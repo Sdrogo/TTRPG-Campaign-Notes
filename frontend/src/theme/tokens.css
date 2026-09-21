@@ -1,0 +1,17 @@
+:root {
+  --bg-base: #0d0a0f;
+  --bg-surface: #17121c;
+  --bg-raised: #1f1826;
+  --text-primary: #e8e3ea;
+  --text-muted: #9b8ba3;
+  --accent-primary: #9333ea;
+  --accent-strong: #a855f7;
+  --border-default: #2a2230;
+  --state-error: #dc2626;
+  --state-success: #4f9c6c;
+  --state-warning: #c2820a;
+
+  --font-display: 'EB Garamond', serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
