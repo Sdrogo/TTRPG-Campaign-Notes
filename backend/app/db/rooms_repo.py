@@ -15,6 +15,7 @@ def _room_from_row(row: RoomRow) -> Room:
         game_system=row.game_system,
         status=RoomStatus(row.status),
         created_by=row.created_by,
+        players_can_create_documents=row.players_can_create_documents,
     )
 
 
@@ -36,6 +37,7 @@ async def insert_new_room(session: AsyncSession, plan: NewRoomPlan) -> None:
             game_system=plan.room.game_system,
             status=plan.room.status.value,
             created_by=plan.room.created_by,
+            players_can_create_documents=plan.room.players_can_create_documents,
         )
     )
     # Flushed separately so the Room row exists before its dependents are
@@ -133,6 +135,16 @@ async def delete_membership(session: AsyncSession, room_id: uuid.UUID, user_id: 
             MembershipRow.room_id == room_id, MembershipRow.user_id == user_id
         )
     )
+    await session.flush()
+
+
+async def set_players_can_create_documents(
+    session: AsyncSession, room_id: uuid.UUID, value: bool
+) -> None:
+    row = await session.get(RoomRow, room_id)
+    if row is None:
+        raise LookupError(f"Room {room_id} not found")
+    row.players_can_create_documents = value
     await session.flush()
 
 

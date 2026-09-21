@@ -1,0 +1,136 @@
+import uuid
+from collections.abc import Sequence
+
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.models import (
+    DocumentOwnerRow,
+    DocumentRow,
+    DocumentTagRow,
+    DocumentVisibilityGrantRow,
+)
+from app.domain.documents import NewDocumentPlan
+from app.domain.models import Document, DocumentVisibility
+
+
+def _document_from_row(row: DocumentRow) -> Document:
+    return Document(
+        id=row.id,
+        room_id=row.room_id,
+        name=row.name,
+        description=row.description,
+        visibility=DocumentVisibility(row.visibility),
+        created_by=row.created_by,
+    )
+
+
+async def insert_new_document(
+    session: AsyncSession,
+    plan: NewDocumentPlan,
+    tag_ids: Sequence[uuid.UUID],
+    selective_user_ids: Sequence[uuid.UUID],
+) -> None:
+    session.add(
+        DocumentRow(
+            id=plan.document.id,
+            room_id=plan.document.room_id,
+            name=plan.document.name,
+            description=plan.document.description,
+            visibility=plan.document.visibility.value,
+            created_by=plan.document.created_by,
+        )
+    )
+    await session.flush()
+
+    session.add(DocumentOwnerRow(document_id=plan.owner.document_id, user_id=plan.owner.user_id))
+    for tag_id in tag_ids:
+        session.add(DocumentTagRow(document_id=plan.document.id, tag_id=tag_id))
+    for user_id in selective_user_ids:
+        session.add(
+            DocumentVisibilityGrantRow(document_id=plan.document.id, user_id=user_id)
+        )
+    await session.flush()
+
+
+async def get_document(session: AsyncSession, document_id: uuid.UUID) -> Document | None:
+    row = await session.get(DocumentRow, document_id)
+    return _document_from_row(row) if row else None
+
+
+async def list_documents_for_room(session: AsyncSession, room_id: uuid.UUID) -> list[Document]:
+    result = await session.execute(select(DocumentRow).where(DocumentRow.room_id == room_id))
+    return [_document_from_row(row) for row in result.scalars()]
+
+
+async def update_document(session: AsyncSession, document: Document) -> None:
+    row = await session.get(DocumentRow, document.id)
+    if row is None:
+        raise LookupError(f"Document {document.id} not found")
+    row.name = document.name
+    row.description = document.description
+    row.visibility = document.visibility.value
+    await session.flush()
+
+
+async def list_owner_ids(session: AsyncSession, document_id: uuid.UUID) -> list[uuid.UUID]:
+    result = await session.execute(
+        select(DocumentOwnerRow.user_id).where(DocumentOwnerRow.document_id == document_id)
+    )
+    return list(result.scalars())
+
+
+async def insert_owner(session: AsyncSession, document_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    session.add(DocumentOwnerRow(document_id=document_id, user_id=user_id))
+    await session.flush()
+
+
+async def delete_owner(session: AsyncSession, document_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    await session.execute(
+        delete(DocumentOwnerRow).where(
+            DocumentOwnerRow.document_id == document_id, DocumentOwnerRow.user_id == user_id
+        )
+    )
+    await session.flush()
+
+
+async def list_selective_grant_ids(
+    session: AsyncSession, document_id: uuid.UUID
+) -> list[uuid.UUID]:
+    result = await session.execute(
+        select(DocumentVisibilityGrantRow.user_id).where(
+            DocumentVisibilityGrantRow.document_id == document_id
+        )
+    )
+    return list(result.scalars())
+
+
+async def set_selective_grants(
+    session: AsyncSession, document_id: uuid.UUID, user_ids: Sequence[uuid.UUID]
+) -> None:
+    await session.execute(
+        delete(DocumentVisibilityGrantRow).where(
+            DocumentVisibilityGrantRow.document_id == document_id
+        )
+    )
+    for user_id in user_ids:
+        session.add(DocumentVisibilityGrantRow(document_id=document_id, user_id=user_id))
+    await session.flush()
+
+
+async def list_tag_ids_for_document(
+    session: AsyncSession, document_id: uuid.UUID
+) -> list[uuid.UUID]:
+    result = await session.execute(
+        select(DocumentTagRow.tag_id).where(DocumentTagRow.document_id == document_id)
+    )
+    return list(result.scalars())
+
+
+async def set_document_tags(
+    session: AsyncSession, document_id: uuid.UUID, tag_ids: Sequence[uuid.UUID]
+) -> None:
+    await session.execute(delete(DocumentTagRow).where(DocumentTagRow.document_id == document_id))
+    for tag_id in tag_ids:
+        session.add(DocumentTagRow(document_id=document_id, tag_id=tag_id))
+    await session.flush()

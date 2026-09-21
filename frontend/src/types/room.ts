@@ -6,6 +6,7 @@ export interface Room {
   name: string;
   gameSystem: string | null;
   status: RoomStatus;
+  playersCanCreateDocuments: boolean;
 }
 
 export interface MyRoom {

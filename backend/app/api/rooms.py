@@ -14,7 +14,7 @@ from app.domain.memberships import (
     plan_removal,
     plan_role_change,
 )
-from app.domain.models import RoomRole, RoomStatus
+from app.domain.models import Room, RoomRole, RoomStatus
 from app.domain.rooms import RoomNameRequiredError, plan_new_room
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
@@ -30,6 +30,7 @@ class RoomResponse(BaseModel):
     name: str
     game_system: str | None
     status: RoomStatus
+    players_can_create_documents: bool
 
 
 class MyRoomResponse(BaseModel):
@@ -50,6 +51,20 @@ class UpdateMemberRequest(BaseModel):
     is_admin: bool | None = None
 
 
+class UpdateRoomSettingsRequest(BaseModel):
+    players_can_create_documents: bool
+
+
+def room_to_response(room: Room) -> RoomResponse:
+    return RoomResponse(
+        id=room.id,
+        name=room.name,
+        game_system=room.game_system,
+        status=room.status,
+        players_can_create_documents=room.players_can_create_documents,
+    )
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_room(
     body: CreateRoomRequest,
@@ -64,12 +79,7 @@ async def create_room(
     await rooms_repo.insert_new_room(session, plan)
     await users_repo.upsert_user(session, plan.room.created_by, current_user.email)
 
-    return RoomResponse(
-        id=plan.room.id,
-        name=plan.room.name,
-        game_system=plan.room.game_system,
-        status=plan.room.status,
-    )
+    return room_to_response(plan.room)
 
 
 @router.get("")
@@ -77,14 +87,52 @@ async def list_my_rooms(current_user: CurrentUserDep, session: SessionDep) -> li
     rows = await rooms_repo.list_rooms_for_user(session, uuid.UUID(current_user.id))
     return [
         MyRoomResponse(
-            room=RoomResponse(
-                id=room.id, name=room.name, game_system=room.game_system, status=room.status
-            ),
-            role=membership.role,
-            is_admin=membership.is_admin,
+            room=room_to_response(room), role=membership.role, is_admin=membership.is_admin
         )
         for room, membership in rows
     ]
+
+
+@router.get("/{room_id}")
+async def get_room(
+    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
+) -> RoomResponse:
+    requester_id = uuid.UUID(current_user.id)
+    membership = await rooms_repo.get_membership(session, room_id, requester_id)
+    if membership is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
+
+    room = await rooms_repo.get_room(session, room_id)
+    if room is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Room not found")
+    return room_to_response(room)
+
+
+@router.patch("/{room_id}")
+async def update_room_settings(
+    room_id: uuid.UUID,
+    body: UpdateRoomSettingsRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+) -> RoomResponse:
+    requester_id = uuid.UUID(current_user.id)
+    membership = await rooms_repo.get_membership(session, room_id, requester_id)
+    if membership is None or membership.role != RoomRole.MASTER:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "Only the Master can change this Room's settings"
+        )
+
+    try:
+        await rooms_repo.set_players_can_create_documents(
+            session, room_id, body.players_can_create_documents
+        )
+    except LookupError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Room not found") from exc
+
+    room = await rooms_repo.get_room(session, room_id)
+    if room is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Room not found")
+    return room_to_response(room)
 
 
 @router.get("/{room_id}/members")

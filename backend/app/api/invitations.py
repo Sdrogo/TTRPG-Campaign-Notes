@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from app.api.rooms import RoomResponse
+from app.api.rooms import RoomResponse, room_to_response
 from app.auth.dependencies import CurrentUserDep
 from app.db import invitations_repo, rooms_repo, users_repo
 from app.db.session import SessionDep
@@ -86,6 +86,4 @@ async def accept_invitation(
     if room is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Room not found")
 
-    return RoomResponse(
-        id=room.id, name=room.name, game_system=room.game_system, status=room.status
-    )
+    return room_to_response(room)
