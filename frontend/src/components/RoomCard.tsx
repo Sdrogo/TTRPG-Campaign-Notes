@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, Group, Stack, Title, Text, Button } from '@mantine/core';
-import { UserPlus } from '@phosphor-icons/react';
+import { Link } from 'react-router-dom';
+import { UserPlusIcon, UsersIcon } from '@phosphor-icons/react';
 import { RoleTag } from './RoleTag';
 import { InviteModal } from './InviteModal';
 import type { MyRoom } from '../types/room';
@@ -27,16 +28,27 @@ export function RoomCard({ myRoom }: RoomCardProps) {
           )}
           <RoleTag role={role} isAdmin={isAdmin} />
         </Stack>
-        {isAdmin && (
+        <Group gap="xs">
           <Button
-            variant="light"
+            component={Link}
+            to={`/rooms/${room.id}/members`}
+            variant="subtle"
             size="xs"
-            leftSection={<UserPlus size={16} />}
-            onClick={() => setInviteOpened(true)}
+            leftSection={<UsersIcon size={16} />}
           >
-            Invita
+            Membri
           </Button>
-        )}
+          {isAdmin && (
+            <Button
+              variant="light"
+              size="xs"
+              leftSection={<UserPlusIcon size={16} />}
+              onClick={() => setInviteOpened(true)}
+            >
+              Invita
+            </Button>
+          )}
+        </Group>
       </Group>
       <InviteModal
         opened={inviteOpened}

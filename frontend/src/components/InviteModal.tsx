@@ -11,7 +11,7 @@ import {
   Text,
   Tooltip,
 } from '@mantine/core';
-import { Check, Copy } from '@phosphor-icons/react';
+import { CheckIcon, CopyIcon } from '@phosphor-icons/react';
 import { useCreateInvitation } from '../hooks/useRooms';
 import type { RoomRole } from '../types/room';
 
@@ -65,7 +65,7 @@ export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
               {({ copied, copy }) => (
                 <Tooltip label={copied ? 'Copiato' : 'Copia'}>
                   <ActionIcon variant="light" onClick={copy}>
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                    {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
                   </ActionIcon>
                 </Tooltip>
               )}

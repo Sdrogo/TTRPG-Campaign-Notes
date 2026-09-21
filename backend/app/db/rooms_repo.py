@@ -1,10 +1,10 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import MembershipRow, RoomRow, TagRow
-from app.domain.models import Membership, Room, RoomRole, RoomStatus
+from app.db.models import AuditLogRow, MembershipRow, RoomRow, TagRow, UserRow
+from app.domain.models import AuditLogEntry, Membership, Room, RoomRole, RoomStatus
 from app.domain.rooms import NewRoomPlan
 
 
@@ -98,3 +98,53 @@ async def list_rooms_for_user(
         .where(MembershipRow.user_id == user_id)
     )
     return [(_room_from_row(room), _membership_from_row(m)) for room, m in result.all()]
+
+
+async def list_memberships(session: AsyncSession, room_id: uuid.UUID) -> list[Membership]:
+    result = await session.execute(
+        select(MembershipRow).where(MembershipRow.room_id == room_id)
+    )
+    return [_membership_from_row(row) for row in result.scalars()]
+
+
+async def list_members_with_email(
+    session: AsyncSession, room_id: uuid.UUID
+) -> list[tuple[Membership, str | None]]:
+    result = await session.execute(
+        select(MembershipRow, UserRow.email)
+        .outerjoin(UserRow, UserRow.id == MembershipRow.user_id)
+        .where(MembershipRow.room_id == room_id)
+    )
+    return [(_membership_from_row(m), email) for m, email in result.all()]
+
+
+async def update_membership(session: AsyncSession, membership: Membership) -> None:
+    row = await session.get(MembershipRow, membership.id)
+    if row is None:
+        raise LookupError(f"Membership {membership.id} not found")
+    row.role = membership.role.value
+    row.is_admin = membership.is_admin
+    await session.flush()
+
+
+async def delete_membership(session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    await session.execute(
+        delete(MembershipRow).where(
+            MembershipRow.room_id == room_id, MembershipRow.user_id == user_id
+        )
+    )
+    await session.flush()
+
+
+async def insert_audit_log(session: AsyncSession, entry: AuditLogEntry) -> None:
+    session.add(
+        AuditLogRow(
+            id=entry.id,
+            room_id=entry.room_id,
+            actor_user_id=entry.actor_user_id,
+            target_user_id=entry.target_user_id,
+            action=entry.action,
+            details=entry.details,
+        )
+    )
+    await session.flush()

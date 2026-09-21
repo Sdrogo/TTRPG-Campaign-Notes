@@ -1,5 +1,5 @@
 import { Stack, Group, Title, Text, Button, Loader } from '@mantine/core';
-import { BookOpen, GoogleLogo } from '@phosphor-icons/react';
+import { BookOpenIcon, GoogleLogoIcon } from '@phosphor-icons/react';
 import { supabase } from '../lib/supabaseClient';
 import { useSession } from '../hooks/useSession';
 import { RoomsPage } from './RoomsPage';
@@ -26,14 +26,14 @@ export function HomePage() {
   if (!session) {
     return (
       <Stack align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
-        <BookOpen size={48} weight="duotone" color="var(--text-muted)" />
+        <BookOpenIcon size={48} weight="duotone" color="var(--text-muted)" />
         <Title order={1} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
           TTRPG Campaign Notes
         </Title>
         <Text c="dimmed" ta="center">
           Accedi per continuare.
         </Text>
-        <Button leftSection={<GoogleLogo size={20} />} onClick={signInWithGoogle}>
+        <Button leftSection={<GoogleLogoIcon size={20} />} onClick={signInWithGoogle}>
           Accedi con Google
         </Button>
       </Stack>

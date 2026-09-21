@@ -49,3 +49,13 @@ class Invitation:
     created_by: uuid.UUID
     expires_at: datetime | None
     revoked_at: datetime | None
+
+
+@dataclass(frozen=True)
+class AuditLogEntry:
+    id: uuid.UUID
+    room_id: uuid.UUID
+    actor_user_id: uuid.UUID
+    target_user_id: uuid.UUID | None
+    action: str
+    details: dict[str, object]

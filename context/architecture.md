@@ -24,6 +24,7 @@
 ## Storage Model
 
 - **Database (Supabase Postgres)**: all metadata and relationships — Users (mirrored from Supabase Auth), Rooms, Memberships (role: Master/Player, Administrator flag), Documents (name, description, Tags, Owner refs, image *reference*), Tags, GlossaryEntries, Threads/Posts (Comments and Details), Invitations, VisibilityRule, AuditLog.
+  - The `Users` mirror is intentionally minimal (`id`, `email`) and kept in sync **opportunistically, not via a dedicated sync job**: whenever a request creates a Room or accepts an Invitation, the backend upserts a row for the acting user from their already-verified JWT claims (`app/db/users_repo.py`). This is enough to show a human-readable identity in the members list (built for UC-05) without a webhook or scheduled job; a user who has never created/joined a Room simply has no row yet, which is fine since they can't be a `Membership.user_id` in that case either.
 - **File/Blob Storage (Supabase Storage)**: Document images and other uploaded media. The backend authorizes an upload (checking the user is an Owner of the target Document, D-12) and issues a scoped upload reference; the client never uploads directly with a raw, unauthorized bucket key.
 
 ## Backend Data Access

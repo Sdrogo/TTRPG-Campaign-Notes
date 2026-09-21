@@ -35,7 +35,21 @@ export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promis
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, await response.text());
+    const body = await response.text();
+    let message = body;
+    try {
+      const parsed = JSON.parse(body) as { detail?: string };
+      if (parsed.detail) {
+        message = parsed.detail;
+      }
+    } catch {
+      // Not JSON (e.g. a plain-text 500) - fall back to the raw body.
+    }
+    throw new ApiError(response.status, message);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return (await response.json()) as T;

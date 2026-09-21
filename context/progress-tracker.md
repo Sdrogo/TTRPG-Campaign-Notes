@@ -5,21 +5,22 @@ Update this file after every meaningful implementation change.
 ## Current Phase
 
 - **Setup + Auth unit complete** (2026-09-21).
-- **Rooms + Membership unit complete** (2026-09-21, branch
-  `feature/rooms_and_membership`): backend (domain, schema/migrations,
-  API) and frontend (create Room, generate/accept invite link, Room
-  list) are both done. The user verified Room creation and the invite
-  link flow live in the browser. UC-02 and UC-04 are satisfied end to
-  end. Next unit: UC-05 (manage members/roles).
+- **Rooms + Membership unit complete** (2026-09-21).
+- **Manage members/roles unit complete** (2026-09-21, branch
+  `feature/Gestione_membri_ruoli`): backend and frontend both done and
+  verified (automated tests + a headless regression check; live click-
+  through of the role/admin/remove UI is still worth the user doing
+  when convenient, same caveat as Rooms+Membership's frontend — no
+  password-login path exists to drive it headlessly). UC-05, FR-R4,
+  FR-R5, FR-R7 and D-16/Invariant 5 are satisfied end to end, including
+  a first AuditLog implementation (NFR-06). Next unit: not yet chosen
+  — see Next Up.
 
 ## Current Goal
 
-- Manage members and roles (UC-05, FR-R4, FR-R5, FR-R7): an
-  Administrator changes a member's role, assigns/revokes
-  Administrator, designates a new Master, and removes a member — with
-  D-16's guard (last Master / last Administrator can't leave or be
-  demoted without a successor) enforced in the domain layer, not just
-  the UI.
+- None set yet for the next unit — awaiting a decision on what to build
+  next (see Next Up: Documents is the natural continuation, blocked on
+  resolving OQ-11 first).
 
 ## Completed
 
@@ -185,6 +186,56 @@ Update this file after every meaningful implementation change.
     headlessly — no password-login path exists by design (Google-only,
     D-07) — so it was verified live by the user instead, who confirmed
     both Room creation and the invite-link flow work.
+- **Branch mix-up caught and fixed (2026-09-21):** a new branch for
+  this unit was created from a stale local `main` (missing the merged
+  Rooms+Membership PR, `cd949b9`), which made several already-committed
+  files look reverted on disk. Nothing was actually lost — both
+  `feature/rooms_and_membership` commits were safely on `origin`. Fixed
+  with `git reset --hard origin/main` (zero unique commits on the new
+  branch, confirmed before running it) plus a fast-forward of local
+  `main`. Lesson for future sessions: branch from `origin/main` (or
+  `git fetch` first), not an unrefreshed local `main`.
+- **Manage members/roles (UC-05) (2026-09-21, branch
+  `feature/Gestione_membri_ruoli`):**
+  - `app/domain/memberships.py`: pure functions `plan_role_change` and
+    `plan_removal`, both funnelling through one `_ensure_successor_exists`
+    guard for D-16/Invariant 5 — a Room can never lose its last Master
+    or last Administrator. `plan_removal` covers both UC-05 (an
+    Administrator removes someone) and UC-19 (a member leaves
+    voluntarily), since the guard is identical either way; the caller
+    passes `is_self` only to pick the AuditLog action name
+    (`member_removed` vs `member_left`). 12 pure unit tests, no DB.
+  - New tables: `users` (minimal mirror of `auth.users` — just `id` +
+    `email`, upserted opportunistically when a user creates a Room or
+    accepts an invite; see `architecture.md`) and `audit_log` (first
+    real implementation of Invariant 7 — every role change and removal
+    writes an entry in the same transaction as the change).
+  - API: `GET /rooms/{id}/members` (any member), `PATCH
+    /rooms/{id}/members/{user_id}` (role and/or admin flag, Administrator
+    only), `DELETE /rooms/{id}/members/{user_id}` (Administrator for
+    others, any member for themselves = leave). 6 integration tests
+    against the real Supabase DB (rollback-wrapped, per
+    `tests/conftest.py`).
+  - Frontend: `RoomMembersPage` at `/rooms/:roomId/members` — a table
+    with inline role `Select` / admin `Switch` for Administrators,
+    read-only for everyone else, plus a leave/remove button; errors
+    (e.g. the 409 from the D-16 guard) surface via
+    `@mantine/notifications`. `apiClient.ts` gained JSON-`detail`
+    parsing on error responses (so messages are human-readable, not raw
+    JSON) and 204-No-Content handling (needed for `DELETE`). "Members"
+    link added to `RoomCard`.
+  - Along the way, discovered every bare Phosphor icon import
+    (`Users`, `UserPlus`, `BookOpen`, `GoogleLogo`, `Plus`, `Check`,
+    `Copy`, `ArrowLeft`, ...) is deprecated in the installed
+    `@phosphor-icons/react` version in favor of an `*Icon`-suffixed
+    export (`UsersIcon`, etc.) — fixed across the whole frontend, worth
+    remembering for any new icon import.
+  - mypy strict, ruff, and pytest (39/39) all pass; a Playwright
+    regression check confirmed the signed-out screen and the new
+    `/rooms/:id/members` route's signed-out guard both render with no
+    console errors. The authenticated role/admin/remove UI itself
+    wasn't clicked through live this time (same headless-Google-login
+    limitation as before) — worth the user trying when convenient.
 
 ## In Progress
 
@@ -192,28 +243,28 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. UC-05 · Manage members and roles: an Administrator changes a
-   member's role, assigns/revokes Administrator, designates a new
-   Master, and removes a member (FR-R4, FR-R5). Must enforce D-16 in
-   the domain layer: the last Administrator can't leave/be demoted,
-   and the last Master can't leave/be demoted, without a successor
-   named first (FR-R7) — this is Invariant 5 in `architecture.md` and
-   needs a domain-layer test proving it's rejected, not just documented.
-   Needs a Room detail/members view on the frontend that doesn't exist
-   yet (so far only the Room list card exists).
-2. After that: Documents (FR-D1–D4, D-05, D-12) — the first unit
-   without an existing OQ blocking it, once OQ-11 (Details) is
-   resolved, which Documents needs for D-18/FR-D3.
+1. Documents (FR-D1–D4, D-05, D-12): CRUD with name, image, description
+   (rich text/Markdown), Tags; Ownership model (creator + Master are
+   Owners, D-12); only an Owner edits the description (D-03). Blocked
+   on resolving **OQ-11** first (who can add Details and how they
+   work) since D-18/FR-D3 — Details as Posts in the main Thread — is
+   part of this unit's natural scope; decide whether to resolve OQ-11
+   now or build plain Document CRUD first and defer Details/Threads to
+   a following slice.
+2. Visibility (VR-01…VR-11) will end up threaded through whatever unit
+   touches Documents/Posts first, per Invariant 1 — worth deciding
+   alongside #1 rather than bolting on later.
 
 ## Open Questions
 
-- OQ-09 · OQ-10 from `requirements.md` (section 6) are still formally
-  unresolved (no `D-` number assigned), though the Rooms/Membership
-  unit now implements their documented working proposals end to end
-  (creator = Administrator + Master on creation; the last-
-  Administrator/last-Master successor requirement from OQ-10/D-16
-  itself is Next Up #1, not yet built). OQ-11/OQ-12 (Details, extra
-  Threads) still block the Documents/Details unit specifically.
+- OQ-09 · OQ-10 from `requirements.md` (section 6) are formally
+  unresolved (no `D-` number assigned) but now fully implemented in
+  practice: creator = Administrator + Master on creation (OQ-09), and
+  the last-Administrator/last-Master successor requirement (OQ-10/D-16)
+  is enforced by the Manage members/roles unit above.
+- **OQ-11** (who can add Details, how they work) and **OQ-12** (no
+  extra Threads beyond the main one) block the Documents/Details unit
+  specifically — see Next Up #1.
 - RLS as defense-in-depth (`architecture.md` → Open items): decide
   before or after the MVP ships.
 - Agent export format, JSON vs. Markdown vs. both
