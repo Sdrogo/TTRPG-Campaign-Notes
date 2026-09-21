@@ -18,9 +18,10 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- None set yet for the next unit — awaiting a decision on what to build
-  next (see Next Up: Documents is the natural continuation, blocked on
-  resolving OQ-11 first).
+- Documents (FR-D1–D4, D-05, D-12, D-19, D-20): CRUD with name, image,
+  description, Tags, and Ownership, plus Details as titled Posts in
+  the Document's one main Thread. Not yet started — see Next Up for
+  how it's likely to be split into steps.
 
 ## Completed
 
@@ -245,12 +246,12 @@ Update this file after every meaningful implementation change.
 
 1. Documents (FR-D1–D4, D-05, D-12): CRUD with name, image, description
    (rich text/Markdown), Tags; Ownership model (creator + Master are
-   Owners, D-12); only an Owner edits the description (D-03). Blocked
-   on resolving **OQ-11** first (who can add Details and how they
-   work) since D-18/FR-D3 — Details as Posts in the main Thread — is
-   part of this unit's natural scope; decide whether to resolve OQ-11
-   now or build plain Document CRUD first and defer Details/Threads to
-   a following slice.
+   Owners, D-12); only an Owner edits the description (D-03); Details
+   as titled top-level Posts in the one main Thread (D-18, D-19, D-20,
+   FR-D3) — no longer blocked, OQ-11/OQ-12 resolved (see Open
+   Questions). Given the size, likely still worth splitting further:
+   plain Document CRUD first, Details/Thread as a following slice
+   within the same unit.
 2. Visibility (VR-01…VR-11) will end up threaded through whatever unit
    touches Documents/Posts first, per Invariant 1 — worth deciding
    alongside #1 rather than bolting on later.
@@ -262,9 +263,12 @@ Update this file after every meaningful implementation change.
   practice: creator = Administrator + Master on creation (OQ-09), and
   the last-Administrator/last-Master successor requirement (OQ-10/D-16)
   is enforced by the Manage members/roles unit above.
-- **OQ-11** (who can add Details, how they work) and **OQ-12** (no
-  extra Threads beyond the main one) block the Documents/Details unit
-  specifically — see Next Up #1.
+- **Resolved (2026-09-21):** OQ-11 and OQ-12 are now `requirements.md`
+  D-19 and D-20 (v0.3) — who can add a Detail and how it behaves
+  (D-19), and confirmation that a Document has only its one main
+  Thread in v1 (D-20). Two new invariants, I-10 and I-11, were added
+  alongside them. This unblocks the Documents unit (Next Up #1); no
+  requirements-level blocker remains for it.
 - RLS as defense-in-depth (`architecture.md` → Open items): decide
   before or after the MVP ships.
 - Agent export format, JSON vs. Markdown vs. both
