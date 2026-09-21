@@ -14,9 +14,13 @@ Update this file after every meaningful implementation change.
   frontend, with automated tests and a headless regression check.
   **Details/Threads (D-18–D-20, FR-D3, FR-T1) were deliberately
   deferred**, as planned — this unit covers plain Document CRUD only.
-  Also deferred: image upload (needs Supabase Storage, D-09), version
-  history (FR-D5, Should), draft/published status (FR-D6, Could),
-  cross-Document mentions/backlinks (FR-D4).
+  Also deferred: version history (FR-D5, Should), draft/published
+  status (FR-D6, Could), cross-Document mentions/backlinks (FR-D4).
+- **Document images unit complete** (2026-09-21, same branch; spec in
+  `context/feature/01 - Add image to  Document.md`): multiple images
+  per Document, from a local file or an image URL, stored in Supabase
+  Storage after server-side validation + downscaling, shown on
+  `DocumentDetailPage` in a carousel with a zoomable fullscreen viewer.
 
 ## Current Goal
 
@@ -303,6 +307,74 @@ Update this file after every meaningful implementation change.
     live (same headless-Google-login limitation as every unit since
     Auth) — worth the user trying when convenient, especially the
     Visibility levels since those are new and security-relevant.
+- **Document images (D-09, FR-D1) (2026-09-21, branch
+  `feature/Gestione_membri_ruoli`, spec `context/feature/01 - Add image
+  to  Document.md`):**
+  - Picked up a half-finished, uncommitted single-image draft (one
+    `documents.image_path` column + client upload via a Supabase signed
+    upload URL). The feature spec asked for *several* images, URL
+    imports and downscaling, so it was reshaped: migration
+    `b051c9ffcdfe` (already applied, but no row used it) was downgraded
+    and deleted, replaced by `ba03b9ea5f44` creating a `document_images`
+    table (`id`, `document_id` FK cascade, `storage_path`, `created_by`,
+    `created_at`; ordered by upload time).
+  - **Upload model changed**: both sources now go through the backend
+    instead of a client-side signed upload — see `architecture.md` →
+    Storage Model for the reasoning (URL imports must be fetched/resized
+    server-side anyway; one pipeline means the rules can't be bypassed).
+    `app/domain/images.py::normalize_image` (pure, Pillow) validates the
+    bytes are really PNG/JPEG/WebP/GIF, rejects >20 MB / >50 MP input,
+    downscales to ≤1920px longest side, re-encodes to WebP q82 (strips
+    EXIF/GPS; animated GIFs keep only their first frame).
+    `app/domain/documents.py` adds `plan_new_image` / `ensure_can_add_image`
+    (max 20 images per Document, random `{room}/{doc}/{uuid}.webp` path).
+    `app/db/storage.py` does server-side upload/delete with the secret
+    key; `app/db/remote_images.py` fetches URLs with an SSRF guard
+    (http(s) only, public IPs only — re-checked per redirect, max 3 —
+    10s timeout, 20 MB streaming cap).
+  - API: `POST /rooms/{id}/documents/{doc}/images` (multipart `file`),
+    `POST .../images/from-url` (`{url}`), `DELETE .../images/{image_id}`
+    — all Owner/Master-only (D-12), behind the same visibility filter
+    (404 for hidden Documents). `DocumentResponse.image_url` became
+    `images: [{id, url}]` on every Document route. Errors: 409 over the
+    image limit, 413 too large, 422 not an image / bad URL, 502 Storage
+    down. If the DB insert fails after an upload, the object is removed
+    again; a failed Storage delete rolls back the row delete.
+  - Dependencies: `pillow`, `python-multipart` (backend);
+    `@mantine/carousel`, `embla-carousel`, `embla-carousel-react`
+    (frontend).
+  - Tests: 7 pure image-normalization tests, 2 new domain tests, 8 SSRF
+    guard cases, 9 API integration tests (Storage and URL fetch faked
+    in-memory so rolled-back tests leave nothing in the real bucket).
+    mypy strict, ruff, pytest **96/96** pass.
+  - **Live Supabase check**: fetched a real 14.7 MB, 10109×4542 JPEG from
+    Wikimedia through the SSRF-guarded fetcher, normalized it to a
+    243 KB 1920×863 WebP, uploaded it to the real `document-images`
+    bucket, read it back via its public URL (200, `image/webp`), then
+    deleted it and confirmed via the Storage list API that the bucket is
+    empty again. Note: the public URL kept answering 200 right after the
+    delete — Supabase's CDN cache (see Open Questions).
+  - Frontend: `types/document.ts` gains `DocumentImage`/`images`;
+    `apiClient.ts` gains a `formData` option; `useDocuments.ts` gains
+    `useUploadDocumentImages` (sequential, error names the failing file),
+    `useImportDocumentImage`, `useDeleteDocumentImage`. New components:
+    `DocumentImageGallery` (one image = plain hero, several = Mantine
+    `Carousel` with loop + indicators; delete-with-confirm popover per
+    image), `ImageViewerModal` (fullscreen, 100–500% zoom via buttons or
+    double-click, scroll to pan, prev/next + "n / N" counter, zoom resets
+    per image), `AddDocumentImages` (multi-file picker + URL field with
+    http(s) validation). On `DocumentDetailPage` the gallery sits at the
+    top of the card; add/delete controls appear only in edit mode (the
+    pencil). Edit/cancel icons got `aria-label`s.
+  - `npm run build` and `npm run lint` pass. Headless Playwright check
+    with a faked session + stubbed API (Google-only login still can't be
+    automated): carousel (3 slides, controls, indicators), viewer zoom
+    (541×812 → 1082×1624 at 200%), prev/next, read-only mode shows no
+    delete buttons, 2-file upload + URL import + delete all hit the right
+    endpoints, single-image Document renders without a carousel, zero
+    console errors. Separately confirmed the multipart request carries
+    the full file bytes. Not yet clicked through live against the real
+    backend by a signed-in user — worth doing.
 
 ## In Progress
 
@@ -321,11 +393,7 @@ Update this file after every meaningful implementation change.
    worth scoping down to FR-T1/T5/T10 (post, edit/moderate, show
    Details on the Document card) for a first slice, same "thinnest
    usable" approach as before.
-2. Image upload for Documents (D-09, FR-D1) — needs Supabase Storage
-   wiring (architecture.md: backend authorizes a scoped upload
-   reference, client never uploads with a raw bucket key). Not started;
-   no blocker, just deferred for scope.
-3. Reveal action + fuller Visibility (VR-02, VR-05, VR-06, FR-V2, FR-V3,
+2. Reveal action + fuller Visibility (VR-02, VR-05, VR-06, FR-V2, FR-V3,
    FR-V5): default visibility per Room, the Reveal action with
    AuditLog + notification, "view as User X" for the Master. The
    Visibility *filter* exists now (Documents unit); Reveal and the
@@ -341,6 +409,21 @@ Update this file after every meaningful implementation change.
 - OQ-11 and OQ-12 are resolved (see Completed, 2026-09-21) — no open
   requirements-level question blocks Details/Threads (Next Up #1)
   anymore.
+- **Document image privacy (new, 2026-09-21)**: the `document-images`
+  bucket is public. Paths are unguessable, but a URL someone has already
+  seen keeps working after the Document is made Private/Master-only, and
+  even briefly after the image is deleted (CDN cache, confirmed live).
+  If that matters for VR-07, switch to a private bucket + short-lived
+  signed read URLs issued per response. Needs a product decision.
+- **Spec gaps from the images feature (new, 2026-09-21)**:
+  `requirements.md` D-09/FR-D1 still say "Immagine" (singular); the
+  feature spec asks for several. Not edited (protected file), so it
+  should be updated in a product pass. The 20-images-per-Document cap
+  and the 1920px/WebP output are implementation choices, not spec'd,
+  so change them if they don't fit.
+- URL-import SSRF guard doesn't cover DNS rebinding (host re-resolved by
+  httpx after the check). Acceptable for now; revisit if the backend
+  ever runs next to sensitive internal services.
 - RLS as defense-in-depth (`architecture.md` → Open items): decide
   before or after the MVP ships.
 - Agent export format, JSON vs. Markdown vs. both
@@ -368,6 +451,10 @@ Update this file after every meaningful implementation change.
   DB-level FK to `auth.users` — full reasoning in `architecture.md` →
   Backend Data Access (added 2026-09-21 with the Rooms/Membership
   slice).
+- Document images are proxied through the backend (validate → downscale
+  → WebP → Storage upload with the secret key) rather than uploaded
+  client-side via signed URLs — full reasoning in `architecture.md` →
+  Storage Model (added 2026-09-21 with the Document images unit).
 
 ## Session Notes
 
@@ -375,13 +462,14 @@ Update this file after every meaningful implementation change.
   (v0.3 as of 2026-09-21) — every other context file cross-references
   it by ID (`D-`, `FR-`, `UC-`, `VR-`, `I-`, `OQ-`). Read it first when
   an ID reference is unclear.
-- Setup + Auth, Rooms + Membership, Manage members/roles, and Documents
-  (CRUD only) are all **done** as of 2026-09-21. Details/Threads is the
+- Setup + Auth, Rooms + Membership, Manage members/roles, Documents
+  (CRUD only) and Document images are all **done** as of 2026-09-21. Details/Threads is the
   natural next slice (see Next Up #1) but hasn't been started.
 - The branch `feature/Gestione_membri_ruoli` ended up covering both the
   Manage members/roles unit AND the Documents unit — the user never cut
   a fresh branch for Documents, and nothing in `ai-workflow-rules.md`
   requires one branch per unit, so work continued there rather than
-  stopping to ask. Worth a heads-up before merging/opening a PR, since
+  stopping to ask. The Document images feature landed here too. Worth a
+  heads-up before merging/opening a PR, since
   its name undersells what it now contains (same kind of mismatch as
   the `0ec23ce` commit message noted earlier in this file).

@@ -14,6 +14,7 @@ import '@fontsource/jetbrains-mono/400.css';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import '@mantine/carousel/styles.css';
 import './theme/tokens.css';
 import './index.css';
 

@@ -11,10 +11,12 @@ export class ApiError extends Error {
 
 interface ApiFetchInit extends Omit<RequestInit, 'body'> {
   json?: unknown;
+  // Multipart upload; the browser sets its own Content-Type with the boundary.
+  formData?: FormData;
 }
 
 export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promise<T> {
-  const { json, ...rest } = init;
+  const { json, formData, ...rest } = init;
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -31,7 +33,7 @@ export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promis
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
     ...rest,
     headers,
-    body: json !== undefined ? JSON.stringify(json) : undefined,
+    body: json !== undefined ? JSON.stringify(json) : formData,
   });
 
   if (!response.ok) {

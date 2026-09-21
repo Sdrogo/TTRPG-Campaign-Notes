@@ -2,10 +2,22 @@ import uuid
 from collections.abc import Collection
 from dataclasses import dataclass
 
-from app.domain.models import Document, DocumentOwner, DocumentVisibility, RoomRole
+from app.domain.models import (
+    Document,
+    DocumentImage,
+    DocumentOwner,
+    DocumentVisibility,
+    RoomRole,
+)
+
+MAX_IMAGES_PER_DOCUMENT = 20
 
 
 class DocumentNameRequiredError(Exception):
+    pass
+
+
+class TooManyImagesError(Exception):
     pass
 
 
@@ -87,3 +99,29 @@ def ensure_can_remove_owner(user_id: uuid.UUID, current_owner_ids: Collection[uu
     # end up without one even if every explicit Owner row is removed.
     if user_id not in current_owner_ids:
         raise NotAnOwnerError("User is not an explicit Owner of this Document")
+
+
+def ensure_can_add_image(current_image_count: int) -> None:
+    if current_image_count >= MAX_IMAGES_PER_DOCUMENT:
+        raise TooManyImagesError(f"A Document can have at most {MAX_IMAGES_PER_DOCUMENT} images")
+
+
+def plan_new_image(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    extension: str,
+    uploader_id: uuid.UUID,
+    current_image_count: int,
+) -> DocumentImage:
+    """D-09/FR-D1: plans one more image on a Document. The Storage object
+    path is scoped under room/document so paths never collide across
+    Documents, and randomized so it can't be guessed from a Document's id
+    alone (the bucket is public - see architecture.md's Storage Model)."""
+    ensure_can_add_image(current_image_count)
+    image_id = uuid.uuid4()
+    return DocumentImage(
+        id=image_id,
+        document_id=document_id,
+        storage_path=f"{room_id}/{document_id}/{image_id.hex}{extension}",
+        created_by=uploader_id,
+    )

@@ -1,27 +1,43 @@
+import asyncio
 import uuid
 
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, UploadFile, status
+from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, rooms_repo, tags_repo
+from app.db import documents_repo, remote_images, rooms_repo, storage, tags_repo
+from app.db.remote_images import RemoteImageError
 from app.db.session import SessionDep
 from app.domain.documents import (
     AlreadyOwnerError,
     DocumentNameRequiredError,
     NotAnOwnerError,
     NotOwnerError,
+    TooManyImagesError,
     can_create_document,
+    ensure_can_add_image,
     ensure_can_remove_owner,
     ensure_owner,
     plan_add_owner,
     plan_new_document,
+    plan_new_image,
 )
-from app.domain.models import Document, DocumentVisibility, RoomRole
+from app.domain.images import (
+    MAX_INPUT_BYTES,
+    ImageTooLargeError,
+    InvalidImageError,
+    normalize_image,
+)
+from app.domain.models import Document, DocumentImage, DocumentVisibility, RoomRole
 from app.domain.visibility import is_document_visible
 
 router = APIRouter(prefix="/rooms/{room_id}/documents", tags=["documents"])
+
+
+class DocumentImageResponse(BaseModel):
+    id: uuid.UUID
+    url: str
 
 
 class DocumentResponse(BaseModel):
@@ -30,9 +46,14 @@ class DocumentResponse(BaseModel):
     name: str
     description: str
     visibility: DocumentVisibility
+    images: list[DocumentImageResponse]
     tag_ids: list[uuid.UUID]
     owner_ids: list[uuid.UUID]
     selective_user_ids: list[uuid.UUID]
+
+
+class ImageFromUrlRequest(BaseModel):
+    url: HttpUrl
 
 
 class CreateDocumentRequest(BaseModel):
@@ -51,20 +72,35 @@ class UpdateDocumentRequest(BaseModel):
     selective_user_ids: list[uuid.UUID] | None = None
 
 
-async def _to_response(session: AsyncSession, document: Document) -> DocumentResponse:
-    owner_ids = await documents_repo.list_owner_ids(session, document.id)
-    selective_ids = await documents_repo.list_selective_grant_ids(session, document.id)
+def _image_response(image: DocumentImage) -> DocumentImageResponse:
+    return DocumentImageResponse(id=image.id, url=storage.public_url(image.storage_path))
+
+
+async def _build_response(
+    session: AsyncSession,
+    document: Document,
+    owner_ids: list[uuid.UUID],
+    selective_ids: list[uuid.UUID],
+) -> DocumentResponse:
     tag_ids = await documents_repo.list_tag_ids_for_document(session, document.id)
+    images = await documents_repo.list_images(session, document.id)
     return DocumentResponse(
         id=document.id,
         room_id=document.room_id,
         name=document.name,
         description=document.description,
         visibility=document.visibility,
+        images=[_image_response(image) for image in images],
         tag_ids=tag_ids,
         owner_ids=owner_ids,
         selective_user_ids=selective_ids,
     )
+
+
+async def _to_response(session: AsyncSession, document: Document) -> DocumentResponse:
+    owner_ids = await documents_repo.list_owner_ids(session, document.id)
+    selective_ids = await documents_repo.list_selective_grant_ids(session, document.id)
+    return await _build_response(session, document, owner_ids, selective_ids)
 
 
 async def _validate_tag_ids(
@@ -128,19 +164,7 @@ async def list_documents(
             document, requester_id, membership.role, owner_ids, selective_ids
         ):
             continue
-        tag_ids = await documents_repo.list_tag_ids_for_document(session, document.id)
-        responses.append(
-            DocumentResponse(
-                id=document.id,
-                room_id=document.room_id,
-                name=document.name,
-                description=document.description,
-                visibility=document.visibility,
-                tag_ids=tag_ids,
-                owner_ids=owner_ids,
-                selective_user_ids=selective_ids,
-            )
-        )
+        responses.append(await _build_response(session, document, owner_ids, selective_ids))
     return responses
 
 
@@ -226,6 +250,130 @@ async def update_document(
         await documents_repo.set_selective_grants(session, document_id, body.selective_user_ids)
 
     return await _to_response(session, updated)
+
+
+async def _get_owned_document(
+    session: AsyncSession, room_id: uuid.UUID, document_id: uuid.UUID, requester_id: uuid.UUID
+) -> Document:
+    membership = await rooms_repo.get_membership(session, room_id, requester_id)
+    if membership is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
+
+    document, owner_ids, _ = await _get_visible_document(
+        session, room_id, document_id, requester_id, membership.role
+    )
+    try:
+        ensure_owner(membership.role, requester_id, owner_ids)
+    except NotOwnerError as exc:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+    return document
+
+
+async def _ensure_room_for_another_image(session: AsyncSession, document: Document) -> int:
+    current_count = len(await documents_repo.list_images(session, document.id))
+    try:
+        ensure_can_add_image(current_count)
+    except TooManyImagesError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+    return current_count
+
+
+async def _store_image(
+    session: AsyncSession,
+    document: Document,
+    uploader_id: uuid.UUID,
+    data: bytes,
+    current_count: int,
+) -> DocumentResponse:
+    """Shared tail of both image sources: normalize -> upload -> record.
+    The Storage upload happens before the row insert; if the insert fails,
+    the just-uploaded object is removed again so nothing is orphaned."""
+    try:
+        normalized = await asyncio.to_thread(normalize_image, data)
+    except ImageTooLargeError as exc:
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, str(exc)) from exc
+    except InvalidImageError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+
+    try:
+        image = plan_new_image(
+            document.room_id, document.id, normalized.extension, uploader_id, current_count
+        )
+    except TooManyImagesError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    try:
+        await storage.upload(image.storage_path, normalized.data, normalized.content_type)
+    except storage.StorageError as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Image storage is unavailable") from exc
+    try:
+        await documents_repo.insert_image(session, image)
+    except Exception:
+        await storage.remove(image.storage_path)
+        raise
+
+    return await _to_response(session, document)
+
+
+@router.post("/{document_id}/images", status_code=status.HTTP_201_CREATED)
+async def upload_document_image(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    file: UploadFile,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+) -> DocumentResponse:
+    requester_id = uuid.UUID(current_user.id)
+    document = await _get_owned_document(session, room_id, document_id, requester_id)
+    current_count = await _ensure_room_for_another_image(session, document)
+
+    # Read one byte past the limit so an oversized file is detectable
+    # without buffering all of it.
+    data = await file.read(MAX_INPUT_BYTES + 1)
+    return await _store_image(session, document, requester_id, data, current_count)
+
+
+@router.post("/{document_id}/images/from-url", status_code=status.HTTP_201_CREATED)
+async def import_document_image(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    body: ImageFromUrlRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+) -> DocumentResponse:
+    requester_id = uuid.UUID(current_user.id)
+    document = await _get_owned_document(session, room_id, document_id, requester_id)
+    current_count = await _ensure_room_for_another_image(session, document)
+
+    try:
+        data = await remote_images.fetch_image_bytes(str(body.url))
+    except RemoteImageError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+    return await _store_image(session, document, requester_id, data, current_count)
+
+
+@router.delete("/{document_id}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document_image(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    image_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+) -> None:
+    requester_id = uuid.UUID(current_user.id)
+    await _get_owned_document(session, room_id, document_id, requester_id)
+
+    images = await documents_repo.list_images(session, document_id)
+    image = next((i for i in images if i.id == image_id), None)
+    if image is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Image not found")
+
+    await documents_repo.delete_image(session, image_id)
+    try:
+        await storage.remove(image.storage_path)
+    except storage.StorageError as exc:
+        # Raising rolls the row deletion back too, so DB and bucket stay in step.
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Image storage is unavailable") from exc
 
 
 @router.post("/{document_id}/owners/{user_id}", status_code=status.HTTP_201_CREATED)

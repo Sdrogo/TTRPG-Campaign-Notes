@@ -99,7 +99,7 @@ Una web application distribuita online in cui più User contribuiscono alla docu
 | D-06 | I ruoli (Master/Player/Amministratore) sono **per Stanza**, non globali. |
 | D-07 | Login tramite **Google** (modalità preferita). |
 | D-08 | Ogni **Player è Owner della visibilità dei propri contenuti** rispetto agli altri Player. Il **Master ha Ownership completa** sul progetto (Stanza). |
-| D-09 | Ogni Documento può avere Nome, Immagine, descrizione, Tag e ulteriori dettagli (definiti in D-18). |
+| D-09 | Ogni Documento può avere Nome, Immagini, descrizione, Tag e ulteriori dettagli (definiti in D-18). |
 | D-10 | Contenuti, singoli commenti e altre informazioni possono essere **nascosti a User diversi**. |
 | D-11 | L'**Amministratore è un ruolo terzo**, assegnato di base al creatore della Stanza. **Più User possono essere Amministratori contemporaneamente.** *(risolve OQ-01)* |
 | D-12 | **Ownership dei Documenti:** il creatore è Owner di default; Master e Owner possono aggiungere o rimuovere Owner (l'Ownership può essere riattribuita ad altri). Il **Master ha sempre Ownership implicita**. *(risolve OQ-02)* |
@@ -159,7 +159,7 @@ erDiagram
 - **User:** id, identità Google (nome, avatar).
 - **Room:** id, nome, descrizione, sistema di gioco (testo libero), stato (attiva/archiviata).
 - **Membership:** user, room, ruolo narrativo (Master/Player), flag Amministratore, data di ingresso.
-- **Document:** id, nome, immagine, descrizione, Tag, Owner, visibilità, cronologia versioni; Thread principale.
+- **Document:** id, nome, immagini, descrizione, Tag, Owner, visibilità, cronologia versioni; Thread principale.
 - **Tag:** nome, categoria opzionale, Stanza.
 - **GlossaryEntry:** termine, definizione, Tag, visibilità, Stanza.
 - **Thread:** Documento di appartenenza; contiene i Post.
@@ -239,7 +239,7 @@ erDiagram
 - **FR-R8** Alla rimozione o uscita di un User, i suoi contenuti restano visibili salvo eliminazione, e l'Ownership dei suoi Documenti è riattribuibile (D-15).
 
 ### Documenti
-- **FR-D1** CRUD Documento con nome, immagine, descrizione (rich text o Markdown), Tag.
+- **FR-D1** CRUD Documento con nome, immagini, descrizione (rich text o Markdown), Tag.
 - **FR-D2** Gestione e riattribuzione dell'Ownership del Documento (D-12).
 - **FR-D3** Aggiungere **Dettagli** (ulteriori Descrizioni titolate) al Thread principale del Documento (D-18, D-19).
 - **FR-D4** Collegamenti tra Documenti tramite menzione, con backlink.
@@ -303,7 +303,7 @@ erDiagram
 | UC-03 | Invitare in Stanza | Amministratore | Ruolo Amministratore | Genera link/codice con ruolo proposto e scadenza → lo condivide | Revoca dell'invito; invito scaduto |
 | UC-04 | Entrare in Stanza | User | Invito valido | Apre il link → login → viene aggiunto con il ruolo proposto | Invito invalido/scaduto; già membro |
 | UC-05 | Gestire membri e ruoli | Amministratore | Ruolo Amministratore | Cambia ruoli, nomina Amministratori, designa un nuovo Master, rimuove un membro | Rimozione/retrocessione dell'ultimo Master o Amministratore senza sostituto: non consentita (D-16, OQ-10) |
-| UC-06 | Creare Documento | Master/Player abilitato | Membro della Stanza | Inserisce nome, descrizione, immagine, Tag → imposta la visibilità → salva; diventa Owner | Creazione da Player disabilitata (D-13) |
+| UC-06 | Creare Documento | Master/Player abilitato | Membro della Stanza | Inserisce nome, descrizione, immagini, Tag → imposta la visibilità → salva; diventa Owner | Creazione da Player disabilitata (D-13) |
 | UC-07 | Modificare Documento | Owner | Owner del Documento | Modifica la descrizione → salva → nuova versione in cronologia | Non Owner: può solo postare nel Thread |
 | UC-08 | Riattribuire Ownership | Master/Owner | Permesso | Aggiunge o rimuove Owner del Documento | Non si può rimuovere l'ultimo Owner esplicito senza lasciare il solo Master implicito |
 | UC-09 | Navigare per Tag | Membro | Membro della Stanza | Seleziona uno o più Tag → vede i Documenti visibili con quei Tag | Nessun risultato visibile |

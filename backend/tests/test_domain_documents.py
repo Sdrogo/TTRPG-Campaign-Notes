@@ -3,16 +3,19 @@ import uuid
 import pytest
 
 from app.domain.documents import (
+    MAX_IMAGES_PER_DOCUMENT,
     AlreadyOwnerError,
     DocumentNameRequiredError,
     NotAnOwnerError,
     NotOwnerError,
+    TooManyImagesError,
     can_create_document,
     ensure_can_remove_owner,
     ensure_owner,
     is_owner,
     plan_add_owner,
     plan_new_document,
+    plan_new_image,
 )
 from app.domain.models import DocumentVisibility, RoomRole
 
@@ -88,3 +91,29 @@ def test_removing_the_only_explicit_owner_is_allowed() -> None:
     # Document ownerless.
     user_id = uuid.uuid4()
     ensure_can_remove_owner(user_id, current_owner_ids=[user_id])  # should not raise
+
+
+def test_new_image_path_is_scoped_and_randomized() -> None:
+    room_id = uuid.uuid4()
+    document_id = uuid.uuid4()
+    uploader_id = uuid.uuid4()
+    image = plan_new_image(room_id, document_id, ".webp", uploader_id, current_image_count=0)
+
+    assert image.document_id == document_id
+    assert image.created_by == uploader_id
+    assert image.storage_path.startswith(f"{room_id}/{document_id}/")
+    assert image.storage_path.endswith(".webp")
+    # Two images on the same Document never collide.
+    other = plan_new_image(room_id, document_id, ".webp", uploader_id, current_image_count=1)
+    assert image.storage_path != other.storage_path
+
+
+def test_image_limit_per_document_is_enforced() -> None:
+    with pytest.raises(TooManyImagesError):
+        plan_new_image(
+            uuid.uuid4(),
+            uuid.uuid4(),
+            ".webp",
+            uuid.uuid4(),
+            current_image_count=MAX_IMAGES_PER_DOCUMENT,
+        )

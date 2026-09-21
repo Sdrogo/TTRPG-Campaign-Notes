@@ -5,13 +5,14 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import (
+    DocumentImageRow,
     DocumentOwnerRow,
     DocumentRow,
     DocumentTagRow,
     DocumentVisibilityGrantRow,
 )
 from app.domain.documents import NewDocumentPlan
-from app.domain.models import Document, DocumentVisibility
+from app.domain.models import Document, DocumentImage, DocumentVisibility
 
 
 def _document_from_row(row: DocumentRow) -> Document:
@@ -47,9 +48,7 @@ async def insert_new_document(
     for tag_id in tag_ids:
         session.add(DocumentTagRow(document_id=plan.document.id, tag_id=tag_id))
     for user_id in selective_user_ids:
-        session.add(
-            DocumentVisibilityGrantRow(document_id=plan.document.id, user_id=user_id)
-        )
+        session.add(DocumentVisibilityGrantRow(document_id=plan.document.id, user_id=user_id))
     await session.flush()
 
 
@@ -70,6 +69,41 @@ async def update_document(session: AsyncSession, document: Document) -> None:
     row.name = document.name
     row.description = document.description
     row.visibility = document.visibility.value
+    await session.flush()
+
+
+def _image_from_row(row: DocumentImageRow) -> DocumentImage:
+    return DocumentImage(
+        id=row.id,
+        document_id=row.document_id,
+        storage_path=row.storage_path,
+        created_by=row.created_by,
+    )
+
+
+async def list_images(session: AsyncSession, document_id: uuid.UUID) -> list[DocumentImage]:
+    result = await session.execute(
+        select(DocumentImageRow)
+        .where(DocumentImageRow.document_id == document_id)
+        .order_by(DocumentImageRow.created_at, DocumentImageRow.id)
+    )
+    return [_image_from_row(row) for row in result.scalars()]
+
+
+async def insert_image(session: AsyncSession, image: DocumentImage) -> None:
+    session.add(
+        DocumentImageRow(
+            id=image.id,
+            document_id=image.document_id,
+            storage_path=image.storage_path,
+            created_by=image.created_by,
+        )
+    )
+    await session.flush()
+
+
+async def delete_image(session: AsyncSession, image_id: uuid.UUID) -> None:
+    await session.execute(delete(DocumentImageRow).where(DocumentImageRow.id == image_id))
     await session.flush()
 
 

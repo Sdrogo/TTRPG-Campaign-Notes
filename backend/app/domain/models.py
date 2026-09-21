@@ -84,6 +84,14 @@ class Document:
 
 
 @dataclass(frozen=True)
+class DocumentImage:
+    id: uuid.UUID
+    document_id: uuid.UUID
+    storage_path: str
+    created_by: uuid.UUID
+
+
+@dataclass(frozen=True)
 class DocumentOwner:
     document_id: uuid.UUID
     user_id: uuid.UUID
