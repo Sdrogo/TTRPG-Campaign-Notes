@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Stack, Group, Title, Button, SimpleGrid, Text, Loader, Switch } from '@mantine/core';
-import { PlusIcon, ArrowLeftIcon } from '@phosphor-icons/react';
+import { useParams } from 'react-router-dom';
+import { Group, Title, Button, SimpleGrid, Text, Loader, Switch } from '@mantine/core';
+import { PlusIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
 import { useTags } from '../hooks/useTags';
@@ -9,6 +9,8 @@ import { useMembers } from '../hooks/useMembers';
 import { useRoom, useUpdateRoomSettings } from '../hooks/useRooms';
 import { DocumentCard } from '../components/DocumentCard';
 import { CreateDocumentModal } from '../components/CreateDocumentModal';
+import { FullPageLoader, SignInRequired } from '../components/PageState';
+import { PageLayout } from '../components/PageLayout';
 
 export function RoomDocumentsPage() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -19,22 +21,11 @@ export function RoomDocumentsPage() {
   }
 
   if (sessionLoading) {
-    return (
-      <Stack align="center" justify="center" style={{ minHeight: '100svh' }}>
-        <Loader color="accent" />
-      </Stack>
-    );
+    return <FullPageLoader />;
   }
 
   if (!session) {
-    return (
-      <Stack align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
-        <Text>Accedi per vedere i Documenti di questa Stanza.</Text>
-        <Button component={Link} to="/">
-          Vai al login
-        </Button>
-      </Stack>
-    );
+    return <SignInRequired>Accedi per vedere i Documenti di questa Stanza.</SignInRequired>;
   }
 
   return <RoomDocumentsContent roomId={roomId} currentUserId={session.user.id} />;
@@ -51,13 +42,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   const isMaster = members.data?.find((m) => m.userId === currentUserId)?.role === 'master';
 
   return (
-    <Stack gap="md" p="md">
-      <Group>
-        <Button component={Link} to="/" variant="subtle" leftSection={<ArrowLeftIcon size={16} />}>
-          Le mie Stanze
-        </Button>
-      </Group>
-
+    <PageLayout backTo="/" backLabel="Le mie Stanze">
       <Group justify="space-between">
         <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
           Documenti{room.data ? ` — ${room.data.name}` : ''}
@@ -88,6 +73,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               document={document}
               roomId={roomId}
               tags={tags.data ?? []}
+              members={members.data ?? []}
             />
           ))}
         </SimpleGrid>
@@ -98,6 +84,6 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
         onClose={() => setCreateOpened(false)}
         roomId={roomId}
       />
-    </Stack>
+    </PageLayout>
   );
 }

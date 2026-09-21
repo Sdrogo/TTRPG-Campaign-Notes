@@ -148,12 +148,50 @@ class DocumentVisibilityGrantRow(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
 
 
+
+
+class PostRow(Base):
+    """A Post in a Document's main Thread (requirements.md's data model).
+    There is no separate `threads` table: a Document has exactly one Thread
+    (D-20/I-11), so a Post points straight at its Document. `kind` is only
+    ever "comment" for now; Details (D-18/D-19) will reuse this table."""
+
+    __tablename__ = "posts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    author_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    kind: Mapped[str] = mapped_column(String(20), default="comment")
+    body: Mapped[str] = mapped_column(Text)
+    visibility: Mapped[str] = mapped_column(String(20), default="room")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PostVisibilityGrantRow(Base):
+    __tablename__ = "post_visibility_grants"
+
+    post_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("posts.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+
+
 class DocumentImageRow(Base):
     __tablename__ = "document_images"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     document_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    # The Comment this image was attached to, if any. CASCADE, not SET NULL:
+    # un-linking would silently widen a Private Comment's image to everyone
+    # who sees the Document.
+    post_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("posts.id", ondelete="CASCADE"), index=True
     )
     storage_path: Mapped[str] = mapped_column(String(500))
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))

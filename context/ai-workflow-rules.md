@@ -90,5 +90,6 @@ Update the relevant context file whenever implementation changes:
 1. The current unit works end to end within its defined scope.
 2. No invariant defined in `architecture.md` was violated.
 3. `progress-tracker.md` reflects the completed work.
-4. Frontend build passes (`npm run build` in `frontend/`) and backend
+4. Frontend build and unit tests pass (`npm run build` and `npm test`
+   in `frontend/`) and backend
    checks pass (tests + type check in `backend/`).

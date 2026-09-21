@@ -1,4 +1,5 @@
 import uuid
+from collections import defaultdict
 from collections.abc import Sequence
 
 from sqlalchemy import delete, select
@@ -78,6 +79,7 @@ def _image_from_row(row: DocumentImageRow) -> DocumentImage:
         document_id=row.document_id,
         storage_path=row.storage_path,
         created_by=row.created_by,
+        post_id=row.post_id,
     )
 
 
@@ -97,9 +99,33 @@ async def insert_image(session: AsyncSession, image: DocumentImage) -> None:
             document_id=image.document_id,
             storage_path=image.storage_path,
             created_by=image.created_by,
+            post_id=image.post_id,
         )
     )
     await session.flush()
+
+
+async def list_images_for_posts(
+    session: AsyncSession, post_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[DocumentImage]]:
+    by_post: dict[uuid.UUID, list[DocumentImage]] = defaultdict(list)
+    if not post_ids:
+        return by_post
+    result = await session.execute(
+        select(DocumentImageRow)
+        .where(DocumentImageRow.post_id.in_(post_ids))
+        .order_by(DocumentImageRow.created_at, DocumentImageRow.id)
+    )
+    for row in result.scalars():
+        assert row.post_id is not None
+        by_post[row.post_id].append(_image_from_row(row))
+    return by_post
+
+
+async def delete_images(session: AsyncSession, image_ids: Sequence[uuid.UUID]) -> None:
+    if image_ids:
+        await session.execute(delete(DocumentImageRow).where(DocumentImageRow.id.in_(image_ids)))
+        await session.flush()
 
 
 async def delete_image(session: AsyncSession, image_id: uuid.UUID) -> None:

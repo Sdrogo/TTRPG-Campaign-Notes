@@ -112,6 +112,7 @@ def plan_new_image(
     extension: str,
     uploader_id: uuid.UUID,
     current_image_count: int,
+    post_id: uuid.UUID | None = None,
 ) -> DocumentImage:
     """D-09/FR-D1: plans one more image on a Document. The Storage object
     path is scoped under room/document so paths never collide across
@@ -124,4 +125,5 @@ def plan_new_image(
         document_id=document_id,
         storage_path=f"{room_id}/{document_id}/{image_id.hex}{extension}",
         created_by=uploader_id,
+        post_id=post_id,
     )

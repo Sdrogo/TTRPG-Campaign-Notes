@@ -1,43 +1,37 @@
-import asyncio
 import uuid
 
 from fastapi import APIRouter, HTTPException, UploadFile, status
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.access import get_visible_document, get_visible_images, require_membership
+from app.api.image_uploads import (
+    ImageResponse,
+    ensure_room_for_another_image,
+    fetch_url,
+    image_response,
+    read_upload,
+    remove_images,
+    store_image,
+)
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, remote_images, rooms_repo, storage, tags_repo
-from app.db.remote_images import RemoteImageError
+from app.db import documents_repo, rooms_repo, tags_repo
 from app.db.session import SessionDep
 from app.domain.documents import (
     AlreadyOwnerError,
     DocumentNameRequiredError,
     NotAnOwnerError,
     NotOwnerError,
-    TooManyImagesError,
     can_create_document,
-    ensure_can_add_image,
     ensure_can_remove_owner,
     ensure_owner,
     plan_add_owner,
     plan_new_document,
-    plan_new_image,
 )
-from app.domain.images import (
-    MAX_INPUT_BYTES,
-    ImageTooLargeError,
-    InvalidImageError,
-    normalize_image,
-)
-from app.domain.models import Document, DocumentImage, DocumentVisibility, RoomRole
+from app.domain.models import Document, DocumentVisibility, Membership
 from app.domain.visibility import is_document_visible
 
 router = APIRouter(prefix="/rooms/{room_id}/documents", tags=["documents"])
-
-
-class DocumentImageResponse(BaseModel):
-    id: uuid.UUID
-    url: str
 
 
 class DocumentResponse(BaseModel):
@@ -46,7 +40,9 @@ class DocumentResponse(BaseModel):
     name: str
     description: str
     visibility: DocumentVisibility
-    images: list[DocumentImageResponse]
+    # Filtered per viewer: an image attached to a Comment is listed only
+    # for those who can read that Comment.
+    images: list[ImageResponse]
     tag_ids: list[uuid.UUID]
     owner_ids: list[uuid.UUID]
     selective_user_ids: list[uuid.UUID]
@@ -72,35 +68,34 @@ class UpdateDocumentRequest(BaseModel):
     selective_user_ids: list[uuid.UUID] | None = None
 
 
-def _image_response(image: DocumentImage) -> DocumentImageResponse:
-    return DocumentImageResponse(id=image.id, url=storage.public_url(image.storage_path))
-
-
 async def _build_response(
     session: AsyncSession,
     document: Document,
     owner_ids: list[uuid.UUID],
     selective_ids: list[uuid.UUID],
+    viewer: Membership,
 ) -> DocumentResponse:
     tag_ids = await documents_repo.list_tag_ids_for_document(session, document.id)
-    images = await documents_repo.list_images(session, document.id)
+    images = await get_visible_images(session, document.id, viewer)
     return DocumentResponse(
         id=document.id,
         room_id=document.room_id,
         name=document.name,
         description=document.description,
         visibility=document.visibility,
-        images=[_image_response(image) for image in images],
+        images=[image_response(image) for image in images],
         tag_ids=tag_ids,
         owner_ids=owner_ids,
         selective_user_ids=selective_ids,
     )
 
 
-async def _to_response(session: AsyncSession, document: Document) -> DocumentResponse:
+async def _to_response(
+    session: AsyncSession, document: Document, viewer: Membership
+) -> DocumentResponse:
     owner_ids = await documents_repo.list_owner_ids(session, document.id)
     selective_ids = await documents_repo.list_selective_grant_ids(session, document.id)
-    return await _build_response(session, document, owner_ids, selective_ids)
+    return await _build_response(session, document, owner_ids, selective_ids, viewer)
 
 
 async def _validate_tag_ids(
@@ -121,9 +116,7 @@ async def create_document(
     session: SessionDep,
 ) -> DocumentResponse:
     requester_id = uuid.UUID(current_user.id)
-    membership = await rooms_repo.get_membership(session, room_id, requester_id)
-    if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
+    membership = await require_membership(session, room_id, requester_id)
 
     room = await rooms_repo.get_room(session, room_id)
     if room is None:
@@ -143,7 +136,7 @@ async def create_document(
     await _validate_tag_ids(session, room_id, body.tag_ids)
     await documents_repo.insert_new_document(session, plan, body.tag_ids, body.selective_user_ids)
 
-    return await _to_response(session, plan.document)
+    return await _to_response(session, plan.document, membership)
 
 
 @router.get("")
@@ -151,9 +144,7 @@ async def list_documents(
     room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
 ) -> list[DocumentResponse]:
     requester_id = uuid.UUID(current_user.id)
-    membership = await rooms_repo.get_membership(session, room_id, requester_id)
-    if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
+    membership = await require_membership(session, room_id, requester_id)
 
     documents = await documents_repo.list_documents_for_room(session, room_id)
     responses = []
@@ -164,29 +155,10 @@ async def list_documents(
             document, requester_id, membership.role, owner_ids, selective_ids
         ):
             continue
-        responses.append(await _build_response(session, document, owner_ids, selective_ids))
+        responses.append(
+            await _build_response(session, document, owner_ids, selective_ids, membership)
+        )
     return responses
-
-
-async def _get_visible_document(
-    session: AsyncSession,
-    room_id: uuid.UUID,
-    document_id: uuid.UUID,
-    requester_id: uuid.UUID,
-    role: RoomRole,
-) -> tuple[Document, list[uuid.UUID], list[uuid.UUID]]:
-    document = await documents_repo.get_document(session, document_id)
-    if document is None or document.room_id != room_id:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
-
-    owner_ids = await documents_repo.list_owner_ids(session, document_id)
-    selective_ids = await documents_repo.list_selective_grant_ids(session, document_id)
-    if not is_document_visible(document, requester_id, role, owner_ids, selective_ids):
-        # Not found, not forbidden - a Document you can't see doesn't
-        # exist as far as you're concerned (VR-07).
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
-
-    return document, owner_ids, selective_ids
 
 
 @router.get("/{document_id}")
@@ -197,14 +169,28 @@ async def get_document(
     session: SessionDep,
 ) -> DocumentResponse:
     requester_id = uuid.UUID(current_user.id)
-    membership = await rooms_repo.get_membership(session, room_id, requester_id)
-    if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
+    membership = await require_membership(session, room_id, requester_id)
 
-    document, _, _ = await _get_visible_document(
+    document, _, _ = await get_visible_document(
         session, room_id, document_id, requester_id, membership.role
     )
-    return await _to_response(session, document)
+    return await _to_response(session, document, membership)
+
+
+async def _get_owned_document(
+    session: AsyncSession, room_id: uuid.UUID, document_id: uuid.UUID, requester_id: uuid.UUID
+) -> tuple[Document, list[uuid.UUID], Membership]:
+    """Returns (document, owner_ids, membership) once the requester is known
+    to see the Document and to be one of its Owners (D-12)."""
+    membership = await require_membership(session, room_id, requester_id)
+    document, owner_ids, _ = await get_visible_document(
+        session, room_id, document_id, requester_id, membership.role
+    )
+    try:
+        ensure_owner(membership.role, requester_id, owner_ids)
+    except NotOwnerError as exc:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+    return document, owner_ids, membership
 
 
 @router.patch("/{document_id}")
@@ -216,17 +202,7 @@ async def update_document(
     session: SessionDep,
 ) -> DocumentResponse:
     requester_id = uuid.UUID(current_user.id)
-    membership = await rooms_repo.get_membership(session, room_id, requester_id)
-    if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
-
-    document, owner_ids, _ = await _get_visible_document(
-        session, room_id, document_id, requester_id, membership.role
-    )
-    try:
-        ensure_owner(membership.role, requester_id, owner_ids)
-    except NotOwnerError as exc:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+    document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
 
     new_name = document.name if body.name is None else body.name.strip()
     if body.name is not None and not new_name:
@@ -249,70 +225,7 @@ async def update_document(
     if body.selective_user_ids is not None:
         await documents_repo.set_selective_grants(session, document_id, body.selective_user_ids)
 
-    return await _to_response(session, updated)
-
-
-async def _get_owned_document(
-    session: AsyncSession, room_id: uuid.UUID, document_id: uuid.UUID, requester_id: uuid.UUID
-) -> Document:
-    membership = await rooms_repo.get_membership(session, room_id, requester_id)
-    if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
-
-    document, owner_ids, _ = await _get_visible_document(
-        session, room_id, document_id, requester_id, membership.role
-    )
-    try:
-        ensure_owner(membership.role, requester_id, owner_ids)
-    except NotOwnerError as exc:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
-    return document
-
-
-async def _ensure_room_for_another_image(session: AsyncSession, document: Document) -> int:
-    current_count = len(await documents_repo.list_images(session, document.id))
-    try:
-        ensure_can_add_image(current_count)
-    except TooManyImagesError as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
-    return current_count
-
-
-async def _store_image(
-    session: AsyncSession,
-    document: Document,
-    uploader_id: uuid.UUID,
-    data: bytes,
-    current_count: int,
-) -> DocumentResponse:
-    """Shared tail of both image sources: normalize -> upload -> record.
-    The Storage upload happens before the row insert; if the insert fails,
-    the just-uploaded object is removed again so nothing is orphaned."""
-    try:
-        normalized = await asyncio.to_thread(normalize_image, data)
-    except ImageTooLargeError as exc:
-        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, str(exc)) from exc
-    except InvalidImageError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
-
-    try:
-        image = plan_new_image(
-            document.room_id, document.id, normalized.extension, uploader_id, current_count
-        )
-    except TooManyImagesError as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
-
-    try:
-        await storage.upload(image.storage_path, normalized.data, normalized.content_type)
-    except storage.StorageError as exc:
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Image storage is unavailable") from exc
-    try:
-        await documents_repo.insert_image(session, image)
-    except Exception:
-        await storage.remove(image.storage_path)
-        raise
-
-    return await _to_response(session, document)
+    return await _to_response(session, updated, membership)
 
 
 @router.post("/{document_id}/images", status_code=status.HTTP_201_CREATED)
@@ -324,13 +237,11 @@ async def upload_document_image(
     session: SessionDep,
 ) -> DocumentResponse:
     requester_id = uuid.UUID(current_user.id)
-    document = await _get_owned_document(session, room_id, document_id, requester_id)
-    current_count = await _ensure_room_for_another_image(session, document)
-
-    # Read one byte past the limit so an oversized file is detectable
-    # without buffering all of it.
-    data = await file.read(MAX_INPUT_BYTES + 1)
-    return await _store_image(session, document, requester_id, data, current_count)
+    document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
+    current_count = await ensure_room_for_another_image(session, document)
+    data = await read_upload(file)
+    await store_image(session, document, requester_id, data, current_count)
+    return await _to_response(session, document, membership)
 
 
 @router.post("/{document_id}/images/from-url", status_code=status.HTTP_201_CREATED)
@@ -342,14 +253,11 @@ async def import_document_image(
     session: SessionDep,
 ) -> DocumentResponse:
     requester_id = uuid.UUID(current_user.id)
-    document = await _get_owned_document(session, room_id, document_id, requester_id)
-    current_count = await _ensure_room_for_another_image(session, document)
-
-    try:
-        data = await remote_images.fetch_image_bytes(str(body.url))
-    except RemoteImageError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
-    return await _store_image(session, document, requester_id, data, current_count)
+    document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
+    current_count = await ensure_room_for_another_image(session, document)
+    data = await fetch_url(str(body.url))
+    await store_image(session, document, requester_id, data, current_count)
+    return await _to_response(session, document, membership)
 
 
 @router.delete("/{document_id}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -360,20 +268,16 @@ async def delete_document_image(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> None:
+    """An Owner (or the Master) manages every image in the Document's gallery,
+    including Comment attachments - but only those they can see."""
     requester_id = uuid.UUID(current_user.id)
-    await _get_owned_document(session, room_id, document_id, requester_id)
+    _, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
 
-    images = await documents_repo.list_images(session, document_id)
+    images = await get_visible_images(session, document_id, membership)
     image = next((i for i in images if i.id == image_id), None)
     if image is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Image not found")
-
-    await documents_repo.delete_image(session, image_id)
-    try:
-        await storage.remove(image.storage_path)
-    except storage.StorageError as exc:
-        # Raising rolls the row deletion back too, so DB and bucket stay in step.
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Image storage is unavailable") from exc
+    await remove_images(session, [image])
 
 
 @router.post("/{document_id}/owners/{user_id}", status_code=status.HTTP_201_CREATED)
@@ -385,17 +289,9 @@ async def add_owner(
     session: SessionDep,
 ) -> DocumentResponse:
     requester_id = uuid.UUID(current_user.id)
-    membership = await rooms_repo.get_membership(session, room_id, requester_id)
-    if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
-
-    document, owner_ids, _ = await _get_visible_document(
-        session, room_id, document_id, requester_id, membership.role
+    document, owner_ids, membership = await _get_owned_document(
+        session, room_id, document_id, requester_id
     )
-    try:
-        ensure_owner(membership.role, requester_id, owner_ids)
-    except NotOwnerError as exc:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
 
     target_membership = await rooms_repo.get_membership(session, room_id, user_id)
     if target_membership is None:
@@ -407,7 +303,7 @@ async def add_owner(
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
     await documents_repo.insert_owner(session, new_owner.document_id, new_owner.user_id)
-    return await _to_response(session, document)
+    return await _to_response(session, document, membership)
 
 
 @router.delete("/{document_id}/owners/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -419,17 +315,7 @@ async def remove_owner(
     session: SessionDep,
 ) -> None:
     requester_id = uuid.UUID(current_user.id)
-    membership = await rooms_repo.get_membership(session, room_id, requester_id)
-    if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
-
-    _, owner_ids, _ = await _get_visible_document(
-        session, room_id, document_id, requester_id, membership.role
-    )
-    try:
-        ensure_owner(membership.role, requester_id, owner_ids)
-    except NotOwnerError as exc:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+    _, owner_ids, _ = await _get_owned_document(session, room_id, document_id, requester_id)
 
     try:
         ensure_can_remove_owner(user_id, owner_ids)

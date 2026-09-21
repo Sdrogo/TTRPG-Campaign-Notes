@@ -1,4 +1,4 @@
-import { Badge } from '@mantine/core';
+import { Badge, type MantineSize } from '@mantine/core';
 import type { DocumentVisibility } from '../types/document';
 
 const LABELS: Record<DocumentVisibility, string> = {
@@ -10,11 +10,18 @@ const LABELS: Record<DocumentVisibility, string> = {
 
 interface VisibilityBadgeProps {
   visibility: DocumentVisibility;
+  size?: MantineSize;
 }
 
-export function VisibilityBadge({ visibility }: VisibilityBadgeProps) {
+export function VisibilityBadge({ visibility, size }: VisibilityBadgeProps) {
   return (
-    <Badge color={visibility === 'master' ? 'accent' : 'gray'} variant="light">
+    <Badge
+      color={visibility === 'master' ? 'accent' : 'gray'}
+      variant="light"
+      size={size}
+      // Never squeezed by a long title sitting next to it.
+      style={{ flexShrink: 0 }}
+    >
       {LABELS[visibility]}
     </Badge>
   );

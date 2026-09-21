@@ -1,17 +1,21 @@
 import { Card, Group, Stack, Title, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { VisibilityBadge } from './VisibilityBadge';
+import { TagList } from './TagList';
+import { displayNameFor } from '../lib/members';
 import type { Document } from '../types/document';
+import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
 
 interface DocumentCardProps {
   document: Document;
   roomId: string;
   tags: Tag[];
+  members: Member[];
 }
 
-export function DocumentCard({ document, roomId, tags }: DocumentCardProps) {
-  const documentTags = tags.filter((tag) => document.tagIds.includes(tag.id));
+export function DocumentCard({ document, roomId, tags, members }: DocumentCardProps) {
+  const ownerNames = document.ownerIds.map((id) => displayNameFor(members, id)).join(', ');
 
   return (
     <Card
@@ -23,8 +27,11 @@ export function DocumentCard({ document, roomId, tags }: DocumentCardProps) {
       style={{ textDecoration: 'none', color: 'inherit' }}
     >
       <Stack gap={4}>
-        <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <Title order={4} style={{ fontFamily: 'var(--font-display)' }}>
+        <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
+          <Title
+            order={4}
+            style={{ fontFamily: 'var(--font-display)', minWidth: 0, overflowWrap: 'anywhere' }}
+          >
             {document.name}
           </Title>
           <VisibilityBadge visibility={document.visibility} />
@@ -34,14 +41,11 @@ export function DocumentCard({ document, roomId, tags }: DocumentCardProps) {
             {document.description}
           </Text>
         )}
-        {documentTags.length > 0 && (
-          <Group gap={6}>
-            {documentTags.map((tag) => (
-              <Text key={tag.id} size="xs" c="dimmed">
-                #{tag.name}
-              </Text>
-            ))}
-          </Group>
+        <TagList tags={tags} tagIds={document.tagIds} />
+        {ownerNames && (
+          <Text size="xs" c="dimmed" truncate>
+            Owner: {ownerNames}
+          </Text>
         )}
       </Stack>
     </Card>

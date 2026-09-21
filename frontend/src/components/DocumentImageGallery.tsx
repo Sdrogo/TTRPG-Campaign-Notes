@@ -5,7 +5,8 @@ import { TrashIcon } from '@phosphor-icons/react';
 import { ImageViewerModal } from './ImageViewerModal';
 import type { DocumentImage } from '../types/document';
 
-const GALLERY_HEIGHT = 360;
+// Grows with the viewport so the images use the wider card on large screens.
+const GALLERY_HEIGHT = { base: 240, sm: 360, lg: 480 };
 
 interface DocumentImageGalleryProps {
   images: DocumentImage[];
@@ -44,16 +45,18 @@ export function DocumentImageGallery({
       {images.length === 1 ? (
         renderSlide(images[0], 0)
       ) : (
-        <Carousel
-          height={GALLERY_HEIGHT}
-          withIndicators
-          emblaOptions={{ loop: true }}
-          styles={{ indicator: { width: 12, height: 4 } }}
-        >
-          {images.map((image, index) => (
-            <Carousel.Slide key={image.id}>{renderSlide(image, index)}</Carousel.Slide>
-          ))}
-        </Carousel>
+        <Box h={GALLERY_HEIGHT}>
+          <Carousel
+            height="100%"
+            withIndicators
+            emblaOptions={{ loop: true }}
+            styles={{ indicator: { width: 12, height: 4 } }}
+          >
+            {images.map((image, index) => (
+              <Carousel.Slide key={image.id}>{renderSlide(image, index)}</Carousel.Slide>
+            ))}
+          </Carousel>
+        </Box>
       )}
 
       <ImageViewerModal

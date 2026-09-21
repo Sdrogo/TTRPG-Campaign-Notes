@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
+from app.api.comments import router as comments_router
 from app.api.documents import router as documents_router
 from app.api.invitations import router as invitations_router
 from app.api.rooms import router as rooms_router
@@ -23,6 +24,7 @@ app.include_router(rooms_router)
 app.include_router(invitations_router)
 app.include_router(tags_router)
 app.include_router(documents_router)
+app.include_router(comments_router)
 
 
 @app.get("/health")

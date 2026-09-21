@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import remote_images, storage
+from app.db import remote_images
 from app.db.remote_images import RemoteImageError
 from app.domain.documents import MAX_IMAGES_PER_DOCUMENT
 from app.domain.images import MAX_DIMENSION
@@ -19,24 +19,6 @@ from app.main import app
 async def client() -> AsyncIterator[AsyncClient]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
-
-
-@pytest.fixture
-def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
-    """In-memory stand-in for Supabase Storage: DB changes in these tests
-    are rolled back (conftest.db_session), but real bucket uploads would
-    not be, so Storage is faked here and verified live separately."""
-    objects: dict[str, bytes] = {}
-
-    async def fake_upload(path: str, data: bytes, content_type: str) -> None:
-        objects[path] = data
-
-    async def fake_remove(path: str) -> None:
-        objects.pop(path, None)
-
-    monkeypatch.setattr(storage, "upload", fake_upload)
-    monkeypatch.setattr(storage, "remove", fake_remove)
-    return objects
 
 
 def _png(size: tuple[int, int] = (100, 80)) -> bytes:

@@ -1,0 +1,156 @@
+import { useMemo, useState } from 'react';
+import { Badge, Button, Card, Divider, Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { ChatCircleDotsIcon } from '@phosphor-icons/react';
+import { CommentComposer } from './CommentComposer';
+import { CommentItem } from './CommentItem';
+import { CommentToolbar } from './CommentToolbar';
+import { UserAvatar } from '../UserAvatar';
+import { useComments, useDeleteComment, useSaveComment } from '../../hooks/useComments';
+import type { SaveCommentResult } from '../../hooks/useComments';
+import {
+  DEFAULT_COMMENT_FILTERS,
+  applyCommentFilters,
+  commentAuthors,
+} from '../../lib/comments';
+import { displayNameFor } from '../../lib/members';
+import { notifyError } from '../../lib/notify';
+import type { CommentFilters } from '../../types/comment';
+import type { Member } from '../../types/member';
+
+interface CommentSectionProps {
+  roomId: string;
+  documentId: string;
+  members: Member[];
+  currentUserId: string;
+}
+
+// The Comment was saved, but some image changes failed: say which.
+function reportImageErrors({ imageErrors }: SaveCommentResult) {
+  if (imageErrors.length > 0) {
+    notifyError(new Error(`Commento salvato, ma non tutte le immagini: ${imageErrors.join('; ')}`));
+  }
+}
+
+// A Document's Comments (its main Thread, D-20): sort/filter toolbar, the
+// list, and the composer at the bottom. The backend only returns Comments
+// the viewer may see.
+export function CommentSection({ roomId, documentId, members, currentUserId }: CommentSectionProps) {
+  const comments = useComments(roomId, documentId, true);
+  const saveComment = useSaveComment(roomId, documentId);
+  const deleteComment = useDeleteComment(roomId, documentId);
+  const [filters, setFilters] = useState<CommentFilters>(DEFAULT_COMMENT_FILTERS);
+
+  const all = useMemo(() => comments.data ?? [], [comments.data]);
+  const shown = useMemo(() => applyCommentFilters(all, filters, members), [all, filters, members]);
+  const authorOptions = useMemo(() => commentAuthors(all, members), [all, members]);
+  const savingId = saveComment.isPending ? saveComment.variables?.commentId : undefined;
+
+  return (
+    <Card withBorder radius="md" w="100%" p={{ base: 'md', sm: 'lg', lg: 'xl' }}>
+      <Stack gap="md">
+        <Group gap="xs">
+          <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
+            Commenti
+          </Title>
+          {all.length > 0 && (
+            <Badge variant="light" color="gray">
+              {all.length}
+            </Badge>
+          )}
+        </Group>
+
+        {comments.isLoading ? (
+          <Group justify="center" py="md">
+            <Loader color="accent" size="sm" />
+          </Group>
+        ) : comments.isError ? (
+          <Text c="red" size="sm">
+            Impossibile caricare i commenti.
+          </Text>
+        ) : all.length === 0 ? (
+          <Stack align="center" gap="xs" py="lg">
+            <ChatCircleDotsIcon size={40} weight="duotone" color="var(--text-muted)" />
+            <Text c="dimmed" size="sm">
+              Nessun commento ancora. Scrivi il primo!
+            </Text>
+          </Stack>
+        ) : (
+          <Stack gap="md">
+            <CommentToolbar filters={filters} onChange={setFilters} authorOptions={authorOptions} />
+            {shown.length < all.length && (
+              <Text size="xs" c="dimmed">
+                {shown.length} di {all.length} commenti
+              </Text>
+            )}
+            {shown.length === 0 ? (
+              <Stack align="center" gap="xs" py="md">
+                <Text c="dimmed" size="sm">
+                  Nessun commento corrisponde ai filtri.
+                </Text>
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  onClick={() => setFilters({ ...DEFAULT_COMMENT_FILTERS, sort: filters.sort })}
+                >
+                  Azzera filtri
+                </Button>
+              </Stack>
+            ) : (
+              <Stack gap="md" data-testid="comment-list">
+                {shown.map((comment) => (
+                  <CommentItem
+                    key={comment.id}
+                    comment={comment}
+                    members={members}
+                    currentUserId={currentUserId}
+                    updating={savingId === comment.id}
+                    onUpdate={(values, onDone) =>
+                      saveComment.mutate(
+                        { commentId: comment.id, values },
+                        {
+                          onSuccess: (result) => {
+                            reportImageErrors(result);
+                            onDone();
+                          },
+                          onError: notifyError,
+                        },
+                      )
+                    }
+                    deleting={deleteComment.isPending && deleteComment.variables === comment.id}
+                    onDelete={() => deleteComment.mutate(comment.id, { onError: notifyError })}
+                  />
+                ))}
+              </Stack>
+            )}
+          </Stack>
+        )}
+
+        <Divider />
+
+        <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="new-comment">
+          <UserAvatar name={displayNameFor(members, currentUserId)} size="md" mt={2} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <CommentComposer
+              members={members}
+              currentUserId={currentUserId}
+              submitLabel="Pubblica"
+              submitting={saveComment.isPending && savingId === undefined}
+              onSubmit={(values, reset) =>
+                saveComment.mutate(
+                  { values },
+                  {
+                    onSuccess: (result) => {
+                      reportImageErrors(result);
+                      reset();
+                    },
+                    onError: notifyError,
+                  },
+                )
+              }
+            />
+          </div>
+        </Group>
+      </Stack>
+    </Card>
+  );
+}

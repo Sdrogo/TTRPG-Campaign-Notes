@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.auth import jwt as auth_jwt
 from app.config import settings
+from app.db import storage
 from app.db.session import engine, get_session
 from app.main import app
 
@@ -70,3 +71,21 @@ async def db_session() -> AsyncIterator[AsyncSession]:
             finally:
                 app.dependency_overrides.pop(get_session, None)
         await outer_transaction.rollback()
+
+
+@pytest.fixture
+def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
+    """In-memory stand-in for Supabase Storage: DB changes in these tests
+    are rolled back (conftest.db_session), but real bucket uploads would
+    not be, so Storage is faked here and verified live separately."""
+    objects: dict[str, bytes] = {}
+
+    async def fake_upload(path: str, data: bytes, content_type: str) -> None:
+        objects[path] = data
+
+    async def fake_remove(path: str) -> None:
+        objects.pop(path, None)
+
+    monkeypatch.setattr(storage, "upload", fake_upload)
+    monkeypatch.setattr(storage, "remove", fake_remove)
+    return objects

@@ -1,26 +1,13 @@
 import { useState } from 'react';
 import { Button, FileButton, Group, Stack, Text, TextInput } from '@mantine/core';
 import { LinkIcon, UploadSimpleIcon } from '@phosphor-icons/react';
-
-// Mirrors the backend's accepted formats (app/domain/images.py). The backend
-// re-validates the actual bytes and scales large images down, so this is
-// only a convenience filter for the file picker.
-const ACCEPTED_TYPES = 'image/png,image/jpeg,image/webp,image/gif';
+import { ACCEPTED_IMAGE_TYPES, isHttpUrl } from '../lib/images';
 
 interface AddDocumentImagesProps {
   onUploadFiles: (files: File[]) => void;
   uploading: boolean;
   onImportUrl: (url: string, onDone: () => void) => void;
   importing: boolean;
-}
-
-function isHttpUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
 }
 
 export function AddDocumentImages({
@@ -45,7 +32,7 @@ export function AddDocumentImages({
               onUploadFiles(files);
             }
           }}
-          accept={ACCEPTED_TYPES}
+          accept={ACCEPTED_IMAGE_TYPES}
           multiple
         >
           {(props) => (
