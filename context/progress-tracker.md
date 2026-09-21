@@ -4,17 +4,22 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- **Setup + Auth unit complete** (2026-09-21). The user confirmed a real
-  Google login on the running `HomePage`: Supabase issued a session
-  (`andreapartenope@gmail.com`) and the backend's `/auth/me` verified the
-  JWT and returned the matching `id`/`email` (UC-01, FR-A1, FR-A2 all
-  satisfied end to end). Next unit is Rooms + Membership.
+- **Setup + Auth unit complete** (2026-09-21).
+- **Rooms + Membership unit complete** (2026-09-21, branch
+  `feature/rooms_and_membership`): backend (domain, schema/migrations,
+  API) and frontend (create Room, generate/accept invite link, Room
+  list) are both done. The user verified Room creation and the invite
+  link flow live in the browser. UC-02 and UC-04 are satisfied end to
+  end. Next unit: UC-05 (manage members/roles).
 
 ## Current Goal
 
-- Rooms + Membership (UC-02, UC-04): a signed-in user can create a Room
-  (becoming Administrator + Master, with default Tags created) or join
-  one via an invite link (becoming Player by default).
+- Manage members and roles (UC-05, FR-R4, FR-R5, FR-R7): an
+  Administrator changes a member's role, assigns/revokes
+  Administrator, designates a new Master, and removes a member — with
+  D-16's guard (last Master / last Administrator can't leave or be
+  demoted without a successor) enforced in the domain layer, not just
+  the UI.
 
 ## Completed
 
@@ -117,6 +122,69 @@ Update this file after every meaningful implementation change.
   `HomePage`; Supabase issued a session and the backend's `GET
   /auth/me` verified the JWT and returned the matching `id`/`email`.
   Closes UC-01, FR-A1, FR-A2 and the Setup + Auth unit end to end.
+- **Rooms + Membership backend (2026-09-21, branch
+  `feature/rooms_and_membership`):**
+  - **Backend Data Access decision**: direct Postgres access via
+    SQLAlchemy 2.0 async (`asyncpg` driver) + Alembic, instead of
+    Supabase's REST client — documented in `architecture.md` with the
+    reasoning (atomic multi-table writes, e.g. Invariant 7's AuditLog
+    requirement, aren't possible through PostgREST without pushing
+    logic into Postgres functions). Connects through Supabase's
+    **Session Pooler**, not Direct Connection — the direct host only
+    has an IPv6 DNS record, unreachable from this network.
+  - Schema (`backend/migrations/`): `rooms`, `memberships`, `tags`,
+    `invitations` tables in `public`. User-referencing columns
+    (`created_by`, `user_id`) deliberately have **no DB-level FK to
+    `auth.users`** — that id always comes from a verified JWT, and a
+    real FK broke integration tests using synthetic user ids (see
+    `architecture.md`). Confirmed empty `public` schema before
+    creating anything (the same Supabase project was previously used
+    by an unrelated prototype, `TTRPG_Companion/`, on this machine).
+  - Domain layer (`app/domain/rooms.py`, `app/domain/invitations.py`):
+    pure, DB-free functions — `plan_new_room` (creator becomes
+    Master + Administrator, 4 default Tags per D-14/FR-N1: NPC, Place,
+    Event, Artifact, category "Type"), `plan_new_invitation`,
+    `check_invitation_usable` (rejects revoked/expired), and
+    `plan_accepted_membership` (rejects joining twice). Fully unit
+    tested with no database involved (`tests/test_domain_*.py`).
+  - API (`app/api/rooms.py`, `app/api/invitations.py`): `POST /rooms`,
+    `GET /rooms` (mine, with role), `POST /rooms/{id}/invitations`
+    (Administrator-only), `POST /invitations/{code}/accept`.
+  - Integration tests (`tests/test_rooms_api.py`) run against the real
+    Supabase DB, each wrapped in a savepoint that's rolled back after
+    the test (`tests/conftest.py::db_session`) so nothing persists.
+    Needed an async `httpx` client instead of the sync `TestClient`
+    (mixing a sync-driven ASGI portal with an async DB connection from
+    a different event loop broke asyncpg), and
+    `asyncio_default_fixture_loop_scope = "session"` in `pyproject.toml`
+    so the module-level DB engine survives across tests.
+  - mypy strict, ruff, and pytest (21/21) all pass.
+- **Rooms + Membership frontend (2026-09-21, branch
+  `feature/rooms_and_membership`):**
+  - `src/types/room.ts` (`Room`, `MyRoom`, `Invitation`) and
+    `src/hooks/useRooms.ts` (TanStack Query: `useMyRooms`,
+    `useCreateRoom`, `useCreateInvitation`, `useAcceptInvitation`),
+    mapping the backend's snake_case JSON to camelCase domain types at
+    the API boundary.
+  - `src/lib/apiClient.ts`'s `apiFetch` extended with a `json` option
+    (serializes body + sets `Content-Type`) to support POST mutations,
+    used by all the hooks above.
+  - Components: `RoleTag` (the app-specific badge `ui-context.md`
+    calls out by name), `CreateRoomModal`, `InviteModal` (role picker
+    plus a generated link with copy-to-clipboard), `RoomCard`.
+  - Pages: `RoomsPage` ("my Rooms" grid and create action), replacing
+    the old JSON-dump placeholder on `HomePage`; `AcceptInvitePage` at
+    a new route `/invite/:code` that auto-accepts once signed in.
+    Removed `useCurrentUser`/`types/auth.ts` (the Auth unit's debug
+    dump), no longer used once `RoomsPage` became the real
+    authenticated view.
+  - `npm run build` (strict TS) and `npm run lint` pass; a Playwright
+    regression check confirmed the signed-out screen still renders
+    correctly with no console errors. The authenticated flow itself
+    (create Room, generate/accept invite) couldn't be driven
+    headlessly — no password-login path exists by design (Google-only,
+    D-07) — so it was verified live by the user instead, who confirmed
+    both Room creation and the invite-link flow work.
 
 ## In Progress
 
@@ -124,19 +192,28 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. Rooms + Membership (UC-02, UC-04): create a Room (creator becomes
-   Administrator + Master, default Tags created per D-14/FR-N1),
-   generate/accept an invite (FR-R2, FR-R3), join with the Player role
-   by default. Implements the working proposals for OQ-09/OQ-10 from
-   `requirements.md` §6 (still marked provisional there) — flag it
-   explicitly if anything in this slice needs the proposal firmed up
-   into a `D-` decision first.
+1. UC-05 · Manage members and roles: an Administrator changes a
+   member's role, assigns/revokes Administrator, designates a new
+   Master, and removes a member (FR-R4, FR-R5). Must enforce D-16 in
+   the domain layer: the last Administrator can't leave/be demoted,
+   and the last Master can't leave/be demoted, without a successor
+   named first (FR-R7) — this is Invariant 5 in `architecture.md` and
+   needs a domain-layer test proving it's rejected, not just documented.
+   Needs a Room detail/members view on the frontend that doesn't exist
+   yet (so far only the Room list card exists).
+2. After that: Documents (FR-D1–D4, D-05, D-12) — the first unit
+   without an existing OQ blocking it, once OQ-11 (Details) is
+   resolved, which Documents needs for D-18/FR-D3.
 
 ## Open Questions
 
-- OQ-09 · OQ-10 · OQ-11 · OQ-12 from `requirements.md` (section 6)
-  are not yet resolved — flagged here as a reminder they block the
-  Rooms/Membership and Documents/Details units, not the Auth unit.
+- OQ-09 · OQ-10 from `requirements.md` (section 6) are still formally
+  unresolved (no `D-` number assigned), though the Rooms/Membership
+  unit now implements their documented working proposals end to end
+  (creator = Administrator + Master on creation; the last-
+  Administrator/last-Master successor requirement from OQ-10/D-16
+  itself is Next Up #1, not yet built). OQ-11/OQ-12 (Details, extra
+  Threads) still block the Documents/Details unit specifically.
 - RLS as defense-in-depth (`architecture.md` → Open items): decide
   before or after the MVP ships.
 - Agent export format, JSON vs. Markdown vs. both
@@ -159,6 +236,11 @@ Update this file after every meaningful implementation change.
 - Mono-repo layout (`/frontend`, `/backend`, `/context`) — simpler to
   keep the context files in sync with a single-person/small-team
   build than two repos each carrying their own copy.
+- Backend talks to Postgres directly via SQLAlchemy async + Alembic,
+  not Supabase's REST/`supabase-py` client, and app tables have no
+  DB-level FK to `auth.users` — full reasoning in `architecture.md` →
+  Backend Data Access (added 2026-09-21 with the Rooms/Membership
+  slice).
 
 ## Session Notes
 

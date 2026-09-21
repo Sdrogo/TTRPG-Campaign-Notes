@@ -1,12 +1,11 @@
-import { Stack, Title, Text, Button, Loader, Code } from '@mantine/core';
+import { Stack, Group, Title, Text, Button, Loader } from '@mantine/core';
 import { BookOpen, GoogleLogo } from '@phosphor-icons/react';
 import { supabase } from '../lib/supabaseClient';
 import { useSession } from '../hooks/useSession';
-import { useCurrentUser } from '../hooks/useCurrentUser';
+import { RoomsPage } from './RoomsPage';
 
 export function HomePage() {
   const { session, loading: sessionLoading } = useSession();
-  const currentUser = useCurrentUser(Boolean(session));
 
   const signInWithGoogle = () => {
     void supabase.auth.signInWithOAuth({ provider: 'google' });
@@ -16,41 +15,47 @@ export function HomePage() {
     void supabase.auth.signOut();
   };
 
+  if (sessionLoading) {
+    return (
+      <Stack align="center" justify="center" style={{ minHeight: '100svh' }}>
+        <Loader color="accent" />
+      </Stack>
+    );
+  }
+
+  if (!session) {
+    return (
+      <Stack align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
+        <BookOpen size={48} weight="duotone" color="var(--text-muted)" />
+        <Title order={1} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
+          TTRPG Campaign Notes
+        </Title>
+        <Text c="dimmed" ta="center">
+          Accedi per continuare.
+        </Text>
+        <Button leftSection={<GoogleLogo size={20} />} onClick={signInWithGoogle}>
+          Accedi con Google
+        </Button>
+      </Stack>
+    );
+  }
+
   return (
-    <Stack align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
-      <BookOpen size={48} weight="duotone" color="var(--text-muted)" />
-      <Title order={1} ta="center">
-        TTRPG Campaign Notes
-      </Title>
-
-      {sessionLoading && <Loader color="accent" />}
-
-      {!sessionLoading && !session && (
-        <>
-          <Text c="dimmed" ta="center">
-            Accedi per continuare.
+    <Stack gap={0}>
+      <Group justify="space-between" p="md" style={{ borderBottom: '1px solid var(--border-default)' }}>
+        <Title order={3} style={{ fontFamily: 'var(--font-display)' }}>
+          TTRPG Campaign Notes
+        </Title>
+        <Group gap="sm">
+          <Text c="dimmed" size="sm">
+            {session.user.email}
           </Text>
-          <Button leftSection={<GoogleLogo size={20} />} onClick={signInWithGoogle}>
-            Accedi con Google
-          </Button>
-        </>
-      )}
-
-      {!sessionLoading && session && (
-        <>
-          <Text ta="center">Sessione attiva: {session.user.email}</Text>
-          {currentUser.isLoading && <Text c="dimmed">Verifica lato backend in corso…</Text>}
-          {currentUser.isError && (
-            <Text c="red">Errore nella verifica backend: {String(currentUser.error)}</Text>
-          )}
-          {currentUser.data && (
-            <Code block>{JSON.stringify(currentUser.data, null, 2)}</Code>
-          )}
-          <Button variant="outline" onClick={signOut}>
+          <Button variant="outline" size="xs" onClick={signOut}>
             Esci
           </Button>
-        </>
-      )}
+        </Group>
+      </Group>
+      <RoomsPage />
     </Stack>
   );
 }
