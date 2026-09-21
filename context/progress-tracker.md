@@ -5,18 +5,21 @@ Update this file after every meaningful implementation change.
 ## Current Phase
 
 - **Setup + Auth unit complete** (2026-09-21).
-- **Rooms + Membership backend complete** (2026-09-21, on branch
-  `feature/rooms_and_membership`): domain logic, DB schema/migrations,
-  and API routes for creating a Room and inviting/joining are done and
-  tested against the real Supabase Postgres instance. The frontend for
-  this unit (Room creation UI, invite flow, Room list) has not been
-  built yet — see Next Up.
+- **Rooms + Membership unit complete** (2026-09-21, branch
+  `feature/rooms_and_membership`): backend (domain, schema/migrations,
+  API) and frontend (create Room, generate/accept invite link, Room
+  list) are both done. The user verified Room creation and the invite
+  link flow live in the browser. UC-02 and UC-04 are satisfied end to
+  end. Next unit: UC-05 (manage members/roles).
 
 ## Current Goal
 
-- Rooms + Membership frontend: UI for creating a Room, generating and
-  accepting an invite link, and listing "my Rooms" with role, wired to
-  the backend endpoints below.
+- Manage members and roles (UC-05, FR-R4, FR-R5, FR-R7): an
+  Administrator changes a member's role, assigns/revokes
+  Administrator, designates a new Master, and removes a member — with
+  D-16's guard (last Master / last Administrator can't leave or be
+  demoted without a successor) enforced in the domain layer, not just
+  the UI.
 
 ## Completed
 
@@ -156,6 +159,32 @@ Update this file after every meaningful implementation change.
     `asyncio_default_fixture_loop_scope = "session"` in `pyproject.toml`
     so the module-level DB engine survives across tests.
   - mypy strict, ruff, and pytest (21/21) all pass.
+- **Rooms + Membership frontend (2026-09-21, branch
+  `feature/rooms_and_membership`):**
+  - `src/types/room.ts` (`Room`, `MyRoom`, `Invitation`) and
+    `src/hooks/useRooms.ts` (TanStack Query: `useMyRooms`,
+    `useCreateRoom`, `useCreateInvitation`, `useAcceptInvitation`),
+    mapping the backend's snake_case JSON to camelCase domain types at
+    the API boundary.
+  - `src/lib/apiClient.ts`'s `apiFetch` extended with a `json` option
+    (serializes body + sets `Content-Type`) to support POST mutations,
+    used by all the hooks above.
+  - Components: `RoleTag` (the app-specific badge `ui-context.md`
+    calls out by name), `CreateRoomModal`, `InviteModal` (role picker
+    plus a generated link with copy-to-clipboard), `RoomCard`.
+  - Pages: `RoomsPage` ("my Rooms" grid and create action), replacing
+    the old JSON-dump placeholder on `HomePage`; `AcceptInvitePage` at
+    a new route `/invite/:code` that auto-accepts once signed in.
+    Removed `useCurrentUser`/`types/auth.ts` (the Auth unit's debug
+    dump), no longer used once `RoomsPage` became the real
+    authenticated view.
+  - `npm run build` (strict TS) and `npm run lint` pass; a Playwright
+    regression check confirmed the signed-out screen still renders
+    correctly with no console errors. The authenticated flow itself
+    (create Room, generate/accept invite) couldn't be driven
+    headlessly — no password-login path exists by design (Google-only,
+    D-07) — so it was verified live by the user instead, who confirmed
+    both Room creation and the invite-link flow work.
 
 ## In Progress
 
@@ -163,28 +192,28 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. Rooms + Membership **frontend** (UC-02, UC-04): a "Create Room" form
-   (`POST /rooms`), an invite-generation action for Administrators
-   (`POST /rooms/{id}/invitations`) and an accept-invite screen/route
-   (`POST /invitations/{code}/accept`), and a Room list on `HomePage`
-   or a new route (`GET /rooms`) replacing today's static placeholder.
-   `src/types/room.ts` for the shared Room/Membership/Invitation
-   shapes, `src/hooks/` for the TanStack Query mutations/queries per
-   `code-standards.md`.
-2. After that, this unit is done. Next slice after it: UC-05 (manage
-   members/roles, designate a new Master/Administrator, D-16's
-   last-Master/last-Administrator protection) — deliberately deferred
-   out of this slice.
+1. UC-05 · Manage members and roles: an Administrator changes a
+   member's role, assigns/revokes Administrator, designates a new
+   Master, and removes a member (FR-R4, FR-R5). Must enforce D-16 in
+   the domain layer: the last Administrator can't leave/be demoted,
+   and the last Master can't leave/be demoted, without a successor
+   named first (FR-R7) — this is Invariant 5 in `architecture.md` and
+   needs a domain-layer test proving it's rejected, not just documented.
+   Needs a Room detail/members view on the frontend that doesn't exist
+   yet (so far only the Room list card exists).
+2. After that: Documents (FR-D1–D4, D-05, D-12) — the first unit
+   without an existing OQ blocking it, once OQ-11 (Details) is
+   resolved, which Documents needs for D-18/FR-D3.
 
 ## Open Questions
 
-- OQ-09 · OQ-10 · OQ-11 · OQ-12 from `requirements.md` (section 6) are
-  still formally unresolved (no `D-` number assigned), though the
-  Rooms/Membership backend now implements OQ-09/OQ-10's documented
-  working proposals (creator = Administrator + Master, last-
-  Administrator can't leave without a successor — the last part not
-  yet built, see Next Up #2). OQ-11/OQ-12 (Details, extra Threads)
-  still block the Documents/Details unit specifically.
+- OQ-09 · OQ-10 from `requirements.md` (section 6) are still formally
+  unresolved (no `D-` number assigned), though the Rooms/Membership
+  unit now implements their documented working proposals end to end
+  (creator = Administrator + Master on creation; the last-
+  Administrator/last-Master successor requirement from OQ-10/D-16
+  itself is Next Up #1, not yet built). OQ-11/OQ-12 (Details, extra
+  Threads) still block the Documents/Details unit specifically.
 - RLS as defense-in-depth (`architecture.md` → Open items): decide
   before or after the MVP ships.
 - Agent export format, JSON vs. Markdown vs. both
