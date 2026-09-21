@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     supabase_url: str = ""
     cors_origins: list[str] = ["http://localhost:5173"]
+    database_url: str = ""
 
     @property
     def supabase_jwks_url(self) -> str:
