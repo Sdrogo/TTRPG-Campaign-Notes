@@ -61,6 +61,22 @@ Update this file after every meaningful implementation change.
   Document card, side-by-side from 992px, no horizontal overflow, zero
   console errors; screenshots checked by eye. Note: Mantine v9 renamed
   `Grid`'s `gutter` prop to `gap`.
+- **Explicit deny policies complete** (2026-09-22, branch
+  `fix/rls_explicit_deny_policies`, uncommitted): Supabase then flagged
+  "RLS enabled, no policy" (info) on each table. Migration
+  `f1c8a2e6d493` adds a restrictive `backend_only_deny_clients` policy
+  (`FOR ALL TO anon, authenticated USING (false) WITH CHECK (false)`)
+  to all 15 `public` tables. It's idempotent, and its downgrade drops
+  only these policies. **Applied to the live DB**, and exercised
+  down/up. Nothing changes for the backend (table owner, not subject to
+  RLS); the Data API still answers 42501. The dashboard's suggested SQL
+  was *not* used: all its snippets were `to authenticated using (true)`,
+  which grants read access instead of denying it. Guard test +2: every
+  table has the deny policy (failed before, passes after), and no
+  permissive policy targets the client roles (proven to catch that
+  exact dashboard snippet, in a rolled-back transaction). Full suite
+  **201/201**, mypy and ruff clean. `code-standards.md` now includes
+  the SQL every table-creating migration must run.
 - **Database lockdown complete** (2026-09-22, backend only): fixed
   Supabase's "RLS Disabled in Public" critical warnings. Every table
   was readable and writable through the Data API with the public key.
@@ -905,10 +921,9 @@ Update this file after every meaningful implementation change.
   (backend-only, no policies; 2026-09-22). Only the question of adding
   *policies* for some future direct client access remains, in
   `architecture.md` → Open items.
-- **Supabase dashboard lints (new, 2026-09-22)**: after the lockdown,
-  re-check Supabase's Security Advisor. Expect the RLS warnings gone. An
-  "RLS enabled, no policy" *info* notice per table is expected and
-  intended (backend-only tables).
+- **Supabase dashboard lints (2026-09-22)**: the "RLS enabled, no policy"
+  notices were addressed with explicit deny policies (see Completed).
+  Re-check Supabase's Security Advisor: no RLS findings should remain.
 - Agent export format, JSON vs. Markdown vs. both
   (`architecture.md` → Open items, FR-G1): decide when the export
   endpoint is designed, not needed for the Auth unit.
