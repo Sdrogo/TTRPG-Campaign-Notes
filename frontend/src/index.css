@@ -41,3 +41,18 @@ body {
 .account-button[data-active] {
   border-color: var(--accent-primary);
 }
+
+/* A Document suggestion in the `#` mention popup: highlighted (arrow keys or
+   hover) like a Mantine combobox option. */
+.mention-option {
+  display: flex;
+  gap: var(--mantine-spacing-xs);
+  align-items: flex-start;
+  padding: 6px var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  cursor: pointer;
+}
+
+.mention-option[data-active] {
+  background: var(--mantine-color-accent-light);
+}

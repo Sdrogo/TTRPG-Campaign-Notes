@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Group, Stack, Textarea } from '@mantine/core';
+import { Button, Group, Stack } from '@mantine/core';
 import { PaperPlaneRightIcon } from '@phosphor-icons/react';
 import { VisibilitySelect } from '../VisibilitySelect';
 import { MemberMultiSelect } from '../MemberMultiSelect';
+import { MentionTextarea } from '../mentions/MentionTextarea';
 import { ImageAttachButtons } from '../ImageAttachButtons';
 import { ImageThumbnailGrid, type Thumbnail } from '../ImageThumbnailGrid';
 import {
@@ -104,11 +105,11 @@ export function CommentComposer({
       }}
     >
       <Stack gap="xs">
-        <Textarea
+        <MentionTextarea
           aria-label="Testo del commento"
-          placeholder="Scrivi un commento…"
+          placeholder="Scrivi un commento… (# per collegare un Documento)"
           value={values.body}
-          onChange={(event) => set({ body: event.currentTarget.value })}
+          onChange={(body) => set({ body })}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
               event.preventDefault();

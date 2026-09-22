@@ -61,6 +61,15 @@ Update this file after every meaningful implementation change.
   Document card, side-by-side from 992px, no horizontal overflow, zero
   console errors; screenshots checked by eye. Note: Mantine v9 renamed
   `Grid`'s `gutter` prop to `gap`.
+- **Quick navigation (Document mentions) complete** (2026-09-22,
+  frontend only, branch `fix/rls_explicit_deny_policies`, uncommitted;
+  spec `context/feature/06 - Quick navigation.md`, first slice of
+  FR-D4): typing `#` at the start of a word in a Document description or
+  a Comment opens a list of the Room's Documents, filtered by name or
+  Tag as you type; picking one (arrows + Enter/Tab, or click) writes
+  `#Document name`, which is shown as an accent-colored link. Build,
+  lint and `npm test` **63/63** pass; headless check 32/32. No backlinks
+  yet (see Open Questions).
 - **Database lockdown complete** (2026-09-22, backend only): fixed
   Supabase's "RLS Disabled in Public" critical warnings. Every table
   was readable and writable through the Data API with the public key.
@@ -813,12 +822,78 @@ Update this file after every meaningful implementation change.
   - New convention in `code-standards.md`: every table-creating
     migration must enable RLS.
 
+- **Quick navigation — Document mentions (2026-09-22, frontend only,
+  branch `fix/rls_explicit_deny_policies`, uncommitted, spec
+  `context/feature/06 - Quick navigation.md`, first slice of FR-D4):**
+  - **Storage decision**: a mention is plain text, `#Document name`, as
+    the spec says. Nothing is stored server-side and no backend changed.
+    Mentions are resolved when rendered, against the Room's Document
+    list, which the backend already filters per viewer. So a mention of
+    a Document you can't see stays plain text and reveals nothing
+    (VR-07). Resolution: a `#` at the start of a word (or after `(`,
+    `[`, `{`), longest matching name wins, case-insensitive, and it
+    must end on a word boundary (`#Rome` doesn't match `#Romeo`).
+    Written up in `architecture.md` → Storage Model → Document mentions.
+  - **Pure logic** (`lib/documentMentions.ts`): `findMentionQuery`
+    (the `#…` being typed at the caret; names can contain spaces, so
+    the query can too), `filterMentionCandidates` (name prefix, then
+    word prefix, then substring, then Tag matches; accent- and
+    case-insensitive; max 8), `insertMention`, `splitMentions`,
+    `mentionKeyAction`, `moveActiveIndex`.
+  - **Reusable components** (`components/mentions/`):
+    `DocumentMentionsProvider` (context with the Room's Documents and
+    Tags, same TanStack queries as the pages, so no extra requests;
+    context in `hooks/useDocumentMentions.ts`), `MentionTextarea`
+    (drop-in for Mantine's `Textarea`: Popover list with name + Tags,
+    arrows, Enter/Tab, click, Esc; ARIA combobox/listbox with
+    `aria-activedescendant`; Ctrl/Cmd+Enter still reaches the Comment
+    composer; the list stays open past a space only while something
+    matches) and `MentionText` (renders mentions as `--accent-primary`
+    links; `linked={false}` for places that are already links). Both
+    fall back to plain behavior without a provider.
+  - **Wired in**: `DocumentFields` description (so both the create
+    modal and the inline editor get it, with a hint line "Scrivi # per
+    collegare un altro Documento."), `CommentComposer` (new and edit;
+    placeholder mentions `#`), `DocumentDetailPage` description,
+    `CommentItem` body, `DocumentCard` description (colored only, since
+    the card is a link). Providers on `DocumentDetailPage` and
+    `RoomDocumentsPage`.
+  - **Tests**: 30 new vitest tests (`lib/documentMentions.test.ts`):
+    query detection, filtering and ranking (incl. Tag search, accents,
+    limit), insertion, parsing (spaces in names, longest match, word
+    boundary, punctuation, mid-word `#`, hidden Documents, adjacent
+    mentions), key mapping and wrap-around. `npm test` **63/63**, `npm
+    run build` and `npm run lint` pass. No component tests: the project
+    has no DOM test setup (testing-library/jsdom), so the UI is covered
+    by the headless check below.
+  - **Headless Playwright check** (faked session, stateful stubbed
+    API): **32/32**. Covered: links and their targets on the Document
+    and on Comments; unknown and mid-word `#` left plain; accent color;
+    bare `#` lists everything; filtering while typing; Tags shown; Enter,
+    Tab and click insert and put the caret after the mention; Tag
+    search; arrow highlight wraps and `aria-activedescendant` follows;
+    focus stays in the textarea after a click; "Nessun Documento
+    trovato"; Esc closes and Enter is a newline again; Ctrl+Enter posts
+    with the list open; the posted Comment renders its links; the
+    description editor's PATCH carries the mention; clicking a mention
+    opens the Document; cards show colored mentions with no nested
+    links; works in the create modal; at 375px no overflow and the list
+    fits (it flips above the field). Zero console errors; screenshots
+    checked by eye. Two issues found and fixed: Mantine's `Anchor` uses
+    a lighter accent shade in dark mode (now pinned to
+    `--accent-primary`), and the Popover's fade made the list
+    half-transparent while typing (transition removed, like Mantine's
+    Combobox). Not yet tried live by a signed-in user.
+
 ## In Progress
 
 - None yet.
 
 ## Next Up
 
+0. Mention backlinks (rest of FR-D4): store mentions server-side on
+   save, show "Mentioned in" on the Document page (filtered per viewer),
+   and decide whether mentions should survive a rename.
 1. Rest of Threads on top of the new `posts` table: nested replies
    (FR-T1/T2) with D-17/VR-04's "never wider than the parent" check in
    the domain layer (Invariant 3), and pagination (FR-T3) if Comment
@@ -909,6 +984,14 @@ Update this file after every meaningful implementation change.
   re-check Supabase's Security Advisor. Expect the RLS warnings gone. An
   "RLS enabled, no policy" *info* notice per table is expected and
   intended (backend-only tables).
+- **Document mentions: choices to confirm (new, 2026-09-22)**:
+  (a) mentions are stored as plain `#Name` text, so **renaming a
+  Document breaks existing mentions** of it, and two Documents with the
+  same name resolve to the first one; (b) **no backlinks** yet (FR-D4
+  asks for them), which will need mentions stored server-side (see
+  `architecture.md` → Open items); (c) the list shows at most 8
+  Documents, and a Document can mention itself. Change any of these
+  if they don't fit.
 - Agent export format, JSON vs. Markdown vs. both
   (`architecture.md` → Open items, FR-G1): decide when the export
   endpoint is designed, not needed for the Auth unit.

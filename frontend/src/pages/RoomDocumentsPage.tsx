@@ -11,6 +11,7 @@ import { DocumentCard } from '../components/DocumentCard';
 import { CreateDocumentModal } from '../components/CreateDocumentModal';
 import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
+import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 
 export function RoomDocumentsPage() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -46,49 +47,51 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
 
   return (
     <PageLayout backTo="/" backLabel="Le mie Stanze">
-      <Group justify="space-between">
-        <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
-          Documenti{room.data ? ` — ${room.data.name}` : ''}
-        </Title>
-        {canCreateDocument && (
-          <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>
-            Crea Documento
-          </Button>
+      <DocumentMentionsProvider roomId={roomId}>
+        <Group justify="space-between">
+          <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
+            Documenti{room.data ? ` — ${room.data.name}` : ''}
+          </Title>
+          {canCreateDocument && (
+            <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>
+              Crea Documento
+            </Button>
+          )}
+        </Group>
+
+        {isMaster && room.data && (
+          <Switch
+            label="I Player possono creare Documenti"
+            checked={room.data.playersCanCreateDocuments}
+            onChange={(event) => updateSettings.mutate(event.currentTarget.checked)}
+          />
         )}
-      </Group>
 
-      {isMaster && room.data && (
-        <Switch
-          label="I Player possono creare Documenti"
-          checked={room.data.playersCanCreateDocuments}
-          onChange={(event) => updateSettings.mutate(event.currentTarget.checked)}
+        {documents.isLoading && <Loader color="accent" />}
+        {documents.isError && <Text c="red">Errore nel caricamento dei Documenti.</Text>}
+        {documents.data && documents.data.length === 0 && (
+          <Text c="dimmed">Nessun Documento ancora. Creane uno per iniziare.</Text>
+        )}
+        {documents.data && documents.data.length > 0 && (
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+            {documents.data.map((document) => (
+              <DocumentCard
+                key={document.id}
+                document={document}
+                roomId={roomId}
+                tags={tags.data ?? []}
+                members={members.data ?? []}
+              />
+            ))}
+          </SimpleGrid>
+        )}
+
+        <CreateDocumentModal
+          opened={createOpened}
+          onClose={() => setCreateOpened(false)}
+          roomId={roomId}
         />
-      )}
-
-      {documents.isLoading && <Loader color="accent" />}
-      {documents.isError && <Text c="red">Errore nel caricamento dei Documenti.</Text>}
-      {documents.data && documents.data.length === 0 && (
-        <Text c="dimmed">Nessun Documento ancora. Creane uno per iniziare.</Text>
-      )}
-      {documents.data && documents.data.length > 0 && (
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-          {documents.data.map((document) => (
-            <DocumentCard
-              key={document.id}
-              document={document}
-              roomId={roomId}
-              tags={tags.data ?? []}
-              members={members.data ?? []}
-            />
-          ))}
-        </SimpleGrid>
-      )}
-
-      <CreateDocumentModal
-        opened={createOpened}
-        onClose={() => setCreateOpened(false)}
-        roomId={roomId}
-      />
+      </DocumentMentionsProvider>
     </PageLayout>
   );
 }

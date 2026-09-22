@@ -156,6 +156,24 @@ other icon set.
   picker, URL popover) and previews them as removable 72px thumbnails
   before posting. Deletion confirms in a small popover, like image
   deletion, and warns when the Comment's images will go too.
+- **Document mentions** (built 2026-09-22, `components/mentions/`, spec
+  `06 - Quick navigation`): wherever a user writes free text (Document
+  description, Comment body) use `MentionTextarea` instead of Mantine's
+  `Textarea`. Typing `#` at the start of a word opens a list below the
+  field (flips above when there's no room), as wide as the field, on the
+  Popover surface: up to 8 of the Room's Documents, each with a 16px
+  `FileText` icon, its name and its Tags (`#Tag`, muted, one line),
+  filtered by name or Tag as you type (case- and accent-insensitive).
+  Arrows move the highlight (`--mantine-color-accent-light` background,
+  wraps around), Enter/Tab or a click inserts `#Document name `, Esc
+  closes; Ctrl/Cmd+Enter still submits a Comment. No open/close
+  animation, like Mantine's Combobox. Wherever that text is shown, use
+  `MentionText`: mentions become links in `--accent-primary` (the whole
+  `#Name`, underline on hover). Inside something that is already a link
+  (`DocumentCard`) pass `linked={false}`: same color, no link. Both need
+  a `DocumentMentionsProvider roomId={…}` above them (the Document page
+  and the Documents list have one); without it they behave as a plain
+  textarea / plain text.
 - **Modals**: centered overlay with backdrop blur, used for Room
   creation, invitations, and the Reveal confirmation (Reveal is
   destructive/irreversible in effect, so it always confirms in a
