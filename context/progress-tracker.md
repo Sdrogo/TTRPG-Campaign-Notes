@@ -62,7 +62,7 @@ Update this file after every meaningful implementation change.
   console errors; screenshots checked by eye. Note: Mantine v9 renamed
   `Grid`'s `gutter` prop to `gap`.
 - **Explicit deny policies complete** (2026-09-22, branch
-  `fix/rls_explicit_deny_policies`, uncommitted): Supabase then flagged
+  `fix/rls_explicit_deny_policies`, merged into `main` in PR #4): Supabase then flagged
   "RLS enabled, no policy" (info) on each table. Migration
   `f1c8a2e6d493` adds a restrictive `backend_only_deny_clients` policy
   (`FOR ALL TO anon, authenticated USING (false) WITH CHECK (false)`)
@@ -77,6 +77,22 @@ Update this file after every meaningful implementation change.
   exact dashboard snippet, in a rolled-back transaction). Full suite
   **201/201**, mypy and ruff clean. `code-standards.md` now includes
   the SQL every table-creating migration must run.
+- **Quick navigation (Document mentions) complete** (2026-09-22,
+  frontend only, branch `feature/quick_navigation`;
+  spec `context/feature/06 - Quick navigation.md`, first slice of
+  FR-D4): typing `#` at the start of a word in a Document description or
+  a Comment opens a list of the Room's Documents, filtered by name or
+  Tag as you type; picking one (arrows + Enter/Tab, or click) writes
+  `#Document name`, which is shown as an accent-colored link. Build,
+  lint and `npm test` **63/63** pass; headless check 32/32. No backlinks
+  yet (see Open Questions).
+- **Quick navigation refinement complete** (2026-09-22, frontend only,
+  same branch; spec `context/feature/06_1 - Quick
+  navigation refnment.md`): Tags can be mentioned too (`#Tag` opens the
+  Documents list filtered by that Tag, via a new URL-bound Tag filter),
+  and when nothing matches the popup can create the typed name as a
+  blank Document or a Tag, with a switch. Build, lint and `npm test`
+  **84/84** pass; headless checks 32/32 (new) + 32/32 (regression).
 - **Database lockdown complete** (2026-09-22, backend only): fixed
   Supabase's "RLS Disabled in Public" critical warnings. Every table
   was readable and writable through the Data API with the public key.
@@ -829,12 +845,144 @@ Update this file after every meaningful implementation change.
   - New convention in `code-standards.md`: every table-creating
     migration must enable RLS.
 
+- **Quick navigation — Document mentions (2026-09-22, frontend only,
+  branch `feature/quick_navigation`, spec
+  `context/feature/06 - Quick navigation.md`, first slice of FR-D4):**
+  - **Storage decision**: a mention is plain text, `#Document name`, as
+    the spec says. Nothing is stored server-side and no backend changed.
+    Mentions are resolved when rendered, against the Room's Document
+    list, which the backend already filters per viewer. So a mention of
+    a Document you can't see stays plain text and reveals nothing
+    (VR-07). Resolution: a `#` at the start of a word (or after `(`,
+    `[`, `{`), longest matching name wins, case-insensitive, and it
+    must end on a word boundary (`#Rome` doesn't match `#Romeo`).
+    Written up in `architecture.md` → Storage Model → Document mentions.
+  - **Pure logic** (`lib/documentMentions.ts`): `findMentionQuery`
+    (the `#…` being typed at the caret; names can contain spaces, so
+    the query can too), `filterMentionCandidates` (name prefix, then
+    word prefix, then substring, then Tag matches; accent- and
+    case-insensitive; max 8), `insertMention`, `splitMentions`,
+    `mentionKeyAction`, `moveActiveIndex`.
+  - **Reusable components** (`components/mentions/`):
+    `DocumentMentionsProvider` (context with the Room's Documents and
+    Tags, same TanStack queries as the pages, so no extra requests;
+    context in `hooks/useDocumentMentions.ts`), `MentionTextarea`
+    (drop-in for Mantine's `Textarea`: Popover list with name + Tags,
+    arrows, Enter/Tab, click, Esc; ARIA combobox/listbox with
+    `aria-activedescendant`; Ctrl/Cmd+Enter still reaches the Comment
+    composer; the list stays open past a space only while something
+    matches) and `MentionText` (renders mentions as `--accent-primary`
+    links; `linked={false}` for places that are already links). Both
+    fall back to plain behavior without a provider.
+  - **Wired in**: `DocumentFields` description (so both the create
+    modal and the inline editor get it, with a hint line "Scrivi # per
+    collegare un altro Documento."), `CommentComposer` (new and edit;
+    placeholder mentions `#`), `DocumentDetailPage` description,
+    `CommentItem` body, `DocumentCard` description (colored only, since
+    the card is a link). Providers on `DocumentDetailPage` and
+    `RoomDocumentsPage`.
+  - **Tests**: 30 new vitest tests (`lib/documentMentions.test.ts`):
+    query detection, filtering and ranking (incl. Tag search, accents,
+    limit), insertion, parsing (spaces in names, longest match, word
+    boundary, punctuation, mid-word `#`, hidden Documents, adjacent
+    mentions), key mapping and wrap-around. `npm test` **63/63**, `npm
+    run build` and `npm run lint` pass. No component tests: the project
+    has no DOM test setup (testing-library/jsdom), so the UI is covered
+    by the headless check below.
+  - **Headless Playwright check** (faked session, stateful stubbed
+    API): **32/32**. Covered: links and their targets on the Document
+    and on Comments; unknown and mid-word `#` left plain; accent color;
+    bare `#` lists everything; filtering while typing; Tags shown; Enter,
+    Tab and click insert and put the caret after the mention; Tag
+    search; arrow highlight wraps and `aria-activedescendant` follows;
+    focus stays in the textarea after a click; "Nessun Documento
+    trovato"; Esc closes and Enter is a newline again; Ctrl+Enter posts
+    with the list open; the posted Comment renders its links; the
+    description editor's PATCH carries the mention; clicking a mention
+    opens the Document; cards show colored mentions with no nested
+    links; works in the create modal; at 375px no overflow and the list
+    fits (it flips above the field). Zero console errors; screenshots
+    checked by eye. Two issues found and fixed: Mantine's `Anchor` uses
+    a lighter accent shade in dark mode (now pinned to
+    `--accent-primary`), and the Popover's fade made the list
+    half-transparent while typing (transition removed, like Mantine's
+    Combobox). Not yet tried live by a signed-in user.
+
+- **Quick navigation refinement (2026-09-22, frontend only, branch
+  `feature/quick_navigation`, spec
+  `context/feature/06_1 - Quick navigation refnment.md`):**
+  - **Tag mentions**: the popup now lists Tags as well as Documents
+    (`MentionTarget` union: a Document with its Tags, or a Tag with how
+    many visible Documents carry it). Ranking: name prefix, word prefix,
+    substring, then Documents matched only through a Tag; a Document
+    comes before a Tag on a tie. Picking a Tag writes `#Tag`.
+    `splitMentions` resolves Tags too (Document wins a same-name tie),
+    and `MentionText` links a Tag mention to
+    `/rooms/{id}/documents?tag={tagId}` (`mentionHref`,
+    `documentsWithTagsHref`).
+  - **Documents list filtered by Tag**: `RoomDocumentsPage` reads
+    `?tag=` (repeatable, AND; `lib/documentFilters.ts::filterDocumentsByTags`)
+    and shows a new reusable `TagFilter` (URL-bound `MultiSelect`), plus
+    "Nessun Documento con questo Tag." / "Mostra tutti" when empty. Also
+    a first slice of FR-N2 (filter by one or more Tags).
+  - **Create from the popup**: when nothing matches, a create row offers
+    the typed name as a **blank Document** (only `name`, so Room
+    visibility — the user's choice; see Open Questions) or a **Tag**,
+    with a Documento/Tag switch. Only what the backend would allow is
+    offered (`lib/roomPermissions.ts`: `canCreateDocuments` — D-13;
+    `canManageTags` — Master or Administrator); nothing allowed = just
+    "Nessun risultato". A plain Enter never creates (reach the row with
+    ↓, ←/→ switch kind, Enter creates), so typing `#word` + newline
+    doesn't create anything by accident. After the request succeeds the
+    `#query` is replaced with `#Name` only if it's still unchanged in the
+    text; errors show a notification. `DocumentMentionsProvider` now
+    takes `currentUserId` and exposes `canCreateDocument`,
+    `canCreateTag` and `create()`.
+  - **Popup behavior changes**: it stays open past a space while
+    something matches *or can be created* (so multi-word names can be
+    created), but never while writing prose after a finished mention
+    (`isFinishedMention`). Esc or a pick closes it for that `#` until the
+    caret leaves the mention (was: until the query changed).
+    `mentionKeyAction` now takes the popup state (list / create row /
+    highlighted). The popup content moved to `MentionSuggestions.tsx`.
+    `RoomDocumentsPage` reuses `canCreateDocuments` instead of its
+    inline rule.
+  - **Bug found in the check and fixed**: the kind switch was first a
+    Mantine `SegmentedControl`. Clicking it moved the focus to its hidden
+    radio input, which blurred the textarea and closed the popup. It is
+    now two plain buttons (`aria-pressed`), which don't take the focus.
+  - **Tests**: vitest **84/84** (+21): Tag candidates and counts,
+    Document-before-Tag ordering, Tag mentions in `splitMentions`, links,
+    `isFinishedMention`, creatable kinds, name cleanup, the new key
+    states (plain Enter never creates), `roomPermissions`,
+    `filterDocumentsByTags`. `npm run build` and `npm run lint` pass.
+  - **Headless Playwright check** (faked session, stateful stubbed API):
+    new script **32/32**. It covers the Tag mention link and its color,
+    the Tag listed first with its count, Enter inserting `#NPC`, and no
+    popup while writing after a mention. For creation it covers: the
+    create row for a multi-word name, the switch by mouse (focus stays in
+    the textarea), and that a plain Enter doesn't create. A click creates
+    a Document whose POST body is only `{name}`, and the mention is
+    inserted with the focus kept. ↓ highlights the row (and sets
+    `aria-activedescendant`), → switches to Tag, and Enter creates it.
+    The posted Comment links the Tag, the new Document and the new Tag.
+    A Tag link opens the filtered list with the Tag selected; clearing
+    the filter works, and so do the empty message and "Mostra tutti". A
+    Player without rights gets no create row, and a Player who may only
+    create Documents gets no switch. At 375px it fits with no overflow,
+    and there are zero console errors. The previous script was updated
+    for Tags appearing in the list and passes **32/32**. Screenshots
+    checked by eye. Not yet tried live by a signed-in user.
+
 ## In Progress
 
 - None yet.
 
 ## Next Up
 
+0. Mention backlinks (rest of FR-D4): store mentions server-side on
+   save, show "Mentioned in" on the Document page (filtered per viewer),
+   and decide whether mentions should survive a rename.
 1. Rest of Threads on top of the new `posts` table: nested replies
    (FR-T1/T2) with D-17/VR-04's "never wider than the parent" check in
    the domain layer (Invariant 3), and pagination (FR-T3) if Comment
@@ -926,6 +1074,18 @@ Update this file after every meaningful implementation change.
 - **Supabase dashboard lints (2026-09-22)**: the "RLS enabled, no policy"
   notices were addressed with explicit deny policies (see Completed).
   Re-check Supabase's Security Advisor: no RLS findings should remain.
+- **Document mentions: choices to confirm (new, 2026-09-22)**:
+  (a) mentions are stored as plain `#Name` text, so **renaming a
+  Document or Tag breaks existing mentions** of it, two Documents with
+  the same name resolve to the first one, and a Document wins over a Tag
+  with the same name; (b) **no backlinks** yet (FR-D4
+  asks for them), which will need mentions stored server-side (see
+  `architecture.md` → Open items); (c) the list shows at most 8
+  Documents and Tags, and a Document can mention itself; (d) a Document
+  created from the popup gets **Room** visibility (user's choice), so
+  creating one from a Private/Selective Comment shows its *name* to the
+  whole Room; (e) creating from the popup needs ↓ then Enter (a plain
+  Enter is a newline). Change any of these if they don't fit.
 - Agent export format, JSON vs. Markdown vs. both
   (`architecture.md` → Open items, FR-G1): decide when the export
   endpoint is designed, not needed for the Auth unit.

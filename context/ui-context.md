@@ -156,6 +156,42 @@ other icon set.
   picker, URL popover) and previews them as removable 72px thumbnails
   before posting. Deletion confirms in a small popover, like image
   deletion, and warns when the Comment's images will go too.
+- **Mentions** (built 2026-09-22, `components/mentions/`, specs
+  `06 - Quick navigation` and `06_1 - Quick navigation refnment`):
+  wherever a user writes free text (Document description, Comment body)
+  use `MentionTextarea` instead of Mantine's `Textarea`. Typing `#` at
+  the start of a word opens a list below the field (flips above when
+  there's no room), as wide as the field, on the Popover surface: up to 8
+  of the Room's Documents **and Tags**, filtered as you type (case- and
+  accent-insensitive). A Document row has a 16px `FileText` icon, its
+  name and its Tags (`#Tag`, muted); a Tag row has a `Tag` icon, its name
+  and "Tag · N Documenti". Arrows move the highlight
+  (`--mantine-color-accent-light` background, wraps around), Enter/Tab or
+  a click inserts `#Name `, Esc closes; Ctrl/Cmd+Enter still submits a
+  Comment. No open/close animation, like Mantine's Combobox.
+  **When nothing matches** and the viewer may create something, the list
+  is replaced by a create row: "Nessun risultato per «name». Crealo
+  come:", a two-button switch (Documento / Tag — `light` = chosen,
+  `default` = other; only shown when both are allowed) and a "Crea …"
+  button (`light`, `filled` when the row is highlighted). A plain Enter
+  never creates: the row is reached with ↓, then ←/→ switch the kind and
+  Enter creates (a hint line says so). The switch is plain buttons, not a
+  `SegmentedControl`, whose radio inputs would take the focus and close
+  the popup.
+  Wherever that text is shown, use `MentionText`: mentions become links
+  in `--accent-primary` (the whole `#Name`, underline on hover) — a
+  Document mention opens the Document, a Tag mention opens the Documents
+  list filtered by that Tag. Inside something that is already a link
+  (`DocumentCard`) pass `linked={false}`: same color, no link. Both need
+  a `DocumentMentionsProvider roomId={…} currentUserId={…}` above them
+  (the Document page and the Documents list have one); without it they
+  behave as a plain textarea / plain text.
+- **Documents list Tag filter** (`TagFilter`, 2026-09-22): a searchable,
+  clearable `MultiSelect` with a `Funnel` icon above the grid (max 480px
+  from `sm` up), options shown as `#Tag`. It is bound to the URL
+  (`?tag=…`, repeatable, Tags combine with AND), which is where a Tag
+  mention leads. No match: "Nessun Documento con questo Tag." plus a
+  "Mostra tutti" button.
 - **Modals**: centered overlay with backdrop blur, used for Room
   creation, invitations, and the Reveal confirmation (Reveal is
   destructive/irreversible in effect, so it always confirms in a

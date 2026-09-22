@@ -2,6 +2,7 @@ import { Card, Group, Stack, Title, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { VisibilityBadge } from './VisibilityBadge';
 import { TagList } from './TagList';
+import { MentionText } from './mentions/MentionText';
 import { displayNameFor } from '../lib/members';
 import type { Document } from '../types/document';
 import type { Member } from '../types/member';
@@ -37,9 +38,8 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
           <VisibilityBadge visibility={document.visibility} />
         </Group>
         {document.description && (
-          <Text c="dimmed" size="sm" lineClamp={2}>
-            {document.description}
-          </Text>
+          // The card is itself a link, so mentions are only colored here.
+          <MentionText text={document.description} linked={false} c="dimmed" size="sm" lineClamp={2} />
         )}
         <TagList tags={tags} tagIds={document.tagIds} />
         {ownerNames && (

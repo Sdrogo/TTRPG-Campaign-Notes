@@ -1,5 +1,6 @@
-import { MultiSelect, Stack, TextInput, Textarea } from '@mantine/core';
+import { MultiSelect, Stack, TextInput } from '@mantine/core';
 import { VisibilitySelect } from './VisibilitySelect';
+import { MentionTextarea } from './mentions/MentionTextarea';
 import type { DocumentFormValues } from '../types/document';
 import type { Tag } from '../types/tag';
 
@@ -23,10 +24,11 @@ export function DocumentFields({ values, onChange, tags, autoFocus }: DocumentFi
         required
         autoFocus={autoFocus}
       />
-      <Textarea
+      <MentionTextarea
         label="Descrizione"
+        description="Scrivi # per collegare un altro Documento."
         value={values.description}
-        onChange={(event) => set({ description: event.currentTarget.value })}
+        onChange={(description) => set({ description })}
         minRows={3}
         autosize
       />

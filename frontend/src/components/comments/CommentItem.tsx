@@ -5,6 +5,7 @@ import { ImageThumbnailGrid } from '../ImageThumbnailGrid';
 import { ImageViewerModal } from '../ImageViewerModal';
 import { VisibilityBadge } from '../VisibilityBadge';
 import { CommentComposer } from './CommentComposer';
+import { MentionText } from '../mentions/MentionText';
 import { findMember, memberDisplayName } from '../../lib/members';
 import { isEdited } from '../../lib/comments';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/time';
@@ -91,9 +92,11 @@ export function CommentItem({
               </Text>
             ) : (
               <Stack gap="xs">
-                <Text size="sm" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-                  {comment.body}
-                </Text>
+                <MentionText
+                  text={comment.body}
+                  size="sm"
+                  style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
+                />
                 <CommentImages images={comment.images} authorName={authorName} />
               </Stack>
             )}

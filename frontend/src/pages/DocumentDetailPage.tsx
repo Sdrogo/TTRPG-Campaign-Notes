@@ -25,6 +25,8 @@ import { DocumentOwners } from '../components/DocumentOwners';
 import { DocumentImageGallery } from '../components/DocumentImageGallery';
 import { AddDocumentImages } from '../components/AddDocumentImages';
 import { CommentSection } from '../components/comments/CommentSection';
+import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
+import { MentionText } from '../components/mentions/MentionText';
 import type { Document, DocumentFormValues } from '../types/document';
 import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
@@ -77,20 +79,22 @@ function DocumentDetailLoader({
 
   return (
     <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel="Documenti">
-      <DocumentPanel
-        key={document.data.id}
-        roomId={roomId}
-        document={document.data}
-        tags={tags.data ?? []}
-        members={members.data ?? []}
-        currentUserId={currentUserId}
-      />
-      <CommentSection
-        roomId={roomId}
-        documentId={document.data.id}
-        members={members.data ?? []}
-        currentUserId={currentUserId}
-      />
+      <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
+        <DocumentPanel
+          key={document.data.id}
+          roomId={roomId}
+          document={document.data}
+          tags={tags.data ?? []}
+          members={members.data ?? []}
+          currentUserId={currentUserId}
+        />
+        <CommentSection
+          roomId={roomId}
+          documentId={document.data.id}
+          members={members.data ?? []}
+          currentUserId={currentUserId}
+        />
+      </DocumentMentionsProvider>
     </PageLayout>
   );
 }
@@ -165,9 +169,14 @@ function DocumentPanel({
         ) : (
           <>
             <TagList tags={tags} tagIds={document.tagIds} />
-            <Text style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-              {document.description || 'Nessuna descrizione.'}
-            </Text>
+            {document.description ? (
+              <MentionText
+                text={document.description}
+                style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
+              />
+            ) : (
+              <Text c="dimmed">Nessuna descrizione.</Text>
+            )}
           </>
         )}
 
