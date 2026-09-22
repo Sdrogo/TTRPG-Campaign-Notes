@@ -4,6 +4,7 @@ import pytest
 from PIL import Image
 
 from app.domain.images import (
+    AVATAR_DIMENSION,
     MAX_DIMENSION,
     MAX_INPUT_BYTES,
     ImageTooLargeError,
@@ -62,3 +63,20 @@ def test_unsupported_image_format_is_rejected() -> None:
 def test_oversized_input_is_rejected_before_decoding() -> None:
     with pytest.raises(ImageTooLargeError):
         normalize_image(b"\0" * (MAX_INPUT_BYTES + 1))
+
+
+def test_square_mode_center_crops_and_downscales() -> None:
+    result = normalize_image(_encode((3000, 2000), "PNG"), AVATAR_DIMENSION, square=True)
+
+    assert (result.width, result.height) == (AVATAR_DIMENSION, AVATAR_DIMENSION)
+    assert _decode(result.data).size == (AVATAR_DIMENSION, AVATAR_DIMENSION)
+
+
+def test_square_mode_never_upscales_a_small_image() -> None:
+    result = normalize_image(_encode((300, 120), "JPEG"), AVATAR_DIMENSION, square=True)
+    assert (result.width, result.height) == (120, 120)
+
+
+def test_square_mode_accepts_palette_images() -> None:
+    result = normalize_image(_encode((64, 32), "GIF", mode="P"), AVATAR_DIMENSION, square=True)
+    assert (result.width, result.height) == (32, 32)

@@ -3,6 +3,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
+from app.api.profiles import ProfileFields, profile_fields
 from app.auth.dependencies import CurrentUserDep
 from app.db import rooms_repo, users_repo
 from app.db.session import SessionDep
@@ -14,7 +15,7 @@ from app.domain.memberships import (
     plan_removal,
     plan_role_change,
 )
-from app.domain.models import Room, RoomRole, RoomStatus
+from app.domain.models import Membership, Room, RoomRole, RoomStatus, UserProfile
 from app.domain.rooms import RoomNameRequiredError, plan_new_room
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
@@ -39,9 +40,8 @@ class MyRoomResponse(BaseModel):
     is_admin: bool
 
 
-class MemberResponse(BaseModel):
+class MemberResponse(ProfileFields):
     user_id: uuid.UUID
-    email: str | None
     role: RoomRole
     is_admin: bool
 
@@ -53,6 +53,15 @@ class UpdateMemberRequest(BaseModel):
 
 class UpdateRoomSettingsRequest(BaseModel):
     players_can_create_documents: bool
+
+
+def member_response(membership: Membership, profile: UserProfile) -> MemberResponse:
+    return MemberResponse(
+        user_id=membership.user_id,
+        role=membership.role,
+        is_admin=membership.is_admin,
+        **profile_fields(profile).model_dump(),
+    )
 
 
 def room_to_response(room: Room) -> RoomResponse:
@@ -144,11 +153,8 @@ async def list_members(
     if requester is None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
 
-    rows = await rooms_repo.list_members_with_email(session, room_id)
-    return [
-        MemberResponse(user_id=m.user_id, email=email, role=m.role, is_admin=m.is_admin)
-        for m, email in rows
-    ]
+    rows = await rooms_repo.list_members_with_profile(session, room_id)
+    return [member_response(membership, profile) for membership, profile in rows]
 
 
 @router.patch("/{room_id}/members/{user_id}")
@@ -177,13 +183,8 @@ async def update_member(
     await rooms_repo.update_membership(session, plan.membership)
     await rooms_repo.insert_audit_log(session, plan.audit_entry)
 
-    email = await users_repo.get_email(session, user_id)
-    return MemberResponse(
-        user_id=plan.membership.user_id,
-        email=email,
-        role=plan.membership.role,
-        is_admin=plan.membership.is_admin,
-    )
+    profile = await users_repo.get_profile(session, user_id)
+    return member_response(plan.membership, profile)
 
 
 @router.delete("/{room_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

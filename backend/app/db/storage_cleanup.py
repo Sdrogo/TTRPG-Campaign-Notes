@@ -1,18 +1,19 @@
-"""Keeps Supabase Storage in step with `document_images` when a transaction
+"""Keeps Supabase Storage in step with the rows that reference its objects
+(`document_images.storage_path`, `users.avatar_path`) when a transaction
 fails. Storage isn't part of the Postgres transaction, so every object that
 might end up unreferenced gets a `storage_cleanup` row first:
 
 - Upload: the row is committed in its own transaction *before* the object is
   uploaded, then deleted in the request's transaction together with the
-  image row insert. If that transaction never commits, the row stays and the
+  row that references it. If that transaction never commits, the row stays and the
   sweep removes the orphaned object.
-- Delete: the image rows are deleted and cleanup rows inserted in the same
-  transaction; the objects are removed only after it commits. A rollback
+- Delete/replace: the references are dropped and cleanup rows inserted in
+  the same transaction; the objects are removed only after it commits. A rollback
   restores the rows with their objects untouched; a failed removal keeps its
   cleanup row for the sweep to retry.
 
 Removal is idempotent (`storage.remove` treats 404 as done), and an object
-is never removed while an image row still references its path."""
+is never removed while any row still references its path."""
 
 import asyncio
 import logging
@@ -25,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import session as session_module
 from app.db import storage
-from app.db.models import DocumentImageRow, StorageCleanupRow
+from app.db.models import DocumentImageRow, StorageCleanupRow, UserRow
 
 logger = logging.getLogger(__name__)
 
@@ -55,13 +56,14 @@ async def record_pending_upload(path: str) -> None:
 
 
 async def confirm_upload(session: AsyncSession, path: str) -> None:
-    """In the request's transaction, next to the image row insert."""
+    """In the request's transaction, next to the insert of the row that
+    references the object."""
     await session.execute(delete(StorageCleanupRow).where(StorageCleanupRow.storage_path == path))
 
 
 async def schedule_removal(session: AsyncSession, paths: Collection[str]) -> None:
-    """In the request's transaction, next to the image row deletion; the
-    objects themselves are removed after commit."""
+    """In the request's transaction, next to the deletion of the rows that
+    referenced them; the objects themselves are removed after commit."""
     await _insert(session, paths)
     session.info.setdefault(_SCHEDULED_KEY, []).extend(paths)
     session_module.on_commit(session, _remove_scheduled)
@@ -71,18 +73,20 @@ async def _remove_scheduled(session: AsyncSession) -> None:
     await _remove(session, session.info.pop(_SCHEDULED_KEY, []))
 
 
+async def _referenced(session: AsyncSession, paths: Collection[str]) -> set[str]:
+    images = await session.execute(
+        select(DocumentImageRow.storage_path).where(DocumentImageRow.storage_path.in_(paths))
+    )
+    avatars = await session.execute(
+        select(UserRow.avatar_path).where(UserRow.avatar_path.in_(paths))
+    )
+    return {path for path in [*images.scalars(), *avatars.scalars()] if path is not None}
+
+
 async def _remove(session: AsyncSession, paths: Collection[str]) -> None:
     if not paths:
         return
-    referenced = set(
-        (
-            await session.execute(
-                select(DocumentImageRow.storage_path).where(
-                    DocumentImageRow.storage_path.in_(paths)
-                )
-            )
-        ).scalars()
-    )
+    referenced = await _referenced(session, paths)
     done: list[str] = []
     for path in paths:
         if path not in referenced:

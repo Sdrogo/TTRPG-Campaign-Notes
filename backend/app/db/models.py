@@ -75,16 +75,21 @@ class InvitationRow(Base):
 
 
 class UserRow(Base):
-    """A minimal mirror of Supabase Auth's `auth.users`, per
-    architecture.md's Storage Model - just enough (id + email) to show a
-    human-readable identity in the members list. Upserted opportunistically
-    whenever a user creates a Room or accepts an invitation; see
+    """A mirror of Supabase Auth's `auth.users` (id + email) plus the
+    profile the user edits on the Account page, per architecture.md's
+    Storage Model. Upserted opportunistically whenever a user creates a
+    Room, accepts an invitation or edits their profile; see
     app/db/users_repo.py."""
 
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     email: Mapped[str | None] = mapped_column(String(320))
+    display_name: Mapped[str | None] = mapped_column(String(60))
+    pronouns: Mapped[str | None] = mapped_column(String(40))
+    bio: Mapped[str | None] = mapped_column(Text)
+    # Storage path in the images bucket, like document_images.storage_path.
+    avatar_path: Mapped[str | None] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

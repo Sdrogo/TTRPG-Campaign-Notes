@@ -18,6 +18,10 @@ OUTPUT_EXTENSION = ".webp"
 OUTPUT_CONTENT_TYPE = "image/webp"
 OUTPUT_QUALITY = 82
 
+# Avatars are always shown as small circles, so they're cropped to a square
+# and stored far smaller than a Document image.
+AVATAR_DIMENSION = 512
+
 
 class InvalidImageError(Exception):
     pass
@@ -36,10 +40,13 @@ class NormalizedImage:
     height: int
 
 
-def normalize_image(data: bytes) -> NormalizedImage:
+def normalize_image(
+    data: bytes, max_dimension: int = MAX_DIMENSION, square: bool = False
+) -> NormalizedImage:
     """Validates that `data` really is a supported image (by content, not
     by filename), downscales it so its longest side is at most
-    MAX_DIMENSION, and re-encodes it as WebP. Animated GIFs keep only
+    `max_dimension`, and re-encodes it as WebP. With `square`, the image is
+    first center-cropped to a square (avatars). Animated GIFs keep only
     their first frame."""
     if len(data) > MAX_INPUT_BYTES:
         raise ImageTooLargeError(
@@ -54,7 +61,11 @@ def normalize_image(data: bytes) -> NormalizedImage:
                 raise ImageTooLargeError("Image dimensions are too large")
 
             image = ImageOps.exif_transpose(source)
-            image.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.Resampling.LANCZOS)
+            if square:
+                side = min(image.width, image.height, max_dimension)
+                image = ImageOps.fit(image, (side, side), Image.Resampling.LANCZOS)
+            else:
+                image.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
             if image.mode not in ("RGB", "RGBA"):
                 has_alpha = image.mode in ("LA", "PA") or "transparency" in image.info
                 image = image.convert("RGBA" if has_alpha else "RGB")

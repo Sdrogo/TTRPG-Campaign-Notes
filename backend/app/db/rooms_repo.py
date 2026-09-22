@@ -4,7 +4,8 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import AuditLogRow, MembershipRow, RoomRow, TagRow, UserRow
-from app.domain.models import AuditLogEntry, Membership, Room, RoomRole, RoomStatus
+from app.db.users_repo import profile_from_row
+from app.domain.models import AuditLogEntry, Membership, Room, RoomRole, RoomStatus, UserProfile
 from app.domain.rooms import NewRoomPlan
 
 
@@ -109,15 +110,17 @@ async def list_memberships(session: AsyncSession, room_id: uuid.UUID) -> list[Me
     return [_membership_from_row(row) for row in result.scalars()]
 
 
-async def list_members_with_email(
+async def list_members_with_profile(
     session: AsyncSession, room_id: uuid.UUID
-) -> list[tuple[Membership, str | None]]:
+) -> list[tuple[Membership, UserProfile]]:
     result = await session.execute(
-        select(MembershipRow, UserRow.email)
+        select(MembershipRow, UserRow)
         .outerjoin(UserRow, UserRow.id == MembershipRow.user_id)
         .where(MembershipRow.room_id == room_id)
     )
-    return [(_membership_from_row(m), email) for m, email in result.all()]
+    return [
+        (_membership_from_row(m), profile_from_row(m.user_id, user)) for m, user in result.all()
+    ]
 
 
 async def update_membership(session: AsyncSession, membership: Membership) -> None:
