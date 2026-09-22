@@ -61,8 +61,24 @@ Update this file after every meaningful implementation change.
   Document card, side-by-side from 992px, no horizontal overflow, zero
   console errors; screenshots checked by eye. Note: Mantine v9 renamed
   `Grid`'s `gutter` prop to `gap`.
+- **Explicit deny policies complete** (2026-09-22, branch
+  `fix/rls_explicit_deny_policies`, merged into `main` in PR #4): Supabase then flagged
+  "RLS enabled, no policy" (info) on each table. Migration
+  `f1c8a2e6d493` adds a restrictive `backend_only_deny_clients` policy
+  (`FOR ALL TO anon, authenticated USING (false) WITH CHECK (false)`)
+  to all 15 `public` tables. It's idempotent, and its downgrade drops
+  only these policies. **Applied to the live DB**, and exercised
+  down/up. Nothing changes for the backend (table owner, not subject to
+  RLS); the Data API still answers 42501. The dashboard's suggested SQL
+  was *not* used: all its snippets were `to authenticated using (true)`,
+  which grants read access instead of denying it. Guard test +2: every
+  table has the deny policy (failed before, passes after), and no
+  permissive policy targets the client roles (proven to catch that
+  exact dashboard snippet, in a rolled-back transaction). Full suite
+  **201/201**, mypy and ruff clean. `code-standards.md` now includes
+  the SQL every table-creating migration must run.
 - **Quick navigation (Document mentions) complete** (2026-09-22,
-  frontend only, branch `fix/rls_explicit_deny_policies`, uncommitted;
+  frontend only, branch `feature/quick_navigation`;
   spec `context/feature/06 - Quick navigation.md`, first slice of
   FR-D4): typing `#` at the start of a word in a Document description or
   a Comment opens a list of the Room's Documents, filtered by name or
@@ -71,7 +87,7 @@ Update this file after every meaningful implementation change.
   lint and `npm test` **63/63** pass; headless check 32/32. No backlinks
   yet (see Open Questions).
 - **Quick navigation refinement complete** (2026-09-22, frontend only,
-  same branch, uncommitted; spec `context/feature/06_1 - Quick
+  same branch; spec `context/feature/06_1 - Quick
   navigation refnment.md`): Tags can be mentioned too (`#Tag` opens the
   Documents list filtered by that Tag, via a new URL-bound Tag filter),
   and when nothing matches the popup can create the typed name as a
@@ -830,7 +846,7 @@ Update this file after every meaningful implementation change.
     migration must enable RLS.
 
 - **Quick navigation — Document mentions (2026-09-22, frontend only,
-  branch `fix/rls_explicit_deny_policies`, uncommitted, spec
+  branch `feature/quick_navigation`, spec
   `context/feature/06 - Quick navigation.md`, first slice of FR-D4):**
   - **Storage decision**: a mention is plain text, `#Document name`, as
     the spec says. Nothing is stored server-side and no backend changed.
@@ -893,7 +909,7 @@ Update this file after every meaningful implementation change.
     Combobox). Not yet tried live by a signed-in user.
 
 - **Quick navigation refinement (2026-09-22, frontend only, branch
-  `fix/rls_explicit_deny_policies`, uncommitted, spec
+  `feature/quick_navigation`, spec
   `context/feature/06_1 - Quick navigation refnment.md`):**
   - **Tag mentions**: the popup now lists Tags as well as Documents
     (`MentionTarget` union: a Document with its Tags, or a Tag with how
@@ -1049,14 +1065,15 @@ Update this file after every meaningful implementation change.
   is private for all images (see Completed).
   (e) name and avatar from Google. **Done**: copied once as defaults,
   then owned by the user (see Completed).
-- ~~RLS as defense-in-depth~~ — RLS is now on for every table
-  (backend-only, no policies; 2026-09-22). Only the question of adding
-  *policies* for some future direct client access remains, in
+- ~~RLS as defense-in-depth~~ — RLS is now on for every table, each with
+  the restrictive `backend_only_deny_clients` policy denying `anon` and
+  `authenticated` everything (backend-only; 2026-09-22, migrations
+  `c9d4e7b1f352` and `f1c8a2e6d493`). Only the question of adding
+  policies that *allow* some future direct client access remains, in
   `architecture.md` → Open items.
-- **Supabase dashboard lints (new, 2026-09-22)**: after the lockdown,
-  re-check Supabase's Security Advisor. Expect the RLS warnings gone. An
-  "RLS enabled, no policy" *info* notice per table is expected and
-  intended (backend-only tables).
+- **Supabase dashboard lints (2026-09-22)**: the "RLS enabled, no policy"
+  notices were addressed with explicit deny policies (see Completed).
+  Re-check Supabase's Security Advisor: no RLS findings should remain.
 - **Document mentions: choices to confirm (new, 2026-09-22)**:
   (a) mentions are stored as plain `#Name` text, so **renaming a
   Document or Tag breaks existing mentions** of it, two Documents with

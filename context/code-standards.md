@@ -98,11 +98,20 @@ split in two instead of one. Everything else applies to both.
 
 ## Data and Storage
 
-- Every migration that creates a table in `public` also runs
-  `ALTER TABLE … ENABLE ROW LEVEL SECURITY` and adds no policies (tables
-  are backend-only, see `architecture.md` → Backend Data Access).
+- Every migration that creates a table in `public` also enables RLS
+  and adds the explicit deny policy (tables are backend-only, see
+  `architecture.md` → Backend Data Access):
+
+  ```sql
+  ALTER TABLE public.<table> ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY backend_only_deny_clients ON public.<table>
+    AS RESTRICTIVE FOR ALL TO anon, authenticated
+    USING (false) WITH CHECK (false);
+  ```
+
   `tests/test_database_security.py` fails otherwise. Never grant
-  anything to `anon` or `authenticated`.
+  anything to `anon` or `authenticated`, and never add a permissive
+  policy for them (including dashboard-suggested ones).
 
 - Metadata belongs in Postgres (Supabase): Rooms, Memberships,
   Documents, Tags, GlossaryEntries, Threads/Posts, Invitations,
