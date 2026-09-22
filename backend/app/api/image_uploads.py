@@ -1,7 +1,8 @@
 """The image pipeline shared by every route that adds or removes a Document
 image - the Document's own image routes and a Comment's attachments. One
 path means the size/format rules and the upload/rollback handling can't
-drift apart between the two."""
+drift apart between the two. Keeping Storage consistent with the rows when a
+transaction fails is app/db/storage_cleanup.py's job."""
 
 import asyncio
 import uuid
@@ -11,7 +12,7 @@ from fastapi import HTTPException, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import documents_repo, remote_images, storage
+from app.db import documents_repo, remote_images, storage, storage_cleanup
 from app.db.remote_images import RemoteImageError
 from app.domain.documents import TooManyImagesError, ensure_can_add_image, plan_new_image
 from app.domain.images import (
@@ -46,7 +47,13 @@ async def fetch_url(url: str) -> bytes:
 
 
 async def ensure_room_for_another_image(session: AsyncSession, document: Document) -> int:
-    """Returns the Document's current image count, or 409 at the limit."""
+    """Returns the Document's current image count, or 409 at the limit.
+
+    Locks the Document row first, for the rest of the request: two
+    concurrent uploads would otherwise both see 19 images and both insert.
+    Call it before any other image count the request relies on (e.g. a
+    Comment's own limit), so that count is taken under the lock too."""
+    await documents_repo.lock_document(session, document.id)
     current_count = len(await documents_repo.list_images(session, document.id))
     try:
         ensure_can_add_image(current_count)
@@ -63,9 +70,10 @@ async def store_image(
     current_count: int,
     post_id: uuid.UUID | None = None,
 ) -> DocumentImage:
-    """Normalize -> upload -> record. The Storage upload happens before the
-    row insert; if the insert fails, the just-uploaded object is removed
-    again so nothing is orphaned."""
+    """Normalize -> upload -> record. The object is marked as a cleanup
+    candidate before it's uploaded, and the mark is cleared in the same
+    transaction as the row insert - so if that transaction doesn't commit,
+    the sweep removes the orphan (app/db/storage_cleanup.py)."""
     try:
         normalized = await asyncio.to_thread(normalize_image, data)
     except ImageTooLargeError as exc:
@@ -85,24 +93,20 @@ async def store_image(
     except TooManyImagesError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
+    await storage_cleanup.record_pending_upload(image.storage_path)
     try:
         await storage.upload(image.storage_path, normalized.data, normalized.content_type)
     except storage.StorageError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Image storage is unavailable") from exc
-    try:
-        await documents_repo.insert_image(session, image)
-    except Exception:
-        await storage.remove(image.storage_path)
-        raise
+    await documents_repo.insert_image(session, image)
+    await storage_cleanup.confirm_upload(session, image.storage_path)
     return image
 
 
 async def remove_images(session: AsyncSession, images: Sequence[DocumentImage]) -> None:
-    """Deletes the rows, then the Storage objects. A Storage failure raises,
-    which rolls the row deletion back too, so DB and bucket stay in step."""
+    """Deletes the rows now; the Storage objects go only once the request's
+    transaction commits (and are retried if Storage is down), so a later
+    failure in the same request can't leave rows pointing at deleted
+    objects."""
     await documents_repo.delete_images(session, [image.id for image in images])
-    try:
-        for image in images:
-            await storage.remove(image.storage_path)
-    except storage.StorageError as exc:
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Image storage is unavailable") from exc
+    await storage_cleanup.schedule_removal(session, [image.storage_path for image in images])

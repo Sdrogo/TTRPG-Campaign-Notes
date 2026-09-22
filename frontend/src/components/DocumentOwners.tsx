@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ActionIcon, Badge, Button, Group, Select, Stack, Text } from '@mantine/core';
 import { TrashIcon } from '@phosphor-icons/react';
-import { displayNameFor, memberDisplayName } from '../lib/members';
+import { displayNameFor, memberOptionLabel } from '../lib/members';
 import type { Member } from '../types/member';
 
 interface DocumentOwnersProps {
@@ -17,7 +17,7 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
 
   const ownerOptions = members
     .filter((m) => !ownerIds.includes(m.userId))
-    .map((m) => ({ value: m.userId, label: memberDisplayName(m) }));
+    .map((m) => ({ value: m.userId, label: memberOptionLabel(m) }));
 
   return (
     <Stack gap="xs">

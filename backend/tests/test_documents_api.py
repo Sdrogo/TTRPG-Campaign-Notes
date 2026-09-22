@@ -219,3 +219,36 @@ async def test_invalid_tag_id_is_rejected(
         headers=_auth_headers(master_token),
     )
     assert response.status_code == 422
+
+
+async def test_duplicate_tag_and_grant_ids_are_collapsed(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, master_token, _ = await _room_with_master_and_player(client, make_token)
+    tag_id = (
+        await client.get(f"/rooms/{room_id}/tags", headers=_auth_headers(master_token))
+    ).json()[0]["id"]
+    grantee = str(uuid.uuid4())
+
+    created = await client.post(
+        f"/rooms/{room_id}/documents",
+        json={
+            "name": "Duplicates",
+            "visibility": "selective",
+            "tag_ids": [tag_id, tag_id],
+            "selective_user_ids": [grantee, grantee],
+        },
+        headers=_auth_headers(master_token),
+    )
+    assert created.status_code == 201
+    assert created.json()["tag_ids"] == [tag_id]
+    assert created.json()["selective_user_ids"] == [grantee]
+
+    updated = await client.patch(
+        f"/rooms/{room_id}/documents/{created.json()['id']}",
+        json={"tag_ids": [tag_id, tag_id], "selective_user_ids": [grantee, grantee]},
+        headers=_auth_headers(master_token),
+    )
+    assert updated.status_code == 200
+    assert updated.json()["tag_ids"] == [tag_id]
+    assert updated.json()["selective_user_ids"] == [grantee]

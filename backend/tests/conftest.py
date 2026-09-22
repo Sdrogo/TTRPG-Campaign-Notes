@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
@@ -10,8 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.auth import jwt as auth_jwt
 from app.config import settings
+from app.db import session as session_module
 from app.db import storage
-from app.db.session import engine, get_session
+from app.db.session import discard_after_commit, engine, get_session, run_after_commit
 from app.main import app
 
 _private_key = ec.generate_private_key(ec.SECP256R1())
@@ -63,13 +65,29 @@ async def db_session() -> AsyncIterator[AsyncSession]:
         async with session_factory() as session:
 
             async def override_get_session() -> AsyncIterator[AsyncSession]:
+                # Mirrors get_session's after-commit handling (minus the
+                # real commit), so post-commit Storage cleanup runs here too.
+                try:
+                    yield session
+                except Exception:
+                    discard_after_commit(session)
+                    raise
+                await run_after_commit(session)
+
+            @asynccontextmanager
+            async def same_session() -> AsyncIterator[AsyncSession]:
+                # Writes meant to escape the request's transaction stay in
+                # the test's savepoint too, so they're rolled back as well.
                 yield session
 
+            original_independent_session = session_module.independent_session
+            session_module.independent_session = same_session
             app.dependency_overrides[get_session] = override_get_session
             try:
                 yield session
             finally:
                 app.dependency_overrides.pop(get_session, None)
+                session_module.independent_session = original_independent_session
         await outer_transaction.rollback()
 
 

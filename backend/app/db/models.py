@@ -148,8 +148,6 @@ class DocumentVisibilityGrantRow(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
 
 
-
-
 class PostRow(Base):
     """A Post in a Document's main Thread (requirements.md's data model).
     There is no separate `threads` table: a Document has exactly one Thread
@@ -196,3 +194,18 @@ class DocumentImageRow(Base):
     storage_path: Mapped[str] = mapped_column(String(500))
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class StorageCleanupRow(Base):
+    """A Storage object that may no longer be referenced by any
+    `document_images` row and must be removed once that's certain - see
+    app/db/storage_cleanup.py. Storage isn't part of the Postgres
+    transaction, so this is how a rolled-back or half-finished image
+    change is reconciled instead of leaving an orphan or a broken image."""
+
+    __tablename__ = "storage_cleanup"
+
+    storage_path: Mapped[str] = mapped_column(String(500), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )

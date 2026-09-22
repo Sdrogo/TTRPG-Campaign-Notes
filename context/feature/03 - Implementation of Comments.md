@@ -3,7 +3,7 @@
 - Comments are displayed below the Document card.
 - Comments are displayed as a list if the User have the visibility right to see it
 - Comments are styled as a social media standard comment (e.g. Facebook)
-- a Comment can be edited by any User that has Hownership on that Comment
+- a Comment can be edited only by its author (Document Ownership does not apply to Comments); a Master can delete another User's Comment but cannot edit it
 
 ## Implementation
 

@@ -40,6 +40,9 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   const updateSettings = useUpdateRoomSettings(roomId);
 
   const isMaster = members.data?.find((m) => m.userId === currentUserId)?.role === 'master';
+  // D-13/FR-D7: same rule the backend enforces, so a Player isn't offered a
+  // form that would only be rejected on submit.
+  const canCreateDocument = isMaster || room.data?.playersCanCreateDocuments === true;
 
   return (
     <PageLayout backTo="/" backLabel="Le mie Stanze">
@@ -47,9 +50,11 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
         <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
           Documenti{room.data ? ` — ${room.data.name}` : ''}
         </Title>
-        <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>
-          Crea Documento
-        </Button>
+        {canCreateDocument && (
+          <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>
+            Crea Documento
+          </Button>
+        )}
       </Group>
 
       {isMaster && room.data && (

@@ -83,6 +83,15 @@ def _image_from_row(row: DocumentImageRow) -> DocumentImage:
     )
 
 
+async def lock_document(session: AsyncSession, document_id: uuid.UUID) -> None:
+    """Row lock held until the transaction ends: serializes concurrent image
+    additions to one Document, so a count-then-insert can't overshoot the
+    image limits."""
+    await session.execute(
+        select(DocumentRow.id).where(DocumentRow.id == document_id).with_for_update()
+    )
+
+
 async def list_images(session: AsyncSession, document_id: uuid.UUID) -> list[DocumentImage]:
     result = await session.execute(
         select(DocumentImageRow)

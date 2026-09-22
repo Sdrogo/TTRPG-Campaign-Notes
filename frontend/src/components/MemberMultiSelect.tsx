@@ -1,5 +1,5 @@
 import { MultiSelect, type MultiSelectProps } from '@mantine/core';
-import { memberDisplayName } from '../lib/members';
+import { memberOptionLabel } from '../lib/members';
 import type { Member } from '../types/member';
 
 interface MemberMultiSelectProps extends Omit<MultiSelectProps, 'data' | 'value' | 'onChange'> {
@@ -20,7 +20,7 @@ export function MemberMultiSelect({
 }: MemberMultiSelectProps) {
   const data = members
     .filter((m) => !excludeUserIds.includes(m.userId))
-    .map((m) => ({ value: m.userId, label: memberDisplayName(m) }));
+    .map((m) => ({ value: m.userId, label: memberOptionLabel(m) }));
 
   return <MultiSelect {...props} data={data} value={value} onChange={onChange} searchable />;
 }

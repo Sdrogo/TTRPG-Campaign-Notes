@@ -1,7 +1,8 @@
 import io
 import uuid
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Collection
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 import pytest
 import pytest_asyncio
@@ -10,8 +11,8 @@ from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import remote_images
-from app.db.models import AuditLogRow
+from app.db import comments_repo, documents_repo, remote_images, storage, storage_cleanup
+from app.db.models import AuditLogRow, StorageCleanupRow
 from app.domain.comments import MAX_IMAGES_PER_COMMENT
 from app.main import app
 
@@ -485,3 +486,110 @@ async def test_comment_image_can_be_imported_from_url(
     )
     assert response.status_code == 201, response.text
     assert len(response.json()["images"]) == 1
+
+
+# --- Storage consistency (code review 04) --------------------------------
+
+
+async def _cleanup_rows(session: AsyncSession, paths: Collection[str]) -> list[str]:
+    result = await session.execute(
+        select(StorageCleanupRow.storage_path).where(StorageCleanupRow.storage_path.in_(paths))
+    )
+    return list(result.scalars())
+
+
+def _after_grace() -> datetime:
+    return datetime.now(UTC) + 2 * storage_cleanup.SWEEP_GRACE
+
+
+async def test_upload_whose_transaction_fails_is_swept_later(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    comment = await _comment(client, room, document_id, room.player)
+
+    # A successful upload leaves nothing to clean up.
+    await _attached_image_id(client, room, document_id, comment["id"], room.player)
+    (kept,) = fake_storage
+    assert await _cleanup_rows(db_session, [kept]) == []
+
+    async def failing_insert(session: AsyncSession, image: object) -> None:
+        raise RuntimeError("database went away")
+
+    monkeypatch.setattr(documents_repo, "insert_image", failing_insert)
+    with pytest.raises(RuntimeError):
+        await _attach(client, room, document_id, comment["id"], room.player)
+
+    # The object reached Storage but no row points at it: it stays marked...
+    (orphan,) = set(fake_storage) - {kept}
+    assert await _cleanup_rows(db_session, [orphan]) == [orphan]
+
+    # ... and the sweep removes it, leaving the recorded image alone.
+    await storage_cleanup.sweep(db_session, now=_after_grace())
+    assert set(fake_storage) == {kept}
+    assert await _cleanup_rows(db_session, [orphan]) == []
+
+
+async def test_comment_deletion_that_fails_later_removes_nothing_from_storage(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    comment = await _comment(client, room, document_id, room.player)
+    await _attached_image_id(client, room, document_id, comment["id"], room.player)
+
+    async def failing_update(session: AsyncSession, comment: object) -> None:
+        raise RuntimeError("database went away")
+
+    monkeypatch.setattr(comments_repo, "update_comment", failing_update)
+    with pytest.raises(RuntimeError):
+        await client.delete(
+            f"{room.comments_url(document_id)}/{comment['id']}", headers=room.master.headers
+        )
+
+    # The image rows come back on rollback, so their objects must still exist.
+    assert len(fake_storage) == 1
+
+
+async def test_removal_while_storage_is_down_is_retried_by_the_sweep(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    comment = await _comment(client, room, document_id, room.player)
+    image_id = await _attached_image_id(client, room, document_id, comment["id"], room.player)
+    (path,) = fake_storage
+
+    working_remove = storage.remove
+
+    async def storage_down(path: str) -> None:
+        raise storage.StorageError("Storage unavailable")
+
+    monkeypatch.setattr(storage, "remove", storage_down)
+    detached = await client.delete(
+        f"{room.comments_url(document_id)}/{comment['id']}/images/{image_id}",
+        headers=room.player.headers,
+    )
+    # The row deletion is committed; the object removal is only postponed.
+    assert detached.status_code == 204
+    assert await _gallery_ids(client, room, document_id, room.player) == []
+    assert path in fake_storage
+    assert await _cleanup_rows(db_session, [path]) == [path]
+
+    monkeypatch.setattr(storage, "remove", working_remove)
+    await storage_cleanup.sweep(db_session, now=_after_grace())
+    assert fake_storage == {}
+    assert await _cleanup_rows(db_session, [path]) == []

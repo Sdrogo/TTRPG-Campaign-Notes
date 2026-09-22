@@ -14,6 +14,7 @@ from app.api.image_uploads import (
     remove_images,
     store_image,
 )
+from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, rooms_repo, tags_repo
 from app.db.session import SessionDep
@@ -56,16 +57,16 @@ class CreateDocumentRequest(BaseModel):
     name: str
     description: str = ""
     visibility: DocumentVisibility = DocumentVisibility.ROOM
-    tag_ids: list[uuid.UUID] = []
-    selective_user_ids: list[uuid.UUID] = []
+    tag_ids: UniqueIds = []
+    selective_user_ids: UniqueIds = []
 
 
 class UpdateDocumentRequest(BaseModel):
     name: str | None = None
     description: str | None = None
     visibility: DocumentVisibility | None = None
-    tag_ids: list[uuid.UUID] | None = None
-    selective_user_ids: list[uuid.UUID] | None = None
+    tag_ids: UniqueIds | None = None
+    selective_user_ids: UniqueIds | None = None
 
 
 async def _build_response(

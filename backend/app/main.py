@@ -1,3 +1,8 @@
+import asyncio
+import contextlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,8 +13,19 @@ from app.api.invitations import router as invitations_router
 from app.api.rooms import router as rooms_router
 from app.api.tags import router as tags_router
 from app.config import settings
+from app.db.storage_cleanup import run_sweeper
 
-app = FastAPI(title="TTRPG Campaign Notes API")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    sweeper = asyncio.create_task(run_sweeper())
+    yield
+    sweeper.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await sweeper
+
+
+app = FastAPI(title="TTRPG Campaign Notes API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

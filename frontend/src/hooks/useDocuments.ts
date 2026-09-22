@@ -106,7 +106,7 @@ export function useUpdateDocument(roomId: string, documentId: string) {
 }
 
 export function useAddDocumentOwner(roomId: string, documentId: string) {
-  const queryClient = useQueryClient();
+  const invalidate = useInvalidateDocument(roomId, documentId);
   return useMutation({
     mutationFn: async (userId: string) =>
       toDocument(
@@ -114,23 +114,21 @@ export function useAddDocumentOwner(roomId: string, documentId: string) {
           method: 'POST',
         }),
       ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: documentQueryKey(roomId, documentId) });
-    },
+    // Owners show on the list's cards too, not only on the detail page.
+    onSuccess: invalidate,
   });
 }
 
 export function useRemoveDocumentOwner(roomId: string, documentId: string) {
-  const queryClient = useQueryClient();
+  const invalidate = useInvalidateDocument(roomId, documentId);
   return useMutation({
     mutationFn: async (userId: string) => {
       await apiFetch<void>(`/rooms/${roomId}/documents/${documentId}/owners/${userId}`, {
         method: 'DELETE',
       });
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: documentQueryKey(roomId, documentId) });
-    },
+    // Owners show on the list's cards too, not only on the detail page.
+    onSuccess: invalidate,
   });
 }
 

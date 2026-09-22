@@ -143,3 +143,25 @@ async def test_last_administrator_cannot_leave(
         f"/rooms/{room_id}/members/{admin_id}", headers=_auth_headers(admin_token)
     )
     assert response.status_code == 409
+
+
+async def test_token_without_email_keeps_the_stored_email(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    user_id = str(uuid.uuid4())
+    with_email = make_token(user_id, email="gm@example.com")
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(with_email))
+    ).json()
+
+    # A later request whose token has no email claim must not wipe it.
+    without_email = make_token(user_id)
+    response = await client.post(
+        "/rooms", json={"name": "Ravenloft"}, headers=_auth_headers(without_email)
+    )
+    assert response.status_code == 201
+
+    members = (
+        await client.get(f"/rooms/{room['id']}/members", headers=_auth_headers(with_email))
+    ).json()
+    assert members[0]["email"] == "gm@example.com"

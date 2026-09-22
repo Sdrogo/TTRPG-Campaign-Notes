@@ -36,6 +36,11 @@ Update this file after every meaningful implementation change.
   the list, full-width bubbles, and images on Comments — stored as
   Document images (shown in the gallery) that inherit the Comment's
   visibility.
+- **Code review 04 fixes complete** (2026-09-22, same branch; findings in
+  `context/feature/04 codereview.md`): 10 of 11 review items fixed. These
+  include DNS-rebinding-proof URL imports, Storage/DB consistency
+  across failed transactions, and an atomic image limit. The docstring-coverage
+  warning was deliberately not acted on (see Completed).
 
 ## Current Goal
 
@@ -587,6 +592,72 @@ Update this file after every meaningful implementation change.
     signed-in user — worth trying an actual upload against the real
     bucket.
 
+- **Code review 04 fixes (2026-09-22, branch `feature/Gestione_membri_ruoli`,
+  findings `context/feature/04 codereview.md`):** each finding was checked
+  against the current code first; all but the docstring warning were still
+  valid.
+  - **Duplicate relationship ids → 500**: `tag_ids` / `selective_user_ids`
+    with repeats passed validation but hit the composite primary keys
+    on insert. New shared request type `app/api/validation.py::UniqueIds`
+    (Pydantic `AfterValidator`, dedupes, keeps order) on both Document
+    create and update. Comments already deduped in the repo.
+  - **User email wiped by a token without an email claim**:
+    `users_repo.upsert_user` now does `COALESCE(excluded.email,
+    users.email)`.
+  - **SSRF via DNS rebinding** (was an Open Question): `remote_images.py`
+    resolves each hop once, requires every address to be public, and pins
+    the connection to the validated IP (original name in `Host` and as
+    TLS SNI, so the certificate is still verified against it). Redirects
+    are resolved against the original URL and pinned again.
+    `fetch_image_bytes` gained an optional `transport` for tests.
+  - **Storage/DB drift on failed transactions**: new `storage_cleanup`
+    table (migration `5c1f7e2a9b30`, **applied to the live Supabase DB**;
+    new table only, nothing existing touched) and
+    `app/db/storage_cleanup.py`. An upload records a cleanup row in its own
+    committed transaction before the object is uploaded, and the request
+    clears it together with the image insert. A delete queues the objects
+    and removes them only after commit (new `on_commit` hook in
+    `app/db/session.py`). A lifespan sweeper (every 10 min, rows older
+    than 15 min) removes orphans and retries failed removals. Behaviour
+    change: deleting an image while Storage is down now returns 204 and
+    the removal is retried later (it used to return 502 and roll back).
+  - **Image limit race**: `ensure_room_for_another_image` now locks the
+    Document row (`SELECT … FOR UPDATE`) before counting.
+    `comments._attach_image` calls it before the per-Comment count, so
+    both caps are counted under the same lock.
+  - **Spec wording**: `context/feature/03 - Implementation of Comments.md`
+    now says only the author edits a Comment. The Master can delete
+    another user's Comment but not edit it, which matches the
+    implementation.
+  - **Frontend**: `CreateDocumentModal` blocks submit (button disabled,
+    and guarded in `handleSubmit`) while a new tag is still being created.
+    The Owner add/remove mutations now also invalidate the Documents
+    list, so cards show new Owners. `RoomDocumentsPage` shows "Crea
+    Documento" only to a Master, or to anyone when
+    `playersCanCreateDocuments` is on. Owner/Selective pickers use the new
+    `memberOptionLabel`, which adds 8 id characters to "Utente sconosciuto"
+    so two members without an email can be told apart.
+  - **Not done: docstring coverage** (CodeRabbit wants 80% of touched
+    functions). Not a project standard: `code-standards.md` asks for
+    comments where the reasoning isn't obvious, not a docstring on
+    every function. Mass docstrings on thin handlers and repos would only
+    restate the signatures. Revisit if the team adopts that threshold.
+  - Tests: +1 dedupe API test, +1 email-preservation test, +3 SSRF
+    pinning tests (mock transport + fake resolver, incl. a rebinding
+    resolver and a redirect to a private host), +3 Storage-consistency
+    tests (failed upload transaction swept later, failed Comment deletion
+    leaves Storage intact, removal while Storage is down retried by the
+    sweep), +3 vitest tests for `memberOptionLabel`. Backend mypy strict
+    (app + tests), ruff, pytest **153/153**. Frontend build, lint, and
+    `npm test` **22/22**.
+  - Live checks: a pinned HTTPS fetch of a real Wikimedia image and an
+    http→https redirect both succeed. `expired`, `self-signed` and
+    `wrong.host` badssl.com certificates are all refused, which shows TLS is still
+    verified against the original hostname. App lifespan started the
+    sweeper against the live DB and shut down cleanly. The row lock was checked by
+    its compiled SQL, not by a real two-connection race. The UI changes
+    were checked by build/tests only, not clicked through.
+
 ## In Progress
 
 - None yet.
@@ -654,9 +725,13 @@ Update this file after every meaningful implementation change.
   itself; (d) 4 images per Comment; (e) a Comment still needs text — no
   image-only Comments. The public-bucket caveat above applies to these
   images as well.
-- URL-import SSRF guard doesn't cover DNS rebinding (host re-resolved by
-  httpx after the check). Acceptable for now; revisit if the backend
-  ever runs next to sensitive internal services.
+- ~~URL-import SSRF guard doesn't cover DNS rebinding~~ — resolved
+  2026-09-22 (connection pinned to the validated IP, see Code review 04
+  fixes).
+- **Storage sweeper runs in-process (new, 2026-09-22)**: one task per
+  backend process, so several workers each sweep (harmless, removal is
+  idempotent). If the backend is ever scaled out or runs serverless, move
+  it to a scheduled job.
 - RLS as defense-in-depth (`architecture.md` → Open items): decide
   before or after the MVP ships.
 - Agent export format, JSON vs. Markdown vs. both
@@ -692,6 +767,11 @@ Update this file after every meaningful implementation change.
   and filtered per viewer by the Comment's visibility — see
   `architecture.md` → Storage Model → Threads/Posts (added 2026-09-21
   with the Comments refactor).
+- Storage objects are kept consistent with `document_images` by a
+  `storage_cleanup` outbox table plus post-commit removal and a background
+  sweep, not by best-effort compensation inside the request. See
+  `architecture.md` → Storage Model (added 2026-09-22 with the code
+  review 04 fixes).
 
 ## Session Notes
 

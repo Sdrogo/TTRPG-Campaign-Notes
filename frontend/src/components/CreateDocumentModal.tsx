@@ -36,6 +36,9 @@ export function CreateDocumentModal({ opened, onClose, roomId }: CreateDocumentM
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    // A tag still being created is added to `values` only once it exists;
+    // submitting now would silently drop it.
+    if (createTag.isPending) return;
     createDocument.mutate(values, { onSuccess: handleClose });
   };
 
@@ -81,7 +84,11 @@ export function CreateDocumentModal({ opened, onClose, roomId }: CreateDocumentM
               {String(createDocument.error)}
             </Text>
           )}
-          <Button type="submit" loading={createDocument.isPending} disabled={!values.name.trim()}>
+          <Button
+            type="submit"
+            loading={createDocument.isPending}
+            disabled={!values.name.trim() || createTag.isPending}
+          >
             Crea Documento
           </Button>
         </Stack>
