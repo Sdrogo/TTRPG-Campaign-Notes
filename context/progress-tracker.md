@@ -70,6 +70,13 @@ Update this file after every meaningful implementation change.
   `#Document name`, which is shown as an accent-colored link. Build,
   lint and `npm test` **63/63** pass; headless check 32/32. No backlinks
   yet (see Open Questions).
+- **Quick navigation refinement complete** (2026-09-22, frontend only,
+  same branch, uncommitted; spec `context/feature/06_1 - Quick
+  navigation refnment.md`): Tags can be mentioned too (`#Tag` opens the
+  Documents list filtered by that Tag, via a new URL-bound Tag filter),
+  and when nothing matches the popup can create the typed name as a
+  blank Document or a Tag, with a switch. Build, lint and `npm test`
+  **84/84** pass; headless checks 32/32 (new) + 32/32 (regression).
 - **Database lockdown complete** (2026-09-22, backend only): fixed
   Supabase's "RLS Disabled in Public" critical warnings. Every table
   was readable and writable through the Data API with the public key.
@@ -885,6 +892,72 @@ Update this file after every meaningful implementation change.
     half-transparent while typing (transition removed, like Mantine's
     Combobox). Not yet tried live by a signed-in user.
 
+- **Quick navigation refinement (2026-09-22, frontend only, branch
+  `fix/rls_explicit_deny_policies`, uncommitted, spec
+  `context/feature/06_1 - Quick navigation refnment.md`):**
+  - **Tag mentions**: the popup now lists Tags as well as Documents
+    (`MentionTarget` union: a Document with its Tags, or a Tag with how
+    many visible Documents carry it). Ranking: name prefix, word prefix,
+    substring, then Documents matched only through a Tag; a Document
+    comes before a Tag on a tie. Picking a Tag writes `#Tag`.
+    `splitMentions` resolves Tags too (Document wins a same-name tie),
+    and `MentionText` links a Tag mention to
+    `/rooms/{id}/documents?tag={tagId}` (`mentionHref`,
+    `documentsWithTagsHref`).
+  - **Documents list filtered by Tag**: `RoomDocumentsPage` reads
+    `?tag=` (repeatable, AND; `lib/documentFilters.ts::filterDocumentsByTags`)
+    and shows a new reusable `TagFilter` (URL-bound `MultiSelect`), plus
+    "Nessun Documento con questo Tag." / "Mostra tutti" when empty. Also
+    a first slice of FR-N2 (filter by one or more Tags).
+  - **Create from the popup**: when nothing matches, a create row offers
+    the typed name as a **blank Document** (only `name`, so Room
+    visibility — the user's choice; see Open Questions) or a **Tag**,
+    with a Documento/Tag switch. Only what the backend would allow is
+    offered (`lib/roomPermissions.ts`: `canCreateDocuments` — D-13;
+    `canManageTags` — Master or Administrator); nothing allowed = just
+    "Nessun risultato". A plain Enter never creates (reach the row with
+    ↓, ←/→ switch kind, Enter creates), so typing `#word` + newline
+    doesn't create anything by accident. After the request succeeds the
+    `#query` is replaced with `#Name` only if it's still unchanged in the
+    text; errors show a notification. `DocumentMentionsProvider` now
+    takes `currentUserId` and exposes `canCreateDocument`,
+    `canCreateTag` and `create()`.
+  - **Popup behavior changes**: it stays open past a space while
+    something matches *or can be created* (so multi-word names can be
+    created), but never while writing prose after a finished mention
+    (`isFinishedMention`). Esc or a pick closes it for that `#` until the
+    caret leaves the mention (was: until the query changed).
+    `mentionKeyAction` now takes the popup state (list / create row /
+    highlighted). The popup content moved to `MentionSuggestions.tsx`.
+    `RoomDocumentsPage` reuses `canCreateDocuments` instead of its
+    inline rule.
+  - **Bug found in the check and fixed**: the kind switch was first a
+    Mantine `SegmentedControl`. Clicking it moved the focus to its hidden
+    radio input, which blurred the textarea and closed the popup. It is
+    now two plain buttons (`aria-pressed`), which don't take the focus.
+  - **Tests**: vitest **84/84** (+21): Tag candidates and counts,
+    Document-before-Tag ordering, Tag mentions in `splitMentions`, links,
+    `isFinishedMention`, creatable kinds, name cleanup, the new key
+    states (plain Enter never creates), `roomPermissions`,
+    `filterDocumentsByTags`. `npm run build` and `npm run lint` pass.
+  - **Headless Playwright check** (faked session, stateful stubbed API):
+    new script **32/32**. It covers the Tag mention link and its color,
+    the Tag listed first with its count, Enter inserting `#NPC`, and no
+    popup while writing after a mention. For creation it covers: the
+    create row for a multi-word name, the switch by mouse (focus stays in
+    the textarea), and that a plain Enter doesn't create. A click creates
+    a Document whose POST body is only `{name}`, and the mention is
+    inserted with the focus kept. ↓ highlights the row (and sets
+    `aria-activedescendant`), → switches to Tag, and Enter creates it.
+    The posted Comment links the Tag, the new Document and the new Tag.
+    A Tag link opens the filtered list with the Tag selected; clearing
+    the filter works, and so do the empty message and "Mostra tutti". A
+    Player without rights gets no create row, and a Player who may only
+    create Documents gets no switch. At 375px it fits with no overflow,
+    and there are zero console errors. The previous script was updated
+    for Tags appearing in the list and passes **32/32**. Screenshots
+    checked by eye. Not yet tried live by a signed-in user.
+
 ## In Progress
 
 - None yet.
@@ -986,12 +1059,16 @@ Update this file after every meaningful implementation change.
   intended (backend-only tables).
 - **Document mentions: choices to confirm (new, 2026-09-22)**:
   (a) mentions are stored as plain `#Name` text, so **renaming a
-  Document breaks existing mentions** of it, and two Documents with the
-  same name resolve to the first one; (b) **no backlinks** yet (FR-D4
+  Document or Tag breaks existing mentions** of it, two Documents with
+  the same name resolve to the first one, and a Document wins over a Tag
+  with the same name; (b) **no backlinks** yet (FR-D4
   asks for them), which will need mentions stored server-side (see
   `architecture.md` → Open items); (c) the list shows at most 8
-  Documents, and a Document can mention itself. Change any of these
-  if they don't fit.
+  Documents and Tags, and a Document can mention itself; (d) a Document
+  created from the popup gets **Room** visibility (user's choice), so
+  creating one from a Private/Selective Comment shows its *name* to the
+  whole Room; (e) creating from the popup needs ↓ then Enter (a plain
+  Enter is a newline). Change any of these if they don't fit.
 - Agent export format, JSON vs. Markdown vs. both
   (`architecture.md` → Open items, FR-G1): decide when the export
   endpoint is designed, not needed for the Auth unit.

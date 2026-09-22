@@ -79,7 +79,7 @@ function DocumentDetailLoader({
 
   return (
     <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel="Documenti">
-      <DocumentMentionsProvider roomId={roomId}>
+      <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         <DocumentPanel
           key={document.data.id}
           roomId={roomId}

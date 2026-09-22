@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Anchor, Text, type TextProps } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { useDocumentMentions } from '../../hooks/useDocumentMentions';
-import { splitMentions } from '../../lib/documentMentions';
+import { mentionHref, splitMentions } from '../../lib/documentMentions';
 
 interface MentionTextProps extends TextProps {
   text: string;
@@ -11,13 +11,13 @@ interface MentionTextProps extends TextProps {
   linked?: boolean;
 }
 
-// Text with `#Document name` mentions rendered as accent-colored links to
-// the Document.
+// Text with `#Name` mentions rendered as accent-colored links: a Document
+// mention opens the Document, a Tag mention the Documents with that Tag.
 export function MentionText({ text, linked = true, ...textProps }: MentionTextProps) {
   const mentions = useDocumentMentions();
   const segments = useMemo(
-    () => splitMentions(text, mentions?.documents ?? []),
-    [text, mentions?.documents],
+    () => splitMentions(text, mentions?.documents ?? [], mentions?.tags ?? []),
+    [text, mentions?.documents, mentions?.tags],
   );
 
   return (
@@ -26,19 +26,20 @@ export function MentionText({ text, linked = true, ...textProps }: MentionTextPr
         if (segment.kind === 'text') {
           return segment.text;
         }
+        const testId = `${segment.kind}-mention`;
         return linked && mentions ? (
           <Anchor
             key={index}
             component={Link}
-            to={`/rooms/${mentions.roomId}/documents/${segment.document.id}`}
+            to={mentionHref(mentions.roomId, segment)}
             inherit
             c="var(--accent-primary)"
-            data-testid="document-mention"
+            data-testid={testId}
           >
             {segment.text}
           </Anchor>
         ) : (
-          <Text key={index} span inherit c="var(--accent-primary)" data-testid="document-mention">
+          <Text key={index} span inherit c="var(--accent-primary)" data-testid={testId}>
             {segment.text}
           </Text>
         );

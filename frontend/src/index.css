@@ -56,3 +56,9 @@ body {
 .mention-option[data-active] {
   background: var(--mantine-color-accent-light);
 }
+
+/* The "create" row shown when nothing matches: it holds its own controls,
+   so the row itself isn't clickable. */
+.mention-create {
+  cursor: default;
+}
