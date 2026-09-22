@@ -4,11 +4,13 @@ import { AcceptInvitePage } from './pages/AcceptInvitePage';
 import { RoomMembersPage } from './pages/RoomMembersPage';
 import { RoomDocumentsPage } from './pages/RoomDocumentsPage';
 import { DocumentDetailPage } from './pages/DocumentDetailPage';
+import { AccountPage } from './pages/AccountPage';
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/account" element={<AccountPage />} />
       <Route path="/invite/:code" element={<AcceptInvitePage />} />
       <Route path="/rooms/:roomId/members" element={<RoomMembersPage />} />
       <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />

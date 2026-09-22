@@ -9,9 +9,11 @@ import {
 import type { Comment, CommentFilters } from '../types/comment';
 import type { Member } from '../types/member';
 
+const noProfile = { displayName: null, pronouns: null, bio: null, avatarUrl: null };
+
 const members: Member[] = [
-  { userId: 'u-zed', email: 'zed@example.com', role: 'player', isAdmin: false },
-  { userId: 'u-ann', email: 'ann@example.com', role: 'master', isAdmin: true },
+  { ...noProfile, userId: 'u-zed', email: 'zed@example.com', role: 'player', isAdmin: false },
+  { ...noProfile, userId: 'u-ann', email: 'ann@example.com', role: 'master', isAdmin: true },
 ];
 
 function comment(id: string, overrides: Partial<Comment> = {}): Comment {
@@ -92,6 +94,20 @@ describe('applyCommentFilters', () => {
   it('searches the body and the author name, case-insensitively', () => {
     expect(ids(applyCommentFilters(comments, filters({ query: 'COUNT' }), members))).toEqual(['b']);
     expect(ids(applyCommentFilters(comments, filters({ query: 'ann@' }), members))).toEqual(['b']);
+  });
+
+  it('uses chosen names, and still finds an author by email', () => {
+    // Zed picked a name that sorts before Ann's email.
+    const named = members.map((m) => (m.userId === 'u-zed' ? { ...m, displayName: 'Abelard' } : m));
+
+    expect(commentAuthors(comments, named).map((a) => a.label)).toEqual([
+      'Abelard',
+      'ann@example.com',
+    ]);
+    const byName = ids(applyCommentFilters(comments, filters({ query: 'abel' }), named));
+    const byEmail = ids(applyCommentFilters(comments, filters({ query: 'zed@' }), named));
+    expect(byName).not.toEqual([]);
+    expect(byEmail).toEqual(byName);
   });
 
   it('can hide deleted placeholders', () => {

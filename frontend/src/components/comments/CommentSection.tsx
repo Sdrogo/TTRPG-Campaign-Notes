@@ -12,7 +12,7 @@ import {
   applyCommentFilters,
   commentAuthors,
 } from '../../lib/comments';
-import { displayNameFor } from '../../lib/members';
+import { findMember } from '../../lib/members';
 import { notifyError } from '../../lib/notify';
 import type { CommentFilters } from '../../types/comment';
 import type { Member } from '../../types/member';
@@ -128,7 +128,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
         <Divider />
 
         <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="new-comment">
-          <UserAvatar name={displayNameFor(members, currentUserId)} size="md" mt={2} />
+          <UserAvatar user={findMember(members, currentUserId)} size="md" mt={2} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <CommentComposer
               members={members}

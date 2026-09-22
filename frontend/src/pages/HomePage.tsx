@@ -1,7 +1,8 @@
-import { Stack, Group, Title, Text, Button, Loader } from '@mantine/core';
+import { Stack, Title, Text, Button, Loader } from '@mantine/core';
 import { BookOpenIcon, GoogleLogoIcon } from '@phosphor-icons/react';
 import { supabase } from '../lib/supabaseClient';
 import { useSession } from '../hooks/useSession';
+import { AppHeader } from '../components/AppHeader';
 import { RoomsPage } from './RoomsPage';
 
 export function HomePage() {
@@ -9,10 +10,6 @@ export function HomePage() {
 
   const signInWithGoogle = () => {
     void supabase.auth.signInWithOAuth({ provider: 'google' });
-  };
-
-  const signOut = () => {
-    void supabase.auth.signOut();
   };
 
   if (sessionLoading) {
@@ -42,19 +39,7 @@ export function HomePage() {
 
   return (
     <Stack gap={0}>
-      <Group justify="space-between" p="md" style={{ borderBottom: '1px solid var(--border-default)' }}>
-        <Title order={3} style={{ fontFamily: 'var(--font-display)' }}>
-          TTRPG Campaign Notes
-        </Title>
-        <Group gap="sm">
-          <Text c="dimmed" size="sm">
-            {session.user.email}
-          </Text>
-          <Button variant="outline" size="xs" onClick={signOut}>
-            Esci
-          </Button>
-        </Group>
-      </Group>
+      <AppHeader />
       <RoomsPage />
     </Stack>
   );

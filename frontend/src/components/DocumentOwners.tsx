@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { ActionIcon, Badge, Button, Group, Select, Stack, Text } from '@mantine/core';
 import { TrashIcon } from '@phosphor-icons/react';
-import { displayNameFor, memberOptionLabel } from '../lib/members';
+import { findMember, memberDisplayName, memberOptionLabel } from '../lib/members';
+import { UserAvatar } from './UserAvatar';
 import type { Member } from '../types/member';
 
 interface DocumentOwnersProps {
@@ -26,7 +27,8 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
       </Text>
       <Group gap="xs">
         {ownerIds.map((ownerId) => {
-          const name = displayNameFor(members, ownerId);
+          const owner = findMember(members, ownerId);
+          const name = memberDisplayName(owner);
           return (
             <Badge
               key={ownerId}
@@ -34,6 +36,8 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
               color="gray"
               tt="none"
               maw="100%"
+              pl={3}
+              leftSection={<UserAvatar user={owner} size={16} />}
               rightSection={
                 canManage ? (
                   <ActionIcon

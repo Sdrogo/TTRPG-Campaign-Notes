@@ -1,21 +1,33 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
+import { toUserIdentity } from '../lib/profile';
 import type { Member } from '../types/member';
+import type { RawUserIdentity } from '../types/profile';
 import type { RoomRole } from '../types/room';
 
-interface RawMember {
+interface RawMember extends RawUserIdentity {
   user_id: string;
-  email: string | null;
   role: RoomRole;
   is_admin: boolean;
 }
 
 function toMember(raw: RawMember): Member {
-  return { userId: raw.user_id, email: raw.email, role: raw.role, isAdmin: raw.is_admin };
+  return {
+    ...toUserIdentity(raw),
+    userId: raw.user_id,
+    role: raw.role,
+    isAdmin: raw.is_admin,
+  };
 }
 
 function membersQueryKey(roomId: string) {
   return ['rooms', roomId, 'members'] as const;
+}
+
+// Every Room's member list names users by their profile, so a profile
+// change must refresh all of them.
+export function isMembersQueryKey(queryKey: readonly unknown[]): boolean {
+  return queryKey[0] === 'rooms' && queryKey[2] === 'members';
 }
 
 export function useMembers(roomId: string, enabled: boolean) {

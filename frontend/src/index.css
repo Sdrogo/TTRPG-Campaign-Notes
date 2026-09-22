@@ -25,3 +25,19 @@ body {
 .comment-action:hover {
   color: var(--accent-strong);
 }
+
+/* The account avatar in the top bar: a thin ring that turns accent on hover,
+   focus, and while the Account page is open. */
+.account-button {
+  display: block;
+  border-radius: 50%;
+  padding: 2px;
+  border: 1px solid var(--border-default);
+  transition: border-color 120ms ease;
+}
+
+.account-button:hover,
+.account-button:focus-visible,
+.account-button[data-active] {
+  border-color: var(--accent-primary);
+}
