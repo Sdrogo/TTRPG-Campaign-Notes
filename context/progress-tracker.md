@@ -917,9 +917,11 @@ Update this file after every meaningful implementation change.
   is private for all images (see Completed).
   (e) name and avatar from Google. **Done**: copied once as defaults,
   then owned by the user (see Completed).
-- ~~RLS as defense-in-depth~~ — RLS is now on for every table
-  (backend-only, no policies; 2026-09-22). Only the question of adding
-  *policies* for some future direct client access remains, in
+- ~~RLS as defense-in-depth~~ — RLS is now on for every table, each with
+  the restrictive `backend_only_deny_clients` policy denying `anon` and
+  `authenticated` everything (backend-only; 2026-09-22, migrations
+  `c9d4e7b1f352` and `f1c8a2e6d493`). Only the question of adding
+  policies that *allow* some future direct client access remains, in
   `architecture.md` → Open items.
 - **Supabase dashboard lints (2026-09-22)**: the "RLS enabled, no policy"
   notices were addressed with explicit deny policies (see Completed).
