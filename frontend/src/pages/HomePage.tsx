@@ -9,7 +9,13 @@ export function HomePage() {
   const { session, loading: sessionLoading } = useSession();
 
   const signInWithGoogle = () => {
-    void supabase.auth.signInWithOAuth({ provider: 'google' });
+    // Come back to whatever origin we're on (production, a Vercel preview,
+    // or localhost) instead of Supabase's single configured Site URL. Each
+    // origin must be listed in Supabase's Redirect URLs allowlist.
+    void supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
   };
 
   if (sessionLoading) {
