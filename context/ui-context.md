@@ -102,16 +102,25 @@ other icon set.
   rendered by `HomePage` and by `PageLayout`, so every signed-in page
   has it. The account avatar is the only way to the Account page and
   to sign out.
-- **Account page** (`/account`, `pages/AccountPage.tsx`): standard
-  settings layout — page title + one-line subtitle, then a narrow
-  column (max 720px, left-aligned under the back link) of titled cards
-  (`AccountSection`). "Profilo": `AvatarEditor` (112px avatar;
-  "Carica foto", "Da URL" popover, "Rimuovi" — each applies
-  immediately) above `ProfileForm` (Nome visualizzato, Pronomi,
+- **Page cards** (`PageCard`): the main card(s) of a page — Document,
+  Comments, Account sections — are full width inside `PageLayout`'s
+  symmetric, screen-growing margins, so they're centered horizontally
+  and stretch with the screen (spec `02 - redifine Document UI`), with
+  padding growing `md` → `lg` → `xl`. Use `PageCard` rather than
+  repeating the `Card` props.
+- **Account page** (`/account`, `pages/AccountPage.tsx`): page title +
+  one-line subtitle, then titled `PageCard`s (`AccountSection`),
+  centered and full width like the Document page (changed 2026-09-22;
+  it was a 720px left-aligned column). "Profilo": `AvatarEditor` (112px
+  avatar; "Carica foto", "Da URL" popover, "Rimuovi" — each applies
+  immediately) and `ProfileForm` (Nome visualizzato, Pronomi,
   Descrizione with a character counter; "Annulla modifiche" / "Salva
   profilo" enabled only when the form is dirty, success toast on
-  save). "Accesso": the Google email, read-only, and a sign-out row
-  ("Esci", outline, not red — signing out isn't destructive).
+  save). From `md` up the avatar is a left column (4/12, 3/12 at `lg`)
+  beside the form, so fields don't stretch across the whole card; below
+  `md` they stack with a divider. "Accesso": the Google email,
+  read-only, with the sign-out row ("Esci", outline, not red — signing
+  out isn't destructive) beside it from `md` up, below it on phones.
 - **Showing a user**: always `UserAvatar user={…}` (photo, or initials
   of their display name/email) plus `userDisplayName` — never an email
   directly. The members table adds pronouns and a 2-line-clamped

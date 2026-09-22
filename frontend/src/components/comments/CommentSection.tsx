@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Badge, Button, Card, Divider, Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { Badge, Button, Divider, Group, Loader, Stack, Text, Title } from '@mantine/core';
 import { ChatCircleDotsIcon } from '@phosphor-icons/react';
 import { CommentComposer } from './CommentComposer';
 import { CommentItem } from './CommentItem';
 import { CommentToolbar } from './CommentToolbar';
 import { UserAvatar } from '../UserAvatar';
+import { PageCard } from '../PageCard';
 import { useComments, useDeleteComment, useSaveComment } from '../../hooks/useComments';
 import type { SaveCommentResult } from '../../hooks/useComments';
 import {
@@ -46,7 +47,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
   const savingId = saveComment.isPending ? saveComment.variables?.commentId : undefined;
 
   return (
-    <Card withBorder radius="md" w="100%" p={{ base: 'md', sm: 'lg', lg: 'xl' }}>
+    <PageCard>
       <Stack gap="md">
         <Group gap="xs">
           <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
@@ -151,6 +152,6 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
           </div>
         </Group>
       </Stack>
-    </Card>
+    </PageCard>
   );
 }

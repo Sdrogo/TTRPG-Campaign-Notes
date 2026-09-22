@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Card, Stack, Text, Title } from '@mantine/core';
+import { Stack, Text, Title } from '@mantine/core';
+import { PageCard } from '../PageCard';
 
 interface AccountSectionProps {
   title: string;
@@ -10,10 +11,10 @@ interface AccountSectionProps {
 // One titled card on the Account page (Profilo, Accesso, ...).
 export function AccountSection({ title, description, children }: AccountSectionProps) {
   return (
-    <Card withBorder radius="md" w="100%" p={{ base: 'md', sm: 'lg' }}>
+    <PageCard>
       <Stack gap="md">
         <Stack gap={2}>
-          <Title order={3} style={{ fontFamily: 'var(--font-display)' }}>
+          <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
             {title}
           </Title>
           {description && (
@@ -24,6 +25,6 @@ export function AccountSection({ title, description, children }: AccountSectionP
         </Stack>
         {children}
       </Stack>
-    </Card>
+    </PageCard>
   );
 }

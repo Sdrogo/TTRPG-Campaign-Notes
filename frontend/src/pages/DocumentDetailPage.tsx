@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Stack, Group, Title, Text, Button, Card, Divider, ActionIcon } from '@mantine/core';
+import { Stack, Group, Title, Text, Button, Divider, ActionIcon } from '@mantine/core';
 import { PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
@@ -17,6 +17,7 @@ import { useMembers } from '../hooks/useMembers';
 import { notifyError } from '../lib/notify';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
+import { PageCard } from '../components/PageCard';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { TagList } from '../components/TagList';
 import { DocumentFields } from '../components/DocumentFields';
@@ -119,7 +120,7 @@ function DocumentPanel({
     members.find((m) => m.userId === currentUserId)?.role === 'master';
 
   return (
-    <Card withBorder radius="md" w="100%" p={{ base: 'md', sm: 'lg', lg: 'xl' }}>
+    <PageCard>
       <Stack gap="md">
         <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
           <Title
@@ -186,7 +187,7 @@ function DocumentPanel({
           onRemove={(userId) => removeOwner.mutate(userId, { onError: notifyError })}
         />
       </Stack>
-    </Card>
+    </PageCard>
   );
 }
 

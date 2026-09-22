@@ -50,6 +50,17 @@ Update this file after every meaningful implementation change.
 - **Google profile defaults complete** (2026-09-22, backend only): the
   Google name and picture are copied into the profile once, for
   whatever the user hasn't set.
+- **Account page layout redefined** (2026-09-22, frontend only,
+  uncommitted): the Account cards are now centered and full width like
+  the Document page. New shared `PageCard` component (the full-width
+  card style repeated by the Document, Comments and Account cards) now
+  used by all three. From `md` up the avatar sits beside the form and
+  the email beside sign-out; below `md` they stack. Build, lint and
+  `npm test` 33/33 pass. Headless layout check at 1920/1280/900/375px:
+  both cards centered (equal side margins), exactly as wide as the
+  Document card, side-by-side from 992px, no horizontal overflow, zero
+  console errors; screenshots checked by eye. Note: Mantine v9 renamed
+  `Grid`'s `gutter` prop to `gap`.
 - **Database lockdown complete** (2026-09-22, backend only): fixed
   Supabase's "RLS Disabled in Public" critical warnings. Every table
   was readable and writable through the Data API with the public key.

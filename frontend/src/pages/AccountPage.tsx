@@ -1,4 +1,4 @@
-import { Button, Divider, Group, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Button, Divider, Grid, Group, Stack, Text, TextInput, Title } from '@mantine/core';
 import { GoogleLogoIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
@@ -67,71 +67,76 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
 
   return (
     <PageLayout backTo="/" backLabel="Le mie Stanze">
-      <Stack gap="lg" maw={720} w="100%">
-        <Stack gap={2}>
-          <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
-            Account
-          </Title>
-          <Text c="dimmed">Il tuo profilo e la tua sessione.</Text>
-        </Stack>
+      <Stack gap={2}>
+        <Title order={1} fz={{ base: 'h2', sm: 'h1' }} style={{ fontFamily: 'var(--font-display)' }}>
+          Account
+        </Title>
+        <Text c="dimmed">Il tuo profilo e la tua sessione.</Text>
+      </Stack>
 
-        <AccountSection
-          title="Profilo"
-          description="Come ti vedono gli altri membri delle tue Stanze."
-        >
-          <AvatarEditor
-            user={profile}
-            pending={avatarPending}
-            onUpload={(file) => uploadAvatar.mutate(file, { onError: notifyError })}
-            onImportUrl={(url) => importAvatar.mutate(url, { onError: notifyError })}
-            onRemove={() => removeAvatar.mutate(undefined, { onError: notifyError })}
-          />
-          <Divider />
-          <ProfileForm
-            profile={profile}
-            saving={updateProfile.isPending}
-            onSubmit={(values, onDone) =>
-              updateProfile.mutate(toProfilePatch(values), {
-                onSuccess: (saved) => {
-                  onDone(saved);
-                  notifySuccess('Profilo salvato.');
-                },
-                onError: notifyError,
-              })
-            }
-          />
-        </AccountSection>
+      {/* Full-width cards like the Document page; on wide screens the
+          avatar sits beside the form and the email beside sign-out, so the
+          fields don't stretch across the whole card. */}
+      <AccountSection title="Profilo" description="Come ti vedono gli altri membri delle tue Stanze.">
+        <Grid gap={{ base: 'md', md: 'xl' }}>
+          <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
+            <AvatarEditor
+              user={profile}
+              pending={avatarPending}
+              onUpload={(file) => uploadAvatar.mutate(file, { onError: notifyError })}
+              onImportUrl={(url) => importAvatar.mutate(url, { onError: notifyError })}
+              onRemove={() => removeAvatar.mutate(undefined, { onError: notifyError })}
+            />
+            <Divider hiddenFrom="md" mt="md" />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
+            <ProfileForm
+              profile={profile}
+              saving={updateProfile.isPending}
+              onSubmit={(values, onDone) =>
+                updateProfile.mutate(toProfilePatch(values), {
+                  onSuccess: (saved) => {
+                    onDone(saved);
+                    notifySuccess('Profilo salvato.');
+                  },
+                  onError: notifyError,
+                })
+              }
+            />
+          </Grid.Col>
+        </Grid>
+      </AccountSection>
 
-        <AccountSection title="Accesso">
-          <TextInput
-            label="Email"
-            description="Accedi con Google: l'email è quella del tuo account Google."
-            value={profile.email ?? ''}
-            leftSection={<GoogleLogoIcon size={16} />}
-            readOnly
-          />
-          <Divider />
-          <Group justify="space-between" wrap="wrap" gap="sm">
-            <Stack gap={0}>
-              <Text size="sm" fw={600}>
-                Esci
-              </Text>
+      <AccountSection title="Accesso">
+        <Grid gap={{ base: 'md', md: 'xl' }} align="flex-end">
+          <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
+            <TextInput
+              label="Email"
+              description="Accedi con Google: l'email è quella del tuo account Google."
+              value={profile.email ?? ''}
+              leftSection={<GoogleLogoIcon size={16} />}
+              readOnly
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
+            <Group justify="space-between" wrap="nowrap" gap="sm">
               <Text size="sm" c="dimmed">
                 Termina la sessione su questo dispositivo.
               </Text>
-            </Stack>
-            <Button
-              variant="outline"
-              color="gray"
-              leftSection={<SignOutIcon size={16} />}
-              loading={signOut.isPending}
-              onClick={() => signOut.mutate(undefined, { onError: notifyError })}
-            >
-              Esci
-            </Button>
-          </Group>
-        </AccountSection>
-      </Stack>
+              <Button
+                variant="outline"
+                color="gray"
+                leftSection={<SignOutIcon size={16} />}
+                loading={signOut.isPending}
+                onClick={() => signOut.mutate(undefined, { onError: notifyError })}
+                style={{ flexShrink: 0 }}
+              >
+                Esci
+              </Button>
+            </Group>
+          </Grid.Col>
+        </Grid>
+      </AccountSection>
     </PageLayout>
   );
 }
