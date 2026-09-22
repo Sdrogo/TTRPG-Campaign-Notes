@@ -7,7 +7,7 @@ app/db/storage_cleanup.py's job."""
 
 import asyncio
 import uuid
-from collections.abc import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from fastapi import HTTPException, UploadFile, status
 from pydantic import BaseModel
@@ -32,8 +32,22 @@ class ImageResponse(BaseModel):
     url: str
 
 
-def image_response(image: DocumentImage) -> ImageResponse:
-    return ImageResponse(id=image.id, url=storage.public_url(image.storage_path))
+async def sign_images(images: Iterable[DocumentImage]) -> dict[str, str]:
+    """Signed URLs for images already known to be visible to the requester,
+    in one Storage request. Pass the result to `image_responses`."""
+    return await storage.signed_urls([image.storage_path for image in images])
+
+
+def image_responses(
+    images: Iterable[DocumentImage], urls: Mapping[str, str]
+) -> list[ImageResponse]:
+    """An image Storage couldn't sign is left out (see
+    `storage.signed_urls`)."""
+    return [
+        ImageResponse(id=image.id, url=urls[image.storage_path])
+        for image in images
+        if image.storage_path in urls
+    ]
 
 
 async def read_upload(file: UploadFile) -> bytes:

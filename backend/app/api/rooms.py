@@ -1,9 +1,10 @@
 import uuid
+from collections.abc import Mapping
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from app.api.profiles import ProfileFields, profile_fields
+from app.api.profiles import ProfileFields, profile_fields, sign_avatars
 from app.auth.dependencies import CurrentUserDep
 from app.db import rooms_repo, users_repo
 from app.db.session import SessionDep
@@ -55,12 +56,14 @@ class UpdateRoomSettingsRequest(BaseModel):
     players_can_create_documents: bool
 
 
-def member_response(membership: Membership, profile: UserProfile) -> MemberResponse:
+def member_response(
+    membership: Membership, profile: UserProfile, avatar_urls: Mapping[str, str]
+) -> MemberResponse:
     return MemberResponse(
         user_id=membership.user_id,
         role=membership.role,
         is_admin=membership.is_admin,
-        **profile_fields(profile).model_dump(),
+        **profile_fields(profile, avatar_urls).model_dump(),
     )
 
 
@@ -154,7 +157,8 @@ async def list_members(
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
 
     rows = await rooms_repo.list_members_with_profile(session, room_id)
-    return [member_response(membership, profile) for membership, profile in rows]
+    avatar_urls = await sign_avatars(profile for _, profile in rows)
+    return [member_response(membership, profile, avatar_urls) for membership, profile in rows]
 
 
 @router.patch("/{room_id}/members/{user_id}")
@@ -184,7 +188,7 @@ async def update_member(
     await rooms_repo.insert_audit_log(session, plan.audit_entry)
 
     profile = await users_repo.get_profile(session, user_id)
-    return member_response(plan.membership, profile)
+    return member_response(plan.membership, profile, await sign_avatars([profile]))
 
 
 @router.delete("/{room_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

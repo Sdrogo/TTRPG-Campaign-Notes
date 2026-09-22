@@ -5,8 +5,9 @@ there is no role or visibility check here - just input normalization."""
 import re
 import uuid
 from dataclasses import dataclass, replace
+from urllib.parse import urlsplit
 
-from app.domain.images import OUTPUT_EXTENSION
+from app.domain.images import AVATAR_DIMENSION, OUTPUT_EXTENSION
 from app.domain.models import UserProfile
 
 MAX_DISPLAY_NAME_LENGTH = 60
@@ -18,6 +19,8 @@ MAX_BIO_LENGTH = 1000
 AVATAR_PATH_PREFIX = "avatars"
 
 _WHITESPACE_RUN = re.compile(r"\s+")
+# Google profile picture URLs end with a size option, 96px by default.
+_GOOGLE_SIZE_OPTION = re.compile(r"=s\d+(-c)?$")
 
 
 class ProfileFieldTooLongError(Exception):
@@ -78,3 +81,26 @@ def plan_avatar_path(user_id: uuid.UUID) -> str:
     """A fresh random name per upload, so a replaced avatar never serves a
     stale cached copy under the same URL."""
     return f"{AVATAR_PATH_PREFIX}/{user_id}/{uuid.uuid4()}{OUTPUT_EXTENSION}"
+
+
+def plan_google_prefill(current: UserProfile, google_name: str | None) -> UserProfile:
+    """Offers the Google name as the default display name, once: only fills
+    a name the user hasn't set, cut to the limit rather than rejected (the
+    user didn't type it). The picture is imported separately, since that
+    needs I/O."""
+    if current.display_name is not None or google_name is None:
+        return current
+    clean = _WHITESPACE_RUN.sub(" ", google_name).strip()[:MAX_DISPLAY_NAME_LENGTH].strip()
+    return replace(current, display_name=clean or None)
+
+
+def google_avatar_source(picture_url: str | None) -> str | None:
+    """The URL to import a Google profile picture from, asking Google for
+    the size we store instead of its 96px default. Other URLs are used as
+    they are."""
+    if not picture_url:
+        return None
+    host = urlsplit(picture_url).hostname or ""
+    if host.endswith(".googleusercontent.com") and _GOOGLE_SIZE_OPTION.search(picture_url):
+        return _GOOGLE_SIZE_OPTION.sub(f"=s{AVATAR_DIMENSION}-c", picture_url)
+    return picture_url

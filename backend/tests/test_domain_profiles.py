@@ -2,6 +2,7 @@ import uuid
 
 import pytest
 
+from app.domain.images import AVATAR_DIMENSION
 from app.domain.models import UserProfile
 from app.domain.profiles import (
     AVATAR_PATH_PREFIX,
@@ -10,7 +11,9 @@ from app.domain.profiles import (
     MAX_PRONOUNS_LENGTH,
     ProfileChanges,
     ProfileFieldTooLongError,
+    google_avatar_source,
     plan_avatar_path,
+    plan_google_prefill,
     plan_profile_update,
 )
 
@@ -86,3 +89,37 @@ def test_avatar_paths_are_per_user_and_never_reused() -> None:
     assert first.startswith(f"{AVATAR_PATH_PREFIX}/{USER_ID}/")
     assert first.endswith(".webp")
     assert first != second
+
+
+# --- Google defaults ---------------------------------------------------------
+
+EMPTY = UserProfile(user_id=USER_ID, email="a@example.com")
+
+
+def test_google_name_fills_an_unset_display_name() -> None:
+    assert plan_google_prefill(EMPTY, "  Ireena   Kolyana ").display_name == "Ireena Kolyana"
+
+
+def test_google_name_never_replaces_a_chosen_one() -> None:
+    assert plan_google_prefill(CURRENT, "Someone Else") == CURRENT
+
+
+def test_long_google_name_is_cut_not_rejected() -> None:
+    updated = plan_google_prefill(EMPTY, "a" * (MAX_DISPLAY_NAME_LENGTH + 20))
+    assert updated.display_name == "a" * MAX_DISPLAY_NAME_LENGTH
+
+
+def test_no_google_name_changes_nothing() -> None:
+    assert plan_google_prefill(EMPTY, None) == EMPTY
+
+
+def test_google_picture_is_requested_at_avatar_size() -> None:
+    source = google_avatar_source("https://lh3.googleusercontent.com/a/ACg8ocXYZ=s96-c")
+    assert source == f"https://lh3.googleusercontent.com/a/ACg8ocXYZ=s{AVATAR_DIMENSION}-c"
+
+
+def test_other_picture_urls_are_used_as_they_are() -> None:
+    assert google_avatar_source("https://example.com/me.png=s96-c") == (
+        "https://example.com/me.png=s96-c"
+    )
+    assert google_avatar_source(None) is None

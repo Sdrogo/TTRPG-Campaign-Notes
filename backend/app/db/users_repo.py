@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,6 +31,7 @@ def profile_from_row(user_id: uuid.UUID, row: UserRow | None) -> UserProfile:
         pronouns=row.pronouns,
         bio=row.bio,
         avatar_path=row.avatar_path,
+        google_prefilled=row.profile_prefilled_at is not None,
     )
 
 
@@ -57,3 +58,9 @@ async def save_profile(session: AsyncSession, profile: UserProfile) -> None:
     row.bio = profile.bio
     row.avatar_path = profile.avatar_path
     await session.flush()
+
+
+async def mark_prefilled(session: AsyncSession, user_id: uuid.UUID) -> None:
+    await session.execute(
+        update(UserRow).where(UserRow.id == user_id).values(profile_prefilled_at=func.now())
+    )

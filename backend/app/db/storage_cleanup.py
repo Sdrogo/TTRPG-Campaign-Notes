@@ -65,6 +65,7 @@ async def schedule_removal(session: AsyncSession, paths: Collection[str]) -> Non
     """In the request's transaction, next to the deletion of the rows that
     referenced them; the objects themselves are removed after commit."""
     await _insert(session, paths)
+    storage.forget_signed_urls(paths)
     session.info.setdefault(_SCHEDULED_KEY, []).extend(paths)
     session_module.on_commit(session, _remove_scheduled)
 

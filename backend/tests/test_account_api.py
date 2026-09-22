@@ -50,6 +50,10 @@ async def _cleanup_rows(session: AsyncSession, paths: Collection[str]) -> list[s
     return list(result.scalars())
 
 
+async def _signed(path: str) -> str:
+    return (await storage.signed_urls([path]))[path]
+
+
 def _after_grace() -> datetime:
     return datetime.now(UTC) + 2 * storage_cleanup.SWEEP_GRACE
 
@@ -167,7 +171,7 @@ async def test_uploaded_avatar_is_cropped_to_a_small_square(
     assert status_code == 200
     (path, stored) = next(iter(fake_storage.items()))
     assert path.startswith(f"avatars/{user_id}/")
-    assert body["avatar_url"] == storage.public_url(path)
+    assert body["avatar_url"] == await _signed(path)
     with Image.open(io.BytesIO(stored)) as image:
         assert image.format == "WEBP"
         assert image.size == (AVATAR_DIMENSION, AVATAR_DIMENSION)
@@ -188,7 +192,7 @@ async def test_replacing_the_avatar_removes_the_old_one(
 
     (new_path,) = fake_storage
     assert new_path != old_path
-    assert body["avatar_url"] == storage.public_url(new_path)
+    assert body["avatar_url"] == await _signed(new_path)
 
 
 async def test_user_removes_their_avatar(
@@ -282,3 +286,124 @@ async def test_avatar_upload_whose_transaction_fails_is_swept_later(
 
     await storage_cleanup.sweep(db_session, now=_after_grace())
     assert fake_storage == {}
+
+
+# --- Google defaults ---------------------------------------------------------
+
+GOOGLE_PICTURE = "https://lh3.googleusercontent.com/a/ACg8oc123=s96-c"
+
+
+def _google_headers(
+    make_token: Callable[..., str], user_id: str, name: str | None = "Ireena Kolyana"
+) -> dict[str, str]:
+    metadata = {"full_name": name, "avatar_url": GOOGLE_PICTURE, "email": "i@example.com"}
+    token = make_token(user_id, email="i@example.com", user_metadata=metadata)
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def google_fetches(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    requested: list[str] = []
+
+    async def fake_fetch(url: str) -> bytes:
+        requested.append(url)
+        return _png((96, 96))
+
+    monkeypatch.setattr(remote_images, "fetch_image_bytes", fake_fetch)
+    return requested
+
+
+async def test_first_visit_copies_the_google_name_and_picture(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    google_fetches: list[str],
+) -> None:
+    user_id = str(uuid.uuid4())
+    body = (await client.get("/account", headers=_google_headers(make_token, user_id))).json()
+
+    assert body["display_name"] == "Ireena Kolyana"
+    (path,) = fake_storage
+    assert path.startswith(f"avatars/{user_id}/")
+    assert body["avatar_url"] == await _signed(path)
+    # Asked at the stored size, not Google's 96px default.
+    assert google_fetches == [
+        f"https://lh3.googleusercontent.com/a/ACg8oc123=s{AVATAR_DIMENSION}-c"
+    ]
+    assert await _cleanup_rows(db_session, [path]) == []
+
+
+async def test_google_defaults_are_copied_only_once(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    google_fetches: list[str],
+) -> None:
+    headers = _google_headers(make_token, str(uuid.uuid4()))
+    await client.get("/account", headers=headers)
+    await client.patch("/account", json={"display_name": None}, headers=headers)
+    await client.delete("/account/avatar", headers=headers)
+
+    body = (await client.get("/account", headers=headers)).json()
+
+    assert body["display_name"] is None
+    assert body["avatar_url"] is None
+    assert len(google_fetches) == 1
+
+
+async def test_google_defaults_never_replace_what_the_user_set(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    google_fetches: list[str],
+) -> None:
+    user_id = str(uuid.uuid4())
+    plain = _headers(make_token, user_id, "i@example.com")
+    await client.patch("/account", json={"display_name": "Ireena"}, headers=plain)
+    await _upload_avatar(client, plain, _png())
+    (own_avatar,) = fake_storage
+
+    body = (await client.get("/account", headers=_google_headers(make_token, user_id))).json()
+
+    assert body["display_name"] == "Ireena"
+    assert body["avatar_url"] == await _signed(own_avatar)
+    assert google_fetches == []
+
+
+async def test_unreachable_google_picture_still_copies_the_name(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def failing_fetch(url: str) -> bytes:
+        raise remote_images.RemoteImageError("Could not fetch the image")
+
+    monkeypatch.setattr(remote_images, "fetch_image_bytes", failing_fetch)
+    response = await client.get("/account", headers=_google_headers(make_token, str(uuid.uuid4())))
+
+    assert response.status_code == 200
+    assert response.json()["display_name"] == "Ireena Kolyana"
+    assert response.json()["avatar_url"] is None
+    assert fake_storage == {}
+
+
+async def test_prefilled_name_shows_in_the_members_list(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    google_fetches: list[str],
+) -> None:
+    headers = _google_headers(make_token, str(uuid.uuid4()))
+    room = (await client.post("/rooms", json={"name": "Barovia"}, headers=headers)).json()
+    await client.get("/account", headers=headers)
+
+    (member,) = (await client.get(f"/rooms/{room['id']}/members", headers=headers)).json()
+
+    assert member["display_name"] == "Ireena Kolyana"
+    assert member["avatar_url"] is not None
