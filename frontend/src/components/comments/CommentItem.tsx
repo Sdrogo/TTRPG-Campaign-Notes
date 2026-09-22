@@ -5,7 +5,7 @@ import { ImageThumbnailGrid } from '../ImageThumbnailGrid';
 import { ImageViewerModal } from '../ImageViewerModal';
 import { VisibilityBadge } from '../VisibilityBadge';
 import { CommentComposer } from './CommentComposer';
-import { displayNameFor } from '../../lib/members';
+import { findMember, memberDisplayName } from '../../lib/members';
 import { isEdited } from '../../lib/comments';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/time';
 import type { Comment, CommentFormValues } from '../../types/comment';
@@ -33,12 +33,13 @@ export function CommentItem({
   deleting,
 }: CommentItemProps) {
   const [editing, setEditing] = useState(false);
-  const authorName = displayNameFor(members, comment.authorId);
+  const author = findMember(members, comment.authorId);
+  const authorName = memberDisplayName(author);
   const isMine = comment.authorId === currentUserId;
 
   return (
     <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="comment-item">
-      <UserAvatar name={authorName} size="md" mt={2} />
+      <UserAvatar user={author} size="md" mt={2} />
       <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
         {editing ? (
           <CommentComposer

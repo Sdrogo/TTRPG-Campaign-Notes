@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Mapping
 
 from fastapi import APIRouter, HTTPException, UploadFile, status
 from pydantic import BaseModel, HttpUrl
@@ -9,9 +10,10 @@ from app.api.image_uploads import (
     ImageResponse,
     ensure_room_for_another_image,
     fetch_url,
-    image_response,
+    image_responses,
     read_upload,
     remove_images,
+    sign_images,
     store_image,
 )
 from app.api.validation import UniqueIds
@@ -29,7 +31,7 @@ from app.domain.documents import (
     plan_add_owner,
     plan_new_document,
 )
-from app.domain.models import Document, DocumentVisibility, Membership
+from app.domain.models import Document, DocumentImage, DocumentVisibility, Membership
 from app.domain.visibility import is_document_visible
 
 router = APIRouter(prefix="/rooms/{room_id}/documents", tags=["documents"])
@@ -74,17 +76,19 @@ async def _build_response(
     document: Document,
     owner_ids: list[uuid.UUID],
     selective_ids: list[uuid.UUID],
-    viewer: Membership,
+    images: list[DocumentImage],
+    image_urls: Mapping[str, str],
 ) -> DocumentResponse:
+    """`images` must already be filtered for the viewer
+    (`get_visible_images`) and signed (`sign_images`)."""
     tag_ids = await documents_repo.list_tag_ids_for_document(session, document.id)
-    images = await get_visible_images(session, document.id, viewer)
     return DocumentResponse(
         id=document.id,
         room_id=document.room_id,
         name=document.name,
         description=document.description,
         visibility=document.visibility,
-        images=[image_response(image) for image in images],
+        images=image_responses(images, image_urls),
         tag_ids=tag_ids,
         owner_ids=owner_ids,
         selective_user_ids=selective_ids,
@@ -96,7 +100,10 @@ async def _to_response(
 ) -> DocumentResponse:
     owner_ids = await documents_repo.list_owner_ids(session, document.id)
     selective_ids = await documents_repo.list_selective_grant_ids(session, document.id)
-    return await _build_response(session, document, owner_ids, selective_ids, viewer)
+    images = await get_visible_images(session, document.id, viewer)
+    return await _build_response(
+        session, document, owner_ids, selective_ids, images, await sign_images(images)
+    )
 
 
 async def _validate_tag_ids(
@@ -148,7 +155,7 @@ async def list_documents(
     membership = await require_membership(session, room_id, requester_id)
 
     documents = await documents_repo.list_documents_for_room(session, room_id)
-    responses = []
+    visible = []
     for document in documents:
         owner_ids = await documents_repo.list_owner_ids(session, document.id)
         selective_ids = await documents_repo.list_selective_grant_ids(session, document.id)
@@ -156,10 +163,15 @@ async def list_documents(
             document, requester_id, membership.role, owner_ids, selective_ids
         ):
             continue
-        responses.append(
-            await _build_response(session, document, owner_ids, selective_ids, membership)
-        )
-    return responses
+        images = await get_visible_images(session, document.id, membership)
+        visible.append((document, owner_ids, selective_ids, images))
+
+    # One signing request for the whole list, not one per Document.
+    image_urls = await sign_images(image for *_, images in visible for image in images)
+    return [
+        await _build_response(session, document, owner_ids, selective_ids, images, image_urls)
+        for document, owner_ids, selective_ids, images in visible
+    ]
 
 
 @router.get("/{document_id}")

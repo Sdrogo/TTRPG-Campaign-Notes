@@ -1,5 +1,5 @@
 import uuid
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, UploadFile, status
@@ -11,9 +11,10 @@ from app.api.image_uploads import (
     ImageResponse,
     ensure_room_for_another_image,
     fetch_url,
-    image_response,
+    image_responses,
     read_upload,
     remove_images,
+    sign_images,
     store_image,
 )
 from app.auth.dependencies import CurrentUserDep
@@ -79,6 +80,7 @@ def _to_response(
     comment: Comment,
     selective_ids: Collection[uuid.UUID],
     images: Collection[DocumentImage],
+    image_urls: Mapping[str, str],
     viewer: Membership,
 ) -> CommentResponse:
     return CommentResponse(
@@ -91,7 +93,7 @@ def _to_response(
         created_at=comment.created_at,
         updated_at=comment.updated_at,
         deleted=comment.deleted_at is not None,
-        images=[image_response(image) for image in images],
+        images=image_responses(images, image_urls),
         can_edit=can_edit_comment(comment, viewer.user_id),
         can_delete=can_delete_comment(comment, viewer.user_id, viewer.role),
     )
@@ -163,8 +165,9 @@ async def list_comments(
     comment_ids = [c.id for c in comments]
     grants = await comments_repo.list_grants_for_comments(session, comment_ids)
     images = await documents_repo.list_images_for_posts(session, comment_ids)
+    image_urls = await sign_images(image for group in images.values() for image in group)
     return [
-        _to_response(comment, grants[comment.id], images[comment.id], membership)
+        _to_response(comment, grants[comment.id], images[comment.id], image_urls, membership)
         for comment in comments
         if is_comment_visible(comment, requester_id, membership.role, grants[comment.id])
     ]
@@ -190,7 +193,7 @@ async def create_comment(
 
     await _validate_grantees(session, room_id, body.selective_user_ids)
     await comments_repo.insert_comment(session, comment, body.selective_user_ids)
-    return _to_response(comment, set(body.selective_user_ids), [], membership)
+    return _to_response(comment, set(body.selective_user_ids), [], {}, membership)
 
 
 @router.patch("/{comment_id}")
@@ -235,7 +238,7 @@ async def update_comment(
         await rooms_repo.insert_audit_log(session, plan.audit_entry)
 
     images = await _comment_images(session, comment_id)
-    return _to_response(plan.comment, selective_ids, images, membership)
+    return _to_response(plan.comment, selective_ids, images, await sign_images(images), membership)
 
 
 @router.delete("/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -288,7 +291,10 @@ async def _attach_image(
     image = await store_image(
         session, document, membership.user_id, data, current_count, post_id=comment.id
     )
-    return _to_response(comment, selective_ids, [*images, image], membership)
+    all_images = [*images, image]
+    return _to_response(
+        comment, selective_ids, all_images, await sign_images(all_images), membership
+    )
 
 
 @router.post("/{comment_id}/images", status_code=status.HTTP_201_CREATED)

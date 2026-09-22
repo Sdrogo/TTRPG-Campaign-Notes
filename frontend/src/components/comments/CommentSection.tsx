@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Badge, Button, Card, Divider, Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { Badge, Button, Divider, Group, Loader, Stack, Text, Title } from '@mantine/core';
 import { ChatCircleDotsIcon } from '@phosphor-icons/react';
 import { CommentComposer } from './CommentComposer';
 import { CommentItem } from './CommentItem';
 import { CommentToolbar } from './CommentToolbar';
 import { UserAvatar } from '../UserAvatar';
+import { PageCard } from '../PageCard';
 import { useComments, useDeleteComment, useSaveComment } from '../../hooks/useComments';
 import type { SaveCommentResult } from '../../hooks/useComments';
 import {
@@ -12,7 +13,7 @@ import {
   applyCommentFilters,
   commentAuthors,
 } from '../../lib/comments';
-import { displayNameFor } from '../../lib/members';
+import { findMember } from '../../lib/members';
 import { notifyError } from '../../lib/notify';
 import type { CommentFilters } from '../../types/comment';
 import type { Member } from '../../types/member';
@@ -46,7 +47,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
   const savingId = saveComment.isPending ? saveComment.variables?.commentId : undefined;
 
   return (
-    <Card withBorder radius="md" w="100%" p={{ base: 'md', sm: 'lg', lg: 'xl' }}>
+    <PageCard>
       <Stack gap="md">
         <Group gap="xs">
           <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
@@ -128,7 +129,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
         <Divider />
 
         <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="new-comment">
-          <UserAvatar name={displayNameFor(members, currentUserId)} size="md" mt={2} />
+          <UserAvatar user={findMember(members, currentUserId)} size="md" mt={2} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <CommentComposer
               members={members}
@@ -151,6 +152,6 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
           </div>
         </Group>
       </Stack>
-    </Card>
+    </PageCard>
   );
 }

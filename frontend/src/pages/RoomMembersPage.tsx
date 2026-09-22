@@ -1,11 +1,12 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Title, Table, Select, Switch, Button, Text, Loader, Badge } from '@mantine/core';
+import { Title, Table, Select, Switch, Button, Text, Loader, Badge, Group, Stack } from '@mantine/core';
 import { useSession } from '../hooks/useSession';
 import { useMembers, useUpdateMember, useRemoveMember } from '../hooks/useMembers';
 import { memberDisplayName } from '../lib/members';
 import { notifyError } from '../lib/notify';
 import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
+import { UserAvatar } from '../components/UserAvatar';
 import type { RoomRole } from '../types/room';
 
 export function RoomMembersPage() {
@@ -77,12 +78,35 @@ export function RoomMembersPage() {
                 return (
                   <Table.Tr key={member.userId}>
                     <Table.Td>
-                      {memberDisplayName(member)}
-                      {isSelf && (
-                        <Badge ml="xs" size="xs" variant="outline" color="gray">
-                          Tu
-                        </Badge>
-                      )}
+                      <Group gap="sm" wrap="nowrap" align="flex-start">
+                        <UserAvatar user={member} size="md" />
+                        <Stack gap={0} style={{ minWidth: 0 }}>
+                          <Text component="div" size="sm" fw={500} style={{ overflowWrap: 'anywhere' }}>
+                            {memberDisplayName(member)}
+                            {isSelf && (
+                              <Badge ml="xs" size="xs" variant="outline" color="gray">
+                                Tu
+                              </Badge>
+                            )}
+                          </Text>
+                          {member.pronouns && (
+                            <Text size="xs" c="dimmed">
+                              {member.pronouns}
+                            </Text>
+                          )}
+                          {member.bio && (
+                            <Text
+                              size="xs"
+                              c="dimmed"
+                              lineClamp={2}
+                              title={member.bio}
+                              style={{ whiteSpace: 'pre-line' }}
+                            >
+                              {member.bio}
+                            </Text>
+                          )}
+                        </Stack>
+                      </Group>
                     </Table.Td>
                     <Table.Td>
                       {isAdmin ? (

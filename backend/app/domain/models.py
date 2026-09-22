@@ -122,3 +122,19 @@ class Comment:
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class UserProfile:
+    """What a user chose to show about themselves (FR-A2). Every field is
+    optional: a user who never opened the Account page is shown by email."""
+
+    user_id: uuid.UUID
+    email: str | None = None
+    display_name: str | None = None
+    pronouns: str | None = None
+    bio: str | None = None
+    avatar_path: str | None = None
+    # Whether the Google name/picture were already offered as defaults. They
+    # are copied once; after that the profile is entirely the user's.
+    google_prefilled: bool = False

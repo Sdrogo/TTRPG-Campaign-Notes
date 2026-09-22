@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Collection
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -104,6 +104,11 @@ def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
     async def fake_remove(path: str) -> None:
         objects.pop(path, None)
 
+    async def fake_create_signed_urls(paths: Collection[str], expires_in: int) -> dict[str, str]:
+        # Like Storage: only objects that exist get a link.
+        return {path: f"https://signed.test/{path}?token=t" for path in paths if path in objects}
+
     monkeypatch.setattr(storage, "upload", fake_upload)
     monkeypatch.setattr(storage, "remove", fake_remove)
+    monkeypatch.setattr(storage, "create_signed_urls", fake_create_signed_urls)
     return objects

@@ -1,6 +1,6 @@
 import type { Comment, CommentFilters } from '../types/comment';
 import type { Member } from '../types/member';
-import { displayNameFor } from './members';
+import { displayNameFor, findMember } from './members';
 
 export const DEFAULT_COMMENT_FILTERS: CommentFilters = {
   sort: 'newest',
@@ -25,6 +25,15 @@ export function hasActiveFilters(filters: CommentFilters): boolean {
 
 const byCreatedAt = (a: Comment, b: Comment) => Date.parse(a.createdAt) - Date.parse(b.createdAt);
 
+// A search for an author matches the name they're shown by and, since that
+// may be a chosen name now, their email too.
+function authorMatches(members: Member[], authorId: string, query: string): boolean {
+  const author = findMember(members, authorId);
+  return [displayNameFor(members, authorId), author?.email ?? ''].some((text) =>
+    text.toLocaleLowerCase().includes(query),
+  );
+}
+
 // Client-side filter + sort over the Comments the backend already returned
 // (so already visibility-filtered). Never mutates its input.
 export function applyCommentFilters(
@@ -41,7 +50,7 @@ export function applyCommentFilters(
       (filters.visibility === null || comment.visibility === filters.visibility) &&
       (query === '' ||
         comment.body.toLocaleLowerCase().includes(query) ||
-        displayNameFor(members, comment.authorId).toLocaleLowerCase().includes(query)),
+        authorMatches(members, comment.authorId, query)),
   );
 
   switch (filters.sort) {
