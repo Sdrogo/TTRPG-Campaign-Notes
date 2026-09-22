@@ -121,14 +121,6 @@ function DocumentPanel({
   return (
     <Card withBorder radius="md" w="100%" p={{ base: 'md', sm: 'lg', lg: 'xl' }}>
       <Stack gap="md">
-        <DocumentImageGallery
-          images={document.images}
-          documentName={document.name}
-          canDelete={isOwner && editing}
-          onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
-          deletingImageId={deleteImage.isPending ? (deleteImage.variables ?? null) : null}
-        />
-
         <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
           <Title
             order={1}
@@ -179,7 +171,13 @@ function DocumentPanel({
         )}
 
         <Divider />
-
+        <DocumentImageGallery
+          images={document.images}
+          documentName={document.name}
+          canDelete={isOwner && editing}
+          onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
+          deletingImageId={deleteImage.isPending ? (deleteImage.variables ?? null) : null}
+        />
         <DocumentOwners
           ownerIds={document.ownerIds}
           members={members}
