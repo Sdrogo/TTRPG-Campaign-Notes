@@ -36,6 +36,7 @@ def plan_new_room(name: str, game_system: str | None, creator_id: uuid.UUID) -> 
         game_system=game_system.strip() if game_system else None,
         status=RoomStatus.ACTIVE,
         created_by=creator_id,
+        players_can_create_documents=True,
     )
     owner_membership = Membership(
         id=uuid.uuid4(),

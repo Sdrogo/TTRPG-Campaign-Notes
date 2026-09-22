@@ -104,6 +104,24 @@ other icon set.
 - **Thread / Posts**: nested replies indent up to the FR-T2 depth
   limit, then flatten with a "continue thread" link; each post shows
   a compact visibility indicator (see `VisibilityBadge` above).
+- **Comments** (built 2026-09-21, `components/comments/`): a separate
+  card *below* the Document card on the detail page (the right-panel
+  layout above is not built yet). Social-media style: `UserAvatar`
+  (initials, accent light) + a **full-width** bubble (it stretches to
+  the row even for a one-word Comment) on `--bg-raised` with
+  `--border-default` and `md` radius holding the author's name, a
+  `VisibilityBadge` (size `xs`, omitted for "Stanza") and the text; under
+  it a muted meta line (relative time, "Modificato", text actions
+  "Modifica"/"Elimina" that turn `--accent-strong` on hover). Attached
+  images show inside the bubble as 120px square thumbnails
+  (`ImageThumbnailGrid`, `sm` radius) that open the shared fullscreen
+  `ImageViewerModal`. Sort/filter controls (`CommentToolbar`) sit above
+  the list; the **composer is at the bottom**, below the list (changed
+  2026-09-21, spec `04 - Refactor of Comments`). The composer attaches
+  images through two subtle icon buttons (`ImageAttachButtons`: file
+  picker, URL popover) and previews them as removable 72px thumbnails
+  before posting. Deletion confirms in a small popover, like image
+  deletion, and warns when the Comment's images will go too.
 - **Modals**: centered overlay with backdrop blur, used for Room
   creation, invitations, and the Reveal confirmation (Reveal is
   destructive/irreversible in effect, so it always confirms in a

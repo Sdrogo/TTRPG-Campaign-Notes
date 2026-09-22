@@ -15,3 +15,13 @@ body {
 #root {
   min-height: 100svh;
 }
+
+/* Text-link actions under a Comment ("Modifica", "Elimina"): muted at rest,
+   accent on hover, like icons (ui-context.md). */
+.comment-action {
+  transition: color 120ms ease;
+}
+
+.comment-action:hover {
+  color: var(--accent-strong);
+}

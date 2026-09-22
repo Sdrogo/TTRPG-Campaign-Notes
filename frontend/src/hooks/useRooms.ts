@@ -7,6 +7,7 @@ interface RawRoom {
   name: string;
   game_system: string | null;
   status: RoomStatus;
+  players_can_create_documents: boolean;
 }
 
 interface RawMyRoom {
@@ -22,7 +23,13 @@ interface RawInvitation {
 }
 
 function toRoom(raw: RawRoom): Room {
-  return { id: raw.id, name: raw.name, gameSystem: raw.game_system, status: raw.status };
+  return {
+    id: raw.id,
+    name: raw.name,
+    gameSystem: raw.game_system,
+    status: raw.status,
+    playersCanCreateDocuments: raw.players_can_create_documents,
+  };
 }
 
 function toMyRoom(raw: RawMyRoom): MyRoom {
@@ -54,6 +61,31 @@ export function useCreateRoom() {
         }),
       ),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY });
+    },
+  });
+}
+
+export function useRoom(roomId: string, enabled: boolean) {
+  return useQuery<Room>({
+    queryKey: ['rooms', roomId],
+    queryFn: async () => toRoom(await apiFetch<RawRoom>(`/rooms/${roomId}`)),
+    enabled,
+  });
+}
+
+export function useUpdateRoomSettings(roomId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (playersCanCreateDocuments: boolean) =>
+      toRoom(
+        await apiFetch<RawRoom>(`/rooms/${roomId}`, {
+          method: 'PATCH',
+          json: { players_can_create_documents: playersCanCreateDocuments },
+        }),
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['rooms', roomId] });
       void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY });
     },
   });

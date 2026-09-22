@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from app.api.rooms import RoomResponse
+from app.api.rooms import RoomResponse, room_to_response
 from app.auth.dependencies import CurrentUserDep
-from app.db import invitations_repo, rooms_repo
+from app.db import invitations_repo, rooms_repo, users_repo
 from app.db.session import SessionDep
 from app.domain.invitations import (
     DEFAULT_INVITE_TTL,
@@ -80,11 +80,10 @@ async def accept_invitation(
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
     await rooms_repo.insert_membership(session, membership)
+    await users_repo.upsert_user(session, user_id, current_user.email)
 
     room = await rooms_repo.get_room(session, invitation.room_id)
     if room is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Room not found")
 
-    return RoomResponse(
-        id=room.id, name=room.name, game_system=room.game_system, status=room.status
-    )
+    return room_to_response(room)

@@ -1,12 +1,31 @@
+import asyncio
+import contextlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
+from app.api.comments import router as comments_router
+from app.api.documents import router as documents_router
 from app.api.invitations import router as invitations_router
 from app.api.rooms import router as rooms_router
+from app.api.tags import router as tags_router
 from app.config import settings
+from app.db.storage_cleanup import run_sweeper
 
-app = FastAPI(title="TTRPG Campaign Notes API")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    sweeper = asyncio.create_task(run_sweeper())
+    yield
+    sweeper.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await sweeper
+
+
+app = FastAPI(title="TTRPG Campaign Notes API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,6 +38,9 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(rooms_router)
 app.include_router(invitations_router)
+app.include_router(tags_router)
+app.include_router(documents_router)
+app.include_router(comments_router)
 
 
 @app.get("/health")

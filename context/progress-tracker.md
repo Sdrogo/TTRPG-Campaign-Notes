@@ -5,21 +5,49 @@ Update this file after every meaningful implementation change.
 ## Current Phase
 
 - **Setup + Auth unit complete** (2026-09-21).
-- **Rooms + Membership unit complete** (2026-09-21, branch
-  `feature/rooms_and_membership`): backend (domain, schema/migrations,
-  API) and frontend (create Room, generate/accept invite link, Room
-  list) are both done. The user verified Room creation and the invite
-  link flow live in the browser. UC-02 and UC-04 are satisfied end to
-  end. Next unit: UC-05 (manage members/roles).
+- **Rooms + Membership unit complete** (2026-09-21).
+- **Manage members/roles unit complete** (2026-09-21).
+- **Documents unit complete** (2026-09-21, branch
+  `feature/Gestione_membri_ruoli` — same branch as Manage members/roles,
+  see Session Notes): CRUD, Tags, Ownership, and a real Visibility
+  filter (Room/Master/Private/Selective) are done, backend and
+  frontend, with automated tests and a headless regression check.
+  **Details/Threads (D-18–D-20, FR-D3, FR-T1) were deliberately
+  deferred**, as planned — this unit covers plain Document CRUD only.
+  Also deferred: version history (FR-D5, Should), draft/published
+  status (FR-D6, Could), cross-Document mentions/backlinks (FR-D4).
+- **Document images unit complete** (2026-09-21, same branch; spec in
+  `context/feature/01 - Add image to  Document.md`): multiple images
+  per Document, from a local file or an image URL, stored in Supabase
+  Storage after server-side validation + downscaling, shown on
+  `DocumentDetailPage` in a carousel with a zoomable fullscreen viewer.
+- **Document UI redefinition complete** (2026-09-21, same branch; spec
+  in `context/feature/02 - redifine Document UI.md`): responsive,
+  full-width Document detail card, emails instead of user ids, shared
+  page/Document components.
+- **Comments unit complete** (2026-09-21, same branch; spec in
+  `context/feature/03 - Implementation of Comments`): the first slice of
+  Threads (FR-T1, FR-T5, VR-03) — flat Comments on a Document with their
+  own visibility, author-only editing, author/Master deletion with a
+  placeholder, sort/filter toolbar, below the Document card. Replies,
+  Details and pagination are not built yet (see Next Up).
+- **Comments refactor complete** (2026-09-21, same branch; spec in
+  `context/feature/04 - Refactor of Comments.md`): composer moved below
+  the list, full-width bubbles, and images on Comments — stored as
+  Document images (shown in the gallery) that inherit the Comment's
+  visibility.
+- **Code review 04 fixes complete** (2026-09-22, same branch; findings in
+  `context/feature/04 codereview.md`): 10 of 11 review items fixed. These
+  include DNS-rebinding-proof URL imports, Storage/DB consistency
+  across failed transactions, and an atomic image limit. The docstring-coverage
+  warning was deliberately not acted on (see Completed).
 
 ## Current Goal
 
-- Manage members and roles (UC-05, FR-R4, FR-R5, FR-R7): an
-  Administrator changes a member's role, assigns/revokes
-  Administrator, designates a new Master, and removes a member — with
-  D-16's guard (last Master / last Administrator can't leave or be
-  demoted without a successor) enforced in the domain layer, not just
-  the UI.
+- None set yet for the next unit. Candidates (see Next Up): the rest of
+  Threads (Details, nested replies with D-17) on top of the new `posts`
+  table, or Visibility's remaining pieces (Reveal action + AuditLog,
+  "view as User X").
 
 ## Completed
 
@@ -185,6 +213,450 @@ Update this file after every meaningful implementation change.
     headlessly — no password-login path exists by design (Google-only,
     D-07) — so it was verified live by the user instead, who confirmed
     both Room creation and the invite-link flow work.
+- **Branch mix-up caught and fixed (2026-09-21):** a new branch for
+  this unit was created from a stale local `main` (missing the merged
+  Rooms+Membership PR, `cd949b9`), which made several already-committed
+  files look reverted on disk. Nothing was actually lost — both
+  `feature/rooms_and_membership` commits were safely on `origin`. Fixed
+  with `git reset --hard origin/main` (zero unique commits on the new
+  branch, confirmed before running it) plus a fast-forward of local
+  `main`. Lesson for future sessions: branch from `origin/main` (or
+  `git fetch` first), not an unrefreshed local `main`.
+- **Manage members/roles (UC-05) (2026-09-21, branch
+  `feature/Gestione_membri_ruoli`):**
+  - `app/domain/memberships.py`: pure functions `plan_role_change` and
+    `plan_removal`, both funnelling through one `_ensure_successor_exists`
+    guard for D-16/Invariant 5 — a Room can never lose its last Master
+    or last Administrator. `plan_removal` covers both UC-05 (an
+    Administrator removes someone) and UC-19 (a member leaves
+    voluntarily), since the guard is identical either way; the caller
+    passes `is_self` only to pick the AuditLog action name
+    (`member_removed` vs `member_left`). 12 pure unit tests, no DB.
+  - New tables: `users` (minimal mirror of `auth.users` — just `id` +
+    `email`, upserted opportunistically when a user creates a Room or
+    accepts an invite; see `architecture.md`) and `audit_log` (first
+    real implementation of Invariant 7 — every role change and removal
+    writes an entry in the same transaction as the change).
+  - API: `GET /rooms/{id}/members` (any member), `PATCH
+    /rooms/{id}/members/{user_id}` (role and/or admin flag, Administrator
+    only), `DELETE /rooms/{id}/members/{user_id}` (Administrator for
+    others, any member for themselves = leave). 6 integration tests
+    against the real Supabase DB (rollback-wrapped, per
+    `tests/conftest.py`).
+  - Frontend: `RoomMembersPage` at `/rooms/:roomId/members` — a table
+    with inline role `Select` / admin `Switch` for Administrators,
+    read-only for everyone else, plus a leave/remove button; errors
+    (e.g. the 409 from the D-16 guard) surface via
+    `@mantine/notifications`. `apiClient.ts` gained JSON-`detail`
+    parsing on error responses (so messages are human-readable, not raw
+    JSON) and 204-No-Content handling (needed for `DELETE`). "Members"
+    link added to `RoomCard`.
+  - Along the way, discovered every bare Phosphor icon import
+    (`Users`, `UserPlus`, `BookOpen`, `GoogleLogo`, `Plus`, `Check`,
+    `Copy`, `ArrowLeft`, ...) is deprecated in the installed
+    `@phosphor-icons/react` version in favor of an `*Icon`-suffixed
+    export (`UsersIcon`, etc.) — fixed across the whole frontend, worth
+    remembering for any new icon import.
+  - mypy strict, ruff, and pytest (39/39) all pass; a Playwright
+    regression check confirmed the signed-out screen and the new
+    `/rooms/:id/members` route's signed-out guard both render with no
+    console errors. The authenticated role/admin/remove UI itself
+    wasn't clicked through live this time (same headless-Google-login
+    limitation as before) — worth the user trying when convenient.
+- **OQ-11 and OQ-12 resolved (2026-09-21):** formalized as
+  `requirements.md` D-19 (who can add a Detail, how it behaves — Owner/
+  Master edit rights, own visibility, nested replies, promotable) and
+  D-20 (one Thread per Document, no others in v1), plus two new
+  invariants I-10/I-11. Bumped `requirements.md` to v0.3 and fixed
+  every stale cross-reference to the old OQ numbers in that file. This
+  unblocked the Documents unit below with no requirements-level gap
+  left.
+- **Documents (FR-D1–D4, D-05, D-12, D-19, D-20 — Details/Threads
+  deferred) (2026-09-21, branch `feature/Gestione_membri_ruoli`):**
+  - `app/domain/documents.py`: pure functions — `plan_new_document`
+    (creator becomes Owner), `is_owner`/`ensure_owner` (D-12: the
+    Master is always an implicit Owner, same pattern as
+    `app/domain/memberships.py`'s D-16 handling), `plan_add_owner`/
+    `ensure_can_remove_owner` (no "last Owner" guard needed here,
+    unlike Rooms — the Master's implicit Ownership means a Document can
+    never end up ownerless), `can_create_document` (D-13/FR-D7: Master
+    always can, a Player only if the Room hasn't disabled it).
+  - `app/domain/visibility.py`: `is_document_visible` — the actual
+    Invariant 1 filter (Room/Master/Private/Selective per section 8 of
+    `requirements.md`), pure and DB-free, built now rather than bolted
+    on later per the plan noted in this file's own Next Up from the
+    prior session. Reused as-is by both the list and detail API routes.
+  - New tables: `documents`, `document_tags`, `document_owners`,
+    `document_visibility_grants`, plus `rooms.players_can_create_documents`
+    (D-13/FR-D7, defaults `true`). The autogenerated migration for that
+    last column had **no server default** for existing rows — would
+    have failed against the Room already created during earlier live
+    testing; fixed by hand-adding `server_default=sa.text('true')`
+    before applying it (worth double-checking on every future
+    `NOT NULL` column addition to a table that already has rows).
+  - API (`app/api/documents.py`, `app/api/tags.py`): `POST/GET
+    /rooms/{id}/documents`, `GET/PATCH /rooms/{id}/documents/{doc_id}`,
+    `POST/DELETE /rooms/{id}/documents/{doc_id}/owners/{user_id}`,
+    `GET/POST /rooms/{id}/tags`; also `GET/PATCH /rooms/{id}` (the
+    latter for the D-13 toggle, Master-only). A Document a viewer can't
+    see returns **404, not 403**, on both the list and detail routes —
+    deliberate, so hidden content doesn't even reveal its own existence
+    (VR-07). Tag name collisions are caught via a SAVEPOINT
+    (`session.begin_nested()`) around the insert, not a plain
+    try/except — a bare `IntegrityError` catch would have left the
+    request's whole transaction aborted for every statement after it.
+  - 20 new tests (12 pure domain — including a full Visibility truth
+    table per level — plus 8 API integration): mypy strict, ruff, and
+    pytest (70/70 total) all pass.
+  - Frontend: `types/document.ts`, `types/tag.ts`,
+    `hooks/useDocuments.ts`, `hooks/useTags.ts`; `VisibilityBadge` (the
+    other app-specific component `ui-context.md` names, alongside
+    `RoleTag`); `CreateDocumentModal` (with inline tag creation),
+    `DocumentCard`, `RoomDocumentsPage` at `/rooms/:roomId/documents`
+    (includes the Master-only D-13 toggle), `DocumentDetailPage` at
+    `/rooms/:roomId/documents/:documentId` with inline editing for
+    Owners and an Owner add/remove list. Split into a loader + a keyed
+    `DocumentEditor` child component (state initialized directly from
+    props, not via a `useEffect` sync) after oxlint's
+    `set-state-in-effect` rule flagged the more obvious approach as a
+    cascading-render risk.
+  - `npm run build` (strict TS) and `npm run lint` pass; a Playwright
+    regression check confirmed the signed-out screen and both new
+    routes' signed-out guards render with no console errors. The
+    authenticated CRUD/visibility/ownership UI wasn't clicked through
+    live (same headless-Google-login limitation as every unit since
+    Auth) — worth the user trying when convenient, especially the
+    Visibility levels since those are new and security-relevant.
+- **Document images (D-09, FR-D1) (2026-09-21, branch
+  `feature/Gestione_membri_ruoli`, spec `context/feature/01 - Add image
+  to  Document.md`):**
+  - Picked up a half-finished, uncommitted single-image draft (one
+    `documents.image_path` column + client upload via a Supabase signed
+    upload URL). The feature spec asked for *several* images, URL
+    imports and downscaling, so it was reshaped: migration
+    `b051c9ffcdfe` (already applied, but no row used it) was downgraded
+    and deleted, replaced by `ba03b9ea5f44` creating a `document_images`
+    table (`id`, `document_id` FK cascade, `storage_path`, `created_by`,
+    `created_at`; ordered by upload time).
+  - **Upload model changed**: both sources now go through the backend
+    instead of a client-side signed upload — see `architecture.md` →
+    Storage Model for the reasoning (URL imports must be fetched/resized
+    server-side anyway; one pipeline means the rules can't be bypassed).
+    `app/domain/images.py::normalize_image` (pure, Pillow) validates the
+    bytes are really PNG/JPEG/WebP/GIF, rejects >20 MB / >50 MP input,
+    downscales to ≤1920px longest side, re-encodes to WebP q82 (strips
+    EXIF/GPS; animated GIFs keep only their first frame).
+    `app/domain/documents.py` adds `plan_new_image` / `ensure_can_add_image`
+    (max 20 images per Document, random `{room}/{doc}/{uuid}.webp` path).
+    `app/db/storage.py` does server-side upload/delete with the secret
+    key; `app/db/remote_images.py` fetches URLs with an SSRF guard
+    (http(s) only, public IPs only — re-checked per redirect, max 3 —
+    10s timeout, 20 MB streaming cap).
+  - API: `POST /rooms/{id}/documents/{doc}/images` (multipart `file`),
+    `POST .../images/from-url` (`{url}`), `DELETE .../images/{image_id}`
+    — all Owner/Master-only (D-12), behind the same visibility filter
+    (404 for hidden Documents). `DocumentResponse.image_url` became
+    `images: [{id, url}]` on every Document route. Errors: 409 over the
+    image limit, 413 too large, 422 not an image / bad URL, 502 Storage
+    down. If the DB insert fails after an upload, the object is removed
+    again; a failed Storage delete rolls back the row delete.
+  - Dependencies: `pillow`, `python-multipart` (backend);
+    `@mantine/carousel`, `embla-carousel`, `embla-carousel-react`
+    (frontend).
+  - Tests: 7 pure image-normalization tests, 2 new domain tests, 8 SSRF
+    guard cases, 9 API integration tests (Storage and URL fetch faked
+    in-memory so rolled-back tests leave nothing in the real bucket).
+    mypy strict, ruff, pytest **96/96** pass.
+  - **Live Supabase check**: fetched a real 14.7 MB, 10109×4542 JPEG from
+    Wikimedia through the SSRF-guarded fetcher, normalized it to a
+    243 KB 1920×863 WebP, uploaded it to the real `document-images`
+    bucket, read it back via its public URL (200, `image/webp`), then
+    deleted it and confirmed via the Storage list API that the bucket is
+    empty again. Note: the public URL kept answering 200 right after the
+    delete — Supabase's CDN cache (see Open Questions).
+  - Frontend: `types/document.ts` gains `DocumentImage`/`images`;
+    `apiClient.ts` gains a `formData` option; `useDocuments.ts` gains
+    `useUploadDocumentImages` (sequential, error names the failing file),
+    `useImportDocumentImage`, `useDeleteDocumentImage`. New components:
+    `DocumentImageGallery` (one image = plain hero, several = Mantine
+    `Carousel` with loop + indicators; delete-with-confirm popover per
+    image), `ImageViewerModal` (fullscreen, 100–500% zoom via buttons or
+    double-click, scroll to pan, prev/next + "n / N" counter, zoom resets
+    per image), `AddDocumentImages` (multi-file picker + URL field with
+    http(s) validation). On `DocumentDetailPage` the gallery sits at the
+    top of the card; add/delete controls appear only in edit mode (the
+    pencil). Edit/cancel icons got `aria-label`s.
+  - `npm run build` and `npm run lint` pass. Headless Playwright check
+    with a faked session + stubbed API (Google-only login still can't be
+    automated): carousel (3 slides, controls, indicators), viewer zoom
+    (541×812 → 1082×1624 at 200%), prev/next, read-only mode shows no
+    delete buttons, 2-file upload + URL import + delete all hit the right
+    endpoints, single-image Document renders without a carousel, zero
+    console errors. Separately confirmed the multipart request carries
+    the full file bytes. Not yet clicked through live against the real
+    backend by a signed-in user — worth doing.
+- **Document UI redefinition (2026-09-21, branch
+  `feature/Gestione_membri_ruoli`, spec `context/feature/02 - redifine
+  Document UI.md`):**
+  - **Owner/member shown as id — root cause was data, not UI**: the
+    frontend already preferred `email`, but both real members
+    (`andreapartenope@gmail.com`, `maxdump101@gmail.com`) had joined
+    before the `users` mirror table existed, so `GET /rooms/{id}/members`
+    returned `email: null` and the UI fell back to the raw id. Fixed by
+    data migration `d3e8a1f4c2b7` (backfills `users` from `auth.users`
+    for every Membership, only where the email is missing; applied and
+    verified live — both members now resolve). The UI no longer ever
+    falls back to an id: `lib/members.ts` (`memberDisplayName`,
+    `displayNameFor`) renders "Utente sconosciuto" instead. Used on
+    `DocumentDetailPage` (Owner badges + add-Owner picker),
+    `RoomMembersPage`, and `RoomDocumentsPage`, whose `DocumentCard`s
+    now also show an "Owner: …" line (the page previously showed no
+    Owner at all, so this is new).
+  - **Layout**: `DocumentDetailPage`'s card is now full width
+    (`w="100%"`) inside a fluid container with responsive side margins
+    (12/20/32px at base/sm/lg), dropping the old `maw={720}`. Card
+    padding, title size and image gallery height (240/360/480px) scale
+    with the viewport; long titles wrap instead of pushing the
+    visibility badge off. Mantine `Group`'s default `preventGrowOverflow`
+    was capping the header's children and truncating the badge on
+    phones — disabled on those header groups, and `VisibilityBadge`
+    itself no longer shrinks. The members table sits in a
+    `Table.ScrollContainer` so it scrolls instead of overflowing on
+    phones.
+  - **Reusable pieces extracted** (spec: "as modular and reusable as
+    possible"): `PageLayout` (fluid container + back link, used by all
+    three pages), `PageState` (`FullPageLoader`, `FullPageMessage`,
+    `SignInRequired` — replaced six copies of the same loading/sign-in
+    markup), `TagList` (was duplicated in `DocumentCard` and the detail
+    page), `DocumentOwners` (Owner badges + add/remove), `DocumentFields`
+    (name/description/visibility/tags — now shared by
+    `CreateDocumentModal` and the detail page's new `DocumentEditForm`,
+    which also unified the two diverging visibility option lists), and
+    `lib/notify.ts` (`notifyError`, was duplicated in two pages).
+    `DocumentFormValues` type added to `types/document.ts`.
+  - Small behavior change: in edit mode the name is now a labelled
+    "Nome" field in the form (was an inline title input), and the edit
+    form remounts each time editing starts, so Cancel no longer needs a
+    manual reset. Save is disabled when the name is blank.
+  - Checks: `npm run build` and `npm run lint` pass; backend mypy strict,
+    ruff, and pytest **96/96** pass (no backend code changed besides the
+    migration). Headless Playwright check (faked session, stubbed API)
+    at 375/800/1600px on the detail, Documents list and members pages:
+    no horizontal overflow at any width, detail card centered with
+    symmetric margins, emails shown, no raw id anywhere in the page
+    text, zero console errors; screenshots inspected by eye. Not yet
+    clicked through live by a signed-in user.
+
+- **Comments (FR-T1, FR-T5, VR-03, UC-11) (2026-09-21, branch
+  `feature/Gestione_membri_ruoli`, spec `context/feature/03 -
+  Implementation of Comments`):**
+  - **Data model**: migration `2393196bb425` (applied to the live
+    Supabase DB) adds `posts` (`id`, `document_id` FK cascade,
+    `author_id`, `kind`, `body`, `visibility`, `created_at`,
+    `updated_at`, `deleted_at`) and `post_visibility_grants`. Named
+    `posts`, not `comments`, to match `requirements.md`'s Post model —
+    Details will reuse it with `kind = 'detail'`. No `threads` table:
+    one Thread per Document (D-20/I-11). Details in `architecture.md` →
+    Storage Model.
+  - **Domain** (`app/domain/comments.py`, pure): `plan_new_comment`
+    (trimmed, non-empty, ≤10,000 chars), `plan_comment_edit` (author
+    only; returns an AuditLog entry when visibility or the Selective
+    grant list changes — Invariant 7/VR-08), `plan_comment_deletion`
+    (author or Master; soft delete, body emptied — FR-T5 placeholder),
+    `can_edit_comment`/`can_delete_comment`. `app/domain/visibility.py`
+    was generalized: `is_content_visible` holds the section-8 levels,
+    `is_document_visible` now delegates to it, and the new
+    `is_comment_visible` uses it with the author as Owner (and the author
+    always sees their own Comment).
+  - **API** (`app/api/comments.py`): `GET/POST
+    /rooms/{id}/documents/{doc}/comments`, `PATCH/DELETE .../{comment_id}`.
+    Each response carries `can_edit`/`can_delete` for the requester.
+    Hidden Document → 404 on all four routes; hidden Comment → 404 (VR-07);
+    non-member → 403; Selective grantees must be Room members (422);
+    editing/deleting a deleted Comment → 409. The shared membership +
+    visible-Document checks moved out of `documents.py` into
+    `app/api/access.py`, reused by both routers.
+  - **Backend tests**: 24 pure domain tests (incl. a 10-row Comment
+    visibility truth table) + 11 API integration tests (ordering,
+    per-viewer Private/Selective/Master filtering, hidden Document,
+    non-member, author-only edit — the Master gets 403 too, AuditLog row
+    written on visibility change, Master moderation + placeholder,
+    cross-Document id → 404). mypy strict, ruff and pytest **131/131**
+    pass.
+  - **Frontend**: `types/comment.ts`, `hooks/useComments.ts` (TanStack
+    Query CRUD), `lib/comments.ts` (pure `applyCommentFilters` — sort
+    newest/oldest/by author; filter by text, author, visibility, hide
+    deleted — plus `commentAuthors`, `isEdited`, `hasActiveFilters`),
+    `lib/time.ts` (Italian relative/absolute timestamps). Components in
+    `components/comments/`: `CommentSection` (card below the Document
+    card on `DocumentDetailPage`), `CommentComposer` (shared by "new" and
+    inline edit; Ctrl/Cmd+Enter submits; Selective shows a member
+    picker), `CommentToolbar`, `CommentItem` (Facebook-style bubble, see
+    `ui-context.md`). New reusable pieces: `VisibilitySelect` (extracted
+    from `DocumentFields`, now used by both Documents and Comments with
+    subject-specific labels), `MemberMultiSelect`, `UserAvatar`;
+    `VisibilityBadge` gained an optional `size`.
+  - **Frontend tests**: added **vitest** (first frontend test runner,
+    `npm test`); 13 unit tests for the sort/filter logic and timestamp
+    formatting. `ai-workflow-rules.md`'s "before moving on" checklist now
+    includes `npm test`.
+  - Checks: `npm run build`, `npm run lint` and `npm test` (13/13) pass.
+    Headless Playwright check (faked session, stateful stubbed Comments
+    API) at 375px and 1400px: 23/23 checks pass — section below the
+    Document card, default newest-first, oldest-first, author/search/
+    visibility/hide-deleted filters, "n di m" counter, reset, posting a
+    Selective Comment sends the right body/grants and clears the
+    composer, inline edit sends PATCH, Master deletes another Player's
+    Comment after confirmation, placeholder shown, empty state, no
+    horizontal overflow, no raw user ids, zero console errors;
+    screenshots checked visually. Not yet clicked through live by a
+    signed-in user against the real backend.
+
+- **Comments refactor (2026-09-21, branch `feature/Gestione_membri_ruoli`,
+  spec `context/feature/04 - Refactor of Comments.md`):**
+  - **Layout**: the composer moved from the top of the Comments card to
+    the bottom, below the list (after a `Divider`; also below the empty
+    state). Comment bubbles are now full width (`w="100%"`) instead of
+    hugging their text.
+  - **Images on Comments — data model**: migration `9e29c43313a1`
+    (applied to the live Supabase DB; adds one nullable column, existing
+    rows untouched) adds `document_images.post_id` → `posts.id`,
+    `ON DELETE CASCADE`, indexed, FK named explicitly
+    (`fk_document_images_post_id_posts` — the autogenerated `None` name
+    would have broken the downgrade). A Comment image *is* a Document
+    image, per the spec ("the images should be added to the Document
+    images").
+  - **Visibility decision (security-relevant)**: a Comment image inherits
+    the Comment's visibility. Otherwise a Private/Selective/Master-only
+    Comment's image would leak to everyone who sees the Document via its
+    gallery. New pure `visible_document_images` in
+    `app/domain/visibility.py`; every `DocumentResponse` is now built per
+    viewer (list, detail, create, update, image and owner routes).
+    Gallery delete by an Owner/Master only finds images they can see
+    (404 otherwise).
+  - **Rules** (`app/domain/comments.py`): `ensure_can_attach_image` /
+    `ensure_can_detach_image` — author only, not on a deleted Comment,
+    max `MAX_IMAGES_PER_COMMENT = 4` (also counts toward the Document's
+    20). Deleting a Comment removes its images (rows + Storage objects,
+    in the same transaction; a Storage failure rolls the delete back) so
+    moderation actually removes the content.
+  - **API**: `POST .../comments/{id}/images` (multipart),
+    `POST .../comments/{id}/images/from-url`, `DELETE
+    .../comments/{id}/images/{image_id}`; `CommentResponse` gains
+    `images: [{id, url}]`. The image pipeline moved out of `documents.py`
+    into `app/api/image_uploads.py` (shared by both routers — same
+    validation, SSRF-guarded URL import, downscale/WebP, rollback);
+    `documents.py` was rewritten around it with no behavior change for
+    existing routes (all 131 prior tests still pass unchanged).
+  - **Backend tests**: 6 new pure domain tests (attach/detach rules,
+    per-Comment limit, `plan_new_image` link, gallery filtering incl.
+    Selective grants, orphans and deleted Comments) + 8 API tests
+    (attach → shows on Comment and in the gallery; only the author, the
+    Master gets 403 too; 409 over the limit; Private Comment image hidden
+    from another Player's gallery, list and delete; Comment deletion
+    empties Storage and gallery; author detaches; Owner removes from the
+    gallery; URL import). The in-memory Storage fake moved to
+    `tests/conftest.py` (`fake_storage`) so both image test files share
+    it. mypy strict, ruff, pytest **145/145** pass.
+  - **Frontend**: `types/image.ts` (`StoredImage`, `PendingImage`);
+    `lib/images.ts` (accepted types + `isHttpUrl` moved out of
+    `AddDocumentImages`, pending-image helpers with object-URL cleanup,
+    `remainingImageSlots`); `useComments.ts` replaces create/update hooks
+    with one `useSaveComment` (save the Comment → remove images → upload
+    new ones in order; an image failure is reported, not fatal, so a
+    posted Comment is never lost or double-posted) and invalidates the
+    Document too (gallery). New reusable components: `ImageThumbnailGrid`
+    (view/remove/open), `ImageAttachButtons` (file + URL popover).
+    `CommentComposer` stages images (also removal of existing ones when
+    editing) and uploads them only on save; `CommentItem` shows
+    thumbnails that open `ImageViewerModal`, and its delete confirmation
+    warns that the images go too.
+  - **Bug found and fixed during the check**: the URL popover's input
+    used `autoFocus`, which focused it before the dropdown was
+    positioned — whenever the composer was below the fold (i.e. almost
+    always, now that it's at the bottom) the page jumped to the top and
+    the popover closed. Now focused on `onOpen` with
+    `preventScroll: true`.
+  - **Frontend tests**: 6 new vitest tests (`lib/images.test.ts`); `npm
+    test` 19/19, `npm run build` and `npm run lint` pass.
+  - Headless Playwright check (faked session, stateful stubbed API incl.
+    multipart/URL/delete image routes, real PNG bytes): **23/23** — composer
+    below the list (and below the empty state), short bubble spans the
+    full row, thumbnails load and open the viewer, Comment images appear
+    in the gallery, file + URL staged and removable, POST Comment then
+    multipart upload then URL import in that order, composer clears,
+    4-image cap (picker trims, buttons disable), edit removes one image
+    and adds another (PATCH + DELETE + upload), delete warning, sorting
+    unaffected, no horizontal overflow at 375px, zero console errors;
+    screenshots checked by eye. Not yet clicked through live by a
+    signed-in user — worth trying an actual upload against the real
+    bucket.
+
+- **Code review 04 fixes (2026-09-22, branch `feature/Gestione_membri_ruoli`,
+  findings `context/feature/04 codereview.md`):** each finding was checked
+  against the current code first; all but the docstring warning were still
+  valid.
+  - **Duplicate relationship ids → 500**: `tag_ids` / `selective_user_ids`
+    with repeats passed validation but hit the composite primary keys
+    on insert. New shared request type `app/api/validation.py::UniqueIds`
+    (Pydantic `AfterValidator`, dedupes, keeps order) on both Document
+    create and update. Comments already deduped in the repo.
+  - **User email wiped by a token without an email claim**:
+    `users_repo.upsert_user` now does `COALESCE(excluded.email,
+    users.email)`.
+  - **SSRF via DNS rebinding** (was an Open Question): `remote_images.py`
+    resolves each hop once, requires every address to be public, and pins
+    the connection to the validated IP (original name in `Host` and as
+    TLS SNI, so the certificate is still verified against it). Redirects
+    are resolved against the original URL and pinned again.
+    `fetch_image_bytes` gained an optional `transport` for tests.
+  - **Storage/DB drift on failed transactions**: new `storage_cleanup`
+    table (migration `5c1f7e2a9b30`, **applied to the live Supabase DB**;
+    new table only, nothing existing touched) and
+    `app/db/storage_cleanup.py`. An upload records a cleanup row in its own
+    committed transaction before the object is uploaded, and the request
+    clears it together with the image insert. A delete queues the objects
+    and removes them only after commit (new `on_commit` hook in
+    `app/db/session.py`). A lifespan sweeper (every 10 min, rows older
+    than 15 min) removes orphans and retries failed removals. Behaviour
+    change: deleting an image while Storage is down now returns 204 and
+    the removal is retried later (it used to return 502 and roll back).
+  - **Image limit race**: `ensure_room_for_another_image` now locks the
+    Document row (`SELECT … FOR UPDATE`) before counting.
+    `comments._attach_image` calls it before the per-Comment count, so
+    both caps are counted under the same lock.
+  - **Spec wording**: `context/feature/03 - Implementation of Comments.md`
+    now says only the author edits a Comment. The Master can delete
+    another user's Comment but not edit it, which matches the
+    implementation.
+  - **Frontend**: `CreateDocumentModal` blocks submit (button disabled,
+    and guarded in `handleSubmit`) while a new tag is still being created.
+    The Owner add/remove mutations now also invalidate the Documents
+    list, so cards show new Owners. `RoomDocumentsPage` shows "Crea
+    Documento" only to a Master, or to anyone when
+    `playersCanCreateDocuments` is on. Owner/Selective pickers use the new
+    `memberOptionLabel`, which adds 8 id characters to "Utente sconosciuto"
+    so two members without an email can be told apart.
+  - **Not done: docstring coverage** (CodeRabbit wants 80% of touched
+    functions). Not a project standard: `code-standards.md` asks for
+    comments where the reasoning isn't obvious, not a docstring on
+    every function. Mass docstrings on thin handlers and repos would only
+    restate the signatures. Revisit if the team adopts that threshold.
+  - Tests: +1 dedupe API test, +1 email-preservation test, +3 SSRF
+    pinning tests (mock transport + fake resolver, incl. a rebinding
+    resolver and a redirect to a private host), +3 Storage-consistency
+    tests (failed upload transaction swept later, failed Comment deletion
+    leaves Storage intact, removal while Storage is down retried by the
+    sweep), +3 vitest tests for `memberOptionLabel`. Backend mypy strict
+    (app + tests), ruff, pytest **153/153**. Frontend build, lint, and
+    `npm test` **22/22**.
+  - Live checks: a pinned HTTPS fetch of a real Wikimedia image and an
+    http→https redirect both succeed. `expired`, `self-signed` and
+    `wrong.host` badssl.com certificates are all refused, which shows TLS is still
+    verified against the original hostname. App lifespan started the
+    sweeper against the live DB and shut down cleanly. The row lock was checked by
+    its compiled SQL, not by a real two-connection race. The UI changes
+    were checked by build/tests only, not clicked through.
 
 ## In Progress
 
@@ -192,28 +664,74 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. UC-05 · Manage members and roles: an Administrator changes a
-   member's role, assigns/revokes Administrator, designates a new
-   Master, and removes a member (FR-R4, FR-R5). Must enforce D-16 in
-   the domain layer: the last Administrator can't leave/be demoted,
-   and the last Master can't leave/be demoted, without a successor
-   named first (FR-R7) — this is Invariant 5 in `architecture.md` and
-   needs a domain-layer test proving it's rejected, not just documented.
-   Needs a Room detail/members view on the frontend that doesn't exist
-   yet (so far only the Room list card exists).
-2. After that: Documents (FR-D1–D4, D-05, D-12) — the first unit
-   without an existing OQ blocking it, once OQ-11 (Details) is
-   resolved, which Documents needs for D-18/FR-D3.
+1. Rest of Threads on top of the new `posts` table: nested replies
+   (FR-T1/T2) with D-17/VR-04's "never wider than the parent" check in
+   the domain layer (Invariant 3), and pagination (FR-T3) if Comment
+   counts grow. Comments are currently flat and loaded all at once.
+2. Details/Threads (D-18, D-19, D-20, FR-D3, FR-T1, FR-T5–T7): the
+   deferred half of the Documents unit — titled top-level Posts in a
+   Document's one main Thread, own visibility per Post (VR-03, reusing
+   `app/domain/visibility.py`'s pattern), edit rights limited to the
+   author and Master (D-19/I-10), nested replies with D-17/VR-04's
+   "never wider than the parent" constraint (not yet built — this is
+   the first unit that needs it). FR-T6–T9 (mentions, reactions,
+   pinning, resolving, notifications) are Should/Could priority —
+   worth scoping down to FR-T1/T5/T10 (post, edit/moderate, show
+   Details on the Document card) for a first slice, same "thinnest
+   usable" approach as before.
+3. Reveal action + fuller Visibility (VR-02, VR-05, VR-06, FR-V2, FR-V3,
+   FR-V5): default visibility per Room, the Reveal action with
+   AuditLog + notification, "view as User X" for the Master. The
+   Visibility *filter* exists now (Documents unit); Reveal and the
+   rest of the VR- rules don't yet.
 
 ## Open Questions
 
-- OQ-09 · OQ-10 from `requirements.md` (section 6) are still formally
-  unresolved (no `D-` number assigned), though the Rooms/Membership
-  unit now implements their documented working proposals end to end
-  (creator = Administrator + Master on creation; the last-
-  Administrator/last-Master successor requirement from OQ-10/D-16
-  itself is Next Up #1, not yet built). OQ-11/OQ-12 (Details, extra
-  Threads) still block the Documents/Details unit specifically.
+- OQ-09 · OQ-10 from `requirements.md` (section 6) are formally
+  unresolved (no `D-` number assigned) but now fully implemented in
+  practice: creator = Administrator + Master on creation (OQ-09), and
+  the last-Administrator/last-Master successor requirement (OQ-10/D-16)
+  is enforced by the Manage members/roles unit above.
+- OQ-11 and OQ-12 are resolved (see Completed, 2026-09-21) — no open
+  requirements-level question blocks Details/Threads (Next Up #1)
+  anymore.
+- **Document image privacy (new, 2026-09-21)**: the `document-images`
+  bucket is public. Paths are unguessable, but a URL someone has already
+  seen keeps working after the Document is made Private/Master-only, and
+  even briefly after the image is deleted (CDN cache, confirmed live).
+  If that matters for VR-07, switch to a private bucket + short-lived
+  signed read URLs issued per response. Needs a product decision.
+- **Spec gaps from the images feature (new, 2026-09-21)**:
+  `requirements.md` D-09/FR-D1 still say "Immagine" (singular); the
+  feature spec asks for several. Not edited (protected file), so it
+  should be updated in a product pass. The 20-images-per-Document cap
+  and the 1920px/WebP output are implementation choices, not spec'd,
+  so change them if they don't fit.
+- **Comments: implementation choices to confirm (new, 2026-09-21)**:
+  (a) the author always sees their own Comment, so "Solo Master" on a
+  Player's Comment means "me + the Master" (same as Private) — section 8
+  literally says "only Masters"; (b) the Master can delete but **not
+  edit** others' Comments (FR-T5 "moderate" read as delete, per the
+  section 9 matrix); (c) moderation deletes are not written to the
+  AuditLog (Invariant 7 doesn't list them); (d) 10,000-char body limit.
+  None of these is in `requirements.md` (protected), so they need a
+  product decision if any should change.
+- **Comment images: choices to confirm (new, 2026-09-21)**: (a) a
+  Comment image inherits the Comment's visibility, including in the
+  Document gallery (chosen for VR-07 — the alternative leaks private
+  images); (b) deleting a Comment deletes its images from the Document
+  too; (c) a Document Owner/Master can remove a Comment's image from the
+  gallery, but only the author can add/remove it from the Comment
+  itself; (d) 4 images per Comment; (e) a Comment still needs text — no
+  image-only Comments. The public-bucket caveat above applies to these
+  images as well.
+- ~~URL-import SSRF guard doesn't cover DNS rebinding~~ — resolved
+  2026-09-22 (connection pinned to the validated IP, see Code review 04
+  fixes).
+- **Storage sweeper runs in-process (new, 2026-09-22)**: one task per
+  backend process, so several workers each sweep (harmless, removal is
+  idempotent). If the backend is ever scaled out or runs serverless, move
+  it to a scheduled job.
 - RLS as defense-in-depth (`architecture.md` → Open items): decide
   before or after the MVP ships.
 - Agent export format, JSON vs. Markdown vs. both
@@ -241,14 +759,37 @@ Update this file after every meaningful implementation change.
   DB-level FK to `auth.users` — full reasoning in `architecture.md` →
   Backend Data Access (added 2026-09-21 with the Rooms/Membership
   slice).
+- Document images are proxied through the backend (validate → downscale
+  → WebP → Storage upload with the secret key) rather than uploaded
+  client-side via signed URLs — full reasoning in `architecture.md` →
+  Storage Model (added 2026-09-21 with the Document images unit).
+- Comment images are Document images linked by `document_images.post_id`
+  and filtered per viewer by the Comment's visibility — see
+  `architecture.md` → Storage Model → Threads/Posts (added 2026-09-21
+  with the Comments refactor).
+- Storage objects are kept consistent with `document_images` by a
+  `storage_cleanup` outbox table plus post-commit removal and a background
+  sweep, not by best-effort compensation inside the request. See
+  `architecture.md` → Storage Model (added 2026-09-22 with the code
+  review 04 fixes).
 
 ## Session Notes
 
 - Full product spec with stable IDs lives in `context/requirements.md`
-  (v0.2) — every other context file cross-references it by ID
-  (`D-`, `FR-`, `UC-`, `VR-`, `I-`, `OQ-`). Read it first when an ID
-  reference is unclear.
-- First implementation unit, Setup + Auth, is **done** — repo
-  scaffolding, Supabase wiring, and the Google login path are all
-  verified (automated checks, headless smoke tests, and a real login by
-  the user). Rooms + Membership (Next Up #1) is the active unit now.
+  (v0.3 as of 2026-09-21) — every other context file cross-references
+  it by ID (`D-`, `FR-`, `UC-`, `VR-`, `I-`, `OQ-`). Read it first when
+  an ID reference is unclear.
+- Setup + Auth, Rooms + Membership, Manage members/roles, Documents
+  (CRUD only), Document images, the Document UI redefinition,
+  Comments and the Comments refactor (images on Comments) are all
+  **done** as of 2026-09-21. Details/Threads is the
+  natural next slice (see Next Up #1) but hasn't been started.
+- The branch `feature/Gestione_membri_ruoli` ended up covering both the
+  Manage members/roles unit AND the Documents unit — the user never cut
+  a fresh branch for Documents, and nothing in `ai-workflow-rules.md`
+  requires one branch per unit, so work continued there rather than
+  stopping to ask. The Document images, Comments and Comments
+  refactor features landed here too. Worth a
+  heads-up before merging/opening a PR, since
+  its name undersells what it now contains (same kind of mismatch as
+  the `0ec23ce` commit message noted earlier in this file).

@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     supabase_url: str = ""
+    supabase_secret_key: str = ""
+    storage_bucket: str = "document-images"
     cors_origins: list[str] = ["http://localhost:5173"]
     database_url: str = ""
 

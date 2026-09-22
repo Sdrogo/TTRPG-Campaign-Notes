@@ -2,12 +2,14 @@
 
 | | |
 |---|---|
-| **Versione** | 0.2 (bozza) |
+| **Versione** | 0.3 (bozza) |
 | **Data** | 21 settembre 2026 |
 | **Stato** | In definizione: requisiti, use case, feature e workflow |
 | **Destinatari** | Team di progetto e Agent che useranno questo documento come Context di base |
 
 **Novità della 0.2:** risolti i Punti aperti OQ-01…OQ-08 (ora Decisioni D-11…D-18); introdotto il ruolo Amministratore; i "campi" dei Documento sono ora Dettagli nel Thread principale; il Glossario è filtrabile per Tag; nuovi Punti aperti OQ-09…OQ-12.
+
+**Novità della 0.3:** risolti i Punti aperti OQ-11 e OQ-12 (ora Decisioni D-19, D-20), in preparazione all'unità Documenti/Dettagli. OQ-09 e OQ-10 restano formalmente aperti ma sono già implementati nella pratica dall'unità Rooms/Membership (vedi `progress-tracker.md`).
 
 ---
 
@@ -97,7 +99,7 @@ Una web application distribuita online in cui più User contribuiscono alla docu
 | D-06 | I ruoli (Master/Player/Amministratore) sono **per Stanza**, non globali. |
 | D-07 | Login tramite **Google** (modalità preferita). |
 | D-08 | Ogni **Player è Owner della visibilità dei propri contenuti** rispetto agli altri Player. Il **Master ha Ownership completa** sul progetto (Stanza). |
-| D-09 | Ogni Documento può avere Nome, Immagine, descrizione, Tag e ulteriori dettagli (definiti in D-18). |
+| D-09 | Ogni Documento può avere Nome, Immagini, descrizione, Tag e ulteriori dettagli (definiti in D-18). |
 | D-10 | Contenuti, singoli commenti e altre informazioni possono essere **nascosti a User diversi**. |
 | D-11 | L'**Amministratore è un ruolo terzo**, assegnato di base al creatore della Stanza. **Più User possono essere Amministratori contemporaneamente.** *(risolve OQ-01)* |
 | D-12 | **Ownership dei Documenti:** il creatore è Owner di default; Master e Owner possono aggiungere o rimuovere Owner (l'Ownership può essere riattribuita ad altri). Il **Master ha sempre Ownership implicita**. *(risolve OQ-02)* |
@@ -107,6 +109,8 @@ Una web application distribuita online in cui più User contribuiscono alla docu
 | D-16 | L'**Amministratore può designare un nuovo Master**. **L'ultimo Amministratore non può uscire** dalla Stanza senza aver designato un nuovo Amministratore. *(risolve OQ-06)* |
 | D-17 | Una **risposta a un Post non può essere più visibile del Post padre**. *(risolve OQ-07)* |
 | D-18 | I **dettagli di un Documento** sono **ulteriori Descrizioni (Dettagli) aggiunte al Thread principale** del Documento, ciascuna con titolo e contenuto. Non esistono campi custom strutturati. *(risolve OQ-08)* |
+| D-19 | Un **Dettaglio** può essere aggiunto da **qualsiasi membro che veda il Documento** (non solo dagli Owner). È un **Post di primo livello con titolo**, pubblicato nel Thread principale, con **visibilità propria** (come ogni Post, sezione 8) e **risposte annidate**. È **modificabile dall'autore e dal Master** (non da un Owner che non sia anche una di queste due figure). Un **Owner può promuoverlo** nella descrizione del Documento (FR-T8). *(risolve OQ-11)* |
+| D-20 | **Un solo Thread principale per Documento**: nessun Thread aggiuntivo nella v1. *(risolve OQ-12)* |
 
 ---
 
@@ -116,10 +120,10 @@ Una web application distribuita online in cui più User contribuiscono alla docu
 |---|---|---|
 | OQ-09 | L'**Amministratore è cumulabile** con Master/Player? Come si dividono i poteri tra Amministratore e Master (eliminare/archiviare la Stanza, designare Amministratori)? | Cumulabile. **Amministratore** = gestione della Stanza (membri, ruoli, inviti, archiviazione/eliminazione, designazione di Master e Amministratori). **Master** = poteri sui contenuti (D-08). Un Amministratore non-Master non ha visibilità aggiuntiva sui contenuti. Il creatore parte come Amministratore + Master. |
 | OQ-10 | Una Stanza può restare **senza Master**? | No: l'ultimo Master non può uscire né essere retrocesso senza un sostituto; l'Amministratore può designarne uno (D-16). |
-| OQ-11 | Chi può aggiungere **Dettagli** e come funzionano? | Qualsiasi membro che veda il Documento. Un Dettaglio è un Post di primo livello con titolo, con visibilità propria e risposte annidate; modificabile da autore e Master; un Owner può promuoverlo nella descrizione. |
-| OQ-12 | Servono **altri Thread** oltre al Thread principale di un Documento? | No nella v1: un solo Thread principale per Documento. |
 
-**Storico dei Punti aperti risolti:** OQ-01 → D-11 · OQ-02 → D-12 · OQ-03 → D-13 · OQ-04 → D-14 · OQ-05 → D-15 · OQ-06 → D-16 · OQ-07 → D-17 · OQ-08 → D-18.
+**Storico dei Punti aperti risolti:** OQ-01 → D-11 · OQ-02 → D-12 · OQ-03 → D-13 · OQ-04 → D-14 · OQ-05 → D-15 · OQ-06 → D-16 · OQ-07 → D-17 · OQ-08 → D-18 · OQ-11 → D-19 · OQ-12 → D-20.
+
+*Nota: OQ-09 e OQ-10 restano qui perché non hanno ancora un ID `D-` formale, ma le loro proposte di lavoro sono già implementate (vedi `progress-tracker.md`, unità Rooms/Membership) — non sono bloccanti per le unità successive.*
 
 ---
 
@@ -155,7 +159,7 @@ erDiagram
 - **User:** id, identità Google (nome, avatar).
 - **Room:** id, nome, descrizione, sistema di gioco (testo libero), stato (attiva/archiviata).
 - **Membership:** user, room, ruolo narrativo (Master/Player), flag Amministratore, data di ingresso.
-- **Document:** id, nome, immagine, descrizione, Tag, Owner, visibilità, cronologia versioni; Thread principale.
+- **Document:** id, nome, immagini, descrizione, Tag, Owner, visibilità, cronologia versioni; Thread principale.
 - **Tag:** nome, categoria opzionale, Stanza.
 - **GlossaryEntry:** termine, definizione, Tag, visibilità, Stanza.
 - **Thread:** Documento di appartenenza; contiene i Post.
@@ -214,7 +218,7 @@ erDiagram
 | Moderare o eliminare Post altrui | — | ✅ | ❌ | ❌ | ❌ |
 | Rivelare contenuti altrui | — | ✅ | ❌ | ❌ | ❌ |
 
-*La matrice è una proposta da validare insieme a OQ-09 e OQ-11.*
+*La matrice è una proposta da validare insieme a OQ-09; la parte sui Dettagli è ora confermata da D-19.*
 
 ---
 
@@ -235,9 +239,9 @@ erDiagram
 - **FR-R8** Alla rimozione o uscita di un User, i suoi contenuti restano visibili salvo eliminazione, e l'Ownership dei suoi Documenti è riattribuibile (D-15).
 
 ### Documenti
-- **FR-D1** CRUD Documento con nome, immagine, descrizione (rich text o Markdown), Tag.
+- **FR-D1** CRUD Documento con nome, immagini, descrizione (rich text o Markdown), Tag.
 - **FR-D2** Gestione e riattribuzione dell'Ownership del Documento (D-12).
-- **FR-D3** Aggiungere **Dettagli** (ulteriori Descrizioni titolate) al Thread principale del Documento (D-18, OQ-11).
+- **FR-D3** Aggiungere **Dettagli** (ulteriori Descrizioni titolate) al Thread principale del Documento (D-18, D-19).
 - **FR-D4** Collegamenti tra Documenti tramite menzione, con backlink.
 - **FR-D5** Cronologia delle modifiche con ripristino.
 - **FR-D6** Stato bozza/pubblicato.
@@ -299,7 +303,7 @@ erDiagram
 | UC-03 | Invitare in Stanza | Amministratore | Ruolo Amministratore | Genera link/codice con ruolo proposto e scadenza → lo condivide | Revoca dell'invito; invito scaduto |
 | UC-04 | Entrare in Stanza | User | Invito valido | Apre il link → login → viene aggiunto con il ruolo proposto | Invito invalido/scaduto; già membro |
 | UC-05 | Gestire membri e ruoli | Amministratore | Ruolo Amministratore | Cambia ruoli, nomina Amministratori, designa un nuovo Master, rimuove un membro | Rimozione/retrocessione dell'ultimo Master o Amministratore senza sostituto: non consentita (D-16, OQ-10) |
-| UC-06 | Creare Documento | Master/Player abilitato | Membro della Stanza | Inserisce nome, descrizione, immagine, Tag → imposta la visibilità → salva; diventa Owner | Creazione da Player disabilitata (D-13) |
+| UC-06 | Creare Documento | Master/Player abilitato | Membro della Stanza | Inserisce nome, descrizione, immagini, Tag → imposta la visibilità → salva; diventa Owner | Creazione da Player disabilitata (D-13) |
 | UC-07 | Modificare Documento | Owner | Owner del Documento | Modifica la descrizione → salva → nuova versione in cronologia | Non Owner: può solo postare nel Thread |
 | UC-08 | Riattribuire Ownership | Master/Owner | Permesso | Aggiunge o rimuove Owner del Documento | Non si può rimuovere l'ultimo Owner esplicito senza lasciare il solo Master implicito |
 | UC-09 | Navigare per Tag | Membro | Membro della Stanza | Seleziona uno o più Tag → vede i Documenti visibili con quei Tag | Nessun risultato visibile |
@@ -378,18 +382,20 @@ erDiagram
 | I-07 | L'**Amministratore è un ruolo distinto**; l'ultimo Amministratore non può uscire senza designare un successore (D-11, D-16). |
 | I-08 | I Documenti **non hanno campi custom**: le informazioni aggiuntive sono **Dettagli** nel Thread principale (D-18). |
 | I-09 | Una risposta non è mai più visibile del Post padre (D-17). |
+| I-10 | Un **Dettaglio** è modificabile solo dal suo autore o dal Master; qualsiasi membro che veda il Documento può aggiungerne uno nuovo (D-19). |
+| I-11 | Un Documento ha **un solo Thread** (quello principale) — nessun Thread aggiuntivo (D-20). |
 
 **Comportamento in caso di ambiguità**
 
 - Se qualcosa non è coperto dalle Decisioni (sezione 5), consultare i Punti aperti (sezione 6) e **non inventare** una regola: segnalare l'ambiguità e proporre un'opzione.
-- Le proposte marcate come tali (matrice permessi, OQ-09…OQ-12, VR-10, profondità dei Thread) sono provvisorie.
+- Le proposte marcate come tali (matrice permessi, OQ-09…OQ-10, VR-10, profondità dei Thread) sono provvisorie.
 - Citare sempre gli ID (D-, FR-, UC-, VR-…) nelle risposte e nei documenti derivati.
 
 ---
 
 ## 16. Prossimi passi
 
-1. Sciogliere i Punti aperti OQ-09…OQ-12.
+1. Sciogliere i Punti aperti OQ-09…OQ-10.
 2. Validare la matrice dei permessi (sezione 9) e il modello di visibilità (sezione 8) con esempi limite.
 3. Definire le user stories con criteri di accettazione a partire dagli use case.
 4. Definire nel dettaglio la struttura dei Thread (profondità, ordinamento, stato) e la presentazione dei Dettagli nella scheda del Documento.

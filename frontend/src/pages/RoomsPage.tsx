@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Stack, Group, Title, Button, SimpleGrid, Text, Loader } from '@mantine/core';
-import { Plus } from '@phosphor-icons/react';
+import { PlusIcon } from '@phosphor-icons/react';
 import { useMyRooms } from '../hooks/useRooms';
 import { RoomCard } from '../components/RoomCard';
 import { CreateRoomModal } from '../components/CreateRoomModal';
@@ -15,7 +15,7 @@ export function RoomsPage() {
         <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
           Le mie Stanze
         </Title>
-        <Button leftSection={<Plus size={16} />} onClick={() => setCreateOpened(true)}>
+        <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>
           Crea Stanza
         </Button>
       </Group>
