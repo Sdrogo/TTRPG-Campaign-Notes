@@ -37,7 +37,12 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 
 ## Core User Flow
 
-1. User signs in with Google (FR-A1).
+1. User signs in with Google (FR-A1). Their Google name and picture
+   become their display name and avatar by default (copied once, then
+   theirs to change or remove), and they can adjust their profile on
+   the Account page: display name, avatar, pronouns and a short
+   description (FR-A2). The display name is shown instead of
+   their email wherever the app names them.
 2. User creates a Room (becomes Administrator + Master, UC-02) or
    joins one via an invite link (becomes Player by default, UC-04).
 3. A member creates a Document (a place, an NPC, an event, …),
@@ -56,8 +61,23 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 
 ## Features
 
-### Authentication & Rooms
-- Google sign‑in (FR-A1, FR-A2).
+### Authentication & Account
+- Google sign‑in (FR-A1).
+- Profile defaults from Google: the first time a user opens the app,
+  their Google name and picture are copied in for whatever they haven't
+  set. It happens once; later edits and removals stick, and changes to
+  the Google account don't overwrite them.
+- Account page (FR-A2), opened from the circular avatar at the top
+  right of every page: display name, avatar (file upload or image
+  URL, cropped to a square and resized server‑side, always shown as a
+  circle), pronouns, short description, and sign‑out. Logout lives
+  here only; the old header "Esci" button is gone.
+- A user is named by their display name everywhere (members list,
+  Document Owners, Comments, pickers, account button), falling back
+  to their email. Pickers that grant access (Owner, Selective) show
+  "Name (email)", since names aren't unique.
+
+### Rooms
 - Create / edit / archive / delete a Room (FR-R1).
 - Invite via link or code, with expiry and revocation (FR-R2, FR-R3).
 - Per‑Room roles: Administrator, Master, Player — a role is scoped
@@ -126,6 +146,8 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 
 ### In Scope
 - Google authentication.
+- A per‑user profile (display name, avatar, pronouns, description)
+  managed on the Account page.
 - Rooms, per‑Room roles (Administrator, Master, Player) and invites.
 - Documents with Tags, Glossary, and version history.
 - Threaded Comments and Details per Document.
@@ -141,6 +163,9 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   maps.
 - Native mobile apps.
 - Non‑Google login providers.
+- Changing the login email or deleting the account from inside the
+  app — the email comes from Google and the Account page only shows
+  it.
 - Fully sealed content hidden even from the Master (VR-09) — future
   evolution, not prioritized.
 

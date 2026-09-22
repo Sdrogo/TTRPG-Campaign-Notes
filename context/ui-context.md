@@ -68,6 +68,10 @@ The theme favors slightly sharper corners than a typical SaaS
 dark-mode default — it reads more "ledger/grimoire" than "app."
 Nothing above 8px radius; no pill-shaped buttons.
 
+**One exception: user avatars are always circles** (`radius="50%"`,
+built into `UserAvatar`, spec `05 - Account Page`). A circle reads as
+"a person" at a glance, which is the convention users expect.
+
 ## Component Library
 
 **Mantine** (v7+) is the component library, used directly rather
@@ -90,7 +94,28 @@ other icon set.
 
 - **App shell**: persistent top navbar (Room name + role badge for
   the current user + account menu) over a two/three-column body,
-  using Mantine's `AppShell`.
+  using Mantine's `AppShell`. **Built so far** (2026-09-22): the
+  `AppHeader` component — app name on the left (links to the Rooms
+  list), the current user's circular avatar on the right
+  (`AccountButton`, 36px, thin `--border-default` ring that turns
+  `--accent-primary` on hover/focus and while on `/account`). It is
+  rendered by `HomePage` and by `PageLayout`, so every signed-in page
+  has it. The account avatar is the only way to the Account page and
+  to sign out.
+- **Account page** (`/account`, `pages/AccountPage.tsx`): standard
+  settings layout — page title + one-line subtitle, then a narrow
+  column (max 720px, left-aligned under the back link) of titled cards
+  (`AccountSection`). "Profilo": `AvatarEditor` (112px avatar;
+  "Carica foto", "Da URL" popover, "Rimuovi" — each applies
+  immediately) above `ProfileForm` (Nome visualizzato, Pronomi,
+  Descrizione with a character counter; "Annulla modifiche" / "Salva
+  profilo" enabled only when the form is dirty, success toast on
+  save). "Accesso": the Google email, read-only, and a sign-out row
+  ("Esci", outline, not red — signing out isn't destructive).
+- **Showing a user**: always `UserAvatar user={…}` (photo, or initials
+  of their display name/email) plus `userDisplayName` — never an email
+  directly. The members table adds pronouns and a 2-line-clamped
+  description under the name; Owner badges carry a 16px avatar.
 - **Room view**: left sidebar for navigation (Tags, Glossary, Members),
   center column for the Document list or an open Document, right
   panel (collapsible) for the Document's Thread when a Document is

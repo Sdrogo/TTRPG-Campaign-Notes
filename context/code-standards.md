@@ -98,6 +98,12 @@ split in two instead of one. Everything else applies to both.
 
 ## Data and Storage
 
+- Every migration that creates a table in `public` also runs
+  `ALTER TABLE … ENABLE ROW LEVEL SECURITY` and adds no policies (tables
+  are backend-only, see `architecture.md` → Backend Data Access).
+  `tests/test_database_security.py` fails otherwise. Never grant
+  anything to `anon` or `authenticated`.
+
 - Metadata belongs in Postgres (Supabase): Rooms, Memberships,
   Documents, Tags, GlossaryEntries, Threads/Posts, Invitations,
   VisibilityRule, AuditLog.

@@ -41,6 +41,23 @@ Update this file after every meaningful implementation change.
   include DNS-rebinding-proof URL imports, Storage/DB consistency
   across failed transactions, and an atomic image limit. The docstring-coverage
   warning was deliberately not acted on (see Completed).
+- **Account page complete** (2026-09-22, same branch; spec in
+  `context/feature/05 - Account Page.md`, FR-A2): display name, avatar,
+  pronouns and description on a new `/account` page reached from a
+  circular avatar at the top right of every page; logout moved there.
+  Users are shown by their display name everywhere, falling back to
+  email. Backend committed separately (`dfbde1c`).
+- **Google profile defaults complete** (2026-09-22, backend only): the
+  Google name and picture are copied into the profile once, for
+  whatever the user hasn't set.
+- **Database lockdown complete** (2026-09-22, backend only): fixed
+  Supabase's "RLS Disabled in Public" critical warnings. Every table
+  was readable and writable through the Data API with the public key.
+  All tables are now backend-only (RLS on, no client privileges), and a
+  leftover sign-up trigger that would have broken new users was dropped.
+- **Private image bucket complete** (2026-09-22, backend only): the
+  `document-images` bucket is now private and every image URL is a
+  1-hour signed link. Closes the "Document image privacy" open question.
 
 ## Current Goal
 
@@ -658,6 +675,133 @@ Update this file after every meaningful implementation change.
     its compiled SQL, not by a real two-connection race. The UI changes
     were checked by build/tests only, not clicked through.
 
+- **Account page (2026-09-22, branch `feature/Gestione_membri_ruoli`,
+  spec `context/feature/05 - Account Page.md`):**
+  - **DB**: migration `7a4d2c9e1b58` adds nullable `display_name`,
+    `pronouns`, `bio`, `avatar_path` to `users`. **Applied to the live
+    Supabase DB** (new nullable columns only; nothing existing touched).
+  - **Backend**: `app/domain/profiles.py` (normalization + length
+    limits, `ProfileChanges` so only sent fields change and `null`/blank
+    clears, `plan_avatar_path`); `normalize_image` gained
+    `max_dimension` and `square` (center-crop) for 512px avatars;
+    `users_repo` got `get_profile` (optionally `FOR UPDATE`) and
+    `save_profile`; new `/account` router (GET, PATCH, POST `/avatar`,
+    POST `/avatar/from-url`, DELETE `/avatar`); `app/api/profiles.py`
+    (`ProfileFields`) shared by the account and members responses, so
+    `MemberResponse` now also carries `display_name`, `pronouns`, `bio`,
+    `avatar_url`. The image pipeline was split into reusable
+    `normalize` + `upload_object` steps. `storage_cleanup` now treats
+    `users.avatar_path` as a reference, so the sweep never removes an
+    avatar in use.
+  - **Frontend**: `types/profile.ts` (`UserIdentity` shared by
+    `Member` and `AccountProfile`), `lib/profile.ts`, `hooks/useAccount.ts`
+    (profile query, update, avatar upload/import/remove, `useSignOut`
+    which also clears the query cache). Profile changes refresh every
+    Room's member list. New components: `AppHeader`,
+    `account/AccountButton`, `account/AccountSection`,
+    `account/AvatarEditor`, `account/ProfileForm`, and
+    `ImageUrlPopover` (extracted from `ImageAttachButtons`, now shared
+    by it and the avatar editor). `UserAvatar` takes a `user` and
+    shows the photo (circle) with an initials fallback. `lib/members.ts`
+    names users by display name, then email; picker labels become
+    "Name (email)". Comment search also matches the author's email.
+    The members table shows avatar, pronouns and description; Owner
+    badges and Comments show avatars. The old header email + "Esci"
+    button is gone.
+  - **Tests**: backend +25 (7 domain profile tests incl. a
+    parametrized limit test, 3 square-crop tests, 13 Account API tests:
+    auth, empty profile for a new user, edit, partial update/clear, too
+    long → 422, names + avatars in the members list, 512px square
+    avatar, replace removes the old object, remove, URL import, invalid
+    file, the sweep keeps an avatar in use, a failed transaction's
+    upload is swept). Backend mypy strict (app + tests), ruff, pytest
+    **178/178**. Frontend +11 vitest tests (`lib/profile.test.ts`,
+    `lib/members.test.ts` rewritten for display names, a comments test
+    for chosen names): `npm test` **33/33**, `npm run build` and
+    `npm run lint` pass.
+  - **Headless Playwright check** (faked session, stateful stubbed
+    API): **31/31** — avatar button top right and circular, old logout
+    gone, Account page loads, save enabled only when dirty, PATCH body
+    trimmed, initials switch from email to name, too-long name blocked
+    client-side, reset, single-file picker, multipart upload, URL
+    import, remove, no overflow at 375px, names/pronouns/description/
+    avatars on the members page, Owner badges and Comments, sign out
+    back to login, zero console errors. It caught two bugs, both fixed:
+    a `Badge` nested in a `<p>` on the members page, and the form
+    keeping the untrimmed input (instead of the saved value) as its
+    baseline after saving. Screenshots checked by eye. **Not yet
+    tried live** against the real bucket by a signed-in user.
+
+- **Google profile defaults (2026-09-22, uncommitted):** decision (e) of
+  the Account page. `CurrentUser` gained `google_name` /
+  `google_picture_url` from the token's `user_metadata`; `/auth/me` now
+  has an explicit response model so its shape (`id`, `email`) doesn't
+  change. New `users.profile_prefilled_at` (migration `b2e6f1a8c4d9`,
+  **applied to the live DB**, nullable column only). Domain:
+  `plan_google_prefill` (only fills an unset name; cut to the limit
+  rather than rejected) and `google_avatar_source` (asks Google for the
+  512px size). `GET /account` runs the copy once, under the row lock;
+  an unreachable picture is logged and skipped. Tests: +6 domain,
+  +5 API (copied on first visit at 512px, copied only once even after
+  the user clears both, never replaces what the user set, name still
+  copied when the picture fails, shows in the members list). Not
+  verified with a real Google token: the claim names follow Supabase's
+  documented Google `user_metadata`.
+- **Private image bucket (2026-09-22, uncommitted):** decision (d) of
+  the Account page, applied to **all** images (user's choice).
+  `storage.signed_urls` (batch signing, 1h links reused while ≥15 min
+  remain, graceful when Storage is down) and `forget_signed_urls`
+  (called when a removal is scheduled). Every response builder now
+  signs once per response: `image_uploads.sign_images` /
+  `image_responses`, `profiles.sign_avatars` / `profile_fields`;
+  `list_documents` collects all visible images before signing. The
+  live bucket was switched with `public: false` (size limit and MIME
+  types kept). Checked live: signing real objects works and a missing
+  path is left out; after the switch a fresh object's public URL is
+  refused (400 "Bucket not found") while its signed link loads; an
+  already-cached public URL still loaded from the CDN. Tests: +7
+  (`test_storage_signing.py`: one request per batch, link reuse,
+  renewal near expiry, outage leaves paths out, removed objects
+  forgotten, API returns signed links, Documents still load when
+  signing fails). Backend mypy strict, ruff, pytest **196/196**. No
+  frontend change needed (URLs are opaque).
+
+- **Database lockdown (2026-09-22, uncommitted):** Supabase flagged all
+  15 `public` tables as "RLS Disabled in Public" (critical).
+  - **Confirmed live before fixing**: every table granted `anon` and
+    `authenticated` full privileges (Supabase's defaults for `public`),
+    RLS off. With only the publishable key (which ships in the frontend
+    bundle), the Data API returned rows from `rooms`, `documents`,
+    `posts` and `users` (emails) without signing in. That bypassed every
+    visibility rule (Invariant 1). Writes weren't tested, to avoid
+    touching data, but the grants allowed them.
+  - **Fix**: migration `c9d4e7b1f352` loops over every `public` table:
+    RLS on, no policies, `REVOKE ALL` from `anon`/`authenticated`; also
+    sequences, and `postgres`'s default privileges for future
+    tables/sequences/functions. Its downgrade is a deliberate no-op (it
+    would re-expose everything). **Applied to the live DB.** The
+    backend connects as `postgres`, the table owner, so it isn't
+    subject to RLS and nothing else changed.
+  - **Verified**: the Data API now answers 42501 "permission denied"
+    for every table; full suite **199/199**. New guard
+    `tests/test_database_security.py` (3 tests: RLS on everywhere, no
+    client grants, no client default privileges) failed before the fix
+    and passes after. The grant check was separately proven to catch
+    an injected grant (in a rolled-back transaction).
+  - **Also found and removed**: trigger `on_auth_user_created` on
+    `auth.users` + `public.handle_new_user()` (`SECURITY DEFINER`),
+    created outside our migrations (apparently a Supabase quickstart).
+    It inserted into `public.profiles`, which doesn't exist, so a new
+    user's first sign-in would most likely have failed. Dropped by
+    migration `e5a3b8d2c671` (user's decision); its downgrade restores
+    it exactly. **Applied to the live DB.** New-user sign-up hasn't been
+    re-tested live yet.
+  - Storage was already fine: `storage.objects` has RLS on and no
+    policies, so only the backend's secret key reaches the (now
+    private) bucket.
+  - New convention in `code-standards.md`: every table-creating
+    migration must enable RLS.
+
 ## In Progress
 
 - None yet.
@@ -695,12 +839,14 @@ Update this file after every meaningful implementation change.
 - OQ-11 and OQ-12 are resolved (see Completed, 2026-09-21) — no open
   requirements-level question blocks Details/Threads (Next Up #1)
   anymore.
-- **Document image privacy (new, 2026-09-21)**: the `document-images`
-  bucket is public. Paths are unguessable, but a URL someone has already
-  seen keeps working after the Document is made Private/Master-only, and
-  even briefly after the image is deleted (CDN cache, confirmed live).
-  If that matters for VR-07, switch to a private bucket + short-lived
-  signed read URLs issued per response. Needs a product decision.
+- ~~Document image privacy~~ — resolved 2026-09-22: private bucket +
+  1-hour signed links (see Completed). Remaining, by design: a link
+  already handed out works until it expires. Old public URLs may be
+  served from the CDN cache for a while after the switch.
+- **Signed-link cache is in-process (new, 2026-09-22)**: each backend
+  process keeps its own cache, so several workers each sign (harmless,
+  only fewer cache hits). Worth a shared cache only if signing load
+  ever matters.
 - **Spec gaps from the images feature (new, 2026-09-21)**:
   `requirements.md` D-09/FR-D1 still say "Immagine" (singular); the
   feature spec asks for several. Not edited (protected file), so it
@@ -732,8 +878,26 @@ Update this file after every meaningful implementation change.
   backend process, so several workers each sweep (harmless, removal is
   idempotent). If the backend is ever scaled out or runs serverless, move
   it to a scheduled job.
-- RLS as defense-in-depth (`architecture.md` → Open items): decide
-  before or after the MVP ships.
+- **Account page: decisions (2026-09-22)**:
+  (a) profile fields, including the description, are visible to every
+  member of the Rooms a user shares. **Kept for now**: a user-privacy
+  strategy will be planned together with the future "Friend" feature
+  (out of scope today).
+  (b) the email is still sent to Room members and used as the fallback
+  name and in pickers. **Undecided, left as is** for this stage.
+  (c) limits 60/40/1000 chars and 512px square avatars: **confirmed**.
+  (d) avatars shared the public-bucket caveat. **Resolved**: the bucket
+  is private for all images (see Completed).
+  (e) name and avatar from Google. **Done**: copied once as defaults,
+  then owned by the user (see Completed).
+- ~~RLS as defense-in-depth~~ — RLS is now on for every table
+  (backend-only, no policies; 2026-09-22). Only the question of adding
+  *policies* for some future direct client access remains, in
+  `architecture.md` → Open items.
+- **Supabase dashboard lints (new, 2026-09-22)**: after the lockdown,
+  re-check Supabase's Security Advisor. Expect the RLS warnings gone. An
+  "RLS enabled, no policy" *info* notice per table is expected and
+  intended (backend-only tables).
 - Agent export format, JSON vs. Markdown vs. both
   (`architecture.md` → Open items, FR-G1): decide when the export
   endpoint is designed, not needed for the Auth unit.
@@ -767,6 +931,16 @@ Update this file after every meaningful implementation change.
   and filtered per viewer by the Comment's visibility — see
   `architecture.md` → Storage Model → Threads/Posts (added 2026-09-21
   with the Comments refactor).
+- User profiles live on the existing `users` mirror (not a separate
+  table), avatars reuse the Document image pipeline with a square-crop
+  option, and the Storage sweep treats `users.avatar_path` as a
+  reference — see `architecture.md` → Storage Model → User profiles
+  (added 2026-09-22 with the Account page).
+- The images bucket is private and responses carry 1-hour signed links,
+  signed in one batch per response and reused from an in-process cache.
+  Chosen over proxying image bytes through the backend (which would
+  cost bandwidth and lose the CDN). See `architecture.md` → Storage
+  Model (2026-09-22).
 - Storage objects are kept consistent with `document_images` by a
   `storage_cleanup` outbox table plus post-commit removal and a background
   sweep, not by best-effort compensation inside the request. See
