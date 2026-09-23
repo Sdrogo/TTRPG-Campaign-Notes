@@ -17,15 +17,16 @@ class CurrentUser(BaseModel):
 
     id: str
     email: str | None = None
-    # From the Google identity Supabase puts in `user_metadata`; only used
-    # to pre-fill the profile the first time (see app/api/account.py).
+    # From the OAuth identity (Google, Discord, Facebook, GitHub or X) that
+    # Supabase puts in `user_metadata`; only used to pre-fill the profile the
+    # first time (see app/api/account.py). Named for Google, the first provider.
     google_name: str | None = None
     google_picture_url: str | None = None
 
 
 def _first_string(metadata: object, *keys: str) -> str | None:
     """The first non-blank string among `keys` in the token's `user_metadata`.
-    Google's claims have gone by more than one name."""
+    The same claim goes by different names across providers."""
     if not isinstance(metadata, dict):
         return None
     for key in keys:
@@ -50,7 +51,8 @@ def get_current_user(
     return CurrentUser(
         id=payload["sub"],
         email=payload.get("email"),
-        google_name=_first_string(metadata, "full_name", "name"),
+        # GitHub and X users may have no display name, only a handle.
+        google_name=_first_string(metadata, "full_name", "name", "user_name", "preferred_username"),
         google_picture_url=_first_string(metadata, "avatar_url", "picture"),
     )
 
