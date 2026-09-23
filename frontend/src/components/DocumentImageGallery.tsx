@@ -1,17 +1,7 @@
 import { useState } from 'react';
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Group,
-  Popover,
-  Stack,
-  Text,
-  Tooltip,
-  UnstyledButton,
-} from '@mantine/core';
+import { ActionIcon, Box, Button, Group, Popover, Stack, Text, UnstyledButton } from '@mantine/core';
 import { Carousel } from '@mantine/carousel';
-import { HeartIcon, TrashIcon } from '@phosphor-icons/react';
+import { TrashIcon } from '@phosphor-icons/react';
 import { ImageViewerModal } from './ImageViewerModal';
 import type { DocumentImage } from '../types/document';
 
@@ -24,10 +14,6 @@ interface DocumentImageGalleryProps {
   canDelete: boolean;
   onDelete: (imageId: string) => void;
   deletingImageId: string | null;
-  // Spec 07: an Owner picks the image that leads the Document (and so its
-  // card). Omitted for a viewer who may not - the heart is then not shown.
-  onSetFavorite?: (imageId: string) => void;
-  settingFavoriteId?: string | null;
 }
 
 export function DocumentImageGallery({
@@ -36,8 +22,6 @@ export function DocumentImageGallery({
   canDelete,
   onDelete,
   deletingImageId,
-  onSetFavorite,
-  settingFavoriteId = null,
 }: DocumentImageGalleryProps) {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
@@ -53,8 +37,6 @@ export function DocumentImageGallery({
       canDelete={canDelete}
       onDelete={() => onDelete(image.id)}
       deleting={deletingImageId === image.id}
-      onSetFavorite={onSetFavorite}
-      settingFavorite={settingFavoriteId === image.id}
     />
   );
 
@@ -95,8 +77,6 @@ function GalleryImage({
   canDelete,
   onDelete,
   deleting,
-  onSetFavorite,
-  settingFavorite,
 }: {
   image: DocumentImage;
   alt: string;
@@ -104,8 +84,6 @@ function GalleryImage({
   canDelete: boolean;
   onDelete: () => void;
   deleting: boolean;
-  onSetFavorite?: (imageId: string) => void;
-  settingFavorite: boolean;
 }) {
   return (
     <Box
@@ -135,48 +113,7 @@ function GalleryImage({
           <DeleteImageButton onConfirm={onDelete} loading={deleting} />
         </Box>
       )}
-
-      {onSetFavorite && (
-        <Box pos="absolute" bottom={8} right={8}>
-          <FavoriteButton
-            isFavorite={image.isFavorite}
-            loading={settingFavorite}
-            onClick={() => onSetFavorite(image.id)}
-          />
-        </Box>
-      )}
     </Box>
-  );
-}
-
-function FavoriteButton({
-  isFavorite,
-  loading,
-  onClick,
-}: {
-  isFavorite: boolean;
-  loading: boolean;
-  onClick: () => void;
-}) {
-  // No confirmation: unlike deleting, picking a different favorite is
-  // undone by picking the old one again.
-  return (
-    <Tooltip label={isFavorite ? 'Immagine principale' : 'Usa come immagine principale'}>
-      <ActionIcon
-        variant="default"
-        loading={loading}
-        onClick={onClick}
-        disabled={isFavorite}
-        aria-label="Usa come immagine principale"
-        aria-pressed={isFavorite}
-      >
-        <HeartIcon
-          size={16}
-          weight={isFavorite ? 'fill' : 'regular'}
-          color={isFavorite ? 'var(--accent-primary)' : undefined}
-        />
-      </ActionIcon>
-    </Tooltip>
   );
 }
 

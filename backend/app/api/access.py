@@ -2,7 +2,6 @@
 (documents, comments), so each applies them the same way."""
 
 import uuid
-from collections.abc import Sequence
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,38 +43,13 @@ async def get_visible_document(
     return document, owner_ids, selective_ids
 
 
-async def _filter_images(
-    session: AsyncSession, images: list[DocumentImage], viewer: Membership
-) -> list[DocumentImage]:
-    """Applies the Comment-inheritance filter to images already read from
-    the DB, in two queries whatever their Document."""
-    post_ids = list({image.post_id for image in images if image.post_id is not None})
-    comments = await comments_repo.get_comments_by_ids(session, post_ids)
-    grants = await comments_repo.list_grants_for_comments(session, post_ids)
-    return visible_document_images(images, comments, grants, viewer.user_id, viewer.role)
-
-
 async def get_visible_images(
     session: AsyncSession, document_id: uuid.UUID, viewer: Membership
 ) -> list[DocumentImage]:
     """A Document's images as this viewer may see them: Comment attachments
     only when the viewer can read that Comment (Invariant 1)."""
     images = await documents_repo.list_images(session, document_id)
-    return await _filter_images(session, images, viewer)
-
-
-async def get_visible_images_for_documents(
-    session: AsyncSession, document_ids: Sequence[uuid.UUID], viewer: Membership
-) -> dict[uuid.UUID, list[DocumentImage]]:
-    """`get_visible_images` for many Documents, in a fixed number of queries
-    rather than three per Document - the Documents list shows every card's
-    images, so it reads them for the whole page at once. Same filter, so a
-    Comment attachment the viewer can't read is left out here too
-    (Invariant 1)."""
-    by_document = await documents_repo.list_images_for_documents(session, document_ids)
-    all_images = [image for images in by_document.values() for image in images]
-    visible_ids = {image.id for image in await _filter_images(session, all_images, viewer)}
-    return {
-        document_id: [image for image in images if image.id in visible_ids]
-        for document_id, images in by_document.items()
-    }
+    post_ids = list({image.post_id for image in images if image.post_id is not None})
+    comments = await comments_repo.get_comments_by_ids(session, post_ids)
+    grants = await comments_repo.list_grants_for_comments(session, post_ids)
+    return visible_document_images(images, comments, grants, viewer.user_id, viewer.role)

@@ -1,18 +1,4 @@
-import type { PendingImage, RawImage, StoredImage } from '../types/image';
-
-// Every API response returns images the same way (Document images, Comment
-// attachments), so they're read the same way too.
-export function toStoredImage(raw: RawImage): StoredImage {
-  return { id: raw.id, url: raw.url, isFavorite: raw.is_favorite };
-}
-
-// The image a card leads with: the Document's favorite, which the backend
-// already sorts first. Falling back to the first image matters for a viewer
-// whose favorite is a Comment attachment they can't read - it's filtered out
-// of their response, so their card leads with whatever they can see.
-export function leadImage(images: StoredImage[]): StoredImage | undefined {
-  return images.find((image) => image.isFavorite) ?? images[0];
-}
+import type { PendingImage } from '../types/image';
 
 // Mirrors the backend's accepted formats (app/domain/images.py). The backend
 // re-validates the actual bytes and scales large images down, so this is

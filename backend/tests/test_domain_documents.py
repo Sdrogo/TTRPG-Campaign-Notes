@@ -13,22 +13,11 @@ from app.domain.documents import (
     ensure_can_remove_owner,
     ensure_owner,
     is_owner,
-    next_favorite_id,
     plan_add_owner,
     plan_new_document,
     plan_new_image,
 )
-from app.domain.models import DocumentImage, DocumentVisibility, RoomRole
-
-
-def _image(is_favorite: bool = False) -> DocumentImage:
-    return DocumentImage(
-        id=uuid.uuid4(),
-        document_id=uuid.uuid4(),
-        storage_path=f"{uuid.uuid4().hex}.webp",
-        created_by=uuid.uuid4(),
-        is_favorite=is_favorite,
-    )
+from app.domain.models import DocumentVisibility, RoomRole
 
 
 def test_creator_becomes_owner() -> None:
@@ -108,16 +97,14 @@ def test_new_image_path_is_scoped_and_randomized() -> None:
     room_id = uuid.uuid4()
     document_id = uuid.uuid4()
     uploader_id = uuid.uuid4()
-    image = plan_new_image(room_id, document_id, ".webp", uploader_id, current_images=[])
+    image = plan_new_image(room_id, document_id, ".webp", uploader_id, current_image_count=0)
 
     assert image.document_id == document_id
     assert image.created_by == uploader_id
     assert image.storage_path.startswith(f"{room_id}/{document_id}/")
     assert image.storage_path.endswith(".webp")
     # Two images on the same Document never collide.
-    other = plan_new_image(
-        room_id, document_id, ".webp", uploader_id, current_images=[_image(is_favorite=True)]
-    )
+    other = plan_new_image(room_id, document_id, ".webp", uploader_id, current_image_count=1)
     assert image.storage_path != other.storage_path
 
 
@@ -128,46 +115,5 @@ def test_image_limit_per_document_is_enforced() -> None:
             uuid.uuid4(),
             ".webp",
             uuid.uuid4(),
-            current_images=[_image() for _ in range(MAX_IMAGES_PER_DOCUMENT)],
+            current_image_count=MAX_IMAGES_PER_DOCUMENT,
         )
-
-
-# --- Favorite image (spec 07) ---------------------------------------------
-
-
-def test_first_image_of_a_document_becomes_the_favorite() -> None:
-    image = plan_new_image(uuid.uuid4(), uuid.uuid4(), ".webp", uuid.uuid4(), current_images=[])
-    assert image.is_favorite
-
-
-def test_later_images_do_not_displace_the_favorite() -> None:
-    image = plan_new_image(
-        uuid.uuid4(),
-        uuid.uuid4(),
-        ".webp",
-        uuid.uuid4(),
-        current_images=[_image(is_favorite=True), _image()],
-    )
-    assert not image.is_favorite
-
-
-def test_an_image_added_to_a_document_whose_favorite_is_gone_claims_it() -> None:
-    # Can't happen through the API (removing the favorite promotes a
-    # successor), but the rule is "exactly one", not "only the first ever".
-    image = plan_new_image(
-        uuid.uuid4(), uuid.uuid4(), ".webp", uuid.uuid4(), current_images=[_image(), _image()]
-    )
-    assert image.is_favorite
-
-
-def test_no_promotion_while_a_favorite_is_still_there() -> None:
-    assert next_favorite_id([_image(is_favorite=True), _image()]) is None
-
-
-def test_no_promotion_when_the_last_image_is_gone() -> None:
-    assert next_favorite_id([]) is None
-
-
-def test_oldest_survivor_is_promoted_when_the_favorite_is_removed() -> None:
-    oldest, newer = _image(), _image()
-    assert next_favorite_id([oldest, newer]) == oldest.id

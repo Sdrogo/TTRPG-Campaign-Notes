@@ -15,12 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import documents_repo, remote_images, storage, storage_cleanup
 from app.db.remote_images import RemoteImageError
-from app.domain.documents import (
-    TooManyImagesError,
-    ensure_can_add_image,
-    next_favorite_id,
-    plan_new_image,
-)
+from app.domain.documents import TooManyImagesError, ensure_can_add_image, plan_new_image
 from app.domain.images import (
     MAX_DIMENSION,
     MAX_INPUT_BYTES,
@@ -35,10 +30,6 @@ from app.domain.models import Document, DocumentImage
 class ImageResponse(BaseModel):
     id: uuid.UUID
     url: str
-    # The image that leads its Document's gallery (spec 07). Carried on
-    # Comment attachments too, so an image serializes the same way whichever
-    # route returned it.
-    is_favorite: bool
 
 
 async def sign_images(images: Iterable[DocumentImage]) -> dict[str, str]:
@@ -53,7 +44,7 @@ def image_responses(
     """An image Storage couldn't sign is left out (see
     `storage.signed_urls`)."""
     return [
-        ImageResponse(id=image.id, url=urls[image.storage_path], is_favorite=image.is_favorite)
+        ImageResponse(id=image.id, url=urls[image.storage_path])
         for image in images
         if image.storage_path in urls
     ]
@@ -72,25 +63,20 @@ async def fetch_url(url: str) -> bytes:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
 
 
-async def ensure_room_for_another_image(
-    session: AsyncSession, document: Document
-) -> list[DocumentImage]:
-    """Returns the Document's current images, or 409 at the limit.
+async def ensure_room_for_another_image(session: AsyncSession, document: Document) -> int:
+    """Returns the Document's current image count, or 409 at the limit.
 
     Locks the Document row first, for the rest of the request: two
     concurrent uploads would otherwise both see 19 images and both insert.
     Call it before any other image count the request relies on (e.g. a
-    Comment's own limit), so that count is taken under the lock too. The
-    images themselves are returned because the new one's favorite flag
-    depends on whether the Document already has one (spec 07), and the lock
-    is what stops two concurrent first uploads from both claiming it."""
+    Comment's own limit), so that count is taken under the lock too."""
     await documents_repo.lock_document(session, document.id)
-    current_images = await documents_repo.list_images(session, document.id)
+    current_count = len(await documents_repo.list_images(session, document.id))
     try:
-        ensure_can_add_image(len(current_images))
+        ensure_can_add_image(current_count)
     except TooManyImagesError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
-    return current_images
+    return current_count
 
 
 async def normalize(
@@ -121,7 +107,7 @@ async def store_image(
     document: Document,
     uploader_id: uuid.UUID,
     data: bytes,
-    current_images: Sequence[DocumentImage],
+    current_count: int,
     post_id: uuid.UUID | None = None,
 ) -> DocumentImage:
     """Normalize -> upload -> record. The object is marked as a cleanup
@@ -135,7 +121,7 @@ async def store_image(
             document.id,
             normalized.extension,
             uploader_id,
-            current_images,
+            current_count,
             post_id=post_id,
         )
     except TooManyImagesError as exc:
@@ -151,25 +137,6 @@ async def remove_images(session: AsyncSession, images: Sequence[DocumentImage]) 
     """Deletes the rows now; the Storage objects go only once the request's
     transaction commits (and are retried if Storage is down), so a later
     failure in the same request can't leave rows pointing at deleted
-    objects.
-
-    Removing the favorite hands the flag to the oldest surviving image, so a
-    Document that still has images always has exactly one (spec 07). The
-    delete, the read of what survived and the promotion all run under the
-    Document's lock, taken before the delete: a concurrent removal of the
-    image this one is about to promote would otherwise leave the Document
-    with images and no favorite, which the unique index cannot catch. Every
-    affected Document is locked, not just the ones losing their favorite -
-    deleting a non-favorite image is exactly what invalidates the other
-    request's choice of successor. Sorted, so two calls spanning the same
-    Documents can't deadlock taking them in opposite orders."""
-    for document_id in sorted({image.document_id for image in images}):
-        await documents_repo.lock_document(session, document_id)
-
+    objects."""
     await documents_repo.delete_images(session, [image.id for image in images])
     await storage_cleanup.schedule_removal(session, [image.storage_path for image in images])
-    for document_id in {image.document_id for image in images if image.is_favorite}:
-        remaining = await documents_repo.list_images(session, document_id)
-        successor = next_favorite_id(remaining)
-        if successor is not None:
-            await documents_repo.set_favorite_image(session, document_id, successor)

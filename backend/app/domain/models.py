@@ -92,9 +92,6 @@ class DocumentImage:
     # Set when the image was attached to a Comment: it's still one of the
     # Document's images, but only visible to whoever sees that Comment.
     post_id: uuid.UUID | None = None
-    # The one image an Owner picked to lead the Document (spec 07). At most
-    # one per Document, enforced by a partial unique index.
-    is_favorite: bool = False
 
 
 @dataclass(frozen=True)

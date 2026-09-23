@@ -188,9 +188,7 @@ def test_deleted_comment_takes_no_image_changes() -> None:
 
 def test_plan_new_image_links_the_comment() -> None:
     comment = _comment()
-    image = plan_new_image(
-        ROOM_ID, comment.document_id, ".webp", AUTHOR, [], post_id=comment.id
-    )
+    image = plan_new_image(ROOM_ID, comment.document_id, ".webp", AUTHOR, 0, post_id=comment.id)
     assert image.post_id == comment.id
     assert image.storage_path.startswith(f"{ROOM_ID}/{comment.document_id}/")
 

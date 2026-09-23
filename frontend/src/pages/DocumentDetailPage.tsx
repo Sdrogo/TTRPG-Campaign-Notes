@@ -11,7 +11,6 @@ import {
   useUploadDocumentImages,
   useImportDocumentImage,
   useDeleteDocumentImage,
-  useSetFavoriteImage,
 } from '../hooks/useDocuments';
 import { useTags } from '../hooks/useTags';
 import { useMembers } from '../hooks/useMembers';
@@ -119,7 +118,6 @@ function DocumentPanel({
   const uploadImages = useUploadDocumentImages(roomId, document.id);
   const importImage = useImportDocumentImage(roomId, document.id);
   const deleteImage = useDeleteDocumentImage(roomId, document.id);
-  const setFavorite = useSetFavoriteImage(roomId, document.id);
 
   const isOwner =
     document.ownerIds.includes(currentUserId) ||
@@ -189,12 +187,6 @@ function DocumentPanel({
           canDelete={isOwner && editing}
           onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
           deletingImageId={deleteImage.isPending ? (deleteImage.variables ?? null) : null}
-          // Spec 07: not gated on `editing` like deletion - picking the
-          // leading image is reversible, so it needs no edit mode.
-          onSetFavorite={
-            isOwner ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError }) : undefined
-          }
-          settingFavoriteId={setFavorite.isPending ? (setFavorite.variables ?? null) : null}
         />
         <DocumentOwners
           ownerIds={document.ownerIds}

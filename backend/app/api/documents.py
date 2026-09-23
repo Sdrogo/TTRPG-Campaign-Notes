@@ -5,12 +5,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.access import (
-    get_visible_document,
-    get_visible_images,
-    get_visible_images_for_documents,
-    require_membership,
-)
+from app.api.access import get_visible_document, get_visible_images, require_membership
 from app.api.image_uploads import (
     ImageResponse,
     ensure_room_for_another_image,
@@ -76,16 +71,17 @@ class UpdateDocumentRequest(BaseModel):
     selective_user_ids: UniqueIds | None = None
 
 
-def _build_response(
+async def _build_response(
+    session: AsyncSession,
     document: Document,
     owner_ids: list[uuid.UUID],
     selective_ids: list[uuid.UUID],
-    tag_ids: list[uuid.UUID],
     images: list[DocumentImage],
     image_urls: Mapping[str, str],
 ) -> DocumentResponse:
     """`images` must already be filtered for the viewer
     (`get_visible_images`) and signed (`sign_images`)."""
+    tag_ids = await documents_repo.list_tag_ids_for_document(session, document.id)
     return DocumentResponse(
         id=document.id,
         room_id=document.room_id,
@@ -104,10 +100,9 @@ async def _to_response(
 ) -> DocumentResponse:
     owner_ids = await documents_repo.list_owner_ids(session, document.id)
     selective_ids = await documents_repo.list_selective_grant_ids(session, document.id)
-    tag_ids = await documents_repo.list_tag_ids_for_document(session, document.id)
     images = await get_visible_images(session, document.id, viewer)
-    return _build_response(
-        document, owner_ids, selective_ids, tag_ids, images, await sign_images(images)
+    return await _build_response(
+        session, document, owner_ids, selective_ids, images, await sign_images(images)
     )
 
 
@@ -160,40 +155,22 @@ async def list_documents(
     membership = await require_membership(session, room_id, requester_id)
 
     documents = await documents_repo.list_documents_for_room(session, room_id)
-    document_ids = [document.id for document in documents]
-
-    # Every card carries its Tags and its images, so the whole page is read in
-    # a fixed number of queries instead of a handful per Document.
-    owners = await documents_repo.list_owner_ids_for_documents(session, document_ids)
-    grants = await documents_repo.list_selective_grant_ids_for_documents(session, document_ids)
-
-    visible = [
-        document
-        for document in documents
-        if is_document_visible(
-            document, requester_id, membership.role, owners[document.id], grants[document.id]
-        )
-    ]
-    # Tags and images are read only for the Documents that survived the
-    # visibility filter (Invariant 1), never for the whole Room.
-    visible_ids = [document.id for document in visible]
-    tags = await documents_repo.list_tag_ids_for_documents(session, visible_ids)
-    images = await get_visible_images_for_documents(session, visible_ids, membership)
+    visible = []
+    for document in documents:
+        owner_ids = await documents_repo.list_owner_ids(session, document.id)
+        selective_ids = await documents_repo.list_selective_grant_ids(session, document.id)
+        if not is_document_visible(
+            document, requester_id, membership.role, owner_ids, selective_ids
+        ):
+            continue
+        images = await get_visible_images(session, document.id, membership)
+        visible.append((document, owner_ids, selective_ids, images))
 
     # One signing request for the whole list, not one per Document.
-    image_urls = await sign_images(
-        image for document_images in images.values() for image in document_images
-    )
+    image_urls = await sign_images(image for *_, images in visible for image in images)
     return [
-        _build_response(
-            document,
-            owners[document.id],
-            grants[document.id],
-            tags[document.id],
-            images.get(document.id, []),
-            image_urls,
-        )
-        for document in visible
+        await _build_response(session, document, owner_ids, selective_ids, images, image_urls)
+        for document, owner_ids, selective_ids, images in visible
     ]
 
 
@@ -274,9 +251,9 @@ async def upload_document_image(
 ) -> DocumentResponse:
     requester_id = uuid.UUID(current_user.id)
     document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
-    current_images = await ensure_room_for_another_image(session, document)
+    current_count = await ensure_room_for_another_image(session, document)
     data = await read_upload(file)
-    await store_image(session, document, requester_id, data, current_images)
+    await store_image(session, document, requester_id, data, current_count)
     return await _to_response(session, document, membership)
 
 
@@ -290,9 +267,9 @@ async def import_document_image(
 ) -> DocumentResponse:
     requester_id = uuid.UUID(current_user.id)
     document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
-    current_images = await ensure_room_for_another_image(session, document)
+    current_count = await ensure_room_for_another_image(session, document)
     data = await fetch_url(str(body.url))
-    await store_image(session, document, requester_id, data, current_images)
+    await store_image(session, document, requester_id, data, current_count)
     return await _to_response(session, document, membership)
 
 
@@ -314,35 +291,6 @@ async def delete_document_image(
     if image is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Image not found")
     await remove_images(session, [image])
-
-
-@router.put("/{document_id}/images/{image_id}/favorite")
-async def set_favorite_image(
-    room_id: uuid.UUID,
-    document_id: uuid.UUID,
-    image_id: uuid.UUID,
-    current_user: CurrentUserDep,
-    session: SessionDep,
-) -> DocumentResponse:
-    """Spec 07: an Owner (or the Master, D-12) picks the image that leads the
-    Document. Only one at a time, so this clears the previous favorite.
-
-    The image must be one the requester can actually see - otherwise an Owner
-    could probe for a Private Comment's attachment by trying ids (VR-07)."""
-    requester_id = uuid.UUID(current_user.id)
-    document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
-
-    # Locked before the image is read, not just inside `set_favorite_image`:
-    # a concurrent delete of this image between the check and the write would
-    # otherwise clear the old favorite and set nothing, leaving the Document
-    # with images and no favorite.
-    await documents_repo.lock_document(session, document_id)
-    images = await get_visible_images(session, document_id, membership)
-    if not any(image.id == image_id for image in images):
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Image not found")
-
-    await documents_repo.set_favorite_image(session, document_id, image_id)
-    return await _to_response(session, document, membership)
 
 
 @router.post("/{document_id}/owners/{user_id}", status_code=status.HTTP_201_CREATED)

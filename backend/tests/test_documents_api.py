@@ -1,19 +1,11 @@
-import io
 import uuid
 from collections.abc import AsyncIterator, Callable
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.main import app
-
-
-def _png(size: tuple[int, int] = (60, 40)) -> bytes:
-    buffer = io.BytesIO()
-    Image.new("RGB", size, color=(120, 40, 200)).save(buffer, format="PNG")
-    return buffer.getvalue()
 
 
 @pytest_asyncio.fixture
@@ -260,122 +252,3 @@ async def test_duplicate_tag_and_grant_ids_are_collapsed(
     assert updated.status_code == 200
     assert updated.json()["tag_ids"] == [tag_id]
     assert updated.json()["selective_user_ids"] == [grantee]
-
-
-# --- What the Documents list owes a DocumentCard (spec 07) -----------------
-#
-# The cards render Tags, images and Owners straight from this one response,
-# and it now reads them for the whole page in a fixed number of queries
-# instead of a handful per Document - so these lock the per-Document shape
-# and, above all, that batching them didn't widen what a viewer sees.
-
-
-async def test_list_carries_tags_images_and_owners_per_document(
-    db_session: AsyncSession,
-    make_token: Callable[..., str],
-    client: AsyncClient,
-    fake_storage: dict[str, bytes],
-) -> None:
-    room_id, master_token, _ = await _room_with_master_and_player(client, make_token)
-    tag_ids = [
-        t["id"]
-        for t in (
-            await client.get(f"/rooms/{room_id}/tags", headers=_auth_headers(master_token))
-        ).json()
-    ][:2]
-
-    tagged = (
-        await client.post(
-            f"/rooms/{room_id}/documents",
-            json={"name": "Castle Ravenloft", "tag_ids": tag_ids},
-            headers=_auth_headers(master_token),
-        )
-    ).json()
-    plain = (
-        await client.post(
-            f"/rooms/{room_id}/documents",
-            json={"name": "A Document with nothing on it"},
-            headers=_auth_headers(master_token),
-        )
-    ).json()
-
-    await client.post(
-        f"/rooms/{room_id}/documents/{tagged['id']}/images",
-        files={"file": ("keep.png", _png(), "image/png")},
-        headers=_auth_headers(master_token),
-    )
-
-    listing = (
-        await client.get(f"/rooms/{room_id}/documents", headers=_auth_headers(master_token))
-    ).json()
-    by_id = {d["id"]: d for d in listing}
-
-    assert sorted(by_id[tagged["id"]]["tag_ids"]) == sorted(tag_ids)
-    assert len(by_id[tagged["id"]]["images"]) == 1
-    assert by_id[tagged["id"]]["images"][0]["is_favorite"] is True
-    assert by_id[tagged["id"]]["owner_ids"] == tagged["owner_ids"]
-
-    # Batching must not bleed one Document's rows into another's card.
-    assert by_id[plain["id"]]["tag_ids"] == []
-    assert by_id[plain["id"]]["images"] == []
-    assert by_id[plain["id"]]["owner_ids"] == plain["owner_ids"]
-
-
-async def test_list_hides_a_private_comments_image_from_other_members(
-    db_session: AsyncSession,
-    make_token: Callable[..., str],
-    client: AsyncClient,
-    fake_storage: dict[str, bytes],
-) -> None:
-    """Invariant 1 on the list path: a Comment attachment inherits the
-    Comment's visibility, so it must not reach the card of someone who can't
-    read that Comment."""
-    room_id, master_token, player_token = await _room_with_master_and_player(client, make_token)
-    document = (
-        await client.post(
-            f"/rooms/{room_id}/documents",
-            json={"name": "The Vistani Camp"},
-            headers=_auth_headers(master_token),
-        )
-    ).json()
-
-    # An image on the Document itself: everyone in the Room sees this one.
-    await client.post(
-        f"/rooms/{room_id}/documents/{document['id']}/images",
-        files={"file": ("open.png", _png(), "image/png")},
-        headers=_auth_headers(master_token),
-    )
-
-    comment = (
-        await client.post(
-            f"/rooms/{room_id}/documents/{document['id']}/comments",
-            json={"body": "For the Master's eyes only.", "visibility": "master"},
-            headers=_auth_headers(master_token),
-        )
-    ).json()
-    attached = (
-        await client.post(
-            f"/rooms/{room_id}/documents/{document['id']}/comments/{comment['id']}/images",
-            files={"file": ("secret.png", _png(), "image/png")},
-            headers=_auth_headers(master_token),
-        )
-    ).json()
-    secret_id = attached["images"][0]["id"]
-
-    def images_in_list(body: list[dict[str, object]]) -> list[str]:
-        (entry,) = [d for d in body if d["id"] == document["id"]]
-        images = entry["images"]
-        assert isinstance(images, list)
-        return [i["id"] for i in images]
-
-    master_list = (
-        await client.get(f"/rooms/{room_id}/documents", headers=_auth_headers(master_token))
-    ).json()
-    assert secret_id in images_in_list(master_list)
-
-    player_list = (
-        await client.get(f"/rooms/{room_id}/documents", headers=_auth_headers(player_token))
-    ).json()
-    assert secret_id not in images_in_list(player_list)
-    # The Document's own image is still there, so this isn't just an empty list.
-    assert len(images_in_list(player_list)) == 1

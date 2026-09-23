@@ -2,14 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   MAX_IMAGES_PER_COMMENT,
   isHttpUrl,
-  leadImage,
   pendingFromFile,
   pendingFromUrl,
   releasePendingImages,
   remainingImageSlots,
-  toStoredImage,
 } from './images';
-import type { StoredImage } from '../types/image';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -61,38 +58,5 @@ describe('pending images', () => {
 
   it('gives each pending image a distinct id', () => {
     expect(pendingFromUrl('https://a.test/1.png').id).not.toBe(pendingFromUrl('https://a.test/1.png').id);
-  });
-});
-
-
-describe('toStoredImage', () => {
-  it('reads the wire shape every image response uses', () => {
-    expect(toStoredImage({ id: 'i1', url: 'https://x/a.webp', is_favorite: true })).toEqual({
-      id: 'i1',
-      url: 'https://x/a.webp',
-      isFavorite: true,
-    });
-  });
-});
-
-describe('leadImage', () => {
-  const image = (id: string, isFavorite: boolean): StoredImage => ({
-    id,
-    url: `https://x/${id}.webp`,
-    isFavorite,
-  });
-
-  it('is the favorite, wherever it sits in the list', () => {
-    expect(leadImage([image('a', false), image('b', true)])?.id).toBe('b');
-  });
-
-  it('falls back to the first image when the favorite is filtered out', () => {
-    // A favorite attached to a Comment the viewer can't read never reaches
-    // them, so their card leads with the first image they can see.
-    expect(leadImage([image('a', false), image('b', false)])?.id).toBe('a');
-  });
-
-  it('is undefined for a Document with no images', () => {
-    expect(leadImage([])).toBeUndefined();
   });
 });

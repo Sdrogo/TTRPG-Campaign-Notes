@@ -2,17 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import (
-    Boolean,
-    DateTime,
-    ForeignKey,
-    Index,
-    String,
-    Text,
-    UniqueConstraint,
-    func,
-    text,
-)
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -211,19 +201,6 @@ class DocumentImageRow(Base):
     storage_path: Mapped[str] = mapped_column(String(500))
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    # The image that leads the Document (spec 07). At most one per Document:
-    # the partial unique index below is what actually enforces it, so two
-    # concurrent "set favorite" requests can't both win.
-    is_favorite: Mapped[bool] = mapped_column(Boolean, server_default=text("false"), default=False)
-
-    __table_args__ = (
-        Index(
-            "uq_document_images_one_favorite",
-            "document_id",
-            unique=True,
-            postgresql_where=text("is_favorite"),
-        ),
-    )
 
 
 class StorageCleanupRow(Base):

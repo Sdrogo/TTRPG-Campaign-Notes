@@ -1,5 +1,5 @@
 import uuid
-from collections.abc import Collection, Iterable, Sequence
+from collections.abc import Collection
 from dataclasses import dataclass
 
 from app.domain.models import (
@@ -111,17 +111,14 @@ def plan_new_image(
     document_id: uuid.UUID,
     extension: str,
     uploader_id: uuid.UUID,
-    current_images: Sequence[DocumentImage],
+    current_image_count: int,
     post_id: uuid.UUID | None = None,
 ) -> DocumentImage:
     """D-09/FR-D1: plans one more image on a Document. The Storage object
     path is scoped under room/document so paths never collide across
     Documents, and randomized so it can't be guessed from a Document's id
-    alone (the bucket is private - see architecture.md's Storage Model).
-
-    `current_images` are the Document's images before this one, which also
-    decide whether it becomes the favorite (spec 07)."""
-    ensure_can_add_image(len(current_images))
+    alone (the bucket is public - see architecture.md's Storage Model)."""
+    ensure_can_add_image(current_image_count)
     image_id = uuid.uuid4()
     return DocumentImage(
         id=image_id,
@@ -129,23 +126,4 @@ def plan_new_image(
         storage_path=f"{room_id}/{document_id}/{image_id.hex}{extension}",
         created_by=uploader_id,
         post_id=post_id,
-        is_favorite=not has_favorite(current_images),
     )
-
-
-def has_favorite(images: Iterable[DocumentImage]) -> bool:
-    return any(image.is_favorite for image in images)
-
-
-def next_favorite_id(remaining: Sequence[DocumentImage]) -> uuid.UUID | None:
-    """Which image takes over as favorite once the previous one is gone, or
-    None if nothing needs to change.
-
-    Spec 07 says the first image uploaded is the favorite by default. Keeping
-    that true after a deletion means a Document that still has images always
-    has exactly one favorite - so the oldest survivor is promoted, and the
-    card never falls back to an arbitrary image. `remaining` must be in the
-    repository's favorite-first, then oldest-first order."""
-    if not remaining or has_favorite(remaining):
-        return None
-    return remaining[0].id
