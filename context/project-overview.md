@@ -37,7 +37,8 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 
 ## Core User Flow
 
-1. User signs in with Google (FR-A1). Their Google name and picture
+1. User signs in with Google (FR-A1), or with Discord, Facebook, GitHub
+   or X (spec 08). Their provider name and picture
    become their display name and avatar by default (copied once, then
    theirs to change or remove), and they can adjust their profile on
    the Account page: display name, avatar, pronouns and a short
@@ -62,8 +63,9 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 ## Features
 
 ### Authentication & Account
-- Google sign‑in (FR-A1).
-- Profile defaults from Google: the first time a user opens the app,
+- Google sign‑in (FR-A1), plus Discord, Facebook, GitHub and X
+  (spec 08, 2026-09-23). Google stays the highlighted option.
+- Profile defaults from the sign-in provider (Google first, now any of them): the first time a user opens the app,
   their Google name and picture are copied in for whatever they haven't
   set. It happens once; later edits and removals stick, and changes to
   the Google account don't overwrite them.
@@ -145,7 +147,7 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 ## Scope
 
 ### In Scope
-- Google authentication.
+- OAuth authentication: Google (preferred), Discord, Facebook, GitHub, X.
 - A per‑user profile (display name, avatar, pronouns, description)
   managed on the Account page.
 - Rooms, per‑Room roles (Administrator, Master, Player) and invites.
@@ -162,10 +164,10 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 - Game‑system mechanics: character sheets, dice rolling, combat,
   maps.
 - Native mobile apps.
-- Non‑Google login providers.
+- Email/password or magic-link login; providers beyond the five above.
 - Changing the login email or deleting the account from inside the
-  app — the email comes from Google and the Account page only shows
-  it.
+  app — the email comes from the sign-in provider and the Account page
+  only shows it.
 - Fully sealed content hidden even from the Master (VR-09) — future
   evolution, not prioritized.
 

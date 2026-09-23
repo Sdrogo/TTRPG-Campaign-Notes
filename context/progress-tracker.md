@@ -160,6 +160,13 @@ Update this file after every meaningful implementation change.
   commit-preview deploys through, with a pattern that another Vercel account
   can't match. Env var set on Render; live once this is merged and
   deployed (see Completed).
+- **Auth expansion complete** (2026-09-23, frontend + a small backend
+  change, branch `feature/auth_expansion`; spec `context/feature/08 - Auth
+  expansion.md`): sign-in with Discord, Facebook, GitHub and X alongside
+  Google, which stays the highlighted button. The Account page names the
+  provider used. GitHub/X handles now count as a default display name.
+  Frontend **628/628**, backend **250/250**, build/lint/ruff/mypy clean.
+  **Each provider not yet tried end to end against Supabase** (Next Up 0b).
 
 ## Current Goal
 
@@ -1169,6 +1176,49 @@ Update this file after every meaningful implementation change.
     with
     `curl -i -X OPTIONS https://ttrpg-campaign-notes.onrender.com/account -H "Origin: https://ttrpg-campaign-notes-<hash>-rum11.vercel.app" -H "Access-Control-Request-Method: GET"`,
     which should return `access-control-allow-origin` with that origin.
+- **Auth expansion (2026-09-23, branch `feature/auth_expansion`; spec
+  `context/feature/08 - Auth expansion.md`):** Discord, Facebook, GitHub
+  and X were enabled in Supabase's dashboard; the app now offers them.
+  - **Frontend**: new `lib/authProviders.ts`, the one list of providers
+    (`AUTH_PROVIDERS`: Supabase id, label, Phosphor logo) plus
+    `authProviderOf` for a session's `app_metadata.provider`. X uses
+    Supabase's OAuth 2.0 provider id `x`, not the legacy `twitter`.
+    `HomePage` renders one full-width "Accedi con …" button per provider
+    (column capped at 320px, `px="md"` gutter on phones); Google is the
+    only filled button, since D-07 makes it the preferred login. The redirect
+    is still `window.location.origin`, so previews and localhost work for
+    every provider through the same Redirect URLs allowlist. The Account
+    page's "Accesso" email field now shows the provider's logo and name
+    ("Accedi con Discord: l'email è quella del tuo account Discord."),
+    a generic envelope and wording when the provider is unknown, and a
+    placeholder when the account shared no email (X may withhold it).
+  - **Backend** (`app/auth/dependencies.py`): the default display name also
+    falls back to `user_name`/`preferred_username`, since GitHub and X
+    users often have no profile name, only a handle. A real name still wins.
+    Nothing else was needed: every provider yields the same Supabase JWT,
+    Supabase normalizes `full_name`/`name`/`avatar_url`/`picture`, and a
+    missing email was already handled (nullable column, link-based
+    invitations, "Utente sconosciuto" fallback). The `google_*` field
+    names were kept to avoid churn; comments say they cover every provider.
+  - **Tests**: frontend +12 (`authProviders.test.ts` 4; `HomePage`: all five
+    buttons in order, Google the only filled one, each provider calls
+    `signInWithOAuth` with its id and the current origin; `AccountPage`:
+    provider named, generic fallback, no-email placeholder). Backend +6 in
+    `tests/test_auth.py`: claims for Google/Discord/GitHub-handle-only/X,
+    name preferred over handle, no claims → unset. The new backend tests
+    need no database, so they run in CI's non-integration set.
+  - **Checks**: frontend `npm run lint`, `npm run build` and
+    `npm run test:coverage` **628/628** (floors held, 98.6% statements);
+    backend ruff, mypy, full `pytest` **250/250**. Headless check of the
+    signed-out screen via `vite preview` at 1280px and 375px: five buttons
+    in order, each 320px wide, no horizontal overflow, zero console errors,
+    screenshot checked by eye. The signed-in Account page wasn't seen in a
+    browser (needs a real session); its component tests cover it.
+  - **Docs**: `architecture.md` (Auth row + Auth and Access Model, profile
+    defaults), `project-overview.md` (flow, features, scope: other
+    providers moved from Out of Scope to In Scope), `ui-context.md`
+    (sign-in screen, Accesso card). `requirements.md` not edited
+    (protected): see Open Questions.
 
 ## In Progress
 
@@ -1183,6 +1233,16 @@ Update this file after every meaningful implementation change.
    look right side by side with the description. Built and type-checked,
    not seen running; the repo has no committed headless-check tooling, so this needs a session with the
    app up (see Session Notes).
+
+   0b. **Try each new sign-in provider on the deployed app** (spec 08):
+   Discord, Facebook, GitHub and X each round-trip back to the app, land
+   on the Rooms list, and pre-fill the name/avatar on the first
+   `/account` visit. Check an X account without an email too. If a
+   provider sends the user to a Supabase error page, it's a dashboard
+   setting (client id/secret, or that provider's callback URL
+   `https://<project>.supabase.co/auth/v1/callback` in its developer
+   console), not app code. Facebook apps in Development mode only let
+   the app's own testers sign in.
 1. Mention backlinks (rest of FR-D4): store mentions server-side on
    save, show "Mentioned in" on the Document page (filtered per viewer),
    and decide whether mentions should survive a rename.
@@ -1209,6 +1269,16 @@ Update this file after every meaningful implementation change.
 
 ## Open Questions
 
+- **`requirements.md` still says Google only (new, 2026-09-23, spec 08)**:
+  FR-A1 ("Login con Google"), UC-01, section 5's User ("login con
+  Google"), NFR-03 ("dai dati Google…") and the MoSCoW **Won't** row
+  ("supporto ad altri provider di login") all predate spec 08, which
+  enabled Discord, Facebook, GitHub and X. D-07 ("Google, modalità
+  preferita") still holds, and the UI keeps Google primary. Not edited
+  (protected file); needs a product pass to move other providers out of
+  Won't and widen FR-A1/NFR-03. NFR-03's privacy rule (only identity and
+  avatar are used) is kept for every provider: nothing beyond name,
+  picture and email is read.
 - OQ-09 · OQ-10 from `requirements.md` (section 6) are formally
   unresolved (no `D-` number assigned) but now fully implemented in
   practice: creator = Administrator + Master on creation (OQ-09), and
