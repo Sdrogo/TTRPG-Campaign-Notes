@@ -44,6 +44,16 @@ describe('DocumentFields', () => {
     });
   });
 
+  it('reports a description change', async () => {
+    const { onChange, user } = render({ name: 'Il Cancello' });
+
+    await user.type(screen.getByRole('textbox', { name: /Descrizione/ }), 'U');
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ description: 'U', name: 'Il Cancello' }),
+    );
+  });
+
   it('reports a visibility change', async () => {
     const { onChange, user } = render();
 

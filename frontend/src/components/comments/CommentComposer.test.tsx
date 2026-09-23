@@ -260,6 +260,49 @@ describe('images', () => {
     );
   });
 
+  it('stages a picked file and previews it', async () => {
+    const { user } = render();
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));
+
+    expect(screen.getByAltText('mappa.png')).toBeInTheDocument();
+  });
+
+  it('submits a staged file with the Comment', async () => {
+    const { onSubmit, user } = render();
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));
+
+    await user.type(body(), 'Con immagine');
+    await user.click(submitButton());
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        newImages: [expect.objectContaining({ label: 'mappa.png' })],
+      }),
+      expect.any(Function),
+    );
+  });
+
+  // A staged file was never uploaded, so removing it drops it outright
+  // rather than recording a removal for the backend to apply.
+  it('drops a staged file without recording a removal', async () => {
+    const { onSubmit, user } = render();
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));
+
+    await user.click(screen.getByRole('button', { name: 'Rimuovi mappa.png' }));
+
+    expect(screen.queryByAltText('mappa.png')).not.toBeInTheDocument();
+    await user.type(body(), 'Senza immagine');
+    await user.click(submitButton());
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ newImages: [], removedImageIds: [] }),
+      expect.any(Function),
+    );
+  });
+
   const fullComment = [
     ...existingImages,
     { id: 'image-3', url: 'http://a/3.webp', isFavorite: false },

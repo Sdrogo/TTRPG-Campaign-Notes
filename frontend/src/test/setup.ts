@@ -47,9 +47,14 @@ if (!document.fonts) {
   });
 }
 
-// `URL.createObjectURL` backs every image preview in the app.
-globalThis.URL.createObjectURL ??= () => 'blob:preview';
-globalThis.URL.revokeObjectURL ??= () => {};
+// `URL.createObjectURL` backs every image preview in the app. The
+// environment does provide one, but it throws on a File built inside a test
+// ("Cannot read properties of undefined (reading '_buffer')"), so this
+// replaces it outright rather than filling a gap. A real blob: URL would
+// mean nothing here; the previews only need a stable, unique string.
+let objectUrlCount = 0;
+globalThis.URL.createObjectURL = () => `blob:preview-${++objectUrlCount}`;
+globalThis.URL.revokeObjectURL = () => {};
 
 afterEach(() => {
   cleanup();

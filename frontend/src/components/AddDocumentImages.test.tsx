@@ -73,6 +73,15 @@ describe('AddDocumentImages', () => {
     expect(urlField()).toHaveValue('');
   });
 
+  it('uploads picked files', async () => {
+    const { onUploadFiles, user } = render();
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));
+
+    expect(onUploadFiles).toHaveBeenCalledWith([expect.objectContaining({ name: 'mappa.png' })]);
+  });
+
   it('shows the upload in progress', () => {
     render({ uploading: true });
 

@@ -71,6 +71,15 @@ describe('AvatarEditor', () => {
     expect(onImportUrl).toHaveBeenCalledWith('https://example.com/me.png');
   });
 
+  it('uploads a picked file', async () => {
+    const { onUpload, user: u } = render();
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await u.upload(input, new File(['bytes'], 'me.png', { type: 'image/png' }));
+
+    expect(onUpload).toHaveBeenCalledWith(expect.objectContaining({ name: 'me.png' }));
+  });
+
   // Each action takes effect immediately, so a second one mid-flight could
   // race the first.
   it('disables the other actions while one is in flight', () => {

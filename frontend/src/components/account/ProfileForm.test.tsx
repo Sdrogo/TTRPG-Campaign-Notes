@@ -54,6 +54,12 @@ describe('ProfileForm', () => {
     expect(nameField()).toHaveAttribute('placeholder', 'io@example.com');
   });
 
+  it('falls back to a generic hint when there is no email either', () => {
+    render({ displayName: null, email: null });
+
+    expect(nameField()).toHaveAttribute('placeholder', 'Il tuo nome');
+  });
+
   it('cannot save before anything changes', () => {
     render();
 

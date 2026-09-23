@@ -79,3 +79,9 @@ export function rawAccount(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+// A Supabase session, as `useSession` hands it to a page. Only `user.id` and
+// the access token are ever read, so the rest is left off.
+export function fakeSession(userId = 'user-1') {
+  return { access_token: `token-${userId}`, user: { id: userId } };
+}

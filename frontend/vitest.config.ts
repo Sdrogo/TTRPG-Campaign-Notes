@@ -36,15 +36,14 @@ export default defineConfig({
       // check summary (.github/workflows/ci.yml).
       reporter: ['text', 'html', 'json-summary'],
       // Floors, not targets: they sit just under what the suite reaches
-      // today (80.1 / 70.6 / 83.8 / 79.8), so coverage can't erode silently.
+      // today (98.6 / 93.2 / 98.4 / 98.8), so coverage can't erode silently.
       // Raise them when the measured numbers move up; never lower one to
-      // make a build pass. `src/pages` is still untested, which is what
-      // keeps the overall figure at 80 rather than in the nineties.
+      // make a build pass.
       thresholds: {
-        statements: 78,
-        branches: 68,
-        functions: 81,
-        lines: 78,
+        statements: 97,
+        branches: 91,
+        functions: 97,
+        lines: 97,
       },
     },
   },

@@ -205,6 +205,52 @@ describe('filtering', () => {
   });
 });
 
+describe('editing from the list', () => {
+  it('saves an edit made in place', async () => {
+    const writes: string[] = [];
+    mockRoutes([rawComment()], (path) => {
+      writes.push(path);
+      return Promise.resolve(rawComment({ body: 'Nuovo testo' }));
+    });
+    const { user } = render();
+    await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
+
+    await user.click(screen.getByText('Modifica'));
+    const editor = screen.getAllByRole('textbox', { name: 'Testo del commento' })[0];
+    await user.clear(editor);
+    await user.type(editor, 'Nuovo testo');
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+
+    await waitFor(() =>
+      expect(writes).toContain('/rooms/room-1/documents/doc-1/comments/comment-1'),
+    );
+  });
+
+  // The edit form closes only once the save succeeds, so a failure leaves
+  // the text on screen to retry.
+  it('closes the editor after a successful save', async () => {
+    mockRoutes([rawComment()], () => Promise.resolve(rawComment()));
+    const { user } = render();
+    await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
+    await user.click(screen.getByText('Modifica'));
+
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+
+    await waitFor(() => expect(screen.getByText('Modifica')).toBeInTheDocument());
+  });
+
+  it('reports a rejected edit', async () => {
+    mockRoutes([rawComment()], () => Promise.reject(new Error('Only the author can edit')));
+    const { user } = render();
+    await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
+    await user.click(screen.getByText('Modifica'));
+
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+  });
+});
+
 describe('deleting from the list', () => {
   it('deletes the Comment the action belongs to', async () => {
     mockRoutes([rawComment()], () => Promise.resolve(rawComment()));

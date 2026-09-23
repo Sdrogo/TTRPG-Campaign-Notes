@@ -117,14 +117,13 @@ Update this file after every meaningful implementation change.
   88 tests, all of them pure-function tests over `src/lib`, and **no
   component or hook testing stack at all** — measured at 18% of statements.
   Added the stack (React Testing Library, jsdom, `@vitest/coverage-v8`, a
-  `vitest.config.ts`, `src/test/{setup,utils,fixtures}.ts`) and **403 new
-  tests**, covering every hook and every component. Now **491/491 pass** at
-  **80% statements / 79.8% lines / 70.6% branches / 83.8% functions**, with
-  `src/lib` and `src/hooks` at 100% and `src/components` at 94%. Coverage
-  floors are enforced in `vitest.config.ts`, so this can't erode silently.
-  Conventions are written up in `code-standards.md` → Testing (frontend).
-  **`src/pages` is still untested** (7 routed views, ~0%) — that's what
-  holds the overall figure at 80 rather than the nineties; see Next Up #1.
+  `vitest.config.ts`, `src/test/{setup,utils,fixtures}.ts`) and **521 new
+  tests**, covering every hook, every component, all 7 routed pages and the
+  routing table. Now **609/609 pass** at **98.6% statements / 98.8% lines /
+  93.2% branches / 98.4% functions**, with `src/lib` and `src/hooks` at
+  100%, `src/components` at 97% and `src/pages` at 96%. Coverage floors are
+  enforced in `vitest.config.ts`, so this can't erode silently. Conventions
+  are written up in `code-standards.md` → Testing (frontend).
   No production code was changed by this unit.
 - **CI complete** (2026-09-23): `.github/workflows/ci.yml`, the repo's first
   automated check, running on every PR and on pushes to `main`. Frontend:
@@ -1095,21 +1094,14 @@ Update this file after every meaningful implementation change.
    opens the Document. Built and type-checked, not seen running; the repo
    has no committed headless-check tooling, so this needs a session with the
    app up (see Session Notes).
-1. **Cover `src/pages`** — the 7 routed views are the last untested layer
-   of the frontend (`DocumentDetailPage` is the biggest at ~237 lines, then
-   `RoomMembersPage` and `RoomDocumentsPage`). The stack and helpers are in
-   place, so these are ordinary `renderWithProviders` tests with `apiFetch`
-   mocked per route; `App.tsx`'s routing table goes with them. Doing this
-   should take the frontend from 80% to the low nineties, after which the
-   floors in `vitest.config.ts` should be raised to match.
-2. Mention backlinks (rest of FR-D4): store mentions server-side on
+1. Mention backlinks (rest of FR-D4): store mentions server-side on
    save, show "Mentioned in" on the Document page (filtered per viewer),
    and decide whether mentions should survive a rename.
-3. Rest of Threads on top of the new `posts` table: nested replies
+2. Rest of Threads on top of the new `posts` table: nested replies
    (FR-T1/T2) with D-17/VR-04's "never wider than the parent" check in
    the domain layer (Invariant 3), and pagination (FR-T3) if Comment
    counts grow. Comments are currently flat and loaded all at once.
-4. Details/Threads (D-18, D-19, D-20, FR-D3, FR-T1, FR-T5–T7): the
+3. Details/Threads (D-18, D-19, D-20, FR-D3, FR-T1, FR-T5–T7): the
    deferred half of the Documents unit — titled top-level Posts in a
    Document's one main Thread, own visibility per Post (VR-03, reusing
    `app/domain/visibility.py`'s pattern), edit rights limited to the
@@ -1120,7 +1112,7 @@ Update this file after every meaningful implementation change.
    worth scoping down to FR-T1/T5/T10 (post, edit/moderate, show
    Details on the Document card) for a first slice, same "thinnest
    usable" approach as before.
-5. Reveal action + fuller Visibility (VR-02, VR-05, VR-06, FR-V2, FR-V3,
+4. Reveal action + fuller Visibility (VR-02, VR-05, VR-06, FR-V2, FR-V3,
    FR-V5): default visibility per Room, the Reveal action with
    AuditLog + notification, "view as User X" for the Master. The
    Visibility *filter* exists now (Documents unit); Reveal and the

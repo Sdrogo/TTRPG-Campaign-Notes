@@ -284,3 +284,69 @@ describe('creating from the popup', () => {
     expect(onValue).toHaveBeenLastCalledWith('#Tempio');
   });
 });
+
+// The popup's "create" row is reachable from the keyboard: ArrowDown moves
+// onto it, the arrows switch kind, Enter creates.
+describe('creating from the keyboard', () => {
+  it('moves onto the create row and explains the shortcuts', async () => {
+    const { user } = render();
+    await user.type(field(), '#Tempio');
+    await screen.findByRole('button', { name: /Crea Documento/ });
+
+    await user.keyboard('{ArrowDown}');
+
+    expect(await screen.findByText(/Invio per creare/)).toBeInTheDocument();
+  });
+
+  it('creates on Enter once highlighted', async () => {
+    const { create, user } = render();
+    create.mockResolvedValue({ kind: 'document', document: document('doc-9', 'Tempio'), tags: [] });
+    await user.type(field(), '#Tempio');
+    await screen.findByRole('button', { name: /Crea Documento/ });
+
+    await user.keyboard('{ArrowDown}{Enter}');
+
+    await waitFor(() => expect(create).toHaveBeenCalledWith('document', 'Tempio'));
+  });
+
+  it('switches kind with the arrows', async () => {
+    const { create, user } = render();
+    create.mockResolvedValue({
+      kind: 'tag',
+      tag: { id: 'tag-9', name: 'Tempio', category: null },
+      documentCount: 0,
+    });
+    await user.type(field(), '#Tempio');
+    await screen.findByRole('button', { name: /Crea Documento/ });
+
+    await user.keyboard('{ArrowDown}{ArrowRight}');
+    expect(await screen.findByRole('button', { name: /Crea Tag/ })).toBeInTheDocument();
+
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(create).toHaveBeenCalledWith('tag', 'Tempio'));
+  });
+
+  it('steps back off the create row', async () => {
+    const { user } = render();
+    await user.type(field(), '#Tempio');
+    await screen.findByRole('button', { name: /Crea Documento/ });
+    await user.keyboard('{ArrowDown}');
+    await screen.findByText(/Invio per creare/);
+
+    await user.keyboard('{ArrowUp}');
+
+    await waitFor(() => expect(screen.queryByText(/Invio per creare/)).not.toBeInTheDocument());
+  });
+
+  // Enter is a newline until the user has actually moved onto the row.
+  it('leaves Enter alone while the row is not highlighted', async () => {
+    const { create, onValue, user } = render();
+    await user.type(field(), '#Tempio');
+    await screen.findByRole('button', { name: /Crea Documento/ });
+
+    await user.keyboard('{Enter}');
+
+    expect(create).not.toHaveBeenCalled();
+    expect(onValue).toHaveBeenLastCalledWith('#Tempio\n');
+  });
+});

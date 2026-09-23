@@ -43,6 +43,29 @@ describe('ImageAttachButtons', () => {
     expect(screen.getByRole('button', { name: 'Aggiungi immagine da URL' })).toBeEnabled();
   });
 
+  it('reports picked files', async () => {
+    const { onAddFiles, user } = render();
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));
+
+    expect(onAddFiles).toHaveBeenCalledWith([expect.objectContaining({ name: 'mappa.png' })]);
+  });
+
+  // More files than slots left: the extra ones are dropped here rather than
+  // rejected by the backend one at a time.
+  it('takes only as many files as there are slots left', async () => {
+    const { onAddFiles, user } = render(1);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await user.upload(input, [
+      new File(['a'], 'a.png', { type: 'image/png' }),
+      new File(['b'], 'b.png', { type: 'image/png' }),
+    ]);
+
+    expect(onAddFiles).toHaveBeenCalledWith([expect.objectContaining({ name: 'a.png' })]);
+  });
+
   it('accepts only the formats the backend takes', () => {
     const { container } = renderWithProviders(
       <ImageAttachButtons remaining={4} onAddFiles={vi.fn()} onAddUrl={vi.fn()} />,

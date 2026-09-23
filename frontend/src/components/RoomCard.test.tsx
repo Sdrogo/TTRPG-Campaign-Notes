@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
@@ -80,5 +80,16 @@ describe('RoomCard', () => {
     await user.click(screen.getByRole('button', { name: /Invita/ }));
 
     expect(screen.getByRole('button', { name: 'Genera invito' })).toBeInTheDocument();
+  });
+
+  it('closes the invite modal again', async () => {
+    const { user } = render({ isAdmin: true });
+    await user.click(screen.getByRole('button', { name: /Invita/ }));
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Genera invito' })).not.toBeInTheDocument(),
+    );
   });
 });

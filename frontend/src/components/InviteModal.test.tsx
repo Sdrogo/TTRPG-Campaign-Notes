@@ -79,6 +79,20 @@ describe('InviteModal', () => {
     );
   });
 
+  // The generated link belongs to the session that made it; reopening must
+  // not show a stale one.
+  it('forgets the generated link when closed', async () => {
+    fetchMock.mockResolvedValue({ code: 'ABC123', role: 'player', expires_at: null });
+    const { onClose, user } = render();
+    await user.click(screen.getByRole('button', { name: 'Genera invito' }));
+    await screen.findByDisplayValue(/ABC123/);
+
+    await user.keyboard('{Escape}');
+
+    expect(onClose).toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByDisplayValue(/ABC123/)).not.toBeInTheDocument());
+  });
+
   it('reports a failure', async () => {
     fetchMock.mockRejectedValue(new Error('Only an Administrator can invite'));
     const { user } = render();
