@@ -1,6 +1,7 @@
 """Runtime settings, read from the environment (or a local `.env`)."""
 
 import json
+import re
 from typing import Annotated
 
 from pydantic import field_validator
@@ -19,7 +20,28 @@ class Settings(BaseSettings):
     # NoDecode: parsed by `_parse_cors_origins` below instead of as JSON, so
     # a plain or comma-separated value from a hosting dashboard also works.
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
+    # Origins allowed by pattern on top of `cors_origins`, for hosts that are
+    # generated per deploy (Vercel previews). Matched against the whole
+    # Origin header (Starlette uses `fullmatch`). Unset = no pattern.
+    cors_origin_regex: str | None = None
     database_url: str = ""
+
+    @field_validator("cors_origin_regex", mode="before")
+    @classmethod
+    def _check_cors_origin_regex(cls, value: object) -> object:
+        """Blank means unset, and a pattern that doesn't compile fails at
+        startup - Starlette would otherwise raise only once the middleware
+        is built, with no hint that the env var is to blame."""
+        if not isinstance(value, str):
+            return value
+        pattern = value.strip()
+        if not pattern:
+            return None
+        try:
+            re.compile(pattern)
+        except re.error as exc:
+            raise ValueError(f"CORS_ORIGIN_REGEX is not a valid regex: {exc}") from exc
+        return pattern
 
     @field_validator("cors_origins", mode="before")
     @classmethod
