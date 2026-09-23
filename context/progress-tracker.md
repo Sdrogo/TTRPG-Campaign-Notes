@@ -113,6 +113,30 @@ Update this file after every meaningful implementation change.
   Backend and frontend committed separately. Backend **226/226** tests, mypy
   and ruff clean; frontend `npm run build`, `npm run lint` and `npm test`
   **88/88** pass. **Not visually verified in a browser** (see Session Notes).
+- **Frontend test coverage unit complete** (2026-09-23): the frontend had
+  88 tests, all of them pure-function tests over `src/lib`, and **no
+  component or hook testing stack at all** — measured at 18% of statements.
+  Added the stack (React Testing Library, jsdom, `@vitest/coverage-v8`, a
+  `vitest.config.ts`, `src/test/{setup,utils,fixtures}.ts`) and **521 new
+  tests**, covering every hook, every component, all 7 routed pages and the
+  routing table. Now **609/609 pass** at **98.6% statements / 98.8% lines /
+  93.2% branches / 98.4% functions**, with `src/lib` and `src/hooks` at
+  100%, `src/components` at 97% and `src/pages` at 96%. Coverage floors are
+  enforced in `vitest.config.ts`, so this can't erode silently. Conventions
+  are written up in `code-standards.md` → Testing (frontend).
+  No production code was changed by this unit.
+- **CI complete** (2026-09-23): `.github/workflows/ci.yml`, the repo's first
+  automated check, running on every PR and on pushes to `main`. Frontend:
+  lint, build (type-check) and `npm run test:coverage`, gated by the
+  thresholds in `vitest.config.ts`. Backend: ruff, mypy, and
+  `pytest -m "not integration"` gated at 95% of `app/domain` (currently
+  99%). **Needs no secrets**: the 90 tests that talk to the real Supabase
+  project are deselected, marked automatically from their use of the
+  `db_session` fixture, so CI never connects to the live database and fork
+  PRs work. 138 backend tests run in CI in under a second. The trade-off is
+  that **CI green does not mean the API layer was exercised** — running the
+  full `pytest` locally is still a pre-merge step. See `architecture.md` →
+  Continuous Integration.
 
 ## Current Goal
 

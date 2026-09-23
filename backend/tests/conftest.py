@@ -112,3 +112,16 @@ def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
     monkeypatch.setattr(storage, "remove", fake_remove)
     monkeypatch.setattr(storage, "create_signed_urls", fake_create_signed_urls)
     return objects
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Marks every test that needs the real Supabase database as
+    `integration`, so CI can run the rest with `-m "not integration"`
+    without secrets (see `.github/workflows/ci.yml`).
+
+    Keyed on the `db_session` fixture rather than a list of files, so a new
+    test that touches the database is classified correctly on its own.
+    """
+    for item in items:
+        if "db_session" in getattr(item, "fixturenames", ()):
+            item.add_marker(pytest.mark.integration)

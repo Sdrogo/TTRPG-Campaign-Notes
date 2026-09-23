@@ -56,6 +56,62 @@ split in two instead of one. Everything else applies to both.
   component is justified only when Mantine has no equivalent or the
   app needs domain-specific behavior (`VisibilityBadge`, `RoleTag`).
 
+## Testing (frontend)
+
+Vitest + React Testing Library, run with `npm test`; coverage with
+`npm run test:coverage` (config and floors in `vitest.config.ts`).
+
+- A test file sits next to what it tests (`useRooms.ts` →
+  `useRooms.test.ts`), so a module and its tests move together.
+- **Query the way a user finds things**: by role and accessible name
+  (`getByRole('button', { name: 'Elimina' })`), not by class or
+  test id. A query that needs a `data-testid` usually means the
+  component is missing a label. Mantine notes: a `Select` and a
+  `MultiSelect` are `combobox`, and a `required` field's label
+  includes the asterisk, so match it with a regex.
+- **Render through `src/test/utils.tsx`** (`renderWithProviders`,
+  `renderHookWithProviders`), which supplies the same
+  Mantine/TanStack Query/Router stack as `main.tsx`. Its `wrapper`
+  option nests an extra provider when one is needed. Never build a
+  bare `QueryClient` in a test: the shared one disables retries, so
+  a deliberate failure doesn't stall the test.
+- **Mock at the network boundary, not deeper**: `vi.mock` on
+  `lib/apiClient`, then assert the path, method and body a hook
+  sends. Fixtures in `src/test/fixtures.ts` stay in the backend's
+  snake_case wire shape — building them in camelCase would test the
+  mapping against itself. When one test triggers a refetch, mock per
+  route (path + method), or an invalidated list comes back as the
+  single object the mutation returned.
+- **Test the rule, not the render**: prefer a case that pins a
+  decision from `requirements.md`/`architecture.md` (a `VR-`
+  visibility rule, who may edit, what the cache invalidates) over one
+  that restates the markup. Where a test encodes such a rule, name
+  the ID in a comment.
+- Permission flags (`can_edit`, `can_delete`, …) come from the
+  backend: assert the UI *honors* them, never that it re-derives
+  them.
+- `src/test/setup.ts` holds the jsdom gaps Mantine and Embla need
+  (`ResizeObserver`, `IntersectionObserver`, `matchMedia`,
+  `document.fonts`, pointer capture). Add to it rather than stubbing
+  the same thing per file.
+
+## Testing (backend)
+
+pytest, split by what a test needs rather than by what it covers.
+
+- A test that requests the `db_session` fixture talks to the **real**
+  Supabase project and is marked `integration` automatically
+  (`tests/conftest.py`). Don't add the marker by hand, and don't
+  reach for the database from a test that doesn't need it — that
+  quietly moves it out of the CI job.
+- Business rules belong in `tests/test_domain_*.py`, with plain
+  dataclasses and no database, mirroring the rule that
+  `app/domain/` is framework-independent. These are the tests CI
+  gates on (≥95% of `app/domain`), so a new invariant needs one.
+- `pytest -m "not integration"` is what CI runs. **Run the full
+  `pytest` locally before merging** — CI green does not mean the API
+  layer was exercised. See `architecture.md` → Continuous Integration.
+
 ## Backend (FastAPI)
 
 - Route handlers stay thin: parse/validate input (Pydantic), call

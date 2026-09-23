@@ -61,6 +61,22 @@
 - **Visibility** is a separate axis from role/Ownership: it governs which members can *see* a given Document, block, Post, or Glossary entry (section 8 of `requirements.md`). The Master always sees everything in their Room regardless of visibility (D-01, VR-01).
 - Every mutating endpoint checks role/Ownership **before** applying any change; every read endpoint applies the visibility filter **before** returning any content — see Invariants.
 
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `main`, as two independent jobs matching the two codebases.
+
+- **Frontend**: `npm ci`, `npm run lint`, `npm run build` (which type-checks), then `npm run test:coverage`. The coverage bar lives in `frontend/vitest.config.ts`, not in the workflow, so it is versioned with the code it measures and the same command gates locally and in CI.
+- **Backend**: `ruff check`, `mypy app tests`, then `pytest -m "not integration"` with a coverage gate on `app/domain`.
+
+**Backend CI runs no test that touches the database, and therefore needs no secrets.** The backend's API tests run against the *real* Supabase project (`tests/conftest.py::db_session` wraps each in a savepoint that is rolled back). That is fine on a developer's machine, but putting those credentials in GitHub Actions would mean every pull request — including one from a fork — connecting to the live database, so CI deliberately skips them. The split is automatic: `tests/conftest.py::pytest_collection_modifyitems` marks any test that requests the `db_session` fixture as `integration`, so a newly written database test is excluded without anyone editing the workflow. As of 2026-09-23 that is 138 tests in CI and 90 left for a developer to run locally before merging.
+
+Two consequences worth knowing:
+
+- The gate is on `app/domain` (≥95%, currently 99%) rather than on `app/` as a whole, because the domain layer is where this document puts every invariant, and the non-database tests cover it on their own. Coverage of `app/api` and `app/db` is only meaningful with the integration tests, so gating on it in CI would measure the wrong thing.
+- `app/db/session.py` builds the SQLAlchemy engine at import time, so the job sets a syntactically valid `DATABASE_URL` that is never connected to. Without it, importing the app fails before any test runs.
+
+**Running the integration tests is still a manual step before merging**: `pytest` with a real `backend/.env`. CI passing does not mean the API layer was exercised.
+
 ## Invariants
 
 1. **Visibility is enforced only in `backend/app/domain/`, on every read path** — lists, search, Tag filters, Glossary, counts, backlinks, notifications, exports, and the Agent API all pass through the same visibility filter before a response is built. No route handler or data‑access query is allowed to return unfiltered content directly to the client (I-01, NFR-01, VR-07).
