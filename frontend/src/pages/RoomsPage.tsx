@@ -5,6 +5,7 @@ import { useMyRooms } from '../hooks/useRooms';
 import { RoomCard } from '../components/RoomCard';
 import { CreateRoomModal } from '../components/CreateRoomModal';
 
+/** The signed-in user's Rooms, with a button to create one. Shown by `HomePage`. */
 export function RoomsPage() {
   const [createOpened, setCreateOpened] = useState(false);
   const myRooms = useMyRooms(true);

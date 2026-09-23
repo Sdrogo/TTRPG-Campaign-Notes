@@ -42,6 +42,7 @@ function toInvitation(raw: RawInvitation): Invitation {
 
 const ROOMS_QUERY_KEY = ['rooms'] as const;
 
+/** The Rooms the signed-in user belongs to, with their role in each. */
 export function useMyRooms(enabled: boolean) {
   return useQuery<MyRoom[]>({
     queryKey: ROOMS_QUERY_KEY,
@@ -50,6 +51,7 @@ export function useMyRooms(enabled: boolean) {
   });
 }
 
+/** Creates a Room; the user becomes its Master and Administrator. */
 export function useCreateRoom() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -66,6 +68,7 @@ export function useCreateRoom() {
   });
 }
 
+/** One Room, for its members. */
 export function useRoom(roomId: string, enabled: boolean) {
   return useQuery<Room>({
     queryKey: ['rooms', roomId],
@@ -74,6 +77,7 @@ export function useRoom(roomId: string, enabled: boolean) {
   });
 }
 
+/** The Master switches Players' Document creation on or off (D-13). */
 export function useUpdateRoomSettings(roomId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -91,6 +95,7 @@ export function useUpdateRoomSettings(roomId: string) {
   });
 }
 
+/** Creates an invitation code for the Room with the given role (Administrators only). */
 export function useCreateInvitation(roomId: string) {
   return useMutation({
     mutationFn: async (role: RoomRole) =>
@@ -103,6 +108,7 @@ export function useCreateInvitation(roomId: string) {
   });
 }
 
+/** Joins the Room an invitation code points to, with its proposed role. */
 export function useAcceptInvitation() {
   const queryClient = useQueryClient();
   return useMutation({

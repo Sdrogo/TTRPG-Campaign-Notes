@@ -28,19 +28,21 @@ interface CommentComposerProps {
   members: Member[];
   currentUserId: string;
   submitLabel: string;
-  // Called with the values; call `reset` once they're saved to clear the form.
+  /** Called with the values; call `reset` once they're saved to clear the form. */
   onSubmit: (values: CommentFormValues, reset: () => void) => void;
   submitting: boolean;
   initialValues?: CommentFormValues;
-  // Images already attached (when editing); each can be marked for removal.
+  /** Images already attached (when editing); each can be marked for removal. */
   existingImages?: StoredImage[];
   onCancel?: () => void;
   autoFocus?: boolean;
 }
 
-// Body, visibility and images for a Comment. Used both to write a new
-// Comment and to edit one in place, so the two never drift apart. Images
-// are only staged here; they're uploaded when the Comment is saved.
+/**
+ * Body, visibility and images for a Comment. Used both to write a new Comment
+ * and to edit one in place, so the two never drift apart. Images are only
+ * staged here; they're uploaded when the Comment is saved.
+ */
 export function CommentComposer({
   members,
   currentUserId,

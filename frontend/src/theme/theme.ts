@@ -14,6 +14,10 @@ const accent: MantineColorsTuple = [
   '#421769',
 ];
 
+/**
+ * The Mantine theme: the purple accent scale, the app's fonts and the radius
+ * scale from context/ui-context.md. Dark only.
+ */
 export const theme = createTheme({
   primaryColor: 'accent',
   primaryShade: 6,

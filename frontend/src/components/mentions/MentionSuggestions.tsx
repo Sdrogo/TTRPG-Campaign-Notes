@@ -16,13 +16,17 @@ interface MentionSuggestionsProps {
   activeIndex: number;
   onHover: (index: number) => void;
   onPick: (target: MentionTarget) => void;
-  // Shown instead of the list when nothing matched and the viewer may
-  // create something; null otherwise.
+  /**
+   * Shown instead of the list when nothing matched and the viewer may create
+   * something; null otherwise.
+   */
   create: MentionCreateProps | null;
 }
 
-// The popup's content: the matching Documents and Tags, or (when nothing
-// matched) a way to create one.
+/**
+ * The popup's content: the matching Documents and Tags, or (when nothing
+ * matched) a way to create one.
+ */
 export function MentionSuggestions({ listId, candidates, activeIndex, onHover, onPick, create }: MentionSuggestionsProps) {
   if (candidates.length === 0 && !create) {
     return (
@@ -90,6 +94,10 @@ function MentionOption({ id, target, active, onHover, onPick }: MentionOptionPro
   );
 }
 
+/**
+ * The "create" row shown when nothing matched: the typed name, which kinds the
+ * viewer may create, and the one currently chosen.
+ */
 export interface MentionCreateProps {
   name: string;
   kinds: MentionKind[];

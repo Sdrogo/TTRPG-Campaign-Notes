@@ -24,11 +24,12 @@ interface MentionTextareaProps extends Omit<TextareaProps, 'value' | 'onChange'>
   onChange: (value: string) => void;
 }
 
-// A `Textarea` that suggests the Room's Documents and Tags when a word
-// starts with `#` (arrows + Enter/Tab, or a click, to pick one; Esc to
-// dismiss). When nothing matches, the typed name can be created as a blank
-// Document or a Tag. Works as a plain textarea outside a
-// `DocumentMentionsProvider`.
+/**
+ * A `Textarea` that suggests the Room's Documents and Tags when a word starts
+ * with `#` (arrows + Enter/Tab, or a click, to pick one; Esc to dismiss). When
+ * nothing matches, the typed name can be created as a blank Document or a Tag.
+ * Works as a plain textarea outside a `DocumentMentionsProvider`.
+ */
 export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }: MentionTextareaProps) {
   const mentions = useDocumentMentions();
   const textareaRef = useRef<HTMLTextAreaElement>(null);

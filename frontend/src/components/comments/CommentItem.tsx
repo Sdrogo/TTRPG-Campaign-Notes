@@ -22,8 +22,12 @@ interface CommentItemProps {
   deleting: boolean;
 }
 
-// One Comment, social-media style: avatar, a bubble with the author's name
-// and text, then a light meta/action line underneath.
+/**
+ * One Comment, social-media style: avatar, a bubble with the author's name and
+ * text, then a light meta/action line underneath. Edit and delete appear only
+ * when the backend's `canEdit`/`canDelete` allow them; a deleted Comment shows
+ * as a placeholder.
+ */
 export function CommentItem({
   comment,
   members,

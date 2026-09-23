@@ -40,6 +40,7 @@ function documentQueryKey(roomId: string, documentId: string) {
   return ['rooms', roomId, 'documents', documentId] as const;
 }
 
+/** The Room's Documents the viewer can see, each with its Tags, Owners and visible images. */
 export function useDocuments(roomId: string, enabled: boolean) {
   return useQuery<Document[]>({
     queryKey: documentsQueryKey(roomId),
@@ -49,6 +50,10 @@ export function useDocuments(roomId: string, enabled: boolean) {
   });
 }
 
+/**
+ * One Document. A 404 means it doesn't exist or the viewer can't see it - the
+ * backend doesn't say which.
+ */
 export function useDocument(roomId: string, documentId: string, enabled: boolean) {
   return useQuery<Document>({
     queryKey: documentQueryKey(roomId, documentId),
@@ -58,6 +63,7 @@ export function useDocument(roomId: string, documentId: string, enabled: boolean
   });
 }
 
+/** The fields a Document is created or updated with. An update sends only the fields given. */
 export interface DocumentInput {
   name: string;
   description?: string;
@@ -76,6 +82,7 @@ function toBody(input: Partial<DocumentInput>) {
   };
 }
 
+/** Creates a Document with the current user as Owner. */
 export function useCreateDocument(roomId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -92,6 +99,7 @@ export function useCreateDocument(roomId: string) {
   });
 }
 
+/** Updates a Document's fields, Tags or Selective grants. */
 export function useUpdateDocument(roomId: string, documentId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -109,6 +117,7 @@ export function useUpdateDocument(roomId: string, documentId: string) {
   });
 }
 
+/** Makes a member an Owner of the Document. */
 export function useAddDocumentOwner(roomId: string, documentId: string) {
   const invalidate = useInvalidateDocument(roomId, documentId);
   return useMutation({
@@ -123,6 +132,7 @@ export function useAddDocumentOwner(roomId: string, documentId: string) {
   });
 }
 
+/** Removes an explicit Owner. The Master stays an implicit Owner. */
 export function useRemoveDocumentOwner(roomId: string, documentId: string) {
   const invalidate = useInvalidateDocument(roomId, documentId);
   return useMutation({
@@ -144,6 +154,10 @@ function useInvalidateDocument(roomId: string, documentId: string) {
   };
 }
 
+/**
+ * Uploads files to the Document one at a time. A failure keeps the earlier
+ * uploads and names the file that failed.
+ */
 export function useUploadDocumentImages(roomId: string, documentId: string) {
   const invalidate = useInvalidateDocument(roomId, documentId);
   return useMutation({
@@ -168,6 +182,7 @@ export function useUploadDocumentImages(roomId: string, documentId: string) {
   });
 }
 
+/** Adds an image to the Document from a URL. */
 export function useImportDocumentImage(roomId: string, documentId: string) {
   const invalidate = useInvalidateDocument(roomId, documentId);
   return useMutation({
@@ -182,6 +197,7 @@ export function useImportDocumentImage(roomId: string, documentId: string) {
   });
 }
 
+/** Makes an image the one the Document leads with (spec 07). */
 export function useSetFavoriteImage(roomId: string, documentId: string) {
   const invalidate = useInvalidateDocument(roomId, documentId);
   return useMutation({
@@ -197,6 +213,10 @@ export function useSetFavoriteImage(roomId: string, documentId: string) {
   });
 }
 
+/**
+ * Deletes a gallery image. If it was the favorite, the backend promotes the
+ * oldest remaining image.
+ */
 export function useDeleteDocumentImage(roomId: string, documentId: string) {
   const invalidate = useInvalidateDocument(roomId, documentId);
   return useMutation({

@@ -6,13 +6,17 @@ import { mentionHref, splitMentions } from '../../lib/documentMentions';
 
 interface MentionTextProps extends TextProps {
   text: string;
-  // False inside something that is already a link (e.g. a `DocumentCard`):
-  // mentions are then only colored, since links can't nest.
+  /**
+   * False inside something that is already a link (e.g. a `DocumentCard`):
+   * mentions are then only colored, since links can't nest.
+   */
   linked?: boolean;
 }
 
-// Text with `#Name` mentions rendered as accent-colored links: a Document
-// mention opens the Document, a Tag mention the Documents with that Tag.
+/**
+ * Text with `#Name` mentions rendered as accent-colored links: a Document
+ * mention opens the Document, a Tag mention the Documents with that Tag.
+ */
 export function MentionText({ text, linked = true, ...textProps }: MentionTextProps) {
   const mentions = useDocumentMentions();
   const segments = useMemo(

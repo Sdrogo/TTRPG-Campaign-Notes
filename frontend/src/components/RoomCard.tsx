@@ -10,6 +10,10 @@ interface RoomCardProps {
   myRoom: MyRoom;
 }
 
+/**
+ * One of the user's Rooms, with their role and links to its Documents and
+ * members. An Administrator also gets the invite button.
+ */
 export function RoomCard({ myRoom }: RoomCardProps) {
   const [inviteOpened, setInviteOpened] = useState(false);
   const { room, role, isAdmin } = myRoom;

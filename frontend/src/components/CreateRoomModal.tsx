@@ -7,6 +7,10 @@ interface CreateRoomModalProps {
   onClose: () => void;
 }
 
+/**
+ * Creates a Room from a name and an optional game system. The creator becomes
+ * its Master and Administrator.
+ */
 export function CreateRoomModal({ opened, onClose }: CreateRoomModalProps) {
   const [name, setName] = useState('');
   const [gameSystem, setGameSystem] = useState('');

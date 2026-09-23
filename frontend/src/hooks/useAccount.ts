@@ -16,6 +16,7 @@ function toAccount(raw: RawAccount): AccountProfile {
 
 const ACCOUNT_QUERY_KEY = ['account'] as const;
 
+/** The signed-in user's profile. The backend fills in Google defaults on the first call. */
 export function useAccount(enabled: boolean) {
   return useQuery<AccountProfile>({
     queryKey: ACCOUNT_QUERY_KEY,
@@ -34,6 +35,7 @@ function useApplyAccount() {
   };
 }
 
+/** Saves the profile form. Blank fields clear on the backend. */
 export function useUpdateProfile() {
   const applyAccount = useApplyAccount();
   return useMutation({
@@ -43,6 +45,7 @@ export function useUpdateProfile() {
   });
 }
 
+/** Replaces the avatar with an uploaded file. */
 export function useUploadAvatar() {
   const applyAccount = useApplyAccount();
   return useMutation({
@@ -55,6 +58,7 @@ export function useUploadAvatar() {
   });
 }
 
+/** Replaces the avatar with an image fetched from a URL. */
 export function useImportAvatar() {
   const applyAccount = useApplyAccount();
   return useMutation({
@@ -66,6 +70,7 @@ export function useImportAvatar() {
   });
 }
 
+/** Removes the avatar, so the user is shown by initials. */
 export function useRemoveAvatar() {
   const applyAccount = useApplyAccount();
   return useMutation({
@@ -75,8 +80,10 @@ export function useRemoveAvatar() {
   });
 }
 
-// Signs out and drops every cached response, so the next user signing in on
-// this browser never sees the previous one's Rooms or profile.
+/**
+ * Signs out and drops every cached response, so the next user signing in on
+ * this browser never sees the previous one's Rooms or profile.
+ */
 export function useSignOut() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();

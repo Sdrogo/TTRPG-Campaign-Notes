@@ -54,6 +54,7 @@ function commentsQueryKey(roomId: string, documentId: string) {
   return ['rooms', roomId, 'documents', documentId, 'comments'] as const;
 }
 
+/** A Document's Comments the viewer can see, deleted placeholders included. */
 export function useComments(roomId: string, documentId: string, enabled: boolean) {
   return useQuery<Comment[]>({
     queryKey: commentsQueryKey(roomId, documentId),
@@ -83,22 +84,28 @@ async function attachImage(base: string, commentId: string, image: PendingImage)
   }
 }
 
+/** What `useSaveComment` saves: the form's values, and the Comment's id when editing one. */
 export interface SaveCommentInput {
-  // Omitted for a new Comment.
+  /** Omitted for a new Comment. */
   commentId?: string;
   values: CommentFormValues;
 }
 
+/** The saved Comment's id, and any image change that failed after it. */
 export interface SaveCommentResult {
   commentId: string;
-  // Image changes that failed after the Comment itself was saved, one
-  // message each ("name: reason"). The Comment is saved regardless.
+  /**
+   * Image changes that failed after the Comment itself was saved, one
+   * message each ("name: reason"). The Comment is saved regardless.
+   */
   imageErrors: string[];
 }
 
-// Creates or edits a Comment, then applies its image changes in order
-// (removals, then uploads one by one). An image failure doesn't undo the
-// Comment - it's reported in `imageErrors` so the form can still reset.
+/**
+ * Creates or edits a Comment, then applies its image changes in order
+ * (removals, then uploads one by one). An image failure doesn't undo the
+ * Comment - it's reported in `imageErrors` so the form can still reset.
+ */
 export function useSaveComment(roomId: string, documentId: string) {
   const invalidate = useInvalidateThread(roomId);
   const base = commentsPath(roomId, documentId);
@@ -135,6 +142,10 @@ export function useSaveComment(roomId: string, documentId: string) {
   });
 }
 
+/**
+ * Deletes a Comment. It stays in the list as a placeholder, and its images
+ * leave the Document gallery.
+ */
 export function useDeleteComment(roomId: string, documentId: string) {
   const invalidate = useInvalidateThread(roomId);
   return useMutation({

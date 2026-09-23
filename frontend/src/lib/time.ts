@@ -10,7 +10,7 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['minute', 60],
 ];
 
-// "3 minuti fa", "ieri", ... - social-media style timestamps.
+/** "3 minuti fa", "ieri", ... - social-media style timestamps. */
 export function formatRelativeTime(iso: string, now: Date = new Date()): string {
   const seconds = Math.round((Date.parse(iso) - now.getTime()) / 1000);
   for (const [unit, size] of UNITS) {
@@ -21,6 +21,7 @@ export function formatRelativeTime(iso: string, now: Date = new Date()): string 
   return 'adesso';
 }
 
+/** The full date and time, in Italian - e.g. for the tooltip on a relative time. */
 export function formatAbsoluteTime(iso: string): string {
   return absolute.format(new Date(iso));
 }

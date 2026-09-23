@@ -32,6 +32,10 @@ import type { Document, DocumentFormValues } from '../types/document';
 import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
 
+/**
+ * `/rooms/:roomId/documents/:documentId`: one Document with its gallery, Owners
+ * and Comments. Owners and the Master also get the editing controls.
+ */
 export function DocumentDetailPage() {
   const { roomId, documentId } = useParams<{ roomId: string; documentId: string }>();
   const { session, loading: sessionLoading } = useSession();

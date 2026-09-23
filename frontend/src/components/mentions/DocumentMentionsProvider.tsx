@@ -13,10 +13,12 @@ interface DocumentMentionsProviderProps {
   children: ReactNode;
 }
 
-// Makes a Room's Documents and Tags (and the ability to create them)
-// available to every `MentionTextarea` and `MentionText` below it, so they
-// don't have to be passed down by hand. Shares the pages' cached queries
-// (Documents, Tags, members, Room), so it adds few or no requests.
+/**
+ * Makes a Room's Documents and Tags (and the ability to create them) available
+ * to every `MentionTextarea` and `MentionText` below it, so they don't have to
+ * be passed down by hand. Shares the pages' cached queries (Documents, Tags,
+ * members, Room), so it adds few or no requests.
+ */
 export function DocumentMentionsProvider({ roomId, currentUserId, children }: DocumentMentionsProviderProps) {
   const documents = useDocuments(roomId, true);
   const tags = useTags(roomId, true);

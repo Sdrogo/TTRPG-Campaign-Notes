@@ -21,6 +21,7 @@ interface InviteModalProps {
   roomId: string;
 }
 
+/** Creates an invitation link for the Room with a proposed role, ready to copy and share. */
 export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
   const [role, setRole] = useState<RoomRole>('player');
   const createInvitation = useCreateInvitation(roomId);

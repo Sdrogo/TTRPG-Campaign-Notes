@@ -8,7 +8,9 @@ import type { Tag } from '../types/tag';
 // plain, readable text and resolved against what the viewer can see, so a
 // mention of a hidden Document stays plain text.
 
+/** The character that starts a mention. */
 export const MENTION_PREFIX = '#';
+/** How many suggestions the popup shows at most. */
 export const MAX_MENTION_SUGGESTIONS = 8;
 // Past this length a `#…` run is prose, not a mention being typed.
 const MAX_QUERY_LENGTH = 80;
@@ -19,40 +21,55 @@ const MENTION_BOUNDARY = /[\s([{]/;
 // A mention must end on a word boundary: `#Rome` doesn't match `#Romeo`.
 const WORD_CHAR = /[\p{L}\p{N}_]/u;
 
+/** A mention being typed: where its `#` is and what follows it so far. */
 export interface MentionQuery {
-  // Index of the `#` in the text.
+  /** Index of the `#` in the text. */
   start: number;
-  // What was typed after the `#`, up to the caret.
+  /** What was typed after the `#`, up to the caret. */
   query: string;
 }
 
+/** What a mention can point at. */
 export type MentionKind = 'document' | 'tag';
 
+/**
+ * A suggestion in the popup: a Document with its Tags, or a Tag with how many
+ * visible Documents carry it.
+ */
 export type MentionTarget =
   | { kind: 'document'; document: Document; tags: Tag[] }
   | { kind: 'tag'; tag: Tag; documentCount: number };
 
+/**
+ * A run of text as `splitMentions` returns it: plain, or a mention resolved to
+ * the Document or Tag it names.
+ */
 export type MentionSegment =
   | { kind: 'text'; text: string }
   | { kind: 'document'; text: string; document: Document }
   | { kind: 'tag'; text: string; tag: Tag };
 
+/** The name a suggestion is shown and inserted by. */
 export function mentionTargetName(target: MentionTarget): string {
   return target.kind === 'document' ? target.document.name : target.tag.name;
 }
 
+/** A suggestion's id, unique within its kind. */
 export function mentionTargetId(target: MentionTarget): string {
   return target.kind === 'document' ? target.document.id : target.tag.id;
 }
 
-// Where a mention leads: the Document, or the Documents list filtered by
-// the Tag.
+/** Where a mention leads: the Document, or the Documents list filtered by the Tag. */
 export function mentionHref(roomId: string, segment: Exclude<MentionSegment, { kind: 'text' }>): string {
   return segment.kind === 'document'
     ? `/rooms/${roomId}/documents/${segment.document.id}`
     : documentsWithTagsHref(roomId, [segment.tag.id]);
 }
 
+/**
+ * The Documents page filtered to the Documents carrying all of `tagIds`
+ * (FR-N2), or unfiltered for none.
+ */
 export function documentsWithTagsHref(roomId: string, tagIds: string[]): string {
   const params = new URLSearchParams(tagIds.map((id) => ['tag', id]));
   const query = params.toString();
@@ -65,12 +82,12 @@ function isMentionStart(text: string, index: number): boolean {
   );
 }
 
-// Lowercase and without accents, so "citta" finds "Città".
+/** Lowercase and without accents, so "citta" finds "Città". */
 export function normalizeForSearch(value: string): string {
   return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase();
 }
 
-// The mention being typed at the caret, if any.
+/** The mention being typed at the caret, if any. */
 export function findMentionQuery(text: string, caret: number): MentionQuery | null {
   const before = text.slice(0, caret);
   const start = before.lastIndexOf(MENTION_PREFIX);
@@ -84,9 +101,11 @@ export function findMentionQuery(text: string, caret: number): MentionQuery | nu
   return { start, query };
 }
 
-// True when the query is an existing name followed by more prose, e.g.
-// `Castle Drakon is dark`: that `#` is already a finished mention, so no
-// suggestions (and no "create") should pop up while writing after it.
+/**
+ * True when the query is an existing name followed by more prose, e.g. `Castle
+ * Drakon is dark`: that `#` is already a finished mention, so no suggestions
+ * (and no "create") should pop up while writing after it.
+ */
 export function isFinishedMention(query: string, names: string[]): boolean {
   return names.some(
     (name) =>
@@ -116,8 +135,10 @@ function documentRank(document: Document, documentTags: Tag[], query: string): n
   return byTag.length > 0 ? 3 + Math.min(...byTag) : null;
 }
 
-// Documents and Tags matching the query, best matches first; on a tie a
-// Document comes before a Tag, then alphabetical.
+/**
+ * Documents and Tags matching the query, best matches first; on a tie a
+ * Document comes before a Tag, then alphabetical.
+ */
 export function filterMentionCandidates(
   documents: Document[],
   tags: Tag[],
@@ -158,8 +179,10 @@ export function filterMentionCandidates(
     .map((entry) => entry.target);
 }
 
-// Replaces the `#query` being typed with `#Name`, followed by a space
-// unless one is already there. Returns the new text and caret.
+/**
+ * Replaces the `#query` being typed with `#Name`, followed by a space unless
+ * one is already there. Returns the new text and caret.
+ */
 export function insertMention(
   text: string,
   mention: MentionQuery,
@@ -174,9 +197,11 @@ export function insertMention(
   };
 }
 
-// Splits text into plain runs and mentions of the given Documents and Tags.
-// At each `#` the longest matching name wins, compared ignoring case; a
-// Document wins over a Tag with the same name.
+/**
+ * Splits text into plain runs and mentions of the given Documents and Tags. At
+ * each `#` the longest matching name wins, compared ignoring case; a Document
+ * wins over a Tag with the same name.
+ */
 export function splitMentions(text: string, documents: Document[], tags: Tag[] = []): MentionSegment[] {
   const byLongestName = [
     ...documents.map((document) => ({ name: document.name, document, tag: null })),
@@ -227,14 +252,16 @@ function mentionsAt(text: string, position: number, name: string): boolean {
   );
 }
 
+/** What the popup is showing, which decides what a key does. */
 export interface MentionKeyState {
   candidateCount: number;
-  // Nothing matched and the viewer may create a Document or Tag.
+  /** Nothing matched and the viewer may create a Document or Tag. */
   createAvailable: boolean;
-  // The "create" row is highlighted (reached with the arrow keys).
+  /** The "create" row is highlighted (reached with the arrow keys). */
   createHighlighted: boolean;
 }
 
+/** What a key press does to the popup (see `mentionKeyAction`). */
 export type MentionKeyAction =
   | 'next'
   | 'previous'
@@ -253,9 +280,11 @@ interface KeyInfo {
   shiftKey: boolean;
 }
 
-// What a key does while the popup is open (null: let it through, so e.g.
-// Ctrl+Enter still submits a Comment, and Enter is a newline unless the
-// user has moved onto a suggestion or the "create" row).
+/**
+ * What a key does while the popup is open (null: let it through, so e.g.
+ * Ctrl+Enter still submits a Comment, and Enter is a newline unless the user
+ * has moved onto a suggestion or the "create" row).
+ */
 export function mentionKeyAction(event: KeyInfo, state: MentionKeyState): MentionKeyAction | null {
   if (event.key === 'Escape') {
     return 'close';
@@ -280,7 +309,7 @@ export function mentionKeyAction(event: KeyInfo, state: MentionKeyState): Mentio
   return confirm ? 'create' : null;
 }
 
-// Moves the highlighted suggestion, wrapping around at either end.
+/** Moves the highlighted suggestion, wrapping around at either end. */
 export function moveActiveIndex(current: number, count: number, direction: 1 | -1): number {
   if (count === 0) {
     return 0;
@@ -288,12 +317,12 @@ export function moveActiveIndex(current: number, count: number, direction: 1 | -
   return (current + direction + count) % count;
 }
 
-// DOM id of a popup option, for `aria-activedescendant`.
+/** DOM id of a popup option, for `aria-activedescendant`. */
 export function mentionOptionId(listId: string, index: number | 'create'): string {
   return `${listId}-${index}`;
 }
 
-// The kinds the viewer may create from the popup, in switch order.
+/** The kinds the viewer may create from the popup, in switch order. */
 export function creatableKinds(permissions: { canCreateDocument: boolean; canCreateTag: boolean }): MentionKind[] {
   return [
     ...(permissions.canCreateDocument ? (['document'] as const) : []),
@@ -301,7 +330,7 @@ export function creatableKinds(permissions: { canCreateDocument: boolean; canCre
   ];
 }
 
-// The name for a new Document/Tag made from what was typed after `#`.
+/** The name for a new Document/Tag made from what was typed after `#`. */
 export function newEntryName(query: string): string {
   return query.trim().replace(/\s+/g, ' ');
 }

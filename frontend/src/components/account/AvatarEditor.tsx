@@ -5,6 +5,7 @@ import { ImageUrlPopover } from '../ImageUrlPopover';
 import { ACCEPTED_IMAGE_TYPES } from '../../lib/images';
 import type { UserIdentity } from '../../types/profile';
 
+/** The avatar changes `AvatarEditor` offers, one at a time. */
 export type AvatarAction = 'upload' | 'import' | 'remove';
 
 interface AvatarEditorProps {
@@ -12,13 +13,15 @@ interface AvatarEditorProps {
   onUpload: (file: File) => void;
   onImportUrl: (url: string) => void;
   onRemove: () => void;
-  // The action in flight, if any: it shows a spinner, the others disable.
+  /** The action in flight, if any: it shows a spinner, the others disable. */
   pending: AvatarAction | null;
 }
 
-// The avatar with its controls: upload a file, import from a URL, or remove
-// it. Each takes effect immediately - an avatar isn't part of the profile
-// form's "save".
+/**
+ * The avatar with its controls: upload a file, import from a URL, or remove it.
+ * Each takes effect immediately - an avatar isn't part of the profile form's
+ * "save".
+ */
 export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }: AvatarEditorProps) {
   const busy = pending !== null;
 

@@ -16,6 +16,10 @@ interface DocumentCardProps {
   members: Member[];
 }
 
+/**
+ * A Document in the Room's list: name, visibility, Tags, description and
+ * images, with its Owners. The whole card links to the Document.
+ */
 export function DocumentCard({ document, roomId, tags, members }: DocumentCardProps) {
   const ownerNames = document.ownerIds.map((id) => displayNameFor(members, id)).join(', ');
   const hasImages = document.images.length > 0;

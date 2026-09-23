@@ -6,11 +6,15 @@ interface MemberMultiSelectProps extends Omit<MultiSelectProps, 'data' | 'value'
   members: Member[];
   value: string[];
   onChange: (userIds: string[]) => void;
-  // Members who can't be picked (e.g. the author, who always sees their own content).
+  /** Members who can't be picked (e.g. the author, who always sees their own content). */
   excludeUserIds?: string[];
 }
 
-// Picks Room members by email, e.g. for a Selective visibility grant list.
+/**
+ * Picks Room members, e.g. for a Selective visibility grant list. Options show
+ * the chosen name next to the email, since picking the wrong person grants them
+ * access.
+ */
 export function MemberMultiSelect({
   members,
   value,

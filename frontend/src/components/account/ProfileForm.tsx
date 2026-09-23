@@ -11,14 +11,18 @@ import type { AccountProfile, ProfileFormValues } from '../../types/profile';
 
 interface ProfileFormProps {
   profile: AccountProfile;
-  // Call `onDone` with the saved profile: the form then shows it as saved
-  // (trimmed by the backend) and treats it as clean.
+  /**
+   * Call `onDone` with the saved profile: the form then shows it as saved
+   * (trimmed by the backend) and treats it as clean.
+   */
   onSubmit: (values: ProfileFormValues, onDone: (saved: AccountProfile) => void) => void;
   saving: boolean;
 }
 
-// Name, pronouns and description. Saved together with one button, enabled
-// only when something changed.
+/**
+ * Name, pronouns and description. Saved together with one button, enabled only
+ * when something changed.
+ */
 export function ProfileForm({ profile, onSubmit, saving }: ProfileFormProps) {
   const form = useForm<ProfileFormValues>({
     initialValues: profileFormValues(profile),

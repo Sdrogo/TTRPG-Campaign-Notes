@@ -6,6 +6,7 @@ interface RoleTagProps {
   isAdmin: boolean;
 }
 
+/** A member's role badge (Master or Player), plus an Admin badge for an Administrator. */
 export function RoleTag({ role, isAdmin }: RoleTagProps) {
   return (
     <Group gap={4}>
