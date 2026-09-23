@@ -21,8 +21,11 @@ interface DocumentCardImagesProps {
   documentName: string;
 }
 
-/** The Document's images on its card, favorite first. Read-only: managing
- *  them (adding, deleting, moving the favorite) stays on the detail page. */
+/** Show the Document's images in their supplied order (normally favorite first).
+ *  Each image keeps its aspect ratio; multiple images use a carousel with
+ *  independently framed slides. Returns null when there are no images.
+ *  Read-only: managing them (adding, deleting, moving the favorite) stays on
+ *  the detail page. */
 export function DocumentCardImages({ images, documentName }: DocumentCardImagesProps) {
   if (images.length === 0) {
     return null;
@@ -61,9 +64,9 @@ export function DocumentCardImages({ images, documentName }: DocumentCardImagesP
   );
 }
 
-// Framed the way the image itself is (spec 07.1), never cropped: a landscape
-// image fills the width, a portrait one the height. Its orientation is only
-// known once it has loaded; until then it holds a landscape placeholder.
+/** Frame by orientation (spec 07.1): size landscapes to the available width
+ *  (up to the height cap), portraits to the available height, and unloaded
+ *  images to a full-height placeholder. */
 function sizeFor(orientation: ImageOrientation | null) {
   switch (orientation) {
     case 'landscape':
@@ -75,6 +78,8 @@ function sizeFor(orientation: ImageOrientation | null) {
   }
 }
 
+/** Show an uncropped image, switching from a placeholder to an orientation-based
+ *  frame once it loads. */
 function CardImage({ image, alt }: { image: DocumentImage; alt: string }) {
   const [orientation, setOrientation] = useState<ImageOrientation | null>(null);
 

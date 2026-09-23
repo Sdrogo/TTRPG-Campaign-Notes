@@ -64,8 +64,8 @@ export function remainingImageSlots(
 
 export type ImageOrientation = 'landscape' | 'portrait';
 
-// Which way an image is framed, from its natural size once it has loaded.
-// A square image is framed as landscape, like one whose size is unknown.
+/** Classify natural image dimensions in pixels for card framing. Images whose
+ *  height is no greater than their width, including squares, are landscape. */
 export function imageOrientation(width: number, height: number): ImageOrientation {
   return height > width ? 'portrait' : 'landscape';
 }
