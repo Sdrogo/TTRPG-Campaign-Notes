@@ -154,7 +154,18 @@ async def remove_images(session: AsyncSession, images: Sequence[DocumentImage]) 
     objects.
 
     Removing the favorite hands the flag to the oldest surviving image, so a
-    Document that still has images always has exactly one (spec 07)."""
+    Document that still has images always has exactly one (spec 07). The
+    delete, the read of what survived and the promotion all run under the
+    Document's lock, taken before the delete: a concurrent removal of the
+    image this one is about to promote would otherwise leave the Document
+    with images and no favorite, which the unique index cannot catch. Every
+    affected Document is locked, not just the ones losing their favorite -
+    deleting a non-favorite image is exactly what invalidates the other
+    request's choice of successor. Sorted, so two calls spanning the same
+    Documents can't deadlock taking them in opposite orders."""
+    for document_id in sorted({image.document_id for image in images}):
+        await documents_repo.lock_document(session, document_id)
+
     await documents_repo.delete_images(session, [image.id for image in images])
     await storage_cleanup.schedule_removal(session, [image.storage_path for image in images])
     for document_id in {image.document_id for image in images if image.is_favorite}:

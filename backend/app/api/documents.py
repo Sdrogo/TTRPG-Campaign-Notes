@@ -332,6 +332,11 @@ async def set_favorite_image(
     requester_id = uuid.UUID(current_user.id)
     document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
 
+    # Locked before the image is read, not just inside `set_favorite_image`:
+    # a concurrent delete of this image between the check and the write would
+    # otherwise clear the old favorite and set nothing, leaving the Document
+    # with images and no favorite.
+    await documents_repo.lock_document(session, document_id)
     images = await get_visible_images(session, document_id, membership)
     if not any(image.id == image_id for image in images):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Image not found")

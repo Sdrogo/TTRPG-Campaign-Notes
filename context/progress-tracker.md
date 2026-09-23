@@ -1003,6 +1003,21 @@ Update this file after every meaningful implementation change.
     already see — otherwise it would answer "does this id exist?" about a
     Private Comment's attachment (VR-07). The migration backfills existing
     Documents with their oldest image. Applied to the live DB.
+  - **Favorite writes are serialized by the Document's lock** (review
+    follow-up, 2026-09-23): setting the favorite and removing images now take
+    `lock_document` like the upload paths already did. Two concurrent
+    `PUT .../favorite` calls would otherwise both clear and both set — the
+    second one's clear matches nothing, so its `true` hits the partial unique
+    index and the request 500s. Worse, a concurrent delete of the image
+    another request was about to promote left the Document with images and
+    **no favorite**, silently; the index only forbids a second `true`, so it
+    cannot catch that. `remove_images` locks every affected Document, not only
+    those losing their favorite — deleting a non-favorite image is exactly
+    what invalidates the other request's successor — in sorted id order. The
+    favorite route locks *before* reading the visible images, so the
+    check-then-set is atomic. No concurrency test: the suite's savepoint
+    fixture gives each test a single session, so there's no pattern here for
+    driving two real connections.
   - **Gallery order**: `is_favorite DESC, created_at, id`, set once in
     `documents_repo`, so the card and the detail page never disagree about
     which image is first. A Comment attachment may be the favorite; it stays

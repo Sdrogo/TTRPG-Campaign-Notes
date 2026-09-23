@@ -186,7 +186,14 @@ async def set_favorite_image(
 ) -> None:
     """Moves the favorite flag to `image_id` (spec 07: only one at a time).
     The previous favorite is cleared and flushed first - the partial unique
-    index would otherwise reject the instant both rows are true."""
+    index would otherwise reject the instant both rows are true.
+
+    Takes the Document's lock first, like every other write that depends on
+    which images it currently has. Two concurrent moves would otherwise both
+    clear and both set: the second one's clear matches nothing (the first
+    already flipped the old favorite), so its insert of a second `true` hits
+    the unique index and the request dies with an IntegrityError."""
+    await lock_document(session, document_id)
     await session.execute(
         update(DocumentImageRow)
         .where(
