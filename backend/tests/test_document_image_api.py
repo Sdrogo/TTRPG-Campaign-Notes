@@ -415,3 +415,73 @@ async def test_deleting_the_last_image_leaves_the_document_without_a_favorite(
     # A later upload starts the rule over.
     _, after = await _upload(client, room_id, document_id, master_token, _png())
     assert [i["is_favorite"] for i in _images(after)] == [True]
+
+
+async def test_deleting_a_non_favorite_image_leaves_the_favorite_alone(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    """Every removal now asks the Document to restore "exactly one favorite",
+    not only the ones believed to have lost theirs - so this pins that the
+    ask is a no-op while the favorite is still there."""
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(client, make_token)
+    await _upload(client, room_id, document_id, master_token, _png())
+    await _upload(client, room_id, document_id, master_token, _png())
+    _, body = await _upload(client, room_id, document_id, master_token, _png())
+    first_id, second_id, third_id = (str(i["id"]) for i in _images(body))
+
+    response = await client.delete(
+        f"/rooms/{room_id}/documents/{document_id}/images/{second_id}",
+        headers=_auth_headers(master_token),
+    )
+    assert response.status_code == 204
+
+    fetched = (
+        await client.get(
+            f"/rooms/{room_id}/documents/{document_id}", headers=_auth_headers(master_token)
+        )
+    ).json()
+    assert [i["id"] for i in _images(fetched)] == [first_id, third_id]
+    assert [i["is_favorite"] for i in _images(fetched)] == [True, False]
+
+
+async def test_deleting_a_comments_images_keeps_the_documents_favorite_intact(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    """Deleting a Comment removes its attachments through the same path, for
+    a Document whose own favorite is untouched."""
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(client, make_token)
+    _, body = await _upload(client, room_id, document_id, master_token, _png())
+    favorite_id = str(_images(body)[0]["id"])
+
+    comment = (
+        await client.post(
+            f"/rooms/{room_id}/documents/{document_id}/comments",
+            json={"body": "Here's how I picture it."},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+    await client.post(
+        f"/rooms/{room_id}/documents/{document_id}/comments/{comment['id']}/images",
+        files={"file": ("sketch.png", _png(), "image/png")},
+        headers=_auth_headers(master_token),
+    )
+
+    deleted = await client.delete(
+        f"/rooms/{room_id}/documents/{document_id}/comments/{comment['id']}",
+        headers=_auth_headers(master_token),
+    )
+    assert deleted.status_code == 204
+
+    fetched = (
+        await client.get(
+            f"/rooms/{room_id}/documents/{document_id}", headers=_auth_headers(master_token)
+        )
+    ).json()
+    assert [i["id"] for i in _images(fetched)] == [favorite_id]
+    assert [i["is_favorite"] for i in _images(fetched)] == [True]

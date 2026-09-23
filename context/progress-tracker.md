@@ -1015,7 +1015,15 @@ Update this file after every meaningful implementation change.
     those losing their favorite — deleting a non-favorite image is exactly
     what invalidates the other request's successor — in sorted id order. The
     favorite route locks *before* reading the visible images, so the
-    check-then-set is atomic. No concurrency test: the suite's savepoint
+    check-then-set is atomic. A second pass (same day) closed what that left:
+    `remove_images` still *decided* whether to promote from the
+    `is_favorite` on its passed-in images, which were read before the lock —
+    a concurrent move of the favorite onto an image being deleted made them
+    say "not the favorite" and the promotion was skipped. It now decides from
+    a fresh read under the lock, and asks every affected Document to restore
+    the invariant rather than only those thought to have lost their favorite:
+    `next_favorite_id` already answers exactly that and returns None when
+    there's nothing to do. No concurrency test: the suite's savepoint
     fixture gives each test a single session, so there's no pattern here for
     driving two real connections.
   - **Gallery order**: `is_favorite DESC, created_at, id`, set once in

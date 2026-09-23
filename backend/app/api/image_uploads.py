@@ -159,16 +159,24 @@ async def remove_images(session: AsyncSession, images: Sequence[DocumentImage]) 
     Document's lock, taken before the delete: a concurrent removal of the
     image this one is about to promote would otherwise leave the Document
     with images and no favorite, which the unique index cannot catch. Every
-    affected Document is locked, not just the ones losing their favorite -
-    deleting a non-favorite image is exactly what invalidates the other
-    request's choice of successor. Sorted, so two calls spanning the same
-    Documents can't deadlock taking them in opposite orders."""
+    affected Document is locked, in sorted order so two calls spanning the
+    same Documents can't deadlock taking them in opposite orders.
+
+    The promotion is then decided per Document from a **fresh read under the
+    lock**, not from the `is_favorite` on the passed-in images: those were
+    read before the lock, so a concurrent move of the favorite onto an image
+    this call is deleting would leave them saying "not the favorite" and the
+    promotion would be skipped - again images with no favorite. Restoring the
+    invariant is asked of every affected Document rather than only the ones
+    thought to have lost their favorite, since `next_favorite_id` answers
+    exactly that question ("images but no favorite?") and returns None when
+    there's nothing to do."""
     for document_id in sorted({image.document_id for image in images}):
         await documents_repo.lock_document(session, document_id)
 
     await documents_repo.delete_images(session, [image.id for image in images])
     await storage_cleanup.schedule_removal(session, [image.storage_path for image in images])
-    for document_id in {image.document_id for image in images if image.is_favorite}:
+    for document_id in sorted({image.document_id for image in images}):
         remaining = await documents_repo.list_images(session, document_id)
         successor = next_favorite_id(remaining)
         if successor is not None:
