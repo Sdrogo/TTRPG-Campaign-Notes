@@ -23,6 +23,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Neither job pushes, so don't leave the token behind in
+          # .git/config where anything running later could reach it.
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -81,6 +85,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@v5
         with:
