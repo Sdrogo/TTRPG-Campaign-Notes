@@ -1223,6 +1223,7 @@ Update this file after every meaningful implementation change.
   and redeploy. Then the look-alike
   `https://ttrpg-campaign-notes-abc123-evil-rum11.vercel.app` must get no
   `access-control-allow-origin`, while a commit preview still does.
+
 0. **Verify the new Document card in a browser** — the layout below `sm`
    (where a half-width image column is tightest), that the carousel arrows
    really do beat the card's link overlay, that clicking an image still
