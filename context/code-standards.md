@@ -19,6 +19,50 @@ split in two instead of one. Everything else applies to both.
   violate one needs the invariant updated first (see
   `ai-workflow-rules.md`).
 
+## Documentation
+
+Every module, class and function in `backend/app/`, and every export
+in `frontend/src/` (outside tests), carries a docstring / JSDoc block.
+Adopted 2026-09-23. It supersedes the code review 04 call not to chase
+docstring coverage (`progress-tracker.md`), and the concern behind that
+call stays as the rule for what goes in one:
+
+- **Say what the signature can't**: the rule it enforces, why it
+  exists, what it refuses and with which status, what the caller must
+  do next. On the `get_document` route, "Gets a document" adds
+  nothing; "404 whether it doesn't exist or the requester can't see it
+  (VR-07)" does.
+- **Cite the spec by ID** (`D-12`, `VR-07`, `Invariant 1`, `spec 07`)
+  when the code implements a decision from `requirements.md`,
+  `architecture.md` or a `context/feature/` spec, so a reader can
+  find the reasoning.
+- **Prose, not templates**: no `Args:`/`Returns:` or `@param`/`@returns`
+  sections — types already say that. Open with a phrase describing the
+  thing ("The caller's Membership in the Room, or 403…"), not "This
+  function…".
+- **Python format**: `"""Text."""` on one line when it fits, otherwise
+  wrapped at ~79 columns with the closing `"""` on the last text line.
+  A class docstring is followed by a blank line; an exception class
+  with only a docstring needs no `pass`. An `__init__` is covered by
+  its class's docstring. Route handler docstrings also become the
+  endpoint's description in the OpenAPI docs (`/docs`), so write them
+  for an API consumer too.
+- **TypeScript format**: `/** Text. */` when it fits in 100 columns,
+  otherwise a `/** … */` block wrapped at ~80. A comment on an
+  interface field (a props field included) is JSDoc too, so it shows on
+  hover. Inline `//` comments stay for implementation notes inside a
+  body.
+- **Keep it true**: a change that makes a docstring wrong updates it in
+  the same commit. A stale docstring is worse than none.
+
+Enforcement: the backend's `ruff check` selects pydocstyle's `D1`
+rules (missing docstrings on public modules, classes, functions and
+methods; `D107` ignored; `tests/` and `migrations/` exempt), so CI fails
+on an undocumented public name. Private `_helpers` aren't checked but
+are documented anyway when the reason isn't obvious. oxlint has no
+"require JSDoc" rule, so the frontend convention is enforced in review
+only.
+
 ## TypeScript (frontend)
 
 - Strict mode required throughout `frontend/`.
