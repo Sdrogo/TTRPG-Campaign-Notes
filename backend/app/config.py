@@ -27,13 +27,18 @@ class Settings(BaseSettings):
             text = value.strip()
             if text.startswith("{"):
                 raise ValueError("CORS_ORIGINS must be a list of origins, not an object")
-            if text.startswith("["):
+            try:
                 parsed = json.loads(text)
+            except json.JSONDecodeError:
+                # Not JSON at all: a plain or comma-separated value.
+                items: list[object] = list(text.split(","))
+            else:
+                # A bare JSON scalar (`"https://a"`, `null`, `123`) would keep
+                # its quotes or stringify into an origin no browser can match,
+                # so reject it instead of silently blocking every request.
                 if not isinstance(parsed, list):
                     raise ValueError("CORS_ORIGINS must be a list of origins")
-                items: list[object] = list(parsed)
-            else:
-                items = list(text.split(","))
+                items = list(parsed)
         elif isinstance(value, list):
             items = list(value)
         else:

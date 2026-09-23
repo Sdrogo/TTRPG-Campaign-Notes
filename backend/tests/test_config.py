@@ -40,7 +40,21 @@ def test_cors_origins_defaults_to_local_dev(monkeypatch: pytest.MonkeyPatch) -> 
     assert load_settings().cors_origins == ["http://localhost:5173"]
 
 
-def test_cors_origins_rejects_a_non_list_json_value(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CORS_ORIGINS", '{"origin": "https://app.example.com"}')
+@pytest.mark.parametrize(
+    "value",
+    [
+        '{"origin": "https://app.example.com"}',
+        '"https://app.example.com"',
+        "null",
+        "true",
+        "123",
+    ],
+)
+def test_cors_origins_rejects_a_non_list_json_value(
+    value: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A JSON scalar would stringify into an origin no browser sends, silently
+    blocking every request, so it has to fail loudly at startup instead."""
+    monkeypatch.setenv("CORS_ORIGINS", value)
     with pytest.raises(ValueError):
         load_settings()
