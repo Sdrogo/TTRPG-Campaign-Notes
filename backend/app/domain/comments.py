@@ -1,3 +1,6 @@
+"""Rules for Comments (FR-T1, FR-T5): who may write, edit and delete them,
+their length and image limits, and when an edit must be audited."""
+
 import uuid
 from collections.abc import Collection
 from dataclasses import dataclass, replace
@@ -15,31 +18,34 @@ COMMENT_VISIBILITY_CHANGED = "comment_visibility_changed"
 
 
 class CommentBodyRequiredError(Exception):
-    pass
+    """The Comment body is empty once trimmed."""
 
 
 class CommentTooLongError(Exception):
-    pass
+    """The Comment body is over `MAX_COMMENT_LENGTH`."""
 
 
 class NotCommentAuthorError(Exception):
-    pass
+    """Only a Comment's author may do this."""
 
 
 class CannotDeleteCommentError(Exception):
-    pass
+    """Neither the author nor the Master: can't delete the Comment."""
 
 
 class CommentDeletedError(Exception):
-    pass
+    """The Comment was already deleted; it can't be changed any more."""
 
 
 class TooManyCommentImagesError(Exception):
-    pass
+    """The Comment already has `MAX_IMAGES_PER_COMMENT` images."""
 
 
 @dataclass(frozen=True)
 class CommentEditPlan:
+    """The edited Comment, and the audit entry to write with it when the edit
+    changes who can see it."""
+
     comment: Comment
     # Invariant 7 / VR-08: set only when the edit changes who can see the
     # Comment, and written in the same transaction as the edit itself.
@@ -47,6 +53,8 @@ class CommentEditPlan:
 
 
 def _clean_body(body: str) -> str:
+    """Trims the body and enforces that it's non-empty and within
+    `MAX_COMMENT_LENGTH`."""
     clean = body.strip()
     if not clean:
         raise CommentBodyRequiredError("A Comment can't be empty")
@@ -98,6 +106,9 @@ def plan_comment_edit(
     current_selective_ids: Collection[uuid.UUID] = (),
     new_selective_ids: Collection[uuid.UUID] | None = None,
 ) -> CommentEditPlan:
+    """FR-T5: the author edits their own Comment. Changing its visibility level
+    or its Selective grants produces an audit entry (VR-08, Invariant 7);
+    editing only the body does not."""
     if comment.deleted_at is not None:
         raise CommentDeletedError("This Comment was deleted")
     if comment.author_id != editor_id:
@@ -165,6 +176,8 @@ def ensure_can_attach_image(
 
 
 def ensure_can_detach_image(comment: Comment, editor_id: uuid.UUID) -> None:
+    """Removing an image follows the same rule as attaching one: the author
+    only, and never on a deleted Comment (FR-T5)."""
     if comment.deleted_at is not None:
         raise CommentDeletedError("This Comment was deleted")
     if comment.author_id != editor_id:

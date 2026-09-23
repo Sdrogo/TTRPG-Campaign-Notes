@@ -67,7 +67,8 @@ async def test_player_can_create_document_by_default(
 ) -> None:
     room_id, _, player_token = await _room_with_master_and_player(client, make_token)
     response = await client.post(
-        f"/rooms/{room_id}/documents", json={"name": "A Player Document"},
+        f"/rooms/{room_id}/documents",
+        json={"name": "A Player Document"},
         headers=_auth_headers(player_token),
     )
     assert response.status_code == 201
@@ -78,13 +79,15 @@ async def test_player_cannot_create_document_when_master_disables_it(
 ) -> None:
     room_id, master_token, player_token = await _room_with_master_and_player(client, make_token)
     toggle = await client.patch(
-        f"/rooms/{room_id}", json={"players_can_create_documents": False},
+        f"/rooms/{room_id}",
+        json={"players_can_create_documents": False},
         headers=_auth_headers(master_token),
     )
     assert toggle.status_code == 200
 
     response = await client.post(
-        f"/rooms/{room_id}/documents", json={"name": "Should fail"},
+        f"/rooms/{room_id}/documents",
+        json={"name": "Should fail"},
         headers=_auth_headers(player_token),
     )
     assert response.status_code == 403
@@ -96,7 +99,8 @@ async def test_only_owner_or_master_can_edit_description(
     room_id, _, player_token = await _room_with_master_and_player(client, make_token)
     document = (
         await client.post(
-            f"/rooms/{room_id}/documents", json={"name": "Owned by Player"},
+            f"/rooms/{room_id}/documents",
+            json={"name": "Owned by Player"},
             headers=_auth_headers(player_token),
         )
     ).json()
@@ -156,7 +160,8 @@ async def test_selective_document_visible_only_to_granted_users(
     granted_token = make_token(granted_user_id)
     invite2 = (
         await client.post(
-            f"/rooms/{room_id}/invitations", json={"role": "player"},
+            f"/rooms/{room_id}/invitations",
+            json={"role": "player"},
             headers=_auth_headers(master_token),
         )
     ).json()
@@ -193,7 +198,8 @@ async def test_owner_can_add_and_remove_another_owner(
     room_id, master_token, player_token = await _room_with_master_and_player(client, make_token)
     document = (
         await client.post(
-            f"/rooms/{room_id}/documents", json={"name": "Shared doc"},
+            f"/rooms/{room_id}/documents",
+            json={"name": "Shared doc"},
             headers=_auth_headers(master_token),
         )
     ).json()

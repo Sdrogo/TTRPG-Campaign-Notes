@@ -24,6 +24,10 @@ interface VisibilitySelectProps extends Omit<SelectProps, 'data' | 'value' | 'on
   onChange: (value: DocumentVisibility) => void;
 }
 
+/**
+ * Picks a visibility level. The labels depend on `subject`: a Document's level
+ * is described in terms of its Owners, a Comment's in terms of its author.
+ */
 export function VisibilitySelect({ subject, value, onChange, ...props }: VisibilitySelectProps) {
   return (
     <Select

@@ -10,6 +10,11 @@ interface AddDocumentImagesProps {
   importing: boolean;
 }
 
+/**
+ * An Owner's controls for adding images to a Document: upload files from the
+ * computer, or import one from a URL. Unlike a Comment's images, these are sent
+ * right away.
+ */
 export function AddDocumentImages({
   onUploadFiles,
   uploading,

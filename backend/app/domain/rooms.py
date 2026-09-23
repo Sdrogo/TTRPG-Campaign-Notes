@@ -1,3 +1,5 @@
+"""Rules for creating a Room (UC-02, FR-R1)."""
+
 import uuid
 from dataclasses import dataclass
 
@@ -13,11 +15,14 @@ DEFAULT_TAGS: tuple[tuple[str, str], ...] = (
 
 
 class RoomNameRequiredError(Exception):
-    pass
+    """The Room name is empty once trimmed."""
 
 
 @dataclass(frozen=True)
 class NewRoomPlan:
+    """Everything a new Room is created with, inserted in one transaction: the
+    Room, its creator's Membership and the default Tags."""
+
     room: Room
     owner_membership: Membership
     default_tags: tuple[Tag, ...]

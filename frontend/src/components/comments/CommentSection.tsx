@@ -32,9 +32,11 @@ function reportImageErrors({ imageErrors }: SaveCommentResult) {
   }
 }
 
-// A Document's Comments (its main Thread, D-20): sort/filter toolbar, the
-// list, and the composer at the bottom. The backend only returns Comments
-// the viewer may see.
+/**
+ * A Document's Comments (its main Thread, D-20): sort/filter toolbar, the list,
+ * and the composer at the bottom. The backend only returns Comments the viewer
+ * may see.
+ */
 export function CommentSection({ roomId, documentId, members, currentUserId }: CommentSectionProps) {
   const comments = useComments(roomId, documentId, true);
   const saveComment = useSaveComment(roomId, documentId);

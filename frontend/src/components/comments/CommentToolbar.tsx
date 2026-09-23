@@ -23,7 +23,7 @@ interface CommentToolbarProps {
   authorOptions: { value: string; label: string }[];
 }
 
-// Sort + filter controls shown above the Comment list.
+/** Sort + filter controls shown above the Comment list. */
 export function CommentToolbar({ filters, onChange, authorOptions }: CommentToolbarProps) {
   const set = (patch: Partial<CommentFilters>) => onChange({ ...filters, ...patch });
 

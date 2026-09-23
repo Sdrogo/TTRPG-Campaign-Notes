@@ -33,6 +33,9 @@ from app.domain.models import Document, DocumentImage
 
 
 class ImageResponse(BaseModel):
+    """An image as every route serializes it: a short-lived signed URL, never
+    the Storage path."""
+
     id: uuid.UUID
     url: str
     # The image that leads its Document's gallery (spec 07). Carried on
@@ -62,10 +65,14 @@ def image_responses(
 async def read_upload(file: UploadFile) -> bytes:
     # Read one byte past the limit so an oversized file is detectable
     # without buffering all of it.
+    """An uploaded file's bytes, capped one byte past `MAX_INPUT_BYTES` so an
+    oversized file is caught without buffering all of it."""
     return await file.read(MAX_INPUT_BYTES + 1)
 
 
 async def fetch_url(url: str) -> bytes:
+    """An image's bytes from a remote URL; a URL that can't be fetched safely
+    is a 422."""
     try:
         return await remote_images.fetch_image_bytes(url)
     except RemoteImageError as exc:
@@ -96,6 +103,8 @@ async def ensure_room_for_another_image(
 async def normalize(
     data: bytes, max_dimension: int = MAX_DIMENSION, square: bool = False
 ) -> NormalizedImage:
+    """`normalize_image` off the event loop, with its errors mapped to 413 (too
+    large) and 422 (not a supported image)."""
     try:
         return await asyncio.to_thread(normalize_image, data, max_dimension, square)
     except ImageTooLargeError as exc:

@@ -15,6 +15,8 @@ from app.domain.visibility import is_document_visible, visible_document_images
 async def require_membership(
     session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID
 ) -> Membership:
+    """The caller's Membership in the Room, or 403 when they aren't a member.
+    Every Room-scoped route starts here, since roles are per Room (D-06)."""
     membership = await rooms_repo.get_membership(session, room_id, user_id)
     if membership is None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")

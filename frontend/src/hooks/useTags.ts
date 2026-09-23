@@ -6,6 +6,7 @@ function tagsQueryKey(roomId: string) {
   return ['rooms', roomId, 'tags'] as const;
 }
 
+/** The Room's Tags. */
 export function useTags(roomId: string, enabled: boolean) {
   return useQuery<Tag[]>({
     queryKey: tagsQueryKey(roomId),
@@ -14,6 +15,7 @@ export function useTags(roomId: string, enabled: boolean) {
   });
 }
 
+/** Adds a Tag to the Room (Administrator or Master). The backend rejects a duplicate name. */
 export function useCreateTag(roomId: string) {
   const queryClient = useQueryClient();
   return useMutation({

@@ -24,12 +24,19 @@ interface DocumentImageGalleryProps {
   canDelete: boolean;
   onDelete: (imageId: string) => void;
   deletingImageId: string | null;
-  // Spec 07: an Owner picks the image that leads the Document (and so its
-  // card). Omitted for a viewer who may not - the heart is then not shown.
+  /**
+   * Spec 07: an Owner picks the image that leads the Document (and so its
+   * card). Omitted for a viewer who may not - the heart is then not shown.
+   */
   onSetFavorite?: (imageId: string) => void;
   settingFavoriteId?: string | null;
 }
 
+/**
+ * A Document's images as a carousel, favorite first; clicking one opens the
+ * fullscreen viewer. Deleting and choosing the favorite are shown only when the
+ * caller allows them (Owners). Renders nothing without images.
+ */
 export function DocumentImageGallery({
   images,
   documentName,

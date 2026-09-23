@@ -4,14 +4,16 @@ import { ACCEPTED_IMAGE_TYPES } from '../lib/images';
 import { ImageUrlPopover } from './ImageUrlPopover';
 
 interface ImageAttachButtonsProps {
-  // How many more images may be added; the buttons disable at 0.
+  /** How many more images may be added; the buttons disable at 0. */
   remaining: number;
   onAddFiles: (files: File[]) => void;
   onAddUrl: (url: string) => void;
 }
 
-// Compact "attach an image" controls for a form: a file picker and a URL
-// field in a popover. Nothing is uploaded here - the form decides when.
+/**
+ * Compact "attach an image" controls for a form: a file picker and a URL field
+ * in a popover. Nothing is uploaded here - the form decides when.
+ */
 export function ImageAttachButtons({ remaining, onAddFiles, onAddUrl }: ImageAttachButtonsProps) {
   const full = remaining <= 0;
   const hint = full ? 'Limite di immagini raggiunto' : undefined;

@@ -1,3 +1,7 @@
+"""Fetching an image from a user-supplied URL, guarded against SSRF: only
+public addresses, a bounded number of redirects, a size cap enforced while
+streaming, and a connection pinned to the address that was checked."""
+
 import asyncio
 import ipaddress
 import socket
@@ -14,7 +18,8 @@ IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 
 class RemoteImageError(Exception):
-    pass
+    """The URL can't be fetched safely, or didn't return an image within the
+    limits. The message is safe to show to the user."""
 
 
 async def _resolve_public_address(url: httpx.URL) -> IPAddress:
@@ -68,6 +73,9 @@ def _pinned_request(
 
 
 async def fetch_image_bytes(url: str, transport: httpx.AsyncBaseTransport | None = None) -> bytes:
+    """Downloads the image at `url`, following at most `MAX_REDIRECTS`
+    redirects and validating each hop again. The bytes are not yet checked to
+    be an image - that's `normalize_image`'s job. `transport` is for tests."""
     headers = {"User-Agent": "TTRPG-Campaign-Notes/0.1 (image import)", "Accept": "image/*"}
     async with httpx.AsyncClient(
         timeout=TIMEOUT_SECONDS, follow_redirects=False, transport=transport

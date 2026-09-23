@@ -8,7 +8,7 @@ interface AccountSectionProps {
   children: ReactNode;
 }
 
-// One titled card on the Account page (Profilo, Accesso, ...).
+/** One titled card on the Account page (Profilo, Accesso, ...). */
 export function AccountSection({ title, description, children }: AccountSectionProps) {
   return (
     <PageCard>

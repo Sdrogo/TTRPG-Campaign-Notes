@@ -18,6 +18,7 @@ import { AvatarEditor, type AvatarAction } from '../components/account/AvatarEdi
 import { ProfileForm } from '../components/account/ProfileForm';
 import type { AccountProfile } from '../types/profile';
 
+/** `/account`: the signed-in user's profile (name, pronouns, description, avatar) and sign-out. */
 export function AccountPage() {
   const { session, loading: sessionLoading } = useSession();
 

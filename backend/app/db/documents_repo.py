@@ -1,3 +1,7 @@
+"""Documents and what hangs off them: Owners, Tags, Selective grants and
+images. Readers return rows unfiltered; the visibility filter is applied by the
+caller (Invariant 1)."""
+
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
@@ -38,6 +42,7 @@ async def _ids_by_document(
 
 
 def _document_from_row(row: DocumentRow) -> Document:
+    """Maps a `documents` row to the domain `Document`."""
     return Document(
         id=row.id,
         room_id=row.room_id,
@@ -54,6 +59,8 @@ async def insert_new_document(
     tag_ids: Sequence[uuid.UUID],
     selective_user_ids: Sequence[uuid.UUID],
 ) -> None:
+    """Inserts the Document, its creator's Owner row, its Tags and its
+    Selective grants, in the caller's transaction."""
     session.add(
         DocumentRow(
             id=plan.document.id,
@@ -75,16 +82,20 @@ async def insert_new_document(
 
 
 async def get_document(session: AsyncSession, document_id: uuid.UUID) -> Document | None:
+    """The Document, or None."""
     row = await session.get(DocumentRow, document_id)
     return _document_from_row(row) if row else None
 
 
 async def list_documents_for_room(session: AsyncSession, room_id: uuid.UUID) -> list[Document]:
+    """Every Document in the Room, not yet filtered for any viewer."""
     result = await session.execute(select(DocumentRow).where(DocumentRow.room_id == room_id))
     return [_document_from_row(row) for row in result.scalars()]
 
 
 async def update_document(session: AsyncSession, document: Document) -> None:
+    """Writes a Document's name, description and visibility. Raises
+    `LookupError` if it no longer exists."""
     row = await session.get(DocumentRow, document.id)
     if row is None:
         raise LookupError(f"Document {document.id} not found")
@@ -95,6 +106,7 @@ async def update_document(session: AsyncSession, document: Document) -> None:
 
 
 def _image_from_row(row: DocumentImageRow) -> DocumentImage:
+    """Maps a `document_images` row to the domain `DocumentImage`."""
     return DocumentImage(
         id=row.id,
         document_id=row.document_id,
@@ -124,6 +136,8 @@ async def lock_document(session: AsyncSession, document_id: uuid.UUID) -> None:
 
 
 async def list_images(session: AsyncSession, document_id: uuid.UUID) -> list[DocumentImage]:
+    """The Document's images in gallery order (favorite first, then oldest
+    first), Comment attachments included."""
     result = await session.execute(
         select(DocumentImageRow)
         .where(DocumentImageRow.document_id == document_id)
@@ -151,6 +165,7 @@ async def list_images_for_documents(
 
 
 async def insert_image(session: AsyncSession, image: DocumentImage) -> None:
+    """Records an image already uploaded to Storage."""
     session.add(
         DocumentImageRow(
             id=image.id,
@@ -167,6 +182,8 @@ async def insert_image(session: AsyncSession, image: DocumentImage) -> None:
 async def list_images_for_posts(
     session: AsyncSession, post_ids: Sequence[uuid.UUID]
 ) -> dict[uuid.UUID, list[DocumentImage]]:
+    """The images attached to each Comment, oldest first. A Comment with none
+    maps to an empty list."""
     by_post: dict[uuid.UUID, list[DocumentImage]] = defaultdict(list)
     if not post_ids:
         return by_post
@@ -211,17 +228,16 @@ async def set_favorite_image(
 
 
 async def delete_images(session: AsyncSession, image_ids: Sequence[uuid.UUID]) -> None:
+    """Deletes image rows only. Use `app.api.image_uploads.remove_images`,
+    which also removes the Storage objects and hands on the favorite."""
     if image_ids:
         await session.execute(delete(DocumentImageRow).where(DocumentImageRow.id.in_(image_ids)))
         await session.flush()
 
 
-async def delete_image(session: AsyncSession, image_id: uuid.UUID) -> None:
-    await session.execute(delete(DocumentImageRow).where(DocumentImageRow.id == image_id))
-    await session.flush()
-
-
 async def list_owner_ids(session: AsyncSession, document_id: uuid.UUID) -> list[uuid.UUID]:
+    """The Document's explicit Owners. The Master's implicit Ownership isn't
+    listed (D-12)."""
     result = await session.execute(
         select(DocumentOwnerRow.user_id).where(DocumentOwnerRow.document_id == document_id)
     )
@@ -238,11 +254,13 @@ async def list_owner_ids_for_documents(
 
 
 async def insert_owner(session: AsyncSession, document_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    """Adds an explicit Owner."""
     session.add(DocumentOwnerRow(document_id=document_id, user_id=user_id))
     await session.flush()
 
 
 async def delete_owner(session: AsyncSession, document_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    """Removes an explicit Owner."""
     await session.execute(
         delete(DocumentOwnerRow).where(
             DocumentOwnerRow.document_id == document_id, DocumentOwnerRow.user_id == user_id
@@ -254,6 +272,8 @@ async def delete_owner(session: AsyncSession, document_id: uuid.UUID, user_id: u
 async def list_selective_grant_ids(
     session: AsyncSession, document_id: uuid.UUID
 ) -> list[uuid.UUID]:
+    """The users granted a Selective Document besides its Owners and the
+    Master."""
     result = await session.execute(
         select(DocumentVisibilityGrantRow.user_id).where(
             DocumentVisibilityGrantRow.document_id == document_id
@@ -277,6 +297,7 @@ async def list_selective_grant_ids_for_documents(
 async def set_selective_grants(
     session: AsyncSession, document_id: uuid.UUID, user_ids: Sequence[uuid.UUID]
 ) -> None:
+    """Replaces the Document's Selective grantees with `user_ids`."""
     await session.execute(
         delete(DocumentVisibilityGrantRow).where(
             DocumentVisibilityGrantRow.document_id == document_id
@@ -290,6 +311,7 @@ async def set_selective_grants(
 async def list_tag_ids_for_document(
     session: AsyncSession, document_id: uuid.UUID
 ) -> list[uuid.UUID]:
+    """The ids of the Document's Tags."""
     result = await session.execute(
         select(DocumentTagRow.tag_id).where(DocumentTagRow.document_id == document_id)
     )
@@ -308,6 +330,7 @@ async def list_tag_ids_for_documents(
 async def set_document_tags(
     session: AsyncSession, document_id: uuid.UUID, tag_ids: Sequence[uuid.UUID]
 ) -> None:
+    """Replaces the Document's Tags with `tag_ids`."""
     await session.execute(delete(DocumentTagRow).where(DocumentTagRow.document_id == document_id))
     for tag_id in tag_ids:
         session.add(DocumentTagRow(document_id=document_id, tag_id=tag_id))

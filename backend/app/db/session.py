@@ -1,3 +1,7 @@
+"""Database sessions. A request gets one session and one transaction
+(`SessionDep`): committed when the handler returns, rolled back if it raises.
+Work that must wait for the commit is queued with `on_commit`."""
+
 import logging
 from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
@@ -27,6 +31,8 @@ def on_commit(session: AsyncSession, callback: AfterCommit) -> None:
 
 
 def discard_after_commit(session: AsyncSession) -> None:
+    """Drops the queued after-commit work, for a transaction that won't
+    commit."""
     session.info.pop(_AFTER_COMMIT_KEY, None)
 
 
@@ -42,6 +48,9 @@ async def run_after_commit(session: AsyncSession) -> None:
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    """The request's session, as a FastAPI dependency. Commits once the
+    handler returns, rolls back if it raises, and only then runs the
+    after-commit work."""
     async with async_session_factory() as session:
         try:
             yield session

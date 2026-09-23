@@ -1,5 +1,9 @@
 import { supabase } from './supabaseClient';
 
+/**
+ * A non-2xx response from the backend. `message` is its `detail` when the body
+ * is FastAPI's JSON error, else the raw body.
+ */
 export class ApiError extends Error {
   status: number;
 
@@ -15,6 +19,11 @@ interface ApiFetchInit extends Omit<RequestInit, 'body'> {
   formData?: FormData;
 }
 
+/**
+ * Calls the backend at `VITE_API_BASE_URL` with the current Supabase access
+ * token. Pass `json` for a JSON body or `formData` for an upload. Throws
+ * `ApiError` on any non-2xx; a 204 resolves to `undefined`.
+ */
 export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promise<T> {
   const { json, formData, ...rest } = init;
   const {

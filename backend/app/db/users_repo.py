@@ -1,3 +1,5 @@
+"""The `users` mirror of Supabase Auth, and the profile stored on it."""
+
 import uuid
 
 from sqlalchemy import func, select, update
@@ -9,6 +11,8 @@ from app.domain.models import UserProfile
 
 
 async def upsert_user(session: AsyncSession, user_id: uuid.UUID, email: str | None) -> None:
+    """Makes sure the user's mirror row exists and keeps its email current,
+    without touching the profile."""
     stmt = pg_insert(UserRow).values(id=user_id, email=email)
     # A token may omit the email claim: keep the stored email rather than
     # overwriting it with NULL.
@@ -61,6 +65,8 @@ async def save_profile(session: AsyncSession, profile: UserProfile) -> None:
 
 
 async def mark_prefilled(session: AsyncSession, user_id: uuid.UUID) -> None:
+    """Records that the Google defaults were offered, so it happens only
+    once."""
     await session.execute(
         update(UserRow).where(UserRow.id == user_id).values(profile_prefilled_at=func.now())
     )

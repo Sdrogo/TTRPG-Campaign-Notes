@@ -5,6 +5,7 @@ import { useSession } from '../hooks/useSession';
 import { AppHeader } from '../components/AppHeader';
 import { RoomsPage } from './RoomsPage';
 
+/** `/`: the Google sign-in screen, or the user's Rooms once signed in. */
 export function HomePage() {
   const { session, loading: sessionLoading } = useSession();
 

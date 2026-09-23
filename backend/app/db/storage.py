@@ -1,3 +1,7 @@
+"""Supabase Storage over its REST API, with the backend's secret key. The
+images bucket is private, so every image a response carries is a signed,
+expiring link."""
+
 import logging
 import time
 from collections.abc import Collection
@@ -10,10 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class StorageError(Exception):
-    pass
+    """Storage answered with an error."""
 
 
 def _headers() -> dict[str, str]:
+    """Auth headers for the Storage API. The secret key bypasses Storage
+    policies, so it never leaves the backend."""
     return {
         "apikey": settings.supabase_secret_key,
         "Authorization": f"Bearer {settings.supabase_secret_key}",
@@ -21,6 +27,7 @@ def _headers() -> dict[str, str]:
 
 
 def _object_url(path: str) -> str:
+    """The Storage API URL of one object in the images bucket."""
     return f"{settings.supabase_url}/storage/v1/object/{settings.storage_bucket}/{path}"
 
 
@@ -37,6 +44,8 @@ async def upload(path: str, data: bytes, content_type: str) -> None:
 
 
 async def remove(path: str) -> None:
+    """Deletes one object. Idempotent: an object that is already gone counts as
+    removed."""
     async with httpx.AsyncClient(timeout=30) as client:
         response = await client.delete(_object_url(path), headers=_headers())
     # A 404 means the object is already gone, which is the state we want.

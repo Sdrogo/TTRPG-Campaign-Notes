@@ -1,3 +1,6 @@
+"""The `CurrentUserDep` dependency: every protected route takes the caller from
+here, never by parsing the token itself."""
+
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -10,6 +13,8 @@ _bearer_scheme = HTTPBearer(auto_error=False)
 
 
 class CurrentUser(BaseModel):
+    """The authenticated caller, as the verified token describes them."""
+
     id: str
     email: str | None = None
     # From the Google identity Supabase puts in `user_metadata`; only used
@@ -19,6 +24,8 @@ class CurrentUser(BaseModel):
 
 
 def _first_string(metadata: object, *keys: str) -> str | None:
+    """The first non-blank string among `keys` in the token's `user_metadata`.
+    Google's claims have gone by more than one name."""
     if not isinstance(metadata, dict):
         return None
     for key in keys:
@@ -31,6 +38,8 @@ def _first_string(metadata: object, *keys: str) -> str | None:
 def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
 ) -> CurrentUser:
+    """Resolves the caller from the `Authorization: Bearer` header. 401 when
+    it's missing, invalid or expired."""
     if credentials is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token")
     try:

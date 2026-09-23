@@ -1,3 +1,7 @@
+"""Comments on a Document's main Thread (D-20, FR-T1, FR-T5). A Comment is
+reachable only through a Document the requester can see, and is then filtered
+by its own visibility (VR-03)."""
+
 import uuid
 from collections.abc import Collection, Mapping
 from datetime import UTC, datetime
@@ -42,6 +46,9 @@ router = APIRouter(prefix="/rooms/{room_id}/documents/{document_id}/comments", t
 
 
 class CommentResponse(BaseModel):
+    """A Comment as every route serializes it. A deleted Comment keeps its
+    place with an empty body and `deleted` set (FR-T5)."""
+
     id: uuid.UUID
     document_id: uuid.UUID
     author_id: uuid.UUID
@@ -61,16 +68,24 @@ class CommentResponse(BaseModel):
 
 
 class CreateCommentRequest(BaseModel):
+    """A new Comment with its visibility level and, for Selective, who else may
+    read it."""
+
     body: str
     visibility: DocumentVisibility = DocumentVisibility.ROOM
     selective_user_ids: list[uuid.UUID] = []
 
 
 class ImageFromUrlRequest(BaseModel):
+    """An image to attach from a URL instead of uploading a file."""
+
     url: HttpUrl
 
 
 class UpdateCommentRequest(BaseModel):
+    """A partial edit: omitted fields are left as they are. Changing the
+    visibility or the grants is audited (VR-08)."""
+
     body: str | None = None
     visibility: DocumentVisibility | None = None
     selective_user_ids: list[uuid.UUID] | None = None
@@ -83,6 +98,8 @@ def _to_response(
     image_urls: Mapping[str, str],
     viewer: Membership,
 ) -> CommentResponse:
+    """Serializes a Comment for `viewer`, with the permission flags the UI
+    shows or hides its actions by."""
     return CommentResponse(
         id=comment.id,
         document_id=comment.document_id,
@@ -100,12 +117,14 @@ def _to_response(
 
 
 def _body_error(exc: Exception) -> HTTPException:
+    """The 422 for a Comment body that is empty or too long."""
     return HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc))
 
 
 async def _validate_grantees(
     session: AsyncSession, room_id: uuid.UUID, user_ids: Collection[uuid.UUID]
 ) -> None:
+    """422 unless every Selective grantee is a member of the Room."""
     member_ids = {m.user_id for m in await rooms_repo.list_memberships(session, room_id)}
     if not set(user_ids) <= member_ids:
         raise HTTPException(
@@ -117,6 +136,8 @@ async def _validate_grantees(
 async def _get_visible_comment(
     session: AsyncSession, document_id: uuid.UUID, comment_id: uuid.UUID, viewer: Membership
 ) -> tuple[Comment, list[uuid.UUID]]:
+    """Returns (comment, selective_ids) once the viewer is known to see the
+    Comment; 404 otherwise, whether or not it exists (VR-07)."""
     comment = await comments_repo.get_comment(session, comment_id)
     if comment is None or comment.document_id != document_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Comment not found")
@@ -132,6 +153,8 @@ async def _get_visible_comment(
 async def _require_visible_document(
     session: AsyncSession, room_id: uuid.UUID, document_id: uuid.UUID, requester_id: uuid.UUID
 ) -> tuple[Membership, Document]:
+    """The requester's Membership and the Document, once they are known to be a
+    member who can see it."""
     membership = await require_membership(session, room_id, requester_id)
     document, _, _ = await get_visible_document(
         session, room_id, document_id, requester_id, membership.role
@@ -140,12 +163,15 @@ async def _require_visible_document(
 
 
 async def _comment_images(session: AsyncSession, comment_id: uuid.UUID) -> list[DocumentImage]:
+    """The images attached to one Comment."""
     return (await documents_repo.list_images_for_posts(session, [comment_id]))[comment_id]
 
 
 def _author_error(
     exc: NotCommentAuthorError | CommentDeletedError | TooManyCommentImagesError,
 ) -> HTTPException:
+    """403 for a non-author, 409 for a deleted Comment or one that is already
+    at its image limit."""
     if isinstance(exc, NotCommentAuthorError):
         return HTTPException(status.HTTP_403_FORBIDDEN, str(exc))
     return HTTPException(status.HTTP_409_CONFLICT, str(exc))
@@ -158,6 +184,8 @@ async def list_comments(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> list[CommentResponse]:
+    """The Document's Comments the requester can see, deleted placeholders
+    included (FR-T5)."""
     requester_id = uuid.UUID(current_user.id)
     membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
 
@@ -181,6 +209,8 @@ async def create_comment(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> CommentResponse:
+    """UC-11: any member who can see the Document comments on it, choosing the
+    Comment's visibility (VR-02)."""
     requester_id = uuid.UUID(current_user.id)
     membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
 
@@ -205,6 +235,9 @@ async def update_comment(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> CommentResponse:
+    """FR-T5: the author edits their Comment's body, visibility or grants. A
+    change of who can see it is audited in the same transaction (VR-08,
+    Invariant 7)."""
     requester_id = uuid.UUID(current_user.id)
     membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
     comment, selective_ids = await _get_visible_comment(
@@ -249,6 +282,9 @@ async def delete_comment(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> None:
+    """FR-T5: the author, or the Master moderating, deletes a Comment. It stays
+    as an empty placeholder, and its images are removed with it so they don't
+    linger in the Document gallery."""
     requester_id = uuid.UUID(current_user.id)
     membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
     comment, _ = await _get_visible_comment(session, document_id, comment_id, membership)
@@ -306,6 +342,8 @@ async def upload_comment_image(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> CommentResponse:
+    """The author attaches an uploaded image, up to `MAX_IMAGES_PER_COMMENT`.
+    It also counts toward the Document's limit."""
     requester_id = uuid.UUID(current_user.id)
     membership, document = await _require_visible_document(
         session, room_id, document_id, requester_id
@@ -322,6 +360,7 @@ async def import_comment_image(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> CommentResponse:
+    """Like `upload_comment_image`, with the image fetched from a URL."""
     requester_id = uuid.UUID(current_user.id)
     membership, document = await _require_visible_document(
         session, room_id, document_id, requester_id
@@ -338,6 +377,7 @@ async def delete_comment_image(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> None:
+    """The author removes one of their Comment's images."""
     requester_id = uuid.UUID(current_user.id)
     membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
     comment, _ = await _get_visible_comment(session, document_id, comment_id, membership)

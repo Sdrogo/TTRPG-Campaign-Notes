@@ -1,3 +1,6 @@
+"""Comments: rows of `posts` with kind "comment", and their Selective
+grants."""
+
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
@@ -10,6 +13,7 @@ from app.domain.models import Comment, DocumentVisibility, PostKind
 
 
 def _comment_from_row(row: PostRow) -> Comment:
+    """Maps a `posts` row to the domain `Comment`."""
     return Comment(
         id=row.id,
         document_id=row.document_id,
@@ -25,6 +29,8 @@ def _comment_from_row(row: PostRow) -> Comment:
 async def insert_comment(
     session: AsyncSession, comment: Comment, selective_user_ids: Sequence[uuid.UUID]
 ) -> None:
+    """Inserts a Comment and its Selective grants; duplicate grantees are
+    ignored."""
     session.add(
         PostRow(
             id=comment.id,
@@ -45,6 +51,7 @@ async def insert_comment(
 
 
 async def get_comment(session: AsyncSession, comment_id: uuid.UUID) -> Comment | None:
+    """The Comment, or None - also for a Post of another kind."""
     row = await session.get(PostRow, comment_id)
     if row is None or row.kind != PostKind.COMMENT.value:
         return None
@@ -54,6 +61,8 @@ async def get_comment(session: AsyncSession, comment_id: uuid.UUID) -> Comment |
 async def get_comments_by_ids(
     session: AsyncSession, comment_ids: Sequence[uuid.UUID]
 ) -> dict[uuid.UUID, Comment]:
+    """The Comments with these ids, keyed by id. Missing ids are simply
+    absent."""
     if not comment_ids:
         return {}
     result = await session.execute(select(PostRow).where(PostRow.id.in_(comment_ids)))
@@ -63,6 +72,8 @@ async def get_comments_by_ids(
 async def list_comments_for_document(
     session: AsyncSession, document_id: uuid.UUID
 ) -> list[Comment]:
+    """Every Comment on the Document, deleted ones included, oldest first. Not
+    yet filtered for any viewer."""
     result = await session.execute(
         select(PostRow)
         .where(PostRow.document_id == document_id, PostRow.kind == PostKind.COMMENT.value)
@@ -72,6 +83,8 @@ async def list_comments_for_document(
 
 
 async def update_comment(session: AsyncSession, comment: Comment) -> None:
+    """Writes a Comment's body, visibility and timestamps. Raises `LookupError`
+    if it no longer exists."""
     row = await session.get(PostRow, comment.id)
     if row is None:
         raise LookupError(f"Comment {comment.id} not found")
@@ -85,6 +98,8 @@ async def update_comment(session: AsyncSession, comment: Comment) -> None:
 async def list_grants_for_comments(
     session: AsyncSession, comment_ids: Sequence[uuid.UUID]
 ) -> dict[uuid.UUID, list[uuid.UUID]]:
+    """The Selective grantees of each Comment. A Comment with none maps to an
+    empty list."""
     grants: dict[uuid.UUID, list[uuid.UUID]] = defaultdict(list)
     if not comment_ids:
         return grants
@@ -101,6 +116,7 @@ async def list_grants_for_comments(
 async def set_comment_grants(
     session: AsyncSession, comment_id: uuid.UUID, user_ids: Sequence[uuid.UUID]
 ) -> None:
+    """Replaces the Comment's Selective grantees with `user_ids`."""
     await session.execute(
         delete(PostVisibilityGrantRow).where(PostVisibilityGrantRow.post_id == comment_id)
     )

@@ -1,3 +1,6 @@
+"""The FastAPI application: CORS, the routers, and the background Storage sweep
+that runs for the app's lifetime."""
+
 import asyncio
 import contextlib
 from collections.abc import AsyncIterator
@@ -19,6 +22,8 @@ from app.db.storage_cleanup import run_sweeper
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """Starts the Storage cleanup sweep (app/db/storage_cleanup.py) with the
+    app and cancels it on shutdown."""
     sweeper = asyncio.create_task(run_sweeper())
     yield
     sweeper.cancel()
@@ -55,4 +60,6 @@ app.include_router(comments_router)
 
 @app.get("/health")
 def health() -> dict[str, str]:
+    """Liveness check for the hosting platform. Needs no auth and touches no
+    dependency."""
     return {"status": "ok"}

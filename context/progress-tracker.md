@@ -149,10 +149,17 @@ Update this file after every meaningful implementation change.
   mutation-checked: forcing everything to landscape fails 3 of them. Build,
   lint and `npm test` **616/616** pass, coverage floors held. **Not
   visually verified in a browser** — same limitation as spec 07 (Next Up #0).
+- **Docstring coverage complete** (2026-09-23, backend + frontend,
+  documentation only — no behavior change; branch
+  `docs/docstring-coverage`): backend `app/` from 27% to
+  100% of modules/classes/functions documented, frontend exports from ~1%
+  to 100% (173/173). Now a project standard with a CI gate on the backend
+  (see Completed and `code-standards.md` → Documentation).
 - **CORS for Vercel previews complete** (2026-09-23, backend only, branch
   `feature/cors_preview_origins`): optional `CORS_ORIGIN_REGEX` lets
   commit-preview deploys through, with a pattern that another Vercel account
-  can't match. Needs the env var set on Render (see Completed).
+  can't match. Env var set on Render; live once this is merged and
+  deployed (see Completed).
 
 ## Current Goal
 
@@ -754,6 +761,7 @@ Update this file after every meaningful implementation change.
     comments where the reasoning isn't obvious, not a docstring on
     every function. Mass docstrings on thin handlers and repos would only
     restate the signatures. Revisit if the team adopts that threshold.
+    **Superseded 2026-09-23**: adopted — see "Docstring coverage" below.
   - Tests: +1 dedupe API test, +1 email-preservation test, +3 SSRF
     pinning tests (mock transport + fake resolver, incl. a rebinding
     resolver and a redirect to a private host), +3 Storage-consistency
@@ -1097,6 +1105,43 @@ Update this file after every meaningful implementation change.
     two shapes matched; adding `is_favorite` would have broken it silently.
     `leadImage` picks the image a card leads with, falling back to the first
     visible one when the favorite was filtered out for that viewer.
+- **Docstring coverage (2026-09-23, branch
+  `docs/docstring-coverage`):** requested directly, which
+  reverses the code review 04 decision to skip it (that entry is marked
+  superseded). Its concern — docstrings that only restate the signature —
+  became the rule in the new `code-standards.md` → Documentation section:
+  say what the signature can't (the rule, the refusal and its status, what
+  the caller must do next), cite the spec ID, prose rather than
+  `Args:`/`@param` templates.
+  - **Backend**: 88/322 → 322/322 docstrings in `app/` (modules, classes,
+    functions, private helpers included). Existing `"""` docstrings were
+    kept as they were; 40 files gained new ones. Exception classes that were
+    just `pass` now say what they mean. Route handler docstrings also show up
+    as endpoint descriptions in the OpenAPI docs.
+  - **Backend gate**: `pyproject.toml` now selects ruff's `D1` (missing
+    docstrings on public names), ignores `D107` (`__init__`, covered by the
+    class), and exempts `tests/` and `migrations/`. CI already runs
+    `ruff check .`, so an undocumented public name now fails the backend job
+    (`architecture.md` → Continuous Integration updated).
+  - **Frontend**: 1/173 → 173/173 exports with JSDoc, plus `App`. Most
+    exports already had a `//` comment above them; those were converted to
+    `/** */` word for word so they show on hover, and field comments inside
+    `interface` blocks (types and component props) likewise. New JSDoc was
+    written for the rest. One comment was wrong and was corrected:
+    `MemberMultiSelect` said it picks members "by email", but it has shown
+    name + email since `memberOptionLabel`. No gate: oxlint has no
+    require-JSDoc rule, so it is review-only for now.
+  - **Found while documenting**: `documents_repo.delete_image` has no
+    callers and bypasses what `image_uploads.remove_images` does (Storage
+    cleanup, favorite promotion, Document lock). Deleted in a follow-up
+    commit on the same branch, so nothing can call it by mistake.
+  - Checks: backend ruff (with `D1`), mypy strict, pytest non-integration
+    **138/138**; frontend build, oxlint, `npm test` **616/616**. Integration
+    tests not run (documentation only).
+  - **Formatter drift fixed**: `ruff format --check .` reported older
+    drift in `db/rooms_repo.py` and four test files. All five were
+    reformatted (whitespace/line breaks only), so the whole backend now
+    passes it. CI still doesn't run the formatter.
 - **CORS for Vercel previews (2026-09-23, backend only, branch
   `feature/cors_preview_origins`):** preview deploys failed their preflight
   (`OPTIONS /account`) because each one gets a generated hostname that isn't
@@ -1118,9 +1163,10 @@ Update this file after every meaningful implementation change.
     suffix, `http` and unescaped-dot variants rejected; no pattern = exact
     list only) and config parsing (default, blank, trimmed, invalid).
     +16 tests; backend ruff, mypy strict, pytest non-integration **154/154**.
-  - **Deploy step, not done from here**: set `CORS_ORIGIN_REGEX` to the
-    pattern above in Render's Environment tab and redeploy; until then
-    previews stay blocked. Check with
+  - **Deploy**: `CORS_ORIGIN_REGEX` is set to the pattern above in Render's
+    Environment tab (done 2026-09-23, before this merged, so the redeploy
+    then still ran the old code and rejected previews). Once deployed, check
+    with
     `curl -i -X OPTIONS https://ttrpg-campaign-notes.onrender.com/account -H "Origin: https://ttrpg-campaign-notes-<hash>-rum11.vercel.app" -H "Access-Control-Request-Method: GET"`,
     which should return `access-control-allow-origin` with that origin.
 

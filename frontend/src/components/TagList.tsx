@@ -6,6 +6,7 @@ interface TagListProps {
   tagIds: string[];
 }
 
+/** The Tags among `tagIds`, shown as `#Name`. Renders nothing when there are none. */
 export function TagList({ tags, tagIds }: TagListProps) {
   const selected = tags.filter((tag) => tagIds.includes(tag.id));
 

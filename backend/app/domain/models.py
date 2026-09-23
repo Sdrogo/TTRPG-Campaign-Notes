@@ -1,3 +1,6 @@
+"""The domain's data types: frozen dataclasses and enums, independent of how
+they are stored (app/db/models.py maps them to tables)."""
+
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -5,17 +8,25 @@ from enum import StrEnum
 
 
 class RoomRole(StrEnum):
+    """A member's role, per Room (D-06). Being an Administrator is a separate
+    flag, not a role (D-11)."""
+
     MASTER = "master"
     PLAYER = "player"
 
 
 class RoomStatus(StrEnum):
+    """Whether a Room is in use or archived (FR-R1)."""
+
     ACTIVE = "active"
     ARCHIVED = "archived"
 
 
 @dataclass(frozen=True)
 class Room:
+    """A campaign space (FR-R1). `players_can_create_documents` is the Master's
+    switch for Players' Document creation (D-13, FR-D7)."""
+
     id: uuid.UUID
     name: str
     game_system: str | None
@@ -26,6 +37,9 @@ class Room:
 
 @dataclass(frozen=True)
 class Membership:
+    """A user's place in one Room: their role and whether they are an
+    Administrator (D-06, D-11)."""
+
     id: uuid.UUID
     room_id: uuid.UUID
     user_id: uuid.UUID
@@ -35,6 +49,9 @@ class Membership:
 
 @dataclass(frozen=True)
 class Tag:
+    """A Room's label for classifying Documents, with an optional category
+    (D-14, FR-N1)."""
+
     id: uuid.UUID
     room_id: uuid.UUID
     name: str
@@ -43,6 +60,9 @@ class Tag:
 
 @dataclass(frozen=True)
 class Invitation:
+    """A code for joining a Room with a proposed role (FR-R2). It stops working
+    once expired or revoked."""
+
     id: uuid.UUID
     room_id: uuid.UUID
     code: str
@@ -54,6 +74,10 @@ class Invitation:
 
 @dataclass(frozen=True)
 class AuditLogEntry:
+    """A record of a visibility change, role change or Ownership transfer
+    (VR-08), written in the same transaction as the change (Invariant 7).
+    `details` holds the before/after values."""
+
     id: uuid.UUID
     room_id: uuid.UUID
     actor_user_id: uuid.UUID
@@ -75,6 +99,9 @@ class DocumentVisibility(StrEnum):
 
 @dataclass(frozen=True)
 class Document:
+    """A campaign entry - an NPC, a place, an event... (D-05, D-09). Its
+    Owners, Tags, images and grants are stored separately."""
+
     id: uuid.UUID
     room_id: uuid.UUID
     name: str
@@ -85,6 +112,9 @@ class Document:
 
 @dataclass(frozen=True)
 class DocumentImage:
+    """An image in a Document's gallery, stored in Supabase Storage under
+    `storage_path`; only the path lives in Postgres."""
+
     id: uuid.UUID
     document_id: uuid.UUID
     storage_path: str
@@ -99,6 +129,9 @@ class DocumentImage:
 
 @dataclass(frozen=True)
 class DocumentOwner:
+    """An explicit Owner of a Document (D-12). The Master is an implicit Owner
+    of every Document and has no row."""
+
     document_id: uuid.UUID
     user_id: uuid.UUID
 
