@@ -1128,13 +1128,15 @@ Update this file after every meaningful implementation change.
     require-JSDoc rule, so it is review-only for now.
   - **Found while documenting**: `documents_repo.delete_image` has no
     callers and bypasses what `image_uploads.remove_images` does (Storage
-    cleanup, favorite promotion, Document lock). Left in place with a
-    docstring saying so; worth deleting in a code change.
+    cleanup, favorite promotion, Document lock). Deleted in a follow-up
+    commit on the same branch, so nothing can call it by mistake.
   - Checks: backend ruff (with `D1`), mypy strict, pytest non-integration
     **138/138**; frontend build, oxlint, `npm test` **616/616**. Integration
-    tests not run (documentation only). `ruff format --check` still reports
-    drift in `db/rooms_repo.py` in lines this change didn't touch, and CI
-    doesn't run the formatter.
+    tests not run (documentation only).
+  - **Formatter drift fixed**: `ruff format --check .` reported older
+    drift in `db/rooms_repo.py` and four test files. All five were
+    reformatted (whitespace/line breaks only), so the whole backend now
+    passes it. CI still doesn't run the formatter.
 
 ## In Progress
 
