@@ -160,6 +160,11 @@ Update this file after every meaningful implementation change.
   commit-preview deploys through, with a pattern that another Vercel account
   can't match. Env var set on Render; live once this is merged and
   deployed (see Completed).
+- **Database tests run in CI** (2026-09-23, backend/CI only, branch
+  `ci/integration_tests_postgres`): the 90 tests that were skipped in CI
+  now run there against a throwaway Postgres, with no secrets. Backend CI
+  runs all 244 tests, applies every migration from scratch, and gates
+  coverage on `app/` (≥90%, 94% now) as well as `app/domain` (≥95%).
 
 ## Current Goal
 
@@ -1169,6 +1174,43 @@ Update this file after every meaningful implementation change.
     with
     `curl -i -X OPTIONS https://ttrpg-campaign-notes.onrender.com/account -H "Origin: https://ttrpg-campaign-notes-<hash>-rum11.vercel.app" -H "Access-Control-Request-Method: GET"`,
     which should return `access-control-allow-origin` with that origin.
+  - **Checked live after merge (2026-09-23)**: commit previews are allowed.
+    But so are the look-alike (`…-abc123-evil-rum11.vercel.app`) and
+    branch-alias previews, while unrelated origins and a `.evil.com` suffix
+    are rejected. That is exactly how the looser `[a-z0-9-]+` pattern
+    behaves, so Render's `CORS_ORIGIN_REGEX` holds that one, not the pattern
+    above. Low risk (the session is a Bearer header, not a cookie), but it
+    isn't what was decided: see Next Up.
+- **Database tests in CI (2026-09-23, branch
+  `ci/integration_tests_postgres`):** the backend job used to skip the 90
+  `integration` tests because they ran against the live Supabase project.
+  None of them need Supabase itself: `conftest.py` already signs its own
+  tokens and fakes Storage, and each test runs in a rolled-back savepoint.
+  Only Postgres was missing.
+  - **CI**: a `postgres:17.6` service container (production is 17.6; pinned
+    by digest like the actions), then `tests/ci/supabase_shim.sql`, then
+    `alembic upgrade head`, then the whole `pytest`. The shim recreates only
+    what the migrations use: the `anon`/`authenticated` roles **with
+    Supabase's default grants on new `public` tables**, so the lockdown
+    migrations have real grants to revoke and the 5 security tests check
+    something, plus a minimal `auth.users (id, email)`. Green on the first
+    run: 244/244, every migration applied from an empty database.
+  - **Coverage was under-reported**: `app/api` read 51–70% although every
+    route has API tests. SQLAlchemy's asyncio layer runs queries in
+    greenlets, and coverage lost a route after its first database `await`.
+    `[tool.coverage.run] concurrency = ["greenlet", "thread"]` fixes it:
+    `app/api` 86–100%, `app/` **94%**. New gate ≥90% on `app/`; the ≥95%
+    gate on `app/domain` stays (99%). What's left uncovered is mostly what
+    tests replace on purpose: Storage HTTP calls and the production
+    session's commit path.
+  - **Docs**: `architecture.md` → Continuous Integration rewritten (the "CI
+    runs no database test" section is gone), `code-standards.md` → Testing
+    (backend) no longer requires a full local `pytest` before merging, and
+    the `conftest.py` docstrings say what CI does now.
+  - Not covered by CI: real Storage, differences between the shim and a
+    real Supabase database, concurrency. Running `pytest` against the real
+    project with a `backend/.env` is still worth doing for migration or
+    Supabase-facing changes.
 
 ## In Progress
 
@@ -1176,6 +1218,11 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
+- **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only, no code):
+  set it to `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app`
+  and redeploy. Then the look-alike
+  `https://ttrpg-campaign-notes-abc123-evil-rum11.vercel.app` must get no
+  `access-control-allow-origin`, while a commit preview still does.
 0. **Verify the new Document card in a browser** — the layout below `sm`
    (where a half-width image column is tightest), that the carousel arrows
    really do beat the card's link overlay, that clicking an image still
