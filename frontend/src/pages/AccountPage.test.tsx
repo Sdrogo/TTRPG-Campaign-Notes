@@ -67,13 +67,50 @@ describe('AccountPage', () => {
     expect(nameField()).toHaveValue('Io');
   });
 
-  // The email comes from Google and cannot be edited here.
+  // The email comes from the sign-in provider and cannot be edited here.
   it('shows the email read-only', async () => {
     render();
 
     const email = await screen.findByRole('textbox', { name: /Email/ });
     expect(email).toHaveValue('io@example.com');
     expect(email).toHaveAttribute('readonly');
+    expect(email.parentElement?.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('uses account-neutral wording for linked Google and GitHub identities', async () => {
+    const session = {
+      ...fakeSession(),
+      user: {
+        id: 'user-1',
+        app_metadata: { provider: 'google' },
+        identities: [{ provider: 'google' }, { provider: 'github' }],
+      },
+    };
+    sessionMock.mockReturnValue({ session, loading: false } as SessionState);
+    render();
+
+    expect(
+      await screen.findByText("L'email è quella dell'account con cui hai effettuato l'accesso."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Accedi con Google:/)).not.toBeInTheDocument();
+  });
+
+  it('uses the same account-neutral wording when provider metadata is missing', async () => {
+    render();
+
+    expect(
+      await screen.findByText("L'email è quella dell'account con cui hai effettuato l'accesso."),
+    ).toBeInTheDocument();
+  });
+
+  // X, for one, may not share an email address.
+  it('says so when the account shared no email', async () => {
+    fetchMock.mockResolvedValue({ ...rawAccount(), email: null });
+    render();
+
+    const email = await screen.findByRole('textbox', { name: /Email/ });
+    expect(email).toHaveValue('');
+    expect(email).toHaveAttribute('placeholder', 'Nessuna email condivisa dal tuo account');
   });
 
   it('offers a way back when the account cannot be loaded', async () => {

@@ -1,5 +1,5 @@
 import { Button, Divider, Grid, Group, Stack, Text, TextInput, Title } from '@mantine/core';
-import { GoogleLogoIcon, SignOutIcon } from '@phosphor-icons/react';
+import { EnvelopeSimpleIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
   useAccount,
@@ -113,9 +113,10 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
           <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
             <TextInput
               label="Email"
-              description="Accedi con Google: l'email è quella del tuo account Google."
+              description="L'email è quella dell'account con cui hai effettuato l'accesso."
               value={profile.email ?? ''}
-              leftSection={<GoogleLogoIcon size={16} />}
+              placeholder="Nessuna email condivisa dal tuo account"
+              leftSection={<EnvelopeSimpleIcon size={16} aria-hidden="true" />}
               readOnly
             />
           </Grid.Col>

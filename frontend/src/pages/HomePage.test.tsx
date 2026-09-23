@@ -41,11 +41,29 @@ describe('HomePage', () => {
     expect(screen.queryByRole('button', { name: /Accedi con Google/ })).not.toBeInTheDocument();
   });
 
-  it('offers Google sign-in when nobody is signed in', () => {
+  it('offers every enabled provider when nobody is signed in', () => {
     renderWithProviders(<HomePage />);
 
-    expect(screen.getByRole('button', { name: /Accedi con Google/ })).toBeInTheDocument();
+    const buttons = screen.getAllByRole('button', { name: /^Accedi con / });
+    expect(buttons.map((button) => button.textContent)).toEqual([
+      'Accedi con Google',
+      'Accedi con Discord',
+      'Accedi con Facebook',
+      'Accedi con GitHub',
+      'Accedi con X',
+    ]);
+    buttons.forEach((button) => expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true'));
     expect(screen.getByText('Accedi per continuare.')).toBeInTheDocument();
+  });
+
+  // D-07: Google is the preferred login, so it's the one filled button.
+  it('keeps Google as the primary action', () => {
+    renderWithProviders(<HomePage />);
+
+    const filled = screen
+      .getAllByRole('button', { name: /^Accedi con / })
+      .filter((button) => button.getAttribute('data-variant') === 'filled');
+    expect(filled.map((button) => button.textContent)).toEqual(['Accedi con Google']);
   });
 
   // Supabase has one configured Site URL, but the app also runs on Vercel
@@ -58,6 +76,23 @@ describe('HomePage', () => {
 
     expect(signInWithOAuth).toHaveBeenCalledWith({
       provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+  });
+
+  it.each([
+    ['Discord', 'discord'],
+    ['Facebook', 'facebook'],
+    ['GitHub', 'github'],
+    ['X', 'x'],
+  ])('signs in with %s, returning to the current origin', async (label, provider) => {
+    const user = userEvent.setup();
+    renderWithProviders(<HomePage />);
+
+    await user.click(screen.getByRole('button', { name: `Accedi con ${label}` }));
+
+    expect(signInWithOAuth).toHaveBeenCalledWith({
+      provider,
       options: { redirectTo: window.location.origin },
     });
   });

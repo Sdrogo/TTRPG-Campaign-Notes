@@ -102,6 +102,12 @@ other icon set.
   rendered by `HomePage` and by `PageLayout`, so every signed-in page
   has it. The account avatar is the only way to the Account page and
   to sign out.
+- **Sign-in screen** (`HomePage`, signed out; spec 08): centered book
+  icon, title, "Accedi per continuare.", then one full-width button per
+  provider in `AUTH_PROVIDERS` order, in a column capped at 320px. Google
+  is the only `filled` (accent) button, since it's the preferred login
+  (D-07); the others are `default`. Each has the provider's Phosphor
+  logo.
 - **Page cards** (`PageCard`): the main card(s) of a page — Document,
   Comments, Account sections — are full width inside `PageLayout`'s
   symmetric, screen-growing margins, so they're centered horizontally
@@ -118,8 +124,9 @@ other icon set.
   profilo" enabled only when the form is dirty, success toast on
   save). From `md` up the avatar is a left column (4/12, 3/12 at `lg`)
   beside the form, so fields don't stretch across the whole card; below
-  `md` they stack with a divider. "Accesso": the Google email,
-  read-only, with the sign-out row ("Esci", outline, not red — signing
+  `md` they stack with a divider. "Accesso": the account email,
+  read-only, with a generic envelope and provider-neutral description
+  (and a placeholder when the account shared no email), with the sign-out row ("Esci", outline, not red — signing
   out isn't destructive) beside it from `md` up, below it on phones.
 - **Showing a user**: always `UserAvatar user={…}` (photo, or initials
   of their display name/email) plus `userDisplayName` — never an email
