@@ -56,6 +56,45 @@ split in two instead of one. Everything else applies to both.
   component is justified only when Mantine has no equivalent or the
   app needs domain-specific behavior (`VisibilityBadge`, `RoleTag`).
 
+## Testing (frontend)
+
+Vitest + React Testing Library, run with `npm test`; coverage with
+`npm run test:coverage` (config and floors in `vitest.config.ts`).
+
+- A test file sits next to what it tests (`useRooms.ts` →
+  `useRooms.test.ts`), so a module and its tests move together.
+- **Query the way a user finds things**: by role and accessible name
+  (`getByRole('button', { name: 'Elimina' })`), not by class or
+  test id. A query that needs a `data-testid` usually means the
+  component is missing a label. Mantine notes: a `Select` and a
+  `MultiSelect` are `combobox`, and a `required` field's label
+  includes the asterisk, so match it with a regex.
+- **Render through `src/test/utils.tsx`** (`renderWithProviders`,
+  `renderHookWithProviders`), which supplies the same
+  Mantine/TanStack Query/Router stack as `main.tsx`. Its `wrapper`
+  option nests an extra provider when one is needed. Never build a
+  bare `QueryClient` in a test: the shared one disables retries, so
+  a deliberate failure doesn't stall the test.
+- **Mock at the network boundary, not deeper**: `vi.mock` on
+  `lib/apiClient`, then assert the path, method and body a hook
+  sends. Fixtures in `src/test/fixtures.ts` stay in the backend's
+  snake_case wire shape — building them in camelCase would test the
+  mapping against itself. When one test triggers a refetch, mock per
+  route (path + method), or an invalidated list comes back as the
+  single object the mutation returned.
+- **Test the rule, not the render**: prefer a case that pins a
+  decision from `requirements.md`/`architecture.md` (a `VR-`
+  visibility rule, who may edit, what the cache invalidates) over one
+  that restates the markup. Where a test encodes such a rule, name
+  the ID in a comment.
+- Permission flags (`can_edit`, `can_delete`, …) come from the
+  backend: assert the UI *honors* them, never that it re-derives
+  them.
+- `src/test/setup.ts` holds the jsdom gaps Mantine and Embla need
+  (`ResizeObserver`, `IntersectionObserver`, `matchMedia`,
+  `document.fonts`, pointer capture). Add to it rather than stubbing
+  the same thing per file.
+
 ## Backend (FastAPI)
 
 - Route handlers stay thin: parse/validate input (Pydantic), call
