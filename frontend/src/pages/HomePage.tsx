@@ -45,7 +45,7 @@ export function HomePage() {
               key={provider.id}
               fullWidth
               variant={provider.id === 'google' ? 'filled' : 'default'}
-              leftSection={<provider.icon size={20} />}
+              leftSection={<provider.icon size={20} aria-hidden="true" />}
               onClick={() => signInWith(provider)}
             >
               Accedi con {provider.label}

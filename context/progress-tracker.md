@@ -168,8 +168,9 @@ Update this file after every meaningful implementation change.
 - **Auth expansion complete** (2026-09-23, frontend + a small backend
   change, branch `feature/auth_expansion`; spec `context/feature/08 - Auth
   expansion.md`): sign-in with Discord, Facebook, GitHub and X alongside
-  Google, which stays the highlighted button. The Account page names the
-  provider used. GitHub/X handles now count as a default display name.
+  Google, which stays the highlighted button. The Account page shows the
+  account email with provider-neutral wording and icon. GitHub/X handles
+  now count as a default display name.
   Frontend **628/628**, backend **250/250**, build/lint/ruff/mypy clean.
   **Each provider not yet tried end to end against Supabase** (Next Up 0b).
 
@@ -1230,10 +1231,11 @@ Update this file after every meaningful implementation change.
     only filled button, since D-07 makes it the preferred login. The redirect
     is still `window.location.origin`, so previews and localhost work for
     every provider through the same Redirect URLs allowlist. The Account
-    page's "Accesso" email field now shows the provider's logo and name
-    ("Accedi con Discord: l'email è quella del tuo account Discord."),
-    a generic envelope and wording when the provider is unknown, and a
-    placeholder when the account shared no email (X may withhold it).
+    page's "Accesso" email field uses a generic envelope and wording
+    regardless of linked identities or `app_metadata.provider` (which
+    may be the signup provider), and a placeholder when the account
+    shared no email (X may withhold it). Provider logos on the sign-in
+    buttons and the Account envelope are decorative to assistive technology.
   - **Backend** (`app/auth/dependencies.py`): the default display name also
     falls back to `user_name`/`preferred_username`, since GitHub and X
     users often have no profile name, only a handle. A real name still wins.
@@ -1245,7 +1247,8 @@ Update this file after every meaningful implementation change.
   - **Tests**: frontend +12 (`authProviders.test.ts` 4; `HomePage`: all five
     buttons in order, Google the only filled one, each provider calls
     `signInWithOAuth` with its id and the current origin; `AccountPage`:
-    provider named, generic fallback, no-email placeholder). Backend +6 in
+    linked Google/GitHub identities use generic wording, no-email
+    placeholder). Backend +6 in
     `tests/test_auth.py`: claims for Google/Discord/GitHub-handle-only/X,
     name preferred over handle, no claims → unset. The new backend tests
     need no database.
@@ -1259,8 +1262,9 @@ Update this file after every meaningful implementation change.
   - **Docs**: `architecture.md` (Auth row + Auth and Access Model, profile
     defaults), `project-overview.md` (flow, features, scope: other
     providers moved from Out of Scope to In Scope), `ui-context.md`
-    (sign-in screen, Accesso card). `requirements.md` not edited
-    (protected): see Open Questions.
+    (sign-in screen, Accesso card). `requirements.md` FR-A1 was edited
+    to list all five providers; other passages still need a product pass
+    (see Open Questions).
 
 ## In Progress
 
@@ -1317,14 +1321,15 @@ Update this file after every meaningful implementation change.
 
 ## Open Questions
 
-- **`requirements.md` still says Google only (new, 2026-09-23, spec 08)**:
-  FR-A1 ("Login con Google"), UC-01, section 5's User ("login con
-  Google"), NFR-03 ("dai dati Google…") and the MoSCoW **Won't** row
-  ("supporto ad altri provider di login") all predate spec 08, which
-  enabled Discord, Facebook, GitHub and X. D-07 ("Google, modalità
-  preferita") still holds, and the UI keeps Google primary. Not edited
-  (protected file); needs a product pass to move other providers out of
-  Won't and widen FR-A1/NFR-03. NFR-03's privacy rule (only identity and
+- **Remaining `requirements.md` passages (new, 2026-09-23, spec 08)**:
+  FR-A1 now lists Google (OAuth), Discord, Facebook, GitHub e X. UC-01,
+  section 5's User ("login con Google"), NFR-03 ("dai dati Google…") and
+  the MoSCoW **Won't** row ("supporto ad altri provider di login") still
+  predate spec 08. D-07 ("Google, modalità preferita") still holds, and
+  the UI keeps Google primary. These unchanged passages need a product
+  pass to move other providers out of Won't and widen UC-01, section 5's
+  User and NFR-03.
+  NFR-03's privacy rule (only identity and
   avatar are used) is kept for every provider: nothing beyond name,
   picture and email is read.
 - OQ-09 · OQ-10 from `requirements.md` (section 6) are formally

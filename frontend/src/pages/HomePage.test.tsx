@@ -52,6 +52,7 @@ describe('HomePage', () => {
       'Accedi con GitHub',
       'Accedi con X',
     ]);
+    buttons.forEach((button) => expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true'));
     expect(screen.getByText('Accedi per continuare.')).toBeInTheDocument();
   });
 

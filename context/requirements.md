@@ -225,7 +225,7 @@ erDiagram
 ## 10. Requisiti funzionali
 
 ### Autenticazione
-- **FR-A1** Login con Google (OAuth), Discordm Facebook, GitHub,X.
+- **FR-A1** Login con Google (OAuth), Discord, Facebook, GitHub e X.
 - **FR-A2** Profilo base (nome, avatar) e logout.
 
 ### Stanze e membri

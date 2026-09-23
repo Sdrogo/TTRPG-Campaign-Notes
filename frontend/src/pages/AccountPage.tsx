@@ -9,7 +9,6 @@ import {
   useUpdateProfile,
   useUploadAvatar,
 } from '../hooks/useAccount';
-import { authProviderOf, type AuthProvider } from '../lib/authProviders';
 import { toProfilePatch } from '../lib/profile';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
@@ -31,10 +30,10 @@ export function AccountPage() {
     return <SignInRequired>Accedi per gestire il tuo account.</SignInRequired>;
   }
 
-  return <AccountLoader provider={authProviderOf(session.user.app_metadata?.provider)} />;
+  return <AccountLoader />;
 }
 
-function AccountLoader({ provider }: { provider: AuthProvider | undefined }) {
+function AccountLoader() {
   const account = useAccount(true);
 
   if (account.isLoading) {
@@ -49,17 +48,10 @@ function AccountLoader({ provider }: { provider: AuthProvider | undefined }) {
     );
   }
 
-  return <AccountContent profile={account.data} provider={provider} />;
+  return <AccountContent profile={account.data} />;
 }
 
-function AccountContent({
-  profile,
-  provider,
-}: {
-  profile: AccountProfile;
-  /** The provider this session signed in with; undefined if unknown. */
-  provider: AuthProvider | undefined;
-}) {
+function AccountContent({ profile }: { profile: AccountProfile }) {
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
   const importAvatar = useImportAvatar();
@@ -121,12 +113,10 @@ function AccountContent({
           <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
             <TextInput
               label="Email"
-              description={accessDescription(provider)}
+              description="L'email è quella dell'account con cui hai effettuato l'accesso."
               value={profile.email ?? ''}
               placeholder="Nessuna email condivisa dal tuo account"
-              leftSection={
-                provider ? <provider.icon size={16} /> : <EnvelopeSimpleIcon size={16} />
-              }
+              leftSection={<EnvelopeSimpleIcon size={16} aria-hidden="true" />}
               readOnly
             />
           </Grid.Col>
@@ -151,11 +141,4 @@ function AccountContent({
       </AccountSection>
     </PageLayout>
   );
-}
-
-/** Explains where the read-only email comes from, naming the provider when known. */
-function accessDescription(provider: AuthProvider | undefined): string {
-  return provider
-    ? `Accedi con ${provider.label}: l'email è quella del tuo account ${provider.label}.`
-    : "L'email è quella dell'account con cui hai effettuato l'accesso.";
 }

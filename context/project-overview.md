@@ -65,10 +65,11 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 ### Authentication & Account
 - Google sign‑in (FR-A1), plus Discord, Facebook, GitHub and X
   (spec 08, 2026-09-23). Google stays the highlighted option.
-- Profile defaults from the sign-in provider (Google first, now any of them): the first time a user opens the app,
-  their Google name and picture are copied in for whatever they haven't
+- Profile defaults from the sign-in provider (Google, Discord, Facebook,
+  GitHub or X): the first time a user opens the app, their sign-in
+  provider's name and picture are copied in for whatever they haven't
   set. It happens once; later edits and removals stick, and changes to
-  the Google account don't overwrite them.
+  the sign-in provider's account don't overwrite them.
 - Account page (FR-A2), opened from the circular avatar at the top
   right of every page: display name, avatar (file upload or image
   URL, cropped to a square and resized server‑side, always shown as a
@@ -166,7 +167,7 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 - Native mobile apps.
 - Email/password or magic-link login; providers beyond the five above.
 - Changing the login email or deleting the account from inside the
-  app — the email comes from the sign-in provider and the Account page
+  app — the email comes from the account and the Account page
   only shows it.
 - Fully sealed content hidden even from the Master (VR-09) — future
   evolution, not prioritized.

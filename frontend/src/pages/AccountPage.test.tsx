@@ -74,19 +74,28 @@ describe('AccountPage', () => {
     const email = await screen.findByRole('textbox', { name: /Email/ });
     expect(email).toHaveValue('io@example.com');
     expect(email).toHaveAttribute('readonly');
+    expect(email.parentElement?.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('names the provider the session signed in with', async () => {
-    const session = { ...fakeSession(), user: { id: 'user-1', app_metadata: { provider: 'discord' } } };
+  it('uses account-neutral wording for linked Google and GitHub identities', async () => {
+    const session = {
+      ...fakeSession(),
+      user: {
+        id: 'user-1',
+        app_metadata: { provider: 'google' },
+        identities: [{ provider: 'google' }, { provider: 'github' }],
+      },
+    };
     sessionMock.mockReturnValue({ session, loading: false } as SessionState);
     render();
 
     expect(
-      await screen.findByText("Accedi con Discord: l'email è quella del tuo account Discord."),
+      await screen.findByText("L'email è quella dell'account con cui hai effettuato l'accesso."),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/Accedi con Google:/)).not.toBeInTheDocument();
   });
 
-  it('falls back to a generic hint when the provider is unknown', async () => {
+  it('uses the same account-neutral wording when provider metadata is missing', async () => {
     render();
 
     expect(

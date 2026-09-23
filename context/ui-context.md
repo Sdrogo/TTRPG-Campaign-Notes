@@ -124,10 +124,9 @@ other icon set.
   profilo" enabled only when the form is dirty, success toast on
   save). From `md` up the avatar is a left column (4/12, 3/12 at `lg`)
   beside the form, so fields don't stretch across the whole card; below
-  `md` they stack with a divider. "Accesso": the email from the
-  sign-in provider, read-only, with that provider's logo and name in the
-  description (a generic envelope and wording when unknown; a
-  placeholder when the account shared no email), with the sign-out row ("Esci", outline, not red — signing
+  `md` they stack with a divider. "Accesso": the account email,
+  read-only, with a generic envelope and provider-neutral description
+  (and a placeholder when the account shared no email), with the sign-out row ("Esci", outline, not red — signing
   out isn't destructive) beside it from `md` up, below it on phones.
 - **Showing a user**: always `UserAvatar user={…}` (photo, or initials
   of their display name/email) plus `userDisplayName` — never an email
