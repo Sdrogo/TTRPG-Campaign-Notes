@@ -264,3 +264,154 @@ async def test_metadata_update_keeps_images(
     )
     assert response.status_code == 200
     assert len(response.json()["images"]) == 1
+
+
+# --- Favorite image (spec 07) ---------------------------------------------
+
+
+def _images(body: dict[str, object]) -> list[dict[str, object]]:
+    """`body["images"]` is typed `object`; the asserts below need a list."""
+    images = body["images"]
+    assert isinstance(images, list)
+    return images
+
+
+async def _set_favorite(
+    client: AsyncClient, room_id: str, document_id: str, image_id: str, token: str
+) -> tuple[int, dict[str, object]]:
+    response = await client.put(
+        f"/rooms/{room_id}/documents/{document_id}/images/{image_id}/favorite",
+        headers=_auth_headers(token),
+    )
+    return response.status_code, response.json() if response.content else {}
+
+
+async def test_first_uploaded_image_is_the_favorite(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(client, make_token)
+
+    _, first = await _upload(client, room_id, document_id, master_token, _png())
+    assert [i["is_favorite"] for i in _images(first)] == [True]
+
+    _, second = await _upload(client, room_id, document_id, master_token, _png())
+    assert [i["is_favorite"] for i in _images(second)] == [True, False]
+
+
+async def test_owner_can_move_the_favorite_and_it_leads_the_gallery(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(client, make_token)
+    await _upload(client, room_id, document_id, master_token, _png())
+    _, body = await _upload(client, room_id, document_id, master_token, _png())
+    first_id, second_id = (str(i["id"]) for i in _images(body))
+
+    status_code, updated = await _set_favorite(
+        client, room_id, document_id, second_id, master_token
+    )
+    assert status_code == 200
+    # Exactly one favorite, and it now leads the list the card reads.
+    assert [i["id"] for i in _images(updated)] == [second_id, first_id]
+    assert [i["is_favorite"] for i in _images(updated)] == [True, False]
+
+    # Not just in the response of the write - a fresh read agrees.
+    fetched = (
+        await client.get(
+            f"/rooms/{room_id}/documents/{document_id}", headers=_auth_headers(master_token)
+        )
+    ).json()
+    assert [i["id"] for i in _images(fetched)] == [second_id, first_id]
+
+
+async def test_a_player_who_is_not_an_owner_cannot_set_the_favorite(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room_id, document_id, master_token, player_token = await _room_with_master_and_document(
+        client, make_token
+    )
+    _, body = await _upload(client, room_id, document_id, master_token, _png())
+    image_id = str(_images(body)[0]["id"])
+
+    status_code, _ = await _set_favorite(client, room_id, document_id, image_id, player_token)
+    assert status_code == 403
+
+
+async def test_setting_an_unknown_image_as_favorite_is_not_found(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(client, make_token)
+    await _upload(client, room_id, document_id, master_token, _png())
+
+    status_code, _ = await _set_favorite(
+        client, room_id, document_id, str(uuid.uuid4()), master_token
+    )
+    assert status_code == 404
+
+
+async def test_deleting_the_favorite_promotes_the_oldest_survivor(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(client, make_token)
+    await _upload(client, room_id, document_id, master_token, _png())
+    await _upload(client, room_id, document_id, master_token, _png())
+    _, body = await _upload(client, room_id, document_id, master_token, _png())
+    first_id, second_id, third_id = (str(i["id"]) for i in _images(body))
+
+    # The first upload is the favorite; deleting it must hand the flag on
+    # rather than leave the Document without one.
+    response = await client.delete(
+        f"/rooms/{room_id}/documents/{document_id}/images/{first_id}",
+        headers=_auth_headers(master_token),
+    )
+    assert response.status_code == 204
+
+    fetched = (
+        await client.get(
+            f"/rooms/{room_id}/documents/{document_id}", headers=_auth_headers(master_token)
+        )
+    ).json()
+    assert [i["id"] for i in _images(fetched)] == [second_id, third_id]
+    assert [i["is_favorite"] for i in _images(fetched)] == [True, False]
+
+
+async def test_deleting_the_last_image_leaves_the_document_without_a_favorite(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(client, make_token)
+    _, body = await _upload(client, room_id, document_id, master_token, _png())
+    image_id = str(_images(body)[0]["id"])
+
+    response = await client.delete(
+        f"/rooms/{room_id}/documents/{document_id}/images/{image_id}",
+        headers=_auth_headers(master_token),
+    )
+    assert response.status_code == 204
+
+    fetched = (
+        await client.get(
+            f"/rooms/{room_id}/documents/{document_id}", headers=_auth_headers(master_token)
+        )
+    ).json()
+    assert fetched["images"] == []
+
+    # A later upload starts the rule over.
+    _, after = await _upload(client, room_id, document_id, master_token, _png())
+    assert [i["is_favorite"] for i in _images(after)] == [True]

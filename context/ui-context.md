@@ -186,12 +186,39 @@ other icon set.
   a `DocumentMentionsProvider roomId={…} currentUserId={…}` above them
   (the Document page and the Documents list have one); without it they
   behave as a plain textarea / plain text.
+- **Document card** (`DocumentCard`, restructured 2026-09-23, spec
+  `07 - Document visualizazion refactor_beckend`): three stacked blocks. The
+  *Title block* is the Document name (display font) with its
+  `VisibilityBadge` on the same row, and the Tags on a line of their own
+  below (`TagList`). Under it, description and images sit side by side: the
+  description on the left, the image block on the right at **half the card's
+  width** (`flex: 0 0 50%`), lifted to 5 clamped lines when there are images
+  so the two columns balance; with no images the description takes the whole
+  row, and a Document without one says "Nessuna descrizione.". The Owner line
+  closes the card on a line of its own.
+  The images are `DocumentCardImages`: the same carousel as the detail page
+  but read-only and short (120px, 140px from `sm`), `objectFit: cover`,
+  favorite first. Dragging is off and the arrows stay visible rather than
+  appearing on hover, since a touch screen has no hover.
+  **The card's link covers the card instead of wrapping it** — an absolutely
+  positioned `Link` as the last child, at `zIndex: 1`. An `<a>` may not
+  contain the carousel's buttons, so those come back on top at `zIndex: 2`
+  (`controls`/`indicators` in the Carousel's `styles`). Clicking anywhere
+  else, images included, opens the Document.
 - **Documents list Tag filter** (`TagFilter`, 2026-09-22): a searchable,
   clearable `MultiSelect` with a `Funnel` icon above the grid (max 480px
   from `sm` up), options shown as `#Tag`. It is bound to the URL
   (`?tag=…`, repeatable, Tags combine with AND), which is where a Tag
   mention leads. No match: "Nessun Documento con questo Tag." plus a
   "Mostra tutti" button.
+- **Favorite image** (`DocumentImageGallery`, 2026-09-23, spec 07): an Owner
+  picks the image that leads the Document — and so its card — with a heart
+  `ActionIcon` at the **bottom right of the image itself**, opposite the
+  delete button at the top right. Filled and `--accent-primary` when it's the
+  favorite, `regular` weight otherwise; the current favorite's button is
+  disabled (`aria-pressed`), so the heart reads as a state, not just a
+  button. Unlike deleting, it asks for no confirmation — picking a different
+  image undoes it — and it is not gated on edit mode, only on being an Owner.
 - **Modals**: centered overlay with backdrop blur, used for Room
   creation, invitations, and the Reveal confirmation (Reveal is
   destructive/irreversible in effect, so it always confirms in a

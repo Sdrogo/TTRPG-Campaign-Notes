@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
+import { toStoredImage } from '../lib/images';
 import type { Comment, CommentFormValues } from '../types/comment';
 import type { DocumentVisibility } from '../types/document';
-import type { PendingImage, StoredImage } from '../types/image';
+import type { PendingImage, RawImage } from '../types/image';
 
 interface RawComment {
   id: string;
@@ -14,7 +15,7 @@ interface RawComment {
   created_at: string;
   updated_at: string;
   deleted: boolean;
-  images: StoredImage[];
+  images: RawImage[];
   can_edit: boolean;
   can_delete: boolean;
 }
@@ -30,7 +31,7 @@ function toComment(raw: RawComment): Comment {
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
     deleted: raw.deleted,
-    images: raw.images.map((image) => ({ id: image.id, url: image.url })),
+    images: raw.images.map(toStoredImage),
     canEdit: raw.can_edit,
     canDelete: raw.can_delete,
   };

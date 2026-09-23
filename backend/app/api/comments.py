@@ -280,7 +280,7 @@ async def _attach_image(
     )
     # Locks the Document first, so the Comment's own count below can't race
     # a concurrent attachment either.
-    current_count = await ensure_room_for_another_image(session, document)
+    document_images = await ensure_room_for_another_image(session, document)
     images = await _comment_images(session, comment_id)
     try:
         ensure_can_attach_image(comment, membership.user_id, len(images))
@@ -289,7 +289,7 @@ async def _attach_image(
 
     data = await fetch_url(source) if isinstance(source, str) else await read_upload(source)
     image = await store_image(
-        session, document, membership.user_id, data, current_count, post_id=comment.id
+        session, document, membership.user_id, data, document_images, post_id=comment.id
     )
     all_images = [*images, image]
     return _to_response(
