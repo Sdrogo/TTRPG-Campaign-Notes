@@ -13,7 +13,7 @@ from app.api.documents import router as documents_router
 from app.api.invitations import router as invitations_router
 from app.api.rooms import router as rooms_router
 from app.api.tags import router as tags_router
-from app.config import settings
+from app.config import Settings, settings
 from app.db.storage_cleanup import run_sweeper
 
 
@@ -26,15 +26,23 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         await sweeper
 
 
-app = FastAPI(title="TTRPG Campaign Notes API", lifespan=lifespan)
+def add_cors(target: FastAPI, config: Settings) -> None:
+    """Allows the frontend's origins: the exact `cors_origins`, plus any
+    origin matching `cors_origin_regex` (Vercel preview deploys). A function
+    rather than inline so tests can check a preflight against a throwaway
+    app wired exactly like this one."""
+    target.add_middleware(
+        CORSMiddleware,
+        allow_origins=config.cors_origins,
+        allow_origin_regex=config.cors_origin_regex,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+app = FastAPI(title="TTRPG Campaign Notes API", lifespan=lifespan)
+add_cors(app, settings)
 
 app.include_router(auth_router)
 app.include_router(account_router)
