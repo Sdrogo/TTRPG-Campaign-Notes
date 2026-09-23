@@ -67,13 +67,41 @@ describe('AccountPage', () => {
     expect(nameField()).toHaveValue('Io');
   });
 
-  // The email comes from Google and cannot be edited here.
+  // The email comes from the sign-in provider and cannot be edited here.
   it('shows the email read-only', async () => {
     render();
 
     const email = await screen.findByRole('textbox', { name: /Email/ });
     expect(email).toHaveValue('io@example.com');
     expect(email).toHaveAttribute('readonly');
+  });
+
+  it('names the provider the session signed in with', async () => {
+    const session = { ...fakeSession(), user: { id: 'user-1', app_metadata: { provider: 'discord' } } };
+    sessionMock.mockReturnValue({ session, loading: false } as SessionState);
+    render();
+
+    expect(
+      await screen.findByText("Accedi con Discord: l'email è quella del tuo account Discord."),
+    ).toBeInTheDocument();
+  });
+
+  it('falls back to a generic hint when the provider is unknown', async () => {
+    render();
+
+    expect(
+      await screen.findByText("L'email è quella dell'account con cui hai effettuato l'accesso."),
+    ).toBeInTheDocument();
+  });
+
+  // X, for one, may not share an email address.
+  it('says so when the account shared no email', async () => {
+    fetchMock.mockResolvedValue({ ...rawAccount(), email: null });
+    render();
+
+    const email = await screen.findByRole('textbox', { name: /Email/ });
+    expect(email).toHaveValue('');
+    expect(email).toHaveAttribute('placeholder', 'Nessuna email condivisa dal tuo account');
   });
 
   it('offers a way back when the account cannot be loaded', async () => {

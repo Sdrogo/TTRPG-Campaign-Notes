@@ -1,20 +1,21 @@
 import { Stack, Title, Text, Button, Loader } from '@mantine/core';
-import { BookOpenIcon, GoogleLogoIcon } from '@phosphor-icons/react';
+import { BookOpenIcon } from '@phosphor-icons/react';
+import { AUTH_PROVIDERS, type AuthProvider } from '../lib/authProviders';
 import { supabase } from '../lib/supabaseClient';
 import { useSession } from '../hooks/useSession';
 import { AppHeader } from '../components/AppHeader';
 import { RoomsPage } from './RoomsPage';
 
-/** `/`: the Google sign-in screen, or the user's Rooms once signed in. */
+/** `/`: the sign-in screen (one button per provider), or the user's Rooms once signed in. */
 export function HomePage() {
   const { session, loading: sessionLoading } = useSession();
 
-  const signInWithGoogle = () => {
+  const signInWith = (provider: AuthProvider) => {
     // Come back to whatever origin we're on (production, a Vercel preview,
     // or localhost) instead of Supabase's single configured Site URL. Each
     // origin must be listed in Supabase's Redirect URLs allowlist.
     void supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: provider.id,
       options: { redirectTo: window.location.origin },
     });
   };
@@ -29,7 +30,7 @@ export function HomePage() {
 
   if (!session) {
     return (
-      <Stack align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
+      <Stack align="center" justify="center" gap="md" px="md" style={{ minHeight: '100svh' }}>
         <BookOpenIcon size={48} weight="duotone" color="var(--text-muted)" />
         <Title order={1} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
           TTRPG Campaign Notes
@@ -37,9 +38,20 @@ export function HomePage() {
         <Text c="dimmed" ta="center">
           Accedi per continuare.
         </Text>
-        <Button leftSection={<GoogleLogoIcon size={20} />} onClick={signInWithGoogle}>
-          Accedi con Google
-        </Button>
+        <Stack gap="sm" w="100%" maw={320}>
+          {/* Google stays the primary action: it's the preferred login (D-07). */}
+          {AUTH_PROVIDERS.map((provider) => (
+            <Button
+              key={provider.id}
+              fullWidth
+              variant={provider.id === 'google' ? 'filled' : 'default'}
+              leftSection={<provider.icon size={20} />}
+              onClick={() => signInWith(provider)}
+            >
+              Accedi con {provider.label}
+            </Button>
+          ))}
+        </Stack>
       </Stack>
     );
   }

@@ -1,5 +1,5 @@
 import { Button, Divider, Grid, Group, Stack, Text, TextInput, Title } from '@mantine/core';
-import { GoogleLogoIcon, SignOutIcon } from '@phosphor-icons/react';
+import { EnvelopeSimpleIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
   useAccount,
@@ -9,6 +9,7 @@ import {
   useUpdateProfile,
   useUploadAvatar,
 } from '../hooks/useAccount';
+import { authProviderOf, type AuthProvider } from '../lib/authProviders';
 import { toProfilePatch } from '../lib/profile';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
@@ -30,10 +31,10 @@ export function AccountPage() {
     return <SignInRequired>Accedi per gestire il tuo account.</SignInRequired>;
   }
 
-  return <AccountLoader />;
+  return <AccountLoader provider={authProviderOf(session.user.app_metadata?.provider)} />;
 }
 
-function AccountLoader() {
+function AccountLoader({ provider }: { provider: AuthProvider | undefined }) {
   const account = useAccount(true);
 
   if (account.isLoading) {
@@ -48,10 +49,17 @@ function AccountLoader() {
     );
   }
 
-  return <AccountContent profile={account.data} />;
+  return <AccountContent profile={account.data} provider={provider} />;
 }
 
-function AccountContent({ profile }: { profile: AccountProfile }) {
+function AccountContent({
+  profile,
+  provider,
+}: {
+  profile: AccountProfile;
+  /** The provider this session signed in with; undefined if unknown. */
+  provider: AuthProvider | undefined;
+}) {
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
   const importAvatar = useImportAvatar();
@@ -113,9 +121,12 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
           <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
             <TextInput
               label="Email"
-              description="Accedi con Google: l'email è quella del tuo account Google."
+              description={accessDescription(provider)}
               value={profile.email ?? ''}
-              leftSection={<GoogleLogoIcon size={16} />}
+              placeholder="Nessuna email condivisa dal tuo account"
+              leftSection={
+                provider ? <provider.icon size={16} /> : <EnvelopeSimpleIcon size={16} />
+              }
               readOnly
             />
           </Grid.Col>
@@ -140,4 +151,11 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
       </AccountSection>
     </PageLayout>
   );
+}
+
+/** Explains where the read-only email comes from, naming the provider when known. */
+function accessDescription(provider: AuthProvider | undefined): string {
+  return provider
+    ? `Accedi con ${provider.label}: l'email è quella del tuo account ${provider.label}.`
+    : "L'email è quella dell'account con cui hai effettuato l'accesso.";
 }
