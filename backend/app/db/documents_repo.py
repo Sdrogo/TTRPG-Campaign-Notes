@@ -235,14 +235,6 @@ async def delete_images(session: AsyncSession, image_ids: Sequence[uuid.UUID]) -
         await session.flush()
 
 
-async def delete_image(session: AsyncSession, image_id: uuid.UUID) -> None:
-    """Deletes one image row only - no Storage cleanup, no favorite promotion.
-    Currently unused; removing images goes through
-    `app.api.image_uploads.remove_images`."""
-    await session.execute(delete(DocumentImageRow).where(DocumentImageRow.id == image_id))
-    await session.flush()
-
-
 async def list_owner_ids(session: AsyncSession, document_id: uuid.UUID) -> list[uuid.UUID]:
     """The Document's explicit Owners. The Master's implicit Ownership isn't
     listed (D-12)."""
