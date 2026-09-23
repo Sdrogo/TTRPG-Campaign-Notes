@@ -27,6 +27,19 @@ function member(overrides: Partial<Member> = {}): Member {
   };
 }
 
+// Answers the Comment list route with `list`, and anything else (a write,
+// an image attach) with `onWrite`. A test that only reads can omit it.
+function mockRoutes(
+  list: unknown[],
+  onWrite: (path: string) => Promise<unknown> = () => Promise.resolve(),
+) {
+  fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
+    path === '/rooms/room-1/documents/doc-1/comments' && !init?.method
+      ? Promise.resolve(list)
+      : onWrite(path),
+  );
+}
+
 const members = [
   member(),
   member({ userId: 'user-2', displayName: 'Master', email: 'master@example.com' }),
@@ -53,7 +66,7 @@ beforeEach(() => {
 
 describe('CommentSection', () => {
   it('invites the first Comment when there are none', async () => {
-    fetchMock.mockResolvedValue([]);
+    mockRoutes([]);
     render();
 
     expect(await screen.findByText(/Nessun commento ancora/)).toBeInTheDocument();
@@ -61,16 +74,15 @@ describe('CommentSection', () => {
   });
 
   it('lists the Comments with a count', async () => {
-    fetchMock.mockResolvedValue([
-      rawComment(),
-      rawComment({ id: 'comment-2', body: 'Secondo', author_id: 'user-2' }),
-    ]);
+    mockRoutes([rawComment(), rawComment({ id: 'comment-2', body: 'Secondo', author_id: 'user-2' })]);
     render();
 
     await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(2));
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
+  // Not through `mockRoutes`: its list route always resolves, and this test
+  // needs the load itself to fail.
   it('reports a failed load', async () => {
     fetchMock.mockRejectedValue(new Error('offline'));
     render();
@@ -79,11 +91,11 @@ describe('CommentSection', () => {
   });
 
   it('posts a new Comment', async () => {
-    fetchMock.mockResolvedValue([]);
+    mockRoutes([]);
     const { user } = render();
     await screen.findByText(/Nessun commento ancora/);
 
-    fetchMock.mockResolvedValue(rawComment());
+    mockRoutes([rawComment()], () => Promise.resolve(rawComment()));
     await user.type(composer(), 'Ricordate il sigillo.');
     await user.click(screen.getByRole('button', { name: /Pubblica/ }));
 
@@ -96,11 +108,12 @@ describe('CommentSection', () => {
   });
 
   it('clears the composer once the Comment is saved', async () => {
-    fetchMock.mockResolvedValue([]);
+    mockRoutes([]);
+
     const { user } = render();
     await screen.findByText(/Nessun commento ancora/);
 
-    fetchMock.mockResolvedValue(rawComment());
+    mockRoutes([rawComment()], () => Promise.resolve(rawComment()));
     await user.type(composer(), 'Ricordate il sigillo.');
     await user.click(screen.getByRole('button', { name: /Pubblica/ }));
 
@@ -108,7 +121,7 @@ describe('CommentSection', () => {
   });
 
   it('reports a failed post', async () => {
-    fetchMock.mockResolvedValue([]);
+    mockRoutes([]);
     const { user } = render();
     await screen.findByText(/Nessun commento ancora/);
 
@@ -122,11 +135,11 @@ describe('CommentSection', () => {
   // The Comment itself saved; only some images didn't. Losing the text
   // would be worse than reporting the partial failure.
   it('warns when the Comment saved but an image did not', async () => {
-    fetchMock.mockResolvedValue([]);
+    mockRoutes([]);
     const { user } = render();
     await screen.findByText(/Nessun commento ancora/);
 
-    fetchMock.mockImplementation((path: string) =>
+    mockRoutes([rawComment()], (path) =>
       path.includes('/images')
         ? Promise.reject(new Error('Too many images'))
         : Promise.resolve(rawComment()),
@@ -149,10 +162,11 @@ describe('CommentSection', () => {
 
 describe('filtering', () => {
   async function renderWithComments() {
-    fetchMock.mockResolvedValue([
+    mockRoutes([
       rawComment({ id: 'comment-1', body: 'Il sigillo', author_id: 'user-1' }),
       rawComment({ id: 'comment-2', body: 'La porta', author_id: 'user-2' }),
     ]);
+
     const handle = render();
     await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(2));
     return handle;
@@ -193,7 +207,7 @@ describe('filtering', () => {
 
 describe('deleting from the list', () => {
   it('deletes the Comment the action belongs to', async () => {
-    fetchMock.mockResolvedValue([rawComment()]);
+    mockRoutes([rawComment()], () => Promise.resolve(rawComment()));
     const { user } = render();
     await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
 
@@ -209,7 +223,7 @@ describe('deleting from the list', () => {
   });
 
   it('reports a failed delete', async () => {
-    fetchMock.mockResolvedValue([rawComment()]);
+    mockRoutes([rawComment()], () => Promise.resolve(rawComment()));
     const { user } = render();
     await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
 

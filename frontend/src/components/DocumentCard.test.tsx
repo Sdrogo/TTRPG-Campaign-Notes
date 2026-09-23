@@ -1,10 +1,11 @@
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders } from '../test/utils';
 import { DocumentCard } from './DocumentCard';
 import type { Document } from '../types/document';
 import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
+import { DocumentMentionsContext } from '../hooks/useDocumentMentions';
 
 const tags: Tag[] = [
   { id: 'tag-1', name: 'Luoghi', category: null },
@@ -104,10 +105,36 @@ describe('DocumentCard', () => {
   // The card is a link already, and an <a> may not contain another - so a
   // mention in the description is colored but not linked here.
   it('does not nest a mention link inside the card link', () => {
-    render({ description: 'Accanto a #PNG.' });
+    renderWithProviders(
+      <DocumentCard
+        document={document({ description: 'Accanto a #PNG.' })}
+        roomId="room-1"
+        tags={tags}
+        members={members}
+      />,
+      {
+        wrapper: ({ children }) => (
+          <DocumentMentionsContext
+            value={{
+              roomId: 'room-1',
+              documents: [],
+              tags,
+              canCreateDocument: false,
+              canCreateTag: false,
+              create: async () => {
+                throw new Error('not used');
+              },
+            }}
+          >
+            {children}
+          </DocumentMentionsContext>
+        ),
+      },
+    );
 
-    const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(1);
-    expect(within(links[0]).queryByTestId('tag-mention')).not.toBeInTheDocument();
+    const mention = screen.getByTestId('tag-mention');
+    expect(mention.tagName).not.toBe('A');
+    // The card's own link, and no second one nested inside it.
+    expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 });

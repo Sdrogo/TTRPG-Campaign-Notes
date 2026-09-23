@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../test/utils';
@@ -143,10 +143,10 @@ describe('CommentComposer', () => {
     await user.click(submitButton());
 
     const reset = onSubmit.mock.calls[0][1] as () => void;
-    await user.click(submitButton());
-    reset();
+    
+    act(() => reset());
 
-    expect(await screen.findByRole('textbox', { name: 'Testo del commento' })).toHaveValue('');
+    expect(body()).toHaveValue('');
   });
 });
 
@@ -280,11 +280,12 @@ describe('images', () => {
   it('leaves the file picker looking enabled at the cap, but inert', async () => {
     const { user } = render({ existingImages: fullComment });
     const picker = screen.getByRole('button', { name: 'Aggiungi immagini' });
+    const openDialog = vi.spyOn(HTMLInputElement.prototype, 'click');
 
     await user.click(picker);
 
     expect(picker).toBeEnabled();
-    expect(screen.getAllByAltText('Immagine allegata')).toHaveLength(4);
+    expect(openDialog).not.toHaveBeenCalled();
   });
 
   it('frees a slot again when an image is removed', async () => {

@@ -126,25 +126,32 @@ describe('what the viewer may create', () => {
   it('lets a Player create neither when the Room forbids Documents', async () => {
     routes.members = [rawMember({ user_id: 'user-1', role: 'player', is_admin: false })];
     routes.room = rawRoom({ players_can_create_documents: false });
-    const { result } = mount();
+    const { result, queryClient } = mount();
 
     await waitFor(() => expect(result.current?.documents).toHaveLength(1));
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(result.current?.canCreateDocument).toBe(false);
     expect(result.current?.canCreateTag).toBe(false);
   });
 
+  // Administrator is stackable on top of Player (D-11): it adds Tags on top
+  // of whatever the Room already allows the Player to do.
   it('lets an Administrator Player create Tags', async () => {
     routes.members = [rawMember({ user_id: 'user-1', role: 'player', is_admin: true })];
-    const { result } = mount();
 
-    await waitFor(() => expect(result.current?.canCreateTag).toBe(true));
+    const { result, queryClient } = mount();
+
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+    expect(result.current?.canCreateTag).toBe(true);
+    expect(result.current?.canCreateDocument).toBe(true);
   });
 
   // Not a member of this Room (or the list hasn't arrived): create nothing.
   it('lets a non-member create nothing', async () => {
-    const { result } = mount('someone-else');
+    const { result, queryClient } = mount('someone-else');
 
     await waitFor(() => expect(result.current?.documents).toHaveLength(1));
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(result.current?.canCreateDocument).toBe(false);
     expect(result.current?.canCreateTag).toBe(false);
   });

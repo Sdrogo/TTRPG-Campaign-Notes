@@ -88,5 +88,6 @@ describe('CreateRoomModal', () => {
     await user.keyboard('{Escape}');
 
     expect(onClose).toHaveBeenCalled();
+    expect(screen.getByRole('textbox', { name: /Nome/ })).toHaveValue('');
   });
 });
