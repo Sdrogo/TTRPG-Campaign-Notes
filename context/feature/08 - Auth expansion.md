@@ -2,6 +2,7 @@
 
 - we want to expand login auth option for the app.
 
+
 ## Implementation
 
 - The following Authentication Sign In / Providers are been enabled in Supabase:
