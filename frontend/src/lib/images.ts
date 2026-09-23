@@ -61,3 +61,11 @@ export function remainingImageSlots(
 ): number {
   return Math.max(0, max - (existingCount - removedCount) - pendingCount);
 }
+
+export type ImageOrientation = 'landscape' | 'portrait';
+
+/** Classify natural image dimensions in pixels for card framing. Images whose
+ *  height is no greater than their width, including squares, are landscape. */
+export function imageOrientation(width: number, height: number): ImageOrientation {
+  return height > width ? 'portrait' : 'landscape';
+}

@@ -1,34 +1,46 @@
+import { useState } from 'react';
 import { Box } from '@mantine/core';
 import { Carousel } from '@mantine/carousel';
+import { imageOrientation, type ImageOrientation } from '../lib/images';
 import type { DocumentImage } from '../types/document';
 
 // Half the card's width (spec 07), so this stays short enough that the
-// description beside it still reads as the main content.
-const CARD_IMAGE_HEIGHT = { base: 120, sm: 140 };
+// description beside it still reads as the main content. A landscape image
+// is usually shorter than this; a portrait one is exactly this tall.
+const CARD_IMAGE_MAX_HEIGHT = { base: 160, sm: 200 };
 
 // The whole card is a link (see `DocumentCard`), which sits above the images
 // so clicking one opens the Document. The carousel's own controls have to
 // come back out on top of it, or they'd just navigate too.
 const ABOVE_CARD_LINK = 2;
 
+const centered = { display: 'flex', alignItems: 'center', justifyContent: 'center' } as const;
+
 interface DocumentCardImagesProps {
   images: DocumentImage[];
   documentName: string;
 }
 
-/** The Document's images on its card, favorite first. Read-only: managing
- *  them (adding, deleting, moving the favorite) stays on the detail page. */
+/** Show the Document's images in their supplied order (normally favorite first).
+ *  Each image keeps its aspect ratio; multiple images use a carousel with
+ *  independently framed slides. Returns null when there are no images.
+ *  Read-only: managing them (adding, deleting, moving the favorite) stays on
+ *  the detail page. */
 export function DocumentCardImages({ images, documentName }: DocumentCardImagesProps) {
   if (images.length === 0) {
     return null;
   }
 
   if (images.length === 1) {
-    return <CardImage image={images[0]} alt={documentName} />;
+    return (
+      <Box style={centered}>
+        <CardImage image={images[0]} alt={documentName} />
+      </Box>
+    );
   }
 
   return (
-    <Box h={CARD_IMAGE_HEIGHT}>
+    <Box h={CARD_IMAGE_MAX_HEIGHT}>
       <Carousel
         height="100%"
         withIndicators
@@ -43,7 +55,7 @@ export function DocumentCardImages({ images, documentName }: DocumentCardImagesP
         }}
       >
         {images.map((image, index) => (
-          <Carousel.Slide key={image.id}>
+          <Carousel.Slide key={image.id} style={centered}>
             <CardImage image={image} alt={`${documentName} (${index + 1})`} />
           </Carousel.Slide>
         ))}
@@ -52,20 +64,44 @@ export function DocumentCardImages({ images, documentName }: DocumentCardImagesP
   );
 }
 
+/** Frame by orientation (spec 07.1): size landscapes to the available width
+ *  (up to the height cap), portraits to the available height, and unloaded
+ *  images to a full-height placeholder. */
+function sizeFor(orientation: ImageOrientation | null) {
+  switch (orientation) {
+    case 'landscape':
+      return { w: '100%', h: 'auto', mah: CARD_IMAGE_MAX_HEIGHT };
+    case 'portrait':
+      return { w: 'auto', h: CARD_IMAGE_MAX_HEIGHT };
+    case null:
+      return { w: '100%', h: CARD_IMAGE_MAX_HEIGHT, bg: 'var(--bg-base)' };
+  }
+}
+
+/** Show an uncropped image, switching from a placeholder to an orientation-based
+ *  frame once it loads. */
 function CardImage({ image, alt }: { image: DocumentImage; alt: string }) {
+  const [orientation, setOrientation] = useState<ImageOrientation | null>(null);
+
   return (
     <Box
-      h={CARD_IMAGE_HEIGHT}
-      bg="var(--bg-base)"
-      style={{ borderRadius: 'var(--mantine-radius-sm)', overflow: 'hidden' }}
-    >
-      <img
-        src={image.url}
-        alt={alt}
-        loading="lazy"
-        draggable={false}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-      />
-    </Box>
+      component="img"
+      src={image.url}
+      alt={alt}
+      loading="lazy"
+      draggable={false}
+      data-orientation={orientation ?? undefined}
+      onLoad={(event) => {
+        const { naturalWidth, naturalHeight } = event.currentTarget;
+        setOrientation(imageOrientation(naturalWidth, naturalHeight));
+      }}
+      {...sizeFor(orientation)}
+      maw="100%"
+      style={{
+        display: 'block',
+        objectFit: 'contain',
+        borderRadius: 'var(--mantine-radius-sm)',
+      }}
+    />
   );
 }

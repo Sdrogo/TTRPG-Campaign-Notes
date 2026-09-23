@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   MAX_IMAGES_PER_COMMENT,
+  imageOrientation,
   isHttpUrl,
   leadImage,
   pendingFromFile,
@@ -94,5 +95,19 @@ describe('leadImage', () => {
 
   it('is undefined for a Document with no images', () => {
     expect(leadImage([])).toBeUndefined();
+  });
+});
+
+describe('imageOrientation', () => {
+  it('frames a wider image as landscape', () => {
+    expect(imageOrientation(1600, 900)).toBe('landscape');
+  });
+
+  it('frames a taller image as portrait', () => {
+    expect(imageOrientation(900, 1600)).toBe('portrait');
+  });
+
+  it('frames a square image as landscape', () => {
+    expect(imageOrientation(800, 800)).toBe('landscape');
   });
 });

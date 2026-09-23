@@ -197,8 +197,13 @@ other icon set.
   row, and a Document without one says "Nessuna descrizione.". The Owner line
   closes the card on a line of its own.
   The images are `DocumentCardImages`: the same carousel as the detail page
-  but read-only and short (120px, 140px from `sm`), `objectFit: cover`,
-  favorite first. Dragging is off and the arrows stay visible rather than
+  but read-only and short (at most 160px, 200px from `sm`), favorite first.
+  **Each image keeps its own aspect ratio** (spec 07.1): once it has loaded,
+  its natural size decides its frame (`imageOrientation` in `lib/images.ts`)
+  — a landscape (or square) image fills the column's width, a portrait one
+  the full height, centered — with `objectFit: contain`, so nothing is
+  cropped. Before load it holds a full-size `--bg-base` placeholder. Slides
+  of one carousel are framed independently. Dragging is off and the arrows stay visible rather than
   appearing on hover, since a touch screen has no hover.
   **The card's link covers the card instead of wrapping it** — an absolutely
   positioned `Link` as the last child, at `zIndex: 1`. An `<a>` may not
