@@ -67,16 +67,21 @@
 `.github/workflows/ci.yml` runs on every pull request and on pushes to `main`, as two independent jobs matching the two codebases.
 
 - **Frontend**: `npm ci`, `npm run lint`, `npm run build` (which type-checks), then `npm run test:coverage`. The coverage bar lives in `frontend/vitest.config.ts`, not in the workflow, so it is versioned with the code it measures and the same command gates locally and in CI.
-- **Backend**: `ruff check` (which also fails on a public module, class or function in `app/` without a docstring — pydocstyle `D1`, see `code-standards.md` → Documentation), `mypy app tests`, then `pytest -m "not integration"` with a coverage gate on `app/domain`.
+- **Backend**: `ruff check` (which also fails on a public module, class or function in `app/` without a docstring — pydocstyle `D1`, see `code-standards.md` → Documentation), `mypy app tests`, then `alembic upgrade head` and the **whole** `pytest` suite against a throwaway Postgres, with coverage gates on `app/domain` and `app/`.
 
-**Backend CI runs no test that touches the database, and therefore needs no secrets.** The backend's API tests run against the *real* Supabase project (`tests/conftest.py::db_session` wraps each in a savepoint that is rolled back). That is fine on a developer's machine, but putting those credentials in GitHub Actions would mean every pull request — including one from a fork — connecting to the live database, so CI deliberately skips them. The split is automatic: `tests/conftest.py::pytest_collection_modifyitems` marks any test that requests the `db_session` fixture as `integration`, so a newly written database test is excluded without anyone editing the workflow. As of 2026-09-23 that is 138 tests in CI and 90 left for a developer to run locally before merging.
+**Backend CI runs every test, database tests included, and needs no secrets** (since 2026-09-23; before that it skipped the 90 database tests). The database tests don't need Supabase itself: `tests/conftest.py` signs its own tokens and fakes Storage, and `db_session` wraps each test in a savepoint that is rolled back. They only need Postgres, so the job runs a `postgres:17.6` service container (production's version, pinned by digest) and nothing ever connects to the live project, on fork PRs either. Two Supabase-specific pieces the migrations rely on are recreated first by `backend/tests/ci/supabase_shim.sql`:
 
-Two consequences worth knowing:
+- the `anon` and `authenticated` roles, **with Supabase's default grants on new `public` tables**, so the tables the early migrations create really are exposed and `tests/test_database_security.py` proves the lockdown migrations close them, rather than passing on a database that was never open;
+- a minimal `auth.users` (`id`, `email`), which early migrations reference.
 
-- The gate is on `app/domain` (≥95%, currently 99%) rather than on `app/` as a whole, because the domain layer is where this document puts every invariant, and the non-database tests cover it on their own. Coverage of `app/api` and `app/db` is only meaningful with the integration tests, so gating on it in CI would measure the wrong thing.
-- `app/db/session.py` builds the SQLAlchemy engine at import time, so the job sets a syntactically valid `DATABASE_URL` that is never connected to. Without it, importing the app fails before any test runs.
+A migration that reaches further into Supabase fails CI at the Migrate step; extend the shim. Every migration also runs from an empty database on every PR, which nothing checked before.
 
-**Running the integration tests is still a manual step before merging**: `pytest` with a real `backend/.env`. CI passing does not mean the API layer was exercised.
+Things worth knowing:
+
+- Coverage runs with `concurrency = ["greenlet", "thread"]` (`backend/pyproject.toml`). SQLAlchemy's asyncio layer runs database calls in greenlets, and without it coverage loses a route after its first database `await` (`app/api` read 51–70% instead of 86–100%).
+- Two gates: ≥95% on `app/domain`, the home of every invariant (99% now), and ≥90% on all of `app/` (94% when set). What stays uncovered is mostly what tests replace on purpose: the Storage HTTP calls (`app/db/storage.py`) and the production session's commit path (`app/db/session.py`).
+- The `integration` marker (`tests/conftest.py::pytest_collection_modifyitems`, automatic for any test using `db_session`) no longer affects CI. It remains so a developer without a database can run `pytest -m "not integration"`.
+- Not covered by CI: real Supabase Storage, any difference between the shim and a real Supabase database, and concurrency (the single-session fixture can't drive two connections). Running `pytest` against the real project with a `backend/.env` is still possible and worth doing for changes to migrations or to Supabase-facing code.
 
 ## Invariants
 

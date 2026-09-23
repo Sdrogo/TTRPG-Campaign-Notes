@@ -143,18 +143,21 @@ Vitest + React Testing Library, run with `npm test`; coverage with
 
 pytest, split by what a test needs rather than by what it covers.
 
-- A test that requests the `db_session` fixture talks to the **real**
-  Supabase project and is marked `integration` automatically
-  (`tests/conftest.py`). Don't add the marker by hand, and don't
-  reach for the database from a test that doesn't need it — that
-  quietly moves it out of the CI job.
+- A test that requests the `db_session` fixture talks to whatever
+  database `DATABASE_URL` points at (the Supabase project locally, a
+  throwaway Postgres in CI) and is marked `integration` automatically
+  (`tests/conftest.py`). Don't add the marker by hand, and don't reach
+  for the database from a test that doesn't need it: those tests are
+  slower and need a database to run at all.
 - Business rules belong in `tests/test_domain_*.py`, with plain
   dataclasses and no database, mirroring the rule that
-  `app/domain/` is framework-independent. These are the tests CI
-  gates on (≥95% of `app/domain`), so a new invariant needs one.
-- `pytest -m "not integration"` is what CI runs. **Run the full
-  `pytest` locally before merging** — CI green does not mean the API
-  layer was exercised. See `architecture.md` → Continuous Integration.
+  `app/domain/` is framework-independent. CI gates on ≥95% of
+  `app/domain`, so a new invariant needs one.
+- CI runs the whole suite, database tests included, and gates on ≥90%
+  of `app/`. Locally, `pytest -m "not integration"` needs no database;
+  the full `pytest` needs a `backend/.env`. A new migration that uses
+  more of Supabase than `tests/ci/supabase_shim.sql` provides extends
+  the shim. See `architecture.md` → Continuous Integration.
 
 ## Backend (FastAPI)
 
