@@ -126,6 +126,18 @@ Update this file after every meaningful implementation change.
   **`src/pages` is still untested** (7 routed views, ~0%) — that's what
   holds the overall figure at 80 rather than the nineties; see Next Up #1.
   No production code was changed by this unit.
+- **CI complete** (2026-09-23): `.github/workflows/ci.yml`, the repo's first
+  automated check, running on every PR and on pushes to `main`. Frontend:
+  lint, build (type-check) and `npm run test:coverage`, gated by the
+  thresholds in `vitest.config.ts`. Backend: ruff, mypy, and
+  `pytest -m "not integration"` gated at 95% of `app/domain` (currently
+  99%). **Needs no secrets**: the 90 tests that talk to the real Supabase
+  project are deselected, marked automatically from their use of the
+  `db_session` fixture, so CI never connects to the live database and fork
+  PRs work. 138 backend tests run in CI in under a second. The trade-off is
+  that **CI green does not mean the API layer was exercised** — running the
+  full `pytest` locally is still a pre-merge step. See `architecture.md` →
+  Continuous Integration.
 
 ## Current Goal
 

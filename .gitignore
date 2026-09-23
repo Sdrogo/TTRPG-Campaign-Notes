@@ -39,5 +39,8 @@ backend/.mypy_cache/
 backend/.ruff_cache/
 backend/*.egg-info/
 backend/**/*.egg-info/
+backend/.coverage
+backend/coverage.xml
+backend/htmlcov/
 backend/build/
 backend/dist/

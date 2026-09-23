@@ -95,6 +95,23 @@ Vitest + React Testing Library, run with `npm test`; coverage with
   `document.fonts`, pointer capture). Add to it rather than stubbing
   the same thing per file.
 
+## Testing (backend)
+
+pytest, split by what a test needs rather than by what it covers.
+
+- A test that requests the `db_session` fixture talks to the **real**
+  Supabase project and is marked `integration` automatically
+  (`tests/conftest.py`). Don't add the marker by hand, and don't
+  reach for the database from a test that doesn't need it — that
+  quietly moves it out of the CI job.
+- Business rules belong in `tests/test_domain_*.py`, with plain
+  dataclasses and no database, mirroring the rule that
+  `app/domain/` is framework-independent. These are the tests CI
+  gates on (≥95% of `app/domain`), so a new invariant needs one.
+- `pytest -m "not integration"` is what CI runs. **Run the full
+  `pytest` locally before merging** — CI green does not mean the API
+  layer was exercised. See `architecture.md` → Continuous Integration.
+
 ## Backend (FastAPI)
 
 - Route handlers stay thin: parse/validate input (Pydantic), call

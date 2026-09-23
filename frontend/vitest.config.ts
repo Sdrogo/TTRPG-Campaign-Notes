@@ -32,7 +32,9 @@ export default defineConfig({
         'src/types/**',
         'src/vite-env.d.ts',
       ],
-      reporter: ['text', 'html'],
+      // json-summary is what CI reads to print the table on the PR's
+      // check summary (.github/workflows/ci.yml).
+      reporter: ['text', 'html', 'json-summary'],
       // Floors, not targets: they sit just under what the suite reaches
       // today (80.1 / 70.6 / 83.8 / 79.8), so coverage can't erode silently.
       // Raise them when the measured numbers move up; never lower one to

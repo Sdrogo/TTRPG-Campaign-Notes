@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same branch makes the running check irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check and build
+        run: npm run build
+
+      # The gate: thresholds live in frontend/vitest.config.ts, so the bar
+      # is versioned with the code rather than buried in this workflow.
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Summarise coverage
+        if: always()
+        run: |
+          {
+            echo '### Frontend coverage'
+            echo
+            if [ -f coverage/coverage-summary.json ]; then
+              node -e "
+                const t = require('./coverage/coverage-summary.json').total;
+                const row = (k) => \`| \${k} | \${t[k].pct}% | \${t[k].covered}/\${t[k].total} |\`;
+                console.log('| Metric | % | Covered |');
+                console.log('|---|---|---|');
+                for (const k of ['statements', 'branches', 'functions', 'lines']) console.log(row(k));
+              "
+            else
+              echo '_No coverage report produced._'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      # Never connected to. `app/db/session.py` builds the engine at import
+      # time, so the URL has to parse even though no test in this job opens
+      # a connection - the ones that would are marked `integration` and
+      # deselected below. See "Backend CI" in context/architecture.md.
+      DATABASE_URL: postgresql+asyncpg://ci:ci@127.0.0.1:5432/ci
+      SUPABASE_URL: http://supabase.invalid
+      SUPABASE_SECRET_KEY: ci-not-a-real-key
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # The floor this project declares (`requires-python`, and mypy's
+          # `python_version`), so CI checks the contract rather than only
+          # whatever a developer happens to run.
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Type-check
+        run: mypy app tests
+
+      # `-m "not integration"` drops every test that needs the real Supabase
+      # database, so this job needs no secrets and runs on fork PRs too.
+      # The marker is applied automatically to anything using the
+      # `db_session` fixture (tests/conftest.py), so a new database test is
+      # excluded without anyone updating this file.
+      #
+      # The gate is on `app/domain`, which architecture.md makes the home of
+      # every invariant, and which these tests cover on their own.
+      - name: Test with coverage
+        run: |
+          pytest -m "not integration" \
+            --cov=app/domain \
+            --cov-report=term-missing \
+            --cov-fail-under=95
+
+      - name: Summarise coverage
+        if: always()
+        run: |
+          {
+            echo '### Backend coverage (app/domain)'
+            echo
+            echo '```'
+            coverage report --include='app/domain/*' 2>/dev/null || echo 'No coverage data.'
+            echo '```'
+            echo
+            echo '_Integration tests against Supabase are not run here; they need the live database._'
+          } >> "$GITHUB_STEP_SUMMARY"
