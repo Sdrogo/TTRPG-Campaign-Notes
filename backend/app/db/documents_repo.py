@@ -2,8 +2,9 @@ import uuid
 from collections import defaultdict
 from collections.abc import Sequence
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 
 from app.db.models import (
     DocumentImageRow,
@@ -14,6 +15,26 @@ from app.db.models import (
 )
 from app.domain.documents import NewDocumentPlan
 from app.domain.models import Document, DocumentImage, DocumentVisibility
+
+
+async def _ids_by_document(
+    session: AsyncSession,
+    document_column: InstrumentedAttribute[uuid.UUID],
+    id_column: InstrumentedAttribute[uuid.UUID],
+    document_ids: Sequence[uuid.UUID],
+) -> dict[uuid.UUID, list[uuid.UUID]]:
+    """One query over a Document-to-id join table, grouped by Document.
+    Backs the batch `*_for_documents` readers below; a Document with no rows
+    maps to an empty list."""
+    grouped: dict[uuid.UUID, list[uuid.UUID]] = defaultdict(list)
+    if not document_ids:
+        return grouped
+    result = await session.execute(
+        select(document_column, id_column).where(document_column.in_(document_ids))
+    )
+    for document_id, value in result.tuples():
+        grouped[document_id].append(value)
+    return grouped
 
 
 def _document_from_row(row: DocumentRow) -> Document:
@@ -80,7 +101,17 @@ def _image_from_row(row: DocumentImageRow) -> DocumentImage:
         storage_path=row.storage_path,
         created_by=row.created_by,
         post_id=row.post_id,
+        is_favorite=row.is_favorite,
     )
+
+
+# The Document's favorite leads the gallery, the rest stay in upload order
+# (spec 07), so the card and the detail page agree on which image comes first.
+_GALLERY_ORDER = (
+    DocumentImageRow.is_favorite.desc(),
+    DocumentImageRow.created_at,
+    DocumentImageRow.id,
+)
 
 
 async def lock_document(session: AsyncSession, document_id: uuid.UUID) -> None:
@@ -96,9 +127,27 @@ async def list_images(session: AsyncSession, document_id: uuid.UUID) -> list[Doc
     result = await session.execute(
         select(DocumentImageRow)
         .where(DocumentImageRow.document_id == document_id)
-        .order_by(DocumentImageRow.created_at, DocumentImageRow.id)
+        .order_by(*_GALLERY_ORDER)
     )
     return [_image_from_row(row) for row in result.scalars()]
+
+
+async def list_images_for_documents(
+    session: AsyncSession, document_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[DocumentImage]]:
+    """`list_images` for many Documents in one query, so the Documents list
+    doesn't fan out per card. Each Document keeps `list_images`' order."""
+    by_document: dict[uuid.UUID, list[DocumentImage]] = defaultdict(list)
+    if not document_ids:
+        return by_document
+    result = await session.execute(
+        select(DocumentImageRow)
+        .where(DocumentImageRow.document_id.in_(document_ids))
+        .order_by(*_GALLERY_ORDER)
+    )
+    for row in result.scalars():
+        by_document[row.document_id].append(_image_from_row(row))
+    return by_document
 
 
 async def insert_image(session: AsyncSession, image: DocumentImage) -> None:
@@ -109,6 +158,7 @@ async def insert_image(session: AsyncSession, image: DocumentImage) -> None:
             storage_path=image.storage_path,
             created_by=image.created_by,
             post_id=image.post_id,
+            is_favorite=image.is_favorite,
         )
     )
     await session.flush()
@@ -131,6 +181,28 @@ async def list_images_for_posts(
     return by_post
 
 
+async def set_favorite_image(
+    session: AsyncSession, document_id: uuid.UUID, image_id: uuid.UUID
+) -> None:
+    """Moves the favorite flag to `image_id` (spec 07: only one at a time).
+    The previous favorite is cleared and flushed first - the partial unique
+    index would otherwise reject the instant both rows are true."""
+    await session.execute(
+        update(DocumentImageRow)
+        .where(
+            DocumentImageRow.document_id == document_id,
+            DocumentImageRow.is_favorite,
+            DocumentImageRow.id != image_id,
+        )
+        .values(is_favorite=False)
+    )
+    await session.flush()
+    await session.execute(
+        update(DocumentImageRow).where(DocumentImageRow.id == image_id).values(is_favorite=True)
+    )
+    await session.flush()
+
+
 async def delete_images(session: AsyncSession, image_ids: Sequence[uuid.UUID]) -> None:
     if image_ids:
         await session.execute(delete(DocumentImageRow).where(DocumentImageRow.id.in_(image_ids)))
@@ -147,6 +219,15 @@ async def list_owner_ids(session: AsyncSession, document_id: uuid.UUID) -> list[
         select(DocumentOwnerRow.user_id).where(DocumentOwnerRow.document_id == document_id)
     )
     return list(result.scalars())
+
+
+async def list_owner_ids_for_documents(
+    session: AsyncSession, document_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[uuid.UUID]]:
+    """`list_owner_ids` for many Documents in one query."""
+    return await _ids_by_document(
+        session, DocumentOwnerRow.document_id, DocumentOwnerRow.user_id, document_ids
+    )
 
 
 async def insert_owner(session: AsyncSession, document_id: uuid.UUID, user_id: uuid.UUID) -> None:
@@ -174,6 +255,18 @@ async def list_selective_grant_ids(
     return list(result.scalars())
 
 
+async def list_selective_grant_ids_for_documents(
+    session: AsyncSession, document_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[uuid.UUID]]:
+    """`list_selective_grant_ids` for many Documents in one query."""
+    return await _ids_by_document(
+        session,
+        DocumentVisibilityGrantRow.document_id,
+        DocumentVisibilityGrantRow.user_id,
+        document_ids,
+    )
+
+
 async def set_selective_grants(
     session: AsyncSession, document_id: uuid.UUID, user_ids: Sequence[uuid.UUID]
 ) -> None:
@@ -194,6 +287,15 @@ async def list_tag_ids_for_document(
         select(DocumentTagRow.tag_id).where(DocumentTagRow.document_id == document_id)
     )
     return list(result.scalars())
+
+
+async def list_tag_ids_for_documents(
+    session: AsyncSession, document_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[uuid.UUID]]:
+    """`list_tag_ids_for_document` for many Documents in one query."""
+    return await _ids_by_document(
+        session, DocumentTagRow.document_id, DocumentTagRow.tag_id, document_ids
+    )
 
 
 async def set_document_tags(
