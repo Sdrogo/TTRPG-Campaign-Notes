@@ -22,13 +22,16 @@ jobs:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v5
+      # Actions are pinned by commit SHA, not by tag: a tag can be moved to
+      # point at different code, and CI runs with repository access. The
+      # trailing comment is the version that SHA is, so bumps stay readable.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           # Neither job pushes, so don't leave the token behind in
           # .git/config where anything running later could reach it.
           persist-credentials: false
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: '24'
           cache: npm
@@ -84,11 +87,11 @@ jobs:
       SUPABASE_SECRET_KEY: ci-not-a-real-key
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           # The floor this project declares (`requires-python`, and mypy's
           # `python_version`), so CI checks the contract rather than only

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -413,12 +413,12 @@ describe('mentions', () => {
     render();
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    await waitFor(() =>
-      expect(within(screen.getByTestId('tag-mention')).queryByText('#Luoghi')).toBeDefined(),
-    );
-    expect(screen.getByTestId('tag-mention').closest('a')).toHaveAttribute(
-      'href',
-      '/rooms/room-1/documents?tag=tag-1',
-    );
+
+    // `findBy*` waits and then throws if the mention never renders. The
+    // earlier `queryBy* ... toBeDefined()` could not fail: a missing element
+    // comes back as `null`, which is defined.
+    const mention = await screen.findByTestId('tag-mention');
+    expect(mention).toHaveTextContent('#Luoghi');
+    expect(mention.closest('a')).toHaveAttribute('href', '/rooms/room-1/documents?tag=tag-1');
   });
 });
