@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
-import type { Document, DocumentImage, DocumentVisibility } from '../types/document';
+import { toStoredImage } from '../lib/images';
+import type { Document, DocumentVisibility } from '../types/document';
+import type { RawImage } from '../types/image';
 
 interface RawDocument {
   id: string;
@@ -8,7 +10,7 @@ interface RawDocument {
   name: string;
   description: string;
   visibility: DocumentVisibility;
-  images: DocumentImage[];
+  images: RawImage[];
   tag_ids: string[];
   owner_ids: string[];
   selective_user_ids: string[];
@@ -21,7 +23,9 @@ function toDocument(raw: RawDocument): Document {
     name: raw.name,
     description: raw.description,
     visibility: raw.visibility,
-    images: raw.images.map((image) => ({ id: image.id, url: image.url })),
+    // Already favorite-first: the backend orders the gallery, so the card
+    // and the detail page never disagree about which image leads.
+    images: raw.images.map(toStoredImage),
     tagIds: raw.tag_ids,
     ownerIds: raw.owner_ids,
     selectiveUserIds: raw.selective_user_ids,
@@ -174,6 +178,21 @@ export function useImportDocumentImage(roomId: string, documentId: string) {
           json: { url },
         }),
       ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useSetFavoriteImage(roomId: string, documentId: string) {
+  const invalidate = useInvalidateDocument(roomId, documentId);
+  return useMutation({
+    mutationFn: async (imageId: string) =>
+      toDocument(
+        await apiFetch<RawDocument>(
+          `/rooms/${roomId}/documents/${documentId}/images/${imageId}/favorite`,
+          { method: 'PUT' },
+        ),
+      ),
+    // The card in the list leads with this image too, so both caches go.
     onSuccess: invalidate,
   });
 }

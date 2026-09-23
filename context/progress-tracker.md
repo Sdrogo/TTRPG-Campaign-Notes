@@ -101,6 +101,18 @@ Update this file after every meaningful implementation change.
 - **Private image bucket complete** (2026-09-22, backend only): the
   `document-images` bucket is now private and every image URL is a
   1-hour signed link. Closes the "Document image privacy" open question.
+- **Document card images + Tags complete** (2026-09-23, branch
+  `feature/document_card_images_tags`; spec `context/feature/07 - Document
+  visualizazion refactor_beckend.md`): a `DocumentCard` in the Documents list
+  now shows the Document's Tags on their own line under the title and its
+  images as a carousel at half the card's width, with the Owner line at the
+  bottom. Adds the **favorite image** — the one that leads a Document, picked
+  by an Owner with a heart on the image itself — as a real column with a
+  partial unique index and a migration, and makes the Documents list read the
+  whole page in a fixed number of queries instead of ~6 per Document.
+  Backend and frontend committed separately. Backend **226/226** tests, mypy
+  and ruff clean; frontend `npm run build`, `npm run lint` and `npm test`
+  **88/88** pass. **Not visually verified in a browser** (see Session Notes).
 
 ## Current Goal
 
@@ -974,20 +986,75 @@ Update this file after every meaningful implementation change.
     for Tags appearing in the list and passes **32/32**. Screenshots
     checked by eye. Not yet tried live by a signed-in user.
 
+- Document card images + Tags (spec `07 - Document visualizazion
+  refactor_beckend.md`, 2026-09-23, branch
+  `feature/document_card_images_tags`):
+  - **Favorite image** (backend, commit `a4538f1`): migration
+    `a4f7b2c8e015` adds `document_images.is_favorite` plus the partial
+    unique index `uq_document_images_one_favorite`
+    (`document_id WHERE is_favorite`), so "only one per Document" is the
+    database's rule and two concurrent PUTs can't both win. The rules are
+    in `app/domain/documents.py` — `plan_new_image` gives the flag to the
+    first image added, `next_favorite_id` hands it to the oldest survivor
+    when the favorite is removed (applied in `image_uploads.py::remove_images`),
+    so a Document that has images always has exactly one favorite. New route
+    `PUT /rooms/{room}/documents/{doc}/images/{image}/favorite`,
+    Owner/Master only (D-12), restricted to an image the requester can
+    already see — otherwise it would answer "does this id exist?" about a
+    Private Comment's attachment (VR-07). The migration backfills existing
+    Documents with their oldest image. Applied to the live DB.
+  - **Gallery order**: `is_favorite DESC, created_at, id`, set once in
+    `documents_repo`, so the card and the detail page never disagree about
+    which image is first. A Comment attachment may be the favorite; it stays
+    visibility-filtered, so a viewer who can't read that Comment just gets
+    the next image leading their card.
+  - **Batched Documents list** (same commit): `GET /rooms/{id}/documents`
+    cost ~6 queries per Document (owners, grants, tags, images, and two more
+    for the Comment-visibility filter) — acceptable when a card was a title,
+    not now that every card renders its gallery. It reads owners and grants
+    for the Room in one query each, applies the visibility filter, then reads
+    tags and images only for what survived (`documents_repo.*_for_documents`,
+    `api/access.py::get_visible_images_for_documents`). The batched image path
+    reuses the same `visible_document_images` filter, and a test pins that a
+    Private Comment's attachment never reaches another member's list response
+    (Invariant 1). `_build_response` no longer queries, so it's sync now.
+  - **Card layout** (frontend): Title block (name + `VisibilityBadge`, Tags
+    below), then description and images side by side at half width each, then
+    the Owner line. New `DocumentCardImages` — the detail page's carousel,
+    read-only and short, drag off, arrows always visible. The card's link is
+    now an absolutely positioned overlay rather than a wrapper, because an
+    `<a>` may not contain the carousel's buttons; those sit above it.
+  - **Heart control**: `DocumentImageGallery` takes an optional
+    `onSetFavorite`, shown as a heart at the bottom right of each image
+    (opposite the delete button). No confirmation — it's reversible — and
+    gated on being an Owner, not on edit mode.
+  - **One image mapper**: `RawImage` (wire shape) + `lib/images.ts::toStoredImage`
+    replace the per-hook `{ id, url }` mapping. `useComments` had typed its
+    raw images as the camelCase `StoredImage`, which only worked while the
+    two shapes matched; adding `is_favorite` would have broken it silently.
+    `leadImage` picks the image a card leads with, falling back to the first
+    visible one when the favorite was filtered out for that viewer.
+
 ## In Progress
 
 - None yet.
 
 ## Next Up
 
-0. Mention backlinks (rest of FR-D4): store mentions server-side on
+0. **Verify the new Document card in a browser** — the layout below `sm`
+   (where a half-width image column is tightest), that the carousel arrows
+   really do beat the card's link overlay, and that clicking an image still
+   opens the Document. Built and type-checked, not seen running; the repo
+   has no committed headless-check tooling, so this needs a session with the
+   app up (see Session Notes).
+1. Mention backlinks (rest of FR-D4): store mentions server-side on
    save, show "Mentioned in" on the Document page (filtered per viewer),
    and decide whether mentions should survive a rename.
-1. Rest of Threads on top of the new `posts` table: nested replies
+2. Rest of Threads on top of the new `posts` table: nested replies
    (FR-T1/T2) with D-17/VR-04's "never wider than the parent" check in
    the domain layer (Invariant 3), and pagination (FR-T3) if Comment
    counts grow. Comments are currently flat and loaded all at once.
-2. Details/Threads (D-18, D-19, D-20, FR-D3, FR-T1, FR-T5–T7): the
+3. Details/Threads (D-18, D-19, D-20, FR-D3, FR-T1, FR-T5–T7): the
    deferred half of the Documents unit — titled top-level Posts in a
    Document's one main Thread, own visibility per Post (VR-03, reusing
    `app/domain/visibility.py`'s pattern), edit rights limited to the
@@ -998,7 +1065,7 @@ Update this file after every meaningful implementation change.
    worth scoping down to FR-T1/T5/T10 (post, edit/moderate, show
    Details on the Document card) for a first slice, same "thinnest
    usable" approach as before.
-3. Reveal action + fuller Visibility (VR-02, VR-05, VR-06, FR-V2, FR-V3,
+4. Reveal action + fuller Visibility (VR-02, VR-05, VR-06, FR-V2, FR-V3,
    FR-V5): default visibility per Room, the Reveal action with
    AuditLog + notification, "view as User X" for the Master. The
    Visibility *filter* exists now (Documents unit); Reveal and the
@@ -1155,3 +1222,19 @@ Update this file after every meaningful implementation change.
   heads-up before merging/opening a PR, since
   its name undersells what it now contains (same kind of mismatch as
   the `0ec23ce` commit message noted earlier in this file).
+- **Architecture decision (2026-09-23, spec 07)**: the favorite image is a
+  `document_images.is_favorite` flag with a partial unique index, not a
+  `documents.favorite_image_id` FK. The FK makes "only one" structural too,
+  but the flag keeps the state on the image — which is what gets deleted,
+  cascaded from a Comment, and filtered per viewer — and lets one
+  `ORDER BY is_favorite DESC, created_at, id` serve every read path without
+  a join. The "exactly one while images exist" half is application logic
+  (`next_favorite_id`), since the database can't promote a successor.
+- **Not visually verified (2026-09-23)**: the spec 07 frontend was built,
+  type-checked and unit-tested, but never rendered in a browser. The earlier
+  headless layout checks in this file used an ad-hoc browser driver that was
+  never committed, and reproducing one needs the backend up and a real signed
+  -in Supabase session. Two things are worth a human eye (Next Up #0): the
+  card below `sm`, where the half-width image column is tightest, and the
+  carousel arrows, which depend on out-sitting the card's link overlay
+  (`zIndex` 2 vs 1) — that ordering is correct by construction but unproven.

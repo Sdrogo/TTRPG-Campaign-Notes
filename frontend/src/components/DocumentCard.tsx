@@ -1,7 +1,8 @@
-import { Card, Group, Stack, Title, Text } from '@mantine/core';
+import { Box, Card, Group, Stack, Title, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { VisibilityBadge } from './VisibilityBadge';
 import { TagList } from './TagList';
+import { DocumentCardImages } from './DocumentCardImages';
 import { MentionText } from './mentions/MentionText';
 import { displayNameFor } from '../lib/members';
 import type { Document } from '../types/document';
@@ -17,37 +18,66 @@ interface DocumentCardProps {
 
 export function DocumentCard({ document, roomId, tags, members }: DocumentCardProps) {
   const ownerNames = document.ownerIds.map((id) => displayNameFor(members, id)).join(', ');
+  const hasImages = document.images.length > 0;
 
   return (
-    <Card
-      component={Link}
-      to={`/rooms/${roomId}/documents/${document.id}`}
-      withBorder
-      padding="md"
-      radius="md"
-      style={{ textDecoration: 'none', color: 'inherit' }}
-    >
-      <Stack gap={4}>
-        <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
-          <Title
-            order={4}
-            style={{ fontFamily: 'var(--font-display)', minWidth: 0, overflowWrap: 'anywhere' }}
-          >
-            {document.name}
-          </Title>
-          <VisibilityBadge visibility={document.visibility} />
+    <Card withBorder padding="md" radius="md" pos="relative">
+      <Stack gap="xs">
+        {/* Title block: name and visibility on top, Tags on their own line. */}
+        <Stack gap={4}>
+          <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
+            <Title
+              order={4}
+              style={{ fontFamily: 'var(--font-display)', minWidth: 0, overflowWrap: 'anywhere' }}
+            >
+              {document.name}
+            </Title>
+            <VisibilityBadge visibility={document.visibility} />
+          </Group>
+          <TagList tags={tags} tagIds={document.tagIds} />
+        </Stack>
+
+        {/* Description on the left, images on the right at half the card's
+            width (spec 07). Without images the description takes it all. */}
+        <Group align="flex-start" wrap="nowrap" gap="sm">
+          <Box style={{ flex: '1 1 50%', minWidth: 0 }}>
+            {document.description ? (
+              // The card is itself a link, so mentions are only colored here.
+              <MentionText
+                text={document.description}
+                linked={false}
+                c="dimmed"
+                size="sm"
+                lineClamp={hasImages ? 5 : 2}
+              />
+            ) : (
+              <Text size="sm" c="dimmed" fs="italic">
+                Nessuna descrizione.
+              </Text>
+            )}
+          </Box>
+          {hasImages && (
+            <Box style={{ flex: '0 0 50%', minWidth: 0 }}>
+              <DocumentCardImages images={document.images} documentName={document.name} />
+            </Box>
+          )}
         </Group>
-        {document.description && (
-          // The card is itself a link, so mentions are only colored here.
-          <MentionText text={document.description} linked={false} c="dimmed" size="sm" lineClamp={2} />
-        )}
-        <TagList tags={tags} tagIds={document.tagIds} />
+
         {ownerNames && (
           <Text size="xs" c="dimmed" truncate>
             Owner: {ownerNames}
           </Text>
         )}
       </Stack>
+
+      {/* The link covers the card rather than wrapping it: an <a> may not
+          contain the carousel's buttons, which sit above this (see
+          DocumentCardImages). Last child, so it overlays the content. */}
+      <Link
+        to={`/rooms/${roomId}/documents/${document.id}`}
+        aria-label={document.name}
+        style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+      />
     </Card>
   );
 }
