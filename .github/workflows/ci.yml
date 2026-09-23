@@ -22,13 +22,13 @@ jobs:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # Neither job pushes, so don't leave the token behind in
           # .git/config where anything running later could reach it.
           persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: npm
@@ -84,11 +84,11 @@ jobs:
       SUPABASE_SECRET_KEY: ci-not-a-real-key
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           # The floor this project declares (`requires-python`, and mypy's
           # `python_version`), so CI checks the contract rather than only
