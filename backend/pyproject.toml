@@ -58,6 +58,12 @@ markers = [
     "integration: needs the real Supabase database",
 ]
 
+[tool.coverage.run]
+# SQLAlchemy's asyncio layer runs database calls in greenlets. Without this,
+# coverage stops tracing a route after its first database `await` and
+# reports the rest of it as never run.
+concurrency = ["greenlet", "thread"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
