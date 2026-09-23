@@ -137,6 +137,18 @@ Update this file after every meaningful implementation change.
   that **CI green does not mean the API layer was exercised** — running the
   full `pytest` locally is still a pre-merge step. See `architecture.md` →
   Continuous Integration.
+- **Document card image orientation complete** (2026-09-23, frontend only,
+  branch `feature/document_card_image_orientation`;
+  spec `context/feature/07_1 - refinment.md`): a card image no longer gets
+  cropped into a landscape box (`objectFit: cover` at a fixed height). Once an image loads, its natural
+  size picks a **landscape** or **portrait** frame (new `imageOrientation` in
+  `lib/images.ts`; square counts as landscape), shown with `objectFit:
+  contain` so its aspect ratio is kept. The image column's cap rose from
+  120/140px to 160/200px (`base`/`sm`) so a portrait image stays legible.
+  Carousel slides are framed one by one. +7 tests (3 helper, 4 component),
+  mutation-checked: forcing everything to landscape fails 3 of them. Build,
+  lint and `npm test` **616/616** pass, coverage floors held. **Not
+  visually verified in a browser** — same limitation as spec 07 (Next Up #0).
 
 ## Current Goal
 
@@ -1090,9 +1102,10 @@ Update this file after every meaningful implementation change.
 
 0. **Verify the new Document card in a browser** — the layout below `sm`
    (where a half-width image column is tightest), that the carousel arrows
-   really do beat the card's link overlay, and that clicking an image still
-   opens the Document. Built and type-checked, not seen running; the repo
-   has no committed headless-check tooling, so this needs a session with the
+   really do beat the card's link overlay, that clicking an image still
+   opens the Document, and (spec 07.1) that portrait and landscape images
+   look right side by side with the description. Built and type-checked,
+   not seen running; the repo has no committed headless-check tooling, so this needs a session with the
    app up (see Session Notes).
 1. Mention backlinks (rest of FR-D4): store mentions server-side on
    save, show "Mentioned in" on the Document page (filtered per viewer),

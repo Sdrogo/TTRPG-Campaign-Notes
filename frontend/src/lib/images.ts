@@ -61,3 +61,11 @@ export function remainingImageSlots(
 ): number {
   return Math.max(0, max - (existingCount - removedCount) - pendingCount);
 }
+
+export type ImageOrientation = 'landscape' | 'portrait';
+
+// Which way an image is framed, from its natural size once it has loaded.
+// A square image is framed as landscape, like one whose size is unknown.
+export function imageOrientation(width: number, height: number): ImageOrientation {
+  return height > width ? 'portrait' : 'landscape';
+}
