@@ -149,6 +149,10 @@ Update this file after every meaningful implementation change.
   mutation-checked: forcing everything to landscape fails 3 of them. Build,
   lint and `npm test` **616/616** pass, coverage floors held. **Not
   visually verified in a browser** — same limitation as spec 07 (Next Up #0).
+- **CORS for Vercel previews complete** (2026-09-23, backend only, branch
+  `feature/cors_preview_origins`): optional `CORS_ORIGIN_REGEX` lets
+  commit-preview deploys through, with a pattern that another Vercel account
+  can't match. Needs the env var set on Render (see Completed).
 
 ## Current Goal
 
@@ -1093,6 +1097,32 @@ Update this file after every meaningful implementation change.
     two shapes matched; adding `is_favorite` would have broken it silently.
     `leadImage` picks the image a card leads with, falling back to the first
     visible one when the favorite was filtered out for that viewer.
+- **CORS for Vercel previews (2026-09-23, backend only, branch
+  `feature/cors_preview_origins`):** preview deploys failed their preflight
+  (`OPTIONS /account`) because each one gets a generated hostname that isn't
+  in `CORS_ORIGINS`.
+  - New optional setting `cors_origin_regex` (env `CORS_ORIGIN_REGEX`),
+    passed to Starlette's `allow_origin_regex` next to the unchanged exact
+    list. A blank value means unset; a pattern that doesn't compile fails at
+    startup and names the env var. The middleware setup moved into
+    `app/main.py::add_cors` so tests wire a throwaway app exactly like the
+    real one.
+  - **Pattern choice**: `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app`.
+    The version first suggested (`[a-z0-9-]+`) also matches another Vercel
+    account whose scope ends in `-rum11`
+    (`…-abc123-evil-rum11.vercel.app`), so hyphens are excluded, which also
+    excludes branch-alias previews (`…-git-<branch>-rum11`). Reasoning in
+    `architecture.md` → Auth and Access Model.
+  - `tests/test_cors.py`: real preflights against the pattern (commit
+    previews and production allowed; the look-alike, branch alias, prefix,
+    suffix, `http` and unescaped-dot variants rejected; no pattern = exact
+    list only) and config parsing (default, blank, trimmed, invalid).
+    +16 tests; backend ruff, mypy strict, pytest non-integration **154/154**.
+  - **Deploy step, not done from here**: set `CORS_ORIGIN_REGEX` to the
+    pattern above in Render's Environment tab and redeploy; until then
+    previews stay blocked. Check with
+    `curl -i -X OPTIONS https://ttrpg-campaign-notes.onrender.com/account -H "Origin: https://ttrpg-campaign-notes-<hash>-rum11.vercel.app" -H "Access-Control-Request-Method: GET"`,
+    which should return `access-control-allow-origin` with that origin.
 
 ## In Progress
 
