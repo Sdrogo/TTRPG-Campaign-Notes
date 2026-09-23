@@ -141,11 +141,13 @@ jobs:
 
       # The whole suite, database tests included (the `integration` marker
       # still lets a developer without a database run `-m "not integration"`).
-      # The 95% gate stays on `app/domain`, the home of every invariant;
-      # coverage of all of `app/` is reported below.
+      # Two gates: 95% on `app/domain`, the home of every invariant, and 90%
+      # on all of `app/` (94% when this was set; what's left out is mostly
+      # the Storage HTTP calls and the production session, both replaced in
+      # tests).
       - name: Test with coverage
         run: |
-          pytest --cov=app --cov-report=term-missing
+          pytest --cov=app --cov-report=term-missing --cov-fail-under=90
           coverage report --include='app/domain/*' --fail-under=95
 
       - name: Summarise coverage
