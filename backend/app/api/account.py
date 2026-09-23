@@ -32,6 +32,9 @@ router = APIRouter(prefix="/account", tags=["account"])
 
 
 class AccountResponse(ProfileFields):
+    """The caller's own profile, in the same shape every other response uses
+    for a user (`ProfileFields`), plus their id."""
+
     user_id: uuid.UUID
 
 
@@ -44,10 +47,13 @@ class UpdateProfileRequest(BaseModel):
 
 
 class AvatarFromUrlRequest(BaseModel):
+    """An avatar to import from a URL instead of uploading a file."""
+
     url: HttpUrl
 
 
 async def _response(profile: UserProfile) -> AccountResponse:
+    """Serializes the profile with its avatar signed for this response."""
     fields = profile_fields(profile, await sign_avatars([profile]))
     return AccountResponse(user_id=profile.user_id, **fields.model_dump())
 
@@ -63,6 +69,9 @@ async def _load_for_update(session: AsyncSession, current_user: CurrentUser) -> 
 async def _replace_avatar(
     session: AsyncSession, profile: UserProfile, new_path: str | None
 ) -> UserProfile:
+    """Points the profile at `new_path` (None removes the avatar) and settles
+    Storage in the same transaction: the new object is confirmed, the old one
+    scheduled for removal after commit (app/db/storage_cleanup.py)."""
     updated = replace(profile, avatar_path=new_path)
     await users_repo.save_profile(session, updated)
     if new_path is not None:
@@ -73,6 +82,8 @@ async def _replace_avatar(
 
 
 async def _normalize_avatar(data: bytes) -> NormalizedImage:
+    """The shared image pipeline with the avatar settings: a square crop at
+    `AVATAR_DIMENSION`."""
     return await normalize(data, max_dimension=AVATAR_DIMENSION, square=True)
 
 
@@ -88,6 +99,8 @@ async def _store_avatar(
     session: AsyncSession, current_user: CurrentUser, data: bytes
 ) -> UserProfile:
     # Validated before locking the row, so a bad file doesn't hold the lock.
+    """Validates, uploads and swaps in a new avatar from raw bytes, shared by
+    the upload and import-from-URL routes."""
     normalized = await _normalize_avatar(data)
     profile = await _load_for_update(session, current_user)
     path = await _upload_avatar(profile.user_id, normalized)
@@ -119,6 +132,8 @@ async def _prefill_from_google(session: AsyncSession, current_user: CurrentUser)
 
 @router.get("")
 async def get_account(current_user: CurrentUserDep, session: SessionDep) -> AccountResponse:
+    """The caller's profile. The first call per user also copies in their
+    Google name and picture as defaults (`_prefill_from_google`)."""
     user_id = uuid.UUID(current_user.id)
     profile = await users_repo.get_profile(session, user_id)
     if not profile.google_prefilled:
@@ -133,6 +148,8 @@ async def get_account(current_user: CurrentUserDep, session: SessionDep) -> Acco
 async def update_account(
     body: UpdateProfileRequest, current_user: CurrentUserDep, session: SessionDep
 ) -> AccountResponse:
+    """Updates only the fields sent; `null` or a blank string clears one. 422
+    when a field is over its length limit."""
     changes = ProfileChanges(
         fields=frozenset(body.model_fields_set),
         display_name=body.display_name,
@@ -152,6 +169,8 @@ async def update_account(
 async def upload_avatar(
     file: UploadFile, current_user: CurrentUserDep, session: SessionDep
 ) -> AccountResponse:
+    """Replaces the avatar with an uploaded image (cropped square, re-encoded
+    as WebP)."""
     data = await read_upload(file)
     return await _response(await _store_avatar(session, current_user, data))
 
@@ -160,11 +179,13 @@ async def upload_avatar(
 async def import_avatar(
     body: AvatarFromUrlRequest, current_user: CurrentUserDep, session: SessionDep
 ) -> AccountResponse:
+    """Replaces the avatar with an image fetched from a URL."""
     data = await fetch_url(str(body.url))
     return await _response(await _store_avatar(session, current_user, data))
 
 
 @router.delete("/avatar")
 async def remove_avatar(current_user: CurrentUserDep, session: SessionDep) -> AccountResponse:
+    """Clears the avatar, so the user is shown by their initials."""
     profile = await _load_for_update(session, current_user)
     return await _response(await _replace_avatar(session, profile, None))

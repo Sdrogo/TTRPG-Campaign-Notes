@@ -1,3 +1,6 @@
+"""Joining a Room by invitation (FR-R2, FR-R3): an Administrator creates a code
+with a proposed role, and whoever opens it joins with that role."""
+
 import uuid
 from datetime import datetime, timedelta
 
@@ -22,11 +25,16 @@ router = APIRouter(tags=["invitations"])
 
 
 class CreateInvitationRequest(BaseModel):
+    """The role the invitee will join with, and how many days the code stays
+    valid (`DEFAULT_INVITE_TTL` when omitted)."""
+
     role: RoomRole = RoomRole.PLAYER
     ttl_days: int | None = None
 
 
 class InvitationResponse(BaseModel):
+    """The shareable code, its role and when it expires."""
+
     code: str
     role: RoomRole
     expires_at: datetime | None
@@ -39,6 +47,7 @@ async def create_invitation(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> InvitationResponse:
+    """UC-03: an Administrator creates an invitation for their Room."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
     if membership is None or not membership.is_admin:
@@ -61,6 +70,9 @@ async def accept_invitation(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> RoomResponse:
+    """UC-04: the caller joins the invitation's Room with its proposed role.
+    404 for an unknown code, 410 when it has expired or been revoked, 409 when
+    the caller is already a member."""
     invitation = await invitations_repo.get_invitation_by_code(session, code)
     if invitation is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Invitation not found")

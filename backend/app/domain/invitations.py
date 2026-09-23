@@ -1,3 +1,5 @@
+"""Rules for Room invitations (FR-R2, FR-R3, UC-03, UC-04)."""
+
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -8,14 +10,16 @@ DEFAULT_INVITE_TTL = timedelta(days=7)
 
 
 class InvitationInvalidError(Exception):
-    pass
+    """The invitation has expired or been revoked."""
 
 
 class AlreadyMemberError(Exception):
-    pass
+    """The user accepting the invitation is already a member."""
 
 
 def _generate_invite_code() -> str:
+    """A random URL-safe code (12 characters, 72 bits), short enough to share
+    by hand but not guessable."""
     return secrets.token_urlsafe(9)
 
 

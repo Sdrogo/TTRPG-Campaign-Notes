@@ -11,6 +11,10 @@ from app.domain.models import UserProfile
 
 
 class ProfileFields(BaseModel):
+    """The public face of a user: what they chose to show plus their email
+    as a fallback. `avatar_url` is a short-lived signed link, not the
+    Storage path."""
+
     email: str | None
     display_name: str | None
     pronouns: str | None

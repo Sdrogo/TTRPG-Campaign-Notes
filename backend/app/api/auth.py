@@ -1,3 +1,6 @@
+"""Who the bearer token belongs to - the frontend's check that its Supabase
+session is accepted by the backend."""
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -15,4 +18,5 @@ class MeResponse(BaseModel):
 
 @router.get("/me")
 def get_me(current_user: CurrentUserDep) -> MeResponse:
+    """The authenticated user's id and email, straight from the token."""
     return MeResponse(id=current_user.id, email=current_user.email)

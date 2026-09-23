@@ -1,3 +1,7 @@
+"""SQLAlchemy table definitions. Alembic migrations (backend/migrations) are
+generated from these; the repositories map rows to the domain dataclasses in
+app/domain/models.py."""
+
 import uuid
 from datetime import datetime
 from typing import Any
@@ -18,7 +22,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
-    pass
+    """Declarative base of every table, and the metadata Alembic compares
+    against."""
 
 
 # User ids (created_by / user_id below) intentionally have no DB-level FK to
@@ -31,6 +36,8 @@ class Base(DeclarativeBase):
 
 
 class RoomRow(Base):
+    """A Room. Deleting it cascades to everything in it."""
+
     __tablename__ = "rooms"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -43,6 +50,8 @@ class RoomRow(Base):
 
 
 class MembershipRow(Base):
+    """A user's role in a Room; unique per (room, user)."""
+
     __tablename__ = "memberships"
     __table_args__ = (UniqueConstraint("room_id", "user_id", name="uq_membership_room_user"),)
 
@@ -57,6 +66,8 @@ class MembershipRow(Base):
 
 
 class TagRow(Base):
+    """A Room's Tag; names are unique within a Room."""
+
     __tablename__ = "tags"
     __table_args__ = (UniqueConstraint("room_id", "name", name="uq_tag_room_name"),)
 
@@ -70,6 +81,8 @@ class TagRow(Base):
 
 
 class InvitationRow(Base):
+    """A Room invitation, looked up by its unique `code`."""
+
     __tablename__ = "invitations"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -106,6 +119,9 @@ class UserRow(Base):
 
 
 class AuditLogRow(Base):
+    """An audited change (Invariant 7), with its before/after values in
+    `details`."""
+
     __tablename__ = "audit_log"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -120,6 +136,9 @@ class AuditLogRow(Base):
 
 
 class DocumentRow(Base):
+    """A Document. Its Owners, Tags, grants, images and Posts live in their own
+    tables and cascade with it."""
+
     __tablename__ = "documents"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -137,6 +156,8 @@ class DocumentRow(Base):
 
 
 class DocumentTagRow(Base):
+    """Links a Document to one of its Tags."""
+
     __tablename__ = "document_tags"
 
     document_id: Mapped[uuid.UUID] = mapped_column(
@@ -148,6 +169,9 @@ class DocumentTagRow(Base):
 
 
 class DocumentOwnerRow(Base):
+    """An explicit Owner of a Document (D-12). The Master's implicit Ownership
+    has no row."""
+
     __tablename__ = "document_owners"
 
     document_id: Mapped[uuid.UUID] = mapped_column(
@@ -157,6 +181,9 @@ class DocumentOwnerRow(Base):
 
 
 class DocumentVisibilityGrantRow(Base):
+    """A user who may see a Selective Document besides its Owners and the
+    Master."""
+
     __tablename__ = "document_visibility_grants"
 
     document_id: Mapped[uuid.UUID] = mapped_column(
@@ -187,6 +214,9 @@ class PostRow(Base):
 
 
 class PostVisibilityGrantRow(Base):
+    """A user who may see a Selective Post besides its author and the
+    Master."""
+
     __tablename__ = "post_visibility_grants"
 
     post_id: Mapped[uuid.UUID] = mapped_column(
@@ -196,6 +226,9 @@ class PostVisibilityGrantRow(Base):
 
 
 class DocumentImageRow(Base):
+    """An image in a Document's gallery. Only the Storage path is kept here,
+    never the bytes."""
+
     __tablename__ = "document_images"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)

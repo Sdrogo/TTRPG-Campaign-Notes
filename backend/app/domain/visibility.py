@@ -1,3 +1,7 @@
+"""The visibility filter (section 8 of requirements.md, VR-01 to VR-07). Every
+read path passes Room content through here before it reaches the client
+(Invariant 1)."""
+
 import uuid
 from collections.abc import Collection, Iterable, Mapping
 

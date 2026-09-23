@@ -1,3 +1,6 @@
+"""Rules for Documents: who may create them (D-13), Ownership (D-12), the image
+limit and which image is the favorite (spec 07)."""
+
 import uuid
 from collections.abc import Collection, Iterable, Sequence
 from dataclasses import dataclass
@@ -14,27 +17,29 @@ MAX_IMAGES_PER_DOCUMENT = 20
 
 
 class DocumentNameRequiredError(Exception):
-    pass
+    """The Document name is empty once trimmed."""
 
 
 class TooManyImagesError(Exception):
-    pass
+    """The Document already has `MAX_IMAGES_PER_DOCUMENT` images."""
 
 
 class NotOwnerError(Exception):
-    pass
+    """The requester is neither an Owner nor the Master (D-12)."""
 
 
 class AlreadyOwnerError(Exception):
-    pass
+    """The user is already an explicit Owner."""
 
 
 class NotAnOwnerError(Exception):
-    pass
+    """The user isn't an explicit Owner, so there's nothing to remove."""
 
 
 @dataclass(frozen=True)
 class NewDocumentPlan:
+    """A new Document and the Owner row for its creator, inserted together."""
+
     document: Document
     owner: DocumentOwner
 
@@ -81,6 +86,8 @@ def is_owner(role: RoomRole, user_id: uuid.UUID, owner_user_ids: Collection[uuid
 
 
 def ensure_owner(role: RoomRole, user_id: uuid.UUID, owner_user_ids: Collection[uuid.UUID]) -> None:
+    """Raises `NotOwnerError` unless `is_owner` holds - the check before any
+    change to a Document (Invariant 6)."""
     if not is_owner(role, user_id, owner_user_ids):
         raise NotOwnerError("Only an Owner (or the Master) can do this")
 
@@ -88,6 +95,7 @@ def ensure_owner(role: RoomRole, user_id: uuid.UUID, owner_user_ids: Collection[
 def plan_add_owner(
     document_id: uuid.UUID, user_id: uuid.UUID, current_owner_ids: Collection[uuid.UUID]
 ) -> DocumentOwner:
+    """D-12/UC-08: one more explicit Owner for the Document."""
     if user_id in current_owner_ids:
         raise AlreadyOwnerError("User is already an Owner of this Document")
     return DocumentOwner(document_id=document_id, user_id=user_id)
@@ -97,11 +105,15 @@ def ensure_can_remove_owner(user_id: uuid.UUID, current_owner_ids: Collection[uu
     # No "last Owner" guard is needed here (unlike D-16 for Rooms): the
     # Master is always an implicit Owner (D-12), so a Document can never
     # end up without one even if every explicit Owner row is removed.
+    """Only an explicit Owner row can be removed."""
     if user_id not in current_owner_ids:
         raise NotAnOwnerError("User is not an explicit Owner of this Document")
 
 
 def ensure_can_add_image(current_image_count: int) -> None:
+    """Raises `TooManyImagesError` once the Document is at
+    `MAX_IMAGES_PER_DOCUMENT`. Comment attachments count too, since they are
+    Document images."""
     if current_image_count >= MAX_IMAGES_PER_DOCUMENT:
         raise TooManyImagesError(f"A Document can have at most {MAX_IMAGES_PER_DOCUMENT} images")
 
@@ -134,6 +146,7 @@ def plan_new_image(
 
 
 def has_favorite(images: Iterable[DocumentImage]) -> bool:
+    """Whether one of `images` is already the favorite."""
     return any(image.is_favorite for image in images)
 
 

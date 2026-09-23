@@ -1,3 +1,6 @@
+"""A Room's Tags (D-14, FR-N1): the labels Documents are classified and
+filtered by, in place of rigid Document types (D-05)."""
+
 import uuid
 
 from fastapi import APIRouter, HTTPException, status
@@ -13,12 +16,16 @@ router = APIRouter(prefix="/rooms/{room_id}/tags", tags=["tags"])
 
 
 class TagResponse(BaseModel):
+    """A Tag with its optional category (e.g. "Type", "Faction")."""
+
     id: uuid.UUID
     name: str
     category: str | None
 
 
 class CreateTagRequest(BaseModel):
+    """A new Tag. The name is trimmed and must be unique within the Room."""
+
     name: str
     category: str | None = None
 
@@ -27,6 +34,7 @@ class CreateTagRequest(BaseModel):
 async def list_tags(
     room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
 ) -> list[TagResponse]:
+    """Every Tag in the Room, for any member."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
     if membership is None:
@@ -43,6 +51,8 @@ async def create_tag(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> TagResponse:
+    """Adds a Tag. Only an Administrator or the Master may manage Tags; 409
+    when the Room already has one with that name."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
     if membership is None or not (membership.is_admin or membership.role == RoomRole.MASTER):

@@ -1,3 +1,7 @@
+"""Rules for changing a Room's members (UC-05, UC-19): role and Administrator
+changes, removals and leaving, all guarded so a Room always keeps a Master and
+an Administrator (D-16, Invariant 5)."""
+
 import uuid
 from dataclasses import dataclass
 
@@ -5,28 +9,33 @@ from app.domain.models import AuditLogEntry, Membership, RoomRole
 
 
 class MemberNotFoundError(Exception):
-    pass
+    """The target user isn't a member of the Room."""
 
 
 class LastMasterError(Exception):
-    pass
+    """The change would leave the Room without a Master (D-16)."""
 
 
 class LastAdministratorError(Exception):
-    pass
+    """The change would leave the Room without an Administrator (D-16,
+    FR-R7)."""
 
 
 class NoChangeRequestedError(Exception):
-    pass
+    """The request set neither the role nor the Administrator flag."""
 
 
 @dataclass(frozen=True)
 class MembershipChangePlan:
+    """The updated Membership and its audit entry, written in the same
+    transaction (Invariant 7)."""
+
     membership: Membership
     audit_entry: AuditLogEntry
 
 
 def _find_membership(memberships: list[Membership], user_id: uuid.UUID) -> Membership:
+    """The Membership of `user_id`, or `MemberNotFoundError`."""
     target = next((m for m in memberships if m.user_id == user_id), None)
     if target is None:
         raise MemberNotFoundError("User is not a member of this room")

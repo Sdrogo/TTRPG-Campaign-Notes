@@ -1,3 +1,7 @@
+"""Rooms and their members (FR-R1, FR-R4 to FR-R7): creating a Room, listing
+your own, the Master's Room settings, and the Administrator's member
+management."""
+
 import uuid
 from collections.abc import Mapping
 
@@ -23,11 +27,15 @@ router = APIRouter(prefix="/rooms", tags=["rooms"])
 
 
 class CreateRoomRequest(BaseModel):
+    """A new Room's name and optional game system."""
+
     name: str
     game_system: str | None = None
 
 
 class RoomResponse(BaseModel):
+    """A Room as every route serializes it."""
+
     id: uuid.UUID
     name: str
     game_system: str | None
@@ -36,29 +44,41 @@ class RoomResponse(BaseModel):
 
 
 class MyRoomResponse(BaseModel):
+    """One of the caller's Rooms, with their role in it (FR-R6)."""
+
     room: RoomResponse
     role: RoomRole
     is_admin: bool
 
 
 class MemberResponse(ProfileFields):
+    """A member of a Room: their role and Administrator flag, plus their public
+    profile."""
+
     user_id: uuid.UUID
     role: RoomRole
     is_admin: bool
 
 
 class UpdateMemberRequest(BaseModel):
+    """A role change, an Administrator flag change, or both. Omitted fields are
+    left as they are."""
+
     role: RoomRole | None = None
     is_admin: bool | None = None
 
 
 class UpdateRoomSettingsRequest(BaseModel):
+    """The Room settings only the Master may change (D-13, FR-D7)."""
+
     players_can_create_documents: bool
 
 
 def member_response(
     membership: Membership, profile: UserProfile, avatar_urls: Mapping[str, str]
 ) -> MemberResponse:
+    """Serializes a member. `avatar_urls` comes from `sign_avatars`, signed
+    once for the whole list."""
     return MemberResponse(
         user_id=membership.user_id,
         role=membership.role,
@@ -68,6 +88,8 @@ def member_response(
 
 
 def room_to_response(room: Room) -> RoomResponse:
+    """Serializes a Room the same way for every route that returns one,
+    invitations included."""
     return RoomResponse(
         id=room.id,
         name=room.name,
@@ -83,6 +105,8 @@ async def create_room(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> RoomResponse:
+    """UC-02: creates a Room; the creator becomes its Master and Administrator,
+    and the default Tags are added (D-14)."""
     try:
         plan = plan_new_room(body.name, body.game_system, uuid.UUID(current_user.id))
     except RoomNameRequiredError as exc:
@@ -96,6 +120,7 @@ async def create_room(
 
 @router.get("")
 async def list_my_rooms(current_user: CurrentUserDep, session: SessionDep) -> list[MyRoomResponse]:
+    """FR-R6: the Rooms the caller belongs to, with their role in each."""
     rows = await rooms_repo.list_rooms_for_user(session, uuid.UUID(current_user.id))
     return [
         MyRoomResponse(
@@ -109,6 +134,7 @@ async def list_my_rooms(current_user: CurrentUserDep, session: SessionDep) -> li
 async def get_room(
     room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
 ) -> RoomResponse:
+    """One Room, for its members only (403 otherwise)."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
     if membership is None:
@@ -127,6 +153,8 @@ async def update_room_settings(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> RoomResponse:
+    """The Master switches Players' Document creation on or off for the Room
+    (D-13, FR-D7)."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
     if membership is None or membership.role != RoomRole.MASTER:
@@ -151,6 +179,7 @@ async def update_room_settings(
 async def list_members(
     room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
 ) -> list[MemberResponse]:
+    """Everyone in the Room with their role and profile, for any member."""
     requester_id = uuid.UUID(current_user.id)
     requester = await rooms_repo.get_membership(session, room_id, requester_id)
     if requester is None:
@@ -169,6 +198,10 @@ async def update_member(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> MemberResponse:
+    """UC-05: an Administrator changes a member's role and/or Administrator
+    flag - designating a new Master included (FR-R5). 409 when the change would
+    leave the Room without a Master or an Administrator (D-16). Audited in the
+    same transaction (Invariant 7)."""
     requester_id = uuid.UUID(current_user.id)
     requester = await rooms_repo.get_membership(session, room_id, requester_id)
     if requester is None or not requester.is_admin:
@@ -198,6 +231,9 @@ async def remove_member(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> None:
+    """UC-05/UC-19: an Administrator removes a member, or a member removes
+    themselves (leaves). The last Master or Administrator can't go without a
+    successor (D-16, 409). Audited in the same transaction (Invariant 7)."""
     requester_id = uuid.UUID(current_user.id)
     is_self = requester_id == user_id
 
