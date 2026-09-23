@@ -77,12 +77,33 @@ jobs:
       run:
         working-directory: backend
 
+    # A throwaway Postgres for the database tests, so the whole suite runs
+    # here with no Supabase credentials - on fork PRs too. Same major/minor
+    # as production (17.6), pinned by digest like the actions above. The
+    # Supabase-specific bits the migrations need are recreated by
+    # tests/ci/supabase_shim.sql. See "Continuous Integration" in
+    # context/architecture.md.
+    services:
+      postgres:
+        image: postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+        env:
+          # The migrations alter default privileges `FOR ROLE postgres`, as
+          # on Supabase, so the tests connect as `postgres` too.
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
-      # Never connected to. `app/db/session.py` builds the engine at import
-      # time, so the URL has to parse even though no test in this job opens
-      # a connection - the ones that would are marked `integration` and
-      # deselected below. See "Backend CI" in context/architecture.md.
-      DATABASE_URL: postgresql+asyncpg://ci:ci@127.0.0.1:5432/ci
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
+      # Never contacted: tests sign their own tokens and fake Storage
+      # (tests/conftest.py).
       SUPABASE_URL: http://supabase.invalid
       SUPABASE_SECRET_KEY: ci-not-a-real-key
 
@@ -109,30 +130,31 @@ jobs:
       - name: Type-check
         run: mypy app tests
 
-      # `-m "not integration"` drops every test that needs the real Supabase
-      # database, so this job needs no secrets and runs on fork PRs too.
-      # The marker is applied automatically to anything using the
-      # `db_session` fixture (tests/conftest.py), so a new database test is
-      # excluded without anyone updating this file.
-      #
-      # The gate is on `app/domain`, which architecture.md makes the home of
-      # every invariant, and which these tests cover on their own.
+      - name: Prepare the database
+        env:
+          PGPASSWORD: postgres
+        run: psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/ci/supabase_shim.sql
+
+      # Every migration, from an empty database, on every PR.
+      - name: Migrate
+        run: alembic upgrade head
+
+      # The whole suite, database tests included (the `integration` marker
+      # still lets a developer without a database run `-m "not integration"`).
+      # The 95% gate stays on `app/domain`, the home of every invariant;
+      # coverage of all of `app/` is reported below.
       - name: Test with coverage
         run: |
-          pytest -m "not integration" \
-            --cov=app/domain \
-            --cov-report=term-missing \
-            --cov-fail-under=95
+          pytest --cov=app --cov-report=term-missing
+          coverage report --include='app/domain/*' --fail-under=95
 
       - name: Summarise coverage
         if: always()
         run: |
           {
-            echo '### Backend coverage (app/domain)'
+            echo '### Backend coverage'
             echo
             echo '```'
-            coverage report --include='app/domain/*' 2>/dev/null || echo 'No coverage data.'
+            coverage report 2>/dev/null || echo 'No coverage data.'
             echo '```'
-            echo
-            echo '_Integration tests against Supabase are not run here; they need the live database._'
           } >> "$GITHUB_STEP_SUMMARY"

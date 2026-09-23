@@ -54,9 +54,10 @@ def make_token() -> Callable[..., str]:
 @pytest_asyncio.fixture
 async def db_session() -> AsyncIterator[AsyncSession]:
     """A session bound to a savepoint that's rolled back after the test,
-    so integration tests against the real Supabase DB leave no residue -
-    even though route handlers call `session.commit()`, that only commits
-    the savepoint, not the outer transaction."""
+    so integration tests leave no residue in whichever database
+    `DATABASE_URL` points at (the Supabase project locally, a throwaway
+    Postgres in CI) - even though route handlers call `session.commit()`,
+    that only commits the savepoint, not the outer transaction."""
     async with engine.connect() as conn:
         outer_transaction = await conn.begin()
         session_factory = async_sessionmaker(
@@ -115,9 +116,10 @@ def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    """Marks every test that needs the real Supabase database as
-    `integration`, so CI can run the rest with `-m "not integration"`
-    without secrets (see `.github/workflows/ci.yml`).
+    """Marks every test that needs a database as `integration`, so a
+    developer without one can run the rest with `-m "not integration"`.
+    CI runs everything, against a throwaway Postgres
+    (`.github/workflows/ci.yml`).
 
     Keyed on the `db_session` fixture rather than a list of files, so a new
     test that touches the database is classified correctly on its own.
