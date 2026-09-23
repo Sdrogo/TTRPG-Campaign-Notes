@@ -139,7 +139,5 @@ async def test_unknown_invitation_code_is_not_found(
     make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     token = make_token(str(uuid.uuid4()))
-    response = await client.post(
-        "/invitations/does-not-exist/accept", headers=_auth_headers(token)
-    )
+    response = await client.post("/invitations/does-not-exist/accept", headers=_auth_headers(token))
     assert response.status_code == 404

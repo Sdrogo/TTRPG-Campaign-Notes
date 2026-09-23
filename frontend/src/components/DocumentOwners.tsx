@@ -13,6 +13,10 @@ interface DocumentOwnersProps {
   onRemove: (userId: string) => void;
 }
 
+/**
+ * A Document's explicit Owners, with controls to add a member or remove an
+ * Owner when `canManage` (Owners and the Master, D-12).
+ */
 export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }: DocumentOwnersProps) {
   const [addOwnerId, setAddOwnerId] = useState<string | null>(null);
 

@@ -13,6 +13,10 @@ interface VisibilityBadgeProps {
   size?: MantineSize;
 }
 
+/**
+ * The visibility level of a Document or Comment, as a small badge. "Solo
+ * Master" stands out in the accent color.
+ */
 export function VisibilityBadge({ visibility, size }: VisibilityBadgeProps) {
   return (
     <Badge

@@ -16,6 +16,11 @@ import { TagFilter } from '../components/TagFilter';
 import { filterDocumentsByTags } from '../lib/documentFilters';
 import { canCreateDocuments } from '../lib/roomPermissions';
 
+/**
+ * `/rooms/:roomId/documents`: the Documents the viewer can see, filterable by
+ * Tags through `?tag=` (FR-N2). The Master also gets the switch for Players'
+ * Document creation (D-13).
+ */
 export function RoomDocumentsPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const { session, loading: sessionLoading } = useSession();

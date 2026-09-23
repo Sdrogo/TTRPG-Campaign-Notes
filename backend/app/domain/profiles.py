@@ -24,6 +24,9 @@ _GOOGLE_SIZE_OPTION = re.compile(r"=s\d+(-c)?$")
 
 
 class ProfileFieldTooLongError(Exception):
+    """A profile field is over its length limit. `field` names it, so the API
+    can report which one."""
+
     def __init__(self, field: str, max_length: int) -> None:
         super().__init__(f"{field} must be at most {max_length} characters")
         self.field = field
@@ -51,6 +54,8 @@ def _single_line(value: str | None, field: str, max_length: int) -> str | None:
 
 
 def _multi_line(value: str | None, field: str, max_length: int) -> str | None:
+    """Trims the value and normalizes line endings, keeping the line breaks a
+    description may use. Blank means unset."""
     if value is None:
         return None
     clean = value.replace("\r\n", "\n").strip()
@@ -60,6 +65,8 @@ def _multi_line(value: str | None, field: str, max_length: int) -> str | None:
 
 
 def plan_profile_update(current: UserProfile, changes: ProfileChanges) -> UserProfile:
+    """Applies only the fields in `changes.fields`, each normalized and checked
+    against its length limit."""
     updated = current
     if "display_name" in changes.fields:
         updated = replace(

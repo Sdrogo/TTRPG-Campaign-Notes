@@ -39,6 +39,7 @@ _SCHEDULED_KEY = "storage_paths_to_remove"
 
 
 async def _insert(session: AsyncSession, paths: Collection[str]) -> None:
+    """Adds cleanup rows for `paths`, ignoring any that already have one."""
     if paths:
         await session.execute(
             pg_insert(StorageCleanupRow)
@@ -71,10 +72,14 @@ async def schedule_removal(session: AsyncSession, paths: Collection[str]) -> Non
 
 
 async def _remove_scheduled(session: AsyncSession) -> None:
+    """The after-commit callback of `schedule_removal`: removes the objects it
+    queued on this session."""
     await _remove(session, session.info.pop(_SCHEDULED_KEY, []))
 
 
 async def _referenced(session: AsyncSession, paths: Collection[str]) -> set[str]:
+    """Which of `paths` a row still points at, as a Document image or an
+    avatar. Those objects must stay."""
     images = await session.execute(
         select(DocumentImageRow.storage_path).where(DocumentImageRow.storage_path.in_(paths))
     )
@@ -85,6 +90,9 @@ async def _referenced(session: AsyncSession, paths: Collection[str]) -> set[str]
 
 
 async def _remove(session: AsyncSession, paths: Collection[str]) -> None:
+    """Removes the unreferenced objects among `paths`, then drops the cleanup
+    rows of everything settled. A failed removal keeps its row for the next
+    sweep. Commits on its own."""
     if not paths:
         return
     referenced = await _referenced(session, paths)

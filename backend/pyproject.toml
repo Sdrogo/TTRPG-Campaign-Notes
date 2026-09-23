@@ -28,6 +28,7 @@ dev = [
 [tool.mypy]
 strict = true
 python_version = "3.12"
+enable_error_code = ["deprecated"]
 
 [tool.ruff]
 line-length = 100
@@ -35,7 +36,15 @@ target-version = "py312"
 extend-exclude = ["migrations/versions"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E", "F", "I", "UP", "B", "D1"]
+# D1 = every public module, class and function in app/ has a docstring
+# (code-standards.md -> Documentation). `__init__` is covered by its class's
+# docstring; tests and migrations are named for what they do instead.
+ignore = ["D107"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D1"]
+"migrations/**" = ["D1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

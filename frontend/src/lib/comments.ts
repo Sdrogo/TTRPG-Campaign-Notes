@@ -2,6 +2,7 @@ import type { Comment, CommentFilters } from '../types/comment';
 import type { Member } from '../types/member';
 import { displayNameFor, findMember } from './members';
 
+/** The Comment list's starting state: newest first, nothing filtered out. */
 export const DEFAULT_COMMENT_FILTERS: CommentFilters = {
   sort: 'newest',
   query: '',
@@ -10,10 +11,12 @@ export const DEFAULT_COMMENT_FILTERS: CommentFilters = {
   hideDeleted: false,
 };
 
+/** Whether a Comment was changed after it was posted. A deleted Comment never counts as edited. */
 export function isEdited(comment: Comment): boolean {
   return !comment.deleted && comment.updatedAt !== comment.createdAt;
 }
 
+/** Whether any filter would hide Comments. The sort order doesn't count. */
 export function hasActiveFilters(filters: CommentFilters): boolean {
   return (
     filters.query.trim() !== '' ||
@@ -34,8 +37,10 @@ function authorMatches(members: Member[], authorId: string, query: string): bool
   );
 }
 
-// Client-side filter + sort over the Comments the backend already returned
-// (so already visibility-filtered). Never mutates its input.
+/**
+ * Client-side filter + sort over the Comments the backend already returned (so
+ * already visibility-filtered). Never mutates its input.
+ */
 export function applyCommentFilters(
   comments: Comment[],
   filters: CommentFilters,
@@ -67,7 +72,7 @@ export function applyCommentFilters(
   }
 }
 
-// The distinct authors among `comments`, for the author filter.
+/** The distinct authors among `comments`, for the author filter. */
 export function commentAuthors(comments: Comment[], members: Member[]) {
   const ids = [...new Set(comments.map((c) => c.authorId))];
   return ids

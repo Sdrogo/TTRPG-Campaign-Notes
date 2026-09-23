@@ -66,7 +66,7 @@
 `.github/workflows/ci.yml` runs on every pull request and on pushes to `main`, as two independent jobs matching the two codebases.
 
 - **Frontend**: `npm ci`, `npm run lint`, `npm run build` (which type-checks), then `npm run test:coverage`. The coverage bar lives in `frontend/vitest.config.ts`, not in the workflow, so it is versioned with the code it measures and the same command gates locally and in CI.
-- **Backend**: `ruff check`, `mypy app tests`, then `pytest -m "not integration"` with a coverage gate on `app/domain`.
+- **Backend**: `ruff check` (which also fails on a public module, class or function in `app/` without a docstring — pydocstyle `D1`, see `code-standards.md` → Documentation), `mypy app tests`, then `pytest -m "not integration"` with a coverage gate on `app/domain`.
 
 **Backend CI runs no test that touches the database, and therefore needs no secrets.** The backend's API tests run against the *real* Supabase project (`tests/conftest.py::db_session` wraps each in a savepoint that is rolled back). That is fine on a developer's machine, but putting those credentials in GitHub Actions would mean every pull request — including one from a fork — connecting to the live database, so CI deliberately skips them. The split is automatic: `tests/conftest.py::pytest_collection_modifyitems` marks any test that requests the `db_session` fixture as `integration`, so a newly written database test is excluded without anyone editing the workflow. As of 2026-09-23 that is 138 tests in CI and 90 left for a developer to run locally before merging.
 

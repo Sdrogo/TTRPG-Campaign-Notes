@@ -1,3 +1,5 @@
+"""Rooms, Memberships and the audit log."""
+
 import uuid
 
 from sqlalchemy import delete, select
@@ -10,6 +12,7 @@ from app.domain.rooms import NewRoomPlan
 
 
 def _room_from_row(row: RoomRow) -> Room:
+    """Maps a `rooms` row to the domain `Room`."""
     return Room(
         id=row.id,
         name=row.name,
@@ -21,6 +24,7 @@ def _room_from_row(row: RoomRow) -> Room:
 
 
 def _membership_from_row(row: MembershipRow) -> Membership:
+    """Maps a `memberships` row to the domain `Membership`."""
     return Membership(
         id=row.id,
         room_id=row.room_id,
@@ -31,6 +35,8 @@ def _membership_from_row(row: MembershipRow) -> Membership:
 
 
 async def insert_new_room(session: AsyncSession, plan: NewRoomPlan) -> None:
+    """Inserts everything a `NewRoomPlan` holds - the Room, its creator's
+    Membership and the default Tags - in the caller's transaction."""
     session.add(
         RoomRow(
             id=plan.room.id,
@@ -56,13 +62,12 @@ async def insert_new_room(session: AsyncSession, plan: NewRoomPlan) -> None:
         )
     )
     for tag in plan.default_tags:
-        session.add(
-            TagRow(id=tag.id, room_id=tag.room_id, name=tag.name, category=tag.category)
-        )
+        session.add(TagRow(id=tag.id, room_id=tag.room_id, name=tag.name, category=tag.category))
     await session.flush()
 
 
 async def insert_membership(session: AsyncSession, membership: Membership) -> None:
+    """Adds a member to a Room."""
     session.add(
         MembershipRow(
             id=membership.id,
@@ -78,6 +83,7 @@ async def insert_membership(session: AsyncSession, membership: Membership) -> No
 async def get_membership(
     session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID
 ) -> Membership | None:
+    """The user's Membership in the Room, or None if they aren't a member."""
     result = await session.execute(
         select(MembershipRow).where(
             MembershipRow.room_id == room_id, MembershipRow.user_id == user_id
@@ -88,6 +94,7 @@ async def get_membership(
 
 
 async def get_room(session: AsyncSession, room_id: uuid.UUID) -> Room | None:
+    """The Room, or None."""
     row = await session.get(RoomRow, room_id)
     return _room_from_row(row) if row else None
 
@@ -95,6 +102,7 @@ async def get_room(session: AsyncSession, room_id: uuid.UUID) -> Room | None:
 async def list_rooms_for_user(
     session: AsyncSession, user_id: uuid.UUID
 ) -> list[tuple[Room, Membership]]:
+    """Every Room the user belongs to, with their Membership in it."""
     result = await session.execute(
         select(RoomRow, MembershipRow)
         .join(MembershipRow, MembershipRow.room_id == RoomRow.id)
@@ -104,15 +112,16 @@ async def list_rooms_for_user(
 
 
 async def list_memberships(session: AsyncSession, room_id: uuid.UUID) -> list[Membership]:
-    result = await session.execute(
-        select(MembershipRow).where(MembershipRow.room_id == room_id)
-    )
+    """Every Membership in the Room."""
+    result = await session.execute(select(MembershipRow).where(MembershipRow.room_id == room_id))
     return [_membership_from_row(row) for row in result.scalars()]
 
 
 async def list_members_with_profile(
     session: AsyncSession, room_id: uuid.UUID
 ) -> list[tuple[Membership, UserProfile]]:
+    """Every member of the Room with their profile. A member without a `users`
+    row gets an empty profile."""
     result = await session.execute(
         select(MembershipRow, UserRow)
         .outerjoin(UserRow, UserRow.id == MembershipRow.user_id)
@@ -124,6 +133,8 @@ async def list_members_with_profile(
 
 
 async def update_membership(session: AsyncSession, membership: Membership) -> None:
+    """Writes a Membership's role and Administrator flag. Raises `LookupError`
+    if it no longer exists."""
     row = await session.get(MembershipRow, membership.id)
     if row is None:
         raise LookupError(f"Membership {membership.id} not found")
@@ -133,6 +144,7 @@ async def update_membership(session: AsyncSession, membership: Membership) -> No
 
 
 async def delete_membership(session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    """Removes the user from the Room. Their content stays (D-15)."""
     await session.execute(
         delete(MembershipRow).where(
             MembershipRow.room_id == room_id, MembershipRow.user_id == user_id
@@ -144,6 +156,8 @@ async def delete_membership(session: AsyncSession, room_id: uuid.UUID, user_id: 
 async def set_players_can_create_documents(
     session: AsyncSession, room_id: uuid.UUID, value: bool
 ) -> None:
+    """Writes the Room's Document-creation setting (D-13). Raises `LookupError`
+    for an unknown Room."""
     row = await session.get(RoomRow, room_id)
     if row is None:
         raise LookupError(f"Room {room_id} not found")
@@ -152,6 +166,8 @@ async def set_players_can_create_documents(
 
 
 async def insert_audit_log(session: AsyncSession, entry: AuditLogEntry) -> None:
+    """Writes an audit entry. Call it in the same transaction as the change it
+    records (Invariant 7)."""
     session.add(
         AuditLogRow(
             id=entry.id,

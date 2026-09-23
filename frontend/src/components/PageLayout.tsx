@@ -10,8 +10,10 @@ interface PageLayoutProps {
   children: ReactNode;
 }
 
-// The top bar, then a full-width page body with side margins that grow with
-// the screen, starting with the "back" link every nested page has.
+/**
+ * The top bar, then a full-width page body with side margins that grow with the
+ * screen, starting with the "back" link every nested page has.
+ */
 export function PageLayout({ backTo, backLabel, children }: PageLayoutProps) {
   return (
     <>

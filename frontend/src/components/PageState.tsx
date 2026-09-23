@@ -5,6 +5,7 @@ import { Button, Loader, Stack, Text } from '@mantine/core';
 // Full-viewport placeholders shared by every routed page: loading, and a
 // message with an optional way out (sign in, go back, ...).
 
+/** A centered spinner while a page's session or data loads. */
 export function FullPageLoader() {
   return (
     <Stack align="center" justify="center" style={{ minHeight: '100svh' }}>
@@ -19,6 +20,7 @@ interface FullPageMessageProps {
   actionTo?: string;
 }
 
+/** A centered message, with a link out when `actionLabel` and `actionTo` are given. */
 export function FullPageMessage({ children, actionLabel, actionTo }: FullPageMessageProps) {
   return (
     <Stack align="center" justify="center" gap="md" p="md" style={{ minHeight: '100svh' }}>
@@ -32,6 +34,7 @@ export function FullPageMessage({ children, actionLabel, actionTo }: FullPageMes
   );
 }
 
+/** The message for a signed-out visitor, with a link to the sign-in page. */
 export function SignInRequired({ children }: { children: ReactNode }) {
   return (
     <FullPageMessage actionLabel="Vai al login" actionTo="/">

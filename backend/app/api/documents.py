@@ -1,3 +1,7 @@
+"""Documents (FR-D1, FR-D2): CRUD, their images and their Owners. Every read
+goes through the visibility filter first (Invariant 1), and every change
+requires Ownership - which the Master always has (D-12)."""
+
 import uuid
 from collections.abc import Mapping
 
@@ -43,6 +47,8 @@ router = APIRouter(prefix="/rooms/{room_id}/documents", tags=["documents"])
 
 
 class DocumentResponse(BaseModel):
+    """A Document as every route serializes it, filtered for the requester."""
+
     id: uuid.UUID
     room_id: uuid.UUID
     name: str
@@ -57,10 +63,15 @@ class DocumentResponse(BaseModel):
 
 
 class ImageFromUrlRequest(BaseModel):
+    """An image to import from a URL instead of uploading a file."""
+
     url: HttpUrl
 
 
 class CreateDocumentRequest(BaseModel):
+    """A new Document. Tags must belong to the Room; repeated ids are
+    dropped."""
+
     name: str
     description: str = ""
     visibility: DocumentVisibility = DocumentVisibility.ROOM
@@ -69,6 +80,9 @@ class CreateDocumentRequest(BaseModel):
 
 
 class UpdateDocumentRequest(BaseModel):
+    """A partial update: omitted fields are left as they are. A list that is
+    sent replaces the current one."""
+
     name: str | None = None
     description: str | None = None
     visibility: DocumentVisibility | None = None
@@ -102,6 +116,8 @@ def _build_response(
 async def _to_response(
     session: AsyncSession, document: Document, viewer: Membership
 ) -> DocumentResponse:
+    """Reads everything a single Document's response needs and serializes it
+    for `viewer`."""
     owner_ids = await documents_repo.list_owner_ids(session, document.id)
     selective_ids = await documents_repo.list_selective_grant_ids(session, document.id)
     tag_ids = await documents_repo.list_tag_ids_for_document(session, document.id)
@@ -114,6 +130,8 @@ async def _to_response(
 async def _validate_tag_ids(
     session: AsyncSession, room_id: uuid.UUID, tag_ids: list[uuid.UUID]
 ) -> None:
+    """422 unless every id is a Tag of this Room - a Document can't be tagged
+    with another Room's Tag."""
     found = await tags_repo.get_tags_by_ids(session, room_id, tag_ids)
     if len(found) != len(set(tag_ids)):
         raise HTTPException(
@@ -128,6 +146,8 @@ async def create_document(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> DocumentResponse:
+    """UC-06: creates a Document with the requester as its Owner. 403 when the
+    Room has disabled Document creation for Players (D-13, FR-D7)."""
     requester_id = uuid.UUID(current_user.id)
     membership = await require_membership(session, room_id, requester_id)
 
@@ -156,6 +176,8 @@ async def create_document(
 async def list_documents(
     room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
 ) -> list[DocumentResponse]:
+    """Every Document in the Room the requester can see (VR-07), each with its
+    Tags and visible images, in a fixed number of queries."""
     requester_id = uuid.UUID(current_user.id)
     membership = await require_membership(session, room_id, requester_id)
 
@@ -204,6 +226,8 @@ async def get_document(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> DocumentResponse:
+    """One Document; 404 whether it doesn't exist or the requester can't see it
+    (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
     membership = await require_membership(session, room_id, requester_id)
 
@@ -237,6 +261,8 @@ async def update_document(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> DocumentResponse:
+    """UC-07: an Owner (or the Master, D-12) edits the Document's fields, Tags
+    and Selective grants."""
     requester_id = uuid.UUID(current_user.id)
     document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
 
@@ -272,6 +298,8 @@ async def upload_document_image(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> DocumentResponse:
+    """An Owner adds an uploaded image, up to `MAX_IMAGES_PER_DOCUMENT` (409
+    beyond). The first image becomes the favorite (spec 07)."""
     requester_id = uuid.UUID(current_user.id)
     document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
     current_images = await ensure_room_for_another_image(session, document)
@@ -288,6 +316,7 @@ async def import_document_image(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> DocumentResponse:
+    """Like `upload_document_image`, with the image fetched from a URL."""
     requester_id = uuid.UUID(current_user.id)
     document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
     current_images = await ensure_room_for_another_image(session, document)
@@ -353,6 +382,8 @@ async def add_owner(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> DocumentResponse:
+    """UC-08: an Owner makes another member an Owner too. 404 when the user
+    isn't in the Room, 409 when they already own it."""
     requester_id = uuid.UUID(current_user.id)
     document, owner_ids, membership = await _get_owned_document(
         session, room_id, document_id, requester_id
@@ -379,6 +410,9 @@ async def remove_owner(
     current_user: CurrentUserDep,
     session: SessionDep,
 ) -> None:
+    """UC-08: an Owner removes an explicit Owner - themselves included. The
+    Master stays an implicit Owner, so a Document is never left unowned
+    (D-12)."""
     requester_id = uuid.UUID(current_user.id)
     _, owner_ids, _ = await _get_owned_document(session, room_id, document_id, requester_id)
 

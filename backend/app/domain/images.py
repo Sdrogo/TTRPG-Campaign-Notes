@@ -1,3 +1,6 @@
+"""The image pipeline's rules: which files are accepted, and how every stored
+image is resized and re-encoded. Pure Pillow, no I/O."""
+
 import io
 from dataclasses import dataclass
 
@@ -24,15 +27,18 @@ AVATAR_DIMENSION = 512
 
 
 class InvalidImageError(Exception):
-    pass
+    """The data isn't an image in a supported format."""
 
 
 class ImageTooLargeError(Exception):
-    pass
+    """The file or its pixel count is over the input limits."""
 
 
 @dataclass(frozen=True)
 class NormalizedImage:
+    """An image ready for Storage: the re-encoded bytes, their content type and
+    file extension, and the final size."""
+
     data: bytes
     content_type: str
     extension: str

@@ -19,6 +19,10 @@ const EMPTY_VALUES: DocumentFormValues = {
   tagIds: [],
 };
 
+/**
+ * Creates a Document in the Room, with a shortcut for adding a new Tag without
+ * leaving the form. Clears itself on close.
+ */
 export function CreateDocumentModal({ opened, onClose, roomId }: CreateDocumentModalProps) {
   const [values, setValues] = useState<DocumentFormValues>(EMPTY_VALUES);
   const [newTagName, setNewTagName] = useState('');

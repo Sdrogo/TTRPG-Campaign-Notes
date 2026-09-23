@@ -8,8 +8,10 @@ interface TagFilterProps extends Omit<MultiSelectProps, 'data' | 'value' | 'onCh
   onChange: (tagIds: string[]) => void;
 }
 
-// Pick one or more Tags to filter a list by (FR-N2). Tags are shown as
-// `#Name`, like everywhere else.
+/**
+ * Pick one or more Tags to filter a list by (FR-N2). Tags are shown as `#Name`,
+ * like everywhere else.
+ */
 export function TagFilter({ tags, value, onChange, ...props }: TagFilterProps) {
   return (
     <MultiSelect

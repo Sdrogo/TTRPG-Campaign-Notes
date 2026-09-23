@@ -1,6 +1,7 @@
 import { ActionIcon, Box, Group, Image, UnstyledButton } from '@mantine/core';
 import { XIcon } from '@phosphor-icons/react';
 
+/** One image in an `ImageThumbnailGrid`: stored or still pending. */
 export interface Thumbnail {
   id: string;
   url: string;
@@ -10,13 +11,13 @@ export interface Thumbnail {
 interface ImageThumbnailGridProps {
   images: Thumbnail[];
   size?: number;
-  // Makes each thumbnail clickable (e.g. to open a fullscreen viewer).
+  /** Makes each thumbnail clickable (e.g. to open a fullscreen viewer). */
   onOpen?: (index: number) => void;
-  // Shows a remove button on each thumbnail.
+  /** Shows a remove button on each thumbnail. */
   onRemove?: (id: string) => void;
 }
 
-// A wrapping row of square image thumbnails.
+/** A wrapping row of square image thumbnails. */
 export function ImageThumbnailGrid({ images, size = 96, onOpen, onRemove }: ImageThumbnailGridProps) {
   if (images.length === 0) {
     return null;

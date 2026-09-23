@@ -1,3 +1,5 @@
+"""Room invitations."""
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,6 +8,7 @@ from app.domain.models import Invitation, RoomRole
 
 
 def _invitation_from_row(row: InvitationRow) -> Invitation:
+    """Maps an `invitations` row to the domain `Invitation`."""
     return Invitation(
         id=row.id,
         room_id=row.room_id,
@@ -18,6 +21,7 @@ def _invitation_from_row(row: InvitationRow) -> Invitation:
 
 
 async def insert_invitation(session: AsyncSession, invitation: Invitation) -> None:
+    """Stores a new invitation."""
     session.add(
         InvitationRow(
             id=invitation.id,
@@ -33,6 +37,8 @@ async def insert_invitation(session: AsyncSession, invitation: Invitation) -> No
 
 
 async def get_invitation_by_code(session: AsyncSession, code: str) -> Invitation | None:
+    """The invitation with this code, or None. Whether it is still usable is
+    the domain's call."""
     result = await session.execute(select(InvitationRow).where(InvitationRow.code == code))
     row = result.scalar_one_or_none()
     return _invitation_from_row(row) if row else None

@@ -7,6 +7,7 @@ from pydantic import AfterValidator
 
 
 def _dedupe(ids: list[uuid.UUID]) -> list[uuid.UUID]:
+    """Drops repeated ids, keeping the first occurrence's position."""
     return list(dict.fromkeys(ids))
 
 

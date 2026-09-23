@@ -1,3 +1,5 @@
+"""Runtime settings, read from the environment (or a local `.env`)."""
+
 import json
 from typing import Annotated
 
@@ -6,6 +8,9 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """Every setting the backend reads. Defaults suit local development;
+    production sets them in the hosting dashboard."""
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     supabase_url: str = ""
@@ -48,10 +53,13 @@ class Settings(BaseSettings):
 
     @property
     def supabase_jwks_url(self) -> str:
+        """Where Supabase publishes the public keys its access tokens are
+        signed with."""
         return f"{self.supabase_url}/auth/v1/.well-known/jwks.json"
 
     @property
     def supabase_issuer(self) -> str:
+        """The `iss` claim a Supabase access token must carry."""
         return f"{self.supabase_url}/auth/v1"
 
 

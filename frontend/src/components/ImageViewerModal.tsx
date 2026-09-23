@@ -15,13 +15,17 @@ const ZOOM_STEP = 0.5;
 
 interface ImageViewerModalProps {
   images: DocumentImage[];
-  // Index of the open image, or null when the viewer is closed.
+  /** Index of the open image, or null when the viewer is closed. */
   index: number | null;
   onIndexChange: (index: number) => void;
   onClose: () => void;
   alt: string;
 }
 
+/**
+ * Fullscreen viewer for a set of images, with zoom and previous/next
+ * navigation. Open while `index` is set.
+ */
 export function ImageViewerModal({
   images,
   index,

@@ -9,6 +9,10 @@ import { PageLayout } from '../components/PageLayout';
 import { UserAvatar } from '../components/UserAvatar';
 import type { RoomRole } from '../types/room';
 
+/**
+ * `/rooms/:roomId/members`: the Room's members. An Administrator changes roles
+ * and the Administrator flag and removes members; anyone can leave.
+ */
 export function RoomMembersPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();

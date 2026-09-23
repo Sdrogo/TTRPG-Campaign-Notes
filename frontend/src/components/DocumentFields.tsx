@@ -11,7 +11,7 @@ interface DocumentFieldsProps {
   autoFocus?: boolean;
 }
 
-// Controlled name/description/visibility/tag inputs for a Document.
+/** Controlled name/description/visibility/tag inputs for a Document. */
 export function DocumentFields({ values, onChange, tags, autoFocus }: DocumentFieldsProps) {
   const set = (patch: Partial<DocumentFormValues>) => onChange({ ...values, ...patch });
 

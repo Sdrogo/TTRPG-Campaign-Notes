@@ -24,12 +24,15 @@ function membersQueryKey(roomId: string) {
   return ['rooms', roomId, 'members'] as const;
 }
 
-// Every Room's member list names users by their profile, so a profile
-// change must refresh all of them.
+/**
+ * Every Room's member list names users by their profile, so a profile change
+ * must refresh all of them.
+ */
 export function isMembersQueryKey(queryKey: readonly unknown[]): boolean {
   return queryKey[0] === 'rooms' && queryKey[2] === 'members';
 }
 
+/** The Room's members with their roles and profiles. */
 export function useMembers(roomId: string, enabled: boolean) {
   return useQuery<Member[]>({
     queryKey: membersQueryKey(roomId),
@@ -38,6 +41,10 @@ export function useMembers(roomId: string, enabled: boolean) {
   });
 }
 
+/**
+ * Changes a member's role and/or Administrator flag. The backend refuses a
+ * change that would leave the Room without a Master or an Administrator.
+ */
 export function useUpdateMember(roomId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -54,6 +61,10 @@ export function useUpdateMember(roomId: string) {
   });
 }
 
+/**
+ * Removes a member, or the user themselves when they leave. Also refreshes the
+ * user's own Room list.
+ */
 export function useRemoveMember(roomId: string) {
   const queryClient = useQueryClient();
   return useMutation({

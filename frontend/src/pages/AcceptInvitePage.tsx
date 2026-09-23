@@ -4,6 +4,10 @@ import { Stack, Title, Text, Button, Loader } from '@mantine/core';
 import { useSession } from '../hooks/useSession';
 import { useAcceptInvitation } from '../hooks/useRooms';
 
+/**
+ * `/invite/:code`: accepts the invitation as soon as the user is signed in,
+ * then opens the Room. An invalid, expired or used code shows an error.
+ */
 export function AcceptInvitePage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();

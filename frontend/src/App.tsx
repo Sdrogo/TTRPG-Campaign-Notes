@@ -6,6 +6,10 @@ import { RoomDocumentsPage } from './pages/RoomDocumentsPage';
 import { DocumentDetailPage } from './pages/DocumentDetailPage';
 import { AccountPage } from './pages/AccountPage';
 
+/**
+ * The route table. Every page checks the session itself and shows a sign-in
+ * prompt when there is none.
+ */
 function App() {
   return (
     <Routes>

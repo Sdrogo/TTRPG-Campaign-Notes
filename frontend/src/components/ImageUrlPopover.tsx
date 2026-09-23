@@ -4,15 +4,17 @@ import { isHttpUrl } from '../lib/images';
 
 interface ImageUrlPopoverProps {
   onAddUrl: (url: string) => void;
-  // The element that opens the popover; call `toggle` from its onClick.
+  /** The element that opens the popover; call `toggle` from its onClick. */
   children: (toggle: () => void) => ReactElement;
   position?: PopoverProps['position'];
   submitLabel?: string;
 }
 
-// A small "paste an image URL" popover, shared by every place that accepts
-// an image by URL (Comment composer, avatar). The backend fetches and
-// validates the image; this only checks it looks like an http(s) URL.
+/**
+ * A small "paste an image URL" popover, shared by every place that accepts an
+ * image by URL (Comment composer, avatar). The backend fetches and validates
+ * the image; this only checks it looks like an http(s) URL.
+ */
 export function ImageUrlPopover({
   onAddUrl,
   children,
