@@ -51,13 +51,9 @@ def test_private_is_hidden_from_non_owners() -> None:
 def test_selective_is_visible_to_the_grant_list() -> None:
     document = _document(DocumentVisibility.SELECTIVE)
     granted_id = uuid.uuid4()
-    assert (
-        is_document_visible(document, granted_id, RoomRole.PLAYER, [], [granted_id]) is True
-    )
+    assert is_document_visible(document, granted_id, RoomRole.PLAYER, [], [granted_id]) is True
 
 
 def test_selective_is_hidden_from_everyone_else() -> None:
     document = _document(DocumentVisibility.SELECTIVE)
-    assert (
-        is_document_visible(document, uuid.uuid4(), RoomRole.PLAYER, [], [uuid.uuid4()]) is False
-    )
+    assert is_document_visible(document, uuid.uuid4(), RoomRole.PLAYER, [], [uuid.uuid4()]) is False

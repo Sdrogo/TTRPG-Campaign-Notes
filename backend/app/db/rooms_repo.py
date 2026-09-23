@@ -62,9 +62,7 @@ async def insert_new_room(session: AsyncSession, plan: NewRoomPlan) -> None:
         )
     )
     for tag in plan.default_tags:
-        session.add(
-            TagRow(id=tag.id, room_id=tag.room_id, name=tag.name, category=tag.category)
-        )
+        session.add(TagRow(id=tag.id, room_id=tag.room_id, name=tag.name, category=tag.category))
     await session.flush()
 
 
@@ -115,9 +113,7 @@ async def list_rooms_for_user(
 
 async def list_memberships(session: AsyncSession, room_id: uuid.UUID) -> list[Membership]:
     """Every Membership in the Room."""
-    result = await session.execute(
-        select(MembershipRow).where(MembershipRow.room_id == room_id)
-    )
+    result = await session.execute(select(MembershipRow).where(MembershipRow.room_id == room_id))
     return [_membership_from_row(row) for row in result.scalars()]
 
 
