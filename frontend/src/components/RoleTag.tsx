@@ -1,5 +1,6 @@
 import { Badge, Group } from '@mantine/core';
 import type { RoomRole } from '../types/room';
+import { useTranslation } from 'react-i18next';
 
 interface RoleTagProps {
   role: RoomRole;
@@ -8,14 +9,15 @@ interface RoleTagProps {
 
 /** A member's role badge (Master or Player), plus an Admin badge for an Administrator. */
 export function RoleTag({ role, isAdmin }: RoleTagProps) {
+  const { t } = useTranslation();
   return (
     <Group gap={4}>
       <Badge color={role === 'master' ? 'accent' : 'gray'} variant="light">
-        {role === 'master' ? 'Master' : 'Player'}
+        {t(`roles.${role}`)}
       </Badge>
       {isAdmin && (
         <Badge color="gray" variant="outline">
-          Admin
+          {t('roles.admin')}
         </Badge>
       )}
     </Group>

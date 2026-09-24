@@ -4,6 +4,7 @@ import { TrashIcon } from '@phosphor-icons/react';
 import { findMember, memberDisplayName, memberOptionLabel } from '../lib/members';
 import { UserAvatar } from './UserAvatar';
 import type { Member } from '../types/member';
+import { useTranslation } from 'react-i18next';
 
 interface DocumentOwnersProps {
   ownerIds: string[];
@@ -18,6 +19,7 @@ interface DocumentOwnersProps {
  * Owner when `canManage` (Owners and the Master, D-12).
  */
 export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }: DocumentOwnersProps) {
+  const { t } = useTranslation();
   const [addOwnerId, setAddOwnerId] = useState<string | null>(null);
 
   const ownerOptions = members
@@ -27,7 +29,7 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
   return (
     <Stack gap="xs">
       <Text fw={600} size="sm">
-        Owner
+        {t('documents.owners')}
       </Text>
       <Group gap="xs">
         {ownerIds.map((ownerId) => {
@@ -49,7 +51,7 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
                     variant="transparent"
                     color="gray"
                     onClick={() => onRemove(ownerId)}
-                    aria-label={`Rimuovi Owner ${name}`}
+                    aria-label={t('documents.removeOwner', { name })}
                   >
                     <TrashIcon size={12} />
                   </ActionIcon>
@@ -64,7 +66,7 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
       {canManage && (
         <Group gap="xs" wrap="wrap">
           <Select
-            placeholder="Aggiungi Owner"
+            placeholder={t('documents.addOwner')}
             data={ownerOptions}
             value={addOwnerId}
             onChange={setAddOwnerId}
@@ -81,7 +83,7 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
               }
             }}
           >
-            Aggiungi
+            {t('common.add')}
           </Button>
         </Group>
       )}

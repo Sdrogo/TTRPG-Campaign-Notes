@@ -15,6 +15,7 @@ import { DocumentMentionsProvider } from '../components/mentions/DocumentMention
 import { TagFilter } from '../components/TagFilter';
 import { filterDocumentsByTags } from '../lib/documentFilters';
 import { canCreateDocuments } from '../lib/roomPermissions';
+import { useTranslation } from 'react-i18next';
 
 /**
  * `/rooms/:roomId/documents`: the Documents the viewer can see, filterable by
@@ -22,6 +23,7 @@ import { canCreateDocuments } from '../lib/roomPermissions';
  * Document creation (D-13).
  */
 export function RoomDocumentsPage() {
+  const { t } = useTranslation();
   const { roomId } = useParams<{ roomId: string }>();
   const { session, loading: sessionLoading } = useSession();
 
@@ -34,13 +36,14 @@ export function RoomDocumentsPage() {
   }
 
   if (!session) {
-    return <SignInRequired>Accedi per vedere i Documenti di questa Stanza.</SignInRequired>;
+    return <SignInRequired>{t('documents.signInRequired')}</SignInRequired>;
   }
 
   return <RoomDocumentsContent roomId={roomId} currentUserId={session.user.id} />;
 }
 
 function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; currentUserId: string }) {
+  const { t } = useTranslation();
   const [createOpened, setCreateOpened] = useState(false);
   const room = useRoom(roomId, true);
   const documents = useDocuments(roomId, true);
@@ -61,22 +64,22 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   const shown = documents.data ? filterDocumentsByTags(documents.data, tagFilter) : undefined;
 
   return (
-    <PageLayout backTo="/" backLabel="Le mie Stanze">
+    <PageLayout backTo="/" backLabel={t('common.myRooms')}>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         <Group justify="space-between">
           <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
-            Documenti{room.data ? ` — ${room.data.name}` : ''}
+            {room.data ? t('documents.titleWithRoom', { room: room.data.name }) : t('documents.title')}
           </Title>
           {canCreateDocument && (
             <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>
-              Crea Documento
+              {t('documents.create')}
             </Button>
           )}
         </Group>
 
         {isMaster && room.data && (
           <Switch
-            label="I Player possono creare Documenti"
+            label={t('documents.playersCanCreate')}
             checked={room.data.playersCanCreateDocuments}
             onChange={(event) => updateSettings.mutate(event.currentTarget.checked)}
           />
@@ -92,15 +95,15 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
         )}
 
         {documents.isLoading && <Loader color="accent" />}
-        {documents.isError && <Text c="red">Errore nel caricamento dei Documenti.</Text>}
+        {documents.isError && <Text c="red">{t('documents.loadError')}</Text>}
         {documents.data && documents.data.length === 0 && (
-          <Text c="dimmed">Nessun Documento ancora. Creane uno per iniziare.</Text>
+          <Text c="dimmed">{t('documents.empty')}</Text>
         )}
         {documents.data && documents.data.length > 0 && shown && shown.length === 0 && (
           <Group gap="xs">
-            <Text c="dimmed">Nessun Documento con {tagFilter.length === 1 ? 'questo Tag' : 'questi Tag'}.</Text>
+            <Text c="dimmed">{t('documents.noMatchForTags', { count: tagFilter.length })}</Text>
             <Button size="xs" variant="subtle" onClick={() => setTagFilter([])}>
-              Mostra tutti
+              {t('documents.showAll')}
             </Button>
           </Group>
         )}

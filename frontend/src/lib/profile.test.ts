@@ -7,6 +7,7 @@ import {
   tooLong,
 } from './profile';
 import type { AccountProfile } from '../types/profile';
+import { setLanguage } from '../i18n';
 
 const profile: AccountProfile = {
   userId: 'u-1',
@@ -36,6 +37,15 @@ describe('profile form', () => {
     expect(validate('a'.repeat(MAX_DISPLAY_NAME_LENGTH + 1))).toContain(
       String(MAX_DISPLAY_NAME_LENGTH),
     );
+  });
+
+  it('reports the limit in the UI language', async () => {
+    const validate = tooLong(40);
+    expect(validate('a'.repeat(41))).toBe('Massimo 40 caratteri');
+
+    await setLanguage('en');
+
+    expect(validate('a'.repeat(41))).toBe('At most 40 characters');
   });
 });
 

@@ -5,6 +5,7 @@ import { useCreateDocument } from '../hooks/useDocuments';
 import { useTags, useCreateTag } from '../hooks/useTags';
 import { DocumentFields } from './DocumentFields';
 import type { DocumentFormValues } from '../types/document';
+import { useTranslation } from 'react-i18next';
 
 interface CreateDocumentModalProps {
   opened: boolean;
@@ -24,6 +25,7 @@ const EMPTY_VALUES: DocumentFormValues = {
  * leaving the form. Clears itself on close.
  */
 export function CreateDocumentModal({ opened, onClose, roomId }: CreateDocumentModalProps) {
+  const { t } = useTranslation();
   const [values, setValues] = useState<DocumentFormValues>(EMPTY_VALUES);
   const [newTagName, setNewTagName] = useState('');
 
@@ -61,14 +63,14 @@ export function CreateDocumentModal({ opened, onClose, roomId }: CreateDocumentM
   };
 
   return (
-    <Modal opened={opened} onClose={handleClose} title="Crea Documento" centered>
+    <Modal opened={opened} onClose={handleClose} title={t('documents.create')} centered>
       <form onSubmit={handleSubmit}>
         <Stack gap="sm">
           <DocumentFields values={values} onChange={setValues} tags={tags.data ?? []} autoFocus />
           <Group gap="xs" align="flex-end">
             <TextInput
-              label="Nuovo tag"
-              placeholder="Es. Fazione"
+              label={t('documents.fields.newTag')}
+              placeholder={t('documents.fields.newTagPlaceholder')}
               value={newTagName}
               onChange={(event) => setNewTagName(event.currentTarget.value)}
               style={{ flex: 1 }}
@@ -80,7 +82,7 @@ export function CreateDocumentModal({ opened, onClose, roomId }: CreateDocumentM
               loading={createTag.isPending}
               disabled={!newTagName.trim()}
             >
-              Aggiungi
+              {t('common.add')}
             </Button>
           </Group>
           {createDocument.isError && (
@@ -93,7 +95,7 @@ export function CreateDocumentModal({ opened, onClose, roomId }: CreateDocumentM
             loading={createDocument.isPending}
             disabled={!values.name.trim() || createTag.isPending}
           >
-            Crea Documento
+            {t('documents.create')}
           </Button>
         </Stack>
       </form>

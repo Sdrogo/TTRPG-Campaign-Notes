@@ -1,0 +1,245 @@
+{
+  "language": {
+    "name": "English",
+    "selectorLabel": "Language: {{language}}",
+    "selectorTooltip": "Change language"
+  },
+  "app": {
+    "name": "TTRPG Campaign Notes"
+  },
+  "common": {
+    "add": "Add",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "remove": "Remove",
+    "save": "Save",
+    "leave": "Leave",
+    "copy": "Copy",
+    "copied": "Copied",
+    "yes": "Yes",
+    "notApplicable": "—",
+    "you": "You",
+    "name": "Name",
+    "description": "Description",
+    "noDescription": "No description.",
+    "noResults": "No results",
+    "resetFilters": "Reset filters",
+    "goToLogin": "Go to sign in",
+    "myRooms": "My Rooms",
+    "backToMyRooms": "Back to my Rooms",
+    "maxLength": "At most {{max}} characters",
+    "unknownUser": "Unknown user"
+  },
+  "roles": {
+    "master": "Master",
+    "player": "Player",
+    "admin": "Admin"
+  },
+  "visibility": {
+    "label": "Visibility",
+    "level": {
+      "room": "Room",
+      "master": "Master only",
+      "private": "Private",
+      "selective": "Selective"
+    },
+    "documentOption": {
+      "room": "Room (all members)",
+      "master": "Master only",
+      "private": "Private (Owners + Master)",
+      "selective": "Selective (only Owners + Master until you pick others)"
+    },
+    "commentOption": {
+      "room": "Room (all members)",
+      "master": "Master only (and you)",
+      "private": "Private (you + Master)",
+      "selective": "Selective (you, Master and whoever you pick)"
+    }
+  },
+  "time": {
+    "now": "just now"
+  },
+  "auth": {
+    "prompt": "Sign in to continue.",
+    "signInWith": "Sign in with {{provider}}"
+  },
+  "header": {
+    "account": "Your account"
+  },
+  "account": {
+    "signInRequired": "Sign in to manage your account.",
+    "loadError": "Couldn't load your account.",
+    "title": "Account",
+    "subtitle": "Your profile and your session.",
+    "profile": {
+      "title": "Profile",
+      "description": "How the other members of your Rooms see you.",
+      "displayName": "Display name",
+      "displayNameDescription": "Shown instead of your email in Rooms, Comments and among Owners.",
+      "displayNamePlaceholder": "Your name",
+      "pronouns": "Pronouns",
+      "pronounsPlaceholder": "E.g. she/her, he/him, they/them",
+      "bioDescription": "A couple of lines about you, visible to the members of your Rooms.",
+      "discardChanges": "Discard changes",
+      "save": "Save profile",
+      "saved": "Profile saved."
+    },
+    "avatar": {
+      "upload": "Upload photo",
+      "fromUrl": "From URL",
+      "useImage": "Use image",
+      "hint": "PNG, JPEG, WebP or GIF. The image is cropped to the center and resized automatically."
+    },
+    "access": {
+      "title": "Sign-in",
+      "email": "Email",
+      "emailDescription": "This is the email of the account you signed in with.",
+      "noEmail": "Your account didn't share an email",
+      "signOutDescription": "End the session on this device."
+    }
+  },
+  "rooms": {
+    "create": "Create Room",
+    "loadError": "Error loading Rooms.",
+    "empty": "No Rooms yet. Create one to get started.",
+    "documents": "Documents",
+    "members": "Members",
+    "invite": "Invite",
+    "createModal": {
+      "title": "Create a Room",
+      "namePlaceholder": "E.g. Curse of Strahd",
+      "gameSystem": "Game system",
+      "gameSystemPlaceholder": "E.g. D&D 5e (optional)"
+    }
+  },
+  "invite": {
+    "modalTitle": "Invite to the Room",
+    "proposedRole": "Proposed role",
+    "generate": "Generate invite",
+    "signInRequired": "Sign in to join this Room.",
+    "invalid": "Invalid, expired or already used invite.",
+    "joined": "You joined \"{{room}}\"",
+    "goToMyRooms": "Go to my Rooms"
+  },
+  "members": {
+    "signInRequired": "Sign in to see the members of this Room.",
+    "title": "Room members",
+    "loadError": "Error loading members.",
+    "columnUser": "User",
+    "columnRole": "Role",
+    "columnAdmin": "Administrator"
+  },
+  "documents": {
+    "signInRequired": "Sign in to see the Documents of this Room.",
+    "title": "Documents",
+    "titleWithRoom": "Documents — {{room}}",
+    "create": "Create Document",
+    "playersCanCreate": "Players can create Documents",
+    "loadError": "Error loading Documents.",
+    "empty": "No Documents yet. Create one to get started.",
+    "noMatchForTags_one": "No Documents with this Tag.",
+    "noMatchForTags_other": "No Documents with these Tags.",
+    "showAll": "Show all",
+    "filterByTag": "Filter by Tag",
+    "owners": "Owners",
+    "ownersLine": "Owners: {{names}}",
+    "addOwner": "Add Owner",
+    "removeOwner": "Remove Owner {{name}}",
+    "detail": {
+      "signInRequired": "Sign in to see this Document.",
+      "notFound": "Document not found or not visible.",
+      "backToDocuments": "Back to Documents",
+      "cancelEditing": "Discard changes",
+      "saveChanges": "Save changes"
+    },
+    "fields": {
+      "descriptionHint": "Type # to link another Document.",
+      "tags": "Tags",
+      "newTag": "New tag",
+      "newTagPlaceholder": "E.g. Faction"
+    }
+  },
+  "images": {
+    "numbered": "{{name}} ({{index}})",
+    "open": "Open image",
+    "openNamed": "Open {{name}}",
+    "removeNamed": "Remove {{name}}",
+    "delete": "Delete image",
+    "deleteConfirm": "Delete this image?",
+    "favorite": "Main image",
+    "setFavorite": "Use as main image",
+    "urlLabel": "Image URL",
+    "urlPlaceholder": "https://… image URL",
+    "invalidUrl": "Enter a valid http(s) URL",
+    "addTitle": "Add images",
+    "fromComputer": "From computer",
+    "addFromUrl": "Add from URL",
+    "resizeHint": "PNG, JPEG, WebP or GIF. Large images are resized automatically.",
+    "limitReached": "Image limit reached",
+    "attachFiles": "Add images",
+    "attachFilesTooltip": "Add images from your computer",
+    "attachUrl": "Add image from URL",
+    "viewer": {
+      "previous": "Previous image",
+      "next": "Next image",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "fit": "Fit to screen"
+    }
+  },
+  "comments": {
+    "title": "Comments",
+    "loadError": "Couldn't load the comments.",
+    "empty": "No comments yet. Write the first one!",
+    "filteredCount_one": "{{shown}} of {{count}} comment",
+    "filteredCount_other": "{{shown}} of {{count}} comments",
+    "noMatch": "No comments match the filters.",
+    "publish": "Post",
+    "savedWithImageErrors": "Comment saved, but not all of its images: {{errors}}",
+    "imageRemovalFailed": "Removing image: {{reason}}",
+    "you": "(you)",
+    "deleted": "Comment deleted.",
+    "edited": "Edited",
+    "editedAt": "Edited {{date}}",
+    "deleteConfirm": "Delete this comment?",
+    "deleteImagesWarning": "Its images will be removed from the Document too.",
+    "imageLabel": "Image {{index}} of {{author}}'s comment",
+    "imagesAlt": "Comment by {{author}}",
+    "attachedImage": "Attached image",
+    "composer": {
+      "bodyLabel": "Comment text",
+      "bodyPlaceholder": "Write a comment… (# to link a Document)",
+      "visibilityLabel": "Comment visibility",
+      "selectiveLabel": "Members who can see the comment",
+      "selectivePlaceholder": "Who can see it"
+    },
+    "toolbar": {
+      "searchLabel": "Search comments",
+      "searchPlaceholder": "Search…",
+      "sortLabel": "Sort comments",
+      "sortNewest": "Newest",
+      "sortOldest": "Oldest",
+      "sortAuthor": "By author",
+      "authorLabel": "Filter by author",
+      "authorPlaceholder": "All authors",
+      "visibilityLabel": "Filter by visibility",
+      "visibilityPlaceholder": "Any visibility",
+      "hideDeleted": "Hide deleted"
+    }
+  },
+  "mentions": {
+    "listLabel": "Documents and Tags to link",
+    "kind": {
+      "document": "Document",
+      "tag": "Tag"
+    },
+    "tagDetail_one": "Tag · {{count}} Document",
+    "tagDetail_other": "Tag · {{count}} Documents",
+    "noMatchCreate": "No results for “{{name}}”. Create it as:",
+    "kindSwitchLabel": "Type of the new item",
+    "createKind": "Create {{kind}}",
+    "hintSwitchKind": "←/→ switch type · ",
+    "hintCreate": "Enter to create"
+  }
+}

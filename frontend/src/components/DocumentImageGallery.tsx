@@ -14,6 +14,7 @@ import { Carousel } from '@mantine/carousel';
 import { HeartIcon, TrashIcon } from '@phosphor-icons/react';
 import { ImageViewerModal } from './ImageViewerModal';
 import type { DocumentImage } from '../types/document';
+import { useTranslation } from 'react-i18next';
 
 // Grows with the viewport so the images use the wider card on large screens.
 const GALLERY_HEIGHT = { base: 240, sm: 360, lg: 480 };
@@ -46,6 +47,7 @@ export function DocumentImageGallery({
   onSetFavorite,
   settingFavoriteId = null,
 }: DocumentImageGalleryProps) {
+  const { t } = useTranslation();
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   if (images.length === 0) {
@@ -55,7 +57,7 @@ export function DocumentImageGallery({
   const renderSlide = (image: DocumentImage, index: number) => (
     <GalleryImage
       image={image}
-      alt={`${documentName} (${index + 1})`}
+      alt={t('images.numbered', { name: documentName, index: index + 1 })}
       onOpen={() => setViewerIndex(index)}
       canDelete={canDelete}
       onDelete={() => onDelete(image.id)}
@@ -114,6 +116,7 @@ function GalleryImage({
   onSetFavorite?: (imageId: string) => void;
   settingFavorite: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Box
       pos="relative"
@@ -125,7 +128,7 @@ function GalleryImage({
         onClick={onOpen}
         w="100%"
         h="100%"
-        aria-label="Apri immagine"
+        aria-label={t('images.open')}
         style={{ cursor: 'zoom-in' }}
       >
         <img
@@ -165,16 +168,17 @@ function FavoriteButton({
   loading: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   // No confirmation: unlike deleting, picking a different favorite is
   // undone by picking the old one again.
   return (
-    <Tooltip label={isFavorite ? 'Immagine principale' : 'Usa come immagine principale'}>
+    <Tooltip label={isFavorite ? t('images.favorite') : t('images.setFavorite')}>
       <ActionIcon
         variant="default"
         loading={loading}
         onClick={onClick}
         disabled={isFavorite}
-        aria-label="Usa come immagine principale"
+        aria-label={t('images.setFavorite')}
         aria-pressed={isFavorite}
       >
         <HeartIcon
@@ -188,6 +192,7 @@ function FavoriteButton({
 }
 
 function DeleteImageButton({ onConfirm, loading }: { onConfirm: () => void; loading: boolean }) {
+  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
 
   return (
@@ -198,17 +203,17 @@ function DeleteImageButton({ onConfirm, loading }: { onConfirm: () => void; load
           color="red"
           loading={loading}
           onClick={() => setOpened((current) => !current)}
-          aria-label="Elimina immagine"
+          aria-label={t('images.delete')}
         >
           <TrashIcon size={16} />
         </ActionIcon>
       </Popover.Target>
       <Popover.Dropdown>
         <Stack gap="xs">
-          <Text size="sm">Eliminare questa immagine?</Text>
+          <Text size="sm">{t('images.deleteConfirm')}</Text>
           <Group gap="xs" justify="flex-end">
             <Button size="xs" variant="subtle" color="gray" onClick={() => setOpened(false)}>
-              Annulla
+              {t('common.cancel')}
             </Button>
             <Button
               size="xs"
@@ -218,7 +223,7 @@ function DeleteImageButton({ onConfirm, loading }: { onConfirm: () => void; load
                 onConfirm();
               }}
             >
-              Elimina
+              {t('common.delete')}
             </Button>
           </Group>
         </Stack>

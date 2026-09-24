@@ -1,5 +1,6 @@
 import type { Document } from '../types/document';
 import type { Tag } from '../types/tag';
+import { currentLanguage } from '../i18n';
 
 // Mentions (FR-D4, specs `06 - Quick navigation` and `06_1 - … refnment`):
 // typing `#` at the start of a word suggests the Room's Documents and Tags;
@@ -171,7 +172,7 @@ export function filterMentionCandidates(
       (a, b) =>
         a.rank - b.rank ||
         (a.target.kind === b.target.kind ? 0 : a.target.kind === 'document' ? -1 : 1) ||
-        mentionTargetName(a.target).localeCompare(mentionTargetName(b.target), 'it', {
+        mentionTargetName(a.target).localeCompare(mentionTargetName(b.target), currentLanguage(), {
           sensitivity: 'base',
         }),
     )

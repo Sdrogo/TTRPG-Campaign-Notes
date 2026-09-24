@@ -4,6 +4,7 @@ import { UserAvatar } from '../UserAvatar';
 import { ImageUrlPopover } from '../ImageUrlPopover';
 import { ACCEPTED_IMAGE_TYPES } from '../../lib/images';
 import type { UserIdentity } from '../../types/profile';
+import { useTranslation } from 'react-i18next';
 
 /** The avatar changes `AvatarEditor` offers, one at a time. */
 export type AvatarAction = 'upload' | 'import' | 'remove';
@@ -23,6 +24,7 @@ interface AvatarEditorProps {
  * "save".
  */
 export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }: AvatarEditorProps) {
+  const { t } = useTranslation();
   const busy = pending !== null;
 
   return (
@@ -43,11 +45,11 @@ export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }:
                 loading={pending === 'upload'}
                 leftSection={<UploadSimpleIcon size={16} />}
               >
-                Carica foto
+                {t('account.avatar.upload')}
               </Button>
             )}
           </FileButton>
-          <ImageUrlPopover onAddUrl={onImportUrl} position="bottom-start" submitLabel="Usa immagine">
+          <ImageUrlPopover onAddUrl={onImportUrl} position="bottom-start" submitLabel={t('account.avatar.useImage')}>
             {(toggle) => (
               <Button
                 variant="subtle"
@@ -57,7 +59,7 @@ export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }:
                 onClick={toggle}
                 leftSection={<LinkIcon size={16} />}
               >
-                Da URL
+                {t('account.avatar.fromUrl')}
               </Button>
             )}
           </ImageUrlPopover>
@@ -71,13 +73,12 @@ export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }:
               onClick={onRemove}
               leftSection={<TrashIcon size={16} />}
             >
-              Rimuovi
+              {t('common.remove')}
             </Button>
           )}
         </Group>
         <Text size="xs" c="dimmed">
-          PNG, JPEG, WebP o GIF. L&apos;immagine viene ritagliata al centro e ridimensionata
-          automaticamente.
+          {t('account.avatar.hint')}
         </Text>
       </Stack>
     </Group>

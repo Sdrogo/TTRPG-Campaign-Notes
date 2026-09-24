@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-  UNKNOWN_USER_LABEL,
+  unknownUserLabel,
   displayNameFor,
   memberDisplayName,
   memberOptionLabel,
   userDisplayName,
 } from './members';
 import type { Member } from '../types/member';
+import { setLanguage } from '../i18n';
 
 const member = (
   userId: string,
@@ -33,8 +34,8 @@ describe('memberDisplayName', () => {
   });
 
   it('never shows a raw id', () => {
-    expect(memberDisplayName(member('11111111-aaaa', null))).toBe(UNKNOWN_USER_LABEL);
-    expect(memberDisplayName(undefined)).toBe(UNKNOWN_USER_LABEL);
+    expect(memberDisplayName(member('11111111-aaaa', null))).toBe(unknownUserLabel());
+    expect(memberDisplayName(undefined)).toBe(unknownUserLabel());
   });
 
   it('works for any user identity, not only members', () => {
@@ -53,7 +54,7 @@ describe('memberDisplayName', () => {
     const members = [member('u-1', 'a@example.com', 'Ireena'), member('u-2', 'b@example.com')];
     expect(displayNameFor(members, 'u-1')).toBe('Ireena');
     expect(displayNameFor(members, 'u-2')).toBe('b@example.com');
-    expect(displayNameFor(members, 'u-3')).toBe(UNKNOWN_USER_LABEL);
+    expect(displayNameFor(members, 'u-3')).toBe(unknownUserLabel());
   });
 });
 
@@ -77,6 +78,17 @@ describe('memberOptionLabel', () => {
     const first = memberOptionLabel(member('11111111-aaaa', null));
     const second = memberOptionLabel(member('22222222-bbbb', null));
     expect(first).not.toBe(second);
-    expect(first).toContain(UNKNOWN_USER_LABEL);
+    expect(first).toContain(unknownUserLabel());
+  });
+});
+
+describe('unknownUserLabel', () => {
+  it('is in the UI language', async () => {
+    expect(unknownUserLabel()).toBe('Utente sconosciuto');
+
+    await setLanguage('en');
+
+    expect(unknownUserLabel()).toBe('Unknown user');
+    expect(userDisplayName(undefined)).toBe('Unknown user');
   });
 });

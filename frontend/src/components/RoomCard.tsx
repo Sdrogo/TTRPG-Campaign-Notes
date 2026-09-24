@@ -5,6 +5,7 @@ import { FilesIcon, UserPlusIcon, UsersIcon } from '@phosphor-icons/react';
 import { RoleTag } from './RoleTag';
 import { InviteModal } from './InviteModal';
 import type { MyRoom } from '../types/room';
+import { useTranslation } from 'react-i18next';
 
 interface RoomCardProps {
   myRoom: MyRoom;
@@ -15,6 +16,7 @@ interface RoomCardProps {
  * members. An Administrator also gets the invite button.
  */
 export function RoomCard({ myRoom }: RoomCardProps) {
+  const { t } = useTranslation();
   const [inviteOpened, setInviteOpened] = useState(false);
   const { room, role, isAdmin } = myRoom;
 
@@ -40,7 +42,7 @@ export function RoomCard({ myRoom }: RoomCardProps) {
             size="xs"
             leftSection={<FilesIcon size={16} />}
           >
-            Documenti
+            {t('rooms.documents')}
           </Button>
           <Button
             component={Link}
@@ -49,7 +51,7 @@ export function RoomCard({ myRoom }: RoomCardProps) {
             size="xs"
             leftSection={<UsersIcon size={16} />}
           >
-            Membri
+            {t('rooms.members')}
           </Button>
           {isAdmin && (
             <Button
@@ -58,7 +60,7 @@ export function RoomCard({ myRoom }: RoomCardProps) {
               leftSection={<UserPlusIcon size={16} />}
               onClick={() => setInviteOpened(true)}
             >
-              Invita
+              {t('rooms.invite')}
             </Button>
           )}
         </Group>

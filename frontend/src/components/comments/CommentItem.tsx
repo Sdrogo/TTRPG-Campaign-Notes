@@ -11,6 +11,7 @@ import { isEdited } from '../../lib/comments';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/time';
 import type { Comment, CommentFormValues } from '../../types/comment';
 import type { Member } from '../../types/member';
+import { useTranslation } from 'react-i18next';
 
 interface CommentItemProps {
   comment: Comment;
@@ -37,6 +38,7 @@ export function CommentItem({
   onDelete,
   deleting,
 }: CommentItemProps) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const author = findMember(members, comment.authorId);
   const authorName = memberDisplayName(author);
@@ -50,7 +52,7 @@ export function CommentItem({
           <CommentComposer
             members={members}
             currentUserId={currentUserId}
-            submitLabel="Salva"
+            submitLabel={t('common.save')}
             initialValues={{
               body: comment.body,
               visibility: comment.visibility,
@@ -82,7 +84,7 @@ export function CommentItem({
                 {isMine && (
                   <Text span size="xs" c="dimmed" fw={400}>
                     {' '}
-                    (tu)
+                    {t('comments.you')}
                   </Text>
                 )}
               </Text>
@@ -92,7 +94,7 @@ export function CommentItem({
             </Group>
             {comment.deleted ? (
               <Text size="sm" c="dimmed" fs="italic">
-                Commento eliminato.
+                {t('comments.deleted')}
               </Text>
             ) : (
               <Stack gap="xs">
@@ -115,14 +117,14 @@ export function CommentItem({
               </Text>
             </Tooltip>
             {isEdited(comment) && (
-              <Tooltip label={`Modificato ${formatAbsoluteTime(comment.updatedAt)}`} withArrow>
+              <Tooltip label={t('comments.editedAt', { date: formatAbsoluteTime(comment.updatedAt) })} withArrow>
                 <Text size="xs" c="dimmed">
-                  Modificato
+                  {t('comments.edited')}
                 </Text>
               </Tooltip>
             )}
             {comment.canEdit && (
-              <CommentAction onClick={() => setEditing(true)}>Modifica</CommentAction>
+              <CommentAction onClick={() => setEditing(true)}>{t('common.edit')}</CommentAction>
             )}
             {comment.canDelete && (
               <DeleteCommentAction
@@ -155,6 +157,7 @@ interface DeleteCommentActionProps {
 }
 
 function DeleteCommentAction({ onConfirm, loading, imageCount }: DeleteCommentActionProps) {
+  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
 
   return (
@@ -162,21 +165,21 @@ function DeleteCommentAction({ onConfirm, loading, imageCount }: DeleteCommentAc
       <Popover.Target>
         <UnstyledButton onClick={() => setOpened((current) => !current)}>
           <Text size="xs" fw={600} c="dimmed" className="comment-action">
-            Elimina
+            {t('common.delete')}
           </Text>
         </UnstyledButton>
       </Popover.Target>
       <Popover.Dropdown>
         <Stack gap="xs">
-          <Text size="sm">Eliminare questo commento?</Text>
+          <Text size="sm">{t('comments.deleteConfirm')}</Text>
           {imageCount > 0 && (
             <Text size="xs" c="dimmed" maw={240}>
-              Anche le sue immagini verranno rimosse dal Documento.
+              {t('comments.deleteImagesWarning')}
             </Text>
           )}
           <Group gap="xs" justify="flex-end">
             <Button size="xs" variant="subtle" color="gray" onClick={() => setOpened(false)}>
-              Annulla
+              {t('common.cancel')}
             </Button>
             <Button
               size="xs"
@@ -187,7 +190,7 @@ function DeleteCommentAction({ onConfirm, loading, imageCount }: DeleteCommentAc
                 onConfirm();
               }}
             >
-              Elimina
+              {t('common.delete')}
             </Button>
           </Group>
         </Stack>
@@ -197,6 +200,7 @@ function DeleteCommentAction({ onConfirm, loading, imageCount }: DeleteCommentAc
 }
 
 function CommentImages({ images, authorName }: { images: Comment['images']; authorName: string }) {
+  const { t } = useTranslation();
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   if (images.length === 0) {
@@ -209,7 +213,7 @@ function CommentImages({ images, authorName }: { images: Comment['images']; auth
         images={images.map((image, index) => ({
           id: image.id,
           url: image.url,
-          label: `Immagine ${index + 1} del commento di ${authorName}`,
+          label: t('comments.imageLabel', { index: index + 1, author: authorName }),
         }))}
         size={120}
         onOpen={setViewerIndex}
@@ -219,7 +223,7 @@ function CommentImages({ images, authorName }: { images: Comment['images']; auth
         index={viewerIndex}
         onIndexChange={setViewerIndex}
         onClose={() => setViewerIndex(null)}
-        alt={`Commento di ${authorName}`}
+        alt={t('comments.imagesAlt', { author: authorName })}
       />
     </>
   );

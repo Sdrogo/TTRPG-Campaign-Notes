@@ -1,0 +1,245 @@
+{
+  "language": {
+    "name": "Italiano",
+    "selectorLabel": "Lingua: {{language}}",
+    "selectorTooltip": "Cambia lingua"
+  },
+  "app": {
+    "name": "TTRPG Campaign Notes"
+  },
+  "common": {
+    "add": "Aggiungi",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "remove": "Rimuovi",
+    "save": "Salva",
+    "leave": "Esci",
+    "copy": "Copia",
+    "copied": "Copiato",
+    "yes": "Sì",
+    "notApplicable": "—",
+    "you": "Tu",
+    "name": "Nome",
+    "description": "Descrizione",
+    "noDescription": "Nessuna descrizione.",
+    "noResults": "Nessun risultato",
+    "resetFilters": "Azzera filtri",
+    "goToLogin": "Vai al login",
+    "myRooms": "Le mie Stanze",
+    "backToMyRooms": "Torna alle mie Stanze",
+    "maxLength": "Massimo {{max}} caratteri",
+    "unknownUser": "Utente sconosciuto"
+  },
+  "roles": {
+    "master": "Master",
+    "player": "Player",
+    "admin": "Admin"
+  },
+  "visibility": {
+    "label": "Visibilità",
+    "level": {
+      "room": "Stanza",
+      "master": "Solo Master",
+      "private": "Privato",
+      "selective": "Selettivo"
+    },
+    "documentOption": {
+      "room": "Stanza (tutti i membri)",
+      "master": "Solo Master",
+      "private": "Privato (Owner + Master)",
+      "selective": "Selettivo (solo Owner + Master finché non scegli altri)"
+    },
+    "commentOption": {
+      "room": "Stanza (tutti i membri)",
+      "master": "Solo Master (e te)",
+      "private": "Privato (tu + Master)",
+      "selective": "Selettivo (tu, Master e chi scegli)"
+    }
+  },
+  "time": {
+    "now": "adesso"
+  },
+  "auth": {
+    "prompt": "Accedi per continuare.",
+    "signInWith": "Accedi con {{provider}}"
+  },
+  "header": {
+    "account": "Il tuo account"
+  },
+  "account": {
+    "signInRequired": "Accedi per gestire il tuo account.",
+    "loadError": "Impossibile caricare il tuo account.",
+    "title": "Account",
+    "subtitle": "Il tuo profilo e la tua sessione.",
+    "profile": {
+      "title": "Profilo",
+      "description": "Come ti vedono gli altri membri delle tue Stanze.",
+      "displayName": "Nome visualizzato",
+      "displayNameDescription": "Mostrato al posto della tua email nelle Stanze, nei Commenti e tra gli Owner.",
+      "displayNamePlaceholder": "Il tuo nome",
+      "pronouns": "Pronomi",
+      "pronounsPlaceholder": "Es. lei/sua, lui/suo, loro",
+      "bioDescription": "Due righe su di te, visibili ai membri delle tue Stanze.",
+      "discardChanges": "Annulla modifiche",
+      "save": "Salva profilo",
+      "saved": "Profilo salvato."
+    },
+    "avatar": {
+      "upload": "Carica foto",
+      "fromUrl": "Da URL",
+      "useImage": "Usa immagine",
+      "hint": "PNG, JPEG, WebP o GIF. L'immagine viene ritagliata al centro e ridimensionata automaticamente."
+    },
+    "access": {
+      "title": "Accesso",
+      "email": "Email",
+      "emailDescription": "L'email è quella dell'account con cui hai effettuato l'accesso.",
+      "noEmail": "Nessuna email condivisa dal tuo account",
+      "signOutDescription": "Termina la sessione su questo dispositivo."
+    }
+  },
+  "rooms": {
+    "create": "Crea Stanza",
+    "loadError": "Errore nel caricamento delle Stanze.",
+    "empty": "Nessuna Stanza ancora. Creane una per iniziare.",
+    "documents": "Documenti",
+    "members": "Membri",
+    "invite": "Invita",
+    "createModal": {
+      "title": "Crea una Stanza",
+      "namePlaceholder": "Es. La Maledizione di Strahd",
+      "gameSystem": "Sistema di gioco",
+      "gameSystemPlaceholder": "Es. D&D 5e (opzionale)"
+    }
+  },
+  "invite": {
+    "modalTitle": "Invita nella Stanza",
+    "proposedRole": "Ruolo proposto",
+    "generate": "Genera invito",
+    "signInRequired": "Accedi per unirti a questa Stanza.",
+    "invalid": "Invito non valido, scaduto o già utilizzato.",
+    "joined": "Ti sei unito a \"{{room}}\"",
+    "goToMyRooms": "Vai alle mie Stanze"
+  },
+  "members": {
+    "signInRequired": "Accedi per vedere i membri di questa Stanza.",
+    "title": "Membri della Stanza",
+    "loadError": "Errore nel caricamento dei membri.",
+    "columnUser": "Utente",
+    "columnRole": "Ruolo",
+    "columnAdmin": "Amministratore"
+  },
+  "documents": {
+    "signInRequired": "Accedi per vedere i Documenti di questa Stanza.",
+    "title": "Documenti",
+    "titleWithRoom": "Documenti — {{room}}",
+    "create": "Crea Documento",
+    "playersCanCreate": "I Player possono creare Documenti",
+    "loadError": "Errore nel caricamento dei Documenti.",
+    "empty": "Nessun Documento ancora. Creane uno per iniziare.",
+    "noMatchForTags_one": "Nessun Documento con questo Tag.",
+    "noMatchForTags_other": "Nessun Documento con questi Tag.",
+    "showAll": "Mostra tutti",
+    "filterByTag": "Filtra per Tag",
+    "owners": "Owner",
+    "ownersLine": "Owner: {{names}}",
+    "addOwner": "Aggiungi Owner",
+    "removeOwner": "Rimuovi Owner {{name}}",
+    "detail": {
+      "signInRequired": "Accedi per vedere questo Documento.",
+      "notFound": "Documento non trovato o non visibile.",
+      "backToDocuments": "Torna ai Documenti",
+      "cancelEditing": "Annulla modifiche",
+      "saveChanges": "Salva modifiche"
+    },
+    "fields": {
+      "descriptionHint": "Scrivi # per collegare un altro Documento.",
+      "tags": "Tag",
+      "newTag": "Nuovo tag",
+      "newTagPlaceholder": "Es. Fazione"
+    }
+  },
+  "images": {
+    "numbered": "{{name}} ({{index}})",
+    "open": "Apri immagine",
+    "openNamed": "Apri {{name}}",
+    "removeNamed": "Rimuovi {{name}}",
+    "delete": "Elimina immagine",
+    "deleteConfirm": "Eliminare questa immagine?",
+    "favorite": "Immagine principale",
+    "setFavorite": "Usa come immagine principale",
+    "urlLabel": "URL dell'immagine",
+    "urlPlaceholder": "https://… URL dell'immagine",
+    "invalidUrl": "Inserisci un URL http(s) valido",
+    "addTitle": "Aggiungi immagini",
+    "fromComputer": "Dal computer",
+    "addFromUrl": "Aggiungi da URL",
+    "resizeHint": "PNG, JPEG, WebP o GIF. Le immagini grandi vengono ridimensionate automaticamente.",
+    "limitReached": "Limite di immagini raggiunto",
+    "attachFiles": "Aggiungi immagini",
+    "attachFilesTooltip": "Aggiungi immagini dal computer",
+    "attachUrl": "Aggiungi immagine da URL",
+    "viewer": {
+      "previous": "Immagine precedente",
+      "next": "Immagine successiva",
+      "zoomOut": "Riduci",
+      "zoomIn": "Ingrandisci",
+      "fit": "Adatta allo schermo"
+    }
+  },
+  "comments": {
+    "title": "Commenti",
+    "loadError": "Impossibile caricare i commenti.",
+    "empty": "Nessun commento ancora. Scrivi il primo!",
+    "filteredCount_one": "{{shown}} di {{count}} commento",
+    "filteredCount_other": "{{shown}} di {{count}} commenti",
+    "noMatch": "Nessun commento corrisponde ai filtri.",
+    "publish": "Pubblica",
+    "savedWithImageErrors": "Commento salvato, ma non tutte le immagini: {{errors}}",
+    "imageRemovalFailed": "Rimozione immagine: {{reason}}",
+    "you": "(tu)",
+    "deleted": "Commento eliminato.",
+    "edited": "Modificato",
+    "editedAt": "Modificato {{date}}",
+    "deleteConfirm": "Eliminare questo commento?",
+    "deleteImagesWarning": "Anche le sue immagini verranno rimosse dal Documento.",
+    "imageLabel": "Immagine {{index}} del commento di {{author}}",
+    "imagesAlt": "Commento di {{author}}",
+    "attachedImage": "Immagine allegata",
+    "composer": {
+      "bodyLabel": "Testo del commento",
+      "bodyPlaceholder": "Scrivi un commento… (# per collegare un Documento)",
+      "visibilityLabel": "Visibilità del commento",
+      "selectiveLabel": "Membri che possono vedere il commento",
+      "selectivePlaceholder": "Chi può vederlo"
+    },
+    "toolbar": {
+      "searchLabel": "Cerca nei commenti",
+      "searchPlaceholder": "Cerca…",
+      "sortLabel": "Ordina commenti",
+      "sortNewest": "Più recenti",
+      "sortOldest": "Meno recenti",
+      "sortAuthor": "Per autore",
+      "authorLabel": "Filtra per autore",
+      "authorPlaceholder": "Tutti gli autori",
+      "visibilityLabel": "Filtra per visibilità",
+      "visibilityPlaceholder": "Ogni visibilità",
+      "hideDeleted": "Nascondi eliminati"
+    }
+  },
+  "mentions": {
+    "listLabel": "Documenti e Tag da collegare",
+    "kind": {
+      "document": "Documento",
+      "tag": "Tag"
+    },
+    "tagDetail_one": "Tag · {{count}} Documento",
+    "tagDetail_other": "Tag · {{count}} Documenti",
+    "noMatchCreate": "Nessun risultato per «{{name}}». Crealo come:",
+    "kindSwitchLabel": "Tipo del nuovo elemento",
+    "createKind": "Crea {{kind}}",
+    "hintSwitchKind": "←/→ cambia tipo · ",
+    "hintCreate": "Invio per creare"
+  }
+}
