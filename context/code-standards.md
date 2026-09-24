@@ -100,6 +100,30 @@ only.
   component is justified only when Mantine has no equivalent or the
   app needs domain-specific behavior (`VisibilityBadge`, `RoleTag`).
 
+## UI Text (frontend)
+
+Adopted 2026-09-24 (spec 09); see `architecture.md` → UI Language.
+
+- **No hardcoded UI strings.** Every piece of text a user can see or hear
+  (labels, placeholders, `aria-label`s, tooltips, `alt` text, toasts,
+  validation messages) comes from `src/i18n/locales/*.json` through `t()`:
+  `useTranslation()` in a component, `i18n.t()` from `src/i18n` in a plain
+  helper. Brand names (sign-in providers) and user content are the only
+  literals.
+- **A new string goes in every language in the same change.** `it.json`
+  is the typed source (`i18next.d.ts`), and `locales.test.ts` fails on a
+  key missing from `en.json` or a placeholder that differs.
+- **Keys** are nested by area and named for what the text is, not what it
+  says (`documents.detail.notFound`, not `documents.documentoNonTrovato`).
+  Reuse a `common.*` key only when the meaning is really the same. The
+  same word can need different translations in different places.
+- **Compose with interpolation and plurals, never concatenation**:
+  `t('documents.ownersLine', { names })`, `t('mentions.tagDetail', { count })`
+  with `_one`/`_other` keys. Word order and plural rules differ between
+  languages.
+- **Locale-sensitive formatting** (dates, relative times, sorting by
+  name) uses `currentLanguage()`, never a hardcoded locale.
+
 ## Testing (frontend)
 
 Vitest + React Testing Library, run with `npm test`; coverage with
@@ -107,6 +131,10 @@ Vitest + React Testing Library, run with `npm test`; coverage with
 
 - A test file sits next to what it tests (`useRooms.ts` →
   `useRooms.test.ts`), so a module and its tests move together.
+- **Tests run in Italian**: `src/test/setup.ts` resets the language to
+  `it` (and clears `localStorage`) before each test, so existing
+  assertions query the real Italian strings. A test about English, or
+  about switching languages, calls `setLanguage('en')` itself.
 - **Query the way a user finds things**: by role and accessible name
   (`getByRole('button', { name: 'Elimina' })`), not by class or
   test id. A query that needs a `data-testid` usually means the
