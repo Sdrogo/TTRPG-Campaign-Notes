@@ -18,6 +18,8 @@ import '@mantine/carousel/styles.css';
 import './theme/tokens.css';
 import './index.css';
 
+// Initializes i18next before the first render, so every component has its strings.
+import './i18n';
 import { theme } from './theme/theme';
 import App from './App.tsx';
 

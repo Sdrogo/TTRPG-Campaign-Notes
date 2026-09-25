@@ -4,6 +4,7 @@ import { toStoredImage } from '../lib/images';
 import type { Comment, CommentFormValues } from '../types/comment';
 import type { DocumentVisibility } from '../types/document';
 import type { PendingImage, RawImage } from '../types/image';
+import i18n from '../i18n';
 
 interface RawComment {
   id: string;
@@ -126,7 +127,7 @@ export function useSaveComment(roomId: string, documentId: string) {
         try {
           await apiFetch<void>(`${base}/${saved.id}/images/${imageId}`, { method: 'DELETE' });
         } catch (error) {
-          imageErrors.push(`Rimozione immagine: ${reason(error)}`);
+          imageErrors.push(i18n.t('comments.imageRemovalFailed', { reason: reason(error) }));
         }
       }
       for (const image of values.newImages) {

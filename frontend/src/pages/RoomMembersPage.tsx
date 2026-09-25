@@ -8,12 +8,14 @@ import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { UserAvatar } from '../components/UserAvatar';
 import type { RoomRole } from '../types/room';
+import { useTranslation } from 'react-i18next';
 
 /**
  * `/rooms/:roomId/members`: the Room's members. An Administrator changes roles
  * and the Administrator flag and removes members; anyone can leave.
  */
 export function RoomMembersPage() {
+  const { t } = useTranslation();
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { session, loading: sessionLoading } = useSession();
@@ -30,7 +32,7 @@ export function RoomMembersPage() {
   }
 
   if (!session) {
-    return <SignInRequired>Accedi per vedere i membri di questa Stanza.</SignInRequired>;
+    return <SignInRequired>{t('members.signInRequired')}</SignInRequired>;
   }
 
   const currentUserId = session.user.id;
@@ -57,22 +59,22 @@ export function RoomMembersPage() {
   };
 
   return (
-    <PageLayout backTo="/" backLabel="Le mie Stanze">
+    <PageLayout backTo="/" backLabel={t('common.myRooms')}>
       <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
-        Membri della Stanza
+        {t('members.title')}
       </Title>
 
       {members.isLoading && <Loader color="accent" />}
-      {members.isError && <Text c="red">Errore nel caricamento dei membri.</Text>}
+      {members.isError && <Text c="red">{t('members.loadError')}</Text>}
 
       {members.data && (
         <Table.ScrollContainer minWidth={560}>
           <Table>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Utente</Table.Th>
-                <Table.Th>Ruolo</Table.Th>
-                <Table.Th>Amministratore</Table.Th>
+                <Table.Th>{t('members.columnUser')}</Table.Th>
+                <Table.Th>{t('members.columnRole')}</Table.Th>
+                <Table.Th>{t('members.columnAdmin')}</Table.Th>
                 <Table.Th />
               </Table.Tr>
             </Table.Thead>
@@ -89,7 +91,7 @@ export function RoomMembersPage() {
                             {memberDisplayName(member)}
                             {isSelf && (
                               <Badge ml="xs" size="xs" variant="outline" color="gray">
-                                Tu
+                                {t('common.you')}
                               </Badge>
                             )}
                           </Text>
@@ -116,8 +118,8 @@ export function RoomMembersPage() {
                       {isAdmin ? (
                         <Select
                           data={[
-                            { value: 'player', label: 'Player' },
-                            { value: 'master', label: 'Master' },
+                            { value: 'player', label: t('roles.player') },
+                            { value: 'master', label: t('roles.master') },
                           ]}
                           value={member.role}
                           onChange={(value) =>
@@ -127,10 +129,8 @@ export function RoomMembersPage() {
                           size="xs"
                           w={110}
                         />
-                      ) : member.role === 'master' ? (
-                        'Master'
                       ) : (
-                        'Player'
+                        t(`roles.${member.role}`)
                       )}
                     </Table.Td>
                     <Table.Td>
@@ -142,9 +142,9 @@ export function RoomMembersPage() {
                           }
                         />
                       ) : member.isAdmin ? (
-                        'Sì'
+                        t('common.yes')
                       ) : (
-                        '—'
+                        t('common.notApplicable')
                       )}
                     </Table.Td>
                     <Table.Td>
@@ -156,7 +156,7 @@ export function RoomMembersPage() {
                           onClick={() => handleRemove(member.userId)}
                           loading={removeMember.isPending}
                         >
-                          {isSelf ? 'Esci' : 'Rimuovi'}
+                          {isSelf ? t('common.leave') : t('common.remove')}
                         </Button>
                       )}
                     </Table.Td>

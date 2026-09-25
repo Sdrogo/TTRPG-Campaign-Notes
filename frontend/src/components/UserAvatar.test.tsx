@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { UNKNOWN_USER_LABEL } from '../lib/members';
+import { unknownUserLabel } from '../lib/members';
 import { renderWithProviders } from '../test/utils';
 import { UserAvatar } from './UserAvatar';
 import type { UserIdentity } from '../types/profile';
@@ -49,6 +49,6 @@ describe('UserAvatar', () => {
   it('falls back to the unknown-user label when the profile is missing', () => {
     renderWithProviders(<UserAvatar user={undefined} />);
 
-    expect(screen.getByTitle(UNKNOWN_USER_LABEL)).toBeInTheDocument();
+    expect(screen.getByTitle(unknownUserLabel())).toBeInTheDocument();
   });
 });

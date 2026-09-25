@@ -17,9 +17,11 @@ import { AccountSection } from '../components/account/AccountSection';
 import { AvatarEditor, type AvatarAction } from '../components/account/AvatarEditor';
 import { ProfileForm } from '../components/account/ProfileForm';
 import type { AccountProfile } from '../types/profile';
+import { useTranslation } from 'react-i18next';
 
 /** `/account`: the signed-in user's profile (name, pronouns, description, avatar) and sign-out. */
 export function AccountPage() {
+  const { t } = useTranslation();
   const { session, loading: sessionLoading } = useSession();
 
   if (sessionLoading) {
@@ -27,13 +29,14 @@ export function AccountPage() {
   }
 
   if (!session) {
-    return <SignInRequired>Accedi per gestire il tuo account.</SignInRequired>;
+    return <SignInRequired>{t('account.signInRequired')}</SignInRequired>;
   }
 
   return <AccountLoader />;
 }
 
 function AccountLoader() {
+  const { t } = useTranslation();
   const account = useAccount(true);
 
   if (account.isLoading) {
@@ -42,8 +45,8 @@ function AccountLoader() {
 
   if (account.isError || !account.data) {
     return (
-      <FullPageMessage actionLabel="Torna alle mie Stanze" actionTo="/">
-        Impossibile caricare il tuo account.
+      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/">
+        {t('account.loadError')}
       </FullPageMessage>
     );
   }
@@ -52,6 +55,7 @@ function AccountLoader() {
 }
 
 function AccountContent({ profile }: { profile: AccountProfile }) {
+  const { t } = useTranslation();
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
   const importAvatar = useImportAvatar();
@@ -67,18 +71,18 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
         : null;
 
   return (
-    <PageLayout backTo="/" backLabel="Le mie Stanze">
+    <PageLayout backTo="/" backLabel={t('common.myRooms')}>
       <Stack gap={2}>
         <Title order={1} fz={{ base: 'h2', sm: 'h1' }} style={{ fontFamily: 'var(--font-display)' }}>
-          Account
+          {t('account.title')}
         </Title>
-        <Text c="dimmed">Il tuo profilo e la tua sessione.</Text>
+        <Text c="dimmed">{t('account.subtitle')}</Text>
       </Stack>
 
       {/* Full-width cards like the Document page; on wide screens the
           avatar sits beside the form and the email beside sign-out, so the
           fields don't stretch across the whole card. */}
-      <AccountSection title="Profilo" description="Come ti vedono gli altri membri delle tue Stanze.">
+      <AccountSection title={t('account.profile.title')} description={t('account.profile.description')}>
         <Grid gap={{ base: 'md', md: 'xl' }}>
           <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
             <AvatarEditor
@@ -98,7 +102,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
                 updateProfile.mutate(toProfilePatch(values), {
                   onSuccess: (saved) => {
                     onDone(saved);
-                    notifySuccess('Profilo salvato.');
+                    notifySuccess(t('account.profile.saved'));
                   },
                   onError: notifyError,
                 })
@@ -108,14 +112,14 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
         </Grid>
       </AccountSection>
 
-      <AccountSection title="Accesso">
+      <AccountSection title={t('account.access.title')}>
         <Grid gap={{ base: 'md', md: 'xl' }} align="flex-end">
           <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
             <TextInput
-              label="Email"
-              description="L'email è quella dell'account con cui hai effettuato l'accesso."
+              label={t('account.access.email')}
+              description={t('account.access.emailDescription')}
               value={profile.email ?? ''}
-              placeholder="Nessuna email condivisa dal tuo account"
+              placeholder={t('account.access.noEmail')}
               leftSection={<EnvelopeSimpleIcon size={16} aria-hidden="true" />}
               readOnly
             />
@@ -123,7 +127,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
           <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
             <Group justify="space-between" wrap="nowrap" gap="sm">
               <Text size="sm" c="dimmed">
-                Termina la sessione su questo dispositivo.
+                {t('account.access.signOutDescription')}
               </Text>
               <Button
                 variant="outline"
@@ -133,7 +137,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
                 onClick={() => signOut.mutate(undefined, { onError: notifyError })}
                 style={{ flexShrink: 0 }}
               >
-                Esci
+                {t('account.access.signOut')}
               </Button>
             </Group>
           </Grid.Col>

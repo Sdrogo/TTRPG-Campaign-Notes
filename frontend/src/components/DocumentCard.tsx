@@ -8,6 +8,7 @@ import { displayNameFor } from '../lib/members';
 import type { Document } from '../types/document';
 import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
+import { useTranslation } from 'react-i18next';
 
 interface DocumentCardProps {
   document: Document;
@@ -21,6 +22,7 @@ interface DocumentCardProps {
  * images, with its Owners. The whole card links to the Document.
  */
 export function DocumentCard({ document, roomId, tags, members }: DocumentCardProps) {
+  const { t } = useTranslation();
   const ownerNames = document.ownerIds.map((id) => displayNameFor(members, id)).join(', ');
   const hasImages = document.images.length > 0;
 
@@ -56,7 +58,7 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
               />
             ) : (
               <Text size="sm" c="dimmed" fs="italic">
-                Nessuna descrizione.
+                {t('common.noDescription')}
               </Text>
             )}
           </Box>
@@ -69,7 +71,7 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
 
         {ownerNames && (
           <Text size="xs" c="dimmed" truncate>
-            Owner: {ownerNames}
+            {t('documents.ownersLine', { names: ownerNames })}
           </Text>
         )}
       </Stack>

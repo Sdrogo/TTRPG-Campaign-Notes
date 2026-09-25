@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { setLanguage } from '../../i18n';
 import { renderWithProviders } from '../../test/utils';
 import { MentionSuggestions, type MentionCreateProps } from './MentionSuggestions';
 import type { MentionTarget } from '../../lib/documentMentions';
@@ -83,6 +84,19 @@ describe('MentionSuggestions', () => {
     render({ candidates: [{ ...candidates[1], documentCount: 1 } as MentionTarget] });
 
     expect(screen.getByText('Tag · 1 Documento')).toBeInTheDocument();
+  });
+
+  it('pluralizes by the rules of the UI language (spec 09)', async () => {
+    await setLanguage('en');
+    const oneDocument = {
+      kind: 'tag',
+      tag: { id: 'tag-2', name: 'Fazioni', category: null },
+      documentCount: 1,
+    } as MentionTarget;
+    render({ candidates: [oneDocument, candidates[1]] });
+
+    expect(screen.getByText('Tag · 1 Document')).toBeInTheDocument();
+    expect(screen.getByText('Tag · 3 Documents')).toBeInTheDocument();
   });
 
   // The active option drives the keyboard selection and `aria-activedescendant`.

@@ -42,6 +42,22 @@ body {
   border-color: var(--accent-primary);
 }
 
+/* The language flag just before the avatar: the same ring as the avatar,
+   but square-cornered like the flag itself, accent while its menu is open. */
+.language-button {
+  display: block;
+  border-radius: var(--mantine-radius-sm);
+  padding: 4px;
+  border: 1px solid transparent;
+  transition: border-color 120ms ease;
+}
+
+.language-button:hover,
+.language-button:focus-visible,
+.language-button[aria-expanded='true'] {
+  border-color: var(--accent-primary);
+}
+
 /* A Document suggestion in the `#` mention popup: highlighted (arrow keys or
    hover) like a Mantine combobox option. */
 .mention-option {

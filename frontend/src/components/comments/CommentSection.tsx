@@ -17,6 +17,8 @@ import { findMember } from '../../lib/members';
 import { notifyError } from '../../lib/notify';
 import type { CommentFilters } from '../../types/comment';
 import type { Member } from '../../types/member';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 interface CommentSectionProps {
   roomId: string;
@@ -28,7 +30,7 @@ interface CommentSectionProps {
 // The Comment was saved, but some image changes failed: say which.
 function reportImageErrors({ imageErrors }: SaveCommentResult) {
   if (imageErrors.length > 0) {
-    notifyError(new Error(`Commento salvato, ma non tutte le immagini: ${imageErrors.join('; ')}`));
+    notifyError(new Error(i18n.t('comments.savedWithImageErrors', { errors: imageErrors.join('; ') })));
   }
 }
 
@@ -38,6 +40,7 @@ function reportImageErrors({ imageErrors }: SaveCommentResult) {
  * may see.
  */
 export function CommentSection({ roomId, documentId, members, currentUserId }: CommentSectionProps) {
+  const { t, i18n } = useTranslation();
   const comments = useComments(roomId, documentId, true);
   const saveComment = useSaveComment(roomId, documentId);
   const deleteComment = useDeleteComment(roomId, documentId);
@@ -45,7 +48,9 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
 
   const all = useMemo(() => comments.data ?? [], [comments.data]);
   const shown = useMemo(() => applyCommentFilters(all, filters, members), [all, filters, members]);
-  const authorOptions = useMemo(() => commentAuthors(all, members), [all, members]);
+  // commentAuthors reaches the active global translator for unknown-user labels.
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
+  const authorOptions = useMemo(() => commentAuthors(all, members), [all, members, i18n.language]);
   const savingId = saveComment.isPending ? saveComment.variables?.commentId : undefined;
 
   return (
@@ -53,7 +58,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
       <Stack gap="md">
         <Group gap="xs">
           <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
-            Commenti
+            {t('comments.title')}
           </Title>
           {all.length > 0 && (
             <Badge variant="light" color="gray">
@@ -68,13 +73,13 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
           </Group>
         ) : comments.isError ? (
           <Text c="red" size="sm">
-            Impossibile caricare i commenti.
+            {t('comments.loadError')}
           </Text>
         ) : all.length === 0 ? (
           <Stack align="center" gap="xs" py="lg">
             <ChatCircleDotsIcon size={40} weight="duotone" color="var(--text-muted)" />
             <Text c="dimmed" size="sm">
-              Nessun commento ancora. Scrivi il primo!
+              {t('comments.empty')}
             </Text>
           </Stack>
         ) : (
@@ -82,20 +87,20 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
             <CommentToolbar filters={filters} onChange={setFilters} authorOptions={authorOptions} />
             {shown.length < all.length && (
               <Text size="xs" c="dimmed">
-                {shown.length} di {all.length} commenti
+                {t('comments.filteredCount', { shown: shown.length, count: all.length })}
               </Text>
             )}
             {shown.length === 0 ? (
               <Stack align="center" gap="xs" py="md">
                 <Text c="dimmed" size="sm">
-                  Nessun commento corrisponde ai filtri.
+                  {t('comments.noMatch')}
                 </Text>
                 <Button
                   size="xs"
                   variant="subtle"
                   onClick={() => setFilters({ ...DEFAULT_COMMENT_FILTERS, sort: filters.sort })}
                 >
-                  Azzera filtri
+                  {t('common.resetFilters')}
                 </Button>
               </Stack>
             ) : (
@@ -136,7 +141,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
             <CommentComposer
               members={members}
               currentUserId={currentUserId}
-              submitLabel="Pubblica"
+              submitLabel={t('comments.publish')}
               submitting={saveComment.isPending && savingId === undefined}
               onSubmit={(values, reset) =>
                 saveComment.mutate(

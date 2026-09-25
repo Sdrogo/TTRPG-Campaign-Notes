@@ -80,6 +80,14 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   to their email. Pickers that grant access (Owner, Selective) show
   "Name (email)", since names aren't unique.
 
+### Language
+- The UI is in Italian and English (spec 09, 2026-09-24). It starts in the
+  browser's language (English for any other locale), and a flag
+  selector just before the account avatar switches it. The choice is
+  remembered on that browser.
+- Every UI string lives in a resource file per language, so adding a
+  language means adding a file (plus its flag).
+
 ### Rooms
 - Create / edit / archive / delete a Room (FR-R1).
 - Invite via link or code, with expiry and revocation (FR-R2, FR-R3).
@@ -158,6 +166,7 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   action and an audit log.
 - Structured export / API for Agent consumption, scoped per user.
 - Mobile‑usable web UI.
+- UI in Italian and English, chosen by browser locale or flag selector.
 
 ### Out of Scope (for now)
 - Real‑time collaborative editing (D-04) — concurrent contribution
@@ -171,6 +180,10 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   only shows it.
 - Fully sealed content hidden even from the Master (VR-09) — future
   evolution, not prioritized.
+- Localized backend messages (API error texts are still Italian; a
+  separate task, see `architecture.md` → UI Language), languages
+  beyond Italian and English, and translating user content (Documents,
+  Comments, Tag names).
 
 ## Success Criteria
 

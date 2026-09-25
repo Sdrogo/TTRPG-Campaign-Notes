@@ -15,6 +15,7 @@ import {
 import type { CommentFormValues } from '../../types/comment';
 import type { StoredImage } from '../../types/image';
 import type { Member } from '../../types/member';
+import { useTranslation } from 'react-i18next';
 
 const EMPTY_COMMENT_VALUES: CommentFormValues = {
   body: '',
@@ -54,6 +55,7 @@ export function CommentComposer({
   onCancel,
   autoFocus,
 }: CommentComposerProps) {
+  const { t } = useTranslation();
   const [values, setValues] = useState<CommentFormValues>(initialValues);
   const set = (patch: Partial<CommentFormValues>) =>
     setValues((current) => ({ ...current, ...patch }));
@@ -74,7 +76,7 @@ export function CommentComposer({
     values.newImages.length,
   );
   const thumbnails: Thumbnail[] = [
-    ...keptImages.map((image) => ({ id: image.id, url: image.url, label: 'Immagine allegata' })),
+    ...keptImages.map((image) => ({ id: image.id, url: image.url, label: t('comments.attachedImage') })),
     ...values.newImages.map((image) => ({ id: image.id, url: image.previewUrl, label: image.label })),
   ];
 
@@ -108,8 +110,8 @@ export function CommentComposer({
     >
       <Stack gap="xs">
         <MentionTextarea
-          aria-label="Testo del commento"
-          placeholder="Scrivi un commento… (# per collegare un Documento)"
+          aria-label={t('comments.composer.bodyLabel')}
+          placeholder={t('comments.composer.bodyPlaceholder')}
           value={values.body}
           onChange={(body) => set({ body })}
           onKeyDown={(event) => {
@@ -129,7 +131,7 @@ export function CommentComposer({
             <VisibilitySelect
               subject="comment"
               size="xs"
-              aria-label="Visibilità del commento"
+              aria-label={t('comments.composer.visibilityLabel')}
               value={values.visibility}
               onChange={(visibility) => set({ visibility })}
               w={240}
@@ -138,8 +140,8 @@ export function CommentComposer({
             {values.visibility === 'selective' && (
               <MemberMultiSelect
                 size="xs"
-                aria-label="Membri che possono vedere il commento"
-                placeholder="Chi può vederlo"
+                aria-label={t('comments.composer.selectiveLabel')}
+                placeholder={t('comments.composer.selectivePlaceholder')}
                 members={members}
                 excludeUserIds={[currentUserId]}
                 value={values.selectiveUserIds}
@@ -158,7 +160,7 @@ export function CommentComposer({
             />
             {onCancel && (
               <Button size="xs" variant="subtle" color="gray" onClick={onCancel}>
-                Annulla
+                {t('common.cancel')}
               </Button>
             )}
             <Button

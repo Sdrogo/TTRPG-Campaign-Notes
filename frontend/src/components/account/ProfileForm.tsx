@@ -8,6 +8,7 @@ import {
   tooLong,
 } from '../../lib/profile';
 import type { AccountProfile, ProfileFormValues } from '../../types/profile';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileFormProps {
   profile: AccountProfile;
@@ -24,6 +25,7 @@ interface ProfileFormProps {
  * when something changed.
  */
 export function ProfileForm({ profile, onSubmit, saving }: ProfileFormProps) {
+  const { t } = useTranslation();
   const form = useForm<ProfileFormValues>({
     initialValues: profileFormValues(profile),
     validate: {
@@ -47,19 +49,19 @@ export function ProfileForm({ profile, onSubmit, saving }: ProfileFormProps) {
     >
       <Stack gap="md">
         <TextInput
-          label="Nome visualizzato"
-          description="Mostrato al posto della tua email nelle Stanze, nei Commenti e tra gli Owner."
-          placeholder={profile.email ?? 'Il tuo nome'}
+          label={t('account.profile.displayName')}
+          description={t('account.profile.displayNameDescription')}
+          placeholder={profile.email ?? t('account.profile.displayNamePlaceholder')}
           {...form.getInputProps('displayName')}
         />
         <TextInput
-          label="Pronomi"
-          placeholder="Es. lei/sua, lui/suo, loro"
+          label={t('account.profile.pronouns')}
+          placeholder={t('account.profile.pronounsPlaceholder')}
           {...form.getInputProps('pronouns')}
         />
         <Textarea
-          label="Descrizione"
-          description="Due righe su di te, visibili ai membri delle tue Stanze."
+          label={t('common.description')}
+          description={t('account.profile.bioDescription')}
           autosize
           minRows={3}
           maxRows={8}
@@ -75,10 +77,10 @@ export function ProfileForm({ profile, onSubmit, saving }: ProfileFormProps) {
             disabled={!form.isDirty() || saving}
             onClick={() => form.reset()}
           >
-            Annulla modifiche
+            {t('account.profile.discardChanges')}
           </Button>
           <Button type="submit" loading={saving} disabled={!form.isDirty()}>
-            Salva profilo
+            {t('account.profile.save')}
           </Button>
         </Group>
       </Stack>
