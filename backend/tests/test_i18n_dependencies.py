@@ -30,3 +30,10 @@ def test_picks_the_highest_quality_supported_locale(header: str, expected: str) 
 
 def test_a_malformed_quality_value_is_treated_as_default_quality() -> None:
     assert get_locale("it;q=not-a-number") == "it"
+
+
+def test_a_q_zero_language_is_excluded_not_just_deprioritized() -> None:
+    # q=0 means "not acceptable" (RFC 7231), so it must fall back to
+    # English rather than being picked as a low-priority match.
+    assert get_locale("it;q=0") == DEFAULT_LOCALE
+    assert get_locale("it;q=0,en;q=0.5") == "en"
