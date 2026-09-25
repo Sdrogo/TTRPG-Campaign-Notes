@@ -69,5 +69,9 @@ async def test_new_tables_are_not_granted_to_client_roles(db_session: AsyncSessi
             "AND defaclrole = 'postgres'::regrole"
         )
     )
-    leaks = [acl for acl in result.scalars() if any(f"{role}=" in acl for role in CLIENT_ROLES)]
+    # `defaclacl` is NULL when no default ACL was ever set for that
+    # (role, object type) pair - the safe case, not a leak - so it's
+    # filtered out before the substring check rather than stringified.
+    acls = [str(row) for row in result.scalars() if row is not None]
+    leaks = [acl for acl in acls if any(f"{role}=" in acl for role in CLIENT_ROLES)]
     assert leaks == []
