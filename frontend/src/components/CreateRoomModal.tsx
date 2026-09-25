@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, Stack, TextInput, Button, Text } from '@mantine/core';
 import { useCreateRoom } from '../hooks/useRooms';
+import { useTranslation } from 'react-i18next';
 
 interface CreateRoomModalProps {
   opened: boolean;
@@ -12,6 +13,7 @@ interface CreateRoomModalProps {
  * its Master and Administrator.
  */
 export function CreateRoomModal({ opened, onClose }: CreateRoomModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [gameSystem, setGameSystem] = useState('');
   const createRoom = useCreateRoom();
@@ -34,20 +36,20 @@ export function CreateRoomModal({ opened, onClose }: CreateRoomModalProps) {
   };
 
   return (
-    <Modal opened={opened} onClose={handleClose} title="Crea una Stanza" centered>
+    <Modal opened={opened} onClose={handleClose} title={t('rooms.createModal.title')} centered>
       <form onSubmit={handleSubmit}>
         <Stack gap="sm">
           <TextInput
-            label="Nome"
-            placeholder="Es. La Maledizione di Strahd"
+            label={t('common.name')}
+            placeholder={t('rooms.createModal.namePlaceholder')}
             value={name}
             onChange={(event) => setName(event.currentTarget.value)}
             required
             autoFocus
           />
           <TextInput
-            label="Sistema di gioco"
-            placeholder="Es. D&D 5e (opzionale)"
+            label={t('rooms.createModal.gameSystem')}
+            placeholder={t('rooms.createModal.gameSystemPlaceholder')}
             value={gameSystem}
             onChange={(event) => setGameSystem(event.currentTarget.value)}
           />
@@ -57,7 +59,7 @@ export function CreateRoomModal({ opened, onClose }: CreateRoomModalProps) {
             </Text>
           )}
           <Button type="submit" loading={createRoom.isPending} disabled={!name.trim()}>
-            Crea Stanza
+            {t('rooms.create')}
           </Button>
         </Stack>
       </form>

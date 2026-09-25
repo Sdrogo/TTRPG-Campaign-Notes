@@ -1,5 +1,6 @@
 import { ActionIcon, Box, Group, Image, UnstyledButton } from '@mantine/core';
 import { XIcon } from '@phosphor-icons/react';
+import { useTranslation } from 'react-i18next';
 
 /** One image in an `ImageThumbnailGrid`: stored or still pending. */
 export interface Thumbnail {
@@ -19,6 +20,8 @@ interface ImageThumbnailGridProps {
 
 /** A wrapping row of square image thumbnails. */
 export function ImageThumbnailGrid({ images, size = 96, onOpen, onRemove }: ImageThumbnailGridProps) {
+  const { t } = useTranslation();
+
   if (images.length === 0) {
     return null;
   }
@@ -40,7 +43,7 @@ export function ImageThumbnailGrid({ images, size = 96, onOpen, onRemove }: Imag
         return (
           <Box key={image.id} pos="relative">
             {onOpen ? (
-              <UnstyledButton onClick={() => onOpen(index)} aria-label={`Apri ${image.label}`}>
+              <UnstyledButton onClick={() => onOpen(index)} aria-label={t('images.openNamed', { name: image.label })}>
                 {picture}
               </UnstyledButton>
             ) : (
@@ -55,7 +58,7 @@ export function ImageThumbnailGrid({ images, size = 96, onOpen, onRemove }: Imag
                 top={4}
                 right={4}
                 onClick={() => onRemove(image.id)}
-                aria-label={`Rimuovi ${image.label}`}
+                aria-label={t('images.removeNamed', { name: image.label })}
               >
                 <XIcon size={12} />
               </ActionIcon>

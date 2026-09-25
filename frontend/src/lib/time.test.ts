@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { setLanguage } from '../i18n';
 import { formatAbsoluteTime, formatRelativeTime } from './time';
 
 const now = new Date('2026-09-21T12:00:00Z');
@@ -41,5 +42,17 @@ describe('formatAbsoluteTime', () => {
     expect(formatted).toContain('2026');
     expect(formatted).toContain('set');
     expect(formatted).toMatch(/\d{1,2}:\d{2}/);
+  });
+});
+
+// Spec 09: timestamps follow the UI language, not a fixed locale.
+describe('in English', () => {
+  it('formats relative and absolute times in English', async () => {
+    await setLanguage('en');
+
+    expect(formatRelativeTime('2026-09-21T11:59:30Z', now)).toBe('just now');
+    expect(formatRelativeTime('2026-09-21T11:55:00Z', now)).toBe('5 minutes ago');
+    expect(formatRelativeTime('2026-09-20T12:00:00Z', now)).toBe('yesterday');
+    expect(formatAbsoluteTime('2026-09-21T12:00:00Z')).toContain('Sep');
   });
 });

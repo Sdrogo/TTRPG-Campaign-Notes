@@ -40,7 +40,9 @@ Notes:
   not introduce a second red. It is also used for destructive
   actions (delete Document, remove member).
 - All components use these tokens — no hardcoded hex values in
-  component code.
+  component code. **One exception: country flags** (the language
+  selector, spec 09) keep their official colors. They're content, not
+  theme, so they are SVG files in `src/assets/flags/`, not components.
 
 ## Typography
 
@@ -101,7 +103,16 @@ other icon set.
   `--accent-primary` on hover/focus and while on `/account`). It is
   rendered by `HomePage` and by `PageLayout`, so every signed-in page
   has it. The account avatar is the only way to the Account page and
-  to sign out.
+  to sign out. **Just before the avatar** (spec 09) is the
+  `LanguageSelector`: the current language's flag (24×16, `sm` radius,
+  thin `--border-default` edge) inside a 4px padded button whose
+  transparent ring turns `--accent-primary` on hover/focus and while its
+  menu is open. It opens a Mantine `Menu` (`bottom-end`): one item per
+  language with a 20px flag and the language's **own** name ("Italiano",
+  "English"), so it can be found whatever language the UI is in, and a
+  check mark on the current one. Its tooltip ("Cambia lingua" / "Change
+  language") is hidden while the menu is open, so it doesn't cover the
+  first item.
 - **Sign-in screen** (`HomePage`, signed out; spec 08): centered book
   icon, title, "Accedi per continuare.", then one full-width button per
   provider in `AUTH_PROVIDERS` order, in a column capped at 320px. Google
@@ -237,6 +248,17 @@ other icon set.
   modal, styled with `--state-warning`, never the default accent).
 - **Empty states**: illustrated with a single large Phosphor
   duotone icon in `--text-muted`, not a stock illustration.
+
+## Language
+
+The UI is in **Italian and English** (spec 09; see `architecture.md` →
+UI Language). The browser locale picks the language (English for
+anything that isn't Italian), and the flag selector in the top bar
+overrides it for good. Terminology is the spec's in both languages:
+Room/Stanza, Document/Documento, Tag, Owner, Master, Player,
+Comment/Commento. Roles and "Owner" stay English in Italian too, as
+before. The sign-in screen has no top bar, so a signed-out visitor
+sees the browser's language.
 
 ## Icons
 

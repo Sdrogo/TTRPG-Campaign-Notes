@@ -179,6 +179,14 @@ Update this file after every meaningful implementation change.
   API returns is now rendered from a resource file for the caller's
   locale, instead of a hardcoded English literal. Backend **269/269**,
   ruff, mypy strict clean.
+- **UI strings in resource files, Italian + English complete** (2026-09-24,
+  frontend only, branch `feature/i18n_ui`; spec `context/feature/09 -
+  Removing Hardcoded strings, implement multi lenguage`): every UI string
+  moved to `src/i18n/locales/{it,en}.json` (react-i18next). The UI starts in
+  the browser's language and a flag selector before the account avatar
+  switches it. Frontend **647/647**, backend unchanged (ruff/mypy clean,
+  160 non-DB tests pass). Checked headless in a browser (see Completed).
+  Backend messages are the follow-up (Next Up).
 
 ## Current Goal
 
@@ -1345,12 +1353,69 @@ Update this file after every meaningful implementation change.
     Comment's body.
   - **Docs**: `architecture.md` (new "Backend Message Localization"
     section), `code-standards.md` (new API Routes rule).
+- **UI strings in resource files + Italian/English** (2026-09-24, spec 09,
+  branch `feature/i18n_ui`, frontend only; the user scoped the backend to a
+  separate task):
+  - **Decisions taken with the user**: UI only for now; ship both Italian
+    and English; `react-i18next`; the language starts from the browser
+    locale and can be picked from a flag selector just before the account
+    avatar in the top bar.
+  - **Decisions taken in implementation**: English is the fallback for any
+    locale that is neither Italian nor English (the browser asked for
+    something we don't have, and English is more likely to be understood).
+    Only an explicit pick is stored (`localStorage` `ttrpg.language`), so an
+    untouched app keeps following the browser. Our own ~20-line detection
+    replaced `i18next-browser-languagedetector`, which would have stored the
+    *detected* language on first load and pinned it. English uses the UK
+    flag. Resources are bundled (not lazy-loaded): +26 kB gzipped. The
+    chunk-size warning was already there on `main` (991 kB → 1,079 kB raw).
+  - **What changed**: 40 components/pages/helpers converted, 185
+    keys, same Italian text as before. `UNKNOWN_USER_LABEL` (constant)
+    became `unknownUserLabel()`, since it now depends on the language.
+    `lib/time.ts` and mention sorting use the current language instead of a
+    hardcoded `'it'`. `App` subscribes to language changes so the whole tree
+    re-renders on a switch, with no reload. New `LanguageSelector` in
+    `AppHeader`, with flag SVGs in `src/assets/flags/`.
+  - **Tests** (+19): key/placeholder parity between the two files
+    (`i18n/locales.test.ts`); detection order, fallback, stored pick,
+    storage failures (`i18n/index.test.ts`); the selector's position, menu,
+    switching the whole header and remembering it
+    (`LanguageSelector.test.tsx`); English time formatting, unknown-user
+    label, length message and plurals. `src/test/setup.ts` resets to
+    Italian before each test, so the existing 628 tests needed no text
+    changes.
+  - **Checks**: `tsc -b`, `npm run lint`, `npm run build`,
+    `npm run test:coverage` **647/647** (98.7% statements, floors held).
+    Backend untouched: ruff, mypy, `pytest -m "not integration"` 160/160
+    (CI runs the DB tests). **Headless Chromium check** (Vite dev server,
+    fake Supabase session in `localStorage`, backend mocked with Playwright
+    routes, so nothing touched live data), 16/16: an `it-IT` browser at
+    1280px starts in Italian, a `de-DE` one at 375px falls back to English;
+    `<html lang>` right; the flag sits just left of the avatar on the same
+    row; no horizontal overflow; picking the other language re-renders the
+    page; the pick survives a reload; zero console errors. Screenshots
+    checked by eye. That check caught the tooltip covering the open menu
+    (fixed: the tooltip is hidden while the menu is open).
+  - **Docs**: `architecture.md` (new UI Language section, unknown-user
+    label), `ui-context.md` (selector in the app shell, flag color
+    exception, Language section), `code-standards.md` (new UI Text rules,
+    tests run in Italian), `project-overview.md` (feature + scope).
 
 ## In Progress
 
 - None yet.
 
 ## Next Up
+
+- **Localize backend messages** (the second half of spec 09, split off by
+  the user): API errors are still Italian text in FastAPI's `detail` and
+  shown verbatim by `notifyError`. Plan: the backend returns a stable error
+  code alongside (or instead of) the text, the frontend maps codes to
+  `errors.*` keys in both locale files, and falls back to the raw `detail`
+  for an unknown code. The default Tags created with a Room (NPC, Place,
+  Event, Artifact; `app/domain/rooms.py::DEFAULT_TAGS`) are stored data in
+  English, not UI text. Decide whether new Rooms should get them in the
+  creator's language.
 
 - **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only, no code):
   set it to `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app`
@@ -1411,6 +1476,14 @@ Update this file after every meaningful implementation change.
   unit was scoped backend-only): the frontend would need to send its
   picked language on every request (e.g. as `Accept-Language` itself, or
   a header the backend also reads) for the two to always agree.
+- **UI language in `requirements.md` (new, 2026-09-24, spec 09)**: the spec
+  has no requirement about the UI language or localization. It's written in
+  Italian and assumed an Italian UI. The app now ships Italian + English,
+  with browser-locale detection, an English fallback and a flag selector.
+  `requirements.md` is protected, so this needs a product pass to add it
+  (e.g. an NFR for supported languages) and to confirm English as the
+  fallback.
+
 - **Remaining `requirements.md` passages (new, 2026-09-23, spec 08)**:
   FR-A1 now lists Google (OAuth), Discord, Facebook, GitHub e X. UC-01,
   section 5's User ("login con Google"), NFR-03 ("dai dati Google…") and

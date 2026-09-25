@@ -3,6 +3,7 @@ import { Box } from '@mantine/core';
 import { Carousel } from '@mantine/carousel';
 import { imageOrientation, type ImageOrientation } from '../lib/images';
 import type { DocumentImage } from '../types/document';
+import { useTranslation } from 'react-i18next';
 
 // Half the card's width (spec 07), so this stays short enough that the
 // description beside it still reads as the main content. A landscape image
@@ -27,6 +28,8 @@ interface DocumentCardImagesProps {
  *  Read-only: managing them (adding, deleting, moving the favorite) stays on
  *  the detail page. */
 export function DocumentCardImages({ images, documentName }: DocumentCardImagesProps) {
+  const { t } = useTranslation();
+
   if (images.length === 0) {
     return null;
   }
@@ -56,7 +59,7 @@ export function DocumentCardImages({ images, documentName }: DocumentCardImagesP
       >
         {images.map((image, index) => (
           <Carousel.Slide key={image.id} style={centered}>
-            <CardImage image={image} alt={`${documentName} (${index + 1})`} />
+            <CardImage image={image} alt={t('images.numbered', { name: documentName, index: index + 1 })} />
           </Carousel.Slide>
         ))}
       </Carousel>

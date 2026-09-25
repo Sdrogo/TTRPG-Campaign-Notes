@@ -7,8 +7,7 @@ import {
   type MentionKind,
   type MentionTarget,
 } from '../../lib/documentMentions';
-
-const KIND_LABELS: Record<MentionKind, string> = { document: 'Documento', tag: 'Tag' };
+import { useTranslation } from 'react-i18next';
 
 interface MentionSuggestionsProps {
   listId: string;
@@ -28,16 +27,17 @@ interface MentionSuggestionsProps {
  * matched) a way to create one.
  */
 export function MentionSuggestions({ listId, candidates, activeIndex, onHover, onPick, create }: MentionSuggestionsProps) {
+  const { t } = useTranslation();
   if (candidates.length === 0 && !create) {
     return (
       <Text size="sm" c="dimmed" px="xs" py={6}>
-        Nessun risultato
+        {t('common.noResults')}
       </Text>
     );
   }
 
   return (
-    <Box id={listId} role="listbox" aria-label="Documenti e Tag da collegare">
+    <Box id={listId} role="listbox" aria-label={t('mentions.listLabel')}>
       {candidates.map((target, index) => (
         <MentionOption
           key={`${target.kind}-${mentionTargetId(target)}`}
@@ -62,11 +62,12 @@ interface MentionOptionProps {
 }
 
 function MentionOption({ id, target, active, onHover, onPick }: MentionOptionProps) {
+  const { t } = useTranslation();
   const Icon = target.kind === 'document' ? FileTextIcon : TagIcon;
   const detail =
     target.kind === 'document'
       ? target.tags.map((tag) => `#${tag.name}`).join(' ')
-      : `Tag · ${target.documentCount} ${target.documentCount === 1 ? 'Documento' : 'Documenti'}`;
+      : t('mentions.tagDetail', { count: target.documentCount });
 
   return (
     <Box
@@ -111,6 +112,7 @@ export interface MentionCreateProps {
 // "Nothing found": create the typed name as a new blank Document or a Tag,
 // with a switch when the viewer may create both.
 function MentionCreateRow({ id, name, kinds, kind, onKindChange, highlighted, creating, onCreate }: MentionCreateProps & { id: string }) {
+  const { t } = useTranslation();
   return (
     <Box
       id={id}
@@ -121,13 +123,13 @@ function MentionCreateRow({ id, name, kinds, kind, onKindChange, highlighted, cr
     >
       <Stack gap={6} style={{ flex: 1, minWidth: 0 }}>
         <Text size="xs" c="dimmed" style={{ overflowWrap: 'anywhere' }}>
-          Nessun risultato per «{name}». Crealo come:
+          {t('mentions.noMatchCreate', { name })}
         </Text>
         <Group gap="xs" justify="space-between" wrap="wrap">
           {kinds.length > 1 ? (
             // Plain buttons, not a SegmentedControl: its radio inputs take
             // the focus on click, which would close the popup.
-            <Button.Group aria-label="Tipo del nuovo elemento">
+            <Button.Group aria-label={t('mentions.kindSwitchLabel')}>
               {kinds.map((value) => (
                 <Button
                   key={value}
@@ -136,13 +138,13 @@ function MentionCreateRow({ id, name, kinds, kind, onKindChange, highlighted, cr
                   aria-pressed={value === kind}
                   onClick={() => onKindChange(value)}
                 >
-                  {KIND_LABELS[value]}
+                  {t(`mentions.kind.${value}`)}
                 </Button>
               ))}
             </Button.Group>
           ) : (
             <Text size="xs" fw={600}>
-              {KIND_LABELS[kind]}
+              {t(`mentions.kind.${kind}`)}
             </Text>
           )}
           <Button
@@ -152,12 +154,13 @@ function MentionCreateRow({ id, name, kinds, kind, onKindChange, highlighted, cr
             loading={creating}
             onClick={onCreate}
           >
-            Crea {KIND_LABELS[kind]}
+            {t('mentions.createKind', { kind: t(`mentions.kind.${kind}`) })}
           </Button>
         </Group>
         {highlighted && (
           <Text size="xs" c="dimmed">
-            {kinds.length > 1 ? '←/→ cambia tipo · ' : ''}Invio per creare
+            {kinds.length > 1 ? t('mentions.hintSwitchKind') : ''}
+            {t('mentions.hintCreate')}
           </Text>
         )}
       </Stack>

@@ -5,9 +5,11 @@ import { supabase } from '../lib/supabaseClient';
 import { useSession } from '../hooks/useSession';
 import { AppHeader } from '../components/AppHeader';
 import { RoomsPage } from './RoomsPage';
+import { useTranslation } from 'react-i18next';
 
 /** `/`: the sign-in screen (one button per provider), or the user's Rooms once signed in. */
 export function HomePage() {
+  const { t } = useTranslation();
   const { session, loading: sessionLoading } = useSession();
 
   const signInWith = (provider: AuthProvider) => {
@@ -33,10 +35,10 @@ export function HomePage() {
       <Stack align="center" justify="center" gap="md" px="md" style={{ minHeight: '100svh' }}>
         <BookOpenIcon size={48} weight="duotone" color="var(--text-muted)" />
         <Title order={1} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
-          TTRPG Campaign Notes
+          {t('app.name')}
         </Title>
         <Text c="dimmed" ta="center">
-          Accedi per continuare.
+          {t('auth.prompt')}
         </Text>
         <Stack gap="sm" w="100%" maw={320}>
           {/* Google stays the primary action: it's the preferred login (D-07). */}
@@ -48,7 +50,7 @@ export function HomePage() {
               leftSection={<provider.icon size={20} aria-hidden="true" />}
               onClick={() => signInWith(provider)}
             >
-              Accedi con {provider.label}
+              {t('auth.signInWith', { provider: provider.label })}
             </Button>
           ))}
         </Stack>

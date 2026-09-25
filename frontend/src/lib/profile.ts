@@ -5,6 +5,7 @@ import type {
   RawUserIdentity,
   UserIdentity,
 } from '../types/profile';
+import i18n from '../i18n';
 
 /** Mirrors app/domain/profiles.py; the backend re-checks it. */
 export const MAX_DISPLAY_NAME_LENGTH = 60;
@@ -45,10 +46,10 @@ export function toProfilePatch(values: ProfileFormValues): ProfilePatch {
 }
 
 /**
- * Mantine form validator: an error message, or null when within the limit.
- * Counted after trimming, like the backend.
+ * Mantine form validator: an error message (in the current UI language), or
+ * null when within the limit. Counted after trimming, like the backend.
  */
 export function tooLong(max: number) {
   return (value: string): string | null =>
-    value.trim().length > max ? `Massimo ${max} caratteri` : null;
+    value.trim().length > max ? i18n.t('common.maxLength', { max }) : null;
 }

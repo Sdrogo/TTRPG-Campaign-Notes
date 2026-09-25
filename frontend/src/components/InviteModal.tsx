@@ -14,6 +14,7 @@ import {
 import { CheckIcon, CopyIcon } from '@phosphor-icons/react';
 import { useCreateInvitation } from '../hooks/useRooms';
 import type { RoomRole } from '../types/room';
+import { useTranslation } from 'react-i18next';
 
 interface InviteModalProps {
   opened: boolean;
@@ -23,6 +24,7 @@ interface InviteModalProps {
 
 /** Creates an invitation link for the Room with a proposed role, ready to copy and share. */
 export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
+  const { t } = useTranslation();
   const [role, setRole] = useState<RoomRole>('player');
   const createInvitation = useCreateInvitation(roomId);
 
@@ -36,13 +38,13 @@ export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
     : null;
 
   return (
-    <Modal opened={opened} onClose={handleClose} title="Invita nella Stanza" centered>
+    <Modal opened={opened} onClose={handleClose} title={t('invite.modalTitle')} centered>
       <Stack gap="sm">
         <Select
-          label="Ruolo proposto"
+          label={t('invite.proposedRole')}
           data={[
-            { value: 'player', label: 'Player' },
-            { value: 'master', label: 'Master' },
+            { value: 'player', label: t('roles.player') },
+            { value: 'master', label: t('roles.master') },
           ]}
           value={role}
           onChange={(value) => setRole((value as RoomRole | null) ?? 'player')}
@@ -51,7 +53,7 @@ export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
         />
         {!inviteUrl && (
           <Button onClick={() => createInvitation.mutate(role)} loading={createInvitation.isPending}>
-            Genera invito
+            {t('invite.generate')}
           </Button>
         )}
         {createInvitation.isError && (
@@ -64,7 +66,7 @@ export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
             <TextInput value={inviteUrl} readOnly style={{ flex: 1 }} />
             <CopyButton value={inviteUrl}>
               {({ copied, copy }) => (
-                <Tooltip label={copied ? 'Copiato' : 'Copia'}>
+                <Tooltip label={copied ? t('common.copied') : t('common.copy')}>
                   <ActionIcon variant="light" onClick={copy}>
                     {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
                   </ActionIcon>

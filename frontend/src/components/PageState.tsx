@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Loader, Stack, Text } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 
 // Full-viewport placeholders shared by every routed page: loading, and a
 // message with an optional way out (sign in, go back, ...).
@@ -36,8 +37,9 @@ export function FullPageMessage({ children, actionLabel, actionTo }: FullPageMes
 
 /** The message for a signed-out visitor, with a link to the sign-in page. */
 export function SignInRequired({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   return (
-    <FullPageMessage actionLabel="Vai al login" actionTo="/">
+    <FullPageMessage actionLabel={t('common.goToLogin')} actionTo="/">
       {children}
     </FullPageMessage>
   );

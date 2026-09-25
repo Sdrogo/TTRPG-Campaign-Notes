@@ -31,12 +31,14 @@ import { MentionText } from '../components/mentions/MentionText';
 import type { Document, DocumentFormValues } from '../types/document';
 import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
+import { useTranslation } from 'react-i18next';
 
 /**
  * `/rooms/:roomId/documents/:documentId`: one Document with its gallery, Owners
  * and Comments. Owners and the Master also get the editing controls.
  */
 export function DocumentDetailPage() {
+  const { t } = useTranslation();
   const { roomId, documentId } = useParams<{ roomId: string; documentId: string }>();
   const { session, loading: sessionLoading } = useSession();
 
@@ -49,7 +51,7 @@ export function DocumentDetailPage() {
   }
 
   if (!session) {
-    return <SignInRequired>Accedi per vedere questo Documento.</SignInRequired>;
+    return <SignInRequired>{t('documents.detail.signInRequired')}</SignInRequired>;
   }
 
   return (
@@ -66,6 +68,7 @@ function DocumentDetailLoader({
   documentId: string;
   currentUserId: string;
 }) {
+  const { t } = useTranslation();
   const document = useDocument(roomId, documentId, true);
   const tags = useTags(roomId, true);
   const members = useMembers(roomId, true);
@@ -76,14 +79,14 @@ function DocumentDetailLoader({
 
   if (document.isError || !document.data) {
     return (
-      <FullPageMessage actionLabel="Torna ai Documenti" actionTo={`/rooms/${roomId}/documents`}>
-        Documento non trovato o non visibile.
+      <FullPageMessage actionLabel={t('documents.detail.backToDocuments')} actionTo={`/rooms/${roomId}/documents`}>
+        {t('documents.detail.notFound')}
       </FullPageMessage>
     );
   }
 
   return (
-    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel="Documenti">
+    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('documents.title')}>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         <DocumentPanel
           key={document.data.id}
@@ -117,6 +120,7 @@ function DocumentPanel({
   members: Member[];
   currentUserId: string;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const addOwner = useAddDocumentOwner(roomId, document.id);
   const removeOwner = useRemoveDocumentOwner(roomId, document.id);
@@ -147,7 +151,7 @@ function DocumentPanel({
                 variant="subtle"
                 color="gray"
                 onClick={() => setEditing((current) => !current)}
-                aria-label={editing ? 'Annulla modifiche' : 'Modifica'}
+                aria-label={editing ? t('documents.detail.cancelEditing') : t('common.edit')}
               >
                 {editing ? <XIcon size={18} /> : <PencilSimpleIcon size={18} />}
               </ActionIcon>
@@ -181,7 +185,7 @@ function DocumentPanel({
                 style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
               />
             ) : (
-              <Text c="dimmed">Nessuna descrizione.</Text>
+              <Text c="dimmed">{t('common.noDescription')}</Text>
             )}
           </>
         )}
@@ -225,6 +229,7 @@ function DocumentEditForm({
   tags: Tag[];
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const updateDocument = useUpdateDocument(roomId, document.id);
   const [values, setValues] = useState<DocumentFormValues>({
     name: document.name,
@@ -244,10 +249,10 @@ function DocumentEditForm({
         <DocumentFields values={values} onChange={setValues} tags={tags} />
         <Group>
           <Button type="submit" loading={updateDocument.isPending} disabled={!values.name.trim()}>
-            Salva modifiche
+            {t('documents.detail.saveChanges')}
           </Button>
           <Button variant="subtle" color="gray" onClick={onDone}>
-            Annulla
+            {t('common.cancel')}
           </Button>
         </Group>
       </Stack>

@@ -3,19 +3,9 @@ import { ArrowCounterClockwiseIcon, MagnifyingGlassIcon } from '@phosphor-icons/
 import { DEFAULT_COMMENT_FILTERS, hasActiveFilters } from '../../lib/comments';
 import type { CommentFilters, CommentSortOrder } from '../../types/comment';
 import type { DocumentVisibility } from '../../types/document';
+import { useTranslation } from 'react-i18next';
 
-const SORT_OPTIONS: { value: CommentSortOrder; label: string }[] = [
-  { value: 'newest', label: 'Più recenti' },
-  { value: 'oldest', label: 'Meno recenti' },
-  { value: 'author', label: 'Per autore' },
-];
-
-const VISIBILITY_OPTIONS: { value: DocumentVisibility; label: string }[] = [
-  { value: 'room', label: 'Stanza' },
-  { value: 'master', label: 'Solo Master' },
-  { value: 'private', label: 'Privato' },
-  { value: 'selective', label: 'Selettivo' },
-];
+const VISIBILITY_LEVELS: DocumentVisibility[] = ['room', 'master', 'private', 'selective'];
 
 interface CommentToolbarProps {
   filters: CommentFilters;
@@ -25,14 +15,24 @@ interface CommentToolbarProps {
 
 /** Sort + filter controls shown above the Comment list. */
 export function CommentToolbar({ filters, onChange, authorOptions }: CommentToolbarProps) {
+  const { t } = useTranslation();
+  const sortOptions: { value: CommentSortOrder; label: string }[] = [
+    { value: 'newest', label: t('comments.toolbar.sortNewest') },
+    { value: 'oldest', label: t('comments.toolbar.sortOldest') },
+    { value: 'author', label: t('comments.toolbar.sortAuthor') },
+  ];
+  const visibilityOptions = VISIBILITY_LEVELS.map((level) => ({
+    value: level,
+    label: t(`visibility.level.${level}`),
+  }));
   const set = (patch: Partial<CommentFilters>) => onChange({ ...filters, ...patch });
 
   return (
     <Group gap="xs" align="center" wrap="wrap">
       <TextInput
         size="xs"
-        aria-label="Cerca nei commenti"
-        placeholder="Cerca…"
+        aria-label={t('comments.toolbar.searchLabel')}
+        placeholder={t('comments.toolbar.searchPlaceholder')}
         leftSection={<MagnifyingGlassIcon size={14} />}
         value={filters.query}
         onChange={(event) => set({ query: event.currentTarget.value })}
@@ -40,8 +40,8 @@ export function CommentToolbar({ filters, onChange, authorOptions }: CommentTool
       />
       <Select
         size="xs"
-        aria-label="Ordina commenti"
-        data={SORT_OPTIONS}
+        aria-label={t('comments.toolbar.sortLabel')}
+        data={sortOptions}
         value={filters.sort}
         onChange={(sort) => set({ sort: (sort as CommentSortOrder | null) ?? 'newest' })}
         allowDeselect={false}
@@ -49,8 +49,8 @@ export function CommentToolbar({ filters, onChange, authorOptions }: CommentTool
       />
       <Select
         size="xs"
-        aria-label="Filtra per autore"
-        placeholder="Tutti gli autori"
+        aria-label={t('comments.toolbar.authorLabel')}
+        placeholder={t('comments.toolbar.authorPlaceholder')}
         data={authorOptions}
         value={filters.authorId}
         onChange={(authorId) => set({ authorId })}
@@ -60,9 +60,9 @@ export function CommentToolbar({ filters, onChange, authorOptions }: CommentTool
       />
       <Select
         size="xs"
-        aria-label="Filtra per visibilità"
-        placeholder="Ogni visibilità"
-        data={VISIBILITY_OPTIONS}
+        aria-label={t('comments.toolbar.visibilityLabel')}
+        placeholder={t('comments.toolbar.visibilityPlaceholder')}
+        data={visibilityOptions}
         value={filters.visibility}
         onChange={(visibility) => set({ visibility: visibility as DocumentVisibility | null })}
         clearable
@@ -70,7 +70,7 @@ export function CommentToolbar({ filters, onChange, authorOptions }: CommentTool
       />
       <Checkbox
         size="xs"
-        label="Nascondi eliminati"
+        label={t('comments.toolbar.hideDeleted')}
         checked={filters.hideDeleted}
         onChange={(event) => set({ hideDeleted: event.currentTarget.checked })}
       />
@@ -82,7 +82,7 @@ export function CommentToolbar({ filters, onChange, authorOptions }: CommentTool
           leftSection={<ArrowCounterClockwiseIcon size={14} />}
           onClick={() => onChange({ ...DEFAULT_COMMENT_FILTERS, sort: filters.sort })}
         >
-          Azzera filtri
+          {t('common.resetFilters')}
         </Button>
       )}
     </Group>

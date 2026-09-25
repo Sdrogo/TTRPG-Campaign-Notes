@@ -8,6 +8,7 @@ import {
   MagnifyingGlassPlusIcon,
 } from '@phosphor-icons/react';
 import type { DocumentImage } from '../types/document';
+import { useTranslation } from 'react-i18next';
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 5;
@@ -79,6 +80,7 @@ function ZoomableImage({
   onPrevious?: () => void;
   onNext?: () => void;
 }) {
+  const { t } = useTranslation();
   const [zoom, setZoom] = useState(MIN_ZOOM);
   // Size the image renders at when fitted to the viewport (zoom 1). Zooming
   // scales from this, so the scroll container can pan over the enlarged image.
@@ -136,7 +138,7 @@ function ZoomableImage({
           top="50%"
           style={{ transform: 'translateY(-50%)' }}
           onClick={onPrevious}
-          aria-label="Immagine precedente"
+          aria-label={t('images.viewer.previous')}
         >
           <CaretLeftIcon size={20} weight="bold" />
         </ActionIcon>
@@ -150,7 +152,7 @@ function ZoomableImage({
           top="50%"
           style={{ transform: 'translateY(-50%)' }}
           onClick={onNext}
-          aria-label="Immagine successiva"
+          aria-label={t('images.viewer.next')}
         >
           <CaretRightIcon size={20} weight="bold" />
         </ActionIcon>
@@ -169,13 +171,13 @@ function ZoomableImage({
           border: '1px solid var(--border-default)',
         }}
       >
-        <Tooltip label="Riduci">
+        <Tooltip label={t('images.viewer.zoomOut')}>
           <ActionIcon
             variant="default"
             size="lg"
             disabled={zoom <= MIN_ZOOM}
             onClick={() => setZoom((current) => clampZoom(current - ZOOM_STEP))}
-            aria-label="Riduci"
+            aria-label={t('images.viewer.zoomOut')}
           >
             <MagnifyingGlassMinusIcon size={20} weight="bold" />
           </ActionIcon>
@@ -183,24 +185,24 @@ function ZoomableImage({
         <Text size="sm" c="dimmed" w={48} ta="center">
           {Math.round(zoom * 100)}%
         </Text>
-        <Tooltip label="Ingrandisci">
+        <Tooltip label={t('images.viewer.zoomIn')}>
           <ActionIcon
             variant="default"
             size="lg"
             disabled={zoom >= MAX_ZOOM}
             onClick={() => setZoom((current) => clampZoom(current + ZOOM_STEP))}
-            aria-label="Ingrandisci"
+            aria-label={t('images.viewer.zoomIn')}
           >
             <MagnifyingGlassPlusIcon size={20} weight="bold" />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label="Adatta allo schermo">
+        <Tooltip label={t('images.viewer.fit')}>
           <ActionIcon
             variant="default"
             size="lg"
             disabled={zoom === MIN_ZOOM}
             onClick={() => setZoom(MIN_ZOOM)}
-            aria-label="Adatta allo schermo"
+            aria-label={t('images.viewer.fit')}
           >
             <ArrowsInIcon size={20} weight="bold" />
           </ActionIcon>

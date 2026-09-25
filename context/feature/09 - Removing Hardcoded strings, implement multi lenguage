@@ -1,0 +1,15 @@
+## Goals
+
+We want to remove Any arcoded strings and put them into a resurce file.
+
+## Implementation
+
+We also want to implement the resurces in such a way we open-up to possible localization implementation.
+
+## Definition of Done
+
+- requested feature are implemented
+- Technical and Progettual Documentation is updated
+- All tests passes
+- Both beckend and frontend builds passes
+- GIT commit, push and PR are part of the task
