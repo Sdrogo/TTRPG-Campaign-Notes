@@ -5,8 +5,10 @@ from collections.abc import AsyncIterator, Callable
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from PIL import Image
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.models import DocumentImageRow, DocumentOwnerRow, DocumentTagRow, PostRow
 from app.main import app
 
 
@@ -385,3 +387,153 @@ async def test_list_hides_a_private_comments_image_from_other_members(
     assert secret_id not in images_in_list(player_list)
     # The Document's own image is still there, so this isn't just an empty list.
     assert len(images_in_list(player_list)) == 1
+
+
+# --- Deleting a Document -----------------------------------------------
+
+
+async def test_owner_can_delete_a_document(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, master_token, player_token = await _room_with_master_and_player(client, make_token)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Owned by Player"},
+            headers=_auth_headers(player_token),
+        )
+    ).json()
+
+    deleted = await client.delete(
+        f"/rooms/{room_id}/documents/{document['id']}", headers=_auth_headers(player_token)
+    )
+    assert deleted.status_code == 204
+
+    gone = await client.get(
+        f"/rooms/{room_id}/documents/{document['id']}", headers=_auth_headers(player_token)
+    )
+    assert gone.status_code == 404
+
+    listing = (
+        await client.get(f"/rooms/{room_id}/documents", headers=_auth_headers(master_token))
+    ).json()
+    assert document["id"] not in {d["id"] for d in listing}
+
+
+async def test_master_can_delete_a_document_without_an_explicit_owner_row(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, master_token, player_token = await _room_with_master_and_player(client, make_token)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Owned by Player"},
+            headers=_auth_headers(player_token),
+        )
+    ).json()
+
+    # D-12: the Master is always an implicit Owner, even without a row.
+    deleted = await client.delete(
+        f"/rooms/{room_id}/documents/{document['id']}", headers=_auth_headers(master_token)
+    )
+    assert deleted.status_code == 204
+
+
+async def test_non_owner_cannot_delete_a_document(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, master_token, player_token = await _room_with_master_and_player(client, make_token)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Owned by Master"},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+
+    forbidden = await client.delete(
+        f"/rooms/{room_id}/documents/{document['id']}", headers=_auth_headers(player_token)
+    )
+    assert forbidden.status_code == 403
+
+    still_there = await client.get(
+        f"/rooms/{room_id}/documents/{document['id']}", headers=_auth_headers(master_token)
+    )
+    assert still_there.status_code == 200
+
+
+async def test_deleting_a_hidden_document_is_a_404_not_a_403(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """VR-07: a Document a viewer can't see doesn't even hint it exists."""
+    room_id, master_token, player_token = await _room_with_master_and_player(client, make_token)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Secret Plot", "visibility": "master"},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+
+    response = await client.delete(
+        f"/rooms/{room_id}/documents/{document['id']}", headers=_auth_headers(player_token)
+    )
+    assert response.status_code == 404
+
+
+async def test_deleting_a_document_cascades_tags_owners_comments_and_images(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room_id, master_token, _ = await _room_with_master_and_player(client, make_token)
+    tag_id = (
+        await client.get(f"/rooms/{room_id}/tags", headers=_auth_headers(master_token))
+    ).json()[0]["id"]
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Doomed", "tag_ids": [tag_id]},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+    document_id = uuid.UUID(document["id"])
+
+    await client.post(
+        f"/rooms/{room_id}/documents/{document_id}/images",
+        files={"file": ("doomed.png", _png(), "image/png")},
+        headers=_auth_headers(master_token),
+    )
+    comment = (
+        await client.post(
+            f"/rooms/{room_id}/documents/{document_id}/comments",
+            json={"body": "Last words."},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+    await client.post(
+        f"/rooms/{room_id}/documents/{document_id}/comments/{comment['id']}/images",
+        files={"file": ("attachment.png", _png(), "image/png")},
+        headers=_auth_headers(master_token),
+    )
+    assert len(fake_storage) == 2
+
+    deleted = await client.delete(
+        f"/rooms/{room_id}/documents/{document_id}", headers=_auth_headers(master_token)
+    )
+    assert deleted.status_code == 204
+
+    # Every image's Storage object is gone, not just its row.
+    assert fake_storage == {}
+
+    for model, column in (
+        (DocumentTagRow, DocumentTagRow.document_id),
+        (DocumentOwnerRow, DocumentOwnerRow.document_id),
+        (PostRow, PostRow.document_id),
+        (DocumentImageRow, DocumentImageRow.document_id),
+    ):
+        remaining = (
+            await db_session.execute(select(model).where(column == document_id))
+        ).scalars().all()
+        assert remaining == [], f"{model.__name__} rows survived the Document's deletion"

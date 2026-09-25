@@ -159,7 +159,10 @@
       "notFound": "Document not found or not visible.",
       "backToDocuments": "Back to Documents",
       "cancelEditing": "Discard changes",
-      "saveChanges": "Save changes"
+      "saveChanges": "Save changes",
+      "deleteDocument": "Delete Document",
+      "deleteConfirmTitle": "Delete this Document?",
+      "deleteConfirmBody": "Its Comments, images and Tag links will be deleted with it. This can't be undone."
     },
     "fields": {
       "descriptionHint": "Type # to link another Document.",

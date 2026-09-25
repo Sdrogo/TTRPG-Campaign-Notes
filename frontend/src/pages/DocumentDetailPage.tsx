@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Stack, Group, Title, Text, Button, Box, Flex, ActionIcon } from '@mantine/core';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Stack, Group, Title, Text, Button, Box, Flex, ActionIcon, Modal } from '@mantine/core';
 import { PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
   useDocument,
   useUpdateDocument,
+  useDeleteDocument,
   useAddDocumentOwner,
   useRemoveDocumentOwner,
   useUploadDocumentImages,
@@ -246,7 +247,9 @@ function DocumentEditForm({
   onDone: () => void;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const updateDocument = useUpdateDocument(roomId, document.id);
+  const deleteDocument = useDeleteDocument(roomId, document.id);
   const [values, setValues] = useState<DocumentFormValues>({
     name: document.name,
     description: document.description,
@@ -254,11 +257,19 @@ function DocumentEditForm({
     tagIds: document.tagIds,
   });
   const [tagCreatePending, setTagCreatePending] = useState(false);
+  const [confirmDeleteOpened, setConfirmDeleteOpened] = useState(false);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (tagCreatePending) return;
     updateDocument.mutate(values, { onSuccess: onDone, onError: notifyError });
+  };
+
+  const handleDelete = () => {
+    deleteDocument.mutate(undefined, {
+      onSuccess: () => navigate(`/rooms/${roomId}/documents`),
+      onError: notifyError,
+    });
   };
 
   return (
@@ -272,19 +283,43 @@ function DocumentEditForm({
           canCreateTag={canManageTags}
           onTagCreatePendingChange={setTagCreatePending}
         />
-        <Group>
-          <Button
-            type="submit"
-            loading={updateDocument.isPending}
-            disabled={!values.name.trim() || tagCreatePending}
-          >
-            {t('documents.detail.saveChanges')}
-          </Button>
-          <Button variant="subtle" color="gray" onClick={onDone}>
-            {t('common.cancel')}
+        <Group justify="space-between">
+          <Group>
+            <Button
+              type="submit"
+              loading={updateDocument.isPending}
+              disabled={!values.name.trim() || tagCreatePending}
+            >
+              {t('documents.detail.saveChanges')}
+            </Button>
+            <Button variant="subtle" color="gray" onClick={onDone}>
+              {t('common.cancel')}
+            </Button>
+          </Group>
+          <Button variant="outline" color="red" onClick={() => setConfirmDeleteOpened(true)}>
+            {t('documents.detail.deleteDocument')}
           </Button>
         </Group>
       </Stack>
+
+      <Modal
+        opened={confirmDeleteOpened}
+        onClose={() => setConfirmDeleteOpened(false)}
+        title={t('documents.detail.deleteConfirmTitle')}
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">{t('documents.detail.deleteConfirmBody')}</Text>
+          <Group justify="flex-end">
+            <Button variant="subtle" color="gray" onClick={() => setConfirmDeleteOpened(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button color="red" loading={deleteDocument.isPending} onClick={handleDelete}>
+              {t('common.delete')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </form>
   );
 }

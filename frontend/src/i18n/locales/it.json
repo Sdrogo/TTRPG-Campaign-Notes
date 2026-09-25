@@ -159,7 +159,10 @@
       "notFound": "Documento non trovato o non visibile.",
       "backToDocuments": "Torna ai Documenti",
       "cancelEditing": "Annulla modifiche",
-      "saveChanges": "Salva modifiche"
+      "saveChanges": "Salva modifiche",
+      "deleteDocument": "Elimina Documento",
+      "deleteConfirmTitle": "Eliminare questo Documento?",
+      "deleteConfirmBody": "I Commenti, le immagini e i collegamenti ai Tag di questo Documento verranno eliminati. L'operazione non può essere annullata."
     },
     "fields": {
       "descriptionHint": "Scrivi # per collegare un altro Documento.",

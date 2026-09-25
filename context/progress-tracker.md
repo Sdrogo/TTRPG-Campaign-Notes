@@ -196,9 +196,15 @@ Update this file after every meaningful implementation change.
   the Documents list; a Tag can be created inline while editing a Document,
   not just when creating one. New UI strings were added to
   `src/i18n/locales/{it,en}.json` alongside spec 09's convention rather than
-  hardcoded. Frontend **677/677**, backend **251/251**,
-  builds/lint/mypy/ruff clean. The `PC` backfill migration for *existing*
-  Rooms is written but **not yet applied to the live DB** (Next Up).
+  hardcoded. Also adds Document deletion (an Owner-only action in edit
+  mode, behind a confirmation modal, first requested mid-review and folded
+  into this same spec/branch): `DELETE /rooms/{id}/documents/{doc}`
+  cascades its Tags, Owners and Comments at the database level, but its
+  images are removed through the normal `image_uploads.remove_images`
+  path first, since the cascade alone would orphan their Storage objects.
+  Frontend **703/703**, backend **275/275**, builds/lint/mypy/ruff clean.
+  The `PC` backfill migration for *existing* Rooms is written but **not
+  yet applied to the live DB** (Next Up).
 
 ## Current Goal
 
@@ -1437,7 +1443,8 @@ Update this file after every meaningful implementation change.
     `architecture.md` → Storage Model). **Not yet applied to the live
     Supabase DB** — this is a real, hard-to-reverse write to production
     data and wasn't run without asking first (see Next Up). Backend
-    **251/251** tests, mypy strict, ruff clean.
+    **270/270** tests (post-rebase baseline, i18n's new tests included),
+    mypy strict, ruff clean.
   - **Frontend — grouping and sorting** (`RoomDocumentsPage`): new
     `lib/tags.ts` (`isMainTag`, `groupTagsByCategory`) and
     `lib/documentGrouping.ts`/`lib/documentSorting.ts` (pure, URL-param-
@@ -1497,9 +1504,11 @@ Update this file after every meaningful implementation change.
     `DocumentImageGallery`, `layout.test.tsx` for the burger/drawer).
     `npm test` **677/677**, coverage **98.42/93.52/98.52/98.81** (floors
     raised from 97/91/97/97 to 98/93/98/98 per `vitest.config.ts`'s own
-    "raise when the measured numbers move up" rule). Backend +2
-    (`test_domain_rooms.py`), full suite **251/251**, mypy strict, ruff
-    clean. `npm run build` and `npm run lint` both pass.
+    "raise when the measured numbers move up" rule). Backend: one existing
+    assertion updated (`test_domain_rooms.py`, no new test - the PC tag is
+    covered by the existing default-Tags test), full suite **270/270**
+    (post-rebase baseline), mypy strict, ruff clean. `npm run build` and
+    `npm run lint` both pass.
   - **Headless browser check** (real Chromium via `playwright-core`,
     `npm run dev` + a faked Supabase session + a stubbed backend at
     `VITE_API_BASE_URL`, script not committed): confirmed live —
@@ -1517,6 +1526,50 @@ Update this file after every meaningful implementation change.
     including the CI/local one used for this check — Playwright hit the
     dev server's real local backend, whose DB wasn't migrated for this
     check).
+  - **Document deletion** (added to this same spec/branch mid-review, not
+    in the original spec 10 text): an Owner (or the Master, D-12) can now
+    delete a Document outright from edit mode, behind a confirmation
+    Modal — this is the first time Document CRUD's "D" existed at all;
+    only image deletion and Owner removal had routes before.
+    - **Backend**: `DELETE /rooms/{id}/documents/{doc}`
+      (`app/api/documents.py::delete_document`) reuses the same
+      `_get_owned_document` ownership/visibility check every other
+      mutating Document route already used (404 for a hidden Document,
+      per VR-07; 403 for a visible one you don't own). Its Tags, Owner
+      and Selective-grant links and its Comments (`posts`,
+      `post_visibility_grants`) cascade at the database level
+      (`ondelete="CASCADE"`, already in place from earlier migrations —
+      no new migration needed), but its images do **not**: a plain
+      cascade would delete the `document_images` rows without ever
+      creating the `storage_cleanup` row their removal depends on,
+      orphaning the Storage objects forever. The route locks the
+      Document, reads every image via `documents_repo.list_images`
+      (unfiltered — Comment attachments included, since nothing here
+      depends on the caller's visibility), and runs them through the
+      existing `image_uploads.remove_images` before deleting the
+      Document row itself (new `documents_repo.delete_document`). See
+      `architecture.md` → Storage Model.
+    - **Frontend**: `useDeleteDocument` (`hooks/useDocuments.ts`) removes
+      the single-Document query from the cache on success (an
+      invalidate-triggered refetch of a Document that no longer exists
+      would just 404) and invalidates the list. `DocumentEditForm` gained
+      an outlined red "Elimina Documento" button next to Save/Cancel,
+      opening a centered `Modal` (not the small Popover a gallery image's
+      deletion uses — this is heavier, per `ui-context.md` → Document
+      detail) that names what's lost before confirming; on success the
+      page navigates to the Room's Documents list.
+    - **Tests**: backend +5 in `test_documents_api.py` (Owner deletes;
+      Master deletes without an explicit Owner row, D-12; a non-Owner
+      gets 403; a hidden Document 404s instead, VR-07; deleting cascades
+      `document_tags`/`document_owners`/`posts`/`document_images` rows
+      and empties `fake_storage`, checked by querying each table
+      directly). Backend **275/275**, mypy strict, ruff clean. Frontend
+      +5 in `DocumentDetailPage.test.tsx` (gated on editing; confirmation
+      required; dismissing does nothing; confirming deletes and
+      navigates; a rejected deletion notifies and stays put, mirroring
+      the `useNavigate` mock pattern from `RoomMembersPage.test.tsx`).
+      `npm test` **703/703**, coverage floors still held with no change
+      needed. `npm run build` and `npm run lint` both pass.
 
 ## In Progress
 

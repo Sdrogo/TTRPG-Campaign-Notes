@@ -104,7 +104,10 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 
 ### Documents
 - CRUD with name, image, description (rich text/Markdown), Tags
-  (FR-D1). No rigid "type" field — types are just Tags (D-05).
+  (FR-D1). No rigid "type" field — types are just Tags (D-05). An
+  Owner can also delete a Document outright (behind a confirmation
+  modal, 2026-09-25), taking its Comments, images and Tag links with
+  it.
 - Ownership model: creator is Owner by default, Master is always an
   implicit Owner, Owners can be added/removed (D-12, FR-D2).
 - Only an Owner edits the description; everyone else contributes

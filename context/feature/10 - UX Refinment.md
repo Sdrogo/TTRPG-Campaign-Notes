@@ -16,6 +16,8 @@
 - Images in DocumentDetailPage should work similar to what is been implemented in RoomDocumentsPage for big screens.
 - for TAG section in DocumentCard.tsx of RoomDocumentsPage evevry individual TAG should be cliccable, and Click should be redirect as works in description TAG system.
 - Should be possible to create a new TAG when adding TAGS to a Document in edit mode.
+- Document can be deleted by Owner in edit mode. A modal should ask for
+  confirmation before performing the delete on the DB.
 
 ## Definition of Done
 

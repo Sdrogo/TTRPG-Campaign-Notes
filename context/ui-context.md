@@ -162,6 +162,13 @@ other icon set.
   (spec 07.1, shared via `lib/images.ts::imageFrameSize`), so a portrait
   image isn't stretched into the fixed-height box's full width. Its
   delete/favorite controls and the fullscreen viewer are unchanged.
+  **Deleting the Document** (2026-09-25, spec 10) is an Owner-only action
+  offered in edit mode: an outlined red "Elimina Documento" button next to
+  Save/Cancel opens a centered `Modal` (unlike a gallery image's small
+  Popover — deleting the whole Document is heavier: its Comments and images
+  go with it) naming what's lost, with `Annulla` / a red `Elimina` to
+  confirm. On success the page navigates back to the Documents list, since
+  the Document it was showing no longer exists.
 - **Thread / Posts**: nested replies indent up to the FR-T2 depth
   limit, then flatten with a "continue thread" link; each post shows
   a compact visibility indicator (see `VisibilityBadge` above).
