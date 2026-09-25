@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { HomePage } from './pages/HomePage';
 import { AcceptInvitePage } from './pages/AcceptInvitePage';
 import { RoomMembersPage } from './pages/RoomMembersPage';
@@ -11,6 +12,11 @@ import { AccountPage } from './pages/AccountPage';
  * prompt when there is none.
  */
 function App() {
+  // Subscribes the whole tree to language changes: every page re-renders in
+  // the new language, including components that read their strings through
+  // plain helpers (`userDisplayName`, `formatRelativeTime`) rather than a hook.
+  useTranslation();
+
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />

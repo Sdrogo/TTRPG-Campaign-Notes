@@ -1,12 +1,14 @@
 import { useRef, useState, type ReactElement } from 'react';
 import { Button, Popover, Stack, TextInput, type PopoverProps } from '@mantine/core';
 import { isHttpUrl } from '../lib/images';
+import { useTranslation } from 'react-i18next';
 
 interface ImageUrlPopoverProps {
   onAddUrl: (url: string) => void;
   /** The element that opens the popover; call `toggle` from its onClick. */
   children: (toggle: () => void) => ReactElement;
   position?: PopoverProps['position'];
+  /** Defaults to "Add". */
   submitLabel?: string;
 }
 
@@ -19,13 +21,14 @@ export function ImageUrlPopover({
   onAddUrl,
   children,
   position = 'top-start',
-  submitLabel = 'Aggiungi',
+  submitLabel,
 }: ImageUrlPopoverProps) {
+  const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [url, setUrl] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const trimmedUrl = url.trim();
-  const urlError = trimmedUrl && !isHttpUrl(trimmedUrl) ? 'Inserisci un URL http(s) valido' : null;
+  const urlError = trimmedUrl && !isHttpUrl(trimmedUrl) ? t('images.invalidUrl') : null;
 
   const submit = () => {
     if (trimmedUrl && !urlError) {
@@ -52,8 +55,8 @@ export function ImageUrlPopover({
         <Stack gap="xs" w={280}>
           <TextInput
             size="xs"
-            aria-label="URL dell'immagine"
-            placeholder="https://… URL dell'immagine"
+            aria-label={t('images.urlLabel')}
+            placeholder={t('images.urlPlaceholder')}
             value={url}
             onChange={(event) => setUrl(event.currentTarget.value)}
             onKeyDown={(event) => {
@@ -66,7 +69,7 @@ export function ImageUrlPopover({
             ref={inputRef}
           />
           <Button size="xs" disabled={!trimmedUrl || urlError !== null} onClick={submit}>
-            {submitLabel}
+            {submitLabel ?? t('common.add')}
           </Button>
         </Stack>
       </Popover.Dropdown>

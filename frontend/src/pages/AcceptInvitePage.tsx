@@ -3,12 +3,14 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Stack, Title, Text, Button, Loader } from '@mantine/core';
 import { useSession } from '../hooks/useSession';
 import { useAcceptInvitation } from '../hooks/useRooms';
+import { useTranslation } from 'react-i18next';
 
 /**
  * `/invite/:code`: accepts the invitation as soon as the user is signed in,
  * then opens the Room. An invalid, expired or used code shows an error.
  */
 export function AcceptInvitePage() {
+  const { t } = useTranslation();
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const { session, loading: sessionLoading } = useSession();
@@ -33,9 +35,9 @@ export function AcceptInvitePage() {
   if (!session) {
     return (
       <Stack align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
-        <Text>Accedi per unirti a questa Stanza.</Text>
+        <Text>{t('invite.signInRequired')}</Text>
         <Button component={Link} to="/">
-          Vai al login
+          {t('common.goToLogin')}
         </Button>
       </Stack>
     );
@@ -46,18 +48,18 @@ export function AcceptInvitePage() {
       {acceptInvitation.isPending && <Loader color="accent" />}
       {acceptInvitation.isError && (
         <>
-          <Text c="red">Invito non valido, scaduto o già utilizzato.</Text>
+          <Text c="red">{t('invite.invalid')}</Text>
           <Button component={Link} to="/">
-            Torna alle mie Stanze
+            {t('common.backToMyRooms')}
           </Button>
         </>
       )}
       {acceptInvitation.isSuccess && acceptInvitation.data && (
         <>
           <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
-            Ti sei unito a "{acceptInvitation.data.name}"
+            {t('invite.joined', { room: acceptInvitation.data.name })}
           </Title>
-          <Button onClick={() => navigate('/')}>Vai alle mie Stanze</Button>
+          <Button onClick={() => navigate('/')}>{t('invite.goToMyRooms')}</Button>
         </>
       )}
     </Stack>

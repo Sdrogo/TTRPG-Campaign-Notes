@@ -1,12 +1,6 @@
 import { Badge, type MantineSize } from '@mantine/core';
 import type { DocumentVisibility } from '../types/document';
-
-const LABELS: Record<DocumentVisibility, string> = {
-  room: 'Stanza',
-  master: 'Solo Master',
-  private: 'Privato',
-  selective: 'Selettivo',
-};
+import { useTranslation } from 'react-i18next';
 
 interface VisibilityBadgeProps {
   visibility: DocumentVisibility;
@@ -14,10 +8,11 @@ interface VisibilityBadgeProps {
 }
 
 /**
- * The visibility level of a Document or Comment, as a small badge. "Solo
- * Master" stands out in the accent color.
+ * The visibility level of a Document or Comment, as a small badge. "Master
+ * only" stands out in the accent color.
  */
 export function VisibilityBadge({ visibility, size }: VisibilityBadgeProps) {
+  const { t } = useTranslation();
   return (
     <Badge
       color={visibility === 'master' ? 'accent' : 'gray'}
@@ -26,7 +21,7 @@ export function VisibilityBadge({ visibility, size }: VisibilityBadgeProps) {
       // Never squeezed by a long title sitting next to it.
       style={{ flexShrink: 0 }}
     >
-      {LABELS[visibility]}
+      {t(`visibility.level.${visibility}`)}
     </Badge>
   );
 }

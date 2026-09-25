@@ -2,6 +2,7 @@ import { ActionIcon, FileButton, Group, Tooltip } from '@mantine/core';
 import { ImageIcon, LinkIcon } from '@phosphor-icons/react';
 import { ACCEPTED_IMAGE_TYPES } from '../lib/images';
 import { ImageUrlPopover } from './ImageUrlPopover';
+import { useTranslation } from 'react-i18next';
 
 interface ImageAttachButtonsProps {
   /** How many more images may be added; the buttons disable at 0. */
@@ -15,8 +16,9 @@ interface ImageAttachButtonsProps {
  * in a popover. Nothing is uploaded here - the form decides when.
  */
 export function ImageAttachButtons({ remaining, onAddFiles, onAddUrl }: ImageAttachButtonsProps) {
+  const { t } = useTranslation();
   const full = remaining <= 0;
-  const hint = full ? 'Limite di immagini raggiunto' : undefined;
+  const hint = full ? t('images.limitReached') : undefined;
 
   return (
     <Group gap={4}>
@@ -27,8 +29,8 @@ export function ImageAttachButtons({ remaining, onAddFiles, onAddUrl }: ImageAtt
         disabled={full}
       >
         {(props) => (
-          <Tooltip label={hint ?? 'Aggiungi immagini dal computer'} withArrow>
-            <ActionIcon {...props} variant="subtle" color="gray" aria-label="Aggiungi immagini">
+          <Tooltip label={hint ?? t('images.attachFilesTooltip')} withArrow>
+            <ActionIcon {...props} variant="subtle" color="gray" aria-label={t('images.attachFiles')}>
               <ImageIcon size={18} />
             </ActionIcon>
           </Tooltip>
@@ -36,13 +38,13 @@ export function ImageAttachButtons({ remaining, onAddFiles, onAddUrl }: ImageAtt
       </FileButton>
       <ImageUrlPopover onAddUrl={onAddUrl}>
         {(toggle) => (
-          <Tooltip label={hint ?? 'Aggiungi immagine da URL'} withArrow>
+          <Tooltip label={hint ?? t('images.attachUrl')} withArrow>
             <ActionIcon
               variant="subtle"
               color="gray"
               disabled={full}
               onClick={toggle}
-              aria-label="Aggiungi immagine da URL"
+              aria-label={t('images.attachUrl')}
             >
               <LinkIcon size={18} />
             </ActionIcon>

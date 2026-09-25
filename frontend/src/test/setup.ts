@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
+import i18n from '../i18n';
 
 // jsdom implements none of these, and Mantine's primitives (Modal, Select,
 // Carousel, anything responsive) call them during a normal render.
@@ -55,6 +56,14 @@ if (!document.fonts) {
 let objectUrlCount = 0;
 globalThis.URL.createObjectURL = () => `blob:preview-${++objectUrlCount}`;
 globalThis.URL.revokeObjectURL = () => {};
+
+// The suite asserts the Italian strings, the app's original language, so
+// every test starts in Italian whatever language jsdom reports or an earlier
+// test switched to. A test that checks English switches explicitly.
+beforeEach(async () => {
+  localStorage.clear();
+  await i18n.changeLanguage('it');
+});
 
 afterEach(() => {
   cleanup();
