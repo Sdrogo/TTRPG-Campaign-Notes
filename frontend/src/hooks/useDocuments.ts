@@ -214,6 +214,26 @@ export function useSetFavoriteImage(roomId: string, documentId: string) {
 }
 
 /**
+ * Permanently deletes the Document, along with its Comments, images and
+ * Tag/Owner/Selective-grant links. Owner-only (D-12); the caller navigates
+ * away on success, since the Document no longer exists to show.
+ */
+export function useDeleteDocument(roomId: string, documentId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      await apiFetch<void>(`/rooms/${roomId}/documents/${documentId}`, { method: 'DELETE' });
+    },
+    onSuccess: () => {
+      // Removed, not invalidated: a refetch of a Document that no longer
+      // exists would just 404.
+      queryClient.removeQueries({ queryKey: documentQueryKey(roomId, documentId) });
+      void queryClient.invalidateQueries({ queryKey: documentsQueryKey(roomId) });
+    },
+  });
+}
+
+/**
  * Deletes a gallery image. If it was the favorite, the backend promotes the
  * oldest remaining image.
  */

@@ -301,6 +301,29 @@ async def update_document(
     return await _to_response(session, updated, membership)
 
 
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> None:
+    """An Owner (or the Master, D-12) permanently deletes the Document, along
+    with its Comments, images and Tag/Owner/Selective-grant links."""
+    requester_id = uuid.UUID(current_user.id)
+    document, _, _ = await _get_owned_document(session, room_id, document_id, requester_id, locale)
+
+    # Locked first so a concurrent image upload can't insert a row the
+    # cascade below would then delete without ever scheduling its Storage
+    # object for cleanup.
+    await documents_repo.lock_document(session, document_id)
+    images = await documents_repo.list_images(session, document_id)
+    if images:
+        await remove_images(session, images)
+    await documents_repo.delete_document(session, document.id)
+
+
 @router.post("/{document_id}/images", status_code=status.HTTP_201_CREATED)
 async def upload_document_image(
     room_id: uuid.UUID,

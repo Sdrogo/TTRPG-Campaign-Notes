@@ -104,7 +104,10 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 
 ### Documents
 - CRUD with name, image, description (rich text/Markdown), Tags
-  (FR-D1). No rigid "type" field — types are just Tags (D-05).
+  (FR-D1). No rigid "type" field — types are just Tags (D-05). An
+  Owner can also delete a Document outright (behind a confirmation
+  modal, 2026-09-25), taking its Comments, images and Tag links with
+  it.
 - Ownership model: creator is Owner by default, Master is always an
   implicit Owner, Owners can be added/removed (D-12, FR-D2).
 - Only an Owner edits the description; everyone else contributes
@@ -119,8 +122,9 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   default on (D-13, FR-D7).
 
 ### Tags, Glossary & Navigation
-- Room‑scoped Tags with optional category; default Tags (NPC,
-  Place, Event, Artifact) created with the Room (D-14, FR-N1).
+- Room‑scoped Tags with optional category; default "Main" Tags (NPC,
+  PC, Place, Event, Artifact) created with the Room (D-14, FR-N1),
+  used to group the Documents list (spec `10 - UX Refinment`).
 - Filter Documents by one or more Tags (FR-N2).
 - Glossary of terms, filterable by Tag, linked to related Documents
   (FR-N3, FR-N4).

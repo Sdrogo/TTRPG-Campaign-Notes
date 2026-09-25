@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box } from '@mantine/core';
 import { Carousel } from '@mantine/carousel';
-import { imageOrientation, type ImageOrientation } from '../lib/images';
+import { imageFrameSize, imageOrientation, type ImageOrientation } from '../lib/images';
 import type { DocumentImage } from '../types/document';
 import { useTranslation } from 'react-i18next';
 
@@ -67,20 +67,6 @@ export function DocumentCardImages({ images, documentName }: DocumentCardImagesP
   );
 }
 
-/** Frame by orientation (spec 07.1): size landscapes to the available width
- *  (up to the height cap), portraits to the available height, and unloaded
- *  images to a full-height placeholder. */
-function sizeFor(orientation: ImageOrientation | null) {
-  switch (orientation) {
-    case 'landscape':
-      return { w: '100%', h: 'auto', mah: CARD_IMAGE_MAX_HEIGHT };
-    case 'portrait':
-      return { w: 'auto', h: CARD_IMAGE_MAX_HEIGHT };
-    case null:
-      return { w: '100%', h: CARD_IMAGE_MAX_HEIGHT, bg: 'var(--bg-base)' };
-  }
-}
-
 /** Show an uncropped image, switching from a placeholder to an orientation-based
  *  frame once it loads. */
 function CardImage({ image, alt }: { image: DocumentImage; alt: string }) {
@@ -98,7 +84,7 @@ function CardImage({ image, alt }: { image: DocumentImage; alt: string }) {
         const { naturalWidth, naturalHeight } = event.currentTarget;
         setOrientation(imageOrientation(naturalWidth, naturalHeight));
       }}
-      {...sizeFor(orientation)}
+      {...imageFrameSize(orientation, CARD_IMAGE_MAX_HEIGHT)}
       maw="100%"
       style={{
         display: 'block',

@@ -59,7 +59,7 @@ export function RoomMembersPage() {
   };
 
   return (
-    <PageLayout backTo="/" backLabel={t('common.myRooms')}>
+    <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
       <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
         {t('members.title')}
       </Title>

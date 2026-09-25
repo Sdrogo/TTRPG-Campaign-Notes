@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   MAX_IMAGES_PER_COMMENT,
+  imageFrameSize,
   imageOrientation,
   isHttpUrl,
   leadImage,
@@ -109,5 +110,21 @@ describe('imageOrientation', () => {
 
   it('frames a square image as landscape', () => {
     expect(imageOrientation(800, 800)).toBe('landscape');
+  });
+});
+
+describe('imageFrameSize', () => {
+  const cap = { base: 160, sm: 200 };
+
+  it('fills the available width up to the cap for a landscape image', () => {
+    expect(imageFrameSize('landscape', cap)).toEqual({ w: '100%', h: 'auto', mah: cap });
+  });
+
+  it('fills the cap height and keeps its own width for a portrait image', () => {
+    expect(imageFrameSize('portrait', cap)).toEqual({ w: 'auto', h: cap });
+  });
+
+  it('holds a full-size placeholder before the image has loaded', () => {
+    expect(imageFrameSize(null, cap)).toEqual({ w: '100%', h: cap, bg: 'var(--bg-base)' });
   });
 });

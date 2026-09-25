@@ -105,6 +105,17 @@ async def update_document(session: AsyncSession, document: Document) -> None:
     await session.flush()
 
 
+async def delete_document(session: AsyncSession, document_id: uuid.UUID) -> None:
+    """Deletes the Document row. Its Tags, Owner and Selective-grant links and
+    its Comments (`posts`, `post_visibility_grants`) cascade at the database
+    level (`ondelete="CASCADE"`, see `app/db/models.py`). Call only after the
+    Document's images have already gone through `image_uploads.remove_images`
+    - the cascade would delete the `document_images` rows too, but not their
+    Storage objects, breaking the storage_cleanup invariant."""
+    await session.execute(delete(DocumentRow).where(DocumentRow.id == document_id))
+    await session.flush()
+
+
 def _image_from_row(row: DocumentImageRow) -> DocumentImage:
     """Maps a `document_images` row to the domain `DocumentImage`."""
     return DocumentImage(

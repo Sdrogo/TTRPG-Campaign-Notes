@@ -187,6 +187,24 @@ Update this file after every meaningful implementation change.
   switches it. Frontend **647/647**, backend unchanged (ruff/mypy clean,
   160 non-DB tests pass). Checked headless in a browser (see Completed).
   Backend messages are the follow-up (Next Up).
+- **UX refinement complete** (2026-09-25, branch `feature/ux_refinement`;
+  spec `context/feature/10 - UX Refinment.md`): Documents grouped by Main
+  Tag (NPC/PC/Place/Event/Artifact — PC newly added) with a group-by/sort
+  control next to the Tag filter; a Glossary/Tag Index sidebar toggled from
+  a burger in the top nav; every Tag on a `DocumentCard` is now clickable;
+  the Document detail page's images sit beside the text on big screens like
+  the Documents list; a Tag can be created inline while editing a Document,
+  not just when creating one. New UI strings were added to
+  `src/i18n/locales/{it,en}.json` alongside spec 09's convention rather than
+  hardcoded. Also adds Document deletion (an Owner-only action in edit
+  mode, behind a confirmation modal, first requested mid-review and folded
+  into this same spec/branch): `DELETE /rooms/{id}/documents/{doc}`
+  cascades its Tags, Owners and Comments at the database level, but its
+  images are removed through the normal `image_uploads.remove_images`
+  path first, since the cascade alone would orphan their Storage objects.
+  Frontend **703/703**, backend **275/275**, builds/lint/mypy/ruff clean.
+  The `PC` backfill migration for *existing* Rooms is written but **not
+  yet applied to the live DB** (Next Up).
 
 ## Current Goal
 
@@ -1400,6 +1418,158 @@ Update this file after every meaningful implementation change.
     label), `ui-context.md` (selector in the app shell, flag color
     exception, Language section), `code-standards.md` (new UI Text rules,
     tests run in Italian), `project-overview.md` (feature + scope).
+- **UX refinement (2026-09-25, branch `feature/ux_refinement`; spec
+  `context/feature/10 - UX Refinment.md`):**
+  - **Scope decision (asked, not guessed)**: the spec's "Glossary Index"
+    is **not** the full Glossary entity from `requirements.md` FR-N3/FR-N4
+    (terms, definitions, own visibility, linked Documents — still entirely
+    unbuilt, no table/route/type exists anywhere). Confirmed with the user
+    before implementing: it's a lightweight navigational sidebar over the
+    Room's existing Tags, in keeping with this spec's "quick navigation"
+    theme. If the full Glossary entity is ever wanted, it's a separate,
+    much larger unit (new domain model, migration, visibility filtering).
+  - **"Main Tag" defined**: there was no such concept anywhere in the
+    schema or `requirements.md` before this spec introduced the term. It's
+    now defined as a Tag whose `category` is `"Type"` — the category the
+    seeded default Tags already share (`app/domain/rooms.py::DEFAULT_TAGS`,
+    `frontend/src/lib/tags.ts::MAIN_TAG_CATEGORY`) — rather than a new
+    schema field, since no other signal distinguishes "main" from a
+    user-created category (e.g. "Faction").
+  - **Backend**: `DEFAULT_TAGS` gains `("PC", "Type")` (D-14/FR-N1,
+    `app/domain/rooms.py`), so every **new** Room seeds NPC/PC/Place/
+    Event/Artifact. Migration `d8a2f5c1b976` backfills a `PC` Tag into
+    every **existing** Room that doesn't already have one with that name
+    (default Tags are otherwise only created at Room-creation time, per
+    `architecture.md` → Storage Model). **Not yet applied to the live
+    Supabase DB** — this is a real, hard-to-reverse write to production
+    data and wasn't run without asking first (see Next Up). Backend
+    **270/270** tests (post-rebase baseline, i18n's new tests included),
+    mypy strict, ruff clean.
+  - **Frontend — grouping and sorting** (`RoomDocumentsPage`): new
+    `lib/tags.ts` (`isMainTag`, `groupTagsByCategory`) and
+    `lib/documentGrouping.ts`/`lib/documentSorting.ts` (pure, URL-param-
+    bound like the existing Tag filter: `?groupBy=`/`?sort=`, defaulting
+    to `main-tag`/`name-asc` when absent). A Document with several Main
+    Tags appears in each one's group, matching how the Tag filter already
+    treats Tags; Documents with none fall into a trailing "Senza Tag
+    principale" group. Two `Select`s sit next to `TagFilter`, hidden
+    with it when the Room has no Documents. `setTagFilter` was fixed to
+    preserve `groupBy`/`sort` in the URL instead of overwriting all
+    params (a latent bug this change would otherwise have introduced).
+  - **Frontend — Glossary/Tag Index** (`GlossaryIndexDrawer`, `AppHeader`):
+    a left `Drawer`, toggled by a `Burger` added to `AppHeader`'s right
+    side (shown only when `roomId` is given — `PageLayout` now threads it
+    through from `RoomDocumentsPage`, `DocumentDetailPage` and
+    `RoomMembersPage`), listing every Room Tag grouped by category (Main
+    Tags first, then other categories alphabetically, then uncategorized),
+    each one linking to the Documents list filtered by it — the same
+    destination a `#Tag` mention already leads to
+    (`documentsWithTagsHref`).
+  - **Frontend — clickable Tags in `DocumentCard`**: `TagList` gained an
+    optional `roomId` prop; when given (only from `DocumentCard`, per the
+    spec's exact scope — `DocumentDetailPage`'s `TagList` stays plain),
+    each Tag becomes an `Anchor` to `documentsWithTagsHref`, reusing the
+    same navigation the mention system already has. Needed a small
+    z-index fix (`pos="relative"`, `zIndex: 2`) to sit above the card's
+    absolutely-positioned overlay link (same technique `DocumentCardImages`
+    already used for its carousel controls), since a positioned sibling
+    with a positive z-index otherwise paints over static content
+    regardless of DOM order.
+  - **Frontend — image layout parity on `DocumentDetailPage`**: the
+    gallery now sits beside the text (`Flex direction={{ base: 'column',
+    lg: 'row' }}`, ~45% width) instead of always full-width below a
+    `Divider`, mirroring `DocumentCard`'s side-by-side layout; below `lg`
+    it still stacks. `DocumentImageGallery` gained the same orientation-
+    aware framing `DocumentCardImages` already had (spec 07.1) — extracted
+    the shared sizing into `lib/images.ts::imageFrameSize` so both use one
+    implementation — so a portrait image in the gallery no longer gets
+    heavily letterboxed inside the fixed-height box. All of the gallery's
+    existing management controls (delete, favorite, fullscreen viewer)
+    are unchanged.
+  - **Frontend — inline Tag creation in edit mode**: the "new Tag" field
+    and button that only lived in `CreateDocumentModal` were extracted into
+    `TagCreateInline` and folded into `DocumentFields` itself (behind a
+    `canCreateTag` prop), so both the create modal and
+    `DocumentDetailPage`'s `DocumentEditForm` offer it. **Bug fixed along
+    the way**: the inline creator was shown to *any* user who could open
+    the create-Document modal, including a Player, but
+    `POST /rooms/{id}/tags` is Administrator/Master-only — a Player
+    clicking "Aggiungi" would have hit a 403. Both call sites now gate it
+    on `lib/roomPermissions.ts::canManageTags`.
+  - **Tests**: +64 frontend (new: `tags.test.ts`, `documentGrouping.test.ts`,
+    `documentSorting.test.ts`, `TagCreateInline.test.tsx`,
+    `GlossaryIndexDrawer.test.tsx`, `imageFrameSize` cases in
+    `images.test.ts`; extended: `RoomDocumentsPage`, `DocumentCard`,
+    `DocumentFields`, `CreateDocumentModal`, `DocumentDetailPage`,
+    `DocumentImageGallery`, `layout.test.tsx` for the burger/drawer).
+    `npm test` **677/677**, coverage **98.42/93.52/98.52/98.81** (floors
+    raised from 97/91/97/97 to 98/93/98/98 per `vitest.config.ts`'s own
+    "raise when the measured numbers move up" rule). Backend: one existing
+    assertion updated (`test_domain_rooms.py`, no new test - the PC tag is
+    covered by the existing default-Tags test), full suite **270/270**
+    (post-rebase baseline), mypy strict, ruff clean. `npm run build` and
+    `npm run lint` both pass.
+  - **Headless browser check** (real Chromium via `playwright-core`,
+    `npm run dev` + a faked Supabase session + a stubbed backend at
+    `VITE_API_BASE_URL`, script not committed): confirmed live —
+    grouping by Main Tag with the "Senza Tag principale" fallback,
+    switching to "Nessun raggruppamento" collapses to a flat grid,
+    clicking a Tag on a card navigates to `?tag=`, the Glossary Index
+    drawer opens from the burger and lists Tags grouped exactly as
+    designed (Tag principali / Faction / Altri Tag), and the Document
+    detail page shows the image beside the text at 1600px and stacked at
+    500px, with a real photo rendering uncropped. Zero console errors.
+    **Not checked**: the DocumentCard grid at phone width (carries over
+    from spec 07's own unresolved item, see Next Up), inline Tag creation
+    and the Master-only Room setting live (only one fake Master session
+    was used), and the PC-tag migration (not applied to any database,
+    including the CI/local one used for this check — Playwright hit the
+    dev server's real local backend, whose DB wasn't migrated for this
+    check).
+  - **Document deletion** (added to this same spec/branch mid-review, not
+    in the original spec 10 text): an Owner (or the Master, D-12) can now
+    delete a Document outright from edit mode, behind a confirmation
+    Modal — this is the first time Document CRUD's "D" existed at all;
+    only image deletion and Owner removal had routes before.
+    - **Backend**: `DELETE /rooms/{id}/documents/{doc}`
+      (`app/api/documents.py::delete_document`) reuses the same
+      `_get_owned_document` ownership/visibility check every other
+      mutating Document route already used (404 for a hidden Document,
+      per VR-07; 403 for a visible one you don't own). Its Tags, Owner
+      and Selective-grant links and its Comments (`posts`,
+      `post_visibility_grants`) cascade at the database level
+      (`ondelete="CASCADE"`, already in place from earlier migrations —
+      no new migration needed), but its images do **not**: a plain
+      cascade would delete the `document_images` rows without ever
+      creating the `storage_cleanup` row their removal depends on,
+      orphaning the Storage objects forever. The route locks the
+      Document, reads every image via `documents_repo.list_images`
+      (unfiltered — Comment attachments included, since nothing here
+      depends on the caller's visibility), and runs them through the
+      existing `image_uploads.remove_images` before deleting the
+      Document row itself (new `documents_repo.delete_document`). See
+      `architecture.md` → Storage Model.
+    - **Frontend**: `useDeleteDocument` (`hooks/useDocuments.ts`) removes
+      the single-Document query from the cache on success (an
+      invalidate-triggered refetch of a Document that no longer exists
+      would just 404) and invalidates the list. `DocumentEditForm` gained
+      an outlined red "Elimina Documento" button next to Save/Cancel,
+      opening a centered `Modal` (not the small Popover a gallery image's
+      deletion uses — this is heavier, per `ui-context.md` → Document
+      detail) that names what's lost before confirming; on success the
+      page navigates to the Room's Documents list.
+    - **Tests**: backend +5 in `test_documents_api.py` (Owner deletes;
+      Master deletes without an explicit Owner row, D-12; a non-Owner
+      gets 403; a hidden Document 404s instead, VR-07; deleting cascades
+      `document_tags`/`document_owners`/`posts`/`document_images` rows
+      and empties `fake_storage`, checked by querying each table
+      directly). Backend **275/275**, mypy strict, ruff clean. Frontend
+      +5 in `DocumentDetailPage.test.tsx` (gated on editing; confirmation
+      required; dismissing does nothing; confirming deletes and
+      navigates; a rejected deletion notifies and stays put, mirroring
+      the `useNavigate` mock pattern from `RoomMembersPage.test.tsx`).
+      `npm test` **703/703**, coverage floors still held with no change
+      needed. `npm run build` and `npm run lint` both pass.
 
 ## In Progress
 
@@ -1412,11 +1582,16 @@ Update this file after every meaningful implementation change.
   shown verbatim by `notifyError`. Plan: the backend returns a stable error
   code alongside (or instead of) the text, the frontend maps codes to
   `errors.*` keys in both locale files, and falls back to the raw `detail`
-  for an unknown code. The default Tags created with a Room (NPC, Place,
-  Event, Artifact; `app/domain/rooms.py::DEFAULT_TAGS`) are stored data in
-  English, not UI text. Decide whether new Rooms should get them in the
-  creator's language.
-
+  for an unknown code. The default Tags created with a Room (NPC, PC,
+  Place, Event, Artifact; `app/domain/rooms.py::DEFAULT_TAGS`) are stored
+  data in English, not UI text. Decide whether new Rooms should get them in
+  the creator's language.
+- **Apply the PC-tag migration to the live Supabase DB** (`d8a2f5c1b976`,
+  spec 10): backfills a `PC` Tag into every existing Room. Not run yet —
+  it's a real write to production data, so it needs `alembic upgrade
+  head` run deliberately (with the user's go-ahead), not as a side effect
+  of a code review. New Rooms already get it from `DEFAULT_TAGS` once this
+  branch merges; only existing Rooms need the backfill.
 - **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only, no code):
   set it to `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app`
   and redeploy. Then the look-alike

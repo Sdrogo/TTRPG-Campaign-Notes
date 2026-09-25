@@ -40,7 +40,7 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
             </Title>
             <VisibilityBadge visibility={document.visibility} />
           </Group>
-          <TagList tags={tags} tagIds={document.tagIds} />
+          <TagList tags={tags} tagIds={document.tagIds} roomId={roomId} />
         </Stack>
 
         {/* Description on the left, images on the right at half the card's

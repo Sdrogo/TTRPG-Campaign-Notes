@@ -147,12 +147,22 @@
     "ownersLine": "Owners: {{names}}",
     "addOwner": "Add Owner",
     "removeOwner": "Remove Owner {{name}}",
+    "groupByLabel": "Group by",
+    "groupByMainTag": "Group by Main Tag",
+    "groupByNone": "No grouping",
+    "sortLabel": "Sort by",
+    "sortNameAsc": "Name (A-Z)",
+    "sortNameDesc": "Name (Z-A)",
+    "ungroupedTag": "No Main Tag",
     "detail": {
       "signInRequired": "Sign in to see this Document.",
       "notFound": "Document not found or not visible.",
       "backToDocuments": "Back to Documents",
       "cancelEditing": "Discard changes",
-      "saveChanges": "Save changes"
+      "saveChanges": "Save changes",
+      "deleteDocument": "Delete Document",
+      "deleteConfirmTitle": "Delete this Document?",
+      "deleteConfirmBody": "Its Comments, images and Tag links will be deleted with it. This can't be undone."
     },
     "fields": {
       "descriptionHint": "Type # to link another Document.",
@@ -242,5 +252,13 @@
     "createKind": "Create {{kind}}",
     "hintSwitchKind": "←/→ switch type · ",
     "hintCreate": "Enter to create"
+  },
+  "glossary": {
+    "title": "Tag Index",
+    "openToggle": "Open Tag Index",
+    "closeToggle": "Close Tag Index",
+    "mainTags": "Main Tags",
+    "otherTags": "Other Tags",
+    "empty": "No Tags in this Room."
   }
 }

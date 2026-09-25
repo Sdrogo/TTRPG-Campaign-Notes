@@ -1,9 +1,17 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../test/utils';
 import { DocumentImageGallery } from './DocumentImageGallery';
 import type { DocumentImage } from '../types/document';
+
+// jsdom never decodes images, so a load is simulated with the size a browser
+// would have read from the file.
+function loadImage(img: HTMLElement, naturalWidth: number, naturalHeight: number) {
+  Object.defineProperty(img, 'naturalWidth', { value: naturalWidth });
+  Object.defineProperty(img, 'naturalHeight', { value: naturalHeight });
+  fireEvent.load(img);
+}
 
 const images: DocumentImage[] = [
   { id: 'image-1', url: 'http://a/1.webp', isFavorite: true },
@@ -56,6 +64,36 @@ describe('DocumentImageGallery', () => {
     await user.click(screen.getByRole('button', { name: 'Apri immagine' }));
 
     expect(screen.getByAltText('Il Cancello')).toHaveAttribute('src', 'http://a/1.webp');
+  });
+
+  // Spec 10: images keep their own aspect ratio instead of being stretched
+  // into a fixed box, mirroring DocumentCardImages (spec 07.1).
+  describe('orientation', () => {
+    it('holds a placeholder until the image has loaded', () => {
+      render({ images: [images[0]] });
+
+      expect(screen.getByAltText('Il Cancello (1)')).not.toHaveAttribute('data-orientation');
+    });
+
+    it('frames a wide image as landscape', () => {
+      render({ images: [images[0]] });
+      const img = screen.getByAltText('Il Cancello (1)');
+
+      loadImage(img, 1600, 900);
+
+      expect(img).toHaveAttribute('data-orientation', 'landscape');
+      expect(img).toHaveStyle({ width: '100%', objectFit: 'contain' });
+    });
+
+    it('frames a tall image as portrait', () => {
+      render({ images: [images[0]] });
+      const img = screen.getByAltText('Il Cancello (1)');
+
+      loadImage(img, 900, 1600);
+
+      expect(img).toHaveAttribute('data-orientation', 'portrait');
+      expect(img).toHaveStyle({ width: 'auto', objectFit: 'contain' });
+    });
   });
 });
 

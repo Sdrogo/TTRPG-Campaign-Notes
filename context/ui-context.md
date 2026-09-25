@@ -153,6 +153,22 @@ other icon set.
   visually lighter list of titled entries above the general Comment
   thread (Details and Comments are both Posts, but Details are
   visually promoted so they read like structured facts, not chat).
+  **Images sit beside the text on big screens** (2026-09-25, spec 10,
+  mirroring `DocumentCard`'s side-by-side layout): a `Flex` with
+  `direction={{ base: 'column', lg: 'row' }}` puts the description/edit
+  form on the left and `DocumentImageGallery` on the right at ~45% width
+  from `lg`; below `lg` it stacks, image block last, as before. The
+  gallery gained the same orientation-aware framing as `DocumentCardImages`
+  (spec 07.1, shared via `lib/images.ts::imageFrameSize`), so a portrait
+  image isn't stretched into the fixed-height box's full width. Its
+  delete/favorite controls and the fullscreen viewer are unchanged.
+  **Deleting the Document** (2026-09-25, spec 10) is an Owner-only action
+  offered in edit mode: an outlined red "Elimina Documento" button next to
+  Save/Cancel opens a centered `Modal` (unlike a gallery image's small
+  Popover — deleting the whole Document is heavier: its Comments and images
+  go with it) naming what's lost, with `Annulla` / a red `Elimina` to
+  confirm. On success the page navigates back to the Documents list, since
+  the Document it was showing no longer exists.
 - **Thread / Posts**: nested replies indent up to the FR-T2 depth
   limit, then flatten with a "continue thread" link; each post shows
   a compact visibility indicator (see `VisibilityBadge` above).
@@ -228,12 +244,40 @@ other icon set.
   contain the carousel's buttons, so those come back on top at `zIndex: 2`
   (`controls`/`indicators` in the Carousel's `styles`). Clicking anywhere
   else, images included, opens the Document.
+  **Every Tag in the Title block's `TagList` is itself a link** (2026-09-25,
+  spec 10), to the Documents list filtered by it (`documentsWithTagsHref`,
+  the same target a `#Tag` mention leads to) — `TagList` takes an optional
+  `roomId` that only `DocumentCard` passes (the Document detail page's
+  `TagList` stays plain, per the spec's own scope). Needs the same
+  `zIndex: 2` treatment as the carousel controls above, since it sits above
+  the card's overlay link too.
 - **Documents list Tag filter** (`TagFilter`, 2026-09-22): a searchable,
   clearable `MultiSelect` with a `Funnel` icon above the grid (max 480px
   from `sm` up), options shown as `#Tag`. It is bound to the URL
   (`?tag=…`, repeatable, Tags combine with AND), which is where a Tag
   mention leads. No match: "Nessun Documento con questo Tag." plus a
   "Mostra tutti" button.
+- **Grouping and sorting** (2026-09-25, spec `10 - UX Refinment`): next to
+  `TagFilter`, two more `Select`s — "Raggruppa per" (Tag principale /
+  nessuno) and "Ordina per" (Nome A-Z / Z-A) — also URL-bound (`?groupBy=`,
+  `?sort=`, both hidden with the filter when the Room has no Documents).
+  Grouped by Main Tag (a Tag whose category is `"Type"` — the category the
+  seeded default Tags share) is the default: each group gets its own
+  `Title` (`#TagName`, or "Senza Tag principale" for Documents carrying
+  none) above its own `SimpleGrid`; a Document with several Main Tags
+  appears under each one. "Nessun raggruppamento" collapses back to the
+  single flat grid spec 07 already had.
+- **Glossary Index** (`GlossaryIndexDrawer`, 2026-09-25, spec 10): a
+  left-anchored Mantine `Drawer`, toggled by a `Burger` on the right of
+  `AppHeader` (next to the account avatar) — shown only on a Room-scoped
+  page (`PageLayout`'s `roomId` prop). Lists every Tag in the Room, grouped
+  by category exactly like the grouping control above (Main Tags first
+  under "Tag principali", then other categories by name, then uncategorized
+  under "Altri Tag"), each one linking to the Documents list filtered by
+  it — the same destination a `#Tag` mention already leads to. Not the
+  Glossary entity from `requirements.md` (FR-N3/FR-N4, terms with their own
+  definitions) — that remains unbuilt; this is a navigational index over
+  Tags, a deliberate scope decision for this spec.
 - **Favorite image** (`DocumentImageGallery`, 2026-09-23, spec 07): an Owner
   picks the image that leads the Document — and so its card — with a heart
   `ActionIcon` at the **bottom right of the image itself**, opposite the

@@ -229,3 +229,84 @@ describe('filtering by Tag', () => {
     expect(screen.queryByRole('combobox', { name: 'Filtra per Tag' })).not.toBeInTheDocument();
   });
 });
+
+// Spec 10: Documents group by Main Tag (category "Type") by default, and can
+// be sorted or ungrouped from the controls next to the Tag filter.
+describe('grouping and sorting', () => {
+  beforeEach(() => {
+    routes.documents = [
+      rawDocument({ id: 'doc-1', name: 'Zanna', tag_ids: ['tag-npc'] }),
+      rawDocument({ id: 'doc-2', name: 'Alba', tag_ids: [] }),
+    ];
+  });
+
+  function mockApiWithMainTags() {
+    fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
+      if (init?.method) return Promise.resolve();
+      if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
+      if (path === '/rooms/room-1/tags')
+        return Promise.resolve([...tags, { id: 'tag-npc', name: 'NPC', category: 'Type' }]);
+      if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
+      if (path === '/rooms/room-1') return Promise.resolve(routes.room);
+      if (path === '/account') return Promise.resolve(rawAccount());
+      return Promise.resolve(routes.documents);
+    });
+  }
+
+  // Group headings render at level 5, distinct from the app header's (level
+  // 3) and a DocumentCard's own (level 4) title.
+  const groupHeadings = () => screen.queryAllByRole('heading', { level: 5 }).map((h) => h.textContent);
+  const cardTitles = () => screen.queryAllByRole('heading', { level: 4 }).map((h) => h.textContent);
+
+  it('groups Documents under their Main Tag by default, ungrouped ones last', async () => {
+    mockApiWithMainTags();
+    render();
+
+    await screen.findByText('Zanna');
+    expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']);
+  });
+
+  it('drops the grouping headings when set to no grouping', async () => {
+    mockApiWithMainTags();
+    const { user } = render();
+    await screen.findByText('Zanna');
+
+    await user.click(screen.getByRole('combobox', { name: 'Raggruppa per' }));
+    await user.click(screen.getByText('Nessun raggruppamento'));
+
+    await waitFor(() => expect(groupHeadings()).toEqual([]));
+    expect(screen.getByText('Zanna')).toBeInTheDocument();
+    expect(screen.getByText('Alba')).toBeInTheDocument();
+  });
+
+  it('honours group-by and sort from the URL', async () => {
+    mockApiWithMainTags();
+    render('/rooms/room-1/documents?groupBy=none&sort=name-desc');
+
+    await screen.findByText('Zanna');
+    expect(groupHeadings()).toEqual([]);
+    expect(cardTitles()).toEqual(['Zanna', 'Alba']);
+  });
+
+  it('sorts Documents A-Z by default and reverses on Z-A', async () => {
+    mockApiWithMainTags();
+    const { user } = render('/rooms/room-1/documents?groupBy=none');
+    await screen.findByText('Zanna');
+
+    expect(cardTitles()).toEqual(['Alba', 'Zanna']);
+
+    await user.click(screen.getByRole('combobox', { name: 'Ordina per' }));
+    await user.click(screen.getByText('Nome (Z-A)'));
+
+    await waitFor(() => expect(cardTitles()).toEqual(['Zanna', 'Alba']));
+  });
+
+  it('hides the grouping and sorting controls when the Room has no Documents', async () => {
+    routes.documents = [];
+    render();
+
+    await screen.findByText(/Nessun Documento ancora/);
+    expect(screen.queryByRole('combobox', { name: 'Raggruppa per' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Ordina per' })).not.toBeInTheDocument();
+  });
+});

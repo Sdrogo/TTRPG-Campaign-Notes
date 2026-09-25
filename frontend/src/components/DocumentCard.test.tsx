@@ -134,7 +134,21 @@ describe('DocumentCard', () => {
 
     const mention = screen.getByTestId('tag-mention');
     expect(mention.tagName).not.toBe('A');
-    // The card's own link, and no second one nested inside it.
-    expect(screen.getAllByRole('link')).toHaveLength(1);
+    // The card's own link, plus the TagList's own clickable Tag (spec 10) -
+    // but no second link nested around the mention itself.
+    expect(screen.getAllByRole('link')).toHaveLength(2);
+  });
+});
+
+// Spec 10: every Tag in the "Tags on their own line" section is clickable,
+// unlike a plain mention inside the description.
+describe('clicking a Tag', () => {
+  it('links each Tag to the Documents list filtered by it', () => {
+    render();
+
+    expect(screen.getByRole('link', { name: '#Luoghi' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/documents?tag=tag-1',
+    );
   });
 });

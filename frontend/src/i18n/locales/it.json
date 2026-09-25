@@ -147,12 +147,22 @@
     "ownersLine": "Owner: {{names}}",
     "addOwner": "Aggiungi Owner",
     "removeOwner": "Rimuovi Owner {{name}}",
+    "groupByLabel": "Raggruppa per",
+    "groupByMainTag": "Raggruppa per Tag principale",
+    "groupByNone": "Nessun raggruppamento",
+    "sortLabel": "Ordina per",
+    "sortNameAsc": "Nome (A-Z)",
+    "sortNameDesc": "Nome (Z-A)",
+    "ungroupedTag": "Senza Tag principale",
     "detail": {
       "signInRequired": "Accedi per vedere questo Documento.",
       "notFound": "Documento non trovato o non visibile.",
       "backToDocuments": "Torna ai Documenti",
       "cancelEditing": "Annulla modifiche",
-      "saveChanges": "Salva modifiche"
+      "saveChanges": "Salva modifiche",
+      "deleteDocument": "Elimina Documento",
+      "deleteConfirmTitle": "Eliminare questo Documento?",
+      "deleteConfirmBody": "I Commenti, le immagini e i collegamenti ai Tag di questo Documento verranno eliminati. L'operazione non può essere annullata."
     },
     "fields": {
       "descriptionHint": "Scrivi # per collegare un altro Documento.",
@@ -242,5 +252,13 @@
     "createKind": "Crea {{kind}}",
     "hintSwitchKind": "←/→ cambia tipo · ",
     "hintCreate": "Invio per creare"
+  },
+  "glossary": {
+    "title": "Indice dei Tag",
+    "openToggle": "Apri indice dei Tag",
+    "closeToggle": "Chiudi indice dei Tag",
+    "mainTags": "Tag principali",
+    "otherTags": "Altri Tag",
+    "empty": "Nessun Tag in questa Stanza."
   }
 }

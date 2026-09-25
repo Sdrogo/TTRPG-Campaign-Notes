@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -12,6 +12,12 @@ import { DocumentDetailPage } from './DocumentDetailPage';
 vi.mock('../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 vi.mock('../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 vi.mock('../hooks/useSession', () => ({ useSession: vi.fn() }));
+
+const navigate = vi.fn();
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
+  useNavigate: () => navigate,
+}));
 
 const fetchMock = vi.mocked(apiFetch);
 const sessionMock = vi.mocked(useSession);
@@ -63,6 +69,7 @@ beforeEach(() => {
   routes.members = [rawMember({ user_id: 'user-1', display_name: 'Io' })];
   routes.comments = [];
   fetchMock.mockReset();
+  navigate.mockReset();
   vi.mocked(notifyError).mockClear();
   sessionMock.mockReturnValue({ session: fakeSession('user-1'), loading: false } as SessionState);
   mockApi();
@@ -242,6 +249,108 @@ describe('editing', () => {
 
     await user.click(editButton());
     expect(screen.getByText('Aggiungi immagini')).toBeInTheDocument();
+  });
+});
+
+// The Owner deletes the Document from edit mode, behind a confirmation
+// modal - the action is irreversible (Comments, images and Tag links go
+// with it), unlike deleting a single gallery image.
+describe('deleting the Document', () => {
+  it('offers deletion only while editing', async () => {
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    expect(screen.queryByRole('button', { name: 'Elimina Documento' })).not.toBeInTheDocument();
+
+    await user.click(editButton());
+    expect(screen.getByRole('button', { name: 'Elimina Documento' })).toBeInTheDocument();
+  });
+
+  it('asks for confirmation before deleting', async () => {
+    const writes: string[] = [];
+    mockApi((path) => {
+      writes.push(path);
+      return Promise.resolve();
+    });
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await user.click(editButton());
+
+    await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
+
+    expect(screen.getByText('Eliminare questo Documento?')).toBeInTheDocument();
+    expect(writes).not.toContain(DOC);
+  });
+
+  it('deletes nothing when the confirmation is dismissed', async () => {
+    const writes: string[] = [];
+    mockApi((path) => {
+      writes.push(path);
+      return Promise.resolve();
+    });
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await user.click(editButton());
+    await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
+    const dialog = within(screen.getByRole('dialog'));
+
+    await user.click(dialog.getByRole('button', { name: 'Annulla' }));
+
+    expect(screen.queryByText('Eliminare questo Documento?')).not.toBeInTheDocument();
+    expect(writes).not.toContain(DOC);
+  });
+
+  it('deletes the Document once confirmed and navigates back to the list', async () => {
+    const writes: string[] = [];
+    mockApi((path) => {
+      writes.push(path);
+      return Promise.resolve();
+    });
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await user.click(editButton());
+    await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
+
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Elimina' }));
+
+    await waitFor(() => expect(writes).toContain(DOC));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents'));
+  });
+
+  it('reports a rejected deletion and stays on the page', async () => {
+    mockApi(() => Promise.reject(new Error('Only an Owner can delete')));
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await user.click(editButton());
+    await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
+
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Elimina' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    expect(navigate).not.toHaveBeenCalled();
+  });
+});
+
+// Spec 10: creating a Tag inline while editing is only offered to whoever may
+// manage Tags (Administrator or Master), matching the create-Document modal.
+describe('creating a Tag while editing', () => {
+  it('offers it to the Master', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(editButton());
+
+    expect(screen.getByRole('textbox', { name: 'Nuovo tag' })).toBeInTheDocument();
+  });
+
+  it('withholds it from an Owner who is a Player', async () => {
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(editButton());
+
+    expect(screen.queryByRole('textbox', { name: 'Nuovo tag' })).not.toBeInTheDocument();
   });
 });
 

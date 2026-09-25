@@ -1,6 +1,7 @@
 import { MultiSelect, Stack, TextInput } from '@mantine/core';
 import { VisibilitySelect } from './VisibilitySelect';
 import { MentionTextarea } from './mentions/MentionTextarea';
+import { TagCreateInline } from './TagCreateInline';
 import type { DocumentFormValues } from '../types/document';
 import type { Tag } from '../types/tag';
 import { useTranslation } from 'react-i18next';
@@ -9,11 +10,24 @@ interface DocumentFieldsProps {
   values: DocumentFormValues;
   onChange: (values: DocumentFormValues) => void;
   tags: Tag[];
+  roomId: string;
+  /** Whether the viewer may create a Tag here (Administrator or Master,
+   *  `POST /rooms/{id}/tags`) - spec 10 extends this to edit mode. */
+  canCreateTag: boolean;
+  onTagCreatePendingChange?: (pending: boolean) => void;
   autoFocus?: boolean;
 }
 
 /** Controlled name/description/visibility/tag inputs for a Document. */
-export function DocumentFields({ values, onChange, tags, autoFocus }: DocumentFieldsProps) {
+export function DocumentFields({
+  values,
+  onChange,
+  tags,
+  roomId,
+  canCreateTag,
+  onTagCreatePendingChange,
+  autoFocus,
+}: DocumentFieldsProps) {
   const { t } = useTranslation();
   const set = (patch: Partial<DocumentFormValues>) => onChange({ ...values, ...patch });
 
@@ -47,6 +61,13 @@ export function DocumentFields({ values, onChange, tags, autoFocus }: DocumentFi
         onChange={(tagIds) => set({ tagIds })}
         searchable
       />
+      {canCreateTag && (
+        <TagCreateInline
+          roomId={roomId}
+          onCreated={(tag) => set({ tagIds: [...values.tagIds, tag.id] })}
+          onPendingChange={onTagCreatePendingChange}
+        />
+      )}
     </Stack>
   );
 }
