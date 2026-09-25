@@ -5,23 +5,24 @@ an Administrator (D-16, Invariant 5)."""
 import uuid
 from dataclasses import dataclass
 
+from app.domain.errors import DomainError
 from app.domain.models import AuditLogEntry, Membership, RoomRole
 
 
-class MemberNotFoundError(Exception):
+class MemberNotFoundError(DomainError):
     """The target user isn't a member of the Room."""
 
 
-class LastMasterError(Exception):
+class LastMasterError(DomainError):
     """The change would leave the Room without a Master (D-16)."""
 
 
-class LastAdministratorError(Exception):
+class LastAdministratorError(DomainError):
     """The change would leave the Room without an Administrator (D-16,
     FR-R7)."""
 
 
-class NoChangeRequestedError(Exception):
+class NoChangeRequestedError(DomainError):
     """The request set neither the role nor the Administrator flag."""
 
 
@@ -38,7 +39,7 @@ def _find_membership(memberships: list[Membership], user_id: uuid.UUID) -> Membe
     """The Membership of `user_id`, or `MemberNotFoundError`."""
     target = next((m for m in memberships if m.user_id == user_id), None)
     if target is None:
-        raise MemberNotFoundError("User is not a member of this room")
+        raise MemberNotFoundError("errors.membership.notFound")
     return target
 
 
@@ -53,11 +54,11 @@ def _ensure_successor_exists(
     own post-change state is what `resolved_role`/`resolved_is_admin` say."""
     losing_master = target.role == RoomRole.MASTER and resolved_role != RoomRole.MASTER
     if losing_master and not any(m.role == RoomRole.MASTER for m in others):
-        raise LastMasterError("Cannot remove the last Master without a successor")
+        raise LastMasterError("errors.membership.lastMaster")
 
     losing_admin = target.is_admin and not resolved_is_admin
     if losing_admin and not any(m.is_admin for m in others):
-        raise LastAdministratorError("Cannot remove the last Administrator without a successor")
+        raise LastAdministratorError("errors.membership.lastAdministrator")
 
 
 def plan_role_change(
@@ -71,7 +72,7 @@ def plan_role_change(
     Administrator flag. 'Designating a new Master' is just setting
     role=master on someone via this same function."""
     if new_role is None and new_is_admin is None:
-        raise NoChangeRequestedError("Request must change the role and/or the admin flag")
+        raise NoChangeRequestedError("errors.membership.noChangeRequested")
 
     target = _find_membership(memberships, target_user_id)
     others = [m for m in memberships if m.user_id != target_user_id]

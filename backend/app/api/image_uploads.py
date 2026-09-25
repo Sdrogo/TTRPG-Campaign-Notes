@@ -9,10 +9,11 @@ import asyncio
 import uuid
 from collections.abc import Iterable, Mapping, Sequence
 
-from fastapi import HTTPException, UploadFile, status
+from fastapi import UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.errors import http_error, translated_error
 from app.db import documents_repo, remote_images, storage, storage_cleanup
 from app.db.remote_images import RemoteImageError
 from app.domain.documents import (
@@ -70,17 +71,17 @@ async def read_upload(file: UploadFile) -> bytes:
     return await file.read(MAX_INPUT_BYTES + 1)
 
 
-async def fetch_url(url: str) -> bytes:
+async def fetch_url(url: str, locale: str) -> bytes:
     """An image's bytes from a remote URL; a URL that can't be fetched safely
     is a 422."""
     try:
         return await remote_images.fetch_image_bytes(url)
     except RemoteImageError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
 
 async def ensure_room_for_another_image(
-    session: AsyncSession, document: Document
+    session: AsyncSession, document: Document, locale: str
 ) -> list[DocumentImage]:
     """Returns the Document's current images, or 409 at the limit.
 
@@ -96,24 +97,24 @@ async def ensure_room_for_another_image(
     try:
         ensure_can_add_image(len(current_images))
     except TooManyImagesError as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
     return current_images
 
 
 async def normalize(
-    data: bytes, max_dimension: int = MAX_DIMENSION, square: bool = False
+    data: bytes, locale: str, max_dimension: int = MAX_DIMENSION, square: bool = False
 ) -> NormalizedImage:
     """`normalize_image` off the event loop, with its errors mapped to 413 (too
     large) and 422 (not a supported image)."""
     try:
         return await asyncio.to_thread(normalize_image, data, max_dimension, square)
     except ImageTooLargeError as exc:
-        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, str(exc)) from exc
+        raise translated_error(status.HTTP_413_CONTENT_TOO_LARGE, exc, locale) from exc
     except InvalidImageError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
 
-async def upload_object(path: str, normalized: NormalizedImage) -> None:
+async def upload_object(path: str, normalized: NormalizedImage, locale: str) -> None:
     """Marks `path` as a cleanup candidate, then uploads it. The caller must
     insert the row referencing `path` and call
     `storage_cleanup.confirm_upload` in the same transaction - otherwise the
@@ -122,7 +123,9 @@ async def upload_object(path: str, normalized: NormalizedImage) -> None:
     try:
         await storage.upload(path, normalized.data, normalized.content_type)
     except storage.StorageError as exc:
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Image storage is unavailable") from exc
+        raise http_error(
+            status.HTTP_502_BAD_GATEWAY, "errors.image.storageUnavailable", locale
+        ) from exc
 
 
 async def store_image(
@@ -131,13 +134,14 @@ async def store_image(
     uploader_id: uuid.UUID,
     data: bytes,
     current_images: Sequence[DocumentImage],
+    locale: str,
     post_id: uuid.UUID | None = None,
 ) -> DocumentImage:
     """Normalize -> upload -> record. The object is marked as a cleanup
     candidate before it's uploaded, and the mark is cleared in the same
     transaction as the row insert - so if that transaction doesn't commit,
     the sweep removes the orphan (app/db/storage_cleanup.py)."""
-    normalized = await normalize(data)
+    normalized = await normalize(data, locale)
     try:
         image = plan_new_image(
             document.room_id,
@@ -148,9 +152,9 @@ async def store_image(
             post_id=post_id,
         )
     except TooManyImagesError as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
 
-    await upload_object(image.storage_path, normalized)
+    await upload_object(image.storage_path, normalized, locale)
     await documents_repo.insert_image(session, image)
     await storage_cleanup.confirm_upload(session, image.storage_path)
     return image

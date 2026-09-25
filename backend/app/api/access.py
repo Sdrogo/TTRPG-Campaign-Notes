@@ -4,22 +4,23 @@
 import uuid
 from collections.abc import Sequence
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.errors import http_error
 from app.db import comments_repo, documents_repo, rooms_repo
 from app.domain.models import Document, DocumentImage, Membership, RoomRole
 from app.domain.visibility import is_document_visible, visible_document_images
 
 
 async def require_membership(
-    session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID
+    session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID, locale: str
 ) -> Membership:
     """The caller's Membership in the Room, or 403 when they aren't a member.
     Every Room-scoped route starts here, since roles are per Room (D-06)."""
     membership = await rooms_repo.get_membership(session, room_id, user_id)
     if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
     return membership
 
 
@@ -29,19 +30,20 @@ async def get_visible_document(
     document_id: uuid.UUID,
     requester_id: uuid.UUID,
     role: RoomRole,
+    locale: str,
 ) -> tuple[Document, list[uuid.UUID], list[uuid.UUID]]:
     """Returns (document, owner_ids, selective_ids) once the requester is
     known to see it."""
     document = await documents_repo.get_document(session, document_id)
     if document is None or document.room_id != room_id:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.document.notFound", locale)
 
     owner_ids = await documents_repo.list_owner_ids(session, document_id)
     selective_ids = await documents_repo.list_selective_grant_ids(session, document_id)
     if not is_document_visible(document, requester_id, role, owner_ids, selective_ids):
         # Not found, not forbidden - a Document you can't see doesn't
         # exist as far as you're concerned (VR-07).
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.document.notFound", locale)
 
     return document, owner_ids, selective_ids
 

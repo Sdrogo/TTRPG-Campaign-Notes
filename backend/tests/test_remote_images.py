@@ -94,8 +94,9 @@ async def test_each_redirect_hop_is_resolved_and_pinned_again(resolver: _FakeRes
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(302, headers={"location": "http://internal.example.com/secret"})
 
-    with pytest.raises(RemoteImageError, match="non-public"):
+    with pytest.raises(RemoteImageError) as exc_info:
         await fetch_image_bytes(
             "http://public.example.com/x.png", transport=httpx.MockTransport(handler)
         )
+    assert exc_info.value.key == "errors.image.remoteNonPublic"
     assert resolver.calls == ["public.example.com", "internal.example.com"]

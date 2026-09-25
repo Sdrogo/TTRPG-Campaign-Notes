@@ -3,14 +3,16 @@ filtered by, in place of rigid Document types (D-05)."""
 
 import uuid
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 
+from app.api.errors import http_error
 from app.auth.dependencies import CurrentUserDep
 from app.db import rooms_repo, tags_repo
 from app.db.session import SessionDep
 from app.domain.models import RoomRole, Tag
+from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/tags", tags=["tags"])
 
@@ -32,13 +34,13 @@ class CreateTagRequest(BaseModel):
 
 @router.get("")
 async def list_tags(
-    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
+    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> list[TagResponse]:
     """Every Tag in the Room, for any member."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
     if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
 
     tags = await tags_repo.list_tags(session, room_id)
     return [TagResponse(id=t.id, name=t.name, category=t.category) for t in tags]
@@ -50,19 +52,18 @@ async def create_tag(
     body: CreateTagRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> TagResponse:
     """Adds a Tag. Only an Administrator or the Master may manage Tags; 409
     when the Room already has one with that name."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
     if membership is None or not (membership.is_admin or membership.role == RoomRole.MASTER):
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN, "Only an Administrator or the Master can manage Tags"
-        )
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.tag.notAllowedToManage", locale)
 
     name = body.name.strip()
     if not name:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Tag name is required")
+        raise http_error(status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.tag.nameRequired", locale)
 
     tag = Tag(id=uuid.uuid4(), room_id=room_id, name=name, category=body.category)
     try:
@@ -72,8 +73,6 @@ async def create_tag(
         async with session.begin_nested():
             await tags_repo.insert_tag(session, tag)
     except IntegrityError as exc:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT, "A Tag with this name already exists in this Room"
-        ) from exc
+        raise http_error(status.HTTP_409_CONFLICT, "errors.tag.duplicateName", locale) from exc
 
     return TagResponse(id=tag.id, name=tag.name, category=tag.category)

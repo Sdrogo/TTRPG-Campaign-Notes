@@ -5,6 +5,7 @@ import uuid
 from collections.abc import Collection, Iterable, Sequence
 from dataclasses import dataclass
 
+from app.domain.errors import DomainError
 from app.domain.models import (
     Document,
     DocumentImage,
@@ -16,23 +17,23 @@ from app.domain.models import (
 MAX_IMAGES_PER_DOCUMENT = 20
 
 
-class DocumentNameRequiredError(Exception):
+class DocumentNameRequiredError(DomainError):
     """The Document name is empty once trimmed."""
 
 
-class TooManyImagesError(Exception):
+class TooManyImagesError(DomainError):
     """The Document already has `MAX_IMAGES_PER_DOCUMENT` images."""
 
 
-class NotOwnerError(Exception):
+class NotOwnerError(DomainError):
     """The requester is neither an Owner nor the Master (D-12)."""
 
 
-class AlreadyOwnerError(Exception):
+class AlreadyOwnerError(DomainError):
     """The user is already an explicit Owner."""
 
 
-class NotAnOwnerError(Exception):
+class NotAnOwnerError(DomainError):
     """The user isn't an explicit Owner, so there's nothing to remove."""
 
 
@@ -64,7 +65,7 @@ def plan_new_document(
     the Document being planned here."""
     clean_name = name.strip()
     if not clean_name:
-        raise DocumentNameRequiredError("Document name is required")
+        raise DocumentNameRequiredError("errors.document.nameRequired")
 
     document_id = uuid.uuid4()
     document = Document(
@@ -89,7 +90,7 @@ def ensure_owner(role: RoomRole, user_id: uuid.UUID, owner_user_ids: Collection[
     """Raises `NotOwnerError` unless `is_owner` holds - the check before any
     change to a Document (Invariant 6)."""
     if not is_owner(role, user_id, owner_user_ids):
-        raise NotOwnerError("Only an Owner (or the Master) can do this")
+        raise NotOwnerError("errors.document.notOwner")
 
 
 def plan_add_owner(
@@ -97,7 +98,7 @@ def plan_add_owner(
 ) -> DocumentOwner:
     """D-12/UC-08: one more explicit Owner for the Document."""
     if user_id in current_owner_ids:
-        raise AlreadyOwnerError("User is already an Owner of this Document")
+        raise AlreadyOwnerError("errors.document.alreadyOwner")
     return DocumentOwner(document_id=document_id, user_id=user_id)
 
 
@@ -107,7 +108,7 @@ def ensure_can_remove_owner(user_id: uuid.UUID, current_owner_ids: Collection[uu
     # end up without one even if every explicit Owner row is removed.
     """Only an explicit Owner row can be removed."""
     if user_id not in current_owner_ids:
-        raise NotAnOwnerError("User is not an explicit Owner of this Document")
+        raise NotAnOwnerError("errors.document.notAnOwner")
 
 
 def ensure_can_add_image(current_image_count: int) -> None:
@@ -115,7 +116,7 @@ def ensure_can_add_image(current_image_count: int) -> None:
     `MAX_IMAGES_PER_DOCUMENT`. Comment attachments count too, since they are
     Document images."""
     if current_image_count >= MAX_IMAGES_PER_DOCUMENT:
-        raise TooManyImagesError(f"A Document can have at most {MAX_IMAGES_PER_DOCUMENT} images")
+        raise TooManyImagesError("errors.document.tooManyImages", max=MAX_IMAGES_PER_DOCUMENT)
 
 
 def plan_new_image(

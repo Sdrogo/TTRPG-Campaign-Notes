@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.errors import translated_error
 from app.api.image_uploads import fetch_url, normalize, read_upload, upload_object
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
 from app.auth.dependencies import CurrentUser, CurrentUserDep
@@ -25,6 +26,7 @@ from app.domain.profiles import (
     plan_google_prefill,
     plan_profile_update,
 )
+from app.i18n.dependencies import LocaleDep
 
 logger = logging.getLogger(__name__)
 
@@ -81,33 +83,35 @@ async def _replace_avatar(
     return updated
 
 
-async def _normalize_avatar(data: bytes) -> NormalizedImage:
+async def _normalize_avatar(data: bytes, locale: str) -> NormalizedImage:
     """The shared image pipeline with the avatar settings: a square crop at
     `AVATAR_DIMENSION`."""
-    return await normalize(data, max_dimension=AVATAR_DIMENSION, square=True)
+    return await normalize(data, locale, max_dimension=AVATAR_DIMENSION, square=True)
 
 
-async def _upload_avatar(user_id: uuid.UUID, normalized: NormalizedImage) -> str:
+async def _upload_avatar(user_id: uuid.UUID, normalized: NormalizedImage, locale: str) -> str:
     """Uploads an avatar and returns its path. The caller must reference it
     in the same transaction (see `_replace_avatar`)."""
     path = plan_avatar_path(user_id)
-    await upload_object(path, normalized)
+    await upload_object(path, normalized, locale)
     return path
 
 
 async def _store_avatar(
-    session: AsyncSession, current_user: CurrentUser, data: bytes
+    session: AsyncSession, current_user: CurrentUser, data: bytes, locale: str
 ) -> UserProfile:
     # Validated before locking the row, so a bad file doesn't hold the lock.
     """Validates, uploads and swaps in a new avatar from raw bytes, shared by
     the upload and import-from-URL routes."""
-    normalized = await _normalize_avatar(data)
+    normalized = await _normalize_avatar(data, locale)
     profile = await _load_for_update(session, current_user)
-    path = await _upload_avatar(profile.user_id, normalized)
+    path = await _upload_avatar(profile.user_id, normalized, locale)
     return await _replace_avatar(session, profile, path)
 
 
-async def _prefill_from_google(session: AsyncSession, current_user: CurrentUser) -> UserProfile:
+async def _prefill_from_google(
+    session: AsyncSession, current_user: CurrentUser, locale: str
+) -> UserProfile:
     """Copies the Google name and picture in as defaults, once per user,
     for whatever the user hasn't set. Best effort for the picture: if it
     can't be fetched or stored, the user just starts without an avatar."""
@@ -120,8 +124,10 @@ async def _prefill_from_google(session: AsyncSession, current_user: CurrentUser)
     source = google_avatar_source(current_user.google_picture_url)
     if updated.avatar_path is None and source is not None:
         try:
-            data = await fetch_url(source)
-            path = await _upload_avatar(profile.user_id, await _normalize_avatar(data))
+            data = await fetch_url(source, locale)
+            path = await _upload_avatar(
+                profile.user_id, await _normalize_avatar(data, locale), locale
+            )
         except HTTPException as exc:
             logger.warning("Could not import the Google picture: %s", exc.detail)
         else:
@@ -131,13 +137,15 @@ async def _prefill_from_google(session: AsyncSession, current_user: CurrentUser)
 
 
 @router.get("")
-async def get_account(current_user: CurrentUserDep, session: SessionDep) -> AccountResponse:
+async def get_account(
+    current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
+) -> AccountResponse:
     """The caller's profile. The first call per user also copies in their
     Google name and picture as defaults (`_prefill_from_google`)."""
     user_id = uuid.UUID(current_user.id)
     profile = await users_repo.get_profile(session, user_id)
     if not profile.google_prefilled:
-        profile = await _prefill_from_google(session, current_user)
+        profile = await _prefill_from_google(session, current_user, locale)
     if profile.email is None:
         # No mirror row yet (or no stored email): the token still knows it.
         profile = replace(profile, email=current_user.email)
@@ -146,7 +154,7 @@ async def get_account(current_user: CurrentUserDep, session: SessionDep) -> Acco
 
 @router.patch("")
 async def update_account(
-    body: UpdateProfileRequest, current_user: CurrentUserDep, session: SessionDep
+    body: UpdateProfileRequest, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> AccountResponse:
     """Updates only the fields sent; `null` or a blank string clears one. 422
     when a field is over its length limit."""
@@ -160,28 +168,28 @@ async def update_account(
     try:
         updated = plan_profile_update(profile, changes)
     except ProfileFieldTooLongError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
     await users_repo.save_profile(session, updated)
     return await _response(updated)
 
 
 @router.post("/avatar")
 async def upload_avatar(
-    file: UploadFile, current_user: CurrentUserDep, session: SessionDep
+    file: UploadFile, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> AccountResponse:
     """Replaces the avatar with an uploaded image (cropped square, re-encoded
     as WebP)."""
     data = await read_upload(file)
-    return await _response(await _store_avatar(session, current_user, data))
+    return await _response(await _store_avatar(session, current_user, data, locale))
 
 
 @router.post("/avatar/from-url")
 async def import_avatar(
-    body: AvatarFromUrlRequest, current_user: CurrentUserDep, session: SessionDep
+    body: AvatarFromUrlRequest, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> AccountResponse:
     """Replaces the avatar with an image fetched from a URL."""
-    data = await fetch_url(str(body.url))
-    return await _response(await _store_avatar(session, current_user, data))
+    data = await fetch_url(str(body.url), locale)
+    return await _response(await _store_avatar(session, current_user, data, locale))
 
 
 @router.delete("/avatar")

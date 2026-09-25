@@ -11,6 +11,7 @@ from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import get_visible_document, require_membership
+from app.api.errors import http_error, translated_error
 from app.api.image_uploads import (
     ImageResponse,
     ensure_room_for_another_image,
@@ -39,8 +40,10 @@ from app.domain.comments import (
     plan_comment_edit,
     plan_new_comment,
 )
+from app.domain.errors import DomainError
 from app.domain.models import Comment, Document, DocumentImage, DocumentVisibility, Membership
 from app.domain.visibility import is_comment_visible
+from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/documents/{document_id}/comments", tags=["comments"])
 
@@ -116,48 +119,55 @@ def _to_response(
     )
 
 
-def _body_error(exc: Exception) -> HTTPException:
+def _body_error(exc: DomainError, locale: str) -> HTTPException:
     """The 422 for a Comment body that is empty or too long."""
-    return HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc))
+    return translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale)
 
 
 async def _validate_grantees(
-    session: AsyncSession, room_id: uuid.UUID, user_ids: Collection[uuid.UUID]
+    session: AsyncSession, room_id: uuid.UUID, user_ids: Collection[uuid.UUID], locale: str
 ) -> None:
     """422 unless every Selective grantee is a member of the Room."""
     member_ids = {m.user_id for m in await rooms_repo.list_memberships(session, room_id)}
     if not set(user_ids) <= member_ids:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_CONTENT,
-            "selective_user_ids must all be members of this room",
+        raise http_error(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.comment.invalidSelectiveUsers", locale
         )
 
 
 async def _get_visible_comment(
-    session: AsyncSession, document_id: uuid.UUID, comment_id: uuid.UUID, viewer: Membership
+    session: AsyncSession,
+    document_id: uuid.UUID,
+    comment_id: uuid.UUID,
+    viewer: Membership,
+    locale: str,
 ) -> tuple[Comment, list[uuid.UUID]]:
     """Returns (comment, selective_ids) once the viewer is known to see the
     Comment; 404 otherwise, whether or not it exists (VR-07)."""
     comment = await comments_repo.get_comment(session, comment_id)
     if comment is None or comment.document_id != document_id:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Comment not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.comment.notFound", locale)
     selective_ids = (await comments_repo.list_grants_for_comments(session, [comment.id]))[
         comment.id
     ]
     if not is_comment_visible(comment, viewer.user_id, viewer.role, selective_ids):
         # Same as Documents: hidden content doesn't reveal it exists (VR-07).
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Comment not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.comment.notFound", locale)
     return comment, selective_ids
 
 
 async def _require_visible_document(
-    session: AsyncSession, room_id: uuid.UUID, document_id: uuid.UUID, requester_id: uuid.UUID
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    requester_id: uuid.UUID,
+    locale: str,
 ) -> tuple[Membership, Document]:
     """The requester's Membership and the Document, once they are known to be a
     member who can see it."""
-    membership = await require_membership(session, room_id, requester_id)
+    membership = await require_membership(session, room_id, requester_id, locale)
     document, _, _ = await get_visible_document(
-        session, room_id, document_id, requester_id, membership.role
+        session, room_id, document_id, requester_id, membership.role, locale
     )
     return membership, document
 
@@ -168,13 +178,13 @@ async def _comment_images(session: AsyncSession, comment_id: uuid.UUID) -> list[
 
 
 def _author_error(
-    exc: NotCommentAuthorError | CommentDeletedError | TooManyCommentImagesError,
+    exc: NotCommentAuthorError | CommentDeletedError | TooManyCommentImagesError, locale: str
 ) -> HTTPException:
     """403 for a non-author, 409 for a deleted Comment or one that is already
     at its image limit."""
     if isinstance(exc, NotCommentAuthorError):
-        return HTTPException(status.HTTP_403_FORBIDDEN, str(exc))
-    return HTTPException(status.HTTP_409_CONFLICT, str(exc))
+        return translated_error(status.HTTP_403_FORBIDDEN, exc, locale)
+    return translated_error(status.HTTP_409_CONFLICT, exc, locale)
 
 
 @router.get("")
@@ -183,11 +193,14 @@ async def list_comments(
     document_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> list[CommentResponse]:
     """The Document's Comments the requester can see, deleted placeholders
     included (FR-T5)."""
     requester_id = uuid.UUID(current_user.id)
-    membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
+    membership, _ = await _require_visible_document(
+        session, room_id, document_id, requester_id, locale
+    )
 
     comments = await comments_repo.list_comments_for_document(session, document_id)
     comment_ids = [c.id for c in comments]
@@ -208,20 +221,23 @@ async def create_comment(
     body: CreateCommentRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> CommentResponse:
     """UC-11: any member who can see the Document comments on it, choosing the
     Comment's visibility (VR-02)."""
     requester_id = uuid.UUID(current_user.id)
-    membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
+    membership, _ = await _require_visible_document(
+        session, room_id, document_id, requester_id, locale
+    )
 
     try:
         comment = plan_new_comment(
             document_id, requester_id, body.body, body.visibility, datetime.now(UTC)
         )
     except (CommentBodyRequiredError, CommentTooLongError) as exc:
-        raise _body_error(exc) from exc
+        raise _body_error(exc, locale) from exc
 
-    await _validate_grantees(session, room_id, body.selective_user_ids)
+    await _validate_grantees(session, room_id, body.selective_user_ids, locale)
     await comments_repo.insert_comment(session, comment, body.selective_user_ids)
     return _to_response(comment, set(body.selective_user_ids), [], {}, membership)
 
@@ -234,14 +250,17 @@ async def update_comment(
     body: UpdateCommentRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> CommentResponse:
     """FR-T5: the author edits their Comment's body, visibility or grants. A
     change of who can see it is audited in the same transaction (VR-08,
     Invariant 7)."""
     requester_id = uuid.UUID(current_user.id)
-    membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
+    membership, _ = await _require_visible_document(
+        session, room_id, document_id, requester_id, locale
+    )
     comment, selective_ids = await _get_visible_comment(
-        session, document_id, comment_id, membership
+        session, document_id, comment_id, membership, locale
     )
 
     try:
@@ -256,12 +275,12 @@ async def update_comment(
             new_selective_ids=body.selective_user_ids,
         )
     except (NotCommentAuthorError, CommentDeletedError) as exc:
-        raise _author_error(exc) from exc
+        raise _author_error(exc, locale) from exc
     except (CommentBodyRequiredError, CommentTooLongError) as exc:
-        raise _body_error(exc) from exc
+        raise _body_error(exc, locale) from exc
 
     if body.selective_user_ids is not None:
-        await _validate_grantees(session, room_id, body.selective_user_ids)
+        await _validate_grantees(session, room_id, body.selective_user_ids, locale)
 
     await comments_repo.update_comment(session, plan.comment)
     if body.selective_user_ids is not None:
@@ -281,20 +300,23 @@ async def delete_comment(
     comment_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> None:
     """FR-T5: the author, or the Master moderating, deletes a Comment. It stays
     as an empty placeholder, and its images are removed with it so they don't
     linger in the Document gallery."""
     requester_id = uuid.UUID(current_user.id)
-    membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
-    comment, _ = await _get_visible_comment(session, document_id, comment_id, membership)
+    membership, _ = await _require_visible_document(
+        session, room_id, document_id, requester_id, locale
+    )
+    comment, _ = await _get_visible_comment(session, document_id, comment_id, membership, locale)
 
     try:
         deleted = plan_comment_deletion(comment, requester_id, membership.role, datetime.now(UTC))
     except CannotDeleteCommentError as exc:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        raise translated_error(status.HTTP_403_FORBIDDEN, exc, locale) from exc
     except CommentDeletedError as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
 
     # A deleted Comment's images go too - they'd otherwise outlive the
     # Comment in the Document gallery (moderation must actually remove them).
@@ -308,24 +330,27 @@ async def _attach_image(
     document: Document,
     comment_id: uuid.UUID,
     source: UploadFile | str,
+    locale: str,
 ) -> CommentResponse:
     """Attaches one image (an uploaded file, or a URL to import) to a
     Comment. It becomes a Document image too, linked to the Comment."""
     comment, selective_ids = await _get_visible_comment(
-        session, document.id, comment_id, membership
+        session, document.id, comment_id, membership, locale
     )
     # Locks the Document first, so the Comment's own count below can't race
     # a concurrent attachment either.
-    document_images = await ensure_room_for_another_image(session, document)
+    document_images = await ensure_room_for_another_image(session, document, locale)
     images = await _comment_images(session, comment_id)
     try:
         ensure_can_attach_image(comment, membership.user_id, len(images))
     except (NotCommentAuthorError, CommentDeletedError, TooManyCommentImagesError) as exc:
-        raise _author_error(exc) from exc
+        raise _author_error(exc, locale) from exc
 
-    data = await fetch_url(source) if isinstance(source, str) else await read_upload(source)
+    data = (
+        await fetch_url(source, locale) if isinstance(source, str) else await read_upload(source)
+    )
     image = await store_image(
-        session, document, membership.user_id, data, document_images, post_id=comment.id
+        session, document, membership.user_id, data, document_images, locale, post_id=comment.id
     )
     all_images = [*images, image]
     return _to_response(
@@ -341,14 +366,15 @@ async def upload_comment_image(
     file: UploadFile,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> CommentResponse:
     """The author attaches an uploaded image, up to `MAX_IMAGES_PER_COMMENT`.
     It also counts toward the Document's limit."""
     requester_id = uuid.UUID(current_user.id)
     membership, document = await _require_visible_document(
-        session, room_id, document_id, requester_id
+        session, room_id, document_id, requester_id, locale
     )
-    return await _attach_image(session, membership, document, comment_id, file)
+    return await _attach_image(session, membership, document, comment_id, file, locale)
 
 
 @router.post("/{comment_id}/images/from-url", status_code=status.HTTP_201_CREATED)
@@ -359,13 +385,14 @@ async def import_comment_image(
     body: ImageFromUrlRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> CommentResponse:
     """Like `upload_comment_image`, with the image fetched from a URL."""
     requester_id = uuid.UUID(current_user.id)
     membership, document = await _require_visible_document(
-        session, room_id, document_id, requester_id
+        session, room_id, document_id, requester_id, locale
     )
-    return await _attach_image(session, membership, document, comment_id, str(body.url))
+    return await _attach_image(session, membership, document, comment_id, str(body.url), locale)
 
 
 @router.delete("/{comment_id}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -376,17 +403,20 @@ async def delete_comment_image(
     image_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> None:
     """The author removes one of their Comment's images."""
     requester_id = uuid.UUID(current_user.id)
-    membership, _ = await _require_visible_document(session, room_id, document_id, requester_id)
-    comment, _ = await _get_visible_comment(session, document_id, comment_id, membership)
+    membership, _ = await _require_visible_document(
+        session, room_id, document_id, requester_id, locale
+    )
+    comment, _ = await _get_visible_comment(session, document_id, comment_id, membership, locale)
     try:
         ensure_can_detach_image(comment, requester_id)
     except (NotCommentAuthorError, CommentDeletedError) as exc:
-        raise _author_error(exc) from exc
+        raise _author_error(exc, locale) from exc
 
     image = next((i for i in await _comment_images(session, comment_id) if i.id == image_id), None)
     if image is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Image not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.image.notFound", locale)
     await remove_images(session, [image])

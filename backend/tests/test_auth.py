@@ -39,7 +39,9 @@ def test_me_with_wrong_audience_is_unauthorized(make_token: Callable[..., str]) 
 
 def _user_from(make_token: Callable[..., str], metadata: dict[str, object]) -> CurrentUser:
     token = make_token(USER_ID, user_metadata=metadata)
-    return get_current_user(HTTPAuthorizationCredentials(scheme="Bearer", credentials=token))
+    return get_current_user(
+        HTTPAuthorizationCredentials(scheme="Bearer", credentials=token), locale="en"
+    )
 
 
 # The claims Supabase puts in `user_metadata` for each enabled provider.

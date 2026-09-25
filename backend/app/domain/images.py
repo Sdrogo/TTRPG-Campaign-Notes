@@ -6,6 +6,8 @@ from dataclasses import dataclass
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
+from app.domain.errors import DomainError
+
 # Input guards: reject before decoding anything expensive.
 MAX_INPUT_BYTES = 20 * 1024 * 1024
 MAX_INPUT_PIXELS = 50_000_000
@@ -26,11 +28,11 @@ OUTPUT_QUALITY = 82
 AVATAR_DIMENSION = 512
 
 
-class InvalidImageError(Exception):
+class InvalidImageError(DomainError):
     """The data isn't an image in a supported format."""
 
 
-class ImageTooLargeError(Exception):
+class ImageTooLargeError(DomainError):
     """The file or its pixel count is over the input limits."""
 
 
@@ -55,16 +57,14 @@ def normalize_image(
     first center-cropped to a square (avatars). Animated GIFs keep only
     their first frame."""
     if len(data) > MAX_INPUT_BYTES:
-        raise ImageTooLargeError(
-            f"Image exceeds the {MAX_INPUT_BYTES // (1024 * 1024)} MB upload limit"
-        )
+        raise ImageTooLargeError("errors.image.tooLarge", mb=MAX_INPUT_BYTES // (1024 * 1024))
 
     try:
         with Image.open(io.BytesIO(data)) as source:
             if source.format not in ALLOWED_INPUT_FORMATS:
-                raise InvalidImageError(f"Unsupported image format: {source.format}")
+                raise InvalidImageError("errors.image.unsupportedFormat", format=source.format)
             if source.width * source.height > MAX_INPUT_PIXELS:
-                raise ImageTooLargeError("Image dimensions are too large")
+                raise ImageTooLargeError("errors.image.dimensionsTooLarge")
 
             image = ImageOps.exif_transpose(source)
             if square:
@@ -79,7 +79,7 @@ def normalize_image(
             output = io.BytesIO()
             image.save(output, format=OUTPUT_FORMAT, quality=OUTPUT_QUALITY, method=4)
     except (UnidentifiedImageError, Image.DecompressionBombError, OSError) as exc:
-        raise InvalidImageError("File is not a valid image") from exc
+        raise InvalidImageError("errors.image.invalidFile") from exc
 
     return NormalizedImage(
         data=output.getvalue(),

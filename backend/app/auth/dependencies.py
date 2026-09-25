@@ -8,6 +8,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
 from app.auth.jwt import InvalidTokenError, decode_supabase_jwt
+from app.i18n.dependencies import LocaleDep
+from app.i18n.translator import translate
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -38,15 +40,20 @@ def _first_string(metadata: object, *keys: str) -> str | None:
 
 def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
+    locale: LocaleDep,
 ) -> CurrentUser:
     """Resolves the caller from the `Authorization: Bearer` header. 401 when
     it's missing, invalid or expired."""
     if credentials is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token")
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, translate("errors.auth.missingToken", locale)
+        )
     try:
         payload = decode_supabase_jwt(credentials.credentials)
     except InvalidTokenError as exc:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token") from exc
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, translate("errors.auth.invalidToken", locale)
+        ) from exc
     metadata = payload.get("user_metadata")
     return CurrentUser(
         id=payload["sub"],

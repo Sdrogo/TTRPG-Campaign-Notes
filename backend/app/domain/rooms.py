@@ -3,6 +3,7 @@
 import uuid
 from dataclasses import dataclass
 
+from app.domain.errors import DomainError
 from app.domain.models import Membership, Room, RoomRole, RoomStatus, Tag
 
 # D-14 / FR-N1: default Tags created with every Room.
@@ -14,7 +15,7 @@ DEFAULT_TAGS: tuple[tuple[str, str], ...] = (
 )
 
 
-class RoomNameRequiredError(Exception):
+class RoomNameRequiredError(DomainError):
     """The Room name is empty once trimmed."""
 
 
@@ -32,7 +33,7 @@ def plan_new_room(name: str, game_system: str | None, creator_id: uuid.UUID) -> 
     """UC-02: creator becomes Administrator + Master, default Tags are created."""
     clean_name = name.strip()
     if not clean_name:
-        raise RoomNameRequiredError("Room name is required")
+        raise RoomNameRequiredError("errors.room.nameRequired")
 
     room_id = uuid.uuid4()
     room = Room(
