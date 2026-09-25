@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { notifyError } from '../../lib/notify';
 import { rawComment } from '../../test/fixtures';
+import i18n from '../../i18n';
 import { renderWithProviders } from '../../test/utils';
 import { CommentSection } from './CommentSection';
 import type { Member } from '../../types/member';
@@ -192,6 +193,19 @@ describe('filtering', () => {
     await user.click(screen.getAllByRole('button', { name: /Azzera filtri/ }).at(-1)!);
 
     await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(2));
+  });
+
+  it('updates an unknown author label when the language changes', async () => {
+    mockRoutes([rawComment({ author_id: 'former-member' })]);
+    const { user } = render();
+    await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
+
+    await user.click(screen.getByRole('combobox', { name: 'Filtra per autore' }));
+    expect(screen.getByRole('option', { name: 'Utente sconosciuto' })).toBeInTheDocument();
+
+    await i18n.changeLanguage('en');
+    await user.click(screen.getByRole('combobox', { name: 'Filter by author' }));
+    expect(await screen.findByRole('option', { name: 'Unknown user' })).toBeInTheDocument();
   });
 
   it('filters by author', async () => {

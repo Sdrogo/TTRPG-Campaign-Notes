@@ -5,6 +5,7 @@ import { apiFetch } from '../lib/apiClient';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { supabase } from '../lib/supabaseClient';
 import { useSession } from '../hooks/useSession';
+import i18n from '../i18n';
 import { fakeSession, rawAccount } from '../test/fixtures';
 import { renderWithProviders } from '../test/utils';
 import { AccountPage } from './AccountPage';
@@ -218,6 +219,13 @@ describe('the avatar', () => {
 });
 
 describe('signing out', () => {
+  it('uses the dedicated English sign-out label', async () => {
+    await i18n.changeLanguage('en');
+    render();
+
+    expect(await screen.findByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+  });
+
   it('signs out through Supabase', async () => {
     signOut.mockResolvedValue({ error: null } as Awaited<ReturnType<typeof supabase.auth.signOut>>);
     const { user } = render();

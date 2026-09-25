@@ -137,7 +137,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
                 onClick={() => signOut.mutate(undefined, { onError: notifyError })}
                 style={{ flexShrink: 0 }}
               >
-                {t('common.leave')}
+                {t('account.access.signOut')}
               </Button>
             </Group>
           </Grid.Col>

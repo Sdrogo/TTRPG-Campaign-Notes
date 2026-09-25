@@ -96,7 +96,8 @@
       "email": "Email",
       "emailDescription": "This is the email of the account you signed in with.",
       "noEmail": "Your account didn't share an email",
-      "signOutDescription": "End the session on this device."
+      "signOutDescription": "End the session on this device.",
+      "signOut": "Sign out"
     }
   },
   "rooms": {

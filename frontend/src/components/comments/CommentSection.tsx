@@ -40,7 +40,7 @@ function reportImageErrors({ imageErrors }: SaveCommentResult) {
  * may see.
  */
 export function CommentSection({ roomId, documentId, members, currentUserId }: CommentSectionProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const comments = useComments(roomId, documentId, true);
   const saveComment = useSaveComment(roomId, documentId);
   const deleteComment = useDeleteComment(roomId, documentId);
@@ -48,7 +48,9 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
 
   const all = useMemo(() => comments.data ?? [], [comments.data]);
   const shown = useMemo(() => applyCommentFilters(all, filters, members), [all, filters, members]);
-  const authorOptions = useMemo(() => commentAuthors(all, members), [all, members]);
+  // commentAuthors reaches the active global translator for unknown-user labels.
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
+  const authorOptions = useMemo(() => commentAuthors(all, members), [all, members, i18n.language]);
   const savingId = saveComment.isPending ? saveComment.variables?.commentId : undefined;
 
   return (

@@ -96,7 +96,8 @@
       "email": "Email",
       "emailDescription": "L'email è quella dell'account con cui hai effettuato l'accesso.",
       "noEmail": "Nessuna email condivisa dal tuo account",
-      "signOutDescription": "Termina la sessione su questo dispositivo."
+      "signOutDescription": "Termina la sessione su questo dispositivo.",
+      "signOut": "Esci"
     }
   },
   "rooms": {
