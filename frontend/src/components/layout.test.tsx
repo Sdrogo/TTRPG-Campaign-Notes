@@ -1,6 +1,7 @@
 // The thin layout wrappers, covered together: each is a handful of lines
 // with one thing worth asserting, and a file apiece would be noise.
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
 import { rawAccount } from '../test/fixtures';
@@ -17,7 +18,9 @@ const fetchMock = vi.mocked(apiFetch);
 
 beforeEach(() => {
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue(rawAccount());
+  fetchMock.mockImplementation((path: string) =>
+    path.endsWith('/tags') ? Promise.resolve([]) : Promise.resolve(rawAccount()),
+  );
 });
 
 describe('PageCard', () => {
@@ -56,6 +59,16 @@ describe('PageLayout', () => {
 
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
+
+  it('forwards a given Room id to the header, offering the Glossary Index', () => {
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro" roomId="room-1">
+        <p>Contenuto</p>
+      </PageLayout>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Apri indice dei Tag' })).toBeInTheDocument();
+  });
 });
 
 describe('AppHeader', () => {
@@ -72,6 +85,37 @@ describe('AppHeader', () => {
     renderWithProviders(<AppHeader />);
 
     expect(screen.getByRole('link', { name: 'Il tuo account' })).toBeInTheDocument();
+  });
+
+  // Spec 10: the Glossary/Tag index toggle only makes sense on a Room page.
+  it('offers no Glossary Index toggle without a Room', () => {
+    renderWithProviders(<AppHeader />);
+
+    expect(screen.queryByRole('button', { name: /indice dei Tag/ })).not.toBeInTheDocument();
+  });
+
+  describe('with a Room', () => {
+    it('offers a burger that opens the Glossary Index', async () => {
+      renderWithProviders(<AppHeader roomId="room-1" />);
+      const user = userEvent.setup();
+
+      expect(screen.queryByText('Indice dei Tag')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Apri indice dei Tag' }));
+
+      expect(await screen.findByText('Indice dei Tag')).toBeInTheDocument();
+    });
+
+    it('closes the Glossary Index on a second click', async () => {
+      renderWithProviders(<AppHeader roomId="room-1" />);
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: 'Apri indice dei Tag' }));
+      await screen.findByText('Indice dei Tag');
+      await user.click(screen.getByRole('button', { name: 'Chiudi indice dei Tag' }));
+
+      await waitFor(() => expect(screen.queryByText('Indice dei Tag')).not.toBeInTheDocument());
+    });
   });
 });
 

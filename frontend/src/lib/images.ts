@@ -84,3 +84,32 @@ export type ImageOrientation = 'landscape' | 'portrait';
 export function imageOrientation(width: number, height: number): ImageOrientation {
   return height > width ? 'portrait' : 'landscape';
 }
+
+/** The sizing an orientation-framed image is rendered with, within `maxHeight`. */
+export interface ImageFrameSize {
+  w: string;
+  h: string | Record<string, number>;
+  mah?: Record<string, number>;
+  bg?: string;
+}
+
+/**
+ * Frame an image by orientation (spec 07.1, reused for the Document detail
+ * gallery by spec 10): a landscape image fills the available width up to
+ * `maxHeight`, a portrait one fills the height and keeps its own width, and an
+ * unloaded image (`orientation` still `null`) holds a full-size placeholder -
+ * so nothing is stretched or cropped.
+ */
+export function imageFrameSize(
+  orientation: ImageOrientation | null,
+  maxHeight: Record<string, number>,
+): ImageFrameSize {
+  switch (orientation) {
+    case 'landscape':
+      return { w: '100%', h: 'auto', mah: maxHeight };
+    case 'portrait':
+      return { w: 'auto', h: maxHeight };
+    case null:
+      return { w: '100%', h: maxHeight, bg: 'var(--bg-base)' };
+  }
+}

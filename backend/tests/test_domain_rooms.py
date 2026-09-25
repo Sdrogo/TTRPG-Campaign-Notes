@@ -24,7 +24,7 @@ def test_default_tags_are_created_with_the_room() -> None:
     plan = plan_new_room("Waterdeep", None, uuid.uuid4())
 
     names = {tag.name for tag in plan.default_tags}
-    assert names == {"NPC", "Place", "Event", "Artifact"}
+    assert names == {"NPC", "PC", "Place", "Event", "Artifact"}
     assert all(tag.room_id == plan.room.id for tag in plan.default_tags)
     assert all(tag.category == "Type" for tag in plan.default_tags)
 

@@ -18,6 +18,8 @@ function render(overrides: Partial<DocumentFormValues> = {}) {
       values={{ name: '', description: '', visibility: 'room', tagIds: [], ...overrides }}
       onChange={onChange}
       tags={tags}
+      roomId="room-1"
+      canCreateTag={false}
     />,
   );
   return { onChange, user: userEvent.setup() };
@@ -82,5 +84,28 @@ describe('DocumentFields', () => {
     render();
 
     expect(screen.getByRole('textbox', { name: /Nome/ })).toBeRequired();
+  });
+
+  // Spec 10: creating a Tag inline is only offered to whoever may manage Tags.
+  it('hides the inline Tag creator by default', () => {
+    render();
+
+    expect(screen.queryByRole('textbox', { name: 'Nuovo tag' })).not.toBeInTheDocument();
+  });
+
+  it('offers the inline Tag creator when the viewer may create Tags', () => {
+    const onChange = vi.fn();
+    renderWithProviders(
+      <DocumentFields
+        values={{ name: '', description: '', visibility: 'room', tagIds: [] }}
+        onChange={onChange}
+        tags={tags}
+        roomId="room-1"
+        canCreateTag
+      />,
+    );
+
+    expect(screen.getByRole('textbox', { name: 'Nuovo tag' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Aggiungi/ })).toBeInTheDocument();
   });
 });

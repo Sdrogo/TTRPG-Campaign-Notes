@@ -7,6 +7,9 @@ import { AppHeader } from './AppHeader';
 interface PageLayoutProps {
   backTo: string;
   backLabel: string;
+  /** Given on a Room-scoped page, so `AppHeader` offers the Glossary Index
+   *  toggle for this Room (spec 10). */
+  roomId?: string;
   children: ReactNode;
 }
 
@@ -14,10 +17,10 @@ interface PageLayoutProps {
  * The top bar, then a full-width page body with side margins that grow with the
  * screen, starting with the "back" link every nested page has.
  */
-export function PageLayout({ backTo, backLabel, children }: PageLayoutProps) {
+export function PageLayout({ backTo, backLabel, roomId, children }: PageLayoutProps) {
   return (
     <>
-      <AppHeader />
+      <AppHeader roomId={roomId} />
       <Container fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="md">
         <Stack gap="md">
           <Group>

@@ -13,6 +13,7 @@ import {
 import { Carousel } from '@mantine/carousel';
 import { HeartIcon, TrashIcon } from '@phosphor-icons/react';
 import { ImageViewerModal } from './ImageViewerModal';
+import { imageFrameSize, imageOrientation, type ImageOrientation } from '../lib/images';
 import type { DocumentImage } from '../types/document';
 import { useTranslation } from 'react-i18next';
 
@@ -117,26 +118,42 @@ function GalleryImage({
   settingFavorite: boolean;
 }) {
   const { t } = useTranslation();
+  const [orientation, setOrientation] = useState<ImageOrientation | null>(null);
+
   return (
     <Box
       pos="relative"
       h={GALLERY_HEIGHT}
       bg="var(--bg-base)"
-      style={{ borderRadius: 'var(--mantine-radius-md)', overflow: 'hidden' }}
+      style={{
+        borderRadius: 'var(--mantine-radius-md)',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
       <UnstyledButton
         onClick={onOpen}
         w="100%"
         h="100%"
         aria-label={t('images.open')}
-        style={{ cursor: 'zoom-in' }}
+        style={{ cursor: 'zoom-in', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
-        <img
+        <Box
+          component="img"
           src={image.url}
           alt={alt}
           loading="lazy"
           draggable={false}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+          data-orientation={orientation ?? undefined}
+          onLoad={(event) => {
+            const { naturalWidth, naturalHeight } = event.currentTarget;
+            setOrientation(imageOrientation(naturalWidth, naturalHeight));
+          }}
+          {...imageFrameSize(orientation, GALLERY_HEIGHT)}
+          maw="100%"
+          style={{ display: 'block', objectFit: 'contain' }}
         />
       </UnstyledButton>
 

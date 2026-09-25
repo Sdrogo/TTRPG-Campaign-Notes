@@ -19,9 +19,11 @@ const routes = {
   createDocument: rawDocument() as unknown,
 };
 
-function render() {
+function render(canManageTags = true) {
   const onClose = vi.fn();
-  renderWithProviders(<CreateDocumentModal opened onClose={onClose} roomId="room-1" />);
+  renderWithProviders(
+    <CreateDocumentModal opened onClose={onClose} roomId="room-1" canManageTags={canManageTags} />,
+  );
   return { onClose, user: userEvent.setup() };
 }
 
@@ -110,6 +112,15 @@ describe('CreateDocumentModal', () => {
 });
 
 describe('adding a Tag inline', () => {
+  // Spec 10: only an Administrator or the Master may create a Tag
+  // (`POST /rooms/{id}/tags`); a Player must not be offered a form the
+  // backend would reject with a 403.
+  it('is hidden from a viewer who may not manage Tags', () => {
+    render(false);
+
+    expect(screen.queryByRole('textbox', { name: 'Nuovo tag' })).not.toBeInTheDocument();
+  });
+
   it('cannot add a blank Tag', () => {
     render();
 

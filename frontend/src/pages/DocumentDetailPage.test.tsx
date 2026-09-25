@@ -245,6 +245,29 @@ describe('editing', () => {
   });
 });
 
+// Spec 10: creating a Tag inline while editing is only offered to whoever may
+// manage Tags (Administrator or Master), matching the create-Document modal.
+describe('creating a Tag while editing', () => {
+  it('offers it to the Master', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(editButton());
+
+    expect(screen.getByRole('textbox', { name: 'Nuovo tag' })).toBeInTheDocument();
+  });
+
+  it('withholds it from an Owner who is a Player', async () => {
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(editButton());
+
+    expect(screen.queryByRole('textbox', { name: 'Nuovo tag' })).not.toBeInTheDocument();
+  });
+});
+
 describe('adding images while editing', () => {
   it('uploads a picked file', async () => {
     const writes: string[] = [];

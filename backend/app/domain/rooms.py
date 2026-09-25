@@ -6,9 +6,11 @@ from dataclasses import dataclass
 from app.domain.errors import DomainError
 from app.domain.models import Membership, Room, RoomRole, RoomStatus, Tag
 
-# D-14 / FR-N1: default Tags created with every Room.
+# D-14 / FR-N1: default Tags created with every Room. Also the Room's "Main
+# Tags" (category "Type") that spec 10 groups Documents by.
 DEFAULT_TAGS: tuple[tuple[str, str], ...] = (
     ("NPC", "Type"),
+    ("PC", "Type"),
     ("Place", "Type"),
     ("Event", "Type"),
     ("Artifact", "Type"),

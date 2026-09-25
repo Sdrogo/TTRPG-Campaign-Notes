@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Stack, Group, Title, Text, Button, Divider, ActionIcon } from '@mantine/core';
+import { Stack, Group, Title, Text, Button, Box, Flex, ActionIcon } from '@mantine/core';
 import { PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
@@ -16,6 +16,7 @@ import {
 import { useTags } from '../hooks/useTags';
 import { useMembers } from '../hooks/useMembers';
 import { notifyError } from '../lib/notify';
+import { canManageTags } from '../lib/roomPermissions';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { PageCard } from '../components/PageCard';
@@ -86,7 +87,7 @@ function DocumentDetailLoader({
   }
 
   return (
-    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('documents.title')}>
+    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('documents.title')} roomId={roomId}>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         <DocumentPanel
           key={document.data.id}
@@ -132,6 +133,7 @@ function DocumentPanel({
   const isOwner =
     document.ownerIds.includes(currentUserId) ||
     members.find((m) => m.userId === currentUserId)?.role === 'master';
+  const me = members.find((m) => m.userId === currentUserId);
 
   return (
     <PageCard>
@@ -159,51 +161,63 @@ function DocumentPanel({
           </Group>
         </Group>
 
-        {editing ? (
-          <Stack gap="md">
-            <AddDocumentImages
-              onUploadFiles={(files) => uploadImages.mutate(files, { onError: notifyError })}
-              uploading={uploadImages.isPending}
-              onImportUrl={(url, onDone) =>
-                importImage.mutate(url, { onSuccess: onDone, onError: notifyError })
-              }
-              importing={importImage.isPending}
-            />
-            <DocumentEditForm
-              roomId={roomId}
-              document={document}
-              tags={tags}
-              onDone={() => setEditing(false)}
-            />
-          </Stack>
-        ) : (
-          <>
-            <TagList tags={tags} tagIds={document.tagIds} />
-            {document.description ? (
-              <MentionText
-                text={document.description}
-                style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-              />
-            ) : (
-              <Text c="dimmed">{t('common.noDescription')}</Text>
-            )}
-          </>
+        {editing && (
+          <AddDocumentImages
+            onUploadFiles={(files) => uploadImages.mutate(files, { onError: notifyError })}
+            uploading={uploadImages.isPending}
+            onImportUrl={(url, onDone) =>
+              importImage.mutate(url, { onSuccess: onDone, onError: notifyError })
+            }
+            importing={importImage.isPending}
+          />
         )}
 
-        <Divider />
-        <DocumentImageGallery
-          images={document.images}
-          documentName={document.name}
-          canDelete={isOwner && editing}
-          onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
-          deletingImageId={deleteImage.isPending ? (deleteImage.variables ?? null) : null}
-          // Spec 07: not gated on `editing` like deletion - picking the
-          // leading image is reversible, so it needs no edit mode.
-          onSetFavorite={
-            isOwner ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError }) : undefined
-          }
-          settingFavoriteId={setFavorite.isPending ? (setFavorite.variables ?? null) : null}
-        />
+        {/* Text on the left, images on the right on big screens (spec 10,
+            mirroring DocumentCard's layout in RoomDocumentsPage); stacked
+            below `lg`. */}
+        <Flex direction={{ base: 'column', lg: 'row' }} align="flex-start" gap="md">
+          <Box style={{ flex: '1 1 auto', minWidth: 0, width: '100%' }}>
+            {editing ? (
+              <DocumentEditForm
+                roomId={roomId}
+                document={document}
+                tags={tags}
+                canManageTags={canManageTags(me)}
+                onDone={() => setEditing(false)}
+              />
+            ) : (
+              <Stack gap="xs">
+                <TagList tags={tags} tagIds={document.tagIds} />
+                {document.description ? (
+                  <MentionText
+                    text={document.description}
+                    style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
+                  />
+                ) : (
+                  <Text c="dimmed">{t('common.noDescription')}</Text>
+                )}
+              </Stack>
+            )}
+          </Box>
+          {document.images.length > 0 && (
+            <Box w={{ base: '100%', lg: '45%' }} style={{ flexShrink: 0 }}>
+              <DocumentImageGallery
+                images={document.images}
+                documentName={document.name}
+                canDelete={isOwner && editing}
+                onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
+                deletingImageId={deleteImage.isPending ? (deleteImage.variables ?? null) : null}
+                // Spec 07: not gated on `editing` like deletion - picking the
+                // leading image is reversible, so it needs no edit mode.
+                onSetFavorite={
+                  isOwner ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError }) : undefined
+                }
+                settingFavoriteId={setFavorite.isPending ? (setFavorite.variables ?? null) : null}
+              />
+            </Box>
+          )}
+        </Flex>
+
         <DocumentOwners
           ownerIds={document.ownerIds}
           members={members}
@@ -222,11 +236,13 @@ function DocumentEditForm({
   roomId,
   document,
   tags,
+  canManageTags,
   onDone,
 }: {
   roomId: string;
   document: Document;
   tags: Tag[];
+  canManageTags: boolean;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -237,18 +253,31 @@ function DocumentEditForm({
     visibility: document.visibility,
     tagIds: document.tagIds,
   });
+  const [tagCreatePending, setTagCreatePending] = useState(false);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    if (tagCreatePending) return;
     updateDocument.mutate(values, { onSuccess: onDone, onError: notifyError });
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <Stack gap="sm">
-        <DocumentFields values={values} onChange={setValues} tags={tags} />
+        <DocumentFields
+          values={values}
+          onChange={setValues}
+          tags={tags}
+          roomId={roomId}
+          canCreateTag={canManageTags}
+          onTagCreatePendingChange={setTagCreatePending}
+        />
         <Group>
-          <Button type="submit" loading={updateDocument.isPending} disabled={!values.name.trim()}>
+          <Button
+            type="submit"
+            loading={updateDocument.isPending}
+            disabled={!values.name.trim() || tagCreatePending}
+          >
             {t('documents.detail.saveChanges')}
           </Button>
           <Button variant="subtle" color="gray" onClick={onDone}>

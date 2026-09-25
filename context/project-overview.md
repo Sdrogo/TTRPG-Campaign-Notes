@@ -119,8 +119,9 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   default on (D-13, FR-D7).
 
 ### Tags, Glossary & Navigation
-- Room‑scoped Tags with optional category; default Tags (NPC,
-  Place, Event, Artifact) created with the Room (D-14, FR-N1).
+- Room‑scoped Tags with optional category; default "Main" Tags (NPC,
+  PC, Place, Event, Artifact) created with the Room (D-14, FR-N1),
+  used to group the Documents list (spec `10 - UX Refinment`).
 - Filter Documents by one or more Tags (FR-N2).
 - Glossary of terms, filterable by Tag, linked to related Documents
   (FR-N3, FR-N4).
