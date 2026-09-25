@@ -1,0 +1,80 @@
+{
+  "errors": {
+    "auth": {
+      "missingToken": "Missing bearer token",
+      "invalidToken": "Invalid or expired token"
+    },
+    "room": {
+      "notFound": "Room not found",
+      "notAMember": "Not a member of this room",
+      "onlyMasterCanChangeSettings": "Only the Master can change this Room's settings",
+      "onlyAdministratorCanChangeRoles": "Only a Room Administrator can change roles",
+      "onlyAdministratorCanRemoveMembers": "Only a Room Administrator can remove members",
+      "nameRequired": "Room name is required"
+    },
+    "membership": {
+      "notFound": "User is not a member of this room",
+      "lastMaster": "Cannot remove the last Master without a successor",
+      "lastAdministrator": "Cannot remove the last Administrator without a successor",
+      "noChangeRequested": "Request must change the role and/or the admin flag"
+    },
+    "document": {
+      "notFound": "Document not found",
+      "nameRequired": "Document name is required",
+      "creationDisabled": "Document creation is disabled for Players in this Room",
+      "invalidTagIds": "One or more tag_ids are invalid for this room",
+      "notOwner": "Only an Owner (or the Master) can do this",
+      "alreadyOwner": "User is already an Owner of this Document",
+      "notAnOwner": "User is not an explicit Owner of this Document",
+      "tooManyImages": "A Document can have at most {max} images"
+    },
+    "comment": {
+      "notFound": "Comment not found",
+      "bodyRequired": "A Comment can't be empty",
+      "tooLong": "A Comment can be at most {max} characters",
+      "notAuthor": "Only the author can edit this Comment",
+      "notAuthorImages": "Only the author can change this Comment's images",
+      "cannotDelete": "Only the author or the Master can delete this Comment",
+      "deleted": "This Comment was deleted",
+      "alreadyDeleted": "This Comment was already deleted",
+      "tooManyImages": "A Comment can have at most {max} images",
+      "invalidSelectiveUsers": "selective_user_ids must all be members of this room"
+    },
+    "tag": {
+      "notAllowedToManage": "Only an Administrator or the Master can manage Tags",
+      "nameRequired": "Tag name is required",
+      "duplicateName": "A Tag with this name already exists in this Room"
+    },
+    "image": {
+      "notFound": "Image not found",
+      "storageUnavailable": "Image storage is unavailable",
+      "tooLarge": "Image exceeds the {mb} MB upload limit",
+      "dimensionsTooLarge": "Image dimensions are too large",
+      "unsupportedFormat": "Unsupported image format: {format}",
+      "invalidFile": "File is not a valid image",
+      "remoteUnsupportedScheme": "Only http(s) image URLs are supported",
+      "remoteHostUnresolved": "Could not resolve the image URL's host",
+      "remoteNonPublic": "Image URL points to a non-public address",
+      "remoteRedirectNoLocation": "Image URL redirected without a location",
+      "remoteHttpStatus": "Image URL returned HTTP {status}",
+      "remoteTooLarge": "Image at URL is too large",
+      "remoteDownloadFailed": "Could not download the image URL",
+      "remoteTooManyRedirects": "Image URL redirected too many times"
+    },
+    "invitation": {
+      "notFound": "Invitation not found",
+      "revoked": "Invitation has been revoked",
+      "expired": "Invitation has expired",
+      "alreadyMember": "User is already a member of this room",
+      "onlyAdministratorCanInvite": "Only a Room Administrator can create invitations"
+    },
+    "account": {
+      "fields": {
+        "display_name": "Display name",
+        "pronouns": "Pronouns",
+        "bio": "Bio"
+      },
+      "fieldTooLong": "{field} must be at most {max} characters"
+    }
+  }
+}

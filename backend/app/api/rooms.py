@@ -5,9 +5,10 @@ management."""
 import uuid
 from collections.abc import Mapping
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 from pydantic import BaseModel
 
+from app.api.errors import http_error, translated_error
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
 from app.auth.dependencies import CurrentUserDep
 from app.db import rooms_repo, users_repo
@@ -22,6 +23,7 @@ from app.domain.memberships import (
 )
 from app.domain.models import Membership, Room, RoomRole, RoomStatus, UserProfile
 from app.domain.rooms import RoomNameRequiredError, plan_new_room
+from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
@@ -104,13 +106,14 @@ async def create_room(
     body: CreateRoomRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> RoomResponse:
     """UC-02: creates a Room; the creator becomes its Master and Administrator,
     and the default Tags are added (D-14)."""
     try:
         plan = plan_new_room(body.name, body.game_system, uuid.UUID(current_user.id))
     except RoomNameRequiredError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
     await rooms_repo.insert_new_room(session, plan)
     await users_repo.upsert_user(session, plan.room.created_by, current_user.email)
@@ -132,17 +135,17 @@ async def list_my_rooms(current_user: CurrentUserDep, session: SessionDep) -> li
 
 @router.get("/{room_id}")
 async def get_room(
-    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
+    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> RoomResponse:
     """One Room, for its members only (403 otherwise)."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
     if membership is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
 
     room = await rooms_repo.get_room(session, room_id)
     if room is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Room not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
     return room_to_response(room)
 
 
@@ -152,14 +155,15 @@ async def update_room_settings(
     body: UpdateRoomSettingsRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> RoomResponse:
     """The Master switches Players' Document creation on or off for the Room
     (D-13, FR-D7)."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
     if membership is None or membership.role != RoomRole.MASTER:
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN, "Only the Master can change this Room's settings"
+        raise http_error(
+            status.HTTP_403_FORBIDDEN, "errors.room.onlyMasterCanChangeSettings", locale
         )
 
     try:
@@ -167,23 +171,23 @@ async def update_room_settings(
             session, room_id, body.players_can_create_documents
         )
     except LookupError as exc:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Room not found") from exc
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale) from exc
 
     room = await rooms_repo.get_room(session, room_id)
     if room is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Room not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
     return room_to_response(room)
 
 
 @router.get("/{room_id}/members")
 async def list_members(
-    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
+    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> list[MemberResponse]:
     """Everyone in the Room with their role and profile, for any member."""
     requester_id = uuid.UUID(current_user.id)
     requester = await rooms_repo.get_membership(session, room_id, requester_id)
     if requester is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member of this room")
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
 
     rows = await rooms_repo.list_members_with_profile(session, room_id)
     avatar_urls = await sign_avatars(profile for _, profile in rows)
@@ -197,6 +201,7 @@ async def update_member(
     body: UpdateMemberRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> MemberResponse:
     """UC-05: an Administrator changes a member's role and/or Administrator
     flag - designating a new Master included (FR-R5). 409 when the change would
@@ -205,17 +210,19 @@ async def update_member(
     requester_id = uuid.UUID(current_user.id)
     requester = await rooms_repo.get_membership(session, room_id, requester_id)
     if requester is None or not requester.is_admin:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Only a Room Administrator can change roles")
+        raise http_error(
+            status.HTTP_403_FORBIDDEN, "errors.room.onlyAdministratorCanChangeRoles", locale
+        )
 
     memberships = await rooms_repo.list_memberships(session, room_id)
     try:
         plan = plan_role_change(memberships, user_id, requester_id, body.role, body.is_admin)
     except MemberNotFoundError as exc:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        raise translated_error(status.HTTP_404_NOT_FOUND, exc, locale) from exc
     except NoChangeRequestedError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
     except (LastMasterError, LastAdministratorError) as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
 
     await rooms_repo.update_membership(session, plan.membership)
     await rooms_repo.insert_audit_log(session, plan.audit_entry)
@@ -230,6 +237,7 @@ async def remove_member(
     user_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> None:
     """UC-05/UC-19: an Administrator removes a member, or a member removes
     themselves (leaves). The last Master or Administrator can't go without a
@@ -240,17 +248,17 @@ async def remove_member(
     if not is_self:
         requester = await rooms_repo.get_membership(session, room_id, requester_id)
         if requester is None or not requester.is_admin:
-            raise HTTPException(
-                status.HTTP_403_FORBIDDEN, "Only a Room Administrator can remove members"
+            raise http_error(
+                status.HTTP_403_FORBIDDEN, "errors.room.onlyAdministratorCanRemoveMembers", locale
             )
 
     memberships = await rooms_repo.list_memberships(session, room_id)
     try:
         audit_entry = plan_removal(memberships, user_id, requester_id, is_self=is_self)
     except MemberNotFoundError as exc:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        raise translated_error(status.HTTP_404_NOT_FOUND, exc, locale) from exc
     except (LastMasterError, LastAdministratorError) as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
 
     await rooms_repo.delete_membership(session, room_id, user_id)
     await rooms_repo.insert_audit_log(session, audit_entry)

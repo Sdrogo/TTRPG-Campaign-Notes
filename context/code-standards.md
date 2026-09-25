@@ -226,6 +226,18 @@ pytest, split by what a test needs rather than by what it covers.
   transfer writes an AuditLog entry in the same transaction as the
   change (Invariant 7, `architecture.md`) — not as a best-effort
   follow-up call.
+- **No hardcoded `HTTPException` `detail` text.** Adopted 2026-09-25
+  (spec 09_1); see `architecture.md` → Backend Message Localization.
+  Every message a caller can see is a key into
+  `backend/app/i18n/locales/*.json`, rendered by `translate(key,
+  locale, **params)` for the `LocaleDep` the route resolved from
+  `Accept-Language`. A domain function raises a narrow exception
+  (`NotOwnerError`, ...) built from `app/domain/errors.py::DomainError`
+  with a `key` and its interpolation `params`, never a rendered
+  string — `app/api/errors.py::translated_error`/`http_error` turn
+  that into the response. A new key goes in every locale file in the
+  same change; `tests/test_i18n.py` fails on one that's missing or
+  whose `{placeholder}`s differ.
 
 ## Data and Storage
 

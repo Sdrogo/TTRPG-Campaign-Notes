@@ -6,6 +6,7 @@ from collections.abc import Collection
 from dataclasses import dataclass, replace
 from datetime import datetime
 
+from app.domain.errors import DomainError
 from app.domain.models import AuditLogEntry, Comment, DocumentVisibility, RoomRole
 
 MAX_COMMENT_LENGTH = 10_000
@@ -17,27 +18,27 @@ MAX_IMAGES_PER_COMMENT = 4
 COMMENT_VISIBILITY_CHANGED = "comment_visibility_changed"
 
 
-class CommentBodyRequiredError(Exception):
+class CommentBodyRequiredError(DomainError):
     """The Comment body is empty once trimmed."""
 
 
-class CommentTooLongError(Exception):
+class CommentTooLongError(DomainError):
     """The Comment body is over `MAX_COMMENT_LENGTH`."""
 
 
-class NotCommentAuthorError(Exception):
+class NotCommentAuthorError(DomainError):
     """Only a Comment's author may do this."""
 
 
-class CannotDeleteCommentError(Exception):
+class CannotDeleteCommentError(DomainError):
     """Neither the author nor the Master: can't delete the Comment."""
 
 
-class CommentDeletedError(Exception):
+class CommentDeletedError(DomainError):
     """The Comment was already deleted; it can't be changed any more."""
 
 
-class TooManyCommentImagesError(Exception):
+class TooManyCommentImagesError(DomainError):
     """The Comment already has `MAX_IMAGES_PER_COMMENT` images."""
 
 
@@ -57,9 +58,9 @@ def _clean_body(body: str) -> str:
     `MAX_COMMENT_LENGTH`."""
     clean = body.strip()
     if not clean:
-        raise CommentBodyRequiredError("A Comment can't be empty")
+        raise CommentBodyRequiredError("errors.comment.bodyRequired")
     if len(clean) > MAX_COMMENT_LENGTH:
-        raise CommentTooLongError(f"A Comment can be at most {MAX_COMMENT_LENGTH} characters")
+        raise CommentTooLongError("errors.comment.tooLong", max=MAX_COMMENT_LENGTH)
     return clean
 
 
@@ -110,9 +111,9 @@ def plan_comment_edit(
     or its Selective grants produces an audit entry (VR-08, Invariant 7);
     editing only the body does not."""
     if comment.deleted_at is not None:
-        raise CommentDeletedError("This Comment was deleted")
+        raise CommentDeletedError("errors.comment.deleted")
     if comment.author_id != editor_id:
-        raise NotCommentAuthorError("Only the author can edit this Comment")
+        raise NotCommentAuthorError("errors.comment.notAuthor")
 
     updated = replace(
         comment,
@@ -154,9 +155,9 @@ def plan_comment_deletion(
     """FR-T5: deletion leaves a placeholder (the row, emptied) so the
     conversation isn't broken."""
     if comment.deleted_at is not None:
-        raise CommentDeletedError("This Comment was already deleted")
+        raise CommentDeletedError("errors.comment.alreadyDeleted")
     if not can_delete_comment(comment, requester_id, role):
-        raise CannotDeleteCommentError("Only the author or the Master can delete this Comment")
+        raise CannotDeleteCommentError("errors.comment.cannotDelete")
     return replace(comment, body="", deleted_at=now, updated_at=now)
 
 
@@ -166,19 +167,17 @@ def ensure_can_attach_image(
     """Attaching or removing a Comment's images is part of editing the
     Comment, so it follows the same rule: its author only (FR-T5)."""
     if comment.deleted_at is not None:
-        raise CommentDeletedError("This Comment was deleted")
+        raise CommentDeletedError("errors.comment.deleted")
     if comment.author_id != editor_id:
-        raise NotCommentAuthorError("Only the author can change this Comment's images")
+        raise NotCommentAuthorError("errors.comment.notAuthorImages")
     if current_comment_image_count >= MAX_IMAGES_PER_COMMENT:
-        raise TooManyCommentImagesError(
-            f"A Comment can have at most {MAX_IMAGES_PER_COMMENT} images"
-        )
+        raise TooManyCommentImagesError("errors.comment.tooManyImages", max=MAX_IMAGES_PER_COMMENT)
 
 
 def ensure_can_detach_image(comment: Comment, editor_id: uuid.UUID) -> None:
     """Removing an image follows the same rule as attaching one: the author
     only, and never on a deleted Comment (FR-T5)."""
     if comment.deleted_at is not None:
-        raise CommentDeletedError("This Comment was deleted")
+        raise CommentDeletedError("errors.comment.deleted")
     if comment.author_id != editor_id:
-        raise NotCommentAuthorError("Only the author can change this Comment's images")
+        raise NotCommentAuthorError("errors.comment.notAuthorImages")

@@ -4,16 +4,17 @@ import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 
+from app.domain.errors import DomainError
 from app.domain.models import Invitation, Membership, RoomRole
 
 DEFAULT_INVITE_TTL = timedelta(days=7)
 
 
-class InvitationInvalidError(Exception):
+class InvitationInvalidError(DomainError):
     """The invitation has expired or been revoked."""
 
 
-class AlreadyMemberError(Exception):
+class AlreadyMemberError(DomainError):
     """The user accepting the invitation is already a member."""
 
 
@@ -45,9 +46,9 @@ def check_invitation_usable(invitation: Invitation, now: datetime | None = None)
     """UC-04 alternative flow: invalid/expired/revoked invitations are rejected."""
     now = now or datetime.now(UTC)
     if invitation.revoked_at is not None:
-        raise InvitationInvalidError("Invitation has been revoked")
+        raise InvitationInvalidError("errors.invitation.revoked")
     if invitation.expires_at is not None and invitation.expires_at < now:
-        raise InvitationInvalidError("Invitation has expired")
+        raise InvitationInvalidError("errors.invitation.expired")
 
 
 def plan_accepted_membership(
@@ -57,7 +58,7 @@ def plan_accepted_membership(
 ) -> Membership:
     """UC-04: joining grants the invitation's proposed role, default Player-level admin (none)."""
     if already_member:
-        raise AlreadyMemberError("User is already a member of this room")
+        raise AlreadyMemberError("errors.invitation.alreadyMember")
     return Membership(
         id=uuid.uuid4(),
         room_id=invitation.room_id,

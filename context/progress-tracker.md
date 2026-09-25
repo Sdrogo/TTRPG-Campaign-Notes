@@ -173,6 +173,12 @@ Update this file after every meaningful implementation change.
   now count as a default display name.
   Frontend **628/628**, backend **250/250**, build/lint/ruff/mypy clean.
   **Each provider not yet tried end to end against Supabase** (Next Up 0b).
+- **Backend string localization complete** (2026-09-25, backend only,
+  branch `feature/backend_i18n`; spec `context/feature/09_1 - Removing
+  hardcoded strings for backend.md`): every `HTTPException` `detail` the
+  API returns is now rendered from a resource file for the caller's
+  locale, instead of a hardcoded English literal. Backend **269/269**,
+  ruff, mypy strict clean.
 - **UI strings in resource files, Italian + English complete** (2026-09-24,
   frontend only, branch `feature/i18n_ui`; spec `context/feature/09 -
   Removing Hardcoded strings, implement multi lenguage`): every UI string
@@ -185,9 +191,9 @@ Update this file after every meaningful implementation change.
 ## Current Goal
 
 - None set yet for the next unit. Candidates (see Next Up): the rest of
-  Threads (Details, nested replies with D-17) on top of the new `posts`
-  table, or Visibility's remaining pieces (Reveal action + AuditLog,
-  "view as User X").
+  Threads (Details, nested replies with D-17) on top of the `posts` table,
+  or Visibility's remaining pieces (Reveal action + AuditLog, "view as
+  User X").
 
 ## Completed
 
@@ -1274,6 +1280,79 @@ Update this file after every meaningful implementation change.
     to list all five providers; other passages still need a product pass
     (see Open Questions).
 
+- **Backend string localization (2026-09-25, backend only, branch
+  `feature/backend_i18n`, spec `context/feature/09_1 - Removing hardcoded
+  strings for backend.md`):** every hardcoded English string in an API
+  error response is now a translation key, rendered for the caller's
+  locale. Independent of the frontend's own UI language (spec 09, a
+  separate branch not yet merged to `main`) - the two share only a shape,
+  not a mechanism.
+  - **Resource files**: new `backend/app/i18n/locales/{en,it}.json`, one
+    nested tree per locale grouped by area (`errors.room.*`,
+    `errors.document.*`, `errors.comment.*`, `errors.tag.*`,
+    `errors.image.*`, `errors.invitation.*`, `errors.account.*`,
+    `errors.auth.*`), mirroring the frontend's own
+    `src/i18n/locales/*.json` shape (spec 09) without sharing any code.
+    `app/i18n/translator.py::translate(key, locale, **params)` looks up
+    the dotted key, falls back to English on a missing locale or key, and
+    finally to the key itself, so a typo is a readable `detail` rather
+    than a 500. A param value starting with `@` is itself translated
+    first - used once, to localize a profile field's name
+    (`display_name`/`pronouns`/`bio`) before it's interpolated into
+    `ProfileFieldTooLongError`'s message.
+  - **Locale resolution**: `app/i18n/dependencies.py::get_locale` reads
+    the standard `Accept-Language` header (quality-ordered, `it-IT`
+    counts as `it`) and falls back to English - a real HTTP mechanism,
+    not a new custom header, so it works with no frontend change (a
+    browser sends `Accept-Language` on every request already; a UI
+    language picked separately from the browser locale, like the
+    frontend's own flag selector, is not read by the backend - out of
+    scope for a backend-only unit). Exposed as the `LocaleDep`
+    dependency, the same pattern as `CurrentUserDep`.
+  - **Domain exceptions carry a key, not a message**: every domain
+    exception a route can catch (`NotOwnerError`, `CommentTooLongError`,
+    `RemoteImageError`, ... - about 20 in all, across
+    `app/domain/{documents,comments,memberships,invitations,rooms,
+    profiles,images}.py` and `app/db/remote_images.py`) now subclasses
+    new `app/domain/errors.py::DomainError`, storing a `key` and
+    `**params` instead of a rendered English string - keeps
+    `app/domain/` free of any i18n dependency (`code-standards.md`'s
+    framework-independence rule already in place for FastAPI/Supabase).
+    `str(exc)` is just the key, which is what a test now asserts
+    (`exc_info.value.key`) instead of matching English text -
+    `tests/test_remote_images.py`'s one message-matching assertion was
+    updated this way; nothing else in the suite asserted on `detail`
+    text (checked first, before changing anything). New
+    `app/api/errors.py::translated_error`/`http_error` render the
+    response at the one point every route already converts a caught
+    exception (or a plain check like "not a member of this room") into
+    an `HTTPException`.
+  - **Every route threads `locale`**: each route handler gained a
+    `locale: LocaleDep` parameter, and the shared helpers below route
+    level that build their own `HTTPException` (`app/api/access.py`,
+    `app/api/image_uploads.py`, and the private helpers inside
+    `documents.py`/`comments.py`/`account.py`) take `locale: str` as a
+    plain argument instead, since FastAPI only injects dependencies at
+    the route level. Mechanical but touches every router module
+    (`rooms`, `documents`, `comments`, `tags`, `invitations`, `account`)
+    plus `auth/dependencies.py` (401s) - no route's business logic
+    changed, only how its error text is produced.
+  - **Tests**: `tests/test_i18n.py` (mirrors the frontend's own
+    `locales.test.ts`): key parity and `{placeholder}` parity between
+    `en.json`/`it.json`, rendering, interpolation, the locale and
+    unknown-key fallbacks, the `@`-prefixed nested-key convention.
+    `tests/test_i18n_dependencies.py`: `Accept-Language` parsing (quality
+    order, base-language reduction, malformed quality, no header). +19
+    tests; backend ruff, mypy strict and the **full** `pytest` (Postgres
+    integration tests included, run locally against the real Supabase
+    project) **269/269** (250 prior + 19 new). No frontend change: none
+    was needed or asked for.
+  - **Not localized, on purpose**: the default Tags created with a Room
+    (NPC, Place, Event, Artifact; `app/domain/rooms.py::DEFAULT_TAGS`)
+    are stored data, not UI text, same as a Document's name or a
+    Comment's body.
+  - **Docs**: `architecture.md` (new "Backend Message Localization"
+    section), `code-standards.md` (new API Routes rule).
 - **UI strings in resource files + Italian/English** (2026-09-24, spec 09,
   branch `feature/i18n_ui`, frontend only; the user scoped the backend to a
   separate task):
@@ -1387,6 +1466,16 @@ Update this file after every meaningful implementation change.
 
 ## Open Questions
 
+- **Backend locale follows `Accept-Language`, not the frontend's own
+  language picker (new, 2026-09-25, spec 09_1)**: the backend picks the
+  error-message locale from the browser's `Accept-Language` header, which
+  a browser sends automatically - it doesn't know about the frontend's
+  separate flag selector (spec 09, `localStorage` `ttrpg.language`). A
+  user whose browser is in English but who picked Italian in the UI would
+  still see English `detail` text on an API error. Not fixed here (this
+  unit was scoped backend-only): the frontend would need to send its
+  picked language on every request (e.g. as `Accept-Language` itself, or
+  a header the backend also reads) for the two to always agree.
 - **UI language in `requirements.md` (new, 2026-09-24, spec 09)**: the spec
   has no requirement about the UI language or localization. It's written in
   Italian and assumed an Italian UI. The app now ships Italian + English,

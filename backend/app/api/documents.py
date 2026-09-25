@@ -5,7 +5,7 @@ requires Ownership - which the Master always has (D-12)."""
 import uuid
 from collections.abc import Mapping
 
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, UploadFile, status
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +15,7 @@ from app.api.access import (
     get_visible_images_for_documents,
     require_membership,
 )
+from app.api.errors import http_error, translated_error
 from app.api.image_uploads import (
     ImageResponse,
     ensure_room_for_another_image,
@@ -42,6 +43,7 @@ from app.domain.documents import (
 )
 from app.domain.models import Document, DocumentImage, DocumentVisibility, Membership
 from app.domain.visibility import is_document_visible
+from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/documents", tags=["documents"])
 
@@ -128,14 +130,14 @@ async def _to_response(
 
 
 async def _validate_tag_ids(
-    session: AsyncSession, room_id: uuid.UUID, tag_ids: list[uuid.UUID]
+    session: AsyncSession, room_id: uuid.UUID, tag_ids: list[uuid.UUID], locale: str
 ) -> None:
     """422 unless every id is a Tag of this Room - a Document can't be tagged
     with another Room's Tag."""
     found = await tags_repo.get_tags_by_ids(session, room_id, tag_ids)
     if len(found) != len(set(tag_ids)):
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_CONTENT, "One or more tag_ids are invalid for this room"
+        raise http_error(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.document.invalidTagIds", locale
         )
 
 
@@ -145,28 +147,27 @@ async def create_document(
     body: CreateDocumentRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> DocumentResponse:
     """UC-06: creates a Document with the requester as its Owner. 403 when the
     Room has disabled Document creation for Players (D-13, FR-D7)."""
     requester_id = uuid.UUID(current_user.id)
-    membership = await require_membership(session, room_id, requester_id)
+    membership = await require_membership(session, room_id, requester_id, locale)
 
     room = await rooms_repo.get_room(session, room_id)
     if room is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Room not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
     if not can_create_document(membership.role, room.players_can_create_documents):
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN, "Document creation is disabled for Players in this Room"
-        )
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.document.creationDisabled", locale)
 
     try:
         plan = plan_new_document(
             room_id, body.name, body.description, body.visibility, requester_id
         )
     except DocumentNameRequiredError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
-    await _validate_tag_ids(session, room_id, body.tag_ids)
+    await _validate_tag_ids(session, room_id, body.tag_ids, locale)
     await documents_repo.insert_new_document(session, plan, body.tag_ids, body.selective_user_ids)
 
     return await _to_response(session, plan.document, membership)
@@ -174,12 +175,12 @@ async def create_document(
 
 @router.get("")
 async def list_documents(
-    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep
+    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> list[DocumentResponse]:
     """Every Document in the Room the requester can see (VR-07), each with its
     Tags and visible images, in a fixed number of queries."""
     requester_id = uuid.UUID(current_user.id)
-    membership = await require_membership(session, room_id, requester_id)
+    membership = await require_membership(session, room_id, requester_id, locale)
 
     documents = await documents_repo.list_documents_for_room(session, room_id)
     document_ids = [document.id for document in documents]
@@ -225,31 +226,36 @@ async def get_document(
     document_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> DocumentResponse:
     """One Document; 404 whether it doesn't exist or the requester can't see it
     (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
-    membership = await require_membership(session, room_id, requester_id)
+    membership = await require_membership(session, room_id, requester_id, locale)
 
     document, _, _ = await get_visible_document(
-        session, room_id, document_id, requester_id, membership.role
+        session, room_id, document_id, requester_id, membership.role, locale
     )
     return await _to_response(session, document, membership)
 
 
 async def _get_owned_document(
-    session: AsyncSession, room_id: uuid.UUID, document_id: uuid.UUID, requester_id: uuid.UUID
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    requester_id: uuid.UUID,
+    locale: str,
 ) -> tuple[Document, list[uuid.UUID], Membership]:
     """Returns (document, owner_ids, membership) once the requester is known
     to see the Document and to be one of its Owners (D-12)."""
-    membership = await require_membership(session, room_id, requester_id)
+    membership = await require_membership(session, room_id, requester_id, locale)
     document, owner_ids, _ = await get_visible_document(
-        session, room_id, document_id, requester_id, membership.role
+        session, room_id, document_id, requester_id, membership.role, locale
     )
     try:
         ensure_owner(membership.role, requester_id, owner_ids)
     except NotOwnerError as exc:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        raise translated_error(status.HTTP_403_FORBIDDEN, exc, locale) from exc
     return document, owner_ids, membership
 
 
@@ -260,15 +266,20 @@ async def update_document(
     body: UpdateDocumentRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> DocumentResponse:
     """UC-07: an Owner (or the Master, D-12) edits the Document's fields, Tags
     and Selective grants."""
     requester_id = uuid.UUID(current_user.id)
-    document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
+    document, _, membership = await _get_owned_document(
+        session, room_id, document_id, requester_id, locale
+    )
 
     new_name = document.name if body.name is None else body.name.strip()
     if body.name is not None and not new_name:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Document name is required")
+        raise http_error(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.document.nameRequired", locale
+        )
 
     updated = Document(
         id=document.id,
@@ -281,7 +292,7 @@ async def update_document(
     await documents_repo.update_document(session, updated)
 
     if body.tag_ids is not None:
-        await _validate_tag_ids(session, room_id, body.tag_ids)
+        await _validate_tag_ids(session, room_id, body.tag_ids, locale)
         await documents_repo.set_document_tags(session, document_id, body.tag_ids)
 
     if body.selective_user_ids is not None:
@@ -297,14 +308,17 @@ async def upload_document_image(
     file: UploadFile,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> DocumentResponse:
     """An Owner adds an uploaded image, up to `MAX_IMAGES_PER_DOCUMENT` (409
     beyond). The first image becomes the favorite (spec 07)."""
     requester_id = uuid.UUID(current_user.id)
-    document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
-    current_images = await ensure_room_for_another_image(session, document)
+    document, _, membership = await _get_owned_document(
+        session, room_id, document_id, requester_id, locale
+    )
+    current_images = await ensure_room_for_another_image(session, document, locale)
     data = await read_upload(file)
-    await store_image(session, document, requester_id, data, current_images)
+    await store_image(session, document, requester_id, data, current_images, locale=locale)
     return await _to_response(session, document, membership)
 
 
@@ -315,13 +329,16 @@ async def import_document_image(
     body: ImageFromUrlRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> DocumentResponse:
     """Like `upload_document_image`, with the image fetched from a URL."""
     requester_id = uuid.UUID(current_user.id)
-    document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
-    current_images = await ensure_room_for_another_image(session, document)
-    data = await fetch_url(str(body.url))
-    await store_image(session, document, requester_id, data, current_images)
+    document, _, membership = await _get_owned_document(
+        session, room_id, document_id, requester_id, locale
+    )
+    current_images = await ensure_room_for_another_image(session, document, locale)
+    data = await fetch_url(str(body.url), locale)
+    await store_image(session, document, requester_id, data, current_images, locale=locale)
     return await _to_response(session, document, membership)
 
 
@@ -332,16 +349,19 @@ async def delete_document_image(
     image_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> None:
     """An Owner (or the Master) manages every image in the Document's gallery,
     including Comment attachments - but only those they can see."""
     requester_id = uuid.UUID(current_user.id)
-    _, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
+    _, _, membership = await _get_owned_document(
+        session, room_id, document_id, requester_id, locale
+    )
 
     images = await get_visible_images(session, document_id, membership)
     image = next((i for i in images if i.id == image_id), None)
     if image is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Image not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.image.notFound", locale)
     await remove_images(session, [image])
 
 
@@ -352,6 +372,7 @@ async def set_favorite_image(
     image_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> DocumentResponse:
     """Spec 07: an Owner (or the Master, D-12) picks the image that leads the
     Document. Only one at a time, so this clears the previous favorite.
@@ -359,7 +380,9 @@ async def set_favorite_image(
     The image must be one the requester can actually see - otherwise an Owner
     could probe for a Private Comment's attachment by trying ids (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
-    document, _, membership = await _get_owned_document(session, room_id, document_id, requester_id)
+    document, _, membership = await _get_owned_document(
+        session, room_id, document_id, requester_id, locale
+    )
 
     # Locked before the image is read, not just inside `set_favorite_image`:
     # a concurrent delete of this image between the check and the write would
@@ -368,7 +391,7 @@ async def set_favorite_image(
     await documents_repo.lock_document(session, document_id)
     images = await get_visible_images(session, document_id, membership)
     if not any(image.id == image_id for image in images):
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Image not found")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.image.notFound", locale)
 
     await documents_repo.set_favorite_image(session, document_id, image_id)
     return await _to_response(session, document, membership)
@@ -381,22 +404,23 @@ async def add_owner(
     user_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> DocumentResponse:
     """UC-08: an Owner makes another member an Owner too. 404 when the user
     isn't in the Room, 409 when they already own it."""
     requester_id = uuid.UUID(current_user.id)
     document, owner_ids, membership = await _get_owned_document(
-        session, room_id, document_id, requester_id
+        session, room_id, document_id, requester_id, locale
     )
 
     target_membership = await rooms_repo.get_membership(session, room_id, user_id)
     if target_membership is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "User is not a member of this room")
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.membership.notFound", locale)
 
     try:
         new_owner = plan_add_owner(document_id, user_id, owner_ids)
     except AlreadyOwnerError as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
 
     await documents_repo.insert_owner(session, new_owner.document_id, new_owner.user_id)
     return await _to_response(session, document, membership)
@@ -409,16 +433,17 @@ async def remove_owner(
     user_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
+    locale: LocaleDep,
 ) -> None:
     """UC-08: an Owner removes an explicit Owner - themselves included. The
     Master stays an implicit Owner, so a Document is never left unowned
     (D-12)."""
     requester_id = uuid.UUID(current_user.id)
-    _, owner_ids, _ = await _get_owned_document(session, room_id, document_id, requester_id)
+    _, owner_ids, _ = await _get_owned_document(session, room_id, document_id, requester_id, locale)
 
     try:
         ensure_can_remove_owner(user_id, owner_ids)
     except NotAnOwnerError as exc:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        raise translated_error(status.HTTP_404_NOT_FOUND, exc, locale) from exc
 
     await documents_repo.delete_owner(session, document_id, user_id)

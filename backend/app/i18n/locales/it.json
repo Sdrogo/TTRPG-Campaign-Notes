@@ -1,0 +1,80 @@
+{
+  "errors": {
+    "auth": {
+      "missingToken": "Token di autenticazione mancante",
+      "invalidToken": "Token non valido o scaduto"
+    },
+    "room": {
+      "notFound": "Room non trovata",
+      "notAMember": "Non sei un membro di questa Room",
+      "onlyMasterCanChangeSettings": "Solo il Master può modificare le impostazioni di questa Room",
+      "onlyAdministratorCanChangeRoles": "Solo un Amministratore della Room può modificare i ruoli",
+      "onlyAdministratorCanRemoveMembers": "Solo un Amministratore della Room può rimuovere membri",
+      "nameRequired": "Il nome della Room è obbligatorio"
+    },
+    "membership": {
+      "notFound": "L'utente non è membro di questa Room",
+      "lastMaster": "Impossibile rimuovere l'ultimo Master senza indicarne un successore",
+      "lastAdministrator": "Impossibile rimuovere l'ultimo Amministratore senza indicarne un successore",
+      "noChangeRequested": "La richiesta deve modificare il ruolo e/o il flag di amministratore"
+    },
+    "document": {
+      "notFound": "Documento non trovato",
+      "nameRequired": "Il nome del Documento è obbligatorio",
+      "creationDisabled": "La creazione di Documenti è disabilitata per i Player in questa Room",
+      "invalidTagIds": "Uno o più tag_ids non sono validi per questa Room",
+      "notOwner": "Solo un Owner (o il Master) può farlo",
+      "alreadyOwner": "L'utente è già un Owner di questo Documento",
+      "notAnOwner": "L'utente non è un Owner esplicito di questo Documento",
+      "tooManyImages": "Un Documento può avere al massimo {max} immagini"
+    },
+    "comment": {
+      "notFound": "Commento non trovato",
+      "bodyRequired": "Un Commento non può essere vuoto",
+      "tooLong": "Un Commento può avere al massimo {max} caratteri",
+      "notAuthor": "Solo l'autore può modificare questo Commento",
+      "notAuthorImages": "Solo l'autore può modificare le immagini di questo Commento",
+      "cannotDelete": "Solo l'autore o il Master possono eliminare questo Commento",
+      "deleted": "Questo Commento è stato eliminato",
+      "alreadyDeleted": "Questo Commento era già stato eliminato",
+      "tooManyImages": "Un Commento può avere al massimo {max} immagini",
+      "invalidSelectiveUsers": "selective_user_ids deve contenere solo membri di questa Room"
+    },
+    "tag": {
+      "notAllowedToManage": "Solo un Amministratore o il Master possono gestire i Tag",
+      "nameRequired": "Il nome del Tag è obbligatorio",
+      "duplicateName": "Esiste già un Tag con questo nome in questa Room"
+    },
+    "image": {
+      "notFound": "Immagine non trovata",
+      "storageUnavailable": "Lo storage delle immagini non è disponibile",
+      "tooLarge": "L'immagine supera il limite di caricamento di {mb} MB",
+      "dimensionsTooLarge": "Le dimensioni dell'immagine sono troppo grandi",
+      "unsupportedFormat": "Formato immagine non supportato: {format}",
+      "invalidFile": "Il file non è un'immagine valida",
+      "remoteUnsupportedScheme": "Sono supportati solo URL immagine http(s)",
+      "remoteHostUnresolved": "Impossibile risolvere l'host dell'URL dell'immagine",
+      "remoteNonPublic": "L'URL dell'immagine punta a un indirizzo non pubblico",
+      "remoteRedirectNoLocation": "L'URL dell'immagine ha reindirizzato senza indicare una destinazione",
+      "remoteHttpStatus": "L'URL dell'immagine ha restituito HTTP {status}",
+      "remoteTooLarge": "L'immagine all'URL indicato è troppo grande",
+      "remoteDownloadFailed": "Impossibile scaricare l'immagine dall'URL",
+      "remoteTooManyRedirects": "L'URL dell'immagine ha reindirizzato troppe volte"
+    },
+    "invitation": {
+      "notFound": "Invito non trovato",
+      "revoked": "L'invito è stato revocato",
+      "expired": "L'invito è scaduto",
+      "alreadyMember": "L'utente è già membro di questa Room",
+      "onlyAdministratorCanInvite": "Solo un Amministratore della Room può creare inviti"
+    },
+    "account": {
+      "fields": {
+        "display_name": "Nome visualizzato",
+        "pronouns": "Pronomi",
+        "bio": "Biografia"
+      },
+      "fieldTooLong": "{field} deve avere al massimo {max} caratteri"
+    }
+  }
+}

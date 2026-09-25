@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 
 import httpx
 
+from app.domain.errors import DomainError
 from app.domain.images import MAX_INPUT_BYTES
 
 MAX_REDIRECTS = 3
@@ -17,9 +18,9 @@ TIMEOUT_SECONDS = 10
 IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 
-class RemoteImageError(Exception):
+class RemoteImageError(DomainError):
     """The URL can't be fetched safely, or didn't return an image within the
-    limits. The message is safe to show to the user."""
+    limits. The key is safe to translate and show to the user."""
 
 
 async def _resolve_public_address(url: httpx.URL) -> IPAddress:
@@ -33,24 +34,24 @@ async def _resolve_public_address(url: httpx.URL) -> IPAddress:
     second time, which a short-TTL DNS record could answer differently
     (DNS rebinding)."""
     if url.scheme not in ("http", "https") or not url.raw_host:
-        raise RemoteImageError("Only http(s) image URLs are supported")
+        raise RemoteImageError("errors.image.remoteUnsupportedScheme")
 
     try:
         infos = await asyncio.get_running_loop().getaddrinfo(
             url.raw_host.decode("ascii"), url.port, type=socket.SOCK_STREAM
         )
     except socket.gaierror as exc:
-        raise RemoteImageError("Could not resolve the image URL's host") from exc
+        raise RemoteImageError("errors.image.remoteHostUnresolved") from exc
 
     addresses: list[IPAddress] = []
     for info in infos:
         # Strip an IPv6 zone id ("fe80::1%eth0"), which ip_address rejects.
         address = ipaddress.ip_address(str(info[4][0]).split("%", 1)[0])
         if not address.is_global:
-            raise RemoteImageError("Image URL points to a non-public address")
+            raise RemoteImageError("errors.image.remoteNonPublic")
         addresses.append(address)
     if not addresses:
-        raise RemoteImageError("Could not resolve the image URL's host")
+        raise RemoteImageError("errors.image.remoteHostUnresolved")
     return addresses[0]
 
 
@@ -85,7 +86,7 @@ async def fetch_image_bytes(url: str, transport: httpx.AsyncBaseTransport | None
             try:
                 parsed = httpx.URL(current)
             except httpx.InvalidURL as exc:
-                raise RemoteImageError("Only http(s) image URLs are supported") from exc
+                raise RemoteImageError("errors.image.remoteUnsupportedScheme") from exc
             address = await _resolve_public_address(parsed)
             request = _pinned_request(client, parsed, address, headers)
             try:
@@ -94,24 +95,26 @@ async def fetch_image_bytes(url: str, transport: httpx.AsyncBaseTransport | None
                     if response.is_redirect:
                         location = response.headers.get("location")
                         if not location:
-                            raise RemoteImageError("Image URL redirected without a location")
+                            raise RemoteImageError("errors.image.remoteRedirectNoLocation")
                         # Resolved against the original URL, not the pinned
                         # IP one, so the next hop is validated by name again.
                         current = urljoin(current, location)
                         continue
                     if response.is_error:
-                        raise RemoteImageError(f"Image URL returned HTTP {response.status_code}")
+                        raise RemoteImageError(
+                            "errors.image.remoteHttpStatus", status=response.status_code
+                        )
 
                     chunks: list[bytes] = []
                     received = 0
                     async for chunk in response.aiter_bytes():
                         received += len(chunk)
                         if received > MAX_INPUT_BYTES:
-                            raise RemoteImageError("Image at URL is too large")
+                            raise RemoteImageError("errors.image.remoteTooLarge")
                         chunks.append(chunk)
                     return b"".join(chunks)
                 finally:
                     await response.aclose()
             except httpx.HTTPError as exc:
-                raise RemoteImageError("Could not download the image URL") from exc
-    raise RemoteImageError("Image URL redirected too many times")
+                raise RemoteImageError("errors.image.remoteDownloadFailed") from exc
+    raise RemoteImageError("errors.image.remoteTooManyRedirects")

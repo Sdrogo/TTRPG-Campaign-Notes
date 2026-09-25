@@ -7,6 +7,7 @@ import uuid
 from dataclasses import dataclass, replace
 from urllib.parse import urlsplit
 
+from app.domain.errors import DomainError
 from app.domain.images import AVATAR_DIMENSION, OUTPUT_EXTENSION
 from app.domain.models import UserProfile
 
@@ -23,12 +24,18 @@ _WHITESPACE_RUN = re.compile(r"\s+")
 _GOOGLE_SIZE_OPTION = re.compile(r"=s\d+(-c)?$")
 
 
-class ProfileFieldTooLongError(Exception):
+class ProfileFieldTooLongError(DomainError):
     """A profile field is over its length limit. `field` names it, so the API
     can report which one."""
 
     def __init__(self, field: str, max_length: int) -> None:
-        super().__init__(f"{field} must be at most {max_length} characters")
+        # `field` is the internal snake_case name (`display_name`, ...);
+        # `@errors.account.fields.<field>` is translated to a human label
+        # before it's interpolated into `fieldTooLong` (see
+        # `app/i18n/translator.py::translate`'s `@`-prefix convention).
+        super().__init__(
+            "errors.account.fieldTooLong", field=f"@errors.account.fields.{field}", max=max_length
+        )
         self.field = field
 
 
