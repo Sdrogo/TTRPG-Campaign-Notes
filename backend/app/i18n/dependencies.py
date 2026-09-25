@@ -27,7 +27,9 @@ def _preferred_locales(header: str) -> list[str]:
             except ValueError:
                 quality = 1.0
         base = tag.strip().split("-")[0].lower()
-        if base:
+        # q=0 explicitly means "not acceptable" (RFC 7231 §5.3.1), not just
+        # low priority - it must be excluded, not merely sorted last.
+        if base and 0 < quality <= 1.0:
             tagged.append((quality, position, base))
     tagged.sort(key=lambda item: (-item[0], item[1]))
     return [base for _, _, base in tagged]
