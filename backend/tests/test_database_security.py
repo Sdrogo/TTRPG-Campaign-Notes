@@ -3,6 +3,8 @@ must be backend-only (RLS on, an explicit deny policy, no privileges for the
 client roles), including tables added by future migrations. See migrations
 c9d4e7b1f352 and f1c8a2e6d493."""
 
+from collections.abc import Sequence
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,6 +74,7 @@ async def test_new_tables_are_not_granted_to_client_roles(db_session: AsyncSessi
     # `defaclacl` is NULL when no default ACL was ever set for that
     # (role, object type) pair - the safe case, not a leak - so it's
     # filtered out before the substring check rather than stringified.
-    acls = [str(row) for row in result.scalars() if row is not None]
+    rows: Sequence[str | None] = result.scalars().all()
+    acls = [row for row in rows if row is not None]
     leaks = [acl for acl in acls if any(f"{role}=" in acl for role in CLIENT_ROLES)]
     assert leaks == []
