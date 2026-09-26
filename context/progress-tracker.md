@@ -4,6 +4,9 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
+- **Accent tokens synced** (2026-09-26, frontend only): the CSS primary
+  and strong accents now match Mantine's red shades 6 and 5, including
+  the filled favorite-image heart.
 - **Setup + Auth unit complete** (2026-09-21).
 - **Rooms + Membership unit complete** (2026-09-21).
 - **Manage members/roles unit complete** (2026-09-21).
