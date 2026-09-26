@@ -202,9 +202,16 @@ Update this file after every meaningful implementation change.
   cascades its Tags, Owners and Comments at the database level, but its
   images are removed through the normal `image_uploads.remove_images`
   path first, since the cascade alone would orphan their Storage objects.
-  Frontend **703/703**, backend **275/275**, builds/lint/mypy/ruff clean.
-  The `PC` backfill migration for *existing* Rooms is written but **not
-  yet applied to the live DB** (Next Up).
+  Also fixes a stale-closure bug in inline Tag creation (a Name/
+  Description edit made while a Tag was still being created got silently
+  overwritten) and makes `PageLayout`'s "back" button prefer real browser
+  history over a fixed destination, falling back to it only when there's
+  none. Each grouped section can also be collapsed/expanded by clicking
+  its header (a small arrow shows the state). Frontend **710/710**,
+  backend **275/275**, builds/lint/mypy/ruff clean. **Both PC-tag
+  migrations (`d8a2f5c1b976`, `f3b8e2a71c94`) applied to the live
+  Supabase DB** (2026-09-26, with the user's go-ahead each time; see
+  Completed).
 
 ## Current Goal
 
@@ -1570,6 +1577,79 @@ Update this file after every meaningful implementation change.
       the `useNavigate` mock pattern from `RoomMembersPage.test.tsx`).
       `npm test` **703/703**, coverage floors still held with no change
       needed. `npm run build` and `npm run lint` both pass.
+  - **Bug fix (review finding, confirmed valid)**: `DocumentFields`'
+    inline Tag creation closed over the `values` prop captured when
+    "Aggiungi" was clicked, then spread it wholesale back through
+    `onChange` once the (async) creation resolved — a Name/Description
+    edit made while that request was in flight was silently overwritten.
+    `onChange` now also accepts a functional update (both callers already
+    pass `useState`'s setter directly, so neither needed a change), and
+    `onCreated` appends the new Tag id to whatever the form holds *then*.
+    New regression test in `CreateDocumentModal.test.tsx` types into Name
+    while a Tag creation is deliberately held pending; mutation-checked by
+    reverting the fix and confirming the test fails (blank name) before
+    restoring it. `npm test` **704/704**.
+  - **Smart "back" button** (added to this same spec/branch, user request
+    with a screenshot): `PageLayout`'s back button used to always link to
+    a fixed `backTo` destination (e.g. always "Le mie Stanze" from the
+    Documents list) rather than wherever the user actually came from. It's
+    now a button, not a `Link`: `PageLayout::hasAppHistory` checks
+    `window.history.state.idx` (set by React Router's `BrowserHistory`,
+    `0` for the very first entry it created) and calls `navigate(-1)`
+    when there's at least one in-app entry behind this page, falling back
+    to `navigate(backTo)` only when there isn't (a bookmark, a shared
+    link, a fresh tab) — otherwise `navigate(-1)` could exit the SPA
+    entirely, to whatever page originally linked into it. `FullPageMessage`
+    ("Torna ai Documenti", the not-found/error recovery action) is
+    unchanged - that's a fixed call-to-action, not a "back" - deliberately
+    not touched. Tested both branches directly in `layout.test.tsx` by
+    seeding `window.history.state` with `pushState`/`replaceState` (a real
+    jsdom API, unlike `MemoryRouter`'s own history which never touches
+    `window.history`); `DocumentDetailPage.test.tsx`'s existing back-link
+    test converted to a click + `navigate` assertion the same way. `npm
+    test` **706/706**, `npm run build` and `npm run lint` both pass.
+  - **PC-tag migrations applied to the live Supabase DB** (2026-09-26,
+    user report: an existing Room's Documents list never grouped anything
+    under "#PC" after this shipped). `alembic current` showed the live DB
+    one revision behind head (`a4f7b2c8e015`), with `d8a2f5c1b976` the
+    only pending migration — confirmed with the user before running
+    `alembic upgrade head`. Verified after: all 3 live Rooms now have a
+    `PC` Tag. But one, "Bassifondi Scarlatti", already had a Tag literally
+    named `PC` from before this feature (its NPC/Place/Event/Artifact Tags
+    all had `category = 'Type'`; only `PC` had `category = NULL`) — the
+    backfill migration only inserts a *missing* `PC` Tag, so it correctly
+    left this one alone rather than violating the `(room_id, name)`
+    uniqueness constraint, but that meant it still wasn't a Main Tag.
+    New migration `f3b8e2a71c94` (confirmed with the user separately,
+    since it's a distinct write not covered by the first confirmation):
+    `UPDATE tags SET category = 'Type' WHERE name = 'PC' AND category IS
+    DISTINCT FROM 'Type'`, applied and verified the same way. Backend
+    ruff and mypy strict clean; no domain/test changes needed (pure data
+    fix, same pattern as `d3e8a1f4c2b7`). Both migrations, plus the two
+    frontend commits from earlier in this same session, ended up on
+    `feature/ux_refinement` after PR #19 had already merged (see Session
+    Notes) — opened as PR #20 instead of a fresh branch, since GitHub
+    diffs it against `main` correctly regardless.
+  - **Collapsible groups** (2026-09-26, user request, same PR #20): each
+    group's `Title` now wraps a clickable row (`CaretDownIcon`/
+    `CaretRightIcon` at 16px, then the label) that toggles a Mantine
+    `Collapse` around that group's grid, `aria-expanded` reflecting the
+    state; every group starts expanded, and collapsing one doesn't affect
+    the others (per-group `Set<string>` state in `DocumentsGrid`, not
+    persisted). Along the way, restored `RoomDocumentsPage`'s top toolbar
+    to its tested structure (Title+"Crea Documento" in one row, the
+    Master's Switch on its own line, the filter/group/sort row on its
+    own) — an in-progress, seemingly accidental edit had nested the
+    Switch and the filter row inside the title's row; flagged to the user
+    first, left untouched pending a response, then folded the restore
+    into this same change since nothing came back and the file needed
+    editing anyway for the new feature. +4 tests (starts expanded,
+    collapses and hides its Documents, re-expands, groups are
+    independent); one needed `waitFor` around a `toBeVisible()`
+    assertion right after re-expanding — Mantine's `Collapse` visibility
+    update doesn't land synchronously with the click in this version.
+    `npm test` **710/710**, coverage floors held, `npm run build` and
+    `npm run lint` both pass.
 
 ## In Progress
 
@@ -1586,12 +1666,9 @@ Update this file after every meaningful implementation change.
   Place, Event, Artifact; `app/domain/rooms.py::DEFAULT_TAGS`) are stored
   data in English, not UI text. Decide whether new Rooms should get them in
   the creator's language.
-- **Apply the PC-tag migration to the live Supabase DB** (`d8a2f5c1b976`,
-  spec 10): backfills a `PC` Tag into every existing Room. Not run yet —
-  it's a real write to production data, so it needs `alembic upgrade
-  head` run deliberately (with the user's go-ahead), not as a side effect
-  of a code review. New Rooms already get it from `DEFAULT_TAGS` once this
-  branch merges; only existing Rooms need the backfill.
+- ~~Apply the PC-tag migration to the live Supabase DB~~ — resolved
+  2026-09-26: both `d8a2f5c1b976` and its follow-up `f3b8e2a71c94` are
+  applied (see Completed).
 - **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only, no code):
   set it to `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app`
   and redeploy. Then the look-alike
@@ -1801,6 +1878,18 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes
 
+- **PR #19 was merged mid-session without this session noticing**
+  (2026-09-26): the UX-refinement PR was merged (presumably by the user,
+  via GitHub) shortly after it was opened, but this session kept pushing
+  follow-up commits (a bug fix, the smart back button) to the same
+  `feature/ux_refinement` branch under the assumption it was still open —
+  it wasn't checked again after the first push. Those commits, plus the
+  two PC-tag migrations from the same session, are real and tested but
+  **not yet in `main`** and need a fresh PR from that branch. Lesson: when
+  resuming work on a branch across turns (especially after a gap, or
+  after being told to "fold this into the same task"), re-check the PR's
+  merge state (`gh pr view <n> --json state,mergedAt`) rather than
+  assuming it's still open.
 - Full product spec with stable IDs lives in `context/requirements.md`
   (v0.3 as of 2026-09-21) — every other context file cross-references
   it by ID (`D-`, `FR-`, `UC-`, `VR-`, `I-`, `OQ-`). Read it first when

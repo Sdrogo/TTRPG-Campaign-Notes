@@ -1,7 +1,19 @@
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Group, Title, Button, Select, SimpleGrid, Stack, Text, Loader, Switch } from '@mantine/core';
-import { PlusIcon } from '@phosphor-icons/react';
+import {
+  Collapse,
+  Group,
+  Title,
+  Button,
+  Select,
+  SimpleGrid,
+  Stack,
+  Text,
+  Loader,
+  Switch,
+  UnstyledButton,
+} from '@mantine/core';
+import { CaretDownIcon, CaretRightIcon, PlusIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
 import { useTags } from '../hooks/useTags';
@@ -194,6 +206,17 @@ function DocumentsGrid({
   groupBy: DocumentGroupBy;
 }) {
   const { t } = useTranslation();
+  // Which group keys are collapsed; everything starts expanded. Not
+  // persisted - a reload or a `groupBy`/sort change is a fresh page.
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const toggleGroup = (key: string) =>
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
   const cards = (list: Document[]) => (
     <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
       {list.map((document) => (
@@ -209,14 +232,31 @@ function DocumentsGrid({
   const groups = groupDocumentsByMainTag(documents, tags);
   return (
     <Stack gap="lg">
-      {groups.map((group) => (
-        <Stack key={group.tag?.id ?? 'ungrouped'} gap="xs">
-          <Title order={5} c="dimmed" style={{ fontFamily: 'var(--font-display)' }}>
-            {group.tag ? `#${group.tag.name}` : t('documents.ungroupedTag')}
-          </Title>
-          {cards(group.documents)}
-        </Stack>
-      ))}
+      {groups.map((group) => {
+        const key = group.tag?.id ?? 'ungrouped';
+        const isExpanded = !collapsed.has(key);
+        const label = group.tag ? `#${group.tag.name}` : t('documents.ungroupedTag');
+        return (
+          <Stack key={key} gap="xs">
+            <Title order={5} style={{ fontFamily: 'var(--font-display)' }}>
+              <UnstyledButton
+                onClick={() => toggleGroup(key)}
+                aria-expanded={isExpanded}
+                c="dimmed"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                {isExpanded ? (
+                  <CaretDownIcon size={16} aria-hidden="true" />
+                ) : (
+                  <CaretRightIcon size={16} aria-hidden="true" />
+                )}
+                {label}
+              </UnstyledButton>
+            </Title>
+            <Collapse expanded={isExpanded}>{cards(group.documents)}</Collapse>
+          </Stack>
+        );
+      })}
     </Stack>
   );
 }
