@@ -8,7 +8,11 @@ import { useTranslation } from 'react-i18next';
 
 interface DocumentFieldsProps {
   values: DocumentFormValues;
-  onChange: (values: DocumentFormValues) => void;
+  /** Accepts a functional update too (like `useState`'s setter, which both
+   *  callers pass directly) - `onCreated` below relies on that form so a
+   *  Tag created while the user keeps typing doesn't clobber those edits
+   *  with the stale `values` this component was last rendered with. */
+  onChange: (update: DocumentFormValues | ((previous: DocumentFormValues) => DocumentFormValues)) => void;
   tags: Tag[];
   roomId: string;
   /** Whether the viewer may create a Tag here (Administrator or Master,
@@ -64,7 +68,13 @@ export function DocumentFields({
       {canCreateTag && (
         <TagCreateInline
           roomId={roomId}
-          onCreated={(tag) => set({ tagIds: [...values.tagIds, tag.id] })}
+          // Functional update: creation is async, so `values` here could be
+          // stale by the time it resolves - appending to whatever the form
+          // holds *then* keeps a Name/Description edit made while it was
+          // pending instead of overwriting it with this render's snapshot.
+          onCreated={(tag) =>
+            onChange((previous) => ({ ...previous, tagIds: [...previous.tagIds, tag.id] }))
+          }
           onPendingChange={onTagCreatePendingChange}
         />
       )}

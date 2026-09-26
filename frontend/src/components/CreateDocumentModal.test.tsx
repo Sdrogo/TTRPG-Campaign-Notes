@@ -179,4 +179,43 @@ describe('adding a Tag inline', () => {
 
     await waitFor(() => expect(submit()).toBeDisabled());
   });
+
+  // Tag creation is async: without a functional state update, a Name/
+  // Description edit made while it's in flight would be overwritten by the
+  // stale `values` the create handler closed over when it was clicked.
+  it('keeps a Name edit made while a Tag is still being created', async () => {
+    const { user } = render();
+    await tagsLoaded();
+
+    let resolveCreateTag: (value: unknown) => void = () => {};
+    fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
+      if (path.endsWith('/tags') && init?.method === 'POST') {
+        return new Promise((resolve) => {
+          resolveCreateTag = resolve;
+        });
+      }
+      if (path.endsWith('/tags')) return Promise.resolve(routes.tags);
+      return Promise.resolve(routes.createDocument);
+    });
+
+    await user.type(nameField(), 'Il Cancello');
+    await user.type(tagField(), 'Fazione');
+    await user.click(addTag());
+
+    // The edit happens while the Tag is still being created.
+    await user.type(nameField(), '!');
+    resolveCreateTag(routes.createTag);
+    await waitFor(() => expect(submit()).toBeEnabled());
+
+    await user.click(submit());
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/rooms/room-1/documents',
+        expect.objectContaining({
+          json: expect.objectContaining({ name: 'Il Cancello!', tag_ids: ['tag-9'] }),
+        }),
+      ),
+    );
+  });
 });
