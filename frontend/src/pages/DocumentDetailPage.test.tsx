@@ -73,6 +73,9 @@ beforeEach(() => {
   vi.mocked(notifyError).mockClear();
   sessionMock.mockReturnValue({ session: fakeSession('user-1'), loading: false } as SessionState);
   mockApi();
+  // jsdom's `window.history` persists across tests in this file (MemoryRouter
+  // never touches it), so the "back" button's history check starts clean.
+  window.history.replaceState(null, '', '/');
 });
 
 describe('DocumentDetailPage', () => {
@@ -132,14 +135,13 @@ describe('DocumentDetailPage', () => {
     );
   });
 
-  it('links back to the Room\'s Documents', async () => {
-    render();
+  it('goes back to the Room\'s Documents', async () => {
+    const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
-    expect(screen.getByRole('link', { name: 'Documenti' })).toHaveAttribute(
-      'href',
-      '/rooms/room-1/documents',
-    );
+    await user.click(screen.getByRole('button', { name: 'Documenti' }));
+
+    expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents');
   });
 
   it('shows the Comment section', async () => {

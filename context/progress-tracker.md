@@ -202,9 +202,13 @@ Update this file after every meaningful implementation change.
   cascades its Tags, Owners and Comments at the database level, but its
   images are removed through the normal `image_uploads.remove_images`
   path first, since the cascade alone would orphan their Storage objects.
-  Frontend **703/703**, backend **275/275**, builds/lint/mypy/ruff clean.
-  The `PC` backfill migration for *existing* Rooms is written but **not
-  yet applied to the live DB** (Next Up).
+  Also fixes a stale-closure bug in inline Tag creation (a Name/
+  Description edit made while a Tag was still being created got silently
+  overwritten) and makes `PageLayout`'s "back" button prefer real browser
+  history over a fixed destination, falling back to it only when there's
+  none. Frontend **706/706**, backend **275/275**, builds/lint/mypy/ruff
+  clean. The `PC` backfill migration for *existing* Rooms is written but
+  **not yet applied to the live DB** (Next Up).
 
 ## Current Goal
 
@@ -1570,6 +1574,37 @@ Update this file after every meaningful implementation change.
       the `useNavigate` mock pattern from `RoomMembersPage.test.tsx`).
       `npm test` **703/703**, coverage floors still held with no change
       needed. `npm run build` and `npm run lint` both pass.
+  - **Bug fix (review finding, confirmed valid)**: `DocumentFields`'
+    inline Tag creation closed over the `values` prop captured when
+    "Aggiungi" was clicked, then spread it wholesale back through
+    `onChange` once the (async) creation resolved — a Name/Description
+    edit made while that request was in flight was silently overwritten.
+    `onChange` now also accepts a functional update (both callers already
+    pass `useState`'s setter directly, so neither needed a change), and
+    `onCreated` appends the new Tag id to whatever the form holds *then*.
+    New regression test in `CreateDocumentModal.test.tsx` types into Name
+    while a Tag creation is deliberately held pending; mutation-checked by
+    reverting the fix and confirming the test fails (blank name) before
+    restoring it. `npm test` **704/704**.
+  - **Smart "back" button** (added to this same spec/branch, user request
+    with a screenshot): `PageLayout`'s back button used to always link to
+    a fixed `backTo` destination (e.g. always "Le mie Stanze" from the
+    Documents list) rather than wherever the user actually came from. It's
+    now a button, not a `Link`: `PageLayout::hasAppHistory` checks
+    `window.history.state.idx` (set by React Router's `BrowserHistory`,
+    `0` for the very first entry it created) and calls `navigate(-1)`
+    when there's at least one in-app entry behind this page, falling back
+    to `navigate(backTo)` only when there isn't (a bookmark, a shared
+    link, a fresh tab) — otherwise `navigate(-1)` could exit the SPA
+    entirely, to whatever page originally linked into it. `FullPageMessage`
+    ("Torna ai Documenti", the not-found/error recovery action) is
+    unchanged - that's a fixed call-to-action, not a "back" - deliberately
+    not touched. Tested both branches directly in `layout.test.tsx` by
+    seeding `window.history.state` with `pushState`/`replaceState` (a real
+    jsdom API, unlike `MemoryRouter`'s own history which never touches
+    `window.history`); `DocumentDetailPage.test.tsx`'s existing back-link
+    test converted to a click + `navigate` assertion the same way. `npm
+    test` **706/706**, `npm run build` and `npm run lint` both pass.
 
 ## In Progress
 
