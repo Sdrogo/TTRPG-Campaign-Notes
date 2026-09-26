@@ -267,6 +267,12 @@ other icon set.
   none) above its own `SimpleGrid`; a Document with several Main Tags
   appears under each one. "Nessun raggruppamento" collapses back to the
   single flat grid spec 07 already had.
+  **Each group collapses independently** (2026-09-26): its `Title` wraps a
+  clickable row (a `CaretDownIcon`/`CaretRightIcon` at 16px, then the
+  label) that toggles a Mantine `Collapse` around that group's grid —
+  `aria-expanded` on the button reflects the state. Every group starts
+  expanded; collapsing one doesn't affect the others, and the state isn't
+  persisted (a reload starts fresh).
 - **Glossary Index** (`GlossaryIndexDrawer`, 2026-09-25, spec 10): a
   left-anchored Mantine `Drawer`, toggled by a `Burger` on the right of
   `AppHeader` (next to the account avatar) — shown only on a Room-scoped

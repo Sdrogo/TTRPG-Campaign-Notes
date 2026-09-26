@@ -206,10 +206,12 @@ Update this file after every meaningful implementation change.
   Description edit made while a Tag was still being created got silently
   overwritten) and makes `PageLayout`'s "back" button prefer real browser
   history over a fixed destination, falling back to it only when there's
-  none. Frontend **706/706**, backend **275/275**, builds/lint/mypy/ruff
-  clean. **Both PC-tag migrations (`d8a2f5c1b976`, `f3b8e2a71c94`) applied
-  to the live Supabase DB** (2026-09-26, with the user's go-ahead each
-  time; see Completed).
+  none. Each grouped section can also be collapsed/expanded by clicking
+  its header (a small arrow shows the state). Frontend **710/710**,
+  backend **275/275**, builds/lint/mypy/ruff clean. **Both PC-tag
+  migrations (`d8a2f5c1b976`, `f3b8e2a71c94`) applied to the live
+  Supabase DB** (2026-09-26, with the user's go-ahead each time; see
+  Completed).
 
 ## Current Goal
 
@@ -1623,10 +1625,31 @@ Update this file after every meaningful implementation change.
     `UPDATE tags SET category = 'Type' WHERE name = 'PC' AND category IS
     DISTINCT FROM 'Type'`, applied and verified the same way. Backend
     ruff and mypy strict clean; no domain/test changes needed (pure data
-    fix, same pattern as `d3e8a1f4c2b7`). Both migrations are only on the
-    `feature/ux_refinement` branch as of this writing (PR #19 had already
-    merged before this session continued on it — see Session Notes) and
-    need a new PR to reach `main`.
+    fix, same pattern as `d3e8a1f4c2b7`). Both migrations, plus the two
+    frontend commits from earlier in this same session, ended up on
+    `feature/ux_refinement` after PR #19 had already merged (see Session
+    Notes) — opened as PR #20 instead of a fresh branch, since GitHub
+    diffs it against `main` correctly regardless.
+  - **Collapsible groups** (2026-09-26, user request, same PR #20): each
+    group's `Title` now wraps a clickable row (`CaretDownIcon`/
+    `CaretRightIcon` at 16px, then the label) that toggles a Mantine
+    `Collapse` around that group's grid, `aria-expanded` reflecting the
+    state; every group starts expanded, and collapsing one doesn't affect
+    the others (per-group `Set<string>` state in `DocumentsGrid`, not
+    persisted). Along the way, restored `RoomDocumentsPage`'s top toolbar
+    to its tested structure (Title+"Crea Documento" in one row, the
+    Master's Switch on its own line, the filter/group/sort row on its
+    own) — an in-progress, seemingly accidental edit had nested the
+    Switch and the filter row inside the title's row; flagged to the user
+    first, left untouched pending a response, then folded the restore
+    into this same change since nothing came back and the file needed
+    editing anyway for the new feature. +4 tests (starts expanded,
+    collapses and hides its Documents, re-expands, groups are
+    independent); one needed `waitFor` around a `toBeVisible()`
+    assertion right after re-expanding — Mantine's `Collapse` visibility
+    update doesn't land synchronously with the click in this version.
+    `npm test` **710/710**, coverage floors held, `npm run build` and
+    `npm run lint` both pass.
 
 ## In Progress
 
