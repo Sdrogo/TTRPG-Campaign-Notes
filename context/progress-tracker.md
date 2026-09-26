@@ -207,8 +207,9 @@ Update this file after every meaningful implementation change.
   overwritten) and makes `PageLayout`'s "back" button prefer real browser
   history over a fixed destination, falling back to it only when there's
   none. Frontend **706/706**, backend **275/275**, builds/lint/mypy/ruff
-  clean. The `PC` backfill migration for *existing* Rooms is written but
-  **not yet applied to the live DB** (Next Up).
+  clean. **Both PC-tag migrations (`d8a2f5c1b976`, `f3b8e2a71c94`) applied
+  to the live Supabase DB** (2026-09-26, with the user's go-ahead each
+  time; see Completed).
 
 ## Current Goal
 
@@ -1605,6 +1606,27 @@ Update this file after every meaningful implementation change.
     `window.history`); `DocumentDetailPage.test.tsx`'s existing back-link
     test converted to a click + `navigate` assertion the same way. `npm
     test` **706/706**, `npm run build` and `npm run lint` both pass.
+  - **PC-tag migrations applied to the live Supabase DB** (2026-09-26,
+    user report: an existing Room's Documents list never grouped anything
+    under "#PC" after this shipped). `alembic current` showed the live DB
+    one revision behind head (`a4f7b2c8e015`), with `d8a2f5c1b976` the
+    only pending migration — confirmed with the user before running
+    `alembic upgrade head`. Verified after: all 3 live Rooms now have a
+    `PC` Tag. But one, "Bassifondi Scarlatti", already had a Tag literally
+    named `PC` from before this feature (its NPC/Place/Event/Artifact Tags
+    all had `category = 'Type'`; only `PC` had `category = NULL`) — the
+    backfill migration only inserts a *missing* `PC` Tag, so it correctly
+    left this one alone rather than violating the `(room_id, name)`
+    uniqueness constraint, but that meant it still wasn't a Main Tag.
+    New migration `f3b8e2a71c94` (confirmed with the user separately,
+    since it's a distinct write not covered by the first confirmation):
+    `UPDATE tags SET category = 'Type' WHERE name = 'PC' AND category IS
+    DISTINCT FROM 'Type'`, applied and verified the same way. Backend
+    ruff and mypy strict clean; no domain/test changes needed (pure data
+    fix, same pattern as `d3e8a1f4c2b7`). Both migrations are only on the
+    `feature/ux_refinement` branch as of this writing (PR #19 had already
+    merged before this session continued on it — see Session Notes) and
+    need a new PR to reach `main`.
 
 ## In Progress
 
@@ -1621,12 +1643,9 @@ Update this file after every meaningful implementation change.
   Place, Event, Artifact; `app/domain/rooms.py::DEFAULT_TAGS`) are stored
   data in English, not UI text. Decide whether new Rooms should get them in
   the creator's language.
-- **Apply the PC-tag migration to the live Supabase DB** (`d8a2f5c1b976`,
-  spec 10): backfills a `PC` Tag into every existing Room. Not run yet —
-  it's a real write to production data, so it needs `alembic upgrade
-  head` run deliberately (with the user's go-ahead), not as a side effect
-  of a code review. New Rooms already get it from `DEFAULT_TAGS` once this
-  branch merges; only existing Rooms need the backfill.
+- ~~Apply the PC-tag migration to the live Supabase DB~~ — resolved
+  2026-09-26: both `d8a2f5c1b976` and its follow-up `f3b8e2a71c94` are
+  applied (see Completed).
 - **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only, no code):
   set it to `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app`
   and redeploy. Then the look-alike
@@ -1836,6 +1855,18 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes
 
+- **PR #19 was merged mid-session without this session noticing**
+  (2026-09-26): the UX-refinement PR was merged (presumably by the user,
+  via GitHub) shortly after it was opened, but this session kept pushing
+  follow-up commits (a bug fix, the smart back button) to the same
+  `feature/ux_refinement` branch under the assumption it was still open —
+  it wasn't checked again after the first push. Those commits, plus the
+  two PC-tag migrations from the same session, are real and tested but
+  **not yet in `main`** and need a fresh PR from that branch. Lesson: when
+  resuming work on a branch across turns (especially after a gap, or
+  after being told to "fold this into the same task"), re-check the PR's
+  merge state (`gh pr view <n> --json state,mergedAt`) rather than
+  assuming it's still open.
 - Full product spec with stable IDs lives in `context/requirements.md`
   (v0.3 as of 2026-09-21) — every other context file cross-references
   it by ID (`D-`, `FR-`, `UC-`, `VR-`, `I-`, `OQ-`). Read it first when
