@@ -47,7 +47,7 @@ export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
             { value: 'master', label: t('roles.master') },
           ]}
           value={role}
-          onChange={(value) => setRole((value as RoomRole | null) ?? 'player')}
+          onChange={(value) => value && setRole(value as RoomRole)}
           disabled={Boolean(inviteUrl)}
           allowDeselect={false}
         />
@@ -67,7 +67,11 @@ export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
             <CopyButton value={inviteUrl}>
               {({ copied, copy }) => (
                 <Tooltip label={copied ? t('common.copied') : t('common.copy')}>
-                  <ActionIcon variant="light" onClick={copy}>
+                  <ActionIcon
+                    variant="light"
+                    onClick={copy}
+                    aria-label={copied ? t('common.copied') : t('common.copy')}
+                  >
                     {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
                   </ActionIcon>
                 </Tooltip>

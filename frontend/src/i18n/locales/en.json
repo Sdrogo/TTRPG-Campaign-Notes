@@ -143,6 +143,8 @@
     "noMatchForTags_other": "No Documents with these Tags.",
     "showAll": "Show all",
     "filterByTag": "Filter by Tag",
+    "hideControls": "Hide filters and settings",
+    "showControls": "Show filters and settings",
     "owners": "Owners",
     "ownersLine": "Owners: {{names}}",
     "addOwner": "Add Owner",

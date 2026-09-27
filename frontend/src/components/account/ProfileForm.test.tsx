@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MAX_BIO_LENGTH } from '../../lib/profile';
@@ -140,5 +140,15 @@ describe('limits', () => {
     await user.type(bioField(), '  ciao  ');
 
     expect(screen.getByText(`4/${MAX_BIO_LENGTH}`)).toBeInTheDocument();
+  });
+
+  it('turns the counter red once over the limit', () => {
+    render({ bio: null });
+
+    fireEvent.change(bioField(), { target: { value: 'a'.repeat(MAX_BIO_LENGTH + 1) } });
+
+    expect(screen.getByText(`${MAX_BIO_LENGTH + 1}/${MAX_BIO_LENGTH}`)).toHaveStyle({
+      color: 'var(--mantine-color-red-text)',
+    });
   });
 });

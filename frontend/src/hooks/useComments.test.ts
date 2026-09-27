@@ -221,6 +221,20 @@ describe('useSaveComment', () => {
     expect(saved.imageErrors).toEqual(['Rimozione immagine: Storage down']);
   });
 
+  it('reports a non-Error failure by its string form', async () => {
+    fetchMock.mockImplementation((path: string) =>
+      path === `${BASE}/comment-1/images/image-9` ? Promise.reject('rate limited') : Promise.resolve(rawComment()),
+    );
+
+    const { result } = renderHookWithProviders(() => useSaveComment('room-1', 'doc-1'));
+    const saved = await result.current.mutateAsync({
+      commentId: 'comment-1',
+      values: values({ removedImageIds: ['image-9'] }),
+    });
+
+    expect(saved.imageErrors).toEqual(['Rimozione immagine: rate limited']);
+  });
+
   it('keeps going after one image fails, so the rest still attach', async () => {
     fetchMock.mockImplementation((_path: string, init?: { formData?: FormData }) => {
       const name = (init?.formData?.get('file') as File | null)?.name;

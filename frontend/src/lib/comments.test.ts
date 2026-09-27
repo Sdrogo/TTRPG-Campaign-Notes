@@ -110,6 +110,12 @@ describe('applyCommentFilters', () => {
     expect(byEmail).toEqual(byName);
   });
 
+  it('searching by author name never crashes on a Comment from a departed member', () => {
+    const orphan = [comment('c', { authorId: 'u-gone', body: 'nothing matches this' })];
+
+    expect(ids(applyCommentFilters(orphan, filters({ query: 'zed' }), members))).toEqual([]);
+  });
+
   it('can hide deleted placeholders', () => {
     expect(
       ids(applyCommentFilters(comments, filters({ hideDeleted: true, sort: 'oldest' }), members)),

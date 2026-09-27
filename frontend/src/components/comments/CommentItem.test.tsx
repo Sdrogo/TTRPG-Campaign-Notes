@@ -255,6 +255,18 @@ describe('attached images', () => {
     );
   });
 
+  it('closes the viewer', async () => {
+    const { user } = render({ images });
+    await user.click(
+      screen.getByRole('button', { name: 'Apri Immagine 2 del commento di Giocatore' }),
+    );
+    await screen.findByAltText('Commento di Giocatore');
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('shows no image area when there are none', () => {
     render();
 

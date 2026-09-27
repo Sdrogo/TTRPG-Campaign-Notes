@@ -109,3 +109,10 @@ def test_invalid_cors_origin_regex_fails_at_startup(monkeypatch: pytest.MonkeyPa
     monkeypatch.setenv("CORS_ORIGIN_REGEX", "https://(unclosed")
     with pytest.raises(ValueError, match="CORS_ORIGIN_REGEX"):
         Settings(_env_file=None)  # type: ignore[call-arg]
+
+
+def test_cors_origins_of_the_wrong_type_is_rejected() -> None:
+    # Passed straight through by the validator (it only special-cases str
+    # and list), then rejected by pydantic's own type check against `list[str]`.
+    with pytest.raises(ValueError, match="cors_origins"):
+        Settings(_env_file=None, cors_origins=None)  # type: ignore[call-arg,arg-type]

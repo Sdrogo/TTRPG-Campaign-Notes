@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import remote_images
+from app.db import remote_images, storage
 from app.db.remote_images import RemoteImageError
 from app.domain.documents import MAX_IMAGES_PER_DOCUMENT
 from app.domain.images import MAX_DIMENSION
@@ -143,6 +143,43 @@ async def test_non_image_file_is_rejected(
     )
     assert status_code == 422
     assert fake_storage == {}
+
+
+async def test_an_oversized_image_is_rejected(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    # A huge pixel count is rejected even from a tiny (solid-color) file.
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(
+        client, make_token
+    )
+
+    status_code, _ = await _upload(
+        client, room_id, document_id, master_token, _png((10_000, 5_001))
+    )
+
+    assert status_code == 413
+    assert fake_storage == {}
+
+
+async def test_storage_being_down_is_reported_as_a_bad_gateway(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def storage_down(path: str, data: bytes, content_type: str) -> None:
+        raise storage.StorageError("Storage unavailable")
+
+    monkeypatch.setattr(storage, "upload", storage_down)
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(client, make_token)
+
+    status_code, _ = await _upload(client, room_id, document_id, master_token, _png())
+
+    assert status_code == 502
 
 
 async def test_image_limit_returns_conflict(

@@ -35,15 +35,14 @@ export default defineConfig({
       // json-summary is what CI reads to print the table on the PR's
       // check summary (.github/workflows/ci.yml).
       reporter: ['text', 'html', 'json-summary'],
-      // Floors, not targets: they sit just under what the suite reaches
-      // today (98.4 / 93.5 / 98.5 / 98.8), so coverage can't erode silently.
-      // Raise them when the measured numbers move up; never lower one to
-      // make a build pass.
+      // Floors, not targets: the suite reaches 100% on every metric, so
+      // these are exact, not "just under" - any regression fails the build.
+      // Raise (impossible here) or hold; never lower one to make a build pass.
       thresholds: {
-        statements: 98,
-        branches: 93,
-        functions: 98,
-        lines: 98,
+        statements: 100,
+        branches: 100,
+        functions: 100,
+        lines: 100,
       },
     },
   },

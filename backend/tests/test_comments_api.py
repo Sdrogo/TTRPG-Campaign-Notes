@@ -108,6 +108,18 @@ async def test_member_comments_and_everyone_sees_it_in_order(
     assert listed[0]["can_delete"] is False
 
 
+async def test_listing_comments_on_a_document_with_none_yet(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+
+    response = await client.get(room.comments_url(document_id), headers=room.player.headers)
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 async def test_blank_comment_is_rejected(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
@@ -199,6 +211,73 @@ async def test_only_author_can_edit_even_the_master_cannot(
     assert edited.status_code == 200
     assert edited.json()["body"] == "Edited by me"
     assert edited.json()["updated_at"] > edited.json()["created_at"]
+
+
+async def test_editing_to_a_blank_body_is_rejected(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    comment = await _comment(client, room, document_id, room.player)
+    url = f"{room.comments_url(document_id)}/{comment['id']}"
+
+    response = await client.patch(url, json={"body": "   "}, headers=room.player.headers)
+
+    assert response.status_code == 422
+
+
+async def test_editing_the_grantees_of_a_selective_comment_to_a_non_member_is_rejected(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    comment = await _comment(
+        client,
+        room,
+        document_id,
+        room.player,
+        visibility="selective",
+        selective_user_ids=[room.other_player.id],
+    )
+    url = f"{room.comments_url(document_id)}/{comment['id']}"
+
+    response = await client.patch(
+        url,
+        json={"selective_user_ids": [str(uuid.uuid4())]},
+        headers=room.player.headers,
+    )
+
+    assert response.status_code == 422
+
+
+async def test_editing_the_grantees_of_a_selective_comment(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    comment = await _comment(
+        client,
+        room,
+        document_id,
+        room.player,
+        visibility="selective",
+        selective_user_ids=[room.other_player.id],
+    )
+    url = f"{room.comments_url(document_id)}/{comment['id']}"
+
+    response = await client.patch(
+        url,
+        json={"selective_user_ids": [room.master.id]},
+        headers=room.player.headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["selective_user_ids"] == [room.master.id]
+    # The dropped grantee no longer sees it, the newly granted one does.
+    hidden = await client.get(room.comments_url(document_id), headers=room.other_player.headers)
+    assert hidden.json() == []
+    shown = await client.get(room.comments_url(document_id), headers=room.master.headers)
+    assert len(shown.json()) == 1
 
 
 async def test_visibility_change_is_audited_in_the_same_transaction(

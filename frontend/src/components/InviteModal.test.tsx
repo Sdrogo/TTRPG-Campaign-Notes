@@ -93,6 +93,21 @@ describe('InviteModal', () => {
     await waitFor(() => expect(screen.queryByDisplayValue(/ABC123/)).not.toBeInTheDocument());
   });
 
+  it('shows a checkmark once the link is copied', async () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      configurable: true,
+    });
+    fetchMock.mockResolvedValue({ code: 'ABC123', role: 'player', expires_at: null });
+    const { user } = render();
+    await user.click(screen.getByRole('button', { name: 'Genera invito' }));
+    await screen.findByDisplayValue(/ABC123/);
+
+    await user.click(screen.getByRole('button', { name: 'Copia' }));
+
+    expect(await screen.findByRole('button', { name: 'Copiato' })).toBeInTheDocument();
+  });
+
   it('reports a failure', async () => {
     fetchMock.mockRejectedValue(new Error('Only an Administrator can invite'));
     const { user } = render();

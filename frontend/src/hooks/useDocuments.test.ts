@@ -249,6 +249,14 @@ describe('useUploadDocumentImages', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it('names the file even when the failure is not an Error', async () => {
+    fetchMock.mockRejectedValueOnce('rate limited');
+
+    const { result } = renderHookWithProviders(() => useUploadDocumentImages('room-1', 'doc-1'));
+
+    await expect(result.current.mutateAsync([file('a.png')])).rejects.toThrow('a.png: rate limited');
+  });
+
   // `onSettled`, not `onSuccess`: a partial upload still changed the gallery.
   it('refreshes the caches even when an upload failed', async () => {
     fetchMock.mockRejectedValue(new Error('Storage down'));

@@ -1,6 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import i18n, { LANGUAGE_STORAGE_KEY, currentLanguage, detectLanguage, setLanguage } from '.';
 
+describe('currentLanguage', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // i18next can resolve to a language outside `SUPPORTED_LANGUAGES` (e.g. one
+  // matched by `supportedLngs`'s own fallback logic); this app only ever
+  // shows it or en, so that case still needs a safe value.
+  it('falls back to English when i18next resolves to an unsupported language', () => {
+    vi.spyOn(i18n, 'resolvedLanguage', 'get').mockReturnValue('fr');
+
+    expect(currentLanguage()).toBe('en');
+  });
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -40,6 +55,20 @@ describe('detectLanguage', () => {
     });
 
     expect(detectLanguage(['it-IT'])).toBe('it');
+  });
+
+  // No argument: falls through to the default parameter, which reads the
+  // real navigator - the only way that expression itself runs.
+  it('reads navigator.languages when called with no argument', () => {
+    vi.stubGlobal('navigator', { ...navigator, languages: ['it-IT'], language: 'it-IT' });
+
+    expect(detectLanguage()).toBe('it');
+  });
+
+  it('falls back to navigator.language when navigator.languages is unset', () => {
+    vi.stubGlobal('navigator', { ...navigator, languages: undefined, language: 'it-IT' });
+
+    expect(detectLanguage()).toBe('it');
   });
 });
 

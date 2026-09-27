@@ -66,6 +66,16 @@ describe('DocumentImageGallery', () => {
     expect(screen.getByAltText('Il Cancello')).toHaveAttribute('src', 'http://a/1.webp');
   });
 
+  it('closes the fullscreen viewer', async () => {
+    const { user } = render({ images: [images[0]] });
+    await user.click(screen.getByRole('button', { name: 'Apri immagine' }));
+    await screen.findByAltText('Il Cancello');
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   // Spec 10: images keep their own aspect ratio instead of being stretched
   // into a fixed box, mirroring DocumentCardImages (spec 07.1).
   describe('orientation', () => {

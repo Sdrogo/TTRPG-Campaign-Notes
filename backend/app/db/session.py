@@ -47,10 +47,13 @@ async def run_after_commit(session: AsyncSession) -> None:
             logger.exception("After-commit work failed; it will be retried by the sweep")
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:  # pragma: no cover - real DB only
     """The request's session, as a FastAPI dependency. Commits once the
     handler returns, rolls back if it raises, and only then runs the
-    after-commit work."""
+    after-commit work.
+
+    Every test overrides this with its own savepoint-bound session
+    (tests/conftest.py::db_session), so it never runs itself in the suite."""
     async with async_session_factory() as session:
         try:
             yield session
@@ -63,9 +66,12 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @asynccontextmanager
-async def independent_session() -> AsyncIterator[AsyncSession]:
+async def independent_session() -> AsyncIterator[AsyncSession]:  # pragma: no cover - real DB only
     """A session outside the request's transaction, for a write that must
-    survive even if the request rolls back."""
+    survive even if the request rolls back.
+
+    Every test replaces this with one bound to its own savepoint
+    (tests/conftest.py::db_session), so it never runs itself in the suite."""
     async with async_session_factory() as session:
         yield session
 

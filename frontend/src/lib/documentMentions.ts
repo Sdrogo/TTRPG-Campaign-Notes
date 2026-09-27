@@ -137,6 +137,24 @@ function documentRank(document: Document, documentTags: Tag[], query: string): n
 }
 
 /**
+ * Tie-break for two equally-ranked suggestions: a Document before a Tag,
+ * then alphabetically within the same kind. Exported as its own function
+ * (rather than inlined into `.sort()`) so every branch can be tested
+ * directly - `Array.prototype.sort`'s own comparator call order is
+ * implementation-defined and not a reliable way to exercise all of them.
+ */
+export function compareRankedMentions(
+  a: { target: MentionTarget; rank: number },
+  b: { target: MentionTarget; rank: number },
+): number {
+  if (a.rank !== b.rank) return a.rank - b.rank;
+  if (a.target.kind !== b.target.kind) return a.target.kind === 'document' ? -1 : 1;
+  return mentionTargetName(a.target).localeCompare(mentionTargetName(b.target), currentLanguage(), {
+    sensitivity: 'base',
+  });
+}
+
+/**
  * Documents and Tags matching the query, best matches first; on a tie a
  * Document comes before a Tag, then alphabetical.
  */
@@ -168,14 +186,7 @@ export function filterMentionCandidates(
 
   return ranked
     .filter((entry): entry is { target: MentionTarget; rank: number } => entry.rank !== null)
-    .sort(
-      (a, b) =>
-        a.rank - b.rank ||
-        (a.target.kind === b.target.kind ? 0 : a.target.kind === 'document' ? -1 : 1) ||
-        mentionTargetName(a.target).localeCompare(mentionTargetName(b.target), currentLanguage(), {
-          sensitivity: 'base',
-        }),
-    )
+    .sort(compareRankedMentions)
     .slice(0, limit)
     .map((entry) => entry.target);
 }

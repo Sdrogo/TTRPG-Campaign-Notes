@@ -99,6 +99,36 @@ async def test_cannot_demote_the_last_master(
     assert response.status_code == 409
 
 
+async def test_cannot_change_the_role_of_someone_who_never_joined(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, admin_token, _, _ = await _create_room_and_join_as_player(client, make_token)
+
+    response = await client.patch(
+        f"/rooms/{room_id}/members/{uuid.uuid4()}",
+        json={"role": "master"},
+        headers=_auth_headers(admin_token),
+    )
+
+    assert response.status_code == 404
+
+
+async def test_a_role_change_that_changes_nothing_is_rejected(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, admin_token, player_user_id, _ = await _create_room_and_join_as_player(
+        client, make_token
+    )
+
+    response = await client.patch(
+        f"/rooms/{room_id}/members/{player_user_id}",
+        json={},
+        headers=_auth_headers(admin_token),
+    )
+
+    assert response.status_code == 422
+
+
 async def test_admin_removes_a_member(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
@@ -115,6 +145,41 @@ async def test_admin_removes_a_member(
         await client.get(f"/rooms/{room_id}/members", headers=_auth_headers(admin_token))
     ).json()
     assert player_user_id not in {m["user_id"] for m in members}
+
+
+async def test_a_non_admin_cannot_remove_someone_else(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, admin_token, player_user_id, _ = await _create_room_and_join_as_player(
+        client, make_token
+    )
+    other_token = make_token(str(uuid.uuid4()), email="other@example.com")
+    invite = (
+        await client.post(
+            f"/rooms/{room_id}/invitations",
+            json={"role": "player"},
+            headers=_auth_headers(admin_token),
+        )
+    ).json()
+    await client.post(f"/invitations/{invite['code']}/accept", headers=_auth_headers(other_token))
+
+    response = await client.delete(
+        f"/rooms/{room_id}/members/{player_user_id}", headers=_auth_headers(other_token)
+    )
+
+    assert response.status_code == 403
+
+
+async def test_cannot_remove_someone_who_never_joined(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, admin_token, _, _ = await _create_room_and_join_as_player(client, make_token)
+
+    response = await client.delete(
+        f"/rooms/{room_id}/members/{uuid.uuid4()}", headers=_auth_headers(admin_token)
+    )
+
+    assert response.status_code == 404
 
 
 async def test_member_can_leave_without_admin_rights(

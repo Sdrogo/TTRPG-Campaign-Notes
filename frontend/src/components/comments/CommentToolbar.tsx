@@ -43,7 +43,7 @@ export function CommentToolbar({ filters, onChange, authorOptions }: CommentTool
         aria-label={t('comments.toolbar.sortLabel')}
         data={sortOptions}
         value={filters.sort}
-        onChange={(sort) => set({ sort: (sort as CommentSortOrder | null) ?? 'newest' })}
+        onChange={(sort) => sort && set({ sort: sort as CommentSortOrder })}
         allowDeselect={false}
         w={140}
       />

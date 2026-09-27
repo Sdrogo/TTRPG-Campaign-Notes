@@ -33,6 +33,8 @@ beforeEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
+const oneTag = [{ id: 'tag-npc', name: 'NPC', category: null }];
+
 describe('PageCard', () => {
   it('renders its content', () => {
     renderWithProviders(
@@ -46,7 +48,7 @@ describe('PageCard', () => {
 });
 
 describe('PageLayout', () => {
-  it('renders the back button and the content', () => {
+  it('renders the back button (forwarded to the header) and the content', () => {
     renderWithProviders(
       <PageLayout backTo="/rooms/room-1/documents" backLabel="Documenti">
         <p>Contenuto</p>
@@ -55,36 +57,6 @@ describe('PageLayout', () => {
 
     expect(screen.getByRole('button', { name: 'Documenti' })).toBeInTheDocument();
     expect(screen.getByText('Contenuto')).toBeInTheDocument();
-  });
-
-  // The button prefers real browser history over the fixed `backTo`, so it
-  // lands wherever the user actually came from.
-  it('falls back to backTo when there is no app history behind this page', async () => {
-    renderWithProviders(
-      <PageLayout backTo="/rooms/room-1/documents" backLabel="Documenti">
-        <p>Contenuto</p>
-      </PageLayout>,
-    );
-    const user = userEvent.setup();
-
-    await user.click(screen.getByRole('button', { name: 'Documenti' }));
-
-    expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents');
-  });
-
-  it('goes back through real browser history when there is some', async () => {
-    // Set by React Router's BrowserHistory after at least one in-app push.
-    window.history.pushState({ idx: 1 }, '', '/somewhere-else');
-    renderWithProviders(
-      <PageLayout backTo="/rooms/room-1/documents" backLabel="Documenti">
-        <p>Contenuto</p>
-      </PageLayout>,
-    );
-    const user = userEvent.setup();
-
-    await user.click(screen.getByRole('button', { name: 'Documenti' }));
-
-    expect(navigate).toHaveBeenCalledWith(-1);
   });
 
   it('includes the app header', () => {
@@ -131,6 +103,47 @@ describe('AppHeader', () => {
     expect(screen.queryByRole('button', { name: /indice dei Tag/ })).not.toBeInTheDocument();
   });
 
+  // Given by every nested page through PageLayout; the Rooms list
+  // (`HomePage`) renders AppHeader without it since it's the app's own root.
+  it('offers no back button without a backTo', () => {
+    renderWithProviders(<AppHeader />);
+
+    expect(screen.queryByRole('button', { name: /Indietro|Documenti/ })).not.toBeInTheDocument();
+  });
+
+  describe('with a back destination', () => {
+    // The button prefers real browser history over the fixed `backTo`, so it
+    // lands wherever the user actually came from.
+    it('falls back to backTo when there is no app history behind this page', async () => {
+      renderWithProviders(<AppHeader backTo="/rooms/room-1/documents" backLabel="Documenti" />);
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: 'Documenti' }));
+
+      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents');
+    });
+
+    it('goes back through real browser history when there is some', async () => {
+      // Set by React Router's BrowserHistory after at least one in-app push.
+      window.history.pushState({ idx: 1 }, '', '/somewhere-else');
+      renderWithProviders(<AppHeader backTo="/rooms/room-1/documents" backLabel="Documenti" />);
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: 'Documenti' }));
+
+      expect(navigate).toHaveBeenCalledWith(-1);
+    });
+
+    it('renders alongside the Glossary burger on a Room page', () => {
+      renderWithProviders(
+        <AppHeader roomId="room-1" backTo="/rooms/room-1/documents" backLabel="Documenti" />,
+      );
+
+      expect(screen.getByRole('button', { name: 'Apri indice dei Tag' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Documenti' })).toBeInTheDocument();
+    });
+  });
+
   describe('with a Room', () => {
     it('offers a burger that opens the Glossary Index', async () => {
       renderWithProviders(<AppHeader roomId="room-1" />);
@@ -150,6 +163,21 @@ describe('AppHeader', () => {
       await user.click(screen.getByRole('button', { name: 'Apri indice dei Tag' }));
       await screen.findByText('Indice dei Tag');
       await user.click(screen.getByRole('button', { name: 'Chiudi indice dei Tag' }));
+
+      await waitFor(() => expect(screen.queryByText('Indice dei Tag')).not.toBeInTheDocument());
+    });
+
+    // The Drawer also closes itself (e.g. picking a Tag), not just via the
+    // burger - AppHeader's own onClose has to handle that too.
+    it('closes the Glossary Index when a Tag inside it is picked', async () => {
+      fetchMock.mockImplementation((path: string) =>
+        path.endsWith('/tags') ? Promise.resolve(oneTag) : Promise.resolve(rawAccount()),
+      );
+      renderWithProviders(<AppHeader roomId="room-1" />);
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: 'Apri indice dei Tag' }));
+      await user.click(await screen.findByText('#NPC'));
 
       await waitFor(() => expect(screen.queryByText('Indice dei Tag')).not.toBeInTheDocument());
     });

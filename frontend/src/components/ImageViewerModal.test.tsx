@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../test/utils';
@@ -155,6 +155,18 @@ describe('zoom controls', () => {
     await user.click(screen.getByRole('button', { name: 'Adatta allo schermo' }));
 
     expect(screen.getByText('100%')).toBeInTheDocument();
+  });
+
+  it('sizes a zoomed image off its loaded, fitted size', async () => {
+    const { user } = open(0);
+    const img = screen.getByAltText('Il Cancello');
+    Object.defineProperty(img, 'clientWidth', { value: 400, configurable: true });
+    Object.defineProperty(img, 'clientHeight', { value: 300, configurable: true });
+    fireEvent.load(img);
+
+    await user.click(screen.getByRole('button', { name: 'Ingrandisci' }));
+
+    expect(img).toHaveStyle({ width: '600px', height: '450px' });
   });
 
   it('toggles zoom on a double click', async () => {

@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../test/utils';
@@ -80,6 +80,16 @@ describe('AddDocumentImages', () => {
     await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));
 
     expect(onUploadFiles).toHaveBeenCalledWith([expect.objectContaining({ name: 'mappa.png' })]);
+  });
+
+  // The picker fires onChange with no files on a cancelled dialog too.
+  it('does nothing when the file dialog is cancelled', () => {
+    const { onUploadFiles } = render();
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    fireEvent.change(input, { target: { files: [] } });
+
+    expect(onUploadFiles).not.toHaveBeenCalled();
   });
 
   it('shows the upload in progress', () => {

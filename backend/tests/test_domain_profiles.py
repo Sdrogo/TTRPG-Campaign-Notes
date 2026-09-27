@@ -59,6 +59,11 @@ def test_bio_keeps_its_line_breaks() -> None:
     assert updated.bio == "First line\nSecond line"
 
 
+def test_bio_can_be_cleared_too() -> None:
+    updated = plan_profile_update(CURRENT, _changes(bio=None))
+    assert updated.bio is None
+
+
 @pytest.mark.parametrize(
     ("field", "limit"),
     [

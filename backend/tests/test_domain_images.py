@@ -7,6 +7,7 @@ from app.domain.images import (
     AVATAR_DIMENSION,
     MAX_DIMENSION,
     MAX_INPUT_BYTES,
+    MAX_INPUT_PIXELS,
     ImageTooLargeError,
     InvalidImageError,
     normalize_image,
@@ -63,6 +64,18 @@ def test_unsupported_image_format_is_rejected() -> None:
 def test_oversized_input_is_rejected_before_decoding() -> None:
     with pytest.raises(ImageTooLargeError):
         normalize_image(b"\0" * (MAX_INPUT_BYTES + 1))
+
+
+# A pixel count over the limit is rejected even when the file itself is
+# small (a solid color compresses to almost nothing).
+def test_oversized_pixel_count_is_rejected_even_in_a_small_file() -> None:
+    width = 10_000
+    height = MAX_INPUT_PIXELS // width + 1
+    data = _encode((width, height), "PNG")
+    assert len(data) < MAX_INPUT_BYTES
+
+    with pytest.raises(ImageTooLargeError):
+        normalize_image(data)
 
 
 def test_square_mode_center_crops_and_downscales() -> None:
