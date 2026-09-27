@@ -31,7 +31,7 @@ export function VisibilitySelect({ subject, value, onChange, ...props }: Visibil
       {...props}
       data={data}
       value={value}
-      onChange={(next) => onChange((next as DocumentVisibility | null) ?? 'room')}
+      onChange={(next) => next && onChange(next as DocumentVisibility)}
       allowDeselect={false}
     />
   );

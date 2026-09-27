@@ -66,6 +66,18 @@ async def test_a_link_close_to_expiry_is_renewed(
     assert len(signer) == 2
 
 
+async def test_a_fully_expired_link_is_dropped_from_the_cache(
+    signer: list[list[str]], clock: list[float]
+) -> None:
+    await storage.signed_urls(["a.webp"])
+    assert "a.webp" in storage._signed_cache
+
+    clock[0] += storage.SIGNED_URL_TTL_SECONDS + 1
+    await storage.signed_urls(["b.webp"])
+
+    assert "a.webp" not in storage._signed_cache
+
+
 async def test_storage_outage_leaves_paths_out_instead_of_failing(
     signer: list[list[str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:

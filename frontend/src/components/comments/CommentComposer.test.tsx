@@ -90,6 +90,17 @@ describe('CommentComposer', () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 
+  // Ctrl+Enter reaches `submit()` straight from the textarea, bypassing the
+  // disabled submit button - the guard has to hold there too.
+  it('does nothing on Ctrl+Enter while empty', async () => {
+    const { onSubmit, user } = render();
+
+    await user.click(body());
+    await user.keyboard('{Control>}{Enter}{/Control}');
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('does not submit on a plain Enter', async () => {
     const { onSubmit, user } = render();
 
@@ -192,6 +203,30 @@ describe('visibility', () => {
 
     expect(screen.queryByText('Giocatore (giocatore@example.com)')).not.toBeInTheDocument();
     expect(screen.getByText('Master (master@example.com)')).toBeInTheDocument();
+  });
+
+  it('picks who a Selective Comment is shared with', async () => {
+    const { onSubmit, user } = render({
+      initialValues: {
+        body: '',
+        visibility: 'selective',
+        selectiveUserIds: [],
+        newImages: [],
+        removedImageIds: [],
+      },
+    });
+
+    await user.click(
+      screen.getByRole('combobox', { name: 'Membri che possono vedere il commento' }),
+    );
+    await user.click(screen.getByText('Master (master@example.com)'));
+    await user.type(body(), 'Solo per te');
+    await user.click(submitButton());
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ selectiveUserIds: ['user-2'] }),
+      expect.any(Function),
+    );
   });
 });
 

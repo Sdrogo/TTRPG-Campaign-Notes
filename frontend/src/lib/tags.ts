@@ -43,6 +43,8 @@ export function groupTagsByCategory(tags: Tag[]): TagGroup[] {
     .filter((category): category is string => category !== null && category !== MAIN_TAG_CATEGORY)
     .sort((a, b) => a.localeCompare(b, language, { sensitivity: 'base' }));
 
+  // Main Tags first, then other categories alphabetically, uncategorized
+  // last - each key came straight from `byCategory` above, so it's there.
   const orderedKeys: (string | null)[] = [
     ...(byCategory.has(MAIN_TAG_CATEGORY) ? [MAIN_TAG_CATEGORY] : []),
     ...otherCategories,
@@ -51,6 +53,6 @@ export function groupTagsByCategory(tags: Tag[]): TagGroup[] {
 
   return orderedKeys.map((category) => ({
     category,
-    tags: sortTagsByName(byCategory.get(category) ?? []),
+    tags: sortTagsByName(byCategory.get(category) as Tag[]),
   }));
 }

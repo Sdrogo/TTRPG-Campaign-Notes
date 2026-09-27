@@ -225,6 +225,138 @@ async def test_owner_can_add_and_remove_another_owner(
     assert remove.status_code == 204
 
 
+async def test_a_blank_document_name_is_rejected(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, master_token, _ = await _room_with_master_and_player(client, make_token)
+    response = await client.post(
+        f"/rooms/{room_id}/documents", json={"name": "   "}, headers=_auth_headers(master_token)
+    )
+    assert response.status_code == 422
+
+
+async def test_clearing_the_name_on_update_is_rejected(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, master_token, _ = await _room_with_master_and_player(client, make_token)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "The Winking Skull"},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+
+    response = await client.patch(
+        f"/rooms/{room_id}/documents/{document['id']}",
+        json={"name": "   "},
+        headers=_auth_headers(master_token),
+    )
+    assert response.status_code == 422
+
+
+async def test_cannot_add_an_owner_who_is_not_a_member(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, master_token, _ = await _room_with_master_and_player(client, make_token)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Shared doc"},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+
+    response = await client.post(
+        f"/rooms/{room_id}/documents/{document['id']}/owners/{uuid.uuid4()}",
+        headers=_auth_headers(master_token),
+    )
+    assert response.status_code == 404
+
+
+async def test_cannot_add_an_owner_twice(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, master_token, _ = await _room_with_master_and_player(client, make_token)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Shared doc"},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+    members = (
+        await client.get(f"/rooms/{room_id}/members", headers=_auth_headers(master_token))
+    ).json()
+    player_id = next(m["user_id"] for m in members if m["role"] == "player")
+    await client.post(
+        f"/rooms/{room_id}/documents/{document['id']}/owners/{player_id}",
+        headers=_auth_headers(master_token),
+    )
+
+    response = await client.post(
+        f"/rooms/{room_id}/documents/{document['id']}/owners/{player_id}",
+        headers=_auth_headers(master_token),
+    )
+
+    assert response.status_code == 409
+
+
+async def test_cannot_remove_an_owner_who_is_not_one(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room_id, master_token, _ = await _room_with_master_and_player(client, make_token)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Shared doc"},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+    members = (
+        await client.get(f"/rooms/{room_id}/members", headers=_auth_headers(master_token))
+    ).json()
+    player_id = next(m["user_id"] for m in members if m["role"] == "player")
+
+    response = await client.delete(
+        f"/rooms/{room_id}/documents/{document['id']}/owners/{player_id}",
+        headers=_auth_headers(master_token),
+    )
+
+    assert response.status_code == 404
+
+
+async def test_deleting_an_already_deleted_image_is_a_404(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room_id, master_token, _ = await _room_with_master_and_player(client, make_token)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Shared doc"},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+    uploaded = (
+        await client.post(
+            f"/rooms/{room_id}/documents/{document['id']}/images",
+            files={"file": ("a.png", _png(), "image/png")},
+            headers=_auth_headers(master_token),
+        )
+    ).json()
+    (image_id,) = [image["id"] for image in uploaded["images"]]
+    url = f"/rooms/{room_id}/documents/{document['id']}/images/{image_id}"
+    first = await client.delete(url, headers=_auth_headers(master_token))
+    assert first.status_code == 204
+
+    second = await client.delete(url, headers=_auth_headers(master_token))
+
+    assert second.status_code == 404
+
+
 async def test_invalid_tag_id_is_rejected(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:

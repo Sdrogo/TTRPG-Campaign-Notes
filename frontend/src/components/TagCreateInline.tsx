@@ -25,8 +25,9 @@ export function TagCreateInline({ roomId, onCreated, onPendingChange }: TagCreat
   const createTag = useCreateTag(roomId);
 
   const handleAdd = () => {
+    // The button is disabled on a blank name, so this only ever runs on a
+    // real one.
     const trimmed = name.trim();
-    if (!trimmed) return;
     onPendingChange?.(true);
     createTag.mutate(
       { name: trimmed },

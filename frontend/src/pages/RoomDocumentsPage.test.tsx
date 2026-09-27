@@ -82,6 +82,34 @@ describe('RoomDocumentsPage', () => {
     expect(screen.getByText('Accedi per vedere i Documenti di questa Stanza.')).toBeInTheDocument();
   });
 
+  // Guards against a route reached with no Room id at all, which the app
+  // itself never links to but a malformed URL could.
+  it('renders nothing without a Room id in the URL', () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/documents" element={<RoomDocumentsPage />} />
+      </Routes>,
+      { route: '/documents' },
+    );
+
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  // Tags and Members are separate queries from the Documents themselves; the
+  // page must render (with nothing to show from them yet) while they load.
+  it('renders before the Tags and Members queries settle', async () => {
+    fetchMock.mockImplementation((path: string) => {
+      if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
+      if (path === '/rooms/room-1') return Promise.resolve(routes.room);
+      if (path === '/account') return Promise.resolve(rawAccount());
+      return new Promise(() => {});
+    });
+    render();
+
+    expect(await screen.findByText('Il Cancello')).toBeInTheDocument();
+  });
+
   it('lists the Documents under the Room name', async () => {
     render();
 
@@ -215,6 +243,17 @@ describe('filtering by Tag', () => {
     await waitFor(() => expect(screen.getByText('Il Cancello')).toBeInTheDocument());
   });
 
+  it('filters by picking a Tag from the combobox', async () => {
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(screen.getByRole('combobox', { name: 'Filtra per Tag' }));
+    await user.click(screen.getByRole('option', { name: '#PNG' }));
+
+    await waitFor(() => expect(screen.queryByText('Il Cancello')).not.toBeInTheDocument());
+    expect(screen.getByText('Il Mercante')).toBeInTheDocument();
+  });
+
   it('pluralises the empty message for several Tags', async () => {
     render('/rooms/room-1/documents?tag=tag-1&tag=tag-2');
 
@@ -279,6 +318,20 @@ describe('grouping and sorting', () => {
     expect(screen.getByText('Alba')).toBeInTheDocument();
   });
 
+  // Switching back to the default clears the URL param instead of writing it
+  // out explicitly.
+  it('drops the groupBy param from the URL when set back to the default', async () => {
+    mockApiWithMainTags();
+    const { user } = render('/rooms/room-1/documents?groupBy=none');
+    await screen.findByText('Zanna');
+    expect(groupHeadings()).toEqual([]);
+
+    await user.click(screen.getByRole('combobox', { name: 'Raggruppa per' }));
+    await user.click(screen.getByText('Raggruppa per Tag principale'));
+
+    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
+  });
+
   it('honours group-by and sort from the URL', async () => {
     mockApiWithMainTags();
     render('/rooms/room-1/documents?groupBy=none&sort=name-desc');
@@ -308,6 +361,60 @@ describe('grouping and sorting', () => {
     await screen.findByText(/Nessun Documento ancora/);
     expect(screen.queryByRole('combobox', { name: 'Raggruppa per' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Ordina per' })).not.toBeInTheDocument();
+  });
+});
+
+// The filters/settings row next to the title (the Room setting Switch, the
+// Tag filter, group-by and sort) collapses independently of the title, which
+// always stays visible.
+describe('collapsing the filters and settings row', () => {
+  const toggleButton = (name: string | RegExp) => screen.getByRole('button', { name });
+
+  it('starts expanded, showing the row next to a visible title', async () => {
+    render();
+
+    await screen.findByText('Il Cancello');
+    expect(screen.getByText('Documenti — La Cripta')).toBeVisible();
+    expect(toggleButton('Nascondi filtri e impostazioni')).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('switch', { name: 'I Player possono creare Documenti' })).toBeVisible();
+    expect(screen.getByRole('combobox', { name: 'Raggruppa per' })).toBeVisible();
+  });
+
+  it('collapses the row on click, keeping the title visible', async () => {
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(toggleButton('Nascondi filtri e impostazioni'));
+
+    expect(toggleButton('Mostra filtri e impostazioni')).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('Documenti — La Cripta')).toBeVisible();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('switch', { name: 'I Player possono creare Documenti' }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it('expands the row again on a second click', async () => {
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(toggleButton('Nascondi filtri e impostazioni'));
+    await user.click(toggleButton('Mostra filtri e impostazioni'));
+
+    expect(toggleButton('Nascondi filtri e impostazioni')).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: 'I Player possono creare Documenti' })).toBeVisible(),
+    );
+  });
+
+  it('offers no toggle when there is nothing to show or hide', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    routes.documents = [];
+    render();
+
+    await screen.findByText(/Nessun Documento ancora/);
+    expect(screen.queryByRole('button', { name: /filtri e impostazioni/ })).not.toBeInTheDocument();
   });
 });
 

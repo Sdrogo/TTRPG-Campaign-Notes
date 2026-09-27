@@ -24,13 +24,13 @@ type SessionState = ReturnType<typeof useSession>;
 
 // Rendered on its route, so `useParams` sees the invite code.
 function render(code = 'ABC123') {
-  renderWithProviders(
+  const { container } = renderWithProviders(
     <Routes>
       <Route path="/invite/:code" element={<AcceptInvitePage />} />
     </Routes>,
     { route: `/invite/${code}` },
   );
-  return { user: userEvent.setup() };
+  return { container, user: userEvent.setup() };
 }
 
 beforeEach(() => {
@@ -72,6 +72,17 @@ describe('AcceptInvitePage', () => {
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith('/invitations/XYZ789/accept', { method: 'POST' }),
     );
+  });
+
+  it('shows a loader while the invitation is being accepted', async () => {
+    let resolveAccept: (value: unknown) => void = () => {};
+    fetchMock.mockImplementation(() => new Promise((resolve) => (resolveAccept = resolve)));
+    const { container } = render();
+
+    await waitFor(() => expect(container.querySelector('.mantine-Loader-root')).toBeInTheDocument());
+
+    resolveAccept(rawRoom());
+    await waitFor(() => expect(container.querySelector('.mantine-Loader-root')).not.toBeInTheDocument());
   });
 
   it('names the Room that was joined', async () => {

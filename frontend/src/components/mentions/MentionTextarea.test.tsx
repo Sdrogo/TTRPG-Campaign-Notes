@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { screen, waitFor } from '@testing-library/react';
+import { useState, type FocusEvent, type KeyboardEvent } from 'react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocumentMentionsContext } from '../../hooks/useDocumentMentions';
@@ -30,7 +30,17 @@ const tags = [{ id: 'tag-1', name: 'Luoghi', category: null }];
 
 // Controlled, like every real caller: the popup depends on the value and
 // the caret moving together.
-function Harness({ onValue, initial = '' }: { onValue: (value: string) => void; initial?: string }) {
+function Harness({
+  onValue,
+  initial = '',
+  onKeyDown,
+  onBlur,
+}: {
+  onValue: (value: string) => void;
+  initial?: string;
+  onKeyDown?: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
+  onBlur?: (event: FocusEvent<HTMLTextAreaElement>) => void;
+}) {
   const [value, setValue] = useState(initial);
   return (
     <MentionTextarea
@@ -40,14 +50,30 @@ function Harness({ onValue, initial = '' }: { onValue: (value: string) => void; 
         setValue(next);
         onValue(next);
       }}
+      onKeyDown={onKeyDown}
+      onBlur={onBlur}
     />
   );
 }
 
-function render(options: { context?: Partial<DocumentMentionsValue> | null; initial?: string } = {}) {
+function render(
+  options: {
+    context?: Partial<DocumentMentionsValue> | null;
+    initial?: string;
+    onKeyDown?: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
+    onBlur?: (event: FocusEvent<HTMLTextAreaElement>) => void;
+  } = {},
+) {
   const onValue = vi.fn();
   const create = vi.fn();
-  const harness = <Harness onValue={onValue} initial={options.initial} />;
+  const harness = (
+    <Harness
+      onValue={onValue}
+      initial={options.initial}
+      onKeyDown={options.onKeyDown}
+      onBlur={options.onBlur}
+    />
+  );
 
   if (options.context === null) {
     renderWithProviders(harness);
@@ -182,6 +208,16 @@ describe('picking a suggestion', () => {
     expect(onValue).toHaveBeenLastCalledWith('#Il Castello ');
   });
 
+  it('moves back up the list with ArrowUp', async () => {
+    const { onValue, user } = render();
+    await user.type(field(), '#Il');
+    await screen.findByText('Il Cancello');
+
+    await user.keyboard('{ArrowDown}{ArrowUp}{Enter}');
+
+    expect(onValue).toHaveBeenLastCalledWith('#Il Cancello ');
+  });
+
   it('keeps the text around the mention', async () => {
     const { onValue, user } = render();
     await user.type(field(), 'Vai al #Il Can');
@@ -272,6 +308,39 @@ describe('creating from the popup', () => {
     );
   });
 
+  it('ignores a second click while the first creation is still in flight', async () => {
+    const { create, user } = render();
+    let resolveCreate: (value: unknown) => void = () => {};
+    create.mockImplementation(() => new Promise((resolve) => (resolveCreate = resolve)));
+    await user.type(field(), '#Tempio');
+    await screen.findByRole('button', { name: /Crea Documento/ });
+
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{Enter}');
+    await user.keyboard('{Enter}');
+
+    expect(create).toHaveBeenCalledTimes(1);
+    resolveCreate({ kind: 'document', document: document('doc-9', 'Tempio'), tags: [] });
+  });
+
+  // "Only replace what was typed if it's still there, unchanged" (the
+  // component's own comment): editing the mention away while the request is
+  // still in flight must not have the eventual result overwrite the edit.
+  it('does not overwrite text edited away while the creation was in flight', async () => {
+    const { create, user } = render();
+    let resolveCreate: (value: unknown) => void = () => {};
+    create.mockImplementation(() => new Promise((resolve) => (resolveCreate = resolve)));
+    await user.type(field(), '#Tempio');
+    await screen.findByRole('button', { name: /Crea Documento/ });
+
+    await user.click(screen.getByRole('button', { name: /Crea Documento/ }));
+    await user.clear(field());
+    resolveCreate({ kind: 'document', document: document('doc-9', 'Tempio'), tags: [] });
+
+    await waitFor(() => expect(create).toHaveBeenCalled());
+    expect(field()).toHaveValue('');
+  });
+
   it('reports a failed creation and leaves the text alone', async () => {
     const { onValue, create, user } = render();
     create.mockRejectedValue(new Error('Only the Master can create Tags'));
@@ -348,5 +417,45 @@ describe('creating from the keyboard', () => {
 
     expect(create).not.toHaveBeenCalled();
     expect(onValue).toHaveBeenLastCalledWith('#Tempio\n');
+  });
+});
+
+describe('forwarding the caller\'s own handlers', () => {
+  it('still calls onKeyDown for a key the popup does not act on', async () => {
+    const onKeyDown = vi.fn();
+    const { user } = render({ onKeyDown });
+
+    await user.type(field(), 'a');
+
+    expect(onKeyDown).toHaveBeenCalled();
+  });
+
+  it('still calls onBlur when the field loses focus', async () => {
+    const onBlur = vi.fn();
+    const { user } = render({ onBlur });
+    await user.click(field());
+
+    await user.tab();
+
+    expect(onBlur).toHaveBeenCalled();
+  });
+});
+
+describe('tracking the caret', () => {
+  // A range selection (not a plain caret) means there's nowhere for a
+  // mention to start from, so the popup stays shut.
+  it('closes the popup once the caret becomes a range selection', async () => {
+    render({ initial: '#Il Can and more' });
+    const textarea = field() as HTMLTextAreaElement;
+
+    textarea.focus();
+    textarea.setSelectionRange(3, 3);
+    fireEvent.select(textarea);
+    await screen.findByRole('listbox');
+
+    textarea.setSelectionRange(0, 5);
+    fireEvent.select(textarea);
+
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
   });
 });

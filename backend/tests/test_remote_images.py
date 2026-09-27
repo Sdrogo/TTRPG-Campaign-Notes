@@ -5,6 +5,7 @@ import httpx
 import pytest
 import pytest_asyncio
 
+from app.db import remote_images
 from app.db.remote_images import RemoteImageError, fetch_image_bytes
 
 
@@ -100,3 +101,93 @@ async def test_each_redirect_hop_is_resolved_and_pinned_again(resolver: _FakeRes
         )
     assert exc_info.value.key == "errors.image.remoteNonPublic"
     assert resolver.calls == ["public.example.com", "internal.example.com"]
+
+
+async def test_an_unresolvable_host_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def fails(*args: object, **kwargs: object) -> list[object]:
+        raise socket.gaierror("Name or service not known")
+
+    monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", fails)
+
+    with pytest.raises(RemoteImageError) as exc_info:
+        await fetch_image_bytes("http://nowhere.example.com/x.png")
+    assert exc_info.value.key == "errors.image.remoteHostUnresolved"
+
+
+async def test_a_host_with_no_addresses_at_all_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def empty(*args: object, **kwargs: object) -> list[object]:
+        return []
+
+    monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", empty)
+
+    with pytest.raises(RemoteImageError) as exc_info:
+        await fetch_image_bytes("http://nowhere.example.com/x.png")
+    assert exc_info.value.key == "errors.image.remoteHostUnresolved"
+
+
+async def test_a_malformed_url_is_refused() -> None:
+    # A non-numeric port is one of the few things httpx.URL() itself rejects
+    # (a malformed *redirect* Location never reaches this: httpx validates
+    # that header itself first, as a RemoteProtocolError).
+    with pytest.raises(RemoteImageError) as exc_info:
+        await fetch_image_bytes("http://public.example.com:abc/x.png")
+    assert exc_info.value.key == "errors.image.remoteUnsupportedScheme"
+
+
+async def test_a_redirect_with_no_location_is_refused(resolver: _FakeResolver) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(302)
+
+    with pytest.raises(RemoteImageError) as exc_info:
+        await fetch_image_bytes(
+            "http://public.example.com/x.png", transport=httpx.MockTransport(handler)
+        )
+    assert exc_info.value.key == "errors.image.remoteRedirectNoLocation"
+
+
+async def test_an_error_status_is_refused(resolver: _FakeResolver) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404)
+
+    with pytest.raises(RemoteImageError) as exc_info:
+        await fetch_image_bytes(
+            "http://public.example.com/x.png", transport=httpx.MockTransport(handler)
+        )
+    assert exc_info.value.key == "errors.image.remoteHttpStatus"
+
+
+async def test_a_body_over_the_size_cap_is_refused(
+    resolver: _FakeResolver, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(remote_images, "MAX_INPUT_BYTES", 5)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=b"way too much data")
+
+    with pytest.raises(RemoteImageError) as exc_info:
+        await fetch_image_bytes(
+            "http://public.example.com/x.png", transport=httpx.MockTransport(handler)
+        )
+    assert exc_info.value.key == "errors.image.remoteTooLarge"
+
+
+async def test_a_connection_failure_is_refused(resolver: _FakeResolver) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("connection refused")
+
+    with pytest.raises(RemoteImageError) as exc_info:
+        await fetch_image_bytes(
+            "http://public.example.com/x.png", transport=httpx.MockTransport(handler)
+        )
+    assert exc_info.value.key == "errors.image.remoteDownloadFailed"
+
+
+async def test_too_many_redirects_is_refused(resolver: _FakeResolver) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(302, headers={"location": "http://public.example.com/next"})
+
+    with pytest.raises(RemoteImageError) as exc_info:
+        await fetch_image_bytes(
+            "http://public.example.com/x.png", transport=httpx.MockTransport(handler)
+        )
+    assert exc_info.value.key == "errors.image.remoteTooManyRedirects"

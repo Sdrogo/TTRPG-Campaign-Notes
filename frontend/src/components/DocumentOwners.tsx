@@ -76,11 +76,10 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
           <Button
             variant="light"
             disabled={!addOwnerId}
+            // Disabled on no selection, so this only ever runs with one.
             onClick={() => {
-              if (addOwnerId) {
-                onAdd(addOwnerId);
-                setAddOwnerId(null);
-              }
+              onAdd(addOwnerId as string);
+              setAddOwnerId(null);
             }}
           >
             {t('common.add')}

@@ -10,6 +10,8 @@ from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.account import _prefill_from_google
+from app.auth.dependencies import CurrentUser
 from app.db import remote_images, storage, storage_cleanup, users_repo
 from app.db.models import StorageCleanupRow
 from app.domain.images import AVATAR_DIMENSION
@@ -351,6 +353,43 @@ async def test_google_defaults_are_copied_only_once(
     assert body["display_name"] is None
     assert body["avatar_url"] is None
     assert len(google_fetches) == 1
+
+
+async def test_prefilling_twice_in_a_row_does_nothing_the_second_time(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    fake_storage: dict[str, bytes],
+    google_fetches: list[str],
+) -> None:
+    """Guards a race between two concurrent first requests: the second to
+    acquire the profile's row lock must see it already prefilled and bail
+    out, rather than prefilling (and fetching the Google picture) twice."""
+    current_user = CurrentUser(
+        id=str(uuid.uuid4()),
+        email="ireena@example.com",
+        google_name="Ireena Kolyana",
+        google_picture_url="https://lh3.googleusercontent.com/a/ACg8oc123=s96-c",
+    )
+
+    first = await _prefill_from_google(db_session, current_user, "en")
+    assert first.google_prefilled is True
+    assert len(google_fetches) == 1
+
+    second = await _prefill_from_google(db_session, current_user, "en")
+
+    assert second == first
+    assert len(google_fetches) == 1
+
+
+async def test_a_token_with_no_email_claim_leaves_it_null(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    response = await client.get(
+        "/account", headers=_headers(make_token, str(uuid.uuid4()), None)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["email"] is None
 
 
 async def test_google_defaults_never_replace_what_the_user_set(

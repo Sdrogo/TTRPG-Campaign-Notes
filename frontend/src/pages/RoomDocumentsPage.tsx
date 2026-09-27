@@ -42,7 +42,8 @@ import type { Tag } from '../types/tag';
  * `/rooms/:roomId/documents`: the Documents the viewer can see, filterable by
  * Tags through `?tag=` (FR-N2), grouped by Main Tag and sorted through
  * `?groupBy=`/`?sort=` (spec 10). The Master also gets the switch for
- * Players' Document creation (D-13).
+ * Players' Document creation (D-13). The filter/sort/settings row next to
+ * the title collapses independently of it, so the title stays visible.
  */
 export function RoomDocumentsPage() {
   const { t } = useTranslation();
@@ -67,6 +68,9 @@ export function RoomDocumentsPage() {
 function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; currentUserId: string }) {
   const { t } = useTranslation();
   const [createOpened, setCreateOpened] = useState(false);
+  // The filters/settings row below the title starts expanded; collapsing it
+  // just hides those controls, the title itself always stays visible.
+  const [controlsExpanded, setControlsExpanded] = useState(true);
   const room = useRoom(roomId, true);
   const documents = useDocuments(roomId, true);
   const tags = useTags(roomId, true);
@@ -99,6 +103,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   const canCreateDocument = canCreateDocuments(me, room.data);
   const shown = documents.data ? filterDocumentsByTags(documents.data, tagFilter) : undefined;
   const sorted = shown ? sortDocuments(shown, sort) : undefined;
+  const hasControls = Boolean((isMaster && room.data) || (documents.data && documents.data.length > 0));
 
   const groupByOptions: { value: DocumentGroupBy; label: string }[] = [
     { value: 'main-tag', label: t('documents.groupByMainTag') },
@@ -113,51 +118,71 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
     <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         <Group justify="space-between">
-          <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
-            {room.data ? t('documents.titleWithRoom', { room: room.data.name }) : t('documents.title')}
-          </Title>
+          <Group gap="sm" align="center" wrap="wrap">
+            <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
+              {room.data ? t('documents.titleWithRoom', { room: room.data.name }) : t('documents.title')}
+            </Title>
+            {hasControls && (
+              <UnstyledButton
+                onClick={() => setControlsExpanded((current) => !current)}
+                aria-expanded={controlsExpanded}
+                aria-label={controlsExpanded ? t('documents.hideControls') : t('documents.showControls')}
+                c="dimmed"
+                style={{ display: 'inline-flex', alignItems: 'center' }}
+              >
+                {controlsExpanded ? (
+                  <CaretDownIcon size={16} aria-hidden="true" />
+                ) : (
+                  <CaretRightIcon size={16} aria-hidden="true" />
+                )}
+              </UnstyledButton>
+            )}
+          </Group>
           {canCreateDocument && (
             <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>
               {t('documents.create')}
             </Button>
           )}
         </Group>
-
-        {isMaster && room.data && (
-          <Switch
-            label={t('documents.playersCanCreate')}
-            checked={room.data.playersCanCreateDocuments}
-            onChange={(event) => updateSettings.mutate(event.currentTarget.checked)}
-          />
+        {hasControls && (
+          <Collapse expanded={controlsExpanded}>
+            <Group gap="sm" align="flex-end" wrap="wrap">
+              {isMaster && room.data && (
+                <Switch
+                  label={t('documents.playersCanCreate')}
+                  checked={room.data.playersCanCreateDocuments}
+                  onChange={(event) => updateSettings.mutate(event.currentTarget.checked)}
+                />
+              )}
+              {documents.data && documents.data.length > 0 && (
+                <Group gap="sm" align="flex-end" wrap="wrap">
+                  <TagFilter
+                    tags={tags.data ?? []}
+                    value={tagFilter}
+                    onChange={setTagFilter}
+                    maw={{ base: '100%', sm: 320 }}
+                  />
+                  <Select
+                    aria-label={t('documents.groupByLabel')}
+                    data={groupByOptions}
+                    value={groupBy}
+                    onChange={(value) => value && setParam('groupBy', value, DEFAULT_GROUP_BY)}
+                    allowDeselect={false}
+                    w={{ base: '100%', sm: 220 }}
+                  />
+                  <Select
+                    aria-label={t('documents.sortLabel')}
+                    data={sortOptions}
+                    value={sort}
+                    onChange={(value) => value && setParam('sort', value, DEFAULT_SORT)}
+                    allowDeselect={false}
+                    w={{ base: '100%', sm: 180 }}
+                  />
+                </Group>
+              )}
+            </Group>
+          </Collapse>
         )}
-
-        {documents.data && documents.data.length > 0 && (
-          <Group gap="sm" align="flex-end" wrap="wrap">
-            <TagFilter
-              tags={tags.data ?? []}
-              value={tagFilter}
-              onChange={setTagFilter}
-              maw={{ base: '100%', sm: 320 }}
-            />
-            <Select
-              aria-label={t('documents.groupByLabel')}
-              data={groupByOptions}
-              value={groupBy}
-              onChange={(value) => value && setParam('groupBy', value, DEFAULT_GROUP_BY)}
-              allowDeselect={false}
-              w={{ base: '100%', sm: 220 }}
-            />
-            <Select
-              aria-label={t('documents.sortLabel')}
-              data={sortOptions}
-              value={sort}
-              onChange={(value) => value && setParam('sort', value, DEFAULT_SORT)}
-              allowDeselect={false}
-              w={{ base: '100%', sm: 180 }}
-            />
-          </Group>
-        )}
-
         {documents.isLoading && <Loader color="accent" />}
         {documents.isError && <Text c="red">{t('documents.loadError')}</Text>}
         {documents.data && documents.data.length === 0 && (

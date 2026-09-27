@@ -17,7 +17,7 @@ class StorageError(Exception):
     """Storage answered with an error."""
 
 
-def _headers() -> dict[str, str]:
+def _headers() -> dict[str, str]:  # pragma: no cover - real Storage HTTP only
     """Auth headers for the Storage API. The secret key bypasses Storage
     policies, so it never leaves the backend."""
     return {
@@ -26,12 +26,14 @@ def _headers() -> dict[str, str]:
     }
 
 
-def _object_url(path: str) -> str:
+def _object_url(path: str) -> str:  # pragma: no cover - real Storage HTTP only
     """The Storage API URL of one object in the images bucket."""
     return f"{settings.supabase_url}/storage/v1/object/{settings.storage_bucket}/{path}"
 
 
-async def upload(path: str, data: bytes, content_type: str) -> None:
+async def upload(  # pragma: no cover - real Storage HTTP only
+    path: str, data: bytes, content_type: str
+) -> None:
     """Server-side upload with the backend's secret key: the client never
     touches Storage itself (architecture.md, Invariant 2), and only bytes
     that already went through `app/domain/images.normalize_image` land in
@@ -43,7 +45,7 @@ async def upload(path: str, data: bytes, content_type: str) -> None:
         raise StorageError(f"Failed to upload {path}: {response.text}")
 
 
-async def remove(path: str) -> None:
+async def remove(path: str) -> None:  # pragma: no cover - real Storage HTTP only
     """Deletes one object. Idempotent: an object that is already gone counts as
     removed."""
     async with httpx.AsyncClient(timeout=30) as client:
@@ -64,7 +66,9 @@ _now = time.monotonic
 _signed_cache: dict[str, tuple[str, float]] = {}
 
 
-async def create_signed_urls(paths: Collection[str], expires_in: int) -> dict[str, str]:
+async def create_signed_urls(  # pragma: no cover - real Storage HTTP only
+    paths: Collection[str], expires_in: int
+) -> dict[str, str]:
     """Asks Storage to sign `paths` in one request. A path Storage can't sign
     (e.g. the object is gone) is left out."""
     url = f"{settings.supabase_url}/storage/v1/object/sign/{settings.storage_bucket}"

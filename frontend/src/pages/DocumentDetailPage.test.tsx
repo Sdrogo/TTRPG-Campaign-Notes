@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -142,6 +142,34 @@ describe('DocumentDetailPage', () => {
     await user.click(screen.getByRole('button', { name: 'Documenti' }));
 
     expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents');
+  });
+
+  // Guards against a route reached with no Room/Document id at all, which
+  // the app itself never links to but a malformed URL could.
+  it('renders nothing without a Room and Document id in the URL', () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/documents/:documentId" element={<DocumentDetailPage />} />
+      </Routes>,
+      { route: '/documents/doc-1' },
+    );
+
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  // Tags and Members are separate queries from the Document itself; the page
+  // must render (with nothing to show yet) while they're still in flight.
+  it('renders before the Tags and Members queries settle', async () => {
+    fetchMock.mockImplementation((path: string) => {
+      if (path === DOC) return Promise.resolve(routes.document);
+      if (path === `${DOC}/comments`) return Promise.resolve(routes.comments);
+      if (path === '/account') return Promise.resolve(rawAccount());
+      return new Promise(() => {});
+    });
+    render();
+
+    expect(await screen.findByRole('heading', { name: 'Il Cancello' })).toBeInTheDocument();
   });
 
   it('shows the Comment section', async () => {
@@ -302,6 +330,20 @@ describe('deleting the Document', () => {
     expect(writes).not.toContain(DOC);
   });
 
+  it('dismisses the confirmation on Escape too, not just Cancel', async () => {
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await user.click(editButton());
+    await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
+    expect(screen.getByText('Eliminare questo Documento?')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() =>
+      expect(screen.queryByText('Eliminare questo Documento?')).not.toBeInTheDocument(),
+    );
+  });
+
   it('deletes the Document once confirmed and navigates back to the list', async () => {
     const writes: string[] = [];
     mockApi((path) => {
@@ -353,6 +395,25 @@ describe('creating a Tag while editing', () => {
     await user.click(editButton());
 
     expect(screen.queryByRole('textbox', { name: 'Nuovo tag' })).not.toBeInTheDocument();
+  });
+
+  // Guards the handler itself, not just the disabled Save button.
+  it('drops a direct form submission while a Tag is still being created', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
+    mockApi(() => new Promise(() => {}));
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await user.click(editButton());
+
+    const tagField = screen.getByRole('textbox', { name: 'Nuovo tag' });
+    await user.type(tagField, 'Fazione');
+    const tagGroup = tagField.closest('.mantine-Group-root') as HTMLElement;
+    await user.click(within(tagGroup).getByRole('button', { name: 'Aggiungi' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Salva modifiche' })).toBeDisabled());
+
+    fireEvent.submit(screen.getByRole('textbox', { name: /^Nome/ }).closest('form') as HTMLFormElement);
+
+    expect(fetchMock).not.toHaveBeenCalledWith(DOC, expect.objectContaining({ method: 'PATCH' }));
   });
 });
 
@@ -472,6 +533,46 @@ describe('the image gallery', () => {
 
     await waitFor(() => expect(writes).toContain(`${DOC}/images/image-1`));
   });
+
+  it('shows the image being deleted as busy while it saves', async () => {
+    let resolveDelete: (value: unknown) => void = () => {};
+    mockApi(() => new Promise((resolve) => (resolveDelete = resolve)));
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await user.click(editButton());
+
+    await user.click(screen.getByRole('button', { name: 'Elimina immagine' }));
+    await user.click(screen.getByRole('button', { name: 'Elimina' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Elimina immagine' })).toHaveAttribute(
+        'data-loading',
+        'true',
+      ),
+    );
+    resolveDelete(undefined);
+  });
+
+  it('shows the favorite button as busy while it saves', async () => {
+    routes.document = rawDocument({
+      owner_ids: ['user-1'],
+      images: [rawImage({ id: 'image-2', is_favorite: false })],
+    });
+    let resolveFavorite: (value: unknown) => void = () => {};
+    mockApi(() => new Promise((resolve) => (resolveFavorite = resolve)));
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(screen.getByRole('button', { name: 'Usa come immagine principale' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Usa come immagine principale' })).toHaveAttribute(
+        'data-loading',
+        'true',
+      ),
+    );
+    resolveFavorite(routes.document);
+  });
 });
 
 describe('Owners', () => {
@@ -501,6 +602,20 @@ describe('Owners', () => {
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
 
     await waitFor(() => expect(writes).toContain(`${DOC}/owners/user-2`));
+  });
+
+  it('removes an Owner', async () => {
+    const writes: string[] = [];
+    mockApi((path) => {
+      writes.push(path);
+      return Promise.resolve(routes.document);
+    });
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(screen.getByRole('button', { name: 'Rimuovi Owner Io' }));
+
+    await waitFor(() => expect(writes).toContain(`${DOC}/owners/user-1`));
   });
 
   it('offers no Owner controls to a non-Owner', async () => {

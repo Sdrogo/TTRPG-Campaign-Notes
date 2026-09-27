@@ -141,3 +141,115 @@ async def test_unknown_invitation_code_is_not_found(
     token = make_token(str(uuid.uuid4()))
     response = await client.post("/invitations/does-not-exist/accept", headers=_auth_headers(token))
     assert response.status_code == 404
+
+
+async def test_an_expired_invitation_is_gone(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    admin_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(admin_token))
+    ).json()
+    invite = (
+        await client.post(
+            f"/rooms/{room['id']}/invitations",
+            json={"role": "player", "ttl_days": -1},
+            headers=_auth_headers(admin_token),
+        )
+    ).json()
+
+    player_token = make_token(str(uuid.uuid4()))
+    response = await client.post(
+        f"/invitations/{invite['code']}/accept", headers=_auth_headers(player_token)
+    )
+
+    assert response.status_code == 410
+
+
+@pytest.mark.usefixtures("db_session")
+async def test_get_room_is_offered_to_a_member(
+    make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(token))
+    ).json()
+
+    response = await client.get(f"/rooms/{room['id']}", headers=_auth_headers(token))
+
+    assert response.status_code == 200
+    assert response.json()["name"] == "Barovia"
+
+
+async def test_get_room_is_withheld_from_a_non_member(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    owner_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(owner_token))
+    ).json()
+
+    outsider_token = make_token(str(uuid.uuid4()))
+    response = await client.get(f"/rooms/{room['id']}", headers=_auth_headers(outsider_token))
+
+    assert response.status_code == 403
+
+
+async def test_master_changes_room_settings(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    master_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(master_token))
+    ).json()
+
+    response = await client.patch(
+        f"/rooms/{room['id']}",
+        json={"players_can_create_documents": True},
+        headers=_auth_headers(master_token),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["players_can_create_documents"] is True
+
+
+async def test_only_the_master_may_change_room_settings(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    admin_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(admin_token))
+    ).json()
+    invite = (
+        await client.post(
+            f"/rooms/{room['id']}/invitations",
+            json={"role": "player"},
+            headers=_auth_headers(admin_token),
+        )
+    ).json()
+    player_token = make_token(str(uuid.uuid4()))
+    await client.post(f"/invitations/{invite['code']}/accept", headers=_auth_headers(player_token))
+
+    response = await client.patch(
+        f"/rooms/{room['id']}",
+        json={"players_can_create_documents": True},
+        headers=_auth_headers(player_token),
+    )
+
+    assert response.status_code == 403
+
+
+async def test_listing_members_is_withheld_from_a_non_member(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    owner_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(owner_token))
+    ).json()
+
+    outsider_token = make_token(str(uuid.uuid4()))
+    response = await client.get(
+        f"/rooms/{room['id']}/members", headers=_auth_headers(outsider_token)
+    )
+
+    assert response.status_code == 403

@@ -66,6 +66,37 @@ async def test_player_cannot_create_a_tag(
     assert response.status_code == 403
 
 
+async def test_listing_tags_is_withheld_from_a_non_member(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    owner_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(owner_token))
+    ).json()
+
+    outsider_token = make_token(str(uuid.uuid4()))
+    response = await client.get(
+        f"/rooms/{room['id']}/tags", headers=_auth_headers(outsider_token)
+    )
+
+    assert response.status_code == 403
+
+
+async def test_a_blank_tag_name_is_rejected(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    master_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(master_token))
+    ).json()
+
+    response = await client.post(
+        f"/rooms/{room['id']}/tags", json={"name": "   "}, headers=_auth_headers(master_token)
+    )
+
+    assert response.status_code == 422
+
+
 async def test_duplicate_tag_name_conflicts(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:

@@ -155,7 +155,7 @@ async def create_document(
     membership = await require_membership(session, room_id, requester_id, locale)
 
     room = await rooms_repo.get_room(session, room_id)
-    if room is None:
+    if room is None:  # pragma: no cover - no route ever deletes a Room
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
     if not can_create_document(membership.role, room.players_can_create_documents):
         raise http_error(status.HTTP_403_FORBIDDEN, "errors.document.creationDisabled", locale)

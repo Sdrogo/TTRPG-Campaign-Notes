@@ -151,7 +151,7 @@ async def store_image(
             current_images,
             post_id=post_id,
         )
-    except TooManyImagesError as exc:
+    except TooManyImagesError as exc:  # pragma: no cover - every caller already checked this
         raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
 
     await upload_object(image.storage_path, normalized, locale)

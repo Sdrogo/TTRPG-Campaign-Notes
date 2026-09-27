@@ -144,7 +144,7 @@ async def get_room(
         raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
 
     room = await rooms_repo.get_room(session, room_id)
-    if room is None:
+    if room is None:  # pragma: no cover - no route ever deletes a Room
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
     return room_to_response(room)
 
@@ -170,11 +170,11 @@ async def update_room_settings(
         await rooms_repo.set_players_can_create_documents(
             session, room_id, body.players_can_create_documents
         )
-    except LookupError as exc:
+    except LookupError as exc:  # pragma: no cover - no route ever deletes a Room
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale) from exc
 
     room = await rooms_repo.get_room(session, room_id)
-    if room is None:
+    if room is None:  # pragma: no cover - no route ever deletes a Room
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
     return room_to_response(room)
 

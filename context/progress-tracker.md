@@ -215,6 +215,90 @@ Update this file after every meaningful implementation change.
   migrations (`d8a2f5c1b976`, `f3b8e2a71c94`) applied to the live
   Supabase DB** (2026-09-26, with the user's go-ahead each time; see
   Completed).
+- **UX refinement follow-ups (2026-09-27, same branch, frontend only,
+  uncommitted)**: two more polish items on top of spec 10.
+  - The Glossary burger moved to the header's left side (next to the app
+    name) instead of the right; `RoomDocumentsPage`'s Room-setting Switch
+    and Tag filter/group-by/sort controls moved into the same `Group` as
+    the page title. This session then built on that in-progress work:
+  - The filter/settings row next to the title on `RoomDocumentsPage` now
+    collapses on its own (new `controlsExpanded` state, same
+    arrow-button/`Collapse` idiom as a grouped section), independently of
+    the title, which always stays visible; hidden whenever there'd be
+    nothing in it (a Player on a Room with no Documents).
+  - The "back" button (`PageLayout`'s `backTo`/`backLabel`) moved out of
+    the page body and into `AppHeader`, right next to the burger position
+    — `AppHeader` now owns the browser-history-vs-fixed-destination logic
+    that used to live in `PageLayout` (`hasAppHistory`, `handleBack`);
+    `PageLayout` just forwards the two props through. Both props are
+    optional on `AppHeader` since `HomePage` renders it with neither (it's
+    the app's own root).
+  - New i18n keys `documents.hideControls`/`showControls` (it/en). Tests
+    moved to match: the back-button behavior tests now live under
+    `AppHeader` in `layout.test.tsx` (rendering it directly with
+    `backTo`/`backLabel`) rather than `PageLayout`; +4 new tests in
+    `RoomDocumentsPage.test.tsx` for the controls-row collapse. Frontend
+    **716/716**, `tsc --noEmit` and `oxlint` clean. Not yet checked live
+    in a browser.
+- **100% test coverage, frontend and backend (2026-09-27, same branch,
+  test-only — no behavior change)**: both codebases now measure **100%
+  statements/branches/functions/lines**, and both coverage gates were
+  raised from "floor just under today's number" to an exact 100%
+  (`frontend/vitest.config.ts`'s `thresholds`; `.github/workflows/ci.yml`'s
+  `--cov-fail-under` and the `app/domain` gate).
+  - **Frontend** (98.4/93.5/98.4/98.8% → 100% across the board, +52 tests,
+    **761/761**): most gaps were genuine missing cases (a text selection
+    collapsing the mention popup, a non-`Error` upload rejection, an
+    AppHeader/RoomDocumentsPage/DocumentDetailPage/RoomMembersPage route
+    reached with no id at all, a Comment from a departed member, an
+    unsupported `i18next` language, a Document's Tags/Members queries still
+    loading when the page first paints). A few `Select`/`Button` `onChange`
+    handlers had a `?? default` fallback for a null value `allowDeselect`
+    makes unreachable through the UI — changed to the `value && onChange(…)`
+    skip-pattern already proven elsewhere in the app instead of chasing an
+    impossible branch. Two onClick guards that duplicated an already-`disabled`
+    Button's condition (`DocumentOwners`, `TagCreateInline`) were simplified
+    away rather than tested around. `documentMentions.ts`'s sort tie-break
+    was pulled out into its own `compareRankedMentions` so every branch could
+    be asserted directly — `Array.sort`'s own comparator call order is
+    implementation-defined and can't be trusted to exercise all of them.
+    `tags.ts::groupTagsByCategory` was restructured to build straight from
+    `Map.entries()` instead of re-querying by key, removing a `?? []` that
+    could never actually miss.
+  - **Backend** (94% of `app/`, 1914 stmts/118 missed → 100%, +53 tests,
+    **328/328**): most gaps were real cases too — `GET /rooms/{id}` had no
+    test at all, `PATCH /rooms/{id}`'s actual success path likewise, several
+    404/409/422s on rooms/members/documents/owners/tags/comments-editing
+    that nobody had exercised, an expired invitation (via `ttl_days: -1`,
+    no DB fakery needed), a huge-pixel-count/tiny-file-size image, a Storage
+    upload failure (502), `app/main.py`'s lifespan (start/cancel the
+    sweeper, faked, under a real `with TestClient(app):`), and
+    `app/db/storage_cleanup.py::run_sweeper`'s own retry loop (also faked
+    DB/sleep). New `tests/test_repo_races.py` covers five repo-level
+    `LookupError` guards (`rooms_repo`, `documents_repo`, `users_repo`,
+    `comments_repo`) directly — each fires only when a row vanishes between
+    an earlier check and the write, which no single request can trigger on
+    its own. What's left as `# pragma: no cover` (with a comment explaining
+    why) is real infra a test shouldn't fake further: `app/db/session.py`'s
+    actual `get_session`/`independent_session` (every test already runs
+    against its own savepoint-bound session instead,
+    `tests/conftest.py::db_session`), `app/db/storage.py`'s real Storage
+    HTTP calls (`_headers`, `_object_url`, `upload`, `remove`,
+    `create_signed_urls` — tests fake these via `conftest.py::fake_storage`),
+    `app/auth/jwt.py`'s real `_jwk_client()` (always faked by an autouse
+    fixture — except one dedicated test that imports it before the fixture
+    can swap it, so the real construction is still checked), and three
+    `room is None`/`LookupError` guards after a room-membership check in
+    `rooms.py`/`invitations.py`/`documents.py` — genuinely unreachable since
+    no route can delete a Room. One redundant `TooManyImagesError` guard in
+    `image_uploads.py::store_image` (every caller already checked the same
+    count under the same lock before calling it) got the same treatment
+    rather than a contrived test.
+  - Both suites' builds/lint/type-check stay clean throughout
+    (`tsc --noEmit`, `oxlint`, `ruff`, `mypy` strict). Not checked live in a
+    browser — this unit touched only test files plus a few lines of
+    non-behavioral source refactoring (dead-branch removal, the
+    `pragma: no cover` comments, the `compareRankedMentions` extraction).
 
 ## Current Goal
 

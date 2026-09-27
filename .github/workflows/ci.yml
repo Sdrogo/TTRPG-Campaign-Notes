@@ -141,14 +141,15 @@ jobs:
 
       # The whole suite, database tests included (the `integration` marker
       # still lets a developer without a database run `-m "not integration"`).
-      # Two gates: 95% on `app/domain`, the home of every invariant, and 90%
-      # on all of `app/` (94% when this was set; what's left out is mostly
-      # the Storage HTTP calls and the production session, both replaced in
-      # tests).
+      # 100% of `app/`, `app/domain` included: the handful of lines that only
+      # ever run against real infrastructure (a real DB engine/session in
+      # app/db/session.py, real Storage HTTP calls in app/db/storage.py, no
+      # route ever deleting a Room) are marked `# pragma: no cover` instead of
+      # counted against the floor - so this is exact, not "just under".
       - name: Test with coverage
         run: |
-          pytest --cov=app --cov-report=term-missing --cov-fail-under=90
-          coverage report --include='app/domain/*' --fail-under=95
+          pytest --cov=app --cov-report=term-missing --cov-fail-under=100
+          coverage report --include='app/domain/*' --fail-under=100
 
       - name: Summarise coverage
         if: always()

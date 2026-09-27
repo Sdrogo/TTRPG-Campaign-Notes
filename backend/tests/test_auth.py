@@ -4,8 +4,11 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from fastapi.security import HTTPAuthorizationCredentials
 from fastapi.testclient import TestClient
+from jwt import PyJWKClient
 
 from app.auth.dependencies import CurrentUser, get_current_user
+from app.auth.jwt import _jwk_client
+from app.config import settings
 from app.main import app
 
 client = TestClient(app)
@@ -35,6 +38,15 @@ def test_me_with_wrong_audience_is_unauthorized(make_token: Callable[..., str]) 
     token = make_token(USER_ID, aud="something-else")
     response = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 401
+
+
+def test_jwk_client_points_at_this_projects_jwks_endpoint() -> None:
+    # Imported directly (not through app.auth.jwt), so the autouse fixture
+    # that fakes it for every other test doesn't apply here: this exercises
+    # the real, never-contacted-in-tests construction.
+    client = _jwk_client()
+    assert isinstance(client, PyJWKClient)
+    assert client.uri == settings.supabase_jwks_url
 
 
 def _user_from(make_token: Callable[..., str], metadata: dict[str, object]) -> CurrentUser:

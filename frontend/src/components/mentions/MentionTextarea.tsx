@@ -108,10 +108,11 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }
     latest.current.onChange(result.text);
   };
 
+  // Only reachable (keyboard 'select', or clicking a rendered suggestion)
+  // while the popup is open, which itself requires a `mention` - and by its
+  // own definition, only ever set once `caret` is too.
   const pick = (target: MentionTarget) => {
-    if (mention && caret !== null) {
-      complete(value, mention, caret, target);
-    }
+    complete(value, mention as MentionQuery, caret as number, target);
   };
 
   const create = async () => {
@@ -147,6 +148,9 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }
       onKeyDown?.(event);
       return;
     }
+    // `action` only comes from `mentionKeyAction`, called only while `opened`
+    // - which itself requires a `mention` - so it's set on every case below.
+    const activeMention = mention as MentionQuery;
     event.preventDefault();
     switch (action) {
       case 'next':
@@ -157,7 +161,7 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }
         pick(candidates[active]);
         break;
       case 'close':
-        setDismissedStart(mention?.start ?? null);
+        setDismissedStart(activeMention.start);
         break;
       case 'highlightCreate':
         setCreateHighlighted(true);

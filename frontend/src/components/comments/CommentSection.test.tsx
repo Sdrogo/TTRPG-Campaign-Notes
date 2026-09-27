@@ -121,6 +121,39 @@ describe('CommentSection', () => {
     await waitFor(() => expect(composer()).toHaveValue(''));
   });
 
+  it('marks the composer submitting while a new Comment saves', async () => {
+    mockRoutes([]);
+    const { user } = render();
+    await screen.findByText(/Nessun commento ancora/);
+
+    let resolvePost: (value: unknown) => void = () => {};
+    mockRoutes([rawComment()], () => new Promise((resolve) => (resolvePost = resolve)));
+    await user.type(composer(), 'Ricordate il sigillo.');
+    await user.click(screen.getByRole('button', { name: /Pubblica/ }));
+
+    expect(screen.getByRole('button', { name: /Pubblica/ })).toHaveAttribute('data-loading', 'true');
+    resolvePost(rawComment());
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Pubblica/ })).not.toHaveAttribute('data-loading', 'true'),
+    );
+  });
+
+  // The composer's own "submitting" only ever means a *new* Comment is being
+  // posted - an in-place edit uses the same mutation but must not light it up.
+  it('does not mark the composer submitting while an in-place edit saves', async () => {
+    let resolvePatch: (value: unknown) => void = () => {};
+    mockRoutes([rawComment()], () => new Promise((resolve) => (resolvePatch = resolve)));
+    const { user } = render();
+    await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
+
+    await user.click(screen.getByText('Modifica'));
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+
+    expect(screen.getByRole('button', { name: /Pubblica/ })).not.toHaveAttribute('data-loading', 'true');
+    resolvePatch(rawComment());
+    await waitFor(() => expect(screen.getByText('Modifica')).toBeInTheDocument());
+  });
+
   it('reports a failed post', async () => {
     mockRoutes([]);
     const { user } = render();
@@ -292,5 +325,34 @@ describe('deleting from the list', () => {
     await user.click(screen.getAllByRole('button', { name: 'Elimina' }).at(-1)!);
 
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
+  });
+
+  // While one Comment's deletion is in flight, every other Comment in the
+  // list is re-rendered too - each must compute its own `deleting` as false.
+  it('only marks the Comment actually being deleted, leaving the rest alone', async () => {
+    let resolveDelete: (value: unknown) => void = () => {};
+    mockRoutes(
+      [rawComment(), rawComment({ id: 'comment-2', body: 'Secondo', author_id: 'user-2' })],
+      () => new Promise((resolve) => (resolveDelete = resolve)),
+    );
+    const { user } = render();
+    await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(2));
+
+    await user.click(screen.getAllByText('Elimina')[0]);
+    // Only the trigger for comment-1's own popover is open, so exactly one
+    // "Elimina" button isn't a list-row trigger (those carry `.comment-action`).
+    const confirmButtons = screen
+      .getAllByRole('button', { name: 'Elimina' })
+      .filter((button) => !button.querySelector('.comment-action'));
+    await user.click(confirmButtons[0]);
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/rooms/room-1/documents/doc-1/comments/comment-1',
+        { method: 'DELETE' },
+      ),
+    );
+    expect(screen.getByText('Secondo')).toBeInTheDocument();
+    resolveDelete(undefined);
   });
 });

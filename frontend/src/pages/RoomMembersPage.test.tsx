@@ -68,6 +68,22 @@ describe('RoomMembersPage', () => {
     expect(container.querySelector('.mantine-Loader-root')).toBeInTheDocument();
   });
 
+  // Guards against a route reached with no Room id at all, which the app
+  // itself never links to but a malformed URL could.
+  it('renders nothing without a Room id in the URL', () => {
+    mockMembers([]);
+
+    renderWithProviders(
+      <Routes>
+        <Route path="/members" element={<RoomMembersPage />} />
+      </Routes>,
+      { route: '/members' },
+    );
+
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('asks an anonymous visitor to sign in', () => {
     sessionMock.mockReturnValue({ session: null, loading: false } as SessionState);
     mockMembers([]);

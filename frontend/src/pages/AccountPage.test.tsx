@@ -216,6 +216,54 @@ describe('the avatar', () => {
 
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
   });
+
+  it('uploads a picked file', async () => {
+    let resolveUpload: (value: unknown) => void = () => {};
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Account' });
+    fetchMock.mockImplementation(() => new Promise((resolve) => (resolveUpload = resolve)));
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await user.upload(input, new File(['bytes'], 'io.png', { type: 'image/png' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Carica foto/ })).toHaveAttribute('data-loading', 'true'),
+    );
+    // Uploading disables the other avatar actions too.
+    expect(screen.getByRole('button', { name: /Da URL/ })).toBeDisabled();
+    resolveUpload(rawAccount());
+  });
+
+  it('shows the URL import as the one busy while it runs', async () => {
+    let resolveImport: (value: unknown) => void = () => {};
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Account' });
+    fetchMock.mockImplementation(() => new Promise((resolve) => (resolveImport = resolve)));
+
+    await user.click(screen.getByRole('button', { name: /Da URL/ }));
+    await user.type(screen.getByLabelText("URL dell'immagine"), 'https://example.com/me.png');
+    await user.click(screen.getByRole('button', { name: 'Usa immagine' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Da URL/ })).toHaveAttribute('data-loading', 'true'),
+    );
+    resolveImport(rawAccount());
+  });
+
+  it('shows removal as the one busy while it runs', async () => {
+    let resolveRemove: (value: unknown) => void = () => {};
+    fetchMock.mockResolvedValue(rawAccount({ avatar_url: 'http://a/me.webp' }));
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Account' });
+    fetchMock.mockImplementation(() => new Promise((resolve) => (resolveRemove = resolve)));
+
+    await user.click(screen.getByRole('button', { name: /Rimuovi/ }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Rimuovi/ })).toHaveAttribute('data-loading', 'true'),
+    );
+    resolveRemove(rawAccount());
+  });
 });
 
 describe('signing out', () => {

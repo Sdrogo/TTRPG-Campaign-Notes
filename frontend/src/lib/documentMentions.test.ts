@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  compareRankedMentions,
   creatableKinds,
   documentsWithTagsHref,
   filterMentionCandidates,
@@ -168,6 +169,33 @@ describe('filterMentionCandidates', () => {
   });
 });
 
+// Tested directly, not just through filterMentionCandidates: sort()'s own
+// comparator call order is implementation-defined, so it can't be trusted to
+// exercise every branch (e.g. a Document ever landing as the first argument).
+describe('compareRankedMentions', () => {
+  const asDocument = (document: Document, rank: number) => ({
+    target: { kind: 'document' as const, document, tags: [] },
+    rank,
+  });
+  const asTag = (tag: Tag, rank: number) => ({ target: { kind: 'tag' as const, tag, documentCount: 0 }, rank });
+
+  it('ranks the lower number first', () => {
+    expect(compareRankedMentions(asDocument(documents[0], 0), asDocument(documents[1], 1))).toBeLessThan(0);
+  });
+
+  it('puts a Document before a Tag on a tie', () => {
+    expect(compareRankedMentions(asDocument(documents[0], 0), asTag(npcTag, 0))).toBeLessThan(0);
+  });
+
+  it('puts a Tag after a Document on a tie, whichever argument it is', () => {
+    expect(compareRankedMentions(asTag(npcTag, 0), asDocument(documents[0], 0))).toBeGreaterThan(0);
+  });
+
+  it('sorts alphabetically within the same kind on a tie', () => {
+    expect(compareRankedMentions(asTag(npcTag, 0), asTag(placeTag, 0))).toBeLessThan(0);
+  });
+});
+
 describe('insertMention', () => {
   it('replaces the typed query with the full name and a space', () => {
     expect(insertMention('Meet #cou', { start: 5, query: 'cou' }, 9, 'Count Vlad')).toEqual({
@@ -320,6 +348,7 @@ describe('mentionKeyAction', () => {
     expect(mentionKeyAction(key('Enter'), onCreate)).toBe('create');
     expect(mentionKeyAction(key('Tab'), onCreate)).toBe('create');
     expect(mentionKeyAction(key('ArrowUp'), onCreate)).toBe('unhighlightCreate');
+    expect(mentionKeyAction(key('a'), onCreate)).toBeNull();
     expect(mentionKeyAction(key('Enter', { ctrlKey: true }), onCreate)).toBeNull();
   });
 

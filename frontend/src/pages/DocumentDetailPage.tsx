@@ -207,13 +207,13 @@ function DocumentPanel({
                 documentName={document.name}
                 canDelete={isOwner && editing}
                 onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
-                deletingImageId={deleteImage.isPending ? (deleteImage.variables ?? null) : null}
+                deletingImageId={deleteImage.isPending ? (deleteImage.variables as string) : null}
                 // Spec 07: not gated on `editing` like deletion - picking the
                 // leading image is reversible, so it needs no edit mode.
                 onSetFavorite={
                   isOwner ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError }) : undefined
                 }
-                settingFavoriteId={setFavorite.isPending ? (setFavorite.variables ?? null) : null}
+                settingFavoriteId={setFavorite.isPending ? (setFavorite.variables as string) : null}
               />
             </Box>
           )}

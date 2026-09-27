@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
@@ -178,6 +178,28 @@ describe('adding a Tag inline', () => {
     await user.click(addTag());
 
     await waitFor(() => expect(submit()).toBeDisabled());
+  });
+
+  // Guards the handler itself, not just the disabled button - belt and
+  // braces against any way the form could still be submitted (e.g. Enter in
+  // a field, which doesn't go through the button's disabled state).
+  it('drops a direct form submission while a Tag is still being created', async () => {
+    const { user } = render();
+    await tagsLoaded();
+
+    fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
+      path.endsWith('/tags') && init?.method === 'POST'
+        ? new Promise(() => {})
+        : Promise.resolve(routes.tags),
+    );
+    await user.type(nameField(), 'Il Cancello');
+    await user.type(tagField(), 'Fazione');
+    await user.click(addTag());
+    await waitFor(() => expect(submit()).toBeDisabled());
+
+    fireEvent.submit(nameField().closest('form') as HTMLFormElement);
+
+    expect(fetchMock).not.toHaveBeenCalledWith('/rooms/room-1/documents', expect.anything());
   });
 
   // Tag creation is async: without a functional state update, a Name/
