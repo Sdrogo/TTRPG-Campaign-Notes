@@ -14,6 +14,12 @@ import { AccountButton } from './account/AccountButton';
 
 vi.mock('../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 
+const navigate = vi.fn();
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
+  useNavigate: () => navigate,
+}));
+
 const fetchMock = vi.mocked(apiFetch);
 
 beforeEach(() => {
@@ -21,6 +27,10 @@ beforeEach(() => {
   fetchMock.mockImplementation((path: string) =>
     path.endsWith('/tags') ? Promise.resolve([]) : Promise.resolve(rawAccount()),
   );
+  navigate.mockReset();
+  // jsdom's `window.history` persists across tests in this file (MemoryRouter
+  // never touches it), so each test starts from a clean, "no app history" state.
+  window.history.replaceState(null, '', '/');
 });
 
 describe('PageCard', () => {
@@ -36,18 +46,45 @@ describe('PageCard', () => {
 });
 
 describe('PageLayout', () => {
-  it('renders the back link and the content', () => {
+  it('renders the back button and the content', () => {
     renderWithProviders(
       <PageLayout backTo="/rooms/room-1/documents" backLabel="Documenti">
         <p>Contenuto</p>
       </PageLayout>,
     );
 
-    expect(screen.getByRole('link', { name: 'Documenti' })).toHaveAttribute(
-      'href',
-      '/rooms/room-1/documents',
-    );
+    expect(screen.getByRole('button', { name: 'Documenti' })).toBeInTheDocument();
     expect(screen.getByText('Contenuto')).toBeInTheDocument();
+  });
+
+  // The button prefers real browser history over the fixed `backTo`, so it
+  // lands wherever the user actually came from.
+  it('falls back to backTo when there is no app history behind this page', async () => {
+    renderWithProviders(
+      <PageLayout backTo="/rooms/room-1/documents" backLabel="Documenti">
+        <p>Contenuto</p>
+      </PageLayout>,
+    );
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Documenti' }));
+
+    expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents');
+  });
+
+  it('goes back through real browser history when there is some', async () => {
+    // Set by React Router's BrowserHistory after at least one in-app push.
+    window.history.pushState({ idx: 1 }, '', '/somewhere-else');
+    renderWithProviders(
+      <PageLayout backTo="/rooms/room-1/documents" backLabel="Documenti">
+        <p>Contenuto</p>
+      </PageLayout>,
+    );
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Documenti' }));
+
+    expect(navigate).toHaveBeenCalledWith(-1);
   });
 
   it('includes the app header', () => {

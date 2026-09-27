@@ -310,3 +310,73 @@ describe('grouping and sorting', () => {
     expect(screen.queryByRole('combobox', { name: 'Ordina per' })).not.toBeInTheDocument();
   });
 });
+
+// Clicking a group header collapses/expands just that group (spec: an arrow
+// on the left reflects whether it's expanded).
+describe('collapsing a group', () => {
+  beforeEach(() => {
+    routes.documents = [
+      rawDocument({ id: 'doc-1', name: 'Zanna', tag_ids: ['tag-npc'] }),
+      rawDocument({ id: 'doc-2', name: 'Alba', tag_ids: [] }),
+    ];
+  });
+
+  function mockApiWithMainTags() {
+    fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
+      if (init?.method) return Promise.resolve();
+      if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
+      if (path === '/rooms/room-1/tags')
+        return Promise.resolve([...tags, { id: 'tag-npc', name: 'NPC', category: 'Type' }]);
+      if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
+      if (path === '/rooms/room-1') return Promise.resolve(routes.room);
+      if (path === '/account') return Promise.resolve(rawAccount());
+      return Promise.resolve(routes.documents);
+    });
+  }
+
+  const groupButton = (name: string) => screen.getByRole('button', { name });
+
+  it('starts every group expanded', async () => {
+    mockApiWithMainTags();
+    render();
+    await screen.findByText('Zanna');
+
+    expect(groupButton('#NPC')).toHaveAttribute('aria-expanded', 'true');
+    expect(groupButton('Senza Tag principale')).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('collapses a group on click, hiding its Documents', async () => {
+    mockApiWithMainTags();
+    const { user } = render();
+    await screen.findByText('Zanna');
+
+    await user.click(groupButton('#NPC'));
+
+    expect(groupButton('#NPC')).toHaveAttribute('aria-expanded', 'false');
+    await waitFor(() => expect(screen.getByText('Zanna')).not.toBeVisible());
+  });
+
+  it('expands it again on a second click', async () => {
+    mockApiWithMainTags();
+    const { user } = render();
+    await screen.findByText('Zanna');
+
+    await user.click(groupButton('#NPC'));
+    await user.click(groupButton('#NPC'));
+
+    expect(groupButton('#NPC')).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(screen.getByText('Zanna')).toBeVisible());
+  });
+
+  it('collapses groups independently of one another', async () => {
+    mockApiWithMainTags();
+    const { user } = render();
+    await screen.findByText('Zanna');
+
+    await user.click(groupButton('#NPC'));
+
+    expect(groupButton('#NPC')).toHaveAttribute('aria-expanded', 'false');
+    expect(groupButton('Senza Tag principale')).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Alba')).toBeVisible();
+  });
+});

@@ -5,7 +5,7 @@
 Dark only, no light mode. Gothic/vampiric technical workspace: a
 near-black backdrop with a cold purple undertone, layered surfaces
 that read like parchment under candlelight gone digital, and a
-single vivid violet accent for anything interactive. The mood is
+single vivid red accent for anything interactive. The mood is
 closer to a grimoire or a vampire's study than a generic dark IDE
 theme — restrained ornamentation (thin borders, subtle glow on
 accent elements), never gaudy or neon.
@@ -25,8 +25,8 @@ Mantine theme is built from these).
 | Raised surface (modals/popovers) | `--bg-raised` | `#1f1826` |
 | Primary text        | `--text-primary`     | `#e8e3ea` |
 | Muted text           | `--text-muted`       | `#9b8ba3` |
-| Primary accent       | `--accent-primary`   | `#9333ea` |
-| Accent hover/active  | `--accent-strong`    | `#a855f7` |
+| Primary accent       | `--accent-primary`   | `#ea3333` |
+| Accent hover/active  | `--accent-strong`    | `#f75555` |
 | Border               | `--border-default`   | `#2a2230` |
 | Error                | `--state-error`      | `#dc2626` |
 | Success              | `--state-success`    | `#4f9c6c` |
@@ -36,9 +36,8 @@ Notes:
 - `--accent-primary` is reserved for interactive elements (links,
   primary buttons, active tab, focus ring) — never used decoratively
   on large surfaces.
-- `--state-error` doubles as the "blood red" the theme calls for; do
-  not introduce a second red. It is also used for destructive
-  actions (delete Document, remove member).
+- `--state-error` is reserved for errors and destructive actions
+  (delete Document, remove member), separate from the red accent.
 - All components use these tokens — no hardcoded hex values in
   component code. **One exception: country flags** (the language
   selector, spec 09) keep their official colors. They're content, not
@@ -79,7 +78,7 @@ built into `UserAvatar`, spec `05 - Account Page`). A circle reads as
 **Mantine** (v7+) is the component library, used directly rather
 than restyled from scratch — it ships its own theming system, so
 the tokens above are wired into a single `theme` object (colors,
-fonts, radius, `primaryColor: 'violet'` mapped to the accent shades)
+fonts, radius, `primaryColor: 'accent'` mapped to the accent shades)
 passed to `MantineProvider`, instead of hand-written CSS custom
 properties everywhere. Components live under `components/` in the
 frontend, built as thin wrappers around Mantine primitives where the
@@ -267,6 +266,12 @@ other icon set.
   none) above its own `SimpleGrid`; a Document with several Main Tags
   appears under each one. "Nessun raggruppamento" collapses back to the
   single flat grid spec 07 already had.
+  **Each group collapses independently** (2026-09-26): its `Title` wraps a
+  clickable row (a `CaretDownIcon`/`CaretRightIcon` at 16px, then the
+  label) that toggles a Mantine `Collapse` around that group's grid —
+  `aria-expanded` on the button reflects the state. Every group starts
+  expanded; collapsing one doesn't affect the others, and the state isn't
+  persisted (a reload starts fresh).
 - **Glossary Index** (`GlossaryIndexDrawer`, 2026-09-25, spec 10): a
   left-anchored Mantine `Drawer`, toggled by a `Burger` on the right of
   `AppHeader` (next to the account avatar) — shown only on a Room-scoped

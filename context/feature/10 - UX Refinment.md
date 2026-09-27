@@ -18,6 +18,12 @@
 - Should be possible to create a new TAG when adding TAGS to a Document in edit mode.
 - Document can be deleted by Owner in edit mode. A modal should ask for
   confirmation before performing the delete on the DB.
+- The back navigation button (top left of each nested page) should pop
+  back to the previous page the user actually came from, instead of
+  always navigating to a fixed destination (e.g. always "My Rooms").
+- Grouped sections in RoomDocumentsPage should be collapsible/expandable
+  by clicking the group header, with a small arrow on the left showing
+  whether the section is expanded.
 
 ## Definition of Done
 
