@@ -1,6 +1,6 @@
 import { createTheme, type MantineColorsTuple } from '@mantine/core';
 
-// Anchored at --accent-primary (#9333ea) = shade 6, --accent-strong (#a855f7) = shade 5.
+// Anchored at --accent-primary (#ea3333) = shade 6, --accent-strong (#f75555) = shade 5.
 const accent: MantineColorsTuple = [
   'rgb(252, 231, 231)',
   'rgb(249, 201, 201)',
@@ -15,7 +15,7 @@ const accent: MantineColorsTuple = [
 ];
 
 /**
- * The Mantine theme: the purple accent scale, the app's fonts and the radius
+ * The Mantine theme: the red accent scale, the app's fonts and the radius
  * scale from context/ui-context.md. Dark only.
  */
 export const theme = createTheme({
