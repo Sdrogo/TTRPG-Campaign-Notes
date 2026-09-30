@@ -43,7 +43,10 @@
     "tag": {
       "notAllowedToManage": "Solo un Amministratore o il Master possono gestire i Tag",
       "nameRequired": "Il nome del Tag è obbligatorio",
-      "duplicateName": "Esiste già un Tag con questo nome in questa Room"
+      "duplicateName": "Esiste già un Tag con questo nome in questa Room",
+      "onlyAdministratorCanSetMainTags": "Solo un Amministratore può scegliere i Tag principali",
+      "duplicateMainTag": "Un Tag può comparire una sola volta tra i Tag principali",
+      "unknownMainTag": "Un Tag principale non è un Tag di questa Room"
     },
     "image": {
       "notFound": "Immagine non trovata",

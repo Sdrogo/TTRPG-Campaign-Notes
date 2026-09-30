@@ -11,6 +11,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     UniqueConstraint,
@@ -77,6 +78,10 @@ class TagRow(Base):
     )
     name: Mapped[str] = mapped_column(String(100))
     category: Mapped[str | None] = mapped_column(String(100))
+    # Non-NULL = a Main Tag (spec 11); Documents group by these in ascending
+    # order. A label like `category`, never a constraint: positions are
+    # rewritten together, so gaps and ties are harmless.
+    main_position: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

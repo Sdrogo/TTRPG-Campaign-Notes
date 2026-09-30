@@ -62,7 +62,15 @@ async def insert_new_room(session: AsyncSession, plan: NewRoomPlan) -> None:
         )
     )
     for tag in plan.default_tags:
-        session.add(TagRow(id=tag.id, room_id=tag.room_id, name=tag.name, category=tag.category))
+        session.add(
+            TagRow(
+                id=tag.id,
+                room_id=tag.room_id,
+                name=tag.name,
+                category=tag.category,
+                main_position=tag.main_position,
+            )
+        )
     await session.flush()
 
 

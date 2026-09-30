@@ -43,7 +43,10 @@
     "tag": {
       "notAllowedToManage": "Only an Administrator or the Master can manage Tags",
       "nameRequired": "Tag name is required",
-      "duplicateName": "A Tag with this name already exists in this Room"
+      "duplicateName": "A Tag with this name already exists in this Room",
+      "onlyAdministratorCanSetMainTags": "Only an Administrator can choose the Main Tags",
+      "duplicateMainTag": "A Tag can only appear once among the Main Tags",
+      "unknownMainTag": "A Main Tag is not a Tag of this Room"
     },
     "image": {
       "notFound": "Image not found",

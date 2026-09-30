@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from app.domain.errors import DomainError
 from app.domain.models import Membership, Room, RoomRole, RoomStatus, Tag
 
-# D-14 / FR-N1: default Tags created with every Room. Also the Room's "Main
-# Tags" (category "Type") that spec 10 groups Documents by.
+# D-14 / FR-N1: default Tags created with every Room. They are also its first
+# Main Tags (spec 10, 11), in this order; an Administrator can change both.
 DEFAULT_TAGS: tuple[tuple[str, str], ...] = (
     ("NPC", "Type"),
     ("PC", "Type"),
@@ -54,7 +54,13 @@ def plan_new_room(name: str, game_system: str | None, creator_id: uuid.UUID) -> 
         is_admin=True,
     )
     default_tags = tuple(
-        Tag(id=uuid.uuid4(), room_id=room_id, name=tag_name, category=category)
-        for tag_name, category in DEFAULT_TAGS
+        Tag(
+            id=uuid.uuid4(),
+            room_id=room_id,
+            name=tag_name,
+            category=category,
+            main_position=position,
+        )
+        for position, (tag_name, category) in enumerate(DEFAULT_TAGS)
     )
     return NewRoomPlan(room=room, owner_membership=owner_membership, default_tags=default_tags)
