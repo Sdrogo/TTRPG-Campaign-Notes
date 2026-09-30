@@ -9,12 +9,11 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-01)
 
-Branch `feature/11-2-tag-combinations` (spec 11_2, PR open). Latest measured
-state: frontend **819/819** tests at **100%** coverage; backend **355**
-tests (212 without a database pass locally; the 143 DB tests, including the
-new Main-items API tests, run in CI only — migration `b5d8f2a9c1e3` is not on
-the live DB yet, see Next Up); lint, `tsc`, ruff and mypy strict clean. CI
-keeps exact-100% gates.
+Branch `feature/11-3-index-follows-main-items` (spec 11_3, PR open). Latest
+measured state: frontend **827/827** tests at **100%** coverage; backend
+**355** tests (DB tests run in CI; migrations `a7c3e9d1b254` and
+`b5d8f2a9c1e3` are both applied to the live DB); lint, `tsc`, ruff and mypy
+strict clean. CI keeps exact-100% gates.
 
 No other unit is in progress. Candidates for the next one are in **Next
 Up**.
@@ -172,12 +171,11 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   09-30** after the deployed backend returned 500 on `/tags` (the code had
   deployed before the migration). Apply migrations before merging.
 
-## In Progress
+### Tag combinations (spec 11_2, 10-01, PR #25 merged)
 
-### Tag combinations (spec 11_2, branch `feature/11-2-tag-combinations`)
+- Migration `b5d8f2a9c1e3` **applied to the live DB on 10-01** (with the
+  user's go-ahead, before the merge).
 
-Implementation is ready; completion is pending approval and application of
-migration `b5d8f2a9c1e3` to the live DB (see Next Up).
 
 - **Backend first**: a combination of two or more Tags is a line item of the
   Documents grouping, in the same order as the single Main Tags. Tables
@@ -193,15 +191,27 @@ migration `b5d8f2a9c1e3` to the live DB (see Next Up).
   **all** its Tags); `MainTagsEditor` gained combinations through
   `CombinationAdder`; group headings read `#A + #B`.
 
+### Index follows the Main items (spec 11_3, 10-01, branch `feature/11-3-index-follows-main-items`)
+
+- The Glossary/Tag index drawer now opens with the Room's Main items - single
+  Tags **and combinations** - instead of only `mainPosition` Tags. Index,
+  Documents grouping and setup editor all consume one list:
+  `useMainItems` -> `lib/mainItems.ts::resolveMainItems` (ordered, drops items
+  with a missing Tag). A combination links to the Documents filtered by all its
+  Tags (`?tag=a&tag=b`, AND - the same rule as its group).
+- `groupTagsByCategory(tags, items)` now returns `entries: Tag[][]`; a Tag
+  that is a *single* Main item is listed only in the first group, one that is
+  only inside a combination keeps its category place. Saving on the setup
+  page writes the cached list the drawer reads, so it updates without reload.
+- Removed the now-dead `isMainTag`/`sortMainTags`; `Tag.mainPosition` is no
+  longer read by the UI (the backend still stores it for single items).
+
 ## Next Up
 
-- **Apply migration `b5d8f2a9c1e3` to the live DB BEFORE merging spec 11_2**
-  (adds two empty tables; needs the user's go-ahead). Merge order matters
-  twice: Render redeploys the backend on merge and the API shape changed, so
-  the old frontend's setup page gets 422 on save until Vercel catches up.
-- **Browser check of spec 11** (migration is applied): setup page as
-  Administrator and as a plain member, reorder + save, Documents grouping
-  follows the order; and the one-line `TagFilter` with 3+ Tags selected.
+- **Browser check of specs 11-11_3**: setup page as Administrator and as a
+  plain member, reorder + save, add a combination; the Documents grouping and
+  the Tag index both follow the order; the one-line `TagFilter` with 3+ Tags
+  selected.
 - **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only): set it to
   `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app` and redeploy.
   Then the look-alike `…-abc123-evil-rum11.vercel.app` must get no
