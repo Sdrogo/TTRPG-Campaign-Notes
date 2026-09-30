@@ -114,6 +114,28 @@ describe('MemberManagement', () => {
     expect(onLeft).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['Altro', 'Rimuovi'],
+    ['Io', 'Esci'],
+  ])('shows loading only on %s while removing them', async (name, label) => {
+    let finishRemoval!: () => void;
+    fetchMock.mockReturnValueOnce(new Promise<void>((resolve) => {
+      finishRemoval = resolve;
+    }));
+    const { user } = render([me, member(), member({ userId: 'user-3', displayName: 'Terzo' })]);
+    const selectedButton = within(rowFor(name)).getByRole('button', { name: label });
+
+    await user.click(selectedButton);
+
+    await waitFor(() => expect(selectedButton).toHaveAttribute('data-loading'));
+    for (const otherName of ['Io', 'Altro', 'Terzo'].filter((other) => other !== name)) {
+      expect(within(rowFor(otherName)).getByRole('button')).not.toHaveAttribute('data-loading');
+    }
+
+    finishRemoval();
+    await waitFor(() => expect(selectedButton).not.toHaveAttribute('data-loading'));
+  });
+
   // Leaving drops the Room off your own list, so staying on its page would
   // show a 403 on the next refresh.
   it('reports that you left the Room yourself', async () => {

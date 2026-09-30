@@ -130,7 +130,7 @@ export function MemberManagement({
                     variant="subtle"
                     size="xs"
                     onClick={() => handleRemove(member.userId)}
-                    loading={removeMember.isPending}
+                    loading={removeMember.isPending && removeMember.variables === member.userId}
                   >
                     {isSelf ? t('common.leave') : t('common.remove')}
                   </Button>

@@ -10,7 +10,7 @@ step-by-step notes) is in
 ## Current Status (2026-09-30)
 
 Branch `feature/11-room-setup-page` (spec 11, PR open). Latest measured
-state: frontend **794/794** tests at **100%** coverage; backend **341**
+state: frontend **796/796** tests at **100%** coverage; backend **341**
 tests (205 without a database pass locally; the 136 DB tests, 13 of them
 new, run in CI only — the migration isn't on the live DB yet, see Next Up);
 lint, `tsc`, ruff and mypy strict clean. CI keeps exact-100% gates.
@@ -21,6 +21,11 @@ Up**.
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Member removal loading (09-30)
+
+- The member table shows loading only for the user being removed or leaving;
+  pending-state regression cases cover both actions and other rows.
 
 ### Foundations (09-21)
 
