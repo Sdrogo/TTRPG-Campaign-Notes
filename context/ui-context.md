@@ -278,15 +278,20 @@ other icon set.
   `aria-expanded` on the button reflects the state. Every group starts
   expanded; collapsing one doesn't affect the others, and the state isn't
   persisted (a reload starts fresh).
-- **Glossary Index** (`GlossaryIndexDrawer`, 2026-09-25, spec 10): a
-  left-anchored Mantine `Drawer`, toggled by a `Burger` on the right of
-  `AppHeader` (next to the account avatar) — shown only on a Room-scoped
-  page (`PageLayout`'s `roomId` prop). Lists every Tag in the Room, grouped
-  by category like the grouping control above (Main Tags first, in the
-  Room's chosen order, under "Tag principali", then other categories by name, then uncategorized
-  under "Altri Tag"), each one linking to the Documents list filtered by
-  it — the same destination a `#Tag` mention already leads to. Not the
-  Glossary entity from `requirements.md` (FR-N3/FR-N4, terms with their own
+- **Glossary Index** (`GlossaryIndexDrawer`, 2026-09-25, spec 10; Main items
+  2026-10-01, spec 11_3): a left-anchored Mantine `Drawer`, toggled by a
+  `Burger` on the right of `AppHeader` (next to the account avatar) — shown
+  only on a Room-scoped page (`PageLayout`'s `roomId` prop). It opens with
+  "Tag principali": the Room's Main items — single Tags and Tag combinations
+  (`#A + #B`) — **in exactly the order the Documents page groups by**; both
+  read the same `useMainItems` list through `resolveMainItems`, so they can't
+  diverge, and saving on the Room setup page updates the index without a
+  reload. Then the other Tags by category (alphabetical), uncategorized under
+  "Altri Tag". A Tag that is a single Main item is listed only under
+  "Tag principali". Each entry links to the Documents list filtered by its
+  Tag, or by all the Tags of a combination — the same destination a `#Tag`
+  mention leads to, and the same Documents its group holds. Not the Glossary
+  entity from `requirements.md` (FR-N3/FR-N4, terms with their own
   definitions) — that remains unbuilt; this is a navigational index over
   Tags, a deliberate scope decision for this spec.
 - **Favorite image** (`DocumentImageGallery`, 2026-09-23, spec 07): an Owner

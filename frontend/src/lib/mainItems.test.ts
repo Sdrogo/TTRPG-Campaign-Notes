@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { isCombination, itemKey, itemLabel, resolveItem, sameTagSet } from './mainItems';
+import {
+  isCombination,
+  itemKey,
+  itemLabel,
+  resolveItem,
+  resolveMainItems,
+  sameTagSet,
+} from './mainItems';
 import type { Tag } from '../types/tag';
 
 const tag = (id: string, name: string): Tag => ({ id, name, category: null, mainPosition: null });
@@ -48,5 +55,19 @@ describe('sameTagSet', () => {
   it('is false for different Tags or sizes', () => {
     expect(sameTagSet(['a', 'b'], ['a', 'c'])).toBe(false);
     expect(sameTagSet(['a'], ['a', 'b'])).toBe(false);
+  });
+});
+
+describe('resolveMainItems', () => {
+  it('resolves each item in order, singles and combinations', () => {
+    const items = [{ tagIds: ['place'] }, { tagIds: ['npc', 'place'] }];
+
+    expect(resolveMainItems(items, [npc, place])).toEqual([[place], [npc, place]]);
+  });
+
+  it('leaves out an item with a missing Tag', () => {
+    const items = [{ tagIds: ['npc', 'gone'] }, { tagIds: ['npc'] }];
+
+    expect(resolveMainItems(items, [npc, place])).toEqual([[npc]]);
   });
 });
