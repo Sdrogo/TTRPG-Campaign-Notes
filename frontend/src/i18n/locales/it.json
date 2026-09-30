@@ -138,7 +138,7 @@
     "loadError": "Errore nel caricamento delle impostazioni della Stanza.",
     "mainTags": {
       "title": "Tag principali",
-      "description": "Nella pagina dei Documenti i Documenti sono raggruppati per questi Tag, in quest'ordine.",
+      "description": "Nella pagina dei Documenti i Documenti sono raggruppati per queste voci, in quest'ordine. Una voce è un Tag, o una combinazione di due o più: i suoi Documenti hanno tutti i Tag.",
       "empty": "Nessun Tag principale: i Documenti non saranno raggruppati.",
       "moveUp": "Sposta {{name}} su",
       "moveDown": "Sposta {{name}} giù",
@@ -147,7 +147,10 @@
       "addPlaceholder": "Scegli un Tag",
       "noMoreTags": "Ogni Tag è già un Tag principale.",
       "save": "Salva ordine",
-      "saved": "Tag principali salvati"
+      "saved": "Tag principali salvati",
+      "combinationLabel": "Aggiungi una combinazione",
+      "combinationPlaceholder": "Scegli due o più Tag",
+      "addCombination": "Aggiungi combinazione"
     }
   },
   "documents": {

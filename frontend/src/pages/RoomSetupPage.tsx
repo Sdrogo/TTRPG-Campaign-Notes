@@ -3,9 +3,11 @@ import { Loader, Stack, Text, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useMembers } from '../hooks/useMembers';
-import { useSetMainTags, useTags } from '../hooks/useTags';
+import { useMainItems, useSetMainItems } from '../hooks/useMainItems';
+import { useTags } from '../hooks/useTags';
 import { notifyError, notifySuccess } from '../lib/notify';
-import { sortMainTags } from '../lib/tags';
+import { itemKey, resolveItem } from '../lib/mainItems';
+import type { MainItem } from '../types/tag';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { MainTagsEditor } from '../components/setup/MainTagsEditor';
@@ -27,7 +29,8 @@ export function RoomSetupPage() {
   const currentMember = members.data?.find((m) => m.userId === session?.user.id);
   const isAdmin = currentMember?.isAdmin ?? false;
   const tags = useTags(roomId ?? '', isAdmin);
-  const setMainTags = useSetMainTags(roomId ?? '');
+  const mainItems = useMainItems(roomId ?? '', isAdmin);
+  const setMainItems = useSetMainItems(roomId ?? '');
 
   if (!roomId) {
     return null;
@@ -61,9 +64,9 @@ export function RoomSetupPage() {
     );
   }
 
-  /** Saves the Main Tags and confirms or reports the result. */
-  const handleSaveMainTags = (tagIds: string[]) => {
-    setMainTags.mutate(tagIds, {
+  /** Saves the Main items and confirms or reports the result. */
+  const handleSaveMainItems = (items: MainItem[]) => {
+    setMainItems.mutate(items, {
       onSuccess: () => notifySuccess(t('setup.mainTags.saved')),
       onError: notifyError,
     });
@@ -87,18 +90,17 @@ export function RoomSetupPage() {
         />
       </Stack>
 
-      {tags.isLoading && <Loader color="accent" />}
-      {tags.isError && <Text c="red">{t('setup.loadError')}</Text>}
-      {tags.data && (
+      {(tags.isLoading || mainItems.isLoading) && <Loader color="accent" />}
+      {(tags.isError || mainItems.isError) && <Text c="red">{t('setup.loadError')}</Text>}
+      {tags.data && mainItems.data && (
         <MainTagsEditor
-          // Re-keyed on the saved order so a save, or a change made
+          // Re-keyed on the saved list so a save, or a change made
           // elsewhere, replaces the draft instead of fighting it.
-          key={sortMainTags(tags.data)
-            .map((tag) => tag.id)
-            .join()}
+          key={mainItems.data.map((item) => itemKey(resolveItem(item, tags.data))).join('|')}
           tags={tags.data}
-          saving={setMainTags.isPending}
-          onSave={handleSaveMainTags}
+          items={mainItems.data}
+          saving={setMainItems.isPending}
+          onSave={handleSaveMainItems}
         />
       )}
     </PageLayout>

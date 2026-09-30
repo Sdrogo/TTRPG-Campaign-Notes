@@ -138,7 +138,7 @@
     "loadError": "Error loading the Room setup.",
     "mainTags": {
       "title": "Main Tags",
-      "description": "Documents are grouped by these Tags on the Documents page, in this order.",
+      "description": "Documents are grouped by these items on the Documents page, in this order. An item is one Tag, or a combination of two or more: its Documents carry all of them.",
       "empty": "No Main Tags: Documents won't be grouped.",
       "moveUp": "Move {{name}} up",
       "moveDown": "Move {{name}} down",
@@ -147,7 +147,10 @@
       "addPlaceholder": "Choose a Tag",
       "noMoreTags": "Every Tag is already a Main Tag.",
       "save": "Save order",
-      "saved": "Main Tags saved"
+      "saved": "Main Tags saved",
+      "combinationLabel": "Add a combination",
+      "combinationPlaceholder": "Pick two or more Tags",
+      "addCombination": "Add combination"
     }
   },
   "documents": {

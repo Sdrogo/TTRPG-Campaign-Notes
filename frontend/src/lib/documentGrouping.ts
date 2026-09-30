@@ -1,6 +1,6 @@
-import { sortMainTags } from './tags';
+import { itemKey, resolveItem } from './mainItems';
 import type { Document } from '../types/document';
-import type { Tag } from '../types/tag';
+import type { MainItem, Tag } from '../types/tag';
 
 /** How the Documents list buckets its cards (spec 10's grouping control). */
 export type DocumentGroupBy = 'main-tag' | 'none';
@@ -8,37 +8,49 @@ export type DocumentGroupBy = 'main-tag' | 'none';
 /** The grouping applied when `?groupBy=` is absent from the URL. */
 export const DEFAULT_GROUP_BY: DocumentGroupBy = 'main-tag';
 
-/** Heading for Documents carrying none of the Room's Main Tags. */
-export const UNGROUPED_LABEL = 'Senza Tag principale';
+/** The key of the fallback group, which has no Tags. */
+export const UNGROUPED_KEY = 'ungrouped';
 
-/** One Main Tag's Documents, or the `null`-tag fallback group. */
+/**
+ * One line item's Documents: `tags` holds one Tag for a Main Tag or two or
+ * more for a combination, and is empty for the fallback group.
+ */
 export interface DocumentGroup {
-  tag: Tag | null;
+  key: string;
+  tags: Tag[];
   documents: Document[];
 }
 
 /**
- * Buckets `documents` by each Main Tag (spec 10, 11) they carry -
- * a Document with several Main Tags appears in every one of their groups -
- * with a trailing `UNGROUPED_LABEL` group for Documents carrying none. Groups
- * follow the order the Room's Administrators gave the Main Tags; empty
- * groups are left out.
+ * Buckets `documents` by the Room's Main items (specs 10, 11, 11_2). A Document
+ * belongs to an item when it carries every Tag of it - one for a Main Tag, all
+ * of them for a combination - and appears in every item it matches, so a
+ * Document can sit under a combination and under the single Tags it is made
+ * of. Groups follow the order of `items`, with a trailing fallback group for
+ * Documents matching none; empty groups are left out, and an item that refers
+ * to a missing Tag is ignored.
  */
-export function groupDocumentsByMainTag(documents: Document[], tags: Tag[]): DocumentGroup[] {
-  const mainTags = sortMainTags(tags);
-  const mainTagIds = new Set(mainTags.map((tag) => tag.id));
+export function groupDocumentsByMainItems(
+  documents: Document[],
+  tags: Tag[],
+  items: MainItem[],
+): DocumentGroup[] {
+  const matched = new Set<string>();
+  const groups: DocumentGroup[] = [];
 
-  const groups: DocumentGroup[] = mainTags.map((tag) => ({
-    tag,
-    documents: documents.filter((document) => document.tagIds.includes(tag.id)),
-  }));
+  for (const item of items) {
+    const itemTags = resolveItem(item, tags);
+    if (itemTags.length === 0) continue;
 
-  const ungrouped = documents.filter(
-    (document) => !document.tagIds.some((id) => mainTagIds.has(id)),
-  );
-  if (ungrouped.length > 0) {
-    groups.push({ tag: null, documents: ungrouped });
+    const inItem = documents.filter((document) =>
+      itemTags.every((tag) => document.tagIds.includes(tag.id)),
+    );
+    inItem.forEach((document) => matched.add(document.id));
+    groups.push({ key: itemKey(itemTags), tags: itemTags, documents: inItem });
   }
+
+  const ungrouped = documents.filter((document) => !matched.has(document.id));
+  groups.push({ key: UNGROUPED_KEY, tags: [], documents: ungrouped });
 
   return groups.filter((group) => group.documents.length > 0);
 }

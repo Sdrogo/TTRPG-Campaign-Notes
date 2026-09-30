@@ -33,16 +33,20 @@ const rawTags = [
   { id: 'place', name: 'Luogo', category: null, main_position: null },
 ];
 
+const rawItems = [{ tag_ids: ['npc'] }, { tag_ids: ['pc'] }];
+
 interface Routes_ {
   members: unknown;
   tags: unknown;
+  items: unknown;
   put: () => Promise<unknown>;
 }
 
 const routes: Routes_ = {
   members: [],
   tags: rawTags,
-  put: () => Promise.resolve(rawTags),
+  items: rawItems,
+  put: () => Promise.resolve(rawItems),
 };
 
 /** Sets the members the Room's members route answers with. */
@@ -67,7 +71,8 @@ beforeEach(() => {
   vi.mocked(notifyError).mockClear();
   vi.mocked(notifySuccess).mockClear();
   routes.tags = rawTags;
-  routes.put = () => Promise.resolve(rawTags);
+  routes.items = rawItems;
+  routes.put = () => Promise.resolve(rawItems);
   setMembers([rawMember({ user_id: 'user-1', display_name: 'Io', is_admin: true })]);
   sessionMock.mockReturnValue({
     session: fakeSession('user-1'),
@@ -76,6 +81,7 @@ beforeEach(() => {
   fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
     if (path === '/rooms/room-1/tags/main' && init?.method === 'PUT') return routes.put();
+    if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.items);
     if (path === '/rooms/room-1/tags') return Promise.resolve(routes.tags);
     if (path === '/account') return Promise.resolve(rawAccount());
     return Promise.resolve(undefined);
@@ -185,12 +191,7 @@ describe('RoomSetupPage', () => {
   });
 
   it('saves a new order and confirms it', async () => {
-    routes.put = () =>
-      Promise.resolve([
-        { id: 'npc', name: 'NPC', category: 'Type', main_position: 1 },
-        { id: 'pc', name: 'PC', category: 'Type', main_position: 0 },
-        rawTags[2],
-      ]);
+    routes.put = () => Promise.resolve([{ tag_ids: ['pc'] }, { tag_ids: ['npc'] }]);
     const { user } = render();
 
     await user.click(await screen.findByRole('button', { name: 'Sposta NPC giù' }));
@@ -199,13 +200,35 @@ describe('RoomSetupPage', () => {
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', {
         method: 'PUT',
-        json: { tag_ids: ['pc', 'npc'] },
+        json: { items: [{ tag_ids: ['pc'] }, { tag_ids: ['npc'] }] },
       }),
     );
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Tag principali salvati'));
     // The saved order becomes the list, with nothing left to save.
     expect(await screen.findByText('1. #PC')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Salva ordine' })).toBeDisabled();
+  });
+
+  // Spec 11_2: a combination is saved as an item of several Tags.
+  it('saves a combination added to the list', async () => {
+    routes.put = () => Promise.resolve([...(rawItems as unknown[]), { tag_ids: ['pc', 'place'] }]);
+    const { user } = render();
+
+    await user.click(await screen.findByRole('combobox', { name: 'Aggiungi una combinazione' }));
+    await user.click(screen.getByRole('option', { name: 'PC' }));
+    await user.click(screen.getByRole('option', { name: 'Luogo' }));
+    await user.click(screen.getByRole('button', { name: 'Aggiungi combinazione' }));
+    await user.click(screen.getByRole('button', { name: 'Salva ordine' }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', {
+        method: 'PUT',
+        json: {
+          items: [{ tag_ids: ['npc'] }, { tag_ids: ['pc'] }, { tag_ids: ['pc', 'place'] }],
+        },
+      }),
+    );
+    expect(await screen.findByText('3. #PC + #Luogo')).toBeInTheDocument();
   });
 
   it('surfaces a rejected save and keeps the draft', async () => {
