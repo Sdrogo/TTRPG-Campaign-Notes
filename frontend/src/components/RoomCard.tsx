@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Group, Stack, Title, Text, Button } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { FilesIcon, UserPlusIcon, UsersIcon } from '@phosphor-icons/react';
+import { FilesIcon, GearIcon, UserPlusIcon } from '@phosphor-icons/react';
 import { RoleTag } from './RoleTag';
 import { InviteModal } from './InviteModal';
 import type { MyRoom } from '../types/room';
@@ -12,8 +12,9 @@ interface RoomCardProps {
 }
 
 /**
- * One of the user's Rooms, with their role and links to its Documents and
- * members. An Administrator also gets the invite button.
+ * One of the user's Rooms, with their role and links to its Documents. An
+ * Administrator also gets the setup page (members, Main Tags) and the invite
+ * button.
  */
 export function RoomCard({ myRoom }: RoomCardProps) {
   const { t } = useTranslation();
@@ -44,24 +45,26 @@ export function RoomCard({ myRoom }: RoomCardProps) {
           >
             {t('rooms.documents')}
           </Button>
-          <Button
-            component={Link}
-            to={`/rooms/${room.id}/members`}
-            variant="subtle"
-            size="xs"
-            leftSection={<UsersIcon size={16} />}
-          >
-            {t('rooms.members')}
-          </Button>
           {isAdmin && (
-            <Button
-              variant="light"
-              size="xs"
-              leftSection={<UserPlusIcon size={16} />}
-              onClick={() => setInviteOpened(true)}
-            >
-              {t('rooms.invite')}
-            </Button>
+            <>
+              <Button
+                component={Link}
+                to={`/rooms/${room.id}/setup`}
+                variant="subtle"
+                size="xs"
+                leftSection={<GearIcon size={16} />}
+              >
+                {t('rooms.setup')}
+              </Button>
+              <Button
+                variant="light"
+                size="xs"
+                leftSection={<UserPlusIcon size={16} />}
+                onClick={() => setInviteOpened(true)}
+              >
+                {t('rooms.invite')}
+              </Button>
+            </>
           )}
         </Group>
       </Group>

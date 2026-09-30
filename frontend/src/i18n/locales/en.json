@@ -105,14 +105,14 @@
     "loadError": "Error loading Rooms.",
     "empty": "No Rooms yet. Create one to get started.",
     "documents": "Documents",
-    "members": "Members",
     "invite": "Invite",
     "createModal": {
       "title": "Create a Room",
       "namePlaceholder": "E.g. Curse of Strahd",
       "gameSystem": "Game system",
       "gameSystemPlaceholder": "E.g. D&D 5e (optional)"
-    }
+    },
+    "setup": "Setup"
   },
   "invite": {
     "modalTitle": "Invite to the Room",
@@ -125,11 +125,30 @@
   },
   "members": {
     "signInRequired": "Sign in to see the members of this Room.",
-    "title": "Room members",
+    "title": "Members",
     "loadError": "Error loading members.",
     "columnUser": "User",
     "columnRole": "Role",
     "columnAdmin": "Administrator"
+  },
+  "setup": {
+    "signInRequired": "Sign in to manage this Room.",
+    "title": "Room setup",
+    "adminOnly": "Only a Room Administrator can open the setup.",
+    "loadError": "Error loading the Room setup.",
+    "mainTags": {
+      "title": "Main Tags",
+      "description": "Documents are grouped by these Tags on the Documents page, in this order.",
+      "empty": "No Main Tags: Documents won't be grouped.",
+      "moveUp": "Move {{name}} up",
+      "moveDown": "Move {{name}} down",
+      "remove": "Remove {{name}} from the Main Tags",
+      "addLabel": "Add a Main Tag",
+      "addPlaceholder": "Choose a Tag",
+      "noMoreTags": "Every Tag is already a Main Tag.",
+      "save": "Save order",
+      "saved": "Main Tags saved"
+    }
   },
   "documents": {
     "signInRequired": "Sign in to see the Documents of this Room.",

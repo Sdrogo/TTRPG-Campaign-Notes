@@ -10,8 +10,8 @@ vi.mock('../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 const fetchMock = vi.mocked(apiFetch);
 
 const tags = [
-  { id: 'tag-npc', name: 'NPC', category: 'Type' },
-  { id: 'tag-pc', name: 'PC', category: 'Type' },
+  { id: 'tag-npc', name: 'NPC', category: 'Type', main_position: 1 },
+  { id: 'tag-pc', name: 'PC', category: 'Type', main_position: 0 },
   { id: 'tag-faction', name: 'Fazione', category: 'Faction' },
   { id: 'tag-loose', name: 'Sciolto', category: null },
 ];
@@ -44,6 +44,16 @@ describe('GlossaryIndexDrawer', () => {
     expect(screen.getByText('#PC')).toBeInTheDocument();
     expect(screen.getByText('#Fazione')).toBeInTheDocument();
     expect(screen.getByText('#Sciolto')).toBeInTheDocument();
+  });
+
+  // Spec 11: the Main Tags keep the order the Room's Administrators gave them
+  // (PC before NPC here), not the alphabetical one.
+  it("lists the Main Tags in the Room's chosen order", async () => {
+    render();
+    await screen.findByText('Tag principali');
+
+    const links = screen.getAllByRole('link').map((link) => link.textContent);
+    expect(links.slice(0, 2)).toEqual(['#PC', '#NPC']);
   });
 
   it('links each Tag to the Documents list filtered by it', async () => {

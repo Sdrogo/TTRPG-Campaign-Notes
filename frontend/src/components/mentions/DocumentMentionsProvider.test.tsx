@@ -49,7 +49,7 @@ describe('DocumentMentionsProvider', () => {
 
     await waitFor(() => expect(result.current?.documents).toHaveLength(1));
     expect(result.current?.roomId).toBe('room-1');
-    expect(result.current?.tags).toEqual(tags);
+    expect(result.current?.tags).toEqual([{ ...tags[0], mainPosition: null }]);
   });
 
   // Every consumer renders before the queries settle; empty lists keep the
@@ -97,7 +97,7 @@ describe('DocumentMentionsProvider', () => {
 
     expect(created).toEqual({
       kind: 'tag',
-      tag: { id: 'tag-9', name: 'Tempio', category: null },
+      tag: { id: 'tag-9', name: 'Tempio', category: null, mainPosition: null },
       documentCount: 0,
     });
   });

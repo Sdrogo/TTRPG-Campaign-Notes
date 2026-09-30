@@ -2,7 +2,7 @@ import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
 import { renderHookWithProviders } from '../test/utils';
-import { useCreateTag, useTags } from './useTags';
+import { useCreateTag, useSetMainTags, useTags } from './useTags';
 
 vi.mock('../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 
@@ -20,7 +20,17 @@ describe('useTags', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags');
-    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data).toEqual([
+      { id: 'tag-1', name: 'PNG', category: 'Personaggi', mainPosition: null },
+    ]);
+  });
+
+  it('maps the backend main_position to mainPosition', async () => {
+    fetchMock.mockResolvedValue([{ id: 'tag-1', name: 'PNG', category: null, main_position: 2 }]);
+
+    const { result } = renderHookWithProviders(() => useTags('room-1', true));
+
+    await waitFor(() => expect(result.current.data?.[0].mainPosition).toBe(2));
   });
 
   it('does not fetch while disabled', () => {
@@ -43,7 +53,11 @@ describe('useTags', () => {
 
 describe('useCreateTag', () => {
   it('posts the name with an explicit null category when none is given', async () => {
-    fetchMock.mockResolvedValue({ id: 'tag-2', name: 'Luoghi', category: null });
+    fetchMock.mockResolvedValue({
+      id: 'tag-2',
+      name: 'Luoghi',
+      category: null,
+    });
 
     const { result } = renderHookWithProviders(() => useCreateTag('room-1'));
     await result.current.mutateAsync({ name: 'Luoghi' });
@@ -55,7 +69,11 @@ describe('useCreateTag', () => {
   });
 
   it('keeps a category that was given', async () => {
-    fetchMock.mockResolvedValue({ id: 'tag-2', name: 'Luoghi', category: 'Mappa' });
+    fetchMock.mockResolvedValue({
+      id: 'tag-2',
+      name: 'Luoghi',
+      category: 'Mappa',
+    });
 
     const { result } = renderHookWithProviders(() => useCreateTag('room-1'));
     await result.current.mutateAsync({ name: 'Luoghi', category: 'Mappa' });
@@ -69,14 +87,20 @@ describe('useCreateTag', () => {
   // The mention popup creates Tags inline; the suggestion list has to show
   // the new one immediately afterwards.
   it("invalidates that Room's tag list", async () => {
-    fetchMock.mockResolvedValue({ id: 'tag-2', name: 'Luoghi', category: null });
+    fetchMock.mockResolvedValue({
+      id: 'tag-2',
+      name: 'Luoghi',
+      category: null,
+    });
     const { result, queryClient } = renderHookWithProviders(() => useCreateTag('room-1'));
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
 
     await result.current.mutateAsync({ name: 'Luoghi' });
 
     await waitFor(() =>
-      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1', 'tags'] }),
+      expect(invalidate).toHaveBeenCalledWith({
+        queryKey: ['rooms', 'room-1', 'tags'],
+      }),
     );
   });
 
@@ -88,5 +112,27 @@ describe('useCreateTag', () => {
     await expect(result.current.mutateAsync({ name: 'Luoghi' })).rejects.toThrow(
       'Only the Master can create Tags',
     );
+  });
+});
+
+// Spec 11: the Administrator's ordered list replaces the Room's Main Tags.
+describe('useSetMainTags', () => {
+  it('puts the ordered ids and stores the returned Tags in the cache', async () => {
+    fetchMock.mockResolvedValue([
+      { id: 'tag-2', name: 'PG', category: null, main_position: 0 },
+      { id: 'tag-1', name: 'PNG', category: null, main_position: null },
+    ]);
+
+    const { result, queryClient } = renderHookWithProviders(() => useSetMainTags('room-1'));
+    await result.current.mutateAsync(['tag-2']);
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', {
+      method: 'PUT',
+      json: { tag_ids: ['tag-2'] },
+    });
+    expect(queryClient.getQueryData(['rooms', 'room-1', 'tags'])).toEqual([
+      { id: 'tag-2', name: 'PG', category: null, mainPosition: 0 },
+      { id: 'tag-1', name: 'PNG', category: null, mainPosition: null },
+    ]);
   });
 });

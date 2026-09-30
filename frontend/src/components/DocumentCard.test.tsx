@@ -8,8 +8,8 @@ import type { Tag } from '../types/tag';
 import { DocumentMentionsContext } from '../hooks/useDocumentMentions';
 
 const tags: Tag[] = [
-  { id: 'tag-1', name: 'Luoghi', category: null },
-  { id: 'tag-2', name: 'PNG', category: null },
+  { id: 'tag-1', name: 'Luoghi', category: null, mainPosition: null },
+  { id: 'tag-2', name: 'PNG', category: null, mainPosition: null },
 ];
 
 const members: Member[] = [

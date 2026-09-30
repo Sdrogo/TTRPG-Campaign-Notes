@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HomePage } from './pages/HomePage';
 import { AcceptInvitePage } from './pages/AcceptInvitePage';
-import { RoomMembersPage } from './pages/RoomMembersPage';
+import { RoomMembersRedirect, RoomSetupPage } from './pages/RoomSetupPage';
 import { RoomDocumentsPage } from './pages/RoomDocumentsPage';
 import { DocumentDetailPage } from './pages/DocumentDetailPage';
 import { AccountPage } from './pages/AccountPage';
@@ -22,7 +22,8 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/account" element={<AccountPage />} />
       <Route path="/invite/:code" element={<AcceptInvitePage />} />
-      <Route path="/rooms/:roomId/members" element={<RoomMembersPage />} />
+      <Route path="/rooms/:roomId/setup" element={<RoomSetupPage />} />
+      <Route path="/rooms/:roomId/members" element={<RoomMembersRedirect />} />
       <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />
       <Route path="/rooms/:roomId/documents/:documentId" element={<DocumentDetailPage />} />
     </Routes>

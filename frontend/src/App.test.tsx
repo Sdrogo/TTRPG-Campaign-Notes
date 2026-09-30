@@ -9,7 +9,10 @@ import App from './App';
 vi.mock('./pages/HomePage', () => ({ HomePage: () => <div>home</div> }));
 vi.mock('./pages/AccountPage', () => ({ AccountPage: () => <div>account</div> }));
 vi.mock('./pages/AcceptInvitePage', () => ({ AcceptInvitePage: () => <div>invite</div> }));
-vi.mock('./pages/RoomMembersPage', () => ({ RoomMembersPage: () => <div>members</div> }));
+vi.mock('./pages/RoomSetupPage', () => ({
+  RoomSetupPage: () => <div>setup</div>,
+  RoomMembersRedirect: () => <div>members redirect</div>,
+}));
 vi.mock('./pages/RoomDocumentsPage', () => ({ RoomDocumentsPage: () => <div>documents</div> }));
 vi.mock('./pages/DocumentDetailPage', () => ({ DocumentDetailPage: () => <div>detail</div> }));
 vi.mock('./hooks/useSession', () => ({ useSession: vi.fn() }));
@@ -25,7 +28,8 @@ describe('App routes', () => {
     ['/', 'home'],
     ['/account', 'account'],
     ['/invite/ABC123', 'invite'],
-    ['/rooms/room-1/members', 'members'],
+    ['/rooms/room-1/setup', 'setup'],
+    ['/rooms/room-1/members', 'members redirect'],
     ['/rooms/room-1/documents', 'documents'],
     ['/rooms/room-1/documents/doc-1', 'detail'],
   ])('renders %s', (route, marker) => {

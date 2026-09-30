@@ -46,7 +46,12 @@ describe('TagCreateInline', () => {
       }),
     );
     await waitFor(() =>
-      expect(onCreated).toHaveBeenCalledWith({ id: 'tag-9', name: 'Fazione', category: null }),
+      expect(onCreated).toHaveBeenCalledWith({
+        id: 'tag-9',
+        name: 'Fazione',
+        category: null,
+        mainPosition: null,
+      }),
     );
   });
 

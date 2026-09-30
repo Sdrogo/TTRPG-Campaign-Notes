@@ -26,7 +26,7 @@ function document(id: string, name: string): Document {
 }
 
 const documents = [document('doc-1', 'Il Cancello'), document('doc-2', 'Il Castello')];
-const tags = [{ id: 'tag-1', name: 'Luoghi', category: null }];
+const tags = [{ id: 'tag-1', name: 'Luoghi', category: null, mainPosition: null }];
 
 // Controlled, like every real caller: the popup depends on the value and
 // the caret moving together.
@@ -276,7 +276,7 @@ describe('creating from the popup', () => {
     const { create, user } = render();
     create.mockResolvedValue({
       kind: 'tag',
-      tag: { id: 'tag-9', name: 'Tempio', category: null },
+      tag: { id: 'tag-9', name: 'Tempio', category: null, mainPosition: null },
       documentCount: 0,
     });
     await user.type(field(), '#Tempio');
@@ -382,7 +382,7 @@ describe('creating from the keyboard', () => {
     const { create, user } = render();
     create.mockResolvedValue({
       kind: 'tag',
-      tag: { id: 'tag-9', name: 'Tempio', category: null },
+      tag: { id: 'tag-9', name: 'Tempio', category: null, mainPosition: null },
       documentCount: 0,
     });
     await user.type(field(), '#Tempio');

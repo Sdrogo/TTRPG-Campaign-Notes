@@ -34,8 +34,8 @@ function doc(id: string, name: string, tagIds: string[] = []): Document {
   };
 }
 
-const npcTag: Tag = { id: 't-npc', name: 'NPC', category: 'Type' };
-const placeTag: Tag = { id: 't-place', name: 'Place', category: 'Type' };
+const npcTag: Tag = { id: 't-npc', name: 'NPC', category: 'Type', mainPosition: null };
+const placeTag: Tag = { id: 't-place', name: 'Place', category: 'Type', mainPosition: null };
 const tags: Tag[] = [npcTag, placeTag];
 
 const documents = [
