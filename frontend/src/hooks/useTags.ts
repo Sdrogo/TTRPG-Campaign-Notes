@@ -42,24 +42,3 @@ export function useCreateTag(roomId: string) {
     },
   });
 }
-
-/**
- * Replaces the Room's Main Tags with `tagIds`, in that order (Administrator
- * only, spec 11). The answer is every Tag of the Room, so the cached list is
- * updated in place rather than refetched.
- */
-export function useSetMainTags(roomId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (tagIds: string[]) =>
-      (
-        await apiFetch<RawTag[]>(`/rooms/${roomId}/tags/main`, {
-          method: 'PUT',
-          json: { tag_ids: tagIds },
-        })
-      ).map(toTag),
-    onSuccess: (tags) => {
-      queryClient.setQueryData(tagsQueryKey(roomId), tags);
-    },
-  });
-}

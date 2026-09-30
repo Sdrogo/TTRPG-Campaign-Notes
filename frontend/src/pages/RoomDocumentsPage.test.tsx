@@ -25,14 +25,21 @@ interface Routes {
   documents: unknown;
   members: unknown;
   room: unknown;
+  mainItems: unknown;
 }
 
-const routes: Routes = { documents: [rawDocument()], members: [rawMember()], room: rawRoom() };
+const routes: Routes = {
+  documents: [rawDocument()],
+  members: [rawMember()],
+  room: rawRoom(),
+  mainItems: [],
+};
 
 function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.resolve()) {
   fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
     if (init?.method) return onWrite(path);
     if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
+    if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
     if (path === '/rooms/room-1/tags') return Promise.resolve(tags);
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
     if (path === '/rooms/room-1') return Promise.resolve(routes.room);
@@ -55,6 +62,7 @@ beforeEach(() => {
   routes.documents = [rawDocument()];
   routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
   routes.room = rawRoom();
+  routes.mainItems = [];
   fetchMock.mockReset();
   sessionMock.mockReturnValue({ session: fakeSession('user-1'), loading: false } as SessionState);
   mockApi();
@@ -269,10 +277,11 @@ describe('filtering by Tag', () => {
   });
 });
 
-// Spec 10: Documents group by Main Tag (category "Type") by default, and can
+// Specs 10, 11, 11_2: Documents group by the Room's Main items by default, and can
 // be sorted or ungrouped from the controls next to the Tag filter.
 describe('grouping and sorting', () => {
   beforeEach(() => {
+    routes.mainItems = [{ tag_ids: ['tag-npc'] }];
     routes.documents = [
       rawDocument({ id: 'doc-1', name: 'Zanna', tag_ids: ['tag-npc'] }),
       rawDocument({ id: 'doc-2', name: 'Alba', tag_ids: [] }),
@@ -283,6 +292,7 @@ describe('grouping and sorting', () => {
     fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
       if (init?.method) return Promise.resolve();
       if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
+      if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
       if (path === '/rooms/room-1/tags')
         return Promise.resolve([...tags, { id: 'tag-npc', name: 'NPC', category: 'Type', main_position: 0 }]);
       if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
@@ -303,6 +313,22 @@ describe('grouping and sorting', () => {
 
     await screen.findByText('Zanna');
     expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']);
+  });
+
+  // Spec 11_2: a combination is a heading of its own, in the chosen order, and
+  // holds only the Documents carrying all of its Tags.
+  it('shows a combination as its own group in the chosen order', async () => {
+    routes.documents = [
+      rawDocument({ id: 'doc-1', name: 'Zanna', tag_ids: ['tag-npc', 'tag-1'] }),
+      rawDocument({ id: 'doc-2', name: 'Alba', tag_ids: ['tag-npc'] }),
+    ];
+    routes.mainItems = [{ tag_ids: ['tag-npc', 'tag-1'] }, { tag_ids: ['tag-npc'] }];
+    mockApiWithMainTags();
+    render();
+
+    // Zanna carries both Tags, so it shows under the combination and under #NPC.
+    expect(await screen.findAllByText('Zanna')).toHaveLength(2);
+    expect(groupHeadings()).toEqual(['#NPC + #Luoghi', '#NPC']);
   });
 
   it('drops the grouping headings when set to no grouping', async () => {
@@ -422,6 +448,7 @@ describe('collapsing the filters and settings row', () => {
 // on the left reflects whether it's expanded).
 describe('collapsing a group', () => {
   beforeEach(() => {
+    routes.mainItems = [{ tag_ids: ['tag-npc'] }];
     routes.documents = [
       rawDocument({ id: 'doc-1', name: 'Zanna', tag_ids: ['tag-npc'] }),
       rawDocument({ id: 'doc-2', name: 'Alba', tag_ids: [] }),
@@ -432,6 +459,7 @@ describe('collapsing a group', () => {
     fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
       if (init?.method) return Promise.resolve();
       if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
+      if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
       if (path === '/rooms/room-1/tags')
         return Promise.resolve([...tags, { id: 'tag-npc', name: 'NPC', category: 'Type', main_position: 0 }]);
       if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);

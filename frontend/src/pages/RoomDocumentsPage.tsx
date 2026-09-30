@@ -17,6 +17,7 @@ import { CaretDownIcon, CaretRightIcon, PlusIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
 import { useTags } from '../hooks/useTags';
+import { useMainItems } from '../hooks/useMainItems';
 import { useMembers } from '../hooks/useMembers';
 import { useRoom, useUpdateRoomSettings } from '../hooks/useRooms';
 import { DocumentCard } from '../components/DocumentCard';
@@ -28,7 +29,8 @@ import { TagFilter } from '../components/TagFilter';
 import { filterDocumentsByTags } from '../lib/documentFilters';
 import {
   DEFAULT_GROUP_BY,
-  groupDocumentsByMainTag,
+  groupDocumentsByMainItems,
+  UNGROUPED_KEY,
   type DocumentGroupBy,
 } from '../lib/documentGrouping';
 import { DEFAULT_SORT, sortDocuments, type DocumentSort } from '../lib/documentSorting';
@@ -36,7 +38,8 @@ import { canCreateDocuments, canManageTags } from '../lib/roomPermissions';
 import { useTranslation } from 'react-i18next';
 import type { Document } from '../types/document';
 import type { Member } from '../types/member';
-import type { Tag } from '../types/tag';
+import type { MainItem, Tag } from '../types/tag';
+import { itemLabel } from '../lib/mainItems';
 
 /**
  * `/rooms/:roomId/documents`: the Documents the viewer can see, filterable by
@@ -74,6 +77,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   const room = useRoom(roomId, true);
   const documents = useDocuments(roomId, true);
   const tags = useTags(roomId, true);
+  const mainItems = useMainItems(roomId, true);
   const members = useMembers(roomId, true);
   const updateSettings = useUpdateRoomSettings(roomId);
   // `?tag=…` (repeatable): where a `#Tag` mention leads. Tags combine (AND).
@@ -201,6 +205,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             documents={sorted}
             roomId={roomId}
             tags={tags.data ?? []}
+            mainItems={mainItems.data ?? []}
             memberList={members.data ?? []}
             groupBy={groupBy}
           />
@@ -221,12 +226,14 @@ function DocumentsGrid({
   documents,
   roomId,
   tags,
+  mainItems,
   memberList,
   groupBy,
 }: {
   documents: Document[];
   roomId: string;
   tags: Tag[];
+  mainItems: MainItem[];
   memberList: Member[];
   groupBy: DocumentGroupBy;
 }) {
@@ -254,13 +261,14 @@ function DocumentsGrid({
     return cards(documents);
   }
 
-  const groups = groupDocumentsByMainTag(documents, tags);
+  const groups = groupDocumentsByMainItems(documents, tags, mainItems);
   return (
     <Stack gap="lg">
       {groups.map((group) => {
-        const key = group.tag?.id ?? 'ungrouped';
+        const key = group.key;
         const isExpanded = !collapsed.has(key);
-        const label = group.tag ? `#${group.tag.name}` : t('documents.ungroupedTag');
+        const label =
+          group.key === UNGROUPED_KEY ? t('documents.ungroupedTag') : itemLabel(group.tags);
         return (
           <Stack key={key} gap="xs">
             <Title order={5} style={{ fontFamily: 'var(--font-display)' }}>

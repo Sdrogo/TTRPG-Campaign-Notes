@@ -85,6 +85,35 @@ class TagRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class TagCombinationRow(Base):
+    """A combination of Tags the Room groups Documents by (spec 11_2); its
+    Tags are in `tag_combination_tags`."""
+
+    __tablename__ = "tag_combinations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    # Same numbering as `TagRow.main_position`: singles and combinations
+    # interleave in one order.
+    position: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TagCombinationTagRow(Base):
+    """Links a combination to one of its Tags."""
+
+    __tablename__ = "tag_combination_tags"
+
+    combination_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tag_combinations.id", ondelete="CASCADE"), primary_key=True
+    )
+    tag_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True
+    )
+
+
 class InvitationRow(Base):
     """A Room invitation, looked up by its unique `code`."""
 

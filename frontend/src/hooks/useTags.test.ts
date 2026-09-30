@@ -2,7 +2,7 @@ import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
 import { renderHookWithProviders } from '../test/utils';
-import { useCreateTag, useSetMainTags, useTags } from './useTags';
+import { useCreateTag, useTags } from './useTags';
 
 vi.mock('../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 
@@ -112,27 +112,5 @@ describe('useCreateTag', () => {
     await expect(result.current.mutateAsync({ name: 'Luoghi' })).rejects.toThrow(
       'Only the Master can create Tags',
     );
-  });
-});
-
-// Spec 11: the Administrator's ordered list replaces the Room's Main Tags.
-describe('useSetMainTags', () => {
-  it('puts the ordered ids and stores the returned Tags in the cache', async () => {
-    fetchMock.mockResolvedValue([
-      { id: 'tag-2', name: 'PG', category: null, main_position: 0 },
-      { id: 'tag-1', name: 'PNG', category: null, main_position: null },
-    ]);
-
-    const { result, queryClient } = renderHookWithProviders(() => useSetMainTags('room-1'));
-    await result.current.mutateAsync(['tag-2']);
-
-    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', {
-      method: 'PUT',
-      json: { tag_ids: ['tag-2'] },
-    });
-    expect(queryClient.getQueryData(['rooms', 'room-1', 'tags'])).toEqual([
-      { id: 'tag-2', name: 'PG', category: null, mainPosition: 0 },
-      { id: 'tag-1', name: 'PNG', category: null, mainPosition: null },
-    ]);
   });
 });

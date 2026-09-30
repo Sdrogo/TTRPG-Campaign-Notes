@@ -1,20 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { UNGROUPED_LABEL, groupDocumentsByMainTag } from './documentGrouping';
+import { UNGROUPED_KEY, groupDocumentsByMainItems } from './documentGrouping';
 import type { Document } from '../types/document';
-import type { Tag } from '../types/tag';
+import type { MainItem, Tag } from '../types/tag';
 
-/** A Tag with an optional Main Tag position. */
-const tag = (
-  id: string,
-  name: string,
-  category: string | null,
-  mainPosition: number | null = null,
-): Tag => ({
-  id,
-  name,
-  category,
-  mainPosition,
-});
+/** A Tag with no Main Tag position of its own: grouping follows the items. */
+const tag = (id: string, name: string): Tag => ({ id, name, category: null, mainPosition: null });
+
 /** A Document carrying the given Tag ids. */
 const doc = (id: string, tagIds: string[]): Document => ({
   id,
@@ -28,58 +19,111 @@ const doc = (id: string, tagIds: string[]): Document => ({
   selectiveUserIds: [],
 });
 
-const npc = tag('npc', 'NPC', 'Type', 0);
-const pc = tag('pc', 'PC', 'Type', 1);
-const faction = tag('faction', 'Fazione', 'Faction');
+/** A Main item of the given Tag ids. */
+const item = (...tagIds: string[]): MainItem => ({ tagIds });
 
-describe('groupDocumentsByMainTag', () => {
+const npc = tag('npc', 'NPC');
+const pc = tag('pc', 'PC');
+const faction = tag('faction', 'Fazione');
+const tags = [npc, pc, faction];
+
+/** Each group's key with the ids of its Documents. */
+const summary = (groups: ReturnType<typeof groupDocumentsByMainItems>) =>
+  groups.map((g) => [g.key, g.documents.map((d) => d.id)]);
+
+describe('groupDocumentsByMainItems', () => {
   it('groups a Document under its Main Tag', () => {
-    const groups = groupDocumentsByMainTag([doc('a', ['npc'])], [npc, pc]);
+    const groups = groupDocumentsByMainItems([doc('a', ['npc'])], tags, [item('npc')]);
 
-    expect(groups).toEqual([{ tag: npc, documents: [doc('a', ['npc'])] }]);
+    expect(groups).toEqual([{ key: 'npc', tags: [npc], documents: [doc('a', ['npc'])] }]);
   });
 
   // Spec 11: the Room's Administrators order the groups, not the alphabet.
-  it("orders groups by the Main Tags' chosen position", () => {
-    const first = tag('pc', 'PC', 'Type', 0);
-    const second = tag('npc', 'NPC', 'Type', 1);
-    const groups = groupDocumentsByMainTag([doc('a', ['npc']), doc('b', ['pc'])], [second, first]);
+  it("follows the items' order", () => {
+    const docs = [doc('a', ['npc']), doc('b', ['pc'])];
 
-    expect(groups.map((g) => g.tag?.name)).toEqual(['PC', 'NPC']);
+    const groups = groupDocumentsByMainItems(docs, tags, [item('pc'), item('npc')]);
+
+    expect(groups.map((g) => g.tags[0].name)).toEqual(['PC', 'NPC']);
   });
 
-  it('does not group by a Tag that lost its Main Tag status, even in category "Type"', () => {
-    const demoted = tag('npc', 'NPC', 'Type');
-    const groups = groupDocumentsByMainTag([doc('a', ['npc'])], [demoted]);
+  it('puts a Document in every item it matches', () => {
+    const groups = groupDocumentsByMainItems([doc('a', ['npc', 'pc'])], tags, [
+      item('npc'),
+      item('pc'),
+    ]);
 
-    expect(groups).toEqual([{ tag: null, documents: [doc('a', ['npc'])] }]);
+    expect(summary(groups)).toEqual([
+      ['npc', ['a']],
+      ['pc', ['a']],
+    ]);
   });
 
-  it('puts a Document with several Main Tags in every one of their groups', () => {
-    const groups = groupDocumentsByMainTag([doc('a', ['npc', 'pc'])], [npc, pc]);
+  // Spec 11_2: a combination holds the Documents that carry ALL its Tags.
+  describe('combinations', () => {
+    it('only takes Documents carrying every Tag of the combination', () => {
+      const docs = [
+        doc('both', ['npc', 'faction']),
+        doc('one', ['npc']),
+        doc('other', ['faction']),
+      ];
 
-    expect(groups.map((g) => g.documents.map((d) => d.id))).toEqual([['a'], ['a']]);
-  });
+      const groups = groupDocumentsByMainItems(docs, tags, [item('npc', 'faction')]);
 
-  it("ignores a non-Main Tag when deciding a Document's group", () => {
-    const groups = groupDocumentsByMainTag([doc('a', ['faction'])], [npc, faction]);
+      expect(summary(groups)).toEqual([
+        ['npc+faction', ['both']],
+        [UNGROUPED_KEY, ['one', 'other']],
+      ]);
+      expect(groups[0].tags).toEqual([npc, faction]);
+    });
 
-    expect(groups).toEqual([{ tag: null, documents: [doc('a', ['faction'])] }]);
+    it('sits between single items in the chosen order', () => {
+      const docs = [doc('a', ['npc', 'faction'])];
+
+      const groups = groupDocumentsByMainItems(docs, tags, [
+        item('pc'),
+        item('npc', 'faction'),
+        item('npc'),
+      ]);
+
+      expect(groups.map((g) => g.key)).toEqual(['npc+faction', 'npc']);
+    });
+
+    it('ignores an item that refers to a missing Tag', () => {
+      const groups = groupDocumentsByMainItems([doc('a', ['npc'])], tags, [item('npc', 'gone')]);
+
+      expect(summary(groups)).toEqual([[UNGROUPED_KEY, ['a']]]);
+    });
   });
 
   it('falls back to the ungrouped bucket, listed last', () => {
-    const groups = groupDocumentsByMainTag([doc('a', ['npc']), doc('b', [])], [npc]);
+    const groups = groupDocumentsByMainItems([doc('a', ['npc']), doc('b', [])], tags, [
+      item('npc'),
+    ]);
 
-    expect(groups.map((g) => g.tag?.name ?? UNGROUPED_LABEL)).toEqual(['NPC', UNGROUPED_LABEL]);
+    expect(groups.map((g) => g.key)).toEqual(['npc', UNGROUPED_KEY]);
+    expect(groups[1].tags).toEqual([]);
   });
 
-  it('omits a Main Tag with no Documents', () => {
-    const groups = groupDocumentsByMainTag([doc('a', ['npc'])], [npc, pc]);
+  it('ignores a Tag that is not a Main item when deciding the group', () => {
+    const groups = groupDocumentsByMainItems([doc('a', ['faction'])], tags, [item('npc')]);
 
-    expect(groups.map((g) => g.tag?.name)).toEqual(['NPC']);
+    expect(summary(groups)).toEqual([[UNGROUPED_KEY, ['a']]]);
+  });
+
+  it('omits an item with no Documents', () => {
+    const groups = groupDocumentsByMainItems([doc('a', ['npc'])], tags, [item('npc'), item('pc')]);
+
+    expect(groups.map((g) => g.key)).toEqual(['npc']);
+  });
+
+  it('puts everything in the fallback group when the Room has no items', () => {
+    const groups = groupDocumentsByMainItems([doc('a', ['npc'])], tags, []);
+
+    expect(summary(groups)).toEqual([[UNGROUPED_KEY, ['a']]]);
   });
 
   it('returns nothing for an empty list', () => {
-    expect(groupDocumentsByMainTag([], [npc])).toEqual([]);
+    expect(groupDocumentsByMainItems([], tags, [item('npc')])).toEqual([]);
   });
 });

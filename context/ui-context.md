@@ -265,10 +265,10 @@ other icon set.
   `TagFilter`, two more `Select`s — "Raggruppa per" (Tag principale /
   nessuno) and "Ordina per" (Nome A-Z / Z-A) — also URL-bound (`?groupBy=`,
   `?sort=`, both hidden with the filter when the Room has no Documents).
-  Grouped by Main Tag (the Tags an Administrator chose on the Room setup
-  page, in the order they gave them — spec 11, `Tag.mainPosition`) is the
-  default: each group gets its own
-  `Title` (`#TagName`, or "Senza Tag principale" for Documents carrying
+  Grouped by Main item (the Tags and Tag combinations an Administrator chose
+  on the Room setup page, in the order they gave them — specs 11, 11_2) is
+  the default: each group gets its own
+  `Title` (`#TagName`, `#A + #B` for a combination, or "Senza Tag principale" for Documents carrying
   none) above its own `SimpleGrid`; a Document with several Main Tags
   appears under each one. "Nessun raggruppamento" collapses back to the
   single flat grid spec 07 already had.
@@ -345,3 +345,11 @@ order 2, each with an order-3 `Title`:
   not drag and drop: keyboard- and screen-reader-friendly, and no new
   dependency. A saved order updates the Tags cache in place and is
   confirmed with a toast.
+
+**Combinations** (2026-10-01, spec 11_2): below the single-Tag `Select`, the
+Main items section has a `CombinationAdder`: a searchable `MultiSelect` of
+every Tag plus an "Aggiungi combinazione" button, disabled until two or more
+Tags are picked and while that set is already listed (in any order). A
+combination is a row like the others, labelled `#A + #B`, and moves, removes
+and saves the same way. A Document is under a combination when it has all its
+Tags.

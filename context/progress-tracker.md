@@ -7,13 +7,14 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-09-30)
+## Current Status (2026-10-01)
 
-Branch `feature/11-room-setup-page` (spec 11, PR open). Latest measured
-state: frontend **796/796** tests at **100%** coverage; backend **341**
-tests (205 without a database pass locally; the 136 DB tests, 13 of them
-new, run in CI only — the migration isn't on the live DB yet, see Next Up);
-lint, `tsc`, ruff and mypy strict clean. CI keeps exact-100% gates.
+Branch `feature/11-2-tag-combinations` (spec 11_2, PR open). Latest measured
+state: frontend **819/819** tests at **100%** coverage; backend **355**
+tests (212 without a database pass locally; the 143 DB tests, including the
+new Main-items API tests, run in CI only — migration `b5d8f2a9c1e3` is not on
+the live DB yet, see Next Up); lint, `tsc`, ruff and mypy strict clean. CI
+keeps exact-100% gates.
 
 No other unit is in progress. Candidates for the next one are in **Next
 Up**.
@@ -171,8 +172,33 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   09-30** after the deployed backend returned 500 on `/tags` (the code had
   deployed before the migration). Apply migrations before merging.
 
+## In Progress
+
+### Tag combinations (spec 11_2, branch `feature/11-2-tag-combinations`)
+
+Implementation is ready; completion is pending approval and application of
+migration `b5d8f2a9c1e3` to the live DB (see Next Up).
+
+- **Backend first**: a combination of two or more Tags is a line item of the
+  Documents grouping, in the same order as the single Main Tags. Tables
+  `tag_combinations` + `tag_combination_tags` (migration `b5d8f2a9c1e3`, RLS +
+  deny policy); combinations share the numbering of `tags.main_position`.
+  `GET`/`PUT /rooms/{id}/tags/main` moved to `app/api/main_items.py`.
+  GET returns a raw list of `MainItem` objects (`[{tag_ids: [...]}]`);
+  PUT accepts a top-level `items` field (`{items: [{tag_ids: [...]}]}`)
+  and returns the saved raw list (**breaking** vs spec 11's `{tag_ids}`);
+  rules in `app/domain/tags.py`.
+- **Frontend**: `useMainItems`/`useSetMainItems`, `lib/mainItems.ts`,
+  `groupDocumentsByMainItems` (a Document is in a combination when it has
+  **all** its Tags); `MainTagsEditor` gained combinations through
+  `CombinationAdder`; group headings read `#A + #B`.
+
 ## Next Up
 
+- **Apply migration `b5d8f2a9c1e3` to the live DB BEFORE merging spec 11_2**
+  (adds two empty tables; needs the user's go-ahead). Merge order matters
+  twice: Render redeploys the backend on merge and the API shape changed, so
+  the old frontend's setup page gets 422 on save until Vercel catches up.
 - **Browser check of spec 11** (migration is applied): setup page as
   Administrator and as a plain member, reorder + save, Documents grouping
   follows the order; and the one-line `TagFilter` with 3+ Tags selected.
@@ -214,6 +240,12 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 Items marked *protected* need a product pass because `requirements.md` is a
 protected file.
 
+- **Spec 11_2 — combination semantics (assumed, confirm)**: the spec only
+  says a combination of 2+ Tags can be a Group-by line item. Assumed: a
+  Document is in it when it carries **all** the Tags (AND, like the filter);
+  it also stays in the single-Tag groups it matches; any Tags can be combined
+  (not only Main Tags); combinations can't be nested or named. Changing
+  any of these needs a product pass.
 - **Spec 11 — who may set up a Room, and leaving** (needs a product
   decision): the spec says the setup page is reachable only by a Room's
   Administrator, and it replaced the members page. So (a) a plain Player or

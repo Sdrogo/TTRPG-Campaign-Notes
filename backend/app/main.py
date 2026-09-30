@@ -14,6 +14,7 @@ from app.api.auth import router as auth_router
 from app.api.comments import router as comments_router
 from app.api.documents import router as documents_router
 from app.api.invitations import router as invitations_router
+from app.api.main_items import router as main_items_router
 from app.api.rooms import router as rooms_router
 from app.api.tags import router as tags_router
 from app.config import Settings, settings
@@ -54,6 +55,7 @@ app.include_router(account_router)
 app.include_router(rooms_router)
 app.include_router(invitations_router)
 app.include_router(tags_router)
+app.include_router(main_items_router)
 app.include_router(documents_router)
 app.include_router(comments_router)
 
