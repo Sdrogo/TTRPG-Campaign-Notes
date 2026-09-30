@@ -46,7 +46,9 @@
       "duplicateName": "A Tag with this name already exists in this Room",
       "onlyAdministratorCanSetMainTags": "Only an Administrator can choose the Main Tags",
       "duplicateMainTag": "A Tag can only appear once among the Main Tags",
-      "unknownMainTag": "A Main Tag is not a Tag of this Room"
+      "unknownMainTag": "A Main Tag is not a Tag of this Room",
+      "emptyMainItem": "A Main item needs at least one Tag",
+      "duplicateCombination": "This combination of Tags is already listed"
     },
     "image": {
       "notFound": "Image not found",

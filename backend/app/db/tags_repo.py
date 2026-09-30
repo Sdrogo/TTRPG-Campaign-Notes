@@ -3,11 +3,12 @@
 import uuid
 from collections.abc import Mapping
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import TagRow
-from app.domain.models import Tag
+from app.db.models import TagCombinationRow, TagCombinationTagRow, TagRow
+from app.domain.models import Tag, TagCombination
+from app.domain.tags import PlannedCombination
 
 
 def _tag_from_row(row: TagRow) -> Tag:
@@ -66,4 +67,50 @@ async def set_main_positions(
             .where(TagRow.id == tag_id, TagRow.room_id == room_id)
             .values(main_position=position)
         )
+    await session.flush()
+
+
+async def list_combinations(session: AsyncSession, room_id: uuid.UUID) -> list[TagCombination]:
+    """Every Tag combination of the Room, in position order."""
+    result = await session.execute(
+        select(TagCombinationRow)
+        .where(TagCombinationRow.room_id == room_id)
+        .order_by(TagCombinationRow.position)
+    )
+    rows = list(result.scalars())
+    if not rows:
+        return []
+    links = await session.execute(
+        select(TagCombinationTagRow.combination_id, TagCombinationTagRow.tag_id).where(
+            TagCombinationTagRow.combination_id.in_([row.id for row in rows])
+        )
+    )
+    by_combination: dict[uuid.UUID, list[uuid.UUID]] = {row.id: [] for row in rows}
+    for combination_id, tag_id in links.all():
+        by_combination[combination_id].append(tag_id)
+    return [
+        TagCombination(
+            id=row.id,
+            room_id=row.room_id,
+            position=row.position,
+            tag_ids=tuple(by_combination[row.id]),
+        )
+        for row in rows
+    ]
+
+
+async def replace_combinations(
+    session: AsyncSession, room_id: uuid.UUID, combinations: tuple[PlannedCombination, ...]
+) -> None:
+    """Replaces the Room's combinations with `combinations`. Their Tags must
+    already be checked as belonging to the Room (`plan_main_items`)."""
+    await session.execute(delete(TagCombinationRow).where(TagCombinationRow.room_id == room_id))
+    for planned in combinations:
+        combination_id = uuid.uuid4()
+        session.add(
+            TagCombinationRow(id=combination_id, room_id=room_id, position=planned.position)
+        )
+        await session.flush()
+        for tag_id in planned.tag_ids:
+            session.add(TagCombinationTagRow(combination_id=combination_id, tag_id=tag_id))
     await session.flush()

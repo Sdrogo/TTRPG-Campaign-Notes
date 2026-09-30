@@ -61,6 +61,18 @@ class Tag:
 
 
 @dataclass(frozen=True)
+class TagCombination:
+    """Two or more Tags a Room groups its Documents list by together (spec
+    11_2): a Document belongs to it when it carries all of them. `position`
+    shares the numbering of the single Main Tags' `main_position`."""
+
+    id: uuid.UUID
+    room_id: uuid.UUID
+    position: int
+    tag_ids: tuple[uuid.UUID, ...]
+
+
+@dataclass(frozen=True)
 class Invitation:
     """A code for joining a Room with a proposed role (FR-R2). It stops working
     once expired or revoked."""
