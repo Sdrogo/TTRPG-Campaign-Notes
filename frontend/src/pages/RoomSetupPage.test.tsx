@@ -45,10 +45,12 @@ const routes: Routes_ = {
   put: () => Promise.resolve(rawTags),
 };
 
+/** Sets the members the Room's members route answers with. */
 function setMembers(list: unknown[]) {
   routes.members = list;
 }
 
+/** Renders the setup page at its route. */
 function render() {
   renderWithProviders(
     <Routes>
@@ -80,6 +82,7 @@ beforeEach(() => {
   });
 });
 
+/** Whether the page asked for the Room's Tags at all. */
 const tagsWereRequested = () =>
   fetchMock.mock.calls.some(([path]) => path === '/rooms/room-1/tags');
 

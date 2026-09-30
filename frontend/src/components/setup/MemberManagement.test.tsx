@@ -16,6 +16,7 @@ vi.mock('../../lib/notify', () => ({
 
 const fetchMock = vi.mocked(apiFetch);
 
+/** A Member with plain-player defaults. */
 const member = (overrides: Partial<Member> = {}): Member => ({
   userId: 'user-2',
   role: 'player',
@@ -28,6 +29,7 @@ const member = (overrides: Partial<Member> = {}): Member => ({
   ...overrides,
 });
 
+/** Renders the table for user-1 and returns the leave spy and a user. */
 function render(members: Member[]) {
   const onLeft = vi.fn();
   renderWithProviders(
@@ -36,8 +38,10 @@ function render(members: Member[]) {
   return { onLeft, user: userEvent.setup() };
 }
 
+/** The table row showing the member with this name. */
 const rowFor = (name: string) => screen.getByText(name).closest('tr') as HTMLElement;
 
+/** The signed-in Administrator. */
 const me = member({
   userId: 'user-1',
   displayName: 'Io',

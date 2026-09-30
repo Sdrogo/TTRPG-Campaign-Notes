@@ -61,6 +61,7 @@ export function RoomSetupPage() {
     );
   }
 
+  /** Saves the Main Tags and confirms or reports the result. */
   const handleSaveMainTags = (tagIds: string[]) => {
     setMainTags.mutate(tagIds, {
       onSuccess: () => notifySuccess(t('setup.mainTags.saved')),

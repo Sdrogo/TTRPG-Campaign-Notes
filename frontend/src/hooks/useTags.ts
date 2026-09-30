@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import type { RawTag, Tag } from '../types/tag';
 
+/** The cache key of a Room's Tags. */
 function tagsQueryKey(roomId: string) {
   return ['rooms', roomId, 'tags'] as const;
 }
 
+/** Maps a Tag from the backend's wire shape; a missing `main_position` means not a Main Tag. */
 function toTag(raw: RawTag): Tag {
   return {
     id: raw.id,

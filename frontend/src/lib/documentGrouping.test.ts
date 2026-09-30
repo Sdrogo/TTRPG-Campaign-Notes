@@ -3,6 +3,7 @@ import { UNGROUPED_LABEL, groupDocumentsByMainTag } from './documentGrouping';
 import type { Document } from '../types/document';
 import type { Tag } from '../types/tag';
 
+/** A Tag with an optional Main Tag position. */
 const tag = (
   id: string,
   name: string,
@@ -14,6 +15,7 @@ const tag = (
   category,
   mainPosition,
 });
+/** A Document carrying the given Tag ids. */
 const doc = (id: string, tagIds: string[]): Document => ({
   id,
   roomId: 'r',

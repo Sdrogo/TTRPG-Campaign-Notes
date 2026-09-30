@@ -384,7 +384,9 @@ async def test_prefilling_twice_in_a_row_does_nothing_the_second_time(
 async def test_a_token_with_no_email_claim_leaves_it_null(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
-    response = await client.get("/account", headers=_headers(make_token, str(uuid.uuid4()), None))
+    response = await client.get(
+        "/account", headers=_headers(make_token, str(uuid.uuid4()), None)
+    )
 
     assert response.status_code == 200
     assert response.json()["email"] is None

@@ -346,7 +346,9 @@ async def _attach_image(
     except (NotCommentAuthorError, CommentDeletedError, TooManyCommentImagesError) as exc:
         raise _author_error(exc, locale) from exc
 
-    data = await fetch_url(source, locale) if isinstance(source, str) else await read_upload(source)
+    data = (
+        await fetch_url(source, locale) if isinstance(source, str) else await read_upload(source)
+    )
     image = await store_image(
         session, document, membership.user_id, data, document_images, locale, post_id=comment.id
     )

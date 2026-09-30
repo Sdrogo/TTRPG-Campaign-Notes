@@ -32,6 +32,7 @@ export function MemberManagement({
   const updateMember = useUpdateMember(roomId);
   const removeMember = useRemoveMember(roomId);
 
+  /** Removes a member; removing yourself also leaves the page. */
   const handleRemove = (userId: string) => {
     removeMember.mutate(userId, {
       onSuccess: () => {

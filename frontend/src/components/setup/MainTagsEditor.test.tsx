@@ -5,6 +5,7 @@ import { renderWithProviders } from '../../test/utils';
 import { MainTagsEditor } from './MainTagsEditor';
 import type { Tag } from '../../types/tag';
 
+/** A Tag with a chosen Main Tag position, or none. */
 const tag = (id: string, name: string, mainPosition: number | null): Tag => ({
   id,
   name,
@@ -16,12 +17,14 @@ const npc = tag('npc', 'NPC', 0);
 const pc = tag('pc', 'PC', 1);
 const place = tag('place', 'Luogo', null);
 
+/** Renders the editor and returns its save spy and a user. */
 function render(tags: Tag[], saving = false) {
   const onSave = vi.fn();
   renderWithProviders(<MainTagsEditor tags={tags} saving={saving} onSave={onSave} />);
   return { onSave, user: userEvent.setup() };
 }
 
+/** The text of each Main Tag row, in order. */
 const names = () => screen.getAllByRole('listitem').map((item) => item.textContent);
 
 describe('MainTagsEditor', () => {

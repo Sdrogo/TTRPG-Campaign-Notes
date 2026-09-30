@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { groupTagsByCategory, isMainTag, sortMainTags, sortTagsByName } from './tags';
 import type { Tag } from '../types/tag';
 
+/** A Tag with an optional Main Tag position. */
 const tag = (
   id: string,
   name: string,
