@@ -188,6 +188,20 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   touches production). Until then the deployed backend would fail reading
   `tags`. Then check in a browser: setup page as Administrator and as a
   plain member, reorder + save, Documents grouping follows the order.
+### UI/UX refinement 11.1 (09-30, branch `feature/11-1-tagfilter-one-line`)
+
+- `TagFilter` is forced to one line: two pills then "+N", no wrapping
+  (`renderPill`, since Mantine 9's `MultiSelect` lacks `maxDisplayedValues`).
+  Frontend 800 tests, 100% coverage.
+- Migration `a7c3e9d1b254` (spec 11) was **applied to the live DB on
+  09-30** after the deployed backend returned 500 on `/tags` (the code had
+  deployed before the migration). Apply migrations before merging.
+
+## Next Up
+
+- **Browser check of spec 11** (migration is applied): setup page as
+  Administrator and as a plain member, reorder + save, Documents grouping
+  follows the order; and the one-line `TagFilter` with 3+ Tags selected.
 - **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only): set it to
   `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app` and redeploy.
   Then the look-alike `…-abc123-evil-rum11.vercel.app` must get no

@@ -255,7 +255,12 @@ other icon set.
   from `sm` up), options shown as `#Tag`. It is bound to the URL
   (`?tag=…`, repeatable, Tags combine with AND), which is where a Tag
   mention leads. No match: "Nessun Documento con questo Tag." plus a
-  "Mostra tutti" button.
+  "Mostra tutti" button. **Always one line** (2026-09-30, spec
+  `11_1 - UI UX Refinment`): the first two selected Tags show as pills
+  (`MAX_DISPLAYED_TAGS`) and the rest collapse into a "+N" pill; the pill row
+  is `nowrap` with hidden overflow, so the control keeps its height. Mantine
+  9's `MultiSelect` has no `maxDisplayedValues` (only `TreeSelect` does), so
+  it's done with `renderPill`; the filter still holds every selected Tag.
 - **Grouping and sorting** (2026-09-25, spec `10 - UX Refinment`): next to
   `TagFilter`, two more `Select`s — "Raggruppa per" (Tag principale /
   nessuno) and "Ordina per" (Nome A-Z / Z-A) — also URL-bound (`?groupBy=`,
