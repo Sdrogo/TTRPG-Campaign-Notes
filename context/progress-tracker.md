@@ -9,12 +9,14 @@ step-by-step notes) is in
 
 ## Current Status (2026-09-30)
 
-Branch `feature/ux_refinement`. All units below are complete and merged or
-in open PRs. Latest measured state: frontend **761/761** tests and backend
-**328/328** tests, both at **100%** coverage with exact-100% CI gates;
-lint, `tsc`, ruff and mypy strict clean.
+Branch `feature/11-room-setup-page` (spec 11, PR open). Latest measured
+state: frontend **794/794** tests at **100%** coverage; backend **341**
+tests (205 without a database pass locally; the 136 DB tests, 13 of them
+new, run in CI only — the migration isn't on the live DB yet, see Next Up);
+lint, `tsc`, ruff and mypy strict clean. CI keeps exact-100% gates.
 
-No unit is in progress. Candidates for the next one are in **Next Up**.
+No other unit is in progress. Candidates for the next one are in **Next
+Up**.
 
 ## Completed Units
 
@@ -140,8 +142,28 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   is commented: real DB session, real Storage HTTP, real JWKS client, and
   unreachable "room is None" guards (no route deletes a Room).
 
+### Room setup page (spec 11, 09-30, branch `feature/11-room-setup-page`)
+
+- **Backend first** (commit 1): `tags.main_position` (migration
+  `a7c3e9d1b254`) makes "Main Tag" an Administrator's choice with an order,
+  replacing "category `Type`". Existing `Type` Tags were promoted by name
+  order; new Rooms seed the defaults as Main Tags in `DEFAULT_TAGS` order.
+  `PUT /rooms/{id}/tags/main` (Administrator only) replaces the selection;
+  rule in `app/domain/tags.py`.
+- **Frontend** (commit 2): `RoomSetupPage` at `/rooms/:id/setup`
+  (Administrators only) replaces `RoomMembersPage` (old `/members` URL
+  redirects). Built from `setup/MemberManagement` (the old table, now
+  all-controls) and `setup/MainTagsEditor` (up/down/remove/add, one Save).
+  Documents grouping and the Tag index follow the chosen order. `RoomCard`
+  shows "Impostazioni" to Administrators only.
+
 ## Next Up
 
+- **Apply migration `a7c3e9d1b254` to the live DB** before deploying spec
+  11 (additive: one nullable column + a backfill; not applied by me — it
+  touches production). Until then the deployed backend would fail reading
+  `tags`. Then check in a browser: setup page as Administrator and as a
+  plain member, reorder + save, Documents grouping follows the order.
 - **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only): set it to
   `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app` and redeploy.
   Then the look-alike `…-abc123-evil-rum11.vercel.app` must get no
@@ -179,6 +201,16 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
 Items marked *protected* need a product pass because `requirements.md` is a
 protected file.
+
+- **Spec 11 — who may set up a Room, and leaving** (needs a product
+  decision): the spec says the setup page is reachable only by a Room's
+  Administrator, and it replaced the members page. So (a) a plain Player or
+  a Master who isn't an Administrator can no longer see the members list
+  page or **leave a Room from the UI** (UC-19; the `DELETE` endpoint still
+  allows it) — a "Leave" action somewhere else (Rooms list card?) is
+  needed; (b) the Master alone can't set Main Tags (Administrator only,
+  matching "Admin of that Room"). Also new: who the "Admin" is when the
+  Master isn't one (they are separate flags, D-11).
 
 - **Backend locale follows `Accept-Language`, not the UI flag selector**: a
   user with an English browser who picked Italian in the UI still gets
@@ -255,8 +287,10 @@ Full reasoning lives in `architecture.md`; this is the index.
   what is deleted, cascaded and filtered), and one `ORDER BY is_favorite
   DESC, created_at, id` serves every read path. "Exactly one while images
   exist" is application logic (`next_favorite_id`).
-- "Main Tag" = Tag with category `"Type"` (no schema field); the Glossary
-  Index is a navigation over Tags, not the FR-N3/N4 Glossary entity.
+- "Main Tag" = a Tag with a non-NULL `tags.main_position`, chosen and
+  ordered by a Room Administrator (spec 11; it was "category `Type`" in
+  spec 10); the Glossary Index is a navigation over Tags, not the FR-N3/N4
+  Glossary entity.
 - Localization: frontend and backend each have their own resource files with
   the same shape and share no code; domain exceptions carry keys, rendered
   at the API boundary.
@@ -272,6 +306,11 @@ Full reasoning lives in `architecture.md`; this is the index.
   `server_default` (autogenerate omits it).
 - Phosphor icons: use the `*Icon`-suffixed exports (bare names are
   deprecated). Mantine v9 renamed `Grid`'s `gutter` to `gap`.
+- Bash heredocs with backticks break; and `Path.write_text` without
+  `encoding='utf-8'` **truncates the file** on a non-cp1252 character (it
+  emptied `ui-context.md` once; restored from git). Always pass
+  `encoding='utf-8'`. Prettier has no repo config: use
+  `--single-quote --print-width 100` to match the code.
 - Headless browser checks need a faked Supabase session (Google-only login
   can't be automated) and a stubbed API; the scripts were never committed,
   which is why several UI items still await a human look.

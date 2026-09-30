@@ -260,8 +260,9 @@ other icon set.
   `TagFilter`, two more `Select`s — "Raggruppa per" (Tag principale /
   nessuno) and "Ordina per" (Nome A-Z / Z-A) — also URL-bound (`?groupBy=`,
   `?sort=`, both hidden with the filter when the Room has no Documents).
-  Grouped by Main Tag (a Tag whose category is `"Type"` — the category the
-  seeded default Tags share) is the default: each group gets its own
+  Grouped by Main Tag (the Tags an Administrator chose on the Room setup
+  page, in the order they gave them — spec 11, `Tag.mainPosition`) is the
+  default: each group gets its own
   `Title` (`#TagName`, or "Senza Tag principale" for Documents carrying
   none) above its own `SimpleGrid`; a Document with several Main Tags
   appears under each one. "Nessun raggruppamento" collapses back to the
@@ -276,8 +277,8 @@ other icon set.
   left-anchored Mantine `Drawer`, toggled by a `Burger` on the right of
   `AppHeader` (next to the account avatar) — shown only on a Room-scoped
   page (`PageLayout`'s `roomId` prop). Lists every Tag in the Room, grouped
-  by category exactly like the grouping control above (Main Tags first
-  under "Tag principali", then other categories by name, then uncategorized
+  by category like the grouping control above (Main Tags first, in the
+  Room's chosen order, under "Tag principali", then other categories by name, then uncategorized
   under "Altri Tag"), each one linking to the Documents list filtered by
   it — the same destination a `#Tag` mention already leads to. Not the
   Glossary entity from `requirements.md` (FR-N3/FR-N4, terms with their own
@@ -317,3 +318,25 @@ sees the browser's language.
 onboarding at 32px+. Icon color always follows `--text-muted` at
 rest and `--accent-primary` on hover/active — never a hardcoded
 color per icon.
+
+## Room setup page (spec 11)
+
+`/rooms/:roomId/setup` (`RoomSetupPage`, 2026-09-30), opened from the
+"Impostazioni" button on a `RoomCard`. The button, and the page, are for
+Administrators of that Room only; anyone else who reaches the URL gets a
+full-page "Solo un Amministratore…" message with a way back (the backend
+enforces the same on every write). It has two sections under a `Title`
+order 2, each with an order-3 `Title`:
+
+- **Membri** (`setup/MemberManagement`): the table that used to be the
+  members page — avatar, name, pronouns, bio, role `Select`, Administrator
+  `Switch`, Remove/Leave. Every control is offered, since the page is
+  Administrator-only.
+- **Tag principali** (`setup/MainTagsEditor`): an ordered list (`ol` of
+  bordered `Paper` rows: position, `#Name`, and `ActionIcon`s for up, down
+  and remove) and a searchable `Select` that adds one of the remaining Tags
+  at the end. It edits a draft; "Salva ordine" (disabled until the draft
+  differs from what's saved) sends the whole list. Reordering is buttons,
+  not drag and drop: keyboard- and screen-reader-friendly, and no new
+  dependency. A saved order updates the Tags cache in place and is
+  confirmed with a toast.
