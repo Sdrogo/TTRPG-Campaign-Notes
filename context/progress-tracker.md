@@ -163,15 +163,31 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   Documents grouping and the Tag index follow the chosen order. `RoomCard`
   shows "Impostazioni" to Administrators only.
 
-### Tag combinations (spec 11_2, 10-01, branch `feature/11-2-tag-combinations`)
+### UI/UX refinement 11.1 (09-30, branch `feature/11-1-tagfilter-one-line`)
+
+- `TagFilter` is forced to one line: two pills then "+N", no wrapping
+  (`renderPill`, since Mantine 9's `MultiSelect` lacks `maxDisplayedValues`).
+  Frontend 800 tests, 100% coverage.
+- Migration `a7c3e9d1b254` (spec 11) was **applied to the live DB on
+  09-30** after the deployed backend returned 500 on `/tags` (the code had
+  deployed before the migration). Apply migrations before merging.
+
+## In Progress
+
+### Tag combinations (spec 11_2, branch `feature/11-2-tag-combinations`)
+
+Implementation is ready; completion is pending approval and application of
+migration `b5d8f2a9c1e3` to the live DB (see Next Up).
 
 - **Backend first**: a combination of two or more Tags is a line item of the
   Documents grouping, in the same order as the single Main Tags. Tables
   `tag_combinations` + `tag_combination_tags` (migration `b5d8f2a9c1e3`, RLS +
   deny policy); combinations share the numbering of `tags.main_position`.
-  `GET`/`PUT /rooms/{id}/tags/main` moved to `app/api/main_items.py` and now
-  speak `items` (**breaking** vs spec 11's `{tag_ids}`); rules in
-  `app/domain/tags.py`.
+  `GET`/`PUT /rooms/{id}/tags/main` moved to `app/api/main_items.py`.
+  GET returns a raw list of `MainItem` objects (`[{tag_ids: [...]}]`);
+  PUT accepts a top-level `items` field (`{items: [{tag_ids: [...]}]}`)
+  and returns the saved raw list (**breaking** vs spec 11's `{tag_ids}`);
+  rules in `app/domain/tags.py`.
 - **Frontend**: `useMainItems`/`useSetMainItems`, `lib/mainItems.ts`,
   `groupDocumentsByMainItems` (a Document is in a combination when it has
   **all** its Tags); `MainTagsEditor` gained combinations through
@@ -183,22 +199,6 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   (adds two empty tables; needs the user's go-ahead). Merge order matters
   twice: Render redeploys the backend on merge and the API shape changed, so
   the old frontend's setup page gets 422 on save until Vercel catches up.
-- **Apply migration `a7c3e9d1b254` to the live DB** before deploying spec
-  11 (additive: one nullable column + a backfill; not applied by me — it
-  touches production). Until then the deployed backend would fail reading
-  `tags`. Then check in a browser: setup page as Administrator and as a
-  plain member, reorder + save, Documents grouping follows the order.
-### UI/UX refinement 11.1 (09-30, branch `feature/11-1-tagfilter-one-line`)
-
-- `TagFilter` is forced to one line: two pills then "+N", no wrapping
-  (`renderPill`, since Mantine 9's `MultiSelect` lacks `maxDisplayedValues`).
-  Frontend 800 tests, 100% coverage.
-- Migration `a7c3e9d1b254` (spec 11) was **applied to the live DB on
-  09-30** after the deployed backend returned 500 on `/tags` (the code had
-  deployed before the migration). Apply migrations before merging.
-
-## Next Up
-
 - **Browser check of spec 11** (migration is applied): setup page as
   Administrator and as a plain member, reorder + save, Documents grouping
   follows the order; and the one-line `TagFilter` with 3+ Tags selected.
