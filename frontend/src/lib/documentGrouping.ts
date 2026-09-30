@@ -1,4 +1,4 @@
-import { isMainTag, sortTagsByName } from './tags';
+import { sortMainTags } from './tags';
 import type { Document } from '../types/document';
 import type { Tag } from '../types/tag';
 
@@ -18,13 +18,14 @@ export interface DocumentGroup {
 }
 
 /**
- * Buckets `documents` by each Main Tag (category "Type", spec 10) they carry -
+ * Buckets `documents` by each Main Tag (spec 10, 11) they carry -
  * a Document with several Main Tags appears in every one of their groups -
  * with a trailing `UNGROUPED_LABEL` group for Documents carrying none. Groups
- * are ordered by Tag name; empty groups are left out.
+ * follow the order the Room's Administrators gave the Main Tags; empty
+ * groups are left out.
  */
 export function groupDocumentsByMainTag(documents: Document[], tags: Tag[]): DocumentGroup[] {
-  const mainTags = sortTagsByName(tags.filter(isMainTag));
+  const mainTags = sortMainTags(tags);
   const mainTagIds = new Set(mainTags.map((tag) => tag.id));
 
   const groups: DocumentGroup[] = mainTags.map((tag) => ({

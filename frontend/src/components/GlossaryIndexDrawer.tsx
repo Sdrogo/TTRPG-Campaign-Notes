@@ -2,7 +2,7 @@ import { Anchor, Drawer, Stack, Text, Title } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { useTags } from '../hooks/useTags';
 import { documentsWithTagsHref } from '../lib/documentMentions';
-import { groupTagsByCategory, MAIN_TAG_CATEGORY } from '../lib/tags';
+import { groupTagsByCategory } from '../lib/tags';
 
 interface GlossaryIndexDrawerProps {
   roomId: string;
@@ -12,7 +12,7 @@ interface GlossaryIndexDrawerProps {
 
 /**
  * The Room's "Glossary Index" (spec `10 - UX Refinment`): a left-side
- * navigation drawer of every Tag, grouped by category (Main Tags first),
+ * navigation drawer of every Tag, grouped by category (Main Tags first, in the Room's chosen order),
  * each one a shortcut to the Documents list filtered by it - the same
  * destination a `#Tag` mention leads to. Toggled from the burger menu in
  * `AppHeader`.
@@ -30,9 +30,9 @@ export function GlossaryIndexDrawer({ roomId, opened, onClose }: GlossaryIndexDr
       ) : (
         <Stack gap="md">
           {groups.map((group) => (
-            <Stack key={group.category ?? 'none'} gap={4}>
+            <Stack key={group.isMain ? 'main' : (group.category ?? 'none')} gap={4}>
               <Title order={6} c="dimmed" tt="uppercase">
-                {group.category === MAIN_TAG_CATEGORY
+                {group.isMain
                   ? 'Tag principali'
                   : (group.category ?? 'Altri Tag')}
               </Title>

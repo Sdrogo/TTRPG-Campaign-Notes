@@ -2,16 +2,18 @@
 filtered by, in place of rigid Document types (D-05)."""
 
 import uuid
+from dataclasses import replace
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 
-from app.api.errors import http_error
+from app.api.errors import http_error, translated_error
 from app.auth.dependencies import CurrentUserDep
 from app.db import rooms_repo, tags_repo
 from app.db.session import SessionDep
 from app.domain.models import RoomRole, Tag
+from app.domain.tags import DuplicateMainTagError, UnknownMainTagError, plan_main_tags
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/tags", tags=["tags"])
@@ -23,6 +25,20 @@ class TagResponse(BaseModel):
     id: uuid.UUID
     name: str
     category: str | None
+    main_position: int | None
+
+
+class SetMainTagsRequest(BaseModel):
+    """The Room's Main Tags, in the order Documents are grouped by them."""
+
+    tag_ids: list[uuid.UUID]
+
+
+def tag_to_response(tag: Tag) -> TagResponse:
+    """Serializes a Tag the same way for every route that returns one."""
+    return TagResponse(
+        id=tag.id, name=tag.name, category=tag.category, main_position=tag.main_position
+    )
 
 
 class CreateTagRequest(BaseModel):
@@ -43,7 +59,7 @@ async def list_tags(
         raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
 
     tags = await tags_repo.list_tags(session, room_id)
-    return [TagResponse(id=t.id, name=t.name, category=t.category) for t in tags]
+    return [tag_to_response(t) for t in tags]
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -75,4 +91,34 @@ async def create_tag(
     except IntegrityError as exc:
         raise http_error(status.HTTP_409_CONFLICT, "errors.tag.duplicateName", locale) from exc
 
-    return TagResponse(id=tag.id, name=tag.name, category=tag.category)
+    return tag_to_response(tag)
+
+
+@router.put("/main")
+async def set_main_tags(
+    room_id: uuid.UUID,
+    body: SetMainTagsRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> list[TagResponse]:
+    """Spec 11: an Administrator chooses which Tags are the Room's Main Tags
+    and their order (the Documents list groups by them in that order). The
+    list replaces the previous selection; an empty one clears it. 422 for a
+    repeated Tag or one that isn't in this Room. Returns every Tag of the
+    Room."""
+    requester_id = uuid.UUID(current_user.id)
+    membership = await rooms_repo.get_membership(session, room_id, requester_id)
+    if membership is None or not membership.is_admin:
+        raise http_error(
+            status.HTTP_403_FORBIDDEN, "errors.tag.onlyAdministratorCanSetMainTags", locale
+        )
+
+    tags = await tags_repo.list_tags(session, room_id)
+    try:
+        positions = plan_main_tags([t.id for t in tags], body.tag_ids)
+    except (DuplicateMainTagError, UnknownMainTagError) as exc:
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
+
+    await tags_repo.set_main_positions(session, room_id, positions)
+    return [tag_to_response(replace(t, main_position=positions[t.id])) for t in tags]

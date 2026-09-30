@@ -50,12 +50,14 @@ class Membership:
 @dataclass(frozen=True)
 class Tag:
     """A Room's label for classifying Documents, with an optional category
-    (D-14, FR-N1)."""
+    (D-14, FR-N1). A non-None `main_position` makes it one of the Room's Main
+    Tags (spec 11): Documents group by them, in ascending position."""
 
     id: uuid.UUID
     room_id: uuid.UUID
     name: str
     category: str | None
+    main_position: int | None = None
 
 
 @dataclass(frozen=True)

@@ -105,14 +105,14 @@
     "loadError": "Errore nel caricamento delle Stanze.",
     "empty": "Nessuna Stanza ancora. Creane una per iniziare.",
     "documents": "Documenti",
-    "members": "Membri",
     "invite": "Invita",
     "createModal": {
       "title": "Crea una Stanza",
       "namePlaceholder": "Es. La Maledizione di Strahd",
       "gameSystem": "Sistema di gioco",
       "gameSystemPlaceholder": "Es. D&D 5e (opzionale)"
-    }
+    },
+    "setup": "Impostazioni"
   },
   "invite": {
     "modalTitle": "Invita nella Stanza",
@@ -125,11 +125,30 @@
   },
   "members": {
     "signInRequired": "Accedi per vedere i membri di questa Stanza.",
-    "title": "Membri della Stanza",
+    "title": "Membri",
     "loadError": "Errore nel caricamento dei membri.",
     "columnUser": "Utente",
     "columnRole": "Ruolo",
     "columnAdmin": "Amministratore"
+  },
+  "setup": {
+    "signInRequired": "Accedi per gestire questa Stanza.",
+    "title": "Impostazioni della Stanza",
+    "adminOnly": "Solo un Amministratore della Stanza può aprire le impostazioni.",
+    "loadError": "Errore nel caricamento delle impostazioni della Stanza.",
+    "mainTags": {
+      "title": "Tag principali",
+      "description": "Nella pagina dei Documenti i Documenti sono raggruppati per questi Tag, in quest'ordine.",
+      "empty": "Nessun Tag principale: i Documenti non saranno raggruppati.",
+      "moveUp": "Sposta {{name}} su",
+      "moveDown": "Sposta {{name}} giù",
+      "remove": "Rimuovi {{name}} dai Tag principali",
+      "addLabel": "Aggiungi un Tag principale",
+      "addPlaceholder": "Scegli un Tag",
+      "noMoreTags": "Ogni Tag è già un Tag principale.",
+      "save": "Salva ordine",
+      "saved": "Tag principali salvati"
+    }
   },
   "documents": {
     "signInRequired": "Accedi per vedere i Documenti di questa Stanza.",

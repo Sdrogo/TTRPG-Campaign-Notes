@@ -25,7 +25,7 @@ function withMentions(children: ReactNode, overrides: Partial<DocumentMentionsVa
   const value: DocumentMentionsValue = {
     roomId: 'room-1',
     documents: [document('doc-1', 'Il Cancello')],
-    tags: [{ id: 'tag-1', name: 'Luoghi', category: null }],
+    tags: [{ id: 'tag-1', name: 'Luoghi', category: null, mainPosition: null }],
     canCreateDocument: false,
     canCreateTag: false,
     create: async () => {

@@ -25,9 +25,9 @@ const candidates: MentionTarget[] = [
   {
     kind: 'document',
     document: document('doc-1', 'Il Cancello'),
-    tags: [{ id: 'tag-1', name: 'Luoghi', category: null }],
+    tags: [{ id: 'tag-1', name: 'Luoghi', category: null, mainPosition: null }],
   },
-  { kind: 'tag', tag: { id: 'tag-1', name: 'Luoghi', category: null }, documentCount: 3 },
+  { kind: 'tag', tag: { id: 'tag-1', name: 'Luoghi', category: null, mainPosition: null }, documentCount: 3 },
 ];
 
 function render(props: Partial<Parameters<typeof MentionSuggestions>[0]> = {}) {
@@ -90,7 +90,7 @@ describe('MentionSuggestions', () => {
     await setLanguage('en');
     const oneDocument = {
       kind: 'tag',
-      tag: { id: 'tag-2', name: 'Fazioni', category: null },
+      tag: { id: 'tag-2', name: 'Fazioni', category: null, mainPosition: null },
       documentCount: 1,
     } as MentionTarget;
     render({ candidates: [oneDocument, candidates[1]] });

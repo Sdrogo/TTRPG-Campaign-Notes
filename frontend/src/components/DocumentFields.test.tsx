@@ -7,8 +7,8 @@ import type { DocumentFormValues } from '../types/document';
 import type { Tag } from '../types/tag';
 
 const tags: Tag[] = [
-  { id: 'tag-1', name: 'Luoghi', category: null },
-  { id: 'tag-2', name: 'PNG', category: null },
+  { id: 'tag-1', name: 'Luoghi', category: null, mainPosition: null },
+  { id: 'tag-2', name: 'PNG', category: null, mainPosition: null },
 ];
 
 function render(overrides: Partial<DocumentFormValues> = {}) {

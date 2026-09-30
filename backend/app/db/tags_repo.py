@@ -1,8 +1,9 @@
 """A Room's Tags."""
 
 import uuid
+from collections.abc import Mapping
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import TagRow
@@ -11,7 +12,13 @@ from app.domain.models import Tag
 
 def _tag_from_row(row: TagRow) -> Tag:
     """Maps a `tags` row to the domain `Tag`."""
-    return Tag(id=row.id, room_id=row.room_id, name=row.name, category=row.category)
+    return Tag(
+        id=row.id,
+        room_id=row.room_id,
+        name=row.name,
+        category=row.category,
+        main_position=row.main_position,
+    )
 
 
 async def list_tags(session: AsyncSession, room_id: uuid.UUID) -> list[Tag]:
@@ -23,7 +30,15 @@ async def list_tags(session: AsyncSession, room_id: uuid.UUID) -> list[Tag]:
 async def insert_tag(session: AsyncSession, tag: Tag) -> None:
     """Adds a Tag. A duplicate name in the same Room raises
     `IntegrityError`."""
-    session.add(TagRow(id=tag.id, room_id=tag.room_id, name=tag.name, category=tag.category))
+    session.add(
+        TagRow(
+            id=tag.id,
+            room_id=tag.room_id,
+            name=tag.name,
+            category=tag.category,
+            main_position=tag.main_position,
+        )
+    )
     await session.flush()
 
 
@@ -38,3 +53,17 @@ async def get_tags_by_ids(
         select(TagRow).where(TagRow.room_id == room_id, TagRow.id.in_(tag_ids))
     )
     return [_tag_from_row(row) for row in result.scalars()]
+
+
+async def set_main_positions(
+    session: AsyncSession, room_id: uuid.UUID, positions: Mapping[uuid.UUID, int | None]
+) -> None:
+    """Writes each listed Tag's `main_position` (None clears it). Only rows of
+    this Room are touched, whatever ids `positions` holds."""
+    for tag_id, position in positions.items():
+        await session.execute(
+            update(TagRow)
+            .where(TagRow.id == tag_id, TagRow.room_id == room_id)
+            .values(main_position=position)
+        )
+    await session.flush()

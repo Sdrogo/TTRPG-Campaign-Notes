@@ -7,6 +7,7 @@ from app.domain.rooms import RoomNameRequiredError, plan_new_room
 
 
 def test_creator_becomes_master_and_admin() -> None:
+    """Creator becomes master and admin."""
     creator_id = uuid.uuid4()
     plan = plan_new_room("Curse of Strahd", "D&D 5e", creator_id)
 
@@ -21,6 +22,7 @@ def test_creator_becomes_master_and_admin() -> None:
 
 
 def test_default_tags_are_created_with_the_room() -> None:
+    """Default tags are created with the room."""
     plan = plan_new_room("Waterdeep", None, uuid.uuid4())
 
     names = {tag.name for tag in plan.default_tags}
@@ -29,11 +31,22 @@ def test_default_tags_are_created_with_the_room() -> None:
     assert all(tag.category == "Type" for tag in plan.default_tags)
 
 
+def test_default_tags_are_the_first_main_tags_in_declaration_order() -> None:
+    """Default tags are the first main tags in declaration order."""
+    plan = plan_new_room("Waterdeep", None, uuid.uuid4())
+
+    ordered = sorted(plan.default_tags, key=lambda tag: tag.main_position or 0)
+    assert [tag.name for tag in ordered] == ["NPC", "PC", "Place", "Event", "Artifact"]
+    assert [tag.main_position for tag in ordered] == [0, 1, 2, 3, 4]
+
+
 def test_blank_name_is_rejected() -> None:
+    """Blank name is rejected."""
     with pytest.raises(RoomNameRequiredError):
         plan_new_room("   ", None, uuid.uuid4())
 
 
 def test_game_system_is_optional() -> None:
+    """Game system is optional."""
     plan = plan_new_room("Homebrew", None, uuid.uuid4())
     assert plan.room.game_system is None

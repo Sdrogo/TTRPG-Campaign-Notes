@@ -47,16 +47,27 @@ describe('RoomCard', () => {
     expect(screen.queryByText('D&D 5e')).not.toBeInTheDocument();
   });
 
-  it('links to the Documents and members pages', () => {
+  it('links to the Documents page', () => {
     render();
 
     expect(screen.getByRole('link', { name: /Documenti/ })).toHaveAttribute(
       'href',
       '/rooms/room-1/documents',
     );
-    expect(screen.getByRole('link', { name: /Membri/ })).toHaveAttribute(
+  });
+
+  // Spec 11: the setup page is reachable only by a Room Administrator.
+  it('offers the setup page to an Administrator only', () => {
+    render();
+    expect(screen.queryByRole('link', { name: /Impostazioni/ })).not.toBeInTheDocument();
+  });
+
+  it('links an Administrator to the setup page', () => {
+    render({ isAdmin: true });
+
+    expect(screen.getByRole('link', { name: /Impostazioni/ })).toHaveAttribute(
       'href',
-      '/rooms/room-1/members',
+      '/rooms/room-1/setup',
     );
   });
 

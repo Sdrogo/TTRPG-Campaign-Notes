@@ -5,9 +5,9 @@ import { TagList } from './TagList';
 import type { Tag } from '../types/tag';
 
 const tags: Tag[] = [
-  { id: 'tag-1', name: 'PNG', category: 'Personaggi' },
-  { id: 'tag-2', name: 'Luoghi', category: null },
-  { id: 'tag-3', name: 'Oggetti', category: null },
+  { id: 'tag-1', name: 'PNG', category: 'Personaggi', mainPosition: null },
+  { id: 'tag-2', name: 'Luoghi', category: null, mainPosition: null },
+  { id: 'tag-3', name: 'Oggetti', category: null, mainPosition: null },
 ];
 
 describe('TagList', () => {
