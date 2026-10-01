@@ -9,15 +9,11 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-01)
 
-Branch `feature/11-2-tag-combinations` (spec 11_2, PR open). Latest measured
-state: frontend **819/819** tests at **100%** coverage; backend **355**
-tests (212 without a database pass locally; the 143 DB tests, including the
-new Main-items API tests, run in CI only — migration `b5d8f2a9c1e3` is not on
-the live DB yet, see Next Up); lint, `tsc`, ruff and mypy strict clean. CI
-keeps exact-100% gates.
-
-No other unit is in progress. Candidates for the next one are in **Next
-Up**.
+Branch `feature/12-1-notes-backend` (spec 12_1, backend only). Latest measured
+state: backend **412** tests pass against the live DB (migrations
+`b5d8f2a9c1e3` and `c6e1a4b7d2f9` are both applied to it); new modules at
+100% coverage, ruff and mypy strict clean. Frontend untouched (spec 12_2 is
+the next unit). CI keeps exact-100% gates.
 
 ## Completed Units
 
@@ -174,6 +170,30 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
 ## In Progress
 
+### Notes on Documents, backend (spec 12_1, branch `feature/12-1-notes-backend`)
+
+Backend and DB half of `context/feature/12 - add Notes to Documents.md`; the
+UI is spec 12_2. Migration `c6e1a4b7d2f9` (two new empty tables) was **applied
+to the live DB on 10-01** with the user's go-ahead, before the merge.
+
+- A **Note** = `title` (≤200), `description` (plain text, `#Name` mentions,
+  no length rule like a Document's), own **visibility**, `position`. Tables
+  `document_notes` + `document_note_visibility_grants`, cascade from the
+  Document, RLS + deny policy. **Not a Detail** (D-18) - see Open Questions.
+- Visibility = `is_note_visible` (reuses `is_content_visible`, the Document's
+  Owners as "Owner"). A hidden Note is absent from every response and a
+  request for it is **404, not 403**; visibility is checked before permission.
+- Owners + Master manage Notes (`app/domain/notes.py`). Visibility/grant
+  changes write a `note_visibility_changed` AuditLog row (Invariant 7).
+- API `app/api/notes.py`: list/create/PATCH/DELETE and `PUT .../notes/order`
+  (a Note hidden from the reorderer keeps its slot). Notes are **embedded in
+  every single-Document response** (`DocumentDetailResponse`) and **not** in
+  the list. ≤50 per Document, enforced under the Document row lock.
+- `ensure_room_members` moved to `api/access.py` (shared with Comments).
+- Local note: a full local run once showed 6 uncovered lines in
+  `api/comments.py` (a coverage-tracing flake; 100% in isolation and next to
+  the Notes tests). CI is the gate.
+
 ### Tag combinations (spec 11_2, branch `feature/11-2-tag-combinations`)
 
 Implementation is ready; completion is pending approval and application of
@@ -195,10 +215,9 @@ migration `b5d8f2a9c1e3` to the live DB (see Next Up).
 
 ## Next Up
 
-- **Apply migration `b5d8f2a9c1e3` to the live DB BEFORE merging spec 11_2**
-  (adds two empty tables; needs the user's go-ahead). Merge order matters
-  twice: Render redeploys the backend on merge and the API shape changed, so
-  the old frontend's setup page gets 422 on save until Vercel catches up.
+- **Merge spec 12_1, then build 12_2** (frontend). Migration `c6e1a4b7d2f9`
+  is already live; Render redeploys the backend on merge and the single-Document
+  responses gain a `notes` field (additive, the old frontend ignores it).
 - **Browser check of spec 11** (migration is applied): setup page as
   Administrator and as a plain member, reorder + save, Documents grouping
   follows the order; and the one-line `TagFilter` with 3+ Tags selected.
@@ -239,6 +258,19 @@ migration `b5d8f2a9c1e3` to the live DB (see Next Up).
 
 Items marked *protected* need a product pass because `requirements.md` is a
 protected file.
+
+- **Spec 12 — Notes (assumed, confirm)**: implemented as assumed in 12_1.
+  (a) A Note is distinct from a Detail (D-18), although D-18 also describes
+  "an additional titled description" - if they are meant to be the same thing,
+  Notes should become Posts of kind `detail` and this table goes away.
+  (b) Private = the Document's Owners + Master (a Note has no ownership of its
+  own); an Owner who sets a Note to "Master" stops seeing it. (c) Only
+  Owners/Master edit Notes. (d) Notes are in the single-Document responses,
+  not the list or the card. (e) Limits: 200-char title, 50 per Document, no
+  description limit. (f) Reordering was kept. (g) The Selective grant list is
+  sent only to those who can manage the Note. (h) The Agent export (FR-G1)
+  doesn't exist yet and must apply the same filter. Tickets:
+  `context/feature/12_1 - Note backend effort.md`, `12_2 - Note frontend effort.md`.
 
 - **Spec 11_2 — combination semantics (assumed, confirm)**: the spec only
   says a combination of 2+ Tags can be a Group-by line item. Assumed: a
