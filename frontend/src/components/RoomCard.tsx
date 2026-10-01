@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActionIcon, Card, Group, Menu, Stack, Title, Text, Button } from '@mantine/core';
+import { ActionIcon, Card, Group, Menu, Stack, Title, Text, Tooltip } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { DotsThreeVerticalIcon, GearIcon, SignOutIcon, UserPlusIcon } from '@phosphor-icons/react';
 import { RoleTag } from './RoleTag';
@@ -18,7 +18,8 @@ interface RoomCardProps {
  * One of the user's Rooms, with their role. The whole card links to the Room's
  * Documents; an Administrator also gets the setup page (members, Main Tags)
  * and the invite button, and every member gets a menu with Leave (spec 15).
- * These sit above that link and so win over it.
+ * These are icon buttons with tooltips, so they fit on the title row at any
+ * card width, and sit above that link so they win over it.
  */
 export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
   const { t } = useTranslation();
@@ -28,38 +29,46 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
 
   return (
     <Card withBorder padding="md" radius="md" pos="relative">
-      <Group justify="space-between" align="flex-start">
-        <Stack gap={4}>
-          <Title order={3} style={{ fontFamily: 'var(--font-display)' }}>
+      {/* nowrap: a long name or game system wraps inside its own column
+          instead of pushing the actions onto a second row. */}
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <Stack gap={4} style={{ minWidth: 0 }}>
+          <Title
+            order={3}
+            style={{ fontFamily: 'var(--font-display)', overflowWrap: 'anywhere' }}
+          >
             {room.name}
           </Title>
           {room.gameSystem && (
-            <Text c="dimmed" size="sm">
+            <Text c="dimmed" size="sm" style={{ overflowWrap: 'anywhere' }}>
               {room.gameSystem}
             </Text>
           )}
           <RoleTag role={role} isAdmin={isAdmin} />
         </Stack>
-        <Group gap="xs" pos="relative" style={{ zIndex: 2 }}>
+        <Group gap={4} wrap="nowrap" pos="relative" style={{ zIndex: 2, flexShrink: 0 }}>
           {isAdmin && (
             <>
-              <Button
-                component={Link}
-                to={`/rooms/${room.id}/setup`}
-                variant="subtle"
-                size="xs"
-                leftSection={<GearIcon size={16} />}
-              >
-                {t('rooms.setup')}
-              </Button>
-              <Button
-                variant="light"
-                size="xs"
-                leftSection={<UserPlusIcon size={16} />}
-                onClick={() => setInviteOpened(true)}
-              >
-                {t('rooms.invite')}
-              </Button>
+              <Tooltip label={t('rooms.setup')} withArrow>
+                <ActionIcon
+                  component={Link}
+                  to={`/rooms/${room.id}/setup`}
+                  variant="subtle"
+                  color="gray"
+                  aria-label={t('rooms.setup')}
+                >
+                  <GearIcon size={18} />
+                </ActionIcon>
+              </Tooltip>
+              <Tooltip label={t('rooms.invite')} withArrow>
+                <ActionIcon
+                  variant="light"
+                  aria-label={t('rooms.invite')}
+                  onClick={() => setInviteOpened(true)}
+                >
+                  <UserPlusIcon size={18} />
+                </ActionIcon>
+              </Tooltip>
             </>
           )}
           <Menu position="bottom-end" shadow="md">
