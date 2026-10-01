@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Pull requests target `staging` (context/code-standards.md -> Branches and
+# Pull Requests). CodeRabbit only auto-reviews PRs into the default branch
+# unless the other base branches are listed here.
+reviews:
+  auto_review:
+    base_branches:
+      - "staging"
