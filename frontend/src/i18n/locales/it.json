@@ -261,6 +261,22 @@
       "selectivePlaceholder": "Chi può vederla"
     }
   },
+  "files": {
+    "title": "File",
+    "empty": "Nessun PDF allegato.",
+    "upload": "Carica PDF",
+    "uploadHint": "Allega un PDF fino a {{mb}} MB, ad esempio una scheda del personaggio",
+    "limitReached": "Un Documento può avere al massimo {{max}} file",
+    "details": "{{size}} · {{date}}",
+    "open": "Apri {{name}}",
+    "download": "Scarica {{name}}",
+    "delete": "Elimina {{name}}",
+    "deleteConfirmTitle": "Eliminare questo file?",
+    "deleteConfirmBody": "\"{{name}}\" verrà eliminato. L'operazione non si può annullare.",
+    "notPdf": "Si possono allegare solo file PDF",
+    "tooLarge": "Il file supera il limite di {{mb}} MB",
+    "openFailed": "Impossibile aprire {{name}}"
+  },
   "comments": {
     "title": "Commenti",
     "loadError": "Impossibile caricare i commenti.",

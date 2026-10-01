@@ -47,6 +47,7 @@ describe('useDocuments', () => {
       selectiveUserIds: [],
       // The list's response carries no Notes.
       notes: [],
+      files: [],
     });
   });
 
