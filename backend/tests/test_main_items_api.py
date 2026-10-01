@@ -231,3 +231,118 @@ async def test_another_rooms_tag_cannot_be_used(
         assert (await _put(client, room_id, master, bad)).status_code == 422
 
     assert await _get(client, other_room, other) == before
+
+
+async def _delete_tag(
+    client: AsyncClient, room_id: str, headers: dict[str, str], tag_id: str
+) -> Response:
+    return await client.delete(f"/rooms/{room_id}/tags/{tag_id}", headers=headers)
+
+
+async def test_deleting_a_tag_removes_its_main_item_and_keeps_documents(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 13: the Tag and its link go, the Document stays."""
+    master, _, room_id, ids = await _room(make_token, client)
+    document = (
+        await client.post(
+            f"/rooms/{room_id}/documents",
+            json={"name": "Strahd", "tag_ids": [ids["NPC"], ids["Place"]]},
+            headers=master,
+        )
+    ).json()
+
+    response = await _delete_tag(client, room_id, master, ids["NPC"])
+
+    assert response.status_code == 204
+    tags = (await client.get(f"/rooms/{room_id}/tags", headers=master)).json()
+    assert ids["NPC"] not in {t["id"] for t in tags}
+    assert [ids["NPC"]] not in await _get(client, room_id, master)
+    reloaded = (
+        await client.get(f"/rooms/{room_id}/documents/{document['id']}", headers=master)
+    ).json()
+    assert reloaded["tag_ids"] == [ids["Place"]]
+
+
+async def test_a_combination_shrinks_or_disappears_with_its_tag(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Three Tags shrink to two; two Tags would leave one, so it is dropped."""
+    master, _, room_id, ids = await _room(make_token, client)
+    npc, place, event, pc = ids["NPC"], ids["Place"], ids["Event"], ids["PC"]
+    await _put(client, room_id, master, [[npc, place, event], [place, pc], [npc]])
+
+    await _delete_tag(client, room_id, master, event)
+    assert await _get(client, room_id, master) == [[npc, place], [place, pc], [npc]]
+
+    await _delete_tag(client, room_id, master, pc)
+    assert await _get(client, room_id, master) == [[npc, place], [npc]]
+
+
+async def test_a_shrunken_combination_that_duplicates_another_is_dropped(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """The earlier position wins; the saved items stay valid."""
+    master, _, room_id, ids = await _room(make_token, client)
+    npc, place, event = ids["NPC"], ids["Place"], ids["Event"]
+    await _put(client, room_id, master, [[npc, place, event], [npc, place]])
+
+    await _delete_tag(client, room_id, master, event)
+
+    assert await _get(client, room_id, master) == [[npc, place]]
+    # Saving what the API returned is accepted, so nothing invalid was stored.
+    assert (await _put(client, room_id, master, [[npc, place]])).status_code == 200
+
+
+async def test_the_master_may_delete_a_tag_without_being_an_administrator(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Same people who may create one (spec 13)."""
+    admin, player, room_id, ids = await _room(make_token, client)
+    members = (await client.get(f"/rooms/{room_id}/members", headers=admin)).json()
+    player_id = next(m["user_id"] for m in members if not m["is_admin"])
+    await client.patch(
+        f"/rooms/{room_id}/members/{player_id}", json={"role": "master"}, headers=admin
+    )
+
+    response = await _delete_tag(client, room_id, player, ids["Event"])
+
+    assert response.status_code == 204
+
+
+async def test_a_player_cannot_delete_a_tag(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """403, and the Tag is still there."""
+    master, player, room_id, ids = await _room(make_token, client)
+
+    response = await _delete_tag(client, room_id, player, ids["Event"])
+
+    assert response.status_code == 403
+    tags = (await client.get(f"/rooms/{room_id}/tags", headers=master)).json()
+    assert ids["Event"] in {t["id"] for t in tags}
+
+
+async def test_a_non_member_cannot_delete_a_tag(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """403 for someone outside the Room."""
+    _, _, room_id, ids = await _room(make_token, client)
+    stranger = _auth_headers(make_token(str(uuid.uuid4())))
+
+    assert (await _delete_tag(client, room_id, stranger, ids["Event"])).status_code == 403
+
+
+async def test_another_rooms_tag_cannot_be_deleted(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """404, and the other Room keeps its Tag."""
+    master, _, room_id, _ = await _room(make_token, client)
+    other_master, _, other_room, other_ids = await _room(make_token, client)
+
+    response = await _delete_tag(client, room_id, master, other_ids["Event"])
+
+    assert response.status_code == 404
+    other_tags = (await client.get(f"/rooms/{other_room}/tags", headers=other_master)).json()
+    assert other_ids["Event"] in {t["id"] for t in other_tags}
+    assert (await _delete_tag(client, room_id, master, str(uuid.uuid4()))).status_code == 404

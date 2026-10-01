@@ -10,6 +10,7 @@
       "onlyMasterCanChangeSettings": "Solo il Master può modificare le impostazioni di questa Room",
       "onlyAdministratorCanChangeRoles": "Solo un Amministratore della Room può modificare i ruoli",
       "onlyAdministratorCanRemoveMembers": "Solo un Amministratore della Room può rimuovere membri",
+      "onlyAdministratorCanDelete": "Solo un amministratore della Room può eliminarla",
       "nameRequired": "Il nome della Room è obbligatorio"
     },
     "membership": {
@@ -51,6 +52,7 @@
     },
     "tag": {
       "notAllowedToManage": "Solo un Amministratore o il Master possono gestire i Tag",
+      "notFound": "Tag non trovato",
       "nameRequired": "Il nome del Tag è obbligatorio",
       "duplicateName": "Esiste già un Tag con questo nome in questa Room",
       "onlyAdministratorCanSetMainTags": "Solo un Amministratore può scegliere i Tag principali",

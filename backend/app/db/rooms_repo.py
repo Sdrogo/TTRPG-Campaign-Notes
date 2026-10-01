@@ -173,6 +173,24 @@ async def set_players_can_create_documents(
     await session.flush()
 
 
+async def lock_room(session: AsyncSession, room_id: uuid.UUID) -> None:
+    """Row lock held until the transaction ends: serializes writes that rely
+    on the Room's Tags staying as read (deleting a Tag, saving the Main
+    items)."""
+    await session.execute(select(RoomRow.id).where(RoomRow.id == room_id).with_for_update())
+
+
+async def delete_room(session: AsyncSession, room_id: uuid.UUID) -> None:
+    """Deletes the Room row. Memberships, Invitations, Tags, combinations,
+    Documents (and through them everything under a Document) and the Room's
+    AuditLog rows cascade at the database level (`ondelete="CASCADE"`). Call
+    only after every Document image has gone through
+    `image_uploads.remove_images`: the cascade would delete the
+    `document_images` rows but not their Storage objects."""
+    await session.execute(delete(RoomRow).where(RoomRow.id == room_id))
+    await session.flush()
+
+
 async def insert_audit_log(session: AsyncSession, entry: AuditLogEntry) -> None:
     """Writes an audit entry. Call it in the same transaction as the change it
     records (Invariant 7)."""

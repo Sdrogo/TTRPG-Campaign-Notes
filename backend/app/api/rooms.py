@@ -9,9 +9,10 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from app.api.errors import http_error, translated_error
+from app.api.image_uploads import remove_images
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
 from app.auth.dependencies import CurrentUserDep
-from app.db import rooms_repo, users_repo
+from app.db import documents_repo, rooms_repo, users_repo
 from app.db.session import SessionDep
 from app.domain.memberships import (
     LastAdministratorError,
@@ -144,7 +145,7 @@ async def get_room(
         raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
 
     room = await rooms_repo.get_room(session, room_id)
-    if room is None:  # pragma: no cover - no route ever deletes a Room
+    if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
     return room_to_response(room)
 
@@ -170,11 +171,11 @@ async def update_room_settings(
         await rooms_repo.set_players_can_create_documents(
             session, room_id, body.players_can_create_documents
         )
-    except LookupError as exc:  # pragma: no cover - no route ever deletes a Room
+    except LookupError as exc:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale) from exc
 
     room = await rooms_repo.get_room(session, room_id)
-    if room is None:  # pragma: no cover - no route ever deletes a Room
+    if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
     return room_to_response(room)
 
@@ -262,3 +263,32 @@ async def remove_member(
 
     await rooms_repo.delete_membership(session, room_id, user_id)
     await rooms_repo.insert_audit_log(session, audit_entry)
+
+
+@router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_room(
+    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
+) -> None:
+    """Spec 13: a Room Administrator permanently deletes the Room with all it
+    holds - members, invitations, Tags, Documents, Comments, Notes and images.
+    403 for a non-member and for a member who isn't an Administrator (the
+    Master alone isn't enough). The Room's AuditLog rows go with it. Every
+    image is queued for Storage removal before the rows cascade away, so no
+    object is left orphaned."""
+    membership = await rooms_repo.get_membership(session, room_id, uuid.UUID(current_user.id))
+    if membership is None:
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
+    if not membership.is_admin:
+        raise http_error(
+            status.HTTP_403_FORBIDDEN, "errors.room.onlyAdministratorCanDelete", locale
+        )
+
+    await rooms_repo.lock_room(session, room_id)
+    # Locked first so a concurrent image upload can't insert a row the
+    # cascade would then delete without scheduling its Storage object.
+    document_ids = await documents_repo.lock_documents_for_room(session, room_id)
+    by_document = await documents_repo.list_images_for_documents(session, document_ids)
+    images = [image for document_images in by_document.values() for image in document_images]
+    if images:
+        await remove_images(session, images)
+    await rooms_repo.delete_room(session, room_id)

@@ -99,7 +99,7 @@ async def accept_invitation(
     await users_repo.upsert_user(session, user_id, current_user.email)
 
     room = await rooms_repo.get_room(session, invitation.room_id)
-    if room is None:  # pragma: no cover - no route ever deletes a Room
+    if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
 
     return room_to_response(room)

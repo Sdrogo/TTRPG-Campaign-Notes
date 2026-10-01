@@ -8,9 +8,11 @@ from app.domain.tags import (
     DuplicateCombinationError,
     DuplicateMainTagError,
     EmptyMainItemError,
+    PlannedCombination,
     UnknownMainTagError,
     ordered_main_items,
     plan_main_items,
+    plan_tag_removal,
 )
 
 A, B, C, D = (uuid.uuid4() for _ in range(4))
@@ -89,3 +91,27 @@ def test_ordered_main_items_merges_singles_and_combinations_by_position() -> Non
     combinations = [_combo(1, A, B)]
 
     assert ordered_main_items(tags, combinations) == [(C,), (A, B), (A,)]
+
+
+def test_removing_a_tag_shrinks_the_combinations_that_held_it() -> None:
+    """Spec 13: a combination of three keeps its other two Tags and its place."""
+    plan = plan_tag_removal(C, [_combo(1, A, B, C)])
+
+    assert plan == (PlannedCombination(1, (A, B)),)
+
+
+def test_a_combination_left_with_one_tag_is_dropped() -> None:
+    """One Tag would repeat a Main Tag item, which plan_main_items refuses."""
+    assert plan_tag_removal(A, [_combo(0, A, B)]) == ()
+
+
+def test_a_combination_without_the_tag_is_untouched() -> None:
+    """Only combinations holding the Tag change."""
+    assert plan_tag_removal(D, [_combo(2, A, B)]) == (PlannedCombination(2, (A, B)),)
+
+
+def test_a_shrunken_combination_equal_to_another_keeps_the_earlier_one() -> None:
+    """[A,B,C] and [A,B] both become {A,B}: the one at the lower position stays."""
+    plan = plan_tag_removal(C, [_combo(3, A, B), _combo(1, A, B, C)])
+
+    assert plan == (PlannedCombination(1, (A, B)),)

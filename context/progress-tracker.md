@@ -27,6 +27,22 @@ in **Next Up**.
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room and Tag deletion, backend (spec 13_1b, branch `feature/13-1b-room-tag-delete-backend`)
+
+- `DELETE /rooms/{id}` (Administrator only) and `DELETE /rooms/{id}/tags/{tag}`
+  (Administrator or Master). Room deletion queues every image of every
+  Document for Storage removal before the cascade; Tag deletion rewrites the
+  combinations through `plan_tag_removal`. No migration (every FK already
+  cascades). Details in `architecture.md` -> Storage Model.
+- Tests: `tests/test_room_delete_api.py`, additions to `test_main_items_api.py`
+  and `test_domain_tags.py`; `app/` coverage stays 100%. Four tests in
+  `test_notes_api.py` fail locally because the live database already holds 7
+  `note_visibility_changed` audit rows and they count every row; unrelated to
+  this change (CI uses an empty database).
+- Assumptions confirmed by the product owner (2026-10-01): Administrator-only
+  Room deletion; the Master may delete Tags; Room audit rows go with the Room;
+  a combination below two Tags is dropped.
+- Next: 13_1c (setup-page controls).
 ### Room card navigation feedback (2026-10-01)
 
 - The Room navigation overlay has a dedicated class with a themed hover
@@ -289,6 +305,12 @@ Question in the backend PR.
   Master/Owner and as a plain Player, at 1280px and 390px: add, move, edit,
   delete all issue the right requests, the hidden Note's text never reaches the
   page, no console errors. Not checked: the real backend end to end.
+
+## Room deletion lock ordering (2026-10-01)
+
+- Room deletion locks the Room before locking its Documents and
+  snapshotting images. Image cleanup and the cascading deletion keep
+  their existing sequence.
 
 ## Next Up
 
