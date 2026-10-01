@@ -324,12 +324,33 @@ class DocumentImageRow(Base):
     )
 
 
+class DocumentFileRow(Base):
+    """A PDF Attachment on a Document (D-21, spec 16). Only the Storage path is
+    kept here, never the bytes. Cascades with the Document, but its Storage
+    object doesn't: deleting a Document or a Room queues every file for
+    removal first (`app/api/document_files.py::remove_files`)."""
+
+    __tablename__ = "document_files"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    storage_path: Mapped[str] = mapped_column(String(500))
+    display_name: Mapped[str] = mapped_column(String(200))
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    content_type: Mapped[str] = mapped_column(String(100))
+    uploaded_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class StorageCleanupRow(Base):
     """A Storage object that may no longer be referenced by any
-    `document_images` row and must be removed once that's certain - see
-    app/db/storage_cleanup.py. Storage isn't part of the Postgres
-    transaction, so this is how a rolled-back or half-finished image
-    change is reconciled instead of leaving an orphan or a broken image."""
+    `document_images`, `document_files` or `users.avatar_path` row and must
+    be removed once that's certain - see app/db/storage_cleanup.py. Storage
+    isn't part of the Postgres transaction, so this is how a rolled-back or
+    half-finished image or file change is reconciled instead of leaving an
+    orphan or a broken link."""
 
     __tablename__ = "storage_cleanup"
 

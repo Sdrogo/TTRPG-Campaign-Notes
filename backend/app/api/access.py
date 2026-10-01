@@ -1,5 +1,6 @@
 """Access checks shared by the routers that sit under a Room/Document
-(documents, comments, notes), so each applies them the same way."""
+(documents, comments, notes, document files), so each applies them the same
+way."""
 
 import uuid
 from collections.abc import Collection, Sequence
@@ -8,8 +9,9 @@ from dataclasses import dataclass
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.errors import http_error
+from app.api.errors import http_error, translated_error
 from app.db import comments_repo, documents_repo, notes_repo, rooms_repo
+from app.domain.documents import NotOwnerError, ensure_owner
 from app.domain.models import Document, DocumentImage, Membership, Note, RoomRole
 from app.domain.visibility import is_document_visible, is_note_visible, visible_document_images
 
@@ -47,6 +49,28 @@ async def get_visible_document(
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.document.notFound", locale)
 
     return document, owner_ids, selective_ids
+
+
+async def get_owned_document(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    requester_id: uuid.UUID,
+    locale: str,
+) -> tuple[Document, list[uuid.UUID], Membership]:
+    """Returns (document, owner_ids, membership) once the requester is known
+    to see the Document (404 otherwise, VR-07) and to be one of its Owners or
+    the Master (403 otherwise, D-12) - visibility first, so the status can't
+    reveal a hidden Document."""
+    membership = await require_membership(session, room_id, requester_id, locale)
+    document, owner_ids, _ = await get_visible_document(
+        session, room_id, document_id, requester_id, membership.role, locale
+    )
+    try:
+        ensure_owner(membership.role, requester_id, owner_ids)
+    except NotOwnerError as exc:
+        raise translated_error(status.HTTP_403_FORBIDDEN, exc, locale) from exc
+    return document, owner_ids, membership
 
 
 async def ensure_room_members(
