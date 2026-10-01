@@ -16,6 +16,17 @@ export function resolveItem(item: MainItem, tags: Tag[]): Tag[] {
   return resolved.every((tag): tag is Tag => tag !== undefined) ? resolved : [];
 }
 
+/**
+ * The Room's Main items resolved against `tags`, in `items` order: each entry
+ * is the Tags of one item (one for a Main Tag, several for a combination).
+ * Items that refer to a missing Tag are left out. This is the one ordered list
+ * the Documents grouping, the Tag index and the setup editor all consume
+ * (spec 11_3), so they can't disagree about what comes first.
+ */
+export function resolveMainItems(items: MainItem[], tags: Tag[]): Tag[][] {
+  return items.map((item) => resolveItem(item, tags)).filter((entry) => entry.length > 0);
+}
+
 /** `#A` for a single Tag, `#A + #B` for a combination. */
 export function itemLabel(tags: Tag[]): string {
   return tags.map((tag) => `#${tag.name}`).join(' + ');
