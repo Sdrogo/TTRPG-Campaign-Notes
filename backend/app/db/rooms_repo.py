@@ -175,8 +175,8 @@ async def set_players_can_create_documents(
 
 async def lock_room(session: AsyncSession, room_id: uuid.UUID) -> None:
     """Row lock held until the transaction ends: serializes writes that rely
-    on the Room's Tags staying as read (deleting a Tag, saving the Main
-    items)."""
+    on the Room's Tags or members staying as read (deleting a Tag, saving the
+    Main items, linking a Character's player against a member leaving)."""
     await session.execute(select(RoomRow.id).where(RoomRow.id == room_id).with_for_update())
 
 

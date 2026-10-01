@@ -255,6 +255,9 @@ async def remove_member(
                 status.HTTP_403_FORBIDDEN, "errors.room.onlyAdministratorCanRemoveMembers", locale
             )
 
+    # Taken before the membership read, so a concurrent `set_player` can't
+    # link a Character to this member after their links are cleared below.
+    await rooms_repo.lock_room(session, room_id)
     memberships = await rooms_repo.list_memberships(session, room_id)
     try:
         audit_entry = plan_removal(memberships, user_id, requester_id, is_self=is_self)
