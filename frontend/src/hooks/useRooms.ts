@@ -119,3 +119,22 @@ export function useAcceptInvitation() {
     },
   });
 }
+
+/**
+ * Permanently deletes the Room with everything in it (Administrator only,
+ * spec 13). Every query scoped to the Room is removed rather than refetched,
+ * since it would only 403, and the Rooms list is refetched. The caller
+ * navigates away on success.
+ */
+export function useDeleteRoom(roomId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      await apiFetch<void>(`/rooms/${roomId}`, { method: 'DELETE' });
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ['rooms', roomId] });
+      void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY });
+    },
+  });
+}

@@ -55,6 +55,21 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   the requester (VR-07), preserving success and Document query invalidation.
   Regression cases cover null responses from both mutations.
 
+### Room card, Room and Tag deletion, frontend (spec 13_1a + 13_1c)
+
+- 13_1a (PR #29): the whole Room card links to its Documents; Setup and Invite
+  sit above the link (same overlay pattern as `DocumentCard`).
+- 13_1c (branch `feature/13-1c-room-tag-delete-frontend`): setup page gains a
+  Tag list with a confirmed delete per Tag (`TagManagement`, `useDeleteTag`)
+  and a "Danger zone" that deletes the Room once its name is typed
+  (`DeleteRoomSection`, `useDeleteRoom`, then back to `/`). The Tag
+  confirmation shows no Document count on purpose (the backend has none that
+  respects visibility, VR-07). The Main Tags editor is also re-keyed on the
+  Room's Tag ids, so a deleted Tag can't linger in an unsaved draft. Depends
+  on the 13_1b endpoints: merge after that PR.
+- Not yet seen in a browser: card/button stacking, both modals, the setup page
+  after a Tag deletion.
+
 ### Note reorder reload (2026-10-01)
 
 - Note mutations return the Document invalidation promise so reordering stays

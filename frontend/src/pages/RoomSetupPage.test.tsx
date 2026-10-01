@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { useSession } from '../hooks/useSession';
-import { fakeSession, rawAccount, rawMember } from '../test/fixtures';
+import { fakeSession, rawAccount, rawMember, rawRoom } from '../test/fixtures';
 import { renderWithProviders } from '../test/utils';
 import { RoomMembersRedirect, RoomSetupPage } from './RoomSetupPage';
 
@@ -83,6 +83,7 @@ beforeEach(() => {
     if (path === '/rooms/room-1/tags/main' && init?.method === 'PUT') return routes.put();
     if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.items);
     if (path === '/rooms/room-1/tags') return Promise.resolve(routes.tags);
+    if (path === '/rooms/room-1') return Promise.resolve(rawRoom());
     if (path === '/account') return Promise.resolve(rawAccount());
     return Promise.resolve(undefined);
   });
@@ -245,6 +246,36 @@ describe('RoomSetupPage', () => {
 });
 
 describe('RoomMembersRedirect', () => {
+  // Spec 13: the setup page can delete a Tag and the whole Room.
+  it('lists the Tags with a delete button each', async () => {
+    render();
+
+    expect(await screen.findByRole('button', { name: 'Elimina il Tag Luogo' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Elimina il Tag NPC' })).toBeInTheDocument();
+  });
+
+  it('deletes a Tag after confirmation', async () => {
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Elimina il Tag Luogo' }));
+    await user.click(screen.getByRole('button', { name: 'Elimina' }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/place', { method: 'DELETE' }),
+    );
+  });
+
+  it('deletes the Room once its name is typed, then goes home', async () => {
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Elimina Stanza' }));
+    await user.type(screen.getByLabelText('Scrivi "La Cripta" per confermare'), 'La Cripta');
+    await user.click(screen.getByRole('button', { name: 'Elimina' }));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/'));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1', { method: 'DELETE' });
+  });
+
   it('sends the old members URL to the setup page', () => {
     renderWithProviders(
       <Routes>

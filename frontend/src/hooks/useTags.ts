@@ -42,3 +42,23 @@ export function useCreateTag(roomId: string) {
     },
   });
 }
+
+/**
+ * Deletes a Tag (Administrator or Master, spec 13). The backend also drops it
+ * from the Main items and shrinks or removes the combinations that held it,
+ * and Documents lose their link to it, so the Tags, the Main items and every
+ * Documents query (list and details, which carry `tagIds`) are refetched.
+ */
+export function useDeleteTag(roomId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (tagId: string) => {
+      await apiFetch<void>(`/rooms/${roomId}/tags/${tagId}`, { method: 'DELETE' });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: tagsQueryKey(roomId) });
+      void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'main-items'] });
+      void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'documents'] });
+    },
+  });
+}
