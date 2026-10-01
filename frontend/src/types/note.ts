@@ -2,8 +2,10 @@ import type { DocumentVisibility } from './document';
 
 /**
  * An additional block of information on a Document (spec 12): a title, a
- * description and a visibility of its own. Not a Detail (D-18). The backend
- * only sends the Notes the viewer may see, so there is no "hidden" Note here.
+ * description and a visibility of its own. This is the Detail of D-18 under
+ * the product's own name, managed by Owners and the Master rather than written
+ * by any member. The backend only sends the Notes the viewer may see, so there
+ * is no "hidden" Note here.
  */
 export interface Note {
   id: string;

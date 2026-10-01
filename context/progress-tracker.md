@@ -211,6 +211,10 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 UI half of `context/feature/12 - add Notes to Documents.md`, on top of the API
 from spec 12_1 (a separate PR; this one must merge after it).
 
+A Note is the Detail of D-18 (same feature, two names, confirmed 10-01); it
+stays Owner/Master-managed, a deliberate departure from D-19 logged as an Open
+Question in the backend PR.
+
 - Each Note the viewer may see is a **paragraph under the Document
   description** on the detail page (`components/notes/NoteList`, `NoteItem`,
   `NoteForm`): a small heading, the text through `MentionText` and, to those
