@@ -223,6 +223,20 @@
       "fit": "Fit to screen"
     }
   },
+  "notes": {
+    "add": "Add Note",
+    "edit": "Edit Note: {{title}}",
+    "delete": "Delete Note: {{title}}",
+    "moveUp": "Move Note up: {{title}}",
+    "moveDown": "Move Note down: {{title}}",
+    "deleteConfirmTitle": "Delete this Note?",
+    "deleteConfirmBody": "\"{{title}}\" will be deleted. This can't be undone.",
+    "form": {
+      "title": "Title",
+      "selectiveLabel": "Members who can see the Note",
+      "selectivePlaceholder": "Who can see it"
+    }
+  },
   "comments": {
     "title": "Comments",
     "loadError": "Couldn't load the comments.",

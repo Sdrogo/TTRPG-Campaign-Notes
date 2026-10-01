@@ -5,7 +5,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
 import { notifyError } from '../lib/notify';
 import { useSession } from '../hooks/useSession';
-import { fakeSession, rawAccount, rawDocument, rawImage, rawMember } from '../test/fixtures';
+import {
+  fakeSession,
+  rawAccount,
+  rawDocument,
+  rawImage,
+  rawMember,
+  rawNote,
+} from '../test/fixtures';
 import { renderWithProviders } from '../test/utils';
 import { DocumentDetailPage } from './DocumentDetailPage';
 
@@ -646,5 +653,118 @@ describe('mentions', () => {
     const mention = await screen.findByTestId('tag-mention');
     expect(mention).toHaveTextContent('#Luoghi');
     expect(mention.closest('a')).toHaveAttribute('href', '/rooms/room-1/documents?tag=tag-1');
+  });
+});
+
+// Spec 12: Notes are paragraphs under the description. The backend leaves out
+// the ones this viewer may not see, and the page shows exactly what it gets.
+describe('Notes', () => {
+  const two = [
+    rawNote(),
+    rawNote({ id: 'note-2', title: 'Trappola', description: 'Un dardo avvelenato.', position: 1 }),
+  ];
+
+  it('shows each Note under the description, in the order the backend sent them', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-1'], notes: two });
+    render();
+
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    const headings = screen.getAllByRole('heading', { level: 4 }).map((h) => h.textContent);
+    expect(headings).toEqual(['Porta segreta', 'Trappola']);
+    expect(screen.getByText('Dietro la libreria.')).toBeInTheDocument();
+    expect(screen.getByText('Un dardo avvelenato.')).toBeInTheDocument();
+    const description = screen.getByText('Una porta di pietra.');
+    const first = screen.getByRole('heading', { name: 'Porta segreta' });
+    expect(
+      description.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  // A Note hidden from the viewer is simply not in the response.
+  it('shows no trace of a Note the backend left out', async () => {
+    routes.document = rawDocument({
+      owner_ids: ['user-2'],
+      notes: [rawNote({ can_edit: false, can_delete: false })],
+    });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    render();
+
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    expect(screen.getAllByRole('heading', { level: 4 })).toHaveLength(1);
+    expect(screen.queryByText(/Trappola/)).not.toBeInTheDocument();
+  });
+
+  it('looks like before for a reader of a Document with no Notes', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-2'], notes: [] });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    render();
+
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    expect(screen.queryAllByRole('heading', { level: 4 })).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Aggiungi Nota' })).not.toBeInTheDocument();
+  });
+
+  it('offers adding a Note to an Owner and to the Master', async () => {
+    render();
+    expect(await screen.findByRole('button', { name: 'Aggiungi Nota' })).toBeInTheDocument();
+  });
+
+  it('offers adding a Note to the Master without an Owner row', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-2'] });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
+    render();
+
+    expect(await screen.findByRole('button', { name: 'Aggiungi Nota' })).toBeInTheDocument();
+  });
+
+  it('withholds it from a Player who is not an Owner', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-2'] });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    render();
+
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    expect(screen.queryByRole('button', { name: 'Aggiungi Nota' })).not.toBeInTheDocument();
+  });
+
+  it('resolves a mention in a Note against the Room, like the description', async () => {
+    routes.document = rawDocument({
+      owner_ids: ['user-1'],
+      notes: [rawNote({ description: 'Vedi #Luoghi e #Il Cancello.' })],
+    });
+    render();
+
+    const tag = await screen.findByTestId('tag-mention');
+    expect(tag.closest('a')).toHaveAttribute('href', '/rooms/room-1/documents?tag=tag-1');
+    expect(screen.getByTestId('document-mention').closest('a')).toHaveAttribute(
+      'href',
+      '/rooms/room-1/documents/doc-1',
+    );
+  });
+
+  // VR-07: a Document absent from the viewer's list stays plain text.
+  it('leaves a mention of a Document the viewer cannot see as plain text', async () => {
+    routes.document = rawDocument({
+      owner_ids: ['user-1'],
+      notes: [rawNote({ description: 'Ricorda #Cripta Segreta.' })],
+    });
+    render();
+
+    await screen.findByText(/Ricorda #Cripta Segreta\./);
+    expect(screen.queryByTestId('document-mention')).not.toBeInTheDocument();
+  });
+
+  it('adds a Note and reloads the Document', async () => {
+    const writes: string[] = [];
+    mockApi((path) => {
+      writes.push(path);
+      return Promise.resolve(rawNote());
+    });
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Aggiungi Nota' }));
+    await user.type(screen.getByRole('textbox', { name: /Titolo/ }), 'Trappola');
+    await user.click(screen.getAllByRole('button', { name: 'Aggiungi Nota' })[0]);
+
+    await waitFor(() => expect(writes).toEqual([`${DOC}/notes`]));
   });
 });

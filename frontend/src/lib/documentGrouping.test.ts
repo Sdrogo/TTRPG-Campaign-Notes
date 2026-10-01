@@ -17,6 +17,7 @@ const doc = (id: string, tagIds: string[]): Document => ({
   tagIds,
   ownerIds: [],
   selectiveUserIds: [],
+  notes: [],
 });
 
 /** A Main item of the given Tag ids. */

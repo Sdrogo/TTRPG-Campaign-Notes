@@ -31,6 +31,7 @@ function doc(id: string, name: string, tagIds: string[] = []): Document {
     tagIds,
     ownerIds: [],
     selectiveUserIds: [],
+    notes: [],
   };
 }
 
