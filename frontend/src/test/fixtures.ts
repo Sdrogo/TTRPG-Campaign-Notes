@@ -53,6 +53,21 @@ export function rawNote(overrides: Record<string, unknown> = {}) {
   };
 }
 
+export function rawDocumentFile(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'file-1',
+    document_id: 'doc-1',
+    name: 'Scheda di Aria.pdf',
+    size_bytes: 2_516_582,
+    content_type: 'application/pdf',
+    uploaded_by: 'user-1',
+    created_at: '2026-10-01T12:00:00Z',
+    url: 'https://storage.example/file-1.pdf?token=t&download=Scheda',
+    can_delete: true,
+    ...overrides,
+  };
+}
+
 export function rawComment(overrides: Record<string, unknown> = {}) {
   return {
     id: 'comment-1',

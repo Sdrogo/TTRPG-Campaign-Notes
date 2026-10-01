@@ -111,7 +111,14 @@
       "gameSystem": "Sistema di gioco",
       "gameSystemPlaceholder": "Es. D&D 5e (opzionale)"
     },
-    "setup": "Impostazioni"
+    "setup": "Impostazioni",
+    "actions": "Azioni per la Stanza {{name}}",
+    "leave": {
+      "confirmTitle": "Uscire da \"{{name}}\"?",
+      "confirmBody": "I tuoi Documenti, Commenti e Note restano nella Stanza. Per rientrare ti servirà un nuovo invito.",
+      "adminHint": "Sei un Amministratore: se sei l'ultimo, nomina prima un altro Amministratore dalle Impostazioni della Stanza.",
+      "left": "Hai lasciato \"{{name}}\""
+    }
   },
   "invite": {
     "modalTitle": "Invita nella Stanza",
@@ -253,6 +260,22 @@
       "selectiveLabel": "Membri che possono vedere la Nota",
       "selectivePlaceholder": "Chi può vederla"
     }
+  },
+  "files": {
+    "title": "File",
+    "empty": "Nessun PDF allegato.",
+    "upload": "Carica PDF",
+    "uploadHint": "Allega un PDF fino a {{mb}} MB, ad esempio una scheda del personaggio",
+    "limitReached": "Un Documento può avere al massimo {{max}} file",
+    "details": "{{size}} · {{date}}",
+    "open": "Apri {{name}}",
+    "download": "Scarica {{name}}",
+    "delete": "Elimina {{name}}",
+    "deleteConfirmTitle": "Eliminare questo file?",
+    "deleteConfirmBody": "\"{{name}}\" verrà eliminato. L'operazione non si può annullare.",
+    "notPdf": "Si possono allegare solo file PDF",
+    "tooLarge": "Il file supera il limite di {{mb}} MB",
+    "openFailed": "Impossibile aprire {{name}}"
   },
   "comments": {
     "title": "Commenti",

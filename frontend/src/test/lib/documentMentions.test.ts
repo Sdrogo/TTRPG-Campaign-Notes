@@ -32,6 +32,7 @@ function doc(id: string, name: string, tagIds: string[] = []): Document {
     ownerIds: [],
     selectiveUserIds: [],
     notes: [],
+    files: [],
   };
 }
 

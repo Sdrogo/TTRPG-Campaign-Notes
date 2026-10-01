@@ -111,7 +111,14 @@
       "gameSystem": "Game system",
       "gameSystemPlaceholder": "E.g. D&D 5e (optional)"
     },
-    "setup": "Setup"
+    "setup": "Setup",
+    "actions": "Room actions for {{name}}",
+    "leave": {
+      "confirmTitle": "Leave \"{{name}}\"?",
+      "confirmBody": "Your Documents, Comments and Notes stay in the Room. You will need a new invite to come back.",
+      "adminHint": "You are an Administrator: if you are the last one, name another Administrator from the Room setup first.",
+      "left": "You left \"{{name}}\""
+    }
   },
   "invite": {
     "modalTitle": "Invite to the Room",
@@ -253,6 +260,22 @@
       "selectiveLabel": "Members who can see the Note",
       "selectivePlaceholder": "Who can see it"
     }
+  },
+  "files": {
+    "title": "Files",
+    "empty": "No PDFs attached yet.",
+    "upload": "Upload PDF",
+    "uploadHint": "Attach a PDF up to {{mb}} MB, such as a character sheet",
+    "limitReached": "A Document can have at most {{max}} files",
+    "details": "{{size}} · {{date}}",
+    "open": "Open {{name}}",
+    "download": "Download {{name}}",
+    "delete": "Delete {{name}}",
+    "deleteConfirmTitle": "Delete this file?",
+    "deleteConfirmBody": "\"{{name}}\" will be deleted. This can't be undone.",
+    "notPdf": "Only PDF files can be attached",
+    "tooLarge": "The file exceeds the {{mb}} MB limit",
+    "openFailed": "Couldn't open {{name}}"
   },
   "comments": {
     "title": "Comments",

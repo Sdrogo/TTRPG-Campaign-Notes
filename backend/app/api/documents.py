@@ -11,11 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import (
     get_document_notes,
+    get_owned_document,
     get_visible_document,
     get_visible_images,
     get_visible_images_for_documents,
     require_membership,
 )
+from app.api.document_files import FileResponse, file_responses, remove_files, sign_files
 from app.api.errors import http_error, translated_error
 from app.api.image_uploads import (
     ImageResponse,
@@ -30,16 +32,14 @@ from app.api.image_uploads import (
 from app.api.notes import NoteResponse, visible_note_responses
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, rooms_repo, tags_repo
+from app.db import documents_repo, files_repo, rooms_repo, tags_repo
 from app.db.session import SessionDep
 from app.domain.documents import (
     AlreadyOwnerError,
     DocumentNameRequiredError,
     NotAnOwnerError,
-    NotOwnerError,
     can_create_document,
     ensure_can_remove_owner,
-    ensure_owner,
     plan_add_owner,
     plan_new_document,
 )
@@ -69,10 +69,12 @@ class DocumentResponse(BaseModel):
 class DocumentDetailResponse(DocumentResponse):
     """One Document, as the single-Document routes return it: the list's
     fields plus its Notes (spec 12), filtered for the requester like
-    everything else. The list leaves them out - a card doesn't show Notes, and
-    the list is read in a fixed number of queries."""
+    everything else, and its PDF Attachments (spec 16), which have the
+    Document's own visibility (VR-12). The list leaves both out - a card shows
+    neither, and the list is read in a fixed number of queries."""
 
     notes: list[NoteResponse]
+    files: list[FileResponse]
 
 
 class ImageFromUrlRequest(BaseModel):
@@ -136,11 +138,14 @@ async def _to_response(
     tag_ids = await documents_repo.list_tag_ids_for_document(session, document.id)
     images = await get_visible_images(session, document.id, viewer)
     notes = await get_document_notes(session, document.id, viewer, owner_ids)
+    files = await files_repo.list_files(session, document.id)
     base = _build_response(
         document, owner_ids, selective_ids, tag_ids, images, await sign_images(images)
     )
     return DocumentDetailResponse(
-        **base.model_dump(), notes=visible_note_responses(notes, viewer, owner_ids)
+        **base.model_dump(),
+        notes=visible_note_responses(notes, viewer, owner_ids),
+        files=file_responses(files, await sign_files(files), viewer, owner_ids),
     )
 
 
@@ -254,26 +259,6 @@ async def get_document(
     return await _to_response(session, document, membership)
 
 
-async def _get_owned_document(
-    session: AsyncSession,
-    room_id: uuid.UUID,
-    document_id: uuid.UUID,
-    requester_id: uuid.UUID,
-    locale: str,
-) -> tuple[Document, list[uuid.UUID], Membership]:
-    """Returns (document, owner_ids, membership) once the requester is known
-    to see the Document and to be one of its Owners (D-12)."""
-    membership = await require_membership(session, room_id, requester_id, locale)
-    document, owner_ids, _ = await get_visible_document(
-        session, room_id, document_id, requester_id, membership.role, locale
-    )
-    try:
-        ensure_owner(membership.role, requester_id, owner_ids)
-    except NotOwnerError as exc:
-        raise translated_error(status.HTTP_403_FORBIDDEN, exc, locale) from exc
-    return document, owner_ids, membership
-
-
 @router.patch("/{document_id}")
 async def update_document(
     room_id: uuid.UUID,
@@ -286,7 +271,7 @@ async def update_document(
     """UC-07: an Owner (or the Master, D-12) edits the Document's fields, Tags
     and Selective grants."""
     requester_id = uuid.UUID(current_user.id)
-    document, _, membership = await _get_owned_document(
+    document, _, membership = await get_owned_document(
         session, room_id, document_id, requester_id, locale
     )
 
@@ -325,17 +310,21 @@ async def delete_document(
     locale: LocaleDep,
 ) -> None:
     """An Owner (or the Master, D-12) permanently deletes the Document, along
-    with its Comments, images and Tag/Owner/Selective-grant links."""
+    with its Comments, Notes, images, PDF Attachments and
+    Tag/Owner/Selective-grant links."""
     requester_id = uuid.UUID(current_user.id)
-    document, _, _ = await _get_owned_document(session, room_id, document_id, requester_id, locale)
+    document, _, _ = await get_owned_document(session, room_id, document_id, requester_id, locale)
 
-    # Locked first so a concurrent image upload can't insert a row the
-    # cascade below would then delete without ever scheduling its Storage
+    # Locked first so a concurrent image or file upload can't insert a row
+    # the cascade below would then delete without ever scheduling its Storage
     # object for cleanup.
     await documents_repo.lock_document(session, document_id)
     images = await documents_repo.list_images(session, document_id)
     if images:
         await remove_images(session, images)
+    files = await files_repo.list_files(session, document_id)
+    if files:
+        await remove_files(session, files)
     await documents_repo.delete_document(session, document.id)
 
 
@@ -351,7 +340,7 @@ async def upload_document_image(
     """An Owner adds an uploaded image, up to `MAX_IMAGES_PER_DOCUMENT` (409
     beyond). The first image becomes the favorite (spec 07)."""
     requester_id = uuid.UUID(current_user.id)
-    document, _, membership = await _get_owned_document(
+    document, _, membership = await get_owned_document(
         session, room_id, document_id, requester_id, locale
     )
     current_images = await ensure_room_for_another_image(session, document, locale)
@@ -371,7 +360,7 @@ async def import_document_image(
 ) -> DocumentDetailResponse:
     """Like `upload_document_image`, with the image fetched from a URL."""
     requester_id = uuid.UUID(current_user.id)
-    document, _, membership = await _get_owned_document(
+    document, _, membership = await get_owned_document(
         session, room_id, document_id, requester_id, locale
     )
     current_images = await ensure_room_for_another_image(session, document, locale)
@@ -392,7 +381,7 @@ async def delete_document_image(
     """An Owner (or the Master) manages every image in the Document's gallery,
     including Comment attachments - but only those they can see."""
     requester_id = uuid.UUID(current_user.id)
-    _, _, membership = await _get_owned_document(
+    _, _, membership = await get_owned_document(
         session, room_id, document_id, requester_id, locale
     )
 
@@ -418,7 +407,7 @@ async def set_favorite_image(
     The image must be one the requester can actually see - otherwise an Owner
     could probe for a Private Comment's attachment by trying ids (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
-    document, _, membership = await _get_owned_document(
+    document, _, membership = await get_owned_document(
         session, room_id, document_id, requester_id, locale
     )
 
@@ -447,7 +436,7 @@ async def add_owner(
     """UC-08: an Owner makes another member an Owner too. 404 when the user
     isn't in the Room, 409 when they already own it."""
     requester_id = uuid.UUID(current_user.id)
-    document, owner_ids, membership = await _get_owned_document(
+    document, owner_ids, membership = await get_owned_document(
         session, room_id, document_id, requester_id, locale
     )
 
@@ -477,7 +466,7 @@ async def remove_owner(
     Master stays an implicit Owner, so a Document is never left unowned
     (D-12)."""
     requester_id = uuid.UUID(current_user.id)
-    _, owner_ids, _ = await _get_owned_document(session, room_id, document_id, requester_id, locale)
+    _, owner_ids, _ = await get_owned_document(session, room_id, document_id, requester_id, locale)
 
     try:
         ensure_can_remove_owner(user_id, owner_ids)

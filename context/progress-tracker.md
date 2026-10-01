@@ -9,23 +9,86 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-01)
 
-Branch `feature/12-2-notes-frontend` (spec 12_2, frontend only, PR open;
-**depends on the backend PR for spec 12_1 being merged first**). Latest
-measured state: frontend **899/899** tests at **100%** coverage; lint, `tsc`
-and `npm run build` clean. The backend is untouched here. CI keeps exact-100%
-gates.
-Branch `feature/12-1-notes-backend` (spec 12_1, backend only). Latest measured
-state: backend **413** tests pass against disposable PostgreSQL (migrations
-`b5d8f2a9c1e3` and `c6e1a4b7d2f9` are also applied to the live DB); backend at
-100% coverage, ruff and mypy strict clean. Frontend untouched (spec 12_2 is
-the next unit). CI keeps exact-100% gates.
+Branch `claude/project-thread-40pxi6` (spec 16_2, PDF Attachments frontend,
+PR into `staging`; 16_1 backend is already on `staging`). Frontend **968**
+tests at 100% coverage; lint, `tsc` and `npm run build` clean. Backend
+untouched. Migration `e2f7c4a9b1d6` is still **not** applied to the live DB:
+it needs the user's go-ahead before the release PR merges.
 
-Spec 12_1 is the current unit awaiting merge. Candidates for the next unit are
-in **Next Up**.
+Specs 12 to 15 are merged. Candidates for the next unit are in **Next Up**.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### PDF Attachments, frontend (spec 16_2, 2026-10-01)
+
+- `components/files/DocumentFileList.tsx` under the text and gallery on the
+  Document page: name, size, upload date, Open and Download for every reader
+  (VR-12); Upload (`FileButton`, one PDF at a time) for Owners and the
+  Master, disabled at 10; delete with a confirm, shown per the backend's
+  `can_delete`. Renders nothing for a reader of a Document without files.
+- `hooks/useDocumentFiles.ts` (upload multipart, delete) reloads the
+  Document, like Notes; `Document.files` comes from the single-Document
+  response only. `lib/documentFiles.ts`: wire mapping, client hints (type,
+  10 MB; the backend decides by content), size formatting, `openPdf`.
+- **Open** fetches the signed link's bytes and shows them from a `blob:` URL
+  in a tab opened before the fetch (popup blockers), as the spec says; the
+  link itself downloads (`Content-Disposition: attachment`). Not seen in a
+  real browser against real Storage yet: check that Supabase's signed link
+  answers the `fetch` with CORS, and the layout at phone width.
+
+### PDF Attachments, backend (spec 16_1, 2026-10-01)
+
+- Table `document_files` (migration `e2f7c4a9b1d6`, RLS + deny policy), rules
+  in `app/domain/files.py` (by content `%PDF-`, ≤10 MB → 413, ≤10 per
+  Document → 409 under the row lock, display name cleaned and cut to 200),
+  routes `POST`/`DELETE` in `app/api/document_files.py`, Owners + Master only.
+- Files have the Document's visibility (VR-12) and are embedded as `files` in
+  every single-Document response, not in the list. Each `url` is a signed link
+  with `download=<name>`, so Storage serves `Content-Disposition: attachment`.
+- Deleting a Document or a Room queues every file (`remove_files`); the sweep
+  treats `document_files.storage_path` as in use.
+- `_get_owned_document` moved to `access.get_owned_document` (shared).
+- Storage path follows the ticket (`documents/{doc}/files/…`), unlike images
+  (`{room}/{doc}/…`). Live Storage behaviour of `download=` is unverified
+  (fake Storage in tests): check on the first deploy.
+
+### Leave Room (spec 15, 2026-10-01)
+
+- Every member can leave from the Room card's three-dots menu ("Room actions
+  for {name}"), next to Setup and Invite and above the card link. A
+  confirmation modal says the user's content stays (D-15) and that coming
+  back needs a new invite; an Administrator also sees a hint to name a
+  successor in the setup page first. Frontend only.
+- `useLeaveRoom` (in `useMembers.ts`) sends `DELETE /rooms/{id}/members/{me}`,
+  then removes the Room's queries (they would only 403) and refetches the
+  Rooms list. It is separate from `useRemoveMember`, which refetches the
+  members list. The last-Master/Administrator `409` text is shown with
+  `notifyError` and the modal stays open; the client doesn't re-derive the
+  rule. The user id comes from `HomePage`'s session, passed through
+  `RoomsPage` to each `RoomCard`.
+- Frontend **937/937** tests at **100%** coverage; lint, `tsc`, build clean.
+  Not yet seen in a browser.
+
+### API errors follow the UI language (2026-10-01)
+
+- `apiFetch` sends `currentLanguage()` as `Accept-Language` on every request,
+  so a user who picked Italian from the flag selector on an English browser
+  gets Italian API error text. Frontend only; the backend's `get_locale`
+  already reads the header, and `Accept-Language` is a CORS-safelisted
+  header, so no CORS change. Frontend **925/925** tests at **100%**
+  coverage; lint, `tsc` and `npm run build` clean.
+
+### Claude Code on the web session setup (2026-10-01)
+
+- `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`)
+  runs only in Claude Code on the web: installs frontend and backend
+  dependencies, starts a local Postgres, applies `tests/ci/supabase_shim.sql`
+  on a fresh database and `alembic upgrade head`, and exports CI's env values.
+  `DATABASE_URL` is always the local database, so tests never touch the live
+  one. Verified on a fresh cluster and on a re-run; lint and sample tests pass.
+  The container has Postgres 16 and Node 22 (CI: 17.6 and 24).
 
 ### Tests moved to `src/test/` (spec 14, branch `feature/14-tests-folder`)
 
@@ -350,6 +413,15 @@ Question in the backend PR.
 
 ## Next Up
 
+- **Browser check of spec 16** (after 16_2 merges and the migration is
+  live): upload a character sheet as an Owner, open and download it as
+  another member, confirm a member who can't see the Document gets nothing.
+  Apply migration `e2f7c4a9b1d6` to the live DB (with the user's go-ahead)
+  before releasing.
+- **Planned 2026-10-01** (tickets in `context/feature/`, each lists the
+  decisions to confirm before building): 17 Characters and posting in
+  character, 18 Friends. Suggested order: 17, 18. (15 Leave Room is built,
+  16_1 PDF backend too, see Completed Units.)
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
@@ -392,8 +464,6 @@ Question in the backend PR.
 - **Reveal action + fuller Visibility** (VR-02, VR-05, VR-06, FR-V2/V3/V5):
   per-Room default visibility, Reveal with AuditLog + notification, "view as
   User X" for the Master.
-- **Backend locale vs UI language**: the frontend should send its picked
-  language as `Accept-Language` so the two agree (see Open Questions).
 - Decide whether new Rooms should get default Tags in the creator's
   language.
 
@@ -404,7 +474,7 @@ protected file.
 
 - **Spec 12 — Notes = Details (decided 2026-10-01, `requirements.md` needs a
   product pass, *protected*)**: the product owner confirmed a Note and a
-  Dettaglio (D-18) are the same feature under two names, and chose to keep
+  Detail (D-18) are the same feature under two names, and chose to keep
   **Owner/Master-only** management. This departs from the spec: D-19/I-10 say
   any member who sees the Document may add a Detail, only its author or the
   Master may edit it, and it is a Thread Post with nested replies; FR-T8
@@ -432,28 +502,24 @@ protected file.
   decision): the spec says the setup page is reachable only by a Room's
   Administrator, and it replaced the members page. So (a) a plain Player or
   a Master who isn't an Administrator can no longer see the members list
-  page or **leave a Room from the UI** (UC-19; the `DELETE` endpoint still
-  allows it) — a "Leave" action somewhere else (Rooms list card?) is
-  needed; (b) the Master alone can't set Main Tags (Administrator only,
+  page; leaving is **resolved** by spec 15 (Leave in the Room card's menu);
+  (b) the Master alone can't set Main Tags (Administrator only,
   matching "Admin of that Room"). Also new: who the "Admin" is when the
   Master isn't one (they are separate flags, D-11).
 
-- **Backend locale follows `Accept-Language`, not the UI flag selector**: a
-  user with an English browser who picked Italian in the UI still gets
-  English API error text. Fix = frontend sends its language on every request.
 - **UI language absent from `requirements.md`** (*protected*): add an NFR for
   supported languages and confirm English as fallback.
 - **Auth passages in `requirements.md`** (*protected*): FR-A1 lists five
   providers, but UC-01, the section 5 User, NFR-03 and the MoSCoW **Won't**
   row still say Google-only. D-07 (Google preferred) still holds. NFR-03's
   privacy rule (only name, picture, email) applies to every provider.
-- **Images spec gap** (*protected*): D-09/FR-D1 say "Immagine" (singular).
+- **Images spec gap** (*protected*): D-09/FR-D1 say "Image" (singular).
   The 20-per-Document cap and 1920px/WebP output are implementation choices.
 - **OQ-09 / OQ-10** have no `D-` number but are implemented (creator =
   Administrator + Master; last-Master/Administrator guard). OQ-11/OQ-12 are
   resolved (D-19, D-20).
 - **Comments — choices to confirm**: (a) the author always sees their own
-  Comment, so "Solo Master" = me + the Master; (b) the Master can delete but
+  Comment, so "Master only" = me + the Master; (b) the Master can delete but
   not edit others' Comments; (c) moderation deletes aren't in the AuditLog;
   (d) 10,000-char body limit.
 - **Comment images — choices to confirm**: (a) inherit the Comment's
@@ -523,7 +589,8 @@ Full reasoning lives in `architecture.md`; this is the index.
 
 ## Session Notes (lessons worth keeping)
 
-- **Branch from `origin/main`**, or `git fetch` first — a branch cut from a
+- **Branch from `origin/staging`** (PRs target `staging` since 2026-10-01,
+  see `code-standards.md`), or `git fetch` first — a branch cut from a
   stale local `main` once made merged files look reverted (nothing was lost).
 - **Re-check a PR's merge state** (`gh pr view <n> --json state,mergedAt`)
   before pushing more commits to its branch after a gap. PR #19 was merged

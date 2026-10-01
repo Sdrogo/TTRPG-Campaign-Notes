@@ -11,6 +11,7 @@ import {
   rawDocument,
   rawImage,
   rawMember,
+  rawDocumentFile,
   rawNote,
 } from '../fixtures';
 import { renderWithProviders } from '../utils';
@@ -766,5 +767,28 @@ describe('Notes', () => {
     await user.click(screen.getAllByRole('button', { name: 'Aggiungi Nota' })[0]);
 
     await waitFor(() => expect(writes).toEqual([`${DOC}/notes`]));
+  });
+});
+
+// Spec 16: a Document's PDFs, sent inside the single-Document response.
+describe('Files', () => {
+  // VR-12: a reader of the Document sees its files, without managing them.
+  it('lists the files to a reader who is not an Owner, without upload', async () => {
+    routes.document = rawDocument({
+      owner_ids: ['user-2'],
+      files: [rawDocumentFile({ can_delete: false })],
+    });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    render();
+
+    expect(await screen.findByText('Scheda di Aria.pdf')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Scarica Scheda di Aria.pdf' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Carica PDF' })).not.toBeInTheDocument();
+  });
+
+  it('offers the upload to an Owner', async () => {
+    render();
+
+    expect(await screen.findByRole('button', { name: 'Carica PDF' })).toBeInTheDocument();
   });
 });

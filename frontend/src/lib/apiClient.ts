@@ -1,3 +1,4 @@
+import { currentLanguage } from '../i18n';
 import { supabase } from './supabaseClient';
 
 /**
@@ -23,6 +24,9 @@ interface ApiFetchInit extends Omit<RequestInit, 'body'> {
  * Calls the backend at `VITE_API_BASE_URL` with the current Supabase access
  * token. Pass `json` for a JSON body or `formData` for an upload. Throws
  * `ApiError` on any non-2xx; a 204 resolves to `undefined`.
+ *
+ * Sends the UI's current language as `Accept-Language`, so the backend's
+ * error text matches the flag selector rather than the browser's locale.
  */
 export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promise<T> {
   const { json, formData, ...rest } = init;
@@ -32,6 +36,7 @@ export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promis
 
   const headers = new Headers(rest.headers);
   headers.set('Accept', 'application/json');
+  headers.set('Accept-Language', currentLanguage());
   if (json !== undefined) {
     headers.set('Content-Type', 'application/json');
   }

@@ -23,6 +23,7 @@ function document(id: string, name: string): Document {
     ownerIds: [],
     selectiveUserIds: [],
     notes: [],
+    files: [],
   };
 }
 

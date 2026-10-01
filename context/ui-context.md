@@ -109,11 +109,10 @@ other icon set.
   menu is open. It opens a Mantine `Menu` (`bottom-end`): one item per
   language with a 20px flag and the language's **own** name ("Italiano",
   "English"), so it can be found whatever language the UI is in, and a
-  check mark on the current one. Its tooltip ("Cambia lingua" / "Change
-  language") is hidden while the menu is open, so it doesn't cover the
+  check mark on the current one. Its tooltip ("Change language") is hidden while the menu is open, so it doesn't cover the
   first item.
 - **Sign-in screen** (`HomePage`, signed out; spec 08): centered book
-  icon, title, "Accedi per continuare.", then one full-width button per
+  icon, title, "Sign in to continue.", then one full-width button per
   provider in `AUTH_PROVIDERS` order, in a column capped at 320px. Google
   is the only `filled` (accent) button, since it's the preferred login
   (D-07); the others are `default`. Each has the provider's Phosphor
@@ -177,9 +176,9 @@ other icon set.
   (initials, accent light) + a **full-width** bubble (it stretches to
   the row even for a one-word Comment) on `--bg-raised` with
   `--border-default` and `md` radius holding the author's name, a
-  `VisibilityBadge` (size `xs`, omitted for "Stanza") and the text; under
-  it a muted meta line (relative time, "Modificato", text actions
-  "Modifica"/"Elimina" that turn `--accent-strong` on hover). Attached
+  `VisibilityBadge` (size `xs`, omitted for "Room") and the text; under
+  it a muted meta line (relative time, "Edited", text actions
+  "Edit"/"Delete" that turn `--accent-strong` on hover). Attached
   images show inside the bubble as 120px square thumbnails
   (`ImageThumbnailGrid`, `sm` radius) that open the shared fullscreen
   `ImageViewerModal`. Sort/filter controls (`CommentToolbar`) sit above
@@ -203,9 +202,9 @@ other icon set.
   a click inserts `#Name `, Esc closes; Ctrl/Cmd+Enter still submits a
   Comment. No open/close animation, like Mantine's Combobox.
   **When nothing matches** and the viewer may create something, the list
-  is replaced by a create row: "Nessun risultato per «name». Crealo
-  come:", a two-button switch (Documento / Tag — `light` = chosen,
-  `default` = other; only shown when both are allowed) and a "Crea …"
+  is replaced by a create row: "No results for “name”. Create
+  it as:", a two-button switch (Document / Tag — `light` = chosen,
+  `default` = other; only shown when both are allowed) and a "Create …"
   button (`light`, `filled` when the row is highlighted). A plain Enter
   never creates: the row is reached with ↓, then ←/→ switch the kind and
   Enter creates (a hint line says so). The switch is plain buttons, not a
@@ -227,7 +226,7 @@ other icon set.
   description on the left, the image block on the right at **half the card's
   width** (`flex: 0 0 50%`), lifted to 5 clamped lines when there are images
   so the two columns balance; with no images the description takes the whole
-  row, and a Document without one says "Nessuna descrizione.". The Owner line
+  row, and a Document without one says "No description.". The Owner line
   closes the card on a line of its own.
   The images are `DocumentCardImages`: the same carousel as the detail page
   but read-only and short (at most 160px, 200px from `sm`), favorite first.
@@ -254,23 +253,23 @@ other icon set.
   clearable `MultiSelect` with a `Funnel` icon above the grid (max 480px
   from `sm` up), options shown as `#Tag`. It is bound to the URL
   (`?tag=…`, repeatable, Tags combine with AND), which is where a Tag
-  mention leads. No match: "Nessun Documento con questo Tag." plus a
-  "Mostra tutti" button. **Always one line** (2026-09-30, spec
+  mention leads. No match: "No Documents with this Tag." plus a
+  "Show all" button. **Always one line** (2026-09-30, spec
   `11_1 - UI UX Refinment`): the first two selected Tags show as pills
   (`MAX_DISPLAYED_TAGS`) and the rest collapse into a "+N" pill; the pill row
   is `nowrap` with hidden overflow, so the control keeps its height. Mantine
   9's `MultiSelect` has no `maxDisplayedValues` (only `TreeSelect` does), so
   it's done with `renderPill`; the filter still holds every selected Tag.
 - **Grouping and sorting** (2026-09-25, spec `10 - UX Refinment`): next to
-  `TagFilter`, two more `Select`s — "Raggruppa per" (Tag principale /
-  nessuno) and "Ordina per" (Nome A-Z / Z-A) — also URL-bound (`?groupBy=`,
+  `TagFilter`, two more `Select`s — "Group by" (Main Tag /
+  none) and "Sort by" (Name A-Z / Z-A) — also URL-bound (`?groupBy=`,
   `?sort=`, both hidden with the filter when the Room has no Documents).
   Grouped by Main item (the Tags and Tag combinations an Administrator chose
   on the Room setup page, in the order they gave them — specs 11, 11_2) is
   the default: each group gets its own
-  `Title` (`#TagName`, `#A + #B` for a combination, or "Senza Tag principale" for Documents carrying
+  `Title` (`#TagName`, `#A + #B` for a combination, or "No Main Tag" for Documents carrying
   none) above its own `SimpleGrid`; a Document with several Main Tags
-  appears under each one. "Nessun raggruppamento" collapses back to the
+  appears under each one. "No grouping" collapses back to the
   single flat grid spec 07 already had.
   **Each group collapses independently** (2026-09-26): its `Title` wraps a
   clickable row (a `CaretDownIcon`/`CaretRightIcon` at 16px, then the
@@ -316,7 +315,9 @@ UI Language). The browser locale picks the language (English for
 anything that isn't Italian), and the flag selector in the top bar
 overrides it for good. Terminology is the spec's in both languages:
 Room/Stanza, Document/Documento, Tag, Owner, Master, Player,
-Comment/Commento. Roles and "Owner" stay English in Italian too, as
+Comment/Commento (English/Italian). UI strings quoted in this file are the
+English ones; the Italian text is in `it.json` under the same keys. Roles
+and "Owner" stay English in Italian too, as
 before. The sign-in screen has no top bar, so a signed-out visitor
 sees the browser's language.
 

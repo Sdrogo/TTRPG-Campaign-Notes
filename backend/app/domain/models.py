@@ -142,6 +142,24 @@ class DocumentImage:
 
 
 @dataclass(frozen=True)
+class DocumentFile:
+    """A PDF Attachment on a Document (D-21, spec 16), stored in Supabase
+    Storage under `storage_path`; only the path lives in Postgres. It has no
+    visibility of its own: whoever sees the Document sees it (VR-12)."""
+
+    id: uuid.UUID
+    document_id: uuid.UUID
+    storage_path: str
+    # The uploaded file's own name, cleaned up, shown in the UI and used as
+    # the download name. The Storage object's name is random.
+    display_name: str
+    size_bytes: int
+    content_type: str
+    uploaded_by: uuid.UUID
+    created_at: datetime
+
+
+@dataclass(frozen=True)
 class DocumentOwner:
     """An explicit Owner of a Document (D-12). The Master is an implicit Owner
     of every Document and has no row."""

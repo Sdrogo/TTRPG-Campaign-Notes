@@ -37,6 +37,7 @@ function document(overrides: Partial<Document> = {}): Document {
     ownerIds: ['user-1'],
     selectiveUserIds: [],
     notes: [],
+    files: [],
     ...overrides,
   };
 }

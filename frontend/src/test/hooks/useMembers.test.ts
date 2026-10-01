@@ -3,7 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { rawMember } from '../fixtures';
 import { renderHookWithProviders } from '../utils';
-import { isMembersQueryKey, useMembers, useRemoveMember, useUpdateMember } from '../../hooks/useMembers';
+import {
+  isMembersQueryKey,
+  useLeaveRoom,
+  useMembers,
+  useRemoveMember,
+  useUpdateMember,
+} from '../../hooks/useMembers';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 
@@ -144,6 +150,32 @@ describe('useRemoveMember', () => {
 
     await waitFor(() => {
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1', 'members'] });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'] });
+    });
+  });
+});
+
+describe('useLeaveRoom', () => {
+  it("deletes the caller's own membership", async () => {
+    fetchMock.mockResolvedValue(undefined);
+
+    const { result } = renderHookWithProviders(() => useLeaveRoom('room-1'));
+    await result.current.mutateAsync('me');
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/members/me', { method: 'DELETE' });
+  });
+
+  // The Room's queries would only 403 now, so they are dropped, not refetched.
+  it("drops the Room's queries and refreshes the rooms list", async () => {
+    fetchMock.mockResolvedValue(undefined);
+    const { result, queryClient } = renderHookWithProviders(() => useLeaveRoom('room-1'));
+    const remove = vi.spyOn(queryClient, 'removeQueries');
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await result.current.mutateAsync('me');
+
+    await waitFor(() => {
+      expect(remove).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1'] });
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'] });
     });
   });

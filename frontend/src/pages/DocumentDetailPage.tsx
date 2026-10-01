@@ -29,6 +29,7 @@ import { DocumentImageGallery } from '../components/DocumentImageGallery';
 import { AddDocumentImages } from '../components/AddDocumentImages';
 import { CommentSection } from '../components/comments/CommentSection';
 import { NoteList } from '../components/notes/NoteList';
+import { DocumentFileList } from '../components/files/DocumentFileList';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { MentionText } from '../components/mentions/MentionText';
 import type { Document, DocumentFormValues } from '../types/document';
@@ -228,6 +229,15 @@ function DocumentPanel({
             </Box>
           )}
         </Flex>
+
+        {/* Spec 16: the PDFs, under the text and the gallery. Like the
+            Document itself, every reader sees them (VR-12). */}
+        <DocumentFileList
+          roomId={roomId}
+          documentId={document.id}
+          files={document.files}
+          canUpload={isOwner}
+        />
 
         <DocumentOwners
           ownerIds={document.ownerIds}

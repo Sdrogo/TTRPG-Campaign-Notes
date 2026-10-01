@@ -5,6 +5,7 @@ expiring link."""
 import logging
 import time
 from collections.abc import Collection
+from urllib.parse import quote
 
 import httpx
 
@@ -124,3 +125,13 @@ def forget_signed_urls(paths: Collection[str]) -> None:
     given out keep working until they expire."""
     for path in paths:
         _signed_cache.pop(path, None)
+
+
+def as_download(signed_url: str, file_name: str) -> str:
+    """A signed link that makes Storage serve the object as an attachment
+    named `file_name` (`Content-Disposition: attachment`), so the browser
+    downloads it instead of rendering it. PDF Attachments are always served
+    this way (D-22): a PDF can carry scripts and must never open as a page.
+    Supabase reads the `download` query parameter of a signed link; the link
+    already carries `?token=`."""
+    return f"{signed_url}&download={quote(file_name, safe='')}"
