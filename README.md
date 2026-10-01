@@ -109,3 +109,7 @@ merging the code that needs them**, because the backend redeploys on merge.
 Start with [CLAUDE.md](CLAUDE.md) and the files in [context/](context/). Feature
 specs are in `context/feature/` and current status is in
 [context/progress-tracker.md](context/progress-tracker.md).
+
+In Claude Code on the web, `.claude/hooks/session-start.sh` prepares each new
+session to run all the checks above: it installs both sides' dependencies and
+sets up a local Postgres the way CI does.
