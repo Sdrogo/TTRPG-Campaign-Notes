@@ -1,16 +1,17 @@
 """Access checks shared by the routers that sit under a Room/Document
-(documents, comments), so each applies them the same way."""
+(documents, comments, notes), so each applies them the same way."""
 
 import uuid
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
+from dataclasses import dataclass
 
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.errors import http_error
-from app.db import comments_repo, documents_repo, rooms_repo
-from app.domain.models import Document, DocumentImage, Membership, RoomRole
-from app.domain.visibility import is_document_visible, visible_document_images
+from app.db import comments_repo, documents_repo, notes_repo, rooms_repo
+from app.domain.models import Document, DocumentImage, Membership, Note, RoomRole
+from app.domain.visibility import is_document_visible, is_note_visible, visible_document_images
 
 
 async def require_membership(
@@ -46,6 +47,50 @@ async def get_visible_document(
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.document.notFound", locale)
 
     return document, owner_ids, selective_ids
+
+
+async def ensure_room_members(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    user_ids: Collection[uuid.UUID],
+    error_key: str,
+    locale: str,
+) -> None:
+    """422 (with `error_key`) unless every one of `user_ids` is a member of the
+    Room - a Selective grant can't name an outsider."""
+    member_ids = {m.user_id for m in await rooms_repo.list_memberships(session, room_id)}
+    if not set(user_ids) <= member_ids:
+        raise http_error(status.HTTP_422_UNPROCESSABLE_CONTENT, error_key, locale)
+
+
+@dataclass(frozen=True)
+class DocumentNotes:
+    """A Document's Notes: every one (for the cap, the order and the position
+    of a new one) and the ones this viewer may see, with their grants."""
+
+    every: list[Note]
+    visible: list[Note]
+    grants: dict[uuid.UUID, list[uuid.UUID]]
+
+
+async def get_document_notes(
+    session: AsyncSession,
+    document_id: uuid.UUID,
+    viewer: Membership,
+    document_owner_ids: Collection[uuid.UUID],
+) -> DocumentNotes:
+    """A Document's Notes as this viewer may see them (Invariant 1, VR-07): a
+    Note they can't read is simply absent from `visible`, in two queries
+    whatever the number of Notes. The caller already knows the viewer sees the
+    Document itself."""
+    every = await notes_repo.list_notes_for_document(session, document_id)
+    grants = await notes_repo.list_grants_for_notes(session, [note.id for note in every])
+    visible = [
+        note
+        for note in every
+        if is_note_visible(note, viewer.user_id, viewer.role, document_owner_ids, grants[note.id])
+    ]
+    return DocumentNotes(every=every, visible=visible, grants=grants)
 
 
 async def _filter_images(

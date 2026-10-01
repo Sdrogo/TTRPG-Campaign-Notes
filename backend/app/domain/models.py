@@ -150,6 +150,24 @@ class DocumentOwner:
     user_id: uuid.UUID
 
 
+@dataclass(frozen=True)
+class Note:
+    """An additional block of information on a Document, with a title, a
+    description and a visibility of its own (spec 12, VR-03). Not a Detail
+    (D-18): a Note belongs to the Document and is managed by its Owners.
+    `position` orders a Document's Notes, ascending."""
+
+    id: uuid.UUID
+    document_id: uuid.UUID
+    title: str
+    description: str
+    visibility: DocumentVisibility
+    position: int
+    created_by: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+
 class PostKind(StrEnum):
     """requirements.md's Post model: a Thread contribution is either a
     Comment or a (titled) Detail. Only Comments are implemented so far."""

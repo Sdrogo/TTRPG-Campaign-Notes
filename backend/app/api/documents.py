@@ -10,6 +10,7 @@ from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import (
+    get_document_notes,
     get_visible_document,
     get_visible_images,
     get_visible_images_for_documents,
@@ -26,6 +27,7 @@ from app.api.image_uploads import (
     sign_images,
     store_image,
 )
+from app.api.notes import NoteResponse, visible_note_responses
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, rooms_repo, tags_repo
@@ -62,6 +64,15 @@ class DocumentResponse(BaseModel):
     tag_ids: list[uuid.UUID]
     owner_ids: list[uuid.UUID]
     selective_user_ids: list[uuid.UUID]
+
+
+class DocumentDetailResponse(DocumentResponse):
+    """One Document, as the single-Document routes return it: the list's
+    fields plus its Notes (spec 12), filtered for the requester like
+    everything else. The list leaves them out - a card doesn't show Notes, and
+    the list is read in a fixed number of queries."""
+
+    notes: list[NoteResponse]
 
 
 class ImageFromUrlRequest(BaseModel):
@@ -117,15 +128,19 @@ def _build_response(
 
 async def _to_response(
     session: AsyncSession, document: Document, viewer: Membership
-) -> DocumentResponse:
+) -> DocumentDetailResponse:
     """Reads everything a single Document's response needs and serializes it
     for `viewer`."""
     owner_ids = await documents_repo.list_owner_ids(session, document.id)
     selective_ids = await documents_repo.list_selective_grant_ids(session, document.id)
     tag_ids = await documents_repo.list_tag_ids_for_document(session, document.id)
     images = await get_visible_images(session, document.id, viewer)
-    return _build_response(
+    notes = await get_document_notes(session, document.id, viewer, owner_ids)
+    base = _build_response(
         document, owner_ids, selective_ids, tag_ids, images, await sign_images(images)
+    )
+    return DocumentDetailResponse(
+        **base.model_dump(), notes=visible_note_responses(notes, viewer, owner_ids)
     )
 
 
@@ -148,7 +163,7 @@ async def create_document(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> DocumentResponse:
+) -> DocumentDetailResponse:
     """UC-06: creates a Document with the requester as its Owner. 403 when the
     Room has disabled Document creation for Players (D-13, FR-D7)."""
     requester_id = uuid.UUID(current_user.id)
@@ -227,7 +242,7 @@ async def get_document(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> DocumentResponse:
+) -> DocumentDetailResponse:
     """One Document; 404 whether it doesn't exist or the requester can't see it
     (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
@@ -267,7 +282,7 @@ async def update_document(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> DocumentResponse:
+) -> DocumentDetailResponse:
     """UC-07: an Owner (or the Master, D-12) edits the Document's fields, Tags
     and Selective grants."""
     requester_id = uuid.UUID(current_user.id)
@@ -332,7 +347,7 @@ async def upload_document_image(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> DocumentResponse:
+) -> DocumentDetailResponse:
     """An Owner adds an uploaded image, up to `MAX_IMAGES_PER_DOCUMENT` (409
     beyond). The first image becomes the favorite (spec 07)."""
     requester_id = uuid.UUID(current_user.id)
@@ -353,7 +368,7 @@ async def import_document_image(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> DocumentResponse:
+) -> DocumentDetailResponse:
     """Like `upload_document_image`, with the image fetched from a URL."""
     requester_id = uuid.UUID(current_user.id)
     document, _, membership = await _get_owned_document(
@@ -396,7 +411,7 @@ async def set_favorite_image(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> DocumentResponse:
+) -> DocumentDetailResponse:
     """Spec 07: an Owner (or the Master, D-12) picks the image that leads the
     Document. Only one at a time, so this clears the previous favorite.
 
@@ -428,7 +443,7 @@ async def add_owner(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> DocumentResponse:
+) -> DocumentDetailResponse:
     """UC-08: an Owner makes another member an Owner too. 404 when the user
     isn't in the Room, 409 when they already own it."""
     requester_id = uuid.UUID(current_user.id)

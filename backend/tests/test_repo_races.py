@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import comments_repo, documents_repo, rooms_repo, users_repo
+from app.db import comments_repo, documents_repo, notes_repo, rooms_repo, users_repo
 from app.db.models import PostRow
 from app.domain.documents import plan_new_document
 from app.domain.models import (
@@ -18,6 +18,7 @@ from app.domain.models import (
     Document,
     DocumentVisibility,
     Membership,
+    Note,
     RoomRole,
     UserProfile,
 )
@@ -105,3 +106,20 @@ async def test_get_comment_ignores_a_post_of_another_kind(db_session: AsyncSessi
 
 async def test_get_comment_returns_none_for_an_unknown_id(db_session: AsyncSession) -> None:
     assert await comments_repo.get_comment(db_session, uuid.uuid4()) is None
+
+
+async def test_updating_a_vanished_note_raises(db_session: AsyncSession) -> None:
+    now = datetime.now(UTC)
+    ghost = Note(
+        id=uuid.uuid4(),
+        document_id=uuid.uuid4(),
+        title="Gone",
+        description="",
+        visibility=DocumentVisibility.ROOM,
+        position=0,
+        created_by=uuid.uuid4(),
+        created_at=now,
+        updated_at=now,
+    )
+    with pytest.raises(LookupError):
+        await notes_repo.update_note(db_session, ghost)

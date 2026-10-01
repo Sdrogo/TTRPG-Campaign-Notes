@@ -226,6 +226,37 @@ class DocumentVisibilityGrantRow(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
 
 
+class NoteRow(Base):
+    """A Note on a Document (spec 12): its own title, description and
+    visibility. Not a Post - Notes belong to the Document, not its Thread."""
+
+    __tablename__ = "document_notes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    title: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text, default="")
+    visibility: Mapped[str] = mapped_column(String(20), default="room")
+    position: Mapped[int] = mapped_column(Integer)
+    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class NoteVisibilityGrantRow(Base):
+    """A user who may see a Selective Note besides the Document's Owners and
+    the Master."""
+
+    __tablename__ = "document_note_visibility_grants"
+
+    note_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("document_notes.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+
+
 class PostRow(Base):
     """A Post in a Document's main Thread (requirements.md's data model).
     There is no separate `threads` table: a Document has exactly one Thread
