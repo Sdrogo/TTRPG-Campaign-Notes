@@ -1,32 +1,72 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The React single-page app for TTRPG Campaign Notes. It talks only to the
+backend API; it never reaches Postgres or Storage directly. Overview of the
+whole project: [../README.md](../README.md).
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+React 19, Vite, TypeScript (strict), Mantine v9 for UI, TanStack Query for
+server state, React Router, `react-i18next` (Italian and English), Supabase JS
+for sign-in only, Phosphor icons, Oxlint. Tests use Vitest and React Testing
+Library.
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm ci
+cp .env.example .env
+npm run dev          # http://localhost:5173
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+| Variable | Meaning |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable (public) key |
+| `VITE_API_BASE_URL` | Backend URL, `http://localhost:8000` locally |
+
+The backend must run too, and must allow this origin (its default CORS origin is
+`http://localhost:5173`). If Vite starts on another port the API calls fail CORS,
+so stop any leftover dev server first.
+
+## Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Dev server with HMR |
+| `npm run build` | `tsc -b` then the production build |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Oxlint |
+| `npm test` | Run the tests once |
+| `npm run test:coverage` | Tests with coverage; fails below 100% on every metric |
+
+## Layout (`src/`)
+
+| Folder | Contents |
+| --- | --- |
+| `pages/` | One component per route |
+| `components/` | Shared UI, with sub-folders per area (`account`, `comments`, `mentions`, `notes`, `setup`) |
+| `hooks/` | TanStack Query hooks for the API, plus `useSession` |
+| `lib/` | Pure helpers (API client, grouping, filtering, permissions) |
+| `types/` | API response types |
+| `i18n/` | Setup and `locales/it.json` / `en.json` |
+| `theme/` | Mantine theme and CSS tokens |
+
+## Conventions
+
+- **No hardcoded UI text.** Every visible string goes through `t()` and must be
+  added to both locale files; `it.json` is the typed source.
+- **The UI shows what the API sends.** Visibility is decided by the backend; the
+  frontend never filters hidden content itself.
+- Query the way a user finds things in tests (role and accessible name), and
+  keep every module at 100% coverage. Tests live in `src/test/`, mirroring the
+  `src/` folders.
+
+Full rules: [../context/code-standards.md](../context/code-standards.md) and
+[../context/ui-context.md](../context/ui-context.md).
+
+## Deployment
+
+Deployed on Vercel. `vercel.json` rewrites every path to `index.html` so deep
+links work with client-side routing. The three `VITE_` variables are set in the
+Vercel project settings.

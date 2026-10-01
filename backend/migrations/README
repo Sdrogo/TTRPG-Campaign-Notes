@@ -1,1 +1,63 @@
-Generic single-database configuration with an async dbapi.
+Database migrations (Alembic, async, single database)
+======================================================
+
+The schema lives in the Postgres database that Supabase hosts. Alembic builds it
+from `app/db/models.py`. The connection comes from `DATABASE_URL` (see
+`backend/.env.example`), which must use the `postgresql+asyncpg://` scheme;
+`migrations/env.py` reads it through `app/config.py`, so the placeholder URL in
+`alembic.ini` is never used.
+
+Run every command below from the `backend/` folder with the virtualenv active.
+
+Common commands
+---------------
+
+    alembic upgrade head                    # apply everything not yet applied
+    alembic current                         # which revision the database is at
+    alembic history                         # list the revisions
+    alembic downgrade -1                    # undo the last one
+    alembic revision --autogenerate -m "add thing"   # new migration from model changes
+
+Adding a migration
+------------------
+
+1. Change the models in `app/db/models.py`.
+2. Generate the file with `--autogenerate`, then READ it. Autogenerate misses
+   things, so fix them by hand:
+   - Adding a NOT NULL column to a table that already has rows needs a
+     `server_default`; autogenerate leaves it out.
+   - Data changes (backfills) are never generated.
+3. Write a real `downgrade()`.
+4. Run `alembic upgrade head` on an empty or disposable database, then run the
+   backend tests.
+
+Rules every migration must follow
+---------------------------------
+
+- **A migration that creates a table in `public` must also enable Row Level
+  Security and create the deny policy** (see `c6e1a4b7d2f9` for an example):
+
+      ALTER TABLE public.<table> ENABLE ROW LEVEL SECURITY;
+      CREATE POLICY backend_only_deny_clients ON public.<table>
+        AS RESTRICTIVE FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
+
+  Supabase exposes `public` through its Data API, and the publishable key ships
+  in the frontend. `tests/test_database_security.py` fails if a table is missing
+  this. Do not "fix" a dashboard warning with a permissive policy.
+- **No foreign key to `auth.users`.** User ids are plain UUID columns taken from
+  the verified JWT, so our migrations don't depend on Supabase's own schema.
+- Only the `public` schema is ours; `env.py` ignores the others Supabase creates.
+- If a migration needs something Supabase provides (roles, `auth.users`), CI
+  recreates it with `tests/ci/supabase_shim.sql`. Extend that file if the
+  Migrate step fails.
+
+Deploying
+---------
+
+Migrations are not applied automatically. Apply them to the live database
+BEFORE merging the code that depends on them, because the backend redeploys on
+merge and would otherwise fail against the old schema. Do this only with the
+product owner's go-ahead.
+
+CI runs `alembic upgrade head` from an empty Postgres on every pull request, so
+the whole chain must keep working from scratch.
