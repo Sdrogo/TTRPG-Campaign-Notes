@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../utils';
 import { CommentItem } from '../../../components/comments/CommentItem';
+import type { Character } from '../../../types/character';
 import type { Comment } from '../../../types/comment';
 import type { Member } from '../../../types/member';
 
@@ -36,17 +37,27 @@ function comment(overrides: Partial<Comment> = {}): Comment {
     images: [],
     canEdit: true,
     canDelete: true,
+    asCharacter: null,
     ...overrides,
   };
 }
 
-function render(overrides: Partial<Comment> = {}, currentUserId = 'user-1') {
+const aria: Character = { documentId: 'doc-2', name: 'Aria', imageUrl: 'http://signed/aria.webp' };
+const bram: Character = { documentId: 'doc-3', name: 'Bram', imageUrl: null };
+
+function render(
+  overrides: Partial<Comment> = {},
+  currentUserId = 'user-1',
+  characters: Character[] = [],
+) {
   const onUpdate = vi.fn();
   const onDelete = vi.fn();
   renderWithProviders(
     <CommentItem
+      roomId="room-1"
       comment={comment(overrides)}
       members={members}
+      characters={characters}
       currentUserId={currentUserId}
       onUpdate={onUpdate}
       updating={false}
@@ -271,5 +282,95 @@ describe('attached images', () => {
     render();
 
     expect(screen.queryByTestId('image-thumbnails')).not.toBeInTheDocument();
+  });
+});
+
+describe('in character', () => {
+  // D-24/D-25: the Character leads, linked to its Document, and the real
+  // author stays identifiable.
+  it('shows the Character, linked to its Document, and who plays it', () => {
+    render({ asCharacter: aria }, 'user-2');
+
+    expect(screen.getByRole('link', { name: 'Aria' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/documents/doc-2',
+    );
+    expect(screen.getByText('interpretato da Giocatore')).toBeInTheDocument();
+    expect(screen.queryByText('(tu)')).not.toBeInTheDocument();
+  });
+
+  it('marks your own in-character Comment', () => {
+    render({ asCharacter: aria });
+
+    expect(screen.getByText('(tu)')).toBeInTheDocument();
+  });
+
+  it("uses the Character's picture instead of the author's", () => {
+    render({ asCharacter: aria });
+
+    expect(screen.getByRole('img', { name: 'Aria' })).toHaveAttribute(
+      'src',
+      'http://signed/aria.webp',
+    );
+  });
+
+  it("names the Character in its images' labels", async () => {
+    const { user } = render({
+      asCharacter: aria,
+      images: [{ id: 'image-1', url: 'http://a/1.webp', isFavorite: false }],
+    });
+
+    await user.click(screen.getByRole('button', { name: /Aria/ }));
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('offers no "Post as" while editing when there is nothing to write as', async () => {
+    const { user } = render();
+
+    await user.click(screen.getByText('Modifica'));
+
+    expect(screen.queryByRole('combobox', { name: 'Scrivi come' })).not.toBeInTheDocument();
+  });
+
+  it("keeps the Comment's Character when the choice is left alone", async () => {
+    // Bram isn't among the Characters the author may write as any more, but
+    // stays pickable: an unchanged choice is omitted, so the backend keeps it.
+    const { onUpdate, user } = render({ asCharacter: bram }, 'user-1', [aria]);
+    await user.click(screen.getByText('Modifica'));
+
+    expect(screen.getByRole('combobox', { name: 'Scrivi come' })).toHaveValue('Bram');
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+
+    expect(onUpdate.mock.calls[0][0].asDocumentId).toBeUndefined();
+  });
+
+  it('sends a changed Character', async () => {
+    const { onUpdate, user } = render({}, 'user-1', [aria]);
+    await user.click(screen.getByText('Modifica'));
+
+    await user.click(screen.getByRole('combobox', { name: 'Scrivi come' }));
+    await user.click(screen.getByRole('option', { name: 'Aria' }));
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+
+    expect(onUpdate.mock.calls[0][0].asDocumentId).toBe('doc-2');
+  });
+
+  it('starts the edit on the current Character when the author still plays it', async () => {
+    const { user } = render({ asCharacter: aria }, 'user-1', [aria]);
+    await user.click(screen.getByText('Modifica'));
+
+    expect(screen.getByRole('combobox', { name: 'Scrivi come' })).toHaveValue('Aria');
+  });
+
+  it('turns an in-character Comment back into a plain one', async () => {
+    const { onUpdate, user } = render({ asCharacter: aria }, 'user-1', [aria]);
+    await user.click(screen.getByText('Modifica'));
+
+    await user.click(screen.getByRole('combobox', { name: 'Scrivi come' }));
+    await user.click(screen.getByRole('option', { name: 'Te stesso (Giocatore)' }));
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+
+    expect(onUpdate.mock.calls[0][0].asDocumentId).toBeNull();
   });
 });

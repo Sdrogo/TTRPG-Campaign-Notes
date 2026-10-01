@@ -4,7 +4,8 @@ import { VisibilityBadge } from './VisibilityBadge';
 import { TagList } from './TagList';
 import { DocumentCardImages } from './DocumentCardImages';
 import { MentionText } from './mentions/MentionText';
-import { displayNameFor } from '../lib/members';
+import { UserAvatar } from './UserAvatar';
+import { displayNameFor, findMember, memberDisplayName } from '../lib/members';
 import type { Document } from '../types/document';
 import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
@@ -19,12 +20,14 @@ interface DocumentCardProps {
 
 /**
  * A Document in the Room's list: name, visibility, Tags, description and
- * images, with its Owners. The whole card links to the Document.
+ * images, with its player (for a Character) and Owners. The whole card links
+ * to the Document.
  */
 export function DocumentCard({ document, roomId, tags, members }: DocumentCardProps) {
   const { t } = useTranslation();
   const ownerNames = document.ownerIds.map((id) => displayNameFor(members, id)).join(', ');
   const hasImages = document.images.length > 0;
+  const player = document.playedBy ? findMember(members, document.playedBy) : undefined;
 
   return (
     <Card withBorder padding="md" radius="md" pos="relative">
@@ -68,6 +71,16 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
             </Box>
           )}
         </Group>
+
+        {/* D-23: a Character shows who plays it. */}
+        {document.playedBy && (
+          <Group gap={6} wrap="nowrap">
+            <UserAvatar user={player} size={20} />
+            <Text size="xs" c="dimmed" truncate>
+              {t('characters.playedByLine', { name: memberDisplayName(player) })}
+            </Text>
+          </Group>
+        )}
 
         {ownerNames && (
           <Text size="xs" c="dimmed" truncate>

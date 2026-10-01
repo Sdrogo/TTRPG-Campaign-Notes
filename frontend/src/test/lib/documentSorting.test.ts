@@ -14,6 +14,7 @@ const doc = (id: string, name: string): Document => ({
   selectiveUserIds: [],
   notes: [],
   files: [],
+  playedBy: null,
 });
 
 const documents = [doc('a', 'Zanna'), doc('b', 'Città'), doc('c', 'alfa')];

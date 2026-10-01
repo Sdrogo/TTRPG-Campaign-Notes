@@ -56,6 +56,7 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
     if (path === '/rooms/room-1/tags') return Promise.resolve(tags);
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
     if (path === '/account') return Promise.resolve(rawAccount());
+    if (path === '/rooms/room-1/characters/mine') return Promise.resolve([]);
     return Promise.resolve(routes.document);
   });
 }
@@ -173,6 +174,7 @@ describe('DocumentDetailPage', () => {
       if (path === DOC) return Promise.resolve(routes.document);
       if (path === `${DOC}/comments`) return Promise.resolve(routes.comments);
       if (path === '/account') return Promise.resolve(rawAccount());
+    if (path === '/rooms/room-1/characters/mine') return Promise.resolve([]);
       return new Promise(() => {});
     });
     render();
@@ -633,6 +635,76 @@ describe('Owners', () => {
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
     expect(screen.queryByRole('button', { name: 'Aggiungi' })).not.toBeInTheDocument();
+  });
+});
+
+describe('Played by', () => {
+  it('links a player, making them an Owner by default', async () => {
+    routes.members = [
+      rawMember({ user_id: 'user-1', display_name: 'Io' }),
+      rawMember({ user_id: 'user-2', display_name: 'Altro', email: 'altro@example.com' }),
+    ];
+    const writes: unknown[] = [];
+    fetchMock.mockImplementation((path: string, init?: { method?: string; json?: unknown }) => {
+      if (init?.method) {
+        writes.push([path, init.json]);
+        return Promise.resolve(rawDocument({ played_by: 'user-2' }));
+      }
+      if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
+      if (path === '/rooms/room-1/characters/mine' || path === `${DOC}/comments`) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve(routes.document);
+    });
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(screen.getByRole('combobox', { name: 'Scegli il giocatore' }));
+    await user.click(screen.getByRole('option', { name: 'Altro (altro@example.com)' }));
+    await user.click(screen.getByRole('button', { name: 'Imposta giocatore' }));
+
+    await waitFor(() =>
+      expect(writes).toContainEqual([`${DOC}/player`, { user_id: 'user-2', add_as_owner: true }]),
+    );
+  });
+
+  it('unlinks the player', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-1'], played_by: 'user-1' });
+    const writes: unknown[] = [];
+    fetchMock.mockImplementation((path: string, init?: { method?: string; json?: unknown }) => {
+      if (init?.method) {
+        writes.push([path, init.json]);
+        return Promise.reject(new Error('no'));
+      }
+      if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
+      if (path === '/rooms/room-1/characters/mine' || path === `${DOC}/comments`) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve(routes.document);
+    });
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(screen.getByRole('button', { name: 'Scollega Io' }));
+
+    await waitFor(() =>
+      expect(writes).toContainEqual([`${DOC}/player`, { user_id: null, add_as_owner: false }]),
+    );
+    // A refused change is reported, like every other Owner action.
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+  });
+
+  it('reports a refused link', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', display_name: 'Io' })];
+    mockApi(() => Promise.reject(new Error('not a member')));
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(screen.getByRole('combobox', { name: 'Scegli il giocatore' }));
+    await user.click(screen.getByRole('option', { name: 'Io (giocatore@example.com)' }));
+    await user.click(screen.getByRole('button', { name: 'Imposta giocatore' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
   });
 });
 

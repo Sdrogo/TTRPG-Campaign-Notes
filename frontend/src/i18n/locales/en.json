@@ -277,6 +277,17 @@
     "tooLarge": "The file exceeds the {{mb}} MB limit",
     "openFailed": "Couldn't open {{name}}"
   },
+  "characters": {
+    "playedBy": "Played by",
+    "playedByLine": "Played by {{name}}",
+    "choosePlayer": "Choose the player",
+    "alsoOwner": "Also make them an Owner",
+    "setPlayer": "Set player",
+    "unlink": "Unlink {{name}}",
+    "postAs": "Post as",
+    "yourself": "Yourself ({{name}})",
+    "writtenBy": "played by {{name}}"
+  },
   "comments": {
     "title": "Comments",
     "loadError": "Couldn't load the comments.",

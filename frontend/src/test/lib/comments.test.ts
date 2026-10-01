@@ -30,6 +30,7 @@ function comment(id: string, overrides: Partial<Comment> = {}): Comment {
     images: [],
     canEdit: false,
     canDelete: false,
+    asCharacter: null,
     ...overrides,
   };
 }

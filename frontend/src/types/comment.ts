@@ -1,3 +1,4 @@
+import type { Character } from './character';
 import type { DocumentVisibility } from './document';
 import type { PendingImage, StoredImage } from './image';
 
@@ -20,6 +21,12 @@ export interface Comment {
   /** Decided by the backend for the current viewer. */
   canEdit: boolean;
   canDelete: boolean;
+  /**
+   * The Character the Comment was written as (D-24), or null. The backend
+   * leaves it null for a viewer who can't see that Character's Document
+   * (VR-13), who then sees the real author like any other Comment.
+   */
+  asCharacter: Character | null;
 }
 
 /** The editable fields of a Comment, shared by the composer and inline edit. */
@@ -30,6 +37,11 @@ export interface CommentFormValues {
   /** Images to upload on save, and ids of already attached ones to remove. */
   newImages: PendingImage[];
   removedImageIds: string[];
+  /**
+   * The Document to write as (D-24), null to write as yourself. Left
+   * undefined, an edit keeps the Comment's current choice.
+   */
+  asDocumentId?: string | null;
 }
 
 /** How the Comment list is ordered: by date either way, or grouped by author name. */

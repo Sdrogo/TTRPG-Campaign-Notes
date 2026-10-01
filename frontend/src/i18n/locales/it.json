@@ -277,6 +277,17 @@
     "tooLarge": "Il file supera il limite di {{mb}} MB",
     "openFailed": "Impossibile aprire {{name}}"
   },
+  "characters": {
+    "playedBy": "Interpretato da",
+    "playedByLine": "Interpretato da {{name}}",
+    "choosePlayer": "Scegli il giocatore",
+    "alsoOwner": "Rendilo anche Owner",
+    "setPlayer": "Imposta giocatore",
+    "unlink": "Scollega {{name}}",
+    "postAs": "Scrivi come",
+    "yourself": "Te stesso ({{name}})",
+    "writtenBy": "interpretato da {{name}}"
+  },
   "comments": {
     "title": "Commenti",
     "loadError": "Impossibile caricare i commenti.",

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import { toStoredImage } from '../lib/images';
+import { toCharacter, type RawCharacter } from '../lib/characters';
 import type { Comment, CommentFormValues } from '../types/comment';
 import type { DocumentVisibility } from '../types/document';
 import type { PendingImage, RawImage } from '../types/image';
@@ -19,6 +20,7 @@ interface RawComment {
   images: RawImage[];
   can_edit: boolean;
   can_delete: boolean;
+  as_character: RawCharacter | null;
 }
 
 function toComment(raw: RawComment): Comment {
@@ -35,15 +37,21 @@ function toComment(raw: RawComment): Comment {
     images: raw.images.map(toStoredImage),
     canEdit: raw.can_edit,
     canDelete: raw.can_delete,
+    asCharacter: raw.as_character ? toCharacter(raw.as_character) : null,
   };
 }
 
-function toBody(values: Pick<CommentFormValues, 'body' | 'visibility' | 'selectiveUserIds'>) {
+function toBody(
+  values: Pick<CommentFormValues, 'body' | 'visibility' | 'selectiveUserIds' | 'asDocumentId'>,
+) {
   return {
     body: values.body,
     visibility: values.visibility,
     // Grants only mean something at the Selective level.
     selective_user_ids: values.visibility === 'selective' ? values.selectiveUserIds : [],
+    // Omitted (undefined is dropped by JSON) keeps an edited Comment's
+    // Character; null writes as yourself.
+    as_document_id: values.asDocumentId,
   };
 }
 

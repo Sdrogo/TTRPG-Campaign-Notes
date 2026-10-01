@@ -7,9 +7,12 @@ import { CommentToolbar } from './CommentToolbar';
 import { UserAvatar } from '../UserAvatar';
 import { PageCard } from '../PageCard';
 import { useComments, useDeleteComment, useSaveComment } from '../../hooks/useComments';
+import { useMyCharacters } from '../../hooks/useCharacters';
+import { readLastPostAs, saveLastPostAs } from '../../lib/characters';
 import type { SaveCommentResult } from '../../hooks/useComments';
 import {
   DEFAULT_COMMENT_FILTERS,
+  EMPTY_COMMENT_VALUES,
   applyCommentFilters,
   commentAuthors,
 } from '../../lib/comments';
@@ -44,6 +47,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
   const comments = useComments(roomId, documentId, true);
   const saveComment = useSaveComment(roomId, documentId);
   const deleteComment = useDeleteComment(roomId, documentId);
+  const myCharacters = useMyCharacters(roomId, true);
   const [filters, setFilters] = useState<CommentFilters>(DEFAULT_COMMENT_FILTERS);
 
   const all = useMemo(() => comments.data ?? [], [comments.data]);
@@ -52,6 +56,10 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
   // oxlint-disable-next-line react-hooks/exhaustive-deps
   const authorOptions = useMemo(() => commentAuthors(all, members), [all, members, i18n.language]);
   const savingId = saveComment.isPending ? saveComment.variables?.commentId : undefined;
+  const characters = myCharacters.data ?? [];
+  // The last "Post as" choice in this Room, if the viewer may still use it.
+  const lastPostAs = readLastPostAs(roomId);
+  const initialPostAs = characters.some((c) => c.documentId === lastPostAs) ? lastPostAs : null;
 
   return (
     <PageCard>
@@ -108,8 +116,10 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
                 {shown.map((comment) => (
                   <CommentItem
                     key={comment.id}
+                    roomId={roomId}
                     comment={comment}
                     members={members}
+                    characters={characters}
                     currentUserId={currentUserId}
                     updating={savingId === comment.id}
                     onUpdate={(values, onDone) =>
@@ -138,24 +148,33 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
         <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="new-comment">
           <UserAvatar user={findMember(members, currentUserId)} size="md" mt={2} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <CommentComposer
-              members={members}
-              currentUserId={currentUserId}
-              submitLabel={t('comments.publish')}
-              submitting={saveComment.isPending && savingId === undefined}
-              onSubmit={(values, reset) =>
-                saveComment.mutate(
-                  { values },
-                  {
-                    onSuccess: (result) => {
-                      reportImageErrors(result);
-                      reset();
+            {/* Mounted once the Characters are known, so the composer starts
+                on the remembered "Post as" choice. */}
+            {myCharacters.isLoading ? (
+              <Loader color="accent" size="sm" />
+            ) : (
+              <CommentComposer
+                members={members}
+                currentUserId={currentUserId}
+                submitLabel={t('comments.publish')}
+                submitting={saveComment.isPending && savingId === undefined}
+                initialValues={{ ...EMPTY_COMMENT_VALUES, asDocumentId: initialPostAs }}
+                characters={characters}
+                onSubmit={(values, reset) =>
+                  saveComment.mutate(
+                    { values },
+                    {
+                      onSuccess: (result) => {
+                        reportImageErrors(result);
+                        saveLastPostAs(roomId, values.asDocumentId ?? null);
+                        reset();
+                      },
+                      onError: notifyError,
                     },
-                    onError: notifyError,
-                  },
-                )
-              }
-            />
+                  )
+                }
+              />
+            )}
           </div>
         </Group>
       </Stack>
