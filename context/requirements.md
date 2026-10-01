@@ -2,12 +2,14 @@
 
 | | |
 |---|---|
-| **Versione** | 0.3 (bozza) |
-| **Data** | 21 settembre 2026 |
+| **Versione** | 0.4 (bozza) |
+| **Data** | 1 ottobre 2026 |
 | **Stato** | In definizione: requisiti, use case, feature e workflow |
 | **Destinatari** | Team di progetto e Agent che useranno questo documento come Context di base |
 
 **Novità della 0.2:** risolti i Punti aperti OQ-01…OQ-08 (ora Decisioni D-11…D-18); introdotto il ruolo Amministratore; i "campi" dei Documento sono ora Dettagli nel Thread principale; il Glossario è filtrabile per Tag; nuovi Punti aperti OQ-09…OQ-12.
+
+**Novità della 0.4:** nuove Decisioni D-21…D-27: **Allegati PDF** sui Documenti, **Personaggi** collegati a un User con Post scritti "come Personaggio", **Amicizie** tra User (primo concetto non legato a una Stanza). Nuove regole VR-12, VR-13, requisiti FR-D8, FR-D9, FR-T11, FR-F1…FR-F5, use case UC-20…UC-25, invarianti I-12…I-14. Ticket: `context/feature/15`…`18`.
 
 **Novità della 0.3:** risolti i Punti aperti OQ-11 e OQ-12 (ora Decisioni D-19, D-20), in preparazione all'unità Documenti/Dettagli. OQ-09 e OQ-10 restano formalmente aperti ma sono già implementati nella pratica dall'unità Rooms/Membership (vedi `progress-tracker.md`).
 
@@ -42,7 +44,7 @@ Una web application distribuita online in cui più User contribuiscono alla docu
 **Fuori scope per ora**
 
 - Editing collaborativo in tempo reale (D-04).
-- Gestione di regole, schede personaggio, dadi, mappe o combattimento.
+- Gestione di regole, schede personaggio, dadi, mappe o combattimento. *(Una scheda personaggio può però essere **allegata** come file PDF al Documento del Personaggio, D-21: la piattaforma la conserva, non la interpreta.)*
 - App mobile nativa (l'interfaccia web deve però essere usabile da smartphone).
 
 ---
@@ -67,6 +69,11 @@ Una web application distribuita online in cui più User contribuiscono alla docu
 | **Visibilità** | Insieme di User che possono vedere un contenuto. |
 | **Rivela** | Azione che amplia la visibilità di un contenuto, con tracciamento. |
 | **Agent** | Consumatore automatico di contesto che opera con i permessi dell'User per cui agisce. |
+| **Allegato** | File PDF caricato su un Documento (es. la scheda di un Personaggio). Ha la visibilità del Documento (D-21). |
+| **Personaggio** | Documento interpretato da un membro della Stanza (il suo **Giocatore**), di solito un PC. È un Documento come gli altri, con in più il collegamento al Giocatore (D-23). |
+| **Giocatore (di un Personaggio)** | Il membro della Stanza collegato a un Personaggio. Può scrivere Post come quel Personaggio (D-24). |
+| **Amico** | User legato a un altro User da un'Amicizia accettata, indipendentemente dalle Stanze (D-26). |
+| **Codice amico** | Codice o link personale e rigenerabile con cui un User può ricevere richieste di Amicizia (D-27). |
 
 ---
 
@@ -111,6 +118,13 @@ Una web application distribuita online in cui più User contribuiscono alla docu
 | D-18 | I **dettagli di un Documento** sono **ulteriori Descrizioni (Dettagli) aggiunte al Thread principale** del Documento, ciascuna con titolo e contenuto. Non esistono campi custom strutturati. *(risolve OQ-08)* |
 | D-19 | Un **Dettaglio** può essere aggiunto da **qualsiasi membro che veda il Documento** (non solo dagli Owner). È un **Post di primo livello con titolo**, pubblicato nel Thread principale, con **visibilità propria** (come ogni Post, sezione 8) e **risposte annidate**. È **modificabile dall'autore e dal Master** (non da un Owner che non sia anche una di queste due figure). Un **Owner può promuoverlo** nella descrizione del Documento (FR-T8). *(risolve OQ-11)* |
 | D-20 | **Un solo Thread principale per Documento**: nessun Thread aggiuntivo nella v1. *(risolve OQ-12)* |
+| D-21 | Un Documento può avere **Allegati PDF**. Un Allegato **non ha una visibilità propria**: lo vede chi vede il Documento. Un file segreto va su un Documento segreto. |
+| D-22 | Gli Allegati li **caricano e rimuovono gli Owner del Documento e il Master** (D-12). Limiti: **10 MB per file, 10 Allegati per Documento**. Il file è validato dal contenuto (non dal nome) e viene sempre aperto o scaricato come file separato, mai incorporato nella pagina dell'applicazione. |
+| D-23 | Un Documento può essere un **Personaggio** collegato a **un solo** membro della Stanza (il Giocatore); un membro può avere **più Personaggi**. Il collegamento non è un campo custom (I-08) né un tipo (D-05): è una relazione come l'Ownership. Lo impostano **il Master o un Owner del Documento**; il Giocatore non deve confermare. Collegando il Giocatore si può renderlo anche Owner (scelta proposta di default). Se il Giocatore esce o viene rimosso, il collegamento si scioglie e il Documento resta (D-15). |
+| D-24 | Un membro può scrivere un Post **come uno dei propri Personaggi**. Il **Master può scrivere come qualsiasi Documento** della Stanza (per far parlare i PNG). Il Post resta dell'User che lo scrive: permessi di modifica, eliminazione e visibilità non cambiano. |
+| D-25 | Un Post scritto come Personaggio mostra nome e immagine del Personaggio **solo a chi vede il Documento del Personaggio**; a tutti gli altri mostra l'autore reale, come un Post normale (VR-13). |
+| D-26 | Gli User possono stringere **Amicizie**, valide tra Stanze diverse: richiesta, accettazione o rifiuto, rimozione da una delle due parti. Nella v1 un'Amicizia serve a **invitare un Amico direttamente in una Stanza**: l'invito resta in attesa finché l'Amico non lo accetta, nessuno entra in una Stanza senza consenso. La privacy del profilo legata alle Amicizie è un'evoluzione successiva. |
+| D-27 | Una richiesta di Amicizia si invia **solo a un membro di una Stanza in comune** o tramite il suo **Codice amico**. Non esiste ricerca per nome o email (rivelerebbe chi ha un account). Rifiutare o rimuovere è silenzioso; una richiesta rifiutata non può essere ripetuta per 30 giorni. Nessun blocco nella v1. |
 
 ---
 
@@ -144,6 +158,10 @@ erDiagram
     THREAD ||--o{ POST : contiene
     POST ||--o{ POST : "ha risposte"
     USER ||--o{ POST : scrive
+    DOCUMENT ||--o{ ATTACHMENT : "ha come allegati"
+    USER |o--o{ DOCUMENT : "interpreta (Personaggio)"
+    DOCUMENT |o--o{ POST : "voce del Post"
+    USER }o--o{ USER : "amico di"
 ```
 
 **Note sul modello**
@@ -165,7 +183,12 @@ erDiagram
 - **Thread:** Documento di appartenenza; contiene i Post.
 - **Post:** autore, tipo (Commento | Dettaglio), titolo (solo Dettaglio), contenuto, Post padre, visibilità, stato, timestamp.
 - **Invitation:** Stanza, codice/link, ruolo proposto, scadenza, stato.
-- **AuditLog:** chi, cosa, quando (modifiche di visibilità, ruoli, Ownership, Rivela).
+- **AuditLog:** chi, cosa, quando (modifiche di visibilità, ruoli, Ownership, Rivela, Giocatore di un Personaggio).
+- **Attachment:** Documento, nome visualizzato, dimensione, tipo (PDF), chi l'ha caricato, data (D-21, D-22).
+- **Document (Personaggio):** Giocatore opzionale, un membro della Stanza (D-23).
+- **Post (come Personaggio):** Documento opzionale che "parla" nel Post (D-24).
+- **Friendship:** coppia di User, chi ha chiesto, stato (in attesa / accettata), date (D-26). Non appartiene a nessuna Stanza.
+- **FriendCode:** User, codice, data di creazione (D-27).
 
 ---
 
@@ -195,6 +218,8 @@ erDiagram
 | VR-09 | *(evoluzione, non prioritaria)* Contenuti **sigillati**: privati anche al Master (D-01). |
 | VR-10 | *(proposta)* Le **voci di Glossario** sono contenuti con visibilità, per evitare che rivelino informazioni nascoste. |
 | VR-11 | I contenuti di un User che esce restano soggetti alla visibilità impostata (D-15). |
+| VR-12 | Un **Allegato** ha la visibilità del suo Documento; non esiste un Allegato visibile su un Documento nascosto (D-21). |
+| VR-13 | Un Post scritto **come Personaggio** non rivela il Personaggio a chi non vede il suo Documento: per quel lettore il Post mostra l'autore reale (D-25). |
 
 ---
 
@@ -217,6 +242,10 @@ erDiagram
 | Vedere contenuti altrui non pubblici | ❌ | ✅ | Solo se ammesso | Solo se ammesso | ❌ |
 | Moderare o eliminare Post altrui | — | ✅ | ❌ | ❌ | ❌ |
 | Rivelare contenuti altrui | — | ✅ | ❌ | ❌ | ❌ |
+| Caricare o rimuovere Allegati PDF (D-22) | — | ✅ | ✅ | ❌ | ❌ |
+| Collegare un Personaggio al suo Giocatore (D-23) | — | ✅ | ✅ | ❌ | ❌ |
+| Scrivere come un Personaggio (D-24) | — | ✅ (qualsiasi Documento) | Solo se Giocatore | Solo se Giocatore | ❌ |
+| Invitare un Amico direttamente nella Stanza (D-26) | ✅ | ❌ | — | ❌ | ❌ |
 
 *La matrice è una proposta da validare insieme a OQ-09; la parte sui Dettagli è ora confermata da D-19.*
 
@@ -246,6 +275,8 @@ erDiagram
 - **FR-D5** Cronologia delle modifiche con ripristino.
 - **FR-D6** Stato bozza/pubblicato.
 - **FR-D7** Opzione per Stanza che abilita/disabilita la creazione di Documenti da parte dei Player (D-13).
+- **FR-D8** **Allegati PDF** su un Documento: caricare, elencare, aprire, scaricare, rimuovere (D-21, D-22). Eliminare un Documento o una Stanza elimina anche i suoi Allegati.
+- **FR-D9** Collegare un Documento a un membro come **Personaggio**, cambiare o togliere il Giocatore (D-23), con tracciamento nell'AuditLog.
 
 ### Tag, Glossario e navigazione
 - **FR-N1** Tag per Stanza, con categoria opzionale e Tag di default alla creazione (D-14).
@@ -266,6 +297,7 @@ erDiagram
 - **FR-T8** **Promuovere** un Post o un Dettaglio a contenuto della descrizione del Documento (o a nuovo Documento), da parte di un Owner.
 - **FR-T9** Notifiche in-app (email in seguito).
 - **FR-T10** I Dettagli sono mostrati nella scheda del Documento come sezione dedicata, filtrata per visibilità.
+- **FR-T11** Scrivere un Post **come Personaggio** (D-24), mostrato secondo VR-13.
 
 ### Visibilità
 - **FR-V1** Impostare la visibilità su Documento, blocco e Post (VR-03).
@@ -274,6 +306,13 @@ erDiagram
 - **FR-V4** Filtro di visibilità lato server su ogni query (VR-07).
 - **FR-V5** Cronologia delle modifiche di visibilità (VR-08).
 - **FR-V6** Una risposta non può avere visibilità più ampia del Post padre (VR-04).
+
+### Amicizie
+- **FR-F1** Inviare una richiesta di Amicizia a un membro di una Stanza in comune o tramite Codice amico (D-27).
+- **FR-F2** Accettare, rifiutare o annullare una richiesta; rimuovere un Amico (D-26).
+- **FR-F3** Elenco degli Amici e delle richieste ricevute e inviate nella pagina Account.
+- **FR-F4** Codice amico personale, copiabile e rigenerabile (D-27).
+- **FR-F5** Invitare un Amico direttamente in una Stanza con un ruolo proposto; l'invito diventa Membership solo quando l'Amico lo accetta (D-26, FR-R3).
 
 ### Integrazione con Agent
 - **FR-G1** Export strutturato della Stanza (JSON/Markdown) con ID stabili, Tag, collegamenti tra Documenti, Dettagli e struttura dei Thread.
@@ -285,7 +324,7 @@ erDiagram
 
 - **NFR-01 Sicurezza:** la visibilità è imposta lato server; la UI non è mai l'unica barriera.
 - **NFR-02 Isolamento:** nessun accesso a dati di Stanze di cui l'User non è membro.
-- **NFR-03 Privacy:** dai dati Google si usano solo identità e avatar.
+- **NFR-03 Privacy:** dai dati Google si usano solo identità e avatar. Un Amico vede gli stessi dati di profilo visibili ai membri di una Stanza in comune, non di più (D-26).
 - **NFR-04 Prestazioni:** liste, ricerca e Thread devono restare fluidi con molti contenuti e filtri di visibilità attivi.
 - **NFR-05 Usabilità:** interfaccia utilizzabile da smartphone durante le sessioni di gioco.
 - **NFR-06 Tracciabilità:** ruoli, ownership e visibilità hanno AuditLog.
@@ -317,6 +356,12 @@ erDiagram
 | UC-17 | Esportare contesto per Agent | Agent per conto di un User | Scope dell'User | Richiede l'export → riceve solo i contenuti visibili a quell'User | Scope non valido: rifiutato |
 | UC-18 | Aggiungere un Dettaglio | Membro | Documento visibile | Apre il Documento → "Aggiungi Dettaglio" → inserisce titolo (es. "Segni Particolari") e contenuto → imposta la visibilità → pubblica nel Thread principale | Titolo o contenuto mancante: validazione |
 | UC-19 | Uscire dalla Stanza | Membro | Membro della Stanza | Conferma l'uscita → i suoi contenuti restano (D-15) → l'Ownership dei suoi Documenti resta riattribuibile | Ultimo Amministratore o ultimo Master senza sostituto: non consentito (D-16) |
+| UC-20 | Allegare un PDF | Owner / Master | Documento di cui è Owner | Apre il Documento → "Carica PDF" → sceglie il file → l'Allegato compare nella sezione File | File non PDF o oltre i limiti (D-22): rifiutato |
+| UC-21 | Collegare un Personaggio | Master / Owner | Documento visibile, Giocatore membro della Stanza | Apre il Documento → "Interpretato da" → sceglie il membro (e, se vuole, lo rende Owner) → salva; l'AuditLog registra | Membro non valido: rifiutato |
+| UC-22 | Scrivere come Personaggio | Giocatore / Master | Personaggio proprio (o qualsiasi Documento per il Master) | Nel Thread sceglie "Scrivi come" → il Personaggio → pubblica | Personaggio non proprio: rifiutato (D-24) |
+| UC-23 | Chiedere l'Amicizia | User | Stanza in comune o Codice amico | Sceglie "Aggiungi agli Amici" o inserisce il Codice → invia la richiesta | Già Amici o richiesta in attesa; richiesta rifiutata da meno di 30 giorni |
+| UC-24 | Rispondere a una richiesta | User | Richiesta ricevuta | Accetta o rifiuta | — |
+| UC-25 | Invitare un Amico in una Stanza | Amministratore | Ruolo Amministratore, Amicizia accettata | Sceglie l'Amico e il ruolo → l'Amico riceve l'invito → lo accetta ed entra | L'Amico rifiuta o lascia scadere l'invito |
 
 ---
 
@@ -361,8 +406,8 @@ erDiagram
 | Priorità | Feature |
 |---|---|
 | **Must (MVP)** | FR-A1, FR-A2; FR-R1–R4, FR-R6, FR-R7; FR-D1–D4, FR-D7; FR-N1, FR-N2; FR-T1–T5; FR-V1, FR-V4, FR-V6; NFR-01, NFR-02 |
-| **Should** | FR-R5, FR-R8; FR-D5; FR-N3–N5; FR-T6–T8, FR-T10; FR-V2, FR-V3, FR-V5; FR-G1 |
-| **Could** | Co-Master multipli (D-02); FR-D6; FR-N6; FR-T9; FR-G2; VR-09 (contenuti sigillati) |
+| **Should** | FR-R5, FR-R8; FR-D5, FR-D8, FR-D9; FR-N3–N5; FR-T6–T8, FR-T10, FR-T11; FR-V2, FR-V3, FR-V5; FR-G1 |
+| **Could** | Co-Master multipli (D-02); FR-D6; FR-N6; FR-T9; FR-F1–F5; FR-G2; VR-09 (contenuti sigillati) |
 | **Won't (per ora)** | Editing real-time; app mobile nativa; supporto ad altri provider di login |
 
 ---
@@ -384,6 +429,9 @@ erDiagram
 | I-09 | Una risposta non è mai più visibile del Post padre (D-17). |
 | I-10 | Un **Dettaglio** è modificabile solo dal suo autore o dal Master; qualsiasi membro che veda il Documento può aggiungerne uno nuovo (D-19). |
 | I-11 | Un Documento ha **un solo Thread** (quello principale) — nessun Thread aggiuntivo (D-20). |
+| I-12 | Un **Allegato** non è mai visibile a chi non vede il suo Documento (D-21, VR-12). |
+| I-13 | Un Post **come Personaggio** non rivela mai un Personaggio nascosto al lettore; solo il Giocatore (o il Master) può scrivere come quel Personaggio (D-24, D-25, VR-13). |
+| I-14 | Le **Amicizie non danno accesso** a nessuna Stanza né a nessun contenuto: si entra in una Stanza solo accettando un invito (D-26). |
 
 **Comportamento in caso di ambiguità**
 

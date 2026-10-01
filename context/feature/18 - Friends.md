@@ -2,9 +2,9 @@
 
 - Users can become **Friends** across Rooms: send a request, accept or decline it, remove a Friend.
 - First use of a friendship: **add a Friend to a Room directly**, without sharing an invite link.
-- This is the first feature that is **not scoped to a Room** (everything else follows D-06). It needs a product pass on `requirements.md` (new glossary entry, `D-` decision, FR lines), logged as an Open Question. Planned as its own unit, after 15-17.
+- This is the first feature that is **not scoped to a Room** (everything else follows D-06). Spec: D-26, D-27, FR-F1…FR-F5, UC-23…UC-25, I-14 in `requirements.md` (v0.4). Planned as its own unit, after 15-17.
 
-## Decisions to confirm (defaults used below)
+## Decisions (recorded in `requirements.md`, change them there first)
 
 1. **What a friendship unlocks in v1**: a Friends list on the Account page, and "Add a Friend" in a Room's invite flow. Nothing else. Profile privacy ("only Friends see my bio") is a later step, already flagged in the Account open question.
 2. **How you find someone** (there is no user directory, and email search would leak who has an account):
@@ -40,4 +40,4 @@
 ## Definition of Done
 
 - Two users who met in a Room become Friends, one adds the other to a new Room, and the other joins after accepting.
-- Checks green; architecture.md (a new "not Room-scoped" section) and Open Questions updated.
+- Checks green; architecture.md updated with a new "not Room-scoped" section.

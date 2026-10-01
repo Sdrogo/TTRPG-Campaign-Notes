@@ -4,9 +4,9 @@
 - A member can **write a Comment as one of their Characters**: it shows the Character's name and picture, with the real user still identifiable.
 - Comments are the only Posts that exist today (the full Thread is still in Next Up), so "posts" in this ticket means Comments. When Threads land, the same field applies to every Post.
 
-> Spec note: nothing in `requirements.md` covers this. The relation is not a custom field (I-08) but a link between a Document and a User, like the Owner link in the domain model (section 7). Log an Open Question asking for a `D-` decision and an FR line.
+> Spec: D-23, D-24, D-25, VR-13, FR-D9, FR-T11, UC-21, UC-22, I-13 in `requirements.md` (v0.4). The defaults below are the ones recorded there.
 
-## Decisions to confirm (defaults used below)
+## Decisions (recorded in `requirements.md`, change them there first)
 
 1. **Who links a Character to a player**: the **Master** (or an Owner of the Document, D-12) picks the player among the Room's members. The player doesn't have to confirm.
 2. **How many**: a Document has **at most one player**; a member can play **several** Characters in the same Room.
@@ -40,4 +40,4 @@
 ## Definition of Done
 
 - The Master links "Aria" to a Player, the Player writes a Comment as Aria, other members see it as Aria, and a member who can't see Aria's Document sees the Player's own name.
-- Checks green; architecture.md and the Open Questions updated.
+- Checks green; architecture.md updated.

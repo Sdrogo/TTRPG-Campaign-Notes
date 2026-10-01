@@ -4,9 +4,9 @@
 - Readers of the Document can open or download the PDFs.
 - Images keep their own pipeline; a PDF is a new kind of attachment, not an image.
 
-> Spec note: D-09/FR-D1 list name, images, description, Tags and Details for a Document; files are not mentioned, and section 2 puts "schede personaggio" out of scope. Attaching a PDF is storage of a file, not managing a character sheet, so it doesn't contradict that, but `requirements.md` is protected: log it as an Open Question asking for an FR-D line.
+> Spec: D-21, D-22, VR-12, FR-D8, UC-20, I-12 in `requirements.md` (v0.4). The defaults below are the ones recorded there.
 
-## Decisions to confirm (defaults used below)
+## Decisions (recorded in `requirements.md`, change them there first)
 
 1. **Visibility**: a PDF has **the Document's visibility** (no level of its own). Anyone who sees the Document sees its PDFs. A secret file goes on a secret Document. *(Alternative: own visibility like Notes, more work and a second filter.)*
 2. **Who uploads and removes**: Owners + Master only (D-12, same as images and the description). Comments can't carry PDFs in this unit.
@@ -42,4 +42,4 @@
 ## Definition of Done
 
 - An Owner uploads a PDF to their PC's Document, another member who sees the Document opens it, and a member who can't see the Document gets nothing.
-- Backend and frontend checks green; architecture.md Storage Model updated; Open Question logged for `requirements.md`.
+- Backend and frontend checks green; architecture.md Storage Model updated.
