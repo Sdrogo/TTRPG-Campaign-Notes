@@ -1,450 +1,450 @@
-# Piattaforma collaborativa di note per TTRPG — Analisi dei requisiti
+# Collaborative TTRPG notes platform — Requirements analysis
 
 | | |
 |---|---|
-| **Versione** | 0.4 (bozza) |
-| **Data** | 1 ottobre 2026 |
-| **Stato** | In definizione: requisiti, use case, feature e workflow |
-| **Destinatari** | Team di progetto e Agent che useranno questo documento come Context di base |
+| **Version** | 0.4 (draft) |
+| **Date** | 1 October 2026 |
+| **Status** | Being defined: requirements, use cases, features and workflows |
+| **Audience** | Project team and the Agents that will use this document as their base Context |
 
-**Novità della 0.2:** risolti i Punti aperti OQ-01…OQ-08 (ora Decisioni D-11…D-18); introdotto il ruolo Amministratore; i "campi" dei Documento sono ora Dettagli nel Thread principale; il Glossario è filtrabile per Tag; nuovi Punti aperti OQ-09…OQ-12.
+**New in 0.2:** resolved Open points OQ-01…OQ-08 (now Decisions D-11…D-18); introduced the Administrator role; a Document's "fields" are now Details in the main Thread; the Glossary can be filtered by Tag; new Open points OQ-09…OQ-12.
 
-**Novità della 0.4:** nuove Decisioni D-21…D-27: **Allegati PDF** sui Documenti, **Personaggi** collegati a un User con Post scritti "come Personaggio", **Amicizie** tra User (primo concetto non legato a una Stanza). Nuove regole VR-12, VR-13, requisiti FR-D8, FR-D9, FR-T11, FR-F1…FR-F5, use case UC-20…UC-25, invarianti I-12…I-14. Ticket: `context/feature/15`…`18`.
+**New in 0.3:** resolved Open points OQ-11 and OQ-12 (now Decisions D-19, D-20), ahead of the Documents/Details unit. OQ-09 and OQ-10 stay formally open but are already implemented in practice by the Rooms/Membership unit (see `progress-tracker.md`).
 
-**Novità della 0.3:** risolti i Punti aperti OQ-11 e OQ-12 (ora Decisioni D-19, D-20), in preparazione all'unità Documenti/Dettagli. OQ-09 e OQ-10 restano formalmente aperti ma sono già implementati nella pratica dall'unità Rooms/Membership (vedi `progress-tracker.md`).
-
----
-
-## 1. Scopo del documento
-
-Questo documento è la guideline di base del progetto. Serve a:
-
-1. fissare requisiti, use case, feature e workflow prima dell'implementazione;
-2. fornire un **Context stabile e non ambiguo** agli Agent che lavoreranno sulle implementazioni successive.
-
-**Convenzioni di lettura**
-
-- Ogni elemento ha un **ID stabile** (`D-` decisioni, `OQ-` punti aperti, `VR-` regole di visibilità, `FR-` requisiti funzionali, `NFR-` non funzionali, `UC-` use case, `W-` workflow, `I-` invarianti). Riferirsi sempre agli ID, non a parafrasi.
-- I termini con l'iniziale maiuscola sono definiti nel Glossario (sezione 3) e vanno usati con quel significato.
-- Ciò che non è nelle Decisioni (sezione 5) è una **proposta**, non una scelta confermata.
+**New in 0.4:** new Decisions D-21…D-27: **PDF Attachments** on Documents, **Characters** linked to a User with Posts written "as the Character", **Friendships** between Users (the first concept not tied to a Room). New rules VR-12, VR-13, requirements FR-D8, FR-D9, FR-T11, FR-F1…FR-F5, use cases UC-20…UC-25, invariants I-12…I-14. Tickets: `context/feature/15`…`18`. The document was also translated from Italian to English; IDs and meaning are unchanged.
 
 ---
 
-## 2. Visione e scope
+## 1. Purpose of this document
 
-Una web application distribuita online in cui più User contribuiscono alla documentazione e alle note di una campagna di un qualsiasi TTRPG (sistema di gioco agnostico).
+This document is the project's base guideline. It is used to:
 
-**Obiettivi**
+1. fix requirements, use cases, features and workflows before implementation;
+2. give the Agents that will work on later implementations a **stable, unambiguous Context**.
 
-- Raccogliere in un unico posto le informazioni di una campagna (luoghi, NPC, eventi, artefatti e altro).
-- Permettere conversazioni contestuali sui contenuti tramite Thread.
-- Controllare con precisione chi vede cosa (segreti del Master, informazioni dei singoli Player).
-- Produrre una base di conoscenza strutturata, utilizzabile anche da Agent.
+**Reading conventions**
 
-**Fuori scope per ora**
-
-- Editing collaborativo in tempo reale (D-04).
-- Gestione di regole, schede personaggio, dadi, mappe o combattimento. *(Una scheda personaggio può però essere **allegata** come file PDF al Documento del Personaggio, D-21: la piattaforma la conserva, non la interpreta.)*
-- App mobile nativa (l'interfaccia web deve però essere usabile da smartphone).
+- Every item has a **stable ID** (`D-` decisions, `OQ-` open points, `VR-` visibility rules, `FR-` functional requirements, `NFR-` non-functional, `UC-` use cases, `W-` workflows, `I-` invariants). Always refer to the IDs, not to paraphrases.
+- Capitalized terms are defined in the Glossary (section 3) and must be used with that meaning.
+- Anything not in the Decisions (section 5) is a **proposal**, not a confirmed choice.
 
 ---
 
-## 3. Glossario
+## 2. Vision and scope
 
-| Termine | Definizione |
+A web application, distributed online, where several Users contribute to the documentation and notes of a campaign of any TTRPG (game-system agnostic).
+
+**Goals**
+
+- Gather a campaign's information in one place (places, NPCs, events, artifacts and more).
+- Allow contextual conversations about the content through Threads.
+- Control precisely who sees what (the Master's secrets, individual Players' information).
+- Produce a structured knowledge base, usable by Agents too.
+
+**Out of scope for now**
+
+- Real-time collaborative editing (D-04).
+- Managing rules, character sheets, dice, maps or combat. *(A character sheet can however be **attached** as a PDF file to the Character's Document, D-21: the platform stores it, it doesn't interpret it.)*
+- A native mobile app (the web interface must still be usable from a smartphone).
+
+---
+
+## 3. Glossary
+
+| Term | Definition |
 |---|---|
-| **User** | Persona autenticata sulla piattaforma (login con Google). |
-| **Stanza** | Contenitore di una campagna: ha membri, Documenti, Tag, Glossario. |
-| **Membership** | Legame tra un User e una Stanza, con i suoi ruoli in quella Stanza. |
-| **Master** | Ruolo di un User in una specifica Stanza, con Ownership completa sui contenuti. |
-| **Player** | Ruolo di un User in una specifica Stanza, con contributi e visibilità propri. |
-| **Amministratore** | Ruolo di gestione della Stanza (membri, ruoli, inviti). Assegnato di base al creatore; più User possono averlo (D-11). |
-| **Documento** | Unità di conoscenza di una Stanza (luogo, NPC, evento, artefatto, ecc.). Non ha un tipo rigido (D-05). |
-| **Tag** | Etichetta per classificare e navigare Documenti e voci di Glossario. I "tipi" sono Tag (D-05). |
-| **Glossario** (o Dizionario) | Insieme di voci (termine + definizione) della Stanza, filtrabile per Tag (D-14). |
-| **Thread** | Conversazione legata a un Documento, composta da Post annidati. Ogni Documento ha un Thread principale. |
-| **Post** | Singolo contributo in un Thread. Può essere un **Commento** o un **Dettaglio**. |
-| **Dettaglio** | Ulteriore Descrizione titolata aggiunta al Thread principale di un Documento (es. "Segni Particolari: ha una gamba di legno che scricchiola ad ogni passo") (D-18). |
-| **Ownership (di un Documento)** | Diritto di modificare il Documento e gestirne la visibilità. Riattribuibile (D-12). |
-| **Visibilità** | Insieme di User che possono vedere un contenuto. |
-| **Rivela** | Azione che amplia la visibilità di un contenuto, con tracciamento. |
-| **Agent** | Consumatore automatico di contesto che opera con i permessi dell'User per cui agisce. |
-| **Allegato** | File PDF caricato su un Documento (es. la scheda di un Personaggio). Ha la visibilità del Documento (D-21). |
-| **Personaggio** | Documento interpretato da un membro della Stanza (il suo **Giocatore**), di solito un PC. È un Documento come gli altri, con in più il collegamento al Giocatore (D-23). |
-| **Giocatore (di un Personaggio)** | Il membro della Stanza collegato a un Personaggio. Può scrivere Post come quel Personaggio (D-24). |
-| **Amico** | User legato a un altro User da un'Amicizia accettata, indipendentemente dalle Stanze (D-26). |
-| **Codice amico** | Codice o link personale e rigenerabile con cui un User può ricevere richieste di Amicizia (D-27). |
+| **User** | A person authenticated on the platform (Google login). |
+| **Room** | The container of a campaign: it has members, Documents, Tags, a Glossary. |
+| **Membership** | The link between a User and a Room, with their roles in that Room. |
+| **Master** | A User's role in a specific Room, with full Ownership of the content. |
+| **Player** | A User's role in a specific Room, with their own contributions and visibility. |
+| **Administrator** | The Room management role (members, roles, invitations). Given to the creator by default; several Users can hold it (D-11). |
+| **Document** | A unit of knowledge in a Room (place, NPC, event, artifact, etc.). It has no rigid type (D-05). |
+| **Tag** | A label to classify and navigate Documents and Glossary entries. "Types" are Tags (D-05). |
+| **Glossary** (or Dictionary) | The Room's set of entries (term + definition), filterable by Tag (D-14). |
+| **Thread** | A conversation tied to a Document, made of nested Posts. Every Document has a main Thread. |
+| **Post** | A single contribution in a Thread. It can be a **Comment** or a **Detail**. |
+| **Detail** | An additional titled Description added to a Document's main Thread (e.g. "Distinguishing marks: has a wooden leg that creaks with every step") (D-18). |
+| **Ownership (of a Document)** | The right to edit the Document and manage its visibility. Reassignable (D-12). |
+| **Visibility** | The set of Users who can see a piece of content. |
+| **Reveal** | An action that widens a piece of content's visibility, with tracking. |
+| **Agent** | An automated consumer of context that acts with the permissions of the User it acts for. |
+| **Attachment** | A PDF file uploaded to a Document (e.g. a Character's sheet). It has the Document's visibility (D-21). |
+| **Character** | A Document played by a member of the Room (its **Character player**), usually a PC. It is a Document like any other, plus the link to its player (D-23). |
+| **Character player** | The member of the Room linked to a Character. They can write Posts as that Character (D-24). Not to be confused with the Player role. |
+| **Friend** | A User linked to another User by an accepted Friendship, independently of Rooms (D-26). |
+| **Friend code** | A personal, regenerable code or link through which a User can receive Friendship requests (D-27). |
 
 ---
 
-## 4. Attori e ruoli
+## 4. Actors and roles
 
-| Attore | Descrizione |
+| Actor | Description |
 |---|---|
-| Visitatore | Non autenticato. Vede solo la pagina di login. |
-| User | Autenticato. Può creare Stanze e ricevere inviti. |
-| Amministratore | Ruolo per Stanza. Gestisce membri, ruoli e inviti. Assegnato di base al creatore; più Amministratori possibili (D-11). |
-| Master | Ruolo per Stanza. Ownership completa sui contenuti, vede ogni contenuto della Stanza. |
-| Player | Ruolo per Stanza. Contribuisce e gestisce la visibilità dei propri contenuti. |
-| Agent (futuro) | Opera con lo scope di un User. |
+| Visitor | Not authenticated. Sees only the login page. |
+| User | Authenticated. Can create Rooms and receive invitations. |
+| Administrator | Per-Room role. Manages members, roles and invitations. Given to the creator by default; several Administrators are possible (D-11). |
+| Master | Per-Room role. Full Ownership of the content, sees every piece of content in the Room. |
+| Player | Per-Room role. Contributes and manages the visibility of their own content. |
+| Agent (future) | Acts with a User's scope. |
 
-**I ruoli dipendono dalla Stanza** (D-06): lo stesso User può essere Master in una Stanza e Player in un'altra.
+**Roles depend on the Room** (D-06): the same User can be Master in one Room and Player in another.
 
-*Assunzione (OQ-09):* l'Amministratore è **cumulabile** con Master o Player: un User ha sempre almeno un ruolo narrativo (Master o Player) e può in più essere Amministratore. Il creatore di una Stanza parte come Amministratore e Master.
+*Assumption (OQ-09):* the Administrator role **can be combined** with Master or Player: a User always has at least one narrative role (Master or Player) and can additionally be Administrator. A Room's creator starts as Administrator and Master.
 
 ---
 
-## 5. Decisioni prese
+## 5. Decisions made
 
-| ID | Decisione |
+| ID | Decision |
 |---|---|
-| D-01 | Il **Master vede anche i contenuti privati dei Player**. Commenti privati al 100% (Master incluso, "contenuti sigillati") sono un'evoluzione possibile ma non prioritaria. |
-| D-02 | Una Stanza può avere **più Master (co-GM)**, non prioritario. Serve un sistema generale di gestione delle Stanze: User Amministratori, ruoli modificabili, User che entrano o vengono invitati. |
-| D-03 | La **descrizione di un Documento** la modifica **chiunque abbia Ownership** su quel Documento. |
-| D-04 | **Nessun editing real-time** per ora. Priorità a una **struttura di Thread efficiente**. |
-| D-05 | I Documenti **non sono strettamente tipizzati**: i "Tipi" (NPC, Luogo, Evento, Artefatto…) sono assimilabili ai **Tag**. |
-| D-06 | I ruoli (Master/Player/Amministratore) sono **per Stanza**, non globali. |
-| D-07 | Login tramite **Google** (modalità preferita). |
-| D-08 | Ogni **Player è Owner della visibilità dei propri contenuti** rispetto agli altri Player. Il **Master ha Ownership completa** sul progetto (Stanza). |
-| D-09 | Ogni Documento può avere Nome, Immagini, descrizione, Tag e ulteriori dettagli (definiti in D-18). |
-| D-10 | Contenuti, singoli commenti e altre informazioni possono essere **nascosti a User diversi**. |
-| D-11 | L'**Amministratore è un ruolo terzo**, assegnato di base al creatore della Stanza. **Più User possono essere Amministratori contemporaneamente.** *(risolve OQ-01)* |
-| D-12 | **Ownership dei Documenti:** il creatore è Owner di default; Master e Owner possono aggiungere o rimuovere Owner (l'Ownership può essere riattribuita ad altri). Il **Master ha sempre Ownership implicita**. *(risolve OQ-02)* |
-| D-13 | I **Player possono creare Documenti** di default; l'opzione è disattivabile per Stanza dal Master. *(risolve OQ-03)* |
-| D-14 | **Tag con categoria opzionale** (es. "Tipo", "Fazione"); Tag di default (NPC, Luogo, Evento, Artefatto) creati con la Stanza e modificabili. Il **Glossario/Dizionario è filtrabile per uno o più Tag**. *(risolve OQ-04)* |
-| D-15 | I **contenuti di un User che esce o viene rimosso restano visibili, salvo eliminazione**. L'Ownership dei suoi Documenti può essere riattribuita; il Master ha comunque Ownership implicita. *(risolve OQ-05)* |
-| D-16 | L'**Amministratore può designare un nuovo Master**. **L'ultimo Amministratore non può uscire** dalla Stanza senza aver designato un nuovo Amministratore. *(risolve OQ-06)* |
-| D-17 | Una **risposta a un Post non può essere più visibile del Post padre**. *(risolve OQ-07)* |
-| D-18 | I **dettagli di un Documento** sono **ulteriori Descrizioni (Dettagli) aggiunte al Thread principale** del Documento, ciascuna con titolo e contenuto. Non esistono campi custom strutturati. *(risolve OQ-08)* |
-| D-19 | Un **Dettaglio** può essere aggiunto da **qualsiasi membro che veda il Documento** (non solo dagli Owner). È un **Post di primo livello con titolo**, pubblicato nel Thread principale, con **visibilità propria** (come ogni Post, sezione 8) e **risposte annidate**. È **modificabile dall'autore e dal Master** (non da un Owner che non sia anche una di queste due figure). Un **Owner può promuoverlo** nella descrizione del Documento (FR-T8). *(risolve OQ-11)* |
-| D-20 | **Un solo Thread principale per Documento**: nessun Thread aggiuntivo nella v1. *(risolve OQ-12)* |
-| D-21 | Un Documento può avere **Allegati PDF**. Un Allegato **non ha una visibilità propria**: lo vede chi vede il Documento. Un file segreto va su un Documento segreto. |
-| D-22 | Gli Allegati li **caricano e rimuovono gli Owner del Documento e il Master** (D-12). Limiti: **10 MB per file, 10 Allegati per Documento**. Il file è validato dal contenuto (non dal nome) e viene sempre aperto o scaricato come file separato, mai incorporato nella pagina dell'applicazione. |
-| D-23 | Un Documento può essere un **Personaggio** collegato a **un solo** membro della Stanza (il Giocatore); un membro può avere **più Personaggi**. Il collegamento non è un campo custom (I-08) né un tipo (D-05): è una relazione come l'Ownership. Lo impostano **il Master o un Owner del Documento**; il Giocatore non deve confermare. Collegando il Giocatore si può renderlo anche Owner (scelta proposta di default). Se il Giocatore esce o viene rimosso, il collegamento si scioglie e il Documento resta (D-15). |
-| D-24 | Un membro può scrivere un Post **come uno dei propri Personaggi**. Il **Master può scrivere come qualsiasi Documento** della Stanza (per far parlare i PNG). Il Post resta dell'User che lo scrive: permessi di modifica, eliminazione e visibilità non cambiano. |
-| D-25 | Un Post scritto come Personaggio mostra nome e immagine del Personaggio **solo a chi vede il Documento del Personaggio**; a tutti gli altri mostra l'autore reale, come un Post normale (VR-13). |
-| D-26 | Gli User possono stringere **Amicizie**, valide tra Stanze diverse: richiesta, accettazione o rifiuto, rimozione da una delle due parti. Nella v1 un'Amicizia serve a **invitare un Amico direttamente in una Stanza**: l'invito resta in attesa finché l'Amico non lo accetta, nessuno entra in una Stanza senza consenso. La privacy del profilo legata alle Amicizie è un'evoluzione successiva. |
-| D-27 | Una richiesta di Amicizia si invia **solo a un membro di una Stanza in comune** o tramite il suo **Codice amico**. Non esiste ricerca per nome o email (rivelerebbe chi ha un account). Rifiutare o rimuovere è silenzioso; una richiesta rifiutata non può essere ripetuta per 30 giorni. Nessun blocco nella v1. |
+| D-01 | The **Master also sees Players' private content**. Comments that are 100% private (Master included, "sealed content") are a possible evolution but not a priority. |
+| D-02 | A Room can have **several Masters (co-GMs)**, not a priority. A general Room management system is needed: Administrator Users, editable roles, Users who join or are invited. |
+| D-03 | A **Document's description** is edited by **anyone with Ownership** of that Document. |
+| D-04 | **No real-time editing** for now. Priority to an **efficient Thread structure**. |
+| D-05 | Documents are **not strictly typed**: "Types" (NPC, Place, Event, Artifact…) are treated as **Tags**. |
+| D-06 | Roles (Master/Player/Administrator) are **per Room**, not global. |
+| D-07 | Login through **Google** (preferred method). |
+| D-08 | Every **Player owns the visibility of their own content** with respect to the other Players. The **Master has full Ownership** of the project (Room). |
+| D-09 | Every Document can have a Name, Images, a description, Tags and further details (defined in D-18). |
+| D-10 | Content, single comments and other information can be **hidden from different Users**. |
+| D-11 | The **Administrator is a third role**, given by default to the Room's creator. **Several Users can be Administrators at the same time.** *(resolves OQ-01)* |
+| D-12 | **Document Ownership:** the creator is Owner by default; the Master and Owners can add or remove Owners (Ownership can be reassigned to others). The **Master always has implicit Ownership**. *(resolves OQ-02)* |
+| D-13 | **Players can create Documents** by default; the option can be turned off per Room by the Master. *(resolves OQ-03)* |
+| D-14 | **Tags with an optional category** (e.g. "Type", "Faction"); default Tags (NPC, Place, Event, Artifact) are created with the Room and editable. The **Glossary/Dictionary can be filtered by one or more Tags**. *(resolves OQ-04)* |
+| D-15 | **The content of a User who leaves or is removed stays visible, unless deleted**. Ownership of their Documents can be reassigned; the Master has implicit Ownership anyway. *(resolves OQ-05)* |
+| D-16 | The **Administrator can designate a new Master**. **The last Administrator cannot leave** the Room without designating a new Administrator. *(resolves OQ-06)* |
+| D-17 | A **reply to a Post cannot be more visible than its parent Post**. *(resolves OQ-07)* |
+| D-18 | A **Document's details** are **further Descriptions (Details) added to the Document's main Thread**, each with a title and content. There are no structured custom fields. *(resolves OQ-08)* |
+| D-19 | A **Detail** can be added by **any member who sees the Document** (not only by Owners). It is a **top-level Post with a title**, published in the main Thread, with **its own visibility** (like every Post, section 8) and **nested replies**. It is **editable by its author and by the Master** (not by an Owner who is neither of the two). An **Owner can promote it** into the Document's description (FR-T8). *(resolves OQ-11)* |
+| D-20 | **One main Thread per Document**: no additional Threads in v1. *(resolves OQ-12)* |
+| D-21 | A Document can have **PDF Attachments**. An Attachment **has no visibility of its own**: whoever sees the Document sees it. A secret file goes on a secret Document. |
+| D-22 | Attachments are **uploaded and removed by the Document's Owners and the Master** (D-12). Limits: **10 MB per file, 10 Attachments per Document**. The file is validated by its content (not its name) and is always opened or downloaded as a separate file, never embedded in the application's page. |
+| D-23 | A Document can be a **Character** linked to **a single** member of the Room (its Character player); a member can have **several Characters**. The link is neither a custom field (I-08) nor a type (D-05): it is a relation, like Ownership. It is set by **the Master or an Owner of the Document**; the Character player doesn't have to confirm. Linking the Character player can also make them an Owner (the proposed default). If the Character player leaves or is removed, the link is dropped and the Document stays (D-15). |
+| D-24 | A member can write a Post **as one of their own Characters**. The **Master can write as any Document** of the Room (to give NPCs a voice). The Post still belongs to the User who writes it: edit, delete and visibility permissions don't change. |
+| D-25 | A Post written as a Character shows the Character's name and image **only to those who see the Character's Document**; everyone else sees the real author, as with a normal Post (VR-13). |
+| D-26 | Users can form **Friendships**, valid across Rooms: request, acceptance or refusal, removal by either side. In v1 a Friendship is used to **invite a Friend directly into a Room**: the invitation stays pending until the Friend accepts it, nobody joins a Room without consenting. Profile privacy tied to Friendships is a later evolution. |
+| D-27 | A Friendship request can be sent **only to a member of a shared Room** or through their **Friend code**. There is no search by name or email (it would reveal who has an account). Declining or removing is silent; a declined request cannot be repeated for 30 days. No blocking in v1. |
 
 ---
 
-## 6. Punti aperti
+## 6. Open points
 
-| ID | Domanda | Proposta di lavoro |
+| ID | Question | Working proposal |
 |---|---|---|
-| OQ-09 | L'**Amministratore è cumulabile** con Master/Player? Come si dividono i poteri tra Amministratore e Master (eliminare/archiviare la Stanza, designare Amministratori)? | Cumulabile. **Amministratore** = gestione della Stanza (membri, ruoli, inviti, archiviazione/eliminazione, designazione di Master e Amministratori). **Master** = poteri sui contenuti (D-08). Un Amministratore non-Master non ha visibilità aggiuntiva sui contenuti. Il creatore parte come Amministratore + Master. |
-| OQ-10 | Una Stanza può restare **senza Master**? | No: l'ultimo Master non può uscire né essere retrocesso senza un sostituto; l'Amministratore può designarne uno (D-16). |
+| OQ-09 | Can the **Administrator role be combined** with Master/Player? How are powers split between Administrator and Master (deleting/archiving the Room, designating Administrators)? | Combinable. **Administrator** = Room management (members, roles, invitations, archiving/deletion, designating Masters and Administrators). **Master** = powers over content (D-08). An Administrator who isn't a Master has no extra visibility over content. The creator starts as Administrator + Master. |
+| OQ-10 | Can a Room be left **without a Master**? | No: the last Master cannot leave or be demoted without a replacement; the Administrator can designate one (D-16). |
 
-**Storico dei Punti aperti risolti:** OQ-01 → D-11 · OQ-02 → D-12 · OQ-03 → D-13 · OQ-04 → D-14 · OQ-05 → D-15 · OQ-06 → D-16 · OQ-07 → D-17 · OQ-08 → D-18 · OQ-11 → D-19 · OQ-12 → D-20.
+**History of resolved Open points:** OQ-01 → D-11 · OQ-02 → D-12 · OQ-03 → D-13 · OQ-04 → D-14 · OQ-05 → D-15 · OQ-06 → D-16 · OQ-07 → D-17 · OQ-08 → D-18 · OQ-11 → D-19 · OQ-12 → D-20.
 
-*Nota: OQ-09 e OQ-10 restano qui perché non hanno ancora un ID `D-` formale, ma le loro proposte di lavoro sono già implementate (vedi `progress-tracker.md`, unità Rooms/Membership) — non sono bloccanti per le unità successive.*
+*Note: OQ-09 and OQ-10 stay here because they don't have a formal `D-` ID yet, but their working proposals are already implemented (see `progress-tracker.md`, Rooms/Membership unit) — they don't block later units.*
 
 ---
 
-## 7. Modello di dominio
+## 7. Domain model
 
 ```mermaid
 erDiagram
-    USER ||--o{ MEMBERSHIP : ha
-    ROOM ||--o{ MEMBERSHIP : contiene
-    ROOM ||--o{ DOCUMENT : contiene
-    ROOM ||--o{ TAG : definisce
-    ROOM ||--o{ GLOSSARY_ENTRY : definisce
-    DOCUMENT }o--o{ TAG : "classificato da"
-    GLOSSARY_ENTRY }o--o{ TAG : "classificata da"
-    DOCUMENT }o--o{ USER : "ha come owner"
-    DOCUMENT }o--o{ DOCUMENT : "collegato a"
-    DOCUMENT ||--|| THREAD : "ha come principale"
-    THREAD ||--o{ POST : contiene
-    POST ||--o{ POST : "ha risposte"
-    USER ||--o{ POST : scrive
-    DOCUMENT ||--o{ ATTACHMENT : "ha come allegati"
-    USER |o--o{ DOCUMENT : "interpreta (Personaggio)"
-    DOCUMENT |o--o{ POST : "voce del Post"
-    USER }o--o{ USER : "amico di"
+    USER ||--o{ MEMBERSHIP : has
+    ROOM ||--o{ MEMBERSHIP : contains
+    ROOM ||--o{ DOCUMENT : contains
+    ROOM ||--o{ TAG : defines
+    ROOM ||--o{ GLOSSARY_ENTRY : defines
+    DOCUMENT }o--o{ TAG : "classified by"
+    GLOSSARY_ENTRY }o--o{ TAG : "classified by"
+    DOCUMENT }o--o{ USER : "has as owner"
+    DOCUMENT }o--o{ DOCUMENT : "linked to"
+    DOCUMENT ||--|| THREAD : "has as main"
+    THREAD ||--o{ POST : contains
+    POST ||--o{ POST : "has replies"
+    USER ||--o{ POST : writes
+    DOCUMENT ||--o{ ATTACHMENT : "has as attachments"
+    USER |o--o{ DOCUMENT : "plays (Character)"
+    DOCUMENT |o--o{ POST : "voice of the Post"
+    USER }o--o{ USER : "friend of"
 ```
 
-**Note sul modello**
+**Notes on the model**
 
-- `MEMBERSHIP` contiene i **ruoli** dell'User nella Stanza: Master o Player, più l'eventuale Amministratore (D-06, D-11). È ciò che rende il ruolo dipendente dalla Stanza.
-- `DOCUMENT` **non ha un campo "tipo"**: la classificazione avviene tramite `TAG` (D-05).
-- `DOCUMENT` **non ha campi custom**: le informazioni aggiuntive sono `POST` di tipo **Dettaglio** nel Thread principale (D-18).
-- Ogni contenuto visibile (Documento, blocco di informazione, Post, voce di Glossario) ha una **regola di Visibilità** associata.
-- `DOCUMENT` ↔ `USER` (owner) rappresenta la **Ownership** (D-03, D-12).
+- `MEMBERSHIP` holds the User's **roles** in the Room: Master or Player, plus the optional Administrator (D-06, D-11). It is what makes the role depend on the Room.
+- `DOCUMENT` **has no "type" field**: classification happens through `TAG` (D-05).
+- `DOCUMENT` **has no custom fields**: additional information is `POST`s of kind **Detail** in the main Thread (D-18).
+- Every visible piece of content (Document, information block, Post, Glossary entry) has an associated **Visibility rule**.
+- `DOCUMENT` ↔ `USER` (owner) represents **Ownership** (D-03, D-12).
 
-**Entità principali e attributi indicativi**
+**Main entities and indicative attributes**
 
-- **User:** id, identità Google (nome, avatar).
-- **Room:** id, nome, descrizione, sistema di gioco (testo libero), stato (attiva/archiviata).
-- **Membership:** user, room, ruolo narrativo (Master/Player), flag Amministratore, data di ingresso.
-- **Document:** id, nome, immagini, descrizione, Tag, Owner, visibilità, cronologia versioni; Thread principale.
-- **Tag:** nome, categoria opzionale, Stanza.
-- **GlossaryEntry:** termine, definizione, Tag, visibilità, Stanza.
-- **Thread:** Documento di appartenenza; contiene i Post.
-- **Post:** autore, tipo (Commento | Dettaglio), titolo (solo Dettaglio), contenuto, Post padre, visibilità, stato, timestamp.
-- **Invitation:** Stanza, codice/link, ruolo proposto, scadenza, stato.
-- **AuditLog:** chi, cosa, quando (modifiche di visibilità, ruoli, Ownership, Rivela, Giocatore di un Personaggio).
-- **Attachment:** Documento, nome visualizzato, dimensione, tipo (PDF), chi l'ha caricato, data (D-21, D-22).
-- **Document (Personaggio):** Giocatore opzionale, un membro della Stanza (D-23).
-- **Post (come Personaggio):** Documento opzionale che "parla" nel Post (D-24).
-- **Friendship:** coppia di User, chi ha chiesto, stato (in attesa / accettata), date (D-26). Non appartiene a nessuna Stanza.
-- **FriendCode:** User, codice, data di creazione (D-27).
+- **User:** id, Google identity (name, avatar).
+- **Room:** id, name, description, game system (free text), status (active/archived).
+- **Membership:** user, room, narrative role (Master/Player), Administrator flag, join date.
+- **Document:** id, name, images, description, Tags, Owners, visibility, version history; main Thread.
+- **Tag:** name, optional category, Room.
+- **GlossaryEntry:** term, definition, Tags, visibility, Room.
+- **Thread:** owning Document; contains the Posts.
+- **Post:** author, kind (Comment | Detail), title (Detail only), content, parent Post, visibility, status, timestamps.
+- **Invitation:** Room, code/link, proposed role, expiry, status.
+- **AuditLog:** who, what, when (visibility, role and Ownership changes, Reveal, a Character's player).
+- **Attachment:** Document, display name, size, type (PDF), who uploaded it, date (D-21, D-22).
+- **Document (Character):** optional Character player, a member of the Room (D-23).
+- **Post (as a Character):** optional Document that "speaks" in the Post (D-24).
+- **Friendship:** pair of Users, who asked, status (pending / accepted), dates (D-26). Belongs to no Room.
+- **FriendCode:** User, code, creation date (D-27).
 
 ---
 
-## 8. Modello di Visibilità
+## 8. Visibility model
 
-**Livelli**
+**Levels**
 
-| Livello | Chi vede |
+| Level | Who sees it |
 |---|---|
-| Stanza | Tutti i membri della Stanza |
-| Solo Master | Solo i Master |
-| Privato | L'autore/Owner e il Master |
-| Selettivo | Autore/Owner, Master e una lista di User scelti |
+| Room | Every member of the Room |
+| Master only | Only the Masters |
+| Private | The author/Owner and the Master |
+| Selective | Author/Owner, Master and a list of chosen Users |
 
-**Regole**
+**Rules**
 
-| ID | Regola |
+| ID | Rule |
 |---|---|
-| VR-01 | Il **Master vede ogni contenuto** della Stanza, indipendentemente dal livello (D-01). |
-| VR-02 | Un **Player decide la visibilità dei propri contenuti** rispetto agli altri Player (D-08). |
-| VR-03 | La visibilità è applicabile a **Documento, blocco di un Documento, Post (Commenti e Dettagli)** (D-10). |
-| VR-04 | Una **risposta non può essere più visibile del Post padre** (D-17). |
-| VR-05 | Ogni Stanza definisce una **visibilità di default** per i nuovi contenuti. |
-| VR-06 | **Rivela** amplia la visibilità e viene registrata (chi, quando, da/verso quale livello). |
-| VR-07 | Il filtro di visibilità è applicato **lato server** a ogni punto di uscita: liste, ricerca, filtri per Tag, Glossario, conteggi (anche dei Tag), backlink, notifiche, immagini, export, API e contesto per Agent. |
-| VR-08 | Ogni modifica di visibilità è tracciata nell'AuditLog. |
-| VR-09 | *(evoluzione, non prioritaria)* Contenuti **sigillati**: privati anche al Master (D-01). |
-| VR-10 | *(proposta)* Le **voci di Glossario** sono contenuti con visibilità, per evitare che rivelino informazioni nascoste. |
-| VR-11 | I contenuti di un User che esce restano soggetti alla visibilità impostata (D-15). |
-| VR-12 | Un **Allegato** ha la visibilità del suo Documento; non esiste un Allegato visibile su un Documento nascosto (D-21). |
-| VR-13 | Un Post scritto **come Personaggio** non rivela il Personaggio a chi non vede il suo Documento: per quel lettore il Post mostra l'autore reale (D-25). |
+| VR-01 | The **Master sees every piece of content** in the Room, whatever its level (D-01). |
+| VR-02 | A **Player decides the visibility of their own content** with respect to the other Players (D-08). |
+| VR-03 | Visibility applies to **Documents, Document blocks, Posts (Comments and Details)** (D-10). |
+| VR-04 | A **reply cannot be more visible than its parent Post** (D-17). |
+| VR-05 | Every Room defines a **default visibility** for new content. |
+| VR-06 | **Reveal** widens visibility and is recorded (who, when, from/to which level). |
+| VR-07 | The visibility filter is applied **server-side** at every exit point: lists, search, Tag filters, Glossary, counts (Tag counts too), backlinks, notifications, images, export, API and Agent context. |
+| VR-08 | Every visibility change is tracked in the AuditLog. |
+| VR-09 | *(evolution, not a priority)* **Sealed** content: private from the Master too (D-01). |
+| VR-10 | *(proposal)* **Glossary entries** are content with a visibility, so they don't reveal hidden information. |
+| VR-11 | The content of a User who leaves stays subject to the visibility that was set (D-15). |
+| VR-12 | An **Attachment** has its Document's visibility; there is no visible Attachment on a hidden Document (D-21). |
+| VR-13 | A Post written **as a Character** doesn't reveal the Character to those who don't see its Document: for that reader the Post shows the real author (D-25). |
 
 ---
 
-## 9. Ownership e permessi
+## 9. Ownership and permissions
 
-**Ownership di un Documento (D-12):** il creatore è Owner di default. Master e Owner possono aggiungere o rimuovere Owner. Il Master è sempre Owner implicito. Chi non è Owner contribuisce tramite Thread (Commenti e Dettagli).
+**Ownership of a Document (D-12):** the creator is Owner by default. The Master and Owners can add or remove Owners. The Master is always an implicit Owner. Whoever isn't an Owner contributes through the Thread (Comments and Details).
 
-**Come leggere la matrice:** la colonna Amministratore mostra solo i **poteri di gestione della Stanza**. I poteri sui contenuti derivano dal ruolo narrativo (Master/Player) e dall'Ownership (OQ-09).
+**How to read the matrix:** the Administrator column shows only the **Room management powers**. Powers over content come from the narrative role (Master/Player) and from Ownership (OQ-09).
 
-| Azione | Amministratore | Master | Owner del Documento | Altri membri | Non membro |
+| Action | Administrator | Master | Document Owner | Other members | Non-member |
 |---|---|---|---|---|---|
-| Modificare/archiviare/eliminare la Stanza | ✅ | ❌ | — | ❌ | ❌ |
-| Invitare, rimuovere membri, cambiare ruoli, designare Master e Amministratori | ✅ | ❌ | — | ❌ | ❌ |
-| Creare Documenti | — | ✅ | — | ✅ (D-13) | ❌ |
-| Modificare la descrizione di un Documento | — | ✅ | ✅ | ❌ | ❌ |
-| Riattribuire l'Ownership | — | ✅ | ✅ | ❌ | ❌ |
-| Gestire Tag e Glossario | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Postare Commenti e aggiungere Dettagli (dove visibili) | — | ✅ | ✅ | ✅ | ❌ |
-| Impostare la visibilità dei propri contenuti | — | ✅ | ✅ | ✅ | ❌ |
-| Vedere contenuti altrui non pubblici | ❌ | ✅ | Solo se ammesso | Solo se ammesso | ❌ |
-| Moderare o eliminare Post altrui | — | ✅ | ❌ | ❌ | ❌ |
-| Rivelare contenuti altrui | — | ✅ | ❌ | ❌ | ❌ |
-| Caricare o rimuovere Allegati PDF (D-22) | — | ✅ | ✅ | ❌ | ❌ |
-| Collegare un Personaggio al suo Giocatore (D-23) | — | ✅ | ✅ | ❌ | ❌ |
-| Scrivere come un Personaggio (D-24) | — | ✅ (qualsiasi Documento) | Solo se Giocatore | Solo se Giocatore | ❌ |
-| Invitare un Amico direttamente nella Stanza (D-26) | ✅ | ❌ | — | ❌ | ❌ |
+| Edit/archive/delete the Room | ✅ | ❌ | — | ❌ | ❌ |
+| Invite, remove members, change roles, designate Masters and Administrators | ✅ | ❌ | — | ❌ | ❌ |
+| Create Documents | — | ✅ | — | ✅ (D-13) | ❌ |
+| Edit a Document's description | — | ✅ | ✅ | ❌ | ❌ |
+| Reassign Ownership | — | ✅ | ✅ | ❌ | ❌ |
+| Manage Tags and Glossary | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Post Comments and add Details (where visible) | — | ✅ | ✅ | ✅ | ❌ |
+| Set the visibility of one's own content | — | ✅ | ✅ | ✅ | ❌ |
+| See others' non-public content | ❌ | ✅ | Only if allowed | Only if allowed | ❌ |
+| Moderate or delete others' Posts | — | ✅ | ❌ | ❌ | ❌ |
+| Reveal others' content | — | ✅ | ❌ | ❌ | ❌ |
+| Upload or remove PDF Attachments (D-22) | — | ✅ | ✅ | ❌ | ❌ |
+| Link a Character to its Character player (D-23) | — | ✅ | ✅ | ❌ | ❌ |
+| Write as a Character (D-24) | — | ✅ (any Document) | Only if Character player | Only if Character player | ❌ |
+| Invite a Friend directly into the Room (D-26) | ✅ | ❌ | — | ❌ | ❌ |
 
-*La matrice è una proposta da validare insieme a OQ-09; la parte sui Dettagli è ora confermata da D-19.*
-
----
-
-## 10. Requisiti funzionali
-
-### Autenticazione
-- **FR-A1** Login con Google (OAuth), Discord, Facebook, GitHub e X.
-- **FR-A2** Profilo base (nome, avatar) e logout.
-
-### Stanze e membri
-- **FR-R1** Creare, modificare, archiviare ed eliminare una Stanza. Chi crea la Stanza diventa Amministratore (D-11) e Master (OQ-09).
-- **FR-R2** Invitare tramite link o codice, con scadenza e revoca.
-- **FR-R3** Accettare un invito ed entrare con il ruolo proposto.
-- **FR-R4** Gestire i membri: cambiare ruoli, assegnare il ruolo Amministratore a più User, rimuovere, uscire (D-02, D-11).
-- **FR-R5** Designare un nuovo Master (D-16). Più Master contemporanei (co-GM) sono possibili ma non prioritari (D-02).
-- **FR-R6** Elenco delle proprie Stanze con i ruoli in ciascuna.
-- **FR-R7** L'ultimo Amministratore non può uscire senza aver designato un nuovo Amministratore (D-16).
-- **FR-R8** Alla rimozione o uscita di un User, i suoi contenuti restano visibili salvo eliminazione, e l'Ownership dei suoi Documenti è riattribuibile (D-15).
-
-### Documenti
-- **FR-D1** CRUD Documento con nome, immagini, descrizione (rich text o Markdown), Tag.
-- **FR-D2** Gestione e riattribuzione dell'Ownership del Documento (D-12).
-- **FR-D3** Aggiungere **Dettagli** (ulteriori Descrizioni titolate) al Thread principale del Documento (D-18, D-19).
-- **FR-D4** Collegamenti tra Documenti tramite menzione, con backlink.
-- **FR-D5** Cronologia delle modifiche con ripristino.
-- **FR-D6** Stato bozza/pubblicato.
-- **FR-D7** Opzione per Stanza che abilita/disabilita la creazione di Documenti da parte dei Player (D-13).
-- **FR-D8** **Allegati PDF** su un Documento: caricare, elencare, aprire, scaricare, rimuovere (D-21, D-22). Eliminare un Documento o una Stanza elimina anche i suoi Allegati.
-- **FR-D9** Collegare un Documento a un membro come **Personaggio**, cambiare o togliere il Giocatore (D-23), con tracciamento nell'AuditLog.
-
-### Tag, Glossario e navigazione
-- **FR-N1** Tag per Stanza, con categoria opzionale e Tag di default alla creazione (D-14).
-- **FR-N2** Filtro dei Documenti per uno o più Tag (combinabili) e navigazione per categoria.
-- **FR-N3** Glossario con voci, definizioni, Tag e link ai Documenti correlati.
-- **FR-N4** **Filtro del Glossario/Dizionario per uno o più Tag** (D-14).
-- **FR-N5** Ricerca full-text su Documenti, Post e Glossario, sempre filtrata per visibilità.
-- **FR-N6** Riconoscimento dei termini del Glossario nel testo (Could).
-
-### Thread
-- **FR-T1** Ogni Documento ha un Thread principale; si aggiungono Commenti e Dettagli come Post, con risposte annidate.
-- **FR-T2** Profondità di annidamento limitata (proposta: 3–4 livelli, poi appiattimento) per mantenere la leggibilità.
-- **FR-T3** Ordinamento (cronologico, ultima attività) e caricamento progressivo/paginato.
-- **FR-T4** Comprimere/espandere rami; indicatore di contenuti non letti.
-- **FR-T5** Modificare ed eliminare i propri Post (eliminazione con segnaposto per non spezzare la conversazione); il Master può moderare.
-- **FR-T6** Menzioni @User e reazioni.
-- **FR-T7** Fissare un Post in evidenza e segnare una discussione come risolta.
-- **FR-T8** **Promuovere** un Post o un Dettaglio a contenuto della descrizione del Documento (o a nuovo Documento), da parte di un Owner.
-- **FR-T9** Notifiche in-app (email in seguito).
-- **FR-T10** I Dettagli sono mostrati nella scheda del Documento come sezione dedicata, filtrata per visibilità.
-- **FR-T11** Scrivere un Post **come Personaggio** (D-24), mostrato secondo VR-13.
-
-### Visibilità
-- **FR-V1** Impostare la visibilità su Documento, blocco e Post (VR-03).
-- **FR-V2** Azione **Rivela** con tracciamento (VR-06).
-- **FR-V3** Anteprima "vedi come User X" per il Master.
-- **FR-V4** Filtro di visibilità lato server su ogni query (VR-07).
-- **FR-V5** Cronologia delle modifiche di visibilità (VR-08).
-- **FR-V6** Una risposta non può avere visibilità più ampia del Post padre (VR-04).
-
-### Amicizie
-- **FR-F1** Inviare una richiesta di Amicizia a un membro di una Stanza in comune o tramite Codice amico (D-27).
-- **FR-F2** Accettare, rifiutare o annullare una richiesta; rimuovere un Amico (D-26).
-- **FR-F3** Elenco degli Amici e delle richieste ricevute e inviate nella pagina Account.
-- **FR-F4** Codice amico personale, copiabile e rigenerabile (D-27).
-- **FR-F5** Invitare un Amico direttamente in una Stanza con un ruolo proposto; l'invito diventa Membership solo quando l'Amico lo accetta (D-26, FR-R3).
-
-### Integrazione con Agent
-- **FR-G1** Export strutturato della Stanza (JSON/Markdown) con ID stabili, Tag, collegamenti tra Documenti, Dettagli e struttura dei Thread.
-- **FR-G2** Accesso via API con lo scope dell'User richiedente.
+*The matrix is a proposal to validate together with OQ-09; the part about Details is now confirmed by D-19.*
 
 ---
 
-## 11. Requisiti non funzionali
+## 10. Functional requirements
 
-- **NFR-01 Sicurezza:** la visibilità è imposta lato server; la UI non è mai l'unica barriera.
-- **NFR-02 Isolamento:** nessun accesso a dati di Stanze di cui l'User non è membro.
-- **NFR-03 Privacy:** dai dati Google si usano solo identità e avatar. Un Amico vede gli stessi dati di profilo visibili ai membri di una Stanza in comune, non di più (D-26).
-- **NFR-04 Prestazioni:** liste, ricerca e Thread devono restare fluidi con molti contenuti e filtri di visibilità attivi.
-- **NFR-05 Usabilità:** interfaccia utilizzabile da smartphone durante le sessioni di gioco.
-- **NFR-06 Tracciabilità:** ruoli, ownership e visibilità hanno AuditLog.
-- **NFR-07 Affidabilità:** backup e cronologia delle versioni.
-- **NFR-08 Estensibilità:** modello dati agnostico rispetto al sistema di gioco e ai "tipi" di Documento.
+### Authentication
+- **FR-A1** Login with Google (OAuth), Discord, Facebook, GitHub and X.
+- **FR-A2** Basic profile (name, avatar) and logout.
+
+### Rooms and members
+- **FR-R1** Create, edit, archive and delete a Room. Whoever creates the Room becomes Administrator (D-11) and Master (OQ-09).
+- **FR-R2** Invite through a link or code, with expiry and revocation.
+- **FR-R3** Accept an invitation and join with the proposed role.
+- **FR-R4** Manage members: change roles, give the Administrator role to several Users, remove, leave (D-02, D-11).
+- **FR-R5** Designate a new Master (D-16). Several Masters at once (co-GM) are possible but not a priority (D-02).
+- **FR-R6** List of one's own Rooms with the roles in each.
+- **FR-R7** The last Administrator cannot leave without designating a new Administrator (D-16).
+- **FR-R8** When a User is removed or leaves, their content stays visible unless deleted, and the Ownership of their Documents can be reassigned (D-15).
+
+### Documents
+- **FR-D1** Document CRUD with name, images, description (rich text or Markdown), Tags.
+- **FR-D2** Management and reassignment of the Document's Ownership (D-12).
+- **FR-D3** Add **Details** (further titled Descriptions) to the Document's main Thread (D-18, D-19).
+- **FR-D4** Links between Documents through mentions, with backlinks.
+- **FR-D5** Change history with restore.
+- **FR-D6** Draft/published status.
+- **FR-D7** Per-Room option that enables/disables Document creation by Players (D-13).
+- **FR-D8** **PDF Attachments** on a Document: upload, list, open, download, remove (D-21, D-22). Deleting a Document or a Room also deletes its Attachments.
+- **FR-D9** Link a Document to a member as a **Character**, change or remove the Character player (D-23), tracked in the AuditLog.
+
+### Tags, Glossary and navigation
+- **FR-N1** Per-Room Tags, with an optional category and default Tags on creation (D-14).
+- **FR-N2** Filter Documents by one or more (combinable) Tags and navigate by category.
+- **FR-N3** Glossary with entries, definitions, Tags and links to related Documents.
+- **FR-N4** **Filter the Glossary/Dictionary by one or more Tags** (D-14).
+- **FR-N5** Full-text search over Documents, Posts and Glossary, always filtered by visibility.
+- **FR-N6** Recognize Glossary terms in text (Could).
+
+### Threads
+- **FR-T1** Every Document has a main Thread; Comments and Details are added as Posts, with nested replies.
+- **FR-T2** Limited nesting depth (proposal: 3–4 levels, then flattening) to keep it readable.
+- **FR-T3** Sorting (chronological, latest activity) and progressive/paginated loading.
+- **FR-T4** Collapse/expand branches; unread-content indicator.
+- **FR-T5** Edit and delete one's own Posts (deletion with a placeholder so the conversation isn't broken); the Master can moderate.
+- **FR-T6** @User mentions and reactions.
+- **FR-T7** Pin a Post and mark a discussion as resolved.
+- **FR-T8** **Promote** a Post or a Detail into the Document's description (or into a new Document), by an Owner.
+- **FR-T9** In-app notifications (email later).
+- **FR-T10** Details are shown on the Document card as a dedicated section, filtered by visibility.
+- **FR-T11** Write a Post **as a Character** (D-24), shown according to VR-13.
+
+### Visibility
+- **FR-V1** Set the visibility of a Document, block and Post (VR-03).
+- **FR-V2** **Reveal** action with tracking (VR-06).
+- **FR-V3** "View as User X" preview for the Master.
+- **FR-V4** Server-side visibility filter on every query (VR-07).
+- **FR-V5** History of visibility changes (VR-08).
+- **FR-V6** A reply cannot have a wider visibility than its parent Post (VR-04).
+
+### Friendships
+- **FR-F1** Send a Friendship request to a member of a shared Room or through a Friend code (D-27).
+- **FR-F2** Accept, decline or cancel a request; remove a Friend (D-26).
+- **FR-F3** List of Friends and of received and sent requests on the Account page.
+- **FR-F4** Personal Friend code, copyable and regenerable (D-27).
+- **FR-F5** Invite a Friend directly into a Room with a proposed role; the invitation becomes a Membership only when the Friend accepts it (D-26, FR-R3).
+
+### Agent integration
+- **FR-G1** Structured export of the Room (JSON/Markdown) with stable IDs, Tags, links between Documents, Details and Thread structure.
+- **FR-G2** API access with the requesting User's scope.
 
 ---
 
-## 12. Use case
+## 11. Non-functional requirements
 
-| ID | Use case | Attore | Precondizioni | Flusso principale | Alternative / eccezioni |
+- **NFR-01 Security:** visibility is enforced server-side; the UI is never the only barrier.
+- **NFR-02 Isolation:** no access to data of Rooms the User isn't a member of.
+- **NFR-03 Privacy:** from Google's data only identity and avatar are used. A Friend sees the same profile data that members of a shared Room see, no more (D-26).
+- **NFR-04 Performance:** lists, search and Threads must stay smooth with a lot of content and active visibility filters.
+- **NFR-05 Usability:** the interface is usable from a smartphone during game sessions.
+- **NFR-06 Traceability:** roles, ownership and visibility have an AuditLog.
+- **NFR-07 Reliability:** backups and version history.
+- **NFR-08 Extensibility:** a data model agnostic of the game system and of Document "types".
+
+---
+
+## 12. Use cases
+
+| ID | Use case | Actor | Preconditions | Main flow | Alternatives / exceptions |
 |---|---|---|---|---|---|
-| UC-01 | Login | Visitatore | — | Sceglie "Accedi con Google" → autorizza → accede | Autorizzazione negata: resta sul login |
-| UC-02 | Creare Stanza | User | Autenticato | Inserisce nome e sistema di gioco → la Stanza viene creata → l'User diventa Amministratore e Master → vengono creati i Tag di default | Nome mancante: errore di validazione |
-| UC-03 | Invitare in Stanza | Amministratore | Ruolo Amministratore | Genera link/codice con ruolo proposto e scadenza → lo condivide | Revoca dell'invito; invito scaduto |
-| UC-04 | Entrare in Stanza | User | Invito valido | Apre il link → login → viene aggiunto con il ruolo proposto | Invito invalido/scaduto; già membro |
-| UC-05 | Gestire membri e ruoli | Amministratore | Ruolo Amministratore | Cambia ruoli, nomina Amministratori, designa un nuovo Master, rimuove un membro | Rimozione/retrocessione dell'ultimo Master o Amministratore senza sostituto: non consentita (D-16, OQ-10) |
-| UC-06 | Creare Documento | Master/Player abilitato | Membro della Stanza | Inserisce nome, descrizione, immagini, Tag → imposta la visibilità → salva; diventa Owner | Creazione da Player disabilitata (D-13) |
-| UC-07 | Modificare Documento | Owner | Owner del Documento | Modifica la descrizione → salva → nuova versione in cronologia | Non Owner: può solo postare nel Thread |
-| UC-08 | Riattribuire Ownership | Master/Owner | Permesso | Aggiunge o rimuove Owner del Documento | Non si può rimuovere l'ultimo Owner esplicito senza lasciare il solo Master implicito |
-| UC-09 | Navigare per Tag | Membro | Membro della Stanza | Seleziona uno o più Tag → vede i Documenti visibili con quei Tag | Nessun risultato visibile |
-| UC-10 | Consultare il Glossario | Membro | Membro della Stanza | Apre il Glossario → filtra per uno o più Tag o cerca → vede definizione e Documenti collegati | Termine assente |
-| UC-11 | Avviare/rispondere in un Thread | Membro | Documento visibile | Scrive un Commento o risponde a un Post → imposta la visibilità → pubblica | Padre non visibile: la risposta non è possibile |
-| UC-12 | Impostare visibilità | Autore/Owner | Contenuto proprio | Sceglie il livello (o gli User) → salva → l'AuditLog registra | Risposta più visibile del padre: rifiutata (VR-04) |
-| UC-13 | Rivelare un contenuto | Master | Contenuto con visibilità limitata | Seleziona "Rivela" → sceglie il nuovo pubblico → conferma → notifica agli User coinvolti | Annullamento prima della conferma |
-| UC-14 | Vedere come un altro User | Master | Ruolo Master | Sceglie un User → vede la Stanza con la sua visibilità | — |
-| UC-15 | Cercare | Membro | Membro della Stanza | Inserisce una query → vede solo i risultati visibili | Nessun risultato |
-| UC-16 | Promuovere un Post | Owner del Documento | Post visibile all'Owner | Sceglie "Promuovi" → integra nella descrizione o crea un nuovo Documento → il Post resta come riferimento | Visibilità del contenuto promosso da confermare |
-| UC-17 | Esportare contesto per Agent | Agent per conto di un User | Scope dell'User | Richiede l'export → riceve solo i contenuti visibili a quell'User | Scope non valido: rifiutato |
-| UC-18 | Aggiungere un Dettaglio | Membro | Documento visibile | Apre il Documento → "Aggiungi Dettaglio" → inserisce titolo (es. "Segni Particolari") e contenuto → imposta la visibilità → pubblica nel Thread principale | Titolo o contenuto mancante: validazione |
-| UC-19 | Uscire dalla Stanza | Membro | Membro della Stanza | Conferma l'uscita → i suoi contenuti restano (D-15) → l'Ownership dei suoi Documenti resta riattribuibile | Ultimo Amministratore o ultimo Master senza sostituto: non consentito (D-16) |
-| UC-20 | Allegare un PDF | Owner / Master | Documento di cui è Owner | Apre il Documento → "Carica PDF" → sceglie il file → l'Allegato compare nella sezione File | File non PDF o oltre i limiti (D-22): rifiutato |
-| UC-21 | Collegare un Personaggio | Master / Owner | Documento visibile, Giocatore membro della Stanza | Apre il Documento → "Interpretato da" → sceglie il membro (e, se vuole, lo rende Owner) → salva; l'AuditLog registra | Membro non valido: rifiutato |
-| UC-22 | Scrivere come Personaggio | Giocatore / Master | Personaggio proprio (o qualsiasi Documento per il Master) | Nel Thread sceglie "Scrivi come" → il Personaggio → pubblica | Personaggio non proprio: rifiutato (D-24) |
-| UC-23 | Chiedere l'Amicizia | User | Stanza in comune o Codice amico | Sceglie "Aggiungi agli Amici" o inserisce il Codice → invia la richiesta | Già Amici o richiesta in attesa; richiesta rifiutata da meno di 30 giorni |
-| UC-24 | Rispondere a una richiesta | User | Richiesta ricevuta | Accetta o rifiuta | — |
-| UC-25 | Invitare un Amico in una Stanza | Amministratore | Ruolo Amministratore, Amicizia accettata | Sceglie l'Amico e il ruolo → l'Amico riceve l'invito → lo accetta ed entra | L'Amico rifiuta o lascia scadere l'invito |
+| UC-01 | Login | Visitor | — | Chooses "Sign in with Google" → authorizes → gets in | Authorization denied: stays on the login page |
+| UC-02 | Create a Room | User | Authenticated | Enters name and game system → the Room is created → the User becomes Administrator and Master → the default Tags are created | Missing name: validation error |
+| UC-03 | Invite into a Room | Administrator | Administrator role | Generates a link/code with a proposed role and expiry → shares it | Revoking the invitation; expired invitation |
+| UC-04 | Join a Room | User | Valid invitation | Opens the link → logs in → is added with the proposed role | Invalid/expired invitation; already a member |
+| UC-05 | Manage members and roles | Administrator | Administrator role | Changes roles, appoints Administrators, designates a new Master, removes a member | Removing/demoting the last Master or Administrator without a replacement: not allowed (D-16, OQ-10) |
+| UC-06 | Create a Document | Master/enabled Player | Member of the Room | Enters name, description, images, Tags → sets the visibility → saves; becomes Owner | Document creation by Players disabled (D-13) |
+| UC-07 | Edit a Document | Owner | Owner of the Document | Edits the description → saves → new version in the history | Not an Owner: can only post in the Thread |
+| UC-08 | Reassign Ownership | Master/Owner | Permission | Adds or removes Owners of the Document | The last explicit Owner can't be removed leaving only the implicit Master |
+| UC-09 | Browse by Tag | Member | Member of the Room | Selects one or more Tags → sees the visible Documents with those Tags | No visible result |
+| UC-10 | Consult the Glossary | Member | Member of the Room | Opens the Glossary → filters by one or more Tags or searches → sees definition and linked Documents | Term missing |
+| UC-11 | Start/reply in a Thread | Member | Visible Document | Writes a Comment or replies to a Post → sets the visibility → publishes | Parent not visible: replying isn't possible |
+| UC-12 | Set visibility | Author/Owner | Own content | Chooses the level (or the Users) → saves → the AuditLog records it | Reply more visible than its parent: refused (VR-04) |
+| UC-13 | Reveal content | Master | Content with limited visibility | Selects "Reveal" → chooses the new audience → confirms → the Users involved are notified | Cancel before confirming |
+| UC-14 | View as another User | Master | Master role | Chooses a User → sees the Room with their visibility | — |
+| UC-15 | Search | Member | Member of the Room | Enters a query → sees only the visible results | No result |
+| UC-16 | Promote a Post | Document Owner | Post visible to the Owner | Chooses "Promote" → merges it into the description or creates a new Document → the Post stays as a reference | Visibility of the promoted content to be confirmed |
+| UC-17 | Export context for an Agent | Agent on behalf of a User | The User's scope | Requests the export → receives only the content visible to that User | Invalid scope: refused |
+| UC-18 | Add a Detail | Member | Visible Document | Opens the Document → "Add Detail" → enters a title (e.g. "Distinguishing marks") and content → sets the visibility → publishes in the main Thread | Missing title or content: validation |
+| UC-19 | Leave the Room | Member | Member of the Room | Confirms leaving → their content stays (D-15) → the Ownership of their Documents stays reassignable | Last Administrator or last Master without a replacement: not allowed (D-16) |
+| UC-20 | Attach a PDF | Owner / Master | Document they own | Opens the Document → "Upload PDF" → chooses the file → the Attachment appears in the Files section | File not a PDF or over the limits (D-22): refused |
+| UC-21 | Link a Character | Master / Owner | Visible Document, Character player is a member of the Room | Opens the Document → "Played by" → chooses the member (and, optionally, makes them an Owner) → saves; the AuditLog records it | Invalid member: refused |
+| UC-22 | Write as a Character | Character player / Master | Own Character (or any Document for the Master) | In the Thread chooses "Write as" → the Character → publishes | Not one's own Character: refused (D-24) |
+| UC-23 | Ask for Friendship | User | Shared Room or Friend code | Chooses "Add as Friend" or enters the Code → sends the request | Already Friends or request pending; request declined less than 30 days ago |
+| UC-24 | Answer a request | User | Request received | Accepts or declines | — |
+| UC-25 | Invite a Friend into a Room | Administrator | Administrator role, accepted Friendship | Chooses the Friend and the role → the Friend receives the invitation → accepts it and joins | The Friend declines or lets the invitation expire |
 
 ---
 
-## 13. Workflow
+## 13. Workflows
 
-**W-01 · Creazione Stanza e ingresso dei Player**
-1. L'User fa login con Google (UC-01).
-2. Crea la Stanza (UC-02) e diventa Amministratore e Master.
-3. Genera un invito (UC-03) e lo condivide.
-4. I Player aprono il link, fanno login ed entrano con il ruolo Player (UC-04).
+**W-01 · Creating a Room and Players joining**
+1. The User logs in with Google (UC-01).
+2. Creates the Room (UC-02) and becomes Administrator and Master.
+3. Generates an invitation (UC-03) and shares it.
+4. The Players open the link, log in and join with the Player role (UC-04).
 
-**W-02 · Il Master prepara un contenuto segreto e lo rivela**
-1. Il Master crea un Documento (UC-06) con Tag "NPC".
-2. Imposta la visibilità su "Solo Master" (UC-12).
-3. Durante la sessione usa **Rivela** (UC-13): il contenuto diventa visibile alla Stanza e gli User vengono notificati.
+**W-02 · The Master prepares secret content and reveals it**
+1. The Master creates a Document (UC-06) with the "NPC" Tag.
+2. Sets its visibility to "Master only" (UC-12).
+3. During the session uses **Reveal** (UC-13): the content becomes visible to the Room and the Users are notified.
 
-**W-03 · Contributo di un Player a un Documento**
-1. Il Player apre il Documento di un Luogo o di un NPC.
-2. Aggiunge un **Dettaglio** (UC-18), ad esempio "Segni Particolari: ha una gamba di legno che scricchiola ad ogni passo", oppure scrive un Commento (UC-11), impostando la visibilità (es. solo lui e il Master).
-3. Il Master risponde; un Owner del Documento può **promuovere** il Post nella descrizione (UC-16).
+**W-03 · A Player's contribution to a Document**
+1. The Player opens the Document of a Place or an NPC.
+2. Adds a **Detail** (UC-18), for example "Distinguishing marks: has a wooden leg that creaks with every step", or writes a Comment (UC-11), setting the visibility (e.g. only them and the Master).
+3. The Master replies; an Owner of the Document can **promote** the Post into the description (UC-16).
 
-**W-04 · Consultazione**
-1. L'User entra nella Stanza.
-2. Filtra per Tag (UC-09), consulta il Glossario filtrando per Tag (UC-10) o cerca (UC-15).
-3. Il sistema mostra solo ciò che ruoli, Ownership e regole di visibilità consentono.
+**W-04 · Consultation**
+1. The User enters the Room.
+2. Filters by Tag (UC-09), consults the Glossary filtering by Tag (UC-10) or searches (UC-15).
+3. The system shows only what roles, Ownership and visibility rules allow.
 
-**W-05 · Gestione della Stanza**
-1. L'Amministratore apre la gestione membri (UC-05).
-2. Cambia ruoli, nomina altri Amministratori, designa un nuovo Master, invita o rimuove User.
-3. Un membro che esce (UC-19) lascia i propri contenuti nella Stanza; l'Ownership dei suoi Documenti viene riattribuita a un altro User (D-15).
-4. Le modifiche sono registrate nell'AuditLog.
+**W-05 · Room management**
+1. The Administrator opens member management (UC-05).
+2. Changes roles, appoints other Administrators, designates a new Master, invites or removes Users.
+3. A member who leaves (UC-19) leaves their content in the Room; the Ownership of their Documents is reassigned to another User (D-15).
+4. The changes are recorded in the AuditLog.
 
-**W-06 · Consumo del contesto da parte di un Agent**
-1. Un User avvia un Agent sulla propria Stanza.
-2. L'Agent richiede l'export (UC-17) con lo scope di quell'User.
-3. Riceve solo i contenuti visibili a quell'User, con ID stabili e collegamenti.
+**W-06 · An Agent consuming the context**
+1. A User starts an Agent on their Room.
+2. The Agent requests the export (UC-17) with that User's scope.
+3. It receives only the content visible to that User, with stable IDs and links.
 
 ---
 
-## 14. Priorità (MoSCoW)
+## 14. Priorities (MoSCoW)
 
-| Priorità | Feature |
+| Priority | Features |
 |---|---|
 | **Must (MVP)** | FR-A1, FR-A2; FR-R1–R4, FR-R6, FR-R7; FR-D1–D4, FR-D7; FR-N1, FR-N2; FR-T1–T5; FR-V1, FR-V4, FR-V6; NFR-01, NFR-02 |
 | **Should** | FR-R5, FR-R8; FR-D5, FR-D8, FR-D9; FR-N3–N5; FR-T6–T8, FR-T10, FR-T11; FR-V2, FR-V3, FR-V5; FR-G1 |
-| **Could** | Co-Master multipli (D-02); FR-D6; FR-N6; FR-T9; FR-F1–F5; FR-G2; VR-09 (contenuti sigillati) |
-| **Won't (per ora)** | Editing real-time; app mobile nativa; supporto ad altri provider di login |
+| **Could** | Several co-Masters (D-02); FR-D6; FR-N6; FR-T9; FR-F1–F5; FR-G2; VR-09 (sealed content) |
+| **Won't (for now)** | Real-time editing; native mobile app; support for other login providers |
 
 ---
 
-## 15. Linee guida per gli Agent
+## 15. Guidelines for Agents
 
-**Invarianti (non derogabili)**
+**Invariants (non-negotiable)**
 
-| ID | Invariante |
+| ID | Invariant |
 |---|---|
-| I-01 | Un Agent **non espone mai** contenuti oltre la visibilità dell'User per cui opera (VR-07). |
-| I-02 | I **ruoli sono per Stanza**: non assumere un ruolo globale dell'User (D-06). |
-| I-03 | Il **Master vede tutto** nella propria Stanza (D-01). |
-| I-04 | I Documenti **non hanno un tipo rigido**: la classificazione è tramite Tag (D-05). |
-| I-05 | La modifica della descrizione di un Documento spetta a chi ne ha **Ownership**; il Master ha sempre Ownership implicita (D-03, D-12). |
-| I-06 | Nessuna funzionalità real-time è richiesta (D-04). |
-| I-07 | L'**Amministratore è un ruolo distinto**; l'ultimo Amministratore non può uscire senza designare un successore (D-11, D-16). |
-| I-08 | I Documenti **non hanno campi custom**: le informazioni aggiuntive sono **Dettagli** nel Thread principale (D-18). |
-| I-09 | Una risposta non è mai più visibile del Post padre (D-17). |
-| I-10 | Un **Dettaglio** è modificabile solo dal suo autore o dal Master; qualsiasi membro che veda il Documento può aggiungerne uno nuovo (D-19). |
-| I-11 | Un Documento ha **un solo Thread** (quello principale) — nessun Thread aggiuntivo (D-20). |
-| I-12 | Un **Allegato** non è mai visibile a chi non vede il suo Documento (D-21, VR-12). |
-| I-13 | Un Post **come Personaggio** non rivela mai un Personaggio nascosto al lettore; solo il Giocatore (o il Master) può scrivere come quel Personaggio (D-24, D-25, VR-13). |
-| I-14 | Le **Amicizie non danno accesso** a nessuna Stanza né a nessun contenuto: si entra in una Stanza solo accettando un invito (D-26). |
+| I-01 | An Agent **never exposes** content beyond the visibility of the User it acts for (VR-07). |
+| I-02 | **Roles are per Room**: never assume a global role for a User (D-06). |
+| I-03 | The **Master sees everything** in their own Room (D-01). |
+| I-04 | Documents **have no rigid type**: classification is through Tags (D-05). |
+| I-05 | Editing a Document's description belongs to whoever has **Ownership** of it; the Master always has implicit Ownership (D-03, D-12). |
+| I-06 | No real-time functionality is required (D-04). |
+| I-07 | The **Administrator is a distinct role**; the last Administrator cannot leave without designating a successor (D-11, D-16). |
+| I-08 | Documents **have no custom fields**: additional information is **Details** in the main Thread (D-18). |
+| I-09 | A reply is never more visible than its parent Post (D-17). |
+| I-10 | A **Detail** can be edited only by its author or by the Master; any member who sees the Document can add a new one (D-19). |
+| I-11 | A Document has **a single Thread** (the main one) — no additional Threads (D-20). |
+| I-12 | An **Attachment** is never visible to someone who doesn't see its Document (D-21, VR-12). |
+| I-13 | A Post **as a Character** never reveals a Character hidden from the reader; only the Character player (or the Master) can write as that Character (D-24, D-25, VR-13). |
+| I-14 | **Friendships grant no access** to any Room or content: one joins a Room only by accepting an invitation (D-26). |
 
-**Comportamento in caso di ambiguità**
+**Behavior when something is ambiguous**
 
-- Se qualcosa non è coperto dalle Decisioni (sezione 5), consultare i Punti aperti (sezione 6) e **non inventare** una regola: segnalare l'ambiguità e proporre un'opzione.
-- Le proposte marcate come tali (matrice permessi, OQ-09…OQ-10, VR-10, profondità dei Thread) sono provvisorie.
-- Citare sempre gli ID (D-, FR-, UC-, VR-…) nelle risposte e nei documenti derivati.
+- If something isn't covered by the Decisions (section 5), check the Open points (section 6) and **don't invent** a rule: flag the ambiguity and propose an option.
+- The proposals marked as such (permission matrix, OQ-09…OQ-10, VR-10, Thread depth) are provisional.
+- Always cite the IDs (D-, FR-, UC-, VR-…) in answers and derived documents.
 
 ---
 
-## 16. Prossimi passi
+## 16. Next steps
 
-1. Sciogliere i Punti aperti OQ-09…OQ-10.
-2. Validare la matrice dei permessi (sezione 9) e il modello di visibilità (sezione 8) con esempi limite.
-3. Definire le user stories con criteri di accettazione a partire dagli use case.
-4. Definire nel dettaglio la struttura dei Thread (profondità, ordinamento, stato) e la presentazione dei Dettagli nella scheda del Documento.
-5. Solo dopo: architettura, stack tecnologico e modello dati dettagliato.
+1. Resolve Open points OQ-09…OQ-10.
+2. Validate the permission matrix (section 9) and the visibility model (section 8) with edge cases.
+3. Define user stories with acceptance criteria starting from the use cases.
+4. Define the Thread structure in detail (depth, sorting, status) and how Details are presented on the Document card.
+5. Only after that: architecture, technology stack and detailed data model.

@@ -76,6 +76,10 @@ Do not modify the following unless explicitly instructed:
 
 ## Keeping Docs in Sync
 
+Every file in `context/` is written in **English** (`requirements.md`
+included, translated from Italian on 2026-10-01). Italian appears only
+where it is product text, such as the Italian UI strings in `it.json`.
+
 Update the relevant context file whenever implementation changes:
 
 - System architecture or boundaries → `architecture.md`
