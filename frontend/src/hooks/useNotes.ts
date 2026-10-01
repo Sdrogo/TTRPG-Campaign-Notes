@@ -22,13 +22,13 @@ function useReloadDocument(roomId: string, documentId: string) {
 export function useCreateNote(roomId: string, documentId: string) {
   const reload = useReloadDocument(roomId, documentId);
   return useMutation({
-    mutationFn: async (values: NoteFormValues) =>
-      toNote(
-        await apiFetch<RawNote>(notesPath(roomId, documentId), {
-          method: 'POST',
-          json: toNoteBody(values),
-        }),
-      ),
+    mutationFn: async (values: NoteFormValues) => {
+      const raw = await apiFetch<RawNote | null>(notesPath(roomId, documentId), {
+        method: 'POST',
+        json: toNoteBody(values),
+      });
+      return raw === null ? null : toNote(raw);
+    },
     onSuccess: reload,
   });
 }
@@ -37,13 +37,13 @@ export function useCreateNote(roomId: string, documentId: string) {
 export function useUpdateNote(roomId: string, documentId: string) {
   const reload = useReloadDocument(roomId, documentId);
   return useMutation({
-    mutationFn: async ({ noteId, values }: { noteId: string; values: NoteFormValues }) =>
-      toNote(
-        await apiFetch<RawNote>(`${notesPath(roomId, documentId)}/${noteId}`, {
-          method: 'PATCH',
-          json: toNoteBody(values),
-        }),
-      ),
+    mutationFn: async ({ noteId, values }: { noteId: string; values: NoteFormValues }) => {
+      const raw = await apiFetch<RawNote | null>(`${notesPath(roomId, documentId)}/${noteId}`, {
+        method: 'PATCH',
+        json: toNoteBody(values),
+      });
+      return raw === null ? null : toNote(raw);
+    },
     onSuccess: reload,
   });
 }

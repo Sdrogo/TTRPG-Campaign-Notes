@@ -48,8 +48,19 @@ describe('useCreateNote', () => {
         selective_user_ids: ['user-2'],
       },
     });
-    expect(created.title).toBe('Porta segreta');
+    expect(created?.title).toBe('Porta segreta');
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY }));
+  });
+
+  it('succeeds and reloads the Document when the created Note is hidden', async () => {
+    fetchMock.mockResolvedValue(null);
+    const { result, queryClient } = renderHookWithProviders(() => useCreateNote('room-1', 'doc-1'));
+    const invalidate = spyOnInvalidate(queryClient);
+
+    await expect(result.current.mutateAsync(form)).resolves.toBeNull();
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY });
   });
 });
 
@@ -74,6 +85,17 @@ describe('useUpdateNote', () => {
       },
     });
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY }));
+  });
+
+  it('succeeds and reloads the Document when the updated Note is hidden', async () => {
+    fetchMock.mockResolvedValue(null);
+    const { result, queryClient } = renderHookWithProviders(() => useUpdateNote('room-1', 'doc-1'));
+    const invalidate = spyOnInvalidate(queryClient);
+
+    await expect(result.current.mutateAsync({ noteId: 'note-1', values: form })).resolves.toBeNull();
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY });
   });
 });
 

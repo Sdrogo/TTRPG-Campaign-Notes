@@ -11,7 +11,7 @@ step-by-step notes) is in
 
 Branch `feature/12-2-notes-frontend` (spec 12_2, frontend only, PR open;
 **depends on the backend PR for spec 12_1 being merged first**). Latest
-measured state: frontend **897/897** tests at **100%** coverage; lint, `tsc`
+measured state: frontend **899/899** tests at **100%** coverage; lint, `tsc`
 and `npm run build` clean. The backend is untouched here. CI keeps exact-100%
 gates.
 Branch `feature/12-1-notes-backend` (spec 12_1, backend only). Latest measured
@@ -26,6 +26,12 @@ in **Next Up**.
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Nullable Note mutation responses (2026-10-01)
+
+- Create and update mutations accept null when the saved Note is hidden from
+  the requester (VR-07), preserving success and Document query invalidation.
+  Regression cases cover null responses from both mutations.
 
 ### Note reorder reload (2026-10-01)
 
