@@ -23,6 +23,7 @@ def _comment_from_row(row: PostRow) -> Comment:
         created_at=row.created_at,
         updated_at=row.updated_at,
         deleted_at=row.deleted_at,
+        as_document_id=row.as_document_id,
     )
 
 
@@ -42,6 +43,7 @@ async def insert_comment(
             created_at=comment.created_at,
             updated_at=comment.updated_at,
             deleted_at=comment.deleted_at,
+            as_document_id=comment.as_document_id,
         )
     )
     await session.flush()
@@ -83,7 +85,7 @@ async def list_comments_for_document(
 
 
 async def update_comment(session: AsyncSession, comment: Comment) -> None:
-    """Writes a Comment's body, visibility and timestamps. Raises `LookupError`
+    """Writes a Comment's body, visibility, Character and timestamps. Raises `LookupError`
     if it no longer exists."""
     row = await session.get(PostRow, comment.id)
     if row is None:
@@ -92,6 +94,7 @@ async def update_comment(session: AsyncSession, comment: Comment) -> None:
     row.visibility = comment.visibility.value
     row.updated_at = comment.updated_at
     row.deleted_at = comment.deleted_at
+    row.as_document_id = comment.as_document_id
     await session.flush()
 
 

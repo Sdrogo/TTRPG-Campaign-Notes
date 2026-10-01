@@ -41,6 +41,11 @@
       "tooManyImages": "A Comment can have at most {max} images",
       "invalidSelectiveUsers": "selective_user_ids must all be members of this room"
     },
+    "character": {
+      "notFound": "Character not found",
+      "playerNotAMember": "The Character's player must be a member of this Room",
+      "cannotPostAs": "You can only write as a Character you play (the Master can write as any Document)"
+    },
     "note": {
       "notFound": "Note not found",
       "titleRequired": "A Note needs a title",
