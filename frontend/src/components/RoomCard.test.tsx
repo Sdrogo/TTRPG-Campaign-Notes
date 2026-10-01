@@ -47,13 +47,14 @@ describe('RoomCard', () => {
     expect(screen.queryByText('D&D 5e')).not.toBeInTheDocument();
   });
 
-  it('links to the Documents page', () => {
+  it('links the whole card to the Documents page, with no separate button', () => {
     render();
 
-    expect(screen.getByRole('link', { name: /Documenti/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'La Cripta' })).toHaveAttribute(
       'href',
       '/rooms/room-1/documents',
     );
+    expect(screen.queryByRole('link', { name: /Documenti/ })).not.toBeInTheDocument();
   });
 
   // Spec 11: the setup page is reachable only by a Room Administrator.
