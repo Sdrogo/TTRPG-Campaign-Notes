@@ -1,4 +1,4 @@
-import { itemKey, resolveItem } from './mainItems';
+import { itemKey, resolveMainItems } from './mainItems';
 import type { Document } from '../types/document';
 import type { MainItem, Tag } from '../types/tag';
 
@@ -38,10 +38,7 @@ export function groupDocumentsByMainItems(
   const matched = new Set<string>();
   const groups: DocumentGroup[] = [];
 
-  for (const item of items) {
-    const itemTags = resolveItem(item, tags);
-    if (itemTags.length === 0) continue;
-
+  for (const itemTags of resolveMainItems(items, tags)) {
     const inItem = documents.filter((document) =>
       itemTags.every((tag) => document.tagIds.includes(tag.id)),
     );

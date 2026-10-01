@@ -1,76 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import { groupTagsByCategory, isMainTag, sortMainTags, sortTagsByName } from './tags';
-import type { Tag } from '../types/tag';
+import { groupTagsByCategory, sortTagsByName } from './tags';
+import type { MainItem, Tag } from '../types/tag';
 
-/** A Tag with an optional Main Tag position. */
-const tag = (
-  id: string,
-  name: string,
-  category: string | null,
-  mainPosition: number | null = null,
-): Tag => ({ id, name, category, mainPosition });
-
-describe('isMainTag', () => {
-  // Spec 11: a Main Tag is decided by the Room's Administrators, not by its
-  // category.
-  it('is true for a Tag with a position, whatever its category', () => {
-    expect(isMainTag(tag('t1', 'NPC', 'Type', 0))).toBe(true);
-    expect(isMainTag(tag('t1', 'Fazione', null, 3))).toBe(true);
-  });
-
-  it('is false without a position, even in the "Type" category', () => {
-    expect(isMainTag(tag('t1', 'NPC', 'Type'))).toBe(false);
-  });
+/** A Tag in an optional category. */
+const tag = (id: string, name: string, category: string | null = null): Tag => ({
+  id,
+  name,
+  category,
+  mainPosition: null,
 });
 
-describe('sortMainTags', () => {
-  it('orders by the chosen position, not by name', () => {
-    const tags = [tag('a', 'Alfa', null, 2), tag('b', 'Beta', null, 0), tag('c', 'Gamma', null, 1)];
-
-    expect(sortMainTags(tags).map((t) => t.name)).toEqual(['Beta', 'Gamma', 'Alfa']);
-  });
-
-  it('leaves out Tags that are not Main Tags', () => {
-    const tags = [tag('a', 'Alfa', null, 0), tag('b', 'Beta', 'Type')];
-
-    expect(sortMainTags(tags).map((t) => t.name)).toEqual(['Alfa']);
-  });
-
-  it('does not mutate the input array', () => {
-    const input = [tag('a', 'Alfa', null, 1), tag('b', 'Beta', null, 0)];
-    sortMainTags(input);
-    expect(input.map((t) => t.name)).toEqual(['Alfa', 'Beta']);
-  });
-});
+/** A Main item of the given Tag ids. */
+const item = (...tagIds: string[]): MainItem => ({ tagIds });
 
 describe('sortTagsByName', () => {
   it('orders Tags by name, ignoring case and accents', () => {
-    const names = sortTagsByName([
-      tag('a', 'zeta', null),
-      tag('b', 'Città', null),
-      tag('c', 'alfa', null),
-    ]).map((t) => t.name);
+    const names = sortTagsByName([tag('a', 'zeta'), tag('b', 'Città'), tag('c', 'alfa')]).map(
+      (t) => t.name,
+    );
     expect(names).toEqual(['alfa', 'Città', 'zeta']);
   });
 
   it('does not mutate the input array', () => {
-    const input = [tag('a', 'zeta', null), tag('b', 'alfa', null)];
+    const input = [tag('a', 'zeta'), tag('b', 'alfa')];
     sortTagsByName(input);
     expect(input.map((t) => t.name)).toEqual(['zeta', 'alfa']);
   });
 });
 
+/** The names of each entry of each group, `+`-joined for a combination. */
+const names = (groups: ReturnType<typeof groupTagsByCategory>) =>
+  groups.map((g) => g.entries.map((entry) => entry.map((t) => t.name).join('+')));
+
 describe('groupTagsByCategory', () => {
-  it('puts Main Tags first in their chosen order, then categories alphabetically, then uncategorized', () => {
+  it('puts Main items first in their chosen order, then categories alphabetically, then uncategorized', () => {
     const tags = [
       tag('t1', 'Fazione', 'Faction'),
-      tag('t2', 'PC', 'Type', 0),
-      tag('t3', 'Sciolto', null),
-      tag('t4', 'NPC', 'Type', 1),
+      tag('t2', 'PC', 'Type'),
+      tag('t3', 'Sciolto'),
+      tag('t4', 'NPC', 'Type'),
       tag('t5', 'Clima', 'Ambiente'),
     ];
 
-    const groups = groupTagsByCategory(tags);
+    const groups = groupTagsByCategory(tags, [item('t2'), item('t4')]);
 
     expect(groups.map((g) => [g.isMain, g.category])).toEqual([
       [true, null],
@@ -78,22 +50,49 @@ describe('groupTagsByCategory', () => {
       [false, 'Faction'],
       [false, null],
     ]);
-    expect(groups[0].tags.map((t) => t.name)).toEqual(['PC', 'NPC']);
-    expect(groups[3].tags.map((t) => t.name)).toEqual(['Sciolto']);
+    expect(names(groups)).toEqual([['PC', 'NPC'], ['Clima'], ['Fazione'], ['Sciolto']]);
   });
 
-  it('lists a Main Tag once, in the Main group, not again under its category', () => {
-    const groups = groupTagsByCategory([tag('t1', 'NPC', 'Type', 0), tag('t2', 'Mostro', 'Type')]);
+  // Spec 11_3: the index reads the same ordered list as the Documents grouping.
+  it('lists combinations among the Main items, in the list order', () => {
+    const tags = [tag('a', 'NPC'), tag('b', 'Camarilla'), tag('c', 'Anarch')];
 
-    expect(groups.map((g) => g.tags.map((t) => t.name))).toEqual([['NPC'], ['Mostro']]);
+    const groups = groupTagsByCategory(tags, [item('a', 'b'), item('a'), item('a', 'c')]);
+
+    expect(names(groups)[0]).toEqual(['NPC+Camarilla', 'NPC', 'NPC+Anarch']);
   });
 
-  it('has no Main group when the Room has no Main Tags', () => {
-    const groups = groupTagsByCategory([tag('t1', 'Sciolto', null)]);
-    expect(groups).toEqual([{ isMain: false, category: null, tags: [tag('t1', 'Sciolto', null)] }]);
+  it('lists a single Main Tag once, in the Main group, not again under its category', () => {
+    const groups = groupTagsByCategory(
+      [tag('t1', 'NPC', 'Type'), tag('t2', 'Mostro', 'Type')],
+      [item('t1')],
+    );
+
+    expect(names(groups)).toEqual([['NPC'], ['Mostro']]);
+  });
+
+  it('keeps a Tag that is only part of a combination under its category', () => {
+    const tags = [tag('a', 'NPC', 'Type'), tag('b', 'Camarilla', 'Clan')];
+
+    const groups = groupTagsByCategory(tags, [item('a', 'b')]);
+
+    expect(names(groups)).toEqual([['NPC+Camarilla'], ['Camarilla'], ['NPC']]);
+  });
+
+  it('ignores an item that refers to a missing Tag', () => {
+    const groups = groupTagsByCategory([tag('a', 'NPC')], [item('a', 'gone')]);
+
+    expect(names(groups)).toEqual([['NPC']]);
+    expect(groups[0].isMain).toBe(false);
+  });
+
+  it('has no Main group when the Room has no Main items', () => {
+    const groups = groupTagsByCategory([tag('t1', 'Sciolto')], []);
+
+    expect(groups).toEqual([{ isMain: false, category: null, entries: [[tag('t1', 'Sciolto')]] }]);
   });
 
   it('returns nothing for an empty Room', () => {
-    expect(groupTagsByCategory([])).toEqual([]);
+    expect(groupTagsByCategory([], [])).toEqual([]);
   });
 });

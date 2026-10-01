@@ -6,7 +6,7 @@ import { useMembers } from '../hooks/useMembers';
 import { useMainItems, useSetMainItems } from '../hooks/useMainItems';
 import { useTags } from '../hooks/useTags';
 import { notifyError, notifySuccess } from '../lib/notify';
-import { itemKey, resolveItem } from '../lib/mainItems';
+import { itemKey, resolveMainItems } from '../lib/mainItems';
 import type { MainItem } from '../types/tag';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
@@ -96,7 +96,7 @@ export function RoomSetupPage() {
         <MainTagsEditor
           // Re-keyed on the saved list so a save, or a change made
           // elsewhere, replaces the draft instead of fighting it.
-          key={mainItems.data.map((item) => itemKey(resolveItem(item, tags.data))).join('|')}
+          key={resolveMainItems(mainItems.data, tags.data).map(itemKey).join('|')}
           tags={tags.data}
           items={mainItems.data}
           saving={setMainItems.isPending}

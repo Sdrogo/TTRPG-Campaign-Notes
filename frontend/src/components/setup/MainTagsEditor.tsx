@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ActionIcon, Button, Group, Paper, Select, Stack, Text, Title } from '@mantine/core';
 import { ArrowDownIcon, ArrowUpIcon, XIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
-import { itemKey, itemLabel, resolveItem, sameTagSet } from '../../lib/mainItems';
+import { itemKey, itemLabel, resolveMainItems, sameTagSet } from '../../lib/mainItems';
 import { moveItem } from '../../lib/mainTags';
 import { sortTagsByName } from '../../lib/tags';
 import type { MainItem, Tag } from '../../types/tag';
@@ -29,7 +29,7 @@ interface MainTagsEditorProps {
  */
 export function MainTagsEditor({ tags, items, saving, onSave }: MainTagsEditorProps) {
   const { t } = useTranslation();
-  const saved = items.map((item) => resolveItem(item, tags)).filter((list) => list.length > 0);
+  const saved = resolveMainItems(items, tags);
   const [draft, setDraft] = useState<Tag[][]>(saved);
 
   const singleIds = draft.filter((list) => list.length === 1).map((list) => list[0].id);

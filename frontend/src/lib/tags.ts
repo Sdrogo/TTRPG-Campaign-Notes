@@ -1,21 +1,6 @@
+import { resolveMainItems } from './mainItems';
 import { currentLanguage } from '../i18n';
-import type { Tag } from '../types/tag';
-
-/** Whether `tag` is one of the Room's Main Tags (spec 11). */
-export function isMainTag(tag: Tag): boolean {
-  return tag.mainPosition !== null;
-}
-
-/**
- * The Room's Main Tags in the order an Administrator chose (spec 11), which
- * is the order the Documents list groups by. Ties (which the backend never
- * writes) fall back to the name.
- */
-export function sortMainTags(tags: Tag[]): Tag[] {
-  return sortTagsByName(tags.filter(isMainTag)).sort(
-    (a, b) => (a.mainPosition as number) - (b.mainPosition as number),
-  );
-}
+import type { MainItem, Tag } from '../types/tag';
 
 /** Tags ordered by name, in the UI's current language. */
 export function sortTagsByName(tags: Tag[]): Tag[] {
@@ -23,24 +8,34 @@ export function sortTagsByName(tags: Tag[]): Tag[] {
   return [...tags].sort((a, b) => a.name.localeCompare(b.name, language, { sensitivity: 'base' }));
 }
 
-/** One group of Tags in the Glossary/Tag index: the Main Tags, or a category. */
+/**
+ * One group in the Glossary/Tag index: the Room's Main items, or a category.
+ * Each entry is the Tags of one link - one Tag, or several for a combination.
+ */
 export interface TagGroup {
-  /** True for the Main Tags group, which is ordered by position, not name. */
+  /** True for the Main items group, which keeps the Administrators' order. */
   isMain: boolean;
   category: string | null;
-  tags: Tag[];
+  entries: Tag[][];
 }
 
 /**
- * Buckets `tags` for the Glossary/Tag index sidebar (spec 10, 11): the Main
- * Tags first in their chosen order, then the remaining Tags by category
- * alphabetically, uncategorized last. A Main Tag is listed only in the first
- * group, whatever its category.
+ * Buckets `tags` for the Glossary/Tag index sidebar (specs 10, 11, 11_3). The
+ * first group is the Room's Main items - single Tags and combinations - in
+ * exactly the order the Documents page groups by, taken from the same
+ * `items` list. The remaining Tags follow by category alphabetically,
+ * uncategorized last; a Tag that is a single Main item is listed only in the
+ * first group, while one that only appears inside combinations keeps its
+ * place in its category.
  */
-export function groupTagsByCategory(tags: Tag[]): TagGroup[] {
-  const mainTags = sortMainTags(tags);
+export function groupTagsByCategory(tags: Tag[], items: MainItem[]): TagGroup[] {
+  const mainEntries = resolveMainItems(items, tags);
+  const singleIds = new Set(
+    mainEntries.filter((entry) => entry.length === 1).map((entry) => entry[0].id),
+  );
+
   const byCategory = new Map<string | null, Tag[]>();
-  for (const tag of tags.filter((t) => !isMainTag(t))) {
+  for (const tag of tags.filter((t) => !singleIds.has(t.id))) {
     const list = byCategory.get(tag.category) ?? [];
     list.push(tag);
     byCategory.set(tag.category, list);
@@ -54,11 +49,11 @@ export function groupTagsByCategory(tags: Tag[]): TagGroup[] {
   const orderedKeys: (string | null)[] = [...categories, ...(byCategory.has(null) ? [null] : [])];
 
   return [
-    ...(mainTags.length > 0 ? [{ isMain: true, category: null, tags: mainTags }] : []),
+    ...(mainEntries.length > 0 ? [{ isMain: true, category: null, entries: mainEntries }] : []),
     ...orderedKeys.map((category) => ({
       isMain: false,
       category,
-      tags: sortTagsByName(byCategory.get(category) as Tag[]),
+      entries: sortTagsByName(byCategory.get(category) as Tag[]).map((tag) => [tag]),
     })),
   ];
 }
