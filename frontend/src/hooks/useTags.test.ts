@@ -2,7 +2,7 @@ import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
 import { renderHookWithProviders } from '../test/utils';
-import { useCreateTag, useTags } from './useTags';
+import { useCreateTag, useDeleteTag, useTags } from './useTags';
 
 vi.mock('../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 
@@ -112,5 +112,32 @@ describe('useCreateTag', () => {
     await expect(result.current.mutateAsync({ name: 'Luoghi' })).rejects.toThrow(
       'Only the Master can create Tags',
     );
+  });
+});
+
+describe('useDeleteTag', () => {
+  it('deletes the Tag and refreshes what depends on it', async () => {
+    fetchMock.mockResolvedValue(undefined);
+    const { result, queryClient } = renderHookWithProviders(() => useDeleteTag('room-1'));
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await result.current.mutateAsync('tag-1');
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/tag-1', { method: 'DELETE' });
+    // The Main items change too (the backend shrinks combinations), and every
+    // Document loses a Tag link.
+    await waitFor(() => {
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1', 'tags'] });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1', 'main-items'] });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1', 'documents'] });
+    });
+  });
+
+  it('propagates a rejection from the backend', async () => {
+    fetchMock.mockRejectedValue(new Error('Tag not found'));
+
+    const { result } = renderHookWithProviders(() => useDeleteTag('room-1'));
+
+    await expect(result.current.mutateAsync('tag-1')).rejects.toThrow('Tag not found');
   });
 });

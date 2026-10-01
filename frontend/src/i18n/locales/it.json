@@ -151,6 +151,24 @@
       "combinationLabel": "Aggiungi una combinazione",
       "combinationPlaceholder": "Scegli due o più Tag",
       "addCombination": "Aggiungi combinazione"
+    },
+    "tags": {
+      "title": "Tag",
+      "description": "Tutti i Tag di questa Stanza. Eliminare un Tag lo toglie dai Documenti, dai Tag principali e dalle combinazioni che lo usano; i Documenti restano.",
+      "empty": "Questa Stanza non ha Tag.",
+      "delete": "Elimina il Tag {{name}}",
+      "confirmTitle": "Eliminare il Tag \"{{name}}\"?",
+      "confirmBody": "Il Tag viene tolto da ogni Documento che lo ha e dai Tag principali. Le combinazioni che lo usavano si riducono e vengono rimosse se restano meno di due Tag. I Documenti non vengono eliminati. L'operazione non si può annullare.",
+      "deleted": "Tag \"{{name}}\" eliminato"
+    },
+    "dangerZone": {
+      "title": "Zona pericolosa",
+      "description": "Eliminare la Stanza la rimuove per sempre insieme a membri, Documenti, Commenti, Note e immagini.",
+      "deleteRoom": "Elimina Stanza",
+      "confirmTitle": "Eliminare la Stanza \"{{name}}\"?",
+      "confirmBody": "Tutto ciò che è nella Stanza viene eliminato per tutti: membri, inviti, Tag, Documenti, Commenti, Note e immagini. L'operazione non si può annullare.",
+      "confirmLabel": "Scrivi \"{{name}}\" per confermare",
+      "deleted": "Stanza \"{{name}}\" eliminata"
     }
   },
   "documents": {

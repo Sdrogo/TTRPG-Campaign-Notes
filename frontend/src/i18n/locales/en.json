@@ -151,6 +151,24 @@
       "combinationLabel": "Add a combination",
       "combinationPlaceholder": "Pick two or more Tags",
       "addCombination": "Add combination"
+    },
+    "tags": {
+      "title": "Tags",
+      "description": "Every Tag of this Room. Deleting a Tag removes it from the Documents, the Main Tags and the combinations that use it; the Documents themselves stay.",
+      "empty": "This Room has no Tags.",
+      "delete": "Delete the Tag {{name}}",
+      "confirmTitle": "Delete the Tag \"{{name}}\"?",
+      "confirmBody": "The Tag is removed from every Document that has it and from the Main Tags. Combinations that used it shrink, and are removed if fewer than two Tags are left. Documents are not deleted. This cannot be undone.",
+      "deleted": "Tag \"{{name}}\" deleted"
+    },
+    "dangerZone": {
+      "title": "Danger zone",
+      "description": "Deleting the Room permanently removes it with its members, Documents, Comments, Notes and images.",
+      "deleteRoom": "Delete Room",
+      "confirmTitle": "Delete the Room \"{{name}}\"?",
+      "confirmBody": "Everything in this Room is deleted for everyone: members, invitations, Tags, Documents, Comments, Notes and images. This cannot be undone.",
+      "confirmLabel": "Type \"{{name}}\" to confirm",
+      "deleted": "Room \"{{name}}\" deleted"
     }
   },
   "documents": {

@@ -7,6 +7,7 @@ import {
   useAcceptInvitation,
   useCreateInvitation,
   useCreateRoom,
+  useDeleteRoom,
   useMyRooms,
   useRoom,
   useUpdateRoomSettings,
@@ -178,5 +179,31 @@ describe('useAcceptInvitation', () => {
     const { result } = renderHookWithProviders(() => useAcceptInvitation());
 
     await expect(result.current.mutateAsync('EXPIRED')).rejects.toThrow('Invitation expired');
+  });
+});
+
+describe('useDeleteRoom', () => {
+  it('deletes the Room, drops its cached queries and refreshes the rooms list', async () => {
+    fetchMock.mockResolvedValue(undefined);
+    const { result, queryClient } = renderHookWithProviders(() => useDeleteRoom('room-1'));
+    const remove = vi.spyOn(queryClient, 'removeQueries');
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await result.current.mutateAsync();
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1', { method: 'DELETE' });
+    // Removed, not refetched: every one of them would only 403.
+    await waitFor(() => expect(remove).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1'] }));
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'] });
+  });
+
+  it('propagates a rejection from the backend', async () => {
+    fetchMock.mockRejectedValue(new Error('Only an Administrator can delete the Room'));
+
+    const { result } = renderHookWithProviders(() => useDeleteRoom('room-1'));
+
+    await expect(result.current.mutateAsync()).rejects.toThrow(
+      'Only an Administrator can delete the Room',
+    );
   });
 });

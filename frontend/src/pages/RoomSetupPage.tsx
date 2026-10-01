@@ -5,6 +5,7 @@ import { useSession } from '../hooks/useSession';
 import { useMembers } from '../hooks/useMembers';
 import { useMainItems, useSetMainItems } from '../hooks/useMainItems';
 import { useTags } from '../hooks/useTags';
+import { useRoom } from '../hooks/useRooms';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { itemKey, resolveMainItems } from '../lib/mainItems';
 import type { MainItem } from '../types/tag';
@@ -12,12 +13,15 @@ import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/P
 import { PageLayout } from '../components/PageLayout';
 import { MainTagsEditor } from '../components/setup/MainTagsEditor';
 import { MemberManagement } from '../components/setup/MemberManagement';
+import { TagManagement } from '../components/setup/TagManagement';
+import { DeleteRoomSection } from '../components/setup/DeleteRoomSection';
 
 /**
  * `/rooms/:roomId/setup` (spec 11): the Room's setup, reachable only by an
  * Administrator of that Room - everyone else gets a message instead (the
  * backend enforces the same on every write). Holds the member management that
- * used to be its own page, and the Main Tags that order the Documents page.
+ * used to be its own page, the Main Tags that order the Documents page, the
+ * Tag list with its delete buttons and the Room's deletion (spec 13).
  */
 export function RoomSetupPage() {
   const { t } = useTranslation();
@@ -31,6 +35,7 @@ export function RoomSetupPage() {
   const tags = useTags(roomId ?? '', isAdmin);
   const mainItems = useMainItems(roomId ?? '', isAdmin);
   const setMainItems = useSetMainItems(roomId ?? '');
+  const room = useRoom(roomId ?? '', isAdmin);
 
   if (!roomId) {
     return null;
@@ -94,13 +99,29 @@ export function RoomSetupPage() {
       {(tags.isError || mainItems.isError) && <Text c="red">{t('setup.loadError')}</Text>}
       {tags.data && mainItems.data && (
         <MainTagsEditor
-          // Re-keyed on the saved list so a save, or a change made
-          // elsewhere, replaces the draft instead of fighting it.
-          key={resolveMainItems(mainItems.data, tags.data).map(itemKey).join('|')}
+          // Re-keyed on the saved list and on the Room's Tags so a save,
+          // a change made elsewhere or a deleted Tag (spec 13) replaces the
+          // draft instead of fighting it or keeping a Tag that is gone.
+          key={`${tags.data.map((tag) => tag.id).join(',')}#${resolveMainItems(
+            mainItems.data,
+            tags.data,
+          )
+            .map(itemKey)
+            .join('|')}`}
           tags={tags.data}
           items={mainItems.data}
           saving={setMainItems.isPending}
           onSave={handleSaveMainItems}
+        />
+      )}
+
+      {tags.data && <TagManagement roomId={roomId} tags={tags.data} />}
+
+      {room.data && (
+        <DeleteRoomSection
+          roomId={roomId}
+          roomName={room.data.name}
+          onDeleted={() => navigate('/')}
         />
       )}
     </PageLayout>
