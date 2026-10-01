@@ -1,6 +1,15 @@
-import type { Comment, CommentFilters } from '../types/comment';
+import type { Comment, CommentFilters, CommentFormValues } from '../types/comment';
 import type { Member } from '../types/member';
 import { displayNameFor, findMember } from './members';
+
+/** An empty composer: a Room-visible Comment with no images, written as yourself. */
+export const EMPTY_COMMENT_VALUES: CommentFormValues = {
+  body: '',
+  visibility: 'room',
+  selectiveUserIds: [],
+  newImages: [],
+  removedImageIds: [],
+};
 
 /** The Comment list's starting state: newest first, nothing filtered out. */
 export const DEFAULT_COMMENT_FILTERS: CommentFilters = {

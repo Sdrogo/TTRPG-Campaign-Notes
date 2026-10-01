@@ -1,7 +1,7 @@
 import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
-import { rawComment, rawImage } from '../fixtures';
+import { rawCharacter, rawComment, rawImage } from '../fixtures';
 import { renderHookWithProviders } from '../utils';
 import { useComments, useDeleteComment, useSaveComment } from '../../hooks/useComments';
 import type { CommentFormValues } from '../../types/comment';
@@ -64,6 +64,20 @@ describe('useComments', () => {
       images: [{ id: 'image-1', url: 'http://signed/image-1.webp', isFavorite: false }],
       canEdit: true,
       canDelete: true,
+      asCharacter: null,
+    });
+  });
+
+  it('maps the Character a Comment was written as', async () => {
+    fetchMock.mockResolvedValue([rawComment({ as_character: rawCharacter() })]);
+
+    const { result } = renderHookWithProviders(() => useComments('room-1', 'doc-1', true));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.[0].asCharacter).toEqual({
+      documentId: 'doc-2',
+      name: 'Aria',
+      imageUrl: 'http://signed/aria.webp',
     });
   });
 
@@ -287,5 +301,31 @@ describe('useDeleteComment', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(`${BASE}/comment-1`, { method: 'DELETE' });
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: THREAD_KEY }));
+  });
+});
+
+describe('writing in character', () => {
+  it('sends the Character to write as', async () => {
+    fetchMock.mockResolvedValue(rawComment());
+
+    const { result } = renderHookWithProviders(() => useSaveComment('room-1', 'doc-1'));
+    await result.current.mutateAsync({ values: { ...values(), asDocumentId: 'doc-2' } });
+
+    expect(fetchMock).toHaveBeenCalledWith(BASE, {
+      method: 'POST',
+      json: expect.objectContaining({ as_document_id: 'doc-2' }),
+    });
+  });
+
+  // Undefined keeps an edited Comment's Character: it must not be sent as
+  // null, which would turn the Comment back into a plain one.
+  it('leaves the Character out of the request when it is undefined', async () => {
+    fetchMock.mockResolvedValue(rawComment());
+
+    const { result } = renderHookWithProviders(() => useSaveComment('room-1', 'doc-1'));
+    await result.current.mutateAsync({ commentId: 'comment-1', values: values() });
+
+    const json = (fetchMock.mock.calls[0][1] as { json: object }).json;
+    expect(JSON.parse(JSON.stringify(json))).not.toHaveProperty('as_document_id');
   });
 });

@@ -24,6 +24,7 @@ function document(id: string, name: string): Document {
     selectiveUserIds: [],
     notes: [],
     files: [],
+    playedBy: null,
   };
 }
 

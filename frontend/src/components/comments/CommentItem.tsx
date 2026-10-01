@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Box, Button, Group, Popover, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core';
+import { Anchor, Box, Button, Group, Popover, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core';
+import { Link } from 'react-router-dom';
 import { UserAvatar } from '../UserAvatar';
+import { CharacterAvatar } from '../CharacterAvatar';
 import { ImageThumbnailGrid } from '../ImageThumbnailGrid';
 import { ImageViewerModal } from '../ImageViewerModal';
 import { VisibilityBadge } from '../VisibilityBadge';
@@ -9,13 +11,17 @@ import { MentionText } from '../mentions/MentionText';
 import { findMember, memberDisplayName } from '../../lib/members';
 import { isEdited } from '../../lib/comments';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/time';
+import type { Character } from '../../types/character';
 import type { Comment, CommentFormValues } from '../../types/comment';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
 
 interface CommentItemProps {
+  roomId: string;
   comment: Comment;
   members: Member[];
+  /** What the viewer may write as, offered when they edit the Comment. */
+  characters: Character[];
   currentUserId: string;
   onUpdate: (values: CommentFormValues, onDone: () => void) => void;
   updating: boolean;
@@ -27,11 +33,15 @@ interface CommentItemProps {
  * One Comment, social-media style: avatar, a bubble with the author's name and
  * text, then a light meta/action line underneath. Edit and delete appear only
  * when the backend's `canEdit`/`canDelete` allow them; a deleted Comment shows
- * as a placeholder.
+ * as a placeholder. A Comment written as a Character (D-24) leads with the
+ * Character's picture and name, linked to its Document, and names the real
+ * author underneath.
  */
 export function CommentItem({
+  roomId,
   comment,
   members,
+  characters,
   currentUserId,
   onUpdate,
   updating,
@@ -43,10 +53,31 @@ export function CommentItem({
   const author = findMember(members, comment.authorId);
   const authorName = memberDisplayName(author);
   const isMine = comment.authorId === currentUserId;
+  const character = comment.asCharacter;
+  const shownName = character ? character.name : authorName;
+
+  // The Character it was written as stays pickable while editing, even if
+  // the author no longer plays it.
+  const initialAsDocumentId = character?.documentId ?? null;
+  const editCharacters =
+    character && !characters.some((c) => c.documentId === character.documentId)
+      ? [character, ...characters]
+      : characters;
+
+  const you = isMine && (
+    <Text span size="xs" c="dimmed" fw={400}>
+      {' '}
+      {t('comments.you')}
+    </Text>
+  );
 
   return (
     <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="comment-item">
-      <UserAvatar user={author} size="md" mt={2} />
+      {character ? (
+        <CharacterAvatar character={character} size="md" mt={2} />
+      ) : (
+        <UserAvatar user={author} size="md" mt={2} />
+      )}
       <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
         {editing ? (
           <CommentComposer
@@ -59,9 +90,20 @@ export function CommentItem({
               selectiveUserIds: comment.selectiveUserIds,
               newImages: [],
               removedImageIds: [],
+              asDocumentId: initialAsDocumentId,
             }}
             existingImages={comment.images}
-            onSubmit={(values) => onUpdate(values, () => setEditing(false))}
+            characters={editCharacters}
+            onSubmit={(values) =>
+              onUpdate(
+                // Unchanged, the Character is omitted so the backend keeps
+                // it rather than checking again that the author may use it.
+                values.asDocumentId === initialAsDocumentId
+                  ? { ...values, asDocumentId: undefined }
+                  : values,
+                () => setEditing(false),
+              )
+            }
             submitting={updating}
             onCancel={() => setEditing(false)}
             autoFocus
@@ -79,15 +121,32 @@ export function CommentItem({
             }}
           >
             <Group gap="xs" wrap="wrap">
-              <Text size="sm" fw={600} style={{ overflowWrap: 'anywhere' }}>
-                {authorName}
-                {isMine && (
-                  <Text span size="xs" c="dimmed" fw={400}>
-                    {' '}
-                    {t('comments.you')}
-                  </Text>
-                )}
-              </Text>
+              {character ? (
+                <Group gap={6} wrap="wrap">
+                  <Anchor
+                    component={Link}
+                    to={`/rooms/${roomId}/documents/${character.documentId}`}
+                    size="sm"
+                    fw={600}
+                    c="var(--accent-primary)"
+                    style={{ overflowWrap: 'anywhere' }}
+                  >
+                    {character.name}
+                  </Anchor>
+                  <Group gap={4} wrap="nowrap">
+                    <UserAvatar user={author} size={16} />
+                    <Text size="xs" c="dimmed">
+                      {t('characters.writtenBy', { name: authorName })}
+                      {you}
+                    </Text>
+                  </Group>
+                </Group>
+              ) : (
+                <Text size="sm" fw={600} style={{ overflowWrap: 'anywhere' }}>
+                  {authorName}
+                  {you}
+                </Text>
+              )}
               {comment.visibility !== 'room' && (
                 <VisibilityBadge visibility={comment.visibility} size="xs" />
               )}
@@ -103,7 +162,7 @@ export function CommentItem({
                   size="sm"
                   style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
                 />
-                <CommentImages images={comment.images} authorName={authorName} />
+                <CommentImages images={comment.images} authorName={shownName} />
               </Stack>
             )}
           </Box>

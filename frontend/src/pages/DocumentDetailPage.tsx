@@ -13,6 +13,7 @@ import {
   useImportDocumentImage,
   useDeleteDocumentImage,
   useSetFavoriteImage,
+  useSetDocumentPlayer,
 } from '../hooks/useDocuments';
 import { useTags } from '../hooks/useTags';
 import { useMembers } from '../hooks/useMembers';
@@ -25,6 +26,7 @@ import { VisibilityBadge } from '../components/VisibilityBadge';
 import { TagList } from '../components/TagList';
 import { DocumentFields } from '../components/DocumentFields';
 import { DocumentOwners } from '../components/DocumentOwners';
+import { DocumentPlayer } from '../components/DocumentPlayer';
 import { DocumentImageGallery } from '../components/DocumentImageGallery';
 import { AddDocumentImages } from '../components/AddDocumentImages';
 import { CommentSection } from '../components/comments/CommentSection';
@@ -132,6 +134,7 @@ function DocumentPanel({
   const importImage = useImportDocumentImage(roomId, document.id);
   const deleteImage = useDeleteDocumentImage(roomId, document.id);
   const setFavorite = useSetFavoriteImage(roomId, document.id);
+  const setPlayer = useSetDocumentPlayer(roomId, document.id);
 
   const isOwner =
     document.ownerIds.includes(currentUserId) ||
@@ -237,6 +240,18 @@ function DocumentPanel({
           documentId={document.id}
           files={document.files}
           canUpload={isOwner}
+        />
+
+        <DocumentPlayer
+          playedBy={document.playedBy}
+          members={members}
+          canManage={isOwner}
+          onSet={(userId, addAsOwner) =>
+            setPlayer.mutate({ userId, addAsOwner }, { onError: notifyError })
+          }
+          onUnlink={() =>
+            setPlayer.mutate({ userId: null, addAsOwner: false }, { onError: notifyError })
+          }
         />
 
         <DocumentOwners

@@ -32,6 +32,7 @@ export function rawDocument(overrides: Record<string, unknown> = {}) {
     tag_ids: ['tag-1'],
     owner_ids: ['user-1'],
     selective_user_ids: [],
+    played_by: null,
     ...overrides,
   };
 }
@@ -82,6 +83,16 @@ export function rawComment(overrides: Record<string, unknown> = {}) {
     images: [],
     can_edit: true,
     can_delete: true,
+    as_character: null,
+    ...overrides,
+  };
+}
+
+export function rawCharacter(overrides: Record<string, unknown> = {}) {
+  return {
+    document_id: 'doc-2',
+    name: 'Aria',
+    image_url: 'http://signed/aria.webp',
     ...overrides,
   };
 }

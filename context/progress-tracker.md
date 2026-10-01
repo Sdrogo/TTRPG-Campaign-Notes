@@ -9,19 +9,42 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-01)
 
-Branch `claude/project-thread-duasvn` (spec 17_1, Characters backend, PR into
-`staging`). Backend **492** tests at 100% coverage; ruff, mypy clean;
-migration `a3d9c5e7f210` round-trips locally. Frontend untouched. Migrations
+Branch `claude/project-thread-duasvn` (spec 17_2, Characters frontend, PR into
+`staging`). Frontend **1006** tests at 100% coverage; oxlint, tsc and the
+build clean. Backend untouched since 17_1 (merged, 492 tests). Migrations
 `e2f7c4a9b1d6` (spec 16) and `a3d9c5e7f210` (spec 17) are both **applied to
-the live DB** (`alembic current` showed `e2f7c4a9b1d6`; `a3d9c5e7f210` applied
-2026-10-01 with the user's go-ahead, before its release PR merges).
+the live DB**.
 
-Specs 12 to 16 are merged into `staging`. Candidates for the next unit are in
-**Next Up**.
+Specs 12 to 17_1 are merged into `staging`. Candidates for the next unit are
+in **Next Up**.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Characters, frontend (spec 17_2, 2026-10-01)
+
+- Types `Character`, `Document.playedBy`, `Comment.asCharacter`,
+  `CommentFormValues.asDocumentId` (undefined = omit, keeps an edited
+  Comment's Character). Hooks `useSetDocumentPlayer` (also reloads the
+  caller's Characters) and `useMyCharacters`; `lib/characters.ts` maps the
+  wire shape and remembers the last "Post as" per Room in `localStorage`
+  (guarded, key `postAs:{roomId}`).
+- `DocumentPlayer` ("Interpretato da") above the Owners on the detail page:
+  single member `Select` + "also make Owner" checkbox (checked by default) +
+  unlink, for Owners and the Master; hidden from readers when nobody plays
+  it. The Document card adds a "Played by {name}" line with a 20px avatar.
+- Composer "Post as" `Select` (yourself + Characters), shown only when the
+  caller has at least one; the composer mounts once the Characters load so
+  it starts on the remembered choice (dropped if no longer allowed).
+- In-character Comment: `CharacterAvatar` (rounded square, not a circle),
+  Character name linked to its Document, "interpretato da {author}" with a
+  16px user avatar. Editing keeps the current Character selectable even if
+  the author no longer plays it, and an unchanged choice is omitted from the
+  PATCH so the backend doesn't re-check it.
+- Not yet checked in a browser: the Definition of Done walk-through (Master
+  links Aria, Player writes as Aria, a member who can't see Aria sees the
+  Player's name).
 
 ### Characters, backend (spec 17_1, 2026-10-01)
 
@@ -38,8 +61,6 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - Deviation from the ticket: Document responses carry `played_by` as a bare
   user id (like `owner_ids`), not embedded profile fields; 17_2 resolves it
   through the members list.
-- Next: 17_2 frontend ("Played by" picker, "Post as" selector, in-character
-  Comment display), after this merges.
 
 ### PDF Attachments, frontend (spec 16_2, 2026-10-01)
 
@@ -437,8 +458,9 @@ Question in the backend PR.
   live): upload a character sheet as an Owner, open and download it as
   another member, confirm a member who can't see the Document gets nothing.
   Migration `e2f7c4a9b1d6` is already live.
-- **Spec 17_2, Characters frontend** (after 17_1 merges). Migration
-  `a3d9c5e7f210` is already live.
+- **Browser check of spec 17** (after 17_2 merges): the ticket's Definition
+  of Done walk-through with a Master, a Player and a member who can't see
+  the Character's Document.
 - **Spec 18, Friends** (ticket in `context/feature/`, decisions D-26, D-27).
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and

@@ -141,6 +141,14 @@ other icon set.
   of their display name/email) plus `userDisplayName` — never an email
   directly. The members table adds pronouns and a 2-line-clamped
   description under the name; Owner badges carry a 16px avatar.
+- **Showing a Character** (spec 17_2): `CharacterAvatar` (the Document's
+  leading image or its initials) is a **rounded square** (`md` radius),
+  never a circle, so it can't be mistaken for a person. A Comment written
+  in character leads with it and the Character's name (accent link to the
+  Document), then "interpretato da {author}" in small dimmed text with a
+  16px `UserAvatar`. "Interpretato da" on the detail page sits above the
+  Owners, styled like them; the Document card adds a "Played by" line
+  with a 20px avatar above the Owners line.
 - **Room view**: left sidebar for navigation (Tags, Glossary, Members),
   center column for the Document list or an open Document, right
   panel (collapsible) for the Document's Thread when a Document is

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Group, Stack } from '@mantine/core';
+import { Button, Group, Select, Stack } from '@mantine/core';
 import { PaperPlaneRightIcon } from '@phosphor-icons/react';
 import { VisibilitySelect } from '../VisibilitySelect';
 import { MemberMultiSelect } from '../MemberMultiSelect';
@@ -12,18 +12,17 @@ import {
   releasePendingImages,
   remainingImageSlots,
 } from '../../lib/images';
+import { EMPTY_COMMENT_VALUES } from '../../lib/comments';
+import { displayNameFor } from '../../lib/members';
+import type { Character } from '../../types/character';
 import type { CommentFormValues } from '../../types/comment';
 import type { StoredImage } from '../../types/image';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
 
-const EMPTY_COMMENT_VALUES: CommentFormValues = {
-  body: '',
-  visibility: 'room',
-  selectiveUserIds: [],
-  newImages: [],
-  removedImageIds: [],
-};
+// The "Post as" option for writing as yourself: Document ids are UUIDs, so
+// this can't collide with a Character.
+const AS_YOURSELF = 'yourself';
 
 interface CommentComposerProps {
   members: Member[];
@@ -35,6 +34,11 @@ interface CommentComposerProps {
   initialValues?: CommentFormValues;
   /** Images already attached (when editing); each can be marked for removal. */
   existingImages?: StoredImage[];
+  /**
+   * What the author may write as (D-24). The "Post as" picker shows only
+   * when there's at least one.
+   */
+  characters?: Character[];
   onCancel?: () => void;
   autoFocus?: boolean;
 }
@@ -52,6 +56,7 @@ export function CommentComposer({
   submitting,
   initialValues = EMPTY_COMMENT_VALUES,
   existingImages = [],
+  characters = [],
   onCancel,
   autoFocus,
 }: CommentComposerProps) {
@@ -92,7 +97,8 @@ export function CommentComposer({
 
   const reset = () => {
     releasePendingImages(values.newImages);
-    setValues(EMPTY_COMMENT_VALUES);
+    // The next Comment keeps the same "Post as" choice.
+    setValues({ ...EMPTY_COMMENT_VALUES, asDocumentId: values.asDocumentId });
   };
 
   const submit = () => {
@@ -128,6 +134,26 @@ export function CommentComposer({
         <ImageThumbnailGrid images={thumbnails} size={72} onRemove={removeThumbnail} />
         <Group gap="xs" align="flex-end" justify="space-between">
           <Group gap="xs" align="flex-end" style={{ flex: '1 1 240px', minWidth: 0 }}>
+            {characters.length > 0 && (
+              <Select
+                size="xs"
+                aria-label={t('characters.postAs')}
+                data={[
+                  {
+                    value: AS_YOURSELF,
+                    label: t('characters.yourself', { name: displayNameFor(members, currentUserId) }),
+                  },
+                  ...characters.map((c) => ({ value: c.documentId, label: c.name })),
+                ]}
+                value={values.asDocumentId ?? AS_YOURSELF}
+                onChange={(value) =>
+                  set({ asDocumentId: value === AS_YOURSELF ? null : value })
+                }
+                allowDeselect={false}
+                w={200}
+                maw="100%"
+              />
+            )}
             <VisibilitySelect
               subject="comment"
               size="xs"

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../../lib/apiClient';
 import { notifyError } from '../../../lib/notify';
-import { rawComment } from '../../fixtures';
+import { rawCharacter, rawComment } from '../../fixtures';
 import i18n from '../../../i18n';
 import { renderWithProviders } from '../../utils';
 import { CommentSection } from '../../../components/comments/CommentSection';
@@ -28,17 +28,22 @@ function member(overrides: Partial<Member> = {}): Member {
   };
 }
 
-// Answers the Comment list route with `list`, and anything else (a write,
-// an image attach) with `onWrite`. A test that only reads can omit it.
+// Answers the Comment list route with `list`, the caller's Characters with
+// `characters`, and anything else (a write, an image attach) with `onWrite`.
+// A test that only reads can omit it.
 function mockRoutes(
   list: unknown[],
   onWrite: (path: string) => Promise<unknown> = () => Promise.resolve(),
+  characters: unknown[] = [],
 ) {
-  fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
-    path === '/rooms/room-1/documents/doc-1/comments' && !init?.method
+  fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
+    if (path === '/rooms/room-1/characters/mine') {
+      return Promise.resolve(characters);
+    }
+    return path === '/rooms/room-1/documents/doc-1/comments' && !init?.method
       ? Promise.resolve(list)
-      : onWrite(path),
-  );
+      : onWrite(path);
+  });
 }
 
 const members = [
@@ -63,6 +68,7 @@ const composer = () => screen.getByRole('textbox', { name: 'Testo del commento' 
 beforeEach(() => {
   fetchMock.mockReset();
   vi.mocked(notifyError).mockClear();
+  localStorage.clear();
 });
 
 describe('CommentSection', () => {
@@ -103,7 +109,12 @@ describe('CommentSection', () => {
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/documents/doc-1/comments', {
         method: 'POST',
-        json: { body: 'Ricordate il sigillo.', visibility: 'room', selective_user_ids: [] },
+        json: {
+          body: 'Ricordate il sigillo.',
+          visibility: 'room',
+          selective_user_ids: [],
+          as_document_id: null,
+        },
       }),
     );
   });
@@ -354,5 +365,73 @@ describe('deleting from the list', () => {
     );
     expect(screen.getByText('Secondo')).toBeInTheDocument();
     resolveDelete(undefined);
+  });
+});
+
+describe('posting in character', () => {
+  const postAs = () => screen.getByRole('combobox', { name: 'Scrivi come' });
+
+  it('offers no "Post as" to someone with no Character', async () => {
+    mockRoutes([]);
+    render();
+    await screen.findByText(/Nessun commento ancora/);
+
+    await waitFor(() => expect(composer()).toBeInTheDocument());
+    expect(screen.queryByRole('combobox', { name: 'Scrivi come' })).not.toBeInTheDocument();
+  });
+
+  it('writes as a Character and remembers the choice for the Room', async () => {
+    const writes: unknown[] = [];
+    fetchMock.mockImplementation((path: string, init?: { method?: string; json?: unknown }) => {
+      if (path === '/rooms/room-1/characters/mine') {
+        return Promise.resolve([rawCharacter()]);
+      }
+      if (init?.method) {
+        writes.push(init.json);
+        return Promise.resolve(rawComment());
+      }
+      return Promise.resolve([]);
+    });
+    const { user } = render();
+    await screen.findByText(/Nessun commento ancora/);
+
+    expect(await screen.findByRole('combobox', { name: 'Scrivi come' })).toHaveValue(
+      'Te stesso (Giocatore)',
+    );
+    await user.click(postAs());
+    await user.click(screen.getByRole('option', { name: 'Aria' }));
+    await user.type(composer(), 'Salve.');
+    await user.click(screen.getByRole('button', { name: /Pubblica/ }));
+
+    await waitFor(() => expect(localStorage.getItem('postAs:room-1')).toBe('doc-2'));
+    expect(writes[0]).toEqual(expect.objectContaining({ as_document_id: 'doc-2' }));
+    // The composer clears but keeps writing as Aria.
+    await waitFor(() => expect(composer()).toHaveValue(''));
+    expect(postAs()).toHaveValue('Aria');
+  });
+
+  it('starts on the Character last used in this Room', async () => {
+    localStorage.setItem('postAs:room-1', 'doc-2');
+    mockRoutes([], undefined, [rawCharacter()]);
+    render();
+
+    expect(await screen.findByRole('combobox', { name: 'Scrivi come' })).toHaveValue('Aria');
+  });
+
+  it('forgets a remembered Character the author may no longer write as', async () => {
+    localStorage.setItem('postAs:room-1', 'doc-9');
+    mockRoutes([], undefined, [rawCharacter()]);
+    render();
+
+    expect(await screen.findByRole('combobox', { name: 'Scrivi come' })).toHaveValue(
+      'Te stesso (Giocatore)',
+    );
+  });
+
+  it('shows the Character a Comment was written as', async () => {
+    mockRoutes([rawComment({ as_character: rawCharacter() })]);
+    render();
+
+    expect(await screen.findByRole('link', { name: 'Aria' })).toBeInTheDocument();
   });
 });

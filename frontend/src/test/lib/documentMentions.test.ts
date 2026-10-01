@@ -33,6 +33,7 @@ function doc(id: string, name: string, tagIds: string[] = []): Document {
     selectiveUserIds: [],
     notes: [],
     files: [],
+    playedBy: null,
   };
 }
 
