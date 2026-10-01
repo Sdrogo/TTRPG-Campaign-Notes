@@ -9,14 +9,14 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-01)
 
-Branch `feature/11-3-index-follows-main-items` (spec 11_3, PR open). Latest
-measured state: frontend **827/827** tests at **100%** coverage; backend
-**355** tests (DB tests run in CI; migrations `a7c3e9d1b254` and
-`b5d8f2a9c1e3` are both applied to the live DB); lint, `tsc`, ruff and mypy
-strict clean. CI keeps exact-100% gates.
+Branch `feature/12-1-notes-backend` (spec 12_1, backend only). Latest measured
+state: backend **413** tests pass against disposable PostgreSQL (migrations
+`b5d8f2a9c1e3` and `c6e1a4b7d2f9` are also applied to the live DB); backend at
+100% coverage, ruff and mypy strict clean. Frontend untouched (spec 12_2 is
+the next unit). CI keeps exact-100% gates.
 
-No other unit is in progress. Candidates for the next one are in **Next
-Up**.
+Spec 12_1 is the current unit awaiting merge. Candidates for the next unit are
+in **Next Up**.
 
 ## Completed Units
 
@@ -173,6 +173,34 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
 ### Tag combinations (spec 11_2, 10-01, PR #25 merged)
 
+### Notes on Documents, backend (spec 12_1, branch `feature/12-1-notes-backend`)
+
+Backend and DB half of `context/feature/12 - add Notes to Documents.md`; the
+UI is spec 12_2. Migration `c6e1a4b7d2f9` (two new empty tables) was **applied
+to the live DB on 10-01** with the user's go-ahead, before the merge.
+
+- A **Note** = `title` (≤200), `description` (plain text, `#Name` mentions,
+  no length rule like a Document's), own **visibility**, `position`. Tables
+  `document_notes` + `document_note_visibility_grants`, cascade from the
+  Document, RLS + deny policy. **A Note is the Detail of D-18** (same feature,
+  two names), implemented outside the Thread - see Open Questions.
+- Visibility = `is_note_visible` (reuses `is_content_visible`, the Document's
+  Owners as "Owner"). A hidden Note is absent from every response and a
+  request for it is **404, not 403**; visibility is checked before permission.
+  Create and PATCH return null when the saved Note is hidden from the caller;
+  the Master can still read it, and visibility changes remain audited.
+- Owners + Master manage Notes (`app/domain/notes.py`). Visibility/grant
+  changes write a `note_visibility_changed` AuditLog row (Invariant 7).
+- API `app/api/notes.py`: list/create/PATCH/DELETE and `PUT .../notes/order`
+  (a Note hidden from the reorderer keeps its slot). Notes are **embedded in
+  every single-Document response** (`DocumentDetailResponse`) and **not** in
+  the list. ≤50 per Document, enforced under the Document row lock.
+- `ensure_room_members` moved to `api/access.py` (shared with Comments).
+- Local note: a full local run once showed 6 uncovered lines in
+  `api/comments.py` (a coverage-tracing flake; 100% in isolation and next to
+  the Notes tests). CI is the gate.
+
+### Tag combinations (spec 11_2, branch `feature/11-2-tag-combinations`)
 - Migration `b5d8f2a9c1e3` **applied to the live DB on 10-01** (with the
   user's go-ahead, before the merge).
 
@@ -208,10 +236,12 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
 ## Next Up
 
-- **Browser check of specs 11-11_3**: setup page as Administrator and as a
-  plain member, reorder + save, add a combination; the Documents grouping and
-  the Tag index both follow the order; the one-line `TagFilter` with 3+ Tags
-  selected.
+- **Merge spec 12_1, then build 12_2** (frontend). Migration `c6e1a4b7d2f9`
+  is already live; Render redeploys the backend on merge and the single-Document
+  responses gain a `notes` field (additive, the old frontend ignores it).
+- **Browser check of spec 12** (after 12_2): create, edit and reorder Notes
+  as a Document Owner and Master; confirm Master-only Notes disappear for
+  Players while remaining visible to the Master.
 - **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only): set it to
   `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app` and redeploy.
   Then the look-alike `…-abc123-evil-rum11.vercel.app` must get no
@@ -234,9 +264,9 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   rename.
 - **Threads** on the `posts` table: nested replies (FR-T1/T2) with the
   D-17/VR-04 "never wider than the parent" check in the domain layer
-  (Invariant 3); pagination (FR-T3); Details (D-18–D-20, FR-D3, FR-T5–T7).
-  Scope a first slice to FR-T1/T5/T10 (post, edit/moderate, show Details on
-  the card).
+  (Invariant 3); pagination (FR-T3); D-20, FR-T5–T7. Details (D-18, FR-D3,
+  FR-T10) already exist as **Notes** (spec 12), outside the Thread. Scope a
+  first slice to FR-T1/T5 (post, edit/moderate).
 - **Reveal action + fuller Visibility** (VR-02, VR-05, VR-06, FR-V2/V3/V5):
   per-Room default visibility, Reveal with AuditLog + notification, "view as
   User X" for the Master.
@@ -249,6 +279,26 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
 Items marked *protected* need a product pass because `requirements.md` is a
 protected file.
+
+- **Spec 12 — Notes = Details (decided 2026-10-01, `requirements.md` needs a
+  product pass, *protected*)**: the product owner confirmed a Note and a
+  Dettaglio (D-18) are the same feature under two names, and chose to keep
+  **Owner/Master-only** management. This departs from the spec: D-19/I-10 say
+  any member who sees the Document may add a Detail, only its author or the
+  Master may edit it, and it is a Thread Post with nested replies; FR-T8
+  (promote a Detail into the description) and FR-T10 (a dedicated section on
+  the Document card) also assume that model. Implemented instead: own tables,
+  Owners + Master add/edit/delete/reorder, no replies, shown on the detail page
+  only. Either amend D-19, I-10, FR-T8 and FR-T10 to this model, or move
+  Notes onto `posts` (kind `detail`) later to get member-written Details and
+  replies. Other choices to confirm: (a) Private = the Document's Owners +
+  Master, and an Owner who sets a Note to "Master" stops seeing it; (b) Notes
+  are in the single-Document responses, not the list or the card; (c) limits:
+  200-char title, 50 per Document, no description limit; (d) reordering is
+  kept; (e) the Selective grant list is sent only to those who can manage the
+  Note; (f) the Agent export (FR-G1) doesn't exist yet and must apply the same
+  filter. Tickets: `context/feature/12_1 - Note backend effort.md`,
+  `12_2 - Note frontend effort.md`.
 
 - **Spec 11_2 — combination semantics (assumed, confirm)**: the spec only
   says a combination of 2+ Tags can be a Group-by line item. Assumed: a

@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.access import get_visible_document, require_membership
+from app.api.access import ensure_room_members, get_visible_document, require_membership
 from app.api.errors import http_error, translated_error
 from app.api.image_uploads import (
     ImageResponse,
@@ -128,11 +128,9 @@ async def _validate_grantees(
     session: AsyncSession, room_id: uuid.UUID, user_ids: Collection[uuid.UUID], locale: str
 ) -> None:
     """422 unless every Selective grantee is a member of the Room."""
-    member_ids = {m.user_id for m in await rooms_repo.list_memberships(session, room_id)}
-    if not set(user_ids) <= member_ids:
-        raise http_error(
-            status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.comment.invalidSelectiveUsers", locale
-        )
+    await ensure_room_members(
+        session, room_id, user_ids, "errors.comment.invalidSelectiveUsers", locale
+    )
 
 
 async def _get_visible_comment(
