@@ -43,6 +43,17 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   Room deletion; the Master may delete Tags; Room audit rows go with the Room;
   a combination below two Tags is dropped.
 - Next: 13_1c (setup-page controls).
+### Invite link survives sign-in (2026-10-01)
+
+- Bug: opening `/invite/:code` signed out, then signing in, logged the user in
+  but never joined the Room (OAuth returns to the site origin, so the invite URL
+  was lost). Fix: `lib/pendingInvite.ts` keeps the code in `sessionStorage`;
+  `AcceptInvitePage` saves it when signed out and clears it on accepting;
+  `HomePage` redirects a signed-in user with a saved code to `/invite/:code`.
+  `redirectTo` is unchanged, so no Supabase Redirect URLs change is needed.
+- Frontend 923 tests, 100% coverage, `tsc` and lint clean. Not seen against
+  real Google login: do a live check with a fresh invite link.
+
 ### Room card navigation feedback (2026-10-01)
 
 - The Room navigation overlay has a dedicated class with a themed hover
