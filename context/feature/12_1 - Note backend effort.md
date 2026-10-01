@@ -6,7 +6,7 @@
 ## Design
 
 - A Document has zero or more Notes. A Note has: `id`, `document_id`, `title`, `description`, `visibility` (Room / Master / Private / Selective, the same four levels as a Document), a Selective grant list, `position` (display order within the Document), `created_by`, `created_at`, `updated_at`.
-- **A Note is not a Detail.** Details (D-18/D-19) are `posts` of kind `detail` in the Thread, written by any member. A Note belongs to the Document itself, is edited by the Document's Owners and the Master, and lives in its own table. Keep the two names distinct in code, routes and docs.
+- **A Note is the Detail of D-18** (confirmed by the product owner, 2026-10-01: same feature, two names; "Note" is the name used in code, routes and UI). It deliberately departs from D-19: it lives in its own table, is managed by the Document's Owners and the Master (not written by any member as a Thread Post), and has no replies. The departure is an Open Question against `requirements.md`.
 - **Visibility is independent of the Document's, but never wider in effect**: a Note is only reachable through a Document the viewer already sees (hidden Document -> 404 for its Notes too, VR-07), exactly like Comments.
 - Who sees a Note, by level (reusing `app/domain/visibility.py::is_content_visible`, with the Document's Owners as the "Owner"):
   - Room: every member who sees the Document.
@@ -51,7 +51,7 @@
 
 ## Open questions to log in `progress-tracker.md`
 
-- Naming: "Note" vs the requirements' "blocco di informazione" and "Dettaglio". Assumed distinct from Details (D-18).
+- Naming: resolved - Note = Dettaglio (D-18). Open: amend D-19/I-10/FR-T10 to match the Owner/Master-managed model, or move Notes onto `posts` later.
 - Private means "the Document's Owners and the Master", not "the Note's creator", since a Note has no separate author in the ownership sense. Confirm.
 - Limits (title 200, 50 Notes per Document) and the optional reordering.
 - Whether Notes appear on the Document card (assumed no) and in the Agent export (not built yet; the export must apply the same filter, FR-G1).

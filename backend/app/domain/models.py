@@ -153,9 +153,11 @@ class DocumentOwner:
 @dataclass(frozen=True)
 class Note:
     """An additional block of information on a Document, with a title, a
-    description and a visibility of its own (spec 12, VR-03). Not a Detail
-    (D-18): a Note belongs to the Document and is managed by its Owners.
-    `position` orders a Document's Notes, ascending."""
+    description and a visibility of its own (spec 12, VR-03). A Note is what
+    requirements.md calls a Detail (D-18), stored in its own table and managed
+    by the Document's Owners and the Master rather than written by any member
+    as a Thread Post (a deliberate departure from D-19). `position` orders a
+    Document's Notes, ascending."""
 
     id: uuid.UUID
     document_id: uuid.UUID
@@ -170,7 +172,8 @@ class Note:
 
 class PostKind(StrEnum):
     """requirements.md's Post model: a Thread contribution is either a
-    Comment or a (titled) Detail. Only Comments are implemented so far."""
+    Comment or a (titled) Detail. Only Comments are Posts: Details are
+    implemented as Notes, in their own table (see `Note`)."""
 
     COMMENT = "comment"
 

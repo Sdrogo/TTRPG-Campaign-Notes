@@ -261,7 +261,7 @@ class PostRow(Base):
     """A Post in a Document's main Thread (requirements.md's data model).
     There is no separate `threads` table: a Document has exactly one Thread
     (D-20/I-11), so a Post points straight at its Document. `kind` is only
-    ever "comment" for now; Details (D-18/D-19) will reuse this table."""
+    ever "comment": Details (D-18) are the Notes of `document_notes`."""
 
     __tablename__ = "posts"
 
