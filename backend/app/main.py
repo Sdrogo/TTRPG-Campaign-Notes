@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.account import router as account_router
 from app.api.auth import router as auth_router
+from app.api.characters import router as characters_router
 from app.api.comments import router as comments_router
 from app.api.document_files import router as document_files_router
 from app.api.documents import router as documents_router
@@ -62,6 +63,7 @@ app.include_router(documents_router)
 app.include_router(comments_router)
 app.include_router(notes_router)
 app.include_router(document_files_router)
+app.include_router(characters_router)
 
 
 @app.get("/health")

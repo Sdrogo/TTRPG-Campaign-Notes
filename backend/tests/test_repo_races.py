@@ -55,6 +55,11 @@ async def test_updating_a_vanished_document_raises(db_session: AsyncSession) -> 
         await documents_repo.update_document(db_session, ghost)
 
 
+async def test_linking_a_player_to_a_vanished_document_raises(db_session: AsyncSession) -> None:
+    with pytest.raises(LookupError):
+        await documents_repo.set_played_by(db_session, uuid.uuid4(), uuid.uuid4())
+
+
 async def test_saving_the_profile_of_a_vanished_user_raises(db_session: AsyncSession) -> None:
     ghost = UserProfile(user_id=uuid.uuid4(), display_name="Gone")
     with pytest.raises(LookupError):

@@ -4,6 +4,7 @@ requires Ownership - which the Master always has (D-12)."""
 
 import uuid
 from collections.abc import Mapping
+from dataclasses import replace
 
 from fastapi import APIRouter, UploadFile, status
 from pydantic import BaseModel, HttpUrl
@@ -34,6 +35,7 @@ from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, files_repo, rooms_repo, tags_repo
 from app.db.session import SessionDep
+from app.domain.characters import PlayerNotAMemberError, plan_player_change
 from app.domain.documents import (
     AlreadyOwnerError,
     DocumentNameRequiredError,
@@ -64,6 +66,9 @@ class DocumentResponse(BaseModel):
     tag_ids: list[uuid.UUID]
     owner_ids: list[uuid.UUID]
     selective_user_ids: list[uuid.UUID]
+    # The member who plays this Document as a Character (D-23), or None. Like
+    # `owner_ids`, a user id the client resolves through the members list.
+    played_by: uuid.UUID | None
 
 
 class DocumentDetailResponse(DocumentResponse):
@@ -75,6 +80,15 @@ class DocumentDetailResponse(DocumentResponse):
 
     notes: list[NoteResponse]
     files: list[FileResponse]
+
+
+class SetPlayerRequest(BaseModel):
+    """The member who plays the Document as a Character, or null to unlink it
+    (D-23). `add_as_owner` also makes them an Owner, so they can edit their
+    sheet (spec 17's default)."""
+
+    user_id: uuid.UUID | None
+    add_as_owner: bool = True
 
 
 class ImageFromUrlRequest(BaseModel):
@@ -125,6 +139,7 @@ def _build_response(
         tag_ids=tag_ids,
         owner_ids=owner_ids,
         selective_user_ids=selective_ids,
+        played_by=document.played_by,
     )
 
 
@@ -281,13 +296,11 @@ async def update_document(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.document.nameRequired", locale
         )
 
-    updated = Document(
-        id=document.id,
-        room_id=document.room_id,
+    updated = replace(
+        document,
         name=new_name,
         description=document.description if body.description is None else body.description,
         visibility=document.visibility if body.visibility is None else body.visibility,
-        created_by=document.created_by,
     )
     await documents_repo.update_document(session, updated)
 
@@ -381,9 +394,7 @@ async def delete_document_image(
     """An Owner (or the Master) manages every image in the Document's gallery,
     including Comment attachments - but only those they can see."""
     requester_id = uuid.UUID(current_user.id)
-    _, _, membership = await get_owned_document(
-        session, room_id, document_id, requester_id, locale
-    )
+    _, _, membership = await get_owned_document(session, room_id, document_id, requester_id, locale)
 
     images = await get_visible_images(session, document_id, membership)
     image = next((i for i in images if i.id == image_id), None)
@@ -474,3 +485,43 @@ async def remove_owner(
         raise translated_error(status.HTTP_404_NOT_FOUND, exc, locale) from exc
 
     await documents_repo.delete_owner(session, document_id, user_id)
+
+
+@router.put("/{document_id}/player")
+async def set_player(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    body: SetPlayerRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> DocumentDetailResponse:
+    """UC-21/FR-D9: an Owner (or the Master, D-12) makes the Document a
+    Character played by one member of the Room, changes who plays it, or
+    unlinks it with `user_id: null` (D-23). 422 when the user isn't a member.
+    The change, and the Owner added with `add_as_owner`, are audited in the
+    same transaction (Invariant 7)."""
+    requester_id = uuid.UUID(current_user.id)
+    # Taken before anything is read, so the Document's current player and the
+    # members are read as of the lock: serialized with `remove_member` (a
+    # member leaving can't stay linked, D-15) and with a concurrent link (the
+    # audited "from" is the real previous player).
+    await rooms_repo.lock_room(session, room_id)
+    document, owner_ids, membership = await get_owned_document(
+        session, room_id, document_id, requester_id, locale
+    )
+
+    member_ids = {m.user_id for m in await rooms_repo.list_memberships(session, room_id)}
+    try:
+        plan = plan_player_change(
+            document, requester_id, owner_ids, member_ids, body.user_id, body.add_as_owner
+        )
+    except PlayerNotAMemberError as exc:
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
+
+    await documents_repo.set_played_by(session, document_id, plan.document.played_by)
+    if plan.new_owner is not None:
+        await documents_repo.insert_owner(session, document_id, plan.new_owner.user_id)
+    for entry in plan.audit_entries:
+        await rooms_repo.insert_audit_log(session, entry)
+    return await _to_response(session, plan.document, membership)

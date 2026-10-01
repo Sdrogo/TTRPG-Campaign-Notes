@@ -11,6 +11,7 @@ from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import ensure_room_members, get_visible_document, require_membership
+from app.api.characters import CharacterResponse, visible_characters
 from app.api.errors import http_error, translated_error
 from app.api.image_uploads import (
     ImageResponse,
@@ -25,6 +26,7 @@ from app.api.image_uploads import (
 from app.auth.dependencies import CurrentUserDep
 from app.db import comments_repo, documents_repo, rooms_repo
 from app.db.session import SessionDep
+from app.domain.characters import CannotPostAsError, character_shown_to, ensure_can_post_as
 from app.domain.comments import (
     CannotDeleteCommentError,
     CommentBodyRequiredError,
@@ -42,7 +44,7 @@ from app.domain.comments import (
 )
 from app.domain.errors import DomainError
 from app.domain.models import Comment, Document, DocumentImage, DocumentVisibility, Membership
-from app.domain.visibility import is_comment_visible
+from app.domain.visibility import is_comment_visible, is_document_visible
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/documents/{document_id}/comments", tags=["comments"])
@@ -68,15 +70,20 @@ class CommentResponse(BaseModel):
     # layer so the UI never re-derives permission rules.
     can_edit: bool
     can_delete: bool
+    # The Character the Comment was written as (D-24), only when this viewer
+    # sees that Document; otherwise None and the author shows as usual
+    # (VR-13). `author_id` is always the real author.
+    as_character: CharacterResponse | None
 
 
 class CreateCommentRequest(BaseModel):
-    """A new Comment with its visibility level and, for Selective, who else may
-    read it."""
+    """A new Comment with its visibility level, for Selective who else may
+    read it, and optionally the Character it is written as (D-24)."""
 
     body: str
     visibility: DocumentVisibility = DocumentVisibility.ROOM
     selective_user_ids: list[uuid.UUID] = []
+    as_document_id: uuid.UUID | None = None
 
 
 class ImageFromUrlRequest(BaseModel):
@@ -87,11 +94,13 @@ class ImageFromUrlRequest(BaseModel):
 
 class UpdateCommentRequest(BaseModel):
     """A partial edit: omitted fields are left as they are. Changing the
-    visibility or the grants is audited (VR-08)."""
+    visibility or the grants is audited (VR-08). `as_document_id` sent as null
+    turns a Comment written as a Character back into a plain one."""
 
     body: str | None = None
     visibility: DocumentVisibility | None = None
     selective_user_ids: list[uuid.UUID] | None = None
+    as_document_id: uuid.UUID | None = None
 
 
 def _to_response(
@@ -100,9 +109,12 @@ def _to_response(
     images: Collection[DocumentImage],
     image_urls: Mapping[str, str],
     viewer: Membership,
+    characters: Mapping[uuid.UUID, CharacterResponse],
 ) -> CommentResponse:
     """Serializes a Comment for `viewer`, with the permission flags the UI
-    shows or hides its actions by."""
+    shows or hides its actions by. `characters` holds only the Characters the
+    viewer sees (`visible_characters`)."""
+    character_id = character_shown_to(comment, characters.keys())
     return CommentResponse(
         id=comment.id,
         document_id=comment.document_id,
@@ -116,7 +128,38 @@ def _to_response(
         images=image_responses(images, image_urls),
         can_edit=can_edit_comment(comment, viewer.user_id),
         can_delete=can_delete_comment(comment, viewer.user_id, viewer.role),
+        as_character=None if character_id is None else characters[character_id],
     )
+
+
+async def _characters_for(
+    session: AsyncSession, comments: Collection[Comment], viewer: Membership
+) -> Mapping[uuid.UUID, CharacterResponse]:
+    """The Characters these Comments were written as, those `viewer` may see
+    (VR-13)."""
+    ids = {c.as_document_id for c in comments if c.as_document_id is not None}
+    return await visible_characters(session, ids, viewer)
+
+
+async def _ensure_can_post_as(
+    session: AsyncSession, author: Membership, document_id: uuid.UUID, locale: str
+) -> None:
+    """UC-22: the Character must be a Document of the author's Room that they
+    see (404 otherwise, whether or not it exists, VR-07), and one they may
+    write as (403, D-24) - visibility first, so the status can't reveal a
+    hidden Document."""
+    found = await documents_repo.get_documents_by_ids(session, [document_id])
+    document = found[0] if found else None
+    if document is None or document.room_id != author.room_id:
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.character.notFound", locale)
+    owner_ids = await documents_repo.list_owner_ids(session, document_id)
+    selective_ids = await documents_repo.list_selective_grant_ids(session, document_id)
+    if not is_document_visible(document, author.user_id, author.role, owner_ids, selective_ids):
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.character.notFound", locale)
+    try:
+        ensure_can_post_as(document, author.user_id, author.role)
+    except CannotPostAsError as exc:
+        raise translated_error(status.HTTP_403_FORBIDDEN, exc, locale) from exc
 
 
 def _body_error(exc: DomainError, locale: str) -> HTTPException:
@@ -205,10 +248,18 @@ async def list_comments(
     grants = await comments_repo.list_grants_for_comments(session, comment_ids)
     images = await documents_repo.list_images_for_posts(session, comment_ids)
     image_urls = await sign_images(image for group in images.values() for image in group)
-    return [
-        _to_response(comment, grants[comment.id], images[comment.id], image_urls, membership)
+    visible = [
+        comment
         for comment in comments
         if is_comment_visible(comment, requester_id, membership.role, grants[comment.id])
+    ]
+    # Characters are read only for the Comments that survived the filter.
+    characters = await _characters_for(session, visible, membership)
+    return [
+        _to_response(
+            comment, grants[comment.id], images[comment.id], image_urls, membership, characters
+        )
+        for comment in visible
     ]
 
 
@@ -222,7 +273,9 @@ async def create_comment(
     locale: LocaleDep,
 ) -> CommentResponse:
     """UC-11: any member who can see the Document comments on it, choosing the
-    Comment's visibility (VR-02)."""
+    Comment's visibility (VR-02). With `as_document_id` it is written as a
+    Character (UC-22): one the author plays, or any Document for the Master
+    (D-24); 403 otherwise, 404 for a Document they can't see."""
     requester_id = uuid.UUID(current_user.id)
     membership, _ = await _require_visible_document(
         session, room_id, document_id, requester_id, locale
@@ -230,14 +283,22 @@ async def create_comment(
 
     try:
         comment = plan_new_comment(
-            document_id, requester_id, body.body, body.visibility, datetime.now(UTC)
+            document_id,
+            requester_id,
+            body.body,
+            body.visibility,
+            datetime.now(UTC),
+            as_document_id=body.as_document_id,
         )
     except (CommentBodyRequiredError, CommentTooLongError) as exc:
         raise _body_error(exc, locale) from exc
 
+    if body.as_document_id is not None:
+        await _ensure_can_post_as(session, membership, body.as_document_id, locale)
     await _validate_grantees(session, room_id, body.selective_user_ids, locale)
     await comments_repo.insert_comment(session, comment, body.selective_user_ids)
-    return _to_response(comment, set(body.selective_user_ids), [], {}, membership)
+    characters = await _characters_for(session, [comment], membership)
+    return _to_response(comment, set(body.selective_user_ids), [], {}, membership, characters)
 
 
 @router.patch("/{comment_id}")
@@ -250,9 +311,9 @@ async def update_comment(
     session: SessionDep,
     locale: LocaleDep,
 ) -> CommentResponse:
-    """FR-T5: the author edits their Comment's body, visibility or grants. A
-    change of who can see it is audited in the same transaction (VR-08,
-    Invariant 7)."""
+    """FR-T5: the author edits their Comment's body, visibility, grants or the
+    Character it is written as (same rule as creating one, D-24). A change of
+    who can see it is audited in the same transaction (VR-08, Invariant 7)."""
     requester_id = uuid.UUID(current_user.id)
     membership, _ = await _require_visible_document(
         session, room_id, document_id, requester_id, locale
@@ -261,6 +322,7 @@ async def update_comment(
         session, document_id, comment_id, membership, locale
     )
 
+    change_character = "as_document_id" in body.model_fields_set
     try:
         plan = plan_comment_edit(
             comment,
@@ -271,11 +333,22 @@ async def update_comment(
             visibility=body.visibility,
             current_selective_ids=selective_ids,
             new_selective_ids=body.selective_user_ids,
+            change_character=change_character,
+            as_document_id=body.as_document_id,
         )
     except (NotCommentAuthorError, CommentDeletedError) as exc:
         raise _author_error(exc, locale) from exc
     except (CommentBodyRequiredError, CommentTooLongError) as exc:
         raise _body_error(exc, locale) from exc
+
+    # Re-checked only for a new Character: re-sending the current one is not a
+    # change, even if the author no longer plays it.
+    if (
+        change_character
+        and body.as_document_id is not None
+        and body.as_document_id != comment.as_document_id
+    ):
+        await _ensure_can_post_as(session, membership, body.as_document_id, locale)
 
     if body.selective_user_ids is not None:
         await _validate_grantees(session, room_id, body.selective_user_ids, locale)
@@ -288,7 +361,10 @@ async def update_comment(
         await rooms_repo.insert_audit_log(session, plan.audit_entry)
 
     images = await _comment_images(session, comment_id)
-    return _to_response(plan.comment, selective_ids, images, await sign_images(images), membership)
+    characters = await _characters_for(session, [plan.comment], membership)
+    return _to_response(
+        plan.comment, selective_ids, images, await sign_images(images), membership, characters
+    )
 
 
 @router.delete("/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -344,15 +420,14 @@ async def _attach_image(
     except (NotCommentAuthorError, CommentDeletedError, TooManyCommentImagesError) as exc:
         raise _author_error(exc, locale) from exc
 
-    data = (
-        await fetch_url(source, locale) if isinstance(source, str) else await read_upload(source)
-    )
+    data = await fetch_url(source, locale) if isinstance(source, str) else await read_upload(source)
     image = await store_image(
         session, document, membership.user_id, data, document_images, locale, post_id=comment.id
     )
     all_images = [*images, image]
+    characters = await _characters_for(session, [comment], membership)
     return _to_response(
-        comment, selective_ids, all_images, await sign_images(all_images), membership
+        comment, selective_ids, all_images, await sign_images(all_images), membership, characters
     )
 
 

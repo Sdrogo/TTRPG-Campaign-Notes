@@ -50,6 +50,7 @@ def _document_from_row(row: DocumentRow) -> Document:
         description=row.description,
         visibility=DocumentVisibility(row.visibility),
         created_by=row.created_by,
+        played_by=row.played_by,
     )
 
 
@@ -91,6 +92,51 @@ async def list_documents_for_room(session: AsyncSession, room_id: uuid.UUID) -> 
     """Every Document in the Room, not yet filtered for any viewer."""
     result = await session.execute(select(DocumentRow).where(DocumentRow.room_id == room_id))
     return [_document_from_row(row) for row in result.scalars()]
+
+
+async def get_documents_by_ids(
+    session: AsyncSession, document_ids: Sequence[uuid.UUID]
+) -> list[Document]:
+    """The Documents with these ids, in no particular order; missing ids are
+    simply absent. Not yet filtered for any viewer."""
+    result = await session.execute(select(DocumentRow).where(DocumentRow.id.in_(document_ids)))
+    return [_document_from_row(row) for row in result.scalars()]
+
+
+async def list_documents_played_by(
+    session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID
+) -> list[Document]:
+    """The Room's Documents this user plays as Characters (D-23). Not yet
+    filtered for any viewer."""
+    result = await session.execute(
+        select(DocumentRow).where(DocumentRow.room_id == room_id, DocumentRow.played_by == user_id)
+    )
+    return [_document_from_row(row) for row in result.scalars()]
+
+
+async def set_played_by(
+    session: AsyncSession, document_id: uuid.UUID, user_id: uuid.UUID | None
+) -> None:
+    """Links the Document to the member who plays it, or unlinks it with
+    None (D-23). Raises `LookupError` if it no longer exists."""
+    row = await session.get(DocumentRow, document_id)
+    if row is None:
+        raise LookupError(f"Document {document_id} not found")
+    row.played_by = user_id
+    await session.flush()
+
+
+async def clear_played_by_in_room(
+    session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID
+) -> None:
+    """Unlinks every Character this user plays in the Room, for when they
+    leave or are removed: the Documents stay, the links go (D-15, D-23)."""
+    await session.execute(
+        update(DocumentRow)
+        .where(DocumentRow.room_id == room_id, DocumentRow.played_by == user_id)
+        .values(played_by=None)
+    )
+    await session.flush()
 
 
 async def update_document(session: AsyncSession, document: Document) -> None:

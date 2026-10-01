@@ -9,17 +9,36 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-01)
 
-Branch `claude/project-thread-40pxi6` (spec 16_2, PDF Attachments frontend,
-PR into `staging`; 16_1 backend is already on `staging`). Frontend **968**
-tests at 100% coverage; lint, `tsc` and `npm run build` clean. Backend
-untouched. Migration `e2f7c4a9b1d6` is still **not** applied to the live DB:
-it needs the user's go-ahead before the release PR merges.
+Branch `claude/project-thread-duasvn` (spec 17_1, Characters backend, PR into
+`staging`). Backend **492** tests at 100% coverage; ruff, mypy clean;
+migration `a3d9c5e7f210` round-trips locally. Frontend untouched. Migrations
+`e2f7c4a9b1d6` (spec 16) and `a3d9c5e7f210` (spec 17) are **not** applied to
+the live DB: each needs the user's go-ahead before its release PR merges.
 
-Specs 12 to 15 are merged. Candidates for the next unit are in **Next Up**.
+Specs 12 to 16 are merged into `staging`. Candidates for the next unit are in
+**Next Up**.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Characters, backend (spec 17_1, 2026-10-01)
+
+- Migration `a3d9c5e7f210`: `documents.played_by` (user id) and
+  `posts.as_document_id` (FK, `SET NULL`). Rules in `app/domain/characters.py`;
+  `PUT .../documents/{doc}/player` (Owners + Master, 422 for a non-member,
+  audited as `character_player_changed` + `document_owner_added`), Comment
+  create/PATCH take `as_document_id` (404 hidden/elsewhere, 403 not yours),
+  `GET /rooms/{id}/characters/mine` for the picker. Details in
+  `architecture.md` -> Characters.
+- `CommentResponse.as_character` is null for a viewer who can't see the
+  Character (VR-13). Leaving the Room clears `played_by`; deleting the
+  Character keeps its Comments as plain ones.
+- Deviation from the ticket: Document responses carry `played_by` as a bare
+  user id (like `owner_ids`), not embedded profile fields; 17_2 resolves it
+  through the members list.
+- Next: 17_2 frontend ("Played by" picker, "Post as" selector, in-character
+  Comment display), after this merges.
 
 ### PDF Attachments, frontend (spec 16_2, 2026-10-01)
 
@@ -418,10 +437,9 @@ Question in the backend PR.
   another member, confirm a member who can't see the Document gets nothing.
   Apply migration `e2f7c4a9b1d6` to the live DB (with the user's go-ahead)
   before releasing.
-- **Planned 2026-10-01** (tickets in `context/feature/`, each lists the
-  decisions to confirm before building): 17 Characters and posting in
-  character, 18 Friends. Suggested order: 17, 18. (15 Leave Room is built,
-  16_1 PDF backend too, see Completed Units.)
+- **Spec 17_2, Characters frontend** (after 17_1 merges). Apply migration
+  `a3d9c5e7f210` to the live DB (with the user's go-ahead) before releasing.
+- **Spec 18, Friends** (ticket in `context/feature/`, decisions D-26, D-27).
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
