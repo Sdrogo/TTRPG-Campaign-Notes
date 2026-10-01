@@ -1,4 +1,5 @@
 import type { StoredImage } from './image';
+import type { Note } from './note';
 
 /**
  * Who can see a Document or a Comment (section 8 of requirements.md): `room`
@@ -25,6 +26,11 @@ export interface Document {
   tagIds: string[];
   ownerIds: string[];
   selectiveUserIds: string[];
+  /**
+   * The Notes the viewer may see, in display order. Only the single-Document
+   * routes send them: on a Document from the list this is always empty.
+   */
+  notes: Note[];
 }
 
 /**

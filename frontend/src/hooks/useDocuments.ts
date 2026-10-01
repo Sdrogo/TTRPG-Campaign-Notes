@@ -3,6 +3,7 @@ import { apiFetch } from '../lib/apiClient';
 import { toStoredImage } from '../lib/images';
 import type { Document, DocumentVisibility } from '../types/document';
 import type { RawImage } from '../types/image';
+import { toNote, type RawNote } from '../lib/notes';
 
 interface RawDocument {
   id: string;
@@ -14,6 +15,8 @@ interface RawDocument {
   tag_ids: string[];
   owner_ids: string[];
   selective_user_ids: string[];
+  // Only the single-Document responses carry Notes, not the list.
+  notes?: RawNote[];
 }
 
 function toDocument(raw: RawDocument): Document {
@@ -29,6 +32,7 @@ function toDocument(raw: RawDocument): Document {
     tagIds: raw.tag_ids,
     ownerIds: raw.owner_ids,
     selectiveUserIds: raw.selective_user_ids,
+    notes: (raw.notes ?? []).map(toNote),
   };
 }
 
@@ -36,7 +40,8 @@ function documentsQueryKey(roomId: string) {
   return ['rooms', roomId, 'documents'] as const;
 }
 
-function documentQueryKey(roomId: string, documentId: string) {
+/** The cache key of one Document; Comments and Notes reload it on change. */
+export function documentQueryKey(roomId: string, documentId: string) {
   return ['rooms', roomId, 'documents', documentId] as const;
 }
 

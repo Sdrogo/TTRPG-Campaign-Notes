@@ -28,6 +28,7 @@ import { DocumentOwners } from '../components/DocumentOwners';
 import { DocumentImageGallery } from '../components/DocumentImageGallery';
 import { AddDocumentImages } from '../components/AddDocumentImages';
 import { CommentSection } from '../components/comments/CommentSection';
+import { NoteList } from '../components/notes/NoteList';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { MentionText } from '../components/mentions/MentionText';
 import type { Document, DocumentFormValues } from '../types/document';
@@ -177,7 +178,7 @@ function DocumentPanel({
             mirroring DocumentCard's layout in RoomDocumentsPage); stacked
             below `lg`. */}
         <Flex direction={{ base: 'column', lg: 'row' }} align="flex-start" gap="md">
-          <Box style={{ flex: '1 1 auto', minWidth: 0, width: '100%' }}>
+          <Stack gap="md" style={{ flex: '1 1 auto', minWidth: 0, width: '100%' }}>
             {editing ? (
               <DocumentEditForm
                 roomId={roomId}
@@ -199,7 +200,16 @@ function DocumentPanel({
                 )}
               </Stack>
             )}
-          </Box>
+            {/* Spec 12: each Note the viewer may see is a paragraph under the
+                description. The backend already left out the hidden ones. */}
+            <NoteList
+              roomId={roomId}
+              documentId={document.id}
+              notes={document.notes}
+              members={members}
+              canAdd={isOwner}
+            />
+          </Stack>
           {document.images.length > 0 && (
             <Box w={{ base: '100%', lg: '45%' }} style={{ flexShrink: 0 }}>
               <DocumentImageGallery

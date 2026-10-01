@@ -9,6 +9,11 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-01)
 
+Branch `feature/12-2-notes-frontend` (spec 12_2, frontend only, PR open;
+**depends on the backend PR for spec 12_1 being merged first**). Latest
+measured state: frontend **899/899** tests at **100%** coverage; lint, `tsc`
+and `npm run build` clean. The backend is untouched here. CI keeps exact-100%
+gates.
 Branch `feature/12-1-notes-backend` (spec 12_1, backend only). Latest measured
 state: backend **413** tests pass against disposable PostgreSQL (migrations
 `b5d8f2a9c1e3` and `c6e1a4b7d2f9` are also applied to the live DB); backend at
@@ -21,6 +26,18 @@ in **Next Up**.
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Nullable Note mutation responses (2026-10-01)
+
+- Create and update mutations accept null when the saved Note is hidden from
+  the requester (VR-07), preserving success and Document query invalidation.
+  Regression cases cover null responses from both mutations.
+
+### Note reorder reload (2026-10-01)
+
+- Note mutations return the Document invalidation promise so reordering stays
+  pending until the reload finishes; regression cases cover accepted and
+  rejected orders.
 
 ### Member removal loading (09-30)
 
@@ -233,6 +250,39 @@ to the live DB on 10-01** with the user's go-ahead, before the merge.
   page writes the cached list the drawer reads, so it updates without reload.
 - Removed the now-dead `isMainTag`/`sortMainTags`; `Tag.mainPosition` is no
   longer read by the UI (the backend still stores it for single items).
+
+### Notes on Documents, frontend (spec 12_2, 10-01, branch `feature/12-2-notes-frontend`)
+
+UI half of `context/feature/12 - add Notes to Documents.md`, on top of the API
+from spec 12_1 (a separate PR; this one must merge after it).
+
+A Note is the Detail of D-18 (same feature, two names, confirmed 10-01); it
+stays Owner/Master-managed, a deliberate departure from D-19 logged as an Open
+Question in the backend PR.
+
+- Each Note the viewer may see is a **paragraph under the Document
+  description** on the detail page (`components/notes/NoteList`, `NoteItem`,
+  `NoteForm`): a small heading, the text through `MentionText` and, to those
+  who can edit, the `VisibilityBadge`. Notes come **embedded in the Document
+  response** (`Document.notes`, empty on a Document from the list), so there
+  is no second query: `hooks/useNotes.ts` mutations reload that one Document.
+- **A hidden Note leaves no trace**: the UI renders exactly what the API sent
+  and filters nothing itself. With no Notes and no right to add one, `NoteList`
+  renders nothing, so the page looks as before. Controls follow the backend's
+  per-Note `can_edit`/`can_delete`; "Add Note" shows for Owners and the Master
+  (same rule as editing the description).
+- Same `#` logic as the description: `MentionText` to read, `MentionTextarea`
+  to edit; a mention of a Document missing from the viewer's list stays plain
+  text (VR-07). Title is required (≤200, `MAX_NOTE_TITLE_LENGTH`); the
+  description has no limit, like a Document's.
+- **Reordering is immediate** (up/down arrows, one `PUT .../order` per click)
+  rather than "move then Save" as the ticket suggested: it is cheap and
+  reversible, like picking the favorite image. Only the Notes the viewer sees
+  are sent; the backend keeps a hidden Note in its slot.
+- Checked in a headless browser against a stubbed API and a faked session, as
+  Master/Owner and as a plain Player, at 1280px and 390px: add, move, edit,
+  delete all issue the right requests, the hidden Note's text never reaches the
+  page, no console errors. Not checked: the real backend end to end.
 
 ## Next Up
 

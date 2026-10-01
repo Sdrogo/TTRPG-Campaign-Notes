@@ -22,6 +22,7 @@ function document(id: string, name: string): Document {
     tagIds: [],
     ownerIds: [],
     selectiveUserIds: [],
+    notes: [],
   };
 }
 

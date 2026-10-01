@@ -223,6 +223,20 @@
       "fit": "Adatta allo schermo"
     }
   },
+  "notes": {
+    "add": "Aggiungi Nota",
+    "edit": "Modifica Nota: {{title}}",
+    "delete": "Elimina Nota: {{title}}",
+    "moveUp": "Sposta su la Nota: {{title}}",
+    "moveDown": "Sposta giù la Nota: {{title}}",
+    "deleteConfirmTitle": "Eliminare questa Nota?",
+    "deleteConfirmBody": "\"{{title}}\" verrà eliminata. L'operazione non si può annullare.",
+    "form": {
+      "title": "Titolo",
+      "selectiveLabel": "Membri che possono vedere la Nota",
+      "selectivePlaceholder": "Chi può vederla"
+    }
+  },
   "comments": {
     "title": "Commenti",
     "loadError": "Impossibile caricare i commenti.",

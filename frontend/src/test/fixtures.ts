@@ -36,6 +36,23 @@ export function rawDocument(overrides: Record<string, unknown> = {}) {
   };
 }
 
+export function rawNote(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'note-1',
+    document_id: 'doc-1',
+    title: 'Porta segreta',
+    description: 'Dietro la libreria.',
+    visibility: 'room',
+    selective_user_ids: [],
+    position: 0,
+    created_at: '2026-10-01T12:00:00Z',
+    updated_at: '2026-10-01T12:00:00Z',
+    can_edit: true,
+    can_delete: true,
+    ...overrides,
+  };
+}
+
 export function rawComment(overrides: Record<string, unknown> = {}) {
   return {
     id: 'comment-1',

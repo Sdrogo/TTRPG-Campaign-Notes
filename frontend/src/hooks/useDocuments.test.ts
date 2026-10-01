@@ -1,7 +1,7 @@
 import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
-import { rawDocument, rawImage } from '../test/fixtures';
+import { rawDocument, rawImage, rawNote } from '../test/fixtures';
 import { renderHookWithProviders } from '../test/utils';
 import {
   useAddDocumentOwner,
@@ -45,6 +45,8 @@ describe('useDocuments', () => {
       tagIds: ['tag-1'],
       ownerIds: ['user-1'],
       selectiveUserIds: [],
+      // The list's response carries no Notes.
+      notes: [],
     });
   });
 
@@ -87,6 +89,24 @@ describe('useDocument', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/documents/doc-1');
     expect(queryClient.getQueryData(DETAIL_KEY)).toBeDefined();
+  });
+
+  // Spec 12: only the single-Document routes carry Notes.
+  it('maps the Notes the backend embedded, in the order it sent them', async () => {
+    fetchMock.mockResolvedValue(
+      rawDocument({
+        notes: [rawNote(), rawNote({ id: 'note-2', title: 'Trappola', position: 1 })],
+      }),
+    );
+
+    const { result } = renderHookWithProviders(() => useDocument('room-1', 'doc-1', true));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.notes.map((note) => note.title)).toEqual([
+      'Porta segreta',
+      'Trappola',
+    ]);
+    expect(result.current.data?.notes[0].canEdit).toBe(true);
   });
 });
 
