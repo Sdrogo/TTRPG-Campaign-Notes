@@ -350,6 +350,10 @@ Question in the backend PR.
 
 ## Next Up
 
+- **Planned 2026-10-01** (tickets in `context/feature/`, each lists the
+  decisions to confirm before building): 15 Leave Room (frontend only),
+  16 PDF attachments on Documents, 17 Characters and posting in character,
+  18 Friends. Suggested order: 15, 16, 17, 18.
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
@@ -404,7 +408,7 @@ protected file.
 
 - **Spec 12 — Notes = Details (decided 2026-10-01, `requirements.md` needs a
   product pass, *protected*)**: the product owner confirmed a Note and a
-  Dettaglio (D-18) are the same feature under two names, and chose to keep
+  Detail (D-18) are the same feature under two names, and chose to keep
   **Owner/Master-only** management. This departs from the spec: D-19/I-10 say
   any member who sees the Document may add a Detail, only its author or the
   Master may edit it, and it is a Thread Post with nested replies; FR-T8
@@ -447,13 +451,13 @@ protected file.
   providers, but UC-01, the section 5 User, NFR-03 and the MoSCoW **Won't**
   row still say Google-only. D-07 (Google preferred) still holds. NFR-03's
   privacy rule (only name, picture, email) applies to every provider.
-- **Images spec gap** (*protected*): D-09/FR-D1 say "Immagine" (singular).
+- **Images spec gap** (*protected*): D-09/FR-D1 say "Image" (singular).
   The 20-per-Document cap and 1920px/WebP output are implementation choices.
 - **OQ-09 / OQ-10** have no `D-` number but are implemented (creator =
   Administrator + Master; last-Master/Administrator guard). OQ-11/OQ-12 are
   resolved (D-19, D-20).
 - **Comments — choices to confirm**: (a) the author always sees their own
-  Comment, so "Solo Master" = me + the Master; (b) the Master can delete but
+  Comment, so "Master only" = me + the Master; (b) the Master can delete but
   not edit others' Comments; (c) moderation deletes aren't in the AuditLog;
   (d) 10,000-char body limit.
 - **Comment images — choices to confirm**: (a) inherit the Comment's
@@ -523,7 +527,8 @@ Full reasoning lives in `architecture.md`; this is the index.
 
 ## Session Notes (lessons worth keeping)
 
-- **Branch from `origin/main`**, or `git fetch` first — a branch cut from a
+- **Branch from `origin/staging`** (PRs target `staging` since 2026-10-01,
+  see `code-standards.md`), or `git fetch` first — a branch cut from a
   stale local `main` once made merged files look reverted (nothing was lost).
 - **Re-check a PR's merge state** (`gh pr view <n> --json state,mergedAt`)
   before pushing more commits to its branch after a gap. PR #19 was merged
