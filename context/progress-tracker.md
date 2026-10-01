@@ -306,6 +306,12 @@ Question in the backend PR.
   delete all issue the right requests, the hidden Note's text never reaches the
   page, no console errors. Not checked: the real backend end to end.
 
+## Room deletion lock ordering (2026-10-01)
+
+- Room deletion locks the Room before locking its Documents and
+  snapshotting images. Image cleanup and the cascading deletion keep
+  their existing sequence.
+
 ## Next Up
 
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,

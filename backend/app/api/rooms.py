@@ -283,6 +283,7 @@ async def delete_room(
             status.HTTP_403_FORBIDDEN, "errors.room.onlyAdministratorCanDelete", locale
         )
 
+    await rooms_repo.lock_room(session, room_id)
     # Locked first so a concurrent image upload can't insert a row the
     # cascade would then delete without scheduling its Storage object.
     document_ids = await documents_repo.lock_documents_for_room(session, room_id)
