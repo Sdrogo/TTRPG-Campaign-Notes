@@ -271,6 +271,20 @@ pytest, split by what a test needs rather than by what it covers.
   caching a denormalized blob, unless a specific performance need
   justifies it later.
 
+## Branches and Pull Requests
+
+- **Every pull request targets `staging`, not `main`** (2026-10-01).
+  Vercel and Render deploy production on every merge to `main`, so
+  feature PRs collect on `staging` and `main` only receives a
+  `staging` → `main` PR when a batch is ready to ship. That keeps the
+  number of production deploys down.
+- Feature branches are cut from an up-to-date `origin/staging`
+  (`git fetch origin staging` first) and merged back into it.
+- The `staging` → `main` release PR is opened only when the product
+  owner asks for a release. A migration that ships in it is applied to
+  the live database with their go-ahead before that PR is merged.
+- CI runs on every pull request and on pushes to `main` and `staging`.
+
 ## File Organization
 
 **`frontend/`**

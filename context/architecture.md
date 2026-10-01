@@ -95,7 +95,7 @@ Added 2026-09-24, spec `context/feature/09 - Removing Hardcoded strings, impleme
 
 ## Continuous Integration
 
-`.github/workflows/ci.yml` runs on every pull request and on pushes to `main`, as two independent jobs matching the two codebases.
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `main` and `staging` (PRs target `staging`, see `code-standards.md` → Branches and Pull Requests), as two independent jobs matching the two codebases.
 
 - **Frontend**: `npm ci`, `npm run lint`, `npm run build` (which type-checks), then `npm run test:coverage`. The coverage bar lives in `frontend/vitest.config.ts`, not in the workflow, so it is versioned with the code it measures and the same command gates locally and in CI.
 - **Backend**: `ruff check` (which also fails on a public module, class or function in `app/` without a docstring — pydocstyle `D1`, see `code-standards.md` → Documentation), `mypy app tests`, then `alembic upgrade head` and the **whole** `pytest` suite against a throwaway Postgres, with coverage gates on `app/domain` and `app/`.

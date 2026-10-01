@@ -527,7 +527,8 @@ Full reasoning lives in `architecture.md`; this is the index.
 
 ## Session Notes (lessons worth keeping)
 
-- **Branch from `origin/main`**, or `git fetch` first — a branch cut from a
+- **Branch from `origin/staging`** (PRs target `staging` since 2026-10-01,
+  see `code-standards.md`), or `git fetch` first — a branch cut from a
   stale local `main` once made merged files look reverted (nothing was lost).
 - **Re-check a PR's merge state** (`gh pr view <n> --json state,mergedAt`)
   before pushing more commits to its branch after a gap. PR #19 was merged

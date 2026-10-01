@@ -14,7 +14,7 @@
 
 ## Implementation
 
-- Branch from `origin/main`: `feature/15-leave-room`.
+- Branch from `origin/staging`: `feature/15-leave-room`.
 - Reuse `useRemoveMember` (`src/hooks/useMembers.ts`) with the current user's id (`useAuth`). If the hook needs a variant that does not require the members query, add `useLeaveRoom` next to it rather than duplicating the fetch.
 - `RoomCard.tsx`: add the menu and a `LeaveRoomModal` (new file under `src/components/`). Mantine primitives and theme tokens only.
 - i18n: new keys under `rooms.leave.*` in `it.json` and `en.json` (`common.leave` already exists for the button label).
