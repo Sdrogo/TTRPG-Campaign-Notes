@@ -13,6 +13,7 @@ const doc = (id: string, tagIds: string[]): Document => ({
   ownerIds: [],
   selectiveUserIds: [],
   notes: [],
+  files: [],
 });
 
 const documents = [doc('a', ['npc']), doc('b', ['npc', 'place']), doc('c', [])];

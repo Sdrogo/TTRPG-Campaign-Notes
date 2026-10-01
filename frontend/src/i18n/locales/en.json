@@ -261,6 +261,22 @@
       "selectivePlaceholder": "Who can see it"
     }
   },
+  "files": {
+    "title": "Files",
+    "empty": "No PDFs attached yet.",
+    "upload": "Upload PDF",
+    "uploadHint": "Attach a PDF up to {{mb}} MB, such as a character sheet",
+    "limitReached": "A Document can have at most {{max}} files",
+    "details": "{{size}} · {{date}}",
+    "open": "Open {{name}}",
+    "download": "Download {{name}}",
+    "delete": "Delete {{name}}",
+    "deleteConfirmTitle": "Delete this file?",
+    "deleteConfirmBody": "\"{{name}}\" will be deleted. This can't be undone.",
+    "notPdf": "Only PDF files can be attached",
+    "tooLarge": "The file exceeds the {{mb}} MB limit",
+    "openFailed": "Couldn't open {{name}}"
+  },
   "comments": {
     "title": "Comments",
     "loadError": "Couldn't load the comments.",

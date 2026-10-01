@@ -9,17 +9,34 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-01)
 
-Branch `claude/project-thread-o9oq99` (spec 16_1, PDF Attachments backend, PR
-into `staging`). Backend **469** tests pass against disposable PostgreSQL at
-100% coverage (`app/domain` too); ruff and mypy strict clean. Frontend
-untouched (spec 16_2 is next). Migration `e2f7c4a9b1d6` is **not** applied to
-the live DB yet: it needs the user's go-ahead before the release PR merges.
+Branch `claude/project-thread-40pxi6` (spec 16_2, PDF Attachments frontend,
+PR into `staging`; 16_1 backend is already on `staging`). Frontend **968**
+tests at 100% coverage; lint, `tsc` and `npm run build` clean. Backend
+untouched. Migration `e2f7c4a9b1d6` is still **not** applied to the live DB:
+it needs the user's go-ahead before the release PR merges.
 
 Specs 12 to 15 are merged. Candidates for the next unit are in **Next Up**.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### PDF Attachments, frontend (spec 16_2, 2026-10-01)
+
+- `components/files/DocumentFileList.tsx` under the text and gallery on the
+  Document page: name, size, upload date, Open and Download for every reader
+  (VR-12); Upload (`FileButton`, one PDF at a time) for Owners and the
+  Master, disabled at 10; delete with a confirm, shown per the backend's
+  `can_delete`. Renders nothing for a reader of a Document without files.
+- `hooks/useDocumentFiles.ts` (upload multipart, delete) reloads the
+  Document, like Notes; `Document.files` comes from the single-Document
+  response only. `lib/documentFiles.ts`: wire mapping, client hints (type,
+  10 MB; the backend decides by content), size formatting, `openPdf`.
+- **Open** fetches the signed link's bytes and shows them from a `blob:` URL
+  in a tab opened before the fetch (popup blockers), as the spec says; the
+  link itself downloads (`Content-Disposition: attachment`). Not seen in a
+  real browser against real Storage yet: check that Supabase's signed link
+  answers the `fetch` with CORS, and the layout at phone width.
 
 ### PDF Attachments, backend (spec 16_1, 2026-10-01)
 
@@ -396,9 +413,11 @@ Question in the backend PR.
 
 ## Next Up
 
-- **Spec 16_2 (PDF Attachments, frontend)**, after 16_1 is merged: Files
-  section on the Document page, `useDocumentFiles`. Apply migration
-  `e2f7c4a9b1d6` to the live DB (with the user's go-ahead) before releasing.
+- **Browser check of spec 16** (after 16_2 merges and the migration is
+  live): upload a character sheet as an Owner, open and download it as
+  another member, confirm a member who can't see the Document gets nothing.
+  Apply migration `e2f7c4a9b1d6` to the live DB (with the user's go-ahead)
+  before releasing.
 - **Planned 2026-10-01** (tickets in `context/feature/`, each lists the
   decisions to confirm before building): 17 Characters and posting in
   character, 18 Friends. Suggested order: 17, 18. (15 Leave Room is built,

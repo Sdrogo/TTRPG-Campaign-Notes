@@ -13,6 +13,7 @@ const doc = (id: string, name: string): Document => ({
   ownerIds: [],
   selectiveUserIds: [],
   notes: [],
+  files: [],
 });
 
 const documents = [doc('a', 'Zanna'), doc('b', 'Città'), doc('c', 'alfa')];

@@ -1,4 +1,5 @@
 import type { StoredImage } from './image';
+import type { DocumentFile } from './documentFile';
 import type { Note } from './note';
 
 /**
@@ -31,6 +32,11 @@ export interface Document {
    * routes send them: on a Document from the list this is always empty.
    */
   notes: Note[];
+  /**
+   * The PDFs attached to the Document (spec 16), oldest first. Like `notes`,
+   * only the single-Document routes send them.
+   */
+  files: DocumentFile[];
 }
 
 /**
