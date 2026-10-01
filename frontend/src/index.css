@@ -16,6 +16,21 @@ body {
   min-height: 100svh;
 }
 
+/* Keep the Room card's link ring inside the card's clipped, rounded edge. */
+.room-card-link {
+  border-radius: inherit;
+  transition: box-shadow 120ms ease;
+}
+
+.room-card-link:hover {
+  box-shadow: inset 0 0 0 1px var(--accent-strong);
+}
+
+.room-card-link:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+
 /* Text-link actions under a Comment ("Modifica", "Elimina"): muted at rest,
    accent on hover, like icons (ui-context.md). */
 .comment-action {

@@ -104,7 +104,6 @@
     "create": "Create Room",
     "loadError": "Error loading Rooms.",
     "empty": "No Rooms yet. Create one to get started.",
-    "documents": "Documents",
     "invite": "Invite",
     "createModal": {
       "title": "Create a Room",
