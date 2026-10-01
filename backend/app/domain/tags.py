@@ -95,3 +95,25 @@ def ordered_main_items(
     ]
     entries += [(combination.position, combination.tag_ids) for combination in combinations]
     return [tag_ids for _, tag_ids in sorted(entries, key=lambda entry: entry[0])]
+
+
+def plan_tag_removal(
+    tag_id: uuid.UUID, combinations: Sequence[TagCombination]
+) -> tuple[PlannedCombination, ...]:
+    """The Room's combinations once `tag_id` is deleted (spec 13_1). The Tag's
+    own single Main item needs no planning: it is its `main_position`, which
+    goes with the row. A combination that held the Tag shrinks; one left with
+    fewer than two Tags is dropped, since a one-Tag combination would repeat a
+    Main Tag item and `plan_main_items` refuses it. A shrunken combination
+    that now has the same Tags as another keeps only the earlier one. Every
+    survivor keeps its position (gaps are harmless, spec 11)."""
+    kept: list[PlannedCombination] = []
+    seen: set[frozenset[uuid.UUID]] = set()
+    for combination in sorted(combinations, key=lambda c: c.position):
+        remaining = tuple(t for t in combination.tag_ids if t != tag_id)
+        key = frozenset(remaining)
+        if len(remaining) < 2 or key in seen:
+            continue
+        seen.add(key)
+        kept.append(PlannedCombination(combination.position, remaining))
+    return tuple(kept)

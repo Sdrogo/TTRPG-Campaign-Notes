@@ -75,6 +75,9 @@ async def set_main_items(
             status.HTTP_403_FORBIDDEN, "errors.tag.onlyAdministratorCanSetMainTags", locale
         )
 
+    # Locked before the Tags are read: a concurrent Tag deletion would
+    # otherwise leave the plan pointing at a Tag that no longer exists.
+    await rooms_repo.lock_room(session, room_id)
     tags = await tags_repo.list_tags(session, room_id)
     try:
         plan = plan_main_items([t.id for t in tags], [item.tag_ids for item in body.items])

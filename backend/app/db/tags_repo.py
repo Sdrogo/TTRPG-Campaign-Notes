@@ -114,3 +114,12 @@ async def replace_combinations(
         for tag_id in planned.tag_ids:
             session.add(TagCombinationTagRow(combination_id=combination_id, tag_id=tag_id))
     await session.flush()
+
+
+async def delete_tag(session: AsyncSession, room_id: uuid.UUID, tag_id: uuid.UUID) -> None:
+    """Deletes the Tag row of this Room. Its Document links
+    (`document_tags`) and combination links (`tag_combination_tags`) cascade
+    at the database level; the combinations themselves are rewritten by the
+    caller (`plan_tag_removal`)."""
+    await session.execute(delete(TagRow).where(TagRow.id == tag_id, TagRow.room_id == room_id))
+    await session.flush()

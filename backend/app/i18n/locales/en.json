@@ -10,6 +10,7 @@
       "onlyMasterCanChangeSettings": "Only the Master can change this Room's settings",
       "onlyAdministratorCanChangeRoles": "Only a Room Administrator can change roles",
       "onlyAdministratorCanRemoveMembers": "Only a Room Administrator can remove members",
+      "onlyAdministratorCanDelete": "Only a Room Administrator can delete the Room",
       "nameRequired": "Room name is required"
     },
     "membership": {
@@ -51,6 +52,7 @@
     },
     "tag": {
       "notAllowedToManage": "Only an Administrator or the Master can manage Tags",
+      "notFound": "Tag not found",
       "nameRequired": "Tag name is required",
       "duplicateName": "A Tag with this name already exists in this Room",
       "onlyAdministratorCanSetMainTags": "Only an Administrator can choose the Main Tags",

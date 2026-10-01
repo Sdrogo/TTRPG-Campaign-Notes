@@ -12,6 +12,7 @@ from app.auth.dependencies import CurrentUserDep
 from app.db import rooms_repo, tags_repo
 from app.db.session import SessionDep
 from app.domain.models import RoomRole, Tag
+from app.domain.tags import plan_tag_removal
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/tags", tags=["tags"])
@@ -84,3 +85,29 @@ async def create_tag(
         raise http_error(status.HTTP_409_CONFLICT, "errors.tag.duplicateName", locale) from exc
 
     return tag_to_response(tag)
+
+
+@router.delete("/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_tag(
+    room_id: uuid.UUID,
+    tag_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> None:
+    """Spec 13: an Administrator or the Master (who may also create Tags)
+    deletes a Tag. Documents keep everything but the link to it; its single
+    Main item goes, and combinations that held it shrink or, below two Tags,
+    disappear (`plan_tag_removal`). 404 for a Tag that isn't in this Room."""
+    membership = await rooms_repo.get_membership(session, room_id, uuid.UUID(current_user.id))
+    if membership is None or not (membership.is_admin or membership.role == RoomRole.MASTER):
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.tag.notAllowedToManage", locale)
+
+    # Same lock as saving the Main items, so the two can't interleave.
+    await rooms_repo.lock_room(session, room_id)
+    if not await tags_repo.get_tags_by_ids(session, room_id, [tag_id]):
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.tag.notFound", locale)
+
+    combinations = await tags_repo.list_combinations(session, room_id)
+    await tags_repo.delete_tag(session, room_id, tag_id)
+    await tags_repo.replace_combinations(session, room_id, plan_tag_removal(tag_id, combinations))
