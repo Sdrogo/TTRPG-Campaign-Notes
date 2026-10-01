@@ -62,6 +62,7 @@ export function RoomCard({ myRoom }: RoomCardProps) {
       {/* Covers the card rather than wrapping it, like DocumentCard: the
           buttons above can't live inside an <a>. */}
       <Link
+        className="room-card-link"
         to={`/rooms/${room.id}/documents`}
         aria-label={room.name}
         style={{ position: 'absolute', inset: 0, zIndex: 1 }}

@@ -27,6 +27,12 @@ in **Next Up**.
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room card navigation feedback (2026-10-01)
+
+- The Room navigation overlay has a dedicated class with a themed hover
+  border and an inset keyboard focus ring, preserving its positioning and
+  the Administrator controls above it.
+
 ### Nullable Note mutation responses (2026-10-01)
 
 - Create and update mutations accept null when the saved Note is hidden from
