@@ -502,14 +502,15 @@ async def set_player(
     The change, and the Owner added with `add_as_owner`, are audited in the
     same transaction (Invariant 7)."""
     requester_id = uuid.UUID(current_user.id)
+    # Taken before anything is read, so the Document's current player and the
+    # members are read as of the lock: serialized with `remove_member` (a
+    # member leaving can't stay linked, D-15) and with a concurrent link (the
+    # audited "from" is the real previous player).
+    await rooms_repo.lock_room(session, room_id)
     document, owner_ids, membership = await get_owned_document(
         session, room_id, document_id, requester_id, locale
     )
 
-    # Serialized with `remove_member`, which takes the same lock: otherwise a
-    # member could leave between this check and the write, and the link to
-    # them would survive their departure (D-15).
-    await rooms_repo.lock_room(session, room_id)
     member_ids = {m.user_id for m in await rooms_repo.list_memberships(session, room_id)}
     try:
         plan = plan_player_change(
