@@ -187,7 +187,7 @@ erDiagram
 - **Attachment:** Document, display name, size, type (PDF), who uploaded it, date (D-21, D-22).
 - **Document (Character):** optional Character player, a member of the Room (D-23).
 - **Post (as a Character):** optional Document that "speaks" in the Post (D-24).
-- **Friendship:** pair of Users, who asked, status (pending / accepted), dates (D-26). Belongs to no Room.
+- **Friendship:** pair of Users, who asked, status (pending / accepted / declined), creation date, answer date (D-26). A declined Friendship is kept with its decline date so a new request can be refused for 30 days (D-27). Belongs to no Room.
 - **FriendCode:** User, code, creation date (D-27).
 
 ---

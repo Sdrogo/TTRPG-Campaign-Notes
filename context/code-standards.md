@@ -273,7 +273,9 @@ pytest, split by what a test needs rather than by what it covers.
 
 ## Branches and Pull Requests
 
-- **Every pull request targets `staging`, not `main`** (2026-10-01).
+- **Every feature pull request targets `staging`, not `main`** (2026-10-01).
+  The only pull request into `main` is the `staging` → `main` release PR
+  described below.
   Vercel and Render deploy production on every merge to `main`, so
   feature PRs collect on `staging` and `main` only receives a
   `staging` → `main` PR when a batch is ready to ship. That keeps the
