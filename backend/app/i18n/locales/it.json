@@ -77,6 +77,13 @@
       "remoteDownloadFailed": "Impossibile scaricare l'immagine dall'URL",
       "remoteTooManyRedirects": "L'URL dell'immagine ha reindirizzato troppe volte"
     },
+    "file": {
+      "notPdf": "Il file non è un PDF",
+      "tooLarge": "Il file supera il limite di {mb} MB",
+      "tooMany": "Un Documento può avere al massimo {max} file",
+      "notFound": "File non trovato",
+      "storageUnavailable": "Lo storage dei file non è disponibile"
+    },
     "invitation": {
       "notFound": "Invito non trovato",
       "revoked": "L'invito è stato revocato",

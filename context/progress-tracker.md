@@ -9,23 +9,33 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-01)
 
-Branch `feature/12-2-notes-frontend` (spec 12_2, frontend only, PR open;
-**depends on the backend PR for spec 12_1 being merged first**). Latest
-measured state: frontend **899/899** tests at **100%** coverage; lint, `tsc`
-and `npm run build` clean. The backend is untouched here. CI keeps exact-100%
-gates.
-Branch `feature/12-1-notes-backend` (spec 12_1, backend only). Latest measured
-state: backend **413** tests pass against disposable PostgreSQL (migrations
-`b5d8f2a9c1e3` and `c6e1a4b7d2f9` are also applied to the live DB); backend at
-100% coverage, ruff and mypy strict clean. Frontend untouched (spec 12_2 is
-the next unit). CI keeps exact-100% gates.
+Branch `claude/project-thread-o9oq99` (spec 16_1, PDF Attachments backend, PR
+into `staging`). Backend **469** tests pass against disposable PostgreSQL at
+100% coverage (`app/domain` too); ruff and mypy strict clean. Frontend
+untouched (spec 16_2 is next). Migration `e2f7c4a9b1d6` is **not** applied to
+the live DB yet: it needs the user's go-ahead before the release PR merges.
 
-Spec 12_1 is the current unit awaiting merge. Candidates for the next unit are
-in **Next Up**.
+Specs 12 to 15 are merged. Candidates for the next unit are in **Next Up**.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### PDF Attachments, backend (spec 16_1, 2026-10-01)
+
+- Table `document_files` (migration `e2f7c4a9b1d6`, RLS + deny policy), rules
+  in `app/domain/files.py` (by content `%PDF-`, ≤10 MB → 413, ≤10 per
+  Document → 409 under the row lock, display name cleaned and cut to 200),
+  routes `POST`/`DELETE` in `app/api/document_files.py`, Owners + Master only.
+- Files have the Document's visibility (VR-12) and are embedded as `files` in
+  every single-Document response, not in the list. Each `url` is a signed link
+  with `download=<name>`, so Storage serves `Content-Disposition: attachment`.
+- Deleting a Document or a Room queues every file (`remove_files`); the sweep
+  treats `document_files.storage_path` as in use.
+- `_get_owned_document` moved to `access.get_owned_document` (shared).
+- Storage path follows the ticket (`documents/{doc}/files/…`), unlike images
+  (`{room}/{doc}/…`). Live Storage behaviour of `download=` is unverified
+  (fake Storage in tests): check on the first deploy.
 
 ### Leave Room (spec 15, 2026-10-01)
 
@@ -386,10 +396,13 @@ Question in the backend PR.
 
 ## Next Up
 
+- **Spec 16_2 (PDF Attachments, frontend)**, after 16_1 is merged: Files
+  section on the Document page, `useDocumentFiles`. Apply migration
+  `e2f7c4a9b1d6` to the live DB (with the user's go-ahead) before releasing.
 - **Planned 2026-10-01** (tickets in `context/feature/`, each lists the
-  decisions to confirm before building): 16 PDF attachments on Documents,
-  17 Characters and posting in character, 18 Friends. Suggested order: 16,
-  17, 18. (15 Leave Room is built, see Completed Units.)
+  decisions to confirm before building): 17 Characters and posting in
+  character, 18 Friends. Suggested order: 17, 18. (15 Leave Room is built,
+  16_1 PDF backend too, see Completed Units.)
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
