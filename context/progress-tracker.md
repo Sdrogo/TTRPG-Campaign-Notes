@@ -12,8 +12,9 @@ step-by-step notes) is in
 Branch `claude/project-thread-duasvn` (spec 17_1, Characters backend, PR into
 `staging`). Backend **492** tests at 100% coverage; ruff, mypy clean;
 migration `a3d9c5e7f210` round-trips locally. Frontend untouched. Migrations
-`e2f7c4a9b1d6` (spec 16) and `a3d9c5e7f210` (spec 17) are **not** applied to
-the live DB: each needs the user's go-ahead before its release PR merges.
+`e2f7c4a9b1d6` (spec 16) and `a3d9c5e7f210` (spec 17) are both **applied to
+the live DB** (`alembic current` showed `e2f7c4a9b1d6`; `a3d9c5e7f210` applied
+2026-10-01 with the user's go-ahead, before its release PR merges).
 
 Specs 12 to 16 are merged into `staging`. Candidates for the next unit are in
 **Next Up**.
@@ -435,10 +436,9 @@ Question in the backend PR.
 - **Browser check of spec 16** (after 16_2 merges and the migration is
   live): upload a character sheet as an Owner, open and download it as
   another member, confirm a member who can't see the Document gets nothing.
-  Apply migration `e2f7c4a9b1d6` to the live DB (with the user's go-ahead)
-  before releasing.
-- **Spec 17_2, Characters frontend** (after 17_1 merges). Apply migration
-  `a3d9c5e7f210` to the live DB (with the user's go-ahead) before releasing.
+  Migration `e2f7c4a9b1d6` is already live.
+- **Spec 17_2, Characters frontend** (after 17_1 merges). Migration
+  `a3d9c5e7f210` is already live.
 - **Spec 18, Friends** (ticket in `context/feature/`, decisions D-26, D-27).
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
