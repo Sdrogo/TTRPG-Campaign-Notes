@@ -1,24 +1,29 @@
 import { useState } from 'react';
-import { Card, Group, Stack, Title, Text, Button } from '@mantine/core';
+import { ActionIcon, Card, Group, Menu, Stack, Title, Text, Button } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { GearIcon, UserPlusIcon } from '@phosphor-icons/react';
+import { DotsThreeVerticalIcon, GearIcon, SignOutIcon, UserPlusIcon } from '@phosphor-icons/react';
 import { RoleTag } from './RoleTag';
 import { InviteModal } from './InviteModal';
+import { LeaveRoomModal } from './LeaveRoomModal';
 import type { MyRoom } from '../types/room';
 import { useTranslation } from 'react-i18next';
 
 interface RoomCardProps {
   myRoom: MyRoom;
+  /** The signed-in user, who can leave the Room from the card's menu. */
+  currentUserId: string;
 }
 
 /**
  * One of the user's Rooms, with their role. The whole card links to the Room's
  * Documents; an Administrator also gets the setup page (members, Main Tags)
- * and the invite button, which sit above that link and so win over it.
+ * and the invite button, and every member gets a menu with Leave (spec 15).
+ * These sit above that link and so win over it.
  */
-export function RoomCard({ myRoom }: RoomCardProps) {
+export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
   const { t } = useTranslation();
   const [inviteOpened, setInviteOpened] = useState(false);
+  const [leaveOpened, setLeaveOpened] = useState(false);
   const { room, role, isAdmin } = myRoom;
 
   return (
@@ -57,6 +62,26 @@ export function RoomCard({ myRoom }: RoomCardProps) {
               </Button>
             </>
           )}
+          <Menu position="bottom-end" shadow="md">
+            <Menu.Target>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                aria-label={t('rooms.actions', { name: room.name })}
+              >
+                <DotsThreeVerticalIcon size={18} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                color="red"
+                leftSection={<SignOutIcon size={16} />}
+                onClick={() => setLeaveOpened(true)}
+              >
+                {t('common.leave')}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
       </Group>
       {/* Covers the card rather than wrapping it, like DocumentCard: the
@@ -71,6 +96,14 @@ export function RoomCard({ myRoom }: RoomCardProps) {
         opened={inviteOpened}
         onClose={() => setInviteOpened(false)}
         roomId={room.id}
+      />
+      <LeaveRoomModal
+        opened={leaveOpened}
+        onClose={() => setLeaveOpened(false)}
+        roomId={room.id}
+        roomName={room.name}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
       />
     </Card>
   );

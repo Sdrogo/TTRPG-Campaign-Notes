@@ -11,7 +11,7 @@ vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 const fetchMock = vi.mocked(apiFetch);
 
 function render() {
-  renderWithProviders(<RoomsPage />);
+  renderWithProviders(<RoomsPage currentUserId="me" />);
   return { user: userEvent.setup() };
 }
 
@@ -47,7 +47,7 @@ describe('RoomsPage', () => {
 
   it('shows a loader while the Rooms are on their way', () => {
     fetchMock.mockReturnValue(new Promise(() => {}));
-    const { container } = renderWithProviders(<RoomsPage />);
+    const { container } = renderWithProviders(<RoomsPage currentUserId="me" />);
 
     expect(container.querySelector('.mantine-Loader-root')).toBeInTheDocument();
   });
@@ -81,5 +81,26 @@ describe('RoomsPage', () => {
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Crea Stanza' }));
 
     await waitFor(() => expect(screen.getByText('La Cripta')).toBeInTheDocument());
+  });
+
+  // Spec 15: leaving refreshes the list, so the Room's card goes away.
+  it('drops a Room the user left', async () => {
+    let rooms = [rawMyRoom()];
+    fetchMock.mockImplementation((_path: string, init?: { method?: string }) => {
+      if (init?.method === 'DELETE') {
+        rooms = [];
+        return Promise.resolve(undefined);
+      }
+      return Promise.resolve(rooms);
+    });
+    const { user } = render();
+    await screen.findByText('La Cripta');
+
+    await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Esci' }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Esci' }));
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/members/me', { method: 'DELETE' });
+    expect(await screen.findByText(/Nessuna Stanza ancora/)).toBeInTheDocument();
   });
 });

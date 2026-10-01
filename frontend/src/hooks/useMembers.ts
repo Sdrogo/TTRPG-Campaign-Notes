@@ -77,3 +77,23 @@ export function useRemoveMember(roomId: string) {
     },
   });
 }
+
+/**
+ * Leaves a Room: removes the signed-in user's own Membership (UC-19, spec 15).
+ * The backend refuses the last Master or the last Administrator with `409`
+ * (D-16, Invariant 5). On success every query scoped to the Room is removed
+ * rather than refetched, since it would only 403, and the Rooms list is
+ * refetched so the Room's card goes away.
+ */
+export function useLeaveRoom(roomId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (currentUserId: string) => {
+      await apiFetch<void>(`/rooms/${roomId}/members/${currentUserId}`, { method: 'DELETE' });
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ['rooms', roomId] });
+      void queryClient.invalidateQueries({ queryKey: ['rooms'] });
+    },
+  });
+}

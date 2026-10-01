@@ -69,7 +69,7 @@ export function HomePage() {
   return (
     <Stack gap={0}>
       <AppHeader />
-      <RoomsPage />
+      <RoomsPage currentUserId={session.user.id} />
     </Stack>
   );
 }

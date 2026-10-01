@@ -27,6 +27,32 @@ in **Next Up**.
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Leave Room (spec 15, 2026-10-01)
+
+- Every member can leave from the Room card's three-dots menu ("Room actions
+  for {name}"), next to Setup and Invite and above the card link. A
+  confirmation modal says the user's content stays (D-15) and that coming
+  back needs a new invite; an Administrator also sees a hint to name a
+  successor in the setup page first. Frontend only.
+- `useLeaveRoom` (in `useMembers.ts`) sends `DELETE /rooms/{id}/members/{me}`,
+  then removes the Room's queries (they would only 403) and refetches the
+  Rooms list. It is separate from `useRemoveMember`, which refetches the
+  members list. The last-Master/Administrator `409` text is shown with
+  `notifyError` and the modal stays open; the client doesn't re-derive the
+  rule. The user id comes from `HomePage`'s session, passed through
+  `RoomsPage` to each `RoomCard`.
+- Frontend **937/937** tests at **100%** coverage; lint, `tsc`, build clean.
+  Not yet seen in a browser.
+
+### API errors follow the UI language (2026-10-01)
+
+- `apiFetch` sends `currentLanguage()` as `Accept-Language` on every request,
+  so a user who picked Italian from the flag selector on an English browser
+  gets Italian API error text. Frontend only; the backend's `get_locale`
+  already reads the header, and `Accept-Language` is a CORS-safelisted
+  header, so no CORS change. Frontend **925/925** tests at **100%**
+  coverage; lint, `tsc` and `npm run build` clean.
+
 ### Claude Code on the web session setup (2026-10-01)
 
 - `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`)
@@ -361,9 +387,9 @@ Question in the backend PR.
 ## Next Up
 
 - **Planned 2026-10-01** (tickets in `context/feature/`, each lists the
-  decisions to confirm before building): 15 Leave Room (frontend only),
-  16 PDF attachments on Documents, 17 Characters and posting in character,
-  18 Friends. Suggested order: 15, 16, 17, 18.
+  decisions to confirm before building): 16 PDF attachments on Documents,
+  17 Characters and posting in character, 18 Friends. Suggested order: 16,
+  17, 18. (15 Leave Room is built, see Completed Units.)
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
@@ -406,8 +432,6 @@ Question in the backend PR.
 - **Reveal action + fuller Visibility** (VR-02, VR-05, VR-06, FR-V2/V3/V5):
   per-Room default visibility, Reveal with AuditLog + notification, "view as
   User X" for the Master.
-- **Backend locale vs UI language**: the frontend should send its picked
-  language as `Accept-Language` so the two agree (see Open Questions).
 - Decide whether new Rooms should get default Tags in the creator's
   language.
 
@@ -446,15 +470,11 @@ protected file.
   decision): the spec says the setup page is reachable only by a Room's
   Administrator, and it replaced the members page. So (a) a plain Player or
   a Master who isn't an Administrator can no longer see the members list
-  page or **leave a Room from the UI** (UC-19; the `DELETE` endpoint still
-  allows it) — a "Leave" action somewhere else (Rooms list card?) is
-  needed; (b) the Master alone can't set Main Tags (Administrator only,
+  page; leaving is **resolved** by spec 15 (Leave in the Room card's menu);
+  (b) the Master alone can't set Main Tags (Administrator only,
   matching "Admin of that Room"). Also new: who the "Admin" is when the
   Master isn't one (they are separate flags, D-11).
 
-- **Backend locale follows `Accept-Language`, not the UI flag selector**: a
-  user with an English browser who picked Italian in the UI still gets
-  English API error text. Fix = frontend sends its language on every request.
 - **UI language absent from `requirements.md`** (*protected*): add an NFR for
   supported languages and confirm English as fallback.
 - **Auth passages in `requirements.md`** (*protected*): FR-A1 lists five

@@ -6,8 +6,13 @@ import { RoomCard } from '../components/RoomCard';
 import { CreateRoomModal } from '../components/CreateRoomModal';
 import { useTranslation } from 'react-i18next';
 
+interface RoomsPageProps {
+  /** The signed-in user, passed down so each Room card can offer Leave. */
+  currentUserId: string;
+}
+
 /** The signed-in user's Rooms, with a button to create one. Shown by `HomePage`. */
-export function RoomsPage() {
+export function RoomsPage({ currentUserId }: RoomsPageProps) {
   const { t } = useTranslation();
   const [createOpened, setCreateOpened] = useState(false);
   const myRooms = useMyRooms(true);
@@ -31,7 +36,7 @@ export function RoomsPage() {
       {myRooms.data && myRooms.data.length > 0 && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
           {myRooms.data.map((myRoom) => (
-            <RoomCard key={myRoom.room.id} myRoom={myRoom} />
+            <RoomCard key={myRoom.room.id} myRoom={myRoom} currentUserId={currentUserId} />
           ))}
         </SimpleGrid>
       )}
