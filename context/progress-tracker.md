@@ -27,6 +27,15 @@ in **Next Up**.
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### API errors follow the UI language (2026-10-01)
+
+- `apiFetch` sends `currentLanguage()` as `Accept-Language` on every request,
+  so a user who picked Italian from the flag selector on an English browser
+  gets Italian API error text. Frontend only; the backend's `get_locale`
+  already reads the header, and `Accept-Language` is a CORS-safelisted
+  header, so no CORS change. Frontend **925/925** tests at **100%**
+  coverage; lint, `tsc` and `npm run build` clean.
+
 ### Claude Code on the web session setup (2026-10-01)
 
 - `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`)
@@ -406,8 +415,6 @@ Question in the backend PR.
 - **Reveal action + fuller Visibility** (VR-02, VR-05, VR-06, FR-V2/V3/V5):
   per-Room default visibility, Reveal with AuditLog + notification, "view as
   User X" for the Master.
-- **Backend locale vs UI language**: the frontend should send its picked
-  language as `Accept-Language` so the two agree (see Open Questions).
 - Decide whether new Rooms should get default Tags in the creator's
   language.
 
@@ -452,9 +459,6 @@ protected file.
   matching "Admin of that Room"). Also new: who the "Admin" is when the
   Master isn't one (they are separate flags, D-11).
 
-- **Backend locale follows `Accept-Language`, not the UI flag selector**: a
-  user with an English browser who picked Italian in the UI still gets
-  English API error text. Fix = frontend sends its language on every request.
 - **UI language absent from `requirements.md`** (*protected*): add an NFR for
   supported languages and confirm English as fallback.
 - **Auth passages in `requirements.md`** (*protected*): FR-A1 lists five

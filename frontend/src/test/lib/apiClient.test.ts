@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setLanguage } from '../../i18n';
 import { ApiError, apiFetch } from '../../lib/apiClient';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -67,6 +68,25 @@ describe('apiFetch', () => {
     await apiFetch('/rooms');
 
     expect(callInit(fetchMock).headers.get('Accept')).toBe('application/json');
+  });
+});
+
+describe('language', () => {
+  it('sends the UI language as Accept-Language', async () => {
+    const fetchMock = respondWith('{}');
+
+    await apiFetch('/rooms');
+
+    expect(callInit(fetchMock).headers.get('Accept-Language')).toBe('it');
+  });
+
+  it('follows the language picked from the selector, not the browser', async () => {
+    await setLanguage('en');
+    const fetchMock = respondWith('{}');
+
+    await apiFetch('/rooms');
+
+    expect(callInit(fetchMock).headers.get('Accept-Language')).toBe('en');
   });
 });
 
