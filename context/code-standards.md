@@ -129,8 +129,11 @@ Adopted 2026-09-24 (spec 09); see `architecture.md` → UI Language.
 Vitest + React Testing Library, run with `npm test`; coverage with
 `npm run test:coverage` (config and floors in `vitest.config.ts`).
 
-- A test file sits next to what it tests (`useRooms.ts` →
-  `useRooms.test.ts`), so a module and its tests move together.
+- Tests live in `src/test/`, mirroring the `src/` folders (`hooks/useRooms.ts`
+  → `src/test/hooks/useRooms.test.ts`, `components/setup/X.tsx` →
+  `src/test/components/setup/X.test.tsx`). Shared helpers (`setup.ts`,
+  `utils.tsx`, `fixtures.ts`) stay at the root of `src/test/`. Moving or
+  renaming a module means moving its test to the matching path.
 - **Tests run in Italian**: `src/test/setup.ts` resets the language to
   `it` (and clears `localStorage`) before each test, so existing
   assertions query the real Italian strings. A test about English, or

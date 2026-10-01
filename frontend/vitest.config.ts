@@ -24,9 +24,8 @@ export default defineConfig({
       // or not - Vitest dropped the separate `all` flag.
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
-        'src/**/*.test.{ts,tsx}',
-        // Test helpers, the app bootstrap, and type-only modules: nothing
-        // with behaviour of its own to assert.
+        // Tests and their helpers (all under `src/test/`), the app bootstrap,
+        // and type-only modules: nothing with behaviour of its own to assert.
         'src/test/**',
         'src/main.tsx',
         'src/types/**',
