@@ -1,7 +1,9 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
+import { savePendingInvite } from '../lib/pendingInvite';
 import { supabase } from '../lib/supabaseClient';
 import { useSession } from '../hooks/useSession';
 import { fakeSession } from '../test/fixtures';
@@ -25,6 +27,7 @@ function signedIn() {
 }
 
 beforeEach(() => {
+  sessionStorage.clear();
   fetchMock.mockReset();
   fetchMock.mockResolvedValue([]);
   signInWithOAuth.mockReset();
@@ -103,6 +106,21 @@ describe('HomePage', () => {
 
     expect(await screen.findByText('Le mie Stanze')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Accedi con Google/ })).not.toBeInTheDocument();
+  });
+
+  // OAuth returns to the site root, dropping the invite URL: the code saved by
+  // the invite page must carry the user back to it.
+  it('resumes a pending invitation after signing in', () => {
+    signedIn();
+    savePendingInvite('ABC123');
+    renderWithProviders(
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/invite/:code" element={<p>invite page</p>} />
+      </Routes>,
+    );
+
+    expect(screen.getByText('invite page')).toBeInTheDocument();
   });
 
   it('shows the app header once signed in', async () => {

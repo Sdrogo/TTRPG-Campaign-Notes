@@ -1,5 +1,7 @@
 import { Stack, Title, Text, Button, Loader } from '@mantine/core';
+import { Navigate } from 'react-router-dom';
 import { BookOpenIcon } from '@phosphor-icons/react';
+import { readPendingInvite } from '../lib/pendingInvite';
 import { AUTH_PROVIDERS, type AuthProvider } from '../lib/authProviders';
 import { supabase } from '../lib/supabaseClient';
 import { useSession } from '../hooks/useSession';
@@ -56,6 +58,12 @@ export function HomePage() {
         </Stack>
       </Stack>
     );
+  }
+
+  // Signed in right after opening an invite link: finish joining the Room.
+  const pendingInvite = readPendingInvite();
+  if (pendingInvite) {
+    return <Navigate to={`/invite/${encodeURIComponent(pendingInvite)}`} replace />;
   }
 
   return (

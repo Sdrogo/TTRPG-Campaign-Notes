@@ -4,6 +4,7 @@ import { Stack, Title, Text, Button, Loader } from '@mantine/core';
 import { useSession } from '../hooks/useSession';
 import { useAcceptInvitation } from '../hooks/useRooms';
 import { useTranslation } from 'react-i18next';
+import { clearPendingInvite, savePendingInvite } from '../lib/pendingInvite';
 
 /**
  * `/invite/:code`: accepts the invitation as soon as the user is signed in,
@@ -20,9 +21,18 @@ export function AcceptInvitePage() {
   useEffect(() => {
     if (session && code && !triggered.current) {
       triggered.current = true;
+      clearPendingInvite();
       acceptInvitation.mutate(code);
     }
   }, [session, code, acceptInvitation]);
+
+  // Signing in sends the user back to the site root, so remember the code and
+  // let the home page bring them back here.
+  useEffect(() => {
+    if (!sessionLoading && !session && code) {
+      savePendingInvite(code);
+    }
+  }, [sessionLoading, session, code]);
 
   if (sessionLoading) {
     return (

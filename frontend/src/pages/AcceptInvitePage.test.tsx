@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../lib/apiClient';
+import { readPendingInvite, savePendingInvite } from '../lib/pendingInvite';
 import { useSession } from '../hooks/useSession';
 import { fakeSession, rawRoom } from '../test/fixtures';
 import { renderWithProviders } from '../test/utils';
@@ -34,6 +35,7 @@ function render(code = 'ABC123') {
 }
 
 beforeEach(() => {
+  sessionStorage.clear();
   fetchMock.mockReset();
   navigate.mockReset();
   sessionMock.mockReturnValue({ session: fakeSession(), loading: false } as SessionState);
@@ -63,6 +65,30 @@ describe('AcceptInvitePage', () => {
     expect(screen.getByText('Accedi per unirti a questa Stanza.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Vai al login' })).toHaveAttribute('href', '/');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  // Sign-in returns to "/", so the code is stored for the home page to resume.
+  it('remembers the code of an anonymous visitor for after sign-in', () => {
+    sessionMock.mockReturnValue({ session: null, loading: false } as SessionState);
+    render('XYZ789');
+
+    expect(readPendingInvite()).toBe('XYZ789');
+  });
+
+  it('does not remember the code while the session is still resolving', () => {
+    sessionMock.mockReturnValue({ session: null, loading: true } as SessionState);
+    render('XYZ789');
+
+    expect(readPendingInvite()).toBeNull();
+  });
+
+  it('forgets the remembered code once it is being accepted', async () => {
+    savePendingInvite('ABC123');
+    fetchMock.mockResolvedValue(rawRoom());
+    render('ABC123');
+    await screen.findByText(/Ti sei unito a/);
+
+    expect(readPendingInvite()).toBeNull();
   });
 
   it('accepts the invitation in the URL as soon as it can', async () => {
