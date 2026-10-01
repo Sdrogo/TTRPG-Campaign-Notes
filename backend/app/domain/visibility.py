@@ -5,7 +5,14 @@ read path passes Room content through here before it reaches the client
 import uuid
 from collections.abc import Collection, Iterable, Mapping
 
-from app.domain.models import Comment, Document, DocumentImage, DocumentVisibility, RoomRole
+from app.domain.models import (
+    Comment,
+    Document,
+    DocumentImage,
+    DocumentVisibility,
+    Note,
+    RoomRole,
+)
 
 
 def is_content_visible(
@@ -60,6 +67,22 @@ def is_comment_visible(
         return True
     return is_content_visible(
         comment.visibility, viewer_user_id, viewer_role, {comment.author_id}, selective_user_ids
+    )
+
+
+def is_note_visible(
+    note: Note,
+    viewer_user_id: uuid.UUID,
+    viewer_role: RoomRole,
+    document_owner_ids: Collection[uuid.UUID],
+    selective_user_ids: Collection[uuid.UUID],
+) -> bool:
+    """VR-03 for a Note. Only meaningful once the viewer is known to see the
+    Note's Document. A Note has no author of its own in the visibility sense:
+    "Private" means the Document's Owners (and the Master), like the
+    Document itself."""
+    return is_content_visible(
+        note.visibility, viewer_user_id, viewer_role, document_owner_ids, selective_user_ids
     )
 
 

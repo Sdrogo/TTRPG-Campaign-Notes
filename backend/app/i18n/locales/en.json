@@ -40,6 +40,15 @@
       "tooManyImages": "A Comment can have at most {max} images",
       "invalidSelectiveUsers": "selective_user_ids must all be members of this room"
     },
+    "note": {
+      "notFound": "Note not found",
+      "titleRequired": "A Note needs a title",
+      "titleTooLong": "A Note title can be at most {max} characters",
+      "notOwner": "Only an Owner (or the Master) can manage this Document's Notes",
+      "tooMany": "A Document can have at most {max} Notes",
+      "invalidOrder": "note_ids must list each Note you can see exactly once",
+      "invalidSelectiveUsers": "selective_user_ids must all be members of this room"
+    },
     "tag": {
       "notAllowedToManage": "Only an Administrator or the Master can manage Tags",
       "nameRequired": "Tag name is required",
