@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Group, Stack, Title, Text, Button } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { FilesIcon, GearIcon, UserPlusIcon } from '@phosphor-icons/react';
+import { GearIcon, UserPlusIcon } from '@phosphor-icons/react';
 import { RoleTag } from './RoleTag';
 import { InviteModal } from './InviteModal';
 import type { MyRoom } from '../types/room';
@@ -12,9 +12,9 @@ interface RoomCardProps {
 }
 
 /**
- * One of the user's Rooms, with their role and links to its Documents. An
- * Administrator also gets the setup page (members, Main Tags) and the invite
- * button.
+ * One of the user's Rooms, with their role. The whole card links to the Room's
+ * Documents; an Administrator also gets the setup page (members, Main Tags)
+ * and the invite button, which sit above that link and so win over it.
  */
 export function RoomCard({ myRoom }: RoomCardProps) {
   const { t } = useTranslation();
@@ -22,7 +22,7 @@ export function RoomCard({ myRoom }: RoomCardProps) {
   const { room, role, isAdmin } = myRoom;
 
   return (
-    <Card withBorder padding="md" radius="md">
+    <Card withBorder padding="md" radius="md" pos="relative">
       <Group justify="space-between" align="flex-start">
         <Stack gap={4}>
           <Title order={3} style={{ fontFamily: 'var(--font-display)' }}>
@@ -35,16 +35,7 @@ export function RoomCard({ myRoom }: RoomCardProps) {
           )}
           <RoleTag role={role} isAdmin={isAdmin} />
         </Stack>
-        <Group gap="xs">
-          <Button
-            component={Link}
-            to={`/rooms/${room.id}/documents`}
-            variant="subtle"
-            size="xs"
-            leftSection={<FilesIcon size={16} />}
-          >
-            {t('rooms.documents')}
-          </Button>
+        <Group gap="xs" pos="relative" style={{ zIndex: 2 }}>
           {isAdmin && (
             <>
               <Button
@@ -68,6 +59,13 @@ export function RoomCard({ myRoom }: RoomCardProps) {
           )}
         </Group>
       </Group>
+      {/* Covers the card rather than wrapping it, like DocumentCard: the
+          buttons above can't live inside an <a>. */}
+      <Link
+        to={`/rooms/${room.id}/documents`}
+        aria-label={room.name}
+        style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+      />
       <InviteModal
         opened={inviteOpened}
         onClose={() => setInviteOpened(false)}

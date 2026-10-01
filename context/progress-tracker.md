@@ -286,6 +286,14 @@ Question in the backend PR.
 
 ## Next Up
 
+- **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
+  branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
+  buttons stacking is not yet seen in a browser. Ticket written
+  (`context/feature/13_1 - Room Card refinment and Delition for TAGs and
+  Rooms.md`), no code yet. Three steps: 13_1a clickable Room card (frontend),
+  13_1b `DELETE` Room/Tag (backend; Storage cleanup for every image, Main
+  items stay valid), 13_1c setup-page controls (frontend). Open questions are
+  listed at the end of the ticket.
 - **Merge spec 12_1, then build 12_2** (frontend). Migration `c6e1a4b7d2f9`
   is already live; Render redeploys the backend on merge and the single-Document
   responses gain a `notes` field (additive, the old frontend ignores it).
