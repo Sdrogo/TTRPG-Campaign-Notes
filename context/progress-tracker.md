@@ -27,6 +27,16 @@ in **Next Up**.
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Tests moved to `src/test/` (spec 14, branch `feature/14-tests-folder`)
+
+- All 80 frontend test files moved (`git mv`, history kept) from beside their
+  modules to `src/test/`, mirroring the `src/` folders (`src/test/hooks`,
+  `src/test/components/setup`, ...); only their relative imports changed.
+  Helpers stay at the root of `src/test/`. Rule updated in `code-standards.md`
+  -> Testing. No test logic changed: 923/923 pass, 100% coverage, lint and
+  `tsc` clean. Open PRs that add or edit a co-located test will conflict and
+  need their test moved to the matching `src/test/` path.
+
 ### Room and Tag deletion, backend (spec 13_1b, branch `feature/13-1b-room-tag-delete-backend`)
 
 - `DELETE /rooms/{id}` (Administrator only) and `DELETE /rooms/{id}/tags/{tag}`
