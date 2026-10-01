@@ -14,7 +14,7 @@ function notesPath(roomId: string, documentId: string) {
 function useReloadDocument(roomId: string, documentId: string) {
   const queryClient = useQueryClient();
   return () => {
-    void queryClient.invalidateQueries({ queryKey: documentQueryKey(roomId, documentId) });
+    return queryClient.invalidateQueries({ queryKey: documentQueryKey(roomId, documentId) });
   };
 }
 

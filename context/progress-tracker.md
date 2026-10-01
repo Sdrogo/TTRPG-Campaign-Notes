@@ -11,7 +11,7 @@ step-by-step notes) is in
 
 Branch `feature/12-2-notes-frontend` (spec 12_2, frontend only, PR open;
 **depends on the backend PR for spec 12_1 being merged first**). Latest
-measured state: frontend **895/895** tests at **100%** coverage; lint, `tsc`
+measured state: frontend **897/897** tests at **100%** coverage; lint, `tsc`
 and `npm run build` clean. The backend is untouched here. CI keeps exact-100%
 gates.
 
@@ -21,6 +21,12 @@ Up**.
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Note reorder reload (2026-10-01)
+
+- Note mutations return the Document invalidation promise so reordering stays
+  pending until the reload finishes; regression cases cover accepted and
+  rejected orders.
 
 ### Member removal loading (09-30)
 

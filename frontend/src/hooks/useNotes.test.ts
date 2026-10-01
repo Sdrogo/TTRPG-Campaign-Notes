@@ -104,6 +104,39 @@ describe('useReorderNotes', () => {
     expect(notes.map((note) => note.id)).toEqual(['note-2', 'note-1']);
   });
 
+  it.each(['succeeds', 'fails'])(
+    'stays pending until the Document reloads when reordering %s',
+    async (outcome) => {
+      if (outcome === 'succeeds') {
+        fetchMock.mockResolvedValue([rawNote()]);
+      } else {
+        fetchMock.mockRejectedValue(new Error('422'));
+      }
+      const { result, queryClient } = renderHookWithProviders(() =>
+        useReorderNotes('room-1', 'doc-1'),
+      );
+      let finishReload!: () => void;
+      const reload = new Promise<void>((resolve) => {
+        finishReload = resolve;
+      });
+      const invalidate = spyOnInvalidate(queryClient).mockReturnValue(reload);
+      const onFinished = vi.fn();
+
+      const mutation = result.current.mutateAsync(['note-1']).then(onFinished, onFinished);
+
+      await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY }));
+      expect(result.current.isPending).toBe(true);
+      expect(onFinished).not.toHaveBeenCalled();
+
+      finishReload();
+      await mutation;
+
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+      expect(result.current.isError).toBe(outcome === 'fails');
+      expect(onFinished).toHaveBeenCalledOnce();
+    },
+  );
+
   // A 422 means the Notes changed under us: reload so the list is true again.
   it('reloads the Document even when the order is rejected', async () => {
     fetchMock.mockRejectedValue(new Error('422'));
