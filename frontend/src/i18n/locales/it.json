@@ -111,7 +111,14 @@
       "gameSystem": "Sistema di gioco",
       "gameSystemPlaceholder": "Es. D&D 5e (opzionale)"
     },
-    "setup": "Impostazioni"
+    "setup": "Impostazioni",
+    "actions": "Azioni per la Stanza {{name}}",
+    "leave": {
+      "confirmTitle": "Uscire da \"{{name}}\"?",
+      "confirmBody": "I tuoi Documenti, Commenti e Note restano nella Stanza. Per rientrare ti servirà un nuovo invito.",
+      "adminHint": "Sei un Amministratore: se sei l'ultimo, nomina prima un altro Amministratore dalle Impostazioni della Stanza.",
+      "left": "Hai lasciato \"{{name}}\""
+    }
   },
   "invite": {
     "modalTitle": "Invita nella Stanza",

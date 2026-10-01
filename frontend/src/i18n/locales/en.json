@@ -111,7 +111,14 @@
       "gameSystem": "Game system",
       "gameSystemPlaceholder": "E.g. D&D 5e (optional)"
     },
-    "setup": "Setup"
+    "setup": "Setup",
+    "actions": "Room actions for {{name}}",
+    "leave": {
+      "confirmTitle": "Leave \"{{name}}\"?",
+      "confirmBody": "Your Documents, Comments and Notes stay in the Room. You will need a new invite to come back.",
+      "adminHint": "You are an Administrator: if you are the last one, name another Administrator from the Room setup first.",
+      "left": "You left \"{{name}}\""
+    }
   },
   "invite": {
     "modalTitle": "Invite to the Room",
