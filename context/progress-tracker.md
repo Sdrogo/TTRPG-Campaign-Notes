@@ -27,6 +27,16 @@ in **Next Up**.
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Claude Code on the web session setup (2026-10-01)
+
+- `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`)
+  runs only in Claude Code on the web: installs frontend and backend
+  dependencies, starts a local Postgres, applies `tests/ci/supabase_shim.sql`
+  on a fresh database and `alembic upgrade head`, and exports CI's env values.
+  `DATABASE_URL` is always the local database, so tests never touch the live
+  one. Verified on a fresh cluster and on a re-run; lint and sample tests pass.
+  The container has Postgres 16 and Node 22 (CI: 17.6 and 24).
+
 ### Tests moved to `src/test/` (spec 14, branch `feature/14-tests-folder`)
 
 - All 80 frontend test files moved (`git mv`, history kept) from beside their
