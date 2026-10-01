@@ -41,6 +41,11 @@
       "tooManyImages": "Un Commento può avere al massimo {max} immagini",
       "invalidSelectiveUsers": "selective_user_ids deve contenere solo membri di questa Room"
     },
+    "character": {
+      "notFound": "Personaggio non trovato",
+      "playerNotAMember": "Chi interpreta il Personaggio deve essere un membro di questa Room",
+      "cannotPostAs": "Puoi scrivere solo come un Personaggio che interpreti (il Master può scrivere come qualsiasi Documento)"
+    },
     "note": {
       "notFound": "Nota non trovata",
       "titleRequired": "Una Nota ha bisogno di un titolo",

@@ -122,6 +122,9 @@ class Document:
     description: str
     visibility: DocumentVisibility
     created_by: uuid.UUID
+    # Set when the Document is a Character: the member of the Room who plays
+    # it (D-23). A relation like Ownership, not a type (D-05).
+    played_by: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)
@@ -211,6 +214,9 @@ class Comment:
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None = None
+    # The Character (a Document of the same Room) the author wrote this as
+    # (D-24). Shown only to viewers who see that Document (VR-13).
+    as_document_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)

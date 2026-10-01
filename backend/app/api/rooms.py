@@ -243,7 +243,8 @@ async def remove_member(
 ) -> None:
     """UC-05/UC-19: an Administrator removes a member, or a member removes
     themselves (leaves). The last Master or Administrator can't go without a
-    successor (D-16, 409). Audited in the same transaction (Invariant 7)."""
+    successor (D-16, 409). Audited in the same transaction (Invariant 7).
+    The Characters they played stay in the Room, unlinked (D-23)."""
     requester_id = uuid.UUID(current_user.id)
     is_self = requester_id == user_id
 
@@ -254,6 +255,9 @@ async def remove_member(
                 status.HTTP_403_FORBIDDEN, "errors.room.onlyAdministratorCanRemoveMembers", locale
             )
 
+    # Taken before the membership read, so a concurrent `set_player` can't
+    # link a Character to this member after their links are cleared below.
+    await rooms_repo.lock_room(session, room_id)
     memberships = await rooms_repo.list_memberships(session, room_id)
     try:
         audit_entry = plan_removal(memberships, user_id, requester_id, is_self=is_self)
@@ -263,6 +267,8 @@ async def remove_member(
         raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
 
     await rooms_repo.delete_membership(session, room_id, user_id)
+    # Their Characters stay, unlinked (D-15, D-23).
+    await documents_repo.clear_played_by_in_room(session, room_id, user_id)
     await rooms_repo.insert_audit_log(session, audit_entry)
 
 

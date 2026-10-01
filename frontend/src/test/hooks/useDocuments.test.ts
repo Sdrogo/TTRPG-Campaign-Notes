@@ -11,6 +11,7 @@ import {
   useDocuments,
   useImportDocumentImage,
   useRemoveDocumentOwner,
+  useSetDocumentPlayer,
   useSetFavoriteImage,
   useUpdateDocument,
   useUploadDocumentImages,
@@ -45,6 +46,7 @@ describe('useDocuments', () => {
       tagIds: ['tag-1'],
       ownerIds: ['user-1'],
       selectiveUserIds: [],
+      playedBy: null,
       // The list's response carries no Notes.
       notes: [],
       files: [],
@@ -348,6 +350,43 @@ describe('useDeleteDocumentImage', () => {
     await waitFor(() => {
       expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY });
       expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY });
+    });
+  });
+});
+
+describe('useSetDocumentPlayer', () => {
+  it("links the player and refreshes the Document and the caller's Characters", async () => {
+    fetchMock.mockResolvedValue(rawDocument({ played_by: 'user-2' }));
+    const { result, queryClient } = renderHookWithProviders(() =>
+      useSetDocumentPlayer('room-1', 'doc-1'),
+    );
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const document = await result.current.mutateAsync({ userId: 'user-2', addAsOwner: true });
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/documents/doc-1/player', {
+      method: 'PUT',
+      json: { user_id: 'user-2', add_as_owner: true },
+    });
+    expect(document.playedBy).toBe('user-2');
+    await waitFor(() => {
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY });
+      expect(invalidate).toHaveBeenCalledWith({
+        queryKey: ['rooms', 'room-1', 'characters', 'mine'],
+      });
+    });
+  });
+
+  it('unlinks with a null player', async () => {
+    fetchMock.mockResolvedValue(rawDocument());
+    const { result } = renderHookWithProviders(() => useSetDocumentPlayer('room-1', 'doc-1'));
+
+    await result.current.mutateAsync({ userId: null, addAsOwner: false });
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/documents/doc-1/player', {
+      method: 'PUT',
+      json: { user_id: null, add_as_owner: false },
     });
   });
 });

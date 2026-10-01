@@ -38,6 +38,7 @@ function document(overrides: Partial<Document> = {}): Document {
     selectiveUserIds: [],
     notes: [],
     files: [],
+    playedBy: null,
     ...overrides,
   };
 }
@@ -72,6 +73,19 @@ describe('DocumentCard', () => {
       'href',
       '/rooms/room-1/documents/doc-1',
     );
+  });
+
+  // D-23: a Character's card names who plays it.
+  it('names the player of a Character', () => {
+    render({ playedBy: 'user-1' });
+
+    expect(screen.getByText('Interpretato da Il Master')).toBeInTheDocument();
+  });
+
+  it('says nothing about a player on any other Document', () => {
+    render();
+
+    expect(screen.queryByText(/Interpretato da/)).not.toBeInTheDocument();
   });
 
   it('names the Owners by their profile name', () => {

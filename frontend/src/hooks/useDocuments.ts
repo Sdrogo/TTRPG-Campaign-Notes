@@ -5,6 +5,7 @@ import type { Document, DocumentVisibility } from '../types/document';
 import type { RawImage } from '../types/image';
 import { toNote, type RawNote } from '../lib/notes';
 import { toDocumentFile, type RawDocumentFile } from '../lib/documentFiles';
+import { charactersQueryKey } from './useCharacters';
 
 interface RawDocument {
   id: string;
@@ -16,6 +17,7 @@ interface RawDocument {
   tag_ids: string[];
   owner_ids: string[];
   selective_user_ids: string[];
+  played_by: string | null;
   // Only the single-Document responses carry Notes and files, not the list.
   notes?: RawNote[];
   files?: RawDocumentFile[];
@@ -34,6 +36,7 @@ function toDocument(raw: RawDocument): Document {
     tagIds: raw.tag_ids,
     ownerIds: raw.owner_ids,
     selectiveUserIds: raw.selective_user_ids,
+    playedBy: raw.played_by,
     notes: (raw.notes ?? []).map(toNote),
     files: (raw.files ?? []).map(toDocumentFile),
   };
@@ -151,6 +154,36 @@ export function useRemoveDocumentOwner(roomId: string, documentId: string) {
     },
     // Owners show on the list's cards too, not only on the detail page.
     onSuccess: invalidate,
+  });
+}
+
+/** What `useSetDocumentPlayer` sends: the new player (null unlinks) and whether to make them an Owner. */
+export interface SetPlayerInput {
+  userId: string | null;
+  addAsOwner: boolean;
+}
+
+/**
+ * Links the Document to the member who plays it as their Character, or
+ * unlinks it (UC-21). Owners and the Master only; with `addAsOwner` the
+ * player also becomes an Owner, so they can edit their sheet.
+ */
+export function useSetDocumentPlayer(roomId: string, documentId: string) {
+  const queryClient = useQueryClient();
+  const invalidate = useInvalidateDocument(roomId, documentId);
+  return useMutation({
+    mutationFn: async ({ userId, addAsOwner }: SetPlayerInput) =>
+      toDocument(
+        await apiFetch<RawDocument>(`/rooms/${roomId}/documents/${documentId}/player`, {
+          method: 'PUT',
+          json: { user_id: userId, add_as_owner: addAsOwner },
+        }),
+      ),
+    onSuccess: () => {
+      invalidate();
+      // Who may write as this Document changed with its player.
+      void queryClient.invalidateQueries({ queryKey: charactersQueryKey(roomId) });
+    },
   });
 }
 

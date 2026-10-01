@@ -183,6 +183,9 @@ class DocumentRow(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     visibility: Mapped[str] = mapped_column(String(20), default="room")
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    # The member who plays this Document as a Character (D-23, spec 17), or
+    # None. Cleared when they leave the Room (D-15); no FK, like every user id.
+    played_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -273,6 +276,12 @@ class PostRow(Base):
     kind: Mapped[str] = mapped_column(String(20), default="comment")
     body: Mapped[str] = mapped_column(Text)
     visibility: Mapped[str] = mapped_column(String(20), default="room")
+    # The Character this Post is written as (D-24, spec 17), or None. SET
+    # NULL, not CASCADE: deleting the Character turns its Posts back into
+    # plain ones, which shows the real author and so widens nothing.
+    as_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), index=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

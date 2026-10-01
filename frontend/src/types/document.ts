@@ -28,6 +28,11 @@ export interface Document {
   ownerIds: string[];
   selectiveUserIds: string[];
   /**
+   * The member who plays this Document as their Character (D-23), or null.
+   * A bare user id, named through the Room's member list.
+   */
+  playedBy: string | null;
+  /**
    * The Notes the viewer may see, in display order. Only the single-Document
    * routes send them: on a Document from the list this is always empty.
    */

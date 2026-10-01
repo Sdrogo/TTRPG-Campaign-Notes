@@ -70,9 +70,12 @@ def plan_new_comment(
     body: str,
     visibility: DocumentVisibility,
     now: datetime,
+    as_document_id: uuid.UUID | None = None,
 ) -> Comment:
     """UC-11/FR-T1: any member who sees the Document can comment on it -
-    the caller has already checked the Document is visible to the author."""
+    the caller has already checked the Document is visible to the author, and,
+    with `as_document_id`, that they may write as that Character (D-24,
+    `characters.ensure_can_post_as`)."""
     return Comment(
         id=uuid.uuid4(),
         document_id=document_id,
@@ -81,6 +84,7 @@ def plan_new_comment(
         visibility=visibility,
         created_at=now,
         updated_at=now,
+        as_document_id=as_document_id,
     )
 
 
@@ -106,10 +110,15 @@ def plan_comment_edit(
     visibility: DocumentVisibility | None = None,
     current_selective_ids: Collection[uuid.UUID] = (),
     new_selective_ids: Collection[uuid.UUID] | None = None,
+    change_character: bool = False,
+    as_document_id: uuid.UUID | None = None,
 ) -> CommentEditPlan:
     """FR-T5: the author edits their own Comment. Changing its visibility level
     or its Selective grants produces an audit entry (VR-08, Invariant 7);
-    editing only the body does not."""
+    editing only the body does not. With `change_character`, the Comment is
+    rewritten as `as_document_id` (None = as the author themselves); the
+    caller has already checked they may write as it (D-24). The Post still
+    belongs to its author, so that isn't audited."""
     if comment.deleted_at is not None:
         raise CommentDeletedError("errors.comment.deleted")
     if comment.author_id != editor_id:
@@ -119,6 +128,7 @@ def plan_comment_edit(
         comment,
         body=comment.body if body is None else _clean_body(body),
         visibility=comment.visibility if visibility is None else visibility,
+        as_document_id=as_document_id if change_character else comment.as_document_id,
         updated_at=now,
     )
 
