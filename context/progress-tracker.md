@@ -350,6 +350,10 @@ Question in the backend PR.
 
 ## Next Up
 
+- **Planned 2026-10-01** (tickets in `context/feature/`, each lists the
+  decisions to confirm before building): 15 Leave Room (frontend only),
+  16 PDF attachments on Documents, 17 Characters and posting in character,
+  18 Friends. Suggested order: 15, 16, 17, 18.
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
