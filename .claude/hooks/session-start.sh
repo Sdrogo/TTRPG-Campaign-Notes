@@ -12,8 +12,9 @@ cd "$CLAUDE_PROJECT_DIR"
 
 LOCAL_DB_URL="postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres"
 
-# Frontend. `npm install` (not `ci`) reuses the cached node_modules.
-(cd frontend && npm install --no-audit --no-fund)
+# Frontend. `npm ci`, because the container's npm would rewrite the
+# lockfile (made with a newer npm) on `npm install`.
+(cd frontend && npm ci --no-audit --no-fund)
 
 # Backend, in the venv the README uses.
 (
