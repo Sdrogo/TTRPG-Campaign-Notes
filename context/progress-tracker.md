@@ -10,18 +10,13 @@ step-by-step notes) is in
 ## Current Status (2026-10-01)
 
 Branch `feature/12-1-notes-backend` (spec 12_1, backend only). Latest measured
-state: backend **412** tests pass against the live DB (migrations
-`b5d8f2a9c1e3` and `c6e1a4b7d2f9` are both applied to it); new modules at
+state: backend **413** tests pass against disposable PostgreSQL (migrations
+`b5d8f2a9c1e3` and `c6e1a4b7d2f9` are also applied to the live DB); backend at
 100% coverage, ruff and mypy strict clean. Frontend untouched (spec 12_2 is
 the next unit). CI keeps exact-100% gates.
-Branch `feature/11-3-index-follows-main-items` (spec 11_3, PR open). Latest
-measured state: frontend **827/827** tests at **100%** coverage; backend
-**355** tests (DB tests run in CI; migrations `a7c3e9d1b254` and
-`b5d8f2a9c1e3` are both applied to the live DB); lint, `tsc`, ruff and mypy
-strict clean. CI keeps exact-100% gates.
 
-No other unit is in progress. Candidates for the next one are in **Next
-Up**.
+Spec 12_1 is the current unit awaiting merge. Candidates for the next unit are
+in **Next Up**.
 
 ## Completed Units
 
@@ -192,6 +187,8 @@ to the live DB on 10-01** with the user's go-ahead, before the merge.
 - Visibility = `is_note_visible` (reuses `is_content_visible`, the Document's
   Owners as "Owner"). A hidden Note is absent from every response and a
   request for it is **404, not 403**; visibility is checked before permission.
+  Create and PATCH return null when the saved Note is hidden from the caller;
+  the Master can still read it, and visibility changes remain audited.
 - Owners + Master manage Notes (`app/domain/notes.py`). Visibility/grant
   changes write a `note_visibility_changed` AuditLog row (Invariant 7).
 - API `app/api/notes.py`: list/create/PATCH/DELETE and `PUT .../notes/order`
@@ -242,13 +239,9 @@ to the live DB on 10-01** with the user's go-ahead, before the merge.
 - **Merge spec 12_1, then build 12_2** (frontend). Migration `c6e1a4b7d2f9`
   is already live; Render redeploys the backend on merge and the single-Document
   responses gain a `notes` field (additive, the old frontend ignores it).
-- **Browser check of spec 11** (migration is applied): setup page as
-  Administrator and as a plain member, reorder + save, Documents grouping
-  follows the order; and the one-line `TagFilter` with 3+ Tags selected.
-- **Browser check of specs 11-11_3**: setup page as Administrator and as a
-  plain member, reorder + save, add a combination; the Documents grouping and
-  the Tag index both follow the order; the one-line `TagFilter` with 3+ Tags
-  selected.
+- **Browser check of spec 12** (after 12_2): create, edit and reorder Notes
+  as a Document Owner and Master; confirm Master-only Notes disappear for
+  Players while remaining visible to the Master.
 - **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only): set it to
   `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app` and redeploy.
   Then the look-alike `…-abc123-evil-rum11.vercel.app` must get no

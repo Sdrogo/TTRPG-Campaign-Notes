@@ -90,6 +90,7 @@ async def _note(
     )
     assert response.status_code == 201, response.text
     body: dict[str, object] = response.json()
+    assert isinstance(body, dict)
     return body
 
 
@@ -177,7 +178,14 @@ async def test_notes_are_filtered_per_viewer_at_every_level(
         visibility="selective",
         selective_user_ids=[room.friend.id],
     )
-    await _note(client, room, document_id, room.owner, title="GM only", visibility="master")
+    created = await client.post(
+        room.notes_url(document_id),
+        json={"title": "GM only", "visibility": "master"},
+        headers=room.owner.headers,
+    )
+
+    assert created.status_code == 201
+    assert created.json() is None
 
     assert await _titles(client, room, document_id, room.master) == [
         "Room",
@@ -197,7 +205,7 @@ async def test_a_hidden_note_is_absent_from_the_document_response(
     room = await _room(client, make_token)
     document_id = await _document(client, room)
     await _note(client, room, document_id, room.owner, title="Visible")
-    await _note(client, room, document_id, room.owner, title="Hidden", visibility="master")
+    await _note(client, room, document_id, room.master, title="Hidden", visibility="master")
 
     reader = await client.get(room.document_url(document_id), headers=room.reader.headers)
     master = await client.get(room.document_url(document_id), headers=room.master.headers)
@@ -213,7 +221,7 @@ async def test_a_document_with_only_hidden_notes_looks_like_one_with_none(
     room = await _room(client, make_token)
     with_hidden = await _document(client, room)
     without = await _document(client, room)
-    await _note(client, room, with_hidden, room.owner, visibility="master")
+    await _note(client, room, with_hidden, room.master, visibility="master")
 
     hidden = (await client.get(room.document_url(with_hidden), headers=room.reader.headers)).json()
     empty = (await client.get(room.document_url(without), headers=room.reader.headers)).json()
@@ -288,7 +296,12 @@ async def test_a_hidden_note_is_a_404_not_a_403_for_a_reader_who_tries_it(
 ) -> None:
     room = await _room(client, make_token)
     document_id = await _document(client, room)
-    hidden = await _note(client, room, document_id, room.owner, visibility="master")
+    await client.post(
+        room.notes_url(document_id),
+        json={"title": "Secret door", "visibility": "master"},
+        headers=room.owner.headers,
+    )
+    hidden = (await client.get(room.notes_url(document_id), headers=room.master.headers)).json()[0]
     url = f"{room.notes_url(document_id)}/{hidden['id']}"
     missing = f"{room.notes_url(document_id)}/{uuid.uuid4()}"
 
@@ -429,6 +442,30 @@ async def test_changing_a_notes_visibility_is_audited_in_the_same_transaction(
     assert entries[0].details["selective_user_ids"] == [room.friend.id]
     assert await _titles(client, room, document_id, room.friend) == ["Secret door"]
     assert await _titles(client, room, document_id, room.reader) == []
+
+
+async def test_changing_a_note_to_master_hides_it_from_its_owner(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    note = await _note(client, room, document_id, room.owner)
+
+    response = await client.patch(
+        f"{room.notes_url(document_id)}/{note['id']}",
+        json={"visibility": "master"},
+        headers=room.owner.headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json() is None
+    for viewer in (room.owner, room.reader):
+        assert await _titles(client, room, document_id, viewer) == []
+        document = await client.get(room.document_url(document_id), headers=viewer.headers)
+        assert document.status_code == 200
+        assert document.json()["notes"] == []
+    assert await _titles(client, room, document_id, room.master) == ["Secret door"]
+    assert await _audit_actions(db_session) == ["note_visibility_changed"]
 
 
 async def test_changing_only_the_grants_is_audited_and_resending_them_is_not(

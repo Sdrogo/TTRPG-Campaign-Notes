@@ -38,6 +38,7 @@ from app.domain.notes import (
     plan_note_edit,
     plan_note_order,
 )
+from app.domain.visibility import is_note_visible
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/documents/{document_id}/notes", tags=["notes"])
@@ -185,9 +186,10 @@ async def create_note(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> NoteResponse:
+) -> NoteResponse | None:
     """An Owner (or the Master) adds a Note after the Document's others, up to
-    `MAX_NOTES_PER_DOCUMENT` (409 beyond)."""
+    `MAX_NOTES_PER_DOCUMENT` (409 beyond). Returns null if the new Note is
+    hidden from the requester (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
     membership, owner_ids = await _require_document(
         session, room_id, document_id, requester_id, locale
@@ -217,6 +219,9 @@ async def create_note(
         session, room_id, body.selective_user_ids, "errors.note.invalidSelectiveUsers", locale
     )
     await notes_repo.insert_note(session, note, body.selective_user_ids)
+    notes = await get_document_notes(session, document_id, membership, owner_ids)
+    if not any(visible.id == note.id for visible in notes.visible):
+        return None
     return note_response(note, body.selective_user_ids, membership, owner_ids)
 
 
@@ -264,10 +269,11 @@ async def update_note(
     current_user: CurrentUserDep,
     session: SessionDep,
     locale: LocaleDep,
-) -> NoteResponse:
+) -> NoteResponse | None:
     """An Owner (or the Master) edits a Note's title, description, visibility
     or grants. A change of who can see it is audited in the same transaction
-    (VR-08, Invariant 7)."""
+    (VR-08, Invariant 7). Returns null if the edit hides the Note from the
+    requester (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
     membership, owner_ids = await _require_document(
         session, room_id, document_id, requester_id, locale
@@ -305,6 +311,8 @@ async def update_note(
         selective_ids = body.selective_user_ids
     if plan.audit_entry is not None:
         await rooms_repo.insert_audit_log(session, plan.audit_entry)
+    if not is_note_visible(plan.note, requester_id, membership.role, owner_ids, selective_ids):
+        return None
     return note_response(plan.note, selective_ids, membership, owner_ids)
 
 
