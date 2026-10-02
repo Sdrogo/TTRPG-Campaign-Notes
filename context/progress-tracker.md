@@ -9,17 +9,38 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/feature-18-qba36q` (spec 18_2, Friends frontend, PR into
-`staging`). Frontend **1078** tests at 100% coverage; lint and build clean.
-Backend unchanged since 18_1b: 563 tests at 100%. No new migration; all
-migrations up to `c4f9a2e7d1b8` (spec 18_1b) are live.
+Branch `claude/project-thread-xryv0u` (spec 19_1, threaded replies backend,
+PR into `staging`). Backend **601** tests at 100% coverage; ruff and mypy
+clean. New migration `d5b2e8f4a1c7` (`posts.parent_id`), **not yet applied
+to the live database**: it must be live before 19_2 (frontend) merges.
+Frontend unchanged since 18_2: 1078 tests at 100%.
 
-Specs 12 to 18_1b (with direct-invitation decline) are merged into
-`staging`. Spec 18 is complete once 18_2 merges; then its browser check.
+Specs 12 to 18 are merged into `staging`. Build order is feature by feature
+(19, 19b, 19c, then 20...): 19_2 (replies frontend) comes next.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Threaded replies, backend (spec 19_1, 2026-10-02)
+
+- Migration `d5b2e8f4a1c7`: nullable `posts.parent_id` (FK `posts.id`,
+  CASCADE, index). The ticket says `comments.parent_id`; Comments live in
+  `posts`. `POST .../comments` takes `parent_id` (404 missing, foreign or
+  hidden parent; 409 deleted parent); every Comment response carries
+  `parent_id` and `parent_hidden`. The list stays flat.
+- `ensure_not_wider` (422) compares audiences over the Room's members, the
+  reply's author left out; checked on create and on edits that change who
+  sees the reply, never on body-only edits.
+- `is_comment_visible_in_thread`: own visibility and every parent's, the
+  author always sees their own. Used by the list, the single-Comment routes
+  and the gallery. Details in `architecture.md` -> Threads/Posts -> Replies.
+- **Choices made beyond the ticket**: the parent's audience is compared on
+  its own visibility, not its effective one (the chain rule narrows the
+  reply at read time anyway); `comments_repo.get_comment` and
+  `get_comments_by_ids` were folded into `get_comments_with_ancestors`,
+  which keeps the "Posts of another kind are absent" rule.
+- 38 new tests (32 domain, 6 API).
 
 ### Friends, frontend (spec 18_2, 2026-10-02)
 

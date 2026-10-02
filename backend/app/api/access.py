@@ -121,10 +121,13 @@ async def _filter_images(
     session: AsyncSession, images: list[DocumentImage], viewer: Membership
 ) -> list[DocumentImage]:
     """Applies the Comment-inheritance filter to images already read from
-    the DB, in two queries whatever their Document."""
+    the DB, whatever their Document: the Comments they're attached to and
+    every Comment above those (a reply's image follows its effective
+    visibility, spec 19), in one query per level of the deepest branch plus
+    one for the grants."""
     post_ids = list({image.post_id for image in images if image.post_id is not None})
-    comments = await comments_repo.get_comments_by_ids(session, post_ids)
-    grants = await comments_repo.list_grants_for_comments(session, post_ids)
+    comments = await comments_repo.get_comments_with_ancestors(session, post_ids)
+    grants = await comments_repo.list_grants_for_comments(session, list(comments))
     return visible_document_images(images, comments, grants, viewer.user_id, viewer.role)
 
 

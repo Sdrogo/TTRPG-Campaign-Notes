@@ -24,6 +24,7 @@ def _comment_from_row(row: PostRow) -> Comment:
         updated_at=row.updated_at,
         deleted_at=row.deleted_at,
         as_document_id=row.as_document_id,
+        parent_id=row.parent_id,
     )
 
 
@@ -44,6 +45,7 @@ async def insert_comment(
             updated_at=comment.updated_at,
             deleted_at=comment.deleted_at,
             as_document_id=comment.as_document_id,
+            parent_id=comment.parent_id,
         )
     )
     await session.flush()
@@ -52,23 +54,23 @@ async def insert_comment(
     await session.flush()
 
 
-async def get_comment(session: AsyncSession, comment_id: uuid.UUID) -> Comment | None:
-    """The Comment, or None - also for a Post of another kind."""
-    row = await session.get(PostRow, comment_id)
-    if row is None or row.kind != PostKind.COMMENT.value:
-        return None
-    return _comment_from_row(row)
-
-
-async def get_comments_by_ids(
+async def get_comments_with_ancestors(
     session: AsyncSession, comment_ids: Sequence[uuid.UUID]
 ) -> dict[uuid.UUID, Comment]:
-    """The Comments with these ids, keyed by id. Missing ids are simply
-    absent."""
-    if not comment_ids:
-        return {}
-    result = await session.execute(select(PostRow).where(PostRow.id.in_(comment_ids)))
-    return {row.id: _comment_from_row(row) for row in result.scalars()}
+    """The Comments with these ids and every Comment above them (parent,
+    grandparent, ... up to the top-level one), keyed by id: what the effective
+    visibility of a reply needs (spec 19). One query per level of the deepest
+    branch. Missing ids, and Posts of another kind, are simply absent."""
+    found: dict[uuid.UUID, Comment] = {}
+    wanted = set(comment_ids)
+    while wanted:
+        result = await session.execute(
+            select(PostRow).where(PostRow.id.in_(wanted), PostRow.kind == PostKind.COMMENT.value)
+        )
+        batch = [_comment_from_row(row) for row in result.scalars()]
+        found.update((comment.id, comment) for comment in batch)
+        wanted = {c.parent_id for c in batch if c.parent_id is not None} - found.keys()
+    return found
 
 
 async def list_comments_for_document(
