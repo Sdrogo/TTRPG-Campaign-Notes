@@ -8,7 +8,7 @@ The Thread features left out of **19** (product discussion, 2026-10-02):
 
 Each part is small and independent; build them as separate branches in the order below. Not included: in-app notifications (FR-T9, *Could*), so a mention only highlights the name for now.
 
-## Decisions (to confirm before building)
+## Decisions (confirmed by the product owner, 2026-10-02)
 
 1. **Reactions** (any emoji, product owner's choice, 2026-10-02): a member reacts with **any Unicode emoji**, picked from a full emoji picker with search; the emoji already used on that Comment are shown as chips, one click adds yours. Each member at most once per emoji per Comment, at most **20 different emoji per Comment** (so a Comment can't be flooded). A reaction shows a count, and hovering (or a long press) lists who reacted. Anyone who sees the Comment may react; not on a deleted placeholder. The server accepts exactly one emoji grapheme (skin tones and ZWJ sequences included), never free text.
 2. **@User mentions**: typing `@` offers the Room's members (same popup as `#` for Documents); stored as a token `@[Name](user:<uuid>)` in the same grammar as the `#` tokens of ticket 20, shown highlighted. A mention never widens visibility: a mentioned member who can't see the Comment still doesn't see it.

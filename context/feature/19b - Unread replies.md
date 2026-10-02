@@ -4,7 +4,7 @@
 - Builds on **19** (threaded replies); split out of it in the product discussion of 2026-10-02.
 - No real-time (D-04): counts refresh when a page loads or the window regains focus, like the Friends badge.
 
-## Decisions (to confirm before building)
+## Decisions (confirmed by the product owner, 2026-10-02)
 
 1. **What counts as new**: a Comment or reply **created** after the member last opened the Document, written by someone else, and **visible to them** (effective visibility, ticket 19). Edits don't count. A post that becomes visible later (its parent widened, a Reveal) doesn't count either: it was not created after the visit. *(Alternative: count it too, which needs a per-viewer "first seen" record.)*
 2. **When a Document counts as read**: opening its detail page marks it read up to that moment. No "mark as unread".
