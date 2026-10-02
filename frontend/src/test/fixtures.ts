@@ -95,6 +95,7 @@ export function rawComment(overrides: Record<string, unknown> = {}) {
     as_character: null,
     parent_id: null,
     parent_hidden: false,
+    reactions: [],
     ...overrides,
   };
 }

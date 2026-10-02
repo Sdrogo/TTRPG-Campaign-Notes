@@ -7,6 +7,9 @@ import { ImageThumbnailGrid } from '../ImageThumbnailGrid';
 import { ImageViewerModal } from '../ImageViewerModal';
 import { VisibilityBadge } from '../VisibilityBadge';
 import { CommentComposer } from './CommentComposer';
+import { AddReaction, ReactionChips } from './CommentReactions';
+import { useToggleReaction } from '../../hooks/useComments';
+import { notifyError } from '../../lib/notify';
 import { MentionText } from '../mentions/MentionText';
 import { findMember, memberDisplayName } from '../../lib/members';
 import { isEdited } from '../../lib/comments';
@@ -68,6 +71,9 @@ export function CommentItem({
 }: CommentItemProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
+  const toggleReaction = useToggleReaction(roomId, comment.documentId);
+  const onToggleReaction = (emoji: string, add: boolean) =>
+    toggleReaction.mutate({ commentId: comment.id, emoji, add }, { onError: notifyError });
   const author = findMember(members, comment.authorId);
   const authorName = memberDisplayName(author);
   const isMine = comment.authorId === currentUserId;
@@ -202,6 +208,15 @@ export function CommentItem({
           </Box>
         )}
 
+        {!editing && !comment.deleted && (
+          <ReactionChips
+            reactions={comment.reactions}
+            members={members}
+            onToggle={onToggleReaction}
+            disabled={toggleReaction.isPending}
+          />
+        )}
+
         {!editing && (
           <Group gap="sm" pl="xs">
             <Tooltip label={formatAbsoluteTime(comment.createdAt)} withArrow>
@@ -215,6 +230,13 @@ export function CommentItem({
                   {t('comments.edited')}
                 </Text>
               </Tooltip>
+            )}
+            {!comment.deleted && (
+              <AddReaction
+                comment={comment}
+                onToggle={onToggleReaction}
+                disabled={toggleReaction.isPending}
+              />
             )}
             {onReply && !comment.deleted && (
               <CommentAction onClick={onReply}>{t('comments.reply')}</CommentAction>

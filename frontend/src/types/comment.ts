@@ -35,6 +35,21 @@ export interface Comment {
    * drawn under a placeholder that tells nothing about the parent.
    */
   parentHidden: boolean;
+  /**
+   * Emoji reactions (spec 19c), in the order each emoji was first used.
+   * Always empty on a deleted placeholder.
+   */
+  reactions: Reaction[];
+}
+
+/** One emoji on a Comment (spec 19c Decision 1), as the current viewer sees it. */
+export interface Reaction {
+  /** One emoji grapheme, as the picker sent it. */
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+  /** Who reacted, in the order they did; named through the members list. */
+  userIds: string[];
 }
 
 /** The editable fields of a Comment, shared by the composer and inline edit. */

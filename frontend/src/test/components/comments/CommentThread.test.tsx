@@ -23,6 +23,7 @@ function comment(id: string, overrides: Partial<Comment> = {}): Comment {
     asCharacter: null,
     parentId: null,
     parentHidden: false,
+    reactions: [],
     ...overrides,
   };
 }
