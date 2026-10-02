@@ -47,7 +47,12 @@
       "pinReply": "Only a top-level Comment can be pinned",
       "tooManyPinned": "A Document can have at most {max} pinned Comments",
       "cannotResolve": "Only the author, an Owner or the Master can resolve this discussion",
-      "resolveReply": "Only a top-level Comment's discussion can be resolved"
+      "resolveReply": "Only a top-level Comment's discussion can be resolved",
+      "cannotPromote": "Only an Owner or the Master can promote this Document's Comments",
+      "cannotPromoteIntoDocument": "You can only promote a Comment into a Document you own",
+      "promoteIntoSameDocument": "A Comment can't be promoted into its own Document as a new one",
+      "promotionWidens": "Promoting this Comment shows it to members who can't read it now: confirm to continue",
+      "promoteDocumentRequired": "Choose the Document to promote the Comment into"
     },
     "reaction": {
       "invalidEmoji": "A reaction must be exactly one emoji",

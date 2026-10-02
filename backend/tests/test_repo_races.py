@@ -81,6 +81,8 @@ async def test_updating_a_vanished_comment_raises(db_session: AsyncSession) -> N
         await comments_repo.update_comment(db_session, ghost)
     with pytest.raises(LookupError):
         await comments_repo.set_pin_and_resolution(db_session, ghost)
+    with pytest.raises(LookupError):
+        await comments_repo.set_promotion(db_session, ghost)
 
 
 async def test_comment_lookup_ignores_a_post_of_another_kind(db_session: AsyncSession) -> None:

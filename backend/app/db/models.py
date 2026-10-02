@@ -301,6 +301,15 @@ class PostRow(Base):
     pinned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     resolved_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    # The latest promotion of the Comment's text (spec 19c Decision 5):
+    # when, by whom, into what (`description` or `document`) and, for a new
+    # Document, which one. SET NULL: deleting that Document keeps the mark.
+    promoted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    promoted_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    promoted_to: Mapped[str | None] = mapped_column(String(20))
+    promoted_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), index=True
+    )
 
 
 class PostVisibilityGrantRow(Base):

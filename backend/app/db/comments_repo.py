@@ -10,7 +10,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import PostRow, PostVisibilityGrantRow
-from app.domain.models import Comment, DocumentVisibility, PostKind
+from app.domain.models import Comment, DocumentVisibility, PostKind, PromotionTarget
 
 
 def comment_from_row(row: PostRow) -> Comment:
@@ -29,6 +29,10 @@ def comment_from_row(row: PostRow) -> Comment:
         pinned_at=row.pinned_at,
         resolved_at=row.resolved_at,
         resolved_by=row.resolved_by,
+        promoted_at=row.promoted_at,
+        promoted_by=row.promoted_by,
+        promoted_to=None if row.promoted_to is None else PromotionTarget(row.promoted_to),
+        promoted_document_id=row.promoted_document_id,
     )
 
 
@@ -137,6 +141,20 @@ async def set_pin_and_resolution(session: AsyncSession, comment: Comment) -> Non
     row.pinned_at = comment.pinned_at
     row.resolved_at = comment.resolved_at
     row.resolved_by = comment.resolved_by
+    await session.flush()
+
+
+async def set_promotion(session: AsyncSession, comment: Comment) -> None:
+    """Writes only a Comment's promotion mark (spec 19c Decision 5). Callers
+    hold the Comment's lock (`get_locked_comment`). Raises `LookupError` if it
+    no longer exists."""
+    row = await session.get(PostRow, comment.id)
+    if row is None:
+        raise LookupError(f"Comment {comment.id} not found")
+    row.promoted_at = comment.promoted_at
+    row.promoted_by = comment.promoted_by
+    row.promoted_to = None if comment.promoted_to is None else comment.promoted_to.value
+    row.promoted_document_id = comment.promoted_document_id
     await session.flush()
 
 

@@ -12,7 +12,12 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.access import ensure_room_members, get_visible_document, require_membership
+from app.api.access import (
+    ensure_room_members,
+    get_visible_document,
+    require_membership,
+    visible_documents,
+)
 from app.api.characters import CharacterResponse, visible_characters
 from app.api.errors import http_error, translated_error
 from app.api.image_uploads import (
@@ -66,7 +71,17 @@ from app.domain.models import (
     DocumentImage,
     DocumentVisibility,
     Membership,
+    PromotionTarget,
     Reaction,
+)
+from app.domain.promotion import (
+    CannotPromoteCommentError,
+    CannotPromoteIntoDocumentError,
+    PromotionIntoSameDocumentError,
+    PromotionWidensVisibilityError,
+    can_promote_comment,
+    newly_reached_members,
+    plan_promotion,
 )
 from app.domain.reactions import (
     InvalidEmojiError,
@@ -143,6 +158,25 @@ class CommentResponse(BaseModel):
     # (also its author).
     can_pin: bool
     can_resolve: bool
+    # The latest promotion of the Comment's text (spec 19c Decision 5): when,
+    # and into what. `promoted_document_id` names the new Document only for a
+    # viewer who sees it (VR-07); `can_promote` says whether the requester may
+    # promote it (an Owner or the Master, on a Comment that isn't deleted).
+    promoted_at: datetime | None
+    promoted_to: PromotionTarget | None
+    promoted_document_id: uuid.UUID | None
+    can_promote: bool
+
+
+class PromoteCommentRequest(BaseModel):
+    """Where the Comment's text went: the Document's own description, or
+    the new Document `document_id`. `confirm_widening` is the promoter's
+    answer to the warning that the text will reach members who can't read
+    the Comment."""
+
+    target: PromotionTarget
+    document_id: uuid.UUID | None = None
+    confirm_widening: bool = False
 
 
 class CreateCommentRequest(BaseModel):
@@ -210,13 +244,15 @@ def _to_response(
     manages_document: bool,
     parent_hidden: bool = False,
     reactions: Collection[Reaction] = (),
+    visible_document_ids: Collection[uuid.UUID] = (),
 ) -> CommentResponse:
     """Serializes a Comment for `viewer`, with the permission flags the UI
     shows or hides its actions by; `manages_document` says whether the viewer
     is an Owner of the Document or the Master (D-12). `characters` holds only
     the Characters the viewer sees (`visible_characters`). With
     `parent_hidden`, `parent_id` is withheld (spec 19 Decision 6).
-    `reactions` are the Comment's, oldest first."""
+    `reactions` are the Comment's, oldest first. `visible_document_ids` holds
+    the Documents the Comment was promoted into that the viewer sees."""
     character_id = character_shown_to(comment, characters.keys())
     return CommentResponse(
         id=comment.id,
@@ -248,6 +284,14 @@ def _to_response(
         resolved_by=comment.resolved_by,
         can_pin=can_pin_comment(comment, manages_document),
         can_resolve=can_resolve_comment(comment, viewer.user_id, manages_document),
+        promoted_at=comment.promoted_at,
+        promoted_to=comment.promoted_to,
+        promoted_document_id=(
+            comment.promoted_document_id
+            if comment.promoted_document_id in visible_document_ids
+            else None
+        ),
+        can_promote=can_promote_comment(comment, manages_document),
     )
 
 
@@ -258,6 +302,18 @@ async def _characters_for(
     (VR-13)."""
     ids = {c.as_document_id for c in comments if c.as_document_id is not None}
     return await visible_characters(session, ids, viewer)
+
+
+async def _visible_promotion_targets(
+    session: AsyncSession, comments: Collection[Comment], viewer: Membership
+) -> set[uuid.UUID]:
+    """The Documents these Comments were promoted into that `viewer` sees
+    (VR-07): a hidden one isn't named."""
+    ids = {c.promoted_document_id for c in comments if c.promoted_document_id is not None}
+    if not ids:
+        return set()
+    documents = await documents_repo.get_documents_by_ids(session, list(ids))
+    return {document.id for document in await visible_documents(session, documents, viewer)}
 
 
 async def _ensure_can_post_as(
@@ -335,6 +391,7 @@ async def _single_response(
     images = await _comment_images(session, comment.id) if images is None else images
     characters = await _characters_for(session, [comment], viewer.membership)
     reactions = await reactions_repo.list_reactions_for_comments(session, [comment.id])
+    targets = await _visible_promotion_targets(session, [comment], viewer.membership)
     return _to_response(
         comment,
         found.selective_ids if selective_ids is None else selective_ids,
@@ -345,6 +402,7 @@ async def _single_response(
         manages_document=viewer.manages_document,
         parent_hidden=found.thread.parent_hidden(comment, viewer.membership),
         reactions=reactions[comment.id],
+        visible_document_ids=targets,
     )
 
 
@@ -456,6 +514,7 @@ async def list_comments(
     image_urls = await sign_images(image for group in images.values() for image in group)
     characters = await _characters_for(session, visible, membership)
     reactions = await reactions_repo.list_reactions_for_comments(session, [c.id for c in visible])
+    targets = await _visible_promotion_targets(session, visible, membership)
     return [
         _to_response(
             comment,
@@ -467,6 +526,7 @@ async def list_comments(
             manages_document=viewer.manages_document,
             parent_hidden=thread.parent_hidden(comment, membership),
             reactions=reactions[comment.id],
+            visible_document_ids=targets,
         )
         for comment in visible
     ]
@@ -829,7 +889,7 @@ async def remove_reaction(
     return await _single_response(session, found, viewer)
 
 
-async def _locked_top_level(
+async def _locked_visible(
     session: AsyncSession,
     document_id: uuid.UUID,
     comment_id: uuid.UUID,
@@ -837,9 +897,9 @@ async def _locked_top_level(
     locale: str,
 ) -> tuple[_VisibleComment, Comment]:
     """The Comment once the viewer is known to see it (404 otherwise, VR-07),
-    and as read again under its lock: pinning, resolving and deleting
-    serialize on it, so each decides on the current pin, resolution and
-    deletion (spec 19c)."""
+    and as read again under its lock: pinning, resolving, promoting and
+    deleting serialize on it, so each decides on the current pin, resolution
+    and deletion (spec 19c)."""
     found = await _get_visible_comment(session, document_id, comment_id, viewer.membership, locale)
     return found, await comments_repo.get_locked_comment(session, comment_id)
 
@@ -870,7 +930,7 @@ async def pin_comment(
     Comment keeps its place. Returns the Comment."""
     requester_id = uuid.UUID(current_user.id)
     viewer, _ = await _require_visible_document(session, room_id, document_id, requester_id, locale)
-    found, comment = await _locked_top_level(session, document_id, comment_id, viewer, locale)
+    found, comment = await _locked_visible(session, document_id, comment_id, viewer, locale)
     # The count is read under the Document's lock, taken after the Comment's
     # (the order deleting a Comment with images takes them in), so two pins
     # can't both take the last slot.
@@ -902,7 +962,7 @@ async def unpin_comment(
     Idempotent on a Comment that isn't pinned. Returns the Comment."""
     requester_id = uuid.UUID(current_user.id)
     viewer, _ = await _require_visible_document(session, room_id, document_id, requester_id, locale)
-    found, comment = await _locked_top_level(session, document_id, comment_id, viewer, locale)
+    found, comment = await _locked_visible(session, document_id, comment_id, viewer, locale)
     try:
         unpinned = plan_unpin(comment, viewer.manages_document)
     except CannotPinCommentError as exc:
@@ -928,7 +988,7 @@ async def resolve_comment(
     it. Returns the Comment."""
     requester_id = uuid.UUID(current_user.id)
     viewer, _ = await _require_visible_document(session, room_id, document_id, requester_id, locale)
-    found, comment = await _locked_top_level(session, document_id, comment_id, viewer, locale)
+    found, comment = await _locked_visible(session, document_id, comment_id, viewer, locale)
     try:
         resolved = plan_resolve(comment, requester_id, viewer.manages_document, datetime.now(UTC))
     except (CannotResolveCommentError, NotTopLevelCommentError) as exc:
@@ -951,10 +1011,91 @@ async def reopen_comment(
     the Comment."""
     requester_id = uuid.UUID(current_user.id)
     viewer, _ = await _require_visible_document(session, room_id, document_id, requester_id, locale)
-    found, comment = await _locked_top_level(session, document_id, comment_id, viewer, locale)
+    found, comment = await _locked_visible(session, document_id, comment_id, viewer, locale)
     try:
         reopened = plan_reopen(comment, requester_id, viewer.manages_document)
     except (CannotResolveCommentError, NotTopLevelCommentError) as exc:
         raise _pin_or_resolve_error(exc, locale) from exc
     await comments_repo.set_pin_and_resolution(session, reopened)
     return await _single_response(session, found, viewer, comment=reopened)
+
+
+def _promotion_error(exc: DomainError, locale: str) -> HTTPException:
+    """403 for someone who may not promote it or into that Document, 422 for
+    the Comment's own Document named as a new one, 409 for a deleted Comment
+    or an unconfirmed widening."""
+    if isinstance(exc, (CannotPromoteCommentError, CannotPromoteIntoDocumentError)):
+        return translated_error(status.HTTP_403_FORBIDDEN, exc, locale)
+    if isinstance(exc, PromotionIntoSameDocumentError):
+        return translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale)
+    return translated_error(status.HTTP_409_CONFLICT, exc, locale)
+
+
+@router.post("/{comment_id}/promote")
+async def promote_comment(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    comment_id: uuid.UUID,
+    body: PromoteCommentRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> CommentResponse:
+    """FR-T8 (spec 19c Decision 5): an Owner of the Document or the Master
+    records that a Comment's text was promoted into the Document's
+    description or into a new Document (`document_id`, which they must
+    manage too); the text itself is saved through the description and
+    Document routes. When the target reaches members who can't read the
+    Comment, `confirm_widening` must be true (409 otherwise). Audited in the
+    same transaction (VR-08, Invariant 7). 404 for a Comment, or a new
+    Document, the caller can't see (VR-07); 403 for anyone else; 422 for no
+    `document_id` with `document`, or the Comment's own Document; 409 for a
+    deleted Comment. Returns the Comment."""
+    requester_id = uuid.UUID(current_user.id)
+    viewer, _ = await _require_visible_document(session, room_id, document_id, requester_id, locale)
+    membership = viewer.membership
+    if body.target is PromotionTarget.DESCRIPTION:
+        target_id = document_id
+    elif body.document_id is None:
+        raise http_error(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.comment.promoteDocumentRequired", locale
+        )
+    else:
+        target_id = body.document_id
+    target, target_owner_ids, target_selective_ids = await get_visible_document(
+        session, room_id, target_id, requester_id, membership.role, locale
+    )
+    found, comment = await _locked_visible(session, document_id, comment_id, viewer, locale)
+    members = await rooms_repo.list_memberships(session, room_id)
+    newly_reached = newly_reached_members(
+        members,
+        lambda member: found.thread.is_visible(comment, member),
+        lambda member: is_document_visible(
+            target, member.user_id, member.role, target_owner_ids, target_selective_ids
+        ),
+    )
+    try:
+        plan = plan_promotion(
+            comment,
+            room_id,
+            requester_id,
+            viewer.manages_document,
+            body.target,
+            target.id,
+            target.visibility,
+            is_owner(membership.role, requester_id, target_owner_ids),
+            newly_reached,
+            body.confirm_widening,
+            datetime.now(UTC),
+        )
+    except (
+        CannotPromoteCommentError,
+        CannotPromoteIntoDocumentError,
+        CommentDeletedError,
+        PromotionIntoSameDocumentError,
+        PromotionWidensVisibilityError,
+    ) as exc:
+        raise _promotion_error(exc, locale) from exc
+    await comments_repo.set_promotion(session, plan.comment)
+    await rooms_repo.insert_audit_log(session, plan.audit_entry)
+    return await _single_response(session, found, viewer, comment=plan.comment)

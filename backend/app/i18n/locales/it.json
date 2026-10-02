@@ -47,7 +47,12 @@
       "pinReply": "Si può fissare solo un Commento di primo livello",
       "tooManyPinned": "Un Documento può avere al massimo {max} Commenti fissati",
       "cannotResolve": "Solo l'autore, un Owner o il Master può segnare questa discussione come risolta",
-      "resolveReply": "Si può risolvere solo la discussione di un Commento di primo livello"
+      "resolveReply": "Si può risolvere solo la discussione di un Commento di primo livello",
+      "cannotPromote": "Solo un Owner o il Master possono promuovere i commenti di questo Documento",
+      "cannotPromoteIntoDocument": "Puoi promuovere un commento solo in un Documento di cui sei Owner",
+      "promoteIntoSameDocument": "Un commento non può essere promosso come nuovo Documento nel suo stesso Documento",
+      "promotionWidens": "Promuovere questo commento lo mostra a membri che ora non possono leggerlo: conferma per continuare",
+      "promoteDocumentRequired": "Scegli il Documento in cui promuovere il commento"
     },
     "reaction": {
       "invalidEmoji": "Una reazione deve essere esattamente un'emoji",

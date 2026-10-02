@@ -9,21 +9,38 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-ads76p` (spec 19c_6, @mentions frontend, PR
-into `staging`). Frontend **1193** tests at 100% coverage; oxlint and
-build clean. Backend unchanged since 19c_5: 712 tests at 100%. Migration
+Branch `claude/project-thread-ads76p` (spec 19c_7, promotion backend, PR
+into `staging`). Backend **727** tests at 100% coverage; ruff and mypy
+clean. Frontend unchanged since 19c_6: 1193 tests at 100%. Migration
 `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
 database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
-19c_3) is **not yet applied to the live database**; 19c_3 and 19c_4 need it
-live before they reach `main`.
+19c_3) and migration `c2f6b8d4e1a7` (promotion columns on `posts`, 19c_7,
+revises it) are **not yet applied to the live database**; 19c_3 onward needs
+them live before reaching `main`.
 
-Specs 12 to 19c_5 are merged into `staging`. Build order is feature by
+Specs 12 to 19c_6 are merged into `staging`. Build order is feature by
 feature: 19c goes reactions → pin and resolved → @mentions → promotion.
-Next: 19c_7, promotion backend.
+Next: 19c_8, promotion frontend (the last unit of 19c).
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Promotion, backend (spec 19c_7, 2026-10-02)
+
+- Migration `c2f6b8d4e1a7`: nullable `posts.promoted_at`, `promoted_by`,
+  `promoted_to`, `promoted_document_id` (SET NULL). Not yet live.
+- `app/domain/promotion.py` and `POST .../comments/{id}/promote`
+  `{target: description|document, document_id?, confirm_widening}`: records
+  the mark and a `comment_promoted` AuditLog row; the text goes through the
+  existing description and Document routes.
+- **Choices made beyond the ticket**: every promotion is audited, not only
+  the widening ones (with `newly_reached_user_ids`, empty when nothing
+  widens); the backend refuses an unconfirmed widening (409), so the
+  dialog can't be skipped; a reply may be promoted; the new Document must
+  be one the promoter manages; promoting again keeps only the latest mark;
+  `promoted_document_id` is withheld from a viewer who can't see that
+  Document. 15 new tests (9 domain, 6 API).
 
 ### @mentions, frontend (spec 19c_6, 2026-10-02)
 
