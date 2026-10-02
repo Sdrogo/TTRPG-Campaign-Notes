@@ -10,7 +10,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import CommentReactionRow, PostRow
+from app.db.models import CommentReactionRow
 from app.domain.models import Reaction
 
 
@@ -37,12 +37,6 @@ async def list_reactions_for_comments(
             )
         )
     return reactions
-
-
-async def lock_comment(session: AsyncSession, comment_id: uuid.UUID) -> None:
-    """Takes the Comment's row lock until the transaction ends, so the emoji
-    counted for its cap and the insert that follows are one step."""
-    await session.execute(select(PostRow.id).where(PostRow.id == comment_id).with_for_update())
 
 
 async def add_reaction(

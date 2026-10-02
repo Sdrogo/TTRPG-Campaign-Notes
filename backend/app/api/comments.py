@@ -5,7 +5,7 @@ Comment above it (spec 19, D-17)."""
 
 import uuid
 from collections.abc import Collection, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, UploadFile, status
@@ -587,6 +587,9 @@ async def delete_comment(
     comment = (
         await _get_visible_comment(session, document_id, comment_id, membership, locale)
     ).comment
+    # Under the Comment's lock, like reacting, so no reaction lands on the
+    # placeholder after its reactions are cleared below.
+    comment = replace(comment, deleted_at=await comments_repo.lock_comment(session, comment_id))
 
     try:
         deleted = plan_comment_deletion(comment, requester_id, membership.role, datetime.now(UTC))
@@ -726,12 +729,17 @@ async def add_reaction(
     found = await _get_visible_comment(session, document_id, comment_id, membership, locale)
     clean = _parse_emoji(emoji, locale)
 
-    # Counted under the Comment's lock, so two new emoji can't both take the
-    # last free slot.
-    await reactions_repo.lock_comment(session, comment_id)
+    # Checked under the Comment's lock, so two new emoji can't both take the
+    # last free slot, and a concurrent deletion (which takes the same lock)
+    # can't leave a reaction on its placeholder.
+    deleted_at = await comments_repo.lock_comment(session, comment_id)
     existing = (await reactions_repo.list_reactions_for_comments(session, [comment_id]))[comment_id]
     try:
-        ensure_can_react(found.comment, clean, {reaction.emoji for reaction in existing})
+        ensure_can_react(
+            replace(found.comment, deleted_at=deleted_at),
+            clean,
+            {reaction.emoji for reaction in existing},
+        )
     except (ReactionOnDeletedCommentError, TooManyReactionEmojiError) as exc:
         raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
     await reactions_repo.add_reaction(session, comment_id, requester_id, clean, datetime.now(UTC))
