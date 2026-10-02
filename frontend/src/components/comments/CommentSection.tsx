@@ -12,6 +12,7 @@ import {
   useDeleteComment,
   useSaveComment,
   useSetCommentFlag,
+  type CommentFlag,
 } from '../../hooks/useComments';
 import { useDocumentVisit } from '../../hooks/useDocuments';
 import { useMyCharacters } from '../../hooks/useCharacters';
@@ -97,6 +98,19 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
   // reopened (spec 19c Decision 4), whatever was chosen by hand before.
   const resetBranch = (commentId: string) =>
     setBranchStates(({ [commentId]: _dropped, ...rest }) => rest);
+  // Pin or resolve changes on their way, by Comment id. Each change follows
+  // its own promise: `mutate`'s per-call callbacks would only run for the
+  // latest of two overlapping changes on different Comments.
+  const [flagging, setFlagging] = useState<string[]>([]);
+  const onSetFlag = (commentId: string, flag: CommentFlag, on: boolean) => {
+    setFlagging((current) => [...current, commentId]);
+    setFlag
+      .mutateAsync({ commentId, flag, on })
+      .then(() => {
+        if (flag === 'resolve') resetBranch(commentId);
+      }, notifyError)
+      .finally(() => setFlagging((current) => current.filter((id) => id !== commentId)));
+  };
   const characters = myCharacters.data ?? [];
   // The last "Post as" choice in this Room, if the viewer may still use it.
   const lastPostAs = readLastPostAs(roomId);
@@ -132,18 +146,8 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
         visibilityLevels={parent && replyLevels(parent, currentUserId)}
         granteeIds={parent && replyGranteeIds(parent)}
         isNew={isNew(comment)}
-        onSetFlag={(flag, on) =>
-          setFlag.mutate(
-            { commentId: comment.id, flag, on },
-            {
-              onSuccess: () => {
-                if (flag === 'resolve') resetBranch(comment.id);
-              },
-              onError: notifyError,
-            },
-          )
-        }
-        settingFlag={setFlag.isPending && setFlag.variables?.commentId === comment.id}
+        onSetFlag={(flag, on) => onSetFlag(comment.id, flag, on)}
+        settingFlag={flagging.includes(comment.id)}
       />
       {replyingTo === comment.id && (
         <Box pl={{ base: 'md', sm: 'xl' }}>

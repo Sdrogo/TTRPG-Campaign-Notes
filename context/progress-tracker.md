@@ -10,7 +10,7 @@ step-by-step notes) is in
 ## Current Status (2026-10-02)
 
 Branch `claude/project-thread-ads76p` (spec 19c_4, pin and resolved
-frontend, PR into `staging`). Frontend **1148** tests at 100% coverage;
+frontend, PR into `staging`). Frontend **1149** tests at 100% coverage;
 lint and build clean. Backend unchanged since 19c_3: 690 tests at 100%.
 Migration `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the
 live database. Migration `a9e3d7c5b1f8` (pin and resolution columns on
@@ -40,7 +40,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   resolved branch keeps its top-level Comment visible and folds only its
   replies, still counting new ones ("N nuove"); actions are text links in
   the meta line like Edit/Delete, since Comments have no menu. Not yet
-  checked in a browser: the Definition of Done walk-through. 17 new tests.
+  checked in a browser: the Definition of Done walk-through. 18 new tests.
 
 ### Pin and resolved, backend (spec 19c_3, 2026-10-02)
 

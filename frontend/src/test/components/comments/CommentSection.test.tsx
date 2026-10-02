@@ -721,6 +721,42 @@ describe('pinned and resolved (spec 19c)', () => {
     );
   });
 
+  // Two changes on different Comments overlap: the first one's outcome still
+  // counts once the second has started.
+  it('handles overlapping changes on two Comments each on its own', async () => {
+    const parent = rawComment({ id: 'c-1', body: 'Uno', can_resolve: true });
+    const reply = rawComment({ id: 'c-2', body: "L'oste.", parent_id: 'c-1' });
+    const other = rawComment({ id: 'c-3', body: 'Tre', can_pin: true });
+    let finishResolve: (value: unknown) => void = () => {};
+    let failPin: (error: Error) => void = () => {};
+    mockRoutes([parent, reply, other], (path) =>
+      path.endsWith('/resolve')
+        ? new Promise((resolve) => {
+            finishResolve = resolve;
+          })
+        : new Promise((_, reject) => {
+            failPin = reject;
+          }),
+    );
+    const { user } = render();
+
+    expect(await screen.findByText("L'oste.")).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Nascondi risposte' }));
+    await user.click(screen.getByRole('button', { name: 'Mostra 1 risposta' }));
+    await user.click(screen.getByRole('button', { name: 'Segna come risolto' }));
+    await user.click(screen.getByRole('button', { name: 'Fissa' }));
+    expect(screen.getByRole('button', { name: 'Segna come risolto' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Fissa' })).toBeDisabled();
+
+    finishResolve({ ...parent, resolved_at: '2026-10-02T12:00:00Z', resolved_by: 'user-1' });
+    failPin(new Error('Un Documento può avere al massimo 3 Commenti fissati'));
+
+    // The resolve still collapses its branch, the pin's failure is reported.
+    await waitFor(() => expect(screen.queryByText("L'oste.")).not.toBeInTheDocument());
+    await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('button', { name: 'Fissa' })).toBeEnabled();
+  });
+
   it('reports a refused pin', async () => {
     mockRoutes([rawComment({ can_pin: true })], () =>
       Promise.reject(new Error('Un Documento può avere al massimo 3 Commenti fissati')),
