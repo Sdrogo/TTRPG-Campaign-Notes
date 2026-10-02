@@ -5,7 +5,7 @@ Comment above it (spec 19, D-17)."""
 
 import uuid
 from collections.abc import Collection, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, UploadFile, status
@@ -26,7 +26,7 @@ from app.api.image_uploads import (
     store_image,
 )
 from app.auth.dependencies import CurrentUserDep
-from app.db import comments_repo, documents_repo, rooms_repo
+from app.db import comments_repo, documents_repo, reactions_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.characters import CannotPostAsError, character_shown_to, ensure_can_post_as
 from app.domain.comments import (
@@ -48,7 +48,22 @@ from app.domain.comments import (
     plan_new_comment,
 )
 from app.domain.errors import DomainError
-from app.domain.models import Comment, Document, DocumentImage, DocumentVisibility, Membership
+from app.domain.models import (
+    Comment,
+    Document,
+    DocumentImage,
+    DocumentVisibility,
+    Membership,
+    Reaction,
+)
+from app.domain.reactions import (
+    InvalidEmojiError,
+    ReactionOnDeletedCommentError,
+    TooManyReactionEmojiError,
+    ensure_can_react,
+    parse_emoji,
+    summarize_reactions,
+)
 from app.domain.visibility import (
     is_comment_visible_in_thread,
     is_document_visible,
@@ -57,6 +72,17 @@ from app.domain.visibility import (
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/documents/{document_id}/comments", tags=["comments"])
+
+
+class ReactionResponse(BaseModel):
+    """One emoji on a Comment (spec 19c): how many members reacted with it,
+    whether the requester is one of them, and who, in the order they
+    reacted. The client names them through the members list."""
+
+    emoji: str
+    count: int
+    reacted_by_me: bool
+    user_ids: list[uuid.UUID]
 
 
 class CommentResponse(BaseModel):
@@ -90,6 +116,9 @@ class CommentResponse(BaseModel):
     # own author gets one (Decision 6); `parent_id` is then withheld, so the
     # client draws a placeholder that reveals nothing about the parent.
     parent_hidden: bool
+    # Emoji reactions (spec 19c), in the order each emoji was first used.
+    # Always empty on a deleted placeholder.
+    reactions: list[ReactionResponse]
 
 
 class CreateCommentRequest(BaseModel):
@@ -155,11 +184,13 @@ def _to_response(
     viewer: Membership,
     characters: Mapping[uuid.UUID, CharacterResponse],
     parent_hidden: bool = False,
+    reactions: Collection[Reaction] = (),
 ) -> CommentResponse:
     """Serializes a Comment for `viewer`, with the permission flags the UI
     shows or hides its actions by. `characters` holds only the Characters the
     viewer sees (`visible_characters`). With `parent_hidden`, `parent_id` is
-    withheld (spec 19 Decision 6)."""
+    withheld (spec 19 Decision 6). `reactions` are the Comment's, oldest
+    first."""
     character_id = character_shown_to(comment, characters.keys())
     return CommentResponse(
         id=comment.id,
@@ -177,6 +208,15 @@ def _to_response(
         as_character=None if character_id is None else characters[character_id],
         parent_id=None if parent_hidden else comment.parent_id,
         parent_hidden=parent_hidden,
+        reactions=[
+            ReactionResponse(
+                emoji=summary.emoji,
+                count=summary.count,
+                reacted_by_me=summary.reacted_by_me,
+                user_ids=summary.user_ids,
+            )
+            for summary in summarize_reactions(reactions, viewer.user_id)
+        ],
     )
 
 
@@ -231,6 +271,33 @@ class _VisibleComment:
     comment: Comment
     selective_ids: list[uuid.UUID]
     thread: _Thread
+
+
+async def _single_response(
+    session: AsyncSession,
+    found: _VisibleComment,
+    viewer: Membership,
+    comment: Comment | None = None,
+    selective_ids: Collection[uuid.UUID] | None = None,
+    images: list[DocumentImage] | None = None,
+) -> CommentResponse:
+    """The response for one Comment the viewer sees, read fresh: its images,
+    Character and reactions. `comment`, `selective_ids` and `images` override
+    what `found` holds, for a route that has just changed them."""
+    comment = found.comment if comment is None else comment
+    images = await _comment_images(session, comment.id) if images is None else images
+    characters = await _characters_for(session, [comment], viewer)
+    reactions = await reactions_repo.list_reactions_for_comments(session, [comment.id])
+    return _to_response(
+        comment,
+        found.selective_ids if selective_ids is None else selective_ids,
+        images,
+        await sign_images(images),
+        viewer,
+        characters,
+        parent_hidden=found.thread.parent_hidden(comment, viewer),
+        reactions=reactions[comment.id],
+    )
 
 
 async def _get_visible_comment(
@@ -337,6 +404,7 @@ async def list_comments(
     images = await documents_repo.list_images_for_posts(session, [c.id for c in visible])
     image_urls = await sign_images(image for group in images.values() for image in group)
     characters = await _characters_for(session, visible, membership)
+    reactions = await reactions_repo.list_reactions_for_comments(session, [c.id for c in visible])
     return [
         _to_response(
             comment,
@@ -346,6 +414,7 @@ async def list_comments(
             membership,
             characters,
             parent_hidden=thread.parent_hidden(comment, membership),
+            reactions=reactions[comment.id],
         )
         for comment in visible
     ]
@@ -494,16 +563,8 @@ async def update_comment(
     if plan.audit_entry is not None:
         await rooms_repo.insert_audit_log(session, plan.audit_entry)
 
-    images = await _comment_images(session, comment_id)
-    characters = await _characters_for(session, [plan.comment], membership)
-    return _to_response(
-        plan.comment,
-        selective_ids,
-        images,
-        await sign_images(images),
-        membership,
-        characters,
-        parent_hidden=found.thread.parent_hidden(comment, membership),
+    return await _single_response(
+        session, found, membership, comment=plan.comment, selective_ids=selective_ids
     )
 
 
@@ -526,6 +587,9 @@ async def delete_comment(
     comment = (
         await _get_visible_comment(session, document_id, comment_id, membership, locale)
     ).comment
+    # Under the Comment's lock, like reacting, so no reaction lands on the
+    # placeholder after its reactions are cleared below.
+    comment = replace(comment, deleted_at=await comments_repo.lock_comment(session, comment_id))
 
     try:
         deleted = plan_comment_deletion(comment, requester_id, membership.role, datetime.now(UTC))
@@ -537,6 +601,7 @@ async def delete_comment(
     # A deleted Comment's images go too - they'd otherwise outlive the
     # Comment in the Document gallery (moderation must actually remove them).
     await remove_images(session, await _comment_images(session, comment_id))
+    await reactions_repo.delete_reactions_for_comment(session, comment_id)
     await comments_repo.update_comment(session, deleted)
 
 
@@ -565,17 +630,7 @@ async def _attach_image(
     image = await store_image(
         session, document, membership.user_id, data, document_images, locale, post_id=comment.id
     )
-    all_images = [*images, image]
-    characters = await _characters_for(session, [comment], membership)
-    return _to_response(
-        comment,
-        found.selective_ids,
-        all_images,
-        await sign_images(all_images),
-        membership,
-        characters,
-        parent_hidden=found.thread.parent_hidden(comment, membership),
-    )
+    return await _single_response(session, found, membership, images=[*images, image])
 
 
 @router.post("/{comment_id}/images", status_code=status.HTTP_201_CREATED)
@@ -642,3 +697,74 @@ async def delete_comment_image(
     if image is None:
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.image.notFound", locale)
     await remove_images(session, [image])
+
+
+def _parse_emoji(emoji: str, locale: str) -> str:
+    """The path's emoji once it is one emoji grapheme; 422 otherwise."""
+    try:
+        return parse_emoji(emoji)
+    except InvalidEmojiError as exc:
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
+
+
+@router.put("/{comment_id}/reactions/{emoji}")
+async def add_reaction(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    comment_id: uuid.UUID,
+    emoji: str,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> CommentResponse:
+    """FR-T6 (spec 19c Decision 1): any member who sees the Comment reacts
+    with one emoji (URL-encoded in the path; 422 for anything else, text
+    included). Idempotent: reacting again with the same emoji changes
+    nothing. 409 on a deleted Comment, or for a new emoji once the Comment
+    has `MAX_EMOJI_PER_COMMENT` different ones. Returns the Comment."""
+    requester_id = uuid.UUID(current_user.id)
+    membership, _ = await _require_visible_document(
+        session, room_id, document_id, requester_id, locale
+    )
+    found = await _get_visible_comment(session, document_id, comment_id, membership, locale)
+    clean = _parse_emoji(emoji, locale)
+
+    # Checked under the Comment's lock, so two new emoji can't both take the
+    # last free slot, and a concurrent deletion (which takes the same lock)
+    # can't leave a reaction on its placeholder.
+    deleted_at = await comments_repo.lock_comment(session, comment_id)
+    existing = (await reactions_repo.list_reactions_for_comments(session, [comment_id]))[comment_id]
+    try:
+        ensure_can_react(
+            replace(found.comment, deleted_at=deleted_at),
+            clean,
+            {reaction.emoji for reaction in existing},
+        )
+    except (ReactionOnDeletedCommentError, TooManyReactionEmojiError) as exc:
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
+    await reactions_repo.add_reaction(session, comment_id, requester_id, clean, datetime.now(UTC))
+    return await _single_response(session, found, membership)
+
+
+@router.delete("/{comment_id}/reactions/{emoji}")
+async def remove_reaction(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    comment_id: uuid.UUID,
+    emoji: str,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> CommentResponse:
+    """FR-T6: the requester takes back their own reaction with this emoji;
+    nobody removes someone else's. Idempotent: an emoji they hadn't used
+    changes nothing. 404 for a Comment they can't see (VR-07). Returns the
+    Comment."""
+    requester_id = uuid.UUID(current_user.id)
+    membership, _ = await _require_visible_document(
+        session, room_id, document_id, requester_id, locale
+    )
+    found = await _get_visible_comment(session, document_id, comment_id, membership, locale)
+    clean = _parse_emoji(emoji, locale)
+    await reactions_repo.remove_reaction(session, comment_id, requester_id, clean)
+    return await _single_response(session, found, membership)

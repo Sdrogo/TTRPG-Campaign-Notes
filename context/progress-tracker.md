@@ -9,17 +9,37 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-8skfcb` (spec 19b_2, unread replies frontend,
-PR into `staging`). Frontend **1116** tests at 100% coverage; lint and build
-clean. Backend unchanged since 19b_1: 624 tests at 100%. All migrations up to
-`e8c1f5a3b7d2` are live.
+Branch `claude/project-thread-42spr1` (spec 19c_1, reactions backend, PR
+into `staging`). Backend **667** tests at 100% coverage; ruff and mypy
+clean. Migration `f4c7a1d9e2b6` (`comment_reactions`) is **not yet applied
+to the live database**. Frontend unchanged since 19b_2: 1116 tests.
 
-Specs 12 to 19b_1 are merged into `staging`. Build order is feature by
-feature: 19c (reactions, mentions, pins, promotion) comes after 19b_2.
+Specs 12 to 19b_2 are merged into `staging`. Build order is feature by
+feature: 19c goes reactions (backend, then frontend) → pin and resolved →
+@mentions → promotion.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Reactions, backend (spec 19c_1, 2026-10-02)
+
+- Migration `f4c7a1d9e2b6`: `comment_reactions` (`comment_id`, `user_id`,
+  `emoji`, `created_at`), PK on the three, CASCADE from `posts`, RLS + deny.
+- `PUT`/`DELETE .../comments/{id}/reactions/{emoji}`, idempotent, return the
+  Comment; `CommentResponse.reactions` = `[{emoji, count, reacted_by_me,
+  user_ids}]` on every Comment route (list in one extra query).
+- `app/domain/reactions.py`: `parse_emoji` (one emoji grapheme, ≤32 bytes,
+  422), `ensure_can_react` (409 on a deleted placeholder or a 21st emoji,
+  counted under the Comment's row lock), `summarize_reactions`.
+- **Choices made beyond the ticket**: emoji are recognized by Unicode's
+  Extended_Pictographic ranges plus the emoji sequence grammar, without a
+  new dependency, so future emoji pass; stored as sent (no VS16
+  normalization, the picker always sends one form). The 32-byte limit
+  refuses one emoji, a kiss with two different skin tones (35 bytes).
+  Deleting a Comment clears its reactions. A member who leaves keeps their
+  reactions, like their Comments. `DELETE` removes only the caller's own,
+  the Master included. 43 new tests (35 domain, 8 API).
 
 ### Unread replies, frontend (spec 19b_2, 2026-10-02)
 

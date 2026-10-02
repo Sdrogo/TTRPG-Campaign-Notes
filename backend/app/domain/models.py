@@ -226,6 +226,17 @@ class Comment:
 
 
 @dataclass(frozen=True)
+class Reaction:
+    """One member's emoji on a Comment (spec 19c, FR-T6). A member reacts at
+    most once with each emoji on a Comment."""
+
+    comment_id: uuid.UUID
+    user_id: uuid.UUID
+    emoji: str
+    created_at: datetime
+
+
+@dataclass(frozen=True)
 class UserProfile:
     """What a user chose to show about themselves (FR-A2). Every field is
     optional: a user who never opened the Account page is shown by email."""

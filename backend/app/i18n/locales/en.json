@@ -44,6 +44,11 @@
       "parentDeleted": "A deleted Comment can't be answered",
       "replyWiderThanParent": "A reply can't be visible to anyone who can't see the Comment it answers"
     },
+    "reaction": {
+      "invalidEmoji": "A reaction must be exactly one emoji",
+      "commentDeleted": "A deleted Comment can't be reacted to",
+      "tooMany": "A Comment can have at most {max} different emoji"
+    },
     "character": {
       "notFound": "Character not found",
       "playerNotAMember": "The Character's player must be a member of this Room",

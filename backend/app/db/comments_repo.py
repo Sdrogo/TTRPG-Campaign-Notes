@@ -4,6 +4,7 @@ grants."""
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
+from datetime import datetime
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -84,6 +85,19 @@ async def list_comments_for_document(
         .order_by(PostRow.created_at, PostRow.id)
     )
     return [comment_from_row(row) for row in result.scalars()]
+
+
+async def lock_comment(session: AsyncSession, comment_id: uuid.UUID) -> datetime | None:
+    """Takes the Comment's row lock until the transaction ends and returns its
+    `deleted_at` as of the lock, so a check made on it can't be undone by a
+    concurrent deletion: reacting and deleting serialize on this lock
+    (spec 19c). The caller has just read the Comment: a row that vanished
+    since raises `NoResultFound`."""
+    result = await session.execute(
+        select(PostRow.deleted_at).where(PostRow.id == comment_id).with_for_update()
+    )
+    deleted_at: datetime | None = result.scalar_one()
+    return deleted_at
 
 
 async def update_comment(session: AsyncSession, comment: Comment) -> None:
