@@ -168,3 +168,22 @@ describe('clicking a Tag', () => {
     );
   });
 });
+
+// Spec 19b: what is new in the Thread since the viewer last opened it.
+describe('unread mark', () => {
+  it('shows how many Comments are new, with a label', () => {
+    render({ unreadCount: 3 });
+    expect(screen.getByLabelText('3 nuovi commenti')).toHaveTextContent('3');
+  });
+
+  it('shows a "not yet read" dot for a Document never opened', () => {
+    render({ unreadCount: null });
+    expect(screen.getByRole('img', { name: 'Non ancora letto' })).toBeInTheDocument();
+  });
+
+  it('shows nothing when nothing is new', () => {
+    render({ unreadCount: 0 });
+    expect(screen.queryByLabelText(/nuov/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Non ancora letto' })).not.toBeInTheDocument();
+  });
+});

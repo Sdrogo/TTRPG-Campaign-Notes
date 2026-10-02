@@ -8,6 +8,7 @@ import {
   countReplies,
   hasActiveFilters,
   isEdited,
+  isNewComment,
   replyGranteeIds,
   replyLevels,
   replyStartVisibility,
@@ -256,9 +257,60 @@ describe('visibleReplies (Decision 4)', () => {
 
   it('shows a short branch whole, and follows a choice made by hand', () => {
     const small = node('top', [node('a'), node('b'), node('c')]);
-    expect(visibleReplies(small, undefined)).toEqual({ shown: small.replies, hiddenCount: 0 });
-    expect(visibleReplies(big, 'open')).toEqual({ shown: big.replies, hiddenCount: 0 });
-    expect(visibleReplies(small, 'closed')).toEqual({ shown: [], hiddenCount: 3 });
+    const none = { hiddenCount: 0, hiddenNewCount: 0 };
+    expect(visibleReplies(small, undefined)).toEqual({ shown: small.replies, ...none });
+    expect(visibleReplies(big, 'open')).toEqual({ shown: big.replies, ...none });
+    expect(visibleReplies(small, 'closed')).toEqual({
+      shown: [],
+      hiddenCount: 3,
+      hiddenNewCount: 0,
+    });
+  });
+
+  // Spec 19b: a collapsed branch never hides what is new.
+  it('starts expanded when a reply it would hide is new', () => {
+    const isNew = (c: Comment) => c.id === 'd';
+    expect(visibleReplies(big, undefined, isNew)).toEqual({
+      shown: big.replies,
+      hiddenCount: 0,
+      hiddenNewCount: 0,
+    });
+  });
+
+  it('stays collapsed when the new replies are already shown', () => {
+    const isNew = (c: Comment) => c.id === 'a1';
+    const { shown, hiddenNewCount } = visibleReplies(big, undefined, isNew);
+    expect(shown.map((n) => n.comment.id)).toEqual(['a', 'b']);
+    expect(hiddenNewCount).toBe(0);
+  });
+
+  it('counts the new replies a branch closed by hand hides', () => {
+    const isNew = (c: Comment) => ['a1', 'c'].includes(c.id);
+    expect(visibleReplies(big, 'closed', isNew)).toEqual({
+      shown: [],
+      hiddenCount: 5,
+      hiddenNewCount: 2,
+    });
+  });
+});
+
+describe('isNewComment (spec 19b Decision 1)', () => {
+  const since = '2026-09-21T10:00:00Z';
+  const later = { createdAt: '2026-09-21T11:00:00Z' };
+
+  it('marks a Comment by someone else posted after the previous visit', () => {
+    expect(isNewComment(comment('a', later), since, 'u-me')).toBe(true);
+  });
+
+  it('never marks older, own or deleted Comments', () => {
+    expect(isNewComment(comment('a', { createdAt: since }), since, 'u-me')).toBe(false);
+    expect(isNewComment(comment('a', later), since, 'u-zed')).toBe(false);
+    expect(isNewComment(comment('a', { ...later, deleted: true }), since, 'u-me')).toBe(false);
+  });
+
+  it('marks nothing on a first visit or before the visit is recorded', () => {
+    expect(isNewComment(comment('a', later), null, 'u-me')).toBe(false);
+    expect(isNewComment(comment('a', later), undefined, 'u-me')).toBe(false);
   });
 });
 

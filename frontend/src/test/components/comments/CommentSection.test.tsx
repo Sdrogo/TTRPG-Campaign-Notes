@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../../lib/apiClient';
 import { notifyError } from '../../../lib/notify';
-import { rawCharacter, rawComment } from '../../fixtures';
+import { rawCharacter, rawComment, rawDocumentRead } from '../../fixtures';
 import i18n from '../../../i18n';
 import { renderWithProviders } from '../../utils';
 import { CommentSection } from '../../../components/comments/CommentSection';
@@ -28,6 +28,9 @@ function member(overrides: Partial<Member> = {}): Member {
   };
 }
 
+// Where the page records the visit once the Thread loads (spec 19b).
+const READ = '/rooms/room-1/documents/doc-1/read';
+
 // Answers the Comment list route with `list`, the caller's Characters with
 // `characters`, and anything else (a write, an image attach) with `onWrite`.
 // A test that only reads can omit it.
@@ -35,10 +38,14 @@ function mockRoutes(
   list: unknown[],
   onWrite: (path: string) => Promise<unknown> = () => Promise.resolve(),
   characters: unknown[] = [],
+  read: unknown = rawDocumentRead(),
 ) {
   fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
     if (path === '/rooms/room-1/characters/mine') {
       return Promise.resolve(characters);
+    }
+    if (path === READ) {
+      return Promise.resolve(read);
     }
     return path === '/rooms/room-1/documents/doc-1/comments' && !init?.method
       ? Promise.resolve(list)
@@ -386,6 +393,9 @@ describe('posting in character', () => {
       if (path === '/rooms/room-1/characters/mine') {
         return Promise.resolve([rawCharacter()]);
       }
+      if (path === READ) {
+        return Promise.resolve(rawDocumentRead());
+      }
       if (init?.method) {
         writes.push(init.json);
         return Promise.resolve(rawComment());
@@ -561,5 +571,68 @@ describe('CommentSection replies (spec 19)', () => {
 
     await user.click(screen.getAllByRole('combobox', { name: 'Visibilità del commento' })[0]);
     expect(screen.queryByRole('option', { name: 'Stanza (tutti i membri)' })).toBeNull();
+  });
+});
+
+// Spec 19b: the visit is recorded once the Thread loads, and what was posted
+// since the previous one is marked.
+describe('new since the last visit', () => {
+  const before = '2026-09-21T12:00:00Z';
+  const after = '2026-09-22T12:00:00Z';
+  const lastVisit = rawDocumentRead({ previous_read_at: '2026-09-22T00:00:00Z' });
+
+  it('records the visit once and marks only what others posted since', async () => {
+    mockRoutes(
+      [
+        rawComment({ id: 'old', author_id: 'user-2', body: 'Vecchio', created_at: before }),
+        rawComment({ id: 'fresh', author_id: 'user-2', body: 'Fresco', created_at: after }),
+        rawComment({ id: 'mine', body: 'Mio', created_at: after }),
+      ],
+      undefined,
+      [],
+      lastVisit,
+    );
+    render();
+
+    const badge = await screen.findByText('Nuovo');
+    expect(screen.getAllByText('Nuovo')).toHaveLength(1);
+    expect(badge.closest('[data-testid="comment-item"]')).toHaveTextContent('Fresco');
+    expect(fetchMock.mock.calls.filter(([path]) => path === READ)).toEqual([
+      [READ, { method: 'POST' }],
+    ]);
+  });
+
+  it('marks nothing on a first visit', async () => {
+    mockRoutes([rawComment({ author_id: 'user-2', created_at: after })]);
+    render();
+
+    await screen.findByText('Ricordate il sigillo.');
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(READ, { method: 'POST' }));
+    expect(screen.queryByText('Nuovo')).not.toBeInTheDocument();
+  });
+
+  it('opens a long branch hiding a new reply, and counts it once closed', async () => {
+    const reply = (id: string, created_at = before) =>
+      rawComment({ id, parent_id: 'top', author_id: 'user-2', body: `Risposta ${id}`, created_at });
+    mockRoutes(
+      [
+        rawComment({ id: 'top', body: 'Domanda', created_at: before }),
+        reply('r1'),
+        reply('r2'),
+        reply('r3'),
+        reply('r4', after),
+      ],
+      undefined,
+      [],
+      lastVisit,
+    );
+    const { user } = render();
+
+    // Four replies would start collapsed to two, but the fourth is new.
+    expect(await screen.findByText('Risposta r4')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Nascondi risposte' }));
+
+    expect(screen.queryByText('Risposta r4')).not.toBeInTheDocument();
+    expect(screen.getByText('1 nuova')).toBeInTheDocument();
   });
 });
