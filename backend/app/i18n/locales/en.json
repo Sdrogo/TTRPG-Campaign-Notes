@@ -94,7 +94,8 @@
       "revoked": "Invitation has been revoked",
       "expired": "Invitation has expired",
       "alreadyMember": "User is already a member of this room",
-      "onlyAdministratorCanInvite": "Only a Room Administrator can create invitations"
+      "onlyAdministratorCanInvite": "Only a Room Administrator can create invitations",
+      "notAFriend": "You can only invite a Friend directly"
     },
     "account": {
       "fields": {

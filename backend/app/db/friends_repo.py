@@ -151,3 +151,9 @@ async def replace_code(session: AsyncSession, code: FriendCode) -> None:
         set_={"code": stmt.excluded.code, "created_at": stmt.excluded.created_at},
     )
     await session.execute(stmt)
+
+
+async def are_friends(session: AsyncSession, a: uuid.UUID, b: uuid.UUID) -> bool:
+    """Whether the two users have an accepted Friendship (D-26)."""
+    friendship = await get_between(session, a, b)
+    return friendship is not None and friendship.status is FriendshipStatus.ACCEPTED

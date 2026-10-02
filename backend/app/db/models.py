@@ -116,7 +116,8 @@ class TagCombinationTagRow(Base):
 
 
 class InvitationRow(Base):
-    """A Room invitation, looked up by its unique `code`."""
+    """A Room invitation, looked up by its unique `code`: a shareable link, or
+    a direct invitation addressed to one user (`invitee_user_id`)."""
 
     __tablename__ = "invitations"
 
@@ -130,6 +131,9 @@ class InvitationRow(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # Set for a direct invitation to a Friend (FR-F5, spec 18_1b): only this
+    # user may accept it. NULL for a shareable link.
+    invitee_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True)
 
 
 class UserRow(Base):

@@ -94,7 +94,8 @@
       "revoked": "L'invito è stato revocato",
       "expired": "L'invito è scaduto",
       "alreadyMember": "L'utente è già membro di questa Room",
-      "onlyAdministratorCanInvite": "Solo un Amministratore della Room può creare inviti"
+      "onlyAdministratorCanInvite": "Solo un Amministratore della Room può creare inviti",
+      "notAFriend": "Puoi invitare direttamente solo un amico"
     },
     "account": {
       "fields": {
