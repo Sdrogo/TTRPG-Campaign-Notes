@@ -22,6 +22,14 @@ Specs 12 to 18_1a are merged into `staging`. Next for spec 18: 18_2
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Claude code review replaces CodeRabbit (2026-10-02)
+
+- `claude-code-review.yml` runs `anthropics/claude-code-action` on every
+  non-draft PR into `staging`; `claude.yml` answers `@claude` mentions on
+  PRs. `.coderabbit.yaml` removed (CodeRabbit trial ended).
+- Needs the Claude GitHub App on the repo and one repository secret,
+  `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`) or `ANTHROPIC_API_KEY`.
+
 ### Direct Room invitations, backend (spec 18_1b, 2026-10-02)
 
 - Migration `c4f9a2e7d1b8`: nullable `invitations.invitee_user_id`.

@@ -286,6 +286,11 @@ pytest, split by what a test needs rather than by what it covers.
   owner asks for a release. A migration that ships in it is applied to
   the live database with their go-ahead before that PR is merged.
 - CI runs on every pull request and on pushes to `main` and `staging`.
+- Claude reviews every non-draft pull request into `staging`
+  automatically (`.github/workflows/claude-code-review.yml`, replacing
+  CodeRabbit since 2026-10-02) and posts inline findings plus a summary.
+  Mentioning `@claude` in a PR comment or review asks it a question or
+  for a fix (`.github/workflows/claude.yml`, write-access users only).
 
 ## File Organization
 
