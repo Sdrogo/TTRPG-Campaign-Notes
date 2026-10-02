@@ -1,4 +1,4 @@
-import { Box, Card, Group, Stack, Title, Text } from '@mantine/core';
+import { Badge, Box, Card, Group, Stack, Title, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { VisibilityBadge } from './VisibilityBadge';
 import { TagList } from './TagList';
@@ -20,8 +20,9 @@ interface DocumentCardProps {
 
 /**
  * A Document in the Room's list: name, visibility, Tags, description and
- * images, with its player (for a Character) and Owners. The whole card links
- * to the Document.
+ * images, with its player (for a Character) and Owners, and what is new in its
+ * Thread since the viewer last opened it (spec 19b): a count, or a "not yet
+ * read" dot for a Document never opened. The whole card links to the Document.
  */
 export function DocumentCard({ document, roomId, tags, members }: DocumentCardProps) {
   const { t } = useTranslation();
@@ -41,7 +42,10 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
             >
               {document.name}
             </Title>
-            <VisibilityBadge visibility={document.visibility} />
+            <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
+              <UnreadMark count={document.unreadCount} />
+              <VisibilityBadge visibility={document.visibility} />
+            </Group>
           </Group>
           <TagList tags={tags} tagIds={document.tagIds} roomId={roomId} />
         </Stack>
@@ -98,5 +102,40 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
         style={{ position: 'absolute', inset: 0, zIndex: 1 }}
       />
     </Card>
+  );
+}
+
+/**
+ * The card's unread mark (spec 19b): the number of new Comments and replies,
+ * a dot when the Document was never opened (null), nothing otherwise. Each
+ * carries an accessible label, since the number or dot alone says little.
+ */
+function UnreadMark({ count }: { count: number | null | undefined }) {
+  const { t } = useTranslation();
+  if (count === null) {
+    return (
+      <Box
+        role="img"
+        aria-label={t('documents.notYetRead')}
+        title={t('documents.notYetRead')}
+        w={8}
+        h={8}
+        style={{ borderRadius: '50%', background: 'var(--accent-primary)' }}
+      />
+    );
+  }
+  if (!count) {
+    return null;
+  }
+  return (
+    <Badge
+      size="sm"
+      variant="filled"
+      color="accent"
+      aria-label={t('documents.unreadCount', { count })}
+      title={t('documents.unreadCount', { count })}
+    >
+      {count}
+    </Badge>
   );
 }

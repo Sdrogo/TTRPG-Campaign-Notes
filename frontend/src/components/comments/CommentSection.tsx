@@ -8,6 +8,7 @@ import { CommentToolbar } from './CommentToolbar';
 import { UserAvatar } from '../UserAvatar';
 import { PageCard } from '../PageCard';
 import { useComments, useDeleteComment, useSaveComment } from '../../hooks/useComments';
+import { useDocumentVisit } from '../../hooks/useDocuments';
 import { useMyCharacters } from '../../hooks/useCharacters';
 import { readLastPostAs, saveLastPostAs } from '../../lib/characters';
 import type { SaveCommentResult } from '../../hooks/useComments';
@@ -17,6 +18,7 @@ import {
   buildCommentTree,
   commentAuthors,
   commentShownName,
+  isNewComment,
   replyGranteeIds,
   replyLevels,
   replyStartVisibility,
@@ -47,7 +49,9 @@ function reportImageErrors({ imageErrors }: SaveCommentResult) {
  * A Document's Comments (its main Thread, D-20): sort/filter toolbar, the
  * Comments with their replies as a tree (spec 19), and the composer at the
  * bottom. The toolbar picks and orders the top-level Comments; each brings its
- * whole branch. The backend only returns Comments the viewer may see.
+ * whole branch. The backend only returns Comments the viewer may see. Once the
+ * Thread loads, the visit is recorded and what was posted since the previous
+ * one is marked "New" (spec 19b).
  */
 export function CommentSection({ roomId, documentId, members, currentUserId }: CommentSectionProps) {
   const { t, i18n } = useTranslation();
@@ -55,6 +59,8 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
   const saveComment = useSaveComment(roomId, documentId);
   const deleteComment = useDeleteComment(roomId, documentId);
   const myCharacters = useMyCharacters(roomId, true);
+  const newSince = useDocumentVisit(roomId, documentId, comments.isSuccess);
+  const isNew = (comment: Comment) => isNewComment(comment, newSince, currentUserId);
   const [filters, setFilters] = useState<CommentFilters>(DEFAULT_COMMENT_FILTERS);
   // Branches expanded or collapsed by hand; not remembered across visits.
   const [branchStates, setBranchStates] = useState<Record<string, BranchState>>({});
@@ -111,6 +117,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
         inReplyTo={inReplyTo}
         visibilityLevels={parent && replyLevels(parent, currentUserId)}
         granteeIds={parent && replyGranteeIds(parent)}
+        isNew={isNew(comment)}
       />
       {replyingTo === comment.id && (
         <Box pl={{ base: 'md', sm: 'xl' }}>
@@ -211,6 +218,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
                     branchStates={branchStates}
                     onBranchChange={setBranch}
                     nameOf={(comment) => commentShownName(comment, members)}
+                    isNew={isNew}
                     renderComment={(comment, inReplyTo) =>
                       renderComment(comment, inReplyTo, byId.get(comment.parentId ?? ''))
                     }

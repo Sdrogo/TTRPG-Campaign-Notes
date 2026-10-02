@@ -9,17 +9,33 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-8skfcb` (spec 19b_1, unread replies backend,
-PR into `staging`). Backend **624** tests at 100% coverage; ruff and mypy
-clean. Frontend unchanged since 19_2: 1103 tests at 100%. All migrations
-up to `e8c1f5a3b7d2` (`document_reads`) are live (applied 2026-10-02).
+Branch `claude/project-thread-8skfcb` (spec 19b_2, unread replies frontend,
+PR into `staging`). Frontend **1116** tests at 100% coverage; lint and build
+clean. Backend unchanged since 19b_1: 624 tests at 100%. All migrations up to
+`e8c1f5a3b7d2` are live.
 
-Specs 12 to 19_2 are merged into `staging`. Build order is feature by
-feature: 19b_2 (unread replies frontend) comes after 19b_1, then 19c.
+Specs 12 to 19b_1 are merged into `staging`. Build order is feature by
+feature: 19c (reactions, mentions, pins, promotion) comes after 19b_2.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Unread replies, frontend (spec 19b_2, 2026-10-02)
+
+- `useDocumentVisit` (hooks/useDocuments.ts): `POST .../read` once the
+  Thread has loaded, once per Document per mount; returns
+  `previous_read_at` and reloads the Documents list so the card's count goes.
+- `CommentSection`/`CommentItem`: a "New" badge on what others posted since
+  the previous visit (`isNewComment`); nothing on a first visit.
+  `visibleReplies` takes `isNew`: a branch that would hide a new reply starts
+  expanded, and a branch closed by hand shows "N new" next to "Show".
+- `DocumentCard`: the unread count (labelled "N new comments"), or a "not
+  yet read" dot when `unread_count` is null.
+- **Choices made beyond the ticket**: the marks use the `read` response's
+  `previous_read_at` rather than the Document's `last_read_at`, so a
+  refetch on focus can't wipe them mid-visit. Not yet checked in a browser:
+  the Definition of Done walk-through. 13 new tests.
 
 ### Unread replies, backend (spec 19b_1, 2026-10-02)
 

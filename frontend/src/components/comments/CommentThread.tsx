@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Box, Button, Group, Stack, Text } from '@mantine/core';
+import { Badge, Box, Button, Group, Stack, Text } from '@mantine/core';
 import { EyeSlashIcon } from '@phosphor-icons/react';
 import { visibleReplies } from '../../lib/comments';
 import type { BranchState, Comment, CommentNode } from '../../types/comment';
@@ -21,6 +21,11 @@ interface CommentThreadProps {
   renderComment: (comment: Comment, inReplyTo: string | undefined) => ReactNode;
   /** The name a Comment is shown by, for "in reply to". */
   nameOf: (comment: Comment) => string;
+  /**
+   * Whether a Comment is new to the viewer (spec 19b): a branch hiding a new
+   * reply starts expanded, and a collapsed one says how many it hides.
+   */
+  isNew?: (comment: Comment) => boolean;
 }
 
 // One indentation step. Small on a phone, so level 3 still reads at 390px.
@@ -53,6 +58,7 @@ export function CommentThread(props: CommentThreadProps) {
     onBranchChange,
     renderComment,
     nameOf,
+    isNew,
   } = props;
   const { comment } = node;
 
@@ -81,7 +87,11 @@ export function CommentThread(props: CommentThreadProps) {
     );
   }
 
-  const { shown, hiddenCount } = visibleReplies(node, branchStates[comment.id]);
+  const { shown, hiddenCount, hiddenNewCount } = visibleReplies(
+    node,
+    branchStates[comment.id],
+    isNew,
+  );
   const childLevel = Math.min(level + 1, MAX_THREAD_LEVEL);
   // Past the last level, a reply is drawn beside its parent, so it says whom
   // it answers.
@@ -110,6 +120,11 @@ export function CommentThread(props: CommentThreadProps) {
               ? t('comments.thread.showMore', { count: hiddenCount })
               : t('comments.thread.show', { count: hiddenCount })}
           </Button>
+        )}
+        {hiddenNewCount > 0 && (
+          <Badge size="xs" variant="light" color="accent">
+            {t('comments.thread.hiddenNew', { count: hiddenNewCount })}
+          </Badge>
         )}
         {shown.length > 0 && (
           <Button

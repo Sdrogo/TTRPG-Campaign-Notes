@@ -256,7 +256,10 @@
       "tags": "Tag",
       "newTag": "Nuovo tag",
       "newTagPlaceholder": "Es. Fazione"
-    }
+    },
+    "notYetRead": "Non ancora letto",
+    "unreadCount_one": "{{count}} nuovo commento",
+    "unreadCount_other": "{{count}} nuovi commenti"
   },
   "images": {
     "numbered": "{{name}} ({{index}})",
@@ -355,7 +358,9 @@
       "showMore_other": "Mostra altre {{count}} risposte",
       "show_one": "Mostra {{count}} risposta",
       "show_other": "Mostra {{count}} risposte",
-      "hide": "Nascondi risposte"
+      "hide": "Nascondi risposte",
+      "hiddenNew_one": "{{count}} nuova",
+      "hiddenNew_other": "{{count}} nuove"
     },
     "composer": {
       "bodyLabel": "Testo del commento",
@@ -376,7 +381,8 @@
       "visibilityLabel": "Filtra per visibilità",
       "visibilityPlaceholder": "Ogni visibilità",
       "hideDeleted": "Nascondi eliminati"
-    }
+    },
+    "new": "Nuovo"
   },
   "mentions": {
     "listLabel": "Documenti e Tag da collegare",

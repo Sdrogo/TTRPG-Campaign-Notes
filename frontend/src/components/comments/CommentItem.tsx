@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Anchor, Box, Button, Group, Popover, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core';
+import { Anchor, Badge, Box, Button, Group, Popover, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { UserAvatar } from '../UserAvatar';
 import { CharacterAvatar } from '../CharacterAvatar';
@@ -38,6 +38,8 @@ interface CommentItemProps {
   /** Limits on the visibility an edit may pick: a reply's parent's (spec 19). */
   visibilityLevels?: DocumentVisibility[];
   granteeIds?: string[] | null;
+  /** Posted since the viewer's previous visit (spec 19b): marked "New". */
+  isNew?: boolean;
 }
 
 /**
@@ -62,6 +64,7 @@ export function CommentItem({
   inReplyTo,
   visibilityLevels,
   granteeIds,
+  isNew = false,
 }: CommentItemProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -175,6 +178,11 @@ export function CommentItem({
               )}
               {comment.visibility !== 'room' && (
                 <VisibilityBadge visibility={comment.visibility} size="xs" />
+              )}
+              {isNew && (
+                <Badge size="xs" variant="filled" color="accent">
+                  {t('comments.new')}
+                </Badge>
               )}
             </Group>
             {comment.deleted ? (

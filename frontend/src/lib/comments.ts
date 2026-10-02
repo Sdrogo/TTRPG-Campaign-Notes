@@ -148,24 +148,56 @@ export const COLLAPSE_ABOVE = 3;
 export const SHOWN_WHEN_COLLAPSED = 2;
 
 /**
- * The replies to draw under a Comment, and how many are left out. With no
- * choice made by hand (`state` undefined), a branch with more than
- * `COLLAPSE_ABOVE` replies shows its first `SHOWN_WHEN_COLLAPSED` (spec 19
- * Decision 4).
+ * Whether a Comment is new to the viewer (spec 19b Decision 1): created after
+ * their previous visit (`newSince`), by someone else, and not deleted. Edits
+ * don't count. Nothing is new on a first visit (`newSince` null) or before the
+ * visit is recorded (undefined).
+ */
+export function isNewComment(
+  comment: Comment,
+  newSince: string | null | undefined,
+  currentUserId: string,
+): boolean {
+  return (
+    newSince != null &&
+    !comment.deleted &&
+    comment.authorId !== currentUserId &&
+    Date.parse(comment.createdAt) > Date.parse(newSince)
+  );
+}
+
+function branchComments(nodes: CommentNode[]): Comment[] {
+  return nodes.flatMap((node) => [node.comment, ...branchComments(node.replies)]);
+}
+
+/**
+ * The replies to draw under a Comment, how many are left out, and how many of
+ * those are new. With no choice made by hand (`state` undefined), a branch
+ * with more than `COLLAPSE_ABOVE` replies shows its first
+ * `SHOWN_WHEN_COLLAPSED` (spec 19 Decision 4), unless one of the replies it
+ * would hide is new: then it starts expanded (spec 19b).
  */
 export function visibleReplies(
   node: CommentNode,
   state: BranchState | undefined,
-): { shown: CommentNode[]; hiddenCount: number } {
+  isNew: (comment: Comment) => boolean = () => false,
+): { shown: CommentNode[]; hiddenCount: number; hiddenNewCount: number } {
   const total = countReplies(node);
+  const collapsed = node.replies.slice(0, SHOWN_WHEN_COLLAPSED);
+  const holdsNew = branchComments(node.replies.slice(SHOWN_WHEN_COLLAPSED)).some(isNew);
   const shown =
     state === 'closed'
       ? []
-      : state === 'open' || total <= COLLAPSE_ABOVE
+      : state === 'open' || total <= COLLAPSE_ABOVE || holdsNew
         ? node.replies
-        : node.replies.slice(0, SHOWN_WHEN_COLLAPSED);
-  const shownCount = shown.reduce((sum, reply) => sum + 1 + countReplies(reply), 0);
-  return { shown, hiddenCount: total - shownCount };
+        : collapsed;
+  const shownComments = branchComments(shown);
+  const hidden = branchComments(node.replies).filter((c) => !shownComments.includes(c));
+  return {
+    shown,
+    hiddenCount: total - shownComments.length,
+    hiddenNewCount: hidden.filter(isNew).length,
+  };
 }
 
 /**
