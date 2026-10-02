@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Badge, Button, Divider, Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { Badge, Box, Button, Divider, Group, Loader, Stack, Text, Title } from '@mantine/core';
 import { ChatCircleDotsIcon } from '@phosphor-icons/react';
 import { CommentComposer } from './CommentComposer';
 import { CommentItem } from './CommentItem';
+import { CommentThread } from './CommentThread';
 import { CommentToolbar } from './CommentToolbar';
 import { UserAvatar } from '../UserAvatar';
 import { PageCard } from '../PageCard';
@@ -13,12 +14,17 @@ import type { SaveCommentResult } from '../../hooks/useComments';
 import {
   DEFAULT_COMMENT_FILTERS,
   EMPTY_COMMENT_VALUES,
-  applyCommentFilters,
+  buildCommentTree,
   commentAuthors,
+  commentShownName,
+  replyGranteeIds,
+  replyLevels,
+  replyStartVisibility,
+  topLevelComments,
 } from '../../lib/comments';
 import { findMember } from '../../lib/members';
 import { notifyError } from '../../lib/notify';
-import type { CommentFilters } from '../../types/comment';
+import type { BranchState, Comment, CommentFilters } from '../../types/comment';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
@@ -38,9 +44,10 @@ function reportImageErrors({ imageErrors }: SaveCommentResult) {
 }
 
 /**
- * A Document's Comments (its main Thread, D-20): sort/filter toolbar, the list,
- * and the composer at the bottom. The backend only returns Comments the viewer
- * may see.
+ * A Document's Comments (its main Thread, D-20): sort/filter toolbar, the
+ * Comments with their replies as a tree (spec 19), and the composer at the
+ * bottom. The toolbar picks and orders the top-level Comments; each brings its
+ * whole branch. The backend only returns Comments the viewer may see.
  */
 export function CommentSection({ roomId, documentId, members, currentUserId }: CommentSectionProps) {
   const { t, i18n } = useTranslation();
@@ -49,17 +56,101 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
   const deleteComment = useDeleteComment(roomId, documentId);
   const myCharacters = useMyCharacters(roomId, true);
   const [filters, setFilters] = useState<CommentFilters>(DEFAULT_COMMENT_FILTERS);
+  // Branches expanded or collapsed by hand; not remembered across visits.
+  const [branchStates, setBranchStates] = useState<Record<string, BranchState>>({});
+  // The Comment whose reply composer is open, at most one at a time.
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   const all = useMemo(() => comments.data ?? [], [comments.data]);
-  const shown = useMemo(() => applyCommentFilters(all, filters, members), [all, filters, members]);
+  const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all]);
+  const topLevelCount = useMemo(() => topLevelComments(all).length, [all]);
+  const shown = useMemo(() => buildCommentTree(all, filters, members), [all, filters, members]);
   // commentAuthors reaches the active global translator for unknown-user labels.
   // oxlint-disable-next-line react-hooks/exhaustive-deps
   const authorOptions = useMemo(() => commentAuthors(all, members), [all, members, i18n.language]);
   const savingId = saveComment.isPending ? saveComment.variables?.commentId : undefined;
+  // Which new Comment is being posted: null for a top-level one, else the
+  // id of the Comment it answers. Undefined while nothing new is posting.
+  const postingParent =
+    saveComment.isPending && savingId === undefined
+      ? (saveComment.variables?.values.parentId ?? null)
+      : undefined;
+  const setBranch = (commentId: string, state: BranchState) =>
+    setBranchStates((current) => ({ ...current, [commentId]: state }));
   const characters = myCharacters.data ?? [];
   // The last "Post as" choice in this Room, if the viewer may still use it.
   const lastPostAs = readLastPostAs(roomId);
   const initialPostAs = characters.some((c) => c.documentId === lastPostAs) ? lastPostAs : null;
+
+  // One Comment of the tree, with its reply composer when it's open. A
+  // reply's edit is offered only the visibility its parent allows (VR-04).
+  const renderComment = (comment: Comment, inReplyTo: string | undefined, parent?: Comment) => (
+    <>
+      <CommentItem
+        roomId={roomId}
+        comment={comment}
+        members={members}
+        characters={characters}
+        currentUserId={currentUserId}
+        updating={savingId === comment.id}
+        onUpdate={(values, onDone) =>
+          saveComment.mutate(
+            { commentId: comment.id, values },
+            {
+              onSuccess: (result) => {
+                reportImageErrors(result);
+                onDone();
+              },
+              onError: notifyError,
+            },
+          )
+        }
+        deleting={deleteComment.isPending && deleteComment.variables === comment.id}
+        onDelete={() => deleteComment.mutate(comment.id, { onError: notifyError })}
+        onReply={() => setReplyingTo(comment.id)}
+        inReplyTo={inReplyTo}
+        visibilityLevels={parent && replyLevels(parent, currentUserId)}
+        granteeIds={parent && replyGranteeIds(parent)}
+      />
+      {replyingTo === comment.id && (
+        <Box pl={{ base: 'md', sm: 'xl' }}>
+          <CommentComposer
+            members={members}
+            currentUserId={currentUserId}
+            submitLabel={t('comments.reply')}
+            bodyLabel={t('comments.replyLabel', { name: commentShownName(comment, members) })}
+            submitting={postingParent === comment.id}
+            initialValues={{
+              ...EMPTY_COMMENT_VALUES,
+              ...replyStartVisibility(comment, currentUserId),
+              parentId: comment.id,
+              asDocumentId: initialPostAs,
+            }}
+            visibilityLevels={replyLevels(comment, currentUserId)}
+            granteeIds={replyGranteeIds(comment)}
+            characters={characters}
+            onCancel={() => setReplyingTo(null)}
+            autoFocus
+            onSubmit={(values) =>
+              saveComment.mutate(
+                { values },
+                {
+                  onSuccess: (result) => {
+                    reportImageErrors(result);
+                    saveLastPostAs(roomId, values.asDocumentId ?? null);
+                    setReplyingTo(null);
+                    // The new reply must show, even in a collapsed branch.
+                    setBranch(comment.id, 'open');
+                  },
+                  onError: notifyError,
+                },
+              )
+            }
+          />
+        </Box>
+      )}
+    </>
+  );
 
   return (
     <PageCard>
@@ -93,9 +184,9 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
         ) : (
           <Stack gap="md">
             <CommentToolbar filters={filters} onChange={setFilters} authorOptions={authorOptions} />
-            {shown.length < all.length && (
+            {shown.length < topLevelCount && (
               <Text size="xs" c="dimmed">
-                {t('comments.filteredCount', { shown: shown.length, count: all.length })}
+                {t('comments.filteredCount', { shown: shown.length, count: topLevelCount })}
               </Text>
             )}
             {shown.length === 0 ? (
@@ -113,29 +204,16 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
               </Stack>
             ) : (
               <Stack gap="md" data-testid="comment-list">
-                {shown.map((comment) => (
-                  <CommentItem
-                    key={comment.id}
-                    roomId={roomId}
-                    comment={comment}
-                    members={members}
-                    characters={characters}
-                    currentUserId={currentUserId}
-                    updating={savingId === comment.id}
-                    onUpdate={(values, onDone) =>
-                      saveComment.mutate(
-                        { commentId: comment.id, values },
-                        {
-                          onSuccess: (result) => {
-                            reportImageErrors(result);
-                            onDone();
-                          },
-                          onError: notifyError,
-                        },
-                      )
+                {shown.map((node) => (
+                  <CommentThread
+                    key={node.comment.id}
+                    node={node}
+                    branchStates={branchStates}
+                    onBranchChange={setBranch}
+                    nameOf={(comment) => commentShownName(comment, members)}
+                    renderComment={(comment, inReplyTo) =>
+                      renderComment(comment, inReplyTo, byId.get(comment.parentId ?? ''))
                     }
-                    deleting={deleteComment.isPending && deleteComment.variables === comment.id}
-                    onDelete={() => deleteComment.mutate(comment.id, { onError: notifyError })}
                   />
                 ))}
               </Stack>
@@ -157,7 +235,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
                 members={members}
                 currentUserId={currentUserId}
                 submitLabel={t('comments.publish')}
-                submitting={saveComment.isPending && savingId === undefined}
+                submitting={postingParent === null}
                 initialValues={{ ...EMPTY_COMMENT_VALUES, asDocumentId: initialPostAs }}
                 characters={characters}
                 onSubmit={(values, reset) =>

@@ -65,7 +65,25 @@ describe('useComments', () => {
       canEdit: true,
       canDelete: true,
       asCharacter: null,
+      parentId: null,
+      parentHidden: false,
     });
+  });
+
+  // Spec 19: the list stays flat, each reply naming its parent.
+  it('maps the Comment a reply answers, or that its parent is hidden', async () => {
+    fetchMock.mockResolvedValue([
+      rawComment({ id: 'reply', parent_id: 'comment-1' }),
+      rawComment({ id: 'orphan', parent_hidden: true }),
+    ]);
+
+    const { result } = renderHookWithProviders(() => useComments('room-1', 'doc-1', true));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.map((c) => [c.parentId, c.parentHidden])).toEqual([
+      ['comment-1', false],
+      [null, true],
+    ]);
   });
 
   it('maps the Character a Comment was written as', async () => {
@@ -111,6 +129,23 @@ describe('useSaveComment', () => {
       json: { body: 'Ricordate il sigillo.', visibility: 'room', selective_user_ids: [] },
     });
     expect(saved).toEqual({ commentId: 'comment-1', imageErrors: [] });
+  });
+
+  it('posts a reply with the Comment it answers', async () => {
+    fetchMock.mockResolvedValue(rawComment({ id: 'reply' }));
+
+    const { result } = renderHookWithProviders(() => useSaveComment('room-1', 'doc-1'));
+    await result.current.mutateAsync({ values: { ...values(), parentId: 'comment-1' } });
+
+    expect(fetchMock).toHaveBeenCalledWith(BASE, {
+      method: 'POST',
+      json: {
+        body: 'Ricordate il sigillo.',
+        visibility: 'room',
+        selective_user_ids: [],
+        parent_id: 'comment-1',
+      },
+    });
   });
 
   it('patches an existing Comment when an id is given', async () => {

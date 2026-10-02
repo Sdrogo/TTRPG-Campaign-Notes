@@ -84,6 +84,8 @@ export function rawComment(overrides: Record<string, unknown> = {}) {
     can_edit: true,
     can_delete: true,
     as_character: null,
+    parent_id: null,
+    parent_hidden: false,
     ...overrides,
   };
 }

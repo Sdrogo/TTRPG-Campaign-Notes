@@ -21,6 +21,8 @@ interface RawComment {
   can_edit: boolean;
   can_delete: boolean;
   as_character: RawCharacter | null;
+  parent_id: string | null;
+  parent_hidden: boolean;
 }
 
 function toComment(raw: RawComment): Comment {
@@ -38,6 +40,8 @@ function toComment(raw: RawComment): Comment {
     canEdit: raw.can_edit,
     canDelete: raw.can_delete,
     asCharacter: raw.as_character ? toCharacter(raw.as_character) : null,
+    parentId: raw.parent_id,
+    parentHidden: raw.parent_hidden,
   };
 }
 
@@ -126,7 +130,12 @@ export function useSaveComment(roomId: string, documentId: string) {
             method: 'PATCH',
             json: toBody(values),
           })
-        : await apiFetch<RawComment>(base, { method: 'POST', json: toBody(values) });
+        : await apiFetch<RawComment>(base, {
+            method: 'POST',
+            // A reply names the Comment it answers (spec 19); undefined is
+            // dropped by JSON, so a top-level Comment sends nothing.
+            json: { ...toBody(values), parent_id: values.parentId },
+          });
 
       const imageErrors: string[] = [];
       const reason = (error: unknown) => (error instanceof Error ? error.message : String(error));

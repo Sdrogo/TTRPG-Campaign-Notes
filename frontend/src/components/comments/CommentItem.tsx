@@ -13,6 +13,7 @@ import { isEdited } from '../../lib/comments';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/time';
 import type { Character } from '../../types/character';
 import type { Comment, CommentFormValues } from '../../types/comment';
+import type { DocumentVisibility } from '../../types/document';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
 
@@ -27,6 +28,16 @@ interface CommentItemProps {
   updating: boolean;
   onDelete: () => void;
   deleting: boolean;
+  /** Opens a reply under this Comment (spec 19); no Reply action without it. */
+  onReply?: () => void;
+  /**
+   * Who this Comment answers, for a reply drawn at the last indentation level
+   * below a deeper parent (spec 19 Decision 1).
+   */
+  inReplyTo?: string;
+  /** Limits on the visibility an edit may pick: a reply's parent's (spec 19). */
+  visibilityLevels?: DocumentVisibility[];
+  granteeIds?: string[] | null;
 }
 
 /**
@@ -47,6 +58,10 @@ export function CommentItem({
   updating,
   onDelete,
   deleting,
+  onReply,
+  inReplyTo,
+  visibilityLevels,
+  granteeIds,
 }: CommentItemProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -79,6 +94,11 @@ export function CommentItem({
         <UserAvatar user={author} size="md" mt={2} />
       )}
       <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+        {inReplyTo && (
+          <Text size="xs" c="dimmed" pl="xs">
+            {t('comments.inReplyTo', { name: inReplyTo })}
+          </Text>
+        )}
         {editing ? (
           <CommentComposer
             members={members}
@@ -94,6 +114,12 @@ export function CommentItem({
             }}
             existingImages={comment.images}
             characters={editCharacters}
+            // The current level and grants stay pickable even when the parent
+            // was narrowed since: keeping them is not a change.
+            visibilityLevels={
+              visibilityLevels && [...new Set([...visibilityLevels, comment.visibility])]
+            }
+            granteeIds={granteeIds && [...new Set([...granteeIds, ...comment.selectiveUserIds])]}
             onSubmit={(values) =>
               onUpdate(
                 // Unchanged, the Character is omitted so the backend keeps
@@ -181,6 +207,9 @@ export function CommentItem({
                   {t('comments.edited')}
                 </Text>
               </Tooltip>
+            )}
+            {onReply && !comment.deleted && (
+              <CommentAction onClick={onReply}>{t('comments.reply')}</CommentAction>
             )}
             {comment.canEdit && (
               <CommentAction onClick={() => setEditing(true)}>{t('common.edit')}</CommentAction>

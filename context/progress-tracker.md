@@ -9,18 +9,41 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Spec 19_1 (threaded replies, backend) is merged into `staging` (PR #54).
-Backend **601** tests at 100% coverage. Migration `d5b2e8f4a1c7`
-(`posts.parent_id`) **was applied to the live database on 10-02**; all
-migrations up to it are live. Frontend unchanged since 18_2: 1078 tests at
-100%.
+Branch `claude/project-thread-xryv0u` (spec 19_2, threaded replies
+frontend, PR into `staging`). Frontend **1103** tests at 100% coverage;
+lint and build clean. Backend unchanged since 19_1: 601 tests at 100%. All
+migrations up to `d5b2e8f4a1c7` are live.
 
 Specs 12 to 19_1 are merged into `staging`. Build order is feature by
-feature (19, 19b, 19c, then 20...): 19_2 (replies frontend) comes next.
+feature: 19b (unread replies) comes after 19_2, then 19c.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Threaded replies, frontend (spec 19_2, 2026-10-02)
+
+- `Comment.parentId`/`parentHidden`; a new Comment's `parentId` is sent as
+  `parent_id`. `lib/comments.ts`: `buildCommentTree` (toolbar picks the top
+  level, branches follow, same sort), `topLevelComments` (the "shown of
+  total" counter counts them), `visibleReplies` (more than 3 replies start
+  collapsed to 2), `replyLevels`/`replyGranteeIds`/`replyStartVisibility`.
+- `CommentThread`: three indentation levels (a smaller step on phones),
+  deeper replies at level 3 with "in reply to *Name*", Show more / Hide
+  replies, the "parent hidden" placeholder. A Reply action on every
+  non-deleted Comment opens the composer under it (one at a time), with
+  "Post as" like a Comment (D-24).
+- **Choices made beyond the ticket**: a reply to someone else's non-Room
+  Comment starts Selective to the parent's readers (its author and grantees)
+  rather than at the parent's exact level, so the person answered can read
+  it; at the same parent level a Master-only or Private reply would hide
+  it from them. Answering yourself starts exactly at your Comment's level.
+  Filters match top-level Comments only, so a search that hits only a
+  reply shows nothing (Decision 3 read literally). "Hide deleted" is the
+  exception: it drops a deleted Comment, at any level, only when nothing
+  live sits under it, so the placeholder keeps its live replies (FR-T5).
+- Not yet checked in a browser: the Definition of Done walk-through and
+  the indentation at 390px. 25 new tests.
 
 ### Threaded replies, backend (spec 19_1, 2026-10-02)
 

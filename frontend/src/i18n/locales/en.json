@@ -346,6 +346,17 @@
     "imageLabel": "Image {{index}} of {{author}}'s comment",
     "imagesAlt": "Comment by {{author}}",
     "attachedImage": "Attached image",
+    "reply": "Reply",
+    "replyLabel": "Reply to {{name}}",
+    "inReplyTo": "in reply to {{name}}",
+    "parentHidden": "A comment you can't see",
+    "thread": {
+      "showMore_one": "Show {{count}} more reply",
+      "showMore_other": "Show {{count}} more replies",
+      "show_one": "Show {{count}} reply",
+      "show_other": "Show {{count}} replies",
+      "hide": "Hide replies"
+    },
     "composer": {
       "bodyLabel": "Comment text",
       "bodyPlaceholder": "Write a comment… (# to link a Document)",

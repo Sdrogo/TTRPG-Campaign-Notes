@@ -16,6 +16,7 @@ import { EMPTY_COMMENT_VALUES } from '../../lib/comments';
 import { displayNameFor } from '../../lib/members';
 import type { Character } from '../../types/character';
 import type { CommentFormValues } from '../../types/comment';
+import type { DocumentVisibility } from '../../types/document';
 import type { StoredImage } from '../../types/image';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +42,15 @@ interface CommentComposerProps {
   characters?: Character[];
   onCancel?: () => void;
   autoFocus?: boolean;
+  /**
+   * The visibility levels offered; all by default. A reply is offered only
+   * those not wider than its parent (spec 19), the backend still decides.
+   */
+  visibilityLevels?: DocumentVisibility[];
+  /** Who may be granted at the Selective level; anyone when omitted. */
+  granteeIds?: string[] | null;
+  /** The composer's text field label, when it isn't a new Comment's. */
+  bodyLabel?: string;
 }
 
 /**
@@ -59,6 +69,9 @@ export function CommentComposer({
   characters = [],
   onCancel,
   autoFocus,
+  visibilityLevels,
+  granteeIds = null,
+  bodyLabel,
 }: CommentComposerProps) {
   const { t } = useTranslation();
   const [values, setValues] = useState<CommentFormValues>(initialValues);
@@ -98,7 +111,7 @@ export function CommentComposer({
   const reset = () => {
     releasePendingImages(values.newImages);
     // The next Comment keeps the same "Post as" choice.
-    setValues({ ...EMPTY_COMMENT_VALUES, asDocumentId: values.asDocumentId });
+    setValues({ ...initialValues, asDocumentId: values.asDocumentId });
   };
 
   const submit = () => {
@@ -116,7 +129,7 @@ export function CommentComposer({
     >
       <Stack gap="xs">
         <MentionTextarea
-          aria-label={t('comments.composer.bodyLabel')}
+          aria-label={bodyLabel ?? t('comments.composer.bodyLabel')}
           placeholder={t('comments.composer.bodyPlaceholder')}
           value={values.body}
           onChange={(body) => set({ body })}
@@ -160,6 +173,7 @@ export function CommentComposer({
               aria-label={t('comments.composer.visibilityLabel')}
               value={values.visibility}
               onChange={(visibility) => set({ visibility })}
+              levels={visibilityLevels}
               w={240}
               maw="100%"
             />
@@ -168,7 +182,11 @@ export function CommentComposer({
                 size="xs"
                 aria-label={t('comments.composer.selectiveLabel')}
                 placeholder={t('comments.composer.selectivePlaceholder')}
-                members={members}
+                members={
+                  granteeIds === null
+                    ? members
+                    : members.filter((m) => granteeIds.includes(m.userId))
+                }
                 excludeUserIds={[currentUserId]}
                 value={values.selectiveUserIds}
                 onChange={(selectiveUserIds) => set({ selectiveUserIds })}
