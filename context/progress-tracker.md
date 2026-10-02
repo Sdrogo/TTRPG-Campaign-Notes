@@ -9,17 +9,35 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-xryv0u` (spec 19_2, threaded replies
-frontend, PR into `staging`). Frontend **1103** tests at 100% coverage;
-lint and build clean. Backend unchanged since 19_1: 601 tests at 100%. All
-migrations up to `d5b2e8f4a1c7` are live.
+Branch `claude/project-thread-8skfcb` (spec 19b_1, unread replies backend,
+PR into `staging`). Backend **624** tests at 100% coverage; ruff and mypy
+clean. Frontend unchanged since 19_2: 1103 tests at 100%. All migrations
+up to `e8c1f5a3b7d2` (`document_reads`) are live (applied 2026-10-02).
 
-Specs 12 to 19_1 are merged into `staging`. Build order is feature by
-feature: 19b (unread replies) comes after 19_2, then 19c.
+Specs 12 to 19_2 are merged into `staging`. Build order is feature by
+feature: 19b_2 (unread replies frontend) comes after 19b_1, then 19c.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Unread replies, backend (spec 19b_1, 2026-10-02)
+
+- Migration `e8c1f5a3b7d2`: `document_reads` (`user_id`, `document_id`,
+  `last_read_at`), PK on the pair, CASCADE from Documents, RLS + deny.
+- `POST .../documents/{doc}/read` (404 on a hidden Document) returns
+  `{last_read_at, previous_read_at}`. The single-Document response gains
+  `last_read_at`; the list gains `unread_count` (`DocumentListItemResponse`).
+  `remove_member` drops the member's reads of the Room's Documents.
+- `app/domain/reads.py`: `is_unread` (created after the visit, by someone
+  else, not deleted) and `unread_counts` (effective visibility of spec 19,
+  so hidden posts and replies under a hidden parent never count).
+- **Choices made beyond the ticket**: `unread_count` is null for a Document
+  never opened (Decision 4's dot); deleted posts never count (a placeholder
+  has nothing to read); `read` also returns the previous visit, so the
+  page can still mark "New" if it refetches the Document after `read`.
+  `comments_repo._comment_from_row` became public (`comment_from_row`) for
+  `reads_repo`. 23 new tests (14 domain, 9 API).
 
 ### Threaded replies, frontend (spec 19_2, 2026-10-02)
 

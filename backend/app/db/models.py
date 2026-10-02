@@ -309,6 +309,23 @@ class PostVisibilityGrantRow(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
 
 
+class DocumentReadRow(Base):
+    """When a member last opened a Document's detail page (spec 19b): the
+    Comments created after it, by someone else, are new to them. Deleted with
+    the Document, and by the API when the member leaves the Room."""
+
+    __tablename__ = "document_reads"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
+    last_read_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class DocumentImageRow(Base):
     """An image in a Document's gallery. Only the Storage path is kept here,
     never the bytes."""
