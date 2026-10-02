@@ -251,4 +251,27 @@ describe('FriendsSection', () => {
     expect(second).not.toHaveAttribute('data-loading');
     finish();
   });
+
+  // Answering twice at once would make the second answer fail.
+  it('locks the other answer on a request while one is on its way', async () => {
+    const pending = new Promise(() => {});
+    serve(rawFriends({ incoming: [incoming] }), (path) =>
+      path.startsWith('/friends/requests/') ? pending : undefined,
+    );
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Accetta' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Rifiuta' })).toBeDisabled());
+  });
+
+  it('locks Accept while the decline is on its way', async () => {
+    const pending = new Promise(() => {});
+    serve(rawFriends({ incoming: [incoming] }), (path) =>
+      path.startsWith('/friends/requests/') ? pending : undefined,
+    );
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Rifiuta' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Accetta' })).toBeDisabled());
+  });
 });

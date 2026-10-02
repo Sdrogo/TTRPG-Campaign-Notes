@@ -127,4 +127,29 @@ describe('InviteModal Friends tab', () => {
 
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
   });
+
+  // Until the members arrive, a Friend already in the Room could be offered.
+  it('waits for the Room members before offering anyone', async () => {
+    fetchMock.mockImplementation((path: string) =>
+      path === '/friends'
+        ? Promise.resolve(rawFriends({ friends: [rawFriend()] }))
+        : new Promise(() => {}),
+    );
+    await openFriendsTab();
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/members'));
+    expect(friendPicker()).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Invia invito' })).toBeDisabled();
+  });
+
+  it('says when the Room members cannot be loaded', async () => {
+    fetchMock.mockImplementation((path: string) =>
+      path === '/friends'
+        ? Promise.resolve(rawFriends({ friends: [rawFriend()] }))
+        : Promise.reject(new Error('offline')),
+    );
+    await openFriendsTab();
+
+    expect(await screen.findByText('Errore nel caricamento dei membri.')).toBeInTheDocument();
+  });
 });

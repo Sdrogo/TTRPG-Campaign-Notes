@@ -30,17 +30,26 @@ export function InviteFriendPanel({ roomId }: { roomId: string }) {
   const [friendId, setFriendId] = useState<string | null>(null);
   const [role, setRole] = useState<RoomRole>('player');
 
-  const memberIds = new Set((members.data ?? []).map((member) => member.userId));
-  const candidates = (friends.data?.friends ?? []).filter(
-    (friend) => !memberIds.has(friend.userId),
-  );
+  // Both lists are needed to know who is still invitable: until the members
+  // arrive, a Friend already in the Room could otherwise be offered.
+  const ready = Boolean(friends.data && members.data);
+  const candidates =
+    friends.data && members.data
+      ? friends.data.friends.filter(
+          (friend) => !members.data.some((member) => member.userId === friend.userId),
+        )
+      : [];
   const chosen = candidates.find((friend) => friend.userId === friendId);
 
   if (friends.isError) {
     return <Text c="red">{t('account.friends.loadError')}</Text>;
   }
 
-  if (friends.data && candidates.length === 0) {
+  if (members.isError) {
+    return <Text c="red">{t('members.loadError')}</Text>;
+  }
+
+  if (ready && candidates.length === 0) {
     return (
       <Text size="sm" c="dimmed">
         {t('invite.noFriends')}
@@ -76,7 +85,7 @@ export function InviteFriendPanel({ roomId }: { roomId: string }) {
         value={friendId}
         onChange={setFriendId}
         searchable
-        disabled={!friends.data}
+        disabled={!ready}
       />
       <Select
         label={t('invite.proposedRole')}

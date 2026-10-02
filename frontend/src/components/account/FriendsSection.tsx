@@ -59,6 +59,7 @@ export function FriendsSection() {
                   <Button
                     size="xs"
                     loading={busy(accept, request.friendshipId)}
+                    disabled={busy(decline, request.friendshipId)}
                     onClick={() =>
                       accept.mutate(request.friendshipId, {
                         onSuccess: (friend) =>
@@ -76,6 +77,7 @@ export function FriendsSection() {
                     variant="subtle"
                     color="gray"
                     loading={busy(decline, request.friendshipId)}
+                    disabled={busy(accept, request.friendshipId)}
                     onClick={() => decline.mutate(request.friendshipId, { onError: notifyError })}
                   >
                     {t('common.decline')}

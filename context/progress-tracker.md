@@ -10,7 +10,7 @@ step-by-step notes) is in
 ## Current Status (2026-10-02)
 
 Branch `claude/feature-18-qba36q` (spec 18_2, Friends frontend, PR into
-`staging`). Frontend **1074** tests at 100% coverage; lint and build clean.
+`staging`). Frontend **1078** tests at 100% coverage; lint and build clean.
 Backend unchanged since 18_1b: 563 tests at 100%. No new migration; all
 migrations up to `c4f9a2e7d1b8` (spec 18_1b) are live.
 
@@ -42,7 +42,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   request straight away, like an invite link joins; a request to someone
   with no name who shares no Room is confirmed without naming them.
 - Hooks `useFriends.ts`, `useInvitations.ts`, shared keys `queryKeys.ts`.
-  70 new tests.
+  74 new tests.
 ### Claude code review replaces CodeRabbit (2026-10-02)
 
 - `claude-code-review.yml` runs `anthropics/claude-code-action` on every
