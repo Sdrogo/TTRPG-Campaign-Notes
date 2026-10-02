@@ -559,9 +559,10 @@ Question in the backend PR.
   setting, not app code. Facebook apps in Development mode only admit the
   app's testers. Also re-test a brand-new user's first sign-in live (the
   stray trigger was dropped but never re-tested).
-- **Mention backlinks** (rest of FR-D4): store mentions server-side, show
-  "Mentioned in" filtered per viewer, decide whether mentions survive a
-  rename.
+- **Mention backlinks (spec 20, ticket written 2026-10-02)**:
+  `20 - Mention backlinks` (mentions stored with ids, one-off conversion of
+  old `#Name` text, "Mentioned in" filtered per viewer). 20_1 backend +
+  data migration, then 20_2 frontend.
 - **Threads (spec 19, tickets written 2026-10-02)**: `19 - Threaded replies`
   (nested replies, 3 visible levels, a reply narrowed with its parent but
   its own visibility kept), `19b - Unread replies`, `19c - Reactions,
