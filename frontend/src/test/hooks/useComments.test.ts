@@ -7,6 +7,7 @@ import {
   useComments,
   useDeleteComment,
   useSaveComment,
+  useSetCommentFlag,
   useToggleReaction,
 } from '../../hooks/useComments';
 import type { CommentFormValues } from '../../types/comment';
@@ -73,6 +74,11 @@ describe('useComments', () => {
       parentId: null,
       parentHidden: false,
       reactions: [],
+      pinnedAt: null,
+      resolvedAt: null,
+      resolvedBy: null,
+      canPin: false,
+      canResolve: false,
     });
   });
 
@@ -293,7 +299,9 @@ describe('useSaveComment', () => {
 
   it('reports a non-Error failure by its string form', async () => {
     fetchMock.mockImplementation((path: string) =>
-      path === `${BASE}/comment-1/images/image-9` ? Promise.reject('rate limited') : Promise.resolve(rawComment()),
+      path === `${BASE}/comment-1/images/image-9`
+        ? Promise.reject('rate limited')
+        : Promise.resolve(rawComment()),
     );
 
     const { result } = renderHookWithProviders(() => useSaveComment('room-1', 'doc-1'));
@@ -428,5 +436,42 @@ describe('useToggleReaction', () => {
       `${BASE}/comment-1/reactions/${encodeURIComponent('👍')}`,
       { method: 'DELETE' },
     );
+  });
+});
+
+describe('useSetCommentFlag', () => {
+  const KEY = ['rooms', 'room-1', 'documents', 'doc-1', 'comments'];
+
+  // Spec 19c: pin and resolve are POST to set, DELETE to clear, and the
+  // returned Comment replaces the cached one.
+  it('pins with POST and puts the returned Comment in the cache', async () => {
+    fetchMock.mockResolvedValue(rawComment({ pinned_at: '2026-10-02T12:00:00Z', can_pin: true }));
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(KEY, [{ id: 'comment-1', pinnedAt: null }]);
+
+    const { result } = renderHookWithProviders(() => useSetCommentFlag('room-1', 'doc-1'), {
+      queryClient,
+    });
+    await result.current.mutateAsync({ commentId: 'comment-1', flag: 'pin', on: true });
+
+    expect(fetchMock).toHaveBeenCalledWith(`${BASE}/comment-1/pin`, { method: 'POST' });
+    const cached = queryClient.getQueryData<{ pinnedAt: string | null; canPin: boolean }[]>(KEY);
+    expect(cached?.[0]).toMatchObject({ pinnedAt: '2026-10-02T12:00:00Z', canPin: true });
+  });
+
+  it('reopens with DELETE and maps who resolved', async () => {
+    fetchMock.mockResolvedValue(
+      rawComment({ resolved_at: '2026-10-02T12:00:00Z', resolved_by: 'user-2', can_resolve: true }),
+    );
+
+    const { result } = renderHookWithProviders(() => useSetCommentFlag('room-1', 'doc-1'));
+    const comment = await result.current.mutateAsync({
+      commentId: 'comment-1',
+      flag: 'resolve',
+      on: false,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(`${BASE}/comment-1/resolve`, { method: 'DELETE' });
+    expect(comment).toMatchObject({ resolvedBy: 'user-2', canResolve: true });
   });
 });

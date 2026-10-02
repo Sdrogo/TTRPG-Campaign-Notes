@@ -137,6 +137,22 @@ export function buildCommentTree(
   return roots.map(toNode).filter(isKept);
 }
 
+/**
+ * The tree's top-level branches split into the pinned ones (spec 19c
+ * Decision 3), oldest pin first, and the rest in the toolbar's order. Pinned
+ * Comments come before the sort but still go through the filters, so a
+ * search that misses them leaves them out. Never mutates its input.
+ */
+export function splitPinned(nodes: CommentNode[]): {
+  pinned: CommentNode[];
+  others: CommentNode[];
+} {
+  const pinned = nodes
+    .filter((node) => node.comment.pinnedAt !== null)
+    .sort((a, b) => Date.parse(a.comment.pinnedAt!) - Date.parse(b.comment.pinnedAt!));
+  return { pinned, others: nodes.filter((node) => node.comment.pinnedAt === null) };
+}
+
 /** How many replies sit below a Comment, at any depth. */
 export function countReplies(node: CommentNode): number {
   return node.replies.reduce((total, reply) => total + 1 + countReplies(reply), 0);
@@ -172,7 +188,9 @@ function branchComments(nodes: CommentNode[]): Comment[] {
 
 /**
  * The replies to draw under a Comment, how many are left out, and how many of
- * those are new. With no choice made by hand (`state` undefined), a branch
+ * those are new. With no choice made by hand (`state` undefined), a resolved
+ * branch shows none, new replies included (spec 19c Decision 4: a reply
+ * doesn't reopen it, the count of new ones says it's there); any other branch
  * with more than `COLLAPSE_ABOVE` replies shows its first
  * `SHOWN_WHEN_COLLAPSED` (spec 19 Decision 4), unless one of the replies it
  * would hide is new: then it starts expanded (spec 19b).
@@ -185,12 +203,12 @@ export function visibleReplies(
   const total = countReplies(node);
   const collapsed = node.replies.slice(0, SHOWN_WHEN_COLLAPSED);
   const holdsNew = branchComments(node.replies.slice(SHOWN_WHEN_COLLAPSED)).some(isNew);
-  const shown =
-    state === 'closed'
-      ? []
-      : state === 'open' || total <= COLLAPSE_ABOVE || holdsNew
-        ? node.replies
-        : collapsed;
+  const closed = state === 'closed' || (state === undefined && node.comment.resolvedAt !== null);
+  const shown = closed
+    ? []
+    : state === 'open' || total <= COLLAPSE_ABOVE || holdsNew
+      ? node.replies
+      : collapsed;
   const shownComments = branchComments(shown);
   const hidden = branchComments(node.replies).filter((c) => !shownComments.includes(c));
   return {

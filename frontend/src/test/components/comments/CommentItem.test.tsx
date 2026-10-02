@@ -47,6 +47,11 @@ function comment(overrides: Partial<Comment> = {}): Comment {
     parentId: null,
     parentHidden: false,
     reactions: [],
+    pinnedAt: null,
+    resolvedAt: null,
+    resolvedBy: null,
+    canPin: false,
+    canResolve: false,
     ...overrides,
   };
 }
@@ -91,7 +96,7 @@ describe('CommentItem', () => {
     expect(screen.getByText('(tu)')).toBeInTheDocument();
   });
 
-  it('does not mark someone else\'s', () => {
+  it("does not mark someone else's", () => {
     render({}, 'user-2');
 
     expect(screen.queryByText('(tu)')).not.toBeInTheDocument();
@@ -211,7 +216,9 @@ describe('deleting', () => {
   // Deleting a Comment also removes its images from the Document's gallery,
   // which isn't obvious from "delete comment".
   it('warns that attached images go too', async () => {
-    const { user } = render({ images: [{ id: 'image-1', url: 'http://a/1.webp', isFavorite: false }] });
+    const { user } = render({
+      images: [{ id: 'image-1', url: 'http://a/1.webp', isFavorite: false }],
+    });
 
     await user.click(screen.getByText('Elimina'));
 
@@ -256,9 +263,7 @@ describe('attached images', () => {
   it('shows a thumbnail per image, labelled by author', () => {
     render({ images });
 
-    expect(
-      screen.getByAltText('Immagine 1 del commento di Giocatore'),
-    ).toBeInTheDocument();
+    expect(screen.getByAltText('Immagine 1 del commento di Giocatore')).toBeInTheDocument();
     expect(screen.getByAltText('Immagine 2 del commento di Giocatore')).toBeInTheDocument();
   });
 
@@ -269,10 +274,7 @@ describe('attached images', () => {
       screen.getByRole('button', { name: 'Apri Immagine 2 del commento di Giocatore' }),
     );
 
-    expect(screen.getByAltText('Commento di Giocatore')).toHaveAttribute(
-      'src',
-      'http://a/2.webp',
-    );
+    expect(screen.getByAltText('Commento di Giocatore')).toHaveAttribute('src', 'http://a/2.webp');
   });
 
   it('closes the viewer', async () => {
@@ -413,5 +415,88 @@ describe('CommentItem reactions (spec 19c)', () => {
     render({ deleted: true, body: '', reactions: [thumbs] });
 
     expect(screen.queryByRole('button', { name: /reazion/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('CommentItem pin and resolve (spec 19c)', () => {
+  function renderWithFlag(overrides: Partial<Comment> = {}, settingFlag = false) {
+    const onSetFlag = vi.fn();
+    renderWithProviders(
+      <CommentItem
+        roomId="room-1"
+        comment={comment(overrides)}
+        members={members}
+        characters={[]}
+        currentUserId="user-1"
+        onUpdate={vi.fn()}
+        updating={false}
+        onDelete={vi.fn()}
+        deleting={false}
+        onSetFlag={onSetFlag}
+        settingFlag={settingFlag}
+      />,
+    );
+    return { onSetFlag, user: userEvent.setup() };
+  }
+
+  // The backend's flags decide: nothing is offered without them.
+  it('offers neither action without canPin and canResolve', () => {
+    renderWithFlag();
+
+    expect(screen.queryByRole('button', { name: 'Fissa' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Segna come risolto' })).not.toBeInTheDocument();
+  });
+
+  it('offers nothing without a handler, even when allowed', () => {
+    render({ canPin: true, canResolve: true });
+
+    expect(screen.queryByRole('button', { name: 'Fissa' })).not.toBeInTheDocument();
+  });
+
+  it('pins and resolves an open Comment', async () => {
+    const { onSetFlag, user } = renderWithFlag({ canPin: true, canResolve: true });
+
+    await user.click(screen.getByRole('button', { name: 'Fissa' }));
+    await user.click(screen.getByRole('button', { name: 'Segna come risolto' }));
+
+    expect(onSetFlag.mock.calls).toEqual([
+      ['pin', true],
+      ['resolve', true],
+    ]);
+  });
+
+  it('unpins and reopens, and badges both states', async () => {
+    const { onSetFlag, user } = renderWithFlag({
+      canPin: true,
+      canResolve: true,
+      pinnedAt: '2026-10-02T12:00:00Z',
+      resolvedAt: '2026-10-02T12:00:00Z',
+      resolvedBy: 'user-2',
+    });
+
+    expect(screen.getByText('Fissato')).toBeInTheDocument();
+    await user.hover(screen.getByText('Risolto'));
+    expect(await screen.findByText(/Risolto da Master/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Togli dai fissati' }));
+    await user.click(screen.getByRole('button', { name: 'Riapri' }));
+
+    expect(onSetFlag.mock.calls).toEqual([
+      ['pin', false],
+      ['resolve', false],
+    ]);
+  });
+
+  it('names an unknown resolver like any departed member', async () => {
+    const { user } = renderWithFlag({ resolvedAt: '2026-10-02T12:00:00Z', resolvedBy: null });
+
+    await user.hover(screen.getByText('Risolto'));
+    expect(await screen.findByText(/Risolto da Utente sconosciuto/)).toBeInTheDocument();
+  });
+
+  it('disables both actions while a change is on its way', () => {
+    renderWithFlag({ canPin: true, canResolve: true }, true);
+
+    expect(screen.getByRole('button', { name: 'Fissa' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Segna come risolto' })).toBeDisabled();
   });
 });

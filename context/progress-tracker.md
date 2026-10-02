@@ -9,20 +9,38 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-ads76p` (spec 19c_3, pin and resolved
-backend, PR into `staging`). Backend **690** tests at 100% coverage; ruff
-and mypy clean. Frontend unchanged since 19c_2: 1131 tests at 100%.
+Branch `claude/project-thread-ads76p` (spec 19c_4, pin and resolved
+frontend, PR into `staging`). Frontend **1148** tests at 100% coverage;
+lint and build clean. Backend unchanged since 19c_3: 690 tests at 100%.
 Migration `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the
-live database (2026-10-02). Migration `a9e3d7c5b1f8` (pin and resolution
-columns on `posts`, 19c_3) is **not yet applied to the live database**.
+live database. Migration `a9e3d7c5b1f8` (pin and resolution columns on
+`posts`, 19c_3) is **not yet applied to the live database**; the 19c_4
+frontend needs it live before it reaches `main`.
 
-Specs 12 to 19c_2 are merged into `staging`. Build order is feature by
+Specs 12 to 19c_3 are merged into `staging`. Build order is feature by
 feature: 19c goes reactions → pin and resolved → @mentions → promotion.
-Next: 19c_4, pin and resolved frontend.
+Next: 19c_5, @mentions.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Pin and resolved, frontend (spec 19c_4, 2026-10-02)
+
+- `Comment` gains `pinnedAt`, `resolvedAt`, `resolvedBy`, `canPin`,
+  `canResolve`; `useSetCommentFlag` POSTs/DELETEs `.../pin` or
+  `.../resolve` and swaps the returned Comment into the Thread's cache.
+- `CommentItem`: "Fissato" and "Risolto" badges (tooltip: who resolved,
+  when) and the four text actions, offered per the backend's flags.
+- `CommentSection`: pinned branches in a "Commenti fissati" section first
+  (`splitPinned`, oldest pin first); `visibleReplies` starts a resolved
+  branch closed, and resolving or reopening drops a hand-made open/close.
+- **Choices made beyond the ticket**: the toolbar's filters still apply to
+  pinned Comments (a search can leave them out), only the sort doesn't; a
+  resolved branch keeps its top-level Comment visible and folds only its
+  replies, still counting new ones ("N nuove"); actions are text links in
+  the meta line like Edit/Delete, since Comments have no menu. Not yet
+  checked in a browser: the Definition of Done walk-through. 17 new tests.
 
 ### Pin and resolved, backend (spec 19c_3, 2026-10-02)
 
