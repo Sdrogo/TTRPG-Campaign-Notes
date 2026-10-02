@@ -223,6 +223,13 @@ class Comment:
     # The Comment this one answers (spec 19, FR-T1), None for a top-level
     # Comment. A reply is seen only by who sees its parent too (D-17).
     parent_id: uuid.UUID | None = None
+    # When an Owner or the Master pinned this top-level Comment (spec 19c
+    # Decision 3); pinned Comments are shown first, oldest pin first.
+    pinned_at: datetime | None = None
+    # When, and by whom, this top-level Comment's branch was marked resolved
+    # (spec 19c Decision 4); both None while it is open.
+    resolved_at: datetime | None = None
+    resolved_by: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)

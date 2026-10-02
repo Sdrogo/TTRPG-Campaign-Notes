@@ -295,6 +295,12 @@ class PostRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Pin and resolution of a top-level Comment (spec 19c Decisions 3-4).
+    # `resolved_by` names a user, so like `author_id` it has no foreign key
+    # (no FK to `auth.users`, architecture.md -> Backend Data Access).
+    pinned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolved_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
 
 
 class PostVisibilityGrantRow(Base):

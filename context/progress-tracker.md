@@ -9,18 +9,39 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-42spr1` (spec 19c_2, reactions frontend, PR
-into `staging`). Frontend **1131** tests at 100% coverage; lint and build
-clean. Backend unchanged since 19c_1: 667 tests at 100%. Migration
-`f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is **not yet applied to the
-live database**.
+Branch `claude/project-thread-ads76p` (spec 19c_3, pin and resolved
+backend, PR into `staging`). Backend **690** tests at 100% coverage; ruff
+and mypy clean. Frontend unchanged since 19c_2: 1131 tests at 100%.
+Migration `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the
+live database (2026-10-02). Migration `a9e3d7c5b1f8` (pin and resolution
+columns on `posts`, 19c_3) is **not yet applied to the live database**.
 
-Specs 12 to 19c_1 are merged into `staging`. Build order is feature by
+Specs 12 to 19c_2 are merged into `staging`. Build order is feature by
 feature: 19c goes reactions → pin and resolved → @mentions → promotion.
+Next: 19c_4, pin and resolved frontend.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Pin and resolved, backend (spec 19c_3, 2026-10-02)
+
+- Migration `a9e3d7c5b1f8`: nullable `posts.pinned_at`, `resolved_at`,
+  `resolved_by`.
+- `POST`/`DELETE .../comments/{id}/pin` and `/resolve`, idempotent, return
+  the Comment; `CommentResponse` gains `pinned_at`, `resolved_at`,
+  `resolved_by`, `can_pin`, `can_resolve`.
+- `app/domain/comments.py`: `plan_pin` (Owner or Master, top-level, not
+  deleted, max 3 per Document, 403/422/409), `plan_unpin`, `plan_resolve`
+  and `plan_reopen` (author, Owner or Master; top-level only),
+  `can_pin_comment`, `can_resolve_comment`.
+- **Choices made beyond the ticket**: the pin limit counts every pinned
+  Comment, including ones the pinner can't see (a 409 can thus hint that a
+  hidden pinned Comment exists, nothing more); deleting a Comment unpins it
+  but keeps its branch resolved, and a deleted top-level Comment can still
+  be resolved or reopened (its replies still form a branch); re-resolving
+  keeps who resolved first; pinning and resolving don't touch `updated_at`
+  and aren't AuditLogged. 23 new tests (14 domain, 9 API).
 
 ### Reactions, frontend (spec 19c_2, 2026-10-02)
 
