@@ -24,6 +24,7 @@ from app.domain.invitations import (
     check_invitation_for,
     check_invitation_usable,
     plan_accepted_membership,
+    plan_decline,
     plan_direct_invitation,
     plan_new_invitation,
 )
@@ -223,3 +224,23 @@ async def accept_invitation(
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
 
     return room_to_response(room)
+
+
+@router.post("/invitations/{code}/decline", status_code=status.HTTP_204_NO_CONTENT)
+async def decline_invitation(
+    code: str, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
+) -> None:
+    """The invitee turns down a direct invitation (spec 18_1b): it is
+    revoked and leaves `GET /invitations/mine`, silently for the sender. 404
+    for an unknown code, a link invitation or one addressed to someone else,
+    410 when it has already expired or been revoked."""
+    invitation = await invitations_repo.get_invitation_by_code(session, code)
+    if invitation is None:
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.invitation.notFound", locale)
+    try:
+        declined = plan_decline(invitation, uuid.UUID(current_user.id), datetime.now(UTC))
+    except NotTheInviteeError as exc:
+        raise translated_error(status.HTTP_404_NOT_FOUND, exc, locale) from exc
+    except InvitationInvalidError as exc:
+        raise translated_error(status.HTTP_410_GONE, exc, locale) from exc
+    await invitations_repo.revoke_invitation(session, declined.id, datetime.now(UTC))

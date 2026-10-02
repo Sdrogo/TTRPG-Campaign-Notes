@@ -31,8 +31,10 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   Details in `architecture.md` → Not Room-scoped.
 - **Choices made beyond the ticket**: a new direct invitation to the same
   Friend and Room revokes the open one (latest role wins); the sender's
-  email follows the Friend rule. No decline route (see Open Questions).
-- 15 new tests (5 domain, 10 API).
+  email follows the Friend rule. Declining (`POST /invitations/{code}/decline`,
+  invitee only, never a link) was added after PR #47 at the product owner's
+  choice (2026-10-02): it revokes the invitation, silently for the sender.
+- 20 new tests (8 domain, 12 API), 563 in all at 100% coverage.
 
 ### Friendships, backend (spec 18_1a, 2026-10-02)
 
@@ -544,13 +546,9 @@ Question in the backend PR.
 Items marked *protected* need a product pass because `requirements.md` is a
 protected file.
 
-- **Spec 18_1b, declining a direct Room invitation**: the ticket defines no
-  way to decline one, so it stays in `GET /invitations/mine` until it
-  expires (7 days) or the Administrator sends a new one. The 18_2 header
-  badge will count it until then. Options: a `POST /invitations/{code}/decline`
-  that revokes it, or a dismiss that only hides it. Also open: whether
-  removing a Friendship should revoke direct invitations the two sent each
-  other (today it doesn't).
+- **Spec 18_1b, Friendship removal and direct invitations**: removing a
+  Friendship doesn't revoke direct invitations the two sent each other. Keep
+  it, or revoke them on removal?
 - **Spec 12 — Notes = Details (decided 2026-10-01, `requirements.md` needs a
   product pass, *protected*)**: the product owner confirmed a Note and a
   Detail (D-18) are the same feature under two names, and chose to keep

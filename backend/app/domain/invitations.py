@@ -81,6 +81,18 @@ def check_invitation_for(invitation: Invitation, user_id: uuid.UUID) -> None:
         raise NotTheInviteeError("errors.invitation.notFound")
 
 
+def plan_decline(invitation: Invitation, user_id: uuid.UUID, now: datetime) -> Invitation:
+    """The invitee turns a direct invitation down: it is revoked, so it
+    leaves their list and its code stops working. Silent for the sender, who
+    can invite again. A link invitation can't be declined (that would revoke
+    it for everyone), so it is answered like one addressed to someone
+    else."""
+    if invitation.invitee_id is None or invitation.invitee_id != user_id:
+        raise NotTheInviteeError("errors.invitation.notFound")
+    check_invitation_usable(invitation, now)
+    return replace(invitation, revoked_at=now)
+
+
 def check_invitation_usable(invitation: Invitation, now: datetime | None = None) -> None:
     """UC-04 alternative flow: invalid/expired/revoked invitations are rejected."""
     now = now or datetime.now(UTC)
