@@ -7,7 +7,7 @@
 
 ## Decisions (product discussion, 2026-10-02)
 
-These agree with `requirements.md` (D-17, FR-T2) and only add detail, except Decision 6, which is still to confirm; `requirements.md` is not changed.
+These agree with `requirements.md` (D-17, FR-T2) and only add detail, so it is not changed.
 
 1. **Depth**: three visible levels (a Comment, its replies, their replies). Anyone can still answer a third-level reply; the reply is stored under the post it really answers, but it is **drawn at the third level** with an "in reply to *Name*" line. The data stays a true tree; only the indentation is flattened.
 2. **Visibility of a reply**:
@@ -16,7 +16,7 @@ These agree with `requirements.md` (D-17, FR-T2) and only add detail, except Dec
 3. **Order and filters**: the Comment toolbar (sort, search, author, visibility, hide deleted) **picks and orders the top-level Comments**; a top-level Comment that is shown brings its **whole branch**, and replies are ordered with the same sort. Loading stays as today (the whole Thread at once, filtered client-side); paginating it is left for when Threads get long in practice.
 4. **Collapsing**: a branch with **more than 3 replies** (at any depth below it) starts collapsed to its first 2, with a "Show N more replies" control; any branch can be collapsed and expanded by hand. Not remembered across visits.
 5. **Writing as a Character** (D-24, FR-T11): a reply can be written as a Character with the same rules as a Comment (VR-13).
-6. **The author and a hidden parent** *(to confirm with the product owner before 19_1)*: today the author always sees their own Comment (VR-02, `architecture.md` → Comment visibility). Proposed: an author who **loses sight of the parent** loses sight of their own reply too, so nobody sees a reply detached from its conversation; it comes back when the parent does. This narrows VR-02 for replies only; if confirmed, `architecture.md` changes in the 19_1 branch and the VR-02 wording needs a product pass (`requirements.md` is protected). *Alternative*: the author keeps seeing their reply, shown under a "parent hidden" placeholder.
+6. **The author and a hidden parent** (product owner, 2026-10-02): the author **always keeps seeing their own reply** (VR-02 unchanged). If its parent becomes hidden from them, the reply is shown under a **"parent hidden" placeholder** that reveals nothing about the parent (no author, no text, no date). Everyone else follows the chain rule of Decision 2.
 
 ## Design
 
@@ -27,7 +27,7 @@ These agree with `requirements.md` (D-17, FR-T2) and only add detail, except Dec
   - `plan_new_comment` takes an optional parent: the parent must exist, belong to the Document, be visible to the author, and not be deleted (no answering a placeholder).
   - `ensure_not_wider(reply, parent, members)`: every member of the Room who would see the reply on its own must also see the parent. Compare **audiences** (sets of members), not level names, because Selective and Private aren't ordered. Used on create and on every visibility or grant edit of a reply.
   - **Effective visibility**: a Comment is visible to a viewer when it is visible on its own **and its parent is visible** (recursively up to the top-level Comment). `is_comment_visible` gains the parent chain (or a helper over the Document's Comments by id), and every caller uses it: the Thread list, the single Comment, and the **Document gallery** (an image attached to a reply follows the reply's effective visibility, `visibility.py` image filter). The future Agent export (FR-G1) must use the same function.
-  - The author of a reply follows Decision 6.
+  - The author of a reply always sees it (Decision 6): the chain rule applies to everyone else. A reply whose parent the author can't see is sent with `parent_hidden: true` and its `parent_id` withheld, so the client draws the placeholder without learning anything about the parent.
   - Narrowing a parent doesn't touch its replies' rows, so it writes no AuditLog row for them; only the parent's own visibility change is audited, as today (VR-08).
 - **API** (`app/api/comments.py`): `CreateCommentRequest` gains `parent_id`; `CommentResponse` gains `parent_id`. A reply is a Comment in every other way (edit, delete as a placeholder, images, Character). Deleting a Comment that has replies leaves its placeholder and the replies (FR-T5). The list stays flat (each item with its `parent_id`); the client builds the tree.
 - Tests at 100%: reply to a missing, deleted, foreign-Document or hidden parent; wider audience refused on create and on edit (each level pair, Selective subset); parent narrowed hides the replies from the right members and restores them when widened; images of a hidden reply leave the gallery; Master sees everything (I-03).

@@ -574,8 +574,8 @@ Question in the backend PR.
   (nested replies, 3 visible levels, a reply narrowed with its parent but
   its own visibility kept), `19b - Unread replies`, `19c - Reactions,
   mentions, pins and promotion`. 19b and 19c have decisions still to
-  confirm, and so does 19's Decision 6 (author of a reply under a hidden
-  parent, touches VR-02).
+  confirm. 19's Decision 6 is settled: the author keeps seeing their reply
+  under a "parent hidden" placeholder (VR-02 unchanged).
 - **Thread pagination (FR-T3)**: not owned by any ticket; 19 loads the
   whole Thread at once. Write a ticket when Threads get long in practice.
 - **Reveal and visibility (spec 22, tickets written 2026-10-02)**:
