@@ -42,7 +42,12 @@
       "invalidSelectiveUsers": "selective_user_ids must all be members of this room",
       "parentNotFound": "The Comment you are answering was not found",
       "parentDeleted": "A deleted Comment can't be answered",
-      "replyWiderThanParent": "A reply can't be visible to anyone who can't see the Comment it answers"
+      "replyWiderThanParent": "A reply can't be visible to anyone who can't see the Comment it answers",
+      "cannotPin": "Only an Owner or the Master can pin this Document's Comments",
+      "pinReply": "Only a top-level Comment can be pinned",
+      "tooManyPinned": "A Document can have at most {max} pinned Comments",
+      "cannotResolve": "Only the author, an Owner or the Master can resolve this discussion",
+      "resolveReply": "Only a top-level Comment's discussion can be resolved"
     },
     "reaction": {
       "invalidEmoji": "A reaction must be exactly one emoji",

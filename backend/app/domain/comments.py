@@ -1,6 +1,7 @@
-"""Rules for Comments (FR-T1, FR-T5): who may write, edit and delete them,
-what they may answer and how wide a reply may be (spec 19), their length and
-image limits, and when an edit must be audited."""
+"""Rules for Comments (FR-T1, FR-T5, FR-T7): who may write, edit and delete
+them, what they may answer and how wide a reply may be (spec 19), who may pin
+them or resolve their branch (spec 19c), their length and image limits, and
+when an edit must be audited."""
 
 import uuid
 from collections.abc import Collection
@@ -16,6 +17,9 @@ MAX_COMMENT_LENGTH = 10_000
 # Images attached to one Comment. They also count toward the Document's
 # own limit (MAX_IMAGES_PER_DOCUMENT), since they're Document images too.
 MAX_IMAGES_PER_COMMENT = 4
+
+# Pinned Comments on one Document (spec 19c Decision 3).
+MAX_PINNED_PER_DOCUMENT = 3
 
 COMMENT_VISIBILITY_CHANGED = "comment_visibility_changed"
 
@@ -57,6 +61,25 @@ class ParentCommentDeletedError(DomainError):
 class ReplyWiderThanParentError(DomainError):
     """A reply would reach someone who can't read the Comment it answers
     (VR-04, I-09)."""
+
+
+class CannotPinCommentError(DomainError):
+    """Neither an Owner of the Document nor the Master: can't pin or unpin
+    its Comments (spec 19c Decision 3)."""
+
+
+class CannotResolveCommentError(DomainError):
+    """Neither the Comment's author, an Owner of the Document nor the Master:
+    can't resolve or reopen its branch (spec 19c Decision 4)."""
+
+
+class NotTopLevelCommentError(DomainError):
+    """Only a top-level Comment is pinned or resolved; a reply goes with its
+    branch (spec 19c)."""
+
+
+class TooManyPinnedCommentsError(DomainError):
+    """The Document already has `MAX_PINNED_PER_DOCUMENT` pinned Comments."""
 
 
 @dataclass(frozen=True)
@@ -218,12 +241,13 @@ def plan_comment_deletion(
     comment: Comment, requester_id: uuid.UUID, role: RoomRole, now: datetime
 ) -> Comment:
     """FR-T5: deletion leaves a placeholder (the row, emptied) so the
-    conversation isn't broken."""
+    conversation isn't broken. The placeholder is unpinned, freeing its slot
+    (spec 19c); a resolved branch stays resolved."""
     if comment.deleted_at is not None:
         raise CommentDeletedError("errors.comment.alreadyDeleted")
     if not can_delete_comment(comment, requester_id, role):
         raise CannotDeleteCommentError("errors.comment.cannotDelete")
-    return replace(comment, body="", deleted_at=now, updated_at=now)
+    return replace(comment, body="", deleted_at=now, updated_at=now, pinned_at=None)
 
 
 def ensure_can_attach_image(
@@ -246,3 +270,77 @@ def ensure_can_detach_image(comment: Comment, editor_id: uuid.UUID) -> None:
         raise CommentDeletedError("errors.comment.deleted")
     if comment.author_id != editor_id:
         raise NotCommentAuthorError("errors.comment.notAuthorImages")
+
+
+def can_pin_comment(comment: Comment, manages_document: bool) -> bool:
+    """Spec 19c Decision 3: an Owner of the Document or the Master
+    (`manages_document`, D-12) pins a top-level Comment, never a reply or a
+    deleted placeholder. Says nothing about the per-Document limit, which
+    only the pin itself checks."""
+    return manages_document and comment.parent_id is None and comment.deleted_at is None
+
+
+def can_resolve_comment(comment: Comment, user_id: uuid.UUID, manages_document: bool) -> bool:
+    """Spec 19c Decision 4: the author of a top-level Comment, an Owner of
+    the Document or the Master resolves or reopens its branch. A deleted
+    top-level Comment still heads its branch, so it may still be resolved."""
+    return comment.parent_id is None and (manages_document or comment.author_id == user_id)
+
+
+def plan_pin(comment: Comment, manages_document: bool, pinned_count: int, now: datetime) -> Comment:
+    """Pins a top-level Comment (spec 19c Decision 3): 403 unless an Owner or
+    the Master, then a reply or a deleted placeholder is refused. Pinning a
+    Comment that is already pinned changes nothing, so its place among the
+    pinned ones is kept. `pinned_count` is the Document's pinned Comments,
+    read under the Document's lock so two pins can't both take the last
+    slot."""
+    if not manages_document:
+        raise CannotPinCommentError("errors.comment.cannotPin")
+    if comment.parent_id is not None:
+        raise NotTopLevelCommentError("errors.comment.pinReply")
+    if comment.deleted_at is not None:
+        raise CommentDeletedError("errors.comment.deleted")
+    if comment.pinned_at is not None:
+        return comment
+    if pinned_count >= MAX_PINNED_PER_DOCUMENT:
+        raise TooManyPinnedCommentsError(
+            "errors.comment.tooManyPinned", max=MAX_PINNED_PER_DOCUMENT
+        )
+    return replace(comment, pinned_at=now)
+
+
+def plan_unpin(comment: Comment, manages_document: bool) -> Comment:
+    """Unpins a Comment: the same people who may pin it. Idempotent, so a
+    Comment that isn't pinned (a reply, a deleted placeholder) is simply
+    returned unpinned."""
+    if not manages_document:
+        raise CannotPinCommentError("errors.comment.cannotPin")
+    return replace(comment, pinned_at=None)
+
+
+def _ensure_can_resolve(comment: Comment, user_id: uuid.UUID, manages_document: bool) -> None:
+    """403 unless `can_resolve_comment` would allow it for a top-level
+    Comment, then refuses a reply."""
+    if not (manages_document or comment.author_id == user_id):
+        raise CannotResolveCommentError("errors.comment.cannotResolve")
+    if comment.parent_id is not None:
+        raise NotTopLevelCommentError("errors.comment.resolveReply")
+
+
+def plan_resolve(
+    comment: Comment, user_id: uuid.UUID, manages_document: bool, now: datetime
+) -> Comment:
+    """Marks a top-level Comment's branch resolved (spec 19c Decision 4).
+    Resolving one that is already resolved keeps who resolved it and when.
+    New replies don't reopen it: only `plan_reopen` does."""
+    _ensure_can_resolve(comment, user_id, manages_document)
+    if comment.resolved_at is not None:
+        return comment
+    return replace(comment, resolved_at=now, resolved_by=user_id)
+
+
+def plan_reopen(comment: Comment, user_id: uuid.UUID, manages_document: bool) -> Comment:
+    """Reopens a resolved branch: the same people who may resolve it.
+    Idempotent on an open one."""
+    _ensure_can_resolve(comment, user_id, manages_document)
+    return replace(comment, resolved_at=None, resolved_by=None)

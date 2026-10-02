@@ -42,7 +42,12 @@
       "invalidSelectiveUsers": "selective_user_ids deve contenere solo membri di questa Room",
       "parentNotFound": "Il Commento a cui stai rispondendo non è stato trovato",
       "parentDeleted": "Non si può rispondere a un Commento eliminato",
-      "replyWiderThanParent": "Una risposta non può essere visibile a chi non vede il Commento a cui risponde"
+      "replyWiderThanParent": "Una risposta non può essere visibile a chi non vede il Commento a cui risponde",
+      "cannotPin": "Solo un Owner o il Master può fissare i Commenti di questo Documento",
+      "pinReply": "Si può fissare solo un Commento di primo livello",
+      "tooManyPinned": "Un Documento può avere al massimo {max} Commenti fissati",
+      "cannotResolve": "Solo l'autore, un Owner o il Master può segnare questa discussione come risolta",
+      "resolveReply": "Si può risolvere solo la discussione di un Commento di primo livello"
     },
     "reaction": {
       "invalidEmoji": "Una reazione deve essere esattamente un'emoji",
