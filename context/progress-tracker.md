@@ -9,14 +9,13 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/feature-18-qba36q` (spec 18_1a, Friendships backend, PR into
-`staging`). Backend **543** tests at 100% coverage (`app/` and
-`app/domain`); ruff, mypy clean. New migration `b7e1d4f8a2c6` (tables
-`friendships`, `friend_codes`) is **not yet applied to the live DB**: apply
-it with the product owner's go-ahead before the release PR to `main`.
-Migrations `e2f7c4a9b1d6` (spec 16) and `a3d9c5e7f210` (spec 17) are live.
+Spec 18_1a (Friendships backend, PR #45) is merged into `staging`. Backend
+**543** tests at 100% coverage (`app/` and `app/domain`). Migrations
+`e2f7c4a9b1d6` (spec 16), `a3d9c5e7f210` (spec 17) and `b7e1d4f8a2c6`
+(spec 18_1a, `friendships` and `friend_codes`) are all **applied to the live
+DB**.
 
-Specs 12 to 17_2 are merged into `staging`. Next for spec 18: 18_1b (direct
+Specs 12 to 18_1a are merged into `staging`. Next for spec 18: 18_1b (direct
 Room invitations), then 18_2 (frontend).
 
 ## Completed Units
@@ -481,8 +480,8 @@ Question in the backend PR.
   the Character's Document.
 - **Spec 18, Friends**: 18_1a (friendships backend) is built; next 18_1b
   (`POST /rooms/{id}/invitations/direct` to a Friend, `GET
-  /invitations/mine`), then 18_2 (frontend). Apply migration `b7e1d4f8a2c6`
-  live before the release that ships it.
+  /invitations/mine`), then 18_2 (frontend). Migration `b7e1d4f8a2c6` is
+  already live.
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
