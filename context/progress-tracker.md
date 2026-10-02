@@ -567,11 +567,14 @@ Question in the backend PR.
   `21 - Full-text search` (current Room, Documents/Notes/Comments/Tags,
   accent-insensitive prefix match, visibility filtered on the server).
   21_1 backend + migration, then 21_2 frontend.
+- **Build order (product owner, 2026-10-02)**: one feature at a time, each
+  closed with all its sub-tickets before the next starts: 19 (19_1, 19_2,
+  19b, 19c) → 20 → 21 → 22 (with 22b) → 23 (with 23b, 23c) → 24.
 - **Threads (spec 19, tickets written 2026-10-02)**: `19 - Threaded replies`
   (nested replies, 3 visible levels, a reply narrowed with its parent but
   its own visibility kept), `19b - Unread replies`, `19c - Reactions,
-  mentions, pins and promotion`. Build order: 19_1 backend, 19_2 frontend,
-  then 19b, then 19c. 19b and 19c have decisions still to confirm.
+  mentions, pins and promotion`. 19b and 19c have decisions still to
+  confirm.
 - **Reveal and visibility (spec 22, tickets written 2026-10-02)**:
   `22 - Reveal and visibility history` (Reveal on Documents, single Notes
   and Comments with "Revealed" marks and a header count; History tab;
