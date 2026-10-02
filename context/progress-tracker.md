@@ -9,21 +9,37 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-ads76p` (spec 19c_4, pin and resolved
-frontend, PR into `staging`). Frontend **1149** tests at 100% coverage;
-lint and build clean. Backend unchanged since 19c_3: 690 tests at 100%.
-Migration `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the
-live database. Migration `a9e3d7c5b1f8` (pin and resolution columns on
-`posts`, 19c_3) is **not yet applied to the live database**; the 19c_4
-frontend needs it live before it reaches `main`.
+Branch `claude/project-thread-ads76p` (spec 19c_5, @mentions backend, PR
+into `staging`). Backend **712** tests at 100% coverage; ruff and mypy
+clean. Frontend unchanged since 19c_4: 1149 tests at 100%. Migration
+`f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
+database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
+19c_3) is **not yet applied to the live database**; 19c_3 and 19c_4 need it
+live before they reach `main`.
 
-Specs 12 to 19c_3 are merged into `staging`. Build order is feature by
+Specs 12 to 19c_4 are merged into `staging`. Build order is feature by
 feature: 19c goes reactions → pin and resolved → @mentions → promotion.
-Next: 19c_5, @mentions.
+Next: 19c_6, @mentions frontend.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### @mentions, backend (spec 19c_5, 2026-10-02)
+
+- `app/domain/mentions.py`: `find_mentions` reads the token grammar shared
+  with spec 20, `<sigil>[Name](<kind>:<uuid>)` (`@` + `user`, `#` + `doc`
+  or `tag`, `\` escaping `]` and `\`); `unlink_non_members` turns `@`
+  tokens naming a non-member into plain `@Name`.
+- Comment create and body edit run the body through it with the Room's
+  members; no schema change.
+- **Choices made beyond the ticket**: a malformed or mismatched token is
+  kept as written rather than rejected; `[` in a name needs no escape; a
+  mention of a member who later leaves stays a token until the body is
+  next edited (the frontend shows it like any departed member). `#` tokens
+  are parsed but not yet checked or stored as links: that is spec 20.
+  22 new tests (20 domain, 2 API). Unlinking repeats until the text stops
+  changing, since an unescaped name can itself read as a token.
 
 ### Pin and resolved, frontend (spec 19c_4, 2026-10-02)
 

@@ -59,6 +59,7 @@ from app.domain.comments import (
 )
 from app.domain.documents import is_owner
 from app.domain.errors import DomainError
+from app.domain.mentions import unlink_non_members
 from app.domain.models import (
     Comment,
     Document,
@@ -285,6 +286,13 @@ def _body_error(exc: DomainError, locale: str) -> HTTPException:
     return translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale)
 
 
+async def _clean_mentions(session: AsyncSession, room_id: uuid.UUID, body: str) -> str:
+    """The body with `@` mentions of anyone outside the Room turned back into
+    plain text (spec 19c Decision 2), so only members are ever linked."""
+    members = await rooms_repo.list_memberships(session, room_id)
+    return unlink_non_members(body, {member.user_id for member in members})
+
+
 async def _validate_grantees(
     session: AsyncSession, room_id: uuid.UUID, user_ids: Collection[uuid.UUID], locale: str
 ) -> None:
@@ -479,7 +487,9 @@ async def create_comment(
     (D-24); 403 otherwise, 404 for a Document they can't see. With
     `parent_id` it answers that Comment (spec 19): 404 if it isn't one of
     this Document's Comments the author sees, 409 if it was deleted, 422 if
-    the reply would reach someone who can't read it (VR-04)."""
+    the reply would reach someone who can't read it (VR-04). `@[Name](user:id)`
+    mentions a member (spec 19c); one naming anyone else is saved as plain
+    `@Name`. A mention never widens who sees the Comment."""
     requester_id = uuid.UUID(current_user.id)
     viewer, _ = await _require_visible_document(session, room_id, document_id, requester_id, locale)
     membership = viewer.membership
@@ -498,7 +508,7 @@ async def create_comment(
         comment = plan_new_comment(
             document_id,
             requester_id,
-            body.body,
+            await _clean_mentions(session, room_id, body.body),
             body.visibility,
             datetime.now(UTC),
             as_document_id=body.as_document_id,
@@ -552,7 +562,8 @@ async def update_comment(
     Character it is written as (same rule as creating one, D-24). A change of
     who can see it is audited in the same transaction (VR-08, Invariant 7).
     A reply's new audience must still fit inside its parent's, 422 otherwise
-    (VR-04, spec 19); editing only the body never re-checks it."""
+    (VR-04, spec 19); editing only the body never re-checks it. A new body's
+    `@` mentions are cleaned as on creation (spec 19c)."""
     requester_id = uuid.UUID(current_user.id)
     viewer, _ = await _require_visible_document(session, room_id, document_id, requester_id, locale)
     membership = viewer.membership
@@ -566,7 +577,7 @@ async def update_comment(
             room_id,
             requester_id,
             datetime.now(UTC),
-            body=body.body,
+            body=None if body.body is None else await _clean_mentions(session, room_id, body.body),
             visibility=body.visibility,
             current_selective_ids=selective_ids,
             new_selective_ids=body.selective_user_ids,
