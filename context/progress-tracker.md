@@ -9,21 +9,36 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-ads76p` (spec 19c_5, @mentions backend, PR
-into `staging`). Backend **712** tests at 100% coverage; ruff and mypy
-clean. Frontend unchanged since 19c_4: 1149 tests at 100%. Migration
+Branch `claude/project-thread-ads76p` (spec 19c_6, @mentions frontend, PR
+into `staging`). Frontend **1193** tests at 100% coverage; oxlint and
+build clean. Backend unchanged since 19c_5: 712 tests at 100%. Migration
 `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
 database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
 19c_3) is **not yet applied to the live database**; 19c_3 and 19c_4 need it
 live before they reach `main`.
 
-Specs 12 to 19c_4 are merged into `staging`. Build order is feature by
+Specs 12 to 19c_5 are merged into `staging`. Build order is feature by
 feature: 19c goes reactions → pin and resolved → @mentions → promotion.
-Next: 19c_6, @mentions frontend.
+Next: 19c_7, promotion backend.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### @mentions, frontend (spec 19c_6, 2026-10-02)
+
+- `lib/userMentions.ts` parses `@[Name](user:<uuid>)` like the backend and
+  maps stored text to what the field shows (`@Name`) and edits back.
+- `MentionTextarea` takes `members`: `@` opens the member list (no create
+  row), a pick stores the token. `MentionText` takes `members`: a member
+  is highlighted under their current name, someone who left reads as
+  plain `@Name`. Both are passed only for Comments.
+- **Choices made beyond the ticket**: editing inside a mentioned name
+  unlinks it (plain text), rather than keeping a half-edited token; the
+  field shows the name stored in the token, the rendered body the
+  member's current name; the Comment search matches the shown text, not
+  the token. With members on, the Comment field is announced as a
+  combobox even outside a Room's mention context.
 
 ### @mentions, backend (spec 19c_5, 2026-10-02)
 

@@ -401,6 +401,7 @@
   },
   "mentions": {
     "listLabel": "Documenti e Tag da collegare",
+    "membersListLabel": "Membri da menzionare",
     "kind": {
       "document": "Documento",
       "tag": "Tag"

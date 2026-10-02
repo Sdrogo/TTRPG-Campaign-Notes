@@ -133,6 +133,7 @@ export function CommentComposer({
           placeholder={t('comments.composer.bodyPlaceholder')}
           value={values.body}
           onChange={(body) => set({ body })}
+          members={members}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
               event.preventDefault();

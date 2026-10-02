@@ -1,5 +1,7 @@
 import type { Document } from '../types/document';
 import type { Tag } from '../types/tag';
+import type { Member } from '../types/member';
+import { memberDisplayName } from './members';
 import { currentLanguage } from '../i18n';
 
 // Mentions (FR-D4, specs `06 - Quick navigation` and `06_1 - … refnment`):
@@ -7,7 +9,8 @@ import { currentLanguage } from '../i18n';
 // picking one writes `#Name` into the text, rendered as a link (to the
 // Document, or to the Documents with that Tag). Mentions are stored as
 // plain, readable text and resolved against what the viewer can see, so a
-// mention of a hidden Document stays plain text.
+// mention of a hidden Document stays plain text. In Comments, `@` suggests
+// the Room's members the same way (spec 19c, see `userMentions.ts`).
 
 /** The character that starts a mention. */
 export const MENTION_PREFIX = '#';
@@ -34,12 +37,13 @@ export interface MentionQuery {
 export type MentionKind = 'document' | 'tag';
 
 /**
- * A suggestion in the popup: a Document with its Tags, or a Tag with how many
- * visible Documents carry it.
+ * A suggestion in the popup: a Document with its Tags, a Tag with how many
+ * visible Documents carry it, or a Room member.
  */
 export type MentionTarget =
   | { kind: 'document'; document: Document; tags: Tag[] }
-  | { kind: 'tag'; tag: Tag; documentCount: number };
+  | { kind: 'tag'; tag: Tag; documentCount: number }
+  | { kind: 'member'; member: Member };
 
 /**
  * A run of text as `splitMentions` returns it: plain, or a mention resolved to
@@ -52,12 +56,26 @@ export type MentionSegment =
 
 /** The name a suggestion is shown and inserted by. */
 export function mentionTargetName(target: MentionTarget): string {
-  return target.kind === 'document' ? target.document.name : target.tag.name;
+  switch (target.kind) {
+    case 'document':
+      return target.document.name;
+    case 'tag':
+      return target.tag.name;
+    case 'member':
+      return memberDisplayName(target.member);
+  }
 }
 
 /** A suggestion's id, unique within its kind. */
 export function mentionTargetId(target: MentionTarget): string {
-  return target.kind === 'document' ? target.document.id : target.tag.id;
+  switch (target.kind) {
+    case 'document':
+      return target.document.id;
+    case 'tag':
+      return target.tag.id;
+    case 'member':
+      return target.member.userId;
+  }
 }
 
 /** Where a mention leads: the Document, or the Documents list filtered by the Tag. */
@@ -77,10 +95,8 @@ export function documentsWithTagsHref(roomId: string, tagIds: string[]): string 
   return `/rooms/${roomId}/documents${query ? `?${query}` : ''}`;
 }
 
-function isMentionStart(text: string, index: number): boolean {
-  return (
-    text[index] === MENTION_PREFIX && (index === 0 || MENTION_BOUNDARY.test(text[index - 1]))
-  );
+function isMentionStart(text: string, index: number, prefixes: string): boolean {
+  return prefixes.includes(text[index]) && (index === 0 || MENTION_BOUNDARY.test(text[index - 1]));
 }
 
 /** Lowercase and without accents, so "citta" finds "Città". */
@@ -88,11 +104,14 @@ export function normalizeForSearch(value: string): string {
   return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase();
 }
 
-/** The mention being typed at the caret, if any. */
-export function findMentionQuery(text: string, caret: number): MentionQuery | null {
+/**
+ * The mention being typed at the caret, if any, started by one of the
+ * `prefixes` characters (`#` by default; `#@` in Comments).
+ */
+export function findMentionQuery(text: string, caret: number, prefixes = MENTION_PREFIX): MentionQuery | null {
   const before = text.slice(0, caret);
-  const start = before.lastIndexOf(MENTION_PREFIX);
-  if (start === -1 || !isMentionStart(before, start)) {
+  const start = Math.max(-1, ...[...prefixes].map((prefix) => before.lastIndexOf(prefix)));
+  if (start === -1 || !isMentionStart(before, start, prefixes)) {
     return null;
   }
   const query = before.slice(start + 1);
@@ -117,8 +136,11 @@ export function isFinishedMention(query: string, names: string[]): boolean {
   );
 }
 
-// 0 = name starts with the query, 1 = a word of it does, 2 = contains it.
-function nameRank(name: string, query: string): number | null {
+/**
+ * How well a name matches a normalized query: 0 = it starts with it, 1 = a
+ * word of it does, 2 = it contains it, null = no match.
+ */
+export function nameRank(name: string, query: string): number | null {
   const normalized = normalizeForSearch(name);
   if (normalized.startsWith(query)) return 0;
   if (normalized.split(/\s+/).some((word) => word.startsWith(query))) return 1;
@@ -192,17 +214,19 @@ export function filterMentionCandidates(
 }
 
 /**
- * Replaces the `#query` being typed with `#Name`, followed by a space unless
- * one is already there. Returns the new text and caret.
+ * Replaces the `#query` being typed with `#Name` (or `@query` with `@Name`),
+ * followed by a space unless one is already there. Returns the new text and
+ * caret.
  */
 export function insertMention(
   text: string,
   mention: MentionQuery,
   caret: number,
   name: string,
+  prefix = MENTION_PREFIX,
 ): { text: string; caret: number } {
   const after = text.slice(caret);
-  const inserted = `${MENTION_PREFIX}${name}${/^\s/.test(after) ? '' : ' '}`;
+  const inserted = `${prefix}${name}${/^\s/.test(after) ? '' : ' '}`;
   return {
     text: text.slice(0, mention.start) + inserted + after,
     caret: mention.start + inserted.length,
@@ -227,7 +251,7 @@ export function splitMentions(text: string, documents: Document[], tags: Tag[] =
   let index = text.indexOf(MENTION_PREFIX);
 
   while (index !== -1 && byLongestName.length > 0) {
-    const entry = isMentionStart(text, index)
+    const entry = isMentionStart(text, index, MENTION_PREFIX)
       ? byLongestName.find((candidate) => mentionsAt(text, index + 1, candidate.name))
       : undefined;
     if (entry) {

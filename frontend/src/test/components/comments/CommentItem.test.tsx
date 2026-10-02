@@ -166,7 +166,7 @@ describe('editing', () => {
 
     await user.click(screen.getByText('Modifica'));
 
-    expect(screen.getByRole('textbox', { name: 'Testo del commento' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Testo del commento' })).toHaveValue(
       'Ricordate il sigillo.',
     );
   });
@@ -192,8 +192,8 @@ describe('editing', () => {
     const { onUpdate, user } = render();
     await user.click(screen.getByText('Modifica'));
 
-    await user.clear(screen.getByRole('textbox', { name: 'Testo del commento' }));
-    await user.type(screen.getByRole('textbox', { name: 'Testo del commento' }), 'Nuovo testo');
+    await user.clear(screen.getByRole('combobox', { name: 'Testo del commento' }));
+    await user.type(screen.getByRole('combobox', { name: 'Testo del commento' }), 'Nuovo testo');
     await user.click(screen.getByRole('button', { name: 'Salva' }));
 
     expect(onUpdate).toHaveBeenCalledWith(

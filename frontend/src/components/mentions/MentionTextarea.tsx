@@ -2,6 +2,16 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent
 import { Box, Popover, Textarea, type TextareaProps } from '@mantine/core';
 import { useDocumentMentions } from '../../hooks/useDocumentMentions';
 import { notifyError } from '../../lib/notify';
+import { memberDisplayName } from '../../lib/members';
+import {
+  applyDisplayEdit,
+  filterMemberCandidates,
+  replaceDisplayRange,
+  toDisplay,
+  USER_MENTION_PREFIX,
+  userMentionToken,
+} from '../../lib/userMentions';
+import type { Member } from '../../types/member';
 import {
   creatableKinds,
   filterMentionCandidates,
@@ -22,15 +32,22 @@ import { MentionSuggestions } from './MentionSuggestions';
 interface MentionTextareaProps extends Omit<TextareaProps, 'value' | 'onChange'> {
   value: string;
   onChange: (value: string) => void;
+  /**
+   * The Room's members, to mention with `@` (Comments only, spec 19c). Then
+   * `value` holds `@[Name](user:<uuid>)` tokens, shown as `@Name`.
+   */
+  members?: Member[];
 }
 
 /**
  * A `Textarea` that suggests the Room's Documents and Tags when a word starts
  * with `#` (arrows + Enter/Tab, or a click, to pick one; Esc to dismiss). When
  * nothing matches, the typed name can be created as a blank Document or a Tag.
- * Works as a plain textarea outside a `DocumentMentionsProvider`.
+ * Given `members`, a word starting with `@` suggests them the same way, and
+ * a picked one is stored as a token. Works as a plain textarea outside a
+ * `DocumentMentionsProvider` and without `members`.
  */
-export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }: MentionTextareaProps) {
+export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, ...props }: MentionTextareaProps) {
   const mentions = useDocumentMentions();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pendingCaret = useRef<number | null>(null);
@@ -50,18 +67,27 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }
     latest.current = { value, onChange };
   });
 
-  const mention = mentions && caret !== null ? findMentionQuery(value, caret) : null;
-  // Cheap enough (a Room's Documents and Tags) to redo on every render.
-  const candidates =
-    mention && mentions ? filterMentionCandidates(mentions.documents, mentions.tags, mention.query) : [];
+  // What the textarea shows: `value` with every member token as `@Name`.
+  const display = members ? toDisplay(value) : value;
+  const prefixes = `${mentions ? '#' : ''}${members ? USER_MENTION_PREFIX : ''}`;
+  const mention = prefixes && caret !== null ? findMentionQuery(display, caret, prefixes) : null;
+  const forMember = members !== undefined && mention !== null && display[mention.start] === USER_MENTION_PREFIX;
+  // Cheap enough (a Room's members, Documents and Tags) to redo on every render.
+  const candidates: MentionTarget[] =
+    mention === null
+      ? []
+      : forMember
+        ? filterMemberCandidates(members, mention.query).map((member) => ({ kind: 'member', member }))
+        : filterMentionCandidates(mentions!.documents, mentions!.tags, mention.query);
   const finished =
     mention !== null &&
-    mentions !== null &&
-    isFinishedMention(mention.query, [
-      ...mentions.documents.map((document) => document.name),
-      ...mentions.tags.map((tag) => tag.name),
-    ]);
-  const kinds = mentions ? creatableKinds(mentions) : [];
+    isFinishedMention(
+      mention.query,
+      forMember
+        ? members.map(memberDisplayName)
+        : [...mentions!.documents.map((document) => document.name), ...mentions!.tags.map((tag) => tag.name)],
+    );
+  const kinds = mentions && !forMember ? creatableKinds(mentions) : [];
   const kind = chosenKind !== null && kinds.includes(chosenKind) ? chosenKind : kinds[0];
   const newName = mention ? newEntryName(mention.query) : '';
   const createAvailable = candidates.length === 0 && kind !== undefined && newName !== '';
@@ -99,13 +125,24 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }
     }
   };
 
-  // Writes `#Name` over the `#query` and closes the popup for it.
-  const complete = (text: string, at: MentionQuery, queryEnd: number, target: MentionTarget) => {
-    const result = insertMention(text, at, queryEnd, mentionTargetName(target));
+  // Writes `#Name` (or a member's token, shown as `@Name`) over the query in
+  // `stored` and closes the popup for it. `at` and `queryEnd` are positions
+  // in what the textarea shows.
+  const complete = (stored: string, at: MentionQuery, queryEnd: number, target: MentionTarget) => {
+    const name = mentionTargetName(target);
+    const prefix = target.kind === 'member' ? USER_MENTION_PREFIX : '#';
+    const shown = members ? toDisplay(stored) : stored;
+    const result = insertMention(shown, at, queryEnd, name, prefix);
+    // What was written, then a space if `insertMention` added one.
+    const written = result.text.slice(at.start, result.caret);
+    const inserted =
+      target.kind === 'member'
+        ? userMentionToken(target.member.userId, name) + written.slice(prefix.length + name.length)
+        : written;
     pendingCaret.current = result.caret;
     setCaret(result.caret);
     setDismissedStart(at.start);
-    latest.current.onChange(result.text);
+    latest.current.onChange(members ? replaceDisplayRange(stored, at.start, queryEnd, inserted) : result.text);
   };
 
   // Only reachable (keyboard 'select', or clicking a rendered suggestion)
@@ -125,7 +162,8 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }
       const created = await mentions.create(kind, newName);
       // Only replace what was typed if it's still there, unchanged.
       const text = latest.current.value;
-      if (text.slice(mention.start, mention.start + typed.length) === typed) {
+      const shown = members ? toDisplay(text) : text;
+      if (shown.slice(mention.start, mention.start + typed.length) === typed) {
         complete(text, mention, mention.start + typed.length, created);
       }
     } catch (error) {
@@ -203,9 +241,11 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }
           <Textarea
             {...props}
             ref={textareaRef}
-            value={value}
+            value={display}
             onChange={(event) => {
-              onChange(event.currentTarget.value);
+              const next = event.currentTarget.value;
+              const editedTo = event.currentTarget.selectionStart;
+              onChange(members ? applyDisplayEdit(value, next, editedTo) : next);
               trackCaret(event.currentTarget);
             }}
             onSelect={(event) => trackCaret(event.currentTarget)}
@@ -214,9 +254,9 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, ...props }
               setCaret(null);
               onBlur?.(event);
             }}
-            role={mentions ? 'combobox' : undefined}
-            aria-autocomplete={mentions ? 'list' : undefined}
-            aria-expanded={mentions ? opened : undefined}
+            role={prefixes ? 'combobox' : undefined}
+            aria-autocomplete={prefixes ? 'list' : undefined}
+            aria-expanded={prefixes ? opened : undefined}
             aria-controls={opened && (candidates.length > 0 || createAvailable) ? listId : undefined}
             aria-activedescendant={activeOptionId}
           />

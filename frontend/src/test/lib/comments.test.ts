@@ -118,6 +118,16 @@ describe('applyCommentFilters', () => {
     expect(ids(applyCommentFilters(comments, filters({ query: 'ann@' }), members))).toEqual(['b']);
   });
 
+  // Spec 19c: a member mention is searched as it reads, `@Name`, not as its token.
+  it('searches member mentions by their name, not their token', () => {
+    const mentioning = [
+      comment('m', { body: 'Ciao @[Bea](user:11111111-1111-4111-8111-111111111111)' }),
+    ];
+
+    expect(ids(applyCommentFilters(mentioning, filters({ query: '@bea' }), members))).toEqual(['m']);
+    expect(ids(applyCommentFilters(mentioning, filters({ query: 'user:' }), members))).toEqual([]);
+  });
+
   it('uses chosen names, and still finds an author by email', () => {
     // Zed picked a name that sorts before Ann's email.
     const named = members.map((m) => (m.userId === 'u-zed' ? { ...m, displayName: 'Abelard' } : m));

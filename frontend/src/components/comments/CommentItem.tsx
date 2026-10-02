@@ -239,6 +239,7 @@ export function CommentItem({
               <Stack gap="xs">
                 <MentionText
                   text={comment.body}
+                  members={members}
                   size="sm"
                   style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
                 />
