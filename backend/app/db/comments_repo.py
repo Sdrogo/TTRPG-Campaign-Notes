@@ -12,7 +12,7 @@ from app.db.models import PostRow, PostVisibilityGrantRow
 from app.domain.models import Comment, DocumentVisibility, PostKind
 
 
-def _comment_from_row(row: PostRow) -> Comment:
+def comment_from_row(row: PostRow) -> Comment:
     """Maps a `posts` row to the domain `Comment`."""
     return Comment(
         id=row.id,
@@ -67,7 +67,7 @@ async def get_comments_with_ancestors(
         result = await session.execute(
             select(PostRow).where(PostRow.id.in_(wanted), PostRow.kind == PostKind.COMMENT.value)
         )
-        batch = [_comment_from_row(row) for row in result.scalars()]
+        batch = [comment_from_row(row) for row in result.scalars()]
         found.update((comment.id, comment) for comment in batch)
         wanted = {c.parent_id for c in batch if c.parent_id is not None} - found.keys()
     return found
@@ -83,7 +83,7 @@ async def list_comments_for_document(
         .where(PostRow.document_id == document_id, PostRow.kind == PostKind.COMMENT.value)
         .order_by(PostRow.created_at, PostRow.id)
     )
-    return [_comment_from_row(row) for row in result.scalars()]
+    return [comment_from_row(row) for row in result.scalars()]
 
 
 async def update_comment(session: AsyncSession, comment: Comment) -> None:

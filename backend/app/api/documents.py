@@ -5,6 +5,7 @@ requires Ownership - which the Master always has (D-12)."""
 import uuid
 from collections.abc import Mapping
 from dataclasses import replace
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, UploadFile, status
 from pydantic import BaseModel, HttpUrl
@@ -33,7 +34,7 @@ from app.api.image_uploads import (
 from app.api.notes import NoteResponse, visible_note_responses
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, files_repo, rooms_repo, tags_repo
+from app.db import comments_repo, documents_repo, files_repo, reads_repo, rooms_repo, tags_repo
 from app.db.session import SessionDep
 from app.domain.characters import PlayerNotAMemberError, plan_player_change
 from app.domain.documents import (
@@ -46,6 +47,7 @@ from app.domain.documents import (
     plan_new_document,
 )
 from app.domain.models import Document, DocumentImage, DocumentVisibility, Membership
+from app.domain.reads import unread_counts
 from app.domain.visibility import is_document_visible
 from app.i18n.dependencies import LocaleDep
 
@@ -80,6 +82,28 @@ class DocumentDetailResponse(DocumentResponse):
 
     notes: list[NoteResponse]
     files: list[FileResponse]
+    # When the requester last opened the Document (spec 19b), None if never.
+    # `POST .../read` moves it to now; the page reads it first, so it can mark
+    # the Comments created since as "New".
+    last_read_at: datetime | None
+
+
+class DocumentListItemResponse(DocumentResponse):
+    """A Document as the list returns it: the card's fields plus how many
+    Comments and replies are new to the requester since they last opened it
+    (spec 19b), counted only among those they can see (VR-07). None when they
+    never opened it: the card shows "not yet read" rather than a count."""
+
+    unread_count: int | None
+
+
+class DocumentReadResponse(BaseModel):
+    """The requester's visit recorded by `POST .../read` (spec 19b): the time
+    it was recorded, and the previous visit (None on the first one), so the
+    page can mark what is new even if it read the Document after this call."""
+
+    last_read_at: datetime
+    previous_read_at: datetime | None
 
 
 class SetPlayerRequest(BaseModel):
@@ -154,6 +178,7 @@ async def _to_response(
     images = await get_visible_images(session, document.id, viewer)
     notes = await get_document_notes(session, document.id, viewer, owner_ids)
     files = await files_repo.list_files(session, document.id)
+    last_read_at = await reads_repo.get_last_read_at(session, viewer.user_id, document.id)
     base = _build_response(
         document, owner_ids, selective_ids, tag_ids, images, await sign_images(images)
     )
@@ -161,6 +186,7 @@ async def _to_response(
         **base.model_dump(),
         notes=visible_note_responses(notes, viewer, owner_ids),
         files=file_responses(files, await sign_files(files), viewer, owner_ids),
+        last_read_at=last_read_at,
     )
 
 
@@ -211,9 +237,10 @@ async def create_document(
 @router.get("")
 async def list_documents(
     room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
-) -> list[DocumentResponse]:
+) -> list[DocumentListItemResponse]:
     """Every Document in the Room the requester can see (VR-07), each with its
-    Tags and visible images, in a fixed number of queries."""
+    Tags, visible images and unread count (spec 19b), in a fixed number of
+    queries."""
     requester_id = uuid.UUID(current_user.id)
     membership = await require_membership(session, room_id, requester_id, locale)
 
@@ -242,17 +269,43 @@ async def list_documents(
     image_urls = await sign_images(
         image for document_images in images.values() for image in document_images
     )
+    unread = await _unread_counts(session, visible_ids, membership)
     return [
-        _build_response(
-            document,
-            owners[document.id],
-            grants[document.id],
-            tags[document.id],
-            images.get(document.id, []),
-            image_urls,
+        DocumentListItemResponse(
+            **_build_response(
+                document,
+                owners[document.id],
+                grants[document.id],
+                tags[document.id],
+                images.get(document.id, []),
+                image_urls,
+            ).model_dump(),
+            unread_count=unread[document.id],
         )
         for document in visible
     ]
+
+
+async def _unread_counts(
+    session: AsyncSession, document_ids: list[uuid.UUID], viewer: Membership
+) -> dict[uuid.UUID, int | None]:
+    """The unread count of each Document (spec 19b) for the whole list at
+    once: the viewer's reads, the Comments created since, their ancestors
+    (one query per level of the deepest branch) and grants - never a query
+    per Document (NFR-04). Filtered with the Thread's own effective
+    visibility, so a count never reveals a hidden post (VR-07)."""
+    last_read = await reads_repo.list_last_read_for_documents(session, viewer.user_id, document_ids)
+    candidates = await reads_repo.list_comments_since_last_read(
+        session, viewer.user_id, list(last_read)
+    )
+    comments = await comments_repo.get_comments_with_ancestors(
+        session, [comment.parent_id for comment in candidates if comment.parent_id is not None]
+    )
+    comments.update((comment.id, comment) for comment in candidates)
+    grants = await comments_repo.list_grants_for_comments(session, list(comments))
+    return unread_counts(
+        document_ids, last_read, candidates, comments, grants, viewer.user_id, viewer.role
+    )
 
 
 @router.get("/{document_id}")
@@ -272,6 +325,26 @@ async def get_document(
         session, room_id, document_id, requester_id, membership.role, locale
     )
     return await _to_response(session, document, membership)
+
+
+@router.post("/{document_id}/read")
+async def mark_document_read(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> DocumentReadResponse:
+    """Spec 19b: the requester opened the Document, so what was posted until
+    now is no longer new to them. Any member who sees the Document (404
+    otherwise, VR-07); calling it again only moves the time forward. The
+    previous visit comes back so the page can still mark what is new."""
+    requester_id = uuid.UUID(current_user.id)
+    membership = await require_membership(session, room_id, requester_id, locale)
+    await get_visible_document(session, room_id, document_id, requester_id, membership.role, locale)
+    now = datetime.now(UTC)
+    previous = await reads_repo.mark_read(session, requester_id, document_id, now)
+    return DocumentReadResponse(last_read_at=now, previous_read_at=previous)
 
 
 @router.patch("/{document_id}")

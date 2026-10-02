@@ -13,7 +13,7 @@ from app.api.errors import http_error, translated_error
 from app.api.image_uploads import remove_images
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, files_repo, rooms_repo, users_repo
+from app.db import documents_repo, files_repo, reads_repo, rooms_repo, users_repo
 from app.db.session import SessionDep
 from app.domain.memberships import (
     LastAdministratorError,
@@ -244,7 +244,8 @@ async def remove_member(
     """UC-05/UC-19: an Administrator removes a member, or a member removes
     themselves (leaves). The last Master or Administrator can't go without a
     successor (D-16, 409). Audited in the same transaction (Invariant 7).
-    The Characters they played stay in the Room, unlinked (D-23)."""
+    The Characters they played stay in the Room, unlinked (D-23); their
+    Document reads (spec 19b) are dropped."""
     requester_id = uuid.UUID(current_user.id)
     is_self = requester_id == user_id
 
@@ -269,6 +270,8 @@ async def remove_member(
     await rooms_repo.delete_membership(session, room_id, user_id)
     # Their Characters stay, unlinked (D-15, D-23).
     await documents_repo.clear_played_by_in_room(session, room_id, user_id)
+    # What they had read goes too (spec 19b): rejoining starts afresh.
+    await reads_repo.delete_reads_in_room(session, room_id, user_id)
     await rooms_repo.insert_audit_log(session, audit_entry)
 
 
