@@ -2,8 +2,8 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../../lib/apiClient';
-import { notifyError } from '../../../lib/notify';
-import { rawMember } from '../../fixtures';
+import { notifyError, notifySuccess } from '../../../lib/notify';
+import { rawFriend, rawFriends, rawMember } from '../../fixtures';
 import { renderWithProviders } from '../../utils';
 import { MemberManagement } from '../../../components/setup/MemberManagement';
 import type { Member } from '../../../types/member';
@@ -53,6 +53,7 @@ beforeEach(() => {
   fetchMock.mockReset();
   fetchMock.mockResolvedValue(rawMember());
   vi.mocked(notifyError).mockClear();
+  vi.mocked(notifySuccess).mockClear();
 });
 
 describe('MemberManagement', () => {
@@ -119,9 +120,12 @@ describe('MemberManagement', () => {
     ['Io', 'Esci'],
   ])('shows loading only on %s while removing them', async (name, label) => {
     let finishRemoval!: () => void;
-    fetchMock.mockReturnValueOnce(new Promise<void>((resolve) => {
+    const removal = new Promise<void>((resolve) => {
       finishRemoval = resolve;
-    }));
+    });
+    fetchMock.mockImplementation((_path: string, init?: { method?: string }) =>
+      init?.method === 'DELETE' ? removal : Promise.resolve(rawMember()),
+    );
     const { user } = render([me, member(), member({ userId: 'user-3', displayName: 'Terzo' })]);
     const selectedButton = within(rowFor(name)).getByRole('button', { name: label });
 
@@ -175,5 +179,103 @@ describe('MemberManagement', () => {
 
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
     expect(onLeft).not.toHaveBeenCalled();
+  });
+
+  describe('Friends', () => {
+    /** Serves the Friends lists, and answers everything else like a member. */
+    function serveFriends(friends: unknown) {
+      fetchMock.mockImplementation((path: string) =>
+        Promise.resolve(path === '/friends' ? friends : rawMember()),
+      );
+    }
+
+    const others = [
+      me,
+      member(),
+      member({ userId: 'user-3', displayName: 'Terzo' }),
+      member({ userId: 'user-4', displayName: 'Quarto' }),
+      member({ userId: 'user-5', displayName: 'Quinto' }),
+    ];
+
+    it('shows where each other member stands and offers Add as Friend to the rest', async () => {
+      serveFriends(
+        rawFriends({
+          friends: [rawFriend({ user_id: 'user-2' })],
+          incoming: [rawFriend({ user_id: 'user-3' })],
+          outgoing: [rawFriend({ user_id: 'user-4' })],
+        }),
+      );
+      render(others);
+
+      expect(await within(rowFor('Altro')).findByText('Amico')).toBeInTheDocument();
+      expect(within(rowFor('Terzo')).getByText("Ti ha chiesto l'amicizia")).toBeInTheDocument();
+      expect(within(rowFor('Quarto')).getByText('Richiesta inviata')).toBeInTheDocument();
+      expect(
+        within(rowFor('Quinto')).getByRole('button', { name: 'Aggiungi agli amici' }),
+      ).toBeInTheDocument();
+      // Never to yourself.
+      expect(
+        within(rowFor('Io')).queryByRole('button', { name: 'Aggiungi agli amici' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('sends a friend request to a member and confirms it', async () => {
+      serveFriends(rawFriends());
+      const { user } = render([me, member()]);
+
+      await user.click(
+        await within(rowFor('Altro')).findByRole('button', { name: 'Aggiungi agli amici' }),
+      );
+
+      await waitFor(() =>
+        expect(fetchMock).toHaveBeenCalledWith('/friends/requests', {
+          method: 'POST',
+          json: { user_id: 'user-2' },
+        }),
+      );
+      await waitFor(() =>
+        expect(notifySuccess).toHaveBeenCalledWith('Richiesta di amicizia inviata a Altro.'),
+      );
+    });
+
+    it('shows loading only on the member being asked', async () => {
+      let finish!: (value: unknown) => void;
+      const request = new Promise((resolve) => {
+        finish = resolve;
+      });
+      fetchMock.mockImplementation((path: string) => {
+        if (path === '/friends') return Promise.resolve(rawFriends());
+        if (path === '/friends/requests') return request;
+        return Promise.resolve(rawMember());
+      });
+      const { user } = render([me, member(), member({ userId: 'user-3', displayName: 'Terzo' })]);
+      const button = await within(rowFor('Altro')).findByRole('button', {
+        name: 'Aggiungi agli amici',
+      });
+
+      await user.click(button);
+
+      await waitFor(() => expect(button).toHaveAttribute('data-loading'));
+      expect(
+        within(rowFor('Terzo')).getByRole('button', { name: 'Aggiungi agli amici' }),
+      ).not.toHaveAttribute('data-loading');
+      finish(rawFriend({ user_id: 'user-2' }));
+      await waitFor(() => expect(button).not.toHaveAttribute('data-loading'));
+    });
+
+    it('reports a refused request', async () => {
+      fetchMock.mockImplementation((path: string) => {
+        if (path === '/friends') return Promise.resolve(rawFriends());
+        if (path === '/friends/requests') return Promise.reject(new Error('Already sent'));
+        return Promise.resolve(rawMember());
+      });
+      const { user } = render([me, member()]);
+
+      await user.click(
+        await within(rowFor('Altro')).findByRole('button', { name: 'Aggiungi agli amici' }),
+      );
+
+      await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    });
   });
 });

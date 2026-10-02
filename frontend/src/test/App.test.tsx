@@ -9,6 +9,7 @@ import App from '../App';
 vi.mock('../pages/HomePage', () => ({ HomePage: () => <div>home</div> }));
 vi.mock('../pages/AccountPage', () => ({ AccountPage: () => <div>account</div> }));
 vi.mock('../pages/AcceptInvitePage', () => ({ AcceptInvitePage: () => <div>invite</div> }));
+vi.mock('../pages/AddFriendPage', () => ({ AddFriendPage: () => <div>add friend</div> }));
 vi.mock('../pages/RoomSetupPage', () => ({
   RoomSetupPage: () => <div>setup</div>,
   RoomMembersRedirect: () => <div>members redirect</div>,
@@ -28,6 +29,7 @@ describe('App routes', () => {
     ['/', 'home'],
     ['/account', 'account'],
     ['/invite/ABC123', 'invite'],
+    ['/friends/add/FRIEND1', 'add friend'],
     ['/rooms/room-1/setup', 'setup'],
     ['/rooms/room-1/members', 'members redirect'],
     ['/rooms/room-1/documents', 'documents'],

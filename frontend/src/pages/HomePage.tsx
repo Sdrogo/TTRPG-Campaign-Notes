@@ -1,7 +1,7 @@
 import { Stack, Title, Text, Button, Loader } from '@mantine/core';
 import { Navigate } from 'react-router-dom';
 import { BookOpenIcon } from '@phosphor-icons/react';
-import { readPendingInvite } from '../lib/pendingInvite';
+import { readPendingFriendCode, readPendingInvite } from '../lib/pendingInvite';
 import { AUTH_PROVIDERS, type AuthProvider } from '../lib/authProviders';
 import { supabase } from '../lib/supabaseClient';
 import { useSession } from '../hooks/useSession';
@@ -64,6 +64,12 @@ export function HomePage() {
   const pendingInvite = readPendingInvite();
   if (pendingInvite) {
     return <Navigate to={`/invite/${encodeURIComponent(pendingInvite)}`} replace />;
+  }
+
+  // Signed in right after opening a friend link: finish sending the request.
+  const pendingFriendCode = readPendingFriendCode();
+  if (pendingFriendCode) {
+    return <Navigate to={`/friends/add/${encodeURIComponent(pendingFriendCode)}`} replace />;
   }
 
   return (
