@@ -3,6 +3,8 @@ name: Claude
 # Mention @claude in a pull request comment or review to ask a question
 # about the change or have Claude push a fix, like chatting with CodeRabbit.
 # Only users with write access to the repository can trigger it.
+# Comment events run the workflow from the default branch, so this starts
+# working once it reaches `main` with the next release.
 on:
   issue_comment:
     types: [created]

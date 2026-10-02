@@ -290,7 +290,8 @@ pytest, split by what a test needs rather than by what it covers.
   automatically (`.github/workflows/claude-code-review.yml`, replacing
   CodeRabbit since 2026-10-02) and posts inline findings plus a summary.
   Mentioning `@claude` in a PR comment or review asks it a question or
-  for a fix (`.github/workflows/claude.yml`, write-access users only).
+  for a fix (`.github/workflows/claude.yml`, write-access users only;
+  it runs from `main`, so it needs a release to take effect).
 
 ## File Organization
 

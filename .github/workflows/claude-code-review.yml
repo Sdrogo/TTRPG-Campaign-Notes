@@ -24,7 +24,6 @@ jobs:
       contents: read
       pull-requests: write
       issues: read
-      id-token: write
 
     steps:
       # Pinned by commit SHA, as in ci.yml; the comment is the version.
@@ -40,6 +39,11 @@ jobs:
           # Anthropic Console API key (billed per use).
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Comment with this job's own token instead of the Claude GitHub
+          # App's. The App token is only issued when this file matches the
+          # copy on the default branch (`main`), which a PR into `staging`
+          # never does until the next release, so the review would be skipped.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
