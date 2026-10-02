@@ -43,6 +43,13 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   with no name who shares no Room is confirmed without naming them.
 - Hooks `useFriends.ts`, `useInvitations.ts`, shared keys `queryKeys.ts`.
   74 new tests.
+### CI job summary formatting (2026-10-02)
+
+- The backend coverage section was a raw `coverage report` dump; both jobs
+  now write the same layout from `.github/scripts/`: test counts, a totals
+  table, and a collapsible per-file table (backend skips empty
+  `__init__.py`). Backend test counts come from `pytest --junitxml`.
+
 ### Claude code review replaces CodeRabbit (2026-10-02)
 
 - `claude-code-review.yml` runs `anthropics/claude-code-action` on every

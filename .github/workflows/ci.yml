@@ -51,24 +51,11 @@ jobs:
       - name: Test with coverage
         run: npm run test:coverage
 
+      # Vitest's github-actions reporter writes the test counts; this adds
+      # the coverage tables underneath.
       - name: Summarise coverage
         if: always()
-        run: |
-          {
-            echo '### Frontend coverage'
-            echo
-            if [ -f coverage/coverage-summary.json ]; then
-              node -e "
-                const t = require('./coverage/coverage-summary.json').total;
-                const row = (k) => \`| \${k} | \${t[k].pct}% | \${t[k].covered}/\${t[k].total} |\`;
-                console.log('| Metric | % | Covered |');
-                console.log('|---|---|---|');
-                for (const k of ['statements', 'branches', 'functions', 'lines']) console.log(row(k));
-              "
-            else
-              echo '_No coverage report produced._'
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: node ../.github/scripts/frontend-summary.mjs >> "$GITHUB_STEP_SUMMARY"
 
   backend:
     name: Backend
@@ -148,16 +135,13 @@ jobs:
       # counted against the floor - so this is exact, not "just under".
       - name: Test with coverage
         run: |
-          pytest --cov=app --cov-report=term-missing --cov-fail-under=100
+          pytest --cov=app --cov-report=term-missing --cov-fail-under=100 --junitxml=junit.xml
           coverage report --include='app/domain/*' --fail-under=100
 
-      - name: Summarise coverage
+      # Same layout as the Frontend job's summary: test counts, coverage
+      # totals, then a collapsible per-file table.
+      - name: Summarise tests and coverage
         if: always()
         run: |
-          {
-            echo '### Backend coverage'
-            echo
-            echo '```'
-            coverage report 2>/dev/null || echo 'No coverage data.'
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          coverage json -q -o coverage.json || true
+          python ../.github/scripts/backend-summary.py >> "$GITHUB_STEP_SUMMARY"
