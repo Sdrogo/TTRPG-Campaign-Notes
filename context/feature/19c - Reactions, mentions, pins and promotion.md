@@ -10,7 +10,7 @@ Each part is small and independent; build them as separate branches in the order
 
 ## Decisions (to confirm before building)
 
-1. **Reactions**: a fixed set of 6 emoji (👍 ❤️ 😂 😮 🎲 ⚔️), each member at most once per emoji per Comment; a reaction shows a count, and hovering (or a long press) lists who reacted. Anyone who sees the Comment may react; reacting isn't possible on a deleted placeholder. *(Alternative: any emoji.)*
+1. **Reactions** (any emoji, product owner's choice, 2026-10-02): a member reacts with **any Unicode emoji**, picked from a full emoji picker with search; the emoji already used on that Comment are shown as chips, one click adds yours. Each member at most once per emoji per Comment, at most **20 different emoji per Comment** (so a Comment can't be flooded). A reaction shows a count, and hovering (or a long press) lists who reacted. Anyone who sees the Comment may react; not on a deleted placeholder. The server accepts exactly one emoji grapheme (skin tones and ZWJ sequences included), never free text.
 2. **@User mentions**: typing `@` offers the Room's members (same popup as `#` for Documents); stored as text with the user id, shown highlighted. A mention never widens visibility: a mentioned member who can't see the Comment still doesn't see it.
 3. **Pin**: an Owner of the Document or the Master pins a **top-level** Comment; pinned Comments are shown first, above the toolbar's sort, at most 3 per Document.
 4. **Resolved**: the author of a top-level Comment, an Owner or the Master marks its branch resolved; a resolved branch is shown collapsed with a "Resolved" label and can be reopened. A new reply doesn't reopen it automatically.
@@ -24,7 +24,7 @@ Each part is small and independent; build them as separate branches in the order
 
 ### Backend
 
-- **Reactions**: table `comment_reactions` (`comment_id`, `user_id`, `emoji`), unique on the three, RLS + deny policy; `PUT`/`DELETE /…/comments/{id}/reactions/{emoji}`; `CommentResponse` gains `reactions: [{emoji, count, reacted_by_me, user_ids}]`.
+- **Reactions**: table `comment_reactions` (`comment_id`, `user_id`, `emoji`), unique on the three, `emoji` checked in the domain layer as one emoji grapheme (≤ 32 bytes), RLS + deny policy; `PUT`/`DELETE /…/comments/{id}/reactions/{emoji}`; `CommentResponse` gains `reactions: [{emoji, count, reacted_by_me, user_ids}]`.
 - **Pin and resolved**: `comments.pinned_at`, `comments.resolved_at` + `resolved_by` (nullable); `POST`/`DELETE /…/comments/{id}/pin` and `/resolve`, with the permission rules above in `app/domain/comments.py`.
 - **Mentions**: no schema change if mentions are stored inline in the body (`@[Name](user-id)`, like `#` today); the response resolves names with the members list.
 - **Promotion**: `POST /…/comments/{id}/promote` records the "promoted" mark (and the target Document, if new) and writes the AuditLog row; the description update and Document creation reuse their existing routes.
@@ -32,7 +32,7 @@ Each part is small and independent; build them as separate branches in the order
 
 ### Frontend
 
-- Reaction bar under each Comment; `@` popup in `MentionTextarea`; pin and resolve in the Comment's menu; pinned section on top; "Promote" in the menu for Owners and the Master, with the confirmation dialog when it widens visibility.
+- Reaction bar under each Comment, with an emoji picker (an existing library such as `emoji-mart`, loaded lazily so it doesn't weigh on the first page load; labels in the UI language); `@` popup in `MentionTextarea`; pin and resolve in the Comment's menu; pinned section on top; "Promote" in the menu for Owners and the Master, with the confirmation dialog when it widens visibility.
 - New strings in `en.json` and `it.json`.
 
 ## Implementation
