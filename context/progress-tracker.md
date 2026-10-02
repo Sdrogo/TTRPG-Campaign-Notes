@@ -9,14 +9,14 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-xryv0u` (spec 19_1, threaded replies backend,
-PR into `staging`). Backend **601** tests at 100% coverage; ruff and mypy
-clean. New migration `d5b2e8f4a1c7` (`posts.parent_id`), **not yet applied
-to the live database**: it must be live before 19_2 (frontend) merges.
-Frontend unchanged since 18_2: 1078 tests at 100%.
+Spec 19_1 (threaded replies, backend) is merged into `staging` (PR #54).
+Backend **601** tests at 100% coverage. Migration `d5b2e8f4a1c7`
+(`posts.parent_id`) **was applied to the live database on 10-02**; all
+migrations up to it are live. Frontend unchanged since 18_2: 1078 tests at
+100%.
 
-Specs 12 to 18 are merged into `staging`. Build order is feature by feature
-(19, 19b, 19c, then 20...): 19_2 (replies frontend) comes next.
+Specs 12 to 19_1 are merged into `staging`. Build order is feature by
+feature (19, 19b, 19c, then 20...): 19_2 (replies frontend) comes next.
 
 ## Completed Units
 
@@ -40,7 +40,8 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   reply at read time anyway); `comments_repo.get_comment` and
   `get_comments_by_ids` were folded into `get_comments_with_ancestors`,
   which keeps the "Posts of another kind are absent" rule.
-- 38 new tests (32 domain, 6 API).
+- 38 new tests (32 domain, 6 API). Merged in PR #54; migration applied to
+  the live DB on 10-02.
 
 ### Friends, frontend (spec 18_2, 2026-10-02)
 
