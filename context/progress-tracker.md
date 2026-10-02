@@ -562,11 +562,11 @@ Question in the backend PR.
 - **Mention backlinks** (rest of FR-D4): store mentions server-side, show
   "Mentioned in" filtered per viewer, decide whether mentions survive a
   rename.
-- **Threads** on the `posts` table: nested replies (FR-T1/T2) with the
-  D-17/VR-04 "never wider than the parent" check in the domain layer
-  (Invariant 3); pagination (FR-T3); D-20, FR-T5–T7. Details (D-18, FR-D3,
-  FR-T10) already exist as **Notes** (spec 12), outside the Thread. Scope a
-  first slice to FR-T1/T5 (post, edit/moderate).
+- **Threads (spec 19, tickets written 2026-10-02)**: `19 - Threaded replies`
+  (nested replies, 3 visible levels, a reply narrowed with its parent but
+  its own visibility kept), `19b - Unread replies`, `19c - Reactions,
+  mentions, pins and promotion`. Build order: 19_1 backend, 19_2 frontend,
+  then 19b, then 19c. 19b and 19c have decisions still to confirm.
 - **Reveal action + fuller Visibility** (VR-02, VR-05, VR-06, FR-V2/V3/V5):
   per-Room default visibility, Reveal with AuditLog + notification, "view as
   User X" for the Master.
