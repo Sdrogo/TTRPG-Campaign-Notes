@@ -94,3 +94,10 @@ async def list_open_direct_for(
         .order_by(InvitationRow.created_at, InvitationRow.id)
     )
     return [(_invitation_from_row(inv), room_from_row(room)) for inv, room in result.all()]
+
+
+async def revoke_invitation(session: AsyncSession, invitation_id: uuid.UUID, now: datetime) -> None:
+    """Revokes one invitation; its code stops working at once."""
+    await session.execute(
+        update(InvitationRow).where(InvitationRow.id == invitation_id).values(revoked_at=now)
+    )

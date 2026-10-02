@@ -11,6 +11,7 @@ from app.domain.invitations import (
     check_invitation_for,
     check_invitation_usable,
     plan_accepted_membership,
+    plan_decline,
     plan_direct_invitation,
     plan_new_invitation,
 )
@@ -121,3 +122,25 @@ def test_direct_invitation_works_only_for_its_invitee() -> None:
 
 def test_link_invitation_works_for_anyone() -> None:
     check_invitation_for(_invitation(), uuid.uuid4())
+
+
+def test_invitee_declines_a_direct_invitation() -> None:
+    invitee = uuid.uuid4()
+    now = datetime.now(UTC)
+    declined = plan_decline(_invitation(invitee_id=invitee), invitee, now)
+    assert declined.revoked_at == now
+
+
+def test_only_the_invitee_declines_and_never_a_link() -> None:
+    # Declining a link would revoke it for everyone it was shared with.
+    with pytest.raises(NotTheInviteeError):
+        plan_decline(_invitation(invitee_id=uuid.uuid4()), uuid.uuid4(), datetime.now(UTC))
+    with pytest.raises(NotTheInviteeError):
+        plan_decline(_invitation(), uuid.uuid4(), datetime.now(UTC))
+
+
+def test_an_expired_invitation_cannot_be_declined() -> None:
+    invitee = uuid.uuid4()
+    expired = _invitation(invitee_id=invitee, expires_at=datetime.now(UTC) - timedelta(days=1))
+    with pytest.raises(InvitationInvalidError):
+        plan_decline(expired, invitee, datetime.now(UTC))

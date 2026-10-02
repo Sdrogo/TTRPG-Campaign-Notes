@@ -229,3 +229,48 @@ async def test_sender_email_shows_once_they_share_a_room(
     mine = await _mine(client, bob)
     assert [entry["room"]["id"] for entry in mine] == [second_room]
     assert mine[0]["invited_by"]["email"] == "alice@example.com"
+
+
+async def test_invitee_declines_silently(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    alice, bob, mallory = (_User(make_token, n) for n in ("alice", "bob", "mallory"))
+    await _befriend(client, alice, bob)
+    room_id = await _room(client, alice)
+    code = (await _invite(client, room_id, alice, bob)).json()["code"]
+
+    assert (
+        await client.post(f"/invitations/{code}/decline", headers=mallory.headers)
+    ).status_code == 404
+    declined = await client.post(f"/invitations/{code}/decline", headers=bob.headers)
+    assert declined.status_code == 204
+    assert await _mine(client, bob) == []
+    assert (
+        await client.post(f"/invitations/{code}/accept", headers=bob.headers)
+    ).status_code == 410
+    assert (
+        await client.post(f"/invitations/{code}/decline", headers=bob.headers)
+    ).status_code == 410
+    assert (await client.post("/invitations/nope/decline", headers=bob.headers)).status_code == 404
+    # The sender may invite again.
+    assert (await _invite(client, room_id, alice, bob)).status_code == 201
+    assert len(await _mine(client, bob)) == 1
+
+
+async def test_a_link_invitation_cannot_be_declined(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    alice, bob = _User(make_token, "alice"), _User(make_token, "bob")
+    room_id = await _room(client, alice)
+    link = (
+        await client.post(
+            f"/rooms/{room_id}/invitations", json={"role": "player"}, headers=alice.headers
+        )
+    ).json()
+
+    assert (
+        await client.post(f"/invitations/{link['code']}/decline", headers=bob.headers)
+    ).status_code == 404
+    assert (
+        await client.post(f"/invitations/{link['code']}/accept", headers=bob.headers)
+    ).status_code == 200
