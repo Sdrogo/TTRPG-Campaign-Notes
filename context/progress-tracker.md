@@ -582,6 +582,9 @@ Question in the backend PR.
   manual layout, first style Gothic/Vampire-inspired, WeasyPrint in a background job; check
   Render can install Pango first), `23c - Agent access tokens` (read-only
   per-Room tokens, FR-G2). 23 and 23c decisions still to confirm.
+- **Version history (spec 24, ticket written 2026-10-02)**: `24 - Version
+  history` (Document name/description and Note text, 10-minute merge per
+  editor, Owners + Master compare and restore, all versions kept).
 - Decide whether new Rooms should get default Tags in the creator's
   language.
 
