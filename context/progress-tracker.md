@@ -572,9 +572,11 @@ Question in the backend PR.
   its own visibility kept), `19b - Unread replies`, `19c - Reactions,
   mentions, pins and promotion`. Build order: 19_1 backend, 19_2 frontend,
   then 19b, then 19c. 19b and 19c have decisions still to confirm.
-- **Reveal action + fuller Visibility** (VR-02, VR-05, VR-06, FR-V2/V3/V5):
-  per-Room default visibility, Reveal with AuditLog + notification, "view as
-  User X" for the Master.
+- **Reveal and visibility (spec 22, tickets written 2026-10-02)**:
+  `22 - Reveal and visibility history` (Reveal on Documents, single Notes
+  and Comments with "Revealed" marks and a header count; History tab;
+  Room default visibility) and `22b - View as player` (read-only preview
+  through an `X-View-As` header).
 - Decide whether new Rooms should get default Tags in the creator's
   language.
 
