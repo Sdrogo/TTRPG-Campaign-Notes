@@ -203,6 +203,21 @@ describe('buildCommentTree (Decision 3)', () => {
     );
   });
 
+  // FR-T5: a deleted Comment's placeholder keeps the live replies under it readable.
+  it('hides a deleted Comment only when nothing live sits under it', () => {
+    const list = [
+      comment('gone', { deleted: true, body: '', createdAt: at(0), updatedAt: at(0) }),
+      reply('live', 'gone', 1),
+      reply('dead-leaf', 'live', 2, { deleted: true, body: '' }),
+      comment('lonely', { deleted: true, body: '', createdAt: at(5), updatedAt: at(5) }),
+    ];
+    const hide = filters({ hideDeleted: true, sort: 'oldest' });
+    expect(shape(buildCommentTree(list, hide, members))).toBe('gone(live)');
+    expect(shape(buildCommentTree(list, filters({ sort: 'oldest' }), members))).toBe(
+      'gone(live(dead-leaf)),lonely',
+    );
+  });
+
   it('starts a branch at a reply whose parent is hidden or missing', () => {
     const list = [
       comment('mine', { parentHidden: true }),

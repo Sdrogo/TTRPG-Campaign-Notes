@@ -39,7 +39,9 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   it; at the same parent level a Master-only or Private reply would hide
   it from them. Answering yourself starts exactly at your Comment's level.
   Filters match top-level Comments only, so a search that hits only a
-  reply shows nothing (Decision 3 read literally).
+  reply shows nothing (Decision 3 read literally). "Hide deleted" is the
+  exception: it drops a deleted Comment, at any level, only when nothing
+  live sits under it, so the placeholder keeps its live replies (FR-T5).
 - Not yet checked in a browser: the Definition of Done walk-through and
   the indentation at 390px. 25 new tests.
 

@@ -105,7 +105,10 @@ export function topLevelComments(comments: Comment[]): Comment[] {
 /**
  * The Thread as a tree (spec 19 Decision 3): the toolbar's filters and sort
  * pick and order the top-level Comments, each shown one brings its whole
- * branch, and replies are ordered with the same sort. Never mutates its input.
+ * branch, and replies are ordered with the same sort. "Hide deleted" drops a
+ * deleted Comment only when nothing live sits under it, at any level: the
+ * placeholder stays above live replies so the conversation still reads
+ * (FR-T5). Never mutates its input.
  */
 export function buildCommentTree(
   comments: Comment[],
@@ -120,9 +123,18 @@ export function buildCommentTree(
   }
   const toNode = (comment: Comment): CommentNode => ({
     comment,
-    replies: sortComments([...(byParent.get(comment.id) ?? [])], filters.sort, members).map(toNode),
+    replies: sortComments([...(byParent.get(comment.id) ?? [])], filters.sort, members)
+      .map(toNode)
+      .filter(isKept),
   });
-  return applyCommentFilters(topLevelComments(comments), filters, members).map(toNode);
+  const isKept = (node: CommentNode) =>
+    !filters.hideDeleted || !node.comment.deleted || node.replies.length > 0;
+  const roots = applyCommentFilters(
+    topLevelComments(comments),
+    { ...filters, hideDeleted: false },
+    members,
+  );
+  return roots.map(toNode).filter(isKept);
 }
 
 /** How many replies sit below a Comment, at any depth. */
