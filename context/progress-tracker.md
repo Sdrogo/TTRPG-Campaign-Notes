@@ -11,9 +11,8 @@ step-by-step notes) is in
 
 Branch `claude/project-thread-8skfcb` (spec 19b_1, unread replies backend,
 PR into `staging`). Backend **624** tests at 100% coverage; ruff and mypy
-clean. Frontend unchanged since 19_2: 1103 tests at 100%. Migration
-`e8c1f5a3b7d2` (`document_reads`) is **not yet applied** to the live DB:
-apply it before merging 19b_1 (the list and detail routes read the table).
+clean. Frontend unchanged since 19_2: 1103 tests at 100%. All migrations
+up to `e8c1f5a3b7d2` (`document_reads`) are live (applied 2026-10-02).
 
 Specs 12 to 19_2 are merged into `staging`. Build order is feature by
 feature: 19b_2 (unread replies frontend) comes after 19b_1, then 19c.
