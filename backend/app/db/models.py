@@ -8,6 +8,7 @@ from typing import Any
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Index,
@@ -115,7 +116,8 @@ class TagCombinationTagRow(Base):
 
 
 class InvitationRow(Base):
-    """A Room invitation, looked up by its unique `code`."""
+    """A Room invitation, looked up by its unique `code`: a shareable link, or
+    a direct invitation addressed to one user (`invitee_user_id`)."""
 
     __tablename__ = "invitations"
 
@@ -129,6 +131,9 @@ class InvitationRow(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # Set for a direct invitation to a Friend (FR-F5, spec 18_1b): only this
+    # user may accept it. NULL for a shareable link.
+    invitee_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True)
 
 
 class UserRow(Base):
@@ -350,6 +355,46 @@ class DocumentFileRow(Base):
     size_bytes: Mapped[int] = mapped_column(Integer)
     content_type: Mapped[str] = mapped_column(String(100))
     uploaded_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class FriendshipRow(Base):
+    """A Friendship or a request for one (D-26, spec 18), not tied to any
+    Room. One row per pair: the two ids are stored ordered and unique
+    together. A declined row is kept for the 30-day cooldown (D-27)."""
+
+    __tablename__ = "friendships"
+    __table_args__ = (
+        UniqueConstraint("user_low", "user_high", name="uq_friendships_pair"),
+        CheckConstraint("user_low < user_high", name="ck_friendships_ordered_pair"),
+        CheckConstraint(
+            "requested_by IN (user_low, user_high)", name="ck_friendships_requested_by_in_pair"
+        ),
+        CheckConstraint(
+            "status IN ('pending', 'accepted', 'declined')", name="ck_friendships_status"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    user_low: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    user_high: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
+    requested_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    status: Mapped[str] = mapped_column(String(20))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    hidden_from_sender: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false"), default=False
+    )
+
+
+class FriendCodeRow(Base):
+    """A user's Friend code (D-27, FR-F4): one per user, unique across
+    users. Regenerating overwrites it, so the old code stops working."""
+
+    __tablename__ = "friend_codes"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    code: Mapped[str] = mapped_column(String(64), unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 

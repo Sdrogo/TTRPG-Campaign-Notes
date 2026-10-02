@@ -1,6 +1,7 @@
 """The `users` mirror of Supabase Auth, and the profile stored on it."""
 
 import uuid
+from collections.abc import Collection
 
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -70,3 +71,15 @@ async def mark_prefilled(session: AsyncSession, user_id: uuid.UUID) -> None:
     await session.execute(
         update(UserRow).where(UserRow.id == user_id).values(profile_prefilled_at=func.now())
     )
+
+
+async def get_profiles(
+    session: AsyncSession, user_ids: Collection[uuid.UUID]
+) -> dict[uuid.UUID, UserProfile]:
+    """The profiles of `user_ids` in one query, an empty one for a user with
+    no mirror row (see `profile_from_row`)."""
+    if not user_ids:
+        return {}
+    result = await session.execute(select(UserRow).where(UserRow.id.in_(list(user_ids))))
+    rows = {row.id: row for row in result.scalars()}
+    return {user_id: profile_from_row(user_id, rows.get(user_id)) for user_id in user_ids}

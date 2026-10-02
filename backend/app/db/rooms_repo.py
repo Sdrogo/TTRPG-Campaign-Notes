@@ -1,9 +1,11 @@
 """Rooms, Memberships and the audit log."""
 
 import uuid
+from collections.abc import Collection
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from app.db.models import AuditLogRow, MembershipRow, RoomRow, TagRow, UserRow
 from app.db.users_repo import profile_from_row
@@ -11,7 +13,7 @@ from app.domain.models import AuditLogEntry, Membership, Room, RoomRole, RoomSta
 from app.domain.rooms import NewRoomPlan
 
 
-def _room_from_row(row: RoomRow) -> Room:
+def room_from_row(row: RoomRow) -> Room:
     """Maps a `rooms` row to the domain `Room`."""
     return Room(
         id=row.id,
@@ -104,7 +106,7 @@ async def get_membership(
 async def get_room(session: AsyncSession, room_id: uuid.UUID) -> Room | None:
     """The Room, or None."""
     row = await session.get(RoomRow, room_id)
-    return _room_from_row(row) if row else None
+    return room_from_row(row) if row else None
 
 
 async def list_rooms_for_user(
@@ -116,7 +118,7 @@ async def list_rooms_for_user(
         .join(MembershipRow, MembershipRow.room_id == RoomRow.id)
         .where(MembershipRow.user_id == user_id)
     )
-    return [(_room_from_row(room), _membership_from_row(m)) for room, m in result.all()]
+    return [(room_from_row(room), _membership_from_row(m)) for room, m in result.all()]
 
 
 async def list_memberships(session: AsyncSession, room_id: uuid.UUID) -> list[Membership]:
@@ -205,3 +207,22 @@ async def insert_audit_log(session: AsyncSession, entry: AuditLogEntry) -> None:
         )
     )
     await session.flush()
+
+
+async def users_sharing_a_room(
+    session: AsyncSession, user_id: uuid.UUID, others: Collection[uuid.UUID]
+) -> set[uuid.UUID]:
+    """Which of `others` are in at least one Room with `user_id` right now,
+    in one query. Friend requests by user id need it (D-27), and so does
+    the email rule for Friends (a Friend sharing no Room doesn't get it)."""
+    if not others:
+        return set()
+    mine = aliased(MembershipRow)
+    theirs = aliased(MembershipRow)
+    result = await session.execute(
+        select(theirs.user_id)
+        .distinct()
+        .join(mine, mine.room_id == theirs.room_id)
+        .where(mine.user_id == user_id, theirs.user_id.in_(list(others)))
+    )
+    return set(result.scalars())

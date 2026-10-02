@@ -110,7 +110,10 @@ other icon set.
   language with a 20px flag and the language's **own** name ("Italiano",
   "English"), so it can be found whatever language the UI is in, and a
   check mark on the current one. Its tooltip ("Change language") is hidden while the menu is open, so it doesn't cover the
-  first item.
+  first item. **Pending count** (spec 18_2): the avatar sits in a Mantine
+  `Indicator` (accent, 18px) counting friend requests received plus Room
+  invitations from Friends, hidden at zero; the link's label becomes
+  "Il tuo account: N da vedere".
 - **Sign-in screen** (`HomePage`, signed out; spec 08): centered book
   icon, title, "Sign in to continue.", then one full-width button per
   provider in `AUTH_PROVIDERS` order, in a column capped at 320px. Google
@@ -367,3 +370,21 @@ Tags are picked and while that set is already listed (in any order). A
 combination is a row like the others, labelled `#A + #B`, and moves, removes
 and saves the same way. A Document is under a combination when it has all its
 Tags.
+
+## Friends (spec 18_2)
+
+- **Account page**: "Inviti alle Stanze" (only while some wait) comes
+  right after the page title, "Amici" after "Profilo". Each person is a
+  `FriendRow`: `md` avatar, name, pronouns or a detail line, the email only
+  when the backend sends it, buttons on the right (wrapping under on
+  narrow screens). Accept is `filled` `xs`, Decline and Cancel are
+  `subtle` gray, Remove is `subtle` red and confirms in a small popover.
+  The friend link is a read-only `TextInput` with a copy `ActionIcon`
+  and a `default` "Rigenera" button.
+- **Setup member table**: under a member's details, a `compact-xs`
+  `light` "Aggiungi agli amici" button, or a `xs` `light` badge (accent for
+  "Amico", gray for a pending request).
+- **Invite modal**: `Tabs` "Link" | "Amici" (Phosphor icons); the Friends
+  tab has a searchable Friend `Select`, the role `Select` and "Invia invito".
+- **Friend link page** (`/friends/add/:code`): full-page and centered like
+  the invite page, with buttons to the Account page and the Rooms list.

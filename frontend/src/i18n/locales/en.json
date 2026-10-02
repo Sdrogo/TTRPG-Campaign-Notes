@@ -29,7 +29,9 @@
     "myRooms": "My Rooms",
     "backToMyRooms": "Back to my Rooms",
     "maxLength": "At most {{max}} characters",
-    "unknownUser": "Unknown user"
+    "unknownUser": "Unknown user",
+    "accept": "Accept",
+    "decline": "Decline"
   },
   "roles": {
     "master": "Master",
@@ -65,7 +67,8 @@
     "signInWith": "Sign in with {{provider}}"
   },
   "header": {
-    "account": "Your account"
+    "account": "Your account",
+    "accountPending": "Your account: {{count}} waiting"
   },
   "account": {
     "signInRequired": "Sign in to manage your account.",
@@ -98,6 +101,29 @@
       "noEmail": "Your account didn't share an email",
       "signOutDescription": "End the session on this device.",
       "signOut": "Sign out"
+    },
+    "invitations": {
+      "title": "Room invitations",
+      "description": "A Friend invited you: you join the Room only if you accept.",
+      "from": "{{name}} invites you as {{role}}",
+      "joined": "You joined \"{{room}}\"."
+    },
+    "friends": {
+      "title": "Friends",
+      "description": "Friends can invite you straight into their Rooms.",
+      "linkLabel": "Your friend link",
+      "linkDescription": "Whoever opens it sends you a friend request. Regenerate it to turn the old one off.",
+      "linkError": "Couldn't load your friend link.",
+      "regenerate": "Regenerate",
+      "regenerated": "New link created: the old one no longer works.",
+      "loadError": "Couldn't load your Friends.",
+      "incoming": "Requests received",
+      "outgoing": "Requests sent",
+      "list": "Your Friends",
+      "empty": "No Friends yet. Share your link or add a member of one of your Rooms.",
+      "cancelRequest": "Cancel request",
+      "removeConfirm": "Remove {{name}} from your Friends?",
+      "accepted": "You and {{name}} are now Friends."
     }
   },
   "rooms": {
@@ -127,7 +153,15 @@
     "signInRequired": "Sign in to join this Room.",
     "invalid": "Invalid, expired or already used invite.",
     "joined": "You joined \"{{room}}\"",
-    "goToMyRooms": "Go to my Rooms"
+    "goToMyRooms": "Go to my Rooms",
+    "tabLink": "Link",
+    "tabFriends": "Friends",
+    "friend": "Friend",
+    "friendPlaceholder": "Pick a Friend",
+    "noFriends": "No Friends to invite. Add them from your Account page.",
+    "friendsHint": "Your Friend sees the invite on their Account page and joins only if they accept.",
+    "send": "Send invite",
+    "sent": "Invite sent to {{name}}."
   },
   "members": {
     "signInRequired": "Sign in to see the members of this Room.",
@@ -135,7 +169,12 @@
     "loadError": "Error loading members.",
     "columnUser": "User",
     "columnRole": "Role",
-    "columnAdmin": "Administrator"
+    "columnAdmin": "Administrator",
+    "addFriend": "Add as Friend",
+    "friend": "Friend",
+    "requestSent": "Request sent",
+    "requestReceived": "Sent you a request",
+    "friendRequestSent": "Friend request sent to {{name}}."
   },
   "setup": {
     "signInRequired": "Sign in to manage this Room.",
@@ -349,5 +388,12 @@
     "mainTags": "Main Tags",
     "otherTags": "Other Tags",
     "empty": "No Tags in this Room."
+  },
+  "friendLink": {
+    "signInRequired": "Sign in to send the friend request.",
+    "sent": "Friend request sent to {{name}}.",
+    "sentAnonymous": "Friend request sent.",
+    "failed": "Couldn't send the friend request.",
+    "goToAccount": "Go to your account"
   }
 }

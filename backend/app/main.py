@@ -15,6 +15,7 @@ from app.api.characters import router as characters_router
 from app.api.comments import router as comments_router
 from app.api.document_files import router as document_files_router
 from app.api.documents import router as documents_router
+from app.api.friends import router as friends_router
 from app.api.invitations import router as invitations_router
 from app.api.main_items import router as main_items_router
 from app.api.notes import router as notes_router
@@ -64,6 +65,7 @@ app.include_router(comments_router)
 app.include_router(notes_router)
 app.include_router(document_files_router)
 app.include_router(characters_router)
+app.include_router(friends_router)
 
 
 @app.get("/health")

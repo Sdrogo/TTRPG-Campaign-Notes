@@ -16,10 +16,16 @@ import { PageLayout } from '../components/PageLayout';
 import { AccountSection } from '../components/account/AccountSection';
 import { AvatarEditor, type AvatarAction } from '../components/account/AvatarEditor';
 import { ProfileForm } from '../components/account/ProfileForm';
+import { FriendsSection } from '../components/account/FriendsSection';
+import { RoomInvitationsSection } from '../components/account/RoomInvitationsSection';
 import type { AccountProfile } from '../types/profile';
 import { useTranslation } from 'react-i18next';
 
-/** `/account`: the signed-in user's profile (name, pronouns, description, avatar) and sign-out. */
+/**
+ * `/account`: the signed-in user's profile (name, pronouns, description,
+ * avatar), their Friends and Room invitations from Friends (spec 18), and
+ * sign-out.
+ */
 export function AccountPage() {
   const { t } = useTranslation();
   const { session, loading: sessionLoading } = useSession();
@@ -79,6 +85,10 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
         <Text c="dimmed">{t('account.subtitle')}</Text>
       </Stack>
 
+      {/* Invitations waiting for an answer come first; the section is only
+          there while some are. */}
+      <RoomInvitationsSection />
+
       {/* Full-width cards like the Document page; on wide screens the
           avatar sits beside the form and the email beside sign-out, so the
           fields don't stretch across the whole card. */}
@@ -111,6 +121,8 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
           </Grid.Col>
         </Grid>
       </AccountSection>
+
+      <FriendsSection />
 
       <AccountSection title={t('account.access.title')}>
         <Grid gap={{ base: 'md', md: 'xl' }} align="flex-end">

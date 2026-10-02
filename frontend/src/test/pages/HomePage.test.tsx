@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
-import { savePendingInvite } from '../../lib/pendingInvite';
+import { savePendingFriendCode, savePendingInvite } from '../../lib/pendingInvite';
 import { supabase } from '../../lib/supabaseClient';
 import { useSession } from '../../hooks/useSession';
 import { fakeSession } from '../fixtures';
@@ -121,6 +121,19 @@ describe('HomePage', () => {
     );
 
     expect(screen.getByText('invite page')).toBeInTheDocument();
+  });
+
+  it('resumes a pending friend link after signing in', () => {
+    signedIn();
+    savePendingFriendCode('FRIEND1');
+    renderWithProviders(
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/friends/add/:code" element={<p>friend link page</p>} />
+      </Routes>,
+    );
+
+    expect(screen.getByText('friend link page')).toBeInTheDocument();
   });
 
   it('shows the app header once signed in', async () => {

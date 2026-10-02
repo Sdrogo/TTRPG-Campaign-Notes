@@ -111,6 +111,42 @@ export function rawMember(overrides: Record<string, unknown> = {}) {
   };
 }
 
+export function rawFriend(overrides: Record<string, unknown> = {}) {
+  return {
+    friendship_id: 'friendship-1',
+    user_id: 'user-2',
+    since: '2026-10-01T12:00:00Z',
+    email: null,
+    display_name: 'Altro',
+    pronouns: null,
+    bio: null,
+    avatar_url: null,
+    ...overrides,
+  };
+}
+
+export function rawFriends(overrides: Record<string, unknown> = {}) {
+  return { friends: [], incoming: [], outgoing: [], ...overrides };
+}
+
+export function rawDirectInvitation(overrides: Record<string, unknown> = {}) {
+  return {
+    code: 'DIRECT1',
+    role: 'player',
+    expires_at: '2026-10-09T12:00:00Z',
+    room: rawRoom({ id: 'room-2', name: 'Barovia' }),
+    invited_by: {
+      user_id: 'user-2',
+      email: null,
+      display_name: 'Altro',
+      pronouns: null,
+      bio: null,
+      avatar_url: null,
+    },
+    ...overrides,
+  };
+}
+
 export function rawAccount(overrides: Record<string, unknown> = {}) {
   return {
     user_id: 'user-1',

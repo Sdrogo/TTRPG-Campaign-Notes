@@ -1,8 +1,11 @@
 import { Table, Select, Switch, Button, Badge, Group, Stack, Text } from '@mantine/core';
+import { UserPlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useUpdateMember, useRemoveMember } from '../../hooks/useMembers';
+import { useFriends, useSendFriendRequest } from '../../hooks/useFriends';
+import { friendStatus } from '../../lib/friends';
 import { memberDisplayName } from '../../lib/members';
-import { notifyError } from '../../lib/notify';
+import { notifyError, notifySuccess } from '../../lib/notify';
 import { UserAvatar } from '../UserAvatar';
 import type { Member } from '../../types/member';
 import type { RoomRole } from '../../types/room';
@@ -21,6 +24,10 @@ interface MemberManagementProps {
  * for an Administrator, so it offers every control; the backend still refuses
  * what would leave the Room without a Master or Administrator (D-16) and the
  * message reaches the user.
+ *
+ * Each other member also gets "Add as Friend" (FR-F1, spec 18_2), or where
+ * the two already stand: Friends, request sent or received. Left out when
+ * the Friends list can't be loaded.
  */
 export function MemberManagement({
   roomId,
@@ -31,6 +38,53 @@ export function MemberManagement({
   const { t } = useTranslation();
   const updateMember = useUpdateMember(roomId);
   const removeMember = useRemoveMember(roomId);
+  const friends = useFriends(true);
+  const sendRequest = useSendFriendRequest();
+
+  /** Asks a member to become Friends and confirms it. */
+  const handleAddFriend = (member: Member) => {
+    sendRequest.mutate(
+      { userId: member.userId },
+      {
+        onSuccess: () =>
+          notifySuccess(t('members.friendRequestSent', { name: memberDisplayName(member) })),
+        onError: notifyError,
+      },
+    );
+  };
+
+  /** The member's Friend status or the button to ask them; nothing for oneself. */
+  const friendControl = (member: Member) => {
+    if (!friends.data || member.userId === currentUserId) {
+      return null;
+    }
+    const status = friendStatus(friends.data, member.userId);
+    if (status === 'none') {
+      return (
+        <Button
+          size="compact-xs"
+          variant="light"
+          leftSection={<UserPlusIcon size={14} />}
+          loading={sendRequest.isPending && sendRequest.variables?.userId === member.userId}
+          onClick={() => handleAddFriend(member)}
+          style={{ alignSelf: 'flex-start' }}
+          mt={4}
+        >
+          {t('members.addFriend')}
+        </Button>
+      );
+    }
+    const labels = {
+      friend: t('members.friend'),
+      outgoing: t('members.requestSent'),
+      incoming: t('members.requestReceived'),
+    };
+    return (
+      <Badge size="xs" variant="light" color={status === 'friend' ? 'accent' : 'gray'} mt={4}>
+        {labels[status]}
+      </Badge>
+    );
+  };
 
   /** Removes a member; removing yourself also leaves the page. */
   const handleRemove = (userId: string) => {
@@ -88,6 +142,7 @@ export function MemberManagement({
                           {member.bio}
                         </Text>
                       )}
+                      {friendControl(member)}
                     </Stack>
                   </Group>
                 </Table.Td>

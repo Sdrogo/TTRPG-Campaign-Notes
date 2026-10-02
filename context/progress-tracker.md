@@ -7,20 +7,83 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-01)
+## Current Status (2026-10-02)
 
-Branch `claude/project-thread-duasvn` (spec 17_2, Characters frontend, PR into
-`staging`). Frontend **1006** tests at 100% coverage; oxlint, tsc and the
-build clean. Backend untouched since 17_1 (merged, 492 tests). Migrations
-`e2f7c4a9b1d6` (spec 16) and `a3d9c5e7f210` (spec 17) are both **applied to
-the live DB**.
+Branch `claude/feature-18-qba36q` (spec 18_2, Friends frontend, PR into
+`staging`). Frontend **1078** tests at 100% coverage; lint and build clean.
+Backend unchanged since 18_1b: 563 tests at 100%. No new migration; all
+migrations up to `c4f9a2e7d1b8` (spec 18_1b) are live.
 
-Specs 12 to 17_1 are merged into `staging`. Candidates for the next unit are
-in **Next Up**.
+Specs 12 to 18_1b (with direct-invitation decline) are merged into
+`staging`. Spec 18 is complete once 18_2 merges; then its browser check.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Friends, frontend (spec 18_2, 2026-10-02)
+
+- Account page: a **Room invitations** card (only while some wait:
+  Accept/Decline) above Profile, and a **Friends** card under it (friend
+  link with Copy and Regenerate, requests received with Accept/Decline,
+  Friends with a confirmed Remove, requests sent with Cancel).
+- Setup page member table: "Add as Friend" under each other member, or a
+  badge (Friend, request sent, request received); hidden if `/friends`
+  fails. Invite modal: "Link" and "Friends" tabs; the Friends tab offers
+  Friends not already in the Room.
+- Header: the account avatar carries a count of requests received plus
+  Room invitations (Mantine `Indicator`); its label says how many. No
+  real-time: TanStack's refetch on window focus (D-04).
+- `/friends/add/:code` (`AddFriendPage`) sends the request once signed in;
+  the code survives the sign-in round trip like an invite code
+  (`lib/pendingInvite.ts`, its own key).
+- **Choices made beyond the ticket**: invitations live on the Account page
+  (where the badge leads), not on the Rooms list; the friend link sends the
+  request straight away, like an invite link joins; a request to someone
+  with no name who shares no Room is confirmed without naming them.
+- Hooks `useFriends.ts`, `useInvitations.ts`, shared keys `queryKeys.ts`.
+  74 new tests.
+### Claude code review replaces CodeRabbit (2026-10-02)
+
+- `claude-code-review.yml` runs `anthropics/claude-code-action` on every
+  non-draft PR into `staging`; `claude.yml` answers `@claude` mentions on
+  PRs. `.coderabbit.yaml` removed (CodeRabbit trial ended).
+- Both need one repository secret, `CLAUDE_CODE_OAUTH_TOKEN`
+  (`claude setup-token`, set 2026-10-02) or `ANTHROPIC_API_KEY`. The review
+  posts with the job's `GITHUB_TOKEN`, since the Claude GitHub App only
+  issues a token when the workflow matches `main`; only `claude.yml` uses
+  the App, and it takes effect after the next release to `main`.
+
+### Direct Room invitations, backend (spec 18_1b, 2026-10-02)
+
+- Migration `c4f9a2e7d1b8`: nullable `invitations.invitee_user_id`.
+  `POST /rooms/{id}/invitations/direct` (Administrator, accepted Friend,
+  not a member), `GET /invitations/mine`; accepting a direct invitation
+  reuses `POST /invitations/{code}/accept`, 404 for anyone but the invitee.
+  Details in `architecture.md` → Not Room-scoped.
+- **Choices made beyond the ticket**: a new direct invitation to the same
+  Friend and Room revokes the open one (latest role wins); the sender's
+  email follows the Friend rule. Declining (`POST /invitations/{code}/decline`,
+  invitee only, never a link) was added after PR #47 at the product owner's
+  choice (2026-10-02): it revokes the invitation, silently for the sender.
+- 20 new tests (8 domain, 12 API), 563 in all at 100% coverage.
+
+### Friendships, backend (spec 18_1a, 2026-10-02)
+
+- Migration `b7e1d4f8a2c6`: `friendships` (one row per ordered pair, CHECKs
+  on order, sender and status) and `friend_codes` (one per user, code
+  unique), both RLS + deny policy. Domain `app/domain/friends.py`
+  (`plan_request`, `plan_response`, `plan_removal`, `view_for`,
+  `plan_friend_code`), repo `app/db/friends_repo.py`, routes
+  `app/api/friends.py`. Details in `architecture.md` → Not Room-scoped.
+- **Choice made beyond the ticket**: a `hidden_from_sender` column, so the
+  sender of a silently declined request can "cancel" it without deleting the
+  row (which would end the 30-day cooldown). Re-sending inside the cooldown
+  answers like a pending request and asks nobody, so the decline stays
+  silent. The recipient of a pending request can't delete it (409): they
+  answer it, so a decline always counts.
+- Email of a Friend is null unless the two share a Room right now (NFR-03).
+- Not audited (no Room). 51 new tests (34 domain, 17 API).
 
 ### Characters, frontend (spec 17_2, 2026-10-01)
 
@@ -461,7 +524,10 @@ Question in the backend PR.
 - **Browser check of spec 17** (after 17_2 merges): the ticket's Definition
   of Done walk-through with a Master, a Player and a member who can't see
   the Character's Document.
-- **Spec 18, Friends** (ticket in `context/feature/`, decisions D-26, D-27).
+- **Browser check of spec 18** (after 18_2 merges): the ticket's Definition
+  of Done with two users who met in a Room: Add as Friend, accept, then one
+  invites the other to a new Room from the Friends tab and the other joins
+  from their Account page. Also open a friend link while signed out.
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
@@ -512,6 +578,9 @@ Question in the backend PR.
 Items marked *protected* need a product pass because `requirements.md` is a
 protected file.
 
+- **Spec 18_1b, Friendship removal and direct invitations**: removing a
+  Friendship doesn't revoke direct invitations the two sent each other. Keep
+  it, or revoke them on removal?
 - **Spec 12 — Notes = Details (decided 2026-10-01, `requirements.md` needs a
   product pass, *protected*)**: the product owner confirmed a Note and a
   Detail (D-18) are the same feature under two names, and chose to keep
