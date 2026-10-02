@@ -75,7 +75,8 @@ class TagCombination:
 @dataclass(frozen=True)
 class Invitation:
     """A code for joining a Room with a proposed role (FR-R2). It stops working
-    once expired or revoked."""
+    once expired or revoked. A direct invitation (FR-F5) has an `invitee_id`:
+    only that user may accept it, and it is listed for them."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -84,6 +85,7 @@ class Invitation:
     created_by: uuid.UUID
     expires_at: datetime | None
     revoked_at: datetime | None
+    invitee_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)

@@ -9,18 +9,30 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Spec 18_1a (Friendships backend, PR #45) is merged into `staging`. Backend
-**543** tests at 100% coverage (`app/` and `app/domain`). Migrations
-`e2f7c4a9b1d6` (spec 16), `a3d9c5e7f210` (spec 17) and `b7e1d4f8a2c6`
-(spec 18_1a, `friendships` and `friend_codes`) are all **applied to the live
-DB**.
+Branch `claude/feature-18-qba36q` (spec 18_1b, direct Room invitations, PR
+into `staging`). Backend **558** tests at 100% coverage (`app/` and
+`app/domain`); ruff, mypy clean. Migration `c4f9a2e7d1b8`
+(`invitations.invitee_user_id`) **applied to the live DB** (2026-10-02).
+Migrations up to `b7e1d4f8a2c6` (spec 18_1a) are live too.
 
-Specs 12 to 18_1a are merged into `staging`. Next for spec 18: 18_1b (direct
-Room invitations), then 18_2 (frontend).
+Specs 12 to 18_1a are merged into `staging`. Next for spec 18: 18_2
+(frontend).
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Direct Room invitations, backend (spec 18_1b, 2026-10-02)
+
+- Migration `c4f9a2e7d1b8`: nullable `invitations.invitee_user_id`.
+  `POST /rooms/{id}/invitations/direct` (Administrator, accepted Friend,
+  not a member), `GET /invitations/mine`; accepting a direct invitation
+  reuses `POST /invitations/{code}/accept`, 404 for anyone but the invitee.
+  Details in `architecture.md` → Not Room-scoped.
+- **Choices made beyond the ticket**: a new direct invitation to the same
+  Friend and Room revokes the open one (latest role wins); the sender's
+  email follows the Friend rule. No decline route (see Open Questions).
+- 15 new tests (5 domain, 10 API).
 
 ### Friendships, backend (spec 18_1a, 2026-10-02)
 
@@ -478,10 +490,10 @@ Question in the backend PR.
 - **Browser check of spec 17** (after 17_2 merges): the ticket's Definition
   of Done walk-through with a Master, a Player and a member who can't see
   the Character's Document.
-- **Spec 18, Friends**: 18_1a (friendships backend) is built; next 18_1b
-  (`POST /rooms/{id}/invitations/direct` to a Friend, `GET
-  /invitations/mine`), then 18_2 (frontend). Migration `b7e1d4f8a2c6` is
-  already live.
+- **Spec 18, Friends**: 18_1a and 18_1b (backend) are built; next 18_2
+  (frontend: Friends section on the Account page, "Add as Friend" in the
+  setup page, a Friends tab in the invite modal, a header badge). Migration
+  `c4f9a2e7d1b8` is already applied live.
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
@@ -532,6 +544,13 @@ Question in the backend PR.
 Items marked *protected* need a product pass because `requirements.md` is a
 protected file.
 
+- **Spec 18_1b, declining a direct Room invitation**: the ticket defines no
+  way to decline one, so it stays in `GET /invitations/mine` until it
+  expires (7 days) or the Administrator sends a new one. The 18_2 header
+  badge will count it until then. Options: a `POST /invitations/{code}/decline`
+  that revokes it, or a dismiss that only hides it. Also open: whether
+  removing a Friendship should revoke direct invitations the two sent each
+  other (today it doesn't).
 - **Spec 12 — Notes = Details (decided 2026-10-01, `requirements.md` needs a
   product pass, *protected*)**: the product owner confirmed a Note and a
   Detail (D-18) are the same feature under two names, and chose to keep

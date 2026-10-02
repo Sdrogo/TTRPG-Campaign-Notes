@@ -1,7 +1,9 @@
-"""Rules for Room invitations (FR-R2, FR-R3, UC-03, UC-04)."""
+"""Rules for Room invitations (FR-R2, FR-R3, UC-03, UC-04), including direct
+invitations to a Friend (FR-F5, spec 18_1b)."""
 
 import secrets
 import uuid
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from app.domain.errors import DomainError
@@ -16,6 +18,15 @@ class InvitationInvalidError(DomainError):
 
 class AlreadyMemberError(DomainError):
     """The user accepting the invitation is already a member."""
+
+
+class NotAFriendError(DomainError):
+    """A direct invitation goes only to a Friend of the Administrator who
+    sends it (D-26)."""
+
+
+class NotTheInviteeError(DomainError):
+    """A direct invitation is addressed to someone else."""
 
 
 def _generate_invite_code() -> str:
@@ -40,6 +51,34 @@ def plan_new_invitation(
         expires_at=datetime.now(UTC) + ttl,
         revoked_at=None,
     )
+
+
+def plan_direct_invitation(
+    room_id: uuid.UUID,
+    role: RoomRole,
+    created_by: uuid.UUID,
+    invitee_id: uuid.UUID,
+    *,
+    is_friend: bool,
+    invitee_is_member: bool,
+    ttl: timedelta = DEFAULT_INVITE_TTL,
+) -> Invitation:
+    """FR-F5: an invitation addressed to one Friend of the sender, with a
+    proposed role and the usual expiry. The caller has already checked the
+    sender is an Administrator (UC-03). It never makes the Friend a member:
+    they join only by accepting it (D-26, FR-R3)."""
+    if not is_friend:
+        raise NotAFriendError("errors.invitation.notAFriend")
+    if invitee_is_member:
+        raise AlreadyMemberError("errors.invitation.alreadyMember")
+    return replace(plan_new_invitation(room_id, role, created_by, ttl=ttl), invitee_id=invitee_id)
+
+
+def check_invitation_for(invitation: Invitation, user_id: uuid.UUID) -> None:
+    """A link invitation works for whoever holds the code; a direct one only
+    for its invitee, even if someone else learns its code."""
+    if invitation.invitee_id is not None and invitation.invitee_id != user_id:
+        raise NotTheInviteeError("errors.invitation.notFound")
 
 
 def check_invitation_usable(invitation: Invitation, now: datetime | None = None) -> None:

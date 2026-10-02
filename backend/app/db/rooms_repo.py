@@ -13,7 +13,7 @@ from app.domain.models import AuditLogEntry, Membership, Room, RoomRole, RoomSta
 from app.domain.rooms import NewRoomPlan
 
 
-def _room_from_row(row: RoomRow) -> Room:
+def room_from_row(row: RoomRow) -> Room:
     """Maps a `rooms` row to the domain `Room`."""
     return Room(
         id=row.id,
@@ -106,7 +106,7 @@ async def get_membership(
 async def get_room(session: AsyncSession, room_id: uuid.UUID) -> Room | None:
     """The Room, or None."""
     row = await session.get(RoomRow, room_id)
-    return _room_from_row(row) if row else None
+    return room_from_row(row) if row else None
 
 
 async def list_rooms_for_user(
@@ -118,7 +118,7 @@ async def list_rooms_for_user(
         .join(MembershipRow, MembershipRow.room_id == RoomRow.id)
         .where(MembershipRow.user_id == user_id)
     )
-    return [(_room_from_row(room), _membership_from_row(m)) for room, m in result.all()]
+    return [(room_from_row(room), _membership_from_row(m)) for room, m in result.all()]
 
 
 async def list_memberships(session: AsyncSession, room_id: uuid.UUID) -> list[Membership]:
