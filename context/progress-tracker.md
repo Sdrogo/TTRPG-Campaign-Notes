@@ -9,18 +9,37 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/project-thread-42spr1` (spec 19c_1, reactions backend, PR
-into `staging`). Backend **667** tests at 100% coverage; ruff and mypy
-clean. Migration `f4c7a1d9e2b6` (`comment_reactions`) is **not yet applied
-to the live database**. Frontend unchanged since 19b_2: 1116 tests.
+Branch `claude/project-thread-42spr1` (spec 19c_2, reactions frontend, PR
+into `staging`). Frontend **1131** tests at 100% coverage; lint and build
+clean. Backend unchanged since 19c_1: 667 tests at 100%. Migration
+`f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is **not yet applied to the
+live database**.
 
-Specs 12 to 19b_2 are merged into `staging`. Build order is feature by
-feature: 19c goes reactions (backend, then frontend) → pin and resolved →
-@mentions → promotion.
+Specs 12 to 19c_1 are merged into `staging`. Build order is feature by
+feature: 19c goes reactions → pin and resolved → @mentions → promotion.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Reactions, frontend (spec 19c_2, 2026-10-02)
+
+- `Comment.reactions` (`emoji`, `count`, `reactedByMe`, `userIds`);
+  `useToggleReaction` PUTs/DELETEs `.../reactions/{emoji}` (URL-encoded)
+  and swaps the returned Comment into the Thread's cache.
+- `CommentReactions.tsx`: `ReactionChips` (click joins or leaves, tooltip
+  names who reacted, also on long press) and `AddReaction` (Smiley button,
+  popover with the picker, hidden at 20 emoji; re-picking your own emoji
+  does nothing). Neither on a deleted placeholder.
+- `EmojiPicker` + `lib/emojiPicker.ts`: emoji-mart and its data loaded on
+  first open, in their own chunks (77 kB + 429 kB raw), labels in the UI
+  language.
+- **Choices made beyond the ticket**: emoji-mart without `@emoji-mart/react`
+  (its peer range stops at React 18), so the custom element is mounted by
+  hand; the picker keeps emoji-mart's own dark theme rather than the app's
+  accent, since recoloring it needs raw RGB values outside the Mantine
+  tokens. Not yet checked in a browser: the Definition of Done
+  walk-through. 15 new tests.
 
 ### Reactions, backend (spec 19c_1, 2026-10-02)
 

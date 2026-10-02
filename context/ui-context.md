@@ -189,7 +189,14 @@ other icon set.
   `--border-default` and `md` radius holding the author's name, a
   `VisibilityBadge` (size `xs`, omitted for "Room") and the text; under
   it a muted meta line (relative time, "Edited", text actions
-  "Edit"/"Delete" that turn `--accent-strong` on hover). Attached
+  "Edit"/"Delete" that turn `--accent-strong` on hover). Reactions (spec
+  19c) sit between the bubble and the meta line as round `compact-xs`
+  chips, "emoji count", `light` when the viewer reacted and `default`
+  otherwise; their tooltip (hover, focus or long press) lists who
+  reacted. A subtle 16px `Smiley` icon button in the meta line opens
+  emoji-mart's picker (dark theme, search with skin tones, no preview)
+  in a popover with no padding; it's gone once a Comment has 20
+  different emoji, and a deleted placeholder shows neither. Attached
   images show inside the bubble as 120px square thumbnails
   (`ImageThumbnailGrid`, `sm` radius) that open the shared fullscreen
   `ImageViewerModal`. Sort/filter controls (`CommentToolbar`) sit above

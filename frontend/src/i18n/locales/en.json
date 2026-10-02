@@ -353,6 +353,13 @@
     "replyLabel": "Reply to {{name}}",
     "inReplyTo": "in reply to {{name}}",
     "parentHidden": "A comment you can't see",
+    "reactions": {
+      "add": "Add a reaction",
+      "chip_one": "{{emoji}}, {{count}} reaction: {{names}}",
+      "chip_other": "{{emoji}}, {{count}} reactions: {{names}}",
+      "loadingPicker": "Loading emoji",
+      "pickerFailed": "The emoji couldn't be loaded. Try again later."
+    },
     "thread": {
       "showMore_one": "Show {{count}} more reply",
       "showMore_other": "Show {{count}} more replies",

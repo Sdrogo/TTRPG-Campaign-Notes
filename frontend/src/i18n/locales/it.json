@@ -353,6 +353,13 @@
     "replyLabel": "Risposta a {{name}}",
     "inReplyTo": "in risposta a {{name}}",
     "parentHidden": "Un commento che non puoi vedere",
+    "reactions": {
+      "add": "Aggiungi una reazione",
+      "chip_one": "{{emoji}}, {{count}} reazione: {{names}}",
+      "chip_other": "{{emoji}}, {{count}} reazioni: {{names}}",
+      "loadingPicker": "Caricamento delle emoji",
+      "pickerFailed": "Impossibile caricare le emoji. Riprova più tardi."
+    },
     "thread": {
       "showMore_one": "Mostra {{count}} altra risposta",
       "showMore_other": "Mostra altre {{count}} risposte",
