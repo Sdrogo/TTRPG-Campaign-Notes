@@ -672,3 +672,246 @@ async def test_removal_while_storage_is_down_is_retried_by_the_sweep(
     await storage_cleanup.sweep(db_session, now=_after_grace())
     assert fake_storage == {}
     assert await _cleanup_rows(db_session, [path]) == []
+
+
+# --- Threaded replies (spec 19) --------------------------------------------
+
+
+async def _list(
+    client: AsyncClient, room: _Room, document_id: str, member: _Member
+) -> list[dict[str, object]]:
+    response = await client.get(room.comments_url(document_id), headers=member.headers)
+    assert response.status_code == 200, response.text
+    listed: list[dict[str, object]] = response.json()
+    return listed
+
+
+async def _set_visibility(
+    client: AsyncClient,
+    room: _Room,
+    document_id: str,
+    comment: dict[str, object],
+    author: _Member,
+    **fields: object,
+) -> Response:
+    return await client.patch(
+        f"{room.comments_url(document_id)}/{comment['id']}", json=fields, headers=author.headers
+    )
+
+
+async def test_replies_nest_three_levels_and_deeper(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+
+    top = await _comment(client, room, document_id, room.master, body="A stranger arrives.")
+    first = await _comment(client, room, document_id, room.player, parent_id=top["id"])
+    second = await _comment(client, room, document_id, room.master, parent_id=first["id"])
+    third = await _comment(client, room, document_id, room.other_player, parent_id=second["id"])
+    # The data stays a true tree: a fourth level is stored under what it answers.
+    fourth = await _comment(client, room, document_id, room.player, parent_id=third["id"])
+
+    assert top["parent_id"] is None
+    assert first["parent_id"] == top["id"]
+    assert fourth["parent_id"] == third["id"]
+    listed = await _list(client, room, document_id, room.other_player)
+    assert [(c["id"], c["parent_id"], c["parent_hidden"]) for c in listed] == [
+        (top["id"], None, False),
+        (first["id"], top["id"], False),
+        (second["id"], first["id"], False),
+        (third["id"], second["id"], False),
+        (fourth["id"], third["id"], False),
+    ]
+
+
+async def test_reply_to_a_missing_foreign_or_hidden_comment_is_not_found(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    other_document_id = await _document(client, room)
+    elsewhere = await _comment(client, room, other_document_id, room.player)
+    hidden = await _comment(client, room, document_id, room.master, visibility="master")
+
+    for parent_id in (str(uuid.uuid4()), elsewhere["id"], hidden["id"]):
+        response = await client.post(
+            room.comments_url(document_id),
+            json={"body": "Hm?", "parent_id": parent_id},
+            headers=room.player.headers,
+        )
+        assert response.status_code == 404, parent_id
+        assert response.json()["detail"] == "The Comment you are answering was not found"
+
+
+async def test_a_deleted_comment_cannot_be_answered(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    top = await _comment(client, room, document_id, room.player)
+    await client.delete(
+        f"{room.comments_url(document_id)}/{top['id']}", headers=room.player.headers
+    )
+
+    response = await client.post(
+        room.comments_url(document_id),
+        json={"body": "Too late.", "parent_id": top["id"]},
+        headers=room.other_player.headers,
+    )
+    assert response.status_code == 409
+
+
+async def test_a_reply_wider_than_its_parent_is_refused(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    top = await _comment(
+        client,
+        room,
+        document_id,
+        room.master,
+        visibility="selective",
+        selective_user_ids=[room.player.id],
+    )
+
+    # VR-04: the other Player can't read the parent, so neither may they read
+    # the reply.
+    for fields in (
+        {"visibility": "room"},
+        {"visibility": "selective", "selective_user_ids": [room.other_player.id]},
+    ):
+        response = await client.post(
+            room.comments_url(document_id),
+            json={"body": "Psst.", "parent_id": top["id"], **fields},
+            headers=room.player.headers,
+        )
+        assert response.status_code == 422
+        assert "can't see the Comment it answers" in response.json()["detail"]
+
+    # Narrower is fine, and the reply then can't be widened by an edit either.
+    reply = await _comment(
+        client, room, document_id, room.player, parent_id=top["id"], visibility="private"
+    )
+    widened = await _set_visibility(
+        client, room, document_id, reply, room.player, visibility="room"
+    )
+    assert widened.status_code == 422
+    regranted = await _set_visibility(
+        client,
+        room,
+        document_id,
+        reply,
+        room.player,
+        visibility="selective",
+        selective_user_ids=[room.other_player.id],
+    )
+    assert regranted.status_code == 422
+    kept = await _set_visibility(client, room, document_id, reply, room.player, visibility="master")
+    assert kept.status_code == 200, kept.text
+    assert kept.json()["parent_id"] == top["id"]
+
+
+async def test_narrowing_a_comment_hides_its_branch_until_widened(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    top = await _comment(client, room, document_id, room.master, body="The Master asks.")
+    reply = await _comment(
+        client, room, document_id, room.master, parent_id=top["id"], body="And answers."
+    )
+    deeper = await _comment(
+        client,
+        room,
+        document_id,
+        room.master,
+        parent_id=reply["id"],
+        visibility="selective",
+        selective_user_ids=[room.other_player.id],
+    )
+    image_id = await _attached_image_id(client, room, document_id, reply["id"], room.master)
+
+    narrowed = await _set_visibility(
+        client, room, document_id, top, room.master, visibility="master"
+    )
+    assert narrowed.status_code == 200
+    # The narrowing writes one audit row, for the top Comment only.
+    audit = (
+        await db_session.execute(
+            select(AuditLogRow).where(AuditLogRow.action == "comment_visibility_changed")
+        )
+    ).scalars()
+    assert [row.details["comment_id"] for row in audit] == [top["id"]]
+
+    for member in (room.player, room.other_player):
+        assert await _list(client, room, document_id, member) == []
+        assert await _gallery_ids(client, room, document_id, member) == []
+        # The reply can't be reached directly either (VR-07).
+        hidden = await client.delete(
+            f"{room.comments_url(document_id)}/{reply['id']}", headers=member.headers
+        )
+        assert hidden.status_code == 404
+    # The Master sees everything (I-03).
+    assert len(await _list(client, room, document_id, room.master)) == 3
+    assert await _gallery_ids(client, room, document_id, room.master) == [image_id]
+
+    await _set_visibility(client, room, document_id, top, room.master, visibility="room")
+    # The replies come back with the visibility they had.
+    assert [c["id"] for c in await _list(client, room, document_id, room.player)] == [
+        top["id"],
+        reply["id"],
+    ]
+    restored = await _list(client, room, document_id, room.other_player)
+    assert [(c["id"], c["visibility"]) for c in restored] == [
+        (top["id"], "room"),
+        (reply["id"], "room"),
+        (deeper["id"], "selective"),
+    ]
+    assert await _gallery_ids(client, room, document_id, room.player) == [image_id]
+
+
+async def test_the_author_keeps_their_reply_under_a_parent_hidden_placeholder(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    top = await _comment(client, room, document_id, room.master)
+    reply = await _comment(client, room, document_id, room.player, parent_id=top["id"])
+    answer = await _comment(client, room, document_id, room.other_player, parent_id=reply["id"])
+
+    await _set_visibility(client, room, document_id, top, room.master, visibility="master")
+
+    # Spec 19 Decision 6: the author sees their reply, but nothing about the
+    # parent; everyone else follows the chain rule.
+    mine = await _list(client, room, document_id, room.player)
+    assert [(c["id"], c["parent_id"], c["parent_hidden"]) for c in mine] == [
+        (reply["id"], None, True),
+        (answer["id"], reply["id"], False),
+    ]
+    theirs = await _list(client, room, document_id, room.other_player)
+    assert [(c["id"], c["parent_id"], c["parent_hidden"]) for c in theirs] == [
+        (answer["id"], None, True),
+    ]
+
+    # Editing the body of a reply under a narrowed parent still works, and
+    # keeps the placeholder; so does attaching an image.
+    edited = await _set_visibility(client, room, document_id, reply, room.player, body="Still me.")
+    assert edited.status_code == 200, edited.text
+    assert (edited.json()["parent_id"], edited.json()["parent_hidden"]) == (None, True)
+    attached = await _attach(client, room, document_id, reply["id"], room.player)
+    assert attached.status_code == 201, attached.text
+    assert attached.json()["parent_hidden"] is True
+
+    # Answering their own reply is allowed: they see it.
+    own = await _comment(
+        client, room, document_id, room.player, parent_id=reply["id"], visibility="private"
+    )
+    assert own["parent_id"] == reply["id"]

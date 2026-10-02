@@ -206,7 +206,8 @@ class Comment:
     """A Post of kind Comment in a Document's one main Thread (D-20, FR-T1).
     Its visibility uses the same section-8 levels as a Document (VR-03),
     with the author standing in for the Owner. A deleted Comment keeps its
-    row with an empty body so the conversation isn't broken (FR-T5)."""
+    row with an empty body so the conversation isn't broken (FR-T5). A
+    Comment may answer another one (`parent_id`), so a Thread is a tree."""
 
     id: uuid.UUID
     document_id: uuid.UUID
@@ -219,6 +220,9 @@ class Comment:
     # The Character (a Document of the same Room) the author wrote this as
     # (D-24). Shown only to viewers who see that Document (VR-13).
     as_document_id: uuid.UUID | None = None
+    # The Comment this one answers (spec 19, FR-T1), None for a top-level
+    # Comment. A reply is seen only by who sees its parent too (D-17).
+    parent_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)
