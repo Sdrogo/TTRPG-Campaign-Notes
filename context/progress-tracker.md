@@ -562,7 +562,11 @@ Question in the backend PR.
 - **Mention backlinks (spec 20, ticket written 2026-10-02)**:
   `20 - Mention backlinks` (mentions stored with ids, one-off conversion of
   old `#Name` text, "Mentioned in" filtered per viewer). 20_1 backend +
-  data migration, then 20_2 frontend.
+  data migration, then 20_2 frontend. Tags get backlinks too.
+- **Full-text search (spec 21, ticket written 2026-10-02)**:
+  `21 - Full-text search` (current Room, Documents/Notes/Comments/Tags,
+  accent-insensitive prefix match, visibility filtered on the server).
+  21_1 backend + migration, then 21_2 frontend.
 - **Threads (spec 19, tickets written 2026-10-02)**: `19 - Threaded replies`
   (nested replies, 3 visible levels, a reply narrowed with its parent but
   its own visibility kept), `19b - Unread replies`, `19c - Reactions,
