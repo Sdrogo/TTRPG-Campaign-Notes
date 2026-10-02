@@ -43,6 +43,16 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   with no name who shares no Room is confirmed without naming them.
 - Hooks `useFriends.ts`, `useInvitations.ts`, shared keys `queryKeys.ts`.
   70 new tests.
+### Claude code review replaces CodeRabbit (2026-10-02)
+
+- `claude-code-review.yml` runs `anthropics/claude-code-action` on every
+  non-draft PR into `staging`; `claude.yml` answers `@claude` mentions on
+  PRs. `.coderabbit.yaml` removed (CodeRabbit trial ended).
+- Both need one repository secret, `CLAUDE_CODE_OAUTH_TOKEN`
+  (`claude setup-token`, set 2026-10-02) or `ANTHROPIC_API_KEY`. The review
+  posts with the job's `GITHUB_TOKEN`, since the Claude GitHub App only
+  issues a token when the workflow matches `main`; only `claude.yml` uses
+  the App, and it takes effect after the next release to `main`.
 
 ### Direct Room invitations, backend (spec 18_1b, 2026-10-02)
 
