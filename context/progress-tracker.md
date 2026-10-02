@@ -11,9 +11,9 @@ step-by-step notes) is in
 
 Branch `claude/feature-18-qba36q` (spec 18_1b, direct Room invitations, PR
 into `staging`). Backend **558** tests at 100% coverage (`app/` and
-`app/domain`); ruff, mypy clean. New migration `c4f9a2e7d1b8`
-(`invitations.invitee_user_id`) is **not yet applied to the live DB**.
-Migrations up to `b7e1d4f8a2c6` (spec 18_1a) are live.
+`app/domain`); ruff, mypy clean. Migration `c4f9a2e7d1b8`
+(`invitations.invitee_user_id`) **applied to the live DB** (2026-10-02).
+Migrations up to `b7e1d4f8a2c6` (spec 18_1a) are live too.
 
 Specs 12 to 18_1a are merged into `staging`. Next for spec 18: 18_2
 (frontend).
@@ -492,8 +492,8 @@ Question in the backend PR.
   the Character's Document.
 - **Spec 18, Friends**: 18_1a and 18_1b (backend) are built; next 18_2
   (frontend: Friends section on the Account page, "Add as Friend" in the
-  setup page, a Friends tab in the invite modal, a header badge). Apply
-  migration `c4f9a2e7d1b8` live before the release that ships it.
+  setup page, a Friends tab in the invite modal, a header badge). Migration
+  `c4f9a2e7d1b8` is already applied live.
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
