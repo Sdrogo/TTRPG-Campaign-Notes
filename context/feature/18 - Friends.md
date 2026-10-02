@@ -31,6 +31,7 @@
 - Setup page members list: "Add as Friend" on each member who isn't one yet.
 - Invite modal: a "Friends" tab to pick a Friend and a role.
 - An unread badge in the header for incoming requests and Room invitations (no real-time: refreshed on focus, D-04).
+- *(Built in 18_2. Room invitations from Friends are answered on the Account page too, where the header badge leads, and a friend link opens `/friends/add/:code`, which sends the request once signed in.)*
 
 ## Implementation
 

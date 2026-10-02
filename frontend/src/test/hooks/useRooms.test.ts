@@ -173,6 +173,21 @@ describe('useAcceptInvitation', () => {
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'] }));
   });
 
+  // The accepted invitation leaves the user's list, and sharing a Room now
+  // shows a Friend's email.
+  it('refreshes the invitations waiting for the user and their Friends', async () => {
+    fetchMock.mockResolvedValue(rawRoom());
+    const { result, queryClient } = renderHookWithProviders(() => useAcceptInvitation());
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await result.current.mutateAsync('ABC123');
+
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['invitations', 'mine'] }),
+    );
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['friends'] });
+  });
+
   it('propagates a rejected invitation', async () => {
     fetchMock.mockRejectedValue(new Error('Invitation expired'));
 

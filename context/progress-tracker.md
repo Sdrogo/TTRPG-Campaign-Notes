@@ -9,18 +9,40 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/feature-18-qba36q` (spec 18_1b, direct Room invitations, PR
-into `staging`). Backend **558** tests at 100% coverage (`app/` and
-`app/domain`); ruff, mypy clean. Migration `c4f9a2e7d1b8`
-(`invitations.invitee_user_id`) **applied to the live DB** (2026-10-02).
-Migrations up to `b7e1d4f8a2c6` (spec 18_1a) are live too.
+Branch `claude/feature-18-qba36q` (spec 18_2, Friends frontend, PR into
+`staging`). Frontend **1074** tests at 100% coverage; lint and build clean.
+Backend unchanged since 18_1b: 563 tests at 100%. No new migration; all
+migrations up to `c4f9a2e7d1b8` (spec 18_1b) are live.
 
-Specs 12 to 18_1a are merged into `staging`. Next for spec 18: 18_2
-(frontend).
+Specs 12 to 18_1b (with direct-invitation decline) are merged into
+`staging`. Spec 18 is complete once 18_2 merges; then its browser check.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Friends, frontend (spec 18_2, 2026-10-02)
+
+- Account page: a **Room invitations** card (only while some wait:
+  Accept/Decline) above Profile, and a **Friends** card under it (friend
+  link with Copy and Regenerate, requests received with Accept/Decline,
+  Friends with a confirmed Remove, requests sent with Cancel).
+- Setup page member table: "Add as Friend" under each other member, or a
+  badge (Friend, request sent, request received); hidden if `/friends`
+  fails. Invite modal: "Link" and "Friends" tabs; the Friends tab offers
+  Friends not already in the Room.
+- Header: the account avatar carries a count of requests received plus
+  Room invitations (Mantine `Indicator`); its label says how many. No
+  real-time: TanStack's refetch on window focus (D-04).
+- `/friends/add/:code` (`AddFriendPage`) sends the request once signed in;
+  the code survives the sign-in round trip like an invite code
+  (`lib/pendingInvite.ts`, its own key).
+- **Choices made beyond the ticket**: invitations live on the Account page
+  (where the badge leads), not on the Rooms list; the friend link sends the
+  request straight away, like an invite link joins; a request to someone
+  with no name who shares no Room is confirmed without naming them.
+- Hooks `useFriends.ts`, `useInvitations.ts`, shared keys `queryKeys.ts`.
+  70 new tests.
 
 ### Direct Room invitations, backend (spec 18_1b, 2026-10-02)
 
@@ -492,10 +514,10 @@ Question in the backend PR.
 - **Browser check of spec 17** (after 17_2 merges): the ticket's Definition
   of Done walk-through with a Master, a Player and a member who can't see
   the Character's Document.
-- **Spec 18, Friends**: 18_1a and 18_1b (backend) are built; next 18_2
-  (frontend: Friends section on the Account page, "Add as Friend" in the
-  setup page, a Friends tab in the invite modal, a header badge). Migration
-  `c4f9a2e7d1b8` is already applied live.
+- **Browser check of spec 18** (after 18_2 merges): the ticket's Definition
+  of Done with two users who met in a Room: Add as Friend, accept, then one
+  invites the other to a new Room from the Friends tab and the other joins
+  from their Account page. Also open a friend link while signed out.
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written

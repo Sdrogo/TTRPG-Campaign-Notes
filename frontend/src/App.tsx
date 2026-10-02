@@ -6,6 +6,7 @@ import { RoomMembersRedirect, RoomSetupPage } from './pages/RoomSetupPage';
 import { RoomDocumentsPage } from './pages/RoomDocumentsPage';
 import { DocumentDetailPage } from './pages/DocumentDetailPage';
 import { AccountPage } from './pages/AccountPage';
+import { AddFriendPage } from './pages/AddFriendPage';
 
 /**
  * The route table. Every page checks the session itself and shows a sign-in
@@ -22,6 +23,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/account" element={<AccountPage />} />
       <Route path="/invite/:code" element={<AcceptInvitePage />} />
+      <Route path="/friends/add/:code" element={<AddFriendPage />} />
       <Route path="/rooms/:roomId/setup" element={<RoomSetupPage />} />
       <Route path="/rooms/:roomId/members" element={<RoomMembersRedirect />} />
       <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />

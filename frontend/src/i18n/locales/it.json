@@ -29,7 +29,9 @@
     "myRooms": "Le mie Stanze",
     "backToMyRooms": "Torna alle mie Stanze",
     "maxLength": "Massimo {{max}} caratteri",
-    "unknownUser": "Utente sconosciuto"
+    "unknownUser": "Utente sconosciuto",
+    "accept": "Accetta",
+    "decline": "Rifiuta"
   },
   "roles": {
     "master": "Master",
@@ -65,7 +67,8 @@
     "signInWith": "Accedi con {{provider}}"
   },
   "header": {
-    "account": "Il tuo account"
+    "account": "Il tuo account",
+    "accountPending": "Il tuo account: {{count}} da vedere"
   },
   "account": {
     "signInRequired": "Accedi per gestire il tuo account.",
@@ -98,6 +101,29 @@
       "noEmail": "Nessuna email condivisa dal tuo account",
       "signOutDescription": "Termina la sessione su questo dispositivo.",
       "signOut": "Esci"
+    },
+    "invitations": {
+      "title": "Inviti alle Stanze",
+      "description": "Un amico ti ha invitato: entri nella Stanza solo se accetti.",
+      "from": "{{name}} ti invita come {{role}}",
+      "joined": "Ti sei unito a \"{{room}}\"."
+    },
+    "friends": {
+      "title": "Amici",
+      "description": "Gli amici possono invitarti direttamente nelle loro Stanze.",
+      "linkLabel": "Il tuo link amico",
+      "linkDescription": "Chi lo apre ti invia una richiesta di amicizia. Rigeneralo per disattivare quello vecchio.",
+      "linkError": "Impossibile caricare il tuo link amico.",
+      "regenerate": "Rigenera",
+      "regenerated": "Nuovo link creato: quello vecchio non funziona più.",
+      "loadError": "Impossibile caricare i tuoi amici.",
+      "incoming": "Richieste ricevute",
+      "outgoing": "Richieste inviate",
+      "list": "I tuoi amici",
+      "empty": "Nessun amico per ora. Condividi il tuo link o aggiungi un membro di una tua Stanza.",
+      "cancelRequest": "Annulla richiesta",
+      "removeConfirm": "Rimuovere {{name}} dagli amici?",
+      "accepted": "Ora tu e {{name}} siete amici."
     }
   },
   "rooms": {
@@ -127,7 +153,15 @@
     "signInRequired": "Accedi per unirti a questa Stanza.",
     "invalid": "Invito non valido, scaduto o già utilizzato.",
     "joined": "Ti sei unito a \"{{room}}\"",
-    "goToMyRooms": "Vai alle mie Stanze"
+    "goToMyRooms": "Vai alle mie Stanze",
+    "tabLink": "Link",
+    "tabFriends": "Amici",
+    "friend": "Amico",
+    "friendPlaceholder": "Scegli un amico",
+    "noFriends": "Nessun amico da invitare. Aggiungili dalla tua pagina Account.",
+    "friendsHint": "Il tuo amico vedrà l'invito nella sua pagina Account ed entrerà solo se accetta.",
+    "send": "Invia invito",
+    "sent": "Invito inviato a {{name}}."
   },
   "members": {
     "signInRequired": "Accedi per vedere i membri di questa Stanza.",
@@ -135,7 +169,12 @@
     "loadError": "Errore nel caricamento dei membri.",
     "columnUser": "Utente",
     "columnRole": "Ruolo",
-    "columnAdmin": "Amministratore"
+    "columnAdmin": "Amministratore",
+    "addFriend": "Aggiungi agli amici",
+    "friend": "Amico",
+    "requestSent": "Richiesta inviata",
+    "requestReceived": "Ti ha chiesto l'amicizia",
+    "friendRequestSent": "Richiesta di amicizia inviata a {{name}}."
   },
   "setup": {
     "signInRequired": "Accedi per gestire questa Stanza.",
@@ -349,5 +388,12 @@
     "mainTags": "Tag principali",
     "otherTags": "Altri Tag",
     "empty": "Nessun Tag in questa Stanza."
+  },
+  "friendLink": {
+    "signInRequired": "Accedi per inviare la richiesta di amicizia.",
+    "sent": "Richiesta di amicizia inviata a {{name}}.",
+    "sentAnonymous": "Richiesta di amicizia inviata.",
+    "failed": "Impossibile inviare la richiesta di amicizia.",
+    "goToAccount": "Vai al tuo account"
   }
 }

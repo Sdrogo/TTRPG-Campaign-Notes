@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
+import { FRIENDS_QUERY_KEY, MY_INVITATIONS_QUERY_KEY } from './queryKeys';
 import type { Invitation, MyRoom, Room, RoomRole, RoomStatus } from '../types/room';
 
-interface RawRoom {
+/** A Room as the API sends it (snake_case). */
+export interface RawRoom {
   id: string;
   name: string;
   game_system: string | null;
@@ -22,7 +24,8 @@ interface RawInvitation {
   expires_at: string | null;
 }
 
-function toRoom(raw: RawRoom): Room {
+/** Converts the API's Room, the one place it is read. */
+export function toRoom(raw: RawRoom): Room {
   return {
     id: raw.id,
     name: raw.name,
@@ -108,7 +111,11 @@ export function useCreateInvitation(roomId: string) {
   });
 }
 
-/** Joins the Room an invitation code points to, with its proposed role. */
+/**
+ * Joins the Room an invitation code points to, with its proposed role. Also
+ * refreshes the user's direct invitations (the accepted one is gone) and
+ * Friends (sharing a Room now shows a Friend's email).
+ */
 export function useAcceptInvitation() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -116,6 +123,8 @@ export function useAcceptInvitation() {
       toRoom(await apiFetch<RawRoom>(`/invitations/${code}/accept`, { method: 'POST' })),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: MY_INVITATIONS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: FRIENDS_QUERY_KEY });
     },
   });
 }

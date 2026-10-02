@@ -1,10 +1,10 @@
 // The thin layout wrappers, covered together: each is a handful of lines
 // with one thing worth asserting, and a file apiece would be noise.
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
-import { rawAccount } from '../fixtures';
+import { rawAccount, rawDirectInvitation, rawFriend, rawFriends } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { AppHeader } from '../../components/AppHeader';
 import { PageCard } from '../../components/PageCard';
@@ -200,6 +200,37 @@ describe('AccountButton', () => {
     expect(screen.getByRole('link', { name: 'Il tuo account' })).not.toHaveAttribute(
       'aria-current',
     );
+  });
+
+  // Friend requests received plus Room invitations from Friends.
+  it('counts what waits for an answer on the Account page', async () => {
+    fetchMock.mockImplementation((path: string) => {
+      if (path === '/friends') {
+        return Promise.resolve(
+          rawFriends({ incoming: [rawFriend(), rawFriend({ friendship_id: 'friendship-2' })] }),
+        );
+      }
+      if (path === '/invitations/mine') return Promise.resolve([rawDirectInvitation()]);
+      return Promise.resolve(rawAccount());
+    });
+
+    renderWithProviders(<AccountButton />);
+
+    const link = await screen.findByRole('link', { name: 'Il tuo account: 3 da vedere' });
+    expect(within(link).getByText('3')).toBeInTheDocument();
+  });
+
+  it('shows no count when nothing waits', async () => {
+    fetchMock.mockImplementation((path: string) => {
+      if (path === '/friends') return Promise.resolve(rawFriends({ friends: [rawFriend()] }));
+      if (path === '/invitations/mine') return Promise.resolve([]);
+      return Promise.resolve(rawAccount());
+    });
+
+    renderWithProviders(<AccountButton />);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/invitations/mine'));
+    expect(screen.getByRole('link', { name: 'Il tuo account' })).toBeInTheDocument();
   });
 
   it('marks itself as the current page on /account', () => {
