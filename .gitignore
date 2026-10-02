@@ -41,6 +41,8 @@ backend/*.egg-info/
 backend/**/*.egg-info/
 backend/.coverage
 backend/coverage.xml
+backend/coverage.json
+backend/junit.xml
 backend/htmlcov/
 backend/build/
 backend/dist/
