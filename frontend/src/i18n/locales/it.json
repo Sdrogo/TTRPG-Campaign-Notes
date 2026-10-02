@@ -346,6 +346,17 @@
     "imageLabel": "Immagine {{index}} del commento di {{author}}",
     "imagesAlt": "Commento di {{author}}",
     "attachedImage": "Immagine allegata",
+    "reply": "Rispondi",
+    "replyLabel": "Risposta a {{name}}",
+    "inReplyTo": "in risposta a {{name}}",
+    "parentHidden": "Un commento che non puoi vedere",
+    "thread": {
+      "showMore_one": "Mostra {{count}} altra risposta",
+      "showMore_other": "Mostra altre {{count}} risposte",
+      "show_one": "Mostra {{count}} risposta",
+      "show_other": "Mostra {{count}} risposte",
+      "hide": "Nascondi risposte"
+    },
     "composer": {
       "bodyLabel": "Testo del commento",
       "bodyPlaceholder": "Scrivi un commento… (# per collegare un Documento)",

@@ -38,6 +38,8 @@ function comment(overrides: Partial<Comment> = {}): Comment {
     canEdit: true,
     canDelete: true,
     asCharacter: null,
+    parentId: null,
+    parentHidden: false,
     ...overrides,
   };
 }

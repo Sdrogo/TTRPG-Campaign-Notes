@@ -2,11 +2,19 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_COMMENT_FILTERS,
   applyCommentFilters,
+  buildCommentTree,
   commentAuthors,
+  commentShownName,
+  countReplies,
   hasActiveFilters,
   isEdited,
+  replyGranteeIds,
+  replyLevels,
+  replyStartVisibility,
+  topLevelComments,
+  visibleReplies,
 } from '../../lib/comments';
-import type { Comment, CommentFilters } from '../../types/comment';
+import type { Comment, CommentFilters, CommentNode } from '../../types/comment';
 import type { Member } from '../../types/member';
 
 const noProfile = { displayName: null, pronouns: null, bio: null, avatarUrl: null };
@@ -31,6 +39,8 @@ function comment(id: string, overrides: Partial<Comment> = {}): Comment {
     canEdit: false,
     canDelete: false,
     asCharacter: null,
+    parentId: null,
+    parentHidden: false,
     ...overrides,
   };
 }
@@ -147,5 +157,137 @@ describe('helpers', () => {
       { value: 'u-ann', label: 'ann@example.com' },
       { value: 'u-zed', label: 'zed@example.com' },
     ]);
+  });
+});
+
+// --- Threaded replies (spec 19) ---------------------------------------------
+
+const at = (minute: number) => `2026-09-21T10:${String(minute).padStart(2, '0')}:00Z`;
+
+function reply(id: string, parentId: string, minute: number, overrides: Partial<Comment> = {}) {
+  return comment(id, { parentId, createdAt: at(minute), updatedAt: at(minute), ...overrides });
+}
+
+// Renders a tree as "id(child,child)" for compact assertions.
+function shape(nodes: CommentNode[]): string {
+  return nodes
+    .map((n) => (n.replies.length ? `${n.comment.id}(${shape(n.replies)})` : n.comment.id))
+    .join(',');
+}
+
+const thread = [
+  comment('top1', { createdAt: at(0), updatedAt: at(0), body: 'the bridge' }),
+  comment('top2', { createdAt: at(10), updatedAt: at(10), authorId: 'u-ann' }),
+  reply('r1', 'top1', 1),
+  reply('r2', 'top1', 2, { authorId: 'u-ann', body: 'about the bridge too' }),
+  reply('r1a', 'r1', 3),
+];
+
+describe('buildCommentTree (Decision 3)', () => {
+  it('nests replies under what they answer, in the same sort as the top level', () => {
+    expect(shape(buildCommentTree(thread, filters({ sort: 'oldest' }), members))).toBe(
+      'top1(r1(r1a),r2),top2',
+    );
+    expect(shape(buildCommentTree(thread, DEFAULT_COMMENT_FILTERS, members))).toBe(
+      'top2,top1(r2,r1(r1a))',
+    );
+  });
+
+  it('filters pick top-level Comments, which bring their whole branch', () => {
+    // r2 is by Ann, but only top-level authors count.
+    expect(shape(buildCommentTree(thread, filters({ authorId: 'u-ann' }), members))).toBe('top2');
+    // A match in a reply alone doesn't bring its branch.
+    expect(shape(buildCommentTree(thread, filters({ query: 'too' }), members))).toBe('');
+    expect(shape(buildCommentTree(thread, filters({ query: 'bridge', sort: 'oldest' }), members))).toBe(
+      'top1(r1(r1a),r2)',
+    );
+  });
+
+  it('starts a branch at a reply whose parent is hidden or missing', () => {
+    const list = [
+      comment('mine', { parentHidden: true }),
+      reply('stray', 'gone', 5),
+      reply('under-mine', 'mine', 6),
+    ];
+    expect(topLevelComments(list).map((c) => c.id)).toEqual(['mine', 'stray']);
+    expect(shape(buildCommentTree(list, filters({ sort: 'oldest' }), members))).toBe(
+      'mine(under-mine),stray',
+    );
+  });
+
+  it('does not mutate its input', () => {
+    const input = [...thread];
+    buildCommentTree(input, DEFAULT_COMMENT_FILTERS, members);
+    expect(ids(input)).toEqual(ids(thread));
+  });
+});
+
+describe('visibleReplies (Decision 4)', () => {
+  const node = (id: string, replies: CommentNode[] = []): CommentNode => ({
+    comment: comment(id),
+    replies,
+  });
+  const big = node('top', [node('a', [node('a1')]), node('b'), node('c'), node('d')]);
+
+  it('counts replies at every depth', () => {
+    expect(countReplies(big)).toBe(5);
+  });
+
+  it('starts a branch with more than 3 replies collapsed to its first 2', () => {
+    const { shown, hiddenCount } = visibleReplies(big, undefined);
+    expect(shown.map((n) => n.comment.id)).toEqual(['a', 'b']);
+    expect(hiddenCount).toBe(2);
+  });
+
+  it('shows a short branch whole, and follows a choice made by hand', () => {
+    const small = node('top', [node('a'), node('b'), node('c')]);
+    expect(visibleReplies(small, undefined)).toEqual({ shown: small.replies, hiddenCount: 0 });
+    expect(visibleReplies(big, 'open')).toEqual({ shown: big.replies, hiddenCount: 0 });
+    expect(visibleReplies(small, 'closed')).toEqual({ shown: [], hiddenCount: 3 });
+  });
+});
+
+describe('reply visibility (Decision 2, VR-04)', () => {
+  const parent = (overrides: Partial<Comment>) => comment('p', { authorId: 'u-ann', ...overrides });
+
+  it('offers every level under a Room parent', () => {
+    expect(replyLevels(parent({}), 'u-zed')).toEqual(['room', 'master', 'private', 'selective']);
+    expect(replyGranteeIds(parent({}))).toBeNull();
+    expect(replyStartVisibility(parent({}), 'u-zed')).toEqual({
+      visibility: 'room',
+      selectiveUserIds: [],
+    });
+  });
+
+  it('never offers Room under a narrower parent, and grants only its readers', () => {
+    const selective = parent({ visibility: 'selective', selectiveUserIds: ['u-zed', 'u-bob'] });
+    expect(replyLevels(selective, 'u-zed')).toEqual(['master', 'private', 'selective']);
+    expect(replyGranteeIds(selective)).toEqual(['u-ann', 'u-zed', 'u-bob']);
+    // Answering someone else starts Selective to the parent's readers, so the
+    // person answered can read it.
+    expect(replyStartVisibility(selective, 'u-zed')).toEqual({
+      visibility: 'selective',
+      selectiveUserIds: ['u-ann', 'u-bob'],
+    });
+  });
+
+  it('starts from the parent as it is when answering yourself', () => {
+    const own = parent({ visibility: 'private' });
+    expect(replyStartVisibility(own, 'u-ann')).toEqual({
+      visibility: 'private',
+      selectiveUserIds: [],
+    });
+    // Nobody else reads a Private Comment, so there is nobody to grant.
+    expect(replyLevels(own, 'u-ann')).toEqual(['master', 'private']);
+  });
+
+  it('shows a Comment by its Character, or its author', () => {
+    expect(commentShownName(comment('x'), members)).toBe('zed@example.com');
+    expect(
+      commentShownName(
+        comment('x', { asCharacter: { documentId: 'd', name: 'Aria', imageUrl: null } }),
+        members,
+      ),
+    ).toBe('Aria');
   });
 });

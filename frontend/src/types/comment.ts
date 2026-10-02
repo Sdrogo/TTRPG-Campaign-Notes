@@ -27,6 +27,14 @@ export interface Comment {
    * (VR-13), who then sees the real author like any other Comment.
    */
   asCharacter: Character | null;
+  /** The Comment this one answers (spec 19), null for a top-level Comment. */
+  parentId: string | null;
+  /**
+   * True for a reply whose parent the viewer can't see: only its own author
+   * gets one (spec 19 Decision 6). `parentId` is then null, and the reply is
+   * drawn under a placeholder that tells nothing about the parent.
+   */
+  parentHidden: boolean;
 }
 
 /** The editable fields of a Comment, shared by the composer and inline edit. */
@@ -42,6 +50,8 @@ export interface CommentFormValues {
    * undefined, an edit keeps the Comment's current choice.
    */
   asDocumentId?: string | null;
+  /** The Comment a new Comment answers (spec 19). Ignored when editing. */
+  parentId?: string;
 }
 
 /** How the Comment list is ordered: by date either way, or grouped by author name. */
@@ -59,3 +69,15 @@ export interface CommentFilters {
   visibility: DocumentVisibility | null;
   hideDeleted: boolean;
 }
+
+/** A Comment with the replies drawn under it (spec 19). */
+export interface CommentNode {
+  comment: Comment;
+  replies: CommentNode[];
+}
+
+/**
+ * A branch expanded or collapsed by hand. A branch nobody touched follows the
+ * default of spec 19 Decision 4 (`visibleReplies`).
+ */
+export type BranchState = 'open' | 'closed';
