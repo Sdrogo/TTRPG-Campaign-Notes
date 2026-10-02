@@ -43,9 +43,15 @@ async def insert_invitation(session: AsyncSession, invitation: Invitation) -> No
 
 
 async def get_invitation_by_code(session: AsyncSession, code: str) -> Invitation | None:
-    """The invitation with this code, or None. Whether it is still usable is
-    the domain's call."""
-    result = await session.execute(select(InvitationRow).where(InvitationRow.code == code))
+    """The invitation with this code, or None, locked until the request's
+    transaction ends. Accepting reads it this way, so a concurrent
+    replacement of a direct invitation (`revoke_pending_direct`, an UPDATE of
+    the same row) either finishes first and the accept sees it revoked, or
+    waits for the accept to commit: never a join with a role that was just
+    replaced. Whether it is still usable is the domain's call."""
+    result = await session.execute(
+        select(InvitationRow).where(InvitationRow.code == code).with_for_update()
+    )
     row = result.scalar_one_or_none()
     return _invitation_from_row(row) if row else None
 
