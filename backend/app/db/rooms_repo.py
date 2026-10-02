@@ -1,9 +1,11 @@
 """Rooms, Memberships and the audit log."""
 
 import uuid
+from collections.abc import Collection
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from app.db.models import AuditLogRow, MembershipRow, RoomRow, TagRow, UserRow
 from app.db.users_repo import profile_from_row
@@ -205,3 +207,22 @@ async def insert_audit_log(session: AsyncSession, entry: AuditLogEntry) -> None:
         )
     )
     await session.flush()
+
+
+async def users_sharing_a_room(
+    session: AsyncSession, user_id: uuid.UUID, others: Collection[uuid.UUID]
+) -> set[uuid.UUID]:
+    """Which of `others` are in at least one Room with `user_id` right now,
+    in one query. Friend requests by user id need it (D-27), and so does
+    the email rule for Friends (a Friend sharing no Room doesn't get it)."""
+    if not others:
+        return set()
+    mine = aliased(MembershipRow)
+    theirs = aliased(MembershipRow)
+    result = await session.execute(
+        select(theirs.user_id)
+        .distinct()
+        .join(mine, mine.room_id == theirs.room_id)
+        .where(mine.user_id == user_id, theirs.user_id.in_(list(others)))
+    )
+    return set(result.scalars())

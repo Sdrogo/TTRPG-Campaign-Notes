@@ -103,6 +103,20 @@
         "bio": "Bio"
       },
       "fieldTooLong": "{field} must be at most {max} characters"
+    },
+    "friend": {
+      "notFound": "Friend or friend request not found",
+      "self": "You can't send a friend request to yourself",
+      "noSharedRoom": "You can only send a friend request to someone you share a Room with, or through their friend code",
+      "userOrCode": "Send either a user or a friend code",
+      "codeNotFound": "Friend code not found",
+      "alreadyFriends": "You are already friends",
+      "alreadyRequested": "You have already sent this user a friend request",
+      "incomingPending": "This user has already sent you a friend request: answer it instead",
+      "cooldown": "You declined this user's request less than 30 days ago",
+      "notRecipient": "Only the user who received this request can answer it",
+      "notPending": "This request has already been answered",
+      "answerInstead": "Accept or decline this request instead of removing it"
     }
   }
 }

@@ -233,3 +233,54 @@ class UserProfile:
     # Whether the Google name/picture were already offered as defaults. They
     # are copied once; after that the profile is entirely the user's.
     google_prefilled: bool = False
+
+
+class FriendshipStatus(StrEnum):
+    """Where a Friendship stands (D-26). A declined one is kept for the
+    request cooldown (D-27)."""
+
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+
+
+@dataclass(frozen=True)
+class Friendship:
+    """A Friendship or a request for one between two users, independent of
+    any Room (D-26). The pair is stored ordered (`user_low` < `user_high`) so
+    there is one row per pair whoever asked; `requested_by` is the sender of
+    the current request and the other user is the only one who may answer
+    it. `hidden_from_sender` is set when the sender cancels a request that
+    was silently declined: the row stays for the cooldown (spec 18)."""
+
+    id: uuid.UUID
+    user_low: uuid.UUID
+    user_high: uuid.UUID
+    requested_by: uuid.UUID
+    status: FriendshipStatus
+    created_at: datetime
+    responded_at: datetime | None = None
+    hidden_from_sender: bool = False
+
+    @property
+    def recipient(self) -> uuid.UUID:
+        """The user the current request was sent to."""
+        return self.other(self.requested_by)
+
+    def involves(self, user_id: uuid.UUID) -> bool:
+        """Whether `user_id` is one of the pair."""
+        return user_id in (self.user_low, self.user_high)
+
+    def other(self, user_id: uuid.UUID) -> uuid.UUID:
+        """The other user of the pair, seen from `user_id` (one of the two)."""
+        return self.user_high if user_id == self.user_low else self.user_low
+
+
+@dataclass(frozen=True)
+class FriendCode:
+    """A user's personal code for receiving Friendship requests without
+    sharing a Room (D-27, FR-F4). One per user; regenerating replaces it."""
+
+    user_id: uuid.UUID
+    code: str
+    created_at: datetime

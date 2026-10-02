@@ -103,6 +103,20 @@
         "bio": "Biografia"
       },
       "fieldTooLong": "{field} deve avere al massimo {max} caratteri"
+    },
+    "friend": {
+      "notFound": "Amico o richiesta di amicizia non trovati",
+      "self": "Non puoi inviare una richiesta di amicizia a te stesso",
+      "noSharedRoom": "Puoi inviare una richiesta di amicizia solo a chi condivide una Room con te, o tramite il suo codice amico",
+      "userOrCode": "Indica un utente oppure un codice amico",
+      "codeNotFound": "Codice amico non trovato",
+      "alreadyFriends": "Siete già amici",
+      "alreadyRequested": "Hai già inviato una richiesta di amicizia a questo utente",
+      "incomingPending": "Questo utente ti ha già inviato una richiesta di amicizia: rispondi a quella",
+      "cooldown": "Hai rifiutato la richiesta di questo utente meno di 30 giorni fa",
+      "notRecipient": "Solo chi ha ricevuto la richiesta può rispondere",
+      "notPending": "Hai già risposto a questa richiesta",
+      "answerInstead": "Accetta o rifiuta la richiesta invece di rimuoverla"
     }
   }
 }

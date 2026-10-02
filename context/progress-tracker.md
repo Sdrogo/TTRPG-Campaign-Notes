@@ -7,20 +7,38 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-01)
+## Current Status (2026-10-02)
 
-Branch `claude/project-thread-duasvn` (spec 17_2, Characters frontend, PR into
-`staging`). Frontend **1006** tests at 100% coverage; oxlint, tsc and the
-build clean. Backend untouched since 17_1 (merged, 492 tests). Migrations
-`e2f7c4a9b1d6` (spec 16) and `a3d9c5e7f210` (spec 17) are both **applied to
-the live DB**.
+Branch `claude/feature-18-qba36q` (spec 18_1a, Friendships backend, PR into
+`staging`). Backend **543** tests at 100% coverage (`app/` and
+`app/domain`); ruff, mypy clean. New migration `b7e1d4f8a2c6` (tables
+`friendships`, `friend_codes`) is **not yet applied to the live DB**: apply
+it with the product owner's go-ahead before the release PR to `main`.
+Migrations `e2f7c4a9b1d6` (spec 16) and `a3d9c5e7f210` (spec 17) are live.
 
-Specs 12 to 17_1 are merged into `staging`. Candidates for the next unit are
-in **Next Up**.
+Specs 12 to 17_2 are merged into `staging`. Next for spec 18: 18_1b (direct
+Room invitations), then 18_2 (frontend).
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Friendships, backend (spec 18_1a, 2026-10-02)
+
+- Migration `b7e1d4f8a2c6`: `friendships` (one row per ordered pair, CHECKs
+  on order, sender and status) and `friend_codes` (one per user, code
+  unique), both RLS + deny policy. Domain `app/domain/friends.py`
+  (`plan_request`, `plan_response`, `plan_removal`, `view_for`,
+  `plan_friend_code`), repo `app/db/friends_repo.py`, routes
+  `app/api/friends.py`. Details in `architecture.md` → Not Room-scoped.
+- **Choice made beyond the ticket**: a `hidden_from_sender` column, so the
+  sender of a silently declined request can "cancel" it without deleting the
+  row (which would end the 30-day cooldown). Re-sending inside the cooldown
+  answers like a pending request and asks nobody, so the decline stays
+  silent. The recipient of a pending request can't delete it (409): they
+  answer it, so a decline always counts.
+- Email of a Friend is null unless the two share a Room right now (NFR-03).
+- Not audited (no Room). 51 new tests (34 domain, 17 API).
 
 ### Characters, frontend (spec 17_2, 2026-10-01)
 
@@ -461,7 +479,10 @@ Question in the backend PR.
 - **Browser check of spec 17** (after 17_2 merges): the ticket's Definition
   of Done walk-through with a Master, a Player and a member who can't see
   the Character's Document.
-- **Spec 18, Friends** (ticket in `context/feature/`, decisions D-26, D-27).
+- **Spec 18, Friends**: 18_1a (friendships backend) is built; next 18_1b
+  (`POST /rooms/{id}/invitations/direct` to a Friend, `GET
+  /invitations/mine`), then 18_2 (frontend). Apply migration `b7e1d4f8a2c6`
+  live before the release that ships it.
 - **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
   branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
   buttons stacking is not yet seen in a browser. Ticket written
