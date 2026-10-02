@@ -566,17 +566,39 @@ Question in the backend PR.
   setting, not app code. Facebook apps in Development mode only admit the
   app's testers. Also re-test a brand-new user's first sign-in live (the
   stray trigger was dropped but never re-tested).
-- **Mention backlinks** (rest of FR-D4): store mentions server-side, show
-  "Mentioned in" filtered per viewer, decide whether mentions survive a
-  rename.
-- **Threads** on the `posts` table: nested replies (FR-T1/T2) with the
-  D-17/VR-04 "never wider than the parent" check in the domain layer
-  (Invariant 3); pagination (FR-T3); D-20, FR-T5–T7. Details (D-18, FR-D3,
-  FR-T10) already exist as **Notes** (spec 12), outside the Thread. Scope a
-  first slice to FR-T1/T5 (post, edit/moderate).
-- **Reveal action + fuller Visibility** (VR-02, VR-05, VR-06, FR-V2/V3/V5):
-  per-Room default visibility, Reveal with AuditLog + notification, "view as
-  User X" for the Master.
+- **Mention backlinks (spec 20, ticket written 2026-10-02)**:
+  `20 - Mention backlinks` (mentions stored with ids, one-off conversion of
+  old `#Name` text, "Mentioned in" filtered per viewer). 20_1 backend +
+  data migration, then 20_2 frontend. Tags get backlinks too.
+- **Full-text search (spec 21, ticket written 2026-10-02)**:
+  `21 - Full-text search` (current Room, Documents/Notes/Comments/Tags,
+  accent-insensitive prefix match, visibility filtered on the server).
+  21_1 backend + migration, then 21_2 frontend.
+- **Build order (product owner, 2026-10-02)**: one feature at a time, each
+  closed with all its sub-tickets before the next starts: 19 (19_1, 19_2,
+  19b, 19c) → 20 → 21 → 22 (with 22b) → 23 (with 23b, 23c) → 24.
+- **Threads (spec 19, tickets written 2026-10-02)**: `19 - Threaded replies`
+  (nested replies, 3 visible levels, a reply narrowed with its parent but
+  its own visibility kept), `19b - Unread replies`, `19c - Reactions,
+  mentions, pins and promotion`. All decisions confirmed (2026-10-02); 19's
+  Decision 6: the author keeps seeing their reply under a "parent hidden"
+  placeholder (VR-02 unchanged). Ready to build, starting with 19_1.
+- **Thread pagination (FR-T3)**: not owned by any ticket; 19 loads the
+  whole Thread at once. Write a ticket when Threads get long in practice.
+- **Reveal and visibility (spec 22, tickets written 2026-10-02)**:
+  `22 - Reveal and visibility history` (Reveal on Documents, single Notes
+  and Comments with "Revealed" marks and a header count; History tab;
+  Room default visibility) and `22b - View as player` (read-only preview
+  through an `X-View-As` header).
+- **Room export (spec 23, tickets written 2026-10-02)**: `23 - Room
+  export` (JSON + Markdown, per-viewer), `23b - Room PDF manual` (TTRPG
+  manual layout, first style Gothic, Vampire-inspired, WeasyPrint in a
+  background job; check Render can install Pango first), `23c - Agent
+  access tokens` (read-only per-Room tokens, FR-G2). 23 and 23c decisions
+  still to confirm.
+- **Version history (spec 24, ticket written 2026-10-02)**: `24 - Version
+  history` (Document name/description and Note text, 10-minute merge per
+  editor, Owners + Master compare and restore, all versions kept).
 - Decide whether new Rooms should get default Tags in the creator's
   language.
 
