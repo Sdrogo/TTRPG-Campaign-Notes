@@ -13,11 +13,11 @@
    - a closing **index of Tags** with page numbers.
 2. **Comments**: left out by default; an option adds them as an appendix per Document.
 3. **Mentions** become internal links with a page reference ("Drago Rosso → p. 12"); a mention of something not in the PDF stays plain text.
-4. **Styles**: three presets:
-   - **Fantasy parchment**: paper background, serif fonts, two columns, drop caps, ornamental rules;
+4. **Styles**: presets, built in this order:
+   - **Gothic** (the first one, product owner's choice 2026-10-02), inspired by the look of *Vampire: The Masquerade* manuals: black and deep blood-red accents, a full-bleed dark cover, distressed serif headings, red rules and drop caps, quotes set in italic sidebars, white pages for the body so it stays readable and printable. **Inspired by, never copied**: no logos, trademarked symbols, artwork or proprietary fonts from the game; only open-licensed fonts and original ornaments in the repo;
    - **Modern**: clean sans-serif, one column, generous whitespace;
    - **Print**: black and white, no backgrounds, ink-friendly.
-   Custom colors or fonts later.
+   More presets later (a fantasy parchment one was mentioned), then custom colors or fonts.
 5. **Page size**: A4 or Letter.
 6. **Visibility**: only what the requester sees (as 23). With 22b the Master can generate it "as player X" to hand out.
 7. **PDF Attachments** (character sheets, spec 16): optionally appended at the end; off by default.
@@ -46,6 +46,6 @@
 
 ## Definition of Done
 
-- A Room with ~30 Documents and images renders in each of the three styles, A4 and Letter, with a working TOC, page references and Tag index.
+- A Room with ~30 Documents and images renders in each of the three styles (Gothic first), A4 and Letter, with a working TOC, page references and Tag index.
 - A Player's PDF contains nothing hidden from them; the Master's "as player X" PDF matches what X sees.
 - Files disappear from Storage after 24 hours. Checks green.

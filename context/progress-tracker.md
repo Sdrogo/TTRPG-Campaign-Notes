@@ -579,7 +579,7 @@ Question in the backend PR.
   through an `X-View-As` header).
 - **Room export (spec 23, tickets written 2026-10-02)**: `23 - Room
   export` (JSON + Markdown, per-viewer), `23b - Room PDF manual` (TTRPG
-  manual layout in three styles, WeasyPrint in a background job; check
+  manual layout, first style Gothic/Vampire-inspired, WeasyPrint in a background job; check
   Render can install Pango first), `23c - Agent access tokens` (read-only
   per-Room tokens, FR-G2). 23 and 23c decisions still to confirm.
 - Decide whether new Rooms should get default Tags in the creator's
