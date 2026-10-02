@@ -65,7 +65,7 @@ function render() {
   return { user: userEvent.setup() };
 }
 
-const composer = () => screen.getByRole('textbox', { name: 'Testo del commento' });
+const composer = () => screen.getByRole('combobox', { name: 'Testo del commento' });
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -288,7 +288,7 @@ describe('editing from the list', () => {
     await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
 
     await user.click(screen.getByText('Modifica'));
-    const editor = screen.getAllByRole('textbox', { name: 'Testo del commento' })[0];
+    const editor = screen.getAllByRole('combobox', { name: 'Testo del commento' })[0];
     await user.clear(editor);
     await user.type(editor, 'Nuovo testo');
     await user.click(screen.getByRole('button', { name: 'Salva' }));
@@ -452,7 +452,7 @@ describe('posting in character', () => {
 });
 
 describe('CommentSection replies (spec 19)', () => {
-  const replyBox = () => screen.getByRole('textbox', { name: /^Risposta a / });
+  const replyBox = () => screen.getByRole('combobox', { name: /^Risposta a / });
   // The composer's submit button, not the Reply action that opened it.
   const sendReply = () =>
     screen
@@ -517,7 +517,7 @@ describe('CommentSection replies (spec 19)', () => {
         },
       }),
     );
-    await waitFor(() => expect(screen.queryByRole('textbox', { name: /^Risposta a / })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('combobox', { name: /^Risposta a / })).toBeNull());
   });
 
   // VR-04: a reply to a narrower Comment is never offered Room, and starts
@@ -552,7 +552,7 @@ describe('CommentSection replies (spec 19)', () => {
     expect(screen.getAllByText('Rispondi')).toHaveLength(1);
     await user.click(screen.getByText('Rispondi'));
     await user.click(screen.getAllByRole('button', { name: 'Annulla' })[0]);
-    expect(screen.queryByRole('textbox', { name: /^Risposta a / })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: /^Risposta a / })).toBeNull();
   });
 
   it('reports a failed reply and keeps the composer open', async () => {

@@ -7,6 +7,7 @@ import {
   type MentionKind,
   type MentionTarget,
 } from '../../lib/documentMentions';
+import { UserAvatar } from '../UserAvatar';
 import { useTranslation } from 'react-i18next';
 
 interface MentionSuggestionsProps {
@@ -24,7 +25,7 @@ interface MentionSuggestionsProps {
 
 /**
  * The popup's content: the matching Documents and Tags, or (when nothing
- * matched) a way to create one.
+ * matched) a way to create one; or, after `@`, the matching members.
  */
 export function MentionSuggestions({ listId, candidates, activeIndex, onHover, onPick, create }: MentionSuggestionsProps) {
   const { t } = useTranslation();
@@ -37,7 +38,11 @@ export function MentionSuggestions({ listId, candidates, activeIndex, onHover, o
   }
 
   return (
-    <Box id={listId} role="listbox" aria-label={t('mentions.listLabel')}>
+    <Box
+      id={listId}
+      role="listbox"
+      aria-label={t(candidates[0]?.kind === 'member' ? 'mentions.membersListLabel' : 'mentions.listLabel')}
+    >
       {candidates.map((target, index) => (
         <MentionOption
           key={`${target.kind}-${mentionTargetId(target)}`}
@@ -63,11 +68,19 @@ interface MentionOptionProps {
 
 function MentionOption({ id, target, active, onHover, onPick }: MentionOptionProps) {
   const { t } = useTranslation();
-  const Icon = target.kind === 'document' ? FileTextIcon : TagIcon;
-  const detail =
-    target.kind === 'document'
-      ? target.tags.map((tag) => `#${tag.name}`).join(' ')
-      : t('mentions.tagDetail', { count: target.documentCount });
+  const iconStyle = { flexShrink: 0, marginTop: 2 };
+  let icon;
+  let detail = '';
+  if (target.kind === 'member') {
+    icon = <UserAvatar user={target.member} size={18} style={iconStyle} />;
+  } else {
+    const Icon = target.kind === 'document' ? FileTextIcon : TagIcon;
+    icon = <Icon size={16} color="var(--text-muted)" style={iconStyle} />;
+    detail =
+      target.kind === 'document'
+        ? target.tags.map((tag) => `#${tag.name}`).join(' ')
+        : t('mentions.tagDetail', { count: target.documentCount });
+  }
 
   return (
     <Box
@@ -80,7 +93,7 @@ function MentionOption({ id, target, active, onHover, onPick }: MentionOptionPro
       onMouseEnter={onHover}
       onClick={onPick}
     >
-      <Icon size={16} color="var(--text-muted)" style={{ flexShrink: 0, marginTop: 2 }} />
+      {icon}
       <Box style={{ minWidth: 0 }}>
         <Text size="sm" style={{ overflowWrap: 'anywhere' }}>
           {mentionTargetName(target)}

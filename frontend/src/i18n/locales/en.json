@@ -401,6 +401,7 @@
   },
   "mentions": {
     "listLabel": "Documents and Tags to link",
+    "membersListLabel": "Members to mention",
     "kind": {
       "document": "Document",
       "tag": "Tag"

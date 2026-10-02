@@ -245,6 +245,16 @@ other icon set.
   a `DocumentMentionsProvider roomId={…} currentUserId={…}` above them
   (the Document page and the Documents list have one); without it they
   behave as a plain textarea / plain text.
+  **`@` members** (2026-10-02, spec 19c, Comments only): pass `members`
+  to `MentionTextarea` and `MentionText`. Typing `@` at the start of a
+  word opens the same list with the Room's members ("Membri da
+  menzionare"): an 18px avatar and the shown name, no detail line, never
+  a create row. Picking one shows `@Name ` in the field and stores
+  `@[Name](user:<uuid>)`; the field never shows the token syntax, and
+  editing inside a mentioned name turns it back into plain text. In the
+  rendered body a member's mention is `@` + their current name in
+  `--accent-primary`, weight 600, not a link; a mention of someone who has
+  left the Room is plain text with the name as written.
 - **Document card** (`DocumentCard`, restructured 2026-09-23, spec
   `07 - Document visualizazion refactor_beckend`): three stacked blocks. The
   *Title block* is the Document name (display font) with its
