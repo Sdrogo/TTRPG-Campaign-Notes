@@ -27,9 +27,10 @@ async def mark_read(
     session: AsyncSession, user_id: uuid.UUID, document_id: uuid.UUID, now: datetime
 ) -> datetime | None:
     """Records that the user opened the Document at `now`, and returns the
-    previous time (None on a first visit). The row is locked while it is read,
-    so two concurrent visits can't both report the same "before"; the time
-    never moves backwards."""
+    previous time (None on a first visit). An existing row is locked while it
+    is read, so two concurrent visits can't both report the same "before"
+    (two concurrent first visits can both get None, which only affects the
+    "New" marks); the time never moves backwards."""
     previous = (
         select(DocumentReadRow.last_read_at)
         .where(DocumentReadRow.user_id == user_id, DocumentReadRow.document_id == document_id)
