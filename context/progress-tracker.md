@@ -10,7 +10,7 @@ step-by-step notes) is in
 ## Current Status (2026-10-02)
 
 Branch `claude/project-thread-ads76p` (spec 19c_5, @mentions backend, PR
-into `staging`). Backend **710** tests at 100% coverage; ruff and mypy
+into `staging`). Backend **712** tests at 100% coverage; ruff and mypy
 clean. Frontend unchanged since 19c_4: 1149 tests at 100%. Migration
 `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
 database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
@@ -38,7 +38,8 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   mention of a member who later leaves stays a token until the body is
   next edited (the frontend shows it like any departed member). `#` tokens
   are parsed but not yet checked or stored as links: that is spec 20.
-  20 new tests (18 domain, 2 API).
+  22 new tests (20 domain, 2 API). Unlinking repeats until the text stops
+  changing, since an unescaped name can itself read as a token.
 
 ### Pin and resolved, frontend (spec 19c_4, 2026-10-02)
 

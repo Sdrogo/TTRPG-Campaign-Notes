@@ -104,7 +104,18 @@ def unlink_non_members(text: str, member_ids: Collection[uuid.UUID]) -> str:
     """`text` with every `@` mention of someone who isn't one of
     `member_ids` turned back into plain `@Name` (spec 19c): a client can't
     store a link to an outsider or a made-up id. Mentions of members, other
-    kinds of token and plain text are left exactly as written."""
+    kinds of token and plain text are left exactly as written. Repeated
+    until nothing changes, since an unescaped name can itself read as a
+    token; each pass shortens the text, so it ends."""
+    while True:
+        cleaned = _unlink_once(text, member_ids)
+        if cleaned == text:
+            return text
+        text = cleaned
+
+
+def _unlink_once(text: str, member_ids: Collection[uuid.UUID]) -> str:
+    """One pass of `unlink_non_members` over the tokens found in `text`."""
     parts: list[str] = []
     last = 0
     for mention in find_mentions(text):

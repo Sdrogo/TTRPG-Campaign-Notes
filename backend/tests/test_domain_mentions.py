@@ -80,3 +80,17 @@ def test_members_stay_linked_and_others_become_plain_text() -> None:
 
 def test_text_without_tokens_is_returned_as_is() -> None:
     assert unlink_non_members("Nothing to see @here", {ALICE}) == "Nothing to see @here"
+
+
+def test_a_token_hidden_in_an_unlinked_name_is_unlinked_too() -> None:
+    # The outer token's name, once unescaped, is itself a token for an
+    # outsider: it must not survive as a link.
+    text = f"@[@[Z\\](user:{BOB})](user:{BOB})"
+
+    assert unlink_non_members(text, {ALICE}) == "@@Z"
+
+
+def test_a_member_hidden_in_an_unlinked_name_stays_linked() -> None:
+    text = f"@[@[A\\](user:{ALICE})](user:{BOB})"
+
+    assert unlink_non_members(text, {ALICE}) == f"@@[A](user:{ALICE})"
