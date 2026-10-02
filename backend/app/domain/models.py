@@ -102,6 +102,13 @@ class AuditLogEntry:
     details: dict[str, object]
 
 
+class PromotionTarget(StrEnum):
+    """Where a promoted Comment's text went (spec 19c Decision 5)."""
+
+    DESCRIPTION = "description"
+    DOCUMENT = "document"
+
+
 class DocumentVisibility(StrEnum):
     """Section 8 of requirements.md. ROOM = every member; MASTER = Master
     only; PRIVATE = Owners + Master; SELECTIVE = Owners + Master + an
@@ -230,6 +237,13 @@ class Comment:
     # (spec 19c Decision 4); both None while it is open.
     resolved_at: datetime | None = None
     resolved_by: uuid.UUID | None = None
+    # When, by whom and where the Comment's text was promoted (spec 19c
+    # Decision 5, FR-T8): into its Document's description, or into a new
+    # Document (`promoted_document_id`). The latest promotion wins.
+    promoted_at: datetime | None = None
+    promoted_by: uuid.UUID | None = None
+    promoted_to: PromotionTarget | None = None
+    promoted_document_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)

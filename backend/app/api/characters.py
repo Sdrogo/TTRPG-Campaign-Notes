@@ -4,20 +4,23 @@ Character to its player is a Document route (`PUT .../documents/{id}/player`
 in app/api/documents.py), next to the Owner routes it resembles."""
 
 import uuid
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Collection, Mapping
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.access import get_visible_images_for_documents, require_membership
+from app.api.access import (
+    get_visible_images_for_documents,
+    require_membership,
+    visible_documents,
+)
 from app.api.image_uploads import sign_images
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo
 from app.db.session import SessionDep
 from app.domain.characters import postable_characters
 from app.domain.models import Document, Membership, RoomRole
-from app.domain.visibility import is_document_visible
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/characters", tags=["characters"])
@@ -31,24 +34,6 @@ class CharacterResponse(BaseModel):
     document_id: uuid.UUID
     name: str
     image_url: str | None
-
-
-async def _visible_documents(
-    session: AsyncSession, documents: Iterable[Document], viewer: Membership
-) -> list[Document]:
-    """The Documents of the viewer's Room they may see (Invariant 1), with the
-    Owners and grants read in two queries whatever their number."""
-    candidates = [document for document in documents if document.room_id == viewer.room_id]
-    ids = [document.id for document in candidates]
-    owners = await documents_repo.list_owner_ids_for_documents(session, ids)
-    grants = await documents_repo.list_selective_grant_ids_for_documents(session, ids)
-    return [
-        document
-        for document in candidates
-        if is_document_visible(
-            document, viewer.user_id, viewer.role, owners[document.id], grants[document.id]
-        )
-    ]
 
 
 async def _character_responses(
@@ -87,7 +72,7 @@ async def visible_characters(
     if not document_ids:
         return {}
     documents = await documents_repo.get_documents_by_ids(session, list(set(document_ids)))
-    visible = await _visible_documents(session, documents, viewer)
+    visible = await visible_documents(session, documents, viewer)
     return {
         character.document_id: character
         for character in await _character_responses(session, visible, viewer)
@@ -109,6 +94,6 @@ async def list_my_characters(
         documents = await documents_repo.list_documents_for_room(session, room_id)
     else:
         documents = await documents_repo.list_documents_played_by(session, room_id, requester_id)
-    visible = await _visible_documents(session, documents, membership)
+    visible = await visible_documents(session, documents, membership)
     allowed = postable_characters(visible, requester_id, membership.role)
     return await _character_responses(session, allowed, membership)
