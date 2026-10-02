@@ -577,6 +577,11 @@ Question in the backend PR.
   and Comments with "Revealed" marks and a header count; History tab;
   Room default visibility) and `22b - View as player` (read-only preview
   through an `X-View-As` header).
+- **Room export (spec 23, tickets written 2026-10-02)**: `23 - Room
+  export` (JSON + Markdown, per-viewer), `23b - Room PDF manual` (TTRPG
+  manual layout in three styles, WeasyPrint in a background job; check
+  Render can install Pango first), `23c - Agent access tokens` (read-only
+  per-Room tokens, FR-G2). 23 and 23c decisions still to confirm.
 - Decide whether new Rooms should get default Tags in the creator's
   language.
 
