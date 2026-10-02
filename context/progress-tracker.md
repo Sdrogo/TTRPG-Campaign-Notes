@@ -574,7 +574,10 @@ Question in the backend PR.
   (nested replies, 3 visible levels, a reply narrowed with its parent but
   its own visibility kept), `19b - Unread replies`, `19c - Reactions,
   mentions, pins and promotion`. 19b and 19c have decisions still to
-  confirm.
+  confirm, and so does 19's Decision 6 (author of a reply under a hidden
+  parent, touches VR-02).
+- **Thread pagination (FR-T3)**: not owned by any ticket; 19 loads the
+  whole Thread at once. Write a ticket when Threads get long in practice.
 - **Reveal and visibility (spec 22, tickets written 2026-10-02)**:
   `22 - Reveal and visibility history` (Reveal on Documents, single Notes
   and Comments with "Revealed" marks and a header count; History tab;
@@ -582,9 +585,10 @@ Question in the backend PR.
   through an `X-View-As` header).
 - **Room export (spec 23, tickets written 2026-10-02)**: `23 - Room
   export` (JSON + Markdown, per-viewer), `23b - Room PDF manual` (TTRPG
-  manual layout, first style Gothic/Vampire-inspired, WeasyPrint in a background job; check
-  Render can install Pango first), `23c - Agent access tokens` (read-only
-  per-Room tokens, FR-G2). 23 and 23c decisions still to confirm.
+  manual layout, first style Gothic, Vampire-inspired, WeasyPrint in a
+  background job; check Render can install Pango first), `23c - Agent
+  access tokens` (read-only per-Room tokens, FR-G2). 23 and 23c decisions
+  still to confirm.
 - **Version history (spec 24, ticket written 2026-10-02)**: `24 - Version
   history` (Document name/description and Note text, 10-minute merge per
   editor, Owners + Master compare and restore, all versions kept).
