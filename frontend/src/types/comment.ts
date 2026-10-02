@@ -40,6 +40,22 @@ export interface Comment {
    * Always empty on a deleted placeholder.
    */
   reactions: Reaction[];
+  /**
+   * When an Owner or the Master pinned this top-level Comment (spec 19c
+   * Decision 3), null if it isn't pinned. Pinned Comments are listed first,
+   * oldest pin first.
+   */
+  pinnedAt: string | null;
+  /**
+   * When, and by whom, this top-level Comment's branch was marked resolved
+   * (spec 19c Decision 4); both null while it is open. A resolved branch
+   * starts collapsed.
+   */
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+  /** Decided by the backend: may the viewer pin it, and resolve its branch. */
+  canPin: boolean;
+  canResolve: boolean;
 }
 
 /** One emoji on a Comment (spec 19c Decision 1), as the current viewer sees it. */

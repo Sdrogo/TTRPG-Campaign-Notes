@@ -196,7 +196,16 @@ other icon set.
   reacted. A subtle 16px `Smiley` icon button in the meta line opens
   emoji-mart's picker (dark theme, search with skin tones, no preview)
   in a popover with no padding; it's gone once a Comment has 20
-  different emoji, and a deleted placeholder shows neither. Attached
+  different emoji, and a deleted placeholder shows neither. Pin and
+  resolve (spec 19c) are more text actions in the meta line ("Fissa"/"Togli
+  dai fissati", "Segna come risolto"/"Riapri"), shown only when the
+  backend's `canPin`/`canResolve` allow them. Pinned Comments sit first in
+  a section of their own, headed by a small filled accent `PushPin` and an
+  uppercase dimmed "Commenti fissati" label, with a `Divider` before the
+  rest; each carries a `light` accent `xs` "Fissato" badge with a pin icon.
+  A resolved branch shows its top-level Comment with a `light` gray `xs`
+  "Risolto" badge (a `CheckCircle` in `--state-success`, tooltip naming who
+  resolved it and when) and starts with its replies collapsed. Attached
   images show inside the bubble as 120px square thumbnails
   (`ImageThumbnailGrid`, `sm` radius) that open the shared fullscreen
   `ImageViewerModal`. Sort/filter controls (`CommentToolbar`) sit above

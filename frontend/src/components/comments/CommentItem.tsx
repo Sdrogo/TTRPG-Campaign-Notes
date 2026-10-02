@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Anchor, Badge, Box, Button, Group, Popover, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core';
 import { Link } from 'react-router-dom';
+import { CheckCircleIcon, PushPinIcon } from '@phosphor-icons/react';
 import { UserAvatar } from '../UserAvatar';
 import { CharacterAvatar } from '../CharacterAvatar';
 import { ImageThumbnailGrid } from '../ImageThumbnailGrid';
@@ -8,10 +9,10 @@ import { ImageViewerModal } from '../ImageViewerModal';
 import { VisibilityBadge } from '../VisibilityBadge';
 import { CommentComposer } from './CommentComposer';
 import { AddReaction, ReactionChips } from './CommentReactions';
-import { useToggleReaction } from '../../hooks/useComments';
+import { useToggleReaction, type CommentFlag } from '../../hooks/useComments';
 import { notifyError } from '../../lib/notify';
 import { MentionText } from '../mentions/MentionText';
-import { findMember, memberDisplayName } from '../../lib/members';
+import { displayNameFor, findMember, memberDisplayName } from '../../lib/members';
 import { isEdited } from '../../lib/comments';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/time';
 import type { Character } from '../../types/character';
@@ -43,6 +44,13 @@ interface CommentItemProps {
   granteeIds?: string[] | null;
   /** Posted since the viewer's previous visit (spec 19b): marked "New". */
   isNew?: boolean;
+  /**
+   * Pins or unpins it, resolves or reopens its branch (spec 19c). Offered
+   * only where the backend's `canPin`/`canResolve` allow it.
+   */
+  onSetFlag?: (flag: CommentFlag, on: boolean) => void;
+  /** A pin or resolve change on this Comment is on its way. */
+  settingFlag?: boolean;
 }
 
 /**
@@ -68,6 +76,8 @@ export function CommentItem({
   visibilityLevels,
   granteeIds,
   isNew = false,
+  onSetFlag,
+  settingFlag = false,
 }: CommentItemProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -190,6 +200,36 @@ export function CommentItem({
                   {t('comments.new')}
                 </Badge>
               )}
+              {comment.pinnedAt && (
+                <Badge
+                  size="xs"
+                  variant="light"
+                  color="accent"
+                  leftSection={<PushPinIcon size={10} weight="fill" />}
+                >
+                  {t('comments.pinned')}
+                </Badge>
+              )}
+              {comment.resolvedAt && (
+                <Tooltip
+                  label={t('comments.resolvedBy', {
+                    name: displayNameFor(members, comment.resolvedBy ?? ''),
+                    date: formatAbsoluteTime(comment.resolvedAt),
+                  })}
+                  withArrow
+                >
+                  <Badge
+                    size="xs"
+                    variant="light"
+                    color="gray"
+                    leftSection={
+                      <CheckCircleIcon size={10} weight="fill" color="var(--state-success)" />
+                    }
+                  >
+                    {t('comments.resolved')}
+                  </Badge>
+                </Tooltip>
+              )}
             </Group>
             {comment.deleted ? (
               <Text size="sm" c="dimmed" fs="italic">
@@ -244,6 +284,22 @@ export function CommentItem({
             {comment.canEdit && (
               <CommentAction onClick={() => setEditing(true)}>{t('common.edit')}</CommentAction>
             )}
+            {onSetFlag && comment.canPin && (
+              <CommentAction
+                disabled={settingFlag}
+                onClick={() => onSetFlag('pin', comment.pinnedAt === null)}
+              >
+                {comment.pinnedAt === null ? t('comments.pin') : t('comments.unpin')}
+              </CommentAction>
+            )}
+            {onSetFlag && comment.canResolve && (
+              <CommentAction
+                disabled={settingFlag}
+                onClick={() => onSetFlag('resolve', comment.resolvedAt === null)}
+              >
+                {comment.resolvedAt === null ? t('comments.resolve') : t('comments.reopen')}
+              </CommentAction>
+            )}
             {comment.canDelete && (
               <DeleteCommentAction
                 onConfirm={onDelete}
@@ -258,9 +314,15 @@ export function CommentItem({
   );
 }
 
-function CommentAction({ children, onClick }: { children: string; onClick: () => void }) {
+interface CommentActionProps {
+  children: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+function CommentAction({ children, onClick, disabled = false }: CommentActionProps) {
   return (
-    <UnstyledButton onClick={onClick}>
+    <UnstyledButton onClick={onClick} disabled={disabled}>
       <Text size="xs" fw={600} c="dimmed" className="comment-action">
         {children}
       </Text>

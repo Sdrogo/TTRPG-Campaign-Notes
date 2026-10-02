@@ -24,6 +24,11 @@ function comment(id: string, overrides: Partial<Comment> = {}): Comment {
     parentId: null,
     parentHidden: false,
     reactions: [],
+    pinnedAt: null,
+    resolvedAt: null,
+    resolvedBy: null,
+    canPin: false,
+    canResolve: false,
     ...overrides,
   };
 }

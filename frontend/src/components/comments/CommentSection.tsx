@@ -1,13 +1,19 @@
 import { useMemo, useState } from 'react';
 import { Badge, Box, Button, Divider, Group, Loader, Stack, Text, Title } from '@mantine/core';
-import { ChatCircleDotsIcon } from '@phosphor-icons/react';
+import { ChatCircleDotsIcon, PushPinIcon } from '@phosphor-icons/react';
 import { CommentComposer } from './CommentComposer';
 import { CommentItem } from './CommentItem';
 import { CommentThread } from './CommentThread';
 import { CommentToolbar } from './CommentToolbar';
 import { UserAvatar } from '../UserAvatar';
 import { PageCard } from '../PageCard';
-import { useComments, useDeleteComment, useSaveComment } from '../../hooks/useComments';
+import {
+  useComments,
+  useDeleteComment,
+  useSaveComment,
+  useSetCommentFlag,
+  type CommentFlag,
+} from '../../hooks/useComments';
 import { useDocumentVisit } from '../../hooks/useDocuments';
 import { useMyCharacters } from '../../hooks/useCharacters';
 import { readLastPostAs, saveLastPostAs } from '../../lib/characters';
@@ -22,11 +28,12 @@ import {
   replyGranteeIds,
   replyLevels,
   replyStartVisibility,
+  splitPinned,
   topLevelComments,
 } from '../../lib/comments';
 import { findMember } from '../../lib/members';
 import { notifyError } from '../../lib/notify';
-import type { BranchState, Comment, CommentFilters } from '../../types/comment';
+import type { BranchState, Comment, CommentFilters, CommentNode } from '../../types/comment';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
@@ -49,15 +56,18 @@ function reportImageErrors({ imageErrors }: SaveCommentResult) {
  * A Document's Comments (its main Thread, D-20): sort/filter toolbar, the
  * Comments with their replies as a tree (spec 19), and the composer at the
  * bottom. The toolbar picks and orders the top-level Comments; each brings its
- * whole branch. The backend only returns Comments the viewer may see. Once the
- * Thread loads, the visit is recorded and what was posted since the previous
- * one is marked "New" (spec 19b).
+ * whole branch. Pinned Comments come first in a section of their own, ahead
+ * of the sort, and a resolved branch starts collapsed (spec 19c). The backend
+ * only returns Comments the viewer may see. Once the Thread loads, the visit
+ * is recorded and what was posted since the previous one is marked "New"
+ * (spec 19b).
  */
 export function CommentSection({ roomId, documentId, members, currentUserId }: CommentSectionProps) {
   const { t, i18n } = useTranslation();
   const comments = useComments(roomId, documentId, true);
   const saveComment = useSaveComment(roomId, documentId);
   const deleteComment = useDeleteComment(roomId, documentId);
+  const setFlag = useSetCommentFlag(roomId, documentId);
   const myCharacters = useMyCharacters(roomId, true);
   const newSince = useDocumentVisit(roomId, documentId, comments.isSuccess);
   const isNew = (comment: Comment) => isNewComment(comment, newSince, currentUserId);
@@ -71,6 +81,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
   const byId = useMemo(() => new Map(all.map((c) => [c.id, c])), [all]);
   const topLevelCount = useMemo(() => topLevelComments(all).length, [all]);
   const shown = useMemo(() => buildCommentTree(all, filters, members), [all, filters, members]);
+  const { pinned, others } = useMemo(() => splitPinned(shown), [shown]);
   // commentAuthors reaches the active global translator for unknown-user labels.
   // oxlint-disable-next-line react-hooks/exhaustive-deps
   const authorOptions = useMemo(() => commentAuthors(all, members), [all, members, i18n.language]);
@@ -83,6 +94,23 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
       : undefined;
   const setBranch = (commentId: string, state: BranchState) =>
     setBranchStates((current) => ({ ...current, [commentId]: state }));
+  // Back to the branch's default: collapsed once resolved, as usual once
+  // reopened (spec 19c Decision 4), whatever was chosen by hand before.
+  const resetBranch = (commentId: string) =>
+    setBranchStates(({ [commentId]: _dropped, ...rest }) => rest);
+  // Pin or resolve changes on their way, by Comment id. Each change follows
+  // its own promise: `mutate`'s per-call callbacks would only run for the
+  // latest of two overlapping changes on different Comments.
+  const [flagging, setFlagging] = useState<string[]>([]);
+  const onSetFlag = (commentId: string, flag: CommentFlag, on: boolean) => {
+    setFlagging((current) => [...current, commentId]);
+    setFlag
+      .mutateAsync({ commentId, flag, on })
+      .then(() => {
+        if (flag === 'resolve') resetBranch(commentId);
+      }, notifyError)
+      .finally(() => setFlagging((current) => current.filter((id) => id !== commentId)));
+  };
   const characters = myCharacters.data ?? [];
   // The last "Post as" choice in this Room, if the viewer may still use it.
   const lastPostAs = readLastPostAs(roomId);
@@ -118,6 +146,8 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
         visibilityLevels={parent && replyLevels(parent, currentUserId)}
         granteeIds={parent && replyGranteeIds(parent)}
         isNew={isNew(comment)}
+        onSetFlag={(flag, on) => onSetFlag(comment.id, flag, on)}
+        settingFlag={flagging.includes(comment.id)}
       />
       {replyingTo === comment.id && (
         <Box pl={{ base: 'md', sm: 'xl' }}>
@@ -157,6 +187,20 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
         </Box>
       )}
     </>
+  );
+
+  const renderBranch = (node: CommentNode) => (
+    <CommentThread
+      key={node.comment.id}
+      node={node}
+      branchStates={branchStates}
+      onBranchChange={setBranch}
+      nameOf={(comment) => commentShownName(comment, members)}
+      isNew={isNew}
+      renderComment={(comment, inReplyTo) =>
+        renderComment(comment, inReplyTo, byId.get(comment.parentId ?? ''))
+      }
+    />
   );
 
   return (
@@ -210,21 +254,28 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
                 </Button>
               </Stack>
             ) : (
-              <Stack gap="md" data-testid="comment-list">
-                {shown.map((node) => (
-                  <CommentThread
-                    key={node.comment.id}
-                    node={node}
-                    branchStates={branchStates}
-                    onBranchChange={setBranch}
-                    nameOf={(comment) => commentShownName(comment, members)}
-                    isNew={isNew}
-                    renderComment={(comment, inReplyTo) =>
-                      renderComment(comment, inReplyTo, byId.get(comment.parentId ?? ''))
-                    }
-                  />
-                ))}
-              </Stack>
+              <>
+                {pinned.length > 0 && (
+                  <Stack
+                    gap="md"
+                    component="section"
+                    aria-label={t('comments.pinnedSection')}
+                    data-testid="pinned-comments"
+                  >
+                    <Group gap={6}>
+                      <PushPinIcon size={14} weight="fill" color="var(--accent-primary)" />
+                      <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                        {t('comments.pinnedSection')}
+                      </Text>
+                    </Group>
+                    {pinned.map(renderBranch)}
+                    {others.length > 0 && <Divider />}
+                  </Stack>
+                )}
+                <Stack gap="md" data-testid="comment-list">
+                  {others.map(renderBranch)}
+                </Stack>
+              </>
             )}
           </Stack>
         )}

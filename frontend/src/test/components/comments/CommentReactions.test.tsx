@@ -54,6 +54,11 @@ function comment(reactions: Reaction[]): Comment {
     parentId: null,
     parentHidden: false,
     reactions,
+    pinnedAt: null,
+    resolvedAt: null,
+    resolvedBy: null,
+    canPin: false,
+    canResolve: false,
   };
 }
 
