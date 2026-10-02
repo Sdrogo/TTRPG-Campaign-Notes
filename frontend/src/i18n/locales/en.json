@@ -256,7 +256,10 @@
       "tags": "Tags",
       "newTag": "New tag",
       "newTagPlaceholder": "E.g. Faction"
-    }
+    },
+    "notYetRead": "Not yet read",
+    "unreadCount_one": "{{count}} new comment",
+    "unreadCount_other": "{{count}} new comments"
   },
   "images": {
     "numbered": "{{name}} ({{index}})",
@@ -346,6 +349,26 @@
     "imageLabel": "Image {{index}} of {{author}}'s comment",
     "imagesAlt": "Comment by {{author}}",
     "attachedImage": "Attached image",
+    "reply": "Reply",
+    "replyLabel": "Reply to {{name}}",
+    "inReplyTo": "in reply to {{name}}",
+    "parentHidden": "A comment you can't see",
+    "reactions": {
+      "add": "Add a reaction",
+      "chip_one": "{{emoji}}, {{count}} reaction: {{names}}",
+      "chip_other": "{{emoji}}, {{count}} reactions: {{names}}",
+      "loadingPicker": "Loading emoji",
+      "pickerFailed": "The emoji couldn't be loaded. Try again later."
+    },
+    "thread": {
+      "showMore_one": "Show {{count}} more reply",
+      "showMore_other": "Show {{count}} more replies",
+      "show_one": "Show {{count}} reply",
+      "show_other": "Show {{count}} replies",
+      "hide": "Hide replies",
+      "hiddenNew_one": "{{count}} new",
+      "hiddenNew_other": "{{count}} new"
+    },
     "composer": {
       "bodyLabel": "Comment text",
       "bodyPlaceholder": "Write a comment… (# to link a Document)",
@@ -365,7 +388,8 @@
       "visibilityLabel": "Filter by visibility",
       "visibilityPlaceholder": "Any visibility",
       "hideDeleted": "Hide deleted"
-    }
+    },
+    "new": "New"
   },
   "mentions": {
     "listLabel": "Documents and Tags to link",

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import { toStoredImage } from '../lib/images';
@@ -21,6 +22,8 @@ interface RawDocument {
   // Only the single-Document responses carry Notes and files, not the list.
   notes?: RawNote[];
   files?: RawDocumentFile[];
+  // Only the list carries it (spec 19b); null for a Document never opened.
+  unread_count?: number | null;
 }
 
 function toDocument(raw: RawDocument): Document {
@@ -39,6 +42,7 @@ function toDocument(raw: RawDocument): Document {
     playedBy: raw.played_by,
     notes: (raw.notes ?? []).map(toNote),
     files: (raw.files ?? []).map(toDocumentFile),
+    unreadCount: raw.unread_count,
   };
 }
 
@@ -72,6 +76,47 @@ export function useDocument(roomId: string, documentId: string, enabled: boolean
       toDocument(await apiFetch<RawDocument>(`/rooms/${roomId}/documents/${documentId}`)),
     enabled,
   });
+}
+
+interface RawDocumentRead {
+  last_read_at: string;
+  previous_read_at: string | null;
+}
+
+/**
+ * Records one visit to a Document's page (spec 19b) once `ready` (the Thread
+ * has loaded), and returns when the viewer had opened it before: the page
+ * marks what was posted since as "New". Undefined until the visit is
+ * recorded, null on a first visit (nothing is marked, Decision 4). Recorded
+ * once per Document per mount; the list is reloaded so the card's count goes.
+ */
+export function useDocumentVisit(
+  roomId: string,
+  documentId: string,
+  ready: boolean,
+): string | null | undefined {
+  const queryClient = useQueryClient();
+  const recorded = useRef<string | null>(null);
+  const [visit, setVisit] = useState<{ documentId: string; previous: string | null }>();
+  const { mutate } = useMutation({
+    mutationFn: async () =>
+      apiFetch<RawDocumentRead>(`/rooms/${roomId}/documents/${documentId}/read`, {
+        method: 'POST',
+      }),
+    onSuccess: (read) => {
+      setVisit({ documentId, previous: read.previous_read_at });
+      void queryClient.invalidateQueries({ queryKey: documentsQueryKey(roomId), exact: true });
+    },
+  });
+
+  useEffect(() => {
+    if (ready && recorded.current !== documentId) {
+      recorded.current = documentId;
+      mutate();
+    }
+  }, [ready, documentId, mutate]);
+
+  return visit?.documentId === documentId ? visit.previous : undefined;
 }
 
 /** The fields a Document is created or updated with. An update sends only the fields given. */

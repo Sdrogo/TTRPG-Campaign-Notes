@@ -8,17 +8,25 @@ interface VisibilitySelectProps extends Omit<SelectProps, 'data' | 'value' | 'on
   subject: 'document' | 'comment';
   value: DocumentVisibility;
   onChange: (value: DocumentVisibility) => void;
+  /** The levels offered, in their usual order; all of them by default. */
+  levels?: DocumentVisibility[];
 }
 
 /**
  * Picks a visibility level. The labels depend on `subject`: a Document's level
  * is described in terms of its Owners, a Comment's in terms of its author.
  */
-export function VisibilitySelect({ subject, value, onChange, ...props }: VisibilitySelectProps) {
+export function VisibilitySelect({
+  subject,
+  value,
+  onChange,
+  levels = LEVELS,
+  ...props
+}: VisibilitySelectProps) {
   const { t } = useTranslation();
   // What the level means depends on what it's set on: a Document's "owner"
   // is its Owner list, a Comment's is its author (VR-03).
-  const data = LEVELS.map((level) => ({
+  const data = LEVELS.filter((level) => levels.includes(level)).map((level) => ({
     value: level,
     label:
       subject === 'document'

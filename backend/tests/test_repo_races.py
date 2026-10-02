@@ -81,9 +81,9 @@ async def test_updating_a_vanished_comment_raises(db_session: AsyncSession) -> N
         await comments_repo.update_comment(db_session, ghost)
 
 
-async def test_get_comment_ignores_a_post_of_another_kind(db_session: AsyncSession) -> None:
+async def test_comment_lookup_ignores_a_post_of_another_kind(db_session: AsyncSession) -> None:
     """`posts.kind` is only ever "comment" today, but the table is shared
-    with Details once those exist (D-18/D-19) - `get_comment` must not
+    with Details once those exist (D-18/D-19) - `get_comments_with_ancestors` must not
     treat one of those as a Comment."""
     creator_id = uuid.uuid4()
     room_plan = plan_new_room("Barovia", None, creator_id)
@@ -106,11 +106,11 @@ async def test_get_comment_ignores_a_post_of_another_kind(db_session: AsyncSessi
     db_session.add(other_kind)
     await db_session.flush()
 
-    assert await comments_repo.get_comment(db_session, other_kind.id) is None
+    assert await comments_repo.get_comments_with_ancestors(db_session, [other_kind.id]) == {}
 
 
-async def test_get_comment_returns_none_for_an_unknown_id(db_session: AsyncSession) -> None:
-    assert await comments_repo.get_comment(db_session, uuid.uuid4()) is None
+async def test_unknown_comment_ids_are_simply_absent(db_session: AsyncSession) -> None:
+    assert await comments_repo.get_comments_with_ancestors(db_session, [uuid.uuid4()]) == {}
 
 
 async def test_updating_a_vanished_note_raises(db_session: AsyncSession) -> None:

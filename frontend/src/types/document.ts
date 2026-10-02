@@ -42,6 +42,13 @@ export interface Document {
    * only the single-Document routes send them.
    */
   files: DocumentFile[];
+  /**
+   * How many Comments and replies are new to the viewer since they last
+   * opened the Document (spec 19b), counted by the backend among those they
+   * can see. Null when they never opened it ("not yet read"). Only the list
+   * sends it: undefined on a Document from the single-Document routes.
+   */
+  unreadCount?: number | null;
 }
 
 /**

@@ -2,8 +2,13 @@ import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { rawCharacter, rawComment, rawImage } from '../fixtures';
-import { renderHookWithProviders } from '../utils';
-import { useComments, useDeleteComment, useSaveComment } from '../../hooks/useComments';
+import { createTestQueryClient, renderHookWithProviders } from '../utils';
+import {
+  useComments,
+  useDeleteComment,
+  useSaveComment,
+  useToggleReaction,
+} from '../../hooks/useComments';
 import type { CommentFormValues } from '../../types/comment';
 import type { PendingImage } from '../../types/image';
 
@@ -65,7 +70,41 @@ describe('useComments', () => {
       canEdit: true,
       canDelete: true,
       asCharacter: null,
+      parentId: null,
+      parentHidden: false,
+      reactions: [],
     });
+  });
+
+  it('maps the reactions', async () => {
+    fetchMock.mockResolvedValue([
+      rawComment({
+        reactions: [{ emoji: '👍', count: 2, reacted_by_me: true, user_ids: ['user-1', 'user-2'] }],
+      }),
+    ]);
+
+    const { result } = renderHookWithProviders(() => useComments('room-1', 'doc-1', true));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.[0].reactions).toEqual([
+      { emoji: '👍', count: 2, reactedByMe: true, userIds: ['user-1', 'user-2'] },
+    ]);
+  });
+
+  // Spec 19: the list stays flat, each reply naming its parent.
+  it('maps the Comment a reply answers, or that its parent is hidden', async () => {
+    fetchMock.mockResolvedValue([
+      rawComment({ id: 'reply', parent_id: 'comment-1' }),
+      rawComment({ id: 'orphan', parent_hidden: true }),
+    ]);
+
+    const { result } = renderHookWithProviders(() => useComments('room-1', 'doc-1', true));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.map((c) => [c.parentId, c.parentHidden])).toEqual([
+      ['comment-1', false],
+      [null, true],
+    ]);
   });
 
   it('maps the Character a Comment was written as', async () => {
@@ -111,6 +150,23 @@ describe('useSaveComment', () => {
       json: { body: 'Ricordate il sigillo.', visibility: 'room', selective_user_ids: [] },
     });
     expect(saved).toEqual({ commentId: 'comment-1', imageErrors: [] });
+  });
+
+  it('posts a reply with the Comment it answers', async () => {
+    fetchMock.mockResolvedValue(rawComment({ id: 'reply' }));
+
+    const { result } = renderHookWithProviders(() => useSaveComment('room-1', 'doc-1'));
+    await result.current.mutateAsync({ values: { ...values(), parentId: 'comment-1' } });
+
+    expect(fetchMock).toHaveBeenCalledWith(BASE, {
+      method: 'POST',
+      json: {
+        body: 'Ricordate il sigillo.',
+        visibility: 'room',
+        selective_user_ids: [],
+        parent_id: 'comment-1',
+      },
+    });
   });
 
   it('patches an existing Comment when an id is given', async () => {
@@ -327,5 +383,50 @@ describe('writing in character', () => {
 
     const json = (fetchMock.mock.calls[0][1] as { json: object }).json;
     expect(JSON.parse(JSON.stringify(json))).not.toHaveProperty('as_document_id');
+  });
+});
+
+describe('useToggleReaction', () => {
+  const KEY = ['rooms', 'room-1', 'documents', 'doc-1', 'comments'];
+  const reacted = rawComment({
+    reactions: [{ emoji: '🧑🏿‍🤝‍🧑🏻', count: 1, reacted_by_me: true, user_ids: ['user-1'] }],
+  });
+
+  // Spec 19c: the emoji travels URL-encoded in the path, and the returned
+  // Comment replaces the cached one without refetching the Document.
+  it('reacts with PUT and puts the returned Comment in the cache', async () => {
+    fetchMock.mockResolvedValue(reacted);
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(KEY, [
+      { id: 'comment-1', reactions: [] },
+      { id: 'comment-2', reactions: [] },
+    ]);
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHookWithProviders(() => useToggleReaction('room-1', 'doc-1'), {
+      queryClient,
+    });
+    await result.current.mutateAsync({ commentId: 'comment-1', emoji: '🧑🏿‍🤝‍🧑🏻', add: true });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${BASE}/comment-1/reactions/${encodeURIComponent('🧑🏿‍🤝‍🧑🏻')}`,
+      { method: 'PUT' },
+    );
+    const cached = queryClient.getQueryData<{ id: string; reactions: unknown[] }[]>(KEY);
+    expect(cached?.[0].reactions).toHaveLength(1);
+    expect(cached?.[1]).toEqual({ id: 'comment-2', reactions: [] });
+    expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it('takes a reaction back with DELETE, with or without a cached Thread', async () => {
+    fetchMock.mockResolvedValue(rawComment());
+
+    const { result } = renderHookWithProviders(() => useToggleReaction('room-1', 'doc-1'));
+    await result.current.mutateAsync({ commentId: 'comment-1', emoji: '👍', add: false });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${BASE}/comment-1/reactions/${encodeURIComponent('👍')}`,
+      { method: 'DELETE' },
+    );
   });
 });

@@ -39,7 +39,15 @@
       "deleted": "Questo Commento è stato eliminato",
       "alreadyDeleted": "Questo Commento era già stato eliminato",
       "tooManyImages": "Un Commento può avere al massimo {max} immagini",
-      "invalidSelectiveUsers": "selective_user_ids deve contenere solo membri di questa Room"
+      "invalidSelectiveUsers": "selective_user_ids deve contenere solo membri di questa Room",
+      "parentNotFound": "Il Commento a cui stai rispondendo non è stato trovato",
+      "parentDeleted": "Non si può rispondere a un Commento eliminato",
+      "replyWiderThanParent": "Una risposta non può essere visibile a chi non vede il Commento a cui risponde"
+    },
+    "reaction": {
+      "invalidEmoji": "Una reazione deve essere esattamente un'emoji",
+      "commentDeleted": "Non si può reagire a un Commento eliminato",
+      "tooMany": "Un Commento può avere al massimo {max} emoji diverse"
     },
     "character": {
       "notFound": "Personaggio non trovato",

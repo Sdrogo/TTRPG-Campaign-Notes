@@ -1,5 +1,6 @@
 """Rules for Comments (FR-T1, FR-T5): who may write, edit and delete them,
-their length and image limits, and when an edit must be audited."""
+what they may answer and how wide a reply may be (spec 19), their length and
+image limits, and when an edit must be audited."""
 
 import uuid
 from collections.abc import Collection
@@ -7,7 +8,8 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 
 from app.domain.errors import DomainError
-from app.domain.models import AuditLogEntry, Comment, DocumentVisibility, RoomRole
+from app.domain.models import AuditLogEntry, Comment, DocumentVisibility, Membership, RoomRole
+from app.domain.visibility import is_comment_visible, is_content_visible
 
 MAX_COMMENT_LENGTH = 10_000
 
@@ -42,6 +44,21 @@ class TooManyCommentImagesError(DomainError):
     """The Comment already has `MAX_IMAGES_PER_COMMENT` images."""
 
 
+class ParentCommentNotFoundError(DomainError):
+    """The Comment being answered isn't on this Document (or can't be seen,
+    which answers the same, VR-07)."""
+
+
+class ParentCommentDeletedError(DomainError):
+    """The Comment being answered was deleted: a placeholder can't be
+    answered (spec 19)."""
+
+
+class ReplyWiderThanParentError(DomainError):
+    """A reply would reach someone who can't read the Comment it answers
+    (VR-04, I-09)."""
+
+
 @dataclass(frozen=True)
 class CommentEditPlan:
     """The edited Comment, and the audit entry to write with it when the edit
@@ -71,11 +88,20 @@ def plan_new_comment(
     visibility: DocumentVisibility,
     now: datetime,
     as_document_id: uuid.UUID | None = None,
+    parent: Comment | None = None,
 ) -> Comment:
     """UC-11/FR-T1: any member who sees the Document can comment on it -
     the caller has already checked the Document is visible to the author, and,
     with `as_document_id`, that they may write as that Character (D-24,
-    `characters.ensure_can_post_as`)."""
+    `characters.ensure_can_post_as`). With `parent` the Comment is a reply
+    (spec 19): the parent must be on the same Document and not deleted. The
+    caller has already checked the author sees the parent, and checks the
+    reply isn't wider than it (`ensure_not_wider`)."""
+    if parent is not None:
+        if parent.document_id != document_id:
+            raise ParentCommentNotFoundError("errors.comment.parentNotFound")
+        if parent.deleted_at is not None:
+            raise ParentCommentDeletedError("errors.comment.parentDeleted")
     return Comment(
         id=uuid.uuid4(),
         document_id=document_id,
@@ -85,7 +111,36 @@ def plan_new_comment(
         created_at=now,
         updated_at=now,
         as_document_id=as_document_id,
+        parent_id=None if parent is None else parent.id,
     )
+
+
+def ensure_not_wider(
+    author_id: uuid.UUID,
+    visibility: DocumentVisibility,
+    selective_user_ids: Collection[uuid.UUID],
+    parent: Comment,
+    parent_selective_ids: Collection[uuid.UUID],
+    members: Collection[Membership],
+) -> None:
+    """VR-04/I-09 (spec 19 Decision 2): a reply is never more visible than the
+    Comment it answers. Compares audiences, the Room's members who would see
+    each on its own, rather than level names, since Selective and Private
+    aren't ordered. The reply's author is left out: they always see their own
+    reply (VR-02), even once the parent is narrowed past them. Checked on
+    create and on every visibility or grant edit of a reply; narrowing the
+    parent later is allowed and hides the branch instead
+    (`is_comment_visible_in_thread`)."""
+    for member in members:
+        if member.user_id == author_id:
+            continue
+        sees_reply = is_content_visible(
+            visibility, member.user_id, member.role, {author_id}, selective_user_ids
+        )
+        if sees_reply and not is_comment_visible(
+            parent, member.user_id, member.role, parent_selective_ids
+        ):
+            raise ReplyWiderThanParentError("errors.comment.replyWiderThanParent")
 
 
 def can_edit_comment(comment: Comment, user_id: uuid.UUID) -> bool:

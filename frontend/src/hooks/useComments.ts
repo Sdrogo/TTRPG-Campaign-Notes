@@ -21,6 +21,16 @@ interface RawComment {
   can_edit: boolean;
   can_delete: boolean;
   as_character: RawCharacter | null;
+  parent_id: string | null;
+  parent_hidden: boolean;
+  reactions: RawReaction[];
+}
+
+interface RawReaction {
+  emoji: string;
+  count: number;
+  reacted_by_me: boolean;
+  user_ids: string[];
 }
 
 function toComment(raw: RawComment): Comment {
@@ -38,6 +48,14 @@ function toComment(raw: RawComment): Comment {
     canEdit: raw.can_edit,
     canDelete: raw.can_delete,
     asCharacter: raw.as_character ? toCharacter(raw.as_character) : null,
+    parentId: raw.parent_id,
+    parentHidden: raw.parent_hidden,
+    reactions: raw.reactions.map((reaction) => ({
+      emoji: reaction.emoji,
+      count: reaction.count,
+      reactedByMe: reaction.reacted_by_me,
+      userIds: reaction.user_ids,
+    })),
   };
 }
 
@@ -126,7 +144,12 @@ export function useSaveComment(roomId: string, documentId: string) {
             method: 'PATCH',
             json: toBody(values),
           })
-        : await apiFetch<RawComment>(base, { method: 'POST', json: toBody(values) });
+        : await apiFetch<RawComment>(base, {
+            method: 'POST',
+            // A reply names the Comment it answers (spec 19); undefined is
+            // dropped by JSON, so a top-level Comment sends nothing.
+            json: { ...toBody(values), parent_id: values.parentId },
+          });
 
       const imageErrors: string[] = [];
       const reason = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -162,5 +185,38 @@ export function useDeleteComment(roomId: string, documentId: string) {
       await apiFetch<void>(`${commentsPath(roomId, documentId)}/${id}`, { method: 'DELETE' });
     },
     onSuccess: invalidate,
+  });
+}
+
+/** What `useToggleReaction` sends: add or take back the viewer's own emoji. */
+export interface ToggleReactionInput {
+  commentId: string;
+  emoji: string;
+  /** True to react, false to take the viewer's reaction back. */
+  add: boolean;
+}
+
+/**
+ * Adds or removes the viewer's reaction on a Comment (spec 19c Decision 1).
+ * Both calls are idempotent on the backend and return the Comment, which
+ * replaces it in the Thread's cache: reactions change no image, so the
+ * Document and its list are left alone.
+ */
+export function useToggleReaction(roomId: string, documentId: string) {
+  const queryClient = useQueryClient();
+  const key = commentsQueryKey(roomId, documentId);
+  return useMutation({
+    mutationFn: async ({ commentId, emoji, add }: ToggleReactionInput) =>
+      toComment(
+        await apiFetch<RawComment>(
+          `${commentsPath(roomId, documentId)}/${commentId}/reactions/${encodeURIComponent(emoji)}`,
+          { method: add ? 'PUT' : 'DELETE' },
+        ),
+      ),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<Comment[]>(key, (current) =>
+        current?.map((comment) => (comment.id === updated.id ? updated : comment)),
+      );
+    },
   });
 }

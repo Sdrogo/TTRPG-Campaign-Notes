@@ -2,6 +2,9 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../utils';
+import { apiFetch } from '../../../lib/apiClient';
+import { notifyError } from '../../../lib/notify';
+import { rawComment } from '../../fixtures';
 import { CommentItem } from '../../../components/comments/CommentItem';
 import type { Character } from '../../../types/character';
 import type { Comment } from '../../../types/comment';
@@ -21,6 +24,9 @@ function member(overrides: Partial<Member> = {}): Member {
   };
 }
 
+vi.mock('../../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
+vi.mock('../../../lib/notify', () => ({ notifyError: vi.fn() }));
+
 const members = [member(), member({ userId: 'user-2', displayName: 'Master' })];
 
 function comment(overrides: Partial<Comment> = {}): Comment {
@@ -38,6 +44,9 @@ function comment(overrides: Partial<Comment> = {}): Comment {
     canEdit: true,
     canDelete: true,
     asCharacter: null,
+    parentId: null,
+    parentHidden: false,
+    reactions: [],
     ...overrides,
   };
 }
@@ -372,5 +381,37 @@ describe('in character', () => {
     await user.click(screen.getByRole('button', { name: 'Salva' }));
 
     expect(onUpdate.mock.calls[0][0].asDocumentId).toBeNull();
+  });
+});
+
+describe('CommentItem reactions (spec 19c)', () => {
+  const thumbs = { emoji: '👍', count: 1, reactedByMe: false, userIds: ['user-2'] };
+
+  it('joins a reaction through the backend', async () => {
+    vi.mocked(apiFetch).mockResolvedValue(rawComment());
+    const { user } = render({ reactions: [thumbs] });
+
+    await user.click(screen.getByRole('button', { name: '👍, 1 reazione: Master' }));
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      `/rooms/room-1/documents/doc-1/comments/comment-1/reactions/${encodeURIComponent('👍')}`,
+      { method: 'PUT' },
+    );
+  });
+
+  it('reports a refused reaction', async () => {
+    vi.mocked(apiFetch).mockRejectedValue(new Error('409'));
+    const { user } = render({ reactions: [thumbs] });
+
+    await user.click(screen.getByRole('button', { name: '👍, 1 reazione: Master' }));
+
+    await vi.waitFor(() => expect(notifyError).toHaveBeenCalled());
+  });
+
+  // Decision 1: never on a deleted placeholder.
+  it('offers no reactions on a deleted Comment', () => {
+    render({ deleted: true, body: '', reactions: [thumbs] });
+
+    expect(screen.queryByRole('button', { name: /reazion/ })).not.toBeInTheDocument();
   });
 });

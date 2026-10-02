@@ -287,6 +287,11 @@ class PostRow(Base):
     as_document_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), index=True
     )
+    # The Post this one answers (spec 19, FR-T1), always of the same Document;
+    # None for a top-level Comment.
+    parent_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("posts.id", ondelete="CASCADE"), index=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -302,6 +307,40 @@ class PostVisibilityGrantRow(Base):
         UUID(as_uuid=True), ForeignKey("posts.id", ondelete="CASCADE"), primary_key=True
     )
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+
+
+class CommentReactionRow(Base):
+    """One member's emoji on a Comment (spec 19c, FR-T6). The primary key
+    lets a member use each emoji once per Comment; the emoji itself is
+    checked by `app/domain/reactions.py::parse_emoji`. Goes with its Comment
+    (CASCADE); deleting a Comment, which keeps its row, clears its reactions
+    in the API."""
+
+    __tablename__ = "comment_reactions"
+
+    comment_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("posts.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    emoji: Mapped[str] = mapped_column(String(32), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class DocumentReadRow(Base):
+    """When a member last opened a Document's detail page (spec 19b): the
+    Comments created after it, by someone else, are new to them. Deleted with
+    the Document, and by the API when the member leaves the Room."""
+
+    __tablename__ = "document_reads"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
+    last_read_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class DocumentImageRow(Base):

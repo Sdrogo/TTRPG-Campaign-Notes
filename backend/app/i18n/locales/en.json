@@ -39,7 +39,15 @@
       "deleted": "This Comment was deleted",
       "alreadyDeleted": "This Comment was already deleted",
       "tooManyImages": "A Comment can have at most {max} images",
-      "invalidSelectiveUsers": "selective_user_ids must all be members of this room"
+      "invalidSelectiveUsers": "selective_user_ids must all be members of this room",
+      "parentNotFound": "The Comment you are answering was not found",
+      "parentDeleted": "A deleted Comment can't be answered",
+      "replyWiderThanParent": "A reply can't be visible to anyone who can't see the Comment it answers"
+    },
+    "reaction": {
+      "invalidEmoji": "A reaction must be exactly one emoji",
+      "commentDeleted": "A deleted Comment can't be reacted to",
+      "tooMany": "A Comment can have at most {max} different emoji"
     },
     "character": {
       "notFound": "Character not found",

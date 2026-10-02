@@ -37,6 +37,15 @@ export function rawDocument(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/** `POST .../read`'s answer (spec 19b): a first visit unless overridden. */
+export function rawDocumentRead(overrides: Record<string, unknown> = {}) {
+  return {
+    last_read_at: '2026-10-02T12:00:00Z',
+    previous_read_at: null,
+    ...overrides,
+  };
+}
+
 export function rawNote(overrides: Record<string, unknown> = {}) {
   return {
     id: 'note-1',
@@ -84,6 +93,9 @@ export function rawComment(overrides: Record<string, unknown> = {}) {
     can_edit: true,
     can_delete: true,
     as_character: null,
+    parent_id: null,
+    parent_hidden: false,
+    reactions: [],
     ...overrides,
   };
 }

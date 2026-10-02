@@ -4,6 +4,7 @@ grants."""
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
+from datetime import datetime
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +13,7 @@ from app.db.models import PostRow, PostVisibilityGrantRow
 from app.domain.models import Comment, DocumentVisibility, PostKind
 
 
-def _comment_from_row(row: PostRow) -> Comment:
+def comment_from_row(row: PostRow) -> Comment:
     """Maps a `posts` row to the domain `Comment`."""
     return Comment(
         id=row.id,
@@ -24,6 +25,7 @@ def _comment_from_row(row: PostRow) -> Comment:
         updated_at=row.updated_at,
         deleted_at=row.deleted_at,
         as_document_id=row.as_document_id,
+        parent_id=row.parent_id,
     )
 
 
@@ -44,6 +46,7 @@ async def insert_comment(
             updated_at=comment.updated_at,
             deleted_at=comment.deleted_at,
             as_document_id=comment.as_document_id,
+            parent_id=comment.parent_id,
         )
     )
     await session.flush()
@@ -52,23 +55,23 @@ async def insert_comment(
     await session.flush()
 
 
-async def get_comment(session: AsyncSession, comment_id: uuid.UUID) -> Comment | None:
-    """The Comment, or None - also for a Post of another kind."""
-    row = await session.get(PostRow, comment_id)
-    if row is None or row.kind != PostKind.COMMENT.value:
-        return None
-    return _comment_from_row(row)
-
-
-async def get_comments_by_ids(
+async def get_comments_with_ancestors(
     session: AsyncSession, comment_ids: Sequence[uuid.UUID]
 ) -> dict[uuid.UUID, Comment]:
-    """The Comments with these ids, keyed by id. Missing ids are simply
-    absent."""
-    if not comment_ids:
-        return {}
-    result = await session.execute(select(PostRow).where(PostRow.id.in_(comment_ids)))
-    return {row.id: _comment_from_row(row) for row in result.scalars()}
+    """The Comments with these ids and every Comment above them (parent,
+    grandparent, ... up to the top-level one), keyed by id: what the effective
+    visibility of a reply needs (spec 19). One query per level of the deepest
+    branch. Missing ids, and Posts of another kind, are simply absent."""
+    found: dict[uuid.UUID, Comment] = {}
+    wanted = set(comment_ids)
+    while wanted:
+        result = await session.execute(
+            select(PostRow).where(PostRow.id.in_(wanted), PostRow.kind == PostKind.COMMENT.value)
+        )
+        batch = [comment_from_row(row) for row in result.scalars()]
+        found.update((comment.id, comment) for comment in batch)
+        wanted = {c.parent_id for c in batch if c.parent_id is not None} - found.keys()
+    return found
 
 
 async def list_comments_for_document(
@@ -81,7 +84,20 @@ async def list_comments_for_document(
         .where(PostRow.document_id == document_id, PostRow.kind == PostKind.COMMENT.value)
         .order_by(PostRow.created_at, PostRow.id)
     )
-    return [_comment_from_row(row) for row in result.scalars()]
+    return [comment_from_row(row) for row in result.scalars()]
+
+
+async def lock_comment(session: AsyncSession, comment_id: uuid.UUID) -> datetime | None:
+    """Takes the Comment's row lock until the transaction ends and returns its
+    `deleted_at` as of the lock, so a check made on it can't be undone by a
+    concurrent deletion: reacting and deleting serialize on this lock
+    (spec 19c). The caller has just read the Comment: a row that vanished
+    since raises `NoResultFound`."""
+    result = await session.execute(
+        select(PostRow.deleted_at).where(PostRow.id == comment_id).with_for_update()
+    )
+    deleted_at: datetime | None = result.scalar_one()
+    return deleted_at
 
 
 async def update_comment(session: AsyncSession, comment: Comment) -> None:

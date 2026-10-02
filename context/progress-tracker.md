@@ -9,17 +9,135 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-02)
 
-Branch `claude/feature-18-qba36q` (spec 18_2, Friends frontend, PR into
-`staging`). Frontend **1078** tests at 100% coverage; lint and build clean.
-Backend unchanged since 18_1b: 563 tests at 100%. No new migration; all
-migrations up to `c4f9a2e7d1b8` (spec 18_1b) are live.
+Branch `claude/project-thread-42spr1` (spec 19c_2, reactions frontend, PR
+into `staging`). Frontend **1131** tests at 100% coverage; lint and build
+clean. Backend unchanged since 19c_1: 667 tests at 100%. Migration
+`f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is **not yet applied to the
+live database**.
 
-Specs 12 to 18_1b (with direct-invitation decline) are merged into
-`staging`. Spec 18 is complete once 18_2 merges; then its browser check.
+Specs 12 to 19c_1 are merged into `staging`. Build order is feature by
+feature: 19c goes reactions → pin and resolved → @mentions → promotion.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Reactions, frontend (spec 19c_2, 2026-10-02)
+
+- `Comment.reactions` (`emoji`, `count`, `reactedByMe`, `userIds`);
+  `useToggleReaction` PUTs/DELETEs `.../reactions/{emoji}` (URL-encoded)
+  and swaps the returned Comment into the Thread's cache.
+- `CommentReactions.tsx`: `ReactionChips` (click joins or leaves, tooltip
+  names who reacted, also on long press) and `AddReaction` (Smiley button,
+  popover with the picker, hidden at 20 emoji; re-picking your own emoji
+  does nothing). Neither on a deleted placeholder.
+- `EmojiPicker` + `lib/emojiPicker.ts`: emoji-mart and its data loaded on
+  first open, in their own chunks (77 kB + 429 kB raw), labels in the UI
+  language.
+- **Choices made beyond the ticket**: emoji-mart without `@emoji-mart/react`
+  (its peer range stops at React 18), so the custom element is mounted by
+  hand; the picker keeps emoji-mart's own dark theme rather than the app's
+  accent, since recoloring it needs raw RGB values outside the Mantine
+  tokens. Not yet checked in a browser: the Definition of Done
+  walk-through. 15 new tests.
+
+### Reactions, backend (spec 19c_1, 2026-10-02)
+
+- Migration `f4c7a1d9e2b6`: `comment_reactions` (`comment_id`, `user_id`,
+  `emoji`, `created_at`), PK on the three, CASCADE from `posts`, RLS + deny.
+- `PUT`/`DELETE .../comments/{id}/reactions/{emoji}`, idempotent, return the
+  Comment; `CommentResponse.reactions` = `[{emoji, count, reacted_by_me,
+  user_ids}]` on every Comment route (list in one extra query).
+- `app/domain/reactions.py`: `parse_emoji` (one emoji grapheme, ≤32 bytes,
+  422), `ensure_can_react` (409 on a deleted placeholder or a 21st emoji,
+  counted under the Comment's row lock), `summarize_reactions`.
+- **Choices made beyond the ticket**: emoji are recognized by Unicode's
+  Extended_Pictographic ranges plus the emoji sequence grammar, without a
+  new dependency, so future emoji pass; stored as sent (no VS16
+  normalization, the picker always sends one form). The 32-byte limit
+  refuses one emoji, a kiss with two different skin tones (35 bytes).
+  Deleting a Comment clears its reactions. A member who leaves keeps their
+  reactions, like their Comments. `DELETE` removes only the caller's own,
+  the Master included. 43 new tests (35 domain, 8 API).
+
+### Unread replies, frontend (spec 19b_2, 2026-10-02)
+
+- `useDocumentVisit` (hooks/useDocuments.ts): `POST .../read` once the
+  Thread has loaded, once per Document per mount; returns
+  `previous_read_at` and reloads the Documents list so the card's count goes.
+- `CommentSection`/`CommentItem`: a "New" badge on what others posted since
+  the previous visit (`isNewComment`); nothing on a first visit.
+  `visibleReplies` takes `isNew`: a branch that would hide a new reply starts
+  expanded, and a branch closed by hand shows "N new" next to "Show".
+- `DocumentCard`: the unread count (labelled "N new comments"), or a "not
+  yet read" dot when `unread_count` is null.
+- **Choices made beyond the ticket**: the marks use the `read` response's
+  `previous_read_at` rather than the Document's `last_read_at`, so a
+  refetch on focus can't wipe them mid-visit. Not yet checked in a browser:
+  the Definition of Done walk-through. 13 new tests.
+
+### Unread replies, backend (spec 19b_1, 2026-10-02)
+
+- Migration `e8c1f5a3b7d2`: `document_reads` (`user_id`, `document_id`,
+  `last_read_at`), PK on the pair, CASCADE from Documents, RLS + deny.
+- `POST .../documents/{doc}/read` (404 on a hidden Document) returns
+  `{last_read_at, previous_read_at}`. The single-Document response gains
+  `last_read_at`; the list gains `unread_count` (`DocumentListItemResponse`).
+  `remove_member` drops the member's reads of the Room's Documents.
+- `app/domain/reads.py`: `is_unread` (created after the visit, by someone
+  else, not deleted) and `unread_counts` (effective visibility of spec 19,
+  so hidden posts and replies under a hidden parent never count).
+- **Choices made beyond the ticket**: `unread_count` is null for a Document
+  never opened (Decision 4's dot); deleted posts never count (a placeholder
+  has nothing to read); `read` also returns the previous visit, so the
+  page can still mark "New" if it refetches the Document after `read`.
+  `comments_repo._comment_from_row` became public (`comment_from_row`) for
+  `reads_repo`. 23 new tests (14 domain, 9 API).
+
+### Threaded replies, frontend (spec 19_2, 2026-10-02)
+
+- `Comment.parentId`/`parentHidden`; a new Comment's `parentId` is sent as
+  `parent_id`. `lib/comments.ts`: `buildCommentTree` (toolbar picks the top
+  level, branches follow, same sort), `topLevelComments` (the "shown of
+  total" counter counts them), `visibleReplies` (more than 3 replies start
+  collapsed to 2), `replyLevels`/`replyGranteeIds`/`replyStartVisibility`.
+- `CommentThread`: three indentation levels (a smaller step on phones),
+  deeper replies at level 3 with "in reply to *Name*", Show more / Hide
+  replies, the "parent hidden" placeholder. A Reply action on every
+  non-deleted Comment opens the composer under it (one at a time), with
+  "Post as" like a Comment (D-24).
+- **Choices made beyond the ticket**: a reply to someone else's non-Room
+  Comment starts Selective to the parent's readers (its author and grantees)
+  rather than at the parent's exact level, so the person answered can read
+  it; at the same parent level a Master-only or Private reply would hide
+  it from them. Answering yourself starts exactly at your Comment's level.
+  Filters match top-level Comments only, so a search that hits only a
+  reply shows nothing (Decision 3 read literally). "Hide deleted" is the
+  exception: it drops a deleted Comment, at any level, only when nothing
+  live sits under it, so the placeholder keeps its live replies (FR-T5).
+- Not yet checked in a browser: the Definition of Done walk-through and
+  the indentation at 390px. 25 new tests.
+
+### Threaded replies, backend (spec 19_1, 2026-10-02)
+
+- Migration `d5b2e8f4a1c7`: nullable `posts.parent_id` (FK `posts.id`,
+  CASCADE, index). The ticket says `comments.parent_id`; Comments live in
+  `posts`. `POST .../comments` takes `parent_id` (404 missing, foreign or
+  hidden parent; 409 deleted parent); every Comment response carries
+  `parent_id` and `parent_hidden`. The list stays flat.
+- `ensure_not_wider` (422) compares audiences over the Room's members, the
+  reply's author left out; checked on create and on edits that change who
+  sees the reply, never on body-only edits.
+- `is_comment_visible_in_thread`: own visibility and every parent's, the
+  author always sees their own. Used by the list, the single-Comment routes
+  and the gallery. Details in `architecture.md` -> Threads/Posts -> Replies.
+- **Choices made beyond the ticket**: the parent's audience is compared on
+  its own visibility, not its effective one (the chain rule narrows the
+  reply at read time anyway); `comments_repo.get_comment` and
+  `get_comments_by_ids` were folded into `get_comments_with_ancestors`,
+  which keeps the "Posts of another kind are absent" rule.
+- 38 new tests (32 domain, 6 API). Merged in PR #54; migration applied to
+  the live DB on 10-02.
 
 ### Friends, frontend (spec 18_2, 2026-10-02)
 
@@ -43,6 +161,13 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   with no name who shares no Room is confirmed without naming them.
 - Hooks `useFriends.ts`, `useInvitations.ts`, shared keys `queryKeys.ts`.
   74 new tests.
+### CI job summary formatting (2026-10-02)
+
+- The backend coverage section was a raw `coverage report` dump; both jobs
+  now write the same layout from `.github/scripts/`: test counts, a totals
+  table, and a collapsible per-file table (backend skips empty
+  `__init__.py`). Backend test counts come from `pytest --junitxml`.
+
 ### Claude code review replaces CodeRabbit (2026-10-02)
 
 - `claude-code-review.yml` runs `anthropics/claude-code-action` on every
@@ -559,17 +684,39 @@ Question in the backend PR.
   setting, not app code. Facebook apps in Development mode only admit the
   app's testers. Also re-test a brand-new user's first sign-in live (the
   stray trigger was dropped but never re-tested).
-- **Mention backlinks** (rest of FR-D4): store mentions server-side, show
-  "Mentioned in" filtered per viewer, decide whether mentions survive a
-  rename.
-- **Threads** on the `posts` table: nested replies (FR-T1/T2) with the
-  D-17/VR-04 "never wider than the parent" check in the domain layer
-  (Invariant 3); pagination (FR-T3); D-20, FR-T5–T7. Details (D-18, FR-D3,
-  FR-T10) already exist as **Notes** (spec 12), outside the Thread. Scope a
-  first slice to FR-T1/T5 (post, edit/moderate).
-- **Reveal action + fuller Visibility** (VR-02, VR-05, VR-06, FR-V2/V3/V5):
-  per-Room default visibility, Reveal with AuditLog + notification, "view as
-  User X" for the Master.
+- **Mention backlinks (spec 20, ticket written 2026-10-02)**:
+  `20 - Mention backlinks` (mentions stored with ids, one-off conversion of
+  old `#Name` text, "Mentioned in" filtered per viewer). 20_1 backend +
+  data migration, then 20_2 frontend. Tags get backlinks too.
+- **Full-text search (spec 21, ticket written 2026-10-02)**:
+  `21 - Full-text search` (current Room, Documents/Notes/Comments/Tags,
+  accent-insensitive prefix match, visibility filtered on the server).
+  21_1 backend + migration, then 21_2 frontend.
+- **Build order (product owner, 2026-10-02)**: one feature at a time, each
+  closed with all its sub-tickets before the next starts: 19 (19_1, 19_2,
+  19b, 19c) → 20 → 21 → 22 (with 22b) → 23 (with 23b, 23c) → 24.
+- **Threads (spec 19, tickets written 2026-10-02)**: `19 - Threaded replies`
+  (nested replies, 3 visible levels, a reply narrowed with its parent but
+  its own visibility kept), `19b - Unread replies`, `19c - Reactions,
+  mentions, pins and promotion`. All decisions confirmed (2026-10-02); 19's
+  Decision 6: the author keeps seeing their reply under a "parent hidden"
+  placeholder (VR-02 unchanged). Ready to build, starting with 19_1.
+- **Thread pagination (FR-T3)**: not owned by any ticket; 19 loads the
+  whole Thread at once. Write a ticket when Threads get long in practice.
+- **Reveal and visibility (spec 22, tickets written 2026-10-02)**:
+  `22 - Reveal and visibility history` (Reveal on Documents, single Notes
+  and Comments with "Revealed" marks and a header count; History tab;
+  Room default visibility) and `22b - View as player` (read-only preview
+  through an `X-View-As` header).
+- **Room export (spec 23, tickets written 2026-10-02)**: `23 - Room
+  export` (JSON + Markdown, per-viewer), `23b - Room PDF manual` (TTRPG
+  manual layout, first style Gothic, Vampire-inspired, WeasyPrint in a
+  background job; check Render can install Pango first), `23c - Agent
+  access tokens` (read-only per-Room tokens, FR-G2). 23 and 23c decisions
+  still to confirm.
+- **Version history (spec 24, ticket written 2026-10-02)**: `24 - Version
+  history` (Document name/description and Note text, 10-minute merge per
+  editor, Owners + Master compare and restore, all versions kept).
 - Decide whether new Rooms should get default Tags in the creator's
   language.
 

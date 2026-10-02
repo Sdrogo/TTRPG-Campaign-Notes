@@ -9,6 +9,7 @@ import {
   fakeSession,
   rawAccount,
   rawDocument,
+  rawDocumentRead,
   rawImage,
   rawMember,
   rawDocumentFile,
@@ -49,6 +50,8 @@ const routes: Routes = { document: rawDocument(), members: [], comments: [] };
 
 function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.resolve()) {
   fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
+    // Every visit is recorded once the Thread loads (spec 19b).
+    if (path === `${DOC}/read`) return Promise.resolve(rawDocumentRead());
     if (init?.method) return onWrite(path);
     if (path === DOC) return Promise.resolve(routes.document);
     if (path === `${DOC}/comments`) return Promise.resolve(routes.comments);
