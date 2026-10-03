@@ -174,6 +174,7 @@ function NotYetReadDot() {
   );
 }
 
+/** The count of new Comments and replies, as a red pill beside the visibility badge (spec 19b). */
 function UnreadCount({ count }: { count: number | null | undefined }) {
   const { t } = useTranslation();
   if (!count) {
