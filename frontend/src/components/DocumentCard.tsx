@@ -39,8 +39,12 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
 
   const marks = (
     <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
-      <UnreadMark count={document.unreadCount} />
-      <VisibilityBadge visibility={document.visibility} />
+      <UnreadCount count={document.unreadCount} />
+      {/* A Document never opened shows a dot inside its visibility badge. */}
+      <VisibilityBadge
+        visibility={document.visibility}
+        leftSection={document.unreadCount === null ? <NotYetReadDot /> : undefined}
+      />
     </Group>
   );
 
@@ -151,24 +155,27 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
 }
 
 /**
- * The card's unread mark (spec 19b): the number of new Comments and replies,
- * a dot when the Document was never opened (null), nothing otherwise. Each
- * carries an accessible label, since the number or dot alone says little.
+ * The card's unread marks (spec 19b): the number of new Comments and replies
+ * beside the visibility badge, and a dot inside it when the Document was never
+ * opened. Each carries an accessible label, since the number or dot alone says
+ * little.
  */
-function UnreadMark({ count }: { count: number | null | undefined }) {
+function NotYetReadDot() {
   const { t } = useTranslation();
-  if (count === null) {
-    return (
-      <Box
-        role="img"
-        aria-label={t('documents.notYetRead')}
-        title={t('documents.notYetRead')}
-        w={8}
-        h={8}
-        style={{ borderRadius: '50%', background: 'var(--accent-primary)' }}
-      />
-    );
-  }
+  return (
+    <Box
+      role="img"
+      aria-label={t('documents.notYetRead')}
+      title={t('documents.notYetRead')}
+      w={6}
+      h={6}
+      style={{ borderRadius: '50%', background: 'var(--accent-primary)' }}
+    />
+  );
+}
+
+function UnreadCount({ count }: { count: number | null | undefined }) {
+  const { t } = useTranslation();
   if (!count) {
     return null;
   }
