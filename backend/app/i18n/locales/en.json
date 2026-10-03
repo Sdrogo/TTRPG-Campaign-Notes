@@ -11,7 +11,9 @@
       "onlyAdministratorCanChangeRoles": "Only a Room Administrator can change roles",
       "onlyAdministratorCanRemoveMembers": "Only a Room Administrator can remove members",
       "onlyAdministratorCanDelete": "Only a Room Administrator can delete the Room",
-      "nameRequired": "Room name is required"
+      "nameRequired": "Room name is required",
+      "onlyAdministratorCanChangeDefaultVisibility": "Only a Room Administrator can change the default visibility",
+      "invalidDefaultVisibility": "The default visibility can be Room, Master only or Private"
     },
     "membership": {
       "notFound": "User is not a member of this room",
@@ -136,6 +138,18 @@
       "notRecipient": "Only the user who received this request can answer it",
       "notPending": "This request has already been answered",
       "answerInstead": "Accept or decline this request instead of removing it"
+    },
+    "reveal": {
+      "onlyMaster": "Only the Master can reveal content",
+      "audienceRequired": "Choose the whole Room or at least one member to reveal to",
+      "notWidening": "Nobody would gain access: a Reveal can only widen who sees the content",
+      "invalidUsers": "user_ids must all be members of this Room",
+      "invalidNotes": "note_ids must all be Notes of this Document",
+      "commentDeleted": "A deleted Comment can't be revealed"
+    },
+    "history": {
+      "forbidden": "Only the Master or a Room Administrator can read the visibility history",
+      "invalidCursor": "before must be an entry of this Room's history"
     }
   }
 }

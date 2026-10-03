@@ -3,13 +3,21 @@
 import uuid
 from collections.abc import Collection
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from app.db.models import AuditLogRow, MembershipRow, RoomRow, TagRow, UserRow
 from app.db.users_repo import profile_from_row
-from app.domain.models import AuditLogEntry, Membership, Room, RoomRole, RoomStatus, UserProfile
+from app.domain.models import (
+    AuditLogEntry,
+    DocumentVisibility,
+    Membership,
+    Room,
+    RoomRole,
+    RoomStatus,
+    UserProfile,
+)
 from app.domain.rooms import NewRoomPlan
 
 
@@ -22,6 +30,7 @@ def room_from_row(row: RoomRow) -> Room:
         status=RoomStatus(row.status),
         created_by=row.created_by,
         players_can_create_documents=row.players_can_create_documents,
+        default_visibility=DocumentVisibility(row.default_visibility),
     )
 
 
@@ -47,6 +56,7 @@ async def insert_new_room(session: AsyncSession, plan: NewRoomPlan) -> None:
             status=plan.room.status.value,
             created_by=plan.room.created_by,
             players_can_create_documents=plan.room.players_can_create_documents,
+            default_visibility=plan.room.default_visibility.value,
         )
     )
     # Flushed separately so the Room row exists before its dependents are
@@ -163,15 +173,14 @@ async def delete_membership(session: AsyncSession, room_id: uuid.UUID, user_id: 
     await session.flush()
 
 
-async def set_players_can_create_documents(
-    session: AsyncSession, room_id: uuid.UUID, value: bool
-) -> None:
-    """Writes the Room's Document-creation setting (D-13). Raises `LookupError`
-    for an unknown Room."""
-    row = await session.get(RoomRow, room_id)
+async def update_room_settings(session: AsyncSession, room: Room) -> None:
+    """Writes the Room's settings: Players' Document creation (D-13) and the
+    default visibility (VR-05). Raises `LookupError` for an unknown Room."""
+    row = await session.get(RoomRow, room.id)
     if row is None:
-        raise LookupError(f"Room {room_id} not found")
-    row.players_can_create_documents = value
+        raise LookupError(f"Room {room.id} not found")
+    row.players_can_create_documents = room.players_can_create_documents
+    row.default_visibility = room.default_visibility.value
     await session.flush()
 
 
@@ -195,7 +204,9 @@ async def delete_room(session: AsyncSession, room_id: uuid.UUID) -> None:
 
 async def insert_audit_log(session: AsyncSession, entry: AuditLogEntry) -> None:
     """Writes an audit entry. Call it in the same transaction as the change it
-    records (Invariant 7)."""
+    records (Invariant 7). Stamped with the clock at the write, not the
+    transaction's start, so the entries one request writes (a Document's
+    Reveal, then its Notes') keep their order in the history (spec 22)."""
     session.add(
         AuditLogRow(
             id=entry.id,
@@ -204,9 +215,54 @@ async def insert_audit_log(session: AsyncSession, entry: AuditLogEntry) -> None:
             target_user_id=entry.target_user_id,
             action=entry.action,
             details=entry.details,
+            created_at=func.clock_timestamp(),
         )
     )
     await session.flush()
+
+
+def _audit_entry_from_row(row: AuditLogRow) -> AuditLogEntry:
+    """Maps an `audit_log` row to the domain `AuditLogEntry`."""
+    return AuditLogEntry(
+        id=row.id,
+        room_id=row.room_id,
+        actor_user_id=row.actor_user_id,
+        target_user_id=row.target_user_id,
+        action=row.action,
+        details=row.details,
+        created_at=row.created_at,
+    )
+
+
+async def get_audit_entry(
+    session: AsyncSession, room_id: uuid.UUID, entry_id: uuid.UUID
+) -> AuditLogEntry | None:
+    """One of the Room's AuditLog rows, or None."""
+    row = await session.get(AuditLogRow, entry_id)
+    return _audit_entry_from_row(row) if row is not None and row.room_id == room_id else None
+
+
+async def list_audit_entries(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    actions: Collection[str],
+    limit: int,
+    before: AuditLogEntry | None = None,
+) -> list[AuditLogEntry]:
+    """The Room's AuditLog rows with these actions, newest first (ties broken
+    by id, so paging is stable), at most `limit`, and only those older than
+    `before` when given. Unfiltered: the caller redacts them per viewer."""
+    statement = select(AuditLogRow).where(
+        AuditLogRow.room_id == room_id, AuditLogRow.action.in_(list(actions))
+    )
+    if before is not None:
+        statement = statement.where(
+            tuple_(AuditLogRow.created_at, AuditLogRow.id) < (before.created_at, before.id)
+        )
+    result = await session.execute(
+        statement.order_by(AuditLogRow.created_at.desc(), AuditLogRow.id.desc()).limit(limit)
+    )
+    return [_audit_entry_from_row(row) for row in result.scalars()]
 
 
 async def users_sharing_a_room(

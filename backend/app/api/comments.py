@@ -31,6 +31,14 @@ from app.api.image_uploads import (
     store_image,
 )
 from app.api.mentions import clean_content_mentions, index_mentions
+from app.api.reveals import (
+    RevealRequest,
+    audience_of,
+    ensure_audience_members,
+    ensure_master,
+    record_reveal,
+    reveal_error,
+)
 from app.auth.dependencies import CurrentUserDep
 from app.db import comments_repo, documents_repo, reactions_repo, rooms_repo
 from app.db.session import SessionDep
@@ -68,6 +76,7 @@ from app.domain.errors import DomainError
 from app.domain.mentions import unlink_non_members
 from app.domain.models import (
     Comment,
+    ContentKind,
     Document,
     DocumentImage,
     DocumentVisibility,
@@ -94,6 +103,15 @@ from app.domain.reactions import (
     parse_emoji,
     summarize_reactions,
 )
+from app.domain.reveal import (
+    RevealAudienceRequiredError,
+    RevealDeletedCommentError,
+    RevealNotWideningError,
+    RevealTarget,
+    ensure_comment_revealable,
+    plan_reveal,
+)
+from app.domain.rooms import starting_visibility
 from app.domain.visibility import (
     is_comment_visible_in_thread,
     is_document_visible,
@@ -185,10 +203,12 @@ class PromoteCommentRequest(BaseModel):
 class CreateCommentRequest(BaseModel):
     """A new Comment with its visibility level, for Selective who else may
     read it, optionally the Character it is written as (D-24), and the
-    Comment it answers (spec 19)."""
+    Comment it answers (spec 19). Without `visibility`, a top-level Comment
+    starts at the Room's default (VR-05) and a reply at its parent's level
+    and grants (spec 19, 22)."""
 
     body: str
-    visibility: DocumentVisibility = DocumentVisibility.ROOM
+    visibility: DocumentVisibility | None = None
     selective_user_ids: list[uuid.UUID] = []
     as_document_id: uuid.UUID | None = None
     parent_id: uuid.UUID | None = None
@@ -463,6 +483,30 @@ async def _ensure_not_wider(
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
 
+async def _starting_visibility(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    body: CreateCommentRequest,
+    parent: _VisibleComment | None,
+) -> tuple[DocumentVisibility, list[uuid.UUID]]:
+    """The level and grants a new Comment starts at: what the request names,
+    else its parent's for a reply (spec 19) - the grants too, unless the
+    request lists its own - else the Room's default (VR-05, spec 22)."""
+    if body.visibility is not None:
+        return body.visibility, body.selective_user_ids
+    if parent is not None:
+        grants = (
+            body.selective_user_ids
+            if "selective_user_ids" in body.model_fields_set
+            else list(parent.selective_ids)
+        )
+        return parent.comment.visibility, grants
+    room = await rooms_repo.get_room(session, room_id)
+    if room is None:  # pragma: no cover - only a concurrent Room deletion
+        return DocumentVisibility.ROOM, body.selective_user_ids
+    return starting_visibility(room, None), body.selective_user_ids
+
+
 async def _require_visible_document(
     session: AsyncSession,
     room_id: uuid.UUID,
@@ -576,12 +620,13 @@ async def create_comment(
             locale,
             not_found_key="errors.comment.parentNotFound",
         )
+    visibility, selective_ids = await _starting_visibility(session, room_id, body, parent)
     try:
         comment = plan_new_comment(
             document_id,
             requester_id,
             await _clean_mentions(session, membership, body.body),
-            body.visibility,
+            visibility,
             datetime.now(UTC),
             as_document_id=body.as_document_id,
             parent=None if parent is None else parent.comment,
@@ -595,24 +640,24 @@ async def create_comment(
 
     if body.as_document_id is not None:
         await _ensure_can_post_as(session, membership, body.as_document_id, locale)
-    await _validate_grantees(session, room_id, body.selective_user_ids, locale)
+    await _validate_grantees(session, room_id, selective_ids, locale)
     if parent is not None:
         await _ensure_not_wider(
             session,
             room_id,
             requester_id,
-            body.visibility,
-            body.selective_user_ids,
+            visibility,
+            selective_ids,
             parent.comment,
             parent.thread,
             locale,
         )
-    await comments_repo.insert_comment(session, comment, body.selective_user_ids)
+    await comments_repo.insert_comment(session, comment, selective_ids)
     await index_mentions(session, _comment_source(comment), comment.body)
     characters = await _characters_for(session, [comment], membership)
     return _to_response(
         comment,
-        set(body.selective_user_ids),
+        set(selective_ids),
         [],
         {},
         membership,
@@ -1120,3 +1165,101 @@ async def promote_comment(
     await comments_repo.set_promotion(session, plan.comment)
     await rooms_repo.insert_audit_log(session, plan.audit_entry)
     return await _single_response(session, found, viewer, comment=plan.comment)
+
+
+@router.post("/{comment_id}/reveal")
+async def reveal_comment(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    comment_id: uuid.UUID,
+    body: RevealRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> CommentResponse:
+    """UC-13/FR-V2: the Master reveals a Comment to the whole Room, or to
+    chosen members added to who already sees it (spec 22 Decision 1),
+    whoever wrote it. Only ever widens: 422 when nobody would gain access,
+    and for a reply that would become wider than the Comment it answers
+    (VR-04, Invariant 3). 403 for anyone but the Master, 404 for a Comment
+    they can't see, 409 for a deleted one. Replies narrowed together with it
+    come back as their authors left them (spec 19). Only members who see the
+    Document and every Comment above it gain it; they are told (`GET
+    /reveals/mine`), and the Reveal is audited in the same transaction
+    (VR-06, Invariant 7)."""
+    requester_id = uuid.UUID(current_user.id)
+    membership = await require_membership(session, room_id, requester_id, locale)
+    document, owner_ids, document_grants = await get_visible_document(
+        session, room_id, document_id, requester_id, membership.role, locale
+    )
+    viewer = _Viewer(
+        membership=membership,
+        manages_document=is_owner(membership.role, requester_id, owner_ids),
+    )
+    found, comment = await _locked_visible(session, document_id, comment_id, viewer, locale)
+    ensure_master(membership, locale)
+    try:
+        ensure_comment_revealable(comment)
+    except RevealDeletedCommentError as exc:
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
+    await ensure_audience_members(session, room_id, body, locale)
+
+    members = await rooms_repo.list_memberships(session, room_id)
+    thread = found.thread
+
+    def sees(
+        member: Membership, visibility: DocumentVisibility, grants: Collection[uuid.UUID]
+    ) -> bool:
+        """Whether the member sees the Comment at this level, through the
+        Document and every Comment above it."""
+        comments = {**thread.comments, comment.id: replace(comment, visibility=visibility)}
+        return is_document_visible(
+            document, member.user_id, member.role, owner_ids, document_grants
+        ) and is_comment_visible_in_thread(
+            comments[comment.id],
+            comments,
+            {**thread.grants, comment.id: grants},
+            member.user_id,
+            member.role,
+        )
+
+    try:
+        plan = plan_reveal(
+            RevealTarget(
+                ContentKind.COMMENT,
+                document_id,
+                comment_id=comment_id,
+                author_id=comment.author_id,
+                owner_ids=frozenset({comment.author_id}),
+                always_visible_to=frozenset({comment.author_id}),
+            ),
+            comment.visibility,
+            found.selective_ids,
+            audience_of(body),
+            members,
+            sees,
+            room_id,
+            requester_id,
+            datetime.now(UTC),
+        )
+    except (RevealAudienceRequiredError, RevealNotWideningError) as exc:
+        raise reveal_error(exc, locale) from exc
+    if comment.parent_id is not None:
+        await _ensure_not_wider(
+            session,
+            room_id,
+            comment.author_id,
+            plan.visibility,
+            plan.selective_user_ids,
+            thread.comments[comment.parent_id],
+            thread,
+            locale,
+        )
+
+    revealed = replace(comment, visibility=plan.visibility)
+    await comments_repo.update_comment(session, revealed)
+    await comments_repo.set_comment_grants(session, comment_id, sorted(plan.selective_user_ids))
+    await record_reveal(session, plan)
+    return await _single_response(
+        session, found, viewer, comment=revealed, selective_ids=plan.selective_user_ids
+    )

@@ -13,7 +13,12 @@ from app.api.errors import http_error, translated_error
 from app.db import comments_repo, documents_repo, notes_repo, rooms_repo
 from app.domain.documents import NotOwnerError, ensure_owner
 from app.domain.models import Document, DocumentImage, Membership, Note, RoomRole
-from app.domain.visibility import is_document_visible, is_note_visible, visible_document_images
+from app.domain.visibility import (
+    is_comment_visible_in_thread,
+    is_document_visible,
+    is_note_visible,
+    visible_document_images,
+)
 
 
 async def require_membership(
@@ -173,3 +178,73 @@ async def get_visible_images_for_documents(
         document_id: [image for image in images if image.id in visible_ids]
         for document_id, images in by_document.items()
     }
+
+
+@dataclass(frozen=True)
+class ContentLookup:
+    """Documents, Notes and Comments of one Room looked up by id for one
+    viewer: which still exist, which the viewer sees now (everything around
+    them included), and the Documents and Notes themselves for naming the
+    visible ones."""
+
+    existing_ids: set[uuid.UUID]
+    visible_ids: set[uuid.UUID]
+    documents: dict[uuid.UUID, Document]
+    notes: dict[uuid.UUID, Note]
+
+
+async def lookup_content(
+    session: AsyncSession,
+    viewer: Membership,
+    document_ids: Collection[uuid.UUID],
+    note_ids: Collection[uuid.UUID],
+    comment_ids: Collection[uuid.UUID],
+) -> ContentLookup:
+    """Which of these Documents, Notes and Comments exist in the viewer's Room
+    and which they may see (Invariant 1): a Note or a Comment only through a
+    Document they see, then by its own visibility, a Comment through its
+    whole parent chain (spec 19). A fixed number of queries whatever the
+    number of ids (plus one per level of the deepest Comment branch). Used by
+    the Reveal badge and the visibility history (spec 22)."""
+    notes = await notes_repo.get_notes_by_ids(session, list(note_ids))
+    comments = await comments_repo.get_comments_with_ancestors(session, list(comment_ids))
+    wanted_documents = (
+        set(document_ids)
+        | {note.document_id for note in notes}
+        | {comments[comment_id].document_id for comment_id in comment_ids if comment_id in comments}
+    )
+    documents = [
+        document
+        for document in await documents_repo.get_documents_by_ids(session, list(wanted_documents))
+        if document.room_id == viewer.room_id
+    ]
+    by_id = {document.id: document for document in documents}
+    visible_document_ids = {d.id for d in await visible_documents(session, documents, viewer)}
+    owners = await documents_repo.list_owner_ids_for_documents(session, list(by_id))
+    note_grants = await notes_repo.list_grants_for_notes(session, [note.id for note in notes])
+    comment_grants = await comments_repo.list_grants_for_comments(session, list(comments))
+
+    existing = set(by_id)
+    visible = set(visible_document_ids)
+    room_notes = {note.id: note for note in notes if note.document_id in by_id}
+    for note in room_notes.values():
+        existing.add(note.id)
+        if note.document_id in visible_document_ids and is_note_visible(
+            note, viewer.user_id, viewer.role, owners[note.document_id], note_grants[note.id]
+        ):
+            visible.add(note.id)
+    for comment_id in comment_ids:
+        comment = comments.get(comment_id)
+        if comment is None or comment.document_id not in by_id:
+            continue
+        existing.add(comment_id)
+        if comment.document_id in visible_document_ids and is_comment_visible_in_thread(
+            comment, comments, comment_grants, viewer.user_id, viewer.role
+        ):
+            visible.add(comment_id)
+    return ContentLookup(
+        existing_ids=existing,
+        visible_ids=visible,
+        documents=by_id,
+        notes=room_notes,
+    )

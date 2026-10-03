@@ -1,10 +1,11 @@
-"""Rules for creating a Room (UC-02, FR-R1)."""
+"""Rules for creating a Room (UC-02, FR-R1) and changing its settings (D-13,
+VR-05)."""
 
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from app.domain.errors import DomainError
-from app.domain.models import Membership, Room, RoomRole, RoomStatus, Tag
+from app.domain.models import DocumentVisibility, Membership, Room, RoomRole, RoomStatus, Tag
 
 # D-14 / FR-N1: default Tags created with every Room. They are also its first
 # Main Tags (spec 10, 11), in this order; an Administrator can change both.
@@ -19,6 +20,19 @@ DEFAULT_TAGS: tuple[tuple[str, str], ...] = (
 
 class RoomNameRequiredError(DomainError):
     """The Room name is empty once trimmed."""
+
+
+class OnlyMasterChangesSettingsError(DomainError):
+    """Only the Master switches Players' Document creation (D-13, FR-D7)."""
+
+
+class OnlyAdministratorChangesDefaultVisibilityError(DomainError):
+    """Only an Administrator chooses the Room's default visibility (VR-05,
+    spec 22 Decision 5)."""
+
+
+class InvalidDefaultVisibilityError(DomainError):
+    """Selective can't be a default: it needs a list of members."""
 
 
 @dataclass(frozen=True)
@@ -64,3 +78,43 @@ def plan_new_room(name: str, game_system: str | None, creator_id: uuid.UUID) -> 
         for position, (tag_name, category) in enumerate(DEFAULT_TAGS)
     )
     return NewRoomPlan(room=room, owner_membership=owner_membership, default_tags=default_tags)
+
+
+def plan_room_settings(
+    room: Room,
+    requester: Membership,
+    players_can_create_documents: bool | None,
+    default_visibility: DocumentVisibility | None,
+) -> Room:
+    """The Room with the settings the request changes; omitted ones stay.
+    Players' Document creation is the Master's (D-13, FR-D7), the default
+    visibility the Administrators' (VR-05, spec 22 Decision 5): 403 for a
+    setting the requester may not change, 422 for a Selective default.
+    Neither is audited: no content's visibility changes."""
+    if players_can_create_documents is not None and requester.role != RoomRole.MASTER:
+        raise OnlyMasterChangesSettingsError("errors.room.onlyMasterCanChangeSettings")
+    if default_visibility is not None:
+        if not requester.is_admin:
+            raise OnlyAdministratorChangesDefaultVisibilityError(
+                "errors.room.onlyAdministratorCanChangeDefaultVisibility"
+            )
+        if default_visibility == DocumentVisibility.SELECTIVE:
+            raise InvalidDefaultVisibilityError("errors.room.invalidDefaultVisibility")
+    return replace(
+        room,
+        players_can_create_documents=(
+            room.players_can_create_documents
+            if players_can_create_documents is None
+            else players_can_create_documents
+        ),
+        default_visibility=(
+            room.default_visibility if default_visibility is None else default_visibility
+        ),
+    )
+
+
+def starting_visibility(room: Room, requested: DocumentVisibility | None) -> DocumentVisibility:
+    """The level new content starts at (VR-05): the one the request names, or
+    the Room's default. A reply instead starts from its parent's (spec 19),
+    which the Comment route decides."""
+    return room.default_visibility if requested is None else requested

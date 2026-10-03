@@ -33,9 +33,27 @@ from app.api.image_uploads import (
 )
 from app.api.mentions import clean_content_mentions, index_mentions
 from app.api.notes import NoteResponse, visible_note_responses
+from app.api.reveals import (
+    RevealDocumentRequest,
+    RevealedInDocument,
+    audience_of,
+    ensure_audience_members,
+    ensure_master,
+    mark_document_reveals_seen,
+    record_reveal,
+    reveal_error,
+)
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
-from app.db import comments_repo, documents_repo, files_repo, reads_repo, rooms_repo, tags_repo
+from app.db import (
+    comments_repo,
+    documents_repo,
+    files_repo,
+    notes_repo,
+    reads_repo,
+    rooms_repo,
+    tags_repo,
+)
 from app.db.session import SessionDep
 from app.domain.characters import PlayerNotAMemberError, plan_player_change
 from app.domain.documents import (
@@ -43,11 +61,13 @@ from app.domain.documents import (
     DocumentNameRequiredError,
     NotAnOwnerError,
     can_create_document,
+    document_visibility_audit,
     ensure_can_remove_owner,
     plan_add_owner,
     plan_new_document,
 )
 from app.domain.models import (
+    ContentKind,
     Document,
     DocumentImage,
     DocumentVisibility,
@@ -56,7 +76,14 @@ from app.domain.models import (
     MentionSourceKind,
 )
 from app.domain.reads import unread_counts
-from app.domain.visibility import is_document_visible
+from app.domain.reveal import (
+    RevealAudienceRequiredError,
+    RevealNotWideningError,
+    RevealTarget,
+    plan_reveal,
+)
+from app.domain.rooms import starting_visibility
+from app.domain.visibility import is_content_visible, is_document_visible
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/documents", tags=["documents"])
@@ -112,6 +139,9 @@ class DocumentReadResponse(BaseModel):
 
     last_read_at: datetime
     previous_read_at: datetime | None
+    # What this visit opened among the content revealed to the requester
+    # (spec 22): the page marks it "Revealed" for this visit.
+    revealed: RevealedInDocument
 
 
 class SetPlayerRequest(BaseModel):
@@ -131,11 +161,11 @@ class ImageFromUrlRequest(BaseModel):
 
 class CreateDocumentRequest(BaseModel):
     """A new Document. Tags must belong to the Room; repeated ids are
-    dropped."""
+    dropped. Without `visibility` it starts at the Room's default (VR-05)."""
 
     name: str
     description: str = ""
-    visibility: DocumentVisibility = DocumentVisibility.ROOM
+    visibility: DocumentVisibility | None = None
     tag_ids: UniqueIds = []
     selective_user_ids: UniqueIds = []
 
@@ -218,8 +248,9 @@ async def create_document(
     session: SessionDep,
     locale: LocaleDep,
 ) -> DocumentDetailResponse:
-    """UC-06: creates a Document with the requester as its Owner. 403 when the
-    Room has disabled Document creation for Players (D-13, FR-D7)."""
+    """UC-06: creates a Document with the requester as its Owner, at the
+    Room's default visibility unless the request names one (VR-05). 403 when
+    the Room has disabled Document creation for Players (D-13, FR-D7)."""
     requester_id = uuid.UUID(current_user.id)
     membership = await require_membership(session, room_id, requester_id, locale)
 
@@ -231,7 +262,13 @@ async def create_document(
 
     description = await clean_content_mentions(session, membership, body.description)
     try:
-        plan = plan_new_document(room_id, body.name, description, body.visibility, requester_id)
+        plan = plan_new_document(
+            room_id,
+            body.name,
+            description,
+            starting_visibility(room, body.visibility),
+            requester_id,
+        )
     except DocumentNameRequiredError as exc:
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
@@ -350,13 +387,16 @@ async def mark_document_read(
     """Spec 19b: the requester opened the Document, so what was posted until
     now is no longer new to them. Any member who sees the Document (404
     otherwise, VR-07); calling it again only moves the time forward. The
-    previous visit comes back so the page can still mark what is new."""
+    previous visit comes back so the page can still mark what is new. It
+    also opens what was revealed to them in the Document, its Notes and its
+    Comments (spec 22), and says which, so the page can mark it "Revealed"."""
     requester_id = uuid.UUID(current_user.id)
     membership = await require_membership(session, room_id, requester_id, locale)
     await get_visible_document(session, room_id, document_id, requester_id, membership.role, locale)
     now = datetime.now(UTC)
     previous = await reads_repo.mark_read(session, requester_id, document_id, now)
-    return DocumentReadResponse(last_read_at=now, previous_read_at=previous)
+    revealed = await mark_document_reveals_seen(session, membership, document_id, now)
+    return DocumentReadResponse(last_read_at=now, previous_read_at=previous, revealed=revealed)
 
 
 @router.patch("/{document_id}")
@@ -369,11 +409,13 @@ async def update_document(
     locale: LocaleDep,
 ) -> DocumentDetailResponse:
     """UC-07: an Owner (or the Master, D-12) edits the Document's fields, Tags
-    and Selective grants."""
+    and Selective grants. A change of who can see it is audited in the same
+    transaction (VR-08, Invariant 7)."""
     requester_id = uuid.UUID(current_user.id)
     document, _, membership = await get_owned_document(
         session, room_id, document_id, requester_id, locale
     )
+    selective_ids = await documents_repo.list_selective_grant_ids(session, document_id)
 
     new_name = document.name if body.name is None else body.name.strip()
     if body.name is not None and not new_name:
@@ -407,7 +449,116 @@ async def update_document(
     if body.selective_user_ids is not None:
         await documents_repo.set_selective_grants(session, document_id, body.selective_user_ids)
 
+    audit_entry = document_visibility_audit(
+        document, updated, requester_id, selective_ids, body.selective_user_ids
+    )
+    if audit_entry is not None:
+        await rooms_repo.insert_audit_log(session, audit_entry)
+
     return await _to_response(session, updated, membership)
+
+
+@router.post("/{document_id}/reveal")
+async def reveal_document(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    body: RevealDocumentRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> DocumentDetailResponse:
+    """UC-13/FR-V2: the Master reveals the Document to the whole Room, or to
+    chosen members added to who already sees it, together with any of its
+    Notes listed in `note_ids` (spec 22 Decisions 1-2); its Comments are never
+    carried along. Only ever widens: 422 when nobody would gain access to the
+    Document or to one of the Notes, or for a Note that isn't one of its own.
+    403 for anyone but the Master, 404 for a Document they can't see. Every
+    member who gains access is told (`GET /reveals/mine`), and each Reveal is
+    audited in the same transaction (VR-06, Invariant 7)."""
+    requester_id = uuid.UUID(current_user.id)
+    membership = await require_membership(session, room_id, requester_id, locale)
+    # Locked before anything is read: the levels planned from are the ones
+    # written over.
+    await documents_repo.lock_document(session, document_id)
+    document, owner_ids, selective_ids = await get_visible_document(
+        session, room_id, document_id, requester_id, membership.role, locale
+    )
+    ensure_master(membership, locale)
+    await ensure_audience_members(session, room_id, body, locale)
+
+    members = await rooms_repo.list_memberships(session, room_id)
+    owners = frozenset(owner_ids)
+    audience = audience_of(body)
+    now = datetime.now(UTC)
+    try:
+        plan = plan_reveal(
+            RevealTarget(ContentKind.DOCUMENT, document_id, owner_ids=owners),
+            document.visibility,
+            selective_ids,
+            audience,
+            members,
+            lambda member, visibility, grants: is_content_visible(
+                visibility, member.user_id, member.role, owners, grants
+            ),
+            room_id,
+            requester_id,
+            now,
+        )
+    except (RevealAudienceRequiredError, RevealNotWideningError) as exc:
+        raise reveal_error(exc, locale) from exc
+
+    notes = await get_document_notes(session, document_id, membership, owner_ids)
+    notes_by_id = {note.id: note for note in notes.every}
+    if not set(body.note_ids) <= notes_by_id.keys():
+        raise http_error(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.reveal.invalidNotes", locale
+        )
+
+    def sees_document_after(member: Membership) -> bool:
+        """Whether the member sees the Document once it is revealed."""
+        return is_content_visible(
+            plan.visibility, member.user_id, member.role, owners, plan.selective_user_ids
+        )
+
+    note_plans = []
+    for note_id in body.note_ids:
+        note = notes_by_id[note_id]
+        try:
+            note_plans.append(
+                (
+                    note,
+                    plan_reveal(
+                        RevealTarget(
+                            ContentKind.NOTE, document_id, note_id=note_id, owner_ids=owners
+                        ),
+                        note.visibility,
+                        notes.grants[note_id],
+                        audience,
+                        members,
+                        lambda member, visibility, grants: (
+                            sees_document_after(member)
+                            and is_content_visible(
+                                visibility, member.user_id, member.role, owners, grants
+                            )
+                        ),
+                        room_id,
+                        requester_id,
+                        now,
+                    ),
+                )
+            )
+        except (RevealAudienceRequiredError, RevealNotWideningError) as exc:
+            raise reveal_error(exc, locale) from exc
+
+    revealed = replace(document, visibility=plan.visibility)
+    await documents_repo.update_document(session, revealed)
+    await documents_repo.set_selective_grants(session, document_id, sorted(plan.selective_user_ids))
+    await record_reveal(session, plan)
+    for note, note_plan in note_plans:
+        await notes_repo.update_note(session, replace(note, visibility=note_plan.visibility))
+        await notes_repo.set_note_grants(session, note.id, sorted(note_plan.selective_user_ids))
+        await record_reveal(session, note_plan)
+    return await _to_response(session, revealed, membership)
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)

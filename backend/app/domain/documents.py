@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from app.domain.errors import DomainError
 from app.domain.models import (
+    AuditLogEntry,
     Document,
     DocumentImage,
     DocumentOwner,
@@ -15,6 +16,8 @@ from app.domain.models import (
 )
 
 MAX_IMAGES_PER_DOCUMENT = 20
+
+DOCUMENT_VISIBILITY_CHANGED = "document_visibility_changed"
 
 
 class DocumentNameRequiredError(DomainError):
@@ -163,3 +166,39 @@ def next_favorite_id(remaining: Sequence[DocumentImage]) -> uuid.UUID | None:
     if not remaining or has_favorite(remaining):
         return None
     return remaining[0].id
+
+
+def document_visibility_audit(
+    before: Document,
+    after: Document,
+    editor_id: uuid.UUID,
+    current_selective_ids: Collection[uuid.UUID],
+    new_selective_ids: Collection[uuid.UUID] | None,
+) -> AuditLogEntry | None:
+    """The AuditLog row for an edit that changes who can see a Document - its
+    level or its Selective grants (VR-08, Invariant 7) - or None when it
+    changes neither. Like Notes and Comments; the visibility history (spec 22)
+    reads these rows."""
+    grants_changed = new_selective_ids is not None and set(new_selective_ids) != set(
+        current_selective_ids
+    )
+    if after.visibility == before.visibility and not grants_changed:
+        return None
+    return AuditLogEntry(
+        id=uuid.uuid4(),
+        room_id=before.room_id,
+        actor_user_id=editor_id,
+        target_user_id=None,
+        action=DOCUMENT_VISIBILITY_CHANGED,
+        details={
+            "document_id": str(before.id),
+            "from": before.visibility.value,
+            "to": after.visibility.value,
+            "selective_user_ids": sorted(
+                str(user_id)
+                for user_id in (
+                    current_selective_ids if new_selective_ids is None else new_selective_ids
+                )
+            ),
+        },
+    )

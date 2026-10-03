@@ -15,11 +15,33 @@ Backend **754** tests at 100% coverage. The live database is at
 converted to `#` tokens, 204 `document_mentions` rows. No pending migrations.
 
 Specs 12 to 20 are merged into `staging` (features 19 and 20 closed). All
-Open Questions closed 2026-10-03. Next: feature 21 (full-text search).
+Open Questions closed 2026-10-03. Feature 22 started before 21 at the
+product owner's request (2026-10-03); 21 (full-text search) is still to do.
+
+**Pending migration**: `b8d2f6a4c9e1` (spec 22_1: `rooms.default_visibility`,
+`reveals`, `reveal_recipients`, an `audit_log` index). Not yet on the live
+database; apply it by hand before the release that ships 22_1.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Reveal and visibility history, backend (spec 22_1, 2026-10-03)
+
+- Reveal routes for a Document (with chosen Notes), a Note and a Comment,
+  Master only; `GET /reveals/mine` for the badge; the History endpoint
+  `GET /rooms/{id}/audit-log` for the Master and Administrators, redacted
+  for content the reader can't see; `rooms.default_visibility` used by every
+  create route. Details in `architecture.md` → Reveal, visibility history
+  and Room default visibility.
+- Choices beyond the ticket: opening is recorded by `POST .../read` (which
+  now returns what it opened) rather than the Document `GET`; a Master or
+  Private level revealed to chosen Players becomes Selective, so the
+  Document's Owners gain it too; Document visibility changes are now
+  audited (they weren't); recipients count only members who see everything
+  around the content.
+- Migration `b8d2f6a4c9e1` (pending on the live DB). Backend 800 tests,
+  100% coverage.
 
 ### Open questions closed (2026-10-03)
 
@@ -934,10 +956,11 @@ Reorganized with the product owner on 2026-10-03.
   - **Full-text search (spec 21)**: `21 - Full-text search` (current Room,
     Documents/Notes/Comments/Tags, accent-insensitive prefix match,
     visibility filtered on the server). 21_1 backend + migration, then 21_2
-    frontend. **Next.**
+    frontend. Postponed: the product owner asked for 22 first (2026-10-03).
   - **Reveal and visibility (spec 22)**: `22 - Reveal and visibility
     history` and `22b - View as player` (read-only preview through an
-    `X-View-As` header).
+    `X-View-As` header). **In progress**: 22_1 done; 22_2, 22b_1, 22b_2
+    next.
   - **Room export (spec 23)**: `23 - Room export` (JSON + Markdown,
     per-viewer), `23b - Room PDF manual` (WeasyPrint in a background job;
     check Render can install Pango first), `23c - Agent access tokens`

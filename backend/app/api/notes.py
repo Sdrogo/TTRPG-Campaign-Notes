@@ -6,6 +6,7 @@ the Master manage Notes (D-12)."""
 
 import uuid
 from collections.abc import Collection
+from dataclasses import replace
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, status
@@ -21,12 +22,21 @@ from app.api.access import (
 )
 from app.api.errors import http_error, translated_error
 from app.api.mentions import clean_content_mentions, index_mentions
+from app.api.reveals import (
+    RevealRequest,
+    audience_of,
+    ensure_audience_members,
+    ensure_master,
+    record_reveal,
+    reveal_error,
+)
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, notes_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
 from app.domain.models import (
+    ContentKind,
     DocumentVisibility,
     Membership,
     MentionSource,
@@ -45,7 +55,14 @@ from app.domain.notes import (
     plan_note_edit,
     plan_note_order,
 )
-from app.domain.visibility import is_note_visible
+from app.domain.reveal import (
+    RevealAudienceRequiredError,
+    RevealNotWideningError,
+    RevealTarget,
+    plan_reveal,
+)
+from app.domain.rooms import starting_visibility
+from app.domain.visibility import is_content_visible, is_document_visible, is_note_visible
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/documents/{document_id}/notes", tags=["notes"])
@@ -73,11 +90,11 @@ class NoteResponse(BaseModel):
 
 class CreateNoteRequest(BaseModel):
     """A new Note with its visibility level and, for Selective, who else may
-    read it."""
+    read it. Without `visibility` it starts at the Room's default (VR-05)."""
 
     title: str
     description: str = ""
-    visibility: DocumentVisibility = DocumentVisibility.ROOM
+    visibility: DocumentVisibility | None = None
     selective_user_ids: UniqueIds = []
 
 
@@ -195,7 +212,8 @@ async def create_note(
     locale: LocaleDep,
 ) -> NoteResponse | None:
     """An Owner (or the Master) adds a Note after the Document's others, up to
-    `MAX_NOTES_PER_DOCUMENT` (409 beyond). Returns null if the new Note is
+    `MAX_NOTES_PER_DOCUMENT` (409 beyond), at the Room's default visibility
+    unless the request names one (VR-05). Returns null if the new Note is
     hidden from the requester (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
     membership, owner_ids = await _require_document(
@@ -208,13 +226,16 @@ async def create_note(
     await documents_repo.lock_document(session, document_id)
     existing = await notes_repo.list_notes_for_document(session, document_id)
     description = await clean_content_mentions(session, membership, body.description)
+    room = await rooms_repo.get_room(session, room_id)
+    if room is None:  # pragma: no cover - only a concurrent Room deletion
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
     try:
         note = plan_new_note(
             document_id,
             requester_id,
             body.title,
             description,
-            body.visibility,
+            starting_visibility(room, body.visibility),
             existing,
             datetime.now(UTC),
         )
@@ -359,3 +380,59 @@ async def delete_note(
     note = _get_visible_note(notes, note_id, locale)
     _ensure_manager(membership, owner_ids, locale)
     await notes_repo.delete_note(session, note.id)
+
+
+@router.post("/{note_id}/reveal")
+async def reveal_note(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    note_id: uuid.UUID,
+    body: RevealRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> NoteResponse:
+    """UC-13/FR-V2: the Master reveals one Note to the whole Room, or to chosen
+    members added to who already sees it (spec 22 Decision 1). Only ever
+    widens: 422 when nobody would gain access. 403 for anyone but the Master,
+    404 for a Note or a Document they can't see. Only members who see the
+    Document gain the Note; they are told (`GET /reveals/mine`), and the
+    Reveal is audited in the same transaction (VR-06, Invariant 7)."""
+    requester_id = uuid.UUID(current_user.id)
+    membership = await require_membership(session, room_id, requester_id, locale)
+    await documents_repo.lock_document(session, document_id)
+    document, owner_ids, document_grants = await get_visible_document(
+        session, room_id, document_id, requester_id, membership.role, locale
+    )
+    notes = await get_document_notes(session, document_id, membership, owner_ids)
+    note = _get_visible_note(notes, note_id, locale)
+    ensure_master(membership, locale)
+    await ensure_audience_members(session, room_id, body, locale)
+
+    members = await rooms_repo.list_memberships(session, room_id)
+    owners = frozenset(owner_ids)
+    try:
+        plan = plan_reveal(
+            RevealTarget(ContentKind.NOTE, document_id, note_id=note_id, owner_ids=owners),
+            note.visibility,
+            notes.grants[note_id],
+            audience_of(body),
+            members,
+            lambda member, visibility, grants: (
+                is_document_visible(
+                    document, member.user_id, member.role, owner_ids, document_grants
+                )
+                and is_content_visible(visibility, member.user_id, member.role, owners, grants)
+            ),
+            room_id,
+            requester_id,
+            datetime.now(UTC),
+        )
+    except (RevealAudienceRequiredError, RevealNotWideningError) as exc:
+        raise reveal_error(exc, locale) from exc
+
+    revealed = replace(note, visibility=plan.visibility)
+    await notes_repo.update_note(session, revealed)
+    await notes_repo.set_note_grants(session, note_id, sorted(plan.selective_user_ids))
+    await record_reveal(session, plan)
+    return note_response(revealed, plan.selective_user_ids, membership, owner_ids)
