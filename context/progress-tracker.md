@@ -652,8 +652,9 @@ proposals, 2026-10-03):
 - **Docstring coverage**: 100% of backend `app/` (ruff `D1` gate in CI) and
   100% of frontend exports (JSDoc, review-only). Rule in `code-standards.md`
   → Documentation.
-- **CORS for Vercel previews**: optional `CORS_ORIGIN_REGEX`. See Next Up —
-  Render holds a looser pattern than the one decided.
+- **CORS for Vercel previews**: optional `CORS_ORIGIN_REGEX`. Render keeps
+  `[a-z0-9-]+` so branch previews work (decided 2026-10-03, see
+  `architecture.md` → CORS).
 - **Auth expansion (spec 08)**: Discord, Facebook, GitHub and X alongside
   Google (Google stays the filled button). X uses Supabase id `x`. Handles
   are a display-name fallback. Providers in `lib/authProviders.ts`.
@@ -826,11 +827,6 @@ Reorganized with the product owner on 2026-10-03.
   production** (`document_mentions` + one-off conversion of plain `#Name`
   text into tokens). Before 20_2 is live, tokens would show as raw text.
   The live DB is at `c2f6b8d4e1a7` (checked 2026-10-03).
-- **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only, product
-  owner): set it to `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app`
-  and redeploy (Render holds the looser `[a-z0-9-]+`). Then check with
-  curl: the look-alike `…-abc123-evil-rum11.vercel.app` gets no
-  `access-control-allow-origin`, a commit preview still does.
 - **Browser walk-through** (product owner; built and unit-tested, never
   seen running). One checklist:
   - Spec 12, Notes: create, edit, reorder as an Owner and the Master;
