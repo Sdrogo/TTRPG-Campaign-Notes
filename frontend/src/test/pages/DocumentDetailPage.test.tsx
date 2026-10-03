@@ -905,6 +905,22 @@ describe('promoting a Comment (spec 19c)', () => {
     );
   });
 
+  it('keeps the edits in progress when promoting into an open editor', async () => {
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await user.click(screen.getAllByRole('button', { name: 'Modifica' })[0]);
+    await user.type(screen.getByRole('textbox', { name: /^Nome/ }), ' antico');
+
+    await user.click(await screen.findByRole('button', { name: 'Promuovi' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Nella descrizione' }));
+
+    expect(screen.getByRole('textbox', { name: /^Nome/ })).toHaveValue('Il Cancello antico');
+    expect(screen.getByRole('combobox', { name: /Descrizione/ })).toHaveValue(
+      'Una porta di pietra.\n\nIl sigillo è rotto.',
+    );
+    expect(screen.getByText(/Il testo del commento è stato aggiunto/)).toBeInTheDocument();
+  });
+
   it('saves the description, then records the promotion', async () => {
     const user = await startPromotion('Nella descrizione');
 

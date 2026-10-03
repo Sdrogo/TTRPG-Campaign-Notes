@@ -236,9 +236,6 @@ function DocumentPanel({
           <Stack gap="md" style={{ flex: '1 1 auto', minWidth: 0, width: '100%' }}>
             {editing ? (
               <DocumentEditForm
-                // Remounted for a promotion, so the text is added to the
-                // description as saved.
-                key={promotion?.comment.id ?? 'edit'}
                 roomId={roomId}
                 document={document}
                 tags={tags}
@@ -356,13 +353,23 @@ function DocumentEditForm({
   const [confirmWideningOpened, setConfirmWideningOpened] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
+  // A promotion started while the form is already open adds its text to what
+  // is being typed, keeping the unsaved edits.
+  const promotedId = promotion?.comment.id ?? null;
+  const [appendedFor, setAppendedFor] = useState(promotedId);
+  if (promotion && promotedId !== appendedFor) {
+    setAppendedFor(promotedId);
+    setValues((current) => ({
+      ...current,
+      description: appendPromotedText(current.description, promotion.comment),
+    }));
+  }
+
   // A promotion starts from a Comment further down the page: bring the
   // editor into view.
   useEffect(() => {
-    if (promotion) formRef.current!.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    // Only when the form opens: it is remounted for each promotion.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (promotedId) formRef.current!.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [promotedId]);
 
   // Who the promoted text would newly reach with the visibility being saved.
   const reached = promotion
