@@ -142,3 +142,58 @@ describe('MentionText', () => {
     });
   });
 });
+
+// Spec 20 Decision 1: mentions stored as tokens render under the target's
+// current name, whatever name they were written with.
+describe('MentionText with tokens', () => {
+  const DOC = '11111111-1111-4111-8111-111111111111';
+  const TAG = '22222222-2222-4222-8222-222222222222';
+  const tokens = {
+    documents: [document(DOC, 'Il Cancello Nuovo')],
+    tags: [{ id: TAG, name: 'Luoghi', category: null, mainPosition: null }],
+  };
+
+  it('links a Document token under its current name', () => {
+    renderWithProviders(
+      withMentions(<MentionText text={`Vai al #[Il Cancello](doc:${DOC}).`} />, tokens),
+    );
+
+    const link = screen.getByTestId('document-mention');
+    expect(link).toHaveTextContent('#Il Cancello Nuovo');
+    expect(link.closest('a')).toHaveAttribute('href', `/rooms/room-1/documents/${DOC}`);
+  });
+
+  it('links a Tag token to the filtered Documents list', () => {
+    renderWithProviders(withMentions(<MentionText text={`In #[Posti](tag:${TAG})`} />, tokens));
+
+    expect(screen.getByTestId('tag-mention')).toHaveTextContent('#Luoghi');
+  });
+
+  it('shows a token the viewer cannot resolve as its written name', () => {
+    renderWithProviders(
+      withMentions(
+        <MentionText text="Il #[Segreto](doc:33333333-3333-4333-8333-333333333333) esiste?" />,
+        tokens,
+      ),
+    );
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByText('Il #Segreto esiste?')).toBeInTheDocument();
+  });
+
+  it('renders Document tokens next to member tokens', () => {
+    const members: Member[] = [];
+    renderWithProviders(
+      withMentions(
+        <MentionText
+          text={`@[Ara](user:44444444-4444-4444-8444-444444444444) e #[X](doc:${DOC})`}
+          members={members}
+        />,
+        tokens,
+      ),
+    );
+
+    expect(screen.getByTestId('document-mention')).toHaveTextContent('#Il Cancello Nuovo');
+    expect(screen.getByText(/@Ara e/)).toBeInTheDocument();
+  });
+});

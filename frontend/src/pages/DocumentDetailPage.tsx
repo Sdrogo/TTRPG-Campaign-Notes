@@ -37,6 +37,7 @@ import { NoteList } from '../components/notes/NoteList';
 import { DocumentFileList } from '../components/files/DocumentFileList';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { MentionText } from '../components/mentions/MentionText';
+import { Backlinks } from '../components/mentions/Backlinks';
 import type { Comment, PromotionTarget } from '../types/comment';
 import type { Document, DocumentFormValues } from '../types/document';
 import type { Member } from '../types/member';
@@ -44,8 +45,8 @@ import type { Tag } from '../types/tag';
 import { useTranslation } from 'react-i18next';
 
 /**
- * `/rooms/:roomId/documents/:documentId`: one Document with its gallery, Owners
- * and Comments. Owners and the Master also get the editing controls.
+ * `/rooms/:roomId/documents/:documentId`: one Document with its gallery, Owners,
+ * where it is mentioned and its Comments. Owners and the Master also get the editing controls.
  */
 export function DocumentDetailPage() {
   const { t } = useTranslation();
@@ -120,6 +121,12 @@ function DocumentDetailLoader({
           currentUserId={currentUserId}
           promotion={promoting?.target === 'description' ? promotion : null}
           onPromotionEnd={() => setPromoting(null)}
+        />
+        {/* Spec 20 Decision 6: between the Notes and the Comments. */}
+        <Backlinks
+          roomId={roomId}
+          target={{ kind: 'document', id: document.data.id }}
+          members={memberList}
         />
         <CommentSection
           roomId={roomId}

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Badge, Box, Button, Divider, Group, Loader, Stack, Text, Title } from '@mantine/core';
 import { ChatCircleDotsIcon, PushPinIcon } from '@phosphor-icons/react';
 import { CommentComposer } from './CommentComposer';
@@ -50,6 +51,9 @@ interface CommentSectionProps {
   onPromote?: (comment: Comment, target: PromotionTarget) => void;
 }
 
+// The URL fragment that points at one Comment, as `#comment-<id>`.
+const COMMENT_ANCHOR = '#comment-';
+
 // The Comment was saved, but some image changes failed: say which.
 function reportImageErrors({ imageErrors }: SaveCommentResult) {
   if (imageErrors.length > 0) {
@@ -97,6 +101,29 @@ export function CommentSection({ roomId, documentId, members, currentUserId, onP
     saveComment.isPending && savingId === undefined
       ? (saveComment.variables?.values.parentId ?? null)
       : undefined;
+  // `#comment-<id>`, where a "Mentioned in" entry leads (spec 20): once the
+  // Thread loads, every branch above that Comment opens and it scrolls into
+  // view, once per anchor.
+  const { hash } = useLocation();
+  const anchoredId = hash.startsWith(COMMENT_ANCHOR) ? hash.slice(COMMENT_ANCHOR.length) : null;
+  const [reachedAnchor, setReachedAnchor] = useState<string | null>(null);
+  useEffect(() => {
+    const target = anchoredId === reachedAnchor ? undefined : byId.get(anchoredId!);
+    if (!target) return;
+    const opened: Record<string, BranchState> = {};
+    for (let parent = byId.get(target.parentId!); parent; parent = byId.get(parent.parentId!)) {
+      opened[parent.id] = 'open';
+    }
+    setBranchStates((current) => ({ ...current, ...opened }));
+    setReachedAnchor(target.id);
+  }, [anchoredId, reachedAnchor, byId]);
+  useEffect(() => {
+    if (reachedAnchor) {
+      window.document
+        .getElementById(`${COMMENT_ANCHOR.slice(1)}${reachedAnchor}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [reachedAnchor]);
   const setBranch = (commentId: string, state: BranchState) =>
     setBranchStates((current) => ({ ...current, [commentId]: state }));
   // Back to the branch's default: collapsed once resolved, as usual once

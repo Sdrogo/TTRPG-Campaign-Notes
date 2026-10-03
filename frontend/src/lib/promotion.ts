@@ -1,7 +1,7 @@
 import type { Comment } from '../types/comment';
 import type { DocumentVisibility } from '../types/document';
 import type { Member } from '../types/member';
-import { toDisplay } from './userMentions';
+import { splitMentionTokens } from './mentionTokens';
 
 // Promoting a Comment (spec 19c Decision 5, FR-T8): an Owner or the Master
 // takes its text into the Document's description or into a new Document.
@@ -73,9 +73,14 @@ export function promotionReaches(
   );
 }
 
-/** The Comment's text as it reads, member mentions as `@Name`. */
+/**
+ * The Comment's text for a description: member mentions as `@Name` (they
+ * only link in Comments), Document and Tag mentions kept as tokens.
+ */
 export function promotedText(comment: Comment): string {
-  return toDisplay(comment.body);
+  return splitMentionTokens(comment.body, { users: true })
+    .map((segment) => (segment.kind === 'user' ? segment.display : segment.stored))
+    .join('');
 }
 
 /** `description` with the Comment's text added at the end, as a paragraph of its own. */

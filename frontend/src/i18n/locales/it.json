@@ -433,6 +433,12 @@
     "hintSwitchKind": "←/→ cambia tipo · ",
     "hintCreate": "Invio per creare"
   },
+  "backlinks": {
+    "title": "Menzionato in",
+    "inDescription": "Nella descrizione",
+    "inNote": "Nella nota «{{title}}»",
+    "inComment": "In un commento di {{name}}"
+  },
   "glossary": {
     "title": "Indice dei Tag",
     "openToggle": "Apri indice dei Tag",

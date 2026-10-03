@@ -35,11 +35,29 @@ const routes: Routes = {
   mainItems: [],
 };
 
+const BACKLINKS = [
+  {
+    document_id: 'doc-9',
+    document_name: 'La Locanda',
+    mentions: [
+      {
+        kind: 'description',
+        note_id: null,
+        note_title: null,
+        comment_id: null,
+        comment_author_id: null,
+        excerpt: 'Cerca in #Luoghi',
+      },
+    ],
+  },
+];
+
 function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.resolve()) {
   fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
     if (init?.method) return onWrite(path);
     if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
     if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
+    if (path.endsWith('/backlinks')) return Promise.resolve(BACKLINKS);
     if (path === '/rooms/room-1/tags') return Promise.resolve(tags);
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
     if (path === '/rooms/room-1') return Promise.resolve(routes.room);
@@ -513,5 +531,24 @@ describe('collapsing a group', () => {
     expect(groupButton('#NPC')).toHaveAttribute('aria-expanded', 'false');
     expect(groupButton('Senza Tag principale')).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Alba')).toBeVisible();
+  });
+});
+
+// Spec 20 Decision 8: a Tag's "Mentioned in" shows on the list filtered by
+// exactly that Tag.
+describe('Tag backlinks', () => {
+  it('shows where the one filtered Tag is mentioned', async () => {
+    render('/rooms/room-1/documents?tag=tag-1');
+
+    expect(await screen.findByTestId('backlinks')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/tag-1/backlinks');
+  });
+
+  it('shows nothing for no Tag or for several', async () => {
+    render('/rooms/room-1/documents?tag=tag-1&tag=tag-2');
+    await screen.findByText(/Nessun Documento/);
+
+    expect(screen.queryByTestId('backlinks')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/backlinks'));
   });
 });

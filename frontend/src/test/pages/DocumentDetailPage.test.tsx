@@ -45,9 +45,10 @@ interface Routes {
   document: unknown;
   members: unknown;
   comments: unknown;
+  backlinks: unknown;
 }
 
-const routes: Routes = { document: rawDocument(), members: [], comments: [] };
+const routes: Routes = { document: rawDocument(), members: [], comments: [], backlinks: [] };
 
 function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.resolve()) {
   fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
@@ -56,6 +57,7 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
     if (init?.method) return onWrite(path);
     if (path === DOC) return Promise.resolve(routes.document);
     if (path === `${DOC}/comments`) return Promise.resolve(routes.comments);
+    if (path === `${DOC}/backlinks`) return Promise.resolve(routes.backlinks);
     if (path === '/rooms/room-1/documents') return Promise.resolve([routes.document]);
     if (path === '/rooms/room-1/tags') return Promise.resolve(tags);
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
@@ -81,6 +83,7 @@ beforeEach(() => {
   routes.document = rawDocument({ owner_ids: ['user-1'] });
   routes.members = [rawMember({ user_id: 'user-1', display_name: 'Io' })];
   routes.comments = [];
+  routes.backlinks = [];
   fetchMock.mockReset();
   navigate.mockReset();
   vi.mocked(notifyError).mockClear();
@@ -1011,5 +1014,33 @@ describe('promoting a Comment (spec 19c)', () => {
         screen.queryByRole('dialog', { name: 'Promuovi in un nuovo Documento' }),
       ).not.toBeInTheDocument(),
     );
+  });
+});
+
+// Spec 20 Decision 6: "Mentioned in", between the Notes and the Comments.
+describe('DocumentDetailPage backlinks', () => {
+  it('shows where the Document is mentioned, before the Comments', async () => {
+    routes.backlinks = [
+      {
+        document_id: 'doc-2',
+        document_name: 'La Locanda',
+        mentions: [
+          {
+            kind: 'description',
+            note_id: null,
+            note_title: null,
+            comment_id: null,
+            comment_author_id: null,
+            excerpt: 'Vai al #Il Cancello',
+          },
+        ],
+      },
+    ];
+    render();
+
+    const backlinks = await screen.findByTestId('backlinks');
+    expect(within(backlinks).getByRole('link', { name: 'La Locanda' })).toBeInTheDocument();
+    const comments = screen.getByText('Commenti');
+    expect(backlinks.compareDocumentPosition(comments)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 });
