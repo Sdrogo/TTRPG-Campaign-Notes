@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../utils';
@@ -62,41 +62,54 @@ describe('DocumentOwners', () => {
 
     expect(screen.getByText('Giocatore')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Rimuovi Owner/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aggiungi Owner' })).not.toBeInTheDocument();
+  });
+
+  // The picker sits in a popover behind a "+", not always open.
+  it('keeps the picker closed until the "+" is pressed', () => {
+    render();
+
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 
   it('only offers members who are not already Owners', async () => {
     const { user } = render();
 
+    await user.click(screen.getByRole('button', { name: 'Aggiungi Owner' }));
     await user.click(screen.getByRole('combobox'));
 
     expect(screen.getByRole('option', { name: 'Master' })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Giocatore' })).not.toBeInTheDocument();
   });
 
-  it('cannot submit before someone is picked', () => {
-    render();
+  it('cannot submit before someone is picked', async () => {
+    const { user } = render();
 
+    await user.click(screen.getByRole('button', { name: 'Aggiungi Owner' }));
     expect(screen.getByRole('button', { name: 'Aggiungi' })).toBeDisabled();
   });
 
-  it('adds the picked member as an Owner', async () => {
+  it('adds the picked member as an Owner and closes the picker', async () => {
     const { onAdd, user } = render();
 
+    await user.click(screen.getByRole('button', { name: 'Aggiungi Owner' }));
     await user.click(screen.getByRole('combobox'));
     await user.click(screen.getByText('Master'));
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
 
     expect(onAdd).toHaveBeenCalledWith('user-2');
+    await waitFor(() => expect(screen.queryByRole('combobox')).not.toBeInTheDocument());
   });
 
-  // Otherwise the next click would silently add the same person again.
+  // Otherwise reopening it would silently add the same person again.
   it('clears the picker after adding', async () => {
     const { user } = render();
+    await user.click(screen.getByRole('button', { name: 'Aggiungi Owner' }));
     await user.click(screen.getByRole('combobox'));
     await user.click(screen.getByText('Master'));
-
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
+
+    await user.click(screen.getByRole('button', { name: 'Aggiungi Owner' }));
 
     expect(screen.getByRole('button', { name: 'Aggiungi' })).toBeDisabled();
   });

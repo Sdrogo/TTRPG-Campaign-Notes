@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { ActionIcon, Badge, Button, Group, Select, Stack, Text } from '@mantine/core';
-import { TrashIcon } from '@phosphor-icons/react';
+import { Button, Select, Stack } from '@mantine/core';
 import { findMember, memberDisplayName, memberOptionLabel } from '../lib/members';
-import { UserAvatar } from './UserAvatar';
+import { AddPopover, InfoRow, PersonChip } from './DocumentInfoRow';
 import type { Member } from '../types/member';
 import { useTranslation } from 'react-i18next';
 
@@ -15,11 +14,13 @@ interface DocumentOwnersProps {
 }
 
 /**
- * A Document's explicit Owners, with controls to add a member or remove an
- * Owner when `canManage` (Owners and the Master, D-12).
+ * A Document's explicit Owners, a row of the info panel. When `canManage`
+ * (Owners and the Master, D-12) each can be removed, and a "+" opens a picker
+ * to add a member.
  */
 export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }: DocumentOwnersProps) {
   const { t } = useTranslation();
+  const [adding, setAdding] = useState(false);
   const [addOwnerId, setAddOwnerId] = useState<string | null>(null);
 
   const ownerOptions = members
@@ -27,65 +28,50 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
     .map((m) => ({ value: m.userId, label: memberOptionLabel(m, members) }));
 
   return (
-    <Stack gap="xs">
-      <Text fw={600} size="sm">
-        {t('documents.owners')}
-      </Text>
-      <Group gap="xs">
-        {ownerIds.map((ownerId) => {
-          const owner = findMember(members, ownerId);
-          const name = memberDisplayName(owner);
-          return (
-            <Badge
-              key={ownerId}
-              variant="outline"
-              color="gray"
-              tt="none"
-              maw="100%"
-              pl={3}
-              leftSection={<UserAvatar user={owner} size={16} />}
-              rightSection={
-                canManage ? (
-                  <ActionIcon
-                    size="xs"
-                    variant="transparent"
-                    color="gray"
-                    onClick={() => onRemove(ownerId)}
-                    aria-label={t('documents.removeOwner', { name })}
-                  >
-                    <TrashIcon size={12} />
-                  </ActionIcon>
-                ) : undefined
-              }
-            >
-              {name}
-            </Badge>
-          );
-        })}
-      </Group>
-      {canManage && (
-        <Group gap="xs" wrap="wrap">
-          <Select
-            placeholder={t('documents.addOwner')}
-            data={ownerOptions}
-            value={addOwnerId}
-            onChange={setAddOwnerId}
-            searchable
-            style={{ flex: 1, minWidth: 200 }}
+    <InfoRow label={t('documents.owners')}>
+      {ownerIds.map((ownerId) => {
+        const owner = findMember(members, ownerId);
+        const name = memberDisplayName(owner);
+        return (
+          <PersonChip
+            key={ownerId}
+            member={owner}
+            name={name}
+            onRemove={canManage ? () => onRemove(ownerId) : undefined}
+            removeLabel={t('documents.removeOwner', { name })}
           />
-          <Button
-            variant="light"
-            disabled={!addOwnerId}
-            // Disabled on no selection, so this only ever runs with one.
-            onClick={() => {
-              onAdd(addOwnerId as string);
-              setAddOwnerId(null);
-            }}
-          >
-            {t('common.add')}
-          </Button>
-        </Group>
+        );
+      })}
+      {canManage && (
+        <AddPopover label={t('documents.addOwner')} opened={adding} onChange={setAdding}>
+          <Stack gap="xs">
+            <Select
+              placeholder={t('documents.addOwner')}
+              aria-label={t('documents.addOwner')}
+              data={ownerOptions}
+              value={addOwnerId}
+              onChange={setAddOwnerId}
+              searchable
+              // Inside the popover, or picking an option counts as a click
+              // outside it and closes it.
+              comboboxProps={{ withinPortal: false }}
+            />
+            <Button
+              variant="light"
+              disabled={!addOwnerId}
+              style={{ alignSelf: 'flex-end' }}
+              // Disabled on no selection, so this only ever runs with one.
+              onClick={() => {
+                onAdd(addOwnerId as string);
+                setAddOwnerId(null);
+                setAdding(false);
+              }}
+            >
+              {t('common.add')}
+            </Button>
+          </Stack>
+        </AddPopover>
       )}
-    </Stack>
+    </InfoRow>
   );
 }

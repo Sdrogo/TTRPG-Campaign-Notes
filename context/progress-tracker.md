@@ -9,12 +9,10 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-03)
 
-Branch `claude/project-thread-a660o5` (Next Up reorganized, CORS pattern
-kept; PR #70, open questions closed, is merged). Backend **754** tests at
-100% coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
-(`document_mentions` and the one-off conversion of plain `#Name` text into
-tokens, 20_1) is **not yet applied**: apply it once the 20_2 frontend is
-deployed (before it, tokens would show as raw text).
+Staging released to `main` with PR #73 (specs 20_1/20_2, PRs #68 to #72).
+Backend **754** tests at 100% coverage. The live database is at
+`d7b3a9f2c5e8` (applied by hand 2026-10-03, after the release): 77 texts
+converted to `#` tokens, 204 `document_mentions` rows. No pending migrations.
 
 Specs 12 to 20 are merged into `staging` (features 19 and 20 closed). All
 Open Questions closed 2026-10-03. Next: feature 21 (full-text search).
@@ -57,6 +55,46 @@ proposals, 2026-10-03):
   the live DB by hand. No migration involved.
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
+
+### Document page info panel (2026-10-03)
+
+- Andrea found the Played by, Owner and PDF sections heavy (always-open
+  forms at the bottom) and wanted the PDFs under the images; from a mockup
+  they chose option A. Those three now sit in a bordered panel under the
+  gallery: people as small chips with an ✕, adding through a "+" popover,
+  PDFs as compact rows with a "Carica PDF" button. Without images the panel
+  takes the image's place on the right, 340px wide from `lg`.
+- New `DocumentInfoRow.tsx` (`InfoRow`, `PersonChip`, `AddPopover`);
+  `.document-body-images` renamed `.document-body-aside`; the "Nessun PDF"
+  text is gone (the row hides for readers). No backend change.
+
+### More card columns on very wide screens (2026-10-03)
+
+- On a 3440px monitor three Document cards were over 1000px wide each, and
+  the square image floor made them huge. The list's grid (`.documents-grid`)
+  now goes to 4 columns from 1920px, 5 from 2560px and 6 from 3200px.
+
+### Unread dot inside the visibility badge (2026-10-03)
+
+- From Andrea's mockup: a Document card's "not yet read" dot now sits inside
+  its visibility badge as one pill (`VisibilityBadge` gained `leftSection`),
+  instead of floating to its left. Still only on Documents never opened; the
+  unread count keeps its own pill.
+
+### Document page: Tag links, text around the image (2026-10-03)
+
+- The Tags under the Document title are accent links to the filtered
+  Documents list, as on the cards. From `lg` the gallery floats right and
+  the description and Notes wrap around it, then take the full width below
+  it (`.document-body*` in `index.css`). Checked headless at 390 and 2000px.
+
+### Document card image minimum height (2026-10-03)
+
+- On wide screens the restyled cards got short and cropped the image to a
+  strip. The image panel now stays at least square (an invisible square
+  floor under it), so a wider card is taller. Checked headless at 390, 900,
+  1300 and 2000px.
+
 ### Document card restyle (2026-10-03)
 
 - From Andrea's prototype: on a Document card with images, the images fill
@@ -88,7 +126,9 @@ proposals, 2026-10-03):
   `document_mentions`. `GET .../documents/{id}/backlinks` and
   `GET .../tags/{id}/backlinks` list them, filtered like the sources.
 - Migration `d7b3a9f2c5e8` converts old `#Name` text by the browser's rule
-  and fills the table; tried up and down on a scratch database. Not live.
+  and fills the table; tried up and down on a scratch database. Applied to
+  the live DB on 2026-10-03 after release PR #73; the result matched a
+  local run of the migration on a copy of the live texts.
 - **Choices made beyond the ticket**: one row per target per source (the
   excerpt is around the first mention); a Document mentioning itself is no
   backlink; a writer can't newly link a Document they can't see (keeps the
@@ -823,10 +863,6 @@ Question in the backend PR.
 
 Reorganized with the product owner on 2026-10-03.
 
-- **Apply migration `d7b3a9f2c5e8` right after the 20_2 frontend reaches
-  production** (`document_mentions` + one-off conversion of plain `#Name`
-  text into tokens). Before 20_2 is live, tokens would show as raw text.
-  The live DB is at `c2f6b8d4e1a7` (checked 2026-10-03).
 - **Browser walk-through** (product owner; built and unit-tested, never
   seen running). One checklist:
   - Spec 12, Notes: create, edit, reorder as an Owner and the Master;
@@ -839,7 +875,7 @@ Reorganized with the product owner on 2026-10-03.
   - Spec 18, Friends: two users who met in a Room add each other, one
     invites the other to a new Room from the Friends tab, the other joins
     from their Account page; open a friend link while signed out.
-  - Spec 20, mention backlinks (once deployed and migrated): tokens render
+  - Spec 20, mention backlinks (deployed and migrated 2026-10-03): tokens render
     as names, "Mentioned in" hides what the viewer can't see.
   - Sign-in: Google, Discord and GitHub work (confirmed 2026-10-03);
     re-test a brand-new user's first sign-in.

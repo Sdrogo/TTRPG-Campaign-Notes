@@ -93,3 +93,95 @@ body {
 .mention-create {
   cursor: default;
 }
+
+/* The Document page's body: the text, then the aside (images and info
+   panel), stacked. From `lg` the aside floats right at 45% (340px without
+   images) and the text wraps around it, taking the
+   full width once it is past them. Floats only wrap block content (a flex
+   box beside a float shrinks as a whole), so from `lg` the containers the
+   text flows through become blocks, their gaps turned into margins. */
+.document-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+}
+
+.document-body-aside {
+  order: 1;
+}
+
+@media (min-width: 75em) {
+  .document-body {
+    display: flow-root;
+  }
+
+  .document-body-aside {
+    float: right;
+    width: 45%;
+    margin: 0 0 var(--mantine-spacing-md) var(--mantine-spacing-md);
+  }
+
+  /* No images: just the info panel, so it needs far less room. */
+  .document-body-aside[data-narrow] {
+    width: 340px;
+  }
+
+  .document-body-text,
+  .document-body-text .document-description,
+  .document-body-text .note-list,
+  .document-body-text .note-item {
+    display: block;
+  }
+
+  .document-body-text > * + *,
+  .document-body-text .note-list > * + * {
+    margin-top: var(--mantine-spacing-md);
+  }
+
+  .document-body-text .document-description > * + * {
+    margin-top: var(--mantine-spacing-xs);
+  }
+
+  .document-body-text .note-item > * + * {
+    margin-top: 4px;
+  }
+}
+
+/* The Documents list: 1, 2 then 3 columns like the Rooms list, and more on
+   very wide screens (Andrea, 2026-10-03: on a 3440px monitor three cards
+   were each over 1000px wide, and the square image floor made them huge). */
+.documents-grid {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 48em) {
+  .documents-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 75em) {
+  .documents-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 120em) {
+  .documents-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 160em) {
+  .documents-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 200em) {
+  .documents-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}

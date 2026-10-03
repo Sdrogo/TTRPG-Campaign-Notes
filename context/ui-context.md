@@ -149,8 +149,8 @@ other icon set.
   never a circle, so it can't be mistaken for a person. A Comment written
   in character leads with it and the Character's name (accent link to the
   Document), then "interpretato da {author}" in small dimmed text with a
-  16px `UserAvatar`. "Interpretato da" on the detail page sits above the
-  Owners, styled like them; the Document card adds a "Played by" line
+  16px `UserAvatar`. "Interpretato da" on the detail page is the first row
+  of the info panel, above the Owners (see Document detail); the Document card adds a "Played by" line
   with a 20px avatar above the Owners line.
 - **Room view**: left sidebar for navigation (Tags, Glossary, Members),
   center column for the Document list or an open Document, right
@@ -163,14 +163,34 @@ other icon set.
   thread (Details and Comments are both Posts, but Details are
   visually promoted so they read like structured facts, not chat).
   **Images sit beside the text on big screens** (2026-09-25, spec 10,
-  mirroring `DocumentCard`'s side-by-side layout): a `Flex` with
-  `direction={{ base: 'column', lg: 'row' }}` puts the description/edit
-  form on the left and `DocumentImageGallery` on the right at ~45% width
-  from `lg`; below `lg` it stacks, image block last, as before. The
+  mirroring `DocumentCard`'s side-by-side layout): `DocumentImageGallery`
+  sits on the right at 45% width from `lg`; below `lg` it stacks, image
+  block (and the info panel under it) last. **From `lg` the image floats and the text wraps around it**
+  (2026-10-03, Andrea: the space under the image was too empty): once the
+  description and Notes are past the image they take the full width. The
+  `.document-body*` classes in `index.css` do it; since a flex box beside a
+  float shrinks as a whole instead of wrapping, the description, Note list
+  and Note blocks become `display: block` from `lg`, their gaps turned into
+  margins. The
   gallery gained the same orientation-aware framing as `DocumentCardImages`
   (spec 07.1, shared via `lib/images.ts::imageFrameSize`), so a portrait
   image isn't stretched into the fixed-height box's full width. Its
   delete/favorite controls and the fullscreen viewer are unchanged.
+  **Info panel** (2026-10-03, Andrea chose option A of a mockup: the
+  Played by, Owner and PDF sections were heavy, always-open forms at the
+  bottom of the page): a bordered `Paper` under the gallery, in the same
+  `.document-body-aside` box, holds one `InfoRow` per item
+  (`DocumentInfoRow.tsx`: a 104px dimmed label, then its value). Played by
+  and the Owners are `PersonChip`s (outline pill, 16px avatar, an ✕ to
+  remove for whoever may), and adding opens a small `AddPopover` from a
+  dashed "+" instead of a form always on screen (its `Select` keeps the
+  combobox out of a portal, or picking an option would close the popover).
+  Under a `Divider` the PDFs follow as compact rows (accent PDF icon, name,
+  size with the date as tooltip, open/download/delete icons) with a subtle
+  "Carica PDF" button; with no PDFs the row is hidden for a reader and
+  shows only the button to an Owner. **Without images** the panel takes the
+  image's place on the right, narrower (`data-narrow`: 340px from `lg`), so
+  the information is always in the same spot and the text wraps beside it.
   **Deleting the Document** (2026-09-25, spec 10) is an Owner-only action
   offered in edit mode: an outlined red "Elimina Documento" button next to
   Save/Cancel opens a centered `Modal` (unlike a gallery image's small
@@ -282,8 +302,11 @@ other icon set.
 - **Document card** (`DocumentCard`, restructured 2026-09-23, spec
   `07 - Document visualizazion refactor_beckend`; image panel restyled
   2026-10-03): three stacked blocks. The *Title block* is the Document name
-  (display font) with its `VisibilityBadge` (and unread mark) on the same
-  row, and the Tags on a line of their own below (`TagList`). Under it the
+  (display font) with its `VisibilityBadge` on the same row (spec 19b's
+  unread count, a red pill, just before it; the "not yet read" dot sits
+  *inside* the badge, before its label, via `VisibilityBadge`'s
+  `leftSection`, Andrea's mockup of 2026-10-03), and the Tags on a line of
+  their own below (`TagList`). Under it the
   description, then the Played by and Owner lines, each on a line of its
   own; a Document without a description says "No description.", clamped to
   2 lines without images.
@@ -296,7 +319,11 @@ other icon set.
   the title row and sit over the image at the top right; the text column
   takes the left half, the description grows (5 clamped lines) so the
   Played by and Owner lines close the card at the bottom, and the card is at
-  least 220px tall (260px from `sm`). This replaces spec 07.1's uncropped,
+  least 220px tall (260px from `sm`). **The image panel is never wider than
+  it is tall** (2026-10-03, Andrea's feedback on wide screens): with images
+  the card is a flex row and an empty, `aria-hidden` square sits under the
+  panel (`aspectRatio: 1`), so a wide card grows taller instead of cropping
+  its image to a strip. This replaces spec 07.1's uncropped,
   orientation-framed images on the card; the detail page gallery still
   frames by orientation (`imageFrameSize`).
   The images are `DocumentCardImages`: one image alone, several in the same
@@ -311,8 +338,8 @@ other icon set.
   **Every Tag in the Title block's `TagList` is itself a link** (2026-09-25,
   spec 10), to the Documents list filtered by it (`documentsWithTagsHref`,
   the same target a `#Tag` mention leads to) — `TagList` takes an optional
-  `roomId` that only `DocumentCard` passes (the Document detail page's
-  `TagList` stays plain, per the spec's own scope). Needs the same
+  `roomId`, passed by `DocumentCard` and, since 2026-10-03 (Andrea's
+  request), by the Document detail page too. Needs the same
   `zIndex: 2` treatment as the carousel controls above, since it sits above
   the card's overlay link too.
 - **Documents list Tag filter** (`TagFilter`, 2026-09-22): a searchable,
@@ -334,9 +361,13 @@ other icon set.
   on the Room setup page, in the order they gave them — specs 11, 11_2) is
   the default: each group gets its own
   `Title` (`#TagName`, `#A + #B` for a combination, or "No Main Tag" for Documents carrying
-  none) above its own `SimpleGrid`; a Document with several Main Tags
+  none) above its own grid of cards; a Document with several Main Tags
   appears under each one. "No grouping" collapses back to the
   single flat grid spec 07 already had.
+  **The card grid** is `.documents-grid` in `index.css` (2026-10-03): 1, 2
+  and 3 columns from `base`, `sm` and `lg` like the Rooms list, then 4 from
+  1920px, 5 from 2560px and 6 from 3200px, so a card stays a sensible size
+  on a very wide monitor.
   **Each group collapses independently** (2026-09-26): its `Title` wraps a
   clickable row (a `CaretDownIcon`/`CaretRightIcon` at 16px, then the
   label) that toggles a Mantine `Collapse` around that group's grid —

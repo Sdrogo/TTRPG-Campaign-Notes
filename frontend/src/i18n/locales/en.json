@@ -305,11 +305,9 @@
   },
   "files": {
     "title": "Files",
-    "empty": "No PDFs attached yet.",
     "upload": "Upload PDF",
     "uploadHint": "Attach a PDF up to {{mb}} MB, such as a character sheet",
     "limitReached": "A Document can have at most {{max}} files",
-    "details": "{{size}} · {{date}}",
     "open": "Open {{name}}",
     "download": "Download {{name}}",
     "delete": "Delete {{name}}",
