@@ -215,7 +215,7 @@ async def test_link_invitations_are_not_listed_and_still_work_for_anyone(
     assert accepted.status_code == 200
 
 
-async def test_sender_email_shows_once_they_share_a_room(
+async def test_sender_email_stays_hidden_when_they_share_a_room(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     alice, bob = _User(make_token, "alice"), _User(make_token, "bob")
@@ -228,7 +228,7 @@ async def test_sender_email_shows_once_they_share_a_room(
     await _invite(client, second_room, alice, bob)
     mine = await _mine(client, bob)
     assert [entry["room"]["id"] for entry in mine] == [second_room]
-    assert mine[0]["invited_by"]["email"] == "alice@example.com"
+    assert mine[0]["invited_by"]["email"] is None
 
 
 async def test_invitee_declines_silently(
@@ -274,3 +274,43 @@ async def test_a_link_invitation_cannot_be_declined(
     assert (
         await client.post(f"/invitations/{link['code']}/accept", headers=bob.headers)
     ).status_code == 200
+
+
+async def test_removing_the_friendship_revokes_open_invitations_both_ways(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    # D-26: an invitation presumes the Friendship, so ending it revokes the
+    # open direct invitations between the two, and only those.
+    alice, bob, carol = (_User(make_token, n) for n in ("alice", "bob", "carol"))
+    await _befriend(client, alice, bob)
+    await _befriend(client, alice, carol)
+    alice_room = await _room(client, alice)
+    bob_room = await _room(client, bob)
+    to_bob = (await _invite(client, alice_room, alice, bob)).json()["code"]
+    assert (await _invite(client, bob_room, bob, alice)).status_code == 201
+    assert (await _invite(client, alice_room, alice, carol)).status_code == 201
+
+    removed = await client.delete(f"/friends/{alice.id}", headers=bob.headers)
+    assert removed.status_code == 204
+
+    assert await _mine(client, bob) == []
+    assert await _mine(client, alice) == []
+    assert len(await _mine(client, carol)) == 1
+    accepted = await client.post(f"/invitations/{to_bob}/accept", headers=bob.headers)
+    assert accepted.status_code == 410
+    assert bob.id not in await _member_ids(client, alice_room, alice)
+
+
+async def test_cancelling_a_friend_request_leaves_invitations_alone(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    alice, bob, carol = (_User(make_token, n) for n in ("alice", "bob", "carol"))
+    await _befriend(client, alice, carol)
+    room_id = await _room(client, alice)
+    assert (await _invite(client, room_id, alice, carol)).status_code == 201
+    code = (await client.get("/account/friend-code", headers=bob.headers)).json()["code"]
+    await client.post("/friends/requests", json={"code": code}, headers=alice.headers)
+
+    cancelled = await client.delete(f"/friends/{bob.id}", headers=alice.headers)
+    assert cancelled.status_code == 204
+    assert len(await _mine(client, carol)) == 1

@@ -24,7 +24,7 @@ export function DocumentOwners({ ownerIds, members, canManage, onAdd, onRemove }
 
   const ownerOptions = members
     .filter((m) => !ownerIds.includes(m.userId))
-    .map((m) => ({ value: m.userId, label: memberOptionLabel(m) }));
+    .map((m) => ({ value: m.userId, label: memberOptionLabel(m, members) }));
 
   return (
     <Stack gap="xs">

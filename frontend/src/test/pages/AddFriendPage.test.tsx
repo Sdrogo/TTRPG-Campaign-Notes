@@ -84,21 +84,9 @@ describe('AddFriendPage', () => {
     );
   });
 
-  it('falls back to the email for a recipient with no chosen name', async () => {
-    fetchMock.mockResolvedValue(rawFriend({ display_name: null, email: 'altro@example.com' }));
-
-    render();
-
-    expect(
-      await screen.findByRole('heading', {
-        name: 'Richiesta di amicizia inviata a altro@example.com.',
-      }),
-    ).toBeInTheDocument();
-  });
-
-  // Strangers share no Room, so the backend sends no email: say it was sent
-  // rather than "sent to an unknown user".
-  it('confirms without a name when the backend sends neither', async () => {
+  // The backend never sends another user's email: with no chosen name, say
+  // it was sent rather than "sent to an unknown user".
+  it('confirms without a name when the recipient has no chosen name', async () => {
     fetchMock.mockResolvedValue(rawFriend({ display_name: null, email: null }));
 
     render();

@@ -213,10 +213,7 @@ async def users_sharing_a_room(
     session: AsyncSession, user_id: uuid.UUID, others: Collection[uuid.UUID]
 ) -> set[uuid.UUID]:
     """Which of `others` are in at least one Room with `user_id` right now,
-    in one query. Friend requests by user id need it (D-27), and so does
-    the email rule for Friends (a Friend sharing no Room doesn't get it)."""
-    if not others:
-        return set()
+    in one query. Friend requests by user id need it (D-27)."""
     mine = aliased(MembershipRow)
     theirs = aliased(MembershipRow)
     result = await session.execute(

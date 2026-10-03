@@ -45,8 +45,8 @@ export function hasActiveFilters(filters: CommentFilters): boolean {
 
 const byCreatedAt = (a: Comment, b: Comment) => Date.parse(a.createdAt) - Date.parse(b.createdAt);
 
-// A search for an author matches the name they're shown by and, since that
-// may be a chosen name now, their email too.
+// A search for an author matches the name they're shown by and, for the
+// signed-in user, whose email is the only one sent, their email too.
 function authorMatches(members: Member[], authorId: string, query: string): boolean {
   const author = findMember(members, authorId);
   return [displayNameFor(members, authorId), author?.email ?? ''].some((text) =>

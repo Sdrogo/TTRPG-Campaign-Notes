@@ -44,9 +44,9 @@ export function AddFriendPage() {
     return <SignInRequired>{t('friendLink.signInRequired')}</SignInRequired>;
   }
 
-  // Without a name or an email (they share no Room yet) the request is
-  // confirmed without naming anyone rather than as "unknown user".
-  const name = sendRequest.data?.displayName ?? sendRequest.data?.email;
+  // Without a chosen name (the email is never sent) the request is confirmed
+  // without naming anyone rather than as "unknown user".
+  const name = sendRequest.data?.displayName;
 
   return (
     <Stack align="center" justify="center" gap="md" p="md" style={{ minHeight: '100svh' }}>

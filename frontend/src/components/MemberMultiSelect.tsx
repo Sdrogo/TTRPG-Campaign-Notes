@@ -11,9 +11,9 @@ interface MemberMultiSelectProps extends Omit<MultiSelectProps, 'data' | 'value'
 }
 
 /**
- * Picks Room members, e.g. for a Selective visibility grant list. Options show
- * the chosen name next to the email, since picking the wrong person grants them
- * access.
+ * Picks Room members, e.g. for a Selective visibility grant list. Options tell
+ * apart members with the same name (`memberOptionLabel`), since picking the
+ * wrong person grants them access.
  */
 export function MemberMultiSelect({
   members,
@@ -24,7 +24,7 @@ export function MemberMultiSelect({
 }: MemberMultiSelectProps) {
   const data = members
     .filter((m) => !excludeUserIds.includes(m.userId))
-    .map((m) => ({ value: m.userId, label: memberOptionLabel(m) }));
+    .map((m) => ({ value: m.userId, label: memberOptionLabel(m, members) }));
 
   return <MultiSelect {...props} data={data} value={value} onChange={onChange} searchable />;
 }

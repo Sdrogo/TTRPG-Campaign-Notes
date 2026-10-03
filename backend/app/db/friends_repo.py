@@ -153,7 +153,10 @@ async def replace_code(session: AsyncSession, code: FriendCode) -> None:
     await session.execute(stmt)
 
 
-async def are_friends(session: AsyncSession, a: uuid.UUID, b: uuid.UUID) -> bool:
-    """Whether the two users have an accepted Friendship (D-26)."""
-    friendship = await get_between(session, a, b)
+async def are_friends(
+    session: AsyncSession, a: uuid.UUID, b: uuid.UUID, for_update: bool = False
+) -> bool:
+    """Whether the two users have an accepted Friendship (D-26). With
+    `for_update`, the row stays locked so a concurrent removal waits."""
+    friendship = await get_between(session, a, b, for_update=for_update)
     return friendship is not None and friendship.status is FriendshipStatus.ACCEPTED

@@ -97,8 +97,8 @@ async def test_members_of_a_shared_room_become_friends(
     sent = response.json()
     assert sent["user_id"] == bob.id
     assert sent["display_name"] == "Bob"
-    # They share a Room, so the email is the one the members list shows.
-    assert sent["email"] == "bob@example.com"
+    # NFR-03: no email, even though they share a Room.
+    assert sent["email"] is None
 
     assert await alice.ids() == {**EMPTY, "outgoing": [bob.id]}
     incoming = (await bob.friends())["incoming"]

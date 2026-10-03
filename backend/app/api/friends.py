@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.errors import http_error, translated_error
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
 from app.auth.dependencies import CurrentUser, CurrentUserDep
-from app.db import friends_repo, rooms_repo, users_repo
+from app.db import friends_repo, invitations_repo, rooms_repo, users_repo
 from app.db.session import SessionDep
 from app.domain.friends import (
     AlreadyFriendsError,
@@ -34,7 +34,7 @@ from app.domain.friends import (
     plan_response,
     view_for,
 )
-from app.domain.models import FriendCode, Friendship, UserProfile
+from app.domain.models import FriendCode, Friendship, FriendshipStatus, UserProfile
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(tags=["friends"])
@@ -42,9 +42,8 @@ router = APIRouter(tags=["friends"])
 
 class FriendResponse(ProfileFields):
     """The other user of a Friendship or request, seen by the caller, with
-    the same profile fields a members list carries (NFR-03) - except the
-    email, which is null unless the two share a Room right now (the
-    existing audience for it). `since` is when the Friendship was accepted,
+    the same profile fields a members list carries (no email, NFR-03).
+    `since` is when the Friendship was accepted,
     or when the request was sent. `friendship_id` is what accept and
     decline take."""
 
@@ -82,14 +81,13 @@ async def _responses(
     session: AsyncSession, caller_id: uuid.UUID, friendships: Collection[Friendship]
 ) -> dict[uuid.UUID, FriendResponse]:
     """Serializes each row from the caller's side, keyed by row id, in a
-    fixed number of queries: profiles, shared Rooms, one signing request."""
+    fixed number of queries: profiles, one signing request."""
     other_ids = {friendship.other(caller_id) for friendship in friendships}
     profiles = await users_repo.get_profiles(session, other_ids)
-    sharing = await rooms_repo.users_sharing_a_room(session, caller_id, other_ids)
     avatar_urls = await sign_avatars(profiles.values())
     return {
         friendship.id: _response(
-            friendship, caller_id, profiles[friendship.other(caller_id)], sharing, avatar_urls
+            friendship, caller_id, profiles[friendship.other(caller_id)], avatar_urls
         )
         for friendship in friendships
     }
@@ -99,13 +97,10 @@ def _response(
     friendship: Friendship,
     caller_id: uuid.UUID,
     profile: UserProfile,
-    sharing: Collection[uuid.UUID],
     avatar_urls: Mapping[str, str],
 ) -> FriendResponse:
-    """One row from the caller's side; see `FriendResponse` for the email."""
-    fields = profile_fields(profile, avatar_urls)
-    if profile.user_id not in sharing:
-        fields.email = None
+    """One row from the caller's side."""
+    fields = profile_fields(profile, avatar_urls, caller_id)
     is_friend = view_for(friendship, caller_id) is FriendshipView.FRIEND
     since = friendship.responded_at if is_friend else None
     return FriendResponse(
@@ -267,6 +262,10 @@ async def remove_friend(
         raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
     if plan.delete:
         await friends_repo.delete_friendship(session, friendship.id)
+        if friendship.status is FriendshipStatus.ACCEPTED:
+            await invitations_repo.revoke_direct_between(
+                session, caller_id, user_id, datetime.now(UTC)
+            )
     else:
         await friends_repo.save(session, plan.friendship)
 
