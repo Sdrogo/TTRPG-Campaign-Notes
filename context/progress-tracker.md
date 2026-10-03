@@ -56,6 +56,13 @@ proposals, 2026-10-03):
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
 
+### Top bar hides on scroll down (2026-10-03)
+
+- Andrea: the pinned bar should leave room on a phone. It now slides up out
+  of view while scrolling down and returns as soon as the scroll turns up
+  (`useHeadroom` in `AppHeader`, `data-hidden` + a CSS transform). Frontend
+  only.
+
 ### Pinned top bar (2026-10-03)
 
 - Andrea: in a long Room the top bar scrolled out of view. `AppHeader` now

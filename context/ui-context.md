@@ -106,7 +106,12 @@ other icon set.
   `.app-header` in `index.css` makes it `position: sticky` with the page
   background and `z-index: 100` (above cards, below Mantine overlays), and
   `html { scroll-padding-top: 72px }` keeps scrolled-to targets out from
-  under it. The account avatar is the only way to the Account page and
+  under it. **It slides away while scrolling down and comes back as soon
+  as the scroll turns up** (2026-10-03, Andrea: more room on a phone):
+  Mantine's `useHeadroom` (`fixedAt` 80px, so it never moves near the top
+  of the page) sets `data-hidden` on the header, and `.app-header[data-hidden]`
+  translates it up by its own height over 200ms (no transition with
+  `prefers-reduced-motion`). The account avatar is the only way to the Account page and
   to sign out. **Just before the avatar** (spec 09) is the
   `LanguageSelector`: the current language's flag (24×16, `sm` radius,
   thin `--border-default` edge) inside a 4px padded button whose

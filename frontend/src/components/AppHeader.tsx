@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Burger, Button, Group, Title, UnstyledButton } from '@mantine/core';
+import { useHeadroom } from '@mantine/hooks';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { AccountButton } from './account/AccountButton';
 import { LanguageSelector } from './LanguageSelector';
@@ -19,6 +20,10 @@ interface AppHeaderProps {
   backLabel?: string;
 }
 
+// How far down the page the bar stays put whatever the scroll direction: about
+// its own height, so it never slides away while it's still in its natural spot.
+const HEADER_FIXED_AT = 80;
+
 /**
  * Whether there is an entry in *this app's own* browser history to go back
  * to. `window.history.state.idx` is set by the browser history React Router
@@ -35,13 +40,15 @@ function hasAppHistory(): boolean {
  * The top navigation bar shown on every signed-in page: the back button and,
  * on a Room page, the Glossary Index burger, on the left; the app name (also
  * back to the Rooms list) in the middle; on the right the language flag, then
- * the account avatar (spec 09, spec 10). It stays pinned to the top of the
- * page while it scrolls (`.app-header` in `index.css`).
+ * the account avatar (spec 09, spec 10). It is pinned to the top of the page
+ * (`.app-header` in `index.css`), but slides away while scrolling down and
+ * comes back as soon as the scroll turns up, so a phone shows more content.
  */
 export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [glossaryOpened, setGlossaryOpened] = useState(false);
+  const { pinned } = useHeadroom({ fixedAt: HEADER_FIXED_AT });
 
   const handleBack = (destination: string) => {
     if (hasAppHistory()) {
@@ -60,6 +67,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
         px={{ base: 'sm', sm: 'lg', lg: 'xl' }}
         py="sm"
         className="app-header"
+        data-hidden={!pinned || undefined}
       >
         <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
           {roomId && (
