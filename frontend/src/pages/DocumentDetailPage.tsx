@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Stack, Group, Title, Text, Button, Box, Flex, ActionIcon, Modal } from '@mantine/core';
+import { Stack, Group, Title, Text, Button, Box, Flex, ActionIcon, Modal, Alert } from '@mantine/core';
 import { PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
@@ -17,7 +17,9 @@ import {
 } from '../hooks/useDocuments';
 import { useTags } from '../hooks/useTags';
 import { useMembers } from '../hooks/useMembers';
-import { notifyError } from '../lib/notify';
+import { useComments, usePromoteComment } from '../hooks/useComments';
+import { notifyError, notifySuccess } from '../lib/notify';
+import { appendPromotedText, promotionReaches, type PromotionAudience } from '../lib/promotion';
 import { canManageTags } from '../lib/roomPermissions';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
@@ -30,10 +32,12 @@ import { DocumentPlayer } from '../components/DocumentPlayer';
 import { DocumentImageGallery } from '../components/DocumentImageGallery';
 import { AddDocumentImages } from '../components/AddDocumentImages';
 import { CommentSection } from '../components/comments/CommentSection';
+import { PromoteToDocumentModal, WideningConfirmModal } from '../components/comments/CommentPromotion';
 import { NoteList } from '../components/notes/NoteList';
 import { DocumentFileList } from '../components/files/DocumentFileList';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { MentionText } from '../components/mentions/MentionText';
+import type { Comment, PromotionTarget } from '../types/comment';
 import type { Document, DocumentFormValues } from '../types/document';
 import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
@@ -78,6 +82,11 @@ function DocumentDetailLoader({
   const document = useDocument(roomId, documentId, true);
   const tags = useTags(roomId, true);
   const members = useMembers(roomId, true);
+  // The same query as the Comment section's: the Thread, for the parents of
+  // a promoted reply.
+  const comments = useComments(roomId, documentId, true);
+  // A Comment being promoted (spec 19c Decision 5), and where to.
+  const [promoting, setPromoting] = useState<{ comment: Comment; target: PromotionTarget } | null>(null);
 
   if (document.isLoading) {
     return <FullPageLoader />;
@@ -91,6 +100,14 @@ function DocumentDetailLoader({
     );
   }
 
+  const memberList = members.data ?? [];
+  // A promotion starts from a Comment in this same cache, so it is loaded.
+  const promotion = promoting && {
+    comment: promoting.comment,
+    reachedBy: (audience: PromotionAudience) =>
+      promotionReaches(promoting.comment, comments.data!, memberList, audience),
+  };
+
   return (
     <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('documents.title')} roomId={roomId}>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
@@ -99,18 +116,41 @@ function DocumentDetailLoader({
           roomId={roomId}
           document={document.data}
           tags={tags.data ?? []}
-          members={members.data ?? []}
+          members={memberList}
           currentUserId={currentUserId}
+          promotion={promoting?.target === 'description' ? promotion : null}
+          onPromotionEnd={() => setPromoting(null)}
         />
         <CommentSection
           roomId={roomId}
           documentId={document.data.id}
-          members={members.data ?? []}
+          members={memberList}
           currentUserId={currentUserId}
+          onPromote={(comment, target) => setPromoting({ comment, target })}
         />
+        {promotion && promoting.target === 'document' && (
+          <PromoteToDocumentModal
+            roomId={roomId}
+            documentId={document.data.id}
+            comment={promotion.comment}
+            currentUserId={currentUserId}
+            canManageTags={canManageTags(memberList.find((m) => m.userId === currentUserId))}
+            reachedBy={promotion.reachedBy}
+            onClose={() => setPromoting(null)}
+          />
+        )}
       </DocumentMentionsProvider>
     </PageLayout>
   );
+}
+
+/**
+ * A Comment whose text is being promoted into the description (spec 19c
+ * Decision 5), and who a given audience would newly show it to.
+ */
+interface DescriptionPromotion {
+  comment: Comment;
+  reachedBy: (audience: PromotionAudience) => Member[];
 }
 
 function DocumentPanel({
@@ -119,15 +159,26 @@ function DocumentPanel({
   tags,
   members,
   currentUserId,
+  promotion,
+  onPromotionEnd,
 }: {
   roomId: string;
   document: Document;
   tags: Tag[];
   members: Member[];
   currentUserId: string;
+  /** Opens the editor with the Comment's text added to the description. */
+  promotion: DescriptionPromotion | null;
+  /** The promotion was saved or given up. */
+  onPromotionEnd: () => void;
 }) {
   const { t } = useTranslation();
-  const [editing, setEditing] = useState(false);
+  const [editingByHand, setEditing] = useState(false);
+  const editing = editingByHand || promotion !== null;
+  const stopEditing = () => {
+    setEditing(false);
+    if (promotion) onPromotionEnd();
+  };
   const addOwner = useAddDocumentOwner(roomId, document.id);
   const removeOwner = useRemoveDocumentOwner(roomId, document.id);
   const uploadImages = useUploadDocumentImages(roomId, document.id);
@@ -158,7 +209,7 @@ function DocumentPanel({
               <ActionIcon
                 variant="subtle"
                 color="gray"
-                onClick={() => setEditing((current) => !current)}
+                onClick={() => (editing ? stopEditing() : setEditing(true))}
                 aria-label={editing ? t('documents.detail.cancelEditing') : t('common.edit')}
               >
                 {editing ? <XIcon size={18} /> : <PencilSimpleIcon size={18} />}
@@ -185,11 +236,15 @@ function DocumentPanel({
           <Stack gap="md" style={{ flex: '1 1 auto', minWidth: 0, width: '100%' }}>
             {editing ? (
               <DocumentEditForm
+                // Remounted for a promotion, so the text is added to the
+                // description as saved.
+                key={promotion?.comment.id ?? 'edit'}
                 roomId={roomId}
                 document={document}
                 tags={tags}
                 canManageTags={canManageTags(me)}
-                onDone={() => setEditing(false)}
+                promotion={promotion}
+                onDone={stopEditing}
               />
             ) : (
               <Stack gap="xs">
@@ -273,31 +328,87 @@ function DocumentEditForm({
   document,
   tags,
   canManageTags,
+  promotion,
   onDone,
 }: {
   roomId: string;
   document: Document;
   tags: Tag[];
   canManageTags: boolean;
+  promotion: DescriptionPromotion | null;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const updateDocument = useUpdateDocument(roomId, document.id);
   const deleteDocument = useDeleteDocument(roomId, document.id);
+  const promote = usePromoteComment(roomId, document.id);
   const [values, setValues] = useState<DocumentFormValues>({
     name: document.name,
-    description: document.description,
+    description: promotion
+      ? appendPromotedText(document.description, promotion.comment)
+      : document.description,
     visibility: document.visibility,
     tagIds: document.tagIds,
   });
   const [tagCreatePending, setTagCreatePending] = useState(false);
   const [confirmDeleteOpened, setConfirmDeleteOpened] = useState(false);
+  const [confirmWideningOpened, setConfirmWideningOpened] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // A promotion starts from a Comment further down the page: bring the
+  // editor into view.
+  useEffect(() => {
+    if (promotion) formRef.current!.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Only when the form opens: it is remounted for each promotion.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Who the promoted text would newly reach with the visibility being saved.
+  const reached = promotion
+    ? promotion.reachedBy({
+        visibility: values.visibility,
+        ownerIds: document.ownerIds,
+        selectiveUserIds: document.selectiveUserIds,
+      })
+    : [];
+
+  // Saves the description, then records the promotion (spec 19c Decision 5).
+  const save = () => {
+    setConfirmWideningOpened(false);
+    updateDocument.mutate(values, {
+      onSuccess: () => {
+        if (!promotion) {
+          onDone();
+          return;
+        }
+        // The form stays until the promotion settles: closing it unmounts
+        // this component, and `mutate`'s callbacks would then never run.
+        promote.mutate(
+          {
+            commentId: promotion.comment.id,
+            target: 'description',
+            confirmWidening: reached.length > 0,
+          },
+          {
+            onSuccess: () => notifySuccess(t('comments.promotion.done')),
+            onError: notifyError,
+            onSettled: onDone,
+          },
+        );
+      },
+      onError: notifyError,
+    });
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (tagCreatePending) return;
-    updateDocument.mutate(values, { onSuccess: onDone, onError: notifyError });
+    if (reached.length > 0) {
+      setConfirmWideningOpened(true);
+    } else {
+      save();
+    }
   };
 
   const handleDelete = () => {
@@ -308,8 +419,13 @@ function DocumentEditForm({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form ref={formRef} onSubmit={handleSubmit}>
       <Stack gap="sm">
+        {promotion && (
+          <Alert color="accent" variant="light">
+            {t('comments.promotion.editorNotice')}
+          </Alert>
+        )}
         <DocumentFields
           values={values}
           onChange={setValues}
@@ -322,7 +438,7 @@ function DocumentEditForm({
           <Group>
             <Button
               type="submit"
-              loading={updateDocument.isPending}
+              loading={updateDocument.isPending || promote.isPending}
               disabled={!values.name.trim() || tagCreatePending}
             >
               {t('documents.detail.saveChanges')}
@@ -336,6 +452,13 @@ function DocumentEditForm({
           </Button>
         </Group>
       </Stack>
+
+      <WideningConfirmModal
+        opened={confirmWideningOpened}
+        reached={reached}
+        onConfirm={save}
+        onCancel={() => setConfirmWideningOpened(false)}
+      />
 
       <Modal
         opened={confirmDeleteOpened}

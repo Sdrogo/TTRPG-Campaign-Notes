@@ -205,7 +205,18 @@ other icon set.
   rest; each carries a `light` accent `xs` "Fissato" badge with a pin icon.
   A resolved branch shows its top-level Comment with a `light` gray `xs`
   "Risolto" badge (a `CheckCircle` in `--state-success`, tooltip naming who
-  resolved it and when) and starts with its replies collapsed. Attached
+  resolved it and when) and starts with its replies collapsed. Promotion
+  (spec 19c) is a "Promuovi" text action opening a `Menu` ("Nella
+  descrizione", "In un nuovo Documento"), shown when `canPromote` allows
+  it; a promoted Comment carries a `light` accent `xs` "Promosso" badge
+  (`ArrowFatLineUp`, tooltip saying where and when), a link to the new
+  Document when the viewer sees it. Promoting into the description opens
+  the Document's editor, scrolled into view, with an accent `light` `Alert`
+  explaining the appended text; into a new Document opens a centered modal
+  with the creation form and the Comment's images as checkboxes with 40px
+  thumbnails. A promotion that would show the text to more people asks
+  first in a centered modal naming them, its confirm button orange
+  ("Promuovi comunque"). Attached
   images show inside the bubble as 120px square thumbnails
   (`ImageThumbnailGrid`, `sm` radius) that open the shared fullscreen
   `ImageViewerModal`. Sort/filter controls (`CommentToolbar`) sit above

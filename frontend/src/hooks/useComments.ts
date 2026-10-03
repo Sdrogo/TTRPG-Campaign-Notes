@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import { toStoredImage } from '../lib/images';
 import { toCharacter, type RawCharacter } from '../lib/characters';
-import type { Comment, CommentFormValues } from '../types/comment';
+import type { Comment, CommentFormValues, PromotionTarget } from '../types/comment';
 import type { DocumentVisibility } from '../types/document';
 import type { PendingImage, RawImage } from '../types/image';
 import i18n from '../i18n';
@@ -29,6 +29,10 @@ interface RawComment {
   resolved_by: string | null;
   can_pin: boolean;
   can_resolve: boolean;
+  promoted_at: string | null;
+  promoted_to: PromotionTarget | null;
+  promoted_document_id: string | null;
+  can_promote: boolean;
 }
 
 interface RawReaction {
@@ -66,6 +70,10 @@ function toComment(raw: RawComment): Comment {
     resolvedBy: raw.resolved_by,
     canPin: raw.can_pin,
     canResolve: raw.can_resolve,
+    promotedAt: raw.promoted_at,
+    promotedTo: raw.promoted_to,
+    promotedDocumentId: raw.promoted_document_id,
+    canPromote: raw.can_promote,
   };
 }
 
@@ -262,6 +270,36 @@ export function useSetCommentFlag(roomId: string, documentId: string) {
       toComment(
         await apiFetch<RawComment>(`${commentsPath(roomId, documentId)}/${commentId}/${flag}`, {
           method: on ? 'POST' : 'DELETE',
+        }),
+      ),
+    onSuccess: replaceInThread,
+  });
+}
+
+/** What `usePromoteComment` records (spec 19c Decision 5). */
+export interface PromoteCommentInput {
+  commentId: string;
+  target: PromotionTarget;
+  /** The new Document, for `document`. */
+  documentId?: string;
+  /** The promoter confirmed the text will reach members who can't read the Comment. */
+  confirmWidening: boolean;
+}
+
+/**
+ * Records that a Comment's text was promoted (spec 19c Decision 5), once the
+ * description or the new Document holding it is saved. The backend audits it
+ * and refuses an unconfirmed widening (409). Returns the Comment, which
+ * replaces it in the Thread's cache.
+ */
+export function usePromoteComment(roomId: string, documentId: string) {
+  const replaceInThread = useReplaceInThread(roomId, documentId);
+  return useMutation({
+    mutationFn: async ({ commentId, target, documentId: targetId, confirmWidening }: PromoteCommentInput) =>
+      toComment(
+        await apiFetch<RawComment>(`${commentsPath(roomId, documentId)}/${commentId}/promote`, {
+          method: 'POST',
+          json: { target, document_id: targetId, confirm_widening: confirmWidening },
         }),
       ),
     onSuccess: replaceInThread,

@@ -52,6 +52,10 @@ function comment(overrides: Partial<Comment> = {}): Comment {
     resolvedBy: null,
     canPin: false,
     canResolve: false,
+    promotedAt: null,
+    promotedTo: null,
+    promotedDocumentId: null,
+    canPromote: false,
     ...overrides,
   };
 }
@@ -498,5 +502,80 @@ describe('CommentItem pin and resolve (spec 19c)', () => {
 
     expect(screen.getByRole('button', { name: 'Fissa' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Segna come risolto' })).toBeDisabled();
+  });
+});
+
+describe('CommentItem promotion (spec 19c)', () => {
+  function renderWithPromote(overrides: Partial<Comment> = {}) {
+    const onPromote = vi.fn();
+    renderWithProviders(
+      <CommentItem
+        roomId="room-1"
+        comment={comment(overrides)}
+        members={members}
+        characters={[]}
+        currentUserId="user-1"
+        onUpdate={vi.fn()}
+        updating={false}
+        onDelete={vi.fn()}
+        deleting={false}
+        onPromote={onPromote}
+      />,
+    );
+    return { onPromote, user: userEvent.setup() };
+  }
+
+  it('offers promotion only where the backend allows it and a handler exists', () => {
+    renderWithPromote();
+    expect(screen.queryByRole('button', { name: 'Promuovi' })).not.toBeInTheDocument();
+  });
+
+  it('offers nothing without a handler, even when allowed', () => {
+    render({ canPromote: true });
+    expect(screen.queryByRole('button', { name: 'Promuovi' })).not.toBeInTheDocument();
+  });
+
+  it('promotes into the description or a new Document', async () => {
+    const { onPromote, user } = renderWithPromote({ canPromote: true });
+
+    await user.click(screen.getByRole('button', { name: 'Promuovi' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Nella descrizione' }));
+    await user.click(screen.getByRole('button', { name: 'Promuovi' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'In un nuovo Documento' }));
+
+    expect(onPromote.mock.calls).toEqual([['description'], ['document']]);
+  });
+
+  it('badges a Comment promoted into the description, without a link', async () => {
+    const { user } = renderWithPromote({
+      promotedAt: '2026-10-02T12:00:00Z',
+      promotedTo: 'description',
+    });
+
+    await user.hover(screen.getByText('Promosso'));
+    expect(await screen.findByText(/Promosso nella descrizione il/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Apri il Documento in cui è stato promosso' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('links the badge to the new Document the viewer can see', async () => {
+    const { user } = renderWithPromote({
+      promotedAt: '2026-10-02T12:00:00Z',
+      promotedTo: 'document',
+      promotedDocumentId: 'doc-9',
+    });
+
+    const link = screen.getByRole('link', { name: 'Apri il Documento in cui è stato promosso' });
+    expect(link).toHaveAttribute('href', '/rooms/room-1/documents/doc-9');
+    await user.hover(screen.getByText('Promosso'));
+    expect(await screen.findByText(/Promosso in un nuovo Documento il/)).toBeInTheDocument();
+  });
+
+  it('badges a promotion into a Document the viewer cannot see, without a link', () => {
+    renderWithPromote({ promotedAt: '2026-10-02T12:00:00Z', promotedTo: 'document' });
+
+    expect(screen.getByText('Promosso')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Apri il Documento/ })).not.toBeInTheDocument();
   });
 });

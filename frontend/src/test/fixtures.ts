@@ -101,6 +101,10 @@ export function rawComment(overrides: Record<string, unknown> = {}) {
     resolved_by: null,
     can_pin: false,
     can_resolve: false,
+    promoted_at: null,
+    promoted_to: null,
+    promoted_document_id: null,
+    can_promote: false,
     ...overrides,
   };
 }

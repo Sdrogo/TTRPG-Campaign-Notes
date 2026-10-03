@@ -33,7 +33,7 @@ import {
 } from '../../lib/comments';
 import { findMember } from '../../lib/members';
 import { notifyError } from '../../lib/notify';
-import type { BranchState, Comment, CommentFilters, CommentNode } from '../../types/comment';
+import type { BranchState, Comment, CommentFilters, CommentNode, PromotionTarget } from '../../types/comment';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
@@ -43,6 +43,11 @@ interface CommentSectionProps {
   documentId: string;
   members: Member[];
   currentUserId: string;
+  /**
+   * Starts promoting a Comment's text (spec 19c Decision 5); the page owns
+   * the description editor and the new Document form it opens.
+   */
+  onPromote?: (comment: Comment, target: PromotionTarget) => void;
 }
 
 // The Comment was saved, but some image changes failed: say which.
@@ -62,7 +67,7 @@ function reportImageErrors({ imageErrors }: SaveCommentResult) {
  * is recorded and what was posted since the previous one is marked "New"
  * (spec 19b).
  */
-export function CommentSection({ roomId, documentId, members, currentUserId }: CommentSectionProps) {
+export function CommentSection({ roomId, documentId, members, currentUserId, onPromote }: CommentSectionProps) {
   const { t, i18n } = useTranslation();
   const comments = useComments(roomId, documentId, true);
   const saveComment = useSaveComment(roomId, documentId);
@@ -148,6 +153,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId }: C
         isNew={isNew(comment)}
         onSetFlag={(flag, on) => onSetFlag(comment.id, flag, on)}
         settingFlag={flagging.includes(comment.id)}
+        onPromote={onPromote && ((target) => onPromote(comment, target))}
       />
       {replyingTo === comment.id && (
         <Box pl={{ base: 'md', sm: 'xl' }}>
