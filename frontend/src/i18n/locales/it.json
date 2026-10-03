@@ -397,7 +397,26 @@
       "visibilityPlaceholder": "Ogni visibilità",
       "hideDeleted": "Nascondi eliminati"
     },
-    "new": "Nuovo"
+    "new": "Nuovo",
+    "promotion": {
+      "promote": "Promuovi",
+      "intoDescription": "Nella descrizione",
+      "intoDocument": "In un nuovo Documento",
+      "promoted": "Promosso",
+      "promotedToDescription": "Promosso nella descrizione il {{date}}",
+      "promotedToDocument": "Promosso in un nuovo Documento il {{date}}",
+      "openDocument": "Apri il Documento in cui è stato promosso",
+      "editorNotice": "Il testo del commento è stato aggiunto in fondo alla descrizione: rivedilo e salva per promuoverlo.",
+      "modalTitle": "Promuovi in un nuovo Documento",
+      "images": "Immagini del commento da aggiungere al Documento",
+      "imageLabel": "Immagine {{index}}",
+      "wideningTitle": "Il testo diventerà visibile a più persone",
+      "wideningBody": "Promuovendolo, il testo del commento potrà essere letto anche da chi ora non lo vede: {{names}}.",
+      "wideningConfirm": "Promuovi comunque",
+      "done": "Commento promosso",
+      "imageErrors": "Commento promosso, ma alcune immagini non sono state aggiunte: {{errors}}",
+      "notRecorded": "Il Documento è stato creato, ma la promozione del commento non è stata registrata: {{reason}}"
+    }
   },
   "mentions": {
     "listLabel": "Documenti e Tag da collegare",

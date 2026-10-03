@@ -7,6 +7,7 @@ import {
   useComments,
   useDeleteComment,
   useSaveComment,
+  usePromoteComment,
   useSetCommentFlag,
   useToggleReaction,
 } from '../../hooks/useComments';
@@ -79,6 +80,10 @@ describe('useComments', () => {
       resolvedBy: null,
       canPin: false,
       canResolve: false,
+      promotedAt: null,
+      promotedTo: null,
+      promotedDocumentId: null,
+      canPromote: false,
     });
   });
 
@@ -473,5 +478,46 @@ describe('useSetCommentFlag', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(`${BASE}/comment-1/resolve`, { method: 'DELETE' });
     expect(comment).toMatchObject({ resolvedBy: 'user-2', canResolve: true });
+  });
+});
+
+describe('usePromoteComment', () => {
+  const KEY = ['rooms', 'room-1', 'documents', 'doc-1', 'comments'];
+
+  // Spec 19c Decision 5: records the promotion and puts the returned Comment
+  // in the cache.
+  it('posts the target and the confirmation, and caches the Comment', async () => {
+    fetchMock.mockResolvedValue(
+      rawComment({
+        promoted_at: '2026-10-02T12:00:00Z',
+        promoted_to: 'document',
+        promoted_document_id: 'doc-9',
+        can_promote: true,
+      }),
+    );
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(KEY, [{ id: 'comment-1', promotedAt: null }, { id: 'comment-2' }]);
+
+    const { result } = renderHookWithProviders(() => usePromoteComment('room-1', 'doc-1'), {
+      queryClient,
+    });
+    await result.current.mutateAsync({
+      commentId: 'comment-1',
+      target: 'document',
+      documentId: 'doc-9',
+      confirmWidening: true,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(`${BASE}/comment-1/promote`, {
+      method: 'POST',
+      json: { target: 'document', document_id: 'doc-9', confirm_widening: true },
+    });
+    const cached = queryClient.getQueryData<{ id: string; promotedDocumentId?: string }[]>(KEY);
+    expect(cached?.[0]).toMatchObject({
+      promotedTo: 'document',
+      promotedDocumentId: 'doc-9',
+      canPromote: true,
+    });
+    expect(cached?.[1]).toEqual({ id: 'comment-2' });
   });
 });

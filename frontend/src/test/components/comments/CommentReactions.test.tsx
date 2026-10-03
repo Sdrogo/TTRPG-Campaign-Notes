@@ -59,6 +59,10 @@ function comment(reactions: Reaction[]): Comment {
     resolvedBy: null,
     canPin: false,
     canResolve: false,
+    promotedAt: null,
+    promotedTo: null,
+    promotedDocumentId: null,
+    canPromote: false,
   };
 }
 

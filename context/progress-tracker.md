@@ -7,24 +7,46 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-02)
+## Current Status (2026-10-03)
 
-Branch `claude/project-thread-ads76p` (spec 19c_7, promotion backend, PR
-into `staging`). Backend **727** tests at 100% coverage; ruff and mypy
-clean. Frontend unchanged since 19c_6: 1193 tests at 100%. Migration
+Branch `claude/project-thread-ads76p` (spec 19c_8, promotion frontend, PR
+into `staging`). Frontend **1227** tests at 100% coverage; tsc, oxlint and
+build clean. Backend unchanged since 19c_7: 727 tests at 100%. Migration
 `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
 database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
 19c_3) and migration `c2f6b8d4e1a7` (promotion columns on `posts`, 19c_7,
 revises it) were **applied to the live database on 2026-10-03** (with the
 user's go-ahead); the live DB is at `c2f6b8d4e1a7`.
 
-Specs 12 to 19c_6 are merged into `staging`. Build order is feature by
-feature: 19c goes reactions → pin and resolved → @mentions → promotion.
-Next: 19c_8, promotion frontend (the last unit of 19c).
+Specs 12 to 19c_7 are merged into `staging`; 19c_8 closes spec 19c (and with
+it feature 19). Next, per the build order: spec 20 (mention backlinks),
+starting with 20_1.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Promotion, frontend (spec 19c_8, 2026-10-03)
+
+- A "Promuovi" menu in a Comment's meta line ("Nella descrizione", "In un
+  nuovo Documento"), shown when the backend's `canPromote` allows it; a
+  promoted Comment carries a "Promosso" badge, linked to the new Document
+  when the viewer sees it.
+- Into the description: the Document's editor opens with the Comment's text
+  (mentions as `@Name`) appended as its own paragraph, under a notice; saving
+  the description records the promotion. Into a new Document: a modal with
+  the creation form prefilled and the Comment's images as checkboxes.
+- `lib/promotion.ts` mirrors the backend's widening rule (parents included);
+  when anyone would newly read the text, `WideningConfirmModal` names them
+  before saving, and the confirmation is sent as `confirm_widening`.
+- **Choices made beyond the ticket**: the new Document starts at Room
+  visibility for a Room Comment and Private otherwise, so nothing widens by
+  default; images are copied by URL import into the new Document, and one
+  that fails doesn't stop the promotion (the notice names it); once the
+  new Document exists the modal closes whatever follows, so a refused
+  promotion can't lead to a duplicate Document on retry; the editor
+  scrolls into view; promoting while the description is already being
+  edited appends the text to what is being typed, keeping the edits.
 
 ### Promotion, backend (spec 19c_7, 2026-10-02)
 

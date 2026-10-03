@@ -268,17 +268,21 @@ export function useUploadDocumentImages(roomId: string, documentId: string) {
   });
 }
 
+/** Adds an image to a Document from a URL; the caller refreshes what shows it. */
+export async function importDocumentImage(roomId: string, documentId: string, url: string): Promise<Document> {
+  return toDocument(
+    await apiFetch<RawDocument>(`/rooms/${roomId}/documents/${documentId}/images/from-url`, {
+      method: 'POST',
+      json: { url },
+    }),
+  );
+}
+
 /** Adds an image to the Document from a URL. */
 export function useImportDocumentImage(roomId: string, documentId: string) {
   const invalidate = useInvalidateDocument(roomId, documentId);
   return useMutation({
-    mutationFn: async (url: string) =>
-      toDocument(
-        await apiFetch<RawDocument>(`/rooms/${roomId}/documents/${documentId}/images/from-url`, {
-          method: 'POST',
-          json: { url },
-        }),
-      ),
+    mutationFn: (url: string) => importDocumentImage(roomId, documentId, url),
     onSuccess: invalidate,
   });
 }

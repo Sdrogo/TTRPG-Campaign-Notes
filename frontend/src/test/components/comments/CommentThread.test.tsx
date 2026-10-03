@@ -29,6 +29,10 @@ function comment(id: string, overrides: Partial<Comment> = {}): Comment {
     resolvedBy: null,
     canPin: false,
     canResolve: false,
+    promotedAt: null,
+    promotedTo: null,
+    promotedDocumentId: null,
+    canPromote: false,
     ...overrides,
   };
 }

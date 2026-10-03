@@ -56,7 +56,20 @@ export interface Comment {
   /** Decided by the backend: may the viewer pin it, and resolve its branch. */
   canPin: boolean;
   canResolve: boolean;
+  /**
+   * The latest promotion of its text (spec 19c Decision 5): when, and into
+   * the Document's description or a new Document. `promotedDocumentId` is
+   * that new Document, only when the viewer sees it.
+   */
+  promotedAt: string | null;
+  promotedTo: PromotionTarget | null;
+  promotedDocumentId: string | null;
+  /** Decided by the backend: may the viewer promote it (an Owner or the Master). */
+  canPromote: boolean;
 }
+
+/** Where a Comment's text is promoted (spec 19c Decision 5). */
+export type PromotionTarget = 'description' | 'document';
 
 /** One emoji on a Comment (spec 19c Decision 1), as the current viewer sees it. */
 export interface Reaction {

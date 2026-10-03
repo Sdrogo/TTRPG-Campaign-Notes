@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
-import { notifyError } from '../../lib/notify';
+import { notifyError, notifySuccess } from '../../lib/notify';
 import { useSession } from '../../hooks/useSession';
 import {
   fakeSession,
@@ -14,6 +14,7 @@ import {
   rawMember,
   rawDocumentFile,
   rawNote,
+  rawComment,
 } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { DocumentDetailPage } from '../../pages/DocumentDetailPage';
@@ -865,5 +866,150 @@ describe('Files', () => {
     render();
 
     expect(await screen.findByRole('button', { name: 'Carica PDF' })).toBeInTheDocument();
+  });
+});
+
+describe('promoting a Comment (spec 19c)', () => {
+  const PROMOTE = `${DOC}/comments/comment-1/promote`;
+  const promoteCall = () => fetchMock.mock.calls.find(([path]) => path === PROMOTE);
+
+  beforeEach(() => {
+    routes.members = [
+      rawMember({ user_id: 'user-1', display_name: 'Io' }),
+      rawMember({ user_id: 'user-2', display_name: 'Bruno' }),
+    ];
+    routes.comments = [rawComment({ body: 'Il sigillo è rotto.', can_promote: true })];
+    vi.mocked(notifySuccess).mockClear();
+    mockApi((path) =>
+      Promise.resolve(
+        path === PROMOTE
+          ? rawComment({ promoted_at: '2026-10-03T12:00:00Z', promoted_to: 'description' })
+          : rawDocument({ owner_ids: ['user-1'] }),
+      ),
+    );
+  });
+
+  async function startPromotion(target: 'Nella descrizione' | 'In un nuovo Documento') {
+    const { user } = render();
+    await user.click(await screen.findByRole('button', { name: 'Promuovi' }));
+    await user.click(await screen.findByRole('menuitem', { name: target }));
+    return user;
+  }
+
+  it("opens the editor with the Comment's text added to the description", async () => {
+    await startPromotion('Nella descrizione');
+
+    expect(screen.getByText(/Il testo del commento è stato aggiunto/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /Descrizione/ })).toHaveValue(
+      'Una porta di pietra.\n\nIl sigillo è rotto.',
+    );
+  });
+
+  it('keeps the edits in progress when promoting into an open editor', async () => {
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await user.click(screen.getAllByRole('button', { name: 'Modifica' })[0]);
+    await user.type(screen.getByRole('textbox', { name: /^Nome/ }), ' antico');
+
+    await user.click(await screen.findByRole('button', { name: 'Promuovi' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Nella descrizione' }));
+
+    expect(screen.getByRole('textbox', { name: /^Nome/ })).toHaveValue('Il Cancello antico');
+    expect(screen.getByRole('combobox', { name: /Descrizione/ })).toHaveValue(
+      'Una porta di pietra.\n\nIl sigillo è rotto.',
+    );
+    expect(screen.getByText(/Il testo del commento è stato aggiunto/)).toBeInTheDocument();
+  });
+
+  it('saves the description, then records the promotion', async () => {
+    const user = await startPromotion('Nella descrizione');
+
+    await user.click(screen.getByRole('button', { name: 'Salva modifiche' }));
+
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Commento promosso'));
+    expect(fetchMock).toHaveBeenCalledWith(DOC, {
+      method: 'PATCH',
+      json: expect.objectContaining({ description: 'Una porta di pietra.\n\nIl sigillo è rotto.' }),
+    });
+    expect(promoteCall()?.[1]).toEqual({
+      method: 'POST',
+      json: { target: 'description', confirm_widening: false },
+    });
+    expect(screen.queryByRole('textbox', { name: /^Nome/ })).not.toBeInTheDocument();
+  });
+
+  it('asks before showing a narrower Comment to more people', async () => {
+    routes.comments = [
+      rawComment({ body: 'Il sigillo è rotto.', visibility: 'private', can_promote: true }),
+    ];
+    const user = await startPromotion('Nella descrizione');
+
+    await user.click(screen.getByRole('button', { name: 'Salva modifiche' }));
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Il testo diventerà visibile a più persone',
+    });
+    expect(within(dialog).getByText(/Bruno\./)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
+    expect(promoteCall()).toBeUndefined();
+
+    await user.click(screen.getByRole('button', { name: 'Salva modifiche' }));
+    await user.click(await screen.findByRole('button', { name: 'Promuovi comunque' }));
+
+    await waitFor(() => expect(promoteCall()).toBeDefined());
+    expect(promoteCall()?.[1]).toMatchObject({ json: { confirm_widening: true } });
+  });
+
+  it('gives the promotion up on cancel', async () => {
+    const user = await startPromotion('Nella descrizione');
+
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+
+    expect(screen.queryByText(/Il testo del commento è stato aggiunto/)).not.toBeInTheDocument();
+    // The Document's own, ahead of the Comment's.
+    await user.click(screen.getAllByRole('button', { name: 'Modifica' })[0]);
+    expect(screen.getByRole('combobox', { name: /Descrizione/ })).toHaveValue(
+      'Una porta di pietra.',
+    );
+    expect(promoteCall()).toBeUndefined();
+  });
+
+  it('gives the promotion up from the header too', async () => {
+    const user = await startPromotion('Nella descrizione');
+
+    await user.click(screen.getByRole('button', { name: 'Annulla modifiche' }));
+
+    expect(screen.queryByText(/Il testo del commento è stato aggiunto/)).not.toBeInTheDocument();
+    expect(promoteCall()).toBeUndefined();
+  });
+
+  it('reports a refused promotion', async () => {
+    mockApi((path) =>
+      path === PROMOTE
+        ? Promise.reject(new Error('The Comment was deleted'))
+        : Promise.resolve(rawDocument({ owner_ids: ['user-1'] })),
+    );
+    const user = await startPromotion('Nella descrizione');
+
+    await user.click(screen.getByRole('button', { name: 'Salva modifiche' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    expect(vi.mocked(notifyError).mock.calls[0][0]).toEqual(new Error('The Comment was deleted'));
+    expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  it('opens and closes the new-Document form', async () => {
+    const user = await startPromotion('In un nuovo Documento');
+
+    const dialog = await screen.findByRole('dialog', { name: 'Promuovi in un nuovo Documento' });
+    expect(within(dialog).getByRole('combobox', { name: /Descrizione/ })).toHaveValue(
+      'Il sigillo è rotto.',
+    );
+    await user.keyboard('{Escape}');
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Promuovi in un nuovo Documento' }),
+      ).not.toBeInTheDocument(),
+    );
   });
 });

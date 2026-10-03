@@ -813,3 +813,28 @@ describe('pinned and resolved (spec 19c)', () => {
     expect(fetchMock).toHaveBeenCalledWith(`${COMMENTS}/c-1/resolve`, { method: 'DELETE' });
   });
 });
+
+describe('promotion (spec 19c)', () => {
+  it('hands the promoted Comment and its target to the page', async () => {
+    mockRoutes([rawComment({ can_promote: true })]);
+    const onPromote = vi.fn();
+    renderWithProviders(
+      <CommentSection
+        roomId="room-1"
+        documentId="doc-1"
+        members={members}
+        currentUserId="user-1"
+        onPromote={onPromote}
+      />,
+    );
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Promuovi' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'In un nuovo Documento' }));
+
+    expect(onPromote).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'comment-1' }),
+      'document',
+    );
+  });
+});

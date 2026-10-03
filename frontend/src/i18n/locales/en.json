@@ -397,7 +397,26 @@
       "visibilityPlaceholder": "Any visibility",
       "hideDeleted": "Hide deleted"
     },
-    "new": "New"
+    "new": "New",
+    "promotion": {
+      "promote": "Promote",
+      "intoDescription": "Into the description",
+      "intoDocument": "Into a new Document",
+      "promoted": "Promoted",
+      "promotedToDescription": "Promoted into the description on {{date}}",
+      "promotedToDocument": "Promoted into a new Document on {{date}}",
+      "openDocument": "Open the Document it was promoted into",
+      "editorNotice": "The Comment's text was added at the end of the description: review it and save to promote it.",
+      "modalTitle": "Promote into a new Document",
+      "images": "Comment images to add to the Document",
+      "imageLabel": "Image {{index}}",
+      "wideningTitle": "The text will reach more people",
+      "wideningBody": "Promoting it lets people who can't see the Comment now read its text: {{names}}.",
+      "wideningConfirm": "Promote anyway",
+      "done": "Comment promoted",
+      "imageErrors": "Comment promoted, but some images weren't added: {{errors}}",
+      "notRecorded": "The Document was created, but the Comment's promotion wasn't recorded: {{reason}}"
+    }
   },
   "mentions": {
     "listLabel": "Documents and Tags to link",
