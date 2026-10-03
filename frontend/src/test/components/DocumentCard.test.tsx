@@ -190,9 +190,11 @@ describe('unread mark', () => {
     expect(screen.getByLabelText('3 nuovi commenti')).toHaveTextContent('3');
   });
 
-  it('shows a "not yet read" dot for a Document never opened', () => {
+  // Inside the visibility badge, as one pill, rather than floating beside it.
+  it('shows a "not yet read" dot inside the visibility badge for a Document never opened', () => {
     render({ unreadCount: null });
-    expect(screen.getByRole('img', { name: 'Non ancora letto' })).toBeInTheDocument();
+    const dot = screen.getByRole('img', { name: 'Non ancora letto' });
+    expect(dot.closest('.mantine-Badge-root')).toHaveTextContent('Stanza');
   });
 
   it('shows nothing when nothing is new', () => {

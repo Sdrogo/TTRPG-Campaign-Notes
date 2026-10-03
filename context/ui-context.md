@@ -287,8 +287,11 @@ other icon set.
 - **Document card** (`DocumentCard`, restructured 2026-09-23, spec
   `07 - Document visualizazion refactor_beckend`; image panel restyled
   2026-10-03): three stacked blocks. The *Title block* is the Document name
-  (display font) with its `VisibilityBadge` (and unread mark) on the same
-  row, and the Tags on a line of their own below (`TagList`). Under it the
+  (display font) with its `VisibilityBadge` on the same row (spec 19b's
+  unread count, a red pill, just before it; the "not yet read" dot sits
+  *inside* the badge, before its label, via `VisibilityBadge`'s
+  `leftSection`, Andrea's mockup of 2026-10-03), and the Tags on a line of
+  their own below (`TagList`). Under it the
   description, then the Played by and Owner lines, each on a line of its
   own; a Document without a description says "No description.", clamped to
   2 lines without images.

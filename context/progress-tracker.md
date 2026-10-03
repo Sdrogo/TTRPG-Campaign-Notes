@@ -55,6 +55,14 @@ proposals, 2026-10-03):
   the live DB by hand. No migration involved.
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
+
+### Unread dot inside the visibility badge (2026-10-03)
+
+- From Andrea's mockup: a Document card's "not yet read" dot now sits inside
+  its visibility badge as one pill (`VisibilityBadge` gained `leftSection`),
+  instead of floating to its left. Still only on Documents never opened; the
+  unread count keeps its own pill.
+
 ### Document page: Tag links, text around the image (2026-10-03)
 
 - The Tags under the Document title are accent links to the filtered
