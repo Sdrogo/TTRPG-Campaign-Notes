@@ -63,7 +63,7 @@ export function NoteItem({
   }
 
   return (
-    <Stack gap={4} data-testid="note-item">
+    <Stack gap={4} className="note-item" data-testid="note-item">
       <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
         <Group gap="xs" wrap="wrap" style={{ minWidth: 0 }}>
           <Title

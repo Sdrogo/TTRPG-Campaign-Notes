@@ -163,10 +163,15 @@ other icon set.
   thread (Details and Comments are both Posts, but Details are
   visually promoted so they read like structured facts, not chat).
   **Images sit beside the text on big screens** (2026-09-25, spec 10,
-  mirroring `DocumentCard`'s side-by-side layout): a `Flex` with
-  `direction={{ base: 'column', lg: 'row' }}` puts the description/edit
-  form on the left and `DocumentImageGallery` on the right at ~45% width
-  from `lg`; below `lg` it stacks, image block last, as before. The
+  mirroring `DocumentCard`'s side-by-side layout): `DocumentImageGallery`
+  sits on the right at 45% width from `lg`; below `lg` it stacks, image
+  block last. **From `lg` the image floats and the text wraps around it**
+  (2026-10-03, Andrea: the space under the image was too empty): once the
+  description and Notes are past the image they take the full width. The
+  `.document-body*` classes in `index.css` do it; since a flex box beside a
+  float shrinks as a whole instead of wrapping, the description, Note list
+  and Note blocks become `display: block` from `lg`, their gaps turned into
+  margins. The
   gallery gained the same orientation-aware framing as `DocumentCardImages`
   (spec 07.1, shared via `lib/images.ts::imageFrameSize`), so a portrait
   image isn't stretched into the fixed-height box's full width. Its
@@ -315,8 +320,8 @@ other icon set.
   **Every Tag in the Title block's `TagList` is itself a link** (2026-09-25,
   spec 10), to the Documents list filtered by it (`documentsWithTagsHref`,
   the same target a `#Tag` mention leads to) — `TagList` takes an optional
-  `roomId` that only `DocumentCard` passes (the Document detail page's
-  `TagList` stays plain, per the spec's own scope). Needs the same
+  `roomId`, passed by `DocumentCard` and, since 2026-10-03 (Andrea's
+  request), by the Document detail page too. Needs the same
   `zIndex: 2` treatment as the carousel controls above, since it sits above
   the card's overlay link too.
 - **Documents list Tag filter** (`TagFilter`, 2026-09-22): a searchable,

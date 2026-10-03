@@ -124,6 +124,14 @@ describe('DocumentDetailPage', () => {
     expect(screen.getByText('Una porta di pietra.')).toBeInTheDocument();
   });
 
+  // Like on the Documents list, each Tag leads to the list filtered by it.
+  it('links each Tag to the Documents filtered by it', async () => {
+    render();
+
+    const tag = await screen.findByRole('link', { name: '#Luoghi' });
+    expect(tag).toHaveAttribute('href', '/rooms/room-1/documents?tag=tag-1');
+  });
+
   it('says so when there is no description', async () => {
     routes.document = rawDocument({ owner_ids: ['user-1'], description: '' });
     render();

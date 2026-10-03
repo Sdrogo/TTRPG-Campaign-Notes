@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Stack, Group, Title, Text, Button, Box, Flex, ActionIcon, Modal, Alert } from '@mantine/core';
+import { Stack, Group, Title, Text, Button, Box, ActionIcon, Modal, Alert } from '@mantine/core';
 import { PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
@@ -236,11 +236,29 @@ function DocumentPanel({
           />
         )}
 
-        {/* Text on the left, images on the right on big screens (spec 10,
-            mirroring DocumentCard's layout in RoomDocumentsPage); stacked
-            below `lg`. */}
-        <Flex direction={{ base: 'column', lg: 'row' }} align="flex-start" gap="md">
-          <Stack gap="md" style={{ flex: '1 1 auto', minWidth: 0, width: '100%' }}>
+        {/* Images on the right on big screens (spec 10, mirroring
+            DocumentCard's layout in RoomDocumentsPage), floated so the text
+            wraps around them and takes the full width once it is past them;
+            stacked under the text below `lg` (`.document-body` in index.css). */}
+        <Box className="document-body">
+          {document.images.length > 0 && (
+            <Box className="document-body-images">
+              <DocumentImageGallery
+                images={document.images}
+                documentName={document.name}
+                canDelete={isOwner && editing}
+                onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
+                deletingImageId={deleteImage.isPending ? (deleteImage.variables as string) : null}
+                // Spec 07: not gated on `editing` like deletion - picking the
+                // leading image is reversible, so it needs no edit mode.
+                onSetFavorite={
+                  isOwner ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError }) : undefined
+                }
+                settingFavoriteId={setFavorite.isPending ? (setFavorite.variables as string) : null}
+              />
+            </Box>
+          )}
+          <Stack gap="md" className="document-body-text">
             {editing ? (
               <DocumentEditForm
                 roomId={roomId}
@@ -251,8 +269,8 @@ function DocumentPanel({
                 onDone={stopEditing}
               />
             ) : (
-              <Stack gap="xs">
-                <TagList tags={tags} tagIds={document.tagIds} />
+              <Stack gap="xs" className="document-description">
+                <TagList tags={tags} tagIds={document.tagIds} roomId={roomId} />
                 {document.description ? (
                   <MentionText
                     text={document.description}
@@ -273,24 +291,7 @@ function DocumentPanel({
               canAdd={isOwner}
             />
           </Stack>
-          {document.images.length > 0 && (
-            <Box w={{ base: '100%', lg: '45%' }} style={{ flexShrink: 0 }}>
-              <DocumentImageGallery
-                images={document.images}
-                documentName={document.name}
-                canDelete={isOwner && editing}
-                onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
-                deletingImageId={deleteImage.isPending ? (deleteImage.variables as string) : null}
-                // Spec 07: not gated on `editing` like deletion - picking the
-                // leading image is reversible, so it needs no edit mode.
-                onSetFavorite={
-                  isOwner ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError }) : undefined
-                }
-                settingFavoriteId={setFavorite.isPending ? (setFavorite.variables as string) : null}
-              />
-            </Box>
-          )}
-        </Flex>
+        </Box>
 
         {/* Spec 16: the PDFs, under the text and the gallery. Like the
             Document itself, every reader sees them (VR-12). */}

@@ -40,7 +40,7 @@ export function NoteList({ roomId, documentId, notes, members, canAdd }: NoteLis
   const ids = notes.map((note) => note.id);
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" className="note-list">
       {notes.map((note, index) => (
         <NoteItem
           key={note.id}
