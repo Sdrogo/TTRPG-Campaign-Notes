@@ -35,6 +35,12 @@ body {
   transform: translateY(-100%);
 }
 
+/* Tabbing into a hidden bar brings it back, so keyboard focus is never on
+   controls off-screen. */
+.app-header[data-hidden]:focus-within {
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .app-header {
     transition: none;

@@ -111,7 +111,8 @@ other icon set.
   Mantine's `useHeadroom` (`fixedAt` 80px, so it never moves near the top
   of the page) sets `data-hidden` on the header, and `.app-header[data-hidden]`
   translates it up by its own height over 200ms (no transition with
-  `prefers-reduced-motion`). The account avatar is the only way to the Account page and
+  `prefers-reduced-motion`); `:focus-within` brings it back while keyboard
+  focus is inside it. The account avatar is the only way to the Account page and
   to sign out. **Just before the avatar** (spec 09) is the
   `LanguageSelector`: the current language's flag (24×16, `sm` radius,
   thin `--border-default` edge) inside a 4px padded button whose
