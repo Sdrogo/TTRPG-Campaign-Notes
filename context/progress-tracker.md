@@ -24,6 +24,15 @@ With 20_2, feature 20 is complete. Next: feature 21 (full-text search).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Document card restyle (2026-10-03)
+
+- From Andrea's prototype: on a Document card with images, the images fill
+  the right half edge to edge (cover, top-anchored) and fade into the card
+  on their left; the badges sit over the image. Cards without images keep
+  the old layout. Supersedes spec 07.1's uncropped framing on the card only
+  (`ui-context.md` → Document card). Checked headless at 390, 900 and 1300px;
+  frontend 1251 tests at 100% coverage.
+
 ### Mention backlinks, frontend (spec 20_2, 2026-10-03)
 
 - `lib/userMentions.ts` became `lib/mentionTokens.ts` and reads `doc`/`tag`
