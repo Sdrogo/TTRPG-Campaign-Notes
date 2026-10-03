@@ -74,8 +74,9 @@ app.include_router(mentions_router)
 app.include_router(friends_router)
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health() -> dict[str, str]:
-    """Liveness check for the hosting platform. Needs no auth and touches no
-    dependency."""
+    """Liveness check for the hosting platform and uptime monitors. Needs no
+    auth and touches no dependency. Also answers HEAD, which many monitors
+    send by default (a GET-only route would answer 405)."""
     return {"status": "ok"}
