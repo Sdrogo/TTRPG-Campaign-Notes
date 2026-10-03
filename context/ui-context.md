@@ -57,6 +57,27 @@ of dense content (Thread posts, Glossary entries, forms all use
 Inter). `--font-mono` shows up rarely in this app — mainly for
 technical identifiers if ever surfaced to an Administrator.
 
+**Heading levels follow the page outline, not the look** (2026-10-03,
+Andrea's accessibility audit: "heading levels should only increase by
+one"). Every page has one `h1` (the Room's Documents, the Document's name,
+My Rooms, the setup, the invite and friend-link results), sections are
+`h2` and what sits in them `h3`; `Title`'s `fz` keeps the size each one
+had before (e.g. the Room title is `order={1} fz="h2"`, a group heading
+`order={2} fz="h5"`). `DocumentCard` takes `headingOrder` (2 by default,
+3 inside a group); Note titles are `h2`. The app name in the top bar stays
+an `h3`, which axe allows (only skipping *down* a level is an error).
+
+## Accessibility landmarks and targets
+
+- **One `main` per page** (2026-10-03, same audit): `PageLayout`'s body
+  `Container`, the Rooms list (`RoomsPage`), the sign-in screen, the
+  invite and friend-link pages and `PageState`'s full-screen messages
+  render as `main`; the top bar is the `header` (banner).
+- **Tap targets at least 24px** (WCAG 2.5.8): the Tag links in `TagList`
+  get 4px of vertical padding taken back by an equal negative margin, so
+  the line looks the same while the link is 24px tall, and wrapped rows are
+  8px apart so two rows' hit areas don't overlap.
+
 ## Border Radius
 
 | Context           | Class / token       |

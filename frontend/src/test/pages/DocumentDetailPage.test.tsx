@@ -760,7 +760,9 @@ describe('Notes', () => {
     render();
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    const headings = screen.getAllByRole('heading', { level: 4 }).map((h) => h.textContent);
+    const headings = screen
+      .getAllByTestId('note-item')
+      .map((note) => within(note).getByRole('heading', { level: 2 }).textContent);
     expect(headings).toEqual(['Porta segreta', 'Trappola']);
     expect(screen.getByText('Dietro la libreria.')).toBeInTheDocument();
     expect(screen.getByText('Un dardo avvelenato.')).toBeInTheDocument();
@@ -781,7 +783,7 @@ describe('Notes', () => {
     render();
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    expect(screen.getAllByRole('heading', { level: 4 })).toHaveLength(1);
+    expect(screen.getAllByTestId('note-item')).toHaveLength(1);
     expect(screen.queryByText(/Trappola/)).not.toBeInTheDocument();
   });
 
@@ -791,7 +793,7 @@ describe('Notes', () => {
     render();
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    expect(screen.queryAllByRole('heading', { level: 4 })).toHaveLength(0);
+    expect(screen.queryAllByTestId('note-item')).toHaveLength(0);
     expect(screen.queryByRole('button', { name: 'Aggiungi Nota' })).not.toBeInTheDocument();
   });
 

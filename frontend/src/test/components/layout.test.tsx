@@ -69,6 +69,16 @@ describe('PageLayout', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
+  it('wraps the page body in the main landmark', () => {
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro">
+        <p>Contenuto</p>
+      </PageLayout>,
+    );
+
+    expect(within(screen.getByRole('main')).getByText('Contenuto')).toBeInTheDocument();
+  });
+
   it('pins the app header to the top of the page', () => {
     renderWithProviders(
       <PageLayout backTo="/" backLabel="Indietro">

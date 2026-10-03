@@ -67,7 +67,8 @@ export function NoteItem({
       <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
         <Group gap="xs" wrap="wrap" style={{ minWidth: 0 }}>
           <Title
-            order={4}
+            order={2}
+            fz="h4"
             style={{ fontFamily: 'var(--font-display)', overflowWrap: 'anywhere' }}
           >
             {note.title}

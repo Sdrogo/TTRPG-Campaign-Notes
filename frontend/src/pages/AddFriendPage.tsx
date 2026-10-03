@@ -49,11 +49,11 @@ export function AddFriendPage() {
   const name = sendRequest.data?.displayName;
 
   return (
-    <Stack align="center" justify="center" gap="md" p="md" style={{ minHeight: '100svh' }}>
+    <Stack component="main" align="center" justify="center" gap="md" p="md" style={{ minHeight: '100svh' }}>
       {sendRequest.isPending && <Loader color="accent" />}
       {sendRequest.isError && (
         <>
-          <Title order={2} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
+          <Title order={1} fz="h2" ta="center" style={{ fontFamily: 'var(--font-display)' }}>
             {t('friendLink.failed')}
           </Title>
           <Text c="red" ta="center">
@@ -62,7 +62,7 @@ export function AddFriendPage() {
         </>
       )}
       {sendRequest.isSuccess && (
-        <Title order={2} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
+        <Title order={1} fz="h2" ta="center" style={{ fontFamily: 'var(--font-display)' }}>
           {name ? t('friendLink.sent', { name }) : t('friendLink.sentAnonymous')}
         </Title>
       )}
