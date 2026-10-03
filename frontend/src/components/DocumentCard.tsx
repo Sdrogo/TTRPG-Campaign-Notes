@@ -14,6 +14,10 @@ import { useTranslation } from 'react-i18next';
 // Tall enough that the image panel on the right reads as a picture, not a strip.
 const CARD_WITH_IMAGES_MIN_HEIGHT = { base: 220, sm: 260 };
 
+// Width / height of the image panel at its shortest: square, so a wide card
+// grows taller instead of cropping its image to a strip.
+const CARD_IMAGE_MIN_ASPECT_RATIO = '1';
+
 interface DocumentCardProps {
   document: Document;
   roomId: string;
@@ -41,7 +45,15 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
   );
 
   return (
-    <Card withBorder padding="md" radius="md" pos="relative" mih={hasImages ? CARD_WITH_IMAGES_MIN_HEIGHT : undefined}>
+    <Card
+      withBorder
+      padding="md"
+      radius="md"
+      pos="relative"
+      mih={hasImages ? CARD_WITH_IMAGES_MIN_HEIGHT : undefined}
+      // With images, the text column and the image's floor (below) sit side by side.
+      style={hasImages ? { flexDirection: 'row' } : undefined}
+    >
       {/* With images, they fill the card's right half edge to edge, fading
           into the card on their left, and the badges sit on top of them. */}
       {hasImages && (
@@ -60,7 +72,7 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
         // Above the images, which are positioned and would otherwise paint over it.
         pos="relative"
         w={hasImages ? 'calc(50% - var(--mantine-spacing-sm))' : undefined}
-        style={hasImages ? { flex: 1 } : undefined}
+        style={hasImages ? { flexShrink: 0 } : undefined}
       >
         {/* Title block: name and visibility on top, Tags on their own line. */}
         <Stack gap={4}>
@@ -111,6 +123,20 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
           </Text>
         )}
       </Stack>
+
+      {/* The image panel's floor: an empty square under it, so the card is at
+          least as tall as the panel is wide. On a wide card a fixed minimum
+          height would leave a short, wide strip that crops a portrait to a
+          sliver; this keeps the panel square or taller at any width. */}
+      {hasImages && (
+        <Box
+          data-testid="card-image-floor"
+          aria-hidden
+          w="50%"
+          ml="auto"
+          style={{ aspectRatio: CARD_IMAGE_MIN_ASPECT_RATIO, alignSelf: 'flex-start', flexShrink: 0 }}
+        />
+      )}
 
       {/* The link covers the card rather than wrapping it: an <a> may not
           contain the carousel's buttons, which sit above this (see

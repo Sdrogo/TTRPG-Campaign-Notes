@@ -57,6 +57,13 @@ proposals, 2026-10-03):
   the live DB by hand. No migration involved.
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
+### Document card image minimum height (2026-10-03)
+
+- On wide screens the restyled cards got short and cropped the image to a
+  strip. The image panel now stays at least square (an invisible square
+  floor under it), so a wider card is taller. Checked headless at 390, 900,
+  1300 and 2000px.
+
 ### Document card restyle (2026-10-03)
 
 - From Andrea's prototype: on a Document card with images, the images fill
