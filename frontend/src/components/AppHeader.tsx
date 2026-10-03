@@ -35,7 +35,8 @@ function hasAppHistory(): boolean {
  * The top navigation bar shown on every signed-in page: the back button and,
  * on a Room page, the Glossary Index burger, on the left; the app name (also
  * back to the Rooms list) in the middle; on the right the language flag, then
- * the account avatar (spec 09, spec 10).
+ * the account avatar (spec 09, spec 10). It stays pinned to the top of the
+ * page while it scrolls (`.app-header` in `index.css`).
  */
 export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const { t } = useTranslation();
@@ -58,7 +59,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
         wrap="nowrap"
         px={{ base: 'sm', sm: 'lg', lg: 'xl' }}
         py="sm"
-        style={{ borderBottom: '1px solid var(--border-default)' }}
+        className="app-header"
       >
         <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
           {roomId && (

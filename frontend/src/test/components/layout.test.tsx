@@ -69,6 +69,17 @@ describe('PageLayout', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
+  it('pins the app header to the top of the page', () => {
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro">
+        <p>Contenuto</p>
+      </PageLayout>,
+    );
+
+    // `.app-header` (index.css) makes it sticky at the top.
+    expect(screen.getByRole('banner')).toHaveClass('app-header');
+  });
+
   it('forwards a given Room id to the header, offering the Glossary Index', () => {
     renderWithProviders(
       <PageLayout backTo="/" backLabel="Indietro" roomId="room-1">
