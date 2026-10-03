@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
+  ActionIcon,
+  Affix,
   Box,
   Collapse,
   Group,
@@ -72,9 +74,6 @@ export function RoomDocumentsPage() {
 function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; currentUserId: string }) {
   const { t } = useTranslation();
   const [createOpened, setCreateOpened] = useState(false);
-  // The filters/settings row below the title starts expanded; collapsing it
-  // just hides those controls, the title itself always stays visible.
-  const [controlsExpanded, setControlsExpanded] = useState(true);
   const room = useRoom(roomId, true);
   const documents = useDocuments(roomId, true);
   const tags = useTags(roomId, true);
@@ -84,6 +83,10 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   // `?tag=…` (repeatable): where a `#Tag` mention leads. Tags combine (AND).
   // `?groupBy=`/`?sort=` default to grouping by Main Tag, A-Z, when absent.
   const [searchParams, setSearchParams] = useSearchParams();
+  // The filters/settings row below the title starts collapsed (Andrea,
+  // 2026-10-03), unless the page opens already filtered by Tag - then the
+  // filter that's narrowing the list is shown. The title always stays.
+  const [controlsExpanded, setControlsExpanded] = useState(() => searchParams.has('tag'));
   const tagFilter = searchParams.getAll('tag');
   const groupBy = (searchParams.get('groupBy') as DocumentGroupBy | null) ?? DEFAULT_GROUP_BY;
   const sort = (searchParams.get('sort') as DocumentSort | null) ?? DEFAULT_SORT;
@@ -125,7 +128,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
         <Group justify="space-between">
           <Group gap="sm" align="center" wrap="wrap">
             <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-              {room.data ? t('documents.titleWithRoom', { room: room.data.name }) : t('documents.title')}
+              {room.data ? room.data.name : t('documents.title')}
             </Title>
             {hasControls && (
               <UnstyledButton
@@ -143,12 +146,23 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               </UnstyledButton>
             )}
           </Group>
-          {canCreateDocument && (
-            <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>
-              {t('documents.create')}
-            </Button>
-          )}
         </Group>
+        {/* A round floating "+" at the bottom right, always within reach. */}
+        {canCreateDocument && (
+          <Affix position={{ bottom: 24, right: 24 }} zIndex={150}>
+            <ActionIcon
+              size={56}
+              radius="xl"
+              variant="filled"
+              onClick={() => setCreateOpened(true)}
+              aria-label={t('documents.create')}
+              title={t('documents.create')}
+              style={{ boxShadow: 'var(--mantine-shadow-lg)' }}
+            >
+              <PlusIcon size={28} weight="bold" />
+            </ActionIcon>
+          </Affix>
+        )}
         {hasControls && (
           <Collapse expanded={controlsExpanded}>
             <Group gap="sm" align="flex-end" wrap="wrap">
@@ -221,6 +235,8 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             groupBy={groupBy}
           />
         )}
+        {/* Room under the last cards, so the floating "+" never covers them. */}
+        {canCreateDocument && <Box h={64} aria-hidden="true" />}
 
         <CreateDocumentModal
           opened={createOpened}

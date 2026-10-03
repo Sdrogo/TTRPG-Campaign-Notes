@@ -56,6 +56,14 @@ proposals, 2026-10-03):
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
 
+### Room page and top bar refactor (2026-10-03)
+
+- Andrea: "Create Document" is now a round floating "+" at the bottom right;
+  the Room title drops "Documents —" and its filters/settings row starts
+  collapsed (open when arriving filtered by `?tag=`); the top bar puts the
+  icon-only back arrow before the burger, and the app name is held at the
+  exact center by a 3-column grid. axe audit still clean. Frontend only.
+
 ### Accessibility audit fixes (2026-10-03)
 
 - Andrea's Vercel toolbar audit flagged small touch targets, skipped heading

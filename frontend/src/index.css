@@ -23,6 +23,10 @@ body {
    scrolling down it slides up out of view (`data-hidden`, set by `AppHeader`)
    and slides back as soon as the scroll turns up. */
 .app-header {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
   position: sticky;
   top: 0;
   z-index: 100;
