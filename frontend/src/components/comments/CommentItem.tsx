@@ -7,6 +7,7 @@ import { CharacterAvatar } from '../CharacterAvatar';
 import { ImageThumbnailGrid } from '../ImageThumbnailGrid';
 import { ImageViewerModal } from '../ImageViewerModal';
 import { VisibilityBadge } from '../VisibilityBadge';
+import { RevealedBadge } from '../RevealedBadge';
 import { CommentComposer } from './CommentComposer';
 import { AddReaction, ReactionChips } from './CommentReactions';
 import { useToggleReaction, type CommentFlag } from '../../hooks/useComments';
@@ -56,6 +57,10 @@ interface CommentItemProps {
    * 19c Decision 5). Offered only where the backend's `canPromote` allows it.
    */
   onPromote?: (target: PromotionTarget) => void;
+  /** This visit opened it as revealed to the viewer (spec 22): marked so. */
+  isRevealed?: boolean;
+  /** The Master's Reveal action (spec 22 Decision 1); absent for everyone else. */
+  onReveal?: () => void;
 }
 
 /**
@@ -84,6 +89,8 @@ export function CommentItem({
   onSetFlag,
   settingFlag = false,
   onPromote,
+  isRevealed = false,
+  onReveal,
 }: CommentItemProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -212,6 +219,7 @@ export function CommentItem({
                   {t('comments.new')}
                 </Badge>
               )}
+              {isRevealed && <RevealedBadge size="xs" />}
               {comment.pinnedAt && (
                 <Badge
                   size="xs"
@@ -317,6 +325,9 @@ export function CommentItem({
               </CommentAction>
             )}
             {onPromote && comment.canPromote && <PromoteCommentAction onPromote={onPromote} />}
+            {onReveal && !comment.deleted && comment.visibility !== 'room' && (
+              <CommentAction onClick={onReveal}>{t('reveal.action')}</CommentAction>
+            )}
             {comment.canDelete && (
               <DeleteCommentAction
                 onConfirm={onDelete}

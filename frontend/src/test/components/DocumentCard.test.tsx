@@ -50,6 +50,21 @@ function render(overrides: Partial<Document> = {}) {
 }
 
 describe('DocumentCard', () => {
+  // Spec 22 Decision 3: until the viewer opens what was revealed to them.
+  it('marks a Document revealed to the viewer', () => {
+    renderWithProviders(
+      <DocumentCard document={document()} roomId="room-1" tags={tags} members={members} revealed />,
+    );
+
+    expect(screen.getByTitle('Rivelato a te')).toHaveTextContent('Rivelato');
+  });
+
+  it('carries no Revealed mark otherwise', () => {
+    render();
+
+    expect(screen.queryByText('Rivelato')).not.toBeInTheDocument();
+  });
+
   it('shows the name, description and Tags', () => {
     render();
 

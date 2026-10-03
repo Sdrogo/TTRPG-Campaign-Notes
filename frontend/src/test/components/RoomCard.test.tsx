@@ -21,6 +21,7 @@ function myRoom(overrides: Partial<MyRoom> = {}): MyRoom {
       gameSystem: 'D&D 5e',
       status: 'active',
       playersCanCreateDocuments: true,
+      defaultVisibility: 'room',
     },
     role: 'player',
     isAdmin: false,

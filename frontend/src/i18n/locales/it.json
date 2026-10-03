@@ -124,6 +124,13 @@
       "cancelRequest": "Annulla richiesta",
       "removeConfirm": "Rimuovere {{name}} dagli amici?",
       "accepted": "Ora tu e {{name}} siete amici."
+    },
+    "reveals": {
+      "title": "Rivelati a te",
+      "description": "Quello che il Master ti ha appena mostrato. Sparisce da qui quando lo apri.",
+      "document": "Documento",
+      "note": "Nota \"{{title}}\"",
+      "comment": "Un commento"
     }
   },
   "rooms": {
@@ -179,7 +186,7 @@
   "setup": {
     "signInRequired": "Accedi per gestire questa Stanza.",
     "title": "Impostazioni della Stanza",
-    "adminOnly": "Solo un Amministratore della Stanza può aprire le impostazioni.",
+    "adminOnly": "Solo un Amministratore o il Master della Stanza può aprire le impostazioni.",
     "loadError": "Errore nel caricamento delle impostazioni della Stanza.",
     "mainTags": {
       "title": "Tag principali",
@@ -214,6 +221,49 @@
       "confirmBody": "Tutto ciò che è nella Stanza viene eliminato per tutti: membri, inviti, Tag, Documenti, Commenti, Note e immagini. L'operazione non si può annullare.",
       "confirmLabel": "Scrivi \"{{name}}\" per confermare",
       "deleted": "Stanza \"{{name}}\" eliminata"
+    },
+    "tabs": {
+      "settings": "Impostazioni",
+      "history": "Cronologia"
+    },
+    "defaultVisibility": {
+      "title": "Visibilità predefinita",
+      "description": "Il livello da cui parte ogni nuovo Documento, Nota e Commento. Una risposta parte comunque dalla visibilità del commento a cui risponde. Il contenuto esistente non cambia.",
+      "label": "Visibilità predefinita",
+      "saved": "Visibilità predefinita salvata."
+    },
+    "history": {
+      "title": "Cronologia della visibilità",
+      "description": "Chi ha cambiato chi vede cosa, dal cambio più recente.",
+      "filterLabel": "Contenuto",
+      "filter": {
+        "all": "Tutto",
+        "document": "Documenti",
+        "note": "Note",
+        "comment": "Commenti"
+      },
+      "empty": "Nessun cambio di visibilità.",
+      "loadError": "Impossibile caricare la cronologia.",
+      "loadMore": "Carica altri",
+      "when": "Quando",
+      "who": "Chi",
+      "what": "Cosa",
+      "change": "Cambio",
+      "reveal": "Rivelazione",
+      "hidden": {
+        "document": "Un Documento nascosto",
+        "note": "Una Nota nascosta",
+        "comment": "Un commento nascosto"
+      },
+      "deleted": {
+        "document": "Un Documento eliminato",
+        "note": "Una Nota eliminata",
+        "comment": "Un commento eliminato"
+      },
+      "note": "Nota \"{{title}}\" in {{document}}",
+      "comment": "Commento in {{document}}",
+      "recipients": "Ora lo vedono: {{names}}",
+      "selective": "Scelti: {{names}}"
     }
   },
   "documents": {
@@ -450,5 +500,25 @@
     "sentAnonymous": "Richiesta di amicizia inviata.",
     "failed": "Impossibile inviare la richiesta di amicizia.",
     "goToAccount": "Vai al tuo account"
+  },
+  "reveal": {
+    "action": "Rivela",
+    "actionLabel": "Rivela: {{name}}",
+    "comment": "il commento",
+    "revealed": "Rivelato",
+    "revealedLabel": "Rivelato a te",
+    "modalTitle": "Rivela \"{{name}}\"",
+    "audienceLabel": "A chi",
+    "toRoom": "A tutta la Stanza",
+    "toChosen": "Ai giocatori scelti",
+    "chosenLabel": "Giocatori",
+    "chosenPlaceholder": "Scegli chi",
+    "noOneToPick": "Ogni membro che può riceverlo lo vede già.",
+    "gains": "Ottengono accesso: {{names}}",
+    "noGains": "Nessun altro membro ottiene accesso.",
+    "notesLabel": "Rivela anche queste Note",
+    "notesDescription": "Chi ottiene il Documento non le vede. Restano come sono se non le selezioni.",
+    "confirm": "Rivela",
+    "done": "Rivelato."
   }
 }

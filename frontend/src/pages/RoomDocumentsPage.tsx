@@ -31,6 +31,8 @@ import { DocumentMentionsProvider } from '../components/mentions/DocumentMention
 import { TagFilter } from '../components/TagFilter';
 import { Backlinks } from '../components/mentions/Backlinks';
 import { filterDocumentsByTags } from '../lib/documentFilters';
+import { hasUnseenReveal } from '../lib/reveal';
+import { useMyReveals } from '../hooks/useReveals';
 import {
   DEFAULT_GROUP_BY,
   groupDocumentsByMainItems,
@@ -154,6 +156,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               roomId={roomId}
               roomName={room.data.name}
               isAdmin={me.isAdmin}
+              isMaster={me.role === 'master'}
               currentUserId={currentUserId}
               onLeft={() => navigate('/')}
             />
@@ -182,7 +185,9 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
                 <Switch
                   label={t('documents.playersCanCreate')}
                   checked={room.data.playersCanCreateDocuments}
-                  onChange={(event) => updateSettings.mutate(event.currentTarget.checked)}
+                  onChange={(event) =>
+                    updateSettings.mutate({ playersCanCreateDocuments: event.currentTarget.checked })
+                  }
                 />
               )}
               {documents.data && documents.data.length > 0 && (
@@ -255,6 +260,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
           onClose={() => setCreateOpened(false)}
           roomId={roomId}
           canManageTags={canManageTags(me)}
+          defaultVisibility={room.data?.defaultVisibility}
         />
       </DocumentMentionsProvider>
     </PageLayout>
@@ -277,6 +283,8 @@ function DocumentsGrid({
   groupBy: DocumentGroupBy;
 }) {
   const { t } = useTranslation();
+  // Content revealed to the viewer they haven't opened yet marks its card (spec 22).
+  const reveals = useMyReveals(true);
   // Which group keys are collapsed; everything starts expanded. Not
   // persisted - a reload or a `groupBy`/sort change is a fresh page.
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -301,6 +309,7 @@ function DocumentsGrid({
           tags={tags}
           members={memberList}
           headingOrder={headingOrder}
+          revealed={hasUnseenReveal(reveals.data, document.id)}
         />
       ))}
     </Box>

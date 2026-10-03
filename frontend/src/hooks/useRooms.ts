@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import { FRIENDS_QUERY_KEY, MY_INVITATIONS_QUERY_KEY } from './queryKeys';
+import type { DocumentVisibility } from '../types/document';
 import type { Invitation, MyRoom, Room, RoomRole, RoomStatus } from '../types/room';
 
 /** A Room as the API sends it (snake_case). */
@@ -10,6 +11,7 @@ export interface RawRoom {
   game_system: string | null;
   status: RoomStatus;
   players_can_create_documents: boolean;
+  default_visibility: DocumentVisibility;
 }
 
 interface RawMyRoom {
@@ -32,6 +34,7 @@ export function toRoom(raw: RawRoom): Room {
     gameSystem: raw.game_system,
     status: raw.status,
     playersCanCreateDocuments: raw.players_can_create_documents,
+    defaultVisibility: raw.default_visibility,
   };
 }
 
@@ -80,15 +83,26 @@ export function useRoom(roomId: string, enabled: boolean) {
   });
 }
 
-/** The Master switches Players' Document creation on or off (D-13). */
+/** The Room settings `useUpdateRoomSettings` changes; only those given are sent. */
+export interface RoomSettingsInput {
+  /** The Master's switch for Players' Document creation (D-13). */
+  playersCanCreateDocuments?: boolean;
+  /** The Administrators' starting level for new content (VR-05, spec 22). */
+  defaultVisibility?: DocumentVisibility;
+}
+
+/** Changes the Room's settings: each one is for the role that owns it. */
 export function useUpdateRoomSettings(roomId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (playersCanCreateDocuments: boolean) =>
+    mutationFn: async (input: RoomSettingsInput) =>
       toRoom(
         await apiFetch<RawRoom>(`/rooms/${roomId}`, {
           method: 'PATCH',
-          json: { players_can_create_documents: playersCanCreateDocuments },
+          json: {
+            players_can_create_documents: input.playersCanCreateDocuments,
+            default_visibility: input.defaultVisibility,
+          },
         }),
       ),
     onSuccess: () => {

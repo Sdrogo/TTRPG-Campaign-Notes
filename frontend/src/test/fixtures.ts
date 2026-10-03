@@ -9,6 +9,7 @@ export function rawRoom(overrides: Record<string, unknown> = {}) {
     game_system: 'D&D 5e',
     status: 'active',
     players_can_create_documents: true,
+    default_visibility: 'room',
     ...overrides,
   };
 }
@@ -42,6 +43,7 @@ export function rawDocumentRead(overrides: Record<string, unknown> = {}) {
   return {
     last_read_at: '2026-10-02T12:00:00Z',
     previous_read_at: null,
+    revealed: { document: false, note_ids: [], comment_ids: [] },
     ...overrides,
   };
 }
@@ -184,4 +186,43 @@ export function rawAccount(overrides: Record<string, unknown> = {}) {
 // the access token are ever read, so the rest is left off.
 export function fakeSession(userId = 'user-1') {
   return { access_token: `token-${userId}`, user: { id: userId } };
+}
+
+/** One of `GET /reveals/mine`'s entries (spec 22): a Document revealed to the user. */
+export function rawMyReveal(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'reveal-1',
+    room_id: 'room-1',
+    kind: 'document',
+    document_id: 'doc-1',
+    note_id: null,
+    comment_id: null,
+    revealed_at: '2026-10-03T12:00:00Z',
+    room_name: 'La Cripta',
+    document_name: 'Il Cancello',
+    note_title: null,
+    ...overrides,
+  };
+}
+
+/** One entry of a Room's visibility history (spec 22): a Document revealed to the Room. */
+export function rawHistoryEntry(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'entry-1',
+    created_at: '2026-10-03T12:00:00Z',
+    actor_id: 'user-1',
+    kind: 'document',
+    is_reveal: true,
+    state: 'visible',
+    from_visibility: 'master',
+    to_visibility: 'room',
+    document_id: 'doc-1',
+    document_name: 'Il Cancello',
+    note_id: null,
+    note_title: null,
+    comment_id: null,
+    selective_user_ids: [],
+    recipient_ids: ['user-2'],
+    ...overrides,
+  };
 }

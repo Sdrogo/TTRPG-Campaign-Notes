@@ -124,6 +124,13 @@
       "cancelRequest": "Cancel request",
       "removeConfirm": "Remove {{name}} from your Friends?",
       "accepted": "You and {{name}} are now Friends."
+    },
+    "reveals": {
+      "title": "Revealed to you",
+      "description": "What the Master just showed you. It leaves this list once you open it.",
+      "document": "Document",
+      "note": "Note \"{{title}}\"",
+      "comment": "A comment"
     }
   },
   "rooms": {
@@ -179,7 +186,7 @@
   "setup": {
     "signInRequired": "Sign in to manage this Room.",
     "title": "Room setup",
-    "adminOnly": "Only a Room Administrator can open the setup.",
+    "adminOnly": "Only a Room Administrator or its Master can open the setup.",
     "loadError": "Error loading the Room setup.",
     "mainTags": {
       "title": "Main Tags",
@@ -214,6 +221,49 @@
       "confirmBody": "Everything in this Room is deleted for everyone: members, invitations, Tags, Documents, Comments, Notes and images. This cannot be undone.",
       "confirmLabel": "Type \"{{name}}\" to confirm",
       "deleted": "Room \"{{name}}\" deleted"
+    },
+    "tabs": {
+      "settings": "Settings",
+      "history": "History"
+    },
+    "defaultVisibility": {
+      "title": "Default visibility",
+      "description": "The level every new Document, Note and Comment starts at. A reply still starts from the visibility of the comment it answers. Existing content doesn't change.",
+      "label": "Default visibility",
+      "saved": "Default visibility saved."
+    },
+    "history": {
+      "title": "Visibility history",
+      "description": "Who changed who sees what, most recent change first.",
+      "filterLabel": "Content",
+      "filter": {
+        "all": "Everything",
+        "document": "Documents",
+        "note": "Notes",
+        "comment": "Comments"
+      },
+      "empty": "No visibility changes.",
+      "loadError": "Couldn't load the history.",
+      "loadMore": "Load more",
+      "when": "When",
+      "who": "Who",
+      "what": "What",
+      "change": "Change",
+      "reveal": "Reveal",
+      "hidden": {
+        "document": "A hidden Document",
+        "note": "A hidden Note",
+        "comment": "A hidden comment"
+      },
+      "deleted": {
+        "document": "A deleted Document",
+        "note": "A deleted Note",
+        "comment": "A deleted comment"
+      },
+      "note": "Note \"{{title}}\" in {{document}}",
+      "comment": "Comment in {{document}}",
+      "recipients": "Now seen by: {{names}}",
+      "selective": "Chosen: {{names}}"
     }
   },
   "documents": {
@@ -450,5 +500,25 @@
     "sentAnonymous": "Friend request sent.",
     "failed": "Couldn't send the friend request.",
     "goToAccount": "Go to your account"
+  },
+  "reveal": {
+    "action": "Reveal",
+    "actionLabel": "Reveal: {{name}}",
+    "comment": "the comment",
+    "revealed": "Revealed",
+    "revealedLabel": "Revealed to you",
+    "modalTitle": "Reveal \"{{name}}\"",
+    "audienceLabel": "To whom",
+    "toRoom": "The whole Room",
+    "toChosen": "Chosen players",
+    "chosenLabel": "Players",
+    "chosenPlaceholder": "Choose who",
+    "noOneToPick": "Every member who can get it already sees it.",
+    "gains": "Gaining access: {{names}}",
+    "noGains": "No other member gains access.",
+    "notesLabel": "Also reveal these Notes",
+    "notesDescription": "Whoever gets the Document can't see them. They stay as they are unless you select them.",
+    "confirm": "Reveal",
+    "done": "Revealed."
   }
 }

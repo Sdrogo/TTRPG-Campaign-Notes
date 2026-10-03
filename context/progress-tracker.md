@@ -20,11 +20,29 @@ product owner's request (2026-10-03); 21 (full-text search) is still to do.
 
 **Pending migration**: `b8d2f6a4c9e1` (spec 22_1: `rooms.default_visibility`,
 `reveals`, `reveal_recipients`, an `audit_log` index). Not yet on the live
-database; apply it by hand before the release that ships 22_1.
+database; apply it by hand before the release that ships 22_1. Specs 22_1
+and 22_2 share PR #86.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Reveal and visibility history, frontend (spec 22_2, 2026-10-03)
+
+- Reveal action and dialog on the Document, each Note and each Comment
+  (Master only, hidden on content already at Room level); "Revealed" marks
+  on cards, the Document, Notes and Comments; the header badge counts unseen
+  Reveals and the Account page lists them; the setup page gained Settings
+  and History tabs and the default visibility selector; every create form
+  starts at the Room default. Details in `architecture.md` → Reveal,
+  visibility history and Room default visibility → Frontend.
+- Choices beyond the ticket: a card is marked when anything on its Document
+  was revealed, not only the Document; a Master who isn't an Administrator
+  now reaches the setup page, History tab only; the Reveal dialog starts on
+  "chosen players" with nobody chosen, so nothing is revealed by accident.
+- Same PR, backend: a create route stores Selective grants only when the
+  resolved level is Selective (review finding on PR #86).
+- Frontend 1324 tests, 100% coverage; backend 802 tests, 100% coverage.
 
 ### Reveal and visibility history, backend (spec 22_1, 2026-10-03)
 
@@ -959,8 +977,8 @@ Reorganized with the product owner on 2026-10-03.
     frontend. Postponed: the product owner asked for 22 first (2026-10-03).
   - **Reveal and visibility (spec 22)**: `22 - Reveal and visibility
     history` and `22b - View as player` (read-only preview through an
-    `X-View-As` header). **In progress**: 22_1 done; 22_2, 22b_1, 22b_2
-    next.
+    `X-View-As` header). **In progress**: 22_1 and 22_2 done (PR #86);
+    22b_1, 22b_2 next.
   - **Room export (spec 23)**: `23 - Room export` (JSON + Markdown,
     per-viewer), `23b - Room PDF manual` (WeasyPrint in a background job;
     check Render can install Pango first), `23c - Agent access tokens`

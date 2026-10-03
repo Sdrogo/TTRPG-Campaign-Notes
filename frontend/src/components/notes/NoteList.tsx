@@ -3,9 +3,13 @@ import { Button, Stack } from '@mantine/core';
 import { PlusIcon } from '@phosphor-icons/react';
 import { NoteForm } from './NoteForm';
 import { NoteItem } from './NoteItem';
+import { RevealModal } from '../RevealModal';
 import { useCreateNote, useDeleteNote, useReorderNotes, useUpdateNote } from '../../hooks/useNotes';
+import { useRevealNote, useRevealedInVisit } from '../../hooks/useReveals';
 import { EMPTY_NOTE_VALUES, moveNote } from '../../lib/notes';
-import { notifyError } from '../../lib/notify';
+import { notifyError, notifySuccess } from '../../lib/notify';
+import { noteReveal } from '../../lib/reveal';
+import type { Document, DocumentVisibility } from '../../types/document';
 import type { Member } from '../../types/member';
 import type { Note } from '../../types/note';
 import { useTranslation } from 'react-i18next';
@@ -18,26 +22,46 @@ interface NoteListProps {
   members: Member[];
   /** Whether the viewer may add a Note (an Owner or the Master). */
   canAdd: boolean;
+  /** The Room's default visibility, which a new Note starts at (VR-05). */
+  defaultVisibility?: DocumentVisibility;
+  /**
+   * For the Master: the Document the Notes are on, whose audience decides who
+   * a Note's Reveal reaches (spec 22). Without it nobody can reveal a Note.
+   */
+  revealFrom?: Document;
 }
 
 /**
  * A Document's Notes, one paragraph each under its description, and the
  * "add Note" action for those allowed. With no Notes and no right to add one
  * it renders nothing, so a Document looks as it did before Notes existed.
+ * The Master can reveal a Note not yet seen by the whole Room (spec 22).
  */
-export function NoteList({ roomId, documentId, notes, members, canAdd }: NoteListProps) {
+export function NoteList({
+  roomId,
+  documentId,
+  notes,
+  members,
+  canAdd,
+  defaultVisibility = 'room',
+  revealFrom,
+}: NoteListProps) {
   const { t } = useTranslation();
   const [adding, setAdding] = useState(false);
+  const [revealingId, setRevealingId] = useState<string | null>(null);
   const createNote = useCreateNote(roomId, documentId);
   const updateNote = useUpdateNote(roomId, documentId);
   const deleteNote = useDeleteNote(roomId, documentId);
   const reorderNotes = useReorderNotes(roomId, documentId);
+  const revealNote = useRevealNote(roomId, documentId);
+  const revealed = useRevealedInVisit(roomId, documentId);
 
   if (notes.length === 0 && !canAdd) {
     return null;
   }
 
   const ids = notes.map((note) => note.id);
+  const revealing = notes.find((note) => note.id === revealingId);
 
   return (
     <Stack gap="md" className="note-list">
@@ -61,12 +85,16 @@ export function NoteList({ roomId, documentId, notes, members, canAdd }: NoteLis
           updating={updateNote.isPending && updateNote.variables.noteId === note.id}
           onDelete={() => deleteNote.mutate(note.id, { onError: notifyError })}
           deleting={deleteNote.isPending && deleteNote.variables === note.id}
+          revealed={revealed?.noteIds.includes(note.id)}
+          onReveal={
+            revealFrom && note.visibility !== 'room' ? () => setRevealingId(note.id) : undefined
+          }
         />
       ))}
       {canAdd &&
         (adding ? (
           <NoteForm
-            initialValues={EMPTY_NOTE_VALUES}
+            initialValues={{ ...EMPTY_NOTE_VALUES, visibility: defaultVisibility }}
             members={members}
             submitLabel={t('notes.add')}
             onSubmit={(values) =>
@@ -90,6 +118,27 @@ export function NoteList({ roomId, documentId, notes, members, canAdd }: NoteLis
             {t('notes.add')}
           </Button>
         ))}
+      {revealing && revealFrom && (
+        <RevealModal
+          name={revealing.title}
+          members={members}
+          {...noteReveal(revealing, revealFrom, members)}
+          loading={revealNote.isPending}
+          onConfirm={(audience) =>
+            revealNote.mutate(
+              { noteId: revealing.id, audience },
+              {
+                onSuccess: () => {
+                  notifySuccess(t('reveal.done'));
+                  setRevealingId(null);
+                },
+                onError: notifyError,
+              },
+            )
+          }
+          onClose={() => setRevealingId(null)}
+        />
+      )}
     </Stack>
   );
 }
