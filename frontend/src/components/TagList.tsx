@@ -26,7 +26,8 @@ export function TagList({ tags, tagIds, roomId }: TagListProps) {
   }
 
   return (
-    <Group gap={6}>
+    // Rows 8px apart, so the taller hit areas of two wrapped rows don't overlap.
+    <Group gap={6} style={{ rowGap: 8 }}>
       {selected.map((tag) =>
         roomId ? (
           <Anchor
@@ -40,7 +41,11 @@ export function TagList({ tags, tagIds, roomId }: TagListProps) {
             // (see DocumentCardImages' carousel controls) - this brings the
             // Tag back on top so it's the one that receives the click.
             pos="relative"
-            style={{ zIndex: 2 }}
+            // At least 24px tall to tap (WCAG 2.5.8), without moving the line:
+            // the padding adds to the hit area, the negative margin takes it back.
+            py={4}
+            my={-4}
+            style={{ zIndex: 2, display: 'inline-block' }}
           >
             #{tag.name}
           </Anchor>

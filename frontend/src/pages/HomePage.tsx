@@ -26,7 +26,7 @@ export function HomePage() {
 
   if (sessionLoading) {
     return (
-      <Stack align="center" justify="center" style={{ minHeight: '100svh' }}>
+      <Stack component="main" align="center" justify="center" style={{ minHeight: '100svh' }}>
         <Loader color="accent" />
       </Stack>
     );
@@ -34,7 +34,7 @@ export function HomePage() {
 
   if (!session) {
     return (
-      <Stack align="center" justify="center" gap="md" px="md" style={{ minHeight: '100svh' }}>
+      <Stack component="main" align="center" justify="center" gap="md" px="md" style={{ minHeight: '100svh' }}>
         <BookOpenIcon size={48} weight="duotone" color="var(--text-muted)" />
         <Title order={1} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
           {t('app.name')}

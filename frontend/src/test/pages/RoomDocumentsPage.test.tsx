@@ -66,10 +66,18 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
   });
 }
 
+// The filters and settings row starts collapsed: open it before using it.
+async function showControls(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: 'Mostra filtri e impostazioni' }));
+  // The row mounts as the Collapse opens.
+  await screen.findByRole('combobox', { name: 'Ordina per' });
+}
+
 function render(route = '/rooms/room-1/documents') {
   renderWithProviders(
     <Routes>
       <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />
+      <Route path="/" element={<p>Le mie Stanze</p>} />
     </Routes>,
     { route },
   );
@@ -139,7 +147,7 @@ describe('RoomDocumentsPage', () => {
   it('lists the Documents under the Room name', async () => {
     render();
 
-    expect(await screen.findByText('Documenti — La Cripta')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'La Cripta' })).toBeInTheDocument();
     expect(screen.getByText('Il Cancello')).toBeInTheDocument();
   });
 
@@ -206,7 +214,8 @@ describe('who may create a Document', () => {
 
 describe('the Room setting', () => {
   it('is offered to the Master only', async () => {
-    render();
+    const { user } = render();
+    await showControls(user);
 
     expect(
       await screen.findByRole('switch', { name: 'I Player possono creare Documenti' }),
@@ -215,9 +224,10 @@ describe('the Room setting', () => {
 
   it('is hidden from a Player', async () => {
     routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
-    render();
+    const { user } = render();
 
     await screen.findByText('Il Cancello');
+    await showControls(user);
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 
@@ -229,6 +239,7 @@ describe('the Room setting', () => {
     });
     const { user } = render();
     await screen.findByText('Il Cancello');
+    await showControls(user);
 
     await user.click(screen.getByRole('switch', { name: 'I Player possono creare Documenti' }));
 
@@ -272,6 +283,7 @@ describe('filtering by Tag', () => {
   it('filters by picking a Tag from the combobox', async () => {
     const { user } = render();
     await screen.findByText('Il Cancello');
+    await showControls(user);
 
     await user.click(screen.getByRole('combobox', { name: 'Filtra per Tag' }));
     await user.click(screen.getByRole('option', { name: '#PNG' }));
@@ -320,10 +332,27 @@ describe('grouping and sorting', () => {
     });
   }
 
-  // Group headings render at level 5, distinct from the app header's (level
-  // 3) and a DocumentCard's own (level 4) title.
-  const groupHeadings = () => screen.queryAllByRole('heading', { level: 5 }).map((h) => h.textContent);
-  const cardTitles = () => screen.queryAllByRole('heading', { level: 4 }).map((h) => h.textContent);
+  // Under the page's h1, group headings are h2 (each holds its collapse
+  // toggle) and a DocumentCard's title is h3 inside a group, h2 without one.
+  const pageHeadings = (...levels: number[]) =>
+    Array.from(screen.getByRole('main').querySelectorAll(levels.map((l) => `h${l}`).join(', ')));
+  const isGroupHeading = (h: Element) => h.querySelector('[aria-expanded]') !== null;
+  const groupHeadings = () => pageHeadings(2).filter(isGroupHeading).map((h) => h.textContent);
+  const cardTitles = () =>
+    pageHeadings(2, 3)
+      .filter((h) => !isGroupHeading(h))
+      .map((h) => h.textContent);
+
+  // The outline never skips a level: h1 page title, h2 group, h3 card - or
+  // h2 card when there are no groups.
+  it('nests card titles one level under their group heading', async () => {
+    mockApiWithMainTags();
+    render();
+
+    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('La Cripta');
+    expect(pageHeadings(3).map((h) => h.textContent)).toEqual(['Zanna', 'Alba']);
+  });
 
   it('groups Documents under their Main Tag by default, ungrouped ones last', async () => {
     mockApiWithMainTags();
@@ -353,6 +382,7 @@ describe('grouping and sorting', () => {
     mockApiWithMainTags();
     const { user } = render();
     await screen.findByText('Zanna');
+    await showControls(user);
 
     await user.click(screen.getByRole('combobox', { name: 'Raggruppa per' }));
     await user.click(screen.getByText('Nessun raggruppamento'));
@@ -369,6 +399,7 @@ describe('grouping and sorting', () => {
     const { user } = render('/rooms/room-1/documents?groupBy=none');
     await screen.findByText('Zanna');
     expect(groupHeadings()).toEqual([]);
+    await showControls(user);
 
     await user.click(screen.getByRole('combobox', { name: 'Raggruppa per' }));
     await user.click(screen.getByText('Raggruppa per Tag principale'));
@@ -391,6 +422,7 @@ describe('grouping and sorting', () => {
     await screen.findByText('Zanna');
 
     expect(cardTitles()).toEqual(['Alba', 'Zanna']);
+    await showControls(user);
 
     await user.click(screen.getByRole('combobox', { name: 'Ordina per' }));
     await user.click(screen.getByText('Nome (Z-A)'));
@@ -408,47 +440,84 @@ describe('grouping and sorting', () => {
   });
 });
 
+describe("the Room's actions beside the title", () => {
+  it('unfold from the "⋮" at the end of the title row', async () => {
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+
+    expect(screen.getByRole('button', { name: 'Esci' })).toBeInTheDocument();
+  });
+
+  it('take the user back to their Rooms after leaving', async () => {
+    const writes: string[] = [];
+    mockApi((path) => {
+      writes.push(path);
+      return Promise.resolve();
+    });
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+    await user.click(screen.getByRole('button', { name: 'Esci' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Uscire da "La Cripta"?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Esci' }));
+
+    expect(await screen.findByText('Le mie Stanze')).toBeInTheDocument();
+    expect(writes).toContain('/rooms/room-1/members/user-1');
+  });
+});
+
 // The filters/settings row next to the title (the Room setting Switch, the
 // Tag filter, group-by and sort) collapses independently of the title, which
 // always stays visible.
 describe('collapsing the filters and settings row', () => {
   const toggleButton = (name: string | RegExp) => screen.getByRole('button', { name });
 
-  it('starts expanded, showing the row next to a visible title', async () => {
+  it('starts collapsed, with the title still visible', async () => {
     render();
 
     await screen.findByText('Il Cancello');
-    expect(screen.getByText('Documenti — La Cripta')).toBeVisible();
+    expect(screen.getByRole('heading', { level: 1, name: 'La Cripta' })).toBeVisible();
+    expect(toggleButton('Mostra filtri e impostazioni')).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('switch', { name: 'I Player possono creare Documenti' })).not.toBeInTheDocument();
+  });
+
+  // A `#Tag` mention lands on the list already filtered: show that filter.
+  it('starts expanded when the page opens filtered by Tag', async () => {
+    render('/rooms/room-1/documents?tag=tag-1');
+
+    await screen.findByText('Il Cancello');
     expect(toggleButton('Nascondi filtri e impostazioni')).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('switch', { name: 'I Player possono creare Documenti' })).toBeVisible();
     expect(screen.getByRole('combobox', { name: 'Raggruppa per' })).toBeVisible();
   });
 
-  it('collapses the row on click, keeping the title visible', async () => {
+  it('expands the row on click, showing the controls', async () => {
     const { user } = render();
     await screen.findByText('Il Cancello');
 
-    await user.click(toggleButton('Nascondi filtri e impostazioni'));
-
-    expect(toggleButton('Mostra filtri e impostazioni')).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByText('Documenti — La Cripta')).toBeVisible();
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('switch', { name: 'I Player possono creare Documenti' }),
-      ).not.toBeInTheDocument(),
-    );
-  });
-
-  it('expands the row again on a second click', async () => {
-    const { user } = render();
-    await screen.findByText('Il Cancello');
-
-    await user.click(toggleButton('Nascondi filtri e impostazioni'));
     await user.click(toggleButton('Mostra filtri e impostazioni'));
 
     expect(toggleButton('Nascondi filtri e impostazioni')).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() =>
       expect(screen.getByRole('switch', { name: 'I Player possono creare Documenti' })).toBeVisible(),
+    );
+    expect(screen.getByRole('combobox', { name: 'Raggruppa per' })).toBeVisible();
+  });
+
+  it('collapses the row again on a second click', async () => {
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(toggleButton('Mostra filtri e impostazioni'));
+    await user.click(toggleButton('Nascondi filtri e impostazioni'));
+
+    expect(toggleButton('Mostra filtri e impostazioni')).toHaveAttribute('aria-expanded', 'false');
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('switch', { name: 'I Player possono creare Documenti' }),
+      ).not.toBeInTheDocument(),
     );
   });
 

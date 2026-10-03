@@ -109,7 +109,7 @@ describe('reading a Note', () => {
   it('shows the title as a heading and the description below it', () => {
     render();
 
-    expect(screen.getByRole('heading', { name: 'Porta segreta', level: 4 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Porta segreta', level: 2 })).toBeInTheDocument();
     expect(screen.getByText('Dietro la libreria.')).toBeInTheDocument();
   });
 

@@ -219,7 +219,6 @@
   "documents": {
     "signInRequired": "Accedi per vedere i Documenti di questa Stanza.",
     "title": "Documenti",
-    "titleWithRoom": "Documenti — {{room}}",
     "create": "Crea Documento",
     "playersCanCreate": "I Player possono creare Documenti",
     "loadError": "Errore nel caricamento dei Documenti.",

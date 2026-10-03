@@ -44,7 +44,7 @@ export function MainTagsEditor({ tags, items, saving, onSave }: MainTagsEditorPr
 
   return (
     <Stack gap="sm">
-      <Title order={3} style={{ fontFamily: 'var(--font-display)' }}>
+      <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
         {t('setup.mainTags.title')}
       </Title>
       <Text size="sm" c="dimmed">

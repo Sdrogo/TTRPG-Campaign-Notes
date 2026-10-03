@@ -79,12 +79,12 @@ export function RoomSetupPage() {
 
   return (
     <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
-      <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
+      <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
         {t('setup.title')}
       </Title>
 
       <Stack gap="sm">
-        <Title order={3} style={{ fontFamily: 'var(--font-display)' }}>
+        <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
           {t('members.title')}
         </Title>
         <MemberManagement

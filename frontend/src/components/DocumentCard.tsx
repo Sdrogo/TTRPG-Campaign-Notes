@@ -23,6 +23,9 @@ interface DocumentCardProps {
   roomId: string;
   tags: Tag[];
   members: Member[];
+  /** The name's heading level: 2 right under the page's title, 3 under a
+   *  group heading, so the outline never skips a level. Looks the same. */
+  headingOrder?: 2 | 3;
 }
 
 /**
@@ -31,7 +34,7 @@ interface DocumentCardProps {
  * Owners, and what is new in its Thread since the viewer last opened it (spec
  * 19b): a count, or a "not yet read" dot for a Document never opened. The whole card links to the Document.
  */
-export function DocumentCard({ document, roomId, tags, members }: DocumentCardProps) {
+export function DocumentCard({ document, roomId, tags, members, headingOrder = 2 }: DocumentCardProps) {
   const { t } = useTranslation();
   const ownerNames = document.ownerIds.map((id) => displayNameFor(members, id)).join(', ');
   const hasImages = document.images.length > 0;
@@ -82,7 +85,8 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
         <Stack gap={4}>
           <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
             <Title
-              order={4}
+              order={headingOrder}
+              fz="h4"
               style={{ fontFamily: 'var(--font-display)', minWidth: 0, overflowWrap: 'anywhere' }}
             >
               {document.name}

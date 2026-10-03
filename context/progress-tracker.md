@@ -56,6 +56,46 @@ proposals, 2026-10-03):
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
 
+### Room page and top bar refactor (2026-10-03)
+
+- Andrea: "Create Document" is now a round floating "+" at the bottom right;
+  the Room title drops "Documents —" and its filters/settings row starts
+  collapsed (open when arriving filtered by `?tag=`); the top bar puts the
+  icon-only back arrow before the burger, and the app name is held at the
+  exact center by a 3-column grid. axe audit still clean. Frontend only.
+- Then: the Room card's actions (setup, invite, leave) at the end of the
+  Room title row, folded into a "⋮" that unfolds them (`RoomTitleActions`);
+  leaving there navigates back to the Rooms list.
+- Then: the page's scrollbar keeps its gutter on every page (so the
+  centered title no longer shifts between pages that scroll and pages that
+  don't, nor when a modal opens) and only shows, thin and semi-transparent,
+  while scrolling or with the pointer at the right edge
+  (`useScrollbarReveal`). Checked in headless Chromium with classic
+  scrollbars.
+
+### Accessibility audit fixes (2026-10-03)
+
+- Andrea's Vercel toolbar audit flagged small touch targets, skipped heading
+  levels and no `main` landmark. Reproduced with axe-core in headless
+  Chromium against the app with a mocked API (Room list, Document, Rooms,
+  Account, setup): all clean after the fix. Each page now has one `main`
+  and one `h1`, headings never skip a level (sizes unchanged via `fz`), and
+  Tag links are 24px tall to tap. Frontend only.
+
+### Top bar hides on scroll down (2026-10-03)
+
+- Andrea: the pinned bar should leave room on a phone. It now slides up out
+  of view while scrolling down and returns as soon as the scroll turns up
+  (`useHeadroom` in `AppHeader`, `data-hidden` + a CSS transform). Frontend
+  only.
+
+### Pinned top bar (2026-10-03)
+
+- Andrea: in a long Room the top bar scrolled out of view. `AppHeader` now
+  stays pinned to the top on every signed-in page (`.app-header`, sticky,
+  page background, `z-index: 100`), and `scroll-padding-top` keeps scroll
+  targets below it. Frontend only.
+
 ### Document page info panel (2026-10-03)
 
 - Andrea found the Played by, Owner and PDF sections heavy (always-open
