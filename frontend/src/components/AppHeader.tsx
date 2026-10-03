@@ -14,8 +14,9 @@ interface AppHeaderProps {
    *  (the Rooms list, the Account page), where there is no Room to index. */
   roomId?: string;
   /** Given on any nested page, this shows a "back" arrow (icon only, named
-   *  by `backLabel` for screen readers) before the burger. Omitted on the Rooms list (`HomePage`), which is the app's own
-   *  root and has nowhere to go back to. */
+   *  by `backLabel` for screen readers) before the burger. Omitted on the
+   *  Rooms list (`HomePage`), which is the app's own root and has nowhere to
+   *  go back to. */
   backTo?: string;
   backLabel?: string;
 }
@@ -39,10 +40,11 @@ function hasAppHistory(): boolean {
 /**
  * The top navigation bar shown on every signed-in page: the back arrow and,
  * on a Room page, the Glossary Index burger, on the left; the app name (also
- * back to the Rooms list) always at the exact center; on the right the language flag, then
- * the account avatar (spec 09, spec 10). It is pinned to the top of the page
- * (`.app-header` in `index.css`), but slides away while scrolling down and
- * comes back as soon as the scroll turns up, so a phone shows more content.
+ * back to the Rooms list) always at the exact center; on the right the
+ * language flag, then the account avatar (spec 09, spec 10). It is pinned to
+ * the top of the page (`.app-header` in `index.css`), but slides away while
+ * scrolling down and comes back as soon as the scroll turns up, so a phone
+ * shows more content.
  */
 export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const { t } = useTranslation();

@@ -440,9 +440,6 @@ describe('grouping and sorting', () => {
   });
 });
 
-// The filters/settings row next to the title (the Room setting Switch, the
-// Tag filter, group-by and sort) collapses independently of the title, which
-// always stays visible.
 describe("the Room's actions beside the title", () => {
   it('unfold from the "⋮" at the end of the title row', async () => {
     const { user } = render();
@@ -472,6 +469,9 @@ describe("the Room's actions beside the title", () => {
   });
 });
 
+// The filters/settings row next to the title (the Room setting Switch, the
+// Tag filter, group-by and sort) collapses independently of the title, which
+// always stays visible.
 describe('collapsing the filters and settings row', () => {
   const toggleButton = (name: string | RegExp) => screen.getByRole('button', { name });
 
