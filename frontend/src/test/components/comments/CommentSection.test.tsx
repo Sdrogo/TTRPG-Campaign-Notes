@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { apiFetch } from '../../../lib/apiClient';
 import { notifyError } from '../../../lib/notify';
 import { rawCharacter, rawComment, rawDocumentRead } from '../../fixtures';
@@ -58,9 +58,10 @@ const members = [
   member({ userId: 'user-2', displayName: 'Master', email: 'master@example.com' }),
 ];
 
-function render() {
+function render(route?: string) {
   renderWithProviders(
     <CommentSection roomId="room-1" documentId="doc-1" members={members} currentUserId="user-1" />,
+    { route },
   );
   return { user: userEvent.setup() };
 }
@@ -836,5 +837,41 @@ describe('promotion (spec 19c)', () => {
       expect.objectContaining({ id: 'comment-1' }),
       'document',
     );
+  });
+});
+
+// Spec 20: a "Mentioned in" entry leads to `#comment-<id>`.
+describe('CommentSection anchors', () => {
+  let scroll: MockInstance<Element['scrollIntoView']>;
+
+  beforeEach(() => {
+    scroll = vi.spyOn(Element.prototype, 'scrollIntoView');
+  });
+
+  it('opens the branches above the anchored Comment and scrolls to it', async () => {
+    const parent = rawComment({
+      id: 'c-1',
+      body: 'Chi ha la chiave?',
+      resolved_at: '2026-10-02T12:00:00Z',
+      resolved_by: 'user-1',
+    });
+    const reply = rawComment({ id: 'c-2', body: "L'oste.", parent_id: 'c-1' });
+    const deeper = rawComment({ id: 'c-3', body: 'Davvero?', parent_id: 'c-2' });
+    mockRoutes([parent, reply, deeper]);
+
+    render('/rooms/room-1/documents/doc-1#comment-c-3');
+
+    expect(await screen.findByText('Davvero?')).toBeInTheDocument();
+    await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
+    expect(scroll.mock.contexts[0]).toHaveAttribute('id', 'comment-c-3');
+  });
+
+  it('ignores an anchor to a Comment that is not in the Thread', async () => {
+    mockRoutes([rawComment({ id: 'c-1' })]);
+
+    render('/rooms/room-1/documents/doc-1#comment-c-9');
+
+    await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
+    expect(scroll).not.toHaveBeenCalled();
   });
 });

@@ -9,16 +9,15 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-03)
 
-Branch `claude/project-thread-ads76p` (spec 20_1, mention backlinks backend,
-PR into `staging`). Backend **752** tests at 100% coverage; ruff and mypy
-clean. Frontend unchanged since 19c_8: 1227 tests at 100%. The live
-database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8` (`document_mentions`
-and the one-off conversion of plain `#Name` text into tokens, 20_1) is **not
-yet applied**, and should be applied **only once 20_2 is deployed**: the
-current frontend would show the tokens as raw text.
+Branch `claude/project-thread-a660o5` (open questions closed, PR #70 into
+`staging`). Backend **755** tests and frontend **1251** tests at 100%
+coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
+(`document_mentions` and the one-off conversion of plain `#Name` text into
+tokens, 20_1) is **not yet applied**: apply it once the 20_2 frontend is
+deployed (before it, tokens would show as raw text). PR #70 has no migration.
 
-Specs 12 to 19c are merged into `staging` (feature 19 closed). Next: 20_2,
-mention backlinks frontend.
+Specs 12 to 20 are merged into `staging` (features 19 and 20 closed). All
+Open Questions closed 2026-10-03. Next: feature 21 (full-text search).
 
 ## Completed Units
 
@@ -56,6 +55,20 @@ proposals, 2026-10-03):
   the live DB by hand. No migration involved.
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
+
+### Mention backlinks, frontend (spec 20_2, 2026-10-03)
+
+- `lib/userMentions.ts` became `lib/mentionTokens.ts` and reads `doc`/`tag`
+  tokens too (`user` ones only in Comments). The textarea writes tokens for
+  picked or created Documents and Tags; `MentionText` shows the current
+  name, or the written one as plain text for a hidden or deleted target.
+  Old plain `#Name` text renders as before.
+- "Menzionato in" (`Backlinks`) on the Document page and on the Documents
+  list filtered by one Tag; a Comment entry links to `#comment-<id>`, which
+  opens the branches above it and scrolls to it.
+- **Choices made beyond the ticket**: the section starts expanded; Note
+  entries link to the Document (no Note anchor, the ticket asks only for
+  Comments); the excerpt is plain text, as frozen by the backend.
 
 ### Mention backlinks, backend (spec 20_1, 2026-10-03)
 

@@ -14,10 +14,12 @@ import {
   moveActiveIndex,
   newEntryName,
   normalizeForSearch,
+  resolveContentToken,
   splitMentions,
   type MentionKeyState,
   type MentionTarget,
 } from '../../lib/documentMentions';
+import { splitMentionTokens, type MentionToken } from '../../lib/mentionTokens';
 import type { Document } from '../../types/document';
 import type { Tag } from '../../types/tag';
 
@@ -416,5 +418,46 @@ describe('moveActiveIndex', () => {
     expect(moveActiveIndex(2, 3, 1)).toBe(0);
     expect(moveActiveIndex(0, 3, -1)).toBe(2);
     expect(moveActiveIndex(0, 0, 1)).toBe(0);
+  });
+});
+
+// Spec 20 Decisions 5 and 7: a token shows its target's current name while
+// the viewer sees it, and the name it was written with otherwise.
+describe('resolveContentToken', () => {
+  const DOC = '11111111-1111-4111-8111-111111111111';
+  const TAG = '22222222-2222-4222-8222-222222222222';
+  const gate = doc(DOC, 'Il Cancello Nuovo');
+  const places: Tag = { id: TAG, name: 'Luoghi', category: null, mainPosition: null };
+
+  function token(text: string): MentionToken {
+    return splitMentionTokens(text)[0] as MentionToken;
+  }
+
+  it('links a visible Document under its current name', () => {
+    expect(resolveContentToken(token(`#[Il Cancello](doc:${DOC})`), [gate], [])).toEqual({
+      kind: 'document',
+      text: '#Il Cancello Nuovo',
+      document: gate,
+    });
+  });
+
+  it('links a Tag under its current name', () => {
+    expect(resolveContentToken(token(`#[Posti](tag:${TAG})`), [], [places])).toEqual({
+      kind: 'tag',
+      text: '#Luoghi',
+      tag: places,
+    });
+  });
+
+  it('reads a hidden or deleted target as the name it was written with', () => {
+    expect(resolveContentToken(token(`#[Il Cancello](doc:${DOC})`), [], [places])).toEqual({
+      kind: 'text',
+      text: '#Il Cancello',
+    });
+    // An id is only ever looked up among its own kind.
+    expect(resolveContentToken(token(`#[Luoghi](tag:${DOC})`), [gate], [])).toEqual({
+      kind: 'text',
+      text: '#Luoghi',
+    });
   });
 });

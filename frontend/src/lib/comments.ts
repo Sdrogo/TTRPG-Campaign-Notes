@@ -8,7 +8,7 @@ import type {
 import type { DocumentVisibility } from '../types/document';
 import type { Member } from '../types/member';
 import { displayNameFor, findMember } from './members';
-import { toDisplay } from './userMentions';
+import { toDisplay } from './mentionTokens';
 
 /** An empty composer: a Room-visible Comment with no images, written as yourself. */
 export const EMPTY_COMMENT_VALUES: CommentFormValues = {
@@ -86,7 +86,7 @@ export function applyCommentFilters(
       (filters.authorId === null || comment.authorId === filters.authorId) &&
       (filters.visibility === null || comment.visibility === filters.visibility) &&
       (query === '' ||
-        toDisplay(comment.body).toLocaleLowerCase().includes(query) ||
+        toDisplay(comment.body, { users: true }).toLocaleLowerCase().includes(query) ||
         authorMatches(members, comment.authorId, query)),
   );
   return sortComments(filtered, filters.sort, members);

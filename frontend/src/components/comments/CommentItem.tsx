@@ -112,7 +112,13 @@ export function CommentItem({
   );
 
   return (
-    <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="comment-item">
+    <Group
+      id={`comment-${comment.id}`}
+      align="flex-start"
+      gap="sm"
+      wrap="nowrap"
+      data-testid="comment-item"
+    >
       {character ? (
         <CharacterAvatar character={character} size="md" mt={2} />
       ) : (

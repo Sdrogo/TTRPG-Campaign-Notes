@@ -6,11 +6,11 @@ import { memberDisplayName } from '../../lib/members';
 import {
   applyDisplayEdit,
   filterMemberCandidates,
+  mentionToken,
   replaceDisplayRange,
   toDisplay,
   USER_MENTION_PREFIX,
-  userMentionToken,
-} from '../../lib/userMentions';
+} from '../../lib/mentionTokens';
 import type { Member } from '../../types/member';
 import {
   creatableKinds,
@@ -20,6 +20,7 @@ import {
   isFinishedMention,
   mentionKeyAction,
   mentionOptionId,
+  mentionTargetId,
   mentionTargetName,
   moveActiveIndex,
   newEntryName,
@@ -34,7 +35,7 @@ interface MentionTextareaProps extends Omit<TextareaProps, 'value' | 'onChange'>
   onChange: (value: string) => void;
   /**
    * The Room's members, to mention with `@` (Comments only, spec 19c). Then
-   * `value` holds `@[Name](user:<uuid>)` tokens, shown as `@Name`.
+   * `value` also holds `@[Name](user:<uuid>)` tokens, shown as `@Name`.
    */
   members?: Member[];
 }
@@ -43,8 +44,9 @@ interface MentionTextareaProps extends Omit<TextareaProps, 'value' | 'onChange'>
  * A `Textarea` that suggests the Room's Documents and Tags when a word starts
  * with `#` (arrows + Enter/Tab, or a click, to pick one; Esc to dismiss). When
  * nothing matches, the typed name can be created as a blank Document or a Tag.
- * Given `members`, a word starting with `@` suggests them the same way, and
- * a picked one is stored as a token. Works as a plain textarea outside a
+ * A pick is stored as a `#[Name](doc:<uuid>)` / `#[Name](tag:<uuid>)` token
+ * (spec 20), shown as `#Name`. Given `members`, a word starting with `@`
+ * suggests them the same way. Works as a plain textarea outside a
  * `DocumentMentionsProvider` and without `members`.
  */
 export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, ...props }: MentionTextareaProps) {
@@ -67,8 +69,10 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, .
     latest.current = { value, onChange };
   });
 
-  // What the textarea shows: `value` with every member token as `@Name`.
-  const display = members ? toDisplay(value) : value;
+  // What the textarea shows: `value` with every token as `#Name` (and, in
+  // Comments, `@Name`).
+  const tokens = { users: members !== undefined };
+  const display = toDisplay(value, tokens);
   const prefixes = `${mentions ? '#' : ''}${members ? USER_MENTION_PREFIX : ''}`;
   const mention = prefixes && caret !== null ? findMentionQuery(display, caret, prefixes) : null;
   const forMember = members !== undefined && mention !== null && display[mention.start] === USER_MENTION_PREFIX;
@@ -125,24 +129,21 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, .
     }
   };
 
-  // Writes `#Name` (or a member's token, shown as `@Name`) over the query in
-  // `stored` and closes the popup for it. `at` and `queryEnd` are positions
-  // in what the textarea shows.
+  // Writes the target's token (shown as `#Name` or `@Name`) over the query
+  // in `stored` and closes the popup for it. `at` and `queryEnd` are
+  // positions in what the textarea shows.
   const complete = (stored: string, at: MentionQuery, queryEnd: number, target: MentionTarget) => {
     const name = mentionTargetName(target);
     const prefix = target.kind === 'member' ? USER_MENTION_PREFIX : '#';
-    const shown = members ? toDisplay(stored) : stored;
-    const result = insertMention(shown, at, queryEnd, name, prefix);
+    const result = insertMention(toDisplay(stored, tokens), at, queryEnd, name, prefix);
     // What was written, then a space if `insertMention` added one.
     const written = result.text.slice(at.start, result.caret);
-    const inserted =
-      target.kind === 'member'
-        ? userMentionToken(target.member.userId, name) + written.slice(prefix.length + name.length)
-        : written;
+    const kind = target.kind === 'member' ? 'user' : target.kind === 'document' ? 'doc' : 'tag';
+    const inserted = mentionToken(kind, mentionTargetId(target), name) + written.slice(prefix.length + name.length);
     pendingCaret.current = result.caret;
     setCaret(result.caret);
     setDismissedStart(at.start);
-    latest.current.onChange(members ? replaceDisplayRange(stored, at.start, queryEnd, inserted) : result.text);
+    latest.current.onChange(replaceDisplayRange(stored, at.start, queryEnd, inserted, tokens));
   };
 
   // Only reachable (keyboard 'select', or clicking a rendered suggestion)
@@ -162,7 +163,7 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, .
       const created = await mentions.create(kind, newName);
       // Only replace what was typed if it's still there, unchanged.
       const text = latest.current.value;
-      const shown = members ? toDisplay(text) : text;
+      const shown = toDisplay(text, tokens);
       if (shown.slice(mention.start, mention.start + typed.length) === typed) {
         complete(text, mention, mention.start + typed.length, created);
       }
@@ -245,7 +246,7 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, .
             onChange={(event) => {
               const next = event.currentTarget.value;
               const editedTo = event.currentTarget.selectionStart;
-              onChange(members ? applyDisplayEdit(value, next, editedTo) : next);
+              onChange(applyDisplayEdit(value, next, editedTo, tokens));
               trackCaret(event.currentTarget);
             }}
             onSelect={(event) => trackCaret(event.currentTarget)}

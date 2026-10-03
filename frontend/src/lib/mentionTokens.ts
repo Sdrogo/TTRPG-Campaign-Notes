@@ -3,35 +3,60 @@ import { currentLanguage } from '../i18n';
 import { findMember, memberDisplayName } from './members';
 import { MAX_MENTION_SUGGESTIONS, nameRank, normalizeForSearch } from './documentMentions';
 
-// @mentions of Room members in Comments (spec 19c Decision 2, FR-T6). A
-// mention is stored inline as `@[Name](user:<uuid>)`, the grammar of
-// `backend/app/domain/mentions.py`: inside the brackets `\` keeps the next
-// character as is (so `\]` and `\\`), and anything that doesn't read as a
-// whole token is plain text. The textarea shows `@Name` and never the token
-// syntax; `toDisplay` and `replaceDisplayRange` map between the two.
+// Mention tokens (spec 19c Decision 2, spec 20 Decision 1). A mention is
+// stored inline as `<sigil>[Name](<kind>:<uuid>)`, the grammar of
+// `backend/app/domain/mentions.py`: `@[Name](user:…)` for a Room member (in
+// Comments), `#[Name](doc:…)` for a Document and `#[Name](tag:…)` for a Tag.
+// The name is the one shown when it was written; inside the brackets `\`
+// keeps the next character as is (so `\]` and `\\`), and anything that
+// doesn't read as a whole token is plain text. A textarea shows `@Name` /
+// `#Name` and never the token syntax; `toDisplay` and `replaceDisplayRange`
+// map between the two.
 
 /** The character that starts a member mention. */
 export const USER_MENTION_PREFIX = '@';
 
-const UUID =
-  /^\(user:([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\)/;
+/** What a token points at, as written after its `(`. */
+export type TokenKind = 'user' | 'doc' | 'tag';
 
-/** A member mention as stored (`stored`) and as the textarea shows it (`display`). */
-export interface UserMention {
-  kind: 'user';
+const SIGILS: Record<TokenKind, string> = { user: USER_MENTION_PREFIX, doc: '#', tag: '#' };
+
+const TARGET =
+  /^\((user|doc|tag):([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\)/;
+
+/** A token as stored (`stored`) and as a textarea shows it (`display`). */
+export interface MentionToken {
+  kind: TokenKind;
   stored: string;
   display: string;
-  userId: string;
+  /** The member, Document or Tag it points at, lowercase. */
+  targetId: string;
   /** The name written in the token, unescaped. */
   name: string;
 }
 
-/** A run of stored text: plain, or a member mention. */
-export type UserMentionSegment = { kind: 'text'; stored: string; display: string } | UserMention;
+/** A member mention. */
+export type UserMention = MentionToken & { kind: 'user' };
+
+/** A run of stored text: plain, or a token. */
+export type TokenSegment = { kind: 'text'; stored: string; display: string } | MentionToken;
+
+/**
+ * Which tokens to read. Member tokens only where members can be mentioned
+ * (Comments), so other free text is never read as one.
+ */
+export interface TokenOptions {
+  users?: boolean;
+}
+
+/** The stored token for a mention of `targetId` shown as `name`. */
+export function mentionToken(kind: TokenKind, targetId: string, name: string): string {
+  return `${SIGILS[kind]}[${name.replace(/[\\\]]/g, '\\$&')}](${kind}:${targetId})`;
+}
 
 /** The stored token for a mention of `userId` shown as `name`. */
 export function userMentionToken(userId: string, name: string): string {
-  return `${USER_MENTION_PREFIX}[${name.replace(/[\\\]]/g, '\\$&')}](user:${userId})`;
+  return mentionToken('user', userId, name);
 }
 
 // The unescaped name from `start` (just past the `[`) and the index of its
@@ -54,36 +79,51 @@ function readName(text: string, start: number): { name: string; close: number } 
   return null;
 }
 
+// The token starting at `index`, if one does.
+function readToken(text: string, index: number, options: TokenOptions): MentionToken | null {
+  const sigil = text[index];
+  if ((sigil !== '#' && sigil !== USER_MENTION_PREFIX) || text[index + 1] !== '[') {
+    return null;
+  }
+  const read = readName(text, index + 2);
+  const target = read && TARGET.exec(text.slice(read.close + 1));
+  if (!read || !target) {
+    return null;
+  }
+  const kind = target[1] as TokenKind;
+  if (SIGILS[kind] !== sigil || (kind === 'user' && !options.users)) {
+    return null;
+  }
+  return {
+    kind,
+    stored: text.slice(index, read.close + 1 + target[0].length),
+    display: `${sigil}${read.name}`,
+    targetId: target[2].toLowerCase(),
+    name: read.name,
+  };
+}
+
 /**
- * `text` split into plain runs and member mentions, in order. Joining every
- * `stored` gives `text` back; joining every `display` gives what the textarea
- * shows. Only the `user` kind is read here: `#` tokens (spec 20) stay text.
+ * `text` split into plain runs and tokens, in order. Joining every `stored`
+ * gives `text` back; joining every `display` gives what a textarea shows.
  */
-export function splitUserMentions(text: string): UserMentionSegment[] {
-  const segments: UserMentionSegment[] = [];
+export function splitMentionTokens(text: string, options: TokenOptions = {}): TokenSegment[] {
+  const segments: TokenSegment[] = [];
   let plainStart = 0;
-  let index = text.indexOf(`${USER_MENTION_PREFIX}[`);
-  while (index !== -1) {
-    const read = readName(text, index + 2);
-    const target = read && UUID.exec(text.slice(read.close + 1));
-    if (!read || !target) {
-      index = text.indexOf(`${USER_MENTION_PREFIX}[`, index + 1);
+  let index = 0;
+  while (index < text.length) {
+    const token = readToken(text, index, options);
+    if (!token) {
+      index += 1;
       continue;
     }
-    const end = read.close + 1 + target[0].length;
     if (index > plainStart) {
       const plain = text.slice(plainStart, index);
       segments.push({ kind: 'text', stored: plain, display: plain });
     }
-    segments.push({
-      kind: 'user',
-      stored: text.slice(index, end),
-      display: `${USER_MENTION_PREFIX}${read.name}`,
-      userId: target[1].toLowerCase(),
-      name: read.name,
-    });
-    plainStart = end;
-    index = text.indexOf(`${USER_MENTION_PREFIX}[`, end);
+    segments.push(token);
+    index += token.stored.length;
+    plainStart = index;
   }
   if (plainStart < text.length) {
     const plain = text.slice(plainStart);
@@ -92,9 +132,9 @@ export function splitUserMentions(text: string): UserMentionSegment[] {
   return segments;
 }
 
-/** What `stored` reads as: every mention as `@Name`. */
-export function toDisplay(stored: string): string {
-  return splitUserMentions(stored)
+/** What `stored` reads as: every token as `@Name` or `#Name`. */
+export function toDisplay(stored: string, options: TokenOptions = {}): string {
+  return splitMentionTokens(stored, options)
     .map((segment) => segment.display)
     .join('');
 }
@@ -102,7 +142,7 @@ export function toDisplay(stored: string): string {
 /**
  * `stored` with the shown characters from `from` to `to` (in `toDisplay`
  * coordinates) replaced by `inserted`, which is written as is (so it may
- * itself be a token). A mention cut by the range is kept only for the part
+ * itself be a token). A token cut by the range is kept only for the part
  * outside it, as plain text: editing a name unlinks it.
  */
 export function replaceDisplayRange(
@@ -110,11 +150,12 @@ export function replaceDisplayRange(
   from: number,
   to: number,
   inserted: string,
+  options: TokenOptions = {},
 ): string {
   let before = '';
   let after = '';
   let position = 0;
-  for (const segment of splitUserMentions(stored)) {
+  for (const segment of splitMentionTokens(stored, options)) {
     const start = position;
     const end = position + segment.display.length;
     position = end;
@@ -123,7 +164,7 @@ export function replaceDisplayRange(
     } else if (start >= to) {
       after += segment.stored;
     } else {
-      // Plain text, or a mention the range cuts: keep only what's outside it.
+      // Plain text, or a token the range cuts: keep only what's outside it.
       before += segment.display.slice(0, Math.max(from - start, 0));
       after += segment.display.slice(Math.max(to - start, 0));
     }
@@ -134,12 +175,17 @@ export function replaceDisplayRange(
 /**
  * The stored text after the textarea's text went from `toDisplay(stored)` to
  * `display`: the changed run (between the unchanged start and end) replaces
- * the same run of `stored`, and mentions it touches become plain text. Where
+ * the same run of `stored`, and tokens it touches become plain text. Where
  * the change is ambiguous (typing `@` right before `@Ara`), `caret`, the
  * caret after the edit, places it: the unchanged end never starts before it.
  */
-export function applyDisplayEdit(stored: string, display: string, caret = 0): string {
-  const previous = toDisplay(stored);
+export function applyDisplayEdit(
+  stored: string,
+  display: string,
+  caret = 0,
+  options: TokenOptions = {},
+): string {
+  const previous = toDisplay(stored, options);
   if (previous === display) {
     return stored;
   }
@@ -161,6 +207,7 @@ export function applyDisplayEdit(stored: string, display: string, caret = 0): st
     prefix,
     previous.length - suffix,
     display.slice(prefix, display.length - suffix),
+    options,
   );
 }
 
@@ -169,7 +216,7 @@ export function resolveUserMention(
   segment: UserMention,
   members: Member[],
 ): { text: string; member: boolean } {
-  const member = findMember(members, segment.userId);
+  const member = findMember(members, segment.targetId);
   return member
     ? { text: `${USER_MENTION_PREFIX}${memberDisplayName(member)}`, member: true }
     : { text: segment.display, member: false };
