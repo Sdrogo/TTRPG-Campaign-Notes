@@ -10,7 +10,7 @@ step-by-step notes) is in
 ## Current Status (2026-10-03)
 
 Branch `claude/project-thread-ads76p` (spec 19c_8, promotion frontend, PR
-into `staging`). Frontend **1225** tests at 100% coverage; tsc, oxlint and
+into `staging`). Frontend **1226** tests at 100% coverage; tsc, oxlint and
 build clean. Backend unchanged since 19c_7: 727 tests at 100%. Migration
 `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
 database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
@@ -42,7 +42,9 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - **Choices made beyond the ticket**: the new Document starts at Room
   visibility for a Room Comment and Private otherwise, so nothing widens by
   default; images are copied by URL import into the new Document, and one
-  that fails doesn't stop the promotion (the notice names it); the editor
+  that fails doesn't stop the promotion (the notice names it); once the
+  new Document exists the modal closes whatever follows, so a refused
+  promotion can't lead to a duplicate Document on retry; the editor
   scrolls into view; promoting while the description is already being
   edited reopens the form, losing unsaved edits.
 

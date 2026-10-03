@@ -414,7 +414,8 @@
       "wideningBody": "Promoting it lets people who can't see the Comment now read its text: {{names}}.",
       "wideningConfirm": "Promote anyway",
       "done": "Comment promoted",
-      "imageErrors": "Comment promoted, but some images weren't added: {{errors}}"
+      "imageErrors": "Comment promoted, but some images weren't added: {{errors}}",
+      "notRecorded": "The Document was created, but the Comment's promotion wasn't recorded: {{reason}}"
     }
   },
   "mentions": {

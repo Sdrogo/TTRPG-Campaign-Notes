@@ -69,9 +69,10 @@ function comment(overrides: Partial<Comment> = {}): Comment {
 interface Calls {
   importFails?: unknown[];
   createFails?: boolean;
+  promoteFails?: boolean;
 }
 
-function mockApi({ importFails = [], createFails = false }: Calls = {}) {
+function mockApi({ importFails = [], createFails = false, promoteFails = false }: Calls = {}) {
   fetchMock.mockImplementation((path: string, init?: { method?: string; json?: unknown }) => {
     if (path === '/rooms/room-1/tags') {
       return Promise.resolve(init?.method ? { id: 'tag-9', name: 'Fazione', category: null } : []);
@@ -90,6 +91,7 @@ function mockApi({ importFails = [], createFails = false }: Calls = {}) {
         ? Promise.reject(new Error('Image not reachable'))
         : Promise.resolve(rawDocument({ id: 'doc-9' }));
     }
+    if (promoteFails) return Promise.reject(new Error('The Comment was deleted'));
     return Promise.resolve(
       rawComment({ promoted_to: 'document', promoted_document_id: 'doc-9', can_promote: true }),
     );
@@ -246,6 +248,23 @@ describe('PromoteToDocumentModal', () => {
     );
     expect(onClose).not.toHaveBeenCalled();
     expect(promoteCall()).toBeUndefined();
+  });
+
+  // The Document exists by then: a retry from the same form would make another.
+  it('closes once the Document exists, even when the promotion is refused', async () => {
+    mockApi({ promoteFails: true });
+    const { onClose, user } = render();
+    await user.type(nameField(), 'Il Sigillo');
+
+    await user.click(submit());
+
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(notifyError).toHaveBeenCalledWith(
+      new Error(
+        'Il Documento è stato creato, ma la promozione del commento non è stata registrata: The Comment was deleted',
+      ),
+    );
+    expect(notifySuccess).not.toHaveBeenCalled();
   });
 
   it('offers no images for a Comment without any', () => {

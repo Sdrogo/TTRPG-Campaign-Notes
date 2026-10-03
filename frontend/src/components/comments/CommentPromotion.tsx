@@ -9,7 +9,7 @@ import { memberDisplayName } from '../../lib/members';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { promotedText, startingVisibility, type PromotionAudience } from '../../lib/promotion';
 import type { Comment } from '../../types/comment';
-import type { DocumentFormValues } from '../../types/document';
+import type { Document, DocumentFormValues } from '../../types/document';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
 
@@ -117,34 +117,44 @@ export function PromoteToDocumentModal({
   const save = async () => {
     setConfirming(false);
     setSaving(true);
+    let created: Document;
     try {
-      const created = await createDocument.mutateAsync(values);
-      const failed: string[] = [];
-      for (const image of comment.images.filter((image) => imageIds.includes(image.id))) {
-        try {
-          await importDocumentImage(roomId, created.id, image.url);
-        } catch (error) {
-          failed.push(error instanceof Error ? error.message : String(error));
-        }
+      created = await createDocument.mutateAsync(values);
+    } catch (error) {
+      notifyError(error);
+      setSaving(false);
+      return;
+    }
+    // From here the Document exists: whatever happens next, the form closes,
+    // so a retry can't create a second one.
+    void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'documents'] });
+    const failed: string[] = [];
+    for (const image of comment.images.filter((image) => imageIds.includes(image.id))) {
+      try {
+        await importDocumentImage(roomId, created.id, image.url);
+      } catch (error) {
+        failed.push(error instanceof Error ? error.message : String(error));
       }
+    }
+    try {
       await promote.mutateAsync({
         commentId: comment.id,
         target: 'document',
         documentId: created.id,
         confirmWidening: reached.length > 0,
       });
-      void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'documents'] });
       if (failed.length > 0) {
         notifyError(new Error(t('comments.promotion.imageErrors', { errors: failed.join('; ') })));
       } else {
         notifySuccess(t('comments.promotion.done'));
       }
-      onClose();
     } catch (error) {
-      notifyError(error);
-    } finally {
-      setSaving(false);
+      // A mutation's error is an Error (TanStack Query's default).
+      const reason = (error as Error).message;
+      notifyError(new Error(t('comments.promotion.notRecorded', { reason })));
     }
+    setSaving(false);
+    onClose();
   };
 
   const handleSubmit = (event: React.FormEvent) => {

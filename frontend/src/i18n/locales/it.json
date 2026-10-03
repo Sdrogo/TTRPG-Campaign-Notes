@@ -414,7 +414,8 @@
       "wideningBody": "Promuovendolo, il testo del commento potrà essere letto anche da chi ora non lo vede: {{names}}.",
       "wideningConfirm": "Promuovi comunque",
       "done": "Commento promosso",
-      "imageErrors": "Commento promosso, ma alcune immagini non sono state aggiunte: {{errors}}"
+      "imageErrors": "Commento promosso, ma alcune immagini non sono state aggiunte: {{errors}}",
+      "notRecorded": "Il Documento è stato creato, ma la promozione del commento non è stata registrata: {{reason}}"
     }
   },
   "mentions": {
