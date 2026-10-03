@@ -15,6 +15,11 @@ def test_health() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_health_answers_head() -> None:
+    response = client.head("/health")
+    assert response.status_code == 200
+
+
 def test_lifespan_starts_and_cancels_the_sweeper(monkeypatch: pytest.MonkeyPatch) -> None:
     """The real sweeper touches the database on its very first iteration
     (app/db/storage_cleanup.py); faked here so this only exercises the

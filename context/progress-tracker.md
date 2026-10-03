@@ -954,6 +954,12 @@ Question in the backend PR.
   snapshotting images. Image cleanup and the cascading deletion keep
   their existing sequence.
 
+## /health answers HEAD (2026-10-03)
+
+- `GET /health` was GET-only, so uptime monitors sending HEAD got 405 and
+  reported the Render backend as down while it was up. The route now accepts
+  GET and HEAD (`backend/app/main.py`), with a test for HEAD.
+
 ## Next Up
 
 Reorganized with the product owner on 2026-10-03.
