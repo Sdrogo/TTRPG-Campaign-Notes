@@ -7,6 +7,7 @@ import { useSession } from '../../hooks/useSession';
 import { fakeSession, rawAccount, rawDocument, rawMember, rawRoom } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { RoomDocumentsPage } from '../../pages/RoomDocumentsPage';
+import { ViewAsProvider } from '../../components/ViewAsProvider';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
@@ -466,6 +467,51 @@ describe("the Room's actions beside the title", () => {
 
     expect(await screen.findByText('Le mie Stanze')).toBeInTheDocument();
     expect(writes).toContain('/rooms/room-1/members/user-1');
+  });
+});
+
+// Spec 22b: the Master previews the Room as one of its members, read-only.
+describe('viewing the Room as a member', () => {
+  it('starts from the "⋮" and leaves only reading', async () => {
+    routes.members = [
+      rawMember({ user_id: 'user-1', role: 'master', display_name: 'Io' }),
+      rawMember({ user_id: 'user-2', display_name: 'Alice' }),
+    ];
+    renderWithProviders(
+      <Routes>
+        <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />
+      </Routes>,
+      { route: '/rooms/room-1/documents', wrapper: ViewAsProvider },
+    );
+    const user = userEvent.setup();
+    await screen.findByText('Il Cancello');
+    expect(screen.getByRole('button', { name: /Crea Documento/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+    await user.click(screen.getByRole('button', { name: 'Vedi come un membro' }));
+    expect(screen.queryByRole('menuitem', { name: 'Io' })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('menuitem', { name: 'Alice' }));
+
+    expect(
+      await screen.findByText('Stai vedendo la Stanza come Alice. Sola lettura.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Crea Documento/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Azioni per la Stanza La Cripta' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('is not offered to a Player', async () => {
+    routes.members = [
+      rawMember({ user_id: 'user-1', display_name: 'Io' }),
+      rawMember({ user_id: 'user-2', role: 'master', display_name: 'Master' }),
+    ];
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+
+    expect(screen.queryByRole('button', { name: 'Vedi come un membro' })).not.toBeInTheDocument();
   });
 });
 

@@ -7,6 +7,8 @@ import type { RawImage } from '../types/image';
 import { toNote, type RawNote } from '../lib/notes';
 import { toDocumentFile, type RawDocumentFile } from '../lib/documentFiles';
 import { charactersQueryKey } from './useCharacters';
+import { MY_REVEALS_QUERY_KEY, revealVisitQueryKey } from './queryKeys';
+import { toRevealedInDocument, type RawRevealedInDocument } from './useReveals';
 
 interface RawDocument {
   id: string;
@@ -81,6 +83,7 @@ export function useDocument(roomId: string, documentId: string, enabled: boolean
 interface RawDocumentRead {
   last_read_at: string;
   previous_read_at: string | null;
+  revealed: RawRevealedInDocument;
 }
 
 /**
@@ -89,6 +92,10 @@ interface RawDocumentRead {
  * marks what was posted since as "New". Undefined until the visit is
  * recorded, null on a first visit (nothing is marked, Decision 4). Recorded
  * once per Document per mount; the list is reloaded so the card's count goes.
+ *
+ * The visit also opens what was revealed to the viewer in the Document (spec
+ * 22 Decision 3): that goes to the cache for `useRevealedInVisit`, and the
+ * header's count of unseen Reveals is reloaded.
  */
 export function useDocumentVisit(
   roomId: string,
@@ -105,7 +112,12 @@ export function useDocumentVisit(
       }),
     onSuccess: (read) => {
       setVisit({ documentId, previous: read.previous_read_at });
+      queryClient.setQueryData(
+        revealVisitQueryKey(roomId, documentId),
+        toRevealedInDocument(read.revealed),
+      );
       void queryClient.invalidateQueries({ queryKey: documentsQueryKey(roomId), exact: true });
+      void queryClient.invalidateQueries({ queryKey: MY_REVEALS_QUERY_KEY });
     },
   });
 

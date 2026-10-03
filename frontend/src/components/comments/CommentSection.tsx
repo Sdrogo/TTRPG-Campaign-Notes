@@ -16,6 +16,10 @@ import {
   type CommentFlag,
 } from '../../hooks/useComments';
 import { useDocumentVisit } from '../../hooks/useDocuments';
+import { useRevealComment, useRevealedInVisit } from '../../hooks/useReveals';
+import { useReadOnly } from '../../hooks/useViewAs';
+import { RevealModal } from '../RevealModal';
+import { commentReveal } from '../../lib/reveal';
 import { useMyCharacters } from '../../hooks/useCharacters';
 import { readLastPostAs, saveLastPostAs } from '../../lib/characters';
 import type { SaveCommentResult } from '../../hooks/useComments';
@@ -33,7 +37,8 @@ import {
   topLevelComments,
 } from '../../lib/comments';
 import { findMember } from '../../lib/members';
-import { notifyError } from '../../lib/notify';
+import { notifyError, notifySuccess } from '../../lib/notify';
+import type { Document, DocumentVisibility } from '../../types/document';
 import type { BranchState, Comment, CommentFilters, CommentNode, PromotionTarget } from '../../types/comment';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
@@ -49,6 +54,13 @@ interface CommentSectionProps {
    * the description editor and the new Document form it opens.
    */
   onPromote?: (comment: Comment, target: PromotionTarget) => void;
+  /** The Room's starting level for a new top-level Comment (VR-05). */
+  defaultVisibility?: DocumentVisibility;
+  /**
+   * For the Master: the Document the Thread is on, whose audience decides who
+   * a Comment's Reveal reaches (spec 22). Without it nobody can reveal one.
+   */
+  revealFrom?: Document;
 }
 
 // The URL fragment that points at one Comment, as `#comment-<id>`.
@@ -69,17 +81,32 @@ function reportImageErrors({ imageErrors }: SaveCommentResult) {
  * of the sort, and a resolved branch starts collapsed (spec 19c). The backend
  * only returns Comments the viewer may see. Once the Thread loads, the visit
  * is recorded and what was posted since the previous one is marked "New"
- * (spec 19b).
+ * (spec 19b), what it opened as revealed to the viewer "Revealed" (spec 22).
+ * While the Master previews the Room as a member (spec 22b) the Thread is
+ * read-only: no composer, no reply, pin or resolve, and no visit recorded.
  */
-export function CommentSection({ roomId, documentId, members, currentUserId, onPromote }: CommentSectionProps) {
+export function CommentSection({
+  roomId,
+  documentId,
+  members,
+  currentUserId,
+  onPromote,
+  defaultVisibility = 'room',
+  revealFrom,
+}: CommentSectionProps) {
   const { t, i18n } = useTranslation();
   const comments = useComments(roomId, documentId, true);
   const saveComment = useSaveComment(roomId, documentId);
   const deleteComment = useDeleteComment(roomId, documentId);
   const setFlag = useSetCommentFlag(roomId, documentId);
   const myCharacters = useMyCharacters(roomId, true);
-  const newSince = useDocumentVisit(roomId, documentId, comments.isSuccess);
+  const readOnly = useReadOnly();
+  const newSince = useDocumentVisit(roomId, documentId, comments.isSuccess && !readOnly);
   const isNew = (comment: Comment) => isNewComment(comment, newSince, currentUserId);
+  const revealed = useRevealedInVisit(roomId, documentId);
+  const revealComment = useRevealComment(roomId, documentId);
+  // The Comment the Master is revealing (spec 22).
+  const [revealingId, setRevealingId] = useState<string | null>(null);
   const [filters, setFilters] = useState<CommentFilters>(DEFAULT_COMMENT_FILTERS);
   // Branches expanded or collapsed by hand; not remembered across visits.
   const [branchStates, setBranchStates] = useState<Record<string, BranchState>>({});
@@ -144,6 +171,7 @@ export function CommentSection({ roomId, documentId, members, currentUserId, onP
       .finally(() => setFlagging((current) => current.filter((id) => id !== commentId)));
   };
   const characters = myCharacters.data ?? [];
+  const revealing = revealingId === null ? undefined : byId.get(revealingId);
   // The last "Post as" choice in this Room, if the viewer may still use it.
   const lastPostAs = readLastPostAs(roomId);
   const initialPostAs = characters.some((c) => c.documentId === lastPostAs) ? lastPostAs : null;
@@ -173,14 +201,16 @@ export function CommentSection({ roomId, documentId, members, currentUserId, onP
         }
         deleting={deleteComment.isPending && deleteComment.variables === comment.id}
         onDelete={() => deleteComment.mutate(comment.id, { onError: notifyError })}
-        onReply={() => setReplyingTo(comment.id)}
+        onReply={readOnly ? undefined : () => setReplyingTo(comment.id)}
         inReplyTo={inReplyTo}
         visibilityLevels={parent && replyLevels(parent, currentUserId)}
         granteeIds={parent && replyGranteeIds(parent)}
         isNew={isNew(comment)}
-        onSetFlag={(flag, on) => onSetFlag(comment.id, flag, on)}
+        onSetFlag={readOnly ? undefined : (flag, on) => onSetFlag(comment.id, flag, on)}
         settingFlag={flagging.includes(comment.id)}
         onPromote={onPromote && ((target) => onPromote(comment, target))}
+        isRevealed={revealed?.commentIds.includes(comment.id)}
+        onReveal={revealFrom && (() => setRevealingId(comment.id))}
       />
       {replyingTo === comment.id && (
         <Box pl={{ base: 'md', sm: 'xl' }}>
@@ -313,41 +343,68 @@ export function CommentSection({ roomId, documentId, members, currentUserId, onP
           </Stack>
         )}
 
-        <Divider />
+        {!readOnly && <Divider />}
 
-        <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="new-comment">
-          <UserAvatar user={findMember(members, currentUserId)} size="md" mt={2} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {/* Mounted once the Characters are known, so the composer starts
-                on the remembered "Post as" choice. */}
-            {myCharacters.isLoading ? (
-              <Loader color="accent" size="sm" />
-            ) : (
-              <CommentComposer
-                members={members}
-                currentUserId={currentUserId}
-                submitLabel={t('comments.publish')}
-                submitting={postingParent === null}
-                initialValues={{ ...EMPTY_COMMENT_VALUES, asDocumentId: initialPostAs }}
-                characters={characters}
-                onSubmit={(values, reset) =>
-                  saveComment.mutate(
-                    { values },
-                    {
-                      onSuccess: (result) => {
-                        reportImageErrors(result);
-                        saveLastPostAs(roomId, values.asDocumentId ?? null);
-                        reset();
+        {!readOnly && (
+          <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="new-comment">
+            <UserAvatar user={findMember(members, currentUserId)} size="md" mt={2} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Mounted once the Characters are known, so the composer starts
+                  on the remembered "Post as" choice. */}
+              {myCharacters.isLoading ? (
+                <Loader color="accent" size="sm" />
+              ) : (
+                <CommentComposer
+                  members={members}
+                  currentUserId={currentUserId}
+                  submitLabel={t('comments.publish')}
+                  submitting={postingParent === null}
+                  initialValues={{
+                    ...EMPTY_COMMENT_VALUES,
+                    visibility: defaultVisibility,
+                    asDocumentId: initialPostAs,
+                  }}
+                  characters={characters}
+                  onSubmit={(values, reset) =>
+                    saveComment.mutate(
+                      { values },
+                      {
+                        onSuccess: (result) => {
+                          reportImageErrors(result);
+                          saveLastPostAs(roomId, values.asDocumentId ?? null);
+                          reset();
+                        },
+                        onError: notifyError,
                       },
-                      onError: notifyError,
-                    },
-                  )
-                }
-              />
-            )}
-          </div>
-        </Group>
+                    )
+                  }
+                />
+              )}
+            </div>
+          </Group>
+        )}
       </Stack>
+      {revealing && revealFrom && (
+        <RevealModal
+          name={t('reveal.comment')}
+          members={members}
+          {...commentReveal(revealing, all, revealFrom, members)}
+          loading={revealComment.isPending}
+          onConfirm={(audience) =>
+            revealComment.mutate(
+              { commentId: revealing.id, audience },
+              {
+                onSuccess: () => {
+                  notifySuccess(t('reveal.done'));
+                  setRevealingId(null);
+                },
+                onError: notifyError,
+              },
+            )
+          }
+          onClose={() => setRevealingId(null)}
+        />
+      )}
     </PageCard>
   );
 }

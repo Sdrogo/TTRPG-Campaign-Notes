@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ActionIcon, Box, Burger, Group, Title, UnstyledButton } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
+import { ViewAsBanner } from './ViewAsBanner';
+import { useViewAs } from '../hooks/useViewAs';
 import { AccountButton } from './account/AccountButton';
 import { LanguageSelector } from './LanguageSelector';
 import { GlossaryIndexDrawer } from './GlossaryIndexDrawer';
@@ -44,13 +46,16 @@ function hasAppHistory(): boolean {
  * language flag, then the account avatar (spec 09, spec 10). It is pinned to
  * the top of the page (`.app-header` in `index.css`), but slides away while
  * scrolling down and comes back as soon as the scroll turns up, so a phone
- * shows more content.
+ * shows more content. While the Master previews the Room as a member (spec
+ * 22b) it carries the preview's banner and stays put.
  */
 export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [glossaryOpened, setGlossaryOpened] = useState(false);
   const { pinned } = useHeadroom({ fixedAt: HEADER_FIXED_AT });
+  // While previewing as a member, the bar and its banner never slide away.
+  const viewAs = useViewAs();
 
   const handleBack = (destination: string) => {
     if (hasAppHistory()) {
@@ -69,7 +74,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
         px={{ base: 'sm', sm: 'lg', lg: 'xl' }}
         py="sm"
         className="app-header"
-        data-hidden={!pinned || undefined}
+        data-hidden={(!pinned && !viewAs) || undefined}
       >
         <Group gap="xs" wrap="nowrap">
           {backTo && (
@@ -102,6 +107,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
           <LanguageSelector />
           <AccountButton />
         </Group>
+        {viewAs && <ViewAsBanner viewAs={viewAs} />}
       </Box>
       {roomId && (
         <GlossaryIndexDrawer

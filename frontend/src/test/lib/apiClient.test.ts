@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setLanguage } from '../../i18n';
 import { ApiError, apiFetch } from '../../lib/apiClient';
 import { supabase } from '../../lib/supabaseClient';
+import { setViewAsUser } from '../../lib/viewAs';
 
 vi.mock('../../lib/supabaseClient', () => ({
   supabase: { auth: { getSession: vi.fn() } },
@@ -87,6 +88,22 @@ describe('language', () => {
     await apiFetch('/rooms');
 
     expect(callInit(fetchMock).headers.get('Accept-Language')).toBe('en');
+  });
+});
+
+// Spec 22b: while the Master previews a Room as a member.
+describe('view as', () => {
+  it('sends X-View-As only while a member is being previewed', async () => {
+    const fetchMock = respondWith('{}');
+
+    setViewAsUser('user-2');
+    await apiFetch('/rooms/room-1/documents');
+    setViewAsUser(null);
+    await apiFetch('/rooms/room-1/documents');
+
+    const [first, second] = fetchMock.mock.calls as unknown as [string, RequestInit][];
+    expect((first[1].headers as Headers).get('X-View-As')).toBe('user-2');
+    expect((second[1].headers as Headers).has('X-View-As')).toBe(false);
   });
 });
 

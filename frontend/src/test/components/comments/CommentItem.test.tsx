@@ -579,3 +579,47 @@ describe('CommentItem promotion (spec 19c)', () => {
     expect(screen.queryByRole('link', { name: /Apri il Documento/ })).not.toBeInTheDocument();
   });
 });
+
+// Spec 22: the Master reveals a Comment; one revealed to the viewer is marked.
+describe('revealing a Comment', () => {
+  function renderWithReveal(overrides: Partial<Comment>, isRevealed = false) {
+    const onReveal = vi.fn();
+    renderWithProviders(
+      <CommentItem
+        roomId="room-1"
+        comment={comment(overrides)}
+        members={members}
+        characters={[]}
+        currentUserId="user-2"
+        onUpdate={vi.fn()}
+        updating={false}
+        onDelete={vi.fn()}
+        deleting={false}
+        isRevealed={isRevealed}
+        onReveal={onReveal}
+      />,
+    );
+    return { onReveal, user: userEvent.setup() };
+  }
+
+  it('offers the Reveal action on a Comment the Room does not see', async () => {
+    const { onReveal, user } = renderWithReveal({ visibility: 'master' });
+
+    await user.click(screen.getByRole('button', { name: 'Rivela' }));
+
+    expect(onReveal).toHaveBeenCalled();
+  });
+
+  it('offers nothing to reveal on a Room Comment or a deleted one', () => {
+    renderWithReveal({ visibility: 'room' });
+    renderWithReveal({ visibility: 'master', deleted: true });
+
+    expect(screen.queryByRole('button', { name: 'Rivela' })).not.toBeInTheDocument();
+  });
+
+  it('marks a Comment this visit opened as revealed', () => {
+    renderWithReveal({}, true);
+
+    expect(screen.getByText('Rivelato')).toBeInTheDocument();
+  });
+});

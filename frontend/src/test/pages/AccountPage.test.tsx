@@ -6,7 +6,7 @@ import { notifyError, notifySuccess } from '../../lib/notify';
 import { supabase } from '../../lib/supabaseClient';
 import { useSession } from '../../hooks/useSession';
 import i18n from '../../i18n';
-import { fakeSession, rawAccount } from '../fixtures';
+import { fakeSession, rawAccount, rawMyReveal } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { AccountPage } from '../../pages/AccountPage';
 
@@ -294,5 +294,35 @@ describe('signing out', () => {
     await user.click(screen.getByRole('button', { name: /Esci/ }));
 
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
+  });
+});
+
+// Spec 22 Decision 3: what the Master revealed, until it is opened.
+describe('the revealed content', () => {
+  it('lists each revealed Document, Note and Comment with a link to it', async () => {
+    fetchMock.mockImplementation((path: string) => {
+      if (path === '/reveals/mine') {
+        return Promise.resolve([
+          rawMyReveal(),
+          rawMyReveal({ id: 'r-2', kind: 'note', note_id: 'note-1', note_title: 'Porta segreta' }),
+          rawMyReveal({ id: 'r-3', kind: 'comment', comment_id: 'c-1', document_name: 'La Torre' }),
+        ]);
+      }
+      if (path === '/friends') return Promise.resolve({ friends: [], incoming: [], outgoing: [] });
+      if (path === '/invitations/mine') return Promise.resolve([]);
+      return Promise.resolve(rawAccount());
+    });
+    render();
+
+    expect(await screen.findByRole('heading', { name: 'Rivelati a te' })).toBeInTheDocument();
+    const links = screen.getAllByRole('link', { name: 'Il Cancello' });
+    expect(links[0]).toHaveAttribute('href', '/rooms/room-1/documents/doc-1');
+    expect(screen.getByText('La Cripta · Documento')).toBeInTheDocument();
+    expect(screen.getByText('La Cripta · Nota "Porta segreta"')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'La Torre' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/documents/doc-1#comment-c-1',
+    );
+    expect(screen.getByText('La Cripta · Un commento')).toBeInTheDocument();
   });
 });

@@ -4,7 +4,7 @@ import type { Note, NoteFormValues } from '../types/note';
 /** The longest Note title the backend accepts (`MAX_NOTE_TITLE_LENGTH`). */
 export const MAX_NOTE_TITLE_LENGTH = 200;
 
-/** A new Note's starting values: visible to the whole Room, like a new Document. */
+/** A new Note's starting values; the Room's default visibility (VR-05) replaces `room`. */
 export const EMPTY_NOTE_VALUES: NoteFormValues = {
   title: '',
   description: '',

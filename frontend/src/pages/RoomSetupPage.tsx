@@ -1,5 +1,5 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { Loader, Stack, Text, Title } from '@mantine/core';
+import { Loader, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useMembers } from '../hooks/useMembers';
@@ -15,13 +15,17 @@ import { MainTagsEditor } from '../components/setup/MainTagsEditor';
 import { MemberManagement } from '../components/setup/MemberManagement';
 import { TagManagement } from '../components/setup/TagManagement';
 import { DeleteRoomSection } from '../components/setup/DeleteRoomSection';
+import { DefaultVisibilitySection } from '../components/setup/DefaultVisibilitySection';
+import { VisibilityHistory } from '../components/setup/VisibilityHistory';
 
 /**
  * `/rooms/:roomId/setup` (spec 11): the Room's setup, reachable only by an
- * Administrator of that Room - everyone else gets a message instead (the
- * backend enforces the same on every write). Holds the member management that
- * used to be its own page, the Main Tags that order the Documents page, the
- * Tag list with its delete buttons and the Room's deletion (spec 13).
+ * Administrator or the Master of that Room - everyone else gets a message
+ * instead (the backend enforces the same on every write). Two tabs: Settings,
+ * for Administrators only, holds the member management that used to be its
+ * own page, the Room's default visibility (spec 22), the Main Tags that order
+ * the Documents page, the Tag list with its delete buttons and the Room's
+ * deletion (spec 13); History, for both, the visibility history (spec 22).
  */
 export function RoomSetupPage() {
   const { t } = useTranslation();
@@ -32,6 +36,7 @@ export function RoomSetupPage() {
   const members = useMembers(roomId ?? '', signedIn);
   const currentMember = members.data?.find((m) => m.userId === session?.user.id);
   const isAdmin = currentMember?.isAdmin ?? false;
+  const isMaster = currentMember?.role === 'master';
   const tags = useTags(roomId ?? '', isAdmin);
   const mainItems = useMainItems(roomId ?? '', isAdmin);
   const setMainItems = useSetMainItems(roomId ?? '');
@@ -61,7 +66,7 @@ export function RoomSetupPage() {
     return <FullPageLoader />;
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && !isMaster) {
     return (
       <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/">
         {t('setup.adminOnly')}
@@ -83,47 +88,66 @@ export function RoomSetupPage() {
         {t('setup.title')}
       </Title>
 
-      <Stack gap="sm">
-        <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('members.title')}
-        </Title>
-        <MemberManagement
-          roomId={roomId}
-          members={members.data}
-          currentUserId={session.user.id}
-          onLeft={() => navigate('/')}
-        />
-      </Stack>
+      <Tabs defaultValue={isAdmin ? 'settings' : 'history'} keepMounted={false}>
+        <Tabs.List mb="lg">
+          {isAdmin && <Tabs.Tab value="settings">{t('setup.tabs.settings')}</Tabs.Tab>}
+          <Tabs.Tab value="history">{t('setup.tabs.history')}</Tabs.Tab>
+        </Tabs.List>
+        {isAdmin && (
+          <Tabs.Panel value="settings">
+            <Stack gap="md">
+              <Stack gap="sm">
+                <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
+                  {t('members.title')}
+                </Title>
+                <MemberManagement
+                  roomId={roomId}
+                  members={members.data}
+                  currentUserId={session.user.id}
+                  onLeft={() => navigate('/')}
+                />
+              </Stack>
 
-      {(tags.isLoading || mainItems.isLoading) && <Loader color="accent" />}
-      {(tags.isError || mainItems.isError) && <Text c="red">{t('setup.loadError')}</Text>}
-      {tags.data && mainItems.data && (
-        <MainTagsEditor
-          // Re-keyed on the saved list and on the Room's Tags so a save,
-          // a change made elsewhere or a deleted Tag (spec 13) replaces the
-          // draft instead of fighting it or keeping a Tag that is gone.
-          key={`${tags.data.map((tag) => tag.id).join(',')}#${resolveMainItems(
-            mainItems.data,
-            tags.data,
-          )
-            .map(itemKey)
-            .join('|')}`}
-          tags={tags.data}
-          items={mainItems.data}
-          saving={setMainItems.isPending}
-          onSave={handleSaveMainItems}
-        />
-      )}
+              {room.data && (
+                <DefaultVisibilitySection roomId={roomId} value={room.data.defaultVisibility} />
+              )}
 
-      {tags.data && <TagManagement roomId={roomId} tags={tags.data} />}
+              {(tags.isLoading || mainItems.isLoading) && <Loader color="accent" />}
+              {(tags.isError || mainItems.isError) && <Text c="red">{t('setup.loadError')}</Text>}
+              {tags.data && mainItems.data && (
+                <MainTagsEditor
+                  // Re-keyed on the saved list and on the Room's Tags so a save,
+                  // a change made elsewhere or a deleted Tag (spec 13) replaces the
+                  // draft instead of fighting it or keeping a Tag that is gone.
+                  key={`${tags.data.map((tag) => tag.id).join(',')}#${resolveMainItems(
+                    mainItems.data,
+                    tags.data,
+                  )
+                    .map(itemKey)
+                    .join('|')}`}
+                  tags={tags.data}
+                  items={mainItems.data}
+                  saving={setMainItems.isPending}
+                  onSave={handleSaveMainItems}
+                />
+              )}
 
-      {room.data && (
-        <DeleteRoomSection
-          roomId={roomId}
-          roomName={room.data.name}
-          onDeleted={() => navigate('/')}
-        />
-      )}
+              {tags.data && <TagManagement roomId={roomId} tags={tags.data} />}
+
+              {room.data && (
+                <DeleteRoomSection
+                  roomId={roomId}
+                  roomName={room.data.name}
+                  onDeleted={() => navigate('/')}
+                />
+              )}
+            </Stack>
+          </Tabs.Panel>
+        )}
+        <Tabs.Panel value="history">
+          <VisibilityHistory roomId={roomId} members={members.data} />
+        </Tabs.Panel>
+      </Tabs>
     </PageLayout>
   );
 }

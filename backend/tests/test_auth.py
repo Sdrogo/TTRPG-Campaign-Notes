@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from fastapi.testclient import TestClient
 from jwt import PyJWKClient
 
-from app.auth.dependencies import CurrentUser, get_current_user
+from app.auth.dependencies import CurrentUser, authenticated_user
 from app.auth.jwt import _jwk_client
 from app.config import settings
 from app.main import app
@@ -51,7 +51,7 @@ def test_jwk_client_points_at_this_projects_jwks_endpoint() -> None:
 
 def _user_from(make_token: Callable[..., str], metadata: dict[str, object]) -> CurrentUser:
     token = make_token(USER_ID, user_metadata=metadata)
-    return get_current_user(
+    return authenticated_user(
         HTTPAuthorizationCredentials(scheme="Bearer", credentials=token), locale="en"
     )
 
