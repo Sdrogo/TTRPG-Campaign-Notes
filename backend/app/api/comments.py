@@ -116,6 +116,7 @@ from app.domain.visibility import (
     is_comment_visible_in_thread,
     is_document_visible,
     is_parent_hidden,
+    starting_grants,
 )
 from app.i18n.dependencies import LocaleDep
 
@@ -620,7 +621,8 @@ async def create_comment(
             locale,
             not_found_key="errors.comment.parentNotFound",
         )
-    visibility, selective_ids = await _starting_visibility(session, room_id, body, parent)
+    visibility, requested_ids = await _starting_visibility(session, room_id, body, parent)
+    selective_ids = starting_grants(visibility, requested_ids)
     try:
         comment = plan_new_comment(
             document_id,

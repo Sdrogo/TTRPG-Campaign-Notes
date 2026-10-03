@@ -83,7 +83,7 @@ from app.domain.reveal import (
     plan_reveal,
 )
 from app.domain.rooms import starting_visibility
-from app.domain.visibility import is_content_visible, is_document_visible
+from app.domain.visibility import is_content_visible, is_document_visible, starting_grants
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/documents", tags=["documents"])
@@ -273,7 +273,12 @@ async def create_document(
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
     await _validate_tag_ids(session, room_id, body.tag_ids, locale)
-    await documents_repo.insert_new_document(session, plan, body.tag_ids, body.selective_user_ids)
+    await documents_repo.insert_new_document(
+        session,
+        plan,
+        body.tag_ids,
+        starting_grants(plan.document.visibility, body.selective_user_ids),
+    )
     await index_mentions(
         session,
         MentionSource(plan.document.id, MentionSourceKind.DESCRIPTION),

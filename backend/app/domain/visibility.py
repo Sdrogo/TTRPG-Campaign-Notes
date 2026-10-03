@@ -15,6 +15,18 @@ from app.domain.models import (
 )
 
 
+def starting_grants(
+    visibility: DocumentVisibility, selective_user_ids: Collection[uuid.UUID]
+) -> list[uuid.UUID]:
+    """The grants new content is stored with: the chosen members at Selective,
+    none at any other level. A grant left behind at another level would let
+    its member in unchosen once the level is later set to Selective
+    (Invariant 1)."""
+    if visibility != DocumentVisibility.SELECTIVE:
+        return []
+    return list(selective_user_ids)
+
+
 def is_content_visible(
     visibility: DocumentVisibility,
     viewer_user_id: uuid.UUID,

@@ -605,6 +605,36 @@ async def test_the_room_default_visibility(
     assert own_grants["selective_user_ids"] == []
 
 
+async def test_grants_are_kept_only_at_selective(
+    client: AsyncClient, make_token: Callable[..., str]
+) -> None:
+    """Content created at a non-Selective level (here the Room default)
+    stores no grants: a grant left behind would let its member in unchosen
+    once the level is later set to Selective (Invariant 1)."""
+    room = await _room(client, make_token)
+    await client.patch(
+        f"/rooms/{room.id}", json={"default_visibility": "master"}, headers=room.master.headers
+    )
+    grants = {"selective_user_ids": [room.bob.id]}
+
+    document = await _post(client, room.documents, room.master, name="Fresh", **grants)
+    assert document["selective_user_ids"] == []
+    notes = f"{room.document(document['id'])}/notes"
+    note = await _post(client, notes, room.master, title="N", **grants)
+    assert note["selective_user_ids"] == []
+    shared = await _document(client, room, visibility="room")
+    comments = f"{room.document(shared)}/comments"
+    comment = await _post(client, comments, room.alice, body="Hi", **grants)
+    assert comment["selective_user_ids"] == []
+
+    # Set to Selective later without naming anyone, Bob still can't see it.
+    await client.patch(
+        room.document(document["id"]), json={"visibility": "selective"}, headers=room.master.headers
+    )
+    seen = await client.get(room.document(document["id"]), headers=room.bob.headers)
+    assert seen.status_code == 404
+
+
 async def test_who_may_change_the_room_settings(
     client: AsyncClient, make_token: Callable[..., str]
 ) -> None:

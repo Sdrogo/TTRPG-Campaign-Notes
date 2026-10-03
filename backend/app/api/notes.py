@@ -62,7 +62,12 @@ from app.domain.reveal import (
     plan_reveal,
 )
 from app.domain.rooms import starting_visibility
-from app.domain.visibility import is_content_visible, is_document_visible, is_note_visible
+from app.domain.visibility import (
+    is_content_visible,
+    is_document_visible,
+    is_note_visible,
+    starting_grants,
+)
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/documents/{document_id}/notes", tags=["notes"])
@@ -247,7 +252,8 @@ async def create_note(
     await ensure_room_members(
         session, room_id, body.selective_user_ids, "errors.note.invalidSelectiveUsers", locale
     )
-    await notes_repo.insert_note(session, note, body.selective_user_ids)
+    grants = starting_grants(note.visibility, body.selective_user_ids)
+    await notes_repo.insert_note(session, note, grants)
     await index_mentions(
         session,
         MentionSource(document_id, MentionSourceKind.NOTE, note_id=note.id),
@@ -256,7 +262,7 @@ async def create_note(
     notes = await get_document_notes(session, document_id, membership, owner_ids)
     if not any(visible.id == note.id for visible in notes.visible):
         return None
-    return note_response(note, body.selective_user_ids, membership, owner_ids)
+    return note_response(note, grants, membership, owner_ids)
 
 
 @router.put("/order")
