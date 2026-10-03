@@ -9,12 +9,12 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-03)
 
-Branch `claude/project-thread-a660o5` (open questions closed, PR #70 into
-`staging`). Backend **755** tests and frontend **1249** tests at 100%
-coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
+Branch `claude/project-thread-a660o5` (Next Up reorganized, CORS pattern
+kept; PR #70, open questions closed, is merged). Backend **754** tests at
+100% coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
 (`document_mentions` and the one-off conversion of plain `#Name` text into
 tokens, 20_1) is **not yet applied**: apply it once the 20_2 frontend is
-deployed (before it, tokens would show as raw text). PR #70 has no migration.
+deployed (before it, tokens would show as raw text).
 
 Specs 12 to 20 are merged into `staging` (features 19 and 20 closed). All
 Open Questions closed 2026-10-03. Next: feature 21 (full-text search).
@@ -551,14 +551,13 @@ proposals, 2026-10-03):
 
 - 13_1a (PR #29): the whole Room card links to its Documents; Setup and Invite
   sit above the link (same overlay pattern as `DocumentCard`).
-- 13_1c (branch `feature/13-1c-room-tag-delete-frontend`): setup page gains a
+- 13_1c (merged into `staging`, like 13_1b): setup page gains a
   Tag list with a confirmed delete per Tag (`TagManagement`, `useDeleteTag`)
   and a "Danger zone" that deletes the Room once its name is typed
   (`DeleteRoomSection`, `useDeleteRoom`, then back to `/`). The Tag
   confirmation shows no Document count on purpose (the backend has none that
   respects visibility, VR-07). The Main Tags editor is also re-keyed on the
-  Room's Tag ids, so a deleted Tag can't linger in an unsaved draft. Depends
-  on the 13_1b endpoints: merge after that PR.
+  Room's Tag ids, so a deleted Tag can't linger in an unsaved draft.
 - Not yet seen in a browser: card/button stacking, both modals, the setup page
   after a Tag deletion.
 
@@ -653,8 +652,9 @@ proposals, 2026-10-03):
 - **Docstring coverage**: 100% of backend `app/` (ruff `D1` gate in CI) and
   100% of frontend exports (JSDoc, review-only). Rule in `code-standards.md`
   → Documentation.
-- **CORS for Vercel previews**: optional `CORS_ORIGIN_REGEX`. See Next Up —
-  Render holds a looser pattern than the one decided.
+- **CORS for Vercel previews**: optional `CORS_ORIGIN_REGEX`. Render keeps
+  `[a-z0-9-]+` so branch previews work (decided 2026-10-03, see
+  `architecture.md` → CORS).
 - **Auth expansion (spec 08)**: Discord, Facebook, GitHub and X alongside
   Google (Google stays the filled button). X uses Supabase id `x`. Handles
   are a display-name fallback. Providers in `lib/authProviders.ts`.
@@ -821,86 +821,60 @@ Question in the backend PR.
 
 ## Next Up
 
-- **Browser check of spec 16** (after 16_2 merges and the migration is
-  live): upload a character sheet as an Owner, open and download it as
-  another member, confirm a member who can't see the Document gets nothing.
-  Migration `e2f7c4a9b1d6` is already live.
-- **Browser check of spec 17** (after 17_2 merges): the ticket's Definition
-  of Done walk-through with a Master, a Player and a member who can't see
-  the Character's Document.
-- **Browser check of spec 18** (after 18_2 merges): the ticket's Definition
-  of Done with two users who met in a Room: Add as Friend, accept, then one
-  invites the other to a new Room from the Friends tab and the other joins
-  from their Account page. Also open a friend link while signed out.
-- **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
-  branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
-  buttons stacking is not yet seen in a browser. Ticket written
-  (`context/feature/13_1 - Room Card refinment and Delition for TAGs and
-  Rooms.md`), no code yet. Three steps: 13_1a clickable Room card (frontend),
-  13_1b `DELETE` Room/Tag (backend; Storage cleanup for every image, Main
-  items stay valid), 13_1c setup-page controls (frontend). Open questions are
-  listed at the end of the ticket.
-- **Merge spec 12_1, then build 12_2** (frontend). Migration `c6e1a4b7d2f9`
-  is already live; Render redeploys the backend on merge and the single-Document
-  responses gain a `notes` field (additive, the old frontend ignores it).
-- **Browser check of spec 12** (after 12_2): create, edit and reorder Notes
-  as a Document Owner and Master; confirm Master-only Notes disappear for
-  Players while remaining visible to the Master.
-- **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only): set it to
-  `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app` and redeploy.
-  Then the look-alike `…-abc123-evil-rum11.vercel.app` must get no
-  `access-control-allow-origin` while a commit preview still does. Render
-  currently holds the looser `[a-z0-9-]+` pattern. Low risk (Bearer header,
-  no cookie) but not what was decided.
-- **Verify in a browser** (built and unit-tested, never seen running): the
-  Document card below `sm`, that carousel arrows beat the card's link
-  overlay, that clicking an image opens the Document, portrait/landscape
-  framing (spec 07/07.1); and the 09-27 header/back-button/collapsible-
-  controls changes.
-- **Sign-in providers** (spec 08): Google, Discord and GitHub work on the
-  deployed app (confirmed by the product owner 2026-10-03). Facebook and X
-  were removed from the sign-in screen the same day (no app credentials);
-  they can also be disabled in the Supabase dashboard. Still to re-test a
-  brand-new user's first sign-in live (the
-  stray trigger was dropped but never re-tested).
-- **Mention backlinks (spec 20, ticket written 2026-10-02)**:
-  `20 - Mention backlinks` (mentions stored with ids, one-off conversion of
-  old `#Name` text, "Mentioned in" filtered per viewer). 20_1 backend +
-  data migration, then 20_2 frontend. Tags get backlinks too.
-- **Full-text search (spec 21, ticket written 2026-10-02)**:
-  `21 - Full-text search` (current Room, Documents/Notes/Comments/Tags,
-  accent-insensitive prefix match, visibility filtered on the server).
-  21_1 backend + migration, then 21_2 frontend.
-- **Build order (product owner, 2026-10-02)**: one feature at a time, each
-  closed with all its sub-tickets before the next starts: 19 (19_1, 19_2,
-  19b, 19c) → 20 → 21 → 22 (with 22b) → 23 (with 23b, 23c) → 24.
-- **Threads (spec 19, tickets written 2026-10-02)**: `19 - Threaded replies`
-  (nested replies, 3 visible levels, a reply narrowed with its parent but
-  its own visibility kept), `19b - Unread replies`, `19c - Reactions,
-  mentions, pins and promotion`. All decisions confirmed (2026-10-02); 19's
-  Decision 6: the author keeps seeing their reply under a "parent hidden"
-  placeholder (VR-02 unchanged). Ready to build, starting with 19_1.
-- **Thread pagination (FR-T3)**: not owned by any ticket; 19 loads the
-  whole Thread at once. Write a ticket when Threads get long in practice.
-- **Reveal and visibility (spec 22, tickets written 2026-10-02)**:
-  `22 - Reveal and visibility history` (Reveal on Documents, single Notes
-  and Comments with "Revealed" marks and a header count; History tab;
-  Room default visibility) and `22b - View as player` (read-only preview
-  through an `X-View-As` header).
-- **Room export (spec 23, tickets written 2026-10-02)**: `23 - Room
-  export` (JSON + Markdown, per-viewer), `23b - Room PDF manual` (TTRPG
-  manual layout, first style Gothic, Vampire-inspired, WeasyPrint in a
-  background job; check Render can install Pango first), `23c - Agent
-  access tokens` (read-only per-Room tokens, FR-G2). 23 and 23c decisions
-  still to confirm.
-- **Version history (spec 24, ticket written 2026-10-02)**: `24 - Version
-  history` (Document name/description and Note text, 10-minute merge per
-  editor, Owners + Master compare and restore, all versions kept).
-- Decide whether new Rooms should get default Tags in the creator's
-  language.
-- **Read-only members list for every member** (decided 2026-10-03, spec 11
-  follow-up): the setup page stays Administrator-only, so a plain member has
-  no members list. Write a small ticket; slot it after the current feature.
+Reorganized with the product owner on 2026-10-03.
+
+- **Apply migration `d7b3a9f2c5e8` right after the 20_2 frontend reaches
+  production** (`document_mentions` + one-off conversion of plain `#Name`
+  text into tokens). Before 20_2 is live, tokens would show as raw text.
+  The live DB is at `c2f6b8d4e1a7` (checked 2026-10-03).
+- **Browser walk-through** (product owner; built and unit-tested, never
+  seen running). One checklist:
+  - Spec 12, Notes: create, edit, reorder as an Owner and the Master;
+    Master-only Notes disappear for Players.
+  - Spec 16, PDF Attachments: upload a character sheet as an Owner, open and
+    download it as another member; a member who can't see the Document
+    gets nothing.
+  - Spec 17, Characters: the ticket's Definition of Done with a Master, a
+    Player and a member who can't see the Character's Document.
+  - Spec 18, Friends: two users who met in a Room add each other, one
+    invites the other to a new Room from the Friends tab, the other joins
+    from their Account page; open a friend link while signed out.
+  - Spec 20, mention backlinks (once deployed and migrated): tokens render
+    as names, "Mentioned in" hides what the viewer can't see.
+  - Sign-in: Google, Discord and GitHub work (confirmed 2026-10-03);
+    re-test a brand-new user's first sign-in.
+  - UI never seen running: the Document card below `sm`, carousel arrows
+    over the card's link overlay, clicking an image opens the Document,
+    portrait/landscape framing (spec 07/07.1), the 09-27 header,
+    back-button and collapsible controls, the clickable Room card (13_1a),
+    the Tag and Room delete modals and the setup page after a Tag deletion
+    (13_1c).
+  A Playwright script for the parts that can be automated is possible on
+  request.
+- **Build order (product owner, 2026-10-02, confirmed 2026-10-03)**: one
+  feature at a time, each closed with all its sub-tickets: 21 → 22 (with
+  22b) → 23 (with 23b, 23c) → 24, then the two small tickets below.
+  Features 19 and 20 are done.
+  - **Full-text search (spec 21)**: `21 - Full-text search` (current Room,
+    Documents/Notes/Comments/Tags, accent-insensitive prefix match,
+    visibility filtered on the server). 21_1 backend + migration, then 21_2
+    frontend. **Next.**
+  - **Reveal and visibility (spec 22)**: `22 - Reveal and visibility
+    history` and `22b - View as player` (read-only preview through an
+    `X-View-As` header).
+  - **Room export (spec 23)**: `23 - Room export` (JSON + Markdown,
+    per-viewer), `23b - Room PDF manual` (WeasyPrint in a background job;
+    check Render can install Pango first), `23c - Agent access tokens`
+    (FR-G2). The open decisions of 23 and 23c are prepared when their turn
+    comes.
+  - **Version history (spec 24)**: `24 - Version history`.
+  - **Default Tags in the creator's language** (decided 2026-10-03: yes,
+    the creator's UI language at creation time). Small ticket, after 24.
+  - **Read-only members list for every member** (decided 2026-10-03, spec
+    11 follow-up: the setup page stays Administrator-only). Small ticket,
+    after 24.
+- **Thread pagination (FR-T3)**: parked; feature 19 loads the whole Thread.
+  Write a ticket only when Threads get long in practice.
 
 ## Open Questions
 

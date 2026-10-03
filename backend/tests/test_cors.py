@@ -8,9 +8,9 @@ from app.config import Settings
 from app.main import add_cors
 
 PRODUCTION = "https://ttrpg-campaign-notes-eight.vercel.app"
-# Commit-preview hashes have no hyphens, so `[a-z0-9]+` can't run on into
-# another account's scope: the host must end in exactly `-rum11`.
-PREVIEW_PATTERN = r"https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app"
+# The value set on Render (kept 2026-10-03): hyphens are allowed so branch
+# previews (`...-git-<branch>-rum11`) reach the backend too.
+PREVIEW_PATTERN = r"https://ttrpg-campaign-notes-[a-z0-9-]+-rum11\.vercel\.app"
 
 
 def client_for(cors_origins: list[str], cors_origin_regex: str | None = None) -> TestClient:
@@ -51,20 +51,16 @@ def client() -> TestClient:
         PRODUCTION,
         "https://ttrpg-campaign-notes-jspixip1f-rum11.vercel.app",
         "https://ttrpg-campaign-notes-a1b2c3d4e-rum11.vercel.app",
+        "https://ttrpg-campaign-notes-git-feature-x-rum11.vercel.app",
     ],
 )
-def test_listed_origin_and_commit_previews_are_allowed(client: TestClient, origin: str) -> None:
+def test_listed_origin_and_previews_are_allowed(client: TestClient, origin: str) -> None:
     assert preflight(client, origin) == origin
 
 
 @pytest.mark.parametrize(
     "origin",
     [
-        # Another Vercel account whose scope merely ends in "-rum11".
-        "https://ttrpg-campaign-notes-abc123-evil-rum11.vercel.app",
-        # Branch-alias previews: excluded on purpose, since their hyphens
-        # would make the look-alike above impossible to rule out.
-        "https://ttrpg-campaign-notes-git-feature-x-rum11.vercel.app",
         "https://evil-ttrpg-campaign-notes-abc123-rum11.vercel.app",
         "https://ttrpg-campaign-notes-abc123-rum11.vercel.app.evil.com",
         "http://ttrpg-campaign-notes-abc123-rum11.vercel.app",
@@ -75,11 +71,14 @@ def test_look_alike_origins_are_rejected(client: TestClient, origin: str) -> Non
     assert preflight(client, origin) is None
 
 
-def test_the_looser_pattern_would_admit_the_look_alike() -> None:
-    """Why the pattern above excludes hyphens: `[a-z0-9-]+` swallows another
-    account's scope name."""
-    loose = r"https://ttrpg-campaign-notes-[a-z0-9-]+-rum11\.vercel\.app"
-    assert re.fullmatch(loose, "https://ttrpg-campaign-notes-abc123-evil-rum11.vercel.app")
+def test_a_scope_ending_in_rum11_is_an_accepted_gap() -> None:
+    """Accepted on 2026-10-03: the pattern admits another Vercel account whose
+    scope ends in "-rum11". Excluding hyphens would block branch previews and
+    still admit a project named `ttrpg-campaign-notes-<word>-rum11`; the
+    Bearer token, which a foreign origin never has, is the real barrier."""
+    assert re.fullmatch(
+        PREVIEW_PATTERN, "https://ttrpg-campaign-notes-abc123-evil-rum11.vercel.app"
+    )
 
 
 def test_without_a_pattern_only_listed_origins_are_allowed() -> None:
