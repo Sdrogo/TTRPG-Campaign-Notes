@@ -551,14 +551,13 @@ proposals, 2026-10-03):
 
 - 13_1a (PR #29): the whole Room card links to its Documents; Setup and Invite
   sit above the link (same overlay pattern as `DocumentCard`).
-- 13_1c (branch `feature/13-1c-room-tag-delete-frontend`): setup page gains a
+- 13_1c (merged into `staging`, like 13_1b): setup page gains a
   Tag list with a confirmed delete per Tag (`TagManagement`, `useDeleteTag`)
   and a "Danger zone" that deletes the Room once its name is typed
   (`DeleteRoomSection`, `useDeleteRoom`, then back to `/`). The Tag
   confirmation shows no Document count on purpose (the backend has none that
   respects visibility, VR-07). The Main Tags editor is also re-keyed on the
-  Room's Tag ids, so a deleted Tag can't linger in an unsaved draft. Depends
-  on the 13_1b endpoints: merge after that PR.
+  Room's Tag ids, so a deleted Tag can't linger in an unsaved draft.
 - Not yet seen in a browser: card/button stacking, both modals, the setup page
   after a Tag deletion.
 
@@ -851,7 +850,9 @@ Reorganized with the product owner on 2026-10-03.
   - UI never seen running: the Document card below `sm`, carousel arrows
     over the card's link overlay, clicking an image opens the Document,
     portrait/landscape framing (spec 07/07.1), the 09-27 header,
-    back-button and collapsible controls, the clickable Room card (13_1a).
+    back-button and collapsible controls, the clickable Room card (13_1a),
+  the Tag and Room delete modals and the setup page after a Tag deletion
+  (13_1c).
   A Playwright script for the parts that can be automated is possible on
   request.
 - **Build order (product owner, 2026-10-02, confirmed 2026-10-03)**: one
