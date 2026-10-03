@@ -20,12 +20,19 @@ from app.api.access import (
     require_membership,
 )
 from app.api.errors import http_error, translated_error
+from app.api.mentions import clean_content_mentions, index_mentions
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, notes_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
-from app.domain.models import DocumentVisibility, Membership, Note
+from app.domain.models import (
+    DocumentVisibility,
+    Membership,
+    MentionSource,
+    MentionSourceKind,
+    Note,
+)
 from app.domain.notes import (
     InvalidNoteOrderError,
     NoteTitleRequiredError,
@@ -200,12 +207,13 @@ async def create_note(
     # creates can't both slip under the cap or share a position.
     await documents_repo.lock_document(session, document_id)
     existing = await notes_repo.list_notes_for_document(session, document_id)
+    description = await clean_content_mentions(session, membership, body.description)
     try:
         note = plan_new_note(
             document_id,
             requester_id,
             body.title,
-            body.description,
+            description,
             body.visibility,
             existing,
             datetime.now(UTC),
@@ -219,6 +227,11 @@ async def create_note(
         session, room_id, body.selective_user_ids, "errors.note.invalidSelectiveUsers", locale
     )
     await notes_repo.insert_note(session, note, body.selective_user_ids)
+    await index_mentions(
+        session,
+        MentionSource(document_id, MentionSourceKind.NOTE, note_id=note.id),
+        note.description,
+    )
     notes = await get_document_notes(session, document_id, membership, owner_ids)
     if not any(visible.id == note.id for visible in notes.visible):
         return None
@@ -292,7 +305,13 @@ async def update_note(
             requester_id,
             datetime.now(UTC),
             title=body.title,
-            description=body.description,
+            description=(
+                None
+                if body.description is None
+                else await clean_content_mentions(
+                    session, membership, body.description, previous=note.description
+                )
+            ),
             visibility=body.visibility,
             current_selective_ids=selective_ids,
             new_selective_ids=body.selective_user_ids,
@@ -306,6 +325,12 @@ async def update_note(
         )
 
     await notes_repo.update_note(session, plan.note)
+    if body.description is not None:
+        await index_mentions(
+            session,
+            MentionSource(document_id, MentionSourceKind.NOTE, note_id=note_id),
+            plan.note.description,
+        )
     if body.selective_user_ids is not None:
         await notes_repo.set_note_grants(session, note_id, body.selective_user_ids)
         selective_ids = body.selective_user_ids

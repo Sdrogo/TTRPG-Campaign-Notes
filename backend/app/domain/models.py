@@ -322,3 +322,39 @@ class FriendCode:
     user_id: uuid.UUID
     code: str
     created_at: datetime
+
+
+class MentionSourceKind(StrEnum):
+    """Where in a Document a mention is written (spec 20)."""
+
+    DESCRIPTION = "description"
+    NOTE = "note"
+    COMMENT = "comment"
+
+
+@dataclass(frozen=True)
+class DocumentMention:
+    """A backlink (spec 20): `source_document_id`'s description, one of its
+    Notes (`note_id`) or one of its Comments (`comment_id`), as
+    `source_kind` says, mentions a Document or a Tag (exactly one target),
+    with the excerpt around the mention."""
+
+    id: uuid.UUID
+    source_document_id: uuid.UUID
+    source_kind: MentionSourceKind
+    note_id: uuid.UUID | None
+    comment_id: uuid.UUID | None
+    target_document_id: uuid.UUID | None
+    target_tag_id: uuid.UUID | None
+    excerpt: str
+
+
+@dataclass(frozen=True)
+class MentionSource:
+    """One place mentions are written in (spec 20): a Document's description,
+    or one of its Notes or Comments."""
+
+    document_id: uuid.UUID
+    kind: MentionSourceKind
+    note_id: uuid.UUID | None = None
+    comment_id: uuid.UUID | None = None

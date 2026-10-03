@@ -9,22 +9,36 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-03)
 
-Branch `claude/project-thread-ads76p` (spec 19c_8, promotion frontend, PR
-into `staging`). Frontend **1227** tests at 100% coverage; tsc, oxlint and
-build clean. Backend unchanged since 19c_7: 727 tests at 100%. Migration
-`f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
-database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
-19c_3) and migration `c2f6b8d4e1a7` (promotion columns on `posts`, 19c_7,
-revises it) were **applied to the live database on 2026-10-03** (with the
-user's go-ahead); the live DB is at `c2f6b8d4e1a7`.
+Branch `claude/project-thread-ads76p` (spec 20_1, mention backlinks backend,
+PR into `staging`). Backend **752** tests at 100% coverage; ruff and mypy
+clean. Frontend unchanged since 19c_8: 1227 tests at 100%. The live
+database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8` (`document_mentions`
+and the one-off conversion of plain `#Name` text into tokens, 20_1) is **not
+yet applied**, and should be applied **only once 20_2 is deployed**: the
+current frontend would show the tokens as raw text.
 
-Specs 12 to 19c_7 are merged into `staging`; 19c_8 closes spec 19c (and with
-it feature 19). Next, per the build order: spec 20 (mention backlinks),
-starting with 20_1.
+Specs 12 to 19c are merged into `staging` (feature 19 closed). Next: 20_2,
+mention backlinks frontend.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Mention backlinks, backend (spec 20_1, 2026-10-03)
+
+- `#` mentions are stored as `#[Name](doc:<uuid>)` / `#[Name](tag:<uuid>)`;
+  each save cleans them (a link only to the Room's content the writer sees,
+  or that the text already linked) and rewrites the source's rows in
+  `document_mentions`. `GET .../documents/{id}/backlinks` and
+  `GET .../tags/{id}/backlinks` list them, filtered like the sources.
+- Migration `d7b3a9f2c5e8` converts old `#Name` text by the browser's rule
+  and fills the table; tried up and down on a scratch database. Not live.
+- **Choices made beyond the ticket**: one row per target per source (the
+  excerpt is around the first mention); a Document mentioning itself is no
+  backlink; a writer can't newly link a Document they can't see (keeps the
+  answer from revealing it), but keeps links already in the text; two FK
+  columns `note_id`/`comment_id` instead of one `source_id`; excerpts are
+  frozen at save time, so they show the names as written.
 
 ### Promotion, frontend (spec 19c_8, 2026-10-03)
 
