@@ -13,7 +13,7 @@
 
 **New in 0.4:** new Decisions D-21…D-27: **PDF Attachments** on Documents, **Characters** linked to a User with Posts written "as the Character", **Friendships** between Users (the first concept not tied to a Room). New rules VR-12, VR-13, requirements FR-D8, FR-D9, FR-T11, FR-F1…FR-F5, use cases UC-20…UC-25, invariants I-12…I-14. Tickets: `context/feature/15`…`18`. The document was also translated from Italian to English; IDs and meaning are unchanged.
 
-**New in 0.5:** resolved Open points OQ-09 and OQ-10 (now Decisions D-28, D-29). **Details** are aligned with what was built (Notes): managed by the Document's Owners and the Master, outside the Thread, no replies (D-18, D-19, I-08, I-10, FR-D3, FR-T1, FR-T8, FR-T10). Login lists every provider of FR-A1 (D-07, UC-01, NFR-03, MoSCoW). Images are plural with a cap (D-09, FR-D1). New NFR-09 (UI languages). Removing a Friendship revokes pending direct invitations (D-26); members' emails are not shown to other members (NFR-03).
+**New in 0.5:** resolved Open points OQ-09 and OQ-10 (now Decisions D-28, D-29). **Details** are aligned with what was built (Notes): managed by the Document's Owners and the Master, outside the Thread, no replies (D-18, D-19, I-08, I-10, FR-D3, FR-T1, FR-T8, FR-T10). Login lists the providers of FR-A1: Google, Discord and GitHub; Facebook and X were dropped (D-07, UC-01, NFR-03, MoSCoW). Images are plural with a cap (D-09, FR-D1). New NFR-09 (UI languages). Removing a Friendship revokes pending direct invitations (D-26); members' emails are not shown to other members (NFR-03).
 
 ---
 
@@ -55,7 +55,7 @@ A web application, distributed online, where several Users contribute to the doc
 
 | Term | Definition |
 |---|---|
-| **User** | A person authenticated on the platform (Google, Discord, Facebook, GitHub or X login). |
+| **User** | A person authenticated on the platform (Google, Discord or GitHub login). |
 | **Room** | The container of a campaign: it has members, Documents, Tags, a Glossary. |
 | **Membership** | The link between a User and a Room, with their roles in that Room. |
 | **Master** | A User's role in a specific Room, with full Ownership of the content. |
@@ -106,7 +106,7 @@ A web application, distributed online, where several Users contribute to the doc
 | D-04 | **No real-time editing** for now. Priority to an **efficient Thread structure**. |
 | D-05 | Documents are **not strictly typed**: "Types" (NPC, Place, Event, Artifact…) are treated as **Tags**. |
 | D-06 | Roles (Master/Player/Administrator) are **per Room**, not global. |
-| D-07 | Login through **Google** (preferred method), plus Discord, Facebook, GitHub and X (FR-A1). |
+| D-07 | Login through **Google** (preferred method), plus Discord and GitHub (FR-A1). |
 | D-08 | Every **Player owns the visibility of their own content** with respect to the other Players. The **Master has full Ownership** of the project (Room). |
 | D-09 | Every Document can have a Name, **up to 20 Images** (one of them the favorite), a description, Tags and further details (defined in D-18). |
 | D-10 | Content, single comments and other information can be **hidden from different Users**. |
@@ -258,7 +258,7 @@ erDiagram
 ## 10. Functional requirements
 
 ### Authentication
-- **FR-A1** Login with Google (OAuth), Discord, Facebook, GitHub and X.
+- **FR-A1** Login with Google (OAuth), Discord and GitHub.
 - **FR-A2** Basic profile (name, avatar) and logout.
 
 ### Rooms and members
@@ -342,7 +342,7 @@ erDiagram
 
 | ID | Use case | Actor | Preconditions | Main flow | Alternatives / exceptions |
 |---|---|---|---|---|---|
-| UC-01 | Login | Visitor | — | Chooses a provider (Google, Discord, Facebook, GitHub, X) → authorizes → gets in | Authorization denied: stays on the login page |
+| UC-01 | Login | Visitor | — | Chooses a provider (Google, Discord, GitHub) → authorizes → gets in | Authorization denied: stays on the login page |
 | UC-02 | Create a Room | User | Authenticated | Enters name and game system → the Room is created → the User becomes Administrator and Master → the default Tags are created | Missing name: validation error |
 | UC-03 | Invite into a Room | Administrator | Administrator role | Generates a link/code with a proposed role and expiry → shares it | Revoking the invitation; expired invitation |
 | UC-04 | Join a Room | User | Valid invitation | Opens the link → logs in → is added with the proposed role | Invalid/expired invitation; already a member |

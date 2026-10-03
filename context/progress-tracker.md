@@ -10,7 +10,7 @@ step-by-step notes) is in
 ## Current Status (2026-10-03)
 
 Branch `claude/project-thread-a660o5` (open questions closed, PR #70 into
-`staging`). Backend **755** tests and frontend **1251** tests at 100%
+`staging`). Backend **755** tests and frontend **1249** tests at 100%
 coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
 (`document_mentions` and the one-off conversion of plain `#Name` text into
 tokens, 20_1) is **not yet applied**: apply it once the 20_2 frontend is
@@ -38,7 +38,7 @@ proposals, 2026-10-03):
   choices (a)-(f); spec 11: setup page and Main Tags stay Administrator-only.
 - **`requirements.md` v0.5** (explicitly approved): D-18, D-19, I-08, I-10,
   FR-D3, FR-T1, FR-T8, FR-T10, UC-18, W-03 follow the Notes model; OQ-09/10
-  became D-28/D-29; login lists all five providers (D-07, glossary, UC-01,
+  became D-28/D-29; login lists Google, Discord and GitHub (D-07, glossary, UC-01,
   W-01, NFR-03, MoSCoW); images plural, up to 20 (D-09, FR-D1); new NFR-09
   (English and Italian, English fallback); D-26 and NFR-03 carry the two
   code changes below.
@@ -49,6 +49,8 @@ proposals, 2026-10-03):
   Friends, invitation senders. Pickers tell same-named members apart by a
   piece of the user id. The fallback name stays the existing unknown-user
   label.
+- **Sign-in**: Facebook and X removed from `lib/authProviders.ts` and the
+  docs (no app credentials for them; Google, Discord, GitHub work).
 - **Supabase**: the Security Advisor shows no RLS findings. `EXECUTE` on
   `public.rls_auto_enable()` (Supabase's auto-RLS event trigger function,
   not in our migrations) was revoked from `public`/`anon`/`authenticated` on
@@ -847,11 +849,11 @@ Question in the backend PR.
   overlay, that clicking an image opens the Document, portrait/landscape
   framing (spec 07/07.1); and the 09-27 header/back-button/collapsible-
   controls changes.
-- **Try each sign-in provider on the deployed app** (spec 08): Discord,
-  Facebook, GitHub, X round-trip, land on Rooms, pre-fill name/avatar; check
-  an X account with no email. A Supabase error page means a dashboard
-  setting, not app code. Facebook apps in Development mode only admit the
-  app's testers. Also re-test a brand-new user's first sign-in live (the
+- **Sign-in providers** (spec 08): Google, Discord and GitHub work on the
+  deployed app (confirmed by the product owner 2026-10-03). Facebook and X
+  were removed from the sign-in screen the same day (no app credentials);
+  they can also be disabled in the Supabase dashboard. Still to re-test a
+  brand-new user's first sign-in live (the
   stray trigger was dropped but never re-tested).
 - **Mention backlinks (spec 20, ticket written 2026-10-02)**:
   `20 - Mention backlinks` (mentions stored with ids, one-off conversion of

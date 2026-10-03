@@ -1,10 +1,8 @@
 import type { Provider } from '@supabase/supabase-js';
 import {
   DiscordLogoIcon,
-  FacebookLogoIcon,
   GithubLogoIcon,
   GoogleLogoIcon,
-  XLogoIcon,
   type Icon,
 } from '@phosphor-icons/react';
 
@@ -20,14 +18,13 @@ export interface AuthProvider {
 /**
  * The providers enabled in the Supabase dashboard, in the order the sign-in
  * screen lists them. Adding one here without enabling it there leads to a
- * Supabase error page. `x` is the OAuth 2.0 provider, not the legacy `twitter`.
+ * Supabase error page. Facebook and X were dropped on 2026-10-03 (no app
+ * credentials for them).
  */
 export const AUTH_PROVIDERS: readonly AuthProvider[] = [
   { id: 'google', label: 'Google', icon: GoogleLogoIcon },
   { id: 'discord', label: 'Discord', icon: DiscordLogoIcon },
-  { id: 'facebook', label: 'Facebook', icon: FacebookLogoIcon },
   { id: 'github', label: 'GitHub', icon: GithubLogoIcon },
-  { id: 'x', label: 'X', icon: XLogoIcon },
 ];
 
 /**

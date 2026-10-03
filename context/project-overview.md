@@ -37,8 +37,8 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 
 ## Core User Flow
 
-1. User signs in with Google (FR-A1), or with Discord, Facebook, GitHub
-   or X (spec 08). Their provider name and picture
+1. User signs in with Google (FR-A1), or with Discord or GitHub
+   (spec 08). Their provider name and picture
    become their display name and avatar by default (copied once, then
    theirs to change or remove), and they can adjust their profile on
    the Account page: display name, avatar, pronouns and a short
@@ -63,10 +63,10 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 ## Features
 
 ### Authentication & Account
-- Google sign‑in (FR-A1), plus Discord, Facebook, GitHub and X
-  (spec 08, 2026-09-23). Google stays the highlighted option.
-- Profile defaults from the sign-in provider (Google, Discord, Facebook,
-  GitHub or X): the first time a user opens the app, their sign-in
+- Google sign‑in (FR-A1), plus Discord and GitHub
+  (spec 08, 2026-09-23; Facebook and X removed 2026-10-03). Google stays the highlighted option.
+- Profile defaults from the sign-in provider (Google, Discord or
+  GitHub): the first time a user opens the app, their sign-in
   provider's name and picture are copied in for whatever they haven't
   set. It happens once; later edits and removals stick, and changes to
   the sign-in provider's account don't overwrite them.
@@ -160,7 +160,7 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 ## Scope
 
 ### In Scope
-- OAuth authentication: Google (preferred), Discord, Facebook, GitHub, X.
+- OAuth authentication: Google (preferred), Discord, GitHub.
 - A per‑user profile (display name, avatar, pronouns, description)
   managed on the Account page.
 - Rooms, per‑Room roles (Administrator, Master, Player) and invites.
