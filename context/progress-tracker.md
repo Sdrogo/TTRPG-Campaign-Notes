@@ -9,12 +9,10 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-03)
 
-Branch `claude/project-thread-a660o5` (Next Up reorganized, CORS pattern
-kept; PR #70, open questions closed, is merged). Backend **754** tests at
-100% coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
-(`document_mentions` and the one-off conversion of plain `#Name` text into
-tokens, 20_1) is **not yet applied**: apply it once the 20_2 frontend is
-deployed (before it, tokens would show as raw text).
+Staging released to `main` with PR #73 (specs 20_1/20_2, PRs #68 to #72).
+Backend **754** tests at 100% coverage. The live database is at
+`d7b3a9f2c5e8` (applied by hand 2026-10-03, after the release): 77 texts
+converted to `#` tokens, 204 `document_mentions` rows. No pending migrations.
 
 Specs 12 to 20 are merged into `staging` (features 19 and 20 closed). All
 Open Questions closed 2026-10-03. Next: feature 21 (full-text search).
@@ -88,7 +86,9 @@ proposals, 2026-10-03):
   `document_mentions`. `GET .../documents/{id}/backlinks` and
   `GET .../tags/{id}/backlinks` list them, filtered like the sources.
 - Migration `d7b3a9f2c5e8` converts old `#Name` text by the browser's rule
-  and fills the table; tried up and down on a scratch database. Not live.
+  and fills the table; tried up and down on a scratch database. Applied to
+  the live DB on 2026-10-03 after release PR #73; the result matched a
+  local run of the migration on a copy of the live texts.
 - **Choices made beyond the ticket**: one row per target per source (the
   excerpt is around the first mention); a Document mentioning itself is no
   backlink; a writer can't newly link a Document they can't see (keeps the
@@ -823,10 +823,6 @@ Question in the backend PR.
 
 Reorganized with the product owner on 2026-10-03.
 
-- **Apply migration `d7b3a9f2c5e8` right after the 20_2 frontend reaches
-  production** (`document_mentions` + one-off conversion of plain `#Name`
-  text into tokens). Before 20_2 is live, tokens would show as raw text.
-  The live DB is at `c2f6b8d4e1a7` (checked 2026-10-03).
 - **Browser walk-through** (product owner; built and unit-tested, never
   seen running). One checklist:
   - Spec 12, Notes: create, edit, reorder as an Owner and the Master;
@@ -839,7 +835,7 @@ Reorganized with the product owner on 2026-10-03.
   - Spec 18, Friends: two users who met in a Room add each other, one
     invites the other to a new Room from the Friends tab, the other joins
     from their Account page; open a friend link while signed out.
-  - Spec 20, mention backlinks (once deployed and migrated): tokens render
+  - Spec 20, mention backlinks (deployed and migrated 2026-10-03): tokens render
     as names, "Mentioned in" hides what the viewer can't see.
   - Sign-in: Google, Discord and GitHub work (confirmed 2026-10-03);
     re-test a brand-new user's first sign-in.
