@@ -7,6 +7,7 @@ import { RoomDocumentsPage } from './pages/RoomDocumentsPage';
 import { DocumentDetailPage } from './pages/DocumentDetailPage';
 import { AccountPage } from './pages/AccountPage';
 import { AddFriendPage } from './pages/AddFriendPage';
+import { useScrollbarReveal } from './hooks/useScrollbarReveal';
 
 /**
  * The route table. Every page checks the session itself and shows a sign-in
@@ -17,6 +18,8 @@ function App() {
   // the new language, including components that read their strings through
   // plain helpers (`userDisplayName`, `formatRelativeTime`) rather than a hook.
   useTranslation();
+  // Every page's scrollbar is hidden until the page scrolls (`index.css`).
+  useScrollbarReveal();
 
   return (
     <Routes>

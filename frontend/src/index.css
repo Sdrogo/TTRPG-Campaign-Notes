@@ -57,6 +57,37 @@ html {
   scroll-padding-top: 72px;
 }
 
+/* The page's scrollbar never narrows the page: its gutter is always kept, so
+   the top bar's centered title doesn't move between pages that scroll and
+   pages that don't. It is thin and only shows, semi-transparent, while the
+   page scrolls or the pointer is at the right edge (`data-scrolling`, set by
+   `useScrollbarReveal`); otherwise the gutter blends with the page. Phones
+   and macOS already draw overlay scrollbars, which take no space. */
+html {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 300ms ease;
+}
+
+html[data-scrolling] {
+  scrollbar-color: rgb(155 139 163 / 50%) transparent;
+}
+
+/* An open modal locks the page's scroll and pads the body by the scrollbar's
+   width to make up for it, but the kept gutter already does, so the padding
+   would shift the page sideways instead. */
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    transition: none;
+  }
+}
+
 /* Keep the Room card's link ring inside the card's clipped, rounded edge. */
 .room-card-link {
   border-radius: inherit;
