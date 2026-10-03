@@ -15,8 +15,8 @@ clean. Frontend unchanged since 19c_6: 1193 tests at 100%. Migration
 `f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
 database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
 19c_3) and migration `c2f6b8d4e1a7` (promotion columns on `posts`, 19c_7,
-revises it) are **not yet applied to the live database**; 19c_3 onward needs
-them live before reaching `main`.
+revises it) were **applied to the live database on 2026-10-03** (with the
+user's go-ahead); the live DB is at `c2f6b8d4e1a7`.
 
 Specs 12 to 19c_6 are merged into `staging`. Build order is feature by
 feature: 19c goes reactions → pin and resolved → @mentions → promotion.
