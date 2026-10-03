@@ -31,6 +31,7 @@ from app.api.image_uploads import (
     sign_images,
     store_image,
 )
+from app.api.mentions import clean_content_mentions, index_mentions
 from app.api.notes import NoteResponse, visible_note_responses
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
@@ -46,7 +47,14 @@ from app.domain.documents import (
     plan_add_owner,
     plan_new_document,
 )
-from app.domain.models import Document, DocumentImage, DocumentVisibility, Membership
+from app.domain.models import (
+    Document,
+    DocumentImage,
+    DocumentVisibility,
+    Membership,
+    MentionSource,
+    MentionSourceKind,
+)
 from app.domain.reads import unread_counts
 from app.domain.visibility import is_document_visible
 from app.i18n.dependencies import LocaleDep
@@ -221,15 +229,19 @@ async def create_document(
     if not can_create_document(membership.role, room.players_can_create_documents):
         raise http_error(status.HTTP_403_FORBIDDEN, "errors.document.creationDisabled", locale)
 
+    description = await clean_content_mentions(session, membership, body.description)
     try:
-        plan = plan_new_document(
-            room_id, body.name, body.description, body.visibility, requester_id
-        )
+        plan = plan_new_document(room_id, body.name, description, body.visibility, requester_id)
     except DocumentNameRequiredError as exc:
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
     await _validate_tag_ids(session, room_id, body.tag_ids, locale)
     await documents_repo.insert_new_document(session, plan, body.tag_ids, body.selective_user_ids)
+    await index_mentions(
+        session,
+        MentionSource(plan.document.id, MentionSourceKind.DESCRIPTION),
+        plan.document.description,
+    )
 
     return await _to_response(session, plan.document, membership)
 
@@ -369,13 +381,24 @@ async def update_document(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.document.nameRequired", locale
         )
 
+    description = (
+        document.description
+        if body.description is None
+        else await clean_content_mentions(
+            session, membership, body.description, previous=document.description
+        )
+    )
     updated = replace(
         document,
         name=new_name,
-        description=document.description if body.description is None else body.description,
+        description=description,
         visibility=document.visibility if body.visibility is None else body.visibility,
     )
     await documents_repo.update_document(session, updated)
+    if body.description is not None:
+        await index_mentions(
+            session, MentionSource(document_id, MentionSourceKind.DESCRIPTION), description
+        )
 
     if body.tag_ids is not None:
         await _validate_tag_ids(session, room_id, body.tag_ids, locale)

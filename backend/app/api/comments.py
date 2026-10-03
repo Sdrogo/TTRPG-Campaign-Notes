@@ -30,6 +30,7 @@ from app.api.image_uploads import (
     sign_images,
     store_image,
 )
+from app.api.mentions import clean_content_mentions, index_mentions
 from app.auth.dependencies import CurrentUserDep
 from app.db import comments_repo, documents_repo, reactions_repo, rooms_repo
 from app.db.session import SessionDep
@@ -71,6 +72,8 @@ from app.domain.models import (
     DocumentImage,
     DocumentVisibility,
     Membership,
+    MentionSource,
+    MentionSourceKind,
     PromotionTarget,
     Reaction,
 )
@@ -342,11 +345,20 @@ def _body_error(exc: DomainError, locale: str) -> HTTPException:
     return translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale)
 
 
-async def _clean_mentions(session: AsyncSession, room_id: uuid.UUID, body: str) -> str:
+async def _clean_mentions(
+    session: AsyncSession, writer: Membership, body: str, previous: str = ""
+) -> str:
     """The body with `@` mentions of anyone outside the Room turned back into
-    plain text (spec 19c Decision 2), so only members are ever linked."""
-    members = await rooms_repo.list_memberships(session, room_id)
-    return unlink_non_members(body, {member.user_id for member in members})
+    plain text (spec 19c Decision 2), so only members are ever linked, and
+    `#` mentions cleaned as in every other text (spec 20)."""
+    members = await rooms_repo.list_memberships(session, writer.room_id)
+    body = unlink_non_members(body, {member.user_id for member in members})
+    return await clean_content_mentions(session, writer, body, previous)
+
+
+def _comment_source(comment: Comment) -> MentionSource:
+    """Where a Comment's mentions are indexed from (spec 20)."""
+    return MentionSource(comment.document_id, MentionSourceKind.COMMENT, comment_id=comment.id)
 
 
 async def _validate_grantees(
@@ -568,7 +580,7 @@ async def create_comment(
         comment = plan_new_comment(
             document_id,
             requester_id,
-            await _clean_mentions(session, room_id, body.body),
+            await _clean_mentions(session, membership, body.body),
             body.visibility,
             datetime.now(UTC),
             as_document_id=body.as_document_id,
@@ -596,6 +608,7 @@ async def create_comment(
             locale,
         )
     await comments_repo.insert_comment(session, comment, body.selective_user_ids)
+    await index_mentions(session, _comment_source(comment), comment.body)
     characters = await _characters_for(session, [comment], membership)
     return _to_response(
         comment,
@@ -637,7 +650,11 @@ async def update_comment(
             room_id,
             requester_id,
             datetime.now(UTC),
-            body=None if body.body is None else await _clean_mentions(session, room_id, body.body),
+            body=(
+                None
+                if body.body is None
+                else await _clean_mentions(session, membership, body.body, comment.body)
+            ),
             visibility=body.visibility,
             current_selective_ids=selective_ids,
             new_selective_ids=body.selective_user_ids,
@@ -678,6 +695,8 @@ async def update_comment(
         )
 
     await comments_repo.update_comment(session, plan.comment)
+    if body.body is not None:
+        await index_mentions(session, _comment_source(plan.comment), plan.comment.body)
     if body.selective_user_ids is not None:
         await comments_repo.set_comment_grants(session, comment_id, body.selective_user_ids)
         selective_ids = list(set(body.selective_user_ids))
@@ -723,6 +742,8 @@ async def delete_comment(
     await remove_images(session, await _comment_images(session, comment_id))
     await reactions_repo.delete_reactions_for_comment(session, comment_id)
     await comments_repo.update_comment(session, deleted)
+    # Its placeholder mentions nothing any more.
+    await index_mentions(session, _comment_source(deleted), deleted.body)
     await comments_repo.set_pin_and_resolution(session, deleted)
 
 
