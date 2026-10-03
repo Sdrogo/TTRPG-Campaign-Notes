@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Stack, Group, Title, Text, Button, Box, ActionIcon, Modal, Alert } from '@mantine/core';
+import { Stack, Group, Title, Text, Button, Box, ActionIcon, Modal, Alert, Paper, Divider } from '@mantine/core';
 import { PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
@@ -236,28 +236,70 @@ function DocumentPanel({
           />
         )}
 
-        {/* Images on the right on big screens (spec 10, mirroring
-            DocumentCard's layout in RoomDocumentsPage), floated so the text
-            wraps around them and takes the full width once it is past them;
-            stacked under the text below `lg` (`.document-body` in index.css). */}
+        {/* The aside, on the right on big screens (spec 10, mirroring
+            DocumentCard's layout in RoomDocumentsPage): the images, then the
+            info panel (player, Owners, PDFs). Floated so the text wraps around
+            it and takes the full width once past it; narrower when there are
+            no images; stacked under the text below `lg` (`.document-body` in
+            index.css). */}
         <Box className="document-body">
-          {document.images.length > 0 && (
-            <Box className="document-body-images">
-              <DocumentImageGallery
-                images={document.images}
-                documentName={document.name}
-                canDelete={isOwner && editing}
-                onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
-                deletingImageId={deleteImage.isPending ? (deleteImage.variables as string) : null}
-                // Spec 07: not gated on `editing` like deletion - picking the
-                // leading image is reversible, so it needs no edit mode.
-                onSetFavorite={
-                  isOwner ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError }) : undefined
-                }
-                settingFavoriteId={setFavorite.isPending ? (setFavorite.variables as string) : null}
-              />
-            </Box>
-          )}
+          <Box
+            className="document-body-aside"
+            data-narrow={document.images.length === 0 || undefined}
+          >
+            <Stack gap="sm">
+              {document.images.length > 0 && (
+                <DocumentImageGallery
+                  images={document.images}
+                  documentName={document.name}
+                  canDelete={isOwner && editing}
+                  onDelete={(imageId) => deleteImage.mutate(imageId, { onError: notifyError })}
+                  deletingImageId={deleteImage.isPending ? (deleteImage.variables as string) : null}
+                  // Spec 07: not gated on `editing` like deletion - picking the
+                  // leading image is reversible, so it needs no edit mode.
+                  onSetFavorite={
+                    isOwner ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError }) : undefined
+                  }
+                  settingFavoriteId={setFavorite.isPending ? (setFavorite.variables as string) : null}
+                />
+              )}
+              <Paper withBorder radius="md" p="sm" bg="var(--mantine-color-dark-7)">
+                <Stack gap={6}>
+                  <DocumentPlayer
+                    playedBy={document.playedBy}
+                    members={members}
+                    canManage={isOwner}
+                    onSet={(userId, addAsOwner) =>
+                      setPlayer.mutate({ userId, addAsOwner }, { onError: notifyError })
+                    }
+                    onUnlink={() =>
+                      setPlayer.mutate({ userId: null, addAsOwner: false }, { onError: notifyError })
+                    }
+                  />
+                  <DocumentOwners
+                    ownerIds={document.ownerIds}
+                    members={members}
+                    canManage={isOwner}
+                    onAdd={(userId) => addOwner.mutate(userId, { onError: notifyError })}
+                    onRemove={(userId) => removeOwner.mutate(userId, { onError: notifyError })}
+                  />
+                  {/* Spec 16: the PDFs. Like the Document itself, every reader
+                      sees them (VR-12); with none, only an Owner sees the row. */}
+                  {(document.files.length > 0 || isOwner) && (
+                    <>
+                      <Divider my={4} />
+                      <DocumentFileList
+                        roomId={roomId}
+                        documentId={document.id}
+                        files={document.files}
+                        canUpload={isOwner}
+                      />
+                    </>
+                  )}
+                </Stack>
+              </Paper>
+            </Stack>
+          </Box>
           <Stack gap="md" className="document-body-text">
             {editing ? (
               <DocumentEditForm
@@ -292,35 +334,6 @@ function DocumentPanel({
             />
           </Stack>
         </Box>
-
-        {/* Spec 16: the PDFs, under the text and the gallery. Like the
-            Document itself, every reader sees them (VR-12). */}
-        <DocumentFileList
-          roomId={roomId}
-          documentId={document.id}
-          files={document.files}
-          canUpload={isOwner}
-        />
-
-        <DocumentPlayer
-          playedBy={document.playedBy}
-          members={members}
-          canManage={isOwner}
-          onSet={(userId, addAsOwner) =>
-            setPlayer.mutate({ userId, addAsOwner }, { onError: notifyError })
-          }
-          onUnlink={() =>
-            setPlayer.mutate({ userId: null, addAsOwner: false }, { onError: notifyError })
-          }
-        />
-
-        <DocumentOwners
-          ownerIds={document.ownerIds}
-          members={members}
-          canManage={isOwner}
-          onAdd={(userId) => addOwner.mutate(userId, { onError: notifyError })}
-          onRemove={(userId) => removeOwner.mutate(userId, { onError: notifyError })}
-        />
       </Stack>
     </PageCard>
   );

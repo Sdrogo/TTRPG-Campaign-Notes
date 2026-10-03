@@ -622,7 +622,8 @@ describe('Owners', () => {
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
-    await user.click(screen.getByRole('combobox', { name: '' }));
+    await user.click(screen.getByRole('button', { name: 'Aggiungi Owner' }));
+    await user.click(screen.getByRole('combobox', { name: 'Aggiungi Owner' }));
     await user.click(screen.getByRole('option', { name: 'Altro' }));
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
 
@@ -649,7 +650,7 @@ describe('Owners', () => {
     render();
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    expect(screen.queryByRole('button', { name: 'Aggiungi' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aggiungi Owner' })).not.toBeInTheDocument();
   });
 });
 
@@ -674,6 +675,7 @@ describe('Played by', () => {
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
+    await user.click(screen.getByRole('button', { name: 'Scegli il giocatore' }));
     await user.click(screen.getByRole('combobox', { name: 'Scegli il giocatore' }));
     await user.click(screen.getByRole('option', { name: 'Altro' }));
     await user.click(screen.getByRole('button', { name: 'Imposta giocatore' }));
@@ -715,6 +717,7 @@ describe('Played by', () => {
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
+    await user.click(screen.getByRole('button', { name: 'Scegli il giocatore' }));
     await user.click(screen.getByRole('combobox', { name: 'Scegli il giocatore' }));
     await user.click(screen.getByRole('option', { name: 'Io' }));
     await user.click(screen.getByRole('button', { name: 'Imposta giocatore' }));
@@ -877,6 +880,36 @@ describe('Files', () => {
     render();
 
     expect(await screen.findByRole('button', { name: 'Carica PDF' })).toBeInTheDocument();
+  });
+  it('leaves the files row out for a reader when there are none', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-2'] });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    render();
+
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    expect(screen.queryByText('File')).not.toBeInTheDocument();
+  });
+});
+
+// The info panel (player, Owners, PDFs) sits under the images, or takes their
+// place on the right, narrower, when there are none (index.css does the rest).
+describe('info panel', () => {
+  it('sits in the aside under the images', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-1'], images: [rawImage({ id: 'image-1' })] });
+    render();
+
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    const aside = screen.getByText('Owner').closest('.document-body-aside') as HTMLElement;
+    expect(aside.querySelector('img')).toBeInTheDocument();
+    expect(aside).not.toHaveAttribute('data-narrow');
+  });
+
+  it('narrows the aside when there are no images', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-1'], images: [] });
+    render();
+
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    expect(screen.getByText('Owner').closest('.document-body-aside')).toHaveAttribute('data-narrow');
   });
 });
 

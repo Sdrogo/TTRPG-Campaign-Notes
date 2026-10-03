@@ -149,8 +149,8 @@ other icon set.
   never a circle, so it can't be mistaken for a person. A Comment written
   in character leads with it and the Character's name (accent link to the
   Document), then "interpretato da {author}" in small dimmed text with a
-  16px `UserAvatar`. "Interpretato da" on the detail page sits above the
-  Owners, styled like them; the Document card adds a "Played by" line
+  16px `UserAvatar`. "Interpretato da" on the detail page is the first row
+  of the info panel, above the Owners (see Document detail); the Document card adds a "Played by" line
   with a 20px avatar above the Owners line.
 - **Room view**: left sidebar for navigation (Tags, Glossary, Members),
   center column for the Document list or an open Document, right
@@ -165,7 +165,7 @@ other icon set.
   **Images sit beside the text on big screens** (2026-09-25, spec 10,
   mirroring `DocumentCard`'s side-by-side layout): `DocumentImageGallery`
   sits on the right at 45% width from `lg`; below `lg` it stacks, image
-  block last. **From `lg` the image floats and the text wraps around it**
+  block (and the info panel under it) last. **From `lg` the image floats and the text wraps around it**
   (2026-10-03, Andrea: the space under the image was too empty): once the
   description and Notes are past the image they take the full width. The
   `.document-body*` classes in `index.css` do it; since a flex box beside a
@@ -176,6 +176,21 @@ other icon set.
   (spec 07.1, shared via `lib/images.ts::imageFrameSize`), so a portrait
   image isn't stretched into the fixed-height box's full width. Its
   delete/favorite controls and the fullscreen viewer are unchanged.
+  **Info panel** (2026-10-03, Andrea chose option A of a mockup: the
+  Played by, Owner and PDF sections were heavy, always-open forms at the
+  bottom of the page): a bordered `Paper` under the gallery, in the same
+  `.document-body-aside` box, holds one `InfoRow` per item
+  (`DocumentInfoRow.tsx`: a 104px dimmed label, then its value). Played by
+  and the Owners are `PersonChip`s (outline pill, 16px avatar, an ✕ to
+  remove for whoever may), and adding opens a small `AddPopover` from a
+  dashed "+" instead of a form always on screen (its `Select` keeps the
+  combobox out of a portal, or picking an option would close the popover).
+  Under a `Divider` the PDFs follow as compact rows (accent PDF icon, name,
+  size with the date as tooltip, open/download/delete icons) with a subtle
+  "Carica PDF" button; with no PDFs the row is hidden for a reader and
+  shows only the button to an Owner. **Without images** the panel takes the
+  image's place on the right, narrower (`data-narrow`: 340px from `lg`), so
+  the information is always in the same spot and the text wraps beside it.
   **Deleting the Document** (2026-09-25, spec 10) is an Owner-only action
   offered in edit mode: an outlined red "Elimina Documento" button next to
   Save/Cancel opens a centered `Modal` (unlike a gallery image's small
