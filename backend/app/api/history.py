@@ -110,7 +110,6 @@ async def visibility_history(
         shown = history_entry(entry, lookup.existing_ids, lookup.visible_ids)
         document = lookup.documents.get(shown.document_id) if shown.document_id else None
         note = lookup.notes.get(shown.note_id) if shown.note_id else None
-        assert entry.created_at is not None
         entries.append(
             HistoryEntryResponse(
                 id=entry.id,

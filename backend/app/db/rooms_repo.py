@@ -16,6 +16,7 @@ from app.domain.models import (
     Room,
     RoomRole,
     RoomStatus,
+    StoredAuditLogEntry,
     UserProfile,
 )
 from app.domain.rooms import NewRoomPlan
@@ -221,9 +222,9 @@ async def insert_audit_log(session: AsyncSession, entry: AuditLogEntry) -> None:
     await session.flush()
 
 
-def _audit_entry_from_row(row: AuditLogRow) -> AuditLogEntry:
-    """Maps an `audit_log` row to the domain `AuditLogEntry`."""
-    return AuditLogEntry(
+def _audit_entry_from_row(row: AuditLogRow) -> StoredAuditLogEntry:
+    """Maps an `audit_log` row to the domain `StoredAuditLogEntry`."""
+    return StoredAuditLogEntry(
         id=row.id,
         room_id=row.room_id,
         actor_user_id=row.actor_user_id,
@@ -236,7 +237,7 @@ def _audit_entry_from_row(row: AuditLogRow) -> AuditLogEntry:
 
 async def get_audit_entry(
     session: AsyncSession, room_id: uuid.UUID, entry_id: uuid.UUID
-) -> AuditLogEntry | None:
+) -> StoredAuditLogEntry | None:
     """One of the Room's AuditLog rows, or None."""
     row = await session.get(AuditLogRow, entry_id)
     return _audit_entry_from_row(row) if row is not None and row.room_id == room_id else None
@@ -248,7 +249,7 @@ async def list_audit_entries(
     actions: Collection[str],
     limit: int,
     before: AuditLogEntry | None = None,
-) -> list[AuditLogEntry]:
+) -> list[StoredAuditLogEntry]:
     """The Room's AuditLog rows with these actions, newest first (ties broken
     by id, so paging is stable), at most `limit`, and only those older than
     `before` when given. Unfiltered: the caller redacts them per viewer."""

@@ -118,6 +118,13 @@ class AuditLogEntry:
     created_at: datetime | None = None
 
 
+@dataclass(frozen=True)
+class StoredAuditLogEntry(AuditLogEntry):
+    """An `AuditLogEntry` read back from the database, so `created_at` is set."""
+
+    created_at: datetime
+
+
 class PromotionTarget(StrEnum):
     """Where a promoted Comment's text went (spec 19c Decision 5)."""
 
