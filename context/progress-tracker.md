@@ -55,6 +55,13 @@ proposals, 2026-10-03):
   the live DB by hand. No migration involved.
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
+### Document page: Tag links, text around the image (2026-10-03)
+
+- The Tags under the Document title are accent links to the filtered
+  Documents list, as on the cards. From `lg` the gallery floats right and
+  the description and Notes wrap around it, then take the full width below
+  it (`.document-body*` in `index.css`). Checked headless at 390 and 2000px.
+
 ### Document card image minimum height (2026-10-03)
 
 - On wide screens the restyled cards got short and cropped the image to a
