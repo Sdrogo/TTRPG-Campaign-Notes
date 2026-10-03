@@ -18,6 +18,7 @@ import {
 } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { DocumentDetailPage } from '../../pages/DocumentDetailPage';
+import { ViewAsContext } from '../../hooks/useViewAs';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
@@ -1085,5 +1086,134 @@ describe('DocumentDetailPage backlinks', () => {
     expect(within(backlinks).getByRole('link', { name: 'La Locanda' })).toBeInTheDocument();
     const comments = screen.getByText('Commenti');
     expect(backlinks.compareDocumentPosition(comments)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+});
+
+// Spec 22: the Master reveals the Document with Notes picked in the same
+// step; a Document the visit opened as revealed is marked.
+describe('revealing the Document', () => {
+  beforeEach(() => {
+    vi.mocked(notifySuccess).mockClear();
+    routes.document = rawDocument({
+      visibility: 'master',
+      owner_ids: [],
+      notes: [rawNote({ visibility: 'master' })],
+    });
+    routes.members = [
+      rawMember({ user_id: 'user-1', display_name: 'Io', role: 'master', is_admin: true }),
+      rawMember({ user_id: 'user-2', display_name: 'Alice' }),
+    ];
+  });
+
+  it('reveals it to the Room with a Note picked', async () => {
+    const writes = vi.fn((_path: string) => Promise.resolve(routes.document));
+    mockApi(writes);
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Rivela: Il Cancello' }));
+    const dialog = screen.getByRole('dialog', { name: 'Rivela "Il Cancello"' });
+    await user.click(within(dialog).getByRole('radio', { name: 'A tutta la Stanza' }));
+    expect(within(dialog).getByText('Ottengono accesso: Alice')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Porta segreta' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Rivela' }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(`${DOC}/reveal`, {
+        method: 'POST',
+        json: { to_room: true, user_ids: [], note_ids: ['note-1'] },
+      }),
+    );
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Rivelato.'));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('reports a refused Reveal and closes on cancel', async () => {
+    mockApi(() => Promise.reject(new Error('no')));
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Rivela: Il Cancello' }));
+    await user.click(screen.getByRole('radio', { name: 'A tutta la Stanza' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Rivela' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('offers no Reveal to a Player', async () => {
+    sessionMock.mockReturnValue({ session: fakeSession('user-2'), loading: false } as SessionState);
+    render();
+
+    expect(await screen.findByRole('heading', { name: 'Il Cancello' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Rivela/ })).not.toBeInTheDocument();
+  });
+
+  it('marks the Document the visit opened as revealed', async () => {
+    fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
+      if (path === `${DOC}/read`) {
+        return Promise.resolve(
+          rawDocumentRead({ revealed: { document: true, note_ids: [], comment_ids: [] } }),
+        );
+      }
+      if (init?.method) return Promise.resolve();
+      if (path === `${DOC}/comments`) return Promise.resolve([]);
+      if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
+      if (path === '/rooms/room-1/characters/mine') return Promise.resolve([]);
+      return Promise.resolve(routes.document);
+    });
+    render();
+
+    expect(await screen.findByText('Rivelato')).toBeInTheDocument();
+  });
+});
+
+// Spec 22b: the Master previewing the Room as a member changes nothing, so
+// the page offers no write control, whatever the member could do, and the
+// visit isn't recorded.
+describe('previewing as a member', () => {
+  it('is read-only', async () => {
+    routes.document = rawDocument({
+      visibility: 'master',
+      owner_ids: ['user-1', 'user-2'],
+      notes: [rawNote({ visibility: 'master' })],
+    });
+    routes.members = [
+      rawMember({ user_id: 'user-1', display_name: 'Io', role: 'master', is_admin: true }),
+      rawMember({ user_id: 'user-2', display_name: 'Alice' }),
+    ];
+    routes.comments = [
+      rawComment({
+        author_id: 'user-2',
+        visibility: 'master',
+        can_pin: true,
+        can_resolve: true,
+        can_promote: true,
+        reactions: [{ emoji: '👍', count: 1, reacted_by_me: true, user_ids: ['user-2'] }],
+      }),
+    ];
+    renderWithProviders(
+      <Routes>
+        <Route path="/rooms/:roomId/documents/:documentId" element={<DocumentDetailPage />} />
+      </Routes>,
+      {
+        route: DOC,
+        wrapper: ({ children }) => (
+          <ViewAsContext value={{ roomId: 'room-1', userId: 'user-2' }}>{children}</ViewAsContext>
+        ),
+      },
+    );
+
+    expect(await screen.findByText('Ricordate il sigillo.')).toBeInTheDocument();
+    expect(screen.getByText('Porta segreta')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Rivela/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Nota: Porta segreta/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aggiungi Nota' })).not.toBeInTheDocument();
+    for (const action of ['Rispondi', 'Fissa', 'Segna come risolto', 'Promuovi', 'Elimina', 'Aggiungi una reazione']) {
+      expect(screen.queryByRole('button', { name: action })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole('button', { name: /^👍, 1 reazione/ })).toBeDisabled();
+    expect(screen.queryByTestId('new-comment')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith(`${DOC}/read`, expect.anything());
   });
 });

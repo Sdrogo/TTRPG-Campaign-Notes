@@ -1,5 +1,6 @@
 import { currentLanguage } from '../i18n';
 import { supabase } from './supabaseClient';
+import { VIEW_AS_HEADER, viewAsUser } from './viewAs';
 
 /**
  * A non-2xx response from the backend. `message` is its `detail` when the body
@@ -27,6 +28,8 @@ interface ApiFetchInit extends Omit<RequestInit, 'body'> {
  *
  * Sends the UI's current language as `Accept-Language`, so the backend's
  * error text matches the flag selector rather than the browser's locale.
+ * While the Master previews a Room as a member (spec 22b), sends
+ * `X-View-As` too.
  */
 export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promise<T> {
   const { json, formData, ...rest } = init;
@@ -39,6 +42,10 @@ export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promis
   headers.set('Accept-Language', currentLanguage());
   if (json !== undefined) {
     headers.set('Content-Type', 'application/json');
+  }
+  const viewAs = viewAsUser();
+  if (viewAs) {
+    headers.set(VIEW_AS_HEADER, viewAs);
   }
   if (session) {
     headers.set('Authorization', `Bearer ${session.access_token}`);

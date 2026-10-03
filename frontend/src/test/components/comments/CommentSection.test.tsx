@@ -875,3 +875,95 @@ describe('CommentSection anchors', () => {
     expect(scroll).not.toHaveBeenCalled();
   });
 });
+
+// Spec 22: the Master reveals a Comment; what the visit opened is marked.
+describe('revealing in the Thread', () => {
+  const master = member({ userId: 'user-2', displayName: 'Master', role: 'master' });
+  const reader = member({ userId: 'user-3', displayName: 'Lettore' });
+  const roomDocument = {
+    id: 'doc-1',
+    roomId: 'room-1',
+    name: 'Il Cancello',
+    description: '',
+    visibility: 'room' as const,
+    images: [],
+    tagIds: [],
+    ownerIds: [],
+    selectiveUserIds: [],
+    playedBy: null,
+    notes: [],
+    files: [],
+  };
+
+  function renderAsMaster() {
+    renderWithProviders(
+      <CommentSection
+        roomId="room-1"
+        documentId="doc-1"
+        members={[members[0], master, reader]}
+        currentUserId="user-2"
+        defaultVisibility="private"
+        revealFrom={roomDocument}
+      />,
+    );
+    return userEvent.setup();
+  }
+
+  it('reveals a Comment to the whole Room', async () => {
+    const reveal = vi.fn((_path: string) => Promise.resolve(rawComment()));
+    mockRoutes([rawComment({ visibility: 'master' })], reveal);
+    const user = renderAsMaster();
+
+    await user.click(await screen.findByRole('button', { name: 'Rivela' }));
+    const dialog = screen.getByRole('dialog', { name: 'Rivela "il commento"' });
+    await user.click(within(dialog).getByRole('radio', { name: 'A tutta la Stanza' }));
+    // The author already sees it.
+    expect(within(dialog).getByText('Ottengono accesso: Lettore')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Rivela' }));
+
+    await waitFor(() =>
+      expect(reveal).toHaveBeenCalledWith('/rooms/room-1/documents/doc-1/comments/comment-1/reveal'),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('reports a refused Reveal and closes on cancel', async () => {
+    mockRoutes([rawComment({ visibility: 'master' })], () => Promise.reject(new Error('no')));
+    const user = renderAsMaster();
+
+    await user.click(await screen.findByRole('button', { name: 'Rivela' }));
+    await user.click(screen.getByRole('radio', { name: 'A tutta la Stanza' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Rivela' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  // VR-05: a new top-level Comment starts at the Room's default visibility.
+  it('starts a new Comment at the Room default', async () => {
+    mockRoutes([]);
+    renderAsMaster();
+
+    const composerBox = await screen.findByTestId('new-comment');
+    expect(
+      await within(composerBox).findByRole('combobox', { name: 'Visibilità del commento' }),
+    ).toHaveValue('Privato (tu + Master)');
+  });
+
+  it('marks the Comments this visit opened as revealed', async () => {
+    mockRoutes(
+      [rawComment(), rawComment({ id: 'comment-2', body: 'Altro' })],
+      undefined,
+      [],
+      rawDocumentRead({
+        revealed: { document: false, note_ids: [], comment_ids: ['comment-2'] },
+      }),
+    );
+    render();
+
+    await waitFor(() => expect(screen.getAllByText('Rivelato')).toHaveLength(1));
+    const items = screen.getAllByTestId('comment-item');
+    expect(within(items[1]).getByText('Rivelato')).toBeInTheDocument();
+  });
+});

@@ -10,6 +10,7 @@ const room = (playersCanCreateDocuments: boolean): Room => ({
   name: 'Barovia',
   gameSystem: null,
   status: 'active',
+  defaultVisibility: 'room',
   playersCanCreateDocuments,
 });
 

@@ -36,6 +36,7 @@ describe('useMyInvitations', () => {
           gameSystem: 'D&D 5e',
           status: 'active',
           playersCanCreateDocuments: true,
+          defaultVisibility: 'room',
         },
         invitedBy: {
           userId: 'user-2',

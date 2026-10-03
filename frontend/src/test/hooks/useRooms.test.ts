@@ -37,6 +37,7 @@ describe('useMyRooms', () => {
           gameSystem: 'D&D 5e',
           status: 'active',
           playersCanCreateDocuments: true,
+          defaultVisibility: 'room',
         },
         role: 'master',
         isAdmin: true,
@@ -118,13 +119,27 @@ describe('useUpdateRoomSettings', () => {
     fetchMock.mockResolvedValue(rawRoom({ players_can_create_documents: false }));
 
     const { result } = renderHookWithProviders(() => useUpdateRoomSettings('room-1'));
-    const room = await result.current.mutateAsync(false);
+    const room = await result.current.mutateAsync({ playersCanCreateDocuments: false });
 
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1', {
       method: 'PATCH',
-      json: { players_can_create_documents: false },
+      json: { players_can_create_documents: false, default_visibility: undefined },
     });
     expect(room.playersCanCreateDocuments).toBe(false);
+  });
+
+  // VR-05: the Administrators' starting level for new content.
+  it('patches the default visibility alone', async () => {
+    fetchMock.mockResolvedValue(rawRoom({ default_visibility: 'master' }));
+
+    const { result } = renderHookWithProviders(() => useUpdateRoomSettings('room-1'));
+    const room = await result.current.mutateAsync({ defaultVisibility: 'master' });
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1', {
+      method: 'PATCH',
+      json: { players_can_create_documents: undefined, default_visibility: 'master' },
+    });
+    expect(room.defaultVisibility).toBe('master');
   });
 
   // The flag shows on the Room detail and drives "can I create a Document?"
@@ -136,7 +151,7 @@ describe('useUpdateRoomSettings', () => {
     );
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
 
-    await result.current.mutateAsync(true);
+    await result.current.mutateAsync({ playersCanCreateDocuments: true });
 
     await waitFor(() => {
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1'] });

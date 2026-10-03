@@ -11,7 +11,9 @@
       "onlyAdministratorCanChangeRoles": "Solo un Amministratore della Room può modificare i ruoli",
       "onlyAdministratorCanRemoveMembers": "Solo un Amministratore della Room può rimuovere membri",
       "onlyAdministratorCanDelete": "Solo un amministratore della Room può eliminarla",
-      "nameRequired": "Il nome della Room è obbligatorio"
+      "nameRequired": "Il nome della Room è obbligatorio",
+      "onlyAdministratorCanChangeDefaultVisibility": "Solo un Amministratore della Room può cambiare la visibilità predefinita",
+      "invalidDefaultVisibility": "La visibilità predefinita può essere Room, Solo Master o Privata"
     },
     "membership": {
       "notFound": "L'utente non è membro di questa Room",
@@ -136,6 +138,24 @@
       "notRecipient": "Solo chi ha ricevuto la richiesta può rispondere",
       "notPending": "Hai già risposto a questa richiesta",
       "answerInstead": "Accetta o rifiuta la richiesta invece di rimuoverla"
+    },
+    "reveal": {
+      "onlyMaster": "Solo il Master può rivelare contenuti",
+      "audienceRequired": "Scegli tutta la Room o almeno un membro a cui rivelare",
+      "notWidening": "Nessuno otterrebbe l'accesso: una rivelazione può solo allargare chi vede il contenuto",
+      "invalidUsers": "user_ids deve contenere solo membri di questa Room",
+      "invalidNotes": "note_ids deve contenere solo Note di questo Documento",
+      "commentDeleted": "Un Commento eliminato non può essere rivelato"
+    },
+    "history": {
+      "forbidden": "Solo il Master o un Amministratore della Room può leggere lo storico della visibilità",
+      "invalidCursor": "before deve essere una voce dello storico di questa Room"
+    },
+    "viewAs": {
+      "readOnly": "Non si può modificare nulla mentre vedi come un altro membro",
+      "onlyMaster": "Solo il Master può vedere questa Stanza come un altro membro",
+      "notAMember": "Questo utente non è un membro della Stanza",
+      "invalidUser": "Membro non valido"
     }
   }
 }

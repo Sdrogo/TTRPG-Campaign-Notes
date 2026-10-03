@@ -32,7 +32,8 @@ export function DocumentMentionsProvider({ roomId, currentUserId, children }: Do
   const canCreateTag = canManageTags(me);
 
   const value = useMemo(() => {
-    // A new blank Document gets the backend's default visibility (Room).
+    // A new blank Document starts at the Room's default visibility (VR-05),
+    // which the backend applies when none is sent.
     const create = async (kind: MentionKind, name: string): Promise<MentionTarget> =>
       kind === 'document'
         ? { kind, document: await createDocument({ name }), tags: [] }

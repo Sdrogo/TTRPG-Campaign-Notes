@@ -3,7 +3,7 @@ import uuid
 import pytest
 
 from app.domain.models import Document, DocumentVisibility, RoomRole
-from app.domain.visibility import is_document_visible
+from app.domain.visibility import is_document_visible, starting_grants
 
 
 def _document(visibility: DocumentVisibility) -> Document:
@@ -57,3 +57,9 @@ def test_selective_is_visible_to_the_grant_list() -> None:
 def test_selective_is_hidden_from_everyone_else() -> None:
     document = _document(DocumentVisibility.SELECTIVE)
     assert is_document_visible(document, uuid.uuid4(), RoomRole.PLAYER, [], [uuid.uuid4()]) is False
+
+
+def test_grants_are_stored_only_at_selective() -> None:
+    member = uuid.uuid4()
+    assert starting_grants(DocumentVisibility.SELECTIVE, [member]) == [member]
+    assert starting_grants(DocumentVisibility.MASTER, [member]) == []

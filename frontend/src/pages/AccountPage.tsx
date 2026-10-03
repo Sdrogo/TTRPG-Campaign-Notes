@@ -18,13 +18,14 @@ import { AvatarEditor, type AvatarAction } from '../components/account/AvatarEdi
 import { ProfileForm } from '../components/account/ProfileForm';
 import { FriendsSection } from '../components/account/FriendsSection';
 import { RoomInvitationsSection } from '../components/account/RoomInvitationsSection';
+import { RevealsSection } from '../components/account/RevealsSection';
 import type { AccountProfile } from '../types/profile';
 import { useTranslation } from 'react-i18next';
 
 /**
  * `/account`: the signed-in user's profile (name, pronouns, description,
- * avatar), their Friends and Room invitations from Friends (spec 18), and
- * sign-out.
+ * avatar), their Friends and Room invitations from Friends (spec 18), what
+ * the Master revealed to them (spec 22), and sign-out.
  */
 export function AccountPage() {
   const { t } = useTranslation();
@@ -88,6 +89,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
       {/* Invitations waiting for an answer come first; the section is only
           there while some are. */}
       <RoomInvitationsSection />
+      <RevealsSection />
 
       {/* Full-width cards like the Document page; on wide screens the
           avatar sits beside the form and the email beside sign-out, so the

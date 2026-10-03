@@ -4,7 +4,7 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
-import { rawAccount, rawDirectInvitation, rawFriend, rawFriends } from '../fixtures';
+import { rawAccount, rawDirectInvitation, rawFriend, rawFriends, rawMyReveal } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { AppHeader } from '../../components/AppHeader';
 import { PageCard } from '../../components/PageCard';
@@ -249,8 +249,9 @@ describe('AccountButton', () => {
     );
   });
 
-  // Friend requests received plus Room invitations from Friends.
-  it('counts what waits for an answer on the Account page', async () => {
+  // Friend requests received, Room invitations from Friends, and content
+  // revealed to the user they haven't opened (spec 22).
+  it('counts what waits on the Account page', async () => {
     fetchMock.mockImplementation((path: string) => {
       if (path === '/friends') {
         return Promise.resolve(
@@ -258,13 +259,14 @@ describe('AccountButton', () => {
         );
       }
       if (path === '/invitations/mine') return Promise.resolve([rawDirectInvitation()]);
+      if (path === '/reveals/mine') return Promise.resolve([rawMyReveal()]);
       return Promise.resolve(rawAccount());
     });
 
     renderWithProviders(<AccountButton />);
 
-    const link = await screen.findByRole('link', { name: 'Il tuo account: 3 da vedere' });
-    expect(within(link).getByText('3')).toBeInTheDocument();
+    const link = await screen.findByRole('link', { name: 'Il tuo account: 4 da vedere' });
+    expect(within(link).getByText('4')).toBeInTheDocument();
   });
 
   it('shows no count when nothing waits', async () => {

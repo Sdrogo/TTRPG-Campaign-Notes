@@ -3,7 +3,7 @@ import { Modal, Stack, Button, Text } from '@mantine/core';
 import { useCreateDocument } from '../hooks/useDocuments';
 import { useTags } from '../hooks/useTags';
 import { DocumentFields } from './DocumentFields';
-import type { DocumentFormValues } from '../types/document';
+import type { DocumentFormValues, DocumentVisibility } from '../types/document';
 import { useTranslation } from 'react-i18next';
 
 interface CreateDocumentModalProps {
@@ -12,6 +12,8 @@ interface CreateDocumentModalProps {
   roomId: string;
   /** Whether the viewer may add a Tag inline (Administrator or Master). */
   canManageTags: boolean;
+  /** The Room's default visibility (VR-05), which the form starts at. */
+  defaultVisibility?: DocumentVisibility;
 }
 
 const EMPTY_VALUES: DocumentFormValues = {
@@ -23,18 +25,29 @@ const EMPTY_VALUES: DocumentFormValues = {
 
 /**
  * Creates a Document in the Room, with a shortcut for adding a new Tag without
- * leaving the form. Clears itself on close.
+ * leaving the form. Starts at the Room's default visibility and clears itself
+ * on close.
  */
-export function CreateDocumentModal({ opened, onClose, roomId, canManageTags }: CreateDocumentModalProps) {
+export function CreateDocumentModal({
+  opened,
+  onClose,
+  roomId,
+  canManageTags,
+  defaultVisibility = 'room',
+}: CreateDocumentModalProps) {
   const { t } = useTranslation();
-  const [values, setValues] = useState<DocumentFormValues>(EMPTY_VALUES);
+  // Null until edited, so an untouched form follows the Room's default even
+  // when the Room loads after the modal mounted.
+  const [edited, setValues] = useState<DocumentFormValues | null>(null);
+  const initial = { ...EMPTY_VALUES, visibility: defaultVisibility };
+  const values = edited ?? initial;
   const [tagCreatePending, setTagCreatePending] = useState(false);
 
   const tags = useTags(roomId, opened);
   const createDocument = useCreateDocument(roomId);
 
   const handleClose = () => {
-    setValues(EMPTY_VALUES);
+    setValues(null);
     setTagCreatePending(false);
     createDocument.reset();
     onClose();
@@ -54,7 +67,11 @@ export function CreateDocumentModal({ opened, onClose, roomId, canManageTags }: 
         <Stack gap="sm">
           <DocumentFields
             values={values}
-            onChange={setValues}
+            onChange={(update) =>
+              setValues((previous) =>
+                typeof update === 'function' ? update(previous ?? initial) : update,
+              )
+            }
             tags={tags.data ?? []}
             roomId={roomId}
             canCreateTag={canManageTags}

@@ -17,7 +17,8 @@ interface RoomCardProps {
 /**
  * One of the user's Rooms, with their role. The whole card links to the Room's
  * Documents; an Administrator also gets the setup page (members, Main Tags)
- * and the invite button, and every member gets a menu with Leave (spec 15).
+ * and the invite button, the Master the setup page's visibility history
+ * (spec 22), and every member gets a menu with Leave (spec 15).
  * These are icon buttons with tooltips, so they fit on the title row at any
  * card width, and sit above that link so they win over it.
  */
@@ -48,19 +49,21 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
           <RoleTag role={role} isAdmin={isAdmin} />
         </Stack>
         <Group gap={4} wrap="nowrap" pos="relative" style={{ zIndex: 2, flexShrink: 0 }}>
+          {(isAdmin || role === 'master') && (
+            <Tooltip label={t('rooms.setup')} withArrow>
+              <ActionIcon
+                component={Link}
+                to={`/rooms/${room.id}/setup`}
+                variant="subtle"
+                color="gray"
+                aria-label={t('rooms.setup')}
+              >
+                <GearIcon size={18} />
+              </ActionIcon>
+            </Tooltip>
+          )}
           {isAdmin && (
             <>
-              <Tooltip label={t('rooms.setup')} withArrow>
-                <ActionIcon
-                  component={Link}
-                  to={`/rooms/${room.id}/setup`}
-                  variant="subtle"
-                  color="gray"
-                  aria-label={t('rooms.setup')}
-                >
-                  <GearIcon size={18} />
-                </ActionIcon>
-              </Tooltip>
               <Tooltip label={t('rooms.invite')} withArrow>
                 <ActionIcon
                   variant="light"

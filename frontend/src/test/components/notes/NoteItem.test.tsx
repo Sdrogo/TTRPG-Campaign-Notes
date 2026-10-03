@@ -64,6 +64,8 @@ interface Options {
   updating?: boolean;
   deleting?: boolean;
   documents?: Document[];
+  revealed?: boolean;
+  onReveal?: () => void;
 }
 
 function render(options: Options = {}) {
@@ -93,6 +95,8 @@ function render(options: Options = {}) {
         updating={options.updating ?? false}
         onDelete={onDelete}
         deleting={options.deleting ?? false}
+        revealed={options.revealed}
+        onReveal={options.onReveal}
       />
     </DocumentMentionsContext>,
   );
@@ -313,5 +317,24 @@ describe('deleting', () => {
     expect(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Elimina' }),
     ).toHaveAttribute('data-loading', 'true');
+  });
+});
+
+// Spec 22: the Master reveals a Note; a Note revealed to the viewer is marked.
+describe('revealing a Note', () => {
+  it('offers the Master the Reveal action, even without edit rights', async () => {
+    const onReveal = vi.fn();
+    const { user } = render({ note: { canEdit: false, canDelete: false }, onReveal });
+
+    await user.click(screen.getByRole('button', { name: 'Rivela: Porta segreta' }));
+
+    expect(onReveal).toHaveBeenCalled();
+    expect(editButton()).not.toBeInTheDocument();
+  });
+
+  it('marks a Note this visit opened as revealed', () => {
+    render({ revealed: true });
+
+    expect(screen.getByText('Rivelato')).toBeInTheDocument();
   });
 });

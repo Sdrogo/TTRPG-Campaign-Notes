@@ -48,6 +48,11 @@ class RoomRow(Base):
     status: Mapped[str] = mapped_column(String(20), default="active")
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     players_can_create_documents: Mapped[bool] = mapped_column(Boolean, default=True)
+    # The level new content starts at when a request names none (VR-05,
+    # spec 22): room, master or private, never selective.
+    default_visibility: Mapped[str] = mapped_column(
+        String(20), server_default=text("'room'"), default="room"
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -159,9 +164,11 @@ class UserRow(Base):
 
 class AuditLogRow(Base):
     """An audited change (Invariant 7), with its before/after values in
-    `details`."""
+    `details`. Indexed by Room and time for the visibility history (spec
+    22)."""
 
     __tablename__ = "audit_log"
+    __table_args__ = (Index("ix_audit_log_room_id_created_at", "room_id", "created_at"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     room_id: Mapped[uuid.UUID] = mapped_column(
@@ -492,6 +499,56 @@ class FriendCodeRow(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     code: Mapped[str] = mapped_column(String(64), unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RevealRow(Base):
+    """A Reveal (FR-V2, VR-06, spec 22): the Master widened who sees a
+    Document, a Note or a Comment in one step. `document_id` is the Document
+    the content is or belongs to; `note_id`/`comment_id` say which Note or
+    Comment, as `content_kind` says (CHECK). Separate FK columns rather than
+    one `content_id`, so the row goes with whatever it revealed (CASCADE),
+    like `document_mentions`. Its recipients are in `reveal_recipients`."""
+
+    __tablename__ = "reveals"
+    __table_args__ = (
+        CheckConstraint(
+            "(content_kind = 'document' AND note_id IS NULL AND comment_id IS NULL)"
+            " OR (content_kind = 'note' AND note_id IS NOT NULL AND comment_id IS NULL)"
+            " OR (content_kind = 'comment' AND comment_id IS NOT NULL AND note_id IS NULL)",
+            name="ck_reveals_content",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    content_kind: Mapped[str] = mapped_column(String(20))
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    note_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("document_notes.id", ondelete="CASCADE"), index=True
+    )
+    comment_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("posts.id", ondelete="CASCADE"), index=True
+    )
+    revealed_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    revealed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RevealRecipientRow(Base):
+    """A member who gained access through a Reveal (spec 22 Decision 3), and
+    when they first opened it (`seen_at`, NULL until then). Goes with its
+    Reveal; deleted by the API when the member leaves the Room."""
+
+    __tablename__ = "reveal_recipients"
+
+    reveal_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("reveals.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, index=True)
+    seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class StorageCleanupRow(Base):

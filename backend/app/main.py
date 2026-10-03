@@ -16,10 +16,12 @@ from app.api.comments import router as comments_router
 from app.api.document_files import router as document_files_router
 from app.api.documents import router as documents_router
 from app.api.friends import router as friends_router
+from app.api.history import router as history_router
 from app.api.invitations import router as invitations_router
 from app.api.main_items import router as main_items_router
 from app.api.mentions import router as mentions_router
 from app.api.notes import router as notes_router
+from app.api.reveals import router as reveals_router
 from app.api.rooms import router as rooms_router
 from app.api.tags import router as tags_router
 from app.config import Settings, settings
@@ -64,6 +66,8 @@ app.include_router(main_items_router)
 app.include_router(documents_router)
 app.include_router(comments_router)
 app.include_router(notes_router)
+app.include_router(reveals_router)
+app.include_router(history_router)
 app.include_router(document_files_router)
 app.include_router(characters_router)
 app.include_router(mentions_router)

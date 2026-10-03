@@ -45,6 +45,16 @@ body {
   transform: none;
 }
 
+/* The "view as" banner (spec 22b): a full-width row under the top bar's
+   three columns, in the accent color so the preview is never mistaken for
+   the Master's own view. */
+.view-as-banner {
+  grid-column: 1 / -1;
+  background: var(--accent-primary);
+  color: var(--mantine-color-white);
+  border-radius: var(--mantine-radius-md);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .app-header {
     transition: none;
