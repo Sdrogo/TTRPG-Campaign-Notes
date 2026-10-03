@@ -150,6 +150,12 @@
     "history": {
       "forbidden": "Solo il Master o un Amministratore della Room può leggere lo storico della visibilità",
       "invalidCursor": "before deve essere una voce dello storico di questa Room"
+    },
+    "viewAs": {
+      "readOnly": "Non si può modificare nulla mentre vedi come un altro membro",
+      "onlyMaster": "Solo il Master può vedere questa Stanza come un altro membro",
+      "notAMember": "Questo utente non è un membro della Stanza",
+      "invalidUser": "Membro non valido"
     }
   }
 }

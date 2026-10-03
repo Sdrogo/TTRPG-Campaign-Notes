@@ -150,6 +150,12 @@
     "history": {
       "forbidden": "Only the Master or a Room Administrator can read the visibility history",
       "invalidCursor": "before must be an entry of this Room's history"
+    },
+    "viewAs": {
+      "readOnly": "Nothing can be changed while viewing as another member",
+      "onlyMaster": "Only the Master can view this Room as another member",
+      "notAMember": "That user is not a member of this Room",
+      "invalidUser": "Invalid member to view as"
     }
   }
 }
