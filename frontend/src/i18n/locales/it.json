@@ -305,11 +305,9 @@
   },
   "files": {
     "title": "File",
-    "empty": "Nessun PDF allegato.",
     "upload": "Carica PDF",
     "uploadHint": "Allega un PDF fino a {{mb}} MB, ad esempio una scheda del personaggio",
     "limitReached": "Un Documento può avere al massimo {{max}} file",
-    "details": "{{size}} · {{date}}",
     "open": "Apri {{name}}",
     "download": "Scarica {{name}}",
     "delete": "Elimina {{name}}",

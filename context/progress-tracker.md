@@ -56,6 +56,18 @@ proposals, 2026-10-03):
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
 
+### Document page info panel (2026-10-03)
+
+- Andrea found the Played by, Owner and PDF sections heavy (always-open
+  forms at the bottom) and wanted the PDFs under the images; from a mockup
+  they chose option A. Those three now sit in a bordered panel under the
+  gallery: people as small chips with an ✕, adding through a "+" popover,
+  PDFs as compact rows with a "Carica PDF" button. Without images the panel
+  takes the image's place on the right, 340px wide from `lg`.
+- New `DocumentInfoRow.tsx` (`InfoRow`, `PersonChip`, `AddPopover`);
+  `.document-body-images` renamed `.document-body-aside`; the "Nessun PDF"
+  text is gone (the row hides for readers). No backend change.
+
 ### More card columns on very wide screens (2026-10-03)
 
 - On a 3440px monitor three Document cards were over 1000px wide each, and

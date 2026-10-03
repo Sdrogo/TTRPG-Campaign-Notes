@@ -31,8 +31,9 @@ interface DocumentFileListProps {
 }
 
 /**
- * A Document's PDF Attachments (spec 16): each opens in the browser's viewer
- * or downloads, and an Owner or the Master can upload or delete them. With no
+ * A Document's PDF Attachments (spec 16), a section of the info panel: each
+ * opens in the browser's viewer or downloads, and an Owner or the Master can
+ * upload or delete them. With no
  * files and no right to upload it renders nothing, so a reader's Document
  * looks as it did before files existed.
  */
@@ -67,9 +68,9 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
   };
 
   return (
-    <Stack gap="xs">
-      <Group justify="space-between" gap="xs">
-        <Text fw={600} size="sm">
+    <Stack gap={4}>
+      <Group justify="space-between" gap="xs" wrap="nowrap">
+        <Text size="xs" c="dimmed">
           {t('files.title')}
         </Text>
         {canUpload && (
@@ -82,11 +83,10 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                 <Button
                   {...props}
                   variant="subtle"
-                  color="gray"
-                  size="xs"
+                  size="compact-xs"
                   disabled={full}
                   loading={upload.isPending}
-                  leftSection={<UploadSimpleIcon size={14} />}
+                  leftSection={<UploadSimpleIcon size={12} />}
                 >
                   {t('files.upload')}
                 </Button>
@@ -96,37 +96,36 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
         )}
       </Group>
 
-      {files.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          {t('files.empty')}
-        </Text>
-      ) : (
-        <Stack gap={4} component="ul" m={0} p={0} style={{ listStyle: 'none' }}>
+      {/* With no files the row is just its title and the upload action: no
+          "nothing here" line, which only added weight. */}
+      {files.length > 0 && (
+        <Stack gap={2} component="ul" m={0} p={0} style={{ listStyle: 'none' }}>
           {files.map((file) => (
             <Group key={file.id} component="li" gap="xs" wrap="nowrap" justify="space-between">
-              <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-                <FilePdfIcon size={20} style={{ flexShrink: 0 }} aria-hidden />
-                <Stack gap={0} style={{ minWidth: 0 }}>
-                  <Text size="sm" truncate="end" title={file.name}>
-                    {file.name}
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {t('files.details', {
-                      size: formatFileSize(file.sizeBytes),
-                      date: formatAbsoluteTime(file.createdAt),
-                    })}
-                  </Text>
-                </Stack>
+              <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
+                <FilePdfIcon size={16} color="var(--accent-primary)" style={{ flexShrink: 0 }} aria-hidden />
+                <Text size="sm" truncate="end" title={file.name}>
+                  {file.name}
+                </Text>
+                <Text
+                  size="xs"
+                  c="dimmed"
+                  style={{ flexShrink: 0 }}
+                  title={formatAbsoluteTime(file.createdAt)}
+                >
+                  {formatFileSize(file.sizeBytes)}
+                </Text>
               </Group>
-              <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+              <Group gap={0} wrap="nowrap" style={{ flexShrink: 0 }}>
                 <ActionIcon
+                  size="sm"
                   variant="subtle"
                   color="gray"
                   onClick={() => handleOpen(file)}
                   loading={openingId === file.id}
                   aria-label={t('files.open', { name: file.name })}
                 >
-                  <ArrowSquareOutIcon size={16} />
+                  <ArrowSquareOutIcon size={14} />
                 </ActionIcon>
                 {/* The signed link is served as an attachment (D-22), so
                     following it downloads under the file's name. */}
@@ -134,21 +133,23 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                   component="a"
                   href={file.url}
                   rel="noopener noreferrer"
+                  size="sm"
                   variant="subtle"
                   color="gray"
                   aria-label={t('files.download', { name: file.name })}
                 >
-                  <DownloadSimpleIcon size={16} />
+                  <DownloadSimpleIcon size={14} />
                 </ActionIcon>
                 {file.canDelete && (
                   <ActionIcon
+                    size="sm"
                     variant="subtle"
                     color="red"
                     onClick={() => setConfirmDelete(file)}
                     loading={deleteFile.isPending && deleteFile.variables === file.id}
                     aria-label={t('files.delete', { name: file.name })}
                   >
-                    <TrashIcon size={16} />
+                    <TrashIcon size={14} />
                   </ActionIcon>
                 )}
               </Group>

@@ -41,6 +41,9 @@ function render(props: Partial<Parameters<typeof DocumentPlayer>[0]> = {}) {
 }
 
 const picker = () => screen.getByRole('combobox', { name: 'Scegli il giocatore' });
+// The picker sits in a popover behind a "+", not always open.
+const openPicker = (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByRole('button', { name: 'Scegli il giocatore' }));
 
 describe('DocumentPlayer', () => {
   it('names the player', () => {
@@ -59,9 +62,12 @@ describe('DocumentPlayer', () => {
     expect(screen.queryByText('Interpretato da')).not.toBeInTheDocument();
   });
 
-  it('lets an Owner pick a player for a Document nobody plays', () => {
-    render({ playedBy: null });
+  it('lets an Owner pick a player for a Document nobody plays', async () => {
+    const { user } = render({ playedBy: null });
 
+    expect(screen.getByText('Interpretato da')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    await openPicker(user);
     expect(picker()).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Imposta giocatore' })).toBeDisabled();
   });
@@ -77,6 +83,7 @@ describe('DocumentPlayer', () => {
   it('only offers members other than the current player', async () => {
     const { user } = render();
 
+    await openPicker(user);
     await user.click(picker());
 
     expect(screen.getByRole('option', { name: 'Master' })).toBeInTheDocument();
@@ -87,18 +94,21 @@ describe('DocumentPlayer', () => {
   it('also makes the player an Owner by default, then clears the picker', async () => {
     const { onSet, user } = render({ playedBy: null });
 
+    await openPicker(user);
     expect(screen.getByRole('checkbox', { name: 'Rendilo anche Owner' })).toBeChecked();
     await user.click(picker());
     await user.click(screen.getByText('Master'));
     await user.click(screen.getByRole('button', { name: 'Imposta giocatore' }));
 
     expect(onSet).toHaveBeenCalledWith('user-2', true);
+    await openPicker(user);
     expect(screen.getByRole('button', { name: 'Imposta giocatore' })).toBeDisabled();
   });
 
   it('can link a player without making them an Owner', async () => {
     const { onSet, user } = render({ playedBy: null });
 
+    await openPicker(user);
     await user.click(screen.getByRole('checkbox', { name: 'Rendilo anche Owner' }));
     await user.click(picker());
     await user.click(screen.getByText('Giocatore'));

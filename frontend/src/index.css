@@ -94,8 +94,9 @@ body {
   cursor: default;
 }
 
-/* The Document page's body: the text, then the images, stacked. From `lg`
-   the images float right at 45% and the text wraps around them, taking the
+/* The Document page's body: the text, then the aside (images and info
+   panel), stacked. From `lg` the aside floats right at 45% (340px without
+   images) and the text wraps around it, taking the
    full width once it is past them. Floats only wrap block content (a flex
    box beside a float shrinks as a whole), so from `lg` the containers the
    text flows through become blocks, their gaps turned into margins. */
@@ -105,7 +106,7 @@ body {
   gap: var(--mantine-spacing-md);
 }
 
-.document-body-images {
+.document-body-aside {
   order: 1;
 }
 
@@ -114,10 +115,15 @@ body {
     display: flow-root;
   }
 
-  .document-body-images {
+  .document-body-aside {
     float: right;
     width: 45%;
     margin: 0 0 var(--mantine-spacing-md) var(--mantine-spacing-md);
+  }
+
+  /* No images: just the info panel, so it needs far less room. */
+  .document-body-aside[data-narrow] {
+    width: 340px;
   }
 
   .document-body-text,

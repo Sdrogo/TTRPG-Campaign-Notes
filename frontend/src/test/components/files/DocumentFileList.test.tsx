@@ -52,10 +52,12 @@ describe('what is shown', () => {
     expect(host).toBeEmptyDOMElement();
   });
 
-  it('tells an Owner there are no files yet and offers the upload', () => {
+  // No "nothing here" line, which only added weight: just the upload.
+  it('offers an Owner only the upload when there are no files yet', () => {
     render([]);
 
-    expect(screen.getByText('Nessun PDF allegato.')).toBeInTheDocument();
+    expect(screen.getByText('File')).toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Carica PDF' })).toBeEnabled();
   });
 
@@ -75,10 +77,11 @@ describe('what is shown', () => {
     expect(screen.queryByRole('button', { name: 'Elimina Mappa.pdf' })).not.toBeInTheDocument();
   });
 
-  it('shows the size and upload date', () => {
+  // The date moved to the size's tooltip to keep the row on one line.
+  it('shows the size, with the upload date on hover', () => {
     render([file()]);
 
-    expect(screen.getByText(/^2,4 MB · /)).toBeInTheDocument();
+    expect(screen.getByText('2,4 MB')).toHaveAttribute('title', expect.stringMatching(/\d/));
   });
 
   // The delete control follows the backend's can_delete, not a local rule.
