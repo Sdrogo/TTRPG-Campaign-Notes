@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Burger, Button, Group, Title, UnstyledButton } from '@mantine/core';
+import { ActionIcon, Box, Burger, Group, Title, UnstyledButton } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { AccountButton } from './account/AccountButton';
@@ -13,9 +13,10 @@ interface AppHeaderProps {
    *  Glossary/Tag index sidebar (spec `10 - UX Refinment`). Omitted elsewhere
    *  (the Rooms list, the Account page), where there is no Room to index. */
   roomId?: string;
-  /** Given on any nested page, this shows a "back" button next to the burger
-   *  position. Omitted on the Rooms list (`HomePage`), which is the app's own
-   *  root and has nowhere to go back to. */
+  /** Given on any nested page, this shows a "back" arrow (icon only, named
+   *  by `backLabel` for screen readers) before the burger. Omitted on the
+   *  Rooms list (`HomePage`), which is the app's own root and has nowhere to
+   *  go back to. */
   backTo?: string;
   backLabel?: string;
 }
@@ -37,12 +38,13 @@ function hasAppHistory(): boolean {
 }
 
 /**
- * The top navigation bar shown on every signed-in page: the back button and,
+ * The top navigation bar shown on every signed-in page: the back arrow and,
  * on a Room page, the Glossary Index burger, on the left; the app name (also
- * back to the Rooms list) in the middle; on the right the language flag, then
- * the account avatar (spec 09, spec 10). It is pinned to the top of the page
- * (`.app-header` in `index.css`), but slides away while scrolling down and
- * comes back as soon as the scroll turns up, so a phone shows more content.
+ * back to the Rooms list) always at the exact center; on the right the
+ * language flag, then the account avatar (spec 09, spec 10). It is pinned to
+ * the top of the page (`.app-header` in `index.css`), but slides away while
+ * scrolling down and comes back as soon as the scroll turns up, so a phone
+ * shows more content.
  */
 export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const { t } = useTranslation();
@@ -60,16 +62,28 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
 
   return (
     <>
-      <Group
+      {/* Three columns, the outer two of equal width, so the app name sits at
+          the exact center whatever is on either side. */}
+      <Box
         component="header"
-        justify="space-between"
-        wrap="nowrap"
         px={{ base: 'sm', sm: 'lg', lg: 'xl' }}
         py="sm"
         className="app-header"
         data-hidden={!pinned || undefined}
       >
-        <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Group gap="xs" wrap="nowrap">
+          {backTo && (
+            <ActionIcon
+              onClick={() => handleBack(backTo)}
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label={backLabel}
+              title={backLabel}
+            >
+              <ArrowLeftIcon size={20} />
+            </ActionIcon>
+          )}
           {roomId && (
             <Burger
               opened={glossaryOpened}
@@ -78,26 +92,17 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
               aria-label={glossaryOpened ? t('glossary.closeToggle') : t('glossary.openToggle')}
             />
           )}
-          {backTo && (
-            <Button
-              onClick={() => handleBack(backTo)}
-              variant="subtle"
-              leftSection={<ArrowLeftIcon size={16} />}
-            >
-              {backLabel}
-            </Button>
-          )}
         </Group>
         <UnstyledButton component={Link} to="/" style={{ minWidth: 0 }}>
-          <Title order={3} lineClamp={1} style={{ fontFamily: 'var(--font-display)' }}>
+          <Title order={3} lineClamp={1} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
             {t('app.name')}
           </Title>
         </UnstyledButton>
-        <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Group gap="xs" wrap="nowrap" justify="flex-end">
           <LanguageSelector />
           <AccountButton />
         </Group>
-      </Group>
+      </Box>
       {roomId && (
         <GlossaryIndexDrawer
           roomId={roomId}

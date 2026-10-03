@@ -12,6 +12,8 @@ interface LeaveRoomModalProps {
   currentUserId: string;
   /** Adds a line pointing an Administrator at the setup page to name a successor. */
   isAdmin: boolean;
+  /** Called after leaving, e.g. to navigate off a page of the Room just left. */
+  onLeft?: () => void;
 }
 
 /**
@@ -26,6 +28,7 @@ export function LeaveRoomModal({
   roomName,
   currentUserId,
   isAdmin,
+  onLeft,
 }: LeaveRoomModalProps) {
   const { t } = useTranslation();
   const leaveRoom = useLeaveRoom(roomId);
@@ -35,6 +38,7 @@ export function LeaveRoomModal({
       onSuccess: () => {
         notifySuccess(t('rooms.leave.left', { name: roomName }));
         onClose();
+        onLeft?.();
       },
       onError: notifyError,
     });

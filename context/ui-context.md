@@ -117,8 +117,13 @@ other icon set.
 - **App shell**: persistent top navbar (Room name + role badge for
   the current user + account menu) over a two/three-column body,
   using Mantine's `AppShell`. **Built so far** (2026-09-22): the
-  `AppHeader` component — app name on the left (links to the Rooms
-  list), the current user's circular avatar on the right
+  `AppHeader` component — app name (links to the Rooms list) **always at
+  the exact center** (2026-10-03, Andrea: it shifted between pages): the
+  header is a 3-column grid (`1fr minmax(0, auto) 1fr` in `.app-header`), so
+  whatever sits on either side never moves it. **On the left, the back arrow
+  then the Glossary burger** (same date): the back button is an icon-only
+  `ActionIcon` (`ArrowLeftIcon`), its destination's name kept as
+  `aria-label`/`title`; the current user's circular avatar on the right
   (`AccountButton`, 36px, thin `--border-default` ring that turns
   `--accent-primary` on hover/focus and while on `/account`). It is
   rendered by `HomePage` and by `PageLayout`, so every signed-in page
@@ -396,6 +401,19 @@ other icon set.
   none) above its own grid of cards; a Document with several Main Tags
   appears under each one. "No grouping" collapses back to the
   single flat grid spec 07 already had.
+  **Page title and controls** (2026-10-03, Andrea): the `h1` is just the
+  Room's name (no "Documents —"); the row of filters and settings under it
+  **starts collapsed** (the caret beside the title opens it), except when the
+  page opens already filtered by `?tag=`, where it starts open so the active
+  filter shows. **Creating a Document** is a round floating "+" at the bottom
+  right (`Affix`, 56px filled `ActionIcon`, `aria-label` "Create Document"),
+  with a 64px spacer under the list so it never covers the last cards.
+  **The Room's actions sit at the end of the title row** (same day, Andrea):
+  `RoomTitleActions` shows the Room card's actions — setup and invite for
+  an Administrator, leave for everyone — folded into a "⋮" (`aria-expanded`)
+  that unfolds them inline to its left when clicked, and folds them back on a
+  second click. Leaving from there takes the user back to their Rooms
+  (`LeaveRoomModal`'s `onLeft`).
   **The card grid** is `.documents-grid` in `index.css` (2026-10-03): 1, 2
   and 3 columns from `base`, `sm` and `lg` like the Rooms list, then 4 from
   1920px, 5 from 2560px and 6 from 3200px, so a card stays a sensible size
@@ -408,7 +426,7 @@ other icon set.
   persisted (a reload starts fresh).
 - **Glossary Index** (`GlossaryIndexDrawer`, 2026-09-25, spec 10; Main items
   2026-10-01, spec 11_3): a left-anchored Mantine `Drawer`, toggled by a
-  `Burger` on the right of `AppHeader` (next to the account avatar) — shown
+  `Burger` on the left of `AppHeader`, after the back arrow — shown
   only on a Room-scoped page (`PageLayout`'s `roomId` prop). It opens with
   "Tag principali": the Room's Main items — single Tags and Tag combinations
   (`#A + #B`) — **in exactly the order the Documents page groups by**; both

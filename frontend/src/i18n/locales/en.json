@@ -219,7 +219,6 @@
   "documents": {
     "signInRequired": "Sign in to see the Documents of this Room.",
     "title": "Documents",
-    "titleWithRoom": "Documents — {{room}}",
     "create": "Create Document",
     "playersCanCreate": "Players can create Documents",
     "loadError": "Error loading Documents.",
