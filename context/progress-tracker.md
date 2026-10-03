@@ -55,6 +55,7 @@ proposals, 2026-10-03):
   the live DB by hand. No migration involved.
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
+
 ### Unread dot inside the visibility badge (2026-10-03)
 
 - From Andrea's mockup: a Document card's "not yet read" dot now sits inside

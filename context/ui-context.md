@@ -290,7 +290,8 @@ other icon set.
   (display font) with its `VisibilityBadge` on the same row (spec 19b's
   unread count, a red pill, just before it; the "not yet read" dot sits
   *inside* the badge, before its label, via `VisibilityBadge`'s
-  `leftSection`, Andrea's mockup of 2026-10-03), and the Tags on a line of their own below (`TagList`). Under it the
+  `leftSection`, Andrea's mockup of 2026-10-03), and the Tags on a line of
+  their own below (`TagList`). Under it the
   description, then the Played by and Owner lines, each on a line of its
   own; a Document without a description says "No description.", clamped to
   2 lines without images.

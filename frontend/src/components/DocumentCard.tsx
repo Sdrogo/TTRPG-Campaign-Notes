@@ -155,10 +155,9 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
 }
 
 /**
- * The card's unread marks (spec 19b): the number of new Comments and replies
- * beside the visibility badge, and a dot inside it when the Document was never
- * opened. Each carries an accessible label, since the number or dot alone says
- * little.
+ * The card's "not yet read" mark (spec 19b), shown inside the visibility badge
+ * when the Document was never opened. It carries an accessible label, since
+ * the dot alone says little.
  */
 function NotYetReadDot() {
   const { t } = useTranslation();
@@ -174,6 +173,8 @@ function NotYetReadDot() {
   );
 }
 
+/** The count of new Comments and replies, as a red pill beside the visibility
+ *  badge (spec 19b), labeled for screen readers. Nothing when none are new. */
 function UnreadCount({ count }: { count: number | null | undefined }) {
   const { t } = useTranslation();
   if (!count) {
