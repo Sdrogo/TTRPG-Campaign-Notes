@@ -408,6 +408,12 @@ other icon set.
   filter shows. **Creating a Document** is a round floating "+" at the bottom
   right (`Affix`, 56px filled `ActionIcon`, `aria-label` "Create Document"),
   with a 64px spacer under the list so it never covers the last cards.
+  **The Room's actions sit at the end of the title row** (same day, Andrea):
+  `RoomTitleActions` shows the Room card's actions — setup and invite for
+  an Administrator, leave for everyone — folded into a "⋮" (`aria-expanded`)
+  that unfolds them inline to its left when clicked, and folds them back on a
+  second click. Leaving from there takes the user back to their Rooms
+  (`LeaveRoomModal`'s `onLeft`).
   **The card grid** is `.documents-grid` in `index.css` (2026-10-03): 1, 2
   and 3 columns from `base`, `sm` and `lg` like the Rooms list, then 4 from
   1920px, 5 from 2560px and 6 from 3200px, so a card stays a sensible size

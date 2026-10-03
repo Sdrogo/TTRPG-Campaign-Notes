@@ -77,6 +77,7 @@ function render(route = '/rooms/room-1/documents') {
   renderWithProviders(
     <Routes>
       <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />
+      <Route path="/" element={<p>Le mie Stanze</p>} />
     </Routes>,
     { route },
   );
@@ -442,6 +443,35 @@ describe('grouping and sorting', () => {
 // The filters/settings row next to the title (the Room setting Switch, the
 // Tag filter, group-by and sort) collapses independently of the title, which
 // always stays visible.
+describe("the Room's actions beside the title", () => {
+  it('unfold from the "⋮" at the end of the title row', async () => {
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+
+    expect(screen.getByRole('button', { name: 'Esci' })).toBeInTheDocument();
+  });
+
+  it('take the user back to their Rooms after leaving', async () => {
+    const writes: string[] = [];
+    mockApi((path) => {
+      writes.push(path);
+      return Promise.resolve();
+    });
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+    await user.click(screen.getByRole('button', { name: 'Esci' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Uscire da "La Cripta"?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Esci' }));
+
+    expect(await screen.findByText('Le mie Stanze')).toBeInTheDocument();
+    expect(writes).toContain('/rooms/room-1/members/user-1');
+  });
+});
+
 describe('collapsing the filters and settings row', () => {
   const toggleButton = (name: string | RegExp) => screen.getByRole('button', { name });
 

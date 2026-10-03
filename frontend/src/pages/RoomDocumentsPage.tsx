@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ActionIcon,
   Affix,
@@ -26,6 +26,7 @@ import { DocumentCard } from '../components/DocumentCard';
 import { CreateDocumentModal } from '../components/CreateDocumentModal';
 import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
+import { RoomTitleActions } from '../components/RoomTitleActions';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { TagFilter } from '../components/TagFilter';
 import { Backlinks } from '../components/mentions/Backlinks';
@@ -73,6 +74,7 @@ export function RoomDocumentsPage() {
 
 function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; currentUserId: string }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [createOpened, setCreateOpened] = useState(false);
   const room = useRoom(roomId, true);
   const documents = useDocuments(roomId, true);
@@ -125,8 +127,9 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   return (
     <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
-        <Group justify="space-between">
-          <Group gap="sm" align="center" wrap="wrap">
+        {/* The Room's actions sit at the end of the title row, folded in "⋮". */}
+        <Group justify="space-between" wrap="nowrap">
+          <Group gap="sm" align="center" wrap="wrap" style={{ minWidth: 0 }}>
             <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
               {room.data ? room.data.name : t('documents.title')}
             </Title>
@@ -146,6 +149,15 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               </UnstyledButton>
             )}
           </Group>
+          {room.data && me && (
+            <RoomTitleActions
+              roomId={roomId}
+              roomName={room.data.name}
+              isAdmin={me.isAdmin}
+              currentUserId={currentUserId}
+              onLeft={() => navigate('/')}
+            />
+          )}
         </Group>
         {/* A round floating "+" at the bottom right, always within reach. */}
         {canCreateDocument && (

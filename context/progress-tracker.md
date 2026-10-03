@@ -63,6 +63,9 @@ proposals, 2026-10-03):
   collapsed (open when arriving filtered by `?tag=`); the top bar puts the
   icon-only back arrow before the burger, and the app name is held at the
   exact center by a 3-column grid. axe audit still clean. Frontend only.
+- Then: the Room card's actions (setup, invite, leave) at the end of the
+  Room title row, folded into a "⋮" that unfolds them (`RoomTitleActions`);
+  leaving there navigates back to the Rooms list.
 
 ### Accessibility audit fixes (2026-10-03)
 
