@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Anchor, Badge, Box, Button, Group, Popover, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core';
+import { Anchor, Badge, Box, Button, Group, Menu, Popover, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core';
 import { Link } from 'react-router-dom';
+import { ArrowFatLineUpIcon, CheckCircleIcon, PushPinIcon } from '@phosphor-icons/react';
 import { UserAvatar } from '../UserAvatar';
 import { CharacterAvatar } from '../CharacterAvatar';
 import { ImageThumbnailGrid } from '../ImageThumbnailGrid';
@@ -8,14 +9,14 @@ import { ImageViewerModal } from '../ImageViewerModal';
 import { VisibilityBadge } from '../VisibilityBadge';
 import { CommentComposer } from './CommentComposer';
 import { AddReaction, ReactionChips } from './CommentReactions';
-import { useToggleReaction } from '../../hooks/useComments';
+import { useToggleReaction, type CommentFlag } from '../../hooks/useComments';
 import { notifyError } from '../../lib/notify';
 import { MentionText } from '../mentions/MentionText';
-import { findMember, memberDisplayName } from '../../lib/members';
+import { displayNameFor, findMember, memberDisplayName } from '../../lib/members';
 import { isEdited } from '../../lib/comments';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/time';
 import type { Character } from '../../types/character';
-import type { Comment, CommentFormValues } from '../../types/comment';
+import type { Comment, CommentFormValues, PromotionTarget } from '../../types/comment';
 import type { DocumentVisibility } from '../../types/document';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,18 @@ interface CommentItemProps {
   granteeIds?: string[] | null;
   /** Posted since the viewer's previous visit (spec 19b): marked "New". */
   isNew?: boolean;
+  /**
+   * Pins or unpins it, resolves or reopens its branch (spec 19c). Offered
+   * only where the backend's `canPin`/`canResolve` allow it.
+   */
+  onSetFlag?: (flag: CommentFlag, on: boolean) => void;
+  /** A pin or resolve change on this Comment is on its way. */
+  settingFlag?: boolean;
+  /**
+   * Starts promoting its text into the description or a new Document (spec
+   * 19c Decision 5). Offered only where the backend's `canPromote` allows it.
+   */
+  onPromote?: (target: PromotionTarget) => void;
 }
 
 /**
@@ -68,6 +81,9 @@ export function CommentItem({
   visibilityLevels,
   granteeIds,
   isNew = false,
+  onSetFlag,
+  settingFlag = false,
+  onPromote,
 }: CommentItemProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -190,6 +206,39 @@ export function CommentItem({
                   {t('comments.new')}
                 </Badge>
               )}
+              {comment.pinnedAt && (
+                <Badge
+                  size="xs"
+                  variant="light"
+                  color="accent"
+                  leftSection={<PushPinIcon size={10} weight="fill" />}
+                >
+                  {t('comments.pinned')}
+                </Badge>
+              )}
+              {comment.resolvedAt && (
+                <Tooltip
+                  label={t('comments.resolvedBy', {
+                    name: displayNameFor(members, comment.resolvedBy ?? ''),
+                    date: formatAbsoluteTime(comment.resolvedAt),
+                  })}
+                  withArrow
+                >
+                  <Badge
+                    size="xs"
+                    variant="light"
+                    color="gray"
+                    leftSection={
+                      <CheckCircleIcon size={10} weight="fill" color="var(--state-success)" />
+                    }
+                  >
+                    {t('comments.resolved')}
+                  </Badge>
+                </Tooltip>
+              )}
+              {comment.promotedAt && (
+                <PromotedBadge roomId={roomId} comment={comment} promotedAt={comment.promotedAt} />
+              )}
             </Group>
             {comment.deleted ? (
               <Text size="sm" c="dimmed" fs="italic">
@@ -199,6 +248,7 @@ export function CommentItem({
               <Stack gap="xs">
                 <MentionText
                   text={comment.body}
+                  members={members}
                   size="sm"
                   style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
                 />
@@ -244,6 +294,23 @@ export function CommentItem({
             {comment.canEdit && (
               <CommentAction onClick={() => setEditing(true)}>{t('common.edit')}</CommentAction>
             )}
+            {onSetFlag && comment.canPin && (
+              <CommentAction
+                disabled={settingFlag}
+                onClick={() => onSetFlag('pin', comment.pinnedAt === null)}
+              >
+                {comment.pinnedAt === null ? t('comments.pin') : t('comments.unpin')}
+              </CommentAction>
+            )}
+            {onSetFlag && comment.canResolve && (
+              <CommentAction
+                disabled={settingFlag}
+                onClick={() => onSetFlag('resolve', comment.resolvedAt === null)}
+              >
+                {comment.resolvedAt === null ? t('comments.resolve') : t('comments.reopen')}
+              </CommentAction>
+            )}
+            {onPromote && comment.canPromote && <PromoteCommentAction onPromote={onPromote} />}
             {comment.canDelete && (
               <DeleteCommentAction
                 onConfirm={onDelete}
@@ -258,13 +325,87 @@ export function CommentItem({
   );
 }
 
-function CommentAction({ children, onClick }: { children: string; onClick: () => void }) {
+interface CommentActionProps {
+  children: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+function CommentAction({ children, onClick, disabled = false }: CommentActionProps) {
   return (
-    <UnstyledButton onClick={onClick}>
+    <UnstyledButton onClick={onClick} disabled={disabled}>
       <Text size="xs" fw={600} c="dimmed" className="comment-action">
         {children}
       </Text>
     </UnstyledButton>
+  );
+}
+
+// "Promoted" (spec 19c Decision 5), with when; a link to the new Document
+// when the text went into one the viewer can see.
+function PromotedBadge({
+  roomId,
+  comment,
+  promotedAt,
+}: {
+  roomId: string;
+  comment: Comment;
+  promotedAt: string;
+}) {
+  const { t } = useTranslation();
+  const into = comment.promotedTo === 'document' ? 'promotedToDocument' : 'promotedToDescription';
+  const badge = (
+    <Badge
+      size="xs"
+      variant="light"
+      color="accent"
+      leftSection={<ArrowFatLineUpIcon size={10} weight="fill" />}
+    >
+      {t('comments.promotion.promoted')}
+    </Badge>
+  );
+  return (
+    <Tooltip
+      label={t(`comments.promotion.${into}`, { date: formatAbsoluteTime(promotedAt) })}
+      withArrow
+    >
+      {comment.promotedDocumentId ? (
+        <Anchor
+          component={Link}
+          to={`/rooms/${roomId}/documents/${comment.promotedDocumentId}`}
+          aria-label={t('comments.promotion.openDocument')}
+          lh={0}
+        >
+          {badge}
+        </Anchor>
+      ) : (
+        badge
+      )}
+    </Tooltip>
+  );
+}
+
+// "Promote": into the Document's description, or into a new Document.
+function PromoteCommentAction({ onPromote }: { onPromote: (target: PromotionTarget) => void }) {
+  const { t } = useTranslation();
+  return (
+    <Menu position="bottom-start" withArrow shadow="md">
+      <Menu.Target>
+        <UnstyledButton>
+          <Text size="xs" fw={600} c="dimmed" className="comment-action">
+            {t('comments.promotion.promote')}
+          </Text>
+        </UnstyledButton>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item onClick={() => onPromote('description')}>
+          {t('comments.promotion.intoDescription')}
+        </Menu.Item>
+        <Menu.Item onClick={() => onPromote('document')}>
+          {t('comments.promotion.intoDocument')}
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }
 

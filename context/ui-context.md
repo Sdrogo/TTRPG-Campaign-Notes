@@ -196,7 +196,27 @@ other icon set.
   reacted. A subtle 16px `Smiley` icon button in the meta line opens
   emoji-mart's picker (dark theme, search with skin tones, no preview)
   in a popover with no padding; it's gone once a Comment has 20
-  different emoji, and a deleted placeholder shows neither. Attached
+  different emoji, and a deleted placeholder shows neither. Pin and
+  resolve (spec 19c) are more text actions in the meta line ("Fissa"/"Togli
+  dai fissati", "Segna come risolto"/"Riapri"), shown only when the
+  backend's `canPin`/`canResolve` allow them. Pinned Comments sit first in
+  a section of their own, headed by a small filled accent `PushPin` and an
+  uppercase dimmed "Commenti fissati" label, with a `Divider` before the
+  rest; each carries a `light` accent `xs` "Fissato" badge with a pin icon.
+  A resolved branch shows its top-level Comment with a `light` gray `xs`
+  "Risolto" badge (a `CheckCircle` in `--state-success`, tooltip naming who
+  resolved it and when) and starts with its replies collapsed. Promotion
+  (spec 19c) is a "Promuovi" text action opening a `Menu` ("Nella
+  descrizione", "In un nuovo Documento"), shown when `canPromote` allows
+  it; a promoted Comment carries a `light` accent `xs` "Promosso" badge
+  (`ArrowFatLineUp`, tooltip saying where and when), a link to the new
+  Document when the viewer sees it. Promoting into the description opens
+  the Document's editor, scrolled into view, with an accent `light` `Alert`
+  explaining the appended text; into a new Document opens a centered modal
+  with the creation form and the Comment's images as checkboxes with 40px
+  thumbnails. A promotion that would show the text to more people asks
+  first in a centered modal naming them, its confirm button orange
+  ("Promuovi comunque"). Attached
   images show inside the bubble as 120px square thumbnails
   (`ImageThumbnailGrid`, `sm` radius) that open the shared fullscreen
   `ImageViewerModal`. Sort/filter controls (`CommentToolbar`) sit above
@@ -236,6 +256,16 @@ other icon set.
   a `DocumentMentionsProvider roomId={…} currentUserId={…}` above them
   (the Document page and the Documents list have one); without it they
   behave as a plain textarea / plain text.
+  **`@` members** (2026-10-02, spec 19c, Comments only): pass `members`
+  to `MentionTextarea` and `MentionText`. Typing `@` at the start of a
+  word opens the same list with the Room's members ("Membri da
+  menzionare"): an 18px avatar and the shown name, no detail line, never
+  a create row. Picking one shows `@Name ` in the field and stores
+  `@[Name](user:<uuid>)`; the field never shows the token syntax, and
+  editing inside a mentioned name turns it back into plain text. In the
+  rendered body a member's mention is `@` + their current name in
+  `--accent-primary`, weight 600, not a link; a mention of someone who has
+  left the Room is plain text with the name as written.
 - **Document card** (`DocumentCard`, restructured 2026-09-23, spec
   `07 - Document visualizazion refactor_beckend`): three stacked blocks. The
   *Title block* is the Document name (display font) with its

@@ -6,11 +6,11 @@ from collections import defaultdict
 from collections.abc import Sequence
 from datetime import datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import PostRow, PostVisibilityGrantRow
-from app.domain.models import Comment, DocumentVisibility, PostKind
+from app.domain.models import Comment, DocumentVisibility, PostKind, PromotionTarget
 
 
 def comment_from_row(row: PostRow) -> Comment:
@@ -26,6 +26,13 @@ def comment_from_row(row: PostRow) -> Comment:
         deleted_at=row.deleted_at,
         as_document_id=row.as_document_id,
         parent_id=row.parent_id,
+        pinned_at=row.pinned_at,
+        resolved_at=row.resolved_at,
+        resolved_by=row.resolved_by,
+        promoted_at=row.promoted_at,
+        promoted_by=row.promoted_by,
+        promoted_to=None if row.promoted_to is None else PromotionTarget(row.promoted_to),
+        promoted_document_id=row.promoted_document_id,
     )
 
 
@@ -100,9 +107,61 @@ async def lock_comment(session: AsyncSession, comment_id: uuid.UUID) -> datetime
     return deleted_at
 
 
+async def get_locked_comment(session: AsyncSession, comment_id: uuid.UUID) -> Comment:
+    """Like `lock_comment`, but returns the whole Comment as of the lock (the
+    row is re-read, not taken from the session's cache), for a change that
+    depends on its current pin or resolution (spec 19c)."""
+    result = await session.execute(
+        select(PostRow)
+        .where(PostRow.id == comment_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    return comment_from_row(result.scalar_one())
+
+
+async def count_pinned_comments(session: AsyncSession, document_id: uuid.UUID) -> int:
+    """How many of the Document's Comments are pinned, whoever can see them
+    (spec 19c Decision 3)."""
+    result = await session.execute(
+        select(func.count())
+        .select_from(PostRow)
+        .where(PostRow.document_id == document_id, PostRow.pinned_at.is_not(None))
+    )
+    return result.scalar_one()
+
+
+async def set_pin_and_resolution(session: AsyncSession, comment: Comment) -> None:
+    """Writes only a Comment's pin and resolution (spec 19c), leaving what
+    its author edits alone. Callers hold the Comment's lock
+    (`get_locked_comment`). Raises `LookupError` if it no longer exists."""
+    row = await session.get(PostRow, comment.id)
+    if row is None:
+        raise LookupError(f"Comment {comment.id} not found")
+    row.pinned_at = comment.pinned_at
+    row.resolved_at = comment.resolved_at
+    row.resolved_by = comment.resolved_by
+    await session.flush()
+
+
+async def set_promotion(session: AsyncSession, comment: Comment) -> None:
+    """Writes only a Comment's promotion mark (spec 19c Decision 5). Callers
+    hold the Comment's lock (`get_locked_comment`). Raises `LookupError` if it
+    no longer exists."""
+    row = await session.get(PostRow, comment.id)
+    if row is None:
+        raise LookupError(f"Comment {comment.id} not found")
+    row.promoted_at = comment.promoted_at
+    row.promoted_by = comment.promoted_by
+    row.promoted_to = None if comment.promoted_to is None else comment.promoted_to.value
+    row.promoted_document_id = comment.promoted_document_id
+    await session.flush()
+
+
 async def update_comment(session: AsyncSession, comment: Comment) -> None:
-    """Writes a Comment's body, visibility, Character and timestamps. Raises `LookupError`
-    if it no longer exists."""
+    """Writes a Comment's body, visibility, Character and timestamps, not its
+    pin or resolution (`set_pin_and_resolution`), so an edit can't undo a
+    concurrent pin. Raises `LookupError` if it no longer exists."""
     row = await session.get(PostRow, comment.id)
     if row is None:
         raise LookupError(f"Comment {comment.id} not found")

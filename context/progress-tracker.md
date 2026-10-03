@@ -7,20 +7,129 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-02)
+## Current Status (2026-10-03)
 
-Branch `claude/project-thread-42spr1` (spec 19c_2, reactions frontend, PR
-into `staging`). Frontend **1131** tests at 100% coverage; lint and build
-clean. Backend unchanged since 19c_1: 667 tests at 100%. Migration
-`f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is **not yet applied to the
-live database**.
+Branch `claude/project-thread-ads76p` (spec 19c_8, promotion frontend, PR
+into `staging`). Frontend **1227** tests at 100% coverage; tsc, oxlint and
+build clean. Backend unchanged since 19c_7: 727 tests at 100%. Migration
+`f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
+database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
+19c_3) and migration `c2f6b8d4e1a7` (promotion columns on `posts`, 19c_7,
+revises it) were **applied to the live database on 2026-10-03** (with the
+user's go-ahead); the live DB is at `c2f6b8d4e1a7`.
 
-Specs 12 to 19c_1 are merged into `staging`. Build order is feature by
-feature: 19c goes reactions → pin and resolved → @mentions → promotion.
+Specs 12 to 19c_7 are merged into `staging`; 19c_8 closes spec 19c (and with
+it feature 19). Next, per the build order: spec 20 (mention backlinks),
+starting with 20_1.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Promotion, frontend (spec 19c_8, 2026-10-03)
+
+- A "Promuovi" menu in a Comment's meta line ("Nella descrizione", "In un
+  nuovo Documento"), shown when the backend's `canPromote` allows it; a
+  promoted Comment carries a "Promosso" badge, linked to the new Document
+  when the viewer sees it.
+- Into the description: the Document's editor opens with the Comment's text
+  (mentions as `@Name`) appended as its own paragraph, under a notice; saving
+  the description records the promotion. Into a new Document: a modal with
+  the creation form prefilled and the Comment's images as checkboxes.
+- `lib/promotion.ts` mirrors the backend's widening rule (parents included);
+  when anyone would newly read the text, `WideningConfirmModal` names them
+  before saving, and the confirmation is sent as `confirm_widening`.
+- **Choices made beyond the ticket**: the new Document starts at Room
+  visibility for a Room Comment and Private otherwise, so nothing widens by
+  default; images are copied by URL import into the new Document, and one
+  that fails doesn't stop the promotion (the notice names it); once the
+  new Document exists the modal closes whatever follows, so a refused
+  promotion can't lead to a duplicate Document on retry; the editor
+  scrolls into view; promoting while the description is already being
+  edited appends the text to what is being typed, keeping the edits.
+
+### Promotion, backend (spec 19c_7, 2026-10-02)
+
+- Migration `c2f6b8d4e1a7`: nullable `posts.promoted_at`, `promoted_by`,
+  `promoted_to`, `promoted_document_id` (SET NULL). Not yet live.
+- `app/domain/promotion.py` and `POST .../comments/{id}/promote`
+  `{target: description|document, document_id?, confirm_widening}`: records
+  the mark and a `comment_promoted` AuditLog row; the text goes through the
+  existing description and Document routes.
+- **Choices made beyond the ticket**: every promotion is audited, not only
+  the widening ones (with `newly_reached_user_ids`, empty when nothing
+  widens); the backend refuses an unconfirmed widening (409), so the
+  dialog can't be skipped; a reply may be promoted; the new Document must
+  be one the promoter manages; promoting again keeps only the latest mark;
+  `promoted_document_id` is withheld from a viewer who can't see that
+  Document. 15 new tests (9 domain, 6 API).
+
+### @mentions, frontend (spec 19c_6, 2026-10-02)
+
+- `lib/userMentions.ts` parses `@[Name](user:<uuid>)` like the backend and
+  maps stored text to what the field shows (`@Name`) and edits back.
+- `MentionTextarea` takes `members`: `@` opens the member list (no create
+  row), a pick stores the token. `MentionText` takes `members`: a member
+  is highlighted under their current name, someone who left reads as
+  plain `@Name`. Both are passed only for Comments.
+- **Choices made beyond the ticket**: editing inside a mentioned name
+  unlinks it (plain text), rather than keeping a half-edited token; the
+  field shows the name stored in the token, the rendered body the
+  member's current name; the Comment search matches the shown text, not
+  the token. With members on, the Comment field is announced as a
+  combobox even outside a Room's mention context.
+
+### @mentions, backend (spec 19c_5, 2026-10-02)
+
+- `app/domain/mentions.py`: `find_mentions` reads the token grammar shared
+  with spec 20, `<sigil>[Name](<kind>:<uuid>)` (`@` + `user`, `#` + `doc`
+  or `tag`, `\` escaping `]` and `\`); `unlink_non_members` turns `@`
+  tokens naming a non-member into plain `@Name`.
+- Comment create and body edit run the body through it with the Room's
+  members; no schema change.
+- **Choices made beyond the ticket**: a malformed or mismatched token is
+  kept as written rather than rejected; `[` in a name needs no escape; a
+  mention of a member who later leaves stays a token until the body is
+  next edited (the frontend shows it like any departed member). `#` tokens
+  are parsed but not yet checked or stored as links: that is spec 20.
+  22 new tests (20 domain, 2 API). Unlinking repeats until the text stops
+  changing, since an unescaped name can itself read as a token.
+
+### Pin and resolved, frontend (spec 19c_4, 2026-10-02)
+
+- `Comment` gains `pinnedAt`, `resolvedAt`, `resolvedBy`, `canPin`,
+  `canResolve`; `useSetCommentFlag` POSTs/DELETEs `.../pin` or
+  `.../resolve` and swaps the returned Comment into the Thread's cache.
+- `CommentItem`: "Fissato" and "Risolto" badges (tooltip: who resolved,
+  when) and the four text actions, offered per the backend's flags.
+- `CommentSection`: pinned branches in a "Commenti fissati" section first
+  (`splitPinned`, oldest pin first); `visibleReplies` starts a resolved
+  branch closed, and resolving or reopening drops a hand-made open/close.
+- **Choices made beyond the ticket**: the toolbar's filters still apply to
+  pinned Comments (a search can leave them out), only the sort doesn't; a
+  resolved branch keeps its top-level Comment visible and folds only its
+  replies, still counting new ones ("N nuove"); actions are text links in
+  the meta line like Edit/Delete, since Comments have no menu. Not yet
+  checked in a browser: the Definition of Done walk-through. 18 new tests.
+
+### Pin and resolved, backend (spec 19c_3, 2026-10-02)
+
+- Migration `a9e3d7c5b1f8`: nullable `posts.pinned_at`, `resolved_at`,
+  `resolved_by`.
+- `POST`/`DELETE .../comments/{id}/pin` and `/resolve`, idempotent, return
+  the Comment; `CommentResponse` gains `pinned_at`, `resolved_at`,
+  `resolved_by`, `can_pin`, `can_resolve`.
+- `app/domain/comments.py`: `plan_pin` (Owner or Master, top-level, not
+  deleted, max 3 per Document, 403/422/409), `plan_unpin`, `plan_resolve`
+  and `plan_reopen` (author, Owner or Master; top-level only),
+  `can_pin_comment`, `can_resolve_comment`.
+- **Choices made beyond the ticket**: the pin limit counts every pinned
+  Comment, including ones the pinner can't see (a 409 can thus hint that a
+  hidden pinned Comment exists, nothing more); deleting a Comment unpins it
+  but keeps its branch resolved, and a deleted top-level Comment can still
+  be resolved or reopened (its replies still form a branch); re-resolving
+  keeps who resolved first; pinning and resolving don't touch `updated_at`
+  and aren't AuditLogged. 23 new tests (14 domain, 9 API).
 
 ### Reactions, frontend (spec 19c_2, 2026-10-02)
 

@@ -47,6 +47,15 @@ function comment(overrides: Partial<Comment> = {}): Comment {
     parentId: null,
     parentHidden: false,
     reactions: [],
+    pinnedAt: null,
+    resolvedAt: null,
+    resolvedBy: null,
+    canPin: false,
+    canResolve: false,
+    promotedAt: null,
+    promotedTo: null,
+    promotedDocumentId: null,
+    canPromote: false,
     ...overrides,
   };
 }
@@ -91,7 +100,7 @@ describe('CommentItem', () => {
     expect(screen.getByText('(tu)')).toBeInTheDocument();
   });
 
-  it('does not mark someone else\'s', () => {
+  it("does not mark someone else's", () => {
     render({}, 'user-2');
 
     expect(screen.queryByText('(tu)')).not.toBeInTheDocument();
@@ -161,7 +170,7 @@ describe('editing', () => {
 
     await user.click(screen.getByText('Modifica'));
 
-    expect(screen.getByRole('textbox', { name: 'Testo del commento' })).toHaveValue(
+    expect(screen.getByRole('combobox', { name: 'Testo del commento' })).toHaveValue(
       'Ricordate il sigillo.',
     );
   });
@@ -187,8 +196,8 @@ describe('editing', () => {
     const { onUpdate, user } = render();
     await user.click(screen.getByText('Modifica'));
 
-    await user.clear(screen.getByRole('textbox', { name: 'Testo del commento' }));
-    await user.type(screen.getByRole('textbox', { name: 'Testo del commento' }), 'Nuovo testo');
+    await user.clear(screen.getByRole('combobox', { name: 'Testo del commento' }));
+    await user.type(screen.getByRole('combobox', { name: 'Testo del commento' }), 'Nuovo testo');
     await user.click(screen.getByRole('button', { name: 'Salva' }));
 
     expect(onUpdate).toHaveBeenCalledWith(
@@ -211,7 +220,9 @@ describe('deleting', () => {
   // Deleting a Comment also removes its images from the Document's gallery,
   // which isn't obvious from "delete comment".
   it('warns that attached images go too', async () => {
-    const { user } = render({ images: [{ id: 'image-1', url: 'http://a/1.webp', isFavorite: false }] });
+    const { user } = render({
+      images: [{ id: 'image-1', url: 'http://a/1.webp', isFavorite: false }],
+    });
 
     await user.click(screen.getByText('Elimina'));
 
@@ -256,9 +267,7 @@ describe('attached images', () => {
   it('shows a thumbnail per image, labelled by author', () => {
     render({ images });
 
-    expect(
-      screen.getByAltText('Immagine 1 del commento di Giocatore'),
-    ).toBeInTheDocument();
+    expect(screen.getByAltText('Immagine 1 del commento di Giocatore')).toBeInTheDocument();
     expect(screen.getByAltText('Immagine 2 del commento di Giocatore')).toBeInTheDocument();
   });
 
@@ -269,10 +278,7 @@ describe('attached images', () => {
       screen.getByRole('button', { name: 'Apri Immagine 2 del commento di Giocatore' }),
     );
 
-    expect(screen.getByAltText('Commento di Giocatore')).toHaveAttribute(
-      'src',
-      'http://a/2.webp',
-    );
+    expect(screen.getByAltText('Commento di Giocatore')).toHaveAttribute('src', 'http://a/2.webp');
   });
 
   it('closes the viewer', async () => {
@@ -413,5 +419,163 @@ describe('CommentItem reactions (spec 19c)', () => {
     render({ deleted: true, body: '', reactions: [thumbs] });
 
     expect(screen.queryByRole('button', { name: /reazion/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('CommentItem pin and resolve (spec 19c)', () => {
+  function renderWithFlag(overrides: Partial<Comment> = {}, settingFlag = false) {
+    const onSetFlag = vi.fn();
+    renderWithProviders(
+      <CommentItem
+        roomId="room-1"
+        comment={comment(overrides)}
+        members={members}
+        characters={[]}
+        currentUserId="user-1"
+        onUpdate={vi.fn()}
+        updating={false}
+        onDelete={vi.fn()}
+        deleting={false}
+        onSetFlag={onSetFlag}
+        settingFlag={settingFlag}
+      />,
+    );
+    return { onSetFlag, user: userEvent.setup() };
+  }
+
+  // The backend's flags decide: nothing is offered without them.
+  it('offers neither action without canPin and canResolve', () => {
+    renderWithFlag();
+
+    expect(screen.queryByRole('button', { name: 'Fissa' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Segna come risolto' })).not.toBeInTheDocument();
+  });
+
+  it('offers nothing without a handler, even when allowed', () => {
+    render({ canPin: true, canResolve: true });
+
+    expect(screen.queryByRole('button', { name: 'Fissa' })).not.toBeInTheDocument();
+  });
+
+  it('pins and resolves an open Comment', async () => {
+    const { onSetFlag, user } = renderWithFlag({ canPin: true, canResolve: true });
+
+    await user.click(screen.getByRole('button', { name: 'Fissa' }));
+    await user.click(screen.getByRole('button', { name: 'Segna come risolto' }));
+
+    expect(onSetFlag.mock.calls).toEqual([
+      ['pin', true],
+      ['resolve', true],
+    ]);
+  });
+
+  it('unpins and reopens, and badges both states', async () => {
+    const { onSetFlag, user } = renderWithFlag({
+      canPin: true,
+      canResolve: true,
+      pinnedAt: '2026-10-02T12:00:00Z',
+      resolvedAt: '2026-10-02T12:00:00Z',
+      resolvedBy: 'user-2',
+    });
+
+    expect(screen.getByText('Fissato')).toBeInTheDocument();
+    await user.hover(screen.getByText('Risolto'));
+    expect(await screen.findByText(/Risolto da Master/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Togli dai fissati' }));
+    await user.click(screen.getByRole('button', { name: 'Riapri' }));
+
+    expect(onSetFlag.mock.calls).toEqual([
+      ['pin', false],
+      ['resolve', false],
+    ]);
+  });
+
+  it('names an unknown resolver like any departed member', async () => {
+    const { user } = renderWithFlag({ resolvedAt: '2026-10-02T12:00:00Z', resolvedBy: null });
+
+    await user.hover(screen.getByText('Risolto'));
+    expect(await screen.findByText(/Risolto da Utente sconosciuto/)).toBeInTheDocument();
+  });
+
+  it('disables both actions while a change is on its way', () => {
+    renderWithFlag({ canPin: true, canResolve: true }, true);
+
+    expect(screen.getByRole('button', { name: 'Fissa' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Segna come risolto' })).toBeDisabled();
+  });
+});
+
+describe('CommentItem promotion (spec 19c)', () => {
+  function renderWithPromote(overrides: Partial<Comment> = {}) {
+    const onPromote = vi.fn();
+    renderWithProviders(
+      <CommentItem
+        roomId="room-1"
+        comment={comment(overrides)}
+        members={members}
+        characters={[]}
+        currentUserId="user-1"
+        onUpdate={vi.fn()}
+        updating={false}
+        onDelete={vi.fn()}
+        deleting={false}
+        onPromote={onPromote}
+      />,
+    );
+    return { onPromote, user: userEvent.setup() };
+  }
+
+  it('offers promotion only where the backend allows it and a handler exists', () => {
+    renderWithPromote();
+    expect(screen.queryByRole('button', { name: 'Promuovi' })).not.toBeInTheDocument();
+  });
+
+  it('offers nothing without a handler, even when allowed', () => {
+    render({ canPromote: true });
+    expect(screen.queryByRole('button', { name: 'Promuovi' })).not.toBeInTheDocument();
+  });
+
+  it('promotes into the description or a new Document', async () => {
+    const { onPromote, user } = renderWithPromote({ canPromote: true });
+
+    await user.click(screen.getByRole('button', { name: 'Promuovi' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Nella descrizione' }));
+    await user.click(screen.getByRole('button', { name: 'Promuovi' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'In un nuovo Documento' }));
+
+    expect(onPromote.mock.calls).toEqual([['description'], ['document']]);
+  });
+
+  it('badges a Comment promoted into the description, without a link', async () => {
+    const { user } = renderWithPromote({
+      promotedAt: '2026-10-02T12:00:00Z',
+      promotedTo: 'description',
+    });
+
+    await user.hover(screen.getByText('Promosso'));
+    expect(await screen.findByText(/Promosso nella descrizione il/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Apri il Documento in cui è stato promosso' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('links the badge to the new Document the viewer can see', async () => {
+    const { user } = renderWithPromote({
+      promotedAt: '2026-10-02T12:00:00Z',
+      promotedTo: 'document',
+      promotedDocumentId: 'doc-9',
+    });
+
+    const link = screen.getByRole('link', { name: 'Apri il Documento in cui è stato promosso' });
+    expect(link).toHaveAttribute('href', '/rooms/room-1/documents/doc-9');
+    await user.hover(screen.getByText('Promosso'));
+    expect(await screen.findByText(/Promosso in un nuovo Documento il/)).toBeInTheDocument();
+  });
+
+  it('badges a promotion into a Document the viewer cannot see, without a link', () => {
+    renderWithPromote({ promotedAt: '2026-10-02T12:00:00Z', promotedTo: 'document' });
+
+    expect(screen.getByText('Promosso')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Apri il Documento/ })).not.toBeInTheDocument();
   });
 });

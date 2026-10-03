@@ -12,6 +12,7 @@ import {
   replyGranteeIds,
   replyLevels,
   replyStartVisibility,
+  splitPinned,
   topLevelComments,
   visibleReplies,
 } from '../../lib/comments';
@@ -43,6 +44,15 @@ function comment(id: string, overrides: Partial<Comment> = {}): Comment {
     parentId: null,
     parentHidden: false,
     reactions: [],
+    pinnedAt: null,
+    resolvedAt: null,
+    resolvedBy: null,
+    canPin: false,
+    canResolve: false,
+    promotedAt: null,
+    promotedTo: null,
+    promotedDocumentId: null,
+    canPromote: false,
     ...overrides,
   };
 }
@@ -65,7 +75,10 @@ const comments = [
 ];
 
 const ids = (list: Comment[]) => list.map((c) => c.id);
-const filters = (overrides: Partial<CommentFilters>) => ({ ...DEFAULT_COMMENT_FILTERS, ...overrides });
+const filters = (overrides: Partial<CommentFilters>) => ({
+  ...DEFAULT_COMMENT_FILTERS,
+  ...overrides,
+});
 
 describe('applyCommentFilters', () => {
   it('sorts newest first by default', () => {
@@ -99,14 +112,24 @@ describe('applyCommentFilters', () => {
   });
 
   it('filters by visibility', () => {
-    expect(
-      ids(applyCommentFilters(comments, filters({ visibility: 'private' }), members)),
-    ).toEqual(['b']);
+    expect(ids(applyCommentFilters(comments, filters({ visibility: 'private' }), members))).toEqual(
+      ['b'],
+    );
   });
 
   it('searches the body and the author name, case-insensitively', () => {
     expect(ids(applyCommentFilters(comments, filters({ query: 'COUNT' }), members))).toEqual(['b']);
     expect(ids(applyCommentFilters(comments, filters({ query: 'ann@' }), members))).toEqual(['b']);
+  });
+
+  // Spec 19c: a member mention is searched as it reads, `@Name`, not as its token.
+  it('searches member mentions by their name, not their token', () => {
+    const mentioning = [
+      comment('m', { body: 'Ciao @[Bea](user:11111111-1111-4111-8111-111111111111)' }),
+    ];
+
+    expect(ids(applyCommentFilters(mentioning, filters({ query: '@bea' }), members))).toEqual(['m']);
+    expect(ids(applyCommentFilters(mentioning, filters({ query: 'user:' }), members))).toEqual([]);
   });
 
   it('uses chosen names, and still finds an author by email', () => {
@@ -200,9 +223,9 @@ describe('buildCommentTree (Decision 3)', () => {
     expect(shape(buildCommentTree(thread, filters({ authorId: 'u-ann' }), members))).toBe('top2');
     // A match in a reply alone doesn't bring its branch.
     expect(shape(buildCommentTree(thread, filters({ query: 'too' }), members))).toBe('');
-    expect(shape(buildCommentTree(thread, filters({ query: 'bridge', sort: 'oldest' }), members))).toBe(
-      'top1(r1(r1a),r2)',
-    );
+    expect(
+      shape(buildCommentTree(thread, filters({ query: 'bridge', sort: 'oldest' }), members)),
+    ).toBe('top1(r1(r1a),r2)');
   });
 
   // FR-T5: a deleted Comment's placeholder keeps the live replies under it readable.
@@ -285,6 +308,22 @@ describe('visibleReplies (Decision 4)', () => {
     expect(hiddenNewCount).toBe(0);
   });
 
+  // Spec 19c Decision 4: resolved starts closed, even over a new reply, and
+  // a hand choice still wins.
+  it('starts a resolved branch closed, new replies counted, unless opened by hand', () => {
+    const resolved: CommentNode = {
+      comment: comment('top', { resolvedAt: '2026-10-02T12:00:00Z' }),
+      replies: [node('a'), node('b')],
+    };
+    const isNew = (c: Comment) => c.id === 'b';
+    expect(visibleReplies(resolved, undefined, isNew)).toEqual({
+      shown: [],
+      hiddenCount: 2,
+      hiddenNewCount: 1,
+    });
+    expect(visibleReplies(resolved, 'open').shown).toEqual(resolved.replies);
+  });
+
   it('counts the new replies a branch closed by hand hides', () => {
     const isNew = (c: Comment) => ['a1', 'c'].includes(c.id);
     expect(visibleReplies(big, 'closed', isNew)).toEqual({
@@ -357,5 +396,25 @@ describe('reply visibility (Decision 2, VR-04)', () => {
         members,
       ),
     ).toBe('Aria');
+  });
+});
+
+describe('splitPinned (spec 19c Decision 3)', () => {
+  const node = (id: string, pinnedAt: string | null): CommentNode => ({
+    comment: comment(id, { pinnedAt }),
+    replies: [],
+  });
+
+  it('puts pinned branches apart, oldest pin first, and keeps the rest in order', () => {
+    const nodes = [
+      node('a', null),
+      node('late', '2026-10-02T12:00:00Z'),
+      node('b', null),
+      node('early', '2026-10-01T12:00:00Z'),
+    ];
+    const { pinned, others } = splitPinned(nodes);
+    expect(pinned.map((n) => n.comment.id)).toEqual(['early', 'late']);
+    expect(others.map((n) => n.comment.id)).toEqual(['a', 'b']);
+    expect(nodes.map((n) => n.comment.id)).toEqual(['a', 'late', 'b', 'early']);
   });
 });

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import { toStoredImage } from '../lib/images';
 import { toCharacter, type RawCharacter } from '../lib/characters';
-import type { Comment, CommentFormValues } from '../types/comment';
+import type { Comment, CommentFormValues, PromotionTarget } from '../types/comment';
 import type { DocumentVisibility } from '../types/document';
 import type { PendingImage, RawImage } from '../types/image';
 import i18n from '../i18n';
@@ -24,6 +24,15 @@ interface RawComment {
   parent_id: string | null;
   parent_hidden: boolean;
   reactions: RawReaction[];
+  pinned_at: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  can_pin: boolean;
+  can_resolve: boolean;
+  promoted_at: string | null;
+  promoted_to: PromotionTarget | null;
+  promoted_document_id: string | null;
+  can_promote: boolean;
 }
 
 interface RawReaction {
@@ -56,6 +65,15 @@ function toComment(raw: RawComment): Comment {
       reactedByMe: reaction.reacted_by_me,
       userIds: reaction.user_ids,
     })),
+    pinnedAt: raw.pinned_at,
+    resolvedAt: raw.resolved_at,
+    resolvedBy: raw.resolved_by,
+    canPin: raw.can_pin,
+    canResolve: raw.can_resolve,
+    promotedAt: raw.promoted_at,
+    promotedTo: raw.promoted_to,
+    promotedDocumentId: raw.promoted_document_id,
+    canPromote: raw.can_promote,
   };
 }
 
@@ -79,6 +97,18 @@ function commentsPath(roomId: string, documentId: string) {
 
 function commentsQueryKey(roomId: string, documentId: string) {
   return ['rooms', roomId, 'documents', documentId, 'comments'] as const;
+}
+
+// Puts a Comment a route returned in place of the cached one, for changes
+// that touch nothing else (no image, so no Document or list refresh).
+function useReplaceInThread(roomId: string, documentId: string) {
+  const queryClient = useQueryClient();
+  const key = commentsQueryKey(roomId, documentId);
+  return (updated: Comment) => {
+    queryClient.setQueryData<Comment[]>(key, (current) =>
+      current?.map((comment) => (comment.id === updated.id ? updated : comment)),
+    );
+  };
 }
 
 /** A Document's Comments the viewer can see, deleted placeholders included. */
@@ -203,8 +233,7 @@ export interface ToggleReactionInput {
  * Document and its list are left alone.
  */
 export function useToggleReaction(roomId: string, documentId: string) {
-  const queryClient = useQueryClient();
-  const key = commentsQueryKey(roomId, documentId);
+  const replaceInThread = useReplaceInThread(roomId, documentId);
   return useMutation({
     mutationFn: async ({ commentId, emoji, add }: ToggleReactionInput) =>
       toComment(
@@ -213,10 +242,66 @@ export function useToggleReaction(roomId: string, documentId: string) {
           { method: add ? 'PUT' : 'DELETE' },
         ),
       ),
-    onSuccess: (updated) => {
-      queryClient.setQueryData<Comment[]>(key, (current) =>
-        current?.map((comment) => (comment.id === updated.id ? updated : comment)),
-      );
-    },
+    onSuccess: replaceInThread,
+  });
+}
+
+/** Pin a Comment (spec 19c Decision 3) or resolve its branch (Decision 4). */
+export type CommentFlag = 'pin' | 'resolve';
+
+/** What `useSetCommentFlag` sends: set the flag on a Comment, or clear it. */
+export interface SetCommentFlagInput {
+  commentId: string;
+  flag: CommentFlag;
+  /** True to pin or resolve, false to unpin or reopen. */
+  on: boolean;
+}
+
+/**
+ * Pins or unpins a Comment, or resolves or reopens its branch (spec 19c).
+ * `POST`/`DELETE .../{flag}` are idempotent on the backend and return the
+ * Comment, which replaces it in the Thread's cache. The backend refuses a
+ * fourth pin (409) with a message to show.
+ */
+export function useSetCommentFlag(roomId: string, documentId: string) {
+  const replaceInThread = useReplaceInThread(roomId, documentId);
+  return useMutation({
+    mutationFn: async ({ commentId, flag, on }: SetCommentFlagInput) =>
+      toComment(
+        await apiFetch<RawComment>(`${commentsPath(roomId, documentId)}/${commentId}/${flag}`, {
+          method: on ? 'POST' : 'DELETE',
+        }),
+      ),
+    onSuccess: replaceInThread,
+  });
+}
+
+/** What `usePromoteComment` records (spec 19c Decision 5). */
+export interface PromoteCommentInput {
+  commentId: string;
+  target: PromotionTarget;
+  /** The new Document, for `document`. */
+  documentId?: string;
+  /** The promoter confirmed the text will reach members who can't read the Comment. */
+  confirmWidening: boolean;
+}
+
+/**
+ * Records that a Comment's text was promoted (spec 19c Decision 5), once the
+ * description or the new Document holding it is saved. The backend audits it
+ * and refuses an unconfirmed widening (409). Returns the Comment, which
+ * replaces it in the Thread's cache.
+ */
+export function usePromoteComment(roomId: string, documentId: string) {
+  const replaceInThread = useReplaceInThread(roomId, documentId);
+  return useMutation({
+    mutationFn: async ({ commentId, target, documentId: targetId, confirmWidening }: PromoteCommentInput) =>
+      toComment(
+        await apiFetch<RawComment>(`${commentsPath(roomId, documentId)}/${commentId}/promote`, {
+          method: 'POST',
+          json: { target, document_id: targetId, confirm_widening: confirmWidening },
+        }),
+      ),
+    onSuccess: replaceInThread,
   });
 }

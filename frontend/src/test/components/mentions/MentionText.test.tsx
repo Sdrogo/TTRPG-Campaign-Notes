@@ -6,6 +6,7 @@ import { MentionText } from '../../../components/mentions/MentionText';
 import type { DocumentMentionsValue } from '../../../hooks/useDocumentMentions';
 import type { Document } from '../../../types/document';
 import type { ReactNode } from 'react';
+import type { Member } from '../../../types/member';
 
 function document(id: string, name: string): Document {
   return {
@@ -97,5 +98,47 @@ describe('MentionText', () => {
 
     expect(screen.getByTestId('document-mention')).toBeInTheDocument();
     expect(screen.getByTestId('tag-mention')).toBeInTheDocument();
+  });
+
+  // Spec 19c: `@[Name](user:<uuid>)` tokens in Comments.
+  describe('member mentions', () => {
+    const ARA = '11111111-1111-4111-8111-111111111111';
+    const members: Member[] = [
+      {
+        userId: ARA,
+        role: 'player',
+        isAdmin: false,
+        email: null,
+        displayName: 'Ara la Saggia',
+        pronouns: null,
+        bio: null,
+        avatarUrl: null,
+      },
+    ];
+
+    it('highlights a member under their current name', () => {
+      renderWithProviders(
+        withMentions(<MentionText text={`Chiedi a @[Ara](user:${ARA}) del #Il Cancello`} members={members} />),
+      );
+
+      expect(screen.getByTestId('user-mention')).toHaveTextContent('@Ara la Saggia');
+      expect(screen.getByTestId('document-mention')).toBeInTheDocument();
+    });
+
+    it('shows someone no longer in the Room as written, without highlighting', () => {
+      renderWithProviders(
+        <MentionText text="Chiedi a @[Carla](user:33333333-3333-4333-8333-333333333333)." members={members} />,
+      );
+
+      expect(screen.queryByTestId('user-mention')).not.toBeInTheDocument();
+      expect(screen.getByText('Chiedi a @Carla.')).toBeInTheDocument();
+    });
+
+    it('leaves tokens as written where members are not given', () => {
+      const text = `Chiedi a @[Ara](user:${ARA})`;
+      renderWithProviders(<MentionText text={text} />);
+
+      expect(screen.getByText(text)).toBeInTheDocument();
+    });
   });
 });

@@ -9,6 +9,7 @@ import {
   isFinishedMention,
   mentionHref,
   mentionKeyAction,
+  mentionTargetId,
   mentionTargetName,
   moveActiveIndex,
   newEntryName,
@@ -85,6 +86,46 @@ describe('findMentionQuery', () => {
 
   it('returns null without any #', () => {
     expect(findMentionQuery('plain text', 5)).toBeNull();
+  });
+
+  it('ignores @ unless it is one of the prefixes', () => {
+    expect(findMentionQuery('hi @Ar', 6)).toBeNull();
+    expect(findMentionQuery('hi @Ar', 6, '#@')).toEqual({ start: 3, query: 'Ar' });
+  });
+
+  it('takes the prefix nearest the caret', () => {
+    expect(findMentionQuery('@Ara #Cas', 9, '#@')).toEqual({ start: 5, query: 'Cas' });
+    expect(findMentionQuery('#Cas @Ar', 8, '#@')).toEqual({ start: 5, query: 'Ar' });
+  });
+
+  it('ignores an @ inside a word, like an email address', () => {
+    expect(findMentionQuery('ara@example', 11, '#@')).toBeNull();
+  });
+});
+
+describe('member targets', () => {
+  const target: MentionTarget = {
+    kind: 'member',
+    member: {
+      userId: 'u-ara',
+      role: 'player',
+      isAdmin: false,
+      email: 'ara@example.com',
+      displayName: null,
+      pronouns: null,
+      bio: null,
+      avatarUrl: null,
+    },
+  };
+
+  it('are named and keyed by the member', () => {
+    expect(mentionTargetName(target)).toBe('ara@example.com');
+    expect(mentionTargetId(target)).toBe('u-ara');
+  });
+
+  it('Documents and Tags are keyed by their id', () => {
+    expect(mentionTargetId({ kind: 'document', document: documents[0], tags: [] })).toBe('d-castle');
+    expect(mentionTargetId({ kind: 'tag', tag: npcTag, documentCount: 0 })).toBe('t-npc');
   });
 });
 
@@ -204,6 +245,13 @@ describe('insertMention', () => {
     expect(insertMention('Meet #cou', { start: 5, query: 'cou' }, 9, 'Count Vlad')).toEqual({
       text: 'Meet #Count Vlad ',
       caret: 17,
+    });
+  });
+
+  it('writes the given prefix', () => {
+    expect(insertMention('Ciao @ar', { start: 5, query: 'ar' }, 8, 'Ara', '@')).toEqual({
+      text: 'Ciao @Ara ',
+      caret: 10,
     });
   });
 

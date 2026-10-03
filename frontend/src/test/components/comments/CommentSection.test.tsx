@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../../lib/apiClient';
@@ -60,17 +60,12 @@ const members = [
 
 function render() {
   renderWithProviders(
-    <CommentSection
-      roomId="room-1"
-      documentId="doc-1"
-      members={members}
-      currentUserId="user-1"
-    />,
+    <CommentSection roomId="room-1" documentId="doc-1" members={members} currentUserId="user-1" />,
   );
   return { user: userEvent.setup() };
 }
 
-const composer = () => screen.getByRole('textbox', { name: 'Testo del commento' });
+const composer = () => screen.getByRole('combobox', { name: 'Testo del commento' });
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -88,7 +83,10 @@ describe('CommentSection', () => {
   });
 
   it('lists the Comments with a count', async () => {
-    mockRoutes([rawComment(), rawComment({ id: 'comment-2', body: 'Secondo', author_id: 'user-2' })]);
+    mockRoutes([
+      rawComment(),
+      rawComment({ id: 'comment-2', body: 'Secondo', author_id: 'user-2' }),
+    ]);
     render();
 
     await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(2));
@@ -149,10 +147,16 @@ describe('CommentSection', () => {
     await user.type(composer(), 'Ricordate il sigillo.');
     await user.click(screen.getByRole('button', { name: /Pubblica/ }));
 
-    expect(screen.getByRole('button', { name: /Pubblica/ })).toHaveAttribute('data-loading', 'true');
+    expect(screen.getByRole('button', { name: /Pubblica/ })).toHaveAttribute(
+      'data-loading',
+      'true',
+    );
     resolvePost(rawComment());
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /Pubblica/ })).not.toHaveAttribute('data-loading', 'true'),
+      expect(screen.getByRole('button', { name: /Pubblica/ })).not.toHaveAttribute(
+        'data-loading',
+        'true',
+      ),
     );
   });
 
@@ -167,7 +171,10 @@ describe('CommentSection', () => {
     await user.click(screen.getByText('Modifica'));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
 
-    expect(screen.getByRole('button', { name: /Pubblica/ })).not.toHaveAttribute('data-loading', 'true');
+    expect(screen.getByRole('button', { name: /Pubblica/ })).not.toHaveAttribute(
+      'data-loading',
+      'true',
+    );
     resolvePatch(rawComment());
     await waitFor(() => expect(screen.getByText('Modifica')).toBeInTheDocument());
   });
@@ -281,7 +288,7 @@ describe('editing from the list', () => {
     await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
 
     await user.click(screen.getByText('Modifica'));
-    const editor = screen.getAllByRole('textbox', { name: 'Testo del commento' })[0];
+    const editor = screen.getAllByRole('combobox', { name: 'Testo del commento' })[0];
     await user.clear(editor);
     await user.type(editor, 'Nuovo testo');
     await user.click(screen.getByRole('button', { name: 'Salva' }));
@@ -326,10 +333,9 @@ describe('deleting from the list', () => {
     await user.click(screen.getAllByRole('button', { name: 'Elimina' }).at(-1)!);
 
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/rooms/room-1/documents/doc-1/comments/comment-1',
-        { method: 'DELETE' },
-      ),
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/documents/doc-1/comments/comment-1', {
+        method: 'DELETE',
+      }),
     );
   });
 
@@ -365,10 +371,9 @@ describe('deleting from the list', () => {
     await user.click(confirmButtons[0]);
 
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/rooms/room-1/documents/doc-1/comments/comment-1',
-        { method: 'DELETE' },
-      ),
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/documents/doc-1/comments/comment-1', {
+        method: 'DELETE',
+      }),
     );
     expect(screen.getByText('Secondo')).toBeInTheDocument();
     resolveDelete(undefined);
@@ -447,10 +452,12 @@ describe('posting in character', () => {
 });
 
 describe('CommentSection replies (spec 19)', () => {
-  const replyBox = () => screen.getByRole('textbox', { name: /^Risposta a / });
+  const replyBox = () => screen.getByRole('combobox', { name: /^Risposta a / });
   // The composer's submit button, not the Reply action that opened it.
   const sendReply = () =>
-    screen.getAllByRole('button', { name: /^Rispondi/ }).find((b) => b.getAttribute('type') === 'submit')!;
+    screen
+      .getAllByRole('button', { name: /^Rispondi/ })
+      .find((b) => b.getAttribute('type') === 'submit')!;
 
   it('nests replies under what they answer and counts top-level Comments', async () => {
     mockRoutes([
@@ -510,7 +517,7 @@ describe('CommentSection replies (spec 19)', () => {
         },
       }),
     );
-    await waitFor(() => expect(screen.queryByRole('textbox', { name: /^Risposta a / })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('combobox', { name: /^Risposta a / })).toBeNull());
   });
 
   // VR-04: a reply to a narrower Comment is never offered Room, and starts
@@ -545,7 +552,7 @@ describe('CommentSection replies (spec 19)', () => {
     expect(screen.getAllByText('Rispondi')).toHaveLength(1);
     await user.click(screen.getByText('Rispondi'));
     await user.click(screen.getAllByRole('button', { name: 'Annulla' })[0]);
-    expect(screen.queryByRole('textbox', { name: /^Risposta a / })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: /^Risposta a / })).toBeNull();
   });
 
   it('reports a failed reply and keeps the composer open', async () => {
@@ -634,5 +641,200 @@ describe('new since the last visit', () => {
 
     expect(screen.queryByText('Risposta r4')).not.toBeInTheDocument();
     expect(screen.getByText('1 nuova')).toBeInTheDocument();
+  });
+});
+
+describe('pinned and resolved (spec 19c)', () => {
+  const COMMENTS = '/rooms/room-1/documents/doc-1/comments';
+
+  // Decision 3: pinned Comments come first, oldest pin first, ahead of the
+  // toolbar's newest-first sort.
+  it('lists pinned Comments in their own section before the rest', async () => {
+    mockRoutes([
+      rawComment({ id: 'c-old', body: 'Vecchio', created_at: '2026-09-20T10:00:00Z' }),
+      rawComment({
+        id: 'c-pin-late',
+        body: 'Fissato dopo',
+        created_at: '2026-09-21T10:00:00Z',
+        pinned_at: '2026-09-25T10:00:00Z',
+      }),
+      rawComment({
+        id: 'c-pin-early',
+        body: 'Fissato prima',
+        created_at: '2026-09-19T10:00:00Z',
+        pinned_at: '2026-09-24T10:00:00Z',
+      }),
+    ]);
+    render();
+
+    const section = await screen.findByRole('region', { name: 'Commenti fissati' });
+    const pinnedBodies = within(section)
+      .getAllByTestId('comment-item')
+      .map((item) => item.textContent);
+    expect(pinnedBodies[0]).toContain('Fissato prima');
+    expect(pinnedBodies[1]).toContain('Fissato dopo');
+    expect(within(screen.getByTestId('comment-list')).getByText('Vecchio')).toBeInTheDocument();
+    expect(within(section).getAllByText('Fissato')).toHaveLength(2);
+  });
+
+  it('shows no pinned section when nothing is pinned', async () => {
+    mockRoutes([rawComment()]);
+    render();
+
+    await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(1));
+    expect(screen.queryByTestId('pinned-comments')).not.toBeInTheDocument();
+  });
+
+  it('pins through the Comment action and shows the answer', async () => {
+    const writes: string[] = [];
+    mockRoutes([rawComment({ can_pin: true })], (path) => {
+      writes.push(path);
+      return Promise.resolve(rawComment({ can_pin: true, pinned_at: '2026-10-02T12:00:00Z' }));
+    });
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Fissa' }));
+
+    expect(await screen.findByRole('region', { name: 'Commenti fissati' })).toBeInTheDocument();
+    expect(writes).toEqual([`${COMMENTS}/comment-1/pin`]);
+    expect(fetchMock).toHaveBeenCalledWith(`${COMMENTS}/comment-1/pin`, { method: 'POST' });
+    expect(screen.getByRole('button', { name: 'Togli dai fissati' })).toBeInTheDocument();
+  });
+
+  it('disables only the actions of the Comment being pinned', async () => {
+    mockRoutes(
+      [
+        rawComment({ id: 'c-1', body: 'Uno', can_pin: true }),
+        rawComment({ id: 'c-2', body: 'Due', can_pin: true }),
+      ],
+      () => new Promise(() => {}),
+    );
+    const { user } = render();
+
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Fissa' })).toHaveLength(2));
+    await user.click(screen.getAllByRole('button', { name: 'Fissa' })[0]);
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('button', { name: 'Fissa' }).map((b) => b.hasAttribute('disabled')),
+      ).toEqual([true, false]),
+    );
+  });
+
+  // Two changes on different Comments overlap: the first one's outcome still
+  // counts once the second has started.
+  it('handles overlapping changes on two Comments each on its own', async () => {
+    const parent = rawComment({ id: 'c-1', body: 'Uno', can_resolve: true });
+    const reply = rawComment({ id: 'c-2', body: "L'oste.", parent_id: 'c-1' });
+    const other = rawComment({ id: 'c-3', body: 'Tre', can_pin: true });
+    let finishResolve: (value: unknown) => void = () => {};
+    let failPin: (error: Error) => void = () => {};
+    mockRoutes([parent, reply, other], (path) =>
+      path.endsWith('/resolve')
+        ? new Promise((resolve) => {
+            finishResolve = resolve;
+          })
+        : new Promise((_, reject) => {
+            failPin = reject;
+          }),
+    );
+    const { user } = render();
+
+    expect(await screen.findByText("L'oste.")).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Nascondi risposte' }));
+    await user.click(screen.getByRole('button', { name: 'Mostra 1 risposta' }));
+    await user.click(screen.getByRole('button', { name: 'Segna come risolto' }));
+    await user.click(screen.getByRole('button', { name: 'Fissa' }));
+    expect(screen.getByRole('button', { name: 'Segna come risolto' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Fissa' })).toBeDisabled();
+
+    finishResolve({ ...parent, resolved_at: '2026-10-02T12:00:00Z', resolved_by: 'user-1' });
+    failPin(new Error('Un Documento può avere al massimo 3 Commenti fissati'));
+
+    // The resolve still collapses its branch, the pin's failure is reported.
+    await waitFor(() => expect(screen.queryByText("L'oste.")).not.toBeInTheDocument());
+    await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('button', { name: 'Fissa' })).toBeEnabled();
+  });
+
+  it('reports a refused pin', async () => {
+    mockRoutes([rawComment({ can_pin: true })], () =>
+      Promise.reject(new Error('Un Documento può avere al massimo 3 Commenti fissati')),
+    );
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Fissa' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+  });
+
+  // Decision 4: a resolved branch starts collapsed and says it's resolved.
+  it('collapses a resolved branch, and resolving one by hand collapses it', async () => {
+    const parent = rawComment({ id: 'c-1', body: 'Chi ha la chiave?', can_resolve: true });
+    const reply = rawComment({ id: 'c-2', body: "L'oste.", parent_id: 'c-1' });
+    mockRoutes([parent, reply], () =>
+      Promise.resolve({ ...parent, resolved_at: '2026-10-02T12:00:00Z', resolved_by: 'user-1' }),
+    );
+    const { user } = render();
+
+    expect(await screen.findByText("L'oste.")).toBeInTheDocument();
+    // Opened by hand first: resolving still collapses it.
+    await user.click(screen.getByRole('button', { name: 'Nascondi risposte' }));
+    await user.click(screen.getByRole('button', { name: 'Mostra 1 risposta' }));
+    await user.click(screen.getByRole('button', { name: 'Segna come risolto' }));
+
+    expect(await screen.findByText('Risolto')).toBeInTheDocument();
+    expect(screen.queryByText("L'oste.")).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(`${COMMENTS}/c-1/resolve`, { method: 'POST' });
+    expect(screen.getByRole('button', { name: 'Riapri' })).toBeInTheDocument();
+    // Still reachable by hand.
+    await user.click(screen.getByRole('button', { name: 'Mostra 1 risposta' }));
+    expect(screen.getByText("L'oste.")).toBeInTheDocument();
+  });
+
+  it('reopens a resolved branch through the Comment action', async () => {
+    const parent = rawComment({
+      id: 'c-1',
+      can_resolve: true,
+      resolved_at: '2026-10-02T12:00:00Z',
+      resolved_by: 'user-2',
+    });
+    const reply = rawComment({ id: 'c-2', body: "L'oste.", parent_id: 'c-1' });
+    mockRoutes([parent, reply], () =>
+      Promise.resolve({ ...parent, resolved_at: null, resolved_by: null }),
+    );
+    const { user } = render();
+
+    expect(await screen.findByText('Risolto')).toBeInTheDocument();
+    expect(screen.queryByText("L'oste.")).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Riapri' }));
+
+    expect(await screen.findByText("L'oste.")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(`${COMMENTS}/c-1/resolve`, { method: 'DELETE' });
+  });
+});
+
+describe('promotion (spec 19c)', () => {
+  it('hands the promoted Comment and its target to the page', async () => {
+    mockRoutes([rawComment({ can_promote: true })]);
+    const onPromote = vi.fn();
+    renderWithProviders(
+      <CommentSection
+        roomId="room-1"
+        documentId="doc-1"
+        members={members}
+        currentUserId="user-1"
+        onPromote={onPromote}
+      />,
+    );
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Promuovi' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'In un nuovo Documento' }));
+
+    expect(onPromote).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'comment-1' }),
+      'document',
+    );
   });
 });

@@ -41,7 +41,7 @@ function render(props: Partial<Parameters<typeof CommentComposer>[0]> = {}) {
   return { onSubmit, user: userEvent.setup() };
 }
 
-const body = () => screen.getByRole('textbox', { name: 'Testo del commento' });
+const body = () => screen.getByRole('combobox', { name: 'Testo del commento' });
 const submitButton = () => screen.getByRole('button', { name: /Pubblica/ });
 
 describe('CommentComposer', () => {

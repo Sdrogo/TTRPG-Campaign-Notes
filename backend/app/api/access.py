@@ -3,7 +3,7 @@
 way."""
 
 import uuid
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Iterable, Sequence
 from dataclasses import dataclass
 
 from fastapi import status
@@ -49,6 +49,24 @@ async def get_visible_document(
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.document.notFound", locale)
 
     return document, owner_ids, selective_ids
+
+
+async def visible_documents(
+    session: AsyncSession, documents: Iterable[Document], viewer: Membership
+) -> list[Document]:
+    """The Documents of the viewer's Room they may see (Invariant 1), with the
+    Owners and grants read in two queries whatever their number."""
+    candidates = [document for document in documents if document.room_id == viewer.room_id]
+    ids = [document.id for document in candidates]
+    owners = await documents_repo.list_owner_ids_for_documents(session, ids)
+    grants = await documents_repo.list_selective_grant_ids_for_documents(session, ids)
+    return [
+        document
+        for document in candidates
+        if is_document_visible(
+            document, viewer.user_id, viewer.role, owners[document.id], grants[document.id]
+        )
+    ]
 
 
 async def get_owned_document(

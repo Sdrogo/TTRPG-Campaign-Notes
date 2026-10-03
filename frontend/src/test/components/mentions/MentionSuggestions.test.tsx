@@ -71,6 +71,40 @@ describe('MentionSuggestions', () => {
     expect(screen.getByText('Il Cancello')).toBeInTheDocument();
   });
 
+  it('names the list after what it suggests', () => {
+    render();
+
+    expect(screen.getByRole('listbox', { name: 'Documenti e Tag da collegare' })).toBeInTheDocument();
+  });
+
+  it('lists members by name, with their avatar and no detail line (spec 19c)', async () => {
+    const { onPick, user } = render({
+      candidates: [
+        {
+          kind: 'member',
+          member: {
+            userId: 'user-2',
+            role: 'player',
+            isAdmin: false,
+            email: 'ara@example.com',
+            displayName: 'Ara',
+            pronouns: null,
+            bio: null,
+            avatarUrl: null,
+          },
+        },
+      ],
+    });
+
+    expect(screen.getByRole('listbox', { name: 'Membri da menzionare' })).toBeInTheDocument();
+    const option = screen.getByRole('option');
+    expect(option).toHaveAttribute('data-kind', 'member');
+    expect(option.querySelector('.mantine-Avatar-root')).not.toBeNull();
+    expect(option.querySelectorAll('p')).toHaveLength(1);
+    await user.click(screen.getByText('Ara'));
+    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ kind: 'member' }));
+  });
+
   it("shows a Document's Tags as its detail line", () => {
     render();
 

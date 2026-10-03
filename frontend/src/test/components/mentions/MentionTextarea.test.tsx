@@ -8,6 +8,7 @@ import { renderWithProviders } from '../../utils';
 import { MentionTextarea } from '../../../components/mentions/MentionTextarea';
 import type { DocumentMentionsValue } from '../../../hooks/useDocumentMentions';
 import type { Document } from '../../../types/document';
+import type { Member } from '../../../types/member';
 
 vi.mock('../../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
@@ -38,9 +39,11 @@ function Harness({
   initial = '',
   onKeyDown,
   onBlur,
+  members,
 }: {
   onValue: (value: string) => void;
   initial?: string;
+  members?: Member[];
   onKeyDown?: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
   onBlur?: (event: FocusEvent<HTMLTextAreaElement>) => void;
 }) {
@@ -55,6 +58,7 @@ function Harness({
       }}
       onKeyDown={onKeyDown}
       onBlur={onBlur}
+      members={members}
     />
   );
 }
@@ -65,6 +69,7 @@ function render(
     initial?: string;
     onKeyDown?: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
     onBlur?: (event: FocusEvent<HTMLTextAreaElement>) => void;
+    members?: Member[];
   } = {},
 ) {
   const onValue = vi.fn();
@@ -75,6 +80,7 @@ function render(
       initial={options.initial}
       onKeyDown={options.onKeyDown}
       onBlur={options.onBlur}
+      members={options.members}
     />
   );
 
@@ -460,5 +466,119 @@ describe('tracking the caret', () => {
     fireEvent.select(textarea);
 
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+  });
+});
+
+// Spec 19c: `@` suggests the Room's members; a picked one is stored as a
+// token and shown as `@Name`.
+describe('mentioning members', () => {
+  const ARA = '11111111-1111-4111-8111-111111111111';
+  const BRUNO = '22222222-2222-4222-8222-222222222222';
+  const member = (userId: string, displayName: string): Member => ({
+    userId,
+    role: 'player',
+    isAdmin: false,
+    email: null,
+    displayName,
+    pronouns: null,
+    bio: null,
+    avatarUrl: null,
+  });
+  const members = [member(ARA, 'Ara'), member(BRUNO, 'Bruno')];
+  const ara = `@[Ara](user:${ARA})`;
+
+  it('suggests members on @, even outside a mentions context', async () => {
+    const { user } = render({ context: null, members });
+
+    await user.type(field(), 'Ciao @');
+
+    expect(await screen.findByRole('listbox', { name: 'Membri da menzionare' })).toBeInTheDocument();
+    expect(screen.getAllByRole('option')).toHaveLength(2);
+  });
+
+  it('does not suggest Documents on # without a mentions context', async () => {
+    const { user } = render({ context: null, members });
+
+    await user.type(field(), '#Il');
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('stores a picked member as a token and shows @Name', async () => {
+    const { onValue, user } = render({ members });
+    await user.type(field(), 'Ciao @ar');
+    await screen.findByText('Ara');
+
+    await user.keyboard('{Enter}');
+
+    expect(onValue).toHaveBeenLastCalledWith(`Ciao ${ara} `);
+    expect(field()).toHaveValue('Ciao @Ara ');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('keeps the token while typing after it', async () => {
+    const { onValue, user } = render({ members });
+    await user.type(field(), '@Br');
+    await user.click(await screen.findByText('Bruno'));
+
+    await user.type(field(), 'vieni');
+
+    expect(onValue).toHaveBeenLastCalledWith(`@[Bruno](user:${BRUNO}) vieni`);
+  });
+
+  it('shows a stored token as @Name and unlinks it when the name is edited', async () => {
+    const { onValue, user } = render({ members, initial: `${ara} ciao` });
+    expect(field()).toHaveValue('@Ara ciao');
+
+    // Caret right after "@Ara", then delete its last letter.
+    await user.click(field());
+    fireEvent.select(field(), { target: { selectionStart: 4, selectionEnd: 4 } });
+    await user.keyboard('{Backspace}');
+
+    expect(onValue).toHaveBeenLastCalledWith('@Ar ciao');
+  });
+
+  it('keeps a mention when typing right before it', async () => {
+    const { onValue, user } = render({ members, initial: ara });
+
+    await user.type(field(), '@', { initialSelectionStart: 0, initialSelectionEnd: 0 });
+
+    expect(onValue).toHaveBeenLastCalledWith(`@${ara}`);
+  });
+
+  it('closes once prose follows a member name', async () => {
+    const { user } = render({ members });
+
+    await user.type(field(), '@Ara dice');
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('offers nothing to create for an unknown member', async () => {
+    const { user } = render({ members });
+
+    await user.type(field(), '@Zeta');
+
+    expect(await screen.findByText('Nessun risultato')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Crea/ })).not.toBeInTheDocument();
+  });
+
+  it('still completes # mentions as plain text, next to member tokens', async () => {
+    const { onValue, user } = render({ members, initial: `${ara} ` });
+
+    await user.type(field(), '#Il Can');
+    await user.click(await screen.findByText('Il Cancello'));
+
+    expect(onValue).toHaveBeenLastCalledWith(`${ara} #Il Cancello `);
+  });
+
+  it('creates a Document from # while members are on', async () => {
+    const { onValue, create, user } = render({ members, initial: `${ara} ` });
+    create.mockResolvedValue({ kind: 'document', document: document('doc-9', 'Tempio'), tags: [] });
+    await user.type(field(), '#Tempio');
+
+    await user.click(await screen.findByRole('button', { name: /Crea Documento/ }));
+
+    await waitFor(() => expect(onValue).toHaveBeenLastCalledWith(`${ara} #Tempio `));
   });
 });
