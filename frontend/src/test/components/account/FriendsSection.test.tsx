@@ -131,7 +131,7 @@ describe('FriendsSection', () => {
   it('lists Friends, requests received and requests sent', async () => {
     serve(
       rawFriends({
-        friends: [rawFriend({ email: 'altro@example.com', pronouns: 'lui' })],
+        friends: [rawFriend({ pronouns: 'lui' })],
         incoming: [incoming],
         outgoing: [outgoing],
       }),
@@ -139,20 +139,11 @@ describe('FriendsSection', () => {
     render();
 
     expect(await screen.findByText('Altro')).toBeInTheDocument();
-    // The email only comes when the two share a Room; the backend decides.
-    expect(screen.getByText('altro@example.com')).toBeInTheDocument();
     expect(screen.getByText('lui')).toBeInTheDocument();
     expect(screen.getByText('Richieste ricevute')).toBeInTheDocument();
     expect(screen.getByText('Terzo')).toBeInTheDocument();
     expect(screen.getByText('Richieste inviate')).toBeInTheDocument();
     expect(screen.getByText('Quarto')).toBeInTheDocument();
-  });
-
-  it('does not repeat the email when it is already the name shown', async () => {
-    serve(rawFriends({ friends: [rawFriend({ display_name: null, email: 'altro@example.com' })] }));
-    render();
-
-    expect(await screen.findAllByText('altro@example.com')).toHaveLength(1);
   });
 
   it('accepts a request and confirms the new Friend', async () => {

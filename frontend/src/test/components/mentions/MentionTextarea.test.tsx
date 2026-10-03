@@ -29,8 +29,14 @@ function document(id: string, name: string): Document {
   };
 }
 
-const documents = [document('doc-1', 'Il Cancello'), document('doc-2', 'Il Castello')];
-const tags = [{ id: 'tag-1', name: 'Luoghi', category: null, mainPosition: null }];
+const CANCELLO = '11111111-1111-4111-8111-111111111111';
+const CASTELLO = '22222222-2222-4222-8222-222222222222';
+const TEMPIO = '99999999-9999-4999-8999-999999999999';
+const LUOGHI = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const TEMPIO_TAG = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const documents = [document(CANCELLO, 'Il Cancello'), document(CASTELLO, 'Il Castello')];
+const cancello = `#[Il Cancello](doc:${CANCELLO})`;
+const tags = [{ id: LUOGHI, name: 'Luoghi', category: null, mainPosition: null }];
 
 // Controlled, like every real caller: the popup depends on the value and
 // the caret moving together.
@@ -194,7 +200,7 @@ describe('picking a suggestion', () => {
 
     await user.click(screen.getByText('Il Cancello'));
 
-    expect(onValue).toHaveBeenLastCalledWith('#Il Cancello ');
+    expect(onValue).toHaveBeenLastCalledWith(`${cancello} `);
   });
 
   it('completes on Enter', async () => {
@@ -204,7 +210,7 @@ describe('picking a suggestion', () => {
 
     await user.keyboard('{Enter}');
 
-    expect(onValue).toHaveBeenLastCalledWith('#Il Cancello ');
+    expect(onValue).toHaveBeenLastCalledWith(`${cancello} `);
   });
 
   it('moves through the list with the arrow keys', async () => {
@@ -214,7 +220,7 @@ describe('picking a suggestion', () => {
 
     await user.keyboard('{ArrowDown}{Enter}');
 
-    expect(onValue).toHaveBeenLastCalledWith('#Il Castello ');
+    expect(onValue).toHaveBeenLastCalledWith(`#[Il Castello](doc:${CASTELLO}) `);
   });
 
   it('moves back up the list with ArrowUp', async () => {
@@ -224,7 +230,7 @@ describe('picking a suggestion', () => {
 
     await user.keyboard('{ArrowDown}{ArrowUp}{Enter}');
 
-    expect(onValue).toHaveBeenLastCalledWith('#Il Cancello ');
+    expect(onValue).toHaveBeenLastCalledWith(`${cancello} `);
   });
 
   it('keeps the text around the mention', async () => {
@@ -234,7 +240,7 @@ describe('picking a suggestion', () => {
 
     await user.keyboard('{Enter}');
 
-    expect(onValue).toHaveBeenLastCalledWith('Vai al #Il Cancello ');
+    expect(onValue).toHaveBeenLastCalledWith(`Vai al ${cancello} `);
   });
 
   it('closes the popup after picking', async () => {
@@ -271,21 +277,21 @@ describe('creating from the popup', () => {
 
   it('creates a Document and completes the mention with it', async () => {
     const { onValue, create, user } = render();
-    create.mockResolvedValue({ kind: 'document', document: document('doc-9', 'Tempio'), tags: [] });
+    create.mockResolvedValue({ kind: 'document', document: document(TEMPIO, 'Tempio'), tags: [] });
     await user.type(field(), '#Tempio');
     await screen.findByRole('button', { name: /Crea Documento/ });
 
     await user.click(screen.getByRole('button', { name: /Crea Documento/ }));
 
     await waitFor(() => expect(create).toHaveBeenCalledWith('document', 'Tempio'));
-    await waitFor(() => expect(onValue).toHaveBeenLastCalledWith('#Tempio '));
+    await waitFor(() => expect(onValue).toHaveBeenLastCalledWith(`#[Tempio](doc:${TEMPIO}) `));
   });
 
   it('creates a Tag when that kind is chosen', async () => {
-    const { create, user } = render();
+    const { onValue, create, user } = render();
     create.mockResolvedValue({
       kind: 'tag',
-      tag: { id: 'tag-9', name: 'Tempio', category: null, mainPosition: null },
+      tag: { id: TEMPIO_TAG, name: 'Tempio', category: null, mainPosition: null },
       documentCount: 0,
     });
     await user.type(field(), '#Tempio');
@@ -295,6 +301,7 @@ describe('creating from the popup', () => {
     await user.click(screen.getByRole('button', { name: /Crea Tag/ }));
 
     await waitFor(() => expect(create).toHaveBeenCalledWith('tag', 'Tempio'));
+    await waitFor(() => expect(onValue).toHaveBeenLastCalledWith(`#[Tempio](tag:${TEMPIO_TAG}) `));
   });
 
   // The UI only offers what the backend would allow.
@@ -329,7 +336,7 @@ describe('creating from the popup', () => {
     await user.keyboard('{Enter}');
 
     expect(create).toHaveBeenCalledTimes(1);
-    resolveCreate({ kind: 'document', document: document('doc-9', 'Tempio'), tags: [] });
+    resolveCreate({ kind: 'document', document: document(TEMPIO, 'Tempio'), tags: [] });
   });
 
   // "Only replace what was typed if it's still there, unchanged" (the
@@ -344,7 +351,7 @@ describe('creating from the popup', () => {
 
     await user.click(screen.getByRole('button', { name: /Crea Documento/ }));
     await user.clear(field());
-    resolveCreate({ kind: 'document', document: document('doc-9', 'Tempio'), tags: [] });
+    resolveCreate({ kind: 'document', document: document(TEMPIO, 'Tempio'), tags: [] });
 
     await waitFor(() => expect(create).toHaveBeenCalled());
     expect(field()).toHaveValue('');
@@ -378,7 +385,7 @@ describe('creating from the keyboard', () => {
 
   it('creates on Enter once highlighted', async () => {
     const { create, user } = render();
-    create.mockResolvedValue({ kind: 'document', document: document('doc-9', 'Tempio'), tags: [] });
+    create.mockResolvedValue({ kind: 'document', document: document(TEMPIO, 'Tempio'), tags: [] });
     await user.type(field(), '#Tempio');
     await screen.findByRole('button', { name: /Crea Documento/ });
 
@@ -391,7 +398,7 @@ describe('creating from the keyboard', () => {
     const { create, user } = render();
     create.mockResolvedValue({
       kind: 'tag',
-      tag: { id: 'tag-9', name: 'Tempio', category: null, mainPosition: null },
+      tag: { id: TEMPIO_TAG, name: 'Tempio', category: null, mainPosition: null },
       documentCount: 0,
     });
     await user.type(field(), '#Tempio');
@@ -471,6 +478,35 @@ describe('tracking the caret', () => {
 
 // Spec 19c: `@` suggests the Room's members; a picked one is stored as a
 // token and shown as `@Name`.
+// Spec 20 Decision 1: a Document or Tag mention is stored as a token and
+// shown as `#Name`; editing its name turns it back into plain text.
+describe('Document and Tag tokens', () => {
+  it('shows a stored token as #Name and unlinks it when the name is edited', async () => {
+    const { onValue, user } = render({ initial: `${cancello} ciao` });
+    expect(field()).toHaveValue('#Il Cancello ciao');
+
+    await user.click(field());
+    fireEvent.select(field(), { target: { selectionStart: 12, selectionEnd: 12 } });
+    await user.keyboard('{Backspace}');
+
+    expect(onValue).toHaveBeenLastCalledWith('#Il Cancell ciao');
+  });
+
+  it('keeps the token when typing after it', async () => {
+    const { onValue, user } = render({ initial: `${cancello} ` });
+
+    await user.type(field(), 'vieni');
+
+    expect(onValue).toHaveBeenLastCalledWith(`${cancello} vieni`);
+  });
+
+  it('reads member tokens as plain text where members cannot be mentioned', () => {
+    render({ initial: `@[Ara](user:${CANCELLO})` });
+
+    expect(field()).toHaveValue(`@[Ara](user:${CANCELLO})`);
+  });
+});
+
 describe('mentioning members', () => {
   const ARA = '11111111-1111-4111-8111-111111111111';
   const BRUNO = '22222222-2222-4222-8222-222222222222';
@@ -563,22 +599,22 @@ describe('mentioning members', () => {
     expect(screen.queryByRole('button', { name: /Crea/ })).not.toBeInTheDocument();
   });
 
-  it('still completes # mentions as plain text, next to member tokens', async () => {
+  it('completes # mentions as Document tokens, next to member tokens', async () => {
     const { onValue, user } = render({ members, initial: `${ara} ` });
 
     await user.type(field(), '#Il Can');
     await user.click(await screen.findByText('Il Cancello'));
 
-    expect(onValue).toHaveBeenLastCalledWith(`${ara} #Il Cancello `);
+    expect(onValue).toHaveBeenLastCalledWith(`${ara} ${cancello} `);
   });
 
   it('creates a Document from # while members are on', async () => {
     const { onValue, create, user } = render({ members, initial: `${ara} ` });
-    create.mockResolvedValue({ kind: 'document', document: document('doc-9', 'Tempio'), tags: [] });
+    create.mockResolvedValue({ kind: 'document', document: document(TEMPIO, 'Tempio'), tags: [] });
     await user.type(field(), '#Tempio');
 
     await user.click(await screen.findByRole('button', { name: /Crea Documento/ }));
 
-    await waitFor(() => expect(onValue).toHaveBeenLastCalledWith(`${ara} #Tempio `));
+    await waitFor(() => expect(onValue).toHaveBeenLastCalledWith(`${ara} #[Tempio](doc:${TEMPIO}) `));
   });
 });

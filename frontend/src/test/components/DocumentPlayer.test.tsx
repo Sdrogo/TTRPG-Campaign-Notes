@@ -79,8 +79,8 @@ describe('DocumentPlayer', () => {
 
     await user.click(picker());
 
-    expect(screen.getByText('Master (master@example.com)')).toBeInTheDocument();
-    expect(screen.queryByText('Giocatore (giocatore@example.com)')).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Master' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Giocatore' })).not.toBeInTheDocument();
   });
 
   // Decision 3 of spec 17: also making the player an Owner is the default.
@@ -89,7 +89,7 @@ describe('DocumentPlayer', () => {
 
     expect(screen.getByRole('checkbox', { name: 'Rendilo anche Owner' })).toBeChecked();
     await user.click(picker());
-    await user.click(screen.getByText('Master (master@example.com)'));
+    await user.click(screen.getByText('Master'));
     await user.click(screen.getByRole('button', { name: 'Imposta giocatore' }));
 
     expect(onSet).toHaveBeenCalledWith('user-2', true);
@@ -101,7 +101,7 @@ describe('DocumentPlayer', () => {
 
     await user.click(screen.getByRole('checkbox', { name: 'Rendilo anche Owner' }));
     await user.click(picker());
-    await user.click(screen.getByText('Giocatore (giocatore@example.com)'));
+    await user.click(screen.getByText('Giocatore'));
     await user.click(screen.getByRole('button', { name: 'Imposta giocatore' }));
 
     expect(onSet).toHaveBeenCalledWith('user-1', false);

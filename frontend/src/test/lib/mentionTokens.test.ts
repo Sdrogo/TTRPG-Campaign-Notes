@@ -2,14 +2,24 @@ import { describe, expect, it } from 'vitest';
 import {
   applyDisplayEdit,
   filterMemberCandidates,
+  mentionToken,
   replaceDisplayRange,
   resolveUserMention,
-  splitUserMentions,
+  splitMentionTokens,
   toDisplay,
   userMentionToken,
   type UserMention,
-} from '../../lib/userMentions';
+} from '../../lib/mentionTokens';
 import type { Member } from '../../types/member';
+
+// Member tokens are read only where members can be mentioned (Comments).
+const USERS = { users: true };
+const splitUsers = (text: string) => splitMentionTokens(text, USERS);
+const showUsers = (text: string) => toDisplay(text, USERS);
+const replaceUsers = (stored: string, from: number, to: number, inserted: string) =>
+  replaceDisplayRange(stored, from, to, inserted, USERS);
+const applyUsers = (stored: string, display: string, caret = 0) =>
+  applyDisplayEdit(stored, display, caret, USERS);
 
 const ARA = '11111111-1111-4111-8111-111111111111';
 const BRUNO = '22222222-2222-4222-8222-222222222222';
@@ -39,14 +49,14 @@ describe('userMentionToken', () => {
   });
 });
 
-describe('splitUserMentions', () => {
+describe('splitMentionTokens', () => {
   it('splits plain runs and member mentions, keeping the stored text', () => {
     const text = `Ciao ${ara}, guarda qui`;
-    const segments = splitUserMentions(text);
+    const segments = splitUsers(text);
 
     expect(segments).toEqual([
       { kind: 'text', stored: 'Ciao ', display: 'Ciao ' },
-      { kind: 'user', stored: ara, display: '@Ara', userId: ARA, name: 'Ara' },
+      { kind: 'user', stored: ara, display: '@Ara', targetId: ARA, name: 'Ara' },
       { kind: 'text', stored: ', guarda qui', display: ', guarda qui' },
     ]);
     expect(segments.map((segment) => segment.stored).join('')).toBe(text);
@@ -55,13 +65,13 @@ describe('splitUserMentions', () => {
   it('reads escaped names and back-to-back tokens', () => {
     const escaped = userMentionToken(BRUNO, 'B]r\\x');
 
-    expect(toDisplay(`${escaped}${ara}`)).toBe('@B]r\\x@Ara');
+    expect(showUsers(`${escaped}${ara}`)).toBe('@B]r\\x@Ara');
   });
 
   it('reads an upper-case id as the same user', () => {
-    const [segment] = splitUserMentions(`@[Ara](user:${ARA.toUpperCase()})`);
+    const [segment] = splitUsers(`@[Ara](user:${ARA.toUpperCase()})`);
 
-    expect(segment).toMatchObject({ kind: 'user', userId: ARA });
+    expect(segment).toMatchObject({ kind: 'user', targetId: ARA });
   });
 
   it('leaves whatever is not a whole member token as plain text', () => {
@@ -75,17 +85,43 @@ describe('splitUserMentions', () => {
       `@[Ara] (user:${ARA})`,
       'trailing \\',
     ]) {
-      expect(toDisplay(text)).toBe(text);
+      expect(showUsers(text)).toBe(text);
     }
   });
 
   it('skips a broken opening and still finds the token after it', () => {
-    expect(toDisplay(`@[rotto] ${ara}`)).toBe('@[rotto] @Ara');
+    expect(showUsers(`@[rotto] ${ara}`)).toBe('@[rotto] @Ara');
   });
 
   it('reads a name up to the first unescaped ], like the backend', () => {
     // `[` isn't escaped, so an earlier `@[` swallows the token after it.
-    expect(toDisplay(`@[ciao ${ara}`)).toBe('@ciao @[Ara');
+    expect(showUsers(`@[ciao ${ara}`)).toBe('@ciao @[Ara');
+  });
+});
+
+describe('Document and Tag tokens (spec 20)', () => {
+  const DOC = '44444444-4444-4444-8444-444444444444';
+  const castle = `#[Castle](doc:${DOC})`;
+
+  it('writes a token for each kind', () => {
+    expect(mentionToken('doc', DOC, 'Castle')).toBe(castle);
+    expect(mentionToken('tag', DOC, 'P]NG')).toBe(`#[P\\]NG](tag:${DOC})`);
+  });
+
+  it('reads them in any text, member tokens only when asked', () => {
+    const text = `${castle} e ${ara}`;
+
+    expect(toDisplay(text)).toBe(`#Castle e ${ara}`);
+    expect(toDisplay(text, USERS)).toBe('#Castle e @Ara');
+    expect(splitMentionTokens(`#[PNG](tag:${DOC})`)).toEqual([
+      { kind: 'tag', stored: `#[PNG](tag:${DOC})`, display: '#PNG', targetId: DOC, name: 'PNG' },
+    ]);
+  });
+
+  it('edits around them and unlinks one whose name is edited', () => {
+    expect(applyDisplayEdit(`${castle} ciao`, '#Castle ciao!')).toBe(`${castle} ciao!`);
+    expect(applyDisplayEdit(`${castle} ciao`, '#Castl ciao')).toBe('#Castl ciao');
+    expect(replaceDisplayRange(castle, 7, 7, '!')).toBe(`${castle}!`);
   });
 });
 
@@ -93,55 +129,55 @@ describe('replaceDisplayRange', () => {
   it('keeps tokens on either side of the range', () => {
     const stored = `${ara} e ${ara}`;
     // Shown as "@Ara e @Ara": replace " e " (4 to 7).
-    expect(replaceDisplayRange(stored, 4, 7, ' o ')).toBe(`${ara} o ${ara}`);
+    expect(replaceUsers(stored, 4, 7, ' o ')).toBe(`${ara} o ${ara}`);
   });
 
   it('inserts right after or right before a token without touching it', () => {
-    expect(replaceDisplayRange(ara, 4, 4, '!')).toBe(`${ara}!`);
-    expect(replaceDisplayRange(ara, 0, 0, '>')).toBe(`>${ara}`);
+    expect(replaceUsers(ara, 4, 4, '!')).toBe(`${ara}!`);
+    expect(replaceUsers(ara, 0, 0, '>')).toBe(`>${ara}`);
   });
 
   it('turns a token the range cuts into plain text', () => {
     // Deleting the last letter of "@Ara".
-    expect(replaceDisplayRange(`${ara} ciao`, 3, 4, '')).toBe('@Ar ciao');
+    expect(replaceUsers(`${ara} ciao`, 3, 4, '')).toBe('@Ar ciao');
     // Typing inside the name.
-    expect(replaceDisplayRange(ara, 2, 2, 'x')).toBe('@Axra');
+    expect(replaceUsers(ara, 2, 2, 'x')).toBe('@Axra');
   });
 
   it('writes the inserted text as is, so it may be a token', () => {
-    expect(replaceDisplayRange('Ciao @Ar', 5, 8, `${ara} `)).toBe(`Ciao ${ara} `);
+    expect(replaceUsers('Ciao @Ar', 5, 8, `${ara} `)).toBe(`Ciao ${ara} `);
   });
 });
 
 describe('applyDisplayEdit', () => {
   it('returns the stored text when nothing changed', () => {
-    expect(applyDisplayEdit(ara, '@Ara')).toBe(ara);
+    expect(applyUsers(ara, '@Ara')).toBe(ara);
   });
 
   it('applies typing around tokens', () => {
-    expect(applyDisplayEdit(`${ara} ciao`, '@Ara ciao!')).toBe(`${ara} ciao!`);
-    expect(applyDisplayEdit(`${ara} ciao`, 'Ehi @Ara ciao')).toBe(`Ehi ${ara} ciao`);
+    expect(applyUsers(`${ara} ciao`, '@Ara ciao!')).toBe(`${ara} ciao!`);
+    expect(applyUsers(`${ara} ciao`, 'Ehi @Ara ciao')).toBe(`Ehi ${ara} ciao`);
   });
 
   it('unlinks a mention whose name is edited', () => {
-    expect(applyDisplayEdit(`${ara} ciao`, '@Ar ciao')).toBe('@Ar ciao');
+    expect(applyUsers(`${ara} ciao`, '@Ar ciao')).toBe('@Ar ciao');
   });
 
   it('handles a repeated character at the edit point', () => {
     // "aa" -> "aaa": the common start and end must not overlap.
-    expect(applyDisplayEdit('aa', 'aaa')).toBe('aaa');
-    expect(applyDisplayEdit('aaa', 'aa')).toBe('aa');
+    expect(applyUsers('aa', 'aaa')).toBe('aaa');
+    expect(applyUsers('aaa', 'aa')).toBe('aa');
   });
 
   it('uses the caret to place an ambiguous edit', () => {
     // "@Ara" -> "@@Ara": the new "@" went in before the mention, not inside it.
-    expect(applyDisplayEdit(ara, '@@Ara', 1)).toBe(`@${ara}`);
+    expect(applyUsers(ara, '@@Ara', 1)).toBe(`@${ara}`);
     // Deleting the first of two spaces before a mention keeps it too.
-    expect(applyDisplayEdit(`x  ${ara}`, 'x @Ara', 1)).toBe(`x ${ara}`);
+    expect(applyUsers(`x  ${ara}`, 'x @Ara', 1)).toBe(`x ${ara}`);
   });
 
   it('handles clearing the whole text', () => {
-    expect(applyDisplayEdit(`${ara} ciao`, '')).toBe('');
+    expect(applyUsers(`${ara} ciao`, '')).toBe('');
   });
 });
 
@@ -150,7 +186,7 @@ describe('resolveUserMention', () => {
     kind: 'user',
     stored: userMentionToken(userId, name),
     display: `@${name}`,
-    userId,
+    targetId: userId,
     name,
   });
 

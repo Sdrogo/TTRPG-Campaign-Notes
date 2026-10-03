@@ -10,11 +10,6 @@ import { notifyError, notifySuccess } from '../lib/notify';
 import type { Friend } from '../types/friend';
 import type { RoomRole } from '../types/room';
 
-/** A Friend's option label: their name, with the email when the backend sends one. */
-function friendOptionLabel(friend: Friend): string {
-  const name = userDisplayName(friend);
-  return friend.email && friend.email !== name ? `${name} (${friend.email})` : name;
-}
 
 /**
  * The invite modal's "Friends" tab (FR-F5, spec 18_2): picks a Friend who
@@ -80,7 +75,7 @@ export function InviteFriendPanel({ roomId }: { roomId: string }) {
         placeholder={t('invite.friendPlaceholder')}
         data={candidates.map((friend) => ({
           value: friend.userId,
-          label: friendOptionLabel(friend),
+          label: userDisplayName(friend),
         }))}
         value={friendId}
         onChange={setFriendId}

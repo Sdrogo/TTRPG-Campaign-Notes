@@ -56,7 +56,7 @@ class AvatarFromUrlRequest(BaseModel):
 
 async def _response(profile: UserProfile) -> AccountResponse:
     """Serializes the profile with its avatar signed for this response."""
-    fields = profile_fields(profile, await sign_avatars([profile]))
+    fields = profile_fields(profile, await sign_avatars([profile]), profile.user_id)
     return AccountResponse(user_id=profile.user_id, **fields.model_dump())
 
 

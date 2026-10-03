@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import exists, or_, select, update
+from sqlalchemy import and_, exists, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import InvitationRow, MembershipRow, RoomRow
@@ -66,6 +66,25 @@ async def revoke_pending_direct(
         .where(
             InvitationRow.room_id == room_id,
             InvitationRow.invitee_user_id == invitee_id,
+            InvitationRow.revoked_at.is_(None),
+            or_(InvitationRow.expires_at.is_(None), InvitationRow.expires_at > now),
+        )
+        .values(revoked_at=now)
+    )
+
+
+async def revoke_direct_between(
+    session: AsyncSession, a: uuid.UUID, b: uuid.UUID, now: datetime
+) -> None:
+    """Revokes the open direct invitations either user sent the other, when
+    their Friendship ends (D-26): an invitation presumes the Friendship."""
+    await session.execute(
+        update(InvitationRow)
+        .where(
+            or_(
+                and_(InvitationRow.created_by == a, InvitationRow.invitee_user_id == b),
+                and_(InvitationRow.created_by == b, InvitationRow.invitee_user_id == a),
+            ),
             InvitationRow.revoked_at.is_(None),
             or_(InvitationRow.expires_at.is_(None), InvitationRow.expires_at > now),
         )

@@ -433,6 +433,12 @@
     "hintSwitchKind": "←/→ switch type · ",
     "hintCreate": "Enter to create"
   },
+  "backlinks": {
+    "title": "Mentioned in",
+    "inDescription": "In the description",
+    "inNote": "In the note “{{title}}”",
+    "inComment": "In a comment by {{name}}"
+  },
   "glossary": {
     "title": "Tag Index",
     "openToggle": "Open Tag Index",

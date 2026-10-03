@@ -26,6 +26,7 @@ import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { TagFilter } from '../components/TagFilter';
+import { Backlinks } from '../components/mentions/Backlinks';
 import { filterDocumentsByTags } from '../lib/documentFilters';
 import {
   DEFAULT_GROUP_BY,
@@ -186,6 +187,16 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               )}
             </Group>
           </Collapse>
+        )}
+        {/* Spec 20 Decision 8: a Tag has no page, so where it is mentioned
+            shows on the list filtered by exactly that Tag. */}
+        {tagFilter.length === 1 && (
+          <Backlinks
+            key={tagFilter[0]}
+            roomId={roomId}
+            target={{ kind: 'tag', id: tagFilter[0] }}
+            members={members.data ?? []}
+          />
         )}
         {documents.isLoading && <Loader color="accent" />}
         {documents.isError && <Text c="red">{t('documents.loadError')}</Text>}

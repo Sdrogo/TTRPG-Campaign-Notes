@@ -3,7 +3,7 @@ import type { Room, RoomRole } from './room';
 
 /**
  * The other user of a Friendship or request, as the signed-in user sees them
- * (backend `FriendResponse`). `email` is null unless the two share a Room.
+ * (backend `FriendResponse`). `email` is always null (NFR-03).
  * `since` is when the Friendship was accepted, or when the request was sent.
  */
 export interface Friend extends UserIdentity {

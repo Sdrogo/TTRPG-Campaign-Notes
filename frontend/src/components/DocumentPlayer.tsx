@@ -35,7 +35,7 @@ export function DocumentPlayer({ playedBy, members, canManage, onSet, onUnlink }
   const name = memberDisplayName(player);
   const options = members
     .filter((m) => m.userId !== playedBy)
-    .map((m) => ({ value: m.userId, label: memberOptionLabel(m) }));
+    .map((m) => ({ value: m.userId, label: memberOptionLabel(m, members) }));
 
   return (
     <Stack gap="xs">

@@ -114,7 +114,7 @@ export function useCreateInvitation(roomId: string) {
 /**
  * Joins the Room an invitation code points to, with its proposed role. Also
  * refreshes the user's direct invitations (the accepted one is gone) and
- * Friends (sharing a Room now shows a Friend's email).
+ * Friends.
  */
 export function useAcceptInvitation() {
   const queryClient = useQueryClient();

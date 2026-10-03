@@ -341,6 +341,48 @@ class CommentReactionRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class DocumentMentionRow(Base):
+    """A backlink (spec 20, FR-D4): a source (a Document's description, one of
+    its Notes or one of its Comments) mentions a Document or a Tag of the
+    same Room, with an excerpt around the mention. Rewritten whenever its
+    source is saved; goes with the source Document, the Note, the Comment and
+    the target (CASCADE). Exactly one target, and the source columns match
+    `source_kind` (CHECKs)."""
+
+    __tablename__ = "document_mentions"
+    __table_args__ = (
+        CheckConstraint(
+            "(target_document_id IS NULL) <> (target_tag_id IS NULL)",
+            name="ck_document_mentions_one_target",
+        ),
+        CheckConstraint(
+            "(source_kind = 'description' AND note_id IS NULL AND comment_id IS NULL)"
+            " OR (source_kind = 'note' AND note_id IS NOT NULL AND comment_id IS NULL)"
+            " OR (source_kind = 'comment' AND comment_id IS NOT NULL AND note_id IS NULL)",
+            name="ck_document_mentions_source",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    source_document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    source_kind: Mapped[str] = mapped_column(String(20))
+    note_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("document_notes.id", ondelete="CASCADE"), index=True
+    )
+    comment_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("posts.id", ondelete="CASCADE"), index=True
+    )
+    target_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    target_tag_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), index=True
+    )
+    excerpt: Mapped[str] = mapped_column(Text)
+
+
 class DocumentReadRow(Base):
     """When a member last opened a Document's detail page (spec 19b): the
     Comments created after it, by someone else, are new to them. Deleted with

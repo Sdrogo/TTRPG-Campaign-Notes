@@ -70,8 +70,8 @@ describe('DocumentOwners', () => {
 
     await user.click(screen.getByRole('combobox'));
 
-    expect(screen.getByText('Master (master@example.com)')).toBeInTheDocument();
-    expect(screen.queryByText('Giocatore (giocatore@example.com)')).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Master' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Giocatore' })).not.toBeInTheDocument();
   });
 
   it('cannot submit before someone is picked', () => {
@@ -84,7 +84,7 @@ describe('DocumentOwners', () => {
     const { onAdd, user } = render();
 
     await user.click(screen.getByRole('combobox'));
-    await user.click(screen.getByText('Master (master@example.com)'));
+    await user.click(screen.getByText('Master'));
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
 
     expect(onAdd).toHaveBeenCalledWith('user-2');
@@ -94,7 +94,7 @@ describe('DocumentOwners', () => {
   it('clears the picker after adding', async () => {
     const { user } = render();
     await user.click(screen.getByRole('combobox'));
-    await user.click(screen.getByText('Master (master@example.com)'));
+    await user.click(screen.getByText('Master'));
 
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
 

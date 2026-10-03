@@ -11,6 +11,9 @@ import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
 import { useTranslation } from 'react-i18next';
 
+// Tall enough that the image panel on the right reads as a picture, not a strip.
+const CARD_WITH_IMAGES_MIN_HEIGHT = { base: 220, sm: 260 };
+
 interface DocumentCardProps {
   document: Document;
   roomId: string;
@@ -19,10 +22,10 @@ interface DocumentCardProps {
 }
 
 /**
- * A Document in the Room's list: name, visibility, Tags, description and
- * images, with its player (for a Character) and Owners, and what is new in its
- * Thread since the viewer last opened it (spec 19b): a count, or a "not yet
- * read" dot for a Document never opened. The whole card links to the Document.
+ * A Document in the Room's list: name, visibility, Tags and description, with
+ * its images filling the card's right half, its player (for a Character) and
+ * Owners, and what is new in its Thread since the viewer last opened it (spec
+ * 19b): a count, or a "not yet read" dot for a Document never opened. The whole card links to the Document.
  */
 export function DocumentCard({ document, roomId, tags, members }: DocumentCardProps) {
   const { t } = useTranslation();
@@ -30,9 +33,35 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
   const hasImages = document.images.length > 0;
   const player = document.playedBy ? findMember(members, document.playedBy) : undefined;
 
+  const marks = (
+    <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
+      <UnreadMark count={document.unreadCount} />
+      <VisibilityBadge visibility={document.visibility} />
+    </Group>
+  );
+
   return (
-    <Card withBorder padding="md" radius="md" pos="relative">
-      <Stack gap="xs">
+    <Card withBorder padding="md" radius="md" pos="relative" mih={hasImages ? CARD_WITH_IMAGES_MIN_HEIGHT : undefined}>
+      {/* With images, they fill the card's right half edge to edge, fading
+          into the card on their left, and the badges sit on top of them. */}
+      {hasImages && (
+        <Box pos="absolute" top={0} right={0} bottom={0} w="50%">
+          <DocumentCardImages images={document.images} documentName={document.name} />
+        </Box>
+      )}
+      {hasImages && (
+        <Box pos="absolute" top="var(--mantine-spacing-md)" right="var(--mantine-spacing-md)">
+          {marks}
+        </Box>
+      )}
+
+      <Stack
+        gap="xs"
+        // Above the images, which are positioned and would otherwise paint over it.
+        pos="relative"
+        w={hasImages ? 'calc(50% - var(--mantine-spacing-sm))' : undefined}
+        style={hasImages ? { flex: 1 } : undefined}
+      >
         {/* Title block: name and visibility on top, Tags on their own line. */}
         <Stack gap={4}>
           <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
@@ -42,39 +71,29 @@ export function DocumentCard({ document, roomId, tags, members }: DocumentCardPr
             >
               {document.name}
             </Title>
-            <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
-              <UnreadMark count={document.unreadCount} />
-              <VisibilityBadge visibility={document.visibility} />
-            </Group>
+            {!hasImages && marks}
           </Group>
           <TagList tags={tags} tagIds={document.tagIds} roomId={roomId} />
         </Stack>
 
-        {/* Description on the left, images on the right at half the card's
-            width (spec 07). Without images the description takes it all. */}
-        <Group align="flex-start" wrap="nowrap" gap="sm">
-          <Box style={{ flex: '1 1 50%', minWidth: 0 }}>
-            {document.description ? (
-              // The card is itself a link, so mentions are only colored here.
-              <MentionText
-                text={document.description}
-                linked={false}
-                c="dimmed"
-                size="sm"
-                lineClamp={hasImages ? 5 : 2}
-              />
-            ) : (
-              <Text size="sm" c="dimmed" fs="italic">
-                {t('common.noDescription')}
-              </Text>
-            )}
-          </Box>
-          {hasImages && (
-            <Box style={{ flex: '0 0 50%', minWidth: 0 }}>
-              <DocumentCardImages images={document.images} documentName={document.name} />
-            </Box>
+        {/* The description takes the left column, growing so the Played by
+            and Owner lines close the card at the bottom. */}
+        <Box style={hasImages ? { flex: 1 } : undefined}>
+          {document.description ? (
+            // The card is itself a link, so mentions are only colored here.
+            <MentionText
+              text={document.description}
+              linked={false}
+              c="dimmed"
+              size="sm"
+              lineClamp={hasImages ? 5 : 2}
+            />
+          ) : (
+            <Text size="sm" c="dimmed" fs="italic">
+              {t('common.noDescription')}
+            </Text>
           )}
-        </Group>
+        </Box>
 
         {/* D-23: a Character shows who plays it. */}
         {document.playedBy && (

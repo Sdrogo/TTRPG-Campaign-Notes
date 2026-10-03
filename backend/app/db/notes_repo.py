@@ -61,6 +61,13 @@ async def list_notes_for_document(session: AsyncSession, document_id: uuid.UUID)
     return [_note_from_row(row) for row in result.scalars()]
 
 
+async def get_notes_by_ids(session: AsyncSession, note_ids: Sequence[uuid.UUID]) -> list[Note]:
+    """The Notes with these ids, in no particular order; missing ids are
+    simply absent. Not yet filtered for any viewer."""
+    result = await session.execute(select(NoteRow).where(NoteRow.id.in_(note_ids)))
+    return [_note_from_row(row) for row in result.scalars()]
+
+
 async def update_note(session: AsyncSession, note: Note) -> None:
     """Writes a Note's text, visibility and timestamp. Raises `LookupError` if
     it no longer exists."""

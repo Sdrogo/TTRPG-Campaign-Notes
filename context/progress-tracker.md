@@ -9,22 +9,92 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-03)
 
-Branch `claude/project-thread-ads76p` (spec 19c_8, promotion frontend, PR
-into `staging`). Frontend **1227** tests at 100% coverage; tsc, oxlint and
-build clean. Backend unchanged since 19c_7: 727 tests at 100%. Migration
-`f4c7a1d9e2b6` (`comment_reactions`, 19c_1) is applied to the live
-database. Migration `a9e3d7c5b1f8` (pin and resolution columns on `posts`,
-19c_3) and migration `c2f6b8d4e1a7` (promotion columns on `posts`, 19c_7,
-revises it) were **applied to the live database on 2026-10-03** (with the
-user's go-ahead); the live DB is at `c2f6b8d4e1a7`.
+Branch `claude/project-thread-a660o5` (Next Up reorganized, CORS pattern
+kept; PR #70, open questions closed, is merged). Backend **754** tests at
+100% coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
+(`document_mentions` and the one-off conversion of plain `#Name` text into
+tokens, 20_1) is **not yet applied**: apply it once the 20_2 frontend is
+deployed (before it, tokens would show as raw text).
 
-Specs 12 to 19c_7 are merged into `staging`; 19c_8 closes spec 19c (and with
-it feature 19). Next, per the build order: spec 20 (mention backlinks),
-starting with 20_1.
+Specs 12 to 20 are merged into `staging` (features 19 and 20 closed). All
+Open Questions closed 2026-10-03. Next: feature 21 (full-text search).
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Open questions closed (2026-10-03)
+
+Every Open Question was answered by the product owner ("ok" to all 15
+proposals, 2026-10-03):
+
+- **Confirmed as built**: Tag combination semantics (11_2: AND, also in the
+  single-Tag groups, any Tags, no nesting or names); Comments (author always
+  sees their own, Master deletes but doesn't edit others', moderation not
+  audited, 10,000 chars); Comment images (inherit visibility, deleted with
+  the Comment, Owner/Master remove from the gallery, 4 per Comment, no
+  image-only Comments); Document mentions (c)-(e) ((a)-(b) superseded by
+  spec 20); Account limits and profile visibility; Notes = Details with
+  choices (a)-(f); spec 11: setup page and Main Tags stay Administrator-only.
+- **`requirements.md` v0.5** (explicitly approved): D-18, D-19, I-08, I-10,
+  FR-D3, FR-T1, FR-T8, FR-T10, UC-18, W-03 follow the Notes model; OQ-09/10
+  became D-28/D-29; login lists Google, Discord and GitHub (D-07, glossary, UC-01,
+  W-01, NFR-03, MoSCoW); images plural, up to 20 (D-09, FR-D1); new NFR-09
+  (English and Italian, English fallback); D-26 and NFR-03 carry the two
+  code changes below.
+- **Code**: removing an accepted Friendship revokes the open direct
+  invitations between the two, both ways (`revoke_direct_between`; the
+  invitation route locks the Friendship row). **No other user's email is
+  sent any more** (`profile_fields` takes the viewer): members list,
+  Friends, invitation senders. Pickers tell same-named members apart by a
+  piece of the user id. The fallback name stays the existing unknown-user
+  label.
+- **Sign-in**: Facebook and X removed from `lib/authProviders.ts` and the
+  docs (no app credentials for them; Google, Discord, GitHub work).
+- **Supabase**: the Security Advisor shows no RLS findings. `EXECUTE` on
+  `public.rls_auto_enable()` (Supabase's auto-RLS event trigger function,
+  not in our migrations) was revoked from `public`/`anon`/`authenticated` on
+  the live DB by hand. No migration involved.
+- Limits that were listed as questions (in-process caches/sweeper, stale
+  image URLs) moved to Architecture Decisions as accepted limits.
+### Document card restyle (2026-10-03)
+
+- From Andrea's prototype: on a Document card with images, the images fill
+  the right half edge to edge (cover, top-anchored) and fade into the card
+  on their left; the badges sit over the image. Cards without images keep
+  the old layout. Supersedes spec 07.1's uncropped framing on the card only
+  (`ui-context.md` → Document card). Checked headless at 390, 900 and 1300px;
+  frontend 1251 tests at 100% coverage.
+
+### Mention backlinks, frontend (spec 20_2, 2026-10-03)
+
+- `lib/userMentions.ts` became `lib/mentionTokens.ts` and reads `doc`/`tag`
+  tokens too (`user` ones only in Comments). The textarea writes tokens for
+  picked or created Documents and Tags; `MentionText` shows the current
+  name, or the written one as plain text for a hidden or deleted target.
+  Old plain `#Name` text renders as before.
+- "Menzionato in" (`Backlinks`) on the Document page and on the Documents
+  list filtered by one Tag; a Comment entry links to `#comment-<id>`, which
+  opens the branches above it and scrolls to it.
+- **Choices made beyond the ticket**: the section starts expanded; Note
+  entries link to the Document (no Note anchor, the ticket asks only for
+  Comments); the excerpt is plain text, as frozen by the backend.
+
+### Mention backlinks, backend (spec 20_1, 2026-10-03)
+
+- `#` mentions are stored as `#[Name](doc:<uuid>)` / `#[Name](tag:<uuid>)`;
+  each save cleans them (a link only to the Room's content the writer sees,
+  or that the text already linked) and rewrites the source's rows in
+  `document_mentions`. `GET .../documents/{id}/backlinks` and
+  `GET .../tags/{id}/backlinks` list them, filtered like the sources.
+- Migration `d7b3a9f2c5e8` converts old `#Name` text by the browser's rule
+  and fills the table; tried up and down on a scratch database. Not live.
+- **Choices made beyond the ticket**: one row per target per source (the
+  excerpt is around the first mention); a Document mentioning itself is no
+  backlink; a writer can't newly link a Document they can't see (keeps the
+  answer from revealing it), but keeps links already in the text; two FK
+  columns `note_id`/`comment_id` instead of one `source_id`; excerpts are
+  frozen at save time, so they show the names as written.
 
 ### Promotion, frontend (spec 19c_8, 2026-10-03)
 
@@ -481,14 +551,13 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
 - 13_1a (PR #29): the whole Room card links to its Documents; Setup and Invite
   sit above the link (same overlay pattern as `DocumentCard`).
-- 13_1c (branch `feature/13-1c-room-tag-delete-frontend`): setup page gains a
+- 13_1c (merged into `staging`, like 13_1b): setup page gains a
   Tag list with a confirmed delete per Tag (`TagManagement`, `useDeleteTag`)
   and a "Danger zone" that deletes the Room once its name is typed
   (`DeleteRoomSection`, `useDeleteRoom`, then back to `/`). The Tag
   confirmation shows no Document count on purpose (the backend has none that
   respects visibility, VR-07). The Main Tags editor is also re-keyed on the
-  Room's Tag ids, so a deleted Tag can't linger in an unsaved draft. Depends
-  on the 13_1b endpoints: merge after that PR.
+  Room's Tag ids, so a deleted Tag can't linger in an unsaved draft.
 - Not yet seen in a browser: card/button stacking, both modals, the setup page
   after a Tag deletion.
 
@@ -583,8 +652,9 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - **Docstring coverage**: 100% of backend `app/` (ruff `D1` gate in CI) and
   100% of frontend exports (JSDoc, review-only). Rule in `code-standards.md`
   → Documentation.
-- **CORS for Vercel previews**: optional `CORS_ORIGIN_REGEX`. See Next Up —
-  Render holds a looser pattern than the one decided.
+- **CORS for Vercel previews**: optional `CORS_ORIGIN_REGEX`. Render keeps
+  `[a-z0-9-]+` so branch previews work (decided 2026-10-03, see
+  `architecture.md` → CORS).
 - **Auth expansion (spec 08)**: Discord, Facebook, GitHub and X alongside
   Google (Google stays the filled button). X uses Supabase id `x`. Handles
   are a display-name fallback. Providers in `lib/authProviders.ts`.
@@ -751,170 +821,66 @@ Question in the backend PR.
 
 ## Next Up
 
-- **Browser check of spec 16** (after 16_2 merges and the migration is
-  live): upload a character sheet as an Owner, open and download it as
-  another member, confirm a member who can't see the Document gets nothing.
-  Migration `e2f7c4a9b1d6` is already live.
-- **Browser check of spec 17** (after 17_2 merges): the ticket's Definition
-  of Done walk-through with a Master, a Player and a member who can't see
-  the Character's Document.
-- **Browser check of spec 18** (after 18_2 merges): the ticket's Definition
-  of Done with two users who met in a Room: Add as Friend, accept, then one
-  invites the other to a new Room from the Friends tab and the other joins
-  from their Account page. Also open a friend link while signed out.
-- **Spec 13 (Room card, Room and Tag deletion)**: 13_1a (clickable Room card,
-  branch `feature/13-1a-room-card`) is built and unit-tested; the card link and
-  buttons stacking is not yet seen in a browser. Ticket written
-  (`context/feature/13_1 - Room Card refinment and Delition for TAGs and
-  Rooms.md`), no code yet. Three steps: 13_1a clickable Room card (frontend),
-  13_1b `DELETE` Room/Tag (backend; Storage cleanup for every image, Main
-  items stay valid), 13_1c setup-page controls (frontend). Open questions are
-  listed at the end of the ticket.
-- **Merge spec 12_1, then build 12_2** (frontend). Migration `c6e1a4b7d2f9`
-  is already live; Render redeploys the backend on merge and the single-Document
-  responses gain a `notes` field (additive, the old frontend ignores it).
-- **Browser check of spec 12** (after 12_2): create, edit and reorder Notes
-  as a Document Owner and Master; confirm Master-only Notes disappear for
-  Players while remaining visible to the Master.
-- **Tighten `CORS_ORIGIN_REGEX` on Render** (dashboard only): set it to
-  `https://ttrpg-campaign-notes-[a-z0-9]+-rum11\.vercel\.app` and redeploy.
-  Then the look-alike `…-abc123-evil-rum11.vercel.app` must get no
-  `access-control-allow-origin` while a commit preview still does. Render
-  currently holds the looser `[a-z0-9-]+` pattern. Low risk (Bearer header,
-  no cookie) but not what was decided.
-- **Verify in a browser** (built and unit-tested, never seen running): the
-  Document card below `sm`, that carousel arrows beat the card's link
-  overlay, that clicking an image opens the Document, portrait/landscape
-  framing (spec 07/07.1); and the 09-27 header/back-button/collapsible-
-  controls changes.
-- **Try each sign-in provider on the deployed app** (spec 08): Discord,
-  Facebook, GitHub, X round-trip, land on Rooms, pre-fill name/avatar; check
-  an X account with no email. A Supabase error page means a dashboard
-  setting, not app code. Facebook apps in Development mode only admit the
-  app's testers. Also re-test a brand-new user's first sign-in live (the
-  stray trigger was dropped but never re-tested).
-- **Mention backlinks (spec 20, ticket written 2026-10-02)**:
-  `20 - Mention backlinks` (mentions stored with ids, one-off conversion of
-  old `#Name` text, "Mentioned in" filtered per viewer). 20_1 backend +
-  data migration, then 20_2 frontend. Tags get backlinks too.
-- **Full-text search (spec 21, ticket written 2026-10-02)**:
-  `21 - Full-text search` (current Room, Documents/Notes/Comments/Tags,
-  accent-insensitive prefix match, visibility filtered on the server).
-  21_1 backend + migration, then 21_2 frontend.
-- **Build order (product owner, 2026-10-02)**: one feature at a time, each
-  closed with all its sub-tickets before the next starts: 19 (19_1, 19_2,
-  19b, 19c) → 20 → 21 → 22 (with 22b) → 23 (with 23b, 23c) → 24.
-- **Threads (spec 19, tickets written 2026-10-02)**: `19 - Threaded replies`
-  (nested replies, 3 visible levels, a reply narrowed with its parent but
-  its own visibility kept), `19b - Unread replies`, `19c - Reactions,
-  mentions, pins and promotion`. All decisions confirmed (2026-10-02); 19's
-  Decision 6: the author keeps seeing their reply under a "parent hidden"
-  placeholder (VR-02 unchanged). Ready to build, starting with 19_1.
-- **Thread pagination (FR-T3)**: not owned by any ticket; 19 loads the
-  whole Thread at once. Write a ticket when Threads get long in practice.
-- **Reveal and visibility (spec 22, tickets written 2026-10-02)**:
-  `22 - Reveal and visibility history` (Reveal on Documents, single Notes
-  and Comments with "Revealed" marks and a header count; History tab;
-  Room default visibility) and `22b - View as player` (read-only preview
-  through an `X-View-As` header).
-- **Room export (spec 23, tickets written 2026-10-02)**: `23 - Room
-  export` (JSON + Markdown, per-viewer), `23b - Room PDF manual` (TTRPG
-  manual layout, first style Gothic, Vampire-inspired, WeasyPrint in a
-  background job; check Render can install Pango first), `23c - Agent
-  access tokens` (read-only per-Room tokens, FR-G2). 23 and 23c decisions
-  still to confirm.
-- **Version history (spec 24, ticket written 2026-10-02)**: `24 - Version
-  history` (Document name/description and Note text, 10-minute merge per
-  editor, Owners + Master compare and restore, all versions kept).
-- Decide whether new Rooms should get default Tags in the creator's
-  language.
+Reorganized with the product owner on 2026-10-03.
+
+- **Apply migration `d7b3a9f2c5e8` right after the 20_2 frontend reaches
+  production** (`document_mentions` + one-off conversion of plain `#Name`
+  text into tokens). Before 20_2 is live, tokens would show as raw text.
+  The live DB is at `c2f6b8d4e1a7` (checked 2026-10-03).
+- **Browser walk-through** (product owner; built and unit-tested, never
+  seen running). One checklist:
+  - Spec 12, Notes: create, edit, reorder as an Owner and the Master;
+    Master-only Notes disappear for Players.
+  - Spec 16, PDF Attachments: upload a character sheet as an Owner, open and
+    download it as another member; a member who can't see the Document
+    gets nothing.
+  - Spec 17, Characters: the ticket's Definition of Done with a Master, a
+    Player and a member who can't see the Character's Document.
+  - Spec 18, Friends: two users who met in a Room add each other, one
+    invites the other to a new Room from the Friends tab, the other joins
+    from their Account page; open a friend link while signed out.
+  - Spec 20, mention backlinks (once deployed and migrated): tokens render
+    as names, "Mentioned in" hides what the viewer can't see.
+  - Sign-in: Google, Discord and GitHub work (confirmed 2026-10-03);
+    re-test a brand-new user's first sign-in.
+  - UI never seen running: the Document card below `sm`, carousel arrows
+    over the card's link overlay, clicking an image opens the Document,
+    portrait/landscape framing (spec 07/07.1), the 09-27 header,
+    back-button and collapsible controls, the clickable Room card (13_1a),
+    the Tag and Room delete modals and the setup page after a Tag deletion
+    (13_1c).
+  A Playwright script for the parts that can be automated is possible on
+  request.
+- **Build order (product owner, 2026-10-02, confirmed 2026-10-03)**: one
+  feature at a time, each closed with all its sub-tickets: 21 → 22 (with
+  22b) → 23 (with 23b, 23c) → 24, then the two small tickets below.
+  Features 19 and 20 are done.
+  - **Full-text search (spec 21)**: `21 - Full-text search` (current Room,
+    Documents/Notes/Comments/Tags, accent-insensitive prefix match,
+    visibility filtered on the server). 21_1 backend + migration, then 21_2
+    frontend. **Next.**
+  - **Reveal and visibility (spec 22)**: `22 - Reveal and visibility
+    history` and `22b - View as player` (read-only preview through an
+    `X-View-As` header).
+  - **Room export (spec 23)**: `23 - Room export` (JSON + Markdown,
+    per-viewer), `23b - Room PDF manual` (WeasyPrint in a background job;
+    check Render can install Pango first), `23c - Agent access tokens`
+    (FR-G2). The open decisions of 23 and 23c are prepared when their turn
+    comes.
+  - **Version history (spec 24)**: `24 - Version history`.
+  - **Default Tags in the creator's language** (decided 2026-10-03: yes,
+    the creator's UI language at creation time). Small ticket, after 24.
+  - **Read-only members list for every member** (decided 2026-10-03, spec
+    11 follow-up: the setup page stays Administrator-only). Small ticket,
+    after 24.
+- **Thread pagination (FR-T3)**: parked; feature 19 loads the whole Thread.
+  Write a ticket only when Threads get long in practice.
 
 ## Open Questions
 
-Items marked *protected* need a product pass because `requirements.md` is a
-protected file.
-
-- **Spec 18_1b, Friendship removal and direct invitations**: removing a
-  Friendship doesn't revoke direct invitations the two sent each other. Keep
-  it, or revoke them on removal?
-- **Spec 12 — Notes = Details (decided 2026-10-01, `requirements.md` needs a
-  product pass, *protected*)**: the product owner confirmed a Note and a
-  Detail (D-18) are the same feature under two names, and chose to keep
-  **Owner/Master-only** management. This departs from the spec: D-19/I-10 say
-  any member who sees the Document may add a Detail, only its author or the
-  Master may edit it, and it is a Thread Post with nested replies; FR-T8
-  (promote a Detail into the description) and FR-T10 (a dedicated section on
-  the Document card) also assume that model. Implemented instead: own tables,
-  Owners + Master add/edit/delete/reorder, no replies, shown on the detail page
-  only. Either amend D-19, I-10, FR-T8 and FR-T10 to this model, or move
-  Notes onto `posts` (kind `detail`) later to get member-written Details and
-  replies. Other choices to confirm: (a) Private = the Document's Owners +
-  Master, and an Owner who sets a Note to "Master" stops seeing it; (b) Notes
-  are in the single-Document responses, not the list or the card; (c) limits:
-  200-char title, 50 per Document, no description limit; (d) reordering is
-  kept; (e) the Selective grant list is sent only to those who can manage the
-  Note; (f) the Agent export (FR-G1) doesn't exist yet and must apply the same
-  filter. Tickets: `context/feature/12_1 - Note backend effort.md`,
-  `12_2 - Note frontend effort.md`.
-
-- **Spec 11_2 — combination semantics (assumed, confirm)**: the spec only
-  says a combination of 2+ Tags can be a Group-by line item. Assumed: a
-  Document is in it when it carries **all** the Tags (AND, like the filter);
-  it also stays in the single-Tag groups it matches; any Tags can be combined
-  (not only Main Tags); combinations can't be nested or named. Changing
-  any of these needs a product pass.
-- **Spec 11 — who may set up a Room, and leaving** (needs a product
-  decision): the spec says the setup page is reachable only by a Room's
-  Administrator, and it replaced the members page. So (a) a plain Player or
-  a Master who isn't an Administrator can no longer see the members list
-  page; leaving is **resolved** by spec 15 (Leave in the Room card's menu);
-  (b) the Master alone can't set Main Tags (Administrator only,
-  matching "Admin of that Room"). Also new: who the "Admin" is when the
-  Master isn't one (they are separate flags, D-11).
-
-- **UI language absent from `requirements.md`** (*protected*): add an NFR for
-  supported languages and confirm English as fallback.
-- **Auth passages in `requirements.md`** (*protected*): FR-A1 lists five
-  providers, but UC-01, the section 5 User, NFR-03 and the MoSCoW **Won't**
-  row still say Google-only. D-07 (Google preferred) still holds. NFR-03's
-  privacy rule (only name, picture, email) applies to every provider.
-- **Images spec gap** (*protected*): D-09/FR-D1 say "Image" (singular).
-  The 20-per-Document cap and 1920px/WebP output are implementation choices.
-- **OQ-09 / OQ-10** have no `D-` number but are implemented (creator =
-  Administrator + Master; last-Master/Administrator guard). OQ-11/OQ-12 are
-  resolved (D-19, D-20).
-- **Comments — choices to confirm**: (a) the author always sees their own
-  Comment, so "Master only" = me + the Master; (b) the Master can delete but
-  not edit others' Comments; (c) moderation deletes aren't in the AuditLog;
-  (d) 10,000-char body limit.
-- **Comment images — choices to confirm**: (a) inherit the Comment's
-  visibility, including in the gallery; (b) deleting a Comment deletes its
-  images from the Document; (c) an Owner/Master can remove a Comment's image
-  from the gallery, only the author can add/remove it from the Comment;
-  (d) 4 per Comment; (e) no image-only Comments.
-- **Account — decisions**: profile fields are visible to everyone in a
-  shared Room (kept until the future Friend feature plans user privacy); the
-  email is still sent to Room members and used as fallback name (undecided,
-  left as is); limits 60/40/1000 chars and 512px avatars confirmed.
-- **Document mentions — choices to confirm**: (a) plain `#Name` text, so
-  renaming breaks mentions, duplicate names resolve to the first, a Document
-  beats a same-named Tag; (b) no backlinks yet; (c) popup shows at most 8,
-  and a Document can mention itself; (d) a Document created from the popup
-  gets **Room** visibility even from a Private Comment (user's choice), so
-  its name is shown to the whole Room; (e) creating from the popup needs ↓
-  then Enter.
-- **In-process caches/jobs**: the signed-link cache and the Storage sweeper
-  are per backend process. Harmless with several workers (removal is
-  idempotent); move the sweeper to a scheduled job if the backend ever runs
-  serverless or scales out.
-- **Stale image URLs**: a signed link already handed out works until it
-  expires, and old public URLs may be served from the CDN cache for a while.
-- **RLS**: all tables are backend-only. Only the question of adding policies
-  that *allow* future direct client access remains (`architecture.md` →
-  Open items). Re-check Supabase's Security Advisor: no RLS findings should
-  remain.
-- **Agent export format** (JSON vs Markdown vs both, FR-G1): decide when the
-  export endpoint is designed.
+None. The 15 questions listed here were closed with the product owner on
+2026-10-03 (see "Open questions closed" under Completed Units); the spec
+changes are in `requirements.md` v0.5.
 
 ## Architecture Decisions
 
@@ -951,6 +917,12 @@ Full reasoning lives in `architecture.md`; this is the index.
 - Localization: frontend and backend each have their own resource files with
   the same shape and share no code; domain exceptions carry keys, rendered
   at the API boundary.
+- Accepted limits: the signed-link cache and the Storage sweeper are per
+  backend process (harmless with several workers; move the sweeper to a
+  scheduled job if the backend goes serverless or scales out). A signed link
+  already handed out works until it expires, and old public URLs may be
+  served from the CDN cache for a while.
+- A user's email is sent only to that user (NFR-03, 2026-10-03).
 
 ## Session Notes (lessons worth keeping)
 
@@ -972,6 +944,6 @@ Full reasoning lives in `architecture.md`; this is the index.
 - Headless browser checks need a faked Supabase session (Google-only login
   can't be automated) and a stubbed API; the scripts were never committed,
   which is why several UI items still await a human look.
-- `requirements.md` (v0.3) is the ID source for `D-`, `FR-`, `UC-`, `VR-`,
+- `requirements.md` (v0.5) is the ID source for `D-`, `FR-`, `UC-`, `VR-`,
   `I-`, `OQ-`; it is protected, so spec gaps are logged under Open Questions
   rather than edited.

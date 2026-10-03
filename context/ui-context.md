@@ -266,25 +266,43 @@ other icon set.
   rendered body a member's mention is `@` + their current name in
   `--accent-primary`, weight 600, not a link; a mention of someone who has
   left the Room is plain text with the name as written.
+  **Tokens and "Mentioned in"** (2026-10-03, spec 20): a picked or
+  created Document or Tag still shows as `#Name ` in the field but is
+  stored with its id, so `MentionText` shows the target's current name;
+  a hidden or deleted target is plain text with the name as written.
+  `Backlinks` ("Menzionato in") is a `PageCard` with a caret toggle, the
+  title (`h3` size, display font) and a gray `light` count badge, starting
+  expanded and absent while empty. Per source Document: its name as an
+  `--accent-primary` link, weight 600; under it, one entry per place with
+  a 2px `--border-default` left rule: an `xs` dimmed link saying where
+  ("Nella descrizione", "Nella nota «…»", "In un commento di …", the last
+  one jumping to the Comment) and the `sm` excerpt. On the Document page it
+  sits between the Document card and the Comments; on the Documents list,
+  when exactly one Tag is filtered, above the Documents.
 - **Document card** (`DocumentCard`, restructured 2026-09-23, spec
-  `07 - Document visualizazion refactor_beckend`): three stacked blocks. The
-  *Title block* is the Document name (display font) with its
-  `VisibilityBadge` on the same row, and the Tags on a line of their own
-  below (`TagList`). Under it, description and images sit side by side: the
-  description on the left, the image block on the right at **half the card's
-  width** (`flex: 0 0 50%`), lifted to 5 clamped lines when there are images
-  so the two columns balance; with no images the description takes the whole
-  row, and a Document without one says "No description.". The Owner line
-  closes the card on a line of its own.
-  The images are `DocumentCardImages`: the same carousel as the detail page
-  but read-only and short (at most 160px, 200px from `sm`), favorite first.
-  **Each image keeps its own aspect ratio** (spec 07.1): once it has loaded,
-  its natural size decides its frame (`imageOrientation` in `lib/images.ts`)
-  — a landscape (or square) image fills the column's width, a portrait one
-  the full height, centered — with `objectFit: contain`, so nothing is
-  cropped. Before load it holds a full-size `--bg-base` placeholder. Slides
-  of one carousel are framed independently. Dragging is off and the arrows stay visible rather than
-  appearing on hover, since a touch screen has no hover.
+  `07 - Document visualizazion refactor_beckend`; image panel restyled
+  2026-10-03): three stacked blocks. The *Title block* is the Document name
+  (display font) with its `VisibilityBadge` (and unread mark) on the same
+  row, and the Tags on a line of their own below (`TagList`). Under it the
+  description, then the Played by and Owner lines, each on a line of its
+  own; a Document without a description says "No description.", clamped to
+  2 lines without images.
+  **With images** the card changes shape (prototype from Andrea,
+  2026-10-03): the images fill the card's **right half edge to edge and full
+  height** (absolutely positioned, `objectFit: cover` anchored at the top so
+  a portrait's face survives the crop), and their left edge fades into the
+  card's background (a `linear-gradient` from `--mantine-color-dark-6`, the
+  Card surface, to transparent over the first 35%). The badges move out of
+  the title row and sit over the image at the top right; the text column
+  takes the left half, the description grows (5 clamped lines) so the
+  Played by and Owner lines close the card at the bottom, and the card is at
+  least 220px tall (260px from `sm`). This replaces spec 07.1's uncropped,
+  orientation-framed images on the card; the detail page gallery still
+  frames by orientation (`imageFrameSize`).
+  The images are `DocumentCardImages`: one image alone, several in the same
+  carousel as the detail page, read-only, favorite first. Dragging is off
+  and the arrows stay visible rather than appearing on hover, since a touch
+  screen has no hover.
   **The card's link covers the card instead of wrapping it** — an absolutely
   positioned `Link` as the last child, at `zIndex: 1`. An `<a>` may not
   contain the carousel's buttons, so those come back on top at `zIndex: 2`

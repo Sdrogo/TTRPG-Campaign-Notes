@@ -115,7 +115,7 @@ describe('NoteForm', () => {
     });
 
     await user.click(screen.getByRole('combobox', { name: 'Membri che possono vedere la Nota' }));
-    await user.click(screen.getByText('Master (master@example.com)'));
+    await user.click(screen.getByText('Master'));
     await user.click(submit());
 
     expect(onSubmit).toHaveBeenCalledWith(

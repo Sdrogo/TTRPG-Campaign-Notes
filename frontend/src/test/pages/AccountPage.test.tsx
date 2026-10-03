@@ -104,7 +104,7 @@ describe('AccountPage', () => {
     ).toBeInTheDocument();
   });
 
-  // X, for one, may not share an email address.
+  // A provider may not share an email address.
   it('says so when the account shared no email', async () => {
     fetchMock.mockResolvedValue({ ...rawAccount(), email: null });
     render();

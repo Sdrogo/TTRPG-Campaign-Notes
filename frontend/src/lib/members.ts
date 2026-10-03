@@ -13,7 +13,8 @@ export function unknownUserLabel(): string {
 
 /**
  * The name to show for a user everywhere (Comments, Owners, members list,
- * account button): the name they chose on the Account page, else their email.
+ * account button): the name they chose on the Account page, else their email
+ * (only ever sent for the signed-in user's own profile).
  */
 export function userDisplayName(user: UserIdentity | undefined): string {
   return user?.displayName ?? user?.email ?? unknownUserLabel();
@@ -36,13 +37,17 @@ export function displayNameFor(members: Member[], userId: string): string {
 
 /**
  * Label for a picker option (Owner, Selective grant), where picking the wrong
- * person gives them access. Chosen names aren't unique, so the email is added
- * next to one; two members with neither get a short piece of the user id to
- * tell them apart.
+ * person gives them access. Other members' emails are never sent (NFR-03), so
+ * a name that another of `members` shares, or a missing one, gets a short piece
+ * of the user id to tell them apart.
  */
-export function memberOptionLabel(member: Member): string {
-  if (member.displayName) {
-    return member.email ? `${member.displayName} (${member.email})` : member.displayName;
+export function memberOptionLabel(member: Member, members: Member[]): string {
+  const name = member.displayName ?? member.email;
+  const shared = members.some(
+    (other) => other.userId !== member.userId && (other.displayName ?? other.email) === name,
+  );
+  if (name && !shared) {
+    return name;
   }
-  return member.email ?? `${unknownUserLabel()} (${member.userId.slice(0, 8)})`;
+  return `${name ?? unknownUserLabel()} (${member.userId.slice(0, 8)})`;
 }

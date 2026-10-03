@@ -58,8 +58,8 @@ describe('InviteModal Friends tab', () => {
       rawFriends({
         friends: [
           rawFriend({ user_id: 'user-1', display_name: 'Già dentro' }),
-          rawFriend({ user_id: 'user-2', display_name: 'Altro', email: 'altro@example.com' }),
-          rawFriend({ user_id: 'user-3', display_name: null, email: 'terzo@example.com' }),
+          rawFriend({ user_id: 'user-2', display_name: 'Altro' }),
+          rawFriend({ user_id: 'user-3', display_name: 'Terzo' }),
         ],
       }),
     );
@@ -68,8 +68,8 @@ describe('InviteModal Friends tab', () => {
 
     await user.click(friendPicker());
 
-    expect(await screen.findByRole('option', { name: 'Altro (altro@example.com)' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'terzo@example.com' })).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: 'Altro' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Terzo' })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Già dentro' })).not.toBeInTheDocument();
   });
 
