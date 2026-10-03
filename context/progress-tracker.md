@@ -9,9 +9,9 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-03)
 
-Branch `claude/project-thread-a660o5` (Next Up reorganized, docs only; PR
-#70, open questions closed, is merged). Backend **755** tests and frontend **1249** tests at 100%
-coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
+Branch `claude/project-thread-a660o5` (Next Up reorganized, CORS pattern
+kept; PR #70, open questions closed, is merged). Backend **754** tests at
+100% coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
 (`document_mentions` and the one-off conversion of plain `#Name` text into
 tokens, 20_1) is **not yet applied**: apply it once the 20_2 frontend is
 deployed (before it, tokens would show as raw text).
@@ -847,8 +847,8 @@ Reorganized with the product owner on 2026-10-03.
     over the card's link overlay, clicking an image opens the Document,
     portrait/landscape framing (spec 07/07.1), the 09-27 header,
     back-button and collapsible controls, the clickable Room card (13_1a),
-  the Tag and Room delete modals and the setup page after a Tag deletion
-  (13_1c).
+    the Tag and Room delete modals and the setup page after a Tag deletion
+    (13_1c).
   A Playwright script for the parts that can be automated is possible on
   request.
 - **Build order (product owner, 2026-10-02, confirmed 2026-10-03)**: one
