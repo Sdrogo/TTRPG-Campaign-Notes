@@ -13,9 +13,8 @@ interface FriendRowProps {
 }
 
 /**
- * One person in a Friends list or invitation: avatar, name (the email only
- * shows when the backend sends it, i.e. while the two share a Room) and the
- * actions for them.
+ * One person in a Friends list or invitation: avatar, name and the actions
+ * for them. Another user's email is never sent (NFR-03).
  */
 export function FriendRow({ user, detail, children }: FriendRowProps) {
   const name = userDisplayName(user);
@@ -33,11 +32,6 @@ export function FriendRow({ user, detail, children }: FriendRowProps) {
                 {user.pronouns}
               </Text>
             ))}
-          {user.email && user.email !== name && (
-            <Text size="xs" c="dimmed" style={{ overflowWrap: 'anywhere' }}>
-              {user.email}
-            </Text>
-          )}
         </Stack>
       </Group>
       {children && (

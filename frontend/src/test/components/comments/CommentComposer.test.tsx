@@ -201,8 +201,8 @@ describe('visibility', () => {
       screen.getByRole('combobox', { name: 'Membri che possono vedere il commento' }),
     );
 
-    expect(screen.queryByText('Giocatore (giocatore@example.com)')).not.toBeInTheDocument();
-    expect(screen.getByText('Master (master@example.com)')).toBeInTheDocument();
+    expect(screen.queryByText('Giocatore')).not.toBeInTheDocument();
+    expect(screen.getByText('Master')).toBeInTheDocument();
   });
 
   it('picks who a Selective Comment is shared with', async () => {
@@ -219,7 +219,7 @@ describe('visibility', () => {
     await user.click(
       screen.getByRole('combobox', { name: 'Membri che possono vedere il commento' }),
     );
-    await user.click(screen.getByText('Master (master@example.com)'));
+    await user.click(screen.getByText('Master'));
     await user.type(body(), 'Solo per te');
     await user.click(submitButton());
 

@@ -51,9 +51,7 @@ describe('HomePage', () => {
     expect(buttons.map((button) => button.textContent)).toEqual([
       'Accedi con Google',
       'Accedi con Discord',
-      'Accedi con Facebook',
       'Accedi con GitHub',
-      'Accedi con X',
     ]);
     buttons.forEach((button) => expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true'));
     expect(screen.getByText('Accedi per continuare.')).toBeInTheDocument();
@@ -85,9 +83,7 @@ describe('HomePage', () => {
 
   it.each([
     ['Discord', 'discord'],
-    ['Facebook', 'facebook'],
     ['GitHub', 'github'],
-    ['X', 'x'],
   ])('signs in with %s, returning to the current origin', async (label, provider) => {
     const user = userEvent.setup();
     renderWithProviders(<HomePage />);

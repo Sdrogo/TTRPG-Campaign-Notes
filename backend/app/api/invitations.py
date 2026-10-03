@@ -60,8 +60,8 @@ class DirectInvitationRequest(BaseModel):
 
 
 class InviterResponse(ProfileFields):
-    """Who sent a direct invitation, with the profile fields a Friend sees:
-    the email only while the two share a Room (NFR-03)."""
+    """Who sent a direct invitation, with the profile fields a Friend sees
+    (no email, NFR-03)."""
 
     user_id: uuid.UUID
 
@@ -125,7 +125,9 @@ async def create_direct_invitation(
     # Serializes invitations to this Room, so two concurrent ones to the same
     # Friend can't both stay open.
     await rooms_repo.lock_room(session, room_id)
-    is_friend = await friends_repo.are_friends(session, requester_id, body.user_id)
+    # Locking the Friendship makes a concurrent removal wait, so its
+    # revocation (D-26) sees this invitation.
+    is_friend = await friends_repo.are_friends(session, requester_id, body.user_id, for_update=True)
     invitee_membership = await rooms_repo.get_membership(session, room_id, body.user_id)
     try:
         invitation = plan_direct_invitation(
@@ -162,13 +164,10 @@ async def list_my_invitations(
     rows = await invitations_repo.list_open_direct_for(session, user_id, datetime.now(UTC))
     inviter_ids = {invitation.created_by for invitation, _ in rows}
     profiles = await users_repo.get_profiles(session, inviter_ids)
-    sharing = await rooms_repo.users_sharing_a_room(session, user_id, inviter_ids)
     avatar_urls = await sign_avatars(profiles.values())
 
     def inviter(inviter_id: uuid.UUID) -> InviterResponse:
-        fields = profile_fields(profiles[inviter_id], avatar_urls)
-        if inviter_id not in sharing:
-            fields.email = None
+        fields = profile_fields(profiles[inviter_id], avatar_urls, user_id)
         return InviterResponse(user_id=inviter_id, **fields.model_dump())
 
     return [

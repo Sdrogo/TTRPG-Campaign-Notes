@@ -41,14 +41,14 @@ function render(props: Partial<Parameters<typeof MemberMultiSelect>[0]> = {}) {
 const field = () => screen.getByRole('combobox', { name: 'Chi può vedere' });
 
 describe('MemberMultiSelect', () => {
-  // Picking the wrong person here grants them access, so the option carries
-  // the email next to the chosen name (names aren't unique).
-  it('labels each member with their name and email', async () => {
+  // Other members' emails are never sent (NFR-03): the option is the name;
+  // `memberOptionLabel` tells apart members sharing one.
+  it('labels each member with their name', async () => {
     const { user } = render();
 
     await user.click(field());
 
-    expect(screen.getByText('Giocatore (giocatore@example.com)')).toBeInTheDocument();
+    expect(screen.getByText('Giocatore')).toBeInTheDocument();
   });
 
   it('falls back to the email when a member chose no name', async () => {
@@ -75,7 +75,7 @@ describe('MemberMultiSelect', () => {
     const { onChange, user } = render();
 
     await user.click(field());
-    await user.click(screen.getByText('Master (master@example.com)'));
+    await user.click(screen.getByText('Master'));
 
     expect(onChange).toHaveBeenCalledWith(['user-2']);
   });
@@ -87,7 +87,7 @@ describe('MemberMultiSelect', () => {
 
     await user.click(field());
 
-    expect(screen.queryByText('Giocatore (giocatore@example.com)')).not.toBeInTheDocument();
-    expect(screen.getByText('Master (master@example.com)')).toBeInTheDocument();
+    expect(screen.queryByText('Giocatore')).not.toBeInTheDocument();
+    expect(screen.getByText('Master')).toBeInTheDocument();
   });
 });

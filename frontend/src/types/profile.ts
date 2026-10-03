@@ -1,7 +1,7 @@
 /**
  * How a user is shown to others: every response that names a user carries these
- * fields (backend app/api/profiles.py). All optional - a user who never opened
- * the Account page is shown by email.
+ * fields (backend app/api/profiles.py). All optional. `email` is set only on
+ * the signed-in user's own profile, never on another user's (NFR-03).
  */
 export interface UserIdentity {
   email: string | null;

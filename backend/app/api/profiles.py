@@ -2,6 +2,7 @@
 (the members list, the user's own Account page), so they all serialize the
 same fields the same way."""
 
+import uuid
 from collections.abc import Iterable, Mapping
 
 from pydantic import BaseModel
@@ -11,9 +12,10 @@ from app.domain.models import UserProfile
 
 
 class ProfileFields(BaseModel):
-    """The public face of a user: what they chose to show plus their email
-    as a fallback. `avatar_url` is a short-lived signed link, not the
-    Storage path."""
+    """The public face of a user: what they chose to show. `email` is set
+    only on the viewer's own profile: it is never shown to other users
+    (NFR-03). `avatar_url` is a short-lived signed link, not the Storage
+    path."""
 
     email: str | None
     display_name: str | None
@@ -30,10 +32,13 @@ async def sign_avatars(profiles: Iterable[UserProfile]) -> dict[str, str]:
     )
 
 
-def profile_fields(profile: UserProfile, avatar_urls: Mapping[str, str]) -> ProfileFields:
-    """An avatar Storage couldn't sign shows as none (initials)."""
+def profile_fields(
+    profile: UserProfile, avatar_urls: Mapping[str, str], viewer_id: uuid.UUID
+) -> ProfileFields:
+    """`profile` as `viewer_id` sees it: the email only when it is their own.
+    An avatar Storage couldn't sign shows as none (initials)."""
     return ProfileFields(
-        email=profile.email,
+        email=profile.email if profile.user_id == viewer_id else None,
         display_name=profile.display_name,
         pronouns=profile.pronouns,
         bio=profile.bio,

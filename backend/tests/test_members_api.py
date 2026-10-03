@@ -58,7 +58,8 @@ async def test_admin_promotes_player_to_master(
     assert response.status_code == 200
     body = response.json()
     assert body["role"] == "master"
-    assert body["email"] == "player@example.com"
+    # NFR-03: another member's email is never sent.
+    assert body["email"] is None
 
     members = (
         await client.get(f"/rooms/{room_id}/members", headers=_auth_headers(admin_token))
@@ -230,3 +231,19 @@ async def test_token_without_email_keeps_the_stored_email(
         await client.get(f"/rooms/{room['id']}/members", headers=_auth_headers(with_email))
     ).json()
     assert members[0]["email"] == "gm@example.com"
+
+
+async def test_members_list_shows_only_the_viewers_own_email(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    # NFR-03: a member sees their own email in the list, never another's.
+    room_id, admin_token, player_user_id, player_token = await _create_room_and_join_as_player(
+        client, make_token
+    )
+
+    members = (
+        await client.get(f"/rooms/{room_id}/members", headers=_auth_headers(player_token))
+    ).json()
+    emails = {member["user_id"]: member["email"] for member in members}
+    assert emails.pop(player_user_id) == "player@example.com"
+    assert set(emails.values()) == {None}

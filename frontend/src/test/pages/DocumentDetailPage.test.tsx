@@ -597,8 +597,8 @@ describe('Owners', () => {
     render();
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    expect(screen.getByText('Owner')).toBeInTheDocument();
-    expect(screen.getByText('Io')).toBeInTheDocument();
+    const owners = screen.getByText('Owner').parentElement as HTMLElement;
+    expect(within(owners).getByText('Io')).toBeInTheDocument();
   });
 
   it('adds an Owner', async () => {
@@ -615,7 +615,7 @@ describe('Owners', () => {
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     await user.click(screen.getByRole('combobox', { name: '' }));
-    await user.click(screen.getByRole('option', { name: 'Altro (altro@example.com)' }));
+    await user.click(screen.getByRole('option', { name: 'Altro' }));
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
 
     await waitFor(() => expect(writes).toContain(`${DOC}/owners/user-2`));
@@ -667,7 +667,7 @@ describe('Played by', () => {
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     await user.click(screen.getByRole('combobox', { name: 'Scegli il giocatore' }));
-    await user.click(screen.getByRole('option', { name: 'Altro (altro@example.com)' }));
+    await user.click(screen.getByRole('option', { name: 'Altro' }));
     await user.click(screen.getByRole('button', { name: 'Imposta giocatore' }));
 
     await waitFor(() =>
@@ -708,7 +708,7 @@ describe('Played by', () => {
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     await user.click(screen.getByRole('combobox', { name: 'Scegli il giocatore' }));
-    await user.click(screen.getByRole('option', { name: 'Io (giocatore@example.com)' }));
+    await user.click(screen.getByRole('option', { name: 'Io' }));
     await user.click(screen.getByRole('button', { name: 'Imposta giocatore' }));
 
     await waitFor(() => expect(notifyError).toHaveBeenCalled());

@@ -9,21 +9,54 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-03)
 
-Branch `claude/project-thread-ads76p` (spec 20_2, mention backlinks
-frontend, PR into `staging`). Frontend **1253** tests at 100% coverage;
-tsc, oxlint and build clean. Backend unchanged since 20_1 (752 tests). The
-live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
+Branch `claude/project-thread-a660o5` (open questions closed, PR #70 into
+`staging`). Backend **755** tests and frontend **1249** tests at 100%
+coverage. The live database is at `c2f6b8d4e1a7`. Migration `d7b3a9f2c5e8`
 (`document_mentions` and the one-off conversion of plain `#Name` text into
-tokens, 20_1) is **not yet applied**: apply it once this frontend is
-deployed (before it, tokens would show as raw text).
+tokens, 20_1) is **not yet applied**: apply it once the 20_2 frontend is
+deployed (before it, tokens would show as raw text). PR #70 has no migration.
 
-Specs 12 to 19c are merged into `staging` (feature 19 closed); 20_1 merged.
-With 20_2, feature 20 is complete. Next: feature 21 (full-text search).
+Specs 12 to 20 are merged into `staging` (features 19 and 20 closed). All
+Open Questions closed 2026-10-03. Next: feature 21 (full-text search).
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Open questions closed (2026-10-03)
+
+Every Open Question was answered by the product owner ("ok" to all 15
+proposals, 2026-10-03):
+
+- **Confirmed as built**: Tag combination semantics (11_2: AND, also in the
+  single-Tag groups, any Tags, no nesting or names); Comments (author always
+  sees their own, Master deletes but doesn't edit others', moderation not
+  audited, 10,000 chars); Comment images (inherit visibility, deleted with
+  the Comment, Owner/Master remove from the gallery, 4 per Comment, no
+  image-only Comments); Document mentions (c)-(e) ((a)-(b) superseded by
+  spec 20); Account limits and profile visibility; Notes = Details with
+  choices (a)-(f); spec 11: setup page and Main Tags stay Administrator-only.
+- **`requirements.md` v0.5** (explicitly approved): D-18, D-19, I-08, I-10,
+  FR-D3, FR-T1, FR-T8, FR-T10, UC-18, W-03 follow the Notes model; OQ-09/10
+  became D-28/D-29; login lists Google, Discord and GitHub (D-07, glossary, UC-01,
+  W-01, NFR-03, MoSCoW); images plural, up to 20 (D-09, FR-D1); new NFR-09
+  (English and Italian, English fallback); D-26 and NFR-03 carry the two
+  code changes below.
+- **Code**: removing an accepted Friendship revokes the open direct
+  invitations between the two, both ways (`revoke_direct_between`; the
+  invitation route locks the Friendship row). **No other user's email is
+  sent any more** (`profile_fields` takes the viewer): members list,
+  Friends, invitation senders. Pickers tell same-named members apart by a
+  piece of the user id. The fallback name stays the existing unknown-user
+  label.
+- **Sign-in**: Facebook and X removed from `lib/authProviders.ts` and the
+  docs (no app credentials for them; Google, Discord, GitHub work).
+- **Supabase**: the Security Advisor shows no RLS findings. `EXECUTE` on
+  `public.rls_auto_enable()` (Supabase's auto-RLS event trigger function,
+  not in our migrations) was revoked from `public`/`anon`/`authenticated` on
+  the live DB by hand. No migration involved.
+- Limits that were listed as questions (in-process caches/sweeper, stale
+  image URLs) moved to Architecture Decisions as accepted limits.
 ### Document card restyle (2026-10-03)
 
 - From Andrea's prototype: on a Document card with images, the images fill
@@ -824,11 +857,11 @@ Question in the backend PR.
   overlay, that clicking an image opens the Document, portrait/landscape
   framing (spec 07/07.1); and the 09-27 header/back-button/collapsible-
   controls changes.
-- **Try each sign-in provider on the deployed app** (spec 08): Discord,
-  Facebook, GitHub, X round-trip, land on Rooms, pre-fill name/avatar; check
-  an X account with no email. A Supabase error page means a dashboard
-  setting, not app code. Facebook apps in Development mode only admit the
-  app's testers. Also re-test a brand-new user's first sign-in live (the
+- **Sign-in providers** (spec 08): Google, Discord and GitHub work on the
+  deployed app (confirmed by the product owner 2026-10-03). Facebook and X
+  were removed from the sign-in screen the same day (no app credentials);
+  they can also be disabled in the Supabase dashboard. Still to re-test a
+  brand-new user's first sign-in live (the
   stray trigger was dropped but never re-tested).
 - **Mention backlinks (spec 20, ticket written 2026-10-02)**:
   `20 - Mention backlinks` (mentions stored with ids, one-off conversion of
@@ -865,93 +898,15 @@ Question in the backend PR.
   editor, Owners + Master compare and restore, all versions kept).
 - Decide whether new Rooms should get default Tags in the creator's
   language.
+- **Read-only members list for every member** (decided 2026-10-03, spec 11
+  follow-up): the setup page stays Administrator-only, so a plain member has
+  no members list. Write a small ticket; slot it after the current feature.
 
 ## Open Questions
 
-Items marked *protected* need a product pass because `requirements.md` is a
-protected file.
-
-- **Spec 18_1b, Friendship removal and direct invitations**: removing a
-  Friendship doesn't revoke direct invitations the two sent each other. Keep
-  it, or revoke them on removal?
-- **Spec 12 — Notes = Details (decided 2026-10-01, `requirements.md` needs a
-  product pass, *protected*)**: the product owner confirmed a Note and a
-  Detail (D-18) are the same feature under two names, and chose to keep
-  **Owner/Master-only** management. This departs from the spec: D-19/I-10 say
-  any member who sees the Document may add a Detail, only its author or the
-  Master may edit it, and it is a Thread Post with nested replies; FR-T8
-  (promote a Detail into the description) and FR-T10 (a dedicated section on
-  the Document card) also assume that model. Implemented instead: own tables,
-  Owners + Master add/edit/delete/reorder, no replies, shown on the detail page
-  only. Either amend D-19, I-10, FR-T8 and FR-T10 to this model, or move
-  Notes onto `posts` (kind `detail`) later to get member-written Details and
-  replies. Other choices to confirm: (a) Private = the Document's Owners +
-  Master, and an Owner who sets a Note to "Master" stops seeing it; (b) Notes
-  are in the single-Document responses, not the list or the card; (c) limits:
-  200-char title, 50 per Document, no description limit; (d) reordering is
-  kept; (e) the Selective grant list is sent only to those who can manage the
-  Note; (f) the Agent export (FR-G1) doesn't exist yet and must apply the same
-  filter. Tickets: `context/feature/12_1 - Note backend effort.md`,
-  `12_2 - Note frontend effort.md`.
-
-- **Spec 11_2 — combination semantics (assumed, confirm)**: the spec only
-  says a combination of 2+ Tags can be a Group-by line item. Assumed: a
-  Document is in it when it carries **all** the Tags (AND, like the filter);
-  it also stays in the single-Tag groups it matches; any Tags can be combined
-  (not only Main Tags); combinations can't be nested or named. Changing
-  any of these needs a product pass.
-- **Spec 11 — who may set up a Room, and leaving** (needs a product
-  decision): the spec says the setup page is reachable only by a Room's
-  Administrator, and it replaced the members page. So (a) a plain Player or
-  a Master who isn't an Administrator can no longer see the members list
-  page; leaving is **resolved** by spec 15 (Leave in the Room card's menu);
-  (b) the Master alone can't set Main Tags (Administrator only,
-  matching "Admin of that Room"). Also new: who the "Admin" is when the
-  Master isn't one (they are separate flags, D-11).
-
-- **UI language absent from `requirements.md`** (*protected*): add an NFR for
-  supported languages and confirm English as fallback.
-- **Auth passages in `requirements.md`** (*protected*): FR-A1 lists five
-  providers, but UC-01, the section 5 User, NFR-03 and the MoSCoW **Won't**
-  row still say Google-only. D-07 (Google preferred) still holds. NFR-03's
-  privacy rule (only name, picture, email) applies to every provider.
-- **Images spec gap** (*protected*): D-09/FR-D1 say "Image" (singular).
-  The 20-per-Document cap and 1920px/WebP output are implementation choices.
-- **OQ-09 / OQ-10** have no `D-` number but are implemented (creator =
-  Administrator + Master; last-Master/Administrator guard). OQ-11/OQ-12 are
-  resolved (D-19, D-20).
-- **Comments — choices to confirm**: (a) the author always sees their own
-  Comment, so "Master only" = me + the Master; (b) the Master can delete but
-  not edit others' Comments; (c) moderation deletes aren't in the AuditLog;
-  (d) 10,000-char body limit.
-- **Comment images — choices to confirm**: (a) inherit the Comment's
-  visibility, including in the gallery; (b) deleting a Comment deletes its
-  images from the Document; (c) an Owner/Master can remove a Comment's image
-  from the gallery, only the author can add/remove it from the Comment;
-  (d) 4 per Comment; (e) no image-only Comments.
-- **Account — decisions**: profile fields are visible to everyone in a
-  shared Room (kept until the future Friend feature plans user privacy); the
-  email is still sent to Room members and used as fallback name (undecided,
-  left as is); limits 60/40/1000 chars and 512px avatars confirmed.
-- **Document mentions — choices to confirm**: (a) plain `#Name` text, so
-  renaming breaks mentions, duplicate names resolve to the first, a Document
-  beats a same-named Tag; (b) no backlinks yet; (c) popup shows at most 8,
-  and a Document can mention itself; (d) a Document created from the popup
-  gets **Room** visibility even from a Private Comment (user's choice), so
-  its name is shown to the whole Room; (e) creating from the popup needs ↓
-  then Enter.
-- **In-process caches/jobs**: the signed-link cache and the Storage sweeper
-  are per backend process. Harmless with several workers (removal is
-  idempotent); move the sweeper to a scheduled job if the backend ever runs
-  serverless or scales out.
-- **Stale image URLs**: a signed link already handed out works until it
-  expires, and old public URLs may be served from the CDN cache for a while.
-- **RLS**: all tables are backend-only. Only the question of adding policies
-  that *allow* future direct client access remains (`architecture.md` →
-  Open items). Re-check Supabase's Security Advisor: no RLS findings should
-  remain.
-- **Agent export format** (JSON vs Markdown vs both, FR-G1): decide when the
-  export endpoint is designed.
+None. The 15 questions listed here were closed with the product owner on
+2026-10-03 (see "Open questions closed" under Completed Units); the spec
+changes are in `requirements.md` v0.5.
 
 ## Architecture Decisions
 
@@ -988,6 +943,12 @@ Full reasoning lives in `architecture.md`; this is the index.
 - Localization: frontend and backend each have their own resource files with
   the same shape and share no code; domain exceptions carry keys, rendered
   at the API boundary.
+- Accepted limits: the signed-link cache and the Storage sweeper are per
+  backend process (harmless with several workers; move the sweeper to a
+  scheduled job if the backend goes serverless or scales out). A signed link
+  already handed out works until it expires, and old public URLs may be
+  served from the CDN cache for a while.
+- A user's email is sent only to that user (NFR-03, 2026-10-03).
 
 ## Session Notes (lessons worth keeping)
 
@@ -1009,6 +970,6 @@ Full reasoning lives in `architecture.md`; this is the index.
 - Headless browser checks need a faked Supabase session (Google-only login
   can't be automated) and a stubbed API; the scripts were never committed,
   which is why several UI items still await a human look.
-- `requirements.md` (v0.3) is the ID source for `D-`, `FR-`, `UC-`, `VR-`,
+- `requirements.md` (v0.5) is the ID source for `D-`, `FR-`, `UC-`, `VR-`,
   `I-`, `OQ-`; it is protected, so spec gaps are logged under Open Questions
   rather than edited.

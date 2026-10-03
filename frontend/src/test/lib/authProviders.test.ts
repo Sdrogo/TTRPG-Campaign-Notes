@@ -7,9 +7,7 @@ describe('AUTH_PROVIDERS', () => {
     expect(AUTH_PROVIDERS.map((provider) => provider.id)).toEqual([
       'google',
       'discord',
-      'facebook',
       'github',
-      'x',
     ]);
   });
 
@@ -22,12 +20,14 @@ describe('AUTH_PROVIDERS', () => {
 describe('authProviderOf', () => {
   it('finds the provider a session signed in with', () => {
     expect(authProviderOf('github')?.label).toBe('GitHub');
-    expect(authProviderOf('x')?.label).toBe('X');
+    expect(authProviderOf('discord')?.label).toBe('Discord');
   });
 
   it('is undefined for a missing or unknown provider', () => {
     expect(authProviderOf(undefined)).toBeUndefined();
     expect(authProviderOf('twitter')).toBeUndefined();
+    expect(authProviderOf('facebook')).toBeUndefined();
+    expect(authProviderOf('x')).toBeUndefined();
     expect(authProviderOf(42)).toBeUndefined();
   });
 });

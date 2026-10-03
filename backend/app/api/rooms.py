@@ -79,15 +79,18 @@ class UpdateRoomSettingsRequest(BaseModel):
 
 
 def member_response(
-    membership: Membership, profile: UserProfile, avatar_urls: Mapping[str, str]
+    membership: Membership,
+    profile: UserProfile,
+    avatar_urls: Mapping[str, str],
+    viewer_id: uuid.UUID,
 ) -> MemberResponse:
-    """Serializes a member. `avatar_urls` comes from `sign_avatars`, signed
-    once for the whole list."""
+    """Serializes a member as `viewer_id` sees them. `avatar_urls` comes from
+    `sign_avatars`, signed once for the whole list."""
     return MemberResponse(
         user_id=membership.user_id,
         role=membership.role,
         is_admin=membership.is_admin,
-        **profile_fields(profile, avatar_urls).model_dump(),
+        **profile_fields(profile, avatar_urls, viewer_id).model_dump(),
     )
 
 
@@ -193,7 +196,10 @@ async def list_members(
 
     rows = await rooms_repo.list_members_with_profile(session, room_id)
     avatar_urls = await sign_avatars(profile for _, profile in rows)
-    return [member_response(membership, profile, avatar_urls) for membership, profile in rows]
+    return [
+        member_response(membership, profile, avatar_urls, requester_id)
+        for membership, profile in rows
+    ]
 
 
 @router.patch("/{room_id}/members/{user_id}")
@@ -230,7 +236,7 @@ async def update_member(
     await rooms_repo.insert_audit_log(session, plan.audit_entry)
 
     profile = await users_repo.get_profile(session, user_id)
-    return member_response(plan.membership, profile, await sign_avatars([profile]))
+    return member_response(plan.membership, profile, await sign_avatars([profile]), requester_id)
 
 
 @router.delete("/{room_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
