@@ -19,13 +19,32 @@ body {
 /* The top bar stays pinned while the page scrolls (Andrea, 2026-10-03). It
    sits above the page's own stacking (card links, image controls) but below
    Mantine's overlays (popovers, drawers, modals: z-index 200 and up), and it
-   has the page's background so the content scrolls under it unseen. */
+   has the page's background so the content scrolls under it unseen. While
+   scrolling down it slides up out of view (`data-hidden`, set by `AppHeader`)
+   and slides back as soon as the scroll turns up. */
 .app-header {
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--bg-base);
   border-bottom: 1px solid var(--border-default);
+  transition: transform 200ms ease;
+}
+
+.app-header[data-hidden] {
+  transform: translateY(-100%);
+}
+
+/* Tabbing into a hidden bar brings it back, so keyboard focus is never on
+   controls off-screen. */
+.app-header[data-hidden]:focus-within {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-header {
+    transition: none;
+  }
 }
 
 /* Whatever the page scrolls to (`scrollIntoView`, `#anchors`) lands below

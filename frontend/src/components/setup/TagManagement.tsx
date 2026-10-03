@@ -37,7 +37,7 @@ export function TagManagement({ roomId, tags }: TagManagementProps) {
 
   return (
     <Stack gap="sm">
-      <Title order={3} style={{ fontFamily: 'var(--font-display)' }}>
+      <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
         {t('setup.tags.title')}
       </Title>
       <Text size="sm" c="dimmed">

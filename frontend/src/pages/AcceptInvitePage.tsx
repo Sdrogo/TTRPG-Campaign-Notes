@@ -36,7 +36,7 @@ export function AcceptInvitePage() {
 
   if (sessionLoading) {
     return (
-      <Stack align="center" justify="center" style={{ minHeight: '100svh' }}>
+      <Stack component="main" align="center" justify="center" style={{ minHeight: '100svh' }}>
         <Loader color="accent" />
       </Stack>
     );
@@ -44,7 +44,7 @@ export function AcceptInvitePage() {
 
   if (!session) {
     return (
-      <Stack align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
+      <Stack component="main" align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
         <Text>{t('invite.signInRequired')}</Text>
         <Button component={Link} to="/">
           {t('common.goToLogin')}
@@ -54,7 +54,7 @@ export function AcceptInvitePage() {
   }
 
   return (
-    <Stack align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
+    <Stack component="main" align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
       {acceptInvitation.isPending && <Loader color="accent" />}
       {acceptInvitation.isError && (
         <>
@@ -66,7 +66,7 @@ export function AcceptInvitePage() {
       )}
       {acceptInvitation.isSuccess && acceptInvitation.data && (
         <>
-          <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
+          <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
             {t('invite.joined', { room: acceptInvitation.data.name })}
           </Title>
           <Button onClick={() => navigate('/')}>{t('invite.goToMyRooms')}</Button>

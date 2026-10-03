@@ -124,7 +124,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         <Group justify="space-between">
           <Group gap="sm" align="center" wrap="wrap">
-            <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
+            <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
               {room.data ? t('documents.titleWithRoom', { room: room.data.name }) : t('documents.title')}
             </Title>
             {hasControls && (
@@ -262,10 +262,18 @@ function DocumentsGrid({
 
   // `.documents-grid` (index.css): 1 to 3 columns like before, then more on
   // very wide screens, so a card never grows huge.
-  const cards = (list: Document[]) => (
+  // Grouped, the cards sit under a group heading, one level deeper.
+  const cards = (list: Document[], headingOrder: 2 | 3 = 2) => (
     <Box className="documents-grid">
       {list.map((document) => (
-        <DocumentCard key={document.id} document={document} roomId={roomId} tags={tags} members={memberList} />
+        <DocumentCard
+          key={document.id}
+          document={document}
+          roomId={roomId}
+          tags={tags}
+          members={memberList}
+          headingOrder={headingOrder}
+        />
       ))}
     </Box>
   );
@@ -284,7 +292,7 @@ function DocumentsGrid({
           group.key === UNGROUPED_KEY ? t('documents.ungroupedTag') : itemLabel(group.tags);
         return (
           <Stack key={key} gap="xs">
-            <Title order={5} style={{ fontFamily: 'var(--font-display)' }}>
+            <Title order={2} fz="h5" style={{ fontFamily: 'var(--font-display)' }}>
               <UnstyledButton
                 onClick={() => toggleGroup(key)}
                 aria-expanded={isExpanded}
@@ -299,7 +307,7 @@ function DocumentsGrid({
                 {label}
               </UnstyledButton>
             </Title>
-            <Collapse expanded={isExpanded}>{cards(group.documents)}</Collapse>
+            <Collapse expanded={isExpanded}>{cards(group.documents, 3)}</Collapse>
           </Stack>
         );
       })}

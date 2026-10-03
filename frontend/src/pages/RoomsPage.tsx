@@ -18,9 +18,9 @@ export function RoomsPage({ currentUserId }: RoomsPageProps) {
   const myRooms = useMyRooms(true);
 
   return (
-    <Stack gap="md" p="md">
+    <Stack component="main" gap="md" p="md">
       <Group justify="space-between">
-        <Title order={2} style={{ fontFamily: 'var(--font-display)' }}>
+        <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
           {t('common.myRooms')}
         </Title>
         <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>

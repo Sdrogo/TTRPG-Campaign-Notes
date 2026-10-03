@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 /** A centered spinner while a page's session or data loads. */
 export function FullPageLoader() {
   return (
-    <Stack align="center" justify="center" style={{ minHeight: '100svh' }}>
+    <Stack component="main" align="center" justify="center" style={{ minHeight: '100svh' }}>
       <Loader color="accent" />
     </Stack>
   );
@@ -24,7 +24,7 @@ interface FullPageMessageProps {
 /** A centered message, with a link out when `actionLabel` and `actionTo` are given. */
 export function FullPageMessage({ children, actionLabel, actionTo }: FullPageMessageProps) {
   return (
-    <Stack align="center" justify="center" gap="md" p="md" style={{ minHeight: '100svh' }}>
+    <Stack component="main" align="center" justify="center" gap="md" p="md" style={{ minHeight: '100svh' }}>
       <Text ta="center">{children}</Text>
       {actionLabel && actionTo && (
         <Button component={Link} to={actionTo}>

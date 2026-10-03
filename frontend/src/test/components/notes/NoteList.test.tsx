@@ -52,7 +52,7 @@ function render(notes: Note[], canAdd = true) {
   return { host: screen.getByTestId('host'), user: userEvent.setup() };
 }
 
-const titles = () => screen.queryAllByRole('heading', { level: 4 }).map((h) => h.textContent);
+const titles = () => screen.queryAllByRole('heading', { level: 2 }).map((h) => h.textContent);
 
 beforeEach(() => {
   fetchMock.mockReset();

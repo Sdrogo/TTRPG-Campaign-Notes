@@ -56,6 +56,22 @@ proposals, 2026-10-03):
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
 
+### Accessibility audit fixes (2026-10-03)
+
+- Andrea's Vercel toolbar audit flagged small touch targets, skipped heading
+  levels and no `main` landmark. Reproduced with axe-core in headless
+  Chromium against the app with a mocked API (Room list, Document, Rooms,
+  Account, setup): all clean after the fix. Each page now has one `main`
+  and one `h1`, headings never skip a level (sizes unchanged via `fz`), and
+  Tag links are 24px tall to tap. Frontend only.
+
+### Top bar hides on scroll down (2026-10-03)
+
+- Andrea: the pinned bar should leave room on a phone. It now slides up out
+  of view while scrolling down and returns as soon as the scroll turns up
+  (`useHeadroom` in `AppHeader`, `data-hidden` + a CSS transform). Frontend
+  only.
+
 ### Pinned top bar (2026-10-03)
 
 - Andrea: in a long Room the top bar scrolled out of view. `AppHeader` now

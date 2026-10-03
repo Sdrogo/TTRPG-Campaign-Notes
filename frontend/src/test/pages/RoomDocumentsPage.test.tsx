@@ -320,10 +320,27 @@ describe('grouping and sorting', () => {
     });
   }
 
-  // Group headings render at level 5, distinct from the app header's (level
-  // 3) and a DocumentCard's own (level 4) title.
-  const groupHeadings = () => screen.queryAllByRole('heading', { level: 5 }).map((h) => h.textContent);
-  const cardTitles = () => screen.queryAllByRole('heading', { level: 4 }).map((h) => h.textContent);
+  // Under the page's h1, group headings are h2 (each holds its collapse
+  // toggle) and a DocumentCard's title is h3 inside a group, h2 without one.
+  const pageHeadings = (...levels: number[]) =>
+    Array.from(screen.getByRole('main').querySelectorAll(levels.map((l) => `h${l}`).join(', ')));
+  const isGroupHeading = (h: Element) => h.querySelector('[aria-expanded]') !== null;
+  const groupHeadings = () => pageHeadings(2).filter(isGroupHeading).map((h) => h.textContent);
+  const cardTitles = () =>
+    pageHeadings(2, 3)
+      .filter((h) => !isGroupHeading(h))
+      .map((h) => h.textContent);
+
+  // The outline never skips a level: h1 page title, h2 group, h3 card - or
+  // h2 card when there are no groups.
+  it('nests card titles one level under their group heading', async () => {
+    mockApiWithMainTags();
+    render();
+
+    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('La Cripta');
+    expect(pageHeadings(3).map((h) => h.textContent)).toEqual(['Zanna', 'Alba']);
+  });
 
   it('groups Documents under their Main Tag by default, ungrouped ones last', async () => {
     mockApiWithMainTags();

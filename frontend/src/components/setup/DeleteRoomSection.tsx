@@ -40,7 +40,7 @@ export function DeleteRoomSection({ roomId, roomName, onDeleted }: DeleteRoomSec
 
   return (
     <Stack gap="sm">
-      <Title order={3} style={{ fontFamily: 'var(--font-display)' }}>
+      <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
         {t('setup.dangerZone.title')}
       </Title>
       <Text size="sm" c="dimmed">

@@ -15,13 +15,13 @@ interface PageLayoutProps {
  * The top bar - including the "back" button every nested page has, next to
  * the burger position (`AppHeader` owns its behaviour: it prefers real
  * browser history over the fixed `backTo`) - then a full-width page body with
- * side margins that grow with the screen.
+ * side margins that grow with the screen, as the page's `main` landmark.
  */
 export function PageLayout({ backTo, backLabel, roomId, children }: PageLayoutProps) {
   return (
     <>
       <AppHeader roomId={roomId} backTo={backTo} backLabel={backLabel} />
-      <Container fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="md">
+      <Container component="main" fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="md">
         <Stack gap="md">{children}</Stack>
       </Container>
     </>

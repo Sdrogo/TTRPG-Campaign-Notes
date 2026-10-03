@@ -34,7 +34,8 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         <Stack gap={4} style={{ minWidth: 0 }}>
           <Title
-            order={3}
+            order={2}
+            fz="h3"
             style={{ fontFamily: 'var(--font-display)', overflowWrap: 'anywhere' }}
           >
             {room.name}

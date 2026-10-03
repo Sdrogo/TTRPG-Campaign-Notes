@@ -1,6 +1,6 @@
 // The thin layout wrappers, covered together: each is a handful of lines
 // with one thing worth asserting, and a file apiece would be noise.
-import { screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
@@ -69,6 +69,16 @@ describe('PageLayout', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
+  it('wraps the page body in the main landmark', () => {
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro">
+        <p>Contenuto</p>
+      </PageLayout>,
+    );
+
+    expect(within(screen.getByRole('main')).getByText('Contenuto')).toBeInTheDocument();
+  });
+
   it('pins the app header to the top of the page', () => {
     renderWithProviders(
       <PageLayout backTo="/" backLabel="Indietro">
@@ -78,6 +88,32 @@ describe('PageLayout', () => {
 
     // `.app-header` (index.css) makes it sticky at the top.
     expect(screen.getByRole('banner')).toHaveClass('app-header');
+  });
+
+  it('hides the app header while scrolling down and brings it back on scroll up', async () => {
+    const scrollTo = (y: number) =>
+      act(() => {
+        Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+        fireEvent.scroll(window);
+      });
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro">
+        <p>Contenuto</p>
+      </PageLayout>,
+    );
+    const header = screen.getByRole('banner');
+    expect(header).not.toHaveAttribute('data-hidden');
+
+    scrollTo(100);
+    scrollTo(400);
+    await waitFor(() => expect(header).toHaveAttribute('data-hidden'));
+
+    // The first event up only registers the turn; the next one shows it.
+    scrollTo(390);
+    scrollTo(380);
+    await waitFor(() => expect(header).not.toHaveAttribute('data-hidden'));
+
+    scrollTo(0);
   });
 
   it('forwards a given Room id to the header, offering the Glossary Index', () => {
