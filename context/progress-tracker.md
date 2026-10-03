@@ -56,6 +56,12 @@ proposals, 2026-10-03):
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
 
+### More card columns on very wide screens (2026-10-03)
+
+- On a 3440px monitor three Document cards were over 1000px wide each, and
+  the square image floor made them huge. The list's grid (`.documents-grid`)
+  now goes to 4 columns from 1920px, 5 from 2560px and 6 from 3200px.
+
 ### Unread dot inside the visibility badge (2026-10-03)
 
 - From Andrea's mockup: a Document card's "not yet read" dot now sits inside

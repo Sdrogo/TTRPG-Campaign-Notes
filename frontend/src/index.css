@@ -140,3 +140,42 @@ body {
     margin-top: 4px;
   }
 }
+
+/* The Documents list: 1, 2 then 3 columns like the Rooms list, and more on
+   very wide screens (Andrea, 2026-10-03: on a 3440px monitor three cards
+   were each over 1000px wide, and the square image floor made them huge). */
+.documents-grid {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 48em) {
+  .documents-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 75em) {
+  .documents-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 120em) {
+  .documents-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 160em) {
+  .documents-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 200em) {
+  .documents-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
