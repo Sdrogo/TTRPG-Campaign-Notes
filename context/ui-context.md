@@ -346,9 +346,13 @@ other icon set.
   on the Room setup page, in the order they gave them — specs 11, 11_2) is
   the default: each group gets its own
   `Title` (`#TagName`, `#A + #B` for a combination, or "No Main Tag" for Documents carrying
-  none) above its own `SimpleGrid`; a Document with several Main Tags
+  none) above its own grid of cards; a Document with several Main Tags
   appears under each one. "No grouping" collapses back to the
   single flat grid spec 07 already had.
+  **The card grid** is `.documents-grid` in `index.css` (2026-10-03): 1, 2
+  and 3 columns from `base`, `sm` and `lg` like the Rooms list, then 4 from
+  1920px, 5 from 2560px and 6 from 3200px, so a card stays a sensible size
+  on a very wide monitor.
   **Each group collapses independently** (2026-09-26): its `Title` wraps a
   clickable row (a `CaretDownIcon`/`CaretRightIcon` at 16px, then the
   label) that toggles a Mantine `Collapse` around that group's grid —

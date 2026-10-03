@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
+  Box,
   Collapse,
   Group,
   Title,
   Button,
   Select,
-  SimpleGrid,
   Stack,
   Text,
   Loader,
@@ -260,12 +260,14 @@ function DocumentsGrid({
       return next;
     });
 
+  // `.documents-grid` (index.css): 1 to 3 columns like before, then more on
+  // very wide screens, so a card never grows huge.
   const cards = (list: Document[]) => (
-    <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+    <Box className="documents-grid">
       {list.map((document) => (
         <DocumentCard key={document.id} document={document} roomId={roomId} tags={tags} members={memberList} />
       ))}
-    </SimpleGrid>
+    </Box>
   );
 
   if (groupBy === 'none') {
