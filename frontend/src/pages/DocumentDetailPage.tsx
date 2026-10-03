@@ -20,6 +20,7 @@ import { useMembers } from '../hooks/useMembers';
 import { useComments, usePromoteComment } from '../hooks/useComments';
 import { useRoom } from '../hooks/useRooms';
 import { useRevealDocument, useRevealedInVisit } from '../hooks/useReveals';
+import { useReadOnly } from '../hooks/useViewAs';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { appendPromotedText, promotionReaches, type PromotionAudience } from '../lib/promotion';
 import { canManageTags } from '../lib/roomPermissions';
@@ -51,7 +52,8 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * `/rooms/:roomId/documents/:documentId`: one Document with its gallery, Owners,
- * where it is mentioned and its Comments. Owners and the Master also get the editing controls.
+ * where it is mentioned and its Comments. Owners and the Master also get the editing controls,
+ * except while the Master previews it as a member (spec 22b): then it is read-only.
  */
 export function DocumentDetailPage() {
   const { t } = useTranslation();
@@ -96,6 +98,7 @@ function DocumentDetailLoader({
   const defaultVisibility = room.data?.defaultVisibility ?? 'room';
   // A Comment being promoted (spec 19c Decision 5), and where to.
   const [promoting, setPromoting] = useState<{ comment: Comment; target: PromotionTarget } | null>(null);
+  const readOnly = useReadOnly();
 
   if (document.isLoading) {
     return <FullPageLoader />;
@@ -110,7 +113,7 @@ function DocumentDetailLoader({
   }
 
   const memberList = members.data ?? [];
-  const isMaster = memberList.find((m) => m.userId === currentUserId)?.role === 'master';
+  const isMaster = memberList.find((m) => m.userId === currentUserId)?.role === 'master' && !readOnly;
   // A promotion starts from a Comment in this same cache, so it is loaded.
   const promotion = promoting && {
     comment: promoting.comment,
@@ -145,7 +148,7 @@ function DocumentDetailLoader({
           currentUserId={currentUserId}
           defaultVisibility={defaultVisibility}
           revealFrom={isMaster ? document.data : undefined}
-          onPromote={(comment, target) => setPromoting({ comment, target })}
+          onPromote={readOnly ? undefined : (comment, target) => setPromoting({ comment, target })}
         />
         {promotion && promoting.target === 'document' && (
           <PromoteToDocumentModal
@@ -211,10 +214,12 @@ function DocumentPanel({
   const revealDocument = useRevealDocument(roomId, document.id);
   const revealed = useRevealedInVisit(roomId, document.id);
   const [revealing, setRevealing] = useState(false);
+  // Previewing as a member (spec 22b): no write control at all.
+  const readOnly = useReadOnly();
 
   const me = members.find((m) => m.userId === currentUserId);
-  const isMaster = me?.role === 'master';
-  const isOwner = document.ownerIds.includes(currentUserId) || isMaster;
+  const isMaster = me?.role === 'master' && !readOnly;
+  const isOwner = (document.ownerIds.includes(currentUserId) || isMaster) && !readOnly;
 
   return (
     <PageCard>

@@ -18,6 +18,7 @@ import {
 } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { DocumentDetailPage } from '../../pages/DocumentDetailPage';
+import { ViewAsContext } from '../../hooks/useViewAs';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
@@ -1163,5 +1164,56 @@ describe('revealing the Document', () => {
     render();
 
     expect(await screen.findByText('Rivelato')).toBeInTheDocument();
+  });
+});
+
+// Spec 22b: the Master previewing the Room as a member changes nothing, so
+// the page offers no write control, whatever the member could do, and the
+// visit isn't recorded.
+describe('previewing as a member', () => {
+  it('is read-only', async () => {
+    routes.document = rawDocument({
+      visibility: 'master',
+      owner_ids: ['user-1', 'user-2'],
+      notes: [rawNote({ visibility: 'master' })],
+    });
+    routes.members = [
+      rawMember({ user_id: 'user-1', display_name: 'Io', role: 'master', is_admin: true }),
+      rawMember({ user_id: 'user-2', display_name: 'Alice' }),
+    ];
+    routes.comments = [
+      rawComment({
+        author_id: 'user-2',
+        visibility: 'master',
+        can_pin: true,
+        can_resolve: true,
+        can_promote: true,
+        reactions: [{ emoji: '👍', count: 1, reacted_by_me: true, user_ids: ['user-2'] }],
+      }),
+    ];
+    renderWithProviders(
+      <Routes>
+        <Route path="/rooms/:roomId/documents/:documentId" element={<DocumentDetailPage />} />
+      </Routes>,
+      {
+        route: DOC,
+        wrapper: ({ children }) => (
+          <ViewAsContext value={{ roomId: 'room-1', userId: 'user-2' }}>{children}</ViewAsContext>
+        ),
+      },
+    );
+
+    expect(await screen.findByText('Ricordate il sigillo.')).toBeInTheDocument();
+    expect(screen.getByText('Porta segreta')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Rivela/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Nota: Porta segreta/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aggiungi Nota' })).not.toBeInTheDocument();
+    for (const action of ['Rispondi', 'Fissa', 'Segna come risolto', 'Promuovi', 'Elimina', 'Aggiungi una reazione']) {
+      expect(screen.queryByRole('button', { name: action })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole('button', { name: /^👍, 1 reazione/ })).toBeDisabled();
+    expect(screen.queryByTestId('new-comment')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith(`${DOC}/read`, expect.anything());
   });
 });

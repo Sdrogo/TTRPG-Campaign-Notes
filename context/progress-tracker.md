@@ -20,12 +20,25 @@ product owner's request (2026-10-03); 21 (full-text search) is still to do.
 
 **Pending migration**: `b8d2f6a4c9e1` (spec 22_1: `rooms.default_visibility`,
 `reveals`, `reveal_recipients`, an `audit_log` index). Not yet on the live
-database; apply it by hand before the release that ships 22_1. Specs 22_1
-and 22_2 share PR #86.
+database; apply it by hand before the release that ships 22_1. All of
+feature 22 (22_1, 22_2, 22b_1, 22b_2) is in PR #86; 22b adds no migration.
 
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### View as a member (specs 22b_1 and 22b_2, 2026-10-03)
+
+- Backend: the `X-View-As` header on a Room's routes answers as the chosen
+  member, for the Room's Master only and only for its current members;
+  every write carrying it is refused (403). Frontend: "View as" in the Room
+  title's "⋮", the preview in the URL (`?as=`), a banner with "Exit" in the
+  top bar, a separate query cache, every write control hidden and no visit
+  recorded. Details in `architecture.md` → View as a member.
+- Choices beyond the ticket: the preview covers the Room's Documents pages
+  only (the setup page stays the Master's own); "you" marks still name the
+  Master, since only what is visible changes.
+- Frontend 1337 tests, backend 807 tests, both 100% coverage.
 
 ### Reveal and visibility history, frontend (spec 22_2, 2026-10-03)
 
@@ -977,8 +990,8 @@ Reorganized with the product owner on 2026-10-03.
     frontend. Postponed: the product owner asked for 22 first (2026-10-03).
   - **Reveal and visibility (spec 22)**: `22 - Reveal and visibility
     history` and `22b - View as player` (read-only preview through an
-    `X-View-As` header). **In progress**: 22_1 and 22_2 done (PR #86);
-    22b_1, 22b_2 next.
+    `X-View-As` header). **Done**: 22_1, 22_2, 22b_1, 22b_2 all in PR #86
+    (2026-10-03), awaiting review and merge into `staging`.
   - **Room export (spec 23)**: `23 - Room export` (JSON + Markdown,
     per-viewer), `23b - Room PDF manual` (WeasyPrint in a background job;
     check Render can install Pango first), `23c - Agent access tokens`

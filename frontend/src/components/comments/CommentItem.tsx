@@ -18,6 +18,7 @@ import { isEdited } from '../../lib/comments';
 import { formatAbsoluteTime, formatRelativeTime } from '../../lib/time';
 import type { Character } from '../../types/character';
 import type { Comment, CommentFormValues, PromotionTarget } from '../../types/comment';
+import { useReadOnly } from '../../hooks/useViewAs';
 import type { DocumentVisibility } from '../../types/document';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
@@ -94,6 +95,8 @@ export function CommentItem({
 }: CommentItemProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
+  // Previewing as a member (spec 22b): nothing can be changed.
+  const readOnly = useReadOnly();
   const toggleReaction = useToggleReaction(roomId, comment.documentId);
   const onToggleReaction = (emoji: string, add: boolean) =>
     toggleReaction.mutate({ commentId: comment.id, emoji, add }, { onError: notifyError });
@@ -277,7 +280,7 @@ export function CommentItem({
             reactions={comment.reactions}
             members={members}
             onToggle={onToggleReaction}
-            disabled={toggleReaction.isPending}
+            disabled={readOnly || toggleReaction.isPending}
           />
         )}
 
@@ -295,7 +298,7 @@ export function CommentItem({
                 </Text>
               </Tooltip>
             )}
-            {!comment.deleted && (
+            {!comment.deleted && !readOnly && (
               <AddReaction
                 comment={comment}
                 onToggle={onToggleReaction}
@@ -305,7 +308,7 @@ export function CommentItem({
             {onReply && !comment.deleted && (
               <CommentAction onClick={onReply}>{t('comments.reply')}</CommentAction>
             )}
-            {comment.canEdit && (
+            {comment.canEdit && !readOnly && (
               <CommentAction onClick={() => setEditing(true)}>{t('common.edit')}</CommentAction>
             )}
             {onSetFlag && comment.canPin && (
@@ -328,7 +331,7 @@ export function CommentItem({
             {onReveal && !comment.deleted && comment.visibility !== 'room' && (
               <CommentAction onClick={onReveal}>{t('reveal.action')}</CommentAction>
             )}
-            {comment.canDelete && (
+            {comment.canDelete && !readOnly && (
               <DeleteCommentAction
                 onConfirm={onDelete}
                 loading={deleting}

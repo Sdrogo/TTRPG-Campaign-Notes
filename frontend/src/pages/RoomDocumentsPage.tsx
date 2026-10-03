@@ -33,6 +33,7 @@ import { Backlinks } from '../components/mentions/Backlinks';
 import { filterDocumentsByTags } from '../lib/documentFilters';
 import { hasUnseenReveal } from '../lib/reveal';
 import { useMyReveals } from '../hooks/useReveals';
+import { useReadOnly } from '../hooks/useViewAs';
 import {
   DEFAULT_GROUP_BY,
   groupDocumentsByMainItems,
@@ -108,11 +109,13 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
     setSearchParams(next, { replace: true });
   };
 
+  // A Master previewing the Room as a member (spec 22b) gets no write control.
+  const readOnly = useReadOnly();
   const me = members.data?.find((m) => m.userId === currentUserId);
-  const isMaster = me?.role === 'master';
+  const isMaster = me?.role === 'master' && !readOnly;
   // D-13/FR-D7: same rule the backend enforces, so a Player isn't offered a
   // form that would only be rejected on submit.
-  const canCreateDocument = canCreateDocuments(me, room.data);
+  const canCreateDocument = canCreateDocuments(me, room.data) && !readOnly;
   const shown = documents.data ? filterDocumentsByTags(documents.data, tagFilter) : undefined;
   const sorted = shown ? sortDocuments(shown, sort) : undefined;
   const hasControls = Boolean((isMaster && room.data) || (documents.data && documents.data.length > 0));
@@ -151,14 +154,17 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               </UnstyledButton>
             )}
           </Group>
-          {room.data && me && (
+          {room.data && me && !readOnly && (
             <RoomTitleActions
               roomId={roomId}
               roomName={room.data.name}
               isAdmin={me.isAdmin}
-              isMaster={me.role === 'master'}
+              isMaster={isMaster}
               currentUserId={currentUserId}
               onLeft={() => navigate('/')}
+              viewAsMembers={
+                isMaster ? members.data!.filter((m) => m.userId !== currentUserId) : undefined
+              }
             />
           )}
         </Group>
@@ -283,8 +289,9 @@ function DocumentsGrid({
   groupBy: DocumentGroupBy;
 }) {
   const { t } = useTranslation();
-  // Content revealed to the viewer they haven't opened yet marks its card (spec 22).
-  const reveals = useMyReveals(true);
+  // Content revealed to the viewer they haven't opened yet marks its card
+  // (spec 22). Not while previewing as a member: those are the Master's own.
+  const reveals = useMyReveals(!useReadOnly());
   // Which group keys are collapsed; everything starts expanded. Not
   // persisted - a reload or a `groupBy`/sort change is a fresh page.
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());

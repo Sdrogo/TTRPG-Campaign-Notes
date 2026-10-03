@@ -520,5 +520,11 @@
     "notesDescription": "Whoever gets the Document can't see them. They stay as they are unless you select them.",
     "confirm": "Reveal",
     "done": "Revealed."
+  },
+  "viewAs": {
+    "action": "View as a member",
+    "menuLabel": "View the Room as",
+    "banner": "Viewing the Room as {{name}}. Read-only.",
+    "exit": "Exit view"
   }
 }

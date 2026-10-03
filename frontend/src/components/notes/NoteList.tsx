@@ -6,6 +6,7 @@ import { NoteItem } from './NoteItem';
 import { RevealModal } from '../RevealModal';
 import { useCreateNote, useDeleteNote, useReorderNotes, useUpdateNote } from '../../hooks/useNotes';
 import { useRevealNote, useRevealedInVisit } from '../../hooks/useReveals';
+import { useReadOnly } from '../../hooks/useViewAs';
 import { EMPTY_NOTE_VALUES, moveNote } from '../../lib/notes';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { noteReveal } from '../../lib/reveal';
@@ -36,6 +37,8 @@ interface NoteListProps {
  * "add Note" action for those allowed. With no Notes and no right to add one
  * it renders nothing, so a Document looks as it did before Notes existed.
  * The Master can reveal a Note not yet seen by the whole Room (spec 22).
+ * While the Master previews the Room as a member (spec 22b) no Note can be
+ * changed, whatever the member could do.
  */
 export function NoteList({
   roomId,
@@ -55,6 +58,7 @@ export function NoteList({
   const reorderNotes = useReorderNotes(roomId, documentId);
   const revealNote = useRevealNote(roomId, documentId);
   const revealed = useRevealedInVisit(roomId, documentId);
+  const readOnly = useReadOnly();
 
   if (notes.length === 0 && !canAdd) {
     return null;
@@ -68,7 +72,7 @@ export function NoteList({
       {notes.map((note, index) => (
         <NoteItem
           key={note.id}
-          note={note}
+          note={readOnly ? { ...note, canEdit: false, canDelete: false } : note}
           members={members}
           canMoveUp={index > 0}
           canMoveDown={index < notes.length - 1}

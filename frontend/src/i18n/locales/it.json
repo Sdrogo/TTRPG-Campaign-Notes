@@ -520,5 +520,11 @@
     "notesDescription": "Chi ottiene il Documento non le vede. Restano come sono se non le selezioni.",
     "confirm": "Rivela",
     "done": "Rivelato."
+  },
+  "viewAs": {
+    "action": "Vedi come un membro",
+    "menuLabel": "Vedi la Stanza come",
+    "banner": "Stai vedendo la Stanza come {{name}}. Sola lettura.",
+    "exit": "Esci dalla vista"
   }
 }

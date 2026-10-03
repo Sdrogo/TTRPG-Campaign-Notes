@@ -17,6 +17,7 @@ import {
 } from '../../hooks/useComments';
 import { useDocumentVisit } from '../../hooks/useDocuments';
 import { useRevealComment, useRevealedInVisit } from '../../hooks/useReveals';
+import { useReadOnly } from '../../hooks/useViewAs';
 import { RevealModal } from '../RevealModal';
 import { commentReveal } from '../../lib/reveal';
 import { useMyCharacters } from '../../hooks/useCharacters';
@@ -81,6 +82,8 @@ function reportImageErrors({ imageErrors }: SaveCommentResult) {
  * only returns Comments the viewer may see. Once the Thread loads, the visit
  * is recorded and what was posted since the previous one is marked "New"
  * (spec 19b), what it opened as revealed to the viewer "Revealed" (spec 22).
+ * While the Master previews the Room as a member (spec 22b) the Thread is
+ * read-only: no composer, no reply, pin or resolve, and no visit recorded.
  */
 export function CommentSection({
   roomId,
@@ -97,7 +100,8 @@ export function CommentSection({
   const deleteComment = useDeleteComment(roomId, documentId);
   const setFlag = useSetCommentFlag(roomId, documentId);
   const myCharacters = useMyCharacters(roomId, true);
-  const newSince = useDocumentVisit(roomId, documentId, comments.isSuccess);
+  const readOnly = useReadOnly();
+  const newSince = useDocumentVisit(roomId, documentId, comments.isSuccess && !readOnly);
   const isNew = (comment: Comment) => isNewComment(comment, newSince, currentUserId);
   const revealed = useRevealedInVisit(roomId, documentId);
   const revealComment = useRevealComment(roomId, documentId);
@@ -197,12 +201,12 @@ export function CommentSection({
         }
         deleting={deleteComment.isPending && deleteComment.variables === comment.id}
         onDelete={() => deleteComment.mutate(comment.id, { onError: notifyError })}
-        onReply={() => setReplyingTo(comment.id)}
+        onReply={readOnly ? undefined : () => setReplyingTo(comment.id)}
         inReplyTo={inReplyTo}
         visibilityLevels={parent && replyLevels(parent, currentUserId)}
         granteeIds={parent && replyGranteeIds(parent)}
         isNew={isNew(comment)}
-        onSetFlag={(flag, on) => onSetFlag(comment.id, flag, on)}
+        onSetFlag={readOnly ? undefined : (flag, on) => onSetFlag(comment.id, flag, on)}
         settingFlag={flagging.includes(comment.id)}
         onPromote={onPromote && ((target) => onPromote(comment, target))}
         isRevealed={revealed?.commentIds.includes(comment.id)}
@@ -339,44 +343,46 @@ export function CommentSection({
           </Stack>
         )}
 
-        <Divider />
+        {!readOnly && <Divider />}
 
-        <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="new-comment">
-          <UserAvatar user={findMember(members, currentUserId)} size="md" mt={2} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {/* Mounted once the Characters are known, so the composer starts
-                on the remembered "Post as" choice. */}
-            {myCharacters.isLoading ? (
-              <Loader color="accent" size="sm" />
-            ) : (
-              <CommentComposer
-                members={members}
-                currentUserId={currentUserId}
-                submitLabel={t('comments.publish')}
-                submitting={postingParent === null}
-                initialValues={{
-                  ...EMPTY_COMMENT_VALUES,
-                  visibility: defaultVisibility,
-                  asDocumentId: initialPostAs,
-                }}
-                characters={characters}
-                onSubmit={(values, reset) =>
-                  saveComment.mutate(
-                    { values },
-                    {
-                      onSuccess: (result) => {
-                        reportImageErrors(result);
-                        saveLastPostAs(roomId, values.asDocumentId ?? null);
-                        reset();
+        {!readOnly && (
+          <Group align="flex-start" gap="sm" wrap="nowrap" data-testid="new-comment">
+            <UserAvatar user={findMember(members, currentUserId)} size="md" mt={2} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Mounted once the Characters are known, so the composer starts
+                  on the remembered "Post as" choice. */}
+              {myCharacters.isLoading ? (
+                <Loader color="accent" size="sm" />
+              ) : (
+                <CommentComposer
+                  members={members}
+                  currentUserId={currentUserId}
+                  submitLabel={t('comments.publish')}
+                  submitting={postingParent === null}
+                  initialValues={{
+                    ...EMPTY_COMMENT_VALUES,
+                    visibility: defaultVisibility,
+                    asDocumentId: initialPostAs,
+                  }}
+                  characters={characters}
+                  onSubmit={(values, reset) =>
+                    saveComment.mutate(
+                      { values },
+                      {
+                        onSuccess: (result) => {
+                          reportImageErrors(result);
+                          saveLastPostAs(roomId, values.asDocumentId ?? null);
+                          reset();
+                        },
+                        onError: notifyError,
                       },
-                      onError: notifyError,
-                    },
-                  )
-                }
-              />
-            )}
-          </div>
-        </Group>
+                    )
+                  }
+                />
+              )}
+            </div>
+          </Group>
+        )}
       </Stack>
       {revealing && revealFrom && (
         <RevealModal
