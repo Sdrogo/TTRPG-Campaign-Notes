@@ -101,7 +101,12 @@ other icon set.
   (`AccountButton`, 36px, thin `--border-default` ring that turns
   `--accent-primary` on hover/focus and while on `/account`). It is
   rendered by `HomePage` and by `PageLayout`, so every signed-in page
-  has it. The account avatar is the only way to the Account page and
+  has it. **It stays pinned to the top while the page scrolls**
+  (2026-10-03, Andrea: in a long Room it scrolled out of view):
+  `.app-header` in `index.css` makes it `position: sticky` with the page
+  background and `z-index: 100` (above cards, below Mantine overlays), and
+  `html { scroll-padding-top: 72px }` keeps scrolled-to targets out from
+  under it. The account avatar is the only way to the Account page and
   to sign out. **Just before the avatar** (spec 09) is the
   `LanguageSelector`: the current language's flag (24×16, `sm` radius,
   thin `--border-default` edge) inside a 4px padded button whose

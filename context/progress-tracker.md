@@ -56,6 +56,13 @@ proposals, 2026-10-03):
 - Limits that were listed as questions (in-process caches/sweeper, stale
   image URLs) moved to Architecture Decisions as accepted limits.
 
+### Pinned top bar (2026-10-03)
+
+- Andrea: in a long Room the top bar scrolled out of view. `AppHeader` now
+  stays pinned to the top on every signed-in page (`.app-header`, sticky,
+  page background, `z-index: 100`), and `scroll-padding-top` keeps scroll
+  targets below it. Frontend only.
+
 ### Document page info panel (2026-10-03)
 
 - Andrea found the Played by, Owner and PDF sections heavy (always-open
