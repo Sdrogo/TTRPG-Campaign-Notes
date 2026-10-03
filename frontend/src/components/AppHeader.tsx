@@ -6,6 +6,7 @@ import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { AccountButton } from './account/AccountButton';
 import { LanguageSelector } from './LanguageSelector';
 import { GlossaryIndexDrawer } from './GlossaryIndexDrawer';
+import { useScrollbarReveal } from '../hooks/useScrollbarReveal';
 import { useTranslation } from 'react-i18next';
 
 interface AppHeaderProps {
@@ -51,6 +52,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const navigate = useNavigate();
   const [glossaryOpened, setGlossaryOpened] = useState(false);
   const { pinned } = useHeadroom({ fixedAt: HEADER_FIXED_AT });
+  useScrollbarReveal();
 
   const handleBack = (destination: string) => {
     if (hasAppHistory()) {

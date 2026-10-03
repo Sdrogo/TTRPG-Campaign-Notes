@@ -66,6 +66,12 @@ proposals, 2026-10-03):
 - Then: the Room card's actions (setup, invite, leave) at the end of the
   Room title row, folded into a "⋮" that unfolds them (`RoomTitleActions`);
   leaving there navigates back to the Rooms list.
+- Then: the page's scrollbar keeps its gutter on every page (so the
+  centered title no longer shifts between pages that scroll and pages that
+  don't, nor when a modal opens) and only shows, thin and semi-transparent,
+  while scrolling or with the pointer at the right edge
+  (`useScrollbarReveal`). Checked in headless Chromium with classic
+  scrollbars.
 
 ### Accessibility audit fixes (2026-10-03)
 
