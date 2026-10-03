@@ -19,7 +19,9 @@ from app.domain.models import (
     DocumentVisibility,
     Membership,
     Note,
+    Room,
     RoomRole,
+    RoomStatus,
     UserProfile,
 )
 from app.domain.rooms import plan_new_room
@@ -39,7 +41,14 @@ async def test_updating_a_vanished_membership_raises(db_session: AsyncSession) -
 
 async def test_changing_settings_of_a_vanished_room_raises(db_session: AsyncSession) -> None:
     with pytest.raises(LookupError):
-        await rooms_repo.set_players_can_create_documents(db_session, uuid.uuid4(), True)
+        ghost_room = Room(
+            id=uuid.uuid4(),
+            name="Gone",
+            game_system=None,
+            status=RoomStatus.ACTIVE,
+            created_by=uuid.uuid4(),
+        )
+        await rooms_repo.update_room_settings(db_session, ghost_room)
 
 
 async def test_updating_a_vanished_document_raises(db_session: AsyncSession) -> None:

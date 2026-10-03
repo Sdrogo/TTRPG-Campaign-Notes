@@ -1,6 +1,7 @@
 import { Badge, Box, Card, Group, Stack, Title, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { VisibilityBadge } from './VisibilityBadge';
+import { RevealedBadge } from './RevealedBadge';
 import { TagList } from './TagList';
 import { DocumentCardImages } from './DocumentCardImages';
 import { MentionText } from './mentions/MentionText';
@@ -26,15 +27,28 @@ interface DocumentCardProps {
   /** The name's heading level: 2 right under the page's title, 3 under a
    *  group heading, so the outline never skips a level. Looks the same. */
   headingOrder?: 2 | 3;
+  /**
+   * The Master revealed it, or something on it, to the viewer, who hasn't
+   * opened it since (spec 22 Decision 3).
+   */
+  revealed?: boolean;
 }
 
 /**
  * A Document in the Room's list: name, visibility, Tags and description, with
  * its images filling the card's right half, its player (for a Character) and
  * Owners, and what is new in its Thread since the viewer last opened it (spec
- * 19b): a count, or a "not yet read" dot for a Document never opened. The whole card links to the Document.
+ * 19b): a count, or a "not yet read" dot for a Document never opened, and a
+ * "Revealed" mark (spec 22). The whole card links to the Document.
  */
-export function DocumentCard({ document, roomId, tags, members, headingOrder = 2 }: DocumentCardProps) {
+export function DocumentCard({
+  document,
+  roomId,
+  tags,
+  members,
+  headingOrder = 2,
+  revealed = false,
+}: DocumentCardProps) {
   const { t } = useTranslation();
   const ownerNames = document.ownerIds.map((id) => displayNameFor(members, id)).join(', ');
   const hasImages = document.images.length > 0;
@@ -42,6 +56,7 @@ export function DocumentCard({ document, roomId, tags, members, headingOrder = 2
 
   const marks = (
     <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
+      {revealed && <RevealedBadge />}
       <UnreadCount count={document.unreadCount} />
       {/* A Document never opened shows a dot inside its visibility badge. */}
       <VisibilityBadge

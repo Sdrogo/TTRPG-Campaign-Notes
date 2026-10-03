@@ -22,6 +22,17 @@ class RoomStatus(StrEnum):
     ARCHIVED = "archived"
 
 
+class DocumentVisibility(StrEnum):
+    """Section 8 of requirements.md. ROOM = every member; MASTER = Master
+    only; PRIVATE = Owners + Master; SELECTIVE = Owners + Master + an
+    explicit grant list."""
+
+    ROOM = "room"
+    MASTER = "master"
+    PRIVATE = "private"
+    SELECTIVE = "selective"
+
+
 @dataclass(frozen=True)
 class Room:
     """A campaign space (FR-R1). `players_can_create_documents` is the Master's
@@ -33,6 +44,9 @@ class Room:
     status: RoomStatus
     created_by: uuid.UUID
     players_can_create_documents: bool = True
+    # The level new Documents, Notes and top-level Comments start at when the
+    # request names none (VR-05, spec 22). Never Selective: that needs a list.
+    default_visibility: DocumentVisibility = DocumentVisibility.ROOM
 
 
 @dataclass(frozen=True)
@@ -90,9 +104,10 @@ class Invitation:
 
 @dataclass(frozen=True)
 class AuditLogEntry:
-    """A record of a visibility change, role change or Ownership transfer
-    (VR-08), written in the same transaction as the change (Invariant 7).
-    `details` holds the before/after values."""
+    """A record of a visibility change, Reveal, role change or Ownership
+    transfer (VR-08), written in the same transaction as the change
+    (Invariant 7). `details` holds the before/after values. `created_at` is
+    set by the database; it is None on an entry about to be written."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -100,6 +115,14 @@ class AuditLogEntry:
     target_user_id: uuid.UUID | None
     action: str
     details: dict[str, object]
+    created_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class StoredAuditLogEntry(AuditLogEntry):
+    """An `AuditLogEntry` read back from the database, so `created_at` is set."""
+
+    created_at: datetime
 
 
 class PromotionTarget(StrEnum):
@@ -107,17 +130,6 @@ class PromotionTarget(StrEnum):
 
     DESCRIPTION = "description"
     DOCUMENT = "document"
-
-
-class DocumentVisibility(StrEnum):
-    """Section 8 of requirements.md. ROOM = every member; MASTER = Master
-    only; PRIVATE = Owners + Master; SELECTIVE = Owners + Master + an
-    explicit grant list."""
-
-    ROOM = "room"
-    MASTER = "master"
-    PRIVATE = "private"
-    SELECTIVE = "selective"
 
 
 @dataclass(frozen=True)
@@ -358,3 +370,38 @@ class MentionSource:
     kind: MentionSourceKind
     note_id: uuid.UUID | None = None
     comment_id: uuid.UUID | None = None
+
+
+class ContentKind(StrEnum):
+    """The kinds of Room content with a visibility of their own that can be
+    revealed (spec 22) and that the visibility history filters by."""
+
+    DOCUMENT = "document"
+    NOTE = "note"
+    COMMENT = "comment"
+
+
+@dataclass(frozen=True)
+class Reveal:
+    """The Master widening who sees one piece of content in one deliberate
+    step (FR-V2, VR-06, UC-13). `document_id` is the Document the content is
+    or belongs to; `note_id`/`comment_id` say which Note or Comment, as
+    `kind` says. Its recipients are stored with it."""
+
+    id: uuid.UUID
+    room_id: uuid.UUID
+    kind: ContentKind
+    document_id: uuid.UUID
+    note_id: uuid.UUID | None
+    comment_id: uuid.UUID | None
+    revealed_by: uuid.UUID
+    revealed_at: datetime
+
+
+@dataclass(frozen=True)
+class UnseenReveal:
+    """A Reveal one member gained access through and hasn't opened yet (spec
+    22 Decision 3)."""
+
+    reveal: Reveal
+    user_id: uuid.UUID

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { ActionIcon, Button, Group, Modal, Stack, Text, Title } from '@mantine/core';
-import { ArrowDownIcon, ArrowUpIcon, PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react';
+import { ArrowDownIcon, ArrowUpIcon, EyeIcon, PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react';
 import { VisibilityBadge } from '../VisibilityBadge';
+import { RevealedBadge } from '../RevealedBadge';
 import { MentionText } from '../mentions/MentionText';
 import { NoteForm } from './NoteForm';
 import type { Member } from '../../types/member';
@@ -20,6 +21,10 @@ interface NoteItemProps {
   updating: boolean;
   onDelete: () => void;
   deleting: boolean;
+  /** Whether this visit opened the Note as revealed to the viewer (spec 22). */
+  revealed?: boolean;
+  /** The Master's Reveal action (spec 22 Decision 1); absent for everyone else. */
+  onReveal?: () => void;
 }
 
 /**
@@ -27,6 +32,8 @@ interface NoteItemProps {
  * its text with the same `#` mentions. Editing, deleting and reordering are
  * offered only when the backend's `canEdit`/`canDelete` allow them; the
  * visibility badge is shown to the same people, since only they need it.
+ * The Master can also reveal it, and a Note this visit opened as revealed to
+ * the viewer is marked so (spec 22).
  */
 export function NoteItem({
   note,
@@ -39,6 +46,8 @@ export function NoteItem({
   updating,
   onDelete,
   deleting,
+  revealed = false,
+  onReveal,
 }: NoteItemProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -74,9 +83,21 @@ export function NoteItem({
             {note.title}
           </Title>
           {note.canEdit && <VisibilityBadge visibility={note.visibility} size="xs" />}
+          {revealed && <RevealedBadge size="xs" />}
         </Group>
-        {(note.canEdit || note.canDelete) && (
+        {(note.canEdit || note.canDelete || onReveal) && (
           <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
+            {onReveal && (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                onClick={onReveal}
+                aria-label={t('reveal.actionLabel', { name: note.title })}
+              >
+                <EyeIcon size={14} />
+              </ActionIcon>
+            )}
             {note.canEdit && (
               <>
                 <ActionIcon

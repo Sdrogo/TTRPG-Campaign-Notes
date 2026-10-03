@@ -17,9 +17,11 @@ export interface PromotionAudience {
   selectiveUserIds: string[];
 }
 
-// Section 8 of requirements.md, for content with an "Owner" (a Document's
-// Owners, a Comment's author). The Master sees everything.
-function seesContent(
+/**
+ * Section 8 of requirements.md, for content with an "Owner" (a Document's
+ * Owners, a Comment's author). The Master sees everything.
+ */
+export function seesContent(
   member: Member,
   visibility: DocumentVisibility,
   ownerIds: string[],
@@ -38,10 +40,12 @@ function seesContent(
   }
 }
 
-// A Comment's effective visibility (spec 19): its own and, for a reply, every
-// Comment above it, except that an author always sees their own Comment. A
-// parent missing from the list is treated as hidden.
-function seesComment(member: Member, comment: Comment, byId: Map<string, Comment>): boolean {
+/**
+ * A Comment's effective visibility (spec 19): its own and, for a reply, every
+ * Comment above it, except that an author always sees their own Comment. A
+ * parent missing from the list is treated as hidden.
+ */
+export function seesComment(member: Member, comment: Comment, byId: Map<string, Comment>): boolean {
   let current: Comment | undefined = comment;
   while (current) {
     if (current.authorId === member.userId) return true;

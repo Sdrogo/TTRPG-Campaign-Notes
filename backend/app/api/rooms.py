@@ -13,7 +13,7 @@ from app.api.errors import http_error, translated_error
 from app.api.image_uploads import remove_images
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, files_repo, reads_repo, rooms_repo, users_repo
+from app.db import documents_repo, files_repo, reads_repo, reveals_repo, rooms_repo, users_repo
 from app.db.session import SessionDep
 from app.domain.memberships import (
     LastAdministratorError,
@@ -23,8 +23,22 @@ from app.domain.memberships import (
     plan_removal,
     plan_role_change,
 )
-from app.domain.models import Membership, Room, RoomRole, RoomStatus, UserProfile
-from app.domain.rooms import RoomNameRequiredError, plan_new_room
+from app.domain.models import (
+    DocumentVisibility,
+    Membership,
+    Room,
+    RoomRole,
+    RoomStatus,
+    UserProfile,
+)
+from app.domain.rooms import (
+    InvalidDefaultVisibilityError,
+    OnlyAdministratorChangesDefaultVisibilityError,
+    OnlyMasterChangesSettingsError,
+    RoomNameRequiredError,
+    plan_new_room,
+    plan_room_settings,
+)
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
@@ -45,6 +59,8 @@ class RoomResponse(BaseModel):
     game_system: str | None
     status: RoomStatus
     players_can_create_documents: bool
+    # The level new Documents, Notes and top-level Comments start at (VR-05).
+    default_visibility: DocumentVisibility
 
 
 class MyRoomResponse(BaseModel):
@@ -73,9 +89,12 @@ class UpdateMemberRequest(BaseModel):
 
 
 class UpdateRoomSettingsRequest(BaseModel):
-    """The Room settings only the Master may change (D-13, FR-D7)."""
+    """The Room's settings; omitted ones stay. Players' Document creation is
+    the Master's (D-13, FR-D7), the default visibility the Administrators'
+    (VR-05, spec 22)."""
 
-    players_can_create_documents: bool
+    players_can_create_documents: bool | None = None
+    default_visibility: DocumentVisibility | None = None
 
 
 def member_response(
@@ -103,6 +122,7 @@ def room_to_response(room: Room) -> RoomResponse:
         game_system=room.game_system,
         status=room.status,
         players_can_create_documents=room.players_can_create_documents,
+        default_visibility=room.default_visibility,
     )
 
 
@@ -162,26 +182,30 @@ async def update_room_settings(
     session: SessionDep,
     locale: LocaleDep,
 ) -> RoomResponse:
-    """The Master switches Players' Document creation on or off for the Room
-    (D-13, FR-D7)."""
+    """Changes the Room's settings: the Master switches Players' Document
+    creation on or off (D-13, FR-D7), an Administrator picks the level new
+    content starts at (VR-05, spec 22: Room, Master or Private; 422 for
+    Selective). 403 for a non-member or a setting the requester may not
+    change. Existing content keeps its visibility."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
-    if membership is None or membership.role != RoomRole.MASTER:
-        raise http_error(
-            status.HTTP_403_FORBIDDEN, "errors.room.onlyMasterCanChangeSettings", locale
-        )
-
-    try:
-        await rooms_repo.set_players_can_create_documents(
-            session, room_id, body.players_can_create_documents
-        )
-    except LookupError as exc:  # pragma: no cover - only a concurrent Room deletion
-        raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale) from exc
-
+    if membership is None:
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
     room = await rooms_repo.get_room(session, room_id)
     if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
-    return room_to_response(room)
+
+    try:
+        updated = plan_room_settings(
+            room, membership, body.players_can_create_documents, body.default_visibility
+        )
+    except (OnlyMasterChangesSettingsError, OnlyAdministratorChangesDefaultVisibilityError) as exc:
+        raise translated_error(status.HTTP_403_FORBIDDEN, exc, locale) from exc
+    except InvalidDefaultVisibilityError as exc:
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
+
+    await rooms_repo.update_room_settings(session, updated)
+    return room_to_response(updated)
 
 
 @router.get("/{room_id}/members")
@@ -251,7 +275,7 @@ async def remove_member(
     themselves (leaves). The last Master or Administrator can't go without a
     successor (D-16, 409). Audited in the same transaction (Invariant 7).
     The Characters they played stay in the Room, unlinked (D-23); their
-    Document reads (spec 19b) are dropped."""
+    Document reads (spec 19b) and unopened Reveals (spec 22) are dropped."""
     requester_id = uuid.UUID(current_user.id)
     is_self = requester_id == user_id
 
@@ -278,6 +302,8 @@ async def remove_member(
     await documents_repo.clear_played_by_in_room(session, room_id, user_id)
     # What they had read goes too (spec 19b): rejoining starts afresh.
     await reads_repo.delete_reads_in_room(session, room_id, user_id)
+    # So are the Reveals they hadn't opened (spec 22).
+    await reveals_repo.delete_recipients_in_room(session, room_id, user_id)
     await rooms_repo.insert_audit_log(session, audit_entry)
 
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Stack, Group, Title, Text, Button, Box, ActionIcon, Modal, Alert, Paper, Divider } from '@mantine/core';
-import { PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
+import { EyeIcon, PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
   useDocument,
@@ -18,13 +18,19 @@ import {
 import { useTags } from '../hooks/useTags';
 import { useMembers } from '../hooks/useMembers';
 import { useComments, usePromoteComment } from '../hooks/useComments';
+import { useRoom } from '../hooks/useRooms';
+import { useRevealDocument, useRevealedInVisit } from '../hooks/useReveals';
+import { useReadOnly } from '../hooks/useViewAs';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { appendPromotedText, promotionReaches, type PromotionAudience } from '../lib/promotion';
 import { canManageTags } from '../lib/roomPermissions';
+import { documentReveal, notesHiddenFromGains } from '../lib/reveal';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { PageCard } from '../components/PageCard';
 import { VisibilityBadge } from '../components/VisibilityBadge';
+import { RevealedBadge } from '../components/RevealedBadge';
+import { RevealModal } from '../components/RevealModal';
 import { TagList } from '../components/TagList';
 import { DocumentFields } from '../components/DocumentFields';
 import { DocumentOwners } from '../components/DocumentOwners';
@@ -39,14 +45,15 @@ import { DocumentMentionsProvider } from '../components/mentions/DocumentMention
 import { MentionText } from '../components/mentions/MentionText';
 import { Backlinks } from '../components/mentions/Backlinks';
 import type { Comment, PromotionTarget } from '../types/comment';
-import type { Document, DocumentFormValues } from '../types/document';
+import type { Document, DocumentFormValues, DocumentVisibility } from '../types/document';
 import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
 import { useTranslation } from 'react-i18next';
 
 /**
  * `/rooms/:roomId/documents/:documentId`: one Document with its gallery, Owners,
- * where it is mentioned and its Comments. Owners and the Master also get the editing controls.
+ * where it is mentioned and its Comments. Owners and the Master also get the editing controls,
+ * except while the Master previews it as a member (spec 22b): then it is read-only.
  */
 export function DocumentDetailPage() {
   const { t } = useTranslation();
@@ -86,8 +93,12 @@ function DocumentDetailLoader({
   // The same query as the Comment section's: the Thread, for the parents of
   // a promoted reply.
   const comments = useComments(roomId, documentId, true);
+  // For the level new Notes and Comments start at (VR-05).
+  const room = useRoom(roomId, true);
+  const defaultVisibility = room.data?.defaultVisibility ?? 'room';
   // A Comment being promoted (spec 19c Decision 5), and where to.
   const [promoting, setPromoting] = useState<{ comment: Comment; target: PromotionTarget } | null>(null);
+  const readOnly = useReadOnly();
 
   if (document.isLoading) {
     return <FullPageLoader />;
@@ -102,6 +113,7 @@ function DocumentDetailLoader({
   }
 
   const memberList = members.data ?? [];
+  const isMaster = memberList.find((m) => m.userId === currentUserId)?.role === 'master' && !readOnly;
   // A promotion starts from a Comment in this same cache, so it is loaded.
   const promotion = promoting && {
     comment: promoting.comment,
@@ -119,6 +131,7 @@ function DocumentDetailLoader({
           tags={tags.data ?? []}
           members={memberList}
           currentUserId={currentUserId}
+          defaultVisibility={defaultVisibility}
           promotion={promoting?.target === 'description' ? promotion : null}
           onPromotionEnd={() => setPromoting(null)}
         />
@@ -133,7 +146,9 @@ function DocumentDetailLoader({
           documentId={document.data.id}
           members={memberList}
           currentUserId={currentUserId}
-          onPromote={(comment, target) => setPromoting({ comment, target })}
+          defaultVisibility={defaultVisibility}
+          revealFrom={isMaster ? document.data : undefined}
+          onPromote={readOnly ? undefined : (comment, target) => setPromoting({ comment, target })}
         />
         {promotion && promoting.target === 'document' && (
           <PromoteToDocumentModal
@@ -166,6 +181,7 @@ function DocumentPanel({
   tags,
   members,
   currentUserId,
+  defaultVisibility,
   promotion,
   onPromotionEnd,
 }: {
@@ -174,6 +190,8 @@ function DocumentPanel({
   tags: Tag[];
   members: Member[];
   currentUserId: string;
+  /** The Room's starting level for new Notes (VR-05). */
+  defaultVisibility: DocumentVisibility;
   /** Opens the editor with the Comment's text added to the description. */
   promotion: DescriptionPromotion | null;
   /** The promotion was saved or given up. */
@@ -193,11 +211,15 @@ function DocumentPanel({
   const deleteImage = useDeleteDocumentImage(roomId, document.id);
   const setFavorite = useSetFavoriteImage(roomId, document.id);
   const setPlayer = useSetDocumentPlayer(roomId, document.id);
+  const revealDocument = useRevealDocument(roomId, document.id);
+  const revealed = useRevealedInVisit(roomId, document.id);
+  const [revealing, setRevealing] = useState(false);
+  // Previewing as a member (spec 22b): no write control at all.
+  const readOnly = useReadOnly();
 
-  const isOwner =
-    document.ownerIds.includes(currentUserId) ||
-    members.find((m) => m.userId === currentUserId)?.role === 'master';
   const me = members.find((m) => m.userId === currentUserId);
+  const isMaster = me?.role === 'master' && !readOnly;
+  const isOwner = (document.ownerIds.includes(currentUserId) || isMaster) && !readOnly;
 
   return (
     <PageCard>
@@ -211,7 +233,19 @@ function DocumentPanel({
             {document.name}
           </Title>
           <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
+            {revealed?.document && <RevealedBadge />}
             <VisibilityBadge visibility={document.visibility} />
+            {/* Spec 22: the Master reveals what the whole Room doesn't see yet. */}
+            {isMaster && document.visibility !== 'room' && (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => setRevealing(true)}
+                aria-label={t('reveal.actionLabel', { name: document.name })}
+              >
+                <EyeIcon size={18} />
+              </ActionIcon>
+            )}
             {isOwner && (
               <ActionIcon
                 variant="subtle"
@@ -331,10 +365,34 @@ function DocumentPanel({
               notes={document.notes}
               members={members}
               canAdd={isOwner}
+              defaultVisibility={defaultVisibility}
+              revealFrom={isMaster ? document : undefined}
             />
           </Stack>
         </Box>
       </Stack>
+      {revealing && (
+        <RevealModal
+          name={document.name}
+          members={members}
+          {...documentReveal(document, members)}
+          hiddenNotes={(gains) => notesHiddenFromGains(document, gains)}
+          loading={revealDocument.isPending}
+          onConfirm={(audience, noteIds) =>
+            revealDocument.mutate(
+              { audience, noteIds },
+              {
+                onSuccess: () => {
+                  notifySuccess(t('reveal.done'));
+                  setRevealing(false);
+                },
+                onError: notifyError,
+              },
+            )
+          }
+          onClose={() => setRevealing(false)}
+        />
+      )}
     </PageCard>
   );
 }
