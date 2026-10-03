@@ -9,7 +9,8 @@ const EDGE_ZONE = 24;
 /**
  * Shows the page's scrollbar (`data-scrolling` on `<html>`, styled in
  * `index.css`) while the page scrolls or the pointer is at the right edge,
- * and fades it out otherwise (Andrea, 2026-10-03).
+ * and fades it out otherwise (Andrea, 2026-10-03). Called once by `App`, so
+ * it covers every page.
  */
 export function useScrollbarReveal() {
   useEffect(() => {

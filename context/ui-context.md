@@ -141,9 +141,10 @@ other icon set.
   focus is inside it. **The page's scrollbar never shifts the centered
   title** (2026-10-03, Andrea: pages that scroll were narrower):
   `scrollbar-gutter: stable` on `html` always keeps its gutter, the bar is
-  thin and transparent, and `useScrollbarReveal` (called by `AppHeader`)
-  sets `data-scrolling` on `html` to show it, semi-transparent, while the
-  page scrolls or the pointer is at the right edge. An open modal's scroll
+  thin and transparent, and `useScrollbarReveal` (called once by `App`, so
+  on every page) sets `data-scrolling` on `html` to show it,
+  semi-transparent, while the page scrolls or the pointer is at the right
+  edge. An open modal's scroll
   lock drops its compensating body padding, since the gutter already
   stays. The account avatar is the only way to the Account page and
   to sign out. **Just before the avatar** (spec 09) is the
