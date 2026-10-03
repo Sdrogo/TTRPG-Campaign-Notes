@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.access import ensure_room_members, lookup_content
+from app.api.access import ContentLookup, ensure_room_members, lookup_content
 from app.api.errors import translated_error
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
@@ -59,6 +59,11 @@ class RevealResponse(BaseModel):
     note_id: uuid.UUID | None
     comment_id: uuid.UUID | None
     revealed_at: datetime
+    # Names to list it by. The caller sees the content, so naming it reveals
+    # nothing (VR-07).
+    room_name: str
+    document_name: str
+    note_title: str | None
 
 
 class RevealedInDocument(BaseModel):
@@ -104,11 +109,10 @@ async def record_reveal(session: AsyncSession, plan: RevealPlan) -> None:
     await rooms_repo.insert_audit_log(session, plan.audit_entry)
 
 
-async def visible_reveals(
+async def _visible_with_lookup(
     session: AsyncSession, reveals: Collection[Reveal], viewer: Membership
-) -> list[Reveal]:
-    """The Reveals of the viewer's Room whose content they still see now
-    (Invariant 1): content hidden again since doesn't count (spec 22)."""
+) -> tuple[list[Reveal], ContentLookup]:
+    """`visible_reveals`, with the lookup that decided it (for naming)."""
     in_room = [reveal for reveal in reveals if reveal.room_id == viewer.room_id]
     lookup = await lookup_content(
         session,
@@ -117,7 +121,16 @@ async def visible_reveals(
         [r.note_id for r in in_room if r.note_id is not None],
         [r.comment_id for r in in_room if r.comment_id is not None],
     )
-    return [reveal for reveal in in_room if content_id(reveal) in lookup.visible_ids]
+    return [reveal for reveal in in_room if content_id(reveal) in lookup.visible_ids], lookup
+
+
+async def visible_reveals(
+    session: AsyncSession, reveals: Collection[Reveal], viewer: Membership
+) -> list[Reveal]:
+    """The Reveals of the viewer's Room whose content they still see now
+    (Invariant 1): content hidden again since doesn't count (spec 22)."""
+    visible, _ = await _visible_with_lookup(session, reveals, viewer)
+    return visible
 
 
 async def mark_document_reveals_seen(
@@ -134,8 +147,9 @@ async def mark_document_reveals_seen(
     )
 
 
-def reveal_response(reveal: Reveal) -> RevealResponse:
-    """Serializes a Reveal for its recipient."""
+def reveal_response(reveal: Reveal, room_name: str, lookup: ContentLookup) -> RevealResponse:
+    """Serializes a Reveal for its recipient, who is known to see it."""
+    note = lookup.notes.get(reveal.note_id) if reveal.note_id is not None else None
     return RevealResponse(
         id=reveal.id,
         room_id=reveal.room_id,
@@ -144,6 +158,9 @@ def reveal_response(reveal: Reveal) -> RevealResponse:
         note_id=reveal.note_id,
         comment_id=reveal.comment_id,
         revealed_at=reveal.revealed_at,
+        room_name=room_name,
+        document_name=lookup.documents[reveal.document_id].name,
+        note_title=None if note is None else note.title,
     )
 
 
@@ -152,9 +169,10 @@ async def list_my_reveals(
     current_user: CurrentUserDep, session: SessionDep
 ) -> list[RevealResponse]:
     """The content revealed to the caller that they haven't opened yet, in
-    every Room they are still in, newest first: the "Revealed" marks and the
-    header badge (spec 22 Decision 3). Only content they still see counts
-    (VR-07), and content revealed to them twice counts once."""
+    every Room they are still in, newest first: the "Revealed" marks, the
+    header badge and the list on the Account page (spec 22 Decision 3). Only
+    content they still see counts (VR-07), and content revealed to them twice
+    counts once."""
     user_id = uuid.UUID(current_user.id)
     unseen = await reveals_repo.list_unseen_reveals(session, user_id)
     by_room: dict[uuid.UUID, list[Reveal]] = defaultdict(list)
@@ -162,8 +180,15 @@ async def list_my_reveals(
         by_room[reveal.room_id].append(reveal)
 
     visible: list[Reveal] = []
+    context: dict[uuid.UUID, tuple[str, ContentLookup]] = {}
     for room_id, reveals in by_room.items():
         membership = await rooms_repo.get_membership(session, room_id, user_id)
-        if membership is not None:
-            visible.extend(await visible_reveals(session, reveals, membership))
-    return [reveal_response(reveal) for reveal in unseen_reveals_once(visible)]
+        room = await rooms_repo.get_room(session, room_id)
+        if membership is None or room is None:
+            continue
+        shown, lookup = await _visible_with_lookup(session, reveals, membership)
+        visible.extend(shown)
+        context[room_id] = (room.name, lookup)
+    return [
+        reveal_response(reveal, *context[reveal.room_id]) for reveal in unseen_reveals_once(visible)
+    ]

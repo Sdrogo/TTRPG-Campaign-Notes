@@ -142,6 +142,10 @@ async def test_revealing_a_document_with_one_of_its_notes(
     mine = await _mine(client, room.alice)
     assert {(r["kind"], r["note_id"]) for r in mine} == {("document", None), ("note", carried)}
     assert all(r["document_id"] == document_id and r["room_id"] == room.id for r in mine)
+    assert {(r["room_name"], r["document_name"], r["note_title"]) for r in mine} == {
+        ("Barovia", "Strahd", None),
+        ("Barovia", "Strahd", "Secret"),
+    }
     # Nothing is revealed to the Master, who always saw it.
     assert await _mine(client, room.master) == []
 
