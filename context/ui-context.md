@@ -266,6 +266,19 @@ other icon set.
   rendered body a member's mention is `@` + their current name in
   `--accent-primary`, weight 600, not a link; a mention of someone who has
   left the Room is plain text with the name as written.
+  **Tokens and "Mentioned in"** (2026-10-03, spec 20): a picked or
+  created Document or Tag still shows as `#Name ` in the field but is
+  stored with its id, so `MentionText` shows the target's current name;
+  a hidden or deleted target is plain text with the name as written.
+  `Backlinks` ("Menzionato in") is a `PageCard` with a caret toggle, the
+  title (`h3` size, display font) and a gray `light` count badge, starting
+  expanded and absent while empty. Per source Document: its name as an
+  `--accent-primary` link, weight 600; under it, one entry per place with
+  a 2px `--border-default` left rule: an `xs` dimmed link saying where
+  ("Nella descrizione", "Nella nota «…»", "In un commento di …", the last
+  one jumping to the Comment) and the `sm` excerpt. On the Document page it
+  sits between the Document card and the Comments; on the Documents list,
+  when exactly one Tag is filtered, above the Documents.
 - **Document card** (`DocumentCard`, restructured 2026-09-23, spec
   `07 - Document visualizazion refactor_beckend`): three stacked blocks. The
   *Title block* is the Document name (display font) with its

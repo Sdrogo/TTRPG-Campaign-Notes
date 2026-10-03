@@ -3,14 +3,18 @@ import type { Tag } from '../types/tag';
 import type { Member } from '../types/member';
 import { memberDisplayName } from './members';
 import { currentLanguage } from '../i18n';
+import type { MentionToken } from './mentionTokens';
 
-// Mentions (FR-D4, specs `06 - Quick navigation` and `06_1 - … refnment`):
-// typing `#` at the start of a word suggests the Room's Documents and Tags;
-// picking one writes `#Name` into the text, rendered as a link (to the
-// Document, or to the Documents with that Tag). Mentions are stored as
-// plain, readable text and resolved against what the viewer can see, so a
-// mention of a hidden Document stays plain text. In Comments, `@` suggests
-// the Room's members the same way (spec 19c, see `userMentions.ts`).
+// Mentions (FR-D4, specs `06 - Quick navigation`, `06_1 - … refnment` and
+// `20 - Mention backlinks`): typing `#` at the start of a word suggests the
+// Room's Documents and Tags; picking one stores a token with its id
+// (`#[Name](doc:<uuid>)`, see `mentionTokens.ts`), shown as `#Name` and
+// rendered as a link (to the Document, or to the Documents with that Tag)
+// under its current name. A token is resolved against what the viewer can
+// see, so a mention of a hidden or deleted Document reads as plain text with
+// the name it was written with. Plain `#Name` text from before spec 20 still
+// resolves by name (`splitMentions`). In Comments, `@` suggests the Room's
+// members the same way (spec 19c).
 
 /** The character that starts a mention. */
 export const MENTION_PREFIX = '#';
@@ -276,6 +280,26 @@ export function splitMentions(text: string, documents: Document[], tags: Tag[] =
     segments.push({ kind: 'text', text: text.slice(plainStart) });
   }
   return segments;
+}
+
+/**
+ * How a Document or Tag token renders: a link under the target's current
+ * name while the viewer sees it, else plain text with the name it was
+ * written with (spec 20 Decisions 5 and 7).
+ */
+export function resolveContentToken(
+  token: MentionToken,
+  documents: Document[],
+  tags: Tag[],
+): MentionSegment {
+  const document = token.kind === 'doc' ? documents.find((d) => d.id === token.targetId) : undefined;
+  if (document) {
+    return { kind: 'document', text: `${MENTION_PREFIX}${document.name}`, document };
+  }
+  const tag = token.kind === 'tag' ? tags.find((t) => t.id === token.targetId) : undefined;
+  return tag
+    ? { kind: 'tag', text: `${MENTION_PREFIX}${tag.name}`, tag }
+    : { kind: 'text', text: token.display };
 }
 
 function mentionsAt(text: string, position: number, name: string): boolean {

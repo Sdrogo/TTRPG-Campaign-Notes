@@ -138,6 +138,12 @@ describe('promoted text', () => {
     expect(promotedText(mentioning)).toBe('Chiedi a @Ara.');
   });
 
+  // Document and Tag tokens are valid in a description too (spec 20).
+  it('keeps Document and Tag mentions as tokens', () => {
+    const body = 'Vai al #[Il Cancello](doc:22222222-2222-4222-8222-222222222222).';
+    expect(promotedText(comment({ body }))).toBe(body);
+  });
+
   it('is added at the end of the description as a paragraph of its own', () => {
     expect(appendPromotedText('Una porta.\n', mentioning)).toBe('Una porta.\n\nChiedi a @Ara.');
     expect(appendPromotedText('  ', mentioning)).toBe('Chiedi a @Ara.');
