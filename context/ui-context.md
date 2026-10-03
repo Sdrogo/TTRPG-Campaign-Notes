@@ -296,7 +296,11 @@ other icon set.
   the title row and sit over the image at the top right; the text column
   takes the left half, the description grows (5 clamped lines) so the
   Played by and Owner lines close the card at the bottom, and the card is at
-  least 220px tall (260px from `sm`). This replaces spec 07.1's uncropped,
+  least 220px tall (260px from `sm`). **The image panel is never wider than
+  it is tall** (2026-10-03, Andrea's feedback on wide screens): with images
+  the card is a flex row and an empty, `aria-hidden` square sits under the
+  panel (`aspectRatio: 1`), so a wide card grows taller instead of cropping
+  its image to a strip. This replaces spec 07.1's uncropped,
   orientation-framed images on the card; the detail page gallery still
   frames by orientation (`imageFrameSize`).
   The images are `DocumentCardImages`: one image alone, several in the same
