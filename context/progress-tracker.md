@@ -11,17 +11,19 @@ step-by-step notes) is in
 
 Staging released to `main` with PR #73 (specs 20_1/20_2, PRs #68 to #72).
 Backend **754** tests at 100% coverage. The live database is at
-`d7b3a9f2c5e8` (applied by hand 2026-10-03, after the release): 77 texts
-converted to `#` tokens, 204 `document_mentions` rows. No pending migrations.
+`b8d2f6a4c9e1` (applied by hand 2026-10-03; `d7b3a9f2c5e8` before it converted
+77 texts to `#` tokens, 204 `document_mentions` rows). No pending migrations.
 
 Specs 12 to 20 are merged into `staging` (features 19 and 20 closed). All
 Open Questions closed 2026-10-03. Feature 22 started before 21 at the
 product owner's request (2026-10-03); 21 (full-text search) is still to do.
 
-**Pending migration**: `b8d2f6a4c9e1` (spec 22_1: `rooms.default_visibility`,
-`reveals`, `reveal_recipients`, an `audit_log` index). Not yet on the live
-database; apply it by hand before the release that ships 22_1. All of
-feature 22 (22_1, 22_2, 22b_1, 22b_2) is in PR #86; 22b adds no migration.
+**Migration `b8d2f6a4c9e1`** (spec 22_1: `rooms.default_visibility`,
+`reveals`, `reveal_recipients`, an `audit_log` index) **applied to the live
+database by hand on 2026-10-03**, before the release that ships 22_1 (one
+transaction, `alembic_version` updated; checked: RLS + deny policy on both new
+tables, existing Rooms at `room`). All of feature 22 (22_1, 22_2, 22b_1,
+22b_2) is in PR #86; 22b adds no migration.
 
 ## Completed Units
 
