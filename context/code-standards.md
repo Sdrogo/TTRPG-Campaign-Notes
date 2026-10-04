@@ -285,6 +285,9 @@ pytest, split by what a test needs rather than by what it covers.
 - The `staging` → `main` release PR is opened only when the product
   owner asks for a release. A migration that ships in it is applied to
   the live database with their go-ahead before that PR is merged.
+- A PR that adds a migration is merged into `staging` only after the
+  migration is applied to the staging database (its own Supabase
+  project since 2026-10-04, `architecture.md` → Environments).
 - CI runs on every pull request and on pushes to `main` and `staging`.
 - Claude reviews every non-draft pull request into `staging`
   automatically (`.github/workflows/claude-code-review.yml`, replacing
