@@ -100,9 +100,12 @@ for the conventions.
 ## Deployment
 
 The frontend is deployed on Vercel and the backend on Render; Supabase hosts the
-database. Production settings (including `CORS_ORIGINS`) live in those
-dashboards, not in this repo. **Apply new migrations to the database before
-merging the code that needs them**, because the backend redeploys on merge.
+database. There are two environments: production (branch `main`) and staging
+(branch `staging`, a Vercel Preview plus its own Render service and Supabase
+project). Their settings (including `CORS_ORIGINS`) live in those dashboards,
+not in this repo; see `context/architecture.md` → Environments. **Apply new
+migrations to an environment's database before merging the code that needs
+them into its branch**, because the backend redeploys on merge.
 
 ## Working on it
 

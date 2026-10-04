@@ -133,6 +133,22 @@ Added 2026-09-24, spec `context/feature/09 - Removing Hardcoded strings, impleme
 - **Adding a language**: add `locales/<code>.json` with the same keys, add it to `SUPPORTED_LANGUAGES` and the `resources` in `i18n/index.ts`, and add its flag to `LANGUAGE_FLAGS` (`i18n/languages.ts`, SVG in `src/assets/flags/`). Nothing else changes.
 - **Backend text**: error messages (`ApiError.message`, the FastAPI `detail` shown by `notifyError`) are translated by the backend into the locale `apiFetch` sends as `Accept-Language` (see Choosing the locale); the frontend shows them as they come and doesn't map them to its own keys. User content (Document names, descriptions, Comments, default Tag names created with a Room) is data and is never translated.
 
+## Environments
+
+Added 2026-10-04. Two hosted environments, each a full stack with its own database:
+
+| | Production | Staging |
+|---|---|---|
+| Git branch | `main` | `staging` |
+| Backend | Render service, deploys on push to `main` | Render service, deploys on push to `staging` once CI passes |
+| Frontend | Vercel production deploy | Vercel Preview of the `staging` branch (`…-git-staging-rum11.vercel.app`) |
+| Supabase | production project | **separate** staging project (own Postgres, Auth and Storage) |
+
+- **Settings live in the dashboards**, never in the repo. The staging Render service has the same variables as production (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `STORAGE_BUCKET`, `CORS_ORIGINS`, `CORS_ORIGIN_REGEX`) pointing at the staging Supabase project; `CORS_ORIGINS` holds the staging alias and `http://localhost:5173` (production no longer lists localhost). On Vercel, the Preview variables `VITE_API_BASE_URL`, `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are scoped to the `staging` branch; Vite inlines them at build time, so changing one needs a redeploy.
+- **The staging Supabase project is set up by hand**: the private `document-images` bucket (no migration creates it), Auth's Site URL and Redirect URLs (the login redirects to `window.location.origin`, `pages/HomePage.tsx`), and each enabled OAuth provider with the project's own callback `https://<ref>.supabase.co/auth/v1/callback`. Staging may enable fewer providers than production.
+- **Migrations run by hand on both databases** (`cd backend && DATABASE_URL=<url> alembic upgrade head`): on staging before the PR that needs them is merged into `staging`, on production before the `staging` → `main` release (`code-standards.md` → Branches and Pull Requests). Staging is where a migration is tried on a real Supabase database first.
+- **Uptime monitoring covers production only.** Render's free instance hours are shared by the workspace, so staging is left to sleep when idle.
+
 ## Continuous Integration
 
 `.github/workflows/ci.yml` runs on every pull request and on pushes to `main` and `staging` (PRs target `staging`, see `code-standards.md` → Branches and Pull Requests), as two independent jobs matching the two codebases.

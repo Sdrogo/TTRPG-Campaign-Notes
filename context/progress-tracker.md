@@ -25,6 +25,13 @@ transaction, `alembic_version` updated; checked: RLS + deny policy on both new
 tables, existing Rooms at `room`). All of feature 22 (22_1, 22_2, 22b_1,
 22b_2) is in PR #86; 22b adds no migration.
 
+**Staging environment (2026-10-04)**: a second Render service deploys
+`staging` after CI passes, backed by a **separate Supabase project** (product
+owner's choice, 2026-10-04); the staging frontend is the Vercel Preview of
+`staging`. Setup and the migration flow for both databases are in
+`architecture.md` → Environments. The staging database starts empty and is
+brought to head with `alembic upgrade head`.
+
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
