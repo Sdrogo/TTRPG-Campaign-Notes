@@ -149,6 +149,20 @@ Added 2026-10-04. Two hosted environments, each a full stack with its own databa
 - **Migrations run by hand on both databases** (`cd backend && DATABASE_URL=<url> alembic upgrade head`): on staging before the PR that needs them is merged into `staging`, on production before the `staging` → `main` release (`code-standards.md` → Branches and Pull Requests). Staging is where a migration is tried on a real Supabase database first.
 - **Uptime monitoring covers production only.** Render's free instance hours are shared by the workspace, so staging is left to sleep when idle.
 
+### Local env files
+
+Added 2026-10-04. On the product owner's machine the env files are split by environment, and every agent must respect it:
+
+| File (in `backend/` and `frontend/`) | Points at |
+|---|---|
+| `.env` | **production** |
+| `.env.staging` | staging |
+| `.env.dev` | dev |
+
+- **Never treat `.env` as a safe dev or staging target**, never repoint it at another environment, and never run anything that writes (migrations, the full `pytest`, scripts) with it loaded unless production is the intended target. To work against staging or dev, use `.env.staging` / `.env.dev`. All of them are gitignored (`.gitignore` ignores `.env.*` except `.env.example`).
+- **The code does not pick these files up by itself.** The backend (`app/config.py`, `SettingsConfigDict(env_file=".env")`) and therefore Alembic (`migrations/env.py` reads `settings.database_url`) only read `backend/.env`. Real environment variables win over that file, so target staging or dev by exporting the matching file into the shell first (`set -a; . ./.env.staging; set +a` in bash), or by passing the variable inline (`DATABASE_URL=<staging url> alembic upgrade head`). Any variable the exported file leaves out silently falls back to the production value in `.env`.
+- **Vite loads `.env` in every mode**, with `.env.[mode]` overriding it. `npm run dev` runs mode `development`, which reads `.env.development`, not `.env.dev`, so a plain `npm run dev` gets production values. Use `npx vite --mode dev` or `npx vite --mode staging`; as on the backend, a key missing from the mode file falls back to `.env`.
+
 ## Continuous Integration
 
 `.github/workflows/ci.yml` runs on every pull request and on pushes to `main` and `staging` (PRs target `staging`, see `code-standards.md` → Branches and Pull Requests), as two independent jobs matching the two codebases.
@@ -169,7 +183,7 @@ Things worth knowing:
 - Coverage runs with `concurrency = ["greenlet", "thread"]` (`backend/pyproject.toml`). SQLAlchemy's asyncio layer runs database calls in greenlets, and without it coverage loses a route after its first database `await` (`app/api` read 51–70% instead of 86–100%).
 - Two gates: ≥95% on `app/domain`, the home of every invariant (99% now), and ≥90% on all of `app/` (94% when set). What stays uncovered is mostly what tests replace on purpose: the Storage HTTP calls (`app/db/storage.py`) and the production session's commit path (`app/db/session.py`).
 - The `integration` marker (`tests/conftest.py::pytest_collection_modifyitems`, automatic for any test using `db_session`) no longer affects CI. It remains so a developer without a database can run `pytest -m "not integration"`.
-- Not covered by CI: real Supabase Storage, any difference between the shim and a real Supabase database, and concurrency (the single-session fixture can't drive two connections). Running `pytest` against the real project with a `backend/.env` is still possible and worth doing for changes to migrations or to Supabase-facing code.
+- Not covered by CI: real Supabase Storage, any difference between the shim and a real Supabase database, and concurrency (the single-session fixture can't drive two connections). Running `pytest` against a real Supabase project is still possible and worth doing for changes to migrations or to Supabase-facing code; point it at **staging**, never at the production `backend/.env` (see Local env files above).
 
 ## Invariants
 

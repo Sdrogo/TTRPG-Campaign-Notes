@@ -26,3 +26,13 @@ meaningful implementation change.
 If implementation changes the architecture, scope, or
 standards documented in the context files, update the
 relevant file before continuing.
+
+## Environment files
+
+Plain `.env` files (`backend/.env`, `frontend/.env`) hold
+**production** values; `.env.staging` and `.env.dev` hold staging
+and dev values. Never assume `.env` is safe to use for dev or
+staging, never repoint it, and use the matching file when working
+against another environment. The backend and Vite only read
+`.env` on their own: see `context/architecture.md` → Local env
+files for how to load the others.

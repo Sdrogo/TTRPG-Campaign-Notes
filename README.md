@@ -76,6 +76,10 @@ with at least one provider, and a private Storage bucket named `document-images`
    The app runs on <http://localhost:5173>, which is the backend's default
    allowed CORS origin.
 
+On the maintainer's machine `.env` holds production values, with staging and
+dev in `.env.staging` and `.env.dev`; see `context/architecture.md` → Local env
+files before running migrations or tests.
+
 Environment variables are listed in `backend/.env.example` and
 `frontend/.env.example`. `DATABASE_URL` must use the `postgresql+asyncpg://`
 scheme; Supabase's Session Pooler works where the direct host is IPv6-only.

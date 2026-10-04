@@ -186,7 +186,9 @@ pytest, split by what a test needs rather than by what it covers.
   `app/domain`, so a new invariant needs one.
 - CI runs the whole suite, database tests included, and gates on ≥90%
   of `app/`. Locally, `pytest -m "not integration"` needs no database;
-  the full `pytest` needs a `backend/.env`. A new migration that uses
+  the full `pytest` needs a database: use staging or dev values, never
+  the production `backend/.env` (`architecture.md` → Local env files).
+  A new migration that uses
   more of Supabase than `tests/ci/supabase_shim.sql` provides extends
   the shim. See `architecture.md` → Continuous Integration.
 

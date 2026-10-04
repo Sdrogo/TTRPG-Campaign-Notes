@@ -32,6 +32,11 @@ owner's choice, 2026-10-04); the staging frontend is the Vercel Preview of
 `architecture.md` → Environments. The staging database starts empty and is
 brought to head with `alembic upgrade head`.
 
+**Local env files (2026-10-04)**: on the product owner's machine `.env` is
+**production**; staging and dev live in `.env.staging` and `.env.dev`. The
+backend and Vite only read `.env` by default, so those must be loaded
+explicitly (`architecture.md` → Local env files).
+
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
