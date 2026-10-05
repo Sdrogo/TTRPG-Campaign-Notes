@@ -156,9 +156,9 @@ jobs:
           python ../.github/scripts/backend-summary.py >> "$GITHUB_STEP_SUMMARY"
 
   # The backend image (backend/Dockerfile) builds and starts: Render's native
-  # runtime can't install Pango, so the service is switched to Docker for the
-  # Room PDF (spec 23b). Nothing is pushed anywhere; this only proves the
-  # image is good before a service is pointed at it.
+  # runtime can't install Pango, so the Room PDF (spec 23b) needs a Docker
+  # service (staging runs one). Nothing is pushed anywhere; this only proves
+  # the image is good before a service is pointed at it.
   docker:
     name: Backend image
     runs-on: ubuntu-latest
