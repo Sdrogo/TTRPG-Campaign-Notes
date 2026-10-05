@@ -69,6 +69,32 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
   its three entry points), 100% coverage; `tsc`, lint and build clean.
 
+### Room PDF, jobs and routes (spec 23b_1c, 2026-10-05)
+
+- Backend only, no frontend yet (23b_2). `POST /rooms/{id}/exports/pdf` creates a
+  job (202) that runs in the background; `GET .../exports/{job}` gives the
+  status and, when done, a signed download link; `GET .../exports` lists the
+  requester's own. Table `export_jobs`, one active job per user and Room (409),
+  files in `exports/` removed after 24 hours through `storage_cleanup`, stuck
+  jobs failed by a sweep and at startup. Details in `architecture.md` → Room
+  PDF, layout and typesetting → Jobs.
+- **Migration `d9a4f1c7e3b5`: not applied anywhere yet.** Apply it to staging
+  by hand before this PR merges (`.env.dev` and `.env.staging` point at the same
+  Supabase project), and to production before the release that ships it.
+- Choices beyond the ticket (confirm): "as player X" travels as
+  `view_as_user_id` in the body, because the `X-View-As` header turns every
+  write into a 403; a job is its requester's alone, the Master can't see a
+  player's; a `done` job past 24 hours becomes `expired` (a fifth status) and
+  keeps its row; images are fetched through the backend's own signed links
+  rather than by Storage path, and re-encoded as JPEG on white; attachments are
+  capped at 50 MB in all and added in the manual's order; one render at a time
+  per process; `GET .../exports` is new (the Room page lists what isn't
+  downloaded yet).
+- Not run locally: the integration tests need the new table and the only
+  databases on this machine are production and the staging/dev project, so
+  CI is their first run. Non-database tests (media, options, sweepers,
+  manual) pass locally.
+
 ### Room PDF, layout and styles (spec 23b_1b, 2026-10-05)
 
 - The manual itself, still with no route: `app/domain/manual.py` lays the
@@ -95,8 +121,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   the CSS if needed. Found by CI: the floated drop cap in Gothic crashed
   WeasyPrint's float layout on some paragraphs, so Gothic uses a large red
   initial on the line instead (not a true drop cap).
-- Still to do: 23b_1c (`export_jobs`, routes, image fetching and downscaling
-  through Storage, `pypdf` attachments, 24-hour cleanup), then 23b_2.
+- Still to do: 23b_2 (frontend).
 - `uv.lock` was regenerated (it lacked `weasyprint`/`pypdf`; the newer uv also
   rewrote its header). `jinja2` is a new dependency, `weasyprint>=70`.
 - Backend: 15 layout tests and 16 HTML/asset tests run locally, 7 PDF tests need

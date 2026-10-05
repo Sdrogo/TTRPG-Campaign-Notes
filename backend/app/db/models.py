@@ -629,3 +629,39 @@ class StorageCleanupRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
+
+
+class ExportJobRow(Base):
+    """A Room PDF being generated or ready to download (spec 23b, 23b_1c).
+    `options` is the request (`app/domain/export_jobs.py::PdfOptions`), `status`
+    follows `ExportStatus`. `storage_path` is the finished file in the private
+    `exports/` prefix, kept for 24 hours (removed through `storage_cleanup`,
+    after which the row is `expired` and the path null). At most one queued or
+    running job per user and Room (a partial unique index)."""
+
+    __tablename__ = "export_jobs"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('queued', 'running', 'done', 'failed', 'expired')",
+            name="ck_export_jobs_status",
+        ),
+        Index(
+            "uq_export_jobs_one_active",
+            "room_id",
+            "requested_by",
+            unique=True,
+            postgresql_where=text("status IN ('queued', 'running')"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    requested_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    options: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(20))
+    storage_path: Mapped[str | None] = mapped_column(String(500))
+    error: Mapped[str | None] = mapped_column(String(200))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

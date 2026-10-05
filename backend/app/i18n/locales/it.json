@@ -156,6 +156,10 @@
       "onlyMaster": "Solo il Master può vedere questa Stanza come un altro membro",
       "notAMember": "Questo utente non è un membro della Stanza",
       "invalidUser": "Membro non valido"
+    },
+    "export": {
+      "alreadyRunning": "Stai già generando un PDF in questa Room",
+      "notFound": "Esportazione non trovata"
     }
   },
   "pdf": {

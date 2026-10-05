@@ -1,5 +1,5 @@
-"""The FastAPI application: CORS, the routers, and the background Storage sweep
-that runs for the app's lifetime."""
+"""The FastAPI application: CORS, the routers, and the background Storage and Room PDF sweeps
+that run for the app's lifetime."""
 
 import asyncio
 import contextlib
@@ -16,6 +16,7 @@ from app.api.comments import router as comments_router
 from app.api.document_files import router as document_files_router
 from app.api.documents import router as documents_router
 from app.api.export import router as export_router
+from app.api.export_pdf import router as export_pdf_router
 from app.api.friends import router as friends_router
 from app.api.history import router as history_router
 from app.api.invitations import router as invitations_router
@@ -27,18 +28,22 @@ from app.api.rooms import router as rooms_router
 from app.api.search import router as search_router
 from app.api.tags import router as tags_router
 from app.config import Settings, settings
+from app.db.export_jobs_repo import run_export_sweeper
 from app.db.storage_cleanup import run_sweeper
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """Starts the Storage cleanup sweep (app/db/storage_cleanup.py) with the
-    app and cancels it on shutdown."""
-    sweeper = asyncio.create_task(run_sweeper())
+    """Starts the Storage cleanup sweep (app/db/storage_cleanup.py) and the
+    Room PDF sweep (app/db/export_jobs_repo.py) with the app and cancels them
+    on shutdown."""
+    sweepers = [asyncio.create_task(run_sweeper()), asyncio.create_task(run_export_sweeper())]
     yield
-    sweeper.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await sweeper
+    for sweeper in sweepers:
+        sweeper.cancel()
+    for sweeper in sweepers:
+        with contextlib.suppress(asyncio.CancelledError):
+            await sweeper
 
 
 def add_cors(target: FastAPI, config: Settings) -> None:
@@ -76,6 +81,7 @@ app.include_router(mentions_router)
 app.include_router(friends_router)
 app.include_router(search_router)
 app.include_router(export_router)
+app.include_router(export_pdf_router)
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])

@@ -412,14 +412,23 @@ def _export_comment(
     )
 
 
-def export_filename(room_name: str, generated_at: datetime, export_format: ExportFormat) -> str:
-    """`<room>-<date>.json|md` (spec 23 Decision 5): the Room's name reduced
-    to ASCII letters and digits joined by hyphens, so it is safe in a
-    `Content-Disposition` header whatever the name holds; `room` when nothing
-    is left."""
+def _file_stem(room_name: str, generated_at: datetime) -> str:
+    """`<room>-<date>`: the Room's name reduced to ASCII letters and digits
+    joined by hyphens, so it is safe in a `Content-Disposition` header
+    whatever the name holds; `room` when nothing is left."""
     ascii_name = unicodedata.normalize("NFKD", room_name).encode("ascii", "ignore").decode()
     slug = re.sub(r"[^a-z0-9]+", "-", ascii_name.lower()).strip("-")[:60].strip("-")
-    return f"{slug or 'room'}-{generated_at:%Y-%m-%d}.{export_format.value}"
+    return f"{slug or 'room'}-{generated_at:%Y-%m-%d}"
+
+
+def export_filename(room_name: str, generated_at: datetime, export_format: ExportFormat) -> str:
+    """`<room>-<date>.json|md` (spec 23 Decision 5)."""
+    return f"{_file_stem(room_name, generated_at)}.{export_format.value}"
+
+
+def pdf_filename(room_name: str, generated_at: datetime) -> str:
+    """`<room>-<date>.pdf`, named like the other exports (spec 23b)."""
+    return f"{_file_stem(room_name, generated_at)}.pdf"
 
 
 # --- JSON --------------------------------------------------------------------

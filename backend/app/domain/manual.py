@@ -10,8 +10,9 @@ print CSS asks WeasyPrint for the page of each (`target-counter`)."""
 import re
 import uuid
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
+from enum import StrEnum
 
 from app.domain.export import (
     Export,
@@ -24,6 +25,23 @@ from app.domain.export import (
     group_documents,
 )
 from app.domain.mentions import MentionKind
+
+
+class ManualStyle(StrEnum):
+    """The built-in looks (spec 23b Decision 4), in the order they were built.
+    Each has a template `<value>.html.j2` and a stylesheet `<value>.css`."""
+
+    GOTHIC = "gothic"
+    MODERN = "modern"
+    PRINT = "print"
+
+
+class PageSize(StrEnum):
+    """The paper sizes (Decision 5); the value is the CSS `size` keyword."""
+
+    A4 = "A4"
+    LETTER = "Letter"
+
 
 _PARAGRAPH_BREAK = re.compile(r"\n[ \t]*\n\s*")
 
@@ -355,3 +373,29 @@ def _comment_thread(
 
     write(None, 0)
     return thread
+
+
+def with_image_urls(manual: Manual, urls: Mapping[str, str]) -> Manual:
+    """`manual` with every image link swapped for `urls[link]`; an image with
+    no entry (it couldn't be fetched) is left out of its page. The job uses it
+    to embed images it downloaded and downscaled for print (spec 23b)."""
+
+    def swap(url: str | None) -> str | None:
+        return urls.get(url) if url else None
+
+    return replace(
+        manual,
+        cover_image_url=swap(manual.cover_image_url),
+        chapters=[
+            replace(
+                chapter,
+                entries=[
+                    replace(entry, image_url=swap(entry.image_url))
+                    if isinstance(entry, ManualDocument)
+                    else entry
+                    for entry in chapter.entries
+                ],
+            )
+            for chapter in manual.chapters
+        ],
+    )
