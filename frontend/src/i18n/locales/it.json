@@ -10,6 +10,7 @@
   "common": {
     "add": "Aggiungi",
     "cancel": "Annulla",
+    "close": "Chiudi",
     "delete": "Elimina",
     "edit": "Modifica",
     "remove": "Rimuovi",
@@ -556,14 +557,62 @@
     "format": "Formato del file",
     "formats": {
       "md": "Markdown",
-      "json": "JSON"
+      "json": "JSON",
+      "pdf": "PDF"
     },
     "formatHint": {
       "md": "Un solo file leggibile, da leggere o stampare.",
-      "json": "Dati strutturati con gli id, per strumenti e Agenti AI."
+      "json": "Dati strutturati con gli id, per strumenti e Agenti AI.",
+      "pdf": "Un manuale impaginato da stampare o consegnare ai giocatori."
     },
     "tagFilter": "Solo i Documenti con questi Tag (facoltativo)",
     "linksExpire": "I link a immagini e file PDF scadono entro un'ora. Esporta di nuovo per aggiornarli.",
-    "done": "Esportazione scaricata."
+    "done": "Esportazione scaricata.",
+    "pdf": {
+      "style": "Stile",
+      "styles": {
+        "gothic": "Gotico",
+        "modern": "Moderno",
+        "print": "Stampa"
+      },
+      "styleHints": {
+        "gothic": "Nero e rosso, copertina scura",
+        "modern": "Sans-serif pulito, tanto spazio",
+        "print": "Bianco e nero, risparmia inchiostro"
+      },
+      "pageSize": "Formato della pagina",
+      "comments": "Includi i Commenti in appendice",
+      "attachments": "Aggiungi in coda gli allegati PDF",
+      "cover": "Immagine di copertina",
+      "coverNone": "Nessuna",
+      "coverClear": "Togli l'immagine di copertina",
+      "coverNothing": "Nessun Documento con immagini",
+      "coverHint": "La copertina usa l'immagine preferita del Documento scelto.",
+      "visibility": "Il PDF contiene solo ciò che puoi vedere. Viene preparato in background e resta disponibile per 24 ore.",
+      "asMember": "Stai guardando la Stanza come un altro membro: il PDF conterrà solo ciò che vede lui. Resta disponibile per 24 ore.",
+      "action": "Genera PDF",
+      "making": "Sto preparando il PDF…",
+      "makingHint": "Puoi chiudere questa finestra: il PDF resta nella pagina della Stanza finché non lo scarichi.",
+      "ready": "Il PDF è pronto.",
+      "availableUntil": "Disponibile fino a {{time}}.",
+      "download": "Scarica il PDF",
+      "preparingLink": "Preparo il link di download…",
+      "failed": "Non è stato possibile preparare il PDF.",
+      "expired": "Questo PDF non è più disponibile: i file vengono rimossi dopo 24 ore.",
+      "another": "Prepara un altro PDF",
+      "retry": "Riprova",
+      "listTitle": "I tuoi PDF",
+      "listItem": "{{style}} · {{size}}",
+      "listStatus": {
+        "queued": "In coda",
+        "running": "In preparazione",
+        "done": "Pronto",
+        "failed": "Non riuscito",
+        "expired": "Scaduto"
+      },
+      "downloadNamed": "Scarica il PDF {{name}}",
+      "dismiss": "Nascondi",
+      "dismissNamed": "Nascondi il PDF {{name}}"
+    }
   }
 }

@@ -10,6 +10,7 @@
   "common": {
     "add": "Add",
     "cancel": "Cancel",
+    "close": "Close",
     "delete": "Delete",
     "edit": "Edit",
     "remove": "Remove",
@@ -556,14 +557,62 @@
     "format": "File format",
     "formats": {
       "md": "Markdown",
-      "json": "JSON"
+      "json": "JSON",
+      "pdf": "PDF"
     },
     "formatHint": {
       "md": "One readable file, to read or print.",
-      "json": "Structured data with ids, for tools and AI Agents."
+      "json": "Structured data with ids, for tools and AI Agents.",
+      "pdf": "A manual-style document to print or hand to your players."
     },
     "tagFilter": "Only Documents with these Tags (optional)",
     "linksExpire": "Links to images and PDF files expire within an hour. Export again to refresh them.",
-    "done": "Export downloaded."
+    "done": "Export downloaded.",
+    "pdf": {
+      "style": "Style",
+      "styles": {
+        "gothic": "Gothic",
+        "modern": "Modern",
+        "print": "Print"
+      },
+      "styleHints": {
+        "gothic": "Black and red, dark cover",
+        "modern": "Clean sans-serif, lots of space",
+        "print": "Black and white, saves ink"
+      },
+      "pageSize": "Page size",
+      "comments": "Include Comments as an appendix",
+      "attachments": "Append PDF Attachments at the end",
+      "cover": "Cover image",
+      "coverNone": "None",
+      "coverClear": "Remove the cover image",
+      "coverNothing": "No Document has images",
+      "coverHint": "The cover uses the favorite image of the chosen Document.",
+      "visibility": "The PDF holds only what you can see. It is made in the background and stays available for 24 hours.",
+      "asMember": "You are viewing the Room as another member: the PDF will hold only what they see. It stays available for 24 hours.",
+      "action": "Generate PDF",
+      "making": "Making your PDF…",
+      "makingHint": "You can close this window: the PDF stays on the Room page until you download it.",
+      "ready": "Your PDF is ready.",
+      "availableUntil": "Available until {{time}}.",
+      "download": "Download the PDF",
+      "preparingLink": "Preparing the download link…",
+      "failed": "The PDF could not be made.",
+      "expired": "This PDF is no longer available: files are removed after 24 hours.",
+      "another": "Make another PDF",
+      "retry": "Try again",
+      "listTitle": "Your PDFs",
+      "listItem": "{{style}} · {{size}}",
+      "listStatus": {
+        "queued": "Queued",
+        "running": "Being made",
+        "done": "Ready",
+        "failed": "Failed",
+        "expired": "Expired"
+      },
+      "downloadNamed": "Download the PDF {{name}}",
+      "dismiss": "Hide",
+      "dismissNamed": "Hide the PDF {{name}}"
+    }
   }
 }
