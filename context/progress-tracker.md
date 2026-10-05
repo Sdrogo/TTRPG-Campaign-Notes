@@ -40,7 +40,11 @@ tables, existing Rooms at `room`). All of feature 22 (22_1, 22_2, 22b_1,
 owner's choice, 2026-10-04); the staging frontend is the Vercel Preview of
 `staging`. Setup and the migration flow for both databases are in
 `architecture.md` → Environments. The staging database starts empty and is
-brought to head with `alembic upgrade head`.
+brought to head with `alembic upgrade head`. **Since 2026-10-05 the staging
+backend is a Render Docker service** (`ttrpg-campaign-notes-2.onrender.com`),
+needed for the Room PDF; production is still on Render's native runtime until
+the release that ships the PDF (open decision: new Docker service and URL, or
+the Render API on the existing one).
 
 **Local env files (2026-10-04)**: on the product owner's machine `.env` is
 **production**; staging and dev live in `.env.staging` and `.env.dev`. The
@@ -69,6 +73,39 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
   its three entry points), 100% coverage; `tsc`, lint and build clean.
 
+### Room PDF, jobs and routes (spec 23b_1c, 2026-10-05)
+
+- Backend only, no frontend yet (23b_2). `POST /rooms/{id}/exports/pdf` creates a
+  job (202) that runs in the background; `GET .../exports/{job}` gives the
+  status and, when done, a signed download link; `GET .../exports` lists the
+  requester's own. Table `export_jobs`, one active job per user and Room (409),
+  files in `exports/` removed after 24 hours through `storage_cleanup`, stuck
+  jobs failed by a sweep and at startup. Details in `architecture.md` → Room
+  PDF, layout and typesetting → Jobs.
+- **Migration `d9a4f1c7e3b5`: applied to staging by hand on 2026-10-05** (with
+  `.env.staging` loaded; `alembic current` went from `c4e9a7f1d3b2` to
+  `d9a4f1c7e3b5`; checked: RLS on, the deny policy and the partial unique index
+  `uq_export_jobs_one_active` are there; `.env.dev` points at the same Supabase
+  project). **Still pending on production**: apply it there, with the owner's
+  go-ahead, before the release that ships it.
+- Choices beyond the ticket (confirm): "as player X" travels as
+  `view_as_user_id` in the body, because the `X-View-As` header turns every
+  write into a 403; a job is its requester's alone, the Master can't see a
+  player's; a `done` job past 24 hours becomes `expired` (a fifth status) and
+  keeps its row; images are fetched through the backend's own signed links
+  rather than by Storage path, and re-encoded as JPEG on white; attachments are
+  capped at 50 MB in all and added in the manual's order; one render at a time
+  per process; `GET .../exports` is new (the Room page lists what isn't
+  downloaded yet).
+- Review fixes (2026-10-05): `mark_done` only moves a running job, so a PDF finished
+  after its Room was deleted, or after the sweep failed the job, is removed from
+  Storage instead of orphaned, and a failed job isn't revived; the single-process
+  assumption of the startup `interrupted` sweep is now written down.
+- Not run locally: the integration tests need the new table and the only
+  databases on this machine are production and the staging/dev project, so
+  CI is their first run. Non-database tests (media, options, sweepers,
+  manual) pass locally.
+
 ### Room PDF, layout and styles (spec 23b_1b, 2026-10-05)
 
 - The manual itself, still with no route: `app/domain/manual.py` lays the
@@ -95,8 +132,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   the CSS if needed. Found by CI: the floated drop cap in Gothic crashed
   WeasyPrint's float layout on some paragraphs, so Gothic uses a large red
   initial on the line instead (not a true drop cap).
-- Still to do: 23b_1c (`export_jobs`, routes, image fetching and downscaling
-  through Storage, `pypdf` attachments, 24-hour cleanup), then 23b_2.
+- Still to do: 23b_2 (frontend).
 - `uv.lock` was regenerated (it lacked `weasyprint`/`pypdf`; the newer uv also
   rewrote its header). `jinja2` is a new dependency, `weasyprint>=70`.
 - Backend: 15 layout tests and 16 HTML/asset tests run locally, 7 PDF tests need
@@ -119,10 +155,12 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   Command empty, the same environment variables as the old staging service
   (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `STORAGE_BUCKET`,
   `CORS_ORIGINS`, `CORS_ORIGIN_REGEX`), at `https://ttrpg-campaign-notes-2.onrender.com`
-  (`/health` answers 200). To finish: point the Vercel Preview variable
-  `VITE_API_BASE_URL` of the `staging` branch at it and redeploy the
-  frontend (Vite inlines it at build time), try the app, then retire the old
-  staging service.
+  (`/health` answers 200). **Finished 2026-10-05**: the Vercel Preview variable
+  `VITE_API_BASE_URL` of the `staging` branch points at it (confirmed by the
+  product owner), so staging runs on Docker and the old native staging service
+  (`TTRPG-Campaign-Notes-1`) was **suspended** by the product owner, to be
+  deleted once nothing needs it (checked from outside: `/health` 200, the
+  23b_1c routes exist, CORS accepts the staging preview origin).
 - **Production is still open**: a new service means a new URL (the production
   frontend's `VITE_API_BASE_URL`, possibly a custom domain), so decide before
   the release that ships the PDF: new service plus domain swap, or the Render

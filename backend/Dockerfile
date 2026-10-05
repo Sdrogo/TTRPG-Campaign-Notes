@@ -1,8 +1,8 @@
 # The backend as a container image (spec 23b_1a). Render's native Python
 # runtime can't install system packages, and WeasyPrint (the Room PDF, spec
-# 23b) needs Pango; a Docker service can. Until a Render service's runtime is
-# switched to Docker in its dashboard this file is unused, so merging it
-# changes nothing in production or staging.
+# 23b) needs Pango; a Docker service can. Staging runs this image as a Render
+# Docker web service; production still uses the native runtime until it gets
+# one too (`context/architecture.md` -> Environments).
 #
 # Build context is `backend/`, and `.dockerignore` keeps every `.env*` file
 # out of it: the image must never carry production values (settings live in

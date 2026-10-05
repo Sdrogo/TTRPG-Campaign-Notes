@@ -9,7 +9,6 @@ ornaments (under this package), `data:` URLs, and exactly the image links of the
 `Manual`."""
 
 from collections.abc import Collection
-from enum import StrEnum
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -17,26 +16,18 @@ from urllib.request import url2pathname
 
 from jinja2 import Environment, FileSystemLoader
 
-from app.domain.manual import Manual
+from app.domain.manual import Manual, ManualStyle, PageSize
 from app.i18n.translator import DEFAULT_LOCALE, SUPPORTED_LOCALES
 
 ASSETS_DIR = Path(__file__).resolve().parent
-
-
-class ManualStyle(StrEnum):
-    """The built-in looks (spec 23b Decision 4), in the order they were built.
-    Each has a template `<value>.html.j2` and a stylesheet `<value>.css`."""
-
-    GOTHIC = "gothic"
-    MODERN = "modern"
-    PRINT = "print"
-
-
-class PageSize(StrEnum):
-    """The paper sizes (Decision 5); the value is the CSS `size` keyword."""
-
-    A4 = "A4"
-    LETTER = "Letter"
+__all__ = [
+    "ASSETS_DIR",
+    "ManualStyle",
+    "PageSize",
+    "render_manual_html",
+    "render_manual_pdf",
+    "url_allowed",
+]
 
 
 _ENVIRONMENT = Environment(

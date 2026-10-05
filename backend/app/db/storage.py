@@ -135,3 +135,25 @@ def as_download(signed_url: str, file_name: str) -> str:
     Supabase reads the `download` query parameter of a signed link; the link
     already carries `?token=`."""
     return f"{signed_url}&download={quote(file_name, safe='')}"
+
+
+async def download_signed(  # pragma: no cover - real Storage HTTP only
+    url: str, max_bytes: int
+) -> bytes:
+    """The bytes behind a signed link the backend itself created, for the Room
+    PDF job (spec 23b): images to downscale, PDF Attachments to append.
+    Redirects aren't followed, and a body over `max_bytes` is refused as it
+    streams in. Raises `StorageError` on any failure, so the job can leave
+    that one file out."""
+    try:
+        async with httpx.AsyncClient(timeout=30) as client, client.stream("GET", url) as response:
+            if response.is_error:
+                raise StorageError(f"Storage answered {response.status_code}")
+            body = bytearray()
+            async for chunk in response.aiter_bytes():
+                body.extend(chunk)
+                if len(body) > max_bytes:
+                    raise StorageError("The object is larger than the limit")
+            return bytes(body)
+    except httpx.HTTPError as exc:
+        raise StorageError(f"Could not download: {exc}") from exc
