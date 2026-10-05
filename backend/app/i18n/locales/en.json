@@ -156,6 +156,21 @@
       "onlyMaster": "Only the Master can view this Room as another member",
       "notAMember": "That user is not a member of this Room",
       "invalidUser": "Invalid member to view as"
+    },
+    "export": {
+      "alreadyRunning": "A PDF is already being generated for you in this Room",
+      "notFound": "Export not found"
     }
+  },
+  "pdf": {
+    "contents": "Contents",
+    "index": "Index",
+    "other": "Other",
+    "documents": "Documents",
+    "comments": "Comments",
+    "unknownMember": "Unknown member",
+    "deletedComment": "(deleted)",
+    "playedBy": "{character} (played by {player})",
+    "pageAbbreviation": "p."
   }
 }

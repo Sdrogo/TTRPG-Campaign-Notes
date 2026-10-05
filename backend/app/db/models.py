@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Computed,
     DateTime,
     ForeignKey,
     Index,
@@ -19,13 +20,43 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
     """Declarative base of every table, and the metadata Alembic compares
     against."""
+
+
+# Full-text search (spec 21, migration c4e9a7f1d3b2). One text search
+# configuration for every language: `simple` (lower case, no stemming, no stop
+# words) behind `unaccent`, since a Room mixes Italian and English. Each
+# searchable table carries a generated `search_vector` with a GIN index; the
+# column is deferred so ordinary reads never load it.
+SEARCH_CONFIG = "public.search_simple_unaccent"
+
+
+def _search_text(column: str) -> str:
+    """SQL for `column` as a reader sees it: every mention token (spec 19c,
+    20) replaced by its name, so `#[Drago](doc:<uuid>)` is indexed as
+    "Drago" and never by its kind or id."""
+    return (
+        f"regexp_replace({column}, "
+        r"'[@#]\[((?:[^]\\]|\\.)*)\]\((user|doc|tag):[0-9a-fA-F-]{36}\)', "
+        r"'\1', 'g')"
+    )
+
+
+def _search_vector(column: str, weight: str | None = None) -> str:
+    """SQL for the `tsvector` of `column` under `SEARCH_CONFIG`, weighted."""
+    vector = f"to_tsvector('{SEARCH_CONFIG}'::regconfig, {_search_text(column)})"
+    return vector if weight is None else f"setweight({vector}, '{weight}')"
+
+
+def _search_index(table: str) -> Index:
+    """The GIN index on a table's `search_vector`."""
+    return Index(f"ix_{table}_search_vector", "search_vector", postgresql_using="gin")
 
 
 # User ids (created_by / user_id below) intentionally have no DB-level FK to
@@ -76,7 +107,10 @@ class TagRow(Base):
     """A Room's Tag; names are unique within a Room."""
 
     __tablename__ = "tags"
-    __table_args__ = (UniqueConstraint("room_id", "name", name="uq_tag_room_name"),)
+    __table_args__ = (
+        UniqueConstraint("room_id", "name", name="uq_tag_room_name"),
+        _search_index("tags"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     room_id: Mapped[uuid.UUID] = mapped_column(
@@ -89,6 +123,9 @@ class TagRow(Base):
     # rewritten together, so gaps and ties are harmless.
     main_position: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    search_vector: Mapped[str | None] = mapped_column(
+        TSVECTOR, Computed(_search_vector("name"), persisted=True), deferred=True
+    )
 
 
 class TagCombinationRow(Base):
@@ -186,6 +223,7 @@ class DocumentRow(Base):
     tables and cascade with it."""
 
     __tablename__ = "documents"
+    __table_args__ = (_search_index("documents"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     room_id: Mapped[uuid.UUID] = mapped_column(
@@ -201,6 +239,15 @@ class DocumentRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    # Spec 21: the name weighs more than the description.
+    search_vector: Mapped[str | None] = mapped_column(
+        TSVECTOR,
+        Computed(
+            f"{_search_vector('name', 'A')} || {_search_vector('description', 'B')}",
+            persisted=True,
+        ),
+        deferred=True,
     )
 
 
@@ -246,6 +293,7 @@ class NoteRow(Base):
     visibility. Not a Post - Notes belong to the Document, not its Thread."""
 
     __tablename__ = "document_notes"
+    __table_args__ = (_search_index("document_notes"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     document_id: Mapped[uuid.UUID] = mapped_column(
@@ -258,6 +306,15 @@ class NoteRow(Base):
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Spec 21: the title weighs more than the text.
+    search_vector: Mapped[str | None] = mapped_column(
+        TSVECTOR,
+        Computed(
+            f"{_search_vector('title', 'A')} || {_search_vector('description', 'B')}",
+            persisted=True,
+        ),
+        deferred=True,
+    )
 
 
 class NoteVisibilityGrantRow(Base):
@@ -279,6 +336,7 @@ class PostRow(Base):
     ever "comment": Details (D-18) are the Notes of `document_notes`."""
 
     __tablename__ = "posts"
+    __table_args__ = (_search_index("posts"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     document_id: Mapped[uuid.UUID] = mapped_column(
@@ -316,6 +374,12 @@ class PostRow(Base):
     promoted_to: Mapped[str | None] = mapped_column(String(20))
     promoted_document_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), index=True
+    )
+    # Spec 21: NULL once deleted, so a placeholder is never found.
+    search_vector: Mapped[str | None] = mapped_column(
+        TSVECTOR,
+        Computed(f"CASE WHEN deleted_at IS NULL THEN {_search_vector('body')} END", persisted=True),
+        deferred=True,
     )
 
 
@@ -565,3 +629,39 @@ class StorageCleanupRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
+
+
+class ExportJobRow(Base):
+    """A Room PDF being generated or ready to download (spec 23b, 23b_1c).
+    `options` is the request (`app/domain/export_jobs.py::PdfOptions`), `status`
+    follows `ExportStatus`. `storage_path` is the finished file in the private
+    `exports/` prefix, kept for 24 hours (removed through `storage_cleanup`,
+    after which the row is `expired` and the path null). At most one queued or
+    running job per user and Room (a partial unique index)."""
+
+    __tablename__ = "export_jobs"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('queued', 'running', 'done', 'failed', 'expired')",
+            name="ck_export_jobs_status",
+        ),
+        Index(
+            "uq_export_jobs_one_active",
+            "room_id",
+            "requested_by",
+            unique=True,
+            postgresql_where=text("status IN ('queued', 'running')"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    requested_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    options: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(20))
+    storage_path: Mapped[str | None] = mapped_column(String(500))
+    error: Mapped[str | None] = mapped_column(String(200))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

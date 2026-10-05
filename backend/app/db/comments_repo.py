@@ -94,6 +94,26 @@ async def list_comments_for_document(
     return [comment_from_row(row) for row in result.scalars()]
 
 
+async def list_comments_for_documents(
+    session: AsyncSession, document_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[Comment]]:
+    """`list_comments_for_document` for many Documents in one query (the Room
+    export, spec 23). A Document with none maps to an empty list; every
+    Comment's parent is on the same Document, so each list holds whole
+    threads. Not yet filtered for any viewer."""
+    by_document: dict[uuid.UUID, list[Comment]] = defaultdict(list)
+    if not document_ids:
+        return by_document
+    result = await session.execute(
+        select(PostRow)
+        .where(PostRow.document_id.in_(document_ids), PostRow.kind == PostKind.COMMENT.value)
+        .order_by(PostRow.created_at, PostRow.id)
+    )
+    for row in result.scalars():
+        by_document[row.document_id].append(comment_from_row(row))
+    return by_document
+
+
 async def lock_comment(session: AsyncSession, comment_id: uuid.UUID) -> datetime | None:
     """Takes the Comment's row lock until the transaction ends and returns its
     `deleted_at` as of the lock, so a check made on it can't be undone by a

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setLanguage } from '../../i18n';
-import { ApiError, apiFetch } from '../../lib/apiClient';
+import { ApiError, apiDownload, apiFetch } from '../../lib/apiClient';
 import { supabase } from '../../lib/supabaseClient';
 import { setViewAsUser } from '../../lib/viewAs';
 
@@ -104,6 +104,21 @@ describe('view as', () => {
     const [first, second] = fetchMock.mock.calls as unknown as [string, RequestInit][];
     expect((first[1].headers as Headers).get('X-View-As')).toBe('user-2');
     expect((second[1].headers as Headers).has('X-View-As')).toBe(false);
+  });
+});
+
+describe('ignoreViewAs', () => {
+  it('leaves X-View-As out for the Room PDF routes even while a member is previewed', async () => {
+    const fetchMock = respondWith('{}');
+
+    setViewAsUser('user-2');
+    try {
+      await apiFetch('/rooms/room-1/exports', { ignoreViewAs: true });
+    } finally {
+      setViewAsUser(null);
+    }
+
+    expect(callInit(fetchMock).headers.has('X-View-As')).toBe(false);
   });
 });
 
@@ -234,5 +249,40 @@ describe('ApiError', () => {
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toBe('Room not found');
     expect(error.status).toBe(404);
+  });
+});
+
+// The Room export (spec 23) downloads a file through the same request path.
+describe('apiDownload', () => {
+  it('returns the bytes, accepting any type, with the same auth and language', async () => {
+    const fetchMock = respondWith('# La Cripta');
+
+    const blob = await apiDownload('/rooms/room-1/export?format=md');
+
+    expect(await blob.text()).toBe('# La Cripta');
+    const { url, headers } = callInit(fetchMock);
+    expect(url).toBe('http://api.test/rooms/room-1/export?format=md');
+    expect(headers.get('Accept')).toBe('*/*');
+    expect(headers.get('Authorization')).toBe('Bearer jwt-token');
+    expect(headers.get('Accept-Language')).toBe('it');
+  });
+
+  it('exports as the member being previewed (spec 22b)', async () => {
+    const fetchMock = respondWith('{}');
+
+    setViewAsUser('user-2');
+    await apiDownload('/rooms/room-1/export');
+    setViewAsUser(null);
+
+    expect(callInit(fetchMock).headers.get('X-View-As')).toBe('user-2');
+  });
+
+  it('throws the backend message on a non-2xx, like apiFetch', async () => {
+    respondWith(JSON.stringify({ detail: 'Not a member' }), { status: 403 });
+
+    await expect(apiDownload('/rooms/room-1/export')).rejects.toMatchObject({
+      status: 403,
+      message: 'Not a member',
+    });
   });
 });

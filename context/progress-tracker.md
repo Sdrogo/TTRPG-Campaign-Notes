@@ -7,7 +7,30 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-03)
+## Current Status (2026-10-05)
+
+**Release of 2026-10-05 (staging → main, features 21, 22b follow-ups, 23 and 23b)**:
+both pending migrations were applied to the **production** database by hand
+before the release, with the product owner's go-ahead (`.env` loaded,
+`alembic upgrade head`: `b8d2f6a4c9e1` → `c4e9a7f1d3b2` full-text search →
+`d9a4f1c7e3b5` export jobs; checked: RLS on `export_jobs` with the deny policy,
+its partial unique index, `unaccent` present). The live database is at
+`d9a4f1c7e3b5`; no pending migrations. **The Room PDF needs the Docker backend
+in production**: the product owner created the Docker web service
+`exlibri-prod-docker.onrender.com` and will point the production frontend's
+`VITE_API_BASE_URL` (Vercel) at it after the merge; until then the production
+backend (Render's native runtime, no Pango) answers the PDF routes but its
+jobs fail. When last checked from outside (2026-10-05) the new service did
+not answer `/health` within 55 seconds: confirm it is up before switching.
+
+**Feature 21 (full-text search) is built**: 21_1 and 21_2 in one PR into
+`staging`. It carries **migration `c4e9a7f1d3b2`** (the `unaccent`
+extension, a text search configuration and generated search vectors with GIN
+indexes on `documents`, `document_notes`, `posts`, `tags`), **applied to the
+staging database by hand on 2026-10-05** (from a worktree of the PR's branch,
+with `.env.staging` loaded; `alembic current` read `c4e9a7f1d3b2`, it was at
+`b8d2f6a4c9e1`) and, since the release above, on production too. Backend 827
+tests, frontend 1359 tests, both at 100% coverage.
 
 Staging released to `main` with PR #73 (specs 20_1/20_2, PRs #68 to #72).
 Backend **754** tests at 100% coverage. The live database is at
@@ -25,9 +48,245 @@ transaction, `alembic_version` updated; checked: RLS + deny policy on both new
 tables, existing Rooms at `room`). All of feature 22 (22_1, 22_2, 22b_1,
 22b_2) is in PR #86; 22b adds no migration.
 
+**Staging environment (2026-10-04)**: a second Render service deploys
+`staging` after CI passes, backed by a **separate Supabase project** (product
+owner's choice, 2026-10-04); the staging frontend is the Vercel Preview of
+`staging`. Setup and the migration flow for both databases are in
+`architecture.md` → Environments. The staging database starts empty and is
+brought to head with `alembic upgrade head`. **Since 2026-10-05 the staging
+backend is a Render Docker service** (`ttrpg-campaign-notes-2.onrender.com`),
+needed for the Room PDF; production is still on Render's native runtime until
+the release that ships the PDF (open decision: new Docker service and URL, or
+the Render API on the existing one).
+
+**Local env files (2026-10-04)**: on the product owner's machine `.env` is
+**production**; staging and dev live in `.env.staging` and `.env.dev`. The
+backend and Vite only read `.env` by default, so those must be loaded
+explicitly (`architecture.md` → Local env files).
+
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Room export, frontend (spec 23_2, 2026-10-05)
+
+- An "Export" dialog (`ExportRoomModal`: Markdown or JSON, optional Tag filter,
+  a note that links expire) reached from the Room title's "⋮" (every member),
+  the setup page header and the preview banner, so the Master can export "as
+  player X" (the `X-View-As` header rides along). The file downloads through a
+  blob, named `<room>-<date>.json|md`. Details in `architecture.md` → Room
+  export → Frontend.
+- Choices beyond the ticket (confirm): Markdown is the default format (the
+  ticket lists JSON first); the file name is built in the browser instead of
+  read from `Content-Disposition`, which would need a CORS `expose_headers`
+  change on the backend; no progress or size indicator, the request is one
+  GET; `apiFetch` now shares its request code with the new `apiDownload`.
+- Not seen in a browser yet: the download itself, the dialog at phone width,
+  and the banner with its two buttons.
+- Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
+  its three entry points), 100% coverage; `tsc`, lint and build clean.
+
+### Room PDF, two columns (2026-10-05)
+
+- After looking at an exported PDF the product owner asked for two columns per
+  page, like most TTRPG manuals, then (same day) for **all three styles** and for
+  balanced columns on a chapter's last page, closed by a centered half-page
+  rule with the rest of the page blank. Done in `base.css` (`.chapter-body`:
+  `columns: 2`, `column-fill: balance`; `hr.chapter-end` after it); each style
+  sets only the colors of the column rule and the closing rule (Modern adds a
+  wider gap and a pale rule). The chapter title, contents, index and cover stay
+  full width; body text 10.5 pt in Gothic and Print, images capped lower.
+- WeasyPrint's `balance` fills every page but the last in turn and balances only
+  the last (its multicol layout tries the whole height first). Not seen rendered
+  here; CI checks the structure and, with a long and a short description, that
+  the text starts in a second column in every style.
+### Room PDF, frontend (spec 23b_2, 2026-10-05)
+
+- The Export dialog has a PDF format: style cards with miniatures (Gothic,
+  Modern, Print), page size, Comments and PDF Attachments (off by default), a
+  cover Document and the Tag filter, then "Genera PDF". The dialog follows the
+  job (making, ready with a download link and its expiry, failed) and can be
+  closed; the Room page lists the user's PDFs until downloaded or hidden
+  (`RoomPdfExports`, hidden while previewing as a member). Details in
+  `architecture.md` → Room PDF, layout and typesetting → Frontend.
+- **Merge order**: needs 23b_1c (merged into `staging`, PR #99) and its migration
+  (applied to staging, see above); without them `GET .../exports` is a 404.
+- Choices beyond the ticket (confirm): the job routes are called without
+  `X-View-As` (new `ignoreViewAs` option of `apiFetch`) and the previewed member
+  travels as `view_as_user_id`; "until downloaded" is a list of dismissed job ids
+  in `localStorage` per user and Room, so it follows the browser, not the
+  account; polling every 3 seconds while a job is queued or running, and for up
+  to 2 minutes for a finished one whose link isn't ready (review finding); the
+  style miniatures are plain boxes in the PDF styles' colors, not images; the
+  dialog adopts a job already being made instead of offering a second; new
+  `common.close` string; the download is a plain link (Storage serves it as an
+  attachment), not a blob.
+- **Not seen in a browser**: the dialog at phone width, the cards, the Room page
+  list, the real download. Frontend 1425 tests, 100% coverage; `tsc`, lint and
+  build clean.
+
+### Room PDF, jobs and routes (spec 23b_1c, 2026-10-05)
+
+- Backend only, no frontend yet (23b_2). `POST /rooms/{id}/exports/pdf` creates a
+  job (202) that runs in the background; `GET .../exports/{job}` gives the
+  status and, when done, a signed download link; `GET .../exports` lists the
+  requester's own. Table `export_jobs`, one active job per user and Room (409),
+  files in `exports/` removed after 24 hours through `storage_cleanup`, stuck
+  jobs failed by a sweep and at startup. Details in `architecture.md` → Room
+  PDF, layout and typesetting → Jobs.
+- **Migration `d9a4f1c7e3b5`: applied to staging by hand on 2026-10-05** (with
+  `.env.staging` loaded; `alembic current` went from `c4e9a7f1d3b2` to
+  `d9a4f1c7e3b5`; checked: RLS on, the deny policy and the partial unique index
+  `uq_export_jobs_one_active` are there; `.env.dev` points at the same Supabase
+  project). Applied to production on the same day, before the release (see Current
+  Status).
+- Choices beyond the ticket (confirm): "as player X" travels as
+  `view_as_user_id` in the body, because the `X-View-As` header turns every
+  write into a 403; a job is its requester's alone, the Master can't see a
+  player's; a `done` job past 24 hours becomes `expired` (a fifth status) and
+  keeps its row; images are fetched through the backend's own signed links
+  rather than by Storage path, and re-encoded as JPEG on white; attachments are
+  capped at 50 MB in all and added in the manual's order; one render at a time
+  per process; `GET .../exports` is new (the Room page lists what isn't
+  downloaded yet).
+- Review fixes (2026-10-05): `mark_done` only moves a running job, so a PDF finished
+  after its Room was deleted, or after the sweep failed the job, is removed from
+  Storage instead of orphaned, and a failed job isn't revived; the single-process
+  assumption of the startup `interrupted` sweep is now written down.
+- Not run locally: the integration tests need the new table and the only
+  databases on this machine are production and the staging/dev project, so
+  CI is their first run. Non-database tests (media, options, sweepers,
+  manual) pass locally.
+
+### Room PDF, layout and styles (spec 23b_1b, 2026-10-05)
+
+- The manual itself, still with no route: `app/domain/manual.py` lays the
+  export tree out (cover, one chapter per Main item, a Document printed once
+  and referenced as "→ p. N" elsewhere, "Other" last, Notes as sidebars,
+  Comments as an optional appendix, index of Tags, mentions as links only when
+  their target is in the PDF); `app/pdf/` typesets it (Jinja template per style,
+  print CSS, bundled OFL fonts, WeasyPrint). All three styles (Gothic, Modern,
+  Print) and both sizes (A4, Letter) are in. Page numbers come from CSS
+  (`target-counter`), none from Python. Details in `architecture.md` → Room
+  PDF, layout and typesetting.
+- Choices beyond the ticket (confirm): a Document with no favorite image uses
+  its first; Comment images are left out of the appendix; the page references
+  use the PDF's own page numbers (cover = page 1); the Tag filter isn't
+  mentioned on the cover; "Contents" is "Indice" and "Index" is "Indice
+  analitico" in Italian; the renderer fetches only its own files, `data:` URLs
+  and the Manual's image links. `export.group_documents` was split out of the
+  Markdown grouping so both formats share it (23's tests unchanged).
+- **CI is green on PR #98** (2026-10-05): the PDF smoke tests (three styles,
+  A4 and Letter: page count, contents page numbers, "-> p. N", index, accents)
+  and the `Room PDF styles render` step in the image pass. **Not looked at
+  by eye**: WeasyPrint can't load on the product owner's Windows machine (no
+  GTK), so nobody has seen the pages; open a PDF from CI or the image and tune
+  the CSS if needed. Found by CI: the floated drop cap in Gothic crashed
+  WeasyPrint's float layout on some paragraphs, so Gothic uses a large red
+  initial on the line instead (not a true drop cap).
+- Still to do: 23b_2 (frontend, see above).
+- `uv.lock` was regenerated (it lacked `weasyprint`/`pypdf`; the newer uv also
+  rewrote its header). `jinja2` is a new dependency, `weasyprint>=70`.
+- Backend: 15 layout tests and 16 HTML/asset tests run locally, 7 PDF tests need
+  Pango; `app/` coverage is 100% only where Pango exists (CI).
+
+### Room PDF, Docker image and rendering check (spec 23b_1a, 2026-10-05)
+
+- First step of 23b, the deploy check the spec asks for. Decided with the
+  product owner (2026-10-05): Render's native runtime can't install Pango, so
+  the backend moves to a **Docker image** (`backend/Dockerfile`,
+  `.dockerignore`); the PDF itself (23b_1b templates and styles, 23b_1c jobs
+  and routes) comes next. `weasyprint` and `pypdf` are now dependencies.
+- **Nothing changes in production or staging by merging this**: Render
+  ignores the Dockerfile until a service uses the Docker runtime. **Correction
+  (2026-10-05): Render does not let you change an existing service's runtime
+  from the dashboard** (its changelog says so; only the API or a Blueprint
+  can, and which field the API takes is unverified), so the first plan
+  ("Settings → Runtime") was wrong. Staging got a **new Docker web service**
+  instead: Language Docker, Dockerfile path `backend/Dockerfile`, Docker
+  Command empty, the same environment variables as the old staging service
+  (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `STORAGE_BUCKET`,
+  `CORS_ORIGINS`, `CORS_ORIGIN_REGEX`), at `https://ttrpg-campaign-notes-2.onrender.com`
+  (`/health` answers 200). **Finished 2026-10-05**: the Vercel Preview variable
+  `VITE_API_BASE_URL` of the `staging` branch points at it (confirmed by the
+  product owner), so staging runs on Docker and the old native staging service
+  (`TTRPG-Campaign-Notes-1`) was **suspended** by the product owner, to be
+  deleted once nothing needs it (checked from outside: `/health` 200, the
+  23b_1c routes exist, CORS accepts the staging preview origin).
+- **Production is still open**: a new service means a new URL (the production
+  frontend's `VITE_API_BASE_URL`, possibly a custom domain), so decide before
+  the release that ships the PDF: new service plus domain swap, or the Render
+  API on the existing service (try it on staging first).
+- CI: a `Backend image` job (build, import the app, render a PDF inside the
+  image, no `.env*` in `/app`) and a rendering test that fails in CI when
+  Pango is missing. Not run locally: no Docker and no GTK on the product
+  owner's Windows machine, so the test is skipped there; CI is the check.
+- The container runs as an unprivileged user (`appuser`), a suggestion from
+  the review of the PR; CI checks it and renders the PDF as that user.
+- Free-plan note: Docker builds are slower than the native ones and use the
+  workspace's build minutes.
+
+### Room export, Markdown escaping (23_3, 2026-10-05)
+
+- Review finding on PR #93: names written into Markdown headings, links, list
+  items and bold runs (Room, Tags, Documents, Notes, files, members,
+  Characters, mention names) are now escaped and kept on one line
+  (`export.py::_md`), so a Document called `A [B]` can't break its link.
+  Descriptions and Comment bodies are left as written. The other half of the
+  finding, English labels in the Markdown, stays as decided (see below).
+  1 new domain test.
+
+### Room export, backend (spec 23_1, 2026-10-05)
+
+- `GET /rooms/{id}/export?format=json|md&tag=…`: the Room as a downloadable
+  file, what the requester sees only, built once as a tree
+  (`app/domain/export.py`) and rendered as JSON (`schema_version` 1, documented
+  by `ExportJson`) or Markdown. Details in `architecture.md` → Room export.
+  Closes the Open item "Export format for Agents".
+- Choices beyond the ticket (confirm): reactions, pins, reads and Reveal
+  history are left out; a Document shows in full under its first Markdown
+  group and as a link under the others; Markdown labels are English; JSON
+  `description`/`body` are span lists (`text` and `mention`), not strings;
+  member names are exported (display name only), never emails; the file's
+  link note says "within 60 minutes" because cached signed links keep 15 to
+  60 minutes; a mention of a Document the Tag filter left out is plain
+  `#Name` in Markdown but keeps its id in JSON.
+- No migration. Backend tests: 22 domain + 13 API (dev database), 100% of the
+  two new modules. Frontend (23_2) next.
+
+### Full-text search, frontend (spec 21_2, 2026-10-05)
+
+- A search in the top bar of every Room page (a field with its shortcut from
+  `md`, a magnifier below), opened by click, `Ctrl+K`/`⌘K` or `/`; a modal
+  (full screen on phones) with kind chips and a Tag filter, results grouped
+  by kind with the matched words marked, arrow keys and Enter, "show more"
+  per kind. A result opens the Document, the Note (`#note-<id>`, new) or the
+  Comment (`#comment-<id>`, its branch opened) on its page, or the Documents
+  list filtered by the Tag; the target lights up briefly. Details in
+  `architecture.md` → Full-text search.
+- Choices beyond the ticket: a Mantine `Modal`, since `@mantine/spotlight`
+  isn't installed; "show more" narrows the search to that kind (50 results)
+  instead of growing the group in place; `Ctrl+K` works from text fields too,
+  `/` doesn't.
+- Not seen running in a browser yet. Frontend 1359 tests, 100% coverage.
+
+### Full-text search, backend (spec 21_1, 2026-10-05)
+
+- `GET /rooms/{id}/search?q=&kind=&tag=&limit=`: accent- and case-insensitive
+  prefix match over Document names and descriptions, Notes, Comments
+  (replies included, deleted ones never) and Tag names, ranked, filtered with
+  the usual visibility functions before paging, excerpts with highlight
+  offsets built from the visible rows only. Mention tokens are indexed by
+  name. Details in `architecture.md` → Full-text search.
+- Choices beyond the ticket: a text search configuration
+  (`public.search_simple_unaccent`) instead of an `f_unaccent` wrapper, so
+  `ts_headline` marks "Città" for "citta" too; the Tag filter is AND and
+  leaves Tag results out; `limit` (up to 50) backs "show more"; offsets are
+  in UTF-16 code units so the browser slices them as is; a Tag of another
+  Room in the filter is 404.
+- Migration `c4e9a7f1d3b2` (applied to staging 2026-10-05, pending on
+  production). Backend 827 tests,
+  100% coverage.
 
 ### View as a member (specs 22b_1 and 22b_2, 2026-10-03)
 
@@ -978,6 +1237,10 @@ Reorganized with the product owner on 2026-10-03.
     from their Account page; open a friend link while signed out.
   - Spec 20, mention backlinks (deployed and migrated 2026-10-03): tokens render
     as names, "Mentioned in" hides what the viewer can't see.
+  - Spec 21, search (once migrated): in a Room with Italian and English
+    text, "citta" finds "Città", "dra" finds "Drago", a Tag name finds the
+    Tag; a Player never finds a Master-only Document, Note or Comment;
+    `Ctrl+K` opens search on every Room page; a Comment result scrolls to it.
   - Sign-in: Google, Discord and GitHub work (confirmed 2026-10-03);
     re-test a brand-new user's first sign-in.
   - UI never seen running: the Document card below `sm`, carousel arrows
@@ -992,14 +1255,14 @@ Reorganized with the product owner on 2026-10-03.
   feature at a time, each closed with all its sub-tickets: 21 → 22 (with
   22b) → 23 (with 23b, 23c) → 24, then the two small tickets below.
   Features 19 and 20 are done.
-  - **Full-text search (spec 21)**: `21 - Full-text search` (current Room,
-    Documents/Notes/Comments/Tags, accent-insensitive prefix match,
-    visibility filtered on the server). 21_1 backend + migration, then 21_2
-    frontend. Postponed: the product owner asked for 22 first (2026-10-03).
+  - **Full-text search (spec 21)**: `21 - Full-text search`. **Done**:
+    21_1 and 21_2 in one PR into `staging` (2026-10-05), migration
+    `c4e9a7f1d3b2` applied to the staging database (2026-10-05), pending on
+    production.
   - **Reveal and visibility (spec 22)**: `22 - Reveal and visibility
     history` and `22b - View as player` (read-only preview through an
-    `X-View-As` header). **Done**: 22_1, 22_2, 22b_1, 22b_2 all in PR #86
-    (2026-10-03), awaiting review and merge into `staging`.
+    `X-View-As` header). **Done**: 22_1, 22_2, 22b_1, 22b_2 all in PR #86,
+    merged into `staging` (2026-10-03).
   - **Room export (spec 23)**: `23 - Room export` (JSON + Markdown,
     per-viewer), `23b - Room PDF manual` (WeasyPrint in a background job;
     check Render can install Pango first), `23c - Agent access tokens`

@@ -109,9 +109,17 @@ def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
         # Like Storage: only objects that exist get a link.
         return {path: f"https://signed.test/{path}?token=t" for path in paths if path in objects}
 
+    async def fake_download_signed(url: str, max_bytes: int) -> bytes:
+        # The inverse of the signed links above, for the Room PDF job.
+        path = url.removeprefix("https://signed.test/").split("?")[0]
+        if path not in objects:
+            raise storage.StorageError("Storage answered 404")
+        return objects[path]
+
     monkeypatch.setattr(storage, "upload", fake_upload)
     monkeypatch.setattr(storage, "remove", fake_remove)
     monkeypatch.setattr(storage, "create_signed_urls", fake_create_signed_urls)
+    monkeypatch.setattr(storage, "download_signed", fake_download_signed)
     return objects
 
 

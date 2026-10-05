@@ -1,0 +1,62 @@
+/* Gothic (spec 23b Decision 4): black and deep red, a full-bleed dark cover,
+   distressed serif headings, red rules and a red initial, Notes as italic
+   sidebars, white pages for the body so it stays readable and printable.
+   Inspired by the look of gothic-horror RPG books, never copied: only
+   open-licensed fonts (see ../fonts/README.md) and original ornaments. */
+
+@font-face { font-family: "IM Fell English"; src: url(../fonts/IMFeENrm28P.ttf); }
+@font-face { font-family: "IM Fell English"; font-style: italic; src: url(../fonts/IMFeENit28P.ttf); }
+@font-face { font-family: "Crimson Text"; src: url(../fonts/CrimsonText-Regular.ttf); }
+@font-face { font-family: "Crimson Text"; font-style: italic; src: url(../fonts/CrimsonText-Italic.ttf); }
+@font-face { font-family: "Crimson Text"; font-weight: 600; src: url(../fonts/CrimsonText-SemiBold.ttf); }
+@font-face { font-family: "Crimson Text"; font-weight: bold; src: url(../fonts/CrimsonText-Bold.ttf); }
+@font-face { font-family: "Crimson Text"; font-weight: bold; font-style: italic; src: url(../fonts/CrimsonText-BoldItalic.ttf); }
+
+@page cover { background: #0b0b0c; }
+@page body {
+  @top-left { font: italic 9pt "IM Fell English", serif; color: #8a0f1c; border-bottom: 0.5pt solid #8a0f1c; width: 60%; }
+  @top-right { font: italic 9pt "IM Fell English", serif; color: #555; }
+}
+@page {
+  @bottom-center { font: 9pt "IM Fell English", serif; color: #8a0f1c; }
+}
+
+body { font: 10.5pt/1.4 "Crimson Text", Georgia, serif; color: #1a1a1a; text-align: justify; hyphens: auto; }
+h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: normal; text-align: left; }
+
+/* Cover: dark, centered, a red rule */
+.cover { color: #f1ece6; text-align: center; }
+.cover-inner { padding: 55mm 25mm 0; }
+.cover-system { font: 11pt "IM Fell English", serif; letter-spacing: 0.3em; text-transform: uppercase; color: #c2606a; margin: 0 0 8mm; }
+.cover-title { font-size: 40pt; line-height: 1.1; margin: 0 0 8mm; text-align: center; color: #f1ece6; }
+.cover-ornament { display: block; margin: 0 auto 12mm; }
+.cover-image { display: block; margin: 0 auto 12mm; width: 110mm; height: 120mm; object-fit: cover; border: 1pt solid #8a0f1c; }
+.cover-date { font: italic 10pt "IM Fell English", serif; color: #9a8f88; margin: 0; }
+
+/* Contents and index */
+.section-title { font-size: 26pt; color: #1a1a1a; margin: 0 0 8mm; padding-bottom: 2mm; border-bottom: 1.5pt solid #8a0f1c; }
+.toc-chapter > a { font: 14pt "IM Fell English", serif; color: #8a0f1c; }
+.toc-document > a { font-size: 11pt; }
+.index-entries { columns: 2; column-gap: 10mm; }
+.index-tag { font: 12pt "IM Fell English", serif; color: #8a0f1c; }
+
+/* Chapters: a red rule under the title, then the Documents in two columns like a
+   rulebook (base.css) with a red rule between them */
+.chapter-body { column-rule: 0.5pt solid #8a0f1c; }
+.chapter-end { border-top: 1pt solid #8a0f1c; }
+.chapter-title { font-size: 30pt; line-height: 1.1; margin: 0 0 6mm; padding-bottom: 3mm; border-bottom: 2pt solid #8a0f1c; }
+.document-title { font-size: 20pt; margin: 0 0 4mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #1a1a1a; }
+.document-image img { max-height: 70mm; border: 0.75pt solid #1a1a1a; }
+
+/* A large red initial on the first paragraph of a description. Not floated:
+   WeasyPrint's floated ::first-letter fails in its float layout on some
+   paragraphs (seen in CI), so the initial stays on the line. */
+.description p:first-child::first-letter { font: 2.4em "IM Fell English", serif; color: #8a0f1c; }
+
+/* Notes: italic sidebars with a red edge */
+.note { background: #f5f0f0; border-left: 3pt solid #8a0f1c; font-style: italic; }
+.note h3 { font-size: 13pt; font-style: normal; color: #8a0f1c; }
+
+.xref { color: #8a0f1c; }
+.comments h3 { font-size: 14pt; color: #8a0f1c; border-bottom: 0.5pt solid #8a0f1c; }
+.comment-meta { font-size: 9.5pt; color: #555; }
