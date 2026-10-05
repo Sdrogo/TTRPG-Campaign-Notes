@@ -113,6 +113,31 @@ def test_a_reference_and_the_index_link_to_where_the_document_is_printed() -> No
     assert f'<a class="index-link" href="#doc-{CASTLE}">Castle</a>' in html
 
 
+def test_the_documents_of_a_chapter_sit_in_one_block_under_its_title() -> None:
+    html = render_manual_html(_manual(), ManualStyle.GOTHIC, PageSize.A4)
+
+    # The title is outside, so a style can set the Documents in columns while it
+    # still spans the page.
+    assert html.count('class="chapter-body"') == 3
+    assert html.index('class="chapter-title"') < html.index('class="chapter-body"')
+    assert html.index('class="chapter-body"') < html.index(f'id="doc-{CASTLE}"')
+
+
+@pytest.mark.parametrize(
+    ("style", "columns"),
+    [(ManualStyle.GOTHIC, True), (ManualStyle.PRINT, True), (ManualStyle.MODERN, False)],
+)
+def test_gothic_and_print_set_the_chapters_in_two_columns_and_modern_keeps_one(
+    style: ManualStyle, columns: bool
+) -> None:
+    """Spec 23b: rulebook-like two columns for Gothic and Print; Modern is the
+    single-column style."""
+    css = (ASSETS_DIR / "styles" / f"{style.value}.css").read_text(encoding="utf-8")
+    rule = re.search(r"\.chapter-body\s*\{([^}]*)\}", css)
+
+    assert (rule is not None and "columns: 2" in rule.group(1)) is columns
+
+
 def test_the_language_follows_the_requester_with_english_as_the_fallback() -> None:
     manual = _manual()
 
@@ -265,3 +290,42 @@ def test_the_fetcher_refuses_what_the_renderer_may_not_read(tmp_path: Any) -> No
     assert fetcher.fetch((ASSETS_DIR / "styles" / "base.css").as_uri()).read()
     # An allowed link must not be able to lead elsewhere: redirects aren't followed.
     assert not any(isinstance(h, HTTPRedirectHandler) for h in fetcher.handlers)
+
+
+def _line_starts(reader: PdfReader, page: int) -> list[float]:
+    """The x of every long piece of text on `page`: a line of the body, which
+    WeasyPrint writes as one piece."""
+    found: list[float] = []
+
+    def visit(text: str, _cm: Any, tm: Any, _font: Any, _size: Any) -> None:
+        if len(text.strip()) >= 15:
+            found.append(float(tm[4]))
+
+    reader.pages[page].extract_text(visitor_text=visit)
+    return found
+
+
+@pytest.mark.parametrize(
+    ("style", "columns"),
+    [(ManualStyle.GOTHIC, 2), (ManualStyle.PRINT, 2), (ManualStyle.MODERN, 1)],
+)
+def test_a_long_chapter_flows_in_the_styles_columns(style: ManualStyle, columns: int) -> None:
+    """Spec 23b: Gothic and Print set a chapter's Documents in two columns, Modern
+    in one. The text of a long description starts at the left margin, and in two
+    columns also at the second column, well to the right of it."""
+    _weasyprint()
+    sentence = "Marker the keep stands above the mist and the road bends toward it. "
+    export = make_export(
+        main_items=[],
+        documents=[document(CASTLE, "Castle", description=(text(sentence * 60),))],
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+
+    reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
+
+    body = reader.pages[2]  # cover, contents, then the chapter
+    starts = sorted({round(x) for x in _line_starts(reader, 2)})
+    left = min(starts)
+    width = float(body.mediabox.width)
+    to_the_right = [x for x in starts if x > left + width * 0.25]
+    assert bool(to_the_right) is (columns == 2), (style, starts)

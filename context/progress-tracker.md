@@ -73,6 +73,19 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
   its three entry points), 100% coverage; `tsc`, lint and build clean.
 
+### Room PDF, two columns (2026-10-05)
+
+- After looking at an exported PDF the product owner asked for two columns per
+  page, like most TTRPG manuals. Gothic and Print now set each chapter's
+  Documents in two columns (`.chapter-body`: `columns: 2`, a thin rule between
+  them, body text 10.5 pt, images capped lower); the chapter title, contents,
+  index and cover stay full width. **Modern stays one column** (its defining
+  trait in spec 23b Decision 4): say if it should follow.
+- `column-fill: auto` fills a column before starting the next, so the last page
+  of a chapter has a short second column. Not seen rendered here; CI checks the
+  structure and, with a long description, that the text starts in a second
+  column for Gothic and Print and not for Modern.
+
 ### Room PDF, jobs and routes (spec 23b_1c, 2026-10-05)
 
 - Backend only, no frontend yet (23b_2). `POST /rooms/{id}/exports/pdf` creates a

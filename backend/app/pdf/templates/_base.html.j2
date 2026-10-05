@@ -51,6 +51,7 @@
 {% for chapter in manual.chapters %}
 <section class="chapter" id="{{ chapter.id }}">
   <h1 class="chapter-title">{{ chapter.title }}</h1>
+  <div class="chapter-body">
   {% for entry in chapter.entries %}
   {% if entry.paragraphs is defined %}
   <article class="document" id="{{ entry.anchor }}">
@@ -81,6 +82,7 @@
   <p class="reference"><a class="xref" href="#{{ entry.anchor }}" data-page="{{ manual.labels.page_abbreviation }}">{{ entry.name }}</a></p>
   {% endif %}
   {% endfor %}
+  </div>
 </section>
 {% endfor %}
 

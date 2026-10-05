@@ -28,6 +28,7 @@ h1, h2, h3 { font-family: "Lato", Helvetica, Arial, sans-serif; font-weight: bol
 .toc-document > a { color: #444; }
 .index-tag { color: #0f766e; }
 
+/* One column on purpose: Modern is the airy, single-column style (spec 23b Decision 4). */
 .chapter-title { font-size: 26pt; margin: 0 0 12mm; color: #0f766e; }
 .document { margin-top: 14mm; }
 .document-title { font-size: 16pt; margin: 0 0 5mm; }
