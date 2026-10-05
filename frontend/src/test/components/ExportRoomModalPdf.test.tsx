@@ -14,8 +14,10 @@ vi.mock('../../lib/apiClient', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../lib/apiClient')>()),
   apiFetch: vi.fn(),
 }));
+// The signed-in user, or null to see the dialog before a session is known.
+let signedInAs: string | null = 'user-1';
 vi.mock('../../hooks/useSession', () => ({
-  useSession: () => ({ session: { user: { id: 'user-1' } }, loading: false }),
+  useSession: () => ({ session: signedInAs ? { user: { id: signedInAs } } : null, loading: false }),
 }));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
@@ -57,6 +59,7 @@ const posted = () =>
     .map(([, init]) => init as { method: string; json: Record<string, unknown> });
 
 beforeEach(() => {
+  signedInAs = 'user-1';
   jobs = [];
   afterStart = null;
   started = false;
@@ -175,6 +178,21 @@ describe('ExportRoomModal, PDF format (spec 23b Frontend)', () => {
     await user.click(link);
 
     expect(JSON.parse(localStorage.getItem('pdfDismissed:user-1:room-1') ?? '[]')).toEqual(['job-1']);
+  });
+
+  it('still follows and remembers a download when no session is known yet', async () => {
+    signedInAs = null;
+    const { user } = render();
+    await choosePdf(user);
+    await waitFor(() => expect(generate()).toBeEnabled());
+    afterStart = [rawPdfJob({ status: 'done', download_url: 'https://signed.test/a.pdf' })];
+    await user.click(generate());
+
+    const link = await screen.findByRole('link', { name: 'Scarica il PDF' });
+    link.addEventListener('click', (event) => event.preventDefault());
+    await user.click(link);
+
+    expect(JSON.parse(localStorage.getItem('pdfDismissed::room-1') ?? '[]')).toEqual(['job-1']);
   });
 
   it('goes back to the form for another PDF once the job is over', async () => {
