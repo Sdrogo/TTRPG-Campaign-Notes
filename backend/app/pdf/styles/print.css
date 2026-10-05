@@ -28,7 +28,7 @@ h1, h2, h3 { font-family: "Crimson Text", Georgia, serif; font-weight: bold; }
 .chapter-title { font-size: 26pt; margin: 0 0 6mm; border-bottom: 1.5pt solid #000; }
 /* The Documents in two columns (base.css), a black rule between them. */
 .chapter-body { column-rule: 0.5pt solid #000; }
-.chapter-end { border-top: 1pt solid #000; }
+.chapter { background-image: url(ornaments/rule-black.svg); background-size: 50% 1pt; }
 .document-title { font-size: 16pt; margin: 0 0 4mm; }
 .document-image img { max-height: 55mm; border: 0.5pt solid #000; }
 

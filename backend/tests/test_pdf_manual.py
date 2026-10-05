@@ -121,9 +121,33 @@ def test_the_documents_of_a_chapter_sit_in_one_block_under_its_title() -> None:
     assert html.count('class="chapter-body"') == 3
     assert html.index('class="chapter-title"') < html.index('class="chapter-body"')
     assert html.index('class="chapter-body"') < html.index(f'id="doc-{CASTLE}"')
-    # A half-page rule closes each chapter, after its columns.
-    assert html.count('<hr class="chapter-end">') == 3
-    assert html.index('class="chapter-body"') < html.index('<hr class="chapter-end">')
+    # The closing rule is the chapter's background (base.css), not a box after
+    # the columns that could land alone on a new page.
+    assert "chapter-end" not in html
+
+
+@pytest.mark.parametrize("style", list(ManualStyle))
+def test_every_style_closes_a_chapter_with_its_background_and_one_header_rule(
+    style: ManualStyle,
+) -> None:
+    """The closing half-page rule is a background image at the bottom of the
+    chapter, colored per style. The running header's rule, where a style draws
+    one, runs under both margin boxes with the same border, so it is one line
+    across the page instead of a shorter one at another height."""
+    styles = ASSETS_DIR / "styles"
+    base = (styles / "base.css").read_text(encoding="utf-8")
+    css = (styles / f"{style.value}.css").read_text(encoding="utf-8")
+
+    chapter = re.search(r"^\.chapter\s*\{([^}]*)\}", css, re.M)
+    assert chapter is not None and "background-image:" in chapter.group(1)
+    assert "background-size: 50%" in chapter.group(1)
+    assert re.search(r"^\.chapter\s*\{[^}]*padding-bottom:[^}]*no-repeat bottom center", base, re.M)
+    boxes = dict(re.findall(r"@(top-left|top-right)\s*\{([^}]*)\}", css))
+    borders = {name: re.findall(r"border-bottom:[^;]*;", body) for name, body in boxes.items()}
+    assert borders["top-left"] == borders["top-right"], style
+    for body in boxes.values():
+        if "border-bottom" in body:
+            assert "width: 50%" in body, style
 
 
 def test_every_style_sets_the_chapters_in_two_balanced_columns() -> None:
@@ -333,3 +357,28 @@ def test_a_chapter_flows_in_two_columns_balanced_on_its_last_page(
     width = float(body.mediabox.width)
     to_the_right = [x for x in starts if x > left + width * 0.25]
     assert to_the_right, (style, sentences, starts)
+
+
+@pytest.mark.parametrize(
+    ("style", "sentences"),
+    [(ManualStyle.GOTHIC, 62), (ManualStyle.MODERN, 46), (ManualStyle.PRINT, 66)],
+)
+def test_a_chapter_that_fills_its_last_page_adds_no_empty_page(
+    style: ManualStyle, sentences: int
+) -> None:
+    """A description long enough that the columns fill the chapter's last page
+    to the bottom (the counts were found by sweeping each style): the closing
+    rule used to be an <hr> after the columns, which then moved alone to an
+    otherwise empty page. Every page after the contents holds body text."""
+    _weasyprint()
+    sentence = "Marker the keep stands above the mist and the road bends toward it. "
+    export = make_export(
+        main_items=[],
+        documents=[document(CASTLE, "Castle", description=(text(sentence * sentences),))],
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+
+    reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
+
+    for number in range(2, len(reader.pages)):
+        assert "Marker" in reader.pages[number].extract_text(), (style, number + 1)
