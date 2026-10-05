@@ -107,6 +107,21 @@ describe('view as', () => {
   });
 });
 
+describe('ignoreViewAs', () => {
+  it('leaves X-View-As out for the Room PDF routes even while a member is previewed', async () => {
+    const fetchMock = respondWith('{}');
+
+    setViewAsUser('user-2');
+    try {
+      await apiFetch('/rooms/room-1/exports', { ignoreViewAs: true });
+    } finally {
+      setViewAsUser(null);
+    }
+
+    expect(callInit(fetchMock).headers.has('X-View-As')).toBe(false);
+  });
+});
+
 describe('authorization', () => {
   it('attaches the session token as a Bearer header', async () => {
     signedIn('a-real-looking-jwt');

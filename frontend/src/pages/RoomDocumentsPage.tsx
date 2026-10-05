@@ -26,6 +26,7 @@ import { DocumentCard } from '../components/DocumentCard';
 import { CreateDocumentModal } from '../components/CreateDocumentModal';
 import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
+import { RoomPdfExports } from '../components/pdf/RoomPdfExports';
 import { RoomTitleActions } from '../components/RoomTitleActions';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { TagFilter } from '../components/TagFilter';
@@ -168,6 +169,8 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             />
           )}
         </Group>
+        {/* The user's PDFs still being made or not yet taken (spec 23b); not while previewing as a member. */}
+        {!readOnly && <RoomPdfExports roomId={roomId} userId={currentUserId} />}
         {/* A round floating "+" at the bottom right, always within reach. */}
         {canCreateDocument && (
           <Affix position={{ bottom: 24, right: 24 }} zIndex={150}>
