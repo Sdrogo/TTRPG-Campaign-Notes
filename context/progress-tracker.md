@@ -78,9 +78,12 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   files in `exports/` removed after 24 hours through `storage_cleanup`, stuck
   jobs failed by a sweep and at startup. Details in `architecture.md` → Room
   PDF, layout and typesetting → Jobs.
-- **Migration `d9a4f1c7e3b5`: not applied anywhere yet.** Apply it to staging
-  by hand before this PR merges (`.env.dev` and `.env.staging` point at the same
-  Supabase project), and to production before the release that ships it.
+- **Migration `d9a4f1c7e3b5`: applied to staging by hand on 2026-10-05** (with
+  `.env.staging` loaded; `alembic current` went from `c4e9a7f1d3b2` to
+  `d9a4f1c7e3b5`; checked: RLS on, the deny policy and the partial unique index
+  `uq_export_jobs_one_active` are there; `.env.dev` points at the same Supabase
+  project). **Still pending on production**: apply it there, with the owner's
+  go-ahead, before the release that ships it.
 - Choices beyond the ticket (confirm): "as player X" travels as
   `view_as_user_id` in the body, because the `X-View-As` header turns every
   write into a 403; a job is its requester's alone, the Master can't see a
