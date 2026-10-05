@@ -23,6 +23,7 @@ from app.api.mentions import router as mentions_router
 from app.api.notes import router as notes_router
 from app.api.reveals import router as reveals_router
 from app.api.rooms import router as rooms_router
+from app.api.search import router as search_router
 from app.api.tags import router as tags_router
 from app.config import Settings, settings
 from app.db.storage_cleanup import run_sweeper
@@ -72,6 +73,7 @@ app.include_router(document_files_router)
 app.include_router(characters_router)
 app.include_router(mentions_router)
 app.include_router(friends_router)
+app.include_router(search_router)
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])

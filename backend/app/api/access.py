@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.errors import http_error, translated_error
 from app.db import comments_repo, documents_repo, notes_repo, rooms_repo
 from app.domain.documents import NotOwnerError, ensure_owner
-from app.domain.models import Document, DocumentImage, Membership, Note, RoomRole
+from app.domain.models import Comment, Document, DocumentImage, Membership, Note, RoomRole
 from app.domain.visibility import (
     is_comment_visible_in_thread,
     is_document_visible,
@@ -184,13 +184,14 @@ async def get_visible_images_for_documents(
 class ContentLookup:
     """Documents, Notes and Comments of one Room looked up by id for one
     viewer: which still exist, which the viewer sees now (everything around
-    them included), and the Documents and Notes themselves for naming the
-    visible ones."""
+    them included), and the Documents, Notes and Comments themselves for
+    naming or quoting the visible ones."""
 
     existing_ids: set[uuid.UUID]
     visible_ids: set[uuid.UUID]
     documents: dict[uuid.UUID, Document]
     notes: dict[uuid.UUID, Note]
+    comments: dict[uuid.UUID, Comment]
 
 
 async def lookup_content(
@@ -205,7 +206,8 @@ async def lookup_content(
     Document they see, then by its own visibility, a Comment through its
     whole parent chain (spec 19). A fixed number of queries whatever the
     number of ids (plus one per level of the deepest Comment branch). Used by
-    the Reveal badge and the visibility history (spec 22)."""
+    the Reveal badge, the visibility history (spec 22) and search (spec
+    21)."""
     notes = await notes_repo.get_notes_by_ids(session, list(note_ids))
     comments = await comments_repo.get_comments_with_ancestors(session, list(comment_ids))
     wanted_documents = (
@@ -227,6 +229,7 @@ async def lookup_content(
     existing = set(by_id)
     visible = set(visible_document_ids)
     room_notes = {note.id: note for note in notes if note.document_id in by_id}
+    room_comments: dict[uuid.UUID, Comment] = {}
     for note in room_notes.values():
         existing.add(note.id)
         if note.document_id in visible_document_ids and is_note_visible(
@@ -238,6 +241,7 @@ async def lookup_content(
         if comment is None or comment.document_id not in by_id:
             continue
         existing.add(comment_id)
+        room_comments[comment_id] = comment
         if comment.document_id in visible_document_ids and is_comment_visible_in_thread(
             comment, comments, comment_grants, viewer.user_id, viewer.role
         ):
@@ -247,4 +251,5 @@ async def lookup_content(
         visible_ids=visible,
         documents=by_id,
         notes=room_notes,
+        comments=room_comments,
     )
