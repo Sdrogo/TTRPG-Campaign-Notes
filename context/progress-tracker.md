@@ -9,14 +9,27 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-05)
 
+**Release of 2026-10-05 (staging → main, features 21, 22b follow-ups, 23 and 23b)**:
+both pending migrations were applied to the **production** database by hand
+before the release, with the product owner's go-ahead (`.env` loaded,
+`alembic upgrade head`: `b8d2f6a4c9e1` → `c4e9a7f1d3b2` full-text search →
+`d9a4f1c7e3b5` export jobs; checked: RLS on `export_jobs` with the deny policy,
+its partial unique index, `unaccent` present). The live database is at
+`d9a4f1c7e3b5`; no pending migrations. **The Room PDF needs the Docker backend
+in production**: the product owner created the Docker web service
+`exlibri-prod-docker.onrender.com` and will point the production frontend's
+`VITE_API_BASE_URL` (Vercel) at it after the merge; until then the production
+backend (Render's native runtime, no Pango) answers the PDF routes but its
+jobs fail. When last checked from outside (2026-10-05) the new service did
+not answer `/health` within 55 seconds: confirm it is up before switching.
+
 **Feature 21 (full-text search) is built**: 21_1 and 21_2 in one PR into
 `staging`. It carries **migration `c4e9a7f1d3b2`** (the `unaccent`
 extension, a text search configuration and generated search vectors with GIN
 indexes on `documents`, `document_notes`, `posts`, `tags`), **applied to the
 staging database by hand on 2026-10-05** (from a worktree of the PR's branch,
 with `.env.staging` loaded; `alembic current` read `c4e9a7f1d3b2`, it was at
-`b8d2f6a4c9e1`) and **still pending on production**: apply it there before the
-release that ships it. Backend 827
+`b8d2f6a4c9e1`) and, since the release above, on production too. Backend 827
 tests, frontend 1359 tests, both at 100% coverage.
 
 Staging released to `main` with PR #73 (specs 20_1/20_2, PRs #68 to #72).
@@ -125,8 +138,8 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   `.env.staging` loaded; `alembic current` went from `c4e9a7f1d3b2` to
   `d9a4f1c7e3b5`; checked: RLS on, the deny policy and the partial unique index
   `uq_export_jobs_one_active` are there; `.env.dev` points at the same Supabase
-  project). **Still pending on production**: apply it there, with the owner's
-  go-ahead, before the release that ships it.
+  project). Applied to production on the same day, before the release (see Current
+  Status).
 - Choices beyond the ticket (confirm): "as player X" travels as
   `view_as_user_id` in the body, because the `X-View-As` header turns every
   write into a 403; a job is its requester's alone, the Master can't see a
