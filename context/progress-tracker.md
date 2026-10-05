@@ -76,13 +76,24 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   the backend moves to a **Docker image** (`backend/Dockerfile`,
   `.dockerignore`); the PDF itself (23b_1b templates and styles, 23b_1c jobs
   and routes) comes next. `weasyprint` and `pypdf` are now dependencies.
-- **Nothing changes in production or staging by merging this**: the Render
-  services still run on the native runtime until their settings are switched
-  by hand. To switch (staging first): service → Settings → Runtime = Docker,
-  Root Directory `backend`, Dockerfile path `Dockerfile`, **Docker Command
-  empty**, keep the environment variables; then check `/health` and a Document
-  list. Production later, with the release that ships the PDF. If a deploy
-  fails, switching the runtime back to Python restores the old setup.
+- **Nothing changes in production or staging by merging this**: Render
+  ignores the Dockerfile until a service uses the Docker runtime. **Correction
+  (2026-10-05): Render does not let you change an existing service's runtime
+  from the dashboard** (its changelog says so; only the API or a Blueprint
+  can, and which field the API takes is unverified), so the first plan
+  ("Settings → Runtime") was wrong. Staging got a **new Docker web service**
+  instead: Language Docker, Dockerfile path `backend/Dockerfile`, Docker
+  Command empty, the same environment variables as the old staging service
+  (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `STORAGE_BUCKET`,
+  `CORS_ORIGINS`, `CORS_ORIGIN_REGEX`), at `https://ttrpg-campaign-notes-2.onrender.com`
+  (`/health` answers 200). To finish: point the Vercel Preview variable
+  `VITE_API_BASE_URL` of the `staging` branch at it and redeploy the
+  frontend (Vite inlines it at build time), try the app, then retire the old
+  staging service.
+- **Production is still open**: a new service means a new URL (the production
+  frontend's `VITE_API_BASE_URL`, possibly a custom domain), so decide before
+  the release that ships the PDF: new service plus domain swap, or the Render
+  API on the existing service (try it on staging first).
 - CI: a `Backend image` job (build, import the app, render a PDF inside the
   image, no `.env*` in `/app`) and a rendering test that fails in CI when
   Pango is missing. Not run locally: no Docker and no GTK on the product
