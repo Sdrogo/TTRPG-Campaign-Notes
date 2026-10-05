@@ -44,6 +44,7 @@ from app.api.reveals import (
     reveal_error,
 )
 from app.api.validation import UniqueIds
+from app.api.versions import record_version
 from app.auth.dependencies import CurrentUserDep
 from app.db import (
     comments_repo,
@@ -284,6 +285,15 @@ async def create_document(
         MentionSource(plan.document.id, MentionSourceKind.DESCRIPTION),
         plan.document.description,
     )
+    await record_version(
+        session,
+        "document",
+        plan.document.id,
+        plan.document.id,
+        requester_id,
+        plan.document.name,
+        plan.document.description,
+    )
 
     return await _to_response(session, plan.document, membership)
 
@@ -445,6 +455,10 @@ async def update_document(
     if body.description is not None:
         await index_mentions(
             session, MentionSource(document_id, MentionSourceKind.DESCRIPTION), description
+        )
+    if body.name is not None or body.description is not None:
+        await record_version(
+            session, "document", document_id, document_id, requester_id, new_name, description
         )
 
     if body.tag_ids is not None:

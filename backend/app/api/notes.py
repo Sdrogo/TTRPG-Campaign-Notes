@@ -31,6 +31,7 @@ from app.api.reveals import (
     reveal_error,
 )
 from app.api.validation import UniqueIds
+from app.api.versions import record_version
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, notes_repo, rooms_repo
 from app.db.session import SessionDep
@@ -259,6 +260,9 @@ async def create_note(
         MentionSource(document_id, MentionSourceKind.NOTE, note_id=note.id),
         note.description,
     )
+    await record_version(
+        session, "note", note.id, document_id, requester_id, note.title, note.description
+    )
     notes = await get_document_notes(session, document_id, membership, owner_ids)
     if not any(visible.id == note.id for visible in notes.visible):
         return None
@@ -356,6 +360,16 @@ async def update_note(
         await index_mentions(
             session,
             MentionSource(document_id, MentionSourceKind.NOTE, note_id=note_id),
+            plan.note.description,
+        )
+    if body.title is not None or body.description is not None:
+        await record_version(
+            session,
+            "note",
+            note_id,
+            document_id,
+            requester_id,
+            plan.note.title,
             plan.note.description,
         )
     if body.selective_user_ids is not None:
