@@ -12,9 +12,11 @@ step-by-step notes) is in
 **Feature 21 (full-text search) is built**: 21_1 and 21_2 in one PR into
 `staging`. It carries **migration `c4e9a7f1d3b2`** (the `unaccent`
 extension, a text search configuration and generated search vectors with GIN
-indexes on `documents`, `document_notes`, `posts`, `tags`), **pending on both
-the staging and the production database**: apply it to staging before the PR
-is merged, and to production before the release that ships it. Backend 827
+indexes on `documents`, `document_notes`, `posts`, `tags`), **applied to the
+staging database by hand on 2026-10-05** (from a worktree of the PR's branch,
+with `.env.staging` loaded; `alembic current` read `c4e9a7f1d3b2`, it was at
+`b8d2f6a4c9e1`) and **still pending on production**: apply it there before the
+release that ships it. Backend 827
 tests, frontend 1359 tests, both at 100% coverage.
 
 Staging released to `main` with PR #73 (specs 20_1/20_2, PRs #68 to #72).
@@ -79,7 +81,8 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   leaves Tag results out; `limit` (up to 50) backs "show more"; offsets are
   in UTF-16 code units so the browser slices them as is; a Tag of another
   Room in the filter is 404.
-- Migration `c4e9a7f1d3b2` (pending on both databases). Backend 827 tests,
+- Migration `c4e9a7f1d3b2` (applied to staging 2026-10-05, pending on
+  production). Backend 827 tests,
   100% coverage.
 
 ### View as a member (specs 22b_1 and 22b_2, 2026-10-03)
