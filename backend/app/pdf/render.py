@@ -88,7 +88,11 @@ def _fetcher(image_urls: Collection[str]) -> Any:
                 raise ValueError(f"URL not allowed in the Room PDF: {url}")
             return super().fetch(url, headers)
 
-    return ManualFetcher(timeout=20, allowed_protocols=("file", "https", "data"))
+    # No redirects: `fetch` checks the URL it is given, so following one
+    # would let an allowed link lead to a host that isn't.
+    return ManualFetcher(
+        timeout=20, allowed_protocols=("file", "https", "data"), allow_redirects=False
+    )
 
 
 def render_manual_pdf(

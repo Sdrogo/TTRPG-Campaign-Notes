@@ -59,6 +59,8 @@ a { color: inherit; text-decoration: none; }
 .comments { margin-top: 6mm; }
 .comment { margin: 0 0 3mm; break-inside: avoid; }
 .comment-meta { margin-bottom: 1mm; }
+/* The indent grows to depth 3 and stops there on purpose (the template caps
+   the class): a deep thread stays inside the page. */
 .comment.depth-1 { margin-left: 6mm; }
 .comment.depth-2 { margin-left: 12mm; }
 .comment.depth-3 { margin-left: 18mm; }

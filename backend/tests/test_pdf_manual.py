@@ -10,6 +10,7 @@ import os
 import re
 from dataclasses import replace
 from typing import Any
+from urllib.request import HTTPRedirectHandler
 
 import pytest
 from manual_fixtures import (
@@ -262,3 +263,5 @@ def test_the_fetcher_refuses_what_the_renderer_may_not_read(tmp_path: Any) -> No
         with pytest.raises(ValueError, match="not allowed"):
             fetcher.fetch(url)
     assert fetcher.fetch((ASSETS_DIR / "styles" / "base.css").as_uri()).read()
+    # An allowed link must not be able to lead elsewhere: redirects aren't followed.
+    assert not any(isinstance(h, HTTPRedirectHandler) for h in fetcher.handlers)
