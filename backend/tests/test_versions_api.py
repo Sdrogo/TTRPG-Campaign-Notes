@@ -5,14 +5,17 @@ who may read and restore it, and that a hidden Note's history stays hidden
 import uuid
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db import versions_repo
 from app.db.models import DocumentVersionRow, NoteVersionRow
+from app.domain.versions import Version
 from app.main import app
 
 
@@ -526,3 +529,27 @@ async def test_a_note_version_of_another_note_is_404_and_a_deleted_note_takes_it
         .where(NoteVersionRow.note_id == uuid.UUID(note_id))
     )
     assert count == 0
+
+
+async def test_an_owner_reads_one_note_version_in_full(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    note_id = await _note(client, room, document_id, room.owner)
+    url = room.note_versions_url(document_id, note_id)
+    listed = (await client.get(url, headers=room.owner.headers)).json()[0]
+
+    response = await client.get(f"{url}/{listed['id']}", headers=room.owner.headers)
+
+    assert response.status_code == 200
+    assert response.json()["title"] == "Secret door"
+    assert response.json()["description"] == "Behind the bookcase."
+
+
+async def test_updating_a_version_that_is_gone_raises(db_session: AsyncSession) -> None:
+    gone = Version(uuid.uuid4(), "T", "D", uuid.uuid4(), datetime.now(UTC), datetime.now(UTC))
+
+    for subject in ("document", "note"):
+        with pytest.raises(LookupError):
+            await versions_repo.update_version(db_session, subject, gone)
