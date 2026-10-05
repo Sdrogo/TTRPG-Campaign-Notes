@@ -417,7 +417,7 @@ async def test_a_job_is_its_requesters_alone_and_the_list_shows_only_theirs(
     theirs = (await _start(client, room, room.other)).json()
 
     others_view = await _status(client, room, mine["id"], room.other)
-    wrong_room = await client.get(f"{elsewhere.url}/exports/{mine['id']}", headers=room.master)
+    wrong_room = await client.get(f"{elsewhere.url}/exports/{mine['id']}", headers=elsewhere.master)
     unknown = await _status(client, room, str(uuid.uuid4()))
     listed = (await client.get(f"{room.url}/exports", headers=room.player)).json()
     empty = (await client.get(f"{room.url}/exports", headers=room.master)).json()
