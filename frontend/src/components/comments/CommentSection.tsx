@@ -40,6 +40,7 @@ import { findMember } from '../../lib/members';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import type { Document, DocumentVisibility } from '../../types/document';
 import type { BranchState, Comment, CommentFilters, CommentNode, PromotionTarget } from '../../types/comment';
+import { revealAnchor } from '../../lib/anchors';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
@@ -128,9 +129,9 @@ export function CommentSection({
     saveComment.isPending && savingId === undefined
       ? (saveComment.variables?.values.parentId ?? null)
       : undefined;
-  // `#comment-<id>`, where a "Mentioned in" entry leads (spec 20): once the
-  // Thread loads, every branch above that Comment opens and it scrolls into
-  // view, once per anchor.
+  // `#comment-<id>`, where a "Mentioned in" entry (spec 20) or a search
+  // result (spec 21) leads: once the Thread loads, every branch above that
+  // Comment opens and it scrolls into view and lights up, once per anchor.
   const { hash } = useLocation();
   const anchoredId = hash.startsWith(COMMENT_ANCHOR) ? hash.slice(COMMENT_ANCHOR.length) : null;
   const [reachedAnchor, setReachedAnchor] = useState<string | null>(null);
@@ -146,9 +147,7 @@ export function CommentSection({
   }, [anchoredId, reachedAnchor, byId]);
   useEffect(() => {
     if (reachedAnchor) {
-      window.document
-        .getElementById(`${COMMENT_ANCHOR.slice(1)}${reachedAnchor}`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      revealAnchor(`${COMMENT_ANCHOR.slice(1)}${reachedAnchor}`);
     }
   }, [reachedAnchor]);
   const setBranch = (commentId: string, state: BranchState) =>

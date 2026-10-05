@@ -494,6 +494,28 @@
     "otherTags": "Other Tags",
     "empty": "No Tags in this Room."
   },
+  "search": {
+    "open": "Search",
+    "title": "Search this Room",
+    "inputLabel": "Search this Room",
+    "placeholder": "Documents, Notes, Comments, Tags…",
+    "hint": "Type at least 2 letters.",
+    "loading": "Searching",
+    "resultsLabel": "Results",
+    "showMore": "Show more",
+    "tagFilter": "Filter by Tag",
+    "inDocument": "in {{name}}",
+    "commentOn": "Comment on {{name}}",
+    "kinds": {
+      "all": "All"
+    },
+    "groups": {
+      "document": "Documents",
+      "note": "Notes",
+      "comment": "Comments",
+      "tag": "Tags"
+    }
+  },
   "friendLink": {
     "signInRequired": "Sign in to send the friend request.",
     "sent": "Friend request sent to {{name}}.",
