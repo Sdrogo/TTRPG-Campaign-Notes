@@ -53,7 +53,8 @@ interface SearchSpotlightProps {
  * Tag, and the results grouped by kind with the matched words marked. Arrow
  * keys move through the results and Enter opens one; a click does too. Each
  * leads to the exact place (`searchHitHref`). "Show more" on a group narrows
- * the search to that kind and asks for more of it. Full screen on a phone.
+ * the search to that kind and asks for more of it, until the query, the kind
+ * or the Tags change; the kind stays chosen, as its chip shows. Full screen on a phone.
  * The backend decides what the viewer may find, so nothing is filtered here.
  */
 export function SearchSpotlight({ roomId, opened, onClose }: SearchSpotlightProps) {
@@ -175,6 +176,7 @@ export function SearchSpotlight({ roomId, opened, onClose }: SearchSpotlightProp
           value={query}
           onChange={(event) => {
             setQuery(event.currentTarget.value);
+            setLimit(RESULTS_PER_KIND);
             setActive(0);
           }}
           onKeyDown={onKeyDown}
@@ -206,6 +208,7 @@ export function SearchSpotlight({ roomId, opened, onClose }: SearchSpotlightProp
           value={tagIds}
           onChange={(next) => {
             setTagIds(next);
+            setLimit(RESULTS_PER_KIND);
             setActive(0);
           }}
           placeholder={tagIds.length === 0 ? t('search.tagFilter') : undefined}

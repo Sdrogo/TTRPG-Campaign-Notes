@@ -193,6 +193,27 @@ describe('SearchSpotlight', () => {
     await waitFor(() =>
       expect(searchCalls()).toContain('/rooms/room-1/search?q=drago&limit=10&tag=tag-1'),
     );
+
+    // A new query or Tag filter asks for the usual number again, in the kind
+    // still chosen.
+    const base = '/rooms/room-1/search?q=';
+    await user.click(screen.getByRole('button', { name: 'Mostra altri' }));
+    await waitFor(() =>
+      expect(searchCalls()).toContain(`${base}drago&limit=50&kind=document&tag=tag-1`),
+    );
+    await user.type(searchInput(), 'n');
+    await waitFor(() =>
+      expect(searchCalls()).toContain(`${base}dragon&limit=10&kind=document&tag=tag-1`),
+    );
+    await user.click(screen.getByRole('button', { name: 'Mostra altri' }));
+    await waitFor(() =>
+      expect(searchCalls()).toContain(`${base}dragon&limit=50&kind=document&tag=tag-1`),
+    );
+    await user.click(screen.getByRole('combobox', { name: 'Filtra per Tag' }));
+    await user.click(await screen.findByRole('option', { name: 'PNG' }));
+    await waitFor(() =>
+      expect(searchCalls()).toContain(`${base}dragon&limit=10&kind=document`),
+    );
   });
 
   it('shows a loader until the first results arrive', async () => {
