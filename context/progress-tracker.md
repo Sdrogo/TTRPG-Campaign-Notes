@@ -69,6 +69,16 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
   its three entry points), 100% coverage; `tsc`, lint and build clean.
 
+### Room export, Markdown escaping (23_3, 2026-10-05)
+
+- Review finding on PR #93: names written into Markdown headings, links, list
+  items and bold runs (Room, Tags, Documents, Notes, files, members,
+  Characters, mention names) are now escaped and kept on one line
+  (`export.py::_md`), so a Document called `A [B]` can't break its link.
+  Descriptions and Comment bodies are left as written. The other half of the
+  finding, English labels in the Markdown, stays as decided (see below).
+  1 new domain test.
+
 ### Room export, backend (spec 23_1, 2026-10-05)
 
 - `GET /rooms/{id}/export?format=json|md&tag=…`: the Room as a downloadable

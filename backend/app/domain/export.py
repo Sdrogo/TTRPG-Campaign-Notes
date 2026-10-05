@@ -530,6 +530,16 @@ def _json_document(document: ExportDocument) -> dict[str, Any]:
 # --- Markdown ----------------------------------------------------------------
 
 _BLANK_RUN = re.compile(r"\n{3,}")
+_MARKDOWN_SPECIAL = re.compile(r"([\\`*_\[\]<>])")
+
+
+def _md(name: str) -> str:
+    """A name written into a heading, a link or a bold run: on one line, with
+    the characters Markdown would read as syntax escaped, so a Document called
+    `A [B]` or `x*y` can't break its own link or heading. Descriptions and
+    Comment bodies aren't passed through here: they are the author's own
+    prose."""
+    return _MARKDOWN_SPECIAL.sub(r"\\\1", " ".join(name.split()))
 
 
 def _plain(spans: Sequence[Span], exported: Collection[uuid.UUID]) -> str:
@@ -542,14 +552,14 @@ def _plain(spans: Sequence[Span], exported: Collection[uuid.UUID]) -> str:
             parts.append(span.text)
         elif span.kind is MentionKind.DOCUMENT:
             parts.append(
-                f"[{span.name}](#doc-{span.target_id})"
+                f"[{_md(span.name)}](#doc-{span.target_id})"
                 if span.target_id in exported
-                else f"#{span.name}"
+                else f"#{_md(span.name)}"
             )
         elif span.kind is MentionKind.TAG:
-            parts.append(f"[#{span.name}](#tag-{span.target_id})")
+            parts.append(f"[#{_md(span.name)}](#tag-{span.target_id})")
         else:
-            parts.append(f"@{span.name}")
+            parts.append(f"@{_md(span.name)}")
     return "".join(parts)
 
 
@@ -573,7 +583,7 @@ def _group_documents(export: Export) -> list[tuple[str, list[ExportDocument]]]:
             continue
         members = [d for d in export.documents if all(t in d.tag_ids for t in item)]
         matched.update(d.id for d in members)
-        groups.append((" + ".join(tag_names[tag_id] for tag_id in item), members))
+        groups.append((" + ".join(_md(tag_names[tag_id]) for tag_id in item), members))
     rest = [d for d in export.documents if d.id not in matched]
     groups.append((_OTHER_DOCUMENTS if groups else _DOCUMENTS, rest))
     return [(title, docs) for title, docs in groups if docs]
@@ -588,10 +598,10 @@ def render_markdown(export: Export) -> str:
     names = {m.id: m.name or UNKNOWN_MEMBER for m in export.members}
     exported = {d.id for d in export.documents}
     doc_names = export.visible_documents
-    lines: list[str] = [f"# {export.room_name}", ""]
+    lines: list[str] = [f"# {_md(export.room_name)}", ""]
     meta = []
     if export.game_system:
-        meta.append(export.game_system)
+        meta.append(_md(export.game_system))
     meta.append(f"Exported {export.generated_at:%Y-%m-%d}")
     lines += [" · ".join(meta), ""]
     lines += [
@@ -601,14 +611,14 @@ def render_markdown(export: Export) -> str:
     ]
     if export.tag_filter:
         tag_names = {t.id: t.name for t in export.tags}
-        shown = ", ".join(tag_names.get(tag_id, str(tag_id)) for tag_id in export.tag_filter)
+        shown = ", ".join(_md(tag_names.get(tag_id, str(tag_id))) for tag_id in export.tag_filter)
         lines += [f"Only Documents tagged: {shown}", ""]
 
     if export.tags:
         lines += ["## Tags", ""]
         for tag in export.tags:
-            category = f" ({tag.category})" if tag.category else ""
-            lines.append(f'- <a id="tag-{tag.id}"></a>{tag.name}{category}')
+            category = f" ({_md(tag.category)})" if tag.category else ""
+            lines.append(f'- <a id="tag-{tag.id}"></a>{_md(tag.name)}{category}')
         lines.append("")
 
     written: set[uuid.UUID] = set()
@@ -616,7 +626,7 @@ def render_markdown(export: Export) -> str:
         lines += [f"## {title}", ""]
         for document in documents:
             if document.id in written:
-                lines += [f"- [{document.name}](#doc-{document.id})", ""]
+                lines += [f"- [{_md(document.name)}](#doc-{document.id})", ""]
                 continue
             written.add(document.id)
             lines += _markdown_document(document, export, names, exported, doc_names)
@@ -633,20 +643,20 @@ def _markdown_document(
     """One Document's section: heading with its anchor, facts, description,
     images, files, Notes and the Comment thread."""
     tag_names = {t.id: t.name for t in export.tags}
-    lines = [f'### <a id="doc-{document.id}"></a>{document.name}', ""]
+    lines = [f'### <a id="doc-{document.id}"></a>{_md(document.name)}', ""]
     facts = [f"Visibility: {document.visibility.value}"]
     if document.tag_ids:
-        facts.append("Tags: " + ", ".join(tag_names.get(t, str(t)) for t in document.tag_ids))
+        facts.append("Tags: " + ", ".join(_md(tag_names.get(t, str(t))) for t in document.tag_ids))
     if document.owner_ids:
         facts.append(
-            "Owners: " + ", ".join(names.get(o, UNKNOWN_MEMBER) for o in document.owner_ids)
+            "Owners: " + ", ".join(_md(names.get(o, UNKNOWN_MEMBER)) for o in document.owner_ids)
         )
     if document.played_by is not None:
-        facts.append(f"Played by: {names.get(document.played_by, UNKNOWN_MEMBER)}")
+        facts.append(f"Played by: {_md(names.get(document.played_by, UNKNOWN_MEMBER))}")
     if document.selective_user_ids:
         facts.append(
             "Shared with: "
-            + ", ".join(names.get(u, UNKNOWN_MEMBER) for u in document.selective_user_ids)
+            + ", ".join(_md(names.get(u, UNKNOWN_MEMBER)) for u in document.selective_user_ids)
         )
     lines += [f"- {fact}" for fact in facts] + [""]
     description = _plain(document.description, exported).strip()
@@ -657,11 +667,11 @@ def _markdown_document(
         lines += [f"- ![image]({image.url})" for image in document.images] + [""]
     if document.files:
         lines += ["**Files**", ""]
-        lines += [f"- [{f.name}]({f.url})" for f in document.files] + [""]
+        lines += [f"- [{_md(f.name)}]({f.url})" for f in document.files] + [""]
     if document.notes:
         lines += ["**Notes**", ""]
         for note in document.notes:
-            lines += [f"#### {note.title}", ""]
+            lines += [f"#### {_md(note.title)}", ""]
             text = _plain(note.description, exported).strip()
             if text:
                 lines += [text, ""]
@@ -689,9 +699,9 @@ def _markdown_thread(
 
     def write(parent: uuid.UUID | None, depth: int) -> None:
         for comment in children.get(parent, []):
-            author = names.get(comment.author_id, UNKNOWN_MEMBER)
+            author = _md(names.get(comment.author_id, UNKNOWN_MEMBER))
             if comment.as_character_id is not None and comment.as_character_id in doc_names:
-                author = f"{doc_names[comment.as_character_id]} (played by {author})"
+                author = f"{_md(doc_names[comment.as_character_id])} (played by {author})"
             body = "_(deleted)_" if comment.deleted else _plain(comment.body, exported).strip()
             indent = "  " * depth
             head = f"{indent}- **{author}** ({comment.created_at:%Y-%m-%d}): "

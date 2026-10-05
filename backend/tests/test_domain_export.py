@@ -552,6 +552,54 @@ def test_markdown_never_has_a_run_of_blank_lines_and_ends_with_one_newline() -> 
     assert text.endswith("\n") and not text.endswith("\n\n")
 
 
+def test_markdown_escapes_names_so_they_cannot_break_headings_or_links() -> None:
+    # Review of PR #93: a name with brackets, emphasis marks or a line break
+    # is written escaped and on one line wherever it becomes Markdown syntax.
+    nasty = "A [B]* _c_\nd <e> \\f"
+    safe = "A \\[B\\]\\* \\_c\\_ d \\<e\\> \\\\f"
+    tags = [Tag(NPC, ROOM_ID, nasty, nasty, 0)]
+    link = mention_token(MentionKind.DOCUMENT, CASTLE, nasty)
+    tag_link = mention_token(MentionKind.TAG, NPC, nasty)
+    source = _castle(
+        document=_document(CASTLE, nasty, description=f"{link} {tag_link}", played_by=ALICE),
+        tag_ids=[NPC],
+        files=[replace(_file(1), display_name=nasty)],
+        notes=[_note(1, nasty, DocumentVisibility.ROOM)],
+        comments=[_comment(1, ALICE, "hi", as_document=CASTLE)],
+    )
+    room = Room(
+        id=ROOM_ID, name=nasty, game_system=nasty, status=RoomStatus.ACTIVE, created_by=MASTER
+    )
+    members = [_member(MASTER, RoomRole.MASTER, nasty), _member(ALICE, RoomRole.PLAYER, nasty)]
+
+    text = render_markdown(
+        _export(
+            MASTER,
+            [source],
+            room=room,
+            tags=tags,
+            main_items=[(NPC,)],
+            members=members,
+            tag_filter=[NPC],
+            file_urls={"files/1.pdf": "https://x/f1"},
+            visible_documents={CASTLE: nasty},
+        )
+    )
+
+    assert f"# {safe}\n\n{safe} · Exported" in text
+    assert f"Only Documents tagged: {safe}" in text
+    assert f"</a>{safe} ({safe})" in text
+    assert f"## {safe}\n" in text
+    assert f'### <a id="doc-{CASTLE}"></a>{safe}\n' in text
+    assert f"- Tags: {safe}" in text
+    assert f"- Played by: {safe}" in text
+    assert f"[{safe}](https://x/f1)" in text
+    assert f"#### {safe}\n" in text
+    assert f"[{safe}](#doc-{CASTLE}) [#{safe}](#tag-{NPC})" in text
+    assert f"**{safe} (played by {safe})**" in text
+    assert "A [B]" not in text
+
+
 # --- file name ---------------------------------------------------------------
 
 
