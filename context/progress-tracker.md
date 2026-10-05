@@ -90,6 +90,10 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   capped at 50 MB in all and added in the manual's order; one render at a time
   per process; `GET .../exports` is new (the Room page lists what isn't
   downloaded yet).
+- Review fixes (2026-10-05): `mark_done` only moves a running job, so a PDF finished
+  after its Room was deleted, or after the sweep failed the job, is removed from
+  Storage instead of orphaned, and a failed job isn't revived; the single-process
+  assumption of the startup `interrupted` sweep is now written down.
 - Not run locally: the integration tests need the new table and the only
   databases on this machine are production and the staging/dev project, so
   CI is their first run. Non-database tests (media, options, sweepers,

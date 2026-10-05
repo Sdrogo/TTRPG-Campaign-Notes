@@ -87,18 +87,21 @@ async def mark_running(session: AsyncSession, job_id: uuid.UUID) -> None:
     """The background task has picked the job up."""
     await session.execute(
         update(ExportJobRow)
-        .where(ExportJobRow.id == job_id)
+        .where(ExportJobRow.id == job_id, ExportJobRow.status == ExportStatus.QUEUED.value)
         .values(status=ExportStatus.RUNNING.value)
     )
 
 
 async def mark_done(
     session: AsyncSession, job_id: uuid.UUID, storage_path: str, finished_at: datetime
-) -> None:
-    """The PDF is in Storage at `storage_path`."""
-    await session.execute(
+) -> bool:
+    """The PDF is in Storage at `storage_path`. Only a running job becomes
+    done: False, with nothing written, when the job is gone (its Room was
+    deleted meanwhile) or was already failed (the sweep took it for lost), and
+    the caller must then remove the file it uploaded."""
+    result = await session.execute(
         update(ExportJobRow)
-        .where(ExportJobRow.id == job_id)
+        .where(ExportJobRow.id == job_id, ExportJobRow.status == ExportStatus.RUNNING.value)
         .values(
             status=ExportStatus.DONE.value,
             storage_path=storage_path,
@@ -106,15 +109,20 @@ async def mark_done(
             finished_at=finished_at,
         )
     )
+    return bool(result.rowcount)  # type: ignore[attr-defined]
 
 
 async def mark_failed(
     session: AsyncSession, job_id: uuid.UUID, error: str, finished_at: datetime
 ) -> None:
-    """The job gave up; `error` is a short internal reason, never shown raw."""
+    """The job gave up; `error` is a short internal reason, never shown raw. A
+    job that already finished keeps its outcome."""
     await session.execute(
         update(ExportJobRow)
-        .where(ExportJobRow.id == job_id)
+        .where(
+            ExportJobRow.id == job_id,
+            ExportJobRow.status.in_([status.value for status in ACTIVE_STATUSES]),
+        )
         .values(status=ExportStatus.FAILED.value, error=error[:200], finished_at=finished_at)
     )
 

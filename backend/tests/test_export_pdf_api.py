@@ -798,3 +798,61 @@ async def test_a_job_that_cannot_even_be_marked_failed_is_only_logged(
 
     assert started.status_code == 202  # nothing escaped the background task
     assert "Could not mark Room PDF" in caplog.text
+
+
+async def test_a_room_deleted_while_its_pdf_is_made_leaves_no_file_behind(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    renders: list[Render],
+    held_jobs: list[Coroutine[Any, Any, None]],
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    room = await _room(client, make_token)
+    started = (await _start(client, room)).json()
+    path = f"exports/{room.id}/{started['id']}.pdf"
+    real_upload = storage.upload
+
+    async def upload_then_delete_the_room(path: str, data: bytes, content_type: str) -> None:
+        await real_upload(path, data, content_type)
+        assert (await client.delete(room.url, headers=room.master)).status_code == 204
+
+    monkeypatch.setattr(storage, "upload", upload_then_delete_the_room)
+
+    await held_jobs.pop(0)
+
+    # The row went with the Room: nothing records the file, so it is removed.
+    assert path not in fake_storage
+    assert await export_jobs_repo.get_job(db_session, uuid.UUID(started["id"])) is None
+    assert await _cleanup_rows(db_session) == 0
+    assert "no job to record it on" in caplog.text
+
+
+async def test_a_job_the_sweep_failed_as_lost_is_not_revived_when_it_finishes(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    renders: list[Render],
+    held_jobs: list[Coroutine[Any, Any, None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    room = await _room(client, make_token)
+    started = (await _start(client, room)).json()
+    path = f"exports/{room.id}/{started['id']}.pdf"
+    real_upload = storage.upload
+
+    async def upload_after_the_sweep(path: str, data: bytes, content_type: str) -> None:
+        await export_jobs_repo.fail_active(db_session, "stale", datetime.now(UTC))
+        await real_upload(path, data, content_type)
+
+    monkeypatch.setattr(storage, "upload", upload_after_the_sweep)
+
+    await held_jobs.pop(0)
+
+    job = await _job(db_session, started["id"])
+    assert (job.status, job.error, job.storage_path) == (ExportStatus.FAILED, "stale", None)
+    assert path not in fake_storage
+    assert await _cleanup_rows(db_session) == 0

@@ -71,9 +71,17 @@ async def run_export_job(job_id: uuid.UUID) -> None:
         await storage_cleanup.record_pending_upload(path)
         await storage.upload(path, pdf, "application/pdf")
         async with session_module.independent_session() as session:
-            await storage_cleanup.confirm_upload(session, path)
-            await export_jobs_repo.mark_done(session, job.id, path, datetime.now(UTC))
-            await session.commit()
+            if await export_jobs_repo.mark_done(session, job.id, path, datetime.now(UTC)):
+                await storage_cleanup.confirm_upload(session, path)
+                await session.commit()
+            else:
+                # The Room was deleted while this ran, or the sweep failed the job
+                # as lost: nothing references the file, so it is removed (its cleanup
+                # row stays until that succeeds, for the sweep to retry).
+                logger.warning("Room PDF %s finished with no job to record it on", job.id)
+                await storage_cleanup.schedule_removal(session, [path])
+                await session.commit()
+                await session_module.run_after_commit(session)
     except ExportRefusedError:
         logger.warning("Room PDF %s refused: the requester can no longer ask for it", job_id)
         await _fail(job_id, "refused")
