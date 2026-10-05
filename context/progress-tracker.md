@@ -1054,7 +1054,8 @@ Reorganized with the product owner on 2026-10-03.
   Features 19 and 20 are done.
   - **Full-text search (spec 21)**: `21 - Full-text search`. **Done**:
     21_1 and 21_2 in one PR into `staging` (2026-10-05), migration
-    `c4e9a7f1d3b2` to apply to the staging database before merging.
+    `c4e9a7f1d3b2` applied to the staging database (2026-10-05), pending on
+    production.
   - **Reveal and visibility (spec 22)**: `22 - Reveal and visibility
     history` and `22b - View as player` (read-only preview through an
     `X-View-As` header). **Done**: 22_1, 22_2, 22b_1, 22b_2 all in PR #86,
