@@ -19,6 +19,10 @@ interface ApiFetchInit extends Omit<RequestInit, 'body'> {
   json?: unknown;
   // Multipart upload; the browser sets its own Content-Type with the boundary.
   formData?: FormData;
+  // Leaves out `X-View-As` while the Master previews a member (spec 22b). For
+  // the Room PDF's own job routes (spec 23b): a write refuses that header, and a
+  // read with it would answer as the member, whose jobs the Master doesn't own.
+  ignoreViewAs?: boolean;
 }
 
 /**
@@ -29,10 +33,10 @@ interface ApiFetchInit extends Omit<RequestInit, 'body'> {
  * Sends the UI's current language as `Accept-Language`, so the backend's
  * error text matches the flag selector rather than the browser's locale.
  * While the Master previews a Room as a member (spec 22b), sends
- * `X-View-As` too.
+ * `X-View-As` too, unless `ignoreViewAs` is set.
  */
 async function request(path: string, init: ApiFetchInit): Promise<Response> {
-  const { json, formData, ...rest } = init;
+  const { json, formData, ignoreViewAs, ...rest } = init;
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -45,7 +49,7 @@ async function request(path: string, init: ApiFetchInit): Promise<Response> {
   if (json !== undefined) {
     headers.set('Content-Type', 'application/json');
   }
-  const viewAs = viewAsUser();
+  const viewAs = ignoreViewAs ? null : viewAsUser();
   if (viewAs) {
     headers.set(VIEW_AS_HEADER, viewAs);
   }

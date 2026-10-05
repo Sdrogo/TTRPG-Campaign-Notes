@@ -226,3 +226,18 @@ export function rawHistoryEntry(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+/** A Room PDF job as `GET .../exports` sends it (spec 23b): queued unless overridden. */
+export function rawPdfJob(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'job-1',
+    status: 'queued',
+    style: 'gothic',
+    page_size: 'A4',
+    created_at: '2026-10-05T12:00:00Z',
+    finished_at: null,
+    expires_at: null,
+    download_url: null,
+    ...overrides,
+  };
+}
