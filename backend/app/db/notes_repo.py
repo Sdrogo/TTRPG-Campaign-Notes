@@ -61,6 +61,25 @@ async def list_notes_for_document(session: AsyncSession, document_id: uuid.UUID)
     return [_note_from_row(row) for row in result.scalars()]
 
 
+async def list_notes_for_documents(
+    session: AsyncSession, document_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[Note]]:
+    """`list_notes_for_document` for many Documents in one query (the Room
+    export, spec 23). A Document with none maps to an empty list; not yet
+    filtered for any viewer."""
+    by_document: dict[uuid.UUID, list[Note]] = defaultdict(list)
+    if not document_ids:
+        return by_document
+    result = await session.execute(
+        select(NoteRow)
+        .where(NoteRow.document_id.in_(document_ids))
+        .order_by(NoteRow.position, NoteRow.created_at, NoteRow.id)
+    )
+    for row in result.scalars():
+        by_document[row.document_id].append(_note_from_row(row))
+    return by_document
+
+
 async def get_notes_by_ids(session: AsyncSession, note_ids: Sequence[uuid.UUID]) -> list[Note]:
     """The Notes with these ids, in no particular order; missing ids are
     simply absent. Not yet filtered for any viewer."""

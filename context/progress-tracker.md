@@ -51,6 +51,24 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room export, backend (spec 23_1, 2026-10-05)
+
+- `GET /rooms/{id}/export?format=json|md&tag=…`: the Room as a downloadable
+  file, what the requester sees only, built once as a tree
+  (`app/domain/export.py`) and rendered as JSON (`schema_version` 1, documented
+  by `ExportJson`) or Markdown. Details in `architecture.md` → Room export.
+  Closes the Open item "Export format for Agents".
+- Choices beyond the ticket (confirm): reactions, pins, reads and Reveal
+  history are left out; a Document shows in full under its first Markdown
+  group and as a link under the others; Markdown labels are English; JSON
+  `description`/`body` are span lists (`text` and `mention`), not strings;
+  member names are exported (display name only), never emails; the file's
+  link note says "within 60 minutes" because cached signed links keep 15 to
+  60 minutes; a mention of a Document the Tag filter left out is plain
+  `#Name` in Markdown but keeps its id in JSON.
+- No migration. Backend tests: 22 domain + 13 API (dev database), 100% of the
+  two new modules. Frontend (23_2) next.
+
 ### Full-text search, frontend (spec 21_2, 2026-10-05)
 
 - A search in the top bar of every Room page (a field with its shortcut from
