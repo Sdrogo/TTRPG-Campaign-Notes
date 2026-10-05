@@ -39,8 +39,8 @@ const first = () => note();
 const second = () =>
   note({ id: 'note-2', title: 'Trappola', description: 'Un dardo.', position: 1 });
 
-function render(notes: Note[], canAdd = true) {
-  renderWithProviders(
+function render(notes: Note[], canAdd = true, route = '/') {
+  const view = renderWithProviders(
     <div data-testid="host">
       <NoteList
         roomId="room-1"
@@ -50,8 +50,9 @@ function render(notes: Note[], canAdd = true) {
         canAdd={canAdd}
       />
     </div>,
+    { route },
   );
-  return { host: screen.getByTestId('host'), user: userEvent.setup() };
+  return { host: screen.getByTestId('host'), user: userEvent.setup(), view };
 }
 
 const titles = () => screen.queryAllByRole('heading', { level: 2 }).map((h) => h.textContent);
@@ -379,5 +380,34 @@ describe('revealing a Note', () => {
     const items = screen.getAllByTestId('note-item');
     expect(within(items[0]).queryByText('Rivelato')).not.toBeInTheDocument();
     expect(within(items[1]).getByText('Rivelato')).toBeInTheDocument();
+  });
+});
+
+// Spec 21: a search result leads to `#note-<id>`.
+describe('Note anchors', () => {
+  it('scrolls to the anchored Note and lights it up, once', () => {
+    const scroll = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const { view } = render([first(), second()], true, '/rooms/room-1/documents/doc-1#note-note-2');
+
+    expect(scroll).toHaveBeenCalledTimes(1);
+    expect(scroll.mock.contexts[0]).toHaveAttribute('id', 'note-note-2');
+    expect(document.getElementById('note-note-2')).toHaveClass('anchor-flash');
+
+    // A later change to the Notes doesn't scroll back to it.
+    view.rerender(
+      <div data-testid="host">
+        <NoteList roomId="room-1" documentId="doc-1" notes={[second()]} members={members} canAdd />
+      </div>,
+    );
+    expect(scroll).toHaveBeenCalledTimes(1);
+    scroll.mockRestore();
+  });
+
+  it('ignores an anchor to a Note it was not given', () => {
+    const scroll = vi.spyOn(Element.prototype, 'scrollIntoView');
+    render([first()], true, '/rooms/room-1/documents/doc-1#note-hidden');
+
+    expect(scroll).not.toHaveBeenCalled();
+    scroll.mockRestore();
   });
 });

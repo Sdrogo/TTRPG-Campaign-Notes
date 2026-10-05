@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button, Stack } from '@mantine/core';
 import { PlusIcon } from '@phosphor-icons/react';
 import { NoteForm } from './NoteForm';
@@ -7,6 +8,7 @@ import { RevealModal } from '../RevealModal';
 import { useCreateNote, useDeleteNote, useReorderNotes, useUpdateNote } from '../../hooks/useNotes';
 import { useRevealNote, useRevealedInVisit } from '../../hooks/useReveals';
 import { useReadOnly } from '../../hooks/useViewAs';
+import { revealAnchor } from '../../lib/anchors';
 import { EMPTY_NOTE_VALUES, moveNote } from '../../lib/notes';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { noteReveal } from '../../lib/reveal';
@@ -14,6 +16,8 @@ import type { Document, DocumentVisibility } from '../../types/document';
 import type { Member } from '../../types/member';
 import type { Note } from '../../types/note';
 import { useTranslation } from 'react-i18next';
+
+const NOTE_ANCHOR = '#note-';
 
 interface NoteListProps {
   roomId: string;
@@ -38,7 +42,8 @@ interface NoteListProps {
  * it renders nothing, so a Document looks as it did before Notes existed.
  * The Master can reveal a Note not yet seen by the whole Room (spec 22).
  * While the Master previews the Room as a member (spec 22b) no Note can be
- * changed, whatever the member could do.
+ * changed, whatever the member could do. A `#note-<id>` anchor scrolls to
+ * that Note (spec 21).
  */
 export function NoteList({
   roomId,
@@ -59,6 +64,20 @@ export function NoteList({
   const revealNote = useRevealNote(roomId, documentId);
   const revealed = useRevealedInVisit(roomId, documentId);
   const readOnly = useReadOnly();
+  // `#note-<id>`, where a search result leads (spec 21): once that Note is on
+  // the page it scrolls into view and lights up, once per anchor.
+  const { hash } = useLocation();
+  const reachedAnchor = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      hash === reachedAnchor.current ||
+      !notes.some((note) => `${NOTE_ANCHOR}${note.id}` === hash)
+    ) {
+      return;
+    }
+    revealAnchor(hash.slice(1));
+    reachedAnchor.current = hash;
+  }, [hash, notes]);
 
   if (notes.length === 0 && !canAdd) {
     return null;

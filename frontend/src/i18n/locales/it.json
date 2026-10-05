@@ -494,6 +494,28 @@
     "otherTags": "Altri Tag",
     "empty": "Nessun Tag in questa Stanza."
   },
+  "search": {
+    "open": "Cerca",
+    "title": "Cerca nella Stanza",
+    "inputLabel": "Cerca nella Stanza",
+    "placeholder": "Documenti, Note, Commenti, Tag…",
+    "hint": "Scrivi almeno 2 lettere.",
+    "loading": "Ricerca in corso",
+    "resultsLabel": "Risultati",
+    "showMore": "Mostra altri",
+    "tagFilter": "Filtra per Tag",
+    "inDocument": "in {{name}}",
+    "commentOn": "Commento su {{name}}",
+    "kinds": {
+      "all": "Tutto"
+    },
+    "groups": {
+      "document": "Documenti",
+      "note": "Note",
+      "comment": "Commenti",
+      "tag": "Tag"
+    }
+  },
   "friendLink": {
     "signInRequired": "Accedi per inviare la richiesta di amicizia.",
     "sent": "Richiesta di amicizia inviata a {{name}}.",

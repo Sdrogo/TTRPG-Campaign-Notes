@@ -7,7 +7,17 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-03)
+## Current Status (2026-10-05)
+
+**Feature 21 (full-text search) is built**: 21_1 and 21_2 in one PR into
+`staging`. It carries **migration `c4e9a7f1d3b2`** (the `unaccent`
+extension, a text search configuration and generated search vectors with GIN
+indexes on `documents`, `document_notes`, `posts`, `tags`), **applied to the
+staging database by hand on 2026-10-05** (from a worktree of the PR's branch,
+with `.env.staging` loaded; `alembic current` read `c4e9a7f1d3b2`, it was at
+`b8d2f6a4c9e1`) and **still pending on production**: apply it there before the
+release that ships it. Backend 827
+tests, frontend 1359 tests, both at 100% coverage.
 
 Staging released to `main` with PR #73 (specs 20_1/20_2, PRs #68 to #72).
 Backend **754** tests at 100% coverage. The live database is at
@@ -40,6 +50,40 @@ explicitly (`architecture.md` → Local env files).
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Full-text search, frontend (spec 21_2, 2026-10-05)
+
+- A search in the top bar of every Room page (a field with its shortcut from
+  `md`, a magnifier below), opened by click, `Ctrl+K`/`⌘K` or `/`; a modal
+  (full screen on phones) with kind chips and a Tag filter, results grouped
+  by kind with the matched words marked, arrow keys and Enter, "show more"
+  per kind. A result opens the Document, the Note (`#note-<id>`, new) or the
+  Comment (`#comment-<id>`, its branch opened) on its page, or the Documents
+  list filtered by the Tag; the target lights up briefly. Details in
+  `architecture.md` → Full-text search.
+- Choices beyond the ticket: a Mantine `Modal`, since `@mantine/spotlight`
+  isn't installed; "show more" narrows the search to that kind (50 results)
+  instead of growing the group in place; `Ctrl+K` works from text fields too,
+  `/` doesn't.
+- Not seen running in a browser yet. Frontend 1359 tests, 100% coverage.
+
+### Full-text search, backend (spec 21_1, 2026-10-05)
+
+- `GET /rooms/{id}/search?q=&kind=&tag=&limit=`: accent- and case-insensitive
+  prefix match over Document names and descriptions, Notes, Comments
+  (replies included, deleted ones never) and Tag names, ranked, filtered with
+  the usual visibility functions before paging, excerpts with highlight
+  offsets built from the visible rows only. Mention tokens are indexed by
+  name. Details in `architecture.md` → Full-text search.
+- Choices beyond the ticket: a text search configuration
+  (`public.search_simple_unaccent`) instead of an `f_unaccent` wrapper, so
+  `ts_headline` marks "Città" for "citta" too; the Tag filter is AND and
+  leaves Tag results out; `limit` (up to 50) backs "show more"; offsets are
+  in UTF-16 code units so the browser slices them as is; a Tag of another
+  Room in the filter is 404.
+- Migration `c4e9a7f1d3b2` (applied to staging 2026-10-05, pending on
+  production). Backend 827 tests,
+  100% coverage.
 
 ### View as a member (specs 22b_1 and 22b_2, 2026-10-03)
 
@@ -990,6 +1034,10 @@ Reorganized with the product owner on 2026-10-03.
     from their Account page; open a friend link while signed out.
   - Spec 20, mention backlinks (deployed and migrated 2026-10-03): tokens render
     as names, "Mentioned in" hides what the viewer can't see.
+  - Spec 21, search (once migrated): in a Room with Italian and English
+    text, "citta" finds "Città", "dra" finds "Drago", a Tag name finds the
+    Tag; a Player never finds a Master-only Document, Note or Comment;
+    `Ctrl+K` opens search on every Room page; a Comment result scrolls to it.
   - Sign-in: Google, Discord and GitHub work (confirmed 2026-10-03);
     re-test a brand-new user's first sign-in.
   - UI never seen running: the Document card below `sm`, carousel arrows
@@ -1004,14 +1052,14 @@ Reorganized with the product owner on 2026-10-03.
   feature at a time, each closed with all its sub-tickets: 21 → 22 (with
   22b) → 23 (with 23b, 23c) → 24, then the two small tickets below.
   Features 19 and 20 are done.
-  - **Full-text search (spec 21)**: `21 - Full-text search` (current Room,
-    Documents/Notes/Comments/Tags, accent-insensitive prefix match,
-    visibility filtered on the server). 21_1 backend + migration, then 21_2
-    frontend. Postponed: the product owner asked for 22 first (2026-10-03).
+  - **Full-text search (spec 21)**: `21 - Full-text search`. **Done**:
+    21_1 and 21_2 in one PR into `staging` (2026-10-05), migration
+    `c4e9a7f1d3b2` applied to the staging database (2026-10-05), pending on
+    production.
   - **Reveal and visibility (spec 22)**: `22 - Reveal and visibility
     history` and `22b - View as player` (read-only preview through an
-    `X-View-As` header). **Done**: 22_1, 22_2, 22b_1, 22b_2 all in PR #86
-    (2026-10-03), awaiting review and merge into `staging`.
+    `X-View-As` header). **Done**: 22_1, 22_2, 22b_1, 22b_2 all in PR #86,
+    merged into `staging` (2026-10-03).
   - **Room export (spec 23)**: `23 - Room export` (JSON + Markdown,
     per-viewer), `23b - Room PDF manual` (WeasyPrint in a background job;
     check Render can install Pango first), `23c - Agent access tokens`

@@ -7,13 +7,15 @@ import { ViewAsBanner } from './ViewAsBanner';
 import { useViewAs } from '../hooks/useViewAs';
 import { AccountButton } from './account/AccountButton';
 import { LanguageSelector } from './LanguageSelector';
+import { SearchButton } from './search/SearchButton';
 import { GlossaryIndexDrawer } from './GlossaryIndexDrawer';
 import { useTranslation } from 'react-i18next';
 
 interface AppHeaderProps {
   /** Given on a Room-scoped page, this shows a burger toggling the Room's
-   *  Glossary/Tag index sidebar (spec `10 - UX Refinment`). Omitted elsewhere
-   *  (the Rooms list, the Account page), where there is no Room to index. */
+   *  Glossary/Tag index sidebar (spec `10 - UX Refinment`) and the Room's
+   *  search (spec 21). Omitted elsewhere (the Rooms list, the Account page),
+   *  where there is no Room to index or search. */
   roomId?: string;
   /** Given on any nested page, this shows a "back" arrow (icon only, named
    *  by `backLabel` for screen readers) before the burger. Omitted on the
@@ -42,8 +44,9 @@ function hasAppHistory(): boolean {
 /**
  * The top navigation bar shown on every signed-in page: the back arrow and,
  * on a Room page, the Glossary Index burger, on the left; the app name (also
- * back to the Rooms list) always at the exact center; on the right the
- * language flag, then the account avatar (spec 09, spec 10). It is pinned to
+ * back to the Rooms list) always at the exact center; on the right, on a Room
+ * page, the search (spec 21), then the language flag and the account avatar
+ * (spec 09, spec 10). It is pinned to
  * the top of the page (`.app-header` in `index.css`), but slides away while
  * scrolling down and comes back as soon as the scroll turns up, so a phone
  * shows more content. While the Master previews the Room as a member (spec
@@ -104,6 +107,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
           </Title>
         </UnstyledButton>
         <Group gap="xs" wrap="nowrap" justify="flex-end">
+          {roomId && <SearchButton roomId={roomId} />}
           <LanguageSelector />
           <AccountButton />
         </Group>

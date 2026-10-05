@@ -448,6 +448,20 @@ other icon set.
   entity from `requirements.md` (FR-N3/FR-N4, terms with their own
   definitions) — that remains unbuilt; this is a navigational index over
   Tags, a deliberate scope decision for this spec.
+- **Room search** (`components/search/`, 2026-10-05, spec 21): on every
+  Room page the top bar's right side starts with the search: from `md` a
+  `default` Button "Cerca" with a `Kbd` showing `Ctrl K` (`⌘ K` on Apple
+  devices), below `md` a magnifier `ActionIcon`. It opens a `Modal` ("Cerca
+  nella Stanza", full screen below `sm`) with the query field, a row of
+  `Chip`s for the kind (Tutto, Documenti, Note, Commenti, Tag) and a Tag
+  `MultiSelect`. Results are grouped under small uppercase dimmed labels,
+  each with its kind's Phosphor icon, the title in `sm` semibold, where it
+  sits ("in <Documento>", "Commento su <Documento>") and a two-line `xs`
+  excerpt; matched words are `<mark>`s in `--accent-strong` semibold on no
+  background (`.search-match`). The active result (arrows or hover) has the
+  accent's light background, like a mention suggestion. A Note or Comment
+  reached through its anchor fades from that same light background
+  (`.anchor-flash`, instant with reduced motion).
 - **Favorite image** (`DocumentImageGallery`, 2026-09-23, spec 07): an Owner
   picks the image that leads the Document — and so its card — with a heart
   `ActionIcon` at the **bottom right of the image itself**, opposite the
