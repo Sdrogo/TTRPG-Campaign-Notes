@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { setViewAsUser, viewAsUser } from '../../lib/viewAs';
 import { useReadOnly, useViewAs } from '../../hooks/useViewAs';
 import { ViewAsProvider } from '../../components/ViewAsProvider';
 import { AppHeader } from '../../components/AppHeader';
-import { rawMember } from '../fixtures';
+import { rawMember, rawRoom } from '../fixtures';
 import { renderWithProviders } from '../utils';
 
 vi.mock('../../lib/apiClient', async (importOriginal) => ({
@@ -165,5 +165,27 @@ describe('ViewAsBanner', () => {
     expect(view()).toBe('own');
     expect(where()).toBe('/rooms/room-1/documents/doc-1#comment-c1');
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('exports the Room as the member sees it, from the banner (spec 23 Decision 4)', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <ViewAsProvider>
+        <AppHeader roomId="room-1" />
+        <Probe />
+      </ViewAsProvider>,
+      { route: '/rooms/room-1/documents?as=alice' },
+    );
+    await screen.findByText('Stai vedendo la Stanza come Alice. Sola lettura.');
+    vi.mocked(apiFetch).mockImplementation((path: string) =>
+      Promise.resolve(path.endsWith('/tags') ? [] : rawRoom()),
+    );
+
+    await user.click(within(screen.getByRole('status')).getByRole('button', { name: 'Esporta' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Esporta la Stanza' })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });

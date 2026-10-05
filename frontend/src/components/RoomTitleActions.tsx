@@ -3,6 +3,7 @@ import { ActionIcon, Group, Menu, Tooltip } from '@mantine/core';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   DotsThreeVerticalIcon,
+  DownloadSimpleIcon,
   EyeIcon,
   GearIcon,
   SignOutIcon,
@@ -11,6 +12,7 @@ import {
 import { memberDisplayName } from '../lib/members';
 import { VIEW_AS_PARAM } from '../lib/viewAs';
 import type { Member } from '../types/member';
+import { ExportRoomModal } from './ExportRoomModal';
 import { InviteModal } from './InviteModal';
 import { LeaveRoomModal } from './LeaveRoomModal';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +37,8 @@ interface RoomTitleActionsProps {
 
 /**
  * The Room card's actions (setup and invite for an Administrator, setup and
- * "View as" a member (spec 22b) for the Master, leave for everyone) beside the Room's title, folded into a "⋮" that unfolds them in
+ * "View as" a member (spec 22b) for the Master, export (spec 23) and leave for
+ * everyone) beside the Room's title, folded into a "⋮" that unfolds them in
  * place when clicked (Andrea, 2026-10-03).
  */
 export function RoomTitleActions({
@@ -52,6 +55,7 @@ export function RoomTitleActions({
   const [expanded, setExpanded] = useState(false);
   const [inviteOpened, setInviteOpened] = useState(false);
   const [leaveOpened, setLeaveOpened] = useState(false);
+  const [exportOpened, setExportOpened] = useState(false);
 
   return (
     <Group gap={4} wrap="nowrap">
@@ -107,6 +111,17 @@ export function RoomTitleActions({
               </Tooltip>
             </>
           )}
+          <Tooltip label={t('export.action')} withArrow>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label={t('export.action')}
+              onClick={() => setExportOpened(true)}
+            >
+              <DownloadSimpleIcon size={20} />
+            </ActionIcon>
+          </Tooltip>
           <Tooltip label={t('common.leave')} withArrow>
             <ActionIcon
               variant="subtle"
@@ -133,6 +148,11 @@ export function RoomTitleActions({
       {isAdmin && (
         <InviteModal opened={inviteOpened} onClose={() => setInviteOpened(false)} roomId={roomId} />
       )}
+      <ExportRoomModal
+        opened={exportOpened}
+        onClose={() => setExportOpened(false)}
+        roomId={roomId}
+      />
       <LeaveRoomModal
         opened={leaveOpened}
         onClose={() => setLeaveOpened(false)}

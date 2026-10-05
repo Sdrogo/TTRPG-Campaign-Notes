@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { Loader, Stack, Tabs, Text, Title } from '@mantine/core';
+import { Button, Group, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
+import { DownloadSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useMembers } from '../hooks/useMembers';
@@ -10,6 +12,7 @@ import { notifyError, notifySuccess } from '../lib/notify';
 import { itemKey, resolveMainItems } from '../lib/mainItems';
 import type { MainItem } from '../types/tag';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
+import { ExportRoomModal } from '../components/ExportRoomModal';
 import { PageLayout } from '../components/PageLayout';
 import { MainTagsEditor } from '../components/setup/MainTagsEditor';
 import { MemberManagement } from '../components/setup/MemberManagement';
@@ -41,6 +44,7 @@ export function RoomSetupPage() {
   const mainItems = useMainItems(roomId ?? '', isAdmin);
   const setMainItems = useSetMainItems(roomId ?? '');
   const room = useRoom(roomId ?? '', isAdmin);
+  const [exportOpened, setExportOpened] = useState(false);
 
   if (!roomId) {
     return null;
@@ -84,9 +88,23 @@ export function RoomSetupPage() {
 
   return (
     <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
-      <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-        {t('setup.title')}
-      </Title>
+      <Group justify="space-between" wrap="nowrap">
+        <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
+          {t('setup.title')}
+        </Title>
+        <Button
+          variant="light"
+          leftSection={<DownloadSimpleIcon size={16} />}
+          onClick={() => setExportOpened(true)}
+        >
+          {t('export.action')}
+        </Button>
+      </Group>
+      <ExportRoomModal
+        opened={exportOpened}
+        onClose={() => setExportOpened(false)}
+        roomId={roomId}
+      />
 
       <Tabs defaultValue={isAdmin ? 'settings' : 'history'} keepMounted={false}>
         <Tabs.List mb="lg">
