@@ -225,7 +225,7 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     contents = reader.pages[1].extract_text()
     for word in ("Contents", "Castle", "Irena", "NPC", "Place", "Other", "Index"):
         assert word in contents
-    # (Gothic sets the first letter of a description as a drop cap, a separate
+    # (Gothic sets the first letter of a description as a large initial, a separate
     # piece of text, so these searches skip it.)
     # The contents say on which page each Document starts: where its text is.
     castle_page = _page_with(reader, "uled by")

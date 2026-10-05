@@ -1,5 +1,5 @@
 /* Gothic (spec 23b Decision 4): black and deep red, a full-bleed dark cover,
-   distressed serif headings, red rules and drop caps, Notes as italic
+   distressed serif headings, red rules and a red initial, Notes as italic
    sidebars, white pages for the body so it stays readable and printable.
    Inspired by the look of gothic-horror RPG books, never copied: only
    open-licensed fonts (see ../fonts/README.md) and original ornaments. */
@@ -45,8 +45,10 @@ h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: normal
 .document-title { font-size: 20pt; margin: 0 0 4mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #1a1a1a; }
 .document-image img { border: 0.75pt solid #1a1a1a; }
 
-/* Drop cap on the first paragraph of a description */
-.description p:first-child::first-letter { float: left; font: 40pt/0.8 "IM Fell English", serif; color: #8a0f1c; padding: 1mm 2mm 0 0; }
+/* A large red initial on the first paragraph of a description. Not floated:
+   WeasyPrint's floated ::first-letter fails in its float layout on some
+   paragraphs (seen in CI), so the initial stays on the line. */
+.description p:first-child::first-letter { font: 2.4em "IM Fell English", serif; color: #8a0f1c; }
 
 /* Notes: italic sidebars with a red edge */
 .note { background: #f5f0f0; border-left: 3pt solid #8a0f1c; font-style: italic; }

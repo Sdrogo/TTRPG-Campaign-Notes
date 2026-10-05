@@ -189,7 +189,7 @@ jobs:
       # The installed package carries the Room PDF's templates, stylesheets and
       # fonts (spec 23b_1b): each style renders a small manual from inside the
       # image, as the unprivileged user, and its text is read back (without the
-      # first letter: Gothic sets it as a drop cap, a separate piece of text).
+      # first letter: Gothic sets it as a large initial, a separate piece of text).
       - name: Room PDF styles render
         run: |
           docker run --rm \
