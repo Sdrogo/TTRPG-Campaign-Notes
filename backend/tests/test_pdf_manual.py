@@ -225,9 +225,11 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     contents = reader.pages[1].extract_text()
     for word in ("Contents", "Castle", "Irena", "NPC", "Place", "Other", "Index"):
         assert word in contents
+    # (Gothic sets the first letter of a description as a drop cap, a separate
+    # piece of text, so these searches skip it.)
     # The contents say on which page each Document starts: where its text is.
-    castle_page = _page_with(reader, "Ruled by")
-    irena_page = _page_with(reader, "A vampire.")
+    castle_page = _page_with(reader, "uled by")
+    irena_page = _page_with(reader, "vampire.")
     listed = {
         name: int(re.findall(r"\d+", line)[-1])
         for line in contents.splitlines()
@@ -245,7 +247,7 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     # The Tag index points at the same pages, and the accents survived.
     index = reader.pages[-1].extract_text()
     assert re.search(rf"Castle,\s*{castle_page}\b", index)
-    assert "Città dell'Ovest, perché sì." in " ".join(p.extract_text() for p in reader.pages)
+    assert "ittà dell'Ovest, perché sì." in " ".join(p.extract_text() for p in reader.pages)
 
 
 def test_the_fetcher_refuses_what_the_renderer_may_not_read(tmp_path: Any) -> None:

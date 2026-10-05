@@ -188,7 +188,8 @@ jobs:
 
       # The installed package carries the Room PDF's templates, stylesheets and
       # fonts (spec 23b_1b): each style renders a small manual from inside the
-      # image, as the unprivileged user, and its text is read back.
+      # image, as the unprivileged user, and its text is read back (without the
+      # first letter: Gothic sets it as a drop cap, a separate piece of text).
       - name: Room PDF styles render
         run: |
           docker run --rm \
@@ -207,7 +208,7 @@ jobs:
           for style in ManualStyle:
               reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
               text = ' '.join(page.extract_text() for page in reader.pages)
-              assert len(reader.pages) == 3 and 'Città dell Ovest' in text, (style, len(reader.pages))
+              assert len(reader.pages) == 3 and 'ittà dell Ovest' in text, (style, len(reader.pages))
               print(style.value, 'ok')
           "
 
