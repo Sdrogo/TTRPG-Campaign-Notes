@@ -228,6 +228,32 @@ describe('who may edit', () => {
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+    // Spec 24: the text's history is for the same people.
+    expect(screen.queryByRole('button', { name: /^Storico/ })).not.toBeInTheDocument();
+  });
+
+  it("opens the Document's history for an Owner, and a Note's own from the Note", async () => {
+    routes.document = rawDocument({ owner_ids: ['user-1'], notes: [rawNote()] });
+    const otherRoutes = fetchMock.getMockImplementation() as NonNullable<
+      ReturnType<typeof fetchMock.getMockImplementation>
+    >;
+    fetchMock.mockImplementation((...args: Parameters<typeof otherRoutes>) => {
+      if (args[0] === `${DOC}/versions` || args[0] === `${DOC}/notes/note-1/versions`) {
+        return Promise.resolve([]);
+      }
+      return otherRoutes(...args);
+    });
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Storico: Il Cancello' }));
+    expect(await screen.findByText('Nessuna versione.')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(`${DOC}/versions`);
+    await user.keyboard('{Escape}');
+
+    await user.click(screen.getByRole('button', { name: 'Storico: Porta segreta' }));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(`${DOC}/notes/note-1/versions`),
+    );
   });
 });
 
@@ -1209,6 +1235,7 @@ describe('previewing as a member', () => {
     expect(screen.queryByRole('button', { name: /^Rivela/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Nota: Porta segreta/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aggiungi Nota' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Storico/ })).not.toBeInTheDocument();
     for (const action of ['Rispondi', 'Fissa', 'Segna come risolto', 'Promuovi', 'Elimina', 'Aggiungi una reazione']) {
       expect(screen.queryByRole('button', { name: action })).not.toBeInTheDocument();
     }

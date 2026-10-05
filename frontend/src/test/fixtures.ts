@@ -241,3 +241,17 @@ export function rawPdfJob(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+/** A version in the history list, as the backend sends it (spec 24). */
+export function rawVersion(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'version-1',
+    title: 'Il Cancello',
+    edited_by: 'user-1',
+    created_at: '2026-10-05T12:00:00Z',
+    updated_at: '2026-10-05T12:00:00Z',
+    words_added: null,
+    words_removed: null,
+    ...overrides,
+  };
+}

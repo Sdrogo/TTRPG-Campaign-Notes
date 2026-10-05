@@ -84,6 +84,23 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   none leaves an empty page now. New tests: a chapter that fills its last page
   in each style, and the header/closing-rule CSS.
 
+### Version history, frontend (spec 24_2, 2026-10-05)
+
+- A history icon beside the Document's edit icon and among each Note's edit
+  actions opens a drawer: the versions (author, time, "+N -M" words, the newest
+  marked "Current"), the chosen one beside the current text with the words
+  added and removed marked, and "Restore" behind a confirmation. Mobile: the
+  comparison stacks. Details in `architecture.md` -> Version history -> Frontend.
+- Choices beyond the ticket (confirm): there is no Document or Note "menu" to put
+  "History" in, so it is an icon next to the other actions; the diff (`diff`
+  package, new dependency) compares mention tokens as the names a reader sees;
+  after a restore the drawer goes back to the list, whose newest entry is the
+  restored text; the title and the description are compared separately.
+- **Not seen in a browser**: the drawer, the diff colors and the stacked layout
+  at phone width. Frontend 1455 tests, 100% coverage; `tsc`, lint and build
+  clean. A bug found by the tests: an empty description showed nothing instead
+  of "No description".
+
 ### Version history, backend (spec 24_1, 2026-10-05)
 
 - Backend only, no frontend yet (24_2). Tables `document_versions` and

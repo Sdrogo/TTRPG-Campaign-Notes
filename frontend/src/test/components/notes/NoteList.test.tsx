@@ -411,3 +411,21 @@ describe('Note anchors', () => {
     scroll.mockRestore();
   });
 });
+
+// Spec 24: a Note's history opens from the Note and closes again.
+describe('history', () => {
+  it("opens a Note's history and closes it", async () => {
+    fetchMock.mockImplementation((path: string) =>
+      Promise.resolve(path.endsWith('/versions') ? [] : rawNote()),
+    );
+    const { user } = render([first(), second()]);
+
+    await user.click(screen.getByRole('button', { name: 'Storico: Trappola' }));
+    expect(await screen.findByText('Nessuna versione.')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(`${BASE}/note-2/versions`);
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByText('Nessuna versione.')).not.toBeInTheDocument());
+  });
+});

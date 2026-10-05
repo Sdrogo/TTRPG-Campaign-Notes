@@ -339,6 +339,25 @@
       "fit": "Adatta allo schermo"
     }
   },
+  "versions": {
+    "action": "Storico",
+    "actionFor": "Storico: {{name}}",
+    "title": "Storico: {{name}}",
+    "loadFailed": "Impossibile caricare lo storico.",
+    "empty": "Nessuna versione.",
+    "current": "Attuale",
+    "first": "Prima versione",
+    "changeSize": "+{{added}} −{{removed}}",
+    "changeSizeLabel": "Parole aggiunte: {{added}}, tolte: {{removed}}",
+    "pick": "Scegli una versione per confrontarla con il testo attuale.",
+    "before": "Questa versione",
+    "after": "Testo attuale",
+    "identical": "Questa è già la versione attuale.",
+    "restore": "Ripristina questa versione",
+    "restoreConfirmTitle": "Ripristinare questa versione?",
+    "restoreConfirmBody": "Il testo tornerà com'era il {{date}}. Viene aggiunta una nuova versione con quel testo: non si perde niente.",
+    "restored": "Versione ripristinata"
+  },
   "notes": {
     "add": "Aggiungi Nota",
     "edit": "Modifica Nota: {{title}}",
