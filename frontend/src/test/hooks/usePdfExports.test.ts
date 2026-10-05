@@ -116,22 +116,22 @@ describe('useStartPdfExport', () => {
 
 describe('useDismissedPdfJobs', () => {
   it('starts from what the browser remembers and shares a new dismissal', async () => {
-    localStorage.setItem('pdfDismissed:room-1', '["old"]');
+    localStorage.setItem('pdfDismissed:user-1:room-1', '["old"]');
 
-    const { result } = renderHookWithProviders(() => useDismissedPdfJobs('room-1'));
+    const { result } = renderHookWithProviders(() => useDismissedPdfJobs('user-1', 'room-1'));
     await waitFor(() => expect(result.current.dismissed.has('old')).toBe(true));
 
     act(() => result.current.dismiss('new'));
 
     await waitFor(() => expect([...result.current.dismissed]).toEqual(['old', 'new']));
-    expect(JSON.parse(localStorage.getItem('pdfDismissed:room-1') ?? '[]')).toEqual([
+    expect(JSON.parse(localStorage.getItem('pdfDismissed:user-1:room-1') ?? '[]')).toEqual([
       'old',
       'new',
     ]);
   });
 
   it('is empty before the browser has answered', () => {
-    const { result } = renderHookWithProviders(() => useDismissedPdfJobs('room-1'));
+    const { result } = renderHookWithProviders(() => useDismissedPdfJobs('user-1', 'room-1'));
 
     expect(result.current.dismissed.size).toBe(0);
   });

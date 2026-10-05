@@ -170,7 +170,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
           )}
         </Group>
         {/* The user's PDFs still being made or not yet taken (spec 23b); not while previewing as a member. */}
-        {!readOnly && <RoomPdfExports roomId={roomId} />}
+        {!readOnly && <RoomPdfExports roomId={roomId} userId={currentUserId} />}
         {/* A round floating "+" at the bottom right, always within reach. */}
         {canCreateDocument && (
           <Affix position={{ bottom: 24, right: 24 }} zIndex={150}>

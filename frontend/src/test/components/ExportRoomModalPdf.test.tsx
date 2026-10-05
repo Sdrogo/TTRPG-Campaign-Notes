@@ -14,6 +14,9 @@ vi.mock('../../lib/apiClient', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../lib/apiClient')>()),
   apiFetch: vi.fn(),
 }));
+vi.mock('../../hooks/useSession', () => ({
+  useSession: () => ({ session: { user: { id: 'user-1' } }, loading: false }),
+}));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
 const onClose = vi.fn();
@@ -171,7 +174,7 @@ describe('ExportRoomModal, PDF format (spec 23b Frontend)', () => {
     link.addEventListener('click', (event) => event.preventDefault());
     await user.click(link);
 
-    expect(JSON.parse(localStorage.getItem('pdfDismissed:room-1') ?? '[]')).toEqual(['job-1']);
+    expect(JSON.parse(localStorage.getItem('pdfDismissed:user-1:room-1') ?? '[]')).toEqual(['job-1']);
   });
 
   it('goes back to the form for another PDF once the job is over', async () => {

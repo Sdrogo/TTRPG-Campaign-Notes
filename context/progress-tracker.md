@@ -73,6 +73,31 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
   its three entry points), 100% coverage; `tsc`, lint and build clean.
 
+### Room PDF, frontend (spec 23b_2, 2026-10-05)
+
+- The Export dialog has a PDF format: style cards with miniatures (Gothic,
+  Modern, Print), page size, Comments and PDF Attachments (off by default), a
+  cover Document and the Tag filter, then "Genera PDF". The dialog follows the
+  job (making, ready with a download link and its expiry, failed) and can be
+  closed; the Room page lists the user's PDFs until downloaded or hidden
+  (`RoomPdfExports`, hidden while previewing as a member). Details in
+  `architecture.md` → Room PDF, layout and typesetting → Frontend.
+- **Merge order**: needs 23b_1c (merged into `staging`, PR #99) and its migration
+  (applied to staging, see above); without them `GET .../exports` is a 404.
+- Choices beyond the ticket (confirm): the job routes are called without
+  `X-View-As` (new `ignoreViewAs` option of `apiFetch`) and the previewed member
+  travels as `view_as_user_id`; "until downloaded" is a list of dismissed job ids
+  in `localStorage` per user and Room, so it follows the browser, not the
+  account; polling every 3 seconds while a job is queued or running, and for up
+  to 2 minutes for a finished one whose link isn't ready (review finding); the
+  style miniatures are plain boxes in the PDF styles' colors, not images; the
+  dialog adopts a job already being made instead of offering a second; new
+  `common.close` string; the download is a plain link (Storage serves it as an
+  attachment), not a blob.
+- **Not seen in a browser**: the dialog at phone width, the cards, the Room page
+  list, the real download. Frontend 1425 tests, 100% coverage; `tsc`, lint and
+  build clean.
+
 ### Room PDF, jobs and routes (spec 23b_1c, 2026-10-05)
 
 - Backend only, no frontend yet (23b_2). `POST /rooms/{id}/exports/pdf` creates a
@@ -132,7 +157,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   the CSS if needed. Found by CI: the floated drop cap in Gothic crashed
   WeasyPrint's float layout on some paragraphs, so Gothic uses a large red
   initial on the line instead (not a true drop cap).
-- Still to do: 23b_2 (frontend).
+- Still to do: 23b_2 (frontend, see above).
 - `uv.lock` was regenerated (it lacked `weasyprint`/`pypdf`; the newer uv also
   rewrote its header). `jinja2` is a new dependency, `weasyprint>=70`.
 - Backend: 15 layout tests and 16 HTML/asset tests run locally, 7 PDF tests need

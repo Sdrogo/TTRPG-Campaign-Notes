@@ -9,10 +9,10 @@ import { isActivePdfJob, listedPdfJobs, type PdfJob } from '../../lib/pdfExport'
  * ones still being made, ready to take, or failed, until downloaded or hidden.
  * Nothing at all when there is none to follow.
  */
-export function RoomPdfExports({ roomId }: { roomId: string }) {
+export function RoomPdfExports({ roomId, userId }: { roomId: string; userId: string }) {
   const { t } = useTranslation();
   const jobs = usePdfExports(roomId, true);
-  const { dismissed, dismiss } = useDismissedPdfJobs(roomId);
+  const { dismissed, dismiss } = useDismissedPdfJobs(userId, roomId);
   const listed = listedPdfJobs(jobs.data ?? [], dismissed);
 
   if (listed.length === 0) {

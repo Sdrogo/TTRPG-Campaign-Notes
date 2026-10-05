@@ -3,17 +3,14 @@ import { Button, Group, Modal, SegmentedControl, Stack, Text } from '@mantine/co
 import { DownloadSimpleIcon, FilePdfIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../hooks/useDocuments';
-import {
-  useDismissedPdfJobs,
-  usePdfExports,
-  useStartPdfExport,
-} from '../hooks/usePdfExports';
+import { useDismissedPdfJobs, usePdfExports, useStartPdfExport } from '../hooks/usePdfExports';
+import { useSession } from '../hooks/useSession';
 import { useExportRoom } from '../hooks/useRoomExport';
 import { useRoom } from '../hooks/useRooms';
 import { useTags } from '../hooks/useTags';
 import { useViewAs } from '../hooks/useViewAs';
 import { notifyError, notifySuccess } from '../lib/notify';
-import { DEFAULT_PDF_OPTIONS, isActivePdfJob } from '../lib/pdfExport';
+import { DEFAULT_PDF_OPTIONS, isActivePdfJob, type PdfJob } from '../lib/pdfExport';
 import { EXPORT_FORMATS, type ExportFormat } from '../lib/roomExport';
 import { PdfExportForm, type PdfFormValue } from './pdf/PdfExportForm';
 import { PdfJobPanel } from './pdf/PdfJobPanel';
@@ -29,6 +26,16 @@ interface ExportRoomModalProps {
 type DialogFormat = ExportFormat | 'pdf';
 
 const DIALOG_FORMATS: DialogFormat[] = [...EXPORT_FORMATS, 'pdf'];
+
+/**
+ * The panel of the job the dialog follows. Taking the file is remembered for the
+ * signed-in user, so the Room page stops listing it.
+ */
+function TrackedPdfJob({ roomId, job, onNew }: { roomId: string; job: PdfJob; onNew: () => void }) {
+  const { session } = useSession();
+  const { dismiss } = useDismissedPdfJobs(session?.user.id ?? '', roomId);
+  return <PdfJobPanel job={job} onDownload={dismiss} onNew={onNew} />;
+}
 
 /**
  * The Room export dialog (spec 23 Decision 5, spec 23b Frontend): a format
@@ -53,7 +60,6 @@ export function ExportRoomModal({ opened, onClose, roomId }: ExportRoomModalProp
   const documents = useDocuments(roomId, opened && format === 'pdf');
   const jobs = usePdfExports(roomId, opened && format === 'pdf');
   const startPdf = useStartPdfExport(roomId);
-  const { dismiss } = useDismissedPdfJobs(roomId);
 
   // The job this dialog follows: the one it started, or one still being made
   // (started from an earlier visit), since only one can run at a time.
@@ -101,9 +107,9 @@ export function ExportRoomModal({ opened, onClose, roomId }: ExportRoomModalProp
         </Text>
         {showingJob ? (
           <>
-            <PdfJobPanel
+            <TrackedPdfJob
+              roomId={roomId}
               job={tracked}
-              onDownload={dismiss}
               onNew={() => setStartedJobId(null)}
             />
             <Group justify="flex-end">

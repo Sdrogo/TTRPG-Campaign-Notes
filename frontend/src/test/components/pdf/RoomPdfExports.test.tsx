@@ -12,7 +12,7 @@ const fetchMock = vi.mocked(apiFetch);
 
 function render(jobs: unknown[]) {
   fetchMock.mockResolvedValue(jobs);
-  renderWithProviders(<RoomPdfExports roomId="room-1" />);
+  renderWithProviders(<RoomPdfExports roomId="room-1" userId="user-1" />);
   return { user: userEvent.setup() };
 }
 
@@ -61,7 +61,7 @@ describe('RoomPdfExports', () => {
     await waitFor(() =>
       expect(screen.queryByRole('region', { name: 'I tuoi PDF' })).not.toBeInTheDocument(),
     );
-    expect(JSON.parse(localStorage.getItem('pdfDismissed:room-1') ?? '[]')).toEqual(['job-1']);
+    expect(JSON.parse(localStorage.getItem('pdfDismissed:user-1:room-1') ?? '[]')).toEqual(['job-1']);
   });
 
   it('keeps a failed PDF until it is hidden', async () => {
@@ -86,7 +86,7 @@ describe('RoomPdfExports', () => {
   });
 
   it('does not list what was hidden in an earlier visit', async () => {
-    localStorage.setItem('pdfDismissed:room-1', '["job-1"]');
+    localStorage.setItem('pdfDismissed:user-1:room-1', '["job-1"]');
     render([rawPdfJob({ status: 'failed' })]);
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());

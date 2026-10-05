@@ -4,6 +4,7 @@ import {
   DEFAULT_PDF_OPTIONS,
   isActivePdfJob,
   listedPdfJobs,
+  PDF_LINK_WAIT_MS,
   PDF_POLL_INTERVAL_MS,
   pdfPollInterval,
   pdfRequestBody,
@@ -99,13 +100,24 @@ describe('polling', () => {
     }
   });
 
+  it('stops waiting for a link that has not come two minutes after the job finished', () => {
+    const finished = Date.parse('2026-10-05T12:01:00Z');
+    const waiting = [job({ status: 'done', finishedAt: '2026-10-05T12:01:00Z' })];
+
+    expect(pdfPollInterval(waiting, finished + PDF_LINK_WAIT_MS - 1)).toBe(PDF_POLL_INTERVAL_MS);
+    expect(pdfPollInterval(waiting, finished + PDF_LINK_WAIT_MS)).toBe(false);
+    // Without a finish time it counts from creation.
+    const unknown = [job({ status: 'done', finishedAt: null, createdAt: '2026-10-05T12:00:00Z' })];
+    expect(pdfPollInterval(unknown, Date.parse('2026-10-05T12:00:30Z'))).toBe(PDF_POLL_INTERVAL_MS);
+    expect(pdfPollInterval(unknown, Date.parse('2026-10-05T12:05:00Z'))).toBe(false);
+  });
+
   it('polls while a job is active, or done with no download link yet, and otherwise stops', () => {
     expect(pdfPollInterval(undefined)).toBe(false);
     expect(pdfPollInterval([])).toBe(false);
     expect(pdfPollInterval([job({ status: 'running' })])).toBe(PDF_POLL_INTERVAL_MS);
-    expect(pdfPollInterval([job({ status: 'done', downloadUrl: null })])).toBe(
-      PDF_POLL_INTERVAL_MS,
-    );
+    const justDone = job({ status: 'done', downloadUrl: null, finishedAt: new Date().toISOString() });
+    expect(pdfPollInterval([justDone])).toBe(PDF_POLL_INTERVAL_MS);
     expect(pdfPollInterval([job({ status: 'done', downloadUrl: 'https://x/y.pdf' })])).toBe(false);
     expect(pdfPollInterval([job({ status: 'failed' }), job({ status: 'expired' })])).toBe(false);
   });
@@ -137,20 +149,22 @@ describe('listedPdfJobs', () => {
 
 describe('dismissed jobs in the browser', () => {
   it('remembers a job per Room', () => {
-    expect([...readDismissedPdfJobs('room-1')]).toEqual([]);
+    expect([...readDismissedPdfJobs('user-1', 'room-1')]).toEqual([]);
 
-    saveDismissedPdfJob('room-1', 'a');
-    const after = saveDismissedPdfJob('room-1', 'b');
+    saveDismissedPdfJob('user-1', 'room-1', 'a');
+    const after = saveDismissedPdfJob('user-1', 'room-1', 'b');
 
     expect([...after]).toEqual(['a', 'b']);
-    expect([...readDismissedPdfJobs('room-1')]).toEqual(['a', 'b']);
-    expect([...readDismissedPdfJobs('room-2')]).toEqual([]);
+    expect([...readDismissedPdfJobs('user-1', 'room-1')]).toEqual(['a', 'b']);
+    expect([...readDismissedPdfJobs('user-1', 'room-2')]).toEqual([]);
+    // Another user of the same browser has their own list.
+    expect([...readDismissedPdfJobs('user-2', 'room-1')]).toEqual([]);
   });
 
   it('keeps only the newest fifty', () => {
-    for (let n = 0; n < 55; n += 1) saveDismissedPdfJob('room-1', `job-${n}`);
+    for (let n = 0; n < 55; n += 1) saveDismissedPdfJob('user-1', 'room-1', `job-${n}`);
 
-    const kept = [...readDismissedPdfJobs('room-1')];
+    const kept = [...readDismissedPdfJobs('user-1', 'room-1')];
 
     expect(kept).toHaveLength(50);
     expect(kept[0]).toBe('job-5');
@@ -158,14 +172,14 @@ describe('dismissed jobs in the browser', () => {
   });
 
   it('starts empty when what is stored is damaged or not a list', () => {
-    localStorage.setItem('pdfDismissed:room-1', '{not json');
-    expect([...readDismissedPdfJobs('room-1')]).toEqual([]);
+    localStorage.setItem('pdfDismissed:user-1:room-1', '{not json');
+    expect([...readDismissedPdfJobs('user-1', 'room-1')]).toEqual([]);
 
-    localStorage.setItem('pdfDismissed:room-1', '{"a":1}');
-    expect([...readDismissedPdfJobs('room-1')]).toEqual([]);
+    localStorage.setItem('pdfDismissed:user-1:room-1', '{"a":1}');
+    expect([...readDismissedPdfJobs('user-1', 'room-1')]).toEqual([]);
 
-    localStorage.setItem('pdfDismissed:room-1', '["a", 3, null, "b"]');
-    expect([...readDismissedPdfJobs('room-1')]).toEqual(['a', 'b']);
+    localStorage.setItem('pdfDismissed:user-1:room-1', '["a", 3, null, "b"]');
+    expect([...readDismissedPdfJobs('user-1', 'room-1')]).toEqual(['a', 'b']);
   });
 
   it('still works for this visit when the browser refuses storage', () => {
@@ -176,7 +190,7 @@ describe('dismissed jobs in the browser', () => {
       throw new Error('blocked');
     });
 
-    expect([...readDismissedPdfJobs('room-1')]).toEqual([]);
-    expect([...saveDismissedPdfJob('room-1', 'a')]).toEqual(['a']);
+    expect([...readDismissedPdfJobs('user-1', 'room-1')]).toEqual([]);
+    expect([...saveDismissedPdfJob('user-1', 'room-1', 'a')]).toEqual(['a']);
   });
 });

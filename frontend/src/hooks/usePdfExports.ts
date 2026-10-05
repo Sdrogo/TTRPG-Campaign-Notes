@@ -57,27 +57,30 @@ export function useStartPdfExport(roomId: string) {
   });
 }
 
-function dismissedQueryKey(roomId: string) {
-  return ['rooms', roomId, 'pdf-dismissed'] as const;
+function dismissedQueryKey(userId: string, roomId: string) {
+  return ['rooms', roomId, 'pdf-dismissed', userId] as const;
 }
 
 /**
- * The jobs of the Room the user downloaded or hid, shared through the cache so
+ * The jobs of the Room the signed-in user downloaded or hid, shared through the cache so
  * the dialog and the Room page agree, and `dismiss` to add one (kept in the
  * browser, `lib/pdfExport.ts`).
  */
-export function useDismissedPdfJobs(roomId: string) {
+export function useDismissedPdfJobs(userId: string, roomId: string) {
   const queryClient = useQueryClient();
   const { data } = useQuery({
-    queryKey: dismissedQueryKey(roomId),
-    queryFn: () => readDismissedPdfJobs(roomId),
+    queryKey: dismissedQueryKey(userId, roomId),
+    queryFn: () => readDismissedPdfJobs(userId, roomId),
     staleTime: Infinity,
   });
   const dismiss = useCallback(
     (jobId: string) => {
-      queryClient.setQueryData(dismissedQueryKey(roomId), saveDismissedPdfJob(roomId, jobId));
+      queryClient.setQueryData(
+        dismissedQueryKey(userId, roomId),
+        saveDismissedPdfJob(userId, roomId, jobId),
+      );
     },
-    [queryClient, roomId],
+    [queryClient, userId, roomId],
   );
   return { dismissed: data ?? new Set<string>(), dismiss };
 }

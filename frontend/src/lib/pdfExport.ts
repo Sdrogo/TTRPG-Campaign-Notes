@@ -101,14 +101,26 @@ export function isActivePdfJob(job: PdfJob): boolean {
 /** How often the job list is read while something is still being made (spec 23b Frontend). */
 export const PDF_POLL_INTERVAL_MS = 3000;
 
+/** How long a finished job with no download link yet is waited for before giving up on polling. */
+export const PDF_LINK_WAIT_MS = 2 * 60 * 1000;
+
 /**
  * The refetch interval of the job list: every few seconds while a job is
  * active, or done but its download link couldn't be signed yet (the backend
- * answers `download_url` null then); otherwise not at all.
+ * answers `download_url` null then) for up to `PDF_LINK_WAIT_MS` after it
+ * finished, so a link that never comes doesn't poll for ever; otherwise not
+ * at all. The list is read again on window focus either way.
  */
-export function pdfPollInterval(jobs: PdfJob[] | undefined): number | false {
+export function pdfPollInterval(
+  jobs: PdfJob[] | undefined,
+  now: number = Date.now(),
+): number | false {
   const waiting = jobs?.some(
-    (job) => isActivePdfJob(job) || (job.status === 'done' && job.downloadUrl === null),
+    (job) =>
+      isActivePdfJob(job) ||
+      (job.status === 'done' &&
+        job.downloadUrl === null &&
+        now - Date.parse(job.finishedAt ?? job.createdAt) < PDF_LINK_WAIT_MS),
   );
   return waiting ? PDF_POLL_INTERVAL_MS : false;
 }
@@ -131,19 +143,20 @@ export function listedPdfJobs(jobs: PdfJob[], dismissed: ReadonlySet<string>): P
   return jobs.filter((job) => job.status !== 'expired' && !dismissed.has(job.id));
 }
 
-function dismissedKey(roomId: string) {
-  return `pdfDismissed:${roomId}`;
+function dismissedKey(userId: string, roomId: string) {
+  return `pdfDismissed:${userId}:${roomId}`;
 }
 
 /**
  * The jobs of this Room the user downloaded or hid, remembered in the browser
- * so the Room page stops listing them. A convenience only: storage can be
+ * (per user, so two people sharing a browser don't hide each other's PDFs) so
+ * the Room page stops listing them. A convenience only: storage can be
  * unavailable (private window, blocked site data), so every access is guarded
  * and the job is then simply listed again.
  */
-export function readDismissedPdfJobs(roomId: string): Set<string> {
+export function readDismissedPdfJobs(userId: string, roomId: string): Set<string> {
   try {
-    const stored: unknown = JSON.parse(localStorage.getItem(dismissedKey(roomId)) ?? '[]');
+    const stored: unknown = JSON.parse(localStorage.getItem(dismissedKey(userId, roomId)) ?? '[]');
     return new Set(Array.isArray(stored) ? stored.filter((id) => typeof id === 'string') : []);
   } catch {
     return new Set();
@@ -151,11 +164,11 @@ export function readDismissedPdfJobs(roomId: string): Set<string> {
 }
 
 /** Remembers that `jobId` needn't be listed any more. Keeps the newest 50 so the list can't grow without end. */
-export function saveDismissedPdfJob(roomId: string, jobId: string): Set<string> {
-  const next = new Set([...readDismissedPdfJobs(roomId), jobId]);
+export function saveDismissedPdfJob(userId: string, roomId: string, jobId: string): Set<string> {
+  const next = new Set([...readDismissedPdfJobs(userId, roomId), jobId]);
   const kept = [...next].slice(-50);
   try {
-    localStorage.setItem(dismissedKey(roomId), JSON.stringify(kept));
+    localStorage.setItem(dismissedKey(userId, roomId), JSON.stringify(kept));
   } catch {
     // Nothing to do: the job is listed again next time.
   }
