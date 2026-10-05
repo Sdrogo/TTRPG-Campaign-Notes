@@ -88,7 +88,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
 - Backend only, no frontend yet (24_2). Tables `document_versions` and
   `note_versions` with a backfill of the current text of every Document and Note
-  (**migration `a2e6c9f4b8d1`: not applied anywhere yet**, staging first). Every
+  (**migration `a2e6c9f4b8d1`: applied to staging by hand on 2026-10-05** with `.env.staging` loaded, `alembic current` went from `d9a4f1c7e3b5`; pending on production). Every
   create and every edit of a name, title or description writes or merges a
   version (same editor within 10 minutes), routes list, read and restore for the
   Document and for each Note. Details in `architecture.md` -> Version history.
@@ -99,9 +99,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   response shape (`title` is a Document's name); the change size is computed on
   read, not stored; restore returns the version now in force, not the Document;
   a Note's history is also 404 when the Note is hidden from an Owner.
-- Not run locally: the integration tests (no database on this machine besides
-  the staging/dev project, which lacks the migration); the 13 domain tests and
-  the rest of the non-database suite pass, `ruff` and `mypy` clean.
+- Tests: 13 domain + 21 API (run against the staging database after the migration, all green), `ruff` and `mypy` clean.
 
 ### Room export, frontend (spec 23_2, 2026-10-05)
 
