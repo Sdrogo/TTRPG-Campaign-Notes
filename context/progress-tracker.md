@@ -99,7 +99,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   response shape (`title` is a Document's name); the change size is computed on
   read, not stored; restore returns the version now in force, not the Document;
   a Note's history is also 404 when the Note is hidden from an Owner.
-- Tests: 13 domain + 23 API (run against the staging database after the migration, all green), `ruff` and `mypy` clean.
+- Tests: 13 domain + 24 API (run against the staging database after the migration, all green), `ruff` and `mypy` clean.
 
 ### Room export, frontend (spec 23_2, 2026-10-05)
 

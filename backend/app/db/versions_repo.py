@@ -5,7 +5,7 @@ Document's name and a Note's title are the version's `title`."""
 import uuid
 from typing import Literal
 
-from sqlalchemy import select
+from sqlalchemy import select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import DocumentVersionRow, NoteVersionRow
@@ -48,9 +48,61 @@ async def list_versions(
 async def get_latest_version(
     session: AsyncSession, subject: Subject, subject_id: uuid.UUID
 ) -> Version | None:
-    """The newest version of the Document or Note, or None if it has none."""
-    versions = await list_versions(session, subject, subject_id)
-    return versions[0] if versions else None
+    """The newest version of the Document or Note, or None if it has none.
+    One row is read, however long the history is: it runs on every save."""
+    if subject == "document":
+        document_row = (
+            await session.execute(
+                select(DocumentVersionRow)
+                .where(DocumentVersionRow.document_id == subject_id)
+                .order_by(DocumentVersionRow.created_at.desc(), DocumentVersionRow.id.desc())
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        return None if document_row is None else _from_document_row(document_row)
+    note_row = (
+        await session.execute(
+            select(NoteVersionRow)
+            .where(NoteVersionRow.note_id == subject_id)
+            .order_by(NoteVersionRow.created_at.desc(), NoteVersionRow.id.desc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    return None if note_row is None else _from_note_row(note_row)
+
+
+async def get_previous_version(
+    session: AsyncSession, subject: Subject, subject_id: uuid.UUID, version: Version
+) -> Version | None:
+    """The version just before `version` in the same order as `list_versions`,
+    or None for the first: what the change size is measured against."""
+    if subject == "document":
+        document_row = (
+            await session.execute(
+                select(DocumentVersionRow)
+                .where(
+                    DocumentVersionRow.document_id == subject_id,
+                    tuple_(DocumentVersionRow.created_at, DocumentVersionRow.id)
+                    < tuple_(version.created_at, version.id),
+                )
+                .order_by(DocumentVersionRow.created_at.desc(), DocumentVersionRow.id.desc())
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        return None if document_row is None else _from_document_row(document_row)
+    note_row = (
+        await session.execute(
+            select(NoteVersionRow)
+            .where(
+                NoteVersionRow.note_id == subject_id,
+                tuple_(NoteVersionRow.created_at, NoteVersionRow.id)
+                < tuple_(version.created_at, version.id),
+            )
+            .order_by(NoteVersionRow.created_at.desc(), NoteVersionRow.id.desc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    return None if note_row is None else _from_note_row(note_row)
 
 
 async def get_version(

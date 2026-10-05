@@ -170,11 +170,11 @@ async def get_document_version(
     comparison. Same access as the list; 404 for a version of another
     Document."""
     await get_owned_document(session, room_id, document_id, uuid.UUID(current_user.id), locale)
-    versions = await versions_repo.list_versions(session, "document", document_id)
-    for index, version in enumerate(versions):
-        if version.id == version_id:
-            return _full(version, versions[index + 1] if index + 1 < len(versions) else None)
-    raise _version_not_found(locale)
+    version = await versions_repo.get_version(session, "document", document_id, version_id)
+    if version is None:
+        raise _version_not_found(locale)
+    older = await versions_repo.get_previous_version(session, "document", document_id, version)
+    return _full(version, older)
 
 
 @router.post(_DOCUMENT_VERSIONS + "/{version_id}/restore")
@@ -258,11 +258,11 @@ async def get_note_version(
         session, room_id, document_id, uuid.UUID(current_user.id), locale
     )
     await _require_note(session, document_id, note_id, membership, owner_ids, locale)
-    versions = await versions_repo.list_versions(session, "note", note_id)
-    for index, version in enumerate(versions):
-        if version.id == version_id:
-            return _full(version, versions[index + 1] if index + 1 < len(versions) else None)
-    raise _version_not_found(locale)
+    version = await versions_repo.get_version(session, "note", note_id, version_id)
+    if version is None:
+        raise _version_not_found(locale)
+    older = await versions_repo.get_previous_version(session, "note", note_id, version)
+    return _full(version, older)
 
 
 @router.post(_NOTE_VERSIONS + "/{version_id}/restore")

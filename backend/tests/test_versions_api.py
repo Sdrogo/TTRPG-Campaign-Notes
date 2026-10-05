@@ -553,3 +553,22 @@ async def test_updating_a_version_that_is_gone_raises(db_session: AsyncSession) 
     for subject in ("document", "note"):
         with pytest.raises(LookupError):
             await versions_repo.update_version(db_session, subject, gone)
+
+
+async def test_a_single_version_carries_its_change_size_against_the_one_before(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    note_id = await _note(client, room, document_id, room.owner)
+    await _edit(client, room, document_id, room.master, description="A vampire lord.")
+    await _edit_note(client, room, document_id, note_id, room.master, description="Two words")
+    note_url = room.note_versions_url(document_id, note_id)
+
+    for url in (room.versions_url(document_id), note_url):
+        newest, first = (await client.get(url, headers=room.owner.headers)).json()
+        newest_full = (await client.get(f"{url}/{newest['id']}", headers=room.owner.headers)).json()
+        first_full = (await client.get(f"{url}/{first['id']}", headers=room.owner.headers)).json()
+        assert newest_full["words_added"] == newest["words_added"] > 0
+        assert newest_full["words_removed"] == newest["words_removed"]
+        assert first_full["words_added"] is None
