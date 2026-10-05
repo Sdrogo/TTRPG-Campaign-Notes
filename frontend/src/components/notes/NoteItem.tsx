@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { ActionIcon, Button, Group, Modal, Stack, Text, Title } from '@mantine/core';
-import { ArrowDownIcon, ArrowUpIcon, EyeIcon, PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react';
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ClockCounterClockwiseIcon,
+  EyeIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+} from '@phosphor-icons/react';
 import { VisibilityBadge } from '../VisibilityBadge';
 import { RevealedBadge } from '../RevealedBadge';
 import { MentionText } from '../mentions/MentionText';
@@ -25,6 +32,8 @@ interface NoteItemProps {
   revealed?: boolean;
   /** The Master's Reveal action (spec 22 Decision 1); absent for everyone else. */
   onReveal?: () => void;
+  /** Opens the Note's history (spec 24), offered with the other edit actions. */
+  onHistory?: () => void;
 }
 
 /**
@@ -48,6 +57,7 @@ export function NoteItem({
   deleting,
   revealed = false,
   onReveal,
+  onHistory,
 }: NoteItemProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -100,6 +110,17 @@ export function NoteItem({
             )}
             {note.canEdit && (
               <>
+                {onHistory && (
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    onClick={onHistory}
+                    aria-label={t('versions.actionFor', { name: note.title })}
+                  >
+                    <ClockCounterClockwiseIcon size={14} />
+                  </ActionIcon>
+                )}
                 <ActionIcon
                   variant="subtle"
                   color="gray"
