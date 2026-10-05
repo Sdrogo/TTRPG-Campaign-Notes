@@ -26,8 +26,9 @@ h1, h2, h3 { font-family: "Crimson Text", Georgia, serif; font-weight: bold; }
 .index-entries { columns: 2; column-gap: 10mm; }
 
 .chapter-title { font-size: 26pt; margin: 0 0 6mm; border-bottom: 1.5pt solid #000; }
-/* The Documents in two columns, like a rulebook. */
-.chapter-body { columns: 2; column-gap: 9mm; column-fill: auto; column-rule: 0.5pt solid #000; }
+/* The Documents in two columns (base.css), a black rule between them. */
+.chapter-body { column-rule: 0.5pt solid #000; }
+.chapter-end { border-top: 1pt solid #000; }
 .document-title { font-size: 16pt; margin: 0 0 4mm; }
 .document-image img { max-height: 55mm; border: 0.5pt solid #000; }
 

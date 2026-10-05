@@ -76,15 +76,17 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 ### Room PDF, two columns (2026-10-05)
 
 - After looking at an exported PDF the product owner asked for two columns per
-  page, like most TTRPG manuals. Gothic and Print now set each chapter's
-  Documents in two columns (`.chapter-body`: `columns: 2`, a thin rule between
-  them, body text 10.5 pt, images capped lower); the chapter title, contents,
-  index and cover stay full width. **Modern stays one column** (its defining
-  trait in spec 23b Decision 4): say if it should follow.
-- `column-fill: auto` fills a column before starting the next, so the last page
-  of a chapter has a short second column. Not seen rendered here; CI checks the
-  structure and, with a long description, that the text starts in a second
-  column for Gothic and Print and not for Modern.
+  page, like most TTRPG manuals, then (same day) for **all three styles** and for
+  balanced columns on a chapter's last page, closed by a centered half-page
+  rule with the rest of the page blank. Done in `base.css` (`.chapter-body`:
+  `columns: 2`, `column-fill: balance`; `hr.chapter-end` after it); each style
+  sets only the colors of the column rule and the closing rule (Modern adds a
+  wider gap and a pale rule). The chapter title, contents, index and cover stay
+  full width; body text 10.5 pt in Gothic and Print, images capped lower.
+- WeasyPrint's `balance` fills every page but the last in turn and balances only
+  the last (its multicol layout tries the whole height first). Not seen rendered
+  here; CI checks the structure and, with a long and a short description, that
+  the text starts in a second column in every style.
 
 ### Room PDF, jobs and routes (spec 23b_1c, 2026-10-05)
 

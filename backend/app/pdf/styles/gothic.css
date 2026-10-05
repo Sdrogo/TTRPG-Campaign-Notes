@@ -41,8 +41,9 @@ h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: normal
 .index-tag { font: 12pt "IM Fell English", serif; color: #8a0f1c; }
 
 /* Chapters: a red rule under the title, then the Documents in two columns like a
-   rulebook (column-fill auto: a column fills before the next starts) */
-.chapter-body { columns: 2; column-gap: 9mm; column-fill: auto; column-rule: 0.5pt solid #8a0f1c; }
+   rulebook (base.css) with a red rule between them */
+.chapter-body { column-rule: 0.5pt solid #8a0f1c; }
+.chapter-end { border-top: 1pt solid #8a0f1c; }
 .chapter-title { font-size: 30pt; line-height: 1.1; margin: 0 0 6mm; padding-bottom: 3mm; border-bottom: 2pt solid #8a0f1c; }
 .document-title { font-size: 20pt; margin: 0 0 4mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #1a1a1a; }
 .document-image img { max-height: 70mm; border: 0.75pt solid #1a1a1a; }

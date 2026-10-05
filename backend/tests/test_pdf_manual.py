@@ -121,21 +121,23 @@ def test_the_documents_of_a_chapter_sit_in_one_block_under_its_title() -> None:
     assert html.count('class="chapter-body"') == 3
     assert html.index('class="chapter-title"') < html.index('class="chapter-body"')
     assert html.index('class="chapter-body"') < html.index(f'id="doc-{CASTLE}"')
+    # A half-page rule closes each chapter, after its columns.
+    assert html.count('<hr class="chapter-end">') == 3
+    assert html.index('class="chapter-body"') < html.index('<hr class="chapter-end">')
 
 
-@pytest.mark.parametrize(
-    ("style", "columns"),
-    [(ManualStyle.GOTHIC, True), (ManualStyle.PRINT, True), (ManualStyle.MODERN, False)],
-)
-def test_gothic_and_print_set_the_chapters_in_two_columns_and_modern_keeps_one(
-    style: ManualStyle, columns: bool
-) -> None:
-    """Spec 23b: rulebook-like two columns for Gothic and Print; Modern is the
-    single-column style."""
-    css = (ASSETS_DIR / "styles" / f"{style.value}.css").read_text(encoding="utf-8")
-    rule = re.search(r"\.chapter-body\s*\{([^}]*)\}", css)
+def test_every_style_sets_the_chapters_in_two_balanced_columns() -> None:
+    """Spec 23b: rulebook-like two columns, balanced on the chapter's last page
+    (WeasyPrint fills each page in turn and balances only the last one). Set once
+    in `base.css`; no style may go back to one column."""
+    styles = ASSETS_DIR / "styles"
+    rule = re.search(r"\.chapter-body\s*\{([^}]*)\}", (styles / "base.css").read_text("utf-8"))
 
-    assert (rule is not None and "columns: 2" in rule.group(1)) is columns
+    assert rule is not None
+    assert "columns: 2" in rule.group(1) and "column-fill: balance" in rule.group(1)
+    for style in ManualStyle:
+        css = (styles / f"{style.value}.css").read_text(encoding="utf-8")
+        assert not re.search(r"column-count:\s*1|columns:\s*1|column-fill:\s*auto", css), style
 
 
 def test_the_language_follows_the_requester_with_english_as_the_fallback() -> None:
@@ -305,19 +307,21 @@ def _line_starts(reader: PdfReader, page: int) -> list[float]:
     return found
 
 
-@pytest.mark.parametrize(
-    ("style", "columns"),
-    [(ManualStyle.GOTHIC, 2), (ManualStyle.PRINT, 2), (ManualStyle.MODERN, 1)],
-)
-def test_a_long_chapter_flows_in_the_styles_columns(style: ManualStyle, columns: int) -> None:
-    """Spec 23b: Gothic and Print set a chapter's Documents in two columns, Modern
-    in one. The text of a long description starts at the left margin, and in two
-    columns also at the second column, well to the right of it."""
+@pytest.mark.parametrize("style", list(ManualStyle))
+@pytest.mark.parametrize("sentences", [60, 14])
+def test_a_chapter_flows_in_two_columns_balanced_on_its_last_page(
+    style: ManualStyle, sentences: int
+) -> None:
+    """Spec 23b: every style sets a chapter's Documents in two columns. The text
+    of a description starts at the left margin and also at the second column,
+    well to the right of it: with 60 sentences the chapter spans pages, with 14
+    it would fit one column, and the second column is used all the same because
+    the last page is balanced."""
     _weasyprint()
     sentence = "Marker the keep stands above the mist and the road bends toward it. "
     export = make_export(
         main_items=[],
-        documents=[document(CASTLE, "Castle", description=(text(sentence * 60),))],
+        documents=[document(CASTLE, "Castle", description=(text(sentence * sentences),))],
     )
     manual = build_manual(export, ManualOptions(), LABELS)
 
@@ -328,4 +332,4 @@ def test_a_long_chapter_flows_in_the_styles_columns(style: ManualStyle, columns:
     left = min(starts)
     width = float(body.mediabox.width)
     to_the_right = [x for x in starts if x > left + width * 0.25]
-    assert bool(to_the_right) is (columns == 2), (style, starts)
+    assert to_the_right, (style, sentences, starts)

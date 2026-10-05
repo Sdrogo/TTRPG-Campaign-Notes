@@ -44,9 +44,13 @@ a { color: inherit; text-decoration: none; }
 
 /* Chapters and Documents */
 .chapter-title { break-after: avoid; }
-/* The Documents of a chapter sit in `.chapter-body`: a style may set it in
-   columns (Gothic and Print do), while the chapter's title stays above it across
-   the page. */
+/* The Documents of a chapter sit in `.chapter-body`, set in two columns by every
+   style. `column-fill: balance` fills each page's columns in turn and, on the
+   chapter's last page, balances them to equal height; the rest of that page stays
+   blank (the next chapter starts a new one). The title stays above, across the
+   page. A half-page rule closes the chapter. */
+.chapter-body { columns: 2; column-gap: 9mm; column-fill: balance; }
+.chapter-end { width: 50%; margin: 8mm auto 0; border: 0; border-top: 1pt solid currentColor; break-before: avoid; break-inside: avoid; }
 .document { margin-top: 10mm; }
 .document-image { margin: 0 0 5mm; text-align: center; break-inside: avoid; }
 .document-image img { max-width: 100%; max-height: 90mm; object-fit: contain; }

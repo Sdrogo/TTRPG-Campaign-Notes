@@ -28,9 +28,12 @@ h1, h2, h3 { font-family: "Lato", Helvetica, Arial, sans-serif; font-weight: bol
 .toc-document > a { color: #444; }
 .index-tag { color: #0f766e; }
 
-/* One column on purpose: Modern is the airy, single-column style (spec 23b Decision 4). */
+/* Two columns like the others (base.css), kept airy: a wider gap and a pale rule. */
+.chapter-body { column-gap: 11mm; column-rule: 0.5pt solid #d4d9d9; }
+.chapter-end { border-top: 0.75pt solid #0f766e; }
 .chapter-title { font-size: 26pt; margin: 0 0 12mm; color: #0f766e; }
 .document { margin-top: 14mm; }
+.document-image img { max-height: 70mm; }
 .document-title { font-size: 16pt; margin: 0 0 5mm; }
 
 .note { background: #f4f6f6; border-left: 2.5pt solid #0f766e; }
