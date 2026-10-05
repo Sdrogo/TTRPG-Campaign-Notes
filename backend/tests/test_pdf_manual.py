@@ -113,6 +113,33 @@ def test_a_reference_and_the_index_link_to_where_the_document_is_printed() -> No
     assert f'<a class="index-link" href="#doc-{CASTLE}">Castle</a>' in html
 
 
+def test_the_documents_of_a_chapter_sit_in_one_block_under_its_title() -> None:
+    html = render_manual_html(_manual(), ManualStyle.GOTHIC, PageSize.A4)
+
+    # The title is outside, so a style can set the Documents in columns while it
+    # still spans the page.
+    assert html.count('class="chapter-body"') == 3
+    assert html.index('class="chapter-title"') < html.index('class="chapter-body"')
+    assert html.index('class="chapter-body"') < html.index(f'id="doc-{CASTLE}"')
+    # A half-page rule closes each chapter, after its columns.
+    assert html.count('<hr class="chapter-end">') == 3
+    assert html.index('class="chapter-body"') < html.index('<hr class="chapter-end">')
+
+
+def test_every_style_sets_the_chapters_in_two_balanced_columns() -> None:
+    """Spec 23b: rulebook-like two columns, balanced on the chapter's last page
+    (WeasyPrint fills each page in turn and balances only the last one). Set once
+    in `base.css`; no style may go back to one column."""
+    styles = ASSETS_DIR / "styles"
+    rule = re.search(r"\.chapter-body\s*\{([^}]*)\}", (styles / "base.css").read_text("utf-8"))
+
+    assert rule is not None
+    assert "columns: 2" in rule.group(1) and "column-fill: balance" in rule.group(1)
+    for style in ManualStyle:
+        css = (styles / f"{style.value}.css").read_text(encoding="utf-8")
+        assert not re.search(r"column-count:\s*1|columns:\s*1|column-fill:\s*auto", css), style
+
+
 def test_the_language_follows_the_requester_with_english_as_the_fallback() -> None:
     manual = _manual()
 
@@ -265,3 +292,44 @@ def test_the_fetcher_refuses_what_the_renderer_may_not_read(tmp_path: Any) -> No
     assert fetcher.fetch((ASSETS_DIR / "styles" / "base.css").as_uri()).read()
     # An allowed link must not be able to lead elsewhere: redirects aren't followed.
     assert not any(isinstance(h, HTTPRedirectHandler) for h in fetcher.handlers)
+
+
+def _line_starts(reader: PdfReader, page: int) -> list[float]:
+    """The x of every long piece of text on `page`: a line of the body, which
+    WeasyPrint writes as one piece."""
+    found: list[float] = []
+
+    def visit(text: str, _cm: Any, tm: Any, _font: Any, _size: Any) -> None:
+        if len(text.strip()) >= 15:
+            found.append(float(tm[4]))
+
+    reader.pages[page].extract_text(visitor_text=visit)
+    return found
+
+
+@pytest.mark.parametrize("style", list(ManualStyle))
+@pytest.mark.parametrize("sentences", [60, 14])
+def test_a_chapter_flows_in_two_columns_balanced_on_its_last_page(
+    style: ManualStyle, sentences: int
+) -> None:
+    """Spec 23b: every style sets a chapter's Documents in two columns. The text
+    of a description starts at the left margin and also at the second column,
+    well to the right of it: with 60 sentences the chapter spans pages, with 14
+    it would fit one column, and the second column is used all the same because
+    the last page is balanced."""
+    _weasyprint()
+    sentence = "Marker the keep stands above the mist and the road bends toward it. "
+    export = make_export(
+        main_items=[],
+        documents=[document(CASTLE, "Castle", description=(text(sentence * sentences),))],
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+
+    reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
+
+    body = reader.pages[2]  # cover, contents, then the chapter
+    starts = sorted({round(x) for x in _line_starts(reader, 2)})
+    left = min(starts)
+    width = float(body.mediabox.width)
+    to_the_right = [x for x in starts if x > left + width * 0.25]
+    assert to_the_right, (style, sentences, starts)

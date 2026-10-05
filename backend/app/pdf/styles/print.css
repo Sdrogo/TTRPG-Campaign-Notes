@@ -6,7 +6,7 @@
 @font-face { font-family: "Crimson Text"; font-weight: bold; src: url(../fonts/CrimsonText-Bold.ttf); }
 @font-face { font-family: "Crimson Text"; font-weight: bold; font-style: italic; src: url(../fonts/CrimsonText-BoldItalic.ttf); }
 
-body { font: 11pt/1.4 "Crimson Text", Georgia, serif; color: #000; background: none; }
+body { font: 10.5pt/1.35 "Crimson Text", Georgia, serif; color: #000; background: none; }
 h1, h2, h3 { font-family: "Crimson Text", Georgia, serif; font-weight: bold; }
 @page body {
   @top-left { font: italic 9pt "Crimson Text", serif; }
@@ -26,8 +26,11 @@ h1, h2, h3 { font-family: "Crimson Text", Georgia, serif; font-weight: bold; }
 .index-entries { columns: 2; column-gap: 10mm; }
 
 .chapter-title { font-size: 26pt; margin: 0 0 6mm; border-bottom: 1.5pt solid #000; }
+/* The Documents in two columns (base.css), a black rule between them. */
+.chapter-body { column-rule: 0.5pt solid #000; }
+.chapter-end { border-top: 1pt solid #000; }
 .document-title { font-size: 16pt; margin: 0 0 4mm; }
-.document-image img { max-height: 60mm; border: 0.5pt solid #000; }
+.document-image img { max-height: 55mm; border: 0.5pt solid #000; }
 
 .note { border: 1pt solid #000; }
 .note h3 { font-size: 12pt; }

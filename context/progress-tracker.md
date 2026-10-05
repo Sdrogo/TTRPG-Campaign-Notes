@@ -73,6 +73,20 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
   its three entry points), 100% coverage; `tsc`, lint and build clean.
 
+### Room PDF, two columns (2026-10-05)
+
+- After looking at an exported PDF the product owner asked for two columns per
+  page, like most TTRPG manuals, then (same day) for **all three styles** and for
+  balanced columns on a chapter's last page, closed by a centered half-page
+  rule with the rest of the page blank. Done in `base.css` (`.chapter-body`:
+  `columns: 2`, `column-fill: balance`; `hr.chapter-end` after it); each style
+  sets only the colors of the column rule and the closing rule (Modern adds a
+  wider gap and a pale rule). The chapter title, contents, index and cover stay
+  full width; body text 10.5 pt in Gothic and Print, images capped lower.
+- WeasyPrint's `balance` fills every page but the last in turn and balances only
+  the last (its multicol layout tries the whole height first). Not seen rendered
+  here; CI checks the structure and, with a long and a short description, that
+  the text starts in a second column in every style.
 ### Room PDF, frontend (spec 23b_2, 2026-10-05)
 
 - The Export dialog has a PDF format: style cards with miniatures (Gothic,
