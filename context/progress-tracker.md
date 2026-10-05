@@ -40,7 +40,11 @@ tables, existing Rooms at `room`). All of feature 22 (22_1, 22_2, 22b_1,
 owner's choice, 2026-10-04); the staging frontend is the Vercel Preview of
 `staging`. Setup and the migration flow for both databases are in
 `architecture.md` → Environments. The staging database starts empty and is
-brought to head with `alembic upgrade head`.
+brought to head with `alembic upgrade head`. **Since 2026-10-05 the staging
+backend is a Render Docker service** (`ttrpg-campaign-notes-2.onrender.com`),
+needed for the Room PDF; production is still on Render's native runtime until
+the release that ships the PDF (open decision: new Docker service and URL, or
+the Render API on the existing one).
 
 **Local env files (2026-10-04)**: on the product owner's machine `.env` is
 **production**; staging and dev live in `.env.staging` and `.env.dev`. The
@@ -151,10 +155,11 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   Command empty, the same environment variables as the old staging service
   (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `STORAGE_BUCKET`,
   `CORS_ORIGINS`, `CORS_ORIGIN_REGEX`), at `https://ttrpg-campaign-notes-2.onrender.com`
-  (`/health` answers 200). To finish: point the Vercel Preview variable
-  `VITE_API_BASE_URL` of the `staging` branch at it and redeploy the
-  frontend (Vite inlines it at build time), try the app, then retire the old
-  staging service.
+  (`/health` answers 200). **Finished 2026-10-05**: the Vercel Preview variable
+  `VITE_API_BASE_URL` of the `staging` branch points at it (confirmed by the
+  product owner), so staging runs on Docker and the old native staging service
+  is superseded and can be deleted (checked from outside: `/health` 200, the
+  23b_1c routes exist, CORS accepts the staging preview origin).
 - **Production is still open**: a new service means a new URL (the production
   frontend's `VITE_API_BASE_URL`, possibly a custom domain), so decide before
   the release that ships the PDF: new service plus domain swap, or the Render
