@@ -1,8 +1,8 @@
 """Full-text matching in one Room (spec 21): the ids of the Documents, Notes,
-Comments and Tags whose `search_vector` matches a prefix query, best first,
-and the excerpts Postgres marks up. Matches are not filtered for any viewer:
-the caller applies the visibility functions before using them (Invariant 1)
-and builds excerpts only for what survived."""
+Comments and Tags whose `search_vector` matches a prefix query, best first and
+at most `cap` of each kind, and the excerpts Postgres marks up. Matches are
+not filtered for any viewer: the caller applies the visibility functions
+before using them (Invariant 1) and builds excerpts only for what survived."""
 
 import uuid
 from collections.abc import Sequence
@@ -43,7 +43,11 @@ def _tagged_document_ids(tag_ids: Sequence[uuid.UUID]) -> Select[uuid.UUID]:
 
 
 async def match_document_ids(
-    session: AsyncSession, room_id: uuid.UUID, tsquery: str, tag_ids: Sequence[uuid.UUID]
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    tsquery: str,
+    tag_ids: Sequence[uuid.UUID],
+    cap: int,
 ) -> list[uuid.UUID]:
     """The Room's Documents whose name or description match, best first (a
     name match ranks higher), only those carrying every one of `tag_ids`
@@ -57,13 +61,17 @@ async def match_document_ids(
     result = await session.execute(
         statement.order_by(
             func.ts_rank(DocumentRow.search_vector, query).desc(), DocumentRow.name, DocumentRow.id
-        )
+        ).limit(cap)
     )
     return list(result.scalars())
 
 
 async def match_note_ids(
-    session: AsyncSession, room_id: uuid.UUID, tsquery: str, tag_ids: Sequence[uuid.UUID]
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    tsquery: str,
+    tag_ids: Sequence[uuid.UUID],
+    cap: int,
 ) -> list[uuid.UUID]:
     """The Notes on the Room's Documents whose title or text match, best
     first, only on Documents carrying every one of `tag_ids` when there are
@@ -77,13 +85,17 @@ async def match_note_ids(
     if tag_ids:
         statement = statement.where(NoteRow.document_id.in_(_tagged_document_ids(tag_ids)))
     result = await session.execute(
-        statement.order_by(func.ts_rank(NoteRow.search_vector, query).desc(), NoteRow.id)
+        statement.order_by(func.ts_rank(NoteRow.search_vector, query).desc(), NoteRow.id).limit(cap)
     )
     return list(result.scalars())
 
 
 async def match_comment_ids(
-    session: AsyncSession, room_id: uuid.UUID, tsquery: str, tag_ids: Sequence[uuid.UUID]
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    tsquery: str,
+    tag_ids: Sequence[uuid.UUID],
+    cap: int,
 ) -> list[uuid.UUID]:
     """The Comments (replies included) on the Room's Documents whose text
     matches, best then newest first, only on Documents carrying every one of
@@ -107,18 +119,21 @@ async def match_comment_ids(
             func.ts_rank(PostRow.search_vector, query).desc(),
             PostRow.created_at.desc(),
             PostRow.id,
-        )
+        ).limit(cap)
     )
     return list(result.scalars())
 
 
-async def match_tag_ids(session: AsyncSession, room_id: uuid.UUID, tsquery: str) -> list[uuid.UUID]:
+async def match_tag_ids(
+    session: AsyncSession, room_id: uuid.UUID, tsquery: str, cap: int
+) -> list[uuid.UUID]:
     """The Room's Tags whose name matches, best first."""
     query = _query(tsquery)
     result = await session.execute(
         select(TagRow.id)
         .where(TagRow.room_id == room_id, TagRow.search_vector.op("@@")(query))
         .order_by(func.ts_rank(TagRow.search_vector, query).desc(), TagRow.name, TagRow.id)
+        .limit(cap)
     )
     return list(result.scalars())
 

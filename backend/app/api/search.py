@@ -18,6 +18,7 @@ from app.auth.dependencies import CurrentUserDep
 from app.db import search_repo, tags_repo
 from app.db.session import SessionDep
 from app.domain.search import (
+    MAX_CANDIDATES_PER_KIND,
     MAX_RESULTS_PER_KIND,
     RESULTS_PER_KIND,
     Highlighted,
@@ -132,28 +133,35 @@ async def search_room(
         return SearchResponse(documents=_empty(), notes=_empty(), comments=_empty(), tags=_empty())
 
     document_ids = (
-        await search_repo.match_document_ids(session, room_id, tsquery, tag_ids)
+        await search_repo.match_document_ids(
+            session, room_id, tsquery, tag_ids, MAX_CANDIDATES_PER_KIND
+        )
         if SearchKind.DOCUMENT in kinds
         else []
     )
     note_ids = (
-        await search_repo.match_note_ids(session, room_id, tsquery, tag_ids)
+        await search_repo.match_note_ids(
+            session, room_id, tsquery, tag_ids, MAX_CANDIDATES_PER_KIND
+        )
         if SearchKind.NOTE in kinds
         else []
     )
     comment_ids = (
-        await search_repo.match_comment_ids(session, room_id, tsquery, tag_ids)
+        await search_repo.match_comment_ids(
+            session, room_id, tsquery, tag_ids, MAX_CANDIDATES_PER_KIND
+        )
         if SearchKind.COMMENT in kinds
         else []
     )
     tag_hits = (
-        await search_repo.match_tag_ids(session, room_id, tsquery)
+        await search_repo.match_tag_ids(session, room_id, tsquery, MAX_CANDIDATES_PER_KIND)
         if SearchKind.TAG in kinds
         else []
     )
 
     # Filter first (Invariant 1): only what survives is paged, counted and
-    # read for excerpts.
+    # read for excerpts. Only the best `MAX_CANDIDATES_PER_KIND` matches of a
+    # kind are checked, so a short prefix stays cheap in a large Room.
     lookup = await lookup_content(session, membership, document_ids, note_ids, comment_ids)
     documents, more_documents = first_page(
         [i for i in document_ids if i in lookup.visible_ids], limit

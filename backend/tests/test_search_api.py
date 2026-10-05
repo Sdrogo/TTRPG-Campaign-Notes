@@ -8,10 +8,12 @@ from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from typing import Any
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api import search as search_api
 from app.main import app
 
 
@@ -319,3 +321,33 @@ async def test_short_queries_and_outsiders(
         f"{room.url}/search", params={"q": "abc", "limit": 51}, headers=room.master
     )
     assert response.status_code == 422
+
+
+async def test_only_the_best_ranked_candidates_are_checked(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(search_api, "MAX_CANDIDATES_PER_KIND", 2)
+    room = await _room(client, make_token)
+    # A name match ranks above a description match.
+    hidden = await _document(client, room, "Ember gate", visibility="master")
+    named = await _document(client, room, "Ember hall")
+    await _document(client, room, "Old hall", description="Ember")
+    note_doc = await _document(client, room, "Notes")
+    for title in ("Ember one", "Ember two", "Ember three"):
+        await _note(client, room, note_doc, title)
+    for word in ("Ember", "Embers", "Embered"):
+        await _post(client, f"{room.url}/tags", room.master, name=word)
+
+    # The Master sees the two best Documents; a third is past the cap.
+    found = await _search(client, room, room.master, "ember")
+    assert set(_ids(found, "documents")) == {hidden["id"], named["id"]}
+    assert len(_ids(found, "notes")) == 2
+    assert len(_ids(found, "tags")) == 2
+    # The Player's candidates hold a hidden one, which is neither found nor
+    # counted: the cap never hints at what the Player can't see.
+    found = await _search(client, room, room.player, "ember", limit=1)
+    assert _ids(found, "documents") == [named["id"]]
+    assert found["documents"]["has_more"] is False

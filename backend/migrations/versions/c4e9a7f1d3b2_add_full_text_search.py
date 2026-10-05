@@ -11,8 +11,12 @@ Spec `21 - Full-text search.md`, unit 21_1:
   (body; NULL once the Comment is deleted) and `tags` (name). Mention tokens
   are indexed by their names, not their syntax.
 
-No table is created, so RLS is unchanged. Existing rows get their vectors when
-the columns are added (Postgres computes generated columns on ALTER).
+No table is created, so RLS is unchanged. Adding a stored generated column
+rewrites `documents`, `document_notes`, `posts` and `tags` under an ACCESS
+EXCLUSIVE lock, computing every existing row's vector; quick at this size.
+
+The downgrade leaves the `unaccent` extension and the `extensions` schema in
+place: either may have existed before, and other objects may use them.
 
 Revision ID: c4e9a7f1d3b2
 Revises: b8d2f6a4c9e1
@@ -88,4 +92,4 @@ def downgrade() -> None:
         op.drop_index(f"ix_{table}_search_vector", table_name=table, postgresql_using="gin")
         op.drop_column(table, "search_vector")
     op.execute(f"DROP TEXT SEARCH CONFIGURATION {CONFIG}")
-    op.execute("DROP EXTENSION IF EXISTS unaccent")
+    # `unaccent` stays: it may predate this migration (see the docstring).

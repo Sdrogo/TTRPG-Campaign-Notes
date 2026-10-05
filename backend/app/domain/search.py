@@ -29,6 +29,12 @@ MIN_QUERY_LENGTH = 2
 # it may ask for ("show more").
 RESULTS_PER_KIND = 10
 MAX_RESULTS_PER_KIND = 50
+# The best-ranked matches per kind that go through the visibility check, so a
+# two-letter prefix in a large Room stays cheap. A visible match ranked below
+# this many others (hidden ones included) is not found until the query gets
+# more specific. Only visible rows are paged and counted, so the cap reveals
+# nothing about hidden content.
+MAX_CANDIDATES_PER_KIND = 500
 
 # The markers Postgres wraps a matched word in (`ts_headline`). Control
 # characters, removed from the text beforehand, so they can't come from it.
