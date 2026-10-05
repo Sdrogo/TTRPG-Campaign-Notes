@@ -14,8 +14,8 @@
 
 @page cover { background: #0b0b0c; }
 @page body {
-  @top-left { font: italic 9pt "IM Fell English", serif; color: #8a0f1c; border-bottom: 0.5pt solid #8a0f1c; width: 60%; }
-  @top-right { font: italic 9pt "IM Fell English", serif; color: #555; }
+  @top-left { font: italic 9pt "IM Fell English", serif; color: #8a0f1c; width: 50%; vertical-align: bottom; padding-bottom: 1.5mm; margin-bottom: 6mm; border-bottom: 0.5pt solid #8a0f1c; }
+  @top-right { font: italic 9pt "IM Fell English", serif; color: #555; width: 50%; vertical-align: bottom; padding-bottom: 1.5mm; margin-bottom: 6mm; border-bottom: 0.5pt solid #8a0f1c; }
 }
 @page {
   @bottom-center { font: 9pt "IM Fell English", serif; color: #8a0f1c; }
@@ -43,7 +43,7 @@ h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: normal
 /* Chapters: a red rule under the title, then the Documents in two columns like a
    rulebook (base.css) with a red rule between them */
 .chapter-body { column-rule: 0.5pt solid #8a0f1c; }
-.chapter-end { border-top: 1pt solid #8a0f1c; }
+.chapter { background-image: url(ornaments/rule-gothic.svg); background-size: 50% 1pt; }
 .chapter-title { font-size: 30pt; line-height: 1.1; margin: 0 0 6mm; padding-bottom: 3mm; border-bottom: 2pt solid #8a0f1c; }
 .document-title { font-size: 20pt; margin: 0 0 4mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #1a1a1a; }
 .document-image img { max-height: 70mm; border: 0.75pt solid #1a1a1a; }
