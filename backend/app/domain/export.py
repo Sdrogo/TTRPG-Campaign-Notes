@@ -570,23 +570,46 @@ def _indented(text: str, prefix: str) -> str:
     return "\n".join([first, *[f"{prefix}{line}" if line else "" for line in rest]])
 
 
-def _group_documents(export: Export) -> list[tuple[str, list[ExportDocument]]]:
+def group_documents(
+    export: Export,
+) -> list[tuple[tuple[uuid.UUID, ...] | None, list[ExportDocument]]]:
     """The Documents bucketed like the Documents list (spec 10, 11_2): by the
     Room's Main items in order, a Document under every item whose Tags it
-    all carries, then the ones matching none. Empty groups are dropped, and
-    an item that names a missing Tag is ignored."""
-    tag_names = {tag.id: tag.name for tag in export.tags}
-    groups: list[tuple[str, list[ExportDocument]]] = []
+    all carries (the group is keyed by the item's Tag ids), then the ones
+    matching none, keyed `None` and always last. Empty groups are kept, so a
+    caller can tell the Room has Main items; an item that names a missing Tag
+    is ignored."""
+    tag_ids = {tag.id for tag in export.tags}
+    groups: list[tuple[tuple[uuid.UUID, ...] | None, list[ExportDocument]]] = []
     matched: set[uuid.UUID] = set()
     for item in export.main_items:
-        if not all(tag_id in tag_names for tag_id in item):
+        if not all(tag_id in tag_ids for tag_id in item):
             continue
         members = [d for d in export.documents if all(t in d.tag_ids for t in item)]
         matched.update(d.id for d in members)
-        groups.append((" + ".join(_md(tag_names[tag_id]) for tag_id in item), members))
-    rest = [d for d in export.documents if d.id not in matched]
-    groups.append((_OTHER_DOCUMENTS if groups else _DOCUMENTS, rest))
-    return [(title, docs) for title, docs in groups if docs]
+        groups.append((tuple(item), members))
+    groups.append((None, [d for d in export.documents if d.id not in matched]))
+    return groups
+
+
+def _group_documents(export: Export) -> list[tuple[str, list[ExportDocument]]]:
+    """`group_documents` as Markdown headings: the Tag names of an item joined
+    by " + ", then "Other documents" (or "Documents" when the Room has no
+    Main item to group by). Empty groups are dropped."""
+    tag_names = {tag.id: tag.name for tag in export.tags}
+    groups = group_documents(export)
+    titled = [
+        (
+            (
+                " + ".join(_md(tag_names[tag_id]) for tag_id in item)
+                if item is not None
+                else (_OTHER_DOCUMENTS if len(groups) > 1 else _DOCUMENTS)
+            ),
+            documents,
+        )
+        for item, documents in groups
+    ]
+    return [(title, documents) for title, documents in titled if documents]
 
 
 def render_markdown(export: Export) -> str:

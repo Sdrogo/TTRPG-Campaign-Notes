@@ -1,0 +1,102 @@
+{#- The structure shared by every style of the Room PDF (spec 23b Decision 1):
+    cover, contents, one chapter per Main item, the index of Tags. A style's
+    template only extends it (an ornament for the cover); its look is its CSS.
+    Page numbers are never written here: a link carries `data-page` (the
+    localized "p.") and the CSS prints the page of its target. Each paragraph is
+    written on one line because the CSS keeps line breaks inside <p>. -#}
+{%- macro paragraphs(items) -%}
+{%- for paragraph in items -%}
+<p>{% for run in paragraph %}{% if run.target %}<a class="xref" href="#{{ run.target }}" data-page="{{ manual.labels.page_abbreviation }}">{{ run.text }}</a>{% else %}{{ run.text }}{% endif %}{% endfor %}</p>
+{% endfor -%}
+{%- endmacro -%}
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<title>{{ manual.title }}</title>
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/{{ style }}.css">
+<style>@page { size: {{ page_size }}; }</style>
+</head>
+<body class="style-{{ style }}">
+
+<section class="cover">
+  <div class="cover-inner">
+    {% if manual.game_system %}<p class="cover-system">{{ manual.game_system }}</p>{% endif %}
+    <h1 class="cover-title">{{ manual.title }}</h1>
+    {% block cover_ornament %}{% endblock %}
+    {% if manual.cover_image_url %}<img class="cover-image" src="{{ manual.cover_image_url }}" alt="">{% endif %}
+    <p class="cover-date">{{ manual.generated_on.isoformat() }}</p>
+  </div>
+</section>
+
+<nav class="toc">
+  <h1 class="section-title">{{ manual.labels.contents }}</h1>
+  <ol>
+    {% for chapter in manual.chapters %}
+    <li class="toc-chapter"><a href="#{{ chapter.id }}">{{ chapter.title }}</a>
+      <ol>
+        {% for document in chapter.documents %}
+        <li class="toc-document"><a href="#{{ document.anchor }}">{{ document.name }}</a></li>
+        {% endfor %}
+      </ol>
+    </li>
+    {% endfor %}
+    {% if manual.index %}
+    <li class="toc-chapter"><a href="#index">{{ manual.labels.index }}</a></li>
+    {% endif %}
+  </ol>
+</nav>
+
+{% for chapter in manual.chapters %}
+<section class="chapter" id="{{ chapter.id }}">
+  <h1 class="chapter-title">{{ chapter.title }}</h1>
+  {% for entry in chapter.entries %}
+  {% if entry.paragraphs is defined %}
+  <article class="document" id="{{ entry.anchor }}">
+    <h2 class="document-title">{{ entry.name }}</h2>
+    {% if entry.image_url %}<figure class="document-image"><img src="{{ entry.image_url }}" alt=""></figure>{% endif %}
+    <div class="description">
+      {{ paragraphs(entry.paragraphs) }}
+    </div>
+    {% for note in entry.notes %}
+    <aside class="note">
+      <h3>{{ note.title }}</h3>
+      {{ paragraphs(note.paragraphs) }}
+    </aside>
+    {% endfor %}
+    {% if entry.comments %}
+    <section class="comments">
+      <h3>{{ manual.labels.comments }}</h3>
+      {% for comment in entry.comments %}
+      <div class="comment depth-{{ [comment.depth, 3] | min }}">
+        <p class="comment-meta"><strong>{{ comment.author }}</strong> · {{ comment.written_on.isoformat() }}</p>
+        {% if comment.deleted %}<p class="deleted">{{ manual.labels.deleted_comment }}</p>{% else %}{{ paragraphs(comment.paragraphs) }}{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </article>
+  {% else %}
+  <p class="reference"><a class="xref" href="#{{ entry.anchor }}" data-page="{{ manual.labels.page_abbreviation }}">{{ entry.name }}</a></p>
+  {% endif %}
+  {% endfor %}
+</section>
+{% endfor %}
+
+{% if manual.index %}
+<section class="index" id="index">
+  <h1 class="section-title">{{ manual.labels.index }}</h1>
+  <div class="index-entries">
+    {% for entry in manual.index %}
+    <div class="index-entry" id="{{ entry.anchor }}">
+      <span class="index-tag">{{ entry.name }}</span>
+      <span class="index-documents">{% for document in entry.documents %}<a class="index-link" href="#doc-{{ document.id }}">{{ document.name }}</a>{% if not loop.last %}; {% endif %}{% endfor %}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+</body>
+</html>

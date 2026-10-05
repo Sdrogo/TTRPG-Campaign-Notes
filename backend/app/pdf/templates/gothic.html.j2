@@ -1,0 +1,10 @@
+{#- Gothic (spec 23b Decision 4): inspired by the look of gothic-horror RPG
+    books, never copied. The ornament is original: a rule with a diamond. -#}
+{% extends "_base.html.j2" %}
+{% block cover_ornament %}
+<svg class="cover-ornament" viewBox="0 0 200 12" width="200" height="12" aria-hidden="true">
+  <line x1="0" y1="6" x2="86" y2="6" stroke="#8a0f1c" stroke-width="1"/>
+  <path d="M100 0 L107 6 L100 12 L93 6 Z" fill="#8a0f1c"/>
+  <line x1="114" y1="6" x2="200" y2="6" stroke="#8a0f1c" stroke-width="1"/>
+</svg>
+{% endblock %}

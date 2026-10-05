@@ -1,0 +1,36 @@
+/* Print (spec 23b Decision 4): black and white, no backgrounds, ink-friendly:
+   no fill anywhere, rules instead of tints, smaller images. */
+
+@font-face { font-family: "Crimson Text"; src: url(../fonts/CrimsonText-Regular.ttf); }
+@font-face { font-family: "Crimson Text"; font-style: italic; src: url(../fonts/CrimsonText-Italic.ttf); }
+@font-face { font-family: "Crimson Text"; font-weight: bold; src: url(../fonts/CrimsonText-Bold.ttf); }
+@font-face { font-family: "Crimson Text"; font-weight: bold; font-style: italic; src: url(../fonts/CrimsonText-BoldItalic.ttf); }
+
+body { font: 11pt/1.4 "Crimson Text", Georgia, serif; color: #000; background: none; }
+h1, h2, h3 { font-family: "Crimson Text", Georgia, serif; font-weight: bold; }
+@page body {
+  @top-left { font: italic 9pt "Crimson Text", serif; }
+  @top-right { font: italic 9pt "Crimson Text", serif; }
+}
+@page { @bottom-center { font: 9pt "Crimson Text", serif; } }
+
+.cover { text-align: center; }
+.cover-inner { padding: 60mm 25mm 0; }
+.cover-system { font-size: 11pt; letter-spacing: 0.2em; text-transform: uppercase; margin: 0 0 6mm; }
+.cover-title { font-size: 34pt; line-height: 1.1; margin: 0 0 12mm; text-align: center; }
+.cover-image { display: block; margin: 0 auto 12mm; max-width: 90mm; max-height: 90mm; object-fit: contain; border: 0.75pt solid #000; }
+.cover-date { margin: 0; }
+
+.section-title { font-size: 22pt; margin: 0 0 8mm; border-bottom: 1pt solid #000; }
+.toc-chapter > a { font-weight: bold; }
+.index-entries { columns: 2; column-gap: 10mm; }
+
+.chapter-title { font-size: 26pt; margin: 0 0 6mm; border-bottom: 1.5pt solid #000; }
+.document-title { font-size: 16pt; margin: 0 0 4mm; }
+.document-image img { max-height: 60mm; border: 0.5pt solid #000; }
+
+.note { border: 1pt solid #000; }
+.note h3 { font-size: 12pt; }
+.xref { text-decoration: underline; }
+.comments h3 { font-size: 12pt; border-bottom: 0.5pt solid #000; }
+.comment-meta { font-size: 9.5pt; }

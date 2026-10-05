@@ -69,6 +69,38 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
   its three entry points), 100% coverage; `tsc`, lint and build clean.
 
+### Room PDF, layout and styles (spec 23b_1b, 2026-10-05)
+
+- The manual itself, still with no route: `app/domain/manual.py` lays the
+  export tree out (cover, one chapter per Main item, a Document printed once
+  and referenced as "→ p. N" elsewhere, "Other" last, Notes as sidebars,
+  Comments as an optional appendix, index of Tags, mentions as links only when
+  their target is in the PDF); `app/pdf/` typesets it (Jinja template per style,
+  print CSS, bundled OFL fonts, WeasyPrint). All three styles (Gothic, Modern,
+  Print) and both sizes (A4, Letter) are in. Page numbers come from CSS
+  (`target-counter`), none from Python. Details in `architecture.md` → Room
+  PDF, layout and typesetting.
+- Choices beyond the ticket (confirm): a Document with no favorite image uses
+  its first; Comment images are left out of the appendix; the page references
+  use the PDF's own page numbers (cover = page 1); the Tag filter isn't
+  mentioned on the cover; "Contents" is "Indice" and "Index" is "Indice
+  analitico" in Italian; the renderer fetches only its own files, `data:` URLs
+  and the Manual's image links. `export.group_documents` was split out of the
+  Markdown grouping so both formats share it (23's tests unchanged).
+- **Not seen rendered**: WeasyPrint can't load on the product owner's Windows
+  machine (no GTK), so the HTML, the CSS syntax and the layout tests ran
+  locally but **no PDF was produced here**: the PDF smoke test (page count,
+  contents page numbers = the pages the text is on, "→ p. N", the index,
+  accents, A4 and Letter, three styles) and the new `Room PDF styles render`
+  CI step in the image are the first real check. Look at the three styles in a
+  viewer once CI is green; the CSS is the part most likely to need tuning.
+- Still to do: 23b_1c (`export_jobs`, routes, image fetching and downscaling
+  through Storage, `pypdf` attachments, 24-hour cleanup), then 23b_2.
+- `uv.lock` was regenerated (it lacked `weasyprint`/`pypdf`; the newer uv also
+  rewrote its header). `jinja2` is a new dependency, `weasyprint>=70`.
+- Backend: 15 layout tests and 16 HTML/asset tests run locally, 7 PDF tests need
+  Pango; `app/` coverage is 100% only where Pango exists (CI).
+
 ### Room PDF, Docker image and rendering check (spec 23b_1a, 2026-10-05)
 
 - First step of 23b, the deploy check the spec asks for. Decided with the

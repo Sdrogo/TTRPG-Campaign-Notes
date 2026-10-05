@@ -1,0 +1,70 @@
+/* Layout shared by every style of the Room PDF (spec 23b). A style's own
+   stylesheet sets fonts, colors and ornaments on top of this. Page numbers are
+   asked from WeasyPrint with target-counter(): a link's `data-page` holds the
+   localized "p.". */
+
+@page {
+  margin: 22mm 20mm 24mm;
+  @bottom-center { content: counter(page); }
+}
+@page cover {
+  margin: 0;
+  @bottom-center { content: none; }
+}
+@page toc {
+  @top-left { content: none; }
+  @top-right { content: none; }
+}
+@page body {
+  @top-left { content: string(chapter-title); }
+  @top-right { content: string(document-title); }
+}
+
+.cover { page: cover; break-after: page; }
+.toc { page: toc; break-after: page; }
+.chapter { page: body; break-before: page; }
+.index { page: body; break-before: page; }
+
+.chapter-title { string-set: chapter-title content(); }
+.index .section-title { string-set: chapter-title content(), document-title ""; }
+.document-title { string-set: document-title content(); }
+
+body { margin: 0; }
+p { margin: 0 0 3mm; white-space: pre-line; orphans: 2; widows: 2; }
+h1, h2, h3 { break-after: avoid; }
+a { color: inherit; text-decoration: none; }
+
+/* Contents */
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc ol ol { padding-left: 8mm; }
+.toc a { display: block; }
+.toc a::after { content: leader('.') target-counter(attr(href), page); }
+.toc-chapter { margin-top: 4mm; }
+.toc-document { margin-top: 1mm; }
+
+/* Chapters and Documents */
+.chapter-title { break-after: avoid; }
+.document { margin-top: 10mm; }
+.document-image { margin: 0 0 5mm; text-align: center; break-inside: avoid; }
+.document-image img { max-width: 100%; max-height: 90mm; object-fit: contain; }
+.note { margin: 5mm 0; padding: 3mm 4mm; break-inside: avoid; }
+.note h3 { margin: 0 0 2mm; }
+.note p:last-child { margin-bottom: 0; }
+
+/* A link to something printed elsewhere shows where: "Name → p. 12". */
+.xref::after { content: " \2192 " attr(data-page) " " target-counter(attr(href), page); }
+.reference { margin: 2mm 0; }
+
+/* Comments (only with the option on) */
+.comments { margin-top: 6mm; }
+.comment { margin: 0 0 3mm; break-inside: avoid; }
+.comment-meta { margin-bottom: 1mm; }
+.comment.depth-1 { margin-left: 6mm; }
+.comment.depth-2 { margin-left: 12mm; }
+.comment.depth-3 { margin-left: 18mm; }
+.deleted { font-style: italic; }
+
+/* Index of Tags */
+.index-entry { margin: 0 0 3mm; break-inside: avoid; }
+.index-tag { font-weight: bold; display: block; }
+.index-link::after { content: ", " target-counter(attr(href), page); }

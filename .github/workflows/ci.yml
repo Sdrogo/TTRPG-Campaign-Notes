@@ -186,6 +186,31 @@ jobs:
           print('image ok,', len(pdf), 'bytes')
           "
 
+      # The installed package carries the Room PDF's templates, stylesheets and
+      # fonts (spec 23b_1b): each style renders a small manual from inside the
+      # image, as the unprivileged user, and its text is read back.
+      - name: Room PDF styles render
+        run: |
+          docker run --rm \
+            -e DATABASE_URL=postgresql+asyncpg://u:p@127.0.0.1:5432/db \
+            -e SUPABASE_URL=http://supabase.invalid \
+            -e SUPABASE_SECRET_KEY=ci-not-a-real-key \
+            --entrypoint python ttrpg-backend -c "
+          import datetime, io, uuid
+          from pypdf import PdfReader
+          from app.domain.manual import Manual, ManualChapter, ManualDocument, Run
+          from app.pdf.labels import manual_labels
+          from app.pdf.render import ManualStyle, PageSize, render_manual_pdf
+          doc = ManualDocument(uuid.uuid4(), 'Castle', None, [[Run('Città dell Ovest')]], [], [])
+          chapter = ManualChapter('chapter-1', 'Places', [doc])
+          manual = Manual('Barovia', None, datetime.date.today(), None, manual_labels('en'), [chapter], [])
+          for style in ManualStyle:
+              reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
+              text = ' '.join(page.extract_text() for page in reader.pages)
+              assert len(reader.pages) == 3 and 'Città dell Ovest' in text, (style, len(reader.pages))
+              print(style.value, 'ok')
+          "
+
       # The image runs as an unprivileged user, and the smoke test above
       # already rendered a PDF as that user.
       - name: Runs as a non-root user
