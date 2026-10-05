@@ -186,6 +186,12 @@ jobs:
           print('image ok,', len(pdf), 'bytes')
           "
 
+      # The image runs as an unprivileged user, and the smoke test above
+      # already rendered a PDF as that user.
+      - name: Runs as a non-root user
+        run: |
+          [ "$(docker run --rm --entrypoint id ttrpg-backend -u)" != "0" ]
+
       # A secret file must never be baked into the image.
       - name: No env files in the image
         run: |

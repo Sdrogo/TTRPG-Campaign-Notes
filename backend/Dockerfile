@@ -34,6 +34,12 @@ COPY pyproject.toml ./
 COPY app ./app
 RUN pip install .
 
+# Run as an unprivileged user (review of PR #96). It has a home directory so
+# fontconfig and WeasyPrint have somewhere to write their caches; the code in
+# /app and site-packages stays read-only to it.
+RUN useradd --system --create-home --uid 10001 appuser
+USER appuser
+
 # Render sets PORT (10000 by default) and expects the service on 0.0.0.0.
 # Leave the service's "Docker Command" empty in the dashboard so this runs.
 EXPOSE 10000

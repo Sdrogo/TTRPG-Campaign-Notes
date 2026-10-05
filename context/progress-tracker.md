@@ -87,6 +87,8 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   image, no `.env*` in `/app`) and a rendering test that fails in CI when
   Pango is missing. Not run locally: no Docker and no GTK on the product
   owner's Windows machine, so the test is skipped there; CI is the check.
+- The container runs as an unprivileged user (`appuser`), a suggestion from
+  the review of the PR; CI checks it and renders the PDF as that user.
 - Free-plan note: Docker builds are slower than the native ones and use the
   workspace's build minutes.
 
