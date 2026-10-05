@@ -742,3 +742,59 @@ async def test_deleting_the_room_removes_its_pdfs_from_storage(
 
     assert deleted.status_code == 204, deleted.text
     assert path not in fake_storage
+
+
+async def test_a_document_listed_in_two_chapters_has_its_attachments_appended_once(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    renders: list[Render],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    tags = {
+        t["name"]: t for t in (await client.get(f"{room.url}/tags", headers=room.master)).json()
+    }
+    both = await _document(client, room, "Both", tag_ids=[tags["NPC"]["id"], tags["Place"]["id"]])
+    upload = await client.post(
+        f"{room.url}/documents/{both['id']}/files",
+        files={"file": ("Sheet.pdf", _pdf(3), "application/pdf")},
+        headers=room.master,
+    )
+    assert upload.status_code == 201, upload.text
+
+    started = (await _start(client, room, include_attachments=True)).json()
+
+    (render,) = renders
+    assert [type(e).__name__ for c in render.manual.chapters for e in c.entries] == [
+        "ManualDocument",
+        "ManualReference",
+    ]
+    stored = fake_storage[f"exports/{room.id}/{started['id']}.pdf"]
+    assert len(PdfReader(io.BytesIO(stored)).pages) == 5
+
+
+async def test_a_job_that_cannot_even_be_marked_failed_is_only_logged(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    room = await _room(client, make_token)
+
+    def broken(*_: Any) -> bytes:
+        raise RuntimeError("render failed")
+
+    async def no_database(*_: Any) -> None:
+        raise RuntimeError("database gone")
+
+    monkeypatch.setattr(export_pdf_job, "render_manual_pdf", broken)
+    monkeypatch.setattr(export_jobs_repo, "mark_failed", no_database)
+
+    started = await _start(client, room)
+
+    assert started.status_code == 202  # nothing escaped the background task
+    assert "Could not mark Room PDF" in caplog.text
