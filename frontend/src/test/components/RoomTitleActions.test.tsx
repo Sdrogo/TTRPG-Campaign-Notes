@@ -76,6 +76,19 @@ describe('RoomTitleActions', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
+  it('offers everyone the export of the Room, and closes the dialog again (spec 23)', async () => {
+    vi.mocked(apiFetch).mockResolvedValue([]);
+    const { user } = render(false);
+
+    await user.click(toggle());
+    await user.click(screen.getByRole('button', { name: 'Esporta' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Esporta la Stanza' })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
   it('leaves the Room after confirming, then calls onLeft', async () => {
     vi.mocked(apiFetch).mockResolvedValue(undefined);
     const { user } = render(false);

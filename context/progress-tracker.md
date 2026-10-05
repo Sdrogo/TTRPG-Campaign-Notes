@@ -51,6 +51,24 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room export, frontend (spec 23_2, 2026-10-05)
+
+- An "Export" dialog (`ExportRoomModal`: Markdown or JSON, optional Tag filter,
+  a note that links expire) reached from the Room title's "⋮" (every member),
+  the setup page header and the preview banner, so the Master can export "as
+  player X" (the `X-View-As` header rides along). The file downloads through a
+  blob, named `<room>-<date>.json|md`. Details in `architecture.md` → Room
+  export → Frontend.
+- Choices beyond the ticket (confirm): Markdown is the default format (the
+  ticket lists JSON first); the file name is built in the browser instead of
+  read from `Content-Disposition`, which would need a CORS `expose_headers`
+  change on the backend; no progress or size indicator, the request is one
+  GET; `apiFetch` now shares its request code with the new `apiDownload`.
+- Not seen in a browser yet: the download itself, the dialog at phone width,
+  and the banner with its two buttons.
+- Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
+  its three entry points), 100% coverage; `tsc`, lint and build clean.
+
 ### Room export, backend (spec 23_1, 2026-10-05)
 
 - `GET /rooms/{id}/export?format=json|md&tag=…`: the Room as a downloadable

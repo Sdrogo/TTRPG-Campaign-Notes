@@ -548,5 +548,22 @@
     "menuLabel": "Vedi la Stanza come",
     "banner": "Stai vedendo la Stanza come {{name}}. Sola lettura.",
     "exit": "Esci dalla vista"
+  },
+  "export": {
+    "action": "Esporta",
+    "title": "Esporta la Stanza",
+    "intro": "Scarica la Stanza come file. Contiene solo ciò che puoi vedere: Documenti, Note, Commenti e Tag.",
+    "format": "Formato del file",
+    "formats": {
+      "md": "Markdown",
+      "json": "JSON"
+    },
+    "formatHint": {
+      "md": "Un solo file leggibile, da leggere o stampare.",
+      "json": "Dati strutturati con gli id, per strumenti e Agenti AI."
+    },
+    "tagFilter": "Solo i Documenti con questi Tag (facoltativo)",
+    "linksExpire": "I link a immagini e file PDF scadono entro un'ora. Esporta di nuovo per aggiornarli.",
+    "done": "Esportazione scaricata."
   }
 }

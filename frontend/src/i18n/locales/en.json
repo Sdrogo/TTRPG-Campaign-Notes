@@ -548,5 +548,22 @@
     "menuLabel": "View the Room as",
     "banner": "Viewing the Room as {{name}}. Read-only.",
     "exit": "Exit view"
+  },
+  "export": {
+    "action": "Export",
+    "title": "Export the Room",
+    "intro": "Download the Room as a file. It holds only what you can see: Documents, Notes, Comments and Tags.",
+    "format": "File format",
+    "formats": {
+      "md": "Markdown",
+      "json": "JSON"
+    },
+    "formatHint": {
+      "md": "One readable file, to read or print.",
+      "json": "Structured data with ids, for tools and AI Agents."
+    },
+    "tagFilter": "Only Documents with these Tags (optional)",
+    "linksExpire": "Links to images and PDF files expire within an hour. Export again to refresh them.",
+    "done": "Export downloaded."
   }
 }

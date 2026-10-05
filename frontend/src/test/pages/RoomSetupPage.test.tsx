@@ -101,6 +101,17 @@ const tagsWereRequested = () =>
   fetchMock.mock.calls.some(([path]) => path === '/rooms/room-1/tags');
 
 describe('RoomSetupPage', () => {
+  it('offers the Room export from the page header (spec 23)', async () => {
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Esporta' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Esporta la Stanza' })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
   it('waits on a loader while the session is resolving', () => {
     sessionMock.mockReturnValue({
       session: null,
