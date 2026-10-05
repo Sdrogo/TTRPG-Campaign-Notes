@@ -30,6 +30,7 @@ from app.db import (
 from app.db.session import SessionDep
 from app.domain.export import (
     DocumentSource,
+    Export,
     ExportFormat,
     ExportInput,
     build_export,
@@ -37,7 +38,7 @@ from app.domain.export import (
     render_json,
     render_markdown,
 )
-from app.domain.models import Membership
+from app.domain.models import Membership, Room
 from app.domain.tags import ordered_main_items
 from app.domain.visibility import is_document_visible
 from app.i18n.dependencies import LocaleDep
@@ -244,6 +245,37 @@ async def _document_sources(
     return sources, {d.id: d.name for d in visible}, image_urls, file_urls
 
 
+async def load_export(
+    session: AsyncSession, room: Room, viewer: Membership, tag_ids: list[uuid.UUID]
+) -> Export:
+    """The export tree of `room` for `viewer`, read now: everything they see
+    (Invariant 1) and nothing else, narrowed to the Documents carrying every
+    Tag in `tag_ids`. Shared by the file download and the Room PDF job, which
+    calls it with the requester's (or the "as" member's) Membership when it
+    starts, so the PDF is a snapshot of that moment (spec 23b Backend)."""
+    sources, visible_documents, image_urls, file_urls = await _document_sources(
+        session, room.id, viewer, tag_ids
+    )
+    tags = await tags_repo.list_tags(session, room.id)
+    combinations = await tags_repo.list_combinations(session, room.id)
+    return build_export(
+        ExportInput(
+            room=room,
+            viewer=viewer,
+            members=await rooms_repo.list_members_with_profile(session, room.id),
+            tags=tags,
+            main_items=ordered_main_items(tags, combinations),
+            documents=sources,
+            visible_documents=visible_documents,
+            image_urls=image_urls,
+            file_urls=file_urls,
+            tag_filter=tag_ids,
+            generated_at=datetime.now(UTC),
+            link_ttl_seconds=storage.SIGNED_URL_TTL_SECONDS,
+        )
+    )
+
+
 @router.get(
     "/rooms/{room_id}/export",
     response_class=Response,
@@ -282,35 +314,14 @@ async def export_room(
     if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
 
-    sources, visible_documents, image_urls, file_urls = await _document_sources(
-        session, room_id, viewer, tag_ids
-    )
-    tags = await tags_repo.list_tags(session, room_id)
-    combinations = await tags_repo.list_combinations(session, room_id)
-    generated_at = datetime.now(UTC)
-    export = build_export(
-        ExportInput(
-            room=room,
-            viewer=viewer,
-            members=await rooms_repo.list_members_with_profile(session, room_id),
-            tags=tags,
-            main_items=ordered_main_items(tags, combinations),
-            documents=sources,
-            visible_documents=visible_documents,
-            image_urls=image_urls,
-            file_urls=file_urls,
-            tag_filter=tag_ids,
-            generated_at=generated_at,
-            link_ttl_seconds=storage.SIGNED_URL_TTL_SECONDS,
-        )
-    )
+    export = await load_export(session, room, viewer, tag_ids)
     content: str
     if export_format is ExportFormat.JSON:
         data: dict[str, Any] = render_json(export)
         content = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     else:
         content = render_markdown(export)
-    filename = export_filename(room.name, generated_at, export_format)
+    filename = export_filename(room.name, export.generated_at, export_format)
     return Response(
         content=content,
         media_type=EXPORT_MEDIA_TYPES[export_format],

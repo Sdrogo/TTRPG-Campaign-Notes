@@ -13,7 +13,16 @@ from app.api.errors import http_error, translated_error
 from app.api.image_uploads import remove_images
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, files_repo, reads_repo, reveals_repo, rooms_repo, users_repo
+from app.db import (
+    documents_repo,
+    export_jobs_repo,
+    files_repo,
+    reads_repo,
+    reveals_repo,
+    rooms_repo,
+    storage_cleanup,
+    users_repo,
+)
 from app.db.session import SessionDep
 from app.domain.memberships import (
     LastAdministratorError,
@@ -337,4 +346,8 @@ async def delete_room(
     files = [file for document_files in files_by_document.values() for file in document_files]
     if files:
         await remove_files(session, files)
+    # Finished Room PDFs live in Storage too (spec 23b), their rows cascade.
+    exports = await export_jobs_repo.list_paths_in_room(session, room_id)
+    if exports:
+        await storage_cleanup.schedule_removal(session, exports)
     await rooms_repo.delete_room(session, room_id)
