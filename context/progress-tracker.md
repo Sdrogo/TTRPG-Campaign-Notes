@@ -69,6 +69,27 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 - Frontend 1379 tests (20 new: file name and path, `apiDownload`, the dialog,
   its three entry points), 100% coverage; `tsc`, lint and build clean.
 
+### Room PDF, Docker image and rendering check (spec 23b_1a, 2026-10-05)
+
+- First step of 23b, the deploy check the spec asks for. Decided with the
+  product owner (2026-10-05): Render's native runtime can't install Pango, so
+  the backend moves to a **Docker image** (`backend/Dockerfile`,
+  `.dockerignore`); the PDF itself (23b_1b templates and styles, 23b_1c jobs
+  and routes) comes next. `weasyprint` and `pypdf` are now dependencies.
+- **Nothing changes in production or staging by merging this**: the Render
+  services still run on the native runtime until their settings are switched
+  by hand. To switch (staging first): service → Settings → Runtime = Docker,
+  Root Directory `backend`, Dockerfile path `Dockerfile`, **Docker Command
+  empty**, keep the environment variables; then check `/health` and a Document
+  list. Production later, with the release that ships the PDF. If a deploy
+  fails, switching the runtime back to Python restores the old setup.
+- CI: a `Backend image` job (build, import the app, render a PDF inside the
+  image, no `.env*` in `/app`) and a rendering test that fails in CI when
+  Pango is missing. Not run locally: no Docker and no GTK on the product
+  owner's Windows machine, so the test is skipped there; CI is the check.
+- Free-plan note: Docker builds are slower than the native ones and use the
+  workspace's build minutes.
+
 ### Room export, Markdown escaping (23_3, 2026-10-05)
 
 - Review finding on PR #93: names written into Markdown headings, links, list

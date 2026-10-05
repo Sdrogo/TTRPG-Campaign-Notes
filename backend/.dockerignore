@@ -1,0 +1,20 @@
+# Secrets: `.env` is production, `.env.staging` and `.env.dev` the others
+# (`architecture.md` → Local env files). None may reach an image.
+.env
+.env.*
+!.env.example
+
+# Not needed to run the service
+.venv
+.git
+**/__pycache__
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.coverage
+junit.xml
+tests
+migrations
+alembic.ini
+Dockerfile
+.dockerignore
