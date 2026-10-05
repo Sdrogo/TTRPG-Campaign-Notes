@@ -84,6 +84,25 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   none leaves an empty page now. New tests: a chapter that fills its last page
   in each style, and the header/closing-rule CSS.
 
+### Version history, backend (spec 24_1, 2026-10-05)
+
+- Backend only, no frontend yet (24_2). Tables `document_versions` and
+  `note_versions` with a backfill of the current text of every Document and Note
+  (**migration `a2e6c9f4b8d1`: not applied anywhere yet**, staging first). Every
+  create and every edit of a name, title or description writes or merges a
+  version (same editor within 10 minutes), routes list, read and restore for the
+  Document and for each Note. Details in `architecture.md` -> Version history.
+- Choices beyond the ticket (confirm): creating a Document or Note writes its
+  first version; the merge window runs from the latest version's last save, not
+  from its first; a restore never merges and, when the text is already the
+  current one, changes nothing (returns the latest version); both kinds share one
+  response shape (`title` is a Document's name); the change size is computed on
+  read, not stored; restore returns the version now in force, not the Document;
+  a Note's history is also 404 when the Note is hidden from an Owner.
+- Not run locally: the integration tests (no database on this machine besides
+  the staging/dev project, which lacks the migration); the 13 domain tests and
+  the rest of the non-database suite pass, `ruff` and `mypy` clean.
+
 ### Room export, frontend (spec 23_2, 2026-10-05)
 
 - An "Export" dialog (`ExportRoomModal`: Markdown or JSON, optional Tag filter,

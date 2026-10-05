@@ -66,6 +66,9 @@
       "playerNotAMember": "Chi interpreta il Personaggio deve essere un membro di questa Room",
       "cannotPostAs": "Puoi scrivere solo come un Personaggio che interpreti (il Master può scrivere come qualsiasi Documento)"
     },
+    "version": {
+      "notFound": "Versione non trovata"
+    },
     "note": {
       "notFound": "Nota non trovata",
       "titleRequired": "Una Nota ha bisogno di un titolo",
