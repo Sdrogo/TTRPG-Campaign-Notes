@@ -158,7 +158,8 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   (`/health` answers 200). **Finished 2026-10-05**: the Vercel Preview variable
   `VITE_API_BASE_URL` of the `staging` branch points at it (confirmed by the
   product owner), so staging runs on Docker and the old native staging service
-  is superseded and can be deleted (checked from outside: `/health` 200, the
+  (`TTRPG-Campaign-Notes-1`) was **suspended** by the product owner, to be
+  deleted once nothing needs it (checked from outside: `/health` 200, the
   23b_1c routes exist, CORS accepts the staging preview origin).
 - **Production is still open**: a new service means a new URL (the production
   frontend's `VITE_API_BASE_URL`, possibly a custom domain), so decide before
