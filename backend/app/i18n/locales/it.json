@@ -157,5 +157,16 @@
       "notAMember": "Questo utente non è un membro della Stanza",
       "invalidUser": "Membro non valido"
     }
+  },
+  "pdf": {
+    "contents": "Indice",
+    "index": "Indice analitico",
+    "other": "Altro",
+    "documents": "Documenti",
+    "comments": "Commenti",
+    "unknownMember": "Membro sconosciuto",
+    "deletedComment": "(eliminato)",
+    "playedBy": "{character} (interpretato da {player})",
+    "pageAbbreviation": "p."
   }
 }

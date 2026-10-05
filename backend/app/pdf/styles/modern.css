@@ -1,0 +1,39 @@
+/* Modern (spec 23b Decision 4): clean sans-serif, one column, generous
+   whitespace, one accent color. */
+
+@font-face { font-family: "Lato"; src: url(../fonts/Lato-Regular.ttf); }
+@font-face { font-family: "Lato"; font-style: italic; src: url(../fonts/Lato-Italic.ttf); }
+@font-face { font-family: "Lato"; font-weight: bold; src: url(../fonts/Lato-Bold.ttf); }
+@font-face { font-family: "Lato"; font-weight: bold; font-style: italic; src: url(../fonts/Lato-BoldItalic.ttf); }
+
+@page { margin: 25mm 25mm 28mm; }
+@page body {
+  @top-left { font: 8pt "Lato", sans-serif; color: #777; }
+  @top-right { font: 8pt "Lato", sans-serif; color: #777; }
+}
+@page { @bottom-center { font: 8pt "Lato", sans-serif; color: #777; } }
+
+body { font: 10pt/1.6 "Lato", Helvetica, Arial, sans-serif; color: #222; }
+h1, h2, h3 { font-family: "Lato", Helvetica, Arial, sans-serif; font-weight: bold; }
+
+.cover { text-align: left; }
+.cover-inner { padding: 70mm 25mm 0; }
+.cover-system { font-size: 10pt; letter-spacing: 0.15em; text-transform: uppercase; color: #0f766e; margin: 0 0 6mm; }
+.cover-title { font-size: 38pt; line-height: 1.1; margin: 0 0 14mm; }
+.cover-image { display: block; width: 120mm; height: 100mm; object-fit: cover; margin: 0 0 12mm; }
+.cover-date { color: #777; margin: 0; }
+
+.section-title { font-size: 22pt; margin: 0 0 10mm; }
+.toc-chapter > a { font-weight: bold; }
+.toc-document > a { color: #444; }
+.index-tag { color: #0f766e; }
+
+.chapter-title { font-size: 26pt; margin: 0 0 12mm; color: #0f766e; }
+.document { margin-top: 14mm; }
+.document-title { font-size: 16pt; margin: 0 0 5mm; }
+
+.note { background: #f4f6f6; border-left: 2.5pt solid #0f766e; }
+.note h3 { font-size: 10pt; margin-bottom: 1.5mm; }
+.xref { color: #0f766e; }
+.comments h3 { font-size: 11pt; }
+.comment-meta { font-size: 8.5pt; color: #777; }

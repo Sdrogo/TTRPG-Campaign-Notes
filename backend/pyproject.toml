@@ -15,8 +15,10 @@ dependencies = [
     "pillow>=11.3",
     "python-multipart>=0.0.20",
     # The Room PDF (spec 23b): WeasyPrint renders it (needs Pango, so the
-    # deploy is a Docker image, see Dockerfile) and pypdf merges PDF Attachments.
-    "weasyprint>=66",
+    # deploy is a Docker image, see Dockerfile), Jinja2 writes its HTML and pypdf
+    # merges PDF Attachments.
+    "weasyprint>=70",
+    "jinja2>=3.1",
     "pypdf>=5",
 ]
 
@@ -33,6 +35,11 @@ dev = [
 strict = true
 python_version = "3.12"
 enable_error_code = ["deprecated"]
+
+# WeasyPrint ships no type information.
+[[tool.mypy.overrides]]
+module = ["weasyprint", "weasyprint.*"]
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 100
