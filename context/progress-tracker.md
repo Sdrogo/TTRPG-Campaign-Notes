@@ -68,6 +68,22 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room PDF, header rule and empty last page (2026-10-05)
+
+- Seen by the product owner on a production PDF. Gothic's running header rule
+  was a 60% border on `@top-left` alone, at the bottom of the top margin, so a
+  shorter thin line sat just above the title's thick rule. It now runs under
+  both header boxes (50% each, same border), right under the header text, 6 mm
+  above the page content.
+- The chapter's closing rule was an `<hr>` after the columns; when the columns
+  filled the last page it moved alone to a new, otherwise empty page (the
+  "Altro" page). It is now the `.chapter` background (`styles/ornaments/rule-*.svg`
+  at the bottom of a 9 mm padding), which shows only on the chapter's last page
+  and never makes one. Reproduced by sweeping description lengths in each style
+  (Gothic 61–63 and 136–138 sentences, Modern 45–47 and 103–104, Print 65–68);
+  none leaves an empty page now. New tests: a chapter that fills its last page
+  in each style, and the header/closing-rule CSS.
+
 ### Room export, frontend (spec 23_2, 2026-10-05)
 
 - An "Export" dialog (`ExportRoomModal`: Markdown or JSON, optional Tag filter,
