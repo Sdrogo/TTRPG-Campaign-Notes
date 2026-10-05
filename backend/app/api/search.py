@@ -90,10 +90,12 @@ class _Hit:
 
 
 def _empty() -> SearchGroupResponse:
+    """A group with no results."""
     return SearchGroupResponse(items=[], has_more=False)
 
 
 def _shown(highlighted: Highlighted | None) -> HighlightedResponse | None:
+    """The API form of a `Highlighted`, or None."""
     if highlighted is None:
         return None
     return HighlightedResponse(text=highlighted.text, highlights=list(highlighted.highlights))
