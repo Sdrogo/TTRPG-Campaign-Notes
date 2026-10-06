@@ -373,7 +373,13 @@ describe('revealing a Note', () => {
     const revealed: RevealedInDocument = { document: false, noteIds: ['note-2'], commentIds: [] };
     queryClient.setQueryData(['reveal-visit', 'room-1', 'doc-1'], revealed);
     renderWithProviders(
-      <NoteList roomId="room-1" documentId="doc-1" notes={[first(), second()]} members={members} canAdd={false} />,
+      <NoteList
+        roomId="room-1"
+        documentId="doc-1"
+        notes={[first(), second()]}
+        members={members}
+        canAdd={false}
+      />,
       { queryClient },
     );
 
@@ -412,20 +418,11 @@ describe('Note anchors', () => {
   });
 });
 
-// Spec 24: a Note's history opens from the Note and closes again.
+// Spec 24b Decision 3: a Note has no history of its own, it is in the Document's.
 describe('history', () => {
-  it("opens a Note's history and closes it", async () => {
-    fetchMock.mockImplementation((path: string) =>
-      Promise.resolve(path.endsWith('/versions') ? [] : rawNote()),
-    );
-    const { user } = render([first(), second()]);
+  it('offers no history on a Note', () => {
+    render([first(), second()]);
 
-    await user.click(screen.getByRole('button', { name: 'Storico: Trappola' }));
-    expect(await screen.findByText('Nessuna versione.')).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledWith(`${BASE}/note-2/versions`);
-
-    await user.keyboard('{Escape}');
-
-    await waitFor(() => expect(screen.queryByText('Nessuna versione.')).not.toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /^Storico/ })).not.toBeInTheDocument();
   });
 });
