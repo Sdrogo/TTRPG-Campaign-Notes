@@ -9,9 +9,11 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-06)
 
-**Planned features are all built except 23c (Agent access tokens), which the
+**Features 12 to 24 are all built except 23c (Agent access tokens), which the
 product owner dropped on 2026-10-06** (FR-G2 not built; the ticket stays in
-`context/feature/` marked dropped). **Next: feature 25, a compact UI/UX
+`context/feature/` marked dropped). The two small tickets planned after 24
+(default Tags in the creator's language, read-only members list) are still
+open, not written yet; their place relative to feature 25 is to confirm. **Next: feature 25, a compact UI/UX
 refactor** (tickets written 2026-10-06): `25 - Compact layout` (density rules
 for every page), `25b - Compact Account page` (cards in columns), `25c - Room
 setup Tags and rename` (one Tags section, rename a Tag, create one there),
