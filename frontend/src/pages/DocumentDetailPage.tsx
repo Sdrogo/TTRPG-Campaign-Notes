@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Stack, Group, Title, Text, Button, Box, ActionIcon, Modal, Alert, Paper, Divider } from '@mantine/core';
-import { EyeIcon, PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
+import { ClockCounterClockwiseIcon, EyeIcon, PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
   useDocument,
@@ -34,6 +34,7 @@ import { RevealModal } from '../components/RevealModal';
 import { TagList } from '../components/TagList';
 import { DocumentFields } from '../components/DocumentFields';
 import { DocumentOwners } from '../components/DocumentOwners';
+import { VersionHistoryDrawer } from '../components/versions/VersionHistoryDrawer';
 import { DocumentPlayer } from '../components/DocumentPlayer';
 import { DocumentImageGallery } from '../components/DocumentImageGallery';
 import { AddDocumentImages } from '../components/AddDocumentImages';
@@ -214,6 +215,7 @@ function DocumentPanel({
   const revealDocument = useRevealDocument(roomId, document.id);
   const revealed = useRevealedInVisit(roomId, document.id);
   const [revealing, setRevealing] = useState(false);
+  const [historyOpened, setHistoryOpened] = useState(false);
   // Previewing as a member (spec 22b): no write control at all.
   const readOnly = useReadOnly();
 
@@ -244,6 +246,17 @@ function DocumentPanel({
                 aria-label={t('reveal.actionLabel', { name: document.name })}
               >
                 <EyeIcon size={18} />
+              </ActionIcon>
+            )}
+            {/* Spec 24: Owners and the Master read the text's history. */}
+            {isOwner && (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => setHistoryOpened(true)}
+                aria-label={t('versions.actionFor', { name: document.name })}
+              >
+                <ClockCounterClockwiseIcon size={18} />
               </ActionIcon>
             )}
             {isOwner && (
@@ -371,6 +384,17 @@ function DocumentPanel({
           </Stack>
         </Box>
       </Stack>
+      {isOwner && (
+        <VersionHistoryDrawer
+          opened={historyOpened}
+          onClose={() => setHistoryOpened(false)}
+          roomId={roomId}
+          documentId={document.id}
+          name={document.name}
+          current={{ title: document.name, description: document.description }}
+          members={members}
+        />
+      )}
       {revealing && (
         <RevealModal
           name={document.name}

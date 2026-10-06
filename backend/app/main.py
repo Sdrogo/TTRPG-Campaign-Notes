@@ -27,6 +27,7 @@ from app.api.reveals import router as reveals_router
 from app.api.rooms import router as rooms_router
 from app.api.search import router as search_router
 from app.api.tags import router as tags_router
+from app.api.versions import router as versions_router
 from app.config import Settings, settings
 from app.db.export_jobs_repo import run_export_sweeper
 from app.db.storage_cleanup import run_sweeper
@@ -82,6 +83,7 @@ app.include_router(friends_router)
 app.include_router(search_router)
 app.include_router(export_router)
 app.include_router(export_pdf_router)
+app.include_router(versions_router)
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])

@@ -18,10 +18,12 @@ from manual_fixtures import (
     CASTLE,
     IRENA,
     LABELS,
+    PLACE,
     comment,
     document,
     make_export,
     text,
+    uid,
 )
 from pypdf import PdfReader
 
@@ -113,35 +115,71 @@ def test_a_reference_and_the_index_link_to_where_the_document_is_printed() -> No
     assert f'<a class="index-link" href="#doc-{CASTLE}">Castle</a>' in html
 
 
-def test_the_documents_of_a_chapter_sit_in_one_block_under_its_title() -> None:
-    html = render_manual_html(_manual(), ManualStyle.GOTHIC, PageSize.A4)
+def test_the_documents_of_a_chapter_sit_under_its_title_after_its_references() -> None:
+    # Place gets a Document of its own (Abbey, before "Castle" by name), so its
+    # chapter holds a Document as well as the reference to Castle.
+    export = make_export()
+    abbey = document(uid(34), "Abbey", (PLACE,), description=(text("Ruined."),))
+    export = replace(export, documents=[*export.documents, abbey])
+    manual = build_manual(export, ManualOptions(), LABELS)
+    html = render_manual_html(manual, ManualStyle.GOTHIC, PageSize.A4)
 
-    # The title is outside, so a style can set the Documents in columns while it
+    # The title is outside, so a style can set each Document in columns while it
     # still spans the page.
     assert html.count('class="chapter-body"') == 3
     assert html.index('class="chapter-title"') < html.index('class="chapter-body"')
     assert html.index('class="chapter-body"') < html.index(f'id="doc-{CASTLE}"')
-    # The closing rule is the chapter's background (base.css), not a box after
-    # the columns that could land alone on a new page.
+    # A chapter's references come before its Documents, so each Document can
+    # end its page without leaving a reference alone on the next one.
+    mixed = [
+        chapter
+        for chapter in html.split('<section class="chapter"')[1:]
+        if 'class="references"' in chapter and 'class="document"' in chapter
+    ]
+    assert len(mixed) == 1
+    assert mixed[0].index('class="references"') < mixed[0].index('class="document"')
+    # No rule closes a chapter: the page break does.
     assert "chapter-end" not in html
 
 
-@pytest.mark.parametrize("style", list(ManualStyle))
-def test_every_style_closes_a_chapter_with_its_background_and_one_header_rule(
-    style: ManualStyle,
-) -> None:
-    """The closing half-page rule is a background image at the bottom of the
-    chapter, colored per style. The running header's rule, where a style draws
-    one, runs under both margin boxes with the same border, so it is one line
-    across the page instead of a shorter one at another height."""
-    styles = ASSETS_DIR / "styles"
-    base = (styles / "base.css").read_text(encoding="utf-8")
-    css = (styles / f"{style.value}.css").read_text(encoding="utf-8")
+def test_notes_read_as_more_of_the_description() -> None:
+    """A Note is a subheading and paragraphs after the description, not a
+    sidebar: no style gives it a box, a tint or italics."""
+    html = render_manual_html(_manual(), ManualStyle.GOTHIC, PageSize.A4)
 
-    chapter = re.search(r"^\.chapter\s*\{([^}]*)\}", css, re.M)
-    assert chapter is not None and "background-image:" in chapter.group(1)
-    assert "background-size: 50%" in chapter.group(1)
-    assert re.search(r"^\.chapter\s*\{[^}]*padding-bottom:[^}]*no-repeat bottom center", base, re.M)
+    assert '<section class="note">' in html and "<aside" not in html
+    for style in ManualStyle:
+        css = (ASSETS_DIR / "styles" / f"{style.value}.css").read_text(encoding="utf-8")
+        for body in re.findall(r"^\.note\s*\{([^}]*)\}", css, re.M):
+            assert not re.search(r"background|border|font-style|padding", body), style
+
+
+def test_comments_close_a_document_as_boxed_sidebars() -> None:
+    """Comments come last in a Document and every style draws each one as a
+    box (the look Notes had before, product owner 2026-10-06)."""
+    export = make_export()
+    castle, *others = export.documents
+    castle = replace(castle, comments=(comment(1, ALICE, "Creepy."),))
+    export = replace(export, documents=[castle, *others])
+    manual = build_manual(export, ManualOptions(include_comments=True), LABELS)
+    html = render_manual_html(manual, ManualStyle.GOTHIC, PageSize.A4)
+
+    castle_html = html[html.index(f'id="doc-{CASTLE}"') :]
+    castle_html = castle_html[: castle_html.index("</article>")]
+    assert castle_html.index('class="note"') < castle_html.index('class="comments"')
+    for style in ManualStyle:
+        css = (ASSETS_DIR / "styles" / f"{style.value}.css").read_text(encoding="utf-8")
+        box = re.search(r"^\.comment\s*\{([^}]*)\}", css, re.M)
+        assert box is not None and "border" in box.group(1), style
+
+
+@pytest.mark.parametrize("style", list(ManualStyle))
+def test_every_style_draws_its_header_rule_across_the_page(style: ManualStyle) -> None:
+    """The running header's rule, where a style draws one, runs under both
+    margin boxes with the same border, so it is one line across the page
+    instead of a shorter one at another height."""
+    css = (ASSETS_DIR / "styles" / f"{style.value}.css").read_text(encoding="utf-8")
+
     boxes = dict(re.findall(r"@(top-left|top-right)\s*\{([^}]*)\}", css))
     borders = {name: re.findall(r"border-bottom:[^;]*;", body) for name, body in boxes.items()}
     assert borders["top-left"] == borders["top-right"], style
@@ -150,15 +188,19 @@ def test_every_style_closes_a_chapter_with_its_background_and_one_header_rule(
             assert "width: 50%" in body, style
 
 
-def test_every_style_sets_the_chapters_in_two_balanced_columns() -> None:
-    """Spec 23b: rulebook-like two columns, balanced on the chapter's last page
-    (WeasyPrint fills each page in turn and balances only the last one). Set once
-    in `base.css`; no style may go back to one column."""
+def test_every_style_sets_each_document_on_its_own_pages_in_two_balanced_columns() -> None:
+    """Spec 23b: rulebook-like two columns, balanced on a Document's last page
+    (WeasyPrint fills each page in turn and balances only the last one), and
+    every Document after the first of a chapter starts a new page (product
+    owner, 2026-10-06). Set once in `base.css`; no style may go back to one
+    column."""
     styles = ASSETS_DIR / "styles"
-    rule = re.search(r"\.chapter-body\s*\{([^}]*)\}", (styles / "base.css").read_text("utf-8"))
+    base = (styles / "base.css").read_text("utf-8")
+    rule = re.search(r"^\.document\s*\{([^}]*)\}", base, re.M)
 
     assert rule is not None
     assert "columns: 2" in rule.group(1) and "column-fill: balance" in rule.group(1)
+    assert re.search(r"^\.document \+ \.document\s*\{\s*break-before: page;", base, re.M)
     for style in ManualStyle:
         css = (styles / f"{style.value}.css").read_text(encoding="utf-8")
         assert not re.search(r"column-count:\s*1|columns:\s*1|column-fill:\s*auto", css), style
@@ -263,8 +305,9 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     pdf = render_manual_pdf(_small_room(), style, size)
 
     reader = PdfReader(io.BytesIO(pdf))
-    # Cover, contents, one page per chapter (three) and the index.
-    assert len(reader.pages) == 6
+    # Cover, contents, one page per Document (NPC holds Castle and Irena, Other
+    # holds Orphan), one for the Place chapter's reference, and the index.
+    assert len(reader.pages) == 7
     width_pt, height_pt = (
         float(reader.pages[0].mediabox.width),
         float(reader.pages[0].mediabox.height),
@@ -294,7 +337,11 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     assert re.search(
         rf"Irena\s*→\s*p\.\s*{irena_page}\b", reader.pages[castle_page - 1].extract_text()
     )
-    place = reader.pages[3].extract_text()
+    # Each Document has its own page, and the Place chapter's page names no
+    # Document in its header (it only holds a reference).
+    assert irena_page == castle_page + 1
+    place = reader.pages[4].extract_text()
+    assert "Irena" not in place
     assert re.search(rf"Castle\s*→\s*p\.\s*{castle_page}\b", place)
     # The Tag index points at the same pages, and the accents survived.
     index = reader.pages[-1].extract_text()

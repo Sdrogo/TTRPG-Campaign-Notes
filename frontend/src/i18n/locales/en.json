@@ -339,6 +339,25 @@
       "fit": "Fit to screen"
     }
   },
+  "versions": {
+    "action": "History",
+    "actionFor": "History: {{name}}",
+    "title": "History: {{name}}",
+    "loadFailed": "Couldn't load the history.",
+    "empty": "No versions.",
+    "current": "Current",
+    "first": "First version",
+    "changeSize": "+{{added}} −{{removed}}",
+    "changeSizeLabel": "Words added: {{added}}, removed: {{removed}}",
+    "pick": "Pick a version to compare it with the current text.",
+    "before": "This version",
+    "after": "Current text",
+    "identical": "This is already the current version.",
+    "restore": "Restore this version",
+    "restoreConfirmTitle": "Restore this version?",
+    "restoreConfirmBody": "The text will go back to how it was on {{date}}. A new version with that text is added, so nothing is lost.",
+    "restored": "Version restored"
+  },
   "notes": {
     "add": "Add Note",
     "edit": "Edit Note: {{title}}",

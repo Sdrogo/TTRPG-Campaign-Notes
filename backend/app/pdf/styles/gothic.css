@@ -40,10 +40,9 @@ h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: normal
 .index-entries { columns: 2; column-gap: 10mm; }
 .index-tag { font: 12pt "IM Fell English", serif; color: #8a0f1c; }
 
-/* Chapters: a red rule under the title, then the Documents in two columns like a
+/* Chapters: a red rule under the title, then each Document in two columns like a
    rulebook (base.css) with a red rule between them */
-.chapter-body { column-rule: 0.5pt solid #8a0f1c; }
-.chapter { background-image: url(ornaments/rule-gothic.svg); background-size: 50% 1pt; }
+.document { column-rule: 0.5pt solid #8a0f1c; }
 .chapter-title { font-size: 30pt; line-height: 1.1; margin: 0 0 6mm; padding-bottom: 3mm; border-bottom: 2pt solid #8a0f1c; }
 .document-title { font-size: 20pt; margin: 0 0 4mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #1a1a1a; }
 .document-image img { max-height: 70mm; border: 0.75pt solid #1a1a1a; }
@@ -53,10 +52,11 @@ h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: normal
    paragraphs (seen in CI), so the initial stays on the line. */
 .description p:first-child::first-letter { font: 2.4em "IM Fell English", serif; color: #8a0f1c; }
 
-/* Notes: italic sidebars with a red edge */
-.note { background: #f5f0f0; border-left: 3pt solid #8a0f1c; font-style: italic; }
-.note h3 { font-size: 13pt; font-style: normal; color: #8a0f1c; }
+/* Notes: more paragraphs of the description under a red subheading */
+.note h3 { font-size: 13pt; color: #8a0f1c; }
 
 .xref { color: #8a0f1c; }
 .comments h3 { font-size: 14pt; color: #8a0f1c; border-bottom: 0.5pt solid #8a0f1c; }
-.comment-meta { font-size: 9.5pt; color: #555; }
+/* Comments: italic sidebars with a red edge */
+.comment { background: #f5f0f0; border-left: 3pt solid #8a0f1c; font-style: italic; }
+.comment-meta { font-size: 9.5pt; font-style: normal; color: #555; }

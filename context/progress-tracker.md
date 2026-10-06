@@ -68,6 +68,23 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room PDF, one page per Document, Notes as paragraphs (2026-10-06)
+
+- Product owner's requests after a production PDF: the chapter's closing rule
+  crossed the column rule when the columns filled the page; Notes should read as
+  more paragraphs of the description; every Document should end its page.
+- Each `.document` is now its own two-column, balanced block and the next one
+  starts a new page; a chapter's references are listed first, under its title.
+  The closing rule (and `styles/ornaments/`) is gone: the page break ends a
+  Document. Notes are a `<section class="note">` with a subheading in the
+  style's accent and plain paragraphs (no tint, border or italics). A chapter
+  title clears the header's Document name.
+- Tests: references before Documents, Notes without a box, each Document on its
+  own pages (the small Room is now 7 pages), the header rule.
+- Same day, product owner's follow-up: comments (with the option on) close a
+  Document as boxed sidebars, the look Notes had before (Gothic: tint, red edge,
+  italics; Modern: tint, teal edge; Print: black frame).
+
 ### Room PDF, header rule and empty last page (2026-10-05)
 
 - Seen by the product owner on a production PDF. Gothic's running header rule
@@ -83,6 +100,40 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   (Gothic 61–63 and 136–138 sentences, Modern 45–47 and 103–104, Print 65–68);
   none leaves an empty page now. New tests: a chapter that fills its last page
   in each style, and the header/closing-rule CSS.
+
+### Version history, frontend (spec 24_2, 2026-10-05)
+
+- A history icon beside the Document's edit icon and among each Note's edit
+  actions opens a drawer: the versions (author, time, "+N -M" words, the newest
+  marked "Current"), the chosen one beside the current text with the words
+  added and removed marked, and "Restore" behind a confirmation. Mobile: the
+  comparison stacks. Details in `architecture.md` -> Version history -> Frontend.
+- Choices beyond the ticket (confirm): there is no Document or Note "menu" to put
+  "History" in, so it is an icon next to the other actions; the diff (`diff`
+  package, new dependency) compares mention tokens as the names a reader sees;
+  after a restore the drawer goes back to the list, whose newest entry is the
+  restored text; the title and the description are compared separately.
+- **Not seen in a browser**: the drawer, the diff colors and the stacked layout
+  at phone width. Frontend 1455 tests, 100% coverage; `tsc`, lint and build
+  clean. A bug found by the tests: an empty description showed nothing instead
+  of "No description".
+
+### Version history, backend (spec 24_1, 2026-10-05)
+
+- Backend only, no frontend yet (24_2). Tables `document_versions` and
+  `note_versions` with a backfill of the current text of every Document and Note
+  (**migration `a2e6c9f4b8d1`: applied to staging by hand on 2026-10-05** with `.env.staging` loaded, `alembic current` went from `d9a4f1c7e3b5`; pending on production). Every
+  create and every edit of a name, title or description writes or merges a
+  version (same editor within 10 minutes), routes list, read and restore for the
+  Document and for each Note. Details in `architecture.md` -> Version history.
+- Choices beyond the ticket (confirm): creating a Document or Note writes its
+  first version; the merge window runs from the latest version's last save, not
+  from its first; a restore never merges and, when the text is already the
+  current one, changes nothing (returns the latest version); both kinds share one
+  response shape (`title` is a Document's name); the change size is computed on
+  read, not stored; restore returns the version now in force, not the Document;
+  a Note's history is also 404 when the Note is hidden from an Owner.
+- Tests: 13 domain + 24 API (run against the staging database after the migration, all green), `ruff` and `mypy` clean.
 
 ### Room export, frontend (spec 23_2, 2026-10-05)
 
