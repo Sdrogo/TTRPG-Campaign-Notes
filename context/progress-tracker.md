@@ -81,6 +81,9 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   title clears the header's Document name.
 - Tests: references before Documents, Notes without a box, each Document on its
   own pages (the small Room is now 7 pages), the header rule.
+- Same day, product owner's follow-up: comments (with the option on) close a
+  Document as boxed sidebars, the look Notes had before (Gothic: tint, red edge,
+  italics; Modern: tint, teal edge; Print: black frame).
 
 ### Room PDF, header rule and empty last page (2026-10-05)
 

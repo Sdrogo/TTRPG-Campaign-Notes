@@ -37,4 +37,5 @@ h1, h2, h3 { font-family: "Lato", Helvetica, Arial, sans-serif; font-weight: bol
 .note h3 { font-size: 11pt; margin-bottom: 1.5mm; color: #0f766e; }
 .xref { color: #0f766e; }
 .comments h3 { font-size: 11pt; }
+.comment { background: #f4f6f6; border-left: 2.5pt solid #0f766e; }
 .comment-meta { font-size: 8.5pt; color: #777; }

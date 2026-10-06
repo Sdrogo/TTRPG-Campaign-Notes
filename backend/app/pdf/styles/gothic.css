@@ -57,4 +57,6 @@ h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: normal
 
 .xref { color: #8a0f1c; }
 .comments h3 { font-size: 14pt; color: #8a0f1c; border-bottom: 0.5pt solid #8a0f1c; }
-.comment-meta { font-size: 9.5pt; color: #555; }
+/* Comments: italic sidebars with a red edge */
+.comment { background: #f5f0f0; border-left: 3pt solid #8a0f1c; font-style: italic; }
+.comment-meta { font-size: 9.5pt; font-style: normal; color: #555; }

@@ -34,4 +34,5 @@ h1, h2, h3 { font-family: "Crimson Text", Georgia, serif; font-weight: bold; }
 .note h3 { font-size: 12pt; }
 .xref { text-decoration: underline; }
 .comments h3 { font-size: 12pt; border-bottom: 0.5pt solid #000; }
+.comment { border: 1pt solid #000; }
 .comment-meta { font-size: 9.5pt; }

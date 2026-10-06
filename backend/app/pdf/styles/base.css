@@ -69,7 +69,10 @@ a { color: inherit; text-decoration: none; }
 
 /* Comments (only with the option on) */
 .comments { margin-top: 6mm; }
-.comment { margin: 0 0 3mm; break-inside: avoid; }
+/* Comments close the Document as boxed sidebars (each style sets the box): the
+   look Notes had before they became paragraphs (product owner, 2026-10-06). */
+.comment { margin: 0 0 3mm; padding: 3mm 4mm; break-inside: avoid; }
+.comment p:last-child { margin-bottom: 0; }
 .comment-meta { margin-bottom: 1mm; }
 /* The indent grows to depth 3 and stops there on purpose (the template caps
    the class): a deep thread stays inside the page. */

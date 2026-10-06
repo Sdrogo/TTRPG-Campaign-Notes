@@ -18,10 +18,12 @@ from manual_fixtures import (
     CASTLE,
     IRENA,
     LABELS,
+    PLACE,
     comment,
     document,
     make_export,
     text,
+    uid,
 )
 from pypdf import PdfReader
 
@@ -114,7 +116,13 @@ def test_a_reference_and_the_index_link_to_where_the_document_is_printed() -> No
 
 
 def test_the_documents_of_a_chapter_sit_under_its_title_after_its_references() -> None:
-    html = render_manual_html(_manual(), ManualStyle.GOTHIC, PageSize.A4)
+    # Place gets a Document of its own (Abbey, before "Castle" by name), so its
+    # chapter holds a Document as well as the reference to Castle.
+    export = make_export()
+    abbey = document(uid(34), "Abbey", (PLACE,), description=(text("Ruined."),))
+    export = replace(export, documents=[*export.documents, abbey])
+    manual = build_manual(export, ManualOptions(), LABELS)
+    html = render_manual_html(manual, ManualStyle.GOTHIC, PageSize.A4)
 
     # The title is outside, so a style can set each Document in columns while it
     # still spans the page.
@@ -123,9 +131,13 @@ def test_the_documents_of_a_chapter_sit_under_its_title_after_its_references() -
     assert html.index('class="chapter-body"') < html.index(f'id="doc-{CASTLE}"')
     # A chapter's references come before its Documents, so each Document can
     # end its page without leaving a reference alone on the next one.
-    for chapter in html.split('<section class="chapter"')[1:]:
-        if 'class="references"' in chapter and 'class="document"' in chapter:
-            assert chapter.index('class="references"') < chapter.index('class="document"')
+    mixed = [
+        chapter
+        for chapter in html.split('<section class="chapter"')[1:]
+        if 'class="references"' in chapter and 'class="document"' in chapter
+    ]
+    assert len(mixed) == 1
+    assert mixed[0].index('class="references"') < mixed[0].index('class="document"')
     # No rule closes a chapter: the page break does.
     assert "chapter-end" not in html
 
@@ -140,6 +152,25 @@ def test_notes_read_as_more_of_the_description() -> None:
         css = (ASSETS_DIR / "styles" / f"{style.value}.css").read_text(encoding="utf-8")
         for body in re.findall(r"^\.note\s*\{([^}]*)\}", css, re.M):
             assert not re.search(r"background|border|font-style|padding", body), style
+
+
+def test_comments_close_a_document_as_boxed_sidebars() -> None:
+    """Comments come last in a Document and every style draws each one as a
+    box (the look Notes had before, product owner 2026-10-06)."""
+    export = make_export()
+    castle, *others = export.documents
+    castle = replace(castle, comments=(comment(1, ALICE, "Creepy."),))
+    export = replace(export, documents=[castle, *others])
+    manual = build_manual(export, ManualOptions(include_comments=True), LABELS)
+    html = render_manual_html(manual, ManualStyle.GOTHIC, PageSize.A4)
+
+    castle_html = html[html.index(f'id="doc-{CASTLE}"') :]
+    castle_html = castle_html[: castle_html.index("</article>")]
+    assert castle_html.index('class="note"') < castle_html.index('class="comments"')
+    for style in ManualStyle:
+        css = (ASSETS_DIR / "styles" / f"{style.value}.css").read_text(encoding="utf-8")
+        box = re.search(r"^\.comment\s*\{([^}]*)\}", css, re.M)
+        assert box is not None and "border" in box.group(1), style
 
 
 @pytest.mark.parametrize("style", list(ManualStyle))
