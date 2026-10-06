@@ -73,16 +73,18 @@ a { color: inherit; text-decoration: none; }
 /* Comments (only with the option on) */
 .comments { margin-top: 6mm; }
 /* Comments close the Document as boxed sidebars (each style sets the box): the
-   look Notes had before they became paragraphs (product owner, 2026-10-06). */
-.comment { margin: 0 0 3mm; padding: 3mm 4mm; break-inside: avoid; }
+   look Notes had before they became paragraphs (product owner, 2026-10-06).
+   A long Comment breaks across columns and pages like the text above it,
+   instead of leaving the space before it blank; its author stays with its
+   first lines. */
+.comment { margin: 0 0 3mm; padding: 3mm 4mm; }
 .comment p:last-child { margin-bottom: 0; }
-.comment-meta { margin-bottom: 1mm; }
+.comment-meta { margin-bottom: 1mm; break-after: avoid; }
 /* The indent grows to depth 3 and stops there on purpose (the template caps
    the class): a deep thread stays inside the page. */
 .comment.depth-1 { margin-left: 6mm; }
 .comment.depth-2 { margin-left: 12mm; }
 .comment.depth-3 { margin-left: 18mm; }
-.deleted { font-style: italic; }
 
 /* Glossary: every printed Document by initial letter, with its Tags and page */
 .glossary-letters { columns: 2; column-gap: 10mm; }

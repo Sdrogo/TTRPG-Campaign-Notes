@@ -93,6 +93,18 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room PDF, comments and drop cap fixes (2026-10-06)
+
+- Product owner's request, three fixes in the Room PDF. Only Comments written
+  as a Character reach the appendix: a Comment written as oneself and a
+  deleted one are left out, and a printed reply to one of them takes its
+  place in the thread (`_comment_thread`; the `deletedComment` label is gone).
+  A long Comment no longer has `break-inside: avoid`, so it flows into the
+  space left on the page instead of jumping to the next one. A description
+  that opens with a `#` or `@` mention gets no drop cap
+  (`ManualDocument.drop_cap`, `.description.drop-cap` in gothic.css): the
+  initial took "#G" together.
+
 ### Room PDF, two short Documents share a page (2026-10-06)
 
 - Product owner's request: two Documents that fit on one page together share

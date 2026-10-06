@@ -213,21 +213,29 @@ def test_the_cover_reads_the_room_and_the_day() -> None:
 
 def test_comments_are_left_out_unless_asked() -> None:
     export = make_export(
-        documents=[document(CASTLE, "Castle", comments=(comment(1, ALICE, "Hi"),))]
+        documents=[
+            document(CASTLE, "Castle", comments=(comment(1, ALICE, "Hi", as_character=IRENA),)),
+            document(IRENA, "Irena"),
+        ]
     )
 
     assert _documents(build_manual(export, ManualOptions(), LABELS))["Castle"].comments == []
     asked = build_manual(export, ManualOptions(include_comments=True), LABELS)
-    assert [c.author for c in _documents(asked)["Castle"].comments] == ["Alice"]
+    assert [c.author for c in _documents(asked)["Castle"].comments] == ["Irena (played by Alice)"]
 
 
-def test_comments_nest_depth_first_and_name_characters_and_unknown_members() -> None:
+def test_only_comments_written_as_a_character_are_printed_depth_first() -> None:
+    """Product owner, 2026-10-06: a Comment written as oneself and a deleted
+    one stay out of the PDF; a printed reply to one of them takes its place."""
     comments = (
-        comment(1, ALICE, "Top"),
-        comment(2, BOB, "Other top", as_character=IRENA),
-        comment(3, MARA, "Reply", parent=1),
-        comment(4, uid(77), "Deep", parent=3),
-        comment(5, ALICE, "", parent=1, deleted=True),
+        comment(1, ALICE, "Top", as_character=IRENA),
+        comment(2, BOB, "Out of character"),
+        comment(3, MARA, "Reply", parent=1, as_character=IRENA),
+        comment(4, uid(77), "Deep", parent=3, as_character=IRENA),
+        comment(5, ALICE, "", parent=1, deleted=True, as_character=IRENA),
+        comment(6, ALICE, "Under a deleted one", parent=5, as_character=IRENA),
+        comment(7, BOB, "Answering the player", parent=2, as_character=IRENA),
+        comment(8, BOB, "Not visible", as_character=uid(78)),
     )
     export = make_export(
         documents=[document(CASTLE, "Castle", comments=comments), document(IRENA, "Irena")]
@@ -235,17 +243,42 @@ def test_comments_nest_depth_first_and_name_characters_and_unknown_members() -> 
     manual = build_manual(export, ManualOptions(include_comments=True), LABELS)
 
     thread = _documents(manual)["Castle"].comments
-    assert [(c.depth, c.author) for c in thread] == [
-        (0, "Alice"),
-        (1, "Mara"),
-        (2, "Unknown member"),
-        (1, "Alice"),
-        (0, "Irena (played by Unknown member)"),
+    assert [(c.depth, c.author, c.paragraphs[0][0].text) for c in thread] == [
+        (0, "Irena (played by Alice)", "Top"),
+        (1, "Irena (played by Mara)", "Reply"),
+        (2, "Irena (played by Unknown member)", "Deep"),
+        (1, "Irena (played by Alice)", "Under a deleted one"),
+        (0, "Irena (played by Unknown member)", "Answering the player"),
     ]
-    assert [c.deleted for c in thread] == [False, False, False, True, False]
-    assert thread[3].paragraphs == []
     assert [list(p) for p in thread[0].paragraphs] == [[Run("Top")]]
     assert thread[0].written_on == T0.date()
+
+
+def test_a_description_opening_with_a_tag_or_member_mention_has_no_drop_cap() -> None:
+    """The large initial would take the sigil and the letter after it."""
+    opening = {
+        "Tag": (mention(MentionKind.TAG, NPC, "Ghoul"), text(" di Irena")),
+        "User": (mention(MentionKind.USER, ALICE, "Alice"), text(" knows")),
+        "Link": (mention(MentionKind.DOCUMENT, IRENA, "Irena"), text(" rules")),
+        "Plain": (text("  A vampire."),),
+        "Empty": (),
+    }
+    export = make_export(
+        documents=[
+            document(uid(50 + n), name, description=spans)
+            for n, (name, spans) in enumerate(opening.items())
+        ]
+        + [document(IRENA, "Irena")]
+    )
+    documents = _documents(build_manual(export, ManualOptions(), LABELS))
+
+    assert {name: documents[name].drop_cap for name in opening} == {
+        "Tag": False,
+        "User": False,
+        "Link": True,
+        "Plain": True,
+        "Empty": False,
+    }
 
 
 def _all_text(manual: Manual) -> str:
@@ -310,7 +343,7 @@ def test_nothing_hidden_from_the_requester_reaches_the_manual() -> None:
             updated_at=T0,
             deleted_at=None,
             parent_id=None,
-            as_document_id=None,
+            as_document_id=CASTLE,
         )
 
     source = ExportInput(
