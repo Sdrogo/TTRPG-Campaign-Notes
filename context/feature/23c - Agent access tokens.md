@@ -1,3 +1,7 @@
+> **Dropped (product owner, 2026-10-06)**: not to be built. Kept for
+> reference only; FR-G2 (Agent access on behalf of a user) has no
+> implementation.
+
 ## Goals
 
 - FR-G2: an external AI Agent reads a Room **on behalf of a user**, without that user signing in each time, and never sees more than the user does (I-01).
