@@ -16,7 +16,10 @@ database is at `a2e6c9f4b8d1`; no pending migrations.
 **Whole-Document history (spec 24b, 2026-10-06)** carries **migration
 `c7d3e9a1f5b2`** (folds `note_versions` into `document_versions.notes` and
 drops it). **Applied to the staging database by hand on 2026-10-06** by the
-product owner; **pending on production**, to apply before the release.
+product owner (`alembic current` went from `a2e6c9f4b8d1` to `c7d3e9a1f5b2`;
+checked afterwards: staging held 2 revisions and no Notes, so the backfill fix
+of the review, Notes seeded from their creation, made no difference there).
+**Pending on production**, to apply before the release.
 
 **Release of 2026-10-05 (staging → main, features 21, 22b follow-ups, 23 and 23b)**:
 both pending migrations were applied to the **production** database by hand
@@ -91,7 +94,8 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   the drawer compares a revision with the newest one rather than the cached
   Document; deleting a Note no longer says it can't be undone.
 - Migration `c7d3e9a1f5b2` checked locally on seeded data (Document and Note
-  versions replayed in time order, downgrade and re-upgrade). Backend 994
+  versions replayed in time order, downgrade and re-upgrade) and **applied to
+  the staging database on 2026-10-06** (see Current Status). Backend 994
   tests and frontend tests at 100% coverage. **Not seen in a browser.**
 
 ### Room PDF, one page per Document, Notes as paragraphs (2026-10-06)
