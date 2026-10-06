@@ -1388,8 +1388,9 @@ Reorganized with the product owner on 2026-10-03.
   (theme defaults, spacing, `CompactList`, columns on wide screens),
   `25b - Compact Account page`, `25c - Room setup Tags and rename` (backend
   `PATCH` for the rename plus the new section). Each ticket's Decisions are
-  proposals to confirm in its PR (notably 25c Decision 3: Grouping saves on
-  every change instead of a "Save order" button).
+  proposals to confirm in its PR, except 25c Decision 3, confirmed by the
+  product owner on 2026-10-06: Grouping saves on every change, no "Save
+  order" button.
 - **Build order (product owner, 2026-10-02, confirmed 2026-10-03)**: one
   feature at a time, each closed with all its sub-tickets: 21 → 22 (with
   22b) → 23 (with 23b, 23c) → 24, then the two small tickets below.
