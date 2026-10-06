@@ -472,8 +472,9 @@ class DocumentReadRow(Base):
 
 
 class DocumentVersionRow(Base):
-    """A saved state of a Document's name and description (spec 24). Deleted
-    with the Document."""
+    """A revision of a Document: its name, its description and its Notes
+    (spec 24b). `notes` is a list of `{id, title, description, visibility,
+    selective_user_ids}` in display order. Deleted with the Document."""
 
     __tablename__ = "document_versions"
 
@@ -483,23 +484,7 @@ class DocumentVersionRow(Base):
     )
     name: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text, default="")
-    edited_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-
-
-class NoteVersionRow(Base):
-    """A saved state of a Note's title and description (spec 24). Deleted with
-    the Note."""
-
-    __tablename__ = "note_versions"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
-    note_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("document_notes.id", ondelete="CASCADE"), index=True
-    )
-    title: Mapped[str] = mapped_column(String(200))
-    description: Mapped[str] = mapped_column(Text, default="")
+    notes: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
     edited_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

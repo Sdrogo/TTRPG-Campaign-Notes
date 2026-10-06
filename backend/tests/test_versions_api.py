@@ -1,11 +1,12 @@
-"""Version history routes (spec 24): what each save leaves in the history,
-who may read and restore it, and that a hidden Note's history stays hidden
-(VR-07)."""
+"""Whole-Document history routes (spec 24b, after spec 24): what each save of
+the Document or its Notes leaves in the history, who may read and restore it,
+and that Notes hidden from the requester stay hidden in it (VR-07)."""
 
 import uuid
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 import pytest_asyncio
@@ -14,8 +15,8 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import versions_repo
-from app.db.models import DocumentVersionRow, NoteVersionRow
-from app.domain.versions import Version
+from app.db.models import DocumentVersionRow
+from app.domain.versions import DocumentState, Version
 from app.main import app
 
 
@@ -43,9 +44,6 @@ class _Room:
 
     def versions_url(self, document_id: str) -> str:
         return f"{self.document_url(document_id)}/versions"
-
-    def note_versions_url(self, document_id: str, note_id: str) -> str:
-        return f"{self.document_url(document_id)}/notes/{note_id}/versions"
 
 
 async def _member(
@@ -125,19 +123,6 @@ async def _age_document_versions(db_session: AsyncSession, document_id: str, min
         .values(
             created_at=DocumentVersionRow.created_at - delta,
             updated_at=DocumentVersionRow.updated_at - delta,
-        )
-    )
-
-
-async def _age_note_versions(db_session: AsyncSession, note_id: str, minutes: int) -> None:
-    """`_age_document_versions` for a Note."""
-    delta = timedelta(minutes=minutes)
-    await db_session.execute(
-        update(NoteVersionRow)
-        .where(NoteVersionRow.note_id == uuid.UUID(note_id))
-        .values(
-            created_at=NoteVersionRow.created_at - delta,
-            updated_at=NoteVersionRow.updated_at - delta,
         )
     )
 
@@ -392,7 +377,11 @@ async def test_deleting_a_document_deletes_its_history(
     assert count == 0
 
 
-# --- Notes ------------------------------------------------------------------
+# --- Notes are part of the Document's history (spec 24b) --------------------
+
+
+def _notes_url(room: _Room, document_id: str) -> str:
+    return f"{room.document_url(document_id)}/notes"
 
 
 async def _edit_note(
@@ -404,171 +393,246 @@ async def _edit_note(
     **fields: object,
 ) -> None:
     response = await client.patch(
-        f"{room.document_url(document_id)}/notes/{note_id}", json=fields, headers=editor.headers
+        f"{_notes_url(room, document_id)}/{note_id}", json=fields, headers=editor.headers
     )
     assert response.status_code == 200, response.text
 
 
-async def test_a_note_has_its_own_history_that_merges_like_a_document(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+async def _delete_note(
+    client: AsyncClient, room: _Room, document_id: str, note_id: str, editor: _Member
 ) -> None:
-    room = await _room(client, make_token)
-    document_id = await _document(client, room)
-    note_id = await _note(client, room, document_id, room.owner)
-
-    await _edit_note(client, room, document_id, note_id, room.owner, description="Two.")
-    await _edit_note(client, room, document_id, note_id, room.owner, description="Three.")
-    await _edit_note(client, room, document_id, note_id, room.master, title="Hidden door")
-
-    response = await client.get(
-        room.note_versions_url(document_id, note_id), headers=room.owner.headers
+    response = await client.delete(
+        f"{_notes_url(room, document_id)}/{note_id}", headers=editor.headers
     )
-    versions = response.json()
-    assert [v["title"] for v in versions] == ["Hidden door", "Secret door"]
-    assert [v["edited_by"] for v in versions] == [room.master.id, room.owner.id]
-    # The Document's own history is untouched by a Note's saves.
-    assert len(await _versions(client, room, document_id, room.owner)) == 1
+    assert response.status_code == 204, response.text
 
 
-async def test_a_note_save_that_changes_only_its_visibility_writes_nothing(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
-) -> None:
-    room = await _room(client, make_token)
-    document_id = await _document(client, room)
-    note_id = await _note(client, room, document_id, room.owner)
-    await _age_note_versions(db_session, note_id, 60)
-
-    await _edit_note(client, room, document_id, note_id, room.master, visibility="master")
-
+async def _full(
+    client: AsyncClient, room: _Room, document_id: str, version_id: object, viewer: _Member
+) -> dict[str, Any]:
     response = await client.get(
-        room.note_versions_url(document_id, note_id), headers=room.master.headers
+        f"{room.versions_url(document_id)}/{version_id}", headers=viewer.headers
     )
-    assert len(response.json()) == 1
-
-
-async def test_restoring_a_note_version_adds_a_version_and_keeps_the_rest(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
-) -> None:
-    room = await _room(client, make_token)
-    document_id = await _document(client, room)
-    note_id = await _note(client, room, document_id, room.owner, visibility="selective")
-    await _edit_note(client, room, document_id, note_id, room.master, description="Rewritten.")
-    url = room.note_versions_url(document_id, note_id)
-    first = (await client.get(url, headers=room.owner.headers)).json()[-1]
-
-    response = await client.post(f"{url}/{first['id']}/restore", headers=room.owner.headers)
-
     assert response.status_code == 200, response.text
-    assert response.json()["description"] == "Behind the bookcase."
-    assert len((await client.get(url, headers=room.owner.headers)).json()) == 3
-    notes = (
-        await client.get(f"{room.document_url(document_id)}/notes", headers=room.owner.headers)
+    body: dict[str, Any] = response.json()
+    return body
+
+
+async def _restore(
+    client: AsyncClient, room: _Room, document_id: str, version_id: object, viewer: _Member
+) -> dict[str, Any]:
+    response = await client.post(
+        f"{room.versions_url(document_id)}/{version_id}/restore", headers=viewer.headers
+    )
+    assert response.status_code == 200, response.text
+    body: dict[str, Any] = response.json()
+    return body
+
+
+async def _notes(
+    client: AsyncClient, room: _Room, document_id: str, viewer: _Member
+) -> list[dict[str, object]]:
+    body: list[dict[str, object]] = (
+        await client.get(_notes_url(room, document_id), headers=viewer.headers)
     ).json()
-    assert notes[0]["description"] == "Behind the bookcase."
-    assert notes[0]["visibility"] == "selective"
+    return body
 
 
-async def test_a_reader_is_refused_a_notes_history(
+async def test_note_saves_are_revisions_of_the_document(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
     document_id = await _document(client, room)
+    # The same Owner inside the window: merged into the Document's first one.
     note_id = await _note(client, room, document_id, room.owner)
-    url = room.note_versions_url(document_id, note_id)
+    await _edit_note(client, room, document_id, note_id, room.master, description="Two words")
 
-    assert (await client.get(url, headers=room.reader.headers)).status_code == 403
+    versions = await _versions(client, room, document_id, room.owner)
+
+    assert [v["edited_by"] for v in versions] == [room.master.id, room.owner.id]
+    assert (versions[0]["words_added"], versions[0]["words_removed"]) == (2, 3)
+    assert (versions[0]["notes_added"], versions[0]["notes_removed"]) == (0, 0)
+    first = await _full(client, room, document_id, versions[1]["id"], room.owner)
+    assert first["notes"] == [
+        {"id": note_id, "title": "Secret door", "description": "Behind the bookcase."}
+    ]
+    newest = await _full(client, room, document_id, versions[0]["id"], room.owner)
+    assert newest["words_added"] == 2
 
 
-async def test_an_owner_cannot_read_the_history_of_a_note_hidden_from_them(
+async def test_a_deleted_note_comes_back_with_its_place_and_visibility(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    first_id = await _note(client, room, document_id, room.owner, title="First")
+    note_id = await _note(
+        client,
+        room,
+        document_id,
+        room.owner,
+        visibility="selective",
+        selective_user_ids=[room.reader.id],
+    )
+    await _note(client, room, document_id, room.owner, title="Last")
+    before = (await _versions(client, room, document_id, room.owner))[0]
+
+    # Same Owner, inside the window: still a revision of its own.
+    await _delete_note(client, room, document_id, note_id, room.owner)
+    versions = await _versions(client, room, document_id, room.owner)
+    assert len(versions) == 2
+    assert versions[0]["notes_removed"] == 1
+
+    restored = await _restore(client, room, document_id, before["id"], room.owner)
+
+    assert [note["id"] for note in restored["notes"]] == [
+        first_id,
+        note_id,
+        restored["notes"][2]["id"],
+    ]
+    notes = await _notes(client, room, document_id, room.owner)
+    assert [note["title"] for note in notes] == ["First", "Secret door", "Last"]
+    assert notes[1]["visibility"] == "selective"
+    assert notes[1]["selective_user_ids"] == [room.reader.id]
+    reader_notes = await _notes(client, room, document_id, room.reader)
+    assert note_id in [note["id"] for note in reader_notes]
+    assert len(await _versions(client, room, document_id, room.owner)) == 3
+
+
+async def test_a_restore_removes_notes_added_since_and_puts_the_order_back(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    one = await _note(client, room, document_id, room.owner, title="One")
+    two = await _note(client, room, document_id, room.owner, title="Two")
+    before = (await _versions(client, room, document_id, room.owner))[0]
+    await _age_document_versions(db_session, document_id, 11)
+    response = await client.put(
+        f"{_notes_url(room, document_id)}/order",
+        json={"note_ids": [two, one]},
+        headers=room.owner.headers,
+    )
+    assert response.status_code == 200
+    await _note(client, room, document_id, room.owner, title="Three")
+    await _edit_note(client, room, document_id, one, room.owner, description="Changed.")
+    assert len(await _versions(client, room, document_id, room.owner)) == 2
+
+    await _restore(client, room, document_id, before["id"], room.owner)
+
+    notes = await _notes(client, room, document_id, room.owner)
+    assert [(n["title"], n["description"]) for n in notes] == [
+        ("One", "Behind the bookcase."),
+        ("Two", "Behind the bookcase."),
+    ]
+
+
+async def test_notes_hidden_from_an_owner_stay_out_of_their_history(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    secret = await _note(
+        client, room, document_id, room.master, title="Vault", visibility="master"
+    )
+    await _edit_note(client, room, document_id, secret, room.master, description="Gold.")
+
+    owner_versions = await _versions(client, room, document_id, room.owner)
+    master_versions = await _versions(client, room, document_id, room.master)
+
+    # The Master's two saves merged into one revision, which only touched the
+    # hidden Note: the Owner doesn't see it, or its id.
+    assert len(master_versions) == 2
+    assert len(owner_versions) == 1
+    assert (
+        await client.get(
+            f"{room.versions_url(document_id)}/{master_versions[0]['id']}",
+            headers=room.owner.headers,
+        )
+    ).status_code == 404
+    full = await _full(client, room, document_id, owner_versions[0]["id"], room.owner)
+    assert full["notes"] == []
+
+    # A restore by the Owner leaves the hidden Note as it is.
+    await _edit(client, room, document_id, room.owner, description="Changed.")
+    await _restore(client, room, document_id, owner_versions[0]["id"], room.owner)
+    master_notes = await _notes(client, room, document_id, room.master)
+    assert [(n["id"], n["description"]) for n in master_notes] == [(secret, "Gold.")]
+
+
+async def test_a_note_narrowed_before_its_deletion_stays_hidden(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    note_id = await _note(client, room, document_id, room.owner, title="Plans")
+    await _age_document_versions(db_session, document_id, 60)
+    # Only its visibility changes: no new revision, but the latest learns it.
+    await _edit_note(client, room, document_id, note_id, room.master, visibility="master")
+    assert len(await _versions(client, room, document_id, room.master)) == 1
+    await _delete_note(client, room, document_id, note_id, room.master)
+
+    owner_versions = await _versions(client, room, document_id, room.owner)
+    master_versions = await _versions(client, room, document_id, room.master)
+
+    assert len(owner_versions) == 1
+    assert (await _full(client, room, document_id, owner_versions[0]["id"], room.owner))[
+        "notes"
+    ] == []
+    assert len(master_versions) == 2
+    older = await _full(client, room, document_id, master_versions[1]["id"], room.master)
+    assert [note["title"] for note in older["notes"]] == ["Plans"]
+
+
+async def test_a_reveal_keeps_the_history_in_step(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
     document_id = await _document(client, room)
     note_id = await _note(client, room, document_id, room.master, visibility="master")
-    url = room.note_versions_url(document_id, note_id)
-    version = (await client.get(url, headers=room.master.headers)).json()[0]
+    assert len(await _versions(client, room, document_id, room.owner)) == 1
 
-    assert (await client.get(url, headers=room.owner.headers)).status_code == 404
-    assert (
-        await client.get(f"{url}/{version['id']}", headers=room.owner.headers)
-    ).status_code == 404
-    assert (
-        await client.post(f"{url}/{version['id']}/restore", headers=room.owner.headers)
-    ).status_code == 404
-    assert (await client.get(url, headers=room.master.headers)).status_code == 200
+    response = await client.post(
+        f"{_notes_url(room, document_id)}/{note_id}/reveal",
+        json={"to_room": True},
+        headers=room.master.headers,
+    )
+    assert response.status_code == 200, response.text
+
+    full = await _full(
+        client,
+        room,
+        document_id,
+        (await _versions(client, room, document_id, room.owner))[0]["id"],
+        room.owner,
+    )
+    assert [note["id"] for note in full["notes"]] == [note_id]
 
 
-async def test_a_note_version_of_another_note_is_404_and_a_deleted_note_takes_its_history(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+async def test_a_restore_past_the_note_cap_is_409(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     room = await _room(client, make_token)
     document_id = await _document(client, room)
     note_id = await _note(client, room, document_id, room.owner)
-    other_id = await _note(client, room, document_id, room.owner, title="Other")
-    elsewhere = (
-        await client.get(room.note_versions_url(document_id, other_id), headers=room.owner.headers)
-    ).json()[0]
-    url = room.note_versions_url(document_id, note_id)
+    before = (await _versions(client, room, document_id, room.owner))[0]
+    await _delete_note(client, room, document_id, note_id, room.owner)
+    await _note(client, room, document_id, room.master, title="Hidden", visibility="master")
+    monkeypatch.setattr("app.domain.versions.MAX_NOTES_PER_DOCUMENT", 1)
 
-    assert (
-        await client.get(f"{url}/{elsewhere['id']}", headers=room.owner.headers)
-    ).status_code == 404
-    assert (
-        await client.get(f"{url}/{uuid.uuid4()}", headers=room.owner.headers)
-    ).status_code == 404
-    assert (
-        await client.post(f"{url}/{uuid.uuid4()}/restore", headers=room.owner.headers)
-    ).status_code == 404
-
-    await client.delete(
-        f"{room.document_url(document_id)}/notes/{note_id}", headers=room.owner.headers
+    response = await client.post(
+        f"{room.versions_url(document_id)}/{before['id']}/restore", headers=room.owner.headers
     )
-    count = await db_session.scalar(
-        select(func.count())
-        .select_from(NoteVersionRow)
-        .where(NoteVersionRow.note_id == uuid.UUID(note_id))
-    )
-    assert count == 0
 
-
-async def test_an_owner_reads_one_note_version_in_full(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
-) -> None:
-    room = await _room(client, make_token)
-    document_id = await _document(client, room)
-    note_id = await _note(client, room, document_id, room.owner)
-    url = room.note_versions_url(document_id, note_id)
-    listed = (await client.get(url, headers=room.owner.headers)).json()[0]
-
-    response = await client.get(f"{url}/{listed['id']}", headers=room.owner.headers)
-
-    assert response.status_code == 200
-    assert response.json()["title"] == "Secret door"
-    assert response.json()["description"] == "Behind the bookcase."
+    assert response.status_code == 409
 
 
 async def test_updating_a_version_that_is_gone_raises(db_session: AsyncSession) -> None:
-    gone = Version(uuid.uuid4(), "T", "D", uuid.uuid4(), datetime.now(UTC), datetime.now(UTC))
+    now = datetime.now(UTC)
+    gone = Version(uuid.uuid4(), DocumentState("T", "D"), uuid.uuid4(), now, now)
 
-    for subject in ("document", "note"):
-        with pytest.raises(LookupError):
-            await versions_repo.update_version(db_session, subject, gone)
-
-
-async def test_a_single_version_carries_its_change_size_against_the_one_before(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
-) -> None:
-    room = await _room(client, make_token)
-    document_id = await _document(client, room)
-    note_id = await _note(client, room, document_id, room.owner)
-    await _edit(client, room, document_id, room.master, description="A vampire lord.")
-    await _edit_note(client, room, document_id, note_id, room.master, description="Two words")
-    note_url = room.note_versions_url(document_id, note_id)
-
-    for url in (room.versions_url(document_id), note_url):
-        newest, first = (await client.get(url, headers=room.owner.headers)).json()
-        newest_full = (await client.get(f"{url}/{newest['id']}", headers=room.owner.headers)).json()
-        first_full = (await client.get(f"{url}/{first['id']}", headers=room.owner.headers)).json()
-        assert newest_full["words_added"] == newest["words_added"] > 0
-        assert newest_full["words_removed"] == newest["words_removed"]
-        assert first_full["words_added"] is None
+    with pytest.raises(LookupError):
+        await versions_repo.update_version(db_session, gone)

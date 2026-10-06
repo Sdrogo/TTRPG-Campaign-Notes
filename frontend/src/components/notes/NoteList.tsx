@@ -5,7 +5,6 @@ import { PlusIcon } from '@phosphor-icons/react';
 import { NoteForm } from './NoteForm';
 import { NoteItem } from './NoteItem';
 import { RevealModal } from '../RevealModal';
-import { VersionHistoryDrawer } from '../versions/VersionHistoryDrawer';
 import { useCreateNote, useDeleteNote, useReorderNotes, useUpdateNote } from '../../hooks/useNotes';
 import { useRevealNote, useRevealedInVisit } from '../../hooks/useReveals';
 import { useReadOnly } from '../../hooks/useViewAs';
@@ -58,7 +57,6 @@ export function NoteList({
   const { t } = useTranslation();
   const [adding, setAdding] = useState(false);
   const [revealingId, setRevealingId] = useState<string | null>(null);
-  const [historyId, setHistoryId] = useState<string | null>(null);
   const createNote = useCreateNote(roomId, documentId);
   const updateNote = useUpdateNote(roomId, documentId);
   const deleteNote = useDeleteNote(roomId, documentId);
@@ -87,7 +85,6 @@ export function NoteList({
 
   const ids = notes.map((note) => note.id);
   const revealing = notes.find((note) => note.id === revealingId);
-  const inHistory = notes.find((note) => note.id === historyId);
 
   return (
     <Stack gap="md" className="note-list">
@@ -112,7 +109,6 @@ export function NoteList({
           onDelete={() => deleteNote.mutate(note.id, { onError: notifyError })}
           deleting={deleteNote.isPending && deleteNote.variables === note.id}
           revealed={revealed?.noteIds.includes(note.id)}
-          onHistory={() => setHistoryId(note.id)}
           onReveal={
             revealFrom && note.visibility !== 'room' ? () => setRevealingId(note.id) : undefined
           }
@@ -145,18 +141,6 @@ export function NoteList({
             {t('notes.add')}
           </Button>
         ))}
-      {inHistory && (
-        <VersionHistoryDrawer
-          opened
-          onClose={() => setHistoryId(null)}
-          roomId={roomId}
-          documentId={documentId}
-          noteId={inHistory.id}
-          name={inHistory.title}
-          current={{ title: inHistory.title, description: inHistory.description }}
-          members={members}
-        />
-      )}
       {revealing && revealFrom && (
         <RevealModal
           name={revealing.title}

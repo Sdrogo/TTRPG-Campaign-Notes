@@ -36,18 +36,29 @@ const newest = rawVersion({
   updated_at: '2026-10-05T13:00:00Z',
   words_added: 3,
   words_removed: 1,
+  notes_added: 1,
+  notes_removed: 1,
 });
 const first = rawVersion({ id: 'v1', edited_by: 'user-1' });
 
+const KEY = { id: 'note-1', title: 'Chiave', description: 'Sotto il sasso.' };
+const GONE = { id: 'note-2', title: 'Guardia', description: 'Dorme.' };
+const NEW = { id: 'note-3', title: 'Trappola', description: 'Sul gradino.' };
+
 const details: Record<string, unknown> = {
-  v2: { ...newest, description: 'Un cancello di ferro nero.' },
-  v1: { ...first, description: 'Un cancello di ferro.' },
+  v2: {
+    ...newest,
+    description: 'Un cancello di ferro nero.',
+    notes: [{ ...KEY, description: 'Sotto il sasso grande.' }, NEW],
+  },
+  v1: { ...first, description: 'Un cancello di ferro.', notes: [KEY, GONE] },
 };
 
 interface Overrides {
   list?: unknown;
   failList?: boolean;
   failDetail?: boolean;
+  failNewest?: boolean;
   failRestore?: boolean;
 }
 
@@ -56,26 +67,25 @@ function mockApi(overrides: Overrides = {}) {
     if (init?.method === 'POST') {
       return overrides.failRestore ? Promise.reject(new Error('No')) : Promise.resolve(details.v2);
     }
-    if (path === `${DOC}/versions` || path === `${DOC}/notes/note-1/versions`) {
+    if (path === `${DOC}/versions`) {
       return overrides.failList
         ? Promise.reject(new Error('No'))
         : Promise.resolve(overrides.list ?? [newest, first]);
     }
     if (overrides.failDetail) return Promise.reject(new Error('No'));
+    if (overrides.failNewest && path.endsWith('/v2')) return Promise.reject(new Error('No'));
     return Promise.resolve(details[path.split('/').pop() as string]);
   });
 }
 
-function render(noteId?: string) {
+function render() {
   renderWithProviders(
     <VersionHistoryDrawer
       opened
       onClose={vi.fn()}
       roomId="room-1"
       documentId="doc-1"
-      noteId={noteId}
       name="Il Cancello Nero"
-      current={{ title: 'Il Cancello Nero', description: 'Un cancello di ferro nero.' }}
       members={members}
     />,
   );
@@ -107,26 +117,30 @@ describe('the list', () => {
     expect(within(items[0]).getByLabelText('Parole aggiunte: 3, tolte: 1')).toHaveTextContent(
       '+3 −1',
     );
+    expect(within(items[0]).getByLabelText('Note aggiunte: 1, tolte: 1')).toHaveTextContent(
+      'Note +1 −1',
+    );
     expect(within(items[1]).getByText('Alice')).toBeInTheDocument();
-    expect(within(items[1]).getByText('Prima versione')).toBeInTheDocument();
+    expect(within(items[1]).getByText('Prima revisione')).toBeInTheDocument();
     expect(
-      screen.getByText('Scegli una versione per confrontarla con il testo attuale.'),
+      screen.getByText("Scegli una revisione per confrontarla con il Documento com'è adesso."),
     ).toBeInTheDocument();
   });
 
-  it("reads a Note's own history", async () => {
-    render('note-1');
+  it('leaves out the Notes count when no Note came or went', async () => {
+    mockApi({ list: [{ ...newest, notes_added: 0, notes_removed: 0 }, first] });
+    render();
 
-    await screen.findAllByRole('listitem');
+    const items = await screen.findAllByRole('listitem');
 
-    expect(fetchMock).toHaveBeenCalledWith(`${DOC}/notes/note-1/versions`);
+    expect(within(items[0]).queryByText(/^Note/)).not.toBeInTheDocument();
   });
 
   it('says so when there is nothing', async () => {
     mockApi({ list: [] });
     render();
 
-    expect(await screen.findByText('Nessuna versione.')).toBeInTheDocument();
+    expect(await screen.findByText('Nessuna revisione.')).toBeInTheDocument();
   });
 
   it('says so when it cannot load', async () => {
@@ -137,18 +151,39 @@ describe('the list', () => {
   });
 });
 
-// Spec 24 Decision 4: a version against the current text.
+// Spec 24b Decision 4: a revision against the newest, Notes included.
 describe('comparing', () => {
-  it('shows the chosen version beside the current text, differences marked', async () => {
+  it('shows the chosen revision beside the newest, differences marked', async () => {
     const { user } = render();
 
     await user.click(await row(1));
 
     const diff = await screen.findByTestId('version-diff');
-    expect(within(diff).getByText('Questa versione')).toBeInTheDocument();
-    expect(within(diff).getByText('Testo attuale')).toBeInTheDocument();
+    expect(within(diff).getAllByText('Questa revisione')).toHaveLength(4);
+    expect(within(diff).getAllByText('Adesso')).toHaveLength(4);
     const marked = Array.from(diff.querySelectorAll('mark')).map((m) => m.textContent?.trim());
-    expect(marked).toEqual(['Nero', 'nero']);
+    expect(marked).toEqual([
+      'Nero',
+      'nero',
+      'grande',
+      'Guardia',
+      'Dorme.',
+      'Trappola',
+      'Sul gradino.',
+    ]);
+  });
+
+  it('labels the Notes deleted and added since, each with one side', async () => {
+    const { user } = render();
+
+    await user.click(await row(1));
+
+    const diff = await screen.findByTestId('version-diff');
+    expect(within(diff).getByText('Note')).toBeInTheDocument();
+    expect(within(diff).getByText('Eliminata da allora')).toBeInTheDocument();
+    expect(within(diff).getByText("Non c'è più nel Documento")).toBeInTheDocument();
+    expect(within(diff).getByText('Aggiunta dopo')).toBeInTheDocument();
+    expect(within(diff).getByText("Non c'è in questa revisione")).toBeInTheDocument();
   });
 
   it('says so, and offers no restore, for the text already in force', async () => {
@@ -156,21 +191,21 @@ describe('comparing', () => {
 
     await user.click(await row(0));
 
-    expect(await screen.findByText('Questa è già la versione attuale.')).toBeInTheDocument();
+    expect(await screen.findByText('Il Documento è già così.')).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Ripristina questa versione' }),
+      screen.queryByRole('button', { name: 'Ripristina questa revisione' }),
     ).not.toBeInTheDocument();
   });
 
   it('shows a version with no description as such', async () => {
-    details.v1 = { ...first, description: '' };
+    details.v1 = { ...first, description: '', notes: [] };
     const { user } = render();
 
     await user.click(await row(1));
 
     const diff = await screen.findByTestId('version-diff');
     expect(within(diff).getByText('Nessuna descrizione.')).toBeInTheDocument();
-    details.v1 = { ...first, description: 'Un cancello di ferro.' };
+    details.v1 = { ...first, description: 'Un cancello di ferro.', notes: [KEY, GONE] };
   });
 
   it('says so when the version cannot load', async () => {
@@ -185,12 +220,25 @@ describe('comparing', () => {
   });
 });
 
-// Spec 24 Decision 3: restoring adds a version, behind a confirmation.
+describe('the newest revision', () => {
+  it('says so when the revision it is compared with cannot load', async () => {
+    mockApi({ failNewest: true });
+    const { user } = render();
+
+    await user.click(await row(1));
+
+    await waitFor(() =>
+      expect(screen.getByText('Impossibile caricare lo storico.')).toBeInTheDocument(),
+    );
+  });
+});
+
+// Spec 24b Decision 5: restoring adds a revision, behind a confirmation.
 describe('restoring', () => {
   async function chooseAndRestore(user: ReturnType<typeof userEvent.setup>) {
     await user.click(await row(1));
-    await user.click(await screen.findByRole('button', { name: 'Ripristina questa versione' }));
-    return screen.findByRole('dialog', { name: 'Ripristinare questa versione?' });
+    await user.click(await screen.findByRole('button', { name: 'Ripristina questa revisione' }));
+    return screen.findByRole('dialog', { name: 'Ripristinare questa revisione?' });
   }
 
   it('asks first, then posts the restore and confirms', async () => {
@@ -201,14 +249,14 @@ describe('restoring', () => {
       expect.stringContaining('/restore'),
       expect.anything(),
     );
-    await user.click(within(dialog).getByRole('button', { name: 'Ripristina questa versione' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Ripristina questa revisione' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(`${DOC}/versions/v1/restore`, { method: 'POST' }),
     );
-    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Versione ripristinata'));
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Revisione ripristinata'));
     expect(
-      screen.getByText('Scegli una versione per confrontarla con il testo attuale.'),
+      screen.getByText("Scegli una revisione per confrontarla con il Documento com'è adesso."),
     ).toBeInTheDocument();
   });
 
@@ -220,7 +268,7 @@ describe('restoring', () => {
 
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: 'Ripristinare questa versione?' }),
+        screen.queryByRole('dialog', { name: 'Ripristinare questa revisione?' }),
       ).not.toBeInTheDocument(),
     );
     expect(fetchMock).not.toHaveBeenCalledWith(
@@ -246,7 +294,7 @@ describe('restoring', () => {
     const { user } = render();
 
     const dialog = await chooseAndRestore(user);
-    await user.click(within(dialog).getByRole('button', { name: 'Ripristina questa versione' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Ripristina questa revisione' }));
 
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
     expect(notifySuccess).not.toHaveBeenCalled();

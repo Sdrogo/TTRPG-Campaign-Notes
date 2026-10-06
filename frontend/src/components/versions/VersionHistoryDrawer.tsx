@@ -27,18 +27,20 @@ interface VersionHistoryDrawerProps {
   onClose: () => void;
   roomId: string;
   documentId: string;
-  /** Set for a Note's history; absent for the Document's own. */
-  noteId?: string;
-  /** The Document's name or the Note's title now, for the drawer's title. */
+  /** The Document's name now, for the drawer's title. */
   name: string;
-  /** The text in force now, which every version is compared with. */
-  current: { title: string; description: string };
   members: Member[];
 }
 
 function ChangeSize({ version }: { version: Version }) {
   const { t } = useTranslation();
-  if (version.wordsAdded === null || version.wordsRemoved === null) {
+  // The backend sends all four null together, for the first revision.
+  if (
+    version.wordsAdded === null ||
+    version.wordsRemoved === null ||
+    version.notesAdded === null ||
+    version.notesRemoved === null
+  ) {
     return (
       <Text size="xs" c="dimmed">
         {t('versions.first')}
@@ -46,39 +48,50 @@ function ChangeSize({ version }: { version: Version }) {
     );
   }
   const counts = { added: version.wordsAdded, removed: version.wordsRemoved };
+  const notes = { added: version.notesAdded, removed: version.notesRemoved };
   return (
-    <Text size="xs" c="dimmed" aria-label={t('versions.changeSizeLabel', counts)}>
-      {t('versions.changeSize', counts)}
-    </Text>
+    <Stack gap={0} align="flex-end">
+      <Text size="xs" c="dimmed" aria-label={t('versions.changeSizeLabel', counts)}>
+        {t('versions.changeSize', counts)}
+      </Text>
+      {(notes.added > 0 || notes.removed > 0) && (
+        <Text size="xs" c="dimmed" aria-label={t('versions.notesChangeLabel', notes)}>
+          {t('versions.notesChange', notes)}
+        </Text>
+      )}
+    </Stack>
   );
 }
 
 /**
- * The history of a Document's text or of one Note's (spec 24), for the people
- * who may edit it: a list of versions (who saved it, when, how many words it
- * changed), and, for the one chosen, the comparison with the text in force and
- * a "Restore" behind a confirmation. Restoring adds a version, so nothing is
- * lost. The list is only read while the drawer is open.
+ * The history of a whole Document, its Notes included (spec 24b), for the
+ * people who may edit it: a list of revisions (who saved it, when, how many
+ * words and Notes it changed), and, for the one chosen, the comparison with
+ * the newest revision and a "Restore" behind a confirmation, which puts the
+ * whole Document back, Notes deleted since included. Restoring adds a
+ * revision, so nothing is lost. The list is only read while the drawer is
+ * open, and only holds the Notes the reader may see.
  */
 export function VersionHistoryDrawer({
   opened,
   onClose,
   roomId,
   documentId,
-  noteId,
   name,
-  current,
   members,
 }: VersionHistoryDrawerProps) {
   const { t } = useTranslation();
-  const versions = useVersions(roomId, documentId, noteId, opened);
+  const versions = useVersions(roomId, documentId, opened);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const selected = useVersion(roomId, documentId, noteId, selectedId);
-  const restore = useRestoreVersion(roomId, documentId, noteId);
-  const newestId = versions.data?.[0]?.id;
+  const newestId = versions.data?.[0]?.id ?? null;
+  const selected = useVersion(roomId, documentId, selectedId);
+  // Every revision is compared with the newest, the Document as it is now.
+  const newest = useVersion(roomId, documentId, selectedId === null ? null : newestId);
+  const restore = useRestoreVersion(roomId, documentId);
   const selectedDetail = selected.data?.id === selectedId ? selected.data : undefined;
-  const identical = selectedDetail ? isSameText(selectedDetail, current) : false;
+  const current = newest.data?.id === newestId ? newest.data : undefined;
+  const identical = selectedDetail && current ? isSameText(selectedDetail, current) : false;
 
   return (
     <Drawer
@@ -144,11 +157,11 @@ export function VersionHistoryDrawer({
             <Text c="dimmed" size="sm">
               {t('versions.pick')}
             </Text>
-          ) : selected.isError ? (
+          ) : selected.isError || newest.isError ? (
             <Text c="red" size="sm">
               {t('versions.loadFailed')}
             </Text>
-          ) : !selectedDetail ? (
+          ) : !selectedDetail || !current ? (
             <Loader color="accent" size="sm" />
           ) : (
             <Stack gap="sm">

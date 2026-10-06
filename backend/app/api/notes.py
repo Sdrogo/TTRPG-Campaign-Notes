@@ -31,7 +31,7 @@ from app.api.reveals import (
     reveal_error,
 )
 from app.api.validation import UniqueIds
-from app.api.versions import record_version
+from app.api.versions import record_revision
 from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, notes_repo, rooms_repo
 from app.db.session import SessionDep
@@ -260,9 +260,7 @@ async def create_note(
         MentionSource(document_id, MentionSourceKind.NOTE, note_id=note.id),
         note.description,
     )
-    await record_version(
-        session, "note", note.id, document_id, requester_id, note.title, note.description
-    )
+    await record_revision(session, document_id, requester_id)
     notes = await get_document_notes(session, document_id, membership, owner_ids)
     if not any(visible.id == note.id for visible in notes.visible):
         return None
@@ -300,6 +298,7 @@ async def reorder_notes(
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
     await notes_repo.set_note_positions(session, ordered_ids)
+    await record_revision(session, document_id, requester_id)
     reordered = await get_document_notes(session, document_id, membership, owner_ids)
     return visible_note_responses(reordered, membership, owner_ids)
 
@@ -362,19 +361,10 @@ async def update_note(
             MentionSource(document_id, MentionSourceKind.NOTE, note_id=note_id),
             plan.note.description,
         )
-    if body.title is not None or body.description is not None:
-        await record_version(
-            session,
-            "note",
-            note_id,
-            document_id,
-            requester_id,
-            plan.note.title,
-            plan.note.description,
-        )
     if body.selective_user_ids is not None:
         await notes_repo.set_note_grants(session, note_id, body.selective_user_ids)
         selective_ids = body.selective_user_ids
+    await record_revision(session, document_id, requester_id)
     if plan.audit_entry is not None:
         await rooms_repo.insert_audit_log(session, plan.audit_entry)
     if not is_note_visible(plan.note, requester_id, membership.role, owner_ids, selective_ids):
@@ -391,7 +381,8 @@ async def delete_note(
     session: SessionDep,
     locale: LocaleDep,
 ) -> None:
-    """An Owner (or the Master) deletes a Note they can see, for good."""
+    """An Owner (or the Master) deletes a Note they can see. It stays in the
+    Document's history, from which it can be restored (spec 24b)."""
     requester_id = uuid.UUID(current_user.id)
     membership, owner_ids = await _require_document(
         session, room_id, document_id, requester_id, locale
@@ -400,6 +391,8 @@ async def delete_note(
     note = _get_visible_note(notes, note_id, locale)
     _ensure_manager(membership, owner_ids, locale)
     await notes_repo.delete_note(session, note.id)
+    # The revision before this one keeps the Note, so it can be restored.
+    await record_revision(session, document_id, requester_id)
 
 
 @router.post("/{note_id}/reveal")
@@ -455,4 +448,5 @@ async def reveal_note(
     await notes_repo.update_note(session, revealed)
     await notes_repo.set_note_grants(session, note_id, sorted(plan.selective_user_ids))
     await record_reveal(session, plan)
+    await record_revision(session, document_id, requester_id)
     return note_response(revealed, plan.selective_user_ids, membership, owner_ids)
