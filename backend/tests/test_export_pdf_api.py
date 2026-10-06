@@ -179,8 +179,12 @@ async def _seed(client: AsyncClient, room: _Room) -> dict[str, Any]:
         description="Strahd lives",
         visibility="master",
     )
-    await _post(client, f"{base}/comments", room.player, body="Hello there")
-    await _post(client, f"{base}/comments", room.master, body="Beware", visibility="master")
+    # Only Comments written as a Character reach the PDF: the Master writes as the Castle.
+    as_castle = {"as_document_id": castle["id"]}
+    await _post(client, f"{base}/comments", room.master, body="Hello there", **as_castle)
+    await _post(
+        client, f"{base}/comments", room.master, body="Beware", visibility="master", **as_castle
+    )
     return {"castle": castle, "tags": tags}
 
 

@@ -16,7 +16,6 @@ def manual_labels(locale: str) -> ManualLabels:
         documents=translate("pdf.documents", locale),
         comments=translate("pdf.comments", locale),
         unknown_member=translate("pdf.unknownMember", locale),
-        deleted_comment=translate("pdf.deletedComment", locale),
         # Left as a template: `{character}` and `{player}` are filled per Comment.
         played_by=translate("pdf.playedBy", locale),
         page_abbreviation=translate("pdf.pageAbbreviation", locale),

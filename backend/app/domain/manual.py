@@ -45,6 +45,7 @@ class PageSize(StrEnum):
 
 
 _PARAGRAPH_BREAK = re.compile(r"\n[ \t]*\n\s*")
+_SIGILS = ("#", "@")
 
 
 @dataclass(frozen=True)
@@ -58,7 +59,6 @@ class ManualLabels:
     documents: str
     comments: str
     unknown_member: str
-    deleted_comment: str
     played_by: str
     page_abbreviation: str
 
@@ -96,13 +96,13 @@ class ManualNote:
 
 @dataclass(frozen=True)
 class ManualComment:
-    """A Comment in a Document's appendix. `depth` is 0 for a top-level
-    Comment and grows by one per reply level; a deleted one has no text."""
+    """A Comment in a Document's appendix, always one written as a Character.
+    `depth` is 0 for a top-level Comment and grows by one per printed reply
+    level."""
 
     depth: int
     author: str
     written_on: date
-    deleted: bool
     paragraphs: Sequence[Paragraph]
 
 
@@ -121,6 +121,15 @@ class ManualDocument:
     def anchor(self) -> str:
         """The id the section carries and every link to it points at."""
         return f"doc-{self.id}"
+
+    @property
+    def drop_cap(self) -> bool:
+        """Whether the description opens with a large initial. Not when it
+        opens with a Tag or member mention: the initial would take the "#" or
+        "@" and the letter after it together ("#G" over "houl")."""
+        if not self.paragraphs:
+            return False
+        return not self.paragraphs[0][0].text.startswith(_SIGILS)
 
 
 @dataclass(frozen=True)
@@ -349,11 +358,13 @@ def _comment_thread(
     labels: ManualLabels,
     resolve: Callable[[MentionSpan], Run],
 ) -> list[ManualComment]:
-    """The Comments depth first, replies right under their parent. Every reply
-    in the export has its parent in it (a reply whose parent the requester
-    can't see comes with no `parent_id`, so it is top level). A Comment written
-    as a Character carries the Character's name and, as in the Markdown export,
-    who played it."""
+    """The Comments written as a Character, depth first, replies right under
+    their parent (product owner, 2026-10-06: the PDF tells the story, so a
+    Comment written as oneself and a deleted one are left out). A reply to a
+    Comment left out takes its place in the thread. Every reply in the export
+    has its parent in it (a reply whose parent the requester can't see comes
+    with no `parent_id`, so it is top level). A Comment carries the
+    Character's name and, as in the Markdown export, who played it."""
     children: dict[uuid.UUID | None, list[ExportComment]] = {}
     for comment in comments:
         children.setdefault(comment.parent_id, []).append(comment)
@@ -362,21 +373,21 @@ def _comment_thread(
 
     def write(parent: uuid.UUID | None, depth: int) -> None:
         for comment in children.get(parent, []):
-            author = members.get(comment.author_id, labels.unknown_member)
             character = (
                 export.visible_documents.get(comment.as_character_id)
                 if comment.as_character_id
                 else None
             )
-            if character is not None:
-                author = labels.played_by.format(character=character, player=author)
+            if comment.deleted or character is None:
+                write(comment.id, depth)
+                continue
+            player = members.get(comment.author_id, labels.unknown_member)
             thread.append(
                 ManualComment(
                     depth=depth,
-                    author=author,
+                    author=labels.played_by.format(character=character, player=player),
                     written_on=comment.created_at.date(),
-                    deleted=comment.deleted,
-                    paragraphs=[] if comment.deleted else _paragraphs(comment.body, resolve),
+                    paragraphs=_paragraphs(comment.body, resolve),
                 )
             )
             write(comment.id, depth + 1)

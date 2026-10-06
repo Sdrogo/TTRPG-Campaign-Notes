@@ -46,10 +46,11 @@ h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: normal
 .document-title { font-size: 20pt; margin: 0 0 4mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #1a1a1a; }
 .document-image img { max-height: 70mm; border: 0.75pt solid #1a1a1a; }
 
-/* A large red initial on the first paragraph of a description. Not floated:
-   WeasyPrint's floated ::first-letter fails in its float layout on some
-   paragraphs (seen in CI), so the initial stays on the line. */
-.description p:first-child::first-letter { font: 2.4em "IM Fell English", serif; color: #8a0f1c; }
+/* A large red initial on the first paragraph of a description, unless it opens
+   with a "#" or "@" mention (`drop-cap`, manual.py). Not floated: WeasyPrint's
+   floated ::first-letter fails in its float layout on some paragraphs (seen in
+   CI), so the initial stays on the line. */
+.description.drop-cap p:first-child::first-letter { font: 2.4em "IM Fell English", serif; color: #8a0f1c; }
 
 /* Notes: more paragraphs of the description under a red subheading */
 .note h3 { font-size: 13pt; color: #8a0f1c; }
