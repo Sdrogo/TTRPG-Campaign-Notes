@@ -68,6 +68,20 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room PDF, one page per Document, Notes as paragraphs (2026-10-06)
+
+- Product owner's requests after a production PDF: the chapter's closing rule
+  crossed the column rule when the columns filled the page; Notes should read as
+  more paragraphs of the description; every Document should end its page.
+- Each `.document` is now its own two-column, balanced block and the next one
+  starts a new page; a chapter's references are listed first, under its title.
+  The closing rule (and `styles/ornaments/`) is gone: the page break ends a
+  Document. Notes are a `<section class="note">` with a subheading in the
+  style's accent and plain paragraphs (no tint, border or italics). A chapter
+  title clears the header's Document name.
+- Tests: references before Documents, Notes without a box, each Document on its
+  own pages (the small Room is now 7 pages), the header rule.
+
 ### Room PDF, header rule and empty last page (2026-10-05)
 
 - Seen by the product owner on a production PDF. Gothic's running header rule

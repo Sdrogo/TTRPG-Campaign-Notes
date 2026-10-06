@@ -17,7 +17,7 @@
 }
 @page body {
   @top-left { content: string(chapter-title); }
-  @top-right { content: string(document-title); }
+  @top-right { content: string(document-title, last); }
 }
 
 .cover { page: cover; break-after: page; }
@@ -25,7 +25,10 @@
 .chapter { page: body; break-before: page; }
 .index { page: body; break-before: page; }
 
-.chapter-title { string-set: chapter-title content(); }
+/* A chapter clears the Document name, so a page with only its references
+   doesn't repeat the previous chapter's last Document (`last` then shows the
+   Document a page holds). */
+.chapter-title { string-set: chapter-title content(), document-title ""; }
 .index .section-title { string-set: chapter-title content(), document-title ""; }
 .document-title { string-set: document-title content(); }
 
@@ -44,23 +47,21 @@ a { color: inherit; text-decoration: none; }
 
 /* Chapters and Documents */
 .chapter-title { break-after: avoid; }
-/* The Documents of a chapter sit in `.chapter-body`, set in two columns by every
-   style. `column-fill: balance` fills each page's columns in turn and, on the
-   chapter's last page, balances them to equal height; the rest of that page stays
-   blank (the next chapter starts a new one). The title stays above, across the
-   page. A centered half-page rule closes the chapter: it is drawn as the
-   chapter's background, at the bottom of its padding, because a box after the
-   columns (an <hr>) lands alone on a new page when the columns fill the last
-   one. A broken box's background is sliced, so only the last page shows it.
-   Each style sets the image (`ornaments/rule-*.svg`) to color it. */
-.chapter-body { columns: 2; column-gap: 9mm; column-fill: balance; }
-.chapter { padding-bottom: 9mm; background: url(ornaments/rule-black.svg) no-repeat bottom center; background-size: 50% 1pt; }
-.document { margin-top: 10mm; }
+/* Every Document has its own pages: it is set in two columns by every style and
+   the next one starts a new page. `column-fill: balance` fills each page's
+   columns in turn and, on the Document's last page, balances them to equal
+   height; the rest of that page stays blank. The chapter title (and the
+   references to Documents printed in earlier chapters) stay above the first
+   one, across the page. No rule closes a Document: the page break does, and a
+   rule under balanced columns met the column rule when they filled the page. */
+.document { margin-top: 10mm; columns: 2; column-gap: 9mm; column-fill: balance; }
+.document + .document { break-before: page; }
+.references { margin-top: 6mm; }
 .document-image { margin: 0 0 5mm; text-align: center; break-inside: avoid; }
 .document-image img { max-width: 100%; max-height: 90mm; object-fit: contain; }
-.note { margin: 5mm 0; padding: 3mm 4mm; break-inside: avoid; }
+/* Notes read as more of the description: a subheading, then plain paragraphs. */
+.note { margin: 5mm 0 0; }
 .note h3 { margin: 0 0 2mm; }
-.note p:last-child { margin-bottom: 0; }
 
 /* A link to something printed elsewhere shows where: "Name → p. 12". */
 .xref::after { content: " \2192 " attr(data-page) " " target-counter(attr(href), page); }

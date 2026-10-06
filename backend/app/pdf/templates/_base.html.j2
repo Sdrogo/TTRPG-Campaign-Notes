@@ -52,8 +52,17 @@
 <section class="chapter" id="{{ chapter.id }}">
   <h1 class="chapter-title">{{ chapter.title }}</h1>
   <div class="chapter-body">
-  {% for entry in chapter.entries %}
-  {% if entry.paragraphs is defined %}
+  {#- A chapter's references (Documents printed in an earlier chapter) come first,
+      under its title, so every Document can end its own page. -#}
+  {% set references = chapter.entries | rejectattr("paragraphs", "defined") | list %}
+  {% if references %}
+  <div class="references">
+    {% for entry in references %}
+    <p class="reference"><a class="xref" href="#{{ entry.anchor }}" data-page="{{ manual.labels.page_abbreviation }}">{{ entry.name }}</a></p>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% for entry in chapter.entries if entry.paragraphs is defined %}
   <article class="document" id="{{ entry.anchor }}">
     <h2 class="document-title">{{ entry.name }}</h2>
     {% if entry.image_url %}<figure class="document-image"><img src="{{ entry.image_url }}" alt=""></figure>{% endif %}
@@ -61,10 +70,10 @@
       {{ paragraphs(entry.paragraphs) }}
     </div>
     {% for note in entry.notes %}
-    <aside class="note">
+    <section class="note">
       <h3>{{ note.title }}</h3>
       {{ paragraphs(note.paragraphs) }}
-    </aside>
+    </section>
     {% endfor %}
     {% if entry.comments %}
     <section class="comments">
@@ -78,9 +87,6 @@
     </section>
     {% endif %}
   </article>
-  {% else %}
-  <p class="reference"><a class="xref" href="#{{ entry.anchor }}" data-page="{{ manual.labels.page_abbreviation }}">{{ entry.name }}</a></p>
-  {% endif %}
   {% endfor %}
   </div>
 </section>
