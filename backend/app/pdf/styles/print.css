@@ -23,7 +23,6 @@ h1, h2, h3 { font-family: "Crimson Text", Georgia, serif; font-weight: bold; }
 
 .section-title { font-size: 22pt; margin: 0 0 8mm; border-bottom: 1pt solid #000; }
 .toc-chapter > a { font-weight: bold; }
-.index-entries { columns: 2; column-gap: 10mm; }
 
 .chapter-title { font-size: 26pt; margin: 0 0 6mm; border-bottom: 1.5pt solid #000; }
 /* The Documents in two columns (base.css), a black rule between them. */

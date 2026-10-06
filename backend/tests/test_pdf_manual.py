@@ -35,6 +35,7 @@ from app.pdf.render import (
     ManualStyle,
     PageSize,
     _fetcher,
+    page_pairs,
     render_manual_html,
     render_manual_pdf,
     url_allowed,
@@ -68,7 +69,7 @@ def test_every_style_and_size_renders_the_whole_structure(
         'id="chapter-3"',
         f'id="doc-{CASTLE}"',
         'class="note"',
-        'id="index"',
+        'id="glossary"',
     ):
         assert expected in html
     # A mention printed with its page: the link and the localized "p.".
@@ -108,11 +109,16 @@ def test_text_is_escaped_and_paragraphs_stay_on_one_line() -> None:
     assert "<p>three</p>" in html
 
 
-def test_a_reference_and_the_index_link_to_where_the_document_is_printed() -> None:
+def test_a_reference_and_the_glossary_link_to_where_the_document_is_printed() -> None:
     html = render_manual_html(_manual(), ManualStyle.MODERN, PageSize.A4)
 
     assert f'<a class="xref" href="#doc-{CASTLE}" data-page="p.">Castle</a>' in html
-    assert f'<a class="index-link" href="#doc-{CASTLE}">Castle</a>' in html
+    assert (
+        f'<a class="glossary-link" href="#doc-{CASTLE}"><span class="glossary-name">Castle</span>'
+        '<span class="glossary-tags"> · NPC, Place</span></a>'
+    ) in html
+    # A Document without Tags prints its name alone.
+    assert '<span class="glossary-name">Orphan</span></a>' in html
 
 
 def test_the_documents_of_a_chapter_sit_under_its_title_after_its_references() -> None:
@@ -192,8 +198,8 @@ def test_every_style_sets_each_document_on_its_own_pages_in_two_balanced_columns
     """Spec 23b: rulebook-like two columns, balanced on a Document's last page
     (WeasyPrint fills each page in turn and balances only the last one), and
     every Document after the first of a chapter starts a new page (product
-    owner, 2026-10-06). Set once in `base.css`; no style may go back to one
-    column."""
+    owner, 2026-10-06) unless the renderer lets it share one. Set once in
+    `base.css`; no style may go back to one column."""
     styles = ASSETS_DIR / "styles"
     base = (styles / "base.css").read_text("utf-8")
     rule = re.search(r"^\.document\s*\{([^}]*)\}", base, re.M)
@@ -201,6 +207,9 @@ def test_every_style_sets_each_document_on_its_own_pages_in_two_balanced_columns
     assert rule is not None
     assert "columns: 2" in rule.group(1) and "column-fill: balance" in rule.group(1)
     assert re.search(r"^\.document \+ \.document\s*\{\s*break-before: page;", base, re.M)
+    assert re.search(
+        r"^\.document \+ \.document\.shares-page\s*\{\s*break-before: auto;", base, re.M
+    )
     for style in ManualStyle:
         css = (styles / f"{style.value}.css").read_text(encoding="utf-8")
         assert not re.search(r"column-count:\s*1|columns:\s*1|column-fill:\s*auto", css), style
@@ -216,12 +225,8 @@ def test_the_language_follows_the_requester_with_english_as_the_fallback() -> No
 def test_the_labels_follow_the_locale_and_keep_the_comment_template() -> None:
     english, italian = manual_labels("en"), manual_labels("it")
 
-    assert (english.contents, english.index, english.other) == ("Contents", "Index", "Other")
-    assert (italian.contents, italian.index, italian.other) == (
-        "Indice",
-        "Indice analitico",
-        "Altro",
-    )
+    assert (english.contents, english.glossary, english.other) == ("Contents", "Glossary", "Other")
+    assert (italian.contents, italian.glossary, italian.other) == ("Indice", "Glossario", "Altro")
     assert manual_labels("fr") == english
     for labels in (english, italian):
         assert "{character}" in labels.played_by and "{player}" in labels.played_by
@@ -305,9 +310,10 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     pdf = render_manual_pdf(_small_room(), style, size)
 
     reader = PdfReader(io.BytesIO(pdf))
-    # Cover, contents, one page per Document (NPC holds Castle and Irena, Other
-    # holds Orphan), one for the Place chapter's reference, and the index.
-    assert len(reader.pages) == 7
+    # Cover, contents, one page for the NPC chapter (Castle and Irena are short
+    # enough to share it), one for the Place chapter's reference, one for Other
+    # (Orphan), and the glossary.
+    assert len(reader.pages) == 6
     width_pt, height_pt = (
         float(reader.pages[0].mediabox.width),
         float(reader.pages[0].mediabox.height),
@@ -318,7 +324,7 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     assert "Barovia" in reader.pages[0].extract_text()
 
     contents = reader.pages[1].extract_text()
-    for word in ("Contents", "Castle", "Irena", "NPC", "Place", "Other", "Index"):
+    for word in ("Contents", "Castle", "Irena", "NPC", "Place", "Other", "Glossary"):
         assert word in contents
     # (Gothic sets the first letter of a description as a large initial, a separate
     # piece of text, so these searches skip it.)
@@ -337,15 +343,16 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     assert re.search(
         rf"Irena\s*→\s*p\.\s*{irena_page}\b", reader.pages[castle_page - 1].extract_text()
     )
-    # Each Document has its own page, and the Place chapter's page names no
+    # Castle and Irena share a page, and the Place chapter's page names no
     # Document in its header (it only holds a reference).
-    assert irena_page == castle_page + 1
-    place = reader.pages[4].extract_text()
+    assert irena_page == castle_page
+    place = reader.pages[3].extract_text()
     assert "Irena" not in place
     assert re.search(rf"Castle\s*→\s*p\.\s*{castle_page}\b", place)
-    # The Tag index points at the same pages, and the accents survived.
-    index = reader.pages[-1].extract_text()
-    assert re.search(rf"Castle,\s*{castle_page}\b", index)
+    # The glossary points at the same pages, and the accents survived.
+    glossary = reader.pages[-1].extract_text()
+    assert re.search(rf"Castle · NPC, Place[ .]*{castle_page}\b", glossary)
+    assert re.search(rf"Irena · NPC[ .]*{irena_page}\b", glossary)
     assert "ittà dell'Ovest, perché sì." in " ".join(p.extract_text() for p in reader.pages)
 
 
@@ -406,6 +413,50 @@ def test_a_chapter_flows_in_two_columns_balanced_on_its_last_page(
     assert to_the_right, (style, sentences, starts)
 
 
+def test_neighbours_that_each_took_one_page_pair_up_left_to_right() -> None:
+    order = [("chapter-1", ["a", "b", "c", "d", "e"]), ("chapter-2", ["f"]), ("glossary", [])]
+
+    # d takes two pages, so c and e have no one-page neighbour in their chapter,
+    # and e and f are in different chapters.
+    pages = {"chapter-1": 2, "a": 2, "b": 3, "c": 4, "d": 5, "e": 7, "chapter-2": 8, "f": 8}
+    assert page_pairs(order, {**pages, "glossary": 9}) == [("a", "b")]
+
+    # Every Document on one page: pairs left to right, e is left alone.
+    pages = {"chapter-1": 2, "a": 2, "b": 3, "c": 4, "d": 5, "e": 6, "chapter-2": 7, "f": 7}
+    assert page_pairs(order, {**pages, "glossary": 8}) == [("a", "b"), ("c", "d")]
+
+    # Without the glossary on a page, where the last Document ends is unknown.
+    assert page_pairs(order, pages) == [("a", "b"), ("c", "d")]
+    assert page_pairs([("chapter-1", ["a", "b"]), ("glossary", [])], pages) == []
+
+
+@pytest.mark.parametrize(
+    ("style", "sentences"),
+    [(ManualStyle.GOTHIC, 40), (ManualStyle.MODERN, 30), (ManualStyle.PRINT, 40)],
+)
+def test_two_documents_too_long_together_keep_their_own_pages(
+    style: ManualStyle, sentences: int
+) -> None:
+    """Each takes one page alone but not both together: the renderer tries the
+    pair, sees it spill and lays it out again a page each."""
+    _weasyprint()
+    sentence = "the keep stands above the mist and the road bends toward it. "
+    export = make_export(
+        main_items=[],
+        documents=[
+            document(CASTLE, "Castle", description=(text("First " + sentence * sentences),)),
+            document(IRENA, "Irena", description=(text("Second " + sentence * sentences),)),
+        ],
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+
+    reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
+
+    # Cover, contents, Castle, Irena, glossary.
+    assert len(reader.pages) == 5
+    assert _page_with(reader, "Second the keep") == _page_with(reader, "First the keep") + 1
+
+
 @pytest.mark.parametrize(
     ("style", "sentences"),
     [(ManualStyle.GOTHIC, 62), (ManualStyle.MODERN, 46), (ManualStyle.PRINT, 66)],
@@ -416,7 +467,8 @@ def test_a_chapter_that_fills_its_last_page_adds_no_empty_page(
     """A description long enough that the columns fill the chapter's last page
     to the bottom (the counts were found by sweeping each style): the closing
     rule used to be an <hr> after the columns, which then moved alone to an
-    otherwise empty page. Every page after the contents holds body text."""
+    otherwise empty page. Every page between the contents and the glossary
+    holds body text."""
     _weasyprint()
     sentence = "Marker the keep stands above the mist and the road bends toward it. "
     export = make_export(
@@ -427,5 +479,7 @@ def test_a_chapter_that_fills_its_last_page_adds_no_empty_page(
 
     reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
 
-    for number in range(2, len(reader.pages)):
-        assert "Marker" in reader.pages[number].extract_text(), (style, number + 1)
+    *body, glossary = reader.pages[2:]
+    for number, page in enumerate(body, start=3):
+        assert "Marker" in page.extract_text(), (style, number)
+    assert "Glossary" in glossary.extract_text()

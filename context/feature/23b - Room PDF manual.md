@@ -9,8 +9,8 @@
    - a **cover** with the Room's name and image (the favorite image of a Document chosen in the dialog, or none);
    - a **table of contents** with page numbers;
    - **one chapter per Main item** of the Room (single Tags and combinations, in the order of the Documents list); Documents in no Main item go in a last "Other" chapter. A Document in several items is printed once, in its first chapter, and referenced from the others ("→ p. 12");
-   - **one section per Document**: favorite image, description, its Notes as **paragraphs after the description**, each under its title (product owner, 2026-10-06; boxed sidebars before); each Document on its own pages;
-   - a closing **index of Tags** with page numbers.
+   - **one section per Document**: favorite image, description, its Notes as **paragraphs after the description**, each under its title (product owner, 2026-10-06; boxed sidebars before); each Document on its own pages, except that two short Documents of a chapter that fit on one page together share it (product owner, 2026-10-06);
+   - a closing **glossary of the Documents' names**, A–Z by initial letter, each with its Tags and page number (product owner, 2026-10-06; it replaced the index of Tags).
 2. **Comments**: left out by default; an option adds them as an appendix per Document.
 3. **Mentions** become internal links with a page reference ("Drago Rosso → p. 12"); a mention of something not in the PDF stays plain text.
 4. **Styles**: presets, built in this order:
@@ -27,7 +27,7 @@
 
 ### Backend (23b_1)
 
-- **Rendering**: the export tree of 23 → HTML with one Jinja template per style and print CSS (CSS Paged Media: `@page`, running headers, `target-counter()` for page numbers in the TOC, index and mention links, `columns` for two-column styles) → PDF with **WeasyPrint**. Fonts are bundled in the repo (open licenses), not loaded from the web. Images are fetched through Storage with the backend's key, downscaled for print.
+- **Rendering**: the export tree of 23 → HTML with one Jinja template per style and print CSS (CSS Paged Media: `@page`, running headers, `target-counter()` for page numbers in the TOC, glossary and mention links, `columns` for two-column styles) → PDF with **WeasyPrint**. Fonts are bundled in the repo (open licenses), not loaded from the web. Images are fetched through Storage with the backend's key, downscaled for print.
 - **Deploy check first**: WeasyPrint needs Pango and its system libraries. Confirm Render's Python runtime can install them (or move the backend to a Docker image) before anything else; the fallback is headless Chromium (Playwright), which handles page numbers less well.
 - **Jobs**: table `export_jobs` (`id`, `room_id`, `requested_by`, `options` JSON, `status` = `queued` | `running` | `done` | `failed`, `storage_path`, `created_at`, `finished_at`), RLS + deny policy. `POST /rooms/{id}/exports/pdf` creates a job and runs it in a background task in the same process (like the Storage sweeper); `GET /rooms/{id}/exports/{job}` returns the status and, when done, a signed **download** link (never rendered from the app's origin, as for PDF Attachments). The file lives in a private Storage prefix and is deleted after 24 hours through `storage_cleanup`. One running job per user and Room. The visibility snapshot is taken when the job starts, for the requester (or the 22b target).
 - PDF Attachments are merged with `pypdf` when requested.
@@ -37,7 +37,7 @@
 
 - In the Export dialog of 23, a **PDF** option with style (thumbnail previews), page size, include Comments, include Attachments, cover image, Tag filter.
 - Progress state while the job runs (polling every few seconds while the dialog is open; also listed on the Room page until downloaded), then a download button.
-- New strings in `en.json` and `it.json`; the PDF's own fixed texts ("Contents", "Index", "Other") follow the requester's UI language.
+- New strings in `en.json` and `it.json`; the PDF's own fixed texts ("Contents", "Glossary", "Other") follow the requester's UI language.
 
 ## Implementation
 
@@ -46,6 +46,6 @@
 
 ## Definition of Done
 
-- A Room with ~30 Documents and images renders in each of the three styles (Gothic first), A4 and Letter, with a working TOC, page references and Tag index.
+- A Room with ~30 Documents and images renders in each of the three styles (Gothic first), A4 and Letter, with a working TOC, page references and glossary.
 - A Player's PDF contains nothing hidden from them; the Master's "as player X" PDF matches what X sees.
 - Files disappear from Storage after 24 hours. Checks green.

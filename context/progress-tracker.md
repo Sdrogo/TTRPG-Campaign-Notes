@@ -80,6 +80,26 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room PDF, two short Documents share a page (2026-10-06)
+
+- Product owner's request: two Documents that fit on one page together share
+  it instead of taking a page each. Only a layout can tell, so
+  `render_manual_pdf` measures: a first layout with a page per Document,
+  `page_pairs` picks neighbours in a chapter that each took one page, a second
+  layout joins them (`.shares-page`), and a pair that spilled is split again
+  in a third. Pairs only (as asked), never across chapters. Same PR as the
+  glossary (#116).
+
+### Room PDF, glossary of Documents (2026-10-06)
+
+- The product owner asked for the PDF's closing glossary to be on the
+  Documents' names, not on the Tags. `manual.py::_glossary` lists every
+  printed Document once, grouped by initial letter (accents and case ignored,
+  names not starting with a letter under "#" first), each with its Tags
+  ("Castle · NPC, Place") and its page (leader dots, like the contents). It
+  replaces the index of Tags; `#Tag` mentions are now plain text, since a Tag
+  has no page of its own. Label key `pdf.index` became `pdf.glossary`
+  ("Glossary" / "Glossario"). No migration, backend only.
 ### Whole-Document history (spec 24b, 2026-10-06)
 
 - Product owner's call: History is not a versioning of Notes. One history per
