@@ -35,6 +35,7 @@ from app.pdf.render import (
     ManualStyle,
     PageSize,
     _fetcher,
+    page_pairs,
     render_manual_html,
     render_manual_pdf,
     url_allowed,
@@ -197,8 +198,8 @@ def test_every_style_sets_each_document_on_its_own_pages_in_two_balanced_columns
     """Spec 23b: rulebook-like two columns, balanced on a Document's last page
     (WeasyPrint fills each page in turn and balances only the last one), and
     every Document after the first of a chapter starts a new page (product
-    owner, 2026-10-06). Set once in `base.css`; no style may go back to one
-    column."""
+    owner, 2026-10-06) unless the renderer lets it share one. Set once in
+    `base.css`; no style may go back to one column."""
     styles = ASSETS_DIR / "styles"
     base = (styles / "base.css").read_text("utf-8")
     rule = re.search(r"^\.document\s*\{([^}]*)\}", base, re.M)
@@ -206,6 +207,9 @@ def test_every_style_sets_each_document_on_its_own_pages_in_two_balanced_columns
     assert rule is not None
     assert "columns: 2" in rule.group(1) and "column-fill: balance" in rule.group(1)
     assert re.search(r"^\.document \+ \.document\s*\{\s*break-before: page;", base, re.M)
+    assert re.search(
+        r"^\.document \+ \.document\.shares-page\s*\{\s*break-before: auto;", base, re.M
+    )
     for style in ManualStyle:
         css = (styles / f"{style.value}.css").read_text(encoding="utf-8")
         assert not re.search(r"column-count:\s*1|columns:\s*1|column-fill:\s*auto", css), style
@@ -306,9 +310,10 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     pdf = render_manual_pdf(_small_room(), style, size)
 
     reader = PdfReader(io.BytesIO(pdf))
-    # Cover, contents, one page per Document (NPC holds Castle and Irena, Other
-    # holds Orphan), one for the Place chapter's reference, and the glossary.
-    assert len(reader.pages) == 7
+    # Cover, contents, one page for the NPC chapter (Castle and Irena are short
+    # enough to share it), one for the Place chapter's reference, one for Other
+    # (Orphan), and the glossary.
+    assert len(reader.pages) == 6
     width_pt, height_pt = (
         float(reader.pages[0].mediabox.width),
         float(reader.pages[0].mediabox.height),
@@ -338,10 +343,10 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     assert re.search(
         rf"Irena\s*→\s*p\.\s*{irena_page}\b", reader.pages[castle_page - 1].extract_text()
     )
-    # Each Document has its own page, and the Place chapter's page names no
+    # Castle and Irena share a page, and the Place chapter's page names no
     # Document in its header (it only holds a reference).
-    assert irena_page == castle_page + 1
-    place = reader.pages[4].extract_text()
+    assert irena_page == castle_page
+    place = reader.pages[3].extract_text()
     assert "Irena" not in place
     assert re.search(rf"Castle\s*→\s*p\.\s*{castle_page}\b", place)
     # The glossary points at the same pages, and the accents survived.
@@ -406,6 +411,50 @@ def test_a_chapter_flows_in_two_columns_balanced_on_its_last_page(
     width = float(body.mediabox.width)
     to_the_right = [x for x in starts if x > left + width * 0.25]
     assert to_the_right, (style, sentences, starts)
+
+
+def test_neighbours_that_each_took_one_page_pair_up_left_to_right() -> None:
+    order = [("chapter-1", ["a", "b", "c", "d", "e"]), ("chapter-2", ["f"]), ("glossary", [])]
+
+    # d takes two pages, so c and e have no one-page neighbour in their chapter,
+    # and e and f are in different chapters.
+    pages = {"chapter-1": 2, "a": 2, "b": 3, "c": 4, "d": 5, "e": 7, "chapter-2": 8, "f": 8}
+    assert page_pairs(order, {**pages, "glossary": 9}) == [("a", "b")]
+
+    # Every Document on one page: pairs left to right, e is left alone.
+    pages = {"chapter-1": 2, "a": 2, "b": 3, "c": 4, "d": 5, "e": 6, "chapter-2": 7, "f": 7}
+    assert page_pairs(order, {**pages, "glossary": 8}) == [("a", "b"), ("c", "d")]
+
+    # Without the glossary on a page, where the last Document ends is unknown.
+    assert page_pairs(order, pages) == [("a", "b"), ("c", "d")]
+    assert page_pairs([("chapter-1", ["a", "b"]), ("glossary", [])], pages) == []
+
+
+@pytest.mark.parametrize(
+    ("style", "sentences"),
+    [(ManualStyle.GOTHIC, 40), (ManualStyle.MODERN, 30), (ManualStyle.PRINT, 40)],
+)
+def test_two_documents_too_long_together_keep_their_own_pages(
+    style: ManualStyle, sentences: int
+) -> None:
+    """Each takes one page alone but not both together: the renderer tries the
+    pair, sees it spill and lays it out again a page each."""
+    _weasyprint()
+    sentence = "the keep stands above the mist and the road bends toward it. "
+    export = make_export(
+        main_items=[],
+        documents=[
+            document(CASTLE, "Castle", description=(text("First " + sentence * sentences),)),
+            document(IRENA, "Irena", description=(text("Second " + sentence * sentences),)),
+        ],
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+
+    reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
+
+    # Cover, contents, Castle, Irena, glossary.
+    assert len(reader.pages) == 5
+    assert _page_with(reader, "Second the keep") == _page_with(reader, "First the keep") + 1
 
 
 @pytest.mark.parametrize(

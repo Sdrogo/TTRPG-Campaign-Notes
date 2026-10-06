@@ -63,7 +63,7 @@
   </div>
   {% endif %}
   {% for entry in chapter.entries if entry.paragraphs is defined %}
-  <article class="document" id="{{ entry.anchor }}">
+  <article class="document{% if entry.id in shared %} shares-page{% endif %}" id="{{ entry.anchor }}">
     <h2 class="document-title">{{ entry.name }}</h2>
     {% if entry.image_url %}<figure class="document-image"><img src="{{ entry.image_url }}" alt=""></figure>{% endif %}
     <div class="description">

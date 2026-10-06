@@ -9,7 +9,7 @@
    - a **cover** with the Room's name and image (the favorite image of a Document chosen in the dialog, or none);
    - a **table of contents** with page numbers;
    - **one chapter per Main item** of the Room (single Tags and combinations, in the order of the Documents list); Documents in no Main item go in a last "Other" chapter. A Document in several items is printed once, in its first chapter, and referenced from the others ("→ p. 12");
-   - **one section per Document**: favorite image, description, its Notes as **paragraphs after the description**, each under its title (product owner, 2026-10-06; boxed sidebars before); each Document on its own pages;
+   - **one section per Document**: favorite image, description, its Notes as **paragraphs after the description**, each under its title (product owner, 2026-10-06; boxed sidebars before); each Document on its own pages, except that two short Documents of a chapter that fit on one page together share it (product owner, 2026-10-06);
    - a closing **glossary of the Documents' names**, A–Z by initial letter, each with its Tags and page number (product owner, 2026-10-06; it replaced the index of Tags).
 2. **Comments**: left out by default; an option adds them as an appendix per Document.
 3. **Mentions** become internal links with a page reference ("Drago Rosso → p. 12"); a mention of something not in the PDF stays plain text.
