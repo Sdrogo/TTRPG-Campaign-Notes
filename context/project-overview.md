@@ -156,6 +156,8 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   Document links and thread structure (FR-G1).
 - API access scoped to the requesting user's own visibility — an
   Agent never sees more than the user it acts for (FR-G2, I-01).
+  **Dropped (product owner, 2026-10-06)**: no Agent access tokens (spec
+  23c); the per-user export of FR-G1 is the only Agent-facing surface.
 
 ## Scope
 
