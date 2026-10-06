@@ -7,7 +7,11 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-05)
+## Current Status (2026-10-06)
+
+**Migration `a2e6c9f4b8d1` (version history, spec 24_1) applied to the
+production database by hand on 2026-10-06** by the product owner. The live
+database is at `a2e6c9f4b8d1`; no pending migrations.
 
 **Release of 2026-10-05 (staging → main, features 21, 22b follow-ups, 23 and 23b)**:
 both pending migrations were applied to the **production** database by hand
@@ -122,7 +126,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
 - Backend only, no frontend yet (24_2). Tables `document_versions` and
   `note_versions` with a backfill of the current text of every Document and Note
-  (**migration `a2e6c9f4b8d1`: applied to staging by hand on 2026-10-05** with `.env.staging` loaded, `alembic current` went from `d9a4f1c7e3b5`; pending on production). Every
+  (**migration `a2e6c9f4b8d1`: applied to staging by hand on 2026-10-05** with `.env.staging` loaded, `alembic current` went from `d9a4f1c7e3b5`; applied to production by hand on 2026-10-06). Every
   create and every edit of a name, title or description writes or merges a
   version (same editor within 10 minutes), routes list, read and restore for the
   Document and for each Note. Details in `architecture.md` -> Version history.
