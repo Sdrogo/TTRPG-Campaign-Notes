@@ -1,5 +1,5 @@
 {#- The structure shared by every style of the Room PDF (spec 23b Decision 1):
-    cover, contents, one chapter per Main item, the index of Tags. A style's
+    cover, contents, one chapter per Main item, the glossary of Documents. A style's
     template only extends it (an ornament for the cover); its look is its CSS.
     Page numbers are never written here: a link carries `data-page` (the
     localized "p.") and the CSS prints the page of its target. Each paragraph is
@@ -42,8 +42,8 @@
       </ol>
     </li>
     {% endfor %}
-    {% if manual.index %}
-    <li class="toc-chapter"><a href="#index">{{ manual.labels.index }}</a></li>
+    {% if manual.glossary %}
+    <li class="toc-chapter"><a href="#glossary">{{ manual.labels.glossary }}</a></li>
     {% endif %}
   </ol>
 </nav>
@@ -92,14 +92,16 @@
 </section>
 {% endfor %}
 
-{% if manual.index %}
-<section class="index" id="index">
-  <h1 class="section-title">{{ manual.labels.index }}</h1>
-  <div class="index-entries">
-    {% for entry in manual.index %}
-    <div class="index-entry" id="{{ entry.anchor }}">
-      <span class="index-tag">{{ entry.name }}</span>
-      <span class="index-documents">{% for document in entry.documents %}<a class="index-link" href="#doc-{{ document.id }}">{{ document.name }}</a>{% if not loop.last %}; {% endif %}{% endfor %}</span>
+{% if manual.glossary %}
+<section class="glossary" id="glossary">
+  <h1 class="section-title">{{ manual.labels.glossary }}</h1>
+  <div class="glossary-letters">
+    {% for group in manual.glossary %}
+    <div class="glossary-letter">
+      <h2 class="glossary-initial">{{ group.letter }}</h2>
+      {% for entry in group.entries %}
+      <p class="glossary-entry"><a class="glossary-link" href="#{{ entry.anchor }}"><span class="glossary-name">{{ entry.name }}</span>{% if entry.tags %}<span class="glossary-tags"> · {{ entry.tags | join(", ") }}</span>{% endif %}</a></p>
+      {% endfor %}
     </div>
     {% endfor %}
   </div>

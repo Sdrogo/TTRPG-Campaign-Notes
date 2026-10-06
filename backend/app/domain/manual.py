@@ -1,6 +1,6 @@
 """The Room PDF as a manual (spec 23b, Decisions 1 to 3): the export tree of
 spec 23 laid out as a cover, chapters, Document sections, an optional
-Comments appendix per Document and an index of Tags.
+Comments appendix per Document and a glossary of the Documents' names.
 
 Everything here is pure and works on an `Export`, which already holds only what
 the requester sees (Invariant 1, VR-07), so nothing hidden can reach a page.
@@ -8,6 +8,7 @@ Page numbers are not computed here: the template links to anchors and the
 print CSS asks WeasyPrint for the page of each (`target-counter`)."""
 
 import re
+import unicodedata
 import uuid
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
@@ -52,7 +53,7 @@ class ManualLabels:
     Frontend). `played_by` is a template with `{character}` and `{player}`."""
 
     contents: str
-    index: str
+    glossary: str
     other: str
     documents: str
     comments: str
@@ -152,26 +153,27 @@ class ManualChapter:
 
 
 @dataclass(frozen=True)
-class IndexedDocument:
-    """A Document under a Tag of the index."""
+class GlossaryEntry:
+    """A printed Document in the glossary, with the names of its Tags in the
+    Room's Tag order; the template prints its page."""
 
     id: uuid.UUID
     name: str
-
-
-@dataclass(frozen=True)
-class IndexEntry:
-    """A Tag of the index with the Documents that carry it, in name order.
-    Mentions of the Tag link to its anchor `tag-<id>`."""
-
-    id: uuid.UUID
-    name: str
-    documents: Sequence[IndexedDocument]
+    tags: Sequence[str]
 
     @property
     def anchor(self) -> str:
-        """The id of the entry."""
-        return f"tag-{self.id}"
+        """The anchor of the Document's section."""
+        return f"doc-{self.id}"
+
+
+@dataclass(frozen=True)
+class GlossaryLetter:
+    """The entries whose name starts with `letter`, in name order. A name
+    that doesn't start with a letter is under "#"."""
+
+    letter: str
+    entries: Sequence[GlossaryEntry]
 
 
 @dataclass(frozen=True)
@@ -184,7 +186,7 @@ class Manual:
     cover_image_url: str | None
     labels: ManualLabels
     chapters: Sequence[ManualChapter]
-    index: Sequence[IndexEntry]
+    glossary: Sequence[GlossaryLetter]
 
     @property
     def image_urls(self) -> frozenset[str]:
@@ -238,10 +240,10 @@ def build_manual(export: Export, options: ManualOptions, labels: ManualLabels) -
     One chapter per Main item in the Documents list's order, a Document that
     belongs to several printed once in the first and referenced from the
     others, the rest in a last chapter ("Other", or "Documents" when the Room
-    has no Main item). A mention becomes a link only when its target is in
-    the PDF: a Document printed, or a Tag that has an index entry; any other
-    stays plain text, so it can't point at something the PDF doesn't hold
-    (Decision 3)."""
+    has no Main item), then the glossary of every printed Document. A
+    mention of a printed Document becomes a link; any other mention (a Tag,
+    a member, a Document the PDF doesn't hold) stays plain text, so it can't
+    point at something the PDF doesn't hold (Decision 3)."""
     all_groups = group_documents(export)
     groups = [(item, documents) for item, documents in all_groups if documents]
     first_group: dict[uuid.UUID, int] = {}
@@ -249,14 +251,9 @@ def build_manual(export: Export, options: ManualOptions, labels: ManualLabels) -
         for document in documents:
             first_group.setdefault(document.id, position)
 
-    indexed = _index(export, first_group)
-    indexed_tags = {entry.id for entry in indexed}
-
     def resolve(span: MentionSpan) -> Run:
         if span.kind is MentionKind.DOCUMENT and span.target_id in first_group:
             return Run(span.name, f"doc-{span.target_id}")
-        if span.kind is MentionKind.TAG and span.target_id in indexed_tags:
-            return Run(span.name, f"tag-{span.target_id}")
         return Run(f"@{span.name}" if span.kind is MentionKind.USER else f"#{span.name}")
 
     members = {member.id: member.name or labels.unknown_member for member in export.members}
@@ -286,23 +283,36 @@ def build_manual(export: Export, options: ManualOptions, labels: ManualLabels) -
         cover_image_url=_chosen_image(cover.images) if cover else None,
         labels=labels,
         chapters=chapters,
-        index=indexed,
+        glossary=_glossary(export, first_group),
     )
 
 
-def _index(export: Export, printed: Mapping[uuid.UUID, int]) -> list[IndexEntry]:
-    """The Tags that have at least one printed Document, in name order, each
-    with those Documents in name order (spec 23b Decision 1)."""
-    entries: list[IndexEntry] = []
-    for tag in export.tags:
-        documents = [
-            IndexedDocument(document.id, document.name)
-            for document in export.documents
-            if document.id in printed and tag.id in document.tag_ids
-        ]
-        if documents:
-            entries.append(IndexEntry(tag.id, tag.name, documents))
-    return entries
+def _sort_key(name: str) -> tuple[str, str]:
+    """`name` for ordering: accents and case ignored ("Élise" next to
+    "Elise"), the name itself breaking ties so the order is stable."""
+    folded = unicodedata.normalize("NFKD", name.strip())
+    return ("".join(c for c in folded if not unicodedata.combining(c)).casefold(), name)
+
+
+def _letter(name: str) -> str:
+    """The glossary letter of `name`: its first character without accents,
+    upper case, or "#" when that isn't a letter."""
+    first = _sort_key(name)[0][:1]
+    return first.upper() if first.isalpha() else "#"
+
+
+def _glossary(export: Export, printed: Mapping[uuid.UUID, int]) -> list[GlossaryLetter]:
+    """Every printed Document once, by initial letter ("#" first), in name
+    order (product owner, 2026-10-06: the glossary is on the Documents' names,
+    not on the Tags). Each lists its Tags, which the PDF used to index."""
+    by_letter: dict[str, list[GlossaryEntry]] = {}
+    for document in sorted(export.documents, key=lambda document: _sort_key(document.name)):
+        if document.id in printed:
+            tags = [tag.name for tag in export.tags if tag.id in document.tag_ids]
+            entry = GlossaryEntry(document.id, document.name, tags)
+            by_letter.setdefault(_letter(document.name), []).append(entry)
+    order = sorted(by_letter, key=lambda letter: (letter != "#", letter))
+    return [GlossaryLetter(letter, by_letter[letter]) for letter in order]
 
 
 def _manual_document(

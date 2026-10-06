@@ -72,6 +72,17 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room PDF, glossary of Documents (2026-10-06)
+
+- The product owner asked for the PDF's closing glossary to be on the
+  Documents' names, not on the Tags. `manual.py::_glossary` lists every
+  printed Document once, grouped by initial letter (accents and case ignored,
+  names not starting with a letter under "#" first), each with its Tags
+  ("Castle · NPC, Place") and its page (leader dots, like the contents). It
+  replaces the index of Tags; `#Tag` mentions are now plain text, since a Tag
+  has no page of its own. Label key `pdf.index` became `pdf.glossary`
+  ("Glossary" / "Glossario"). No migration, backend only.
+
 ### Room PDF, one page per Document, Notes as paragraphs (2026-10-06)
 
 - Product owner's requests after a production PDF: the chapter's closing rule

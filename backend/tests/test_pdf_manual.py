@@ -68,7 +68,7 @@ def test_every_style_and_size_renders_the_whole_structure(
         'id="chapter-3"',
         f'id="doc-{CASTLE}"',
         'class="note"',
-        'id="index"',
+        'id="glossary"',
     ):
         assert expected in html
     # A mention printed with its page: the link and the localized "p.".
@@ -108,11 +108,16 @@ def test_text_is_escaped_and_paragraphs_stay_on_one_line() -> None:
     assert "<p>three</p>" in html
 
 
-def test_a_reference_and_the_index_link_to_where_the_document_is_printed() -> None:
+def test_a_reference_and_the_glossary_link_to_where_the_document_is_printed() -> None:
     html = render_manual_html(_manual(), ManualStyle.MODERN, PageSize.A4)
 
     assert f'<a class="xref" href="#doc-{CASTLE}" data-page="p.">Castle</a>' in html
-    assert f'<a class="index-link" href="#doc-{CASTLE}">Castle</a>' in html
+    assert (
+        f'<a class="glossary-link" href="#doc-{CASTLE}"><span class="glossary-name">Castle</span>'
+        '<span class="glossary-tags"> · NPC, Place</span></a>'
+    ) in html
+    # A Document without Tags prints its name alone.
+    assert '<span class="glossary-name">Orphan</span></a>' in html
 
 
 def test_the_documents_of_a_chapter_sit_under_its_title_after_its_references() -> None:
@@ -216,12 +221,8 @@ def test_the_language_follows_the_requester_with_english_as_the_fallback() -> No
 def test_the_labels_follow_the_locale_and_keep_the_comment_template() -> None:
     english, italian = manual_labels("en"), manual_labels("it")
 
-    assert (english.contents, english.index, english.other) == ("Contents", "Index", "Other")
-    assert (italian.contents, italian.index, italian.other) == (
-        "Indice",
-        "Indice analitico",
-        "Altro",
-    )
+    assert (english.contents, english.glossary, english.other) == ("Contents", "Glossary", "Other")
+    assert (italian.contents, italian.glossary, italian.other) == ("Indice", "Glossario", "Altro")
     assert manual_labels("fr") == english
     for labels in (english, italian):
         assert "{character}" in labels.played_by and "{player}" in labels.played_by
@@ -306,7 +307,7 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
 
     reader = PdfReader(io.BytesIO(pdf))
     # Cover, contents, one page per Document (NPC holds Castle and Irena, Other
-    # holds Orphan), one for the Place chapter's reference, and the index.
+    # holds Orphan), one for the Place chapter's reference, and the glossary.
     assert len(reader.pages) == 7
     width_pt, height_pt = (
         float(reader.pages[0].mediabox.width),
@@ -318,7 +319,7 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     assert "Barovia" in reader.pages[0].extract_text()
 
     contents = reader.pages[1].extract_text()
-    for word in ("Contents", "Castle", "Irena", "NPC", "Place", "Other", "Index"):
+    for word in ("Contents", "Castle", "Irena", "NPC", "Place", "Other", "Glossary"):
         assert word in contents
     # (Gothic sets the first letter of a description as a large initial, a separate
     # piece of text, so these searches skip it.)
@@ -343,9 +344,10 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     place = reader.pages[4].extract_text()
     assert "Irena" not in place
     assert re.search(rf"Castle\s*→\s*p\.\s*{castle_page}\b", place)
-    # The Tag index points at the same pages, and the accents survived.
-    index = reader.pages[-1].extract_text()
-    assert re.search(rf"Castle,\s*{castle_page}\b", index)
+    # The glossary points at the same pages, and the accents survived.
+    glossary = reader.pages[-1].extract_text()
+    assert re.search(rf"Castle · NPC, Place[ .]*{castle_page}\b", glossary)
+    assert re.search(rf"Irena · NPC[ .]*{irena_page}\b", glossary)
     assert "ittà dell'Ovest, perché sì." in " ".join(p.extract_text() for p in reader.pages)
 
 
@@ -416,7 +418,8 @@ def test_a_chapter_that_fills_its_last_page_adds_no_empty_page(
     """A description long enough that the columns fill the chapter's last page
     to the bottom (the counts were found by sweeping each style): the closing
     rule used to be an <hr> after the columns, which then moved alone to an
-    otherwise empty page. Every page after the contents holds body text."""
+    otherwise empty page. Every page between the contents and the glossary
+    holds body text."""
     _weasyprint()
     sentence = "Marker the keep stands above the mist and the road bends toward it. "
     export = make_export(
@@ -427,5 +430,7 @@ def test_a_chapter_that_fills_its_last_page_adds_no_empty_page(
 
     reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
 
-    for number in range(2, len(reader.pages)):
-        assert "Marker" in reader.pages[number].extract_text(), (style, number + 1)
+    *body, glossary = reader.pages[2:]
+    for number, page in enumerate(body, start=3):
+        assert "Marker" in page.extract_text(), (style, number)
+    assert "Glossary" in glossary.extract_text()

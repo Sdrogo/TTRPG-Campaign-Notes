@@ -26,7 +26,7 @@ h1, h2, h3 { font-family: "Lato", Helvetica, Arial, sans-serif; font-weight: bol
 .section-title { font-size: 22pt; margin: 0 0 10mm; }
 .toc-chapter > a { font-weight: bold; }
 .toc-document > a { color: #444; }
-.index-tag { color: #0f766e; }
+.glossary-initial { color: #0f766e; }
 
 /* Two columns like the others (base.css), kept airy: a wider gap and a pale rule. */
 .chapter-title { font-size: 26pt; margin: 0 0 12mm; color: #0f766e; }
