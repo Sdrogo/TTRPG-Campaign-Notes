@@ -14,7 +14,7 @@
 
 ## Design
 
-- `pages/AccountPage.tsx`: replace the single `Stack` of sections with a responsive grid (`SimpleGrid cols={{ base: 1, lg: 2, '2xl': 3 }}`, or CSS grid with named areas if the column assignment of Decision 2 needs it). Add the `2xl` breakpoint to the theme only if the theme doesn't have one yet, and record it in `ui-context.md`.
+- `pages/AccountPage.tsx`: replace the single `Stack` of sections with a responsive grid (`SimpleGrid cols={{ base: 1, lg: 2, '2xl': 3 }}`, or CSS grid with named areas if the column assignment of Decision 2 needs it). Mantine's breakpoints stop at `xl` (88em) and `theme.ts` defines none, so add `breakpoints: { '2xl': '125em' }` (2000px) to the theme and record it in `ui-context.md`.
 - `AccountSection`: title `fz="h4"`, description one `xs` dimmed line, content `gap="sm"`; uses `PageCard` (spec 25 padding). Cards in the same row don't need equal height (`align-items: start`).
 - `AvatarEditor`: icon-button variant (sizes per spec 25), avatar 80px; the "From URL" popover unchanged.
 - `ProfileForm`: name and pronouns in a `Grid` (8/4 from `sm`, stacked below), description `Textarea autosize minRows={3} maxRows={6}`, character counter on the same line as the buttons (left), buttons right. Field width capped as spec 25 says.
