@@ -9,9 +9,12 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-06)
 
-**Migration `a2e6c9f4b8d1` (version history, spec 24_1) applied to the
-production database by hand on 2026-10-06** by the product owner. The live
-database is at `a2e6c9f4b8d1`; no pending migrations.
+**Migrations `a2e6c9f4b8d1` (version history, spec 24_1) and `c7d3e9a1f5b2`
+(whole-Document history, spec 24b) applied to the production database by hand
+on 2026-10-06** by the product owner, before the release (`.env` loaded,
+`alembic upgrade`: `d9a4f1c7e3b5` → `a2e6c9f4b8d1` → `c7d3e9a1f5b2`). Production
+and staging are both at `c7d3e9a1f5b2` (checked with `alembic current` on
+each); no pending migrations.
 
 **Whole-Document history (spec 24b, 2026-10-06)** carries **migration
 `c7d3e9a1f5b2`** (folds `note_versions` into `document_versions.notes` and
@@ -19,7 +22,7 @@ drops it). **Applied to the staging database by hand on 2026-10-06** by the
 product owner (`alembic current` went from `a2e6c9f4b8d1` to `c7d3e9a1f5b2`;
 checked afterwards: staging held 2 revisions and no Notes, so the backfill fix
 of the review, Notes seeded from their creation, made no difference there).
-**Pending on production**, to apply before the release.
+**Applied to production by hand on 2026-10-06** (see above).
 
 **Release of 2026-10-05 (staging → main, features 21, 22b follow-ups, 23 and 23b)**:
 both pending migrations were applied to the **production** database by hand
