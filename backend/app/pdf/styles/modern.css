@@ -29,15 +29,13 @@ h1, h2, h3 { font-family: "Lato", Helvetica, Arial, sans-serif; font-weight: bol
 .index-tag { color: #0f766e; }
 
 /* Two columns like the others (base.css), kept airy: a wider gap and a pale rule. */
-.chapter-body { column-gap: 11mm; column-rule: 0.5pt solid #d4d9d9; }
-.chapter { background-image: url(ornaments/rule-modern.svg); background-size: 50% 0.75pt; }
 .chapter-title { font-size: 26pt; margin: 0 0 12mm; color: #0f766e; }
-.document { margin-top: 14mm; }
+.document { margin-top: 14mm; column-gap: 11mm; column-rule: 0.5pt solid #d4d9d9; }
 .document-image img { max-height: 70mm; }
 .document-title { font-size: 16pt; margin: 0 0 5mm; }
 
-.note { background: #f4f6f6; border-left: 2.5pt solid #0f766e; }
-.note h3 { font-size: 10pt; margin-bottom: 1.5mm; }
+.note h3 { font-size: 11pt; margin-bottom: 1.5mm; color: #0f766e; }
 .xref { color: #0f766e; }
 .comments h3 { font-size: 11pt; }
+.comment { background: #f4f6f6; border-left: 2.5pt solid #0f766e; }
 .comment-meta { font-size: 8.5pt; color: #777; }
