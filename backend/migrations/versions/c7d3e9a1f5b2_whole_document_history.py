@@ -6,7 +6,11 @@ order: `{id, title, description, visibility, selective_user_ids}`) and
 `note_versions` is folded into it and dropped. For each Document, every
 `document_versions` and `note_versions` row is replayed in time order on a
 running state, one revision per row whose text changes something. Notes get
-their current position and visibility (neither was recorded before). The
+their current position and visibility (neither was recorded before). A Note
+is in the state from its `created_at` on, with its oldest known text: the
+first migration dated a Note's first version at its last update, so without
+this a revision from before that date would leave out a Note that existed
+then, and restoring it would delete the Note. The
 downgrade is lossy: it recreates `note_versions` with each Note's current
 text, as the first migration did.
 
@@ -41,9 +45,21 @@ def _replay(
     grants: dict[uuid.UUID, list[str]],
 ) -> list[dict[str, Any]]:
     """The revisions of one Document, oldest first."""
+    first_rows: dict[uuid.UUID, Any] = {}
+    for row in sorted(note_rows, key=lambda row: (row.created_at, str(row.id))):
+        first_rows.setdefault(row.note_id, row)
+    # A Note's oldest known text, from its creation (kind -1: it changes the
+    # state, but the revision it shows up in is the next row's).
+    seeds = []
+    for note_id, note in notes.items():
+        first_row = first_rows.get(note_id)
+        if first_row is None or note.created_at < first_row.created_at:
+            text = note if first_row is None else first_row
+            seeds.append((note.created_at, -1, text, note_id))
     events = sorted(
-        [(row.created_at, 0, row) for row in document_rows]
-        + [(row.created_at, 1, row) for row in note_rows],
+        [(seed[0], seed[1], seed[2], seed[3]) for seed in seeds]
+        + [(row.created_at, 0, row, None) for row in document_rows]
+        + [(row.created_at, 1, row, row.note_id) for row in note_rows],
         key=lambda event: (event[0], event[1], str(event[2].id)),
     )
     first = min(document_rows, key=lambda row: row.created_at, default=None)
@@ -52,11 +68,13 @@ def _replay(
     texts: dict[uuid.UUID, tuple[str, str]] = {}
     revisions: list[dict[str, Any]] = []
     previous: Any = None
-    for _, kind, row in events:
+    for _, kind, row, note_id in events:
         if kind == 0:
             name, description = row.name, row.description
         else:
-            texts[row.note_id] = (row.title, row.description)
+            texts[note_id] = (row.title, row.description)
+        if kind == -1:
+            continue
         state = (
             name,
             description,
@@ -102,7 +120,8 @@ def upgrade() -> None:
     notes_by_document: dict[uuid.UUID, list[Any]] = defaultdict(list)
     for note in bind.execute(
         sa.text(
-            "SELECT id, document_id, visibility FROM document_notes "
+            "SELECT id, document_id, title, description, visibility, created_at "
+            "FROM document_notes "
             "ORDER BY position, created_at, id"
         )
     ).all():
