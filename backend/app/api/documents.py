@@ -44,7 +44,7 @@ from app.api.reveals import (
     reveal_error,
 )
 from app.api.validation import UniqueIds
-from app.api.versions import record_version
+from app.api.versions import record_revision
 from app.auth.dependencies import CurrentUserDep
 from app.db import (
     comments_repo,
@@ -285,15 +285,7 @@ async def create_document(
         MentionSource(plan.document.id, MentionSourceKind.DESCRIPTION),
         plan.document.description,
     )
-    await record_version(
-        session,
-        "document",
-        plan.document.id,
-        plan.document.id,
-        requester_id,
-        plan.document.name,
-        plan.document.description,
-    )
+    await record_revision(session, plan.document.id, requester_id)
 
     return await _to_response(session, plan.document, membership)
 
@@ -456,10 +448,7 @@ async def update_document(
         await index_mentions(
             session, MentionSource(document_id, MentionSourceKind.DESCRIPTION), description
         )
-    if body.name is not None or body.description is not None:
-        await record_version(
-            session, "document", document_id, document_id, requester_id, new_name, description
-        )
+    await record_revision(session, document_id, requester_id)
 
     if body.tag_ids is not None:
         await _validate_tag_ids(session, room_id, body.tag_ids, locale)
@@ -577,6 +566,9 @@ async def reveal_document(
         await notes_repo.update_note(session, replace(note, visibility=note_plan.visibility))
         await notes_repo.set_note_grants(session, note.id, sorted(note_plan.selective_user_ids))
         await record_reveal(session, note_plan)
+    if note_plans:
+        # The Notes' visibility is kept in the latest revision (spec 24b).
+        await record_revision(session, document_id, requester_id)
     return await _to_response(session, revealed, membership)
 
 

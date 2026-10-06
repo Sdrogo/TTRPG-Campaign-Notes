@@ -33,12 +33,11 @@ h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: normal
 .cover-image { display: block; margin: 0 auto 12mm; width: 110mm; height: 120mm; object-fit: cover; border: 1pt solid #8a0f1c; }
 .cover-date { font: italic 10pt "IM Fell English", serif; color: #9a8f88; margin: 0; }
 
-/* Contents and index */
+/* Contents and glossary */
 .section-title { font-size: 26pt; color: #1a1a1a; margin: 0 0 8mm; padding-bottom: 2mm; border-bottom: 1.5pt solid #8a0f1c; }
 .toc-chapter > a { font: 14pt "IM Fell English", serif; color: #8a0f1c; }
 .toc-document > a { font-size: 11pt; }
-.index-entries { columns: 2; column-gap: 10mm; }
-.index-tag { font: 12pt "IM Fell English", serif; color: #8a0f1c; }
+.glossary-initial { font: 16pt "IM Fell English", serif; color: #8a0f1c; }
 
 /* Chapters: a red rule under the title, then each Document in two columns like a
    rulebook (base.css) with a red rule between them */

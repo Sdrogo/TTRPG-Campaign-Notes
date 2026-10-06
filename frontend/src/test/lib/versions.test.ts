@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  compareNotes,
   compareTexts,
   isSameText,
   toVersion,
   toVersionDetail,
-  type RawVersionDetail,
 } from '../../lib/versions';
-import { rawVersion } from '../fixtures';
+import { rawVersion, rawVersionDetail } from '../fixtures';
 
 describe('toVersion', () => {
   it('maps the wire shape', () => {
@@ -18,6 +18,8 @@ describe('toVersion', () => {
       updatedAt: '2026-10-05T12:00:00Z',
       wordsAdded: 4,
       wordsRemoved: 1,
+      notesAdded: null,
+      notesRemoved: null,
     });
   });
 
@@ -25,10 +27,15 @@ describe('toVersion', () => {
     expect(toVersion(rawVersion())).toMatchObject({ wordsAdded: null, wordsRemoved: null });
   });
 
-  it('carries the text of a version in full', () => {
-    const raw = { ...rawVersion(), description: 'Un cancello.' } as RawVersionDetail;
+  it('carries the texts of a revision in full, its Notes included', () => {
+    const note = { id: 'note-1', title: 'Chiave', description: 'Sotto.' };
+    const detail = toVersionDetail(
+      rawVersionDetail({ notes: [note], notes_added: 1, notes_removed: 0 }),
+    );
 
-    expect(toVersionDetail(raw).description).toBe('Un cancello.');
+    expect(detail.description).toBe('Un cancello.');
+    expect(detail.notes).toEqual([note]);
+    expect([detail.notesAdded, detail.notesRemoved]).toEqual([1, 0]);
   });
 });
 
@@ -61,15 +68,40 @@ describe('compareTexts', () => {
   });
 });
 
-describe('isSameText', () => {
-  const current = { title: 'A', description: 'B' };
+const NOTE = { id: 'note-1', title: 'Chiave', description: 'Sotto.' };
+const OTHER = { id: 'note-2', title: 'Porta', description: 'A est.' };
 
-  it('is true when title and description match', () => {
-    expect(isSameText({ title: 'A', description: 'B' }, current)).toBe(true);
+describe('isSameText', () => {
+  const current = { title: 'A', description: 'B', notes: [NOTE, OTHER] };
+
+  it('is true when the name, the description and the Notes match', () => {
+    expect(isSameText({ ...current, notes: [NOTE, OTHER] }, current)).toBe(true);
   });
 
-  it('is false when either differs', () => {
-    expect(isSameText({ title: 'A', description: 'C' }, current)).toBe(false);
-    expect(isSameText({ title: 'X', description: 'B' }, current)).toBe(false);
+  it('is false when any of them differs, the order of the Notes included', () => {
+    expect(isSameText({ ...current, description: 'C' }, current)).toBe(false);
+    expect(isSameText({ ...current, title: 'X' }, current)).toBe(false);
+    expect(isSameText({ ...current, notes: [OTHER, NOTE] }, current)).toBe(false);
+    expect(isSameText({ ...current, notes: [NOTE] }, current)).toBe(false);
+    expect(isSameText({ ...current, notes: [{ ...NOTE, title: 'Altra' }, OTHER] }, current)).toBe(
+      false,
+    );
+    expect(
+      isSameText({ ...current, notes: [{ ...NOTE, description: 'Altro.' }, OTHER] }, current),
+    ).toBe(false);
+  });
+});
+
+// Spec 24b Decision 4: Notes are matched by id.
+describe('compareNotes', () => {
+  it("lists the revision's Notes, then the ones added since", () => {
+    const added = { id: 'note-3', title: 'Nuova', description: '' };
+    const changed = { ...NOTE, description: 'Altrove.' };
+
+    expect(compareNotes([NOTE, OTHER], [added, changed])).toEqual([
+      { id: 'note-1', status: 'kept', before: NOTE, after: changed },
+      { id: 'note-2', status: 'removed', before: OTHER, after: null },
+      { id: 'note-3', status: 'added', before: null, after: added },
+    ]);
   });
 });

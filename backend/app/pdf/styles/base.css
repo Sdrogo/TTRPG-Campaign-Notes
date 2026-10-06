@@ -23,13 +23,13 @@
 .cover { page: cover; break-after: page; }
 .toc { page: toc; break-after: page; }
 .chapter { page: body; break-before: page; }
-.index { page: body; break-before: page; }
+.glossary { page: body; break-before: page; }
 
 /* A chapter clears the Document name, so a page with only its references
    doesn't repeat the previous chapter's last Document (`last` then shows the
    Document a page holds). */
 .chapter-title { string-set: chapter-title content(), document-title ""; }
-.index .section-title { string-set: chapter-title content(), document-title ""; }
+.glossary .section-title { string-set: chapter-title content(), document-title ""; }
 .document-title { string-set: document-title content(); }
 
 body { margin: 0; }
@@ -53,9 +53,12 @@ a { color: inherit; text-decoration: none; }
    height; the rest of that page stays blank. The chapter title (and the
    references to Documents printed in earlier chapters) stay above the first
    one, across the page. No rule closes a Document: the page break does, and a
-   rule under balanced columns met the column rule when they filled the page. */
+   rule under balanced columns met the column rule when they filled the page.
+   Two short Documents that fit on one page together share it: the renderer
+   marks the second `shares-page` after measuring (render.py). */
 .document { margin-top: 10mm; columns: 2; column-gap: 9mm; column-fill: balance; }
 .document + .document { break-before: page; }
+.document + .document.shares-page { break-before: auto; }
 .references { margin-top: 6mm; }
 .document-image { margin: 0 0 5mm; text-align: center; break-inside: avoid; }
 .document-image img { max-width: 100%; max-height: 90mm; object-fit: contain; }
@@ -81,7 +84,10 @@ a { color: inherit; text-decoration: none; }
 .comment.depth-3 { margin-left: 18mm; }
 .deleted { font-style: italic; }
 
-/* Index of Tags */
-.index-entry { margin: 0 0 3mm; break-inside: avoid; }
-.index-tag { font-weight: bold; display: block; }
-.index-link::after { content: ", " target-counter(attr(href), page); }
+/* Glossary: every printed Document by initial letter, with its Tags and page */
+.glossary-letters { columns: 2; column-gap: 10mm; }
+.glossary-letter { margin: 0 0 4mm; }
+.glossary-initial { font-size: 14pt; margin: 0 0 1.5mm; break-after: avoid; }
+.glossary-entry { margin: 0 0 1mm; break-inside: avoid; }
+.glossary-tags { font-size: 0.85em; font-style: italic; }
+.glossary-link::after { content: leader('.') target-counter(attr(href), page); }

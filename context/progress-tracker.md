@@ -9,9 +9,20 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-06)
 
-**Migration `a2e6c9f4b8d1` (version history, spec 24_1) applied to the
-production database by hand on 2026-10-06** by the product owner. The live
-database is at `a2e6c9f4b8d1`; no pending migrations.
+**Migrations `a2e6c9f4b8d1` (version history, spec 24_1) and `c7d3e9a1f5b2`
+(whole-Document history, spec 24b) applied to the production database by hand
+on 2026-10-06** by the product owner, before the release (`.env` loaded,
+`alembic upgrade`: `d9a4f1c7e3b5` → `a2e6c9f4b8d1` → `c7d3e9a1f5b2`). Production
+and staging are both at `c7d3e9a1f5b2` (checked with `alembic current` on
+each); no pending migrations.
+
+**Whole-Document history (spec 24b, 2026-10-06)** carries **migration
+`c7d3e9a1f5b2`** (folds `note_versions` into `document_versions.notes` and
+drops it). **Applied to the staging database by hand on 2026-10-06** by the
+product owner (`alembic current` went from `a2e6c9f4b8d1` to `c7d3e9a1f5b2`;
+checked afterwards: staging held 2 revisions and no Notes, so the backfill fix
+of the review, Notes seeded from their creation, made no difference there).
+**Applied to production by hand on 2026-10-06** (see above).
 
 **Release of 2026-10-05 (staging → main, features 21, 22b follow-ups, 23 and 23b)**:
 both pending migrations were applied to the **production** database by hand
@@ -71,6 +82,44 @@ explicitly (`architecture.md` → Local env files).
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Room PDF, two short Documents share a page (2026-10-06)
+
+- Product owner's request: two Documents that fit on one page together share
+  it instead of taking a page each. Only a layout can tell, so
+  `render_manual_pdf` measures: a first layout with a page per Document,
+  `page_pairs` picks neighbours in a chapter that each took one page, a second
+  layout joins them (`.shares-page`), and a pair that spilled is split again
+  in a third. Pairs only (as asked), never across chapters. Same PR as the
+  glossary (#116).
+
+### Room PDF, glossary of Documents (2026-10-06)
+
+- The product owner asked for the PDF's closing glossary to be on the
+  Documents' names, not on the Tags. `manual.py::_glossary` lists every
+  printed Document once, grouped by initial letter (accents and case ignored,
+  names not starting with a letter under "#" first), each with its Tags
+  ("Castle · NPC, Place") and its page (leader dots, like the contents). It
+  replaces the index of Tags; `#Tag` mentions are now plain text, since a Tag
+  has no page of its own. Label key `pdf.index` became `pdf.glossary`
+  ("Glossary" / "Glossario"). No migration, backend only.
+### Whole-Document history (spec 24b, 2026-10-06)
+
+- Product owner's call: History is not a versioning of Notes. One history per
+  Document; a revision holds the name, the description and every Note (title,
+  text, order). The per-Note history icon and routes are gone. Details in
+  `architecture.md` -> Version history.
+- Choices beyond the ticket (confirm): a save that removes a Note never merges
+  (otherwise a delete within 10 minutes of the editor's last save would lose
+  the Note's text); a Note visibility change rewrites the latest revision
+  instead of adding one; each viewer sees the history projected on the Notes
+  they may read, and revisions that changed only hidden Notes are left out;
+  the drawer compares a revision with the newest one rather than the cached
+  Document; deleting a Note no longer says it can't be undone.
+- Migration `c7d3e9a1f5b2` checked locally on seeded data (Document and Note
+  versions replayed in time order, downgrade and re-upgrade) and **applied to
+  the staging database on 2026-10-06** (see Current Status). Backend 994
+  tests and frontend tests at 100% coverage. **Not seen in a browser.**
 
 ### Room PDF, one page per Document, Notes as paragraphs (2026-10-06)
 

@@ -1,5 +1,5 @@
 """The Room PDF's layout (spec 23b Decisions 1 to 3): chapters, repeats,
-mention links, the index, Comments and what never reaches a page."""
+mention links, the glossary, Comments and what never reaches a page."""
 
 import uuid
 from dataclasses import replace
@@ -15,7 +15,6 @@ from manual_fixtures import (
     LABELS,
     MARA,
     NPC,
-    ORPHAN,
     T0,
     comment,
     document,
@@ -98,39 +97,22 @@ def test_a_combination_is_titled_by_its_tags_and_empty_chapters_are_dropped() ->
     assert [type(e) for e in manual.chapters[1].entries] == [ManualReference, ManualDocument]
 
 
-def test_a_mention_links_only_to_what_the_pdf_holds() -> None:
+def test_a_mention_links_only_to_a_printed_document() -> None:
     castle = _documents(_manual())["Castle"]
 
     first, second = castle.paragraphs
     assert list(first) == [Run("Ruled by "), Run("Irena", f"doc-{IRENA}"), Run(".")]
-    # "Gone" is not in the PDF (a Tag filter left it out): plain `#Name`.
+    # "Gone" is not in the PDF (a Tag filter left it out) and a Tag has no
+    # page of its own: plain `#Name`.
     assert list(second) == [
         Run("Second paragraph, near "),
         Run("#Gone"),
         Run(", for "),
-        Run("NPC", f"tag-{NPC}"),
+        Run("#NPC"),
         Run(" and "),
         Run("@Alice"),
         Run("."),
     ]
-
-
-def test_a_tag_without_an_index_entry_stays_plain_text() -> None:
-    manual = _manual(
-        documents=[
-            document(
-                CASTLE,
-                "Castle",
-                (),
-                description=(
-                    mention(MentionKind.TAG, NPC, "NPC"),
-                    mention(MentionKind.TAG, uid(99), "?"),
-                ),
-            )
-        ]
-    )
-
-    assert list(_documents(manual)["Castle"].paragraphs[0]) == [Run("#NPC"), Run("#?")]
 
 
 def test_descriptions_split_at_blank_lines_and_keep_single_breaks() -> None:
@@ -165,20 +147,34 @@ def test_notes_become_sidebars_in_order() -> None:
     assert [list(p) for p in sidebar.paragraphs] == [[Run("The gates creak.")]]
 
 
-def test_the_index_lists_tags_with_printed_documents_in_name_order() -> None:
+def test_the_glossary_lists_each_printed_document_once_by_letter_with_its_tags() -> None:
     manual = _manual()
 
-    # EMPTY_TAG has no Document, so no entry; entries are by Tag name.
-    assert [(e.name, [d.name for d in e.documents]) for e in manual.index] == [
-        ("NPC", ["Castle", "Irena"]),
-        ("Place", ["Castle"]),
+    # Castle is in two chapters but has one entry; Gone isn't printed.
+    assert [
+        (group.letter, [(e.name, list(e.tags)) for e in group.entries]) for group in manual.glossary
+    ] == [
+        ("C", [("Castle", ["NPC", "Place"])]),
+        ("I", [("Irena", ["NPC"])]),
+        ("O", [("Orphan", [])]),
     ]
-    assert manual.index[0].anchor == f"tag-{NPC}"
-    assert manual.index[0].documents[0].id == CASTLE
+    assert manual.glossary[0].entries[0].anchor == f"doc-{CASTLE}"
 
 
-def test_no_tags_in_use_means_no_index() -> None:
-    assert _manual(documents=[document(ORPHAN, "Orphan")]).index == []
+def test_the_glossary_ignores_accents_and_case_and_puts_other_names_first() -> None:
+    names = ["élise", "Zed", "Elba", "3 Ravens", "eagle", "«Odd»"]
+    documents = [document(uid(40 + i), name) for i, name in enumerate(names)]
+    manual = _manual(documents=documents, main_items=[])
+
+    assert [(g.letter, [e.name for e in g.entries]) for g in manual.glossary] == [
+        ("#", ["3 Ravens", "«Odd»"]),
+        ("E", ["eagle", "Elba", "élise"]),
+        ("Z", ["Zed"]),
+    ]
+
+
+def test_no_documents_means_no_glossary() -> None:
+    assert _manual(documents=[]).glossary == []
 
 
 def test_a_document_shows_its_favorite_image_else_its_first() -> None:
@@ -268,8 +264,9 @@ def _all_text(manual: Manual) -> str:
                     parts.append(c.author)
                     paragraphs += list(c.paragraphs)
                 parts += [run.text for paragraph in paragraphs for run in paragraph]
-    for tag_entry in manual.index:
-        parts += [tag_entry.name, *(d.name for d in tag_entry.documents)]
+    for group in manual.glossary:
+        for glossary_entry in group.entries:
+            parts += [glossary_entry.name, *glossary_entry.tags]
     return "\n".join(parts)
 
 

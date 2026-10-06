@@ -160,7 +160,7 @@ describe('DocumentDetailPage', () => {
     );
   });
 
-  it('goes back to the Room\'s Documents', async () => {
+  it("goes back to the Room's Documents", async () => {
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
@@ -190,7 +190,7 @@ describe('DocumentDetailPage', () => {
       if (path === DOC) return Promise.resolve(routes.document);
       if (path === `${DOC}/comments`) return Promise.resolve(routes.comments);
       if (path === '/account') return Promise.resolve(rawAccount());
-    if (path === '/rooms/room-1/characters/mine') return Promise.resolve([]);
+      if (path === '/rooms/room-1/characters/mine') return Promise.resolve([]);
       return new Promise(() => {});
     });
     render();
@@ -228,17 +228,17 @@ describe('who may edit', () => {
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
-    // Spec 24: the text's history is for the same people.
+    // Spec 24b: the Document's history is for the same people.
     expect(screen.queryByRole('button', { name: /^Storico/ })).not.toBeInTheDocument();
   });
 
-  it("opens the Document's history for an Owner, and a Note's own from the Note", async () => {
+  it("opens the Document's history for an Owner, and none on its Notes", async () => {
     routes.document = rawDocument({ owner_ids: ['user-1'], notes: [rawNote()] });
     const otherRoutes = fetchMock.getMockImplementation() as NonNullable<
       ReturnType<typeof fetchMock.getMockImplementation>
     >;
     fetchMock.mockImplementation((...args: Parameters<typeof otherRoutes>) => {
-      if (args[0] === `${DOC}/versions` || args[0] === `${DOC}/notes/note-1/versions`) {
+      if (args[0] === `${DOC}/versions`) {
         return Promise.resolve([]);
       }
       return otherRoutes(...args);
@@ -246,14 +246,13 @@ describe('who may edit', () => {
     const { user } = render();
 
     await user.click(await screen.findByRole('button', { name: 'Storico: Il Cancello' }));
-    expect(await screen.findByText('Nessuna versione.')).toBeInTheDocument();
+    expect(await screen.findByText('Nessuna revisione.')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(`${DOC}/versions`);
+    expect(
+      screen.queryByRole('button', { name: 'Storico: Porta segreta' }),
+    ).not.toBeInTheDocument();
     await user.keyboard('{Escape}');
-
-    await user.click(screen.getByRole('button', { name: 'Storico: Porta segreta' }));
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(`${DOC}/notes/note-1/versions`),
-    );
+    await waitFor(() => expect(screen.queryByText('Nessuna revisione.')).not.toBeInTheDocument());
   });
 });
 
@@ -461,9 +460,13 @@ describe('creating a Tag while editing', () => {
     await user.type(tagField, 'Fazione');
     const tagGroup = tagField.closest('.mantine-Group-root') as HTMLElement;
     await user.click(within(tagGroup).getByRole('button', { name: 'Aggiungi' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Salva modifiche' })).toBeDisabled());
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Salva modifiche' })).toBeDisabled(),
+    );
 
-    fireEvent.submit(screen.getByRole('textbox', { name: /^Nome/ }).closest('form') as HTMLFormElement);
+    fireEvent.submit(
+      screen.getByRole('textbox', { name: /^Nome/ }).closest('form') as HTMLFormElement,
+    );
 
     expect(fetchMock).not.toHaveBeenCalledWith(DOC, expect.objectContaining({ method: 'PATCH' }));
   });
@@ -938,7 +941,9 @@ describe('info panel', () => {
     render();
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    expect(screen.getByText('Owner').closest('.document-body-aside')).toHaveAttribute('data-narrow');
+    expect(screen.getByText('Owner').closest('.document-body-aside')).toHaveAttribute(
+      'data-narrow',
+    );
   });
 });
 
@@ -1236,7 +1241,14 @@ describe('previewing as a member', () => {
     expect(screen.queryByRole('button', { name: /Nota: Porta segreta/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aggiungi Nota' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Storico/ })).not.toBeInTheDocument();
-    for (const action of ['Rispondi', 'Fissa', 'Segna come risolto', 'Promuovi', 'Elimina', 'Aggiungi una reazione']) {
+    for (const action of [
+      'Rispondi',
+      'Fissa',
+      'Segna come risolto',
+      'Promuovi',
+      'Elimina',
+      'Aggiungi una reazione',
+    ]) {
       expect(screen.queryByRole('button', { name: action })).not.toBeInTheDocument();
     }
     expect(screen.getByRole('button', { name: /^👍, 1 reazione/ })).toBeDisabled();

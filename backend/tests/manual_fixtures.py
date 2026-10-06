@@ -34,7 +34,7 @@ CASTLE, IRENA, ORPHAN, GONE = uid(30), uid(31), uid(32), uid(33)
 
 LABELS = ManualLabels(
     contents="Contents",
-    index="Index",
+    glossary="Glossary",
     other="Other",
     documents="Documents",
     comments="Comments",

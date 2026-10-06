@@ -1,5 +1,5 @@
 """The fixed texts of the Room PDF in the requester's language (spec 23b
-Frontend): "Contents", "Index", "Other"… come from the backend's message
+Frontend): "Contents", "Glossary", "Other"… come from the backend's message
 files, like every text the API produces (`architecture.md` → Backend Message
 Localization)."""
 
@@ -11,7 +11,7 @@ def manual_labels(locale: str) -> ManualLabels:
     """The labels for `locale`, falling back to English like `translate`."""
     return ManualLabels(
         contents=translate("pdf.contents", locale),
-        index=translate("pdf.index", locale),
+        glossary=translate("pdf.glossary", locale),
         other=translate("pdf.other", locale),
         documents=translate("pdf.documents", locale),
         comments=translate("pdf.comments", locale),

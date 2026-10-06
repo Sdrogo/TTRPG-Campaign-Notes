@@ -242,7 +242,7 @@ export function rawPdfJob(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** A version in the history list, as the backend sends it (spec 24). */
+/** A revision in the history list, as the backend sends it (spec 24b). */
 export function rawVersion(overrides: Record<string, unknown> = {}) {
   return {
     id: 'version-1',
@@ -252,6 +252,18 @@ export function rawVersion(overrides: Record<string, unknown> = {}) {
     updated_at: '2026-10-05T12:00:00Z',
     words_added: null,
     words_removed: null,
+    notes_added: null,
+    notes_removed: null,
+    ...overrides,
+  };
+}
+
+/** A revision in full, as the backend sends it: the list entry plus its texts. */
+export function rawVersionDetail(overrides: Record<string, unknown> = {}) {
+  return {
+    ...rawVersion(),
+    description: 'Un cancello.',
+    notes: [],
     ...overrides,
   };
 }
