@@ -248,7 +248,7 @@ function DocumentPanel({
                 <EyeIcon size={18} />
               </ActionIcon>
             )}
-            {/* Spec 24: Owners and the Master read the text's history. */}
+            {/* Spec 24b: Owners and the Master read the whole Document's history. */}
             {isOwner && (
               <ActionIcon
                 variant="subtle"
@@ -391,7 +391,6 @@ function DocumentPanel({
           roomId={roomId}
           documentId={document.id}
           name={document.name}
-          current={{ title: document.name, description: document.description }}
           members={members}
         />
       )}

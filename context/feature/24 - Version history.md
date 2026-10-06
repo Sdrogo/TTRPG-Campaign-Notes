@@ -1,3 +1,5 @@
+> **Reshaped 2026-10-06** by `24b - Whole-Document history.md`: Notes no longer have a history of their own; the Document's history covers them.
+
 ## Goals
 
 - FR-D5: keep the **history of a Document's text** and let the people who edit it **compare and restore** an earlier version.
