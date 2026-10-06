@@ -87,7 +87,7 @@ Paragraph = Sequence[Run]
 
 @dataclass(frozen=True)
 class ManualNote:
-    """A Note, printed as a boxed sidebar."""
+    """A Note, printed as a subheading and paragraphs after the description."""
 
     title: str
     paragraphs: Sequence[Paragraph]
