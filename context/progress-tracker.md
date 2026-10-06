@@ -15,8 +15,8 @@ database is at `a2e6c9f4b8d1`; no pending migrations.
 
 **Whole-Document history (spec 24b, 2026-10-06)** carries **migration
 `c7d3e9a1f5b2`** (folds `note_versions` into `document_versions.notes` and
-drops it). **Pending on staging and production**: apply it to the staging
-database before merging, and to production before the release.
+drops it). **Applied to the staging database by hand on 2026-10-06** by the
+product owner; **pending on production**, to apply before the release.
 
 **Release of 2026-10-05 (staging → main, features 21, 22b follow-ups, 23 and 23b)**:
 both pending migrations were applied to the **production** database by hand
