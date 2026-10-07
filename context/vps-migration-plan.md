@@ -52,7 +52,9 @@ page before ordering**, both Render and Hetzner changed prices in 2026.
 | Render Standard | $25 | 1 CPU / 2 GB | What a PDF-heavy backend really wants on Render |
 | Hetzner Cloud, cost-optimized (CX23-class) | ~€4–6 + €0.50 IPv4 | 2 vCPU / 4 GB / 40 GB disk, 20 TB traffic | Best value; **availability limited since 2026-06** in some locations, prices raised in 2026 |
 | Hetzner Cloud, ARM (CAX11-class) | ~€4–5 + IPv4 | 2 vCPU / 4 GB | Needs an `arm64` image (multi-arch build, see §5) |
-| Netcup / OVH / Scaleway entry VPS | ~€3–7 | 1–2 vCPU / 2–4 GB | EU, similar class |
+| OVHcloud VPS (offer seen by the product owner) | €45/year (~€3.75) | 2 vCores / 4 GB / 40 GB NVMe | Daily backup included, unlimited traffic, 500 Mbps |
+| OVHcloud VPS, larger (offer seen) | €86/year (~€7.20) | 4 vCores / 8 GB / 75 GB NVMe | Same, 1 Gbps |
+| Netcup / Scaleway entry VPS | ~€3–7 | 1–2 vCPU / 2–4 GB | EU, similar class |
 | DigitalOcean / Linode basic droplet | ~$6–12 | 1 vCPU / 1–2 GB | Pricier per GB, simpler UI |
 | Backups add-on (Hetzner: +20% of the server) | ~€1 | | Optional, the server holds no data (§7) |
 
@@ -63,10 +65,18 @@ Render tier that would actually fit the PDF (Standard, $25), the VPS is about
 and monitoring become ours (§4–§8), about an hour or two to set up and a few
 minutes a month after that if unattended upgrades are on.
 
-**Recommendation**: a Hetzner cost-optimized x86 instance (2 vCPU / 4 GB) in an
-EU location (Falkenstein, Nuremberg or Helsinki) close to the Supabase region;
-fall back to a regular-performance or ARM instance if cost-optimized isn't
-available. x86 keeps the image identical to CI and staging.
+**Choice (product owner, 2026-10-07): OVHcloud VPS.** Two offers on the
+table: 2 vCores / 4 GB / 40 GB NVMe / 500 Mbps for €45 a year, or 4 vCores /
+8 GB / 75 GB NVMe / 1 Gbps for €86 a year, both with unlimited traffic and a
+daily backup of the previous 24 hours. **Recommended: the 2 vCores / 4 GB one**
+(about €3.75 a month): one backend container plus Caddy fits with room to
+spare, 4 GB covers a large Room PDF, and the backend keeps no data on disk.
+The 8 GB one only pays off if the server will also host something else (for
+example staging, or other projects). Before ordering, check that the price is
+not a first-year promotion with a higher renewal, that the datacenter is in the
+EU (close to the Supabase region), and pick x86, which keeps the image
+identical to CI and staging. OVH's included daily backup covers what §7 calls
+optional.
 
 ## 3. Prerequisite: an API domain
 
@@ -101,7 +111,7 @@ One-time, by hand (or as a short `cloud-init` file kept outside the repo).
   creation; no password login.
 - **Users and SSH**: a non-root `deploy` user in the `docker` group;
   `PermitRootLogin no`, `PasswordAuthentication no` in `sshd_config`.
-- **Firewall**: Hetzner Cloud Firewall (outside the machine) *and* `ufw`
+- **Firewall**: the provider's network firewall (OVH "Edge Network Firewall", outside the machine) *and* `ufw`
   inside: allow 22 (ideally only from the product owner's IP, or keep 22 open
   with key-only auth and `fail2ban`), 80 and 443; deny everything else. The
   backend's port 10000 is **never** exposed: only the reverse proxy reaches it
@@ -242,7 +252,7 @@ two PDF sweepers at once (§1).
   Caddy certificates. Back up the first three (the env file in the password
   manager, the other two in the repo under `deploy/` once approved).
   Rebuilding from scratch is then: new server → §4 → copy files → run the
-  deploy workflow. Hetzner's server backups (+20%) or a snapshot after setup
+  deploy workflow. OVH's included daily backup, or a snapshot after setup,
   are a cheap extra but not required.
 
 ## 8. Monitoring
@@ -256,7 +266,7 @@ two PDF sweepers at once (§1).
   monitors also warn on a certificate close to expiry.
 - **Logs**: `docker compose logs -f backend` on the server; rotation as in §4.
   Optional later: ship them to Better Stack or Grafana Cloud's free tier.
-- **Resources**: a disk and memory alert (Hetzner's console graphs, or a tiny
+- **Resources**: a disk and memory alert (the OVH control panel's graphs, or a tiny
   agent like Netdata / Beszel) so a full disk or a PDF memory spike is noticed.
 - **Deploy failures**: the deploy workflow fails visibly in GitHub Actions
   (and emails the repo owner) when `/health` doesn't come back.
@@ -305,7 +315,7 @@ both backends use the same one and migrations are applied separately.
 1. **Domain**: is there one already (Ex Libris)? Which DNS provider?
 2. **Render plan today**: Free (with the keep-alive cron) or paid? It decides
    whether the VPS saves money or mainly buys RAM and no cold starts.
-3. **Provider**: Hetzner x86 cost-optimized as recommended, or another?
+3. **Provider**: decided, OVHcloud (§2); which of the two offers?
 4. **Who can SSH**: only the product owner, or should CI be the only way
    anything changes on the server (no manual edits)?
 5. **Deploy files in the repo**: add `deploy/compose.yaml`, `deploy/Caddyfile`
