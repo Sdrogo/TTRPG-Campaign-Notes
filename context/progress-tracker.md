@@ -9,6 +9,12 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-07)
 
+**Spec 27 (Document export and import) written on 2026-10-07**, not built:
+export one Document (the spec 23 format with one Document in it) and import
+one or more Documents from JSON or Markdown, a whole Room export included,
+always as new copies. Its Decisions and Open Questions are proposals for the
+product owner to confirm in the ticket's PR.
+
 **Spec 26 (Room image) built on 2026-10-07** at the product owner's request: a
 Room can have an image, set in the create dialog or on the setup page
 (Administrators), and it is the default cover of the Room PDF. It carries
@@ -1453,6 +1459,10 @@ Reorganized with the product owner on 2026-10-03.
   proposals to confirm in its PR, except 25c Decision 3, confirmed by the
   product owner on 2026-10-06: Grouping saves on every change, no "Save
   order" button.
+- **Document export and import (feature 27, product owner 2026-10-07)**:
+  `27 - Document export and import` (27_1 single-Document export, 27_2 import
+  backend, 27_3 frontend). The Room export (spec 23) is unchanged. Decisions
+  and seven Open Questions to confirm before building.
 - **Build order (product owner, 2026-10-02, confirmed 2026-10-03)**: one
   feature at a time, each closed with all its sub-tickets: 21 → 22 (with
   22b) → 23 (with 23b, 23c) → 24, then the two small tickets below.
