@@ -47,6 +47,9 @@ class Room:
     # The level new Documents, Notes and top-level Comments start at when the
     # request names none (VR-05, spec 22). Never Selective: that needs a list.
     default_visibility: DocumentVisibility = DocumentVisibility.ROOM
+    # The Room's own image (spec 26): a private Storage path, the PDF's default
+    # cover. None without one.
+    image_path: str | None = None
 
 
 @dataclass(frozen=True)

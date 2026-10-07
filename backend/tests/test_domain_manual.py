@@ -200,6 +200,27 @@ def test_the_cover_uses_the_chosen_documents_image_or_none() -> None:
         assert built.cover_image_url is None
 
 
+def test_the_room_image_is_the_cover_unless_a_document_gives_one() -> None:
+    # Spec 26 Decision 5.
+    export = make_export()
+    room_image = "https://signed.test/rooms/cover.webp"
+
+    by_default = build_manual(export, ManualOptions(room_cover_url=room_image), LABELS)
+    assert by_default.cover_image_url == room_image
+    assert room_image in by_default.image_urls
+
+    chosen = build_manual(
+        export, ManualOptions(cover_document_id=CASTLE, room_cover_url=room_image), LABELS
+    )
+    assert chosen.cover_image_url == image(2).url
+    # A cover Document that gives no image falls back to the Room's.
+    for other in (IRENA, GONE):
+        built = build_manual(
+            export, ManualOptions(cover_document_id=other, room_cover_url=room_image), LABELS
+        )
+        assert built.cover_image_url == room_image
+
+
 def test_the_cover_reads_the_room_and_the_day() -> None:
     manual = _manual()
 

@@ -41,6 +41,8 @@ class PdfExportRequest(BaseModel):
     """What to put in the PDF (spec 23b Frontend). `tag_ids` keeps only the
     Documents carrying all of them. `cover_document_id` is the Document whose
     favorite image is the cover's; one the requester can't see is ignored.
+    `room_cover` puts the Room's image on the cover when no Document gives one
+    (spec 26 Decision 5): on unless the requester clears it.
     `view_as_user_id`, for the Master only, makes the PDF what that member
     sees; it is sent here and not as the `X-View-As` header, which refuses
     writes."""
@@ -50,6 +52,7 @@ class PdfExportRequest(BaseModel):
     include_comments: bool = False
     include_attachments: bool = False
     cover_document_id: uuid.UUID | None = None
+    room_cover: bool = True
     tag_ids: list[uuid.UUID] = Field(default_factory=list)
     view_as_user_id: uuid.UUID | None = None
 
@@ -140,6 +143,7 @@ async def create_pdf_export(
             tag_ids=tuple(tag_ids),
             locale=locale,
             view_as_user_id=body.view_as_user_id,
+            room_cover=body.room_cover,
         ),
         status=ExportStatus.QUEUED,
         storage_path=None,

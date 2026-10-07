@@ -37,6 +37,7 @@ describe('useMyInvitations', () => {
           status: 'active',
           playersCanCreateDocuments: true,
           defaultVisibility: 'room',
+          imageUrl: null,
         },
         invitedBy: {
           userId: 'user-2',

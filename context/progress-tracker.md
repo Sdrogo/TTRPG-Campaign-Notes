@@ -7,7 +7,28 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-06)
+## Current Status (2026-10-07)
+
+**Spec 26 (Room image) built on 2026-10-07** at the product owner's request: a
+Room can have an image, set in the create dialog or on the setup page
+(Administrators), and it is the default cover of the Room PDF. It carries
+**migration `e9b4c2d7a1f6`** (`rooms.image_path`). **Applied to the staging
+database by hand on 2026-10-07** (`.env.staging` exported, `alembic upgrade
+head`: `c7d3e9a1f5b2` → `e9b4c2d7a1f6`, confirmed with `alembic current`).
+**Applied to the production database by hand on 2026-10-07** too (`.env`
+exported, run from a worktree of `origin/staging`, same step, confirmed with
+`alembic current`): no pending migrations, and the next release to `main`
+needs no migration step for it.
+
+**Spec 25c (Room setup Tags and rename) built on 2026-10-07, ahead of 25 and
+25b** at the product owner's request ("refactor the Tags section like the
+Document page"). One PR into `staging`: `PATCH /rooms/{id}/tags/{tag}` (rename,
+Administrator or Master; no migration) and the new `TagsSection` (Grouping
+saved on every change, All Tags with filter, create, rename in place, delete).
+It builds the shared `CompactList` that spec 25 describes; 25's theme-wide
+density rules and 25b (Account page) are still to do. Backend 1008 tests,
+frontend 1475 tests, both at 100% coverage.
+
 
 **Features 12 to 24 are all built except 23c (Agent access tokens), which the
 product owner dropped on 2026-10-06** (FR-G2 not built; the ticket stays in
@@ -23,8 +44,8 @@ built in that order.
 (whole-Document history, spec 24b) applied to the production database by hand
 on 2026-10-06** by the product owner, before the release (`.env` loaded,
 `alembic upgrade`: `d9a4f1c7e3b5` → `a2e6c9f4b8d1` → `c7d3e9a1f5b2`). Production
-and staging are both at `c7d3e9a1f5b2` (checked with `alembic current` on
-each); no pending migrations.
+and staging were both at `c7d3e9a1f5b2` (checked with `alembic current` on
+each) at that point; since 2026-10-07 both are at `e9b4c2d7a1f6` (spec 26).
 
 **Whole-Document history (spec 24b, 2026-10-06)** carries **migration
 `c7d3e9a1f5b2`** (folds `note_versions` into `document_versions.notes` and
@@ -92,6 +113,28 @@ explicitly (`architecture.md` → Local env files).
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Room image (spec 26, 2026-10-07)
+
+- Backend: `rooms.image_path` (migration `e9b4c2d7a1f6`), `POST/DELETE
+  /rooms/{id}/image` and `POST /rooms/{id}/image/from-url` for Administrators
+  (403 `errors.room.onlyAdministratorChangesImage` otherwise), `image_url` on
+  every `RoomResponse`, Storage cleanup and Room deletion cover it. The PDF
+  request gains `room_cover` (default true; stored jobs without it read false):
+  the Room image is the cover unless a cover Document gives one.
+- Frontend: `RoomImageSection` on the setup page's Settings tab (upload, from
+  URL, remove, saved at once like the avatar), an optional image in
+  `CreateRoomModal` uploaded right after the Room is created, and "Room image"
+  as the first and default choice of the PDF cover field.
+
+### Account page, Avatar block (2026-10-07)
+
+- Product owner's request with a screenshot of the target: in the Profile
+  card the avatar is now 200px (was 112px) and centered in its column, with
+  "Carica foto", "Da URL" and "Rimuovi" in a centered row under it and the
+  format hint below. The avatar column is 4/12 from `md` up (it was 3/12 at
+  `lg`). Behavior unchanged. Not spec 25b, which is still to do and proposes
+  a smaller avatar: reconcile its Decision 3 with this when 25b is built.
 
 ### Room PDF, comments and drop cap fixes (2026-10-06)
 

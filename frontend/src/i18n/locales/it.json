@@ -143,7 +143,12 @@
       "title": "Crea una Stanza",
       "namePlaceholder": "Es. La Maledizione di Strahd",
       "gameSystem": "Sistema di gioco",
-      "gameSystemPlaceholder": "Es. D&D 5e (opzionale)"
+      "gameSystemPlaceholder": "Es. D&D 5e (opzionale)",
+      "image": "Immagine (facoltativa)",
+      "chooseImage": "Scegli immagine",
+      "changeImage": "Cambia immagine",
+      "imageHint": "La copertina del PDF della Stanza. Puoi cambiarla dopo dalle impostazioni della Stanza.",
+      "imageFailed": "La Stanza è stata creata, ma non è stato possibile salvarne l'immagine ({{reason}}). Puoi impostarla dalle impostazioni della Stanza."
     },
     "setup": "Impostazioni",
     "actions": "Azioni per la Stanza {{name}}",
@@ -152,6 +157,9 @@
       "confirmBody": "I tuoi Documenti, Commenti e Note restano nella Stanza. Per rientrare ti servirà un nuovo invito.",
       "adminHint": "Sei un Amministratore: se sei l'ultimo, nomina prima un altro Amministratore dalle Impostazioni della Stanza.",
       "left": "Hai lasciato \"{{name}}\""
+    },
+    "image": {
+      "alt": "Immagine della Stanza"
     }
   },
   "invite": {
@@ -189,29 +197,44 @@
     "title": "Impostazioni della Stanza",
     "adminOnly": "Solo un Amministratore o il Master della Stanza può aprire le impostazioni.",
     "loadError": "Errore nel caricamento delle impostazioni della Stanza.",
-    "mainTags": {
-      "title": "Tag principali",
-      "description": "Nella pagina dei Documenti i Documenti sono raggruppati per queste voci, in quest'ordine. Una voce è un Tag, o una combinazione di due o più: i suoi Documenti hanno tutti i Tag.",
-      "empty": "Nessun Tag principale: i Documenti non saranno raggruppati.",
-      "moveUp": "Sposta {{name}} su",
-      "moveDown": "Sposta {{name}} giù",
-      "remove": "Rimuovi {{name}} dai Tag principali",
-      "addLabel": "Aggiungi un Tag principale",
-      "addPlaceholder": "Scegli un Tag",
-      "noMoreTags": "Ogni Tag è già un Tag principale.",
-      "save": "Salva ordine",
-      "saved": "Tag principali salvati",
-      "combinationLabel": "Aggiungi una combinazione",
-      "combinationPlaceholder": "Scegli due o più Tag",
-      "addCombination": "Aggiungi combinazione"
-    },
     "tags": {
       "title": "Tag",
-      "description": "Tutti i Tag di questa Stanza. Eliminare un Tag lo toglie dai Documenti, dai Tag principali e dalle combinazioni che lo usano; i Documenti restano.",
-      "empty": "Questa Stanza non ha Tag.",
+      "description": "Come la pagina dei Documenti raggruppa i Documenti, e tutti i Tag della Stanza. Ogni modifica si salva subito.",
+      "grouping": {
+        "title": "Raggruppamento",
+        "description": "La pagina dei Documenti li raggruppa per queste voci, in quest'ordine. Una voce è un Tag, o una combinazione: i suoi Documenti hanno tutti quei Tag.",
+        "empty": "Nessuna voce: i Documenti non saranno raggruppati.",
+        "moveUp": "Sposta {{name}} su",
+        "moveDown": "Sposta {{name}} giù",
+        "remove": "Togli {{name}} dal raggruppamento",
+        "addLabel": "Aggiungi una voce",
+        "addPlaceholder": "Scegli uno o più Tag",
+        "addHint": "Un Tag è un Tag principale, due o più una combinazione.",
+        "add": "Aggiungi",
+        "alreadyMain": "Questo Tag è già una voce del raggruppamento.",
+        "alreadyCombination": "Questa combinazione è già nel raggruppamento."
+      },
+      "all": {
+        "title": "Tutti i Tag",
+        "description": "Eliminare un Tag lo toglie dai Documenti e dal raggruppamento; i Documenti restano.",
+        "empty": "Questa Stanza non ha Tag.",
+        "filterLabel": "Filtra i Tag",
+        "filterPlaceholder": "Filtra i Tag",
+        "noMatch": "Nessun Tag corrisponde a \"{{query}}\".",
+        "newLabel": "Nuovo Tag",
+        "newPlaceholder": "Nuovo Tag",
+        "create": "Crea il Tag",
+        "created": "Tag \"{{name}}\" creato",
+        "inGrouping": "Nel raggruppamento",
+        "rename": "Rinomina il Tag {{name}}",
+        "renameInput": "Nuovo nome per {{name}}",
+        "saveRename": "Salva il nome",
+        "cancelRename": "Annulla",
+        "renamed": "Tag rinominato in \"{{name}}\""
+      },
       "delete": "Elimina il Tag {{name}}",
       "confirmTitle": "Eliminare il Tag \"{{name}}\"?",
-      "confirmBody": "Il Tag viene tolto da ogni Documento che lo ha e dai Tag principali. Le combinazioni che lo usavano si riducono e vengono rimosse se restano meno di due Tag. I Documenti non vengono eliminati. L'operazione non si può annullare.",
+      "confirmBody": "Il Tag viene tolto da ogni Documento che lo ha e dal raggruppamento. Le combinazioni che lo usavano si riducono e vengono rimosse se restano meno di due Tag. I Documenti non vengono eliminati. L'operazione non si può annullare.",
       "deleted": "Tag \"{{name}}\" eliminato"
     },
     "dangerZone": {
@@ -265,6 +288,12 @@
       "comment": "Commento in {{document}}",
       "recipients": "Ora lo vedono: {{names}}",
       "selective": "Scelti: {{names}}"
+    },
+    "roomImage": {
+      "title": "Immagine della Stanza",
+      "description": "La copertina predefinita del PDF della Stanza. Chi esporta può comunque scegliere l'immagine di un Documento o nessuna.",
+      "upload": "Carica immagine",
+      "hint": "PNG, JPEG, WebP o GIF. Ridimensionata automaticamente, senza ritagli."
     }
   },
   "documents": {
@@ -638,7 +667,9 @@
       },
       "downloadNamed": "Scarica il PDF {{name}}",
       "dismiss": "Nascondi",
-      "dismissNamed": "Nascondi il PDF {{name}}"
+      "dismissNamed": "Nascondi il PDF {{name}}",
+      "coverRoom": "Immagine della Stanza",
+      "coverHintRoom": "La copertina usa l'immagine della Stanza, o l'immagine preferita del Documento scelto."
     }
   }
 }

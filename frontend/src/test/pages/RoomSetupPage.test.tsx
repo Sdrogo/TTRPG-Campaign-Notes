@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -41,6 +41,7 @@ interface Routes_ {
   items: unknown;
   put: () => Promise<unknown>;
   patch: () => Promise<unknown>;
+  tagPatch: () => Promise<unknown>;
 }
 
 const routes: Routes_ = {
@@ -49,6 +50,7 @@ const routes: Routes_ = {
   items: rawItems,
   put: () => Promise.resolve(rawItems),
   patch: () => Promise.resolve(rawRoom({ default_visibility: 'master' })),
+  tagPatch: () => Promise.reject(new Error('unexpected')),
 };
 
 /** Sets the members the Room's members route answers with. */
@@ -76,6 +78,7 @@ beforeEach(() => {
   routes.items = rawItems;
   routes.put = () => Promise.resolve(rawItems);
   routes.patch = () => Promise.resolve(rawRoom({ default_visibility: 'master' }));
+  routes.tagPatch = () => Promise.reject(new Error('unexpected'));
   setMembers([rawMember({ user_id: 'user-1', display_name: 'Io', is_admin: true })]);
   sessionMock.mockReturnValue({
     session: fakeSession('user-1'),
@@ -85,7 +88,13 @@ beforeEach(() => {
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
     if (path === '/rooms/room-1/tags/main' && init?.method === 'PUT') return routes.put();
     if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.items);
+    if (path === '/rooms/room-1/tags' && init?.method === 'POST') {
+      return Promise.resolve({ id: 'faction', name: 'Fazione', category: null });
+    }
     if (path === '/rooms/room-1/tags') return Promise.resolve(routes.tags);
+    if (path.startsWith('/rooms/room-1/tags/') && init?.method === 'PATCH') {
+      return routes.tagPatch();
+    }
     if (path === '/rooms/room-1' && init?.method === 'PATCH') return routes.patch();
     if (path === '/rooms/room-1') return Promise.resolve(rawRoom());
     if (path === '/rooms/room-1/audit-log') {
@@ -95,6 +104,12 @@ beforeEach(() => {
     return Promise.resolve(undefined);
   });
 });
+
+/** The text of each grouping row, in order, once the list is on screen. */
+const groupingRows = async () =>
+  within((await screen.findAllByRole('list')).find((list) => list.tagName === 'OL') as HTMLElement)
+    .getAllByRole('listitem')
+    .map((row) => row.textContent);
 
 /** Whether the page asked for the Room's Tags at all. */
 const tagsWereRequested = () =>
@@ -171,7 +186,9 @@ describe('RoomSetupPage', () => {
     render();
 
     expect(
-      await screen.findByText('Solo un Amministratore o il Master della Stanza può aprire le impostazioni.'),
+      await screen.findByText(
+        'Solo un Amministratore o il Master della Stanza può aprire le impostazioni.',
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(tagsWereRequested()).toBe(false);
@@ -236,15 +253,14 @@ describe('RoomSetupPage', () => {
     expect(notifySuccess).not.toHaveBeenCalled();
   });
 
-  it('shows an Administrator the members and the Main Tags', async () => {
+  it('shows an Administrator the members and the grouping', async () => {
     render();
 
     expect(
       await screen.findByRole('heading', { name: 'Impostazioni della Stanza' }),
     ).toBeInTheDocument();
     expect(await screen.findByText('Io')).toBeInTheDocument();
-    expect(await screen.findByText('1. #NPC')).toBeInTheDocument();
-    expect(screen.getByText('2. #PC')).toBeInTheDocument();
+    expect(await groupingRows()).toEqual(['1.#NPC', '2.#PC']);
   });
 
   it('goes home after the Administrator leaves the Room', async () => {
@@ -268,35 +284,33 @@ describe('RoomSetupPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('saves a new order and confirms it', async () => {
+  // Spec 25c: the grouping saves on every change, with no "Save order".
+  it('saves a new order at once', async () => {
     routes.put = () => Promise.resolve([{ tag_ids: ['pc'] }, { tag_ids: ['npc'] }]);
     const { user } = render();
 
     await user.click(await screen.findByRole('button', { name: 'Sposta NPC giù' }));
-    await user.click(screen.getByRole('button', { name: 'Salva ordine' }));
 
+    expect(await groupingRows()).toEqual(['1.#PC', '2.#NPC']);
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', {
         method: 'PUT',
         json: { items: [{ tag_ids: ['pc'] }, { tag_ids: ['npc'] }] },
       }),
     );
-    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Tag principali salvati'));
-    // The saved order becomes the list, with nothing left to save.
-    expect(await screen.findByText('1. #PC')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Salva ordine' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Salva ordine' })).not.toBeInTheDocument();
+    expect(notifySuccess).not.toHaveBeenCalled();
   });
 
   // Spec 11_2: a combination is saved as an item of several Tags.
-  it('saves a combination added to the list', async () => {
+  it('saves a combination as soon as it is added', async () => {
     routes.put = () => Promise.resolve([...(rawItems as unknown[]), { tag_ids: ['pc', 'place'] }]);
     const { user } = render();
 
-    await user.click(await screen.findByRole('combobox', { name: 'Aggiungi una combinazione' }));
-    await user.click(screen.getByRole('option', { name: 'PC' }));
-    await user.click(screen.getByRole('option', { name: 'Luogo' }));
-    await user.click(screen.getByRole('button', { name: 'Aggiungi combinazione' }));
-    await user.click(screen.getByRole('button', { name: 'Salva ordine' }));
+    await user.click(await screen.findByRole('combobox', { name: /Aggiungi una voce/ }));
+    await user.click(screen.getByRole('option', { name: '#PC' }));
+    await user.click(screen.getByRole('option', { name: '#Luogo' }));
+    await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', {
@@ -306,19 +320,53 @@ describe('RoomSetupPage', () => {
         },
       }),
     );
-    expect(await screen.findByText('3. #PC + #Luogo')).toBeInTheDocument();
+    expect(await groupingRows()).toEqual(['1.#NPC', '2.#PC', '3.#PC + #Luogo']);
   });
 
-  it('surfaces a rejected save and keeps the draft', async () => {
+  it('rolls a rejected save back and reports it', async () => {
     routes.put = () => Promise.reject(new Error('no'));
     const { user } = render();
 
     await user.click(await screen.findByRole('button', { name: 'Sposta NPC giù' }));
-    await user.click(screen.getByRole('button', { name: 'Salva ordine' }));
 
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
-    expect(notifySuccess).not.toHaveBeenCalled();
-    expect(screen.getByText('1. #PC')).toBeInTheDocument();
+    await waitFor(async () => expect(await groupingRows()).toEqual(['1.#NPC', '2.#PC']));
+  });
+
+  // Spec 25c: a rename shows at once in the Tag list and in the grouping.
+  it('renames a Tag in place and shows the new name everywhere', async () => {
+    routes.tagPatch = () =>
+      Promise.resolve({ id: 'npc', name: 'PNG', category: 'Type', main_position: 0 });
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Rinomina il Tag NPC' }));
+    const field = screen.getByRole('textbox', { name: 'Nuovo nome per NPC' });
+    await user.clear(field);
+    await user.type(field, 'PNG{Enter}');
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/npc', {
+        method: 'PATCH',
+        json: { name: 'PNG' },
+      }),
+    );
+    expect(await screen.findByRole('button', { name: 'Rinomina il Tag PNG' })).toBeInTheDocument();
+    expect(await groupingRows()).toEqual(['1.#PNG', '2.#PC']);
+    expect(notifySuccess).toHaveBeenCalledWith('Tag rinominato in "PNG"');
+  });
+
+  it('creates a Tag from the setup page', async () => {
+    const { user } = render();
+
+    await user.type(await screen.findByRole('textbox', { name: 'Nuovo Tag' }), 'Fazione{Enter}');
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags', {
+        method: 'POST',
+        json: { name: 'Fazione', category: null },
+      }),
+    );
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Tag "Fazione" creato'));
   });
 });
 

@@ -12,6 +12,7 @@ export interface RawRoom {
   status: RoomStatus;
   players_can_create_documents: boolean;
   default_visibility: DocumentVisibility;
+  image_url: string | null;
 }
 
 interface RawMyRoom {
@@ -35,6 +36,7 @@ export function toRoom(raw: RawRoom): Room {
     status: raw.status,
     playersCanCreateDocuments: raw.players_can_create_documents,
     defaultVisibility: raw.default_visibility,
+    imageUrl: raw.image_url,
   };
 }
 
@@ -109,6 +111,72 @@ export function useUpdateRoomSettings(roomId: string) {
       void queryClient.invalidateQueries({ queryKey: ['rooms', roomId] });
       void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY });
     },
+  });
+}
+
+// Every Room image change returns the whole Room: store it, and refresh the
+// Rooms list that shows it too.
+function useApplyRoom(roomId: string) {
+  const queryClient = useQueryClient();
+  return (room: Room) => {
+    queryClient.setQueryData(['rooms', roomId], room);
+    void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY, exact: true });
+  };
+}
+
+async function uploadRoomImage(roomId: string, file: File): Promise<Room> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return toRoom(await apiFetch<RawRoom>(`/rooms/${roomId}/image`, { method: 'POST', formData }));
+}
+
+/** Replaces the Room's image with an uploaded file (Administrators only, spec 26). */
+export function useUploadRoomImage(roomId: string) {
+  const applyRoom = useApplyRoom(roomId);
+  return useMutation({
+    mutationFn: (file: File) => uploadRoomImage(roomId, file),
+    onSuccess: applyRoom,
+  });
+}
+
+/**
+ * Uploads the image picked in the create dialog, right after the Room exists
+ * (spec 26 Decision 6): the Room is only known once created, so it travels
+ * with the file.
+ */
+export function useUploadNewRoomImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roomId, file }: { roomId: string; file: File }) => uploadRoomImage(roomId, file),
+    onSuccess: (room: Room) => {
+      queryClient.setQueryData(['rooms', room.id], room);
+      void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY, exact: true });
+    },
+  });
+}
+
+/** Replaces the Room's image with one fetched from a URL (Administrators only, spec 26). */
+export function useImportRoomImage(roomId: string) {
+  const applyRoom = useApplyRoom(roomId);
+  return useMutation({
+    mutationFn: async (url: string) =>
+      toRoom(
+        await apiFetch<RawRoom>(`/rooms/${roomId}/image/from-url`, {
+          method: 'POST',
+          json: { url },
+        }),
+      ),
+    onSuccess: applyRoom,
+  });
+}
+
+/** Removes the Room's image (Administrators only, spec 26). */
+export function useRemoveRoomImage(roomId: string) {
+  const applyRoom = useApplyRoom(roomId);
+  return useMutation({
+    mutationFn: async () =>
+      toRoom(await apiFetch<RawRoom>(`/rooms/${roomId}/image`, { method: 'DELETE' })),
+    onSuccess: applyRoom,
   });
 }
 

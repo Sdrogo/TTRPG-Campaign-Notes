@@ -466,6 +466,44 @@ async def test_images_are_embedded_downscaled_and_the_cover_comes_from_a_documen
     assert all(url.startswith("data:") for url in render.manual.image_urls)
 
 
+async def test_the_room_image_is_the_default_cover(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    renders: list[Render],
+    inline_jobs: None,
+) -> None:
+    # Spec 26 Decision 5: the Room image unless a Document is chosen or the
+    # requester clears it.
+    room = await _room(client, make_token)
+    red = io.BytesIO()
+    Image.new("RGB", (80, 120), color=(200, 0, 0)).save(red, format="PNG")
+    uploaded = await client.post(
+        f"{room.url}/image",
+        files={"file": ("cover.png", red.getvalue(), "image/png")},
+        headers=room.master,
+    )
+    assert uploaded.status_code == 200, uploaded.text
+    document = await _document(client, room, "Gallery")
+    await client.post(
+        f"{room.url}/documents/{document['id']}/images",
+        files={"file": ("a.png", _png(), "image/png")},
+        headers=room.master,
+    )
+
+    await _start(client, room)
+    await _start(client, room, cover_document_id=document["id"])
+    await _start(client, room, room_cover=False)
+
+    room_cover, document_cover, no_cover = (r.manual.cover_image_url for r in renders)
+    (entry,) = [e for c in renders[1].manual.chapters for e in c.entries]
+    assert room_cover is not None and room_cover.startswith("data:image/jpeg;base64,")
+    assert document_cover == getattr(entry, "image_url", None)
+    assert document_cover != room_cover
+    assert no_cover is None
+
+
 async def test_an_image_that_cannot_be_fetched_or_read_is_left_out_not_fatal(
     db_session: AsyncSession,
     make_token: Callable[..., str],

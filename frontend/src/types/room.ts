@@ -18,6 +18,8 @@ export interface Room {
   status: RoomStatus;
   playersCanCreateDocuments: boolean;
   defaultVisibility: DocumentVisibility;
+  /** The Room's image (spec 26), a short-lived signed link; the PDF's default cover. */
+  imageUrl: string | null;
 }
 
 /** One of the signed-in user's Rooms, with their role in it. */

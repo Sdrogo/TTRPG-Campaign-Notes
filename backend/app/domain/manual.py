@@ -67,10 +67,13 @@ class ManualLabels:
 class ManualOptions:
     """What the requester chose that changes the content: Comments as an
     appendix (off by default) and the Document whose favorite image is the
-    cover's, if any."""
+    cover's, if any. `room_cover_url` is the Room's image (spec 26), the
+    cover when no Document gives one; None when the requester didn't want it
+    or the Room has none."""
 
     include_comments: bool = False
     cover_document_id: uuid.UUID | None = None
+    room_cover_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -289,7 +292,7 @@ def build_manual(export: Export, options: ManualOptions, labels: ManualLabels) -
         title=export.room_name,
         game_system=export.game_system,
         generated_on=export.generated_at.date(),
-        cover_image_url=_chosen_image(cover.images) if cover else None,
+        cover_image_url=(_chosen_image(cover.images) if cover else None) or options.room_cover_url,
         labels=labels,
         chapters=chapters,
         glossary=_glossary(export, first_group),

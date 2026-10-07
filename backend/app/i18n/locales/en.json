@@ -10,6 +10,7 @@
       "onlyMasterCanChangeSettings": "Only the Master can change this Room's settings",
       "onlyAdministratorCanChangeRoles": "Only a Room Administrator can change roles",
       "onlyAdministratorCanRemoveMembers": "Only a Room Administrator can remove members",
+      "onlyAdministratorChangesImage": "Only a Room Administrator can change the Room image",
       "onlyAdministratorCanDelete": "Only a Room Administrator can delete the Room",
       "nameRequired": "Room name is required",
       "onlyAdministratorCanChangeDefaultVisibility": "Only a Room Administrator can change the default visibility",

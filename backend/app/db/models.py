@@ -84,6 +84,8 @@ class RoomRow(Base):
     default_visibility: Mapped[str] = mapped_column(
         String(20), server_default=text("'room'"), default="room"
     )
+    # The Room's image (spec 26), a Storage path like `users.avatar_path`.
+    image_path: Mapped[str | None] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

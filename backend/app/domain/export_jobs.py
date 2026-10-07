@@ -51,7 +51,9 @@ class PdfOptions:
     member the Master generates it "as" (Decision 6); it travels in the body,
     not in the `X-View-As` header, because that header makes every write a 403
     (spec 22b). `locale` is the requester's language, for the PDF's fixed
-    texts."""
+    texts. `room_cover` puts the Room's image on the cover when no Document
+    gives one (spec 26 Decision 5); a job stored before it existed reads as
+    off, as it was made."""
 
     style: ManualStyle
     page_size: PageSize
@@ -61,6 +63,7 @@ class PdfOptions:
     tag_ids: tuple[uuid.UUID, ...]
     locale: str
     view_as_user_id: uuid.UUID | None
+    room_cover: bool = False
 
     def to_json(self) -> dict[str, Any]:
         """The options as the plain JSON stored on the job."""
@@ -73,6 +76,7 @@ class PdfOptions:
             "tag_ids": [str(tag_id) for tag_id in self.tag_ids],
             "locale": self.locale,
             "view_as_user_id": str(self.view_as_user_id) if self.view_as_user_id else None,
+            "room_cover": self.room_cover,
         }
 
     @staticmethod
@@ -89,6 +93,7 @@ class PdfOptions:
             tag_ids=tuple(uuid.UUID(tag_id) for tag_id in data["tag_ids"]),
             locale=data["locale"],
             view_as_user_id=uuid.UUID(view_as) if view_as else None,
+            room_cover=data.get("room_cover", False),
         )
 
 
