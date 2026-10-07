@@ -2,6 +2,7 @@ import { Checkbox, Select, SegmentedControl, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import {
   coverChoices,
+  ROOM_COVER,
   PDF_PAGE_SIZES,
   type PdfExportOptions,
   type PdfPageSize,
@@ -17,16 +18,23 @@ interface PdfExportFormProps {
   onChange: (value: PdfFormValue) => void;
   /** The Documents the cover can come from; only those with an image are offered. */
   documents: Document[];
+  /** Whether the Room has an image (spec 26): then it is offered first, and is the default. */
+  hasRoomImage: boolean;
 }
 
 /**
  * The PDF options (spec 23b Frontend): style with previews, page size,
- * Comments and PDF Attachments (both off by default), and the Document whose
- * favorite image is the cover.
+ * Comments and PDF Attachments (both off by default), and the cover: the
+ * Room's image when it has one (spec 26, the default), the favorite image of a
+ * Document, or none (the field cleared).
  */
-export function PdfExportForm({ value, onChange, documents }: PdfExportFormProps) {
+export function PdfExportForm({ value, onChange, documents, hasRoomImage }: PdfExportFormProps) {
   const { t } = useTranslation();
-  const covers = coverChoices(documents);
+  const covers = [
+    ...(hasRoomImage ? [{ value: ROOM_COVER, label: t('export.pdf.coverRoom') }] : []),
+    ...coverChoices(documents),
+  ];
+  const cover = value.coverDocumentId ?? (hasRoomImage && value.roomCover ? ROOM_COVER : null);
   return (
     <Stack gap="md">
       <PdfStylePicker value={value.style} onChange={(style) => onChange({ ...value, style })} />
@@ -53,15 +61,22 @@ export function PdfExportForm({ value, onChange, documents }: PdfExportFormProps
         label={t('export.pdf.cover')}
         placeholder={t('export.pdf.coverNone')}
         data={covers}
-        value={value.coverDocumentId}
-        onChange={(coverDocumentId) => onChange({ ...value, coverDocumentId })}
+        value={cover}
+        onChange={(choice) =>
+          onChange({
+            ...value,
+            coverDocumentId: choice === ROOM_COVER ? null : choice,
+            // A Document the PDF can't show falls back to the Room's image.
+            roomCover: choice !== null,
+          })
+        }
         clearable
         clearButtonProps={{ 'aria-label': t('export.pdf.coverClear') }}
         searchable
         nothingFoundMessage={t('export.pdf.coverNothing')}
       />
       <Text size="xs" c="dimmed">
-        {t('export.pdf.coverHint')}
+        {t(hasRoomImage ? 'export.pdf.coverHintRoom' : 'export.pdf.coverHint')}
       </Text>
     </Stack>
   );

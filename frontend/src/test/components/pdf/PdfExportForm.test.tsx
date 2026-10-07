@@ -12,7 +12,7 @@ const documents = [
   { id: 'bare', name: 'Senza immagini', images: [] },
 ] as unknown as Document[];
 
-function render(onChange = vi.fn()) {
+function render(onChange = vi.fn(), hasRoomImage = false) {
   function Host() {
     const [value, setValue] = useState<PdfFormValue>(DEFAULT_PDF_OPTIONS);
     return (
@@ -23,6 +23,7 @@ function render(onChange = vi.fn()) {
           setValue(next);
         }}
         documents={documents}
+        hasRoomImage={hasRoomImage}
       />
     );
   }
@@ -83,5 +84,42 @@ describe('PdfExportForm', () => {
     const clear = screen.getByLabelText("Togli l'immagine di copertina", { selector: 'button' });
     await user.click(clear);
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ coverDocumentId: null }));
+  });
+
+  // Spec 26 Decision 5: the Room's image is the default cover, a Document
+  // overrides it and clearing the field prints none.
+  it('starts on the Room image when the Room has one', async () => {
+    const { user, onChange } = render(vi.fn(), true);
+
+    const field = screen.getByRole('combobox', { name: 'Immagine di copertina' });
+    expect(field).toHaveValue('Immagine della Stanza');
+
+    await user.click(field);
+    await user.click(screen.getByRole('option', { name: 'Il Cancello' }));
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ coverDocumentId: 'gate', roomCover: true }),
+    );
+
+    await user.click(screen.getByRole('combobox', { name: 'Immagine di copertina' }));
+    await user.click(screen.getByRole('option', { name: 'Immagine della Stanza' }));
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ coverDocumentId: null, roomCover: true }),
+    );
+
+    await user.click(
+      screen.getByLabelText("Togli l'immagine di copertina", { selector: 'button' }),
+    );
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ coverDocumentId: null, roomCover: false }),
+    );
+    expect(screen.getByRole('combobox', { name: 'Immagine di copertina' })).toHaveValue('');
+  });
+
+  it('offers no Room image when the Room has none', async () => {
+    const { user } = render();
+
+    expect(screen.getByRole('combobox', { name: 'Immagine di copertina' })).toHaveValue('');
+    await user.click(screen.getByRole('combobox', { name: 'Immagine di copertina' }));
+    expect(screen.queryByRole('option', { name: 'Immagine della Stanza' })).not.toBeInTheDocument();
   });
 });

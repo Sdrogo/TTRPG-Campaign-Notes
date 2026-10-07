@@ -22,6 +22,7 @@ function myRoom(overrides: Partial<MyRoom> = {}): MyRoom {
       status: 'active',
       playersCanCreateDocuments: true,
       defaultVisibility: 'room',
+      imageUrl: null,
     },
     role: 'player',
     isAdmin: false,

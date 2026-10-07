@@ -3,7 +3,7 @@
 import uuid
 from collections.abc import Collection
 
-from sqlalchemy import delete, func, select, tuple_
+from sqlalchemy import delete, func, select, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -32,6 +32,7 @@ def room_from_row(row: RoomRow) -> Room:
         created_by=row.created_by,
         players_can_create_documents=row.players_can_create_documents,
         default_visibility=DocumentVisibility(row.default_visibility),
+        image_path=row.image_path,
     )
 
 
@@ -183,6 +184,20 @@ async def update_room_settings(session: AsyncSession, room: Room) -> None:
     row.players_can_create_documents = room.players_can_create_documents
     row.default_visibility = room.default_visibility.value
     await session.flush()
+
+
+async def get_room_for_update(session: AsyncSession, room_id: uuid.UUID) -> Room | None:
+    """The Room, its row locked until the transaction ends, so two concurrent
+    image changes can't both replace the same old image (and orphan one of
+    the new ones)."""
+    result = await session.execute(select(RoomRow).where(RoomRow.id == room_id).with_for_update())
+    row = result.scalar_one_or_none()
+    return room_from_row(row) if row else None
+
+
+async def set_room_image(session: AsyncSession, room_id: uuid.UUID, path: str | None) -> None:
+    """Points the Room at a new image (None removes it, spec 26)."""
+    await session.execute(update(RoomRow).where(RoomRow.id == room_id).values(image_path=path))
 
 
 async def lock_room(session: AsyncSession, room_id: uuid.UUID) -> None:

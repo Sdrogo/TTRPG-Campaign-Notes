@@ -15,6 +15,7 @@ import { MemberManagement } from '../components/setup/MemberManagement';
 import { TagsSection } from '../components/setup/TagsSection';
 import { DeleteRoomSection } from '../components/setup/DeleteRoomSection';
 import { DefaultVisibilitySection } from '../components/setup/DefaultVisibilitySection';
+import { RoomImageSection } from '../components/setup/RoomImageSection';
 import { VisibilityHistory } from '../components/setup/VisibilityHistory';
 
 /**
@@ -22,7 +23,7 @@ import { VisibilityHistory } from '../components/setup/VisibilityHistory';
  * Administrator or the Master of that Room - everyone else gets a message
  * instead (the backend enforces the same on every write). Two tabs: Settings,
  * for Administrators only, holds the member management that used to be its
- * own page, the Room's default visibility (spec 22), the one Tags section
+ * own page, the Room's image (spec 26), its default visibility (spec 22), the one Tags section
  * (spec 25c: the Grouping that orders the Documents page and every Tag, to
  * create, rename and delete) and the Room's deletion (spec 13); History, for both, the visibility history (spec 22).
  */
@@ -112,6 +113,8 @@ export function RoomSetupPage() {
                   onLeft={() => navigate('/')}
                 />
               </Stack>
+
+              {room.data && <RoomImageSection roomId={roomId} imageUrl={room.data.imageUrl} />}
 
               {room.data && (
                 <DefaultVisibilitySection roomId={roomId} value={room.data.defaultVisibility} />

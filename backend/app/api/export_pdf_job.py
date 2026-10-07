@@ -63,8 +63,8 @@ async def run_export_job(job_id: uuid.UUID) -> None:
         started = await _start(job_id)
         if started is None:
             return
-        job, export = started
-        pdf = await _build_pdf(job.options, export)
+        job, export, room_image_path = started
+        pdf = await _build_pdf(job.options, export, room_image_path)
         path = export_storage_path(job.room_id, job.id)
         # Same order as every upload: the cleanup row first, so a crash between
         # the upload and the row below leaves an object the sweep removes.
@@ -101,10 +101,11 @@ async def _fail(job_id: uuid.UUID, error: str) -> None:
         logger.exception("Could not mark Room PDF %s as failed", job_id)
 
 
-async def _start(job_id: uuid.UUID) -> tuple[ExportJob, Export] | None:
+async def _start(job_id: uuid.UUID) -> tuple[ExportJob, Export, str | None] | None:
     """Marks the queued job running and reads the Room's export tree for the
     member it is made for, now: the snapshot of who sees what is taken when
-    the job starts (spec 23b Backend). None for a job that isn't queued."""
+    the job starts (spec 23b Backend), with the Room's image path (spec 26).
+    None for a job that isn't queued."""
     async with session_module.independent_session() as session:
         job = await export_jobs_repo.get_job(session, job_id)
         if job is None or job.status is not ExportStatus.QUEUED:
@@ -126,16 +127,22 @@ async def _start(job_id: uuid.UUID) -> tuple[ExportJob, Export] | None:
             except DomainError as exc:
                 raise ExportRefusedError from exc
         export = await load_export(session, room, viewer, list(job.options.tag_ids))
-        return job, export
+        return job, export, room.image_path
 
 
-async def _build_pdf(options: PdfOptions, export: Export) -> bytes:
-    """The PDF bytes for `export` as `options` ask."""
+async def _build_pdf(options: PdfOptions, export: Export, room_image_path: str | None) -> bytes:
+    """The PDF bytes for `export` as `options` ask. The Room's image, when
+    asked for and set, is the cover unless a Document gives one (spec 26);
+    every member sees it, so it needs no visibility check."""
+    room_cover_url: str | None = None
+    if options.room_cover and room_image_path is not None:
+        room_cover_url = (await storage.signed_urls([room_image_path])).get(room_image_path)
     manual = build_manual(
         export,
         ManualOptions(
             include_comments=options.include_comments,
             cover_document_id=options.cover_document_id,
+            room_cover_url=room_cover_url,
         ),
         manual_labels(options.locale),
     )

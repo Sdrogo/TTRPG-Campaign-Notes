@@ -145,6 +145,7 @@ describe('ExportRoomModal, PDF format (spec 23b Frontend)', () => {
       include_comments: true,
       include_attachments: false,
       cover_document_id: 'gate',
+      room_cover: true,
       tag_ids: ['npc'],
       view_as_user_id: null,
     });

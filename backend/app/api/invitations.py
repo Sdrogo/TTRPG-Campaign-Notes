@@ -11,7 +11,12 @@ from pydantic import BaseModel
 
 from app.api.errors import http_error, translated_error
 from app.api.profiles import ProfileFields, profile_fields, sign_avatars
-from app.api.rooms import RoomResponse, room_to_response
+from app.api.rooms import (
+    RoomResponse,
+    room_to_response,
+    sign_room_images,
+    signed_room_response,
+)
 from app.auth.dependencies import CurrentUserDep
 from app.db import friends_repo, invitations_repo, rooms_repo, users_repo
 from app.db.session import SessionDep
@@ -165,6 +170,7 @@ async def list_my_invitations(
     inviter_ids = {invitation.created_by for invitation, _ in rows}
     profiles = await users_repo.get_profiles(session, inviter_ids)
     avatar_urls = await sign_avatars(profiles.values())
+    image_urls = await sign_room_images(room for _, room in rows)
 
     def inviter(inviter_id: uuid.UUID) -> InviterResponse:
         fields = profile_fields(profiles[inviter_id], avatar_urls, user_id)
@@ -175,7 +181,7 @@ async def list_my_invitations(
             code=invitation.code,
             role=invitation.role,
             expires_at=invitation.expires_at,
-            room=room_to_response(room),
+            room=room_to_response(room, image_urls),
             invited_by=inviter(invitation.created_by),
         )
         for invitation, room in rows
@@ -222,7 +228,7 @@ async def accept_invitation(
     if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
 
-    return room_to_response(room)
+    return await signed_room_response(room)
 
 
 @router.post("/invitations/{code}/decline", status_code=status.HTTP_204_NO_CONTENT)

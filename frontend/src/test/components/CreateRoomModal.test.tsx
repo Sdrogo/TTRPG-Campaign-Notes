@@ -2,11 +2,13 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
+import { notifyError } from '../../lib/notify';
 import { rawRoom } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { CreateRoomModal } from '../../components/CreateRoomModal';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
+vi.mock('../../lib/notify', () => ({ notifyError: vi.fn() }));
 
 const fetchMock = vi.mocked(apiFetch);
 
@@ -18,6 +20,7 @@ function render(opened = true) {
 
 beforeEach(() => {
   fetchMock.mockReset();
+  vi.mocked(notifyError).mockReset();
 });
 
 describe('CreateRoomModal', () => {
@@ -89,5 +92,52 @@ describe('CreateRoomModal', () => {
 
     expect(onClose).toHaveBeenCalled();
     expect(screen.getByRole('textbox', { name: /Nome/ })).toHaveValue('');
+  });
+
+  // Spec 26 Decision 6: the Room first, then its image.
+  it('uploads the picked image once the Room exists, then closes', async () => {
+    fetchMock.mockResolvedValue(rawRoom({ id: 'room-9' }));
+    const { onClose, user } = render();
+    const file = new File(['x'], 'cover.png', { type: 'image/png' });
+
+    await user.type(screen.getByRole('textbox', { name: /Nome/ }), 'La Cripta');
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, file);
+    expect(screen.getByRole('img', { name: 'Immagine della Stanza' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Crea Stanza' }));
+
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    const [path, options] = fetchMock.mock.calls[1] as [string, { formData: FormData }];
+    expect(path).toBe('/rooms/room-9/image');
+    expect(options.formData.get('file')).toBe(file);
+  });
+
+  it('keeps the Room when its image fails, and says so', async () => {
+    fetchMock
+      .mockResolvedValueOnce(rawRoom({ id: 'room-9' }))
+      .mockRejectedValueOnce(new Error('File troppo grande'));
+    const { onClose, user } = render();
+
+    await user.type(screen.getByRole('textbox', { name: /Nome/ }), 'La Cripta');
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, new File(['x'], 'cover.png', { type: 'image/png' }));
+    await user.click(screen.getByRole('button', { name: 'Crea Stanza' }));
+
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(notifyError).toHaveBeenCalledWith(expect.stringContaining('File troppo grande'));
+  });
+
+  it('can drop the picked image before creating', async () => {
+    fetchMock.mockResolvedValue(rawRoom());
+    const { user } = render();
+
+    await user.type(screen.getByRole('textbox', { name: /Nome/ }), 'La Cripta');
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, new File(['x'], 'a.png', { type: 'image/png' }));
+    await user.upload(input, new File(['y'], 'b.png', { type: 'image/png' }));
+    await user.click(screen.getByRole('button', { name: 'Rimuovi' }));
+    await user.click(screen.getByRole('button', { name: 'Crea Stanza' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
   });
 });

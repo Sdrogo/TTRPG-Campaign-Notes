@@ -61,6 +61,7 @@ describe('pdfRequestBody', () => {
       include_comments: false,
       include_attachments: false,
       cover_document_id: null,
+      room_cover: true,
       tag_ids: [],
       view_as_user_id: null,
     });
@@ -75,6 +76,7 @@ describe('pdfRequestBody', () => {
           includeComments: true,
           includeAttachments: true,
           coverDocumentId: 'doc-1',
+          roomCover: false,
           tagIds: ['t1', 't2'],
         },
         'alice',
@@ -85,6 +87,7 @@ describe('pdfRequestBody', () => {
       include_comments: true,
       include_attachments: true,
       cover_document_id: 'doc-1',
+      room_cover: false,
       tag_ids: ['t1', 't2'],
       view_as_user_id: 'alice',
     });

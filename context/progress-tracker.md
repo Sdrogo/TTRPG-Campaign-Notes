@@ -9,6 +9,14 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-07)
 
+**Spec 26 (Room image) built on 2026-10-07** at the product owner's request: a
+Room can have an image, set in the create dialog or on the setup page
+(Administrators), and it is the default cover of the Room PDF. It carries
+**migration `e9b4c2d7a1f6`** (`rooms.image_path`). **Applied to the staging
+database by hand on 2026-10-07** (`.env.staging` exported, `alembic upgrade
+head`: `c7d3e9a1f5b2` → `e9b4c2d7a1f6`, confirmed with `alembic current`).
+**Still pending on production**: apply it before the next release to `main`.
+
 **Spec 25c (Room setup Tags and rename) built on 2026-10-07, ahead of 25 and
 25b** at the product owner's request ("refactor the Tags section like the
 Document page"). One PR into `staging`: `PATCH /rooms/{id}/tags/{tag}` (rename,
@@ -33,8 +41,9 @@ built in that order.
 (whole-Document history, spec 24b) applied to the production database by hand
 on 2026-10-06** by the product owner, before the release (`.env` loaded,
 `alembic upgrade`: `d9a4f1c7e3b5` → `a2e6c9f4b8d1` → `c7d3e9a1f5b2`). Production
-and staging are both at `c7d3e9a1f5b2` (checked with `alembic current` on
-each); no pending migrations.
+and staging were both at `c7d3e9a1f5b2` (checked with `alembic current` on
+each) at that point; since 2026-10-07 staging is at `e9b4c2d7a1f6` (spec 26) and
+production is one migration behind.
 
 **Whole-Document history (spec 24b, 2026-10-06)** carries **migration
 `c7d3e9a1f5b2`** (folds `note_versions` into `document_versions.notes` and
@@ -102,6 +111,19 @@ explicitly (`architecture.md` → Local env files).
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Room image (spec 26, 2026-10-07)
+
+- Backend: `rooms.image_path` (migration `e9b4c2d7a1f6`), `POST/DELETE
+  /rooms/{id}/image` and `POST /rooms/{id}/image/from-url` for Administrators
+  (403 `errors.room.onlyAdministratorChangesImage` otherwise), `image_url` on
+  every `RoomResponse`, Storage cleanup and Room deletion cover it. The PDF
+  request gains `room_cover` (default true; stored jobs without it read false):
+  the Room image is the cover unless a cover Document gives one.
+- Frontend: `RoomImageSection` on the setup page's Settings tab (upload, from
+  URL, remove, saved at once like the avatar), an optional image in
+  `CreateRoomModal` uploaded right after the Room is created, and "Room image"
+  as the first and default choice of the PDF cover field.
 
 ### Account page, Avatar block (2026-10-07)
 
