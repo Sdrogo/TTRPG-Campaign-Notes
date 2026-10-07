@@ -43,6 +43,19 @@ async def insert_tag(session: AsyncSession, tag: Tag) -> None:
     await session.flush()
 
 
+async def rename_tag(
+    session: AsyncSession, room_id: uuid.UUID, tag_id: uuid.UUID, name: str
+) -> None:
+    """Sets the name of this Room's Tag (spec 25c). Everything else refers to
+    the Tag by id, so nothing else is rewritten; its `search_vector` is a
+    generated column. A name another Tag of the Room has raises
+    `IntegrityError` (`uq_tag_room_name`)."""
+    await session.execute(
+        update(TagRow).where(TagRow.id == tag_id, TagRow.room_id == room_id).values(name=name)
+    )
+    await session.flush()
+
+
 async def get_tags_by_ids(
     session: AsyncSession, room_id: uuid.UUID, tag_ids: list[uuid.UUID]
 ) -> list[Tag]:
