@@ -48,6 +48,24 @@ async function openLeave(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('RoomCard', () => {
+  // Spec 26: the Room image fills the card's right half, like a DocumentCard's.
+  it('shows the Room image when it has one', () => {
+    render({
+      room: { ...myRoom().room, imageUrl: 'http://signed/rooms/room-1/a.webp' },
+    });
+
+    expect(screen.getByRole('img', { name: 'La Cripta' })).toHaveAttribute(
+      'src',
+      'http://signed/rooms/room-1/a.webp',
+    );
+  });
+
+  it('shows no image without one', () => {
+    render();
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
   it('shows the Room name, system and role', () => {
     render();
 

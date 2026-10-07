@@ -388,6 +388,11 @@ other icon set.
   request), by the Document detail page too. Needs the same
   `zIndex: 2` treatment as the carousel controls above, since it sits above
   the card's overlay link too.
+- **Room card image** (`RoomCard`, 2026-10-07, spec 26): a Room with an
+  image shows it on the card's right half through `DocumentCardImages`,
+  cropped and fading into the card like a Document card's, with the card at
+  least 160px (180px from `sm`) tall. The setup, invite and menu buttons sit
+  on a `--bg-base` backing so they stay readable on a light image.
 - **Documents list Tag filter** (`TagFilter`, 2026-09-22): a searchable,
   clearable `MultiSelect` with a `Funnel` icon above the grid (max 480px
   from `sm` up), options shown as `#Tag`. It is bound to the URL
