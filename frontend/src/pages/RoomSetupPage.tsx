@@ -5,18 +5,14 @@ import { DownloadSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useMembers } from '../hooks/useMembers';
-import { useMainItems, useSetMainItems } from '../hooks/useMainItems';
+import { useMainItems } from '../hooks/useMainItems';
 import { useTags } from '../hooks/useTags';
 import { useRoom } from '../hooks/useRooms';
-import { notifyError, notifySuccess } from '../lib/notify';
-import { itemKey, resolveMainItems } from '../lib/mainItems';
-import type { MainItem } from '../types/tag';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { ExportRoomModal } from '../components/ExportRoomModal';
 import { PageLayout } from '../components/PageLayout';
-import { MainTagsEditor } from '../components/setup/MainTagsEditor';
 import { MemberManagement } from '../components/setup/MemberManagement';
-import { TagManagement } from '../components/setup/TagManagement';
+import { TagsSection } from '../components/setup/TagsSection';
 import { DeleteRoomSection } from '../components/setup/DeleteRoomSection';
 import { DefaultVisibilitySection } from '../components/setup/DefaultVisibilitySection';
 import { VisibilityHistory } from '../components/setup/VisibilityHistory';
@@ -26,9 +22,9 @@ import { VisibilityHistory } from '../components/setup/VisibilityHistory';
  * Administrator or the Master of that Room - everyone else gets a message
  * instead (the backend enforces the same on every write). Two tabs: Settings,
  * for Administrators only, holds the member management that used to be its
- * own page, the Room's default visibility (spec 22), the Main Tags that order
- * the Documents page, the Tag list with its delete buttons and the Room's
- * deletion (spec 13); History, for both, the visibility history (spec 22).
+ * own page, the Room's default visibility (spec 22), the one Tags section
+ * (spec 25c: the Grouping that orders the Documents page and every Tag, to
+ * create, rename and delete) and the Room's deletion (spec 13); History, for both, the visibility history (spec 22).
  */
 export function RoomSetupPage() {
   const { t } = useTranslation();
@@ -42,7 +38,6 @@ export function RoomSetupPage() {
   const isMaster = currentMember?.role === 'master';
   const tags = useTags(roomId ?? '', isAdmin);
   const mainItems = useMainItems(roomId ?? '', isAdmin);
-  const setMainItems = useSetMainItems(roomId ?? '');
   const room = useRoom(roomId ?? '', isAdmin);
   const [exportOpened, setExportOpened] = useState(false);
 
@@ -77,14 +72,6 @@ export function RoomSetupPage() {
       </FullPageMessage>
     );
   }
-
-  /** Saves the Main items and confirms or reports the result. */
-  const handleSaveMainItems = (items: MainItem[]) => {
-    setMainItems.mutate(items, {
-      onSuccess: () => notifySuccess(t('setup.mainTags.saved')),
-      onError: notifyError,
-    });
-  };
 
   return (
     <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
@@ -133,24 +120,8 @@ export function RoomSetupPage() {
               {(tags.isLoading || mainItems.isLoading) && <Loader color="accent" />}
               {(tags.isError || mainItems.isError) && <Text c="red">{t('setup.loadError')}</Text>}
               {tags.data && mainItems.data && (
-                <MainTagsEditor
-                  // Re-keyed on the saved list and on the Room's Tags so a save,
-                  // a change made elsewhere or a deleted Tag (spec 13) replaces the
-                  // draft instead of fighting it or keeping a Tag that is gone.
-                  key={`${tags.data.map((tag) => tag.id).join(',')}#${resolveMainItems(
-                    mainItems.data,
-                    tags.data,
-                  )
-                    .map(itemKey)
-                    .join('|')}`}
-                  tags={tags.data}
-                  items={mainItems.data}
-                  saving={setMainItems.isPending}
-                  onSave={handleSaveMainItems}
-                />
+                <TagsSection roomId={roomId} tags={tags.data} items={mainItems.data} />
               )}
-
-              {tags.data && <TagManagement roomId={roomId} tags={tags.data} />}
 
               {room.data && (
                 <DeleteRoomSection

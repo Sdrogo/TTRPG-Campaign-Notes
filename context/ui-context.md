@@ -512,22 +512,38 @@ order 2, each with an order-3 `Title`:
   members page — avatar, name, pronouns, bio, role `Select`, Administrator
   `Switch`, Remove/Leave. Every control is offered, since the page is
   Administrator-only.
-- **Tag principali** (`setup/MainTagsEditor`): an ordered list (`ol` of
-  bordered `Paper` rows: position, `#Name`, and `ActionIcon`s for up, down
-  and remove) and a searchable `Select` that adds one of the remaining Tags
-  at the end. It edits a draft; "Salva ordine" (disabled until the draft
-  differs from what's saved) sends the whole list. Reordering is buttons,
-  not drag and drop: keyboard- and screen-reader-friendly, and no new
-  dependency. A saved order updates the Tags cache in place and is
-  confirmed with a toast.
+- **Tag** (`setup/TagsSection`, spec 25c, 2026-10-07; it replaced the
+  separate "Tag principali" editor, its combination adder and "Salva ordine",
+  and the boxed Tag list): one section, two bordered `Paper` parts side by
+  side from `lg` (Grouping 5/12, All Tags 7/12), stacked below. Each part has
+  an `h3` (`fz="h5"`), a gray count `Badge` and a one-line dimmed description.
+  - **Raggruppamento** (`GroupingEditor`): the Main items as a `CompactList`
+    `ol` (position, `#A` or `#A + #B`, up / down / remove `ActionIcon`s
+    `sm`), at most 640px wide so the actions stay near the names. **Every
+    change saves at once** (no "Salva ordine", no toast): `useSetMainItems`
+    updates the cache optimistically, runs the saves one at a time (mutation
+    `scope`) and on failure puts the list back and shows the error. Items hold
+    Tag ids and resolve names from the Tags, so a rename shows at once.
+    Reordering is buttons, not drag and drop. One field adds an item
+    (`GroupAdder`): a searchable `MultiSelect` + "Aggiungi"; one Tag is a Main
+    Tag, two or more a combination (spec 11_2); a set already listed (any
+    order) disables "Aggiungi" with the reason in red under the field.
+  - **Tutti i Tag** (`AllTagsList`, `TagRow`): a "Filtra i Tag" field (accent
+    and case insensitive, like the mention popup) and a "Nuovo Tag" field
+    (Enter or its "+", a refused name shown as the field's error), then every
+    Tag alphabetically in a `CompactList` laid out in columns of at least
+    240px: `#Name`, the category dimmed, a `Stack` icon (tooltip "Nel
+    raggruppamento") when the Grouping uses it, then Rename (pencil) and
+    Delete (trash). Rename turns the row into a prefilled, selected
+    `TextInput` (Enter or check saves, Esc or X cancels, a 409/422 shows
+    under the field), one row at a time. Delete keeps spec 13's confirmation
+    `Modal`.
 
-**Combinations** (2026-10-01, spec 11_2): below the single-Tag `Select`, the
-Main items section has a `CombinationAdder`: a searchable `MultiSelect` of
-every Tag plus an "Aggiungi combinazione" button, disabled until two or more
-Tags are picked and while that set is already listed (in any order). A
-combination is a row like the others, labelled `#A + #B`, and moves, removes
-and saves the same way. A Document is under a combination when it has all its
-Tags.
+**`CompactList`** (`components/CompactList.tsx`, spec 25 Decision 3, built
+with 25c): one bordered `md` box with thin `--border-default` dividers between
+~36px rows (`CompactListItem`: leading, label, actions right after the label
+or, with `actionsAtEnd`, at the row's end); `columnWidth` lays the rows out in
+a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
 
 ## Friends (spec 18_2)
 

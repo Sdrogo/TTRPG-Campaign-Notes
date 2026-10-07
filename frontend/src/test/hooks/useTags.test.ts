@@ -2,7 +2,7 @@ import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { renderHookWithProviders } from '../utils';
-import { useCreateTag, useDeleteTag, useTags } from '../../hooks/useTags';
+import { useCreateTag, useDeleteTag, useRenameTag, useTags } from '../../hooks/useTags';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 
@@ -112,6 +112,43 @@ describe('useCreateTag', () => {
     await expect(result.current.mutateAsync({ name: 'Luoghi' })).rejects.toThrow(
       'Only the Master can create Tags',
     );
+  });
+});
+
+// Spec 25c: a rename shows everywhere the name is read from the Tags cache.
+describe('useRenameTag', () => {
+  it('patches the name and replaces the Tag in the cached list', async () => {
+    fetchMock.mockResolvedValue({ id: 'b', name: 'Bee', category: 'Type', main_position: 1 });
+
+    const { result, queryClient } = renderHookWithProviders(() => useRenameTag('room-1'));
+    queryClient.setQueryData(
+      ['rooms', 'room-1', 'tags'],
+      [
+        { id: 'a', name: 'A', category: null, mainPosition: null },
+        { id: 'b', name: 'B', category: 'Type', mainPosition: 1 },
+      ],
+    );
+    queryClient.setQueryData(['rooms', 'room-1', 'documents'], []);
+    await result.current.mutateAsync({ tagId: 'b', name: 'Bee' });
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/b', {
+      method: 'PATCH',
+      json: { name: 'Bee' },
+    });
+    expect(queryClient.getQueryData(['rooms', 'room-1', 'tags'])).toEqual([
+      { id: 'a', name: 'A', category: null, mainPosition: null },
+      { id: 'b', name: 'Bee', category: 'Type', mainPosition: 1 },
+    ]);
+    expect(queryClient.getQueryState(['rooms', 'room-1', 'documents'])?.isInvalidated).toBe(true);
+  });
+
+  it('leaves an empty cache empty', async () => {
+    fetchMock.mockResolvedValue({ id: 'b', name: 'Bee', category: null });
+
+    const { result, queryClient } = renderHookWithProviders(() => useRenameTag('room-1'));
+    await result.current.mutateAsync({ tagId: 'b', name: 'Bee' });
+
+    expect(queryClient.getQueryData(['rooms', 'room-1', 'tags'])).toBeUndefined();
   });
 });
 

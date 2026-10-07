@@ -7,7 +7,17 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-06)
+## Current Status (2026-10-07)
+
+**Spec 25c (Room setup Tags and rename) built on 2026-10-07, ahead of 25 and
+25b** at the product owner's request ("refactor the Tags section like the
+Document page"). One PR into `staging`: `PATCH /rooms/{id}/tags/{tag}` (rename,
+Administrator or Master; no migration) and the new `TagsSection` (Grouping
+saved on every change, All Tags with filter, create, rename in place, delete).
+It builds the shared `CompactList` that spec 25 describes; 25's theme-wide
+density rules and 25b (Account page) are still to do. Backend 1008 tests,
+frontend 1475 tests, both at 100% coverage.
+
 
 **Features 12 to 24 are all built except 23c (Agent access tokens), which the
 product owner dropped on 2026-10-06** (FR-G2 not built; the ticket stays in
