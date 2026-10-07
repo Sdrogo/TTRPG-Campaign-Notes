@@ -96,7 +96,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
           fields don't stretch across the whole card. */}
       <AccountSection title={t('account.profile.title')} description={t('account.profile.description')}>
         <Grid gap={{ base: 'md', md: 'xl' }}>
-          <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
+          <Grid.Col span={{ base: 12, md: 4 }}>
             <AvatarEditor
               user={profile}
               pending={avatarPending}
@@ -106,7 +106,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
             />
             <Divider hiddenFrom="md" mt="md" />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
+          <Grid.Col span={{ base: 12, md: 8 }}>
             <ProfileForm
               profile={profile}
               saving={updateProfile.isPending}

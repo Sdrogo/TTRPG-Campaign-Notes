@@ -28,10 +28,10 @@ export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }:
   const busy = pending !== null;
 
   return (
-    <Group gap="lg" align="center" wrap="wrap">
-      <UserAvatar user={user} size={112} />
-      <Stack gap="xs" style={{ flex: 1, minWidth: 220 }}>
-        <Group gap="xs" wrap="wrap">
+    <Stack gap="md" align="center">
+      <UserAvatar user={user} size={200} />
+      <Stack gap="xs" maw={360}>
+        <Group gap="xs" wrap="wrap" justify="center">
           <FileButton
             onChange={(file) => file && onUpload(file)}
             accept={ACCEPTED_IMAGE_TYPES}
@@ -81,6 +81,6 @@ export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }:
           {t('account.avatar.hint')}
         </Text>
       </Stack>
-    </Group>
+    </Stack>
   );
 }
