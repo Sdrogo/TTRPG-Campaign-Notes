@@ -2,8 +2,14 @@ import uuid
 
 import pytest
 
-from app.domain.models import RoomRole, RoomStatus
-from app.domain.rooms import RoomNameRequiredError, plan_new_room
+from app.domain.models import Membership, RoomRole, RoomStatus
+from app.domain.rooms import (
+    OnlyAdministratorChangesImageError,
+    RoomNameRequiredError,
+    ensure_can_change_image,
+    plan_new_room,
+    plan_room_image_path,
+)
 
 
 def test_creator_becomes_master_and_admin() -> None:
@@ -50,3 +56,25 @@ def test_game_system_is_optional() -> None:
     """Game system is optional."""
     plan = plan_new_room("Homebrew", None, uuid.uuid4())
     assert plan.room.game_system is None
+
+
+def _member(role: RoomRole, is_admin: bool) -> Membership:
+    return Membership(
+        id=uuid.uuid4(), room_id=uuid.uuid4(), user_id=uuid.uuid4(), role=role, is_admin=is_admin
+    )
+
+
+def test_only_an_administrator_changes_the_room_image() -> None:
+    """Spec 26 Decision 2: the Master alone isn't enough."""
+    ensure_can_change_image(_member(RoomRole.PLAYER, is_admin=True))
+    for role in (RoomRole.MASTER, RoomRole.PLAYER):
+        with pytest.raises(OnlyAdministratorChangesImageError):
+            ensure_can_change_image(_member(role, is_admin=False))
+
+
+def test_room_images_get_a_fresh_path_under_their_own_prefix() -> None:
+    """Spec 26 Decision 4: never the same name twice, never a Document's path."""
+    room_id = uuid.uuid4()
+    first, second = plan_room_image_path(room_id), plan_room_image_path(room_id)
+    assert first.startswith(f"rooms/{room_id}/") and first.endswith(".webp")
+    assert first != second

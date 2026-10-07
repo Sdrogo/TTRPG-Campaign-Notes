@@ -8,9 +8,13 @@ import {
   useCreateInvitation,
   useCreateRoom,
   useDeleteRoom,
+  useImportRoomImage,
   useMyRooms,
+  useRemoveRoomImage,
   useRoom,
   useUpdateRoomSettings,
+  useUploadNewRoomImage,
+  useUploadRoomImage,
 } from '../../hooks/useRooms';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
@@ -38,6 +42,7 @@ describe('useMyRooms', () => {
           status: 'active',
           playersCanCreateDocuments: true,
           defaultVisibility: 'room',
+          imageUrl: null,
         },
         role: 'master',
         isAdmin: true,
@@ -160,6 +165,68 @@ describe('useUpdateRoomSettings', () => {
   });
 });
 
+// Spec 26: the Room's image, the PDF's default cover.
+describe('Room image', () => {
+  const withImage = rawRoom({ image_url: 'http://signed/rooms/room-1/a.webp' });
+
+  it('uploads a file and stores the returned Room', async () => {
+    fetchMock.mockResolvedValue(withImage);
+    const file = new File(['x'], 'cover.png', { type: 'image/png' });
+
+    const { result, queryClient } = renderHookWithProviders(() => useUploadRoomImage('room-1'));
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    const room = await result.current.mutateAsync(file);
+
+    const [path, options] = fetchMock.mock.calls[0] as [
+      string,
+      { method: string; formData: FormData },
+    ];
+    expect(path).toBe('/rooms/room-1/image');
+    expect(options.method).toBe('POST');
+    expect(options.formData.get('file')).toBe(file);
+    expect(room.imageUrl).toBe('http://signed/rooms/room-1/a.webp');
+    expect(queryClient.getQueryData(['rooms', 'room-1'])).toEqual(room);
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'], exact: true }),
+    );
+  });
+
+  it('uploads the image of a Room just created', async () => {
+    fetchMock.mockResolvedValue(withImage);
+    const file = new File(['x'], 'cover.png', { type: 'image/png' });
+
+    const { result, queryClient } = renderHookWithProviders(() => useUploadNewRoomImage());
+    await result.current.mutateAsync({ roomId: 'room-1', file });
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/rooms/room-1/image');
+    expect(queryClient.getQueryData<{ imageUrl: string }>(['rooms', 'room-1'])?.imageUrl).toBe(
+      'http://signed/rooms/room-1/a.webp',
+    );
+  });
+
+  it('imports from a URL', async () => {
+    fetchMock.mockResolvedValue(withImage);
+
+    const { result } = renderHookWithProviders(() => useImportRoomImage('room-1'));
+    await result.current.mutateAsync('https://example.com/a.png');
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/image/from-url', {
+      method: 'POST',
+      json: { url: 'https://example.com/a.png' },
+    });
+  });
+
+  it('removes it', async () => {
+    fetchMock.mockResolvedValue(rawRoom());
+
+    const { result } = renderHookWithProviders(() => useRemoveRoomImage('room-1'));
+    const room = await result.current.mutateAsync();
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/image', { method: 'DELETE' });
+    expect(room.imageUrl).toBeNull();
+  });
+});
+
 describe('useCreateInvitation', () => {
   it('posts the role and maps the expiry field', async () => {
     fetchMock.mockResolvedValue({ code: 'ABC123', role: 'player', expires_at: null });
@@ -185,7 +252,9 @@ describe('useAcceptInvitation', () => {
 
     expect(fetchMock).toHaveBeenCalledWith('/invitations/ABC123/accept', { method: 'POST' });
     expect(room.id).toBe('room-1');
-    await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'] }));
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'] }),
+    );
   });
 
   // The accepted invitation leaves the user's list, and sharing a Room now

@@ -3,7 +3,7 @@ your own, the Master's Room settings, and the Administrator's member
 management."""
 
 import uuid
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel
@@ -20,6 +20,7 @@ from app.db import (
     reads_repo,
     reveals_repo,
     rooms_repo,
+    storage,
     storage_cleanup,
     users_repo,
 )
@@ -70,6 +71,9 @@ class RoomResponse(BaseModel):
     players_can_create_documents: bool
     # The level new Documents, Notes and top-level Comments start at (VR-05).
     default_visibility: DocumentVisibility
+    # The Room's image (spec 26) as a short-lived signed link, never the
+    # Storage path; null without one or when Storage can't sign it right now.
+    image_url: str | None
 
 
 class MyRoomResponse(BaseModel):
@@ -122,9 +126,15 @@ def member_response(
     )
 
 
-def room_to_response(room: Room) -> RoomResponse:
+async def sign_room_images(rooms: Iterable[Room]) -> dict[str, str]:
+    """Signed URLs for the images of `rooms`, in one Storage request. Pass the
+    result to `room_to_response`."""
+    return await storage.signed_urls([room.image_path for room in rooms if room.image_path])
+
+
+def room_to_response(room: Room, image_urls: Mapping[str, str]) -> RoomResponse:
     """Serializes a Room the same way for every route that returns one,
-    invitations included."""
+    invitations included. `image_urls` comes from `sign_room_images`."""
     return RoomResponse(
         id=room.id,
         name=room.name,
@@ -132,7 +142,13 @@ def room_to_response(room: Room) -> RoomResponse:
         status=room.status,
         players_can_create_documents=room.players_can_create_documents,
         default_visibility=room.default_visibility,
+        image_url=image_urls.get(room.image_path) if room.image_path else None,
     )
+
+
+async def signed_room_response(room: Room) -> RoomResponse:
+    """`room_to_response` for a single Room, signing its image."""
+    return room_to_response(room, await sign_room_images([room]))
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -152,16 +168,19 @@ async def create_room(
     await rooms_repo.insert_new_room(session, plan)
     await users_repo.upsert_user(session, plan.room.created_by, current_user.email)
 
-    return room_to_response(plan.room)
+    return room_to_response(plan.room, {})
 
 
 @router.get("")
 async def list_my_rooms(current_user: CurrentUserDep, session: SessionDep) -> list[MyRoomResponse]:
     """FR-R6: the Rooms the caller belongs to, with their role in each."""
     rows = await rooms_repo.list_rooms_for_user(session, uuid.UUID(current_user.id))
+    image_urls = await sign_room_images(room for room, _ in rows)
     return [
         MyRoomResponse(
-            room=room_to_response(room), role=membership.role, is_admin=membership.is_admin
+            room=room_to_response(room, image_urls),
+            role=membership.role,
+            is_admin=membership.is_admin,
         )
         for room, membership in rows
     ]
@@ -180,7 +199,7 @@ async def get_room(
     room = await rooms_repo.get_room(session, room_id)
     if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
-    return room_to_response(room)
+    return await signed_room_response(room)
 
 
 @router.patch("/{room_id}")
@@ -214,7 +233,7 @@ async def update_room_settings(
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
     await rooms_repo.update_room_settings(session, updated)
-    return room_to_response(updated)
+    return await signed_room_response(updated)
 
 
 @router.get("/{room_id}/members")
@@ -350,4 +369,8 @@ async def delete_room(
     exports = await export_jobs_repo.list_paths_in_room(session, room_id)
     if exports:
         await storage_cleanup.schedule_removal(session, exports)
+    # So does the Room's own image (spec 26).
+    room = await rooms_repo.get_room(session, room_id)
+    if room is not None and room.image_path is not None:
+        await storage_cleanup.schedule_removal(session, [room.image_path])
     await rooms_repo.delete_room(session, room_id)

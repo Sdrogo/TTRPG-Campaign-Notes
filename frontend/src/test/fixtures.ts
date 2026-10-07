@@ -10,6 +10,7 @@ export function rawRoom(overrides: Record<string, unknown> = {}) {
     status: 'active',
     players_can_create_documents: true,
     default_visibility: 'room',
+    image_url: null,
     ...overrides,
   };
 }

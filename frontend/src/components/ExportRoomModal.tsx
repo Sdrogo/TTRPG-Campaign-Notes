@@ -125,6 +125,7 @@ export function ExportRoomModal({ opened, onClose, roomId }: ExportRoomModalProp
                 value={pdfOptions}
                 onChange={setPdfOptions}
                 documents={documents.data ?? []}
+                hasRoomImage={Boolean(room.data?.imageUrl)}
               />
             )}
             <TagFilter

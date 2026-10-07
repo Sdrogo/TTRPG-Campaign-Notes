@@ -5,6 +5,7 @@ import uuid
 from dataclasses import dataclass, replace
 
 from app.domain.errors import DomainError
+from app.domain.images import OUTPUT_EXTENSION
 from app.domain.models import DocumentVisibility, Membership, Room, RoomRole, RoomStatus, Tag
 
 # D-14 / FR-N1: default Tags created with every Room. They are also its first
@@ -33,6 +34,16 @@ class OnlyAdministratorChangesDefaultVisibilityError(DomainError):
 
 class InvalidDefaultVisibilityError(DomainError):
     """Selective can't be a default: it needs a list of members."""
+
+
+class OnlyAdministratorChangesImageError(DomainError):
+    """Only an Administrator sets or removes the Room's image (spec 26
+    Decision 2)."""
+
+
+# Room images share the images bucket, under their own prefix so they can
+# never collide with a Document image path ({room_id}/{document_id}/...).
+ROOM_IMAGE_PATH_PREFIX = "rooms"
 
 
 @dataclass(frozen=True)
@@ -118,3 +129,16 @@ def starting_visibility(room: Room, requested: DocumentVisibility | None) -> Doc
     the Room's default. A reply instead starts from its parent's (spec 19),
     which the Comment route decides."""
     return room.default_visibility if requested is None else requested
+
+
+def ensure_can_change_image(requester: Membership) -> None:
+    """Spec 26 Decision 2: the Room's image is the Administrators', like the
+    rest of the setup page's Settings tab."""
+    if not requester.is_admin:
+        raise OnlyAdministratorChangesImageError("errors.room.onlyAdministratorChangesImage")
+
+
+def plan_room_image_path(room_id: uuid.UUID) -> str:
+    """A fresh random name per upload, so a replaced image never serves a
+    stale cached copy under the same URL (as avatars do)."""
+    return f"{ROOM_IMAGE_PATH_PREFIX}/{room_id}/{uuid.uuid4()}{OUTPUT_EXTENSION}"

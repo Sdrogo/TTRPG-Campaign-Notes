@@ -143,7 +143,12 @@
       "title": "Crea una Stanza",
       "namePlaceholder": "Es. La Maledizione di Strahd",
       "gameSystem": "Sistema di gioco",
-      "gameSystemPlaceholder": "Es. D&D 5e (opzionale)"
+      "gameSystemPlaceholder": "Es. D&D 5e (opzionale)",
+      "image": "Immagine (facoltativa)",
+      "chooseImage": "Scegli immagine",
+      "changeImage": "Cambia immagine",
+      "imageHint": "La copertina del PDF della Stanza. Puoi cambiarla dopo dalle impostazioni della Stanza.",
+      "imageFailed": "La Stanza è stata creata, ma non è stato possibile salvarne l'immagine ({{reason}}). Puoi impostarla dalle impostazioni della Stanza."
     },
     "setup": "Impostazioni",
     "actions": "Azioni per la Stanza {{name}}",
@@ -152,6 +157,9 @@
       "confirmBody": "I tuoi Documenti, Commenti e Note restano nella Stanza. Per rientrare ti servirà un nuovo invito.",
       "adminHint": "Sei un Amministratore: se sei l'ultimo, nomina prima un altro Amministratore dalle Impostazioni della Stanza.",
       "left": "Hai lasciato \"{{name}}\""
+    },
+    "image": {
+      "alt": "Immagine della Stanza"
     }
   },
   "invite": {
@@ -280,6 +288,12 @@
       "comment": "Commento in {{document}}",
       "recipients": "Ora lo vedono: {{names}}",
       "selective": "Scelti: {{names}}"
+    },
+    "roomImage": {
+      "title": "Immagine della Stanza",
+      "description": "La copertina predefinita del PDF della Stanza. Chi esporta può comunque scegliere l'immagine di un Documento o nessuna.",
+      "upload": "Carica immagine",
+      "hint": "PNG, JPEG, WebP o GIF. Ridimensionata automaticamente, senza ritagli."
     }
   },
   "documents": {
@@ -653,7 +667,9 @@
       },
       "downloadNamed": "Scarica il PDF {{name}}",
       "dismiss": "Nascondi",
-      "dismissNamed": "Nascondi il PDF {{name}}"
+      "dismissNamed": "Nascondi il PDF {{name}}",
+      "coverRoom": "Immagine della Stanza",
+      "coverHintRoom": "La copertina usa l'immagine della Stanza, o l'immagine preferita del Documento scelto."
     }
   }
 }

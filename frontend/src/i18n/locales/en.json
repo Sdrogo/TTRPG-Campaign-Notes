@@ -143,7 +143,12 @@
       "title": "Create a Room",
       "namePlaceholder": "E.g. Curse of Strahd",
       "gameSystem": "Game system",
-      "gameSystemPlaceholder": "E.g. D&D 5e (optional)"
+      "gameSystemPlaceholder": "E.g. D&D 5e (optional)",
+      "image": "Image (optional)",
+      "chooseImage": "Choose image",
+      "changeImage": "Change image",
+      "imageHint": "The cover of the Room PDF. You can change it later from the Room setup.",
+      "imageFailed": "The Room was created, but its image could not be saved ({{reason}}). You can set it from the Room setup."
     },
     "setup": "Setup",
     "actions": "Room actions for {{name}}",
@@ -152,6 +157,9 @@
       "confirmBody": "Your Documents, Comments and Notes stay in the Room. You will need a new invite to come back.",
       "adminHint": "You are an Administrator: if you are the last one, name another Administrator from the Room setup first.",
       "left": "You left \"{{name}}\""
+    },
+    "image": {
+      "alt": "Room image"
     }
   },
   "invite": {
@@ -280,6 +288,12 @@
       "comment": "Comment in {{document}}",
       "recipients": "Now seen by: {{names}}",
       "selective": "Chosen: {{names}}"
+    },
+    "roomImage": {
+      "title": "Room image",
+      "description": "The default cover of the Room PDF. Whoever exports can still pick a Document's image or none.",
+      "upload": "Upload image",
+      "hint": "PNG, JPEG, WebP or GIF. Resized automatically, not cropped."
     }
   },
   "documents": {
@@ -653,7 +667,9 @@
       },
       "downloadNamed": "Download the PDF {{name}}",
       "dismiss": "Hide",
-      "dismissNamed": "Hide the PDF {{name}}"
+      "dismissNamed": "Hide the PDF {{name}}",
+      "coverRoom": "Room image",
+      "coverHintRoom": "The cover uses the Room image, or the favorite image of the chosen Document."
     }
   }
 }

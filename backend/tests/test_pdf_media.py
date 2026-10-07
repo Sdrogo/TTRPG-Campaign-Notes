@@ -111,12 +111,16 @@ def test_options_survive_the_trip_through_the_jobs_json() -> None:
         tag_ids=(uuid.uuid4(), uuid.uuid4()),
         locale="it",
         view_as_user_id=uuid.uuid4(),
+        room_cover=True,
     )
     bare = replace(options, cover_document_id=None, tag_ids=(), view_as_user_id=None)
 
     assert PdfOptions.from_json(options.to_json()) == options
     assert PdfOptions.from_json(bare.to_json()) == bare
     assert bare.to_json()["cover_document_id"] is None
+    # A job stored before spec 26 has no `room_cover`: it was made without one.
+    stored = {key: value for key, value in options.to_json().items() if key != "room_cover"}
+    assert PdfOptions.from_json(stored).room_cover is False
 
 
 def test_a_jobs_file_has_a_private_prefix_of_its_own() -> None:

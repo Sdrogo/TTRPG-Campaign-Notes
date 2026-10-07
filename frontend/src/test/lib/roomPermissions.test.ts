@@ -11,6 +11,7 @@ const room = (playersCanCreateDocuments: boolean): Room => ({
   gameSystem: null,
   status: 'active',
   defaultVisibility: 'room',
+  imageUrl: null,
   playersCanCreateDocuments,
 });
 

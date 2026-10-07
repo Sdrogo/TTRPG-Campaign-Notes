@@ -15,24 +15,33 @@ export const PDF_STYLES: PdfStyle[] = ['gothic', 'modern', 'print'];
 /** The page sizes in the order the dialog offers them. */
 export const PDF_PAGE_SIZES: PdfPageSize[] = ['A4', 'Letter'];
 
-/** What the requester chooses for a PDF. `coverDocumentId` null = no cover image. */
+/**
+ * What the requester chooses for a PDF. The cover is the favorite image of
+ * `coverDocumentId` when set, otherwise the Room's image when `roomCover` is on
+ * (spec 26 Decision 5), otherwise none.
+ */
 export interface PdfExportOptions {
   style: PdfStyle;
   pageSize: PdfPageSize;
   includeComments: boolean;
   includeAttachments: boolean;
   coverDocumentId: string | null;
+  roomCover: boolean;
   /** Only the Documents carrying all of these Tags; none = the whole Room. */
   tagIds: string[];
 }
 
-/** The dialog's starting choices: Gothic, A4, nothing optional (spec 23b Decisions 2 and 7). */
+/**
+ * The dialog's starting choices: Gothic, A4, nothing optional (spec 23b
+ * Decisions 2 and 7), the Room's image as the cover (spec 26).
+ */
 export const DEFAULT_PDF_OPTIONS: PdfExportOptions = {
   style: 'gothic',
   pageSize: 'A4',
   includeComments: false,
   includeAttachments: false,
   coverDocumentId: null,
+  roomCover: true,
   tagIds: [],
 };
 
@@ -88,6 +97,7 @@ export function pdfRequestBody(options: PdfExportOptions, viewAsUserId: string |
     include_comments: options.includeComments,
     include_attachments: options.includeAttachments,
     cover_document_id: options.coverDocumentId,
+    room_cover: options.roomCover,
     tag_ids: options.tagIds,
     view_as_user_id: viewAsUserId,
   };
@@ -124,6 +134,9 @@ export function pdfPollInterval(
   );
   return waiting ? PDF_POLL_INTERVAL_MS : false;
 }
+
+/** The cover field's value for the Room's image (spec 26); Document ids are UUIDs, so it can't clash. */
+export const ROOM_COVER = 'room';
 
 /**
  * The Documents offered as the cover: only those with an image, since the

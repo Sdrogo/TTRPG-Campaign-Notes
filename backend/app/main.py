@@ -24,6 +24,7 @@ from app.api.main_items import router as main_items_router
 from app.api.mentions import router as mentions_router
 from app.api.notes import router as notes_router
 from app.api.reveals import router as reveals_router
+from app.api.room_image import router as room_image_router
 from app.api.rooms import router as rooms_router
 from app.api.search import router as search_router
 from app.api.tags import router as tags_router
@@ -68,6 +69,7 @@ add_cors(app, settings)
 app.include_router(auth_router)
 app.include_router(account_router)
 app.include_router(rooms_router)
+app.include_router(room_image_router)
 app.include_router(invitations_router)
 app.include_router(tags_router)
 app.include_router(main_items_router)

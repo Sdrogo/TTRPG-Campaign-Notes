@@ -1,6 +1,6 @@
 """Keeps Supabase Storage in step with the rows that reference its objects
 (`document_images.storage_path`, `document_files.storage_path`,
-`users.avatar_path`) when a transaction
+`users.avatar_path`, `rooms.image_path`) when a transaction
 fails. Storage isn't part of the Postgres transaction, so every object that
 might end up unreferenced gets a `storage_cleanup` row first:
 
@@ -27,7 +27,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import session as session_module
 from app.db import storage
-from app.db.models import DocumentFileRow, DocumentImageRow, StorageCleanupRow, UserRow
+from app.db.models import (
+    DocumentFileRow,
+    DocumentImageRow,
+    RoomRow,
+    StorageCleanupRow,
+    UserRow,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +86,7 @@ async def _remove_scheduled(session: AsyncSession) -> None:
 
 async def _referenced(session: AsyncSession, paths: Collection[str]) -> set[str]:
     """Which of `paths` a row still points at, as a Document image, a PDF
-    Attachment or an avatar. Those objects must stay."""
+    Attachment, an avatar or a Room image. Those objects must stay."""
     images = await session.execute(
         select(DocumentImageRow.storage_path).where(DocumentImageRow.storage_path.in_(paths))
     )
@@ -90,9 +96,17 @@ async def _referenced(session: AsyncSession, paths: Collection[str]) -> set[str]
     avatars = await session.execute(
         select(UserRow.avatar_path).where(UserRow.avatar_path.in_(paths))
     )
+    room_images = await session.execute(
+        select(RoomRow.image_path).where(RoomRow.image_path.in_(paths))
+    )
     return {
         path
-        for path in [*images.scalars(), *files.scalars(), *avatars.scalars()]
+        for path in [
+            *images.scalars(),
+            *files.scalars(),
+            *avatars.scalars(),
+            *room_images.scalars(),
+        ]
         if path is not None
     }
 

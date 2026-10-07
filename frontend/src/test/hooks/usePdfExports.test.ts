@@ -89,6 +89,7 @@ describe('useStartPdfExport', () => {
         include_comments: false,
         include_attachments: false,
         cover_document_id: null,
+        room_cover: true,
         tag_ids: ['t1'],
         view_as_user_id: null,
       },
