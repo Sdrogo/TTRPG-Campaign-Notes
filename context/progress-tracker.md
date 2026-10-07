@@ -110,6 +110,14 @@ the Render API on the existing one).
 backend and Vite only read `.env` by default, so those must be loaded
 explicitly (`architecture.md` → Local env files).
 
+**Production backend on a VPS (2026-10-07, proposal only)**: at the product
+owner's request, `context/vps-migration-plan.md` plans moving production off
+Render onto a VPS running the backend image (staging stays on Render, the
+database on Supabase): costs, VPS setup, a GHCR + SSH deploy on `main`,
+secrets, monitoring and a DNS cutover with both running in parallel. Waiting
+on the product owner's answers to its Open questions (domain, current Render
+plan, provider). Nothing changed in any environment.
+
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
