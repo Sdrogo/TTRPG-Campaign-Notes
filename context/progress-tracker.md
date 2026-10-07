@@ -114,6 +114,13 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room image on the Room card (2026-10-07)
+
+- Product owner's follow-up to spec 26: a `RoomCard` with an image shows it on
+  its right half like a `DocumentCard` (same `DocumentCardImages`, cropped,
+  fading into the card), with the card at least 160/180px tall and the setup,
+  invite and menu buttons on a `--bg-base` backing so they read on the image.
+
 ### Room image (spec 26, 2026-10-07)
 
 - Backend: `rooms.image_path` (migration `e9b4c2d7a1f6`), `POST/DELETE
