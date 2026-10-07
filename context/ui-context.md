@@ -174,12 +174,13 @@ other icon set.
 - **Account page** (`/account`, `pages/AccountPage.tsx`): page title +
   one-line subtitle, then titled `PageCard`s (`AccountSection`),
   centered and full width like the Document page (changed 2026-09-22;
-  it was a 720px left-aligned column). "Profilo": `AvatarEditor` (112px
-  avatar; "Carica foto", "Da URL" popover, "Rimuovi" — each applies
-  immediately) and `ProfileForm` (Nome visualizzato, Pronomi,
+  it was a 720px left-aligned column). "Profilo": `AvatarEditor` (200px
+  avatar centered, with "Carica foto", "Da URL" popover, "Rimuovi" in a
+  centered row under it and the format hint below — each applies
+  immediately; changed 2026-10-07) and `ProfileForm` (Nome visualizzato, Pronomi,
   Descrizione with a character counter; "Annulla modifiche" / "Salva
   profilo" enabled only when the form is dirty, success toast on
-  save). From `md` up the avatar is a left column (4/12, 3/12 at `lg`)
+  save). From `md` up the avatar is a left column (4/12)
   beside the form, so fields don't stretch across the whole card; below
   `md` they stack with a divider. "Accesso": the account email,
   read-only, with a generic envelope and provider-neutral description

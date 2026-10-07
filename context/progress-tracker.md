@@ -103,6 +103,15 @@ explicitly (`architecture.md` → Local env files).
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Account page, Avatar block (2026-10-07)
+
+- Product owner's request with a screenshot of the target: in the Profile
+  card the avatar is now 200px (was 112px) and centered in its column, with
+  "Carica foto", "Da URL" and "Rimuovi" in a centered row under it and the
+  format hint below. The avatar column is 4/12 from `md` up (it was 3/12 at
+  `lg`). Behavior unchanged. Not spec 25b, which is still to do and proposes
+  a smaller avatar: reconcile its Decision 3 with this when 25b is built.
+
 ### Room PDF, comments and drop cap fixes (2026-10-06)
 
 - Product owner's request, three fixes in the Room PDF. Only Comments written
