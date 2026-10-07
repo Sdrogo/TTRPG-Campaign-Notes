@@ -39,7 +39,6 @@ LABELS = ManualLabels(
     documents="Documents",
     comments="Comments",
     unknown_member="Unknown member",
-    deleted_comment="(deleted)",
     played_by="{character} (played by {player})",
     page_abbreviation="p.",
 )

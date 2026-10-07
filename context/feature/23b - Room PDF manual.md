@@ -11,7 +11,7 @@
    - **one chapter per Main item** of the Room (single Tags and combinations, in the order of the Documents list); Documents in no Main item go in a last "Other" chapter. A Document in several items is printed once, in its first chapter, and referenced from the others ("→ p. 12");
    - **one section per Document**: favorite image, description, its Notes as **paragraphs after the description**, each under its title (product owner, 2026-10-06; boxed sidebars before); each Document on its own pages, except that two short Documents of a chapter that fit on one page together share it (product owner, 2026-10-06);
    - a closing **glossary of the Documents' names**, A–Z by initial letter, each with its Tags and page number (product owner, 2026-10-06; it replaced the index of Tags).
-2. **Comments**: left out by default; an option adds them as an appendix per Document.
+2. **Comments**: left out by default; an option adds them as an appendix per Document. Only Comments written as a Character are printed; one written as oneself and a deleted one never are (product owner, 2026-10-06).
 3. **Mentions** become internal links with a page reference ("Drago Rosso → p. 12"); a mention of something not in the PDF stays plain text.
 4. **Styles**: presets, built in this order:
    - **Gothic** (the first one, product owner's choice 2026-10-02), inspired by the look of *Vampire: The Masquerade* manuals: black and deep blood-red accents, a full-bleed dark cover, distressed serif headings, red rules and drop caps, quotes set in italic sidebars, white pages for the body so it stays readable and printable. **Inspired by, never copied**: no logos, trademarked symbols, artwork or proprietary fonts from the game; only open-licensed fonts and original ornaments in the repo;

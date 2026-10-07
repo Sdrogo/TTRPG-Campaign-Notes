@@ -18,10 +18,12 @@ from manual_fixtures import (
     CASTLE,
     IRENA,
     LABELS,
+    NPC,
     PLACE,
     comment,
     document,
     make_export,
+    mention,
     text,
     uid,
 )
@@ -29,6 +31,7 @@ from pypdf import PdfReader
 
 from app.domain.export import ExportImage
 from app.domain.manual import Manual, ManualOptions, build_manual
+from app.domain.mentions import MentionKind
 from app.pdf.labels import manual_labels
 from app.pdf.render import (
     ASSETS_DIR,
@@ -92,7 +95,7 @@ def test_text_is_escaped_and_paragraphs_stay_on_one_line() -> None:
                 CASTLE,
                 "A & B",
                 description=(text("one <b>two</b>\n\nthree"),),
-                comments=(comment(1, ALICE, "<i>x</i>"),),
+                comments=(comment(1, ALICE, "<i>x</i>", as_character=IRENA),),
             )
         ],
     )
@@ -165,7 +168,7 @@ def test_comments_close_a_document_as_boxed_sidebars() -> None:
     box (the look Notes had before, product owner 2026-10-06)."""
     export = make_export()
     castle, *others = export.documents
-    castle = replace(castle, comments=(comment(1, ALICE, "Creepy."),))
+    castle = replace(castle, comments=(comment(1, ALICE, "Creepy.", as_character=IRENA),))
     export = replace(export, documents=[castle, *others])
     manual = build_manual(export, ManualOptions(include_comments=True), LABELS)
     html = render_manual_html(manual, ManualStyle.GOTHIC, PageSize.A4)
@@ -177,6 +180,25 @@ def test_comments_close_a_document_as_boxed_sidebars() -> None:
         css = (ASSETS_DIR / "styles" / f"{style.value}.css").read_text(encoding="utf-8")
         box = re.search(r"^\.comment\s*\{([^}]*)\}", css, re.M)
         assert box is not None and "border" in box.group(1), style
+        # A long Comment flows into the space left on the page instead of
+        # jumping to the next one (product owner, 2026-10-06).
+        assert not re.search(r"\.comment\s*\{[^}]*break-inside:\s*avoid", css), style
+
+
+def test_the_drop_cap_is_left_out_when_the_description_opens_with_a_mention() -> None:
+    """A "#Tag" opening would put "#G" in the initial (product owner, 2026-10-06)."""
+    export = make_export()
+    castle, irena, *others = export.documents
+    irena = replace(irena, description=(mention(MentionKind.TAG, NPC, "Ghoul"), text(" bites.")))
+    export = replace(export, documents=[castle, irena, *others])
+    html = render_manual_html(
+        build_manual(export, ManualOptions(), LABELS), ManualStyle.GOTHIC, PageSize.A4
+    )
+
+    assert '<div class="description drop-cap">\n      <p>Ruled by' in html
+    assert '<div class="description">\n      <p>#Ghoul bites.' in html
+    gothic = (ASSETS_DIR / "styles" / "gothic.css").read_text(encoding="utf-8")
+    assert ".description.drop-cap p:first-child::first-letter" in gothic
 
 
 @pytest.mark.parametrize("style", list(ManualStyle))

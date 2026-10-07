@@ -66,7 +66,7 @@
   <article class="document{% if entry.id in shared %} shares-page{% endif %}" id="{{ entry.anchor }}">
     <h2 class="document-title">{{ entry.name }}</h2>
     {% if entry.image_url %}<figure class="document-image"><img src="{{ entry.image_url }}" alt=""></figure>{% endif %}
-    <div class="description">
+    <div class="description{% if entry.drop_cap %} drop-cap{% endif %}">
       {{ paragraphs(entry.paragraphs) }}
     </div>
     {% for note in entry.notes %}
@@ -81,7 +81,7 @@
       {% for comment in entry.comments %}
       <div class="comment depth-{{ [comment.depth, 3] | min }}">
         <p class="comment-meta"><strong>{{ comment.author }}</strong> · {{ comment.written_on.isoformat() }}</p>
-        {% if comment.deleted %}<p class="deleted">{{ manual.labels.deleted_comment }}</p>{% else %}{{ paragraphs(comment.paragraphs) }}{% endif %}
+        {{ paragraphs(comment.paragraphs) }}
       </div>
       {% endfor %}
     </section>

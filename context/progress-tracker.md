@@ -9,6 +9,16 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-06)
 
+**Features 12 to 24 are all built except 23c (Agent access tokens), which the
+product owner dropped on 2026-10-06** (FR-G2 not built; the ticket stays in
+`context/feature/` marked dropped). The two small tickets planned after 24
+(default Tags in the creator's language, read-only members list) are still
+open, not written yet; their place relative to feature 25 is to confirm. **Next: feature 25, a compact UI/UX
+refactor** (tickets written 2026-10-06): `25 - Compact layout` (density rules
+for every page), `25b - Compact Account page` (cards in columns), `25c - Room
+setup Tags and rename` (one Tags section, rename a Tag, create one there),
+built in that order.
+
 **Migrations `a2e6c9f4b8d1` (version history, spec 24_1) and `c7d3e9a1f5b2`
 (whole-Document history, spec 24b) applied to the production database by hand
 on 2026-10-06** by the product owner, before the release (`.env` loaded,
@@ -82,6 +92,18 @@ explicitly (`architecture.md` → Local env files).
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Room PDF, comments and drop cap fixes (2026-10-06)
+
+- Product owner's request, three fixes in the Room PDF. Only Comments written
+  as a Character reach the appendix: a Comment written as oneself and a
+  deleted one are left out, and a printed reply to one of them takes its
+  place in the thread (`_comment_thread`; the `deletedComment` label is gone).
+  A long Comment no longer has `break-inside: avoid`, so it flows into the
+  space left on the page instead of jumping to the next one. A description
+  that opens with a `#` or `@` mention gets no drop cap
+  (`ManualDocument.drop_cap`, `.description.drop-cap` in gothic.css): the
+  initial took "#G" together.
 
 ### Room PDF, two short Documents share a page (2026-10-06)
 
@@ -1371,6 +1393,16 @@ Reorganized with the product owner on 2026-10-03.
     (13_1c).
   A Playwright script for the parts that can be automated is possible on
   request.
+- **Compact UI/UX refactor (feature 25, product owner 2026-10-06)**: the
+  Account page with more compact cards, the Room setup's Tags section
+  reworked with Tag rename, and a more compact, less dispersive design
+  overall. One feature, three tickets, in order: `25 - Compact layout`
+  (theme defaults, spacing, `CompactList`, columns on wide screens),
+  `25b - Compact Account page`, `25c - Room setup Tags and rename` (backend
+  `PATCH` for the rename plus the new section). Each ticket's Decisions are
+  proposals to confirm in its PR, except 25c Decision 3, confirmed by the
+  product owner on 2026-10-06: Grouping saves on every change, no "Save
+  order" button.
 - **Build order (product owner, 2026-10-02, confirmed 2026-10-03)**: one
   feature at a time, each closed with all its sub-tickets: 21 → 22 (with
   22b) → 23 (with 23b, 23c) → 24, then the two small tickets below.
@@ -1385,9 +1417,9 @@ Reorganized with the product owner on 2026-10-03.
     merged into `staging` (2026-10-03).
   - **Room export (spec 23)**: `23 - Room export` (JSON + Markdown,
     per-viewer), `23b - Room PDF manual` (WeasyPrint in a background job;
-    check Render can install Pango first), `23c - Agent access tokens`
-    (FR-G2). The open decisions of 23 and 23c are prepared when their turn
-    comes.
+    check Render can install Pango first). **Done.** `23c - Agent access
+    tokens` (FR-G2) was **dropped by the product owner on 2026-10-06** (not
+    postponed: skip it entirely).
   - **Version history (spec 24)**: `24 - Version history`.
   - **Default Tags in the creator's language** (decided 2026-10-03: yes,
     the creator's UI language at creation time). Small ticket, after 24.
