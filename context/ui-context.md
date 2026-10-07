@@ -388,6 +388,11 @@ other icon set.
   request), by the Document detail page too. Needs the same
   `zIndex: 2` treatment as the carousel controls above, since it sits above
   the card's overlay link too.
+- **Room card image** (`RoomCard`, 2026-10-07, spec 26): a Room with an
+  image shows it on the card's right half through `DocumentCardImages`,
+  cropped and fading into the card like a Document card's, with the card at
+  least 160px (180px from `sm`) tall. The setup, invite and menu buttons sit
+  on a `--bg-base` backing so they stay readable on a light image.
 - **Documents list Tag filter** (`TagFilter`, 2026-09-22): a searchable,
   clearable `MultiSelect` with a `Funnel` icon above the grid (max 480px
   from `sm` up), options shown as `#Tag`. It is bound to the URL
@@ -503,7 +508,7 @@ color per icon.
 ## Room setup page (spec 11)
 
 `/rooms/:roomId/setup` (`RoomSetupPage`, 2026-09-30), opened from the
-"Impostazioni" button on a `RoomCard`. A `RoomCard` whose Room has an image (spec 26) shows it on its right half like a `DocumentCard`, fading into the card, with its buttons on a `--bg-base` backing. The button, and the page, are for
+"Impostazioni" button on a `RoomCard`. The button, and the page, are for
 Administrators of that Room only; anyone else who reaches the URL gets a
 full-page "Solo un Amministratore…" message with a way back (the backend
 enforces the same on every write). It has two sections under a `Title`

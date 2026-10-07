@@ -57,7 +57,7 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         <Stack
           gap={4}
-          // Above the image, which is positioned and would otherwise paint over it.
+          // Positioned so it paints over the image panel, which is positioned too.
           pos="relative"
           w={imageUrl ? 'calc(50% - var(--mantine-spacing-sm))' : undefined}
           style={{ minWidth: 0 }}
