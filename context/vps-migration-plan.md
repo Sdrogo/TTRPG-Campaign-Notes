@@ -127,7 +127,9 @@ One-time, by hand (or as a short `cloud-init` file kept outside the repo).
   Traefik works too but needs more configuration for one service. The
   certificate is issued when DNS points at the VPS; for the parallel run (§9),
   where DNS still points at Render, use a second name (`api-vps.<domain>`) so
-  Caddy can get a certificate and the VPS can be tested end to end.
+  Caddy can get a certificate and the VPS can be tested end to end. Keep that
+  name in the Caddyfile (`api.<domain>, api-vps.<domain> { … }`) and in DNS for
+  good: the deploy's health gate uses it (§5).
 - **Request size and timeouts**: Caddy sets no request-body limit by default,
   so uploads behave as on Render, and long Room PDF renders run as background
   jobs, so no special timeout is needed.
@@ -179,8 +181,13 @@ CI) → release PR `staging` → `main`. Only what happens on `main` changes.
 3. **Deploy**: the same workflow SSHes into the VPS (a dedicated deploy key,
    restricted to the `deploy` user) and runs
    `BACKEND_TAG=<sha> docker compose pull backend && docker compose up -d backend`,
-   then polls `https://api.<domain>/health` until it returns 200 (fail the
-   workflow, and alert, if it doesn't within ~60 s). The previous SHA is
+   then, over the same SSH session, waits until the new container reports
+   `healthy` (`docker compose ps backend`, driven by the healthcheck in §4) and
+   `curl -fsS https://api-vps.<domain>/health` returns 200 (fail the workflow,
+   and alert, if not within ~60 s). The gate must **not** poll
+   `api.<domain>`: before the cutover and after a DNS rollback that name points
+   at Render, so it would pass while the VPS is broken. `api-vps.<domain>`
+   keeps pointing at the VPS permanently for this reason. The previous SHA is
    written to a file on the server so a rollback is one command
    (`BACKEND_TAG=<previous> docker compose up -d backend`), or a manual re-run
    of the workflow on an older commit.
