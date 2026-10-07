@@ -15,7 +15,10 @@ Room can have an image, set in the create dialog or on the setup page
 **migration `e9b4c2d7a1f6`** (`rooms.image_path`). **Applied to the staging
 database by hand on 2026-10-07** (`.env.staging` exported, `alembic upgrade
 head`: `c7d3e9a1f5b2` → `e9b4c2d7a1f6`, confirmed with `alembic current`).
-**Still pending on production**: apply it before the next release to `main`.
+**Applied to the production database by hand on 2026-10-07** too (`.env`
+exported, run from a worktree of `origin/staging`, same step, confirmed with
+`alembic current`): no pending migrations, and the next release to `main`
+needs no migration step for it.
 
 **Spec 25c (Room setup Tags and rename) built on 2026-10-07, ahead of 25 and
 25b** at the product owner's request ("refactor the Tags section like the
@@ -42,8 +45,7 @@ built in that order.
 on 2026-10-06** by the product owner, before the release (`.env` loaded,
 `alembic upgrade`: `d9a4f1c7e3b5` → `a2e6c9f4b8d1` → `c7d3e9a1f5b2`). Production
 and staging were both at `c7d3e9a1f5b2` (checked with `alembic current` on
-each) at that point; since 2026-10-07 staging is at `e9b4c2d7a1f6` (spec 26) and
-production is one migration behind.
+each) at that point; since 2026-10-07 both are at `e9b4c2d7a1f6` (spec 26).
 
 **Whole-Document history (spec 24b, 2026-10-06)** carries **migration
 `c7d3e9a1f5b2`** (folds `note_versions` into `document_versions.notes` and
