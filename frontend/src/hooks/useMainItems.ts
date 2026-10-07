@@ -30,13 +30,18 @@ export function useMainItems(roomId: string, enabled: boolean) {
 }
 
 /**
- * Replaces the Room's Main items (Administrator only). The answer is the
- * saved list, stored in the cache; the Tags' own `mainPosition` changed too,
- * so that list is refetched.
+ * Replaces the Room's Main items (Administrator only). Spec 25c saves on every
+ * change, so the new list goes into the cache before the request (optimistic)
+ * and comes back out if it fails, with the server's list refetched. The
+ * requests share a scope, so they run one at a time in the order they were
+ * made and the last list on screen is the last one saved. The Tags' own
+ * `mainPosition` changes too, so that list is refetched after a save.
  */
 export function useSetMainItems(roomId: string) {
   const queryClient = useQueryClient();
+  const queryKey = mainItemsQueryKey(roomId);
   return useMutation({
+    scope: { id: `main-items-${roomId}` },
     mutationFn: async (items: MainItem[]) =>
       (
         await apiFetch<RawMainItem[]>(`/rooms/${roomId}/tags/main`, {
@@ -44,9 +49,20 @@ export function useSetMainItems(roomId: string) {
           json: { items: items.map((item) => ({ tag_ids: item.tagIds })) },
         })
       ).map(toMainItem),
-    onSuccess: (items) => {
-      queryClient.setQueryData(mainItemsQueryKey(roomId), items);
-      void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'tags'] });
+    onMutate: async (items) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<MainItem[]>(queryKey);
+      queryClient.setQueryData(queryKey, items);
+      return { previous };
+    },
+    onError: (_error, _items, context) => {
+      queryClient.setQueryData(queryKey, context?.previous);
+      void queryClient.invalidateQueries({ queryKey });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['rooms', roomId, 'tags'],
+      });
     },
   });
 }

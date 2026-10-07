@@ -312,3 +312,22 @@ html body[data-scroll-locked] {
     animation-duration: 0.01ms;
   }
 }
+
+/* Spec 25: a list as one bordered box with thin dividers (`CompactList`). */
+.compact-list {
+  list-style: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.compact-list-item {
+  border-top: 1px solid var(--border-default);
+  margin-top: -1px;
+  min-width: 0;
+}
+
+.compact-list-item:hover {
+  background: var(--bg-raised);
+}

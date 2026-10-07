@@ -44,6 +44,35 @@ export function useCreateTag(roomId: string) {
 }
 
 /**
+ * Renames a Tag (Administrator or Master, spec 25c). The answer replaces the
+ * Tag in the cached list at once, so every screen resolving names from it -
+ * the setup page's groups, the Documents page's filter and groups, mention
+ * tokens - shows the new name without a reload. The Documents and search
+ * queries embed Tag names in places, so they are refetched too. The backend
+ * answers 409 for a name another Tag has and 422 for a blank one.
+ */
+export function useRenameTag(roomId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { tagId: string; name: string }) =>
+      toTag(
+        await apiFetch<RawTag>(`/rooms/${roomId}/tags/${input.tagId}`, {
+          method: 'PATCH',
+          json: { name: input.name },
+        }),
+      ),
+    onSuccess: (renamed) => {
+      queryClient.setQueryData<Tag[]>(tagsQueryKey(roomId), (tags) =>
+        tags?.map((tag) => (tag.id === renamed.id ? renamed : tag)),
+      );
+      void queryClient.invalidateQueries({
+        queryKey: ['rooms', roomId, 'documents'],
+      });
+    },
+  });
+}
+
+/**
  * Deletes a Tag (Administrator or Master, spec 13). The backend also drops it
  * from the Main items and shrinks or removes the combinations that held it,
  * and Documents lose their link to it, so the Tags, the Main items and every
@@ -53,12 +82,18 @@ export function useDeleteTag(roomId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (tagId: string) => {
-      await apiFetch<void>(`/rooms/${roomId}/tags/${tagId}`, { method: 'DELETE' });
+      await apiFetch<void>(`/rooms/${roomId}/tags/${tagId}`, {
+        method: 'DELETE',
+      });
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: tagsQueryKey(roomId) });
-      void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'main-items'] });
-      void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'documents'] });
+      void queryClient.invalidateQueries({
+        queryKey: ['rooms', roomId, 'main-items'],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['rooms', roomId, 'documents'],
+      });
     },
   });
 }
