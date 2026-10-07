@@ -503,7 +503,7 @@ color per icon.
 ## Room setup page (spec 11)
 
 `/rooms/:roomId/setup` (`RoomSetupPage`, 2026-09-30), opened from the
-"Impostazioni" button on a `RoomCard`. The button, and the page, are for
+"Impostazioni" button on a `RoomCard`. A `RoomCard` whose Room has an image (spec 26) shows it on its right half like a `DocumentCard`, fading into the card, with its buttons on a `--bg-base` backing. The button, and the page, are for
 Administrators of that Room only; anyone else who reaches the URL gets a
 full-page "Solo un Amministratore…" message with a way back (the backend
 enforces the same on every write). It has two sections under a `Title`
