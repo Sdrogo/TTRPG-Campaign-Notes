@@ -252,9 +252,7 @@ describe('useAcceptInvitation', () => {
 
     expect(fetchMock).toHaveBeenCalledWith('/invitations/ABC123/accept', { method: 'POST' });
     expect(room.id).toBe('room-1');
-    await waitFor(() =>
-      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'] }),
-    );
+    await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'] }));
   });
 
   // The accepted invitation leaves the user's list, and sharing a Room now

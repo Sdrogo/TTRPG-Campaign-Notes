@@ -120,22 +120,14 @@ function useApplyRoom(roomId: string) {
   const queryClient = useQueryClient();
   return (room: Room) => {
     queryClient.setQueryData(['rooms', roomId], room);
-    void queryClient.invalidateQueries({
-      queryKey: ROOMS_QUERY_KEY,
-      exact: true,
-    });
+    void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY, exact: true });
   };
 }
 
 async function uploadRoomImage(roomId: string, file: File): Promise<Room> {
   const formData = new FormData();
   formData.append('file', file);
-  return toRoom(
-    await apiFetch<RawRoom>(`/rooms/${roomId}/image`, {
-      method: 'POST',
-      formData,
-    }),
-  );
+  return toRoom(await apiFetch<RawRoom>(`/rooms/${roomId}/image`, { method: 'POST', formData }));
 }
 
 /** Replaces the Room's image with an uploaded file (Administrators only, spec 26). */
@@ -158,10 +150,7 @@ export function useUploadNewRoomImage() {
     mutationFn: ({ roomId, file }: { roomId: string; file: File }) => uploadRoomImage(roomId, file),
     onSuccess: (room: Room) => {
       queryClient.setQueryData(['rooms', room.id], room);
-      void queryClient.invalidateQueries({
-        queryKey: ROOMS_QUERY_KEY,
-        exact: true,
-      });
+      void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY, exact: true });
     },
   });
 }
@@ -213,16 +202,10 @@ export function useAcceptInvitation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (code: string) =>
-      toRoom(
-        await apiFetch<RawRoom>(`/invitations/${code}/accept`, {
-          method: 'POST',
-        }),
-      ),
+      toRoom(await apiFetch<RawRoom>(`/invitations/${code}/accept`, { method: 'POST' })),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY });
-      void queryClient.invalidateQueries({
-        queryKey: MY_INVITATIONS_QUERY_KEY,
-      });
+      void queryClient.invalidateQueries({ queryKey: MY_INVITATIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: FRIENDS_QUERY_KEY });
     },
   });

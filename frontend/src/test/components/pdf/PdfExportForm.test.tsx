@@ -43,9 +43,7 @@ describe('PdfExportForm', () => {
     ]);
     expect(screen.getByRole('radio', { name: /Gotico/ })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'A4' })).toBeChecked();
-    expect(
-      screen.getByRole('checkbox', { name: 'Includi i Commenti in appendice' }),
-    ).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Includi i Commenti in appendice' })).not.toBeChecked();
     expect(
       screen.getByRole('checkbox', { name: 'Aggiungi in coda gli allegati PDF' }),
     ).not.toBeChecked();
@@ -78,7 +76,9 @@ describe('PdfExportForm', () => {
     expect(screen.queryByRole('option', { name: 'Senza immagini' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('option', { name: 'Il Cancello' }));
-    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ coverDocumentId: 'gate' }));
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ coverDocumentId: 'gate' }),
+    );
 
     // Mantine hides the clear button from the accessibility tree (it is not a tab stop).
     const clear = screen.getByLabelText("Togli l'immagine di copertina", { selector: 'button' });

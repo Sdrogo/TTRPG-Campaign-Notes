@@ -54,10 +54,7 @@ export function PdfExportForm({ value, onChange, documents, hasRoomImage }: PdfE
         label={t('export.pdf.attachments')}
         checked={value.includeAttachments}
         onChange={(event) =>
-          onChange({
-            ...value,
-            includeAttachments: event.currentTarget.checked,
-          })
+          onChange({ ...value, includeAttachments: event.currentTarget.checked })
         }
       />
       <Select

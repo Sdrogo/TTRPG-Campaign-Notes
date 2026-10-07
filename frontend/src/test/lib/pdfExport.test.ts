@@ -119,11 +119,7 @@ describe('polling', () => {
     expect(pdfPollInterval(undefined)).toBe(false);
     expect(pdfPollInterval([])).toBe(false);
     expect(pdfPollInterval([job({ status: 'running' })])).toBe(PDF_POLL_INTERVAL_MS);
-    const justDone = job({
-      status: 'done',
-      downloadUrl: null,
-      finishedAt: new Date().toISOString(),
-    });
+    const justDone = job({ status: 'done', downloadUrl: null, finishedAt: new Date().toISOString() });
     expect(pdfPollInterval([justDone])).toBe(PDF_POLL_INTERVAL_MS);
     expect(pdfPollInterval([job({ status: 'done', downloadUrl: 'https://x/y.pdf' })])).toBe(false);
     expect(pdfPollInterval([job({ status: 'failed' }), job({ status: 'expired' })])).toBe(false);
