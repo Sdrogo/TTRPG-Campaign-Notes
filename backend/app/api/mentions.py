@@ -16,8 +16,21 @@ from app.api.errors import http_error
 from app.auth.dependencies import CurrentUserDep
 from app.db import comments_repo, documents_repo, mentions_repo, notes_repo, tags_repo
 from app.db.session import SessionDep
-from app.domain.mentions import content_targets, plan_source_mentions, unlink_unknown_content
-from app.domain.models import DocumentMention, Membership, MentionSource, MentionSourceKind
+from app.domain.mentions import (
+    content_targets,
+    plan_source_mentions,
+    target_excerpt,
+    unlink_unknown_content,
+)
+from app.domain.models import (
+    Comment,
+    Document,
+    DocumentMention,
+    Membership,
+    MentionSource,
+    MentionSourceKind,
+    Note,
+)
 from app.domain.visibility import is_comment_visible_in_thread, is_note_visible
 from app.i18n.dependencies import LocaleDep
 
@@ -78,6 +91,23 @@ _KIND_ORDER = {
 }
 
 
+def _excerpt(
+    mention: DocumentMention, source: Document, note: Note | None, comment: Comment | None
+) -> str:
+    """The excerpt around `mention`, cut again from its source's text as saved
+    now, so it keeps the tokens and shows renamed targets under their new
+    names even for a backlink stored before excerpts kept them. The stored
+    one when the text can't be read back."""
+    if comment is not None:
+        text = comment.body
+    elif note is not None:
+        text = note.description
+    else:
+        text = source.description
+    excerpt = target_excerpt(text, mention.target_document_id, mention.target_tag_id)
+    return mention.excerpt if excerpt is None else excerpt
+
+
 async def visible_backlinks(
     session: AsyncSession, mentions: Sequence[DocumentMention], viewer: Membership
 ) -> list[BacklinkGroupResponse]:
@@ -130,7 +160,7 @@ async def visible_backlinks(
                     note_title=None if note is None else note.title,
                     comment_id=mention.comment_id,
                     comment_author_id=None if comment is None else comment.author_id,
-                    excerpt=mention.excerpt,
+                    excerpt=_excerpt(mention, documents[mention.source_document_id], note, comment),
                 ),
             )
         )

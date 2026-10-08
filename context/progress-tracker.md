@@ -9,6 +9,25 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-08)
 
+**Backlog review on 2026-10-08** (product owner): tickets **25 and 25b dropped**
+(the Tags section, 25c, and the Account page, PR #123, were already reworked;
+both files kept, marked dropped). **27b (PDF of one Document) is still
+wanted.** New feature **28 - Relationship maps** (ticket written 2026-10-08,
+Decisions to confirm in its PR): free boards per Room where members place
+Documents, text cards and groups and draw labeled arrows that belong to that
+map only (product owner's choice: no Room-wide relationships). Adds a
+migration and the `@xyflow/react` dependency. The ticket also adds a
+**Document subtitle** (28_0, built first: under the name, which grows one
+typography level on the Documents list). Order: 27b, then 28.
+**Spec 29, image search, built on 2026-10-08** at the product owner's
+request (spec merged with PR #141; Pinterest has no public search API): a
+"Cerca" picker over Openverse in the Document's "Immagini" row. Backend
+29_1 `GET /rooms/{id}/documents/{id}/image-search` (Owners and the Master,
+in-memory throttle of 30 searches a minute per user, optional
+`OPENVERSE_CLIENT_ID`/`OPENVERSE_CLIENT_SECRET`); frontend 29_2
+`ImageSearchModal` and `useImageSearch`. No migration. Built ahead of 27b
+and 28 at the product owner's request.
+
 **Spec 27 (Document export and import) built on 2026-10-08** (27_1 export of
 one Document, 27_2 import backend, 27_3 frontend), written the day before with
 the product owner's answers to its Open Questions. A member exports one
@@ -164,6 +183,24 @@ resolved, so the check now calls `api.exlibris.world` at the VPS's IP
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Mentions follow a renamed Document or Tag everywhere (bug fix, 2026-10-08)
+
+- Andrea's report: renaming a Document didn't change its Mentions. Links in read mode already showed the current name; two places didn't: the edit boxes (descriptions, Notes, Comments) showed the name stored in the token, and "Mentioned in" showed excerpts frozen at save time with the old name.
+- `MentionTextarea` shows each token under its target's current name (Document, Tag or member) through `TokenOptions.currentName`; the stored token is untouched, so nothing is rewritten and a hidden target's new name never leaks.
+- Backlink excerpts keep Document and Tag tokens (`mention_excerpt`), are cut again at read time from the source's current text (`target_excerpt`) and render through `MentionText`. No migration: old rows are recut on read.
+- Still on stored names: search excerpts and matching (search for the new name won't find old mentions), and the version history diff (historical text).
+
+### Document image upload in the info panel (2026-10-08)
+
+- Product owner's request: the "Aggiungi immagini" block above the edit form
+  (button, URL field, button, hint) is now an "Immagini" row in the info
+  panel, right above the PDFs' "File" row and shaped like it: "Carica
+  immagini" (formats hint in its tooltip) and "Da URL", which opens a popover
+  with the URL field and "Aggiungi da URL". It shows to whoever may add
+  images (Owners and the Master) without entering edit mode, like the PDFs'
+  upload (product owner's follow-up, same day). The popover keeps the URL after a
+  failed import and closes once it succeeds (`AddDocumentImages.tsx`).
 
 ### Room PDF dialog, chosen style and attachments (2026-10-08)
 
@@ -1557,23 +1594,21 @@ Reorganized with the product owner on 2026-10-03.
     (13_1c).
   A Playwright script for the parts that can be automated is possible on
   request.
-- **Compact UI/UX refactor (feature 25, product owner 2026-10-06)**: the
-  Account page with more compact cards, the Room setup's Tags section
-  reworked with Tag rename, and a more compact, less dispersive design
-  overall. One feature, three tickets, in order: `25 - Compact layout`
-  (theme defaults, spacing, `CompactList`, columns on wide screens),
-  `25b - Compact Account page`, `25c - Room setup Tags and rename` (backend
-  `PATCH` for the rename plus the new section). Each ticket's Decisions are
-  proposals to confirm in its PR, except 25c Decision 3, confirmed by the
-  product owner on 2026-10-06: Grouping saves on every change, no "Save
-  order" button.
+- **Compact UI/UX refactor (feature 25)**: closed. 25c was built (PR #122);
+  `25 - Compact layout` and `25b - Compact Account page` were **dropped by
+  the product owner on 2026-10-08** (that UI was already reworked).
 - **Document export and import (feature 27, product owner 2026-10-07)**:
   `27 - Document export and import` (27_1 single-Document export, 27_2 import
   backend with the `import_jobs` migration, 27_3 frontend), then `27b -
   Document PDF`. The Room export (spec 23) is unchanged. Open Questions
   answered 2026-10-07: copy or replace asked in a modal, only information
   copied (no Owners or grants), Comments and PDF Attachments dropped, every
-  image copied, background job.
+  image copied, background job. 27 is built (PR #129); **27b is next**.
+- **Relationship maps (feature 28, product owner 2026-10-08)**:
+  `28 - Relationship maps` (28_1 backend with its migration, 28_2 frontend
+  with `@xyflow/react`), after 27b. Free boards: arrows belong to their map.
+  `requirements.md` needs a new `FR-`/`VR-` entry once the ticket is
+  approved (product owner's edit only).
 - **Build order (product owner, 2026-10-02, confirmed 2026-10-03)**: one
   feature at a time, each closed with all its sub-tickets: 21 → 22 (with
   22b) → 23 (with 23b, 23c) → 24, then the two small tickets below.

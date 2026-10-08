@@ -1,3 +1,7 @@
+> **Dropped (product owner, 2026-10-08)**: not to be built. The Tags
+> section (25c, PR #122) and the Account page (PR #123) were already
+> reworked, which covers what this ticket was for. Kept for reference only.
+
 ## Goals
 
 - Product owner's request (2026-10-06): "a more compact, less dispersive design overall". Seen on a 3440px screen (Account and Room setup screenshots of 2026-10-06): rows and fields stretch across the whole width, actions end up far from what they act on ("Remove" two thousand pixels right of the member's name), and every list item is a tall boxed row.

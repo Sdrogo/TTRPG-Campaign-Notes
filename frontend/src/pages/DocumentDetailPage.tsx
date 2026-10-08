@@ -45,6 +45,7 @@ import { VersionHistoryDrawer } from '../components/versions/VersionHistoryDrawe
 import { DocumentPlayer } from '../components/DocumentPlayer';
 import { DocumentImageGallery } from '../components/DocumentImageGallery';
 import { AddDocumentImages } from '../components/AddDocumentImages';
+import { ImageSearchModal } from '../components/ImageSearchModal';
 import { CommentSection } from '../components/comments/CommentSection';
 import { PromoteToDocumentModal, WideningConfirmModal } from '../components/comments/CommentPromotion';
 import { NoteList } from '../components/notes/NoteList';
@@ -223,6 +224,7 @@ function DocumentPanel({
   const revealed = useRevealedInVisit(roomId, document.id);
   const [revealing, setRevealing] = useState(false);
   const [historyOpened, setHistoryOpened] = useState(false);
+  const [imageSearchOpened, setImageSearchOpened] = useState(false);
   const [exportOpened, setExportOpened] = useState(false);
   // Previewing as a member (spec 22b): no write control at all.
   const readOnly = useReadOnly();
@@ -290,17 +292,6 @@ function DocumentPanel({
           </Group>
         </Group>
 
-        {editing && (
-          <AddDocumentImages
-            onUploadFiles={(files) => uploadImages.mutate(files, { onError: notifyError })}
-            uploading={uploadImages.isPending}
-            onImportUrl={(url, onDone) =>
-              importImage.mutate(url, { onSuccess: onDone, onError: notifyError })
-            }
-            importing={importImage.isPending}
-          />
-        )}
-
         {/* The aside, on the right on big screens (spec 10, mirroring
             DocumentCard's layout in RoomDocumentsPage): the images, then the
             info panel (player, Owners, PDFs). Floated so the text wraps around
@@ -349,10 +340,24 @@ function DocumentPanel({
                     onRemove={(userId) => removeOwner.mutate(userId, { onError: notifyError })}
                   />
                   {/* Spec 16: the PDFs. Like the Document itself, every reader
-                      sees them (VR-12); with none, only an Owner sees the row. */}
-                  {(document.files.length > 0 || isOwner) && (
+                      sees them (VR-12); with none, only an Owner sees the row.
+                      The image upload sits in the same section, in a row
+                      shaped like the PDFs' one, for whoever may add images
+                      (no need to enter edit mode). */}
+                  {(document.files.length > 0 || isOwner || editing) && (
                     <>
                       <Divider my={4} />
+                      {(isOwner || editing) && (
+                        <AddDocumentImages
+                          onUploadFiles={(files) => uploadImages.mutate(files, { onError: notifyError })}
+                          uploading={uploadImages.isPending}
+                          onImportUrl={(url, onDone) =>
+                            importImage.mutate(url, { onSuccess: onDone, onError: notifyError })
+                          }
+                          importing={importImage.isPending}
+                          onSearch={() => setImageSearchOpened(true)}
+                        />
+                      )}
                       <DocumentFileList
                         roomId={roomId}
                         documentId={document.id}
@@ -410,6 +415,19 @@ function DocumentPanel({
           documentId={document.id}
           name={document.name}
           members={members}
+        />
+      )}
+      {/* Mounted only while open, so each opening starts a fresh search. */}
+      {imageSearchOpened && (
+        <ImageSearchModal
+          opened
+          onClose={() => setImageSearchOpened(false)}
+          roomId={roomId}
+          documentId={document.id}
+          onAdd={(url, onDone) =>
+            importImage.mutate(url, { onSuccess: onDone, onError: notifyError })
+          }
+          addingUrl={importImage.isPending ? importImage.variables : null}
         />
       )}
       <ExportDocumentModal

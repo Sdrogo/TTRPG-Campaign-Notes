@@ -5,7 +5,9 @@ import { apiFetch } from '../../../lib/apiClient';
 import { renderWithProviders } from '../../utils';
 import { Backlinks } from '../../../components/mentions/Backlinks';
 import { backlinkHref } from '../../../lib/backlinks';
+import { DocumentMentionsContext, type DocumentMentionsValue } from '../../../hooks/useDocumentMentions';
 import type { Backlink } from '../../../types/backlink';
+import type { Document } from '../../../types/document';
 import type { Member } from '../../../types/member';
 
 vi.mock('../../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
@@ -24,6 +26,21 @@ const members: Member[] = [
     avatarUrl: null,
   },
 ];
+
+const document: Document = {
+  id: '',
+  roomId: 'room-1',
+  name: '',
+  description: '',
+  visibility: 'room',
+  images: [],
+  tagIds: [],
+  ownerIds: [],
+  selectiveUserIds: [],
+  notes: [],
+  files: [],
+  playedBy: null,
+};
 
 function mention(overrides: Record<string, unknown>) {
   return {
@@ -84,6 +101,36 @@ describe('Backlinks', () => {
       '/rooms/room-1/documents/doc-2#comment-comment-1',
     );
     expect(screen.getByText('Vai al #Il Cancello')).toBeInTheDocument();
+  });
+
+  it('shows the mentions in an excerpt under their current names', async () => {
+    const tower = '11111111-1111-4111-8111-111111111111';
+    fetchMock.mockResolvedValue([
+      {
+        document_id: 'doc-2',
+        document_name: 'La Locanda',
+        mentions: [mention({ excerpt: `Vai al #[La Torre](doc:${tower}).` })],
+      },
+    ]);
+    const mentions: DocumentMentionsValue = {
+      roomId: 'room-1',
+      documents: [{ ...document, id: tower, name: 'La Guglia' }],
+      tags: [],
+      canCreateDocument: false,
+      canCreateTag: false,
+      create: vi.fn(),
+    };
+
+    renderWithProviders(
+      <DocumentMentionsContext value={mentions}>
+        <Backlinks roomId="room-1" target={{ kind: 'document', id: tower }} members={members} />
+      </DocumentMentionsContext>,
+    );
+
+    expect(await screen.findByRole('link', { name: '#La Guglia' })).toHaveAttribute(
+      'href',
+      `/rooms/room-1/documents/${tower}`,
+    );
   });
 
   // Decision 6: hidden when empty, and while loading or failed.

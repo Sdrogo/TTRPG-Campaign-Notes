@@ -352,9 +352,10 @@
     "urlLabel": "Image URL",
     "urlPlaceholder": "https://… image URL",
     "invalidUrl": "Enter a valid http(s) URL",
-    "addTitle": "Add images",
-    "fromComputer": "From computer",
+    "rowTitle": "Images",
+    "upload": "Upload images",
     "addFromUrl": "Add from URL",
+    "fromUrlShort": "From URL",
     "resizeHint": "PNG, JPEG, WebP or GIF. Large images are resized automatically.",
     "limitReached": "Image limit reached",
     "attachFiles": "Add images",
@@ -742,5 +743,20 @@
     },
     "failed": "The import failed. Check the list of Documents before trying again.",
     "another": "Import more files"
+  },
+  "imageSearch": {
+    "action": "Search",
+    "title": "Search images",
+    "queryLabel": "What to search for",
+    "placeholder": "E.g. gothic castle, old map",
+    "submit": "Search",
+    "sourceHint": "Free images (Creative Commons and public domain) from Openverse. Click an image to add it to the Document.",
+    "loading": "Searching",
+    "empty": "No images found",
+    "more": "More results",
+    "add": "Add {{title}}",
+    "added": "Added",
+    "untitled": "Untitled",
+    "source": "Source"
   }
 }

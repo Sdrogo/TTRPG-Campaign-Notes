@@ -183,6 +183,11 @@
       "fileTooLarge": "{name} is over {max} MB",
       "alreadyRunning": "An import is already running for you in this Room",
       "notFound": "Import not found"
+    },
+    "imageSearch": {
+      "emptyQuery": "Type something to search for",
+      "throttled": "Too many searches: wait a minute and try again",
+      "unavailable": "Image search is unavailable right now, try again later"
     }
   },
   "pdf": {

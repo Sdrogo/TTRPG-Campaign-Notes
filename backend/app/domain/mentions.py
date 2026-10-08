@@ -12,6 +12,7 @@ from collections.abc import Callable, Collection, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from itertools import groupby
 
 
 class MentionKind(StrEnum):
@@ -219,20 +220,82 @@ def plan_source_mentions(text: str, source_document_id: uuid.UUID) -> list[Plann
     return planned
 
 
+def target_excerpt(
+    text: str, document_id: uuid.UUID | None, tag_id: uuid.UUID | None
+) -> str | None:
+    """The excerpt around the first mention in `text` of the Document
+    `document_id` or of the Tag `tag_id` (a backlink's target), or None when
+    `text` no longer mentions it."""
+    for mention in find_mentions(text):
+        if (mention.kind is MentionKind.DOCUMENT and mention.target_id == document_id) or (
+            mention.kind is MentionKind.TAG and mention.target_id == tag_id
+        ):
+            return mention_excerpt(text, mention)
+    return None
+
+
 def mention_excerpt(text: str, mention: Mention, length: int = EXCERPT_LENGTH) -> str:
     """About `length` characters of `text` around `mention`, as a reader sees
-    them: every token as its sigil and name, runs of whitespace as one
-    space, cut on word boundaries with an ellipsis where text was left out."""
-    before = _SPACES.sub(" ", display_text(text[: mention.start]))
-    shown = f"{_SIGILS[mention.kind]}{mention.name}"
-    after = _SPACES.sub(" ", display_text(text[mention.end :]))
+    them: runs of whitespace as one space, cut on word boundaries with an
+    ellipsis where text was left out. Document and Tag tokens stay whole
+    tokens (counted as long as their sigil and name), so the browser shows
+    each under its target's current name and a rename shows here too; member
+    tokens read as their sigil and name."""
+    # A character the text already holds in the placeholder range would read
+    # back as a token; one for one, so every position stays where it was.
+    text = _HELD_RANGE.sub("\ufffd", text)
+    tokens: list[str] = []
+    found = find_mentions(text)
+    before = _SPACES.sub(" ", _hold_tokens(text, found, 0, mention.start, tokens))
+    shown = _hold_tokens(text, [mention], mention.start, mention.end, tokens)
+    after = _SPACES.sub(" ", _hold_tokens(text, found, mention.end, len(text), tokens))
     budget = max(0, length - len(shown))
     room_before = budget // 2
     room_after = budget - room_before
     # Room one side doesn't use goes to the other.
     room_after += max(0, room_before - len(before))
     room_before += max(0, room_after - len(after))
-    return (_tail(before, room_before) + shown + _head(after, room_after)).strip()
+    excerpt = (_tail(before, room_before) + shown + _head(after, room_after)).strip()
+    return _release_tokens(excerpt, tokens)
+
+
+# While an excerpt is cut, each kept token stands in it as a run of one
+# private-use character (the first token U+100000, the next U+100001...), as
+# long as the name it shows: no whitespace, so a cut never splits it.
+_HELD = 0x100000
+_HELD_RANGE = re.compile("[\U00100000-\U0010ffff]")
+
+
+def _hold_tokens(
+    text: str, mentions: Sequence[Mention], start: int, end: int, tokens: list[str]
+) -> str:
+    """`text[start:end]` with every Document and Tag token of `mentions`
+    inside it held (appended to `tokens`) and every member token as its sigil
+    and name."""
+    parts: list[str] = []
+    last = start
+    for mention in mentions:
+        if mention.start < start or mention.end > end:
+            continue
+        parts.append(text[last : mention.start])
+        shown = f"{_SIGILS[mention.kind]}{mention.name}"
+        if mention.kind is MentionKind.USER:
+            parts.append(shown)
+        else:
+            parts.append(chr(_HELD + len(tokens)) * len(shown))
+            tokens.append(text[mention.start : mention.end])
+        last = mention.end
+    parts.append(text[last:end])
+    return "".join(parts)
+
+
+def _release_tokens(text: str, tokens: Sequence[str]) -> str:
+    """`text` with every held run back as the token it stands for."""
+    released: list[str] = []
+    for char, run in groupby(text):
+        index = ord(char) - _HELD
+        released.append(tokens[index] if 0 <= index < len(tokens) else "".join(run))
+    return "".join(released)
 
 
 def _tail(text: str, length: int) -> str:
