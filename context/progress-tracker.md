@@ -156,6 +156,10 @@ backends together exceeding the Session Pooler's 15 clients
 the VPS. **Cutover done on 2026-10-08 (~02:30 UTC)**: Render
 production suspended (kept for rollback), `api.exlibris.world` A/AAAA → VPS,
 Caddy serving both names. Production runs only on the VPS.
+The pool cap reached the VPS with the next release; that deploy's
+outside health check failed only because `api-vps.exlibris.world` no longer
+resolved, so the check now calls `api.exlibris.world` at the VPS's IP
+(`curl --resolve`) and needs no second name in DNS.
 
 ## Completed Units
 
