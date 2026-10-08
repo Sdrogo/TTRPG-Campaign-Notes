@@ -17,7 +17,6 @@ suspended for rollback. Staging is unchanged (Render + Vercel Preview + its
 own Supabase). Operating notes: `vps-migration-plan.md` §12. Older entries
 below that describe production on Render are history.
 
-
 **Spec 26 (Room image) built on 2026-10-07** at the product owner's request: a
 Room can have an image, set in the create dialog or on the setup page
 (Administrators), and it is the default cover of the Room PDF. It carries
