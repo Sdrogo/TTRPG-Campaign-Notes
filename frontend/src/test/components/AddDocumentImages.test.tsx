@@ -69,6 +69,18 @@ describe('AddDocumentImages', () => {
     expect(onImportUrl).toHaveBeenCalledWith('https://example.com/map.png', expect.any(Function));
   });
 
+  it('imports on Enter, but not an invalid URL', async () => {
+    const { onImportUrl, user } = render();
+    await openUrl(user);
+
+    await user.type(urlField(), 'not a url{Enter}');
+    expect(onImportUrl).not.toHaveBeenCalled();
+
+    await user.clear(urlField());
+    await user.type(urlField(), 'https://example.com/map.png{Enter}');
+    expect(onImportUrl).toHaveBeenCalledWith('https://example.com/map.png', expect.any(Function));
+  });
+
   // The field is cleared by the callback, not on click: it must survive a
   // failed import so the user can retry without retyping.
   it('clears the field only when the import reports success', async () => {
