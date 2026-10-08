@@ -1,3 +1,7 @@
+> **Dropped (product owner, 2026-10-08)**: not to be built. The Tags
+> section (25c, PR #122) and the Account page (PR #123) were already
+> reworked, which covers what this ticket was for. Kept for reference only.
+
 ## Goals
 
 - Product owner's request (2026-10-06): the Account page "with more compact cards". On a wide screen today every card is full width: the Profile card is mostly empty space (a 112px avatar column, then three fields stretched across the page and the Save buttons at the far right), the friend link field is one line across 3000px, and each friend's "Remove" sits at the opposite edge from their name.
