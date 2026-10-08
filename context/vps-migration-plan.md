@@ -33,7 +33,13 @@ port (`$PORT`, default 10000), outbound HTTPS to Supabase (Postgres through the
 It stores **nothing on local disk** that must survive: PDFs go to Supabase
 Storage, so the VPS holds no data to back up except its own configuration.
 
-Two run-time properties that matter for this plan:
+Three run-time properties that matter for this plan:
+
+- **Database connections are shared.** Supabase's Session Pooler allows 15
+  clients per project, across every backend on that database. With
+  SQLAlchemy's default pool (5 + 10 overflow) Render and the VPS together
+  went over it on 2026-10-08 and requests failed with `EMAXCONNSESSION`;
+  each process is now capped at 5 + 2 (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`).
 
 - **One process owns the background sweeps.** `app/main.py` starts the Storage
   cleanup sweep and the Room PDF sweep in the app's lifespan. At startup the
