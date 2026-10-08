@@ -686,3 +686,38 @@ class ExportJobRow(Base):
     error: Mapped[str | None] = mapped_column(String(200))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ImportJobRow(Base):
+    """A Document import being run or finished (spec 27). `payload` is the
+    parsed files and the importer's choices while the job is active
+    (`app/domain/import_files.py`), cleared when it ends so no content is kept
+    (Decision 17); `result` is what it created, replaced and skipped, and
+    `status` follows `ImportStatus`. At most one queued or running job per
+    user and Room (a partial unique index)."""
+
+    __tablename__ = "import_jobs"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('queued', 'running', 'done', 'failed')", name="ck_import_jobs_status"
+        ),
+        Index(
+            "uq_import_jobs_one_active",
+            "room_id",
+            "requested_by",
+            unique=True,
+            postgresql_where=text("status IN ('queued', 'running')"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    requested_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    status: Mapped[str] = mapped_column(String(20))
+    payload: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    error: Mapped[str | None] = mapped_column(String(200))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

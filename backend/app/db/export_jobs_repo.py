@@ -10,8 +10,8 @@ from sqlalchemy import select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db import import_jobs_repo, storage_cleanup
 from app.db import session as session_module
-from app.db import storage_cleanup
 from app.db.models import ExportJobRow
 from app.domain.export_jobs import (
     ACTIVE_STATUSES,
@@ -186,22 +186,25 @@ async def list_paths_in_room(session: AsyncSession, room_id: uuid.UUID) -> list[
 
 async def sweep(session: AsyncSession, now: datetime | None = None) -> None:
     """One maintenance pass: fails the jobs left active too long and expires
-    the PDFs past `EXPORT_TTL`, then commits and removes their objects."""
+    the PDFs past `EXPORT_TTL`, does the same housekeeping for Document
+    imports (spec 27), then commits and removes the objects."""
     moment = now or datetime.now(UTC)
     await fail_stale(session, moment)
     await expire_due(session, moment)
+    await import_jobs_repo.sweep(session, moment)
     await session.commit()
     await session_module.run_after_commit(session)
 
 
 async def run_export_sweeper() -> None:
     """Runs for the app's lifetime (started from app/main.py's lifespan). First
-    it fails every job still active: nothing can be running at startup, so they
-    were cut off by a restart and would block their owners. Then it sweeps
-    every `SWEEP_INTERVAL_SECONDS`."""
+    it fails every job, Room PDF or Document import, still active: nothing can
+    be running at startup, so they were cut off by a restart and would block
+    their owners. Then it sweeps every `SWEEP_INTERVAL_SECONDS`."""
     try:
         async with session_module.async_session_factory() as session:
             await fail_active(session, "interrupted", datetime.now(UTC))
+            await import_jobs_repo.fail_active(session, "interrupted", datetime.now(UTC))
             await session.commit()
     except Exception:
         logger.exception("Could not fail the Room PDFs interrupted by a restart")

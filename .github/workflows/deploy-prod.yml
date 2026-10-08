@@ -89,16 +89,20 @@ jobs:
           scp -i ~/.ssh/deploy_key deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh "$TARGET:/opt/exlibris/"
           ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/deploy.sh $SHA"
 
-      # From outside, through Caddy and HTTPS. Never api.exlibris.world: it
-      # points at Render before the cutover and after a rollback, so it
-      # would pass while the VPS is broken.
+      # From outside, through Caddy and HTTPS, at the VPS's own address
+      # (--resolve): public DNS for api.exlibris.world may point at Render
+      # after a rollback, so it would pass while the VPS is broken, and no
+      # other name has to stay in DNS for this check.
       - name: Check the VPS from outside
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
           for _ in $(seq 1 20); do
-            curl -fsS --max-time 5 https://api-vps.exlibris.world/health && exit 0
+            curl -fsS --max-time 5 --resolve "api.exlibris.world:443:$VPS_HOST" \
+              https://api.exlibris.world/health && exit 0
             sleep 3
           done
-          echo "https://api-vps.exlibris.world/health did not answer" >&2
+          echo "https://api.exlibris.world/health on the VPS did not answer" >&2
           exit 1
 
       # `prod` names the image last deployed successfully (compose.yaml's

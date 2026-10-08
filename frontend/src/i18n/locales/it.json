@@ -670,6 +670,77 @@
       "dismissNamed": "Nascondi il PDF {{name}}",
       "coverRoom": "Immagine della Stanza",
       "coverHintRoom": "La copertina usa l'immagine della Stanza, o l'immagine preferita del Documento scelto."
+    },
+    "document": {
+      "title": "Esporta il Documento",
+      "action": "Esporta il Documento",
+      "intro": "Scarica questo Documento come file, con ciò che puoi vedere: Note, Commenti e Tag. Puoi importarlo di nuovo in una Stanza."
     }
+  },
+  "documentImport": {
+    "action": "Importa Documenti",
+    "title": "Importa Documenti",
+    "intro": "Carica uno o più file JSON o Markdown, anche l'esportazione di un'intera Stanza. Prima vedrai cosa verrebbe importato: non viene scritto nulla finché non confermi.",
+    "jsonHint": "Il JSON è il formato fedele; il Markdown è letto al meglio che si può. I Commenti, gli allegati PDF, i Proprietari e il collegamento al giocatore non vengono importati.",
+    "files": "File da importare",
+    "filesPlaceholder": "Scegli uno o più file .json o .md",
+    "preview": "Anteprima",
+    "found_one": "{{count}} Documento trovato",
+    "found_other": "{{count}} Documenti trovati",
+    "documentSelect": "Importa {{name}}",
+    "notesCount_one": "{{count}} Nota",
+    "notesCount_other": "{{count}} Note",
+    "imagesCount_one": "{{count}} immagine",
+    "imagesCount_other": "{{count}} immagini",
+    "tags": "Tag: {{names}}",
+    "exists": "Esiste già in questa Stanza",
+    "tagsToCreate": "Tag che verranno creati: {{names}}",
+    "tagsUnavailable": "Tag che non puoi creare e che verranno tolti: {{names}}",
+    "selectedCount_one": "{{count}} Documento selezionato",
+    "selectedCount_other": "{{count}} Documenti selezionati",
+    "next": "Avanti",
+    "back": "Indietro",
+    "start": "Importa",
+    "warning": {
+      "comments_dropped_one": "{{count}} Commento non viene importato",
+      "comments_dropped_other": "{{count}} Commenti non vengono importati",
+      "files_dropped_one": "{{count}} allegato PDF non viene importato",
+      "files_dropped_other": "{{count}} allegati PDF non vengono importati",
+      "player_dropped": "Il collegamento al giocatore non viene importato",
+      "selective_to_private_one": "{{count}} elemento con visibilità Selettiva diventa Privato",
+      "selective_to_private_other": "{{count}} elementi con visibilità Selettiva diventano Privati",
+      "tags_not_created": "Tag non creati: {{names}}"
+    },
+    "existing": {
+      "title": "Alcuni Documenti esistono già",
+      "intro": "Copia crea un nuovo Documento e lascia intatto l'originale. Sostituisci riscrive solo le informazioni dell'originale (nome, descrizione, Tag e Note): Proprietari, visibilità, Commenti e allegati restano. La sostituzione si annulla dalla cronologia del Documento.",
+      "copy": "Copia",
+      "replace": "Sostituisci",
+      "applyAll": "Applica a tutti",
+      "copyAll": "Copia tutti",
+      "replaceAll": "Sostituisci tutti",
+      "cannotReplace": "Solo un Owner del Documento (o il Master) può sostituirlo",
+      "choice": "Cosa fare con {{name}}"
+    },
+    "running": "Importazione in corso…",
+    "runningHint": "Puoi chiudere questa finestra: l'importazione prosegue in background e i Documenti compaiono nell'elenco appena è finita.",
+    "done": "Importazione completata",
+    "created_one": "{{count}} Documento creato",
+    "created_other": "{{count}} Documenti creati",
+    "replaced_one": "{{count}} Documento sostituito",
+    "replaced_other": "{{count}} Documenti sostituiti",
+    "skippedTitle_one": "{{count}} immagine non importata",
+    "skippedTitle_other": "{{count}} immagini non importate",
+    "skipped": "{{document}}: {{reason}}",
+    "skipReason": {
+      "unreachable": "link non raggiungibile o scaduto",
+      "not_an_image": "non è un'immagine",
+      "too_large": "troppo grande",
+      "limit": "il Documento ha già il massimo di immagini",
+      "storage": "archiviazione non disponibile",
+      "failed": "errore imprevisto"
+    },
+    "failed": "L'importazione non è riuscita. Controlla l'elenco dei Documenti prima di riprovare.",
+    "another": "Importa altri file"
   }
 }

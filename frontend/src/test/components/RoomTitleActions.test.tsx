@@ -14,9 +14,16 @@ vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn(
 
 const onLeft = vi.fn();
 
-function render(isAdmin = false) {
+function render(isAdmin = false, canImport = false) {
   renderWithProviders(
-    <RoomTitleActions roomId="room-1" roomName="La Cripta" isAdmin={isAdmin} currentUserId="me" onLeft={onLeft} />,
+    <RoomTitleActions
+      roomId="room-1"
+      roomName="La Cripta"
+      isAdmin={isAdmin}
+      canImport={canImport}
+      currentUserId="me"
+      onLeft={onLeft}
+    />,
   );
   return { user: userEvent.setup() };
 }
@@ -85,6 +92,26 @@ describe('RoomTitleActions', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Esporta la Stanza' })).toBeInTheDocument();
 
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('withholds the import of Documents from whoever may not create them (spec 27)', async () => {
+    const { user } = render(false, false);
+
+    await user.click(toggle());
+
+    expect(screen.queryByRole('button', { name: 'Importa Documenti' })).not.toBeInTheDocument();
+  });
+
+  it('opens the import dialog from its button', async () => {
+    vi.mocked(apiFetch).mockResolvedValue([]);
+    const { user } = render(false, true);
+
+    await user.click(toggle());
+    await user.click(screen.getByRole('button', { name: 'Importa Documenti' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Importa Documenti' })).toBeInTheDocument();
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });

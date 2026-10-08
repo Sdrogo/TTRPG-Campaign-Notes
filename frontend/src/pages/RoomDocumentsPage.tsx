@@ -161,6 +161,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               roomName={room.data.name}
               isAdmin={me.isAdmin}
               isMaster={isMaster}
+              canImport={canCreateDocument}
               currentUserId={currentUserId}
               onLeft={() => navigate('/')}
               viewAsMembers={

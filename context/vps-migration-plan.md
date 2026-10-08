@@ -150,9 +150,9 @@ One-time, by hand (or as a short `cloud-init` file kept outside the repo).
   (§9) changes a line on the server, not the repository. Traefik works too but needs more configuration for one service. The
   certificate is issued when DNS points at the VPS; for the parallel run (§9),
   where DNS still points at Render, use a second name (`api-vps.<domain>`) so
-  Caddy can get a certificate and the VPS can be tested end to end. Keep that
-  name in `API_HOSTS` and in DNS for good: the deploy's health gate uses it
-  (§5).
+  Caddy can get a certificate and the VPS can be tested end to end. After the
+  cutover that name is optional: the deploy's health gate reaches the VPS by
+  its IP (§5).
 - **Request size and timeouts**: Caddy sets no request-body limit by default,
   so uploads behave as on Render, and long Room PDF renders run as background
   jobs, so no special timeout is needed.
@@ -188,10 +188,12 @@ CI) → release PR `staging` → `main`. Only what happens on `main` changes.
    `deploy/deploy.sh` to `/opt/exlibris` over SSH and runs
    `deploy.sh <sha>`, which pins the tag in `.env`, pulls, recreates the
    containers, reloads Caddy and waits (up to 2 minutes) for the backend's own
-   healthcheck. Then the workflow calls `https://api-vps.exlibris.world/health`
-   from outside, through Caddy and HTTPS. The gate must **not** poll
-   `api.exlibris.world`: before the cutover and after a DNS rollback that name
-   points at Render, so it would pass while the VPS is broken. Only after both
+   healthcheck. Then the workflow calls `https://api.exlibris.world/health`
+   from outside, through Caddy and HTTPS, but at the VPS's address
+   (`curl --resolve api.exlibris.world:443:$VPS_HOST`, so `VPS_HOST` must be
+   the IP): after a DNS rollback public DNS points at Render, and a plain call
+   would pass while the VPS is broken. Until 2026-10-08 the gate called
+   `api-vps.exlibris.world`, which failed once that DNS record was gone. Only after both
    checks does the image also get the `prod` tag, which is what `compose.yaml`
    runs when no tag is pinned. Rollback: run the workflow by hand on an older
    commit, or on the server `bash deploy.sh "$(cat .backend_tag.previous)"`.

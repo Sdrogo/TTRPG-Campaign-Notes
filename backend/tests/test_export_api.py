@@ -492,3 +492,119 @@ async def test_the_number_of_queries_does_not_grow_with_the_documents(
         await _comment(client, room, document, room.master, "r", parent_id=top["id"])
 
     assert await count_queries() == small
+
+
+async def _export_document(
+    client: AsyncClient,
+    room: _Room,
+    headers: dict[str, str],
+    document: Any,
+    export_format: str = "json",
+) -> Response:
+    return await client.get(
+        f"{room.url}/documents/{document['id']}/export",
+        params={"format": export_format},
+        headers=headers,
+    )
+
+
+async def test_a_member_exports_one_document_with_only_what_it_refers_to(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    # Spec 27 Decisions 1-4: the Room export with one Document in it.
+    room = await _room(client, make_token)
+    seeded = await _seed(client, room)
+
+    response = await _export_document(client, room, room.player, seeded["castle"])
+
+    assert response.status_code == 200, response.text
+    data = response.json()
+    ExportJson.model_validate(data)
+    assert data["schema_version"] == 1
+    assert [d["name"] for d in data["documents"]] == ["Castle"]
+    assert data["main_items"] == []
+    assert data["tag_filter"] is None
+    assert {t["name"] for t in data["tags"]} == {"NPC", "Place"}
+    # Only the members the Document refers to: its Owner, its Comment authors.
+    assert {m["id"] for m in data["members"]} <= {
+        room.player_id,
+        *(c["author_id"] for c in data["documents"][0]["comments"]),
+        *data["documents"][0]["owner_ids"],
+    }
+    assert {c["body"][0]["text"] for c in data["documents"][0]["comments"]} == {
+        "Hello there",
+        "A reply",
+    }
+    disposition = response.headers["content-disposition"]
+    assert disposition.startswith('attachment; filename="castle-')
+    assert disposition.endswith('.json"')
+    assert response.headers["content-type"] == "application/json"
+
+
+async def test_a_single_document_export_in_markdown_has_the_room_layout(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    seeded = await _seed(client, room)
+
+    response = await _export_document(client, room, room.master, seeded["castle"], "md")
+
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"] == "text/markdown; charset=utf-8"
+    assert f'### <a id="doc-{seeded["castle"]["id"]}"></a>Castle' in response.text
+    assert "## Documents" in response.text
+    assert "Real truth" in response.text
+    # A mention of another Document keeps its name, plain: it is not in the file.
+    assert "#Vampire lair" in response.text
+    assert f"(#doc-{seeded['lair']['id']})" not in response.text
+
+
+async def test_a_players_single_document_export_holds_nothing_hidden_from_them(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    # VR-07: the same filters as the Room export.
+    room = await _room(client, make_token)
+    seeded = await _seed(client, room)
+
+    hidden = await _export_document(client, room, room.player, seeded["lair"])
+    assert hidden.status_code == 404
+
+    for export_format in ("json", "md"):
+        text = (
+            await _export_document(client, room, room.player, seeded["castle"], export_format)
+        ).text
+        for secret in ("Real truth", "Strahd lives", "Beware", "Under the secret"):
+            assert secret not in text
+        assert seeded["lair"]["id"] not in text.replace(seeded["castle"]["id"], "")
+
+
+async def test_single_document_export_needs_membership_and_follows_view_as(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    seeded = await _seed(client, room)
+
+    assert (
+        await _export_document(client, room, room.outsider, seeded["castle"])
+    ).status_code == 403
+    missing = {"id": str(uuid.uuid4())}
+    assert (await _export_document(client, room, room.master, missing)).status_code == 404
+    as_player = await _export_document(
+        client, room, {**room.master, "X-View-As": room.player_id}, seeded["castle"]
+    )
+    assert as_player.status_code == 200
+    assert "Real truth" not in as_player.text
+    assert (
+        await _export_document(client, room, room.player, seeded["castle"], "pdf")
+    ).status_code == 422
+
+
+async def test_a_document_with_no_ascii_name_is_exported_as_document(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document = await _document(client, room, "龍")
+
+    response = await _export_document(client, room, room.master, document)
+
+    assert response.headers["content-disposition"].startswith('attachment; filename="document-')

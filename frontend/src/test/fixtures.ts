@@ -268,3 +268,42 @@ export function rawVersionDetail(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+/** A Document found by the import preview, as `POST .../imports/preview` sends it (spec 27). */
+export function rawImportPreviewDocument(overrides: Record<string, unknown> = {}) {
+  return {
+    key: '0:0',
+    file_name: 'stanza.json',
+    name: 'Il Cancello',
+    notes_count: 2,
+    images_count: 1,
+    tag_names: ['PNG'],
+    existing_document_id: null,
+    can_replace: false,
+    warnings: [],
+    ...overrides,
+  };
+}
+
+/** The import preview as the backend sends it: one new Document unless overridden. */
+export function rawImportPreview(overrides: Record<string, unknown> = {}) {
+  return {
+    documents: [rawImportPreviewDocument()],
+    matched_tags: ['PNG'],
+    tags_to_create: [],
+    unavailable_tags: [],
+    ...overrides,
+  };
+}
+
+/** An import job as `GET .../imports/{job}` sends it (spec 27): queued unless overridden. */
+export function rawImportJob(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'import-1',
+    status: 'queued',
+    created_at: '2026-10-08T12:00:00Z',
+    finished_at: null,
+    result: null,
+    ...overrides,
+  };
+}

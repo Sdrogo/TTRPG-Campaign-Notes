@@ -205,6 +205,22 @@ describe('DocumentDetailPage', () => {
   });
 });
 
+// Spec 27: every member who sees a Document exports it, owner or not.
+describe('exporting the Document', () => {
+  it('offers the export to a member who cannot edit it, and opens its dialog', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-2'] });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    const { user } = render();
+
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Esporta il Documento' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Esporta il Documento' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+});
+
 // D-12: an Owner or the Master may edit; nobody else.
 describe('who may edit', () => {
   it('offers editing to an Owner', async () => {

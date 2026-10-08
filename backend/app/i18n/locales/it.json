@@ -164,6 +164,25 @@
     "export": {
       "alreadyRunning": "Stai già generando un PDF in questa Room",
       "notFound": "Esportazione non trovata"
+    },
+    "import": {
+      "unreadable": "{name} non è un'esportazione JSON o Markdown leggibile",
+      "unsupportedSchema": "{name} è stato esportato da una versione più recente (schema {version}); questa app legge fino allo schema {max}",
+      "noDocuments": "{name} non contiene nessun Documento",
+      "tooManyFiles": "Si possono importare al massimo {max} file alla volta",
+      "tooManyDocuments": "Si possono importare al massimo {max} Documenti alla volta",
+      "tooManyImages": "Si possono importare al massimo {max} immagini alla volta",
+      "nameRequired": "Un Documento del file non ha nome",
+      "nameTooLong": "Il nome del Documento \"{name}...\" supera {max} caratteri",
+      "tooManyNotes": "{name} ha più di {max} Note",
+      "noteTitleInvalid": "Una Nota di {name} non ha titolo o ne ha uno oltre {max} caratteri",
+      "tagNameTooLong": "Il nome del Tag \"{name}...\" supera {max} caratteri",
+      "nothingSelected": "Seleziona almeno un Documento da importare",
+      "badChoices": "Le scelte di importazione non sono valide",
+      "cannotReplace": "Solo un Owner (o il Master) può sostituire {name}",
+      "fileTooLarge": "{name} supera {max} MB",
+      "alreadyRunning": "Hai già un'importazione in corso in questa Room",
+      "notFound": "Importazione non trovata"
     }
   },
   "pdf": {

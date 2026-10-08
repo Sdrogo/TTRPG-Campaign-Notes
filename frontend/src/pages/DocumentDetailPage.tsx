@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Stack, Group, Title, Text, Button, Box, ActionIcon, Modal, Alert, Paper, Divider } from '@mantine/core';
-import { ClockCounterClockwiseIcon, EyeIcon, PencilSimpleIcon, XIcon } from '@phosphor-icons/react';
+import {
+  ClockCounterClockwiseIcon,
+  DownloadSimpleIcon,
+  EyeIcon,
+  PencilSimpleIcon,
+  XIcon,
+} from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import {
   useDocument,
@@ -30,6 +36,7 @@ import { PageLayout } from '../components/PageLayout';
 import { PageCard } from '../components/PageCard';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { RevealedBadge } from '../components/RevealedBadge';
+import { ExportDocumentModal } from '../components/ExportDocumentModal';
 import { RevealModal } from '../components/RevealModal';
 import { TagList } from '../components/TagList';
 import { DocumentFields } from '../components/DocumentFields';
@@ -216,6 +223,7 @@ function DocumentPanel({
   const revealed = useRevealedInVisit(roomId, document.id);
   const [revealing, setRevealing] = useState(false);
   const [historyOpened, setHistoryOpened] = useState(false);
+  const [exportOpened, setExportOpened] = useState(false);
   // Previewing as a member (spec 22b): no write control at all.
   const readOnly = useReadOnly();
 
@@ -248,6 +256,16 @@ function DocumentPanel({
                 <EyeIcon size={18} />
               </ActionIcon>
             )}
+            {/* Spec 27: every member who sees the Document exports it, as the member
+                being previewed too (it only reads). */}
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={() => setExportOpened(true)}
+              aria-label={t('export.document.action')}
+            >
+              <DownloadSimpleIcon size={18} />
+            </ActionIcon>
             {/* Spec 24b: Owners and the Master read the whole Document's history. */}
             {isOwner && (
               <ActionIcon
@@ -394,6 +412,13 @@ function DocumentPanel({
           members={members}
         />
       )}
+      <ExportDocumentModal
+        opened={exportOpened}
+        onClose={() => setExportOpened(false)}
+        roomId={roomId}
+        documentId={document.id}
+        documentName={document.name}
+      />
       {revealing && (
         <RevealModal
           name={document.name}
