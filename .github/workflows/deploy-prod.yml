@@ -1,0 +1,115 @@
+name: Deploy production backend
+
+# Builds the backend image, pushes it to GHCR and deploys it on the VPS
+# (context/vps-migration-plan.md, §5). Runs after CI passes on a push to
+# `main`, or by hand (Actions → Run workflow) to deploy or roll back to any
+# commit. Off until the repository variable VPS_DEPLOY_ENABLED is `true`.
+# Migrations stay a by-hand step and are never run here.
+#
+# Needs, in the `vps-production` environment (not `production`, which
+# Vercel's own GitHub deployments already use): secrets VPS_HOST, VPS_USER,
+# VPS_SSH_KEY (a key used only by this workflow) and VPS_KNOWN_HOSTS (the
+# output of `ssh-keyscan -t ed25519 <host>`, checked by hand).
+#
+# Both triggers only work from the default branch: this starts deploying
+# once it reaches `main` with a release.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit SHA or branch to deploy (default main)
+        required: false
+
+# One deploy at a time, and never cancel one halfway.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/sdrogo/ttrpg-campaign-notes-backend
+
+jobs:
+  deploy:
+    name: Build and deploy
+    if: >-
+      vars.VPS_DEPLOY_ENABLED == 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push'))
+    runs-on: ubuntu-latest
+    environment: vps-production
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || inputs.ref || 'main' }}
+          persist-credentials: false
+
+      - name: Resolve the commit
+        id: commit
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push the image
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build -t "$IMAGE:$SHA" backend
+          docker push "$IMAGE:$SHA"
+
+      - name: Set up SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      # compose.yaml, the Caddyfile and deploy.sh come from this commit, so
+      # the server always runs the versions in the repository.
+      - name: Deploy on the VPS
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+        run: |
+          scp -i ~/.ssh/deploy_key deploy/compose.yaml deploy/Caddyfile deploy/deploy.sh "$TARGET:/opt/exlibris/"
+          ssh -i ~/.ssh/deploy_key "$TARGET" "bash /opt/exlibris/deploy.sh $SHA"
+
+      # From outside, through Caddy and HTTPS. Never api.exlibris.world: it
+      # points at Render before the cutover and after a rollback, so it
+      # would pass while the VPS is broken.
+      - name: Check the VPS from outside
+        run: |
+          for _ in $(seq 1 20); do
+            curl -fsS --max-time 5 https://api-vps.exlibris.world/health && exit 0
+            sleep 3
+          done
+          echo "https://api-vps.exlibris.world/health did not answer" >&2
+          exit 1
+
+      # `prod` names the image last deployed successfully (compose.yaml's
+      # default), so it moves only after the checks above pass.
+      - name: Tag the image as prod
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          docker tag "$IMAGE:$SHA" "$IMAGE:prod"
+          docker push "$IMAGE:prod"
+
+      - name: Remove the SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
