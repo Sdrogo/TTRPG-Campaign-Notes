@@ -11,10 +11,13 @@ cd "$(dirname "$0")"
 
 # BACKEND_TAG lives in .env, so a plain `docker compose up -d` later (or a
 # reboot) keeps running this image. Other lines (API_HOSTS) are kept.
+set_tag() {
+  sed -i '/^BACKEND_TAG=/d' .env
+  if [ -n "$1" ]; then echo "BACKEND_TAG=$1" >> .env; fi
+}
 touch .env
 previous="$(sed -n 's/^BACKEND_TAG=//p' .env)"
-sed -i '/^BACKEND_TAG=/d' .env
-echo "BACKEND_TAG=$tag" >> .env
+set_tag "$tag"
 
 docker compose pull backend
 docker compose up -d --remove-orphans
@@ -32,6 +35,13 @@ done
 if [ "$status" != healthy ]; then
   echo "backend is $status after 2 minutes; last logs:" >&2
   docker compose logs --tail 100 backend >&2
+  # Put the last healthy image back, so neither a reboot nor the next
+  # deploy's .backend_tag.previous ends up pointing at the broken one.
+  if [ -n "$previous" ]; then
+    echo "restoring $previous" >&2
+    set_tag "$previous"
+    docker compose up -d backend
+  fi
   exit 1
 fi
 
