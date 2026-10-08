@@ -9,7 +9,7 @@ base that can later feed AI agents, scoped to what the asking user may see.
 
 ## What it does
 
-- Sign in with Google, Discord, Facebook, GitHub or X; edit a profile (name,
+- Sign in with Google, Discord or GitHub; edit a profile (name,
   avatar, pronouns, bio).
 - Create a Room, invite people by link, and manage members and roles.
 - Documents with Tags, Owners, images, Notes and a Comment thread. Documents are
@@ -28,7 +28,7 @@ The full spec is [context/requirements.md](context/requirements.md).
 | Path | What lives there |
 | --- | --- |
 | [frontend/](frontend/README.md) | React + Vite + TypeScript single-page app (Mantine UI) |
-| [backend/](backend/) | FastAPI service (Python, SQLAlchemy async, Alembic) |
+| [backend/](backend/README.md) | FastAPI service (Python, SQLAlchemy async, Alembic) |
 | [backend/migrations/](backend/migrations/README) | Database migrations |
 | [context/](context/) | Product and engineering docs, feature specs, progress tracker |
 | `.github/workflows/ci.yml` | CI: lint, type-check, tests with exact-100% coverage gates |
