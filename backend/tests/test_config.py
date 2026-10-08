@@ -72,6 +72,8 @@ def test_db_pool_defaults_fit_two_backends(monkeypatch: pytest.MonkeyPatch) -> N
 
 
 def test_engine_pool_follows_the_settings() -> None:
+    """The engine is built with the configured pool, not SQLAlchemy's default
+    of 5 + 10 (app/db/session.py)."""
     from app.config import settings
     from app.db.session import engine
 
