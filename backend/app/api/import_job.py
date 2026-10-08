@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.access import get_visible_images_for_documents
+from app.api.access import get_visible_images, get_visible_images_for_documents
 from app.api.versions import record_revision
 from app.db import (
     documents_repo,
@@ -34,7 +34,12 @@ from app.domain.documents import (
     plan_new_image,
 )
 from app.domain.errors import DomainError
-from app.domain.images import ImageTooLargeError, InvalidImageError, normalize_image
+from app.domain.images import (
+    MAX_INPUT_BYTES,
+    ImageTooLargeError,
+    InvalidImageError,
+    normalize_image,
+)
 from app.domain.import_files import ImportFile, file_from_json, file_to_json
 from app.domain.imports import (
     ExistingDocument,
@@ -244,11 +249,13 @@ async def _attach_images(
     async def one_document(document: PlannedDocument) -> None:
         for image in document.images:
             async with gate:
-                try:
-                    data = await remote_images.fetch_image_bytes(image.url)
-                except remote_images.RemoteImageError:
-                    skipped.append(_skip(document, image.url, "unreachable"))
-                    continue
+                data = await _read_own_image(image.url, importer_id)
+                if data is None:
+                    try:
+                        data = await remote_images.fetch_image_bytes(image.url)
+                    except remote_images.RemoteImageError:
+                        skipped.append(_skip(document, image.url, "unreachable"))
+                        continue
             async with database:
                 reason = await _store_image(room_id, importer_id, document, data)
             if reason is not None:
@@ -256,6 +263,39 @@ async def _attach_images(
 
     await asyncio.gather(*(one_document(d) for d in plan.documents if d.images))
     return skipped
+
+
+async def _read_own_image(url: str, importer_id: uuid.UUID) -> bytes | None:
+    """The bytes of an image the file links in this app's own bucket, read
+    straight from Storage, so an export's signed links still import after they
+    expire (an hour at most). Only when the importer sees that image right now,
+    in its own Room, as on every read path (Invariant 1): the link's token is
+    not trusted for that. None sends the caller to the plain URL fetch, which
+    needs the token to still be valid."""
+    path = storage.own_object_path(url)
+    if path is None:
+        return None
+    async with session_module.independent_session() as session:
+        image = await documents_repo.get_image_by_storage_path(session, path)
+        if image is None:
+            return None
+        document = await documents_repo.get_document(session, image.document_id)
+        if document is None:  # pragma: no cover - the image row cascades with its Document
+            return None
+        viewer = await rooms_repo.get_membership(session, document.room_id, importer_id)
+        if viewer is None:
+            return None
+        owners = await documents_repo.list_owner_ids(session, document.id)
+        grants = await documents_repo.list_selective_grant_ids(session, document.id)
+        if not is_document_visible(document, viewer.user_id, viewer.role, owners, grants):
+            return None
+        if image.id not in {i.id for i in await get_visible_images(session, document.id, viewer)}:
+            return None
+    try:
+        return await storage.download(path, MAX_INPUT_BYTES)
+    except storage.StorageError:
+        logger.warning("An imported image could not be read from Storage", exc_info=True)
+        return None
 
 
 async def _store_image(

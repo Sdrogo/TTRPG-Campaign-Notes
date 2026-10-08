@@ -5,7 +5,7 @@ expiring link."""
 import logging
 import time
 from collections.abc import Collection
-from urllib.parse import quote
+from urllib.parse import quote, unquote, urlsplit
 
 import httpx
 
@@ -125,6 +125,51 @@ def forget_signed_urls(paths: Collection[str]) -> None:
     given out keep working until they expire."""
     for path in paths:
         _signed_cache.pop(path, None)
+
+
+def own_object_path(url: str) -> str | None:
+    """The object path behind a signed link of this app's own images bucket
+    (`<supabase_url>/storage/v1/object/sign/<bucket>/<path>?token=...`), or
+    None for any other URL. Only reads the URL: whether the link's token is
+    still valid, and whether anyone may see that object, is the caller's
+    business."""
+    if not settings.supabase_url:
+        return None
+    prefix = (
+        f"{settings.supabase_url.rstrip('/')}/storage/v1/object/sign/{settings.storage_bucket}/"
+    )
+    parts = urlsplit(url)
+    bare = f"{parts.scheme}://{parts.netloc}{parts.path}"
+    if not bare.startswith(prefix):
+        return None
+    path = unquote(bare.removeprefix(prefix))
+    if not path or ".." in path.split("/"):
+        return None
+    return path
+
+
+async def download(  # pragma: no cover - real Storage HTTP only
+    path: str, max_bytes: int
+) -> bytes:
+    """The bytes of one object of the images bucket, read with the backend's
+    secret key (no signed link, so nothing expires). Callers must have checked
+    the requester may see it. A body over `max_bytes` is refused as it streams
+    in; raises `StorageError` on any failure."""
+    try:
+        async with (
+            httpx.AsyncClient(timeout=30) as client,
+            client.stream("GET", _object_url(path), headers=_headers()) as response,
+        ):
+            if response.is_error:
+                raise StorageError(f"Storage answered {response.status_code}")
+            body = bytearray()
+            async for chunk in response.aiter_bytes():
+                body.extend(chunk)
+                if len(body) > max_bytes:
+                    raise StorageError("The object is larger than the limit")
+            return bytes(body)
+    except httpx.HTTPError as exc:
+        raise StorageError(f"Could not download: {exc}") from exc
 
 
 def as_download(signed_url: str, file_name: str) -> str:
