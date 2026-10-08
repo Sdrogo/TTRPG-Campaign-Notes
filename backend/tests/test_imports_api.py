@@ -20,7 +20,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import imports
-from app.db import import_jobs_repo, remote_images
+from app.config import settings
+from app.db import import_jobs_repo, remote_images, storage
 from app.db.export_jobs_repo import sweep as sweep_export_jobs
 from app.db.models import ImportJobRow
 from app.domain.imports import ImportJob, ImportStatus
@@ -771,6 +772,159 @@ async def test_an_image_that_fails_is_skipped_and_listed_and_the_rest_is_importe
     assert len(gallery["images"]) == 2
     # The file's favorite was stored first, so it is the Document's.
     assert [i["is_favorite"] for i in gallery["images"]] == [True, False]
+
+
+_OWN_STORAGE = "https://own.supabase.test"
+
+
+@pytest.fixture
+def own_bucket(monkeypatch: pytest.MonkeyPatch) -> Callable[[str], str]:
+    """Makes `_OWN_STORAGE` this app's Supabase and returns how to write a
+    signed link of one of its objects whose token has long expired (the fake
+    fetch can't serve it: only a read straight from Storage can)."""
+    monkeypatch.setattr(settings, "supabase_url", _OWN_STORAGE)
+
+    def link(path: str) -> str:
+        return f"{_OWN_STORAGE}/storage/v1/object/sign/{settings.storage_bucket}/{path}?token=old"
+
+    return link
+
+
+async def _image_on(
+    client: AsyncClient, room: _Room, fake_storage: dict[str, bytes], **document: Any
+) -> str:
+    """Creates a Document with one image as the Master; returns its object path."""
+    created = await _post(client, f"{room.url}/documents", room.master, **document)
+    before = set(fake_storage)
+    uploaded = await client.post(
+        f"{room.url}/documents/{created['id']}/images",
+        files={"file": ("a.png", _png(), "image/png")},
+        headers=room.master,
+    )
+    assert uploaded.status_code == 201, uploaded.text
+    (path,) = set(fake_storage) - before
+    return path
+
+
+async def test_an_expired_link_of_our_own_storage_is_read_straight_from_storage(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    own_bucket: Callable[[str], str],
+    inline_jobs: None,
+) -> None:
+    # An export's links live an hour at most; a backup imported later still
+    # brings its images when the importer sees them (product owner, 2026-10-08).
+    room = await _room(client, make_token)
+    path = await _image_on(client, room, fake_storage, name="Castle")
+    target = await _second_room(client, room)
+    file = _json_file(
+        {"name": "Castle", "images": [{"url": own_bucket(path), "is_favorite": True}]}
+    )
+
+    job = await _import(client, target, target.master, file)
+
+    assert job["status"] == "done"
+    assert job["result"]["skipped"] == []
+    assert served["calls"] == []
+    castle = await _detail(client, target, job["result"]["created"][0]["id"])
+    assert len(castle["images"]) == 1 and castle["images"][0]["is_favorite"] is True
+
+
+async def test_an_image_the_importer_cannot_see_is_not_read_from_storage(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    own_bucket: Callable[[str], str],
+    inline_jobs: None,
+) -> None:
+    # A Master-only Document's image, a Room the importer isn't in, an object
+    # no image points at: none of them is read with the backend's key, only
+    # fetched by its link, which has expired (Invariant 1).
+    room = await _room(client, make_token)
+    hidden = await _image_on(client, room, fake_storage, name="Secret", visibility="master")
+    elsewhere = await _second_room(client, room)
+    foreign = await _image_on(client, elsewhere, fake_storage, name="Foreign")
+    links = [own_bucket(hidden), own_bucket(foreign), own_bucket(f"{room.id}/nothing/here.webp")]
+    file = _json_file({"name": "Copy", "images": [{"url": url} for url in links]})
+
+    job = await _import(client, room, room.player, file)
+
+    assert [s["reason"] for s in job["result"]["skipped"]] == ["unreachable"] * 3
+    assert sorted(served["calls"]) == sorted(links)
+
+
+async def test_a_comment_image_the_importer_cannot_read_is_not_read_from_storage(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    own_bucket: Callable[[str], str],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    document = await _post(client, f"{room.url}/documents", room.master, name="Hall")
+    comment = await _post(
+        client,
+        f"{room.url}/documents/{document['id']}/comments",
+        room.master,
+        body="For my eyes",
+        visibility="master",
+    )
+    before = set(fake_storage)
+    uploaded = await client.post(
+        f"{room.url}/documents/{document['id']}/comments/{comment['id']}/images",
+        files={"file": ("a.png", _png(), "image/png")},
+        headers=room.master,
+    )
+    assert uploaded.status_code == 201, uploaded.text
+    (path,) = set(fake_storage) - before
+
+    job = await _import(
+        client,
+        room,
+        room.player,
+        _json_file({"name": "Copy", "images": [{"url": own_bucket(path)}]}),
+    )
+
+    assert [s["reason"] for s in job["result"]["skipped"]] == ["unreachable"]
+    assert served["calls"] == [own_bucket(path)]
+
+
+async def test_a_storage_read_that_fails_falls_back_to_the_link(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    own_bucket: Callable[[str], str],
+    monkeypatch: pytest.MonkeyPatch,
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    path = await _image_on(client, room, fake_storage, name="Castle")
+    served[own_bucket(path)] = _png()
+
+    async def down(path: str, max_bytes: int) -> bytes:
+        raise storage.StorageError("Storage answered 503")
+
+    monkeypatch.setattr(storage, "download", down)
+
+    job = await _import(
+        client,
+        room,
+        room.master,
+        _json_file({"name": "Copy", "images": [{"url": own_bucket(path)}]}),
+    )
+
+    # The link was still served, so the image came that way.
+    assert job["result"]["skipped"] == []
+    assert served["calls"] == [own_bucket(path)]
 
 
 async def test_a_private_address_in_a_file_is_never_fetched(

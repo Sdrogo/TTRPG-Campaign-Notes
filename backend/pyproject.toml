@@ -16,10 +16,10 @@ dependencies = [
     "python-multipart>=0.0.20",
     # The Room PDF (spec 23b): WeasyPrint renders it (needs Pango, so the
     # deploy is a Docker image, see Dockerfile), Jinja2 writes its HTML and pypdf
-    # merges PDF Attachments.
+    # merges PDF Attachments (`crypto` reads owner-locked ones, AES included).
     "weasyprint>=70",
     "jinja2>=3.1",
-    "pypdf>=5",
+    "pypdf[crypto]>=5",
 ]
 
 [project.optional-dependencies]

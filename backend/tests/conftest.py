@@ -119,7 +119,15 @@ def fake_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
     monkeypatch.setattr(storage, "upload", fake_upload)
     monkeypatch.setattr(storage, "remove", fake_remove)
     monkeypatch.setattr(storage, "create_signed_urls", fake_create_signed_urls)
+
+    async def fake_download(path: str, max_bytes: int) -> bytes:
+        # An object read with the backend's key, for the Document import.
+        if path not in objects:
+            raise storage.StorageError("Storage answered 404")
+        return objects[path]
+
     monkeypatch.setattr(storage, "download_signed", fake_download_signed)
+    monkeypatch.setattr(storage, "download", fake_download)
     return objects
 
 

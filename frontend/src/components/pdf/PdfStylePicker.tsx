@@ -35,7 +35,8 @@ function Thumbnail({ style }: { style: PdfStyle }) {
 
 /**
  * The PDF's style as cards with a miniature of each (spec 23b Frontend): Gothic
- * first, then Modern and Print. Each card is one radio of a group.
+ * first, then Modern and Print. Each card is one radio of a group; the chosen
+ * one has an accent border and the others are dimmed (`.pdf-style-card`).
  */
 export function PdfStylePicker({ value, onChange }: PdfStylePickerProps) {
   const { t } = useTranslation();
@@ -47,7 +48,14 @@ export function PdfStylePicker({ value, onChange }: PdfStylePickerProps) {
     >
       <Group gap="xs" mt="xs" wrap="nowrap" align="stretch">
         {PDF_STYLES.map((style) => (
-          <Radio.Card key={style} value={style} radius="md" p="xs" style={{ flex: 1 }}>
+          <Radio.Card
+            key={style}
+            value={style}
+            radius="md"
+            p="xs"
+            className="pdf-style-card"
+            style={{ flex: 1 }}
+          >
             <Stack gap={4} align="center" ta="center">
               <Thumbnail style={style} />
               <Text size="sm" fw={500}>

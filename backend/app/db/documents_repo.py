@@ -203,6 +203,17 @@ async def list_images(session: AsyncSession, document_id: uuid.UUID) -> list[Doc
     return [_image_from_row(row) for row in result.scalars()]
 
 
+async def get_image_by_storage_path(
+    session: AsyncSession, storage_path: str
+) -> DocumentImage | None:
+    """The image stored at `storage_path`, or None when no row points there."""
+    result = await session.execute(
+        select(DocumentImageRow).where(DocumentImageRow.storage_path == storage_path)
+    )
+    row = result.scalars().first()
+    return _image_from_row(row) if row is not None else None
+
+
 async def lock_documents_for_room(session: AsyncSession, room_id: uuid.UUID) -> list[uuid.UUID]:
     """Row-locks every Document of the Room, in id order so two calls can't
     deadlock, and returns their ids. Held until the transaction ends."""

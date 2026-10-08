@@ -35,15 +35,19 @@ def print_image_data_uri(data: bytes) -> str | None:
 
 def merge_attachments(pdf: bytes, attachments: Sequence[bytes]) -> tuple[bytes, int]:
     """`pdf` followed by the pages of each attachment, in order, and how many
-    attachments were appended. One that can't be read (encrypted, damaged) is
-    skipped: the manual is still worth having without it."""
+    attachments were appended. One that can't be read (damaged, or locked
+    with a password needed to open it) is skipped: the manual is still worth
+    having without it. A PDF that opens without a password but carries an
+    owner password (editable character sheets often do, to restrict editing)
+    is read with the empty password, like any viewer does."""
     writer = PdfWriter()
     writer.append(PdfReader(io.BytesIO(pdf)))
     appended = 0
     for attachment in attachments:
         try:
             reader = PdfReader(io.BytesIO(attachment))
-            if reader.is_encrypted:
+            if reader.is_encrypted and not reader.decrypt(""):
+                logger.warning("A PDF Attachment needs a password to open; left out")
                 continue
             len(reader.pages)  # parses the page tree now, so a damaged file fails here
             writer.append(reader)

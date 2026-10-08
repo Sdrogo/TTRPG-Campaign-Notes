@@ -169,3 +169,44 @@ async def test_documents_still_load_when_signing_fails(
 
     assert response.status_code == 200
     assert response.json()["images"] == []
+
+
+# --- own_object_path (spec 27 import) ------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        (
+            "https://own.supabase.test/storage/v1/object/sign/document-images/r/d/a.webp?token=x",
+            "r/d/a.webp",
+        ),
+        (
+            "https://own.supabase.test/storage/v1/object/sign/document-images/r/d/a%20b.webp",
+            "r/d/a b.webp",
+        ),
+        ("https://own.supabase.test/storage/v1/object/sign/other-bucket/r/d/a.webp", None),
+        ("https://elsewhere.test/storage/v1/object/sign/document-images/r/d/a.webp", None),
+        ("https://own.supabase.test/storage/v1/object/sign/document-images/", None),
+        ("https://own.supabase.test/storage/v1/object/sign/document-images/r/../x.webp", None),
+    ],
+)
+def test_own_object_path_reads_only_this_apps_signed_links(
+    monkeypatch: pytest.MonkeyPatch, url: str, expected: str | None
+) -> None:
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "supabase_url", "https://own.supabase.test")
+    monkeypatch.setattr(settings, "storage_bucket", "document-images")
+
+    assert storage.own_object_path(url) == expected
+
+
+def test_own_object_path_is_none_without_a_configured_supabase(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "supabase_url", "")
+
+    assert storage.own_object_path("https://x.test/storage/v1/object/sign/b/p") is None
