@@ -7,7 +7,15 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-07)
+## Current Status (2026-10-08)
+
+**Production moved to `exlibris.world` on 2026-10-08**: the backend runs on
+an OVHcloud VPS (`api.exlibris.world`, deployed by
+`.github/workflows/deploy-prod.yml` after CI on `main`), the frontend is on
+`exlibris.world` / `www.exlibris.world` (Vercel), Render production is
+suspended for rollback. Staging is unchanged (Render + Vercel Preview + its
+own Supabase). Operating notes: `vps-migration-plan.md` §12. Older entries
+below that describe production on Render are history.
 
 **Spec 26 (Room image) built on 2026-10-07** at the product owner's request: a
 Room can have an image, set in the create dialog or on the setup page
@@ -122,6 +130,15 @@ reachable as `api-vps.exlibris.world`. In the repository: `deploy/`
 `VPS_DEPLOY_ENABLED` variable). Next: server setup and the first deploy, the
 test on `api-vps`, the DNS switch (plan §9); the frontend on `exlibris.world`
 (§10). Production traffic is still served by Render.
+
+2026-10-08: first VPS deploy from `main` succeeded (`api-vps.exlibris.world`
+healthy); production traffic is still on Render. Testing it showed both
+backends together exceeding the Session Pooler's 15 clients
+(`EMAXCONNSESSION`), so the DB pool is now capped at 5 + 2 per process
+(`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`); needs a release to `main` to reach
+the VPS. **Cutover done on 2026-10-08 (~02:30 UTC)**: Render
+production suspended (kept for rollback), `api.exlibris.world` A/AAAA → VPS,
+Caddy serving both names. Production runs only on the VPS.
 
 ## Completed Units
 

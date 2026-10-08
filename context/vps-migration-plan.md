@@ -2,11 +2,14 @@
 
 Written 2026-10-07 at the product owner's request. Scope: only the **production backend** moves. Staging stays on
 Render, the database (and Auth and Storage) stays on Supabase, the frontend
-stays on Vercel. This document is a plan, not a record of the live setup;
-`architecture.md` → Environments stays the source of truth until the cutover
-happens, and is updated then.
+stays on Vercel. The cutover happened on 2026-10-08: `architecture.md` →
+Environments is the source of truth for the live setup, and this file is the
+runbook (deploys, rollback) plus the remaining steps.
 
-**Status (2026-10-08)**: §3 is done: the domain is `exlibris.world`
+**Status (2026-10-08, 02:30 UTC)**: **cutover done.** Production runs on the
+VPS (`api.exlibris.world` A/AAAA → VPS, Render production suspended for
+rollback). The frontend is on `exlibris.world` too (§10, same night). Left: deleting Render after
+a quiet few weeks, backups and monitoring (§7, §8). History: §3 is done: the domain is `exlibris.world`
 (registrar Hostinger, its DNS), `api.exlibris.world` is a custom domain of the
 Render production service and the production frontend's `VITE_API_BASE_URL`
 points at it. The VPS exists (OVHcloud VPS-1, 2 vCores / 4 GB, Debian 12 with
@@ -16,7 +19,7 @@ runs are in `deploy/` and `.github/workflows/deploy-prod.yml` (§5). Next: the
 first deploy (§9 step 2), then the test and the switch. Production traffic is
 still served by Render.
 
-## 1. Where we are today
+## 1. Where we started (before 2026-10-08)
 
 | | Production | Staging |
 |---|---|---|
@@ -33,7 +36,13 @@ port (`$PORT`, default 10000), outbound HTTPS to Supabase (Postgres through the
 It stores **nothing on local disk** that must survive: PDFs go to Supabase
 Storage, so the VPS holds no data to back up except its own configuration.
 
-Two run-time properties that matter for this plan:
+Three run-time properties that matter for this plan:
+
+- **Database connections are shared.** Supabase's Session Pooler allows 15
+  clients per project, across every backend on that database. With
+  SQLAlchemy's default pool (5 + 10 overflow) Render and the VPS together
+  went over it on 2026-10-08 and requests failed with `EMAXCONNSESSION`;
+  each process is now capped at 5 + 2 (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`).
 
 - **One process owns the background sweeps.** `app/main.py` starts the Storage
   cleanup sweep and the Room PDF sweep in the app's lifespan. At startup the
@@ -193,8 +202,8 @@ CI) → release PR `staging` → `main`. Only what happens on `main` changes.
    with the product owner's go-ahead **before** the release PR is merged
    (`code-standards.md` → Branches and Pull Requests). The deploy job does not
    run Alembic.
-5. **Turn off Render's auto-deploy** on the production service once the VPS
-   serves traffic, so a merge to `main` deploys to one place only.
+5. **Render production is suspended** (2026-10-08), so a merge to `main`
+   deploys to the VPS only. Turn its auto-deploy off before ever resuming it.
 6. **Staging is unchanged**: Render keeps deploying `staging` from its own
    build. (Optionally, later, the staging deploy could reuse the CI-built image
    from GHCR via Render's "existing image" service type, so staging and prod
@@ -214,7 +223,7 @@ two PDF sweepers at once (§1).
   `STORAGE_BUCKET`, `CORS_ORIGINS`; no `CORS_ORIGIN_REGEX`, which only staging
   sets) live in
   `/opt/exlibris/backend.env` on the VPS, `chmod 600`, owner `debian`, copied
-  once by hand from the Render production dashboard. They are **never** in the
+  once by hand from the Render production dashboard (2026-10-08). They are **never** in the
   repo, in the image (`.dockerignore` already keeps `.env*` out, and CI checks
   it) or in GitHub secrets. Keep a copy in the product owner's password manager:
   it is the only thing needed to rebuild the server.
@@ -335,10 +344,46 @@ Independent of the backend move, the production frontend can leave
 ## 11. Open questions for the product owner
 
 1. **Domain**: answered, `exlibris.world` on Hostinger (2026-10-08).
-2. **Render plan today**: Free (with the keep-alive cron) or paid? It decides
-   whether the VPS saves money or mainly buys RAM and no cold starts.
+2. **Render plan**: moot since the cutover; Render production is suspended and
+   only staging runs there.
 3. **Provider**: answered, OVHcloud VPS-1, 2 vCores / 4 GB (2026-10-08).
 4. **Who can SSH**: only the product owner, or should CI be the only way
    anything changes on the server (no manual edits)?
 5. **Deploy files in the repo**: answered, `deploy/` and
    `.github/workflows/deploy-prod.yml` (2026-10-08).
+
+## 12. Operating production (after the cutover)
+
+Everything below runs on the VPS as `debian` in `/opt/exlibris`, unless it
+says GitHub.
+
+| Task | How |
+|---|---|
+| Deploy | Release `staging` → `main`; the workflow deploys after CI. By hand: GitHub → Actions → *Deploy production backend* → Run workflow (optional commit or branch). |
+| Roll back the code | Run the workflow on an older commit, or `bash deploy.sh "$(cat .backend_tag.previous)"`. |
+| Roll back the host | Resume the Render service (auto-deploy off), then point the `api` record back to a CNAME `exlibri-prod-docker.onrender.com`. |
+| Logs | `docker compose logs --tail 100 backend` (or `caddy`); `-f` to follow. |
+| Change a setting | Edit `backend.env`, then `docker compose up -d --force-recreate backend` (a few seconds of 502). |
+| Allow a new frontend origin | Add it to `CORS_ORIGINS` in `backend.env` (comma-separated, exact, no trailing `/`), recreate as above, and add it to Supabase Auth's Redirect URLs. |
+| Serve another API name | Add it to `API_HOSTS` in `.env` (comma-separated), point its DNS at the VPS, `docker compose up -d caddy`. |
+| Status | `docker compose ps`; `curl -sS https://api.exlibris.world/health`. |
+
+Lessons from the move (2026-10-08), so they are not rediscovered:
+
+- **Supabase's Session Pooler allows 15 clients per project**, across every
+  backend on the database. Two backends with SQLAlchemy's default pool went
+  over it (`EMAXCONNSESSION`, 500s whose responses also lack CORS headers, so
+  the browser reports a CORS error). Each process is capped at 5 + 2
+  (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`). Keep at most two backends on one
+  database.
+- **A 500 shows up in the browser as a CORS error**: read the backend log
+  before touching `CORS_ORIGINS`.
+- **The deploy key must have no passphrase** (the workflow can't type one;
+  `ssh-keygen -p -f <key>` removes it), and `VPS_KNOWN_HOSTS` must be the
+  bare `ssh-keyscan` line for the same address as `VPS_HOST`.
+- **Vite inlines `VITE_*` at build time**: after changing one on Vercel,
+  redeploy, and keep the Production and the `staging`-scoped Preview values
+  apart (`api.exlibris.world` vs the Render staging URL). A deploy's own
+  `…-<hash>-rum11.vercel.app` address keeps the values it was built with.
+- **Replace DNS records in one go**: deleting the `api` CNAME before adding
+  the A record let resolvers cache "no such name" for a while.

@@ -9,7 +9,7 @@ base that can later feed AI agents, scoped to what the asking user may see.
 
 ## What it does
 
-- Sign in with Google, Discord, Facebook, GitHub or X; edit a profile (name,
+- Sign in with Google, Discord or GitHub; edit a profile (name,
   avatar, pronouns, bio).
 - Create a Room, invite people by link, and manage members and roles.
 - Documents with Tags, Owners, images, Notes and a Comment thread. Documents are
@@ -28,7 +28,7 @@ The full spec is [context/requirements.md](context/requirements.md).
 | Path | What lives there |
 | --- | --- |
 | [frontend/](frontend/README.md) | React + Vite + TypeScript single-page app (Mantine UI) |
-| [backend/](backend/) | FastAPI service (Python, SQLAlchemy async, Alembic) |
+| [backend/](backend/README.md) | FastAPI service (Python, SQLAlchemy async, Alembic) |
 | [backend/migrations/](backend/migrations/README) | Database migrations |
 | [context/](context/) | Product and engineering docs, feature specs, progress tracker |
 | `.github/workflows/ci.yml` | CI: lint, type-check, tests with exact-100% coverage gates |
@@ -103,11 +103,21 @@ for the conventions.
 
 ## Deployment
 
-The frontend is deployed on Vercel and the backend on Render; Supabase hosts the
-database. There are two environments: production (branch `main`) and staging
-(branch `staging`, a Vercel Preview plus its own Render service and Supabase
-project). Their settings (including `CORS_ORIGINS`) live in those dashboards,
-not in this repo; see `context/architecture.md` → Environments. **Apply new
+The frontend is deployed on Vercel and Supabase hosts the database. There are
+two environments:
+
+- **Production** (branch `main`): the frontend at `https://exlibris.world`, the
+  backend on a VPS at `https://api.exlibris.world` (Docker behind Caddy, files in
+  `deploy/`). After CI passes on `main`, `.github/workflows/deploy-prod.yml`
+  builds the backend image, pushes it to GHCR and deploys it over SSH. Its
+  settings live in `/opt/exlibris/backend.env` on the server.
+- **Staging** (branch `staging`): a Vercel Preview, a Render Docker service and
+  its own Supabase project. Its settings live in the Render and Vercel
+  dashboards.
+
+Neither environment's settings are in this repo; see
+`context/architecture.md` → Environments, and `context/vps-migration-plan.md`
+for operating the production server (deploys, rollback, logs). **Apply new
 migrations to an environment's database before merging the code that needs
 them into its branch**, because the backend redeploys on merge.
 

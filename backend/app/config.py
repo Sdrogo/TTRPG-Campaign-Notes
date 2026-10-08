@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     # Origin header (Starlette uses `fullmatch`). Unset = no pattern.
     cors_origin_regex: str | None = None
     database_url: str = ""
+    # Connections this process may hold. Supabase's Session Pooler allows 15
+    # clients per project in total, shared by every backend on the same
+    # database (two at once while production moves host), so 5 + 2 each
+    # keeps two processes under the cap.
+    db_pool_size: int = 5
+    db_max_overflow: int = 2
 
     @field_validator("cors_origin_regex", mode="before")
     @classmethod

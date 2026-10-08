@@ -58,3 +58,23 @@ def test_cors_origins_rejects_a_non_list_json_value(
     monkeypatch.setenv("CORS_ORIGINS", value)
     with pytest.raises(ValueError):
         load_settings()
+
+
+def test_db_pool_defaults_fit_two_backends(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Supabase's Session Pooler allows 15 clients per project, shared by
+    every backend on the database: by default two processes must fit
+    (see app/config.py)."""
+    monkeypatch.delenv("DB_POOL_SIZE", raising=False)
+    monkeypatch.delenv("DB_MAX_OVERFLOW", raising=False)
+    settings = load_settings()
+    assert (settings.db_pool_size, settings.db_max_overflow) == (5, 2)
+    assert 2 * (settings.db_pool_size + settings.db_max_overflow) <= 15
+
+
+def test_engine_pool_follows_the_settings() -> None:
+    """The engine is built with the configured pool, not SQLAlchemy's default
+    of 5 + 10 (app/db/session.py)."""
+    from app.config import settings
+    from app.db.session import engine
+
+    assert engine.pool.size() == settings.db_pool_size  # type: ignore[attr-defined]
