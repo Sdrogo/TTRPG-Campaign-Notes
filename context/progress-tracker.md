@@ -123,6 +123,13 @@ reachable as `api-vps.exlibris.world`. In the repository: `deploy/`
 test on `api-vps`, the DNS switch (plan §9); the frontend on `exlibris.world`
 (§10). Production traffic is still served by Render.
 
+2026-10-08: first VPS deploy from `main` succeeded (`api-vps.exlibris.world`
+healthy); production traffic is still on Render. Testing it showed both
+backends together exceeding the Session Pooler's 15 clients
+(`EMAXCONNSESSION`), so the DB pool is now capped at 5 + 2 per process
+(`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`); needs a release to `main` to reach
+Render and the VPS.
+
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
