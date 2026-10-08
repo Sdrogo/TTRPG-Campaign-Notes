@@ -175,7 +175,7 @@ Added 2026-10-04. Two hosted environments, each a full stack with its own databa
 |---|---|---|
 | Git branch | `main` | `staging` |
 | Backend | **VPS** (OVHcloud, Docker + Caddy, `api.exlibris.world`), deployed by `.github/workflows/deploy-prod.yml` after CI on `main`; Render production suspended since 2026-10-08 | Render **Docker** web service (`ttrpg-campaign-notes-2.onrender.com`), deploys on push to `staging` once CI passes |
-| Frontend | Vercel production deploy | Vercel Preview of the `staging` branch (`…-git-staging-rum11.vercel.app`) |
+| Frontend | Vercel production deploy, on `exlibris.world` / `www.exlibris.world` since 2026-10-08 (both in the backend's `CORS_ORIGINS` and Supabase Auth Redirect URLs) | Vercel Preview of the `staging` branch (`…-git-staging-rum11.vercel.app`) |
 | Supabase | production project | **separate** staging project (own Postgres, Auth and Storage) |
 
 - **Settings live in the dashboards**, never in the repo. The staging Render service has the same variables as production (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `STORAGE_BUCKET`, `CORS_ORIGINS`, `CORS_ORIGIN_REGEX`) pointing at the staging Supabase project; `CORS_ORIGINS` holds the staging alias and `http://localhost:5173` (production no longer lists localhost). On Vercel, the Preview variables `VITE_API_BASE_URL`, `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are scoped to the `staging` branch; Vite inlines them at build time, so changing one needs a redeploy.
