@@ -23,7 +23,7 @@ still served by Render.
 | Backend | Render Docker web service `exlibri-prod-docker.onrender.com` (created 2026-10-05; the old native service is retired once the switch is checked, see `architecture.md` → Environments) | Render Docker web service `ttrpg-campaign-notes-2.onrender.com` |
 | Deploys | Render auto-deploys on push to `main` | Render deploys `staging` once CI passes |
 | Frontend → backend | `VITE_API_BASE_URL` on Vercel points at the `*.onrender.com` URL, **no custom domain** | same, Preview variable scoped to `staging` |
-| Settings | Render dashboard env vars (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `STORAGE_BUCKET`, `CORS_ORIGINS`, `CORS_ORIGIN_REGEX`) | same, pointing at the staging Supabase project |
+| Settings | Render dashboard env vars (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `STORAGE_BUCKET`, `CORS_ORIGINS`) | same, pointing at the staging Supabase project, plus `CORS_ORIGIN_REGEX` for Vercel Preview deploys (staging only) |
 | Uptime | An external cron/monitor pings `/health` (GET and HEAD, PR #88) to keep the instance awake and alert when it is down | none (left to sleep) |
 
 What the backend needs at run time, all already in the image
@@ -211,7 +211,8 @@ two PDF sweepers at once (§1).
 ## 6. Secrets
 
 - **Runtime settings** (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`,
-  `STORAGE_BUCKET`, `CORS_ORIGINS`, `CORS_ORIGIN_REGEX`) live in
+  `STORAGE_BUCKET`, `CORS_ORIGINS`; no `CORS_ORIGIN_REGEX`, which only staging
+  sets) live in
   `/opt/exlibris/backend.env` on the VPS, `chmod 600`, owner `debian`, copied
   once by hand from the Render production dashboard. They are **never** in the
   repo, in the image (`.dockerignore` already keeps `.env*` out, and CI checks
@@ -273,7 +274,9 @@ Both run in parallel; the switch is DNS; rollback is DNS.
    variable and secrets set, that release deploys it, or run it by hand (§5).
 3. **Test the VPS in isolation**: `curl https://api-vps.<domain>/health`;
    then a Vercel **Preview** deploy with `VITE_API_BASE_URL=https://api-vps.<domain>`
-   (its origin already matches `CORS_ORIGIN_REGEX`): sign in, open a Room,
+   (production sets no `CORS_ORIGIN_REGEX`, so add that Preview's exact URL to
+   `CORS_ORIGINS` in the VPS `backend.env` for the test, run
+   `docker compose up -d backend`, and remove it afterwards): sign in, open a Room,
    edit a Document, upload an image, run search, generate a Room PDF and
    download it. It is the real production database, so test in a throwaway
    Room. Remember a VPS start fails any Room PDF in flight on Render (§1); do
