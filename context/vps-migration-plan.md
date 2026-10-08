@@ -2,9 +2,9 @@
 
 Written 2026-10-07 at the product owner's request. Scope: only the **production backend** moves. Staging stays on
 Render, the database (and Auth and Storage) stays on Supabase, the frontend
-stays on Vercel. This document is a plan, not a record of the live setup;
-`architecture.md` → Environments stays the source of truth until the cutover
-happens, and is updated then.
+stays on Vercel. The cutover happened on 2026-10-08: `architecture.md` →
+Environments is the source of truth for the live setup, and this file is the
+runbook (deploys, rollback) plus the remaining steps.
 
 **Status (2026-10-08, 02:30 UTC)**: **cutover done.** Production runs on the
 VPS (`api.exlibris.world` A/AAAA → VPS, Render production suspended for
