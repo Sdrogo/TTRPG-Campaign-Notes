@@ -1,0 +1,8 @@
+# HTTPS in front of the backend (context/vps-migration-plan.md, §4).
+# Caddy gets and renews Let's Encrypt certificates on its own for every name
+# in API_HOSTS (set in compose.yaml / the server's .env); each must already
+# resolve to this server.
+{$API_HOSTS} {
+	encode zstd gzip
+	reverse_proxy backend:10000
+}

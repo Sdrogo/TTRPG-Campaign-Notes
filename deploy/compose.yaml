@@ -1,0 +1,54 @@
+# Production backend on the VPS (context/vps-migration-plan.md). Lives in
+# /opt/exlibris on the server next to:
+#   backend.env  the backend's settings (secrets, chmod 600, never in git)
+#   .env         non-secret settings for this file: API_HOSTS, and
+#                BACKEND_TAG once deploy.sh has run
+# The deploy workflow copies this file, the Caddyfile and deploy.sh here on
+# every deploy, so edit them in the repository, not on the server.
+services:
+  backend:
+    # `prod` is the image last deployed successfully; deploy.sh pins the
+    # commit SHA instead.
+    image: ghcr.io/sdrogo/ttrpg-campaign-notes-backend:${BACKEND_TAG:-prod}
+    env_file: backend.env
+    environment:
+      PORT: "10000"
+    # No `ports:`: only Caddy reaches the backend, over the compose network.
+    # (Docker would bypass ufw for a published port.)
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:10000/health', timeout=4)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      # The names Caddy serves and gets certificates for. Before the cutover
+      # only api-vps (api still points at Render, so no certificate could be
+      # issued for it); the cutover adds api (vps-migration-plan.md, §9).
+      API_HOSTS: ${API_HOSTS:-api-vps.exlibris.world}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  # The certificates. Losing it only means Caddy asks for new ones.
+  caddy_data:
+  caddy_config:
