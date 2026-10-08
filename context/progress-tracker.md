@@ -201,6 +201,9 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   images (Owners and the Master) without entering edit mode, like the PDFs'
   upload (product owner's follow-up, same day). The popover keeps the URL after a
   failed import and closes once it succeeds (`AddDocumentImages.tsx`).
+- Product owner's report: on narrow windows the row's buttons ran out of the
+  panel. They now wrap onto further lines, right-aligned, while the
+  "Immagini" label keeps its width.
 
 ### Room PDF dialog, chosen style and attachments (2026-10-08)
 
