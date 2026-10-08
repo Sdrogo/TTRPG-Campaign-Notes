@@ -7,16 +7,25 @@ step-by-step notes) is in
 [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
-## Current Status (2026-10-07)
+## Current Status (2026-10-08)
 
-**Spec 27 (Document export and import) and 27b (Document PDF) written on
-2026-10-07**, not built: export one Document (the spec 23 format with one
-Document in it) and import one or more Documents from JSON or Markdown, a whole
-Room export included, in a background job; Documents that exist in the Room
-are copied or replaced (a modal asks). The product owner answered the
-ticket's Open Questions the same day (listed at its end); 27b, a PDF of one
-Document, is the follow-up they asked for. 27_2 will carry a migration
-(`import_jobs`).
+**Spec 27 (Document export and import) built on 2026-10-08** (27_1 export of
+one Document, 27_2 import backend, 27_3 frontend), written the day before with
+the product owner's answers to its Open Questions. A member exports one
+Document as JSON or Markdown (the Room export holding that Document alone); a
+member who may create Documents imports one or more from JSON or Markdown, a
+whole Room export included, through a preview and a background job; Documents
+that exist in the Room are copied or replaced (information only). It carries
+**migration `f7a2d8c4e1b9`** (`import_jobs`): **applied to the staging
+database on 2026-10-08** (`.env.dev` and `.env.staging` point at the same
+Supabase project, so the dev run was the staging one; `alembic current` reads
+`f7a2d8c4e1b9`). **To do by the product owner: apply it to production before
+the next release** (`alembic upgrade head` with `.env` loaded,
+`architecture.md` → Local env files). 27b (a PDF of one Document) is
+still to do. Backend 1074 tests passing (20 skipped without Pango), every
+new module at 100% (`app/pdf/render.py` is only covered in the Docker image, as
+before), `ruff` and `mypy` clean; frontend 1526 tests at 100% coverage, build
+and lint clean.
 
 **Spec 26 (Room image) built on 2026-10-07** at the product owner's request: a
 Room can have an image, set in the create dialog or on the setup page
@@ -122,6 +131,46 @@ explicitly (`architecture.md` → Local env files).
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Document export and import (spec 27, 27_1 to 27_3, 2026-10-08)
+
+- **27_1, export one Document**: `GET /rooms/{id}/documents/{doc}/export` =
+  `load_export(..., document_id)` + `restrict_to_document` (one Document, its
+  Tags/members only, no Main items). Same filters as the Room export, so a
+  Player's file holds nothing hidden from them; 404 for a Document they can't
+  see; follows `X-View-As`. The Room export is unchanged.
+- **27_2, import backend**: `domain/import_files.py` (JSON, the app's Markdown
+  and hand-written Markdown into one `ImportFile`), `domain/imports.py`
+  (`validate_files`, `plan_import`: Copy/Replace, Tag matching, Selective →
+  Private, mention re-pointing, warnings), `db/imports_repo.py` (bulk writes),
+  `db/import_jobs_repo.py` (+ migration `f7a2d8c4e1b9`, housekeeping in the
+  export sweeper), `api/import_job.py` (the job) and `api/imports.py` (preview,
+  start, read). Details and rules: `architecture.md` → Document export and
+  import.
+- **27_3, frontend**: `ExportDocumentModal` (icon button on the Document page),
+  `ImportDocumentsModal` with its review, Copy/Replace and job steps (button in
+  the Room title's actions), hooks `useExportDocument`, `usePreviewImport`,
+  `useStartImport`, `useImportJob`, `lib/documentImport.ts`, strings in
+  `documentImport.*` / `export.document.*` (en, it).
+- **Decisions taken while building, to confirm with the product owner**:
+  (1) *Visibility*: the spec says an item keeps its level "when the importer
+  may set it" and tests that a Player can't set `master`, but no such rule
+  exists: `POST /documents` and the Note routes let any creator choose any
+  level, so the import keeps the file's level (Selective → Private) and adds
+  no restriction of its own. If Players should not be able to set Master-only
+  content, that is a rule to add to creation first. (2) *Document page*: the
+  export is an icon button next to History/Edit, not a "⋮" menu, which that
+  page does not have. (3) *Replace* with a Document deleted between preview and
+  job runs as a copy.
+- **Tests**: `test_domain_imports.py` (parsing, planning, limits, no
+  database), `test_imports_api.py` (round trips of a Room export in both
+  formats into another Room, single-Document export copied and replaced in its
+  own Room with a history revision, Player rights, Tag creation, refusals with
+  nothing written, one job at a time, images skipped, payload cleared, sweep),
+  single-Document cases in `test_export_api.py` and `test_domain_export.py`;
+  frontend `documentImport`, `useDocumentImport`, `ExportDocumentModal`,
+  `ImportDocumentsModal`, `RoomTitleActions`, `RoomDocumentsPage` and
+  `DocumentDetailPage` tests.
 
 ### Room image on the Room card (2026-10-07)
 

@@ -80,3 +80,21 @@
 5. PDF Attachments: skipped (Decision 15).
 6. Images: copy all of them (Decision 15).
 7. Big imports: background job (Decision 9).
+
+## Built (2026-10-08)
+
+27_1, 27_2 and 27_3 are built in one branch; see `progress-tracker.md` → Document
+export and import and `architecture.md` for the rules as built. Where the build
+differs from the text above:
+
+- **Visibility (Decision 12)**: no rule stops a Player from choosing `master`
+  today (`POST /documents` and the Note routes accept any level from any
+  creator), so the import keeps the file's level and turns only Selective into
+  Private. The Definition of Done line "a Player can't set `master`" is not
+  tested because it is not a rule of the app; add it to creation first if the
+  product owner wants it.
+- **Document page (Decision 3)**: the export is an icon button beside History and
+  Edit, not a "⋮" menu (the page has none). It opens the JSON / Markdown dialog.
+- **Documents deleted before the job starts**: a Replace of a Document that is
+  gone is run as a copy, since the job plans again against the Room as it is.
+
