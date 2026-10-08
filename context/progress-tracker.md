@@ -16,7 +16,9 @@ wanted.** New feature **28 - Relationship maps** (ticket written 2026-10-08,
 Decisions to confirm in its PR): free boards per Room where members place
 Documents, text cards and groups and draw labeled arrows that belong to that
 map only (product owner's choice: no Room-wide relationships). Adds a
-migration and the `@xyflow/react` dependency. Order: 27b, then 28.
+migration and the `@xyflow/react` dependency. The ticket also adds a
+**Document subtitle** (28_0, built first: under the name, which grows one
+typography level on the Documents list). Order: 27b, then 28.
 
 **Spec 27 (Document export and import) built on 2026-10-08** (27_1 export of
 one Document, 27_2 import backend, 27_3 frontend), written the day before with
