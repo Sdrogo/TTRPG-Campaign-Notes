@@ -46,3 +46,7 @@ backend/junit.xml
 backend/htmlcov/
 backend/build/
 backend/dist/
+
+# ssh-keygen output written by mistake (2026-10-08)
+/y
+/y.pub
