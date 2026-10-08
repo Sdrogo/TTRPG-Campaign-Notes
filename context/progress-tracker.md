@@ -9,6 +9,12 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-08)
 
+**Spec 29, image search (proposed 2026-10-08, PR #141, not built)**: a
+"Cerca" picker over Openverse in the Document's "Immagini" row, at the
+product owner's request (Pinterest has no public search API). Waiting on the
+product owner's confirmation of its decisions and on where it goes in the
+queue (27b and 28 are ahead).
+
 **Spec 27 (Document export and import) built on 2026-10-08** (27_1 export of
 one Document, 27_2 import backend, 27_3 frontend), written the day before with
 the product owner's answers to its Open Questions. A member exports one
