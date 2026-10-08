@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     # keeps two processes under the cap.
     db_pool_size: int = 5
     db_max_overflow: int = 2
+    # Openverse API credentials for the image search (spec 29). Unset, the
+    # search calls Openverse anonymously, under its lower rate limits.
+    openverse_client_id: str = ""
+    openverse_client_secret: str = ""
 
     @field_validator("cors_origin_regex", mode="before")
     @classmethod

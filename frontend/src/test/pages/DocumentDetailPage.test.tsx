@@ -47,6 +47,7 @@ interface Routes {
   members: unknown;
   comments: unknown;
   backlinks: unknown;
+  imageSearch?: unknown;
 }
 
 const routes: Routes = { document: rawDocument(), members: [], comments: [], backlinks: [] };
@@ -64,6 +65,7 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
     if (path === '/account') return Promise.resolve(rawAccount());
     if (path === '/rooms/room-1/characters/mine') return Promise.resolve([]);
+    if (path.startsWith(`${DOC}/image-search?`)) return Promise.resolve(routes.imageSearch);
     return Promise.resolve(routes.document);
   });
 }
@@ -337,15 +339,20 @@ describe('editing', () => {
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
   });
 
-  // The image controls belong to edit mode, not the read view.
-  it('offers image uploads only while editing', async () => {
-    const { user } = render();
+  // Like the PDFs' upload, adding images needs no edit mode.
+  it('offers image uploads to an Owner outside edit mode', async () => {
+    render();
+
+    expect(await screen.findByRole('button', { name: /Carica immagini/ })).toBeInTheDocument();
+  });
+
+  it('hides image uploads from a reader who is not an Owner', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-2'] });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    render();
+
     await screen.findByRole('heading', { name: 'Il Cancello' });
-
-    expect(screen.queryByText('Aggiungi immagini')).not.toBeInTheDocument();
-
-    await user.click(editButton());
-    expect(screen.getByText('Aggiungi immagini')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Carica immagini/ })).not.toBeInTheDocument();
   });
 });
 
@@ -488,7 +495,7 @@ describe('creating a Tag while editing', () => {
   });
 });
 
-describe('adding images while editing', () => {
+describe('adding images', () => {
   it('uploads a picked file', async () => {
     const writes: string[] = [];
     mockApi((path) => {
@@ -497,7 +504,6 @@ describe('adding images while editing', () => {
     });
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    await user.click(editButton());
 
     const input = window.document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));
@@ -513,10 +519,10 @@ describe('adding images while editing', () => {
     });
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    await user.click(editButton());
+    await user.click(screen.getByRole('button', { name: 'Da URL' }));
 
     await user.type(
-      screen.getByPlaceholderText("https://… URL dell'immagine"),
+      await screen.findByPlaceholderText("https://… URL dell'immagine"),
       'https://example.com/map.png',
     );
     await user.click(screen.getByRole('button', { name: 'Aggiungi da URL' }));
@@ -524,11 +530,58 @@ describe('adding images while editing', () => {
     await waitFor(() => expect(writes).toContain(`${DOC}/images/from-url`));
   });
 
+  // Spec 29: a search result goes through the same import as "Da URL".
+  it('adds an image found with the search', async () => {
+    routes.imageSearch = {
+      results: [
+        {
+          id: 'img-1',
+          thumbnail_url: 'https://api.openverse.org/v1/images/img-1/thumb/',
+          url: 'https://example.com/castle.jpg',
+          width: 800,
+          height: 600,
+          title: 'Castello',
+          creator: 'Ada',
+          license: 'CC BY 2.0',
+          license_url: null,
+          source_url: null,
+        },
+      ],
+      page: 1,
+      has_more: false,
+    };
+    const writes: string[] = [];
+    let finishImport: (value: unknown) => void = () => {};
+    mockApi((path) => {
+      writes.push(path);
+      return new Promise((resolve) => {
+        finishImport = resolve;
+      });
+    });
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(screen.getByRole('button', { name: 'Cerca immagini' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Cerca immagini' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Cosa cercare' }), 'castello{Enter}');
+    await user.click(await within(dialog).findByRole('button', { name: 'Aggiungi Castello' }));
+
+    await waitFor(() => expect(writes).toContain(`${DOC}/images/from-url`));
+    // While it imports, the result shows it and nothing else can be picked.
+    expect(within(dialog).getByRole('button', { name: 'Aggiungi Castello' })).toBeDisabled();
+    finishImport(routes.document);
+    expect(await within(dialog).findByText('Aggiunta')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Cerca immagini' })).not.toBeInTheDocument(),
+    );
+  });
+
   it('reports a rejected upload', async () => {
     mockApi(() => Promise.reject(new Error('Too many images')));
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    await user.click(editButton());
 
     const input = window.document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));

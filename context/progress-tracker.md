@@ -19,6 +19,14 @@ map only (product owner's choice: no Room-wide relationships). Adds a
 migration and the `@xyflow/react` dependency. The ticket also adds a
 **Document subtitle** (28_0, built first: under the name, which grows one
 typography level on the Documents list). Order: 27b, then 28.
+**Spec 29, image search, built on 2026-10-08** at the product owner's
+request (spec merged with PR #141; Pinterest has no public search API): a
+"Cerca" picker over Openverse in the Document's "Immagini" row. Backend
+29_1 `GET /rooms/{id}/documents/{id}/image-search` (Owners and the Master,
+in-memory throttle of 30 searches a minute per user, optional
+`OPENVERSE_CLIENT_ID`/`OPENVERSE_CLIENT_SECRET`); frontend 29_2
+`ImageSearchModal` and `useImageSearch`. No migration. Built ahead of 27b
+and 28 at the product owner's request.
 
 **Spec 27 (Document export and import) built on 2026-10-08** (27_1 export of
 one Document, 27_2 import backend, 27_3 frontend), written the day before with
@@ -175,6 +183,17 @@ resolved, so the check now calls `api.exlibris.world` at the VPS's IP
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Document image upload in the info panel (2026-10-08)
+
+- Product owner's request: the "Aggiungi immagini" block above the edit form
+  (button, URL field, button, hint) is now an "Immagini" row in the info
+  panel, right above the PDFs' "File" row and shaped like it: "Carica
+  immagini" (formats hint in its tooltip) and "Da URL", which opens a popover
+  with the URL field and "Aggiungi da URL". It shows to whoever may add
+  images (Owners and the Master) without entering edit mode, like the PDFs'
+  upload (product owner's follow-up, same day). The popover keeps the URL after a
+  failed import and closes once it succeeds (`AddDocumentImages.tsx`).
 
 ### Room PDF dialog, chosen style and attachments (2026-10-08)
 

@@ -183,6 +183,11 @@
       "fileTooLarge": "{name} supera {max} MB",
       "alreadyRunning": "Hai già un'importazione in corso in questa Room",
       "notFound": "Importazione non trovata"
+    },
+    "imageSearch": {
+      "emptyQuery": "Scrivi qualcosa da cercare",
+      "throttled": "Troppe ricerche: aspetta un minuto e riprova",
+      "unavailable": "La ricerca di immagini non è disponibile ora, riprova più tardi"
     }
   },
   "pdf": {
