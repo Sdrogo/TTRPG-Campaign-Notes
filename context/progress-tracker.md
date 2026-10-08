@@ -171,8 +171,9 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
   (button, URL field, button, hint) is now an "Immagini" row in the info
   panel, right above the PDFs' "File" row and shaped like it: "Carica
   immagini" (formats hint in its tooltip) and "Da URL", which opens a popover
-  with the URL field and "Aggiungi da URL". Who sees it is unchanged: the row
-  shows while the Document is in edit mode. The popover keeps the URL after a
+  with the URL field and "Aggiungi da URL". It shows to whoever may add
+  images (Owners and the Master) without entering edit mode, like the PDFs'
+  upload (product owner's follow-up, same day). The popover keeps the URL after a
   failed import and closes once it succeeds (`AddDocumentImages.tsx`).
 
 ### Room PDF dialog, chosen style and attachments (2026-10-08)

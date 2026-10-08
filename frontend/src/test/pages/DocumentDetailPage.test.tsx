@@ -337,15 +337,20 @@ describe('editing', () => {
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
   });
 
-  // The image controls belong to edit mode, not the read view.
-  it('offers image uploads only while editing', async () => {
-    const { user } = render();
+  // Like the PDFs' upload, adding images needs no edit mode.
+  it('offers image uploads to an Owner outside edit mode', async () => {
+    render();
+
+    expect(await screen.findByRole('button', { name: /Carica immagini/ })).toBeInTheDocument();
+  });
+
+  it('hides image uploads from a reader who is not an Owner', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-2'] });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    render();
+
     await screen.findByRole('heading', { name: 'Il Cancello' });
-
     expect(screen.queryByRole('button', { name: /Carica immagini/ })).not.toBeInTheDocument();
-
-    await user.click(editButton());
-    expect(screen.getByRole('button', { name: /Carica immagini/ })).toBeInTheDocument();
   });
 });
 
@@ -488,7 +493,7 @@ describe('creating a Tag while editing', () => {
   });
 });
 
-describe('adding images while editing', () => {
+describe('adding images', () => {
   it('uploads a picked file', async () => {
     const writes: string[] = [];
     mockApi((path) => {
@@ -497,7 +502,6 @@ describe('adding images while editing', () => {
     });
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    await user.click(editButton());
 
     const input = window.document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));
@@ -513,7 +517,6 @@ describe('adding images while editing', () => {
     });
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    await user.click(editButton());
     await user.click(screen.getByRole('button', { name: 'Da URL' }));
 
     await user.type(
@@ -529,7 +532,6 @@ describe('adding images while editing', () => {
     mockApi(() => Promise.reject(new Error('Too many images')));
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
-    await user.click(editButton());
 
     const input = window.document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(input, new File(['bytes'], 'mappa.png', { type: 'image/png' }));

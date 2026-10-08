@@ -339,12 +339,13 @@ function DocumentPanel({
                   />
                   {/* Spec 16: the PDFs. Like the Document itself, every reader
                       sees them (VR-12); with none, only an Owner sees the row.
-                      In edit mode the image upload sits in the
-                      same section, in a row shaped like the PDFs' one. */}
+                      The image upload sits in the same section, in a row
+                      shaped like the PDFs' one, for whoever may add images
+                      (no need to enter edit mode). */}
                   {(document.files.length > 0 || isOwner || editing) && (
                     <>
                       <Divider my={4} />
-                      {editing && (
+                      {(isOwner || editing) && (
                         <AddDocumentImages
                           onUploadFiles={(files) => uploadImages.mutate(files, { onError: notifyError })}
                           uploading={uploadImages.isPending}
