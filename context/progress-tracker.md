@@ -165,6 +165,18 @@ resolved, so the check now calls `api.exlibris.world` at the VPS's IP
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Room PDF dialog, chosen style and attachments (2026-10-08)
+
+- Product owner's report: the style cards gave no sign of the chosen one,
+  and "Aggiungi in coda gli allegati PDF" added nothing. The chosen card now
+  has an accent border and the others are dimmed (`.pdf-style-card` in
+  `index.css`). Attachments were downloaded fine (Storage logs show 200s for
+  all four PC sheets) but the PDF stayed at the manual's size: every
+  encrypted attachment was skipped, including sheets that open without a
+  password and only carry an owner password (common on editable character
+  sheets). Those are now read with the empty password; a PDF that truly
+  needs a password is still left out, now with a log line.
+
 ### Import keeps images after the export's links expire (2026-10-08)
 
 - Product owner's report: importing an export brought no images. An export's
