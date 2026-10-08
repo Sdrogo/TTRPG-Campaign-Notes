@@ -9,8 +9,10 @@ from typing import Any
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.models import DocumentMentionRow, DocumentRow
 from app.main import app
 
 
@@ -115,7 +117,7 @@ async def test_a_document_lists_where_it_is_mentioned_and_survives_a_rename(
                     "note_title": None,
                     "comment_id": None,
                     "comment_author_id": None,
-                    "excerpt": "North of #Tower.",
+                    "excerpt": f"North of {_doc(tower)}.",
                 },
                 {
                     "kind": "note",
@@ -123,7 +125,7 @@ async def test_a_document_lists_where_it_is_mentioned_and_survives_a_rename(
                     "note_title": "Rumours",
                     "comment_id": None,
                     "comment_author_id": None,
-                    "excerpt": "#Tower!",
+                    "excerpt": f"{_doc(tower)}!",
                 },
                 {
                     "kind": "comment",
@@ -131,7 +133,7 @@ async def test_a_document_lists_where_it_is_mentioned_and_survives_a_rename(
                     "note_title": None,
                     "comment_id": comment["id"],
                     "comment_author_id": room.player_id,
-                    "excerpt": "I saw #the tower",
+                    "excerpt": f"I saw {_doc(tower, 'the tower')}",
                 },
             ],
         }
@@ -158,7 +160,10 @@ async def test_groups_are_ordered_by_document_and_comments_by_age(
     groups = await _backlinks(client, room, tower, room.master)
 
     assert _kinds(groups) == [("alpha", ["comment", "comment"]), ("Zeta", ["description"])]
-    assert [m["excerpt"] for m in groups[0]["mentions"]] == ["first #Tower", "second #Tower"]
+    assert [m["excerpt"] for m in groups[0]["mentions"]] == [
+        f"first {_doc(tower)}",
+        f"second {_doc(tower)}",
+    ]
 
 
 async def test_a_player_sees_only_the_backlinks_they_could_read(
@@ -333,7 +338,7 @@ async def test_a_tag_lists_where_it_is_mentioned_until_it_is_deleted(
     as_master = await client.get(url, headers=room.master)
 
     assert _kinds(as_player.json()) == [("Open", ["description"])]
-    assert as_player.json()[0]["mentions"][0]["excerpt"] == "An #Faction"
+    assert as_player.json()[0]["mentions"][0]["excerpt"] == f"An {mention}"
     assert _kinds(as_master.json()) == [("Open", ["description"]), ("Secret", ["description"])]
     deleted = await client.delete(f"{room.url}/tags/{tag['id']}", headers=room.master)
     assert deleted.status_code == 204
@@ -352,3 +357,33 @@ async def test_backlinks_are_for_members_only(
 
     assert document.status_code == 403
     assert tag.status_code == 403
+
+
+async def test_an_excerpt_stored_before_tokens_is_cut_again_from_the_text(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    tower = await _document(client, room, "Tower", room.master)
+    await _document(client, room, "Castle", room.master, description=f"North of {_doc(tower)}.")
+    # A row indexed before excerpts kept their tokens holds the name as text.
+    await db_session.execute(update(DocumentMentionRow).values(excerpt="North of #Tower."))
+
+    groups = await _backlinks(client, room, tower, room.master)
+
+    assert groups[0]["mentions"][0]["excerpt"] == f"North of {_doc(tower)}."
+
+
+async def test_the_stored_excerpt_stays_when_the_text_no_longer_holds_the_mention(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    tower = await _document(client, room, "Tower", room.master)
+    castle = await _document(client, room, "Castle", room.master, description=_doc(tower))
+    # Not written through the API, so the backlink isn't indexed again.
+    await db_session.execute(
+        update(DocumentRow).where(DocumentRow.id == castle["id"]).values(description="Gone.")
+    )
+
+    groups = await _backlinks(client, room, tower, room.master)
+
+    assert groups[0]["mentions"][0]["excerpt"] == _doc(tower)

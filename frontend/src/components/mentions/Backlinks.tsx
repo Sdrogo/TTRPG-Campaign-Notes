@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Anchor, Badge, Collapse, Group, Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { Anchor, Badge, Collapse, Group, Stack, Title, UnstyledButton } from '@mantine/core';
 import { CaretDownIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import { useBacklinks } from '../../hooks/useBacklinks';
 import { backlinkHref } from '../../lib/backlinks';
 import { displayNameFor } from '../../lib/members';
 import { PageCard } from '../PageCard';
+import { MentionText } from './MentionText';
 import type { Backlink, BacklinkTarget } from '../../types/backlink';
 import type { Member } from '../../types/member';
 
@@ -19,7 +20,8 @@ interface BacklinksProps {
 /**
  * "Mentioned in" (spec 20 Decisions 4, 6 and 8): the Documents that mention
  * a Document or a Tag, each with where it does (the description, a Note, a
- * Comment) and the text around it. The backend already left out what the
+ * Comment) and the text around it, its mentions under their targets' current
+ * names (the excerpt keeps the tokens). The backend already left out what the
  * viewer may not see. Collapsible, and not shown at all while empty.
  */
 export function Backlinks({ roomId, target, members }: BacklinksProps) {
@@ -92,9 +94,7 @@ export function Backlinks({ roomId, target, members }: BacklinksProps) {
                     >
                       {where(mention)}
                     </Anchor>
-                    <Text size="sm" style={{ overflowWrap: 'anywhere' }}>
-                      {mention.excerpt}
-                    </Text>
+                    <MentionText size="sm" text={mention.excerpt} style={{ overflowWrap: 'anywhere' }} />
                   </Stack>
                 ))}
               </Stack>
