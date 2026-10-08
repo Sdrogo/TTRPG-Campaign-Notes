@@ -8,12 +8,18 @@ export const EXPORT_FORMATS: ExportFormat[] = ['md', 'json'];
 const MAX_SLUG_LENGTH = 60;
 
 /**
- * `<room>-<date>.json|md` (spec 23 Decision 5): the Room's name reduced to
- * lowercase ASCII letters and digits joined by hyphens, as the backend names
- * its own download, so the file is safe on any system. `room` when nothing is
- * left. The date is UTC, like the backend's.
+ * `<name>-<date>.json|md` (spec 23 Decision 5): the Room's name (or, for one
+ * Document, spec 27, the Document's) reduced to lowercase ASCII letters and
+ * digits joined by hyphens, as the backend names its own download, so the file
+ * is safe on any system. `fallback` (`room` unless told) when nothing is left.
+ * The date is UTC, like the backend's.
  */
-export function exportFileName(roomName: string, date: Date, format: ExportFormat): string {
+export function exportFileName(
+  roomName: string,
+  date: Date,
+  format: ExportFormat,
+  fallback = 'room',
+): string {
   const slug = roomName
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
@@ -22,7 +28,7 @@ export function exportFileName(roomName: string, date: Date, format: ExportForma
     .replace(/^-+|-+$/g, '')
     .slice(0, MAX_SLUG_LENGTH)
     .replace(/-+$/g, '');
-  return `${slug || 'room'}-${date.toISOString().slice(0, 10)}.${format}`;
+  return `${slug || fallback}-${date.toISOString().slice(0, 10)}.${format}`;
 }
 
 /** The request path for a Room's export, with one `tag` parameter per Tag. */
@@ -30,6 +36,15 @@ export function exportPath(roomId: string, format: ExportFormat, tagIds: string[
   const params = new URLSearchParams({ format });
   tagIds.forEach((tagId) => params.append('tag', tagId));
   return `/rooms/${roomId}/export?${params.toString()}`;
+}
+
+/** The request path for one Document's export (spec 27): the Room export with that Document alone. */
+export function documentExportPath(
+  roomId: string,
+  documentId: string,
+  format: ExportFormat,
+): string {
+  return `/rooms/${roomId}/documents/${documentId}/export?format=${format}`;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { exportFileName, exportPath, saveBlob } from '../../lib/roomExport';
+import { documentExportPath, exportFileName, exportPath, saveBlob } from '../../lib/roomExport';
 
 const DAY = new Date('2026-10-05T23:30:00Z');
 
@@ -27,6 +27,23 @@ describe('exportFileName', () => {
     const name = `${'a'.repeat(59)} bbbb`;
 
     expect(exportFileName(name, DAY, 'md')).toBe(`${'a'.repeat(59)}-2026-10-05.md`);
+  });
+});
+
+describe('exportFileName for one Document (spec 27 Decision 4)', () => {
+  it('is named after the Document, with "document" when nothing ASCII is left', () => {
+    expect(exportFileName('Il Cancello', DAY, 'json', 'document')).toBe(
+      'il-cancello-2026-10-05.json',
+    );
+    expect(exportFileName('龍', DAY, 'md', 'document')).toBe('document-2026-10-05.md');
+  });
+});
+
+describe('documentExportPath', () => {
+  it('is the Document export route with the format', () => {
+    expect(documentExportPath('room-1', 'doc-1', 'md')).toBe(
+      '/rooms/room-1/documents/doc-1/export?format=md',
+    );
   });
 });
 

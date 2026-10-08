@@ -7,12 +7,14 @@ import {
   EyeIcon,
   GearIcon,
   SignOutIcon,
+  UploadSimpleIcon,
   UserPlusIcon,
 } from '@phosphor-icons/react';
 import { memberDisplayName } from '../lib/members';
 import { VIEW_AS_PARAM } from '../lib/viewAs';
 import type { Member } from '../types/member';
 import { ExportRoomModal } from './ExportRoomModal';
+import { ImportDocumentsModal } from './importing/ImportDocumentsModal';
 import { InviteModal } from './InviteModal';
 import { LeaveRoomModal } from './LeaveRoomModal';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +26,8 @@ interface RoomTitleActionsProps {
   isAdmin: boolean;
   /** Shows the setup button too: a Master reads the visibility history there (spec 22). */
   isMaster?: boolean;
+  /** Shows the import button: whoever may create Documents in the Room (spec 27 Decision 10). */
+  canImport?: boolean;
   /** The signed-in user, who can leave the Room. */
   currentUserId: string;
   /** Called once the user has left, to take them off the Room's pages. */
@@ -38,7 +42,7 @@ interface RoomTitleActionsProps {
 /**
  * The Room card's actions (setup and invite for an Administrator, setup and
  * "View as" a member (spec 22b) for the Master, export (spec 23) and leave for
- * everyone) beside the Room's title, folded into a "⋮" that unfolds them in
+ * everyone, import of Documents (spec 27) for whoever may create them) beside the Room's title, folded into a "⋮" that unfolds them in
  * place when clicked (Andrea, 2026-10-03).
  */
 export function RoomTitleActions({
@@ -46,6 +50,7 @@ export function RoomTitleActions({
   roomName,
   isAdmin,
   isMaster = false,
+  canImport = false,
   currentUserId,
   onLeft,
   viewAsMembers,
@@ -56,6 +61,7 @@ export function RoomTitleActions({
   const [inviteOpened, setInviteOpened] = useState(false);
   const [leaveOpened, setLeaveOpened] = useState(false);
   const [exportOpened, setExportOpened] = useState(false);
+  const [importOpened, setImportOpened] = useState(false);
 
   return (
     <Group gap={4} wrap="nowrap">
@@ -122,6 +128,19 @@ export function RoomTitleActions({
               <DownloadSimpleIcon size={20} />
             </ActionIcon>
           </Tooltip>
+          {canImport && (
+            <Tooltip label={t('documentImport.action')} withArrow>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="lg"
+                aria-label={t('documentImport.action')}
+                onClick={() => setImportOpened(true)}
+              >
+                <UploadSimpleIcon size={20} />
+              </ActionIcon>
+            </Tooltip>
+          )}
           <Tooltip label={t('common.leave')} withArrow>
             <ActionIcon
               variant="subtle"
@@ -153,6 +172,13 @@ export function RoomTitleActions({
         onClose={() => setExportOpened(false)}
         roomId={roomId}
       />
+      {canImport && (
+        <ImportDocumentsModal
+          opened={importOpened}
+          onClose={() => setImportOpened(false)}
+          roomId={roomId}
+        />
+      )}
       <LeaveRoomModal
         opened={leaveOpened}
         onClose={() => setLeaveOpened(false)}
