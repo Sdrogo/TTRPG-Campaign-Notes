@@ -10,7 +10,7 @@
 3. **Picker**: a modal with a search field and a grid of thumbnails (20 per page, "Altri risultati" for the next page). Each result shows its creator and license on hover. Clicking a result adds it right away (one image per click; the modal stays open so several can be added, each counting toward `MAX_IMAGES_PER_DOCUMENT`). Search only, no browsing of categories.
 4. **Adding**: the existing `POST .../images/from-url` with the result's full image URL. The image goes through the same pipeline (content check, EXIF stripped, WebP, resized), so nothing new is stored or trusted. A result whose host refuses the download fails like any bad URL today.
 5. **Credit**: shown in the picker (creator, license, link to the source page). **Not stored** with the image in this spec: Documents are private to a Room, not published. Keeping the credit on the image (a caption, an exported PDF's credits page) is a follow-up if wanted.
-6. **Safety**: only results Openverse marks as not mature (`mature=false`); the search query goes to Openverse through our backend, never with the user's identity.
+6. **Safety and privacy**: only results Openverse marks as not mature (`mature=false`). The search query goes to Openverse through our backend, so Openverse never sees who searched. The **thumbnails** are a trade-off: the browser loads them from Openverse's own thumbnail endpoint (`api.openverse.org/v1/images/{id}/thumb/`, which Openverse serves itself, so Flickr, Wikimedia and the other upstream hosts are not contacted). Openverse therefore sees the viewer's IP and user agent for those requests, but not the query or the account. Relaying the thumbnails through our backend would hide that too, at the cost of about 20 image requests per search on the VPS. Proposed: accept the trade-off; confirm in the PR. The app has no Content Security Policy today; if one is added, `img-src` must allow `api.openverse.org`.
 
 ## Design
 
@@ -25,7 +25,7 @@
 
 - `ImageSearchModal` (search field, thumbnail grid, credit on hover, "Altri risultati", loading and empty states, an error line on 502) and `useImageSearch` (TanStack Query, keyed by query and page).
 - `AddDocumentImages` gets the "Cerca" action; picking a result calls the same import mutation as "Da URL", with a per-result loading state and the usual error toast.
-- Thumbnails load straight from Openverse's thumbnail URLs (no proxying of images).
+- Thumbnails load straight from Openverse's thumbnail endpoint (Decision 6), never from the upstream hosts; the backend returns that URL as `thumbnail_url`.
 - New strings in `it.json` and `en.json`.
 
 ## Implementation
