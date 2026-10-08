@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pytest
 
-from app.db import export_jobs_repo
+from app.db import export_jobs_repo, import_jobs_repo
 from app.db import session as session_module
 
 
@@ -48,13 +48,15 @@ async def test_startup_fails_what_a_restart_cut_off_then_sweeps_and_waits(
 
     monkeypatch.setattr(session_module, "async_session_factory", lambda: session)
     monkeypatch.setattr(export_jobs_repo, "fail_active", fake_fail_active)
+    monkeypatch.setattr(import_jobs_repo, "fail_active", fake_fail_active)
     monkeypatch.setattr(export_jobs_repo, "sweep", fake_sweep)
     monkeypatch.setattr(asyncio, "sleep", _stop_sleep)
 
     with pytest.raises(_StopLoop):
         await export_jobs_repo.run_export_sweeper()
 
-    assert failed == ["interrupted"]
+    # Room PDFs and Document imports (spec 27) cut off by the restart.
+    assert failed == ["interrupted", "interrupted"]
     assert session.commits == 1
     assert swept == [session]
 

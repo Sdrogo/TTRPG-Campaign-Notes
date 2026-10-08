@@ -17,9 +17,11 @@ from app.domain.export import (
     MentionSpan,
     TextSpan,
     build_export,
+    document_export_filename,
     export_filename,
     render_json,
     render_markdown,
+    restrict_to_document,
     text_spans,
 )
 from app.domain.mentions import MentionKind, mention_token
@@ -611,3 +613,43 @@ def test_the_file_name_is_the_room_and_the_date() -> None:
     # Nothing ASCII left, so a header-safe fallback.
     assert export_filename("龍", T0, ExportFormat.JSON) == "room-2026-10-02.json"
     assert export_filename('a"b\r\nc', T0, ExportFormat.JSON) == "a-b-c-2026-10-02.json"
+
+
+# --- one Document (spec 27) ---------------------------------------------------
+
+
+def test_a_single_document_export_keeps_only_what_the_document_refers_to() -> None:
+    description = (
+        f"{mention_token(MentionKind.TAG, PLACE, 'Place')} and "
+        f"{mention_token(MentionKind.USER, CARA, 'Cara')}"
+    )
+    castle = _castle(
+        document=_document(CASTLE, "Castle", description, played_by=BOB),
+        tag_ids=[NPC],
+        owner_ids=[ALICE],
+        selective_ids=[],
+        comments=[_comment(1, ALICE, "In character", as_document=IRENA)],
+    )
+    other = DocumentSource(**{**castle.__dict__, "document": _document(IRENA, "Irena")})
+    export = _export(
+        MASTER,
+        [castle, other],
+        visible_documents={CASTLE: "Castle", IRENA: "Irena", SECRET: "Secret"},
+    )
+
+    one = restrict_to_document(export, CASTLE)
+
+    assert [d.id for d in one.documents] == [CASTLE]
+    # The Tag it carries and the one it mentions; its Owner, player, Comment
+    # author and the member it mentions - nobody else.
+    assert {t.id for t in one.tags} == {NPC, PLACE}
+    assert {m.id for m in one.members} == {ALICE, BOB, CARA}
+    assert one.main_items == () and one.tag_filter == ()
+    # The Documents Comments were written as stay named, no other Document does.
+    assert set(one.visible_documents) == {CASTLE, IRENA}
+    assert (one.room_name, one.generated_at) == (export.room_name, export.generated_at)
+
+
+def test_a_document_file_is_named_after_it_with_a_fallback() -> None:
+    assert document_export_filename("La Torre", T0, ExportFormat.JSON) == "la-torre-2026-10-02.json"
+    assert document_export_filename("龍", T0, ExportFormat.MARKDOWN) == "document-2026-10-02.md"

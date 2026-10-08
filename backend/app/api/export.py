@@ -13,7 +13,11 @@ from fastapi import APIRouter, Query, Response, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.access import get_visible_images_for_documents, require_membership
+from app.api.access import (
+    get_visible_document,
+    get_visible_images_for_documents,
+    require_membership,
+)
 from app.api.document_files import sign_files
 from app.api.errors import http_error
 from app.api.image_uploads import sign_images
@@ -34,9 +38,11 @@ from app.domain.export import (
     ExportFormat,
     ExportInput,
     build_export,
+    document_export_filename,
     export_filename,
     render_json,
     render_markdown,
+    restrict_to_document,
 )
 from app.domain.models import Membership, Room
 from app.domain.tags import ordered_main_items
@@ -184,13 +190,18 @@ EXPORT_MEDIA_TYPES = {
 
 
 async def _document_sources(
-    session: AsyncSession, room_id: uuid.UUID, viewer: Membership, tag_ids: list[uuid.UUID]
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    viewer: Membership,
+    tag_ids: list[uuid.UUID],
+    document_id: uuid.UUID | None = None,
 ) -> tuple[list[DocumentSource], dict[uuid.UUID, str], dict[str, str], dict[str, str]]:
-    """The Documents the viewer sees (and carry every Tag in `tag_ids`) with
-    all their rows, the name of every Document they see, and the signed links
-    of the images and files that survive the filters. Tags, images, files,
-    Notes and Comments are read only for the Documents that survived the
-    visibility filter (Invariant 1), each in one query for the whole Room."""
+    """The Documents the viewer sees (and carry every Tag in `tag_ids`, and
+    are `document_id` when it is given) with all their rows, the name of every
+    Document they see, and the signed links of the images and files that
+    survive the filters. Tags, images, files, Notes and Comments are read only
+    for the Documents that survived the visibility filter (Invariant 1), each
+    in one query for the whole Room."""
     documents = await documents_repo.list_documents_for_room(session, room_id)
     all_ids = [document.id for document in documents]
     owners = await documents_repo.list_owner_ids_for_documents(session, all_ids)
@@ -204,7 +215,12 @@ async def _document_sources(
     ]
     visible_ids = [document.id for document in visible]
     tags = await documents_repo.list_tag_ids_for_documents(session, visible_ids)
-    wanted = [document for document in visible if set(tag_ids) <= set(tags[document.id])]
+    wanted = [
+        document
+        for document in visible
+        if set(tag_ids) <= set(tags[document.id])
+        and (document_id is None or document.id == document_id)
+    ]
     ids = [document.id for document in wanted]
 
     images = await get_visible_images_for_documents(session, ids, viewer)
@@ -246,19 +262,25 @@ async def _document_sources(
 
 
 async def load_export(
-    session: AsyncSession, room: Room, viewer: Membership, tag_ids: list[uuid.UUID]
+    session: AsyncSession,
+    room: Room,
+    viewer: Membership,
+    tag_ids: list[uuid.UUID],
+    document_id: uuid.UUID | None = None,
 ) -> Export:
     """The export tree of `room` for `viewer`, read now: everything they see
     (Invariant 1) and nothing else, narrowed to the Documents carrying every
     Tag in `tag_ids`. Shared by the file download and the Room PDF job, which
     calls it with the requester's (or the "as" member's) Membership when it
-    starts, so the PDF is a snapshot of that moment (spec 23b Backend)."""
+    starts, so the PDF is a snapshot of that moment (spec 23b Backend). With
+    `document_id` the tree holds that Document alone (spec 27,
+    `restrict_to_document`); the caller has checked the viewer sees it."""
     sources, visible_documents, image_urls, file_urls = await _document_sources(
-        session, room.id, viewer, tag_ids
+        session, room.id, viewer, tag_ids, document_id
     )
     tags = await tags_repo.list_tags(session, room.id)
     combinations = await tags_repo.list_combinations(session, room.id)
-    return build_export(
+    export = build_export(
         ExportInput(
             room=room,
             viewer=viewer,
@@ -274,6 +296,7 @@ async def load_export(
             link_ttl_seconds=storage.SIGNED_URL_TTL_SECONDS,
         )
     )
+    return export if document_id is None else restrict_to_document(export, document_id)
 
 
 @router.get(
@@ -315,13 +338,65 @@ async def export_room(
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
 
     export = await load_export(session, room, viewer, tag_ids)
+    return _file_response(
+        export, export_filename(room.name, export.generated_at, export_format), export_format
+    )
+
+
+@router.get(
+    "/rooms/{room_id}/documents/{document_id}/export",
+    response_class=Response,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "A file: the JSON export (`ExportJson`) holding one Document, or "
+            "the Markdown one.",
+            "content": {
+                "application/json": {"schema": ExportJson.model_json_schema()},
+                "text/markdown": {"schema": {"type": "string"}},
+            },
+        }
+    },
+)
+async def export_document(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+    export_format: Annotated[ExportFormat, Query(alias="format")] = ExportFormat.JSON,
+) -> Response:
+    """Downloads one Document as `<document>-<date>.json` or `.md` (spec 27):
+    the Room export with that Document alone, so the import reads it like any
+    other. Exactly what the requester sees of it (VR-07, Invariant 1); its
+    `tags` and `members` list only what it refers to. Every member who sees
+    the Document may export it; 404 for one they can't see, as for the
+    Document itself. Follows `X-View-As`. Not audited: it reads."""
+    requester_id = uuid.UUID(current_user.id)
+    viewer = await require_membership(session, room_id, requester_id, locale)
+    document, _, _ = await get_visible_document(
+        session, room_id, document_id, requester_id, viewer.role, locale
+    )
+    room = await rooms_repo.get_room(session, room_id)
+    if room is None:  # pragma: no cover - only a concurrent Room deletion
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
+
+    export = await load_export(session, room, viewer, [], document.id)
+    return _file_response(
+        export,
+        document_export_filename(document.name, export.generated_at, export_format),
+        export_format,
+    )
+
+
+def _file_response(export: Export, filename: str, export_format: ExportFormat) -> Response:
+    """The export serialized in `export_format` as a download named
+    `filename`."""
     content: str
     if export_format is ExportFormat.JSON:
         data: dict[str, Any] = render_json(export)
         content = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     else:
         content = render_markdown(export)
-    filename = export_filename(room.name, export.generated_at, export_format)
     return Response(
         content=content,
         media_type=EXPORT_MEDIA_TYPES[export_format],

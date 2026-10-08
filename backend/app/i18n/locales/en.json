@@ -164,6 +164,25 @@
     "export": {
       "alreadyRunning": "A PDF is already being generated for you in this Room",
       "notFound": "Export not found"
+    },
+    "import": {
+      "unreadable": "{name} can't be read as a JSON or Markdown export",
+      "unsupportedSchema": "{name} was exported by a newer version (schema {version}); this app reads up to schema {max}",
+      "noDocuments": "{name} holds no Document",
+      "tooManyFiles": "At most {max} files can be imported at once",
+      "tooManyDocuments": "At most {max} Documents can be imported at once",
+      "tooManyImages": "At most {max} images can be imported at once",
+      "nameRequired": "A Document in the file has no name",
+      "nameTooLong": "The Document name \"{name}...\" is over {max} characters",
+      "tooManyNotes": "{name} has more than {max} Notes",
+      "noteTitleInvalid": "A Note of {name} has no title or one over {max} characters",
+      "tagNameTooLong": "The Tag name \"{name}...\" is over {max} characters",
+      "nothingSelected": "Select at least one Document to import",
+      "badChoices": "The import choices are not valid",
+      "cannotReplace": "Only an Owner (or the Master) can replace {name}",
+      "fileTooLarge": "{name} is over {max} MB",
+      "alreadyRunning": "An import is already running for you in this Room",
+      "notFound": "Import not found"
     }
   },
   "pdf": {
