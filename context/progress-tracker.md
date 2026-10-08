@@ -165,6 +165,17 @@ resolved, so the check now calls `api.exlibris.world` at the VPS's IP
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Import keeps images after the export's links expire (2026-10-08)
+
+- Product owner's report: importing an export brought no images. An export's
+  image links are signed and live an hour at most, so a file imported later
+  had every image skipped as `unreachable` (seen on staging: a prod export,
+  all 52 images skipped). Images in this app's own bucket are now read
+  straight from Storage when the importer sees them in their Room; anything
+  else still goes through the link. Details in `architecture.md` → Document
+  export and import → The job. Cross-environment imports (a prod export into
+  staging) still need fresh links: each environment has its own bucket.
+
 ### Document export and import (spec 27, 27_1 to 27_3, 2026-10-08)
 
 - **27_1, export one Document**: `GET /rooms/{id}/documents/{doc}/export` =
