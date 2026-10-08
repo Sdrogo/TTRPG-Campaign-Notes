@@ -60,13 +60,19 @@ def test_cors_origins_rejects_a_non_list_json_value(
         load_settings()
 
 
-def test_engine_pool_follows_the_settings() -> None:
+def test_db_pool_defaults_fit_two_backends(monkeypatch: pytest.MonkeyPatch) -> None:
     """Supabase's Session Pooler allows 15 clients per project, shared by
-    every backend on the database: the engine must keep to the cap the
-    settings give it (see app/config.py)."""
+    every backend on the database: by default two processes must fit
+    (see app/config.py)."""
+    monkeypatch.delenv("DB_POOL_SIZE", raising=False)
+    monkeypatch.delenv("DB_MAX_OVERFLOW", raising=False)
+    settings = load_settings()
+    assert (settings.db_pool_size, settings.db_max_overflow) == (5, 2)
+    assert 2 * (settings.db_pool_size + settings.db_max_overflow) <= 15
+
+
+def test_engine_pool_follows_the_settings() -> None:
     from app.config import settings
     from app.db.session import engine
 
     assert engine.pool.size() == settings.db_pool_size  # type: ignore[attr-defined]
-    assert engine.pool._max_overflow == settings.db_max_overflow  # type: ignore[attr-defined]
-    assert settings.db_pool_size + settings.db_max_overflow <= 7

@@ -137,7 +137,7 @@ healthy); production traffic is still on Render. Testing it showed both
 backends together exceeding the Session Pooler's 15 clients
 (`EMAXCONNSESSION`), so the DB pool is now capped at 5 + 2 per process
 (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`); needs a release to `main` to reach
-Render and the VPS. **Cutover done on 2026-10-08 (~02:30 UTC)**: Render
+the VPS. **Cutover done on 2026-10-08 (~02:30 UTC)**: Render
 production suspended (kept for rollback), `api.exlibris.world` A/AAAA → VPS,
 Caddy serving both names. Production runs only on the VPS.
 
