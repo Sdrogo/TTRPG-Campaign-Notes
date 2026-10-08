@@ -20,23 +20,30 @@ function render(props: Partial<Parameters<typeof AddDocumentImages>[0]> = {}) {
 }
 
 const urlField = () => screen.getByPlaceholderText("https://… URL dell'immagine");
+const openUrl = (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByRole('button', { name: 'Da URL' }));
 
 describe('AddDocumentImages', () => {
-  it('offers both ways to add an image', () => {
+  // A compact row, like the PDFs' "File" one in the info panel.
+  it('is a titled row offering both ways to add an image', () => {
     render();
 
-    expect(screen.getByRole('button', { name: /Dal computer/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Aggiungi da URL' })).toBeInTheDocument();
+    expect(screen.getByText('Immagini')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Carica immagini/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Da URL' })).toBeInTheDocument();
   });
 
-  it('names the accepted formats', () => {
-    render();
+  it('names the accepted formats on the upload button', async () => {
+    const { user } = render();
 
-    expect(screen.getByText(/PNG, JPEG, WebP o GIF/)).toBeInTheDocument();
+    await user.hover(screen.getByRole('button', { name: /Carica immagini/ }));
+
+    expect(await screen.findByText(/PNG, JPEG, WebP o GIF/)).toBeInTheDocument();
   });
 
-  it('cannot import while the URL field is empty', () => {
-    render();
+  it('cannot import while the URL field is empty', async () => {
+    const { user } = render();
+    await openUrl(user);
 
     expect(screen.getByRole('button', { name: 'Aggiungi da URL' })).toBeDisabled();
   });
@@ -44,6 +51,7 @@ describe('AddDocumentImages', () => {
   // The backend's SSRF guard only fetches http(s).
   it('rejects a non-http(s) URL', async () => {
     const { user } = render();
+    await openUrl(user);
 
     await user.type(urlField(), 'file:///etc/passwd');
 
@@ -53,6 +61,7 @@ describe('AddDocumentImages', () => {
 
   it('imports a trimmed URL', async () => {
     const { onImportUrl, user } = render();
+    await openUrl(user);
 
     await user.type(urlField(), '  https://example.com/map.png  ');
     await user.click(screen.getByRole('button', { name: 'Aggiungi da URL' }));
@@ -64,12 +73,14 @@ describe('AddDocumentImages', () => {
   // failed import so the user can retry without retyping.
   it('clears the field only when the import reports success', async () => {
     const { onImportUrl, user } = render();
+    await openUrl(user);
     await user.type(urlField(), 'https://example.com/map.png');
     await user.click(screen.getByRole('button', { name: 'Aggiungi da URL' }));
 
     expect(urlField()).toHaveValue('https://example.com/map.png');
 
     act(() => onImportUrl.mock.calls[0][1]());
+    await openUrl(user);
     expect(urlField()).toHaveValue('');
   });
 
@@ -95,14 +106,15 @@ describe('AddDocumentImages', () => {
   it('shows the upload in progress', () => {
     render({ uploading: true });
 
-    expect(screen.getByRole('button', { name: /Dal computer/ })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /Carica immagini/ })).toHaveAttribute(
       'data-loading',
       'true',
     );
   });
 
-  it('shows the import in progress', () => {
-    render({ importing: true });
+  it('shows the import in progress', async () => {
+    const { user } = render({ importing: true });
+    await openUrl(user);
 
     expect(screen.getByRole('button', { name: 'Aggiungi da URL' })).toHaveAttribute(
       'data-loading',

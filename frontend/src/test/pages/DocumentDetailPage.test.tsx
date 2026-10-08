@@ -342,10 +342,10 @@ describe('editing', () => {
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
-    expect(screen.queryByText('Aggiungi immagini')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Carica immagini/ })).not.toBeInTheDocument();
 
     await user.click(editButton());
-    expect(screen.getByText('Aggiungi immagini')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Carica immagini/ })).toBeInTheDocument();
   });
 });
 
@@ -514,9 +514,10 @@ describe('adding images while editing', () => {
     const { user } = render();
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
+    await user.click(screen.getByRole('button', { name: 'Da URL' }));
 
     await user.type(
-      screen.getByPlaceholderText("https://… URL dell'immagine"),
+      await screen.findByPlaceholderText("https://… URL dell'immagine"),
       'https://example.com/map.png',
     );
     await user.click(screen.getByRole('button', { name: 'Aggiungi da URL' }));

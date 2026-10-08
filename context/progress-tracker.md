@@ -165,6 +165,16 @@ resolved, so the check now calls `api.exlibris.world` at the VPS's IP
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Document image upload in the info panel (2026-10-08)
+
+- Product owner's request: the "Aggiungi immagini" block above the edit form
+  (button, URL field, button, hint) is now an "Immagini" row in the info
+  panel, right above the PDFs' "File" row and shaped like it: "Carica
+  immagini" (formats hint in its tooltip) and "Da URL", which opens a popover
+  with the URL field and "Aggiungi da URL". Who sees it is unchanged: the row
+  shows while the Document is in edit mode. The popover keeps the URL after a
+  failed import and closes once it succeeds (`AddDocumentImages.tsx`).
+
 ### Room PDF dialog, chosen style and attachments (2026-10-08)
 
 - Product owner's report: the style cards gave no sign of the chosen one,
