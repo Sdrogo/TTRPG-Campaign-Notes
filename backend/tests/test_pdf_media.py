@@ -101,6 +101,20 @@ def test_a_damaged_or_encrypted_attachment_is_skipped_and_the_rest_kept() -> Non
     assert len(PdfReader(io.BytesIO(merged)).pages) == 3
 
 
+def test_an_attachment_with_only_an_owner_password_is_appended() -> None:
+    # Editable sheets often restrict editing with an owner password but open
+    # without one: they print like any other attachment.
+    restricted = PdfWriter(clone_from=PdfReader(io.BytesIO(_pdf(2))))
+    restricted.encrypt(user_password="", owner_password="secret", algorithm="AES-128")
+    restricted_bytes = io.BytesIO()
+    restricted.write(restricted_bytes)
+
+    merged, appended = merge_attachments(_pdf(1), [restricted_bytes.getvalue()])
+
+    assert appended == 1
+    assert len(PdfReader(io.BytesIO(merged)).pages) == 3
+
+
 def test_options_survive_the_trip_through_the_jobs_json() -> None:
     options = PdfOptions(
         style=ManualStyle.MODERN,

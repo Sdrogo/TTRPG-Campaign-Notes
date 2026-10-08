@@ -139,6 +139,28 @@ html body[data-scroll-locked] {
   border-color: var(--accent-primary);
 }
 
+/* A style card of the Room PDF dialog: the chosen one has an accent border,
+   the others are dimmed until hovered or focused. */
+.pdf-style-card {
+  transition:
+    border-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.pdf-style-card[data-checked] {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+.pdf-style-card:not([data-checked]) {
+  opacity: 0.55;
+}
+
+.pdf-style-card:not([data-checked]):hover,
+.pdf-style-card:not([data-checked]):focus-visible {
+  opacity: 0.85;
+}
+
 /* The language flag just before the avatar: the same ring as the avatar,
    but square-cornered like the flag itself, accent while its menu is open. */
 .language-button {
