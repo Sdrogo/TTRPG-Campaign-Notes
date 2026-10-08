@@ -16,6 +16,7 @@ from app.domain.mentions import (
     mention_token,
     plain_mentions,
     plan_source_mentions,
+    target_excerpt,
     unlink_unknown_content,
 )
 
@@ -75,13 +76,16 @@ def test_one_row_per_target_skipping_people_and_the_document_itself() -> None:
         (DOC, None),
         (None, TAG),
     ]
-    assert planned[0] == PlannedMention(DOC, None, display_text(text))
+    # Document and Tag tokens stay tokens, a member reads as their name.
+    assert planned[0] == PlannedMention(
+        DOC, None, text.replace(f"@[Alice](user:{ALICE})", "@Alice")
+    )
 
 
 def test_a_short_text_is_its_own_excerpt_with_spaces_collapsed() -> None:
     text = f"Go to\n\n  #[Castle](doc:{DOC})   tonight."
 
-    assert mention_excerpt(text, find_mentions(text)[0]) == "Go to #Castle tonight."
+    assert mention_excerpt(text, find_mentions(text)[0]) == f"Go to #[Castle](doc:{DOC}) tonight."
 
 
 def test_a_long_text_is_cut_on_words_around_the_mention() -> None:
@@ -91,7 +95,7 @@ def test_a_long_text_is_cut_on_words_around_the_mention() -> None:
 
     excerpt = mention_excerpt(text, find_mentions(text)[0], length=40)
 
-    assert excerpt == "… before29 #Castle after0 after1…"
+    assert excerpt == f"… before29 #[Castle](doc:{DOC}) after0 after1…"
 
 
 def test_room_one_side_does_not_use_goes_to_the_other() -> None:
@@ -100,14 +104,50 @@ def test_room_one_side_does_not_use_goes_to_the_other() -> None:
 
     excerpt = mention_excerpt(text, find_mentions(text)[0], length=40)
 
-    assert excerpt == "Hi #Castle after0 after1 after2 after3…"
+    assert excerpt == f"Hi #[Castle](doc:{DOC}) after0 after1 after2 after3…"
 
 
 def test_a_cut_inside_one_long_word_keeps_only_the_ellipsis() -> None:
     text = f"{'x' * 50}#[C](doc:{DOC}) {'y' * 50}"
     mention = find_mentions(text)[0]
 
-    assert mention_excerpt(text, mention, length=10) == "…#C…"
+    assert mention_excerpt(text, mention, length=10) == f"…#[C](doc:{DOC})…"
+
+
+def test_tokens_around_the_mention_stay_whole_and_count_as_their_name() -> None:
+    long_name = "The Very Long Name Of A Place"
+    text = (
+        f"{'w ' * 20}#[{long_name}](tag:{TAG}) near #[Castle](doc:{DOC}) "
+        f"with @[Alice](user:{ALICE}) {'z ' * 20}"
+    )
+    mention = find_mentions(text)[1]
+
+    # The ids don't eat the budget, and a cut never splits a name.
+    assert mention_excerpt(text, mention, length=60) == (
+        f"… near #[Castle](doc:{DOC}) with @Alice z z z z z z z…"
+    )
+    assert mention_excerpt(text, mention, length=90).startswith(f"… w w #[{long_name}](tag:{TAG})")
+
+
+def test_a_token_too_long_for_the_room_is_left_out_not_cut() -> None:
+    text = f"#[A long name](tag:{TAG}) #[Castle](doc:{DOC})"
+    mention = find_mentions(text)[1]
+
+    assert mention_excerpt(text, mention, length=10) == f"… #[Castle](doc:{DOC})"
+
+
+def test_a_placeholder_character_in_the_text_never_reads_as_a_token() -> None:
+    text = f"\U00100000 #[Castle](doc:{DOC}) \U00100001"
+
+    assert mention_excerpt(text, find_mentions(text)[0]) == f"\ufffd #[Castle](doc:{DOC}) \ufffd"
+
+
+def test_the_excerpt_of_a_target_is_cut_around_its_first_mention() -> None:
+    text = f"A #[NPC](tag:{TAG}) then #[Castle](doc:{DOC}) and #[Castle](doc:{DOC})"
+
+    assert target_excerpt(text, DOC, None) == text
+    assert target_excerpt(text, None, TAG) == text
+    assert target_excerpt(text, None, DOC) is None
 
 
 def _doc(name: str, target_id: uuid.UUID, age: int = 0) -> NamedTarget:

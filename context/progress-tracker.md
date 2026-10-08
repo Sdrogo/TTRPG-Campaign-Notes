@@ -174,6 +174,13 @@ resolved, so the check now calls `api.exlibris.world` at the VPS's IP
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
+### Mentions follow a renamed Document or Tag everywhere (bug fix, 2026-10-08)
+
+- Andrea's report: renaming a Document didn't change its Mentions. Links in read mode already showed the current name; two places didn't: the edit boxes (descriptions, Notes, Comments) showed the name stored in the token, and "Mentioned in" showed excerpts frozen at save time with the old name.
+- `MentionTextarea` shows each token under its target's current name (Document, Tag or member) through `TokenOptions.currentName`; the stored token is untouched, so nothing is rewritten and a hidden target's new name never leaks.
+- Backlink excerpts keep Document and Tag tokens (`mention_excerpt`), are cut again at read time from the source's current text (`target_excerpt`) and render through `MentionText`. No migration: old rows are recut on read.
+- Still on stored names: search excerpts and matching (search for the new name won't find old mentions), and the version history diff (historical text).
+
 ### Document image upload in the info panel (2026-10-08)
 
 - Product owner's request: the "Aggiungi immagini" block above the edit form

@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent
 import { Box, Popover, Textarea, type TextareaProps } from '@mantine/core';
 import { useDocumentMentions } from '../../hooks/useDocumentMentions';
 import { notifyError } from '../../lib/notify';
-import { memberDisplayName } from '../../lib/members';
+import { findMember, memberDisplayName } from '../../lib/members';
 import {
   applyDisplayEdit,
   filterMemberCandidates,
@@ -10,6 +10,7 @@ import {
   replaceDisplayRange,
   toDisplay,
   USER_MENTION_PREFIX,
+  type TokenOptions,
 } from '../../lib/mentionTokens';
 import type { Member } from '../../types/member';
 import {
@@ -70,8 +71,19 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, .
   });
 
   // What the textarea shows: `value` with every token as `#Name` (and, in
-  // Comments, `@Name`).
-  const tokens = { users: members !== undefined };
+  // Comments, `@Name`), under its target's current name while the viewer
+  // sees it, so a rename shows here too. The stored token is left as is.
+  const tokens: TokenOptions = {
+    users: members !== undefined,
+    currentName: (kind, targetId) => {
+      if (kind === 'user') {
+        const member = members && findMember(members, targetId);
+        return member ? memberDisplayName(member) : undefined;
+      }
+      const targets = kind === 'doc' ? mentions?.documents : mentions?.tags;
+      return targets?.find((target) => target.id === targetId)?.name;
+    },
+  };
   const display = toDisplay(value, tokens);
   const prefixes = `${mentions ? '#' : ''}${members ? USER_MENTION_PREFIX : ''}`;
   const mention = prefixes && caret !== null ? findMentionQuery(display, caret, prefixes) : null;

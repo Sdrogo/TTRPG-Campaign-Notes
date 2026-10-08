@@ -24,7 +24,10 @@ const SIGILS: Record<TokenKind, string> = { user: USER_MENTION_PREFIX, doc: '#',
 const TARGET =
   /^\((user|doc|tag):([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\)/;
 
-/** A token as stored (`stored`) and as a textarea shows it (`display`). */
+/**
+ * A token as stored (`stored`) and as a textarea shows it (`display`: its
+ * target's current name when `TokenOptions.currentName` knows it).
+ */
 export interface MentionToken {
   kind: TokenKind;
   stored: string;
@@ -47,6 +50,12 @@ export type TokenSegment = { kind: 'text'; stored: string; display: string } | M
  */
 export interface TokenOptions {
   users?: boolean;
+  /**
+   * The current name of a token's target, or undefined to show the name
+   * stored with it (a target the viewer can't see). A textarea passes it so
+   * a renamed Document, Tag or member reads under its new name.
+   */
+  currentName?: (kind: TokenKind, targetId: string) => string | undefined;
 }
 
 /** The stored token for a mention of `targetId` shown as `name`. */
@@ -94,11 +103,12 @@ function readToken(text: string, index: number, options: TokenOptions): MentionT
   if (SIGILS[kind] !== sigil || (kind === 'user' && !options.users)) {
     return null;
   }
+  const targetId = target[2].toLowerCase();
   return {
     kind,
     stored: text.slice(index, read.close + 1 + target[0].length),
-    display: `${sigil}${read.name}`,
-    targetId: target[2].toLowerCase(),
+    display: `${sigil}${options.currentName?.(kind, targetId) ?? read.name}`,
+    targetId,
     name: read.name,
   };
 }

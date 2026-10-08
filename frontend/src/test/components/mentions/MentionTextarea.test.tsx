@@ -500,6 +500,32 @@ describe('Document and Tag tokens', () => {
     expect(onValue).toHaveBeenLastCalledWith(`${cancello} vieni`);
   });
 
+  it('shows a renamed Document or Tag under its current name and keeps the token', async () => {
+    const tag = `#[Posti](tag:${LUOGHI})`;
+    const { onValue, user } = render({ initial: `#[Il Portone](doc:${CANCELLO}) e ${tag} ` });
+    expect(field()).toHaveValue('#Il Cancello e #Luoghi ');
+
+    await user.type(field(), 'vieni');
+
+    expect(onValue).toHaveBeenLastCalledWith(`#[Il Portone](doc:${CANCELLO}) e ${tag} vieni`);
+  });
+
+  it('unlinks a renamed mention under the name it shows when that name is edited', async () => {
+    const { onValue, user } = render({ initial: `#[Il Portone](doc:${CANCELLO}) ciao` });
+
+    await user.click(field());
+    fireEvent.select(field(), { target: { selectionStart: 12, selectionEnd: 12 } });
+    await user.keyboard('{Backspace}');
+
+    expect(onValue).toHaveBeenLastCalledWith('#Il Cancell ciao');
+  });
+
+  it('keeps the stored name of a target the viewer cannot see', () => {
+    render({ initial: `#[Segreto](doc:${TEMPIO}) e #[Vecchio](tag:${TEMPIO_TAG})` });
+
+    expect(field()).toHaveValue('#Segreto e #Vecchio');
+  });
+
   it('reads member tokens as plain text where members cannot be mentioned', () => {
     render({ initial: `@[Ara](user:${CANCELLO})` });
 
@@ -572,6 +598,15 @@ describe('mentioning members', () => {
     await user.keyboard('{Backspace}');
 
     expect(onValue).toHaveBeenLastCalledWith('@Ar ciao');
+  });
+
+  it('shows a member under their current name, or as written once they left', () => {
+    render({
+      members,
+      initial: `@[Arabella](user:${ARA}) @[Gone](user:${TEMPIO})`,
+    });
+
+    expect(field()).toHaveValue('@Ara @Gone');
   });
 
   it('keeps a mention when typing right before it', async () => {
