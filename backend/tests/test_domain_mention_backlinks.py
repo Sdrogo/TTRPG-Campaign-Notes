@@ -136,6 +136,12 @@ def test_a_token_too_long_for_the_room_is_left_out_not_cut() -> None:
     assert mention_excerpt(text, mention, length=10) == f"… #[Castle](doc:{DOC})"
 
 
+def test_a_placeholder_character_in_the_text_never_reads_as_a_token() -> None:
+    text = f"\U00100000 #[Castle](doc:{DOC}) \U00100001"
+
+    assert mention_excerpt(text, find_mentions(text)[0]) == f"\ufffd #[Castle](doc:{DOC}) \ufffd"
+
+
 def test_the_excerpt_of_a_target_is_cut_around_its_first_mention() -> None:
     text = f"A #[NPC](tag:{TAG}) then #[Castle](doc:{DOC}) and #[Castle](doc:{DOC})"
 

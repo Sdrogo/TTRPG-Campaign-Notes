@@ -241,6 +241,9 @@ def mention_excerpt(text: str, mention: Mention, length: int = EXCERPT_LENGTH) -
     tokens (counted as long as their sigil and name), so the browser shows
     each under its target's current name and a rename shows here too; member
     tokens read as their sigil and name."""
+    # A character the text already holds in the placeholder range would read
+    # back as a token; one for one, so every position stays where it was.
+    text = _HELD_RANGE.sub("\ufffd", text)
     tokens: list[str] = []
     found = find_mentions(text)
     before = _SPACES.sub(" ", _hold_tokens(text, found, 0, mention.start, tokens))
@@ -260,6 +263,7 @@ def mention_excerpt(text: str, mention: Mention, length: int = EXCERPT_LENGTH) -
 # private-use character (the first token U+100000, the next U+100001...), as
 # long as the name it shows: no whitespace, so a cut never splits it.
 _HELD = 0x100000
+_HELD_RANGE = re.compile("[\U00100000-\U0010ffff]")
 
 
 def _hold_tokens(
