@@ -47,6 +47,7 @@ interface Routes {
   members: unknown;
   comments: unknown;
   backlinks: unknown;
+  imageSearch?: unknown;
 }
 
 const routes: Routes = { document: rawDocument(), members: [], comments: [], backlinks: [] };
@@ -64,6 +65,7 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
     if (path === '/account') return Promise.resolve(rawAccount());
     if (path === '/rooms/room-1/characters/mine') return Promise.resolve([]);
+    if (path.startsWith(`${DOC}/image-search?`)) return Promise.resolve(routes.imageSearch);
     return Promise.resolve(routes.document);
   });
 }
@@ -526,6 +528,54 @@ describe('adding images', () => {
     await user.click(screen.getByRole('button', { name: 'Aggiungi da URL' }));
 
     await waitFor(() => expect(writes).toContain(`${DOC}/images/from-url`));
+  });
+
+  // Spec 29: a search result goes through the same import as "Da URL".
+  it('adds an image found with the search', async () => {
+    routes.imageSearch = {
+      results: [
+        {
+          id: 'img-1',
+          thumbnail_url: 'https://api.openverse.org/v1/images/img-1/thumb/',
+          url: 'https://example.com/castle.jpg',
+          width: 800,
+          height: 600,
+          title: 'Castello',
+          creator: 'Ada',
+          license: 'CC BY 2.0',
+          license_url: null,
+          source_url: null,
+        },
+      ],
+      page: 1,
+      has_more: false,
+    };
+    const writes: string[] = [];
+    let finishImport: (value: unknown) => void = () => {};
+    mockApi((path) => {
+      writes.push(path);
+      return new Promise((resolve) => {
+        finishImport = resolve;
+      });
+    });
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+
+    await user.click(screen.getByRole('button', { name: 'Cerca immagini' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Cerca immagini' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Cosa cercare' }), 'castello{Enter}');
+    await user.click(await within(dialog).findByRole('button', { name: 'Aggiungi Castello' }));
+
+    await waitFor(() => expect(writes).toContain(`${DOC}/images/from-url`));
+    // While it imports, the result shows it and nothing else can be picked.
+    expect(within(dialog).getByRole('button', { name: 'Aggiungi Castello' })).toBeDisabled();
+    finishImport(routes.document);
+    expect(await within(dialog).findByText('Aggiunta')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Cerca immagini' })).not.toBeInTheDocument(),
+    );
   });
 
   it('reports a rejected upload', async () => {

@@ -7,16 +7,18 @@ import { AddDocumentImages } from '../../components/AddDocumentImages';
 function render(props: Partial<Parameters<typeof AddDocumentImages>[0]> = {}) {
   const onUploadFiles = vi.fn();
   const onImportUrl = vi.fn();
+  const onSearch = vi.fn();
   renderWithProviders(
     <AddDocumentImages
       onUploadFiles={onUploadFiles}
       uploading={false}
       onImportUrl={onImportUrl}
       importing={false}
+      onSearch={onSearch}
       {...props}
     />,
   );
-  return { onUploadFiles, onImportUrl, user: userEvent.setup() };
+  return { onUploadFiles, onImportUrl, onSearch, user: userEvent.setup() };
 }
 
 const urlField = () => screen.getByPlaceholderText("https://… URL dell'immagine");
@@ -132,5 +134,13 @@ describe('AddDocumentImages', () => {
       'data-loading',
       'true',
     );
+  });
+
+  it('opens the image search', async () => {
+    const { onSearch, user } = render();
+
+    await user.click(screen.getByRole('button', { name: 'Cerca immagini' }));
+
+    expect(onSearch).toHaveBeenCalled();
   });
 });
