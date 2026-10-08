@@ -6,7 +6,10 @@ stays on Vercel. This document is a plan, not a record of the live setup;
 `architecture.md` → Environments stays the source of truth until the cutover
 happens, and is updated then.
 
-**Status (2026-10-08)**: §3 is done: the domain is `exlibris.world`
+**Status (2026-10-08, 02:30 UTC)**: **cutover done.** Production runs on the
+VPS (`api.exlibris.world` A/AAAA → VPS, Render production suspended for
+rollback). Left: the frontend on `exlibris.world` (§10), deleting Render after
+a quiet few weeks, backups and monitoring (§7, §8). History: §3 is done: the domain is `exlibris.world`
 (registrar Hostinger, its DNS), `api.exlibris.world` is a custom domain of the
 Render production service and the production frontend's `VITE_API_BASE_URL`
 points at it. The VPS exists (OVHcloud VPS-1, 2 vCores / 4 GB, Debian 12 with
