@@ -17,9 +17,24 @@ set_tag() {
 }
 touch .env
 previous="$(sed -n 's/^BACKEND_TAG=//p' .env)"
+
+# Pulled before .env changes: a failed pull leaves everything as it was.
+BACKEND_TAG="$tag" docker compose pull backend
+
+# From here on, any failure (`up`, the Caddy reload, the health check) puts
+# the last healthy image back, so neither a reboot nor the next deploy's
+# .backend_tag.previous ends up pointing at the broken one.
+# On a first deploy there is nothing to restore: the pin is just removed.
+restore() {
+  set_tag "$previous"
+  if [ -n "$previous" ]; then
+    echo "deploy of $tag failed; restoring $previous" >&2
+    docker compose up -d backend || true
+  fi
+}
+trap restore ERR
 set_tag "$tag"
 
-docker compose pull backend
 docker compose up -d --remove-orphans
 # Picks up a changed Caddyfile; a no-op otherwise.
 docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
@@ -35,15 +50,9 @@ done
 if [ "$status" != healthy ]; then
   echo "backend is $status after 2 minutes; last logs:" >&2
   docker compose logs --tail 100 backend >&2
-  # Put the last healthy image back, so neither a reboot nor the next
-  # deploy's .backend_tag.previous ends up pointing at the broken one.
-  if [ -n "$previous" ]; then
-    echo "restoring $previous" >&2
-    set_tag "$previous"
-    docker compose up -d backend
-  fi
-  exit 1
+  false
 fi
+trap - ERR
 
 [ -n "$previous" ] && [ "$previous" != "$tag" ] && echo "$previous" > .backend_tag.previous
 # Unused images built more than a week ago go. Every image stays in GHCR, so
