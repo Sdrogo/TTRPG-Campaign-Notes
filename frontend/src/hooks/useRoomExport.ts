@@ -1,6 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 import { apiDownload } from '../lib/apiClient';
-import { exportFileName, exportPath, saveBlob, type ExportFormat } from '../lib/roomExport';
+import {
+  documentExportPath,
+  exportFileName,
+  exportPath,
+  saveBlob,
+  type ExportFormat,
+} from '../lib/roomExport';
 
 /** What to export: the format, and the Tags a Document must all carry (none = the whole Room). */
 export interface RoomExportRequest {
@@ -18,6 +24,20 @@ export function useExportRoom(roomId: string, roomName: string) {
     mutationFn: async ({ format, tagIds }: RoomExportRequest) => {
       const blob = await apiDownload(exportPath(roomId, format, tagIds));
       saveBlob(blob, exportFileName(roomName, new Date(), format));
+    },
+  });
+}
+
+/**
+ * Downloads one Document as a file (spec 27): the Room export with that Document
+ * alone, named `<document>-<date>.json|md`, exactly what the signed-in user (or
+ * the member being previewed) sees of it. It only reads, so nothing is cached.
+ */
+export function useExportDocument(roomId: string, documentId: string, documentName: string) {
+  return useMutation({
+    mutationFn: async (format: ExportFormat) => {
+      const blob = await apiDownload(documentExportPath(roomId, documentId, format));
+      saveBlob(blob, exportFileName(documentName, new Date(), format, 'document'));
     },
   });
 }

@@ -193,6 +193,26 @@ describe('who may create a Document', () => {
     expect(screen.queryByRole('button', { name: /Crea Documento/ })).not.toBeInTheDocument();
   });
 
+  // Spec 27 Decision 10: importing is for whoever may create Documents.
+  it('offers the import to whoever may create Documents, and not to a Player who may not', async () => {
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+    await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+    expect(screen.getByRole('button', { name: 'Importa Documenti' })).toBeInTheDocument();
+  });
+
+  it('withholds the import from a Player when the Room forbids creating Documents', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    routes.room = rawRoom({ players_can_create_documents: false });
+    const { user } = render();
+    await screen.findByText('Il Cancello');
+
+    await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+
+    expect(screen.getByRole('button', { name: 'Esporta' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Importa Documenti' })).not.toBeInTheDocument();
+  });
+
   it('opens the create-Document modal', async () => {
     const { user } = render();
     await screen.findByText('Il Cancello');

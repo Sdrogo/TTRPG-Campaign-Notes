@@ -153,7 +153,11 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 
 ### Agent Integration
 - Structured Room export (JSON/Markdown) with stable IDs, Tags,
-  Document links and thread structure (FR-G1).
+  Document links and thread structure (FR-G1). One Document can be
+  exported on its own in the same format, and one or more Documents
+  (or a whole Room export) imported back from a JSON or Markdown file,
+  copying or replacing the information only: no Comments, Owners,
+  grants or PDF Attachments (spec 27).
 - API access scoped to the requesting user's own visibility — an
   Agent never sees more than the user it acts for (FR-G2, I-01).
   **Not built**: spec 23c (Agent access tokens) was dropped by the product

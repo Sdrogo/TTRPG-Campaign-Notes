@@ -19,6 +19,7 @@ from app.api.export import router as export_router
 from app.api.export_pdf import router as export_pdf_router
 from app.api.friends import router as friends_router
 from app.api.history import router as history_router
+from app.api.imports import router as imports_router
 from app.api.invitations import router as invitations_router
 from app.api.main_items import router as main_items_router
 from app.api.mentions import router as mentions_router
@@ -85,6 +86,7 @@ app.include_router(friends_router)
 app.include_router(search_router)
 app.include_router(export_router)
 app.include_router(export_pdf_router)
+app.include_router(imports_router)
 app.include_router(versions_router)
 
 

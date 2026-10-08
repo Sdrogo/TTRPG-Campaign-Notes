@@ -670,6 +670,77 @@
       "dismissNamed": "Hide the PDF {{name}}",
       "coverRoom": "Room image",
       "coverHintRoom": "The cover uses the Room image, or the favorite image of the chosen Document."
+    },
+    "document": {
+      "title": "Export the Document",
+      "action": "Export the Document",
+      "intro": "Download this Document as a file, with what you can see: Notes, Comments and Tags. You can import it into a Room again."
     }
+  },
+  "documentImport": {
+    "action": "Import Documents",
+    "title": "Import Documents",
+    "intro": "Upload one or more JSON or Markdown files, a whole Room export included. You will see what would be imported first: nothing is written until you confirm.",
+    "jsonHint": "JSON is the faithful format; Markdown is read on a best-effort basis. Comments, PDF attachments, Owners and the link to the player are not imported.",
+    "files": "Files to import",
+    "filesPlaceholder": "Choose one or more .json or .md files",
+    "preview": "Preview",
+    "found_one": "{{count}} Document found",
+    "found_other": "{{count}} Documents found",
+    "documentSelect": "Import {{name}}",
+    "notesCount_one": "{{count}} Note",
+    "notesCount_other": "{{count}} Notes",
+    "imagesCount_one": "{{count}} image",
+    "imagesCount_other": "{{count}} images",
+    "tags": "Tags: {{names}}",
+    "exists": "Already in this Room",
+    "tagsToCreate": "Tags that will be created: {{names}}",
+    "tagsUnavailable": "Tags you can't create, which will be left out: {{names}}",
+    "selectedCount_one": "{{count}} Document selected",
+    "selectedCount_other": "{{count}} Documents selected",
+    "next": "Next",
+    "back": "Back",
+    "start": "Import",
+    "warning": {
+      "comments_dropped_one": "{{count}} Comment is not imported",
+      "comments_dropped_other": "{{count}} Comments are not imported",
+      "files_dropped_one": "{{count}} PDF attachment is not imported",
+      "files_dropped_other": "{{count}} PDF attachments are not imported",
+      "player_dropped": "The link to the player is not imported",
+      "selective_to_private_one": "{{count}} item with Selective visibility becomes Private",
+      "selective_to_private_other": "{{count}} items with Selective visibility become Private",
+      "tags_not_created": "Tags not created: {{names}}"
+    },
+    "existing": {
+      "title": "Some Documents already exist",
+      "intro": "Copy makes a new Document and leaves the original untouched. Replace rewrites only the original's information (name, description, Tags and Notes): Owners, visibility, Comments and attachments stay. A replace can be undone from the Document's history.",
+      "copy": "Copy",
+      "replace": "Replace",
+      "applyAll": "Apply to all",
+      "copyAll": "Copy all",
+      "replaceAll": "Replace all",
+      "cannotReplace": "Only an Owner of the Document (or the Master) can replace it",
+      "choice": "What to do with {{name}}"
+    },
+    "running": "Importing…",
+    "runningHint": "You can close this window: the import goes on in the background and the Documents appear in the list when it is over.",
+    "done": "Import finished",
+    "created_one": "{{count}} Document created",
+    "created_other": "{{count}} Documents created",
+    "replaced_one": "{{count}} Document replaced",
+    "replaced_other": "{{count}} Documents replaced",
+    "skippedTitle_one": "{{count}} image not imported",
+    "skippedTitle_other": "{{count}} images not imported",
+    "skipped": "{{document}}: {{reason}}",
+    "skipReason": {
+      "unreachable": "link unreachable or expired",
+      "not_an_image": "not an image",
+      "too_large": "too large",
+      "limit": "the Document already has the maximum of images",
+      "storage": "storage unavailable",
+      "failed": "unexpected error"
+    },
+    "failed": "The import failed. Check the list of Documents before trying again.",
+    "another": "Import more files"
   }
 }

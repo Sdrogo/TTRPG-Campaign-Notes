@@ -12,7 +12,7 @@ import re
 import unicodedata
 import uuid
 from collections.abc import Collection, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -412,18 +412,69 @@ def _export_comment(
     )
 
 
-def _file_stem(room_name: str, generated_at: datetime) -> str:
-    """`<room>-<date>`: the Room's name reduced to ASCII letters and digits
-    joined by hyphens, so it is safe in a `Content-Disposition` header
-    whatever the name holds; `room` when nothing is left."""
-    ascii_name = unicodedata.normalize("NFKD", room_name).encode("ascii", "ignore").decode()
+def _file_stem(name: str, generated_at: datetime, fallback: str = "room") -> str:
+    """`<name>-<date>`: the name reduced to ASCII letters and digits joined by
+    hyphens, so it is safe in a `Content-Disposition` header whatever the name
+    holds; `fallback` when nothing is left."""
+    ascii_name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
     slug = re.sub(r"[^a-z0-9]+", "-", ascii_name.lower()).strip("-")[:60].strip("-")
-    return f"{slug or 'room'}-{generated_at:%Y-%m-%d}"
+    return f"{slug or fallback}-{generated_at:%Y-%m-%d}"
 
 
 def export_filename(room_name: str, generated_at: datetime, export_format: ExportFormat) -> str:
     """`<room>-<date>.json|md` (spec 23 Decision 5)."""
     return f"{_file_stem(room_name, generated_at)}.{export_format.value}"
+
+
+def document_export_filename(
+    document_name: str, generated_at: datetime, export_format: ExportFormat
+) -> str:
+    """`<document>-<date>.json|md`, the same ASCII rule as `export_filename`
+    (spec 27 Decision 4); `document` when the name has no ASCII letter."""
+    return f"{_file_stem(document_name, generated_at, 'document')}.{export_format.value}"
+
+
+def restrict_to_document(export: Export, document_id: uuid.UUID) -> Export:
+    """`export` reduced to one of its Documents (spec 27 Decision 1): the same
+    tree with a single Document, so the import reads it like a Room export.
+    `tags` and `members` list only what the Document refers to (its Tags,
+    Owners, player, grants, Comment authors and mentions), `main_items` is
+    empty and `tag_filter` null. Nothing is added: whatever the Document shows
+    was already filtered for the requester."""
+    document = next(d for d in export.documents if d.id == document_id)
+    tag_ids: set[uuid.UUID] = set(document.tag_ids)
+    member_ids: set[uuid.UUID] = set(document.owner_ids) | set(document.selective_user_ids or ())
+    if document.played_by is not None:
+        member_ids.add(document.played_by)
+    texts: list[Sequence[Span]] = [document.description]
+    for note in document.notes:
+        texts.append(note.description)
+        member_ids.update(note.selective_user_ids or ())
+    character_ids: set[uuid.UUID] = {document.id}
+    for comment in document.comments:
+        texts.append(comment.body)
+        member_ids.add(comment.author_id)
+        member_ids.update(comment.selective_user_ids or ())
+        if comment.as_character_id is not None:
+            character_ids.add(comment.as_character_id)
+    for spans in texts:
+        for span in spans:
+            if isinstance(span, MentionSpan):
+                if span.kind is MentionKind.TAG:
+                    tag_ids.add(span.target_id)
+                elif span.kind is MentionKind.USER:
+                    member_ids.add(span.target_id)
+    return replace(
+        export,
+        members=[m for m in export.members if m.id in member_ids],
+        tags=[t for t in export.tags if t.id in tag_ids],
+        main_items=(),
+        tag_filter=(),
+        documents=[document],
+        visible_documents={
+            id_: name for id_, name in export.visible_documents.items() if id_ in character_ids
+        },
+    )
 
 
 def pdf_filename(room_name: str, generated_at: datetime) -> str:
