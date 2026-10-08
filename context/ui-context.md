@@ -234,7 +234,17 @@ other icon set.
   Under a `Divider` the PDFs follow as compact rows (accent PDF icon, name,
   size with the date as tooltip, open/download/delete icons) with a subtle
   "Carica PDF" button; with no PDFs the row is hidden for a reader and
-  shows only the button to an Owner. **Without images** the panel takes the
+  shows only the button to an Owner. Right above it, for whoever may add images
+  (Owners and the Master, with or without edit mode, 2026-10-08), an
+  "Immagini" row in the same style offers "Carica immagini" (formats in its
+  tooltip), "Da URL" (a popover with the field and "Aggiungi da URL") and
+  "Cerca" (spec 29): a `size="xl"` centered `Modal` with a search field
+  submitted on Enter or the button (never per keystroke), a source hint, and
+  a 2/3/4-column grid of 120px thumbnails. Hovering a thumbnail shows its
+  credit (title · creator · license), the line under it links to the source
+  page, clicking adds it at once (a loader while it imports, then a dimmed
+  "Aggiunta" mark), and "Altri risultati" appends the next page. The modal
+  stays open so several can be added. **Without images** the panel takes the
   image's place on the right, narrower (`data-narrow`: 340px from `lg`), so
   the information is always in the same spot and the text wraps beside it.
   **Deleting the Document** (2026-09-25, spec 10) is an Owner-only action

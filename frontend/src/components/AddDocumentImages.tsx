@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Button, FileButton, Group, Popover, Stack, Text, TextInput, Tooltip } from '@mantine/core';
-import { LinkIcon, UploadSimpleIcon } from '@phosphor-icons/react';
+import { LinkIcon, MagnifyingGlassIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { ACCEPTED_IMAGE_TYPES, isHttpUrl } from '../lib/images';
 import { useTranslation } from 'react-i18next';
 
@@ -9,12 +9,14 @@ interface AddDocumentImagesProps {
   uploading: boolean;
   onImportUrl: (url: string, onDone: () => void) => void;
   importing: boolean;
+  /** Opens the free image search (spec 29). */
+  onSearch: () => void;
 }
 
 /**
  * An Owner's controls for adding images to a Document, as a compact row of the
  * info panel shaped like the PDFs' "File" row: upload files from the computer,
- * or import one from a URL in a popover. Unlike a Comment's images, these are
+ * import one from a URL in a popover, or search free images (spec 29). Unlike a Comment's images, these are
  * sent right away.
  */
 export function AddDocumentImages({
@@ -22,6 +24,7 @@ export function AddDocumentImages({
   uploading,
   onImportUrl,
   importing,
+  onSearch,
 }: AddDocumentImagesProps) {
   const { t } = useTranslation();
   const [urlOpened, setUrlOpened] = useState(false);
@@ -118,6 +121,15 @@ export function AddDocumentImages({
             </Stack>
           </Popover.Dropdown>
         </Popover>
+        <Button
+          variant="subtle"
+          size="compact-xs"
+          leftSection={<MagnifyingGlassIcon size={12} />}
+          onClick={onSearch}
+          aria-label={t('imageSearch.title')}
+        >
+          {t('imageSearch.action')}
+        </Button>
       </Group>
     </Group>
   );

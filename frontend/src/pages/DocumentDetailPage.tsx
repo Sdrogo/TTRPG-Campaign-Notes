@@ -45,6 +45,7 @@ import { VersionHistoryDrawer } from '../components/versions/VersionHistoryDrawe
 import { DocumentPlayer } from '../components/DocumentPlayer';
 import { DocumentImageGallery } from '../components/DocumentImageGallery';
 import { AddDocumentImages } from '../components/AddDocumentImages';
+import { ImageSearchModal } from '../components/ImageSearchModal';
 import { CommentSection } from '../components/comments/CommentSection';
 import { PromoteToDocumentModal, WideningConfirmModal } from '../components/comments/CommentPromotion';
 import { NoteList } from '../components/notes/NoteList';
@@ -223,6 +224,7 @@ function DocumentPanel({
   const revealed = useRevealedInVisit(roomId, document.id);
   const [revealing, setRevealing] = useState(false);
   const [historyOpened, setHistoryOpened] = useState(false);
+  const [imageSearchOpened, setImageSearchOpened] = useState(false);
   const [exportOpened, setExportOpened] = useState(false);
   // Previewing as a member (spec 22b): no write control at all.
   const readOnly = useReadOnly();
@@ -353,6 +355,7 @@ function DocumentPanel({
                             importImage.mutate(url, { onSuccess: onDone, onError: notifyError })
                           }
                           importing={importImage.isPending}
+                          onSearch={() => setImageSearchOpened(true)}
                         />
                       )}
                       <DocumentFileList
@@ -412,6 +415,19 @@ function DocumentPanel({
           documentId={document.id}
           name={document.name}
           members={members}
+        />
+      )}
+      {/* Mounted only while open, so each opening starts a fresh search. */}
+      {imageSearchOpened && (
+        <ImageSearchModal
+          opened
+          onClose={() => setImageSearchOpened(false)}
+          roomId={roomId}
+          documentId={document.id}
+          onAdd={(url, onDone) =>
+            importImage.mutate(url, { onSuccess: onDone, onError: notifyError })
+          }
+          addingUrl={importImage.isPending ? importImage.variables : null}
         />
       )}
       <ExportDocumentModal

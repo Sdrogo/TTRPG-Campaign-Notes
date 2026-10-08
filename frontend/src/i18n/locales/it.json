@@ -743,5 +743,20 @@
     },
     "failed": "L'importazione non è riuscita. Controlla l'elenco dei Documenti prima di riprovare.",
     "another": "Importa altri file"
+  },
+  "imageSearch": {
+    "action": "Cerca",
+    "title": "Cerca immagini",
+    "queryLabel": "Cosa cercare",
+    "placeholder": "Es. castello gotico, mappa antica",
+    "submit": "Cerca",
+    "sourceHint": "Immagini gratuite (Creative Commons e pubblico dominio) da Openverse. Clicca un'immagine per aggiungerla al Documento.",
+    "loading": "Ricerca in corso",
+    "empty": "Nessuna immagine trovata",
+    "more": "Altri risultati",
+    "add": "Aggiungi {{title}}",
+    "added": "Aggiunta",
+    "untitled": "Senza titolo",
+    "source": "Fonte"
   }
 }
