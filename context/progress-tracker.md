@@ -9,6 +9,15 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-08)
 
+**Backlog review on 2026-10-08** (product owner): tickets **25 and 25b dropped**
+(the Tags section, 25c, and the Account page, PR #123, were already reworked;
+both files kept, marked dropped). **27b (PDF of one Document) is still
+wanted.** New feature **28 - Relationship maps** (ticket written 2026-10-08,
+Decisions to confirm in its PR): free boards per Room where members place
+Documents, text cards and groups and draw labeled arrows that belong to that
+map only (product owner's choice: no Room-wide relationships). Adds a
+migration and the `@xyflow/react` dependency. Order: 27b, then 28.
+
 **Spec 27 (Document export and import) built on 2026-10-08** (27_1 export of
 one Document, 27_2 import backend, 27_3 frontend), written the day before with
 the product owner's answers to its Open Questions. A member exports one
@@ -1557,23 +1566,21 @@ Reorganized with the product owner on 2026-10-03.
     (13_1c).
   A Playwright script for the parts that can be automated is possible on
   request.
-- **Compact UI/UX refactor (feature 25, product owner 2026-10-06)**: the
-  Account page with more compact cards, the Room setup's Tags section
-  reworked with Tag rename, and a more compact, less dispersive design
-  overall. One feature, three tickets, in order: `25 - Compact layout`
-  (theme defaults, spacing, `CompactList`, columns on wide screens),
-  `25b - Compact Account page`, `25c - Room setup Tags and rename` (backend
-  `PATCH` for the rename plus the new section). Each ticket's Decisions are
-  proposals to confirm in its PR, except 25c Decision 3, confirmed by the
-  product owner on 2026-10-06: Grouping saves on every change, no "Save
-  order" button.
+- **Compact UI/UX refactor (feature 25)**: closed. 25c was built (PR #122);
+  `25 - Compact layout` and `25b - Compact Account page` were **dropped by
+  the product owner on 2026-10-08** (that UI was already reworked).
 - **Document export and import (feature 27, product owner 2026-10-07)**:
   `27 - Document export and import` (27_1 single-Document export, 27_2 import
   backend with the `import_jobs` migration, 27_3 frontend), then `27b -
   Document PDF`. The Room export (spec 23) is unchanged. Open Questions
   answered 2026-10-07: copy or replace asked in a modal, only information
   copied (no Owners or grants), Comments and PDF Attachments dropped, every
-  image copied, background job.
+  image copied, background job. 27 is built (PR #129); **27b is next**.
+- **Relationship maps (feature 28, product owner 2026-10-08)**:
+  `28 - Relationship maps` (28_1 backend with its migration, 28_2 frontend
+  with `@xyflow/react`), after 27b. Free boards: arrows belong to their map.
+  `requirements.md` needs a new `FR-`/`VR-` entry once the ticket is
+  approved (product owner's edit only).
 - **Build order (product owner, 2026-10-02, confirmed 2026-10-03)**: one
   feature at a time, each closed with all its sub-tickets: 21 → 22 (with
   22b) → 23 (with 23b, 23c) → 24, then the two small tickets below.
