@@ -110,13 +110,18 @@ the Render API on the existing one).
 backend and Vite only read `.env` by default, so those must be loaded
 explicitly (`architecture.md` → Local env files).
 
-**Production backend on a VPS (2026-10-07, proposal only)**: at the product
+**Production backend on a VPS (started 2026-10-07)**: at the product
 owner's request, `context/vps-migration-plan.md` plans moving production off
 Render onto a VPS running the backend image (staging stays on Render, the
-database on Supabase): costs, VPS setup, a GHCR + SSH deploy on `main`,
-secrets, monitoring and a DNS cutover with both running in parallel. Waiting
-on the product owner's answers to its Open questions (domain, current Render
-plan, provider). Nothing changed in any environment.
+database on Supabase). Done on 2026-10-08 by the product owner: domain
+`exlibris.world`, `api.exlibris.world` on the Render production service and
+in the production frontend's `VITE_API_BASE_URL`, an OVHcloud VPS hardened and
+reachable as `api-vps.exlibris.world`. In the repository: `deploy/`
+(`compose.yaml`, `Caddyfile`, `deploy.sh`) and `.github/workflows/deploy-prod.yml`
+(GHCR image per commit, SSH deploy after CI on `main`, off until the
+`VPS_DEPLOY_ENABLED` variable). Next: server setup and the first deploy, the
+test on `api-vps`, the DNS switch (plan §9); the frontend on `exlibris.world`
+(§10). Production traffic is still served by Render.
 
 ## Completed Units
 
