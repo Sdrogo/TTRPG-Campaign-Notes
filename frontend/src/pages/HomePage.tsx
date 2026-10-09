@@ -1,5 +1,5 @@
-import { Stack, Title, Text, Button, Loader } from '@mantine/core';
-import { Navigate } from 'react-router-dom';
+import { Anchor, Stack, Title, Text, Button, Loader } from '@mantine/core';
+import { Link, Navigate } from 'react-router-dom';
 import { BookOpenIcon } from '@phosphor-icons/react';
 import { readPendingFriendCode, readPendingInvite } from '../lib/pendingInvite';
 import { AUTH_PROVIDERS, type AuthProvider } from '../lib/authProviders';
@@ -56,6 +56,10 @@ export function HomePage() {
             </Button>
           ))}
         </Stack>
+        {/* The privacy notice is readable before signing in (spec 31_3). */}
+        <Anchor component={Link} to="/privacy" size="sm" c="dimmed">
+          {t('auth.privacy')}
+        </Anchor>
       </Stack>
     );
   }
