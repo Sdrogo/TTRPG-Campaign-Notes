@@ -37,8 +37,10 @@ describe('the read-aloud player (spec 30)', () => {
   });
 
   it('speaks in the app language, with the voice and speed chosen for it (Decision 4)', async () => {
+    // "Automatica": the best Italian voice installed (spec 30b).
     playSpeech('note:1', 'Ciao.');
-    expect(speech.spoken[0]).toMatchObject({ lang: 'it-IT', voice: null, rate: 1 });
+    expect(speech.spoken[0]).toMatchObject({ lang: 'it-IT', rate: 1 });
+    expect(speech.spoken[0].voice).toMatchObject({ voiceURI: 'alice' });
 
     saveSpeechPreferences({ voices: { it: 'alice' }, rate: 1.5 });
     playSpeech('note:1', 'Ciao.');
@@ -47,7 +49,7 @@ describe('the read-aloud player (spec 30)', () => {
 
     await setLanguage('en');
     playSpeech('note:1', 'Hello.');
-    // No English voice chosen: the browser's default for en-US.
+    // No English voice installed: the browser's default for en-US.
     expect(speech.spoken[2]).toMatchObject({ lang: 'en-US', voice: null });
   });
 
