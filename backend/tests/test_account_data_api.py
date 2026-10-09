@@ -10,7 +10,7 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from PIL import Image
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import auth_admin
@@ -107,7 +107,7 @@ async def _befriend(client: AsyncClient, alice: _User, bob: _User) -> None:
     assert accepted.status_code == 200, accepted.text
 
 
-async def _count(db_session: AsyncSession, model: type, *where: object) -> int:
+async def _count(db_session: AsyncSession, model: type, *where: ColumnElement[bool]) -> int:
     result = await db_session.execute(select(func.count()).select_from(model).where(*where))
     return int(result.scalar_one())
 
