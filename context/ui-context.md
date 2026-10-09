@@ -576,6 +576,18 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
 
 ## Friends (spec 18_2)
 
+- **Account page, "I tuoi dati"** (spec 31, last card, after "Accesso"):
+  "Scarica i miei dati" (`default` button, success toast), a link to
+  "Informativa privacy", then a dimmed paragraph and "Elimina account"
+  (`outline` red). Its modal follows the Room deletion (spec 13): the red
+  "Elimina definitivamente" stays disabled until the word "ELIMINA"
+  ("DELETE" in English) is typed; the backend's refusal (e.g. Rooms that
+  need a successor) shows as an error toast.
+- **Privacy notice** (`/privacy`, `pages/PrivacyPage.tsx`): public, so no
+  `AppHeader`; a `Container size="md"` with a back link, title, date, intro
+  and one `PageCard` per section; a section's text in the locale files is
+  split on blank lines, and a block of "- " lines renders as a `List`. The
+  sign-in screen links to it under the provider buttons (dimmed, `sm`).
 - **Account page**: "Inviti alle Stanze" (only while some wait) comes
   right after the page title, "Amici" after "Profilo". Each person is a
   `FriendRow`: `md` avatar, name, pronouns or a detail line, the email only
