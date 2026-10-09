@@ -16,9 +16,11 @@ caller's data as JSON) and `DELETE /account` (solo Rooms deleted, shared Rooms
 left with the D-16 guard, personal rows and the Supabase Auth account erased,
 content in shared Rooms kept as an unknown user). Frontend: "Your data" on the
 Account page and the public `/privacy` notice (Italian and English, draft).
-No migration. Decisions to confirm in its PR; **before a release**, the
-product owner sets the controller's name and contact in
-`frontend/src/lib/privacy.ts` and reviews the notice (legal review is theirs).
+No migration. Merged into `staging` with PR #150. On 2026-10-09 the product
+owner confirmed the account deletion rules (solo Rooms deleted, D-16 guard,
+profile, avatar, Friends and sign-in account erased) and gave the controller
+details now in the notice. **Before a release**: their legal review of the
+notice and the DPAs with Supabase, OVHcloud and Vercel.
 
 **Spec 30, read aloud, built on 2026-10-09** at the product owner's request
 (frontend only, no migration): Documents (name, description, visible

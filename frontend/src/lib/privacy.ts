@@ -15,14 +15,13 @@ export function personalDataFileName(now: Date): string {
 
 /**
  * Who answers for the personal data (GDPR art. 13): the data controller's name
- * and the address for privacy requests, shown on the privacy page. To be set
- * by the product owner before the page is released; while `null`, the page
- * shows that the detail is still to be completed.
+ * and the address for privacy requests, shown on the privacy page. Given by
+ * the product owner on 2026-10-09.
  */
-export const PRIVACY_CONTROLLER: { name: string | null; email: string | null } = {
-  name: null,
-  email: null,
-};
+export const PRIVACY_CONTROLLER = {
+  name: 'Andrea Partenope',
+  email: 'andreapartenope@gmail.com',
+} as const;
 
 /** The date the privacy notice was last changed, shown at its top (ISO, `YYYY-MM-DD`). */
 export const PRIVACY_NOTICE_UPDATED = '2026-10-09';

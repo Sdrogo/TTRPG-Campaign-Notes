@@ -29,7 +29,7 @@ Gaps found: no account deletion, no export of one's own data, no privacy notice.
 3. **What is erased and what stays**: erased: the `users` row and avatar, Friendships and friend code, reactions, Document reads, Reveal receipts, Ownerships, visibility grants, invitations addressed to them, and the Supabase Auth account (which holds the email and the provider identity). **Content written in shared Rooms stays**, as part of the campaign others co-wrote, shown as "Unknown user": with the profile and the sign-in account gone, the ids left in `author_id`, `created_by`, versions and the AuditLog no longer lead to a person. Room PDF and import jobs they started are left to expire on their own (24 hours, 7 days).
 4. **Order**: the database changes commit first, then the Auth account is deleted through Supabase's admin API with the backend's secret key. If that call fails the answer is 502: the data is gone already, the user is still signed in, and asking again finishes the job (the call is idempotent).
 5. **Personal data export** (`GET /account/export`, JSON, `format_version: 1`): profile (with email), Rooms and roles, the Documents they created, own or play, every Comment they wrote, their reactions, uploads (metadata), Friends as they see them (D-27: a silently declined request stays hidden) and friend code. Room content is filtered as everywhere else (Invariant 1): a Document's name is given only while they see it; their own Comments are always theirs (VR-02). The Room export (spec 23) remains the way to get a campaign's content as a whole.
-6. **Privacy notice** at `/privacy`, public (linked from the sign-in screen and the Account page), in Italian and English. The controller's name and contact address are the product owner's to provide (`frontend/src/lib/privacy.ts::PRIVACY_CONTROLLER`); until set, the page shows "[to be completed]".
+6. **Privacy notice** at `/privacy`, public (linked from the sign-in screen and the Account page), in Italian and English. The controller is the product owner, Andrea Partenope, with andreapartenope@gmail.com for privacy requests (given 2026-10-09, `frontend/src/lib/privacy.ts::PRIVACY_CONTROLLER`).
 7. **No cookie banner**: the app sets no cookies and only stores what it needs to work (ePrivacy art. 5(3) exemption).
 
 ## Design
@@ -41,7 +41,6 @@ Gaps found: no account deletion, no export of one's own data, no privacy notice.
 
 ## Left to the product owner
 
-- The controller's identity and contact address for the notice.
 - Legal review of the notice's text, retention periods and legal bases.
 - Data processing agreements with Supabase, OVHcloud and Vercel (each offers a standard DPA), and confirming Vercel's EU-U.S. Data Privacy Framework certification, as the notice states.
 - Whether request logs need a time limit as well as the size limit they have.
