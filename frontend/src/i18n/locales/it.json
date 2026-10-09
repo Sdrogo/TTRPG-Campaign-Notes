@@ -132,6 +132,19 @@
       "document": "Documento",
       "note": "Nota \"{{title}}\"",
       "comment": "Un commento"
+    },
+    "speech": {
+      "title": "Lettura ad alta voce",
+      "description": "La voce e la velocità con cui l'app legge Documenti, Note e Commenti. Le voci sono quelle del browser: la scelta resta su questo dispositivo, una per lingua.",
+      "unsupported": "Questo browser non sa leggere ad alta voce.",
+      "voice": "Voce",
+      "automatic": "Automatica",
+      "languageVoices": "Voci in italiano",
+      "otherVoices": "Altre voci",
+      "noVoices": "Nessuna voce in italiano su questo dispositivo: il browser userà la sua predefinita.",
+      "rate": "Velocità",
+      "try": "Prova",
+      "sample": "Ecco come suona questa voce mentre legge i tuoi appunti."
     }
   },
   "rooms": {
@@ -758,5 +771,14 @@
     "added": "Aggiunta",
     "untitled": "Senza titolo",
     "source": "Fonte"
+  },
+  "speech": {
+    "listen": "Ascolta «{{name}}»",
+    "pause": "Metti in pausa la lettura",
+    "resume": "Riprendi la lettura",
+    "stop": "Interrompi la lettura",
+    "commentListen": "Ascolta",
+    "commentStop": "Interrompi",
+    "commentBy": "{{name}} ha scritto"
   }
 }

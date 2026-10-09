@@ -1,9 +1,11 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DocumentMentionsContext } from '../../../hooks/useDocumentMentions';
 import { renderWithProviders } from '../../utils';
 import { NoteItem } from '../../../components/notes/NoteItem';
+import { stopSpeech } from '../../../lib/speechPlayer';
+import { installFakeSpeech } from '../../speech';
 import type { DocumentMentionsValue } from '../../../hooks/useDocumentMentions';
 import type { Document } from '../../../types/document';
 import type { Member } from '../../../types/member';
@@ -336,5 +338,35 @@ describe('revealing a Note', () => {
     render({ revealed: true });
 
     expect(screen.getByText('Rivelato')).toBeInTheDocument();
+  });
+});
+
+let uninstallSpeech: (() => void) | undefined;
+
+describe('hearing a Note (spec 30)', () => {
+  afterEach(() => {
+    stopSpeech();
+    uninstallSpeech?.();
+    uninstallSpeech = undefined;
+  });
+
+  it('offers no speaker where the browser cannot speak', () => {
+    render({ note: { canEdit: false, canDelete: false } });
+
+    expect(screen.queryByRole('button', { name: 'Ascolta «Porta segreta»' })).not.toBeInTheDocument();
+  });
+
+  it('lets every reader hear it, not only who can edit it', async () => {
+    const { speech, uninstall } = installFakeSpeech();
+    uninstallSpeech = uninstall;
+    const { user } = render({ note: { canEdit: false, canDelete: false } });
+
+    await user.click(screen.getByRole('button', { name: 'Ascolta «Porta segreta»' }));
+
+    expect(speech.spoken.map((u) => u.text)).toEqual(['Porta segreta.']);
+    act(() => speech.finishCurrent());
+    expect(speech.spoken.map((u) => u.text)).toEqual(['Porta segreta.', 'Dietro la libreria.']);
+    await user.click(screen.getByRole('button', { name: 'Interrompi la lettura' }));
+    expect(screen.getByRole('button', { name: 'Ascolta «Porta segreta»' })).toBeInTheDocument();
   });
 });

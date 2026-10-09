@@ -1,11 +1,13 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../utils';
 import { apiFetch } from '../../../lib/apiClient';
 import { notifyError } from '../../../lib/notify';
 import { rawComment } from '../../fixtures';
 import { CommentItem } from '../../../components/comments/CommentItem';
+import { stopSpeech } from '../../../lib/speechPlayer';
+import { installFakeSpeech } from '../../speech';
 import type { Character } from '../../../types/character';
 import type { Comment } from '../../../types/comment';
 import type { Member } from '../../../types/member';
@@ -621,5 +623,52 @@ describe('revealing a Comment', () => {
     renderWithReveal({}, true);
 
     expect(screen.getByText('Rivelato')).toBeInTheDocument();
+  });
+});
+
+describe('hearing a Comment (spec 30)', () => {
+  let uninstall: (() => void) | undefined;
+
+  afterEach(() => {
+    stopSpeech();
+    uninstall?.();
+    uninstall = undefined;
+  });
+
+  it('offers "Ascolta" only where the browser can speak', () => {
+    render();
+
+    expect(screen.queryByRole('button', { name: 'Ascolta' })).not.toBeInTheDocument();
+  });
+
+  it('reads who wrote it, then the text, and stops on "Interrompi"', async () => {
+    const fake = installFakeSpeech();
+    uninstall = fake.uninstall;
+    const { user } = render();
+
+    await user.click(screen.getByRole('button', { name: 'Ascolta' }));
+
+    expect(fake.speech.spoken.map((u) => u.text)).toEqual(['Giocatore ha scritto.']);
+    await user.click(screen.getByRole('button', { name: 'Interrompi' }));
+    expect(fake.speech.cancel).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Ascolta' })).toBeInTheDocument();
+  });
+
+  it('reads a Comment posted as a Character under the Character', async () => {
+    const fake = installFakeSpeech();
+    uninstall = fake.uninstall;
+    const { user } = render({ asCharacter: aria }, 'user-1', [aria]);
+
+    await user.click(screen.getByRole('button', { name: 'Ascolta' }));
+
+    expect(fake.speech.spoken[0].text).toBe('Aria ha scritto.');
+  });
+
+  it('has nothing to read on a deleted Comment', () => {
+    const fake = installFakeSpeech();
+    uninstall = fake.uninstall;
+    render({ deleted: true, body: '' });
+
+    expect(screen.queryByRole('button', { name: 'Ascolta' })).not.toBeInTheDocument();
   });
 });
