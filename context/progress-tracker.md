@@ -192,7 +192,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 
 ### Better read-aloud voices (spec 30b, 2026-10-09)
 
-- Product owner's report: the voice sounded very poor. Chosen fix (of three: browser voices, Piper on the VPS, cloud TTS): "Automatica" now picks the best installed voice for the app language (`voiceScore`/`rankVoices`: neural-sounding names, network voices, main region, browser default; eSpeak and Apple's novelty voices last) instead of the browser's default, which is often its oldest system voice.
+- Product owner's report: the voice sounded very poor. Chosen fix (of three: browser voices, Piper on the VPS, cloud TTS): "Automatica" now picks the best installed voice for the app language (`voiceScore`/`rankVoices`: neural-sounding names, network voices, main region, browser default; Apple's older multilingual voices below plain system ones, eSpeak and novelty voices last) instead of the browser's default, which is often its oldest system voice.
 - Account page lists the app language's voices best first, names the voice "Automatica" uses, and says where better voices come from (Edge "Natural", Chrome "Google", Apple "Enhanced"/"Premium").
 - No change on browsers that only have poor voices; a server voice (Piper or cloud) remains the next step if needed.
 

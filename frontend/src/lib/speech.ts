@@ -181,12 +181,17 @@ export function voiceSpeaks(
 // Names that mark a neural or high-quality voice: Edge's "Online (Natural)",
 // Chrome's network "Google …" voices, Apple's downloadable "Enhanced" and
 // "Premium" ones (spec 30b).
-const GOOD_VOICE = /natural|neural|online|enhanced|premium|wavenet|siri|google/i;
+const GOOD_VOICE = /\b(natural|neural|online|enhanced|premium|wavenet|siri|google)\b/i;
 
-// Robotic engines and Apple's novelty voices, which some browsers list under
-// every language (spec 30b).
-const POOR_VOICE =
-  /espeak|compact|eloquence|\b(albert|bad news|bahh|bells|boing|bubbles|cellos|eddy|flo|fred|good news|grandma|grandpa|jester|junior|kathy|organ|ralph|reed|rocko|sandy|shelley|superstar|trinoids|whisper|wobble|zarvox)\b/i;
+// Robotic engines and Apple's novelty voices (Bubbles, Zarvox...), which some
+// browsers list under every language (spec 30b).
+const ROBOTIC_VOICE =
+  /espeak|compact|eloquence|\b(bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox)\b/i;
+
+// Apple's older multilingual voices (Eddy, Flo, Grandma...): real voices in
+// every language, but flatter than the regional ones, so they rank below a
+// plain system voice and above the robotic ones.
+const PLAIN_APPLE_VOICE = /\b(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i;
 
 /**
  * How good `voice` is likely to sound, higher is better (spec 30b): a
@@ -201,7 +206,8 @@ export function voiceScore(
 ): number {
   let score = 0;
   if (GOOD_VOICE.test(voice.name)) score += 8;
-  if (POOR_VOICE.test(voice.name)) score -= 8;
+  if (ROBOTIC_VOICE.test(voice.name)) score -= 8;
+  else if (PLAIN_APPLE_VOICE.test(voice.name)) score -= 3;
   if (!voice.localService) score += 4;
   if (voice.lang.replace('_', '-').toLowerCase() === SPEECH_LANGS[language].toLowerCase())
     score += 2;
