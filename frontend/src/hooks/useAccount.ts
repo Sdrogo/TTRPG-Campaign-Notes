@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { apiFetch } from '../lib/apiClient';
+import { apiDownload, apiFetch } from '../lib/apiClient';
+import { DELETION_CONFIRMATION, personalDataFileName } from '../lib/privacy';
+import { saveBlob } from '../lib/roomExport';
 import { toUserIdentity } from '../lib/profile';
 import { supabase } from '../lib/supabaseClient';
 import { isMembersQueryKey } from './useMembers';
@@ -93,6 +95,40 @@ export function useSignOut() {
       if (error) {
         throw error;
       }
+    },
+    onSuccess: () => {
+      queryClient.clear();
+      navigate('/');
+    },
+  });
+}
+
+/** Downloads everything the app keeps about the signed-in user as JSON (spec 31_2, GDPR art. 15 and 20). */
+export function useExportPersonalData() {
+  return useMutation({
+    mutationFn: async () => {
+      const blob = await apiDownload('/account/export');
+      saveBlob(blob, personalDataFileName(new Date()));
+    },
+  });
+}
+
+/**
+ * Permanently deletes the signed-in user's account (spec 31_1, GDPR art. 17),
+ * then forgets the session on this device and every cached response. The
+ * sign-in account is already gone on the server, so the sign-out is local
+ * only: asking Supabase to end a session it no longer has would fail.
+ */
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  return useMutation({
+    mutationFn: async () => {
+      await apiFetch<void>('/account', {
+        method: 'DELETE',
+        json: { confirmation: DELETION_CONFIRMATION },
+      });
+      await supabase.auth.signOut({ scope: 'local' });
     },
     onSuccess: () => {
       queryClient.clear();

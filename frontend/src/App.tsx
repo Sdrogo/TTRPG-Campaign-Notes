@@ -7,12 +7,13 @@ import { RoomDocumentsPage } from './pages/RoomDocumentsPage';
 import { DocumentDetailPage } from './pages/DocumentDetailPage';
 import { AccountPage } from './pages/AccountPage';
 import { AddFriendPage } from './pages/AddFriendPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { useScrollbarReveal } from './hooks/useScrollbarReveal';
 import { ViewAsProvider } from './components/ViewAsProvider';
 
 /**
  * The route table. Every page checks the session itself and shows a sign-in
- * prompt when there is none. `ViewAsProvider` turns a Room's pages into the
+ * prompt when there is none, except the public privacy notice (spec 31_3). `ViewAsProvider` turns a Room's pages into the
  * Master's read-only preview as a member when the URL asks (spec 22b).
  */
 function App() {
@@ -30,6 +31,7 @@ function App() {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/invite/:code" element={<AcceptInvitePage />} />
         <Route path="/friends/add/:code" element={<AddFriendPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/rooms/:roomId/setup" element={<RoomSetupPage />} />
         <Route path="/rooms/:roomId/members" element={<RoomMembersRedirect />} />
         <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />

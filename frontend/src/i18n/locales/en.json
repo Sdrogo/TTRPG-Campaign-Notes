@@ -65,7 +65,8 @@
   },
   "auth": {
     "prompt": "Sign in to continue.",
-    "signInWith": "Sign in with {{provider}}"
+    "signInWith": "Sign in with {{provider}}",
+    "privacy": "Privacy"
   },
   "header": {
     "account": "Your account",
@@ -147,6 +148,21 @@
       "rate": "Speed",
       "try": "Try it",
       "sample": "This is how this voice sounds reading your notes."
+    },
+    "privacy": {
+      "title": "Your data",
+      "description": "Download a copy of everything the app keeps about you, or delete your account.",
+      "export": "Download my data",
+      "exported": "Your data was downloaded",
+      "notice": "Privacy notice",
+      "deleteDescription": "Deleting your account is permanent. Rooms where you are the only member are deleted; in shared Rooms what you wrote stays, shown as written by an unknown user.",
+      "delete": "Delete account",
+      "confirmTitle": "Delete your account?",
+      "confirmBody": "Your profile, avatar, Friends and sign-in account are erased and can't be recovered. Rooms where you are the only member are deleted with everything in them. If you are the last Master or Administrator of a shared Room, hand the role to someone else first.",
+      "confirmLabel": "Type \"{{word}}\" to confirm",
+      "deleteWord": "DELETE",
+      "confirm": "Delete for good",
+      "deleted": "Your account was deleted"
     }
   },
   "rooms": {
@@ -782,5 +798,42 @@
     "commentListen": "Listen",
     "commentStop": "Stop",
     "commentBy": "{{name}} wrote"
+  },
+  "privacy": {
+    "back": "Back to the app",
+    "title": "Privacy notice",
+    "updated": "Last updated: {{date}}",
+    "toComplete": "[to be completed]",
+    "intro": "This notice explains which personal data this app processes, why, where it is kept and how you can exercise your rights under the EU General Data Protection Regulation (GDPR).",
+    "sections": {
+      "controller": {
+        "title": "Who is responsible",
+        "body": "The data controller is {{name}}. For any question about your data, or to exercise your rights, write to {{email}}."
+      },
+      "data": {
+        "title": "What data we process",
+        "body": "Only what the app needs to work:\n\n- Sign-in data from the provider you choose (Google, Discord or GitHub): an account identifier, your email address, and your name and picture, which are copied once as the default name and avatar of your profile.\n- Your profile: display name, pronouns, description and avatar, which you can change or remove at any time on the Account page.\n- What you write and upload in Rooms: Documents, Notes, Comments, reactions, images and PDF attachments, with who created them and when.\n- Your Friends, friend requests and friend code, and the Room invitations you send or receive.\n- Usage and technical data: when you last opened each Document, the change history of Documents, each Room's log of role and visibility changes, and the request data servers record to deliver and protect the service (such as IP address, browser and time)."
+      },
+      "purposes": {
+        "title": "Why, and on what legal basis",
+        "body": "Your data is used only to provide the app to you and to the members of your Rooms (performance of a contract, art. 6(1)(b) GDPR) and to keep it secure and working (legitimate interest, art. 6(1)(f) GDPR).\n\nIt is not sold, it is not used for advertising or profiling, and the app uses no analytics or tracking tools. Your email is never shown to other users."
+      },
+      "processors": {
+        "title": "Who processes it, and where",
+        "body": "The app relies on these providers, which process data on our behalf:\n\n- Supabase: database, file storage and sign-in, hosted in the European Union (Frankfurt, Germany).\n- OVHcloud: the server that runs the app's backend, in the United Kingdom, which the European Commission recognises as offering adequate protection.\n- Vercel: delivery of the web app's pages. Its network may serve requests from outside the European Union; transfers to the United States rely on the EU-U.S. Data Privacy Framework and standard contractual clauses.\n- Google, Discord and GitHub: only for the sign-in you choose, under their own privacy policies.\n- Openverse, a WordPress.org project: when you search free images for a Document, the search is sent by our server, and the previews are loaded by your browser directly from Openverse, which therefore sees your IP address."
+      },
+      "retention": {
+        "title": "How long we keep it",
+        "body": "- Your account and profile are kept until you delete your account.\n- When you delete your account, your profile, avatar, Friends, reactions and sign-in account are erased at once. Rooms where you were the only member are deleted with everything in them. In Rooms shared with others, what you wrote stays as part of the campaign, shown as written by an unknown user.\n- A Room you delete is erased with everything in it.\n- Room PDFs are deleted 24 hours after they are generated, and Document imports 7 days after they finish.\n- Server logs are kept only as long as needed for operation and security, and are overwritten on a rolling basis.\n- Backups kept by our providers are overwritten within their backup cycle."
+      },
+      "rights": {
+        "title": "Your rights",
+        "body": "You can at any time:\n\n- see and download your data: Account page, \"Your data\", \"Download my data\" (a JSON file; each Room's export holds the campaign content you can see);\n- correct your profile on the Account page;\n- delete your account: Account page, \"Your data\", \"Delete account\";\n- object to the processing or ask for its restriction, by writing to {{email}}.\n\nYou also have the right to lodge a complaint with a supervisory authority; in Italy this is the Garante per la protezione dei dati personali (garanteprivacy.it)."
+      },
+      "storage": {
+        "title": "Cookies and local storage",
+        "body": "The app uses no cookies. It keeps a few items in your browser's storage that it needs to work: your sign-in session, the language you chose, your read-aloud voice and speed, the character you last posted as in each Room, the Room PDF notices you dismissed, and an invitation link you opened before signing in. They stay on your device: the session is removed when you sign out, the rest when you clear your browser's data."
+      }
+    }
   }
 }

@@ -7,6 +7,7 @@ from collections.abc import Iterable, Mapping
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.document_files import remove_files
 from app.api.errors import http_error, translated_error
@@ -335,24 +336,12 @@ async def remove_member(
     await rooms_repo.insert_audit_log(session, audit_entry)
 
 
-@router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_room(
-    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
-) -> None:
-    """Spec 13: a Room Administrator permanently deletes the Room with all it
-    holds - members, invitations, Tags, Documents, Comments, Notes, images and
-    PDF Attachments. 403 for a non-member and for a member who isn't an
-    Administrator (the Master alone isn't enough). The Room's AuditLog rows go
-    with it. Every image and file is queued for Storage removal before the
-    rows cascade away, so no object is left orphaned."""
-    membership = await rooms_repo.get_membership(session, room_id, uuid.UUID(current_user.id))
-    if membership is None:
-        raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
-    if not membership.is_admin:
-        raise http_error(
-            status.HTTP_403_FORBIDDEN, "errors.room.onlyAdministratorCanDelete", locale
-        )
-
+async def purge_room(session: AsyncSession, room_id: uuid.UUID) -> None:
+    """Deletes the Room with all it holds (spec 13), once the caller has
+    checked who may. Every image and file is queued for Storage removal
+    before the rows cascade away, so no object is left orphaned. Shared with
+    the account deletion (spec 31_1), which deletes the Rooms whose only
+    member is the user."""
     await rooms_repo.lock_room(session, room_id)
     # Locked first so a concurrent image or file upload can't insert a row
     # the cascade would then delete without scheduling its Storage object.
@@ -374,3 +363,24 @@ async def delete_room(
     if room is not None and room.image_path is not None:
         await storage_cleanup.schedule_removal(session, [room.image_path])
     await rooms_repo.delete_room(session, room_id)
+
+
+@router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_room(
+    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
+) -> None:
+    """Spec 13: a Room Administrator permanently deletes the Room with all it
+    holds - members, invitations, Tags, Documents, Comments, Notes, images and
+    PDF Attachments. 403 for a non-member and for a member who isn't an
+    Administrator (the Master alone isn't enough). The Room's AuditLog rows go
+    with it. Every image and file is queued for Storage removal before the
+    rows cascade away, so no object is left orphaned."""
+    membership = await rooms_repo.get_membership(session, room_id, uuid.UUID(current_user.id))
+    if membership is None:
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.room.notAMember", locale)
+    if not membership.is_admin:
+        raise http_error(
+            status.HTTP_403_FORBIDDEN, "errors.room.onlyAdministratorCanDelete", locale
+        )
+
+    await purge_room(session, room_id)

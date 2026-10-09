@@ -65,7 +65,8 @@
   },
   "auth": {
     "prompt": "Accedi per continuare.",
-    "signInWith": "Accedi con {{provider}}"
+    "signInWith": "Accedi con {{provider}}",
+    "privacy": "Privacy"
   },
   "header": {
     "account": "Il tuo account",
@@ -147,6 +148,21 @@
       "rate": "Velocità",
       "try": "Prova",
       "sample": "Ecco come suona questa voce mentre legge i tuoi appunti."
+    },
+    "privacy": {
+      "title": "I tuoi dati",
+      "description": "Scarica una copia di tutto ciò che l'app conserva su di te, oppure elimina il tuo account.",
+      "export": "Scarica i miei dati",
+      "exported": "Dati scaricati",
+      "notice": "Informativa privacy",
+      "deleteDescription": "L'eliminazione dell'account è definitiva. Le Stanze in cui sei l'unico membro vengono eliminate; nelle Stanze condivise ciò che hai scritto resta, mostrato come scritto da un utente sconosciuto.",
+      "delete": "Elimina account",
+      "confirmTitle": "Eliminare il tuo account?",
+      "confirmBody": "Profilo, avatar, Amici e account di accesso vengono cancellati e non si possono recuperare. Le Stanze in cui sei l'unico membro vengono eliminate con tutto il loro contenuto. Se sei l'ultimo Master o Amministratore di una Stanza condivisa, passa prima il ruolo a qualcun altro.",
+      "confirmLabel": "Scrivi \"{{word}}\" per confermare",
+      "deleteWord": "ELIMINA",
+      "confirm": "Elimina definitivamente",
+      "deleted": "Il tuo account è stato eliminato"
     }
   },
   "rooms": {
@@ -782,5 +798,42 @@
     "commentListen": "Ascolta",
     "commentStop": "Interrompi",
     "commentBy": "{{name}} ha scritto"
+  },
+  "privacy": {
+    "back": "Torna all'app",
+    "title": "Informativa privacy",
+    "updated": "Ultimo aggiornamento: {{date}}",
+    "toComplete": "[da completare]",
+    "intro": "Questa informativa spiega quali dati personali tratta questa app, perché, dove vengono conservati e come puoi esercitare i tuoi diritti secondo il Regolamento generale sulla protezione dei dati (GDPR).",
+    "sections": {
+      "controller": {
+        "title": "Chi è il titolare",
+        "body": "Il titolare del trattamento è {{name}}. Per qualsiasi domanda sui tuoi dati, o per esercitare i tuoi diritti, scrivi a {{email}}."
+      },
+      "data": {
+        "title": "Quali dati trattiamo",
+        "body": "Solo quelli necessari al funzionamento dell'app:\n\n- Dati di accesso dal provider che scegli (Google, Discord o GitHub): un identificativo dell'account, il tuo indirizzo email, il tuo nome e la tua immagine, copiati una sola volta come nome e avatar predefiniti del profilo.\n- Il tuo profilo: nome visualizzato, pronomi, descrizione e avatar, che puoi modificare o rimuovere in qualsiasi momento dalla pagina Account.\n- Ciò che scrivi e carichi nelle Stanze: Documenti, Note, Commenti, reazioni, immagini e allegati PDF, con chi li ha creati e quando.\n- I tuoi Amici, le richieste di amicizia e il tuo codice amico, e gli inviti alle Stanze che invii o ricevi.\n- Dati di utilizzo e tecnici: quando hai aperto per l'ultima volta ogni Documento, la cronologia delle modifiche ai Documenti, il registro di ogni Stanza dei cambi di ruolo e di visibilità, e i dati delle richieste che i server registrano per erogare e proteggere il servizio (come indirizzo IP, browser e orario)."
+      },
+      "purposes": {
+        "title": "Perché, e su quale base giuridica",
+        "body": "I tuoi dati servono solo a fornire l'app a te e ai membri delle tue Stanze (esecuzione di un contratto, art. 6(1)(b) GDPR) e a mantenerla sicura e funzionante (legittimo interesse, art. 6(1)(f) GDPR).\n\nNon vengono venduti né usati per pubblicità o profilazione, e l'app non usa strumenti di analisi o tracciamento. La tua email non viene mai mostrata agli altri utenti."
+      },
+      "processors": {
+        "title": "Chi li tratta, e dove",
+        "body": "L'app si appoggia a questi fornitori, che trattano i dati per nostro conto:\n\n- Supabase: database, archiviazione dei file e accesso, ospitati nell'Unione Europea (Francoforte, Germania).\n- OVHcloud: il server che esegue il backend dell'app, nel Regno Unito, che la Commissione europea riconosce come paese con un livello di protezione adeguato.\n- Vercel: distribuzione delle pagine dell'app. La sua rete può servire richieste da fuori dell'Unione Europea; i trasferimenti verso gli Stati Uniti si basano sull'EU-U.S. Data Privacy Framework e sulle clausole contrattuali standard.\n- Google, Discord e GitHub: solo per l'accesso che scegli, secondo le loro informative.\n- Openverse, un progetto di WordPress.org: quando cerchi immagini libere per un Documento, la ricerca viene inviata dal nostro server, e le anteprime vengono caricate dal tuo browser direttamente da Openverse, che quindi vede il tuo indirizzo IP."
+      },
+      "retention": {
+        "title": "Per quanto tempo li conserviamo",
+        "body": "- Il tuo account e il tuo profilo restano finché non elimini l'account.\n- Quando elimini l'account, profilo, avatar, Amici, reazioni e account di accesso vengono cancellati subito. Le Stanze in cui eri l'unico membro vengono eliminate con tutto il loro contenuto. Nelle Stanze condivise con altri, ciò che hai scritto resta come parte della campagna, mostrato come scritto da un utente sconosciuto.\n- Una Stanza che elimini viene cancellata con tutto il suo contenuto.\n- I PDF delle Stanze vengono cancellati 24 ore dopo la generazione, e le importazioni di Documenti 7 giorni dopo la fine.\n- I log dei server vengono conservati solo per il tempo necessario al funzionamento e alla sicurezza, e vengono sovrascritti a rotazione.\n- I backup dei nostri fornitori vengono sovrascritti entro il loro ciclo di backup."
+      },
+      "rights": {
+        "title": "I tuoi diritti",
+        "body": "Puoi in qualsiasi momento:\n\n- vedere e scaricare i tuoi dati: pagina Account, \"I tuoi dati\", \"Scarica i miei dati\" (un file JSON; l'esportazione di ogni Stanza contiene i contenuti della campagna che puoi vedere);\n- correggere il tuo profilo dalla pagina Account;\n- eliminare il tuo account: pagina Account, \"I tuoi dati\", \"Elimina account\";\n- opporti al trattamento o chiederne la limitazione, scrivendo a {{email}}.\n\nHai anche il diritto di proporre reclamo a un'autorità di controllo; in Italia è il Garante per la protezione dei dati personali (garanteprivacy.it)."
+      },
+      "storage": {
+        "title": "Cookie e memoria locale",
+        "body": "L'app non usa cookie. Conserva alcuni elementi nella memoria del tuo browser, necessari al suo funzionamento: la sessione di accesso, la lingua scelta, voce e velocità della lettura ad alta voce, il personaggio con cui hai scritto l'ultima volta in ogni Stanza, gli avvisi sui PDF delle Stanze che hai chiuso, e un link d'invito aperto prima di accedere. Restano sul tuo dispositivo: la sessione viene rimossa quando esci, il resto quando cancelli i dati del browser."
+      }
+    }
   }
 }

@@ -20,14 +20,15 @@ import { FriendsSection } from '../components/account/FriendsSection';
 import { RoomInvitationsSection } from '../components/account/RoomInvitationsSection';
 import { RevealsSection } from '../components/account/RevealsSection';
 import { SpeechSection } from '../components/account/SpeechSection';
+import { PrivacySection } from '../components/account/PrivacySection';
 import type { AccountProfile } from '../types/profile';
 import { useTranslation } from 'react-i18next';
 
 /**
  * `/account`: the signed-in user's profile (name, pronouns, description,
  * avatar), their Friends and Room invitations from Friends (spec 18), what
- * the Master revealed to them (spec 22), the read-aloud voice (spec 30), and
- * sign-out.
+ * the Master revealed to them (spec 22), the read-aloud voice (spec 30),
+ * sign-out, and their personal data: download and account deletion (spec 31).
  */
 export function AccountPage() {
   const { t } = useTranslation();
@@ -161,6 +162,8 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
           </Grid.Col>
         </Grid>
       </AccountSection>
+
+      <PrivacySection />
     </PageLayout>
   );
 }

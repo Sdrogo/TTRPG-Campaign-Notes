@@ -127,7 +127,10 @@
         "pronouns": "Pronouns",
         "bio": "Bio"
       },
-      "fieldTooLong": "{field} must be at most {max} characters"
+      "fieldTooLong": "{field} must be at most {max} characters",
+      "deletionNotConfirmed": "Type DELETE to confirm the account deletion",
+      "successorNeeded": "Before deleting your account, make someone else Master or Administrator in: {rooms}",
+      "signInDeletionFailed": "Your data was deleted, but your sign-in account could not be removed. Try again in a moment"
     },
     "friend": {
       "notFound": "Friend or friend request not found",

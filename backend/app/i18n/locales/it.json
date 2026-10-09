@@ -127,7 +127,10 @@
         "pronouns": "Pronomi",
         "bio": "Biografia"
       },
-      "fieldTooLong": "{field} deve avere al massimo {max} caratteri"
+      "fieldTooLong": "{field} deve avere al massimo {max} caratteri",
+      "deletionNotConfirmed": "Scrivi DELETE per confermare l'eliminazione dell'account",
+      "successorNeeded": "Prima di eliminare l'account, nomina un altro Master o Amministratore in: {rooms}",
+      "signInDeletionFailed": "I tuoi dati sono stati eliminati, ma non è stato possibile rimuovere l'account di accesso. Riprova tra poco"
     },
     "friend": {
       "notFound": "Amico o richiesta di amicizia non trovati",

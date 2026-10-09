@@ -9,6 +9,17 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-08)
 
+**Spec 31, personal data and GDPR, built on 2026-10-09** at the product
+owner's request ("the app should comply with the GDPR"), after an audit of what
+the app stores and where (in the spec). Backend: `GET /account/export` (the
+caller's data as JSON) and `DELETE /account` (solo Rooms deleted, shared Rooms
+left with the D-16 guard, personal rows and the Supabase Auth account erased,
+content in shared Rooms kept as an unknown user). Frontend: "Your data" on the
+Account page and the public `/privacy` notice (Italian and English, draft).
+No migration. Decisions to confirm in its PR; **before a release**, the
+product owner sets the controller's name and contact in
+`frontend/src/lib/privacy.ts` and reviews the notice (legal review is theirs).
+
 **Spec 30, read aloud, built on 2026-10-09** at the product owner's request
 (frontend only, no migration): Documents (name, description, visible
 Notes), single Notes and single Comments read by the browser's speech
