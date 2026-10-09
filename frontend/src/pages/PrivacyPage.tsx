@@ -25,7 +25,6 @@ const SECTIONS = [
  */
 export function PrivacyPage() {
   const { t } = useTranslation();
-  const pending = t('privacy.toComplete');
   const updated = new Date(`${PRIVACY_NOTICE_UPDATED}T12:00:00`).toLocaleDateString(
     currentLanguage(),
     { dateStyle: 'long' },
@@ -54,8 +53,8 @@ export function PrivacyPage() {
               </Title>
               {privacyBlocks(
                 t(`privacy.sections.${section}.body`, {
-                  name: PRIVACY_CONTROLLER.name ?? pending,
-                  email: PRIVACY_CONTROLLER.email ?? pending,
+                  name: PRIVACY_CONTROLLER.name,
+                  email: PRIVACY_CONTROLLER.email,
                 }),
               ).map((block, index) =>
                 block.kind === 'list' ? (
