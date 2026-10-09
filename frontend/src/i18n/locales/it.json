@@ -803,7 +803,6 @@
     "back": "Torna all'app",
     "title": "Informativa privacy",
     "updated": "Ultimo aggiornamento: {{date}}",
-    "toComplete": "[da completare]",
     "intro": "Questa informativa spiega quali dati personali tratta questa app, perché, dove vengono conservati e come puoi esercitare i tuoi diritti secondo il Regolamento generale sulla protezione dei dati (GDPR).",
     "sections": {
       "controller": {

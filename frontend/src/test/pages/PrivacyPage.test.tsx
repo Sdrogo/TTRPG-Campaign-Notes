@@ -23,15 +23,13 @@ describe('PrivacyPage', () => {
     expect(screen.getByRole('link', { name: "Torna all'app" })).toHaveAttribute('href', '/');
   });
 
-  // The controller's name and address are the product owner's to set
-  // (`PRIVACY_CONTROLLER`); until then the notice says so instead of
-  // showing an empty sentence.
-  it('marks the controller details still to be completed', () => {
+  // GDPR art. 13: the notice names the controller and where to write.
+  it('names the controller and their contact address', () => {
     renderWithProviders(<PrivacyPage />);
 
     expect(
       screen.getByText(
-        'Il titolare del trattamento è [da completare]. Per qualsiasi domanda sui tuoi dati, o per esercitare i tuoi diritti, scrivi a [da completare].',
+        'Il titolare del trattamento è Andrea Partenope. Per qualsiasi domanda sui tuoi dati, o per esercitare i tuoi diritti, scrivi a andreapartenope@gmail.com.',
       ),
     ).toBeInTheDocument();
   });
