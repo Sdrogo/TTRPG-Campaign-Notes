@@ -1,11 +1,14 @@
 import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiFetch } from '../../lib/apiClient';
+import { apiDownload, apiFetch } from '../../lib/apiClient';
+import { saveBlob } from '../../lib/roomExport';
 import { supabase } from '../../lib/supabaseClient';
 import { rawAccount } from '../fixtures';
 import { renderHookWithProviders } from '../utils';
 import {
   useAccount,
+  useDeleteAccount,
+  useExportPersonalData,
   useImportAvatar,
   useRemoveAvatar,
   useSignOut,
@@ -13,7 +16,8 @@ import {
   useUploadAvatar,
 } from '../../hooks/useAccount';
 
-vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
+vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn(), apiDownload: vi.fn() }));
+vi.mock('../../lib/roomExport', () => ({ saveBlob: vi.fn() }));
 vi.mock('../../lib/supabaseClient', () => ({
   supabase: { auth: { signOut: vi.fn() } },
 }));
@@ -163,6 +167,54 @@ describe('useSignOut', () => {
 
     await expect(result.current.mutateAsync()).rejects.toThrow('network');
     expect(queryClient.getQueryData(['rooms'])).toEqual([{ id: 'room-1' }]);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('useExportPersonalData', () => {
+  it('downloads the personal data and saves it as a dated JSON file', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 9, 9, 15, 0));
+    const blob = new Blob(['{}'], { type: 'application/json' });
+    vi.mocked(apiDownload).mockResolvedValue(blob);
+    const { result } = renderHookWithProviders(() => useExportPersonalData());
+
+    await result.current.mutateAsync();
+
+    expect(apiDownload).toHaveBeenCalledWith('/account/export');
+    expect(saveBlob).toHaveBeenCalledWith(blob, 'ex-libris-my-data-2026-10-09.json');
+    vi.useRealTimers();
+  });
+});
+
+describe('useDeleteAccount', () => {
+  // Spec 31_1: the server erases the account; this device then forgets the
+  // session locally (the server no longer has it) and every cached response.
+  it('deletes the account, signs out locally, clears the cache and returns home', async () => {
+    fetchMock.mockResolvedValue(undefined);
+    signOut.mockResolvedValue({ error: null } as Awaited<ReturnType<typeof supabase.auth.signOut>>);
+    const { result, queryClient } = renderHookWithProviders(() => useDeleteAccount());
+    queryClient.setQueryData(['rooms'], [{ id: 'room-1' }]);
+
+    await result.current.mutateAsync();
+
+    expect(fetchMock).toHaveBeenCalledWith('/account', {
+      method: 'DELETE',
+      json: { confirmation: 'DELETE' },
+    });
+    expect(signOut).toHaveBeenCalledWith({ scope: 'local' });
+    await waitFor(() => {
+      expect(queryClient.getQueryData(['rooms'])).toBeUndefined();
+      expect(navigate).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('keeps the session when the server refuses', async () => {
+    fetchMock.mockRejectedValue(new Error('last Master'));
+    const { result } = renderHookWithProviders(() => useDeleteAccount());
+
+    await expect(result.current.mutateAsync()).rejects.toThrow('last Master');
+    expect(signOut).not.toHaveBeenCalled();
     expect(navigate).not.toHaveBeenCalled();
   });
 });

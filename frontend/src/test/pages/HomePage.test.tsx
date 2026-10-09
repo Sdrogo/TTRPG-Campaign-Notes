@@ -55,6 +55,8 @@ describe('HomePage', () => {
     ]);
     buttons.forEach((button) => expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true'));
     expect(screen.getByText('Accedi per continuare.')).toBeInTheDocument();
+    // Spec 31_3: the privacy notice can be read before signing in.
+    expect(screen.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
   });
 
   // D-07: Google is the preferred login, so it's the one filled button.
