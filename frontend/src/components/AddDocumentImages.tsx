@@ -16,8 +16,8 @@ interface AddDocumentImagesProps {
 /**
  * An Owner's controls for adding images to a Document, as a compact row of the
  * info panel shaped like the PDFs' "File" row: upload files from the computer,
- * import one from a URL in a popover, or search free images (spec 29). Unlike a Comment's images, these are
- * sent right away.
+ * import one from a URL in a popover, or search free images (spec 29).
+ * Unlike a Comment's images, these are sent right away.
  */
 export function AddDocumentImages({
   onUploadFiles,
@@ -45,11 +45,13 @@ export function AddDocumentImages({
   };
 
   return (
-    <Group justify="space-between" gap="xs" wrap="nowrap">
-      <Text size="xs" c="dimmed">
+    // The actions wrap under each other instead of overflowing the panel,
+    // which is only 340px wide when the Document has no images.
+    <Group justify="space-between" gap="xs" wrap="nowrap" align="flex-start">
+      <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
         {t('images.rowTitle')}
       </Text>
-      <Group gap={4} wrap="nowrap">
+      <Group gap={4} wrap="wrap" justify="flex-end" style={{ minWidth: 0 }}>
         <FileButton
           onChange={(files) => {
             if (files.length > 0) {

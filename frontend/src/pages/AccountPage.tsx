@@ -19,13 +19,15 @@ import { ProfileForm } from '../components/account/ProfileForm';
 import { FriendsSection } from '../components/account/FriendsSection';
 import { RoomInvitationsSection } from '../components/account/RoomInvitationsSection';
 import { RevealsSection } from '../components/account/RevealsSection';
+import { SpeechSection } from '../components/account/SpeechSection';
 import type { AccountProfile } from '../types/profile';
 import { useTranslation } from 'react-i18next';
 
 /**
  * `/account`: the signed-in user's profile (name, pronouns, description,
  * avatar), their Friends and Room invitations from Friends (spec 18), what
- * the Master revealed to them (spec 22), and sign-out.
+ * the Master revealed to them (spec 22), the read-aloud voice (spec 30), and
+ * sign-out.
  */
 export function AccountPage() {
   const { t } = useTranslation();
@@ -125,6 +127,8 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
       </AccountSection>
 
       <FriendsSection />
+
+      <SpeechSection />
 
       <AccountSection title={t('account.access.title')}>
         <Grid gap={{ base: 'md', md: 'xl' }} align="flex-end">

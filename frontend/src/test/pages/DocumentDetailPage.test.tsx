@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -19,6 +19,7 @@ import {
 import { renderWithProviders } from '../utils';
 import { DocumentDetailPage } from '../../pages/DocumentDetailPage';
 import { ViewAsContext } from '../../hooks/useViewAs';
+import { installFakeSpeech } from '../speech';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
@@ -220,6 +221,34 @@ describe('exporting the Document', () => {
     expect(await screen.findByRole('dialog', { name: 'Esporta il Documento' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Annulla' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+});
+
+// Spec 30: every member who sees a Document can hear it, owner or not.
+describe('reading the Document aloud', () => {
+  it('reads the name, the description, then the Notes the member sees, and stops on leaving', async () => {
+    const { speech, uninstall } = installFakeSpeech();
+    routes.document = rawDocument({
+      owner_ids: ['user-2'],
+      notes: [rawNote({ title: 'Porta segreta', description: 'Dietro la libreria.' })],
+    });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Ascolta «Il Cancello»' }));
+    for (let i = 0; i < 3; i += 1) act(() => speech.finishCurrent());
+
+    expect(speech.spoken.map((u) => u.text)).toEqual([
+      'Il Cancello.',
+      'Una porta di pietra.',
+      'Porta segreta.',
+      'Dietro la libreria.',
+    ]);
+    expect(screen.getByRole('button', { name: 'Interrompi la lettura' })).toBeInTheDocument();
+    speech.cancel.mockClear();
+    cleanup();
+    expect(speech.cancel).toHaveBeenCalled();
+    uninstall();
   });
 });
 

@@ -186,6 +186,18 @@ other icon set.
   read-only, with a generic envelope and provider-neutral description
   (and a placeholder when the account shared no email), with the sign-out row ("Esci", outline, not red — signing
   out isn't destructive) beside it from `md` up, below it on phones.
+  "Lettura ad alta voce" (spec 30), between "Amici" and "Accesso": a
+  searchable voice `Select` ("Automatica", then the app language's
+  voices, then the others) and a speed `SegmentedControl` (0,75× to
+  1,5×) with "Prova" (outline, gray) beside it; a dimmed line instead
+  when the browser can't speak.
+- **Read aloud** (spec 30, `components/speech/ReadAloudControls.tsx`): a
+  gray subtle speaker `ActionIcon` ("Ascolta «Name»") in the Document
+  header (before Export, 18px) and in each Note's row of actions (`sm`,
+  14px, for every reader). While that source plays it becomes a light
+  accent Pause/Resume icon plus a gray Stop icon. A Comment has a text
+  action "Ascolta" / "Interrompi" next to "Rispondi". Hidden entirely
+  when the browser has no speech synthesis.
 - **Showing a user**: always `UserAvatar user={…}` (photo, or initials
   of their display name/email) plus `userDisplayName` — never an email
   directly. The members table adds pronouns and a 2-line-clamped

@@ -27,16 +27,19 @@ import { useComments, usePromoteComment } from '../hooks/useComments';
 import { useRoom } from '../hooks/useRooms';
 import { useRevealDocument, useRevealedInVisit } from '../hooks/useReveals';
 import { useReadOnly } from '../hooks/useViewAs';
+import { useStopReadingOnLeave } from '../hooks/useReadAloud';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { appendPromotedText, promotionReaches, type PromotionAudience } from '../lib/promotion';
 import { canManageTags } from '../lib/roomPermissions';
 import { documentReveal, notesHiddenFromGains } from '../lib/reveal';
+import { documentSpeech } from '../lib/speech';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { PageCard } from '../components/PageCard';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { RevealedBadge } from '../components/RevealedBadge';
 import { ExportDocumentModal } from '../components/ExportDocumentModal';
+import { ReadAloudControls } from '../components/speech/ReadAloudControls';
 import { RevealModal } from '../components/RevealModal';
 import { TagList } from '../components/TagList';
 import { DocumentFields } from '../components/DocumentFields';
@@ -228,6 +231,8 @@ function DocumentPanel({
   const [exportOpened, setExportOpened] = useState(false);
   // Previewing as a member (spec 22b): no write control at all.
   const readOnly = useReadOnly();
+  // Spec 30: leaving the Document (or moving to another) stops reading it.
+  useStopReadingOnLeave();
 
   const me = members.find((m) => m.userId === currentUserId);
   const isMaster = me?.role === 'master' && !readOnly;
@@ -258,6 +263,13 @@ function DocumentPanel({
                 <EyeIcon size={18} />
               </ActionIcon>
             )}
+            {/* Spec 30: everyone who sees the Document can hear it: its name,
+                description and the Notes they see. */}
+            <ReadAloudControls
+              sourceId={`document:${document.id}`}
+              name={document.name}
+              getText={() => documentSpeech(document)}
+            />
             {/* Spec 27: every member who sees the Document exports it, as the member
                 being previewed too (it only reads). */}
             <ActionIcon

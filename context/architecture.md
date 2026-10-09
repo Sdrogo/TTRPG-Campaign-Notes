@@ -150,6 +150,12 @@ Added 2026-10-02, spec `context/feature/18 - Friends.md` (D-26, D-27, FR-F1 to F
 - **Throttle**: 30 searches a minute per user, an in-memory sliding window in the backend process (`image_search.throttle`). Exact because each environment runs one uvicorn process; it resets on deploy. If the backend ever runs several workers or instances, the counter must move to Postgres. Over it: 429 `errors.imageSearch.throttled`; Openverse failing or throttling us: 502 `errors.imageSearch.unavailable`.
 - Nothing from a search is stored or trusted: picking a result calls the existing `images/from-url` import with the full image URL, through the same SSRF-guarded fetch. The browser loads thumbnails straight from Openverse (it sees the viewer's IP, not the query); there is no Content Security Policy today, and one would need `img-src https://api.openverse.org`.
 
+## Browser-only: read aloud (spec 30)
+
+- Reading Documents, Notes and Comments aloud uses the browser's **Web Speech API** (`window.speechSynthesis`) and nothing else: no backend route, no external service, no migration. It reads only what the page already shows, so it adds no visibility rule.
+- One player per page (`lib/speechPlayer.ts`) owns the browser's single speech queue: the text is cut into sentence-sized utterances (≤ 200 characters, to dodge Chrome stopping long ones), and each new reading cancels the previous one. Leaving the Document page stops it.
+- The voice (per app language) and speed live in `localStorage` (`ttrpg.speech`) on each device, chosen on the Account page; with no voice chosen the browser picks its default for `it-IT` / `en-US`.
+
 ## Auth and Access Model
 
 - Every user signs in via **Supabase Auth using OAuth** — Google (the preferred one, D-07, FR-A1), Discord or GitHub (spec 08, 2026-09-23; Facebook and X were removed on 2026-10-03, as there are no app credentials for them). The providers are enabled in Supabase's dashboard and listed once in `frontend/src/lib/authProviders.ts`; the backend doesn't know or care which one was used, since every provider's session is the same Supabase JWT. An account may come without an email (a provider can withhold it): `users.email` is nullable, invitations are link-based, and a user without a display name or email is shown with the unknown-user label. The frontend holds the resulting session and attaches it as a Bearer token on every backend request.
