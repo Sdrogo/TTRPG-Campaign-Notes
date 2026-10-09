@@ -139,9 +139,11 @@
       "unsupported": "This browser can't read aloud.",
       "voice": "Voice",
       "automatic": "Automatic",
+      "automaticWith": "Automatic ({{name}})",
       "languageVoices": "English voices",
       "otherVoices": "Other voices",
       "noVoices": "No English voice on this device: the browser will use its default one.",
+      "betterVoices": "The best voices are the browser's neural ones: \"Natural\" voices in Edge, \"Google\" ones in Chrome, and on iPhone and Mac the \"Enhanced\" or \"Premium\" voices you can download in Settings › Accessibility › Spoken Content.",
       "rate": "Speed",
       "try": "Try it",
       "sample": "This is how this voice sounds reading your notes."

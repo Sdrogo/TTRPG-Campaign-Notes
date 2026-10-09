@@ -187,8 +187,9 @@ other icon set.
   (and a placeholder when the account shared no email), with the sign-out row ("Esci", outline, not red — signing
   out isn't destructive) beside it from `md` up, below it on phones.
   "Lettura ad alta voce" (spec 30), between "Amici" and "Accesso": a
-  searchable voice `Select` ("Automatica", then the app language's
-  voices, then the others) and a speed `SegmentedControl` (0,75× to
+  searchable voice `Select` ("Automatica (best voice's name)", then the
+  app language's voices best first, spec 30b, then the others) with a
+  dimmed hint on where better voices come from and a speed `SegmentedControl` (0,75× to
   1,5×) with "Prova" (outline, gray) beside it; a dimmed line instead
   when the browser can't speak.
 - **Read aloud** (spec 30, `components/speech/ReadAloudControls.tsx`): a
