@@ -9,6 +9,12 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-08)
 
+**Spec 30, read aloud, built on 2026-10-09** at the product owner's request
+(frontend only, no migration): Documents (name, description, visible
+Notes), single Notes and single Comments read by the browser's speech
+synthesis, with Pause/Resume/Stop; voice and speed on the Account page,
+per device. Decisions to confirm in its PR.
+
 **Backlog review on 2026-10-08** (product owner): tickets **25 and 25b dropped**
 (the Tags section, 25c, and the Account page, PR #123, were already reworked;
 both files kept, marked dropped). **27b (PDF of one Document) is still
@@ -183,6 +189,14 @@ resolved, so the check now calls `api.exlibris.world` at the VPS's IP
 ## Completed Units
 
 Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
+
+### Read aloud (spec 30, 2026-10-09)
+
+- Product owner's request: have the app's texts read by a speech synthesizer. The browser's Web Speech API, so no backend, cost or migration (`architecture.md` → Browser-only: read aloud).
+- Speaker icon in the Document header (name, description, then the Notes the viewer sees) and on each Note; "Ascolta" on each Comment. Pause/Resume/Stop while playing, one reading at a time, stops on leaving the page. Mentions read as names.
+- Account page "Lettura ad alta voce": voice per app language ("Automatica" by default) and speed, kept in `localStorage`, with "Prova".
+- `lib/speech.ts` (chunking, text building, preferences), `lib/speechPlayer.ts`, `useReadAloud`, `useSpeechVoices`, `ReadAloudControls`, `SpeechSection`; tests use a fake `speechSynthesis` (`src/test/speech.ts`).
+- Not done: reading the whole Comment thread in one go, and highlighting the sentence being read. Voice quality depends on the device; pausing is unreliable on some Android browsers.
 
 ### Mentions follow a renamed Document or Tag everywhere (bug fix, 2026-10-08)
 

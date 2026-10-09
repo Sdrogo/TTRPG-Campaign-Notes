@@ -19,6 +19,8 @@ import { formatAbsoluteTime, formatRelativeTime } from '../../lib/time';
 import type { Character } from '../../types/character';
 import type { Comment, CommentFormValues, PromotionTarget } from '../../types/comment';
 import { useReadOnly } from '../../hooks/useViewAs';
+import { useReadAloud } from '../../hooks/useReadAloud';
+import { commentSpeech, speechSupported } from '../../lib/speech';
 import type { DocumentVisibility } from '../../types/document';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
@@ -308,6 +310,9 @@ export function CommentItem({
             {onReply && !comment.deleted && (
               <CommentAction onClick={onReply}>{t('comments.reply')}</CommentAction>
             )}
+            {!comment.deleted && comment.body.trim() && speechSupported() && (
+              <ReadCommentAction comment={comment} authorName={shownName} />
+            )}
             {comment.canEdit && !readOnly && (
               <CommentAction onClick={() => setEditing(true)}>{t('common.edit')}</CommentAction>
             )}
@@ -358,6 +363,21 @@ function CommentAction({ children, onClick, disabled = false }: CommentActionPro
         {children}
       </Text>
     </UnstyledButton>
+  );
+}
+
+// "Ascolta" (spec 30 Decision 3): reads this Comment aloud, and becomes
+// "Interrompi" while it plays. A Comment is short, so a text action stays a
+// single toggle, without the Pause the icon controls have.
+function ReadCommentAction({ comment, authorName }: { comment: Comment; authorName: string }) {
+  const { t } = useTranslation();
+  const reading = useReadAloud(`comment:${comment.id}`, () =>
+    commentSpeech(t('speech.commentBy', { name: authorName }), comment.body),
+  );
+  return reading.status === 'idle' ? (
+    <CommentAction onClick={reading.play}>{t('speech.commentListen')}</CommentAction>
+  ) : (
+    <CommentAction onClick={reading.stop}>{t('speech.commentStop')}</CommentAction>
   );
 }
 

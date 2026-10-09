@@ -11,6 +11,8 @@ import { VisibilityBadge } from '../VisibilityBadge';
 import { RevealedBadge } from '../RevealedBadge';
 import { MentionText } from '../mentions/MentionText';
 import { NoteForm } from './NoteForm';
+import { ReadAloudControls } from '../speech/ReadAloudControls';
+import { noteSpeech } from '../../lib/speech';
 import type { Member } from '../../types/member';
 import type { Note, NoteFormValues } from '../../types/note';
 import { useTranslation } from 'react-i18next';
@@ -39,7 +41,8 @@ interface NoteItemProps {
  * offered only when the backend's `canEdit`/`canDelete` allow them; the
  * visibility badge is shown to the same people, since only they need it.
  * The Master can also reveal it, and a Note this visit opened as revealed to
- * the viewer is marked so (spec 22).
+ * the viewer is marked so (spec 22). Every reader can hear it read aloud
+ * on its own (spec 30).
  */
 export function NoteItem({
   note,
@@ -91,65 +94,69 @@ export function NoteItem({
           {note.canEdit && <VisibilityBadge visibility={note.visibility} size="xs" />}
           {revealed && <RevealedBadge size="xs" />}
         </Group>
-        {(note.canEdit || note.canDelete || onReveal) && (
-          <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
-            {onReveal && (
+        <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
+          <ReadAloudControls
+            sourceId={`note:${note.id}`}
+            name={note.title}
+            getText={() => noteSpeech(note)}
+            size="sm"
+          />
+          {onReveal && (
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              onClick={onReveal}
+              aria-label={t('reveal.actionLabel', { name: note.title })}
+            >
+              <EyeIcon size={14} />
+            </ActionIcon>
+          )}
+          {note.canEdit && (
+            <>
               <ActionIcon
                 variant="subtle"
                 color="gray"
                 size="sm"
-                onClick={onReveal}
-                aria-label={t('reveal.actionLabel', { name: note.title })}
+                disabled={!canMoveUp || moving}
+                onClick={() => onMove(-1)}
+                aria-label={t('notes.moveUp', { title: note.title })}
               >
-                <EyeIcon size={14} />
+                <ArrowUpIcon size={14} />
               </ActionIcon>
-            )}
-            {note.canEdit && (
-              <>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="sm"
-                  disabled={!canMoveUp || moving}
-                  onClick={() => onMove(-1)}
-                  aria-label={t('notes.moveUp', { title: note.title })}
-                >
-                  <ArrowUpIcon size={14} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="sm"
-                  disabled={!canMoveDown || moving}
-                  onClick={() => onMove(1)}
-                  aria-label={t('notes.moveDown', { title: note.title })}
-                >
-                  <ArrowDownIcon size={14} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="sm"
-                  onClick={() => setEditing(true)}
-                  aria-label={t('notes.edit', { title: note.title })}
-                >
-                  <PencilSimpleIcon size={14} />
-                </ActionIcon>
-              </>
-            )}
-            {note.canDelete && (
               <ActionIcon
                 variant="subtle"
-                color="red"
+                color="gray"
                 size="sm"
-                onClick={() => setConfirmDeleteOpened(true)}
-                aria-label={t('notes.delete', { title: note.title })}
+                disabled={!canMoveDown || moving}
+                onClick={() => onMove(1)}
+                aria-label={t('notes.moveDown', { title: note.title })}
               >
-                <TrashIcon size={14} />
+                <ArrowDownIcon size={14} />
               </ActionIcon>
-            )}
-          </Group>
-        )}
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                onClick={() => setEditing(true)}
+                aria-label={t('notes.edit', { title: note.title })}
+              >
+                <PencilSimpleIcon size={14} />
+              </ActionIcon>
+            </>
+          )}
+          {note.canDelete && (
+            <ActionIcon
+              variant="subtle"
+              color="red"
+              size="sm"
+              onClick={() => setConfirmDeleteOpened(true)}
+              aria-label={t('notes.delete', { title: note.title })}
+            >
+              <TrashIcon size={14} />
+            </ActionIcon>
+          )}
+        </Group>
       </Group>
       {note.description && (
         <MentionText
