@@ -86,8 +86,13 @@ describe('speechChunks', () => {
     expect(speechChunks('abcdefghij', 4)).toEqual(['abcd', 'efgh', 'ij']);
   });
 
-  it('has nothing to say for blank text', () => {
+  it('cuts hard when the only space falls just past the limit', () => {
+    expect(speechChunks('abcd efgh', 4)).toEqual(['abcd', 'efgh']);
+  });
+
+  it('has nothing to say for blank text or bare punctuation', () => {
     expect(speechChunks('  \n\n ')).toEqual([]);
+    expect(speechChunks('...')).toEqual([]);
   });
 });
 
@@ -100,6 +105,10 @@ describe('speech preferences', () => {
 
   it('drops what it cannot read: an unknown language, an unoffered speed, bad JSON', () => {
     localStorage.setItem('ttrpg.speech', JSON.stringify({ voices: { fr: 'x', en: 3 }, rate: 9 }));
+    expect(readSpeechPreferences()).toEqual(DEFAULT_SPEECH_PREFERENCES);
+    localStorage.setItem('ttrpg.speech', JSON.stringify({ voices: null, rate: 1.5 }));
+    expect(readSpeechPreferences()).toEqual({ voices: {}, rate: 1.5 });
+    localStorage.setItem('ttrpg.speech', '"testo"');
     expect(readSpeechPreferences()).toEqual(DEFAULT_SPEECH_PREFERENCES);
     localStorage.setItem('ttrpg.speech', '{');
     expect(readSpeechPreferences()).toEqual(DEFAULT_SPEECH_PREFERENCES);

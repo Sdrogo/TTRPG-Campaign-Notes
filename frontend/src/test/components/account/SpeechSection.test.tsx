@@ -70,6 +70,16 @@ describe('SpeechSection (spec 30 Decision 4)', () => {
     expect(screen.getByText(/Nessuna voce in italiano/)).toBeInTheDocument();
   });
 
+  it('lists no "Altre voci" group when every voice speaks the app language', async () => {
+    const { user } = render([voices[0]]);
+
+    await user.click(screen.getByRole('combobox', { name: 'Voce' }));
+
+    expect(await screen.findByRole('option', { name: 'Alice (it-IT)' })).toBeInTheDocument();
+    expect(screen.queryByText('Altre voci')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nessuna voce in italiano/)).not.toBeInTheDocument();
+  });
+
   it('plays a sample with "Prova", and stops it', async () => {
     const { speech, user } = render();
 

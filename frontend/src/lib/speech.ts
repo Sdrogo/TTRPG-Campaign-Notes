@@ -86,7 +86,7 @@ function splitBy(text: string, separator: RegExp, max: number, hard: boolean): s
     const window = rest.slice(0, max + 1);
     let cut = -1;
     for (const match of window.matchAll(separator)) {
-      const end = (match.index ?? 0) + match[0].length;
+      const end = match.index + match[0].length;
       if (end <= max) cut = end;
     }
     if (cut <= 0) {
@@ -96,7 +96,7 @@ function splitBy(text: string, separator: RegExp, max: number, hard: boolean): s
     pieces.push(rest.slice(0, cut).trim());
     rest = rest.slice(cut).trim();
   }
-  if (rest) pieces.push(rest);
+  pieces.push(rest);
   return pieces.filter(Boolean);
 }
 

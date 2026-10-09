@@ -101,6 +101,32 @@ describe('the read-aloud player (spec 30)', () => {
     expect(getSpeechState()).toEqual({ status: 'speaking', sourceId: 'note:2' });
   });
 
+  it('ignores pause, resume and stop with nothing playing', () => {
+    pauseSpeech();
+    resumeSpeech();
+    stopSpeech();
+    expect(speech.pause).not.toHaveBeenCalled();
+    expect(speech.resume).not.toHaveBeenCalled();
+    expect(speech.cancel).not.toHaveBeenCalled();
+  });
+
+  it('resumes while the browser still has utterances queued', () => {
+    playSpeech('document:1', 'Testo.');
+    pauseSpeech();
+    speech.speaking = false;
+    speech.pending = true;
+    resumeSpeech();
+    expect(speech.resume).toHaveBeenCalled();
+    expect(getSpeechState().status).toBe('speaking');
+  });
+
+  it('does nothing where the browser cannot speak', () => {
+    uninstall();
+    playSpeech('note:1', 'Ciao.');
+    expect(getSpeechState().status).toBe('idle');
+    ({ speech, uninstall } = installFakeSpeech());
+  });
+
   it('has nothing to play for blank text', () => {
     playSpeech('note:1', '   ');
     expect(speech.spoken).toHaveLength(0);
