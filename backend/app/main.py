@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.account import router as account_router
+from app.api.account_data import router as account_data_router
 from app.api.auth import router as auth_router
 from app.api.characters import router as characters_router
 from app.api.comments import router as comments_router
@@ -70,6 +71,7 @@ add_cors(app, settings)
 
 app.include_router(auth_router)
 app.include_router(account_router)
+app.include_router(account_data_router)
 app.include_router(rooms_router)
 app.include_router(room_image_router)
 app.include_router(invitations_router)
