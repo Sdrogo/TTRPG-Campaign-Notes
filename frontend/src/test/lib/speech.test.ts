@@ -6,10 +6,12 @@ import {
   mentionsToSpeech,
   noteSpeech,
   pickVoice,
+  rankVoices,
   readSpeechPreferences,
   saveSpeechPreferences,
   speechChunks,
   speechSupported,
+  voiceScore,
   voiceSpeaks,
 } from '../../lib/speech';
 import { installFakeSpeech } from '../speech';
@@ -128,8 +130,57 @@ describe('voices', () => {
   it('uses the voice chosen for the app language while the browser still offers it', () => {
     const preferences = { voices: { it: 'it-1', en: 'gone' }, rate: 1 as const };
     expect(pickVoice([italian, english], 'it', preferences)).toBe(italian);
-    // "Automatica": no choice, or a choice this browser no longer has.
-    expect(pickVoice([italian, english], 'en', preferences)).toBeNull();
-    expect(pickVoice([italian], 'it', DEFAULT_SPEECH_PREFERENCES)).toBeNull();
+    // "Automatica": no choice, or a choice this browser no longer has, uses
+    // the best voice for the language (spec 30b), else leaves it to the browser.
+    expect(pickVoice([italian, english], 'en', preferences)).toBe(english);
+    expect(pickVoice([italian], 'it', DEFAULT_SPEECH_PREFERENCES)).toBe(italian);
+    expect(pickVoice([italian], 'en', DEFAULT_SPEECH_PREFERENCES)).toBeNull();
+  });
+});
+
+describe('ranking voices (spec 30b)', () => {
+  const voice = (name: string, lang: string, extra: Partial<SpeechSynthesisVoice> = {}) =>
+    ({
+      voiceURI: name,
+      name,
+      lang,
+      localService: true,
+      default: false,
+      ...extra,
+    }) as SpeechSynthesisVoice;
+
+  it('puts neural and network voices before the system ones, novelty and robotic voices last', () => {
+    const elsa = voice('Microsoft Elsa - Italian (Italy)', 'it-IT', { default: true });
+    const isabella = voice('Microsoft Isabella Online (Natural) - Italian (Italy)', 'it-IT', {
+      localService: false,
+    });
+    const google = voice('Google italiano', 'it-IT', { localService: false });
+    const federica = voice('Federica (Premium)', 'it-IT');
+    const grandma = voice('Grandma (Italian (Italy))', 'it-IT');
+    const espeak = voice('eSpeak Italian', 'it');
+    const daniel = voice('Daniel', 'en-GB');
+
+    expect(rankVoices([grandma, elsa, espeak, federica, daniel, google, isabella], 'it')).toEqual([
+      google,
+      isabella,
+      federica,
+      elsa,
+      grandma,
+      espeak,
+    ]);
+  });
+
+  it('prefers the main region, then the browser default, then keeps the browser order', () => {
+    const swiss = voice('Luca', 'it-CH');
+    const italy = voice('Alice', 'it_IT');
+    const other = voice('Paola', 'it-IT');
+    const defaultOne = voice('Carla', 'it-IT', { default: true });
+    expect(voiceScore(italy, 'it')).toBeGreaterThan(voiceScore(swiss, 'it'));
+    expect(rankVoices([swiss, italy, other, defaultOne], 'it')).toEqual([
+      defaultOne,
+      italy,
+      other,
+      swiss,
+    ]);
   });
 });

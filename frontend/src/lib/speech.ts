@@ -178,10 +178,60 @@ export function voiceSpeaks(
   return voice.lang.toLowerCase().replace('_', '-').split('-')[0] === language;
 }
 
+// Names that mark a neural or high-quality voice: Edge's "Online (Natural)",
+// Chrome's network "Google …" voices, Apple's downloadable "Enhanced" and
+// "Premium" ones (spec 30b).
+const GOOD_VOICE = /\b(natural|neural|online|enhanced|premium|wavenet|siri|google)\b/i;
+
+// Robotic engines and Apple's novelty voices (Bubbles, Zarvox...), which some
+// browsers list under every language (spec 30b).
+const ROBOTIC_VOICE =
+  /espeak|compact|eloquence|\b(bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox)\b/i;
+
+// Apple's older multilingual voices (Eddy, Flo, Grandma...): real voices in
+// every language, but flatter than the regional ones, so they rank below a
+// plain system voice and above the robotic ones.
+const PLAIN_APPLE_VOICE = /\b(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i;
+
+/**
+ * How good `voice` is likely to sound, higher is better (spec 30b): a
+ * neural-sounding name counts most, then being a network voice (they are
+ * usually neural), then speaking the app language's main region (`it-IT`
+ * over `it-CH`), then being the browser's default. The browser exposes no
+ * quality flag, so this is a heuristic over names.
+ */
+export function voiceScore(
+  voice: Pick<SpeechSynthesisVoice, 'name' | 'lang' | 'localService' | 'default'>,
+  language: Language,
+): number {
+  let score = 0;
+  if (GOOD_VOICE.test(voice.name)) score += 8;
+  if (ROBOTIC_VOICE.test(voice.name)) score -= 8;
+  else if (PLAIN_APPLE_VOICE.test(voice.name)) score -= 3;
+  if (!voice.localService) score += 4;
+  if (voice.lang.replace('_', '-').toLowerCase() === SPEECH_LANGS[language].toLowerCase())
+    score += 2;
+  if (voice.default) score += 1;
+  return score;
+}
+
+/** The voices that speak the app language, best first (`voiceScore`); ties keep the browser's order. */
+export function rankVoices(
+  voices: SpeechSynthesisVoice[],
+  language: Language,
+): SpeechSynthesisVoice[] {
+  return voices
+    .filter((voice) => voiceSpeaks(voice, language))
+    .map((voice, index) => ({ voice, index, score: voiceScore(voice, language) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(({ voice }) => voice);
+}
+
 /**
  * The voice to read in: the one chosen for the app language when this
- * browser still has it, else null, which leaves the choice to the browser
- * for the utterance's `lang` ("Automatica").
+ * browser still has it, else the best one it has for that language
+ * ("Automatica", spec 30b), else null, which leaves the choice to the
+ * browser for the utterance's `lang`.
  */
 export function pickVoice(
   voices: SpeechSynthesisVoice[],
@@ -189,5 +239,9 @@ export function pickVoice(
   preferences: SpeechPreferences,
 ): SpeechSynthesisVoice | null {
   const chosen = preferences.voices[language];
-  return (chosen && voices.find((voice) => voice.voiceURI === chosen)) || null;
+  return (
+    (chosen && voices.find((voice) => voice.voiceURI === chosen)) ||
+    rankVoices(voices, language)[0] ||
+    null
+  );
 }

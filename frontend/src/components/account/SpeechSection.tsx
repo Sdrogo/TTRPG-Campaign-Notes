@@ -7,6 +7,7 @@ import { useReadAloud, useStopReadingOnLeave } from '../../hooks/useReadAloud';
 import { useSpeechVoices } from '../../hooks/useSpeechVoices';
 import { currentLanguage } from '../../i18n';
 import {
+  rankVoices,
   readSpeechPreferences,
   saveSpeechPreferences,
   SPEECH_RATES,
@@ -16,13 +17,16 @@ import {
   type SpeechRate,
 } from '../../lib/speech';
 
-// The Select's value for "Automatica": no voice stored, the browser picks.
+// The Select's value for "Automatica": no voice stored, the best installed
+// one is used (spec 30b).
 const AUTOMATIC = '';
 
 /**
  * "Lettura ad alta voce" on the Account page (spec 30 Decision 4): the voice
  * for the app language and the speed, kept on this device, with "Prova" to
- * hear them. A browser without speech synthesis gets a line saying so.
+ * hear them. The app language's voices are listed best first, and
+ * "Automatica" names the one it uses (spec 30b). A browser without speech
+ * synthesis gets a line saying so.
  */
 export function SpeechSection() {
   const { t } = useTranslation();
@@ -57,7 +61,7 @@ function SpeechSettings() {
     value: voice.voiceURI,
     label: `${voice.name} (${voice.lang})`,
   });
-  const own = voices.filter((voice) => voiceSpeaks(voice, language));
+  const own = rankVoices(voices, language);
   const others = voices.filter((voice) => !voiceSpeaks(voice, language));
   const chosen = preferences.voices[language];
   // A voice chosen on this device but no longer offered reads as "Automatica",
@@ -75,7 +79,12 @@ function SpeechSettings() {
             allowDeselect={false}
             searchable
             data={[
-              { value: AUTOMATIC, label: t('account.speech.automatic') },
+              {
+                value: AUTOMATIC,
+                label: own[0]
+                  ? t('account.speech.automaticWith', { name: own[0].name })
+                  : t('account.speech.automatic'),
+              },
               ...(own.length > 0
                 ? [{ group: t('account.speech.languageVoices'), items: own.map(toItem) }]
                 : []),
@@ -93,6 +102,9 @@ function SpeechSettings() {
               {t('account.speech.noVoices')}
             </Text>
           )}
+          <Text size="xs" c="dimmed">
+            {t('account.speech.betterVoices')}
+          </Text>
         </Stack>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6 }}>

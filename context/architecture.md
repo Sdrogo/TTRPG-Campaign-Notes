@@ -154,7 +154,7 @@ Added 2026-10-02, spec `context/feature/18 - Friends.md` (D-26, D-27, FR-F1 to F
 
 - Reading Documents, Notes and Comments aloud uses the browser's **Web Speech API** (`window.speechSynthesis`) and nothing else: no backend route, no external service, no migration. It reads only what the page already shows, so it adds no visibility rule.
 - One player per page (`lib/speechPlayer.ts`) owns the browser's single speech queue: the text is cut into sentence-sized utterances (≤ 200 characters, to dodge Chrome stopping long ones), and each new reading cancels the previous one. Leaving the Document page stops it.
-- The voice (per app language) and speed live in `localStorage` (`ttrpg.speech`) on each device, chosen on the Account page; with no voice chosen the browser picks its default for `it-IT` / `en-US`.
+- The voice (per app language) and speed live in `localStorage` (`ttrpg.speech`) on each device, chosen on the Account page; with no voice chosen the app picks the best installed voice for the language by name and kind (`rankVoices`, spec 30b), and only with none at all leaves it to the browser's default for `it-IT` / `en-US`.
 
 ## Auth and Access Model
 

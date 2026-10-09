@@ -38,7 +38,7 @@ describe('SpeechSection (spec 30 Decision 4)', () => {
   it('starts on "Automatica" and stores the voice picked for the app language', async () => {
     const { user } = render();
     const select = screen.getByRole('combobox', { name: 'Voce' });
-    expect(select).toHaveValue('Automatica');
+    expect(select).toHaveValue('Automatica (Alice)');
 
     await user.click(select);
     await user.click(await screen.findByRole('option', { name: 'Alice (it-IT)' }));
@@ -51,7 +51,7 @@ describe('SpeechSection (spec 30 Decision 4)', () => {
     const { user } = render();
 
     await user.click(screen.getByRole('combobox', { name: 'Voce' }));
-    await user.click(await screen.findByRole('option', { name: 'Automatica' }));
+    await user.click(await screen.findByRole('option', { name: 'Automatica (Alice)' }));
 
     expect(readSpeechPreferences().voices).toEqual({ en: 'daniel' });
   });

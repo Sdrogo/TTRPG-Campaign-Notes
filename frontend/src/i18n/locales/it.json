@@ -139,9 +139,11 @@
       "unsupported": "Questo browser non sa leggere ad alta voce.",
       "voice": "Voce",
       "automatic": "Automatica",
+      "automaticWith": "Automatica ({{name}})",
       "languageVoices": "Voci in italiano",
       "otherVoices": "Altre voci",
       "noVoices": "Nessuna voce in italiano su questo dispositivo: il browser userà la sua predefinita.",
+      "betterVoices": "Le voci migliori sono quelle neurali del browser: in Edge le voci \"Natural\", in Chrome \"Google\", su iPhone e Mac le voci \"Avanzate\" o \"Premium\" da scaricare in Impostazioni › Accessibilità › Contenuti letti.",
       "rate": "Velocità",
       "try": "Prova",
       "sample": "Ecco come suona questa voce mentre legge i tuoi appunti."
