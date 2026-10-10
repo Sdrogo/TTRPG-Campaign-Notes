@@ -201,4 +201,15 @@ describe('the first reading of a page (spec 30b)', () => {
 
     expect(speech.spoken.map((u) => u.text)).toEqual(['Due.']);
   });
+
+  it('keeps the reading when paused and resumed while waiting', async () => {
+    playSpeech('note:1', 'Ciao.');
+    pauseSpeech();
+    resumeSpeech();
+    expect(getSpeechState()).toEqual({ status: 'speaking', sourceId: 'note:1' });
+
+    speech.loadVoices([natural]);
+    await settle();
+    expect(speech.spoken.map((u) => u.text)).toEqual(['Ciao.']);
+  });
 });

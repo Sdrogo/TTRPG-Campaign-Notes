@@ -206,7 +206,7 @@ Dates are 2026-09 unless noted. Spec files live in `context/feature/`.
 ### First reading used the poor voice (spec 30b Decision 4, 2026-10-10)
 
 - Andrea's report: the first reading of a session sounded like the old low-quality voice, the following ones like the good one. Chrome's `getVoices()` is empty until its voices load (which the first call starts), so the first reading chose from nothing and fell back to the browser default.
-- `useReadAloud` primes the list on mount; `playSpeech` waits for `voiceschanged` (≤ 1.5 s) when the list is still empty, ignoring a reading stopped or replaced meanwhile. The test fake now lists a voice by default and can load voices late.
+- `useReadAloud` primes the list on mount; `playSpeech` waits for `voiceschanged` (≤ 1.5 s) when the list is still empty, ignoring a reading stopped or replaced meanwhile; a Pause then Resume during the wait keeps the reading (review finding). The test fake now lists a voice by default and can load voices late.
 
 ### Better read-aloud voices (spec 30b, 2026-10-09)
 

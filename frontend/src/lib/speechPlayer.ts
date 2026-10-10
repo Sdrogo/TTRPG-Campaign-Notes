@@ -25,6 +25,9 @@ let state: SpeechState = IDLE;
 // Bumped by every play and stop, so the callbacks of a cancelled reading
 // (Chrome still fires `end`/`error` on them) don't move the new one along.
 let generation = 0;
+// Whether the current reading is still waiting for the voice list: nothing
+// is queued yet, so a Resume then has to keep it rather than end it.
+let waitingForVoices = false;
 const listeners = new Set<() => void>();
 
 function setState(next: SpeechState) {
@@ -87,6 +90,7 @@ export function playSpeech(sourceId: string, text: string): void {
   if (!speechSupported()) return;
   const synth = window.speechSynthesis;
   const run = ++generation;
+  waitingForVoices = false;
   synth.cancel();
   // Chrome keeps the queue paused across a cancel: a new reading started
   // while one was paused would otherwise stay silent.
@@ -128,9 +132,13 @@ export function playSpeech(sourceId: string, text: string): void {
   if (voices.length > 0) {
     start(voices);
   } else {
-    // Stopped or replaced while waiting: nothing to start.
+    waitingForVoices = true;
+    // Stopped or replaced while waiting: nothing to start. Paused while
+    // waiting: the chunks queue on the paused synth and play on Resume.
     void waitForVoices(synth).then((loaded) => {
-      if (run === generation) start(loaded);
+      if (run !== generation) return;
+      waitingForVoices = false;
+      start(loaded);
     });
   }
 }
@@ -149,7 +157,7 @@ export function pauseSpeech(): void {
 export function resumeSpeech(): void {
   if (state.status !== 'paused') return;
   const synth = window.speechSynthesis;
-  if (!synth.speaking && !synth.pending) {
+  if (!waitingForVoices && !synth.speaking && !synth.pending) {
     generation += 1;
     setState(IDLE);
     return;
@@ -162,6 +170,7 @@ export function resumeSpeech(): void {
 export function stopSpeech(): void {
   if (state.status === 'idle') return;
   generation += 1;
+  waitingForVoices = false;
   window.speechSynthesis.cancel();
   setState(IDLE);
 }
