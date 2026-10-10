@@ -12,7 +12,7 @@ describe('useSpeechVoices (spec 30)', () => {
   });
 
   it('picks up the voices Chrome loads late, and stops listening on unmount', () => {
-    const { speech, uninstall } = installFakeSpeech();
+    const { speech, uninstall } = installFakeSpeech([]);
     const { result, unmount } = renderHookWithProviders(() => useSpeechVoices());
     expect(result.current).toEqual([]);
 
