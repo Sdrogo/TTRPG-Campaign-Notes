@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change. Keep entries
 short: a few lines per unit, with the *why* and anything a future session
 must know. The full per-unit history (test counts, headless-check logs,
 step-by-step notes) is in
-[`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md)
+[`progress-tracker-full-2026-09-30.md`](progress-tracker-full-2026-09-30.md)
 — read it only when you need that detail.
 
 ## Current Status (2026-10-08)
