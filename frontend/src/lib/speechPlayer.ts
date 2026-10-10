@@ -45,10 +45,43 @@ export function subscribeSpeech(listener: () => void): () => void {
   };
 }
 
+// How long a first reading waits for the voice list before falling back to
+// the browser's default voice.
+export const VOICES_WAIT_MS = 1500;
+
+/**
+ * Asks the browser for its voices so they are loaded before the first
+ * reading: Chrome only starts loading them on the first `getVoices()` call.
+ */
+export function primeSpeechVoices(): void {
+  if (speechSupported()) window.speechSynthesis.getVoices();
+}
+
+// The voices once the browser has listed them, or whatever it has after
+// `VOICES_WAIT_MS` (none, on a browser that never fires `voiceschanged`).
+function waitForVoices(synth: SpeechSynthesis): Promise<SpeechSynthesisVoice[]> {
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      synth.removeEventListener('voiceschanged', done);
+      resolve(synth.getVoices());
+    };
+    const timer = setTimeout(done, VOICES_WAIT_MS);
+    synth.addEventListener('voiceschanged', done);
+  });
+}
+
 /**
  * Reads `text` aloud as `sourceId`, stopping whatever was playing. The voice
  * and speed are the ones chosen on the Account page for the app language
- * (spec 30 Decision 4), read at the start of each reading.
+ * (spec 30 Decision 4, spec 30b), read at the start of each reading.
+ *
+ * Chrome lists no voices until it has loaded them, which it starts doing on
+ * the first `getVoices()` call: the first reading of a page would then fall
+ * back to the browser's default (low-quality) voice. So when the list is
+ * still empty the reading waits for `voiceschanged` (at most
+ * `VOICES_WAIT_MS`) before choosing; with the list already there it speaks
+ * at once, still inside the click (iOS Safari needs that).
  */
 export function playSpeech(sourceId: string, text: string): void {
   if (!speechSupported()) return;
@@ -65,30 +98,41 @@ export function playSpeech(sourceId: string, text: string): void {
   }
   const language = currentLanguage();
   const preferences = readSpeechPreferences();
-  const voice = pickVoice(synth.getVoices(), language, preferences);
 
-  const speakChunk = (index: number) => {
-    const utterance = new SpeechSynthesisUtterance(chunks[index]);
-    utterance.lang = voice?.lang ?? SPEECH_LANGS[language];
-    if (voice) utterance.voice = voice;
-    utterance.rate = preferences.rate;
-    const next = () => {
-      if (run !== generation) return;
-      if (index + 1 < chunks.length) {
-        speakChunk(index + 1);
-      } else {
-        setState(IDLE);
-      }
+  const start = (voices: SpeechSynthesisVoice[]) => {
+    const voice = pickVoice(voices, language, preferences);
+    const speakChunk = (index: number) => {
+      const utterance = new SpeechSynthesisUtterance(chunks[index]);
+      utterance.lang = voice?.lang ?? SPEECH_LANGS[language];
+      if (voice) utterance.voice = voice;
+      utterance.rate = preferences.rate;
+      const next = () => {
+        if (run !== generation) return;
+        if (index + 1 < chunks.length) {
+          speakChunk(index + 1);
+        } else {
+          setState(IDLE);
+        }
+      };
+      utterance.onend = next;
+      // A chunk the voice can't say is skipped rather than ending the reading;
+      // a cancelled one is ignored above through `generation`.
+      utterance.onerror = next;
+      synth.speak(utterance);
     };
-    utterance.onend = next;
-    // A chunk the voice can't say is skipped rather than ending the reading;
-    // a cancelled one is ignored above through `generation`.
-    utterance.onerror = next;
-    synth.speak(utterance);
+    speakChunk(0);
   };
 
   setState({ status: 'speaking', sourceId });
-  speakChunk(0);
+  const voices = synth.getVoices();
+  if (voices.length > 0) {
+    start(voices);
+  } else {
+    // Stopped or replaced while waiting: nothing to start.
+    void waitForVoices(synth).then((loaded) => {
+      if (run === generation) start(loaded);
+    });
+  }
 }
 
 /** Pauses the reading; Resume carries on from there. */

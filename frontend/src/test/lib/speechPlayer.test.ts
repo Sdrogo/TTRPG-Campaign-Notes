@@ -1,11 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getSpeechState,
   pauseSpeech,
   playSpeech,
+  primeSpeechVoices,
   resumeSpeech,
   stopSpeech,
   subscribeSpeech,
+  VOICES_WAIT_MS,
 } from '../../lib/speechPlayer';
 import { saveSpeechPreferences } from '../../lib/speech';
 import { setLanguage } from '../../i18n';
@@ -133,5 +135,70 @@ describe('the read-aloud player (spec 30)', () => {
     playSpeech('note:1', '   ');
     expect(speech.spoken).toHaveLength(0);
     expect(getSpeechState().status).toBe('idle');
+  });
+
+  it('asks the browser for its voices ahead of the first reading', () => {
+    const getVoices = vi.spyOn(speech, 'getVoices');
+    primeSpeechVoices();
+    expect(getVoices).toHaveBeenCalled();
+  });
+});
+
+// Andrea's report (2026-10-10): the first reading of a session used the
+// low-quality voice, the next ones the good one. Chrome lists no voices until
+// it has loaded them, so the first reading must wait for them (spec 30b).
+describe('the first reading of a page (spec 30b)', () => {
+  const natural = {
+    voiceURI: 'isabella',
+    name: 'Microsoft Isabella Online (Natural) - Italian (Italy)',
+    lang: 'it-IT',
+    localService: false,
+  };
+
+  beforeEach(() => {
+    uninstall();
+    ({ speech, uninstall } = installFakeSpeech([]));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // The reading starts on a resolved promise: let it settle.
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it('waits for the voice list, then reads with the best voice', async () => {
+    playSpeech('note:1', 'Ciao.');
+    expect(getSpeechState().status).toBe('speaking');
+    expect(speech.spoken).toHaveLength(0);
+
+    speech.loadVoices([{ voiceURI: 'elsa', name: 'Microsoft Elsa', lang: 'it-IT' }, natural]);
+    await settle();
+
+    expect(speech.spoken).toHaveLength(1);
+    expect(speech.spoken[0].voice).toMatchObject({ voiceURI: 'isabella' });
+    // Done waiting: a later list change starts nothing more.
+    speech.loadVoices([natural]);
+    await settle();
+    expect(speech.spoken).toHaveLength(1);
+  });
+
+  it("falls back to the browser's default when the list never comes", async () => {
+    vi.useFakeTimers();
+    playSpeech('note:1', 'Ciao.');
+    await vi.advanceTimersByTimeAsync(VOICES_WAIT_MS);
+
+    expect(speech.spoken).toHaveLength(1);
+    expect(speech.spoken[0]).toMatchObject({ lang: 'it-IT', voice: null });
+  });
+
+  it('starts nothing when stopped or replaced while waiting', async () => {
+    playSpeech('note:1', 'Uno.');
+    stopSpeech();
+    playSpeech('note:2', 'Due.');
+    speech.loadVoices([natural]);
+    await settle();
+
+    expect(speech.spoken.map((u) => u.text)).toEqual(['Due.']);
   });
 });
