@@ -32,18 +32,26 @@ export interface FakeSpeech {
   addEventListener: ReturnType<typeof vi.fn>;
   removeEventListener: ReturnType<typeof vi.fn>;
   finishCurrent: () => void;
+  /** Lists `voices` and fires `voiceschanged`, as Chrome does once it has loaded them. */
+  loadVoices: (voices: Partial<SpeechSynthesisVoice>[]) => void;
 }
+
+/** A voice for tests that don't care which one is used. */
+export const DEFAULT_FAKE_VOICES: Partial<SpeechSynthesisVoice>[] = [
+  { voiceURI: 'carla', name: 'Carla', lang: 'it-IT' },
+];
 
 /**
  * Installs the fake on `window` and returns it with an uninstall. The
  * returned fake speaks one utterance at a time: `finishCurrent` fires its
  * `onend`, which in the player queues the next one.
  */
-export function installFakeSpeech(voices: Partial<SpeechSynthesisVoice>[] = []): {
+export function installFakeSpeech(voices: Partial<SpeechSynthesisVoice>[] = DEFAULT_FAKE_VOICES): {
   speech: FakeSpeech;
   uninstall: () => void;
 } {
   let current: FakeUtterance | null = null;
+  const voicesChanged = new Set<() => void>();
   const speech: FakeSpeech = {
     spoken: [],
     voices,
@@ -66,13 +74,21 @@ export function installFakeSpeech(voices: Partial<SpeechSynthesisVoice>[] = []):
       speech.paused = false;
     }),
     getVoices: () => speech.voices,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
+    addEventListener: vi.fn((_event: string, listener: () => void) => {
+      voicesChanged.add(listener);
+    }),
+    removeEventListener: vi.fn((_event: string, listener: () => void) => {
+      voicesChanged.delete(listener);
+    }),
     finishCurrent: () => {
       const done = current;
       current = null;
       speech.speaking = false;
       done?.onend?.();
+    },
+    loadVoices: (loaded) => {
+      speech.voices = loaded;
+      [...voicesChanged].forEach((listener) => listener());
     },
   };
   Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: speech });

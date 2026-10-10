@@ -3,6 +3,7 @@ import {
   getSpeechState,
   pauseSpeech,
   playSpeech,
+  primeSpeechVoices,
   resumeSpeech,
   stopSpeech,
   subscribeSpeech,
@@ -26,6 +27,8 @@ export interface ReadAloud {
  */
 export function useReadAloud(sourceId: string, getText: () => string): ReadAloud {
   const state = useSyncExternalStore(subscribeSpeech, getSpeechState);
+  // Gets the browser loading its voices before the first play (spec 30b).
+  useEffect(primeSpeechVoices, []);
   return {
     status: state.sourceId === sourceId ? state.status : 'idle',
     play: () => playSpeech(sourceId, getText()),
