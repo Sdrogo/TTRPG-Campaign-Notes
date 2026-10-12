@@ -128,6 +128,18 @@ describe('DocumentDetailPage', () => {
     expect(screen.getByText('Una porta di pietra.')).toBeInTheDocument();
   });
 
+  // Spec 28_0 S3: the subtitle sits under the page title, dimmed, and the
+  // edit form starts from it.
+  it('shows the subtitle under the title and edits it', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-1'], subtitle: 'La Idol' });
+    const { user } = render();
+
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    expect(screen.getByText('La Idol')).toBeInTheDocument();
+    await user.click(editButton());
+    expect(screen.getByRole('textbox', { name: 'Sottotitolo' })).toHaveValue('La Idol');
+  });
+
   // Like on the Documents list, each Tag leads to the list filtered by it.
   it('links each Tag to the Documents filtered by it', async () => {
     render();

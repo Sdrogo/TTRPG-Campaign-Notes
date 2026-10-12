@@ -18,6 +18,7 @@ interface CreateDocumentModalProps {
 
 const EMPTY_VALUES: DocumentFormValues = {
   name: '',
+  subtitle: '',
   description: '',
   visibility: 'room',
   tagIds: [],

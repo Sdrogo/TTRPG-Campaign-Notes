@@ -23,6 +23,7 @@ const GATE: Document = {
   notes: [],
   files: [],
   playedBy: null,
+  subtitle: null,
 };
 
 function withMentions(children: ReactNode) {

@@ -242,13 +242,25 @@ function DocumentPanel({
     <PageCard>
       <Stack gap="md">
         <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
-          <Title
-            order={1}
-            fz={{ base: 'h2', sm: 'h1' }}
-            style={{ fontFamily: 'var(--font-display)', minWidth: 0, overflowWrap: 'anywhere' }}
-          >
-            {document.name}
-          </Title>
+          <Stack gap={0} style={{ minWidth: 0 }}>
+            <Title
+              order={1}
+              fz={{ base: 'h2', sm: 'h1' }}
+              style={{ fontFamily: 'var(--font-display)', overflowWrap: 'anywhere' }}
+            >
+              {document.name}
+            </Title>
+            {/* Spec 28_0 S3: one typography level below the name, dimmed. */}
+            {document.subtitle && (
+              <Text
+                fz={{ base: 'h3', sm: 'h2' }}
+                c="dimmed"
+                style={{ fontFamily: 'var(--font-display)', overflowWrap: 'anywhere' }}
+              >
+                {document.subtitle}
+              </Text>
+            )}
+          </Stack>
           <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
             {revealed?.document && <RevealedBadge />}
             <VisibilityBadge visibility={document.visibility} />
@@ -499,6 +511,7 @@ function DocumentEditForm({
   const promote = usePromoteComment(roomId, document.id);
   const [values, setValues] = useState<DocumentFormValues>({
     name: document.name,
+    subtitle: document.subtitle ?? '',
     description: promotion
       ? appendPromotedText(document.description, promotion.comment)
       : document.description,

@@ -55,6 +55,7 @@ function document(id: string, name: string): Document {
     notes: [],
     files: [],
     playedBy: null,
+    subtitle: null,
   };
 }
 

@@ -35,6 +35,7 @@ export function rawDocument(overrides: Record<string, unknown> = {}) {
     owner_ids: ['user-1'],
     selective_user_ids: [],
     played_by: null,
+    subtitle: null,
     ...overrides,
   };
 }
@@ -263,6 +264,7 @@ export function rawVersion(overrides: Record<string, unknown> = {}) {
 export function rawVersionDetail(overrides: Record<string, unknown> = {}) {
   return {
     ...rawVersion(),
+    subtitle: null,
     description: 'Un cancello.',
     notes: [],
     ...overrides,

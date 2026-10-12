@@ -363,6 +363,8 @@
     },
     "fields": {
       "descriptionHint": "Type # to link another Document.",
+      "subtitle": "Subtitle",
+      "subtitleHint": "One line under the name, for example “The Idol”.",
       "tags": "Tags",
       "newTag": "New tag",
       "newTagPlaceholder": "E.g. Faction"

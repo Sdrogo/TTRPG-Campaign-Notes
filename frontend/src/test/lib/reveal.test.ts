@@ -61,6 +61,7 @@ function document(overrides: Partial<Document> = {}): Document {
     ownerIds: ['owner'],
     selectiveUserIds: [],
     playedBy: null,
+    subtitle: null,
     notes: [],
     files: [],
     ...overrides,

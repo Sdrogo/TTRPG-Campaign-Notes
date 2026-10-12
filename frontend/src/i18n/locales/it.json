@@ -363,6 +363,8 @@
     },
     "fields": {
       "descriptionHint": "Scrivi # per collegare un altro Documento.",
+      "subtitle": "Sottotitolo",
+      "subtitleHint": "Una riga sotto il nome, per esempio «La Idol».",
       "tags": "Tag",
       "newTag": "Nuovo tag",
       "newTagPlaceholder": "Es. Fazione"
