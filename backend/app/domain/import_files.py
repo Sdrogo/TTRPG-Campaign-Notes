@@ -84,7 +84,8 @@ class ImportDocument:
     """A Document of the file. `source_id` is its id there, None for a file
     that has none. The counts are of what the import leaves out (Comments and
     PDF Attachments, Decisions 13 and 15); `has_player` is a Character's
-    player link, not imported (Decision 10)."""
+    player link, not imported (Decision 10). `subtitle` is as written in the
+    file (spec 28_0), cleaned when the import is planned."""
 
     source_id: str | None
     name: str
@@ -96,6 +97,7 @@ class ImportDocument:
     comment_count: int = 0
     file_count: int = 0
     has_player: bool = False
+    subtitle: str | None = None
 
 
 @dataclass(frozen=True)
@@ -302,6 +304,7 @@ def _json_document(raw: dict[str, Any], name: str, tags: Mapping[str, ImportTag]
         comment_count=len(_list(raw.get("comments"), name)),
         file_count=len(_list(raw.get("files"), name)),
         has_player=raw.get("played_by") is not None,
+        subtitle=_optional_str(raw.get("subtitle"), name),
     )
 
 
@@ -317,6 +320,9 @@ _CATEGORY = re.compile(r"^(.*) \((.*)\)$")
 _COMMENT_ITEM = re.compile(r"^\s*- \*\*")
 _MARKERS = {"**Images**", "**Files**", "**Notes**", "**Comments**"}
 _FENCE = re.compile(r"^\s*(```|~~~)")
+# The subtitle line the export writes between a Document's heading and its
+# facts (spec 28_0).
+_SUBTITLE_LINE = re.compile(r"^\*(.+)\*$")
 
 
 def _parse_markdown(name: str, text: str) -> ImportFile:
@@ -368,8 +374,15 @@ def _exported_document(
     """One Document section of the app's Markdown export."""
     index = 0
     facts: dict[str, str] = {}
+    subtitle = None
     while index < len(body) and not body[index].strip():
         index += 1
+    subtitle_line = _SUBTITLE_LINE.match(body[index]) if index < len(body) else None
+    if subtitle_line:
+        subtitle = _unescape(subtitle_line.group(1))
+        index += 1
+        while index < len(body) and not body[index].strip():
+            index += 1
     while index < len(body):
         fact = _FACT.match(body[index])
         if fact is None:
@@ -417,6 +430,7 @@ def _exported_document(
         comment_count=comments,
         file_count=files,
         has_player="Played by" in facts,
+        subtitle=subtitle,
     )
 
 
@@ -549,6 +563,7 @@ def file_to_json(file: ImportFile) -> dict[str, Any]:
                 "comment_count": d.comment_count,
                 "file_count": d.file_count,
                 "has_player": d.has_player,
+                "subtitle": d.subtitle,
             }
             for d in file.documents
         ],
@@ -572,6 +587,8 @@ def file_from_json(data: dict[str, Any]) -> ImportFile:
                 comment_count=d["comment_count"],
                 file_count=d["file_count"],
                 has_player=d["has_player"],
+                # Absent from the payload of a job queued before spec 28_0.
+                subtitle=d.get("subtitle"),
             )
             for d in data["documents"]
         ),

@@ -72,6 +72,7 @@ async def insert_copies(
             id=document.id,
             room_id=room_id,
             name=document.name,
+            subtitle=document.subtitle,
             description=document.text,
             visibility=document.visibility.value,
             created_by=importer,
@@ -89,6 +90,7 @@ async def insert_copies(
             id=uuid.uuid4(),
             document_id=d.id,
             name=d.name,
+            subtitle=d.subtitle,
             description=d.text,
             notes=notes_to_json(
                 tuple(NoteState(n.id, n.title, n.text, n.visibility) for n in d.notes)
@@ -109,7 +111,7 @@ async def replace_information(
     now: datetime,
 ) -> None:
     """Overwrites the information of existing Documents (Decision 6): name,
-    description, Tags and Notes (the old Notes are removed, the file's
+    subtitle (spec 28_0), description, Tags and Notes (the old Notes are removed, the file's
     created). Owners, visibility, grants, Character player, Comments,
     Attachments, images and Reveals are not touched. The caller records the
     new revision and the backlinks."""
@@ -124,6 +126,7 @@ async def replace_information(
     by_id = {document.id: document for document in documents}
     for row in rows:
         row.name = by_id[row.id].name
+        row.subtitle = by_id[row.id].subtitle
         row.description = by_id[row.id].text
     await session.flush()
     await session.execute(delete(DocumentTagRow).where(DocumentTagRow.document_id.in_(ids)))

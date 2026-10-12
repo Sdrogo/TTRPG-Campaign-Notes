@@ -1,5 +1,5 @@
 """Revision rows of a Document's history (spec 24b): `document_versions`, the
-Document's name and description plus its Notes as JSON."""
+Document's name, subtitle and description plus its Notes as JSON."""
 
 import uuid
 from typing import Any
@@ -44,7 +44,7 @@ def _from_row(row: DocumentVersionRow) -> Version:
     """Maps a `document_versions` row to the domain `Version`."""
     return Version(
         row.id,
-        DocumentState(row.name, row.description, _notes_from_json(row.notes)),
+        DocumentState(row.name, row.description, _notes_from_json(row.notes), row.subtitle),
         row.edited_by,
         row.created_at,
         row.updated_at,
@@ -80,6 +80,7 @@ async def insert_version(session: AsyncSession, document_id: uuid.UUID, version:
             id=version.id,
             document_id=document_id,
             name=version.state.name,
+            subtitle=version.state.subtitle,
             description=version.state.description,
             notes=notes_to_json(version.state.notes),
             edited_by=version.edited_by,
@@ -98,6 +99,7 @@ async def update_version(session: AsyncSession, version: Version) -> None:
     if row is None:
         raise LookupError(f"Version {version.id} not found")
     row.name = version.state.name
+    row.subtitle = version.state.subtitle
     row.description = version.state.description
     row.notes = notes_to_json(version.state.notes)
     row.updated_at = version.updated_at

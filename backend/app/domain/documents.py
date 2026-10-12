@@ -16,12 +16,17 @@ from app.domain.models import (
 )
 
 MAX_IMAGES_PER_DOCUMENT = 20
+MAX_SUBTITLE_LENGTH = 120
 
 DOCUMENT_VISIBILITY_CHANGED = "document_visibility_changed"
 
 
 class DocumentNameRequiredError(DomainError):
     """The Document name is empty once trimmed."""
+
+
+class DocumentSubtitleTooLongError(DomainError):
+    """The subtitle is over `MAX_SUBTITLE_LENGTH` characters once cleaned."""
 
 
 class TooManyImagesError(DomainError):
@@ -60,15 +65,18 @@ def plan_new_document(
     description: str,
     visibility: DocumentVisibility,
     creator_id: uuid.UUID,
+    subtitle: str | None = None,
 ) -> NewDocumentPlan:
     """UC-06: the creator becomes Owner. Whether they were allowed to create
     a Document at all (D-13/FR-D7) is checked by the caller against the
     Room's `players_can_create_documents` setting and the creator's role,
     before this is called - that's a Room-level policy, not something about
-    the Document being planned here."""
+    the Document being planned here. The subtitle is cleaned by
+    `clean_subtitle` (spec 28_0)."""
     clean_name = name.strip()
     if not clean_name:
         raise DocumentNameRequiredError("errors.document.nameRequired")
+    clean_sub = clean_subtitle(subtitle)
 
     document_id = uuid.uuid4()
     document = Document(
@@ -78,9 +86,25 @@ def plan_new_document(
         description=description,
         visibility=visibility,
         created_by=creator_id,
+        subtitle=clean_sub,
     )
     owner = DocumentOwner(document_id=document_id, user_id=creator_id)
     return NewDocumentPlan(document=document, owner=owner)
+
+
+def clean_subtitle(subtitle: str | None) -> str | None:
+    """Spec 28_0 S1: a subtitle is one line of plain text, so whitespace
+    (line breaks included) collapses to single spaces and the ends are
+    trimmed; an empty one is None (no subtitle). Raises
+    `DocumentSubtitleTooLongError` past `MAX_SUBTITLE_LENGTH` characters."""
+    if subtitle is None:
+        return None
+    cleaned = " ".join(subtitle.split())
+    if len(cleaned) > MAX_SUBTITLE_LENGTH:
+        raise DocumentSubtitleTooLongError(
+            "errors.document.subtitleTooLong", max=MAX_SUBTITLE_LENGTH
+        )
+    return cleaned or None
 
 
 def is_owner(role: RoomRole, user_id: uuid.UUID, owner_user_ids: Collection[uuid.UUID]) -> bool:

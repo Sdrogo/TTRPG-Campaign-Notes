@@ -1,9 +1,9 @@
-"""History of a whole Document: its name, its description and its Notes
-(spec 24b, FR-D5, replacing spec 24's separate Note histories). A revision is
-the Document's text as it was after a save. Every change writes one, except
-that saves by the same person within `MERGE_WINDOW` update the latest, so a
-typing session leaves one revision instead of a flood. Restoring never
-rewrites history: it appends a revision with the old state.
+"""History of a whole Document: its name, its subtitle (spec 28_0), its
+description and its Notes (spec 24b, FR-D5, replacing spec 24's separate Note
+histories). A revision is the Document's text as it was after a save. Every
+change writes one, except that saves by the same person within `MERGE_WINDOW`
+update the latest, so a typing session leaves one revision instead of a flood.
+Restoring never rewrites history: it appends a revision with the old state.
 
 A Note keeps its visibility of its own (VR-03), so a revision is only ever
 shown projected on the Notes a viewer may see (`visible_note_ids`,
@@ -45,17 +45,20 @@ class NoteState:
 
 @dataclass(frozen=True)
 class DocumentState:
-    """The Document's name and description and its Notes in display order."""
+    """The Document's name, description, Notes in display order, and
+    subtitle (spec 28_0, recorded with the name)."""
 
     name: str
     description: str
     notes: tuple[NoteState, ...] = ()
+    subtitle: str | None = None
 
     def same_text(self, other: "DocumentState") -> bool:
-        """Whether two states read the same: names, descriptions, and Notes
-        with their texts and order. Visibility doesn't count."""
+        """Whether two states read the same: names, subtitles, descriptions,
+        and Notes with their texts and order. Visibility doesn't count."""
         return (
             self.name == other.name
+            and self.subtitle == other.subtitle
             and self.description == other.description
             and [note.text() for note in self.notes] == [note.text() for note in other.notes]
         )
@@ -89,7 +92,8 @@ class VersionWrite:
 @dataclass(frozen=True)
 class ChangeSize:
     """What a revision changed against the one before, as one viewer sees it:
-    words added and removed (the name, the description and the Notes' titles
+    words added and removed (the name, the subtitle, the description and the
+    Notes' titles
     and texts together), and Notes added and removed."""
 
     words_added: int
@@ -213,6 +217,7 @@ def change_size(previous: DocumentState, current: DocumentState) -> ChangeSize:
     removed. Pass projected states, so only what the viewer sees is counted."""
     pairs: list[tuple[str, str]] = [
         (previous.name, current.name),
+        (previous.subtitle or "", current.subtitle or ""),
         (previous.description, current.description),
     ]
     before = {note.id: note for note in previous.notes}

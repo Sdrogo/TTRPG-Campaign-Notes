@@ -60,8 +60,10 @@ from app.domain.characters import PlayerNotAMemberError, plan_player_change
 from app.domain.documents import (
     AlreadyOwnerError,
     DocumentNameRequiredError,
+    DocumentSubtitleTooLongError,
     NotAnOwnerError,
     can_create_document,
+    clean_subtitle,
     document_visibility_audit,
     ensure_can_remove_owner,
     plan_add_owner,
@@ -96,6 +98,8 @@ class DocumentResponse(BaseModel):
     id: uuid.UUID
     room_id: uuid.UUID
     name: str
+    # One line under the name (spec 28_0), null when unset.
+    subtitle: str | None
     description: str
     visibility: DocumentVisibility
     # Filtered per viewer: an image attached to a Comment is listed only
@@ -162,9 +166,12 @@ class ImageFromUrlRequest(BaseModel):
 
 class CreateDocumentRequest(BaseModel):
     """A new Document. Tags must belong to the Room; repeated ids are
-    dropped. Without `visibility` it starts at the Room's default (VR-05)."""
+    dropped. Without `visibility` it starts at the Room's default (VR-05).
+    `subtitle` is one line of at most 120 characters; blank means none
+    (spec 28_0)."""
 
     name: str
+    subtitle: str | None = None
     description: str = ""
     visibility: DocumentVisibility | None = None
     tag_ids: UniqueIds = []
@@ -173,9 +180,10 @@ class CreateDocumentRequest(BaseModel):
 
 class UpdateDocumentRequest(BaseModel):
     """A partial update: omitted fields are left as they are. A list that is
-    sent replaces the current one."""
+    sent replaces the current one. A blank or null `subtitle` removes it."""
 
     name: str | None = None
+    subtitle: str | None = None
     description: str | None = None
     visibility: DocumentVisibility | None = None
     tag_ids: UniqueIds | None = None
@@ -196,6 +204,7 @@ def _build_response(
         id=document.id,
         room_id=document.room_id,
         name=document.name,
+        subtitle=document.subtitle,
         description=document.description,
         visibility=document.visibility,
         images=image_responses(images, image_urls),
@@ -269,8 +278,9 @@ async def create_document(
             description,
             starting_visibility(room, body.visibility),
             requester_id,
+            body.subtitle,
         )
-    except DocumentNameRequiredError as exc:
+    except (DocumentNameRequiredError, DocumentSubtitleTooLongError) as exc:
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
     await _validate_tag_ids(session, room_id, body.tag_ids, locale)
@@ -415,8 +425,9 @@ async def update_document(
     session: SessionDep,
     locale: LocaleDep,
 ) -> DocumentDetailResponse:
-    """UC-07: an Owner (or the Master, D-12) edits the Document's fields, Tags
-    and Selective grants. A change of who can see it is audited in the same
+    """UC-07: an Owner (or the Master, D-12) edits the Document's fields
+    (its subtitle included, spec 28_0: 422 past 120 characters), Tags and
+    Selective grants. A change of who can see it is audited in the same
     transaction (VR-08, Invariant 7)."""
     requester_id = uuid.UUID(current_user.id)
     document, _, membership = await get_owned_document(
@@ -429,6 +440,14 @@ async def update_document(
         raise http_error(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.document.nameRequired", locale
         )
+    try:
+        subtitle = (
+            clean_subtitle(body.subtitle)
+            if "subtitle" in body.model_fields_set
+            else document.subtitle
+        )
+    except DocumentSubtitleTooLongError as exc:
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
     description = (
         document.description
@@ -440,6 +459,7 @@ async def update_document(
     updated = replace(
         document,
         name=new_name,
+        subtitle=subtitle,
         description=description,
         visibility=document.visibility if body.visibility is None else body.visibility,
     )

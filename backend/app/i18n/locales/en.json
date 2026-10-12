@@ -25,6 +25,7 @@
     "document": {
       "notFound": "Document not found",
       "nameRequired": "Document name is required",
+      "subtitleTooLong": "The subtitle can be at most {max} characters",
       "creationDisabled": "Document creation is disabled for Players in this Room",
       "invalidTagIds": "One or more tag_ids are invalid for this room",
       "notOwner": "Only an Owner (or the Master) can do this",
@@ -177,6 +178,7 @@
       "tooManyImages": "At most {max} images can be imported at once",
       "nameRequired": "A Document in the file has no name",
       "nameTooLong": "The Document name \"{name}...\" is over {max} characters",
+      "subtitleTooLong": "The subtitle of {name} is over {max} characters",
       "tooManyNotes": "{name} has more than {max} Notes",
       "noteTitleInvalid": "A Note of {name} has no title or one over {max} characters",
       "tagNameTooLong": "The Tag name \"{name}...\" is over {max} characters",

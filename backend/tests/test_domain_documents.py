@@ -4,12 +4,15 @@ import pytest
 
 from app.domain.documents import (
     MAX_IMAGES_PER_DOCUMENT,
+    MAX_SUBTITLE_LENGTH,
     AlreadyOwnerError,
     DocumentNameRequiredError,
+    DocumentSubtitleTooLongError,
     NotAnOwnerError,
     NotOwnerError,
     TooManyImagesError,
     can_create_document,
+    clean_subtitle,
     ensure_can_remove_owner,
     ensure_owner,
     is_owner,
@@ -171,3 +174,31 @@ def test_no_promotion_when_the_last_image_is_gone() -> None:
 def test_oldest_survivor_is_promoted_when_the_favorite_is_removed() -> None:
     oldest, newer = _image(), _image()
     assert next_favorite_id([oldest, newer]) == oldest.id
+
+
+# --- Subtitle (spec 28_0 S1) ----------------------------------------------------
+
+
+def test_a_subtitle_is_one_trimmed_line_and_blank_means_none() -> None:
+    assert clean_subtitle("  La   Idol\n of the city ") == "La Idol of the city"
+    assert clean_subtitle(" \n ") is None
+    assert clean_subtitle(None) is None
+    assert clean_subtitle("x" * MAX_SUBTITLE_LENGTH) == "x" * MAX_SUBTITLE_LENGTH
+
+
+def test_a_subtitle_over_the_limit_is_refused() -> None:
+    with pytest.raises(DocumentSubtitleTooLongError) as raised:
+        clean_subtitle("x" * (MAX_SUBTITLE_LENGTH + 1))
+
+    assert raised.value.key == "errors.document.subtitleTooLong"
+    assert raised.value.params == {"max": MAX_SUBTITLE_LENGTH}
+
+
+def test_a_new_document_carries_its_cleaned_subtitle() -> None:
+    plan = plan_new_document(
+        uuid.uuid4(), "Hoshino Mirai", "", DocumentVisibility.ROOM, uuid.uuid4(), " La Idol "
+    )
+
+    assert plan.document.subtitle == "La Idol"
+    without = plan_new_document(uuid.uuid4(), "A", "", DocumentVisibility.ROOM, uuid.uuid4())
+    assert without.document.subtitle is None

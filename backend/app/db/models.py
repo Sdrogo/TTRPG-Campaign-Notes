@@ -220,6 +220,11 @@ class AuditLogRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+# A Document's subtitle (spec 28_0) is NULL when unset, and a NULL would make
+# the whole `||` of its search vector NULL.
+_SUBTITLE_TEXT = "coalesce(subtitle, '')"
+
+
 class DocumentRow(Base):
     """A Document. Its Owners, Tags, grants, images and Posts live in their own
     tables and cascade with it."""
@@ -232,6 +237,8 @@ class DocumentRow(Base):
         UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE")
     )
     name: Mapped[str] = mapped_column(String(200))
+    # One line under the name (spec 28_0), None when unset.
+    subtitle: Mapped[str | None] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(Text, default="")
     visibility: Mapped[str] = mapped_column(String(20), default="room")
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
@@ -242,11 +249,14 @@ class DocumentRow(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-    # Spec 21: the name weighs more than the description.
+    # Spec 21: the name weighs more than the description; spec 28_0: the
+    # subtitle weighs like the name.
     search_vector: Mapped[str | None] = mapped_column(
         TSVECTOR,
         Computed(
-            f"{_search_vector('name', 'A')} || {_search_vector('description', 'B')}",
+            f"{_search_vector('name', 'A')} || "
+            f"{_search_vector(_SUBTITLE_TEXT, 'A')} || "
+            f"{_search_vector('description', 'B')}",
             persisted=True,
         ),
         deferred=True,
@@ -474,8 +484,8 @@ class DocumentReadRow(Base):
 
 
 class DocumentVersionRow(Base):
-    """A revision of a Document: its name, its description and its Notes
-    (spec 24b). `notes` is a list of `{id, title, description, visibility,
+    """A revision of a Document: its name, subtitle (spec 28_0), description
+    and Notes (spec 24b). `notes` is a list of `{id, title, description, visibility,
     selective_user_ids}` in display order. Deleted with the Document."""
 
     __tablename__ = "document_versions"
@@ -485,6 +495,7 @@ class DocumentVersionRow(Base):
         UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
     )
     name: Mapped[str] = mapped_column(String(200))
+    subtitle: Mapped[str | None] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(Text, default="")
     notes: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
     edited_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))

@@ -222,3 +222,18 @@ def test_note_states_sort_grants_and_keep_the_order() -> None:
     assert [state.id for state in states] == [B, A]
     assert states[0].selective_user_ids == (low, high)
     assert states[1].selective_user_ids == ()
+
+
+# --- Subtitle (spec 28_0 S4) ----------------------------------------------------
+
+
+def test_a_subtitle_change_is_a_text_change_counted_in_words() -> None:
+    before = _state()
+    after = DocumentState("Strahd", "A vampire.", (), "Lord of Barovia")
+
+    assert not before.same_text(after)
+    write = plan_version(_version(before), OTHER, T0, after)
+    assert write is not None and write.is_new and write.version.state.subtitle == "Lord of Barovia"
+    size = change_size(before, after)
+    assert (size.words_added, size.words_removed) == (3, 0)
+    assert change_size(after, before).words_removed == 3

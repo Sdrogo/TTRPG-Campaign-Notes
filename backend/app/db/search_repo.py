@@ -49,9 +49,9 @@ async def match_document_ids(
     tag_ids: Sequence[uuid.UUID],
     cap: int,
 ) -> list[uuid.UUID]:
-    """The Room's Documents whose name or description match, best first (a
-    name match ranks higher), only those carrying every one of `tag_ids`
-    when there are any."""
+    """The Room's Documents whose name, subtitle (spec 28_0) or description
+    match, best first (a name or subtitle match ranks higher), only those
+    carrying every one of `tag_ids` when there are any."""
     query = _query(tsquery)
     statement = select(DocumentRow.id).where(
         DocumentRow.room_id == room_id, DocumentRow.search_vector.op("@@")(query)

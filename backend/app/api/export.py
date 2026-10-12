@@ -125,10 +125,12 @@ class CommentJson(BaseModel):
 class DocumentJson(BaseModel):
     """A Document the requester sees. `selective_user_ids` is null unless
     they may manage it; `tag_ids`, `owner_ids` and `played_by` refer to
-    objects listed at the top level of the export."""
+    objects listed at the top level of the export. `subtitle` is null when
+    the Document has none (schema 2, spec 28_0)."""
 
     id: uuid.UUID
     name: str
+    subtitle: str | None
     description: Spans
     visibility: str
     selective_user_ids: list[uuid.UUID] | None
@@ -165,12 +167,13 @@ class TagJson(BaseModel):
 
 
 class ExportJson(BaseModel):
-    """The JSON export (`schema_version` 1). Every object carries its UUID
-    and refers to others by id. `main_items` is the Room's grouping in order,
-    each a list of Tag ids (one Tag, or a combination a Document belongs to
-    when it carries all of them). `tag_filter` is null for a whole-Room
-    export. Image and file links expire within
-    `links_expire_within_seconds`. The same content as the Markdown file."""
+    """The JSON export (`schema_version` 2; 1 had no Document `subtitle`).
+    Every object carries its UUID and refers to others by id. `main_items` is
+    the Room's grouping in order, each a list of Tag ids (one Tag, or a
+    combination a Document belongs to when it carries all of them).
+    `tag_filter` is null for a whole-Room export. Image and file links expire
+    within `links_expire_within_seconds`. The same content as the Markdown
+    file."""
 
     schema_version: int
     generated_at: datetime
