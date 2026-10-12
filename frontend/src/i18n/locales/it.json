@@ -183,6 +183,13 @@
     },
     "setup": "Impostazioni",
     "actions": "Azioni per la Stanza {{name}}",
+    "duplicate": {
+      "action": "Duplica",
+      "confirmTitle": "Duplicare \"{{name}}\"?",
+      "confirmBody": "Documenti, Note, Tag e immagini vengono copiati. Commenti, Allegati PDF e membri no. Tu sarai l'unico Master della copia.",
+      "copyName": "{{name}} (Copia)",
+      "created": "Creata \"{{name}}\""
+    },
     "leave": {
       "confirmTitle": "Uscire da \"{{name}}\"?",
       "confirmBody": "I tuoi Documenti, Commenti e Note restano nella Stanza. Per rientrare ti servirà un nuovo invito.",
