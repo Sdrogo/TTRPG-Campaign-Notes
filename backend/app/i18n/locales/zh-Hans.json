@@ -1,0 +1,235 @@
+{
+  "errors": {
+    "auth": {
+      "missingToken": "缺少 Bearer 令牌",
+      "invalidToken": "令牌无效或已过期"
+    },
+    "room": {
+      "notFound": "未找到房间",
+      "notAMember": "你不是此房间的成员",
+      "onlyMasterCanChangeSettings": "只有 Master 可以更改此房间的设置",
+      "onlyAdministratorCanChangeRoles": "只有房间管理员可以更改角色",
+      "onlyAdministratorCanRemoveMembers": "只有房间管理员可以移除成员",
+      "onlyAdministratorChangesImage": "只有房间管理员可以更改房间图片",
+      "onlyAdministratorCanDelete": "只有房间管理员可以删除房间",
+      "nameRequired": "房间名称为必填项",
+      "onlyAdministratorCanChangeDefaultVisibility": "只有房间管理员可以更改默认可见性",
+      "invalidDefaultVisibility": "默认可见性只能是房间、仅 Master 或私密",
+      "onlyMasterCanDuplicate": "只有 Master 可以复制房间"
+    },
+    "membership": {
+      "notFound": "该用户不是此房间的成员",
+      "lastMaster": "没有继任者时，不能移除最后一位 Master",
+      "lastAdministrator": "没有继任者时，不能移除最后一位管理员",
+      "noChangeRequested": "请求必须更改角色和/或管理员标志"
+    },
+    "document": {
+      "notFound": "未找到文档",
+      "nameRequired": "文档名称为必填项",
+      "subtitleTooLong": "副标题最多 {max} 个字符",
+      "creationDisabled": "此房间已禁止 Player 创建文档",
+      "invalidTagIds": "有一个或多个 tag_ids 对此房间无效",
+      "notOwner": "只有 Owner（或 Master）可以执行此操作",
+      "alreadyOwner": "该用户已经是此文档的 Owner",
+      "notAnOwner": "该用户不是此文档的指定 Owner",
+      "tooManyImages": "一个文档最多可有 {max} 张图片"
+    },
+    "comment": {
+      "notFound": "未找到评论",
+      "bodyRequired": "评论不能为空",
+      "tooLong": "评论最多 {max} 个字符",
+      "notAuthor": "只有作者可以编辑此评论",
+      "notAuthorImages": "只有作者可以更改此评论的图片",
+      "cannotDelete": "只有作者或 Master 可以删除此评论",
+      "deleted": "此评论已被删除",
+      "alreadyDeleted": "此评论已被删除过",
+      "tooManyImages": "一条评论最多可有 {max} 张图片",
+      "invalidSelectiveUsers": "selective_user_ids 必须全部是此房间的成员",
+      "parentNotFound": "未找到你要回复的评论",
+      "parentDeleted": "无法回复已删除的评论",
+      "replyWiderThanParent": "回复不能对看不到所回复评论的人可见",
+      "cannotPin": "只有 Owner 或 Master 可以置顶此文档的评论",
+      "pinReply": "只有顶层评论可以置顶",
+      "tooManyPinned": "一个文档最多可有 {max} 条置顶评论",
+      "cannotResolve": "只有作者、Owner 或 Master 可以将此讨论标记为已解决",
+      "resolveReply": "只有顶层评论的讨论可以标记为已解决",
+      "cannotPromote": "只有 Owner 或 Master 可以升级此文档的评论",
+      "cannotPromoteIntoDocument": "你只能将评论升级到你拥有的文档中",
+      "promoteIntoSameDocument": "评论不能作为新文档升级到它自己所在的文档中",
+      "promotionWidens": "升级此评论会让目前看不到它的成员看到它：请确认以继续",
+      "promoteDocumentRequired": "请选择要将评论升级到的文档"
+    },
+    "reaction": {
+      "invalidEmoji": "表情回应必须恰好是一个表情",
+      "commentDeleted": "无法对已删除的评论添加表情回应",
+      "tooMany": "一条评论最多可有 {max} 种不同的表情"
+    },
+    "character": {
+      "notFound": "未找到角色",
+      "playerNotAMember": "角色的玩家必须是此房间的成员",
+      "cannotPostAs": "你只能以你扮演的角色发言（Master 可以以任何文档的身份发言）"
+    },
+    "version": {
+      "notFound": "未找到版本"
+    },
+    "note": {
+      "notFound": "未找到笔记",
+      "titleRequired": "笔记需要标题",
+      "titleTooLong": "笔记标题最多 {max} 个字符",
+      "notOwner": "只有 Owner（或 Master）可以管理此文档的笔记",
+      "tooMany": "一个文档最多可有 {max} 条笔记",
+      "invalidOrder": "note_ids 必须将你能看到的每条笔记恰好列出一次",
+      "invalidSelectiveUsers": "selective_user_ids 必须全部是此房间的成员"
+    },
+    "tag": {
+      "notAllowedToManage": "只有管理员或 Master 可以管理标签",
+      "notFound": "未找到标签",
+      "nameRequired": "标签名称为必填项",
+      "duplicateName": "此房间中已存在同名标签",
+      "onlyAdministratorCanSetMainTags": "只有管理员可以选择主标签",
+      "duplicateMainTag": "一个标签在主标签中只能出现一次",
+      "unknownMainTag": "有一个主标签不是此房间的标签",
+      "emptyMainItem": "主条目至少需要一个标签",
+      "duplicateCombination": "此标签组合已在列表中"
+    },
+    "image": {
+      "notFound": "未找到图片",
+      "storageUnavailable": "图片存储不可用",
+      "tooLarge": "图片超过 {mb} MB 的上传限制",
+      "dimensionsTooLarge": "图片尺寸过大",
+      "unsupportedFormat": "不支持的图片格式：{format}",
+      "invalidFile": "文件不是有效的图片",
+      "remoteUnsupportedScheme": "仅支持 http(s) 图片 URL",
+      "remoteHostUnresolved": "无法解析图片 URL 的主机",
+      "remoteNonPublic": "图片 URL 指向非公开地址",
+      "remoteRedirectNoLocation": "图片 URL 发生重定向，但没有给出位置",
+      "remoteHttpStatus": "图片 URL 返回 HTTP {status}",
+      "remoteTooLarge": "该 URL 处的图片过大",
+      "remoteDownloadFailed": "无法下载该图片 URL",
+      "remoteTooManyRedirects": "图片 URL 重定向次数过多"
+    },
+    "file": {
+      "notPdf": "该文件不是 PDF",
+      "tooLarge": "文件超过 {mb} MB 的限制",
+      "tooMany": "一个文档最多可有 {max} 个文件",
+      "notFound": "未找到文件",
+      "storageUnavailable": "文件存储不可用"
+    },
+    "invitation": {
+      "notFound": "未找到邀请",
+      "revoked": "邀请已被撤销",
+      "expired": "邀请已过期",
+      "alreadyMember": "该用户已经是此房间的成员",
+      "onlyAdministratorCanInvite": "只有房间管理员可以创建邀请",
+      "notAFriend": "你只能直接邀请好友"
+    },
+    "account": {
+      "fields": {
+        "display_name": "显示名称",
+        "pronouns": "代词",
+        "bio": "简介"
+      },
+      "fieldTooLong": "{field}最多 {max} 个字符",
+      "deletionNotConfirmed": "请输入 DELETE 以确认删除账户",
+      "successorNeeded": "删除账户之前，请先在以下房间中指定其他人为 Master 或管理员：{rooms}",
+      "signInDeletionFailed": "你的数据已删除，但你的登录账户无法移除。请稍后再试"
+    },
+    "friend": {
+      "notFound": "未找到好友或好友请求",
+      "self": "你不能向自己发送好友请求",
+      "noSharedRoom": "你只能向与你共处同一房间的人发送好友请求，或通过对方的好友码发送",
+      "userOrCode": "请提供用户或好友码，二选一",
+      "codeNotFound": "未找到好友码",
+      "alreadyFriends": "你们已经是好友了",
+      "alreadyRequested": "你已经向该用户发送过好友请求",
+      "incomingPending": "该用户已向你发送了好友请求：请直接回复该请求",
+      "cooldown": "你拒绝该用户的请求还不到 30 天",
+      "notRecipient": "只有收到此请求的用户可以回复它",
+      "notPending": "此请求已被回复",
+      "answerInstead": "请接受或拒绝此请求，而不是移除它"
+    },
+    "reveal": {
+      "onlyMaster": "只有 Master 可以揭示内容",
+      "audienceRequired": "请选择整个房间，或至少一位成员作为揭示对象",
+      "notWidening": "没有人会获得访问权限：揭示只能扩大可见内容的人群",
+      "invalidUsers": "user_ids 必须全部是此房间的成员",
+      "invalidNotes": "note_ids 必须全部是此文档的笔记",
+      "commentDeleted": "无法揭示已删除的评论"
+    },
+    "history": {
+      "forbidden": "只有 Master 或房间管理员可以查看可见性历史",
+      "invalidCursor": "before 必须是此房间历史中的一条记录"
+    },
+    "viewAs": {
+      "readOnly": "以其他成员身份查看时无法进行任何更改",
+      "onlyMaster": "只有 Master 可以以其他成员身份查看此房间",
+      "notAMember": "该用户不是此房间的成员",
+      "invalidUser": "要查看的成员无效"
+    },
+    "export": {
+      "alreadyRunning": "你在此房间中已有一个 PDF 正在生成",
+      "notFound": "未找到导出"
+    },
+    "import": {
+      "unreadable": "无法将 {name} 读取为 JSON 或 Markdown 导出文件",
+      "unsupportedSchema": "{name} 由较新的版本导出（schema {version}）；本应用最高支持 schema {max}",
+      "noDocuments": "{name} 中没有文档",
+      "tooManyFiles": "一次最多可导入 {max} 个文件",
+      "tooManyDocuments": "一次最多可导入 {max} 个文档",
+      "tooManyImages": "一次最多可导入 {max} 张图片",
+      "nameRequired": "文件中有一个文档没有名称",
+      "nameTooLong": "文档名称“{name}...”超过 {max} 个字符",
+      "subtitleTooLong": "{name} 的副标题超过 {max} 个字符",
+      "tooManyNotes": "{name} 的笔记超过 {max} 条",
+      "noteTitleInvalid": "{name} 的某条笔记没有标题，或标题超过 {max} 个字符",
+      "tagNameTooLong": "标签名称“{name}...”超过 {max} 个字符",
+      "nothingSelected": "请至少选择一个要导入的文档",
+      "badChoices": "导入选项无效",
+      "cannotReplace": "只有 Owner（或 Master）可以替换 {name}",
+      "fileTooLarge": "{name} 超过 {max} MB",
+      "alreadyRunning": "你在此房间中已有一个导入正在运行",
+      "notFound": "未找到导入"
+    },
+    "imageSearch": {
+      "emptyQuery": "请输入要搜索的内容",
+      "throttled": "搜索过于频繁：请等待一分钟后再试",
+      "unavailable": "图片搜索暂时不可用，请稍后再试"
+    },
+    "map": {
+      "notFound": "未找到地图",
+      "notManager": "只有地图的创建者（或 Master）可以更改此地图",
+      "creationDisabled": "此房间中 Player 不能创建地图",
+      "invalidSelectiveUsers": "selective_user_ids 必须全部是此房间的成员",
+      "nameRequired": "地图需要名称",
+      "tooLong": "{field}最多 {max} 个字符",
+      "tooMany": "一个房间最多可有 {max} 张地图",
+      "tooManyCards": "一张地图最多可有 {max} 张卡片",
+      "tooManyGroups": "一张地图最多可有 {max} 个分组",
+      "tooManyArrows": "一张地图最多可有 {max} 个箭头",
+      "invalidBoard": "无法保存此画板：它引用了地图上不存在的内容",
+      "masterOnly": "只有 Master 可以将卡片或箭头标记为仅 Master 可见",
+      "imageNotFound": "该图片不属于此文档",
+      "fields": {
+        "name": "名称",
+        "description": "描述",
+        "text": "卡片文本",
+        "caption": "说明文字",
+        "label": "标签",
+        "groupTitle": "分组标题"
+      }
+    }
+  },
+  "pdf": {
+    "contents": "目录",
+    "glossary": "术语表",
+    "other": "其他",
+    "documents": "文档",
+    "comments": "评论",
+    "unknownMember": "未知成员",
+    "playedBy": "{character}（由 {player} 扮演）",
+    "pageAbbreviation": "p."
+  },
+  "room": {
+    "copySuffix": "（副本）"
+  }
+}

@@ -1,3 +1,4 @@
+@import url("cjk-serif.css");
 /* Gothic (spec 23b Decision 4): black and deep red, a full-bleed dark cover,
    distressed serif headings, red rules and a red initial, Notes as italic
    sidebars, white pages for the body so it stays readable and printable.
@@ -19,30 +20,30 @@
 
 @page cover { background: #0b0b0c; }
 @page body {
-  @top-left { font: italic 9pt "IM Fell English", "PT Serif", serif; color: #8a0f1c; width: 50%; vertical-align: bottom; padding-bottom: 1.5mm; margin-bottom: 6mm; border-bottom: 0.5pt solid #8a0f1c; }
-  @top-right { font: italic 9pt "IM Fell English", "PT Serif", serif; color: #555; width: 50%; vertical-align: bottom; padding-bottom: 1.5mm; margin-bottom: 6mm; border-bottom: 0.5pt solid #8a0f1c; }
+  @top-left { font: italic 9pt "IM Fell English", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #8a0f1c; width: 50%; vertical-align: bottom; padding-bottom: 1.5mm; margin-bottom: 6mm; border-bottom: 0.5pt solid #8a0f1c; }
+  @top-right { font: italic 9pt "IM Fell English", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #555; width: 50%; vertical-align: bottom; padding-bottom: 1.5mm; margin-bottom: 6mm; border-bottom: 0.5pt solid #8a0f1c; }
 }
 @page {
-  @bottom-center { font: 9pt "IM Fell English", "PT Serif", serif; color: #8a0f1c; }
+  @bottom-center { font: 9pt "IM Fell English", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #8a0f1c; }
 }
 
-body { font: 10.5pt/1.4 "Crimson Text", "PT Serif", Georgia, serif; color: #1a1a1a; text-align: justify; hyphens: auto; }
-h1, h2, h3 { font-family: "IM Fell English", "PT Serif", Georgia, serif; font-weight: normal; text-align: left; }
+body { font: 10.5pt/1.4 "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", Georgia, serif; color: #1a1a1a; text-align: justify; hyphens: auto; }
+h1, h2, h3 { font-family: "IM Fell English", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", Georgia, serif; font-weight: normal; text-align: left; }
 
 /* Cover: dark, centered, a red rule */
 .cover { color: #f1ece6; text-align: center; }
 .cover-inner { padding: 55mm 25mm 0; }
-.cover-system { font: 11pt "IM Fell English", "PT Serif", serif; letter-spacing: 0.3em; text-transform: uppercase; color: #c2606a; margin: 0 0 8mm; }
+.cover-system { font: 11pt "IM Fell English", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; letter-spacing: 0.3em; text-transform: uppercase; color: #c2606a; margin: 0 0 8mm; }
 .cover-title { font-size: 40pt; line-height: 1.1; margin: 0 0 8mm; text-align: center; color: #f1ece6; }
 .cover-ornament { display: block; margin: 0 auto 12mm; }
 .cover-image { display: block; margin: 0 auto 12mm; width: 110mm; height: 120mm; object-fit: cover; border: 1pt solid #8a0f1c; }
-.cover-date { font: italic 10pt "IM Fell English", "PT Serif", serif; color: #9a8f88; margin: 0; }
+.cover-date { font: italic 10pt "IM Fell English", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #9a8f88; margin: 0; }
 
 /* Contents and glossary */
 .section-title { font-size: 26pt; color: #1a1a1a; margin: 0 0 8mm; padding-bottom: 2mm; border-bottom: 1.5pt solid #8a0f1c; }
-.toc-chapter > a { font: 14pt "IM Fell English", "PT Serif", serif; color: #8a0f1c; }
+.toc-chapter > a { font: 14pt "IM Fell English", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #8a0f1c; }
 .toc-document > a { font-size: 11pt; }
-.glossary-initial { font: 16pt "IM Fell English", "PT Serif", serif; color: #8a0f1c; }
+.glossary-initial { font: 16pt "IM Fell English", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #8a0f1c; }
 
 /* Chapters: a red rule under the title, then each Document in two columns like a
    rulebook (base.css) with a red rule between them */
@@ -55,7 +56,7 @@ h1, h2, h3 { font-family: "IM Fell English", "PT Serif", Georgia, serif; font-we
    with a "#" or "@" mention (`drop-cap`, manual.py). Not floated: WeasyPrint's
    floated ::first-letter fails in its float layout on some paragraphs (seen in
    CI), so the initial stays on the line. */
-.description.drop-cap p:first-child::first-letter { font: 2.4em "IM Fell English", "PT Serif", serif; color: #8a0f1c; }
+.description.drop-cap p:first-child::first-letter { font: 2.4em "IM Fell English", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #8a0f1c; }
 
 /* Notes: more paragraphs of the description under a red subheading */
 .note h3 { font-size: 13pt; color: #8a0f1c; }
@@ -65,3 +66,13 @@ h1, h2, h3 { font-family: "IM Fell English", "PT Serif", Georgia, serif; font-we
 /* Comments: italic sidebars with a red edge */
 .comment { background: #f5f0f0; border-left: 3pt solid #8a0f1c; font-style: italic; }
 .comment-meta { font-size: 9.5pt; font-style: normal; color: #555; }
+
+/* CJK (spec 34_3): the page language picks whose Han glyphs come first; Japanese is
+   the default order above. No synthesized italics or bold (CJK fonts have no
+   italic) and no hyphenation or drop cap for these scripts. */
+html:lang(zh) body { font-family: "Crimson Text", "PT Serif", "Noto Serif SC", "Noto Serif JP", "Noto Serif KR", serif; }
+html:lang(zh) h1, html:lang(zh) h2, html:lang(zh) h3 { font-family: "IM Fell English", "PT Serif", "Noto Serif SC", "Noto Serif JP", "Noto Serif KR", serif; }
+html:lang(ko) body { font-family: "Crimson Text", "PT Serif", "Noto Serif KR", "Noto Serif JP", "Noto Serif SC", serif; }
+html:lang(ko) h1, html:lang(ko) h2, html:lang(ko) h3 { font-family: "IM Fell English", "PT Serif", "Noto Serif KR", "Noto Serif JP", "Noto Serif SC", serif; }
+html:lang(ja) body, html:lang(zh) body, html:lang(ko) body { font-synthesis: none; hyphens: manual; }
+html:lang(ja) .description.drop-cap p:first-child::first-letter, html:lang(zh) .description.drop-cap p:first-child::first-letter, html:lang(ko) .description.drop-cap p:first-child::first-letter { font: inherit; color: inherit; }

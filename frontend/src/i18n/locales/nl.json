@@ -814,7 +814,7 @@
     "back": "Terug naar de app",
     "title": "Privacyverklaring",
     "updated": "Laatst bijgewerkt: {{date}}",
-    "intro": "Deze verklaring legt uit welke persoonsgegevens deze app verwerkt, waarom, waar ze worden bewaard en hoe je je rechten kunt uitoefenen op grond van de Algemene Verordening Gegevensbescherming (AVG/GDPR).",
+    "intro": "Deze verklaring legt uit welke persoonsgegevens deze app verwerkt, waarom, waar ze worden bewaard en hoe je je rechten kunt uitoefenen op grond van de Algemene Verordening Gegevensbescherming (AVG/GDPR). De Italiaanse en de Engelse tekst zijn bepalend; bij verschillen met deze vertaling gaan zij voor.",
     "sections": {
       "controller": {
         "title": "Wie is de verwerkingsverantwoordelijke",

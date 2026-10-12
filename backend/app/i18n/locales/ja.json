@@ -1,0 +1,235 @@
+{
+  "errors": {
+    "auth": {
+      "missingToken": "Bearerトークンがありません",
+      "invalidToken": "トークンが無効か期限切れです"
+    },
+    "room": {
+      "notFound": "ルームが見つかりません",
+      "notAMember": "このルームのメンバーではありません",
+      "onlyMasterCanChangeSettings": "このルームの設定を変更できるのはMasterだけです",
+      "onlyAdministratorCanChangeRoles": "役割を変更できるのはルームの管理者だけです",
+      "onlyAdministratorCanRemoveMembers": "メンバーを削除できるのはルームの管理者だけです",
+      "onlyAdministratorChangesImage": "ルームの画像を変更できるのはルームの管理者だけです",
+      "onlyAdministratorCanDelete": "ルームを削除できるのはルームの管理者だけです",
+      "nameRequired": "ルーム名は必須です",
+      "onlyAdministratorCanChangeDefaultVisibility": "既定の公開範囲を変更できるのはルームの管理者だけです",
+      "invalidDefaultVisibility": "既定の公開範囲に指定できるのは、ルーム、Masterのみ、非公開のいずれかです",
+      "onlyMasterCanDuplicate": "ルームを複製できるのはMasterだけです"
+    },
+    "membership": {
+      "notFound": "このユーザーはこのルームのメンバーではありません",
+      "lastMaster": "後任なしに最後のMasterを削除することはできません",
+      "lastAdministrator": "後任なしに最後の管理者を削除することはできません",
+      "noChangeRequested": "リクエストでは役割や管理者フラグを変更する必要があります"
+    },
+    "document": {
+      "notFound": "ドキュメントが見つかりません",
+      "nameRequired": "ドキュメント名は必須です",
+      "subtitleTooLong": "サブタイトルは最大{max}文字です",
+      "creationDisabled": "このルームでは、Playerによるドキュメントの作成が無効です",
+      "invalidTagIds": "tag_idsの1つ以上がこのルームでは無効です",
+      "notOwner": "この操作ができるのはOwner(またはMaster)だけです",
+      "alreadyOwner": "このユーザーはすでにこのドキュメントのOwnerです",
+      "notAnOwner": "このユーザーはこのドキュメントの明示的なOwnerではありません",
+      "tooManyImages": "1つのドキュメントに設定できる画像は最大{max}枚です"
+    },
+    "comment": {
+      "notFound": "コメントが見つかりません",
+      "bodyRequired": "コメントを空にすることはできません",
+      "tooLong": "コメントは最大{max}文字です",
+      "notAuthor": "このコメントを編集できるのは投稿者だけです",
+      "notAuthorImages": "このコメントの画像を変更できるのは投稿者だけです",
+      "cannotDelete": "このコメントを削除できるのは投稿者またはMasterだけです",
+      "deleted": "このコメントは削除されました",
+      "alreadyDeleted": "このコメントはすでに削除されています",
+      "tooManyImages": "1つのコメントに設定できる画像は最大{max}枚です",
+      "invalidSelectiveUsers": "selective_user_idsはすべてこのルームのメンバーである必要があります",
+      "parentNotFound": "返信先のコメントが見つかりません",
+      "parentDeleted": "削除されたコメントには返信できません",
+      "replyWiderThanParent": "返信先のコメントを見られない人に、返信を見せることはできません",
+      "cannotPin": "このドキュメントのコメントを固定できるのはOwnerまたはMasterだけです",
+      "pinReply": "固定できるのは最上位のコメントだけです",
+      "tooManyPinned": "1つのドキュメントで固定できるコメントは最大{max}件です",
+      "cannotResolve": "このディスカッションを解決済みにできるのは、投稿者、Owner、Masterだけです",
+      "resolveReply": "解決済みにできるのは、最上位のコメントのディスカッションだけです",
+      "cannotPromote": "このドキュメントのコメントを昇格できるのはOwnerまたはMasterだけです",
+      "cannotPromoteIntoDocument": "コメントを昇格できるのは、自分がOwnerのドキュメントに対してだけです",
+      "promoteIntoSameDocument": "コメントを、そのコメントのあるドキュメント自身に新規ドキュメントとして昇格することはできません",
+      "promotionWidens": "このコメントを昇格すると、現在読めないメンバーにも表示されます。続けるには確認してください",
+      "promoteDocumentRequired": "コメントの昇格先のドキュメントを選んでください"
+    },
+    "reaction": {
+      "invalidEmoji": "リアクションは絵文字1つでなければなりません",
+      "commentDeleted": "削除されたコメントにはリアクションできません",
+      "tooMany": "1つのコメントに付けられる絵文字は最大{max}種類です"
+    },
+    "character": {
+      "notFound": "キャラクターが見つかりません",
+      "playerNotAMember": "キャラクターのプレイヤーはこのルームのメンバーである必要があります",
+      "cannotPostAs": "投稿できるのは、自分が演じるキャラクターとしてのみです(Masterは任意のドキュメントとして投稿できます)"
+    },
+    "version": {
+      "notFound": "バージョンが見つかりません"
+    },
+    "note": {
+      "notFound": "ノートが見つかりません",
+      "titleRequired": "ノートにはタイトルが必要です",
+      "titleTooLong": "ノートのタイトルは最大{max}文字です",
+      "notOwner": "このドキュメントのノートを管理できるのはOwner(またはMaster)だけです",
+      "tooMany": "1つのドキュメントに追加できるノートは最大{max}件です",
+      "invalidOrder": "note_idsには、見られるノートをそれぞれちょうど1回ずつ指定する必要があります",
+      "invalidSelectiveUsers": "selective_user_idsはすべてこのルームのメンバーである必要があります"
+    },
+    "tag": {
+      "notAllowedToManage": "タグを管理できるのは管理者またはMasterだけです",
+      "notFound": "タグが見つかりません",
+      "nameRequired": "タグ名は必須です",
+      "duplicateName": "この名前のタグはすでにこのルームにあります",
+      "onlyAdministratorCanSetMainTags": "メインタグを選べるのは管理者だけです",
+      "duplicateMainTag": "1つのタグをメインタグに複数回含めることはできません",
+      "unknownMainTag": "メインタグがこのルームのタグではありません",
+      "emptyMainItem": "メイン項目には少なくとも1つのタグが必要です",
+      "duplicateCombination": "このタグの組み合わせはすでに登録されています"
+    },
+    "image": {
+      "notFound": "画像が見つかりません",
+      "storageUnavailable": "画像ストレージを利用できません",
+      "tooLarge": "画像がアップロード上限の{mb} MBを超えています",
+      "dimensionsTooLarge": "画像の寸法が大きすぎます",
+      "unsupportedFormat": "サポートされていない画像形式です: {format}",
+      "invalidFile": "ファイルが有効な画像ではありません",
+      "remoteUnsupportedScheme": "サポートされているのはhttp(s)の画像URLだけです",
+      "remoteHostUnresolved": "画像URLのホストを解決できませんでした",
+      "remoteNonPublic": "画像URLが非公開のアドレスを指しています",
+      "remoteRedirectNoLocation": "画像URLが転送先なしでリダイレクトされました",
+      "remoteHttpStatus": "画像URLがHTTP {status}を返しました",
+      "remoteTooLarge": "URLの画像が大きすぎます",
+      "remoteDownloadFailed": "画像URLからダウンロードできませんでした",
+      "remoteTooManyRedirects": "画像URLのリダイレクトが多すぎます"
+    },
+    "file": {
+      "notPdf": "ファイルがPDFではありません",
+      "tooLarge": "ファイルが{mb} MBの上限を超えています",
+      "tooMany": "1つのドキュメントに添付できるファイルは最大{max}個です",
+      "notFound": "ファイルが見つかりません",
+      "storageUnavailable": "ファイルストレージを利用できません"
+    },
+    "invitation": {
+      "notFound": "招待が見つかりません",
+      "revoked": "招待は取り消されました",
+      "expired": "招待の期限が切れています",
+      "alreadyMember": "このユーザーはすでにこのルームのメンバーです",
+      "onlyAdministratorCanInvite": "招待を作成できるのはルームの管理者だけです",
+      "notAFriend": "直接招待できるのはフレンドだけです"
+    },
+    "account": {
+      "fields": {
+        "display_name": "表示名",
+        "pronouns": "代名詞",
+        "bio": "紹介文"
+      },
+      "fieldTooLong": "{field}は最大{max}文字です",
+      "deletionNotConfirmed": "アカウントの削除を確認するには、DELETEと入力してください",
+      "successorNeeded": "アカウントを削除する前に、次のルームで他の人をMasterまたはAdminにしてください: {rooms}",
+      "signInDeletionFailed": "データは削除されましたが、ログイン用アカウントを削除できませんでした。しばらくしてからもう一度お試しください"
+    },
+    "friend": {
+      "notFound": "フレンドまたはフレンド申請が見つかりません",
+      "self": "自分自身にフレンド申請は送れません",
+      "noSharedRoom": "フレンド申請を送れるのは、同じルームにいる相手、またはフレンドコードを知っている相手だけです",
+      "userOrCode": "ユーザーかフレンドコードのどちらかを指定してください",
+      "codeNotFound": "フレンドコードが見つかりません",
+      "alreadyFriends": "すでにフレンドです",
+      "alreadyRequested": "このユーザーにはすでにフレンド申請を送っています",
+      "incomingPending": "このユーザーからすでにフレンド申請が届いています。そちらに応答してください",
+      "cooldown": "このユーザーの申請を辞退してから30日経っていません",
+      "notRecipient": "この申請に応答できるのは、申請を受け取ったユーザーだけです",
+      "notPending": "この申請にはすでに応答済みです",
+      "answerInstead": "この申請は削除せず、承認または辞退してください"
+    },
+    "reveal": {
+      "onlyMaster": "内容を開示できるのはMasterだけです",
+      "audienceRequired": "開示先として、ルーム全体または少なくとも1人のメンバーを選んでください",
+      "notWidening": "新たにアクセスできる人がいません。開示で変えられるのは、内容を見られる人を広げることだけです",
+      "invalidUsers": "user_idsはすべてこのルームのメンバーである必要があります",
+      "invalidNotes": "note_idsはすべてこのドキュメントのノートである必要があります",
+      "commentDeleted": "削除されたコメントは開示できません"
+    },
+    "history": {
+      "forbidden": "公開範囲の履歴を読めるのはMasterまたはルームの管理者だけです",
+      "invalidCursor": "beforeはこのルームの履歴のエントリーである必要があります"
+    },
+    "viewAs": {
+      "readOnly": "他のメンバーとして表示している間は、何も変更できません",
+      "onlyMaster": "このルームを他のメンバーとして表示できるのはMasterだけです",
+      "notAMember": "そのユーザーはこのルームのメンバーではありません",
+      "invalidUser": "表示対象のメンバーが無効です"
+    },
+    "export": {
+      "alreadyRunning": "このルームでは、すでにあなたのPDFを作成中です",
+      "notFound": "エクスポートが見つかりません"
+    },
+    "import": {
+      "unreadable": "{name}をJSONまたはMarkdownのエクスポートとして読み取れません",
+      "unsupportedSchema": "{name}は新しいバージョン(スキーマ{version})でエクスポートされました。このアプリが読み取れるのはスキーマ{max}までです",
+      "noDocuments": "{name}にはドキュメントがありません",
+      "tooManyFiles": "一度にインポートできるファイルは最大{max}個です",
+      "tooManyDocuments": "一度にインポートできるドキュメントは最大{max}件です",
+      "tooManyImages": "一度にインポートできる画像は最大{max}枚です",
+      "nameRequired": "ファイル内に名前のないドキュメントがあります",
+      "nameTooLong": "ドキュメント名「{name}...」が{max}文字を超えています",
+      "subtitleTooLong": "{name}のサブタイトルが{max}文字を超えています",
+      "tooManyNotes": "{name}のノートが{max}件を超えています",
+      "noteTitleInvalid": "{name}のノートに、タイトルがないか{max}文字を超えるものがあります",
+      "tagNameTooLong": "タグ名「{name}...」が{max}文字を超えています",
+      "nothingSelected": "インポートするドキュメントを少なくとも1件選んでください",
+      "badChoices": "インポートの選択内容が無効です",
+      "cannotReplace": "{name}を置き換えられるのはOwner(またはMaster)だけです",
+      "fileTooLarge": "{name}が{max} MBを超えています",
+      "alreadyRunning": "このルームでは、すでにあなたのインポートを実行中です",
+      "notFound": "インポートが見つかりません"
+    },
+    "imageSearch": {
+      "emptyQuery": "検索する言葉を入力してください",
+      "throttled": "検索が多すぎます。1分ほど待ってからもう一度お試しください",
+      "unavailable": "現在、画像検索を利用できません。後でもう一度お試しください"
+    },
+    "map": {
+      "notFound": "マップが見つかりません",
+      "notManager": "このマップを変更できるのは、マップの作成者(またはMaster)だけです",
+      "creationDisabled": "このルームでは、Playerはマップを作成できません",
+      "invalidSelectiveUsers": "selective_user_idsはすべてこのルームのメンバーである必要があります",
+      "nameRequired": "マップには名前が必要です",
+      "tooLong": "{field}は最大{max}文字です",
+      "tooMany": "1つのルームに作成できるマップは最大{max}個です",
+      "tooManyCards": "1つのマップに置けるカードは最大{max}枚です",
+      "tooManyGroups": "1つのマップに作れるグループは最大{max}個です",
+      "tooManyArrows": "1つのマップに引ける矢印は最大{max}本です",
+      "invalidBoard": "このボードは保存できません。マップにないものを参照しています",
+      "masterOnly": "カードや矢印を「Masterのみ」にできるのはMasterだけです",
+      "imageNotFound": "その画像はドキュメントの画像ではありません",
+      "fields": {
+        "name": "名前",
+        "description": "説明",
+        "text": "カードのテキスト",
+        "caption": "キャプション",
+        "label": "ラベル",
+        "groupTitle": "グループのタイトル"
+      }
+    }
+  },
+  "pdf": {
+    "contents": "目次",
+    "glossary": "用語集",
+    "other": "その他",
+    "documents": "ドキュメント",
+    "comments": "コメント",
+    "unknownMember": "不明なメンバー",
+    "playedBy": "{character}(演じる人: {player})",
+    "pageAbbreviation": "p."
+  },
+  "room": {
+    "copySuffix": "(コピー)"
+  }
+}

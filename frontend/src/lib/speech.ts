@@ -24,10 +24,13 @@ export const SPEECH_LANGS: Record<Language, string> = {
   es: 'es-ES',
   fr: 'fr-FR',
   it: 'it-IT',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
   nl: 'nl-NL',
   pl: 'pl-PL',
   'pt-PT': 'pt-PT',
   ru: 'ru-RU',
+  'zh-Hans': 'zh-CN',
 };
 
 /** Whether this browser can read aloud; without it every control is hidden (spec 30 Decision 1). */

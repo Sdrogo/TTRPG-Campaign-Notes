@@ -1,0 +1,913 @@
+{
+  "language": {
+    "name": "한국어",
+    "selectorLabel": "언어: {{language}}",
+    "selectorTooltip": "언어 변경",
+    "loadFailed": "언어를 불러오지 못했습니다. 다시 시도하세요.",
+    "beta": "베타"
+  },
+  "app": {
+    "name": "TTRPG Campaign Notes"
+  },
+  "common": {
+    "add": "추가",
+    "cancel": "취소",
+    "close": "닫기",
+    "delete": "삭제",
+    "edit": "수정",
+    "remove": "제거",
+    "save": "저장",
+    "leave": "나가기",
+    "copy": "복사",
+    "copied": "복사됨",
+    "yes": "예",
+    "notApplicable": "—",
+    "you": "나",
+    "name": "이름",
+    "description": "설명",
+    "noDescription": "설명이 없습니다.",
+    "noResults": "결과 없음",
+    "resetFilters": "필터 초기화",
+    "goToLogin": "로그인으로 이동",
+    "myRooms": "내 룸",
+    "backToMyRooms": "내 룸으로 돌아가기",
+    "maxLength": "최대 {{max}}자",
+    "unknownUser": "알 수 없는 사용자",
+    "accept": "수락",
+    "decline": "거절"
+  },
+  "roles": {
+    "master": "Master",
+    "player": "Player",
+    "admin": "Admin"
+  },
+  "visibility": {
+    "label": "공개 범위",
+    "level": {
+      "room": "룸",
+      "master": "Master 전용",
+      "private": "비공개",
+      "selective": "선택 공개"
+    },
+    "documentOption": {
+      "room": "룸 (모든 멤버)",
+      "master": "Master 전용",
+      "private": "비공개 (Owner + Master)",
+      "selective": "선택 공개 (다른 멤버를 고르기 전까지 Owner + Master만)"
+    },
+    "commentOption": {
+      "room": "룸 (모든 멤버)",
+      "master": "Master 전용 (및 나)",
+      "private": "비공개 (나 + Master)",
+      "selective": "선택 공개 (나, Master, 내가 고른 멤버)"
+    }
+  },
+  "time": {
+    "now": "방금"
+  },
+  "auth": {
+    "prompt": "계속하려면 로그인하세요.",
+    "signInWith": "{{provider}}(으)로 로그인",
+    "privacy": "개인정보"
+  },
+  "header": {
+    "account": "내 계정",
+    "accountPending": "내 계정: 확인할 항목 {{count}}개"
+  },
+  "account": {
+    "signInRequired": "계정을 관리하려면 로그인하세요.",
+    "loadError": "계정을 불러오지 못했습니다.",
+    "title": "계정",
+    "subtitle": "내 프로필과 세션입니다.",
+    "profile": {
+      "title": "프로필",
+      "description": "내 룸의 다른 멤버에게 보이는 모습입니다.",
+      "displayName": "표시 이름",
+      "displayNameDescription": "룸, 댓글, Owner 목록에서 이메일 대신 표시됩니다.",
+      "displayNamePlaceholder": "내 이름",
+      "pronouns": "호칭 대명사",
+      "pronounsPlaceholder": "예: she/her, he/him, they/them",
+      "bioDescription": "나를 소개하는 두어 줄입니다. 내 룸의 멤버에게 보입니다.",
+      "discardChanges": "변경 취소",
+      "save": "프로필 저장",
+      "saved": "프로필을 저장했습니다."
+    },
+    "avatar": {
+      "upload": "사진 올리기",
+      "fromUrl": "URL에서",
+      "useImage": "이미지 사용",
+      "hint": "PNG, JPEG, WebP 또는 GIF. 이미지는 가운데를 기준으로 잘리고 자동으로 크기가 조정됩니다."
+    },
+    "access": {
+      "title": "로그인",
+      "email": "이메일",
+      "emailDescription": "로그인한 계정의 이메일입니다.",
+      "noEmail": "계정에서 공유된 이메일이 없습니다",
+      "signOutDescription": "이 기기에서 세션을 종료합니다.",
+      "signOut": "로그아웃"
+    },
+    "invitations": {
+      "title": "룸 초대",
+      "description": "친구가 초대했습니다. 수락해야만 룸에 들어갑니다.",
+      "from": "{{name}}님이 {{role}}(으)로 초대했습니다",
+      "joined": "\"{{room}}\"에 참여했습니다."
+    },
+    "friends": {
+      "title": "친구",
+      "description": "친구는 나를 자기 룸에 바로 초대할 수 있습니다.",
+      "linkLabel": "내 친구 링크",
+      "linkDescription": "링크를 여는 사람이 친구 요청을 보냅니다. 다시 생성하면 이전 링크는 사용할 수 없습니다.",
+      "linkError": "친구 링크를 불러오지 못했습니다.",
+      "regenerate": "다시 생성",
+      "regenerated": "새 링크를 만들었습니다. 이전 링크는 더 이상 작동하지 않습니다.",
+      "loadError": "친구 목록을 불러오지 못했습니다.",
+      "incoming": "받은 요청",
+      "outgoing": "보낸 요청",
+      "list": "내 친구",
+      "empty": "아직 친구가 없습니다. 링크를 공유하거나 내 룸의 멤버를 추가하세요.",
+      "cancelRequest": "요청 취소",
+      "removeConfirm": "{{name}}님을 친구에서 삭제할까요?",
+      "accepted": "이제 나와 {{name}}님은 친구입니다."
+    },
+    "reveals": {
+      "title": "나에게 공개된 항목",
+      "description": "Master가 방금 보여 준 항목입니다. 열면 여기서 사라집니다.",
+      "document": "문서",
+      "note": "노트 \"{{title}}\"",
+      "comment": "댓글"
+    },
+    "speech": {
+      "title": "소리 내어 읽기",
+      "description": "앱이 문서, 노트, 댓글을 읽을 때의 음성과 속도입니다. 음성은 브라우저의 음성이며, 선택은 이 기기에 언어별로 저장됩니다.",
+      "unsupported": "이 브라우저는 소리 내어 읽기를 지원하지 않습니다.",
+      "voice": "음성",
+      "automatic": "자동",
+      "automaticWith": "자동 ({{name}})",
+      "languageVoices": "한국어 음성",
+      "otherVoices": "다른 음성",
+      "noVoices": "이 기기에는 한국어 음성이 없습니다. 브라우저의 기본 음성을 사용합니다.",
+      "betterVoices": "가장 좋은 음성은 브라우저의 신경망 음성입니다. Edge에서는 \"Natural\" 음성, Chrome에서는 \"Google\" 음성이고, iPhone과 Mac에서는 설정 › 손쉬운 사용 › 읽기 및 말하기에서 내려받는 \"고급\" 또는 \"프리미엄\" 음성입니다.",
+      "rate": "속도",
+      "try": "들어보기",
+      "sample": "이 음성이 내 메모를 읽을 때는 이렇게 들립니다."
+    },
+    "privacy": {
+      "title": "내 데이터",
+      "description": "앱이 나에 대해 보관하는 모든 정보의 사본을 내려받거나 계정을 삭제할 수 있습니다.",
+      "export": "내 데이터 내려받기",
+      "exported": "데이터를 내려받았습니다",
+      "notice": "개인정보 처리방침",
+      "deleteDescription": "계정 삭제는 되돌릴 수 없습니다. 내가 유일한 멤버인 룸은 삭제되며, 공유 룸에서는 내가 작성한 내용이 남아 알 수 없는 사용자가 작성한 것으로 표시됩니다.",
+      "delete": "계정 삭제",
+      "confirmTitle": "계정을 삭제할까요?",
+      "confirmBody": "프로필, 아바타, 친구, 로그인 계정이 삭제되며 복구할 수 없습니다. 내가 유일한 멤버인 룸은 모든 내용과 함께 삭제됩니다. 공유 룸의 마지막 Master 또는 Admin이라면 먼저 다른 사람에게 역할을 넘기세요.",
+      "confirmLabel": "확인하려면 \"{{word}}\"을(를) 입력하세요",
+      "deleteWord": "삭제",
+      "confirm": "완전히 삭제",
+      "deleted": "계정이 삭제되었습니다"
+    }
+  },
+  "rooms": {
+    "create": "룸 만들기",
+    "loadError": "룸을 불러오는 중 오류가 발생했습니다.",
+    "empty": "아직 룸이 없습니다. 하나 만들어 시작하세요.",
+    "invite": "초대",
+    "createModal": {
+      "title": "룸 만들기",
+      "namePlaceholder": "예: 스트라드의 저주",
+      "gameSystem": "게임 시스템",
+      "gameSystemPlaceholder": "예: D&D 5e (선택)",
+      "image": "이미지 (선택)",
+      "chooseImage": "이미지 선택",
+      "changeImage": "이미지 변경",
+      "imageHint": "룸 PDF의 표지입니다. 나중에 룸 설정에서 바꿀 수 있습니다.",
+      "imageFailed": "룸은 만들었지만 이미지를 저장하지 못했습니다({{reason}}). 룸 설정에서 지정할 수 있습니다."
+    },
+    "setup": "설정",
+    "actions": "{{name}} 룸 작업",
+    "duplicate": {
+      "action": "복제",
+      "confirmTitle": "\"{{name}}\"을(를) 복제할까요?",
+      "confirmBody": "문서, 노트, 태그, 이미지가 복사됩니다. 댓글, PDF 첨부 파일, 멤버는 복사되지 않습니다. 사본의 Master는 나 혼자입니다.",
+      "copyName": "{{name}} (복사본)",
+      "created": "\"{{name}}\"을(를) 만들었습니다"
+    },
+    "leave": {
+      "confirmTitle": "\"{{name}}\"에서 나갈까요?",
+      "confirmBody": "내 문서, 댓글, 노트는 룸에 남습니다. 다시 들어오려면 새 초대가 필요합니다.",
+      "adminHint": "내가 Admin입니다. 마지막 Admin이라면 먼저 룸 설정에서 다른 Admin을 지정하세요.",
+      "left": "\"{{name}}\"에서 나갔습니다"
+    },
+    "image": {
+      "alt": "룸 이미지"
+    }
+  },
+  "invite": {
+    "modalTitle": "룸에 초대",
+    "proposedRole": "제안하는 역할",
+    "generate": "초대 만들기",
+    "signInRequired": "이 룸에 참여하려면 로그인하세요.",
+    "invalid": "초대가 유효하지 않거나 만료되었거나 이미 사용되었습니다.",
+    "joined": "\"{{room}}\"에 참여했습니다",
+    "goToMyRooms": "내 룸으로 이동",
+    "tabLink": "링크",
+    "tabFriends": "친구",
+    "friend": "친구",
+    "friendPlaceholder": "친구 선택",
+    "noFriends": "초대할 친구가 없습니다. 계정 페이지에서 추가하세요.",
+    "friendsHint": "친구의 계정 페이지에 초대가 표시되며, 수락해야만 들어옵니다.",
+    "send": "초대 보내기",
+    "sent": "{{name}}님에게 초대를 보냈습니다."
+  },
+  "members": {
+    "signInRequired": "이 룸의 멤버를 보려면 로그인하세요.",
+    "title": "멤버",
+    "loadError": "멤버를 불러오는 중 오류가 발생했습니다.",
+    "columnUser": "사용자",
+    "columnRole": "역할",
+    "columnAdmin": "Admin",
+    "addFriend": "친구로 추가",
+    "friend": "친구",
+    "requestSent": "요청 보냄",
+    "requestReceived": "친구 요청을 보냈습니다",
+    "friendRequestSent": "{{name}}님에게 친구 요청을 보냈습니다."
+  },
+  "setup": {
+    "signInRequired": "이 룸을 관리하려면 로그인하세요.",
+    "title": "룸 설정",
+    "adminOnly": "룸의 Admin 또는 Master만 설정을 열 수 있습니다.",
+    "loadError": "룸 설정을 불러오는 중 오류가 발생했습니다.",
+    "tags": {
+      "title": "태그",
+      "description": "문서 페이지가 문서를 묶는 방식과 룸의 모든 태그입니다. 변경 사항은 바로 저장됩니다.",
+      "grouping": {
+        "title": "묶기",
+        "description": "문서 페이지는 이 항목들을 이 순서대로 사용해 문서를 묶습니다. 항목은 태그 하나이거나 조합입니다. 조합은 그 태그를 모두 가진 문서를 뜻합니다.",
+        "empty": "항목이 없습니다. 문서는 묶이지 않습니다.",
+        "moveUp": "{{name}} 위로 이동",
+        "moveDown": "{{name}} 아래로 이동",
+        "remove": "묶기에서 {{name}} 빼기",
+        "addLabel": "항목 추가",
+        "addPlaceholder": "태그를 하나 이상 선택",
+        "addHint": "태그 하나는 주요 태그, 둘 이상은 조합입니다.",
+        "add": "추가",
+        "alreadyMain": "이 태그는 이미 묶기 항목입니다.",
+        "alreadyCombination": "이 조합은 이미 묶기에 있습니다."
+      },
+      "all": {
+        "title": "모든 태그",
+        "description": "태그를 삭제하면 문서와 묶기에서 빠집니다. 문서는 그대로 남습니다.",
+        "empty": "이 룸에는 태그가 없습니다.",
+        "filterLabel": "태그 필터",
+        "filterPlaceholder": "태그 필터",
+        "noMatch": "\"{{query}}\"와(과) 일치하는 태그가 없습니다.",
+        "newLabel": "새 태그",
+        "newPlaceholder": "새 태그",
+        "create": "태그 만들기",
+        "created": "태그 \"{{name}}\"을(를) 만들었습니다",
+        "inGrouping": "묶기에 포함",
+        "rename": "태그 {{name}} 이름 변경",
+        "renameInput": "{{name}}의 새 이름",
+        "saveRename": "이름 저장",
+        "cancelRename": "취소",
+        "renamed": "태그 이름을 \"{{name}}\"(으)로 변경했습니다"
+      },
+      "delete": "태그 {{name}} 삭제",
+      "confirmTitle": "태그 \"{{name}}\"을(를) 삭제할까요?",
+      "confirmBody": "이 태그는 가지고 있던 모든 문서와 묶기에서 빠집니다. 이 태그를 쓰던 조합은 줄어들고, 태그가 둘 미만으로 남으면 제거됩니다. 문서는 삭제되지 않습니다. 이 작업은 취소할 수 없습니다.",
+      "deleted": "태그 \"{{name}}\"을(를) 삭제했습니다"
+    },
+    "dangerZone": {
+      "title": "위험 구역",
+      "description": "룸을 삭제하면 멤버, 문서, 댓글, 노트, 이미지와 함께 영구히 제거됩니다.",
+      "deleteRoom": "룸 삭제",
+      "confirmTitle": "룸 \"{{name}}\"을(를) 삭제할까요?",
+      "confirmBody": "룸 안의 모든 것이 모두에게서 삭제됩니다. 멤버, 초대, 태그, 문서, 댓글, 노트, 이미지가 포함됩니다. 이 작업은 취소할 수 없습니다.",
+      "confirmLabel": "확인하려면 \"{{name}}\"을(를) 입력하세요",
+      "deleted": "룸 \"{{name}}\"을(를) 삭제했습니다"
+    },
+    "tabs": {
+      "settings": "설정",
+      "history": "기록"
+    },
+    "defaultVisibility": {
+      "title": "기본 공개 범위",
+      "description": "새 문서, 노트, 댓글이 시작하는 공개 범위입니다. 답글은 항상 답하는 댓글의 공개 범위에서 시작합니다. 기존 콘텐츠는 바뀌지 않습니다.",
+      "label": "기본 공개 범위",
+      "saved": "기본 공개 범위를 저장했습니다."
+    },
+    "history": {
+      "title": "공개 범위 기록",
+      "description": "누가 무엇을 볼 수 있는지 바꾼 기록입니다. 최근 변경이 먼저 나옵니다.",
+      "filterLabel": "콘텐츠",
+      "filter": {
+        "all": "전체",
+        "document": "문서",
+        "note": "노트",
+        "comment": "댓글"
+      },
+      "empty": "공개 범위 변경이 없습니다.",
+      "loadError": "기록을 불러오지 못했습니다.",
+      "loadMore": "더 보기",
+      "when": "시각",
+      "who": "누가",
+      "what": "무엇을",
+      "change": "변경",
+      "reveal": "공개",
+      "hidden": {
+        "document": "숨겨진 문서",
+        "note": "숨겨진 노트",
+        "comment": "숨겨진 댓글"
+      },
+      "deleted": {
+        "document": "삭제된 문서",
+        "note": "삭제된 노트",
+        "comment": "삭제된 댓글"
+      },
+      "note": "{{document}}의 노트 \"{{title}}\"",
+      "comment": "{{document}}의 댓글",
+      "recipients": "이제 볼 수 있는 사람: {{names}}",
+      "selective": "선택됨: {{names}}"
+    },
+    "roomImage": {
+      "title": "룸 이미지",
+      "description": "룸 PDF의 기본 표지입니다. 내보내는 사람은 문서의 이미지를 고르거나 표지 없이 내보낼 수도 있습니다.",
+      "upload": "이미지 올리기",
+      "hint": "PNG, JPEG, WebP 또는 GIF. 자르지 않고 자동으로 크기가 조정됩니다."
+    }
+  },
+  "documents": {
+    "signInRequired": "이 룸의 문서를 보려면 로그인하세요.",
+    "title": "문서",
+    "create": "문서 만들기",
+    "playersCanCreate": "Player가 문서를 만들 수 있음",
+    "loadError": "문서를 불러오는 중 오류가 발생했습니다.",
+    "empty": "아직 문서가 없습니다. 하나 만들어 시작하세요.",
+    "noMatchForTags_other": "이 태그의 문서가 없습니다.",
+    "showAll": "모두 보기",
+    "filterByTag": "태그로 필터",
+    "hideControls": "필터와 설정 숨기기",
+    "showControls": "필터와 설정 보기",
+    "owners": "Owner",
+    "ownersLine": "Owner: {{names}}",
+    "addOwner": "Owner 추가",
+    "removeOwner": "Owner {{name}} 제거",
+    "groupByLabel": "묶는 기준",
+    "groupByMainTag": "주요 태그로 묶기",
+    "groupByNone": "묶지 않음",
+    "sortLabel": "정렬 기준",
+    "sortNameAsc": "이름 (가-하)",
+    "sortNameDesc": "이름 (하-가)",
+    "ungroupedTag": "주요 태그 없음",
+    "detail": {
+      "signInRequired": "이 문서를 보려면 로그인하세요.",
+      "notFound": "문서를 찾을 수 없거나 볼 수 없습니다.",
+      "backToDocuments": "문서로 돌아가기",
+      "cancelEditing": "수정 취소",
+      "saveChanges": "변경 사항 저장",
+      "deleteDocument": "문서 삭제",
+      "deleteConfirmTitle": "이 문서를 삭제할까요?",
+      "deleteConfirmBody": "이 문서의 댓글, 이미지, 태그 연결이 삭제됩니다. 이 작업은 취소할 수 없습니다."
+    },
+    "fields": {
+      "descriptionHint": "#을 입력하면 다른 문서를 연결합니다.",
+      "subtitle": "부제목",
+      "subtitleHint": "이름 아래의 한 줄입니다. 예: 「우상」.",
+      "tags": "태그",
+      "newTag": "새 태그",
+      "newTagPlaceholder": "예: 세력"
+    },
+    "notYetRead": "아직 읽지 않음",
+    "unreadCount_other": "새 댓글 {{count}}개"
+  },
+  "images": {
+    "numbered": "{{name}} ({{index}})",
+    "open": "이미지 열기",
+    "openNamed": "{{name}} 열기",
+    "removeNamed": "{{name}} 제거",
+    "delete": "이미지 삭제",
+    "deleteConfirm": "이 이미지를 삭제할까요?",
+    "favorite": "대표 이미지",
+    "setFavorite": "대표 이미지로 사용",
+    "urlLabel": "이미지 URL",
+    "urlPlaceholder": "https://… 이미지 URL",
+    "invalidUrl": "올바른 http(s) URL을 입력하세요",
+    "rowTitle": "이미지",
+    "upload": "이미지 올리기",
+    "addFromUrl": "URL로 추가",
+    "fromUrlShort": "URL에서",
+    "resizeHint": "PNG, JPEG, WebP 또는 GIF. 큰 이미지는 자동으로 크기가 조정됩니다.",
+    "limitReached": "이미지 한도에 도달했습니다",
+    "attachFiles": "이미지 추가",
+    "attachFilesTooltip": "컴퓨터에서 이미지 추가",
+    "attachUrl": "URL로 이미지 추가",
+    "viewer": {
+      "previous": "이전 이미지",
+      "next": "다음 이미지",
+      "zoomOut": "축소",
+      "zoomIn": "확대",
+      "fit": "화면에 맞추기"
+    }
+  },
+  "versions": {
+    "action": "기록",
+    "actionFor": "기록: {{name}}",
+    "title": "기록: {{name}}",
+    "loadFailed": "기록을 불러오지 못했습니다.",
+    "empty": "버전이 없습니다.",
+    "current": "현재",
+    "first": "첫 버전",
+    "changeSize": "+{{added}} −{{removed}}",
+    "changeSizeLabel": "추가된 단어: {{added}}, 삭제된 단어: {{removed}}",
+    "pick": "버전을 선택해 지금의 문서와 비교하세요.",
+    "before": "이 버전",
+    "after": "지금",
+    "identical": "문서가 이미 이 상태입니다.",
+    "restore": "이 버전으로 복원",
+    "restoreConfirmTitle": "이 버전으로 복원할까요?",
+    "restoreConfirmBody": "노트를 포함한 문서가 {{date}}의 상태로 돌아갑니다. 그 이후 삭제된 노트는 돌아오고, 그 이후 추가된 노트는 삭제됩니다. 새 버전이 추가되므로 잃는 것은 없습니다.",
+    "restored": "버전을 복원했습니다",
+    "notesHeading": "노트",
+    "noteRemoved": "그 이후 삭제됨",
+    "noteAdded": "이후에 추가됨",
+    "noteNotThen": "이 버전에는 없음",
+    "noteNotNow": "문서에 더 이상 없음",
+    "notesChange": "노트 +{{added}} −{{removed}}",
+    "notesChangeLabel": "추가된 노트: {{added}}, 삭제된 노트: {{removed}}"
+  },
+  "notes": {
+    "add": "노트 추가",
+    "edit": "노트 수정: {{title}}",
+    "delete": "노트 삭제: {{title}}",
+    "moveUp": "노트 위로 이동: {{title}}",
+    "moveDown": "노트 아래로 이동: {{title}}",
+    "deleteConfirmTitle": "이 노트를 삭제할까요?",
+    "deleteConfirmBody": "\"{{title}}\"이(가) 삭제됩니다. 문서의 기록에서 복구할 수 있습니다.",
+    "form": {
+      "title": "제목",
+      "selectiveLabel": "노트를 볼 수 있는 멤버",
+      "selectivePlaceholder": "볼 수 있는 사람"
+    }
+  },
+  "files": {
+    "title": "파일",
+    "upload": "PDF 올리기",
+    "uploadHint": "최대 {{mb}}MB의 PDF를 첨부하세요. 예: 캐릭터 시트",
+    "limitReached": "문서에는 파일을 최대 {{max}}개까지 둘 수 있습니다",
+    "open": "{{name}} 열기",
+    "download": "{{name}} 내려받기",
+    "delete": "{{name}} 삭제",
+    "deleteConfirmTitle": "이 파일을 삭제할까요?",
+    "deleteConfirmBody": "\"{{name}}\"이(가) 삭제됩니다. 이 작업은 취소할 수 없습니다.",
+    "notPdf": "PDF 파일만 첨부할 수 있습니다",
+    "tooLarge": "파일이 {{mb}}MB 한도를 초과합니다",
+    "openFailed": "{{name}}을(를) 열 수 없습니다"
+  },
+  "characters": {
+    "playedBy": "플레이어",
+    "playedByLine": "플레이어: {{name}}",
+    "choosePlayer": "플레이어 선택",
+    "alsoOwner": "Owner로도 지정",
+    "setPlayer": "플레이어 지정",
+    "unlink": "{{name}} 연결 해제",
+    "postAs": "작성 대상",
+    "yourself": "나 ({{name}})",
+    "writtenBy": "플레이어: {{name}}"
+  },
+  "comments": {
+    "title": "댓글",
+    "loadError": "댓글을 불러오지 못했습니다.",
+    "empty": "아직 댓글이 없습니다. 첫 댓글을 남겨 보세요!",
+    "filteredCount_other": "댓글 {{count}}개 중 {{shown}}개",
+    "noMatch": "필터에 맞는 댓글이 없습니다.",
+    "publish": "게시",
+    "savedWithImageErrors": "댓글은 저장했지만 일부 이미지는 저장하지 못했습니다: {{errors}}",
+    "imageRemovalFailed": "이미지 제거: {{reason}}",
+    "you": "(나)",
+    "deleted": "댓글을 삭제했습니다.",
+    "edited": "수정됨",
+    "editedAt": "{{date}}에 수정됨",
+    "deleteConfirm": "이 댓글을 삭제할까요?",
+    "deleteImagesWarning": "댓글의 이미지도 문서에서 제거됩니다.",
+    "imageLabel": "{{author}}님의 댓글 이미지 {{index}}",
+    "imagesAlt": "{{author}}님의 댓글",
+    "attachedImage": "첨부된 이미지",
+    "reply": "답글",
+    "replyLabel": "{{name}}님에게 답글",
+    "inReplyTo": "{{name}}님에게 답글",
+    "parentHidden": "볼 수 없는 댓글",
+    "pin": "고정",
+    "unpin": "고정 해제",
+    "pinned": "고정됨",
+    "pinnedSection": "고정된 댓글",
+    "resolve": "해결됨으로 표시",
+    "reopen": "다시 열기",
+    "resolved": "해결됨",
+    "resolvedBy": "{{name}}님이 해결함, {{date}}",
+    "reactions": {
+      "add": "리액션 추가",
+      "chip_other": "{{emoji}}, 리액션 {{count}}개: {{names}}",
+      "loadingPicker": "이모지를 불러오는 중",
+      "pickerFailed": "이모지를 불러오지 못했습니다. 나중에 다시 시도하세요."
+    },
+    "thread": {
+      "showMore_other": "답글 {{count}}개 더 보기",
+      "show_other": "답글 {{count}}개 보기",
+      "hide": "답글 숨기기",
+      "hiddenNew_other": "새 답글 {{count}}개"
+    },
+    "composer": {
+      "bodyLabel": "댓글 내용",
+      "bodyPlaceholder": "댓글을 입력하세요… (#으로 문서 연결)",
+      "visibilityLabel": "댓글 공개 범위",
+      "selectiveLabel": "댓글을 볼 수 있는 멤버",
+      "selectivePlaceholder": "볼 수 있는 사람"
+    },
+    "toolbar": {
+      "searchLabel": "댓글 검색",
+      "searchPlaceholder": "검색…",
+      "sortLabel": "댓글 정렬",
+      "sortNewest": "최신순",
+      "sortOldest": "오래된순",
+      "sortAuthor": "작성자순",
+      "authorLabel": "작성자로 필터",
+      "authorPlaceholder": "모든 작성자",
+      "visibilityLabel": "공개 범위로 필터",
+      "visibilityPlaceholder": "모든 공개 범위",
+      "hideDeleted": "삭제된 댓글 숨기기"
+    },
+    "new": "새로 작성",
+    "promotion": {
+      "promote": "승격",
+      "intoDescription": "설명으로",
+      "intoDocument": "새 문서로",
+      "promoted": "승격됨",
+      "promotedToDescription": "{{date}}에 설명으로 승격됨",
+      "promotedToDocument": "{{date}}에 새 문서로 승격됨",
+      "openDocument": "승격된 문서 열기",
+      "editorNotice": "댓글 내용이 설명 끝에 추가되었습니다. 검토한 뒤 저장하면 승격됩니다.",
+      "modalTitle": "새 문서로 승격",
+      "images": "문서에 추가할 댓글 이미지",
+      "imageLabel": "이미지 {{index}}",
+      "wideningTitle": "더 많은 사람이 볼 수 있게 됩니다",
+      "wideningBody": "승격하면 지금은 볼 수 없는 사람도 댓글 내용을 읽을 수 있습니다: {{names}}.",
+      "wideningConfirm": "그래도 승격",
+      "done": "댓글을 승격했습니다",
+      "imageErrors": "댓글을 승격했지만 일부 이미지는 추가하지 못했습니다: {{errors}}",
+      "notRecorded": "문서는 만들었지만 댓글 승격이 기록되지 않았습니다: {{reason}}"
+    }
+  },
+  "mentions": {
+    "listLabel": "연결할 문서와 태그",
+    "membersListLabel": "멘션할 멤버",
+    "kind": {
+      "document": "문서",
+      "tag": "태그"
+    },
+    "tagDetail_other": "태그 · 문서 {{count}}개",
+    "noMatchCreate": "\"{{name}}\"에 대한 결과가 없습니다. 다음으로 만들기:",
+    "kindSwitchLabel": "새 항목의 종류",
+    "createKind": "{{kind}} 만들기",
+    "hintSwitchKind": "←/→ 종류 변경 · ",
+    "hintCreate": "Enter로 만들기"
+  },
+  "backlinks": {
+    "title": "언급된 곳",
+    "inDescription": "설명에서",
+    "inNote": "노트 \"{{title}}\"에서",
+    "inComment": "{{name}}님의 댓글에서"
+  },
+  "glossary": {
+    "title": "태그 색인",
+    "openToggle": "태그 색인 열기",
+    "closeToggle": "태그 색인 닫기",
+    "mainTags": "주요 태그",
+    "otherTags": "기타 태그",
+    "empty": "이 룸에는 태그가 없습니다."
+  },
+  "search": {
+    "open": "검색",
+    "title": "룸에서 검색",
+    "inputLabel": "룸에서 검색",
+    "placeholder": "문서, 노트, 댓글, 태그…",
+    "hint": "두 글자 이상 입력하세요.",
+    "loading": "검색 중",
+    "resultsLabel": "결과",
+    "showMore": "더 보기",
+    "tagFilter": "태그로 필터",
+    "inDocument": "{{name}}에서",
+    "commentOn": "{{name}}의 댓글",
+    "kinds": {
+      "all": "전체"
+    },
+    "groups": {
+      "document": "문서",
+      "note": "노트",
+      "comment": "댓글",
+      "tag": "태그"
+    }
+  },
+  "friendLink": {
+    "signInRequired": "친구 요청을 보내려면 로그인하세요.",
+    "sent": "{{name}}님에게 친구 요청을 보냈습니다.",
+    "sentAnonymous": "친구 요청을 보냈습니다.",
+    "failed": "친구 요청을 보내지 못했습니다.",
+    "goToAccount": "내 계정으로 이동"
+  },
+  "reveal": {
+    "action": "공개",
+    "actionLabel": "공개: {{name}}",
+    "comment": "댓글",
+    "revealed": "공개됨",
+    "revealedLabel": "나에게 공개됨",
+    "modalTitle": "\"{{name}}\" 공개",
+    "audienceLabel": "공개 대상",
+    "toRoom": "룸 전체",
+    "toChosen": "선택한 플레이어",
+    "chosenLabel": "플레이어",
+    "chosenPlaceholder": "대상 선택",
+    "noOneToPick": "받을 수 있는 멤버는 이미 모두 볼 수 있습니다.",
+    "gains": "새로 볼 수 있는 사람: {{names}}",
+    "noGains": "새로 접근 권한을 얻는 멤버가 없습니다.",
+    "notesLabel": "이 노트도 함께 공개",
+    "notesDescription": "문서를 받는 사람은 이 노트를 볼 수 없습니다. 선택하지 않으면 그대로 유지됩니다.",
+    "confirm": "공개",
+    "done": "공개했습니다."
+  },
+  "viewAs": {
+    "action": "멤버로 보기",
+    "menuLabel": "룸을 다음 멤버로 보기",
+    "banner": "{{name}}님으로 룸을 보고 있습니다. 읽기 전용입니다.",
+    "exit": "보기 종료"
+  },
+  "export": {
+    "action": "내보내기",
+    "title": "룸 내보내기",
+    "intro": "룸을 파일로 내려받습니다. 내가 볼 수 있는 문서, 노트, 댓글, 태그만 포함됩니다.",
+    "format": "파일 형식",
+    "formats": {
+      "md": "Markdown",
+      "json": "JSON",
+      "pdf": "PDF"
+    },
+    "formatHint": {
+      "md": "읽거나 인쇄하기 좋은 단일 파일입니다.",
+      "json": "도구와 AI 에이전트를 위한, id가 포함된 구조화된 데이터입니다.",
+      "pdf": "인쇄하거나 플레이어에게 나눠 줄 수 있는 편집된 매뉴얼입니다."
+    },
+    "tagFilter": "이 태그가 있는 문서만 (선택)",
+    "linksExpire": "이미지와 PDF 파일 링크는 한 시간 안에 만료됩니다. 갱신하려면 다시 내보내세요.",
+    "done": "내보내기를 내려받았습니다.",
+    "pdf": {
+      "style": "스타일",
+      "styles": {
+        "gothic": "고딕",
+        "modern": "모던",
+        "print": "인쇄"
+      },
+      "styleHints": {
+        "gothic": "검정과 빨강, 어두운 표지",
+        "modern": "깔끔한 산세리프, 넉넉한 여백",
+        "print": "흑백, 잉크 절약"
+      },
+      "pageSize": "페이지 크기",
+      "comments": "부록에 댓글 포함",
+      "attachments": "PDF 첨부 파일을 끝에 추가",
+      "cover": "표지 이미지",
+      "coverNone": "없음",
+      "coverClear": "표지 이미지 지우기",
+      "coverNothing": "이미지가 있는 문서가 없습니다",
+      "coverHint": "표지에는 선택한 문서의 대표 이미지가 사용됩니다.",
+      "visibility": "PDF에는 내가 볼 수 있는 내용만 들어갑니다. 백그라운드에서 준비되며 24시간 동안 사용할 수 있습니다.",
+      "asMember": "다른 멤버로 룸을 보고 있습니다. PDF에는 그 멤버가 볼 수 있는 내용만 들어갑니다. 24시간 동안 사용할 수 있습니다.",
+      "action": "PDF 만들기",
+      "making": "PDF를 준비하는 중…",
+      "makingHint": "이 창을 닫아도 됩니다. PDF는 내려받을 때까지 룸 페이지에 남아 있습니다.",
+      "ready": "PDF가 준비되었습니다.",
+      "availableUntil": "{{time}}까지 사용할 수 있습니다.",
+      "download": "PDF 내려받기",
+      "preparingLink": "내려받기 링크를 준비하는 중…",
+      "failed": "PDF를 준비하지 못했습니다.",
+      "expired": "이 PDF는 더 이상 사용할 수 없습니다. 파일은 24시간 후 삭제됩니다.",
+      "another": "다른 PDF 준비",
+      "retry": "다시 시도",
+      "listTitle": "내 PDF",
+      "listItem": "{{style}} · {{size}}",
+      "listStatus": {
+        "queued": "대기 중",
+        "running": "준비 중",
+        "done": "완료",
+        "failed": "실패",
+        "expired": "만료됨"
+      },
+      "downloadNamed": "PDF {{name}} 내려받기",
+      "dismiss": "숨기기",
+      "dismissNamed": "PDF {{name}} 숨기기",
+      "coverRoom": "룸 이미지",
+      "coverHintRoom": "표지에는 룸 이미지 또는 선택한 문서의 대표 이미지가 사용됩니다."
+    },
+    "document": {
+      "title": "문서 내보내기",
+      "action": "문서 내보내기",
+      "intro": "이 문서를 파일로 내려받습니다. 내가 볼 수 있는 노트, 댓글, 태그가 포함됩니다. 나중에 룸으로 다시 가져올 수 있습니다."
+    }
+  },
+  "documentImport": {
+    "action": "문서 가져오기",
+    "title": "문서 가져오기",
+    "intro": "JSON 또는 Markdown 파일을 하나 이상 올리세요. 룸 전체를 내보낸 파일도 가능합니다. 먼저 가져올 내용을 미리 보여 주며, 확인하기 전에는 아무것도 기록되지 않습니다.",
+    "jsonHint": "JSON은 원본을 충실히 가져오는 형식이고, Markdown은 최대한 읽어 들입니다. 댓글, PDF 첨부 파일, Owner, 플레이어 연결은 가져오지 않습니다.",
+    "files": "가져올 파일",
+    "filesPlaceholder": ".json 또는 .md 파일을 하나 이상 선택",
+    "preview": "미리보기",
+    "found_other": "문서 {{count}}개 발견",
+    "documentSelect": "{{name}} 가져오기",
+    "notesCount_other": "노트 {{count}}개",
+    "imagesCount_other": "이미지 {{count}}개",
+    "tags": "태그: {{names}}",
+    "exists": "이 룸에 이미 있음",
+    "tagsToCreate": "새로 만들 태그: {{names}}",
+    "tagsUnavailable": "만들 수 없어 제외될 태그: {{names}}",
+    "selectedCount_other": "문서 {{count}}개 선택됨",
+    "next": "다음",
+    "back": "이전",
+    "start": "가져오기",
+    "warning": {
+      "comments_dropped_other": "댓글 {{count}}개는 가져오지 않습니다",
+      "files_dropped_other": "PDF 첨부 파일 {{count}}개는 가져오지 않습니다",
+      "player_dropped": "플레이어 연결은 가져오지 않습니다",
+      "selective_to_private_other": "선택 공개 항목 {{count}}개가 비공개로 바뀝니다",
+      "tags_not_created": "만들지 못한 태그: {{names}}"
+    },
+    "existing": {
+      "title": "이미 있는 문서가 있습니다",
+      "intro": "복사는 새 문서를 만들고 원본은 그대로 둡니다. 대체는 원본의 정보(이름, 설명, 태그, 노트)만 덮어쓰며, Owner, 공개 범위, 댓글, 첨부 파일은 유지됩니다. 대체는 문서 기록에서 되돌릴 수 있습니다.",
+      "copy": "복사",
+      "replace": "대체",
+      "applyAll": "모두에 적용",
+      "copyAll": "모두 복사",
+      "replaceAll": "모두 대체",
+      "cannotReplace": "문서의 Owner(또는 Master)만 대체할 수 있습니다",
+      "choice": "{{name}}에 할 작업"
+    },
+    "running": "가져오는 중…",
+    "runningHint": "이 창을 닫아도 됩니다. 가져오기는 백그라운드에서 계속되며, 끝나면 문서가 목록에 나타납니다.",
+    "done": "가져오기를 완료했습니다",
+    "created_other": "문서 {{count}}개를 만들었습니다",
+    "replaced_other": "문서 {{count}}개를 대체했습니다",
+    "skippedTitle_other": "이미지 {{count}}개를 가져오지 못했습니다",
+    "skipped": "{{document}}: {{reason}}",
+    "skipReason": {
+      "unreachable": "링크에 접근할 수 없거나 만료됨",
+      "not_an_image": "이미지가 아님",
+      "too_large": "너무 큼",
+      "limit": "문서가 이미 최대 이미지 수에 도달함",
+      "storage": "저장소를 사용할 수 없음",
+      "failed": "예기치 않은 오류"
+    },
+    "failed": "가져오기에 실패했습니다. 다시 시도하기 전에 문서 목록을 확인하세요.",
+    "another": "다른 파일 가져오기"
+  },
+  "imageSearch": {
+    "action": "검색",
+    "title": "이미지 검색",
+    "queryLabel": "검색어",
+    "placeholder": "예: 고딕 성, 고지도",
+    "submit": "검색",
+    "sourceHint": "Openverse의 무료 이미지(크리에이티브 커먼즈 및 퍼블릭 도메인)입니다. 이미지를 클릭하면 문서에 추가됩니다.",
+    "loading": "검색 중",
+    "empty": "이미지를 찾지 못했습니다",
+    "more": "결과 더 보기",
+    "add": "{{title}} 추가",
+    "added": "추가됨",
+    "untitled": "제목 없음",
+    "source": "출처"
+  },
+  "speech": {
+    "listen": "\"{{name}}\" 듣기",
+    "pause": "읽기 일시정지",
+    "resume": "읽기 이어서 하기",
+    "stop": "읽기 중지",
+    "commentListen": "듣기",
+    "commentStop": "중지",
+    "commentBy": "{{name}}님이 작성"
+  },
+  "privacy": {
+    "back": "앱으로 돌아가기",
+    "title": "개인정보 처리방침",
+    "updated": "최종 업데이트: {{date}}",
+    "intro": "이 방침은 이 앱이 어떤 개인정보를 처리하는지, 그 이유, 보관 위치, 그리고 일반 데이터 보호 규정(GDPR)에 따라 내 권리를 행사하는 방법을 설명합니다. 이 방침의 원문은 이탈리아어와 영어이며, 번역과 차이가 있는 경우 이탈리아어와 영어 본문이 우선합니다.",
+    "sections": {
+      "controller": {
+        "title": "개인정보 처리자",
+        "body": "개인정보 처리자는 {{name}}입니다. 내 데이터에 관한 질문이나 권리 행사는 {{email}}(으)로 문의하세요."
+      },
+      "data": {
+        "title": "처리하는 데이터",
+        "body": "앱이 작동하는 데 필요한 데이터만 처리합니다.\n\n- 선택한 제공자(Google, Discord 또는 GitHub)의 로그인 데이터: 계정 식별자, 이메일 주소, 이름, 이미지. 프로필의 기본 이름과 아바타로 한 번만 복사됩니다.\n- 내 프로필: 표시 이름, 호칭 대명사, 소개, 아바타. 계정 페이지에서 언제든 수정하거나 지울 수 있습니다.\n- 룸에 작성하고 올린 내용: 문서, 노트, 댓글, 리액션, 이미지, PDF 첨부 파일, 그리고 작성자와 시각.\n- 내 친구, 친구 요청, 친구 코드, 내가 보내거나 받은 룸 초대.\n- 이용 및 기술 데이터: 각 문서를 마지막으로 연 시각, 문서의 변경 기록, 각 룸의 역할 및 공개 범위 변경 기록, 서비스 제공과 보호를 위해 서버가 기록하는 요청 데이터(IP 주소, 브라우저, 시각 등)."
+      },
+      "purposes": {
+        "title": "목적과 법적 근거",
+        "body": "내 데이터는 나와 내 룸의 멤버에게 앱을 제공하기 위해(계약 이행, GDPR 제6조 제1항 (b)호), 그리고 앱을 안전하고 정상적으로 운영하기 위해(정당한 이익, GDPR 제6조 제1항 (f)호) 사용됩니다.\n\n데이터는 판매되지 않으며 광고나 프로파일링에 사용되지 않습니다. 앱은 분석 또는 추적 도구를 사용하지 않습니다. 내 이메일은 다른 사용자에게 절대 표시되지 않습니다."
+      },
+      "processors": {
+        "title": "처리 업체와 위치",
+        "body": "앱은 다음 제공업체를 이용하며, 이들은 우리를 대신해 데이터를 처리합니다.\n\n- Supabase: 데이터베이스, 파일 저장소, 로그인. 유럽 연합(독일 프랑크푸르트)에서 호스팅됩니다.\n- OVHcloud: 앱의 백엔드를 실행하는 서버. 유럽 위원회가 적정 수준의 보호를 제공하는 국가로 인정한 영국에 있습니다.\n- Vercel: 앱 페이지 배포. 네트워크가 유럽 연합 밖에서 요청을 처리할 수 있으며, 미국으로의 전송은 EU-U.S. 데이터 프라이버시 프레임워크와 표준 계약 조항에 근거합니다.\n- Google, Discord, GitHub: 내가 선택한 로그인에만 해당하며, 각 사의 방침을 따릅니다.\n- Openverse, WordPress.org 프로젝트: 문서에 쓸 무료 이미지를 검색하면 검색어는 우리 서버에서 전송되고, 미리보기는 내 브라우저가 Openverse에서 직접 불러오므로 Openverse가 내 IP 주소를 확인할 수 있습니다."
+      },
+      "retention": {
+        "title": "보관 기간",
+        "body": "- 내 계정과 프로필은 계정을 삭제할 때까지 유지됩니다.\n- 계정을 삭제하면 프로필, 아바타, 친구, 리액션, 로그인 계정이 즉시 삭제됩니다. 내가 유일한 멤버였던 룸은 모든 내용과 함께 삭제됩니다. 다른 사람과 공유한 룸에서는 내가 작성한 내용이 캠페인의 일부로 남으며, 알 수 없는 사용자가 작성한 것으로 표시됩니다.\n- 내가 삭제한 룸은 모든 내용과 함께 삭제됩니다.\n- 룸 PDF는 생성 24시간 후, 문서 가져오기 기록은 종료 7일 후에 삭제됩니다.\n- 서버 로그는 운영과 보안에 필요한 기간 동안만 보관되며 순환 방식으로 덮어쓰입니다.\n- 제공업체의 백업은 각 백업 주기 안에 덮어쓰입니다."
+      },
+      "rights": {
+        "title": "내 권리",
+        "body": "언제든 다음을 할 수 있습니다.\n\n- 내 데이터 확인 및 내려받기: 계정 페이지, \"내 데이터\", \"내 데이터 내려받기\" (JSON 파일이며, 각 룸의 내보내기에는 내가 볼 수 있는 캠페인 콘텐츠가 들어 있습니다)\n- 계정 페이지에서 프로필 수정\n- 계정 삭제: 계정 페이지, \"내 데이터\", \"계정 삭제\"\n- {{email}}(으)로 연락해 처리에 이의를 제기하거나 제한을 요청\n\n감독 기관에 민원을 제기할 권리도 있습니다. 이탈리아에서는 개인정보 보호 당국(Garante per la protezione dei dati personali, garanteprivacy.it)입니다."
+      },
+      "storage": {
+        "title": "쿠키와 로컬 저장소",
+        "body": "앱은 쿠키를 사용하지 않습니다. 작동에 필요한 몇 가지 항목을 브라우저 저장소에 보관합니다. 로그인 세션, 선택한 언어, 소리 내어 읽기의 음성과 속도, 각 룸에서 마지막으로 글을 쓴 캐릭터, 내가 닫은 룸 PDF 알림, 로그인 전에 연 초대 링크입니다. 이 항목들은 내 기기에만 남으며, 세션은 로그아웃할 때, 나머지는 브라우저 데이터를 지울 때 삭제됩니다."
+      }
+    }
+  },
+  "maps": {
+    "title": "지도",
+    "create": "새 지도",
+    "settings": "지도 설정",
+    "delete": "지도 삭제",
+    "deleteConfirmTitle": "이 지도를 삭제할까요?",
+    "deleteConfirmBody": "\"{{name}}\"이(가) 안의 모든 것과 함께 삭제됩니다. 문서는 그대로 남습니다.",
+    "signInRequired": "이 룸의 지도를 보려면 로그인하세요.",
+    "backToDocuments": "문서",
+    "backToMaps": "지도",
+    "empty": "아직 지도가 없습니다.",
+    "loadError": "지도를 불러오지 못했습니다.",
+    "notFound": "지도를 찾을 수 없습니다.",
+    "documentCount_other": "문서 {{count}}개",
+    "lastEdit": "{{when}} 수정됨",
+    "selectiveLabel": "지도를 볼 수 있는 멤버",
+    "unsaved": "저장되지 않은 변경 사항",
+    "saving": "저장 중…",
+    "saved": "저장됨",
+    "saveError": "저장되지 않음",
+    "retry": "다시 시도",
+    "readOnlyOnPhone": "이렇게 작은 화면에서는 지도가 읽기 전용입니다.",
+    "addDocuments": "문서 추가",
+    "addText": "텍스트 추가",
+    "selectHint": "배경을 드래그하면 카드를 여러 장 선택합니다. 지도는 마우스 오른쪽 또는 가운데 버튼으로 옮기거나 Space를 누른 채로 옮깁니다.",
+    "groupSelected": "그룹으로 묶기",
+    "searchDocuments": "이름으로 검색",
+    "alreadyOnMap": "이미 지도에 있음",
+    "addChosen_other": "문서 {{count}}개 추가",
+    "editCard": "카드 수정: {{name}}",
+    "editText": "텍스트 수정",
+    "editGroup": "그룹 수정",
+    "editArrow": "화살표 수정: {{label}}",
+    "masterOnly": "Master 전용",
+    "masterOnlyArrow": "Master에게만 보임",
+    "masterOnlyCard": "Master에게만 보임",
+    "struck": "취소선",
+    "color": "색상",
+    "colors": {
+      "default": "기본",
+      "red": "빨강",
+      "green": "초록",
+      "purple": "보라",
+      "blue": "파랑",
+      "gold": "금색"
+    },
+    "card": {
+      "editDocument": "카드: {{name}}",
+      "editText": "텍스트",
+      "newText": "새 텍스트",
+      "text": "텍스트",
+      "size": "크기",
+      "sizes": {
+        "normal": "보통",
+        "large": "크게",
+        "title": "제목"
+      },
+      "caption": "캡션",
+      "captionHint": "이 지도에서만 적용되며, 문서의 부제목 대신 표시됩니다.",
+      "image": "이미지",
+      "imageHint": "이 지도에서만 적용됩니다. 첫 번째는 문서의 대표 이미지이며, 다른 이미지를 고르기 전까지 카드가 이를 따릅니다.",
+      "imageNumbered": "이미지 {{number}}",
+      "remove": "지도에서 빼기"
+    },
+    "group": {
+      "title": "그룹",
+      "name": "제목",
+      "namePlaceholder": "적대 세력과 적",
+      "remove": "그룹 제거",
+      "untitled": "제목 없는 그룹"
+    },
+    "arrow": {
+      "title": "화살표",
+      "direction": "방향",
+      "forward": "한쪽 방향",
+      "both": "양쪽 방향",
+      "none": "선만",
+      "label": "레이블",
+      "labelTowards": "{{name}} 쪽 레이블",
+      "delete": "화살표 삭제"
+    }
+  }
+}

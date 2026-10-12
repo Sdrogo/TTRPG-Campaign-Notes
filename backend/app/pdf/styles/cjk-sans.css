@@ -1,0 +1,12 @@
+/* CJK faces of the Room PDF (spec 34_3): Noto Sans subsets (about 4,000 to
+   5,000 common characters per script, see fonts/README.md) as per-glyph
+   fallbacks of every font stack, so Japanese, Chinese and Korean text renders
+   in any style, whatever the page language. The page language only decides
+   which script's Han glyphs come first (`:lang()` rules in each style). */
+
+@font-face { font-family: "Noto Sans JP"; font-weight: normal; src: url(../fonts/NotoSansJP-Regular.woff); }
+@font-face { font-family: "Noto Sans JP"; font-weight: bold; src: url(../fonts/NotoSansJP-Bold.woff); }
+@font-face { font-family: "Noto Sans SC"; font-weight: normal; src: url(../fonts/NotoSansSC-Regular.woff); }
+@font-face { font-family: "Noto Sans SC"; font-weight: bold; src: url(../fonts/NotoSansSC-Bold.woff); }
+@font-face { font-family: "Noto Sans KR"; font-weight: normal; src: url(../fonts/NotoSansKR-Regular.woff); }
+@font-face { font-family: "Noto Sans KR"; font-weight: bold; src: url(../fonts/NotoSansKR-Bold.woff); }
