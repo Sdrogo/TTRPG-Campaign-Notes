@@ -1,0 +1,913 @@
+{
+  "language": {
+    "name": "日本語",
+    "selectorLabel": "言語: {{language}}",
+    "selectorTooltip": "言語を変更",
+    "loadFailed": "言語を読み込めませんでした。もう一度お試しください。",
+    "beta": "ベータ"
+  },
+  "app": {
+    "name": "TTRPG Campaign Notes"
+  },
+  "common": {
+    "add": "追加",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "delete": "削除",
+    "edit": "編集",
+    "remove": "外す",
+    "save": "保存",
+    "leave": "退出",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "yes": "はい",
+    "notApplicable": "—",
+    "you": "あなた",
+    "name": "名前",
+    "description": "説明",
+    "noDescription": "説明はありません。",
+    "noResults": "結果がありません",
+    "resetFilters": "フィルターをリセット",
+    "goToLogin": "ログインへ",
+    "myRooms": "マイルーム",
+    "backToMyRooms": "マイルームに戻る",
+    "maxLength": "最大{{max}}文字",
+    "unknownUser": "不明なユーザー",
+    "accept": "承認",
+    "decline": "辞退"
+  },
+  "roles": {
+    "master": "Master",
+    "player": "Player",
+    "admin": "Admin"
+  },
+  "visibility": {
+    "label": "公開範囲",
+    "level": {
+      "room": "ルーム",
+      "master": "Masterのみ",
+      "private": "非公開",
+      "selective": "選択式"
+    },
+    "documentOption": {
+      "room": "ルーム(全メンバー)",
+      "master": "Masterのみ",
+      "private": "非公開(Owner + Master)",
+      "selective": "選択式(他のメンバーを選ぶまではOwner + Masterのみ)"
+    },
+    "commentOption": {
+      "room": "ルーム(全メンバー)",
+      "master": "Masterのみ(とあなた)",
+      "private": "非公開(あなた + Master)",
+      "selective": "選択式(あなた、Master、選んだメンバー)"
+    }
+  },
+  "time": {
+    "now": "たった今"
+  },
+  "auth": {
+    "prompt": "続けるにはログインしてください。",
+    "signInWith": "{{provider}}でログイン",
+    "privacy": "プライバシー"
+  },
+  "header": {
+    "account": "あなたのアカウント",
+    "accountPending": "あなたのアカウント: 未確認{{count}}件"
+  },
+  "account": {
+    "signInRequired": "アカウントを管理するにはログインしてください。",
+    "loadError": "アカウントを読み込めませんでした。",
+    "title": "アカウント",
+    "subtitle": "プロフィールとセッション。",
+    "profile": {
+      "title": "プロフィール",
+      "description": "ルームの他のメンバーに表示される内容です。",
+      "displayName": "表示名",
+      "displayNameDescription": "ルーム、コメント、Ownerの一覧で、メールアドレスの代わりに表示されます。",
+      "displayNamePlaceholder": "あなたの名前",
+      "pronouns": "代名詞",
+      "pronounsPlaceholder": "例: she/her、he/him、they/them",
+      "bioDescription": "あなたについての短い紹介。ルームのメンバーに表示されます。",
+      "discardChanges": "変更を破棄",
+      "save": "プロフィールを保存",
+      "saved": "プロフィールを保存しました。"
+    },
+    "avatar": {
+      "upload": "写真をアップロード",
+      "fromUrl": "URLから",
+      "useImage": "画像を使う",
+      "hint": "PNG、JPEG、WebP、GIF。画像は中央で切り抜かれ、自動的にリサイズされます。"
+    },
+    "access": {
+      "title": "アクセス",
+      "email": "メールアドレス",
+      "emailDescription": "ログインに使ったアカウントのメールアドレスです。",
+      "noEmail": "アカウントから共有されたメールアドレスはありません",
+      "signOutDescription": "このデバイスでのセッションを終了します。",
+      "signOut": "ログアウト"
+    },
+    "invitations": {
+      "title": "ルームへの招待",
+      "description": "フレンドから招待されています。承認するとルームに参加します。",
+      "from": "{{name}}さんが{{role}}として招待しています",
+      "joined": "「{{room}}」に参加しました。"
+    },
+    "friends": {
+      "title": "フレンド",
+      "description": "フレンドは自分のルームにあなたを直接招待できます。",
+      "linkLabel": "あなたのフレンドリンク",
+      "linkDescription": "リンクを開いた人からフレンド申請が届きます。再生成すると古いリンクは無効になります。",
+      "linkError": "フレンドリンクを読み込めませんでした。",
+      "regenerate": "再生成",
+      "regenerated": "新しいリンクを作成しました。古いリンクは使えなくなります。",
+      "loadError": "フレンドを読み込めませんでした。",
+      "incoming": "受信した申請",
+      "outgoing": "送信した申請",
+      "list": "あなたのフレンド",
+      "empty": "まだフレンドがいません。リンクを共有するか、自分のルームのメンバーを追加してください。",
+      "cancelRequest": "申請を取り消す",
+      "removeConfirm": "{{name}}さんをフレンドから外しますか?",
+      "accepted": "{{name}}さんとフレンドになりました。"
+    },
+    "reveals": {
+      "title": "あなたに開示されたもの",
+      "description": "Masterがあなたに見せたばかりのもの。開くとここから消えます。",
+      "document": "ドキュメント",
+      "note": "ノート「{{title}}」",
+      "comment": "コメント"
+    },
+    "speech": {
+      "title": "読み上げ",
+      "description": "ドキュメント、ノート、コメントを読み上げる声と速さ。声はブラウザのものです。選択はこのデバイスに保存され、言語ごとに1つ選べます。",
+      "unsupported": "このブラウザは読み上げに対応していません。",
+      "voice": "声",
+      "automatic": "自動",
+      "automaticWith": "自動({{name}})",
+      "languageVoices": "日本語の声",
+      "otherVoices": "その他の声",
+      "noVoices": "このデバイスには日本語の声がありません。ブラウザの既定の声が使われます。",
+      "betterVoices": "ブラウザのニューラル音声がおすすめです。Edgeでは「Natural」、Chromeでは「Google」、iPhoneとMacでは設定 › アクセシビリティ › 読み上げコンテンツからダウンロードできる「拡張」または「プレミアム」の声です。",
+      "rate": "速さ",
+      "try": "試す",
+      "sample": "この声であなたのメモを読み上げるとこのように聞こえます。"
+    },
+    "privacy": {
+      "title": "あなたのデータ",
+      "description": "アプリが保存しているあなたの情報すべてのコピーをダウンロードするか、アカウントを削除できます。",
+      "export": "データをダウンロード",
+      "exported": "データをダウンロードしました",
+      "notice": "プライバシーに関するお知らせ",
+      "deleteDescription": "アカウントの削除は元に戻せません。自分だけがメンバーのルームは削除されます。共有ルームでは、あなたが書いた内容は残り、不明なユーザーが書いたものとして表示されます。",
+      "delete": "アカウントを削除",
+      "confirmTitle": "アカウントを削除しますか?",
+      "confirmBody": "プロフィール、アバター、フレンド、ログイン用アカウントは削除され、復元できません。自分だけがメンバーのルームは、内容ごと削除されます。共有ルームの最後のMasterまたは管理者である場合は、先に他の人に役割を渡してください。",
+      "confirmLabel": "確認のため「{{word}}」と入力してください",
+      "deleteWord": "削除",
+      "confirm": "完全に削除",
+      "deleted": "アカウントを削除しました"
+    }
+  },
+  "rooms": {
+    "create": "ルームを作成",
+    "loadError": "ルームの読み込み中にエラーが発生しました。",
+    "empty": "まだルームがありません。作成して始めましょう。",
+    "invite": "招待",
+    "createModal": {
+      "title": "ルームを作成",
+      "namePlaceholder": "例: ストラードの呪い",
+      "gameSystem": "ゲームシステム",
+      "gameSystemPlaceholder": "例: D&D 5e(任意)",
+      "image": "画像(任意)",
+      "chooseImage": "画像を選ぶ",
+      "changeImage": "画像を変更",
+      "imageHint": "ルームのPDFの表紙になります。後でルームの設定から変更できます。",
+      "imageFailed": "ルームは作成されましたが、画像を保存できませんでした({{reason}})。ルームの設定から設定できます。"
+    },
+    "setup": "設定",
+    "actions": "ルーム「{{name}}」の操作",
+    "duplicate": {
+      "action": "複製",
+      "confirmTitle": "「{{name}}」を複製しますか?",
+      "confirmBody": "ドキュメント、ノート、タグ、画像がコピーされます。コメント、PDF添付、メンバーはコピーされません。コピーのMasterはあなただけになります。",
+      "copyName": "{{name}}(コピー)",
+      "created": "「{{name}}」を作成しました"
+    },
+    "leave": {
+      "confirmTitle": "「{{name}}」から退出しますか?",
+      "confirmBody": "あなたのドキュメント、コメント、ノートはルームに残ります。再び参加するには新しい招待が必要です。",
+      "adminHint": "あなたは管理者です。最後の管理者の場合は、先にルームの設定で別の管理者を指名してください。",
+      "left": "「{{name}}」から退出しました"
+    },
+    "image": {
+      "alt": "ルームの画像"
+    }
+  },
+  "invite": {
+    "modalTitle": "ルームに招待",
+    "proposedRole": "提案する役割",
+    "generate": "招待を作成",
+    "signInRequired": "このルームに参加するにはログインしてください。",
+    "invalid": "招待が無効、期限切れ、または使用済みです。",
+    "joined": "「{{room}}」に参加しました",
+    "goToMyRooms": "マイルームへ",
+    "tabLink": "リンク",
+    "tabFriends": "フレンド",
+    "friend": "フレンド",
+    "friendPlaceholder": "フレンドを選ぶ",
+    "noFriends": "招待できるフレンドがいません。アカウントページから追加してください。",
+    "friendsHint": "フレンドのアカウントページに招待が表示され、承認するとルームに参加します。",
+    "send": "招待を送る",
+    "sent": "{{name}}さんに招待を送りました。"
+  },
+  "members": {
+    "signInRequired": "このルームのメンバーを見るにはログインしてください。",
+    "title": "メンバー",
+    "loadError": "メンバーの読み込み中にエラーが発生しました。",
+    "columnUser": "ユーザー",
+    "columnRole": "役割",
+    "columnAdmin": "管理者",
+    "addFriend": "フレンドに追加",
+    "friend": "フレンド",
+    "requestSent": "申請済み",
+    "requestReceived": "フレンド申請が届いています",
+    "friendRequestSent": "{{name}}さんにフレンド申請を送りました。"
+  },
+  "setup": {
+    "signInRequired": "このルームを管理するにはログインしてください。",
+    "title": "ルームの設定",
+    "adminOnly": "設定を開けるのは、ルームの管理者またはMasterだけです。",
+    "loadError": "ルームの設定の読み込み中にエラーが発生しました。",
+    "tags": {
+      "title": "タグ",
+      "description": "ドキュメントページでのドキュメントのグループ分けと、ルームのすべてのタグ。変更はすぐに保存されます。",
+      "grouping": {
+        "title": "グループ分け",
+        "description": "ドキュメントページは、この順番で以下の項目ごとにドキュメントをまとめます。項目は1つのタグ、または組み合わせです。組み合わせでは、そのすべてのタグを持つドキュメントが対象です。",
+        "empty": "項目がありません。ドキュメントはグループ分けされません。",
+        "moveUp": "{{name}}を上へ移動",
+        "moveDown": "{{name}}を下へ移動",
+        "remove": "{{name}}をグループ分けから外す",
+        "addLabel": "項目を追加",
+        "addPlaceholder": "タグを1つ以上選ぶ",
+        "addHint": "タグ1つはメインタグ、2つ以上は組み合わせになります。",
+        "add": "追加",
+        "alreadyMain": "このタグはすでにグループ分けの項目です。",
+        "alreadyCombination": "この組み合わせはすでにグループ分けにあります。"
+      },
+      "all": {
+        "title": "すべてのタグ",
+        "description": "タグを削除すると、ドキュメントとグループ分けから外れます。ドキュメントは残ります。",
+        "empty": "このルームにはタグがありません。",
+        "filterLabel": "タグを絞り込む",
+        "filterPlaceholder": "タグを絞り込む",
+        "noMatch": "「{{query}}」に一致するタグはありません。",
+        "newLabel": "新しいタグ",
+        "newPlaceholder": "新しいタグ",
+        "create": "タグを作成",
+        "created": "タグ「{{name}}」を作成しました",
+        "inGrouping": "グループ分けに含まれる",
+        "rename": "タグ「{{name}}」の名前を変更",
+        "renameInput": "{{name}}の新しい名前",
+        "saveRename": "名前を保存",
+        "cancelRename": "キャンセル",
+        "renamed": "タグ名を「{{name}}」に変更しました"
+      },
+      "delete": "タグ「{{name}}」を削除",
+      "confirmTitle": "タグ「{{name}}」を削除しますか?",
+      "confirmBody": "このタグは、持っているすべてのドキュメントとグループ分けから外れます。このタグを使っていた組み合わせは縮小され、タグが2つ未満になると削除されます。ドキュメントは削除されません。この操作は元に戻せません。",
+      "deleted": "タグ「{{name}}」を削除しました"
+    },
+    "dangerZone": {
+      "title": "危険な操作",
+      "description": "ルームを削除すると、メンバー、ドキュメント、コメント、ノート、画像とともに完全に削除されます。",
+      "deleteRoom": "ルームを削除",
+      "confirmTitle": "ルーム「{{name}}」を削除しますか?",
+      "confirmBody": "ルーム内のすべてが全員分削除されます。メンバー、招待、タグ、ドキュメント、コメント、ノート、画像が対象です。この操作は元に戻せません。",
+      "confirmLabel": "確認のため「{{name}}」と入力してください",
+      "deleted": "ルーム「{{name}}」を削除しました"
+    },
+    "tabs": {
+      "settings": "設定",
+      "history": "履歴"
+    },
+    "defaultVisibility": {
+      "title": "既定の公開範囲",
+      "description": "新しいドキュメント、ノート、コメントの初期の公開範囲です。返信は、返信先のコメントの公開範囲から始まります。既存の内容は変わりません。",
+      "label": "既定の公開範囲",
+      "saved": "既定の公開範囲を保存しました。"
+    },
+    "history": {
+      "title": "公開範囲の履歴",
+      "description": "誰が何を誰に見せるかを変更したか。新しい変更から順に表示します。",
+      "filterLabel": "内容",
+      "filter": {
+        "all": "すべて",
+        "document": "ドキュメント",
+        "note": "ノート",
+        "comment": "コメント"
+      },
+      "empty": "公開範囲の変更はありません。",
+      "loadError": "履歴を読み込めませんでした。",
+      "loadMore": "さらに読み込む",
+      "when": "日時",
+      "who": "実行者",
+      "what": "対象",
+      "change": "変更",
+      "reveal": "開示",
+      "hidden": {
+        "document": "非表示のドキュメント",
+        "note": "非表示のノート",
+        "comment": "非表示のコメント"
+      },
+      "deleted": {
+        "document": "削除されたドキュメント",
+        "note": "削除されたノート",
+        "comment": "削除されたコメント"
+      },
+      "note": "{{document}}のノート「{{title}}」",
+      "comment": "{{document}}のコメント",
+      "recipients": "現在の閲覧者: {{names}}",
+      "selective": "選択: {{names}}"
+    },
+    "roomImage": {
+      "title": "ルームの画像",
+      "description": "ルームのPDFの既定の表紙です。エクスポートする人は、ドキュメントの画像を選ぶことも、画像なしにすることもできます。",
+      "upload": "画像をアップロード",
+      "hint": "PNG、JPEG、WebP、GIF。自動的にリサイズされ、切り抜かれません。"
+    }
+  },
+  "documents": {
+    "signInRequired": "このルームのドキュメントを見るにはログインしてください。",
+    "title": "ドキュメント",
+    "create": "ドキュメントを作成",
+    "playersCanCreate": "Playerもドキュメントを作成できる",
+    "loadError": "ドキュメントの読み込み中にエラーが発生しました。",
+    "empty": "まだドキュメントがありません。作成して始めましょう。",
+    "noMatchForTags_other": "このタグのドキュメントはありません。",
+    "showAll": "すべて表示",
+    "filterByTag": "タグで絞り込む",
+    "hideControls": "フィルターと設定を隠す",
+    "showControls": "フィルターと設定を表示",
+    "owners": "Owner",
+    "ownersLine": "Owner: {{names}}",
+    "addOwner": "Ownerを追加",
+    "removeOwner": "Owner {{name}}を外す",
+    "groupByLabel": "グループ分け",
+    "groupByMainTag": "メインタグでグループ分け",
+    "groupByNone": "グループ分けなし",
+    "sortLabel": "並べ替え",
+    "sortNameAsc": "名前(A-Z)",
+    "sortNameDesc": "名前(Z-A)",
+    "ungroupedTag": "メインタグなし",
+    "detail": {
+      "signInRequired": "このドキュメントを見るにはログインしてください。",
+      "notFound": "ドキュメントが見つからないか、表示できません。",
+      "backToDocuments": "ドキュメントに戻る",
+      "cancelEditing": "変更を破棄",
+      "saveChanges": "変更を保存",
+      "deleteDocument": "ドキュメントを削除",
+      "deleteConfirmTitle": "このドキュメントを削除しますか?",
+      "deleteConfirmBody": "このドキュメントのコメント、画像、タグとの関連付けが削除されます。この操作は元に戻せません。"
+    },
+    "fields": {
+      "descriptionHint": "#を入力すると他のドキュメントにリンクできます。",
+      "subtitle": "サブタイトル",
+      "subtitleHint": "名前の下に表示される1行。例: 「偶像」。",
+      "tags": "タグ",
+      "newTag": "新しいタグ",
+      "newTagPlaceholder": "例: 派閥"
+    },
+    "notYetRead": "未読",
+    "unreadCount_other": "新しいコメント{{count}}件"
+  },
+  "images": {
+    "numbered": "{{name}}({{index}})",
+    "open": "画像を開く",
+    "openNamed": "{{name}}を開く",
+    "removeNamed": "{{name}}を外す",
+    "delete": "画像を削除",
+    "deleteConfirm": "この画像を削除しますか?",
+    "favorite": "メイン画像",
+    "setFavorite": "メイン画像にする",
+    "urlLabel": "画像のURL",
+    "urlPlaceholder": "https://… 画像のURL",
+    "invalidUrl": "有効なhttp(s)のURLを入力してください",
+    "rowTitle": "画像",
+    "upload": "画像をアップロード",
+    "addFromUrl": "URLから追加",
+    "fromUrlShort": "URLから",
+    "resizeHint": "PNG、JPEG、WebP、GIF。大きな画像は自動的にリサイズされます。",
+    "limitReached": "画像の上限に達しました",
+    "attachFiles": "画像を追加",
+    "attachFilesTooltip": "パソコンから画像を追加",
+    "attachUrl": "URLから画像を追加",
+    "viewer": {
+      "previous": "前の画像",
+      "next": "次の画像",
+      "zoomOut": "縮小",
+      "zoomIn": "拡大",
+      "fit": "画面に合わせる"
+    }
+  },
+  "versions": {
+    "action": "履歴",
+    "actionFor": "履歴: {{name}}",
+    "title": "履歴: {{name}}",
+    "loadFailed": "履歴を読み込めませんでした。",
+    "empty": "リビジョンはありません。",
+    "current": "現在",
+    "first": "最初のリビジョン",
+    "changeSize": "+{{added}} −{{removed}}",
+    "changeSizeLabel": "追加された語: {{added}}、削除された語: {{removed}}",
+    "pick": "リビジョンを選ぶと、現在のドキュメントと比較できます。",
+    "before": "このリビジョン",
+    "after": "現在",
+    "identical": "ドキュメントはすでにこの状態です。",
+    "restore": "このリビジョンを復元",
+    "restoreConfirmTitle": "このリビジョンを復元しますか?",
+    "restoreConfirmBody": "ノートを含め、ドキュメントは{{date}}の状態に戻ります。それ以降に削除されたノートは戻り、それ以降に追加されたノートは削除されます。新しいリビジョンが追加されるので、失われるものはありません。",
+    "restored": "リビジョンを復元しました",
+    "notesHeading": "ノート",
+    "noteRemoved": "それ以降に削除",
+    "noteAdded": "その後に追加",
+    "noteNotThen": "このリビジョンにはありません",
+    "noteNotNow": "現在のドキュメントにはありません",
+    "notesChange": "ノート +{{added}} −{{removed}}",
+    "notesChangeLabel": "追加されたノート: {{added}}、削除されたノート: {{removed}}"
+  },
+  "notes": {
+    "add": "ノートを追加",
+    "edit": "ノートを編集: {{title}}",
+    "delete": "ノートを削除: {{title}}",
+    "moveUp": "ノートを上へ移動: {{title}}",
+    "moveDown": "ノートを下へ移動: {{title}}",
+    "deleteConfirmTitle": "このノートを削除しますか?",
+    "deleteConfirmBody": "「{{title}}」を削除します。ドキュメントの履歴から復元できます。",
+    "form": {
+      "title": "タイトル",
+      "selectiveLabel": "ノートを見られるメンバー",
+      "selectivePlaceholder": "見られる人"
+    }
+  },
+  "files": {
+    "title": "ファイル",
+    "upload": "PDFをアップロード",
+    "uploadHint": "最大{{mb}} MBのPDFを添付できます(キャラクターシートなど)",
+    "limitReached": "1つのドキュメントに添付できるファイルは最大{{max}}個です",
+    "open": "{{name}}を開く",
+    "download": "{{name}}をダウンロード",
+    "delete": "{{name}}を削除",
+    "deleteConfirmTitle": "このファイルを削除しますか?",
+    "deleteConfirmBody": "「{{name}}」を削除します。この操作は元に戻せません。",
+    "notPdf": "添付できるのはPDFファイルのみです",
+    "tooLarge": "ファイルが{{mb}} MBの上限を超えています",
+    "openFailed": "{{name}}を開けませんでした"
+  },
+  "characters": {
+    "playedBy": "演じる人",
+    "playedByLine": "演じる人: {{name}}",
+    "choosePlayer": "プレイヤーを選ぶ",
+    "alsoOwner": "Ownerにもする",
+    "setPlayer": "プレイヤーを設定",
+    "unlink": "{{name}}との関連付けを解除",
+    "postAs": "投稿する名義",
+    "yourself": "自分自身({{name}})",
+    "writtenBy": "演じる人: {{name}}"
+  },
+  "comments": {
+    "title": "コメント",
+    "loadError": "コメントを読み込めませんでした。",
+    "empty": "まだコメントがありません。最初のコメントを書きましょう。",
+    "filteredCount_other": "{{count}}件中{{shown}}件のコメント",
+    "noMatch": "フィルターに一致するコメントはありません。",
+    "publish": "投稿",
+    "savedWithImageErrors": "コメントは保存されましたが、一部の画像は保存されませんでした: {{errors}}",
+    "imageRemovalFailed": "画像の削除: {{reason}}",
+    "you": "(あなた)",
+    "deleted": "コメントを削除しました。",
+    "edited": "編集済み",
+    "editedAt": "{{date}}に編集",
+    "deleteConfirm": "このコメントを削除しますか?",
+    "deleteImagesWarning": "コメントの画像もドキュメントから削除されます。",
+    "imageLabel": "{{author}}さんのコメントの画像{{index}}",
+    "imagesAlt": "{{author}}さんのコメント",
+    "attachedImage": "添付画像",
+    "reply": "返信",
+    "replyLabel": "{{name}}さんへの返信",
+    "inReplyTo": "{{name}}さんへの返信",
+    "parentHidden": "あなたには見えないコメント",
+    "pin": "固定",
+    "unpin": "固定を解除",
+    "pinned": "固定済み",
+    "pinnedSection": "固定されたコメント",
+    "resolve": "解決済みにする",
+    "reopen": "再開",
+    "resolved": "解決済み",
+    "resolvedBy": "{{name}}さんが解決、{{date}}",
+    "reactions": {
+      "add": "リアクションを追加",
+      "chip_other": "{{emoji}}、{{count}}件のリアクション: {{names}}",
+      "loadingPicker": "絵文字を読み込み中",
+      "pickerFailed": "絵文字を読み込めませんでした。後でもう一度お試しください。"
+    },
+    "thread": {
+      "showMore_other": "他の返信{{count}}件を表示",
+      "show_other": "返信{{count}}件を表示",
+      "hide": "返信を隠す",
+      "hiddenNew_other": "新着{{count}}件"
+    },
+    "composer": {
+      "bodyLabel": "コメントの本文",
+      "bodyPlaceholder": "コメントを書く…(#でドキュメントにリンク)",
+      "visibilityLabel": "コメントの公開範囲",
+      "selectiveLabel": "コメントを見られるメンバー",
+      "selectivePlaceholder": "見られる人"
+    },
+    "toolbar": {
+      "searchLabel": "コメントを検索",
+      "searchPlaceholder": "検索…",
+      "sortLabel": "コメントの並べ替え",
+      "sortNewest": "新しい順",
+      "sortOldest": "古い順",
+      "sortAuthor": "投稿者順",
+      "authorLabel": "投稿者で絞り込む",
+      "authorPlaceholder": "すべての投稿者",
+      "visibilityLabel": "公開範囲で絞り込む",
+      "visibilityPlaceholder": "すべての公開範囲",
+      "hideDeleted": "削除済みを隠す"
+    },
+    "new": "新着",
+    "promotion": {
+      "promote": "昇格",
+      "intoDescription": "説明に追加",
+      "intoDocument": "新しいドキュメントに",
+      "promoted": "昇格済み",
+      "promotedToDescription": "{{date}}に説明へ昇格",
+      "promotedToDocument": "{{date}}に新しいドキュメントへ昇格",
+      "openDocument": "昇格先のドキュメントを開く",
+      "editorNotice": "コメントの本文を説明の末尾に追加しました。内容を確認して保存すると昇格されます。",
+      "modalTitle": "新しいドキュメントに昇格",
+      "images": "ドキュメントに追加するコメントの画像",
+      "imageLabel": "画像{{index}}",
+      "wideningTitle": "より多くの人に見えるようになります",
+      "wideningBody": "昇格すると、コメントの本文を現在見られない人にも読まれるようになります: {{names}}。",
+      "wideningConfirm": "それでも昇格",
+      "done": "コメントを昇格しました",
+      "imageErrors": "コメントは昇格されましたが、一部の画像は追加されませんでした: {{errors}}",
+      "notRecorded": "ドキュメントは作成されましたが、コメントの昇格は記録されませんでした: {{reason}}"
+    }
+  },
+  "mentions": {
+    "listLabel": "リンクするドキュメントとタグ",
+    "membersListLabel": "メンションするメンバー",
+    "kind": {
+      "document": "ドキュメント",
+      "tag": "タグ"
+    },
+    "tagDetail_other": "タグ · ドキュメント{{count}}件",
+    "noMatchCreate": "「{{name}}」の結果はありません。次として作成:",
+    "kindSwitchLabel": "新しい項目の種類",
+    "createKind": "{{kind}}を作成",
+    "hintSwitchKind": "←/→ 種類を切り替え · ",
+    "hintCreate": "Enterで作成"
+  },
+  "backlinks": {
+    "title": "言及されている場所",
+    "inDescription": "説明内",
+    "inNote": "ノート「{{title}}」内",
+    "inComment": "{{name}}さんのコメント内"
+  },
+  "glossary": {
+    "title": "タグ索引",
+    "openToggle": "タグ索引を開く",
+    "closeToggle": "タグ索引を閉じる",
+    "mainTags": "メインタグ",
+    "otherTags": "その他のタグ",
+    "empty": "このルームにはタグがありません。"
+  },
+  "search": {
+    "open": "検索",
+    "title": "ルーム内を検索",
+    "inputLabel": "ルーム内を検索",
+    "placeholder": "ドキュメント、ノート、コメント、タグ…",
+    "hint": "2文字以上入力してください。",
+    "loading": "検索中",
+    "resultsLabel": "検索結果",
+    "showMore": "さらに表示",
+    "tagFilter": "タグで絞り込む",
+    "inDocument": "{{name}}内",
+    "commentOn": "{{name}}へのコメント",
+    "kinds": {
+      "all": "すべて"
+    },
+    "groups": {
+      "document": "ドキュメント",
+      "note": "ノート",
+      "comment": "コメント",
+      "tag": "タグ"
+    }
+  },
+  "friendLink": {
+    "signInRequired": "フレンド申請を送るにはログインしてください。",
+    "sent": "{{name}}さんにフレンド申請を送りました。",
+    "sentAnonymous": "フレンド申請を送りました。",
+    "failed": "フレンド申請を送れませんでした。",
+    "goToAccount": "アカウントへ"
+  },
+  "reveal": {
+    "action": "開示",
+    "actionLabel": "開示: {{name}}",
+    "comment": "コメント",
+    "revealed": "開示済み",
+    "revealedLabel": "あなたに開示されました",
+    "modalTitle": "「{{name}}」を開示",
+    "audienceLabel": "開示先",
+    "toRoom": "ルーム全体",
+    "toChosen": "選んだプレイヤー",
+    "chosenLabel": "プレイヤー",
+    "chosenPlaceholder": "開示先を選ぶ",
+    "noOneToPick": "受け取れるメンバーは、すでに見られる状態です。",
+    "gains": "アクセスが付与されます: {{names}}",
+    "noGains": "新たにアクセスできるメンバーはいません。",
+    "notesLabel": "次のノートも開示",
+    "notesDescription": "ドキュメントを受け取った人にも、ノートは見えません。選択しなければそのままです。",
+    "confirm": "開示",
+    "done": "開示しました。"
+  },
+  "viewAs": {
+    "action": "メンバーとして表示",
+    "menuLabel": "ルームの表示視点",
+    "banner": "{{name}}さんの視点でルームを表示しています。閲覧のみです。",
+    "exit": "表示を終了"
+  },
+  "export": {
+    "action": "エクスポート",
+    "title": "ルームをエクスポート",
+    "intro": "ルームをファイルとしてダウンロードします。含まれるのは、あなたが見られるドキュメント、ノート、コメント、タグだけです。",
+    "format": "ファイル形式",
+    "formats": {
+      "md": "Markdown",
+      "json": "JSON",
+      "pdf": "PDF"
+    },
+    "formatHint": {
+      "md": "読んだり印刷したりできる、1つの読みやすいファイル。",
+      "json": "idを含む構造化データ。ツールやAIエージェント向け。",
+      "pdf": "印刷やプレイヤーへの配布に向いた、レイアウト済みのマニュアル。"
+    },
+    "tagFilter": "これらのタグを持つドキュメントのみ(任意)",
+    "linksExpire": "画像とPDFファイルへのリンクは1時間以内に期限切れになります。更新するには再度エクスポートしてください。",
+    "done": "エクスポートをダウンロードしました。",
+    "pdf": {
+      "style": "スタイル",
+      "styles": {
+        "gothic": "ゴシック",
+        "modern": "モダン",
+        "print": "印刷用"
+      },
+      "styleHints": {
+        "gothic": "黒と赤、暗い表紙",
+        "modern": "すっきりしたサンセリフ、ゆったりした余白",
+        "print": "白黒でインクを節約"
+      },
+      "pageSize": "ページサイズ",
+      "comments": "コメントを付録に含める",
+      "attachments": "PDF添付を末尾に追加する",
+      "cover": "表紙の画像",
+      "coverNone": "なし",
+      "coverClear": "表紙の画像を外す",
+      "coverNothing": "画像のあるドキュメントがありません",
+      "coverHint": "表紙には、選んだドキュメントのお気に入りの画像が使われます。",
+      "visibility": "PDFに含まれるのは、あなたが見られる内容だけです。バックグラウンドで作成され、24時間利用できます。",
+      "asMember": "他のメンバーの視点でルームを見ています。PDFにはそのメンバーに見える内容だけが含まれます。24時間利用できます。",
+      "action": "PDFを作成",
+      "making": "PDFを作成しています…",
+      "makingHint": "このウィンドウは閉じても構いません。ダウンロードするまで、PDFはルームのページに残ります。",
+      "ready": "PDFができました。",
+      "availableUntil": "{{time}}まで利用できます。",
+      "download": "PDFをダウンロード",
+      "preparingLink": "ダウンロードリンクを準備しています…",
+      "failed": "PDFを作成できませんでした。",
+      "expired": "このPDFは利用できなくなりました。ファイルは24時間後に削除されます。",
+      "another": "別のPDFを作成",
+      "retry": "再試行",
+      "listTitle": "あなたのPDF",
+      "listItem": "{{style}} · {{size}}",
+      "listStatus": {
+        "queued": "待機中",
+        "running": "作成中",
+        "done": "完了",
+        "failed": "失敗",
+        "expired": "期限切れ"
+      },
+      "downloadNamed": "PDF {{name}}をダウンロード",
+      "dismiss": "非表示",
+      "dismissNamed": "PDF {{name}}を非表示",
+      "coverRoom": "ルームの画像",
+      "coverHintRoom": "表紙には、ルームの画像、または選んだドキュメントのお気に入りの画像が使われます。"
+    },
+    "document": {
+      "title": "ドキュメントをエクスポート",
+      "action": "ドキュメントをエクスポート",
+      "intro": "このドキュメントを、あなたが見られる内容(ノート、コメント、タグ)とともにファイルとしてダウンロードします。ルームに再びインポートできます。"
+    }
+  },
+  "documentImport": {
+    "action": "ドキュメントをインポート",
+    "title": "ドキュメントをインポート",
+    "intro": "JSONまたはMarkdownのファイルを1つ以上アップロードします。ルーム全体のエクスポートでも構いません。まずインポートされる内容をプレビューします。確認するまで何も書き込まれません。",
+    "jsonHint": "JSONは忠実な形式です。Markdownはできる限り読み取ります。コメント、PDF添付、Owner、プレイヤーとの関連付けはインポートされません。",
+    "files": "インポートするファイル",
+    "filesPlaceholder": "1つ以上の.jsonまたは.mdファイルを選ぶ",
+    "preview": "プレビュー",
+    "found_other": "ドキュメント{{count}}件が見つかりました",
+    "documentSelect": "{{name}}をインポート",
+    "notesCount_other": "ノート{{count}}件",
+    "imagesCount_other": "画像{{count}}枚",
+    "tags": "タグ: {{names}}",
+    "exists": "このルームにすでにあります",
+    "tagsToCreate": "作成されるタグ: {{names}}",
+    "tagsUnavailable": "あなたが作成できないため除外されるタグ: {{names}}",
+    "selectedCount_other": "ドキュメント{{count}}件を選択中",
+    "next": "次へ",
+    "back": "戻る",
+    "start": "インポート",
+    "warning": {
+      "comments_dropped_other": "コメント{{count}}件はインポートされません",
+      "files_dropped_other": "PDF添付{{count}}件はインポートされません",
+      "player_dropped": "プレイヤーとの関連付けはインポートされません",
+      "selective_to_private_other": "公開範囲が選択式の項目{{count}}件は非公開になります",
+      "tags_not_created": "作成されなかったタグ: {{names}}"
+    },
+    "existing": {
+      "title": "すでに存在するドキュメントがあります",
+      "intro": "「コピー」は新しいドキュメントを作成し、元のドキュメントはそのままにします。「置き換え」は元のドキュメントの情報(名前、説明、タグ、ノート)だけを書き換え、Owner、公開範囲、コメント、添付は残ります。置き換えは、ドキュメントの履歴から元に戻せます。",
+      "copy": "コピー",
+      "replace": "置き換え",
+      "applyAll": "すべてに適用",
+      "copyAll": "すべてコピー",
+      "replaceAll": "すべて置き換え",
+      "cannotReplace": "置き換えられるのは、ドキュメントのOwner(またはMaster)だけです",
+      "choice": "{{name}}の扱い"
+    },
+    "running": "インポート中…",
+    "runningHint": "このウィンドウは閉じても構いません。インポートはバックグラウンドで続き、完了するとドキュメントが一覧に表示されます。",
+    "done": "インポートが完了しました",
+    "created_other": "ドキュメント{{count}}件を作成しました",
+    "replaced_other": "ドキュメント{{count}}件を置き換えました",
+    "skippedTitle_other": "画像{{count}}枚がインポートされませんでした",
+    "skipped": "{{document}}: {{reason}}",
+    "skipReason": {
+      "unreachable": "リンクにアクセスできないか期限切れです",
+      "not_an_image": "画像ではありません",
+      "too_large": "大きすぎます",
+      "limit": "ドキュメントの画像数がすでに上限です",
+      "storage": "ストレージを利用できません",
+      "failed": "予期しないエラー"
+    },
+    "failed": "インポートに失敗しました。再試行する前に、ドキュメントの一覧を確認してください。",
+    "another": "他のファイルをインポート"
+  },
+  "imageSearch": {
+    "action": "検索",
+    "title": "画像を検索",
+    "queryLabel": "検索キーワード",
+    "placeholder": "例: ゴシック様式の城、古地図",
+    "submit": "検索",
+    "sourceHint": "Openverseの無料画像(クリエイティブ・コモンズとパブリックドメイン)です。画像をクリックするとドキュメントに追加されます。",
+    "loading": "検索中",
+    "empty": "画像が見つかりませんでした",
+    "more": "さらに表示",
+    "add": "{{title}}を追加",
+    "added": "追加済み",
+    "untitled": "無題",
+    "source": "出典"
+  },
+  "speech": {
+    "listen": "「{{name}}」を聞く",
+    "pause": "読み上げを一時停止",
+    "resume": "読み上げを再開",
+    "stop": "読み上げを停止",
+    "commentListen": "聞く",
+    "commentStop": "停止",
+    "commentBy": "{{name}}さんの投稿"
+  },
+  "privacy": {
+    "back": "アプリに戻る",
+    "title": "プライバシーに関するお知らせ",
+    "updated": "最終更新: {{date}}",
+    "intro": "このお知らせでは、このアプリがどのような個人データを、なぜ取り扱うのか、どこに保存されるのか、そして一般データ保護規則(GDPR)に基づきあなたがどのように権利を行使できるのかを説明します。このお知らせの原文はイタリア語と英語です。翻訳との間に相違がある場合は、イタリア語と英語の文面が優先します。",
+    "sections": {
+      "controller": {
+        "title": "管理者",
+        "body": "データの管理者は{{name}}です。データに関するご質問や権利の行使については、{{email}}までご連絡ください。"
+      },
+      "data": {
+        "title": "取り扱うデータ",
+        "body": "アプリの動作に必要なものだけです。\n\n- 選んだプロバイダ(Google、Discord、GitHub)からのログイン情報: アカウント識別子、メールアドレス、名前、画像。プロフィールの既定の名前とアバターとして、一度だけコピーされます。\n- あなたのプロフィール: 表示名、代名詞、紹介文、アバター。アカウントページからいつでも編集または削除できます。\n- ルームで書いたりアップロードしたりしたもの: ドキュメント、ノート、コメント、リアクション、画像、PDF添付。作成者と日時を含みます。\n- あなたのフレンド、フレンド申請、フレンドコード、送受信したルームへの招待。\n- 利用データと技術データ: 各ドキュメントを最後に開いた日時、ドキュメントの編集履歴、各ルームの役割と公開範囲の変更の記録、サービスの提供と保護のためにサーバーが記録するリクエストのデータ(IPアドレス、ブラウザ、時刻など)。"
+      },
+      "purposes": {
+        "title": "目的と法的根拠",
+        "body": "あなたのデータは、あなたとルームのメンバーにアプリを提供するため(契約の履行、GDPR第6条1項(b))、およびアプリを安全に動作させるため(正当な利益、GDPR第6条1項(f))にのみ使われます。\n\n販売されることも、広告やプロファイリングに使われることもなく、アプリは分析ツールや追跡ツールを使用しません。あなたのメールアドレスが他のユーザーに表示されることはありません。"
+      },
+      "processors": {
+        "title": "取り扱う事業者と場所",
+        "body": "アプリは、私たちに代わってデータを取り扱う次の事業者を利用しています。\n\n- Supabase: データベース、ファイルストレージ、ログイン。欧州連合(ドイツ、フランクフルト)でホストされています。\n- OVHcloud: アプリのバックエンドを動かすサーバー。英国にあり、欧州委員会が十分な保護水準を有する国と認めています。\n- Vercel: アプリのページの配信。ネットワークは欧州連合外からのリクエストに対応する場合があり、米国への移転はEU-U.S. Data Privacy Frameworkと標準契約条項に基づきます。\n- Google、Discord、GitHub: あなたが選んだログインの場合のみ、各社のプライバシーポリシーに従います。\n- Openverse(WordPress.orgのプロジェクト): ドキュメント用のフリー画像を検索すると、検索は私たちのサーバーから送信され、プレビューはあなたのブラウザがOpenverseから直接読み込みます。そのためOpenverseにはあなたのIPアドレスが見えます。"
+      },
+      "retention": {
+        "title": "保存期間",
+        "body": "- アカウントとプロフィールは、アカウントを削除するまで保存されます。\n- アカウントを削除すると、プロフィール、アバター、フレンド、リアクション、ログイン用アカウントはすぐに削除されます。あなただけがメンバーだったルームは、内容ごと削除されます。他の人と共有しているルームでは、あなたが書いた内容はキャンペーンの一部として残り、不明なユーザーが書いたものとして表示されます。\n- あなたが削除したルームは、内容ごと削除されます。\n- ルームのPDFは作成の24時間後に、ドキュメントのインポートは完了の7日後に削除されます。\n- サーバーのログは、動作とセキュリティに必要な期間だけ保存され、順次上書きされます。\n- 事業者のバックアップは、各社のバックアップサイクルの中で上書きされます。"
+      },
+      "rights": {
+        "title": "あなたの権利",
+        "body": "あなたはいつでも次のことができます。\n\n- 自分のデータを見る、ダウンロードする: アカウントページの「あなたのデータ」、「データをダウンロード」(JSONファイル。各ルームのエクスポートには、あなたが見られるキャンペーンの内容が含まれます)。\n- アカウントページでプロフィールを訂正する。\n- アカウントを削除する: アカウントページの「あなたのデータ」、「アカウントを削除」。\n- {{email}}に連絡して、取り扱いへの異議を申し立てる、または制限を求める。\n\n監督機関に苦情を申し立てる権利もあります。イタリアでは個人データ保護機関(Garante per la protezione dei dati personali、garanteprivacy.it)です。"
+      },
+      "storage": {
+        "title": "Cookieとローカルストレージ",
+        "body": "アプリはCookieを使用しません。動作に必要ないくつかの項目をブラウザのストレージに保存します。ログインのセッション、選んだ言語、読み上げの声と速さ、各ルームで最後に投稿に使ったキャラクター、閉じたルームのPDFに関する通知、ログイン前に開いた招待リンクです。これらはあなたのデバイスに残ります。セッションはログアウトすると削除され、それ以外はブラウザのデータを消去すると削除されます。"
+      }
+    }
+  },
+  "maps": {
+    "title": "マップ",
+    "create": "新しいマップ",
+    "settings": "マップの設定",
+    "delete": "マップを削除",
+    "deleteConfirmTitle": "このマップを削除しますか?",
+    "deleteConfirmBody": "「{{name}}」を、その中身ごと削除します。ドキュメントは残ります。",
+    "signInRequired": "このルームのマップを見るにはログインしてください。",
+    "backToDocuments": "ドキュメント",
+    "backToMaps": "マップ",
+    "empty": "まだマップがありません。",
+    "loadError": "マップを読み込めませんでした。",
+    "notFound": "マップが見つかりません。",
+    "documentCount_other": "ドキュメント{{count}}件",
+    "lastEdit": "{{when}}に編集",
+    "selectiveLabel": "マップを見られるメンバー",
+    "unsaved": "未保存の変更",
+    "saving": "保存中…",
+    "saved": "保存しました",
+    "saveError": "保存されていません",
+    "retry": "再試行",
+    "readOnlyOnPhone": "画面が小さいため、マップは閲覧のみです。",
+    "addDocuments": "ドキュメントを追加",
+    "addText": "テキストを追加",
+    "selectHint": "背景をドラッグすると複数のカードを選択できます。マップの移動は、マウスの右ボタンか中ボタン、またはスペースキーを押したままで行います。",
+    "groupSelected": "グループ化",
+    "searchDocuments": "名前で検索",
+    "alreadyOnMap": "マップに追加済み",
+    "addChosen_other": "ドキュメント{{count}}件を追加",
+    "editCard": "カードを編集: {{name}}",
+    "editText": "テキストを編集",
+    "editGroup": "グループを編集",
+    "editArrow": "矢印を編集: {{label}}",
+    "masterOnly": "Masterのみ",
+    "masterOnlyArrow": "Masterにのみ表示",
+    "masterOnlyCard": "Masterにのみ表示",
+    "struck": "取り消し線",
+    "color": "色",
+    "colors": {
+      "default": "既定",
+      "red": "赤",
+      "green": "緑",
+      "purple": "紫",
+      "blue": "青",
+      "gold": "金"
+    },
+    "card": {
+      "editDocument": "カード: {{name}}",
+      "editText": "テキスト",
+      "newText": "新しいテキスト",
+      "text": "テキスト",
+      "size": "サイズ",
+      "sizes": {
+        "normal": "標準",
+        "large": "大",
+        "title": "タイトル"
+      },
+      "caption": "キャプション",
+      "captionHint": "このマップのみ。ドキュメントのサブタイトルの代わりに表示されます。",
+      "image": "画像",
+      "imageHint": "このマップのみ。先頭はドキュメントのお気に入りの画像で、別の画像を選ぶまでカードはそれに従います。",
+      "imageNumbered": "画像{{number}}",
+      "remove": "マップから外す"
+    },
+    "group": {
+      "title": "グループ",
+      "name": "タイトル",
+      "namePlaceholder": "敵対者と敵",
+      "remove": "グループを外す",
+      "untitled": "無題のグループ"
+    },
+    "arrow": {
+      "title": "矢印",
+      "direction": "向き",
+      "forward": "一方向",
+      "both": "両方向",
+      "none": "線のみ",
+      "label": "ラベル",
+      "labelTowards": "{{name}}向けのラベル",
+      "delete": "矢印を削除"
+    }
+  }
+}
