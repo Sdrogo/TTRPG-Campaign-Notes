@@ -12,7 +12,8 @@ DEFAULT_LOCALE = "en"
 # `zh-Hans`, and the Traditional-script tags are `zh-Hant`. An alias only
 # counts when its target is in `SUPPORTED_LOCALES`, so `zh-TW` reads
 # Simplified until a `zh-Hant` file exists. Keys are lower case. The frontend
-# keeps the same table (`frontend/src/i18n/languages.ts`).
+# keeps the same table (`LANGUAGE_ALIASES` in `frontend/src/i18n/index.ts`; a
+# backend test fails when the two differ).
 LOCALE_ALIASES: dict[str, str] = {
     "pt": "pt-PT",
     "zh": "zh-Hans",

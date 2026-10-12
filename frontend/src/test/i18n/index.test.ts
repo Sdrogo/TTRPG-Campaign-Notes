@@ -199,3 +199,25 @@ describe('startingLanguage', () => {
     expect(startingLanguage('ko')).toBe('en');
   });
 });
+
+describe('setLanguage with a slow language file', () => {
+  it('lets the last pick win when an earlier fetch finishes after it', async () => {
+    const strings = { language: { name: 'Test' } } as unknown as Parameters<
+      typeof i18n.addResourceBundle
+    >[2];
+    let finish: (value: { default: typeof strings }) => void = () => {};
+    const slow = new Promise<{ default: typeof strings }>((resolve) => {
+      finish = resolve;
+    });
+    const first = setLanguage('xx' as 'it', { xx: () => slow });
+    const second = setLanguage('en');
+    await second;
+    finish({ default: strings });
+    await first;
+
+    expect(currentLanguage()).toBe('en');
+    expect(i18n.language).toBe('en');
+    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en');
+    i18n.removeResourceBundle('xx', 'translation');
+  });
+});

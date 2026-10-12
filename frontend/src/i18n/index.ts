@@ -125,13 +125,24 @@ export async function ensureLanguageLoaded(
   i18n.addResourceBundle(language, 'translation', strings);
 }
 
+/** The newest `setLanguage` call, so a slow fetch can't overwrite a later pick. */
+let latestSwitch = 0;
+
 /**
  * Switches the UI language and remembers the choice for the next visit. The
  * language's file is fetched first, so a failed fetch rejects and changes
  * nothing.
  */
-export async function setLanguage(language: Language): Promise<void> {
-  await ensureLanguageLoaded(language);
+export async function setLanguage(
+  language: Language,
+  loaders: Readonly<Record<string, () => Promise<{ default: Resources }>>> = LAZY_LOADERS,
+): Promise<void> {
+  const request = ++latestSwitch;
+  await ensureLanguageLoaded(language, loaders);
+  if (request !== latestSwitch) {
+    // A later pick started while this file was loading; that one wins.
+    return;
+  }
   try {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   } catch {

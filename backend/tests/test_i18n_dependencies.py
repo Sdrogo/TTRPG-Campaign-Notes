@@ -1,10 +1,13 @@
 """`get_locale`'s `Accept-Language` parsing: quality order, base-language
 reduction, and the fallback to `DEFAULT_LOCALE`."""
 
+import re
+from pathlib import Path
+
 import pytest
 
 from app.i18n.dependencies import get_locale
-from app.i18n.translator import DEFAULT_LOCALE, resolve_locale
+from app.i18n.translator import DEFAULT_LOCALE, LOCALE_ALIASES, resolve_locale
 
 
 def test_no_header_falls_back_to_default() -> None:
@@ -73,3 +76,16 @@ def test_resolve_locale_maps_regional_and_script_tags(
 
 def test_portuguese_and_chinese_tags_stay_unresolved_while_unsupported() -> None:
     assert get_locale("pt-BR,zh-TW") == DEFAULT_LOCALE
+
+
+def test_the_alias_table_matches_the_frontend_one() -> None:
+    """`LOCALE_ALIASES` and the frontend's `LANGUAGE_ALIASES` must say the same
+    thing, or the UI and the API would resolve one browser tag to two
+    languages."""
+    source = Path(__file__).parents[2] / "frontend" / "src" / "i18n" / "index.ts"
+    text = source.read_text(encoding="utf-8")
+    start = text.index("LANGUAGE_ALIASES")
+    block = text[start : text.index("};", start)]
+    frontend = dict(re.findall(r"'?([\w-]+)'?: '([\w-]+)'", block.split("= {", 1)[1]))
+
+    assert frontend == LOCALE_ALIASES
