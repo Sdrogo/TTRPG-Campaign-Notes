@@ -249,8 +249,8 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
   needs its `FR-`/`VR-` entry (product owner's edit only).
 - **34, More UI languages** (proposal, 2026-10-12): spec written in
   `context/feature/34 - More UI languages.md` (de, fr, es, pt, ja, zh, ru
-  requested; ko, pl, nl, tr recommended). Waiting for the product owner's
-  answers to its 8 open questions before building.
+  requested; ko, pl, nl, tr recommended). Scope confirmed 2026-10-12: de, fr,
+  es, pt-PT, ru, ja, zh-Hans, ko, pl, nl (beta). Next: 34_1 foundations.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).
