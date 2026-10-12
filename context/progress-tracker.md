@@ -101,6 +101,10 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-12
 
+- **Mention preview nesting fix** (10-12, PR #172, frontend only):
+  `MentionText` renders its root as a `div` (not Mantine's `<p>`) so the
+  hover preview card (headings, divs, paragraphs) nests validly; a test
+  guards the root element.
 - **More UI languages, 34_2** (spec 34, 10-12, no migration): de, es, fr, nl,
   pl, pt-PT and ru, frontend and backend files drafted by Claude and shown
   as "beta" in the selector; simplified flags; lazy-loaded; the selector
