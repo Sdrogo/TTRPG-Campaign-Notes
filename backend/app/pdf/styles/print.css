@@ -1,3 +1,4 @@
+@import url("cjk-serif.css");
 /* Print (spec 23b Decision 4): black and white, no backgrounds, ink-friendly:
    no fill anywhere, rules instead of tints, smaller images. */
 
@@ -11,13 +12,13 @@
 @font-face { font-family: "PT Serif"; font-weight: bold; src: url(../fonts/PTSerif-Bold.ttf); }
 @font-face { font-family: "PT Serif"; font-weight: bold; font-style: italic; src: url(../fonts/PTSerif-BoldItalic.ttf); }
 
-body { font: 10.5pt/1.35 "Crimson Text", "PT Serif", Georgia, serif; color: #000; background: none; }
-h1, h2, h3 { font-family: "Crimson Text", "PT Serif", Georgia, serif; font-weight: bold; }
+body { font: 10.5pt/1.35 "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", Georgia, serif; color: #000; background: none; }
+h1, h2, h3 { font-family: "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", Georgia, serif; font-weight: bold; }
 @page body {
-  @top-left { font: italic 9pt "Crimson Text", "PT Serif", serif; }
-  @top-right { font: italic 9pt "Crimson Text", "PT Serif", serif; }
+  @top-left { font: italic 9pt "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; }
+  @top-right { font: italic 9pt "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; }
 }
-@page { @bottom-center { font: 9pt "Crimson Text", "PT Serif", serif; } }
+@page { @bottom-center { font: 9pt "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; } }
 
 .cover { text-align: center; }
 .cover-inner { padding: 60mm 25mm 0; }
@@ -40,3 +41,12 @@ h1, h2, h3 { font-family: "Crimson Text", "PT Serif", Georgia, serif; font-weigh
 .comments h3 { font-size: 12pt; border-bottom: 0.5pt solid #000; }
 .comment { border: 1pt solid #000; }
 .comment-meta { font-size: 9.5pt; }
+
+/* CJK (spec 34_3): the page language picks whose Han glyphs come first; Japanese is
+   the default order above. No synthesized italics or bold (CJK fonts have no
+   italic) and no hyphenation or drop cap for these scripts. */
+html:lang(zh) body { font-family: "Crimson Text", "PT Serif", "Noto Serif SC", "Noto Serif JP", "Noto Serif KR", serif; }
+html:lang(zh) h1, html:lang(zh) h2, html:lang(zh) h3 { font-family: "Crimson Text", "PT Serif", "Noto Serif SC", "Noto Serif JP", "Noto Serif KR", serif; }
+html:lang(ko) body { font-family: "Crimson Text", "PT Serif", "Noto Serif KR", "Noto Serif JP", "Noto Serif SC", serif; }
+html:lang(ko) h1, html:lang(ko) h2, html:lang(ko) h3 { font-family: "Crimson Text", "PT Serif", "Noto Serif KR", "Noto Serif JP", "Noto Serif SC", serif; }
+html:lang(ja) body, html:lang(zh) body, html:lang(ko) body { font-synthesis: none; hyphens: manual; }

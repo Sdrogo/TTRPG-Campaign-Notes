@@ -241,7 +241,7 @@ def test_the_language_follows_the_requester_with_english_as_the_fallback() -> No
     manual = _manual()
 
     assert '<html lang="it">' in render_manual_html(manual, ManualStyle.PRINT, PageSize.A4, "it")
-    assert '<html lang="en">' in render_manual_html(manual, ManualStyle.PRINT, PageSize.A4, "ja")
+    assert '<html lang="en">' in render_manual_html(manual, ManualStyle.PRINT, PageSize.A4, "tr")
     # A regional code stays whole: hyphenation and glyph choice follow it.
     assert '<html lang="pt-PT">' in render_manual_html(
         manual, ManualStyle.PRINT, PageSize.A4, "pt-PT"
@@ -253,7 +253,7 @@ def test_the_labels_follow_the_locale_and_keep_the_comment_template() -> None:
 
     assert (english.contents, english.glossary, english.other) == ("Contents", "Glossary", "Other")
     assert (italian.contents, italian.glossary, italian.other) == ("Indice", "Glossario", "Altro")
-    assert manual_labels("ja") == english
+    assert manual_labels("tr") == english
     assert manual_labels("ru").contents == "Содержание"
     for labels in (english, italian):
         assert "{character}" in labels.played_by and "{player}" in labels.played_by
@@ -280,6 +280,7 @@ def test_each_bundled_family_ships_its_license() -> None:
         "OFL-crimsontext.txt",
         "OFL-lato.txt",
         "OFL-ptserif.txt",
+        "OFL-notocjk.txt",
     }
 
 

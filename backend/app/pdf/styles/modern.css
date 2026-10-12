@@ -1,3 +1,4 @@
+@import url("cjk-sans.css");
 /* Modern (spec 23b Decision 4): clean sans-serif, one column, generous
    whitespace, one accent color. */
 
@@ -8,13 +9,13 @@
 
 @page { margin: 25mm 25mm 28mm; }
 @page body {
-  @top-left { font: 8pt "Lato", sans-serif; color: #777; }
-  @top-right { font: 8pt "Lato", sans-serif; color: #777; }
+  @top-left { font: 8pt "Lato", "Noto Sans JP", "Noto Sans SC", "Noto Sans KR", sans-serif; color: #777; }
+  @top-right { font: 8pt "Lato", "Noto Sans JP", "Noto Sans SC", "Noto Sans KR", sans-serif; color: #777; }
 }
-@page { @bottom-center { font: 8pt "Lato", sans-serif; color: #777; } }
+@page { @bottom-center { font: 8pt "Lato", "Noto Sans JP", "Noto Sans SC", "Noto Sans KR", sans-serif; color: #777; } }
 
-body { font: 10pt/1.6 "Lato", Helvetica, Arial, sans-serif; color: #222; }
-h1, h2, h3 { font-family: "Lato", Helvetica, Arial, sans-serif; font-weight: bold; }
+body { font: 10pt/1.6 "Lato", "Noto Sans JP", "Noto Sans SC", "Noto Sans KR", Helvetica, Arial, sans-serif; color: #222; }
+h1, h2, h3 { font-family: "Lato", "Noto Sans JP", "Noto Sans SC", "Noto Sans KR", Helvetica, Arial, sans-serif; font-weight: bold; }
 
 .cover { text-align: left; }
 .cover-inner { padding: 70mm 25mm 0; }
@@ -39,3 +40,12 @@ h1, h2, h3 { font-family: "Lato", Helvetica, Arial, sans-serif; font-weight: bol
 .comments h3 { font-size: 11pt; }
 .comment { background: #f4f6f6; border-left: 2.5pt solid #0f766e; }
 .comment-meta { font-size: 8.5pt; color: #777; }
+
+/* CJK (spec 34_3): the page language picks whose Han glyphs come first; Japanese is
+   the default order above. No synthesized italics or bold (CJK fonts have no
+   italic) and no hyphenation or drop cap for these scripts. */
+html:lang(zh) body { font-family: "Lato", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR", sans-serif; }
+html:lang(zh) h1, html:lang(zh) h2, html:lang(zh) h3 { font-family: "Lato", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR", sans-serif; }
+html:lang(ko) body { font-family: "Lato", "Noto Sans KR", "Noto Sans JP", "Noto Sans SC", sans-serif; }
+html:lang(ko) h1, html:lang(ko) h2, html:lang(ko) h3 { font-family: "Lato", "Noto Sans KR", "Noto Sans JP", "Noto Sans SC", sans-serif; }
+html:lang(ja) body, html:lang(zh) body, html:lang(ko) body { font-synthesis: none; hyphens: manual; }
