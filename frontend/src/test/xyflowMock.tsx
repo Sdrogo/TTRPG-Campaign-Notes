@@ -84,7 +84,9 @@ export const xyflowMock = {
   Background: () => null,
   Controls: () => null,
   Panel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  Handle: ({ type }: { type: string }) => <div data-handle={type} />,
+  Handle: ({ type, style }: { type: string; style?: React.CSSProperties }) => (
+    <div data-handle={type} style={style} />
+  ),
   NodeResizer: ({
     onResizeEnd,
   }: {
