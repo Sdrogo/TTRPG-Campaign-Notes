@@ -14,6 +14,7 @@ import {
   endOf,
   groupCards,
   newId,
+  labelSize,
   placeLabel,
   pointAlong,
   removeArrow,
@@ -358,6 +359,13 @@ describe('drawing arrows', () => {
     expect(pointAlong({ x: 0, y: 0 }, { x: 100, y: 40 }, 0.25)).toEqual({
       x: 25,
       y: 10,
+    });
+  });
+
+  describe('labelSize', () => {
+    it('grows with the text', () => {
+      expect(labelSize('abc').width).toBeLessThan(labelSize('abcdefghij').width);
+      expect(labelSize('abc').height).toBe(labelSize('abcdefghij').height);
     });
   });
 

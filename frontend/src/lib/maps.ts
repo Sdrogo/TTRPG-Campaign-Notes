@@ -501,6 +501,7 @@ export function labelSize(text: string): { width: number; height: number } {
   return { width: Math.ceil(text.length * 7) + 14, height: 24 };
 }
 
+/** Whether two rectangles come within `gap` pixels of each other (or overlap). */
 function overlaps(a: Rect, b: Rect, gap: number): boolean {
   return (
     a.x < b.x + b.width + gap &&
