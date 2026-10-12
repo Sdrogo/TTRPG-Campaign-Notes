@@ -14,6 +14,7 @@ import {
   endOf,
   groupCards,
   newId,
+  placeLabel,
   pointAlong,
   removeArrow,
   removeCards,
@@ -357,6 +358,39 @@ describe('drawing arrows', () => {
     expect(pointAlong({ x: 0, y: 0 }, { x: 100, y: 40 }, 0.25)).toEqual({
       x: 25,
       y: 10,
+    });
+  });
+
+  describe('placeLabel', () => {
+    const size = { width: 100, height: 24 };
+    const clear = (at: { x: number; y: number }, rects: { x: number; y: number; width: number; height: number }[]) =>
+      rects.every(
+        (r) => at.x + 50 <= r.x || at.x - 50 >= r.x + r.width || at.y + 12 <= r.y || at.y - 12 >= r.y + r.height,
+      );
+
+    it('keeps the wanted spot when no card is in the way', () => {
+      expect(placeLabel({ x: 0, y: 0 }, { x: 400, y: 0 }, 0.5, size, [])).toEqual({ x: 200, y: 0 });
+    });
+
+    it('slides the label along the arrow until the card no longer covers it', () => {
+      const card = { x: 330, y: -50, width: 100, height: 100 };
+      const at = placeLabel({ x: 0, y: 0 }, { x: 330, y: 0 }, 0.9, size, [card]);
+      expect(at.x).toBeLessThan(330 - 50);
+      expect(clear(at, [card])).toBe(true);
+    });
+
+    it('moves sideways, off the cards, when the line is too short to clear them', () => {
+      const a = { x: 0, y: -50, width: 100, height: 100 };
+      const b = { x: 110, y: -50, width: 100, height: 100 };
+      const at = placeLabel({ x: 100, y: 0 }, { x: 110, y: 0 }, 0.5, size, [a, b]);
+      expect(clear(at, [a, b])).toBe(true);
+      expect(at.y).toBe(0);
+      expect(at.x).not.toBe(105);
+    });
+
+    it('stays at the wanted spot when there is no room at all', () => {
+      const wall = { x: -5000, y: -5000, width: 10000, height: 10000 };
+      expect(placeLabel({ x: 0, y: 0 }, { x: 10, y: 0 }, 0.5, size, [wall])).toEqual({ x: 5, y: 0 });
     });
   });
 });
