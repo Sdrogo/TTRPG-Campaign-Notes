@@ -48,11 +48,13 @@ release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
 - **Head in the repository**: `b3f7d1e9c5a2` (relationship maps, spec 28_1).
-- **Staging database**: `f7a2d8c4e1b9` (applied 2026-10-08).
+- **Staging database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12, both
+  feature 28 migrations; before it, `f7a2d8c4e1b9`).
 - **Production database**: `f7a2d8c4e1b9` (applied by hand 2026-10-08).
-- **Pending on staging and production** (feature 28, PR #159):
-  `a8c4e2f6b1d3` (Document subtitle; rebuilds `documents.search_vector`)
-  then `b3f7d1e9c5a2` (the five map tables). Both are DDL only.
+- **Pending on production** (feature 28, PR #159): `a8c4e2f6b1d3`
+  (Document subtitle; rebuilds `documents.search_vector`) then
+  `b3f7d1e9c5a2` (the five map tables). Both are DDL only. Apply them
+  before the next release to `main`.
 
 Recent chain, newest first (where each came from):
 `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
@@ -104,6 +106,10 @@ One line per unit; dates 2026, newest first. Spec files live in
   View As; an arrow connects when dropped anywhere on the target card.
   Checked in Chromium through a local harness (drag, drop into a group,
   group drag, connecting), not against a running backend.
+- **Hidden cards keep their place when their group is deleted** (28_1 fix,
+  10-12, PR #160): a card in a group is stored relative to the group, so
+  deleting the group left the cards the editor can't see at the board's
+  origin; `plan_board_edit` now rewrites them with absolute positions.
 
 ### 2026-10-08 → 10-10
 
