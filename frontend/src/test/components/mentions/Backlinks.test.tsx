@@ -40,6 +40,7 @@ const document: Document = {
   notes: [],
   files: [],
   playedBy: null,
+  subtitle: null,
 };
 
 function mention(overrides: Record<string, unknown>) {

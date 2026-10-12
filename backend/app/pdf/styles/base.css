@@ -35,6 +35,8 @@
 body { margin: 0; }
 p { margin: 0 0 3mm; white-space: pre-line; orphans: 2; widows: 2; }
 h1, h2, h3 { break-after: avoid; }
+/* A Document's subtitle (spec 28_0), right under its name. */
+.document-subtitle { margin: -2mm 0 4mm; font-style: italic; opacity: 0.75; break-after: avoid; }
 a { color: inherit; text-decoration: none; }
 
 /* Contents */

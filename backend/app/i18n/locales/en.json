@@ -14,7 +14,8 @@
       "onlyAdministratorCanDelete": "Only a Room Administrator can delete the Room",
       "nameRequired": "Room name is required",
       "onlyAdministratorCanChangeDefaultVisibility": "Only a Room Administrator can change the default visibility",
-      "invalidDefaultVisibility": "The default visibility can be Room, Master only or Private"
+      "invalidDefaultVisibility": "The default visibility can be Room, Master only or Private",
+      "onlyMasterCanDuplicate": "Only the Master can duplicate the Room"
     },
     "membership": {
       "notFound": "User is not a member of this room",
@@ -25,6 +26,7 @@
     "document": {
       "notFound": "Document not found",
       "nameRequired": "Document name is required",
+      "subtitleTooLong": "The subtitle can be at most {max} characters",
       "creationDisabled": "Document creation is disabled for Players in this Room",
       "invalidTagIds": "One or more tag_ids are invalid for this room",
       "notOwner": "Only an Owner (or the Master) can do this",
@@ -177,6 +179,7 @@
       "tooManyImages": "At most {max} images can be imported at once",
       "nameRequired": "A Document in the file has no name",
       "nameTooLong": "The Document name \"{name}...\" is over {max} characters",
+      "subtitleTooLong": "The subtitle of {name} is over {max} characters",
       "tooManyNotes": "{name} has more than {max} Notes",
       "noteTitleInvalid": "A Note of {name} has no title or one over {max} characters",
       "tagNameTooLong": "The Tag name \"{name}...\" is over {max} characters",
@@ -191,6 +194,28 @@
       "emptyQuery": "Type something to search for",
       "throttled": "Too many searches: wait a minute and try again",
       "unavailable": "Image search is unavailable right now, try again later"
+    },
+    "map": {
+      "notFound": "Map not found",
+      "notManager": "Only the map's creator (or the Master) can change this map",
+      "creationDisabled": "Players can't create maps in this room",
+      "invalidSelectiveUsers": "selective_user_ids must all be members of this room",
+      "nameRequired": "A map needs a name",
+      "tooLong": "The {field} can be at most {max} characters",
+      "tooMany": "A room can have at most {max} maps",
+      "tooManyCards": "A map can have at most {max} cards",
+      "tooManyGroups": "A map can have at most {max} groups",
+      "tooManyArrows": "A map can have at most {max} arrows",
+      "invalidBoard": "This board can't be saved: it refers to something that isn't on the map",
+      "masterOnly": "Only the Master can mark a card or an arrow Master only",
+      "fields": {
+        "name": "name",
+        "description": "description",
+        "text": "card text",
+        "caption": "caption",
+        "label": "label",
+        "groupTitle": "group title"
+      }
     }
   },
   "pdf": {
@@ -202,5 +227,8 @@
     "unknownMember": "Unknown member",
     "playedBy": "{character} (played by {player})",
     "pageAbbreviation": "p."
+  },
+  "room": {
+    "copySuffix": " (Copy)"
   }
 }

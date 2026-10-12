@@ -35,6 +35,7 @@ export function rawDocument(overrides: Record<string, unknown> = {}) {
     owner_ids: ['user-1'],
     selective_user_ids: [],
     played_by: null,
+    subtitle: null,
     ...overrides,
   };
 }
@@ -263,6 +264,7 @@ export function rawVersion(overrides: Record<string, unknown> = {}) {
 export function rawVersionDetail(overrides: Record<string, unknown> = {}) {
   return {
     ...rawVersion(),
+    subtitle: null,
     description: 'Un cancello.',
     notes: [],
     ...overrides,
@@ -304,6 +306,78 @@ export function rawImportJob(overrides: Record<string, unknown> = {}) {
     created_at: '2026-10-08T12:00:00Z',
     finished_at: null,
     result: null,
+    ...overrides,
+  };
+}
+
+/** A map as `GET /rooms/{id}/maps` lists it (spec 28). */
+export function rawMap(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'map-1',
+    room_id: 'room-1',
+    name: 'La Corte',
+    description: 'Chi serve chi',
+    visibility: 'room',
+    selective_user_ids: [],
+    created_by: 'user-1',
+    created_at: '2026-10-12T10:00:00Z',
+    updated_at: '2026-10-12T10:00:00Z',
+    document_count: 2,
+    can_edit: true,
+    ...overrides,
+  };
+}
+
+/** A Document card of a map, as the API sends it. */
+export function rawMapCard(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'card-1',
+    document_id: 'doc-1',
+    text: null,
+    group_id: null,
+    caption: null,
+    size: 'normal',
+    master_only: false,
+    color: 'default',
+    struck: false,
+    x: 0,
+    y: 0,
+    document: { id: 'doc-1', name: 'Mira', subtitle: 'La Idol', image: null, tag_ids: [] },
+    ...overrides,
+  };
+}
+
+/** A map with its board, as `GET /rooms/{id}/maps/{map_id}` sends it. */
+export function rawMapDetail(overrides: Record<string, unknown> = {}) {
+  return {
+    ...rawMap(),
+    groups: [
+      { id: 'group-1', title: 'Avversari', color: 'red', struck: false, x: 300, y: 0, width: 300, height: 200 },
+    ],
+    cards: [
+      rawMapCard(),
+      rawMapCard({
+        id: 'card-2',
+        document_id: 'doc-2',
+        group_id: 'group-1',
+        x: 20,
+        y: 40,
+        document: { id: 'doc-2', name: 'Thorn', subtitle: null, image: rawImage(), tag_ids: ['npc'] },
+      }),
+      rawMapCard({ id: 'card-3', document_id: null, text: 'La notte del fuoco', document: null }),
+    ],
+    arrows: [
+      {
+        id: 'arrow-1',
+        from_end: { card_id: 'card-1', group_id: null },
+        to_end: { card_id: 'card-2', group_id: null },
+        direction: 'both',
+        label: 'alleata',
+        reverse_label: 'alleato',
+        color: 'green',
+        master_only: false,
+      },
+    ],
     ...overrides,
   };
 }

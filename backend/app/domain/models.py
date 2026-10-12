@@ -149,6 +149,9 @@ class Document:
     # Set when the Document is a Character: the member of the Room who plays
     # it (D-23). A relation like Ownership, not a type (D-05).
     played_by: uuid.UUID | None = None
+    # One line under the name (spec 28_0), None when unset; it is part of the
+    # Document and follows its visibility.
+    subtitle: str | None = None
 
 
 @dataclass(frozen=True)

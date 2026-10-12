@@ -422,3 +422,14 @@ def test_nothing_hidden_from_the_requester_reaches_the_manual() -> None:
     )
     assert "TOP SECRET NOTE" in as_master
     assert "TOP SECRET COMMENT" in as_master
+
+
+def test_a_document_subtitle_is_printed_under_its_name() -> None:
+    export = make_export()
+    documents = [
+        replace(d, subtitle="The lord") if d.name == "Castle" else d for d in export.documents
+    ]
+    manual = build_manual(replace(export, documents=documents), ManualOptions(), LABELS)
+
+    assert _documents(manual)["Castle"].subtitle == "The lord"
+    assert _documents(manual)["Irena"].subtitle is None

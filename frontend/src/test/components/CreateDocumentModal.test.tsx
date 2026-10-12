@@ -73,6 +73,7 @@ describe('CreateDocumentModal', () => {
         method: 'POST',
         json: {
           name: 'Il Cancello',
+          subtitle: '',
           description: '',
           visibility: 'room',
           tag_ids: [],

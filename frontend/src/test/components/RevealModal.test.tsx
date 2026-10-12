@@ -54,6 +54,7 @@ const doc: Document = {
   ownerIds: ['owner'],
   selectiveUserIds: [],
   playedBy: null,
+  subtitle: null,
   notes: [note('secret', 'Trappola', 'master'), note('owners', 'Chiave', 'private')],
   files: [],
 };

@@ -47,6 +47,7 @@ describe('useDocuments', () => {
       ownerIds: ['user-1'],
       selectiveUserIds: [],
       playedBy: null,
+      subtitle: null,
       // The list's response carries no Notes.
       notes: [],
       files: [],

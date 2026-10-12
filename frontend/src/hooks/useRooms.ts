@@ -76,6 +76,21 @@ export function useCreateRoom() {
   });
 }
 
+/**
+ * Duplicates a Room (spec 33, the Master only): the backend answers with the
+ * copy as one of the caller's Rooms, and the Rooms list is refetched.
+ */
+export function useDuplicateRoom(roomId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      toMyRoom(await apiFetch<RawMyRoom>(`/rooms/${roomId}/duplicate`, { method: 'POST' })),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY });
+    },
+  });
+}
+
 /** One Room, for its members. */
 export function useRoom(roomId: string, enabled: boolean) {
   return useQuery<Room>({

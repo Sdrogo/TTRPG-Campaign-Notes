@@ -14,6 +14,7 @@ interface RawDocument {
   id: string;
   room_id: string;
   name: string;
+  subtitle: string | null;
   description: string;
   visibility: DocumentVisibility;
   images: RawImage[];
@@ -33,6 +34,7 @@ function toDocument(raw: RawDocument): Document {
     id: raw.id,
     roomId: raw.room_id,
     name: raw.name,
+    subtitle: raw.subtitle,
     description: raw.description,
     visibility: raw.visibility,
     // Already favorite-first: the backend orders the gallery, so the card
@@ -134,6 +136,8 @@ export function useDocumentVisit(
 /** The fields a Document is created or updated with. An update sends only the fields given. */
 export interface DocumentInput {
   name: string;
+  /** Blank removes it; the backend trims it and refuses more than 120 characters. */
+  subtitle?: string;
   description?: string;
   visibility?: DocumentVisibility;
   tagIds?: string[];
@@ -143,6 +147,7 @@ export interface DocumentInput {
 function toBody(input: Partial<DocumentInput>) {
   return {
     name: input.name,
+    subtitle: input.subtitle,
     description: input.description,
     visibility: input.visibility,
     tag_ids: input.tagIds,

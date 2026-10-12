@@ -41,7 +41,8 @@ from app.domain.visibility import (
 
 # Bumped when the JSON shape changes: 1 is the first release, with replies
 # (spec 19) and mention ids (spec 20) already part of it.
-SCHEMA_VERSION = 1
+# 2 since spec 28_0 added a Document's `subtitle`; the import reads 1 and 2.
+SCHEMA_VERSION = 2
 
 # Shown for a member with no display name: emails are never exported
 # (NFR-03).
@@ -205,6 +206,7 @@ class ExportDocument:
     files: Sequence[ExportFile]
     notes: Sequence[ExportNote]
     comments: Sequence[ExportComment]
+    subtitle: str | None = None
 
 
 @dataclass(frozen=True)
@@ -376,6 +378,7 @@ def _export_document(
         ],
         notes=notes,
         comments=comments,
+        subtitle=document.subtitle,
     )
 
 
@@ -540,6 +543,7 @@ def _json_document(document: ExportDocument) -> dict[str, Any]:
     return {
         "id": str(document.id),
         "name": document.name,
+        "subtitle": document.subtitle,
         "description": _json_spans(document.description),
         "visibility": document.visibility.value,
         "selective_user_ids": _ids(document.selective_user_ids),
@@ -727,6 +731,8 @@ def _markdown_document(
     images, files, Notes and the Comment thread."""
     tag_names = {t.id: t.name for t in export.tags}
     lines = [f'### <a id="doc-{document.id}"></a>{_md(document.name)}', ""]
+    if document.subtitle:
+        lines += [f"*{_md(document.subtitle)}*", ""]
     facts = [f"Visibility: {document.visibility.value}"]
     if document.tag_ids:
         facts.append("Tags: " + ", ".join(_md(tag_names.get(t, str(t))) for t in document.tag_ids))

@@ -303,6 +303,7 @@ describe('revealing a Note', () => {
     ownerIds: [],
     selectiveUserIds: [],
     playedBy: null,
+    subtitle: null,
     notes,
     files: [],
   });

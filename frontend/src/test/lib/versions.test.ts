@@ -36,6 +36,14 @@ describe('toVersion', () => {
     expect(detail.description).toBe('Un cancello.');
     expect(detail.notes).toEqual([note]);
     expect([detail.notesAdded, detail.notesRemoved]).toEqual([1, 0]);
+    expect(detail.title).toBe('Il Cancello');
+  });
+
+  // Spec 28_0: the subtitle is compared with the name.
+  it('shows the subtitle with the name', () => {
+    expect(toVersionDetail(rawVersionDetail({ subtitle: 'La Idol' })).title).toBe(
+      'Il Cancello · La Idol',
+    );
   });
 });
 

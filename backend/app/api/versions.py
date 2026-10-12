@@ -68,9 +68,10 @@ class VersionSummaryResponse(BaseModel):
 
 
 class VersionResponse(VersionSummaryResponse):
-    """One revision in full: the description and the Notes the requester may
-    read, in display order."""
+    """One revision in full: the subtitle (spec 28_0), the description and the
+    Notes the requester may read, in display order."""
 
+    subtitle: str | None
     description: str
     notes: list[NoteVersionResponse]
 
@@ -97,6 +98,7 @@ def _full(version: Version, state: DocumentState, older: DocumentState | None) -
     """A revision in full, projected (`state`), with its change size."""
     return VersionResponse(
         **_summary(version, state, older).model_dump(),
+        subtitle=state.subtitle,
         description=state.description,
         notes=[
             NoteVersionResponse(id=note.id, title=note.title, description=note.description)
@@ -113,7 +115,9 @@ async def _current_state(session: AsyncSession, document_id: uuid.UUID) -> Docum
         return None
     notes = await notes_repo.list_notes_for_document(session, document_id)
     grants = await notes_repo.list_grants_for_notes(session, [note.id for note in notes])
-    return DocumentState(document.name, document.description, note_states(notes, grants))
+    return DocumentState(
+        document.name, document.description, note_states(notes, grants), document.subtitle
+    )
 
 
 async def record_revision(
@@ -231,7 +235,7 @@ async def restore_document_version(
     locale: LocaleDep,
 ) -> VersionResponse:
     """Puts the whole Document back as it was in a revision (spec 24b Decision
-    5): name, description and the Notes the requester sees, with their texts
+    5): name, subtitle, description and the Notes the requester sees, with their texts
     and order; Notes deleted since come back (same id, their last visibility,
     grants to members still in the Room), Notes added since are deleted. A
     Note hidden from the requester is never touched. The restore is itself a
@@ -259,7 +263,8 @@ async def restore_document_version(
         session, membership, target.description, previous=document.description
     )
     await documents_repo.update_document(
-        session, replace(document, name=target.name, description=description)
+        session,
+        replace(document, name=target.name, subtitle=target.subtitle, description=description),
     )
     await index_mentions(
         session, MentionSource(document_id, MentionSourceKind.DESCRIPTION), description

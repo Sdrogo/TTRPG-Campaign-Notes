@@ -15,6 +15,7 @@ const doc = (id: string, tagIds: string[]): Document => ({
   notes: [],
   files: [],
   playedBy: null,
+  subtitle: null,
 });
 
 const documents = [doc('a', ['npc']), doc('b', ['npc', 'place']), doc('c', [])];

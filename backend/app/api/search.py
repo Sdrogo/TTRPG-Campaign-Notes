@@ -182,7 +182,12 @@ async def search_room(
                 document.id,
                 document.name,
                 document.name,
-                document.description,
+                # A match on the subtitle (spec 28_0) shows in the excerpt.
+                (
+                    f"{document.subtitle} · {document.description}"
+                    if document.subtitle
+                    else document.description
+                ),
             )
         )
     for note_id in notes:

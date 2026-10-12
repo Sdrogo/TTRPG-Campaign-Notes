@@ -20,6 +20,7 @@ const doc = (id: string, tagIds: string[]): Document => ({
   notes: [],
   files: [],
   playedBy: null,
+  subtitle: null,
 });
 
 /** A Main item of the given Tag ids. */

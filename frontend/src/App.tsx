@@ -8,6 +8,8 @@ import { DocumentDetailPage } from './pages/DocumentDetailPage';
 import { AccountPage } from './pages/AccountPage';
 import { AddFriendPage } from './pages/AddFriendPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { RoomMapsPage } from './pages/RoomMapsPage';
+import { RelationshipMapPage } from './pages/RelationshipMapPage';
 import { useScrollbarReveal } from './hooks/useScrollbarReveal';
 import { ViewAsProvider } from './components/ViewAsProvider';
 
@@ -36,6 +38,8 @@ function App() {
         <Route path="/rooms/:roomId/members" element={<RoomMembersRedirect />} />
         <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />
         <Route path="/rooms/:roomId/documents/:documentId" element={<DocumentDetailPage />} />
+        <Route path="/rooms/:roomId/maps" element={<RoomMapsPage />} />
+        <Route path="/rooms/:roomId/maps/:mapId" element={<RelationshipMapPage />} />
       </Routes>
     </ViewAsProvider>
   );

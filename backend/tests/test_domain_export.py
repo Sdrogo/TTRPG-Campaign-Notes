@@ -383,7 +383,7 @@ def test_json_carries_the_version_ids_and_references() -> None:
         )
     )
 
-    assert data["schema_version"] == SCHEMA_VERSION == 1
+    assert data["schema_version"] == SCHEMA_VERSION == 2
     assert data["generated_at"] == T0.isoformat()
     assert data["links_expire_within_seconds"] == 3600
     assert data["room"] == {"id": str(ROOM_ID), "name": "Barovia", "game_system": "D&D 5e"}
@@ -653,3 +653,20 @@ def test_a_single_document_export_keeps_only_what_the_document_refers_to() -> No
 def test_a_document_file_is_named_after_it_with_a_fallback() -> None:
     assert document_export_filename("La Torre", T0, ExportFormat.JSON) == "la-torre-2026-10-02.json"
     assert document_export_filename("龍", T0, ExportFormat.MARKDOWN) == "document-2026-10-02.md"
+
+
+# --- Subtitle (spec 28_0 S4) ----------------------------------------------------
+
+
+def test_the_subtitle_is_in_the_json_and_under_the_markdown_heading() -> None:
+    castle = _castle(document=replace(_document(CASTLE, "Castle"), subtitle="Seat *of* [Strahd]"))
+    irena = _castle(document=_document(IRENA, "Irena"), tag_ids=[NPC])
+    export = _export(MASTER, [castle, irena])
+
+    by_name = {d["name"]: d for d in render_json(export)["documents"]}
+    assert by_name["Castle"]["subtitle"] == "Seat *of* [Strahd]"
+    assert by_name["Irena"]["subtitle"] is None
+    text = render_markdown(export)
+    heading = f'### <a id="doc-{CASTLE}"></a>Castle'
+    assert f"{heading}\n\n*Seat \\*of\\* \\[Strahd\\]*\n\n- Visibility" in text
+    assert f'### <a id="doc-{IRENA}"></a>Irena\n\n- Visibility' in text

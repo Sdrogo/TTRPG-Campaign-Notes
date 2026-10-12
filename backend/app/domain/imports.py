@@ -16,6 +16,11 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
+from app.domain.documents import (
+    MAX_SUBTITLE_LENGTH,
+    DocumentSubtitleTooLongError,
+    clean_subtitle,
+)
 from app.domain.errors import DomainError
 from app.domain.import_files import (
     ImportCannotReplaceError,
@@ -159,6 +164,7 @@ class PlannedDocument:
     file_name: str
     id: uuid.UUID
     name: str
+    subtitle: str | None
     text: str
     visibility: DocumentVisibility
     tag_ids: tuple[uuid.UUID, ...]
@@ -198,7 +204,8 @@ def fold(name: str) -> str:
 def validate_files(files: Sequence[ImportFile]) -> None:
     """422 unless the files are within the limits (Decision 8): at most
     `MAX_FILES` files, `MAX_DOCUMENTS` Documents and `MAX_IMAGES` images, and
-    every Document named, with at most `MAX_NOTES_PER_DOCUMENT` Notes titled
+    every Document named, its subtitle within `MAX_SUBTITLE_LENGTH` once
+    cleaned (spec 28_0), with at most `MAX_NOTES_PER_DOCUMENT` Notes titled
     within `MAX_NOTE_TITLE_LENGTH` and Tag names within
     `MAX_TAG_NAME_LENGTH`. Called before anything is written."""
     if len(files) > MAX_FILES:
@@ -215,6 +222,12 @@ def validate_files(files: Sequence[ImportFile]) -> None:
             raise ImportRefusedError(
                 "errors.import.nameTooLong", name=document.name[:40], max=MAX_DOCUMENT_NAME_LENGTH
             )
+        try:
+            clean_subtitle(document.subtitle)
+        except DocumentSubtitleTooLongError as exc:
+            raise ImportRefusedError(
+                "errors.import.subtitleTooLong", name=document.name, max=MAX_SUBTITLE_LENGTH
+            ) from exc
         if len(document.notes) > MAX_NOTES_PER_DOCUMENT:
             raise ImportRefusedError(
                 "errors.import.tooManyNotes", name=document.name, max=MAX_NOTES_PER_DOCUMENT
@@ -468,6 +481,8 @@ def _plan_document(
         file_name=file.name,
         id=document_id,
         name=document.name.strip(),
+        # Within the limit: `validate_files` ran first.
+        subtitle=clean_subtitle(document.subtitle),
         text=_render(document.text, resolve),
         visibility=level,
         tag_ids=tuple(tag_ids),

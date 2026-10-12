@@ -14,7 +14,8 @@
       "onlyAdministratorCanDelete": "Solo un amministratore della Room può eliminarla",
       "nameRequired": "Il nome della Room è obbligatorio",
       "onlyAdministratorCanChangeDefaultVisibility": "Solo un Amministratore della Room può cambiare la visibilità predefinita",
-      "invalidDefaultVisibility": "La visibilità predefinita può essere Room, Solo Master o Privata"
+      "invalidDefaultVisibility": "La visibilità predefinita può essere Room, Solo Master o Privata",
+      "onlyMasterCanDuplicate": "Solo il Master può duplicare la Room"
     },
     "membership": {
       "notFound": "L'utente non è membro di questa Room",
@@ -25,6 +26,7 @@
     "document": {
       "notFound": "Documento non trovato",
       "nameRequired": "Il nome del Documento è obbligatorio",
+      "subtitleTooLong": "Il sottotitolo può avere al massimo {max} caratteri",
       "creationDisabled": "La creazione di Documenti è disabilitata per i Player in questa Room",
       "invalidTagIds": "Uno o più tag_ids non sono validi per questa Room",
       "notOwner": "Solo un Owner (o il Master) può farlo",
@@ -177,6 +179,7 @@
       "tooManyImages": "Si possono importare al massimo {max} immagini alla volta",
       "nameRequired": "Un Documento del file non ha nome",
       "nameTooLong": "Il nome del Documento \"{name}...\" supera {max} caratteri",
+      "subtitleTooLong": "Il sottotitolo di {name} supera {max} caratteri",
       "tooManyNotes": "{name} ha più di {max} Note",
       "noteTitleInvalid": "Una Nota di {name} non ha titolo o ne ha uno oltre {max} caratteri",
       "tagNameTooLong": "Il nome del Tag \"{name}...\" supera {max} caratteri",
@@ -191,6 +194,28 @@
       "emptyQuery": "Scrivi qualcosa da cercare",
       "throttled": "Troppe ricerche: aspetta un minuto e riprova",
       "unavailable": "La ricerca di immagini non è disponibile ora, riprova più tardi"
+    },
+    "map": {
+      "notFound": "Mappa non trovata",
+      "notManager": "Solo chi ha creato la mappa (o il Master) può modificarla",
+      "creationDisabled": "In questa stanza i Giocatori non possono creare mappe",
+      "invalidSelectiveUsers": "selective_user_ids deve contenere solo membri di questa stanza",
+      "nameRequired": "Una mappa deve avere un nome",
+      "tooLong": "Il campo {field} può contenere al massimo {max} caratteri",
+      "tooMany": "Una stanza può avere al massimo {max} mappe",
+      "tooManyCards": "Una mappa può avere al massimo {max} carte",
+      "tooManyGroups": "Una mappa può avere al massimo {max} gruppi",
+      "tooManyArrows": "Una mappa può avere al massimo {max} frecce",
+      "invalidBoard": "Impossibile salvare la mappa: fa riferimento a qualcosa che non c'è",
+      "masterOnly": "Solo il Master può rendere una carta o una freccia visibile solo al Master",
+      "fields": {
+        "name": "nome",
+        "description": "descrizione",
+        "text": "testo della carta",
+        "caption": "didascalia",
+        "label": "etichetta",
+        "groupTitle": "titolo del gruppo"
+      }
     }
   },
   "pdf": {
@@ -202,5 +227,8 @@
     "unknownMember": "Membro sconosciuto",
     "playedBy": "{character} (interpretato da {player})",
     "pageAbbreviation": "p."
+  },
+  "room": {
+    "copySuffix": " (Copia)"
   }
 }

@@ -1,7 +1,7 @@
 """Rooms, Memberships and the audit log."""
 
 import uuid
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 
 from sqlalchemy import delete, func, select, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +17,7 @@ from app.domain.models import (
     RoomRole,
     RoomStatus,
     StoredAuditLogEntry,
+    Tag,
     UserProfile,
 )
 from app.domain.rooms import NewRoomPlan
@@ -50,15 +51,25 @@ def _membership_from_row(row: MembershipRow) -> Membership:
 async def insert_new_room(session: AsyncSession, plan: NewRoomPlan) -> None:
     """Inserts everything a `NewRoomPlan` holds - the Room, its creator's
     Membership and the default Tags - in the caller's transaction."""
+    await insert_new_room_rows(session, plan.room, plan.owner_membership, plan.default_tags)
+
+
+async def insert_new_room_rows(
+    session: AsyncSession, room: Room, membership: Membership, tags: Iterable[Tag]
+) -> None:
+    """Inserts a new Room, its first Membership and its Tags in the caller's
+    transaction. Shared by creating a Room (UC-02) and duplicating one
+    (spec 33), which also carries the Room's image."""
     session.add(
         RoomRow(
-            id=plan.room.id,
-            name=plan.room.name,
-            game_system=plan.room.game_system,
-            status=plan.room.status.value,
-            created_by=plan.room.created_by,
-            players_can_create_documents=plan.room.players_can_create_documents,
-            default_visibility=plan.room.default_visibility.value,
+            id=room.id,
+            name=room.name,
+            game_system=room.game_system,
+            status=room.status.value,
+            created_by=room.created_by,
+            players_can_create_documents=room.players_can_create_documents,
+            default_visibility=room.default_visibility.value,
+            image_path=room.image_path,
         )
     )
     # Flushed separately so the Room row exists before its dependents are
@@ -68,14 +79,14 @@ async def insert_new_room(session: AsyncSession, plan: NewRoomPlan) -> None:
 
     session.add(
         MembershipRow(
-            id=plan.owner_membership.id,
-            room_id=plan.owner_membership.room_id,
-            user_id=plan.owner_membership.user_id,
-            role=plan.owner_membership.role.value,
-            is_admin=plan.owner_membership.is_admin,
+            id=membership.id,
+            room_id=membership.room_id,
+            user_id=membership.user_id,
+            role=membership.role.value,
+            is_admin=membership.is_admin,
         )
     )
-    for tag in plan.default_tags:
+    for tag in tags:
         session.add(
             TagRow(
                 id=tag.id,

@@ -51,6 +51,7 @@ def _document_from_row(row: DocumentRow) -> Document:
         visibility=DocumentVisibility(row.visibility),
         created_by=row.created_by,
         played_by=row.played_by,
+        subtitle=row.subtitle,
     )
 
 
@@ -67,6 +68,7 @@ async def insert_new_document(
             id=plan.document.id,
             room_id=plan.document.room_id,
             name=plan.document.name,
+            subtitle=plan.document.subtitle,
             description=plan.document.description,
             visibility=plan.document.visibility.value,
             created_by=plan.document.created_by,
@@ -140,12 +142,13 @@ async def clear_played_by_in_room(
 
 
 async def update_document(session: AsyncSession, document: Document) -> None:
-    """Writes a Document's name, description and visibility. Raises
+    """Writes a Document's name, subtitle, description and visibility. Raises
     `LookupError` if it no longer exists."""
     row = await session.get(DocumentRow, document.id)
     if row is None:
         raise LookupError(f"Document {document.id} not found")
     row.name = document.name
+    row.subtitle = document.subtitle
     row.description = document.description
     row.visibility = document.visibility.value
     await session.flush()

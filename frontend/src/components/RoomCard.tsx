@@ -1,9 +1,16 @@
 import { useState } from 'react';
-import { ActionIcon, Box, Card, Group, Menu, Stack, Title, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Box, Card, Group, Menu, Stack, Title, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { DotsThreeVerticalIcon, GearIcon, SignOutIcon, UserPlusIcon } from '@phosphor-icons/react';
+import {
+  CopyIcon,
+  DotsThreeVerticalIcon,
+  GearIcon,
+  SignOutIcon,
+  UserPlusIcon,
+} from '@phosphor-icons/react';
 import { DocumentCardImages } from './DocumentCardImages';
 import { RoleTag } from './RoleTag';
+import { DuplicateRoomModal } from './DuplicateRoomModal';
 import { InviteModal } from './InviteModal';
 import { LeaveRoomModal } from './LeaveRoomModal';
 import type { MyRoom } from '../types/room';
@@ -21,20 +28,24 @@ interface RoomCardProps {
 
 /**
  * One of the user's Rooms, with their role. The whole card links to the Room's
- * Documents; an Administrator also gets the setup page (members, Main Tags)
- * and the invite button, the Master the setup page's visibility history
- * (spec 22), and every member gets a menu with Leave (spec 15).
- * These are icon buttons with tooltips, so they fit on the title row at any
- * card width, and sit above that link so they win over it. The Room's image
- * (spec 26) fills the card's right half like a DocumentCard's, fading into the
- * card, with the buttons on top of it.
+ * Documents. Every action is an item of one ⋮ menu (spec 33): the setup page
+ * (members, Main Tags) for an Administrator or the Master (its visibility
+ * history, spec 22), Invite for an Administrator, Duplicate for the Master,
+ * and Leave for every member (spec 15). The menu button sits above the card
+ * link so it wins over it. The Room's image (spec 26) fills the card's right
+ * half like a DocumentCard's, fading into the card, with the button on top of
+ * it.
  */
 export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
   const { t } = useTranslation();
   const [inviteOpened, setInviteOpened] = useState(false);
+  const [duplicateOpened, setDuplicateOpened] = useState(false);
   const [leaveOpened, setLeaveOpened] = useState(false);
   const { room, role, isAdmin } = myRoom;
   const imageUrl = room.imageUrl;
+  const canSetup = isAdmin || role === 'master';
+  const canDuplicate = role === 'master';
+  const hasOtherActions = canSetup || isAdmin || canDuplicate;
 
   return (
     <Card
@@ -86,32 +97,6 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
           p={imageUrl ? 2 : undefined}
           style={{ zIndex: 2, flexShrink: 0, borderRadius: 'var(--mantine-radius-md)' }}
         >
-          {(isAdmin || role === 'master') && (
-            <Tooltip label={t('rooms.setup')} withArrow>
-              <ActionIcon
-                component={Link}
-                to={`/rooms/${room.id}/setup`}
-                variant="subtle"
-                color="gray"
-                aria-label={t('rooms.setup')}
-              >
-                <GearIcon size={18} />
-              </ActionIcon>
-            </Tooltip>
-          )}
-          {isAdmin && (
-            <>
-              <Tooltip label={t('rooms.invite')} withArrow>
-                <ActionIcon
-                  variant="light"
-                  aria-label={t('rooms.invite')}
-                  onClick={() => setInviteOpened(true)}
-                >
-                  <UserPlusIcon size={18} />
-                </ActionIcon>
-              </Tooltip>
-            </>
-          )}
           <Menu position="bottom-end" shadow="md">
             <Menu.Target>
               <ActionIcon
@@ -123,6 +108,32 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
+              {canSetup && (
+                <Menu.Item
+                  component={Link}
+                  to={`/rooms/${room.id}/setup`}
+                  leftSection={<GearIcon size={16} />}
+                >
+                  {t('rooms.setup')}
+                </Menu.Item>
+              )}
+              {isAdmin && (
+                <Menu.Item
+                  leftSection={<UserPlusIcon size={16} />}
+                  onClick={() => setInviteOpened(true)}
+                >
+                  {t('rooms.invite')}
+                </Menu.Item>
+              )}
+              {canDuplicate && (
+                <Menu.Item
+                  leftSection={<CopyIcon size={16} />}
+                  onClick={() => setDuplicateOpened(true)}
+                >
+                  {t('rooms.duplicate.action')}
+                </Menu.Item>
+              )}
+              {hasOtherActions && <Menu.Divider />}
               <Menu.Item
                 color="red"
                 leftSection={<SignOutIcon size={16} />}
@@ -146,6 +157,12 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
         opened={inviteOpened}
         onClose={() => setInviteOpened(false)}
         roomId={room.id}
+      />
+      <DuplicateRoomModal
+        opened={duplicateOpened}
+        onClose={() => setDuplicateOpened(false)}
+        roomId={room.id}
+        roomName={room.name}
       />
       <LeaveRoomModal
         opened={leaveOpened}

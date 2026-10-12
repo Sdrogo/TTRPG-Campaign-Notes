@@ -15,7 +15,14 @@ function render(overrides: Partial<DocumentFormValues> = {}) {
   const onChange = vi.fn();
   renderWithProviders(
     <DocumentFields
-      values={{ name: '', description: '', visibility: 'room', tagIds: [], ...overrides }}
+      values={{
+        name: '',
+        subtitle: '',
+        description: '',
+        visibility: 'room',
+        tagIds: [],
+        ...overrides,
+      }}
       onChange={onChange}
       tags={tags}
       roomId="room-1"
@@ -26,6 +33,19 @@ function render(overrides: Partial<DocumentFormValues> = {}) {
 }
 
 describe('DocumentFields', () => {
+  // Spec 28_0 S1: an optional one-line subtitle, capped like the backend.
+  it('edits the subtitle under the name, at most 120 characters', async () => {
+    const { onChange, user } = render({ name: 'Mirai', subtitle: 'La' });
+
+    const subtitle = screen.getByRole('textbox', { name: 'Sottotitolo' });
+    expect(subtitle).toHaveAttribute('maxlength', '120');
+    await user.type(subtitle, '!');
+
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: 'Mirai', subtitle: 'La!' }),
+    );
+  });
+
   it('shows the values it was given', () => {
     render({ name: 'Il Cancello', description: 'Una porta.', tagIds: ['tag-1'] });
 
@@ -40,6 +60,7 @@ describe('DocumentFields', () => {
 
     expect(onChange).toHaveBeenCalledWith({
       name: 'I',
+      subtitle: '',
       description: 'Una porta.',
       visibility: 'room',
       tagIds: [],
@@ -97,7 +118,7 @@ describe('DocumentFields', () => {
     const onChange = vi.fn();
     renderWithProviders(
       <DocumentFields
-        values={{ name: '', description: '', visibility: 'room', tagIds: [] }}
+        values={{ name: '', subtitle: '', description: '', visibility: 'room', tagIds: [] }}
         onChange={onChange}
         tags={tags}
         roomId="room-1"

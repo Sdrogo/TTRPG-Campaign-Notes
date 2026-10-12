@@ -66,6 +66,8 @@ describe('RoomTitleActions', () => {
     await user.click(toggle());
 
     expect(screen.getByRole('button', { name: 'Esci' })).toBeInTheDocument();
+    // Everyone reaches the Room's relationship maps (spec 28).
+    expect(screen.getByRole('link', { name: 'Mappe' })).toHaveAttribute('href', '/rooms/room-1/maps');
     expect(screen.queryByRole('link', { name: 'Impostazioni' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Invita' })).not.toBeInTheDocument();
   });

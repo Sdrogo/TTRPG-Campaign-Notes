@@ -39,6 +39,7 @@ function document(overrides: Partial<Document> = {}): Document {
     notes: [],
     files: [],
     playedBy: null,
+    subtitle: null,
     ...overrides,
   };
 }
@@ -71,6 +72,25 @@ describe('DocumentCard', () => {
     expect(screen.getByText('Il Cancello')).toBeInTheDocument();
     expect(screen.getByText('Una porta di pietra.')).toBeInTheDocument();
     expect(screen.getByText('#Luoghi')).toBeInTheDocument();
+  });
+
+  // Spec 28_0 S2: the subtitle takes the name's old size (h4) and the name
+  // goes one level up, with or without a subtitle.
+  it('shows the subtitle under a name one size larger', () => {
+    render({ subtitle: 'La Idol' });
+
+    expect(screen.getByRole('heading', { name: 'Il Cancello' })).toHaveStyle({
+      fontSize: 'var(--mantine-h3-font-size)',
+    });
+    expect(screen.getByText('La Idol')).toBeInTheDocument();
+  });
+
+  it('keeps the larger name without a subtitle', () => {
+    render();
+
+    expect(screen.getByRole('heading', { name: 'Il Cancello' })).toHaveStyle({
+      fontSize: 'var(--mantine-h3-font-size)',
+    });
   });
 
   it('shows the visibility level', () => {
