@@ -21,6 +21,13 @@ detail:
   30/30b (read aloud with the browser's voices, best installed voice by
   default, first reading waits for the voice list, PRs #146, #148, #154).
   Neither has a migration.
+- **Spec 32, mention hover preview** (2026-10-12, PR #157, frontend only,
+  no migration): on the Document page, resting a mouse on a linked
+  `#Document` mention for 400 ms shows that Document's `DocumentCard`
+  (`DocumentMentionPreview`, a Mantine `HoverCard`). It reuses the Document
+  the mention resolved against (the viewer's filtered list): no request, no
+  hidden Document revealed. Nothing on touch screens or for Tag mentions.
+  Decisions to confirm in the PR.
 - **Spec 31, still owed by the product owner**: legal review of the
   `/privacy` notice and the DPAs with Supabase, OVHcloud and Vercel. It
   shipped to production with the 2026-10-09/10 releases before those were
