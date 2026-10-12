@@ -80,7 +80,8 @@ def test_every_bundled_style_covers_the_ui_languages_without_system_fonts(style:
 
     names: set[str] = set()
     for page in PdfReader(io.BytesIO(pdf)).pages:
-        fonts = page["/Resources"].get("/Font", {})
+        resources: Any = page["/Resources"]
+        fonts: Any = resources.get("/Font", {})
         names.update(str(fonts[key].get_object()["/BaseFont"]) for key in fonts)
     assert names
     assert all(any(bundled in name for bundled in _BUNDLED_FONTS) for name in names), names
