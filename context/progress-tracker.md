@@ -247,6 +247,10 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still
   needs its `FR-`/`VR-` entry (product owner's edit only).
+- **34, More UI languages** (scope confirmed 2026-10-12): spec in
+  `context/feature/34 - More UI languages.md`. Round one: de, fr, es, pt-PT,
+  ru, ja, zh-Hans, ko, pl, nl, all beta; tr and zh-Hant later. Next: 34_1
+  foundations.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).
