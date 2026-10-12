@@ -1,0 +1,235 @@
+{
+  "errors": {
+    "auth": {
+      "missingToken": "Authentifizierungs-Token fehlt",
+      "invalidToken": "Token ungültig oder abgelaufen"
+    },
+    "room": {
+      "notFound": "Raum nicht gefunden",
+      "notAMember": "Du bist kein Mitglied dieses Raums",
+      "onlyMasterCanChangeSettings": "Nur der Master kann die Einstellungen dieses Raums ändern",
+      "onlyAdministratorCanChangeRoles": "Nur ein Admin des Raums kann Rollen ändern",
+      "onlyAdministratorCanRemoveMembers": "Nur ein Admin des Raums kann Mitglieder entfernen",
+      "onlyAdministratorChangesImage": "Nur ein Admin des Raums kann sein Bild ändern",
+      "onlyAdministratorCanDelete": "Nur ein Admin des Raums kann ihn löschen",
+      "nameRequired": "Der Name des Raums ist erforderlich",
+      "onlyAdministratorCanChangeDefaultVisibility": "Nur ein Admin des Raums kann die Standard-Sichtbarkeit ändern",
+      "invalidDefaultVisibility": "Die Standard-Sichtbarkeit kann Raum, Nur Master oder Privat sein",
+      "onlyMasterCanDuplicate": "Nur der Master kann den Raum duplizieren"
+    },
+    "membership": {
+      "notFound": "Der Nutzer ist kein Mitglied dieses Raums",
+      "lastMaster": "Der letzte Master kann nicht entfernt werden, ohne einen Nachfolger zu bestimmen",
+      "lastAdministrator": "Der letzte Admin kann nicht entfernt werden, ohne einen Nachfolger zu bestimmen",
+      "noChangeRequested": "Die Anfrage muss die Rolle und/oder das Admin-Flag ändern"
+    },
+    "document": {
+      "notFound": "Dokument nicht gefunden",
+      "nameRequired": "Der Name des Dokuments ist erforderlich",
+      "subtitleTooLong": "Der Untertitel darf höchstens {max} Zeichen haben",
+      "creationDisabled": "Das Erstellen von Dokumenten ist für Player in diesem Raum deaktiviert",
+      "invalidTagIds": "Eine oder mehrere tag_ids sind für diesen Raum ungültig",
+      "notOwner": "Das darf nur ein Owner (oder der Master)",
+      "alreadyOwner": "Der Nutzer ist bereits Owner dieses Dokuments",
+      "notAnOwner": "Der Nutzer ist kein ausdrücklicher Owner dieses Dokuments",
+      "tooManyImages": "Ein Dokument darf höchstens {max} Bilder haben"
+    },
+    "comment": {
+      "notFound": "Kommentar nicht gefunden",
+      "bodyRequired": "Ein Kommentar darf nicht leer sein",
+      "tooLong": "Ein Kommentar darf höchstens {max} Zeichen haben",
+      "notAuthor": "Nur der Autor kann diesen Kommentar bearbeiten",
+      "notAuthorImages": "Nur der Autor kann die Bilder dieses Kommentars ändern",
+      "cannotDelete": "Nur der Autor oder der Master kann diesen Kommentar löschen",
+      "deleted": "Dieser Kommentar wurde gelöscht",
+      "alreadyDeleted": "Dieser Kommentar war bereits gelöscht",
+      "tooManyImages": "Ein Kommentar darf höchstens {max} Bilder haben",
+      "invalidSelectiveUsers": "selective_user_ids darf nur Mitglieder dieses Raums enthalten",
+      "parentNotFound": "Der Kommentar, auf den du antwortest, wurde nicht gefunden",
+      "parentDeleted": "Auf einen gelöschten Kommentar kann nicht geantwortet werden",
+      "replyWiderThanParent": "Eine Antwort darf nicht für Leute sichtbar sein, die den Kommentar, auf den sie antwortet, nicht sehen",
+      "cannotPin": "Nur ein Owner oder der Master kann die Kommentare dieses Dokuments anheften",
+      "pinReply": "Nur ein Kommentar der obersten Ebene kann angeheftet werden",
+      "tooManyPinned": "Ein Dokument darf höchstens {max} angeheftete Kommentare haben",
+      "cannotResolve": "Nur der Autor, ein Owner oder der Master kann diese Diskussion als gelöst markieren",
+      "resolveReply": "Nur die Diskussion eines Kommentars der obersten Ebene kann gelöst werden",
+      "cannotPromote": "Nur ein Owner oder der Master kann die Kommentare dieses Dokuments übernehmen",
+      "cannotPromoteIntoDocument": "Du kannst einen Kommentar nur in ein Dokument übernehmen, dessen Owner du bist",
+      "promoteIntoSameDocument": "Ein Kommentar kann nicht als neues Dokument in sein eigenes Dokument übernommen werden",
+      "promotionWidens": "Wenn du diesen Kommentar übernimmst, wird er Mitgliedern angezeigt, die ihn jetzt nicht lesen können: Bestätige, um fortzufahren",
+      "promoteDocumentRequired": "Wähle das Dokument, in das der Kommentar übernommen werden soll"
+    },
+    "reaction": {
+      "invalidEmoji": "Eine Reaktion muss genau ein Emoji sein",
+      "commentDeleted": "Auf einen gelöschten Kommentar kann nicht reagiert werden",
+      "tooMany": "Ein Kommentar darf höchstens {max} verschiedene Emojis haben"
+    },
+    "character": {
+      "notFound": "Charakter nicht gefunden",
+      "playerNotAMember": "Wer den Charakter spielt, muss Mitglied dieses Raums sein",
+      "cannotPostAs": "Du kannst nur als ein Charakter schreiben, den du spielst (der Master kann als jedes Dokument schreiben)"
+    },
+    "version": {
+      "notFound": "Version nicht gefunden"
+    },
+    "note": {
+      "notFound": "Notiz nicht gefunden",
+      "titleRequired": "Eine Notiz braucht einen Titel",
+      "titleTooLong": "Der Titel einer Notiz darf höchstens {max} Zeichen haben",
+      "notOwner": "Nur ein Owner (oder der Master) kann die Notizen dieses Dokuments verwalten",
+      "tooMany": "Ein Dokument darf höchstens {max} Notizen haben",
+      "invalidOrder": "note_ids muss jede Notiz, die du siehst, genau einmal aufführen",
+      "invalidSelectiveUsers": "selective_user_ids darf nur Mitglieder dieses Raums enthalten"
+    },
+    "tag": {
+      "notAllowedToManage": "Nur ein Admin oder der Master kann Tags verwalten",
+      "notFound": "Tag nicht gefunden",
+      "nameRequired": "Der Name des Tags ist erforderlich",
+      "duplicateName": "In diesem Raum gibt es bereits einen Tag mit diesem Namen",
+      "onlyAdministratorCanSetMainTags": "Nur ein Admin kann die Haupt-Tags wählen",
+      "duplicateMainTag": "Ein Tag darf nur einmal unter den Haupt-Tags vorkommen",
+      "unknownMainTag": "Ein Haupt-Tag ist kein Tag dieses Raums",
+      "emptyMainItem": "Ein Haupteintrag braucht mindestens einen Tag",
+      "duplicateCombination": "Diese Tag-Kombination ist bereits vorhanden"
+    },
+    "image": {
+      "notFound": "Bild nicht gefunden",
+      "storageUnavailable": "Der Bildspeicher ist nicht verfügbar",
+      "tooLarge": "Das Bild überschreitet das Upload-Limit von {mb} MB",
+      "dimensionsTooLarge": "Die Abmessungen des Bildes sind zu groß",
+      "unsupportedFormat": "Bildformat nicht unterstützt: {format}",
+      "invalidFile": "Die Datei ist kein gültiges Bild",
+      "remoteUnsupportedScheme": "Es werden nur http(s)-Bild-URLs unterstützt",
+      "remoteHostUnresolved": "Der Host der Bild-URL konnte nicht aufgelöst werden",
+      "remoteNonPublic": "Die Bild-URL verweist auf eine nicht öffentliche Adresse",
+      "remoteRedirectNoLocation": "Die Bild-URL hat ohne Zielangabe weitergeleitet",
+      "remoteHttpStatus": "Die Bild-URL hat HTTP {status} zurückgegeben",
+      "remoteTooLarge": "Das Bild unter der angegebenen URL ist zu groß",
+      "remoteDownloadFailed": "Das Bild konnte nicht von der URL heruntergeladen werden",
+      "remoteTooManyRedirects": "Die Bild-URL hat zu oft weitergeleitet"
+    },
+    "file": {
+      "notPdf": "Die Datei ist kein PDF",
+      "tooLarge": "Die Datei überschreitet das Limit von {mb} MB",
+      "tooMany": "Ein Dokument darf höchstens {max} Dateien haben",
+      "notFound": "Datei nicht gefunden",
+      "storageUnavailable": "Der Dateispeicher ist nicht verfügbar"
+    },
+    "invitation": {
+      "notFound": "Einladung nicht gefunden",
+      "revoked": "Die Einladung wurde widerrufen",
+      "expired": "Die Einladung ist abgelaufen",
+      "alreadyMember": "Der Nutzer ist bereits Mitglied dieses Raums",
+      "onlyAdministratorCanInvite": "Nur ein Admin des Raums kann Einladungen erstellen",
+      "notAFriend": "Du kannst nur einen Freund direkt einladen"
+    },
+    "account": {
+      "fields": {
+        "display_name": "Anzeigename",
+        "pronouns": "Pronomen",
+        "bio": "Biografie"
+      },
+      "fieldTooLong": "{field} darf höchstens {max} Zeichen haben",
+      "deletionNotConfirmed": "Gib DELETE ein, um das Löschen des Kontos zu bestätigen",
+      "successorNeeded": "Bevor du dein Konto löschst, ernenne jemand anderen zum Master oder Admin in: {rooms}",
+      "signInDeletionFailed": "Deine Daten wurden gelöscht, aber das Anmeldekonto konnte nicht entfernt werden. Versuch es gleich noch einmal"
+    },
+    "friend": {
+      "notFound": "Freund oder Freundschaftsanfrage nicht gefunden",
+      "self": "Du kannst dir selbst keine Freundschaftsanfrage senden",
+      "noSharedRoom": "Du kannst eine Freundschaftsanfrage nur an jemanden senden, mit dem du einen Raum teilst, oder über den Freundescode",
+      "userOrCode": "Gib einen Nutzer oder einen Freundescode an",
+      "codeNotFound": "Freundescode nicht gefunden",
+      "alreadyFriends": "Ihr seid bereits befreundet",
+      "alreadyRequested": "Du hast diesem Nutzer bereits eine Freundschaftsanfrage gesendet",
+      "incomingPending": "Dieser Nutzer hat dir bereits eine Freundschaftsanfrage gesendet: Antworte stattdessen darauf",
+      "cooldown": "Du hast die Anfrage dieses Nutzers vor weniger als 30 Tagen abgelehnt",
+      "notRecipient": "Nur wer die Anfrage erhalten hat, kann darauf antworten",
+      "notPending": "Du hast diese Anfrage bereits beantwortet",
+      "answerInstead": "Nimm die Anfrage an oder lehne sie ab, statt sie zu entfernen"
+    },
+    "reveal": {
+      "onlyMaster": "Nur der Master kann Inhalte enthüllen",
+      "audienceRequired": "Wähle den ganzen Raum oder mindestens ein Mitglied, dem enthüllt werden soll",
+      "notWidening": "Niemand würde Zugriff erhalten: Eine Enthüllung kann nur den Kreis derer erweitern, die den Inhalt sehen",
+      "invalidUsers": "user_ids darf nur Mitglieder dieses Raums enthalten",
+      "invalidNotes": "note_ids darf nur Notizen dieses Dokuments enthalten",
+      "commentDeleted": "Ein gelöschter Kommentar kann nicht enthüllt werden"
+    },
+    "history": {
+      "forbidden": "Nur der Master oder ein Admin des Raums kann den Sichtbarkeitsverlauf lesen",
+      "invalidCursor": "before muss ein Eintrag des Verlaufs dieses Raums sein"
+    },
+    "viewAs": {
+      "readOnly": "Während du als ein anderes Mitglied ansiehst, kann nichts geändert werden",
+      "onlyMaster": "Nur der Master kann diesen Raum als ein anderes Mitglied ansehen",
+      "notAMember": "Dieser Nutzer ist kein Mitglied des Raums",
+      "invalidUser": "Ungültiges Mitglied"
+    },
+    "export": {
+      "alreadyRunning": "Du erzeugst in diesem Raum bereits ein PDF",
+      "notFound": "Export nicht gefunden"
+    },
+    "import": {
+      "unreadable": "{name} ist kein lesbarer JSON- oder Markdown-Export",
+      "unsupportedSchema": "{name} wurde von einer neueren Version exportiert (Schema {version}); diese App liest bis Schema {max}",
+      "noDocuments": "{name} enthält kein Dokument",
+      "tooManyFiles": "Es können höchstens {max} Dateien auf einmal importiert werden",
+      "tooManyDocuments": "Es können höchstens {max} Dokumente auf einmal importiert werden",
+      "tooManyImages": "Es können höchstens {max} Bilder auf einmal importiert werden",
+      "nameRequired": "Ein Dokument in der Datei hat keinen Namen",
+      "nameTooLong": "Der Name des Dokuments \"{name}...\" überschreitet {max} Zeichen",
+      "subtitleTooLong": "Der Untertitel von {name} überschreitet {max} Zeichen",
+      "tooManyNotes": "{name} hat mehr als {max} Notizen",
+      "noteTitleInvalid": "Eine Notiz von {name} hat keinen Titel oder einen mit mehr als {max} Zeichen",
+      "tagNameTooLong": "Der Name des Tags \"{name}...\" überschreitet {max} Zeichen",
+      "nothingSelected": "Wähle mindestens ein Dokument zum Importieren aus",
+      "badChoices": "Die Importauswahl ist ungültig",
+      "cannotReplace": "Nur ein Owner (oder der Master) kann {name} ersetzen",
+      "fileTooLarge": "{name} überschreitet {max} MB",
+      "alreadyRunning": "In diesem Raum läuft bereits ein Import von dir",
+      "notFound": "Import nicht gefunden"
+    },
+    "imageSearch": {
+      "emptyQuery": "Gib einen Suchbegriff ein",
+      "throttled": "Zu viele Suchanfragen: Warte eine Minute und versuch es erneut",
+      "unavailable": "Die Bildersuche ist gerade nicht verfügbar, versuch es später erneut"
+    },
+    "map": {
+      "notFound": "Karte nicht gefunden",
+      "notManager": "Nur wer die Karte erstellt hat (oder der Master) kann sie ändern",
+      "creationDisabled": "In diesem Raum können Player keine Karten erstellen",
+      "invalidSelectiveUsers": "selective_user_ids darf nur Mitglieder dieses Raums enthalten",
+      "nameRequired": "Eine Karte braucht einen Namen",
+      "tooLong": "Das Feld {field} darf höchstens {max} Zeichen enthalten",
+      "tooMany": "Ein Raum darf höchstens {max} Karten haben",
+      "tooManyCards": "Eine Karte darf höchstens {max} Kärtchen haben",
+      "tooManyGroups": "Eine Karte darf höchstens {max} Gruppen haben",
+      "tooManyArrows": "Eine Karte darf höchstens {max} Pfeile haben",
+      "invalidBoard": "Die Karte kann nicht gespeichert werden: Sie verweist auf etwas, das nicht vorhanden ist",
+      "masterOnly": "Nur der Master kann ein Kärtchen oder einen Pfeil nur für den Master sichtbar machen",
+      "imageNotFound": "Dieses Bild gehört nicht zu den Bildern des Dokuments",
+      "fields": {
+        "name": "Name",
+        "description": "Beschreibung",
+        "text": "Kärtchentext",
+        "caption": "Bildunterschrift",
+        "label": "Beschriftung",
+        "groupTitle": "Gruppentitel"
+      }
+    }
+  },
+  "pdf": {
+    "contents": "Inhaltsverzeichnis",
+    "glossary": "Glossar",
+    "other": "Sonstiges",
+    "documents": "Dokumente",
+    "comments": "Kommentare",
+    "unknownMember": "Unbekanntes Mitglied",
+    "playedBy": "{character} (gespielt von {player})",
+    "pageAbbreviation": "S."
+  },
+  "room": {
+    "copySuffix": " (Kopie)"
+  }
+}

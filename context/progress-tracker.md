@@ -101,6 +101,15 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-12
 
+- **More UI languages, 34_2** (spec 34, 10-12, no migration): de, es, fr, nl,
+  pl, pt-PT and ru, frontend and backend files drafted by Claude and shown
+  as "beta" in the selector; simplified flags; lazy-loaded; the selector
+  lists languages from `LANGUAGE_NAMES` (their files aren't loaded until
+  picked); emoji-mart labels and read-aloud tags for each; PT Serif
+  bundled as the Cyrillic fallback of the Gothic and Print PDFs (Lato already
+  has Cyrillic); a PDF test fails if any style falls back to a system font
+  for Cyrillic or Latin Extended text. Glossary filled. Next: 34_3, East
+  Asia (ja, zh-Hans, ko) with CJK fonts.
 - **More UI languages, 34_1 foundations** (spec 34, 10-12, no migration, no
   new language yet): `resolveLanguage` / `resolve_locale` map regional and
   script tags (`pt-BR` → `pt-PT`, `zh-TW` → `zh-Hans` until `zh-Hant` exists)
@@ -108,8 +117,7 @@ One line per unit; dates 2026, newest first. Spec files live in
   lazily (`LAZY_LOADERS`, `ensureLanguageLoaded`, `i18nReady` holds the first
   render, a failed switch shows `language.loadFailed`); `locales.test.ts`
   compares plural keys as groups per `Intl.PluralRules` (Russian four forms,
-  Japanese one); `context/i18n-glossary.md` started. Next: 34_2, the
-  Western European languages and Russian.
+  Japanese one); `context/i18n-glossary.md` started. Next: 34_2.
 
 - **Map cards easier to move and select** (28 follow-up, 10-12, frontend
   only, no migration): cards get a grab cursor, a hover ring and a grip

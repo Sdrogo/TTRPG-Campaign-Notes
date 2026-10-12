@@ -5,14 +5,19 @@
 @font-face { font-family: "Crimson Text"; font-style: italic; src: url(../fonts/CrimsonText-Italic.ttf); }
 @font-face { font-family: "Crimson Text"; font-weight: bold; src: url(../fonts/CrimsonText-Bold.ttf); }
 @font-face { font-family: "Crimson Text"; font-weight: bold; font-style: italic; src: url(../fonts/CrimsonText-BoldItalic.ttf); }
+/* Cyrillic (spec 34): Crimson Text and IM Fell English have none, so those letters fall through to PT Serif. */
+@font-face { font-family: "PT Serif"; src: url(../fonts/PTSerif-Regular.ttf); }
+@font-face { font-family: "PT Serif"; font-style: italic; src: url(../fonts/PTSerif-Italic.ttf); }
+@font-face { font-family: "PT Serif"; font-weight: bold; src: url(../fonts/PTSerif-Bold.ttf); }
+@font-face { font-family: "PT Serif"; font-weight: bold; font-style: italic; src: url(../fonts/PTSerif-BoldItalic.ttf); }
 
-body { font: 10.5pt/1.35 "Crimson Text", Georgia, serif; color: #000; background: none; }
-h1, h2, h3 { font-family: "Crimson Text", Georgia, serif; font-weight: bold; }
+body { font: 10.5pt/1.35 "Crimson Text", "PT Serif", Georgia, serif; color: #000; background: none; }
+h1, h2, h3 { font-family: "Crimson Text", "PT Serif", Georgia, serif; font-weight: bold; }
 @page body {
-  @top-left { font: italic 9pt "Crimson Text", serif; }
-  @top-right { font: italic 9pt "Crimson Text", serif; }
+  @top-left { font: italic 9pt "Crimson Text", "PT Serif", serif; }
+  @top-right { font: italic 9pt "Crimson Text", "PT Serif", serif; }
 }
-@page { @bottom-center { font: 9pt "Crimson Text", serif; } }
+@page { @bottom-center { font: 9pt "Crimson Text", "PT Serif", serif; } }
 
 .cover { text-align: center; }
 .cover-inner { padding: 60mm 25mm 0; }

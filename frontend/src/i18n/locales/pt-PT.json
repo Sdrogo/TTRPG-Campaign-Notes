@@ -1,0 +1,933 @@
+{
+  "language": {
+    "name": "Português",
+    "selectorLabel": "Idioma: {{language}}",
+    "selectorTooltip": "Mudar de idioma",
+    "loadFailed": "Não foi possível carregar o idioma. Tenta novamente.",
+    "beta": "beta"
+  },
+  "app": {
+    "name": "TTRPG Campaign Notes"
+  },
+  "common": {
+    "add": "Adicionar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "remove": "Remover",
+    "save": "Guardar",
+    "leave": "Sair",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "yes": "Sim",
+    "notApplicable": "—",
+    "you": "Tu",
+    "name": "Nome",
+    "description": "Descrição",
+    "noDescription": "Sem descrição.",
+    "noResults": "Sem resultados",
+    "resetFilters": "Repor filtros",
+    "goToLogin": "Ir para o início de sessão",
+    "myRooms": "As minhas Salas",
+    "backToMyRooms": "Voltar às minhas Salas",
+    "maxLength": "Máximo de {{max}} caracteres",
+    "unknownUser": "Utilizador desconhecido",
+    "accept": "Aceitar",
+    "decline": "Recusar"
+  },
+  "roles": {
+    "master": "Master",
+    "player": "Player",
+    "admin": "Admin"
+  },
+  "visibility": {
+    "label": "Visibilidade",
+    "level": {
+      "room": "Sala",
+      "master": "Só Master",
+      "private": "Privado",
+      "selective": "Seletivo"
+    },
+    "documentOption": {
+      "room": "Sala (todos os membros)",
+      "master": "Só Master",
+      "private": "Privado (Owner + Master)",
+      "selective": "Seletivo (só Owner + Master até escolheres outros)"
+    },
+    "commentOption": {
+      "room": "Sala (todos os membros)",
+      "master": "Só Master (e tu)",
+      "private": "Privado (tu + Master)",
+      "selective": "Seletivo (tu, Master e quem escolheres)"
+    }
+  },
+  "time": {
+    "now": "agora"
+  },
+  "auth": {
+    "prompt": "Inicia sessão para continuar.",
+    "signInWith": "Iniciar sessão com {{provider}}",
+    "privacy": "Privacidade"
+  },
+  "header": {
+    "account": "A tua conta",
+    "accountPending": "A tua conta: {{count}} por ver"
+  },
+  "account": {
+    "signInRequired": "Inicia sessão para gerir a tua conta.",
+    "loadError": "Não foi possível carregar a tua conta.",
+    "title": "Conta",
+    "subtitle": "O teu perfil e a tua sessão.",
+    "profile": {
+      "title": "Perfil",
+      "description": "Como os outros membros das tuas Salas te veem.",
+      "displayName": "Nome a apresentar",
+      "displayNameDescription": "Mostrado em vez do teu email nas Salas, nos Comentários e entre os Owner.",
+      "displayNamePlaceholder": "O teu nome",
+      "pronouns": "Pronomes",
+      "pronounsPlaceholder": "Ex.: ela/dela, ele/dele, elu/delu",
+      "bioDescription": "Duas linhas sobre ti, visíveis para os membros das tuas Salas.",
+      "discardChanges": "Descartar alterações",
+      "save": "Guardar perfil",
+      "saved": "Perfil guardado."
+    },
+    "avatar": {
+      "upload": "Carregar foto",
+      "fromUrl": "A partir de URL",
+      "useImage": "Usar imagem",
+      "hint": "PNG, JPEG, WebP ou GIF. A imagem é cortada ao centro e redimensionada automaticamente."
+    },
+    "access": {
+      "title": "Acesso",
+      "email": "Email",
+      "emailDescription": "O email é o da conta com que iniciaste sessão.",
+      "noEmail": "Nenhum email partilhado pela tua conta",
+      "signOutDescription": "Termina a sessão neste dispositivo.",
+      "signOut": "Terminar sessão"
+    },
+    "invitations": {
+      "title": "Convites para Salas",
+      "description": "Um amigo convidou-te: só entras na Sala se aceitares.",
+      "from": "{{name}} convida-te como {{role}}",
+      "joined": "Entraste em \"{{room}}\"."
+    },
+    "friends": {
+      "title": "Amigos",
+      "description": "Os amigos podem convidar-te diretamente para as Salas deles.",
+      "linkLabel": "O teu link de amigo",
+      "linkDescription": "Quem o abrir envia-te um pedido de amizade. Gera-o de novo para desativar o antigo.",
+      "linkError": "Não foi possível carregar o teu link de amigo.",
+      "regenerate": "Gerar de novo",
+      "regenerated": "Novo link criado: o antigo deixou de funcionar.",
+      "loadError": "Não foi possível carregar os teus amigos.",
+      "incoming": "Pedidos recebidos",
+      "outgoing": "Pedidos enviados",
+      "list": "Os teus amigos",
+      "empty": "Ainda sem amigos. Partilha o teu link ou adiciona um membro de uma das tuas Salas.",
+      "cancelRequest": "Cancelar pedido",
+      "removeConfirm": "Remover {{name}} dos amigos?",
+      "accepted": "Agora tu e {{name}} são amigos."
+    },
+    "reveals": {
+      "title": "Revelado para ti",
+      "description": "O que o Master acabou de te mostrar. Desaparece daqui quando o abres.",
+      "document": "Documento",
+      "note": "Nota \"{{title}}\"",
+      "comment": "Um comentário"
+    },
+    "speech": {
+      "title": "Leitura em voz alta",
+      "description": "A voz e a velocidade com que a app lê Documentos, Notas e Comentários. As vozes são as do navegador: a escolha fica neste dispositivo, uma por idioma.",
+      "unsupported": "Este navegador não sabe ler em voz alta.",
+      "voice": "Voz",
+      "automatic": "Automática",
+      "automaticWith": "Automática ({{name}})",
+      "languageVoices": "Vozes em português",
+      "otherVoices": "Outras vozes",
+      "noVoices": "Nenhuma voz em português neste dispositivo: o navegador usará a predefinida.",
+      "betterVoices": "As melhores vozes são as neuronais do navegador: no Edge as vozes \"Natural\", no Chrome \"Google\", no iPhone e Mac as vozes \"Avançadas\" ou \"Premium\" a transferir em Definições › Acessibilidade › Conteúdo falado.",
+      "rate": "Velocidade",
+      "try": "Experimentar",
+      "sample": "Assim soa esta voz a ler os teus apontamentos."
+    },
+    "privacy": {
+      "title": "Os teus dados",
+      "description": "Transfere uma cópia de tudo o que a app guarda sobre ti, ou elimina a tua conta.",
+      "export": "Transferir os meus dados",
+      "exported": "Dados transferidos",
+      "notice": "Política de privacidade",
+      "deleteDescription": "A eliminação da conta é definitiva. As Salas em que és o único membro são eliminadas; nas Salas partilhadas o que escreveste fica, mostrado como escrito por um utilizador desconhecido.",
+      "delete": "Eliminar conta",
+      "confirmTitle": "Eliminar a tua conta?",
+      "confirmBody": "Perfil, avatar, Amigos e conta de acesso são apagados e não podem ser recuperados. As Salas em que és o único membro são eliminadas com todo o seu conteúdo. Se és o último Master ou Administrador de uma Sala partilhada, passa primeiro o papel a outra pessoa.",
+      "confirmLabel": "Escreve \"{{word}}\" para confirmar",
+      "deleteWord": "ELIMINAR",
+      "confirm": "Eliminar definitivamente",
+      "deleted": "A tua conta foi eliminada"
+    }
+  },
+  "rooms": {
+    "create": "Criar Sala",
+    "loadError": "Erro ao carregar as Salas.",
+    "empty": "Ainda sem Salas. Cria uma para começar.",
+    "invite": "Convidar",
+    "createModal": {
+      "title": "Criar uma Sala",
+      "namePlaceholder": "Ex.: A Maldição de Strahd",
+      "gameSystem": "Sistema de jogo",
+      "gameSystemPlaceholder": "Ex.: D&D 5e (opcional)",
+      "image": "Imagem (facultativa)",
+      "chooseImage": "Escolher imagem",
+      "changeImage": "Mudar imagem",
+      "imageHint": "A capa do PDF da Sala. Podes mudá-la depois nas definições da Sala.",
+      "imageFailed": "A Sala foi criada, mas não foi possível guardar a imagem ({{reason}}). Podes defini-la nas definições da Sala."
+    },
+    "setup": "Definições",
+    "actions": "Ações da Sala {{name}}",
+    "duplicate": {
+      "action": "Duplicar",
+      "confirmTitle": "Duplicar \"{{name}}\"?",
+      "confirmBody": "Documentos, Notas, Tags e imagens são copiados. Comentários, anexos PDF e membros não. Serás o único Master da cópia.",
+      "copyName": "{{name}} (Cópia)",
+      "created": "\"{{name}}\" criada"
+    },
+    "leave": {
+      "confirmTitle": "Sair de \"{{name}}\"?",
+      "confirmBody": "Os teus Documentos, Comentários e Notas ficam na Sala. Para voltares a entrar vais precisar de um novo convite.",
+      "adminHint": "És Administrador: se fores o último, nomeia primeiro outro Administrador nas Definições da Sala.",
+      "left": "Saíste de \"{{name}}\""
+    },
+    "image": {
+      "alt": "Imagem da Sala"
+    }
+  },
+  "invite": {
+    "modalTitle": "Convidar para a Sala",
+    "proposedRole": "Papel proposto",
+    "generate": "Gerar convite",
+    "signInRequired": "Inicia sessão para entrares nesta Sala.",
+    "invalid": "Convite inválido, expirado ou já utilizado.",
+    "joined": "Entraste em \"{{room}}\"",
+    "goToMyRooms": "Ir para as minhas Salas",
+    "tabLink": "Link",
+    "tabFriends": "Amigos",
+    "friend": "Amigo",
+    "friendPlaceholder": "Escolhe um amigo",
+    "noFriends": "Nenhum amigo para convidar. Adiciona-os na tua página de Conta.",
+    "friendsHint": "O teu amigo verá o convite na página de Conta dele e só entra se aceitar.",
+    "send": "Enviar convite",
+    "sent": "Convite enviado a {{name}}."
+  },
+  "members": {
+    "signInRequired": "Inicia sessão para veres os membros desta Sala.",
+    "title": "Membros",
+    "loadError": "Erro ao carregar os membros.",
+    "columnUser": "Utilizador",
+    "columnRole": "Papel",
+    "columnAdmin": "Administrador",
+    "addFriend": "Adicionar aos amigos",
+    "friend": "Amigo",
+    "requestSent": "Pedido enviado",
+    "requestReceived": "Pediu-te amizade",
+    "friendRequestSent": "Pedido de amizade enviado a {{name}}."
+  },
+  "setup": {
+    "signInRequired": "Inicia sessão para gerires esta Sala.",
+    "title": "Definições da Sala",
+    "adminOnly": "Só um Administrador ou o Master da Sala pode abrir as definições.",
+    "loadError": "Erro ao carregar as definições da Sala.",
+    "tags": {
+      "title": "Tags",
+      "description": "Como a página dos Documentos agrupa os Documentos, e todas as Tags da Sala. Cada alteração é guardada de imediato.",
+      "grouping": {
+        "title": "Agrupamento",
+        "description": "A página dos Documentos agrupa-os por estas entradas, por esta ordem. Uma entrada é uma Tag, ou uma combinação: os seus Documentos têm todas essas Tags.",
+        "empty": "Nenhuma entrada: os Documentos não serão agrupados.",
+        "moveUp": "Subir {{name}}",
+        "moveDown": "Descer {{name}}",
+        "remove": "Tirar {{name}} do agrupamento",
+        "addLabel": "Adicionar uma entrada",
+        "addPlaceholder": "Escolhe uma ou mais Tags",
+        "addHint": "Uma Tag é uma Tag principal, duas ou mais uma combinação.",
+        "add": "Adicionar",
+        "alreadyMain": "Esta Tag já é uma entrada do agrupamento.",
+        "alreadyCombination": "Esta combinação já está no agrupamento."
+      },
+      "all": {
+        "title": "Todas as Tags",
+        "description": "Eliminar uma Tag retira-a dos Documentos e do agrupamento; os Documentos ficam.",
+        "empty": "Esta Sala não tem Tags.",
+        "filterLabel": "Filtrar as Tags",
+        "filterPlaceholder": "Filtrar as Tags",
+        "noMatch": "Nenhuma Tag corresponde a \"{{query}}\".",
+        "newLabel": "Nova Tag",
+        "newPlaceholder": "Nova Tag",
+        "create": "Criar a Tag",
+        "created": "Tag \"{{name}}\" criada",
+        "inGrouping": "No agrupamento",
+        "rename": "Mudar o nome da Tag {{name}}",
+        "renameInput": "Novo nome para {{name}}",
+        "saveRename": "Guardar o nome",
+        "cancelRename": "Cancelar",
+        "renamed": "Tag renomeada para \"{{name}}\""
+      },
+      "delete": "Eliminar a Tag {{name}}",
+      "confirmTitle": "Eliminar a Tag \"{{name}}\"?",
+      "confirmBody": "A Tag é retirada de todos os Documentos que a têm e do agrupamento. As combinações que a usavam ficam reduzidas e são removidas se restarem menos de duas Tags. Os Documentos não são eliminados. Esta ação não pode ser anulada.",
+      "deleted": "Tag \"{{name}}\" eliminada"
+    },
+    "dangerZone": {
+      "title": "Zona de perigo",
+      "description": "Eliminar a Sala remove-a para sempre, juntamente com membros, Documentos, Comentários, Notas e imagens.",
+      "deleteRoom": "Eliminar Sala",
+      "confirmTitle": "Eliminar a Sala \"{{name}}\"?",
+      "confirmBody": "Tudo o que está na Sala é eliminado para todos: membros, convites, Tags, Documentos, Comentários, Notas e imagens. Esta ação não pode ser anulada.",
+      "confirmLabel": "Escreve \"{{name}}\" para confirmar",
+      "deleted": "Sala \"{{name}}\" eliminada"
+    },
+    "tabs": {
+      "settings": "Definições",
+      "history": "Histórico"
+    },
+    "defaultVisibility": {
+      "title": "Visibilidade predefinida",
+      "description": "O nível com que começa cada novo Documento, Nota e Comentário. Uma resposta começa sempre com a visibilidade do comentário a que responde. O conteúdo existente não muda.",
+      "label": "Visibilidade predefinida",
+      "saved": "Visibilidade predefinida guardada."
+    },
+    "history": {
+      "title": "Histórico de visibilidade",
+      "description": "Quem mudou quem vê o quê, da alteração mais recente para a mais antiga.",
+      "filterLabel": "Conteúdo",
+      "filter": {
+        "all": "Tudo",
+        "document": "Documentos",
+        "note": "Notas",
+        "comment": "Comentários"
+      },
+      "empty": "Nenhuma alteração de visibilidade.",
+      "loadError": "Não foi possível carregar o histórico.",
+      "loadMore": "Carregar mais",
+      "when": "Quando",
+      "who": "Quem",
+      "what": "O quê",
+      "change": "Alteração",
+      "reveal": "Revelação",
+      "hidden": {
+        "document": "Um Documento oculto",
+        "note": "Uma Nota oculta",
+        "comment": "Um comentário oculto"
+      },
+      "deleted": {
+        "document": "Um Documento eliminado",
+        "note": "Uma Nota eliminada",
+        "comment": "Um comentário eliminado"
+      },
+      "note": "Nota \"{{title}}\" em {{document}}",
+      "comment": "Comentário em {{document}}",
+      "recipients": "Agora veem-no: {{names}}",
+      "selective": "Escolhidos: {{names}}"
+    },
+    "roomImage": {
+      "title": "Imagem da Sala",
+      "description": "A capa predefinida do PDF da Sala. Quem exporta pode sempre escolher a imagem de um Documento ou nenhuma.",
+      "upload": "Carregar imagem",
+      "hint": "PNG, JPEG, WebP ou GIF. Redimensionada automaticamente, sem cortes."
+    }
+  },
+  "documents": {
+    "signInRequired": "Inicia sessão para veres os Documentos desta Sala.",
+    "title": "Documentos",
+    "create": "Criar Documento",
+    "playersCanCreate": "Os Players podem criar Documentos",
+    "loadError": "Erro ao carregar os Documentos.",
+    "empty": "Ainda sem Documentos. Cria um para começar.",
+    "noMatchForTags_one": "Nenhum Documento com esta Tag.",
+    "noMatchForTags_other": "Nenhum Documento com estas Tags.",
+    "showAll": "Mostrar todos",
+    "filterByTag": "Filtrar por Tag",
+    "hideControls": "Ocultar filtros e definições",
+    "showControls": "Mostrar filtros e definições",
+    "owners": "Owner",
+    "ownersLine": "Owner: {{names}}",
+    "addOwner": "Adicionar Owner",
+    "removeOwner": "Remover Owner {{name}}",
+    "groupByLabel": "Agrupar por",
+    "groupByMainTag": "Agrupar por Tag principal",
+    "groupByNone": "Sem agrupamento",
+    "sortLabel": "Ordenar por",
+    "sortNameAsc": "Nome (A-Z)",
+    "sortNameDesc": "Nome (Z-A)",
+    "ungroupedTag": "Sem Tag principal",
+    "detail": {
+      "signInRequired": "Inicia sessão para veres este Documento.",
+      "notFound": "Documento não encontrado ou não visível.",
+      "backToDocuments": "Voltar aos Documentos",
+      "cancelEditing": "Descartar alterações",
+      "saveChanges": "Guardar alterações",
+      "deleteDocument": "Eliminar Documento",
+      "deleteConfirmTitle": "Eliminar este Documento?",
+      "deleteConfirmBody": "Os Comentários, as imagens e as ligações às Tags deste Documento serão eliminados. Esta ação não pode ser anulada."
+    },
+    "fields": {
+      "descriptionHint": "Escreve # para ligar a outro Documento.",
+      "subtitle": "Subtítulo",
+      "subtitleHint": "Uma linha por baixo do nome, por exemplo «A Ídolo».",
+      "tags": "Tags",
+      "newTag": "Nova tag",
+      "newTagPlaceholder": "Ex.: Fação"
+    },
+    "notYetRead": "Ainda não lido",
+    "unreadCount_one": "{{count}} novo comentário",
+    "unreadCount_other": "{{count}} novos comentários"
+  },
+  "images": {
+    "numbered": "{{name}} ({{index}})",
+    "open": "Abrir imagem",
+    "openNamed": "Abrir {{name}}",
+    "removeNamed": "Remover {{name}}",
+    "delete": "Eliminar imagem",
+    "deleteConfirm": "Eliminar esta imagem?",
+    "favorite": "Imagem principal",
+    "setFavorite": "Usar como imagem principal",
+    "urlLabel": "URL da imagem",
+    "urlPlaceholder": "https://… URL da imagem",
+    "invalidUrl": "Introduz um URL http(s) válido",
+    "rowTitle": "Imagens",
+    "upload": "Carregar imagens",
+    "addFromUrl": "Adicionar a partir de URL",
+    "fromUrlShort": "De URL",
+    "resizeHint": "PNG, JPEG, WebP ou GIF. As imagens grandes são redimensionadas automaticamente.",
+    "limitReached": "Limite de imagens atingido",
+    "attachFiles": "Adicionar imagens",
+    "attachFilesTooltip": "Adicionar imagens do computador",
+    "attachUrl": "Adicionar imagem a partir de URL",
+    "viewer": {
+      "previous": "Imagem anterior",
+      "next": "Imagem seguinte",
+      "zoomOut": "Reduzir",
+      "zoomIn": "Ampliar",
+      "fit": "Ajustar ao ecrã"
+    }
+  },
+  "versions": {
+    "action": "Histórico",
+    "actionFor": "Histórico: {{name}}",
+    "title": "Histórico: {{name}}",
+    "loadFailed": "Não foi possível carregar o histórico.",
+    "empty": "Nenhuma revisão.",
+    "current": "Atual",
+    "first": "Primeira revisão",
+    "changeSize": "+{{added}} −{{removed}}",
+    "changeSizeLabel": "Palavras adicionadas: {{added}}, removidas: {{removed}}",
+    "pick": "Escolhe uma revisão para a comparar com o Documento como está agora.",
+    "before": "Esta revisão",
+    "after": "Agora",
+    "identical": "O Documento já está assim.",
+    "restore": "Restaurar esta revisão",
+    "restoreConfirmTitle": "Restaurar esta revisão?",
+    "restoreConfirmBody": "O Documento, incluindo as Notas, voltará a ficar como estava em {{date}}: as Notas eliminadas desde então voltam e as adicionadas depois são eliminadas. É acrescentada uma nova revisão: nada se perde.",
+    "restored": "Revisão restaurada",
+    "notesHeading": "Notas",
+    "noteRemoved": "Eliminada desde então",
+    "noteAdded": "Adicionada depois",
+    "noteNotThen": "Não existe nesta revisão",
+    "noteNotNow": "Já não existe no Documento",
+    "notesChange": "Notas +{{added}} −{{removed}}",
+    "notesChangeLabel": "Notas adicionadas: {{added}}, removidas: {{removed}}"
+  },
+  "notes": {
+    "add": "Adicionar Nota",
+    "edit": "Editar Nota: {{title}}",
+    "delete": "Eliminar Nota: {{title}}",
+    "moveUp": "Subir a Nota: {{title}}",
+    "moveDown": "Descer a Nota: {{title}}",
+    "deleteConfirmTitle": "Eliminar esta Nota?",
+    "deleteConfirmBody": "\"{{title}}\" será eliminada. Podes recuperá-la no Histórico do Documento.",
+    "form": {
+      "title": "Título",
+      "selectiveLabel": "Membros que podem ver a Nota",
+      "selectivePlaceholder": "Quem a pode ver"
+    }
+  },
+  "files": {
+    "title": "Ficheiros",
+    "upload": "Carregar PDF",
+    "uploadHint": "Anexa um PDF até {{mb}} MB, por exemplo uma ficha de personagem",
+    "limitReached": "Um Documento pode ter no máximo {{max}} ficheiros",
+    "open": "Abrir {{name}}",
+    "download": "Transferir {{name}}",
+    "delete": "Eliminar {{name}}",
+    "deleteConfirmTitle": "Eliminar este ficheiro?",
+    "deleteConfirmBody": "\"{{name}}\" será eliminado. Esta ação não pode ser anulada.",
+    "notPdf": "Só se podem anexar ficheiros PDF",
+    "tooLarge": "O ficheiro excede o limite de {{mb}} MB",
+    "openFailed": "Não foi possível abrir {{name}}"
+  },
+  "characters": {
+    "playedBy": "Interpretado por",
+    "playedByLine": "Interpretado por {{name}}",
+    "choosePlayer": "Escolhe o jogador",
+    "alsoOwner": "Torná-lo também Owner",
+    "setPlayer": "Definir jogador",
+    "unlink": "Desligar {{name}}",
+    "postAs": "Escrever como",
+    "yourself": "Tu próprio ({{name}})",
+    "writtenBy": "interpretado por {{name}}"
+  },
+  "comments": {
+    "title": "Comentários",
+    "loadError": "Não foi possível carregar os comentários.",
+    "empty": "Ainda sem comentários. Escreve o primeiro!",
+    "filteredCount_one": "{{shown}} de {{count}} comentário",
+    "filteredCount_other": "{{shown}} de {{count}} comentários",
+    "noMatch": "Nenhum comentário corresponde aos filtros.",
+    "publish": "Publicar",
+    "savedWithImageErrors": "Comentário guardado, mas nem todas as imagens: {{errors}}",
+    "imageRemovalFailed": "Remoção da imagem: {{reason}}",
+    "you": "(tu)",
+    "deleted": "Comentário eliminado.",
+    "edited": "Editado",
+    "editedAt": "Editado {{date}}",
+    "deleteConfirm": "Eliminar este comentário?",
+    "deleteImagesWarning": "As suas imagens também serão removidas do Documento.",
+    "imageLabel": "Imagem {{index}} do comentário de {{author}}",
+    "imagesAlt": "Comentário de {{author}}",
+    "attachedImage": "Imagem anexada",
+    "reply": "Responder",
+    "replyLabel": "Resposta a {{name}}",
+    "inReplyTo": "em resposta a {{name}}",
+    "parentHidden": "Um comentário que não podes ver",
+    "pin": "Afixar",
+    "unpin": "Desafixar",
+    "pinned": "Afixado",
+    "pinnedSection": "Comentários afixados",
+    "resolve": "Marcar como resolvido",
+    "reopen": "Reabrir",
+    "resolved": "Resolvido",
+    "resolvedBy": "Resolvido por {{name}}, {{date}}",
+    "reactions": {
+      "add": "Adicionar uma reação",
+      "chip_one": "{{emoji}}, {{count}} reação: {{names}}",
+      "chip_other": "{{emoji}}, {{count}} reações: {{names}}",
+      "loadingPicker": "A carregar os emojis",
+      "pickerFailed": "Não foi possível carregar os emojis. Tenta novamente mais tarde."
+    },
+    "thread": {
+      "showMore_one": "Mostrar mais {{count}} resposta",
+      "showMore_other": "Mostrar mais {{count}} respostas",
+      "show_one": "Mostrar {{count}} resposta",
+      "show_other": "Mostrar {{count}} respostas",
+      "hide": "Ocultar respostas",
+      "hiddenNew_one": "{{count}} nova",
+      "hiddenNew_other": "{{count}} novas"
+    },
+    "composer": {
+      "bodyLabel": "Texto do comentário",
+      "bodyPlaceholder": "Escreve um comentário… (# para ligar a um Documento)",
+      "visibilityLabel": "Visibilidade do comentário",
+      "selectiveLabel": "Membros que podem ver o comentário",
+      "selectivePlaceholder": "Quem o pode ver"
+    },
+    "toolbar": {
+      "searchLabel": "Pesquisar nos comentários",
+      "searchPlaceholder": "Pesquisar…",
+      "sortLabel": "Ordenar comentários",
+      "sortNewest": "Mais recentes",
+      "sortOldest": "Mais antigos",
+      "sortAuthor": "Por autor",
+      "authorLabel": "Filtrar por autor",
+      "authorPlaceholder": "Todos os autores",
+      "visibilityLabel": "Filtrar por visibilidade",
+      "visibilityPlaceholder": "Qualquer visibilidade",
+      "hideDeleted": "Ocultar eliminados"
+    },
+    "new": "Novo",
+    "promotion": {
+      "promote": "Promover",
+      "intoDescription": "Para a descrição",
+      "intoDocument": "Para um novo Documento",
+      "promoted": "Promovido",
+      "promotedToDescription": "Promovido para a descrição em {{date}}",
+      "promotedToDocument": "Promovido para um novo Documento em {{date}}",
+      "openDocument": "Abrir o Documento para onde foi promovido",
+      "editorNotice": "O texto do comentário foi acrescentado ao fim da descrição: revê-o e guarda para o promover.",
+      "modalTitle": "Promover para um novo Documento",
+      "images": "Imagens do comentário a adicionar ao Documento",
+      "imageLabel": "Imagem {{index}}",
+      "wideningTitle": "O texto ficará visível para mais pessoas",
+      "wideningBody": "Ao promovê-lo, o texto do comentário poderá ser lido também por quem agora não o vê: {{names}}.",
+      "wideningConfirm": "Promover na mesma",
+      "done": "Comentário promovido",
+      "imageErrors": "Comentário promovido, mas algumas imagens não foram adicionadas: {{errors}}",
+      "notRecorded": "O Documento foi criado, mas a promoção do comentário não foi registada: {{reason}}"
+    }
+  },
+  "mentions": {
+    "listLabel": "Documentos e Tags a ligar",
+    "membersListLabel": "Membros a mencionar",
+    "kind": {
+      "document": "Documento",
+      "tag": "Tag"
+    },
+    "tagDetail_one": "Tag · {{count}} Documento",
+    "tagDetail_other": "Tag · {{count}} Documentos",
+    "noMatchCreate": "Nenhum resultado para «{{name}}». Cria-o como:",
+    "kindSwitchLabel": "Tipo do novo elemento",
+    "createKind": "Criar {{kind}}",
+    "hintSwitchKind": "←/→ muda o tipo · ",
+    "hintCreate": "Enter para criar"
+  },
+  "backlinks": {
+    "title": "Mencionado em",
+    "inDescription": "Na descrição",
+    "inNote": "Na nota «{{title}}»",
+    "inComment": "Num comentário de {{name}}"
+  },
+  "glossary": {
+    "title": "Índice de Tags",
+    "openToggle": "Abrir índice de Tags",
+    "closeToggle": "Fechar índice de Tags",
+    "mainTags": "Tags principais",
+    "otherTags": "Outras Tags",
+    "empty": "Nenhuma Tag nesta Sala."
+  },
+  "search": {
+    "open": "Pesquisar",
+    "title": "Pesquisar na Sala",
+    "inputLabel": "Pesquisar na Sala",
+    "placeholder": "Documentos, Notas, Comentários, Tags…",
+    "hint": "Escreve pelo menos 2 letras.",
+    "loading": "A pesquisar",
+    "resultsLabel": "Resultados",
+    "showMore": "Mostrar mais",
+    "tagFilter": "Filtrar por Tag",
+    "inDocument": "em {{name}}",
+    "commentOn": "Comentário em {{name}}",
+    "kinds": {
+      "all": "Tudo"
+    },
+    "groups": {
+      "document": "Documentos",
+      "note": "Notas",
+      "comment": "Comentários",
+      "tag": "Tags"
+    }
+  },
+  "friendLink": {
+    "signInRequired": "Inicia sessão para enviares o pedido de amizade.",
+    "sent": "Pedido de amizade enviado a {{name}}.",
+    "sentAnonymous": "Pedido de amizade enviado.",
+    "failed": "Não foi possível enviar o pedido de amizade.",
+    "goToAccount": "Ir para a tua conta"
+  },
+  "reveal": {
+    "action": "Revelar",
+    "actionLabel": "Revelar: {{name}}",
+    "comment": "o comentário",
+    "revealed": "Revelado",
+    "revealedLabel": "Revelado para ti",
+    "modalTitle": "Revelar \"{{name}}\"",
+    "audienceLabel": "A quem",
+    "toRoom": "A toda a Sala",
+    "toChosen": "Aos jogadores escolhidos",
+    "chosenLabel": "Jogadores",
+    "chosenPlaceholder": "Escolhe quem",
+    "noOneToPick": "Todos os membros que o podem receber já o veem.",
+    "gains": "Ganham acesso: {{names}}",
+    "noGains": "Nenhum outro membro ganha acesso.",
+    "notesLabel": "Revelar também estas Notas",
+    "notesDescription": "Quem recebe o Documento não as vê. Ficam como estão se não as selecionares.",
+    "confirm": "Revelar",
+    "done": "Revelado."
+  },
+  "viewAs": {
+    "action": "Ver como um membro",
+    "menuLabel": "Ver a Sala como",
+    "banner": "Estás a ver a Sala como {{name}}. Só de leitura.",
+    "exit": "Sair da vista"
+  },
+  "export": {
+    "action": "Exportar",
+    "title": "Exportar a Sala",
+    "intro": "Transfere a Sala como ficheiro. Contém apenas o que podes ver: Documentos, Notas, Comentários e Tags.",
+    "format": "Formato do ficheiro",
+    "formats": {
+      "md": "Markdown",
+      "json": "JSON",
+      "pdf": "PDF"
+    },
+    "formatHint": {
+      "md": "Um único ficheiro legível, para ler ou imprimir.",
+      "json": "Dados estruturados com os ids, para ferramentas e Agentes de IA.",
+      "pdf": "Um manual paginado para imprimir ou entregar aos jogadores."
+    },
+    "tagFilter": "Só os Documentos com estas Tags (facultativo)",
+    "linksExpire": "Os links para imagens e ficheiros PDF expiram em uma hora. Exporta de novo para os atualizar.",
+    "done": "Exportação transferida.",
+    "pdf": {
+      "style": "Estilo",
+      "styles": {
+        "gothic": "Gótico",
+        "modern": "Moderno",
+        "print": "Impressão"
+      },
+      "styleHints": {
+        "gothic": "Preto e vermelho, capa escura",
+        "modern": "Sans-serif limpo, muito espaço",
+        "print": "Preto e branco, poupa tinta"
+      },
+      "pageSize": "Formato da página",
+      "comments": "Incluir os Comentários em apêndice",
+      "attachments": "Acrescentar no fim os anexos PDF",
+      "cover": "Imagem de capa",
+      "coverNone": "Nenhuma",
+      "coverClear": "Tirar a imagem de capa",
+      "coverNothing": "Nenhum Documento com imagens",
+      "coverHint": "A capa usa a imagem favorita do Documento escolhido.",
+      "visibility": "O PDF contém apenas o que podes ver. É preparado em segundo plano e fica disponível durante 24 horas.",
+      "asMember": "Estás a ver a Sala como outro membro: o PDF conterá apenas o que ele vê. Fica disponível durante 24 horas.",
+      "action": "Gerar PDF",
+      "making": "A preparar o PDF…",
+      "makingHint": "Podes fechar esta janela: o PDF fica na página da Sala até o transferires.",
+      "ready": "O PDF está pronto.",
+      "availableUntil": "Disponível até {{time}}.",
+      "download": "Transferir o PDF",
+      "preparingLink": "A preparar o link de transferência…",
+      "failed": "Não foi possível preparar o PDF.",
+      "expired": "Este PDF já não está disponível: os ficheiros são removidos após 24 horas.",
+      "another": "Preparar outro PDF",
+      "retry": "Tentar novamente",
+      "listTitle": "Os teus PDF",
+      "listItem": "{{style}} · {{size}}",
+      "listStatus": {
+        "queued": "Em fila",
+        "running": "A preparar",
+        "done": "Pronto",
+        "failed": "Falhou",
+        "expired": "Expirado"
+      },
+      "downloadNamed": "Transferir o PDF {{name}}",
+      "dismiss": "Ocultar",
+      "dismissNamed": "Ocultar o PDF {{name}}",
+      "coverRoom": "Imagem da Sala",
+      "coverHintRoom": "A capa usa a imagem da Sala, ou a imagem favorita do Documento escolhido."
+    },
+    "document": {
+      "title": "Exportar o Documento",
+      "action": "Exportar o Documento",
+      "intro": "Transfere este Documento como ficheiro, com o que podes ver: Notas, Comentários e Tags. Podes importá-lo de novo para uma Sala."
+    }
+  },
+  "documentImport": {
+    "action": "Importar Documentos",
+    "title": "Importar Documentos",
+    "intro": "Carrega um ou mais ficheiros JSON ou Markdown, incluindo a exportação de uma Sala inteira. Primeiro verás o que seria importado: nada é escrito até confirmares.",
+    "jsonHint": "O JSON é o formato fiel; o Markdown é lido da melhor forma possível. Os Comentários, os anexos PDF, os Owner e a ligação ao jogador não são importados.",
+    "files": "Ficheiros a importar",
+    "filesPlaceholder": "Escolhe um ou mais ficheiros .json ou .md",
+    "preview": "Pré-visualização",
+    "found_one": "{{count}} Documento encontrado",
+    "found_other": "{{count}} Documentos encontrados",
+    "documentSelect": "Importar {{name}}",
+    "notesCount_one": "{{count}} Nota",
+    "notesCount_other": "{{count}} Notas",
+    "imagesCount_one": "{{count}} imagem",
+    "imagesCount_other": "{{count}} imagens",
+    "tags": "Tags: {{names}}",
+    "exists": "Já existe nesta Sala",
+    "tagsToCreate": "Tags que serão criadas: {{names}}",
+    "tagsUnavailable": "Tags que não podes criar e que serão retiradas: {{names}}",
+    "selectedCount_one": "{{count}} Documento selecionado",
+    "selectedCount_other": "{{count}} Documentos selecionados",
+    "next": "Seguinte",
+    "back": "Anterior",
+    "start": "Importar",
+    "warning": {
+      "comments_dropped_one": "{{count}} Comentário não é importado",
+      "comments_dropped_other": "{{count}} Comentários não são importados",
+      "files_dropped_one": "{{count}} anexo PDF não é importado",
+      "files_dropped_other": "{{count}} anexos PDF não são importados",
+      "player_dropped": "A ligação ao jogador não é importada",
+      "selective_to_private_one": "{{count}} elemento com visibilidade Seletiva passa a Privado",
+      "selective_to_private_other": "{{count}} elementos com visibilidade Seletiva passam a Privados",
+      "tags_not_created": "Tags não criadas: {{names}}"
+    },
+    "existing": {
+      "title": "Alguns Documentos já existem",
+      "intro": "Copiar cria um novo Documento e deixa o original intacto. Substituir reescreve apenas a informação do original (nome, descrição, Tags e Notas): Owner, visibilidade, Comentários e anexos ficam. A substituição pode ser anulada a partir do histórico do Documento.",
+      "copy": "Copiar",
+      "replace": "Substituir",
+      "applyAll": "Aplicar a todos",
+      "copyAll": "Copiar todos",
+      "replaceAll": "Substituir todos",
+      "cannotReplace": "Só um Owner do Documento (ou o Master) o pode substituir",
+      "choice": "O que fazer com {{name}}"
+    },
+    "running": "A importar…",
+    "runningHint": "Podes fechar esta janela: a importação continua em segundo plano e os Documentos aparecem na lista assim que terminar.",
+    "done": "Importação concluída",
+    "created_one": "{{count}} Documento criado",
+    "created_other": "{{count}} Documentos criados",
+    "replaced_one": "{{count}} Documento substituído",
+    "replaced_other": "{{count}} Documentos substituídos",
+    "skippedTitle_one": "{{count}} imagem não importada",
+    "skippedTitle_other": "{{count}} imagens não importadas",
+    "skipped": "{{document}}: {{reason}}",
+    "skipReason": {
+      "unreachable": "link inacessível ou expirado",
+      "not_an_image": "não é uma imagem",
+      "too_large": "demasiado grande",
+      "limit": "o Documento já tem o máximo de imagens",
+      "storage": "armazenamento indisponível",
+      "failed": "erro inesperado"
+    },
+    "failed": "A importação falhou. Verifica a lista de Documentos antes de tentares novamente.",
+    "another": "Importar outros ficheiros"
+  },
+  "imageSearch": {
+    "action": "Pesquisar",
+    "title": "Pesquisar imagens",
+    "queryLabel": "O que pesquisar",
+    "placeholder": "Ex.: castelo gótico, mapa antigo",
+    "submit": "Pesquisar",
+    "sourceHint": "Imagens gratuitas (Creative Commons e domínio público) do Openverse. Clica numa imagem para a adicionar ao Documento.",
+    "loading": "A pesquisar",
+    "empty": "Nenhuma imagem encontrada",
+    "more": "Mais resultados",
+    "add": "Adicionar {{title}}",
+    "added": "Adicionada",
+    "untitled": "Sem título",
+    "source": "Fonte"
+  },
+  "speech": {
+    "listen": "Ouvir «{{name}}»",
+    "pause": "Pausar a leitura",
+    "resume": "Retomar a leitura",
+    "stop": "Parar a leitura",
+    "commentListen": "Ouvir",
+    "commentStop": "Parar",
+    "commentBy": "{{name}} escreveu"
+  },
+  "privacy": {
+    "back": "Voltar à app",
+    "title": "Política de privacidade",
+    "updated": "Última atualização: {{date}}",
+    "intro": "Esta política explica que dados pessoais esta app trata, porquê, onde são conservados e como podes exercer os teus direitos ao abrigo do Regulamento Geral sobre a Proteção de Dados (RGPD).",
+    "sections": {
+      "controller": {
+        "title": "Quem é o responsável",
+        "body": "O responsável pelo tratamento é {{name}}. Para qualquer questão sobre os teus dados, ou para exercer os teus direitos, escreve para {{email}}."
+      },
+      "data": {
+        "title": "Que dados tratamos",
+        "body": "Apenas os necessários para o funcionamento da app:\n\n- Dados de acesso do fornecedor que escolhes (Google, Discord ou GitHub): um identificador da conta, o teu endereço de email, o teu nome e a tua imagem, copiados uma única vez como nome e avatar predefinidos do perfil.\n- O teu perfil: nome a apresentar, pronomes, descrição e avatar, que podes alterar ou remover em qualquer momento na página Conta.\n- O que escreves e carregas nas Salas: Documentos, Notas, Comentários, reações, imagens e anexos PDF, com quem os criou e quando.\n- Os teus Amigos, os pedidos de amizade e o teu código de amigo, e os convites para Salas que envias ou recebes.\n- Dados de utilização e técnicos: quando abriste cada Documento pela última vez, o histórico de alterações dos Documentos, o registo de cada Sala das mudanças de papel e de visibilidade, e os dados dos pedidos que os servidores registam para prestar e proteger o serviço (como endereço IP, navegador e hora)."
+      },
+      "purposes": {
+        "title": "Porquê, e com que base legal",
+        "body": "Os teus dados servem apenas para fornecer a app a ti e aos membros das tuas Salas (execução de um contrato, art. 6.º, n.º 1, al. b) do RGPD) e para a manter segura e a funcionar (interesse legítimo, art. 6.º, n.º 1, al. f) do RGPD).\n\nNão são vendidos nem usados para publicidade ou definição de perfis, e a app não usa ferramentas de análise ou rastreio. O teu email nunca é mostrado a outros utilizadores."
+      },
+      "processors": {
+        "title": "Quem os trata, e onde",
+        "body": "A app recorre a estes fornecedores, que tratam os dados por nossa conta:\n\n- Supabase: base de dados, armazenamento de ficheiros e acesso, alojados na União Europeia (Frankfurt, Alemanha).\n- OVHcloud: o servidor que executa o backend da app, no Reino Unido, que a Comissão Europeia reconhece como país com um nível de proteção adequado.\n- Vercel: distribuição das páginas da app. A sua rede pode servir pedidos de fora da União Europeia; as transferências para os Estados Unidos baseiam-se no EU-U.S. Data Privacy Framework e nas cláusulas contratuais-tipo.\n- Google, Discord e GitHub: apenas para o acesso que escolhes, segundo as respetivas políticas.\n- Openverse, um projeto de WordPress.org: quando pesquisas imagens livres para um Documento, a pesquisa é enviada pelo nosso servidor, e as pré-visualizações são carregadas pelo teu navegador diretamente do Openverse, que por isso vê o teu endereço IP."
+      },
+      "retention": {
+        "title": "Durante quanto tempo os conservamos",
+        "body": "- A tua conta e o teu perfil ficam até eliminares a conta.\n- Quando eliminas a conta, perfil, avatar, Amigos, reações e conta de acesso são apagados de imediato. As Salas em que eras o único membro são eliminadas com todo o seu conteúdo. Nas Salas partilhadas com outros, o que escreveste fica como parte da campanha, mostrado como escrito por um utilizador desconhecido.\n- Uma Sala que eliminas é apagada com todo o seu conteúdo.\n- Os PDF das Salas são apagados 24 horas após a geração, e as importações de Documentos 7 dias após o fim.\n- Os registos dos servidores são conservados apenas pelo tempo necessário ao funcionamento e à segurança, e são substituídos de forma rotativa.\n- As cópias de segurança dos nossos fornecedores são substituídas dentro do respetivo ciclo de cópias."
+      },
+      "rights": {
+        "title": "Os teus direitos",
+        "body": "Podes em qualquer momento:\n\n- ver e transferir os teus dados: página Conta, \"Os teus dados\", \"Transferir os meus dados\" (um ficheiro JSON; a exportação de cada Sala contém os conteúdos da campanha que podes ver);\n- corrigir o teu perfil na página Conta;\n- eliminar a tua conta: página Conta, \"Os teus dados\", \"Eliminar conta\";\n- opor-te ao tratamento ou pedir a sua limitação, escrevendo para {{email}}.\n\nTens também o direito de apresentar reclamação a uma autoridade de controlo; em Itália é o Garante per la protezione dei dati personali (garanteprivacy.it)."
+      },
+      "storage": {
+        "title": "Cookies e armazenamento local",
+        "body": "A app não usa cookies. Guarda alguns elementos na memória do teu navegador, necessários ao seu funcionamento: a sessão de acesso, o idioma escolhido, voz e velocidade da leitura em voz alta, a personagem com que escreveste da última vez em cada Sala, os avisos sobre os PDF das Salas que fechaste, e um link de convite aberto antes de iniciares sessão. Ficam no teu dispositivo: a sessão é removida quando terminas sessão, o resto quando apagas os dados do navegador."
+      }
+    }
+  },
+  "maps": {
+    "title": "Mapas",
+    "create": "Novo mapa",
+    "settings": "Definições do mapa",
+    "delete": "Eliminar mapa",
+    "deleteConfirmTitle": "Eliminar este mapa?",
+    "deleteConfirmBody": "\"{{name}}\" será eliminado com tudo o que contém. Os Documentos ficam.",
+    "signInRequired": "Inicia sessão para veres os mapas desta Sala.",
+    "backToDocuments": "Documentos",
+    "backToMaps": "Mapas",
+    "empty": "Ainda sem mapas.",
+    "loadError": "Não foi possível carregar os mapas.",
+    "notFound": "Mapa não encontrado.",
+    "documentCount_one": "{{count}} Documento",
+    "documentCount_other": "{{count}} Documentos",
+    "lastEdit": "editado {{when}}",
+    "selectiveLabel": "Membros que podem ver o mapa",
+    "unsaved": "Alterações não guardadas",
+    "saving": "A guardar…",
+    "saved": "Guardado",
+    "saveError": "Não guardado",
+    "retry": "Tentar novamente",
+    "readOnlyOnPhone": "Num ecrã tão pequeno o mapa é só de leitura.",
+    "addDocuments": "Adicionar Documentos",
+    "addText": "Adicionar texto",
+    "selectHint": "Arrasta sobre o fundo para selecionar várias cartas. Move o mapa com o botão direito ou do meio do rato, ou mantém premida a barra de espaços.",
+    "groupSelected": "Agrupar",
+    "searchDocuments": "Pesquisar por nome",
+    "alreadyOnMap": "Já está no mapa",
+    "addChosen_one": "Adicionar {{count}} Documento",
+    "addChosen_other": "Adicionar {{count}} Documentos",
+    "editCard": "Editar a carta: {{name}}",
+    "editText": "Editar o texto",
+    "editGroup": "Editar o grupo",
+    "editArrow": "Editar a seta: {{label}}",
+    "masterOnly": "Só Master",
+    "masterOnlyArrow": "Visível apenas para os Master",
+    "masterOnlyCard": "Visível apenas para os Master",
+    "struck": "Riscado",
+    "color": "Cor",
+    "colors": {
+      "default": "Predefinida",
+      "red": "Vermelho",
+      "green": "Verde",
+      "purple": "Roxo",
+      "blue": "Azul",
+      "gold": "Dourado"
+    },
+    "card": {
+      "editDocument": "Carta: {{name}}",
+      "editText": "Texto",
+      "newText": "Novo texto",
+      "text": "Texto",
+      "size": "Tamanho",
+      "sizes": {
+        "normal": "Normal",
+        "large": "Grande",
+        "title": "Título"
+      },
+      "caption": "Legenda",
+      "captionHint": "Só neste mapa; em vez do subtítulo do Documento.",
+      "image": "Imagem",
+      "imageHint": "Só neste mapa. A primeira é a imagem favorita do Documento, que a carta segue até escolheres outra.",
+      "imageNumbered": "Imagem {{number}}",
+      "remove": "Tirar do mapa"
+    },
+    "group": {
+      "title": "Grupo",
+      "name": "Título",
+      "namePlaceholder": "Adversários e inimigos",
+      "remove": "Remover o grupo",
+      "untitled": "Grupo sem título"
+    },
+    "arrow": {
+      "title": "Seta",
+      "direction": "Direção",
+      "forward": "Num sentido",
+      "both": "Em ambos",
+      "none": "Só linha",
+      "label": "Etiqueta",
+      "labelTowards": "Etiqueta para {{name}}",
+      "delete": "Eliminar a seta"
+    }
+  }
+}

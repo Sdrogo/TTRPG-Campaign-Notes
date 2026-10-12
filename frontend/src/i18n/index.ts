@@ -10,7 +10,17 @@ import it from './locales/it.json';
 // other language is fetched when it is first needed (spec 34).
 
 /** The languages the UI is translated into, in the order the selector lists them. */
-export const SUPPORTED_LANGUAGES = ['it', 'en'] as const;
+export const SUPPORTED_LANGUAGES = [
+  'it',
+  'en',
+  'de',
+  'es',
+  'fr',
+  'nl',
+  'pl',
+  'pt-PT',
+  'ru',
+] as const;
 
 /** One of `SUPPORTED_LANGUAGES`. */
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
@@ -99,14 +109,22 @@ export function detectLanguage(
   return match ?? FALLBACK_LANGUAGE;
 }
 
-type Resources = typeof it;
+type Resources = { [key: string]: unknown };
 
 /**
  * The languages that are not bundled, each a dynamic `import()` so Vite
  * splits its file out of the main bundle (spec 34). Empty until the first
  * new language lands.
  */
-const LAZY_LOADERS: Readonly<Record<string, () => Promise<{ default: Resources }>>> = {};
+const LAZY_LOADERS: Readonly<Record<string, () => Promise<{ default: Resources }>>> = {
+  de: () => import('./locales/de.json'),
+  es: () => import('./locales/es.json'),
+  fr: () => import('./locales/fr.json'),
+  nl: () => import('./locales/nl.json'),
+  pl: () => import('./locales/pl.json'),
+  'pt-PT': () => import('./locales/pt-PT.json'),
+  ru: () => import('./locales/ru.json'),
+};
 
 /**
  * Makes sure `language`'s strings are in i18next: nothing to do for a bundled

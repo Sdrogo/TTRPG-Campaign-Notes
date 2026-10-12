@@ -48,3 +48,39 @@ def test_paged_media_renders_a_pdf_with_page_references() -> None:
     first = reader.pages[0].extract_text()
     assert "Chapter p. 2" in first
     assert "Città dell'Ovest" in reader.pages[1].extract_text()
+
+
+# Spec 34: the bundled fonts must cover every language the UI speaks, so a
+# letter never falls back to a font the host happens to have. Each style gets
+# a heading and a paragraph of Cyrillic and of Latin Extended letters.
+_SAMPLES = {
+    "ru": "Подземелье Москвы: Ёж, Щука и Ъ",
+    "pl": "Zażółć gęślą jaźń, ŁĄĆĘŃÓŚŹŻ",
+    "de": "Größe, Übung, Äpfel ß",
+    "es": "¿Mañana? ¡Sí! Ñandú",
+    "fr": "Œuvre, être, naïve, où ç",
+    "nl": "IJsselmeer, ëén, ïs",
+}
+_BUNDLED_FONTS = ("IM-Fell", "Crimson-Text", "Lato", "PT-Serif")
+
+
+@pytest.mark.parametrize("style", ["gothic", "modern", "print"])
+def test_every_bundled_style_covers_the_ui_languages_without_system_fonts(style: str) -> None:
+    from pathlib import Path
+
+    weasyprint = _weasyprint()
+    assets = Path(__file__).parents[1] / "app" / "pdf"
+    body = "".join(f"<h2>{text}</h2><p>{text}</p>" for text in _SAMPLES.values())
+    html = (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        f'<link rel="stylesheet" href="styles/{style}.css"></head><body>{body}</body></html>'
+    )
+
+    pdf: bytes = weasyprint.HTML(string=html, base_url=assets.as_uri() + "/").write_pdf()
+
+    names: set[str] = set()
+    for page in PdfReader(io.BytesIO(pdf)).pages:
+        fonts = page["/Resources"].get("/Font", {})
+        names.update(str(fonts[key].get_object()["/BaseFont"]) for key in fonts)
+    assert names
+    assert all(any(bundled in name for bundled in _BUNDLED_FONTS) for name in names), names

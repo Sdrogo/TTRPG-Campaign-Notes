@@ -18,7 +18,17 @@ export const SPEECH_RATES = [0.75, 1, 1.25, 1.5] as const;
 export type SpeechRate = (typeof SPEECH_RATES)[number];
 
 /** The BCP 47 tag an utterance is spoken in, for each app language. */
-export const SPEECH_LANGS: Record<Language, string> = { it: 'it-IT', en: 'en-US' };
+export const SPEECH_LANGS: Record<Language, string> = {
+  de: 'de-DE',
+  en: 'en-US',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  it: 'it-IT',
+  nl: 'nl-NL',
+  pl: 'pl-PL',
+  'pt-PT': 'pt-PT',
+  ru: 'ru-RU',
+};
 
 /** Whether this browser can read aloud; without it every control is hidden (spec 30 Decision 1). */
 export function speechSupported(): boolean {
@@ -170,12 +180,13 @@ export function saveSpeechPreferences(preferences: SpeechPreferences): void {
   }
 }
 
-/** Whether `voice` speaks the app language (`it-IT`, `it_IT` and `it` all count as `it`). */
+/** Whether `voice` speaks the app language (`it-IT`, `it_IT` and `it` all count as `it`; any `pt-*` voice counts as `pt-PT`). */
 export function voiceSpeaks(
   voice: Pick<SpeechSynthesisVoice, 'lang'>,
   language: Language,
 ): boolean {
-  return voice.lang.toLowerCase().replace('_', '-').split('-')[0] === language;
+  const base = (tag: string) => tag.toLowerCase().replace('_', '-').split('-')[0];
+  return base(voice.lang) === base(SPEECH_LANGS[language]);
 }
 
 // Names that mark a neural or high-quality voice: Edge's "Online (Natural)",

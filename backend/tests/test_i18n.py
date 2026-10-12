@@ -60,7 +60,7 @@ def test_translate_interpolates_params() -> None:
 
 
 def test_translate_falls_back_to_default_locale_for_an_unsupported_locale() -> None:
-    assert translate("errors.document.notFound", "fr") == "Document not found"
+    assert translate("errors.document.notFound", "ja") == "Document not found"
 
 
 def test_translate_falls_back_to_the_key_for_an_unknown_key() -> None:

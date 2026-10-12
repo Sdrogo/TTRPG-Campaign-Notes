@@ -34,7 +34,18 @@ describe('LanguageSelector', () => {
 
     const menu = screen.getByRole('menu');
     const items = within(menu).getAllByRole('menuitem');
-    expect(items.map((item) => item.textContent)).toEqual(['Italiano', 'English']);
+    // Every language by its own name; the ones nobody has read yet carry a "beta" label, in the UI language.
+    expect(items.map((item) => item.textContent)).toEqual([
+      'Italiano',
+      'English',
+      'Deutschbeta',
+      'Españolbeta',
+      'Françaisbeta',
+      'Nederlandsbeta',
+      'Polskibeta',
+      'Portuguêsbeta',
+      'Русскийbeta',
+    ]);
     expect(within(menu).getByRole('menuitem', { name: 'Italiano' })).toHaveAttribute(
       'aria-current',
       'true',

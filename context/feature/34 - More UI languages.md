@@ -2,7 +2,7 @@
 
 - Product owner's request (2026-10-12): add UI support for **German, French, Spanish, Portuguese, Japanese, Chinese and Russian**, and recommend other good languages.
 - The i18n machinery already exists (spec 09, 09_1): this ticket is mostly translation plus the pieces that were fine for two languages and are not for ten (bundle size, regional variants, plural rules, PDF fonts, language picker).
-- **Status: scope confirmed by the product owner, 2026-10-12** (answers under "Decisions taken" at the end). Languages in this round: `de`, `fr`, `es`, `pt-PT`, `ru`, `ja`, `zh-Hans`, `ko`, `pl`, `nl`. Turkish and Traditional Chinese are not in this round.
+- **Status: 34_1 and 34_2 built (PRs #168 and the 34_2 PR); 34_3 next. Scope confirmed by the product owner, 2026-10-12** (answers under "Decisions taken" at the end). Languages in this round: `de`, `fr`, `es`, `pt-PT`, `ru`, `ja`, `zh-Hans`, `ko`, `pl`, `nl`. Turkish and Traditional Chinese are not in this round.
 
 ## What exists today (inspected 2026-10-12)
 

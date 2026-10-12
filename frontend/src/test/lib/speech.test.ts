@@ -106,7 +106,7 @@ describe('speech preferences', () => {
   });
 
   it('drops what it cannot read: an unknown language, an unoffered speed, bad JSON', () => {
-    localStorage.setItem('ttrpg.speech', JSON.stringify({ voices: { fr: 'x', en: 3 }, rate: 9 }));
+    localStorage.setItem('ttrpg.speech', JSON.stringify({ voices: { ja: 'x', en: 3 }, rate: 9 }));
     expect(readSpeechPreferences()).toEqual(DEFAULT_SPEECH_PREFERENCES);
     localStorage.setItem('ttrpg.speech', JSON.stringify({ voices: null, rate: 1.5 }));
     expect(readSpeechPreferences()).toEqual({ voices: {}, rate: 1.5 });
@@ -125,6 +125,13 @@ describe('voices', () => {
     expect(voiceSpeaks(italian, 'it')).toBe(true);
     expect(voiceSpeaks(english, 'en')).toBe(true);
     expect(voiceSpeaks(english, 'it')).toBe(false);
+  });
+
+  it('counts a Brazilian voice as Portuguese, and any region of a language', () => {
+    const brazilian = { voiceURI: 'pt-1', lang: 'pt_BR' } as SpeechSynthesisVoice;
+
+    expect(voiceSpeaks(brazilian, 'pt-PT')).toBe(true);
+    expect(voiceSpeaks(brazilian, 'es')).toBe(false);
   });
 
   it('uses the voice chosen for the app language while the browser still offers it', () => {
