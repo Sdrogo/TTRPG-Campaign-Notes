@@ -10,7 +10,7 @@ import type { Tag } from '../../types/tag';
 const OPEN_DELAY_MS = 400;
 // Short, but long enough to move the pointer from the mention into the card.
 const CLOSE_DELAY_MS = 150;
-const PREVIEW_WIDTH = 360;
+const PREVIEW_WIDTH = 440;
 
 /** Only a precise pointer that can hover: a tap on a touch screen just follows the link. */
 export const HOVER_POINTER_QUERY = '(hover: hover) and (pointer: fine)';
