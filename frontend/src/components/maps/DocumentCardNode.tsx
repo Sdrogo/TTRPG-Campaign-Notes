@@ -60,7 +60,6 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
       style={{
         borderColor: selected ? 'var(--accent-primary)' : 'var(--border-default)',
         opacity: card.struck ? 0.6 : 1,
-        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-end',
@@ -70,7 +69,9 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
     >
       <MapHandle visible={editable} />
       {document.image && (
-        <>
+        // The image is clipped on its own layer: clipping the whole card would
+        // cut the arrow handle on the card's edge in half.
+        <Box pos="absolute" inset={0} style={{ overflow: 'hidden', borderRadius: 'inherit' }}>
           <Image
             src={document.image.url}
             alt=""
@@ -82,7 +83,7 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
             style={{ objectPosition: 'center top' }}
           />
           <Box data-testid="map-card-fade" pos="absolute" inset={0} style={{ background: FADE_INTO_CARD }} />
-        </>
+        </Box>
       )}
       <Stack gap={4} p={8} pos="relative">
         <Text
