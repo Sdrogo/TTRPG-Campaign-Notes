@@ -59,6 +59,11 @@ export interface MapCard {
   groupId: string | null;
   /** A Document card's caption on this map, replacing its subtitle. */
   caption: string | null;
+  /**
+   * The Document image this card shows, on this map only; null for the
+   * Document's favorite, which the card then follows.
+   */
+  imageId: string | null;
   size: CardSize;
   masterOnly: boolean;
   color: MapColor;

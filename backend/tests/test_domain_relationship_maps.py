@@ -41,7 +41,6 @@ from app.domain.relationship_maps import (
     document_card_counts,
     ensure_room_for_another_map,
     is_map_visible,
-    label_suggestions,
     map_visibility_audit,
     plan_board_edit,
     visible_arrows,
@@ -243,17 +242,6 @@ def test_visible_board_drops_a_hidden_document_with_every_arrow_touching_it() ->
 
     master = visible_board(board, {aldric, mira, thorn}, RoomRole.MASTER)
     assert master.arrows == [alliance, father]
-
-
-def test_label_suggestions_are_most_used_first_then_alphabetical() -> None:
-    a, b = ArrowEnd(card_id=uuid.uuid4()), ArrowEnd(card_id=uuid.uuid4())
-    arrows = [
-        _arrow(a, b, "rival"),
-        _arrow(a, b, "ally of", direction=ArrowDirection.BOTH, reverse_label="ally of"),
-        _arrow(a, b, "Brother"),
-        _arrow(a, b, None),
-    ]
-    assert label_suggestions(arrows) == ["ally of", "Brother", "rival"]
 
 
 # --- Cleaning -----------------------------------------------------------------

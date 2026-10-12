@@ -28,6 +28,7 @@ const textCard: MapCard = {
   text: 'Sire ignoto',
   groupId: null,
   caption: null,
+  imageId: null,
   size: 'normal',
   masterOnly: false,
   color: 'default',
@@ -46,7 +47,6 @@ describe('ArrowDialog', () => {
         arrow={arrow}
         fromName="Aldric"
         toName="Mira"
-        suggestions={['alleato']}
         isMaster
         onSave={onSave}
         onDelete={vi.fn()}
@@ -55,10 +55,12 @@ describe('ArrowDialog', () => {
     );
 
     await user.click(screen.getByText('In entrambi'));
-    const towardsMira = screen.getByRole('combobox', { name: 'Etichetta verso Mira' });
+    const towardsMira = screen.getByRole('textbox', {
+      name: 'Etichetta verso Mira',
+    });
     await user.clear(towardsMira);
     await user.type(towardsMira, '  figlia ');
-    await user.type(screen.getByRole('combobox', { name: 'Etichetta verso Aldric' }), 'padre');
+    await user.type(screen.getByRole('textbox', { name: 'Etichetta verso Aldric' }), 'padre');
     await user.click(screen.getByRole('radio', { name: 'Verde' }));
     await user.click(screen.getByLabelText('Visibile solo ai Master'));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
@@ -81,7 +83,6 @@ describe('ArrowDialog', () => {
         arrow={{ ...arrow, direction: 'both', reverseLabel: 'figlio' }}
         fromName="A"
         toName="B"
-        suggestions={[]}
         isMaster={false}
         onSave={onSave}
         onDelete={onDelete}
@@ -90,9 +91,15 @@ describe('ArrowDialog', () => {
     );
     expect(screen.queryByLabelText('Visibile solo ai Master')).not.toBeInTheDocument();
     await user.click(screen.getByText('Solo linea'));
-    await user.clear(screen.getByRole('combobox', { name: 'Etichetta' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Etichetta' }));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ direction: 'none', label: null, reverseLabel: null }));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        direction: 'none',
+        label: null,
+        reverseLabel: null,
+      }),
+    );
 
     await user.click(screen.getByRole('button', { name: 'Elimina la freccia' }));
     expect(onDelete).toHaveBeenCalled();
@@ -106,7 +113,6 @@ describe('ArrowDialog', () => {
         arrow={{ ...arrow, direction: 'both', label: null }}
         fromName="A"
         toName="B"
-        suggestions={[]}
         isMaster={false}
         onSave={onSave}
         onDelete={vi.fn()}
@@ -135,6 +141,7 @@ describe('CardDialog', () => {
     expect(onSave).toHaveBeenCalledWith({
       text: 'Nuove idee',
       caption: null,
+      imageId: null,
       size: 'title',
       color: 'default',
       struck: true,
@@ -162,7 +169,13 @@ describe('CardDialog', () => {
       documentId: 'doc-1',
       text: null,
       caption: 'Neonata',
-      document: { id: 'doc-1', name: 'Mira', subtitle: 'La Idol', image: null, tagIds: [] },
+      document: {
+        id: 'doc-1',
+        name: 'Mira',
+        subtitle: 'La Idol',
+        image: null,
+        tagIds: [],
+      },
     };
     renderWithProviders(<CardDialog card={card} isMaster onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);
 
@@ -175,12 +188,78 @@ describe('CardDialog', () => {
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ caption: null }));
   });
 
+  it('picks the image of a Document card, and goes back to following its favorite', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    const images = [
+      { id: 'a', url: 'http://img/a', isFavorite: true },
+      { id: 'b', url: 'http://img/b', isFavorite: false },
+      { id: 'c', url: 'http://img/c', isFavorite: false },
+    ];
+    const card: MapCard = {
+      ...textCard,
+      documentId: 'doc-1',
+      text: null,
+      document: {
+        id: 'doc-1',
+        name: 'Mira',
+        subtitle: null,
+        image: images[0],
+        tagIds: [],
+      },
+    };
+    renderWithProviders(<CardDialog card={card} images={images} isMaster onSave={onSave} onClose={vi.fn()} />);
+
+    // The favorite is the one shown until another is picked.
+    expect(screen.getByRole('button', { name: 'Immagine 1' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: 'Immagine 3' }));
+    expect(screen.getByRole('button', { name: 'Immagine 3' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Immagine 1' })).toHaveAttribute('aria-pressed', 'false');
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ imageId: 'c' }));
+
+    await user.click(screen.getByRole('button', { name: 'Immagine 1' }));
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ imageId: null }));
+  });
+
+  it('offers no choice of image for a Document with one image or none', () => {
+    const card: MapCard = {
+      ...textCard,
+      documentId: 'doc-1',
+      text: null,
+      document: {
+        id: 'doc-1',
+        name: 'Mira',
+        subtitle: null,
+        image: null,
+        tagIds: [],
+      },
+    };
+    renderWithProviders(
+      <CardDialog
+        card={card}
+        images={[{ id: 'a', url: 'http://img/a', isFavorite: true }]}
+        isMaster
+        onSave={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'Immagine 1' })).not.toBeInTheDocument();
+  });
+
   it('has no placeholder for a Document without subtitle', () => {
     const card: MapCard = {
       ...textCard,
       documentId: 'doc-1',
       text: null,
-      document: { id: 'doc-1', name: 'Mira', subtitle: null, image: null, tagIds: [] },
+      document: {
+        id: 'doc-1',
+        name: 'Mira',
+        subtitle: null,
+        image: null,
+        tagIds: [],
+      },
     };
     renderWithProviders(<CardDialog card={card} isMaster onSave={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getByLabelText('Didascalia')).not.toHaveAttribute('placeholder');
@@ -199,7 +278,11 @@ describe('GroupDialog', () => {
     await user.click(screen.getByRole('radio', { name: 'Oro' }));
     await user.click(screen.getByLabelText('Barrato'));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
-    expect(onSave).toHaveBeenCalledWith({ title: 'Corte', color: 'gold', struck: true });
+    expect(onSave).toHaveBeenCalledWith({
+      title: 'Corte',
+      color: 'gold',
+      struck: true,
+    });
 
     await user.click(screen.getByRole('button', { name: 'Rimuovi il gruppo' }));
     expect(onDelete).toHaveBeenCalled();
@@ -208,11 +291,24 @@ describe('GroupDialog', () => {
   it('saves a blank title as none', async () => {
     const user = userEvent.setup();
     const onSave = vi.fn();
-    const group = { id: 'g', title: 'Corte', color: 'red' as const, struck: true, x: 0, y: 0, width: 100, height: 100 };
+    const group = {
+      id: 'g',
+      title: 'Corte',
+      color: 'red' as const,
+      struck: true,
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+    };
     renderWithProviders(<GroupDialog group={group} onSave={onSave} onDelete={vi.fn()} onClose={vi.fn()} />);
     await user.clear(screen.getByLabelText('Titolo'));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
-    expect(onSave).toHaveBeenCalledWith({ title: null, color: 'red', struck: true });
+    expect(onSave).toHaveBeenCalledWith({
+      title: null,
+      color: 'red',
+      struck: true,
+    });
   });
 });
 
@@ -232,7 +328,14 @@ describe('AddDocumentsPanel', () => {
         opened
         onClose={onClose}
         documents={documents}
-        tags={[{ id: 'npc', name: 'NPC', category: null, mainPosition: null } as never]}
+        tags={[
+          {
+            id: 'npc',
+            name: 'NPC',
+            category: null,
+            mainPosition: null,
+          } as never,
+        ]}
         onMapIds={new Set(['d3'])}
         onAdd={onAdd}
       />,
@@ -274,7 +377,12 @@ describe('MapFormModal', () => {
     renderWithProviders(
       <MapFormModal
         title="Nuova mappa"
-        initialValues={{ name: '', description: '', visibility: 'room', selectiveUserIds: [] }}
+        initialValues={{
+          name: '',
+          description: '',
+          visibility: 'room',
+          selectiveUserIds: [],
+        }}
         members={members}
         creatorId="user-1"
         submitLabel="Crea"
@@ -290,7 +398,11 @@ describe('MapFormModal', () => {
     await user.type(screen.getByLabelText('Descrizione'), 'Chi serve chi');
     await user.click(screen.getByRole('combobox', { name: 'Visibilità' }));
     await user.click(await screen.findByRole('option', { name: /Selettivo/ }));
-    await user.click(screen.getByRole('combobox', { name: 'Membri che possono vedere la mappa' }));
+    await user.click(
+      screen.getByRole('combobox', {
+        name: 'Membri che possono vedere la mappa',
+      }),
+    );
     await user.click(await screen.findByText('Giulia'));
     // The creator always sees the map: not offered.
     expect(screen.queryByRole('option', { name: 'Io' })).not.toBeInTheDocument();
@@ -308,7 +420,12 @@ describe('MapFormModal', () => {
     renderWithProviders(
       <MapFormModal
         title="Impostazioni"
-        initialValues={{ name: 'Corte', description: '', visibility: 'selective', selectiveUserIds: ['user-2'] }}
+        initialValues={{
+          name: 'Corte',
+          description: '',
+          visibility: 'selective',
+          selectiveUserIds: ['user-2'],
+        }}
         members={members}
         creatorId="user-1"
         submitLabel="Salva"

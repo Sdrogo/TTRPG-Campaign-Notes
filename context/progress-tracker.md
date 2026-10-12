@@ -47,17 +47,18 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `b3f7d1e9c5a2` (relationship maps, spec 28_1).
-- **Staging database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12, both
-  feature 28 migrations; before it, `f7a2d8c4e1b9`).
-- **Production database**: `f7a2d8c4e1b9` (applied by hand 2026-10-08).
-- **Pending on production** (feature 28, PR #159): `a8c4e2f6b1d3`
-  (Document subtitle; rebuilds `documents.search_vector`) then
-  `b3f7d1e9c5a2` (the five map tables). Both are DDL only. Apply them
-  before the next release to `main`.
+- **Head in the repository**: `d5a1c8e3f2b7` (map card image, spec 28
+  follow-up).
+- **Staging database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12).
+- **Production database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12; both
+  feature 28 migrations, before them `f7a2d8c4e1b9`).
+- **Pending on staging and production**: `d5a1c8e3f2b7`
+  (`relationship_map_cards.image_id`, a nullable foreign key; DDL only).
+  Apply it to staging before the PR merges and to production before the next
+  release to `main`.
 
 Recent chain, newest first (where each came from):
-`b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -96,6 +97,16 @@ One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
 ### 2026-10-12
+
+- **Map card images and no label suggestions** (28 follow-up, 10-12): a
+  Document card on a map shows an image as its whole background fading into
+  the card at the bottom, where the name is. The editor picks which of the
+  Document's images (`relationship_map_cards.image_id`, migration
+  `d5a1c8e3f2b7`, on this map only); until then the card follows the
+  Document's favorite. An image deleted or no longer visible falls back to
+  the favorite. The arrow label field no longer suggests earlier labels, and
+  `GET /rooms/{id}/maps/labels` is gone (Decision 5 dropped by the product
+  owner).
 
 - **Room card menu and Duplicate Room** (spec 33, 10-12, no migration): the
   Room card's Setup and Invite buttons moved into its ⋮ menu (Setup, Invite,

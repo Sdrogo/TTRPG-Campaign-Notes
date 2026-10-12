@@ -22,16 +22,29 @@ const documentCard: MapCard = {
   text: null,
   groupId: null,
   caption: null,
+  imageId: null,
   size: 'normal',
   masterOnly: false,
   color: 'red',
   struck: false,
   x: 0,
   y: 0,
-  document: { id: 'doc-1', name: 'Hoshino Mirai', subtitle: 'La Idol', image: null, tagIds: [] },
+  document: {
+    id: 'doc-1',
+    name: 'Hoshino Mirai',
+    subtitle: 'La Idol',
+    image: null,
+    tagIds: [],
+  },
 };
 
-const textCard: MapCard = { ...documentCard, id: 'card-2', documentId: null, text: 'Sire\nignoto', document: null };
+const textCard: MapCard = {
+  ...documentCard,
+  id: 'card-2',
+  documentId: null,
+  text: 'Sire\nignoto',
+  document: null,
+};
 
 const group: MapGroup = {
   id: 'group-1',
@@ -70,7 +83,10 @@ describe('DocumentCardNode', () => {
       ...documentCard,
       caption: 'Neonata',
       struck: true,
-      document: { ...documentCard.document!, image: { id: 'i', url: 'http://img', isFavorite: true } },
+      document: {
+        ...documentCard.document!,
+        image: { id: 'i', url: 'http://img', isFavorite: true },
+      },
     };
     const { container } = renderWithProviders(
       <DocumentCardNode {...nodeProps<ComponentProps<typeof DocumentCardNode>>('card-1', { card, roomId: 'room-1', editable: true, onEdit }, true)} />,
@@ -83,8 +99,44 @@ describe('DocumentCardNode', () => {
     expect(onEdit).toHaveBeenCalledWith('card-1');
   });
 
+  it('fades the image into the card, and draws no fade without one', () => {
+    const withImage = {
+      ...documentCard,
+      document: {
+        ...documentCard.document!,
+        image: { id: 'i', url: 'http://img', isFavorite: true },
+      },
+    };
+    const { unmount } = renderWithProviders(
+      <DocumentCardNode
+        {...nodeProps<ComponentProps<typeof DocumentCardNode>>('card-1', {
+          card: withImage,
+          roomId: 'room-1',
+          editable: false,
+          onEdit: vi.fn(),
+        })}
+      />,
+    );
+    expect(screen.getByTestId('map-card-fade')).toBeInTheDocument();
+    unmount();
+    renderWithProviders(
+      <DocumentCardNode
+        {...nodeProps<ComponentProps<typeof DocumentCardNode>>('card-1', {
+          card: documentCard,
+          roomId: 'room-1',
+          editable: false,
+          onEdit: vi.fn(),
+        })}
+      />,
+    );
+    expect(screen.queryByTestId('map-card-fade')).not.toBeInTheDocument();
+  });
+
   it('shows no caption when there is neither a caption nor a subtitle', () => {
-    const card = { ...documentCard, document: { ...documentCard.document!, subtitle: null } };
+    const card = {
+      ...documentCard,
+      document: { ...documentCard.document!, subtitle: null },
+    };
     renderWithProviders(
       <DocumentCardNode {...nodeProps<ComponentProps<typeof DocumentCardNode>>('card-1', { card, roomId: 'room-1', editable: false, onEdit: vi.fn() })} />,
     );
@@ -97,7 +149,20 @@ describe('TextCardNode', () => {
     const onEdit = vi.fn();
     renderWithProviders(
       <TextCardNode
-        {...nodeProps<ComponentProps<typeof TextCardNode>>('card-2', { card: { ...textCard, masterOnly: true, struck: true, size: 'large' }, editable: true, onEdit }, true)}
+        {...nodeProps<ComponentProps<typeof TextCardNode>>(
+          'card-2',
+          {
+            card: {
+              ...textCard,
+              masterOnly: true,
+              struck: true,
+              size: 'large',
+            },
+            editable: true,
+            onEdit,
+          },
+          true,
+        )}
       />,
     );
     expect(screen.getByText(/Sire/)).toBeInTheDocument();
@@ -124,7 +189,12 @@ describe('GroupNode', () => {
     );
     expect(screen.getByText('Avversari e nemici')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'resize' }));
-    expect(onResized).toHaveBeenCalledWith('group-1', { x: 5, y: 6, width: 400, height: 300 });
+    expect(onResized).toHaveBeenCalledWith('group-1', {
+      x: 5,
+      y: 6,
+      width: 400,
+      height: 300,
+    });
     await userEvent.click(screen.getByRole('button', { name: 'Modifica il gruppo' }));
     expect(onEdit).toHaveBeenCalledWith('group-1');
   });
@@ -163,8 +233,16 @@ describe('MapArrow', () => {
   };
 
   function renderArrow(value: Arrow | undefined, editable = true, onEdit = vi.fn()) {
-    flow.internal.b = { internals: { positionAbsolute: { x: 300, y: 0 } }, measured: { width: 100, height: 50 } };
-    const props = { id: 'arrow-1', source: 'a', target: 'b', data: value && { arrow: value, editable, onEdit } };
+    flow.internal.b = {
+      internals: { positionAbsolute: { x: 300, y: 0 } },
+      measured: { width: 100, height: 50 },
+    };
+    const props = {
+      id: 'arrow-1',
+      source: 'a',
+      target: 'b',
+      data: value && { arrow: value, editable, onEdit },
+    };
     renderWithProviders(<MapArrow {...(props as unknown as ComponentProps<typeof MapArrow>)} />);
     return onEdit;
   }
@@ -179,7 +257,12 @@ describe('MapArrow', () => {
   });
 
   it('puts a one-way label in the middle and none when there is none', () => {
-    renderArrow({ ...arrow, direction: 'forward', masterOnly: false, reverseLabel: null });
+    renderArrow({
+      ...arrow,
+      direction: 'forward',
+      masterOnly: false,
+      reverseLabel: null,
+    });
     expect(screen.getAllByRole('button')).toHaveLength(1);
     expect(screen.getByTestId('path-arrow-1')).not.toHaveAttribute('stroke-dasharray');
   });
@@ -198,7 +281,10 @@ describe('MapArrow', () => {
     flow.internal.a = null;
     renderArrow(arrow);
     expect(screen.queryByTestId('path-arrow-1')).not.toBeInTheDocument();
-    flow.internal.a = { internals: { positionAbsolute: { x: 0, y: 0 } }, measured: {} };
+    flow.internal.a = {
+      internals: { positionAbsolute: { x: 0, y: 0 } },
+      measured: {},
+    };
     renderArrow(undefined);
     expect(screen.queryByTestId('path-arrow-1')).not.toBeInTheDocument();
   });

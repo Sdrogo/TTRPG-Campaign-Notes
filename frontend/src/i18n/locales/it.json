@@ -904,6 +904,9 @@
       },
       "caption": "Didascalia",
       "captionHint": "Solo su questa mappa; al posto del sottotitolo del Documento.",
+      "image": "Immagine",
+      "imageHint": "Solo su questa mappa. La prima è l'immagine preferita del Documento, che la carta segue finché non ne scegli un'altra.",
+      "imageNumbered": "Immagine {{number}}",
       "remove": "Togli dalla mappa"
     },
     "group": {

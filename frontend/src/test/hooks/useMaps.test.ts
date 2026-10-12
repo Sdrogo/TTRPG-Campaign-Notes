@@ -7,7 +7,6 @@ import {
   useCreateMap,
   useDeleteMap,
   useMap,
-  useMapLabels,
   useMaps,
   useSaveBoard,
   useUpdateMap,
@@ -44,13 +43,6 @@ describe('the map queries', () => {
     const { result } = renderHookWithProviders(() => useMap('room-1', 'map-1', true));
     await waitFor(() => expect(result.current.data?.cards).toHaveLength(3));
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1');
-  });
-
-  it('reads the label suggestions', async () => {
-    fetchMock.mockResolvedValue(['alleato']);
-    const { result } = renderHookWithProviders(() => useMapLabels('room-1', true));
-    await waitFor(() => expect(result.current.data).toEqual(['alleato']));
-    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/labels');
   });
 });
 
@@ -93,7 +85,7 @@ describe('the map mutations', () => {
     expect(queryClient.getQueryData(DETAIL_KEY)).toBeUndefined();
   });
 
-  it('saves the board and refreshes the map, the list and the labels', async () => {
+  it('saves the board and refreshes the map and the list', async () => {
     fetchMock.mockResolvedValue(rawMapDetail());
     const { result, queryClient } = renderHookWithProviders(() => useSaveBoard('room-1', 'map-1'));
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
@@ -105,6 +97,6 @@ describe('the map mutations', () => {
       json: { groups: [], cards: [], arrows: [] },
     });
     expect(queryClient.getQueryData(DETAIL_KEY)).toBeDefined();
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: [...LIST_KEY, 'labels'] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY, exact: true });
   });
 });
