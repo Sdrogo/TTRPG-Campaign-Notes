@@ -97,6 +97,19 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-12
 
+- **Room card menu and Duplicate Room** (spec 33, 10-12, no migration): the
+  Room card's Setup and Invite buttons moved into its ⋮ menu (Setup, Invite,
+  Duplicate, Leave, each only for who may use it). `POST
+  /rooms/{id}/duplicate` (Master only) copies the Room's setup, Tags, Tag
+  combinations and every Document with its Notes and images into a new Room
+  "<name> (Copy)" in one transaction, the caller its only member and Owner;
+  Comments, PDFs, Reveals, grants and relationship maps are not copied,
+  Selective becomes Private, `@member` mentions become plain text. Images
+  share the original's Storage objects, so no Storage call. Choices beyond
+  the ticket, to confirm: maps are left out (cards point at Documents and
+  would need re-pointing); the modal builds the copy's name from its own
+  `rooms.duplicate.copyName` string, kept in step with the backend's
+  `room.copySuffix`.
 - **Relationship maps** (28_0, 28_1, 28_2, 10-12, PR #159): Document
   subtitle (`a8c4e2f6b1d3`); free boards per Room with Document and text
   cards, groups and labeled arrows that belong to their map only
@@ -211,11 +224,6 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-- **33, Room card menu and duplicate Room** (ticket written 2026-10-12):
-  the card's Setup and Invite buttons move into the ⋮ menu, plus a
-  Master-only Duplicate that copies setup, Tags, Documents, Notes and
-  images (no Comments, PDFs or other members) in one transaction; images
-  share the original's Storage objects. No migration.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still

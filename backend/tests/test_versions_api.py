@@ -532,9 +532,7 @@ async def test_notes_hidden_from_an_owner_stay_out_of_their_history(
 ) -> None:
     room = await _room(client, make_token)
     document_id = await _document(client, room)
-    secret = await _note(
-        client, room, document_id, room.master, title="Vault", visibility="master"
-    )
+    secret = await _note(client, room, document_id, room.master, title="Vault", visibility="master")
     await _edit_note(client, room, document_id, secret, room.master, description="Gold.")
 
     owner_versions = await _versions(client, room, document_id, room.owner)

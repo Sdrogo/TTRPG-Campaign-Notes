@@ -41,8 +41,13 @@ beforeEach(() => {
   vi.mocked(notifySuccess).mockClear();
 });
 
-async function openLeave(user: ReturnType<typeof userEvent.setup>) {
+async function openMenu(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }));
+  await screen.findByRole('menuitem', { name: 'Esci' });
+}
+
+async function openLeave(user: ReturnType<typeof userEvent.setup>) {
+  await openMenu(user);
   await user.click(await screen.findByRole('menuitem', { name: 'Esci' }));
   return screen.findByRole('dialog', { name: 'Uscire da "La Cripta"?' });
 }
@@ -90,52 +95,135 @@ describe('RoomCard', () => {
     expect(screen.queryByRole('link', { name: /Documenti/ })).not.toBeInTheDocument();
   });
 
-  // Spec 11: the setup page is reachable only by a Room Administrator.
-  it('offers the setup page to an Administrator only', () => {
-    render();
-    expect(screen.queryByRole('link', { name: /Impostazioni/ })).not.toBeInTheDocument();
+  // Spec 33: every action is an item of the one ⋮ menu, shown only to whoever
+  // may use it.
+  it('has a single actions button and no other button on the card', () => {
+    render({ isAdmin: true, role: 'master' });
+
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(
+      screen.getByRole('button', { name: 'Azioni per la Stanza La Cripta' }),
+    ).toBeInTheDocument();
   });
 
-  it('links an Administrator to the setup page', () => {
-    render({ isAdmin: true });
+  it.each([
+    ['a Player', { role: 'player' as const, isAdmin: false }, []],
+    ['a Master', { role: 'master' as const, isAdmin: false }, ['Impostazioni', 'Duplica']],
+    ['an Administrator', { role: 'player' as const, isAdmin: true }, ['Impostazioni', 'Invita']],
+    [
+      'a Master and Administrator',
+      { role: 'master' as const, isAdmin: true },
+      ['Impostazioni', 'Invita', 'Duplica'],
+    ],
+  ])('lists the actions %s may use', async (_who, overrides, expected) => {
+    const { user } = render(overrides);
 
-    expect(screen.getByRole('link', { name: /Impostazioni/ })).toHaveAttribute(
+    await openMenu(user);
+
+    const names = screen.getAllByRole('menuitem').map((item) => item.textContent);
+    expect(names).toEqual([...expected, 'Esci']);
+  });
+
+  it('links Setup in the menu to the setup page', async () => {
+    const { user } = render({ isAdmin: true });
+
+    await openMenu(user);
+
+    expect(screen.getByRole('menuitem', { name: 'Impostazioni' })).toHaveAttribute(
       'href',
       '/rooms/room-1/setup',
     );
   });
 
-  // Only an Administrator can invite (the backend rejects anyone else), so
-  // the button is theirs alone.
-  it('offers no invite to an ordinary member', () => {
-    render();
-
-    expect(screen.queryByRole('button', { name: /Invita/ })).not.toBeInTheDocument();
-  });
-
-  it('offers the invite to an Administrator', () => {
-    render({ isAdmin: true });
-
-    expect(screen.getByRole('button', { name: /Invita/ })).toBeInTheDocument();
-  });
-
-  it('opens the invite modal', async () => {
+  it('opens the invite modal from the menu', async () => {
     const { user } = render({ isAdmin: true });
+    await openMenu(user);
 
-    await user.click(screen.getByRole('button', { name: /Invita/ }));
+    await user.click(screen.getByRole('menuitem', { name: 'Invita' }));
 
-    expect(screen.getByRole('button', { name: 'Genera invito' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Genera invito' })).toBeInTheDocument();
   });
 
   it('closes the invite modal again', async () => {
     const { user } = render({ isAdmin: true });
-    await user.click(screen.getByRole('button', { name: /Invita/ }));
+    await openMenu(user);
+    await user.click(screen.getByRole('menuitem', { name: 'Invita' }));
+    await screen.findByRole('button', { name: 'Genera invito' });
 
     await user.keyboard('{Escape}');
 
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Genera invito' })).not.toBeInTheDocument(),
     );
+  });
+
+  describe('Duplicate (spec 33)', () => {
+    async function openDuplicate(user: ReturnType<typeof userEvent.setup>) {
+      await openMenu(user);
+      await user.click(screen.getByRole('menuitem', { name: 'Duplica' }));
+      return screen.findByRole('dialog', { name: 'Duplicare "La Cripta"?' });
+    }
+
+    it('names the copy and says what is not copied', async () => {
+      const { user } = render({ role: 'master' });
+
+      const dialog = await openDuplicate(user);
+
+      expect(within(dialog).getByText(/Commenti, Allegati PDF e membri no/)).toBeInTheDocument();
+      expect(within(dialog).getByText('La Cripta (Copia)')).toBeInTheDocument();
+    });
+
+    it('duplicates the Room, confirms with the copy name and closes', async () => {
+      vi.mocked(apiFetch).mockResolvedValue({
+        room: {
+          id: 'room-2',
+          name: 'La Cripta (Copia)',
+          game_system: 'D&D 5e',
+          status: 'active',
+          players_can_create_documents: true,
+          default_visibility: 'room',
+          image_url: null,
+        },
+        role: 'master',
+        is_admin: true,
+      });
+      const { user } = render({ role: 'master' });
+      const dialog = await openDuplicate(user);
+
+      await user.click(within(dialog).getByRole('button', { name: 'Duplica' }));
+
+      await waitFor(() =>
+        expect(apiFetch).toHaveBeenCalledWith('/rooms/room-1/duplicate', {
+          method: 'POST',
+        }),
+      );
+      expect(notifySuccess).toHaveBeenCalledWith('Creata "La Cripta (Copia)"');
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    it('cancels without duplicating', async () => {
+      const { user } = render({ role: 'master' });
+      const dialog = await openDuplicate(user);
+
+      await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(apiFetch).not.toHaveBeenCalled();
+    });
+
+    it("shows the backend's refusal and stays open", async () => {
+      const refusal = new ApiError(403, 'Solo il Master può duplicare la Stanza');
+      vi.mocked(apiFetch).mockRejectedValue(refusal);
+      const { user } = render({ role: 'master' });
+      const dialog = await openDuplicate(user);
+
+      await user.click(within(dialog).getByRole('button', { name: 'Duplica' }));
+
+      await waitFor(() => expect(notifyError).toHaveBeenCalled());
+      expect(vi.mocked(notifyError).mock.calls[0][0]).toBe(refusal);
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(notifySuccess).not.toHaveBeenCalled();
+    });
   });
 
   // Spec 15: every member can leave from the card, whatever their role.

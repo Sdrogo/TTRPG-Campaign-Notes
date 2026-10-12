@@ -152,9 +152,7 @@ async def test_an_oversized_image_is_rejected(
     fake_storage: dict[str, bytes],
 ) -> None:
     # A huge pixel count is rejected even from a tiny (solid-color) file.
-    room_id, document_id, master_token, _ = await _room_with_master_and_document(
-        client, make_token
-    )
+    room_id, document_id, master_token, _ = await _room_with_master_and_document(client, make_token)
 
     status_code, _ = await _upload(
         client, room_id, document_id, master_token, _png((10_000, 5_001))
