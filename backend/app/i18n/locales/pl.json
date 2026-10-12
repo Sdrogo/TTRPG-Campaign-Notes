@@ -1,0 +1,235 @@
+{
+  "errors": {
+    "auth": {
+      "missingToken": "Brak tokenu uwierzytelniającego",
+      "invalidToken": "Token jest nieprawidłowy lub wygasł"
+    },
+    "room": {
+      "notFound": "Nie znaleziono pokoju",
+      "notAMember": "Nie jesteś członkiem tego pokoju",
+      "onlyMasterCanChangeSettings": "Tylko Master może zmieniać ustawienia tego pokoju",
+      "onlyAdministratorCanChangeRoles": "Tylko Administrator pokoju może zmieniać role",
+      "onlyAdministratorCanRemoveMembers": "Tylko Administrator pokoju może usuwać członków",
+      "onlyAdministratorChangesImage": "Tylko Administrator pokoju może zmienić jego obraz",
+      "onlyAdministratorCanDelete": "Tylko Administrator pokoju może go usunąć",
+      "nameRequired": "Nazwa pokoju jest wymagana",
+      "onlyAdministratorCanChangeDefaultVisibility": "Tylko Administrator pokoju może zmienić domyślną widoczność",
+      "invalidDefaultVisibility": "Domyślna widoczność może być: Pokój, Tylko Master lub Prywatna",
+      "onlyMasterCanDuplicate": "Tylko Master może zduplikować pokój"
+    },
+    "membership": {
+      "notFound": "Ten użytkownik nie jest członkiem tego pokoju",
+      "lastMaster": "Nie można usunąć ostatniego Mastera bez wskazania następcy",
+      "lastAdministrator": "Nie można usunąć ostatniego Administratora bez wskazania następcy",
+      "noChangeRequested": "Żądanie musi zmieniać rolę i/lub flagę administratora"
+    },
+    "document": {
+      "notFound": "Nie znaleziono dokumentu",
+      "nameRequired": "Nazwa dokumentu jest wymagana",
+      "subtitleTooLong": "Podtytuł może mieć najwyżej {max} znaków",
+      "creationDisabled": "Tworzenie dokumentów jest wyłączone dla Playerów w tym pokoju",
+      "invalidTagIds": "Jedno lub więcej tag_ids jest nieprawidłowych dla tego pokoju",
+      "notOwner": "Może to zrobić tylko Owner (lub Master)",
+      "alreadyOwner": "Ten użytkownik jest już Ownerem tego dokumentu",
+      "notAnOwner": "Ten użytkownik nie jest jawnym Ownerem tego dokumentu",
+      "tooManyImages": "Dokument może mieć najwyżej {max} obrazów"
+    },
+    "comment": {
+      "notFound": "Nie znaleziono komentarza",
+      "bodyRequired": "Komentarz nie może być pusty",
+      "tooLong": "Komentarz może mieć najwyżej {max} znaków",
+      "notAuthor": "Tylko autor może edytować ten komentarz",
+      "notAuthorImages": "Tylko autor może edytować obrazy tego komentarza",
+      "cannotDelete": "Tylko autor lub Master może usunąć ten komentarz",
+      "deleted": "Ten komentarz został usunięty",
+      "alreadyDeleted": "Ten komentarz został już usunięty",
+      "tooManyImages": "Komentarz może mieć najwyżej {max} obrazów",
+      "invalidSelectiveUsers": "selective_user_ids może zawierać tylko członków tego pokoju",
+      "parentNotFound": "Nie znaleziono komentarza, na który odpowiadasz",
+      "parentDeleted": "Nie można odpowiedzieć na usunięty komentarz",
+      "replyWiderThanParent": "Odpowiedź nie może być widoczna dla osób, które nie widzą komentarza, na który odpowiada",
+      "cannotPin": "Tylko Owner lub Master może przypinać komentarze tego dokumentu",
+      "pinReply": "Przypiąć można tylko komentarz najwyższego poziomu",
+      "tooManyPinned": "Dokument może mieć najwyżej {max} przypiętych komentarzy",
+      "cannotResolve": "Tylko autor, Owner lub Master może oznaczyć tę dyskusję jako rozwiązaną",
+      "resolveReply": "Rozwiązać można tylko dyskusję komentarza najwyższego poziomu",
+      "cannotPromote": "Tylko Owner lub Master może awansować komentarze tego dokumentu",
+      "cannotPromoteIntoDocument": "Komentarz możesz awansować tylko do dokumentu, którego jesteś Ownerem",
+      "promoteIntoSameDocument": "Komentarza nie można awansować na nowy dokument w tym samym dokumencie",
+      "promotionWidens": "Awans tego komentarza pokaże go członkom, którzy teraz nie mogą go czytać: potwierdź, aby kontynuować",
+      "promoteDocumentRequired": "Wybierz dokument, do którego awansować komentarz"
+    },
+    "reaction": {
+      "invalidEmoji": "Reakcja musi być dokładnie jednym emoji",
+      "commentDeleted": "Nie można zareagować na usunięty komentarz",
+      "tooMany": "Komentarz może mieć najwyżej {max} różnych emoji"
+    },
+    "character": {
+      "notFound": "Nie znaleziono postaci",
+      "playerNotAMember": "Osoba grająca postacią musi być członkiem tego pokoju",
+      "cannotPostAs": "Możesz pisać tylko jako postać, którą grasz (Master może pisać jako dowolny dokument)"
+    },
+    "version": {
+      "notFound": "Nie znaleziono wersji"
+    },
+    "note": {
+      "notFound": "Nie znaleziono notatki",
+      "titleRequired": "Notatka potrzebuje tytułu",
+      "titleTooLong": "Tytuł notatki może mieć najwyżej {max} znaków",
+      "notOwner": "Tylko Owner (lub Master) może zarządzać notatkami tego dokumentu",
+      "tooMany": "Dokument może mieć najwyżej {max} notatek",
+      "invalidOrder": "note_ids musi wymieniać każdą widoczną dla ciebie notatkę dokładnie raz",
+      "invalidSelectiveUsers": "selective_user_ids może zawierać tylko członków tego pokoju"
+    },
+    "tag": {
+      "notAllowedToManage": "Tylko Administrator lub Master może zarządzać tagami",
+      "notFound": "Nie znaleziono tagu",
+      "nameRequired": "Nazwa tagu jest wymagana",
+      "duplicateName": "Tag o tej nazwie już istnieje w tym pokoju",
+      "onlyAdministratorCanSetMainTags": "Tylko Administrator może wybierać tagi główne",
+      "duplicateMainTag": "Tag może występować tylko raz wśród tagów głównych",
+      "unknownMainTag": "Tag główny nie jest tagiem tego pokoju",
+      "emptyMainItem": "Pozycja główna wymaga co najmniej jednego tagu",
+      "duplicateCombination": "Ta kombinacja tagów już istnieje"
+    },
+    "image": {
+      "notFound": "Nie znaleziono obrazu",
+      "storageUnavailable": "Magazyn obrazów jest niedostępny",
+      "tooLarge": "Obraz przekracza limit wgrywania {mb} MB",
+      "dimensionsTooLarge": "Wymiary obrazu są zbyt duże",
+      "unsupportedFormat": "Nieobsługiwany format obrazu: {format}",
+      "invalidFile": "Plik nie jest prawidłowym obrazem",
+      "remoteUnsupportedScheme": "Obsługiwane są tylko adresy URL obrazów http(s)",
+      "remoteHostUnresolved": "Nie można rozpoznać hosta adresu URL obrazu",
+      "remoteNonPublic": "Adres URL obrazu wskazuje na adres niepubliczny",
+      "remoteRedirectNoLocation": "Adres URL obrazu przekierował bez podania miejsca docelowego",
+      "remoteHttpStatus": "Adres URL obrazu zwrócił HTTP {status}",
+      "remoteTooLarge": "Obraz pod podanym adresem URL jest zbyt duży",
+      "remoteDownloadFailed": "Nie można pobrać obrazu z adresu URL",
+      "remoteTooManyRedirects": "Adres URL obrazu przekierował zbyt wiele razy"
+    },
+    "file": {
+      "notPdf": "Plik nie jest plikiem PDF",
+      "tooLarge": "Plik przekracza limit {mb} MB",
+      "tooMany": "Dokument może mieć najwyżej {max} plików",
+      "notFound": "Nie znaleziono pliku",
+      "storageUnavailable": "Magazyn plików jest niedostępny"
+    },
+    "invitation": {
+      "notFound": "Nie znaleziono zaproszenia",
+      "revoked": "Zaproszenie zostało cofnięte",
+      "expired": "Zaproszenie wygasło",
+      "alreadyMember": "Ten użytkownik jest już członkiem tego pokoju",
+      "onlyAdministratorCanInvite": "Tylko Administrator pokoju może tworzyć zaproszenia",
+      "notAFriend": "Bezpośrednio możesz zaprosić tylko znajomego"
+    },
+    "account": {
+      "fields": {
+        "display_name": "Wyświetlana nazwa",
+        "pronouns": "Zaimki",
+        "bio": "Biogram"
+      },
+      "fieldTooLong": "Pole {field} może mieć najwyżej {max} znaków",
+      "deletionNotConfirmed": "Wpisz DELETE, aby potwierdzić usunięcie konta",
+      "successorNeeded": "Przed usunięciem konta wskaż innego Mastera lub Administratora w: {rooms}",
+      "signInDeletionFailed": "Twoje dane zostały usunięte, ale nie udało się usunąć konta logowania. Spróbuj ponownie za chwilę"
+    },
+    "friend": {
+      "notFound": "Nie znaleziono znajomego ani zaproszenia do znajomych",
+      "self": "Nie możesz wysłać zaproszenia do znajomych samemu sobie",
+      "noSharedRoom": "Zaproszenie do znajomych możesz wysłać tylko osobie, która dzieli z tobą pokój, lub przez jej kod znajomego",
+      "userOrCode": "Podaj użytkownika albo kod znajomego",
+      "codeNotFound": "Nie znaleziono kodu znajomego",
+      "alreadyFriends": "Już jesteście znajomymi",
+      "alreadyRequested": "Zaproszenie do znajomych dla tego użytkownika zostało już wysłane",
+      "incomingPending": "Ten użytkownik już wysłał ci zaproszenie do znajomych: odpowiedz na nie",
+      "cooldown": "Zaproszenie tego użytkownika odrzucono mniej niż 30 dni temu",
+      "notRecipient": "Odpowiedzieć może tylko adresat zaproszenia",
+      "notPending": "To zaproszenie ma już odpowiedź",
+      "answerInstead": "Zamiast je usuwać, przyjmij lub odrzuć zaproszenie"
+    },
+    "reveal": {
+      "onlyMaster": "Tylko Master może ujawniać treści",
+      "audienceRequired": "Wybierz cały pokój lub co najmniej jednego członka, któremu ujawnić",
+      "notWidening": "Nikt nie uzyskałby dostępu: ujawnienie może tylko poszerzyć grono osób widzących treść",
+      "invalidUsers": "user_ids może zawierać tylko członków tego pokoju",
+      "invalidNotes": "note_ids może zawierać tylko notatki tego dokumentu",
+      "commentDeleted": "Usuniętego komentarza nie można ujawnić"
+    },
+    "history": {
+      "forbidden": "Tylko Master lub Administrator pokoju może czytać historię widoczności",
+      "invalidCursor": "before musi być wpisem historii tego pokoju"
+    },
+    "viewAs": {
+      "readOnly": "Nie można niczego zmieniać podczas oglądania jako inny członek",
+      "onlyMaster": "Tylko Master może zobaczyć ten pokój jako inny członek",
+      "notAMember": "Ten użytkownik nie jest członkiem pokoju",
+      "invalidUser": "Nieprawidłowy członek"
+    },
+    "export": {
+      "alreadyRunning": "Już generujesz PDF w tym pokoju",
+      "notFound": "Nie znaleziono eksportu"
+    },
+    "import": {
+      "unreadable": "{name} nie jest czytelnym eksportem JSON ani Markdown",
+      "unsupportedSchema": "{name} został wyeksportowany z nowszej wersji (schemat {version}); ta aplikacja czyta do schematu {max}",
+      "noDocuments": "{name} nie zawiera żadnego dokumentu",
+      "tooManyFiles": "Jednorazowo można zaimportować najwyżej {max} plików",
+      "tooManyDocuments": "Jednorazowo można zaimportować najwyżej {max} dokumentów",
+      "tooManyImages": "Jednorazowo można zaimportować najwyżej {max} obrazów",
+      "nameRequired": "Dokument z pliku nie ma nazwy",
+      "nameTooLong": "Nazwa dokumentu „{name}...” przekracza {max} znaków",
+      "subtitleTooLong": "Podtytuł dokumentu {name} przekracza {max} znaków",
+      "tooManyNotes": "{name} ma więcej niż {max} notatek",
+      "noteTitleInvalid": "Notatka w {name} nie ma tytułu lub ma tytuł dłuższy niż {max} znaków",
+      "tagNameTooLong": "Nazwa tagu „{name}...” przekracza {max} znaków",
+      "nothingSelected": "Wybierz co najmniej jeden dokument do zaimportowania",
+      "badChoices": "Wybory importu są nieprawidłowe",
+      "cannotReplace": "Tylko Owner (lub Master) może zastąpić {name}",
+      "fileTooLarge": "{name} przekracza {max} MB",
+      "alreadyRunning": "Import w tym pokoju już trwa",
+      "notFound": "Nie znaleziono importu"
+    },
+    "imageSearch": {
+      "emptyQuery": "Wpisz, czego szukać",
+      "throttled": "Zbyt wiele wyszukiwań: poczekaj minutę i spróbuj ponownie",
+      "unavailable": "Wyszukiwanie obrazów jest teraz niedostępne, spróbuj później"
+    },
+    "map": {
+      "notFound": "Nie znaleziono mapy",
+      "notManager": "Tylko osoba, która utworzyła mapę (lub Master), może ją edytować",
+      "creationDisabled": "W tym pokoju Playerzy nie mogą tworzyć map",
+      "invalidSelectiveUsers": "selective_user_ids może zawierać tylko członków tego pokoju",
+      "nameRequired": "Mapa musi mieć nazwę",
+      "tooLong": "Pole {field} może mieć najwyżej {max} znaków",
+      "tooMany": "Pokój może mieć najwyżej {max} map",
+      "tooManyCards": "Mapa może mieć najwyżej {max} kart",
+      "tooManyGroups": "Mapa może mieć najwyżej {max} grup",
+      "tooManyArrows": "Mapa może mieć najwyżej {max} strzałek",
+      "invalidBoard": "Nie można zapisać mapy: odwołuje się do czegoś, czego nie ma",
+      "masterOnly": "Tylko Master może sprawić, że karta lub strzałka będzie widoczna tylko dla Masterów",
+      "imageNotFound": "Tego obrazu nie ma wśród obrazów dokumentu",
+      "fields": {
+        "name": "nazwa",
+        "description": "opis",
+        "text": "tekst karty",
+        "caption": "podpis",
+        "label": "etykieta",
+        "groupTitle": "tytuł grupy"
+      }
+    }
+  },
+  "pdf": {
+    "contents": "Spis treści",
+    "glossary": "Słowniczek",
+    "other": "Inne",
+    "documents": "Dokumenty",
+    "comments": "Komentarze",
+    "unknownMember": "Nieznany członek",
+    "playedBy": "{character} (gra: {player})",
+    "pageAbbreviation": "s."
+  },
+  "room": {
+    "copySuffix": " (Kopia)"
+  }
+}

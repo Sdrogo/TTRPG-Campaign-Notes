@@ -21,6 +21,7 @@ export function TextCardNode({ data, selected }: NodeProps<TextCardNodeType>) {
 
   return (
     <Paper
+      className="map-card"
       withBorder={!isTitle || selected}
       p={isTitle ? 4 : 8}
       pr={editable ? 28 : undefined}

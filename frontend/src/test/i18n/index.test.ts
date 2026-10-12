@@ -1,5 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import i18n, { LANGUAGE_STORAGE_KEY, currentLanguage, detectLanguage, setLanguage } from '../../i18n';
+import { LANGUAGE_NAMES } from '../../i18n/languages';
+import i18n, {
+  LANGUAGE_STORAGE_KEY,
+  SUPPORTED_LANGUAGES,
+  currentLanguage,
+  detectLanguage,
+  ensureLanguageLoaded,
+  loadStartingLanguage,
+  resolveLanguage,
+  startingLanguage,
+  setLanguage,
+} from '../../i18n';
 
 describe('currentLanguage', () => {
   afterEach(() => {
@@ -10,7 +21,7 @@ describe('currentLanguage', () => {
   // matched by `supportedLngs`'s own fallback logic); this app only ever
   // shows it or en, so that case still needs a safe value.
   it('falls back to English when i18next resolves to an unsupported language', () => {
-    vi.spyOn(i18n, 'resolvedLanguage', 'get').mockReturnValue('fr');
+    vi.spyOn(i18n, 'resolvedLanguage', 'get').mockReturnValue('ja');
 
     expect(currentLanguage()).toBe('en');
   });
@@ -29,11 +40,11 @@ describe('detectLanguage', () => {
   });
 
   it('takes the first supported language among the browser preferences', () => {
-    expect(detectLanguage(['de-DE', 'fr', 'it'])).toBe('it');
+    expect(detectLanguage(['ja', 'ko', 'it'])).toBe('it');
   });
 
   it('falls back to English when nothing the browser asks for is supported', () => {
-    expect(detectLanguage(['de-DE', 'ja'])).toBe('en');
+    expect(detectLanguage(['ja', 'ko'])).toBe('en');
     expect(detectLanguage([])).toBe('en');
   });
 
@@ -90,5 +101,160 @@ describe('setLanguage', () => {
     await setLanguage('en');
 
     expect(currentLanguage()).toBe('en');
+  });
+});
+
+// Spec 34: tags that don't name a language file as written. Only it and en
+// exist today, so these run against a larger supported set.
+describe('resolveLanguage', () => {
+  const future = ['en', 'it', 'pt-PT', 'zh-Hans', 'ko'];
+  const withTraditional = [...future, 'zh-Hant'];
+
+  it.each([
+    ['it-IT', future, 'it'],
+    ['pt', future, 'pt-PT'],
+    ['pt-BR', future, 'pt-PT'],
+    ['pt-pt', future, 'pt-PT'],
+    ['zh-CN', future, 'zh-Hans'],
+    ['zh-Hans-CN', future, 'zh-Hans'],
+    ['zh-TW', future, 'zh-Hans'],
+    ['zh-Hant-HK', future, 'zh-Hans'],
+    ['zh-TW', withTraditional, 'zh-Hant'],
+    ['zh-Hant-HK', withTraditional, 'zh-Hant'],
+    ['zh', withTraditional, 'zh-Hans'],
+    ['KO-kr', future, 'ko'],
+    ['fr-FR', future, undefined],
+    ['*', future, undefined],
+    ['', future, undefined],
+  ])('reads %s as %s', (tag, supported, expected) => {
+    expect(resolveLanguage(tag, supported)).toBe(expected);
+  });
+
+  it('reads Brazilian Portuguese as European, and Traditional Chinese as nothing yet', () => {
+    expect(detectLanguage(['pt-BR'])).toBe('pt-PT');
+    expect(detectLanguage(['zh-TW', 'fr-CA'])).toBe('fr');
+  });
+});
+
+describe('ensureLanguageLoaded', () => {
+  const strings = { language: { name: 'Test' } } as unknown as Parameters<
+    typeof i18n.addResourceBundle
+  >[2];
+
+  afterEach(() => {
+    i18n.removeResourceBundle('xx', 'translation');
+  });
+
+  it('fetches a language that is not loaded yet, once', async () => {
+    const load = vi.fn().mockResolvedValue({ default: strings });
+
+    await ensureLanguageLoaded('xx', { xx: load });
+    await ensureLanguageLoaded('xx', { xx: load });
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(i18n.hasResourceBundle('xx', 'translation')).toBe(true);
+  });
+
+  it('does nothing for a bundled language', async () => {
+    await expect(ensureLanguageLoaded('it', {})).resolves.toBeUndefined();
+  });
+
+  it('rejects when the file cannot be fetched, and loads nothing', async () => {
+    const load = vi.fn().mockRejectedValue(new Error('offline'));
+
+    await expect(ensureLanguageLoaded('xx', { xx: load })).rejects.toThrow('offline');
+    expect(i18n.hasResourceBundle('xx', 'translation')).toBe(false);
+  });
+});
+
+describe('loadStartingLanguage', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('it');
+    i18n.removeResourceBundle('xx', 'translation');
+  });
+
+  it('does nothing for a bundled language', async () => {
+    await loadStartingLanguage('en', {});
+
+    expect(currentLanguage()).toBe('it');
+  });
+
+  it('fetches a language that is not bundled and switches to it', async () => {
+    const strings = { language: { name: 'Test' } } as unknown as Parameters<
+      typeof i18n.addResourceBundle
+    >[2];
+
+    await loadStartingLanguage('xx', { xx: () => Promise.resolve({ default: strings }) });
+
+    expect(i18n.language).toBe('xx');
+  });
+
+  it('stays in the current language when the file cannot be fetched', async () => {
+    await loadStartingLanguage('xx', { xx: () => Promise.reject(new Error('offline')) });
+
+    expect(i18n.language).toBe('it');
+  });
+});
+
+describe('startingLanguage', () => {
+  it('starts in a bundled language, and in English while another one loads', () => {
+    expect(startingLanguage('it')).toBe('it');
+    expect(startingLanguage('ko')).toBe('en');
+  });
+});
+
+describe('setLanguage with a slow language file', () => {
+  it('lets the last pick win when an earlier fetch finishes after it', async () => {
+    const strings = { language: { name: 'Test' } } as unknown as Parameters<
+      typeof i18n.addResourceBundle
+    >[2];
+    let finish: (value: { default: typeof strings }) => void = () => {};
+    const slow = new Promise<{ default: typeof strings }>((resolve) => {
+      finish = resolve;
+    });
+    const first = setLanguage('xx' as 'it', { xx: () => slow });
+    const second = setLanguage('en');
+    await second;
+    finish({ default: strings });
+    await first;
+
+    expect(currentLanguage()).toBe('en');
+    expect(i18n.language).toBe('en');
+    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en');
+    i18n.removeResourceBundle('xx', 'translation');
+  });
+});
+
+// The real lazy files: picking a language fetches its strings, and plurals
+// follow its own rules (Russian has four forms).
+describe('a language that is fetched when picked', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('it');
+  });
+
+  it('switches to it and uses its plural rules', async () => {
+    await setLanguage('ru');
+
+    expect(currentLanguage()).toBe('ru');
+    expect(document.documentElement.lang).toBe('ru');
+    const unread = (count: number) => i18n.t('documents.unreadCount', { count });
+    expect(unread(1)).toBe('1 новый Комментарий');
+    expect(unread(3)).toBe('3 новых Комментария');
+    expect(unread(5)).toBe('5 новых Комментариев');
+  });
+
+  it('keeps a regional language code', async () => {
+    await setLanguage('pt-PT');
+
+    expect(currentLanguage()).toBe('pt-PT');
+    expect(i18n.t('language.name')).toBe('Português');
+  });
+
+  it('loads every supported language by its own file', async () => {
+    for (const language of SUPPORTED_LANGUAGES) {
+      await setLanguage(language);
+
+      expect(i18n.t('language.name')).toBe(LANGUAGE_NAMES[language]);
+    }
   });
 });

@@ -153,8 +153,9 @@ other icon set.
   transparent ring turns `--accent-primary` on hover/focus and while its
   menu is open. It opens a Mantine `Menu` (`bottom-end`): one item per
   language with a 20px flag and the language's **own** name ("Italiano",
-  "English"), so it can be found whatever language the UI is in, and a
-  check mark on the current one. Its tooltip ("Change language") is hidden while the menu is open, so it doesn't cover the
+  "English", "Deutsch", "Русский"…), so it can be found whatever language the UI is in, a
+  check mark on the current one and a small gray "beta" badge (in the UI
+  language) on the languages nobody has proofread yet (spec 34_2). Its tooltip ("Change language") is hidden while the menu is open, so it doesn't cover the
   first item. **Pending count** (spec 18_2): the avatar sits in a Mantine
   `Indicator` (accent, 18px) counting friend requests received plus Room
   invitations from Friends, hidden at zero; the link's label becomes
@@ -627,6 +628,14 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   Colors come from the fixed theme set (`MAP_COLORS`), never a free picker.
   Struck cards and groups are drawn crossed out; Master-only items carry a
   small "Solo Master" marker.
+- **Moving and selecting** (while editing): a card shows a grab cursor, an
+  accent ring on hover and a small grip mark top-left; any part of its body
+  (not the name link nor the pencil) picks it up. Dragging on empty canvas
+  draws a selection box that selects every card or group it touches
+  (`SelectionMode.Partial`), and the selection moves as one. The board itself
+  pans with the middle or right mouse button, or with Space held; a hint
+  under the board says so. On a touch screen (`pointer: coarse`) and on a
+  read-only board a plain drag pans, and there is no selection box nor hint.
 - **Groups**: a tinted frame with an optional title, resizable while
   editing; dragging a card into a group puts it in that group.
 - **Arrows**: straight lines edge to edge between cards or groups, drawn by

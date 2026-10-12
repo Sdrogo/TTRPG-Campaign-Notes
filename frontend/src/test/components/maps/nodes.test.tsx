@@ -218,6 +218,11 @@ describe('MapHandle', () => {
     rerender(<MapHandle visible={false} />);
     expect(container.querySelector('[data-handle="target"]')).toBeInTheDocument();
   });
+
+  it('keeps the arrow dot above the card image and text so it can be grabbed', () => {
+    const { container } = renderWithProviders(<MapHandle visible />);
+    expect(container.querySelector<HTMLElement>('[data-handle="source"]')?.style.zIndex).toBe('1');
+  });
 });
 
 describe('MapArrow', () => {

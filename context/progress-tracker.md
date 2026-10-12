@@ -101,6 +101,29 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-12
 
+- **More UI languages, 34_2** (spec 34, 10-12, no migration): de, es, fr, nl,
+  pl, pt-PT and ru, frontend and backend files drafted by Claude and shown
+  as "beta" in the selector; simplified flags; lazy-loaded; the selector
+  lists languages from `LANGUAGE_NAMES` (their files aren't loaded until
+  picked); emoji-mart labels and read-aloud tags for each; PT Serif
+  bundled as the Cyrillic fallback of the Gothic and Print PDFs (Lato already
+  has Cyrillic); a PDF test fails if any style falls back to a system font
+  for Cyrillic or Latin Extended text. Glossary filled. Next: 34_3, East
+  Asia (ja, zh-Hans, ko) with CJK fonts.
+- **More UI languages, 34_1 foundations** (spec 34, 10-12, no migration, no
+  new language yet): `resolveLanguage` / `resolve_locale` map regional and
+  script tags (`pt-BR` → `pt-PT`, `zh-TW` → `zh-Hans` until `zh-Hant` exists)
+  with the same alias table on both sides; non-bundled languages load
+  lazily (`LAZY_LOADERS`, `ensureLanguageLoaded`, `i18nReady` holds the first
+  render, a failed switch shows `language.loadFailed`); `locales.test.ts`
+  compares plural keys as groups per `Intl.PluralRules` (Russian four forms,
+  Japanese one); `context/i18n-glossary.md` started. Next: 34_2.
+
+- **Map cards easier to move and select** (28 follow-up, 10-12, frontend
+  only, no migration): cards get a grab cursor, a hover ring and a grip
+  mark; dragging on empty canvas now draws a selection box (partial overlap)
+  and the board pans with the middle/right button or Space. Selection drags
+  are saved through `onSelectionDragStop`.
 - **Map card images and no label suggestions** (28 follow-up, 10-12): a
   Document card on a map shows an image as its whole background fading into
   the card at the bottom, where the name is. The editor picks which of the
@@ -242,6 +265,10 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still
   needs its `FR-`/`VR-` entry (product owner's edit only).
+- **34, More UI languages** (scope confirmed 2026-10-12): spec in
+  `context/feature/34 - More UI languages.md`. Round one: de, fr, es, pt-PT,
+  ru, ja, zh-Hans, ko, pl, nl, all beta; tr and zh-Hant later. Next: 34_1
+  foundations.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).

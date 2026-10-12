@@ -112,15 +112,18 @@ Adopted 2026-09-24 (spec 09); see `architecture.md` → UI Language.
   literals.
 - **A new string goes in every language in the same change.** `it.json`
   is the typed source (`i18next.d.ts`), and `locales.test.ts` fails on a
-  key missing from `en.json` or a placeholder that differs.
+  key missing from another language, a placeholder that differs, or a
+  plural without the forms its language needs.
 - **Keys** are nested by area and named for what the text is, not what it
   says (`documents.detail.notFound`, not `documents.documentoNonTrovato`).
   Reuse a `common.*` key only when the meaning is really the same. The
   same word can need different translations in different places.
 - **Compose with interpolation and plurals, never concatenation**:
   `t('documents.ownersLine', { names })`, `t('mentions.tagDetail', { count })`
-  with `_one`/`_other` keys. Word order and plural rules differ between
-  languages.
+  with `_one`/`_other` keys (a language with more forms, like Russian, adds
+  `_few`/`_many`; one with a single form, like Japanese, only `_other`). Word
+  order and plural rules differ between languages. A language's own form of a
+  term comes from `context/i18n-glossary.md`.
 - **Locale-sensitive formatting** (dates, relative times, sorting by
   name) uses `currentLanguage()`, never a hardcoded locale.
 

@@ -2,7 +2,9 @@
   "language": {
     "name": "Italiano",
     "selectorLabel": "Lingua: {{language}}",
-    "selectorTooltip": "Cambia lingua"
+    "selectorTooltip": "Cambia lingua",
+    "loadFailed": "Impossibile caricare la lingua. Riprova.",
+    "beta": "beta"
   },
   "app": {
     "name": "TTRPG Campaign Notes"
@@ -869,6 +871,7 @@
     "readOnlyOnPhone": "Su uno schermo così piccolo la mappa è in sola lettura.",
     "addDocuments": "Aggiungi Documenti",
     "addText": "Aggiungi testo",
+    "selectHint": "Trascina sullo sfondo per selezionare più carte. Sposta la mappa con il tasto destro o centrale del mouse, oppure tieni premuto Spazio.",
     "groupSelected": "Raggruppa",
     "searchDocuments": "Cerca per nome",
     "alreadyOnMap": "Già sulla mappa",

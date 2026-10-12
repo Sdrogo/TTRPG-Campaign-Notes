@@ -2,7 +2,9 @@
   "language": {
     "name": "English",
     "selectorLabel": "Language: {{language}}",
-    "selectorTooltip": "Change language"
+    "selectorTooltip": "Change language",
+    "loadFailed": "Couldn't load the language. Try again.",
+    "beta": "beta"
   },
   "app": {
     "name": "TTRPG Campaign Notes"
@@ -869,6 +871,7 @@
     "readOnlyOnPhone": "On a screen this small the map is read-only.",
     "addDocuments": "Add Documents",
     "addText": "Add text",
+    "selectHint": "Drag on empty space to select several cards. Move the board with the right or middle mouse button, or hold Space.",
     "groupSelected": "Group",
     "searchDocuments": "Search by name",
     "alreadyOnMap": "Already on the map",

@@ -1,0 +1,235 @@
+{
+  "errors": {
+    "auth": {
+      "missingToken": "Falta el token de autenticación",
+      "invalidToken": "Token no válido o caducado"
+    },
+    "room": {
+      "notFound": "Sala no encontrada",
+      "notAMember": "No eres miembro de esta Sala",
+      "onlyMasterCanChangeSettings": "Solo el Master puede modificar los ajustes de esta Sala",
+      "onlyAdministratorCanChangeRoles": "Solo un Admin de la Sala puede modificar los roles",
+      "onlyAdministratorCanRemoveMembers": "Solo un Admin de la Sala puede quitar miembros",
+      "onlyAdministratorChangesImage": "Solo un Admin de la Sala puede cambiar su imagen",
+      "onlyAdministratorCanDelete": "Solo un Admin de la Sala puede eliminarla",
+      "nameRequired": "El nombre de la Sala es obligatorio",
+      "onlyAdministratorCanChangeDefaultVisibility": "Solo un Admin de la Sala puede cambiar la visibilidad predeterminada",
+      "invalidDefaultVisibility": "La visibilidad predeterminada puede ser Sala, Solo Master o Privada",
+      "onlyMasterCanDuplicate": "Solo el Master puede duplicar la Sala"
+    },
+    "membership": {
+      "notFound": "El usuario no es miembro de esta Sala",
+      "lastMaster": "No se puede quitar al último Master sin indicar un sucesor",
+      "lastAdministrator": "No se puede quitar al último Admin sin indicar un sucesor",
+      "noChangeRequested": "La solicitud debe modificar el rol y/o el indicador de admin"
+    },
+    "document": {
+      "notFound": "Documento no encontrado",
+      "nameRequired": "El nombre del Documento es obligatorio",
+      "subtitleTooLong": "El subtítulo puede tener como máximo {max} caracteres",
+      "creationDisabled": "La creación de Documentos está desactivada para los Player en esta Sala",
+      "invalidTagIds": "Uno o más tag_ids no son válidos para esta Sala",
+      "notOwner": "Solo un Owner (o el Master) puede hacerlo",
+      "alreadyOwner": "El usuario ya es Owner de este Documento",
+      "notAnOwner": "El usuario no es un Owner explícito de este Documento",
+      "tooManyImages": "Un Documento puede tener como máximo {max} imágenes"
+    },
+    "comment": {
+      "notFound": "Comentario no encontrado",
+      "bodyRequired": "Un Comentario no puede estar vacío",
+      "tooLong": "Un Comentario puede tener como máximo {max} caracteres",
+      "notAuthor": "Solo el autor puede editar este Comentario",
+      "notAuthorImages": "Solo el autor puede modificar las imágenes de este Comentario",
+      "cannotDelete": "Solo el autor o el Master pueden eliminar este Comentario",
+      "deleted": "Este Comentario ha sido eliminado",
+      "alreadyDeleted": "Este Comentario ya había sido eliminado",
+      "tooManyImages": "Un Comentario puede tener como máximo {max} imágenes",
+      "invalidSelectiveUsers": "selective_user_ids debe contener solo miembros de esta Sala",
+      "parentNotFound": "No se encontró el Comentario al que respondes",
+      "parentDeleted": "No se puede responder a un Comentario eliminado",
+      "replyWiderThanParent": "Una respuesta no puede ser visible para quien no ve el Comentario al que responde",
+      "cannotPin": "Solo un Owner o el Master puede fijar los Comentarios de este Documento",
+      "pinReply": "Solo se puede fijar un Comentario de primer nivel",
+      "tooManyPinned": "Un Documento puede tener como máximo {max} Comentarios fijados",
+      "cannotResolve": "Solo el autor, un Owner o el Master puede marcar esta conversación como resuelta",
+      "resolveReply": "Solo se puede resolver la conversación de un Comentario de primer nivel",
+      "cannotPromote": "Solo un Owner o el Master pueden promover los comentarios de este Documento",
+      "cannotPromoteIntoDocument": "Solo puedes promover un comentario a un Documento del que seas Owner",
+      "promoteIntoSameDocument": "Un comentario no puede promoverse como Documento nuevo dentro de su propio Documento",
+      "promotionWidens": "Promover este comentario lo mostrará a miembros que ahora no pueden leerlo: confirma para continuar",
+      "promoteDocumentRequired": "Elige el Documento al que promover el comentario"
+    },
+    "reaction": {
+      "invalidEmoji": "Una reacción debe ser exactamente un emoji",
+      "commentDeleted": "No se puede reaccionar a un Comentario eliminado",
+      "tooMany": "Un Comentario puede tener como máximo {max} emojis distintos"
+    },
+    "character": {
+      "notFound": "Personaje no encontrado",
+      "playerNotAMember": "Quien interpreta al Personaje debe ser miembro de esta Sala",
+      "cannotPostAs": "Solo puedes escribir como un Personaje que interpretes (el Master puede escribir como cualquier Documento)"
+    },
+    "version": {
+      "notFound": "Versión no encontrada"
+    },
+    "note": {
+      "notFound": "Nota no encontrada",
+      "titleRequired": "Una Nota necesita un título",
+      "titleTooLong": "El título de una Nota puede tener como máximo {max} caracteres",
+      "notOwner": "Solo un Owner (o el Master) puede gestionar las Notas de este Documento",
+      "tooMany": "Un Documento puede tener como máximo {max} Notas",
+      "invalidOrder": "note_ids debe enumerar cada Nota que ves exactamente una vez",
+      "invalidSelectiveUsers": "selective_user_ids debe contener solo miembros de esta Sala"
+    },
+    "tag": {
+      "notAllowedToManage": "Solo un Admin o el Master pueden gestionar las Etiquetas",
+      "notFound": "Etiqueta no encontrada",
+      "nameRequired": "El nombre de la Etiqueta es obligatorio",
+      "duplicateName": "Ya existe una Etiqueta con este nombre en esta Sala",
+      "onlyAdministratorCanSetMainTags": "Solo un Admin puede elegir las Etiquetas principales",
+      "duplicateMainTag": "Una Etiqueta solo puede aparecer una vez entre las Etiquetas principales",
+      "unknownMainTag": "Una Etiqueta principal no es una Etiqueta de esta Sala",
+      "emptyMainItem": "Una entrada principal requiere al menos una Etiqueta",
+      "duplicateCombination": "Esta combinación de Etiquetas ya existe"
+    },
+    "image": {
+      "notFound": "Imagen no encontrada",
+      "storageUnavailable": "El almacenamiento de imágenes no está disponible",
+      "tooLarge": "La imagen supera el límite de subida de {mb} MB",
+      "dimensionsTooLarge": "Las dimensiones de la imagen son demasiado grandes",
+      "unsupportedFormat": "Formato de imagen no compatible: {format}",
+      "invalidFile": "El archivo no es una imagen válida",
+      "remoteUnsupportedScheme": "Solo se admiten URL de imagen http(s)",
+      "remoteHostUnresolved": "No se pudo resolver el host de la URL de la imagen",
+      "remoteNonPublic": "La URL de la imagen apunta a una dirección no pública",
+      "remoteRedirectNoLocation": "La URL de la imagen redirigió sin indicar un destino",
+      "remoteHttpStatus": "La URL de la imagen devolvió HTTP {status}",
+      "remoteTooLarge": "La imagen de la URL indicada es demasiado grande",
+      "remoteDownloadFailed": "No se pudo descargar la imagen desde la URL",
+      "remoteTooManyRedirects": "La URL de la imagen redirigió demasiadas veces"
+    },
+    "file": {
+      "notPdf": "El archivo no es un PDF",
+      "tooLarge": "El archivo supera el límite de {mb} MB",
+      "tooMany": "Un Documento puede tener como máximo {max} archivos",
+      "notFound": "Archivo no encontrado",
+      "storageUnavailable": "El almacenamiento de archivos no está disponible"
+    },
+    "invitation": {
+      "notFound": "Invitación no encontrada",
+      "revoked": "La invitación ha sido revocada",
+      "expired": "La invitación ha caducado",
+      "alreadyMember": "El usuario ya es miembro de esta Sala",
+      "onlyAdministratorCanInvite": "Solo un Admin de la Sala puede crear invitaciones",
+      "notAFriend": "Solo puedes invitar directamente a un amigo"
+    },
+    "account": {
+      "fields": {
+        "display_name": "Nombre visible",
+        "pronouns": "Pronombres",
+        "bio": "Biografía"
+      },
+      "fieldTooLong": "{field} debe tener como máximo {max} caracteres",
+      "deletionNotConfirmed": "Escribe DELETE para confirmar la eliminación de la cuenta",
+      "successorNeeded": "Antes de eliminar la cuenta, nombra a otro Master o Admin en: {rooms}",
+      "signInDeletionFailed": "Tus datos se han eliminado, pero no se pudo quitar la cuenta de acceso. Inténtalo de nuevo en unos minutos"
+    },
+    "friend": {
+      "notFound": "Amigo o solicitud de amistad no encontrados",
+      "self": "No puedes enviarte una solicitud de amistad a ti mismo",
+      "noSharedRoom": "Solo puedes enviar una solicitud de amistad a quien comparta una Sala contigo, o mediante su código de amigo",
+      "userOrCode": "Indica un usuario o un código de amigo",
+      "codeNotFound": "Código de amigo no encontrado",
+      "alreadyFriends": "Ya sois amigos",
+      "alreadyRequested": "Ya has enviado una solicitud de amistad a este usuario",
+      "incomingPending": "Este usuario ya te ha enviado una solicitud de amistad: responde a esa",
+      "cooldown": "Rechazaste la solicitud de este usuario hace menos de 30 días",
+      "notRecipient": "Solo quien recibió la solicitud puede responder",
+      "notPending": "Ya has respondido a esta solicitud",
+      "answerInstead": "Acepta o rechaza la solicitud en lugar de quitarla"
+    },
+    "reveal": {
+      "onlyMaster": "Solo el Master puede revelar contenidos",
+      "audienceRequired": "Elige toda la Sala o al menos un miembro a quien revelar",
+      "notWidening": "Nadie obtendría acceso: una revelación solo puede ampliar quién ve el contenido",
+      "invalidUsers": "user_ids debe contener solo miembros de esta Sala",
+      "invalidNotes": "note_ids debe contener solo Notas de este Documento",
+      "commentDeleted": "Un Comentario eliminado no se puede revelar"
+    },
+    "history": {
+      "forbidden": "Solo el Master o un Admin de la Sala puede leer el historial de visibilidad",
+      "invalidCursor": "before debe ser una entrada del historial de esta Sala"
+    },
+    "viewAs": {
+      "readOnly": "No se puede modificar nada mientras ves como otro miembro",
+      "onlyMaster": "Solo el Master puede ver esta Sala como otro miembro",
+      "notAMember": "Este usuario no es miembro de la Sala",
+      "invalidUser": "Miembro no válido"
+    },
+    "export": {
+      "alreadyRunning": "Ya estás generando un PDF en esta Sala",
+      "notFound": "Exportación no encontrada"
+    },
+    "import": {
+      "unreadable": "{name} no es una exportación JSON o Markdown legible",
+      "unsupportedSchema": "{name} se exportó desde una versión más reciente (esquema {version}); esta app lee hasta el esquema {max}",
+      "noDocuments": "{name} no contiene ningún Documento",
+      "tooManyFiles": "Se pueden importar como máximo {max} archivos a la vez",
+      "tooManyDocuments": "Se pueden importar como máximo {max} Documentos a la vez",
+      "tooManyImages": "Se pueden importar como máximo {max} imágenes a la vez",
+      "nameRequired": "Un Documento del archivo no tiene nombre",
+      "nameTooLong": "El nombre del Documento \"{name}...\" supera los {max} caracteres",
+      "subtitleTooLong": "El subtítulo de {name} supera los {max} caracteres",
+      "tooManyNotes": "{name} tiene más de {max} Notas",
+      "noteTitleInvalid": "Una Nota de {name} no tiene título o lo tiene de más de {max} caracteres",
+      "tagNameTooLong": "El nombre de la Etiqueta \"{name}...\" supera los {max} caracteres",
+      "nothingSelected": "Selecciona al menos un Documento que importar",
+      "badChoices": "Las opciones de importación no son válidas",
+      "cannotReplace": "Solo un Owner (o el Master) puede reemplazar {name}",
+      "fileTooLarge": "{name} supera los {max} MB",
+      "alreadyRunning": "Ya tienes una importación en curso en esta Sala",
+      "notFound": "Importación no encontrada"
+    },
+    "imageSearch": {
+      "emptyQuery": "Escribe algo que buscar",
+      "throttled": "Demasiadas búsquedas: espera un minuto e inténtalo de nuevo",
+      "unavailable": "La búsqueda de imágenes no está disponible ahora, inténtalo más tarde"
+    },
+    "map": {
+      "notFound": "Mapa no encontrado",
+      "notManager": "Solo quien creó el mapa (o el Master) puede modificarlo",
+      "creationDisabled": "En esta Sala los Player no pueden crear mapas",
+      "invalidSelectiveUsers": "selective_user_ids debe contener solo miembros de esta Sala",
+      "nameRequired": "Un mapa debe tener un nombre",
+      "tooLong": "El campo {field} puede contener como máximo {max} caracteres",
+      "tooMany": "Una Sala puede tener como máximo {max} mapas",
+      "tooManyCards": "Un mapa puede tener como máximo {max} tarjetas",
+      "tooManyGroups": "Un mapa puede tener como máximo {max} grupos",
+      "tooManyArrows": "Un mapa puede tener como máximo {max} flechas",
+      "invalidBoard": "No se pudo guardar el mapa: hace referencia a algo que no existe",
+      "masterOnly": "Solo el Master puede hacer que una tarjeta o una flecha sea visible solo para el Master",
+      "imageNotFound": "Esta imagen no está entre las del Documento",
+      "fields": {
+        "name": "nombre",
+        "description": "descripción",
+        "text": "texto de la tarjeta",
+        "caption": "pie de imagen",
+        "label": "etiqueta",
+        "groupTitle": "título del grupo"
+      }
+    }
+  },
+  "pdf": {
+    "contents": "Índice",
+    "glossary": "Glosario",
+    "other": "Otros",
+    "documents": "Documentos",
+    "comments": "Comentarios",
+    "unknownMember": "Miembro desconocido",
+    "playedBy": "{character} (interpretado por {player})",
+    "pageAbbreviation": "p."
+  },
+  "room": {
+    "copySuffix": " (Copia)"
+  }
+}
