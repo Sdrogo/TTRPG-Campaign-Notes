@@ -403,6 +403,26 @@ def test_a_players_edit_leaves_the_cards_hidden_from_them_alone() -> None:
     assert not plan.delete_arrow_ids
 
 
+def test_deleting_a_group_leaves_its_hidden_cards_where_they_were_drawn() -> None:
+    seen, hidden = uuid.uuid4(), uuid.uuid4()
+    group = _group("Corte", x=300.0, y=-50.0)
+    far = _group("Lontano", x=99_990.0, y=0.0)
+    shown_card = _doc_card(seen, group_id=group.id, x=10.0, y=20.0)
+    hidden_card = _doc_card(hidden, group_id=group.id, x=40.0, y=60.0)
+    hidden_far = _doc_card(uuid.uuid4(), group_id=far.id, x=50.0, y=0.0)
+    current = Board(groups=[group, far], cards=[shown_card, hidden_card, hidden_far])
+
+    released = replace(shown_card, group_id=None, x=310.0, y=-30.0)
+    plan = _plan(current, Board(cards=[released]), RoomRole.PLAYER, {seen})
+
+    assert plan.delete_group_ids == {group.id, far.id}
+    assert plan.cards == [
+        released,
+        replace(hidden_card, group_id=None, x=340.0, y=10.0),
+        replace(hidden_far, group_id=None, x=100_000.0, y=0.0),
+    ]
+
+
 @pytest.mark.parametrize("kind", ["group", "card", "arrow"])
 def test_a_repeated_id_is_refused(kind: str) -> None:
     a, b = _text_card(), _text_card()

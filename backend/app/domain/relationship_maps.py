@@ -20,7 +20,7 @@ import math
 import uuid
 from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import StrEnum
 
@@ -203,7 +203,8 @@ class Board:
 @dataclass(frozen=True)
 class BoardPlan:
     """What a board save writes: items to create or rewrite (`upsert`, the
-    editor's whole visible board, cleaned) and ids to delete, per kind."""
+    editor's whole visible board, cleaned, plus any hidden card taken out of
+    a deleted group) and ids to delete, per kind."""
 
     groups: Sequence[MapGroup]
     cards: Sequence[MapCard]
@@ -609,14 +610,32 @@ def plan_board_edit(
     if len(arrows) + len(surviving_hidden_arrows) > MAX_ARROWS_PER_MAP:
         raise MapLimitError("errors.map.tooManyArrows", max=MAX_ARROWS_PER_MAP)
 
+    # A hidden card in a group the editor deletes stays where it was drawn:
+    # its position was relative to the group, so it becomes absolute.
+    delete_group_ids = frozenset(shown_groups.keys() - group_ids)
+    released_cards = [
+        _release_from_group(card, shown_groups[card.group_id])
+        for card in hidden_cards
+        if card.group_id in delete_group_ids
+    ]
+
     return BoardPlan(
         groups=groups,
-        cards=cards,
+        cards=[*cards, *released_cards],
         arrows=arrows,
-        delete_group_ids=frozenset(shown_groups.keys() - group_ids),
+        delete_group_ids=delete_group_ids,
         delete_card_ids=frozenset(shown_cards.keys() - card_ids),
         delete_arrow_ids=frozenset(shown_arrows.keys() - {arrow.id for arrow in arrows}),
     )
+
+
+def _release_from_group(card: MapCard, group: MapGroup) -> MapCard:
+    """`card` taken out of `group`, at the same place on the board."""
+
+    def absolute(offset: float, corner: float) -> float:
+        return max(-MAX_COORDINATE, min(MAX_COORDINATE, corner + offset))
+
+    return replace(card, group_id=None, x=absolute(card.x, group.x), y=absolute(card.y, group.y))
 
 
 def document_card_counts(
