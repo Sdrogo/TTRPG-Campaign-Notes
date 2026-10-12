@@ -6,7 +6,7 @@
 // connection, a deletion) the way React Flow would.
 //
 // Use: vi.mock('@xyflow/react', async (original) => ({ ...(await original()), ...xyflowMock }))
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentType, CSSProperties, ReactNode } from 'react';
 
 interface FakeNode {
   id: string;
@@ -84,7 +84,7 @@ export const xyflowMock = {
   Background: () => null,
   Controls: () => null,
   Panel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  Handle: ({ type, style }: { type: string; style?: React.CSSProperties }) => (
+  Handle: ({ type, style }: { type: string; style?: CSSProperties }) => (
     <div data-handle={type} style={style} />
   ),
   NodeResizer: ({

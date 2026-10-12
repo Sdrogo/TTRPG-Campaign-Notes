@@ -179,6 +179,17 @@ One line per unit; dates 2026, newest first. Spec files live in
   deleting the group left the cards the editor can't see at the board's
   origin; `plan_board_edit` now rewrites them with absolute positions.
 
+- **Map arrow dot grabbable again** (28_2 fix, 10-12, PR #170): the card
+  image and text were laid over the arrow handle and the card's
+  `overflow: hidden` cut it in half, so arrows could not be drawn; the
+  handles now have `z-index: 1` and only the image layer is clipped.
+- **Arrow labels stay clear of the cards** (28_2 fix, 10-12): a label
+  slides along its arrow (`placeLabel`) until its box no longer touches the
+  two cards it joins nor the other label; the box size is estimated from
+  the text. When the arrow is too short for that, the label moves sideways
+  (right or left, whichever clears the cards first) instead of staying
+  centered over them.
+
 ### 2026-10-08 → 10-10
 
 - **Read aloud, first reading waits for voices** (30b, 10-10): Chrome's
