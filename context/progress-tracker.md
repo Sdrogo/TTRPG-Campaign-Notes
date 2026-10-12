@@ -101,6 +101,16 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-12
 
+- **More UI languages, 34_1 foundations** (spec 34, 10-12, no migration, no
+  new language yet): `resolveLanguage` / `resolve_locale` map regional and
+  script tags (`pt-BR` → `pt-PT`, `zh-TW` → `zh-Hans` until `zh-Hant` exists)
+  with the same alias table on both sides; non-bundled languages load
+  lazily (`LAZY_LOADERS`, `ensureLanguageLoaded`, `i18nReady` holds the first
+  render, a failed switch shows `language.loadFailed`); `locales.test.ts`
+  compares plural keys as groups per `Intl.PluralRules` (Russian four forms,
+  Japanese one); `context/i18n-glossary.md` started. Next: 34_2, the
+  Western European languages and Russian.
+
 - **Map cards easier to move and select** (28 follow-up, 10-12, frontend
   only, no migration): cards get a grab cursor, a hover ring and a grip
   mark; dragging on empty canvas now draws a selection box (partial overlap)

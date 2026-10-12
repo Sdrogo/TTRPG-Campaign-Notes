@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import i18n, { LANGUAGE_STORAGE_KEY, currentLanguage, detectLanguage, setLanguage } from '../../i18n';
+import i18n, {
+  LANGUAGE_STORAGE_KEY,
+  currentLanguage,
+  detectLanguage,
+  ensureLanguageLoaded,
+  loadStartingLanguage,
+  resolveLanguage,
+  startingLanguage,
+  setLanguage,
+} from '../../i18n';
 
 describe('currentLanguage', () => {
   afterEach(() => {
@@ -90,5 +99,125 @@ describe('setLanguage', () => {
     await setLanguage('en');
 
     expect(currentLanguage()).toBe('en');
+  });
+});
+
+// Spec 34: tags that don't name a language file as written. Only it and en
+// exist today, so these run against a larger supported set.
+describe('resolveLanguage', () => {
+  const future = ['en', 'it', 'pt-PT', 'zh-Hans', 'ko'];
+  const withTraditional = [...future, 'zh-Hant'];
+
+  it.each([
+    ['it-IT', future, 'it'],
+    ['pt', future, 'pt-PT'],
+    ['pt-BR', future, 'pt-PT'],
+    ['pt-pt', future, 'pt-PT'],
+    ['zh-CN', future, 'zh-Hans'],
+    ['zh-Hans-CN', future, 'zh-Hans'],
+    ['zh-TW', future, 'zh-Hans'],
+    ['zh-Hant-HK', future, 'zh-Hans'],
+    ['zh-TW', withTraditional, 'zh-Hant'],
+    ['zh-Hant-HK', withTraditional, 'zh-Hant'],
+    ['zh', withTraditional, 'zh-Hans'],
+    ['KO-kr', future, 'ko'],
+    ['fr-FR', future, undefined],
+    ['*', future, undefined],
+    ['', future, undefined],
+  ])('reads %s as %s', (tag, supported, expected) => {
+    expect(resolveLanguage(tag, supported)).toBe(expected);
+  });
+
+  it('knows no Portuguese or Chinese while those files do not exist', () => {
+    expect(detectLanguage(['pt-BR', 'zh-TW'])).toBe('en');
+  });
+});
+
+describe('ensureLanguageLoaded', () => {
+  const strings = { language: { name: 'Test' } } as unknown as Parameters<
+    typeof i18n.addResourceBundle
+  >[2];
+
+  afterEach(() => {
+    i18n.removeResourceBundle('xx', 'translation');
+  });
+
+  it('fetches a language that is not loaded yet, once', async () => {
+    const load = vi.fn().mockResolvedValue({ default: strings });
+
+    await ensureLanguageLoaded('xx', { xx: load });
+    await ensureLanguageLoaded('xx', { xx: load });
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(i18n.hasResourceBundle('xx', 'translation')).toBe(true);
+  });
+
+  it('does nothing for a bundled language', async () => {
+    await expect(ensureLanguageLoaded('it', {})).resolves.toBeUndefined();
+  });
+
+  it('rejects when the file cannot be fetched, and loads nothing', async () => {
+    const load = vi.fn().mockRejectedValue(new Error('offline'));
+
+    await expect(ensureLanguageLoaded('xx', { xx: load })).rejects.toThrow('offline');
+    expect(i18n.hasResourceBundle('xx', 'translation')).toBe(false);
+  });
+});
+
+describe('loadStartingLanguage', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('it');
+    i18n.removeResourceBundle('xx', 'translation');
+  });
+
+  it('does nothing for a bundled language', async () => {
+    await loadStartingLanguage('en', {});
+
+    expect(currentLanguage()).toBe('it');
+  });
+
+  it('fetches a language that is not bundled and switches to it', async () => {
+    const strings = { language: { name: 'Test' } } as unknown as Parameters<
+      typeof i18n.addResourceBundle
+    >[2];
+
+    await loadStartingLanguage('xx', { xx: () => Promise.resolve({ default: strings }) });
+
+    expect(i18n.language).toBe('xx');
+  });
+
+  it('stays in the current language when the file cannot be fetched', async () => {
+    await loadStartingLanguage('xx', { xx: () => Promise.reject(new Error('offline')) });
+
+    expect(i18n.language).toBe('it');
+  });
+});
+
+describe('startingLanguage', () => {
+  it('starts in a bundled language, and in English while another one loads', () => {
+    expect(startingLanguage('it')).toBe('it');
+    expect(startingLanguage('ko')).toBe('en');
+  });
+});
+
+describe('setLanguage with a slow language file', () => {
+  it('lets the last pick win when an earlier fetch finishes after it', async () => {
+    const strings = { language: { name: 'Test' } } as unknown as Parameters<
+      typeof i18n.addResourceBundle
+    >[2];
+    let finish: (value: { default: typeof strings }) => void = () => {};
+    const slow = new Promise<{ default: typeof strings }>((resolve) => {
+      finish = resolve;
+    });
+    const first = setLanguage('xx' as 'it', { xx: () => slow });
+    const second = setLanguage('en');
+    await second;
+    finish({ default: strings });
+    await first;
+
+    expect(currentLanguage()).toBe('en');
+    expect(i18n.language).toBe('en');
+    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en');
+    i18n.removeResourceBundle('xx', 'translation');
   });
 });

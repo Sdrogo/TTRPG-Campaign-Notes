@@ -4,6 +4,7 @@ import { CheckIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, currentLanguage, setLanguage, type Language } from '../i18n';
 import { LANGUAGE_FLAGS } from '../i18n/languages';
+import { notifyError } from '../lib/notify';
 
 /** A small rectangular flag; decorative, since the text next to it names the language. */
 function Flag({ language, width }: { language: Language; width: number }) {
@@ -60,7 +61,9 @@ export function LanguageSelector() {
             leftSection={<Flag language={option} width={20} />}
             rightSection={option === language ? <CheckIcon size={14} aria-hidden="true" /> : null}
             aria-current={option === language ? 'true' : undefined}
-            onClick={() => void setLanguage(option)}
+            onClick={() => {
+              setLanguage(option).catch(() => notifyError(new Error(t('language.loadFailed'))));
+            }}
           >
             {t('language.name', { lng: option })}
           </Menu.Item>

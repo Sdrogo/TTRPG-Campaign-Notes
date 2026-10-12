@@ -7,6 +7,25 @@ from typing import Any
 SUPPORTED_LOCALES: tuple[str, ...] = ("en", "it")
 DEFAULT_LOCALE = "en"
 
+# Browser tags that don't name a locale file as written (spec 34): a bare
+# `pt` is European Portuguese, every Simplified-script and mainland tag is
+# `zh-Hans`, and the Traditional-script tags are `zh-Hant`. An alias only
+# counts when its target is in `SUPPORTED_LOCALES`, so `zh-TW` reads
+# Simplified until a `zh-Hant` file exists. Keys are lower case. The frontend
+# keeps the same table (`LANGUAGE_ALIASES` in `frontend/src/i18n/index.ts`; a
+# backend test fails when the two differ).
+LOCALE_ALIASES: dict[str, str] = {
+    "pt": "pt-PT",
+    "zh": "zh-Hans",
+    "zh-cn": "zh-Hans",
+    "zh-sg": "zh-Hans",
+    "zh-hans": "zh-Hans",
+    "zh-tw": "zh-Hant",
+    "zh-hk": "zh-Hant",
+    "zh-mo": "zh-Hant",
+    "zh-hant": "zh-Hant",
+}
+
 _LOCALES_DIR = Path(__file__).parent / "locales"
 
 
@@ -20,6 +39,24 @@ def _load(locale: str) -> dict[str, Any]:
 
 
 _RESOURCES: dict[str, dict[str, Any]] = {locale: _load(locale) for locale in SUPPORTED_LOCALES}
+
+
+def resolve_locale(tag: str, supported: tuple[str, ...] = SUPPORTED_LOCALES) -> str | None:
+    """The supported locale a language tag (`pt-BR`, `zh-Hant-HK`, `it-IT`)
+    means, or None. The tag is tried whole, then with its last subtag dropped
+    again and again; at each step an alias (`LOCALE_ALIASES`) or a
+    case-insensitive match of a locale file's code wins."""
+    by_lower = {code.lower(): code for code in supported}
+    parts = tag.strip().lower().split("-")
+    while parts and parts[0]:
+        candidate = "-".join(parts)
+        target = LOCALE_ALIASES.get(candidate)
+        if target in supported:
+            return target
+        if candidate in by_lower:
+            return by_lower[candidate]
+        parts.pop()
+    return None
 
 
 def _lookup(resources: dict[str, Any], key: str) -> str | None:

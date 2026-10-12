@@ -1,15 +1,18 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { LANGUAGE_STORAGE_KEY, currentLanguage } from '../../i18n';
+import i18n, { LANGUAGE_STORAGE_KEY, currentLanguage } from '../../i18n';
 import { apiFetch } from '../../lib/apiClient';
+import { notifyError } from '../../lib/notify';
 import { rawAccount } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { AppHeader } from '../../components/AppHeader';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
+vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
 beforeEach(() => {
+  vi.mocked(notifyError).mockClear();
   vi.mocked(apiFetch).mockReset();
   vi.mocked(apiFetch).mockResolvedValue(rawAccount());
 });
@@ -51,5 +54,20 @@ describe('LanguageSelector', () => {
     // Other components pick the new language up too, not just the selector.
     expect(await screen.findByRole('link', { name: 'Your account' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Language: English' })).toBeInTheDocument();
+  });
+
+  it('says so when the language cannot be switched, and stays as it was', async () => {
+    vi.spyOn(i18n, 'changeLanguage').mockRejectedValueOnce(new Error('offline'));
+    const user = userEvent.setup();
+    renderWithProviders(<AppHeader />);
+
+    await user.click(screen.getByRole('button', { name: 'Lingua: Italiano' }));
+    await user.click(screen.getByRole('menuitem', { name: 'English' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    expect(vi.mocked(notifyError).mock.calls[0][0]).toEqual(
+      new Error('Impossibile caricare la lingua. Riprova.'),
+    );
+    expect(currentLanguage()).toBe('it');
   });
 });
