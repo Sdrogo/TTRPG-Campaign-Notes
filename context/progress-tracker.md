@@ -47,13 +47,16 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `f7a2d8c4e1b9` (`import_jobs`, spec 27).
+- **Head in the repository**: `b3f7d1e9c5a2` (relationship maps, spec 28_1).
 - **Staging database**: `f7a2d8c4e1b9` (applied 2026-10-08).
 - **Production database**: `f7a2d8c4e1b9` (applied by hand 2026-10-08).
-- **Pending migrations: none.** Feature 28 (Relationship maps) will add one.
+- **Pending on staging and production** (feature 28, PR #159):
+  `a8c4e2f6b1d3` (Document subtitle; rebuilds `documents.search_vector`)
+  then `b3f7d1e9c5a2` (the five map tables). Both are DDL only.
 
 Recent chain, newest first (where each came from):
-`f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
+`b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+(28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
 `d9a4f1c7e3b5` export jobs (23b_1c) ← `c4e9a7f1d3b2` full-text search (21_1,
@@ -89,6 +92,18 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
+
+### 2026-10-12
+
+- **Relationship maps** (28_0, 28_1, 28_2, 10-12, PR #159): Document
+  subtitle (`a8c4e2f6b1d3`); free boards per Room with Document and text
+  cards, groups and labeled arrows that belong to their map only
+  (`b3f7d1e9c5a2`, `/rooms/{id}/maps`); the board on `@xyflow/react`, saved
+  automatically, read-only on phones. Choices beyond the ticket, to
+  confirm: Maps button in the Room title actions plus a read-only link in
+  View As; an arrow connects when dropped anywhere on the target card.
+  Checked in Chromium through a local harness (drag, drop into a group,
+  group drag, connecting), not against a running backend.
 
 ### 2026-10-08 → 10-10
 
@@ -192,11 +207,8 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
-- **28, Relationship maps**: after 27b. Starts with 28_0 (Document
-  subtitle). Free boards per Room with Documents, text cards, groups and
-  labeled arrows that belong to their map only; adds a migration and
-  `@xyflow/react`. `requirements.md` needs a new `FR-`/`VR-` entry once the
-  ticket is approved (product owner's edit only).
+- **28, Relationship maps**: built (PR #159). `requirements.md` still
+  needs its `FR-`/`VR-` entry (product owner's edit only).
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).

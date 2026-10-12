@@ -836,5 +836,85 @@
         "body": "The app uses no cookies. It keeps a few items in your browser's storage that it needs to work: your sign-in session, the language you chose, your read-aloud voice and speed, the character you last posted as in each Room, the Room PDF notices you dismissed, and an invitation link you opened before signing in. They stay on your device: the session is removed when you sign out, the rest when you clear your browser's data."
       }
     }
+  },
+  "maps": {
+    "title": "Maps",
+    "create": "New map",
+    "settings": "Map settings",
+    "delete": "Delete map",
+    "deleteConfirmTitle": "Delete this map?",
+    "deleteConfirmBody": "\"{{name}}\" will be deleted with everything on it. The Documents stay.",
+    "signInRequired": "Sign in to see this Room's maps.",
+    "backToDocuments": "Documents",
+    "backToMaps": "Maps",
+    "empty": "No maps yet.",
+    "loadError": "Couldn't load the maps.",
+    "notFound": "Map not found.",
+    "documentCount_one": "{{count}} Document",
+    "documentCount_other": "{{count}} Documents",
+    "lastEdit": "edited {{when}}",
+    "selectiveLabel": "Members who can see the map",
+    "unsaved": "Unsaved changes",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "saveError": "Not saved",
+    "retry": "Retry",
+    "readOnlyOnPhone": "On a screen this small the map is read-only.",
+    "addDocuments": "Add Documents",
+    "addText": "Add text",
+    "groupSelected": "Group",
+    "searchDocuments": "Search by name",
+    "alreadyOnMap": "Already on the map",
+    "addChosen_one": "Add {{count}} Document",
+    "addChosen_other": "Add {{count}} Documents",
+    "editCard": "Edit card: {{name}}",
+    "editText": "Edit text",
+    "editGroup": "Edit group",
+    "editArrow": "Edit arrow: {{label}}",
+    "masterOnly": "Master only",
+    "masterOnlyArrow": "Visible to Masters only",
+    "masterOnlyCard": "Visible to Masters only",
+    "struck": "Struck through",
+    "color": "Color",
+    "colors": {
+      "default": "Default",
+      "red": "Red",
+      "green": "Green",
+      "purple": "Purple",
+      "blue": "Blue",
+      "gold": "Gold"
+    },
+    "card": {
+      "editDocument": "Card: {{name}}",
+      "editText": "Text",
+      "newText": "New text",
+      "text": "Text",
+      "size": "Size",
+      "sizes": {
+        "normal": "Normal",
+        "large": "Large",
+        "title": "Title"
+      },
+      "caption": "Caption",
+      "captionHint": "On this map only; replaces the Document's subtitle.",
+      "remove": "Take off the map"
+    },
+    "group": {
+      "title": "Group",
+      "name": "Title",
+      "namePlaceholder": "Adversaries and Enemies",
+      "remove": "Remove the group",
+      "untitled": "Untitled group"
+    },
+    "arrow": {
+      "title": "Arrow",
+      "direction": "Direction",
+      "forward": "One way",
+      "both": "Both ways",
+      "none": "Line only",
+      "label": "Label",
+      "labelTowards": "Label towards {{name}}",
+      "delete": "Delete the arrow"
+    }
   }
 }

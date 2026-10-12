@@ -4,8 +4,9 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { ViewAsContext, type ViewAs } from '../hooks/useViewAs';
 import { VIEW_AS_PARAM, setViewAsUser } from '../lib/viewAs';
 
-// The pages a preview covers: a Room's Documents and each Document.
-const ROOM_PAGES = '/rooms/:roomId/documents/*';
+// The pages a preview covers: a Room's Documents and each Document, and its
+// relationship maps (spec 28).
+const ROOM_PAGES = ['/rooms/:roomId/documents/*', '/rooms/:roomId/maps/*'];
 
 /** Navigation state that ends a preview ("Exit" on the banner). */
 export interface ExitViewAsState {
@@ -25,7 +26,9 @@ export function ViewAsProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const ownClient = useQueryClient();
-  const roomId = matchPath(ROOM_PAGES, location.pathname)?.params.roomId ?? null;
+  const roomId =
+    ROOM_PAGES.map((pattern) => matchPath(pattern, location.pathname)).find(Boolean)?.params
+      .roomId ?? null;
   const fromUrl = new URLSearchParams(location.search).get(VIEW_AS_PARAM);
   const exiting = (location.state as Partial<ExitViewAsState> | null)?.exitViewAs === true;
 

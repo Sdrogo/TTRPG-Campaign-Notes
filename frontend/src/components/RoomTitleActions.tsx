@@ -6,6 +6,7 @@ import {
   DownloadSimpleIcon,
   EyeIcon,
   GearIcon,
+  MapTrifoldIcon,
   SignOutIcon,
   UploadSimpleIcon,
   UserPlusIcon,
@@ -41,7 +42,8 @@ interface RoomTitleActionsProps {
 
 /**
  * The Room card's actions (setup and invite for an Administrator, setup and
- * "View as" a member (spec 22b) for the Master, export (spec 23) and leave for
+ * "View as" a member (spec 22b) for the Master, the relationship maps (spec
+ * 28), export (spec 23) and leave for
  * everyone, import of Documents (spec 27) for whoever may create them) beside the Room's title, folded into a "⋮" that unfolds them in
  * place when clicked (Andrea, 2026-10-03).
  */
@@ -117,6 +119,18 @@ export function RoomTitleActions({
               </Tooltip>
             </>
           )}
+          <Tooltip label={t('maps.title')} withArrow>
+            <ActionIcon
+              component={Link}
+              to={`/rooms/${roomId}/maps`}
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label={t('maps.title')}
+            >
+              <MapTrifoldIcon size={20} />
+            </ActionIcon>
+          </Tooltip>
           <Tooltip label={t('export.action')} withArrow>
             <ActionIcon
               variant="subtle"

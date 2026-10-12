@@ -1,4 +1,5 @@
 import { Badge, Checkbox, Group, Stack, Text } from '@mantine/core';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import type { ImportPreview, ImportPreviewDocument } from '../../lib/documentImport';
 
@@ -12,7 +13,7 @@ interface ImportReviewStepProps {
 /** One line of what a Document would bring: Notes and images, then its Tags. */
 function documentDetail(
   document: ImportPreviewDocument,
-  t: ReturnType<typeof useTranslation>['t'],
+  t: TFunction,
 ): string {
   const parts = [
     t('documentImport.notesCount', { count: document.notesCount }),

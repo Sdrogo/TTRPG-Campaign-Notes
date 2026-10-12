@@ -603,3 +603,35 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   tab has a searchable Friend `Select`, the role `Select` and "Invia invito".
 - **Friend link page** (`/friends/add/:code`): full-page and centered like
   the invite page, with buttons to the Account page and the Rooms list.
+
+## Relationship maps (spec 28)
+
+- **Document subtitle** (28_0): one dimmed line under the Document's name on
+  its page and on cards; edited with the name.
+- **Entry points**: a Maps button (`MapTrifoldIcon`) in the Room title
+  actions, before export; during View As, a read-only Maps link on the
+  Documents page. `/rooms/:roomId/maps` lists the maps as cards (name,
+  `VisibilityBadge`, description, Document count, last edit) with "Nuova
+  mappa" for whoever may create Documents.
+- **The board** (`components/maps/MapBoard`, React Flow): full width under
+  the map's title, dark canvas with a dotted background and zoom controls.
+  A toolbar panel holds "Aggiungi Documenti" (side panel with search, Tag
+  filter and multi-select; Documents already on the map are disabled),
+  "Aggiungi testo" and "Raggruppa" (frames the selected cards).
+- **Cards**: a Document card is 160 px wide (larger sizes for emphasis),
+  lead image on top, name linking to the Document, caption (the map's own or
+  the subtitle); a text card is free text, a "title" size has no frame.
+  Colors come from the fixed theme set (`MAP_COLORS`), never a free picker.
+  Struck cards and groups are drawn crossed out; Master-only items carry a
+  small "Solo Master" marker.
+- **Groups**: a tinted frame with an optional title, resizable while
+  editing; dragging a card into a group puts it in that group.
+- **Arrows**: straight lines edge to edge between cards or groups, drawn by
+  dragging from a card's handle and dropping anywhere on the other card.
+  One-way, two-way (a label near each end) or a plain line; Master-only
+  arrows are dashed. A new arrow opens its dialog straight away.
+- **Editing**: each item has a small pencil button that opens its dialog
+  (card, text, group, arrow). Saving is automatic; the header shows
+  "Modifiche non salvate", "Salvataggio…", "Salvato", or the error with
+  "Riprova". Below the `sm` breakpoint the board is read-only with a note.
+
