@@ -336,6 +336,7 @@ export function rawMapCard(overrides: Record<string, unknown> = {}) {
     text: null,
     group_id: null,
     caption: null,
+    image_id: null,
     size: 'normal',
     master_only: false,
     color: 'default',

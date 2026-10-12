@@ -335,7 +335,6 @@ async def test_only_members_reach_the_maps(
 
     for response in (
         await client.get(room.maps_url, headers=stranger.headers),
-        await client.get(f"{room.maps_url}/labels", headers=stranger.headers),
         await client.get(room.map_url(relationship_map["id"]), headers=stranger.headers),
         await client.post(room.maps_url, json={"name": "x"}, headers=stranger.headers),
     ):
@@ -496,33 +495,77 @@ async def test_a_document_card_shows_its_name_subtitle_caption_first_image_and_t
     assert all(c["document"]["image"] is None for c in unsigned["cards"])
 
 
-# --- Labels -------------------------------------------------------------------
+async def _upload(client: AsyncClient, room: _Room, document_id: str, name: str) -> None:
+    response = await client.post(
+        f"/rooms/{room.id}/documents/{document_id}/images",
+        files={"file": (name, _png(), "image/png")},
+        headers=room.master.headers,
+    )
+    assert response.status_code == 201, response.text
 
 
-async def test_label_suggestions_never_leak_what_the_viewer_cannot_see(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+async def _gallery(client: AsyncClient, room: _Room, document_id: str) -> list[dict[str, Any]]:
+    response = await client.get(
+        f"/rooms/{room.id}/documents/{document_id}", headers=room.master.headers
+    )
+    images: list[dict[str, Any]] = response.json()["images"]
+    return images
+
+
+async def test_a_card_shows_the_chosen_image_else_the_favorite(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
 ) -> None:
     room = await _room(client, make_token)
-    small = await _small_map(client, room)
-    secret_map = await _map(client, room, name="Secret", visibility="master")
-    a, b = _text_card("a"), _text_card("b")
-    await _save(
-        client,
-        room,
-        secret_map["id"],
-        room.master,
-        cards=[a, b],
-        arrows=[_arrow(a["id"], b["id"], "conspires")],
+    hoshino = await _document(client, room, "Hoshino Mirai")
+    other = await _document(client, room, "Other")
+    await _upload(client, room, hoshino, "one.png")
+    await _upload(client, room, hoshino, "two.png")
+    await _upload(client, room, other, "three.png")
+    relationship_map = await _map(client, room)
+    card = _doc_card(hoshino)
+    gallery = await _gallery(client, room, hoshino)
+    favorite = next(image["id"] for image in gallery if image["is_favorite"])
+    second = next(image["id"] for image in gallery if not image["is_favorite"])
+    foreign = (await _gallery(client, room, other))[0]["id"]
+
+    # No choice: the Document's favorite, and no image_id echoed.
+    response = await _save(client, room, relationship_map["id"], room.master, cards=[card])
+    assert response.status_code == 200, response.text
+    shown = response.json()["cards"][0]
+    assert shown["image_id"] is None
+    assert shown["document"]["image"]["id"] == favorite
+
+    # A choice among the Document's images is kept, and sent back.
+    chosen = {**card, "image_id": second}
+    response = await _save(client, room, relationship_map["id"], room.master, cards=[chosen])
+    assert response.status_code == 200, response.text
+    shown = response.json()["cards"][0]
+    assert shown["image_id"] == second
+    assert shown["document"]["image"]["id"] == second
+    assert (await _get(client, room, relationship_map["id"], room.player))["cards"][0]["document"][
+        "image"
+    ]["id"] == second
+
+    # Only an image of that card's Document, and one that exists.
+    for bad in (foreign, _id()):
+        response = await _save(
+            client, room, relationship_map["id"], room.master, cards=[{**card, "image_id": bad}]
+        )
+        assert response.status_code == 404, response.text
+    still = await _get(client, room, relationship_map["id"], room.master)
+    assert still["cards"][0]["image_id"] == second
+
+    # Deleting the chosen image puts the card back on the favorite.
+    deleted = await client.delete(
+        f"/rooms/{room.id}/documents/{hoshino}/images/{second}", headers=room.master.headers
     )
-    labels_url = f"{room.maps_url}/labels"
-
-    master = (await client.get(labels_url, headers=room.master.headers)).json()
-    assert master == ["ally of", "conspires", "father of"]
-    assert (await client.get(labels_url, headers=room.player.headers)).json() == ["ally of"]
-
-    await _hide(client, room, small.thorn)
-    assert (await client.get(labels_url, headers=room.player.headers)).json() == []
-    assert small.map_id
+    assert deleted.status_code == 204, deleted.text
+    back = await _get(client, room, relationship_map["id"], room.master)
+    assert back["cards"][0]["image_id"] is None
+    assert back["cards"][0]["document"]["image"]["id"] == favorite
 
 
 # --- Editing ------------------------------------------------------------------
@@ -842,7 +885,6 @@ async def test_an_empty_room_and_an_empty_board(
 ) -> None:
     room = await _room(client, make_token)
     assert (await client.get(room.maps_url, headers=room.player.headers)).json() == []
-    assert (await client.get(f"{room.maps_url}/labels", headers=room.player.headers)).json() == []
     relationship_map = await _map(client, room)
     group = {"id": _id(), "x": 0, "y": 0, "width": 100, "height": 100}
 

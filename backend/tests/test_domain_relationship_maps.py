@@ -20,6 +20,7 @@ from app.domain.relationship_maps import (
     ArrowEnd,
     Board,
     BoardDocumentNotFoundError,
+    BoardImageNotFoundError,
     BoardPlan,
     CardSize,
     InvalidBoardError,
@@ -41,7 +42,6 @@ from app.domain.relationship_maps import (
     document_card_counts,
     ensure_room_for_another_map,
     is_map_visible,
-    label_suggestions,
     map_visibility_audit,
     plan_board_edit,
     visible_arrows,
@@ -245,17 +245,6 @@ def test_visible_board_drops_a_hidden_document_with_every_arrow_touching_it() ->
     assert master.arrows == [alliance, father]
 
 
-def test_label_suggestions_are_most_used_first_then_alphabetical() -> None:
-    a, b = ArrowEnd(card_id=uuid.uuid4()), ArrowEnd(card_id=uuid.uuid4())
-    arrows = [
-        _arrow(a, b, "rival"),
-        _arrow(a, b, "ally of", direction=ArrowDirection.BOTH, reverse_label="ally of"),
-        _arrow(a, b, "Brother"),
-        _arrow(a, b, None),
-    ]
-    assert label_suggestions(arrows) == ["ally of", "Brother", "rival"]
-
-
 # --- Cleaning -----------------------------------------------------------------
 
 
@@ -330,6 +319,7 @@ def _plan(
     role: RoomRole = RoomRole.MASTER,
     visible: set[uuid.UUID] | None = None,
     foreign: frozenset[uuid.UUID] = frozenset(),
+    images: dict[uuid.UUID, set[uuid.UUID]] | None = None,
 ) -> BoardPlan:
     documents = (
         visible
@@ -337,7 +327,37 @@ def _plan(
         else {card.document_id for card in [*current.cards, *submitted.cards] if card.document_id}
     )
     shown = visible_board(current, documents, role)
-    return plan_board_edit(current, shown, submitted, role, documents, foreign)
+    return plan_board_edit(current, shown, submitted, role, documents, foreign, images)
+
+
+def test_a_card_may_show_one_of_its_documents_images_the_editor_sees() -> None:
+    document, image = uuid.uuid4(), uuid.uuid4()
+    card = _doc_card(document, image_id=image)
+
+    plan = _plan(Board(), Board(cards=[card]), images={document: {image, uuid.uuid4()}})
+
+    assert [c.image_id for c in plan.cards] == [image]
+
+
+def test_a_card_cannot_show_an_image_of_another_document_or_one_the_editor_does_not_see() -> None:
+    document, other, image = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    card = _doc_card(document, image_id=image)
+
+    # An image of another Document of the Room.
+    with pytest.raises(BoardImageNotFoundError):
+        _plan(Board(), Board(cards=[card]), images={other: {image}})
+    # An image the editor can't see: absent from what they see of the Document.
+    with pytest.raises(BoardImageNotFoundError):
+        _plan(Board(), Board(cards=[card]), images={document: set()})
+    # No images given at all: any `image_id` is refused.
+    with pytest.raises(BoardImageNotFoundError):
+        _plan(Board(), Board(cards=[card]))
+
+
+def test_a_card_without_an_image_choice_needs_no_images() -> None:
+    plan = _plan(Board(), Board(cards=[_doc_card(uuid.uuid4())]))
+
+    assert [c.image_id for c in plan.cards] == [None]
 
 
 def test_a_new_board_is_created_with_its_texts_cleaned() -> None:

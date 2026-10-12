@@ -903,6 +903,9 @@
         "title": "Title"
       },
       "caption": "Caption",
+      "image": "Image",
+      "imageHint": "On this map only. The first is the Document's favorite image, which the card follows until you pick another.",
+      "imageNumbered": "Image {{number}}",
       "captionHint": "On this map only; replaces the Document's subtitle.",
       "remove": "Take off the map"
     },

@@ -7,6 +7,7 @@ import {
   addDocumentCards,
   addTextCard,
   arrowEnds,
+  cardImage,
   colorValue,
   dropCard,
   endId,
@@ -38,6 +39,7 @@ function card(id: string, overrides: Partial<MapCard> = {}): MapCard {
     text: id,
     groupId: null,
     caption: null,
+    imageId: null,
     size: 'normal',
     masterOnly: false,
     color: 'default',
@@ -50,7 +52,17 @@ function card(id: string, overrides: Partial<MapCard> = {}): MapCard {
 }
 
 function group(id: string, overrides: Partial<MapGroup> = {}): MapGroup {
-  return { id, title: null, color: 'default', struck: false, x: 100, y: 100, width: 200, height: 200, ...overrides };
+  return {
+    id,
+    title: null,
+    color: 'default',
+    struck: false,
+    x: 100,
+    y: 100,
+    width: 200,
+    height: 200,
+    ...overrides,
+  };
 }
 
 function arrow(id: string, from: string, to: string, overrides: Partial<MapArrow> = {}): MapArrow {
@@ -83,7 +95,11 @@ describe('the wire shape', () => {
       canEdit: false,
     });
     const detail = toMapDetail(rawMapDetail() as unknown as RawMapDetail);
-    expect(detail.groups[0]).toMatchObject({ id: 'group-1', title: 'Avversari', width: 300 });
+    expect(detail.groups[0]).toMatchObject({
+      id: 'group-1',
+      title: 'Avversari',
+      width: 300,
+    });
     expect(detail.cards[0]).toMatchObject({
       documentId: 'doc-1',
       masterOnly: false,
@@ -119,6 +135,7 @@ describe('the wire shape', () => {
       text: null,
       group_id: null,
       caption: null,
+      image_id: null,
       size: 'normal',
       master_only: false,
       color: 'default',
@@ -135,9 +152,34 @@ describe('the wire shape', () => {
   });
 
   it('sends Selective grants only at the Selective level', () => {
-    const values = { name: 'Corte', description: '', visibility: 'room' as const, selectiveUserIds: ['u'] };
+    const values = {
+      name: 'Corte',
+      description: '',
+      visibility: 'room' as const,
+      selectiveUserIds: ['u'],
+    };
     expect(toMapBody(values).selective_user_ids).toEqual([]);
     expect(toMapBody({ ...values, visibility: 'selective' }).selective_user_ids).toEqual(['u']);
+  });
+
+  it('keeps the image chosen for a card through a round trip', () => {
+    const raw = rawMapDetail();
+    raw.cards[1] = { ...raw.cards[1], image_id: 'image-2' } as unknown as (typeof raw.cards)[number];
+    const detail = toMapDetail(raw as unknown as RawMapDetail);
+    expect(detail.cards[1].imageId).toBe('image-2');
+    expect(detail.cards[0].imageId).toBeNull();
+    expect(toBoardBody(detail).cards[1].image_id).toBe('image-2');
+  });
+
+  it('shows the image chosen for a card, else the favorite, else none', () => {
+    const images = [
+      { id: 'a', url: 'a', isFavorite: true },
+      { id: 'b', url: 'b', isFavorite: false },
+    ];
+    expect(cardImage(images, 'b')).toBe(images[1]);
+    expect(cardImage(images, null)).toBe(images[0]);
+    expect(cardImage(images, 'gone')).toBe(images[0]);
+    expect(cardImage([], 'b')).toBeUndefined();
   });
 
   it('takes a Document card from the Room list, leading with its favorite image', () => {
@@ -212,10 +254,21 @@ describe('editing a board', () => {
   it('adds a text card at the center', () => {
     const [next, id] = addTextCard(
       board,
-      { text: 'Idee', size: 'title', color: 'gold', struck: false, masterOnly: true },
+      {
+        text: 'Idee',
+        size: 'title',
+        color: 'gold',
+        struck: false,
+        masterOnly: true,
+      },
       { x: 500, y: 50 },
     );
-    expect(next.cards.find((c) => c.id === id)).toMatchObject({ text: 'Idee', size: 'title', masterOnly: true, y: 50 });
+    expect(next.cards.find((c) => c.id === id)).toMatchObject({
+      text: 'Idee',
+      size: 'title',
+      masterOnly: true,
+      y: 50,
+    });
   });
 
   it('changes and removes cards with the arrows touching them', () => {
@@ -264,7 +317,10 @@ describe('editing a board', () => {
 
   it('adds, changes and removes arrows', () => {
     const [next, id] = addArrow(board, { cardId: 'b', groupId: null }, { cardId: 'a', groupId: null });
-    expect(next.arrows.find((a) => a.id === id)).toMatchObject({ direction: 'forward', label: null });
+    expect(next.arrows.find((a) => a.id === id)).toMatchObject({
+      direction: 'forward',
+      label: null,
+    });
     expect(updateArrow(next, id, { label: 'padre di' }).arrows.find((a) => a.id === id)?.label).toBe('padre di');
     expect(removeArrow(next, id).arrows).toEqual(board.arrows);
   });
@@ -291,10 +347,16 @@ describe('drawing arrows', () => {
 
   it('stays at the center of two boxes on top of each other', () => {
     const box = { x: 0, y: 0, width: 10, height: 10 };
-    expect(arrowEnds(box, box)).toEqual({ from: { x: 5, y: 5 }, to: { x: 5, y: 5 } });
+    expect(arrowEnds(box, box)).toEqual({
+      from: { x: 5, y: 5 },
+      to: { x: 5, y: 5 },
+    });
   });
 
   it('finds a point along the line', () => {
-    expect(pointAlong({ x: 0, y: 0 }, { x: 100, y: 40 }, 0.25)).toEqual({ x: 25, y: 10 });
+    expect(pointAlong({ x: 0, y: 0 }, { x: 100, y: 40 }, 0.25)).toEqual({
+      x: 25,
+      y: 10,
+    });
   });
 });

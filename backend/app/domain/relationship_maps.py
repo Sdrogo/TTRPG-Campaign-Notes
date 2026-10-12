@@ -18,7 +18,6 @@ whatever they don't see is left exactly as it is (`plan_board_edit`)."""
 
 import math
 import uuid
-from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime
@@ -111,6 +110,11 @@ class BoardDocumentNotFoundError(DomainError):
     Answered with 404, like the Document itself (VR-07)."""
 
 
+class BoardImageNotFoundError(DomainError):
+    """A Document card names an image its Document doesn't have or the editor
+    doesn't see. Answered with 404, like the image itself."""
+
+
 @dataclass(frozen=True)
 class RelationshipMap:
     """A map of a Room. Its creator is its "Owner" for the visibility levels
@@ -145,7 +149,8 @@ class MapGroup:
 class MapCard:
     """A card on a map: a Document (`document_id`) or a text card (`text`),
     never both. `caption` replaces a Document's subtitle on this map only;
-    `group_id` is the group it sits in, if any."""
+    `image_id` is the Document image it shows instead of the Document's
+    favorite, on this map only; `group_id` is the group it sits in, if any."""
 
     id: uuid.UUID
     document_id: uuid.UUID | None
@@ -158,6 +163,7 @@ class MapCard:
     struck: bool
     x: float
     y: float
+    image_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)
@@ -316,19 +322,6 @@ def visible_board(
     return Board(groups=groups, cards=cards, arrows=arrows)
 
 
-def label_suggestions(arrows: Iterable[MapArrow]) -> list[str]:
-    """Decision 5: the labels used on these arrows, most used first, then
-    alphabetically. Pass only the arrows the viewer sees (`visible_board` on
-    maps they see), so a label used only where they can't look is never
-    suggested (Invariant 1)."""
-    counts: Counter[str] = Counter()
-    for arrow in arrows:
-        for label in (arrow.label, arrow.reverse_label):
-            if label is not None:
-                counts[label] += 1
-    return sorted(counts, key=lambda label: (-counts[label], label.casefold(), label))
-
-
 # --- Cleaning what is sent ----------------------------------------------------
 
 
@@ -457,6 +450,7 @@ def _clean_card(card: MapCard) -> MapCard:
             struck=card.struck,
             x=card.x,
             y=card.y,
+            image_id=card.image_id,
         )
     text = clean_lines(card.text, MAX_TEXT_CARD_LENGTH, "text")
     if text is None:
@@ -509,6 +503,7 @@ def plan_board_edit(
     editor_role: RoomRole,
     editor_visible_document_ids: Collection[uuid.UUID],
     foreign_ids: Collection[uuid.UUID] = frozenset(),
+    editor_visible_image_ids: Mapping[uuid.UUID, Collection[uuid.UUID]] | None = None,
 ) -> BoardPlan:
     """Decision 12: applies the board an editor sends (`submitted`, the whole
     of what they see) to the map. `current` is everything on the map, `shown`
@@ -520,7 +515,8 @@ def plan_board_edit(
     Refused: an id of something hidden from the editor or of another map
     (422, so a hidden item can't be overwritten by guessing its id); a card
     that changes kind or Document; a Document twice on the map; a Document
-    the editor doesn't see or of another Room (404); a card in a group or an
+    the editor doesn't see or of another Room, or an image of it they don't
+    see (`editor_visible_image_ids`, per Document) (404); a card in a group or an
     arrow end not on the resulting board, or an arrow from an end to itself
     (422); Master-only content from anyone but a Master (403); more than the
     caps, counted over everything on the map (409)."""
@@ -575,6 +571,10 @@ def plan_board_edit(
             if card.document_id not in editor_visible_document_ids:
                 raise BoardDocumentNotFoundError("errors.document.notFound")
             documents_on_map.append(card.document_id)
+            if card.image_id is not None and card.image_id not in (
+                (editor_visible_image_ids or {}).get(card.document_id, ())
+            ):
+                raise BoardImageNotFoundError("errors.map.imageNotFound")
         if card.group_id is not None and card.group_id not in group_ids:
             raise InvalidBoardError("errors.map.invalidBoard")
         if card.master_only and not is_master:

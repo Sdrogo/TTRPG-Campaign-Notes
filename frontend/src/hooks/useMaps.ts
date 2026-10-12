@@ -40,15 +40,6 @@ export function useMap(roomId: string, mapId: string, enabled: boolean) {
   });
 }
 
-/** The arrow labels the viewer sees in the Room, most used first (Decision 5). */
-export function useMapLabels(roomId: string, enabled: boolean) {
-  return useQuery<string[]>({
-    queryKey: [...mapsQueryKey(roomId), 'labels'],
-    queryFn: () => apiFetch<string[]>(`${mapsPath(roomId)}/labels`),
-    enabled,
-  });
-}
-
 /** Creates an empty map; the list reloads. */
 export function useCreateMap(roomId: string) {
   const queryClient = useQueryClient();
@@ -109,7 +100,6 @@ export function useSaveBoard(roomId: string, mapId: string) {
     onSuccess: (detail) => {
       queryClient.setQueryData(mapQueryKey(roomId, mapId), detail);
       void queryClient.invalidateQueries({ queryKey: mapsQueryKey(roomId), exact: true });
-      void queryClient.invalidateQueries({ queryKey: [...mapsQueryKey(roomId), 'labels'] });
     },
   });
 }

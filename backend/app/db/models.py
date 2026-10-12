@@ -813,6 +813,11 @@ class RelationshipMapCardRow(Base):
     )
     text: Mapped[str | None] = mapped_column(String(300))
     caption: Mapped[str | None] = mapped_column(String(80))
+    # The Document image this card shows instead of the favorite; NULL when
+    # that image is deleted (the card falls back to the favorite).
+    image_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("document_images.id", ondelete="SET NULL")
+    )
     size: Mapped[str] = mapped_column(String(10), default="normal")
     master_only: Mapped[bool] = mapped_column(Boolean, default=False)
     color: Mapped[str] = mapped_column(String(10))
