@@ -1,0 +1,913 @@
+{
+  "language": {
+    "name": "简体中文",
+    "selectorLabel": "语言：{{language}}",
+    "selectorTooltip": "切换语言",
+    "loadFailed": "无法加载该语言，请重试。",
+    "beta": "测试版"
+  },
+  "app": {
+    "name": "TTRPG Campaign Notes"
+  },
+  "common": {
+    "add": "添加",
+    "cancel": "取消",
+    "close": "关闭",
+    "delete": "删除",
+    "edit": "编辑",
+    "remove": "移除",
+    "save": "保存",
+    "leave": "退出",
+    "copy": "复制",
+    "copied": "已复制",
+    "yes": "是",
+    "notApplicable": "—",
+    "you": "你",
+    "name": "名称",
+    "description": "描述",
+    "noDescription": "暂无描述。",
+    "noResults": "没有结果",
+    "resetFilters": "重置筛选",
+    "goToLogin": "前往登录",
+    "myRooms": "我的房间",
+    "backToMyRooms": "返回我的房间",
+    "maxLength": "最多 {{max}} 个字符",
+    "unknownUser": "未知用户",
+    "accept": "接受",
+    "decline": "拒绝"
+  },
+  "roles": {
+    "master": "Master",
+    "player": "Player",
+    "admin": "Admin"
+  },
+  "visibility": {
+    "label": "可见性",
+    "level": {
+      "room": "房间",
+      "master": "仅 Master",
+      "private": "私密",
+      "selective": "指定成员"
+    },
+    "documentOption": {
+      "room": "房间（所有成员）",
+      "master": "仅 Master",
+      "private": "私密（Owner + Master）",
+      "selective": "指定成员（在你选择其他人之前仅 Owner + Master）"
+    },
+    "commentOption": {
+      "room": "房间（所有成员）",
+      "master": "仅 Master（和你）",
+      "private": "私密（你 + Master）",
+      "selective": "指定成员（你、Master 和你选择的人）"
+    }
+  },
+  "time": {
+    "now": "刚刚"
+  },
+  "auth": {
+    "prompt": "请登录后继续。",
+    "signInWith": "使用 {{provider}} 登录",
+    "privacy": "隐私"
+  },
+  "header": {
+    "account": "你的账户",
+    "accountPending": "你的账户：{{count}} 项待查看"
+  },
+  "account": {
+    "signInRequired": "请登录后管理你的账户。",
+    "loadError": "无法加载你的账户。",
+    "title": "账户",
+    "subtitle": "你的个人资料和登录会话。",
+    "profile": {
+      "title": "个人资料",
+      "description": "你的房间里其他成员看到你的方式。",
+      "displayName": "显示名称",
+      "displayNameDescription": "在房间、评论和 Owner 列表中显示，代替你的电子邮件。",
+      "displayNamePlaceholder": "你的名字",
+      "pronouns": "代词",
+      "pronounsPlaceholder": "例如：她、他、they",
+      "bioDescription": "关于你的几句话，你的房间成员可见。",
+      "discardChanges": "放弃更改",
+      "save": "保存个人资料",
+      "saved": "个人资料已保存。"
+    },
+    "avatar": {
+      "upload": "上传照片",
+      "fromUrl": "从 URL",
+      "useImage": "使用图片",
+      "hint": "PNG、JPEG、WebP 或 GIF。图片会自动居中裁剪并调整大小。"
+    },
+    "access": {
+      "title": "登录",
+      "email": "电子邮件",
+      "emailDescription": "这是你登录所用账户的电子邮件。",
+      "noEmail": "你的账户未提供电子邮件",
+      "signOutDescription": "结束此设备上的会话。",
+      "signOut": "退出登录"
+    },
+    "invitations": {
+      "title": "房间邀请",
+      "description": "有好友邀请了你：只有接受后才会加入房间。",
+      "from": "{{name}} 邀请你担任 {{role}}",
+      "joined": "你已加入“{{room}}”。"
+    },
+    "friends": {
+      "title": "好友",
+      "description": "好友可以直接邀请你加入他们的房间。",
+      "linkLabel": "你的好友链接",
+      "linkDescription": "打开它的人会向你发送好友请求。重新生成后，旧链接将失效。",
+      "linkError": "无法加载你的好友链接。",
+      "regenerate": "重新生成",
+      "regenerated": "新链接已创建：旧链接不再有效。",
+      "loadError": "无法加载你的好友。",
+      "incoming": "收到的请求",
+      "outgoing": "发出的请求",
+      "list": "你的好友",
+      "empty": "暂无好友。分享你的链接，或添加你房间里的成员。",
+      "cancelRequest": "取消请求",
+      "removeConfirm": "要将 {{name}} 从好友中移除吗？",
+      "accepted": "你和 {{name}} 现在是好友了。"
+    },
+    "reveals": {
+      "title": "向你揭示的内容",
+      "description": "Master 刚刚向你展示的内容。你打开后，它会从这里消失。",
+      "document": "文档",
+      "note": "笔记“{{title}}”",
+      "comment": "一条评论"
+    },
+    "speech": {
+      "title": "朗读",
+      "description": "应用朗读文档、笔记和评论所用的声音和语速。声音来自浏览器：所选设置保存在此设备上，每种语言各一个。",
+      "unsupported": "此浏览器不支持朗读。",
+      "voice": "声音",
+      "automatic": "自动",
+      "automaticWith": "自动（{{name}}）",
+      "languageVoices": "中文声音",
+      "otherVoices": "其他声音",
+      "noVoices": "此设备上没有中文声音：浏览器将使用其默认声音。",
+      "betterVoices": "效果最好的是浏览器的神经网络声音：Edge 中的“Natural”声音，Chrome 中的“Google”声音；在 iPhone 和 Mac 上，可在“设置 › 辅助功能 › 朗读内容”中下载“增强”或“高级”声音。",
+      "rate": "语速",
+      "try": "试听",
+      "sample": "这就是这个声音朗读你笔记时的效果。"
+    },
+    "privacy": {
+      "title": "你的数据",
+      "description": "下载应用保存的有关你的全部数据副本，或删除你的账户。",
+      "export": "下载我的数据",
+      "exported": "数据已下载",
+      "notice": "隐私声明",
+      "deleteDescription": "删除账户后无法恢复。只有你一个成员的房间会被删除；在共享房间中，你写下的内容会保留，并显示为未知用户所写。",
+      "delete": "删除账户",
+      "confirmTitle": "删除你的账户？",
+      "confirmBody": "个人资料、头像、好友和登录账户将被删除，且无法恢复。只有你一个成员的房间会连同全部内容一起删除。如果你是共享房间中最后一位 Master 或管理员，请先将该角色交给其他人。",
+      "confirmLabel": "输入“{{word}}”以确认",
+      "deleteWord": "删除",
+      "confirm": "永久删除",
+      "deleted": "你的账户已删除"
+    }
+  },
+  "rooms": {
+    "create": "创建房间",
+    "loadError": "加载房间时出错。",
+    "empty": "还没有房间。创建一个开始吧。",
+    "invite": "邀请",
+    "createModal": {
+      "title": "创建房间",
+      "namePlaceholder": "例如：斯特拉德的诅咒",
+      "gameSystem": "游戏系统",
+      "gameSystemPlaceholder": "例如：D&D 5e（可选）",
+      "image": "图片（可选）",
+      "chooseImage": "选择图片",
+      "changeImage": "更换图片",
+      "imageHint": "房间 PDF 的封面。之后可以在房间设置中更改。",
+      "imageFailed": "房间已创建，但无法保存其图片（{{reason}}）。你可以在房间设置中设置图片。"
+    },
+    "setup": "设置",
+    "actions": "房间 {{name}} 的操作",
+    "duplicate": {
+      "action": "复制",
+      "confirmTitle": "复制“{{name}}”？",
+      "confirmBody": "文档、笔记、标签和图片会被复制。评论、PDF 附件和成员不会。你将成为副本的唯一 Master。",
+      "copyName": "{{name}}（副本）",
+      "created": "已创建“{{name}}”"
+    },
+    "leave": {
+      "confirmTitle": "退出“{{name}}”？",
+      "confirmBody": "你的文档、评论和笔记会保留在房间中。重新加入需要新的邀请。",
+      "adminHint": "你是管理员：如果你是最后一位，请先在房间设置中指定另一位管理员。",
+      "left": "你已离开“{{name}}”"
+    },
+    "image": {
+      "alt": "房间图片"
+    }
+  },
+  "invite": {
+    "modalTitle": "邀请加入房间",
+    "proposedRole": "建议的角色",
+    "generate": "生成邀请",
+    "signInRequired": "请登录后加入此房间。",
+    "invalid": "邀请无效、已过期或已被使用。",
+    "joined": "你已加入“{{room}}”",
+    "goToMyRooms": "前往我的房间",
+    "tabLink": "链接",
+    "tabFriends": "好友",
+    "friend": "好友",
+    "friendPlaceholder": "选择一位好友",
+    "noFriends": "没有可邀请的好友。请在你的账户页面添加。",
+    "friendsHint": "你的好友会在其账户页面看到邀请，接受后才会加入。",
+    "send": "发送邀请",
+    "sent": "邀请已发送给 {{name}}。"
+  },
+  "members": {
+    "signInRequired": "请登录后查看此房间的成员。",
+    "title": "成员",
+    "loadError": "加载成员时出错。",
+    "columnUser": "用户",
+    "columnRole": "角色",
+    "columnAdmin": "管理员",
+    "addFriend": "添加为好友",
+    "friend": "好友",
+    "requestSent": "请求已发送",
+    "requestReceived": "对方向你发来了好友请求",
+    "friendRequestSent": "好友请求已发送给 {{name}}。"
+  },
+  "setup": {
+    "signInRequired": "请登录后管理此房间。",
+    "title": "房间设置",
+    "adminOnly": "只有房间的管理员或 Master 可以打开设置。",
+    "loadError": "加载房间设置时出错。",
+    "tags": {
+      "title": "标签",
+      "description": "文档页面如何对文档分组，以及房间的所有标签。每次更改都会立即保存。",
+      "grouping": {
+        "title": "分组",
+        "description": "文档页面按这些条目、以此顺序对文档分组。一个条目是一个标签，或一个组合：其文档必须同时具有这些标签。",
+        "empty": "没有条目：文档将不分组。",
+        "moveUp": "上移 {{name}}",
+        "moveDown": "下移 {{name}}",
+        "remove": "将 {{name}} 移出分组",
+        "addLabel": "添加条目",
+        "addPlaceholder": "选择一个或多个标签",
+        "addHint": "一个标签是主标签，两个或更多标签则是一个组合。",
+        "add": "添加",
+        "alreadyMain": "此标签已是分组中的一个条目。",
+        "alreadyCombination": "此组合已在分组中。"
+      },
+      "all": {
+        "title": "所有标签",
+        "description": "删除标签会将其从文档和分组中移除；文档会保留。",
+        "empty": "此房间没有标签。",
+        "filterLabel": "筛选标签",
+        "filterPlaceholder": "筛选标签",
+        "noMatch": "没有与“{{query}}”匹配的标签。",
+        "newLabel": "新标签",
+        "newPlaceholder": "新标签",
+        "create": "创建标签",
+        "created": "标签“{{name}}”已创建",
+        "inGrouping": "在分组中",
+        "rename": "重命名标签 {{name}}",
+        "renameInput": "{{name}} 的新名称",
+        "saveRename": "保存名称",
+        "cancelRename": "取消",
+        "renamed": "标签已重命名为“{{name}}”"
+      },
+      "delete": "删除标签 {{name}}",
+      "confirmTitle": "删除标签“{{name}}”？",
+      "confirmBody": "该标签会从所有带有它的文档以及分组中移除。使用过它的组合会缩减，若剩下的标签少于两个则被移除。文档不会被删除。此操作无法撤销。",
+      "deleted": "标签“{{name}}”已删除"
+    },
+    "dangerZone": {
+      "title": "危险区域",
+      "description": "删除房间会将其连同成员、文档、评论、笔记和图片永久移除。",
+      "deleteRoom": "删除房间",
+      "confirmTitle": "删除房间“{{name}}”？",
+      "confirmBody": "房间中的所有内容都会为所有人删除：成员、邀请、标签、文档、评论、笔记和图片。此操作无法撤销。",
+      "confirmLabel": "输入“{{name}}”以确认",
+      "deleted": "房间“{{name}}”已删除"
+    },
+    "tabs": {
+      "settings": "设置",
+      "history": "历史"
+    },
+    "defaultVisibility": {
+      "title": "默认可见性",
+      "description": "每个新文档、笔记和评论的初始级别。回复仍以其所回复评论的可见性为起点。现有内容不会改变。",
+      "label": "默认可见性",
+      "saved": "默认可见性已保存。"
+    },
+    "history": {
+      "title": "可见性历史",
+      "description": "谁更改了谁能看到什么，最近的更改在前。",
+      "filterLabel": "内容",
+      "filter": {
+        "all": "全部",
+        "document": "文档",
+        "note": "笔记",
+        "comment": "评论"
+      },
+      "empty": "没有可见性更改。",
+      "loadError": "无法加载历史。",
+      "loadMore": "加载更多",
+      "when": "时间",
+      "who": "谁",
+      "what": "内容",
+      "change": "更改",
+      "reveal": "揭示",
+      "hidden": {
+        "document": "一个隐藏的文档",
+        "note": "一条隐藏的笔记",
+        "comment": "一条隐藏的评论"
+      },
+      "deleted": {
+        "document": "一个已删除的文档",
+        "note": "一条已删除的笔记",
+        "comment": "一条已删除的评论"
+      },
+      "note": "{{document}} 中的笔记“{{title}}”",
+      "comment": "{{document}} 中的评论",
+      "recipients": "现在可见的人：{{names}}",
+      "selective": "已选择：{{names}}"
+    },
+    "roomImage": {
+      "title": "房间图片",
+      "description": "房间 PDF 的默认封面。导出时仍可选择某个文档的图片或不使用图片。",
+      "upload": "上传图片",
+      "hint": "PNG、JPEG、WebP 或 GIF。自动调整大小，不裁剪。"
+    }
+  },
+  "documents": {
+    "signInRequired": "请登录后查看此房间的文档。",
+    "title": "文档",
+    "create": "创建文档",
+    "playersCanCreate": "Player 可以创建文档",
+    "loadError": "加载文档时出错。",
+    "empty": "还没有文档。创建一个开始吧。",
+    "noMatchForTags_other": "没有带有这些标签的文档。",
+    "showAll": "显示全部",
+    "filterByTag": "按标签筛选",
+    "hideControls": "隐藏筛选和设置",
+    "showControls": "显示筛选和设置",
+    "owners": "Owner",
+    "ownersLine": "Owner：{{names}}",
+    "addOwner": "添加 Owner",
+    "removeOwner": "移除 Owner {{name}}",
+    "groupByLabel": "分组方式",
+    "groupByMainTag": "按主标签分组",
+    "groupByNone": "不分组",
+    "sortLabel": "排序方式",
+    "sortNameAsc": "名称（A-Z）",
+    "sortNameDesc": "名称（Z-A）",
+    "ungroupedTag": "无主标签",
+    "detail": {
+      "signInRequired": "请登录后查看此文档。",
+      "notFound": "文档不存在或不可见。",
+      "backToDocuments": "返回文档",
+      "cancelEditing": "放弃更改",
+      "saveChanges": "保存更改",
+      "deleteDocument": "删除文档",
+      "deleteConfirmTitle": "删除此文档？",
+      "deleteConfirmBody": "此文档的评论、图片和标签关联将被删除。此操作无法撤销。"
+    },
+    "fields": {
+      "descriptionHint": "输入 # 以链接其他文档。",
+      "subtitle": "副标题",
+      "subtitleHint": "名称下方的一行文字，例如“偶像”。",
+      "tags": "标签",
+      "newTag": "新标签",
+      "newTagPlaceholder": "例如：派系"
+    },
+    "notYetRead": "尚未阅读",
+    "unreadCount_other": "{{count}} 条新评论"
+  },
+  "images": {
+    "numbered": "{{name}}（{{index}}）",
+    "open": "打开图片",
+    "openNamed": "打开 {{name}}",
+    "removeNamed": "移除 {{name}}",
+    "delete": "删除图片",
+    "deleteConfirm": "删除这张图片？",
+    "favorite": "主图",
+    "setFavorite": "设为主图",
+    "urlLabel": "图片 URL",
+    "urlPlaceholder": "https://… 图片 URL",
+    "invalidUrl": "请输入有效的 http(s) URL",
+    "rowTitle": "图片",
+    "upload": "上传图片",
+    "addFromUrl": "从 URL 添加",
+    "fromUrlShort": "从 URL",
+    "resizeHint": "PNG、JPEG、WebP 或 GIF。大图片会自动调整大小。",
+    "limitReached": "已达到图片数量上限",
+    "attachFiles": "添加图片",
+    "attachFilesTooltip": "从电脑添加图片",
+    "attachUrl": "从 URL 添加图片",
+    "viewer": {
+      "previous": "上一张图片",
+      "next": "下一张图片",
+      "zoomOut": "缩小",
+      "zoomIn": "放大",
+      "fit": "适应屏幕"
+    }
+  },
+  "versions": {
+    "action": "历史",
+    "actionFor": "历史：{{name}}",
+    "title": "历史：{{name}}",
+    "loadFailed": "无法加载历史。",
+    "empty": "没有修订版本。",
+    "current": "当前",
+    "first": "第一个修订版本",
+    "changeSize": "+{{added}} −{{removed}}",
+    "changeSizeLabel": "新增词数：{{added}}，删除词数：{{removed}}",
+    "pick": "选择一个修订版本，与文档当前的样子对比。",
+    "before": "此修订版本",
+    "after": "现在",
+    "identical": "文档已经是这个样子。",
+    "restore": "恢复此修订版本",
+    "restoreConfirmTitle": "恢复此修订版本？",
+    "restoreConfirmBody": "文档（包括笔记）将恢复到 {{date}} 的样子：自那以后删除的笔记会回来，之后添加的笔记会被删除。系统会新增一个修订版本：不会丢失任何内容。",
+    "restored": "修订版本已恢复",
+    "notesHeading": "笔记",
+    "noteRemoved": "自那以后已删除",
+    "noteAdded": "之后添加",
+    "noteNotThen": "此修订版本中没有",
+    "noteNotNow": "文档中已不存在",
+    "notesChange": "笔记 +{{added}} −{{removed}}",
+    "notesChangeLabel": "新增笔记：{{added}}，删除笔记：{{removed}}"
+  },
+  "notes": {
+    "add": "添加笔记",
+    "edit": "编辑笔记：{{title}}",
+    "delete": "删除笔记：{{title}}",
+    "moveUp": "上移笔记：{{title}}",
+    "moveDown": "下移笔记：{{title}}",
+    "deleteConfirmTitle": "删除这条笔记？",
+    "deleteConfirmBody": "“{{title}}”将被删除。你可以从文档的历史中恢复它。",
+    "form": {
+      "title": "标题",
+      "selectiveLabel": "可以看到该笔记的成员",
+      "selectivePlaceholder": "谁可以看到"
+    }
+  },
+  "files": {
+    "title": "文件",
+    "upload": "上传 PDF",
+    "uploadHint": "附加最大 {{mb}} MB 的 PDF，例如角色卡",
+    "limitReached": "一个文档最多可有 {{max}} 个文件",
+    "open": "打开 {{name}}",
+    "download": "下载 {{name}}",
+    "delete": "删除 {{name}}",
+    "deleteConfirmTitle": "删除此文件？",
+    "deleteConfirmBody": "“{{name}}”将被删除。此操作无法撤销。",
+    "notPdf": "只能附加 PDF 文件",
+    "tooLarge": "文件超过 {{mb}} MB 的限制",
+    "openFailed": "无法打开 {{name}}"
+  },
+  "characters": {
+    "playedBy": "扮演者",
+    "playedByLine": "扮演者：{{name}}",
+    "choosePlayer": "选择玩家",
+    "alsoOwner": "同时设为 Owner",
+    "setPlayer": "设置玩家",
+    "unlink": "取消关联 {{name}}",
+    "postAs": "以此身份发言",
+    "yourself": "你自己（{{name}}）",
+    "writtenBy": "由 {{name}} 扮演"
+  },
+  "comments": {
+    "title": "评论",
+    "loadError": "无法加载评论。",
+    "empty": "还没有评论。来写第一条吧！",
+    "filteredCount_other": "{{shown}} / {{count}} 条评论",
+    "noMatch": "没有符合筛选条件的评论。",
+    "publish": "发布",
+    "savedWithImageErrors": "评论已保存，但部分图片未能保存：{{errors}}",
+    "imageRemovalFailed": "移除图片失败：{{reason}}",
+    "you": "（你）",
+    "deleted": "评论已删除。",
+    "edited": "已编辑",
+    "editedAt": "编辑于 {{date}}",
+    "deleteConfirm": "删除这条评论？",
+    "deleteImagesWarning": "它的图片也会从文档中移除。",
+    "imageLabel": "{{author}} 的评论中的图片 {{index}}",
+    "imagesAlt": "{{author}} 的评论",
+    "attachedImage": "附加的图片",
+    "reply": "回复",
+    "replyLabel": "回复 {{name}}",
+    "inReplyTo": "回复 {{name}}",
+    "parentHidden": "一条你看不到的评论",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "pinned": "已置顶",
+    "pinnedSection": "置顶评论",
+    "resolve": "标记为已解决",
+    "reopen": "重新打开",
+    "resolved": "已解决",
+    "resolvedBy": "{{name}} 于 {{date}} 解决",
+    "reactions": {
+      "add": "添加表情回应",
+      "chip_other": "{{emoji}}，{{count}} 个回应：{{names}}",
+      "loadingPicker": "正在加载表情",
+      "pickerFailed": "无法加载表情，请稍后重试。"
+    },
+    "thread": {
+      "showMore_other": "再显示 {{count}} 条回复",
+      "show_other": "显示 {{count}} 条回复",
+      "hide": "隐藏回复",
+      "hiddenNew_other": "{{count}} 条新回复"
+    },
+    "composer": {
+      "bodyLabel": "评论内容",
+      "bodyPlaceholder": "写一条评论…（输入 # 链接文档）",
+      "visibilityLabel": "评论的可见性",
+      "selectiveLabel": "可以看到该评论的成员",
+      "selectivePlaceholder": "谁可以看到"
+    },
+    "toolbar": {
+      "searchLabel": "搜索评论",
+      "searchPlaceholder": "搜索…",
+      "sortLabel": "评论排序",
+      "sortNewest": "最新优先",
+      "sortOldest": "最早优先",
+      "sortAuthor": "按作者",
+      "authorLabel": "按作者筛选",
+      "authorPlaceholder": "所有作者",
+      "visibilityLabel": "按可见性筛选",
+      "visibilityPlaceholder": "任何可见性",
+      "hideDeleted": "隐藏已删除"
+    },
+    "new": "新",
+    "promotion": {
+      "promote": "升级",
+      "intoDescription": "到描述中",
+      "intoDocument": "到新文档",
+      "promoted": "已升级",
+      "promotedToDescription": "已于 {{date}} 升级到描述中",
+      "promotedToDocument": "已于 {{date}} 升级为新文档",
+      "openDocument": "打开升级后的文档",
+      "editorNotice": "评论内容已添加到描述末尾：请检查并保存以完成升级。",
+      "modalTitle": "升级为新文档",
+      "images": "要添加到文档的评论图片",
+      "imageLabel": "图片 {{index}}",
+      "wideningTitle": "文本将对更多人可见",
+      "wideningBody": "升级后，目前看不到该评论的人也将能读到其文本：{{names}}。",
+      "wideningConfirm": "仍然升级",
+      "done": "评论已升级",
+      "imageErrors": "评论已升级，但部分图片未能添加：{{errors}}",
+      "notRecorded": "文档已创建，但评论的升级未被记录：{{reason}}"
+    }
+  },
+  "mentions": {
+    "listLabel": "可链接的文档和标签",
+    "membersListLabel": "可提及的成员",
+    "kind": {
+      "document": "文档",
+      "tag": "标签"
+    },
+    "tagDetail_other": "标签 · {{count}} 个文档",
+    "noMatchCreate": "没有与“{{name}}”匹配的结果。将其创建为：",
+    "kindSwitchLabel": "新项目的类型",
+    "createKind": "创建{{kind}}",
+    "hintSwitchKind": "←/→ 切换类型 · ",
+    "hintCreate": "按 Enter 创建"
+  },
+  "backlinks": {
+    "title": "提及于",
+    "inDescription": "在描述中",
+    "inNote": "在笔记“{{title}}”中",
+    "inComment": "在 {{name}} 的评论中"
+  },
+  "glossary": {
+    "title": "标签索引",
+    "openToggle": "打开标签索引",
+    "closeToggle": "关闭标签索引",
+    "mainTags": "主标签",
+    "otherTags": "其他标签",
+    "empty": "此房间没有标签。"
+  },
+  "search": {
+    "open": "搜索",
+    "title": "搜索房间",
+    "inputLabel": "搜索房间",
+    "placeholder": "文档、笔记、评论、标签…",
+    "hint": "请至少输入 2 个字符。",
+    "loading": "正在搜索",
+    "resultsLabel": "结果",
+    "showMore": "显示更多",
+    "tagFilter": "按标签筛选",
+    "inDocument": "在 {{name}} 中",
+    "commentOn": "{{name}} 上的评论",
+    "kinds": {
+      "all": "全部"
+    },
+    "groups": {
+      "document": "文档",
+      "note": "笔记",
+      "comment": "评论",
+      "tag": "标签"
+    }
+  },
+  "friendLink": {
+    "signInRequired": "请登录后发送好友请求。",
+    "sent": "好友请求已发送给 {{name}}。",
+    "sentAnonymous": "好友请求已发送。",
+    "failed": "无法发送好友请求。",
+    "goToAccount": "前往你的账户"
+  },
+  "reveal": {
+    "action": "揭示",
+    "actionLabel": "揭示：{{name}}",
+    "comment": "该评论",
+    "revealed": "已揭示",
+    "revealedLabel": "已向你揭示",
+    "modalTitle": "揭示“{{name}}”",
+    "audienceLabel": "向谁",
+    "toRoom": "向整个房间",
+    "toChosen": "向选定的玩家",
+    "chosenLabel": "玩家",
+    "chosenPlaceholder": "选择对象",
+    "noOneToPick": "每个可以接收的成员都已经能看到它。",
+    "gains": "将获得访问权限：{{names}}",
+    "noGains": "没有其他成员会获得访问权限。",
+    "notesLabel": "同时揭示这些笔记",
+    "notesDescription": "获得该文档的人看不到它们。不选择的话，它们保持原样。",
+    "confirm": "揭示",
+    "done": "已揭示。"
+  },
+  "viewAs": {
+    "action": "以成员身份查看",
+    "menuLabel": "以此身份查看房间",
+    "banner": "你正在以 {{name}} 的身份查看房间。只读。",
+    "exit": "退出此视图"
+  },
+  "export": {
+    "action": "导出",
+    "title": "导出房间",
+    "intro": "将房间下载为文件。只包含你能看到的内容：文档、笔记、评论和标签。",
+    "format": "文件格式",
+    "formats": {
+      "md": "Markdown",
+      "json": "JSON",
+      "pdf": "PDF"
+    },
+    "formatHint": {
+      "md": "单个可读文件，适合阅读或打印。",
+      "json": "带 id 的结构化数据，供工具和 AI 代理使用。",
+      "pdf": "排好版的手册，可打印或交给玩家。"
+    },
+    "tagFilter": "仅包含带有这些标签的文档（可选）",
+    "linksExpire": "图片和 PDF 文件的链接会在一小时内失效。重新导出即可更新。",
+    "done": "导出已下载。",
+    "pdf": {
+      "style": "样式",
+      "styles": {
+        "gothic": "哥特",
+        "modern": "现代",
+        "print": "印刷"
+      },
+      "styleHints": {
+        "gothic": "黑红配色，深色封面",
+        "modern": "简洁无衬线字体，留白充足",
+        "print": "黑白，节省墨水"
+      },
+      "pageSize": "页面尺寸",
+      "comments": "在附录中包含评论",
+      "attachments": "在末尾附加 PDF 附件",
+      "cover": "封面图片",
+      "coverNone": "无",
+      "coverClear": "移除封面图片",
+      "coverNothing": "没有带图片的文档",
+      "coverHint": "封面使用所选文档的首选图片。",
+      "visibility": "PDF 只包含你能看到的内容。它在后台生成，并保留 24 小时。",
+      "asMember": "你正在以另一位成员的身份查看房间：PDF 将只包含该成员能看到的内容。保留 24 小时。",
+      "action": "生成 PDF",
+      "making": "正在准备 PDF…",
+      "makingHint": "你可以关闭此窗口：PDF 会保留在房间页面中，直到你下载它。",
+      "ready": "PDF 已准备好。",
+      "availableUntil": "可用至 {{time}}。",
+      "download": "下载 PDF",
+      "preparingLink": "正在准备下载链接…",
+      "failed": "无法准备 PDF。",
+      "expired": "此 PDF 已不可用：文件会在 24 小时后被删除。",
+      "another": "准备另一个 PDF",
+      "retry": "重试",
+      "listTitle": "你的 PDF",
+      "listItem": "{{style}} · {{size}}",
+      "listStatus": {
+        "queued": "排队中",
+        "running": "准备中",
+        "done": "已完成",
+        "failed": "失败",
+        "expired": "已过期"
+      },
+      "downloadNamed": "下载 PDF {{name}}",
+      "dismiss": "隐藏",
+      "dismissNamed": "隐藏 PDF {{name}}",
+      "coverRoom": "房间图片",
+      "coverHintRoom": "封面使用房间图片，或所选文档的首选图片。"
+    },
+    "document": {
+      "title": "导出文档",
+      "action": "导出文档",
+      "intro": "将此文档下载为文件，包含你能看到的内容：笔记、评论和标签。你可以将它重新导入房间。"
+    }
+  },
+  "documentImport": {
+    "action": "导入文档",
+    "title": "导入文档",
+    "intro": "上传一个或多个 JSON 或 Markdown 文件，也可以是整个房间的导出文件。你会先看到将要导入的内容：在你确认之前不会写入任何数据。",
+    "jsonHint": "JSON 是保真格式；Markdown 会尽力读取。评论、PDF 附件、Owner 以及与玩家的关联不会被导入。",
+    "files": "要导入的文件",
+    "filesPlaceholder": "选择一个或多个 .json 或 .md 文件",
+    "preview": "预览",
+    "found_other": "找到 {{count}} 个文档",
+    "documentSelect": "导入 {{name}}",
+    "notesCount_other": "{{count}} 条笔记",
+    "imagesCount_other": "{{count}} 张图片",
+    "tags": "标签：{{names}}",
+    "exists": "此房间中已存在",
+    "tagsToCreate": "将创建的标签：{{names}}",
+    "tagsUnavailable": "你无权创建、将被移除的标签：{{names}}",
+    "selectedCount_other": "已选择 {{count}} 个文档",
+    "next": "下一步",
+    "back": "返回",
+    "start": "导入",
+    "warning": {
+      "comments_dropped_other": "{{count}} 条评论不会被导入",
+      "files_dropped_other": "{{count}} 个 PDF 附件不会被导入",
+      "player_dropped": "与玩家的关联不会被导入",
+      "selective_to_private_other": "{{count}} 个指定成员可见的项目将变为私密",
+      "tags_not_created": "未创建的标签：{{names}}"
+    },
+    "existing": {
+      "title": "部分文档已存在",
+      "intro": "“复制”会创建新文档，原文档保持不变。“替换”只会重写原文档的信息（名称、描述、标签和笔记）：Owner、可见性、评论和附件保持不变。替换可以通过文档的历史撤销。",
+      "copy": "复制",
+      "replace": "替换",
+      "applyAll": "应用于全部",
+      "copyAll": "全部复制",
+      "replaceAll": "全部替换",
+      "cannotReplace": "只有文档的 Owner（或 Master）可以替换它",
+      "choice": "如何处理 {{name}}"
+    },
+    "running": "正在导入…",
+    "runningHint": "你可以关闭此窗口：导入会在后台继续，完成后文档会出现在列表中。",
+    "done": "导入完成",
+    "created_other": "已创建 {{count}} 个文档",
+    "replaced_other": "已替换 {{count}} 个文档",
+    "skippedTitle_other": "{{count}} 张图片未导入",
+    "skipped": "{{document}}：{{reason}}",
+    "skipReason": {
+      "unreachable": "链接无法访问或已过期",
+      "not_an_image": "不是图片",
+      "too_large": "太大",
+      "limit": "文档的图片数量已达上限",
+      "storage": "存储不可用",
+      "failed": "意外错误"
+    },
+    "failed": "导入失败。重试之前请先检查文档列表。",
+    "another": "导入其他文件"
+  },
+  "imageSearch": {
+    "action": "搜索",
+    "title": "搜索图片",
+    "queryLabel": "搜索内容",
+    "placeholder": "例如：哥特城堡、古地图",
+    "submit": "搜索",
+    "sourceHint": "来自 Openverse 的免费图片（知识共享和公有领域）。点击图片即可将其添加到文档。",
+    "loading": "正在搜索",
+    "empty": "没有找到图片",
+    "more": "更多结果",
+    "add": "添加 {{title}}",
+    "added": "已添加",
+    "untitled": "无标题",
+    "source": "来源"
+  },
+  "speech": {
+    "listen": "朗读“{{name}}”",
+    "pause": "暂停朗读",
+    "resume": "继续朗读",
+    "stop": "停止朗读",
+    "commentListen": "朗读",
+    "commentStop": "停止",
+    "commentBy": "{{name}} 写道"
+  },
+  "privacy": {
+    "back": "返回应用",
+    "title": "隐私声明",
+    "updated": "最后更新：{{date}}",
+    "intro": "本声明说明本应用处理哪些个人数据、处理的原因、数据存放的位置，以及你如何根据《通用数据保护条例》（GDPR）行使你的权利。本声明的中文译文仅供参考：如与意大利语或英语原文有出入，以意大利语或英语原文为准。",
+    "sections": {
+      "controller": {
+        "title": "数据控制者是谁",
+        "body": "数据处理的控制者是 {{name}}。如对你的数据有任何疑问，或要行使你的权利，请写信至 {{email}}。"
+      },
+      "data": {
+        "title": "我们处理哪些数据",
+        "body": "只处理应用运行所必需的数据：\n\n- 来自你所选提供方（Google、Discord 或 GitHub）的登录数据：账户标识符、你的电子邮件地址、你的姓名和头像，仅复制一次，作为个人资料的默认名称和头像。\n- 你的个人资料：显示名称、代词、简介和头像，你可以随时在账户页面修改或删除。\n- 你在房间中撰写和上传的内容：文档、笔记、评论、表情回应、图片和 PDF 附件，以及创建者和创建时间。\n- 你的好友、好友请求和好友码，以及你发出或收到的房间邀请。\n- 使用和技术数据：你上次打开每个文档的时间、文档的修改历史、每个房间的角色和可见性变更记录，以及服务器为提供和保护服务而记录的请求数据（例如 IP 地址、浏览器和时间）。"
+      },
+      "purposes": {
+        "title": "原因及法律依据",
+        "body": "你的数据仅用于向你和你房间的成员提供本应用（履行合同，GDPR 第 6(1)(b) 条），以及保障其安全和正常运行（合法利益，GDPR 第 6(1)(f) 条）。\n\n数据不会被出售，也不会用于广告或用户画像，本应用不使用分析或跟踪工具。你的电子邮件绝不会向其他用户显示。"
+      },
+      "processors": {
+        "title": "谁处理数据，在哪里处理",
+        "body": "本应用依赖以下服务提供方，他们代表我们处理数据：\n\n- Supabase：数据库、文件存储和登录，托管于欧盟（德国法兰克福）。\n- OVHcloud：运行应用后端的服务器，位于英国，欧盟委员会承认英国提供充分的保护水平。\n- Vercel：应用页面的分发。其网络可能为欧盟以外的请求提供服务；向美国的数据传输依据欧盟－美国数据隐私框架和标准合同条款。\n- Google、Discord 和 GitHub：仅用于你所选择的登录，适用其各自的隐私声明。\n- Openverse，WordPress.org 的一个项目：当你为文档搜索免费图片时，搜索由我们的服务器发出，缩略图则由你的浏览器直接从 Openverse 加载，因此 Openverse 会看到你的 IP 地址。"
+      },
+      "retention": {
+        "title": "我们保存多久",
+        "body": "- 你的账户和个人资料会保留到你删除账户为止。\n- 删除账户时，个人资料、头像、好友、表情回应和登录账户会立即被删除。你是唯一成员的房间会连同全部内容一起删除。在与他人共享的房间中，你写下的内容作为战役的一部分保留，并显示为未知用户所写。\n- 你删除的房间会连同全部内容一起删除。\n- 房间 PDF 会在生成 24 小时后删除，文档导入记录会在结束 7 天后删除。\n- 服务器日志只在运行和安全所需的时间内保存，并会循环覆盖。\n- 我们服务提供方的备份会在其备份周期内被覆盖。"
+      },
+      "rights": {
+        "title": "你的权利",
+        "body": "你可以随时：\n\n- 查看并下载你的数据：账户页面，“你的数据”，“下载我的数据”（一个 JSON 文件；每个房间的导出包含你能看到的战役内容）；\n- 在账户页面更正你的个人资料；\n- 删除你的账户：账户页面，“你的数据”，“删除账户”；\n- 反对处理或要求限制处理，请写信至 {{email}}。\n\n你还有权向监管机构投诉；在意大利，监管机构是个人数据保护局（Garante per la protezione dei dati personali，garanteprivacy.it）。"
+      },
+      "storage": {
+        "title": "Cookie 和本地存储",
+        "body": "本应用不使用 cookie。它会在你的浏览器存储中保存一些运行所必需的项目：登录会话、所选语言、朗读的声音和语速、你在每个房间中上次发言所用的角色、你已关闭的房间 PDF 提示，以及登录前打开的邀请链接。这些内容保留在你的设备上：会话在你退出登录时删除，其余内容在你清除浏览器数据时删除。"
+      }
+    }
+  },
+  "maps": {
+    "title": "地图",
+    "create": "新建地图",
+    "settings": "地图设置",
+    "delete": "删除地图",
+    "deleteConfirmTitle": "删除这张地图？",
+    "deleteConfirmBody": "“{{name}}”将连同其中的所有内容一起删除。文档会保留。",
+    "signInRequired": "请登录后查看此房间的地图。",
+    "backToDocuments": "文档",
+    "backToMaps": "地图",
+    "empty": "还没有地图。",
+    "loadError": "无法加载地图。",
+    "notFound": "未找到地图。",
+    "documentCount_other": "{{count}} 个文档",
+    "lastEdit": "{{when}}编辑",
+    "selectiveLabel": "可以看到该地图的成员",
+    "unsaved": "有未保存的更改",
+    "saving": "正在保存…",
+    "saved": "已保存",
+    "saveError": "未保存",
+    "retry": "重试",
+    "readOnlyOnPhone": "在这么小的屏幕上，地图为只读。",
+    "addDocuments": "添加文档",
+    "addText": "添加文本",
+    "selectHint": "在背景上拖动可框选多张卡片。用鼠标右键或中键移动地图，或按住空格键。",
+    "groupSelected": "分组",
+    "searchDocuments": "按名称搜索",
+    "alreadyOnMap": "已在地图上",
+    "addChosen_other": "添加 {{count}} 个文档",
+    "editCard": "编辑卡片：{{name}}",
+    "editText": "编辑文本",
+    "editGroup": "编辑分组",
+    "editArrow": "编辑箭头：{{label}}",
+    "masterOnly": "仅 Master",
+    "masterOnlyArrow": "仅 Master 可见",
+    "masterOnlyCard": "仅 Master 可见",
+    "struck": "删除线",
+    "color": "颜色",
+    "colors": {
+      "default": "默认",
+      "red": "红色",
+      "green": "绿色",
+      "purple": "紫色",
+      "blue": "蓝色",
+      "gold": "金色"
+    },
+    "card": {
+      "editDocument": "卡片：{{name}}",
+      "editText": "文本",
+      "newText": "新文本",
+      "text": "文本",
+      "size": "大小",
+      "sizes": {
+        "normal": "正常",
+        "large": "大",
+        "title": "标题"
+      },
+      "caption": "说明文字",
+      "captionHint": "仅用于这张地图；替代文档的副标题。",
+      "image": "图片",
+      "imageHint": "仅用于这张地图。第一张是文档的首选图片，在你选择其他图片之前，卡片会一直使用它。",
+      "imageNumbered": "图片 {{number}}",
+      "remove": "从地图中移除"
+    },
+    "group": {
+      "title": "分组",
+      "name": "标题",
+      "namePlaceholder": "对手与敌人",
+      "remove": "移除分组",
+      "untitled": "未命名分组"
+    },
+    "arrow": {
+      "title": "箭头",
+      "direction": "方向",
+      "forward": "单向",
+      "both": "双向",
+      "none": "仅线条",
+      "label": "标签",
+      "labelTowards": "指向 {{name}} 的标签",
+      "delete": "删除箭头"
+    }
+  }
+}
