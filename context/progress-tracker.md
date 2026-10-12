@@ -101,6 +101,11 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-12
 
+- **Map cards easier to move and select** (28 follow-up, 10-12, frontend
+  only, no migration): cards get a grab cursor, a hover ring and a grip
+  mark; dragging on empty canvas now draws a selection box (partial overlap)
+  and the board pans with the middle/right button or Space. Selection drags
+  are saved through `onSelectionDragStop`.
 - **Map card images and no label suggestions** (28 follow-up, 10-12): a
   Document card on a map shows an image as its whole background fading into
   the card at the bottom, where the name is. The editor picks which of the

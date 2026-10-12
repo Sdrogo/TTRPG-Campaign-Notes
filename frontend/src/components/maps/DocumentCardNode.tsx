@@ -1,6 +1,6 @@
 import { ActionIcon, Box, Image, Paper, Stack, Text } from '@mantine/core';
 import type { NodeProps } from '@xyflow/react';
-import { PencilSimpleIcon } from '@phosphor-icons/react';
+import { DotsSixIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { CARD_WIDTH, colorValue } from '../../lib/maps';
@@ -13,6 +13,28 @@ const IMAGE_CARD_HEIGHT = CARD_WIDTH * 1.5;
 // The image melts into the card's surface towards the name, like a Document
 // card's image does into its own.
 const FADE_INTO_CARD = 'linear-gradient(to bottom, transparent 30%, var(--bg-raised) 92%)';
+
+/** A mark that the card can be picked up and moved anywhere by its body. */
+function DragGrip() {
+  return (
+    <Box
+      pos="absolute"
+      top={2}
+      left={2}
+      aria-hidden
+      style={{
+        pointerEvents: 'none',
+        background: 'rgba(0, 0, 0, 0.55)',
+        borderRadius: 'var(--mantine-radius-sm)',
+        padding: 2,
+        lineHeight: 0,
+        color: 'var(--text-primary)',
+      }}
+    >
+      <DotsSixIcon size={16} weight="bold" />
+    </Box>
+  );
+}
 
 /**
  * A Document on a map (spec 28 Decision 8): its image (the one chosen for the
@@ -31,6 +53,7 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
 
   return (
     <Paper
+      className="map-card"
       withBorder
       w={CARD_WIDTH}
       bg="var(--bg-raised)"
@@ -84,6 +107,7 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
           </Text>
         )}
       </Stack>
+      {editable && <DragGrip />}
       {editable && (
         <Box pos="absolute" top={2} right={2}>
           <ActionIcon
