@@ -104,6 +104,10 @@ One line per unit; dates 2026, newest first. Spec files live in
   View As; an arrow connects when dropped anywhere on the target card.
   Checked in Chromium through a local harness (drag, drop into a group,
   group drag, connecting), not against a running backend.
+- **Hidden cards keep their place when their group is deleted** (28_1 fix,
+  10-12, PR #160): a card in a group is stored relative to the group, so
+  deleting the group left the cards the editor can't see at the board's
+  origin; `plan_board_edit` now rewrites them with absolute positions.
 
 ### 2026-10-08 → 10-10
 
