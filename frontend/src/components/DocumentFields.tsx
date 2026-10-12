@@ -22,7 +22,10 @@ interface DocumentFieldsProps {
   autoFocus?: boolean;
 }
 
-/** Controlled name/description/visibility/tag inputs for a Document. */
+/** The backend's limit on a subtitle (spec 28_0 S1). */
+const SUBTITLE_MAX_LENGTH = 120;
+
+/** Controlled name/subtitle/description/visibility/tag inputs for a Document. */
 export function DocumentFields({
   values,
   onChange,
@@ -43,6 +46,14 @@ export function DocumentFields({
         onChange={(event) => set({ name: event.currentTarget.value })}
         required
         autoFocus={autoFocus}
+      />
+      {/* Spec 28_0: one line under the name, like "La Idol". */}
+      <TextInput
+        label={t('documents.fields.subtitle')}
+        description={t('documents.fields.subtitleHint')}
+        value={values.subtitle}
+        onChange={(event) => set({ subtitle: event.currentTarget.value })}
+        maxLength={SUBTITLE_MAX_LENGTH}
       />
       <MentionTextarea
         label={t('common.description')}

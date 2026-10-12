@@ -519,6 +519,11 @@ describe('viewing the Room as a member', () => {
     expect(
       screen.queryByRole('button', { name: 'Azioni per la Stanza La Cripta' }),
     ).not.toBeInTheDocument();
+    // The preview has no Room menu but still reaches the maps (spec 28).
+    expect(screen.getByRole('link', { name: 'Mappe' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/maps',
+    );
   });
 
   it('is not offered to a Player', async () => {

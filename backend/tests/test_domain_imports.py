@@ -159,10 +159,10 @@ def test_a_file_that_is_not_one_of_the_formats_is_refused(content: bytes) -> Non
 
 def test_a_newer_schema_version_is_refused() -> None:
     with pytest.raises(ImportRefusedError) as raised:
-        _json({"schema_version": 2, "documents": [{"name": "A"}]})
+        _json({"schema_version": 3, "documents": [{"name": "A"}]})
 
     assert raised.value.key == "errors.import.unsupportedSchema"
-    assert raised.value.params["version"] == 2
+    assert raised.value.params["version"] == 3
 
 
 def test_a_file_with_no_document_is_refused() -> None:
@@ -663,3 +663,54 @@ def test_document_key_and_fold() -> None:
     assert document_key(2, 5) == "2:5"
     assert fold("  NpC ") == "npc"
     assert isinstance(ImportRefusedError("k"), DomainError)
+
+
+# --- Subtitle (spec 28_0 S4) ----------------------------------------------------
+
+
+def test_a_json_subtitle_is_read_and_planned_cleaned() -> None:
+    parsed = _json(
+        {"schema_version": 2, "documents": [{"name": "Mirai", "subtitle": " La  Idol "}]}
+    )
+
+    assert parsed.documents[0].subtitle == " La  Idol "
+    plan = plan_import([parsed], _context())
+    assert plan.documents[0].subtitle == "La Idol"
+    assert _json({"documents": [{"name": "Old"}]}).documents[0].subtitle is None
+
+
+def test_the_subtitle_line_of_the_markdown_export_is_read() -> None:
+    doc_id = str(uuid.uuid4())
+    parsed = parse_file(
+        "r.md",
+        (
+            f'### <a id="doc-{doc_id}"></a>Mirai\n\n*La \\*Idol\\**\n\n'
+            "- Visibility: room\n\nShe sings.\n"
+        ).encode(),
+    )
+
+    (document,) = parsed.documents
+    assert (document.subtitle, document.visibility, document.text) == (
+        "La *Idol*",
+        "room",
+        ("She sings.",),
+    )
+    bare = parse_file("r.md", f'### <a id="doc-{doc_id}"></a>Mirai\n'.encode())
+    assert bare.documents[0].subtitle is None
+
+
+def test_a_subtitle_over_the_limit_refuses_the_import() -> None:
+    with pytest.raises(ImportRefusedError) as raised:
+        validate_files(_files(_document(subtitle="x" * 121)))
+
+    assert raised.value.key == "errors.import.subtitleTooLong"
+    validate_files(_files(_document(subtitle="x" * 120)))
+
+
+def test_a_job_payload_without_subtitles_still_reads() -> None:
+    parsed = _json({"documents": [{"name": "A", "subtitle": "B"}]})
+    payload = file_to_json(parsed)
+
+    assert file_from_json(payload) == parsed
+    del payload["documents"][0]["subtitle"]
+    assert file_from_json(payload).documents[0].subtitle is None

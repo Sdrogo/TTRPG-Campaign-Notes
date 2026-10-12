@@ -98,6 +98,7 @@ export function PromoteToDocumentModal({
   const promote = usePromoteComment(roomId, documentId);
   const [values, setValues] = useState<DocumentFormValues>({
     name: '',
+    subtitle: '',
     description: promotedText(comment),
     visibility: startingVisibility(comment),
     tagIds: [],

@@ -17,6 +17,8 @@ export interface RawVersion {
 
 /** A version with its texts, as the backend sends it. */
 export interface RawVersionDetail extends RawVersion {
+  /** The Document's subtitle then (spec 28_0), null when it had none. */
+  subtitle: string | null;
   description: string;
   notes: VersionNote[];
 }
@@ -36,10 +38,15 @@ export function toVersion(raw: RawVersion): Version {
   };
 }
 
-/** Maps the wire shape of one version in full to `VersionDetail`. */
+/**
+ * Maps the wire shape of one version in full to `VersionDetail`. The subtitle
+ * (spec 28_0) is compared and shown with the name, as "Name · Subtitle", so a
+ * change to it shows up in the comparison and counts for the restore.
+ */
 export function toVersionDetail(raw: RawVersionDetail): VersionDetail {
   return {
     ...toVersion(raw),
+    title: raw.subtitle ? `${raw.title} · ${raw.subtitle}` : raw.title,
     description: raw.description,
     notes: raw.notes.map((note) => ({
       id: note.id,

@@ -567,7 +567,7 @@ async def test_a_file_that_is_refused_writes_nothing(
         "too big": (("big.json", b"{" + b" " * (5 * 1024 * 1024)), 413),
         "not json": (("bad.json", b"{oops"), 422),
         "not utf-8": (("bad.md", b"\xff\xfe\x00"), 422),
-        "newer schema": (_json_file({"name": "A"}, schema_version=2), 422),
+        "newer schema": (_json_file({"name": "A"}, schema_version=3), 422),
         "no document": (("empty.json", b'{"documents": []}'), 422),
         "too many documents": (_json_file(*many), 422),
         "too many images": (_json_file(images), 422),

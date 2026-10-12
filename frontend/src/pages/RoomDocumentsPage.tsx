@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ActionIcon,
   Affix,
@@ -15,7 +15,7 @@ import {
   Switch,
   UnstyledButton,
 } from '@mantine/core';
-import { CaretDownIcon, CaretRightIcon, PlusIcon } from '@phosphor-icons/react';
+import { CaretDownIcon, CaretRightIcon, MapTrifoldIcon, PlusIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
 import { useTags } from '../hooks/useTags';
@@ -155,6 +155,20 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               </UnstyledButton>
             )}
           </Group>
+          {/* A preview has no Room menu, but the maps are part of what it shows. */}
+          {readOnly && (
+            <ActionIcon
+              component={Link}
+              to={`/rooms/${roomId}/maps`}
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label={t('maps.title')}
+              title={t('maps.title')}
+            >
+              <MapTrifoldIcon size={20} />
+            </ActionIcon>
+          )}
           {room.data && me && !readOnly && (
             <RoomTitleActions
               roomId={roomId}

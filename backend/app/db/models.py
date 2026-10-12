@@ -220,6 +220,11 @@ class AuditLogRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+# A Document's subtitle (spec 28_0) is NULL when unset, and a NULL would make
+# the whole `||` of its search vector NULL.
+_SUBTITLE_TEXT = "coalesce(subtitle, '')"
+
+
 class DocumentRow(Base):
     """A Document. Its Owners, Tags, grants, images and Posts live in their own
     tables and cascade with it."""
@@ -232,6 +237,8 @@ class DocumentRow(Base):
         UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE")
     )
     name: Mapped[str] = mapped_column(String(200))
+    # One line under the name (spec 28_0), None when unset.
+    subtitle: Mapped[str | None] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(Text, default="")
     visibility: Mapped[str] = mapped_column(String(20), default="room")
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
@@ -242,11 +249,14 @@ class DocumentRow(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-    # Spec 21: the name weighs more than the description.
+    # Spec 21: the name weighs more than the description; spec 28_0: the
+    # subtitle weighs like the name.
     search_vector: Mapped[str | None] = mapped_column(
         TSVECTOR,
         Computed(
-            f"{_search_vector('name', 'A')} || {_search_vector('description', 'B')}",
+            f"{_search_vector('name', 'A')} || "
+            f"{_search_vector(_SUBTITLE_TEXT, 'A')} || "
+            f"{_search_vector('description', 'B')}",
             persisted=True,
         ),
         deferred=True,
@@ -474,8 +484,8 @@ class DocumentReadRow(Base):
 
 
 class DocumentVersionRow(Base):
-    """A revision of a Document: its name, its description and its Notes
-    (spec 24b). `notes` is a list of `{id, title, description, visibility,
+    """A revision of a Document: its name, subtitle (spec 28_0), description
+    and Notes (spec 24b). `notes` is a list of `{id, title, description, visibility,
     selective_user_ids}` in display order. Deleted with the Document."""
 
     __tablename__ = "document_versions"
@@ -485,6 +495,7 @@ class DocumentVersionRow(Base):
         UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
     )
     name: Mapped[str] = mapped_column(String(200))
+    subtitle: Mapped[str | None] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(Text, default="")
     notes: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
     edited_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
@@ -721,3 +732,143 @@ class ImportJobRow(Base):
     error: Mapped[str | None] = mapped_column(String(200))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RelationshipMapRow(Base):
+    """A relationship map of a Room (spec 28_1): a free board of Documents,
+    text cards, groups and arrows that belong to it only. Its visibility uses
+    the Comment levels with `created_by` as the "Owner" (Decision 3).
+    Deleted with the Room; its groups, cards and arrows go with it."""
+
+    __tablename__ = "relationship_maps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str] = mapped_column(Text, default="")
+    visibility: Mapped[str] = mapped_column(String(20))
+    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RelationshipMapGrantRow(Base):
+    """A member who may see a Selective map besides its creator and the
+    Master."""
+
+    __tablename__ = "relationship_map_grants"
+
+    map_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_maps.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+
+
+class RelationshipMapGroupRow(Base):
+    """A framed box on a map holding cards (Decision 7); `x`, `y` is its top
+    left corner on the board."""
+
+    __tablename__ = "relationship_map_groups"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    map_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_maps.id", ondelete="CASCADE"), index=True
+    )
+    title: Mapped[str | None] = mapped_column(String(80))
+    color: Mapped[str] = mapped_column(String(10))
+    struck: Mapped[bool] = mapped_column(Boolean, default=False)
+    x: Mapped[float]
+    y: Mapped[float]
+    width: Mapped[float]
+    height: Mapped[float]
+
+
+class RelationshipMapCardRow(Base):
+    """A card on a map: a Document or a text card, exactly one of the two. A
+    Document is on a map at most once and its card goes with it (`ON DELETE
+    CASCADE`, Decision 10); leaving a group (deleted) keeps the card."""
+
+    __tablename__ = "relationship_map_cards"
+    __table_args__ = (
+        UniqueConstraint("map_id", "document_id", name="uq_relationship_map_cards_document"),
+        CheckConstraint(
+            "(document_id IS NULL) <> (text IS NULL)", name="ck_relationship_map_cards_kind"
+        ),
+        CheckConstraint(
+            "size IN ('normal', 'large', 'title')", name="ck_relationship_map_cards_size"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    map_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_maps.id", ondelete="CASCADE"), index=True
+    )
+    group_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_map_groups.id", ondelete="SET NULL")
+    )
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    text: Mapped[str | None] = mapped_column(String(300))
+    caption: Mapped[str | None] = mapped_column(String(80))
+    size: Mapped[str] = mapped_column(String(10), default="normal")
+    master_only: Mapped[bool] = mapped_column(Boolean, default=False)
+    color: Mapped[str] = mapped_column(String(10))
+    struck: Mapped[bool] = mapped_column(Boolean, default=False)
+    x: Mapped[float]
+    y: Mapped[float]
+
+
+class RelationshipMapArrowRow(Base):
+    """An arrow between two ends of a map, each a card or a group (Decision
+    5). Deleted with either end. `reverse_label` only on a two-way arrow."""
+
+    __tablename__ = "relationship_map_arrows"
+    __table_args__ = (
+        CheckConstraint(
+            "(from_card_id IS NULL) <> (from_group_id IS NULL)",
+            name="ck_relationship_map_arrows_from",
+        ),
+        CheckConstraint(
+            "(to_card_id IS NULL) <> (to_group_id IS NULL)", name="ck_relationship_map_arrows_to"
+        ),
+        CheckConstraint(
+            "from_card_id IS DISTINCT FROM to_card_id OR from_card_id IS NULL",
+            name="ck_relationship_map_arrows_card_ends_differ",
+        ),
+        CheckConstraint(
+            "from_group_id IS DISTINCT FROM to_group_id OR from_group_id IS NULL",
+            name="ck_relationship_map_arrows_group_ends_differ",
+        ),
+        CheckConstraint(
+            "direction IN ('forward', 'both', 'none')", name="ck_relationship_map_arrows_direction"
+        ),
+        CheckConstraint(
+            "reverse_label IS NULL OR direction = 'both'",
+            name="ck_relationship_map_arrows_reverse_label",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    map_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_maps.id", ondelete="CASCADE"), index=True
+    )
+    from_card_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_map_cards.id", ondelete="CASCADE")
+    )
+    from_group_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_map_groups.id", ondelete="CASCADE")
+    )
+    to_card_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_map_cards.id", ondelete="CASCADE")
+    )
+    to_group_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_map_groups.id", ondelete="CASCADE")
+    )
+    direction: Mapped[str] = mapped_column(String(10))
+    label: Mapped[str | None] = mapped_column(String(60))
+    reverse_label: Mapped[str | None] = mapped_column(String(60))
+    color: Mapped[str] = mapped_column(String(10))
+    master_only: Mapped[bool] = mapped_column(Boolean, default=False)

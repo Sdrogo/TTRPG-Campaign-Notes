@@ -363,6 +363,8 @@
     },
     "fields": {
       "descriptionHint": "Scrivi # per collegare un altro Documento.",
+      "subtitle": "Sottotitolo",
+      "subtitleHint": "Una riga sotto il nome, per esempio «La Idol».",
       "tags": "Tag",
       "newTag": "Nuovo tag",
       "newTagPlaceholder": "Es. Fazione"
@@ -833,6 +835,86 @@
         "title": "Cookie e memoria locale",
         "body": "L'app non usa cookie. Conserva alcuni elementi nella memoria del tuo browser, necessari al suo funzionamento: la sessione di accesso, la lingua scelta, voce e velocità della lettura ad alta voce, il personaggio con cui hai scritto l'ultima volta in ogni Stanza, gli avvisi sui PDF delle Stanze che hai chiuso, e un link d'invito aperto prima di accedere. Restano sul tuo dispositivo: la sessione viene rimossa quando esci, il resto quando cancelli i dati del browser."
       }
+    }
+  },
+  "maps": {
+    "title": "Mappe",
+    "create": "Nuova mappa",
+    "settings": "Impostazioni della mappa",
+    "delete": "Elimina mappa",
+    "deleteConfirmTitle": "Eliminare questa mappa?",
+    "deleteConfirmBody": "\"{{name}}\" verrà eliminata con tutto ciò che contiene. I Documenti restano.",
+    "signInRequired": "Accedi per vedere le mappe di questa Stanza.",
+    "backToDocuments": "Documenti",
+    "backToMaps": "Mappe",
+    "empty": "Ancora nessuna mappa.",
+    "loadError": "Impossibile caricare le mappe.",
+    "notFound": "Mappa non trovata.",
+    "documentCount_one": "{{count}} Documento",
+    "documentCount_other": "{{count}} Documenti",
+    "lastEdit": "modificata {{when}}",
+    "selectiveLabel": "Membri che possono vedere la mappa",
+    "unsaved": "Modifiche non salvate",
+    "saving": "Salvataggio…",
+    "saved": "Salvato",
+    "saveError": "Non salvato",
+    "retry": "Riprova",
+    "readOnlyOnPhone": "Su uno schermo così piccolo la mappa è in sola lettura.",
+    "addDocuments": "Aggiungi Documenti",
+    "addText": "Aggiungi testo",
+    "groupSelected": "Raggruppa",
+    "searchDocuments": "Cerca per nome",
+    "alreadyOnMap": "Già sulla mappa",
+    "addChosen_one": "Aggiungi {{count}} Documento",
+    "addChosen_other": "Aggiungi {{count}} Documenti",
+    "editCard": "Modifica la carta: {{name}}",
+    "editText": "Modifica il testo",
+    "editGroup": "Modifica il gruppo",
+    "editArrow": "Modifica la freccia: {{label}}",
+    "masterOnly": "Solo Master",
+    "masterOnlyArrow": "Visibile solo ai Master",
+    "masterOnlyCard": "Visibile solo ai Master",
+    "struck": "Barrato",
+    "color": "Colore",
+    "colors": {
+      "default": "Predefinito",
+      "red": "Rosso",
+      "green": "Verde",
+      "purple": "Viola",
+      "blue": "Blu",
+      "gold": "Oro"
+    },
+    "card": {
+      "editDocument": "Carta: {{name}}",
+      "editText": "Testo",
+      "newText": "Nuovo testo",
+      "text": "Testo",
+      "size": "Dimensione",
+      "sizes": {
+        "normal": "Normale",
+        "large": "Grande",
+        "title": "Titolo"
+      },
+      "caption": "Didascalia",
+      "captionHint": "Solo su questa mappa; al posto del sottotitolo del Documento.",
+      "remove": "Togli dalla mappa"
+    },
+    "group": {
+      "title": "Gruppo",
+      "name": "Titolo",
+      "namePlaceholder": "Avversari e nemici",
+      "remove": "Rimuovi il gruppo",
+      "untitled": "Gruppo senza titolo"
+    },
+    "arrow": {
+      "title": "Freccia",
+      "direction": "Direzione",
+      "forward": "In un senso",
+      "both": "In entrambi",
+      "none": "Solo linea",
+      "label": "Etichetta",
+      "labelTowards": "Etichetta verso {{name}}",
+      "delete": "Elimina la freccia"
     }
   }
 }

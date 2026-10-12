@@ -21,6 +21,7 @@ function document(id: string, name: string): Document {
     notes: [],
     files: [],
     playedBy: null,
+    subtitle: null,
   };
 }
 
@@ -109,6 +110,17 @@ describe('MentionSuggestions', () => {
     render();
 
     expect(screen.getByText('#Luoghi')).toBeInTheDocument();
+  });
+
+  // Spec 28_0 S4: the subtitle tells two Documents with the same name apart.
+  it("shows a Document's subtitle after its name", () => {
+    render({
+      candidates: [
+        { kind: 'document', document: { ...document('doc-2', 'Mirai'), subtitle: 'La Idol' }, tags: [] },
+      ],
+    });
+
+    expect(screen.getByRole('option')).toHaveTextContent('Mirai · La Idol');
   });
 
   it('counts the Documents behind a Tag', () => {

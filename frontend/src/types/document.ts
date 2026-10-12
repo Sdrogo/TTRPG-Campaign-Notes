@@ -21,6 +21,8 @@ export interface Document {
   id: string;
   roomId: string;
   name: string;
+  /** One line under the name (spec 28_0), null when it has none. */
+  subtitle: string | null;
   description: string;
   visibility: DocumentVisibility;
   images: DocumentImage[];
@@ -57,6 +59,8 @@ export interface Document {
  */
 export interface DocumentFormValues {
   name: string;
+  /** The subtitle as typed; empty for none (spec 28_0). */
+  subtitle: string;
   description: string;
   visibility: DocumentVisibility;
   tagIds: string[];

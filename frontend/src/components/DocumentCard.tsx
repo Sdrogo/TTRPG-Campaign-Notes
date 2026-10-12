@@ -99,13 +99,26 @@ export function DocumentCard({
         {/* Title block: name and visibility on top, Tags on their own line. */}
         <Stack gap={4}>
           <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
-            <Title
-              order={headingOrder}
-              fz="h4"
-              style={{ fontFamily: 'var(--font-display)', minWidth: 0, overflowWrap: 'anywhere' }}
-            >
-              {document.name}
-            </Title>
+            {/* Spec 28_0 S2: the name is one size up from the subtitle, which
+                takes the look the name had before, so every card's name
+                looks the same with or without one. */}
+            <Stack gap={0} style={{ minWidth: 0 }}>
+              <Title
+                order={headingOrder}
+                fz="h3"
+                style={{ fontFamily: 'var(--font-display)', overflowWrap: 'anywhere' }}
+              >
+                {document.name}
+              </Title>
+              {document.subtitle && (
+                <Text
+                  fz="h4"
+                  style={{ fontFamily: 'var(--font-display)', overflowWrap: 'anywhere' }}
+                >
+                  {document.subtitle}
+                </Text>
+              )}
+            </Stack>
             {!hasImages && marks}
           </Group>
           <TagList tags={tags} tagIds={document.tagIds} roomId={roomId} />

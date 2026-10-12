@@ -37,6 +37,7 @@ function doc(id: string, name: string, tagIds: string[] = []): Document {
     notes: [],
     files: [],
     playedBy: null,
+    subtitle: null,
   };
 }
 

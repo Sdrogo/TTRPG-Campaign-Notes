@@ -97,6 +97,13 @@ function MentionOption({ id, target, active, onHover, onPick }: MentionOptionPro
       <Box style={{ minWidth: 0 }}>
         <Text size="sm" style={{ overflowWrap: 'anywhere' }}>
           {mentionTargetName(target)}
+          {/* Spec 28_0 S4: the subtitle tells same-named Documents apart. */}
+          {target.kind === 'document' && target.document.subtitle && (
+            <Text span size="sm" c="dimmed">
+              {' · '}
+              {target.document.subtitle}
+            </Text>
+          )}
         </Text>
         {detail && (
           <Text size="xs" c="dimmed" truncate>

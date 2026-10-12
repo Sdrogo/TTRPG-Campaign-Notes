@@ -65,6 +65,7 @@
   {% for entry in chapter.entries if entry.paragraphs is defined %}
   <article class="document{% if entry.id in shared %} shares-page{% endif %}" id="{{ entry.anchor }}">
     <h2 class="document-title">{{ entry.name }}</h2>
+    {% if entry.subtitle %}<p class="document-subtitle">{{ entry.subtitle }}</p>{% endif %}
     {% if entry.image_url %}<figure class="document-image"><img src="{{ entry.image_url }}" alt=""></figure>{% endif %}
     <div class="description{% if entry.drop_cap %} drop-cap{% endif %}">
       {{ paragraphs(entry.paragraphs) }}

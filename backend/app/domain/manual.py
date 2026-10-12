@@ -111,7 +111,8 @@ class ManualComment:
 
 @dataclass(frozen=True)
 class ManualDocument:
-    """A Document's section: its anchor is `doc-<id>`."""
+    """A Document's section: its anchor is `doc-<id>`. `subtitle` is printed
+    under the name (spec 28_0)."""
 
     id: uuid.UUID
     name: str
@@ -119,6 +120,7 @@ class ManualDocument:
     paragraphs: Sequence[Paragraph]
     notes: Sequence[ManualNote]
     comments: Sequence[ManualComment]
+    subtitle: str | None = None
 
     @property
     def anchor(self) -> str:
@@ -340,6 +342,7 @@ def _manual_document(
     return ManualDocument(
         id=document.id,
         name=document.name,
+        subtitle=document.subtitle,
         image_url=_chosen_image(document.images),
         paragraphs=_paragraphs(document.description, resolve),
         notes=[

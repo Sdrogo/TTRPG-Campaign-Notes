@@ -891,6 +891,7 @@ describe('revealing in the Thread', () => {
     ownerIds: [],
     selectiveUserIds: [],
     playedBy: null,
+    subtitle: null,
     notes: [],
     files: [],
   };
