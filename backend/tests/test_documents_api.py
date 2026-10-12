@@ -666,6 +666,6 @@ async def test_deleting_a_document_cascades_tags_owners_comments_and_images(
         (DocumentImageRow, DocumentImageRow.document_id),
     ):
         remaining = (
-            await db_session.execute(select(model).where(column == document_id))
-        ).scalars().all()
+            (await db_session.execute(select(model).where(column == document_id))).scalars().all()
+        )
         assert remaining == [], f"{model.__name__} rows survived the Document's deletion"

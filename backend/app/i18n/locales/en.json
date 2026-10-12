@@ -14,7 +14,8 @@
       "onlyAdministratorCanDelete": "Only a Room Administrator can delete the Room",
       "nameRequired": "Room name is required",
       "onlyAdministratorCanChangeDefaultVisibility": "Only a Room Administrator can change the default visibility",
-      "invalidDefaultVisibility": "The default visibility can be Room, Master only or Private"
+      "invalidDefaultVisibility": "The default visibility can be Room, Master only or Private",
+      "onlyMasterCanDuplicate": "Only the Master can duplicate the Room"
     },
     "membership": {
       "notFound": "User is not a member of this room",
@@ -226,5 +227,8 @@
     "unknownMember": "Unknown member",
     "playedBy": "{character} (played by {player})",
     "pageAbbreviation": "p."
+  },
+  "room": {
+    "copySuffix": " (Copy)"
   }
 }
