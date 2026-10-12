@@ -16,10 +16,13 @@ const EMOJI_LABELS: Record<Language, () => Promise<{ default: unknown }>> = {
   es: () => import('@emoji-mart/data/i18n/es.json'),
   fr: () => import('@emoji-mart/data/i18n/fr.json'),
   it: () => import('@emoji-mart/data/i18n/it.json'),
+  ja: () => import('@emoji-mart/data/i18n/ja.json'),
+  ko: () => import('@emoji-mart/data/i18n/ko.json'),
   nl: () => import('@emoji-mart/data/i18n/nl.json'),
   pl: () => import('@emoji-mart/data/i18n/pl.json'),
   'pt-PT': () => import('@emoji-mart/data/i18n/pt.json'),
   ru: () => import('@emoji-mart/data/i18n/ru.json'),
+  'zh-Hans': () => import('@emoji-mart/data/i18n/zh.json'),
 };
 
 /**

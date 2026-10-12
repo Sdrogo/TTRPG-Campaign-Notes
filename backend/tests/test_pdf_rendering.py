@@ -60,8 +60,11 @@ _SAMPLES = {
     "es": "¿Mañana? ¡Sí! Ñandú",
     "fr": "Œuvre, être, naïve, où ç",
     "nl": "IJsselmeer, ëén, ïs",
+    "ja": "地下迷宮の物語、ひらがなとカタカナ「ア」",
+    "zh-Hans": "地下城的故事：简体中文。",
+    "ko": "지하 감옥의 이야기, 한글입니다.",
 }
-_BUNDLED_FONTS = ("IM-Fell", "Crimson-Text", "Lato", "PT-Serif")
+_BUNDLED_FONTS = ("IM-Fell", "Crimson-Text", "Lato", "PT-Serif", "Noto-Serif", "Noto-Sans")
 
 
 @pytest.mark.parametrize("style", ["gothic", "modern", "print"])
@@ -85,3 +88,35 @@ def test_every_bundled_style_covers_the_ui_languages_without_system_fonts(style:
         names.update(str(fonts[key].get_object()["/BaseFont"]) for key in fonts)
     assert names
     assert all(any(bundled in name for bundled in _BUNDLED_FONTS) for name in names), names
+
+
+@pytest.mark.parametrize(
+    ("lang", "script", "text"),
+    [("ja", "JP", "地下"), ("zh-Hans", "SC", "地下"), ("ko", "KR", "지하")],
+)
+@pytest.mark.parametrize("style", ["gothic", "modern", "print"])
+def test_the_page_language_picks_the_face_of_its_own_script(
+    style: str, lang: str, script: str, text: str
+) -> None:
+    """The text (地下 is Han in Japanese and Chinese; Korean has no Han in its
+    subset, only Hangul) is drawn from the face of the page's own script, not
+    the first CJK face in the stack."""
+    from pathlib import Path
+
+    weasyprint = _weasyprint()
+    assets = Path(__file__).parents[1] / "app" / "pdf"
+    html = (
+        f'<!doctype html><html lang="{lang}"><head><meta charset="utf-8">'
+        f'<link rel="stylesheet" href="styles/{style}.css"></head>'
+        f"<body><h2>{text}</h2><p>{text}</p></body></html>"
+    )
+
+    pdf: bytes = weasyprint.HTML(string=html, base_url=assets.as_uri() + "/").write_pdf()
+
+    names: set[str] = set()
+    for page in PdfReader(io.BytesIO(pdf)).pages:
+        resources: Any = page["/Resources"]
+        fonts: Any = resources.get("/Font", {})
+        names.update(str(fonts[key].get_object()["/BaseFont"]) for key in fonts)
+    family = "Sans" if style == "modern" else "Serif"
+    assert any(f"Noto-{family}-{script}" in name for name in names), names

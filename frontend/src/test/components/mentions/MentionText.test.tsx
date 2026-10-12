@@ -48,6 +48,16 @@ describe('MentionText', () => {
     expect(screen.getByText('Nessuna menzione qui.')).toBeInTheDocument();
   });
 
+  // The Document hover preview renders block elements, which can't nest in a <p>.
+  it('renders its root as a div, not a paragraph', () => {
+    const { container } = renderWithProviders(
+      withMentions(<MentionText text="Vai al #Il Cancello subito." />),
+    );
+
+    expect(screen.getByTestId('document-mention').closest('a')?.parentElement?.tagName).toBe('DIV');
+    expect(container.querySelector('p')).toBeNull();
+  });
+
   it('links a Document mention to the Document', () => {
     renderWithProviders(withMentions(<MentionText text="Vai al #Il Cancello subito." />));
 

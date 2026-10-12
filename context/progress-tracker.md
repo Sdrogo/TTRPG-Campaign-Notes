@@ -101,6 +101,24 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-12
 
+- **More UI languages, 34_3** (spec 34, 10-12, no migration): ja, ko and
+  zh-Hans (Simplified, Mainland wording), frontend and backend files drafted
+  by Claude, "beta" in the selector; flags (jp, kr, cn), emoji-mart labels
+  (`ja`, `ko`, `zh`), read-aloud tags `ja-JP`, `ko-KR`, `zh-CN`. The Room PDF
+  gets Noto Serif and Sans subsets for each script (about 4,000 to 5,000
+  glyphs, `.woff`, 10 MB in all) as per-glyph fallbacks in every style, so
+  CJK content renders whatever the page language; `:lang(zh)` and `:lang(ko)`
+  put their own Han glyphs first, and for CJK pages the Gothic drop cap,
+  hyphenation and synthesized bold/italic are off. Tests: the font-coverage
+  test now includes the three scripts, and a new one checks the page
+  language picks the right script's face. Also: the privacy intro of every
+  non-Italian/English language now says the Italian and English texts prevail
+  (spec 34 Decision 10; it was missing in 34_2). Open for a native check: 開示,
+  揭示 and 공개 for "Reveal", 룸 vs 방 for Room. `zh-Hant` stays later.
+- **Mention preview nesting fix** (10-12, PR #172, frontend only):
+  `MentionText` renders its root as a `div` (not Mantine's `<p>`) so the
+  hover preview card (headings, divs, paragraphs) nests validly; a test
+  guards the root element.
 - **More UI languages, 34_2** (spec 34, 10-12, no migration): de, es, fr, nl,
   pl, pt-PT and ru, frontend and backend files drafted by Claude and shown
   as "beta" in the selector; simplified flags; lazy-loaded; the selector
@@ -160,6 +178,17 @@ One line per unit; dates 2026, newest first. Spec files live in
   10-12, PR #160): a card in a group is stored relative to the group, so
   deleting the group left the cards the editor can't see at the board's
   origin; `plan_board_edit` now rewrites them with absolute positions.
+
+- **Map arrow dot grabbable again** (28_2 fix, 10-12, PR #170): the card
+  image and text were laid over the arrow handle and the card's
+  `overflow: hidden` cut it in half, so arrows could not be drawn; the
+  handles now have `z-index: 1` and only the image layer is clipped.
+- **Arrow labels stay clear of the cards** (28_2 fix, 10-12): a label
+  slides along its arrow (`placeLabel`) until its box no longer touches the
+  two cards it joins nor the other label; the box size is estimated from
+  the text. When the arrow is too short for that, the label moves sideways
+  (right or left, whichever clears the cards first) instead of staying
+  centered over them.
 
 ### 2026-10-08 → 10-10
 

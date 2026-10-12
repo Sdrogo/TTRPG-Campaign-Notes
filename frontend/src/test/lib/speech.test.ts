@@ -106,7 +106,7 @@ describe('speech preferences', () => {
   });
 
   it('drops what it cannot read: an unknown language, an unoffered speed, bad JSON', () => {
-    localStorage.setItem('ttrpg.speech', JSON.stringify({ voices: { ja: 'x', en: 3 }, rate: 9 }));
+    localStorage.setItem('ttrpg.speech', JSON.stringify({ voices: { tr: 'x', en: 3 }, rate: 9 }));
     expect(readSpeechPreferences()).toEqual(DEFAULT_SPEECH_PREFERENCES);
     localStorage.setItem('ttrpg.speech', JSON.stringify({ voices: null, rate: 1.5 }));
     expect(readSpeechPreferences()).toEqual({ voices: {}, rate: 1.5 });

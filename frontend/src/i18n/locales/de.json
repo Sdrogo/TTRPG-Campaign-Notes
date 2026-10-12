@@ -814,7 +814,7 @@
     "back": "Zurück zur App",
     "title": "Datenschutzerklärung",
     "updated": "Zuletzt aktualisiert: {{date}}",
-    "intro": "Diese Erklärung beschreibt, welche personenbezogenen Daten diese App verarbeitet, warum, wo sie gespeichert werden und wie du deine Rechte nach der Datenschutz-Grundverordnung (DSGVO) ausüben kannst.",
+    "intro": "Diese Erklärung beschreibt, welche personenbezogenen Daten diese App verarbeitet, warum, wo sie gespeichert werden und wie du deine Rechte nach der Datenschutz-Grundverordnung (DSGVO) ausüben kannst. Verbindlich sind der italienische und der englische Text; bei Abweichungen gehen sie dieser Übersetzung vor.",
     "sections": {
       "controller": {
         "title": "Wer verantwortlich ist",

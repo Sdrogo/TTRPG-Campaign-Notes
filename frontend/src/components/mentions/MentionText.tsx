@@ -51,8 +51,10 @@ export function MentionText({ text, linked = true, members, ...textProps }: Ment
     );
   }, [text, members, mentions?.documents, mentions?.tags]);
 
+  // A div, not Mantine's default <p>: a Document mention's hover preview
+  // renders a whole card (headings, divs, paragraphs), which can't nest in a <p>.
   return (
-    <Text {...textProps}>
+    <Text component="div" {...textProps}>
       {segments.map((segment, index) => {
         if (segment.kind === 'text') {
           return segment.text;

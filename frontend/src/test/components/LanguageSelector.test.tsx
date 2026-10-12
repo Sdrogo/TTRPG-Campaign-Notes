@@ -41,10 +41,13 @@ describe('LanguageSelector', () => {
       'Deutschbeta',
       'Españolbeta',
       'Françaisbeta',
+      '日本語beta',
+      '한국어beta',
       'Nederlandsbeta',
       'Polskibeta',
       'Portuguêsbeta',
       'Русскийbeta',
+      '简体中文beta',
     ]);
     expect(within(menu).getByRole('menuitem', { name: 'Italiano' })).toHaveAttribute(
       'aria-current',

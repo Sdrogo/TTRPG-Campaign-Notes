@@ -16,10 +16,13 @@ export const SUPPORTED_LANGUAGES = [
   'de',
   'es',
   'fr',
+  'ja',
+  'ko',
   'nl',
   'pl',
   'pt-PT',
   'ru',
+  'zh-Hans',
 ] as const;
 
 /** One of `SUPPORTED_LANGUAGES`. */
@@ -119,10 +122,13 @@ const LAZY_LOADERS: Readonly<Record<string, () => Promise<{ default: Resources }
   de: () => import('./locales/de.json'),
   es: () => import('./locales/es.json'),
   fr: () => import('./locales/fr.json'),
+  ja: () => import('./locales/ja.json'),
+  ko: () => import('./locales/ko.json'),
   nl: () => import('./locales/nl.json'),
   pl: () => import('./locales/pl.json'),
   'pt-PT': () => import('./locales/pt-PT.json'),
   ru: () => import('./locales/ru.json'),
+  'zh-Hans': () => import('./locales/zh-Hans.json'),
 };
 
 /**

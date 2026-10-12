@@ -4,7 +4,20 @@ import json
 from pathlib import Path
 from typing import Any
 
-SUPPORTED_LOCALES: tuple[str, ...] = ("en", "it", "de", "es", "fr", "nl", "pl", "pt-PT", "ru")
+SUPPORTED_LOCALES: tuple[str, ...] = (
+    "en",
+    "it",
+    "de",
+    "es",
+    "fr",
+    "ja",
+    "ko",
+    "nl",
+    "pl",
+    "pt-PT",
+    "ru",
+    "zh-Hans",
+)
 DEFAULT_LOCALE = "en"
 
 # Browser tags that don't name a locale file as written (spec 34): a bare

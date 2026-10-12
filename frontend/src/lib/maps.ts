@@ -496,6 +496,63 @@ export function pointAlong(from: Point, to: Point, t: number): Point {
   return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
 }
 
+/** Rough size of an arrow label's box, from its text (the xs font, 1px border, 6px padding). */
+export function labelSize(text: string): { width: number; height: number } {
+  return { width: Math.ceil(text.length * 7) + 14, height: 24 };
+}
+
+/** Whether two rectangles come within `gap` pixels of each other (or overlap). */
+function overlaps(a: Rect, b: Rect, gap: number): boolean {
+  return (
+    a.x < b.x + b.width + gap &&
+    b.x < a.x + a.width + gap &&
+    a.y < b.y + b.height + gap &&
+    b.y < a.y + a.height + gap
+  );
+}
+
+/**
+ * Where an arrow's label (its center) goes: the point of the line closest to
+ * `preferred` (a fraction of the way from `from` to `to`) where the label's
+ * box clears every rectangle in `avoid` (the cards the arrow joins, and the
+ * labels already placed), so a card never covers it. When nowhere along the
+ * line is clear (a short arrow between cards), the label moves sideways, to
+ * the right or the left, the least it takes to clear them, still beside the
+ * arrow. When even that finds no room, it stays at `preferred`.
+ */
+export function placeLabel(
+  from: Point,
+  to: Point,
+  preferred: number,
+  size: { width: number; height: number },
+  avoid: Rect[],
+): Point {
+  const STEPS = 50;
+  const GAP = 6;
+  const SHIFT_STEP = 8;
+  const MAX_SHIFT = 400;
+  const clearAt = (at: Point): boolean => {
+    const box = { x: at.x - size.width / 2, y: at.y - size.height / 2, ...size };
+    return !avoid.some((rect) => overlaps(box, rect, GAP));
+  };
+  for (let shift = 0; shift <= MAX_SHIFT; shift += SHIFT_STEP) {
+    for (const dx of shift === 0 ? [0] : [shift, -shift]) {
+      let best: number | null = null;
+      for (let i = 0; i <= STEPS; i += 1) {
+        const t = i / STEPS;
+        if (best !== null && Math.abs(t - preferred) >= Math.abs(best - preferred)) continue;
+        const at = pointAlong(from, to, t);
+        if (clearAt({ x: at.x + dx, y: at.y })) best = t;
+      }
+      if (best !== null) {
+        const at = pointAlong(from, to, best);
+        return { x: at.x + dx, y: at.y };
+      }
+    }
+  }
+  return pointAlong(from, to, preferred);
+}
+
 /**
  * The image a card shows from its Document's `images` (favorite first): the
  * one chosen for it, else the favorite. Undefined when there are none.

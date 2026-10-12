@@ -1,7 +1,7 @@
 import { BaseEdge, EdgeLabelRenderer, useInternalNode, type EdgeProps } from '@xyflow/react';
 import { Text, UnstyledButton } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { arrowEnds, colorValue, pointAlong, type Point, type Rect } from '../../lib/maps';
+import { arrowEnds, colorValue, labelSize, placeLabel, type Point, type Rect } from '../../lib/maps';
 import type { MapEdge } from '../../types/mapNodes';
 
 function rectOf(node: ReturnType<typeof useInternalNode>): Rect | null {
@@ -26,13 +26,21 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
   const { from, to } = arrowEnds(sourceRect, targetRect);
   const color = colorValue(arrow.color);
 
-  const labels: { text: string; at: Point }[] = [];
+  // Each label slides along the arrow until no card covers it (nor the other label).
+  const wanted: { text: string; t: number }[] = [];
   if (arrow.direction === 'both') {
-    if (arrow.label) labels.push({ text: arrow.label, at: pointAlong(from, to, 0.75) });
-    if (arrow.reverseLabel) labels.push({ text: arrow.reverseLabel, at: pointAlong(from, to, 0.25) });
+    if (arrow.label) wanted.push({ text: arrow.label, t: 0.75 });
+    if (arrow.reverseLabel) wanted.push({ text: arrow.reverseLabel, t: 0.25 });
   } else if (arrow.label) {
-    labels.push({ text: arrow.label, at: pointAlong(from, to, 0.5) });
+    wanted.push({ text: arrow.label, t: 0.5 });
   }
+  const avoid: Rect[] = [sourceRect, targetRect];
+  const labels: { text: string; at: Point }[] = wanted.map(({ text, t }) => {
+    const size = labelSize(text);
+    const at = placeLabel(from, to, t, size, avoid);
+    avoid.push({ x: at.x - size.width / 2, y: at.y - size.height / 2, ...size });
+    return { text, at };
+  });
 
   return (
     <>
