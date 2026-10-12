@@ -197,6 +197,22 @@ describe('MapBoard', () => {
     expect(last().cards.find((c) => c.id === 'fire')).toMatchObject({ x: 700, y: 40 });
   });
 
+  it('keeps panning with a finger on a touch screen, with no selection box', () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      ...original(query),
+      matches: query === '(pointer: coarse)',
+    })) as typeof original;
+    try {
+      renderBoard();
+      expect(flow.props.selectionOnDrag).toBe(false);
+      expect(flow.props.panOnDrag).toBe(true);
+      expect(screen.queryByText(/Trascina sullo sfondo/)).not.toBeInTheDocument();
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
   it('keeps panning with a plain drag when not editable', () => {
     renderBoard({ editable: false });
     expect(flow.props.selectionOnDrag).toBe(false);
