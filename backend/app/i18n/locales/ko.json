@@ -1,0 +1,235 @@
+{
+  "errors": {
+    "auth": {
+      "missingToken": "Bearer 토큰이 없습니다",
+      "invalidToken": "토큰이 유효하지 않거나 만료되었습니다"
+    },
+    "room": {
+      "notFound": "룸을 찾을 수 없습니다",
+      "notAMember": "이 룸의 멤버가 아닙니다",
+      "onlyMasterCanChangeSettings": "Master만 이 룸의 설정을 변경할 수 있습니다",
+      "onlyAdministratorCanChangeRoles": "룸 Admin만 역할을 변경할 수 있습니다",
+      "onlyAdministratorCanRemoveMembers": "룸 Admin만 멤버를 내보낼 수 있습니다",
+      "onlyAdministratorChangesImage": "룸 Admin만 룸 이미지를 변경할 수 있습니다",
+      "onlyAdministratorCanDelete": "룸 Admin만 룸을 삭제할 수 있습니다",
+      "nameRequired": "룸 이름이 필요합니다",
+      "onlyAdministratorCanChangeDefaultVisibility": "룸 Admin만 기본 공개 범위를 변경할 수 있습니다",
+      "invalidDefaultVisibility": "기본 공개 범위는 룸, Master 전용, 비공개 중 하나여야 합니다",
+      "onlyMasterCanDuplicate": "Master만 룸을 복제할 수 있습니다"
+    },
+    "membership": {
+      "notFound": "이 사용자는 룸의 멤버가 아닙니다",
+      "lastMaster": "후임자 없이 마지막 Master를 제거할 수 없습니다",
+      "lastAdministrator": "후임자 없이 마지막 Admin을 제거할 수 없습니다",
+      "noChangeRequested": "요청에는 역할 또는 Admin 플래그의 변경이 포함되어야 합니다"
+    },
+    "document": {
+      "notFound": "문서를 찾을 수 없습니다",
+      "nameRequired": "문서 이름이 필요합니다",
+      "subtitleTooLong": "부제목은 최대 {max}자까지 가능합니다",
+      "creationDisabled": "이 룸에서는 Player의 문서 생성이 비활성화되어 있습니다",
+      "invalidTagIds": "tag_ids 중 이 룸에 맞지 않는 값이 있습니다",
+      "notOwner": "Owner(또는 Master)만 할 수 있습니다",
+      "alreadyOwner": "이미 이 문서의 Owner입니다",
+      "notAnOwner": "이 사용자는 이 문서의 지정된 Owner가 아닙니다",
+      "tooManyImages": "문서에는 이미지를 최대 {max}개까지 넣을 수 있습니다"
+    },
+    "comment": {
+      "notFound": "댓글을 찾을 수 없습니다",
+      "bodyRequired": "댓글은 비워 둘 수 없습니다",
+      "tooLong": "댓글은 최대 {max}자까지 가능합니다",
+      "notAuthor": "작성자만 이 댓글을 수정할 수 있습니다",
+      "notAuthorImages": "작성자만 이 댓글의 이미지를 변경할 수 있습니다",
+      "cannotDelete": "작성자 또는 Master만 이 댓글을 삭제할 수 있습니다",
+      "deleted": "이 댓글은 삭제되었습니다",
+      "alreadyDeleted": "이 댓글은 이미 삭제되었습니다",
+      "tooManyImages": "댓글에는 이미지를 최대 {max}개까지 넣을 수 있습니다",
+      "invalidSelectiveUsers": "selective_user_ids는 모두 이 룸의 멤버여야 합니다",
+      "parentNotFound": "답글을 달려는 댓글을 찾을 수 없습니다",
+      "parentDeleted": "삭제된 댓글에는 답글을 달 수 없습니다",
+      "replyWiderThanParent": "답글은 원래 댓글을 볼 수 없는 사람에게 보이도록 할 수 없습니다",
+      "cannotPin": "Owner 또는 Master만 이 문서의 댓글을 고정할 수 있습니다",
+      "pinReply": "최상위 댓글만 고정할 수 있습니다",
+      "tooManyPinned": "문서에는 고정된 댓글을 최대 {max}개까지 둘 수 있습니다",
+      "cannotResolve": "작성자, Owner 또는 Master만 이 토론을 해결 처리할 수 있습니다",
+      "resolveReply": "최상위 댓글의 토론만 해결 처리할 수 있습니다",
+      "cannotPromote": "Owner 또는 Master만 이 문서의 댓글을 승격할 수 있습니다",
+      "cannotPromoteIntoDocument": "내가 소유한 문서로만 댓글을 승격할 수 있습니다",
+      "promoteIntoSameDocument": "댓글을 자신이 속한 문서에 새 문서로 승격할 수 없습니다",
+      "promotionWidens": "이 댓글을 승격하면 지금은 읽을 수 없는 멤버에게도 보입니다. 계속하려면 확인하세요",
+      "promoteDocumentRequired": "댓글을 승격할 문서를 선택하세요"
+    },
+    "reaction": {
+      "invalidEmoji": "리액션은 이모지 하나여야 합니다",
+      "commentDeleted": "삭제된 댓글에는 리액션을 남길 수 없습니다",
+      "tooMany": "댓글에는 서로 다른 이모지를 최대 {max}개까지 달 수 있습니다"
+    },
+    "character": {
+      "notFound": "캐릭터를 찾을 수 없습니다",
+      "playerNotAMember": "캐릭터의 플레이어는 이 룸의 멤버여야 합니다",
+      "cannotPostAs": "내가 플레이하는 캐릭터로만 작성할 수 있습니다(Master는 모든 문서로 작성할 수 있습니다)"
+    },
+    "version": {
+      "notFound": "버전을 찾을 수 없습니다"
+    },
+    "note": {
+      "notFound": "노트를 찾을 수 없습니다",
+      "titleRequired": "노트에는 제목이 필요합니다",
+      "titleTooLong": "노트 제목은 최대 {max}자까지 가능합니다",
+      "notOwner": "Owner(또는 Master)만 이 문서의 노트를 관리할 수 있습니다",
+      "tooMany": "문서에는 노트를 최대 {max}개까지 둘 수 있습니다",
+      "invalidOrder": "note_ids에는 볼 수 있는 모든 노트가 정확히 한 번씩 나열되어야 합니다",
+      "invalidSelectiveUsers": "selective_user_ids는 모두 이 룸의 멤버여야 합니다"
+    },
+    "tag": {
+      "notAllowedToManage": "Admin 또는 Master만 태그를 관리할 수 있습니다",
+      "notFound": "태그를 찾을 수 없습니다",
+      "nameRequired": "태그 이름이 필요합니다",
+      "duplicateName": "이 룸에 같은 이름의 태그가 이미 있습니다",
+      "onlyAdministratorCanSetMainTags": "Admin만 주요 태그를 선택할 수 있습니다",
+      "duplicateMainTag": "태그는 주요 태그에 한 번만 나타날 수 있습니다",
+      "unknownMainTag": "주요 태그가 이 룸의 태그가 아닙니다",
+      "emptyMainItem": "주요 항목에는 태그가 하나 이상 필요합니다",
+      "duplicateCombination": "이 태그 조합은 이미 목록에 있습니다"
+    },
+    "image": {
+      "notFound": "이미지를 찾을 수 없습니다",
+      "storageUnavailable": "이미지 저장소를 사용할 수 없습니다",
+      "tooLarge": "이미지가 업로드 한도 {mb}MB를 초과합니다",
+      "dimensionsTooLarge": "이미지 크기가 너무 큽니다",
+      "unsupportedFormat": "지원하지 않는 이미지 형식입니다: {format}",
+      "invalidFile": "유효한 이미지 파일이 아닙니다",
+      "remoteUnsupportedScheme": "http(s) 이미지 URL만 지원합니다",
+      "remoteHostUnresolved": "이미지 URL의 호스트를 확인할 수 없습니다",
+      "remoteNonPublic": "이미지 URL이 비공개 주소를 가리킵니다",
+      "remoteRedirectNoLocation": "이미지 URL이 이동 위치 없이 리디렉션되었습니다",
+      "remoteHttpStatus": "이미지 URL이 HTTP {status}을(를) 반환했습니다",
+      "remoteTooLarge": "URL의 이미지가 너무 큽니다",
+      "remoteDownloadFailed": "이미지 URL을 다운로드할 수 없습니다",
+      "remoteTooManyRedirects": "이미지 URL이 너무 많이 리디렉션되었습니다"
+    },
+    "file": {
+      "notPdf": "PDF 파일이 아닙니다",
+      "tooLarge": "파일이 {mb}MB 한도를 초과합니다",
+      "tooMany": "문서에는 파일을 최대 {max}개까지 둘 수 있습니다",
+      "notFound": "파일을 찾을 수 없습니다",
+      "storageUnavailable": "파일 저장소를 사용할 수 없습니다"
+    },
+    "invitation": {
+      "notFound": "초대를 찾을 수 없습니다",
+      "revoked": "초대가 취소되었습니다",
+      "expired": "초대가 만료되었습니다",
+      "alreadyMember": "이미 이 룸의 멤버입니다",
+      "onlyAdministratorCanInvite": "룸 Admin만 초대를 만들 수 있습니다",
+      "notAFriend": "친구만 직접 초대할 수 있습니다"
+    },
+    "account": {
+      "fields": {
+        "display_name": "표시 이름",
+        "pronouns": "호칭 대명사",
+        "bio": "소개"
+      },
+      "fieldTooLong": "{field}은(는) 최대 {max}자까지 가능합니다",
+      "deletionNotConfirmed": "계정 삭제를 확인하려면 DELETE를 입력하세요",
+      "successorNeeded": "계정을 삭제하기 전에 다음 룸에서 다른 사람을 Master 또는 Admin으로 지정하세요: {rooms}",
+      "signInDeletionFailed": "데이터는 삭제되었지만 로그인 계정을 삭제하지 못했습니다. 잠시 후 다시 시도하세요"
+    },
+    "friend": {
+      "notFound": "친구 또는 친구 요청을 찾을 수 없습니다",
+      "self": "자기 자신에게 친구 요청을 보낼 수 없습니다",
+      "noSharedRoom": "같은 룸에 있는 사람이나 친구 코드를 통해서만 친구 요청을 보낼 수 있습니다",
+      "userOrCode": "사용자 또는 친구 코드 중 하나를 보내세요",
+      "codeNotFound": "친구 코드를 찾을 수 없습니다",
+      "alreadyFriends": "이미 친구입니다",
+      "alreadyRequested": "이 사용자에게 이미 친구 요청을 보냈습니다",
+      "incomingPending": "이 사용자가 이미 친구 요청을 보냈습니다. 대신 그 요청에 응답하세요",
+      "cooldown": "30일이 지나기 전에 이 사용자의 요청을 거절했습니다",
+      "notRecipient": "요청을 받은 사용자만 응답할 수 있습니다",
+      "notPending": "이 요청은 이미 응답되었습니다",
+      "answerInstead": "이 요청을 삭제하지 말고 수락하거나 거절하세요"
+    },
+    "reveal": {
+      "onlyMaster": "Master만 콘텐츠를 공개할 수 있습니다",
+      "audienceRequired": "룸 전체 또는 공개할 멤버를 한 명 이상 선택하세요",
+      "notWidening": "접근 권한을 새로 얻는 사람이 없습니다. 공개는 콘텐츠를 볼 수 있는 사람을 늘릴 때만 가능합니다",
+      "invalidUsers": "user_ids는 모두 이 룸의 멤버여야 합니다",
+      "invalidNotes": "note_ids는 모두 이 문서의 노트여야 합니다",
+      "commentDeleted": "삭제된 댓글은 공개할 수 없습니다"
+    },
+    "history": {
+      "forbidden": "Master 또는 룸 Admin만 공개 범위 기록을 볼 수 있습니다",
+      "invalidCursor": "before는 이 룸 기록의 항목이어야 합니다"
+    },
+    "viewAs": {
+      "readOnly": "다른 멤버로 보는 동안에는 아무것도 변경할 수 없습니다",
+      "onlyMaster": "Master만 이 룸을 다른 멤버로 볼 수 있습니다",
+      "notAMember": "해당 사용자는 이 룸의 멤버가 아닙니다",
+      "invalidUser": "대신 볼 멤버가 올바르지 않습니다"
+    },
+    "export": {
+      "alreadyRunning": "이 룸에서 이미 PDF를 생성하고 있습니다",
+      "notFound": "내보내기를 찾을 수 없습니다"
+    },
+    "import": {
+      "unreadable": "{name}을(를) JSON 또는 Markdown 내보내기 파일로 읽을 수 없습니다",
+      "unsupportedSchema": "{name}은(는) 더 새로운 버전(스키마 {version})에서 내보낸 파일입니다. 이 앱은 스키마 {max}까지 읽을 수 있습니다",
+      "noDocuments": "{name}에 문서가 없습니다",
+      "tooManyFiles": "한 번에 최대 {max}개의 파일을 가져올 수 있습니다",
+      "tooManyDocuments": "한 번에 최대 {max}개의 문서를 가져올 수 있습니다",
+      "tooManyImages": "한 번에 최대 {max}개의 이미지를 가져올 수 있습니다",
+      "nameRequired": "파일 안의 문서에 이름이 없습니다",
+      "nameTooLong": "문서 이름 \"{name}...\"이(가) {max}자를 초과합니다",
+      "subtitleTooLong": "{name}의 부제목이 {max}자를 초과합니다",
+      "tooManyNotes": "{name}에 노트가 {max}개를 초과합니다",
+      "noteTitleInvalid": "{name}의 노트에 제목이 없거나 {max}자를 초과합니다",
+      "tagNameTooLong": "태그 이름 \"{name}...\"이(가) {max}자를 초과합니다",
+      "nothingSelected": "가져올 문서를 하나 이상 선택하세요",
+      "badChoices": "가져오기 선택이 올바르지 않습니다",
+      "cannotReplace": "Owner(또는 Master)만 {name}을(를) 대체할 수 있습니다",
+      "fileTooLarge": "{name}이(가) {max}MB를 초과합니다",
+      "alreadyRunning": "이 룸에서 이미 가져오기를 실행 중입니다",
+      "notFound": "가져오기를 찾을 수 없습니다"
+    },
+    "imageSearch": {
+      "emptyQuery": "검색할 내용을 입력하세요",
+      "throttled": "검색이 너무 많습니다. 1분 후에 다시 시도하세요",
+      "unavailable": "지금은 이미지 검색을 사용할 수 없습니다. 나중에 다시 시도하세요"
+    },
+    "map": {
+      "notFound": "지도를 찾을 수 없습니다",
+      "notManager": "지도를 만든 사람(또는 Master)만 이 지도를 변경할 수 있습니다",
+      "creationDisabled": "이 룸에서는 Player가 지도를 만들 수 없습니다",
+      "invalidSelectiveUsers": "selective_user_ids는 모두 이 룸의 멤버여야 합니다",
+      "nameRequired": "지도에는 이름이 필요합니다",
+      "tooLong": "{field}은(는) 최대 {max}자까지 가능합니다",
+      "tooMany": "룸에는 지도를 최대 {max}개까지 둘 수 있습니다",
+      "tooManyCards": "지도에는 카드를 최대 {max}장까지 둘 수 있습니다",
+      "tooManyGroups": "지도에는 그룹을 최대 {max}개까지 둘 수 있습니다",
+      "tooManyArrows": "지도에는 화살표를 최대 {max}개까지 둘 수 있습니다",
+      "invalidBoard": "이 보드는 저장할 수 없습니다. 지도에 없는 항목을 참조하고 있습니다",
+      "masterOnly": "Master만 카드나 화살표를 Master 전용으로 지정할 수 있습니다",
+      "imageNotFound": "해당 이미지는 이 문서의 이미지가 아닙니다",
+      "fields": {
+        "name": "이름",
+        "description": "설명",
+        "text": "카드 텍스트",
+        "caption": "캡션",
+        "label": "레이블",
+        "groupTitle": "그룹 제목"
+      }
+    }
+  },
+  "pdf": {
+    "contents": "목차",
+    "glossary": "용어집",
+    "other": "기타",
+    "documents": "문서",
+    "comments": "댓글",
+    "unknownMember": "알 수 없는 멤버",
+    "playedBy": "{character} (플레이어: {player})",
+    "pageAbbreviation": "p."
+  },
+  "room": {
+    "copySuffix": " (복사본)"
+  }
+}
