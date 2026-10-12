@@ -1,8 +1,11 @@
+import cnFlag from '../assets/flags/cn.svg';
 import deFlag from '../assets/flags/de.svg';
 import esFlag from '../assets/flags/es.svg';
 import frFlag from '../assets/flags/fr.svg';
 import gbFlag from '../assets/flags/gb.svg';
 import itFlag from '../assets/flags/it.svg';
+import jpFlag from '../assets/flags/jp.svg';
+import krFlag from '../assets/flags/kr.svg';
 import nlFlag from '../assets/flags/nl.svg';
 import plFlag from '../assets/flags/pl.svg';
 import ptFlag from '../assets/flags/pt.svg';
@@ -13,7 +16,7 @@ import type { Language } from '.';
  * The flag the language selector shows for each language. Flags keep their
  * official colors: they're content, not theme, so the no-hardcoded-colors
  * rule (ui-context.md) doesn't apply to them — which is also why they are
- * image files rather than components. English uses the UK flag, Portuguese the Portuguese one (the file is `pt-PT`). Flags are simplified: no coats of arms.
+ * image files rather than components. English uses the UK flag, Portuguese the Portuguese one (the file is `pt-PT`), Simplified Chinese the Chinese one (`zh-Hans`). Flags are simplified: no coats of arms.
  */
 export const LANGUAGE_FLAGS: Record<Language, string> = {
   it: itFlag,
@@ -21,10 +24,13 @@ export const LANGUAGE_FLAGS: Record<Language, string> = {
   de: deFlag,
   es: esFlag,
   fr: frFlag,
+  ja: jpFlag,
+  ko: krFlag,
   nl: nlFlag,
   pl: plFlag,
   'pt-PT': ptFlag,
   ru: ruFlag,
+  'zh-Hans': cnFlag,
 };
 
 /**
@@ -38,11 +44,14 @@ export const LANGUAGE_NAMES: Record<Language, string> = {
   de: 'Deutsch',
   es: 'Español',
   fr: 'Français',
+  ja: '日本語',
+  ko: '한국어',
   nl: 'Nederlands',
   pl: 'Polski',
   'pt-PT': 'Português',
   ru: 'Русский',
+  'zh-Hans': '简体中文',
 };
 
 /** Languages shown with a "beta" label: translated by Claude and not yet read by a native speaker (spec 34, Decisions taken 1). */
-export const BETA_LANGUAGES: readonly Language[] = ['de', 'es', 'fr', 'nl', 'pl', 'pt-PT', 'ru'];
+export const BETA_LANGUAGES: readonly Language[] = ['de', 'es', 'fr', 'ja', 'ko', 'nl', 'pl', 'pt-PT', 'ru', 'zh-Hans'];

@@ -21,7 +21,7 @@ describe('currentLanguage', () => {
   // matched by `supportedLngs`'s own fallback logic); this app only ever
   // shows it or en, so that case still needs a safe value.
   it('falls back to English when i18next resolves to an unsupported language', () => {
-    vi.spyOn(i18n, 'resolvedLanguage', 'get').mockReturnValue('ja');
+    vi.spyOn(i18n, 'resolvedLanguage', 'get').mockReturnValue('tr');
 
     expect(currentLanguage()).toBe('en');
   });
@@ -40,11 +40,11 @@ describe('detectLanguage', () => {
   });
 
   it('takes the first supported language among the browser preferences', () => {
-    expect(detectLanguage(['ja', 'ko', 'it'])).toBe('it');
+    expect(detectLanguage(['tr', 'ar', 'it'])).toBe('it');
   });
 
   it('falls back to English when nothing the browser asks for is supported', () => {
-    expect(detectLanguage(['ja', 'ko'])).toBe('en');
+    expect(detectLanguage(['tr', 'ar'])).toBe('en');
     expect(detectLanguage([])).toBe('en');
   });
 
@@ -130,9 +130,9 @@ describe('resolveLanguage', () => {
     expect(resolveLanguage(tag, supported)).toBe(expected);
   });
 
-  it('reads Brazilian Portuguese as European, and Traditional Chinese as nothing yet', () => {
+  it('reads Brazilian Portuguese as European, and Traditional Chinese as Simplified until zh-Hant exists', () => {
     expect(detectLanguage(['pt-BR'])).toBe('pt-PT');
-    expect(detectLanguage(['zh-TW', 'fr-CA'])).toBe('fr');
+    expect(detectLanguage(['zh-TW', 'fr-CA'])).toBe('zh-Hans');
   });
 });
 

@@ -9,7 +9,7 @@ vi.mock('@emoji-mart/data', () => ({ default: { emojis: {} } }));
 vi.mock('@emoji-mart/data/i18n/it.json', () => ({ default: { search: 'Cerca' } }));
 vi.mock('@emoji-mart/data/i18n/en.json', () => ({ default: { search: 'Search' } }));
 // Each other language's labels live in a file of emoji-mart's own (Portuguese is `pt`).
-for (const file of ['de', 'es', 'fr', 'nl', 'pl', 'pt', 'ru']) {
+for (const file of ['de', 'es', 'fr', 'ja', 'ko', 'nl', 'pl', 'pt', 'ru', 'zh']) {
   vi.doMock(`@emoji-mart/data/i18n/${file}.json`, () => ({ default: { search: file } }));
 }
 
@@ -35,10 +35,13 @@ describe('loadEmojiPicker', () => {
       { search: 'de' },
       { search: 'es' },
       { search: 'fr' },
+      { search: 'ja' },
+      { search: 'ko' },
       { search: 'nl' },
       { search: 'pl' },
       { search: 'pt' },
       { search: 'ru' },
+      { search: 'zh' },
     ]);
   });
 });

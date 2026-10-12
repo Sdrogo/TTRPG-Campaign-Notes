@@ -814,7 +814,7 @@
     "back": "Volver a la app",
     "title": "Aviso de privacidad",
     "updated": "Última actualización: {{date}}",
-    "intro": "Este aviso explica qué datos personales trata esta app, por qué, dónde se conservan y cómo puedes ejercer tus derechos según el Reglamento general de protección de datos (RGPD).",
+    "intro": "Este aviso explica qué datos personales trata esta app, por qué, dónde se conservan y cómo puedes ejercer tus derechos según el Reglamento general de protección de datos (RGPD). Los textos en italiano y en inglés son los que prevalecen; si hay diferencias con esta traducción, prevalecen ellos.",
     "sections": {
       "controller": {
         "title": "Quién es el responsable",

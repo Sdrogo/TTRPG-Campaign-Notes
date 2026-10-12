@@ -814,7 +814,7 @@
     "back": "Retour à l'app",
     "title": "Politique de confidentialité",
     "updated": "Dernière mise à jour : {{date}}",
-    "intro": "Cette politique explique quelles données personnelles cette app traite, pourquoi, où elles sont conservées et comment tu peux exercer tes droits selon le Règlement général sur la protection des données (RGPD).",
+    "intro": "Cette politique explique quelles données personnelles cette app traite, pourquoi, où elles sont conservées et comment tu peux exercer tes droits selon le Règlement général sur la protection des données (RGPD). Les textes italien et anglais font foi ; en cas de divergence avec cette traduction, ils prévalent.",
     "sections": {
       "controller": {
         "title": "Qui est le responsable",

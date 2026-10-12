@@ -101,6 +101,20 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-12
 
+- **More UI languages, 34_3** (spec 34, 10-12, no migration): ja, ko and
+  zh-Hans (Simplified, Mainland wording), frontend and backend files drafted
+  by Claude, "beta" in the selector; flags (jp, kr, cn), emoji-mart labels
+  (`ja`, `ko`, `zh`), read-aloud tags `ja-JP`, `ko-KR`, `zh-CN`. The Room PDF
+  gets Noto Serif and Sans subsets for each script (about 4,000 to 5,000
+  glyphs, `.woff`, 10 MB in all) as per-glyph fallbacks in every style, so
+  CJK content renders whatever the page language; `:lang(zh)` and `:lang(ko)`
+  put their own Han glyphs first, and for CJK pages the Gothic drop cap,
+  hyphenation and synthesized bold/italic are off. Tests: the font-coverage
+  test now includes the three scripts, and a new one checks the page
+  language picks the right script's face. Also: the privacy intro of every
+  non-Italian/English language now says the Italian and English texts prevail
+  (spec 34 Decision 10; it was missing in 34_2). Open for a native check: 開示,
+  揭示 and 공개 for "Reveal", 룸 vs 방 for Room. `zh-Hant` stays later.
 - **More UI languages, 34_2** (spec 34, 10-12, no migration): de, es, fr, nl,
   pl, pt-PT and ru, frontend and backend files drafted by Claude and shown
   as "beta" in the selector; simplified flags; lazy-loaded; the selector

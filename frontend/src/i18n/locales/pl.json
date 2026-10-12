@@ -850,7 +850,7 @@
     "back": "Wróć do aplikacji",
     "title": "Informacja o prywatności",
     "updated": "Ostatnia aktualizacja: {{date}}",
-    "intro": "Ta informacja wyjaśnia, jakie dane osobowe przetwarza ta aplikacja, dlaczego, gdzie są przechowywane i jak możesz skorzystać ze swoich praw zgodnie z Ogólnym rozporządzeniem o ochronie danych (RODO).",
+    "intro": "Ta informacja wyjaśnia, jakie dane osobowe przetwarza ta aplikacja, dlaczego, gdzie są przechowywane i jak możesz skorzystać ze swoich praw zgodnie z Ogólnym rozporządzeniem o ochronie danych (RODO). Wiążące są wersje włoska i angielska; w razie rozbieżności z tym tłumaczeniem mają one pierwszeństwo.",
     "sections": {
       "controller": {
         "title": "Kto jest administratorem",
