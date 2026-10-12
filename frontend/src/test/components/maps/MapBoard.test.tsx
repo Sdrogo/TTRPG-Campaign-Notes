@@ -188,6 +188,21 @@ describe('MapBoard', () => {
     expect(changes).toEqual([]);
   });
 
+  it('selects by dragging on the board and saves a selection moved as a whole', () => {
+    const { last } = renderBoard();
+    expect(flow.props.selectionOnDrag).toBe(true);
+    expect(flow.props.panOnDrag).toEqual([1, 2]);
+    expect(screen.getByText(/Trascina sullo sfondo/)).toBeInTheDocument();
+    call('onSelectionDragStop', null, [{ ...node('fire'), position: { x: 700, y: 40 } }]);
+    expect(last().cards.find((c) => c.id === 'fire')).toMatchObject({ x: 700, y: 40 });
+  });
+
+  it('keeps panning with a plain drag when not editable', () => {
+    renderBoard({ editable: false });
+    expect(flow.props.selectionOnDrag).toBe(false);
+    expect(flow.props.panOnDrag).toBe(true);
+  });
+
   it('moves groups first, then drops cards into or out of groups', () => {
     const { last } = renderBoard();
     flow.measured.mira = { width: 160, height: 80 };

@@ -627,6 +627,13 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   Colors come from the fixed theme set (`MAP_COLORS`), never a free picker.
   Struck cards and groups are drawn crossed out; Master-only items carry a
   small "Solo Master" marker.
+- **Moving and selecting** (while editing): a card shows a grab cursor, an
+  accent ring on hover and a small grip mark top-left; any part of its body
+  (not the name link nor the pencil) picks it up. Dragging on empty canvas
+  draws a selection box that selects every card or group it touches
+  (`SelectionMode.Partial`), and the selection moves as one. The board itself
+  pans with the middle or right mouse button, or with Space held; a hint
+  under the board says so. A read-only board pans with a plain drag.
 - **Groups**: a tinted frame with an optional title, resizable while
   editing; dragging a card into a group puts it in that group.
 - **Arrows**: straight lines edge to edge between cards or groups, drawn by

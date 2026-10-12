@@ -353,3 +353,15 @@ html body[data-scroll-locked] {
 .compact-list-item:hover {
   background: var(--bg-raised);
 }
+
+/* Map cards (spec 28): a card is picked up by its body, so say so. */
+.react-flow__node.draggable .map-card {
+  cursor: grab;
+  transition: box-shadow 120ms ease;
+}
+.react-flow__node.draggable:hover .map-card {
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+.react-flow__node.draggable.dragging .map-card {
+  cursor: grabbing;
+}

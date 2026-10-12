@@ -7,6 +7,7 @@ import {
   Panel,
   ReactFlow,
   ReactFlowProvider,
+  SelectionMode,
   applyNodeChanges,
   useReactFlow,
   type Connection,
@@ -15,7 +16,7 @@ import {
   type OnBeforeDelete,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Box, Button, Group } from '@mantine/core';
+import { Box, Button, Group, Text } from '@mantine/core';
 import { BoundingBoxIcon, FileTextIcon, PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -288,11 +289,18 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
           setNodes((current) => applyNodeChanges(changes, current))
         }
         onNodeDragStop={(_, __, dragged) => handleDragStop(dragged)}
+        onSelectionDragStop={(_, dragged) => handleDragStop(dragged)}
         onConnect={handleConnect}
         onEdgeClick={(_, edge) => editable && setEditing({ kind: 'arrow', id: edge.id })}
         onBeforeDelete={handleBeforeDelete}
         onDelete={handleDelete}
         nodesDraggable={editable}
+        // While editing, dragging on empty space draws a selection box (any
+        // card it touches is selected); the board is then moved with the
+        // middle or right button, or with Space held.
+        selectionOnDrag={editable}
+        selectionMode={SelectionMode.Partial}
+        panOnDrag={editable ? [1, 2] : true}
         nodesConnectable={editable}
         elementsSelectable={editable}
         deleteKeyCode={editable ? ['Backspace', 'Delete'] : null}
@@ -328,6 +336,13 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
                 {t('maps.groupSelected')}
               </Button>
             </Group>
+          </Panel>
+        )}
+        {editable && (
+          <Panel position="bottom-center">
+            <Text size="xs" c="dimmed">
+              {t('maps.selectHint')}
+            </Text>
           </Panel>
         )}
       </ReactFlow>
