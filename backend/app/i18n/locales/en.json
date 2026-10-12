@@ -193,6 +193,28 @@
       "emptyQuery": "Type something to search for",
       "throttled": "Too many searches: wait a minute and try again",
       "unavailable": "Image search is unavailable right now, try again later"
+    },
+    "map": {
+      "notFound": "Map not found",
+      "notManager": "Only the map's creator (or the Master) can change this map",
+      "creationDisabled": "Players can't create maps in this room",
+      "invalidSelectiveUsers": "selective_user_ids must all be members of this room",
+      "nameRequired": "A map needs a name",
+      "tooLong": "The {field} can be at most {max} characters",
+      "tooMany": "A room can have at most {max} maps",
+      "tooManyCards": "A map can have at most {max} cards",
+      "tooManyGroups": "A map can have at most {max} groups",
+      "tooManyArrows": "A map can have at most {max} arrows",
+      "invalidBoard": "This board can't be saved: it refers to something that isn't on the map",
+      "masterOnly": "Only the Master can mark a card or an arrow Master only",
+      "fields": {
+        "name": "name",
+        "description": "description",
+        "text": "card text",
+        "caption": "caption",
+        "label": "label",
+        "groupTitle": "group title"
+      }
     }
   },
   "pdf": {

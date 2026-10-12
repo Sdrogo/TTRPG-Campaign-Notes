@@ -193,6 +193,28 @@
       "emptyQuery": "Scrivi qualcosa da cercare",
       "throttled": "Troppe ricerche: aspetta un minuto e riprova",
       "unavailable": "La ricerca di immagini non è disponibile ora, riprova più tardi"
+    },
+    "map": {
+      "notFound": "Mappa non trovata",
+      "notManager": "Solo chi ha creato la mappa (o il Master) può modificarla",
+      "creationDisabled": "In questa stanza i Giocatori non possono creare mappe",
+      "invalidSelectiveUsers": "selective_user_ids deve contenere solo membri di questa stanza",
+      "nameRequired": "Una mappa deve avere un nome",
+      "tooLong": "Il campo {field} può contenere al massimo {max} caratteri",
+      "tooMany": "Una stanza può avere al massimo {max} mappe",
+      "tooManyCards": "Una mappa può avere al massimo {max} carte",
+      "tooManyGroups": "Una mappa può avere al massimo {max} gruppi",
+      "tooManyArrows": "Una mappa può avere al massimo {max} frecce",
+      "invalidBoard": "Impossibile salvare la mappa: fa riferimento a qualcosa che non c'è",
+      "masterOnly": "Solo il Master può rendere una carta o una freccia visibile solo al Master",
+      "fields": {
+        "name": "nome",
+        "description": "descrizione",
+        "text": "testo della carta",
+        "caption": "didascalia",
+        "label": "etichetta",
+        "groupTitle": "titolo del gruppo"
+      }
     }
   },
   "pdf": {
