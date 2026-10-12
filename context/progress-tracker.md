@@ -190,6 +190,11 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
+- **33, Room card menu and duplicate Room** (ticket written 2026-10-12):
+  the card's Setup and Invite buttons move into the ⋮ menu, plus a
+  Master-only Duplicate that copies setup, Tags, Documents, Notes and
+  images (no Comments, PDFs or other members) in one transaction; images
+  share the original's Storage objects. No migration.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
 - **28, Relationship maps**: after 27b. Starts with 28_0 (Document
