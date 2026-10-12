@@ -526,10 +526,10 @@ export function placeLabel(
   size: { width: number; height: number },
   avoid: Rect[],
 ): Point {
-  const STEPS = 100;
+  const STEPS = 50;
   const GAP = 6;
-  const SHIFT_STEP = 4;
-  const MAX_SHIFT = 800;
+  const SHIFT_STEP = 8;
+  const MAX_SHIFT = 400;
   const clearAt = (at: Point): boolean => {
     const box = { x: at.x - size.width / 2, y: at.y - size.height / 2, ...size };
     return !avoid.some((rect) => overlaps(box, rect, GAP));
