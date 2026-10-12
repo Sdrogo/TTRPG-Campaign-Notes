@@ -49,13 +49,16 @@ here and remind the product owner.
 
 - **Head in the repository**: `d5a1c8e3f2b7` (map card image, spec 28
   follow-up).
-- **Staging database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12).
+- **Staging database**: `d5a1c8e3f2b7` (applied by hand 2026-10-12, with
+  `.env.staging` loaded; `b3f7d1e9c5a2` before it).
 - **Production database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12; both
   feature 28 migrations, before them `f7a2d8c4e1b9`).
-- **Pending on staging and production**: `d5a1c8e3f2b7`
+- **Pending on production**: `d5a1c8e3f2b7`
   (`relationship_map_cards.image_id`, a nullable foreign key; DDL only).
-  Apply it to staging before the PR merges and to production before the next
-  release to `main`.
+  Apply it before the next release to `main`. It is not applied yet: no
+  production `backend/.env` was available on the agent's machine on
+  2026-10-12, so the product owner runs it (or provides the file). Its file
+  lives only on the `claude/project-thread-hakwwg` branch until that merges.
 
 Recent chain, newest first (where each came from):
 `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
