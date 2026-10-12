@@ -15,6 +15,8 @@ export function MapHandle({ visible }: { visible: boolean }) {
         type="source"
         position={Position.Right}
         style={{
+          // Above the card's image and text, which are laid over it.
+          zIndex: 1,
           width: 12,
           height: 12,
           background: 'var(--accent-primary)',
@@ -34,6 +36,7 @@ export function MapHandle({ visible }: { visible: boolean }) {
           transform: 'none',
           borderRadius: 0,
           opacity: 0,
+          zIndex: 1,
           pointerEvents: drawing ? 'all' : 'none',
         }}
       />

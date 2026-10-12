@@ -115,6 +115,10 @@ One line per unit; dates 2026, newest first. Spec files live in
   non-Italian/English language now says the Italian and English texts prevail
   (spec 34 Decision 10; it was missing in 34_2). Open for a native check: 開示,
   揭示 and 공개 for "Reveal", 룸 vs 방 for Room. `zh-Hant` stays later.
+- **Mention preview nesting fix** (10-12, PR #172, frontend only):
+  `MentionText` renders its root as a `div` (not Mantine's `<p>`) so the
+  hover preview card (headings, divs, paragraphs) nests validly; a test
+  guards the root element.
 - **More UI languages, 34_2** (spec 34, 10-12, no migration): de, es, fr, nl,
   pl, pt-PT and ru, frontend and backend files drafted by Claude and shown
   as "beta" in the selector; simplified flags; lazy-loaded; the selector
