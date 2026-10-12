@@ -48,11 +48,13 @@ release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
 - **Head in the repository**: `b3f7d1e9c5a2` (relationship maps, spec 28_1).
-- **Staging database**: `f7a2d8c4e1b9` (applied 2026-10-08).
+- **Staging database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12, both
+  feature 28 migrations; before it, `f7a2d8c4e1b9`).
 - **Production database**: `f7a2d8c4e1b9` (applied by hand 2026-10-08).
-- **Pending on staging and production** (feature 28, PR #159):
-  `a8c4e2f6b1d3` (Document subtitle; rebuilds `documents.search_vector`)
-  then `b3f7d1e9c5a2` (the five map tables). Both are DDL only.
+- **Pending on production** (feature 28, PR #159): `a8c4e2f6b1d3`
+  (Document subtitle; rebuilds `documents.search_vector`) then
+  `b3f7d1e9c5a2` (the five map tables). Both are DDL only. Apply them
+  before the next release to `main`.
 
 Recent chain, newest first (where each came from):
 `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
