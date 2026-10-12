@@ -1,0 +1,933 @@
+{
+  "language": {
+    "name": "Nederlands",
+    "selectorLabel": "Taal: {{language}}",
+    "selectorTooltip": "Taal wijzigen",
+    "loadFailed": "De taal kon niet worden geladen. Probeer het opnieuw.",
+    "beta": "beta"
+  },
+  "app": {
+    "name": "TTRPG Campaign Notes"
+  },
+  "common": {
+    "add": "Toevoegen",
+    "cancel": "Annuleren",
+    "close": "Sluiten",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "remove": "Verwijderen",
+    "save": "Opslaan",
+    "leave": "Verlaten",
+    "copy": "Kopiëren",
+    "copied": "Gekopieerd",
+    "yes": "Ja",
+    "notApplicable": "—",
+    "you": "Jij",
+    "name": "Naam",
+    "description": "Beschrijving",
+    "noDescription": "Geen beschrijving.",
+    "noResults": "Geen resultaten",
+    "resetFilters": "Filters wissen",
+    "goToLogin": "Naar inloggen",
+    "myRooms": "Mijn Kamers",
+    "backToMyRooms": "Terug naar mijn Kamers",
+    "maxLength": "Maximaal {{max}} tekens",
+    "unknownUser": "Onbekende gebruiker",
+    "accept": "Accepteren",
+    "decline": "Weigeren"
+  },
+  "roles": {
+    "master": "Master",
+    "player": "Player",
+    "admin": "Admin"
+  },
+  "visibility": {
+    "label": "Zichtbaarheid",
+    "level": {
+      "room": "Kamer",
+      "master": "Alleen Master",
+      "private": "Privé",
+      "selective": "Selectief"
+    },
+    "documentOption": {
+      "room": "Kamer (alle leden)",
+      "master": "Alleen Master",
+      "private": "Privé (Owner + Master)",
+      "selective": "Selectief (alleen Owner + Master tot je anderen kiest)"
+    },
+    "commentOption": {
+      "room": "Kamer (alle leden)",
+      "master": "Alleen Master (en jij)",
+      "private": "Privé (jij + Master)",
+      "selective": "Selectief (jij, Master en wie je kiest)"
+    }
+  },
+  "time": {
+    "now": "nu"
+  },
+  "auth": {
+    "prompt": "Log in om door te gaan.",
+    "signInWith": "Inloggen met {{provider}}",
+    "privacy": "Privacy"
+  },
+  "header": {
+    "account": "Jouw account",
+    "accountPending": "Jouw account: {{count}} om te bekijken"
+  },
+  "account": {
+    "signInRequired": "Log in om je account te beheren.",
+    "loadError": "Je account kon niet worden geladen.",
+    "title": "Account",
+    "subtitle": "Je profiel en je sessie.",
+    "profile": {
+      "title": "Profiel",
+      "description": "Zo zien andere leden van je Kamers je.",
+      "displayName": "Weergavenaam",
+      "displayNameDescription": "Wordt getoond in plaats van je e-mailadres in Kamers, Opmerkingen en bij Owners.",
+      "displayNamePlaceholder": "Jouw naam",
+      "pronouns": "Voornaamwoorden",
+      "pronounsPlaceholder": "Bijv. zij/haar, hij/hem, hen/hun",
+      "bioDescription": "Twee regels over jezelf, zichtbaar voor de leden van je Kamers.",
+      "discardChanges": "Wijzigingen negeren",
+      "save": "Profiel opslaan",
+      "saved": "Profiel opgeslagen."
+    },
+    "avatar": {
+      "upload": "Foto uploaden",
+      "fromUrl": "Via URL",
+      "useImage": "Afbeelding gebruiken",
+      "hint": "PNG, JPEG, WebP of GIF. De afbeelding wordt automatisch gecentreerd bijgesneden en verkleind."
+    },
+    "access": {
+      "title": "Toegang",
+      "email": "E-mail",
+      "emailDescription": "Het e-mailadres is dat van het account waarmee je bent ingelogd.",
+      "noEmail": "Je account deelt geen e-mailadres",
+      "signOutDescription": "Beëindigt de sessie op dit apparaat.",
+      "signOut": "Uitloggen"
+    },
+    "invitations": {
+      "title": "Uitnodigingen voor Kamers",
+      "description": "Een vriend heeft je uitgenodigd: je komt pas in de Kamer als je accepteert.",
+      "from": "{{name}} nodigt je uit als {{role}}",
+      "joined": "Je bent lid geworden van \"{{room}}\"."
+    },
+    "friends": {
+      "title": "Vrienden",
+      "description": "Vrienden kunnen je rechtstreeks uitnodigen voor hun Kamers.",
+      "linkLabel": "Jouw vriendenlink",
+      "linkDescription": "Wie hem opent, stuurt je een vriendschapsverzoek. Maak een nieuwe aan om de oude uit te schakelen.",
+      "linkError": "Je vriendenlink kon niet worden geladen.",
+      "regenerate": "Vernieuwen",
+      "regenerated": "Nieuwe link aangemaakt: de oude werkt niet meer.",
+      "loadError": "Je vrienden konden niet worden geladen.",
+      "incoming": "Ontvangen verzoeken",
+      "outgoing": "Verstuurde verzoeken",
+      "list": "Jouw vrienden",
+      "empty": "Nog geen vrienden. Deel je link of voeg een lid van een van je Kamers toe.",
+      "cancelRequest": "Verzoek annuleren",
+      "removeConfirm": "{{name}} uit je vrienden verwijderen?",
+      "accepted": "Jij en {{name}} zijn nu vrienden."
+    },
+    "reveals": {
+      "title": "Aan jou onthuld",
+      "description": "Wat de Master je zojuist heeft laten zien. Verdwijnt hier zodra je het opent.",
+      "document": "Document",
+      "note": "Notitie \"{{title}}\"",
+      "comment": "Een opmerking"
+    },
+    "speech": {
+      "title": "Voorlezen",
+      "description": "De stem en snelheid waarmee de app Documenten, Notities en Opmerkingen voorleest. De stemmen komen uit je browser: je keuze blijft op dit apparaat, één per taal.",
+      "unsupported": "Deze browser kan niet voorlezen.",
+      "voice": "Stem",
+      "automatic": "Automatisch",
+      "automaticWith": "Automatisch ({{name}})",
+      "languageVoices": "Stemmen in het Nederlands",
+      "otherVoices": "Andere stemmen",
+      "noVoices": "Geen Nederlandse stem op dit apparaat: de browser gebruikt zijn standaardstem.",
+      "betterVoices": "De beste stemmen zijn de neurale stemmen van de browser: in Edge de \"Natural\"-stemmen, in Chrome \"Google\", op iPhone en Mac de \"Verbeterde\" of \"Premium\" stemmen die je downloadt via Instellingen › Toegankelijkheid › Gesproken content.",
+      "rate": "Snelheid",
+      "try": "Proberen",
+      "sample": "Zo klinkt deze stem terwijl hij je aantekeningen voorleest."
+    },
+    "privacy": {
+      "title": "Jouw gegevens",
+      "description": "Download een kopie van alles wat de app over je bewaart, of verwijder je account.",
+      "export": "Mijn gegevens downloaden",
+      "exported": "Gegevens gedownload",
+      "notice": "Privacyverklaring",
+      "deleteDescription": "Het verwijderen van je account is definitief. Kamers waarvan jij het enige lid bent, worden verwijderd; in gedeelde Kamers blijft wat je hebt geschreven staan, getoond als geschreven door een onbekende gebruiker.",
+      "delete": "Account verwijderen",
+      "confirmTitle": "Je account verwijderen?",
+      "confirmBody": "Profiel, avatar, Vrienden en inlogaccount worden gewist en kunnen niet worden hersteld. Kamers waarvan jij het enige lid bent, worden met alle inhoud verwijderd. Ben je de laatste Master of Admin van een gedeelde Kamer, geef die rol dan eerst aan iemand anders.",
+      "confirmLabel": "Typ \"{{word}}\" om te bevestigen",
+      "deleteWord": "VERWIJDER",
+      "confirm": "Definitief verwijderen",
+      "deleted": "Je account is verwijderd"
+    }
+  },
+  "rooms": {
+    "create": "Kamer maken",
+    "loadError": "Fout bij het laden van de Kamers.",
+    "empty": "Nog geen Kamers. Maak er een om te beginnen.",
+    "invite": "Uitnodigen",
+    "createModal": {
+      "title": "Een Kamer maken",
+      "namePlaceholder": "Bijv. De Vloek van Strahd",
+      "gameSystem": "Spelsysteem",
+      "gameSystemPlaceholder": "Bijv. D&D 5e (optioneel)",
+      "image": "Afbeelding (optioneel)",
+      "chooseImage": "Afbeelding kiezen",
+      "changeImage": "Afbeelding wijzigen",
+      "imageHint": "De omslag van de pdf van de Kamer. Je kunt hem later wijzigen in de instellingen van de Kamer.",
+      "imageFailed": "De Kamer is gemaakt, maar de afbeelding kon niet worden opgeslagen ({{reason}}). Je kunt hem instellen via de instellingen van de Kamer."
+    },
+    "setup": "Instellingen",
+    "actions": "Acties voor de Kamer {{name}}",
+    "duplicate": {
+      "action": "Dupliceren",
+      "confirmTitle": "\"{{name}}\" dupliceren?",
+      "confirmBody": "Documenten, Notities, Tags en afbeeldingen worden gekopieerd. Opmerkingen, pdf-bijlagen en leden niet. Jij wordt de enige Master van de kopie.",
+      "copyName": "{{name}} (Kopie)",
+      "created": "\"{{name}}\" gemaakt"
+    },
+    "leave": {
+      "confirmTitle": "\"{{name}}\" verlaten?",
+      "confirmBody": "Je Documenten, Opmerkingen en Notities blijven in de Kamer. Om terug te komen heb je een nieuwe uitnodiging nodig.",
+      "adminHint": "Je bent een Admin: ben je de laatste, benoem dan eerst een andere Admin via de instellingen van de Kamer.",
+      "left": "Je hebt \"{{name}}\" verlaten"
+    },
+    "image": {
+      "alt": "Afbeelding van de Kamer"
+    }
+  },
+  "invite": {
+    "modalTitle": "Uitnodigen voor de Kamer",
+    "proposedRole": "Voorgestelde rol",
+    "generate": "Uitnodiging maken",
+    "signInRequired": "Log in om lid te worden van deze Kamer.",
+    "invalid": "Uitnodiging ongeldig, verlopen of al gebruikt.",
+    "joined": "Je bent lid geworden van \"{{room}}\"",
+    "goToMyRooms": "Naar mijn Kamers",
+    "tabLink": "Link",
+    "tabFriends": "Vrienden",
+    "friend": "Vriend",
+    "friendPlaceholder": "Kies een vriend",
+    "noFriends": "Geen vrienden om uit te nodigen. Voeg ze toe via je Account-pagina.",
+    "friendsHint": "Je vriend ziet de uitnodiging op zijn of haar Account-pagina en komt er pas in als hij of zij accepteert.",
+    "send": "Uitnodiging versturen",
+    "sent": "Uitnodiging verstuurd naar {{name}}."
+  },
+  "members": {
+    "signInRequired": "Log in om de leden van deze Kamer te zien.",
+    "title": "Leden",
+    "loadError": "Fout bij het laden van de leden.",
+    "columnUser": "Gebruiker",
+    "columnRole": "Rol",
+    "columnAdmin": "Admin",
+    "addFriend": "Toevoegen aan vrienden",
+    "friend": "Vriend",
+    "requestSent": "Verzoek verstuurd",
+    "requestReceived": "Heeft je een vriendschapsverzoek gestuurd",
+    "friendRequestSent": "Vriendschapsverzoek verstuurd naar {{name}}."
+  },
+  "setup": {
+    "signInRequired": "Log in om deze Kamer te beheren.",
+    "title": "Instellingen van de Kamer",
+    "adminOnly": "Alleen een Admin of de Master van de Kamer kan de instellingen openen.",
+    "loadError": "Fout bij het laden van de instellingen van de Kamer.",
+    "tags": {
+      "title": "Tags",
+      "description": "Hoe de Documentenpagina de Documenten groepeert, plus alle Tags van de Kamer. Elke wijziging wordt meteen opgeslagen.",
+      "grouping": {
+        "title": "Groepering",
+        "description": "De Documentenpagina groepeert de Documenten op deze items, in deze volgorde. Een item is een Tag of een combinatie: de bijbehorende Documenten hebben al die Tags.",
+        "empty": "Geen items: de Documenten worden niet gegroepeerd.",
+        "moveUp": "{{name}} omhoog verplaatsen",
+        "moveDown": "{{name}} omlaag verplaatsen",
+        "remove": "{{name}} uit de groepering halen",
+        "addLabel": "Een item toevoegen",
+        "addPlaceholder": "Kies een of meer Tags",
+        "addHint": "Eén Tag is een hoofdtag, twee of meer vormen een combinatie.",
+        "add": "Toevoegen",
+        "alreadyMain": "Deze Tag is al een item van de groepering.",
+        "alreadyCombination": "Deze combinatie zit al in de groepering."
+      },
+      "all": {
+        "title": "Alle Tags",
+        "description": "Een Tag verwijderen haalt hem van de Documenten en uit de groepering; de Documenten blijven.",
+        "empty": "Deze Kamer heeft geen Tags.",
+        "filterLabel": "Tags filteren",
+        "filterPlaceholder": "Tags filteren",
+        "noMatch": "Geen Tag komt overeen met \"{{query}}\".",
+        "newLabel": "Nieuwe Tag",
+        "newPlaceholder": "Nieuwe Tag",
+        "create": "Tag maken",
+        "created": "Tag \"{{name}}\" gemaakt",
+        "inGrouping": "In de groepering",
+        "rename": "Tag {{name}} hernoemen",
+        "renameInput": "Nieuwe naam voor {{name}}",
+        "saveRename": "Naam opslaan",
+        "cancelRename": "Annuleren",
+        "renamed": "Tag hernoemd naar \"{{name}}\""
+      },
+      "delete": "Tag {{name}} verwijderen",
+      "confirmTitle": "Tag \"{{name}}\" verwijderen?",
+      "confirmBody": "De Tag wordt van elk Document gehaald dat hem heeft en uit de groepering. Combinaties die hem gebruikten worden kleiner en verdwijnen als er minder dan twee Tags overblijven. De Documenten worden niet verwijderd. Dit kan niet ongedaan worden gemaakt.",
+      "deleted": "Tag \"{{name}}\" verwijderd"
+    },
+    "dangerZone": {
+      "title": "Gevarenzone",
+      "description": "Een Kamer verwijderen haalt hem voorgoed weg, samen met leden, Documenten, Opmerkingen, Notities en afbeeldingen.",
+      "deleteRoom": "Kamer verwijderen",
+      "confirmTitle": "De Kamer \"{{name}}\" verwijderen?",
+      "confirmBody": "Alles in de Kamer wordt voor iedereen verwijderd: leden, uitnodigingen, Tags, Documenten, Opmerkingen, Notities en afbeeldingen. Dit kan niet ongedaan worden gemaakt.",
+      "confirmLabel": "Typ \"{{name}}\" om te bevestigen",
+      "deleted": "Kamer \"{{name}}\" verwijderd"
+    },
+    "tabs": {
+      "settings": "Instellingen",
+      "history": "Geschiedenis"
+    },
+    "defaultVisibility": {
+      "title": "Standaardzichtbaarheid",
+      "description": "Het niveau waarmee elk nieuw Document, elke nieuwe Notitie en Opmerking begint. Een antwoord begint altijd met de zichtbaarheid van de opmerking waarop het reageert. Bestaande inhoud verandert niet.",
+      "label": "Standaardzichtbaarheid",
+      "saved": "Standaardzichtbaarheid opgeslagen."
+    },
+    "history": {
+      "title": "Zichtbaarheidsgeschiedenis",
+      "description": "Wie heeft gewijzigd wie wat ziet, de nieuwste wijziging eerst.",
+      "filterLabel": "Inhoud",
+      "filter": {
+        "all": "Alles",
+        "document": "Documenten",
+        "note": "Notities",
+        "comment": "Opmerkingen"
+      },
+      "empty": "Geen zichtbaarheidswijzigingen.",
+      "loadError": "De geschiedenis kon niet worden geladen.",
+      "loadMore": "Meer laden",
+      "when": "Wanneer",
+      "who": "Wie",
+      "what": "Wat",
+      "change": "Wijziging",
+      "reveal": "Onthulling",
+      "hidden": {
+        "document": "Een verborgen Document",
+        "note": "Een verborgen Notitie",
+        "comment": "Een verborgen opmerking"
+      },
+      "deleted": {
+        "document": "Een verwijderd Document",
+        "note": "Een verwijderde Notitie",
+        "comment": "Een verwijderde opmerking"
+      },
+      "note": "Notitie \"{{title}}\" in {{document}}",
+      "comment": "Opmerking in {{document}}",
+      "recipients": "Nu zichtbaar voor: {{names}}",
+      "selective": "Gekozen: {{names}}"
+    },
+    "roomImage": {
+      "title": "Afbeelding van de Kamer",
+      "description": "De standaardomslag van de pdf van de Kamer. Wie exporteert, kan nog steeds de afbeelding van een Document kiezen of geen.",
+      "upload": "Afbeelding uploaden",
+      "hint": "PNG, JPEG, WebP of GIF. Automatisch verkleind, zonder bijsnijden."
+    }
+  },
+  "documents": {
+    "signInRequired": "Log in om de Documenten van deze Kamer te zien.",
+    "title": "Documenten",
+    "create": "Document maken",
+    "playersCanCreate": "Players kunnen Documenten maken",
+    "loadError": "Fout bij het laden van de Documenten.",
+    "empty": "Nog geen Documenten. Maak er een om te beginnen.",
+    "noMatchForTags_one": "Geen Document met deze Tag.",
+    "noMatchForTags_other": "Geen Document met deze Tags.",
+    "showAll": "Alles tonen",
+    "filterByTag": "Filteren op Tag",
+    "hideControls": "Filters en instellingen verbergen",
+    "showControls": "Filters en instellingen tonen",
+    "owners": "Owners",
+    "ownersLine": "Owners: {{names}}",
+    "addOwner": "Owner toevoegen",
+    "removeOwner": "Owner {{name}} verwijderen",
+    "groupByLabel": "Groeperen op",
+    "groupByMainTag": "Groeperen op hoofdtag",
+    "groupByNone": "Geen groepering",
+    "sortLabel": "Sorteren op",
+    "sortNameAsc": "Naam (A-Z)",
+    "sortNameDesc": "Naam (Z-A)",
+    "ungroupedTag": "Zonder hoofdtag",
+    "detail": {
+      "signInRequired": "Log in om dit Document te zien.",
+      "notFound": "Document niet gevonden of niet zichtbaar.",
+      "backToDocuments": "Terug naar Documenten",
+      "cancelEditing": "Wijzigingen negeren",
+      "saveChanges": "Wijzigingen opslaan",
+      "deleteDocument": "Document verwijderen",
+      "deleteConfirmTitle": "Dit Document verwijderen?",
+      "deleteConfirmBody": "De Opmerkingen, afbeeldingen en Tag-koppelingen van dit Document worden verwijderd. Dit kan niet ongedaan worden gemaakt."
+    },
+    "fields": {
+      "descriptionHint": "Typ # om een ander Document te koppelen.",
+      "subtitle": "Ondertitel",
+      "subtitleHint": "Eén regel onder de naam, bijvoorbeeld «De Idool».",
+      "tags": "Tags",
+      "newTag": "Nieuwe Tag",
+      "newTagPlaceholder": "Bijv. Factie"
+    },
+    "notYetRead": "Nog niet gelezen",
+    "unreadCount_one": "{{count}} nieuwe opmerking",
+    "unreadCount_other": "{{count}} nieuwe opmerkingen"
+  },
+  "images": {
+    "numbered": "{{name}} ({{index}})",
+    "open": "Afbeelding openen",
+    "openNamed": "{{name}} openen",
+    "removeNamed": "{{name}} verwijderen",
+    "delete": "Afbeelding verwijderen",
+    "deleteConfirm": "Deze afbeelding verwijderen?",
+    "favorite": "Hoofdafbeelding",
+    "setFavorite": "Als hoofdafbeelding gebruiken",
+    "urlLabel": "URL van de afbeelding",
+    "urlPlaceholder": "https://… URL van de afbeelding",
+    "invalidUrl": "Voer een geldige http(s)-URL in",
+    "rowTitle": "Afbeeldingen",
+    "upload": "Afbeeldingen uploaden",
+    "addFromUrl": "Toevoegen via URL",
+    "fromUrlShort": "Via URL",
+    "resizeHint": "PNG, JPEG, WebP of GIF. Grote afbeeldingen worden automatisch verkleind.",
+    "limitReached": "Limiet aan afbeeldingen bereikt",
+    "attachFiles": "Afbeeldingen toevoegen",
+    "attachFilesTooltip": "Afbeeldingen van je computer toevoegen",
+    "attachUrl": "Afbeelding toevoegen via URL",
+    "viewer": {
+      "previous": "Vorige afbeelding",
+      "next": "Volgende afbeelding",
+      "zoomOut": "Uitzoomen",
+      "zoomIn": "Inzoomen",
+      "fit": "Aanpassen aan scherm"
+    }
+  },
+  "versions": {
+    "action": "Geschiedenis",
+    "actionFor": "Geschiedenis: {{name}}",
+    "title": "Geschiedenis: {{name}}",
+    "loadFailed": "De geschiedenis kon niet worden geladen.",
+    "empty": "Geen versies.",
+    "current": "Huidig",
+    "first": "Eerste versie",
+    "changeSize": "+{{added}} −{{removed}}",
+    "changeSizeLabel": "Woorden toegevoegd: {{added}}, verwijderd: {{removed}}",
+    "pick": "Kies een versie om die te vergelijken met het Document zoals het nu is.",
+    "before": "Deze versie",
+    "after": "Nu",
+    "identical": "Het Document is al zo.",
+    "restore": "Deze versie herstellen",
+    "restoreConfirmTitle": "Deze versie herstellen?",
+    "restoreConfirmBody": "Het Document, inclusief Notities, wordt teruggezet zoals het was op {{date}}: sindsdien verwijderde Notities komen terug en Notities die daarna zijn toegevoegd worden verwijderd. Er wordt een nieuwe versie toegevoegd: er gaat niets verloren.",
+    "restored": "Versie hersteld",
+    "notesHeading": "Notities",
+    "noteRemoved": "Sindsdien verwijderd",
+    "noteAdded": "Daarna toegevoegd",
+    "noteNotThen": "Staat niet in deze versie",
+    "noteNotNow": "Staat niet meer in het Document",
+    "notesChange": "Notities +{{added}} −{{removed}}",
+    "notesChangeLabel": "Notities toegevoegd: {{added}}, verwijderd: {{removed}}"
+  },
+  "notes": {
+    "add": "Notitie toevoegen",
+    "edit": "Notitie bewerken: {{title}}",
+    "delete": "Notitie verwijderen: {{title}}",
+    "moveUp": "Notitie omhoog verplaatsen: {{title}}",
+    "moveDown": "Notitie omlaag verplaatsen: {{title}}",
+    "deleteConfirmTitle": "Deze Notitie verwijderen?",
+    "deleteConfirmBody": "\"{{title}}\" wordt verwijderd. Je kunt hem terughalen via de Geschiedenis van het Document.",
+    "form": {
+      "title": "Titel",
+      "selectiveLabel": "Leden die de Notitie kunnen zien",
+      "selectivePlaceholder": "Wie kan hem zien"
+    }
+  },
+  "files": {
+    "title": "Bestanden",
+    "upload": "Pdf uploaden",
+    "uploadHint": "Voeg een pdf toe tot {{mb}} MB, bijvoorbeeld een personagesheet",
+    "limitReached": "Een Document kan maximaal {{max}} bestanden hebben",
+    "open": "{{name}} openen",
+    "download": "{{name}} downloaden",
+    "delete": "{{name}} verwijderen",
+    "deleteConfirmTitle": "Dit bestand verwijderen?",
+    "deleteConfirmBody": "\"{{name}}\" wordt verwijderd. Dit kan niet ongedaan worden gemaakt.",
+    "notPdf": "Je kunt alleen pdf-bestanden toevoegen",
+    "tooLarge": "Het bestand overschrijdt de limiet van {{mb}} MB",
+    "openFailed": "{{name}} kon niet worden geopend"
+  },
+  "characters": {
+    "playedBy": "Gespeeld door",
+    "playedByLine": "Gespeeld door {{name}}",
+    "choosePlayer": "Kies de speler",
+    "alsoOwner": "Maak hem ook Owner",
+    "setPlayer": "Speler instellen",
+    "unlink": "{{name}} ontkoppelen",
+    "postAs": "Schrijven als",
+    "yourself": "Jezelf ({{name}})",
+    "writtenBy": "gespeeld door {{name}}"
+  },
+  "comments": {
+    "title": "Opmerkingen",
+    "loadError": "De opmerkingen konden niet worden geladen.",
+    "empty": "Nog geen opmerkingen. Schrijf de eerste!",
+    "filteredCount_one": "{{shown}} van {{count}} opmerking",
+    "filteredCount_other": "{{shown}} van {{count}} opmerkingen",
+    "noMatch": "Geen opmerkingen komen overeen met de filters.",
+    "publish": "Plaatsen",
+    "savedWithImageErrors": "Opmerking opgeslagen, maar niet alle afbeeldingen: {{errors}}",
+    "imageRemovalFailed": "Afbeelding verwijderen: {{reason}}",
+    "you": "(jij)",
+    "deleted": "Opmerking verwijderd.",
+    "edited": "Bewerkt",
+    "editedAt": "Bewerkt {{date}}",
+    "deleteConfirm": "Deze opmerking verwijderen?",
+    "deleteImagesWarning": "Ook de afbeeldingen ervan worden uit het Document verwijderd.",
+    "imageLabel": "Afbeelding {{index}} van de opmerking van {{author}}",
+    "imagesAlt": "Opmerking van {{author}}",
+    "attachedImage": "Bijgevoegde afbeelding",
+    "reply": "Antwoorden",
+    "replyLabel": "Antwoord aan {{name}}",
+    "inReplyTo": "als antwoord op {{name}}",
+    "parentHidden": "Een opmerking die je niet kunt zien",
+    "pin": "Vastzetten",
+    "unpin": "Losmaken",
+    "pinned": "Vastgezet",
+    "pinnedSection": "Vastgezette opmerkingen",
+    "resolve": "Markeren als opgelost",
+    "reopen": "Heropenen",
+    "resolved": "Opgelost",
+    "resolvedBy": "Opgelost door {{name}}, {{date}}",
+    "reactions": {
+      "add": "Een reactie toevoegen",
+      "chip_one": "{{emoji}}, {{count}} reactie: {{names}}",
+      "chip_other": "{{emoji}}, {{count}} reacties: {{names}}",
+      "loadingPicker": "Emoji laden",
+      "pickerFailed": "De emoji konden niet worden geladen. Probeer het later opnieuw."
+    },
+    "thread": {
+      "showMore_one": "{{count}} ander antwoord tonen",
+      "showMore_other": "{{count}} andere antwoorden tonen",
+      "show_one": "{{count}} antwoord tonen",
+      "show_other": "{{count}} antwoorden tonen",
+      "hide": "Antwoorden verbergen",
+      "hiddenNew_one": "{{count}} nieuw",
+      "hiddenNew_other": "{{count}} nieuwe"
+    },
+    "composer": {
+      "bodyLabel": "Tekst van de opmerking",
+      "bodyPlaceholder": "Schrijf een opmerking… (# om een Document te koppelen)",
+      "visibilityLabel": "Zichtbaarheid van de opmerking",
+      "selectiveLabel": "Leden die de opmerking kunnen zien",
+      "selectivePlaceholder": "Wie kan hem zien"
+    },
+    "toolbar": {
+      "searchLabel": "Zoeken in opmerkingen",
+      "searchPlaceholder": "Zoeken…",
+      "sortLabel": "Opmerkingen sorteren",
+      "sortNewest": "Nieuwste eerst",
+      "sortOldest": "Oudste eerst",
+      "sortAuthor": "Op auteur",
+      "authorLabel": "Filteren op auteur",
+      "authorPlaceholder": "Alle auteurs",
+      "visibilityLabel": "Filteren op zichtbaarheid",
+      "visibilityPlaceholder": "Elke zichtbaarheid",
+      "hideDeleted": "Verwijderde verbergen"
+    },
+    "new": "Nieuw",
+    "promotion": {
+      "promote": "Promoten",
+      "intoDescription": "In de beschrijving",
+      "intoDocument": "In een nieuw Document",
+      "promoted": "Gepromoot",
+      "promotedToDescription": "Gepromoot naar de beschrijving op {{date}}",
+      "promotedToDocument": "Gepromoot naar een nieuw Document op {{date}}",
+      "openDocument": "Het Document openen waarin het is gepromoot",
+      "editorNotice": "De tekst van de opmerking is onderaan de beschrijving toegevoegd: controleer hem en sla op om te promoten.",
+      "modalTitle": "Promoten naar een nieuw Document",
+      "images": "Afbeeldingen van de opmerking om aan het Document toe te voegen",
+      "imageLabel": "Afbeelding {{index}}",
+      "wideningTitle": "De tekst wordt voor meer mensen zichtbaar",
+      "wideningBody": "Door te promoten kan de tekst van de opmerking ook worden gelezen door wie hem nu niet ziet: {{names}}.",
+      "wideningConfirm": "Toch promoten",
+      "done": "Opmerking gepromoot",
+      "imageErrors": "Opmerking gepromoot, maar sommige afbeeldingen zijn niet toegevoegd: {{errors}}",
+      "notRecorded": "Het Document is gemaakt, maar de promotie van de opmerking is niet vastgelegd: {{reason}}"
+    }
+  },
+  "mentions": {
+    "listLabel": "Documenten en Tags om te koppelen",
+    "membersListLabel": "Leden om te vermelden",
+    "kind": {
+      "document": "Document",
+      "tag": "Tag"
+    },
+    "tagDetail_one": "Tag · {{count}} Document",
+    "tagDetail_other": "Tag · {{count}} Documenten",
+    "noMatchCreate": "Geen resultaat voor «{{name}}». Maak het aan als:",
+    "kindSwitchLabel": "Soort van het nieuwe item",
+    "createKind": "{{kind}} maken",
+    "hintSwitchKind": "←/→ soort wijzigen · ",
+    "hintCreate": "Enter om te maken"
+  },
+  "backlinks": {
+    "title": "Vermeld in",
+    "inDescription": "In de beschrijving",
+    "inNote": "In de notitie «{{title}}»",
+    "inComment": "In een opmerking van {{name}}"
+  },
+  "glossary": {
+    "title": "Tag-index",
+    "openToggle": "Tag-index openen",
+    "closeToggle": "Tag-index sluiten",
+    "mainTags": "Hoofdtags",
+    "otherTags": "Andere Tags",
+    "empty": "Geen Tags in deze Kamer."
+  },
+  "search": {
+    "open": "Zoeken",
+    "title": "Zoeken in de Kamer",
+    "inputLabel": "Zoeken in de Kamer",
+    "placeholder": "Documenten, Notities, Opmerkingen, Tags…",
+    "hint": "Typ minstens 2 letters.",
+    "loading": "Zoeken",
+    "resultsLabel": "Resultaten",
+    "showMore": "Meer tonen",
+    "tagFilter": "Filteren op Tag",
+    "inDocument": "in {{name}}",
+    "commentOn": "Opmerking bij {{name}}",
+    "kinds": {
+      "all": "Alles"
+    },
+    "groups": {
+      "document": "Documenten",
+      "note": "Notities",
+      "comment": "Opmerkingen",
+      "tag": "Tags"
+    }
+  },
+  "friendLink": {
+    "signInRequired": "Log in om het vriendschapsverzoek te versturen.",
+    "sent": "Vriendschapsverzoek verstuurd naar {{name}}.",
+    "sentAnonymous": "Vriendschapsverzoek verstuurd.",
+    "failed": "Het vriendschapsverzoek kon niet worden verstuurd.",
+    "goToAccount": "Naar je account"
+  },
+  "reveal": {
+    "action": "Onthullen",
+    "actionLabel": "Onthullen: {{name}}",
+    "comment": "de opmerking",
+    "revealed": "Onthuld",
+    "revealedLabel": "Aan jou onthuld",
+    "modalTitle": "\"{{name}}\" onthullen",
+    "audienceLabel": "Aan wie",
+    "toRoom": "Aan de hele Kamer",
+    "toChosen": "Aan gekozen spelers",
+    "chosenLabel": "Spelers",
+    "chosenPlaceholder": "Kies wie",
+    "noOneToPick": "Elk lid dat het kan ontvangen, ziet het al.",
+    "gains": "Krijgen toegang: {{names}}",
+    "noGains": "Geen ander lid krijgt toegang.",
+    "notesLabel": "Ook deze Notities onthullen",
+    "notesDescription": "Wie het Document krijgt, ziet ze niet. Ze blijven zoals ze zijn als je ze niet selecteert.",
+    "confirm": "Onthullen",
+    "done": "Onthuld."
+  },
+  "viewAs": {
+    "action": "Bekijken als lid",
+    "menuLabel": "De Kamer bekijken als",
+    "banner": "Je bekijkt de Kamer als {{name}}. Alleen lezen.",
+    "exit": "Weergave verlaten"
+  },
+  "export": {
+    "action": "Exporteren",
+    "title": "De Kamer exporteren",
+    "intro": "Download de Kamer als bestand. Het bevat alleen wat je kunt zien: Documenten, Notities, Opmerkingen en Tags.",
+    "format": "Bestandsformaat",
+    "formats": {
+      "md": "Markdown",
+      "json": "JSON",
+      "pdf": "PDF"
+    },
+    "formatHint": {
+      "md": "Eén leesbaar bestand, om te lezen of af te drukken.",
+      "json": "Gestructureerde gegevens met id's, voor tools en AI-agents.",
+      "pdf": "Een opgemaakt handboek om af te drukken of aan de spelers te geven."
+    },
+    "tagFilter": "Alleen Documenten met deze Tags (optioneel)",
+    "linksExpire": "Links naar afbeeldingen en pdf-bestanden verlopen binnen een uur. Exporteer opnieuw om ze te vernieuwen.",
+    "done": "Export gedownload.",
+    "pdf": {
+      "style": "Stijl",
+      "styles": {
+        "gothic": "Gotisch",
+        "modern": "Modern",
+        "print": "Afdruk"
+      },
+      "styleHints": {
+        "gothic": "Zwart en rood, donkere omslag",
+        "modern": "Strak schreefloos, veel witruimte",
+        "print": "Zwart-wit, bespaart inkt"
+      },
+      "pageSize": "Paginaformaat",
+      "comments": "Opmerkingen als bijlage opnemen",
+      "attachments": "Pdf-bijlagen achteraan toevoegen",
+      "cover": "Omslagafbeelding",
+      "coverNone": "Geen",
+      "coverClear": "De omslagafbeelding verwijderen",
+      "coverNothing": "Geen Document met afbeeldingen",
+      "coverHint": "De omslag gebruikt de favoriete afbeelding van het gekozen Document.",
+      "visibility": "De pdf bevat alleen wat je kunt zien. Hij wordt op de achtergrond gemaakt en blijft 24 uur beschikbaar.",
+      "asMember": "Je bekijkt de Kamer als een ander lid: de pdf bevat alleen wat die persoon ziet. Hij blijft 24 uur beschikbaar.",
+      "action": "Pdf maken",
+      "making": "Pdf wordt voorbereid…",
+      "makingHint": "Je kunt dit venster sluiten: de pdf blijft op de pagina van de Kamer staan tot je hem downloadt.",
+      "ready": "De pdf is klaar.",
+      "availableUntil": "Beschikbaar tot {{time}}.",
+      "download": "Pdf downloaden",
+      "preparingLink": "Downloadlink voorbereiden…",
+      "failed": "De pdf kon niet worden gemaakt.",
+      "expired": "Deze pdf is niet meer beschikbaar: bestanden worden na 24 uur verwijderd.",
+      "another": "Nog een pdf maken",
+      "retry": "Opnieuw proberen",
+      "listTitle": "Jouw pdf's",
+      "listItem": "{{style}} · {{size}}",
+      "listStatus": {
+        "queued": "In de wachtrij",
+        "running": "Wordt voorbereid",
+        "done": "Klaar",
+        "failed": "Mislukt",
+        "expired": "Verlopen"
+      },
+      "downloadNamed": "Pdf {{name}} downloaden",
+      "dismiss": "Verbergen",
+      "dismissNamed": "Pdf {{name}} verbergen",
+      "coverRoom": "Afbeelding van de Kamer",
+      "coverHintRoom": "De omslag gebruikt de afbeelding van de Kamer, of de favoriete afbeelding van het gekozen Document."
+    },
+    "document": {
+      "title": "Het Document exporteren",
+      "action": "Het Document exporteren",
+      "intro": "Download dit Document als bestand, met wat je kunt zien: Notities, Opmerkingen en Tags. Je kunt het opnieuw in een Kamer importeren."
+    }
+  },
+  "documentImport": {
+    "action": "Documenten importeren",
+    "title": "Documenten importeren",
+    "intro": "Upload een of meer JSON- of Markdown-bestanden, ook de export van een hele Kamer. Je ziet eerst wat er zou worden geïmporteerd: er wordt niets geschreven tot je bevestigt.",
+    "jsonHint": "JSON is het getrouwe formaat; Markdown wordt zo goed mogelijk gelezen. Opmerkingen, pdf-bijlagen, Owners en de koppeling aan de speler worden niet geïmporteerd.",
+    "files": "Bestanden om te importeren",
+    "filesPlaceholder": "Kies een of meer .json- of .md-bestanden",
+    "preview": "Voorbeeld",
+    "found_one": "{{count}} Document gevonden",
+    "found_other": "{{count}} Documenten gevonden",
+    "documentSelect": "{{name}} importeren",
+    "notesCount_one": "{{count}} Notitie",
+    "notesCount_other": "{{count}} Notities",
+    "imagesCount_one": "{{count}} afbeelding",
+    "imagesCount_other": "{{count}} afbeeldingen",
+    "tags": "Tags: {{names}}",
+    "exists": "Bestaat al in deze Kamer",
+    "tagsToCreate": "Tags die worden gemaakt: {{names}}",
+    "tagsUnavailable": "Tags die je niet kunt maken en die worden weggelaten: {{names}}",
+    "selectedCount_one": "{{count}} Document geselecteerd",
+    "selectedCount_other": "{{count}} Documenten geselecteerd",
+    "next": "Volgende",
+    "back": "Terug",
+    "start": "Importeren",
+    "warning": {
+      "comments_dropped_one": "{{count}} Opmerking wordt niet geïmporteerd",
+      "comments_dropped_other": "{{count}} Opmerkingen worden niet geïmporteerd",
+      "files_dropped_one": "{{count}} pdf-bijlage wordt niet geïmporteerd",
+      "files_dropped_other": "{{count}} pdf-bijlagen worden niet geïmporteerd",
+      "player_dropped": "De koppeling aan de speler wordt niet geïmporteerd",
+      "selective_to_private_one": "{{count}} item met Selectieve zichtbaarheid wordt Privé",
+      "selective_to_private_other": "{{count}} items met Selectieve zichtbaarheid worden Privé",
+      "tags_not_created": "Tags niet gemaakt: {{names}}"
+    },
+    "existing": {
+      "title": "Sommige Documenten bestaan al",
+      "intro": "Kopiëren maakt een nieuw Document en laat het origineel ongemoeid. Vervangen overschrijft alleen de gegevens van het origineel (naam, beschrijving, Tags en Notities): Owners, zichtbaarheid, Opmerkingen en bijlagen blijven. Een vervanging maak je ongedaan via de geschiedenis van het Document.",
+      "copy": "Kopiëren",
+      "replace": "Vervangen",
+      "applyAll": "Op alles toepassen",
+      "copyAll": "Alles kopiëren",
+      "replaceAll": "Alles vervangen",
+      "cannotReplace": "Alleen een Owner van het Document (of de Master) kan het vervangen",
+      "choice": "Wat te doen met {{name}}"
+    },
+    "running": "Bezig met importeren…",
+    "runningHint": "Je kunt dit venster sluiten: het importeren gaat op de achtergrond door en de Documenten verschijnen in de lijst zodra het klaar is.",
+    "done": "Importeren voltooid",
+    "created_one": "{{count}} Document gemaakt",
+    "created_other": "{{count}} Documenten gemaakt",
+    "replaced_one": "{{count}} Document vervangen",
+    "replaced_other": "{{count}} Documenten vervangen",
+    "skippedTitle_one": "{{count}} afbeelding niet geïmporteerd",
+    "skippedTitle_other": "{{count}} afbeeldingen niet geïmporteerd",
+    "skipped": "{{document}}: {{reason}}",
+    "skipReason": {
+      "unreachable": "link onbereikbaar of verlopen",
+      "not_an_image": "is geen afbeelding",
+      "too_large": "te groot",
+      "limit": "het Document heeft al het maximum aan afbeeldingen",
+      "storage": "opslag niet beschikbaar",
+      "failed": "onverwachte fout"
+    },
+    "failed": "Het importeren is mislukt. Controleer de lijst met Documenten voordat je het opnieuw probeert.",
+    "another": "Meer bestanden importeren"
+  },
+  "imageSearch": {
+    "action": "Zoeken",
+    "title": "Afbeeldingen zoeken",
+    "queryLabel": "Waarnaar zoeken",
+    "placeholder": "Bijv. gotisch kasteel, oude kaart",
+    "submit": "Zoeken",
+    "sourceHint": "Gratis afbeeldingen (Creative Commons en publiek domein) van Openverse. Klik op een afbeelding om die aan het Document toe te voegen.",
+    "loading": "Zoeken",
+    "empty": "Geen afbeeldingen gevonden",
+    "more": "Meer resultaten",
+    "add": "{{title}} toevoegen",
+    "added": "Toegevoegd",
+    "untitled": "Zonder titel",
+    "source": "Bron"
+  },
+  "speech": {
+    "listen": "«{{name}}» beluisteren",
+    "pause": "Voorlezen pauzeren",
+    "resume": "Voorlezen hervatten",
+    "stop": "Voorlezen stoppen",
+    "commentListen": "Beluisteren",
+    "commentStop": "Stoppen",
+    "commentBy": "{{name}} schreef"
+  },
+  "privacy": {
+    "back": "Terug naar de app",
+    "title": "Privacyverklaring",
+    "updated": "Laatst bijgewerkt: {{date}}",
+    "intro": "Deze verklaring legt uit welke persoonsgegevens deze app verwerkt, waarom, waar ze worden bewaard en hoe je je rechten kunt uitoefenen op grond van de Algemene Verordening Gegevensbescherming (AVG/GDPR).",
+    "sections": {
+      "controller": {
+        "title": "Wie is de verwerkingsverantwoordelijke",
+        "body": "De verwerkingsverantwoordelijke is {{name}}. Voor vragen over je gegevens, of om je rechten uit te oefenen, schrijf je naar {{email}}."
+      },
+      "data": {
+        "title": "Welke gegevens we verwerken",
+        "body": "Alleen wat nodig is om de app te laten werken:\n\n- Inloggegevens van de provider die je kiest (Google, Discord of GitHub): een accountidentificatie, je e-mailadres, je naam en je afbeelding, eenmalig gekopieerd als standaardnaam en -avatar van je profiel.\n- Je profiel: weergavenaam, voornaamwoorden, beschrijving en avatar, die je op elk moment kunt wijzigen of verwijderen via de Account-pagina.\n- Wat je schrijft en uploadt in de Kamers: Documenten, Notities, Opmerkingen, reacties, afbeeldingen en pdf-bijlagen, met wie ze heeft gemaakt en wanneer.\n- Je Vrienden, vriendschapsverzoeken en je vriendencode, en de uitnodigingen voor Kamers die je verstuurt of ontvangt.\n- Gebruiks- en technische gegevens: wanneer je elk Document het laatst hebt geopend, de wijzigingsgeschiedenis van Documenten, het logboek van elke Kamer met rol- en zichtbaarheidswijzigingen, en de verzoekgegevens die de servers vastleggen om de dienst te leveren en te beveiligen (zoals IP-adres, browser en tijdstip)."
+      },
+      "purposes": {
+        "title": "Waarom, en op welke rechtsgrond",
+        "body": "Je gegevens dienen alleen om de app aan jou en de leden van je Kamers te leveren (uitvoering van een overeenkomst, art. 6(1)(b) AVG) en om haar veilig en werkend te houden (gerechtvaardigd belang, art. 6(1)(f) AVG).\n\nZe worden niet verkocht en niet gebruikt voor reclame of profilering, en de app gebruikt geen analyse- of trackingtools. Je e-mailadres wordt nooit aan andere gebruikers getoond."
+      },
+      "processors": {
+        "title": "Wie ze verwerkt, en waar",
+        "body": "De app maakt gebruik van deze leveranciers, die gegevens namens ons verwerken:\n\n- Supabase: database, bestandsopslag en inloggen, gehost in de Europese Unie (Frankfurt, Duitsland).\n- OVHcloud: de server waarop de backend van de app draait, in het Verenigd Koninkrijk, dat door de Europese Commissie wordt erkend als land met een passend beschermingsniveau.\n- Vercel: levering van de pagina's van de app. Het netwerk kan verzoeken van buiten de Europese Unie afhandelen; doorgiften naar de Verenigde Staten zijn gebaseerd op het EU-U.S. Data Privacy Framework en de standaardcontractbepalingen.\n- Google, Discord en GitHub: alleen voor het inloggen dat je kiest, volgens hun eigen privacyverklaringen.\n- Openverse, een project van WordPress.org: wanneer je naar vrije afbeeldingen voor een Document zoekt, wordt de zoekopdracht vanaf onze server verstuurd en laadt je browser de voorbeelden rechtstreeks van Openverse, dat dus je IP-adres ziet."
+      },
+      "retention": {
+        "title": "Hoe lang we ze bewaren",
+        "body": "- Je account en je profiel blijven bestaan tot je het account verwijdert.\n- Wanneer je het account verwijdert, worden profiel, avatar, Vrienden, reacties en inlogaccount meteen gewist. Kamers waarin jij het enige lid was, worden met alle inhoud verwijderd. In Kamers die je met anderen deelt, blijft wat je hebt geschreven staan als onderdeel van de campagne, getoond als geschreven door een onbekende gebruiker.\n- Een Kamer die je verwijdert, wordt met alle inhoud gewist.\n- De pdf's van Kamers worden 24 uur na het aanmaken gewist, en de importen van Documenten 7 dagen na afloop.\n- Serverlogs worden alleen bewaard zolang dat nodig is voor de werking en de beveiliging, en worden roulerend overschreven.\n- Back-ups van onze leveranciers worden overschreven binnen hun back-upcyclus."
+      },
+      "rights": {
+        "title": "Jouw rechten",
+        "body": "Je kunt op elk moment:\n\n- je gegevens bekijken en downloaden: Account-pagina, \"Jouw gegevens\", \"Mijn gegevens downloaden\" (een JSON-bestand; de export van elke Kamer bevat de campagne-inhoud die je kunt zien);\n- je profiel corrigeren via de Account-pagina;\n- je account verwijderen: Account-pagina, \"Jouw gegevens\", \"Account verwijderen\";\n- bezwaar maken tegen de verwerking of beperking ervan vragen, door te schrijven naar {{email}}.\n\nJe hebt ook het recht om een klacht in te dienen bij een toezichthouder; in Italië is dat de Garante per la protezione dei dati personali (garanteprivacy.it)."
+      },
+      "storage": {
+        "title": "Cookies en lokale opslag",
+        "body": "De app gebruikt geen cookies. Ze bewaart enkele items in het geheugen van je browser die nodig zijn voor de werking: de inlogsessie, de gekozen taal, stem en snelheid van het voorlezen, het personage waarmee je het laatst in elke Kamer schreef, de meldingen over pdf's van Kamers die je hebt gesloten, en een uitnodigingslink die vóór het inloggen is geopend. Ze blijven op je apparaat: de sessie wordt verwijderd als je uitlogt, de rest wanneer je de browsergegevens wist."
+      }
+    }
+  },
+  "maps": {
+    "title": "Kaarten",
+    "create": "Nieuwe kaart",
+    "settings": "Instellingen van de kaart",
+    "delete": "Kaart verwijderen",
+    "deleteConfirmTitle": "Deze kaart verwijderen?",
+    "deleteConfirmBody": "\"{{name}}\" wordt verwijderd met alles wat erop staat. De Documenten blijven.",
+    "signInRequired": "Log in om de kaarten van deze Kamer te zien.",
+    "backToDocuments": "Documenten",
+    "backToMaps": "Kaarten",
+    "empty": "Nog geen kaarten.",
+    "loadError": "De kaarten konden niet worden geladen.",
+    "notFound": "Kaart niet gevonden.",
+    "documentCount_one": "{{count}} Document",
+    "documentCount_other": "{{count}} Documenten",
+    "lastEdit": "bewerkt {{when}}",
+    "selectiveLabel": "Leden die de kaart kunnen zien",
+    "unsaved": "Niet-opgeslagen wijzigingen",
+    "saving": "Opslaan…",
+    "saved": "Opgeslagen",
+    "saveError": "Niet opgeslagen",
+    "retry": "Opnieuw proberen",
+    "readOnlyOnPhone": "Op zo'n klein scherm is de kaart alleen-lezen.",
+    "addDocuments": "Documenten toevoegen",
+    "addText": "Tekst toevoegen",
+    "selectHint": "Sleep over de achtergrond om meerdere kaarten te selecteren. Verplaats de kaart met de rechter- of middelste muisknop, of houd de spatiebalk ingedrukt.",
+    "groupSelected": "Groeperen",
+    "searchDocuments": "Zoeken op naam",
+    "alreadyOnMap": "Staat al op de kaart",
+    "addChosen_one": "{{count}} Document toevoegen",
+    "addChosen_other": "{{count}} Documenten toevoegen",
+    "editCard": "Kaart bewerken: {{name}}",
+    "editText": "Tekst bewerken",
+    "editGroup": "Groep bewerken",
+    "editArrow": "Pijl bewerken: {{label}}",
+    "masterOnly": "Alleen Master",
+    "masterOnlyArrow": "Alleen zichtbaar voor Masters",
+    "masterOnlyCard": "Alleen zichtbaar voor Masters",
+    "struck": "Doorgehaald",
+    "color": "Kleur",
+    "colors": {
+      "default": "Standaard",
+      "red": "Rood",
+      "green": "Groen",
+      "purple": "Paars",
+      "blue": "Blauw",
+      "gold": "Goud"
+    },
+    "card": {
+      "editDocument": "Kaart: {{name}}",
+      "editText": "Tekst",
+      "newText": "Nieuwe tekst",
+      "text": "Tekst",
+      "size": "Grootte",
+      "sizes": {
+        "normal": "Normaal",
+        "large": "Groot",
+        "title": "Titel"
+      },
+      "caption": "Bijschrift",
+      "captionHint": "Alleen op deze kaart; in plaats van de ondertitel van het Document.",
+      "image": "Afbeelding",
+      "imageHint": "Alleen op deze kaart. De eerste is de favoriete afbeelding van het Document, die de kaart volgt tot je een andere kiest.",
+      "imageNumbered": "Afbeelding {{number}}",
+      "remove": "Van de kaart halen"
+    },
+    "group": {
+      "title": "Groep",
+      "name": "Titel",
+      "namePlaceholder": "Tegenstanders en vijanden",
+      "remove": "De groep verwijderen",
+      "untitled": "Groep zonder titel"
+    },
+    "arrow": {
+      "title": "Pijl",
+      "direction": "Richting",
+      "forward": "Eén richting",
+      "both": "Beide richtingen",
+      "none": "Alleen lijn",
+      "label": "Label",
+      "labelTowards": "Label richting {{name}}",
+      "delete": "De pijl verwijderen"
+    }
+  }
+}

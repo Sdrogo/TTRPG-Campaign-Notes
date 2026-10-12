@@ -3,7 +3,8 @@
     "name": "Italiano",
     "selectorLabel": "Lingua: {{language}}",
     "selectorTooltip": "Cambia lingua",
-    "loadFailed": "Impossibile caricare la lingua. Riprova."
+    "loadFailed": "Impossibile caricare la lingua. Riprova.",
+    "beta": "beta"
   },
   "app": {
     "name": "TTRPG Campaign Notes"

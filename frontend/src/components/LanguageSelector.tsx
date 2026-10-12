@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Box, Menu, Tooltip, UnstyledButton } from '@mantine/core';
+import { Badge, Box, Menu, Tooltip, UnstyledButton } from '@mantine/core';
 import { CheckIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, currentLanguage, setLanguage, type Language } from '../i18n';
-import { LANGUAGE_FLAGS } from '../i18n/languages';
+import { BETA_LANGUAGES, LANGUAGE_FLAGS, LANGUAGE_NAMES } from '../i18n/languages';
 import { notifyError } from '../lib/notify';
 
 /** A small rectangular flag; decorative, since the text next to it names the language. */
@@ -29,8 +29,9 @@ function Flag({ language, width }: { language: Language; width: number }) {
  * The current language's flag, just before the account avatar in the top
  * bar (spec 09); it opens a menu of the supported languages. The app starts
  * in the browser's language, and a pick here overrides it from then on.
- * Each language is listed by its own name, so it can be found whichever
- * language the UI is in.
+ * Each language is listed by its own name (`LANGUAGE_NAMES`), so it can be
+ * found whichever language the UI is in; those not translated by a native
+ * speaker yet carry a "beta" label.
  */
 export function LanguageSelector() {
   const { t } = useTranslation();
@@ -59,13 +60,21 @@ export function LanguageSelector() {
             key={option}
             lang={option}
             leftSection={<Flag language={option} width={20} />}
-            rightSection={option === language ? <CheckIcon size={14} aria-hidden="true" /> : null}
+            rightSection={
+              option === language ? (
+                <CheckIcon size={14} aria-hidden="true" />
+              ) : BETA_LANGUAGES.includes(option) ? (
+                <Badge size="xs" variant="light" color="gray">
+                  {t('language.beta')}
+                </Badge>
+              ) : null
+            }
             aria-current={option === language ? 'true' : undefined}
             onClick={() => {
               setLanguage(option).catch(() => notifyError(new Error(t('language.loadFailed'))));
             }}
           >
-            {t('language.name', { lng: option })}
+            {LANGUAGE_NAMES[option]}
           </Menu.Item>
         ))}
       </Menu.Dropdown>

@@ -20,9 +20,11 @@ def test_no_header_falls_back_to_default() -> None:
         ("it", "it"),
         ("it-IT", "it"),
         ("en-US,en;q=0.9", "en"),
-        ("fr-FR,fr;q=0.9,it;q=0.8", "it"),
+        ("ja-JP,ko;q=0.9,it;q=0.8", "it"),
+        ("fr-FR,fr;q=0.9,it;q=0.8", "fr"),
+        ("pt-BR,pt;q=0.9", "pt-PT"),
         ("it;q=0.5,en;q=0.9", "en"),
-        ("fr-FR,de-DE", DEFAULT_LOCALE),
+        ("ja-JP,ko-KR", DEFAULT_LOCALE),
         ("", DEFAULT_LOCALE),
         (" , ,", DEFAULT_LOCALE),
     ],
@@ -74,8 +76,8 @@ def test_resolve_locale_maps_regional_and_script_tags(
     assert resolve_locale(tag, supported) == expected
 
 
-def test_portuguese_and_chinese_tags_stay_unresolved_while_unsupported() -> None:
-    assert get_locale("pt-BR,zh-TW") == DEFAULT_LOCALE
+def test_traditional_chinese_has_no_file_yet() -> None:
+    assert get_locale("zh-TW") == DEFAULT_LOCALE
 
 
 def test_the_alias_table_matches_the_frontend_one() -> None:

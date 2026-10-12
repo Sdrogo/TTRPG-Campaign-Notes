@@ -1,0 +1,235 @@
+{
+  "errors": {
+    "auth": {
+      "missingToken": "Authenticatietoken ontbreekt",
+      "invalidToken": "Token ongeldig of verlopen"
+    },
+    "room": {
+      "notFound": "Kamer niet gevonden",
+      "notAMember": "Je bent geen lid van deze Kamer",
+      "onlyMasterCanChangeSettings": "Alleen de Master kan de instellingen van deze Kamer wijzigen",
+      "onlyAdministratorCanChangeRoles": "Alleen een Admin van de Kamer kan rollen wijzigen",
+      "onlyAdministratorCanRemoveMembers": "Alleen een Admin van de Kamer kan leden verwijderen",
+      "onlyAdministratorChangesImage": "Alleen een Admin van de Kamer kan de afbeelding wijzigen",
+      "onlyAdministratorCanDelete": "Alleen een Admin van de Kamer kan hem verwijderen",
+      "nameRequired": "De naam van de Kamer is verplicht",
+      "onlyAdministratorCanChangeDefaultVisibility": "Alleen een Admin van de Kamer kan de standaardzichtbaarheid wijzigen",
+      "invalidDefaultVisibility": "De standaardzichtbaarheid kan Kamer, Alleen Master of Privé zijn",
+      "onlyMasterCanDuplicate": "Alleen de Master kan de Kamer dupliceren"
+    },
+    "membership": {
+      "notFound": "De gebruiker is geen lid van deze Kamer",
+      "lastMaster": "De laatste Master kan niet worden verwijderd zonder een opvolger aan te wijzen",
+      "lastAdministrator": "De laatste Admin kan niet worden verwijderd zonder een opvolger aan te wijzen",
+      "noChangeRequested": "Het verzoek moet de rol en/of de adminvlag wijzigen"
+    },
+    "document": {
+      "notFound": "Document niet gevonden",
+      "nameRequired": "De naam van het Document is verplicht",
+      "subtitleTooLong": "De ondertitel mag maximaal {max} tekens hebben",
+      "creationDisabled": "Het maken van Documenten is uitgeschakeld voor Players in deze Kamer",
+      "invalidTagIds": "Een of meer tag_ids zijn niet geldig voor deze Kamer",
+      "notOwner": "Alleen een Owner (of de Master) kan dit doen",
+      "alreadyOwner": "De gebruiker is al Owner van dit Document",
+      "notAnOwner": "De gebruiker is geen expliciete Owner van dit Document",
+      "tooManyImages": "Een Document mag maximaal {max} afbeeldingen hebben"
+    },
+    "comment": {
+      "notFound": "Opmerking niet gevonden",
+      "bodyRequired": "Een Opmerking mag niet leeg zijn",
+      "tooLong": "Een Opmerking mag maximaal {max} tekens hebben",
+      "notAuthor": "Alleen de auteur kan deze Opmerking bewerken",
+      "notAuthorImages": "Alleen de auteur kan de afbeeldingen van deze Opmerking wijzigen",
+      "cannotDelete": "Alleen de auteur of de Master kan deze Opmerking verwijderen",
+      "deleted": "Deze Opmerking is verwijderd",
+      "alreadyDeleted": "Deze Opmerking was al verwijderd",
+      "tooManyImages": "Een Opmerking mag maximaal {max} afbeeldingen hebben",
+      "invalidSelectiveUsers": "selective_user_ids mag alleen leden van deze Kamer bevatten",
+      "parentNotFound": "De Opmerking waarop je antwoordt is niet gevonden",
+      "parentDeleted": "Je kunt niet antwoorden op een verwijderde Opmerking",
+      "replyWiderThanParent": "Een antwoord mag niet zichtbaar zijn voor wie de Opmerking waarop het antwoordt niet ziet",
+      "cannotPin": "Alleen een Owner of de Master kan de Opmerkingen van dit Document vastzetten",
+      "pinReply": "Alleen een Opmerking van het hoogste niveau kan worden vastgezet",
+      "tooManyPinned": "Een Document mag maximaal {max} vastgezette Opmerkingen hebben",
+      "cannotResolve": "Alleen de auteur, een Owner of de Master kan deze discussie als opgelost markeren",
+      "resolveReply": "Alleen de discussie van een Opmerking van het hoogste niveau kan worden opgelost",
+      "cannotPromote": "Alleen een Owner of de Master kan de opmerkingen van dit Document promoten",
+      "cannotPromoteIntoDocument": "Je kunt een opmerking alleen promoten naar een Document waarvan je Owner bent",
+      "promoteIntoSameDocument": "Een opmerking kan niet als nieuw Document worden gepromoot in haar eigen Document",
+      "promotionWidens": "Door deze opmerking te promoten wordt ze zichtbaar voor leden die haar nu niet kunnen lezen: bevestig om door te gaan",
+      "promoteDocumentRequired": "Kies het Document waarin de opmerking moet worden gepromoot"
+    },
+    "reaction": {
+      "invalidEmoji": "Een reactie moet precies één emoji zijn",
+      "commentDeleted": "Je kunt niet reageren op een verwijderde Opmerking",
+      "tooMany": "Een Opmerking mag maximaal {max} verschillende emoji hebben"
+    },
+    "character": {
+      "notFound": "Personage niet gevonden",
+      "playerNotAMember": "Wie het Personage speelt, moet lid zijn van deze Kamer",
+      "cannotPostAs": "Je kunt alleen schrijven als een Personage dat jij speelt (de Master kan als elk Document schrijven)"
+    },
+    "version": {
+      "notFound": "Versie niet gevonden"
+    },
+    "note": {
+      "notFound": "Notitie niet gevonden",
+      "titleRequired": "Een Notitie heeft een titel nodig",
+      "titleTooLong": "De titel van een Notitie mag maximaal {max} tekens hebben",
+      "notOwner": "Alleen een Owner (of de Master) kan de Notities van dit Document beheren",
+      "tooMany": "Een Document mag maximaal {max} Notities hebben",
+      "invalidOrder": "note_ids moet elke Notitie die je ziet precies één keer vermelden",
+      "invalidSelectiveUsers": "selective_user_ids mag alleen leden van deze Kamer bevatten"
+    },
+    "tag": {
+      "notAllowedToManage": "Alleen een Admin of de Master kan Tags beheren",
+      "notFound": "Tag niet gevonden",
+      "nameRequired": "De naam van de Tag is verplicht",
+      "duplicateName": "Er bestaat al een Tag met deze naam in deze Kamer",
+      "onlyAdministratorCanSetMainTags": "Alleen een Admin kan de hoofdtags kiezen",
+      "duplicateMainTag": "Een Tag mag maar één keer voorkomen bij de hoofdtags",
+      "unknownMainTag": "Een hoofdtag is geen Tag van deze Kamer",
+      "emptyMainItem": "Een hoofditem vereist minstens één Tag",
+      "duplicateCombination": "Deze combinatie van Tags bestaat al"
+    },
+    "image": {
+      "notFound": "Afbeelding niet gevonden",
+      "storageUnavailable": "De afbeeldingsopslag is niet beschikbaar",
+      "tooLarge": "De afbeelding overschrijdt de uploadlimiet van {mb} MB",
+      "dimensionsTooLarge": "De afmetingen van de afbeelding zijn te groot",
+      "unsupportedFormat": "Afbeeldingsformaat niet ondersteund: {format}",
+      "invalidFile": "Het bestand is geen geldige afbeelding",
+      "remoteUnsupportedScheme": "Alleen http(s)-afbeeldings-URL's worden ondersteund",
+      "remoteHostUnresolved": "De host van de afbeeldings-URL kon niet worden opgelost",
+      "remoteNonPublic": "De afbeeldings-URL wijst naar een niet-openbaar adres",
+      "remoteRedirectNoLocation": "De afbeeldings-URL verwees door zonder een bestemming te noemen",
+      "remoteHttpStatus": "De afbeeldings-URL gaf HTTP {status} terug",
+      "remoteTooLarge": "De afbeelding op de opgegeven URL is te groot",
+      "remoteDownloadFailed": "De afbeelding kon niet van de URL worden gedownload",
+      "remoteTooManyRedirects": "De afbeeldings-URL verwees te vaak door"
+    },
+    "file": {
+      "notPdf": "Het bestand is geen pdf",
+      "tooLarge": "Het bestand overschrijdt de limiet van {mb} MB",
+      "tooMany": "Een Document mag maximaal {max} bestanden hebben",
+      "notFound": "Bestand niet gevonden",
+      "storageUnavailable": "De bestandsopslag is niet beschikbaar"
+    },
+    "invitation": {
+      "notFound": "Uitnodiging niet gevonden",
+      "revoked": "De uitnodiging is ingetrokken",
+      "expired": "De uitnodiging is verlopen",
+      "alreadyMember": "De gebruiker is al lid van deze Kamer",
+      "onlyAdministratorCanInvite": "Alleen een Admin van de Kamer kan uitnodigingen maken",
+      "notAFriend": "Je kunt alleen een vriend rechtstreeks uitnodigen"
+    },
+    "account": {
+      "fields": {
+        "display_name": "Weergavenaam",
+        "pronouns": "Voornaamwoorden",
+        "bio": "Biografie"
+      },
+      "fieldTooLong": "{field} mag maximaal {max} tekens hebben",
+      "deletionNotConfirmed": "Typ DELETE om het verwijderen van het account te bevestigen",
+      "successorNeeded": "Benoem eerst een andere Master of Admin voordat je het account verwijdert in: {rooms}",
+      "signInDeletionFailed": "Je gegevens zijn verwijderd, maar het inlogaccount kon niet worden verwijderd. Probeer het zo meteen opnieuw"
+    },
+    "friend": {
+      "notFound": "Vriend of vriendschapsverzoek niet gevonden",
+      "self": "Je kunt jezelf geen vriendschapsverzoek sturen",
+      "noSharedRoom": "Je kunt alleen een vriendschapsverzoek sturen aan wie een Kamer met je deelt, of via zijn of haar vriendencode",
+      "userOrCode": "Geef een gebruiker of een vriendencode op",
+      "codeNotFound": "Vriendencode niet gevonden",
+      "alreadyFriends": "Jullie zijn al vrienden",
+      "alreadyRequested": "Je hebt deze gebruiker al een vriendschapsverzoek gestuurd",
+      "incomingPending": "Deze gebruiker heeft je al een vriendschapsverzoek gestuurd: beantwoord dat",
+      "cooldown": "Je hebt het verzoek van deze gebruiker minder dan 30 dagen geleden geweigerd",
+      "notRecipient": "Alleen wie het verzoek heeft ontvangen, kan antwoorden",
+      "notPending": "Je hebt dit verzoek al beantwoord",
+      "answerInstead": "Accepteer of weiger het verzoek in plaats van het te verwijderen"
+    },
+    "reveal": {
+      "onlyMaster": "Alleen de Master kan inhoud onthullen",
+      "audienceRequired": "Kies de hele Kamer of minstens één lid aan wie je onthult",
+      "notWidening": "Niemand zou toegang krijgen: een onthulling kan alleen uitbreiden wie de inhoud ziet",
+      "invalidUsers": "user_ids mag alleen leden van deze Kamer bevatten",
+      "invalidNotes": "note_ids mag alleen Notities van dit Document bevatten",
+      "commentDeleted": "Een verwijderde Opmerking kan niet worden onthuld"
+    },
+    "history": {
+      "forbidden": "Alleen de Master of een Admin van de Kamer kan de zichtbaarheidsgeschiedenis lezen",
+      "invalidCursor": "before moet een item uit de geschiedenis van deze Kamer zijn"
+    },
+    "viewAs": {
+      "readOnly": "Je kunt niets wijzigen terwijl je als een ander lid kijkt",
+      "onlyMaster": "Alleen de Master kan deze Kamer als een ander lid bekijken",
+      "notAMember": "Deze gebruiker is geen lid van de Kamer",
+      "invalidUser": "Ongeldig lid"
+    },
+    "export": {
+      "alreadyRunning": "Je maakt al een pdf in deze Kamer",
+      "notFound": "Export niet gevonden"
+    },
+    "import": {
+      "unreadable": "{name} is geen leesbare JSON- of Markdown-export",
+      "unsupportedSchema": "{name} is geëxporteerd door een nieuwere versie (schema {version}); deze app leest tot en met schema {max}",
+      "noDocuments": "{name} bevat geen enkel Document",
+      "tooManyFiles": "Je kunt maximaal {max} bestanden tegelijk importeren",
+      "tooManyDocuments": "Je kunt maximaal {max} Documenten tegelijk importeren",
+      "tooManyImages": "Je kunt maximaal {max} afbeeldingen tegelijk importeren",
+      "nameRequired": "Een Document in het bestand heeft geen naam",
+      "nameTooLong": "De naam van het Document \"{name}...\" is langer dan {max} tekens",
+      "subtitleTooLong": "De ondertitel van {name} is langer dan {max} tekens",
+      "tooManyNotes": "{name} heeft meer dan {max} Notities",
+      "noteTitleInvalid": "Een Notitie van {name} heeft geen titel of een titel van meer dan {max} tekens",
+      "tagNameTooLong": "De naam van de Tag \"{name}...\" is langer dan {max} tekens",
+      "nothingSelected": "Selecteer minstens één Document om te importeren",
+      "badChoices": "De importkeuzes zijn niet geldig",
+      "cannotReplace": "Alleen een Owner (of de Master) kan {name} vervangen",
+      "fileTooLarge": "{name} is groter dan {max} MB",
+      "alreadyRunning": "Je hebt al een import bezig in deze Kamer",
+      "notFound": "Import niet gevonden"
+    },
+    "imageSearch": {
+      "emptyQuery": "Typ iets om naar te zoeken",
+      "throttled": "Te veel zoekopdrachten: wacht een minuut en probeer het opnieuw",
+      "unavailable": "Het zoeken naar afbeeldingen is nu niet beschikbaar, probeer het later opnieuw"
+    },
+    "map": {
+      "notFound": "Kaart niet gevonden",
+      "notManager": "Alleen wie de kaart heeft gemaakt (of de Master) kan hem wijzigen",
+      "creationDisabled": "In deze Kamer kunnen Players geen kaarten maken",
+      "invalidSelectiveUsers": "selective_user_ids mag alleen leden van deze Kamer bevatten",
+      "nameRequired": "Een kaart moet een naam hebben",
+      "tooLong": "Het veld {field} mag maximaal {max} tekens bevatten",
+      "tooMany": "Een Kamer mag maximaal {max} kaarten hebben",
+      "tooManyCards": "Een kaart mag maximaal {max} kaartjes hebben",
+      "tooManyGroups": "Een kaart mag maximaal {max} groepen hebben",
+      "tooManyArrows": "Een kaart mag maximaal {max} pijlen hebben",
+      "invalidBoard": "De kaart kan niet worden opgeslagen: ze verwijst naar iets dat er niet is",
+      "masterOnly": "Alleen de Master kan een kaartje of pijl alleen voor de Master zichtbaar maken",
+      "imageNotFound": "Deze afbeelding hoort niet bij de afbeeldingen van het Document",
+      "fields": {
+        "name": "naam",
+        "description": "beschrijving",
+        "text": "tekst van het kaartje",
+        "caption": "bijschrift",
+        "label": "label",
+        "groupTitle": "titel van de groep"
+      }
+    }
+  },
+  "pdf": {
+    "contents": "Inhoud",
+    "glossary": "Woordenlijst",
+    "other": "Overig",
+    "documents": "Documenten",
+    "comments": "Opmerkingen",
+    "unknownMember": "Onbekend lid",
+    "playedBy": "{character} (gespeeld door {player})",
+    "pageAbbreviation": "p."
+  },
+  "room": {
+    "copySuffix": " (Kopie)"
+  }
+}

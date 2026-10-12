@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { LANGUAGE_NAMES } from '../../i18n/languages';
 import i18n, {
   LANGUAGE_STORAGE_KEY,
+  SUPPORTED_LANGUAGES,
   currentLanguage,
   detectLanguage,
   ensureLanguageLoaded,
@@ -19,7 +21,7 @@ describe('currentLanguage', () => {
   // matched by `supportedLngs`'s own fallback logic); this app only ever
   // shows it or en, so that case still needs a safe value.
   it('falls back to English when i18next resolves to an unsupported language', () => {
-    vi.spyOn(i18n, 'resolvedLanguage', 'get').mockReturnValue('fr');
+    vi.spyOn(i18n, 'resolvedLanguage', 'get').mockReturnValue('ja');
 
     expect(currentLanguage()).toBe('en');
   });
@@ -38,11 +40,11 @@ describe('detectLanguage', () => {
   });
 
   it('takes the first supported language among the browser preferences', () => {
-    expect(detectLanguage(['de-DE', 'fr', 'it'])).toBe('it');
+    expect(detectLanguage(['ja', 'ko', 'it'])).toBe('it');
   });
 
   it('falls back to English when nothing the browser asks for is supported', () => {
-    expect(detectLanguage(['de-DE', 'ja'])).toBe('en');
+    expect(detectLanguage(['ja', 'ko'])).toBe('en');
     expect(detectLanguage([])).toBe('en');
   });
 
@@ -128,8 +130,9 @@ describe('resolveLanguage', () => {
     expect(resolveLanguage(tag, supported)).toBe(expected);
   });
 
-  it('knows no Portuguese or Chinese while those files do not exist', () => {
-    expect(detectLanguage(['pt-BR', 'zh-TW'])).toBe('en');
+  it('reads Brazilian Portuguese as European, and Traditional Chinese as nothing yet', () => {
+    expect(detectLanguage(['pt-BR'])).toBe('pt-PT');
+    expect(detectLanguage(['zh-TW', 'fr-CA'])).toBe('fr');
   });
 });
 
@@ -219,5 +222,39 @@ describe('setLanguage with a slow language file', () => {
     expect(i18n.language).toBe('en');
     expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en');
     i18n.removeResourceBundle('xx', 'translation');
+  });
+});
+
+// The real lazy files: picking a language fetches its strings, and plurals
+// follow its own rules (Russian has four forms).
+describe('a language that is fetched when picked', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('it');
+  });
+
+  it('switches to it and uses its plural rules', async () => {
+    await setLanguage('ru');
+
+    expect(currentLanguage()).toBe('ru');
+    expect(document.documentElement.lang).toBe('ru');
+    const unread = (count: number) => i18n.t('documents.unreadCount', { count });
+    expect(unread(1)).toBe('1 новый Комментарий');
+    expect(unread(3)).toBe('3 новых Комментария');
+    expect(unread(5)).toBe('5 новых Комментариев');
+  });
+
+  it('keeps a regional language code', async () => {
+    await setLanguage('pt-PT');
+
+    expect(currentLanguage()).toBe('pt-PT');
+    expect(i18n.t('language.name')).toBe('Português');
+  });
+
+  it('loads every supported language by its own file', async () => {
+    for (const language of SUPPORTED_LANGUAGES) {
+      await setLanguage(language);
+
+      expect(i18n.t('language.name')).toBe(LANGUAGE_NAMES[language]);
+    }
   });
 });

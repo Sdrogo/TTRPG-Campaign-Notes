@@ -153,8 +153,9 @@ other icon set.
   transparent ring turns `--accent-primary` on hover/focus and while its
   menu is open. It opens a Mantine `Menu` (`bottom-end`): one item per
   language with a 20px flag and the language's **own** name ("Italiano",
-  "English"), so it can be found whatever language the UI is in, and a
-  check mark on the current one. Its tooltip ("Change language") is hidden while the menu is open, so it doesn't cover the
+  "English", "Deutsch", "Русский"…), so it can be found whatever language the UI is in, a
+  check mark on the current one and a small gray "beta" badge (in the UI
+  language) on the languages nobody has proofread yet (spec 34_2). Its tooltip ("Change language") is hidden while the menu is open, so it doesn't cover the
   first item. **Pending count** (spec 18_2): the avatar sits in a Mantine
   `Indicator` (accent, 18px) counting friend requests received plus Room
   invitations from Friends, hidden at zero; the link's label becomes
