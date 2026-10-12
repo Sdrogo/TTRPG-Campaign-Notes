@@ -6,13 +6,13 @@ from typing import Annotated
 
 from fastapi import Depends, Header
 
-from app.i18n.translator import DEFAULT_LOCALE, SUPPORTED_LOCALES
+from app.i18n.translator import DEFAULT_LOCALE, resolve_locale
 
 
-def _preferred_locales(header: str) -> list[str]:
-    """The header's language tags in quality order (`q`, highest first),
-    reduced to their base language (`it-IT` -> `it`). Good enough for
-    choosing among a handful of supported locales without a full RFC 4647
+def _preferred_tags(header: str) -> list[str]:
+    """The header's language tags in quality order (`q`, highest first), whole
+    (`zh-Hant-HK`), for `resolve_locale` to match. Good enough for choosing
+    among a handful of supported locales without a full RFC 4647
     implementation; ties keep the header's own order."""
     tagged: list[tuple[float, int, str]] = []
     for position, part in enumerate(header.split(",")):
@@ -26,13 +26,13 @@ def _preferred_locales(header: str) -> list[str]:
                 quality = float(quality_part.strip().removeprefix("q="))
             except ValueError:
                 quality = 1.0
-        base = tag.strip().split("-")[0].lower()
+        tag = tag.strip()
         # q=0 explicitly means "not acceptable" (RFC 7231 §5.3.1), not just
         # low priority - it must be excluded, not merely sorted last.
-        if base and 0 < quality <= 1.0:
-            tagged.append((quality, position, base))
+        if tag and 0 < quality <= 1.0:
+            tagged.append((quality, position, tag))
     tagged.sort(key=lambda item: (-item[0], item[1]))
-    return [base for _, _, base in tagged]
+    return [tag for _, _, tag in tagged]
 
 
 def get_locale(accept_language: Annotated[str | None, Header()] = None) -> str:
@@ -40,9 +40,10 @@ def get_locale(accept_language: Annotated[str | None, Header()] = None) -> str:
     has messages for, or `DEFAULT_LOCALE` when the header is absent or none
     of its preferences are supported."""
     if accept_language:
-        for base in _preferred_locales(accept_language):
-            if base in SUPPORTED_LOCALES:
-                return base
+        for tag in _preferred_tags(accept_language):
+            locale = resolve_locale(tag)
+            if locale:
+                return locale
     return DEFAULT_LOCALE
 
 

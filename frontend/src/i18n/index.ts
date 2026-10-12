@@ -5,7 +5,9 @@ import it from './locales/it.json';
 
 // Every UI string lives in `locales/<code>.json` (spec 09). Adding a language
 // is: a new JSON file with the same keys (`locales.test.ts` fails otherwise),
-// an entry here and in `LANGUAGE_FLAGS` (`languages.ts`).
+// an entry in `SUPPORTED_LANGUAGES` and `LAZY_LOADERS` here, and one in
+// `LANGUAGE_FLAGS` (`languages.ts`). Italian and English are bundled; every
+// other language is fetched when it is first needed (spec 34).
 
 /** The languages the UI is translated into, in the order the selector lists them. */
 export const SUPPORTED_LANGUAGES = ['it', 'en'] as const;
@@ -18,6 +20,51 @@ export const FALLBACK_LANGUAGE: Language = 'en';
 
 /** Where the language the user picked from the flag selector is remembered. */
 export const LANGUAGE_STORAGE_KEY = 'ttrpg.language';
+
+/**
+ * Browser tags that don't name a language file as written (spec 34). A bare
+ * `pt` is European Portuguese, mainland and Simplified-script Chinese tags are
+ * `zh-Hans` and Traditional ones `zh-Hant`. An alias counts only when its
+ * target is supported, so `zh-TW` reads Simplified until `zh-Hant` exists.
+ * Keys are lower case; `backend/app/i18n/translator.py` keeps the same table.
+ */
+export const LANGUAGE_ALIASES: Readonly<Record<string, string>> = {
+  pt: 'pt-PT',
+  zh: 'zh-Hans',
+  'zh-cn': 'zh-Hans',
+  'zh-sg': 'zh-Hans',
+  'zh-hans': 'zh-Hans',
+  'zh-tw': 'zh-Hant',
+  'zh-hk': 'zh-Hant',
+  'zh-mo': 'zh-Hant',
+  'zh-hant': 'zh-Hant',
+};
+
+/**
+ * The supported language a browser language tag (`pt-BR`, `zh-Hant-HK`,
+ * `it-IT`) means, or undefined. The tag is tried whole, then with its last
+ * subtag dropped again and again; at each step an alias or a case-insensitive
+ * match of a language code wins.
+ */
+export function resolveLanguage(
+  tag: string,
+  supported: readonly string[] = SUPPORTED_LANGUAGES,
+): string | undefined {
+  const parts = tag.trim().toLowerCase().split('-');
+  while (parts.length > 0 && parts[0] !== '') {
+    const candidate = parts.join('-');
+    const target = LANGUAGE_ALIASES[candidate];
+    if (target && supported.includes(target)) {
+      return target;
+    }
+    const exact = supported.find((code) => code.toLowerCase() === candidate);
+    if (exact) {
+      return exact;
+    }
+    parts.pop();
+  }
+  return undefined;
+}
 
 /** Whether `value` is one of `SUPPORTED_LANGUAGES`. */
 export function isLanguage(value: unknown): value is Language {
@@ -48,12 +95,43 @@ export function detectLanguage(
   if (stored) {
     return stored;
   }
-  const match = preferred.map((tag) => tag.toLowerCase().split('-')[0]).find(isLanguage);
+  const match = preferred.map((tag) => resolveLanguage(tag)).find(isLanguage);
   return match ?? FALLBACK_LANGUAGE;
 }
 
-/** Switches the UI language and remembers the choice for the next visit. */
+type Resources = typeof it;
+
+/**
+ * The languages that are not bundled, each a dynamic `import()` so Vite
+ * splits its file out of the main bundle (spec 34). Empty until the first
+ * new language lands.
+ */
+const LAZY_LOADERS: Readonly<Record<string, () => Promise<{ default: Resources }>>> = {};
+
+/**
+ * Makes sure `language`'s strings are in i18next: nothing to do for a bundled
+ * language or one already fetched; otherwise it fetches the file. Rejects when
+ * the fetch fails, leaving the current language as it was.
+ */
+export async function ensureLanguageLoaded(
+  language: string,
+  loaders: Readonly<Record<string, () => Promise<{ default: Resources }>>> = LAZY_LOADERS,
+): Promise<void> {
+  const load = loaders[language];
+  if (!load || i18n.hasResourceBundle(language, 'translation')) {
+    return;
+  }
+  const { default: strings } = await load();
+  i18n.addResourceBundle(language, 'translation', strings);
+}
+
+/**
+ * Switches the UI language and remembers the choice for the next visit. The
+ * language's file is fetched first, so a failed fetch rejects and changes
+ * nothing.
+ */
 export async function setLanguage(language: Language): Promise<void> {
+  await ensureLanguageLoaded(language);
   try {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   } catch {
@@ -72,9 +150,18 @@ i18n.on('languageChanged', (language) => {
   document.documentElement.lang = language;
 });
 
+const initialLanguage = detectLanguage();
+const bundled: Record<string, Resources> = { it, en };
+
+/** The language i18next starts in: `language` when it is bundled, else the fallback until its file is in. */
+export function startingLanguage(language: string): string {
+  return language in bundled ? language : FALLBACK_LANGUAGE;
+}
+
 void i18n.use(initReactI18next).init({
   resources: { it: { translation: it }, en: { translation: en } },
-  lng: detectLanguage(),
+  // A language that isn't bundled switches once its file is in (`i18nReady`).
+  lng: startingLanguage(initialLanguage),
   fallbackLng: FALLBACK_LANGUAGE,
   supportedLngs: SUPPORTED_LANGUAGES,
   // The resources are bundled, so there is nothing to wait for: the first
@@ -83,5 +170,32 @@ void i18n.use(initReactI18next).init({
   // React escapes what it renders already.
   interpolation: { escapeValue: false },
 });
+
+/**
+ * Brings the starting language in: nothing for a bundled one; otherwise it
+ * fetches the file and switches to it. If the file can't be fetched the app
+ * stays in the fallback.
+ */
+export async function loadStartingLanguage(
+  language: string,
+  loaders: Readonly<Record<string, () => Promise<{ default: Resources }>>> = LAZY_LOADERS,
+): Promise<void> {
+  if (language in bundled) {
+    return;
+  }
+  try {
+    await ensureLanguageLoaded(language, loaders);
+    await i18n.changeLanguage(language);
+  } catch {
+    // Offline or the file is gone: English still works.
+  }
+}
+
+/**
+ * Resolves once the starting language's strings are loaded, so `main.tsx` can
+ * hold the first render for a language that isn't bundled and nothing flashes
+ * in the wrong one.
+ */
+export const i18nReady: Promise<void> = loadStartingLanguage(initialLanguage);
 
 export default i18n;

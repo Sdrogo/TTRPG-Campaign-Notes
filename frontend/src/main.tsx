@@ -18,22 +18,25 @@ import '@mantine/carousel/styles.css';
 import './theme/tokens.css';
 import './index.css';
 
-// Initializes i18next before the first render, so every component has its strings.
-import './i18n';
+// Initializes i18next, and the first render waits for the starting language's
+// strings (a language that isn't bundled is fetched), so every component has them.
+import { i18nReady } from './i18n';
 import { theme } from './theme/theme';
 import App from './App.tsx';
 
 const queryClient = new QueryClient();
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <MantineProvider theme={theme} forceColorScheme="dark">
-      <Notifications />
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </MantineProvider>
-  </StrictMode>,
-);
+void i18nReady.then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <MantineProvider theme={theme} forceColorScheme="dark">
+        <Notifications />
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </QueryClientProvider>
+      </MantineProvider>
+    </StrictMode>,
+  );
+});
