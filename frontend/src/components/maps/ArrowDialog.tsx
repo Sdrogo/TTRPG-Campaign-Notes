@@ -1,14 +1,5 @@
 import { useState } from 'react';
-import {
-  Autocomplete,
-  Button,
-  Checkbox,
-  Group,
-  Modal,
-  SegmentedControl,
-  Stack,
-  Input,
-} from '@mantine/core';
+import { Button, Checkbox, Group, Modal, SegmentedControl, Stack, Input, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import type { ArrowDirection, MapArrow } from '../../types/map';
 import { MapColorPicker } from './MapColorPicker';
@@ -21,8 +12,6 @@ interface ArrowDialogProps {
   /** The names of the two ends, so the labels say which way they read. */
   fromName: string;
   toName: string;
-  /** The labels already used in the Room that the viewer sees (Decision 5). */
-  suggestions: string[];
   /** Only the Master marks an arrow Master only. */
   isMaster: boolean;
   onSave: (patch: Partial<MapArrow>) => void;
@@ -31,20 +20,11 @@ interface ArrowDialogProps {
 }
 
 /**
- * Edits an arrow (spec 28 Decision 5): its direction, its label (one per
+ * Edits an arrow (spec 28 Decision 5; labels aren't suggested): its direction, its label (one per
  * direction on a two-way arrow), color and, for the Master, whether only
  * Masters see it. Mounted per arrow, so it starts from the arrow's values.
  */
-export function ArrowDialog({
-  arrow,
-  fromName,
-  toName,
-  suggestions,
-  isMaster,
-  onSave,
-  onDelete,
-  onClose,
-}: ArrowDialogProps) {
+export function ArrowDialog({ arrow, fromName, toName, isMaster, onSave, onDelete, onClose }: ArrowDialogProps) {
   const { t } = useTranslation();
   const [direction, setDirection] = useState<ArrowDirection>(arrow.direction);
   const [label, setLabel] = useState(arrow.label ?? '');
@@ -80,24 +60,18 @@ export function ArrowDialog({
               ]}
             />
           </Input.Wrapper>
-          <Autocomplete
-            label={
-              direction === 'both'
-                ? t('maps.arrow.labelTowards', { name: toName })
-                : t('maps.arrow.label')
-            }
+          <TextInput
+            label={direction === 'both' ? t('maps.arrow.labelTowards', { name: toName }) : t('maps.arrow.label')}
             value={label}
-            onChange={setLabel}
-            data={suggestions}
+            onChange={(event) => setLabel(event.currentTarget.value)}
             maxLength={MAX_LABEL_LENGTH}
             data-autofocus
           />
           {direction === 'both' && (
-            <Autocomplete
+            <TextInput
               label={t('maps.arrow.labelTowards', { name: fromName })}
               value={reverseLabel}
-              onChange={setReverseLabel}
-              data={suggestions}
+              onChange={(event) => setReverseLabel(event.currentTarget.value)}
               maxLength={MAX_LABEL_LENGTH}
             />
           )}

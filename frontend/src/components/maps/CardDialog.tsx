@@ -1,6 +1,18 @@
 import { useState } from 'react';
-import { Button, Checkbox, Group, Modal, SegmentedControl, Stack, Input, Textarea } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Checkbox,
+  Group,
+  Input,
+  Modal,
+  SegmentedControl,
+  Stack,
+  Textarea,
+  UnstyledButton,
+} from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import type { StoredImage } from '../../types/image';
 import type { CardSize, MapCard } from '../../types/map';
 import type { TextCardValues } from '../../lib/maps';
 import { MapColorPicker } from './MapColorPicker';
@@ -12,9 +24,11 @@ const MAX_CAPTION_LENGTH = 80;
 interface CardDialogProps {
   /** The card to edit; absent to write a new text card. */
   card?: MapCard;
+  /** The Document's images, favorite first, for a Document card's choice of image. */
+  images?: StoredImage[];
   /** Only the Master marks a text card Master only (Decision 6). */
   isMaster: boolean;
-  onSave: (values: TextCardValues & { caption: string | null }) => void;
+  onSave: (values: TextCardValues & { caption: string | null; imageId: string | null }) => void;
   /** Takes the card off the map; absent for a new card. */
   onDelete?: () => void;
   onClose: () => void;
@@ -22,15 +36,19 @@ interface CardDialogProps {
 
 /**
  * Edits a card (spec 28 Decisions 6, 8). A Document card gets its caption on
- * this map (replacing the Document's subtitle here only), color and strike; a
+ * this map (replacing the Document's subtitle here only), the image it shows
+ * (the Document's favorite until another is picked), color and strike; a
  * text card its text, size, color, strike and, for the Master, Master only.
  * Mounted per card, so it starts from the card's values.
  */
-export function CardDialog({ card, isMaster, onSave, onDelete, onClose }: CardDialogProps) {
+export function CardDialog({ card, images = [], isMaster, onSave, onDelete, onClose }: CardDialogProps) {
   const { t } = useTranslation();
   const isDocument = Boolean(card?.documentId);
   const [text, setText] = useState(card?.text ?? '');
   const [caption, setCaption] = useState(card?.caption ?? '');
+  // The favorite leads `images`; picking it again goes back to following it.
+  const [imageId, setImageId] = useState<string | null>(card?.imageId ?? null);
+  const shownImageId = imageId ?? images[0]?.id;
   const [size, setSize] = useState<CardSize>(card?.size ?? 'normal');
   const [color, setColor] = useState(card?.color ?? 'default');
   const [struck, setStruck] = useState(card?.struck ?? false);
@@ -41,6 +59,7 @@ export function CardDialog({ card, isMaster, onSave, onDelete, onClose }: CardDi
     onSave({
       text: text.trim(),
       caption: caption.trim() || null,
+      imageId,
       size,
       color,
       struck,
@@ -59,18 +78,57 @@ export function CardDialog({ card, isMaster, onSave, onDelete, onClose }: CardDi
       <form onSubmit={handleSubmit}>
         <Stack gap="sm">
           {isDocument ? (
-            <Textarea
-              label={t('maps.card.caption')}
-              description={t('maps.card.captionHint')}
-              placeholder={card!.document!.subtitle ?? undefined}
-              value={caption}
-              onChange={(event) => setCaption(event.currentTarget.value)}
-              maxLength={MAX_CAPTION_LENGTH}
-              autosize
-              minRows={2}
-              maxRows={2}
-              data-autofocus
-            />
+            <>
+              <Textarea
+                label={t('maps.card.caption')}
+                description={t('maps.card.captionHint')}
+                placeholder={card!.document!.subtitle ?? undefined}
+                value={caption}
+                onChange={(event) => setCaption(event.currentTarget.value)}
+                maxLength={MAX_CAPTION_LENGTH}
+                autosize
+                minRows={2}
+                maxRows={2}
+                data-autofocus
+              />
+              {images.length > 1 && (
+                <Input.Wrapper label={t('maps.card.image')} description={t('maps.card.imageHint')}>
+                  <Group gap="xs" mt={4}>
+                    {images.map((image, index) => (
+                      <UnstyledButton
+                        key={image.id}
+                        aria-label={t('maps.card.imageNumbered', {
+                          number: index + 1,
+                        })}
+                        aria-pressed={image.id === shownImageId}
+                        // The favorite is the default: picking it follows it again.
+                        onClick={() => setImageId(index === 0 ? null : image.id)}
+                      >
+                        <Box
+                          component="img"
+                          src={image.url}
+                          alt=""
+                          w={56}
+                          h={72}
+                          draggable={false}
+                          style={{
+                            display: 'block',
+                            objectFit: 'cover',
+                            objectPosition: 'center top',
+                            borderRadius: 'var(--mantine-radius-sm)',
+                            outline:
+                              image.id === shownImageId
+                                ? '2px solid var(--accent-primary)'
+                                : '1px solid var(--border-default)',
+                            outlineOffset: 1,
+                          }}
+                        />
+                      </UnstyledButton>
+                    ))}
+                  </Group>
+                </Input.Wrapper>
+              )}
+            </>
           ) : (
             <>
               <Textarea

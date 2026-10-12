@@ -1,5 +1,5 @@
 import type { Document, DocumentVisibility } from '../types/document';
-import type { RawImage } from '../types/image';
+import type { RawImage, StoredImage } from '../types/image';
 import type {
   ArrowDirection,
   ArrowEnd,
@@ -49,6 +49,7 @@ export interface RawMapCard {
   text: string | null;
   group_id: string | null;
   caption: string | null;
+  image_id: string | null;
   size: CardSize;
   master_only: boolean;
   color: MapColor;
@@ -116,6 +117,7 @@ export function toMapDetail(raw: RawMapDetail): RelationshipMapDetail {
       text: card.text,
       groupId: card.group_id,
       caption: card.caption,
+      imageId: card.image_id,
       size: card.size,
       masterOnly: card.master_only,
       color: card.color,
@@ -157,6 +159,7 @@ export function toBoardBody(board: Board) {
       text: card.text,
       group_id: card.groupId,
       caption: card.caption,
+      image_id: card.imageId,
       size: card.size,
       master_only: card.masterOnly,
       color: card.color,
@@ -257,6 +260,7 @@ export function addDocumentCards(board: Board, documents: MapDocument[], center:
     text: null,
     groupId: null,
     caption: null,
+    imageId: null,
     size: 'normal' as const,
     masterOnly: false,
     color: 'default' as const,
@@ -283,6 +287,7 @@ export function addTextCard(board: Board, values: TextCardValues, center: Point)
     documentId: null,
     groupId: null,
     caption: null,
+    imageId: null,
     ...values,
     x: center.x - CARD_WIDTH / 2,
     y: center.y,
@@ -396,7 +401,10 @@ function inside(point: Point, group: MapGroup): boolean {
  * the group its center lands in, or leaves its group when dropped outside it.
  */
 export function dropCard(board: Board, cardId: string, position: Point, size: Size): Board {
-  const center = { x: position.x + size.width / 2, y: position.y + size.height / 2 };
+  const center = {
+    x: position.x + size.width / 2,
+    y: position.y + size.height / 2,
+  };
   const group = board.groups.find((candidate) => inside(center, candidate));
   return updateCard(
     board,
@@ -432,7 +440,10 @@ export function updateArrow(board: Board, arrowId: string, patch: Partial<MapArr
 
 /** Takes an arrow off the board. */
 export function removeArrow(board: Board, arrowId: string): Board {
-  return { ...board, arrows: board.arrows.filter((arrow) => arrow.id !== arrowId) };
+  return {
+    ...board,
+    arrows: board.arrows.filter((arrow) => arrow.id !== arrowId),
+  };
 }
 
 /** The arrow end a board node stands for: a card or a group. */
@@ -466,14 +477,31 @@ function boxExit(box: Rect, toward: Point): Point {
  * whatever side they face.
  */
 export function arrowEnds(source: Rect, target: Rect): { from: Point; to: Point } {
-  const sourceCenter = { x: source.x + source.width / 2, y: source.y + source.height / 2 };
-  const targetCenter = { x: target.x + target.width / 2, y: target.y + target.height / 2 };
-  return { from: boxExit(source, targetCenter), to: boxExit(target, sourceCenter) };
+  const sourceCenter = {
+    x: source.x + source.width / 2,
+    y: source.y + source.height / 2,
+  };
+  const targetCenter = {
+    x: target.x + target.width / 2,
+    y: target.y + target.height / 2,
+  };
+  return {
+    from: boxExit(source, targetCenter),
+    to: boxExit(target, sourceCenter),
+  };
 }
 
 /** The point a fraction `t` of the way from `from` to `to`. */
 export function pointAlong(from: Point, to: Point, t: number): Point {
   return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
+}
+
+/**
+ * The image a card shows from its Document's `images` (favorite first): the
+ * one chosen for it, else the favorite. Undefined when there are none.
+ */
+export function cardImage(images: StoredImage[], imageId: string | null): StoredImage | undefined {
+  return images.find((image) => image.id === imageId) ?? leadImage(images);
 }
 
 /** What a Document card needs from a Document of the Room's list. */

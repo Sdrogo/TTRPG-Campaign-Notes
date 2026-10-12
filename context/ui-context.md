@@ -618,9 +618,12 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   A toolbar panel holds "Aggiungi Documenti" (side panel with search, Tag
   filter and multi-select; Documents already on the map are disabled),
   "Aggiungi testo" and "Raggruppa" (frames the selected cards).
-- **Cards**: a Document card is 160 px wide (larger sizes for emphasis),
-  lead image on top, name linking to the Document, caption (the map's own or
-  the subtitle); a text card is free text, a "title" size has no frame.
+- **Cards**: a Document card is 160 px wide. Its image (picked in the card's
+  dialog, else the Document's favorite) is the card's whole background,
+  fading into the card surface towards the bottom (`FADE_INTO_CARD`, like a
+  Document card's image fades into its own), where the name, linking to the
+  Document, and the caption (the map's own or the subtitle) sit; without an
+  image the card is just name and caption. A text card is free text, a "title" size has no frame.
   Colors come from the fixed theme set (`MAP_COLORS`), never a free picker.
   Struck cards and groups are drawn crossed out; Master-only items carry a
   small "Solo Master" marker.
@@ -629,7 +632,8 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
 - **Arrows**: straight lines edge to edge between cards or groups, drawn by
   dragging from a card's handle and dropping anywhere on the other card.
   One-way, two-way (a label near each end) or a plain line; Master-only
-  arrows are dashed. A new arrow opens its dialog straight away.
+  arrows are dashed. A new arrow opens its dialog straight away; its label
+  fields are plain text inputs, with no suggestions of earlier labels.
 - **Editing**: each item has a small pencil button that opens its dialog
   (card, text, group, arrow). Saving is automatic; the header shows
   "Modifiche non salvate", "Salvataggio…", "Salvato", or the error with

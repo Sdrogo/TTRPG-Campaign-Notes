@@ -6,7 +6,7 @@ import { GearIcon, TrashIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
-import { useDeleteMap, useMap, useMapLabels, useSaveBoard, useUpdateMap } from '../hooks/useMaps';
+import { useDeleteMap, useMap, useSaveBoard, useUpdateMap } from '../hooks/useMaps';
 import { useMembers } from '../hooks/useMembers';
 import { useTags } from '../hooks/useTags';
 import { useReadOnly } from '../hooks/useViewAs';
@@ -84,7 +84,6 @@ function MapEditor({
 
   const documents = useDocuments(roomId, editable);
   const tags = useTags(roomId, editable);
-  const labels = useMapLabels(roomId, editable);
   const saveBoard = useSaveBoard(roomId, map.id);
   const updateMap = useUpdateMap(roomId, map.id);
   const deleteMap = useDeleteMap(roomId, map.id);
@@ -191,7 +190,6 @@ function MapEditor({
         isMaster={isMaster}
         documents={documents.data ?? []}
         tags={tags.data ?? []}
-        labels={labels.data ?? []}
         onChange={handleChange}
       />
       {settingsOpened && (

@@ -208,6 +208,7 @@
       "tooManyArrows": "Una mappa può avere al massimo {max} frecce",
       "invalidBoard": "Impossibile salvare la mappa: fa riferimento a qualcosa che non c'è",
       "masterOnly": "Solo il Master può rendere una carta o una freccia visibile solo al Master",
+      "imageNotFound": "Questa immagine non è tra quelle del Documento",
       "fields": {
         "name": "nome",
         "description": "descrizione",

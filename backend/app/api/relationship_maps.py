@@ -26,12 +26,13 @@ from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, relationship_maps_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
-from app.domain.models import DocumentVisibility, Membership
+from app.domain.models import DocumentImage, DocumentVisibility, Membership
 from app.domain.relationship_maps import (
     ArrowDirection,
     ArrowEnd,
     Board,
     BoardDocumentNotFoundError,
+    BoardImageNotFoundError,
     CardSize,
     InvalidBoardError,
     MapArrow,
@@ -50,7 +51,6 @@ from app.domain.relationship_maps import (
     document_card_counts,
     ensure_room_for_another_map,
     is_map_visible,
-    label_suggestions,
     map_visibility_audit,
     plan_board_edit,
     visible_board,
@@ -107,13 +107,15 @@ class GroupBody(BaseModel):
 class CardBody(BaseModel):
     """A card as sent: a Document card names `document_id`, a text card
     carries `text`. `caption` is a Document card's, replacing its subtitle on
-    this map; `size` and `master_only` are a text card's."""
+    this map; `image_id` is a Document card's chosen image, instead of its
+    Document's favorite; `size` and `master_only` are a text card's."""
 
     id: uuid.UUID
     document_id: uuid.UUID | None = None
     text: str | None = None
     group_id: uuid.UUID | None = None
     caption: str | None = None
+    image_id: uuid.UUID | None = None
     size: CardSize = CardSize.NORMAL
     master_only: bool = False
     color: MapColor = MapColor.DEFAULT
@@ -291,19 +293,29 @@ async def _detail(
     shown_ids = [card.document_id for card in shown.cards if card.document_id is not None]
     tags = await documents_repo.list_tag_ids_for_documents(session, shown_ids)
     images = await get_visible_images_for_documents(session, shown_ids, viewer)
-    first_images = {
-        document_id: document_images[0]
-        for document_id, document_images in images.items()
-        if document_images
-    }
-    image_urls = await sign_images(first_images.values())
+    # A card shows the image chosen for it while its viewer still sees it,
+    # else its Document's lead image (the favorite first); `image_id` only
+    # echoes a choice they still see.
+    card_images: dict[uuid.UUID, DocumentImage] = {}
+    chosen_ids: dict[uuid.UUID, uuid.UUID] = {}
+    for card in shown.cards:
+        if card.document_id is None:
+            continue
+        document_images = images.get(card.document_id, [])
+        chosen = next((image for image in document_images if image.id == card.image_id), None)
+        if chosen is not None:
+            card_images[card.id] = chosen
+            chosen_ids[card.id] = chosen.id
+        elif document_images:
+            card_images[card.id] = document_images[0]
+    image_urls = await sign_images(card_images.values())
 
     def card_response(card: MapCard) -> CardResponse:
         """A card as returned, with its Document's look."""
         document = None
         if card.document_id is not None:
             shown_document = visible[card.document_id]
-            image = first_images.get(card.document_id)
+            image = card_images.get(card.id)
             signed = image_responses([image], image_urls) if image is not None else []
             document = MapDocumentResponse(
                 id=shown_document.id,
@@ -318,6 +330,7 @@ async def _detail(
             text=card.text,
             group_id=card.group_id,
             caption=card.caption,
+            image_id=chosen_ids.get(card.id),
             size=card.size,
             master_only=card.master_only,
             color=card.color,
@@ -412,33 +425,6 @@ async def create_map(
     )
     await relationship_maps_repo.insert_map(session, relationship_map, grants)
     return await _detail(session, relationship_map, grants, membership)
-
-
-@router.get("/labels")
-async def list_labels(
-    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
-) -> list[str]:
-    """Decision 5: the arrow labels used in the Room, most used first, taken
-    only from the arrows the requester sees on maps they see, so a label used
-    only on a Master-only arrow or on one touching a hidden Document is never
-    suggested (Invariant 1)."""
-    membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    maps = await relationship_maps_repo.list_maps_for_room(session, room_id)
-    grants = await relationship_maps_repo.list_grants_for_maps(session, [m.id for m in maps])
-    visible = [
-        m.id for m in maps if is_map_visible(m, membership.user_id, membership.role, grants[m.id])
-    ]
-    boards = await relationship_maps_repo.get_boards(session, visible)
-    visible_ids = await _visible_document_ids(
-        session,
-        (card.document_id for board in boards.values() for card in board.cards if card.document_id),
-        membership,
-    )
-    return label_suggestions(
-        arrow
-        for board in boards.values()
-        for arrow in visible_board(board, visible_ids, membership.role).arrows
-    )
 
 
 @router.get("/{map_id}")
@@ -547,6 +533,7 @@ _BOARD_ERROR_STATUS: dict[type[DomainError], int] = {
     InvalidBoardError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     MapTextTooLongError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     BoardDocumentNotFoundError: status.HTTP_404_NOT_FOUND,
+    BoardImageNotFoundError: status.HTTP_404_NOT_FOUND,
     MasterOnlyNotAllowedError: status.HTTP_403_FORBIDDEN,
     MapLimitError: status.HTTP_409_CONFLICT,
 }
@@ -586,6 +573,13 @@ async def save_board(
             | {card.id for card in submitted.cards}
             | {arrow.id for arrow in submitted.arrows}
         )
+        # Only a visible Document's images can be chosen.
+        choosing = [
+            card.document_id
+            for card in submitted.cards
+            if card.image_id is not None and card.document_id in visible_ids
+        ]
+        visible_images = await get_visible_images_for_documents(session, choosing, membership)
         plan = plan_board_edit(
             current,
             visible_board(current, visible_ids, membership.role),
@@ -593,6 +587,10 @@ async def save_board(
             membership.role,
             visible_ids,
             await relationship_maps_repo.find_foreign_ids(session, map_id, sent_ids),
+            {
+                document_id: [image.id for image in images]
+                for document_id, images in visible_images.items()
+            },
         )
     except tuple(_BOARD_ERROR_STATUS) as exc:
         raise translated_error(_BOARD_ERROR_STATUS[type(exc)], exc, locale) from exc

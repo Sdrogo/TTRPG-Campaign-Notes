@@ -7,11 +7,19 @@ import { CARD_WIDTH, colorValue } from '../../lib/maps';
 import type { DocumentCardNodeType } from '../../types/mapNodes';
 import { MapHandle } from './MapHandle';
 
+/** How tall a card with an image is: the image is its background, portrait framed. */
+const IMAGE_CARD_HEIGHT = CARD_WIDTH * 1.5;
+
+// The image melts into the card's surface towards the name, like a Document
+// card's image does into its own.
+const FADE_INTO_CARD = 'linear-gradient(to bottom, transparent 30%, var(--bg-raised) 92%)';
+
 /**
- * A Document on a map (spec 28 Decision 8): its first visible image in
- * portrait framing, its name and its caption (the map's own, or else the
- * Document's subtitle), in the card's color and struck through when it is.
- * Clicking the name opens the Document.
+ * A Document on a map (spec 28 Decision 8): its image (the one chosen for the
+ * card, else the Document's favorite) as the card's background fading into
+ * the card towards the bottom, where its name and caption (the map's own, or
+ * else the Document's subtitle) are, in the card's color and struck through
+ * when it is. Clicking the name opens the Document.
  */
 export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeType>) {
   const { t } = useTranslation();
@@ -24,26 +32,36 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
   return (
     <Paper
       withBorder
-      p={6}
       w={CARD_WIDTH}
       bg="var(--bg-raised)"
       style={{
         borderColor: selected ? 'var(--accent-primary)' : 'var(--border-default)',
         opacity: card.struck ? 0.6 : 1,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        minHeight: document.image ? IMAGE_CARD_HEIGHT : undefined,
+        position: 'relative',
       }}
     >
       <MapHandle visible={editable} />
-      <Stack gap={4}>
-        {document.image && (
+      {document.image && (
+        <>
           <Image
             src={document.image.url}
             alt=""
-            h={CARD_WIDTH * 1.2}
-            radius="sm"
+            pos="absolute"
+            inset={0}
+            h="100%"
+            w="100%"
             fit="cover"
-            style={{ objectPosition: 'top' }}
+            style={{ objectPosition: 'center top' }}
           />
-        )}
+          <Box data-testid="map-card-fade" pos="absolute" inset={0} style={{ background: FADE_INTO_CARD }} />
+        </>
+      )}
+      <Stack gap={4} p={8} pos="relative">
         <Text
           component={Link}
           to={`/rooms/${roomId}/documents/${document.id}`}
@@ -52,7 +70,11 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
           c={colorValue(card.color)}
           td={decoration}
           className="nodrag"
-          style={{ fontFamily: 'var(--font-display)', fontSize: 18, lineHeight: 1.2 }}
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 18,
+            lineHeight: 1.2,
+          }}
         >
           {document.name}
         </Text>
@@ -66,8 +88,8 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
         <Box pos="absolute" top={2} right={2}>
           <ActionIcon
             size="sm"
-            variant="subtle"
-            color="gray"
+            variant="filled"
+            color="dark"
             className="nodrag"
             aria-label={t('maps.editCard', { name: document.name })}
             onClick={() => onEdit(card.id)}

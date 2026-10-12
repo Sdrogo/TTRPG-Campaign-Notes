@@ -208,6 +208,7 @@
       "tooManyArrows": "A map can have at most {max} arrows",
       "invalidBoard": "This board can't be saved: it refers to something that isn't on the map",
       "masterOnly": "Only the Master can mark a card or an arrow Master only",
+      "imageNotFound": "That image isn't one of the Document's",
       "fields": {
         "name": "name",
         "description": "description",

@@ -24,6 +24,7 @@ import {
   addArrow,
   addDocumentCards,
   addTextCard,
+  cardImage,
   colorValue,
   dropCard,
   endId,
@@ -51,7 +52,11 @@ import { MapArrow } from './MapArrow';
 import { TextCardNode } from './TextCardNode';
 
 // Defined once, outside any render: React Flow warns about new objects.
-const NODE_TYPES = { documentCard: DocumentCardNode, textCard: TextCardNode, mapGroup: GroupNode };
+const NODE_TYPES = {
+  documentCard: DocumentCardNode,
+  textCard: TextCardNode,
+  mapGroup: GroupNode,
+};
 const EDGE_TYPES = { mapArrow: MapArrow };
 
 export interface MapBoardProps {
@@ -63,8 +68,6 @@ export interface MapBoardProps {
   /** The Room's Documents the viewer sees, for the picker. */
   documents: Document[];
   tags: Tag[];
-  /** The arrow labels to suggest (Decision 5). */
-  labels: string[];
   onChange: (board: Board) => void;
 }
 
@@ -89,19 +92,15 @@ export function MapBoard(props: MapBoardProps) {
 }
 
 function marker(arrow: Arrow): EdgeMarker {
-  return { type: MarkerType.ArrowClosed, color: colorValue(arrow.color), width: 18, height: 18 };
+  return {
+    type: MarkerType.ArrowClosed,
+    color: colorValue(arrow.color),
+    width: 18,
+    height: 18,
+  };
 }
 
-function BoardCanvas({
-  roomId,
-  board,
-  editable,
-  isMaster,
-  documents,
-  tags,
-  labels,
-  onChange,
-}: MapBoardProps) {
+function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onChange }: MapBoardProps) {
   const { t } = useTranslation();
   const flow = useReactFlow<MapNode, MapEdge>();
   const wrapper = useRef<HTMLDivElement>(null);
@@ -178,12 +177,19 @@ function BoardCanvas({
     type: 'mapArrow',
     markerEnd: arrow.direction === 'none' ? undefined : marker(arrow),
     markerStart: arrow.direction === 'both' ? marker(arrow) : undefined,
-    data: { arrow, editable, onEdit: (id) => setEditing({ kind: 'arrow', id }) },
+    data: {
+      arrow,
+      editable,
+      onEdit: (id) => setEditing({ kind: 'arrow', id }),
+    },
   }));
 
   const viewCenter = (): Point => {
     const rect = wrapper.current!.getBoundingClientRect();
-    return flow.screenToFlowPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    return flow.screenToFlowPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    });
   };
 
   const sizeOf = (id: string) => {
@@ -198,7 +204,10 @@ function BoardCanvas({
     // Groups first, so a card dragged with its group lands in the moved frame.
     for (const node of dragged) {
       if (node.type === 'mapGroup') {
-        next = updateGroup(next, node.id, { x: node.position.x, y: node.position.y });
+        next = updateGroup(next, node.id, {
+          x: node.position.x,
+          y: node.position.y,
+        });
       }
     }
     for (const node of dragged) {
@@ -254,6 +263,8 @@ function BoardCanvas({
   };
 
   const editedCard = editing?.kind === 'card' ? board.cards.find((c) => c.id === editing.id) : undefined;
+  // The edited Document card's Document images, for its choice of image.
+  const editedImages = documents.find((d) => d.id === editedCard?.documentId)?.images ?? [];
   const editedGroup = editing?.kind === 'group' ? board.groups.find((g) => g.id === editing.id) : undefined;
   const editedArrow = editing?.kind === 'arrow' ? board.arrows.find((a) => a.id === editing.id) : undefined;
   const close = () => setEditing(null);
@@ -263,7 +274,10 @@ function BoardCanvas({
       ref={wrapper}
       h="calc(100dvh - 190px)"
       mih={420}
-      style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--mantine-radius-lg)' }}
+      style={{
+        border: '1px solid var(--border-default)',
+        borderRadius: 'var(--mantine-radius-lg)',
+      }}
     >
       <ReactFlow<MapNode, MapEdge>
         nodes={nodes}
@@ -341,14 +355,27 @@ function BoardCanvas({
         <CardDialog
           key={editedCard.id}
           card={editedCard}
+          images={editedImages}
           isMaster={isMaster}
           onClose={close}
-          onSave={({ text, caption, ...look }) => {
+          onSave={({ text, caption, imageId, ...look }) => {
             onChange(
               updateCard(
                 board,
                 editedCard.id,
-                editedCard.documentId ? { caption, ...look, size: 'normal', masterOnly: false } : { text, ...look },
+                editedCard.documentId
+                  ? {
+                      caption,
+                      imageId,
+                      document: {
+                        ...editedCard.document!,
+                        image: cardImage(editedImages, imageId) ?? editedCard.document!.image,
+                      },
+                      ...look,
+                      size: 'normal',
+                      masterOnly: false,
+                    }
+                  : { text, ...look },
               ),
             );
             close();
@@ -380,7 +407,6 @@ function BoardCanvas({
           arrow={editedArrow}
           fromName={nameOf(editedArrow.from)}
           toName={nameOf(editedArrow.to)}
-          suggestions={labels}
           isMaster={isMaster}
           onClose={close}
           onSave={(patch) => {

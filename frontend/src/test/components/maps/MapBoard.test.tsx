@@ -20,6 +20,7 @@ function card(id: string, overrides: Partial<MapCard> = {}): MapCard {
     text: `testo ${id}`,
     groupId: null,
     caption: null,
+    imageId: null,
     size: 'normal',
     masterOnly: false,
     color: 'default',
@@ -33,14 +34,38 @@ function card(id: string, overrides: Partial<MapCard> = {}): MapCard {
 
 const initial: Board = {
   groups: [
-    { id: 'g', title: 'Corte', color: 'red', struck: false, x: 300, y: 0, width: 300, height: 300 },
-    { id: 'h', title: null, color: 'default', struck: false, x: 1000, y: 0, width: 100, height: 100 },
+    {
+      id: 'g',
+      title: 'Corte',
+      color: 'red',
+      struck: false,
+      x: 300,
+      y: 0,
+      width: 300,
+      height: 300,
+    },
+    {
+      id: 'h',
+      title: null,
+      color: 'default',
+      struck: false,
+      x: 1000,
+      y: 0,
+      width: 100,
+      height: 100,
+    },
   ],
   cards: [
     card('mira', {
       documentId: 'doc-mira',
       text: null,
-      document: { id: 'doc-mira', name: 'Mira', subtitle: 'La Idol', image: null, tagIds: [] },
+      document: {
+        id: 'doc-mira',
+        name: 'Mira',
+        subtitle: 'La Idol',
+        image: null,
+        tagIds: [],
+      },
     }),
     card('thorn', {
       documentId: 'doc-thorn',
@@ -48,7 +73,13 @@ const initial: Board = {
       groupId: 'g',
       x: 10,
       y: 50,
-      document: { id: 'doc-thorn', name: 'Thorn', subtitle: null, image: null, tagIds: [] },
+      document: {
+        id: 'doc-thorn',
+        name: 'Thorn',
+        subtitle: null,
+        image: null,
+        tagIds: [],
+      },
     }),
     card('fire'),
     // A card whose group isn't on this viewer's board is drawn free.
@@ -93,7 +124,7 @@ const documents = [
   { id: 'doc-aldric', name: 'Aldric', subtitle: null, images: [], tagIds: [] },
 ] as unknown as Document[];
 
-function renderBoard({ editable = true, isMaster = true } = {}) {
+function renderBoard({ editable = true, isMaster = true, docs = documents } = {}) {
   const changes: Board[] = [];
   function Harness() {
     const [board, setBoard] = useState(initial);
@@ -103,9 +134,8 @@ function renderBoard({ editable = true, isMaster = true } = {}) {
         board={board}
         editable={editable}
         isMaster={isMaster}
-        documents={documents}
+        documents={docs}
         tags={[]}
-        labels={['alleato']}
         onChange={(next) => {
           changes.push(next);
           setBoard(next);
@@ -169,9 +199,20 @@ describe('MapBoard', () => {
     ]);
     const board = last();
     expect(board.groups[0]).toMatchObject({ x: 320, y: 0 });
-    expect(board.cards.find((c) => c.id === 'thorn')).toMatchObject({ groupId: 'g', x: 10, y: 60 });
-    expect(board.cards.find((c) => c.id === 'mira')).toMatchObject({ groupId: 'g', x: 30, y: 100 });
-    expect(board.cards.find((c) => c.id === 'fire')).toMatchObject({ groupId: null, x: 2000 });
+    expect(board.cards.find((c) => c.id === 'thorn')).toMatchObject({
+      groupId: 'g',
+      x: 10,
+      y: 60,
+    });
+    expect(board.cards.find((c) => c.id === 'mira')).toMatchObject({
+      groupId: 'g',
+      x: 30,
+      y: 100,
+    });
+    expect(board.cards.find((c) => c.id === 'fire')).toMatchObject({
+      groupId: null,
+      x: 2000,
+    });
   });
 
   it('draws an arrow between two cards and opens it', async () => {
@@ -181,10 +222,14 @@ describe('MapBoard', () => {
 
     call('onConnect', { source: 'fire', target: 'mira' });
     const added = last().arrows[3];
-    expect(added).toMatchObject({ from: { cardId: 'fire' }, to: { cardId: 'mira' }, direction: 'forward' });
+    expect(added).toMatchObject({
+      from: { cardId: 'fire' },
+      to: { cardId: 'mira' },
+      direction: 'forward',
+    });
     const dialog = screen.getByRole('dialog', { name: 'Freccia' });
 
-    await user.type(within(dialog).getByRole('combobox', { name: 'Etichetta' }), 'teme');
+    await user.type(within(dialog).getByRole('textbox', { name: 'Etichetta' }), 'teme');
     await user.click(within(dialog).getByRole('button', { name: 'Salva' }));
     expect(last().arrows[3].label).toBe('teme');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -193,8 +238,8 @@ describe('MapBoard', () => {
   it('opens an arrow on click, names both ends and deletes it', async () => {
     const { last, user } = renderBoard();
     call('onEdgeClick', null, { id: 'both' });
-    expect(screen.getByRole('combobox', { name: 'Etichetta verso Thorn' })).toHaveValue('alleata');
-    expect(screen.getByRole('combobox', { name: 'Etichetta verso Mira' })).toHaveValue('alleato');
+    expect(screen.getByRole('textbox', { name: 'Etichetta verso Thorn' })).toHaveValue('alleata');
+    expect(screen.getByRole('textbox', { name: 'Etichetta verso Mira' })).toHaveValue('alleato');
     await user.click(screen.getByRole('button', { name: 'Elimina la freccia' }));
     expect(last().arrows.map((a) => a.id)).toEqual(['line', 'forward']);
   });
@@ -203,13 +248,17 @@ describe('MapBoard', () => {
     const { user } = renderBoard();
     call('onEdgeClick', null, { id: 'line' });
     await user.click(screen.getByText('In entrambi'));
-    expect(screen.getByRole('combobox', { name: 'Etichetta verso Gruppo senza titolo' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Etichetta verso testo fire' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox', {
+        name: 'Etichetta verso Gruppo senza titolo',
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Etichetta verso testo fire' })).toBeInTheDocument();
     await user.keyboard('{Escape}');
 
     call('onEdgeClick', null, { id: 'forward' });
     await user.click(screen.getByText('In entrambi'));
-    expect(screen.getByRole('combobox', { name: 'Etichetta verso Corte' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Etichetta verso Corte' })).toBeInTheDocument();
   });
 
   it('opens an arrow from its label', async () => {
@@ -241,7 +290,11 @@ describe('MapBoard', () => {
     const board = last();
     expect(board.groups.map((g) => g.id)).toEqual(['h']);
     expect(board.cards.map((c) => c.id)).toEqual(['mira', 'thorn', 'lost']);
-    expect(board.cards.find((c) => c.id === 'thorn')).toMatchObject({ groupId: null, x: 310, y: 50 });
+    expect(board.cards.find((c) => c.id === 'thorn')).toMatchObject({
+      groupId: null,
+      x: 310,
+      y: 50,
+    });
     expect(board.arrows).toEqual([]);
   });
 
@@ -270,12 +323,36 @@ describe('MapBoard', () => {
   it('edits and removes a group from its pencil, and resizes it', async () => {
     const { last, user } = renderBoard();
     await user.click(screen.getAllByRole('button', { name: 'resize' })[0]);
-    expect(last().groups[0]).toMatchObject({ x: 5, y: 6, width: 400, height: 300 });
+    expect(last().groups[0]).toMatchObject({
+      x: 5,
+      y: 6,
+      width: 400,
+      height: 300,
+    });
 
     await user.click(screen.getAllByRole('button', { name: 'Modifica il gruppo' })[0]);
     await user.click(screen.getByRole('button', { name: 'Rimuovi il gruppo' }));
     expect(last().groups.map((g) => g.id)).toEqual(['h']);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('shows the image picked for a Document card, and its favorite again once unpicked', async () => {
+    const images = [
+      { id: 'a', url: 'http://img/a', isFavorite: true },
+      { id: 'b', url: 'http://img/b', isFavorite: false },
+    ];
+    const docs = [{ ...documents[0], images }, documents[1]] as unknown as Document[];
+    const { last, user } = renderBoard({ docs });
+
+    await user.click(screen.getByRole('button', { name: 'Modifica la carta: Mira' }));
+    await user.click(screen.getByRole('button', { name: 'Immagine 2' }));
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    expect(last().cards[0]).toMatchObject({ imageId: 'b', document: { image: images[1] } });
+
+    await user.click(screen.getByRole('button', { name: 'Modifica la carta: Mira' }));
+    await user.click(screen.getByRole('button', { name: 'Immagine 1' }));
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    expect(last().cards[0]).toMatchObject({ imageId: null, document: { image: images[0] } });
   });
 
   it('edits a Document card caption and takes a card off the map', async () => {
@@ -309,13 +386,19 @@ describe('MapBoard', () => {
     expect(screen.queryByLabelText('Visibile solo ai Master')).not.toBeInTheDocument();
     await user.type(screen.getByLabelText(/Testo/), 'Nuove idee');
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
-    expect(last().cards[4]).toMatchObject({ text: 'Nuove idee', documentId: null });
+    expect(last().cards[4]).toMatchObject({
+      text: 'Nuove idee',
+      documentId: null,
+    });
 
     await user.click(screen.getByRole('button', { name: 'Aggiungi Documenti' }));
     expect(screen.getByRole('checkbox', { name: 'Mira' })).toBeDisabled();
     await user.click(screen.getByRole('checkbox', { name: 'Aldric' }));
     await user.click(screen.getByRole('button', { name: 'Aggiungi 1 Documento' }));
-    expect(last().cards[5]).toMatchObject({ documentId: 'doc-aldric', document: { name: 'Aldric' } });
+    expect(last().cards[5]).toMatchObject({
+      documentId: 'doc-aldric',
+      document: { name: 'Aldric' },
+    });
   });
 
   it('closes a dialog without changing anything', async () => {
