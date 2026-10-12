@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Anchor, Text, type TextProps } from '@mantine/core';
 import { Link } from 'react-router-dom';
+import { DocumentMentionPreview } from './DocumentMentionPreview';
 import { useDocumentMentions } from '../../hooks/useDocumentMentions';
 import {
   mentionHref,
@@ -27,7 +28,8 @@ interface MentionTextProps extends TextProps {
 
 /**
  * Text with `#` mentions rendered as accent-colored links: a Document
- * mention opens the Document, a Tag mention the Documents with that Tag. A
+ * mention opens the Document (and, hovered with a mouse, previews its card:
+ * spec 32), a Tag mention the Documents with that Tag. A
  * token shows its target's current name; one the viewer can't resolve (a
  * hidden or deleted target) reads as plain text with its stored name.
  * Given `members`, a mention of a member is highlighted under their current
@@ -73,18 +75,33 @@ export function MentionText({ text, linked = true, members, ...textProps }: Ment
           );
         }
         const testId = `${segment.kind}-mention`;
-        return linked && mentions ? (
-          <Anchor
-            key={index}
-            component={Link}
-            to={mentionHref(mentions.roomId, segment)}
-            inherit
-            c="var(--accent-primary)"
-            data-testid={testId}
-          >
-            {segment.text}
-          </Anchor>
-        ) : (
+        if (linked && mentions) {
+          const link = (
+            <Anchor
+              key={index}
+              component={Link}
+              to={mentionHref(mentions.roomId, segment)}
+              inherit
+              c="var(--accent-primary)"
+              data-testid={testId}
+            >
+              {segment.text}
+            </Anchor>
+          );
+          return segment.kind === 'document' ? (
+            <DocumentMentionPreview
+              key={index}
+              roomId={mentions.roomId}
+              document={segment.document}
+              tags={mentions.tags}
+            >
+              {link}
+            </DocumentMentionPreview>
+          ) : (
+            link
+          );
+        }
+        return (
           <Text key={index} span inherit c="var(--accent-primary)" data-testid={testId}>
             {segment.text}
           </Text>

@@ -9,6 +9,14 @@ step-by-step notes) is in
 
 ## Current Status (2026-10-08)
 
+**Spec 32, mention hover preview, built on 2026-10-12** at the product
+owner's request (frontend only, no migration, no backend): on the Document
+page, resting a mouse on a linked `#Document` mention for 400 ms shows that
+Document's `DocumentCard` (`DocumentMentionPreview`, a Mantine `HoverCard`).
+It reuses the Document the mention resolved against (the viewer's filtered
+list), so it adds no request and can't reveal a hidden Document. Nothing on
+touch screens or for Tag mentions. Decisions to confirm in its PR.
+
 **Spec 31, personal data and GDPR, built on 2026-10-09** at the product
 owner's request ("the app should comply with the GDPR"), after an audit of what
 the app stores and where (in the spec). Backend: `GET /account/export` (the
