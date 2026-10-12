@@ -113,8 +113,7 @@ type Resources = { [key: string]: unknown };
 
 /**
  * The languages that are not bundled, each a dynamic `import()` so Vite
- * splits its file out of the main bundle (spec 34). Empty until the first
- * new language lands.
+ * splits its file out of the main bundle (spec 34).
  */
 const LAZY_LOADERS: Readonly<Record<string, () => Promise<{ default: Resources }>>> = {
   de: () => import('./locales/de.json'),
