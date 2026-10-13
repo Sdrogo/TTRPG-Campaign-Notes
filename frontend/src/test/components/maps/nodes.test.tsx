@@ -259,7 +259,7 @@ describe('MapArrow', () => {
       id: 'arrow-1',
       source: 'a',
       target: 'b',
-      data: value && { arrow: value, editable, onEdit, onMoveLabel },
+      data: value && { arrow: value, shift: 0, editable, onEdit, onMoveLabel },
     };
     // React Flow listens for clicks on the whole edge, and a label's click bubbles to it.
     renderWithProviders(
