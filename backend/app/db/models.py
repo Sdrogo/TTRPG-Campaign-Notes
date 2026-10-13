@@ -867,6 +867,17 @@ class RelationshipMapArrowRow(Base):
             " AND reverse_label_position <= 1)",
             name="ck_relationship_map_arrows_reverse_label_position",
         ),
+        CheckConstraint(
+            "label_offset IS NULL"
+            " OR (label_position IS NOT NULL AND label_offset >= -2000 AND label_offset <= 2000)",
+            name="ck_relationship_map_arrows_label_offset",
+        ),
+        CheckConstraint(
+            "reverse_label_offset IS NULL"
+            " OR (reverse_label_position IS NOT NULL AND reverse_label_offset >= -2000"
+            " AND reverse_label_offset <= 2000)",
+            name="ck_relationship_map_arrows_reverse_label_offset",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -892,5 +903,9 @@ class RelationshipMapArrowRow(Base):
     # null leaves it to the board's automatic placement.
     label_position: Mapped[float | None] = mapped_column(Float)
     reverse_label_position: Mapped[float | None] = mapped_column(Float)
+    # How far the label sits to the side of the arrow, in board pixels
+    # (negative to the other side); only with a position.
+    label_offset: Mapped[float | None] = mapped_column(Float)
+    reverse_label_offset: Mapped[float | None] = mapped_column(Float)
     color: Mapped[str] = mapped_column(String(10))
     master_only: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -199,6 +199,12 @@ One line per unit; dates 2026, newest first. Spec files live in
   it must go to the staging database before the PR merges and to production
   before the next release to `main`. The drag and the "Relation" rename are
   the frontend step.
+- **Label distance from the relation, backend** (28_3, 10-13): `label_offset` and
+  `reverse_label_offset` on `relationship_map_arrows` (migration
+  `b4d8f2a6c1e7`, nullable floats in board pixels, ±2000, an offset needs its
+  label's position), so a dragged label can sit to the side of its relation.
+  Applied locally only: it must go to the staging database before the PR
+  merges and to production before the next release to `main`.
 
 ### 2026-10-08 → 10-10
 

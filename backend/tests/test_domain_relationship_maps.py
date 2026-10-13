@@ -571,6 +571,28 @@ def test_a_label_place_outside_the_arrow_is_refused() -> None:
             _plan(Board(), Board(cards=[a, b], arrows=[arrow]))
 
 
+def test_a_label_keeps_its_distance_from_the_arrow_only_with_a_place() -> None:
+    a, b = _text_card(), _text_card()
+    placed = _arrow(_card_end(a), _card_end(b), "x", label_position=0.3, label_offset=-40.5)
+    unplaced = _arrow(_card_end(a), _card_end(b), "x", label_offset=25)
+    unlabeled = _arrow(_card_end(b), _card_end(a), None, label_position=0.3, label_offset=10)
+
+    plan = _plan(Board(), Board(cards=[a, b], arrows=[placed, unplaced, unlabeled]))
+
+    assert plan.arrows[0].label_offset == -40.5
+    assert plan.arrows[1].label_offset is None
+    assert plan.arrows[2].label_offset is None
+    assert plan.arrows[0].reverse_label_offset is None
+
+
+def test_a_label_farther_than_the_board_allows_is_refused() -> None:
+    a, b = _text_card(), _text_card()
+    for offset in (-2000.5, 2001):
+        arrow = _arrow(_card_end(a), _card_end(b), "x", label_position=0.5, label_offset=offset)
+        with pytest.raises(InvalidBoardError):
+            _plan(Board(), Board(cards=[a, b], arrows=[arrow]))
+
+
 def test_an_arrow_end_not_on_the_board_or_to_itself_is_refused() -> None:
     a, b = _text_card(), _text_card()
     group = _group()
