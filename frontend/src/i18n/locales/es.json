@@ -671,12 +671,14 @@
       "styles": {
         "gothic": "Gótico",
         "modern": "Moderno",
-        "print": "Impresión"
+        "print": "Impresión",
+        "parchment": "Pergamino"
       },
       "styleHints": {
         "gothic": "Negro y rojo, portada oscura",
         "modern": "Sans-serif limpio, mucho espacio",
-        "print": "Blanco y negro, ahorra tinta"
+        "print": "Blanco y negro, ahorra tinta",
+        "parchment": "Papel envejecido, versalitas marrones"
       },
       "pageSize": "Tamaño de página",
       "comments": "Incluir los Comentarios en un apéndice",
@@ -880,7 +882,7 @@
     "editCard": "Editar la tarjeta: {{name}}",
     "editText": "Editar el texto",
     "editGroup": "Editar el grupo",
-    "editArrow": "Editar la flecha: {{label}}",
+    "editArrow": "Editar la relación: {{label}}",
     "masterOnly": "Solo Master",
     "masterOnlyArrow": "Visible solo para los Master",
     "masterOnlyCard": "Visible solo para los Master",
@@ -890,10 +892,23 @@
       "default": "Predeterminado",
       "red": "Rojo",
       "green": "Verde",
-      "purple": "Morado",
-      "blue": "Azul",
-      "gold": "Oro"
+      "purple": "Fucsia",
+      "blue": "Celeste",
+      "gold": "Amarillo",
+      "orange": "Naranja",
+      "midnight": "Azul noche",
+      "silver": "Plata",
+      "champagne": "Oro",
+      "rose": "Rosa claro",
+      "pink": "Rosa",
+      "cobalt": "Azul",
+      "violet": "Morado",
+      "emerald": "Esmeralda",
+      "brown": "Marrón",
+      "lime": "Verde claro"
     },
+    "colorsMore": "Más colores",
+    "colorsLess": "Menos colores",
     "card": {
       "editDocument": "Tarjeta: {{name}}",
       "editText": "Texto",
@@ -920,14 +935,14 @@
       "untitled": "Grupo sin título"
     },
     "arrow": {
-      "title": "Flecha",
+      "title": "Relación",
       "direction": "Dirección",
       "forward": "En un sentido",
       "both": "En ambos",
       "none": "Solo línea",
       "label": "Etiqueta",
       "labelTowards": "Etiqueta hacia {{name}}",
-      "delete": "Eliminar la flecha"
+      "delete": "Eliminar la relación"
     }
   }
 }

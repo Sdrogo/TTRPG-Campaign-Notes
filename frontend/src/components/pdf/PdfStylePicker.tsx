@@ -1,4 +1,4 @@
-import { Box, Group, Radio, Stack, Text } from '@mantine/core';
+import { Box, Radio, SimpleGrid, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PDF_STYLE_PREVIEW, PDF_STYLES, type PdfStyle } from '../../lib/pdfExport';
 
@@ -35,8 +35,9 @@ function Thumbnail({ style }: { style: PdfStyle }) {
 
 /**
  * The PDF's style as cards with a miniature of each (spec 23b Frontend): Gothic
- * first, then Modern and Print. Each card is one radio of a group; the chosen
- * one has an accent border and the others are dimmed (`.pdf-style-card`).
+ * first, then Modern, Print and Parchment. Each card is one radio of a group; the chosen
+ * one has an accent border and the others are dimmed (`.pdf-style-card`). Four
+ * cards in a row, two by two on a phone.
  */
 export function PdfStylePicker({ value, onChange }: PdfStylePickerProps) {
   const { t } = useTranslation();
@@ -46,7 +47,7 @@ export function PdfStylePicker({ value, onChange }: PdfStylePickerProps) {
       onChange={(next) => onChange(next as PdfStyle)}
       label={t('export.pdf.style')}
     >
-      <Group gap="xs" mt="xs" wrap="nowrap" align="stretch">
+      <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="xs" mt="xs">
         {PDF_STYLES.map((style) => (
           <Radio.Card
             key={style}
@@ -54,7 +55,6 @@ export function PdfStylePicker({ value, onChange }: PdfStylePickerProps) {
             radius="md"
             p="xs"
             className="pdf-style-card"
-            style={{ flex: 1 }}
           >
             <Stack gap={4} align="center" ta="center">
               <Thumbnail style={style} />
@@ -67,7 +67,7 @@ export function PdfStylePicker({ value, onChange }: PdfStylePickerProps) {
             </Stack>
           </Radio.Card>
         ))}
-      </Group>
+      </SimpleGrid>
     </Radio.Group>
   );
 }

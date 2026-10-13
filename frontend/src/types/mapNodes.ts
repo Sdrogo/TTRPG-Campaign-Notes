@@ -15,7 +15,18 @@ export type GroupNodeData = NodeActions & {
   group: MapGroup;
   onResized: (id: string, frame: { x: number; y: number; width: number; height: number }) => void;
 };
-export type MapArrowData = { arrow: MapArrow; onEdit: (id: string) => void; editable: boolean };
+export type MapArrowData = {
+  arrow: MapArrow;
+  /** Pixels to the side of the straight line, for plain lines sharing both ends (see `parallelShift`). */
+  shift: number;
+  onEdit: (id: string) => void;
+  /**
+   * A label was dragged to a place along the arrow (0 at `from`, 1 at `to`)
+   * and a distance to the side of it, in board pixels.
+   */
+  onMoveLabel: (id: string, which: 'label' | 'reverse', position: number, offset: number) => void;
+  editable: boolean;
+};
 
 export type DocumentCardNodeType = Node<DocumentCardNodeData, 'documentCard'>;
 export type TextCardNodeType = Node<TextCardNodeData, 'textCard'>;

@@ -21,6 +21,11 @@ detail:
   30/30b (read aloud with the browser's voices, best installed voice by
   default, first reading waits for the voice list, PRs #146, #148, #154).
   Neither has a migration.
+- **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
+  Room PDF style, `parchment`, modeled on a fantasy monster compendium the
+  product owner shared: parchment-colored pages, brown small-capital
+  headings, ochre rules, the subtitle as a stat-block band. Only existing
+  fonts (Crimson Text, PT Serif, Noto CJK). Defaults to confirm in the PR.
 - **Spec 32, mention hover preview** (2026-10-12, PR #157, frontend only,
   no migration): on the Document page, resting a mouse on a linked
   `#Document` mention for 400 ms shows that Document's `DocumentCard`
@@ -96,6 +101,12 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-13
+
+- **Mentions block compact** (no migration): "Mentioned in" is collapsed by
+  default on the Document page and on the Tag-filtered Room list, where it
+  now sits after the results; vertical padding `md` open, `xs` collapsed.
+
 ### 2026-10-12
 
 - **More UI languages, 34_3** (spec 34, 10-12, no migration): ja, ko and
@@ -134,6 +145,8 @@ One line per unit; dates 2026, newest first. Spec files live in
   compares plural keys as groups per `Intl.PluralRules` (Russian four forms,
   Japanese one); `context/i18n-glossary.md` started. Next: 34_2.
 
+- **Parallel line-only relations** (28 follow-up, 10-13, frontend only, no migration): several "Line only" relations between the same two cards are drawn side by side (`parallelShift` in `lib/maps.ts`, `MapArrow`), metro-map style; backend and DB never restricted duplicates.
+- **More relation colors** (28 follow-up, 10-13, frontend + backend enum, no migration): 11 colors added to the map palette (orange, midnight blue, silver, gold, light pink, pink, blue, purple, emerald, brown, light green); picker shows one row with a "more colors" toggle; old labels renamed Fuchsia / Light blue / Yellow in all 12 languages.
 - **Map cards easier to move and select** (28 follow-up, 10-12, frontend
   only, no migration): cards get a grab cursor, a hover ring and a grip
   mark; dragging on empty canvas now draws a selection box (partial overlap)
@@ -202,6 +215,11 @@ One line per unit; dates 2026, newest first. Spec files live in
   label's position), so a dragged label can sit to the side of its relation.
   Applied to the staging database by hand on 2026-10-13 (`alembic current`
   went from `a9e3c5d7b1f4` to `b4d8f2a6c1e7`) and to production on 2026-10-13.
+- **Dragging a relation's label, frontend** (28_3, 10-13): a label is dragged
+  freely, along its relation and to either side (saved as `label_position` +
+  `label_offset`, the distance kept within the backend's ±2000); the click
+  that ends a drag no longer opens the relation; "Arrow" is "Relation" in all
+  12 languages.
 
 ### 2026-10-08 → 10-10
 

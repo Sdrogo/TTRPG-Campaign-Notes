@@ -663,12 +663,14 @@
       "styles": {
         "gothic": "고딕",
         "modern": "모던",
-        "print": "인쇄"
+        "print": "인쇄",
+        "parchment": "양피지"
       },
       "styleHints": {
         "gothic": "검정과 빨강, 어두운 표지",
         "modern": "깔끔한 산세리프, 넉넉한 여백",
-        "print": "흑백, 잉크 절약"
+        "print": "흑백, 잉크 절약",
+        "parchment": "오래된 종이, 갈색 작은 대문자"
       },
       "pageSize": "페이지 크기",
       "comments": "부록에 댓글 포함",
@@ -860,7 +862,7 @@
     "editCard": "카드 수정: {{name}}",
     "editText": "텍스트 수정",
     "editGroup": "그룹 수정",
-    "editArrow": "화살표 수정: {{label}}",
+    "editArrow": "관계 수정: {{label}}",
     "masterOnly": "Master 전용",
     "masterOnlyArrow": "Master에게만 보임",
     "masterOnlyCard": "Master에게만 보임",
@@ -870,10 +872,23 @@
       "default": "기본",
       "red": "빨강",
       "green": "초록",
-      "purple": "보라",
-      "blue": "파랑",
-      "gold": "금색"
+      "purple": "푸시아",
+      "blue": "하늘색",
+      "gold": "노란색",
+      "orange": "주황색",
+      "midnight": "미드나이트 블루",
+      "silver": "은색",
+      "champagne": "골드",
+      "rose": "연분홍색",
+      "pink": "분홍색",
+      "cobalt": "파란색",
+      "violet": "보라색",
+      "emerald": "에메랄드",
+      "brown": "갈색",
+      "lime": "연두색"
     },
+    "colorsMore": "색상 더 보기",
+    "colorsLess": "색상 줄이기",
     "card": {
       "editDocument": "카드: {{name}}",
       "editText": "텍스트",
@@ -900,14 +915,14 @@
       "untitled": "제목 없는 그룹"
     },
     "arrow": {
-      "title": "화살표",
+      "title": "관계",
       "direction": "방향",
       "forward": "한쪽 방향",
       "both": "양쪽 방향",
       "none": "선만",
       "label": "레이블",
       "labelTowards": "{{name}} 쪽 레이블",
-      "delete": "화살표 삭제"
+      "delete": "관계 삭제"
     }
   }
 }

@@ -663,12 +663,14 @@
       "styles": {
         "gothic": "哥特",
         "modern": "现代",
-        "print": "印刷"
+        "print": "印刷",
+        "parchment": "羊皮纸"
       },
       "styleHints": {
         "gothic": "黑红配色，深色封面",
         "modern": "简洁无衬线字体，留白充足",
-        "print": "黑白，节省墨水"
+        "print": "黑白，节省墨水",
+        "parchment": "做旧纸张，棕色小型大写字母"
       },
       "pageSize": "页面尺寸",
       "comments": "在附录中包含评论",
@@ -860,7 +862,7 @@
     "editCard": "编辑卡片：{{name}}",
     "editText": "编辑文本",
     "editGroup": "编辑分组",
-    "editArrow": "编辑箭头：{{label}}",
+    "editArrow": "编辑关系：{{label}}",
     "masterOnly": "仅 Master",
     "masterOnlyArrow": "仅 Master 可见",
     "masterOnlyCard": "仅 Master 可见",
@@ -870,10 +872,23 @@
       "default": "默认",
       "red": "红色",
       "green": "绿色",
-      "purple": "紫色",
-      "blue": "蓝色",
-      "gold": "金色"
+      "purple": "紫红色",
+      "blue": "浅蓝色",
+      "gold": "黄色",
+      "orange": "橙色",
+      "midnight": "午夜蓝",
+      "silver": "银色",
+      "champagne": "金棕色",
+      "rose": "浅粉色",
+      "pink": "粉色",
+      "cobalt": "蓝色",
+      "violet": "紫色",
+      "emerald": "祖母绿",
+      "brown": "棕色",
+      "lime": "浅绿色"
     },
+    "colorsMore": "更多颜色",
+    "colorsLess": "收起颜色",
     "card": {
       "editDocument": "卡片：{{name}}",
       "editText": "文本",
@@ -900,14 +915,14 @@
       "untitled": "未命名分组"
     },
     "arrow": {
-      "title": "箭头",
+      "title": "关系",
       "direction": "方向",
       "forward": "单向",
       "both": "双向",
       "none": "仅线条",
       "label": "标签",
       "labelTowards": "指向 {{name}} 的标签",
-      "delete": "删除箭头"
+      "delete": "删除关系"
     }
   }
 }

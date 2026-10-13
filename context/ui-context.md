@@ -42,6 +42,9 @@ Notes:
   component code. **One exception: country flags** (the language
   selector, spec 09) keep their official colors. They're content, not
   theme, so they are SVG files in `src/assets/flags/`, not components.
+  **Second exception: the 11 relationship-map palette colors** added
+  2026-10-13 (spec 28), whose exact hexes the product owner chose; they
+  live in one table, `COLOR_VALUES` in `src/lib/maps.ts`.
 
 ## Typography
 
@@ -368,7 +371,7 @@ other icon set.
   ("Nella descrizione", "Nella nota «…»", "In un commento di …", the last
   one jumping to the Comment) and the `sm` excerpt. On the Document page it
   sits between the Document card and the Comments; on the Documents list,
-  when exactly one Tag is filtered, above the Documents.
+  when exactly one Tag is filtered, below the Documents. Closed by default, with `md` vertical padding open and `xs` closed.
 - **Document card** (`DocumentCard`, restructured 2026-09-23, spec
   `07 - Document visualizazion refactor_beckend`; image panel restyled
   2026-10-03): three stacked blocks. The *Title block* is the Document name

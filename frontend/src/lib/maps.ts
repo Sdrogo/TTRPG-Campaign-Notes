@@ -77,6 +77,10 @@ export interface RawMapArrow {
   direction: ArrowDirection;
   label: string | null;
   reverse_label: string | null;
+  label_position: number | null;
+  reverse_label_position: number | null;
+  label_offset: number | null;
+  reverse_label_offset: number | null;
   color: MapColor;
   master_only: boolean;
 }
@@ -139,6 +143,10 @@ export function toMapDetail(raw: RawMapDetail): RelationshipMapDetail {
       direction: arrow.direction,
       label: arrow.label,
       reverseLabel: arrow.reverse_label,
+      labelPosition: arrow.label_position,
+      reverseLabelPosition: arrow.reverse_label_position,
+      labelOffset: arrow.label_offset,
+      reverseLabelOffset: arrow.reverse_label_offset,
       color: arrow.color,
       masterOnly: arrow.master_only,
     })),
@@ -174,6 +182,12 @@ export function toBoardBody(board: Board) {
       direction: arrow.direction,
       label: arrow.label,
       reverse_label: arrow.direction === 'both' ? arrow.reverseLabel : null,
+      label_position: arrow.label ? arrow.labelPosition : null,
+      reverse_label_position:
+        arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelPosition : null,
+      label_offset: arrow.label ? arrow.labelOffset : null,
+      reverse_label_offset:
+        arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelOffset : null,
       color: arrow.color,
       master_only: arrow.masterOnly,
     })),
@@ -193,7 +207,28 @@ export function toMapBody(values: MapFormValues) {
 // --- Looks ------------------------------------------------------------------
 
 /** The theme colors, in the order the pickers offer them. */
-export const MAP_COLORS: MapColor[] = ['default', 'red', 'green', 'purple', 'blue', 'gold'];
+export const MAP_COLORS: MapColor[] = [
+  'default',
+  'red',
+  'green',
+  'purple',
+  'blue',
+  'gold',
+  'orange',
+  'midnight',
+  'silver',
+  'champagne',
+  'rose',
+  'pink',
+  'cobalt',
+  'violet',
+  'emerald',
+  'brown',
+  'lime',
+];
+
+/** How many colors the picker shows before "more colors" (one row). */
+export const MAP_COLORS_VISIBLE = 6;
 
 const COLOR_VALUES: Record<MapColor, string> = {
   default: 'var(--text-primary)',
@@ -202,6 +237,17 @@ const COLOR_VALUES: Record<MapColor, string> = {
   purple: 'var(--mantine-color-grape-5)',
   blue: 'var(--mantine-color-blue-5)',
   gold: 'var(--mantine-color-yellow-5)',
+  orange: '#FF9500',
+  midnight: '#4251B0',
+  silver: '#B5B5AC',
+  champagne: '#C1A470',
+  rose: '#EE86A7',
+  pink: '#E85298',
+  cobalt: '#0079C2',
+  violet: '#8F76D6',
+  emerald: '#00AC9B',
+  brown: '#9C5E31',
+  lime: '#9ACD32',
 };
 
 /** The CSS color a map color stands for, from the theme. */
@@ -424,6 +470,10 @@ export function addArrow(board: Board, from: ArrowEnd, to: ArrowEnd): [Board, st
     direction: 'forward',
     label: null,
     reverseLabel: null,
+    labelPosition: null,
+    reverseLabelPosition: null,
+    labelOffset: null,
+    reverseLabelOffset: null,
     color: 'default',
     masterOnly: false,
   };
@@ -491,6 +541,42 @@ export function arrowEnds(source: Rect, target: Rect): { from: Point; to: Point 
   };
 }
 
+/** Pixels between two parallel lines drawn side by side. */
+export const PARALLEL_GAP = 7;
+
+/**
+ * How far to the side of the straight line between two ends an arrow is
+ * drawn. Plain lines (direction `none`) joining the same two ends sit side
+ * by side, in the order they were added, centered on the straight line, so a
+ * metro-style map can show several relations between two cards. Other arrows
+ * (and a lone line) are not shifted. The sign is relative to the arrow's
+ * own direction, so a line drawn the other way round still lands on its own
+ * lane of the same bundle.
+ */
+export function parallelShift(arrows: MapArrow[], arrow: MapArrow): number {
+  if (arrow.direction !== 'none') return 0;
+  const a = endId(arrow.from);
+  const b = endId(arrow.to);
+  const bundle = arrows.filter((other) => {
+    if (other.direction !== 'none') return false;
+    const x = endId(other.from);
+    const y = endId(other.to);
+    return (x === a && y === b) || (x === b && y === a);
+  });
+  if (bundle.length < 2) return 0;
+  const lane = bundle.findIndex((other) => other.id === arrow.id);
+  return (lane - (bundle.length - 1) / 2) * PARALLEL_GAP * (a < b ? 1 : -1);
+}
+
+/** `from` and `to` both moved `shift` pixels to the side of the line between them. */
+export function shiftParallel(from: Point, to: Point, shift: number): { from: Point; to: Point } {
+  if (shift === 0) return { from, to };
+  const length = Math.hypot(to.x - from.x, to.y - from.y) || 1;
+  const dx = (-(to.y - from.y) / length) * shift;
+  const dy = ((to.x - from.x) / length) * shift;
+  return { from: { x: from.x + dx, y: from.y + dy }, to: { x: to.x + dx, y: to.y + dy } };
+}
+
 /** The point a fraction `t` of the way from `from` to `to`. */
 export function pointAlong(from: Point, to: Point, t: number): Point {
   return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
@@ -509,6 +595,45 @@ function overlaps(a: Rect, b: Rect, gap: number): boolean {
     a.y < b.y + b.height + gap &&
     b.y < a.y + a.height + gap
   );
+}
+
+/**
+ * How far along the line from `from` to `to` the point `p` falls, as a
+ * fraction from 0 to 1 (a point past an end counts as that end).
+ */
+export function projectOnLine(from: Point, to: Point, p: Point): number {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared === 0) return 0.5;
+  const t = ((p.x - from.x) * dx + (p.y - from.y) * dy) / lengthSquared;
+  return Math.min(1, Math.max(0, t));
+}
+
+/** The farthest a label may be dragged from its relation, in board pixels (the backend refuses more). */
+export const MAX_LABEL_OFFSET = 2000;
+
+/**
+ * How far, in the same units as the points, `p` is to the side of the line
+ * from `from` to `to`: positive on the right of the way from `from` to `to`
+ * (on screen, where y grows downward), negative on the left, 0 on the line;
+ * never more than `MAX_LABEL_OFFSET` either way.
+ */
+export function offsetFromLine(from: Point, to: Point, p: Point): number {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy);
+  if (length === 0) return 0;
+  const offset = ((p.x - from.x) * -dy + (p.y - from.y) * dx) / length;
+  return Math.max(-MAX_LABEL_OFFSET, Math.min(MAX_LABEL_OFFSET, offset));
+}
+
+/** The point `offset` to the side of the way `t` along the line (see `offsetFromLine`). */
+export function pointBeside(from: Point, to: Point, t: number, offset: number): Point {
+  const along = pointAlong(from, to, t);
+  const length = Math.hypot(to.x - from.x, to.y - from.y);
+  if (length === 0) return along;
+  return { x: along.x + (-(to.y - from.y) / length) * offset, y: along.y + ((to.x - from.x) / length) * offset };
 }
 
 /**

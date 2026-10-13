@@ -24,6 +24,7 @@ import {
   DEFAULT_CARD_SIZE,
   absolutePosition,
   addArrow,
+  parallelShift,
   addDocumentCards,
   addTextCard,
   cardImage,
@@ -185,8 +186,19 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
     markerStart: arrow.direction === 'both' ? marker(arrow) : undefined,
     data: {
       arrow,
+      shift: parallelShift(board.arrows, arrow),
       editable,
       onEdit: (id) => setEditing({ kind: 'arrow', id }),
+      onMoveLabel: (id, which, position, offset) =>
+        onChange(
+          updateArrow(
+            board,
+            id,
+            which === 'label'
+              ? { labelPosition: position, labelOffset: offset }
+              : { reverseLabelPosition: position, reverseLabelOffset: offset },
+          ),
+        ),
     },
   }));
 
