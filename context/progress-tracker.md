@@ -192,6 +192,14 @@ One line per unit; dates 2026, newest first. Spec files live in
   no room there it stays at its usual spot (a sideways jump used to throw
   it past the far card on short arrows).
 
+- **Label positions on relations, backend** (28_3, 10-13): `label_position` and
+  `reverse_label_position` on `relationship_map_arrows` (migration
+  `a9e3c5d7b1f4`, nullable floats 0 to 1, a position needs its label), saved
+  with the board through the existing `PUT .../board`. Applied locally only:
+  it must go to the staging database before the PR merges and to production
+  before the next release to `main`. The drag and the "Relation" rename are
+  the frontend step.
+
 ### 2026-10-08 → 10-10
 
 - **Read aloud, first reading waits for voices** (30b, 10-10): Chrome's

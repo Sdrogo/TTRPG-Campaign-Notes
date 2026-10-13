@@ -185,7 +185,10 @@ class ArrowEnd:
 class MapArrow:
     """An arrow between two ends of a map. `label` is the only label of a
     one-way arrow or a plain line, the one pointing at `to` on a two-way
-    arrow; `reverse_label`, two-way only, the one pointing at `from_end`."""
+    arrow; `reverse_label`, two-way only, the one pointing at `from_end`.
+    `label_position` and `reverse_label_position` are where each label sits
+    along the arrow (0 at `from_end`, 1 at `to_end`), or None for the
+    board's automatic placement."""
 
     id: uuid.UUID
     from_end: ArrowEnd
@@ -195,6 +198,8 @@ class MapArrow:
     reverse_label: str | None
     color: MapColor
     master_only: bool
+    label_position: float | None = None
+    reverse_label_position: float | None = None
 
 
 @dataclass(frozen=True)
@@ -470,22 +475,36 @@ def _clean_card(card: MapCard) -> MapCard:
     )
 
 
+def _clean_position(position: float | None, label: str | None) -> float | None:
+    """A label's place along its arrow: 422 outside 0 to 1, and none for a
+    label that does not exist."""
+    if position is None or label is None:
+        return None
+    if not 0 <= position <= 1:
+        raise InvalidBoardError("errors.map.invalidBoard")
+    return position
+
+
 def _clean_arrow(arrow: MapArrow) -> MapArrow:
     """An arrow with its labels cleaned; only a two-way arrow keeps a reverse
-    label."""
+    label. A label keeps the place it was dragged to only while it exists."""
+    label = clean_line(arrow.label, MAX_LABEL_LENGTH, "label")
+    reverse_label = (
+        clean_line(arrow.reverse_label, MAX_LABEL_LENGTH, "label")
+        if arrow.direction == ArrowDirection.BOTH
+        else None
+    )
     return MapArrow(
         id=arrow.id,
         from_end=arrow.from_end,
         to_end=arrow.to_end,
         direction=arrow.direction,
-        label=clean_line(arrow.label, MAX_LABEL_LENGTH, "label"),
-        reverse_label=(
-            clean_line(arrow.reverse_label, MAX_LABEL_LENGTH, "label")
-            if arrow.direction == ArrowDirection.BOTH
-            else None
-        ),
+        label=label,
+        reverse_label=reverse_label,
         color=arrow.color,
         master_only=arrow.master_only,
+        label_position=_clean_position(arrow.label_position, label),
+        reverse_label_position=_clean_position(arrow.reverse_label_position, reverse_label),
     )
 
 

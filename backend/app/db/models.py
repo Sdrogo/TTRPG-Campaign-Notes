@@ -11,6 +11,7 @@ from sqlalchemy import (
     CheckConstraint,
     Computed,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -828,7 +829,8 @@ class RelationshipMapCardRow(Base):
 
 class RelationshipMapArrowRow(Base):
     """An arrow between two ends of a map, each a card or a group (Decision
-    5). Deleted with either end. `reverse_label` only on a two-way arrow."""
+    5). Deleted with either end. `reverse_label` only on a two-way arrow; each
+    label may carry the place along the arrow the editor dragged it to."""
 
     __tablename__ = "relationship_map_arrows"
     __table_args__ = (
@@ -854,6 +856,16 @@ class RelationshipMapArrowRow(Base):
             "reverse_label IS NULL OR direction = 'both'",
             name="ck_relationship_map_arrows_reverse_label",
         ),
+        CheckConstraint(
+            "label_position IS NULL OR (label_position >= 0 AND label_position <= 1)",
+            name="ck_relationship_map_arrows_label_position",
+        ),
+        CheckConstraint(
+            "reverse_label_position IS NULL"
+            " OR (reverse_label IS NOT NULL AND reverse_label_position >= 0"
+            " AND reverse_label_position <= 1)",
+            name="ck_relationship_map_arrows_reverse_label_position",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -875,5 +887,9 @@ class RelationshipMapArrowRow(Base):
     direction: Mapped[str] = mapped_column(String(10))
     label: Mapped[str | None] = mapped_column(String(60))
     reverse_label: Mapped[str | None] = mapped_column(String(60))
+    # Where the label sits along the arrow, 0 at `from_end` to 1 at `to_end`;
+    # null leaves it to the board's automatic placement.
+    label_position: Mapped[float | None] = mapped_column(Float)
+    reverse_label_position: Mapped[float | None] = mapped_column(Float)
     color: Mapped[str] = mapped_column(String(10))
     master_only: Mapped[bool] = mapped_column(Boolean, default=False)
