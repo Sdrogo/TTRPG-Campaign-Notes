@@ -671,12 +671,14 @@
       "styles": {
         "gothic": "Gothique",
         "modern": "Moderne",
-        "print": "Impression"
+        "print": "Impression",
+        "parchment": "Parchemin"
       },
       "styleHints": {
         "gothic": "Noir et rouge, couverture sombre",
         "modern": "Sans-serif épuré, beaucoup d'espace",
-        "print": "Noir et blanc, économise l'encre"
+        "print": "Noir et blanc, économise l'encre",
+        "parchment": "Papier ancien, petites capitales brunes"
       },
       "pageSize": "Format de page",
       "comments": "Inclure les Commentaires en annexe",
@@ -880,7 +882,7 @@
     "editCard": "Modifier la fiche : {{name}}",
     "editText": "Modifier le texte",
     "editGroup": "Modifier le groupe",
-    "editArrow": "Modifier la flèche : {{label}}",
+    "editArrow": "Modifier la relation : {{label}}",
     "masterOnly": "Master seul",
     "masterOnlyArrow": "Visible uniquement par les Masters",
     "masterOnlyCard": "Visible uniquement par les Masters",
@@ -890,10 +892,23 @@
       "default": "Par défaut",
       "red": "Rouge",
       "green": "Vert",
-      "purple": "Violet",
-      "blue": "Bleu",
-      "gold": "Or"
+      "purple": "Fuchsia",
+      "blue": "Bleu clair",
+      "gold": "Jaune",
+      "orange": "Orange",
+      "midnight": "Bleu nuit",
+      "silver": "Argent",
+      "champagne": "Or",
+      "rose": "Rose clair",
+      "pink": "Rose",
+      "cobalt": "Bleu",
+      "violet": "Violet",
+      "emerald": "Émeraude",
+      "brown": "Marron",
+      "lime": "Vert clair"
     },
+    "colorsMore": "Plus de couleurs",
+    "colorsLess": "Moins de couleurs",
     "card": {
       "editDocument": "Fiche : {{name}}",
       "editText": "Texte",
@@ -920,14 +935,14 @@
       "untitled": "Groupe sans titre"
     },
     "arrow": {
-      "title": "Flèche",
+      "title": "Relation",
       "direction": "Direction",
       "forward": "Dans un sens",
       "both": "Dans les deux",
       "none": "Ligne seule",
       "label": "Étiquette",
       "labelTowards": "Étiquette vers {{name}}",
-      "delete": "Supprimer la flèche"
+      "delete": "Supprimer la relation"
     }
   }
 }

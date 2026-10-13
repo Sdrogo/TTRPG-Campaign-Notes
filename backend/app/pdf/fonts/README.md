@@ -6,10 +6,10 @@ under the SIL Open Font License 1.1 (the licence text is next to the files):
 | Family | Files | Used by |
 | --- | --- | --- |
 | IM Fell English | `IMFeENrm28P.ttf`, `IMFeENit28P.ttf` | Gothic headings |
-| Crimson Text | `CrimsonText-*.ttf` | Gothic and Print body, Print headings |
+| Crimson Text | `CrimsonText-*.ttf` | Gothic and Print body, Print and Parchment headings and body |
 | Lato | `Lato-*.ttf` | Modern (Latin and Cyrillic) |
-| PT Serif | `PTSerif-*.ttf` | Cyrillic fallback of Gothic and Print (Crimson Text and IM Fell English have no Cyrillic) |
-| Noto Serif / Noto Sans (JP, SC, KR) | `NotoSerif{JP,SC,KR}-{Regular,Bold}.woff`, `NotoSans{JP,SC,KR}-{Regular,Bold}.woff` | Japanese, Chinese and Korean, in every style (serif for Gothic and Print, sans for Modern); per-glyph fallback of every font stack |
+| PT Serif | `PTSerif-*.ttf` | Cyrillic fallback of Gothic, Print and Parchment (Crimson Text and IM Fell English have no Cyrillic) |
+| Noto Serif / Noto Sans (JP, SC, KR) | `NotoSerif{JP,SC,KR}-{Regular,Bold}.woff`, `NotoSans{JP,SC,KR}-{Regular,Bold}.woff` | Japanese, Chinese and Korean, in every style (serif for Gothic, Print and Parchment, sans for Modern); per-glyph fallback of every font stack |
 
 Taken from the Google Fonts repository (`ofl/imfellenglish`, `ofl/crimsontext`,
 `ofl/lato`, `ofl/ptserif`); the Noto files come from the static Noto Serif/Sans CJK weights (SIL OFL 1.1, Adobe/Google, `OFL-notocjk.txt`). Nothing here comes from any game's manuals: the Gothic style is

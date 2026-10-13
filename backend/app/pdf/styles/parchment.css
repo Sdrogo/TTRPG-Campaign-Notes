@@ -1,0 +1,76 @@
+@import url("cjk-serif.css");
+/* Parchment (spec 35): aged paper on every page, two-column text in a classic
+   book face, small-capital headings in brown with ochre rules, the subtitle as
+   a stat-block header, Notes as ruled subheadings. Inspired by
+   the look of fantasy-RPG monster compendiums, never copied: only open-licensed
+   fonts (see ../fonts/README.md) and original ornaments. */
+
+@font-face { font-family: "Crimson Text"; src: url(../fonts/CrimsonText-Regular.ttf); }
+@font-face { font-family: "Crimson Text"; font-style: italic; src: url(../fonts/CrimsonText-Italic.ttf); }
+@font-face { font-family: "Crimson Text"; font-weight: 600; src: url(../fonts/CrimsonText-SemiBold.ttf); }
+@font-face { font-family: "Crimson Text"; font-weight: bold; src: url(../fonts/CrimsonText-Bold.ttf); }
+@font-face { font-family: "Crimson Text"; font-weight: bold; font-style: italic; src: url(../fonts/CrimsonText-BoldItalic.ttf); }
+/* Cyrillic (spec 34): Crimson Text has none, so those letters fall through to PT Serif. */
+@font-face { font-family: "PT Serif"; src: url(../fonts/PTSerif-Regular.ttf); }
+@font-face { font-family: "PT Serif"; font-style: italic; src: url(../fonts/PTSerif-Italic.ttf); }
+@font-face { font-family: "PT Serif"; font-weight: bold; src: url(../fonts/PTSerif-Bold.ttf); }
+@font-face { font-family: "PT Serif"; font-weight: bold; font-style: italic; src: url(../fonts/PTSerif-BoldItalic.ttf); }
+
+@page { background: #f3ead4; margin: 20mm 18mm 24mm; }
+@page cover { background: #e9dcba; }
+@page body {
+  @top-left { font: italic 9pt "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #7a2e14; width: 50%; vertical-align: bottom; padding-bottom: 1.5mm; margin-bottom: 6mm; border-bottom: 0.5pt solid #c9a35a; }
+  @top-right { font: italic 9pt "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #6b5a47; width: 50%; vertical-align: bottom; padding-bottom: 1.5mm; margin-bottom: 6mm; border-bottom: 0.5pt solid #c9a35a; }
+}
+@page { @bottom-center { content: "\2014  " counter(page) "  \2014"; font: 9.5pt "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; color: #7a2e14; } }
+@page cover { @bottom-center { content: none; } }
+
+body { font: 10.5pt/1.35 "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", Georgia, serif; color: #2b2118; text-align: justify; hyphens: auto; }
+h1, h2, h3 { font-family: "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", Georgia, serif; font-weight: bold; font-variant: small-caps; letter-spacing: 0.02em; color: #7a2e14; text-align: left; }
+
+/* Cover: a double frame on the darker paper, everything centered */
+.cover { text-align: center; }
+.cover-inner { box-sizing: border-box; margin: 14mm; padding: 38mm 16mm 0; height: calc(100vh - 28mm); border: 2.5pt double #7a2e14; }
+.cover-system { font: 11pt "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; letter-spacing: 0.3em; text-transform: uppercase; color: #6b5a47; margin: 0 0 8mm; }
+.cover-title { font-size: 42pt; line-height: 1.05; margin: 0 0 8mm; text-align: center; }
+.cover-ornament { display: block; margin: 0 auto 12mm; }
+.cover-image { display: block; margin: 0 auto 12mm; width: 105mm; height: 110mm; object-fit: cover; border: 1pt solid #7a2e14; outline: 1pt solid #c9a35a; outline-offset: 2pt; }
+.cover-date { font-style: italic; color: #6b5a47; margin: 0; }
+
+/* Contents and glossary */
+.section-title { font-size: 28pt; margin: 0 0 8mm; padding-bottom: 2mm; border-bottom: 1.5pt solid #c9a35a; }
+.toc-chapter > a { font: bold 14pt "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; font-variant: small-caps; color: #7a2e14; }
+.toc-document > a { font-size: 11pt; }
+.glossary-initial { font-size: 16pt; }
+
+/* Chapters: a double ochre rule under the title; each Document in two columns
+   (base.css) with an ochre rule between them */
+.document { column-rule: 0.5pt solid #c9a35a; }
+.chapter-title { font-size: 32pt; line-height: 1.1; margin: 0 0 6mm; padding-bottom: 2mm; border-bottom: 3pt double #c9a35a; }
+.document-title { font-size: 21pt; margin: 0 0 3mm; padding-bottom: 1mm; border-bottom: 0.75pt solid #c9a35a; }
+/* The subtitle (spec 28_0) is the stat-block header: bold brown italic, a pale band. */
+.document-subtitle { color: #7a2e14; font-weight: bold; opacity: 1; margin: 0 0 4mm; padding: 1mm 2mm; background: #e6d6ae; border-top: 0.75pt solid #c9a35a; border-bottom: 0.75pt solid #c9a35a; }
+.document-image img { max-height: 70mm; border: 0.75pt solid #7a2e14; }
+
+/* A large brown initial on the first paragraph of a description, unless it opens
+   with a "#" or "@" mention (`drop-cap`, manual.py). Kept on the line, not
+   floated: WeasyPrint's floated ::first-letter fails in its float layout on some
+   paragraphs (see gothic.css). */
+.description.drop-cap p:first-child::first-letter { font-size: 2.6em; font-weight: bold; color: #7a2e14; }
+
+/* Notes read as more of the description, never a box (product owner, 2026-10-06):
+   the subheading in small capitals with a pale ochre rule under it */
+.note h3 { font-size: 13pt; padding-bottom: 0.5mm; border-bottom: 0.5pt solid #c9a35a; }
+
+.xref { color: #7a2e14; }
+.comments h3 { font-size: 14pt; border-bottom: 0.5pt solid #c9a35a; }
+.comment { background: #ebdfbd; border-left: 3pt solid #7a2e14; font-style: italic; }
+.comment-meta { font-size: 9.5pt; font-style: normal; color: #6b5a47; }
+
+/* CJK (spec 34_3): the page language picks whose Han glyphs come first; Japanese is
+   the default order above. No synthesized italics, bold or small capitals (CJK
+   fonts have none) and no hyphenation or drop cap for these scripts. */
+html:lang(zh) body, html:lang(zh) h1, html:lang(zh) h2, html:lang(zh) h3 { font-family: "Crimson Text", "PT Serif", "Noto Serif SC", "Noto Serif JP", "Noto Serif KR", serif; }
+html:lang(ko) body, html:lang(ko) h1, html:lang(ko) h2, html:lang(ko) h3 { font-family: "Crimson Text", "PT Serif", "Noto Serif KR", "Noto Serif JP", "Noto Serif SC", serif; }
+html:lang(ja) body, html:lang(zh) body, html:lang(ko) body { font-synthesis: none; hyphens: manual; }
+html:lang(ja) .description.drop-cap p:first-child::first-letter, html:lang(zh) .description.drop-cap p:first-child::first-letter, html:lang(ko) .description.drop-cap p:first-child::first-letter { font: inherit; color: inherit; }

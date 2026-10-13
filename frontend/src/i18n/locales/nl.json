@@ -671,12 +671,14 @@
       "styles": {
         "gothic": "Gotisch",
         "modern": "Modern",
-        "print": "Afdruk"
+        "print": "Afdruk",
+        "parchment": "Perkament"
       },
       "styleHints": {
         "gothic": "Zwart en rood, donkere omslag",
         "modern": "Strak schreefloos, veel witruimte",
-        "print": "Zwart-wit, bespaart inkt"
+        "print": "Zwart-wit, bespaart inkt",
+        "parchment": "Oud papier, bruine kleinkapitalen"
       },
       "pageSize": "Paginaformaat",
       "comments": "Opmerkingen als bijlage opnemen",
@@ -880,7 +882,7 @@
     "editCard": "Kaart bewerken: {{name}}",
     "editText": "Tekst bewerken",
     "editGroup": "Groep bewerken",
-    "editArrow": "Pijl bewerken: {{label}}",
+    "editArrow": "Relatie bewerken: {{label}}",
     "masterOnly": "Alleen Master",
     "masterOnlyArrow": "Alleen zichtbaar voor Masters",
     "masterOnlyCard": "Alleen zichtbaar voor Masters",
@@ -890,10 +892,23 @@
       "default": "Standaard",
       "red": "Rood",
       "green": "Groen",
-      "purple": "Paars",
-      "blue": "Blauw",
-      "gold": "Goud"
+      "purple": "Fuchsia",
+      "blue": "Lichtblauw",
+      "gold": "Geel",
+      "orange": "Oranje",
+      "midnight": "Nachtblauw",
+      "silver": "Zilver",
+      "champagne": "Goud",
+      "rose": "Lichtroze",
+      "pink": "Roze",
+      "cobalt": "Blauw",
+      "violet": "Paars",
+      "emerald": "Smaragd",
+      "brown": "Bruin",
+      "lime": "Lichtgroen"
     },
+    "colorsMore": "Meer kleuren",
+    "colorsLess": "Minder kleuren",
     "card": {
       "editDocument": "Kaart: {{name}}",
       "editText": "Tekst",
@@ -920,14 +935,14 @@
       "untitled": "Groep zonder titel"
     },
     "arrow": {
-      "title": "Pijl",
+      "title": "Relatie",
       "direction": "Richting",
       "forward": "Eén richting",
       "both": "Beide richtingen",
       "none": "Alleen lijn",
       "label": "Label",
       "labelTowards": "Label richting {{name}}",
-      "delete": "De pijl verwijderen"
+      "delete": "De relatie verwijderen"
     }
   }
 }

@@ -21,6 +21,11 @@ detail:
   30/30b (read aloud with the browser's voices, best installed voice by
   default, first reading waits for the voice list, PRs #146, #148, #154).
   Neither has a migration.
+- **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
+  Room PDF style, `parchment`, modeled on a fantasy monster compendium the
+  product owner shared: parchment-colored pages, brown small-capital
+  headings, ochre rules, the subtitle as a stat-block band. Only existing
+  fonts (Crimson Text, PT Serif, Noto CJK). Defaults to confirm in the PR.
 - **Spec 32, mention hover preview** (2026-10-12, PR #157, frontend only,
   no migration): on the Document page, resting a mouse on a linked
   `#Document` mention for 400 ms shows that Document's `DocumentCard`
@@ -47,21 +52,23 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `d5a1c8e3f2b7` (map card image, spec 28
-  follow-up).
-- **Staging database**: `d5a1c8e3f2b7` (applied by hand 2026-10-12, with
-  `.env.staging` loaded; `b3f7d1e9c5a2` before it).
+- **Head in the repository**: `b4d8f2a6c1e7` (map label offsets, spec 28_3).
+- **Staging database**: `b4d8f2a6c1e7` (applied by hand 2026-10-13, with
+  `.env.staging` loaded; `a9e3c5d7b1f4` before it, same day, and
+  `d5a1c8e3f2b7` before that, applied 2026-10-12).
 - **Production database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12; both
   feature 28 migrations, before them `f7a2d8c4e1b9`).
 - **Pending on production**: `d5a1c8e3f2b7`
-  (`relationship_map_cards.image_id`, a nullable foreign key; DDL only).
-  Apply it before the next release to `main`. It is not applied yet: no
-  production `backend/.env` was available on the agent's machine on
-  2026-10-12, so the product owner runs it (or provides the file). Its file
-  lives only on the `claude/project-thread-hakwwg` branch until that merges.
+  (`relationship_map_cards.image_id`, a nullable foreign key; DDL only) and
+  `a9e3c5d7b1f4` (`label_position` and `reverse_label_position` on
+  `relationship_map_arrows`, nullable floats with check constraints; DDL
+  only) and `b4d8f2a6c1e7` (`label_offset` and `reverse_label_offset` on the
+  same table, nullable floats; DDL only). Apply all three, in that order,
+  before the next release to `main`. None is applied yet: the product owner
+  runs them (the agent has no production `backend/.env`).
 
 Recent chain, newest first (where each came from):
-`d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -98,6 +105,12 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
+
+### 2026-10-13
+
+- **Mentions block compact** (no migration): "Mentioned in" is collapsed by
+  default on the Document page and on the Tag-filtered Room list, where it
+  now sits after the results; vertical padding `md` open, `xs` collapsed.
 
 ### 2026-10-12
 
@@ -137,6 +150,7 @@ One line per unit; dates 2026, newest first. Spec files live in
   compares plural keys as groups per `Intl.PluralRules` (Russian four forms,
   Japanese one); `context/i18n-glossary.md` started. Next: 34_2.
 
+- **More relation colors** (28 follow-up, 10-13, frontend + backend enum, no migration): 11 colors added to the map palette (orange, midnight blue, silver, gold, light pink, pink, blue, purple, emerald, brown, light green); picker shows one row with a "more colors" toggle; old labels renamed Fuchsia / Light blue / Yellow in all 12 languages.
 - **Map cards easier to move and select** (28 follow-up, 10-12, frontend
   only, no migration): cards get a grab cursor, a hover ring and a grip
   mark; dragging on empty canvas now draws a selection box (partial overlap)
@@ -188,7 +202,30 @@ One line per unit; dates 2026, newest first. Spec files live in
   two cards it joins nor the other label; the box size is estimated from
   the text. When the arrow is too short for that, the label moves sideways
   (right or left, whichever clears the cards first) instead of staying
-  centered over them.
+  centered over them, but never outside the area the two cards span: with
+  no room there it stays at its usual spot (a sideways jump used to throw
+  it past the far card on short arrows).
+
+- **Label positions on relations, backend** (28_3, 10-13): `label_position` and
+  `reverse_label_position` on `relationship_map_arrows` (migration
+  `a9e3c5d7b1f4`, nullable floats 0 to 1, a position needs its label), saved
+  with the board through the existing `PUT .../board`. Applied to the
+  staging database by hand on 2026-10-13 (`alembic current` went from
+  `d5a1c8e3f2b7` to `a9e3c5d7b1f4`); still pending on production, before the
+  next release to `main`. The drag and the "Relation" rename are
+  the frontend step.
+- **Label distance from the relation, backend** (28_3, 10-13): `label_offset` and
+  `reverse_label_offset` on `relationship_map_arrows` (migration
+  `b4d8f2a6c1e7`, nullable floats in board pixels, ±2000, an offset needs its
+  label's position), so a dragged label can sit to the side of its relation.
+  Applied to the staging database by hand on 2026-10-13 (`alembic current`
+  went from `a9e3c5d7b1f4` to `b4d8f2a6c1e7`); still pending on production,
+  before the next release to `main`.
+- **Dragging a relation's label, frontend** (28_3, 10-13): a label is dragged
+  freely, along its relation and to either side (saved as `label_position` +
+  `label_offset`, the distance kept within the backend's ±2000); the click
+  that ends a drag no longer opens the relation; "Arrow" is "Relation" in all
+  12 languages.
 
 ### 2026-10-08 → 10-10
 

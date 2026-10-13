@@ -87,6 +87,10 @@ def _arrow_from_row(row: RelationshipMapArrowRow) -> MapArrow:
         direction=ArrowDirection(row.direction),
         label=row.label,
         reverse_label=row.reverse_label,
+        label_position=row.label_position,
+        reverse_label_position=row.reverse_label_position,
+        label_offset=row.label_offset,
+        reverse_label_offset=row.reverse_label_offset,
         color=MapColor(row.color),
         master_only=row.master_only,
     )
@@ -369,6 +373,10 @@ async def save_board(session: AsyncSession, map_id: uuid.UUID, plan: BoardPlan) 
                     "direction": arrow.direction.value,
                     "label": arrow.label,
                     "reverse_label": arrow.reverse_label,
+                    "label_position": arrow.label_position,
+                    "reverse_label_position": arrow.reverse_label_position,
+                    "label_offset": arrow.label_offset,
+                    "reverse_label_offset": arrow.reverse_label_offset,
                     "color": arrow.color.value,
                     "master_only": arrow.master_only,
                 }
@@ -388,6 +396,10 @@ async def save_board(session: AsyncSession, map_id: uuid.UUID, plan: BoardPlan) 
                         "direction",
                         "label",
                         "reverse_label",
+                        "label_position",
+                        "reverse_label_position",
+                        "label_offset",
+                        "reverse_label_offset",
                         "color",
                         "master_only",
                     )

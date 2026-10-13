@@ -671,12 +671,14 @@
       "styles": {
         "gothic": "Gotico",
         "modern": "Moderno",
-        "print": "Stampa"
+        "print": "Stampa",
+        "parchment": "Pergamena"
       },
       "styleHints": {
         "gothic": "Nero e rosso, copertina scura",
         "modern": "Sans-serif pulito, tanto spazio",
-        "print": "Bianco e nero, risparmia inchiostro"
+        "print": "Bianco e nero, risparmia inchiostro",
+        "parchment": "Carta antica, maiuscoletto marrone"
       },
       "pageSize": "Formato della pagina",
       "comments": "Includi i Commenti in appendice",
@@ -880,7 +882,7 @@
     "editCard": "Modifica la carta: {{name}}",
     "editText": "Modifica il testo",
     "editGroup": "Modifica il gruppo",
-    "editArrow": "Modifica la freccia: {{label}}",
+    "editArrow": "Modifica la relazione: {{label}}",
     "masterOnly": "Solo Master",
     "masterOnlyArrow": "Visibile solo ai Master",
     "masterOnlyCard": "Visibile solo ai Master",
@@ -890,10 +892,23 @@
       "default": "Predefinito",
       "red": "Rosso",
       "green": "Verde",
-      "purple": "Viola",
-      "blue": "Blu",
-      "gold": "Oro"
+      "purple": "Fucsia",
+      "blue": "Azzurro",
+      "gold": "Giallo",
+      "orange": "Arancione",
+      "midnight": "Blu notte",
+      "silver": "Argento",
+      "champagne": "Oro",
+      "rose": "Rosa chiaro",
+      "pink": "Rosa",
+      "cobalt": "Blu",
+      "violet": "Viola",
+      "emerald": "Smeraldo",
+      "brown": "Marrone",
+      "lime": "Verde chiaro"
     },
+    "colorsMore": "Altri colori",
+    "colorsLess": "Meno colori",
     "card": {
       "editDocument": "Carta: {{name}}",
       "editText": "Testo",
@@ -920,14 +935,14 @@
       "untitled": "Gruppo senza titolo"
     },
     "arrow": {
-      "title": "Freccia",
+      "title": "Relazione",
       "direction": "Direzione",
       "forward": "In un senso",
       "both": "In entrambi",
       "none": "Solo linea",
       "label": "Etichetta",
       "labelTowards": "Etichetta verso {{name}}",
-      "delete": "Elimina la freccia"
+      "delete": "Elimina la relazione"
     }
   }
 }

@@ -37,6 +37,8 @@ MAX_TEXT_CARD_LENGTH = 300
 MAX_CAPTION_LENGTH = 80
 MAX_CAPTION_LINES = 2
 MAX_LABEL_LENGTH = 60
+# The farthest a dragged label may sit from its arrow, in board pixels.
+MAX_LABEL_OFFSET = 2000
 MAX_GROUP_TITLE_LENGTH = 80
 # How far from the origin a card or group may be placed, either way.
 MAX_COORDINATE = 100_000.0
@@ -56,6 +58,17 @@ class MapColor(StrEnum):
     PURPLE = "purple"
     BLUE = "blue"
     GOLD = "gold"
+    ORANGE = "orange"
+    MIDNIGHT = "midnight"
+    SILVER = "silver"
+    CHAMPAGNE = "champagne"
+    ROSE = "rose"
+    PINK = "pink"
+    COBALT = "cobalt"
+    VIOLET = "violet"
+    EMERALD = "emerald"
+    BROWN = "brown"
+    LIME = "lime"
 
 
 class CardSize(StrEnum):
@@ -185,7 +198,12 @@ class ArrowEnd:
 class MapArrow:
     """An arrow between two ends of a map. `label` is the only label of a
     one-way arrow or a plain line, the one pointing at `to` on a two-way
-    arrow; `reverse_label`, two-way only, the one pointing at `from_end`."""
+    arrow; `reverse_label`, two-way only, the one pointing at `from_end`.
+    `label_position` and `reverse_label_position` are where each label sits
+    along the arrow (0 at `from_end`, 1 at `to_end`), or None for the
+    board's automatic placement. `label_offset` and `reverse_label_offset` are
+    how far, in board pixels, a dragged label sits to the side of the arrow
+    (negative to the other side); they only exist with a position."""
 
     id: uuid.UUID
     from_end: ArrowEnd
@@ -195,6 +213,10 @@ class MapArrow:
     reverse_label: str | None
     color: MapColor
     master_only: bool
+    label_position: float | None = None
+    reverse_label_position: float | None = None
+    label_offset: float | None = None
+    reverse_label_offset: float | None = None
 
 
 @dataclass(frozen=True)
@@ -470,22 +492,50 @@ def _clean_card(card: MapCard) -> MapCard:
     )
 
 
+def _clean_position(position: float | None, label: str | None) -> float | None:
+    """A label's place along its arrow: 422 outside 0 to 1, and none for a
+    label that does not exist."""
+    if position is None or label is None:
+        return None
+    if not 0 <= position <= 1:
+        raise InvalidBoardError("errors.map.invalidBoard")
+    return position
+
+
+def _clean_offset(offset: float | None, position: float | None) -> float | None:
+    """A label's distance from its arrow: 422 beyond the largest a board
+    allows, and none for a label without a place."""
+    if offset is None or position is None:
+        return None
+    if not -MAX_LABEL_OFFSET <= offset <= MAX_LABEL_OFFSET:
+        raise InvalidBoardError("errors.map.invalidBoard")
+    return offset
+
+
 def _clean_arrow(arrow: MapArrow) -> MapArrow:
     """An arrow with its labels cleaned; only a two-way arrow keeps a reverse
-    label."""
+    label. A label keeps the place it was dragged to only while it exists."""
+    label = clean_line(arrow.label, MAX_LABEL_LENGTH, "label")
+    reverse_label = (
+        clean_line(arrow.reverse_label, MAX_LABEL_LENGTH, "label")
+        if arrow.direction == ArrowDirection.BOTH
+        else None
+    )
+    label_position = _clean_position(arrow.label_position, label)
+    reverse_label_position = _clean_position(arrow.reverse_label_position, reverse_label)
     return MapArrow(
         id=arrow.id,
         from_end=arrow.from_end,
         to_end=arrow.to_end,
         direction=arrow.direction,
-        label=clean_line(arrow.label, MAX_LABEL_LENGTH, "label"),
-        reverse_label=(
-            clean_line(arrow.reverse_label, MAX_LABEL_LENGTH, "label")
-            if arrow.direction == ArrowDirection.BOTH
-            else None
-        ),
+        label=label,
+        reverse_label=reverse_label,
         color=arrow.color,
         master_only=arrow.master_only,
+        label_position=label_position,
+        reverse_label_position=reverse_label_position,
+        label_offset=_clean_offset(arrow.label_offset, label_position),
+        reverse_label_offset=_clean_offset(arrow.reverse_label_offset, reverse_label_position),
     )
 
 

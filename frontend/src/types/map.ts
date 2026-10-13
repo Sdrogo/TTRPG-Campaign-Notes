@@ -2,7 +2,24 @@ import type { DocumentVisibility } from './document';
 import type { StoredImage } from './image';
 
 /** The theme colors a card, a label or a group takes (spec 28 Decision 8). */
-export type MapColor = 'default' | 'red' | 'green' | 'purple' | 'blue' | 'gold';
+export type MapColor =
+  | 'default'
+  | 'red'
+  | 'green'
+  | 'purple'
+  | 'blue'
+  | 'gold'
+  | 'orange'
+  | 'midnight'
+  | 'silver'
+  | 'champagne'
+  | 'rose'
+  | 'pink'
+  | 'cobalt'
+  | 'violet'
+  | 'emerald'
+  | 'brown'
+  | 'lime';
 
 /** How large a text card's text is (Decision 6). */
 export type CardSize = 'normal' | 'large' | 'title';
@@ -83,7 +100,8 @@ export interface ArrowEnd {
 /**
  * An arrow between two ends. `label` is the only label of a one-way arrow or a
  * line, the one pointing at `to` on a two-way arrow; `reverseLabel` the one
- * pointing at `from`.
+ * pointing at `from`. The positions are where each label was dragged to along
+ * the arrow, from 0 (at `from`) to 1 (at `to`); null leaves it to the board.
  */
 export interface MapArrow {
   id: string;
@@ -92,6 +110,11 @@ export interface MapArrow {
   direction: ArrowDirection;
   label: string | null;
   reverseLabel: string | null;
+  labelPosition: number | null;
+  reverseLabelPosition: number | null;
+  /** How far a dragged label sits to the side of the arrow, in board pixels. */
+  labelOffset: number | null;
+  reverseLabelOffset: number | null;
   color: MapColor;
   masterOnly: boolean;
 }

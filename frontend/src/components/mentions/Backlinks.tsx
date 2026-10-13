@@ -22,12 +22,12 @@ interface BacklinksProps {
  * a Document or a Tag, each with where it does (the description, a Note, a
  * Comment) and the text around it, its mentions under their targets' current
  * names (the excerpt keeps the tokens). The backend already left out what the
- * viewer may not see. Collapsible, and not shown at all while empty.
+ * viewer may not see. Collapsible (closed by default), and not shown at all while empty.
  */
 export function Backlinks({ roomId, target, members }: BacklinksProps) {
   const { t } = useTranslation();
   const backlinks = useBacklinks(roomId, target);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const groups = backlinks.data ?? [];
 
   if (groups.length === 0) {
@@ -46,8 +46,8 @@ export function Backlinks({ roomId, target, members }: BacklinksProps) {
   };
 
   return (
-    <PageCard>
-      <Stack gap="md" data-testid="backlinks">
+    <PageCard py={expanded ? 'md' : 'xs'}>
+      <Stack gap="xs" data-testid="backlinks">
         <UnstyledButton
           onClick={() => setExpanded((current) => !current)}
           aria-expanded={expanded}

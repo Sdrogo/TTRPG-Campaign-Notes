@@ -687,12 +687,14 @@
       "styles": {
         "gothic": "Gotycki",
         "modern": "Nowoczesny",
-        "print": "Do druku"
+        "print": "Do druku",
+        "parchment": "Pergamin"
       },
       "styleHints": {
         "gothic": "Czerń i czerwień, ciemna okładka",
         "modern": "Czysty sans-serif, dużo miejsca",
-        "print": "Czarno-biały, oszczędza tusz"
+        "print": "Czarno-biały, oszczędza tusz",
+        "parchment": "Postarzały papier, brązowe kapitaliki"
       },
       "pageSize": "Format strony",
       "comments": "Dołącz komentarze w aneksie",
@@ -920,7 +922,7 @@
     "editCard": "Edytuj kartę: {{name}}",
     "editText": "Edytuj tekst",
     "editGroup": "Edytuj grupę",
-    "editArrow": "Edytuj strzałkę: {{label}}",
+    "editArrow": "Edytuj relację: {{label}}",
     "masterOnly": "Tylko Master",
     "masterOnlyArrow": "Widoczna tylko dla Masterów",
     "masterOnlyCard": "Widoczna tylko dla Masterów",
@@ -930,10 +932,23 @@
       "default": "Domyślny",
       "red": "Czerwony",
       "green": "Zielony",
-      "purple": "Fioletowy",
-      "blue": "Niebieski",
-      "gold": "Złoty"
+      "purple": "Fuksja",
+      "blue": "Błękitny",
+      "gold": "Żółty",
+      "orange": "Pomarańczowy",
+      "midnight": "Granatowy",
+      "silver": "Srebrny",
+      "champagne": "Złoty",
+      "rose": "Jasnoróżowy",
+      "pink": "Różowy",
+      "cobalt": "Niebieski",
+      "violet": "Fioletowy",
+      "emerald": "Szmaragdowy",
+      "brown": "Brązowy",
+      "lime": "Jasnozielony"
     },
+    "colorsMore": "Więcej kolorów",
+    "colorsLess": "Mniej kolorów",
     "card": {
       "editDocument": "Karta: {{name}}",
       "editText": "Tekst",
@@ -960,14 +975,14 @@
       "untitled": "Grupa bez tytułu"
     },
     "arrow": {
-      "title": "Strzałka",
+      "title": "Relacja",
       "direction": "Kierunek",
       "forward": "W jedną stronę",
       "both": "W obie strony",
       "none": "Tylko linia",
       "label": "Etykieta",
       "labelTowards": "Etykieta w stronę {{name}}",
-      "delete": "Usuń strzałkę"
+      "delete": "Usuń relację"
     }
   }
 }

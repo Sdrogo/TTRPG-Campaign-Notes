@@ -15,7 +15,7 @@ These complete FR-D4 in `requirements.md` and don't change it.
 5. **Visibility (VR-07, Invariant 1)**: a backlink is listed only when the viewer sees the source Document **and** the Note or Comment holding the mention (effective visibility, ticket 19). A mention never reveals a hidden target either: a token pointing at a Document the viewer can't see renders the **stored** name as plain text, never the current one.
 6. **Where**: a collapsible "Mentioned in" section on the Document page, between the Notes and the Comments; hidden when empty.
 7. **Deleted target**: the mention renders as plain text with its stored name.
-8. **Tag mentions get backlinks too** (product owner, 2026-10-02): a Tag mention still opens the Documents list filtered by that Tag, stored with an id so renaming the Tag no longer breaks it, and the Tag gets the same "Mentioned in" list with the same rules (Decisions 3 to 5, 7). A Tag has no page of its own, so its list is shown on the **Documents list filtered by exactly that one Tag**, as a collapsible section above the Documents, hidden when empty. A deleted Tag's rows go with it.
+8. **Tag mentions get backlinks too** (product owner, 2026-10-02): a Tag mention still opens the Documents list filtered by that Tag, stored with an id so renaming the Tag no longer breaks it, and the Tag gets the same "Mentioned in" list with the same rules (Decisions 3 to 5, 7). A Tag has no page of its own, so its list is shown on the **Documents list filtered by exactly that one Tag**, as a collapsible section **below the Documents, closed by default** (changed 2026-10-13 at the product owner's request, 'Mentioned in' is closed by default on the Document page too), hidden when empty. A deleted Tag's rows go with it.
 
 ## Design
 
