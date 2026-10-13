@@ -238,7 +238,7 @@ const COLOR_VALUES: Record<MapColor, string> = {
   blue: 'var(--mantine-color-blue-5)',
   gold: 'var(--mantine-color-yellow-5)',
   orange: '#FF9500',
-  midnight: '#283583',
+  midnight: '#4251B0',
   silver: '#B5B5AC',
   champagne: '#C1A470',
   rose: '#EE86A7',
