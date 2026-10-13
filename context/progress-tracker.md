@@ -51,16 +51,11 @@ here and remind the product owner.
 - **Staging database**: `b4d8f2a6c1e7` (applied by hand 2026-10-13, with
   `.env.staging` loaded; `a9e3c5d7b1f4` before it, same day, and
   `d5a1c8e3f2b7` before that, applied 2026-10-12).
-- **Production database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12; both
-  feature 28 migrations, before them `f7a2d8c4e1b9`).
-- **Pending on production**: `d5a1c8e3f2b7`
-  (`relationship_map_cards.image_id`, a nullable foreign key; DDL only) and
-  `a9e3c5d7b1f4` (`label_position` and `reverse_label_position` on
-  `relationship_map_arrows`, nullable floats with check constraints; DDL
-  only) and `b4d8f2a6c1e7` (`label_offset` and `reverse_label_offset` on the
-  same table, nullable floats; DDL only). Apply all three, in that order,
-  before the next release to `main`. None is applied yet: the product owner
-  runs them (the agent has no production `backend/.env`).
+- **Production database**: `b4d8f2a6c1e7` (= head). Applied 2026-10-13 with
+  `alembic upgrade head` and `backend/.env` loaded: `a9e3c5d7b1f4` (map label
+  positions) and `b4d8f2a6c1e7` (map label offsets), from `d5a1c8e3f2b7`
+  (map card image, applied earlier).
+- **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
 `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
@@ -199,16 +194,14 @@ One line per unit; dates 2026, newest first. Spec files live in
   `a9e3c5d7b1f4`, nullable floats 0 to 1, a position needs its label), saved
   with the board through the existing `PUT .../board`. Applied to the
   staging database by hand on 2026-10-13 (`alembic current` went from
-  `d5a1c8e3f2b7` to `a9e3c5d7b1f4`); still pending on production, before the
-  next release to `main`. The drag and the "Relation" rename are
+  `d5a1c8e3f2b7` to `a9e3c5d7b1f4`) and to production on 2026-10-13. The drag and the "Relation" rename are
   the frontend step.
 - **Label distance from the relation, backend** (28_3, 10-13): `label_offset` and
   `reverse_label_offset` on `relationship_map_arrows` (migration
   `b4d8f2a6c1e7`, nullable floats in board pixels, ±2000, an offset needs its
   label's position), so a dragged label can sit to the side of its relation.
   Applied to the staging database by hand on 2026-10-13 (`alembic current`
-  went from `a9e3c5d7b1f4` to `b4d8f2a6c1e7`); still pending on production,
-  before the next release to `main`.
+  went from `a9e3c5d7b1f4` to `b4d8f2a6c1e7`) and to production on 2026-10-13.
 
 ### 2026-10-08 → 10-10
 
