@@ -371,34 +371,48 @@ describe('drawing arrows', () => {
 
   describe('placeLabel', () => {
     const size = { width: 100, height: 24 };
+    const everywhere = { x: -1e6, y: -1e6, width: 2e6, height: 2e6 };
     const clear = (at: { x: number; y: number }, rects: { x: number; y: number; width: number; height: number }[]) =>
       rects.every(
         (r) => at.x + 50 <= r.x || at.x - 50 >= r.x + r.width || at.y + 12 <= r.y || at.y - 12 >= r.y + r.height,
       );
 
     it('keeps the wanted spot when no card is in the way', () => {
-      expect(placeLabel({ x: 0, y: 0 }, { x: 400, y: 0 }, 0.5, size, [])).toEqual({ x: 200, y: 0 });
+      expect(placeLabel({ x: 0, y: 0 }, { x: 400, y: 0 }, 0.5, size, [], everywhere)).toEqual({ x: 200, y: 0 });
     });
 
     it('slides the label along the arrow until the card no longer covers it', () => {
       const card = { x: 330, y: -50, width: 100, height: 100 };
-      const at = placeLabel({ x: 0, y: 0 }, { x: 330, y: 0 }, 0.9, size, [card]);
+      const at = placeLabel({ x: 0, y: 0 }, { x: 330, y: 0 }, 0.9, size, [card], everywhere);
       expect(at.x).toBeLessThan(330 - 50);
       expect(clear(at, [card])).toBe(true);
     });
 
     it('moves sideways, off the cards, when the line is too short to clear them', () => {
       const a = { x: 0, y: -50, width: 100, height: 100 };
-      const b = { x: 110, y: -50, width: 100, height: 100 };
-      const at = placeLabel({ x: 100, y: 0 }, { x: 110, y: 0 }, 0.5, size, [a, b]);
+      const b = { x: 110, y: 40, width: 100, height: 100 };
+      const span = { x: 0, y: -50, width: 210, height: 190 };
+      const at = placeLabel({ x: 100, y: -30 }, { x: 110, y: 10 }, 0.5, size, [a, b], span);
       expect(clear(at, [a, b])).toBe(true);
-      expect(at.y).toBe(0);
-      expect(at.x).not.toBe(105);
+      expect(at.x).toBeGreaterThanOrEqual(span.x);
+      expect(at.x).toBeLessThanOrEqual(span.x + span.width);
+      expect(at.y).toBeGreaterThanOrEqual(span.y);
+      expect(at.y).toBeLessThanOrEqual(span.y + span.height);
+    });
+
+    it('never throws the label past the cards to their far side', () => {
+      // Two cards side by side with no gap: no spot between them is clear, so
+      // the label stays at its wanted spot instead of jumping beyond them.
+      const a = { x: 0, y: -50, width: 100, height: 100 };
+      const b = { x: 110, y: -50, width: 100, height: 100 };
+      const span = { x: 0, y: -50, width: 210, height: 100 };
+      const at = placeLabel({ x: 100, y: 0 }, { x: 110, y: 0 }, 0.5, size, [a, b], span);
+      expect(at).toEqual({ x: 105, y: 0 });
     });
 
     it('stays at the wanted spot when there is no room at all', () => {
       const wall = { x: -5000, y: -5000, width: 10000, height: 10000 };
-      expect(placeLabel({ x: 0, y: 0 }, { x: 10, y: 0 }, 0.5, size, [wall])).toEqual({ x: 5, y: 0 });
+      expect(placeLabel({ x: 0, y: 0 }, { x: 10, y: 0 }, 0.5, size, [wall], everywhere)).toEqual({ x: 5, y: 0 });
     });
   });
 });

@@ -188,7 +188,9 @@ One line per unit; dates 2026, newest first. Spec files live in
   two cards it joins nor the other label; the box size is estimated from
   the text. When the arrow is too short for that, the label moves sideways
   (right or left, whichever clears the cards first) instead of staying
-  centered over them.
+  centered over them, but never outside the area the two cards span: with
+  no room there it stays at its usual spot (a sideways jump used to throw
+  it past the far card on short arrows).
 
 ### 2026-10-08 → 10-10
 

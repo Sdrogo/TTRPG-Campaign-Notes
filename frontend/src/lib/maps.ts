@@ -518,7 +518,9 @@ function overlaps(a: Rect, b: Rect, gap: number): boolean {
  * labels already placed), so a card never covers it. When nowhere along the
  * line is clear (a short arrow between cards), the label moves sideways, to
  * the right or the left, the least it takes to clear them, still beside the
- * arrow. When even that finds no room, it stays at `preferred`.
+ * arrow. The label's center never leaves `within` (the area the two cards
+ * span), so it is never thrown past a card to the far side. When even that
+ * finds no room, it stays at `preferred`.
  */
 export function placeLabel(
   from: Point,
@@ -526,12 +528,21 @@ export function placeLabel(
   preferred: number,
   size: { width: number; height: number },
   avoid: Rect[],
+  within: Rect,
 ): Point {
   const STEPS = 50;
   const GAP = 6;
   const SHIFT_STEP = 8;
   const MAX_SHIFT = 400;
   const clearAt = (at: Point): boolean => {
+    if (
+      at.x < within.x ||
+      at.x > within.x + within.width ||
+      at.y < within.y ||
+      at.y > within.y + within.height
+    ) {
+      return false;
+    }
     const box = { x: at.x - size.width / 2, y: at.y - size.height / 2, ...size };
     return !avoid.some((rect) => overlaps(box, rect, GAP));
   };
