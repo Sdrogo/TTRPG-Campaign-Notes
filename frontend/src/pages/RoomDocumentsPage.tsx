@@ -266,8 +266,8 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             groupBy={groupBy}
           />
         )}
-        {/* Spec 20 Decision 8: a Tag has no page, so where it is mentioned
-            shows on the list filtered by exactly that Tag. */}
+        {/* A Tag has no page, so where it is mentioned shows on the list
+            filtered by exactly that Tag, below the results (spec 20 Decision 8). */}
         {tagFilter.length === 1 && (
           <Backlinks
             key={tagFilter[0]}
