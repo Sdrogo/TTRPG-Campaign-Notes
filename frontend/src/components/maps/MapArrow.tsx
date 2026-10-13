@@ -35,9 +35,17 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
     wanted.push({ text: arrow.label, t: 0.5 });
   }
   const avoid: Rect[] = [sourceRect, targetRect];
+  const left = Math.min(sourceRect.x, targetRect.x);
+  const top = Math.min(sourceRect.y, targetRect.y);
+  const within: Rect = {
+    x: left,
+    y: top,
+    width: Math.max(sourceRect.x + sourceRect.width, targetRect.x + targetRect.width) - left,
+    height: Math.max(sourceRect.y + sourceRect.height, targetRect.y + targetRect.height) - top,
+  };
   const labels: { text: string; at: Point }[] = wanted.map(({ text, t }) => {
     const size = labelSize(text);
-    const at = placeLabel(from, to, t, size, avoid);
+    const at = placeLabel(from, to, t, size, avoid, within);
     avoid.push({ x: at.x - size.width / 2, y: at.y - size.height / 2, ...size });
     return { text, at };
   });
