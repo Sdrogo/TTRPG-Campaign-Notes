@@ -46,7 +46,7 @@ export function Backlinks({ roomId, target, members }: BacklinksProps) {
   };
 
   return (
-    <PageCard py={expanded ? 16 : 8}>
+    <PageCard py={expanded ? 'md' : 'xs'}>
       <Stack gap="xs" data-testid="backlinks">
         <UnstyledButton
           onClick={() => setExpanded((current) => !current)}

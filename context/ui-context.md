@@ -368,7 +368,7 @@ other icon set.
   ("Nella descrizione", "Nella nota «…»", "In un commento di …", the last
   one jumping to the Comment) and the `sm` excerpt. On the Document page it
   sits between the Document card and the Comments; on the Documents list,
-  when exactly one Tag is filtered, below the Documents. Closed by default, with 16px vertical padding open and 8px closed.
+  when exactly one Tag is filtered, below the Documents. Closed by default, with `md` vertical padding open and `xs` closed.
 - **Document card** (`DocumentCard`, restructured 2026-09-23, spec
   `07 - Document visualizazion refactor_beckend`; image panel restyled
   2026-10-03): three stacked blocks. The *Title block* is the Document name

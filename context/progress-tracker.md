@@ -110,7 +110,7 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 - **Mentions block compact** (no migration): "Mentioned in" is collapsed by
   default on the Document page and on the Tag-filtered Room list, where it
-  now sits after the results; padding 16px vertical open, 8px collapsed.
+  now sits after the results; vertical padding `md` open, `xs` collapsed.
 
 ### 2026-10-12
 
