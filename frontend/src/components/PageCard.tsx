@@ -6,9 +6,9 @@ import { Card } from '@mantine/core';
  * centered horizontally and grows with the screen, with padding that grows too.
  * Shared by the Document, Comments and Account cards.
  */
-export function PageCard({ children }: { children: ReactNode }) {
+export function PageCard({ children, py }: { children: ReactNode; py?: number }) {
   return (
-    <Card withBorder radius="md" w="100%" p={{ base: 'md', sm: 'lg', lg: 'xl' }}>
+    <Card withBorder radius="md" w="100%" p={{ base: 'md', sm: 'lg', lg: 'xl' }} py={py}>
       {children}
     </Card>
   );

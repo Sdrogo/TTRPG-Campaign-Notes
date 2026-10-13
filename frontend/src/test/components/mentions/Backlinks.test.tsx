@@ -86,9 +86,10 @@ describe('Backlinks', () => {
 
     render();
 
+    await userEvent.click(await screen.findByRole('button', { name: /Menzionato in/ }));
     expect(await screen.findByText('Menzionato in')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'La Locanda' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'La Locanda' })).toHaveAttribute(
       'href',
       '/rooms/room-1/documents/doc-2',
     );
@@ -128,6 +129,7 @@ describe('Backlinks', () => {
       </DocumentMentionsContext>,
     );
 
+    await userEvent.click(await screen.findByRole('button', { name: /Menzionato in/ }));
     expect(await screen.findByRole('link', { name: '#La Guglia' })).toHaveAttribute(
       'href',
       `/rooms/room-1/documents/${tower}`,
@@ -152,11 +154,13 @@ describe('Backlinks', () => {
     render();
     const toggle = await screen.findByRole('button', { name: /Menzionato in/ });
 
-    await user.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
     await user.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 });
 
