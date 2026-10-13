@@ -150,6 +150,7 @@ One line per unit; dates 2026, newest first. Spec files live in
   compares plural keys as groups per `Intl.PluralRules` (Russian four forms,
   Japanese one); `context/i18n-glossary.md` started. Next: 34_2.
 
+- **Parallel line-only relations** (28 follow-up, 10-13, frontend only, no migration): several "Line only" relations between the same two cards are drawn side by side (`parallelShift` in `lib/maps.ts`, `MapArrow`), metro-map style; backend and DB never restricted duplicates.
 - **More relation colors** (28 follow-up, 10-13, frontend + backend enum, no migration): 11 colors added to the map palette (orange, midnight blue, silver, gold, light pink, pink, blue, purple, emerald, brown, light green); picker shows one row with a "more colors" toggle; old labels renamed Fuchsia / Light blue / Yellow in all 12 languages.
 - **Map cards easier to move and select** (28 follow-up, 10-12, frontend
   only, no migration): cards get a grab cursor, a hover ring and a grip

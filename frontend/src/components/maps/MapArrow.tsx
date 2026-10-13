@@ -15,6 +15,7 @@ import {
   placeLabel,
   offsetFromLine,
   pointBeside,
+  shiftParallel,
   projectOnLine,
   type Point,
   type Rect,
@@ -50,8 +51,9 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
   const sourceRect = rectOf(useInternalNode(source));
   const targetRect = rectOf(useInternalNode(target));
   if (!sourceRect || !targetRect || !data) return null;
-  const { arrow, editable, onEdit, onMoveLabel } = data;
-  const { from, to } = arrowEnds(sourceRect, targetRect);
+  const { arrow, shift, editable, onEdit, onMoveLabel } = data;
+  const ends = arrowEnds(sourceRect, targetRect);
+  const { from, to } = shiftParallel(ends.from, ends.to, shift);
   const color = colorValue(arrow.color);
 
   // A dragged label sits where it was dropped; the others slide along the

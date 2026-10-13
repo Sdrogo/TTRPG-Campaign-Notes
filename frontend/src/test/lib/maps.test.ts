@@ -15,6 +15,8 @@ import {
   endOf,
   groupCards,
   newId,
+  parallelShift,
+  shiftParallel,
   labelSize,
   placeLabel,
   offsetFromLine,
@@ -486,5 +488,34 @@ describe('drawing arrows', () => {
       const wall = { x: -5000, y: -5000, width: 10000, height: 10000 };
       expect(placeLabel({ x: 0, y: 0 }, { x: 10, y: 0 }, 0.5, size, [wall], everywhere)).toEqual({ x: 5, y: 0 });
     });
+  });
+});
+
+describe('parallel lines between the same two ends', () => {
+  const line = (id: string, from: string, to: string, direction: MapArrow['direction'] = 'none'): MapArrow => ({
+    ...addArrow({ groups: [], cards: [], arrows: [] }, { cardId: from }, { cardId: to })[0].arrows[0],
+    id,
+    direction,
+  });
+
+  it('spreads plain lines side by side, centered, whichever way they were drawn', () => {
+    const arrows = [line('1', 'a', 'b'), line('2', 'b', 'a'), line('3', 'a', 'b')];
+    const shifts = arrows.map((arrow) => parallelShift(arrows, arrow));
+    expect(shifts[0]).toBeCloseTo(-7);
+    expect(shifts[1]).toBeCloseTo(0);
+    expect(shifts[2]).toBeCloseTo(7);
+  });
+
+  it('leaves a lone line, arrows with heads and other pairs alone', () => {
+    const arrows = [line('1', 'a', 'b'), line('2', 'a', 'c'), line('3', 'a', 'b', 'forward')];
+    expect(arrows.map((arrow) => parallelShift(arrows, arrow))).toEqual([0, 0, 0]);
+  });
+
+  it('moves both ends to the side of the line', () => {
+    const { from, to } = shiftParallel({ x: 0, y: 0 }, { x: 100, y: 0 }, 7);
+    expect(from.x).toBeCloseTo(0);
+    expect(from.y).toBeCloseTo(7);
+    expect(to.x).toBeCloseTo(100);
+    expect(to.y).toBeCloseTo(7);
   });
 });
