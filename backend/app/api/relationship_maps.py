@@ -28,6 +28,7 @@ from app.db.session import SessionDep
 from app.domain.errors import DomainError
 from app.domain.models import DocumentImage, DocumentVisibility, Membership
 from app.domain.relationship_maps import (
+    MAX_LABEL_OFFSET,
     ArrowDirection,
     ArrowEnd,
     Board,
@@ -152,6 +153,10 @@ class ArrowBody(BaseModel):
     reverse_label: str | None = None
     label_position: float | None = Field(default=None, ge=0, le=1)
     reverse_label_position: float | None = Field(default=None, ge=0, le=1)
+    label_offset: float | None = Field(default=None, ge=-MAX_LABEL_OFFSET, le=MAX_LABEL_OFFSET)
+    reverse_label_offset: float | None = Field(
+        default=None, ge=-MAX_LABEL_OFFSET, le=MAX_LABEL_OFFSET
+    )
     color: MapColor = MapColor.DEFAULT
     master_only: bool = False
 
@@ -271,6 +276,8 @@ def _arrow_body(arrow: MapArrow) -> ArrowBody:
         reverse_label=arrow.reverse_label,
         label_position=arrow.label_position,
         reverse_label_position=arrow.reverse_label_position,
+        label_offset=arrow.label_offset,
+        reverse_label_offset=arrow.reverse_label_offset,
         color=arrow.color,
         master_only=arrow.master_only,
     )
@@ -529,6 +536,8 @@ def _submitted_board(body: BoardRequest) -> Board:
                 reverse_label=arrow.reverse_label,
                 label_position=arrow.label_position,
                 reverse_label_position=arrow.reverse_label_position,
+                label_offset=arrow.label_offset,
+                reverse_label_offset=arrow.reverse_label_offset,
                 color=arrow.color,
                 master_only=arrow.master_only,
             )

@@ -691,6 +691,8 @@ async def test_a_dragged_label_keeps_its_place_and_a_place_outside_the_arrow_is_
         reverse_label="ally of",
         label_position=0.25,
         reverse_label_position=0.9,
+        label_offset=-30,
+        reverse_label_offset=18.5,
     )
     saved = await _save(
         client, room, relationship_map["id"], room.master, cards=[a, b], arrows=[arrow]
@@ -700,9 +702,17 @@ async def test_a_dragged_label_keeps_its_place_and_a_place_outside_the_arrow_is_
     reloaded = await _get(client, room, relationship_map["id"], room.master)
     assert reloaded["arrows"][0]["label_position"] == 0.25
     assert reloaded["arrows"][0]["reverse_label_position"] == 0.9
+    assert reloaded["arrows"][0]["label_offset"] == -30
+    assert reloaded["arrows"][0]["reverse_label_offset"] == 18.5
 
     # Without it the label goes back to the automatic place.
-    plain = {**arrow, "label_position": None, "reverse_label_position": None}
+    plain = {
+        **arrow,
+        "label_position": None,
+        "reverse_label_position": None,
+        "label_offset": None,
+        "reverse_label_offset": None,
+    }
     again = await _save(
         client, room, relationship_map["id"], room.master, cards=[a, b], arrows=[plain]
     )
@@ -717,6 +727,16 @@ async def test_a_dragged_label_keeps_its_place_and_a_place_outside_the_arrow_is_
         arrows=[{**arrow, "label_position": 1.5}],
     )
     assert refused.status_code == 422
+
+    too_far = await _save(
+        client,
+        room,
+        relationship_map["id"],
+        room.master,
+        cards=[a, b],
+        arrows=[{**arrow, "label_offset": 5000}],
+    )
+    assert too_far.status_code == 422
 
 
 async def test_reloading_keeps_every_place_group_and_arrow(

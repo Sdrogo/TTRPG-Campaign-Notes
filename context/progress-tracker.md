@@ -47,21 +47,22 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `d5a1c8e3f2b7` (map card image, spec 28
-  follow-up).
-- **Staging database**: `d5a1c8e3f2b7` (applied by hand 2026-10-12, with
-  `.env.staging` loaded; `b3f7d1e9c5a2` before it).
+- **Head in the repository**: `a9e3c5d7b1f4` (map label positions, spec 28_3).
+- **Staging database**: `a9e3c5d7b1f4` (applied by hand 2026-10-13, with
+  `.env.staging` loaded; `d5a1c8e3f2b7` before it, applied 2026-10-12).
 - **Production database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12; both
   feature 28 migrations, before them `f7a2d8c4e1b9`).
 - **Pending on production**: `d5a1c8e3f2b7`
-  (`relationship_map_cards.image_id`, a nullable foreign key; DDL only).
-  Apply it before the next release to `main`. It is not applied yet: no
+  (`relationship_map_cards.image_id`, a nullable foreign key; DDL only) and
+  `a9e3c5d7b1f4` (`label_position` and `reverse_label_position` on
+  `relationship_map_arrows`, nullable floats with check constraints; DDL
+  only). Apply both, in that order, before the next release to `main`. It is not applied yet: no
   production `backend/.env` was available on the agent's machine on
   2026-10-12, so the product owner runs it (or provides the file). Its file
   lives only on the `claude/project-thread-hakwwg` branch until that merges.
 
 Recent chain, newest first (where each came from):
-`d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -195,10 +196,17 @@ One line per unit; dates 2026, newest first. Spec files live in
 - **Label positions on relations, backend** (28_3, 10-13): `label_position` and
   `reverse_label_position` on `relationship_map_arrows` (migration
   `a9e3c5d7b1f4`, nullable floats 0 to 1, a position needs its label), saved
-  with the board through the existing `PUT .../board`. Applied locally only:
-  it must go to the staging database before the PR merges and to production
-  before the next release to `main`. The drag and the "Relation" rename are
+  with the board through the existing `PUT .../board`. Applied to the
+  staging database by hand on 2026-10-13 (`alembic current` went from
+  `d5a1c8e3f2b7` to `a9e3c5d7b1f4`); still pending on production, before the
+  next release to `main`. The drag and the "Relation" rename are
   the frontend step.
+- **Label distance from the relation, backend** (28_3, 10-13): `label_offset` and
+  `reverse_label_offset` on `relationship_map_arrows` (migration
+  `b4d8f2a6c1e7`, nullable floats in board pixels, ±2000, an offset needs its
+  label's position), so a dragged label can sit to the side of its relation.
+  Applied locally only: it must go to the staging database before the PR
+  merges and to production before the next release to `main`.
 
 ### 2026-10-08 → 10-10
 
