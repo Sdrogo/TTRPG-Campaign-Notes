@@ -10,7 +10,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import (
@@ -140,7 +140,9 @@ class ArrowEndBody(BaseModel):
 class ArrowBody(BaseModel):
     """An arrow as sent and returned. `label` is the only label of a one-way
     arrow or a line, the one pointing at `to` on a two-way arrow;
-    `reverse_label` the one pointing at `from_end`, two-way only."""
+    `reverse_label` the one pointing at `from_end`, two-way only. The
+    positions are where each label sits along the arrow (0 at `from_end`, 1 at
+    `to_end`), or null for the automatic placement."""
 
     id: uuid.UUID
     from_end: ArrowEndBody
@@ -148,6 +150,8 @@ class ArrowBody(BaseModel):
     direction: ArrowDirection = ArrowDirection.FORWARD
     label: str | None = None
     reverse_label: str | None = None
+    label_position: float | None = Field(default=None, ge=0, le=1)
+    reverse_label_position: float | None = Field(default=None, ge=0, le=1)
     color: MapColor = MapColor.DEFAULT
     master_only: bool = False
 
@@ -265,6 +269,8 @@ def _arrow_body(arrow: MapArrow) -> ArrowBody:
         direction=arrow.direction,
         label=arrow.label,
         reverse_label=arrow.reverse_label,
+        label_position=arrow.label_position,
+        reverse_label_position=arrow.reverse_label_position,
         color=arrow.color,
         master_only=arrow.master_only,
     )
@@ -521,6 +527,8 @@ def _submitted_board(body: BoardRequest) -> Board:
                 direction=arrow.direction,
                 label=arrow.label,
                 reverse_label=arrow.reverse_label,
+                label_position=arrow.label_position,
+                reverse_label_position=arrow.reverse_label_position,
                 color=arrow.color,
                 master_only=arrow.master_only,
             )

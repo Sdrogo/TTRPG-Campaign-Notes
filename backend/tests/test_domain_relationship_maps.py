@@ -540,6 +540,37 @@ def test_a_card_in_a_group_not_on_the_board_is_refused() -> None:
         _plan(Board(), Board(cards=[_text_card(group_id=uuid.uuid4())]))
 
 
+def test_a_label_keeps_the_place_it_was_dragged_to_only_while_it_exists() -> None:
+    a, b = _text_card(), _text_card()
+    two_way = _arrow(
+        _card_end(a),
+        _card_end(b),
+        "Reliable",
+        direction=ArrowDirection.BOTH,
+        reverse_label="Brother",
+        label_position=0.3,
+        reverse_label_position=0.8,
+    )
+    no_label = _arrow(_card_end(a), _card_end(b), None, label_position=0.4)
+    one_way = _arrow(
+        _card_end(b), _card_end(a), "x", label_position=0.5, reverse_label_position=0.5
+    )
+
+    plan = _plan(Board(), Board(cards=[a, b], arrows=[two_way, no_label, one_way]))
+
+    assert (plan.arrows[0].label_position, plan.arrows[0].reverse_label_position) == (0.3, 0.8)
+    assert plan.arrows[1].label_position is None
+    assert (plan.arrows[2].label_position, plan.arrows[2].reverse_label_position) == (0.5, None)
+
+
+def test_a_label_place_outside_the_arrow_is_refused() -> None:
+    a, b = _text_card(), _text_card()
+    for position in (-0.1, 1.01):
+        arrow = _arrow(_card_end(a), _card_end(b), "x", label_position=position)
+        with pytest.raises(InvalidBoardError):
+            _plan(Board(), Board(cards=[a, b], arrows=[arrow]))
+
+
 def test_an_arrow_end_not_on_the_board_or_to_itself_is_refused() -> None:
     a, b = _text_card(), _text_card()
     group = _group()
