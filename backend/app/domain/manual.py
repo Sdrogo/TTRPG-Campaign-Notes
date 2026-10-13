@@ -35,6 +35,7 @@ class ManualStyle(StrEnum):
     GOTHIC = "gothic"
     MODERN = "modern"
     PRINT = "print"
+    PARCHMENT = "parchment"
 
 
 class PageSize(StrEnum):

@@ -671,12 +671,14 @@
       "styles": {
         "gothic": "Gotisch",
         "modern": "Modern",
-        "print": "Druck"
+        "print": "Druck",
+        "parchment": "Pergament"
       },
       "styleHints": {
         "gothic": "Schwarz und Rot, dunkles Titelbild",
         "modern": "Klare Sans-Serif, viel Platz",
-        "print": "Schwarz-Weiß, spart Tinte"
+        "print": "Schwarz-Weiß, spart Tinte",
+        "parchment": "Altes Papier, braune Kapitälchen"
       },
       "pageSize": "Seitenformat",
       "comments": "Kommentare als Anhang einbeziehen",

@@ -663,12 +663,14 @@
       "styles": {
         "gothic": "고딕",
         "modern": "모던",
-        "print": "인쇄"
+        "print": "인쇄",
+        "parchment": "양피지"
       },
       "styleHints": {
         "gothic": "검정과 빨강, 어두운 표지",
         "modern": "깔끔한 산세리프, 넉넉한 여백",
-        "print": "흑백, 잉크 절약"
+        "print": "흑백, 잉크 절약",
+        "parchment": "오래된 종이, 갈색 작은 대문자"
       },
       "pageSize": "페이지 크기",
       "comments": "부록에 댓글 포함",

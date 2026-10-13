@@ -1,0 +1,11 @@
+{#- Parchment (spec 35): inspired by the look of fantasy-RPG monster compendiums
+    set on aged paper, never copied. The ornament is original: a rule with three
+    diamonds. -#}
+{% extends "_base.html.j2" %}
+{% block cover_ornament %}
+<svg class="cover-ornament" viewBox="0 0 200 12" width="200" height="12" aria-hidden="true">
+  <line x1="0" y1="6" x2="80" y2="6" stroke="#7a2e14" stroke-width="1"/>
+  <path d="M90 6 L94 2 L98 6 L94 10 Z M96 6 L100 2 L104 6 L100 10 Z M102 6 L106 2 L110 6 L106 10 Z" fill="#7a2e14"/>
+  <line x1="120" y1="6" x2="200" y2="6" stroke="#7a2e14" stroke-width="1"/>
+</svg>
+{% endblock %}

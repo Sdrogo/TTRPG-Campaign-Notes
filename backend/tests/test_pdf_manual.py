@@ -326,9 +326,10 @@ def _small_room() -> Manual:
 
 def _page_with(reader: PdfReader, needle: str, after: int = 2) -> int:
     """The 1-based number of the first page from `after` on (0-based) that
-    holds `needle`."""
+    holds `needle`. Runs of whitespace count as one space: a justified line
+    can come back from pypdf with a wide gap read as two spaces."""
     for number in range(after, len(reader.pages)):
-        if needle in reader.pages[number].extract_text():
+        if needle in " ".join(reader.pages[number].extract_text().split()):
             return number + 1
     raise AssertionError(f"{needle!r} is on no page")
 
@@ -465,7 +466,12 @@ def test_neighbours_that_each_took_one_page_pair_up_left_to_right() -> None:
 
 @pytest.mark.parametrize(
     ("style", "sentences"),
-    [(ManualStyle.GOTHIC, 40), (ManualStyle.MODERN, 30), (ManualStyle.PRINT, 40)],
+    [
+        (ManualStyle.GOTHIC, 40),
+        (ManualStyle.MODERN, 30),
+        (ManualStyle.PRINT, 40),
+        (ManualStyle.PARCHMENT, 40),
+    ],
 )
 def test_two_documents_too_long_together_keep_their_own_pages(
     style: ManualStyle, sentences: int
@@ -492,7 +498,12 @@ def test_two_documents_too_long_together_keep_their_own_pages(
 
 @pytest.mark.parametrize(
     ("style", "sentences"),
-    [(ManualStyle.GOTHIC, 62), (ManualStyle.MODERN, 46), (ManualStyle.PRINT, 66)],
+    [
+        (ManualStyle.GOTHIC, 62),
+        (ManualStyle.MODERN, 46),
+        (ManualStyle.PRINT, 66),
+        (ManualStyle.PARCHMENT, 66),
+    ],
 )
 def test_a_chapter_that_fills_its_last_page_adds_no_empty_page(
     style: ManualStyle, sentences: int

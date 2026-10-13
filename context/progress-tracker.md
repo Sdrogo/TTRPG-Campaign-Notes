@@ -21,6 +21,11 @@ detail:
   30/30b (read aloud with the browser's voices, best installed voice by
   default, first reading waits for the voice list, PRs #146, #148, #154).
   Neither has a migration.
+- **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
+  Room PDF style, `parchment`, modeled on a fantasy monster compendium the
+  product owner shared: parchment-colored pages, brown small-capital
+  headings, ochre rules, the subtitle as a stat-block band. Only existing
+  fonts (Crimson Text, PT Serif, Noto CJK). Defaults to confirm in the PR.
 - **Spec 32, mention hover preview** (2026-10-12, PR #157, frontend only,
   no migration): on the Document page, resting a mouse on a linked
   `#Document` mention for 400 ms shows that Document's `DocumentCard`
