@@ -541,6 +541,42 @@ export function arrowEnds(source: Rect, target: Rect): { from: Point; to: Point 
   };
 }
 
+/** Pixels between two parallel lines drawn side by side. */
+export const PARALLEL_GAP = 7;
+
+/**
+ * How far to the side of the straight line between two ends an arrow is
+ * drawn. Plain lines (direction `none`) joining the same two ends sit side
+ * by side, in the order they were added, centered on the straight line, so a
+ * metro-style map can show several relations between two cards. Other arrows
+ * (and a lone line) are not shifted. The sign is relative to the arrow's
+ * own direction, so a line drawn the other way round still lands on its own
+ * lane of the same bundle.
+ */
+export function parallelShift(arrows: MapArrow[], arrow: MapArrow): number {
+  if (arrow.direction !== 'none') return 0;
+  const a = endId(arrow.from);
+  const b = endId(arrow.to);
+  const bundle = arrows.filter((other) => {
+    if (other.direction !== 'none') return false;
+    const x = endId(other.from);
+    const y = endId(other.to);
+    return (x === a && y === b) || (x === b && y === a);
+  });
+  if (bundle.length < 2) return 0;
+  const lane = bundle.findIndex((other) => other.id === arrow.id);
+  return (lane - (bundle.length - 1) / 2) * PARALLEL_GAP * (a < b ? 1 : -1);
+}
+
+/** `from` and `to` both moved `shift` pixels to the side of the line between them. */
+export function shiftParallel(from: Point, to: Point, shift: number): { from: Point; to: Point } {
+  if (shift === 0) return { from, to };
+  const length = Math.hypot(to.x - from.x, to.y - from.y) || 1;
+  const dx = (-(to.y - from.y) / length) * shift;
+  const dy = ((to.x - from.x) / length) * shift;
+  return { from: { x: from.x + dx, y: from.y + dy }, to: { x: to.x + dx, y: to.y + dy } };
+}
+
 /** The point a fraction `t` of the way from `from` to `to`. */
 export function pointAlong(from: Point, to: Point, t: number): Point {
   return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };

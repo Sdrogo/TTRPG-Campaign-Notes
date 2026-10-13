@@ -17,6 +17,8 @@ export type GroupNodeData = NodeActions & {
 };
 export type MapArrowData = {
   arrow: MapArrow;
+  /** Pixels to the side of the straight line, for plain lines sharing both ends (see `parallelShift`). */
+  shift: number;
   onEdit: (id: string) => void;
   /**
    * A label was dragged to a place along the arrow (0 at `from`, 1 at `to`)
