@@ -170,7 +170,10 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
               justDragged.current = false;
               setDragging(null);
             }}
-            onClick={() => {
+            onClick={(event) => {
+              // The label lives in a portal, but React still bubbles its click to the
+              // edge's own handler, which opens the relation: the label decides alone.
+              event.stopPropagation();
               // The click that ends a drag is not a request to edit.
               if (justDragged.current) {
                 justDragged.current = false;

@@ -241,6 +241,10 @@ describe('MapArrow', () => {
     masterOnly: true,
   };
 
+  const edgeClick = vi.fn();
+
+  beforeEach(() => edgeClick.mockClear());
+
   function renderArrow(
     value: Arrow | undefined,
     editable = true,
@@ -257,7 +261,12 @@ describe('MapArrow', () => {
       target: 'b',
       data: value && { arrow: value, editable, onEdit, onMoveLabel },
     };
-    renderWithProviders(<MapArrow {...(props as unknown as ComponentProps<typeof MapArrow>)} />);
+    // React Flow listens for clicks on the whole edge, and a label's click bubbles to it.
+    renderWithProviders(
+      <div onClick={edgeClick}>
+        <MapArrow {...(props as unknown as ComponentProps<typeof MapArrow>)} />
+      </div>,
+    );
     return onEdit;
   }
 
@@ -284,6 +293,7 @@ describe('MapArrow', () => {
     fireEvent.click(button);
     expect(onMoveLabel).toHaveBeenCalledWith('arrow-1', 'label', 0.75, 35);
     expect(onEdit).not.toHaveBeenCalled();
+    expect(edgeClick).not.toHaveBeenCalled();
   });
 
   it('does not open a label after a drag even if the click comes late, and a cancelled drag moves nothing', () => {
