@@ -493,7 +493,7 @@ describe('drawing arrows', () => {
 
 describe('parallel lines between the same two ends', () => {
   const line = (id: string, from: string, to: string, direction: MapArrow['direction'] = 'none'): MapArrow => ({
-    ...addArrow({ groups: [], cards: [], arrows: [] }, { cardId: from }, { cardId: to })[0].arrows[0],
+    ...addArrow({ groups: [], cards: [], arrows: [] }, { cardId: from, groupId: null }, { cardId: to, groupId: null })[0].arrows[0],
     id,
     direction,
   });
