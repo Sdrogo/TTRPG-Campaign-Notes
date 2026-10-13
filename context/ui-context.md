@@ -42,6 +42,9 @@ Notes:
   component code. **One exception: country flags** (the language
   selector, spec 09) keep their official colors. They're content, not
   theme, so they are SVG files in `src/assets/flags/`, not components.
+  **Second exception: the 11 relationship-map palette colors** added
+  2026-10-13 (spec 28), whose exact hexes the product owner chose; they
+  live in one table, `COLOR_VALUES` in `src/lib/maps.ts`.
 
 ## Typography
 
