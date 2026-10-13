@@ -27,16 +27,17 @@ function rectOf(node: ReturnType<typeof useInternalNode>): Rect | null {
   return { x, y, width: node.measured.width ?? 0, height: node.measured.height ?? 0 };
 }
 
+/** Which of an arrow's two labels: the one pointing at `to`, or the reverse one of a two-way arrow. */
+type Which = 'label' | 'reverse';
+
 /**
  * An arrow of a map (spec 28 Decision 5), drawn straight from edge to edge of
  * the two cards or groups. A one-way arrow and a line carry their label in the
  * middle; a two-way arrow carries one label near each end, each naming how
  * the card it points at is seen from the other. Clicking it, or a label,
- * opens it for editing; dragging a label slides it along the arrow, and the
- * place it is dropped at is kept.
+ * opens it for editing; dragging a label moves it freely, along the arrow
+ * and to either side of it, and the place it is dropped at is kept.
  */
-type Which = 'label' | 'reverse';
-
 export function MapArrow({ id, source, target, markerEnd, markerStart, data }: EdgeProps<MapEdge>) {
   const { t } = useTranslation();
   const flow = useReactFlow();
