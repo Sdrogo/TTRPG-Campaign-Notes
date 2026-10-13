@@ -83,7 +83,8 @@ export interface ArrowEnd {
 /**
  * An arrow between two ends. `label` is the only label of a one-way arrow or a
  * line, the one pointing at `to` on a two-way arrow; `reverseLabel` the one
- * pointing at `from`.
+ * pointing at `from`. The positions are where each label was dragged to along
+ * the arrow, from 0 (at `from`) to 1 (at `to`); null leaves it to the board.
  */
 export interface MapArrow {
   id: string;
@@ -92,6 +93,8 @@ export interface MapArrow {
   direction: ArrowDirection;
   label: string | null;
   reverseLabel: string | null;
+  labelPosition: number | null;
+  reverseLabelPosition: number | null;
   color: MapColor;
   masterOnly: boolean;
 }

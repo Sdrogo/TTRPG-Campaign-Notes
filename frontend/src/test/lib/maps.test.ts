@@ -16,6 +16,7 @@ import {
   newId,
   labelSize,
   placeLabel,
+  projectOnLine,
   pointAlong,
   removeArrow,
   removeCards,
@@ -75,6 +76,8 @@ function arrow(id: string, from: string, to: string, overrides: Partial<MapArrow
     direction: 'forward',
     label: null,
     reverseLabel: null,
+    labelPosition: null,
+    reverseLabelPosition: null,
     color: 'default',
     masterOnly: false,
     ...overrides,
@@ -120,6 +123,8 @@ describe('the wire shape', () => {
       direction: 'both',
       label: 'alleata',
       reverseLabel: 'alleato',
+      labelPosition: null,
+      reverseLabelPosition: null,
       color: 'green',
       masterOnly: false,
     });
@@ -151,6 +156,39 @@ describe('the wire shape', () => {
       reverse_label: 'alleato',
     });
     expect(body.arrows[1].reverse_label).toBeNull();
+  });
+
+  it('keeps where a label was dragged to, and drops the place of a label that is gone', () => {
+    const detail = toMapDetail({
+      ...rawMapDetail(),
+      arrows: [
+        {
+          ...rawMapDetail().arrows[0],
+          label_position: 0.2,
+          reverse_label_position: 0.7,
+        },
+      ],
+    } as unknown as RawMapDetail);
+    expect([detail.arrows[0].labelPosition, detail.arrows[0].reverseLabelPosition]).toEqual([
+      0.2, 0.7,
+    ]);
+    const kept = toBoardBody(detail).arrows[0];
+    expect([kept.label_position, kept.reverse_label_position]).toEqual([0.2, 0.7]);
+
+    const cleared = toBoardBody({
+      ...detail,
+      arrows: [{ ...detail.arrows[0], label: null, direction: 'forward' as const }],
+    }).arrows[0];
+    expect([cleared.label_position, cleared.reverse_label_position]).toEqual([null, null]);
+  });
+
+  it('finds how far along a line a point falls, clamped to the line', () => {
+    const from = { x: 0, y: 0 };
+    const to = { x: 100, y: 0 };
+    expect(projectOnLine(from, to, { x: 25, y: 40 })).toBe(0.25);
+    expect(projectOnLine(from, to, { x: -50, y: 0 })).toBe(0);
+    expect(projectOnLine(from, to, { x: 500, y: 9 })).toBe(1);
+    expect(projectOnLine(from, from, { x: 3, y: 3 })).toBe(0.5);
   });
 
   it('sends Selective grants only at the Selective level', () => {

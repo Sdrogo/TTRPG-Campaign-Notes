@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -233,11 +233,18 @@ describe('MapArrow', () => {
     direction: 'both',
     label: 'alleata',
     reverseLabel: 'alleato',
+    labelPosition: null,
+    reverseLabelPosition: null,
     color: 'green',
     masterOnly: true,
   };
 
-  function renderArrow(value: Arrow | undefined, editable = true, onEdit = vi.fn()) {
+  function renderArrow(
+    value: Arrow | undefined,
+    editable = true,
+    onEdit = vi.fn(),
+    onMoveLabel = vi.fn(),
+  ) {
     flow.internal.b = {
       internals: { positionAbsolute: { x: 300, y: 0 } },
       measured: { width: 100, height: 50 },
@@ -246,19 +253,46 @@ describe('MapArrow', () => {
       id: 'arrow-1',
       source: 'a',
       target: 'b',
-      data: value && { arrow: value, editable, onEdit },
+      data: value && { arrow: value, editable, onEdit, onMoveLabel },
     };
     renderWithProviders(<MapArrow {...(props as unknown as ComponentProps<typeof MapArrow>)} />);
     return onEdit;
   }
 
+  const labelButton = (name: string) => screen.getByRole('button', { name: `Modifica la relazione: ${name}` });
+
   it('draws a two-way arrow edge to edge with a label near each end', async () => {
     const onEdit = renderArrow(arrow);
     expect(screen.getByTestId('path-arrow-1')).toHaveAttribute('d', 'M 100,25 L 300,25');
     expect(screen.getByTestId('path-arrow-1')).toHaveAttribute('stroke-dasharray', '6 4');
-    await userEvent.click(screen.getByRole('button', { name: 'Modifica la freccia: alleato' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Modifica la relazione: alleato' }));
     expect(onEdit).toHaveBeenCalledWith('arrow-1');
     expect(screen.getByText('alleata')).toBeInTheDocument();
+  });
+
+  it('slides a label along the arrow when it is dragged, without opening it', () => {
+    const onEdit = vi.fn();
+    const onMoveLabel = vi.fn();
+    renderArrow({ ...arrow, direction: 'forward', reverseLabel: null }, true, onEdit, onMoveLabel);
+    const button = labelButton('alleata');
+    // The arrow runs from x=100 to x=300 on y=25: a drop at x=250 is 75% along it.
+    fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.pointerUp(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.click(button);
+    expect(onMoveLabel).toHaveBeenCalledWith('arrow-1', 'label', 0.75);
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  it('keeps a dragged label where it was dropped, and a press that does not move is a click', async () => {
+    const onEdit = vi.fn();
+    const onMoveLabel = vi.fn();
+    renderArrow({ ...arrow, labelPosition: 0.9 }, true, onEdit, onMoveLabel);
+    const button = labelButton('alleata');
+    expect(button.style.transform).toContain('translate(280px, 25px)');
+    await userEvent.click(button);
+    expect(onEdit).toHaveBeenCalledWith('arrow-1');
+    expect(onMoveLabel).not.toHaveBeenCalled();
   });
 
   it('puts a one-way label in the middle and none when there is none', () => {

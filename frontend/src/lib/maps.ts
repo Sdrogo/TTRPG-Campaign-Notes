@@ -77,6 +77,8 @@ export interface RawMapArrow {
   direction: ArrowDirection;
   label: string | null;
   reverse_label: string | null;
+  label_position: number | null;
+  reverse_label_position: number | null;
   color: MapColor;
   master_only: boolean;
 }
@@ -139,6 +141,8 @@ export function toMapDetail(raw: RawMapDetail): RelationshipMapDetail {
       direction: arrow.direction,
       label: arrow.label,
       reverseLabel: arrow.reverse_label,
+      labelPosition: arrow.label_position,
+      reverseLabelPosition: arrow.reverse_label_position,
       color: arrow.color,
       masterOnly: arrow.master_only,
     })),
@@ -174,6 +178,9 @@ export function toBoardBody(board: Board) {
       direction: arrow.direction,
       label: arrow.label,
       reverse_label: arrow.direction === 'both' ? arrow.reverseLabel : null,
+      label_position: arrow.label ? arrow.labelPosition : null,
+      reverse_label_position:
+        arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelPosition : null,
       color: arrow.color,
       master_only: arrow.masterOnly,
     })),
@@ -424,6 +431,8 @@ export function addArrow(board: Board, from: ArrowEnd, to: ArrowEnd): [Board, st
     direction: 'forward',
     label: null,
     reverseLabel: null,
+    labelPosition: null,
+    reverseLabelPosition: null,
     color: 'default',
     masterOnly: false,
   };
@@ -509,6 +518,19 @@ function overlaps(a: Rect, b: Rect, gap: number): boolean {
     a.y < b.y + b.height + gap &&
     b.y < a.y + a.height + gap
   );
+}
+
+/**
+ * How far along the line from `from` to `to` the point `p` falls, as a
+ * fraction from 0 to 1 (a point past an end counts as that end).
+ */
+export function projectOnLine(from: Point, to: Point, p: Point): number {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared === 0) return 0.5;
+  const t = ((p.x - from.x) * dx + (p.y - from.y) * dy) / lengthSquared;
+  return Math.min(1, Math.max(0, t));
 }
 
 /**

@@ -920,7 +920,7 @@
     "editCard": "Edytuj kartę: {{name}}",
     "editText": "Edytuj tekst",
     "editGroup": "Edytuj grupę",
-    "editArrow": "Edytuj strzałkę: {{label}}",
+    "editArrow": "Edytuj relację: {{label}}",
     "masterOnly": "Tylko Master",
     "masterOnlyArrow": "Widoczna tylko dla Masterów",
     "masterOnlyCard": "Widoczna tylko dla Masterów",
@@ -960,14 +960,14 @@
       "untitled": "Grupa bez tytułu"
     },
     "arrow": {
-      "title": "Strzałka",
+      "title": "Relacja",
       "direction": "Kierunek",
       "forward": "W jedną stronę",
       "both": "W obie strony",
       "none": "Tylko linia",
       "label": "Etykieta",
       "labelTowards": "Etykieta w stronę {{name}}",
-      "delete": "Usuń strzałkę"
+      "delete": "Usuń relację"
     }
   }
 }

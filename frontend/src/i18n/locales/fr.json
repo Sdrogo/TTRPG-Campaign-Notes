@@ -880,7 +880,7 @@
     "editCard": "Modifier la fiche : {{name}}",
     "editText": "Modifier le texte",
     "editGroup": "Modifier le groupe",
-    "editArrow": "Modifier la flèche : {{label}}",
+    "editArrow": "Modifier la relation : {{label}}",
     "masterOnly": "Master seul",
     "masterOnlyArrow": "Visible uniquement par les Masters",
     "masterOnlyCard": "Visible uniquement par les Masters",
@@ -920,14 +920,14 @@
       "untitled": "Groupe sans titre"
     },
     "arrow": {
-      "title": "Flèche",
+      "title": "Relation",
       "direction": "Direction",
       "forward": "Dans un sens",
       "both": "Dans les deux",
       "none": "Ligne seule",
       "label": "Étiquette",
       "labelTowards": "Étiquette vers {{name}}",
-      "delete": "Supprimer la flèche"
+      "delete": "Supprimer la relation"
     }
   }
 }

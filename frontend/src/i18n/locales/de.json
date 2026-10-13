@@ -880,7 +880,7 @@
     "editCard": "Kärtchen bearbeiten: {{name}}",
     "editText": "Text bearbeiten",
     "editGroup": "Gruppe bearbeiten",
-    "editArrow": "Pfeil bearbeiten: {{label}}",
+    "editArrow": "Beziehung bearbeiten: {{label}}",
     "masterOnly": "Nur Master",
     "masterOnlyArrow": "Nur für Master sichtbar",
     "masterOnlyCard": "Nur für Master sichtbar",
@@ -920,14 +920,14 @@
       "untitled": "Gruppe ohne Titel"
     },
     "arrow": {
-      "title": "Pfeil",
+      "title": "Beziehung",
       "direction": "Richtung",
       "forward": "In eine Richtung",
       "both": "In beide Richtungen",
       "none": "Nur Linie",
       "label": "Beschriftung",
       "labelTowards": "Beschriftung Richtung {{name}}",
-      "delete": "Pfeil löschen"
+      "delete": "Beziehung löschen"
     }
   }
 }

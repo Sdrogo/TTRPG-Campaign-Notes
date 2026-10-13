@@ -375,6 +375,8 @@ export function rawMapDetail(overrides: Record<string, unknown> = {}) {
         direction: 'both',
         label: 'alleata',
         reverse_label: 'alleato',
+        label_position: null,
+        reverse_label_position: null,
         color: 'green',
         master_only: false,
       },

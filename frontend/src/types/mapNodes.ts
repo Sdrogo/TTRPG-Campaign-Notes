@@ -15,7 +15,13 @@ export type GroupNodeData = NodeActions & {
   group: MapGroup;
   onResized: (id: string, frame: { x: number; y: number; width: number; height: number }) => void;
 };
-export type MapArrowData = { arrow: MapArrow; onEdit: (id: string) => void; editable: boolean };
+export type MapArrowData = {
+  arrow: MapArrow;
+  onEdit: (id: string) => void;
+  /** A label was dragged to a place along the arrow (0 at `from`, 1 at `to`). */
+  onMoveLabel: (id: string, which: 'label' | 'reverse', position: number) => void;
+  editable: boolean;
+};
 
 export type DocumentCardNodeType = Node<DocumentCardNodeData, 'documentCard'>;
 export type TextCardNodeType = Node<TextCardNodeData, 'textCard'>;

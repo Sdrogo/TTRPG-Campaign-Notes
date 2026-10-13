@@ -187,6 +187,14 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
       arrow,
       editable,
       onEdit: (id) => setEditing({ kind: 'arrow', id }),
+      onMoveLabel: (id, which, position) =>
+        onChange(
+          updateArrow(
+            board,
+            id,
+            which === 'label' ? { labelPosition: position } : { reverseLabelPosition: position },
+          ),
+        ),
     },
   }));
 

@@ -880,7 +880,7 @@
     "editCard": "Modifica la carta: {{name}}",
     "editText": "Modifica il testo",
     "editGroup": "Modifica il gruppo",
-    "editArrow": "Modifica la freccia: {{label}}",
+    "editArrow": "Modifica la relazione: {{label}}",
     "masterOnly": "Solo Master",
     "masterOnlyArrow": "Visibile solo ai Master",
     "masterOnlyCard": "Visibile solo ai Master",
@@ -920,14 +920,14 @@
       "untitled": "Gruppo senza titolo"
     },
     "arrow": {
-      "title": "Freccia",
+      "title": "Relazione",
       "direction": "Direzione",
       "forward": "In un senso",
       "both": "In entrambi",
       "none": "Solo linea",
       "label": "Etichetta",
       "labelTowards": "Etichetta verso {{name}}",
-      "delete": "Elimina la freccia"
+      "delete": "Elimina la relazione"
     }
   }
 }

@@ -860,7 +860,7 @@
     "editCard": "カードを編集: {{name}}",
     "editText": "テキストを編集",
     "editGroup": "グループを編集",
-    "editArrow": "矢印を編集: {{label}}",
+    "editArrow": "関係を編集: {{label}}",
     "masterOnly": "Masterのみ",
     "masterOnlyArrow": "Masterにのみ表示",
     "masterOnlyCard": "Masterにのみ表示",
@@ -900,14 +900,14 @@
       "untitled": "無題のグループ"
     },
     "arrow": {
-      "title": "矢印",
+      "title": "関係",
       "direction": "向き",
       "forward": "一方向",
       "both": "両方向",
       "none": "線のみ",
       "label": "ラベル",
       "labelTowards": "{{name}}向けのラベル",
-      "delete": "矢印を削除"
+      "delete": "関係を削除"
     }
   }
 }
