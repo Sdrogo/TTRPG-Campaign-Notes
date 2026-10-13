@@ -518,4 +518,11 @@ describe('parallel lines between the same two ends', () => {
     expect(to.x).toBeCloseTo(100);
     expect(to.y).toBeCloseTo(7);
   });
+
+  it('does not move ends that sit on the same point', () => {
+    expect(shiftParallel({ x: 5, y: 5 }, { x: 5, y: 5 }, 7)).toEqual({
+      from: { x: 5, y: 5 },
+      to: { x: 5, y: 5 },
+    });
+  });
 });
