@@ -304,6 +304,18 @@ describe('MapBoard', () => {
     expect(screen.getByRole('dialog', { name: 'Relazione' })).toBeInTheDocument();
   });
 
+  it('saves where each label of an arrow was dropped', () => {
+    const { last } = renderBoard();
+    const data = () => flow.props.edges.find((edge) => edge.id === 'both')!.data as {
+      onMoveLabel: (id: string, which: 'label' | 'reverse', position: number) => void;
+    };
+    act(() => data().onMoveLabel('both', 'label', 0.6));
+    act(() => data().onMoveLabel('both', 'reverse', 0.2));
+    const moved = last().arrows.find((arrow) => arrow.id === 'both')!;
+    expect(moved.labelPosition).toBe(0.6);
+    expect(moved.reverseLabelPosition).toBe(0.2);
+  });
+
   it('deletes only what was selected: a group leaves its cards behind', async () => {
     const { last } = renderBoard();
     const filtered = (await (flow.props.onBeforeDelete as Handler)({

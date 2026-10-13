@@ -109,6 +109,8 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
     const at = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
     const position = Math.round(projectOnLine(from, to, at) * 1000) / 1000;
     start.position = position;
+    // From the first real move on, the click that ends the press is not a request to edit.
+    justDragged.current = true;
     setDragging({ which, position });
   };
 
@@ -117,10 +119,6 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
     press.current = null;
     setDragging(null);
     if (start?.position != null) {
-      justDragged.current = true;
-      setTimeout(() => {
-        justDragged.current = false;
-      }, 0);
       onMoveLabel(arrow.id, start.which, start.position);
     }
   };
@@ -148,12 +146,14 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
             onPointerDown={(event: React.PointerEvent<HTMLButtonElement>) => {
               if (event.button !== 0) return;
               event.currentTarget.setPointerCapture?.(event.pointerId);
+              justDragged.current = false;
               press.current = { which: label.which, x: event.clientX, y: event.clientY, position: null };
             }}
             onPointerMove={(event: React.PointerEvent) => move(event, label.which)}
             onPointerUp={drop}
             onPointerCancel={() => {
               press.current = null;
+              justDragged.current = false;
               setDragging(null);
             }}
             onClick={() => {

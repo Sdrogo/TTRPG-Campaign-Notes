@@ -284,6 +284,44 @@ describe('MapArrow', () => {
     expect(onEdit).not.toHaveBeenCalled();
   });
 
+  it('does not open a label after a drag even if the click comes late, and a cancelled drag moves nothing', () => {
+    const onEdit = vi.fn();
+    const onMoveLabel = vi.fn();
+    renderArrow({ ...arrow, direction: 'forward', reverseLabel: null }, true, onEdit, onMoveLabel);
+    const button = labelButton('alleata');
+    fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.pointerUp(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    return new Promise<void>((resolve) =>
+      setTimeout(() => {
+        fireEvent.click(button);
+        expect(onEdit).not.toHaveBeenCalled();
+        fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+        fireEvent.pointerMove(button, { pointerId: 1, clientX: 260, clientY: 60 });
+        fireEvent.pointerCancel(button, { pointerId: 1 });
+        fireEvent.pointerUp(button, { pointerId: 1 });
+        expect(onMoveLabel).toHaveBeenCalledTimes(1);
+        resolve();
+      }, 10),
+    );
+  });
+
+  it('ignores moves without a press and presses with another button', () => {
+    const onEdit = vi.fn();
+    const onMoveLabel = vi.fn();
+    renderArrow({ ...arrow, direction: 'forward', reverseLabel: null }, true, onEdit, onMoveLabel);
+    const button = labelButton('alleata');
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.pointerDown(button, { button: 2, pointerId: 1, clientX: 200, clientY: 25 });
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.pointerUp(button, { pointerId: 1 });
+    // A jitter of a pixel or two is still a click, not a drag.
+    fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 201, clientY: 26 });
+    fireEvent.pointerUp(button, { pointerId: 1 });
+    expect(onMoveLabel).not.toHaveBeenCalled();
+  });
+
   it('keeps a dragged label where it was dropped, and a press that does not move is a click', async () => {
     const onEdit = vi.fn();
     const onMoveLabel = vi.fn();
