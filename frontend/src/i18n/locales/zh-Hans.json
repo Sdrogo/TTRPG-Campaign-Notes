@@ -663,12 +663,14 @@
       "styles": {
         "gothic": "哥特",
         "modern": "现代",
-        "print": "印刷"
+        "print": "印刷",
+        "parchment": "羊皮纸"
       },
       "styleHints": {
         "gothic": "黑红配色，深色封面",
         "modern": "简洁无衬线字体，留白充足",
-        "print": "黑白，节省墨水"
+        "print": "黑白，节省墨水",
+        "parchment": "做旧纸张，棕色小型大写字母"
       },
       "pageSize": "页面尺寸",
       "comments": "在附录中包含评论",

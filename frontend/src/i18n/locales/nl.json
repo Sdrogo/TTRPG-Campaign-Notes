@@ -671,12 +671,14 @@
       "styles": {
         "gothic": "Gotisch",
         "modern": "Modern",
-        "print": "Afdruk"
+        "print": "Afdruk",
+        "parchment": "Perkament"
       },
       "styleHints": {
         "gothic": "Zwart en rood, donkere omslag",
         "modern": "Strak schreefloos, veel witruimte",
-        "print": "Zwart-wit, bespaart inkt"
+        "print": "Zwart-wit, bespaart inkt",
+        "parchment": "Oud papier, bruine kleinkapitalen"
       },
       "pageSize": "Paginaformaat",
       "comments": "Opmerkingen als bijlage opnemen",

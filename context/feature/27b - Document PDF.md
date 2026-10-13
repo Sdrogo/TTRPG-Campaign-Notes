@@ -6,7 +6,7 @@
 ## Decisions (proposed 2026-10-07, confirm in the PR)
 
 1. **Where**: the Document's Export dialog (spec 27 Decision 3) gains a third format, **PDF**, like the Room's dialog (spec 23b_2). Every member who sees the Document; with `X-View-As`, the Master generates it "as player X" (the member's id goes in the body as `view_as_user_id`, as for the Room PDF).
-2. **Options**: style (Gothic, Modern, Print), page size (A4 / Letter), Comments (off; only those written as a Character, spec 23b Decision 2), PDF Attachments appended (off). No Tag filter and no cover picker: it is one Document.
+2. **Options**: style (Gothic, Modern, Print, Parchment from spec 35), page size (A4 / Letter), Comments (off; only those written as a Character, spec 23b Decision 2), PDF Attachments appended (off). No Tag filter and no cover picker: it is one Document.
 3. **Layout**: a cover with the Document's name, the Room's name under it, and the Document's favorite image (its first one when none is marked; no image, no picture); then the Document's section exactly as in the manual: description, Notes as paragraphs, the Comments appendix when chosen. **No table of contents, no chapters, no glossary**: they mean nothing for one Document.
 4. **Content and visibility**: what the requester sees of that Document, from the same `load_export` read as spec 27's single-Document export (404 for a Document they can't see). A mention of another Document is plain `#Name` (the PDF holds only this one, spec 23b Decision 3).
 5. **Job**: the Room PDF job with a `document_id` in its options. It counts toward the "one active PDF per user and Room" rule (409), shows in the Room page's PDF list, is the requester's alone, expires after 24 hours like every PDF. File name `<document>-<date>.pdf`.

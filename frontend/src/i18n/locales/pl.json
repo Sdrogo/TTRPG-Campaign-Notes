@@ -687,12 +687,14 @@
       "styles": {
         "gothic": "Gotycki",
         "modern": "Nowoczesny",
-        "print": "Do druku"
+        "print": "Do druku",
+        "parchment": "Pergamin"
       },
       "styleHints": {
         "gothic": "Czerń i czerwień, ciemna okładka",
         "modern": "Czysty sans-serif, dużo miejsca",
-        "print": "Czarno-biały, oszczędza tusz"
+        "print": "Czarno-biały, oszczędza tusz",
+        "parchment": "Postarzały papier, brązowe kapitaliki"
       },
       "pageSize": "Format strony",
       "comments": "Dołącz komentarze w aneksie",

@@ -671,12 +671,14 @@
       "styles": {
         "gothic": "Gothique",
         "modern": "Moderne",
-        "print": "Impression"
+        "print": "Impression",
+        "parchment": "Parchemin"
       },
       "styleHints": {
         "gothic": "Noir et rouge, couverture sombre",
         "modern": "Sans-serif épuré, beaucoup d'espace",
-        "print": "Noir et blanc, économise l'encre"
+        "print": "Noir et blanc, économise l'encre",
+        "parchment": "Papier ancien, petites capitales brunes"
       },
       "pageSize": "Format de page",
       "comments": "Inclure les Commentaires en annexe",

@@ -67,7 +67,7 @@ _SAMPLES = {
 _BUNDLED_FONTS = ("IM-Fell", "Crimson-Text", "Lato", "PT-Serif", "Noto-Serif", "Noto-Sans")
 
 
-@pytest.mark.parametrize("style", ["gothic", "modern", "print"])
+@pytest.mark.parametrize("style", ["gothic", "modern", "print", "parchment"])
 def test_every_bundled_style_covers_the_ui_languages_without_system_fonts(style: str) -> None:
     from pathlib import Path
 
@@ -94,7 +94,7 @@ def test_every_bundled_style_covers_the_ui_languages_without_system_fonts(style:
     ("lang", "script", "text"),
     [("ja", "JP", "地下"), ("zh-Hans", "SC", "地下"), ("ko", "KR", "지하")],
 )
-@pytest.mark.parametrize("style", ["gothic", "modern", "print"])
+@pytest.mark.parametrize("style", ["gothic", "modern", "print", "parchment"])
 def test_the_page_language_picks_the_face_of_its_own_script(
     style: str, lang: str, script: str, text: str
 ) -> None:

@@ -663,12 +663,14 @@
       "styles": {
         "gothic": "ゴシック",
         "modern": "モダン",
-        "print": "印刷用"
+        "print": "印刷用",
+        "parchment": "羊皮紙"
       },
       "styleHints": {
         "gothic": "黒と赤、暗い表紙",
         "modern": "すっきりしたサンセリフ、ゆったりした余白",
-        "print": "白黒でインクを節約"
+        "print": "白黒でインクを節約",
+        "parchment": "古びた紙、茶色のスモールキャップ"
       },
       "pageSize": "ページサイズ",
       "comments": "コメントを付録に含める",

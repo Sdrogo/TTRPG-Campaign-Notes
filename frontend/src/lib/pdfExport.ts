@@ -1,7 +1,7 @@
 import type { Document } from '../types/document';
 
 /** The built-in looks of the Room PDF (spec 23b Decision 4), as the backend names them. */
-export type PdfStyle = 'gothic' | 'modern' | 'print';
+export type PdfStyle = 'gothic' | 'modern' | 'print' | 'parchment';
 
 /** The paper sizes (spec 23b Decision 5), as the backend names them. */
 export type PdfPageSize = 'A4' | 'Letter';
@@ -10,7 +10,7 @@ export type PdfPageSize = 'A4' | 'Letter';
 export type PdfJobStatus = 'queued' | 'running' | 'done' | 'failed' | 'expired';
 
 /** The styles in the order the dialog offers them: Gothic first (spec 23b Decision 4). */
-export const PDF_STYLES: PdfStyle[] = ['gothic', 'modern', 'print'];
+export const PDF_STYLES: PdfStyle[] = ['gothic', 'modern', 'print', 'parchment'];
 
 /** The page sizes in the order the dialog offers them. */
 export const PDF_PAGE_SIZES: PdfPageSize[] = ['A4', 'Letter'];
@@ -198,4 +198,5 @@ export const PDF_STYLE_PREVIEW: Record<PdfStyle, { cover: string; accent: string
     gothic: { cover: '#0b0b0c', accent: '#8a0f1c', page: '#ffffff' },
     modern: { cover: '#ffffff', accent: '#0f766e', page: '#ffffff' },
     print: { cover: '#ffffff', accent: '#000000', page: '#ffffff' },
+    parchment: { cover: '#e9dcba', accent: '#7a2e14', page: '#f3ead4' },
   };

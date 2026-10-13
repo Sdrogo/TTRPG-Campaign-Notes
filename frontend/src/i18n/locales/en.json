@@ -671,12 +671,14 @@
       "styles": {
         "gothic": "Gothic",
         "modern": "Modern",
-        "print": "Print"
+        "print": "Print",
+        "parchment": "Parchment"
       },
       "styleHints": {
         "gothic": "Black and red, dark cover",
         "modern": "Clean sans-serif, lots of space",
-        "print": "Black and white, saves ink"
+        "print": "Black and white, saves ink",
+        "parchment": "Aged paper, brown small capitals"
       },
       "pageSize": "Page size",
       "comments": "Include Comments as an appendix",

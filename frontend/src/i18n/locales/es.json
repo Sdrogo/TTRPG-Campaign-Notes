@@ -671,12 +671,14 @@
       "styles": {
         "gothic": "Gótico",
         "modern": "Moderno",
-        "print": "Impresión"
+        "print": "Impresión",
+        "parchment": "Pergamino"
       },
       "styleHints": {
         "gothic": "Negro y rojo, portada oscura",
         "modern": "Sans-serif limpio, mucho espacio",
-        "print": "Blanco y negro, ahorra tinta"
+        "print": "Blanco y negro, ahorra tinta",
+        "parchment": "Papel envejecido, versalitas marrones"
       },
       "pageSize": "Tamaño de página",
       "comments": "Incluir los Comentarios en un apéndice",
