@@ -857,7 +857,8 @@ class RelationshipMapArrowRow(Base):
             name="ck_relationship_map_arrows_reverse_label",
         ),
         CheckConstraint(
-            "label_position IS NULL OR (label_position >= 0 AND label_position <= 1)",
+            "label_position IS NULL"
+            " OR (label IS NOT NULL AND label_position >= 0 AND label_position <= 1)",
             name="ck_relationship_map_arrows_label_position",
         ),
         CheckConstraint(

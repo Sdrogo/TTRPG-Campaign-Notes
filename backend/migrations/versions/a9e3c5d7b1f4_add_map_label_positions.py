@@ -4,7 +4,7 @@ Spec `28 - Relationship maps.md`: the editor can drag a relationship's label
 along the relation. `label_position` and `reverse_label_position` hold where
 each label sits, as a fraction of the way from the relation's `from` end (0) to
 its `to` end (1); null keeps the board's automatic placement, so every existing
-relation is unchanged. The reverse position needs a reverse label.
+relation is unchanged. Each position needs its label.
 
 Revision ID: a9e3c5d7b1f4
 Revises: d5a1c8e3f2b7
@@ -32,7 +32,8 @@ def upgrade() -> None:
     op.create_check_constraint(
         "ck_relationship_map_arrows_label_position",
         "relationship_map_arrows",
-        "label_position IS NULL OR (label_position >= 0 AND label_position <= 1)",
+        "label_position IS NULL"
+        " OR (label IS NOT NULL AND label_position >= 0 AND label_position <= 1)",
     )
     op.create_check_constraint(
         "ck_relationship_map_arrows_reverse_label_position",
