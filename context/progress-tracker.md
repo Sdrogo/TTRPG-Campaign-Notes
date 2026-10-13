@@ -106,6 +106,12 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-13
+
+- **Mentions block compact** (no migration): "Mentioned in" is collapsed by
+  default on the Document page and on the Tag-filtered Room list, where it
+  now sits after the results; vertical padding `md` open, `xs` collapsed.
+
 ### 2026-10-12
 
 - **More UI languages, 34_3** (spec 34, 10-12, no migration): ja, ko and

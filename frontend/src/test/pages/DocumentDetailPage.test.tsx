@@ -1221,10 +1221,13 @@ describe('DocumentDetailPage backlinks', () => {
         ],
       },
     ];
-    render();
+    const { user } = render();
 
     const backlinks = await screen.findByTestId('backlinks');
-    expect(within(backlinks).getByRole('link', { name: 'La Locanda' })).toBeInTheDocument();
+    const toggle = within(backlinks).getByRole('button', { name: /Menzionato in/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await user.click(toggle);
+    expect(await within(backlinks).findByRole('link', { name: 'La Locanda' })).toBeInTheDocument();
     const comments = screen.getByText('Commenti');
     expect(backlinks.compareDocumentPosition(comments)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
