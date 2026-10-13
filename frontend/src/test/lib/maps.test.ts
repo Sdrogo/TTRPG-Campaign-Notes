@@ -200,6 +200,9 @@ describe('the wire shape', () => {
     expect(offsetFromLine(from, to, { x: 40, y: 25 })).toBe(25);
     expect(offsetFromLine(from, to, { x: 40, y: -10 })).toBe(-10);
     expect(offsetFromLine(from, from, { x: 5, y: 5 })).toBe(0);
+    // Dragged farther than the board allows, it stops at the limit.
+    expect(offsetFromLine(from, to, { x: 40, y: 99999 })).toBe(2000);
+    expect(offsetFromLine(from, to, { x: 40, y: -99999 })).toBe(-2000);
     expect(pointBeside(from, to, 0.5, 25)).toEqual({ x: 50, y: 25 });
     expect(pointBeside(from, to, 0.5, -10)).toEqual({ x: 50, y: -10 });
     expect(pointBeside(from, from, 0.5, 25)).toEqual(from);
