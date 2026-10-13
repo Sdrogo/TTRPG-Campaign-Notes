@@ -30,7 +30,7 @@ h1, h2, h3 { font-family: "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Ser
 
 /* Cover: a double frame on the darker paper, everything centered */
 .cover { text-align: center; }
-.cover-inner { margin: 14mm; padding: 38mm 16mm 0; height: 240mm; border: 2.5pt double #7a2e14; }
+.cover-inner { box-sizing: border-box; margin: 14mm; padding: 38mm 16mm 0; height: calc(100vh - 28mm); border: 2.5pt double #7a2e14; }
 .cover-system { font: 11pt "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Serif SC", "Noto Serif KR", serif; letter-spacing: 0.3em; text-transform: uppercase; color: #6b5a47; margin: 0 0 8mm; }
 .cover-title { font-size: 42pt; line-height: 1.05; margin: 0 0 8mm; text-align: center; }
 .cover-ornament { display: block; margin: 0 auto 12mm; }

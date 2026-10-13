@@ -390,6 +390,29 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     assert "ittà dell'Ovest, perché sì." in " ".join(p.extract_text() for p in reader.pages)
 
 
+@pytest.mark.parametrize("size", list(PageSize))
+def test_the_parchment_cover_frame_fits_on_its_page(size: PageSize) -> None:
+    """The framed cover follows the page height, so on A4 and Letter alike its
+    bottom edge is on the page, not cut off (a fixed height overflowed both)."""
+    weasyprint = _weasyprint()
+    html = render_manual_html(_small_room(), ManualStyle.PARCHMENT, size)
+
+    page = weasyprint.HTML(string=html, base_url=ASSETS_DIR.as_uri() + "/").render().pages[0]
+
+    def boxes(box: Any) -> Any:
+        yield box
+        for child in getattr(box, "children", None) or []:
+            yield from boxes(child)
+
+    frame = next(
+        box
+        for box in boxes(page._page_box)
+        if getattr(box, "element", None) is not None
+        and "cover-inner" in (box.element.get("class") or "")
+    )
+    assert frame.position_y + frame.margin_height() <= page.height + 0.5
+
+
 def test_the_fetcher_refuses_what_the_renderer_may_not_read(tmp_path: Any) -> None:
     """Even a `file:` image the Manual names is refused when it lies outside
     the package, and a link it doesn't name is never opened."""
