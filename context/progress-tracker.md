@@ -209,6 +209,11 @@ One line per unit; dates 2026, newest first. Spec files live in
   Applied to the staging database by hand on 2026-10-13 (`alembic current`
   went from `a9e3c5d7b1f4` to `b4d8f2a6c1e7`); still pending on production,
   before the next release to `main`.
+- **Dragging a relation's label, frontend** (28_3, 10-13): a label is dragged
+  freely, along its relation and to either side (saved as `label_position` +
+  `label_offset`, the distance kept within the backend's ±2000); the click
+  that ends a drag no longer opens the relation; "Arrow" is "Relation" in all
+  12 languages.
 
 ### 2026-10-08 → 10-10
 

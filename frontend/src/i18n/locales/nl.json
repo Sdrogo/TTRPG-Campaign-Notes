@@ -880,7 +880,7 @@
     "editCard": "Kaart bewerken: {{name}}",
     "editText": "Tekst bewerken",
     "editGroup": "Groep bewerken",
-    "editArrow": "Pijl bewerken: {{label}}",
+    "editArrow": "Relatie bewerken: {{label}}",
     "masterOnly": "Alleen Master",
     "masterOnlyArrow": "Alleen zichtbaar voor Masters",
     "masterOnlyCard": "Alleen zichtbaar voor Masters",
@@ -920,14 +920,14 @@
       "untitled": "Groep zonder titel"
     },
     "arrow": {
-      "title": "Pijl",
+      "title": "Relatie",
       "direction": "Richting",
       "forward": "Eén richting",
       "both": "Beide richtingen",
       "none": "Alleen lijn",
       "label": "Label",
       "labelTowards": "Label richting {{name}}",
-      "delete": "De pijl verwijderen"
+      "delete": "De relatie verwijderen"
     }
   }
 }

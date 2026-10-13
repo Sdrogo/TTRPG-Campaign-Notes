@@ -880,7 +880,7 @@
     "editCard": "Edit card: {{name}}",
     "editText": "Edit text",
     "editGroup": "Edit group",
-    "editArrow": "Edit arrow: {{label}}",
+    "editArrow": "Edit relation: {{label}}",
     "masterOnly": "Master only",
     "masterOnlyArrow": "Visible to Masters only",
     "masterOnlyCard": "Visible to Masters only",
@@ -920,14 +920,14 @@
       "untitled": "Untitled group"
     },
     "arrow": {
-      "title": "Arrow",
+      "title": "Relation",
       "direction": "Direction",
       "forward": "One way",
       "both": "Both ways",
       "none": "Line only",
       "label": "Label",
       "labelTowards": "Label towards {{name}}",
-      "delete": "Delete the arrow"
+      "delete": "Delete the relation"
     }
   }
 }

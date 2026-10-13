@@ -18,6 +18,10 @@ const arrow: MapArrow = {
   direction: 'forward',
   label: 'padre di',
   reverseLabel: null,
+  labelPosition: null,
+  reverseLabelPosition: null,
+  labelOffset: null,
+  reverseLabelOffset: null,
   color: 'default',
   masterOnly: false,
 };
@@ -101,7 +105,7 @@ describe('ArrowDialog', () => {
       }),
     );
 
-    await user.click(screen.getByRole('button', { name: 'Elimina la freccia' }));
+    await user.click(screen.getByRole('button', { name: 'Elimina la relazione' }));
     expect(onDelete).toHaveBeenCalled();
   });
 

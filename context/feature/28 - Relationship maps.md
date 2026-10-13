@@ -65,8 +65,8 @@
 
 ### Dragging a label (28_3)
 
-- The editor grabs a label and slides it along its relation; the place is saved with the board as a fraction of the line (`label_position`, `reverse_label_position`), so it holds at any zoom and when the cards move, plus a signed distance to the side of the line (`label_offset`, `reverse_label_offset`, board pixels), because the label can be dropped anywhere, not only on the line. A click without a move still opens the relation. Without a saved place a label is placed automatically: near its usual spot, slid or moved sideways so no card covers it. A dragged label stays where it was dropped. Clearing a label's text clears its place.
-- Backend (migration `a9e3c5d7b1f4`, nullable columns, so nothing existing changes) first, then the frontend, which also renames "Arrow" to "Relation" in every language of the interface.
+- The editor grabs a label and drags it freely, along its relation and to either side of it; the place is saved with the board as a fraction of the line (`label_position`, `reverse_label_position`), so it holds at any zoom and when the cards move, plus a signed distance to the side of the line (`label_offset`, `reverse_label_offset`, board pixels), because the label can be dropped anywhere, not only on the line. A click without a move still opens the relation, and the click that ends a drag never does. Without a saved place a label is placed automatically: near its usual spot, slid or moved sideways so no card covers it. A dragged label stays where it was dropped. Clearing a label's text clears its place.
+- Backend (migrations `a9e3c5d7b1f4` and `b4d8f2a6c1e7`, nullable columns, so nothing existing changes) first, then the frontend, which also renames "Arrow" to "Relation" in every language of the interface.
 
 ## Implementation
 

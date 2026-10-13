@@ -860,7 +860,7 @@
     "editCard": "编辑卡片：{{name}}",
     "editText": "编辑文本",
     "editGroup": "编辑分组",
-    "editArrow": "编辑箭头：{{label}}",
+    "editArrow": "编辑关系：{{label}}",
     "masterOnly": "仅 Master",
     "masterOnlyArrow": "仅 Master 可见",
     "masterOnlyCard": "仅 Master 可见",
@@ -900,14 +900,14 @@
       "untitled": "未命名分组"
     },
     "arrow": {
-      "title": "箭头",
+      "title": "关系",
       "direction": "方向",
       "forward": "单向",
       "both": "双向",
       "none": "仅线条",
       "label": "标签",
       "labelTowards": "指向 {{name}} 的标签",
-      "delete": "删除箭头"
+      "delete": "删除关系"
     }
   }
 }

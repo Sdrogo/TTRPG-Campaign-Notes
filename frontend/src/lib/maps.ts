@@ -77,6 +77,10 @@ export interface RawMapArrow {
   direction: ArrowDirection;
   label: string | null;
   reverse_label: string | null;
+  label_position: number | null;
+  reverse_label_position: number | null;
+  label_offset: number | null;
+  reverse_label_offset: number | null;
   color: MapColor;
   master_only: boolean;
 }
@@ -139,6 +143,10 @@ export function toMapDetail(raw: RawMapDetail): RelationshipMapDetail {
       direction: arrow.direction,
       label: arrow.label,
       reverseLabel: arrow.reverse_label,
+      labelPosition: arrow.label_position,
+      reverseLabelPosition: arrow.reverse_label_position,
+      labelOffset: arrow.label_offset,
+      reverseLabelOffset: arrow.reverse_label_offset,
       color: arrow.color,
       masterOnly: arrow.master_only,
     })),
@@ -174,6 +182,12 @@ export function toBoardBody(board: Board) {
       direction: arrow.direction,
       label: arrow.label,
       reverse_label: arrow.direction === 'both' ? arrow.reverseLabel : null,
+      label_position: arrow.label ? arrow.labelPosition : null,
+      reverse_label_position:
+        arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelPosition : null,
+      label_offset: arrow.label ? arrow.labelOffset : null,
+      reverse_label_offset:
+        arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelOffset : null,
       color: arrow.color,
       master_only: arrow.masterOnly,
     })),
@@ -424,6 +438,10 @@ export function addArrow(board: Board, from: ArrowEnd, to: ArrowEnd): [Board, st
     direction: 'forward',
     label: null,
     reverseLabel: null,
+    labelPosition: null,
+    reverseLabelPosition: null,
+    labelOffset: null,
+    reverseLabelOffset: null,
     color: 'default',
     masterOnly: false,
   };
@@ -509,6 +527,45 @@ function overlaps(a: Rect, b: Rect, gap: number): boolean {
     a.y < b.y + b.height + gap &&
     b.y < a.y + a.height + gap
   );
+}
+
+/**
+ * How far along the line from `from` to `to` the point `p` falls, as a
+ * fraction from 0 to 1 (a point past an end counts as that end).
+ */
+export function projectOnLine(from: Point, to: Point, p: Point): number {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared === 0) return 0.5;
+  const t = ((p.x - from.x) * dx + (p.y - from.y) * dy) / lengthSquared;
+  return Math.min(1, Math.max(0, t));
+}
+
+/** The farthest a label may be dragged from its relation, in board pixels (the backend refuses more). */
+export const MAX_LABEL_OFFSET = 2000;
+
+/**
+ * How far, in the same units as the points, `p` is to the side of the line
+ * from `from` to `to`: positive on the right of the way from `from` to `to`
+ * (on screen, where y grows downward), negative on the left, 0 on the line;
+ * never more than `MAX_LABEL_OFFSET` either way.
+ */
+export function offsetFromLine(from: Point, to: Point, p: Point): number {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy);
+  if (length === 0) return 0;
+  const offset = ((p.x - from.x) * -dy + (p.y - from.y) * dx) / length;
+  return Math.max(-MAX_LABEL_OFFSET, Math.min(MAX_LABEL_OFFSET, offset));
+}
+
+/** The point `offset` to the side of the way `t` along the line (see `offsetFromLine`). */
+export function pointBeside(from: Point, to: Point, t: number, offset: number): Point {
+  const along = pointAlong(from, to, t);
+  const length = Math.hypot(to.x - from.x, to.y - from.y);
+  if (length === 0) return along;
+  return { x: along.x + (-(to.y - from.y) / length) * offset, y: along.y + ((to.x - from.x) / length) * offset };
 }
 
 /**

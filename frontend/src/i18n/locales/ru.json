@@ -920,7 +920,7 @@
     "editCard": "Изменить карточку: {{name}}",
     "editText": "Изменить текст",
     "editGroup": "Изменить группу",
-    "editArrow": "Изменить стрелку: {{label}}",
+    "editArrow": "Изменить связь: {{label}}",
     "masterOnly": "Только Master",
     "masterOnlyArrow": "Видна только Master",
     "masterOnlyCard": "Видна только Master",
@@ -960,14 +960,14 @@
       "untitled": "Группа без заголовка"
     },
     "arrow": {
-      "title": "Стрелка",
+      "title": "Связь",
       "direction": "Направление",
       "forward": "В одну сторону",
       "both": "В обе стороны",
       "none": "Только линия",
       "label": "Метка",
       "labelTowards": "Метка в сторону {{name}}",
-      "delete": "Удалить стрелку"
+      "delete": "Удалить связь"
     }
   }
 }

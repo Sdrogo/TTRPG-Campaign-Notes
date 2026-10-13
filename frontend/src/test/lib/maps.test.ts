@@ -16,6 +16,9 @@ import {
   newId,
   labelSize,
   placeLabel,
+  offsetFromLine,
+  pointBeside,
+  projectOnLine,
   pointAlong,
   removeArrow,
   removeCards,
@@ -75,6 +78,10 @@ function arrow(id: string, from: string, to: string, overrides: Partial<MapArrow
     direction: 'forward',
     label: null,
     reverseLabel: null,
+    labelPosition: null,
+    reverseLabelPosition: null,
+    labelOffset: null,
+    reverseLabelOffset: null,
     color: 'default',
     masterOnly: false,
     ...overrides,
@@ -120,6 +127,10 @@ describe('the wire shape', () => {
       direction: 'both',
       label: 'alleata',
       reverseLabel: 'alleato',
+      labelPosition: null,
+      reverseLabelPosition: null,
+      labelOffset: null,
+      reverseLabelOffset: null,
       color: 'green',
       masterOnly: false,
     });
@@ -151,6 +162,63 @@ describe('the wire shape', () => {
       reverse_label: 'alleato',
     });
     expect(body.arrows[1].reverse_label).toBeNull();
+  });
+
+  it('keeps where a label was dragged to, and drops the place of a label that is gone', () => {
+    const detail = toMapDetail({
+      ...rawMapDetail(),
+      arrows: [
+        {
+          ...rawMapDetail().arrows[0],
+          label_position: 0.2,
+          reverse_label_position: 0.7,
+          label_offset: -30,
+          reverse_label_offset: 12,
+        },
+      ],
+    } as unknown as RawMapDetail);
+    expect([detail.arrows[0].labelPosition, detail.arrows[0].reverseLabelPosition]).toEqual([
+      0.2, 0.7,
+    ]);
+    const kept = toBoardBody(detail).arrows[0];
+    expect([kept.label_position, kept.reverse_label_position]).toEqual([0.2, 0.7]);
+    expect([detail.arrows[0].labelOffset, detail.arrows[0].reverseLabelOffset]).toEqual([-30, 12]);
+    expect([kept.label_offset, kept.reverse_label_offset]).toEqual([-30, 12]);
+
+    const cleared = toBoardBody({
+      ...detail,
+      arrows: [{ ...detail.arrows[0], label: null, direction: 'forward' as const }],
+    }).arrows[0];
+    expect([cleared.label_position, cleared.reverse_label_position]).toEqual([null, null]);
+    expect([cleared.label_offset, cleared.reverse_label_offset]).toEqual([null, null]);
+  });
+
+  it('finds how far to the side of a line a point is, and puts a point there', () => {
+    const from = { x: 0, y: 0 };
+    const to = { x: 100, y: 0 };
+    // y grows downward, so below the line is to the right of the way along it.
+    expect(offsetFromLine(from, to, { x: 40, y: 25 })).toBe(25);
+    expect(offsetFromLine(from, to, { x: 40, y: -10 })).toBe(-10);
+    expect(offsetFromLine(from, from, { x: 5, y: 5 })).toBe(0);
+    // Dragged farther than the board allows, it stops at the limit.
+    expect(offsetFromLine(from, to, { x: 40, y: 99999 })).toBe(2000);
+    expect(offsetFromLine(from, to, { x: 40, y: -99999 })).toBe(-2000);
+    expect(pointBeside(from, to, 0.5, 25)).toEqual({ x: 50, y: 25 });
+    expect(pointBeside(from, to, 0.5, -10)).toEqual({ x: 50, y: -10 });
+    expect(pointBeside(from, from, 0.5, 25)).toEqual(from);
+    const slanted = pointBeside({ x: 0, y: 0 }, { x: 0, y: 100 }, 0.5, 10);
+    expect(slanted.x).toBeCloseTo(-10);
+    expect(slanted.y).toBeCloseTo(50);
+    expect(offsetFromLine({ x: 0, y: 0 }, { x: 0, y: 100 }, slanted)).toBeCloseTo(10);
+  });
+
+  it('finds how far along a line a point falls, clamped to the line', () => {
+    const from = { x: 0, y: 0 };
+    const to = { x: 100, y: 0 };
+    expect(projectOnLine(from, to, { x: 25, y: 40 })).toBe(0.25);
+    expect(projectOnLine(from, to, { x: -50, y: 0 })).toBe(0);
+    expect(projectOnLine(from, to, { x: 500, y: 9 })).toBe(1);
+    expect(projectOnLine(from, from, { x: 3, y: 3 })).toBe(0.5);
   });
 
   it('sends Selective grants only at the Selective level', () => {

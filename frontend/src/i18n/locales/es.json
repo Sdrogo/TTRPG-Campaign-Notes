@@ -880,7 +880,7 @@
     "editCard": "Editar la tarjeta: {{name}}",
     "editText": "Editar el texto",
     "editGroup": "Editar el grupo",
-    "editArrow": "Editar la flecha: {{label}}",
+    "editArrow": "Editar la relación: {{label}}",
     "masterOnly": "Solo Master",
     "masterOnlyArrow": "Visible solo para los Master",
     "masterOnlyCard": "Visible solo para los Master",
@@ -920,14 +920,14 @@
       "untitled": "Grupo sin título"
     },
     "arrow": {
-      "title": "Flecha",
+      "title": "Relación",
       "direction": "Dirección",
       "forward": "En un sentido",
       "both": "En ambos",
       "none": "Solo línea",
       "label": "Etiqueta",
       "labelTowards": "Etiqueta hacia {{name}}",
-      "delete": "Eliminar la flecha"
+      "delete": "Eliminar la relación"
     }
   }
 }

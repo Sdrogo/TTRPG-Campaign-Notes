@@ -880,7 +880,7 @@
     "editCard": "Editar a carta: {{name}}",
     "editText": "Editar o texto",
     "editGroup": "Editar o grupo",
-    "editArrow": "Editar a seta: {{label}}",
+    "editArrow": "Editar a relação: {{label}}",
     "masterOnly": "Só Master",
     "masterOnlyArrow": "Visível apenas para os Master",
     "masterOnlyCard": "Visível apenas para os Master",
@@ -920,14 +920,14 @@
       "untitled": "Grupo sem título"
     },
     "arrow": {
-      "title": "Seta",
+      "title": "Relação",
       "direction": "Direção",
       "forward": "Num sentido",
       "both": "Em ambos",
       "none": "Só linha",
       "label": "Etiqueta",
       "labelTowards": "Etiqueta para {{name}}",
-      "delete": "Eliminar a seta"
+      "delete": "Eliminar a relação"
     }
   }
 }
