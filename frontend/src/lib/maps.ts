@@ -1,5 +1,5 @@
-import type { Document, DocumentVisibility } from '../types/document';
-import type { RawImage, StoredImage } from '../types/image';
+import type { Document, DocumentVisibility } from "../types/document";
+import type { RawImage, StoredImage } from "../types/image";
 import type {
   ArrowDirection,
   ArrowEnd,
@@ -13,8 +13,8 @@ import type {
   MapFormValues,
   RelationshipMap,
   RelationshipMapDetail,
-} from '../types/map';
-import { leadImage, toStoredImage } from './images';
+} from "../types/map";
+import { leadImage, toStoredImage } from "./images";
 
 // --- The wire shape ---------------------------------------------------------
 
@@ -181,13 +181,17 @@ export function toBoardBody(board: Board) {
       to_end: toEndBody(arrow.to),
       direction: arrow.direction,
       label: arrow.label,
-      reverse_label: arrow.direction === 'both' ? arrow.reverseLabel : null,
+      reverse_label: arrow.direction === "both" ? arrow.reverseLabel : null,
       label_position: arrow.label ? arrow.labelPosition : null,
       reverse_label_position:
-        arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelPosition : null,
+        arrow.direction === "both" && arrow.reverseLabel
+          ? arrow.reverseLabelPosition
+          : null,
       label_offset: arrow.label ? arrow.labelOffset : null,
       reverse_label_offset:
-        arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelOffset : null,
+        arrow.direction === "both" && arrow.reverseLabel
+          ? arrow.reverseLabelOffset
+          : null,
       color: arrow.color,
       master_only: arrow.masterOnly,
     })),
@@ -200,22 +204,55 @@ export function toMapBody(values: MapFormValues) {
     name: values.name,
     description: values.description,
     visibility: values.visibility,
-    selective_user_ids: values.visibility === 'selective' ? values.selectiveUserIds : [],
+    selective_user_ids:
+      values.visibility === "selective" ? values.selectiveUserIds : [],
   };
 }
 
 // --- Looks ------------------------------------------------------------------
 
 /** The theme colors, in the order the pickers offer them. */
-export const MAP_COLORS: MapColor[] = ['default', 'red', 'green', 'purple', 'blue', 'gold'];
+export const MAP_COLORS: MapColor[] = [
+  "default",
+  "red",
+  "green",
+  "purple",
+  "blue",
+  "gold",
+  "orange",
+  "midnight",
+  "silver",
+  "champagne",
+  "rose",
+  "pink",
+  "cobalt",
+  "violet",
+  "emerald",
+  "brown",
+  "lime",
+];
+
+/** How many colors the picker shows before "more colors" (one row). */
+export const MAP_COLORS_VISIBLE = 6;
 
 const COLOR_VALUES: Record<MapColor, string> = {
-  default: 'var(--text-primary)',
-  red: 'var(--accent-strong)',
-  green: 'var(--mantine-color-green-5)',
-  purple: 'var(--mantine-color-grape-5)',
-  blue: 'var(--mantine-color-blue-5)',
-  gold: 'var(--mantine-color-yellow-5)',
+  default: "var(--text-primary)",
+  red: "var(--accent-strong)",
+  green: "var(--mantine-color-green-5)",
+  purple: "var(--mantine-color-grape-5)",
+  blue: "var(--mantine-color-blue-5)",
+  gold: "var(--mantine-color-yellow-5)",
+  orange: "#FF9500",
+  midnight: "#283583",
+  silver: "#B5B5AC",
+  champagne: "#C1A470",
+  rose: "#EE86A7",
+  pink: "#E85298",
+  cobalt: "#0079C2",
+  violet: "#8F76D6",
+  emerald: "#00AC9B",
+  brown: "#9C5E31",
+  lime: "#9ACD32",
 };
 
 /** The CSS color a map color stands for, from the theme. */
@@ -258,15 +295,23 @@ export function endId(end: ArrowEnd): string {
 
 /** Where a card sits on the board, adding its group's corner when it is in one. */
 export function absolutePosition(board: Board, card: MapCard): Point {
-  const group = card.groupId ? board.groups.find((g) => g.id === card.groupId) : undefined;
-  return group ? { x: card.x + group.x, y: card.y + group.y } : { x: card.x, y: card.y };
+  const group = card.groupId
+    ? board.groups.find((g) => g.id === card.groupId)
+    : undefined;
+  return group
+    ? { x: card.x + group.x, y: card.y + group.y }
+    : { x: card.x, y: card.y };
 }
 
 /**
  * Puts Documents on the board around `center`, in rows of four, so that a
  * picker's selection lands where the editor is looking.
  */
-export function addDocumentCards(board: Board, documents: MapDocument[], center: Point): Board {
+export function addDocumentCards(
+  board: Board,
+  documents: MapDocument[],
+  center: Point,
+): Board {
   const columns = Math.min(4, documents.length);
   const cards = documents.map((document, index) => ({
     id: newId(),
@@ -275,9 +320,9 @@ export function addDocumentCards(board: Board, documents: MapDocument[], center:
     groupId: null,
     caption: null,
     imageId: null,
-    size: 'normal' as const,
+    size: "normal" as const,
     masterOnly: false,
-    color: 'default' as const,
+    color: "default" as const,
     struck: false,
     x: center.x + ((index % columns) - columns / 2) * (CARD_WIDTH + 24),
     y: center.y + Math.floor(index / columns) * 140,
@@ -295,7 +340,11 @@ export interface TextCardValues {
 }
 
 /** Adds a text card at `center`; returns the board and the new card's id. */
-export function addTextCard(board: Board, values: TextCardValues, center: Point): [Board, string] {
+export function addTextCard(
+  board: Board,
+  values: TextCardValues,
+  center: Point,
+): [Board, string] {
   const card: MapCard = {
     id: newId(),
     documentId: null,
@@ -311,10 +360,16 @@ export function addTextCard(board: Board, values: TextCardValues, center: Point)
 }
 
 /** Changes one card. */
-export function updateCard(board: Board, cardId: string, patch: Partial<MapCard>): Board {
+export function updateCard(
+  board: Board,
+  cardId: string,
+  patch: Partial<MapCard>,
+): Board {
   return {
     ...board,
-    cards: board.cards.map((card) => (card.id === cardId ? { ...card, ...patch } : card)),
+    cards: board.cards.map((card) =>
+      card.id === cardId ? { ...card, ...patch } : card,
+    ),
   };
 }
 
@@ -341,17 +396,25 @@ export function removeGroup(board: Board, groupId: string): Board {
   return {
     groups: board.groups.filter((group) => group.id !== groupId),
     cards: board.cards.map((card) =>
-      card.groupId === groupId ? { ...card, ...absolutePosition(board, card), groupId: null } : card,
+      card.groupId === groupId
+        ? { ...card, ...absolutePosition(board, card), groupId: null }
+        : card,
     ),
     arrows: board.arrows.filter((arrow) => !touches(arrow, ids)),
   };
 }
 
 /** Changes one group (its title, look or frame). */
-export function updateGroup(board: Board, groupId: string, patch: Partial<MapGroup>): Board {
+export function updateGroup(
+  board: Board,
+  groupId: string,
+  patch: Partial<MapGroup>,
+): Board {
   return {
     ...board,
-    groups: board.groups.map((group) => (group.id === groupId ? { ...group, ...patch } : group)),
+    groups: board.groups.map((group) =>
+      group.id === groupId ? { ...group, ...patch } : group,
+    ),
   };
 }
 
@@ -373,13 +436,14 @@ export function groupCards(
     return { x, y, right: x + width, bottom: y + height };
   });
   const left = Math.min(...boxes.map((box) => box.x)) - GROUP_PADDING;
-  const top = Math.min(...boxes.map((box) => box.y)) - GROUP_PADDING - GROUP_TITLE_SPACE;
+  const top =
+    Math.min(...boxes.map((box) => box.y)) - GROUP_PADDING - GROUP_TITLE_SPACE;
   const right = Math.max(...boxes.map((box) => box.right)) + GROUP_PADDING;
   const bottom = Math.max(...boxes.map((box) => box.bottom)) + GROUP_PADDING;
   const group: MapGroup = {
     id: newId(),
     title: null,
-    color: 'default',
+    color: "default",
     struck: false,
     x: left,
     y: top,
@@ -414,7 +478,12 @@ function inside(point: Point, group: MapGroup): boolean {
  * A card dropped at `position` (its top left corner on the board): it joins
  * the group its center lands in, or leaves its group when dropped outside it.
  */
-export function dropCard(board: Board, cardId: string, position: Point, size: Size): Board {
+export function dropCard(
+  board: Board,
+  cardId: string,
+  position: Point,
+  size: Size,
+): Board {
   const center = {
     x: position.x + size.width / 2,
     y: position.y + size.height / 2,
@@ -430,29 +499,39 @@ export function dropCard(board: Board, cardId: string, position: Point, size: Si
 }
 
 /** Adds an arrow between two ends, one way and unlabelled; returns its id. */
-export function addArrow(board: Board, from: ArrowEnd, to: ArrowEnd): [Board, string] {
+export function addArrow(
+  board: Board,
+  from: ArrowEnd,
+  to: ArrowEnd,
+): [Board, string] {
   const arrow: MapArrow = {
     id: newId(),
     from,
     to,
-    direction: 'forward',
+    direction: "forward",
     label: null,
     reverseLabel: null,
     labelPosition: null,
     reverseLabelPosition: null,
     labelOffset: null,
     reverseLabelOffset: null,
-    color: 'default',
+    color: "default",
     masterOnly: false,
   };
   return [{ ...board, arrows: [...board.arrows, arrow] }, arrow.id];
 }
 
 /** Changes one arrow. */
-export function updateArrow(board: Board, arrowId: string, patch: Partial<MapArrow>): Board {
+export function updateArrow(
+  board: Board,
+  arrowId: string,
+  patch: Partial<MapArrow>,
+): Board {
   return {
     ...board,
-    arrows: board.arrows.map((arrow) => (arrow.id === arrowId ? { ...arrow, ...patch } : arrow)),
+    arrows: board.arrows.map((arrow) =>
+      arrow.id === arrowId ? { ...arrow, ...patch } : arrow,
+    ),
   };
 }
 
@@ -494,7 +573,10 @@ function boxExit(box: Rect, toward: Point): Point {
  * centers leaves each box, so the arrow heads touch the cards' edges
  * whatever side they face.
  */
-export function arrowEnds(source: Rect, target: Rect): { from: Point; to: Point } {
+export function arrowEnds(
+  source: Rect,
+  target: Rect,
+): { from: Point; to: Point } {
   const sourceCenter = {
     x: source.x + source.width / 2,
     y: source.y + source.height / 2,
@@ -561,11 +643,19 @@ export function offsetFromLine(from: Point, to: Point, p: Point): number {
 }
 
 /** The point `offset` to the side of the way `t` along the line (see `offsetFromLine`). */
-export function pointBeside(from: Point, to: Point, t: number, offset: number): Point {
+export function pointBeside(
+  from: Point,
+  to: Point,
+  t: number,
+  offset: number,
+): Point {
   const along = pointAlong(from, to, t);
   const length = Math.hypot(to.x - from.x, to.y - from.y);
   if (length === 0) return along;
-  return { x: along.x + (-(to.y - from.y) / length) * offset, y: along.y + ((to.x - from.x) / length) * offset };
+  return {
+    x: along.x + (-(to.y - from.y) / length) * offset,
+    y: along.y + ((to.x - from.x) / length) * offset,
+  };
 }
 
 /**
@@ -600,7 +690,11 @@ export function placeLabel(
     ) {
       return false;
     }
-    const box = { x: at.x - size.width / 2, y: at.y - size.height / 2, ...size };
+    const box = {
+      x: at.x - size.width / 2,
+      y: at.y - size.height / 2,
+      ...size,
+    };
     return !avoid.some((rect) => overlaps(box, rect, GAP));
   };
   for (let shift = 0; shift <= MAX_SHIFT; shift += SHIFT_STEP) {
@@ -608,7 +702,11 @@ export function placeLabel(
       let best: number | null = null;
       for (let i = 0; i <= STEPS; i += 1) {
         const t = i / STEPS;
-        if (best !== null && Math.abs(t - preferred) >= Math.abs(best - preferred)) continue;
+        if (
+          best !== null &&
+          Math.abs(t - preferred) >= Math.abs(best - preferred)
+        )
+          continue;
         const at = pointAlong(from, to, t);
         if (clearAt({ x: at.x + dx, y: at.y })) best = t;
       }
@@ -625,7 +723,10 @@ export function placeLabel(
  * The image a card shows from its Document's `images` (favorite first): the
  * one chosen for it, else the favorite. Undefined when there are none.
  */
-export function cardImage(images: StoredImage[], imageId: string | null): StoredImage | undefined {
+export function cardImage(
+  images: StoredImage[],
+  imageId: string | null,
+): StoredImage | undefined {
   return images.find((image) => image.id === imageId) ?? leadImage(images);
 }
 

@@ -9,6 +9,7 @@ import {
   arrowEnds,
   cardImage,
   colorValue,
+  MAP_COLORS,
   dropCard,
   endId,
   endOf,
@@ -278,6 +279,9 @@ describe('looks', () => {
   it('maps every color to a theme value', () => {
     expect(colorValue('default')).toBe('var(--text-primary)');
     expect(colorValue('gold')).toContain('yellow');
+    expect(colorValue('orange')).toBe('#FF9500');
+    expect(colorValue('lime')).toBe('#9ACD32');
+    for (const color of MAP_COLORS) expect(colorValue(color)).toBeTruthy();
   });
 
   it('makes a fresh id each time', () => {

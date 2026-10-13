@@ -420,7 +420,7 @@ describe('MapBoard', () => {
     const { last, user } = renderBoard();
     await user.click(screen.getByRole('button', { name: 'Modifica la carta: Mira' }));
     await user.type(screen.getByLabelText('Didascalia'), 'Neonata');
-    await user.click(screen.getByRole('radio', { name: 'Viola' }));
+    await user.click(screen.getByRole('radio', { name: 'Fucsia' }));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
     expect(last().cards[0]).toMatchObject({ caption: 'Neonata', color: 'purple', size: 'normal', masterOnly: false, text: null });
 

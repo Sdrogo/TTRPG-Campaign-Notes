@@ -2,7 +2,24 @@ import type { DocumentVisibility } from './document';
 import type { StoredImage } from './image';
 
 /** The theme colors a card, a label or a group takes (spec 28 Decision 8). */
-export type MapColor = 'default' | 'red' | 'green' | 'purple' | 'blue' | 'gold';
+export type MapColor =
+  | 'default'
+  | 'red'
+  | 'green'
+  | 'purple'
+  | 'blue'
+  | 'gold'
+  | 'orange'
+  | 'midnight'
+  | 'silver'
+  | 'champagne'
+  | 'rose'
+  | 'pink'
+  | 'cobalt'
+  | 'violet'
+  | 'emerald'
+  | 'brown'
+  | 'lime';
 
 /** How large a text card's text is (Decision 6). */
 export type CardSize = 'normal' | 'large' | 'title';
