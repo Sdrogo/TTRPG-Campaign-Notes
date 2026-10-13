@@ -95,6 +95,9 @@ export interface MapArrow {
   reverseLabel: string | null;
   labelPosition: number | null;
   reverseLabelPosition: number | null;
+  /** How far a dragged label sits to the side of the arrow, in board pixels. */
+  labelOffset: number | null;
+  reverseLabelOffset: number | null;
   color: MapColor;
   masterOnly: boolean;
 }

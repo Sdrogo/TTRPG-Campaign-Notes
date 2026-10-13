@@ -235,6 +235,8 @@ describe('MapArrow', () => {
     reverseLabel: 'alleato',
     labelPosition: null,
     reverseLabelPosition: null,
+    labelOffset: null,
+    reverseLabelOffset: null,
     color: 'green',
     masterOnly: true,
   };
@@ -280,7 +282,7 @@ describe('MapArrow', () => {
     fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
     fireEvent.pointerUp(button, { pointerId: 1, clientX: 250, clientY: 60 });
     fireEvent.click(button);
-    expect(onMoveLabel).toHaveBeenCalledWith('arrow-1', 'label', 0.75);
+    expect(onMoveLabel).toHaveBeenCalledWith('arrow-1', 'label', 0.75, 35);
     expect(onEdit).not.toHaveBeenCalled();
   });
 
@@ -325,12 +327,18 @@ describe('MapArrow', () => {
   it('keeps a dragged label where it was dropped, and a press that does not move is a click', async () => {
     const onEdit = vi.fn();
     const onMoveLabel = vi.fn();
-    renderArrow({ ...arrow, labelPosition: 0.9 }, true, onEdit, onMoveLabel);
+    renderArrow({ ...arrow, labelPosition: 0.9, labelOffset: -20 }, true, onEdit, onMoveLabel);
     const button = labelButton('alleata');
-    expect(button.style.transform).toContain('translate(280px, 25px)');
+    // 90% along the arrow (x=280) and 20px to its left, which is up here.
+    expect(button.style.transform).toContain('translate(280px, 5px)');
     await userEvent.click(button);
     expect(onEdit).toHaveBeenCalledWith('arrow-1');
     expect(onMoveLabel).not.toHaveBeenCalled();
+  });
+
+  it('keeps a label saved with a place but no distance on the arrow', () => {
+    renderArrow({ ...arrow, labelPosition: 0.9, labelOffset: null });
+    expect(labelButton('alleata').style.transform).toContain('translate(280px, 25px)');
   });
 
   it('puts a one-way label in the middle and none when there is none', () => {

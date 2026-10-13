@@ -18,8 +18,11 @@ export type GroupNodeData = NodeActions & {
 export type MapArrowData = {
   arrow: MapArrow;
   onEdit: (id: string) => void;
-  /** A label was dragged to a place along the arrow (0 at `from`, 1 at `to`). */
-  onMoveLabel: (id: string, which: 'label' | 'reverse', position: number) => void;
+  /**
+   * A label was dragged to a place along the arrow (0 at `from`, 1 at `to`)
+   * and a distance to the side of it, in board pixels.
+   */
+  onMoveLabel: (id: string, which: 'label' | 'reverse', position: number, offset: number) => void;
   editable: boolean;
 };
 

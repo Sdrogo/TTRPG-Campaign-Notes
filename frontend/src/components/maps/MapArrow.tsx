@@ -13,7 +13,8 @@ import {
   colorValue,
   labelSize,
   placeLabel,
-  pointAlong,
+  offsetFromLine,
+  pointBeside,
   projectOnLine,
   type Point,
   type Rect,
@@ -39,9 +40,11 @@ type Which = 'label' | 'reverse';
 export function MapArrow({ id, source, target, markerEnd, markerStart, data }: EdgeProps<MapEdge>) {
   const { t } = useTranslation();
   const flow = useReactFlow();
-  const [dragging, setDragging] = useState<{ which: Which; position: number } | null>(null);
+  const [dragging, setDragging] = useState<{ which: Which; position: number; offset: number } | null>(
+    null,
+  );
   // The press that may become a drag; a press that never moves is a click.
-  const press = useRef<{ which: Which; x: number; y: number; position: number | null } | null>(null);
+  const press = useRef<{ which: Which; x: number; y: number; moved: { position: number; offset: number } | null } | null>(null);
   const justDragged = useRef(false);
   const sourceRect = rectOf(useInternalNode(source));
   const targetRect = rectOf(useInternalNode(target));
@@ -52,19 +55,34 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
 
   // A dragged label sits where it was dropped; the others slide along the
   // arrow until no card covers them (nor another label).
-  const wanted: { which: Which; text: string; preferred: number; saved: number | null }[] = [];
+  type Spot = { position: number; offset: number };
+  const savedSpot = (position: number | null, offset: number | null): Spot | null =>
+    position === null ? null : { position, offset: offset ?? 0 };
+  const wanted: { which: Which; text: string; preferred: number; saved: Spot | null }[] = [];
   if (arrow.direction === 'both') {
-    if (arrow.label) wanted.push({ which: 'label', text: arrow.label, preferred: 0.75, saved: arrow.labelPosition });
+    if (arrow.label) {
+      wanted.push({
+        which: 'label',
+        text: arrow.label,
+        preferred: 0.75,
+        saved: savedSpot(arrow.labelPosition, arrow.labelOffset),
+      });
+    }
     if (arrow.reverseLabel) {
       wanted.push({
         which: 'reverse',
         text: arrow.reverseLabel,
         preferred: 0.25,
-        saved: arrow.reverseLabelPosition,
+        saved: savedSpot(arrow.reverseLabelPosition, arrow.reverseLabelOffset),
       });
     }
   } else if (arrow.label) {
-    wanted.push({ which: 'label', text: arrow.label, preferred: 0.5, saved: arrow.labelPosition });
+    wanted.push({
+      which: 'label',
+      text: arrow.label,
+      preferred: 0.5,
+      saved: savedSpot(arrow.labelPosition, arrow.labelOffset),
+    });
   }
   const avoid: Rect[] = [sourceRect, targetRect];
   const left = Math.min(sourceRect.x, targetRect.x);
@@ -75,52 +93,48 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
     width: Math.max(sourceRect.x + sourceRect.width, targetRect.x + targetRect.width) - left,
     height: Math.max(sourceRect.y + sourceRect.height, targetRect.y + targetRect.height) - top,
   };
-  const positionOf = (which: Which, saved: number | null) =>
-    dragging?.which === which ? dragging.position : saved;
+  const spotOf = (which: Which, saved: Spot | null): Spot | null =>
+    dragging?.which === which ? dragging : saved;
   const placed = new Map<Which, Point>();
   const reserve = (text: string, at: Point) => {
     const size = labelSize(text);
     avoid.push({ x: at.x - size.width / 2, y: at.y - size.height / 2, ...size });
   };
   for (const { which, text, saved } of wanted) {
-    const position = positionOf(which, saved);
-    if (position === null) continue;
-    const at = pointAlong(from, to, position);
+    const spot = spotOf(which, saved);
+    if (spot === null) continue;
+    const at = pointBeside(from, to, spot.position, spot.offset);
     placed.set(which, at);
     reserve(text, at);
   }
   for (const { which, text, preferred, saved } of wanted) {
-    if (positionOf(which, saved) !== null) continue;
+    if (spotOf(which, saved) !== null) continue;
     const at = placeLabel(from, to, preferred, labelSize(text), avoid, within);
     placed.set(which, at);
     reserve(text, at);
   }
-  const labels = wanted.map(({ which, text, saved }) => ({
-    which,
-    text,
-    saved,
-    at: placed.get(which)!,
-  }));
+  const labels = wanted.map(({ which, text }) => ({ which, text, at: placed.get(which)! }));
 
   const move = (event: React.PointerEvent, which: Which) => {
     const start = press.current;
     if (!start || start.which !== which) return;
-    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 4 && start.position === null) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 4 && start.moved === null) return;
     const at = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
-    const position = Math.round(projectOnLine(from, to, at) * 1000) / 1000;
-    start.position = position;
+    const spot = {
+      position: Math.round(projectOnLine(from, to, at) * 1000) / 1000,
+      offset: Math.round(offsetFromLine(from, to, at)),
+    };
+    start.moved = spot;
     // From the first real move on, the click that ends the press is not a request to edit.
     justDragged.current = true;
-    setDragging({ which, position });
+    setDragging({ which, ...spot });
   };
 
   const drop = () => {
     const start = press.current;
     press.current = null;
     setDragging(null);
-    if (start?.position != null) {
-      onMoveLabel(arrow.id, start.which, start.position);
-    }
+    if (start?.moved) onMoveLabel(arrow.id, start.which, start.moved.position, start.moved.offset);
   };
 
   return (
@@ -147,7 +161,7 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
               if (event.button !== 0) return;
               event.currentTarget.setPointerCapture?.(event.pointerId);
               justDragged.current = false;
-              press.current = { which: label.which, x: event.clientX, y: event.clientY, position: null };
+              press.current = { which: label.which, x: event.clientX, y: event.clientY, moved: null };
             }}
             onPointerMove={(event: React.PointerEvent) => move(event, label.which)}
             onPointerUp={drop}

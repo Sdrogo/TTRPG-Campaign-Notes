@@ -79,6 +79,8 @@ export interface RawMapArrow {
   reverse_label: string | null;
   label_position: number | null;
   reverse_label_position: number | null;
+  label_offset: number | null;
+  reverse_label_offset: number | null;
   color: MapColor;
   master_only: boolean;
 }
@@ -143,6 +145,8 @@ export function toMapDetail(raw: RawMapDetail): RelationshipMapDetail {
       reverseLabel: arrow.reverse_label,
       labelPosition: arrow.label_position,
       reverseLabelPosition: arrow.reverse_label_position,
+      labelOffset: arrow.label_offset,
+      reverseLabelOffset: arrow.reverse_label_offset,
       color: arrow.color,
       masterOnly: arrow.master_only,
     })),
@@ -181,6 +185,9 @@ export function toBoardBody(board: Board) {
       label_position: arrow.label ? arrow.labelPosition : null,
       reverse_label_position:
         arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelPosition : null,
+      label_offset: arrow.label ? arrow.labelOffset : null,
+      reverse_label_offset:
+        arrow.direction === 'both' && arrow.reverseLabel ? arrow.reverseLabelOffset : null,
       color: arrow.color,
       master_only: arrow.masterOnly,
     })),
@@ -433,6 +440,8 @@ export function addArrow(board: Board, from: ArrowEnd, to: ArrowEnd): [Board, st
     reverseLabel: null,
     labelPosition: null,
     reverseLabelPosition: null,
+    labelOffset: null,
+    reverseLabelOffset: null,
     color: 'default',
     masterOnly: false,
   };
@@ -531,6 +540,27 @@ export function projectOnLine(from: Point, to: Point, p: Point): number {
   if (lengthSquared === 0) return 0.5;
   const t = ((p.x - from.x) * dx + (p.y - from.y) * dy) / lengthSquared;
   return Math.min(1, Math.max(0, t));
+}
+
+/**
+ * How far, in the same units as the points, `p` is to the side of the line
+ * from `from` to `to`: positive on the right of the way from `from` to `to`
+ * (on screen, where y grows downward), negative on the left, 0 on the line.
+ */
+export function offsetFromLine(from: Point, to: Point, p: Point): number {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy);
+  if (length === 0) return 0;
+  return ((p.x - from.x) * -dy + (p.y - from.y) * dx) / length;
+}
+
+/** The point `offset` to the side of the way `t` along the line (see `offsetFromLine`). */
+export function pointBeside(from: Point, to: Point, t: number, offset: number): Point {
+  const along = pointAlong(from, to, t);
+  const length = Math.hypot(to.x - from.x, to.y - from.y);
+  if (length === 0) return along;
+  return { x: along.x + (-(to.y - from.y) / length) * offset, y: along.y + ((to.x - from.x) / length) * offset };
 }
 
 /**

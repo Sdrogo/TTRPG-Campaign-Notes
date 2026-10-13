@@ -20,6 +20,8 @@ const arrow: MapArrow = {
   reverseLabel: null,
   labelPosition: null,
   reverseLabelPosition: null,
+  labelOffset: null,
+  reverseLabelOffset: null,
   color: 'default',
   masterOnly: false,
 };

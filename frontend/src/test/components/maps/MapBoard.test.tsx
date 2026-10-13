@@ -95,6 +95,8 @@ const initial: Board = {
       reverseLabel: 'alleato',
       labelPosition: null,
       reverseLabelPosition: null,
+      labelOffset: null,
+      reverseLabelOffset: null,
       color: 'green',
       masterOnly: false,
     },
@@ -107,6 +109,8 @@ const initial: Board = {
       reverseLabel: null,
       labelPosition: null,
       reverseLabelPosition: null,
+      labelOffset: null,
+      reverseLabelOffset: null,
       color: 'default',
       masterOnly: false,
     },
@@ -119,6 +123,8 @@ const initial: Board = {
       reverseLabel: null,
       labelPosition: null,
       reverseLabelPosition: null,
+      labelOffset: null,
+      reverseLabelOffset: null,
       color: 'default',
       masterOnly: false,
     },
@@ -307,13 +313,19 @@ describe('MapBoard', () => {
   it('saves where each label of an arrow was dropped', () => {
     const { last } = renderBoard();
     const data = () => flow.props.edges.find((edge) => edge.id === 'both')!.data as {
-      onMoveLabel: (id: string, which: 'label' | 'reverse', position: number) => void;
+      onMoveLabel: (
+        id: string,
+        which: 'label' | 'reverse',
+        position: number,
+        offset: number,
+      ) => void;
     };
-    act(() => data().onMoveLabel('both', 'label', 0.6));
-    act(() => data().onMoveLabel('both', 'reverse', 0.2));
+    act(() => data().onMoveLabel('both', 'label', 0.6, -15));
+    act(() => data().onMoveLabel('both', 'reverse', 0.2, 40));
     const moved = last().arrows.find((arrow) => arrow.id === 'both')!;
     expect(moved.labelPosition).toBe(0.6);
     expect(moved.reverseLabelPosition).toBe(0.2);
+    expect([moved.labelOffset, moved.reverseLabelOffset]).toEqual([-15, 40]);
   });
 
   it('deletes only what was selected: a group leaves its cards behind', async () => {
