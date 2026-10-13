@@ -207,7 +207,28 @@ export function toMapBody(values: MapFormValues) {
 // --- Looks ------------------------------------------------------------------
 
 /** The theme colors, in the order the pickers offer them. */
-export const MAP_COLORS: MapColor[] = ['default', 'red', 'green', 'purple', 'blue', 'gold'];
+export const MAP_COLORS: MapColor[] = [
+  'default',
+  'red',
+  'green',
+  'purple',
+  'blue',
+  'gold',
+  'orange',
+  'midnight',
+  'silver',
+  'champagne',
+  'rose',
+  'pink',
+  'cobalt',
+  'violet',
+  'emerald',
+  'brown',
+  'lime',
+];
+
+/** How many colors the picker shows before "more colors" (one row). */
+export const MAP_COLORS_VISIBLE = 6;
 
 const COLOR_VALUES: Record<MapColor, string> = {
   default: 'var(--text-primary)',
@@ -216,6 +237,17 @@ const COLOR_VALUES: Record<MapColor, string> = {
   purple: 'var(--mantine-color-grape-5)',
   blue: 'var(--mantine-color-blue-5)',
   gold: 'var(--mantine-color-yellow-5)',
+  orange: '#FF9500',
+  midnight: '#4251B0',
+  silver: '#B5B5AC',
+  champagne: '#C1A470',
+  rose: '#EE86A7',
+  pink: '#E85298',
+  cobalt: '#0079C2',
+  violet: '#8F76D6',
+  emerald: '#00AC9B',
+  brown: '#9C5E31',
+  lime: '#9ACD32',
 };
 
 /** The CSS color a map color stands for, from the theme. */

@@ -696,3 +696,9 @@ def test_an_arrow_end_names_its_card_or_its_group() -> None:
     card_id, group_id = uuid.uuid4(), uuid.uuid4()
     assert ArrowEnd(card_id=card_id).id == card_id
     assert ArrowEnd(group_id=group_id).id == group_id
+
+
+def test_map_colors_fit_their_column_and_include_the_extended_palette() -> None:
+    values = {color.value for color in MapColor}
+    assert {"orange", "midnight", "champagne", "lime"} <= values
+    assert all(len(value) <= 10 for value in values)

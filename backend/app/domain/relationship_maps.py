@@ -58,6 +58,17 @@ class MapColor(StrEnum):
     PURPLE = "purple"
     BLUE = "blue"
     GOLD = "gold"
+    ORANGE = "orange"
+    MIDNIGHT = "midnight"
+    SILVER = "silver"
+    CHAMPAGNE = "champagne"
+    ROSE = "rose"
+    PINK = "pink"
+    COBALT = "cobalt"
+    VIOLET = "violet"
+    EMERALD = "emerald"
+    BROWN = "brown"
+    LIME = "lime"
 
 
 class CardSize(StrEnum):
