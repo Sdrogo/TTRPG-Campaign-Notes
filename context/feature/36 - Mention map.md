@@ -83,7 +83,7 @@
     next to Export and History, with a tooltip. Hidden when the user can't
     create maps, disabled (with a tooltip "No mentions yet") when the
     Document mentions nothing and nothing mentions it, in a way the user
-    sees. A click asks nothing: it creates the map and opens it full page
+    sees (the preview route of 36_1 says so). A click asks nothing: it creates the map and opens it full page
     (`RelationshipMapPage`), with a short notice ("Map created from 14
     mentions") and the "left out" count when there is one. The button is
     shown on phones too: the map is created there and can be viewed, only
@@ -125,21 +125,35 @@
   `save_board` write, under the map's row lock), and answers `201` with
   `map_id`, `documents_added`, `documents_left_out`, `relations_added`,
   `relations_left_out`. Refused in View As like every write.
-- `GET /rooms/{id}/documents/{doc_id}` gains nothing; the button's
-  "disabled" state uses the Backlinks query and the Document's own text.
-  *Alternative*: a `mention_count` field.
+- When there is nothing to add (no other Document passes Decisions 3 and
+  9 for the creator), the `POST` creates nothing and answers **409**
+  (`nothing_to_map`), so a stale click never makes a one-card map.
+- **Preview** `GET /rooms/{id}/documents/{doc_id}/mention-map` (members
+  only; 404 when the viewer can't see the Document; follows `X-View-As`):
+  `{documents, relations}`, the counts the `POST` would add for this
+  viewer, computed by the same functions with the same filters (one source
+  of truth). It is the button's state (Decision 11): the frontend never
+  parses mentions itself, since outgoing mentions sit in Notes and lazily
+  loaded Comments, and mentions of hidden Documents must not count
+  (VR-07). Both routes share one query path, so the preview costs what a
+  generation costs minus the writes.
 - Tests at 100%: A mentions B and C, D mentions A, B mentions C gives four
   relations (A→B, A→C, D→A, B→C), and A↔B becomes one `both` when B also
   mentions A; a Player's generated map holds no Document they can't see and no
   relation from a hidden Note; a Master's holds it as Master only; a
   mention in a Selective Comment the Player sees is still left out of the
   Player's map; caps and "left out" counts; Tag mentions ignored; a
-  Document of another Room never added; the 100-maps cap; View As refused.
+  Document of another Room never added; the preview's counts equal what the
+  `POST` adds, for a Master and a Player; 409 and no map when there is
+  nothing to add; the 100-maps cap; View As refused.
 
 ### Frontend (36_2)
 
 - `DocumentDetailPage`: the header icon button (Decision 11), a
-  `useCreateMentionMap` mutation; on success the maps list query is
+  `useMentionMapPreview` query (the preview route, refetched after a
+  description, Note or Comment is saved) for its state, and a
+  `useCreateMentionMap` mutation (a 409 shows "No mentions yet" and
+  refreshes the preview); on success the maps list query is
   invalidated and the page navigates to the new map with a notification.
 - `RelationshipMapPage`: nothing new; the map is a normal map.
 - New strings in `en.json`, `it.json` and the other UI languages (spec 34:
