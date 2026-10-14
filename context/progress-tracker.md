@@ -31,6 +31,12 @@ detail:
   modal shows a labelled loader while the preview loads, and the preview is
   not retried, so an error shows at once; before, the Create button just
   looked disabled (seen on staging while the backend had not deployed yet).
+- **Mention map: only ties to the center, compact layout** (36 follow-up,
+  2026-10-14, product owner after a real Room): the map draws only the
+  relation tying each card to the card that brought it in (the center on
+  the first ring), no cross relations; the first ring is packed in
+  concentric rings one card apart instead of four fixed 90° sectors. No
+  migration; saved card positions keep winning.
 - **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
   Room PDF style, `parchment`, modeled on a fantasy monster compendium the
   product owner shared: parchment-colored pages, brown small-capital
