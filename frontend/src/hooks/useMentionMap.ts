@@ -42,7 +42,11 @@ export function useMentionMap(roomId: string, documentId: string) {
   });
 }
 
-/** What a mention map at `depth` would hold for the viewer (Decision 11). */
+/**
+ * What a mention map at `depth` would hold for the viewer (Decision 11). Not
+ * retried: the Create button waits on it, so a failure is shown at once
+ * instead of after several silent attempts.
+ */
 export function useMentionMapPreview(roomId: string, documentId: string, depth: number, enabled: boolean) {
   return useQuery<MentionMapPreview>({
     queryKey: [...mentionMapQueryKey(roomId, documentId), 'preview', depth],
@@ -51,6 +55,7 @@ export function useMentionMapPreview(roomId: string, documentId: string, depth: 
         await apiFetch<RawMentionMapPreview>(`${mentionMapPath(roomId, documentId)}/preview?depth=${depth}`),
       ),
     enabled,
+    retry: false,
   });
 }
 

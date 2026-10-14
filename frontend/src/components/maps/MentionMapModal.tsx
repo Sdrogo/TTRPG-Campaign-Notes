@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Group, Input, Modal, SegmentedControl, Stack, Text } from '@mantine/core';
+import { Button, Group, Input, Loader, Modal, SegmentedControl, Stack, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -56,6 +56,7 @@ export function MentionMapModal({
             aria-label={t('maps.mention.depth')}
           />
         </Input.Wrapper>
+        {preview.isLoading && <Loader size="xs" />}
         {preview.data && (
           <Text size="sm" c={empty ? 'dimmed' : undefined} role="status">
             {empty
