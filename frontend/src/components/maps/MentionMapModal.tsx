@@ -56,7 +56,7 @@ export function MentionMapModal({
             aria-label={t('maps.mention.depth')}
           />
         </Input.Wrapper>
-        {preview.isLoading && <Loader size="xs" />}
+        {preview.isLoading && <Loader size="xs" aria-label={t('maps.mention.previewLoading')} />}
         {preview.data && (
           <Text size="sm" c={empty ? 'dimmed' : undefined} role="status">
             {empty

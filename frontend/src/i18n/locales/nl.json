@@ -950,6 +950,7 @@
       "depth": "Diepte",
       "depthHelp": "0 toont alleen de documenten die direct met dit document verbonden zijn; elke stap voegt de volgende ring vermeldingen toe.",
       "preview": "Documenten: {{documents}} · Relaties: {{relations}}",
+      "previewLoading": "Voorbeeld laden",
       "leftOut": "Niet getoond, omdat een kaart 150 kaarten bevat: {{number}}",
       "nothingYet": "Nog geen vermeldingen",
       "create": "Kaart maken",
