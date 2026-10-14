@@ -67,12 +67,12 @@ here and remind the product owner.
 - **Staging database**: `c6e2a9f4d8b3` (= head, mention maps, applied by hand
   2026-10-14 with `.env.staging` loaded; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `b4d8f2a6c1e7`. Applied 2026-10-13 with
-  `alembic upgrade head` and `backend/.env` loaded: `a9e3c5d7b1f4` (map label
-  positions) and `b4d8f2a6c1e7` (map label offsets), from `d5a1c8e3f2b7`
+- **Production database**: `c6e2a9f4d8b3` (= head). Applied 2026-10-15 with
+  `alembic upgrade head` and `backend/.env` loaded: `c6e2a9f4d8b3` (mention
+  maps), from `b4d8f2a6c1e7`. Before it, on 2026-10-13: `a9e3c5d7b1f4` (map
+  label positions) and `b4d8f2a6c1e7` (map label offsets), from `d5a1c8e3f2b7`
   (map card image, applied earlier).
-- **Pending on production**: `c6e2a9f4d8b3` (mention maps), before the release
-  to `main` that ships spec 36.
+- **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
 `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
