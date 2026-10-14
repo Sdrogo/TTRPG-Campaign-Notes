@@ -321,6 +321,11 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
+- **36, Mention map** (spec written 2026-10-14, not built): a button on
+  the Document page generates a relationship map with the Document, every
+  Document it mentions and every Document that mentions it, relations
+  drawn from the mentions. Defaults to confirm in the spec PR. No
+  migration.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still
