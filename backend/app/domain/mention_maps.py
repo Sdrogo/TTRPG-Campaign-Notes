@@ -1,0 +1,341 @@
+"""Mention maps (spec 36): a Document's live relationship map, computed from
+its mentions every time it is read. Only the depth and the cards someone
+moved or recolored are stored; the Documents and relations come from the
+mentions the viewer sees (Decision 7), so a hidden mention never draws an
+arrow, and a Document reachable only through one is not on the map.
+
+Everything here is pure: the routes collect the visible mentions, step by
+step, and hand them over as links."""
+
+import math
+import uuid
+from collections import Counter
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from enum import StrEnum
+
+from app.domain.errors import DomainError
+from app.domain.relationship_maps import (
+    MAX_CARDS_PER_MAP,
+    ArrowDirection,
+    ArrowEnd,
+    CardSize,
+    MapArrow,
+    MapCard,
+    MapColor,
+)
+
+MAX_MENTION_DEPTH = 3
+"""Decision 2: at most three steps past the first level."""
+
+CENTER_COLOR = MapColor.GOLD
+"""Decision 6: the center Document's card stands out in gold."""
+
+# Decision 6, in board pixels: a card is 160 wide and up to 240 tall (an
+# image card, `DocumentCardNode`); SLOT is the room one card takes along a
+# ring, so neighbors never overlap, even on the left and right where they
+# stack vertically.
+CARD_WIDTH = 160
+CARD_HEIGHT = 240
+SLOT = 280
+FIRST_RING_RADIUS = 340
+RING_GAP = 320
+
+
+class MentionDepthError(DomainError):
+    """Decision 2: the depth is a whole number from 0 to 3. Answered with
+    422."""
+
+
+class NothingToMapError(DomainError):
+    """Decision 11: the Document has no mention the user sees, so a map
+    would hold only its own card; nothing is created. Answered with 409."""
+
+
+class Side(StrEnum):
+    """Where a first-ring card sits around the center (Decision 6): the
+    Documents that only mention it on the left, those it only mentions on
+    the right, mutual ones at the top and bottom."""
+
+    MENTIONS_CENTER = "left"
+    MENTIONED_BY_CENTER = "right"
+    MUTUAL = "mutual"
+
+
+@dataclass(frozen=True)
+class GraphCard:
+    """A Document on the map: `step` 0 is the center, 1 the first ring;
+    `parent_id` is the card that brought it in (None for the center)."""
+
+    document_id: uuid.UUID
+    step: int
+    parent_id: uuid.UUID | None
+
+
+@dataclass(frozen=True)
+class GraphRelation:
+    """A relation between two cards (Decisions 4, 5): `from_id` mentions
+    `to_id`, or they mention each other (`BOTH`)."""
+
+    from_id: uuid.UUID
+    to_id: uuid.UUID
+    direction: ArrowDirection
+
+
+@dataclass(frozen=True)
+class MentionGraph:
+    """The cards and relations of a mention map as one viewer sees it, and
+    how many Documents the 150-card cap left out (Decision 10)."""
+
+    cards: Sequence[GraphCard]
+    relations: Sequence[GraphRelation]
+    left_out: int
+
+
+def ensure_something_to_map(graph: MentionGraph) -> None:
+    """Decision 11: refuses a map with no relation the user sees."""
+    if not graph.relations:
+        raise NothingToMapError("errors.mentionMap.nothingToMap")
+
+
+def ensure_depth(depth: int) -> int:
+    """`depth` once it is within Decision 2's bounds, else
+    `MentionDepthError`."""
+    if not 0 <= depth <= MAX_MENTION_DEPTH:
+        raise MentionDepthError("errors.mentionMap.invalidDepth")
+    return depth
+
+
+def next_ring(
+    frontier: Iterable[uuid.UUID],
+    links: Iterable[tuple[uuid.UUID, uuid.UUID]],
+    known: Iterable[uuid.UUID],
+) -> set[uuid.UUID]:
+    """The Documents one mention away from `frontier`, in either direction,
+    that aren't already `known` (Decision 3: never repeated)."""
+    frontier_ids = set(frontier)
+    seen = set(known)
+    found: set[uuid.UUID] = set()
+    for source, target in links:
+        if source in frontier_ids and target not in seen:
+            found.add(target)
+        if target in frontier_ids and source not in seen:
+            found.add(source)
+    return found
+
+
+def mention_graph(
+    center_id: uuid.UUID,
+    depth: int,
+    links: Iterable[tuple[uuid.UUID, uuid.UUID]],
+    names: Mapping[uuid.UUID, str],
+    limit: int = MAX_CARDS_PER_MAP,
+) -> MentionGraph:
+    """The map around `center_id` (Decisions 2 to 5, 10). `links` holds one
+    `(source, target)` pair per visible mention (repeats count how strongly
+    two Documents are linked); `names` the Documents' names, for a stable
+    order. Rings are walked breadth-first, `depth + 1` of them; each card
+    remembers the first card of the previous ring (by name) that reached it.
+    Past `limit` cards the nearest rings win, then the Documents with the
+    most mentions, then by name. Every pair of kept cards linked by a
+    mention gets one relation, two-way when they mention each other."""
+    counts = Counter((source, target) for source, target in links if source != target)
+    neighbors: dict[uuid.UUID, set[uuid.UUID]] = {}
+    for source, target in counts:
+        neighbors.setdefault(source, set()).add(target)
+        neighbors.setdefault(target, set()).add(source)
+    weight: Counter[uuid.UUID] = Counter()
+    for (source, target), count in counts.items():
+        weight[source] += count
+        weight[target] += count
+
+    def order(document_id: uuid.UUID) -> tuple[str, str]:
+        """By name, then id, so equal names keep a fixed order."""
+        return (names.get(document_id, "").casefold(), str(document_id))
+
+    cards = [GraphCard(center_id, 0, None)]
+    known = {center_id}
+    ring = [center_id]
+    for step in range(1, depth + 2):
+        reached: dict[uuid.UUID, uuid.UUID] = {}
+        for parent in sorted(ring, key=order):
+            for document_id in sorted(neighbors.get(parent, ()), key=order):
+                if document_id not in known and document_id not in reached:
+                    reached[document_id] = parent
+        if not reached:
+            break
+        cards.extend(GraphCard(d, step, p) for d, p in reached.items())
+        known.update(reached)
+        ring = list(reached)
+
+    ranked = sorted(cards, key=lambda c: (c.step, -weight[c.document_id], *order(c.document_id)))
+    kept = ranked[:limit]
+    kept_ids = {card.document_id for card in kept}
+    relations: list[GraphRelation] = []
+    for source, target in sorted(counts, key=lambda pair: (*order(pair[0]), *order(pair[1]))):
+        if source not in kept_ids or target not in kept_ids:
+            continue
+        if (target, source) in counts:
+            if order(source) < order(target):
+                relations.append(GraphRelation(source, target, ArrowDirection.BOTH))
+            continue
+        relations.append(GraphRelation(source, target, ArrowDirection.FORWARD))
+    return MentionGraph(cards=kept, relations=relations, left_out=len(cards) - len(kept))
+
+
+def first_ring_side(center_id: uuid.UUID, document_id: uuid.UUID, graph: MentionGraph) -> Side:
+    """Decision 6: which side of the center a first-ring card takes."""
+    for relation in graph.relations:
+        if {relation.from_id, relation.to_id} != {center_id, document_id}:
+            continue
+        if relation.direction == ArrowDirection.BOTH:
+            return Side.MUTUAL
+        if relation.from_id == center_id:
+            return Side.MENTIONED_BY_CENTER
+        return Side.MENTIONS_CENTER
+    # Only reachable when the cap cut the relation's other end: never for a
+    # first-ring card, whose center is always kept.
+    return Side.MUTUAL  # pragma: no cover
+
+
+def _spread(count: int, start: float, end: float) -> list[float]:
+    """`count` angles evenly inside the sector from `start` to `end`."""
+    step = (end - start) / count
+    return [start + step * (index + 0.5) for index in range(count)]
+
+
+def _place_around(desired: Sequence[float], gap: float) -> list[float]:
+    """Angles as close as possible to `desired` (sorted) with at least `gap`
+    between neighbors; evenly around the circle when they don't fit."""
+    placed: list[float] = []
+    for angle in desired:
+        placed.append(angle if not placed else max(angle, placed[-1] + gap))
+    if placed and placed[-1] - placed[0] > 2 * math.pi - gap:
+        step = 2 * math.pi / len(placed)
+        return [placed[0] + step * index for index in range(len(placed))]
+    return placed
+
+
+def ring_layout(
+    graph: MentionGraph, names: Mapping[uuid.UUID, str]
+) -> dict[uuid.UUID, tuple[float, float]]:
+    """Decision 6: each card's top-left corner on the board. The center at
+    the origin; the first ring split in four sectors (mutual ones at the
+    top, those the center mentions on the right, mutual ones at the bottom,
+    those mentioning it on the left), by name inside each; each further
+    ring wider, each card near the angle of the card that brought it in.
+    Rings grow with their number of cards, so cards never overlap.
+    Deterministic for a given graph."""
+    centers: dict[uuid.UUID, tuple[float, float]] = {}
+    angles: dict[uuid.UUID, float] = {}
+    center = next(card for card in graph.cards if card.step == 0)
+    centers[center.document_id] = (0.0, 0.0)
+
+    def order(document_id: uuid.UUID) -> tuple[str, str]:
+        """By name, then id."""
+        return (names.get(document_id, "").casefold(), str(document_id))
+
+    radius = 0.0
+    last_step = max(card.step for card in graph.cards)
+    for step in range(1, last_step + 1):
+        ring = [card for card in graph.cards if card.step == step]
+        if step == 1:
+            sides: dict[Side, list[uuid.UUID]] = {side: [] for side in Side}
+            for card in sorted(ring, key=lambda c: order(c.document_id)):
+                sides[first_ring_side(center.document_id, card.document_id, graph)].append(
+                    card.document_id
+                )
+            mutual = sides[Side.MUTUAL]
+            top, bottom = mutual[: (len(mutual) + 1) // 2], mutual[(len(mutual) + 1) // 2 :]
+            # Screen coordinates: y grows downwards, so -90° is the top.
+            sectors = [
+                (top, -135.0, -45.0),
+                (sides[Side.MENTIONED_BY_CENTER], -45.0, 45.0),
+                (bottom, 45.0, 135.0),
+                (sides[Side.MENTIONS_CENTER], 135.0, 225.0),
+            ]
+            crowded = max(len(ids) for ids, _, _ in sectors)
+            radius = max(FIRST_RING_RADIUS, crowded * SLOT / (math.pi / 2))
+            for ids, start, end in sectors:
+                if ids:
+                    for document_id, angle in zip(
+                        ids, _spread(len(ids), math.radians(start), math.radians(end)), strict=True
+                    ):
+                        angles[document_id] = angle
+        else:
+            radius = max(radius + RING_GAP, len(ring) * SLOT / (2 * math.pi))
+            wanted = sorted(
+                ring,
+                key=lambda c: (angles[c.parent_id or center.document_id], *order(c.document_id)),
+            )
+            placed = _place_around(
+                [angles[card.parent_id or center.document_id] for card in wanted], SLOT / radius
+            )
+            for card, angle in zip(wanted, placed, strict=True):
+                angles[card.document_id] = angle
+        for card in ring:
+            angle = angles[card.document_id]
+            centers[card.document_id] = (radius * math.cos(angle), radius * math.sin(angle))
+    return {
+        document_id: (round(x - CARD_WIDTH / 2), round(y - CARD_HEIGHT / 2))
+        for document_id, (x, y) in centers.items()
+    }
+
+
+def mention_card_id(map_id: uuid.UUID, document_id: uuid.UUID) -> uuid.UUID:
+    """A Document card's id on a mention map: the same on every read, so the
+    board and a saved position agree."""
+    return uuid.uuid5(map_id, f"card:{document_id}")
+
+
+def mention_arrow_id(map_id: uuid.UUID, relation: GraphRelation) -> uuid.UUID:
+    """A relation's id on a mention map, the same on every read."""
+    return uuid.uuid5(map_id, f"arrow:{relation.from_id}:{relation.to_id}")
+
+
+def mention_board(
+    map_id: uuid.UUID,
+    graph: MentionGraph,
+    names: Mapping[uuid.UUID, str],
+    saved: Iterable[MapCard],
+) -> tuple[list[MapCard], list[MapArrow]]:
+    """The map's cards and relations as spec 28 cards and arrows (Decisions
+    5, 6, 9): a card someone moved or recolored keeps its saved place and
+    color, every other card takes `ring_layout`'s place and the default
+    color (gold for the center); relations have no label."""
+    saved_cards = {card.document_id: card for card in saved}
+    positions = ring_layout(graph, names)
+    cards: list[MapCard] = []
+    for card in graph.cards:
+        stored = saved_cards.get(card.document_id)
+        x, y = positions[card.document_id]
+        color = CENTER_COLOR if card.step == 0 else MapColor.DEFAULT
+        cards.append(
+            MapCard(
+                id=mention_card_id(map_id, card.document_id),
+                document_id=card.document_id,
+                text=None,
+                group_id=None,
+                caption=None,
+                size=CardSize.NORMAL,
+                master_only=False,
+                color=stored.color if stored is not None else color,
+                struck=False,
+                x=stored.x if stored is not None else x,
+                y=stored.y if stored is not None else y,
+            )
+        )
+    arrows = [
+        MapArrow(
+            id=mention_arrow_id(map_id, relation),
+            from_end=ArrowEnd(card_id=mention_card_id(map_id, relation.from_id)),
+            to_end=ArrowEnd(card_id=mention_card_id(map_id, relation.to_id)),
+            direction=relation.direction,
+            label=None,
+            reverse_label=None,
+            color=MapColor.DEFAULT,
+            master_only=False,
+        )
+        for relation in graph.relations
+    ]
+    return cards, arrows

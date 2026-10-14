@@ -9,7 +9,12 @@ export type NodeActions = {
   onEdit: (id: string) => void;
 };
 
-export type DocumentCardNodeData = NodeActions & { card: MapCard; roomId: string };
+export type DocumentCardNodeData = NodeActions & {
+  card: MapCard;
+  roomId: string;
+  /** False on a mention map (spec 36), whose relations come from mentions only. */
+  connectable?: boolean;
+};
 export type TextCardNodeData = NodeActions & { card: MapCard };
 export type GroupNodeData = NodeActions & {
   group: MapGroup;

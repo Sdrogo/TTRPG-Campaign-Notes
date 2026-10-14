@@ -923,6 +923,22 @@
       "label": "ラベル",
       "labelTowards": "{{name}}向けのラベル",
       "delete": "関係を削除"
+    },
+    "mention": {
+      "button": "言及マップ",
+      "title": "言及マップ",
+      "depth": "深さ",
+      "depthHelp": "0 はこのドキュメントに直接つながるドキュメントだけを表示します。1 段階ごとに次の言及の輪が加わります。",
+      "preview": "ドキュメント: {{documents}} · 関係: {{relations}}",
+      "leftOut": "マップには 150 枚までしか置けないため非表示: {{number}}",
+      "nothingYet": "まだ言及がありません",
+      "create": "マップを作成",
+      "copy": "自由なマップとしてコピー",
+      "copyName": "{{name}} の言及",
+      "fullScreen": "全画面",
+      "backToDocument": "ドキュメントに戻る",
+      "deleteConfirmBody": "ドキュメントとその言及は残ります。",
+      "loadError": "言及マップを読み込めませんでした。"
     }
   }
 }

@@ -136,3 +136,29 @@ export interface MapFormValues {
   visibility: DocumentVisibility;
   selectiveUserIds: string[];
 }
+
+/**
+ * A Document's live mention map (spec 36) as the viewer sees it: computed from
+ * the mentions they see on every load. It has no groups; `canManage` lets its
+ * creator and the Master change the depth, move and recolor cards, copy or
+ * delete it.
+ */
+export interface MentionMap extends Board {
+  id: string;
+  documentId: string;
+  /** How many steps past the first level it follows mentions (0 to 3). */
+  depth: number;
+  createdBy: string;
+  updatedAt: string;
+  canManage: boolean;
+  /** Documents past the 150-card cap, not drawn. */
+  documentsLeftOut: number;
+}
+
+/** What a mention map at a depth would hold for the viewer (Decision 11). */
+export interface MentionMapPreview {
+  /** The other Documents, the center left out. */
+  documents: number;
+  relations: number;
+  documentsLeftOut: number;
+}

@@ -21,6 +21,12 @@ detail:
   30/30b (read aloud with the browser's voices, best installed voice by
   default, first reading waits for the voice list, PRs #146, #148, #154).
   Neither has a migration.
+- **Spec 36, Mention map** (2026-10-14, PR #188, migration
+  `c6e2a9f4d8b3`): a live map per Document of the Documents it mentions or
+  is mentioned by, depth 0 to 3 picked in a modal, computed from the visible
+  mentions on every read and drawn under the Document's images; full screen
+  page to move and recolor cards, copy as a free map. Built (36_1 backend,
+  36_2 frontend); *proposed* decisions in the spec to confirm in the PR.
 - **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
   Room PDF style, `parchment`, modeled on a fantasy monster compendium the
   product owner shared: parchment-colored pages, brown small-capital
@@ -52,7 +58,8 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `b4d8f2a6c1e7` (map label offsets, spec 28_3).
+- **Head in the repository**: `c6e2a9f4d8b3` (mention maps, spec 36, PR #188).
+- **Pending on staging**: `c6e2a9f4d8b3`, before PR #188 merges.
 - **Staging database**: `b4d8f2a6c1e7` (applied by hand 2026-10-13, with
   `.env.staging` loaded; `a9e3c5d7b1f4` before it, same day, and
   `d5a1c8e3f2b7` before that, applied 2026-10-12).
@@ -63,7 +70,7 @@ here and remind the product owner.
 - **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
-`b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←

@@ -131,7 +131,9 @@ class BoardImageNotFoundError(DomainError):
 @dataclass(frozen=True)
 class RelationshipMap:
     """A map of a Room. Its creator is its "Owner" for the visibility levels
-    and, with the Master, may change it (Decision 2)."""
+    and, with the Master, may change it (Decision 2). With
+    `source_document_id` it is that Document's live mention map (spec 36),
+    following mentions `mention_depth` steps past the first level."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -141,6 +143,8 @@ class RelationshipMap:
     created_by: uuid.UUID
     created_at: datetime
     updated_at: datetime
+    source_document_id: uuid.UUID | None = None
+    mention_depth: int | None = None
 
 
 @dataclass(frozen=True)

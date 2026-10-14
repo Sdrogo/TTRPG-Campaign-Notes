@@ -217,6 +217,12 @@
         "label": "label",
         "groupTitle": "titel van de groep"
       }
+    },
+    "mentionMap": {
+      "notFound": "Dit document heeft geen vermeldingskaart",
+      "alreadyExists": "Dit document heeft al een vermeldingskaart",
+      "nothingToMap": "Nog geen vermeldingen: de kaart zou alleen dit document bevatten",
+      "invalidDepth": "De diepte moet een geheel getal van 0 tot 3 zijn"
     }
   },
   "pdf": {

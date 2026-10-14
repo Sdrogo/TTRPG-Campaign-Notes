@@ -217,6 +217,12 @@
         "label": "레이블",
         "groupTitle": "그룹 제목"
       }
+    },
+    "mentionMap": {
+      "notFound": "이 문서에는 언급 지도가 없습니다",
+      "alreadyExists": "이 문서에는 이미 언급 지도가 있습니다",
+      "nothingToMap": "아직 언급이 없습니다: 맵에는 이 문서만 표시됩니다",
+      "invalidDepth": "깊이는 0에서 3까지의 정수여야 합니다"
     }
   },
   "pdf": {
