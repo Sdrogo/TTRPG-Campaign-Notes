@@ -217,6 +217,12 @@
         "label": "étiquette",
         "groupTitle": "titre du groupe"
       }
+    },
+    "mentionMap": {
+      "notFound": "Ce document n'a pas de carte des mentions",
+      "alreadyExists": "Ce document a déjà une carte des mentions",
+      "nothingToMap": "Aucune mention pour l'instant : la carte ne contiendrait que ce document",
+      "invalidDepth": "La profondeur doit être un nombre entier de 0 à 3"
     }
   },
   "pdf": {
