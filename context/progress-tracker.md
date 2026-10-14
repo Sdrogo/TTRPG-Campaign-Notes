@@ -339,6 +339,10 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
+- **37, Document preview and split view** (spec written 2026-10-14, not
+  built): hover preview on map cards, a click menu (half screen or open the
+  Document) on maps, mentions and the Documents page, resizable split view.
+  Frontend only. Main points from the product owner; the rest *proposed*.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still
