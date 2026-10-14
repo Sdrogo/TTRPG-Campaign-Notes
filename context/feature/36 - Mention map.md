@@ -6,183 +6,220 @@
   with that Document and all the other Documents that are Mentioned or are
   mentioning it. So we create a fully populated Relational Map for that
   Document."
-- One click on a Document's page builds a **relationship map** (spec 28)
-  already filled in: the Document in the middle, every Document it mentions
-  and every Document that mentions it around it, and the mentions drawn as
-  relations between the cards.
+- A Document can get its own **mention map**: a board with the Document in
+  the middle, every Document it mentions and every Document that mentions
+  it around it (and, on request, the next steps out), and the mentions drawn
+  as relations between the cards.
+- The map is **live** (product owner, 2026-10-14): once generated it follows
+  the mentions, so writing or removing a `#mention` changes it with no other
+  action. It is **shown on the Document's page, under the Document's
+  images**, drawn as a board.
 - It reuses what exists: the mentions index `document_mentions` (spec 20,
   filled on save from descriptions, Notes and Comments) and the maps tables
-  and board of spec 28. It adds no new kind of object.
+  and board components of spec 28.
 - `requirements.md` has no requirement for maps yet (spec 28); this ticket
   adds none. A `FR-` entry is added only at the product owner's request.
 
-## Decisions (proposed 2026-10-14, confirm in the PR)
+## Decisions
 
-1. **A new, ordinary map (a snapshot)**: generating creates a new map in the
-   Room, named "Mentions of *Document name*" (≤100, cut with "…"), with
-   the creator as its owner, exactly like a map made by hand. From then on
-   it is a free board (spec 28 Decision 1): the user moves cards, adds or
-   removes relations, renames it. It does **not** follow later mentions on
-   its own; generating again makes another map. *Alternative*: a live map
-   that re-reads the mentions on every open (more code, and the user's own
-   edits would have to be merged with it), or a "Refresh from mentions"
-   button on a generated map (a later ticket, 36b, needs a
-   `relationship_maps.source_document_id` column).
-2. **Who**: whoever may create a map (spec 28 Decision 2: every member,
-   unless the Room disables Document creation by Players, D-13). The map
-   starts at the Room's default visibility, like any new map; the 100-maps
-   cap applies (409).
-3. **Which Documents (one step only)**: the Document itself, the Documents
-   its description, Notes and Comments mention, and the Documents whose
-   description, Notes or Comments mention it. Only Documents of the Room
-   that the **creator** sees, and only mentions in places the creator sees
-   (the "Mentioned in" rules, spec 20 Decision 5). Tag mentions are left
-   out: a Tag is not a card. Mentions of mentions (two steps away) are not
-   followed. *Alternative*: a "depth 2" option.
-4. **Which relations ("fully populated")**: one relation for every pair of
-   cards on the map where one mentions the other, **including pairs that
-   don't involve the center** (if Mira and Thorn both appear and Mira
-   mentions Thorn, that relation is drawn too). *Alternative*: only the
-   relations that touch the center Document, a plain star.
-5. **Direction = mention direction**: A mentions B gives an arrow A → B
-   (`forward`, from the mentioning card). A and B mentioning each other give
-   **one two-way arrow** (`both`), not two. Several mentions between the same
-   two Documents (description and two Notes) still make one relation.
-6. **Labels**: none by default; the arrows speak for themselves and the user
-   writes labels afterwards. *Alternative*: "mentions" on each one (in the
-   creator's UI language), which would clutter a big map.
-7. **Look**: default color for every card and relation, no groups, no text
-   cards. The center Document's card is the only one in a color (gold
-   `#C1A470` from the spec 28 palette) so it stands out. Card images and
-   captions follow spec 28 Decision 8 (favorite image, subtitle).
-8. **Layout (automatic, on the server)**: the center Document in the
-   middle, the others on a ring around it, sorted by name, evenly spaced;
-   past 16 cards a second, wider ring. Spacing comes from the card size so
-   cards never overlap. To read the map at a glance, Documents that only
-   mention the center sit on the left half, Documents the center only
-   mentions on the right half, and those that go both ways at the top and
-   bottom. No layout library (spec 28 chose none). The user moves cards
-   freely afterwards.
-9. **Hidden mentions never leak (Invariant 1, VR-07)**: a relation is only
-   as visible as the place the mention is written in. A relation is drawn as
-   a normal relation when at least one mention behind it is in a
-   **description**, or in a Note or Comment visible to **every member**
-   (`room` level through its whole chain). A relation that rests only on
-   Master-only, Private or Selective Notes and Comments is marked **Master
-   only** when the creator is a Master, and **left out** when the creator is
-   a Player. So a Player who sees both Documents but not the secret Note
-   never learns, from an arrow, that one mentions the other. Cards follow
-   spec 28 Decision 4 as usual (a Document hidden from a viewer is absent,
-   with its arrows).
-10. **Limits**: the spec 28 caps hold (150 cards, 400 relations a map). With
-    more than 149 related Documents, the ones linked by the most mentions
-    are kept (then by name), and the user is told how many were left out
-    ("149 Documents added, 12 left out: a map holds 150"). Relations past
-    400 are dropped the same way (fewest mentions first). Nothing ever fails silently.
-11. **Where**: a **"Mentions map"** icon button in the Document page header,
-    next to Export and History, with a tooltip. Hidden when the user can't
-    create maps, disabled (with a tooltip "No mentions yet") when the
-    Document mentions nothing and nothing mentions it, in a way the user
-    sees (the preview route of 36_1 says so). A click asks nothing: it creates the map and opens it full page
-    (`RelationshipMapPage`), with a short notice ("Map created from 14
-    mentions") and the "left out" count when there is one. The button is
-    shown on phones too: the map is created there and can be viewed, only
-    edited from a wider screen (spec 28 Decision 13).
-12. **Master's "View as"** (spec 22b): the button is hidden, as every write
-    is in View As.
-13. **Not in scope**: a refresh of a generated map (see Decision 1), depth
-    2, Tag cards, a map generated from a Tag or from search results.
+Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
+
+1. **A live map, one per Document**: generating creates a mention map tied
+   to the Document. Its Documents and relations are **never stored**: they
+   are computed from the mentions every time the map is read, so a new
+   mention shows on the next load and a removed one disappears. What is
+   stored is only what a person chose: the depth (Decision 2) and the place
+   and color of each card someone moved or recolored. A Document has at most
+   one mention map (*proposed*; the header button then opens the settings of
+   the existing one, Decision 11).
+2. **Depth, chosen in the creation modal** (product owner): "how many steps
+   to go", **default 0** = only the first level (the Document's direct
+   mentions in both directions). Each extra step adds the Documents that
+   mention or are mentioned by the previous ring. *Proposed*: up to 3 extra
+   steps, changeable later in the same modal by whoever manages the map. A
+   step follows mentions in **both** directions, like the first level.
+3. **Which Documents**: Documents of the Room only; **no Tags** (product
+   owner). The sources are the ones of "Mentioned in" (spec 20 Decision 3):
+   descriptions, Notes and Comments. A Document reached at an earlier step
+   is never repeated.
+4. **Fully populated** (product owner): one relation for every pair of cards
+   on the map where one mentions the other, including pairs that don't
+   involve the center Document.
+5. **Direction = mention direction** (product owner): A mentions B gives an
+   arrow A → B; A and B mentioning each other give **one two-way arrow**.
+   Several mentions between the same two Documents make one relation. No
+   labels; default color.
+6. **Look and layout** (product owner): the center Document's card is gold
+   (`#C1A470`, spec 28 palette), the others default. The center sits in the
+   middle; on the first ring the Documents that only mention it are on the
+   left, those it only mentions on the right, mutual ones at the top and
+   bottom, sorted by name. Each further step is a wider ring, each card
+   placed near the angle of the card that brought it in. Spacing comes from
+   the card size so cards never overlap. Card images and captions follow
+   spec 28 Decision 8 (favorite image, subtitle).
+7. **Hidden mentions never leak (Invariant 1, VR-07)** (product owner): a
+   relation is only as visible as the place the mention is written in. For
+   each viewer, computed on read:
+   - a mention counts only when the viewer sees its source Document and,
+     for a Note or Comment, that Note or the Comment through its whole
+     chain (the "Mentioned in" filter), and sees its target Document;
+   - the steps (Decision 2) only follow relations the viewer sees, so a
+     Document reachable only through a hidden mention is not on that
+     viewer's map, and no card ever floats there without a visible reason;
+   - so the Master sees every relation, and a Player who sees two Documents
+     but not the secret Note linking them sees no arrow between them.
+
+   Since the map is computed per viewer, there is no "Master only" flag to
+   set: a relation simply exists for whoever sees the mention behind it.
+8. **Who sees the map**: whoever sees the Document (*proposed*): the map has
+   no visibility level of its own, it is part of the Document's page, and
+   Decision 7 filters what is on it. It follows the Master's "View as"
+   (spec 22b), read-only there.
+9. **Who manages it** (*proposed*): whoever may create maps (spec 28
+   Decision 2, D-13) and sees the Document can generate it; its creator and
+   the Master change its depth or delete it. Every viewer can pan and zoom;
+   whoever manages it can also **move and recolor cards** (saved for
+   everyone, spec 28 Decision 9). Adding or removing Documents and relations
+   by hand is not possible: they come from the mentions. To edit freely, a
+   manager can **"Copy as a free map"**, which saves the current view as an
+   ordinary spec 28 map (a snapshot, with the manager's view only, at the
+   Room's default visibility).
+10. **Limits** (product owner, ok): 150 cards. Past that, the nearest steps
+    win, then the Documents with the most mentions, then by name; the board
+    says how many were left out ("12 more Documents not shown: a map holds
+    150"). The depth limit keeps the computation small.
+11. **The modal** (product owner, instead of a one-click button): a
+    **"Mentions map"** icon button in the Document page header, next to
+    Export and History, opens a modal:
+    - **Depth**: a number from 0 to 3, default 0, with a line under it saying
+      what the value means ("0: only the Documents linked directly to this
+      one").
+    - A live count: "14 Documents, 20 relations" for the chosen depth, from
+      the preview route (Design), so the user sees what they'll get.
+    - **Create** (or **Save** when the map exists), and, for an existing map,
+      **Delete map** and **Copy as a free map**.
+
+    The button is hidden for a viewer who can neither create nor manage the
+    map. With nothing to show (no mentions the user sees) the modal says
+    "No mentions yet" and Create is disabled.
+12. **On the Document page** (product owner): the map is drawn **under the
+    Document's images**, in the page's side column (above the info panel),
+    as a React Flow board as wide as the images and 360 px tall; without
+    images, at the top of that column. Pan, zoom, click a card to open its
+    Document; a **"Full screen"** button opens the map full page
+    (`RelationshipMapPage`), where a manager moves and recolors cards. Below
+    `lg`, where the side column stacks under the text, the board takes the
+    full width; on phones it is read-only, like spec 28 Decision 13.
+    Nothing is shown when the Document has no mention map, or when the map
+    has no relation the viewer sees (just the center card would say
+    nothing).
+13. **Maps list** (*proposed*): mention maps are not in the Room's Maps
+    list; they live on their Document's page. The free maps copied from them
+    are.
+14. **Not in scope**: Tag cards, labels on the generated relations, relations
+    drawn by hand on a mention map, a map from a Tag or from search results.
 
 ## Design
 
 ### Backend (36_1)
 
-- **No migration**: a generated map is a plain `relationship_maps` row with
-  its cards and arrows.
+- **Migration** (reversible): `relationship_maps.source_document_id`
+  (nullable FK to `documents`, `ON DELETE CASCADE`, **unique**) and
+  `relationship_maps.mention_depth` (nullable `smallint`, 0 to 3, CHECK set
+  exactly when `source_document_id` is). A row with a source Document is a
+  mention map; its `relationship_map_cards` rows hold only the cards someone
+  moved or recolored (Document cards only); it has no groups and no arrow
+  rows. The spec 28 queries that list maps skip mention maps.
 - `app/domain/mention_maps.py` (pure):
-  - `mention_pairs(mentions, center_id, visible_ids, source_is_public)`:
-    from the visible mentions, the set of Documents (Decision 3) and one
-    pair per two Documents with its direction (`forward`, `both`), its
-    mention count and whether any mention behind it is public (Decision 9).
-  - `pick_cards(...)`: the cap and the "most mentions first" order
-    (Decision 10), the counts of what was left out.
-  - `ring_layout(center_id, sides, card_size)`: positions per Decision 8,
-    deterministic for a given input (tested on 0, 1, 16, 17 and 149
-    neighbors).
-  - `generated_map_name(document_name, locale)`.
-- `mentions_repo`: one query for the mentions **from** a Document
-  (`list_mentions_by_source_document`), next to the existing
-  `list_mentions_of_document`, and one for the mentions **among** a set of
-  Documents (both ends in the set), each a single query.
-- Visibility of the sources reuses `visible_backlinks`' filters (Document,
-  Note, Comment through its parent chain) for the creator, plus a check of
-  each source's level for "visible to every member" (Decision 9). No new
-  visibility rule.
-- **Route** `POST /rooms/{id}/documents/{doc_id}/mention-map` (members
-  only, 403; 404 when the creator can't see the Document; 403 when they may
-  not create maps; 409 at 100 maps): creates the map, its cards and its
-  arrows in one transaction through the spec 28 repository (the same
-  `save_board` write, under the map's row lock), and answers `201` with
-  `map_id`, `documents_added`, `documents_left_out`, `relations_added`,
-  `relations_left_out`. Refused in View As like every write.
-- When there is nothing to add (no other Document passes Decisions 3 and
-  9 for the creator), the `POST` creates nothing and answers **409**
-  (`nothing_to_map`), so a stale click never makes a one-card map.
-- **Preview** `GET /rooms/{id}/documents/{doc_id}/mention-map` (members
-  only; 404 when the viewer can't see the Document; follows `X-View-As`):
-  `{documents, relations}`, the counts the `POST` would add for this
-  viewer, computed by the same functions with the same filters (one source
-  of truth). It is the button's state (Decision 11): the frontend never
-  parses mentions itself, since outgoing mentions sit in Notes and lazily
-  loaded Comments, and mentions of hidden Documents must not count
-  (VR-07). Both routes share one query path, so the preview costs what a
-  generation costs minus the writes.
-- Tests at 100%: A mentions B and C, D mentions A, B mentions C gives four
-  relations (A→B, A→C, D→A, B→C), and A↔B becomes one `both` when B also
-  mentions A; a Player's generated map holds no Document they can't see and no
-  relation from a hidden Note; a Master's holds it as Master only; a
-  mention in a Selective Comment the Player sees is still left out of the
-  Player's map; caps and "left out" counts; Tag mentions ignored; a
-  Document of another Room never added; the preview's counts equal what the
-  `POST` adds, for a Master and a Player; 409 and no map when there is
-  nothing to add; the 100-maps cap; View As refused.
+  - `mention_graph(center_id, depth, mentions, visible)`: breadth-first, one
+    ring per step, over the mentions the viewer sees (Decision 7); returns
+    the cards with their step and the relations with their direction
+    (`forward`, `both`), capped per Decision 10 with the left-out count.
+  - `ring_layout(graph, card_size)`: positions per Decision 6, deterministic
+    for a given graph; a stored card position overrides it.
+- `mentions_repo.list_mentions_touching(session, document_ids)`: every
+  Document-to-Document mention with its source or target in the set, one
+  query; called once per step (at most 4 queries). The viewer filter reuses
+  `visible_backlinks`' checks (Document, Note, Comment chain), batched as in
+  the Documents list. No new visibility rule.
+- **Routes** (members only, 403; 404 when the viewer can't see the
+  Document; all follow `X-View-As`, writes refused there):
+  - `GET /rooms/{id}/documents/{doc_id}/mention-map`: 404 when there is no
+    map; else the map (`depth`, `can_manage`) and its board in the spec 28
+    `GET /maps/{map_id}` shape (cards with Document name, image, caption,
+    color, position; relations), plus `documents_left_out`.
+  - `GET /rooms/{id}/documents/{doc_id}/mention-map/preview?depth=n`: the
+    counts `{documents, relations}` for this viewer at that depth, from the
+    same functions (one source of truth). Drives the modal's count and its
+    "No mentions yet".
+  - `POST /rooms/{id}/documents/{doc_id}/mention-map` `{depth}`: creates it
+    (403 if the user may not create maps; 409 if it exists; 409
+    `nothing_to_map` when the preview would be empty). `PATCH` `{depth}` and
+    `DELETE` for whoever manages it.
+  - `PUT /rooms/{id}/documents/{doc_id}/mention-map/cards`: the cards a
+    manager moved or recolored (`document_id`, `x`, `y`, `color`); a
+    Document the manager doesn't see on the map is 404; saved cards of
+    Documents no longer on the map are kept (they come back in place if the
+    mention does).
+  - `POST .../mention-map/copy`: creates an ordinary spec 28 map from the
+    manager's current view (cards, positions, colors, relations as plain
+    arrows), through the usual create and `save_board` paths and caps.
+- Tests at 100%: depth 0 to 3 on a small graph (A mentions B and C, D
+  mentions A, B mentions C gives four relations at depth 0, and A↔B becomes
+  one two-way relation when B also mentions A); a new mention appears on the
+  next read and a deleted one disappears; a Player sees no Document they
+  can't see, no relation from a hidden Note, and no Document reachable only
+  through one; the Master sees all; Tag mentions ignored; the cap and the
+  left-out count; preview counts equal the map; one map per Document;
+  deleting the Document removes the map; View As read-only; the copy is an
+  ordinary map holding only what the manager saw.
 
 ### Frontend (36_2)
 
-- `DocumentDetailPage`: the header icon button (Decision 11), a
-  `useMentionMapPreview` query (the preview route, refetched after a
-  description, Note or Comment is saved) for its state, and a
-  `useCreateMentionMap` mutation (a 409 shows "No mentions yet" and
-  refreshes the preview); on success the maps list query is
-  invalidated and the page navigates to the new map with a notification.
-- `RelationshipMapPage`: nothing new; the map is a normal map.
+- `components/maps/MentionMapModal.tsx` (Decision 11): depth input, live
+  count (`useMentionMapPreview`, debounced on depth), Create / Save / Delete
+  / Copy.
+- `components/maps/MentionMapPanel.tsx` (Decision 12): the board in the
+  Document page's aside, under `DocumentImageGallery`, reusing
+  `DocumentCardNode` and `MapArrow` from spec 28 read-only, with "Full
+  screen". `useMentionMap` query, invalidated after a description, Note or
+  Comment of this Room is saved (so the page's own edits show at once).
+- `RelationshipMapPage`: opens a mention map too (route
+  `/rooms/:roomId/documents/:docId/mention-map`), with only move and color
+  enabled for a manager, and the "left out" notice.
 - New strings in `en.json`, `it.json` and the other UI languages (spec 34:
   English text where a translation is missing, as usual for beta
   languages).
-- Tests at 100% branch coverage (frontend CI enforces it): the button's
-  three states (hidden, disabled, enabled), the navigation, the "left out"
-  notice.
+- Tests at 100% branch coverage (frontend CI enforces it): modal states
+  (create, existing, nothing to map), panel shown or hidden, full screen,
+  read-only for non-managers and on phones.
 
 ## Implementation
 
-- **36_1** backend, then **36_2** frontend, two branches into `staging`
-  (or one PR if small enough). No migration, so nothing to apply to the
-  staging or production database.
-- Update `architecture.md` (Relationship maps: generated from mentions),
-  `ui-context.md` (the header button) and `progress-tracker.md`.
+- **36_1** backend and migration, then **36_2** frontend, two branches into
+  `staging`. The migration goes to the staging database before the merge
+  and to production before the next release to `main`.
+- Update `architecture.md` (Relationship maps: mention maps, computed on
+  read), `ui-context.md` (the panel under the images, the modal) and
+  `progress-tracker.md`.
 
 ## Definition of Done
 
 - On "Mira", whose description mentions Thorn and Aldric and whom the
-  Tavern mentions in a Note, the Master clicks "Mentions map": a map
-  "Mentions of Mira" opens with Mira in gold in the middle, the Tavern on
-  the left with an arrow to Mira, Thorn and Aldric on the right with arrows
-  from Mira, and an arrow Thorn → Aldric because Thorn's description
-  mentions Aldric. Every card can be moved; reloading keeps the places.
-- Aldric's Master-only Note mentioning Mira gives a Master-only arrow
-  Aldric → Mira on the Master's map; a Player sees both cards and no arrow
-  between them.
-- A Player who can't see Thorn generates the map from Mira: Thorn is not on
-  it, and nothing hints that it exists.
+  Tavern mentions in a Note, the Master opens "Mentions map", leaves depth
+  0 and creates it: under Mira's image a board shows Mira in gold in the
+  middle, the Tavern on the left with an arrow to Mira, Thorn and Aldric on
+  the right with arrows from Mira, and an arrow Thorn → Aldric because
+  Thorn's description mentions Aldric.
+- The Master writes `#Lyra` in a Mira Note and saves: Lyra appears on the
+  board. Removing the mention takes her away. Moving Thorn's card keeps its
+  place after a reload.
+- With depth 1, the Documents mentioned by or mentioning Thorn, Aldric and
+  the Tavern appear on an outer ring.
+- Aldric's Master-only Note mentioning Mira gives the Master an arrow Aldric
+  → Mira; a Player sees both cards and no arrow between them, and does not
+  see a Document reachable only through that Note.
+- A Player who can't see Thorn opens Mira: Thorn is not on the board, and
+  nothing hints that it exists.
 - Backend `pytest` (100% coverage), `ruff`, `mypy`; frontend
   `npm run build`, `npm run lint`, `npm test`.
