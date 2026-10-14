@@ -923,6 +923,22 @@
       "label": "레이블",
       "labelTowards": "{{name}} 쪽 레이블",
       "delete": "관계 삭제"
+    },
+    "mention": {
+      "button": "언급 지도",
+      "title": "언급 지도",
+      "depth": "깊이",
+      "depthHelp": "0은 이 문서와 직접 연결된 문서만 보여 줍니다. 단계마다 다음 언급 고리가 추가됩니다.",
+      "preview": "문서: {{documents}} · 관계: {{relations}}",
+      "leftOut": "지도에는 카드 150장까지만 놓을 수 있어 표시하지 않음: {{number}}",
+      "nothingYet": "아직 언급이 없습니다",
+      "create": "지도 만들기",
+      "copy": "자유 지도로 복사",
+      "copyName": "{{name}}의 언급",
+      "fullScreen": "전체 화면",
+      "backToDocument": "문서로 돌아가기",
+      "deleteConfirmBody": "문서와 그 언급은 그대로 남습니다.",
+      "loadError": "언급 지도를 불러오지 못했습니다."
     }
   }
 }

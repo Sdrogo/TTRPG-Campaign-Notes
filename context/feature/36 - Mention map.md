@@ -196,8 +196,8 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
 
 ## Implementation
 
-- **36_1** backend and migration, then **36_2** frontend, two branches into
-  `staging`. The migration goes to the staging database before the merge
+- **36_1** backend and migration, then **36_2** frontend, both built in
+  PR #188 into `staging` (2026-10-14). The migration goes to the staging database before the merge
   and to production before the next release to `main`.
 - Update `architecture.md` (Relationship maps: mention maps, computed on
   read), `ui-context.md` (the panel under the images, the modal) and

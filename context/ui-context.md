@@ -651,3 +651,20 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   "Modifiche non salvate", "Salvataggio…", "Salvato", or the error with
   "Riprova". Below the `sm` breakpoint the board is read-only with a note.
 
+## Mention map (spec 36)
+
+- **Entry point**: a `GraphIcon` button in the Document page's title
+  actions, before History, for whoever may create Documents (or manage the
+  existing map). It opens `MentionMapModal`: a depth control (0 to 3, a
+  `SegmentedControl`), a live preview line ("Documenti: N · Relazioni: N"),
+  the cap notice, and Create or Save; for an existing map also Delete (with
+  an inline confirm) and "Copia come mappa libera", which opens the copy.
+- **On the Document page**: `MentionMapPanel` sits in the aside under the
+  Document's images (the aside is wide when there is a map), a read-only
+  board 360 px high with a "Schermo intero" link, shown only when the map
+  has at least one arrow for the viewer.
+- **Full screen**: `/rooms/:roomId/documents/:documentId/mention-map`
+  (`MentionMapPage`). `MapBoard` in `mode="mention"`: cards can be moved and
+  recolored (`CardColorDialog`), nothing else (no adding, deleting,
+  connecting, arrow editing, toolbar). Changes save automatically like a
+  free map; read-only on phones and in View As. The center card is gold.

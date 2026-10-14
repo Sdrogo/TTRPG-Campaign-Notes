@@ -11,6 +11,8 @@ import type {
   MapDocument,
   MapGroup,
   MapFormValues,
+  MentionMap,
+  MentionMapPreview,
   RelationshipMap,
   RelationshipMapDetail,
 } from '../types/map';
@@ -111,46 +113,115 @@ function toEnd(raw: RawArrowEnd): ArrowEnd {
   return { cardId: raw.card_id, groupId: raw.group_id };
 }
 
+function toCard(card: RawMapCard): MapCard {
+  return {
+    id: card.id,
+    documentId: card.document_id,
+    text: card.text,
+    groupId: card.group_id,
+    caption: card.caption,
+    imageId: card.image_id,
+    size: card.size,
+    masterOnly: card.master_only,
+    color: card.color,
+    struck: card.struck,
+    x: card.x,
+    y: card.y,
+    document: card.document && {
+      id: card.document.id,
+      name: card.document.name,
+      subtitle: card.document.subtitle,
+      image: card.document.image && toStoredImage(card.document.image),
+      tagIds: card.document.tag_ids,
+    },
+  };
+}
+
+function toArrow(arrow: RawMapArrow): MapArrow {
+  return {
+    id: arrow.id,
+    from: toEnd(arrow.from_end),
+    to: toEnd(arrow.to_end),
+    direction: arrow.direction,
+    label: arrow.label,
+    reverseLabel: arrow.reverse_label,
+    labelPosition: arrow.label_position,
+    reverseLabelPosition: arrow.reverse_label_position,
+    labelOffset: arrow.label_offset,
+    reverseLabelOffset: arrow.reverse_label_offset,
+    color: arrow.color,
+    masterOnly: arrow.master_only,
+  };
+}
+
 export function toMapDetail(raw: RawMapDetail): RelationshipMapDetail {
   return {
     ...toMap(raw),
     groups: raw.groups.map((group) => ({ ...group })),
-    cards: raw.cards.map((card) => ({
-      id: card.id,
-      documentId: card.document_id,
-      text: card.text,
-      groupId: card.group_id,
-      caption: card.caption,
-      imageId: card.image_id,
-      size: card.size,
-      masterOnly: card.master_only,
-      color: card.color,
-      struck: card.struck,
-      x: card.x,
-      y: card.y,
-      document: card.document && {
-        id: card.document.id,
-        name: card.document.name,
-        subtitle: card.document.subtitle,
-        image: card.document.image && toStoredImage(card.document.image),
-        tagIds: card.document.tag_ids,
-      },
-    })),
-    arrows: raw.arrows.map((arrow) => ({
-      id: arrow.id,
-      from: toEnd(arrow.from_end),
-      to: toEnd(arrow.to_end),
-      direction: arrow.direction,
-      label: arrow.label,
-      reverseLabel: arrow.reverse_label,
-      labelPosition: arrow.label_position,
-      reverseLabelPosition: arrow.reverse_label_position,
-      labelOffset: arrow.label_offset,
-      reverseLabelOffset: arrow.reverse_label_offset,
-      color: arrow.color,
-      masterOnly: arrow.master_only,
-    })),
+    cards: raw.cards.map(toCard),
+    arrows: raw.arrows.map(toArrow),
   };
+}
+
+export interface RawMentionMap {
+  id: string;
+  document_id: string;
+  depth: number;
+  created_by: string;
+  updated_at: string;
+  can_manage: boolean;
+  cards: RawMapCard[];
+  arrows: RawMapArrow[];
+  documents_left_out: number;
+}
+
+export interface RawMentionMapPreview {
+  documents: number;
+  relations: number;
+  documents_left_out: number;
+}
+
+/** A Document's mention map (spec 36) from the wire shape. */
+export function toMentionMap(raw: RawMentionMap): MentionMap {
+  return {
+    id: raw.id,
+    documentId: raw.document_id,
+    depth: raw.depth,
+    createdBy: raw.created_by,
+    updatedAt: raw.updated_at,
+    canManage: raw.can_manage,
+    groups: [],
+    cards: raw.cards.map(toCard),
+    arrows: raw.arrows.map(toArrow),
+    documentsLeftOut: raw.documents_left_out,
+  };
+}
+
+/** What a mention map at a depth would hold (spec 36 Decision 11). */
+export function toMentionMapPreview(raw: RawMentionMapPreview): MentionMapPreview {
+  return {
+    documents: raw.documents,
+    relations: raw.relations,
+    documentsLeftOut: raw.documents_left_out,
+  };
+}
+
+/** For a board drawn read-only, which never changes (the mention map panel). */
+export function ignoreBoardChange(): void {}
+
+/**
+ * The cards of a mention map someone moved or recolored since `saved`, as
+ * `PUT .../mention-map/cards` takes them (spec 36 Decision 9): the others keep
+ * their place.
+ */
+export function changedMentionCards(saved: Board, board: Board) {
+  const before = new Map(saved.cards.map((card) => [card.id, card]));
+  return board.cards
+    .filter((card) => {
+      const old = before.get(card.id);
+      return !old || old.x !== card.x || old.y !== card.y || old.color !== card.color;
+    })
+    .map((card) => ({ document_id: card.documentId!, x: card.x, y: card.y, color: card.color }));
 }
 
 function toEndBody(end: ArrowEnd): RawArrowEnd {

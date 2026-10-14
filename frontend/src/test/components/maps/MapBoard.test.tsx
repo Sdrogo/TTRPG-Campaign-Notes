@@ -136,7 +136,12 @@ const documents = [
   { id: 'doc-aldric', name: 'Aldric', subtitle: null, images: [], tagIds: [] },
 ] as unknown as Document[];
 
-function renderBoard({ editable = true, isMaster = true, docs = documents } = {}) {
+function renderBoard({
+  editable = true,
+  isMaster = true,
+  docs = documents,
+  mode = undefined as 'free' | 'mention' | undefined,
+} = {}) {
   const changes: Board[] = [];
   function Harness() {
     const [board, setBoard] = useState(initial);
@@ -152,6 +157,8 @@ function renderBoard({ editable = true, isMaster = true, docs = documents } = {}
           changes.push(next);
           setBoard(next);
         }}
+        mode={mode}
+        height={mode ? 360 : undefined}
       />
     );
   }
@@ -189,6 +196,24 @@ describe('MapBoard', () => {
     expect(byId.forward.markerStart).toBeUndefined();
     expect(byId.forward.source).toBe('g');
     expect(screen.getByRole('button', { name: 'Raggruppa' })).toBeDisabled();
+  });
+
+  it('only moves and recolors cards on a mention map (spec 36)', async () => {
+    const { changes, last, user } = renderBoard({ mode: 'mention' });
+    expect(screen.queryByRole('button', { name: 'Aggiungi Documenti' })).not.toBeInTheDocument();
+    expect(flow.props.nodesConnectable).toBe(false);
+    expect(flow.props.deleteKeyCode).toBeNull();
+    expect(flow.props.nodesDraggable).toBe(true);
+    call('onEdgeClick', null, { id: 'both' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Modifica la carta: Mira' }));
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+    expect(changes).toEqual([]);
+    await user.click(screen.getByRole('button', { name: 'Modifica la carta: Mira' }));
+    await user.click(screen.getByRole('radio', { name: 'Rosso' }));
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    expect(last().cards.find((c) => c.id === 'mira')!.color).toBe('red');
   });
 
   it('is only a view when not editable', async () => {
