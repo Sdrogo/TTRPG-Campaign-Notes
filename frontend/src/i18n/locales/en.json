@@ -943,6 +943,23 @@
       "label": "Label",
       "labelTowards": "Label towards {{name}}",
       "delete": "Delete the relation"
+    },
+    "mention": {
+      "button": "Mentions map",
+      "title": "Mentions map",
+      "depth": "Depth",
+      "depthHelp": "0 shows only the Documents linked directly to this one; each step adds the next ring of mentions.",
+      "preview": "Documents: {{documents}} · Relations: {{relations}}",
+      "previewLoading": "Loading the preview",
+      "leftOut": "Not shown, since a map holds 150 cards: {{number}}",
+      "nothingYet": "No mentions yet",
+      "create": "Create map",
+      "copy": "Copy as a free map",
+      "copyName": "Mentions of {{name}}",
+      "fullScreen": "Full screen",
+      "backToDocument": "Back to the Document",
+      "deleteConfirmBody": "The Documents and their mentions stay.",
+      "loadError": "Couldn't load the mentions map."
     }
   }
 }

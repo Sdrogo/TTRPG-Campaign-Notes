@@ -45,7 +45,7 @@ function DragGrip() {
  */
 export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeType>) {
   const { t } = useTranslation();
-  const { card, roomId, editable, onEdit } = data;
+  const { card, roomId, editable, connectable, onEdit } = data;
   // Only the Documents the viewer sees reach the board, each with its look.
   const document = card.document!;
   const caption = card.caption ?? document.subtitle;
@@ -67,7 +67,7 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
         position: 'relative',
       }}
     >
-      <MapHandle visible={editable} />
+      <MapHandle visible={editable && connectable !== false} />
       {document.image && (
         // The image is clipped on its own layer: clipping the whole card would
         // cut the arrow handle on the card's edge in half.

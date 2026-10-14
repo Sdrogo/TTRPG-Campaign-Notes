@@ -15,6 +15,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -739,9 +740,18 @@ class RelationshipMapRow(Base):
     """A relationship map of a Room (spec 28_1): a free board of Documents,
     text cards, groups and arrows that belong to it only. Its visibility uses
     the Comment levels with `created_by` as the "Owner" (Decision 3).
-    Deleted with the Room; its groups, cards and arrows go with it."""
+    Deleted with the Room; its groups, cards and arrows go with it. A row
+    with `source_document_id` is a Document's mention map (spec 36)."""
 
     __tablename__ = "relationship_maps"
+    __table_args__ = (
+        UniqueConstraint("source_document_id", name="uq_relationship_maps_source_document"),
+        CheckConstraint(
+            "(source_document_id IS NULL AND mention_depth IS NULL)"
+            " OR (source_document_id IS NOT NULL AND mention_depth >= 0 AND mention_depth <= 3)",
+            name="ck_relationship_maps_mention_depth",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     room_id: Mapped[uuid.UUID] = mapped_column(
@@ -753,6 +763,13 @@ class RelationshipMapRow(Base):
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Spec 36: set on a Document's live mention map (one per Document, gone
+    # with it), with how many steps past the first level it follows mentions.
+    source_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE", name="fk_relationship_maps_source_document"),
+    )
+    mention_depth: Mapped[int | None] = mapped_column(SmallInteger)
 
 
 class RelationshipMapGrantRow(Base):

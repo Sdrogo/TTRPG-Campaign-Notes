@@ -943,6 +943,23 @@
       "label": "Label",
       "labelTowards": "Label richting {{name}}",
       "delete": "De relatie verwijderen"
+    },
+    "mention": {
+      "button": "Vermeldingskaart",
+      "title": "Vermeldingskaart",
+      "depth": "Diepte",
+      "depthHelp": "0 toont alleen de documenten die direct met dit document verbonden zijn; elke stap voegt de volgende ring vermeldingen toe.",
+      "preview": "Documenten: {{documents}} · Relaties: {{relations}}",
+      "previewLoading": "Voorbeeld laden",
+      "leftOut": "Niet getoond, omdat een kaart 150 kaarten bevat: {{number}}",
+      "nothingYet": "Nog geen vermeldingen",
+      "create": "Kaart maken",
+      "copy": "Kopiëren als vrije kaart",
+      "copyName": "Vermeldingen van {{name}}",
+      "fullScreen": "Volledig scherm",
+      "backToDocument": "Terug naar het document",
+      "deleteConfirmBody": "De documenten en hun vermeldingen blijven.",
+      "loadError": "Kan de vermeldingskaart niet laden."
     }
   }
 }

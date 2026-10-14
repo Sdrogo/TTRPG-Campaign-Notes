@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-libra
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiFetch } from '../../lib/apiClient';
+import { ApiError, apiFetch } from '../../lib/apiClient';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { useSession } from '../../hooks/useSession';
 import {
@@ -15,13 +15,17 @@ import {
   rawDocumentFile,
   rawNote,
   rawComment,
+  rawMentionMap,
 } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { DocumentDetailPage } from '../../pages/DocumentDetailPage';
 import { ViewAsContext } from '../../hooks/useViewAs';
 import { installFakeSpeech } from '../speech';
 
-vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
+vi.mock('../../lib/apiClient', async (original) => ({
+  ...(await original<typeof import('../../lib/apiClient')>()),
+  apiFetch: vi.fn(),
+}));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
 
@@ -49,6 +53,8 @@ interface Routes {
   comments: unknown;
   backlinks: unknown;
   imageSearch?: unknown;
+  /** The Document's mention map (spec 36); none by default. */
+  mentionMap?: unknown;
 }
 
 const routes: Routes = { document: rawDocument(), members: [], comments: [], backlinks: [] };
@@ -61,6 +67,12 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
     if (path === DOC) return Promise.resolve(routes.document);
     if (path === `${DOC}/comments`) return Promise.resolve(routes.comments);
     if (path === `${DOC}/backlinks`) return Promise.resolve(routes.backlinks);
+    if (path === `${DOC}/mention-map`) {
+      return routes.mentionMap ? Promise.resolve(routes.mentionMap) : Promise.reject(new ApiError(404, 'No map'));
+    }
+    if (path.startsWith(`${DOC}/mention-map/preview`)) {
+      return Promise.resolve({ documents: 1, relations: 1, documents_left_out: 0 });
+    }
     if (path === '/rooms/room-1/documents') return Promise.resolve([routes.document]);
     if (path === '/rooms/room-1/tags') return Promise.resolve(tags);
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
@@ -88,6 +100,7 @@ beforeEach(() => {
   routes.members = [rawMember({ user_id: 'user-1', display_name: 'Io' })];
   routes.comments = [];
   routes.backlinks = [];
+  routes.mentionMap = undefined;
   fetchMock.mockReset();
   navigate.mockReset();
   vi.mocked(notifyError).mockClear();
@@ -1367,5 +1380,60 @@ describe('previewing as a member', () => {
     expect(screen.getByRole('button', { name: /^👍, 1 reazione/ })).toBeDisabled();
     expect(screen.queryByTestId('new-comment')).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(`${DOC}/read`, expect.anything());
+  });
+});
+
+describe('DocumentDetailPage mention map (spec 36)', () => {
+  const button = () => screen.queryByRole('button', { name: 'Mappa delle menzioni' });
+
+  it('lets the Master open the modal to create one', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
+    const { user } = render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await waitFor(() => expect(button()).toBeInTheDocument());
+    expect(screen.queryByRole('region', { name: 'Mappa delle menzioni' })).not.toBeInTheDocument();
+
+    await user.click(button()!);
+    expect(await screen.findByRole('button', { name: 'Crea mappa' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Crea mappa' })).not.toBeInTheDocument());
+  });
+
+  it('draws the map under the images, without the button for who cannot manage it', async () => {
+    routes.mentionMap = rawMentionMap({ can_manage: false });
+    render();
+    expect(await screen.findByRole('region', { name: 'Mappa delle menzioni' })).toBeInTheDocument();
+    expect(button()).not.toBeInTheDocument();
+  });
+
+  it('opens an existing map to its manager, and hides a map with no relation', async () => {
+    routes.mentionMap = rawMentionMap({ arrows: [] });
+    const { user } = render();
+    await waitFor(() => expect(button()).toBeInTheDocument());
+    expect(screen.queryByRole('region', { name: 'Mappa delle menzioni' })).not.toBeInTheDocument();
+    await user.click(button()!);
+    expect(await screen.findByRole('button', { name: 'Copia come mappa libera' })).toBeInTheDocument();
+  });
+
+  it('offers nothing to a Player of a Room closed to their Documents, nor in a preview', async () => {
+    render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    expect(button()).not.toBeInTheDocument();
+    cleanup();
+
+    routes.mentionMap = rawMentionMap();
+    renderWithProviders(
+      <Routes>
+        <Route path="/rooms/:roomId/documents/:documentId" element={<DocumentDetailPage />} />
+      </Routes>,
+      {
+        route: DOC,
+        wrapper: ({ children }) => (
+          <ViewAsContext value={{ roomId: 'room-1', userId: 'user-2' }}>{children}</ViewAsContext>
+        ),
+      },
+    );
+    expect(await screen.findByRole('region', { name: 'Mappa delle menzioni' })).toBeInTheDocument();
+    expect(button()).not.toBeInTheDocument();
   });
 });

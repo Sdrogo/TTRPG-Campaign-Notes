@@ -5,6 +5,7 @@ import {
   ClockCounterClockwiseIcon,
   DownloadSimpleIcon,
   EyeIcon,
+  GraphIcon,
   PencilSimpleIcon,
   XIcon,
 } from '@phosphor-icons/react';
@@ -30,7 +31,7 @@ import { useReadOnly } from '../hooks/useViewAs';
 import { useStopReadingOnLeave } from '../hooks/useReadAloud';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { appendPromotedText, promotionReaches, type PromotionAudience } from '../lib/promotion';
-import { canManageTags } from '../lib/roomPermissions';
+import { canCreateDocuments, canManageTags } from '../lib/roomPermissions';
 import { documentReveal, notesHiddenFromGains } from '../lib/reveal';
 import { documentSpeech } from '../lib/speech';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
@@ -56,6 +57,9 @@ import { DocumentFileList } from '../components/files/DocumentFileList';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { MentionText } from '../components/mentions/MentionText';
 import { Backlinks } from '../components/mentions/Backlinks';
+import { MentionMapModal } from '../components/maps/MentionMapModal';
+import { MentionMapPanel } from '../components/maps/MentionMapPanel';
+import { useMentionMap } from '../hooks/useMentionMap';
 import type { Comment, PromotionTarget } from '../types/comment';
 import type { Document, DocumentFormValues, DocumentVisibility } from '../types/document';
 import type { Member } from '../types/member';
@@ -229,6 +233,11 @@ function DocumentPanel({
   const [historyOpened, setHistoryOpened] = useState(false);
   const [imageSearchOpened, setImageSearchOpened] = useState(false);
   const [exportOpened, setExportOpened] = useState(false);
+  const [mentionMapOpened, setMentionMapOpened] = useState(false);
+  // Spec 36: the Document's mention map, drawn under its images when it has a
+  // relation the viewer sees.
+  const mentionMap = useMentionMap(roomId, document.id);
+  const room = useRoom(roomId, true);
   // Previewing as a member (spec 22b): no write control at all.
   const readOnly = useReadOnly();
   // Spec 30: leaving the Document (or moving to another) stops reading it.
@@ -237,6 +246,11 @@ function DocumentPanel({
   const me = members.find((m) => m.userId === currentUserId);
   const isMaster = me?.role === 'master' && !readOnly;
   const isOwner = (document.ownerIds.includes(currentUserId) || isMaster) && !readOnly;
+  const shownMap = mentionMap.data?.arrows.length ? mentionMap.data : null;
+  // Spec 36 Decision 11: whoever may create maps opens the modal to create one;
+  // once it exists, its creator and the Master open it to change it.
+  const canOpenMentionMap =
+    !readOnly && (mentionMap.data ? mentionMap.data.canManage : canCreateDocuments(me, room.data));
 
   return (
     <PageCard>
@@ -292,6 +306,16 @@ function DocumentPanel({
             >
               <DownloadSimpleIcon size={18} />
             </ActionIcon>
+            {canOpenMentionMap && (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => setMentionMapOpened(true)}
+                aria-label={t('maps.mention.button')}
+              >
+                <GraphIcon size={18} />
+              </ActionIcon>
+            )}
             {/* Spec 24b: Owners and the Master read the whole Document's history. */}
             {isOwner && (
               <ActionIcon
@@ -325,7 +349,7 @@ function DocumentPanel({
         <Box className="document-body">
           <Box
             className="document-body-aside"
-            data-narrow={document.images.length === 0 || undefined}
+            data-narrow={(document.images.length === 0 && !shownMap) || undefined}
           >
             <Stack gap="sm">
               {document.images.length > 0 && (
@@ -343,6 +367,7 @@ function DocumentPanel({
                   settingFavoriteId={setFavorite.isPending ? (setFavorite.variables as string) : null}
                 />
               )}
+              {shownMap && <MentionMapPanel roomId={roomId} map={shownMap} />}
               <Paper withBorder radius="md" p="sm" bg="var(--mantine-color-dark-7)">
                 <Stack gap={6}>
                   <DocumentPlayer
@@ -431,6 +456,15 @@ function DocumentPanel({
           </Stack>
         </Box>
       </Stack>
+      {mentionMapOpened && (
+        <MentionMapModal
+          roomId={roomId}
+          documentId={document.id}
+          documentName={document.name}
+          map={mentionMap.data ?? null}
+          onClose={() => setMentionMapOpened(false)}
+        />
+      )}
       {isOwner && (
         <VersionHistoryDrawer
           opened={historyOpened}

@@ -14,6 +14,7 @@ import {
   endId,
   endOf,
   groupCards,
+  ignoreBoardChange,
   newId,
   parallelShift,
   shiftParallel,
@@ -524,5 +525,11 @@ describe('parallel lines between the same two ends', () => {
       from: { x: 5, y: 5 },
       to: { x: 5, y: 5 },
     });
+  });
+});
+
+describe('ignoreBoardChange', () => {
+  it('does nothing with a read-only board', () => {
+    expect(ignoreBoardChange()).toBeUndefined();
   });
 });

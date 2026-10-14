@@ -923,6 +923,23 @@
       "label": "标签",
       "labelTowards": "指向 {{name}} 的标签",
       "delete": "删除关系"
+    },
+    "mention": {
+      "button": "提及地图",
+      "title": "提及地图",
+      "depth": "深度",
+      "depthHelp": "0 只显示与此文档直接相连的文档；每多一步就加入下一圈提及。",
+      "preview": "文档：{{documents}} · 关系：{{relations}}",
+      "previewLoading": "正在加载预览",
+      "leftOut": "因地图最多容纳 150 张卡片而未显示：{{number}}",
+      "nothingYet": "暂无提及",
+      "create": "创建地图",
+      "copy": "复制为自由地图",
+      "copyName": "{{name}} 的提及",
+      "fullScreen": "全屏",
+      "backToDocument": "返回文档",
+      "deleteConfirmBody": "文档及其提及会保留。",
+      "loadError": "无法加载提及地图。"
     }
   }
 }

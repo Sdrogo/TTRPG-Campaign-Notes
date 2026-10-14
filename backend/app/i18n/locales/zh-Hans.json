@@ -217,6 +217,12 @@
         "label": "标签",
         "groupTitle": "分组标题"
       }
+    },
+    "mentionMap": {
+      "notFound": "此文档没有提及地图",
+      "alreadyExists": "此文档已有提及地图",
+      "nothingToMap": "暂无提及：图中只会有此文档",
+      "invalidDepth": "深度必须是 0 到 3 之间的整数"
     }
   },
   "pdf": {

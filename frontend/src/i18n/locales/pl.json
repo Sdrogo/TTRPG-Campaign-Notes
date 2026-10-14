@@ -983,6 +983,23 @@
       "label": "Etykieta",
       "labelTowards": "Etykieta w stronę {{name}}",
       "delete": "Usuń relację"
+    },
+    "mention": {
+      "button": "Mapa wzmianek",
+      "title": "Mapa wzmianek",
+      "depth": "Głębokość",
+      "depthHelp": "0 pokazuje tylko dokumenty powiązane bezpośrednio z tym; każdy krok dodaje kolejny krąg wzmianek.",
+      "preview": "Dokumenty: {{documents}} · Relacje: {{relations}}",
+      "previewLoading": "Wczytywanie podglądu",
+      "leftOut": "Niepokazane, bo mapa mieści 150 kart: {{number}}",
+      "nothingYet": "Brak wzmianek",
+      "create": "Utwórz mapę",
+      "copy": "Kopiuj jako wolną mapę",
+      "copyName": "Wzmianki: {{name}}",
+      "fullScreen": "Pełny ekran",
+      "backToDocument": "Wróć do dokumentu",
+      "deleteConfirmBody": "Dokumenty i ich wzmianki pozostaną.",
+      "loadError": "Nie udało się wczytać mapy wzmianek."
     }
   }
 }

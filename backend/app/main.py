@@ -24,6 +24,7 @@ from app.api.image_search import router as image_search_router
 from app.api.imports import router as imports_router
 from app.api.invitations import router as invitations_router
 from app.api.main_items import router as main_items_router
+from app.api.mention_maps import router as mention_maps_router
 from app.api.mentions import router as mentions_router
 from app.api.notes import router as notes_router
 from app.api.relationship_maps import router as relationship_maps_router
@@ -96,6 +97,7 @@ app.include_router(export_pdf_router)
 app.include_router(imports_router)
 app.include_router(versions_router)
 app.include_router(relationship_maps_router)
+app.include_router(mention_maps_router)
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])

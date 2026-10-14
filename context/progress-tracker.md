@@ -21,6 +21,16 @@ detail:
   30/30b (read aloud with the browser's voices, best installed voice by
   default, first reading waits for the voice list, PRs #146, #148, #154).
   Neither has a migration.
+- **Spec 36, Mention map** (2026-10-14, PR #188, migration
+  `c6e2a9f4d8b3`): a live map per Document of the Documents it mentions or
+  is mentioned by, depth 0 to 3 picked in a modal, computed from the visible
+  mentions on every read and drawn under the Document's images; full screen
+  page to move and recolor cards, copy as a free map. Built (36_1 backend,
+  36_2 frontend); *proposed* decisions in the spec to confirm in the PR.
+- **Mention map preview loading** (36_2 follow-up, 2026-10-14, PR #189): the
+  modal shows a labelled loader while the preview loads, and the preview is
+  not retried, so an error shows at once; before, the Create button just
+  looked disabled (seen on staging while the backend had not deployed yet).
 - **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
   Room PDF style, `parchment`, modeled on a fantasy monster compendium the
   product owner shared: parchment-colored pages, brown small-capital
@@ -52,23 +62,20 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `b4d8f2a6c1e7` (map label offsets, spec 28_3).
-- **Staging database**: `b4d8f2a6c1e7` (applied by hand 2026-10-13, with
-  `.env.staging` loaded; `a9e3c5d7b1f4` before it, same day, and
-  `d5a1c8e3f2b7` before that, applied 2026-10-12).
-- **Production database**: `b3f7d1e9c5a2` (applied by hand 2026-10-12; both
-  feature 28 migrations, before them `f7a2d8c4e1b9`).
-- **Pending on production**: `d5a1c8e3f2b7`
-  (`relationship_map_cards.image_id`, a nullable foreign key; DDL only) and
-  `a9e3c5d7b1f4` (`label_position` and `reverse_label_position` on
-  `relationship_map_arrows`, nullable floats with check constraints; DDL
-  only) and `b4d8f2a6c1e7` (`label_offset` and `reverse_label_offset` on the
-  same table, nullable floats; DDL only). Apply all three, in that order,
-  before the next release to `main`. None is applied yet: the product owner
-  runs them (the agent has no production `backend/.env`).
+- **Head in the repository**: `c6e2a9f4d8b3` (mention maps, spec 36, PR #188).
+- **Pending on staging**: none.
+- **Staging database**: `c6e2a9f4d8b3` (= head, mention maps, applied by hand
+  2026-10-14 with `.env.staging` loaded; `b4d8f2a6c1e7` before it, applied
+  2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
+- **Production database**: `c6e2a9f4d8b3` (= head). Applied 2026-10-15 with
+  `alembic upgrade head` and `backend/.env` loaded: `c6e2a9f4d8b3` (mention
+  maps), from `b4d8f2a6c1e7`. Before it, on 2026-10-13: `a9e3c5d7b1f4` (map
+  label positions) and `b4d8f2a6c1e7` (map label offsets), from `d5a1c8e3f2b7`
+  (map card image, applied earlier).
+- **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
-`b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -212,16 +219,14 @@ One line per unit; dates 2026, newest first. Spec files live in
   `a9e3c5d7b1f4`, nullable floats 0 to 1, a position needs its label), saved
   with the board through the existing `PUT .../board`. Applied to the
   staging database by hand on 2026-10-13 (`alembic current` went from
-  `d5a1c8e3f2b7` to `a9e3c5d7b1f4`); still pending on production, before the
-  next release to `main`. The drag and the "Relation" rename are
+  `d5a1c8e3f2b7` to `a9e3c5d7b1f4`) and to production on 2026-10-13. The drag and the "Relation" rename are
   the frontend step.
 - **Label distance from the relation, backend** (28_3, 10-13): `label_offset` and
   `reverse_label_offset` on `relationship_map_arrows` (migration
   `b4d8f2a6c1e7`, nullable floats in board pixels, ±2000, an offset needs its
   label's position), so a dragged label can sit to the side of its relation.
   Applied to the staging database by hand on 2026-10-13 (`alembic current`
-  went from `a9e3c5d7b1f4` to `b4d8f2a6c1e7`); still pending on production,
-  before the next release to `main`.
+  went from `a9e3c5d7b1f4` to `b4d8f2a6c1e7`) and to production on 2026-10-13.
 - **Dragging a relation's label, frontend** (28_3, 10-13): a label is dragged
   freely, along its relation and to either side (saved as `label_position` +
   `label_offset`, the distance kept within the backend's ±2000); the click

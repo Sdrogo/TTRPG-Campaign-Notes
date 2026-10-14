@@ -943,6 +943,23 @@
       "label": "Etiqueta",
       "labelTowards": "Etiqueta hacia {{name}}",
       "delete": "Eliminar la relación"
+    },
+    "mention": {
+      "button": "Mapa de menciones",
+      "title": "Mapa de menciones",
+      "depth": "Profundidad",
+      "depthHelp": "0 muestra solo los documentos vinculados directamente a este; cada paso añade el siguiente anillo de menciones.",
+      "preview": "Documentos: {{documents}} · Relaciones: {{relations}}",
+      "previewLoading": "Cargando la vista previa",
+      "leftOut": "No mostrados, ya que un mapa admite 150 tarjetas: {{number}}",
+      "nothingYet": "Aún no hay menciones",
+      "create": "Crear mapa",
+      "copy": "Copiar como mapa libre",
+      "copyName": "Menciones de {{name}}",
+      "fullScreen": "Pantalla completa",
+      "backToDocument": "Volver al documento",
+      "deleteConfirmBody": "Los documentos y sus menciones se mantienen.",
+      "loadError": "No se pudo cargar el mapa de menciones."
     }
   }
 }

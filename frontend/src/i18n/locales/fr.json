@@ -943,6 +943,23 @@
       "label": "Étiquette",
       "labelTowards": "Étiquette vers {{name}}",
       "delete": "Supprimer la relation"
+    },
+    "mention": {
+      "button": "Carte des mentions",
+      "title": "Carte des mentions",
+      "depth": "Profondeur",
+      "depthHelp": "0 n'affiche que les documents liés directement à celui-ci ; chaque étape ajoute le cercle suivant de mentions.",
+      "preview": "Documents : {{documents}} · Relations : {{relations}}",
+      "previewLoading": "Chargement de l'aperçu",
+      "leftOut": "Non affichés, une carte contenant 150 cartes : {{number}}",
+      "nothingYet": "Aucune mention pour l'instant",
+      "create": "Créer la carte",
+      "copy": "Copier en carte libre",
+      "copyName": "Mentions de {{name}}",
+      "fullScreen": "Plein écran",
+      "backToDocument": "Retour au document",
+      "deleteConfirmBody": "Les documents et leurs mentions restent.",
+      "loadError": "Impossible de charger la carte des mentions."
     }
   }
 }
