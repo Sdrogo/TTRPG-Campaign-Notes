@@ -59,15 +59,16 @@ release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
 - **Head in the repository**: `c6e2a9f4d8b3` (mention maps, spec 36, PR #188).
-- **Pending on staging**: `c6e2a9f4d8b3`, before PR #188 merges.
-- **Staging database**: `b4d8f2a6c1e7` (applied by hand 2026-10-13, with
-  `.env.staging` loaded; `a9e3c5d7b1f4` before it, same day, and
-  `d5a1c8e3f2b7` before that, applied 2026-10-12).
-- **Production database**: `b4d8f2a6c1e7` (= head). Applied 2026-10-13 with
+- **Pending on staging**: none.
+- **Staging database**: `c6e2a9f4d8b3` (= head, mention maps, applied by hand
+  2026-10-14 with `.env.staging` loaded; `b4d8f2a6c1e7` before it, applied
+  2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
+- **Production database**: `b4d8f2a6c1e7`. Applied 2026-10-13 with
   `alembic upgrade head` and `backend/.env` loaded: `a9e3c5d7b1f4` (map label
   positions) and `b4d8f2a6c1e7` (map label offsets), from `d5a1c8e3f2b7`
   (map card image, applied earlier).
-- **Pending on production**: none.
+- **Pending on production**: `c6e2a9f4d8b3` (mention maps), before the release
+  to `main` that ships spec 36.
 
 Recent chain, newest first (where each came from):
 `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
