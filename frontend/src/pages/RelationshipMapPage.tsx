@@ -12,6 +12,7 @@ import { useTags } from '../hooks/useTags';
 import { useReadOnly } from '../hooks/useViewAs';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
+import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { MapBoard } from '../components/maps/MapBoard';
 import { MapFormModal } from '../components/maps/MapFormModal';
@@ -38,7 +39,12 @@ export function RelationshipMapPage() {
   if (!roomId || !mapId) return null;
   if (loading) return <FullPageLoader />;
   if (!session) return <SignInRequired>{t('maps.signInRequired')}</SignInRequired>;
-  return <MapContent roomId={roomId} mapId={mapId} currentUserId={session.user.id} />;
+  // The Room's Documents, for the cards' previews (spec 37 Decision 1).
+  return (
+    <DocumentMentionsProvider roomId={roomId} currentUserId={session.user.id}>
+      <MapContent roomId={roomId} mapId={mapId} currentUserId={session.user.id} />
+    </DocumentMentionsProvider>
+  );
 }
 
 function MapContent({

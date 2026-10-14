@@ -22,6 +22,8 @@ interface DocumentMentionPreviewProps {
   tags: Tag[];
   /** The mention's link; it must forward its ref. */
   children: ReactElement;
+  /** Opens nothing for now (a map card being dragged, spec 37 Decision 1). */
+  disabled?: boolean;
 }
 
 /**
@@ -29,13 +31,20 @@ interface DocumentMentionPreviewProps {
  * Document's card from the Documents list (spec 32). Nothing on devices
  * without hover.
  */
-export function DocumentMentionPreview({ roomId, document, tags, children }: DocumentMentionPreviewProps) {
+export function DocumentMentionPreview({
+  roomId,
+  document,
+  tags,
+  children,
+  disabled = false,
+}: DocumentMentionPreviewProps) {
   const canHover = useMediaQuery(HOVER_POINTER_QUERY);
   if (!canHover) {
     return children;
   }
   return (
     <HoverCard
+      disabled={disabled}
       openDelay={OPEN_DELAY_MS}
       closeDelay={CLOSE_DELAY_MS}
       width={PREVIEW_WIDTH}
@@ -52,7 +61,7 @@ export function DocumentMentionPreview({ roomId, document, tags, children }: Doc
 }
 
 /** Mounted only while the preview is open; the members query is the page's cached one. */
-function PreviewCard({ roomId, document, tags }: Omit<DocumentMentionPreviewProps, 'children'>) {
+function PreviewCard({ roomId, document, tags }: Pick<DocumentMentionPreviewProps, 'roomId' | 'document' | 'tags'>) {
   const members = useMembers(roomId, true);
   return (
     <DocumentCard

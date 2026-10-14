@@ -11,30 +11,32 @@
 - Lets a Master or Player read a Document next to the map, the Document or
   the list they are working on, without losing their place.
 
-## Decisions (2026-10-14, *proposed* unless marked; to confirm in the PR)
+## Decisions (2026-10-14, confirmed by the product owner)
 
 1. **Hover preview on map cards** (product owner): on a relationship map
    (spec 28) and a mention map (spec 36), resting the pointer on a Document
    card for 400 ms shows that Document's `DocumentCard`, 440 px wide, as
    spec 32 Decisions 2 and 3 (it closes 150 ms after the pointer leaves the
-   card and the preview). *Proposed*: not while a card or the board is
-   being dragged, and never for text cards or groups.
+   card and the preview). Not while the card is being dragged, and never
+   for text cards or groups.
 2. **The choice on click** (product owner): clicking a Document (a map
    card, a `#Document` mention on the Document page, a card on the
    Documents page) opens a small menu at the pointer with two items:
    "Apri a metà schermo" and "Apri il Documento" (navigate to its page).
-   *Proposed*:
    - On a map being edited, a plain click on a card's body keeps selecting
      and dragging it as today; the menu opens from the card's name, which
      is already the link to the Document. On a read-only map, a click
      anywhere on the card opens the menu.
    - Ctrl/Cmd-click and middle-click keep opening the Document in a new
      browser tab, with no menu.
-   - On the Documents page the menu opens from a click on a card's name
-     (its link); the rest of the card keeps its current behavior.
+   - On the Documents page the menu opens from a click on a `#Document`
+     mention inside a card (its description): those mentions become links
+     there, with the hover preview too. The rest of the card keeps its
+     current behavior (a click opens the card's Document), and Tag mentions
+     stay plain colored text (product owner).
 3. **Split view** (product owner): "Apri a metà schermo" splits the page
    into two panes side by side: the page as it was on the left, the
-   Document on the right, with a draggable divider. *Proposed*:
+   Document on the right, with a draggable divider.
    - Starts at half and half; each pane at least 320 px wide; the width
      chosen is remembered in the browser (per viewer, `localStorage`, a
      convenience only).
@@ -49,11 +51,13 @@
      reload or the Back button keeps or restores it, and the link can be
      shared.
 4. **Where** (product owner): the relationship map page, the mention map
-   full screen page (spec 36), the Document page (mentions; *proposed*:
-   also "Menzionato in" entries) and the Room's Documents page. *Proposed*:
-   the mention map panel under the Document's images (spec 36) gets the
-   hover preview and the menu, opening the split on the Document page.
-5. **Phones and touch** (*proposed*): below the `sm` breakpoint there is no
+   full screen page (spec 36), the Document page (its mentions, including
+   those quoted under "Menzionato in") and the Room's Documents page. The
+   mention map panel under the Document's images (spec 36) gets the hover
+   preview and the menu too, opening the split on the Document page.
+   The split itself is part of the page layout, so it works on any Room
+   page whose address carries `?side=`.
+5. **Phones and touch**: below the `sm` breakpoint there is no
    split view and no menu: a tap opens the Document as today. The hover
    preview needs a device that can hover (`(hover: hover) and (pointer:
    fine)`), like spec 32.
@@ -62,27 +66,28 @@
    right pane loads the Document with the same request as its page, so a
    hidden Document answers 404 and the pane says so. During View As (spec
    22b) both are read-only, as everywhere.
-7. **No backend change, no migration** (*proposed*).
+7. **No backend change, no migration**.
 
 ## Implementation
 
-- Frontend only, one branch into `staging`.
+- Frontend only, built in PR #190 into `staging` (2026-10-14).
 - `components/documents/DocumentOpenMenu.tsx`: the two-item menu (Mantine
-  `Menu` at the pointer), and a `useOpenDocument()` hook that either
-  navigates or sets `?side=`.
+  `Menu` under what was clicked), and `hooks/useSideDocument.ts`, which
+  reads, sets and clears `?side=`.
 - `components/layout/SplitView.tsx`: two panes and a divider (pointer and
   keyboard: arrow keys move it, `aria-orientation="vertical"`,
   `role="separator"`), min widths, the stored width. No new dependency.
-- `components/documents/DocumentSidePane.tsx`: the Document page's panel
-  (`DocumentPanel`, extracted from `DocumentDetailPage` so both use it)
-  with the pane header.
+- `components/documents/DocumentSidePane.tsx`: the pane header over
+  `DocumentView`.
 - Map cards (`DocumentCardNode`): hover preview through
   `DocumentMentionPreview` (spec 32), menu on click per Decision 2.
-- `MentionText`, "Menzionato in" and `DocumentCard`'s name link use the
-  menu.
-- Pages wrap their content in `SplitView` when `?side=` is set: the
-  relationship map page, the mention map page, the Document page, the
-  Documents page.
+- `MentionText`'s Document mentions use the menu; `DocumentCard` gets a
+  mode where its description's Document mentions are links above the
+  card's own link (the Documents page uses it; the hover preview's card
+  does not, so a preview never opens another).
+- `PageLayout` wraps a Room page's content in `SplitView` when `?side=`
+  is set; `DocumentView` (the Document page's body, moved out of
+  `DocumentDetailPage` so the page and the pane share it).
 - i18n: the menu items, the pane's close label, the divider's label, in the
   12 languages.
 - Tests: preview on hover on a map card (not while dragging, not on a text
@@ -99,7 +104,8 @@
   closing the pane gives the whole width back to the map.
 - On Mira's page, clicking `#Thorn` and choosing "Apri il Documento" goes
   to Thorn's page; "Apri a metà schermo" opens Thorn next to Mira.
-- On the Documents page, clicking a card's name offers the same choice.
+- On the Documents page, clicking `#Thorn` in Mira's card offers the same
+  choice; clicking elsewhere on the card opens Mira as before.
 - On a phone a tap opens the Document directly.
 - A Player never sees a preview or a pane of a Document hidden from them.
 - Checks green.

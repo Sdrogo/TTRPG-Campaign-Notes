@@ -119,6 +119,18 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-14
+
+- **37, Document preview and split view** (no migration, PR #190 into
+  `staging`): map cards preview their Document on hover; a click menu
+  ("Apri a metà schermo" / "Apri il Documento") on map cards (from the name
+  while editing, the whole card read-only), `#Document` mentions on the
+  Document page and in the Documents page's cards; `?side=<id>` splits any
+  Room page (`PageLayout` → `SplitView`, width in `localStorage`), the right
+  pane is the full `DocumentView`. Not below `sm`.
+- **36 follow-up** (PR #190): mention maps draw only each card's tie to its
+  parent, on tightly packed rings.
+
 ### 2026-10-13
 
 - **Mentions block compact** (no migration): "Mentioned in" is collapsed by
@@ -339,10 +351,6 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-- **37, Document preview and split view** (spec written 2026-10-14, not
-  built): hover preview on map cards, a click menu (half screen or open the
-  Document) on maps, mentions and the Documents page, resizable split view.
-  Frontend only. Main points from the product owner; the rest *proposed*.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still

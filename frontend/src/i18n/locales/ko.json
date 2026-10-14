@@ -378,7 +378,14 @@
       "newTagPlaceholder": "예: 세력"
     },
     "notYetRead": "아직 읽지 않음",
-    "unreadCount_other": "새 댓글 {{count}}개"
+    "unreadCount_other": "새 댓글 {{count}}개",
+    "open": {
+      "side": "화면 절반에 열기",
+      "page": "문서 열기",
+      "resize": "패널 크기 조절",
+      "close": "패널 닫기",
+      "pane": "나란히 보는 문서"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",

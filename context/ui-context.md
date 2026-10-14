@@ -668,3 +668,24 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   recolored (`CardColorDialog`), nothing else (no adding, deleting,
   connecting, arrow editing, toolbar). Changes save automatically like a
   free map; read-only on phones and in View As. The center card is gold.
+
+## Document preview and split view (spec 37)
+
+- **Open menu** (`DocumentOpenMenu`): a click on a `#Document` mention
+  (Document page, and the Documents page's cards, where Document mentions
+  are links raised above the card's own link while Tag mentions stay
+  plain), on a map card's name while the map is edited, or anywhere on a
+  read-only map card opens a two-item Mantine `Menu`: "Apri a metà schermo"
+  (`SquareSplitHorizontalIcon`) and "Apri il Documento"
+  (`ArrowSquareOutIcon`). Ctrl/Cmd/Shift-click keeps the browser's default.
+  Below `sm` there is no menu: a click just follows the link.
+- **Hover preview on map cards**: as spec 32, through
+  `DocumentMentionPreview`, using the page's `DocumentMentionsProvider`
+  Documents; off while the card is dragged.
+- **Split view**: `?side=<documentId>` on any Room page (`PageLayout`)
+  splits it in `SplitView`: the page left, `DocumentSidePane` right (sticky
+  header with the name, an "Apri il Documento" icon link and a close
+  button, then the whole `DocumentView`). The divider is 8 px, a
+  `role="separator"` moved by pointer or arrow keys (5% steps), each pane
+  at least 320 px; the ratio is kept in `localStorage` (`splitView.ratio`).
+
