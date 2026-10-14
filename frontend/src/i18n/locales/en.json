@@ -950,6 +950,7 @@
       "depth": "Depth",
       "depthHelp": "0 shows only the Documents linked directly to this one; each step adds the next ring of mentions.",
       "preview": "Documents: {{documents}} · Relations: {{relations}}",
+      "previewLoading": "Loading the preview",
       "leftOut": "Not shown, since a map holds 150 cards: {{number}}",
       "nothingYet": "No mentions yet",
       "create": "Create map",

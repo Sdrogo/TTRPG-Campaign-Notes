@@ -930,6 +930,7 @@
       "depth": "깊이",
       "depthHelp": "0은 이 문서와 직접 연결된 문서만 보여 줍니다. 단계마다 다음 언급 고리가 추가됩니다.",
       "preview": "문서: {{documents}} · 관계: {{relations}}",
+      "previewLoading": "미리보기 불러오는 중",
       "leftOut": "지도에는 카드 150장까지만 놓을 수 있어 표시하지 않음: {{number}}",
       "nothingYet": "아직 언급이 없습니다",
       "create": "지도 만들기",

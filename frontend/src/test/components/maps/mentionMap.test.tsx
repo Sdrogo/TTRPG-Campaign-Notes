@@ -60,7 +60,9 @@ function renderModal(map: ReturnType<typeof toMentionMap> | null = null) {
 describe('MentionMapModal', () => {
   it('previews each depth and creates the map', async () => {
     const { onClose, user } = renderModal();
+    expect(screen.getByLabelText("Calcolo dell'anteprima")).toBeInTheDocument();
     expect(await screen.findByRole('status')).toHaveTextContent('Documenti: 2 · Relazioni: 3');
+    expect(screen.queryByLabelText("Calcolo dell'anteprima")).not.toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: '1' }));
     expect(await screen.findByText(/150 carte: 11/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Elimina mappa' })).not.toBeInTheDocument();

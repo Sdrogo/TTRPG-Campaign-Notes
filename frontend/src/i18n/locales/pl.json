@@ -990,6 +990,7 @@
       "depth": "Głębokość",
       "depthHelp": "0 pokazuje tylko dokumenty powiązane bezpośrednio z tym; każdy krok dodaje kolejny krąg wzmianek.",
       "preview": "Dokumenty: {{documents}} · Relacje: {{relations}}",
+      "previewLoading": "Wczytywanie podglądu",
       "leftOut": "Niepokazane, bo mapa mieści 150 kart: {{number}}",
       "nothingYet": "Brak wzmianek",
       "create": "Utwórz mapę",

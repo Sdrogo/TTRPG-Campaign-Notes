@@ -950,6 +950,7 @@
       "depth": "Profondità",
       "depthHelp": "0 mostra solo i Documenti collegati direttamente a questo; ogni passo aggiunge il giro successivo di menzioni.",
       "preview": "Documenti: {{documents}} · Relazioni: {{relations}}",
+      "previewLoading": "Calcolo dell'anteprima",
       "leftOut": "Non mostrati, perché una mappa contiene 150 carte: {{number}}",
       "nothingYet": "Ancora nessuna menzione",
       "create": "Crea mappa",

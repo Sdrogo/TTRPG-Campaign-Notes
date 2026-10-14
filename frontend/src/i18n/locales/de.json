@@ -950,6 +950,7 @@
       "depth": "Tiefe",
       "depthHelp": "0 zeigt nur die direkt mit diesem verbundenen Dokumente; jeder Schritt fügt den nächsten Ring von Erwähnungen hinzu.",
       "preview": "Dokumente: {{documents}} · Beziehungen: {{relations}}",
+      "previewLoading": "Vorschau wird geladen",
       "leftOut": "Nicht angezeigt, da eine Karte 150 Karten fasst: {{number}}",
       "nothingYet": "Noch keine Erwähnungen",
       "create": "Karte erstellen",

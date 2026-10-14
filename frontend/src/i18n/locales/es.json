@@ -950,6 +950,7 @@
       "depth": "Profundidad",
       "depthHelp": "0 muestra solo los documentos vinculados directamente a este; cada paso añade el siguiente anillo de menciones.",
       "preview": "Documentos: {{documents}} · Relaciones: {{relations}}",
+      "previewLoading": "Cargando la vista previa",
       "leftOut": "No mostrados, ya que un mapa admite 150 tarjetas: {{number}}",
       "nothingYet": "Aún no hay menciones",
       "create": "Crear mapa",

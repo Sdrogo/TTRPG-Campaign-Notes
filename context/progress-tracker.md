@@ -27,6 +27,10 @@ detail:
   mentions on every read and drawn under the Document's images; full screen
   page to move and recolor cards, copy as a free map. Built (36_1 backend,
   36_2 frontend); *proposed* decisions in the spec to confirm in the PR.
+- **Mention map preview loading** (36_2 follow-up, 2026-10-14, PR #189): the
+  modal shows a labelled loader while the preview loads, and the preview is
+  not retried, so an error shows at once; before, the Create button just
+  looked disabled (seen on staging while the backend had not deployed yet).
 - **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
   Room PDF style, `parchment`, modeled on a fantasy monster compendium the
   product owner shared: parchment-colored pages, brown small-capital

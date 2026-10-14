@@ -930,6 +930,7 @@
       "depth": "深さ",
       "depthHelp": "0 はこのドキュメントに直接つながるドキュメントだけを表示します。1 段階ごとに次の言及の輪が加わります。",
       "preview": "ドキュメント: {{documents}} · 関係: {{relations}}",
+      "previewLoading": "プレビューを読み込み中",
       "leftOut": "マップには 150 枚までしか置けないため非表示: {{number}}",
       "nothingYet": "まだ言及がありません",
       "create": "マップを作成",
