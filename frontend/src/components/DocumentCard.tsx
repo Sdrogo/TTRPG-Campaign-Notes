@@ -32,6 +32,12 @@ interface DocumentCardProps {
    * opened it since (spec 22 Decision 3).
    */
   revealed?: boolean;
+  /**
+   * The description's Document mentions are links of their own, each with
+   * its preview and open menu (spec 37 Decision 2): on the Documents page,
+   * not in a mention's preview, so a preview never opens another.
+   */
+  mentionLinks?: boolean;
 }
 
 /**
@@ -48,6 +54,7 @@ export function DocumentCard({
   members,
   headingOrder = 2,
   revealed = false,
+  mentionLinks = false,
 }: DocumentCardProps) {
   const { t } = useTranslation();
   const ownerNames = document.ownerIds.map((id) => displayNameFor(members, id)).join(', ');
@@ -128,10 +135,11 @@ export function DocumentCard({
             and Owner lines close the card at the bottom. */}
         <Box style={hasImages ? { flex: 1 } : undefined}>
           {document.description ? (
-            // The card is itself a link, so mentions are only colored here.
+            // The card's link lies over it: mentions are only colored here,
+            // or Document mentions sit above it as links of their own.
             <MentionText
               text={document.description}
-              linked={false}
+              linked={mentionLinks ? 'documents' : false}
               c="dimmed"
               size="sm"
               lineClamp={hasImages ? 5 : 2}

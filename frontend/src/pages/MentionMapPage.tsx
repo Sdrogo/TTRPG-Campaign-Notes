@@ -11,6 +11,7 @@ import { useReadOnly } from '../hooks/useViewAs';
 import { changedMentionCards } from '../lib/maps';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
+import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { MapBoard } from '../components/maps/MapBoard';
 import { MentionMapModal } from '../components/maps/MentionMapModal';
 import type { Board, MentionMap } from '../types/map';
@@ -35,7 +36,12 @@ export function MentionMapPage() {
   if (!roomId || !documentId) return null;
   if (loading) return <FullPageLoader />;
   if (!session) return <SignInRequired>{t('maps.signInRequired')}</SignInRequired>;
-  return <MentionMapContent roomId={roomId} documentId={documentId} />;
+  // The Room's Documents, for the cards' previews (spec 37 Decision 1).
+  return (
+    <DocumentMentionsProvider roomId={roomId} currentUserId={session.user.id}>
+      <MentionMapContent roomId={roomId} documentId={documentId} />
+    </DocumentMentionsProvider>
+  );
 }
 
 function MentionMapContent({ roomId, documentId }: { roomId: string; documentId: string }) {

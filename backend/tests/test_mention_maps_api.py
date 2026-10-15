@@ -136,7 +136,7 @@ async def _village(client: AsyncClient, room: _Room) -> dict[str, dict[str, Any]
     return {"thorn": thorn, "aldric": aldric, "mira": mira, "tavern": tavern, "lyra": lyra}
 
 
-async def test_a_mention_map_draws_the_document_its_mentions_and_their_relations(
+async def test_a_mention_map_draws_the_document_and_its_mentions(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
@@ -151,8 +151,8 @@ async def test_a_mention_map_draws_the_document_its_mentions_and_their_relations
         ("Mira", "forward", "Thorn"),
         ("Mira", "forward", "Aldric"),
         ("Tavern", "forward", "Mira"),
-        ("Thorn", "forward", "Aldric"),
     }
+    # Thorn mentions Aldric too, but only the relations with Mira are drawn.
     center = next(c for c in created["cards"] if c["document_id"] == v["mira"]["id"])
     assert center["color"] == "gold"
     # The Tavern mentions Mira: on the left; Thorn is mentioned: on the right.
@@ -170,7 +170,13 @@ async def test_a_mention_map_draws_the_document_its_mentions_and_their_relations
     assert deeper.status_code == 200, deeper.text
     assert deeper.json()["depth"] == 1
     assert _names(deeper.json()) == {"Mira", "Thorn", "Aldric", "Tavern", "Lyra"}
-    assert ("Lyra", "forward", "Tavern") in _relations(deeper.json())
+    # Lyra hangs off the Tavern, the card that brought her in.
+    assert _relations(deeper.json()) == {
+        ("Mira", "forward", "Thorn"),
+        ("Mira", "forward", "Aldric"),
+        ("Tavern", "forward", "Mira"),
+        ("Lyra", "forward", "Tavern"),
+    }
 
 
 async def test_the_map_follows_the_mentions_as_they_change(
@@ -353,7 +359,7 @@ async def test_a_mention_map_copies_into_a_free_map(
     body = copied.json()
     assert body["name"] == "Mira's circle"
     assert _names(body) == {"Mira", "Thorn", "Aldric", "Tavern"}
-    assert len(body["arrows"]) == 4
+    assert len(body["arrows"]) == 3
     listed = (await client.get(f"{room.url}/maps", headers=room.master)).json()
     assert [m["name"] for m in listed] == ["Mira's circle"]
 

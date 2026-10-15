@@ -380,7 +380,14 @@
     },
     "notYetRead": "Not yet read",
     "unreadCount_one": "{{count}} new comment",
-    "unreadCount_other": "{{count}} new comments"
+    "unreadCount_other": "{{count}} new comments",
+    "open": {
+      "side": "Open in half screen",
+      "page": "Open the Document",
+      "resize": "Resize the panes",
+      "close": "Close the pane",
+      "pane": "Document side by side"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",

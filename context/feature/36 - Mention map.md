@@ -42,20 +42,26 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
    owner). The sources are the ones of "Mentioned in" (spec 20 Decision 3):
    descriptions, Notes and Comments. A Document reached at an earlier step
    is never repeated.
-4. **Fully populated** (product owner): one relation for every pair of cards
-   on the map where one mentions the other, including pairs that don't
-   involve the center Document.
+4. **Only the ties to the center** (product owner, 2026-10-14, replacing
+   "fully populated" after trying it on a real Room, where the cross
+   relations drowned the map): a card is drawn with the relation to the
+   card that brought it in, so on the first ring only the relations with
+   the center Document; on a further step, the one with its parent card.
+   Mentions between other Documents are not drawn.
 5. **Direction = mention direction** (product owner): A mentions B gives an
    arrow A → B; A and B mentioning each other give **one two-way arrow**.
    Several mentions between the same two Documents make one relation. No
    labels; default color.
 6. **Look and layout** (product owner): the center Document's card is gold
    (`#C1A470`, spec 28 palette), the others default. The center sits in the
-   middle; on the first ring the Documents that only mention it are on the
-   left, those it only mentions on the right, mutual ones at the top and
-   bottom, sorted by name. Each further step is a wider ring, each card
-   placed near the angle of the card that brought it in. Spacing comes from
-   the card size so cards never overlap. Card images and captions follow
+   middle; the first ring is packed around it as tightly as the cards allow
+   (product owner, 2026-10-14: compact, Documents close to each other):
+   concentric rings one card apart, each holding as many cards as fit, the
+   Documents that only mention it on the left, those it only mentions on
+   the right, mutual ones at the top and bottom, sorted by name. Each
+   further step is a ring just outside, each card placed near the angle of
+   the card that brought it in. Spacing comes from the card size so cards
+   never overlap. Card images and captions follow
    spec 28 Decision 8 (favorite image, subtitle).
 7. **Hidden mentions never leak (Invariant 1, VR-07)** (product owner): a
    relation is only as visible as the place the mention is written in. For
@@ -133,8 +139,9 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
 - `app/domain/mention_maps.py` (pure):
   - `mention_graph(center_id, depth, mentions, visible)`: breadth-first, one
     ring per step, over the mentions the viewer sees (Decision 7); returns
-    the cards with their step and the relations with their direction
-    (`forward`, `both`), capped per Decision 10 with the left-out count.
+    the cards with their step and parent and the relations (Decision 4) with
+    their direction (`forward`, `both`), capped per Decision 10 with the
+    left-out count.
   - `ring_layout(graph, card_size)`: positions per Decision 6, deterministic
     for a given graph; a stored card position overrides it.
 - `mentions_repo.list_mentions_touching(session, document_ids)`: every
@@ -209,8 +216,8 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
   Tavern mentions in a Note, the Master opens "Mentions map", leaves depth
   0 and creates it: under Mira's image a board shows Mira in gold in the
   middle, the Tavern on the left with an arrow to Mira, Thorn and Aldric on
-  the right with arrows from Mira, and an arrow Thorn → Aldric because
-  Thorn's description mentions Aldric.
+  the right with arrows from Mira, and no arrow Thorn → Aldric even though
+  Thorn's description mentions Aldric (Decision 4).
 - The Master writes `#Lyra` in a Mira Note and saves: Lyra appears on the
   board. Removing the mention takes her away. Moving Thorn's card keeps its
   place after a reload.

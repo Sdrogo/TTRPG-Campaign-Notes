@@ -378,7 +378,14 @@
       "newTagPlaceholder": "例: 派閥"
     },
     "notYetRead": "未読",
-    "unreadCount_other": "新しいコメント{{count}}件"
+    "unreadCount_other": "新しいコメント{{count}}件",
+    "open": {
+      "side": "画面の半分で開く",
+      "page": "ドキュメントを開く",
+      "resize": "パネルのサイズを変更",
+      "close": "パネルを閉じる",
+      "pane": "横に並べたドキュメント"
+    }
   },
   "images": {
     "numbered": "{{name}}({{index}})",

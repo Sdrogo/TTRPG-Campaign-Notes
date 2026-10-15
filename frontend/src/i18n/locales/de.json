@@ -380,7 +380,14 @@
     },
     "notYetRead": "Noch nicht gelesen",
     "unreadCount_one": "{{count}} neuer Kommentar",
-    "unreadCount_other": "{{count}} neue Kommentare"
+    "unreadCount_other": "{{count}} neue Kommentare",
+    "open": {
+      "side": "In halbem Bildschirm öffnen",
+      "page": "Dokument öffnen",
+      "resize": "Bereiche anpassen",
+      "close": "Bereich schließen",
+      "pane": "Dokument daneben"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",

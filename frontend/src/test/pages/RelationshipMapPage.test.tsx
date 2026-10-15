@@ -248,6 +248,15 @@ describe('RelationshipMapPage', () => {
     expect(screen.getByRole('textbox', { name: /Nome/ })).toHaveValue('La Corte');
   });
 
+  it('draws the board before the Room Documents and Tags load', async () => {
+    const answer = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation((path: string, init?: Init) =>
+      /\/(documents|tags)/.test(path) ? new Promise(() => {}) : answer(path, init),
+    );
+    render();
+    expect(await screen.findByTestId('board')).toHaveTextContent('cards');
+  });
+
   it('closes the delete confirmation with Escape', async () => {
     const { user } = render();
     await user.click(await screen.findByRole('button', { name: 'Elimina mappa' }));

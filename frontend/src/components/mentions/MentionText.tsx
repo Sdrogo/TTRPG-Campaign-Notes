@@ -2,23 +2,22 @@ import { useMemo } from 'react';
 import { Anchor, Text, type TextProps } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { DocumentMentionPreview } from './DocumentMentionPreview';
+import { DocumentOpenMenu } from '../documents/DocumentOpenMenu';
 import { useDocumentMentions } from '../../hooks/useDocumentMentions';
-import {
-  mentionHref,
-  resolveContentToken,
-  splitMentions,
-  type MentionSegment,
-} from '../../lib/documentMentions';
+import { mentionHref, resolveContentToken, splitMentions, type MentionSegment } from '../../lib/documentMentions';
 import { resolveUserMention, splitMentionTokens, type UserMention } from '../../lib/mentionTokens';
 import type { Member } from '../../types/member';
 
 interface MentionTextProps extends TextProps {
   text: string;
   /**
-   * False inside something that is already a link (e.g. a `DocumentCard`):
-   * mentions are then only colored, since links can't nest.
+   * False inside something that is already a link (e.g. a `DocumentCard` in a
+   * preview): mentions are then only colored, since links can't nest.
+   * `'documents'` on a card that lays its own link over itself (the Documents
+   * page, spec 37 Decision 2): only Document mentions are links, raised above
+   * the card's link; Tag mentions stay colored text.
    */
-  linked?: boolean;
+  linked?: boolean | 'documents';
   /**
    * The Room's members, where `text` may hold `@[Name](user:<uuid>)` tokens
    * (Comments, spec 19c): each is shown as `@Name`.
@@ -62,14 +61,7 @@ export function MentionText({ text, linked = true, members, ...textProps }: Ment
         if (segment.kind === 'user') {
           const resolved = resolveUserMention(segment, members!);
           return resolved.member ? (
-            <Text
-              key={index}
-              span
-              inherit
-              fw={600}
-              c="var(--accent-primary)"
-              data-testid="user-mention"
-            >
+            <Text key={index} span inherit fw={600} c="var(--accent-primary)" data-testid="user-mention">
               {resolved.text}
             </Text>
           ) : (
@@ -77,7 +69,7 @@ export function MentionText({ text, linked = true, members, ...textProps }: Ment
           );
         }
         const testId = `${segment.kind}-mention`;
-        if (linked && mentions) {
+        if (mentions && (linked === true || (linked === 'documents' && segment.kind === 'document'))) {
           const link = (
             <Anchor
               key={index}
@@ -86,19 +78,17 @@ export function MentionText({ text, linked = true, members, ...textProps }: Ment
               inherit
               c="var(--accent-primary)"
               data-testid={testId}
+              style={linked === 'documents' ? { position: 'relative', zIndex: 2 } : undefined}
             >
               {segment.text}
             </Anchor>
           );
           return segment.kind === 'document' ? (
-            <DocumentMentionPreview
-              key={index}
-              roomId={mentions.roomId}
-              document={segment.document}
-              tags={mentions.tags}
-            >
-              {link}
-            </DocumentMentionPreview>
+            <DocumentOpenMenu key={index} roomId={mentions.roomId} documentId={segment.document.id}>
+              <DocumentMentionPreview roomId={mentions.roomId} document={segment.document} tags={mentions.tags}>
+                {link}
+              </DocumentMentionPreview>
+            </DocumentOpenMenu>
           ) : (
             link
           );

@@ -335,6 +335,7 @@ function DocumentsGrid({
           members={memberList}
           headingOrder={headingOrder}
           revealed={hasUnseenReveal(reveals.data, document.id)}
+          mentionLinks
         />
       ))}
     </Box>

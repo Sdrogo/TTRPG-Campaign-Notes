@@ -380,7 +380,14 @@
     },
     "notYetRead": "Nog niet gelezen",
     "unreadCount_one": "{{count}} nieuwe opmerking",
-    "unreadCount_other": "{{count}} nieuwe opmerkingen"
+    "unreadCount_other": "{{count}} nieuwe opmerkingen",
+    "open": {
+      "side": "Openen op half scherm",
+      "page": "Document openen",
+      "resize": "Panelen aanpassen",
+      "close": "Paneel sluiten",
+      "pane": "Document ernaast"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",

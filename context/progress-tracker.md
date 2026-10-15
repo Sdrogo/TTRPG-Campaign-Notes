@@ -31,6 +31,12 @@ detail:
   modal shows a labelled loader while the preview loads, and the preview is
   not retried, so an error shows at once; before, the Create button just
   looked disabled (seen on staging while the backend had not deployed yet).
+- **Mention map: only ties to the center, compact layout** (36 follow-up,
+  2026-10-14, product owner after a real Room): the map draws only the
+  relation tying each card to the card that brought it in (the center on
+  the first ring), no cross relations; the first ring is packed in
+  concentric rings one card apart instead of four fixed 90° sectors. No
+  migration; saved card positions keep winning.
 - **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
   Room PDF style, `parchment`, modeled on a fantasy monster compendium the
   product owner shared: parchment-colored pages, brown small-capital
@@ -112,6 +118,18 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
+
+### 2026-10-14
+
+- **37, Document preview and split view** (no migration, PR #190 into
+  `staging`): map cards preview their Document on hover; a click menu
+  ("Apri a metà schermo" / "Apri il Documento") on map cards (from the name
+  while editing, the whole card read-only), `#Document` mentions on the
+  Document page and in the Documents page's cards; `?side=<id>` splits any
+  Room page (`PageLayout` → `SplitView`, width in `localStorage`), the right
+  pane is the full `DocumentView`. Not below `sm`.
+- **36 follow-up** (PR #190): mention maps draw only each card's tie to its
+  parent, on tightly packed rings.
 
 ### 2026-10-13
 
