@@ -4,6 +4,7 @@ import { useConnection, type NodeProps } from '@xyflow/react';
 import { DotsSixIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { useBackState } from '../../lib/backNav';
 import { CARD_WIDTH, colorValue } from '../../lib/maps';
 import type { DocumentCardNodeType } from '../../types/mapNodes';
 import { useDocumentMentions } from '../../hooks/useDocumentMentions';
@@ -65,10 +66,12 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
   // While an arrow is being drawn (a click or drag already made) no card previews.
   const drawing = useConnection((connection) => connection.inProgress);
 
+  const backState = useBackState();
   const name = (
     <Text
       component={Link}
       to={`/rooms/${roomId}/documents/${document.id}`}
+      state={backState}
       fw={600}
       ta="center"
       c={colorValue(card.color)}

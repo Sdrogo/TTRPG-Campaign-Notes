@@ -4,6 +4,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { ArrowSquareOutIcon, SquareSplitHorizontalIcon } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useBackState } from '../../lib/backNav';
 import { OpenMenuContext, SPLIT_QUERY, useSideDocument } from '../../hooks/useSideDocument';
 
 interface DocumentOpenMenuProps {
@@ -32,6 +33,7 @@ export function DocumentOpenMenu({
 }: DocumentOpenMenuProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const backState = useBackState();
   const wide = useMediaQuery(SPLIT_QUERY, true);
   const { open } = useSideDocument();
   const [opened, setOpenedState] = useState(false);
@@ -68,7 +70,7 @@ export function DocumentOpenMenu({
         </Menu.Item>
         <Menu.Item
           leftSection={<ArrowSquareOutIcon size={16} />}
-          onClick={() => void navigate(`/rooms/${roomId}/documents/${documentId}`)}
+          onClick={() => void navigate(`/rooms/${roomId}/documents/${documentId}`, { state: backState })}
         >
           {t('documents.open.page')}
         </Menu.Item>

@@ -159,26 +159,26 @@ describe('AppHeader', () => {
   });
 
   describe('with a back destination', () => {
-    // The button prefers real browser history over the fixed `backTo`, so it
-    // lands wherever the user actually came from.
-    it('falls back to backTo when there is no app history behind this page', async () => {
+    // Back is hierarchical: it climbs to the page's parent, never through the
+    // browser history, so a map or a split view in between cannot derail it.
+    it('goes up to backTo, replacing the current entry', async () => {
       renderWithProviders(<AppHeader backTo="/rooms/room-1/documents" backLabel="Documenti" />);
       const user = userEvent.setup();
 
       await user.click(screen.getByRole('button', { name: 'Documenti' }));
 
-      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents');
+      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true });
     });
 
-    it('goes back through real browser history when there is some', async () => {
-      // Set by React Router's BrowserHistory after at least one in-app push.
+    it('ignores browser history even when there is some', async () => {
       window.history.pushState({ idx: 1 }, '', '/somewhere-else');
       renderWithProviders(<AppHeader backTo="/rooms/room-1/documents" backLabel="Documenti" />);
       const user = userEvent.setup();
 
       await user.click(screen.getByRole('button', { name: 'Documenti' }));
 
-      expect(navigate).toHaveBeenCalledWith(-1);
+      expect(navigate).not.toHaveBeenCalledWith(-1);
+      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true });
     });
 
     it('renders alongside the Glossary burger on a Room page', () => {
