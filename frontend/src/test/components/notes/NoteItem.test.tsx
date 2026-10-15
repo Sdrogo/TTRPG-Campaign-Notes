@@ -1,8 +1,9 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { matchMediaQueries } from '../../media';
 import { DocumentMentionsContext } from '../../../hooks/useDocumentMentions';
-import { renderWithProviders } from '../../utils';
+import { openNoteActions, renderWithProviders } from '../../utils';
 import { NoteItem } from '../../../components/notes/NoteItem';
 import { stopSpeech } from '../../../lib/speechPlayer';
 import { installFakeSpeech } from '../../speech';
@@ -103,6 +104,7 @@ function render(options: Options = {}) {
       />
     </DocumentMentionsContext>,
   );
+  openNoteActions();
   return { onMove, onUpdate, onDelete, user: userEvent.setup() };
 }
 
@@ -354,7 +356,9 @@ describe('hearing a Note (spec 30)', () => {
   it('offers no speaker where the browser cannot speak', () => {
     render({ note: { canEdit: false, canDelete: false } });
 
-    expect(screen.queryByRole('button', { name: 'Ascolta «Porta segreta»' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ascolta «Porta segreta»' }),
+    ).not.toBeInTheDocument();
   });
 
   it('lets every reader hear it, not only who can edit it', async () => {
@@ -369,5 +373,39 @@ describe('hearing a Note (spec 30)', () => {
     expect(speech.spoken.map((u) => u.text)).toEqual(['Porta segreta.', 'Dietro la libreria.']);
     await user.click(screen.getByRole('button', { name: 'Interrompi la lettura' }));
     expect(screen.getByRole('button', { name: 'Ascolta «Porta segreta»' })).toBeInTheDocument();
+  });
+});
+
+describe('the "⋮" menu', () => {
+  const menu = () => screen.getByRole('button', { name: 'Azioni per la Nota: Porta segreta' });
+
+  it('folds the actions and unfolds them in place', async () => {
+    const { user } = render();
+    expect(menu()).toHaveAttribute('aria-expanded', 'true');
+    expect(editButton()).toBeInTheDocument();
+
+    await user.click(menu());
+    expect(menu()).toHaveAttribute('aria-expanded', 'false');
+    expect(editButton()).not.toBeInTheDocument();
+    expect(deleteButton()).not.toBeInTheDocument();
+  });
+
+  it('is absent when the member has no action on the Note', () => {
+    render({ note: { canEdit: false, canDelete: false } });
+
+    expect(screen.queryByRole('button', { name: /^Azioni per la Nota/ })).not.toBeInTheDocument();
+  });
+
+  it('unfolds on a row of its own on a phone, with an icon-only visibility badge', async () => {
+    const restore = matchMediaQueries(['(max-width: 48em)']);
+    try {
+      const { user } = render();
+      await user.click(menu());
+      await user.click(menu());
+      expect(editButton()).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'Stanza' })).toBeInTheDocument();
+    } finally {
+      restore();
+    }
   });
 });

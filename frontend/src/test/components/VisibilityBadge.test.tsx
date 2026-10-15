@@ -24,4 +24,11 @@ describe('VisibilityBadge', () => {
     expect(screen.queryByText('Stanza')).not.toBeInTheDocument();
     expect(screen.getByText('Privato')).toBeInTheDocument();
   });
+
+  it('compact shows only an icon, still named by its level', () => {
+    renderWithProviders(<VisibilityBadge visibility="master" compact />);
+
+    expect(screen.getByRole('img', { name: 'Solo Master' })).toBeInTheDocument();
+    expect(screen.queryByText('Solo Master')).not.toBeInTheDocument();
+  });
 });

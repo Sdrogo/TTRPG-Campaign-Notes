@@ -1,6 +1,7 @@
-import { ActionIcon, Box, Group, Image, UnstyledButton } from '@mantine/core';
+import { Box, Group, Image, UnstyledButton } from '@mantine/core';
 import { XIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from './LabeledActionIcon';
 
 /** One image in an `ImageThumbnailGrid`: stored or still pending. */
 export interface Thumbnail {
@@ -50,7 +51,7 @@ export function ImageThumbnailGrid({ images, size = 96, onOpen, onRemove }: Imag
               picture
             )}
             {onRemove && (
-              <ActionIcon
+              <LabeledActionIcon
                 size="sm"
                 color="red"
                 variant="filled"
@@ -61,7 +62,7 @@ export function ImageThumbnailGrid({ images, size = 96, onOpen, onRemove }: Imag
                 aria-label={t('images.removeNamed', { name: image.label })}
               >
                 <XIcon size={12} />
-              </ActionIcon>
+              </LabeledActionIcon>
             )}
           </Box>
         );

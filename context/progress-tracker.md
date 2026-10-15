@@ -119,6 +119,18 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-15
+
+- **Mobile Document header, Note actions and icon labels** (frontend only, no
+  migration): the Document's actions and each Note's actions are folded into a
+  "⋮" on every screen size (uniform, Andrea). On a big screen they unfold in place beside it;
+  below `sm` they unfold on a row under the header, and the name, the visibility
+  badge (icon only there, `VisibilityBadge compact`, level as tooltip) and the
+  read-aloud controls share one line, the name wrapping to two lines but always visible.
+  Every icon-only button shows its label as a tooltip on hover or long-press:
+  `LabeledActionIcon` wraps `ActionIcon` + `Tooltip` using the `aria-label`. New keys
+  `documents.detail.actions` and `notes.actions` in all 12 languages.
+
 ### 2026-10-14
 
 - **37, Document preview and split view** (no migration, PR #190 into

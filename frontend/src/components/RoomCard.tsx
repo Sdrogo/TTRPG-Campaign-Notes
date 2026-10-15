@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActionIcon, Box, Card, Group, Menu, Stack, Title, Text } from '@mantine/core';
+import { Box, Card, Group, Menu, Stack, Title, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import {
   CopyIcon,
@@ -15,6 +15,7 @@ import { InviteModal } from './InviteModal';
 import { LeaveRoomModal } from './LeaveRoomModal';
 import type { MyRoom } from '../types/room';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from './LabeledActionIcon';
 
 // With an image the card grows so its right half reads as a picture, not a
 // strip (as a DocumentCard does, though shorter: a Room card has less text).
@@ -99,13 +100,13 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
         >
           <Menu position="bottom-end" shadow="md">
             <Menu.Target>
-              <ActionIcon
+              <LabeledActionIcon
                 variant="subtle"
                 color="gray"
                 aria-label={t('rooms.actions', { name: room.name })}
               >
                 <DotsThreeVerticalIcon size={18} />
-              </ActionIcon>
+              </LabeledActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
               {canSetup && (

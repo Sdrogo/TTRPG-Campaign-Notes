@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../../lib/apiClient';
 import { notifyError, notifySuccess } from '../../../lib/notify';
 import { rawNote } from '../../fixtures';
-import { createTestQueryClient, renderWithProviders } from '../../utils';
+import { createTestQueryClient, openNoteActions, renderWithProviders } from '../../utils';
 import { NoteList } from '../../../components/notes/NoteList';
 import { toNote, type RawNote } from '../../../lib/notes';
 import type { Document } from '../../../types/document';
@@ -52,6 +52,7 @@ function render(notes: Note[], canAdd = true, route = '/') {
     </div>,
     { route },
   );
+  openNoteActions();
   return { host: screen.getByTestId('host'), user: userEvent.setup(), view };
 }
 
@@ -320,6 +321,7 @@ describe('revealing a Note', () => {
         revealFrom={roomDocument(notes)}
       />,
     );
+    openNoteActions();
     return userEvent.setup();
   }
 
