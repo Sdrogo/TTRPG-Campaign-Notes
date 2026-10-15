@@ -29,6 +29,7 @@
     "noResults": "결과 없음",
     "resetFilters": "필터 초기화",
     "goToLogin": "로그인으로 이동",
+    "back": "뒤로",
     "myRooms": "내 룸",
     "backToMyRooms": "내 룸으로 돌아가기",
     "maxLength": "최대 {{max}}자",

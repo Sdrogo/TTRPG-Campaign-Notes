@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Box, Burger, Group, Title, UnstyledButton } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
@@ -11,6 +11,7 @@ import { SearchButton } from './search/SearchButton';
 import { GlossaryIndexDrawer } from './GlossaryIndexDrawer';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from './LabeledActionIcon';
+import { backDestination } from '../lib/backNav';
 
 interface AppHeaderProps {
   /** Given on a Room-scoped page, this shows a burger toggling the Room's
@@ -19,7 +20,8 @@ interface AppHeaderProps {
    *  where there is no Room to index or search. */
   roomId?: string;
   /** Given on any nested page, this shows a "back" arrow (icon only, named
-   *  by `backLabel` for screen readers) before the burger. Omitted on the
+   *  by `backLabel` for screen readers) before the burger, to the page it was
+   *  opened from or else to `backTo`, its parent. Omitted on the
    *  Rooms list (`HomePage`), which is the app's own root and has nowhere to
    *  go back to. */
   backTo?: string;
@@ -29,18 +31,6 @@ interface AppHeaderProps {
 // How far down the page the bar stays put whatever the scroll direction: about
 // its own height, so it never slides away while it's still in its natural spot.
 const HEADER_FIXED_AT = 80;
-
-/**
- * Whether there is an entry in *this app's own* browser history to go back
- * to. `window.history.state.idx` is set by the browser history React Router
- * (`BrowserRouter`) uses - `0` for the very first entry it created, so a
- * value greater than that means at least one in-app navigation happened
- * before this page.
- */
-function hasAppHistory(): boolean {
-  const idx = (window.history.state as { idx?: number } | null)?.idx;
-  return typeof idx === 'number' && idx > 0;
-}
 
 /**
  * The top navigation bar shown on every signed-in page: the back arrow and,
@@ -61,12 +51,15 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   // While previewing as a member, the bar and its banner never slide away.
   const viewAs = useViewAs();
 
-  const handleBack = (destination: string) => {
-    if (hasAppHistory()) {
-      navigate(-1);
-    } else {
-      navigate(destination);
-    }
+  const location = useLocation();
+
+  // Hierarchical, never the browser history: the page this one was opened
+  // from (a map from a Document...), else its fixed parent. It replaces the
+  // current entry so back and the browser's Back never ping-pong.
+  const destination = backDestination(location.state, backTo ?? '/');
+  const label = backTo && destination !== backTo ? t('common.back') : backLabel;
+  const handleBack = () => {
+    void navigate(destination, { replace: true });
   };
 
   return (
@@ -83,11 +76,11 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
         <Group gap="xs" wrap="nowrap">
           {backTo && (
             <LabeledActionIcon
-              onClick={() => handleBack(backTo)}
+              onClick={handleBack}
               variant="subtle"
               color="gray"
               size="lg"
-              aria-label={backLabel}
+              aria-label={label}
             >
               <ArrowLeftIcon size={20} />
             </LabeledActionIcon>

@@ -22,7 +22,9 @@ export interface SideDocument {
 
 /**
  * The Document open in the half-screen pane, kept in the address so a reload
- * or the Back button keeps it (spec 37 Decision 3), with ways to open one
+ * keeps it (spec 37 Decision 3); opening or closing it replaces the current
+ * history entry, so the browser's Back leaves the page instead of stepping
+ * through every pane change, with ways to open one
  * there (replacing any other) and to close it.
  */
 export function useSideDocument(): SideDocument {
@@ -34,7 +36,7 @@ export function useSideDocument(): SideDocument {
         const next = new URLSearchParams(current);
         next.set(SIDE_PARAM, documentId);
         return next;
-      }),
+      }, { replace: true }),
     [setParams],
   );
   const close = useCallback(
@@ -43,7 +45,7 @@ export function useSideDocument(): SideDocument {
         const next = new URLSearchParams(current);
         next.delete(SIDE_PARAM);
         return next;
-      }),
+      }, { replace: true }),
     [setParams],
   );
   return { sideId, open, close };

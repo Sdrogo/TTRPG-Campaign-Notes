@@ -29,6 +29,7 @@
     "noResults": "No results",
     "resetFilters": "Reset filters",
     "goToLogin": "Go to sign in",
+    "back": "Back",
     "myRooms": "My Rooms",
     "backToMyRooms": "Back to my Rooms",
     "maxLength": "At most {{max}} characters",

@@ -29,6 +29,7 @@
     "noResults": "結果がありません",
     "resetFilters": "フィルターをリセット",
     "goToLogin": "ログインへ",
+    "back": "戻る",
     "myRooms": "マイルーム",
     "backToMyRooms": "マイルームに戻る",
     "maxLength": "最大{{max}}文字",
