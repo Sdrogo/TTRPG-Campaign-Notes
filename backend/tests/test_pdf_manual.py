@@ -600,3 +600,20 @@ async def test_a_child_killed_mid_render_raises_instead_of_hanging() -> None:
 
     with pytest.raises(BrokenProcessPool):
         await export_pdf_job._run_in_child(os._exit, (1,))
+
+
+def test_the_typesetting_process_lowers_its_priority_and_copes_without_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.pdf.render import lower_priority
+
+    niced: list[int] = []
+    monkeypatch.setattr(os, "nice", niced.append)
+    lower_priority()
+    assert niced == [10]
+
+    def refused(_: int) -> int:
+        raise PermissionError
+
+    monkeypatch.setattr(os, "nice", refused)
+    lower_priority()
