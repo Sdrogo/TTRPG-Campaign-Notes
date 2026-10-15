@@ -34,18 +34,19 @@ describe('App routes', () => {
     ['/rooms/room-1/members', 'members redirect'],
     ['/rooms/room-1/documents', 'documents'],
     ['/rooms/room-1/documents/doc-1', 'detail'],
-  ])('renders %s', (route, marker) => {
+  ])('renders %s', async (route, marker) => {
     renderWithProviders(<App />, { route });
 
-    expect(screen.getByText(marker)).toBeInTheDocument();
+    // Pages other than the home page are lazy-loaded.
+    expect(await screen.findByText(marker)).toBeInTheDocument();
   });
 
   // The Document detail route is nested under the Documents route; the more
   // specific one has to win rather than both matching.
-  it('prefers the Document detail route over the Documents list', () => {
+  it('prefers the Document detail route over the Documents list', async () => {
     renderWithProviders(<App />, { route: '/rooms/room-1/documents/doc-1' });
 
-    expect(screen.getByText('detail')).toBeInTheDocument();
+    expect(await screen.findByText('detail')).toBeInTheDocument();
     expect(screen.queryByText('documents')).not.toBeInTheDocument();
   });
 

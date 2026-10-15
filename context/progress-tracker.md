@@ -121,6 +121,11 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-15
 
+- **Route code splitting** (frontend only, no migration): Vercel warned the entry
+  chunk was 1,665 kB. Every page except `HomePage` is now `React.lazy` in
+  `App.tsx` (one `Suspense`), so the entry chunk is about 315 kB and no chunk
+  is over 500 kB; the warning limit is untouched. `App.test.tsx` awaits the
+  lazy pages with `findByText`.
 - **Mobile Document header, Note actions and icon labels** (frontend only, no
   migration): the Document's actions and each Note's actions are folded into a
   "⋮" on every screen size (uniform, Andrea). On a big screen they unfold in place beside it;
