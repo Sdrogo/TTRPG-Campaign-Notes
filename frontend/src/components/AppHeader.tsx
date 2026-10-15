@@ -56,8 +56,10 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   // Hierarchical, never the browser history: the page this one was opened
   // from (a map from a Document...), else its fixed parent. It replaces the
   // current entry so back and the browser's Back never ping-pong.
-  const handleBack = (parent: string) => {
-    void navigate(backDestination(location.state, parent), { replace: true });
+  const destination = backDestination(location.state, backTo ?? '/');
+  const label = backTo && destination !== backTo ? t('common.back') : backLabel;
+  const handleBack = () => {
+    void navigate(destination, { replace: true });
   };
 
   return (
@@ -74,11 +76,11 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
         <Group gap="xs" wrap="nowrap">
           {backTo && (
             <LabeledActionIcon
-              onClick={() => handleBack(backTo)}
+              onClick={handleBack}
               variant="subtle"
               color="gray"
               size="lg"
-              aria-label={backLabel}
+              aria-label={label}
             >
               <ArrowLeftIcon size={20} />
             </LabeledActionIcon>

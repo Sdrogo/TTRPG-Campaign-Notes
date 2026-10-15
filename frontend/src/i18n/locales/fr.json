@@ -29,6 +29,7 @@
     "noResults": "Aucun résultat",
     "resetFilters": "Réinitialiser les filtres",
     "goToLogin": "Aller à la connexion",
+    "back": "Retour",
     "myRooms": "Mes Salles",
     "backToMyRooms": "Retour à mes Salles",
     "maxLength": "{{max}} caractères maximum",

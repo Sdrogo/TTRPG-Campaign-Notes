@@ -29,6 +29,7 @@
     "noResults": "Sin resultados",
     "resetFilters": "Restablecer filtros",
     "goToLogin": "Ir al inicio de sesión",
+    "back": "Atrás",
     "myRooms": "Mis Salas",
     "backToMyRooms": "Volver a mis Salas",
     "maxLength": "Máximo {{max}} caracteres",
