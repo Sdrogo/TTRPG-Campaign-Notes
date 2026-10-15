@@ -15,11 +15,16 @@ export function SplitView({ left, right }: { left: ReactNode; right: ReactNode }
   const container = useRef<HTMLDivElement>(null);
   const [ratio, setRatio] = useState(storedRatio);
 
-  // A width remembered on a wider screen may not fit this one: fit it before
-  // the first paint, without forgetting what was chosen there.
+  // A width remembered on a wider screen, or kept while the window narrows,
+  // may not fit: fit it before the first paint and on every resize, without
+  // forgetting what was chosen.
   useLayoutEffect(() => {
-    const width = container.current!.getBoundingClientRect().width;
-    setRatio((current) => clampRatio(current, width));
+    const element = container.current!;
+    const fit = () => setRatio((current) => clampRatio(current, element.getBoundingClientRect().width));
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(element);
+    return () => observer.disconnect();
   }, []);
 
   const update = (next: number) => {

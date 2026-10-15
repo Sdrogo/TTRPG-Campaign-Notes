@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../utils';
 import { SplitView } from '../../../components/layout/SplitView';
@@ -38,6 +38,29 @@ describe('SplitView (spec 37 Decision 3)', () => {
     renderWithProviders(<SplitView left={<p>Mappa</p>} right={<p>Thorn</p>} />);
     expect(screen.getByRole('separator')).toHaveAttribute('aria-valuenow', '68');
     expect(window.localStorage.getItem(SPLIT_STORAGE_KEY)).toBe('0.9');
+  });
+
+  it('fits the panes again when the window narrows', () => {
+    let resized = () => {};
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: () => void) {
+          resized = callback;
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    window.localStorage.setItem(SPLIT_STORAGE_KEY, '0.65');
+    const { unmount } = renderWithProviders(<SplitView left={<p>Mappa</p>} right={<p>Thorn</p>} />);
+    const divider = screen.getByRole('separator');
+    expect(divider).toHaveAttribute('aria-valuenow', '65');
+
+    vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockReturnValue({ left: 0, width: 800 } as DOMRect);
+    act(() => resized());
+    expect(divider).toHaveAttribute('aria-valuenow', '60');
+    unmount();
   });
 
   it('follows the pointer while dragged, within the panes minimum width', () => {
