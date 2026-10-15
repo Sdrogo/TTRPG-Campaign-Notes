@@ -136,8 +136,9 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
     mentions), and the map is **linked to the Document**: shown on its page
     under the images (and under its own mention map, if any), read-only,
     with a link to the map's page. One linked map per Document: adding to
-    another replaces it. Whoever manages the map takes it off the page with
-    an unlink button (the map stays); deleting the map or the Document
+    another replaces it, but only for whoever manages the map linked so
+    far (403 otherwise, nothing added). Whoever manages the map takes it off
+    the page with an unlink button (the map stays); deleting the map or the Document
     removes the link. A viewer who doesn't see the map doesn't see it on
     the page, and its board shows each viewer what they see (spec 28).
     A Document already on the map keeps its card (place, color, arrows);

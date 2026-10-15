@@ -521,3 +521,37 @@ async def test_a_linked_map_hidden_from_the_viewer_is_not_shown(
     linked = f"{room.url}/documents/{v['mira']['id']}/linked-map"
     assert (await client.get(linked, headers=room.master)).status_code == 200
     assert (await client.get(linked, headers=room.player)).status_code == 404
+
+
+async def test_only_who_manages_the_linked_map_may_replace_it(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    v = await _village(client, room)
+    court = (
+        await client.post(f"{room.url}/maps", json={"name": "Court"}, headers=room.master)
+    ).json()
+    mine = (
+        await client.post(f"{room.url}/maps", json={"name": "Mine"}, headers=room.player)
+    ).json()
+    url = _url(room, v["mira"], "/add-to-map")
+    linked = f"{room.url}/documents/{v['mira']['id']}/linked-map"
+    await client.post(url, json={"map_id": court["id"]}, headers=room.master)
+
+    # The Player may not replace the Master's map, and nothing is added.
+    refused = await client.post(url, json={"map_id": mine["id"]}, headers=room.player)
+    assert refused.status_code == 403
+    assert (await client.get(linked, headers=room.master)).json()["name"] == "Court"
+    board = await client.get(f"{room.url}/maps/{mine['id']}", headers=room.player)
+    assert board.json()["cards"] == []
+
+    # Once the Master unlinks it, the Player links their own map.
+    await client.delete(linked, headers=room.master)
+    assert (
+        await client.post(url, json={"map_id": mine["id"]}, headers=room.player)
+    ).status_code == 200
+    assert (await client.get(linked, headers=room.master)).json()["name"] == "Mine"
+    # The Master manages every map, so may replace it.
+    assert (
+        await client.post(url, json={"map_id": court["id"]}, headers=room.master)
+    ).status_code == 200
