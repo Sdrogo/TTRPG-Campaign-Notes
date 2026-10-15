@@ -69,6 +69,18 @@ describe('PageLayout with a Document beside the page (spec 37)', () => {
     expect(screen.getByText('La mappa')).toBeInTheDocument();
   });
 
+  it('says when the Document is gone or hidden, and still closes', async () => {
+    restore = matchMediaQueries([SPLIT_QUERY]);
+    fetchMock.mockImplementation((path: string) =>
+      path === '/rooms/room-1/documents/doc-9' ? Promise.reject(new Error('404')) : Promise.resolve([]),
+    );
+    const user = renderPage('/rooms/room-1/maps/map-1?side=doc-9');
+    expect(await screen.findByText("Documento non trovato o non visibile.")).toBeInTheDocument();
+    expect(screen.queryByText('Vista di doc-9')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Chiudi il pannello' }));
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
+  });
+
   it('waits for the session before showing the Document', () => {
     restore = matchMediaQueries([SPLIT_QUERY]);
     sessionMock.mockReturnValue({ session: null, loading: true } as SessionState);

@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { clampRatio, KEY_STEP, storedRatio, storeRatio } from '../../lib/splitView';
@@ -14,6 +14,13 @@ export function SplitView({ left, right }: { left: ReactNode; right: ReactNode }
   const { t } = useTranslation();
   const container = useRef<HTMLDivElement>(null);
   const [ratio, setRatio] = useState(storedRatio);
+
+  // A width remembered on a wider screen may not fit this one: fit it before
+  // the first paint, without forgetting what was chosen there.
+  useLayoutEffect(() => {
+    const width = container.current!.getBoundingClientRect().width;
+    setRatio((current) => clampRatio(current, width));
+  }, []);
 
   const update = (next: number) => {
     const clamped = clampRatio(next, container.current!.getBoundingClientRect().width);

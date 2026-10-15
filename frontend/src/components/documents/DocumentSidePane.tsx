@@ -71,8 +71,15 @@ export function DocumentSidePane({
           </Tooltip>
         </Group>
       </Group>
-      {session && (
-        <DocumentView key={documentId} roomId={roomId} documentId={documentId} currentUserId={session.user.id} />
+      {document.isError ? (
+        // A Document that is gone or hidden from the viewer: the header keeps the close button.
+        <Text c="dimmed" px="xs">
+          {t('documents.detail.notFound')}
+        </Text>
+      ) : (
+        session && (
+          <DocumentView key={documentId} roomId={roomId} documentId={documentId} currentUserId={session.user.id} />
+        )
       )}
     </Box>
   );

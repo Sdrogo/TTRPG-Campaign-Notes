@@ -33,6 +33,13 @@ describe('SplitView (spec 37 Decision 3)', () => {
     expect(screen.getByText('Thorn')).toBeInTheDocument();
   });
 
+  it('fits a width remembered on a wider screen, without forgetting it', () => {
+    window.localStorage.setItem(SPLIT_STORAGE_KEY, '0.9');
+    renderWithProviders(<SplitView left={<p>Mappa</p>} right={<p>Thorn</p>} />);
+    expect(screen.getByRole('separator')).toHaveAttribute('aria-valuenow', '68');
+    expect(window.localStorage.getItem(SPLIT_STORAGE_KEY)).toBe('0.9');
+  });
+
   it('follows the pointer while dragged, within the panes minimum width', () => {
     // jsdom has no PointerEvent, so the coordinates would be dropped.
     class FakePointerEvent extends MouseEvent {
