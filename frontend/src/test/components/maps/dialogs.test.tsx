@@ -5,7 +5,9 @@ import { AddDocumentsPanel } from '../../../components/maps/AddDocumentsPanel';
 import { ArrowDialog } from '../../../components/maps/ArrowDialog';
 import { CardDialog } from '../../../components/maps/CardDialog';
 import { GroupDialog } from '../../../components/maps/GroupDialog';
+import { MapColorPicker } from '../../../components/maps/MapColorPicker';
 import { MapFormModal } from '../../../components/maps/MapFormModal';
+import { MAP_COLORS, MAP_COLORS_VISIBLE } from '../../../lib/maps';
 import type { Document } from '../../../types/document';
 import type { MapArrow, MapCard } from '../../../types/map';
 import type { Member } from '../../../types/member';
@@ -18,6 +20,10 @@ const arrow: MapArrow = {
   direction: 'forward',
   label: 'padre di',
   reverseLabel: null,
+  labelPosition: null,
+  reverseLabelPosition: null,
+  labelOffset: null,
+  reverseLabelOffset: null,
   color: 'default',
   masterOnly: false,
 };
@@ -101,7 +107,7 @@ describe('ArrowDialog', () => {
       }),
     );
 
-    await user.click(screen.getByRole('button', { name: 'Elimina la freccia' }));
+    await user.click(screen.getByRole('button', { name: 'Elimina la relazione' }));
     expect(onDelete).toHaveBeenCalled();
   });
 
@@ -275,7 +281,7 @@ describe('GroupDialog', () => {
     renderWithProviders(<GroupDialog group={group} onSave={onSave} onDelete={onDelete} onClose={vi.fn()} />);
 
     await user.type(screen.getByLabelText('Titolo'), ' Corte ');
-    await user.click(screen.getByRole('radio', { name: 'Oro' }));
+    await user.click(screen.getByRole('radio', { name: 'Giallo' }));
     await user.click(screen.getByLabelText('Barrato'));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
     expect(onSave).toHaveBeenCalledWith({
@@ -436,5 +442,20 @@ describe('MapFormModal', () => {
       />,
     );
     expect(screen.getByText('Una stanza può avere al massimo 100 mappe')).toBeInTheDocument();
+  });
+});
+
+describe('MapColorPicker', () => {
+  it('shows one row and opens the rest on request', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MapColorPicker value="default" onChange={() => {}} />);
+    expect(screen.getAllByRole('radio')).toHaveLength(MAP_COLORS_VISIBLE);
+    await user.click(screen.getByRole('button', { name: 'Altri colori' }));
+    expect(screen.getAllByRole('radio')).toHaveLength(MAP_COLORS.length);
+  });
+
+  it('starts open when the value sits in the hidden part', () => {
+    renderWithProviders(<MapColorPicker value="lime" onChange={() => {}} />);
+    expect(screen.getAllByRole('radio')).toHaveLength(MAP_COLORS.length);
   });
 });

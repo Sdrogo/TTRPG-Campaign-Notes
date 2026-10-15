@@ -6,6 +6,7 @@ and Comments themselves (VR-07, Invariant 1)."""
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel
@@ -108,14 +109,25 @@ def _excerpt(
     return mention.excerpt if excerpt is None else excerpt
 
 
-async def visible_backlinks(
+@dataclass(frozen=True)
+class VisibleMentions:
+    """The mentions a viewer may see (spec 20 Decision 5), with the source
+    Documents, Notes and Comments that were read to decide it."""
+
+    mentions: list[DocumentMention]
+    documents: dict[uuid.UUID, Document]
+    notes: dict[uuid.UUID, Note]
+    comments: dict[uuid.UUID, Comment]
+
+
+async def visible_mentions(
     session: AsyncSession, mentions: Sequence[DocumentMention], viewer: Membership
-) -> list[BacklinkGroupResponse]:
-    """The backlinks `viewer` may see, grouped by source Document: only where
-    they see the source Document and, for a Note or a Comment, that Note or
-    the Comment through its whole parent chain (spec 20 Decision 5). Groups
-    by Document name, then the description, the Notes in order and the
-    Comments oldest first."""
+) -> VisibleMentions:
+    """The mentions `viewer` may see: only where they see the source Document
+    and, for a Note or a Comment, that Note or the Comment through its whole
+    parent chain (spec 20 Decision 5, VR-07), in a fixed number of queries.
+    The target is not checked here: the callers do. Shared by "Mentioned in"
+    and the mention maps (spec 36), so both follow one rule."""
     found = await documents_repo.get_documents_by_ids(
         session, list({mention.source_document_id for mention in mentions})
     )
@@ -134,7 +146,7 @@ async def visible_backlinks(
     comments = await comments_repo.get_comments_with_ancestors(session, comment_ids)
     comment_grants = await comments_repo.list_grants_for_comments(session, list(comments))
 
-    groups: dict[uuid.UUID, list[tuple[tuple[int, int, str], BacklinkResponse]]] = defaultdict(list)
+    seen: list[DocumentMention] = []
     for mention in mentions:
         note = None if mention.note_id is None else notes[mention.note_id]
         comment = None if mention.comment_id is None else comments[mention.comment_id]
@@ -146,6 +158,22 @@ async def visible_backlinks(
             comment, comments, comment_grants, viewer.user_id, viewer.role
         ):
             continue
+        seen.append(mention)
+    return VisibleMentions(seen, documents, notes, comments)
+
+
+async def visible_backlinks(
+    session: AsyncSession, mentions: Sequence[DocumentMention], viewer: Membership
+) -> list[BacklinkGroupResponse]:
+    """The backlinks `viewer` may see (`visible_mentions`), grouped by source
+    Document: by Document name, then the description, the Notes in order and
+    the Comments oldest first."""
+    visible = await visible_mentions(session, mentions, viewer)
+    documents = visible.documents
+    groups: dict[uuid.UUID, list[tuple[tuple[int, int, str], BacklinkResponse]]] = defaultdict(list)
+    for mention in visible.mentions:
+        note = None if mention.note_id is None else visible.notes[mention.note_id]
+        comment = None if mention.comment_id is None else visible.comments[mention.comment_id]
         order = (
             _KIND_ORDER[mention.source_kind],
             0 if note is None else note.position,

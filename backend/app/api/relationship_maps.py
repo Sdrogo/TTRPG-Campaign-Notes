@@ -5,12 +5,12 @@ the board as the requester sees it (`visible_board`, Invariant 1), and
 follows `X-View-As` like any read."""
 
 import uuid
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import replace
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import (
@@ -26,8 +26,9 @@ from app.auth.dependencies import CurrentUserDep
 from app.db import documents_repo, relationship_maps_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
-from app.domain.models import DocumentImage, DocumentVisibility, Membership
+from app.domain.models import Document, DocumentImage, DocumentVisibility, Membership
 from app.domain.relationship_maps import (
+    MAX_LABEL_OFFSET,
     ArrowDirection,
     ArrowEnd,
     Board,
@@ -140,7 +141,9 @@ class ArrowEndBody(BaseModel):
 class ArrowBody(BaseModel):
     """An arrow as sent and returned. `label` is the only label of a one-way
     arrow or a line, the one pointing at `to` on a two-way arrow;
-    `reverse_label` the one pointing at `from_end`, two-way only."""
+    `reverse_label` the one pointing at `from_end`, two-way only. The
+    positions are where each label sits along the arrow (0 at `from_end`, 1 at
+    `to_end`), or null for the automatic placement."""
 
     id: uuid.UUID
     from_end: ArrowEndBody
@@ -148,6 +151,12 @@ class ArrowBody(BaseModel):
     direction: ArrowDirection = ArrowDirection.FORWARD
     label: str | None = None
     reverse_label: str | None = None
+    label_position: float | None = Field(default=None, ge=0, le=1)
+    reverse_label_position: float | None = Field(default=None, ge=0, le=1)
+    label_offset: float | None = Field(default=None, ge=-MAX_LABEL_OFFSET, le=MAX_LABEL_OFFSET)
+    reverse_label_offset: float | None = Field(
+        default=None, ge=-MAX_LABEL_OFFSET, le=MAX_LABEL_OFFSET
+    )
     color: MapColor = MapColor.DEFAULT
     master_only: bool = False
 
@@ -201,7 +210,12 @@ async def _get_visible_map(
     404 otherwise, whether it doesn't exist, is another Room's or is hidden
     from them (VR-07)."""
     relationship_map = await relationship_maps_repo.get_map(session, map_id)
-    if relationship_map is None or relationship_map.room_id != room_id:
+    # A mention map (spec 36) is reached through its Document only.
+    if (
+        relationship_map is None
+        or relationship_map.room_id != room_id
+        or relationship_map.source_document_id is not None
+    ):
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.map.notFound", locale)
     grants = (await relationship_maps_repo.list_grants_for_maps(session, [map_id]))[map_id]
     if not is_map_visible(relationship_map, viewer.user_id, viewer.role, grants):
@@ -256,8 +270,8 @@ def _summary(
     )
 
 
-def _arrow_body(arrow: MapArrow) -> ArrowBody:
-    """An arrow as returned."""
+def arrow_body(arrow: MapArrow) -> ArrowBody:
+    """An arrow as returned; shared with the mention maps (spec 36)."""
     return ArrowBody(
         id=arrow.id,
         from_end=ArrowEndBody(card_id=arrow.from_end.card_id, group_id=arrow.from_end.group_id),
@@ -265,32 +279,27 @@ def _arrow_body(arrow: MapArrow) -> ArrowBody:
         direction=arrow.direction,
         label=arrow.label,
         reverse_label=arrow.reverse_label,
+        label_position=arrow.label_position,
+        reverse_label_position=arrow.reverse_label_position,
+        label_offset=arrow.label_offset,
+        reverse_label_offset=arrow.reverse_label_offset,
         color=arrow.color,
         master_only=arrow.master_only,
     )
 
 
-async def _detail(
+async def card_responses(
     session: AsyncSession,
-    relationship_map: RelationshipMap,
-    grants: Collection[uuid.UUID],
+    cards: Sequence[MapCard],
+    documents: Mapping[uuid.UUID, Document],
     viewer: Membership,
-) -> MapDetailResponse:
-    """The map and its board as `viewer` sees it, the Documents' names,
-    images and Tags read in a fixed number of queries whatever the number of
-    cards (the Documents list's batch functions)."""
-    board = (await relationship_maps_repo.get_boards(session, [relationship_map.id]))[
-        relationship_map.id
-    ]
-    on_board = [card.document_id for card in board.cards if card.document_id is not None]
-    documents = await documents_repo.get_documents_by_ids(session, on_board)
-    visible = {
-        document.id: document for document in await visible_documents(session, documents, viewer)
-    }
-    shown = visible_board(board, visible.keys(), viewer.role)
-
-    # Only the Documents left on the viewer's board are read further.
-    shown_ids = [card.document_id for card in shown.cards if card.document_id is not None]
+) -> list[CardResponse]:
+    """Cards as returned, each Document card with its Document's name,
+    subtitle, image and Tags, read in a fixed number of queries whatever the
+    number of cards (the Documents list's batch functions). `cards` are
+    already filtered for `viewer` and `documents` holds every Document they
+    show. Shared with the mention maps (spec 36)."""
+    shown_ids = [card.document_id for card in cards if card.document_id is not None]
     tags = await documents_repo.list_tag_ids_for_documents(session, shown_ids)
     images = await get_visible_images_for_documents(session, shown_ids, viewer)
     # A card shows the image chosen for it while its viewer still sees it,
@@ -298,7 +307,7 @@ async def _detail(
     # echoes a choice they still see.
     card_images: dict[uuid.UUID, DocumentImage] = {}
     chosen_ids: dict[uuid.UUID, uuid.UUID] = {}
-    for card in shown.cards:
+    for card in cards:
         if card.document_id is None:
             continue
         document_images = images.get(card.document_id, [])
@@ -314,7 +323,7 @@ async def _detail(
         """A card as returned, with its Document's look."""
         document = None
         if card.document_id is not None:
-            shown_document = visible[card.document_id]
+            shown_document = documents[card.document_id]
             image = card_images.get(card.id)
             signed = image_responses([image], image_urls) if image is not None else []
             document = MapDocumentResponse(
@@ -340,13 +349,90 @@ async def _detail(
             document=document,
         )
 
-    summary = _summary(relationship_map, grants, viewer, len(shown_ids))
+    return [card_response(card) for card in cards]
+
+
+async def _detail(
+    session: AsyncSession,
+    relationship_map: RelationshipMap,
+    grants: Collection[uuid.UUID],
+    viewer: Membership,
+) -> MapDetailResponse:
+    """The map and its board as `viewer` sees it (`card_responses`)."""
+    board = (await relationship_maps_repo.get_boards(session, [relationship_map.id]))[
+        relationship_map.id
+    ]
+    on_board = [card.document_id for card in board.cards if card.document_id is not None]
+    documents = await documents_repo.get_documents_by_ids(session, on_board)
+    visible = {
+        document.id: document for document in await visible_documents(session, documents, viewer)
+    }
+    shown = visible_board(board, visible.keys(), viewer.role)
+    shown_count = sum(1 for card in shown.cards if card.document_id is not None)
+    summary = _summary(relationship_map, grants, viewer, shown_count)
     return MapDetailResponse(
         **summary.model_dump(),
         groups=[GroupBody(**vars(group)) for group in shown.groups],
-        cards=[card_response(card) for card in shown.cards],
-        arrows=[_arrow_body(arrow) for arrow in shown.arrows],
+        cards=await card_responses(session, shown.cards, visible, viewer),
+        arrows=[arrow_body(arrow) for arrow in shown.arrows],
     )
+
+
+async def create_free_map(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    membership: Membership,
+    name: str,
+    board: BoardRequest | None,
+    locale: str,
+    *,
+    description: str = "",
+    visibility: DocumentVisibility | None = None,
+    selective_user_ids: Collection[uuid.UUID] = (),
+) -> MapDetailResponse:
+    """Decision 2: a new map, a Player's only while the Room lets Players
+    create Documents (403 otherwise); at most 100 per Room (409, Decision
+    11). Without `visibility` it starts at the Room's default (VR-05). With
+    `board`, it is filled through the board save's checks and caps (a mention
+    map's copy, spec 36)."""
+    room = await rooms_repo.get_room(session, room_id)
+    if room is None:  # pragma: no cover - only a concurrent Room deletion
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
+    if not can_create_map(membership.role, room.players_can_create_documents):
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.map.creationDisabled", locale)
+    try:
+        name, description = clean_map_fields(name, description)
+    except (MapNameRequiredError, MapTextTooLongError) as exc:
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
+    starting = starting_visibility(room, visibility)
+    grants = starting_grants(starting, selective_user_ids)
+    await ensure_room_members(session, room_id, grants, "errors.map.invalidSelectiveUsers", locale)
+
+    # The Room's lock makes count-then-insert safe against a concurrent
+    # creation overshooting the cap.
+    await rooms_repo.lock_room(session, room_id)
+    try:
+        ensure_room_for_another_map(
+            await relationship_maps_repo.count_maps_for_room(session, room_id)
+        )
+    except TooManyMapsError as exc:
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
+
+    now = _now()
+    relationship_map = RelationshipMap(
+        id=uuid.uuid4(),
+        room_id=room_id,
+        name=name,
+        description=description,
+        visibility=starting,
+        created_by=membership.user_id,
+        created_at=now,
+        updated_at=now,
+    )
+    await relationship_maps_repo.insert_map(session, relationship_map, grants)
+    if board is not None:
+        await _apply_board(session, relationship_map.id, membership, board, locale)
+    return await _detail(session, relationship_map, grants, membership)
 
 
 @router.get("")
@@ -389,42 +475,17 @@ async def create_map(
     Room lets Players create Documents (403 otherwise); at most 100 per Room
     (409, Decision 11)."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    room = await rooms_repo.get_room(session, room_id)
-    if room is None:  # pragma: no cover - only a concurrent Room deletion
-        raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
-    if not can_create_map(membership.role, room.players_can_create_documents):
-        raise http_error(status.HTTP_403_FORBIDDEN, "errors.map.creationDisabled", locale)
-    try:
-        name, description = clean_map_fields(body.name, body.description)
-    except (MapNameRequiredError, MapTextTooLongError) as exc:
-        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
-    visibility = starting_visibility(room, body.visibility)
-    grants = starting_grants(visibility, body.selective_user_ids)
-    await ensure_room_members(session, room_id, grants, "errors.map.invalidSelectiveUsers", locale)
-
-    # The Room's lock makes count-then-insert safe against a concurrent
-    # creation overshooting the cap.
-    await rooms_repo.lock_room(session, room_id)
-    try:
-        ensure_room_for_another_map(
-            await relationship_maps_repo.count_maps_for_room(session, room_id)
-        )
-    except TooManyMapsError as exc:
-        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
-
-    now = _now()
-    relationship_map = RelationshipMap(
-        id=uuid.uuid4(),
-        room_id=room_id,
-        name=name,
-        description=description,
-        visibility=visibility,
-        created_by=membership.user_id,
-        created_at=now,
-        updated_at=now,
+    return await create_free_map(
+        session,
+        room_id,
+        membership,
+        body.name,
+        None,
+        locale,
+        description=body.description,
+        visibility=body.visibility,
+        selective_user_ids=body.selective_user_ids,
     )
-    await relationship_maps_repo.insert_map(session, relationship_map, grants)
-    return await _detail(session, relationship_map, grants, membership)
 
 
 @router.get("/{map_id}")
@@ -521,6 +582,10 @@ def _submitted_board(body: BoardRequest) -> Board:
                 direction=arrow.direction,
                 label=arrow.label,
                 reverse_label=arrow.reverse_label,
+                label_position=arrow.label_position,
+                reverse_label_position=arrow.reverse_label_position,
+                label_offset=arrow.label_offset,
+                reverse_label_offset=arrow.reverse_label_offset,
                 color=arrow.color,
                 master_only=arrow.master_only,
             )
@@ -539,23 +604,18 @@ _BOARD_ERROR_STATUS: dict[type[DomainError], int] = {
 }
 
 
-@router.put("/{map_id}/board")
-async def save_board(
-    room_id: uuid.UUID,
+async def _apply_board(
+    session: AsyncSession,
     map_id: uuid.UUID,
+    membership: Membership,
     body: BoardRequest,
-    current_user: CurrentUserDep,
-    session: SessionDep,
-    locale: LocaleDep,
-) -> MapDetailResponse:
-    """Decisions 9-12: saves the board the editor sees, in one transaction
-    under the map's lock: creates, moves, rewrites and removes what they
-    see, and leaves what they can't see exactly as it is. A card for a
-    Document they don't see, or of another Room, is 404; an id of something
-    hidden from them or of another map is 422; the caps (409) count every
-    item on the map."""
-    membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    relationship_map, grants = await _get_managed_map(session, room_id, map_id, membership, locale)
+    locale: str,
+) -> None:
+    """Saves the board `membership` sends (`plan_board_edit`): what they see
+    is created, moved, rewritten or removed, what they can't see stays. A
+    card for a Document they don't see, or of another Room, is 404; an id of
+    something hidden from them or of another map is 422; the caps (409)
+    count every item on the map. Callers hold the map's lock."""
     current = (await relationship_maps_repo.get_boards(session, [map_id]))[map_id]
     try:
         submitted = _submitted_board(body)
@@ -596,6 +656,26 @@ async def save_board(
         raise translated_error(_BOARD_ERROR_STATUS[type(exc)], exc, locale) from exc
 
     await relationship_maps_repo.save_board(session, map_id, plan)
+
+
+@router.put("/{map_id}/board")
+async def save_board(
+    room_id: uuid.UUID,
+    map_id: uuid.UUID,
+    body: BoardRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> MapDetailResponse:
+    """Decisions 9-12: saves the board the editor sees, in one transaction
+    under the map's lock: creates, moves, rewrites and removes what they
+    see, and leaves what they can't see exactly as it is. A card for a
+    Document they don't see, or of another Room, is 404; an id of something
+    hidden from them or of another map is 422; the caps (409) count every
+    item on the map."""
+    membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
+    relationship_map, grants = await _get_managed_map(session, room_id, map_id, membership, locale)
+    await _apply_board(session, map_id, membership, body, locale)
     updated = replace(relationship_map, updated_at=_now())
     await relationship_maps_repo.update_map(session, updated)
     return await _detail(session, updated, grants, membership)

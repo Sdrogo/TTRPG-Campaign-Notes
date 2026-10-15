@@ -364,6 +364,7 @@
       "notFound": "ドキュメントが見つからないか、表示できません。",
       "backToDocuments": "ドキュメントに戻る",
       "cancelEditing": "変更を破棄",
+      "actions": "{{name}} の操作",
       "saveChanges": "変更を保存",
       "deleteDocument": "ドキュメントを削除",
       "deleteConfirmTitle": "このドキュメントを削除しますか?",
@@ -378,7 +379,14 @@
       "newTagPlaceholder": "例: 派閥"
     },
     "notYetRead": "未読",
-    "unreadCount_other": "新しいコメント{{count}}件"
+    "unreadCount_other": "新しいコメント{{count}}件",
+    "open": {
+      "side": "画面の半分で開く",
+      "page": "ドキュメントを開く",
+      "resize": "パネルのサイズを変更",
+      "close": "パネルを閉じる",
+      "pane": "横に並べたドキュメント"
+    }
   },
   "images": {
     "numbered": "{{name}}({{index}})",
@@ -439,6 +447,7 @@
     "add": "ノートを追加",
     "edit": "ノートを編集: {{title}}",
     "delete": "ノートを削除: {{title}}",
+    "actions": "ノートの操作: {{title}}",
     "moveUp": "ノートを上へ移動: {{title}}",
     "moveDown": "ノートを下へ移動: {{title}}",
     "deleteConfirmTitle": "このノートを削除しますか?",
@@ -663,12 +672,14 @@
       "styles": {
         "gothic": "ゴシック",
         "modern": "モダン",
-        "print": "印刷用"
+        "print": "印刷用",
+        "parchment": "羊皮紙"
       },
       "styleHints": {
         "gothic": "黒と赤、暗い表紙",
         "modern": "すっきりしたサンセリフ、ゆったりした余白",
-        "print": "白黒でインクを節約"
+        "print": "白黒でインクを節約",
+        "parchment": "古びた紙、茶色のスモールキャップ"
       },
       "pageSize": "ページサイズ",
       "comments": "コメントを付録に含める",
@@ -860,7 +871,7 @@
     "editCard": "カードを編集: {{name}}",
     "editText": "テキストを編集",
     "editGroup": "グループを編集",
-    "editArrow": "矢印を編集: {{label}}",
+    "editArrow": "関係を編集: {{label}}",
     "masterOnly": "Masterのみ",
     "masterOnlyArrow": "Masterにのみ表示",
     "masterOnlyCard": "Masterにのみ表示",
@@ -870,10 +881,23 @@
       "default": "既定",
       "red": "赤",
       "green": "緑",
-      "purple": "紫",
-      "blue": "青",
-      "gold": "金"
+      "purple": "フクシア",
+      "blue": "水色",
+      "gold": "イエロー",
+      "orange": "オレンジ",
+      "midnight": "ミッドナイトブルー",
+      "silver": "シルバー",
+      "champagne": "ゴールド",
+      "rose": "ライトピンク",
+      "pink": "ピンク",
+      "cobalt": "ブルー",
+      "violet": "パープル",
+      "emerald": "エメラルド",
+      "brown": "ブラウン",
+      "lime": "ライトグリーン"
     },
+    "colorsMore": "その他の色",
+    "colorsLess": "色を減らす",
     "card": {
       "editDocument": "カード: {{name}}",
       "editText": "テキスト",
@@ -900,14 +924,31 @@
       "untitled": "無題のグループ"
     },
     "arrow": {
-      "title": "矢印",
+      "title": "関係",
       "direction": "向き",
       "forward": "一方向",
       "both": "両方向",
       "none": "線のみ",
       "label": "ラベル",
       "labelTowards": "{{name}}向けのラベル",
-      "delete": "矢印を削除"
+      "delete": "関係を削除"
+    },
+    "mention": {
+      "button": "言及マップ",
+      "title": "言及マップ",
+      "depth": "深さ",
+      "depthHelp": "0 はこのドキュメントに直接つながるドキュメントだけを表示します。1 段階ごとに次の言及の輪が加わります。",
+      "preview": "ドキュメント: {{documents}} · 関係: {{relations}}",
+      "previewLoading": "プレビューを読み込み中",
+      "leftOut": "マップには 150 枚までしか置けないため非表示: {{number}}",
+      "nothingYet": "まだ言及がありません",
+      "create": "マップを作成",
+      "copy": "自由なマップとしてコピー",
+      "copyName": "{{name}} の言及",
+      "fullScreen": "全画面",
+      "backToDocument": "ドキュメントに戻る",
+      "deleteConfirmBody": "ドキュメントとその言及は残ります。",
+      "loadError": "言及マップを読み込めませんでした。"
     }
   }
 }

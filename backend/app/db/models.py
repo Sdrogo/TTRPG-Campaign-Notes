@@ -11,9 +11,11 @@ from sqlalchemy import (
     CheckConstraint,
     Computed,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -738,9 +740,18 @@ class RelationshipMapRow(Base):
     """A relationship map of a Room (spec 28_1): a free board of Documents,
     text cards, groups and arrows that belong to it only. Its visibility uses
     the Comment levels with `created_by` as the "Owner" (Decision 3).
-    Deleted with the Room; its groups, cards and arrows go with it."""
+    Deleted with the Room; its groups, cards and arrows go with it. A row
+    with `source_document_id` is a Document's mention map (spec 36)."""
 
     __tablename__ = "relationship_maps"
+    __table_args__ = (
+        UniqueConstraint("source_document_id", name="uq_relationship_maps_source_document"),
+        CheckConstraint(
+            "(source_document_id IS NULL AND mention_depth IS NULL)"
+            " OR (source_document_id IS NOT NULL AND mention_depth >= 0 AND mention_depth <= 3)",
+            name="ck_relationship_maps_mention_depth",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     room_id: Mapped[uuid.UUID] = mapped_column(
@@ -752,6 +763,13 @@ class RelationshipMapRow(Base):
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Spec 36: set on a Document's live mention map (one per Document, gone
+    # with it), with how many steps past the first level it follows mentions.
+    source_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE", name="fk_relationship_maps_source_document"),
+    )
+    mention_depth: Mapped[int | None] = mapped_column(SmallInteger)
 
 
 class RelationshipMapGrantRow(Base):
@@ -828,7 +846,8 @@ class RelationshipMapCardRow(Base):
 
 class RelationshipMapArrowRow(Base):
     """An arrow between two ends of a map, each a card or a group (Decision
-    5). Deleted with either end. `reverse_label` only on a two-way arrow."""
+    5). Deleted with either end. `reverse_label` only on a two-way arrow; each
+    label may carry the place along the arrow the editor dragged it to."""
 
     __tablename__ = "relationship_map_arrows"
     __table_args__ = (
@@ -854,6 +873,28 @@ class RelationshipMapArrowRow(Base):
             "reverse_label IS NULL OR direction = 'both'",
             name="ck_relationship_map_arrows_reverse_label",
         ),
+        CheckConstraint(
+            "label_position IS NULL"
+            " OR (label IS NOT NULL AND label_position >= 0 AND label_position <= 1)",
+            name="ck_relationship_map_arrows_label_position",
+        ),
+        CheckConstraint(
+            "reverse_label_position IS NULL"
+            " OR (reverse_label IS NOT NULL AND reverse_label_position >= 0"
+            " AND reverse_label_position <= 1)",
+            name="ck_relationship_map_arrows_reverse_label_position",
+        ),
+        CheckConstraint(
+            "label_offset IS NULL"
+            " OR (label_position IS NOT NULL AND label_offset >= -2000 AND label_offset <= 2000)",
+            name="ck_relationship_map_arrows_label_offset",
+        ),
+        CheckConstraint(
+            "reverse_label_offset IS NULL"
+            " OR (reverse_label_position IS NOT NULL AND reverse_label_offset >= -2000"
+            " AND reverse_label_offset <= 2000)",
+            name="ck_relationship_map_arrows_reverse_label_offset",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -875,5 +916,13 @@ class RelationshipMapArrowRow(Base):
     direction: Mapped[str] = mapped_column(String(10))
     label: Mapped[str | None] = mapped_column(String(60))
     reverse_label: Mapped[str | None] = mapped_column(String(60))
+    # Where the label sits along the arrow, 0 at `from_end` to 1 at `to_end`;
+    # null leaves it to the board's automatic placement.
+    label_position: Mapped[float | None] = mapped_column(Float)
+    reverse_label_position: Mapped[float | None] = mapped_column(Float)
+    # How far the label sits to the side of the arrow, in board pixels
+    # (negative to the other side); only with a position.
+    label_offset: Mapped[float | None] = mapped_column(Float)
+    reverse_label_offset: Mapped[float | None] = mapped_column(Float)
     color: Mapped[str] = mapped_column(String(10))
     master_only: Mapped[bool] = mapped_column(Boolean, default=False)

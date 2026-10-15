@@ -365,6 +365,7 @@
       "notFound": "Dokument nicht gefunden oder nicht sichtbar.",
       "backToDocuments": "Zurück zu den Dokumenten",
       "cancelEditing": "Änderungen verwerfen",
+      "actions": "Aktionen für {{name}}",
       "saveChanges": "Änderungen speichern",
       "deleteDocument": "Dokument löschen",
       "deleteConfirmTitle": "Dieses Dokument löschen?",
@@ -380,7 +381,14 @@
     },
     "notYetRead": "Noch nicht gelesen",
     "unreadCount_one": "{{count}} neuer Kommentar",
-    "unreadCount_other": "{{count}} neue Kommentare"
+    "unreadCount_other": "{{count}} neue Kommentare",
+    "open": {
+      "side": "In halbem Bildschirm öffnen",
+      "page": "Dokument öffnen",
+      "resize": "Bereiche anpassen",
+      "close": "Bereich schließen",
+      "pane": "Dokument daneben"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",
@@ -441,6 +449,7 @@
     "add": "Notiz hinzufügen",
     "edit": "Notiz bearbeiten: {{title}}",
     "delete": "Notiz löschen: {{title}}",
+    "actions": "Aktionen für Notiz: {{title}}",
     "moveUp": "Notiz nach oben: {{title}}",
     "moveDown": "Notiz nach unten: {{title}}",
     "deleteConfirmTitle": "Diese Notiz löschen?",
@@ -671,12 +680,14 @@
       "styles": {
         "gothic": "Gotisch",
         "modern": "Modern",
-        "print": "Druck"
+        "print": "Druck",
+        "parchment": "Pergament"
       },
       "styleHints": {
         "gothic": "Schwarz und Rot, dunkles Titelbild",
         "modern": "Klare Sans-Serif, viel Platz",
-        "print": "Schwarz-Weiß, spart Tinte"
+        "print": "Schwarz-Weiß, spart Tinte",
+        "parchment": "Altes Papier, braune Kapitälchen"
       },
       "pageSize": "Seitenformat",
       "comments": "Kommentare als Anhang einbeziehen",
@@ -880,7 +891,7 @@
     "editCard": "Kärtchen bearbeiten: {{name}}",
     "editText": "Text bearbeiten",
     "editGroup": "Gruppe bearbeiten",
-    "editArrow": "Pfeil bearbeiten: {{label}}",
+    "editArrow": "Beziehung bearbeiten: {{label}}",
     "masterOnly": "Nur Master",
     "masterOnlyArrow": "Nur für Master sichtbar",
     "masterOnlyCard": "Nur für Master sichtbar",
@@ -890,10 +901,23 @@
       "default": "Standard",
       "red": "Rot",
       "green": "Grün",
-      "purple": "Violett",
-      "blue": "Blau",
-      "gold": "Gold"
+      "purple": "Fuchsia",
+      "blue": "Hellblau",
+      "gold": "Gelb",
+      "orange": "Orange",
+      "midnight": "Mitternachtsblau",
+      "silver": "Silber",
+      "champagne": "Gold",
+      "rose": "Hellrosa",
+      "pink": "Rosa",
+      "cobalt": "Blau",
+      "violet": "Violett",
+      "emerald": "Smaragd",
+      "brown": "Braun",
+      "lime": "Hellgrün"
     },
+    "colorsMore": "Mehr Farben",
+    "colorsLess": "Weniger Farben",
     "card": {
       "editDocument": "Kärtchen: {{name}}",
       "editText": "Text",
@@ -920,14 +944,31 @@
       "untitled": "Gruppe ohne Titel"
     },
     "arrow": {
-      "title": "Pfeil",
+      "title": "Beziehung",
       "direction": "Richtung",
       "forward": "In eine Richtung",
       "both": "In beide Richtungen",
       "none": "Nur Linie",
       "label": "Beschriftung",
       "labelTowards": "Beschriftung Richtung {{name}}",
-      "delete": "Pfeil löschen"
+      "delete": "Beziehung löschen"
+    },
+    "mention": {
+      "button": "Erwähnungskarte",
+      "title": "Erwähnungskarte",
+      "depth": "Tiefe",
+      "depthHelp": "0 zeigt nur die direkt mit diesem verbundenen Dokumente; jeder Schritt fügt den nächsten Ring von Erwähnungen hinzu.",
+      "preview": "Dokumente: {{documents}} · Beziehungen: {{relations}}",
+      "previewLoading": "Vorschau wird geladen",
+      "leftOut": "Nicht angezeigt, da eine Karte 150 Karten fasst: {{number}}",
+      "nothingYet": "Noch keine Erwähnungen",
+      "create": "Karte erstellen",
+      "copy": "Als freie Karte kopieren",
+      "copyName": "Erwähnungen von {{name}}",
+      "fullScreen": "Vollbild",
+      "backToDocument": "Zurück zum Dokument",
+      "deleteConfirmBody": "Die Dokumente und ihre Erwähnungen bleiben erhalten.",
+      "loadError": "Die Erwähnungskarte konnte nicht geladen werden."
     }
   }
 }

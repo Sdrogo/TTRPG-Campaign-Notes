@@ -2,9 +2,9 @@
 source is saved."""
 
 import uuid
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 
-from sqlalchemy import delete, insert, select
+from sqlalchemy import delete, insert, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import DocumentMentionRow
@@ -72,5 +72,24 @@ async def list_mentions_of_tag(session: AsyncSession, tag_id: uuid.UUID) -> list
     """Every backlink to the Tag, unfiltered."""
     rows = await session.scalars(
         select(DocumentMentionRow).where(DocumentMentionRow.target_tag_id == tag_id)
+    )
+    return [_mention_from_row(row) for row in rows]
+
+
+async def list_document_mentions_touching(
+    session: AsyncSession, document_ids: Collection[uuid.UUID]
+) -> list[DocumentMention]:
+    """Every mention of a Document by a Document where either end is one of
+    these Documents, unfiltered, in one query: one step of a mention map
+    (spec 36), never called with none. Tag mentions are left out."""
+    ids = list(document_ids)
+    rows = await session.scalars(
+        select(DocumentMentionRow).where(
+            DocumentMentionRow.target_document_id.is_not(None),
+            or_(
+                DocumentMentionRow.source_document_id.in_(ids),
+                DocumentMentionRow.target_document_id.in_(ids),
+            ),
+        )
     )
     return [_mention_from_row(row) for row in rows]

@@ -93,6 +93,10 @@ const initial: Board = {
       direction: 'both',
       label: 'alleata',
       reverseLabel: 'alleato',
+      labelPosition: null,
+      reverseLabelPosition: null,
+      labelOffset: null,
+      reverseLabelOffset: null,
       color: 'green',
       masterOnly: false,
     },
@@ -103,6 +107,10 @@ const initial: Board = {
       direction: 'none',
       label: null,
       reverseLabel: null,
+      labelPosition: null,
+      reverseLabelPosition: null,
+      labelOffset: null,
+      reverseLabelOffset: null,
       color: 'default',
       masterOnly: false,
     },
@@ -113,6 +121,10 @@ const initial: Board = {
       direction: 'forward',
       label: null,
       reverseLabel: null,
+      labelPosition: null,
+      reverseLabelPosition: null,
+      labelOffset: null,
+      reverseLabelOffset: null,
       color: 'default',
       masterOnly: false,
     },
@@ -124,7 +136,12 @@ const documents = [
   { id: 'doc-aldric', name: 'Aldric', subtitle: null, images: [], tagIds: [] },
 ] as unknown as Document[];
 
-function renderBoard({ editable = true, isMaster = true, docs = documents } = {}) {
+function renderBoard({
+  editable = true,
+  isMaster = true,
+  docs = documents,
+  mode = undefined as 'free' | 'mention' | undefined,
+} = {}) {
   const changes: Board[] = [];
   function Harness() {
     const [board, setBoard] = useState(initial);
@@ -140,6 +157,8 @@ function renderBoard({ editable = true, isMaster = true, docs = documents } = {}
           changes.push(next);
           setBoard(next);
         }}
+        mode={mode}
+        height={mode ? 360 : undefined}
       />
     );
   }
@@ -177,6 +196,24 @@ describe('MapBoard', () => {
     expect(byId.forward.markerStart).toBeUndefined();
     expect(byId.forward.source).toBe('g');
     expect(screen.getByRole('button', { name: 'Raggruppa' })).toBeDisabled();
+  });
+
+  it('only moves and recolors cards on a mention map (spec 36)', async () => {
+    const { changes, last, user } = renderBoard({ mode: 'mention' });
+    expect(screen.queryByRole('button', { name: 'Aggiungi Documenti' })).not.toBeInTheDocument();
+    expect(flow.props.nodesConnectable).toBe(false);
+    expect(flow.props.deleteKeyCode).toBeNull();
+    expect(flow.props.nodesDraggable).toBe(true);
+    call('onEdgeClick', null, { id: 'both' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Modifica la carta: Mira' }));
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+    expect(changes).toEqual([]);
+    await user.click(screen.getByRole('button', { name: 'Modifica la carta: Mira' }));
+    await user.click(screen.getByRole('radio', { name: 'Rosso' }));
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    expect(last().cards.find((c) => c.id === 'mira')!.color).toBe('red');
   });
 
   it('is only a view when not editable', async () => {
@@ -258,7 +295,7 @@ describe('MapBoard', () => {
       to: { cardId: 'mira' },
       direction: 'forward',
     });
-    const dialog = screen.getByRole('dialog', { name: 'Freccia' });
+    const dialog = screen.getByRole('dialog', { name: 'Relazione' });
 
     await user.type(within(dialog).getByRole('textbox', { name: 'Etichetta' }), 'teme');
     await user.click(within(dialog).getByRole('button', { name: 'Salva' }));
@@ -271,7 +308,7 @@ describe('MapBoard', () => {
     call('onEdgeClick', null, { id: 'both' });
     expect(screen.getByRole('textbox', { name: 'Etichetta verso Thorn' })).toHaveValue('alleata');
     expect(screen.getByRole('textbox', { name: 'Etichetta verso Mira' })).toHaveValue('alleato');
-    await user.click(screen.getByRole('button', { name: 'Elimina la freccia' }));
+    await user.click(screen.getByRole('button', { name: 'Elimina la relazione' }));
     expect(last().arrows.map((a) => a.id)).toEqual(['line', 'forward']);
   });
 
@@ -294,8 +331,26 @@ describe('MapBoard', () => {
 
   it('opens an arrow from its label', async () => {
     const { user } = renderBoard();
-    await user.click(screen.getByRole('button', { name: 'Modifica la freccia: alleato' }));
-    expect(screen.getByRole('dialog', { name: 'Freccia' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Modifica la relazione: alleato' }));
+    expect(screen.getByRole('dialog', { name: 'Relazione' })).toBeInTheDocument();
+  });
+
+  it('saves where each label of an arrow was dropped', () => {
+    const { last } = renderBoard();
+    const data = () => flow.props.edges.find((edge) => edge.id === 'both')!.data as {
+      onMoveLabel: (
+        id: string,
+        which: 'label' | 'reverse',
+        position: number,
+        offset: number,
+      ) => void;
+    };
+    act(() => data().onMoveLabel('both', 'label', 0.6, -15));
+    act(() => data().onMoveLabel('both', 'reverse', 0.2, 40));
+    const moved = last().arrows.find((arrow) => arrow.id === 'both')!;
+    expect(moved.labelPosition).toBe(0.6);
+    expect(moved.reverseLabelPosition).toBe(0.2);
+    expect([moved.labelOffset, moved.reverseLabelOffset]).toEqual([-15, 40]);
   });
 
   it('deletes only what was selected: a group leaves its cards behind', async () => {
@@ -390,7 +445,7 @@ describe('MapBoard', () => {
     const { last, user } = renderBoard();
     await user.click(screen.getByRole('button', { name: 'Modifica la carta: Mira' }));
     await user.type(screen.getByLabelText('Didascalia'), 'Neonata');
-    await user.click(screen.getByRole('radio', { name: 'Viola' }));
+    await user.click(screen.getByRole('radio', { name: 'Fucsia' }));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
     expect(last().cards[0]).toMatchObject({ caption: 'Neonata', color: 'purple', size: 'normal', masterOnly: false, text: null });
 

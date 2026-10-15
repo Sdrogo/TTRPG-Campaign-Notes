@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Group, Paper, Text, Tooltip } from '@mantine/core';
+import { Box, Group, Paper, Text, Tooltip } from '@mantine/core';
 import type { NodeProps } from '@xyflow/react';
 import { EyeSlashIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,7 @@ import { CARD_WIDTH, colorValue } from '../../lib/maps';
 import type { CardSize } from '../../types/map';
 import type { TextCardNodeType } from '../../types/mapNodes';
 import { MapHandle } from './MapHandle';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 const FONT_SIZES: Record<CardSize, number> = { normal: 14, large: 20, title: 30 };
 
@@ -56,7 +57,7 @@ export function TextCardNode({ data, selected }: NodeProps<TextCardNodeType>) {
       </Group>
       {editable && (
         <Box pos="absolute" top={2} right={2}>
-          <ActionIcon
+          <LabeledActionIcon
             size="sm"
             variant="subtle"
             color="gray"
@@ -65,7 +66,7 @@ export function TextCardNode({ data, selected }: NodeProps<TextCardNodeType>) {
             onClick={() => onEdit(card.id)}
           >
             <PencilSimpleIcon size={14} />
-          </ActionIcon>
+          </LabeledActionIcon>
         </Box>
       )}
     </Paper>

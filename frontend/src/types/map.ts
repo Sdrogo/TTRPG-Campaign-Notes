@@ -2,7 +2,24 @@ import type { DocumentVisibility } from './document';
 import type { StoredImage } from './image';
 
 /** The theme colors a card, a label or a group takes (spec 28 Decision 8). */
-export type MapColor = 'default' | 'red' | 'green' | 'purple' | 'blue' | 'gold';
+export type MapColor =
+  | 'default'
+  | 'red'
+  | 'green'
+  | 'purple'
+  | 'blue'
+  | 'gold'
+  | 'orange'
+  | 'midnight'
+  | 'silver'
+  | 'champagne'
+  | 'rose'
+  | 'pink'
+  | 'cobalt'
+  | 'violet'
+  | 'emerald'
+  | 'brown'
+  | 'lime';
 
 /** How large a text card's text is (Decision 6). */
 export type CardSize = 'normal' | 'large' | 'title';
@@ -83,7 +100,8 @@ export interface ArrowEnd {
 /**
  * An arrow between two ends. `label` is the only label of a one-way arrow or a
  * line, the one pointing at `to` on a two-way arrow; `reverseLabel` the one
- * pointing at `from`.
+ * pointing at `from`. The positions are where each label was dragged to along
+ * the arrow, from 0 (at `from`) to 1 (at `to`); null leaves it to the board.
  */
 export interface MapArrow {
   id: string;
@@ -92,6 +110,11 @@ export interface MapArrow {
   direction: ArrowDirection;
   label: string | null;
   reverseLabel: string | null;
+  labelPosition: number | null;
+  reverseLabelPosition: number | null;
+  /** How far a dragged label sits to the side of the arrow, in board pixels. */
+  labelOffset: number | null;
+  reverseLabelOffset: number | null;
   color: MapColor;
   masterOnly: boolean;
 }
@@ -112,4 +135,30 @@ export interface MapFormValues {
   description: string;
   visibility: DocumentVisibility;
   selectiveUserIds: string[];
+}
+
+/**
+ * A Document's live mention map (spec 36) as the viewer sees it: computed from
+ * the mentions they see on every load. It has no groups; `canManage` lets its
+ * creator and the Master change the depth, move and recolor cards, copy or
+ * delete it.
+ */
+export interface MentionMap extends Board {
+  id: string;
+  documentId: string;
+  /** How many steps past the first level it follows mentions (0 to 3). */
+  depth: number;
+  createdBy: string;
+  updatedAt: string;
+  canManage: boolean;
+  /** Documents past the 150-card cap, not drawn. */
+  documentsLeftOut: number;
+}
+
+/** What a mention map at a depth would hold for the viewer (Decision 11). */
+export interface MentionMapPreview {
+  /** The other Documents, the center left out. */
+  documents: number;
+  relations: number;
+  documentsLeftOut: number;
 }

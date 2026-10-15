@@ -1,8 +1,8 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiFetch } from '../../lib/apiClient';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError, apiFetch } from '../../lib/apiClient';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { useSession } from '../../hooks/useSession';
 import {
@@ -15,13 +15,18 @@ import {
   rawDocumentFile,
   rawNote,
   rawComment,
+  rawMentionMap,
 } from '../fixtures';
+import { matchMediaQueries } from '../media';
 import { renderWithProviders } from '../utils';
 import { DocumentDetailPage } from '../../pages/DocumentDetailPage';
 import { ViewAsContext } from '../../hooks/useViewAs';
 import { installFakeSpeech } from '../speech';
 
-vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
+vi.mock('../../lib/apiClient', async (original) => ({
+  ...(await original<typeof import('../../lib/apiClient')>()),
+  apiFetch: vi.fn(),
+}));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
 
@@ -49,6 +54,8 @@ interface Routes {
   comments: unknown;
   backlinks: unknown;
   imageSearch?: unknown;
+  /** The Document's mention map (spec 36); none by default. */
+  mentionMap?: unknown;
 }
 
 const routes: Routes = { document: rawDocument(), members: [], comments: [], backlinks: [] };
@@ -61,6 +68,14 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
     if (path === DOC) return Promise.resolve(routes.document);
     if (path === `${DOC}/comments`) return Promise.resolve(routes.comments);
     if (path === `${DOC}/backlinks`) return Promise.resolve(routes.backlinks);
+    if (path === `${DOC}/mention-map`) {
+      return routes.mentionMap
+        ? Promise.resolve(routes.mentionMap)
+        : Promise.reject(new ApiError(404, 'No map'));
+    }
+    if (path.startsWith(`${DOC}/mention-map/preview`)) {
+      return Promise.resolve({ documents: 1, relations: 1, documents_left_out: 0 });
+    }
     if (path === '/rooms/room-1/documents') return Promise.resolve([routes.document]);
     if (path === '/rooms/room-1/tags') return Promise.resolve(tags);
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
@@ -81,6 +96,11 @@ function render() {
   return { user: userEvent.setup() };
 }
 
+/** The Document's actions are folded into a "⋮": unfolds them. */
+async function openActions(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: /^Azioni per(?! la Nota)/ }));
+}
+
 const editButton = () => screen.getByRole('button', { name: 'Modifica' });
 
 beforeEach(() => {
@@ -88,6 +108,7 @@ beforeEach(() => {
   routes.members = [rawMember({ user_id: 'user-1', display_name: 'Io' })];
   routes.comments = [];
   routes.backlinks = [];
+  routes.mentionMap = undefined;
   fetchMock.mockReset();
   navigate.mockReset();
   vi.mocked(notifyError).mockClear();
@@ -133,6 +154,7 @@ describe('DocumentDetailPage', () => {
   it('shows the subtitle under the title and edits it', async () => {
     routes.document = rawDocument({ owner_ids: ['user-1'], subtitle: 'La Idol' });
     const { user } = render();
+    await openActions(user);
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
     expect(screen.getByText('La Idol')).toBeInTheDocument();
@@ -226,6 +248,7 @@ describe('exporting the Document', () => {
     routes.document = rawDocument({ owner_ids: ['user-2'] });
     routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
     const { user } = render();
+    await openActions(user);
 
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: 'Esporta il Documento' }));
@@ -267,7 +290,8 @@ describe('reading the Document aloud', () => {
 // D-12: an Owner or the Master may edit; nobody else.
 describe('who may edit', () => {
   it('offers editing to an Owner', async () => {
-    render();
+    const { user } = render();
+    await openActions(user);
 
     expect(await screen.findByRole('button', { name: 'Modifica' })).toBeInTheDocument();
   });
@@ -275,7 +299,8 @@ describe('who may edit', () => {
   it('offers editing to the Master even without an Owner row', async () => {
     routes.document = rawDocument({ owner_ids: ['user-2'] });
     routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
-    render();
+    const { user } = render();
+    await openActions(user);
 
     expect(await screen.findByRole('button', { name: 'Modifica' })).toBeInTheDocument();
   });
@@ -303,6 +328,7 @@ describe('who may edit', () => {
       return otherRoutes(...args);
     });
     const { user } = render();
+    await openActions(user);
 
     await user.click(await screen.findByRole('button', { name: 'Storico: Il Cancello' }));
     expect(await screen.findByText('Nessuna revisione.')).toBeInTheDocument();
@@ -315,9 +341,43 @@ describe('who may edit', () => {
   });
 });
 
+describe('on a phone', () => {
+  let restore: () => void;
+  beforeEach(() => {
+    restore = matchMediaQueries(['(max-width: 48em)']);
+  });
+  afterEach(() => restore());
+
+  it('keeps the actions folded under the name until the "⋮" is pressed', async () => {
+    const { user } = render();
+
+    const menu = await screen.findByRole('button', { name: /^Azioni per(?! la Nota)/ });
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+
+    await user.click(menu);
+    expect(menu).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Modifica' })).toBeInTheDocument();
+
+    await user.click(menu);
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+  });
+
+  it('still withholds the Owner-only actions from a Player', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-2'] });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: /^Azioni per(?! la Nota)/ }));
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Storico/ })).not.toBeInTheDocument();
+  });
+});
+
 describe('editing', () => {
   it('opens the form with the current values', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     await user.click(editButton());
@@ -337,6 +397,7 @@ describe('editing', () => {
       return Promise.resolve(rawDocument({ owner_ids: ['user-1'], name: 'Nuovo nome' }));
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -349,6 +410,7 @@ describe('editing', () => {
 
   it('cannot save an empty name', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -359,6 +421,7 @@ describe('editing', () => {
 
   it('leaves the form on cancel', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -371,6 +434,7 @@ describe('editing', () => {
   it('reports a rejected save', async () => {
     mockApi(() => Promise.reject(new Error('Only an Owner can edit')));
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -403,6 +467,7 @@ describe('editing', () => {
 describe('deleting the Document', () => {
   it('offers deletion only while editing', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     expect(screen.queryByRole('button', { name: 'Elimina Documento' })).not.toBeInTheDocument();
@@ -418,6 +483,7 @@ describe('deleting the Document', () => {
       return Promise.resolve();
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -434,6 +500,7 @@ describe('deleting the Document', () => {
       return Promise.resolve();
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
     await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
@@ -447,6 +514,7 @@ describe('deleting the Document', () => {
 
   it('dismisses the confirmation on Escape too, not just Cancel', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
     await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
@@ -466,6 +534,7 @@ describe('deleting the Document', () => {
       return Promise.resolve();
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
     await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
@@ -479,6 +548,7 @@ describe('deleting the Document', () => {
   it('reports a rejected deletion and stays on the page', async () => {
     mockApi(() => Promise.reject(new Error('Only an Owner can delete')));
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
     await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
@@ -496,6 +566,7 @@ describe('creating a Tag while editing', () => {
   it('offers it to the Master', async () => {
     routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     await user.click(editButton());
@@ -505,6 +576,7 @@ describe('creating a Tag while editing', () => {
 
   it('withholds it from an Owner who is a Player', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     await user.click(editButton());
@@ -517,6 +589,7 @@ describe('creating a Tag while editing', () => {
     routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
     mockApi(() => new Promise(() => {}));
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -604,7 +677,10 @@ describe('adding images', () => {
 
     await user.click(screen.getByRole('button', { name: 'Cerca immagini' }));
     const dialog = await screen.findByRole('dialog', { name: 'Cerca immagini' });
-    await user.type(within(dialog).getByRole('textbox', { name: 'Cosa cercare' }), 'castello{Enter}');
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Cosa cercare' }),
+      'castello{Enter}',
+    );
     await user.click(await within(dialog).findByRole('button', { name: 'Aggiungi Castello' }));
 
     await waitFor(() => expect(writes).toContain(`${DOC}/images/from-url`));
@@ -675,6 +751,7 @@ describe('the image gallery', () => {
 
   it('offers deletion only while editing', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     expect(screen.queryByRole('button', { name: 'Elimina immagine' })).not.toBeInTheDocument();
@@ -690,6 +767,7 @@ describe('the image gallery', () => {
       return Promise.resolve();
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -703,6 +781,7 @@ describe('the image gallery', () => {
     let resolveDelete: (value: unknown) => void = () => {};
     mockApi(() => new Promise((resolve) => (resolveDelete = resolve)));
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -1095,6 +1174,7 @@ describe('promoting a Comment (spec 19c)', () => {
 
   it('keeps the edits in progress when promoting into an open editor', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(screen.getAllByRole('button', { name: 'Modifica' })[0]);
     await user.type(screen.getByRole('textbox', { name: /^Nome/ }), ' antico');
@@ -1149,6 +1229,7 @@ describe('promoting a Comment (spec 19c)', () => {
 
   it('gives the promotion up on cancel', async () => {
     const user = await startPromotion('Nella descrizione');
+    await openActions(user);
 
     await user.click(screen.getByRole('button', { name: 'Annulla' }));
 
@@ -1163,6 +1244,7 @@ describe('promoting a Comment (spec 19c)', () => {
 
   it('gives the promotion up from the header too', async () => {
     const user = await startPromotion('Nella descrizione');
+    await openActions(user);
 
     await user.click(screen.getByRole('button', { name: 'Annulla modifiche' }));
 
@@ -1221,10 +1303,15 @@ describe('DocumentDetailPage backlinks', () => {
         ],
       },
     ];
-    render();
+    const { user } = render();
+    await openActions(user);
+    await openActions(user);
 
     const backlinks = await screen.findByTestId('backlinks');
-    expect(within(backlinks).getByRole('link', { name: 'La Locanda' })).toBeInTheDocument();
+    const toggle = within(backlinks).getByRole('button', { name: /Menzionato in/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await user.click(toggle);
+    expect(await within(backlinks).findByRole('link', { name: 'La Locanda' })).toBeInTheDocument();
     const comments = screen.getByText('Commenti');
     expect(backlinks.compareDocumentPosition(comments)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
@@ -1250,6 +1337,7 @@ describe('revealing the Document', () => {
     const writes = vi.fn((_path: string) => Promise.resolve(routes.document));
     mockApi(writes);
     const { user } = render();
+    await openActions(user);
 
     await user.click(await screen.findByRole('button', { name: 'Rivela: Il Cancello' }));
     const dialog = screen.getByRole('dialog', { name: 'Rivela "Il Cancello"' });
@@ -1271,6 +1359,7 @@ describe('revealing the Document', () => {
   it('reports a refused Reveal and closes on cancel', async () => {
     mockApi(() => Promise.reject(new Error('no')));
     const { user } = render();
+    await openActions(user);
 
     await user.click(await screen.findByRole('button', { name: 'Rivela: Il Cancello' }));
     await user.click(screen.getByRole('radio', { name: 'A tutta la Stanza' }));
@@ -1364,5 +1453,66 @@ describe('previewing as a member', () => {
     expect(screen.getByRole('button', { name: /^👍, 1 reazione/ })).toBeDisabled();
     expect(screen.queryByTestId('new-comment')).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(`${DOC}/read`, expect.anything());
+  });
+});
+
+describe('DocumentDetailPage mention map (spec 36)', () => {
+  const button = () => screen.queryByRole('button', { name: 'Mappa delle menzioni' });
+
+  it('lets the Master open the modal to create one', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
+    const { user } = render();
+    await openActions(user);
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    await waitFor(() => expect(button()).toBeInTheDocument());
+    expect(screen.queryByRole('region', { name: 'Mappa delle menzioni' })).not.toBeInTheDocument();
+
+    await user.click(button()!);
+    expect(await screen.findByRole('button', { name: 'Crea mappa' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Crea mappa' })).not.toBeInTheDocument(),
+    );
+  });
+
+  it('draws the map under the images, without the button for who cannot manage it', async () => {
+    routes.mentionMap = rawMentionMap({ can_manage: false });
+    render();
+    expect(await screen.findByRole('region', { name: 'Mappa delle menzioni' })).toBeInTheDocument();
+    expect(button()).not.toBeInTheDocument();
+  });
+
+  it('opens an existing map to its manager, and hides a map with no relation', async () => {
+    routes.mentionMap = rawMentionMap({ arrows: [] });
+    const { user } = render();
+    await openActions(user);
+    await waitFor(() => expect(button()).toBeInTheDocument());
+    expect(screen.queryByRole('region', { name: 'Mappa delle menzioni' })).not.toBeInTheDocument();
+    await user.click(button()!);
+    expect(
+      await screen.findByRole('button', { name: 'Copia come mappa libera' }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers nothing to a Player of a Room closed to their Documents, nor in a preview', async () => {
+    render();
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    expect(button()).not.toBeInTheDocument();
+    cleanup();
+
+    routes.mentionMap = rawMentionMap();
+    renderWithProviders(
+      <Routes>
+        <Route path="/rooms/:roomId/documents/:documentId" element={<DocumentDetailPage />} />
+      </Routes>,
+      {
+        route: DOC,
+        wrapper: ({ children }) => (
+          <ViewAsContext value={{ roomId: 'room-1', userId: 'user-2' }}>{children}</ViewAsContext>
+        ),
+      },
+    );
+    expect(await screen.findByRole('region', { name: 'Mappa delle menzioni' })).toBeInTheDocument();
+    expect(button()).not.toBeInTheDocument();
   });
 });

@@ -680,8 +680,15 @@ describe('Tag backlinks', () => {
   it('shows where the one filtered Tag is mentioned', async () => {
     render('/rooms/room-1/documents?tag=tag-1');
 
-    expect(await screen.findByTestId('backlinks')).toBeInTheDocument();
+    const backlinks = await screen.findByTestId('backlinks');
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/tag-1/backlinks');
+    // Below the results, and closed until opened.
+    const card = await screen.findByText('Il Cancello');
+    expect(card.compareDocumentPosition(backlinks)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(within(backlinks).getByRole('button', { name: /Menzionato in/ })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 
   it('shows nothing for no Tag or for several', async () => {

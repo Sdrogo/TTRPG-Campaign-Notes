@@ -42,6 +42,9 @@ Notes:
   component code. **One exception: country flags** (the language
   selector, spec 09) keep their official colors. They're content, not
   theme, so they are SVG files in `src/assets/flags/`, not components.
+  **Second exception: the 11 relationship-map palette colors** added
+  2026-10-13 (spec 28), whose exact hexes the product owner chose; they
+  live in one table, `COLOR_VALUES` in `src/lib/maps.ts`.
 
 ## Typography
 
@@ -111,6 +114,8 @@ Icons: **Phosphor Icons** (`@phosphor-icons/react`), `duotone` or
 `regular` weight for standalone/emphasis icons (Room icon, empty
 states), `regular` for inline UI icons. Do not mix Phosphor with any
 other icon set.
+
+**Every icon-only button is a `LabeledActionIcon`** (2026-10-15): its `aria-label` is also shown as a tooltip on hover or long-press. A bare `ActionIcon` is only used when already wrapped in its own `Tooltip`.
 
 ## Layout Patterns
 
@@ -368,7 +373,7 @@ other icon set.
   ("Nella descrizione", "Nella nota «…»", "In un commento di …", the last
   one jumping to the Comment) and the `sm` excerpt. On the Document page it
   sits between the Document card and the Comments; on the Documents list,
-  when exactly one Tag is filtered, above the Documents.
+  when exactly one Tag is filtered, below the Documents. Closed by default, with `md` vertical padding open and `xs` closed.
 - **Document card** (`DocumentCard`, restructured 2026-09-23, spec
   `07 - Document visualizazion refactor_beckend`; image panel restyled
   2026-10-03): three stacked blocks. The *Title block* is the Document name
@@ -647,4 +652,42 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   (card, text, group, arrow). Saving is automatic; the header shows
   "Modifiche non salvate", "Salvataggio…", "Salvato", or the error with
   "Riprova". Below the `sm` breakpoint the board is read-only with a note.
+
+## Mention map (spec 36)
+
+- **Entry point**: a `GraphIcon` button in the Document page's title
+  actions, before History, for whoever may create Documents (or manage the
+  existing map). It opens `MentionMapModal`: a depth control (0 to 3, a
+  `SegmentedControl`), a live preview line ("Documenti: N · Relazioni: N"),
+  the cap notice, and Create or Save; for an existing map also Delete (with
+  an inline confirm) and "Copia come mappa libera", which opens the copy.
+- **On the Document page**: `MentionMapPanel` sits in the aside under the
+  Document's images (the aside is wide when there is a map), a read-only
+  board 360 px high with a "Schermo intero" link, shown only when the map
+  has at least one arrow for the viewer.
+- **Full screen**: `/rooms/:roomId/documents/:documentId/mention-map`
+  (`MentionMapPage`). `MapBoard` in `mode="mention"`: cards can be moved and
+  recolored (`CardColorDialog`), nothing else (no adding, deleting,
+  connecting, arrow editing, toolbar). Changes save automatically like a
+  free map; read-only on phones and in View As. The center card is gold.
+
+## Document preview and split view (spec 37)
+
+- **Open menu** (`DocumentOpenMenu`): a click on a `#Document` mention
+  (Document page, and the Documents page's cards, where Document mentions
+  are links raised above the card's own link while Tag mentions stay
+  plain), on a map card's name while the map is edited, or anywhere on a
+  read-only map card opens a two-item Mantine `Menu`: "Apri a metà schermo"
+  (`SquareSplitHorizontalIcon`) and "Apri il Documento"
+  (`ArrowSquareOutIcon`). Ctrl/Cmd/Shift-click keeps the browser's default.
+  Below `sm` there is no menu: a click just follows the link.
+- **Hover preview on map cards**: as spec 32, through
+  `DocumentMentionPreview`, using the page's `DocumentMentionsProvider`
+  Documents; off while the card is dragged.
+- **Split view**: `?side=<documentId>` on any Room page (`PageLayout`)
+  splits it in `SplitView`: the page left, `DocumentSidePane` right (sticky
+  header with the name, an "Apri il Documento" icon link and a close
+  button, then the whole `DocumentView`). The divider is 8 px, a
+  `role="separator"` moved by pointer or arrow keys (5% steps), each pane
+  at least 320 px; the ratio is kept in `localStorage` (`splitView.ratio`).
 

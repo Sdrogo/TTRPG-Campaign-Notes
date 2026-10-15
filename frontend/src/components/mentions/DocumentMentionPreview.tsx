@@ -1,8 +1,9 @@
-import type { ReactElement } from 'react';
+import { useContext, type ReactElement } from 'react';
 import { HoverCard } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { DocumentCard } from '../DocumentCard';
 import { useMembers } from '../../hooks/useMembers';
+import { OpenMenuContext } from '../../hooks/useSideDocument';
 import type { Document } from '../../types/document';
 import type { Tag } from '../../types/tag';
 
@@ -22,6 +23,11 @@ interface DocumentMentionPreviewProps {
   tags: Tag[];
   /** The mention's link; it must forward its ref. */
   children: ReactElement;
+  /**
+   * Opens nothing for now (a map card being dragged or its open menu showing,
+   * spec 37). Inside an open menu's target it also stays shut while the menu shows.
+   */
+  disabled?: boolean;
 }
 
 /**
@@ -29,13 +35,21 @@ interface DocumentMentionPreviewProps {
  * Document's card from the Documents list (spec 32). Nothing on devices
  * without hover.
  */
-export function DocumentMentionPreview({ roomId, document, tags, children }: DocumentMentionPreviewProps) {
+export function DocumentMentionPreview({
+  roomId,
+  document,
+  tags,
+  children,
+  disabled = false,
+}: DocumentMentionPreviewProps) {
   const canHover = useMediaQuery(HOVER_POINTER_QUERY);
+  const menuOpen = useContext(OpenMenuContext);
   if (!canHover) {
     return children;
   }
   return (
     <HoverCard
+      disabled={disabled || menuOpen}
       openDelay={OPEN_DELAY_MS}
       closeDelay={CLOSE_DELAY_MS}
       width={PREVIEW_WIDTH}
@@ -52,7 +66,7 @@ export function DocumentMentionPreview({ roomId, document, tags, children }: Doc
 }
 
 /** Mounted only while the preview is open; the members query is the page's cached one. */
-function PreviewCard({ roomId, document, tags }: Omit<DocumentMentionPreviewProps, 'children'>) {
+function PreviewCard({ roomId, document, tags }: Pick<DocumentMentionPreviewProps, 'roomId' | 'document' | 'tags'>) {
   const members = useMembers(roomId, true);
   return (
     <DocumentCard

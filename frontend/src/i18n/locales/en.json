@@ -365,6 +365,7 @@
       "notFound": "Document not found or not visible.",
       "backToDocuments": "Back to Documents",
       "cancelEditing": "Discard changes",
+      "actions": "Actions for {{name}}",
       "saveChanges": "Save changes",
       "deleteDocument": "Delete Document",
       "deleteConfirmTitle": "Delete this Document?",
@@ -380,7 +381,14 @@
     },
     "notYetRead": "Not yet read",
     "unreadCount_one": "{{count}} new comment",
-    "unreadCount_other": "{{count}} new comments"
+    "unreadCount_other": "{{count}} new comments",
+    "open": {
+      "side": "Open in half screen",
+      "page": "Open the Document",
+      "resize": "Resize the panes",
+      "close": "Close the pane",
+      "pane": "Document side by side"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",
@@ -441,6 +449,7 @@
     "add": "Add Note",
     "edit": "Edit Note: {{title}}",
     "delete": "Delete Note: {{title}}",
+    "actions": "Actions for Note: {{title}}",
     "moveUp": "Move Note up: {{title}}",
     "moveDown": "Move Note down: {{title}}",
     "deleteConfirmTitle": "Delete this Note?",
@@ -671,12 +680,14 @@
       "styles": {
         "gothic": "Gothic",
         "modern": "Modern",
-        "print": "Print"
+        "print": "Print",
+        "parchment": "Parchment"
       },
       "styleHints": {
         "gothic": "Black and red, dark cover",
         "modern": "Clean sans-serif, lots of space",
-        "print": "Black and white, saves ink"
+        "print": "Black and white, saves ink",
+        "parchment": "Aged paper, brown small capitals"
       },
       "pageSize": "Page size",
       "comments": "Include Comments as an appendix",
@@ -880,7 +891,7 @@
     "editCard": "Edit card: {{name}}",
     "editText": "Edit text",
     "editGroup": "Edit group",
-    "editArrow": "Edit arrow: {{label}}",
+    "editArrow": "Edit relation: {{label}}",
     "masterOnly": "Master only",
     "masterOnlyArrow": "Visible to Masters only",
     "masterOnlyCard": "Visible to Masters only",
@@ -890,10 +901,23 @@
       "default": "Default",
       "red": "Red",
       "green": "Green",
-      "purple": "Purple",
-      "blue": "Blue",
-      "gold": "Gold"
+      "purple": "Fuchsia",
+      "blue": "Light blue",
+      "gold": "Yellow",
+      "orange": "Orange",
+      "midnight": "Midnight blue",
+      "silver": "Silver",
+      "champagne": "Gold",
+      "rose": "Light pink",
+      "pink": "Pink",
+      "cobalt": "Blue",
+      "violet": "Purple",
+      "emerald": "Emerald",
+      "brown": "Brown",
+      "lime": "Light green"
     },
+    "colorsMore": "More colors",
+    "colorsLess": "Fewer colors",
     "card": {
       "editDocument": "Card: {{name}}",
       "editText": "Text",
@@ -920,14 +944,31 @@
       "untitled": "Untitled group"
     },
     "arrow": {
-      "title": "Arrow",
+      "title": "Relation",
       "direction": "Direction",
       "forward": "One way",
       "both": "Both ways",
       "none": "Line only",
       "label": "Label",
       "labelTowards": "Label towards {{name}}",
-      "delete": "Delete the arrow"
+      "delete": "Delete the relation"
+    },
+    "mention": {
+      "button": "Mentions map",
+      "title": "Mentions map",
+      "depth": "Depth",
+      "depthHelp": "0 shows only the Documents linked directly to this one; each step adds the next ring of mentions.",
+      "preview": "Documents: {{documents}} · Relations: {{relations}}",
+      "previewLoading": "Loading the preview",
+      "leftOut": "Not shown, since a map holds 150 cards: {{number}}",
+      "nothingYet": "No mentions yet",
+      "create": "Create map",
+      "copy": "Copy as a free map",
+      "copyName": "Mentions of {{name}}",
+      "fullScreen": "Full screen",
+      "backToDocument": "Back to the Document",
+      "deleteConfirmBody": "The Documents and their mentions stay.",
+      "loadError": "Couldn't load the mentions map."
     }
   }
 }

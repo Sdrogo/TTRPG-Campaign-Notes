@@ -24,6 +24,7 @@ import {
   DEFAULT_CARD_SIZE,
   absolutePosition,
   addArrow,
+  parallelShift,
   addDocumentCards,
   addTextCard,
   cardImage,
@@ -46,6 +47,7 @@ import type { MapEdge, MapNode } from '../../types/mapNodes';
 import type { Tag } from '../../types/tag';
 import { AddDocumentsPanel } from './AddDocumentsPanel';
 import { ArrowDialog } from './ArrowDialog';
+import { CardColorDialog } from './CardColorDialog';
 import { CardDialog } from './CardDialog';
 import { DocumentCardNode } from './DocumentCardNode';
 import { GroupDialog } from './GroupDialog';
@@ -71,6 +73,14 @@ export interface MapBoardProps {
   documents: Document[];
   tags: Tag[];
   onChange: (board: Board) => void;
+  /**
+   * `mention`: a Document's mention map (spec 36 Decision 9), whose Documents
+   * and relations come from the mentions: editing only moves and recolors
+   * cards. `free` (the default): a spec 28 map.
+   */
+  mode?: 'free' | 'mention';
+  /** The board's height; the full page's by default. */
+  height?: string | number;
 }
 
 type Editing =
@@ -102,7 +112,17 @@ function marker(arrow: Arrow): EdgeMarker {
   };
 }
 
-function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onChange }: MapBoardProps) {
+function BoardCanvas({
+  roomId,
+  board,
+  editable,
+  isMaster,
+  documents,
+  tags,
+  onChange,
+  mode = 'free',
+  height = 'calc(100dvh - 190px)',
+}: MapBoardProps) {
   const { t } = useTranslation();
   const flow = useReactFlow<MapNode, MapEdge>();
   const wrapper = useRef<HTMLDivElement>(null);
@@ -111,7 +131,10 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
   // A finger has no middle button or Space to pan with, so on touch a drag on
   // empty canvas keeps panning and there is no selection box.
   const touch = useMediaQuery('(pointer: coarse)');
-  const boxSelect = editable && !touch;
+  const free = mode === 'free';
+  // What a mention map can't change: its cards and relations themselves.
+  const shaping = editable && free;
+  const boxSelect = shaping && !touch;
 
   const toNodes = (current: MapNode[]): MapNode[] => {
     const previous = new Map(current.map((node) => [node.id, node]));
@@ -151,7 +174,7 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
                 position: { x: card.x, y: card.y },
                 parentId: card.groupId && groupIds.has(card.groupId) ? card.groupId : undefined,
                 draggable: editable,
-                data: { card, roomId, editable, onEdit: onEdit('card') },
+                data: { card, roomId, editable, connectable: free, onEdit: onEdit('card') },
                 ...kept(card.id),
               }
             : {
@@ -185,8 +208,19 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
     markerStart: arrow.direction === 'both' ? marker(arrow) : undefined,
     data: {
       arrow,
-      editable,
+      shift: parallelShift(board.arrows, arrow),
+      editable: shaping,
       onEdit: (id) => setEditing({ kind: 'arrow', id }),
+      onMoveLabel: (id, which, position, offset) =>
+        onChange(
+          updateArrow(
+            board,
+            id,
+            which === 'label'
+              ? { labelPosition: position, labelOffset: offset }
+              : { reverseLabelPosition: position, reverseLabelOffset: offset },
+          ),
+        ),
     },
   }));
 
@@ -278,8 +312,8 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
   return (
     <Box
       ref={wrapper}
-      h="calc(100dvh - 190px)"
-      mih={420}
+      h={height}
+      mih={free ? 420 : undefined}
       style={{
         border: '1px solid var(--border-default)',
         borderRadius: 'var(--mantine-radius-lg)',
@@ -296,7 +330,7 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
         onNodeDragStop={(_, __, dragged) => handleDragStop(dragged)}
         onSelectionDragStop={(_, dragged) => handleDragStop(dragged)}
         onConnect={handleConnect}
-        onEdgeClick={(_, edge) => editable && setEditing({ kind: 'arrow', id: edge.id })}
+        onEdgeClick={(_, edge) => shaping && setEditing({ kind: 'arrow', id: edge.id })}
         onBeforeDelete={handleBeforeDelete}
         onDelete={handleDelete}
         nodesDraggable={editable}
@@ -306,9 +340,9 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
         selectionOnDrag={boxSelect}
         selectionMode={SelectionMode.Partial}
         panOnDrag={boxSelect ? [1, 2] : true}
-        nodesConnectable={editable}
+        nodesConnectable={shaping}
         elementsSelectable={editable}
-        deleteKeyCode={editable ? ['Backspace', 'Delete'] : null}
+        deleteKeyCode={shaping ? ['Backspace', 'Delete'] : null}
         connectionMode={ConnectionMode.Loose}
         connectionRadius={40}
         colorMode="dark"
@@ -317,7 +351,7 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
       >
         <Background gap={24} color="var(--border-default)" />
         <Controls showInteractive={false} />
-        {editable && (
+        {shaping && (
           <Panel position="top-left">
             <Group gap="xs">
               <Button size="xs" leftSection={<PlusIcon size={14} />} onClick={() => setAddOpened(true)}>
@@ -351,7 +385,7 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
           </Panel>
         )}
       </ReactFlow>
-      {editable && (
+      {shaping && (
         <AddDocumentsPanel
           opened={addOpened}
           onClose={() => setAddOpened(false)}
@@ -371,7 +405,18 @@ function BoardCanvas({ roomId, board, editable, isMaster, documents, tags, onCha
           }}
         />
       )}
-      {editedCard && (
+      {editedCard && !free && (
+        <CardColorDialog
+          key={editedCard.id}
+          card={editedCard}
+          onClose={close}
+          onSave={(color) => {
+            onChange(updateCard(board, editedCard.id, { color }));
+            close();
+          }}
+        />
+      )}
+      {editedCard && free && (
         <CardDialog
           key={editedCard.id}
           card={editedCard}

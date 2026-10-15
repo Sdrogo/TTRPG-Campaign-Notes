@@ -9,13 +9,20 @@ import {
   arrowEnds,
   cardImage,
   colorValue,
+  MAP_COLORS,
   dropCard,
   endId,
   endOf,
   groupCards,
+  ignoreBoardChange,
   newId,
+  parallelShift,
+  shiftParallel,
   labelSize,
   placeLabel,
+  offsetFromLine,
+  pointBeside,
+  projectOnLine,
   pointAlong,
   removeArrow,
   removeCards,
@@ -75,6 +82,10 @@ function arrow(id: string, from: string, to: string, overrides: Partial<MapArrow
     direction: 'forward',
     label: null,
     reverseLabel: null,
+    labelPosition: null,
+    reverseLabelPosition: null,
+    labelOffset: null,
+    reverseLabelOffset: null,
     color: 'default',
     masterOnly: false,
     ...overrides,
@@ -120,6 +131,10 @@ describe('the wire shape', () => {
       direction: 'both',
       label: 'alleata',
       reverseLabel: 'alleato',
+      labelPosition: null,
+      reverseLabelPosition: null,
+      labelOffset: null,
+      reverseLabelOffset: null,
       color: 'green',
       masterOnly: false,
     });
@@ -151,6 +166,63 @@ describe('the wire shape', () => {
       reverse_label: 'alleato',
     });
     expect(body.arrows[1].reverse_label).toBeNull();
+  });
+
+  it('keeps where a label was dragged to, and drops the place of a label that is gone', () => {
+    const detail = toMapDetail({
+      ...rawMapDetail(),
+      arrows: [
+        {
+          ...rawMapDetail().arrows[0],
+          label_position: 0.2,
+          reverse_label_position: 0.7,
+          label_offset: -30,
+          reverse_label_offset: 12,
+        },
+      ],
+    } as unknown as RawMapDetail);
+    expect([detail.arrows[0].labelPosition, detail.arrows[0].reverseLabelPosition]).toEqual([
+      0.2, 0.7,
+    ]);
+    const kept = toBoardBody(detail).arrows[0];
+    expect([kept.label_position, kept.reverse_label_position]).toEqual([0.2, 0.7]);
+    expect([detail.arrows[0].labelOffset, detail.arrows[0].reverseLabelOffset]).toEqual([-30, 12]);
+    expect([kept.label_offset, kept.reverse_label_offset]).toEqual([-30, 12]);
+
+    const cleared = toBoardBody({
+      ...detail,
+      arrows: [{ ...detail.arrows[0], label: null, direction: 'forward' as const }],
+    }).arrows[0];
+    expect([cleared.label_position, cleared.reverse_label_position]).toEqual([null, null]);
+    expect([cleared.label_offset, cleared.reverse_label_offset]).toEqual([null, null]);
+  });
+
+  it('finds how far to the side of a line a point is, and puts a point there', () => {
+    const from = { x: 0, y: 0 };
+    const to = { x: 100, y: 0 };
+    // y grows downward, so below the line is to the right of the way along it.
+    expect(offsetFromLine(from, to, { x: 40, y: 25 })).toBe(25);
+    expect(offsetFromLine(from, to, { x: 40, y: -10 })).toBe(-10);
+    expect(offsetFromLine(from, from, { x: 5, y: 5 })).toBe(0);
+    // Dragged farther than the board allows, it stops at the limit.
+    expect(offsetFromLine(from, to, { x: 40, y: 99999 })).toBe(2000);
+    expect(offsetFromLine(from, to, { x: 40, y: -99999 })).toBe(-2000);
+    expect(pointBeside(from, to, 0.5, 25)).toEqual({ x: 50, y: 25 });
+    expect(pointBeside(from, to, 0.5, -10)).toEqual({ x: 50, y: -10 });
+    expect(pointBeside(from, from, 0.5, 25)).toEqual(from);
+    const slanted = pointBeside({ x: 0, y: 0 }, { x: 0, y: 100 }, 0.5, 10);
+    expect(slanted.x).toBeCloseTo(-10);
+    expect(slanted.y).toBeCloseTo(50);
+    expect(offsetFromLine({ x: 0, y: 0 }, { x: 0, y: 100 }, slanted)).toBeCloseTo(10);
+  });
+
+  it('finds how far along a line a point falls, clamped to the line', () => {
+    const from = { x: 0, y: 0 };
+    const to = { x: 100, y: 0 };
+    expect(projectOnLine(from, to, { x: 25, y: 40 })).toBe(0.25);
+    expect(projectOnLine(from, to, { x: -50, y: 0 })).toBe(0);
+    expect(projectOnLine(from, to, { x: 500, y: 9 })).toBe(1);
+    expect(projectOnLine(from, from, { x: 3, y: 3 })).toBe(0.5);
   });
 
   it('sends Selective grants only at the Selective level', () => {
@@ -210,6 +282,9 @@ describe('looks', () => {
   it('maps every color to a theme value', () => {
     expect(colorValue('default')).toBe('var(--text-primary)');
     expect(colorValue('gold')).toContain('yellow');
+    expect(colorValue('orange')).toBe('#FF9500');
+    expect(colorValue('lime')).toBe('#9ACD32');
+    for (const color of MAP_COLORS) expect(colorValue(color)).toBeTruthy();
   });
 
   it('makes a fresh id each time', () => {
@@ -371,34 +446,90 @@ describe('drawing arrows', () => {
 
   describe('placeLabel', () => {
     const size = { width: 100, height: 24 };
+    const everywhere = { x: -1e6, y: -1e6, width: 2e6, height: 2e6 };
     const clear = (at: { x: number; y: number }, rects: { x: number; y: number; width: number; height: number }[]) =>
       rects.every(
         (r) => at.x + 50 <= r.x || at.x - 50 >= r.x + r.width || at.y + 12 <= r.y || at.y - 12 >= r.y + r.height,
       );
 
     it('keeps the wanted spot when no card is in the way', () => {
-      expect(placeLabel({ x: 0, y: 0 }, { x: 400, y: 0 }, 0.5, size, [])).toEqual({ x: 200, y: 0 });
+      expect(placeLabel({ x: 0, y: 0 }, { x: 400, y: 0 }, 0.5, size, [], everywhere)).toEqual({ x: 200, y: 0 });
     });
 
     it('slides the label along the arrow until the card no longer covers it', () => {
       const card = { x: 330, y: -50, width: 100, height: 100 };
-      const at = placeLabel({ x: 0, y: 0 }, { x: 330, y: 0 }, 0.9, size, [card]);
+      const at = placeLabel({ x: 0, y: 0 }, { x: 330, y: 0 }, 0.9, size, [card], everywhere);
       expect(at.x).toBeLessThan(330 - 50);
       expect(clear(at, [card])).toBe(true);
     });
 
     it('moves sideways, off the cards, when the line is too short to clear them', () => {
       const a = { x: 0, y: -50, width: 100, height: 100 };
-      const b = { x: 110, y: -50, width: 100, height: 100 };
-      const at = placeLabel({ x: 100, y: 0 }, { x: 110, y: 0 }, 0.5, size, [a, b]);
+      const b = { x: 110, y: 40, width: 100, height: 100 };
+      const span = { x: 0, y: -50, width: 210, height: 190 };
+      const at = placeLabel({ x: 100, y: -30 }, { x: 110, y: 10 }, 0.5, size, [a, b], span);
       expect(clear(at, [a, b])).toBe(true);
-      expect(at.y).toBe(0);
-      expect(at.x).not.toBe(105);
+      expect(at.x).toBeGreaterThanOrEqual(span.x);
+      expect(at.x).toBeLessThanOrEqual(span.x + span.width);
+      expect(at.y).toBeGreaterThanOrEqual(span.y);
+      expect(at.y).toBeLessThanOrEqual(span.y + span.height);
+    });
+
+    it('never throws the label past the cards to their far side', () => {
+      // Two cards side by side with no gap: no spot between them is clear, so
+      // the label stays at its wanted spot instead of jumping beyond them.
+      const a = { x: 0, y: -50, width: 100, height: 100 };
+      const b = { x: 110, y: -50, width: 100, height: 100 };
+      const span = { x: 0, y: -50, width: 210, height: 100 };
+      const at = placeLabel({ x: 100, y: 0 }, { x: 110, y: 0 }, 0.5, size, [a, b], span);
+      expect(at).toEqual({ x: 105, y: 0 });
     });
 
     it('stays at the wanted spot when there is no room at all', () => {
       const wall = { x: -5000, y: -5000, width: 10000, height: 10000 };
-      expect(placeLabel({ x: 0, y: 0 }, { x: 10, y: 0 }, 0.5, size, [wall])).toEqual({ x: 5, y: 0 });
+      expect(placeLabel({ x: 0, y: 0 }, { x: 10, y: 0 }, 0.5, size, [wall], everywhere)).toEqual({ x: 5, y: 0 });
     });
+  });
+});
+
+describe('parallel lines between the same two ends', () => {
+  const line = (id: string, from: string, to: string, direction: MapArrow['direction'] = 'none'): MapArrow => ({
+    ...addArrow({ groups: [], cards: [], arrows: [] }, { cardId: from, groupId: null }, { cardId: to, groupId: null })[0].arrows[0],
+    id,
+    direction,
+  });
+
+  it('spreads plain lines side by side, centered, whichever way they were drawn', () => {
+    const arrows = [line('1', 'a', 'b'), line('2', 'b', 'a'), line('3', 'a', 'b')];
+    const shifts = arrows.map((arrow) => parallelShift(arrows, arrow));
+    expect(shifts[0]).toBeCloseTo(-7);
+    expect(shifts[1]).toBeCloseTo(0);
+    expect(shifts[2]).toBeCloseTo(7);
+  });
+
+  it('leaves a lone line, arrows with heads and other pairs alone', () => {
+    const arrows = [line('1', 'a', 'b'), line('2', 'a', 'c'), line('3', 'a', 'b', 'forward')];
+    expect(arrows.map((arrow) => parallelShift(arrows, arrow))).toEqual([0, 0, 0]);
+  });
+
+  it('moves both ends to the side of the line', () => {
+    const { from, to } = shiftParallel({ x: 0, y: 0 }, { x: 100, y: 0 }, 7);
+    expect(from.x).toBeCloseTo(0);
+    expect(from.y).toBeCloseTo(7);
+    expect(to.x).toBeCloseTo(100);
+    expect(to.y).toBeCloseTo(7);
+  });
+
+  it('does not move ends that sit on the same point', () => {
+    expect(shiftParallel({ x: 5, y: 5 }, { x: 5, y: 5 }, 7)).toEqual({
+      from: { x: 5, y: 5 },
+      to: { x: 5, y: 5 },
+    });
+  });
+});
+
+describe('ignoreBoardChange', () => {
+  it('does nothing with a read-only board', () => {
+    expect(ignoreBoardChange()).toBeUndefined();
   });
 });

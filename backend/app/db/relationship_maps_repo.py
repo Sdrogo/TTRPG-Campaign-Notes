@@ -43,6 +43,8 @@ def _map_from_row(row: RelationshipMapRow) -> RelationshipMap:
         created_by=row.created_by,
         created_at=row.created_at,
         updated_at=row.updated_at,
+        source_document_id=row.source_document_id,
+        mention_depth=row.mention_depth,
     )
 
 
@@ -87,6 +89,10 @@ def _arrow_from_row(row: RelationshipMapArrowRow) -> MapArrow:
         direction=ArrowDirection(row.direction),
         label=row.label,
         reverse_label=row.reverse_label,
+        label_position=row.label_position,
+        reverse_label_position=row.reverse_label_position,
+        label_offset=row.label_offset,
+        reverse_label_offset=row.reverse_label_offset,
         color=MapColor(row.color),
         master_only=row.master_only,
     )
@@ -108,6 +114,8 @@ async def insert_map(
             created_by=relationship_map.created_by,
             created_at=relationship_map.created_at,
             updated_at=relationship_map.updated_at,
+            source_document_id=relationship_map.source_document_id,
+            mention_depth=relationship_map.mention_depth,
         )
     )
     await session.flush()
@@ -117,6 +125,16 @@ async def insert_map(
 async def get_map(session: AsyncSession, map_id: uuid.UUID) -> RelationshipMap | None:
     """The map, or None. Not yet checked against any viewer."""
     row = await session.get(RelationshipMapRow, map_id)
+    return _map_from_row(row) if row else None
+
+
+async def get_mention_map(session: AsyncSession, document_id: uuid.UUID) -> RelationshipMap | None:
+    """The Document's mention map (spec 36), or None. Not yet checked against
+    any viewer."""
+    result = await session.execute(
+        select(RelationshipMapRow).where(RelationshipMapRow.source_document_id == document_id)
+    )
+    row = result.scalar_one_or_none()
     return _map_from_row(row) if row else None
 
 
@@ -135,35 +153,44 @@ async def lock_map(session: AsyncSession, map_id: uuid.UUID) -> RelationshipMap 
 
 
 async def list_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> list[RelationshipMap]:
-    """Every map of the Room, last edited first. Not yet filtered for any
-    viewer."""
+    """Every free map of the Room, last edited first; mention maps (spec 36)
+    live on their Document's page and are left out. Not yet filtered for
+    any viewer."""
     result = await session.execute(
         select(RelationshipMapRow)
-        .where(RelationshipMapRow.room_id == room_id)
+        .where(
+            RelationshipMapRow.room_id == room_id,
+            RelationshipMapRow.source_document_id.is_(None),
+        )
         .order_by(RelationshipMapRow.updated_at.desc(), RelationshipMapRow.id)
     )
     return [_map_from_row(row) for row in result.scalars()]
 
 
 async def count_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> int:
-    """How many maps the Room has, whoever can see them (Decision 11)."""
+    """How many free maps the Room has, whoever can see them (Decision 11);
+    mention maps are one per Document and don't count (spec 36)."""
     result = await session.execute(
         select(func.count())
         .select_from(RelationshipMapRow)
-        .where(RelationshipMapRow.room_id == room_id)
+        .where(
+            RelationshipMapRow.room_id == room_id,
+            RelationshipMapRow.source_document_id.is_(None),
+        )
     )
     return result.scalar_one()
 
 
 async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -> None:
-    """Writes a map's name, description, visibility and `updated_at`. Raises
-    `LookupError` if it no longer exists."""
+    """Writes a map's name, description, visibility, mention depth and
+    `updated_at`. Raises `LookupError` if it no longer exists."""
     row = await session.get(RelationshipMapRow, relationship_map.id)
     if row is None:
         raise LookupError(f"Map {relationship_map.id} not found")
     row.name = relationship_map.name
     row.description = relationship_map.description
     row.visibility = relationship_map.visibility.value
+    row.mention_depth = relationship_map.mention_depth
     row.updated_at = relationship_map.updated_at
     await session.flush()
 
@@ -369,6 +396,10 @@ async def save_board(session: AsyncSession, map_id: uuid.UUID, plan: BoardPlan) 
                     "direction": arrow.direction.value,
                     "label": arrow.label,
                     "reverse_label": arrow.reverse_label,
+                    "label_position": arrow.label_position,
+                    "reverse_label_position": arrow.reverse_label_position,
+                    "label_offset": arrow.label_offset,
+                    "reverse_label_offset": arrow.reverse_label_offset,
                     "color": arrow.color.value,
                     "master_only": arrow.master_only,
                 }
@@ -388,6 +419,10 @@ async def save_board(session: AsyncSession, map_id: uuid.UUID, plan: BoardPlan) 
                         "direction",
                         "label",
                         "reverse_label",
+                        "label_position",
+                        "reverse_label_position",
+                        "label_offset",
+                        "reverse_label_offset",
                         "color",
                         "master_only",
                     )

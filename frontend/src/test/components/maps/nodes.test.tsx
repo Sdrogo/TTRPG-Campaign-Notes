@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -233,11 +233,24 @@ describe('MapArrow', () => {
     direction: 'both',
     label: 'alleata',
     reverseLabel: 'alleato',
+    labelPosition: null,
+    reverseLabelPosition: null,
+    labelOffset: null,
+    reverseLabelOffset: null,
     color: 'green',
     masterOnly: true,
   };
 
-  function renderArrow(value: Arrow | undefined, editable = true, onEdit = vi.fn()) {
+  const edgeClick = vi.fn();
+
+  beforeEach(() => edgeClick.mockClear());
+
+  function renderArrow(
+    value: Arrow | undefined,
+    editable = true,
+    onEdit = vi.fn(),
+    onMoveLabel = vi.fn(),
+  ) {
     flow.internal.b = {
       internals: { positionAbsolute: { x: 300, y: 0 } },
       measured: { width: 100, height: 50 },
@@ -246,19 +259,96 @@ describe('MapArrow', () => {
       id: 'arrow-1',
       source: 'a',
       target: 'b',
-      data: value && { arrow: value, editable, onEdit },
+      data: value && { arrow: value, shift: 0, editable, onEdit, onMoveLabel },
     };
-    renderWithProviders(<MapArrow {...(props as unknown as ComponentProps<typeof MapArrow>)} />);
+    // React Flow listens for clicks on the whole edge, and a label's click bubbles to it.
+    renderWithProviders(
+      <div onClick={edgeClick}>
+        <MapArrow {...(props as unknown as ComponentProps<typeof MapArrow>)} />
+      </div>,
+    );
     return onEdit;
   }
+
+  const labelButton = (name: string) => screen.getByRole('button', { name: `Modifica la relazione: ${name}` });
 
   it('draws a two-way arrow edge to edge with a label near each end', async () => {
     const onEdit = renderArrow(arrow);
     expect(screen.getByTestId('path-arrow-1')).toHaveAttribute('d', 'M 100,25 L 300,25');
     expect(screen.getByTestId('path-arrow-1')).toHaveAttribute('stroke-dasharray', '6 4');
-    await userEvent.click(screen.getByRole('button', { name: 'Modifica la freccia: alleato' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Modifica la relazione: alleato' }));
     expect(onEdit).toHaveBeenCalledWith('arrow-1');
     expect(screen.getByText('alleata')).toBeInTheDocument();
+  });
+
+  it('slides a label along the arrow when it is dragged, without opening it', () => {
+    const onEdit = vi.fn();
+    const onMoveLabel = vi.fn();
+    renderArrow({ ...arrow, direction: 'forward', reverseLabel: null }, true, onEdit, onMoveLabel);
+    const button = labelButton('alleata');
+    // The arrow runs from x=100 to x=300 on y=25: a drop at x=250 is 75% along it.
+    fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.pointerUp(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.click(button);
+    expect(onMoveLabel).toHaveBeenCalledWith('arrow-1', 'label', 0.75, 35);
+    expect(onEdit).not.toHaveBeenCalled();
+    expect(edgeClick).not.toHaveBeenCalled();
+  });
+
+  it('does not open a label after a drag even if the click comes late, and a cancelled drag moves nothing', () => {
+    const onEdit = vi.fn();
+    const onMoveLabel = vi.fn();
+    renderArrow({ ...arrow, direction: 'forward', reverseLabel: null }, true, onEdit, onMoveLabel);
+    const button = labelButton('alleata');
+    fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.pointerUp(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    return new Promise<void>((resolve) =>
+      setTimeout(() => {
+        fireEvent.click(button);
+        expect(onEdit).not.toHaveBeenCalled();
+        fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+        fireEvent.pointerMove(button, { pointerId: 1, clientX: 260, clientY: 60 });
+        fireEvent.pointerCancel(button, { pointerId: 1 });
+        fireEvent.pointerUp(button, { pointerId: 1 });
+        expect(onMoveLabel).toHaveBeenCalledTimes(1);
+        resolve();
+      }, 10),
+    );
+  });
+
+  it('ignores moves without a press and presses with another button', () => {
+    const onEdit = vi.fn();
+    const onMoveLabel = vi.fn();
+    renderArrow({ ...arrow, direction: 'forward', reverseLabel: null }, true, onEdit, onMoveLabel);
+    const button = labelButton('alleata');
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.pointerDown(button, { button: 2, pointerId: 1, clientX: 200, clientY: 25 });
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
+    fireEvent.pointerUp(button, { pointerId: 1 });
+    // A jitter of a pixel or two is still a click, not a drag.
+    fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 201, clientY: 26 });
+    fireEvent.pointerUp(button, { pointerId: 1 });
+    expect(onMoveLabel).not.toHaveBeenCalled();
+  });
+
+  it('keeps a dragged label where it was dropped, and a press that does not move is a click', async () => {
+    const onEdit = vi.fn();
+    const onMoveLabel = vi.fn();
+    renderArrow({ ...arrow, labelPosition: 0.9, labelOffset: -20 }, true, onEdit, onMoveLabel);
+    const button = labelButton('alleata');
+    // 90% along the arrow (x=280) and 20px to its left, which is up here.
+    expect(button.style.transform).toContain('translate(280px, 5px)');
+    await userEvent.click(button);
+    expect(onEdit).toHaveBeenCalledWith('arrow-1');
+    expect(onMoveLabel).not.toHaveBeenCalled();
+  });
+
+  it('keeps a label saved with a place but no distance on the arrow', () => {
+    renderArrow({ ...arrow, labelPosition: 0.9, labelOffset: null });
+    expect(labelButton('alleata').style.transform).toContain('translate(280px, 25px)');
   });
 
   it('puts a one-way label in the middle and none when there is none', () => {

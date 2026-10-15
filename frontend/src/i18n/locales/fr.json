@@ -365,6 +365,7 @@
       "notFound": "Document introuvable ou non visible.",
       "backToDocuments": "Retour aux Documents",
       "cancelEditing": "Annuler les modifications",
+      "actions": "Actions pour {{name}}",
       "saveChanges": "Enregistrer les modifications",
       "deleteDocument": "Supprimer le Document",
       "deleteConfirmTitle": "Supprimer ce Document ?",
@@ -380,7 +381,14 @@
     },
     "notYetRead": "Pas encore lu",
     "unreadCount_one": "{{count}} nouveau commentaire",
-    "unreadCount_other": "{{count}} nouveaux commentaires"
+    "unreadCount_other": "{{count}} nouveaux commentaires",
+    "open": {
+      "side": "Ouvrir en demi-écran",
+      "page": "Ouvrir le Document",
+      "resize": "Redimensionner les panneaux",
+      "close": "Fermer le panneau",
+      "pane": "Document à côté"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",
@@ -441,6 +449,7 @@
     "add": "Ajouter une Note",
     "edit": "Modifier la Note : {{title}}",
     "delete": "Supprimer la Note : {{title}}",
+    "actions": "Actions pour la Note : {{title}}",
     "moveUp": "Monter la Note : {{title}}",
     "moveDown": "Descendre la Note : {{title}}",
     "deleteConfirmTitle": "Supprimer cette Note ?",
@@ -671,12 +680,14 @@
       "styles": {
         "gothic": "Gothique",
         "modern": "Moderne",
-        "print": "Impression"
+        "print": "Impression",
+        "parchment": "Parchemin"
       },
       "styleHints": {
         "gothic": "Noir et rouge, couverture sombre",
         "modern": "Sans-serif épuré, beaucoup d'espace",
-        "print": "Noir et blanc, économise l'encre"
+        "print": "Noir et blanc, économise l'encre",
+        "parchment": "Papier ancien, petites capitales brunes"
       },
       "pageSize": "Format de page",
       "comments": "Inclure les Commentaires en annexe",
@@ -880,7 +891,7 @@
     "editCard": "Modifier la fiche : {{name}}",
     "editText": "Modifier le texte",
     "editGroup": "Modifier le groupe",
-    "editArrow": "Modifier la flèche : {{label}}",
+    "editArrow": "Modifier la relation : {{label}}",
     "masterOnly": "Master seul",
     "masterOnlyArrow": "Visible uniquement par les Masters",
     "masterOnlyCard": "Visible uniquement par les Masters",
@@ -890,10 +901,23 @@
       "default": "Par défaut",
       "red": "Rouge",
       "green": "Vert",
-      "purple": "Violet",
-      "blue": "Bleu",
-      "gold": "Or"
+      "purple": "Fuchsia",
+      "blue": "Bleu clair",
+      "gold": "Jaune",
+      "orange": "Orange",
+      "midnight": "Bleu nuit",
+      "silver": "Argent",
+      "champagne": "Or",
+      "rose": "Rose clair",
+      "pink": "Rose",
+      "cobalt": "Bleu",
+      "violet": "Violet",
+      "emerald": "Émeraude",
+      "brown": "Marron",
+      "lime": "Vert clair"
     },
+    "colorsMore": "Plus de couleurs",
+    "colorsLess": "Moins de couleurs",
     "card": {
       "editDocument": "Fiche : {{name}}",
       "editText": "Texte",
@@ -920,14 +944,31 @@
       "untitled": "Groupe sans titre"
     },
     "arrow": {
-      "title": "Flèche",
+      "title": "Relation",
       "direction": "Direction",
       "forward": "Dans un sens",
       "both": "Dans les deux",
       "none": "Ligne seule",
       "label": "Étiquette",
       "labelTowards": "Étiquette vers {{name}}",
-      "delete": "Supprimer la flèche"
+      "delete": "Supprimer la relation"
+    },
+    "mention": {
+      "button": "Carte des mentions",
+      "title": "Carte des mentions",
+      "depth": "Profondeur",
+      "depthHelp": "0 n'affiche que les documents liés directement à celui-ci ; chaque étape ajoute le cercle suivant de mentions.",
+      "preview": "Documents : {{documents}} · Relations : {{relations}}",
+      "previewLoading": "Chargement de l'aperçu",
+      "leftOut": "Non affichés, une carte contenant 150 cartes : {{number}}",
+      "nothingYet": "Aucune mention pour l'instant",
+      "create": "Créer la carte",
+      "copy": "Copier en carte libre",
+      "copyName": "Mentions de {{name}}",
+      "fullScreen": "Plein écran",
+      "backToDocument": "Retour au document",
+      "deleteConfirmBody": "Les documents et leurs mentions restent.",
+      "loadError": "Impossible de charger la carte des mentions."
     }
   }
 }

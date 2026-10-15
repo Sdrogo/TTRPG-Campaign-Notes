@@ -35,11 +35,12 @@ describe('PdfExportForm', () => {
   it('starts from Gothic, A4 and nothing optional, with Gothic offered first', () => {
     render();
 
-    const styles = screen.getAllByRole('radio').slice(0, 3);
+    const styles = screen.getAllByRole('radio').slice(0, 4);
     expect(styles.map((radio) => radio.closest('[role="radio"]')?.textContent)).toEqual([
       expect.stringContaining('Gotico'),
       expect.stringContaining('Moderno'),
       expect.stringContaining('Stampa'),
+      expect.stringContaining('Pergamena'),
     ]);
     expect(screen.getByRole('radio', { name: /Gotico/ })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'A4' })).toBeChecked();

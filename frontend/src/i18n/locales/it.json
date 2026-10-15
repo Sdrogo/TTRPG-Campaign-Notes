@@ -365,6 +365,7 @@
       "notFound": "Documento non trovato o non visibile.",
       "backToDocuments": "Torna ai Documenti",
       "cancelEditing": "Annulla modifiche",
+      "actions": "Azioni per {{name}}",
       "saveChanges": "Salva modifiche",
       "deleteDocument": "Elimina Documento",
       "deleteConfirmTitle": "Eliminare questo Documento?",
@@ -380,7 +381,14 @@
     },
     "notYetRead": "Non ancora letto",
     "unreadCount_one": "{{count}} nuovo commento",
-    "unreadCount_other": "{{count}} nuovi commenti"
+    "unreadCount_other": "{{count}} nuovi commenti",
+    "open": {
+      "side": "Apri a metà schermo",
+      "page": "Apri il Documento",
+      "resize": "Ridimensiona i pannelli",
+      "close": "Chiudi il pannello",
+      "pane": "Documento affiancato"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",
@@ -441,6 +449,7 @@
     "add": "Aggiungi Nota",
     "edit": "Modifica Nota: {{title}}",
     "delete": "Elimina Nota: {{title}}",
+    "actions": "Azioni per la Nota: {{title}}",
     "moveUp": "Sposta su la Nota: {{title}}",
     "moveDown": "Sposta giù la Nota: {{title}}",
     "deleteConfirmTitle": "Eliminare questa Nota?",
@@ -671,12 +680,14 @@
       "styles": {
         "gothic": "Gotico",
         "modern": "Moderno",
-        "print": "Stampa"
+        "print": "Stampa",
+        "parchment": "Pergamena"
       },
       "styleHints": {
         "gothic": "Nero e rosso, copertina scura",
         "modern": "Sans-serif pulito, tanto spazio",
-        "print": "Bianco e nero, risparmia inchiostro"
+        "print": "Bianco e nero, risparmia inchiostro",
+        "parchment": "Carta antica, maiuscoletto marrone"
       },
       "pageSize": "Formato della pagina",
       "comments": "Includi i Commenti in appendice",
@@ -880,7 +891,7 @@
     "editCard": "Modifica la carta: {{name}}",
     "editText": "Modifica il testo",
     "editGroup": "Modifica il gruppo",
-    "editArrow": "Modifica la freccia: {{label}}",
+    "editArrow": "Modifica la relazione: {{label}}",
     "masterOnly": "Solo Master",
     "masterOnlyArrow": "Visibile solo ai Master",
     "masterOnlyCard": "Visibile solo ai Master",
@@ -890,10 +901,23 @@
       "default": "Predefinito",
       "red": "Rosso",
       "green": "Verde",
-      "purple": "Viola",
-      "blue": "Blu",
-      "gold": "Oro"
+      "purple": "Fucsia",
+      "blue": "Azzurro",
+      "gold": "Giallo",
+      "orange": "Arancione",
+      "midnight": "Blu notte",
+      "silver": "Argento",
+      "champagne": "Oro",
+      "rose": "Rosa chiaro",
+      "pink": "Rosa",
+      "cobalt": "Blu",
+      "violet": "Viola",
+      "emerald": "Smeraldo",
+      "brown": "Marrone",
+      "lime": "Verde chiaro"
     },
+    "colorsMore": "Altri colori",
+    "colorsLess": "Meno colori",
     "card": {
       "editDocument": "Carta: {{name}}",
       "editText": "Testo",
@@ -920,14 +944,31 @@
       "untitled": "Gruppo senza titolo"
     },
     "arrow": {
-      "title": "Freccia",
+      "title": "Relazione",
       "direction": "Direzione",
       "forward": "In un senso",
       "both": "In entrambi",
       "none": "Solo linea",
       "label": "Etichetta",
       "labelTowards": "Etichetta verso {{name}}",
-      "delete": "Elimina la freccia"
+      "delete": "Elimina la relazione"
+    },
+    "mention": {
+      "button": "Mappa delle menzioni",
+      "title": "Mappa delle menzioni",
+      "depth": "Profondità",
+      "depthHelp": "0 mostra solo i Documenti collegati direttamente a questo; ogni passo aggiunge il giro successivo di menzioni.",
+      "preview": "Documenti: {{documents}} · Relazioni: {{relations}}",
+      "previewLoading": "Calcolo dell'anteprima",
+      "leftOut": "Non mostrati, perché una mappa contiene 150 carte: {{number}}",
+      "nothingYet": "Ancora nessuna menzione",
+      "create": "Crea mappa",
+      "copy": "Copia come mappa libera",
+      "copyName": "Menzioni di {{name}}",
+      "fullScreen": "Schermo intero",
+      "backToDocument": "Torna al Documento",
+      "deleteConfirmBody": "I Documenti e le loro menzioni restano.",
+      "loadError": "Impossibile caricare la mappa delle menzioni."
     }
   }
 }

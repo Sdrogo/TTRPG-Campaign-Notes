@@ -375,10 +375,53 @@ export function rawMapDetail(overrides: Record<string, unknown> = {}) {
         direction: 'both',
         label: 'alleata',
         reverse_label: 'alleato',
+        label_position: null,
+        reverse_label_position: null,
+        label_offset: null,
+        reverse_label_offset: null,
         color: 'green',
         master_only: false,
       },
     ],
+    ...overrides,
+  };
+}
+
+/** A Document's mention map, as `GET .../documents/{id}/mention-map` sends it (spec 36). */
+export function rawMentionMap(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'mention-map-1',
+    document_id: 'doc-1',
+    depth: 0,
+    created_by: 'user-1',
+    updated_at: '2026-10-14T10:00:00Z',
+    can_manage: true,
+    cards: [
+      rawMapCard({ color: 'gold' }),
+      rawMapCard({
+        id: 'card-2',
+        document_id: 'doc-2',
+        x: 400,
+        document: { id: 'doc-2', name: 'Thorn', subtitle: null, image: null, tag_ids: [] },
+      }),
+    ],
+    arrows: [
+      {
+        id: 'arrow-1',
+        from_end: { card_id: 'card-1', group_id: null },
+        to_end: { card_id: 'card-2', group_id: null },
+        direction: 'forward',
+        label: null,
+        reverse_label: null,
+        label_position: null,
+        reverse_label_position: null,
+        label_offset: null,
+        reverse_label_offset: null,
+        color: 'default',
+        master_only: false,
+      },
+    ],
+    documents_left_out: 0,
     ...overrides,
   };
 }

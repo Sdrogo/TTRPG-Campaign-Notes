@@ -364,6 +364,7 @@
       "notFound": "文档不存在或不可见。",
       "backToDocuments": "返回文档",
       "cancelEditing": "放弃更改",
+      "actions": "{{name}} 的操作",
       "saveChanges": "保存更改",
       "deleteDocument": "删除文档",
       "deleteConfirmTitle": "删除此文档？",
@@ -378,7 +379,14 @@
       "newTagPlaceholder": "例如：派系"
     },
     "notYetRead": "尚未阅读",
-    "unreadCount_other": "{{count}} 条新评论"
+    "unreadCount_other": "{{count}} 条新评论",
+    "open": {
+      "side": "在半屏中打开",
+      "page": "打开文档",
+      "resize": "调整面板大小",
+      "close": "关闭面板",
+      "pane": "并排的文档"
+    }
   },
   "images": {
     "numbered": "{{name}}（{{index}}）",
@@ -439,6 +447,7 @@
     "add": "添加笔记",
     "edit": "编辑笔记：{{title}}",
     "delete": "删除笔记：{{title}}",
+    "actions": "笔记的操作：{{title}}",
     "moveUp": "上移笔记：{{title}}",
     "moveDown": "下移笔记：{{title}}",
     "deleteConfirmTitle": "删除这条笔记？",
@@ -663,12 +672,14 @@
       "styles": {
         "gothic": "哥特",
         "modern": "现代",
-        "print": "印刷"
+        "print": "印刷",
+        "parchment": "羊皮纸"
       },
       "styleHints": {
         "gothic": "黑红配色，深色封面",
         "modern": "简洁无衬线字体，留白充足",
-        "print": "黑白，节省墨水"
+        "print": "黑白，节省墨水",
+        "parchment": "做旧纸张，棕色小型大写字母"
       },
       "pageSize": "页面尺寸",
       "comments": "在附录中包含评论",
@@ -860,7 +871,7 @@
     "editCard": "编辑卡片：{{name}}",
     "editText": "编辑文本",
     "editGroup": "编辑分组",
-    "editArrow": "编辑箭头：{{label}}",
+    "editArrow": "编辑关系：{{label}}",
     "masterOnly": "仅 Master",
     "masterOnlyArrow": "仅 Master 可见",
     "masterOnlyCard": "仅 Master 可见",
@@ -870,10 +881,23 @@
       "default": "默认",
       "red": "红色",
       "green": "绿色",
-      "purple": "紫色",
-      "blue": "蓝色",
-      "gold": "金色"
+      "purple": "紫红色",
+      "blue": "浅蓝色",
+      "gold": "黄色",
+      "orange": "橙色",
+      "midnight": "午夜蓝",
+      "silver": "银色",
+      "champagne": "金棕色",
+      "rose": "浅粉色",
+      "pink": "粉色",
+      "cobalt": "蓝色",
+      "violet": "紫色",
+      "emerald": "祖母绿",
+      "brown": "棕色",
+      "lime": "浅绿色"
     },
+    "colorsMore": "更多颜色",
+    "colorsLess": "收起颜色",
     "card": {
       "editDocument": "卡片：{{name}}",
       "editText": "文本",
@@ -900,14 +924,31 @@
       "untitled": "未命名分组"
     },
     "arrow": {
-      "title": "箭头",
+      "title": "关系",
       "direction": "方向",
       "forward": "单向",
       "both": "双向",
       "none": "仅线条",
       "label": "标签",
       "labelTowards": "指向 {{name}} 的标签",
-      "delete": "删除箭头"
+      "delete": "删除关系"
+    },
+    "mention": {
+      "button": "提及地图",
+      "title": "提及地图",
+      "depth": "深度",
+      "depthHelp": "0 只显示与此文档直接相连的文档；每多一步就加入下一圈提及。",
+      "preview": "文档：{{documents}} · 关系：{{relations}}",
+      "previewLoading": "正在加载预览",
+      "leftOut": "因地图最多容纳 150 张卡片而未显示：{{number}}",
+      "nothingYet": "暂无提及",
+      "create": "创建地图",
+      "copy": "复制为自由地图",
+      "copyName": "{{name}} 的提及",
+      "fullScreen": "全屏",
+      "backToDocument": "返回文档",
+      "deleteConfirmBody": "文档及其提及会保留。",
+      "loadError": "无法加载提及地图。"
     }
   }
 }

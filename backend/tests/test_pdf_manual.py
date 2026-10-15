@@ -326,9 +326,10 @@ def _small_room() -> Manual:
 
 def _page_with(reader: PdfReader, needle: str, after: int = 2) -> int:
     """The 1-based number of the first page from `after` on (0-based) that
-    holds `needle`."""
+    holds `needle`. Runs of whitespace count as one space: a justified line
+    can come back from pypdf with a wide gap read as two spaces."""
     for number in range(after, len(reader.pages)):
-        if needle in reader.pages[number].extract_text():
+        if needle in " ".join(reader.pages[number].extract_text().split()):
             return number + 1
     raise AssertionError(f"{needle!r} is on no page")
 
@@ -387,6 +388,29 @@ def test_a_small_room_renders_to_a_pdf_whose_page_references_are_right(
     assert re.search(rf"Castle · NPC, Place[ .]*{castle_page}\b", glossary)
     assert re.search(rf"Irena · NPC[ .]*{irena_page}\b", glossary)
     assert "ittà dell'Ovest, perché sì." in " ".join(p.extract_text() for p in reader.pages)
+
+
+@pytest.mark.parametrize("size", list(PageSize))
+def test_the_parchment_cover_frame_fits_on_its_page(size: PageSize) -> None:
+    """The framed cover follows the page height, so on A4 and Letter alike its
+    bottom edge is on the page, not cut off (a fixed height overflowed both)."""
+    weasyprint = _weasyprint()
+    html = render_manual_html(_small_room(), ManualStyle.PARCHMENT, size)
+
+    page = weasyprint.HTML(string=html, base_url=ASSETS_DIR.as_uri() + "/").render().pages[0]
+
+    def boxes(box: Any) -> Any:
+        yield box
+        for child in getattr(box, "children", None) or []:
+            yield from boxes(child)
+
+    frame = next(
+        box
+        for box in boxes(page._page_box)
+        if getattr(box, "element", None) is not None
+        and "cover-inner" in (box.element.get("class") or "")
+    )
+    assert frame.position_y + frame.margin_height() <= page.height + 0.5
 
 
 def test_the_fetcher_refuses_what_the_renderer_may_not_read(tmp_path: Any) -> None:
@@ -465,7 +489,12 @@ def test_neighbours_that_each_took_one_page_pair_up_left_to_right() -> None:
 
 @pytest.mark.parametrize(
     ("style", "sentences"),
-    [(ManualStyle.GOTHIC, 40), (ManualStyle.MODERN, 30), (ManualStyle.PRINT, 40)],
+    [
+        (ManualStyle.GOTHIC, 40),
+        (ManualStyle.MODERN, 30),
+        (ManualStyle.PRINT, 40),
+        (ManualStyle.PARCHMENT, 40),
+    ],
 )
 def test_two_documents_too_long_together_keep_their_own_pages(
     style: ManualStyle, sentences: int
@@ -492,7 +521,12 @@ def test_two_documents_too_long_together_keep_their_own_pages(
 
 @pytest.mark.parametrize(
     ("style", "sentences"),
-    [(ManualStyle.GOTHIC, 62), (ManualStyle.MODERN, 46), (ManualStyle.PRINT, 66)],
+    [
+        (ManualStyle.GOTHIC, 62),
+        (ManualStyle.MODERN, 46),
+        (ManualStyle.PRINT, 66),
+        (ManualStyle.PARCHMENT, 66),
+    ],
 )
 def test_a_chapter_that_fills_its_last_page_adds_no_empty_page(
     style: ManualStyle, sentences: int
