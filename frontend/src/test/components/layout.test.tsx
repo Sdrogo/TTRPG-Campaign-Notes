@@ -1,11 +1,15 @@
 // The thin layout wrappers, covered together: each is a handful of lines
 // with one thing worth asserting, and a file apiece would be noise.
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { rawAccount, rawDirectInvitation, rawFriend, rawFriends, rawMyReveal } from '../fixtures';
-import { renderWithProviders } from '../utils';
+import { MantineProvider } from '@mantine/core';
+import { MemoryRouter } from 'react-router-dom';
+import { theme } from '../../theme/theme';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createTestQueryClient, renderWithProviders } from '../utils';
 import { AppHeader } from '../../components/AppHeader';
 import { PageCard } from '../../components/PageCard';
 import { PageLayout } from '../../components/PageLayout';
@@ -159,26 +163,44 @@ describe('AppHeader', () => {
   });
 
   describe('with a back destination', () => {
-    // The button prefers real browser history over the fixed `backTo`, so it
-    // lands wherever the user actually came from.
-    it('falls back to backTo when there is no app history behind this page', async () => {
+    // Back is hierarchical: it climbs to the page's parent, never through the
+    // browser history, so a map or a split view in between cannot derail it.
+    it('goes up to backTo, replacing the current entry', async () => {
       renderWithProviders(<AppHeader backTo="/rooms/room-1/documents" backLabel="Documenti" />);
       const user = userEvent.setup();
 
       await user.click(screen.getByRole('button', { name: 'Documenti' }));
 
-      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents');
+      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true });
     });
 
-    it('goes back through real browser history when there is some', async () => {
-      // Set by React Router's BrowserHistory after at least one in-app push.
+    it('returns to the page it was opened from, under a generic name', async () => {
+      render(
+        <MantineProvider theme={theme} forceColorScheme="dark" env="test">
+          <QueryClientProvider client={createTestQueryClient()}>
+            <MemoryRouter initialEntries={[{ pathname: '/x', state: { from: '/rooms/r1/maps/m1' } }]}>
+              <AppHeader backTo="/rooms/room-1/documents" backLabel="Documenti" />
+            </MemoryRouter>
+          </QueryClientProvider>
+        </MantineProvider>,
+      );
+      const user = userEvent.setup();
+
+      expect(screen.queryByRole('button', { name: 'Documenti' })).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
+
+      expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps/m1', { replace: true });
+    });
+
+    it('ignores browser history even when there is some', async () => {
       window.history.pushState({ idx: 1 }, '', '/somewhere-else');
       renderWithProviders(<AppHeader backTo="/rooms/room-1/documents" backLabel="Documenti" />);
       const user = userEvent.setup();
 
       await user.click(screen.getByRole('button', { name: 'Documenti' }));
 
-      expect(navigate).toHaveBeenCalledWith(-1);
+      expect(navigate).not.toHaveBeenCalledWith(-1);
+      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true });
     });
 
     it('renders alongside the Glossary burger on a Room page', () => {

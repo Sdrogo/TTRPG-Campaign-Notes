@@ -128,7 +128,14 @@ other icon set.
   whatever sits on either side never moves it. **On the left, the back arrow
   then the Glossary burger** (same date): the back button is an icon-only
   `ActionIcon` (`ArrowLeftIcon`), its destination's name kept as
-  `aria-label`/`title`; the current user's circular avatar on the right
+  `aria-label`/`title`. **Back is hierarchical** (2026-10-15, Andrea: browser
+  history made it unreliable around maps and the split view): it goes to
+  the page's fixed parent (Document -> Room -> Rooms list, map -> maps
+  list), never `navigate(-1)`, replacing the current history entry; a link
+  that opens a page on purpose from elsewhere (a map from a Document, a
+  Document from a map card or the open menu, a copied map) puts
+  `{ from }` (`lib/backNav.ts`) in the navigation state and back returns
+  there, labelled with the generic `common.back`; the current user's circular avatar on the right
   (`AccountButton`, 36px, thin `--border-default` ring that turns
   `--accent-primary` on hover/focus and while on `/account`). It is
   rendered by `HomePage` and by `PageLayout`, so every signed-in page
@@ -663,10 +670,10 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   an inline confirm) and "Copia come mappa libera", which opens the copy.
   When the viewer manages free maps, a `NativeSelect` "Mappa" between the
   depth and the preview offers "Nuova mappa delle menzioni" (or the
-  Document's own map) and those maps; picking one hides Delete and Copy,
-  shows a one-line note that it is added once and shown on the page, and
-  the button becomes "Aggiungi alla mappa", which closes the modal; the map
-  then shows on the Document page (spec 36 Decision 15).
+  Document's own map) and those maps; picking one hides the depth, the
+  preview, Delete and Copy, shows a one-line note that the map shows on
+  the page as it is, and the button becomes "Collega al Documento", which
+  links the map unchanged and closes the modal (spec 36 Decision 15).
 - **Linked map**: `LinkedMapPanel`, under `MentionMapPanel` in the aside:
   the map's name, a read-only board 360 px high, "Schermo intero" to the
   map's page and, for its managers outside View As, a `LinkBreakIcon`
@@ -699,5 +706,7 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   header with the name, an "Apri il Documento" icon link and a close
   button, then the whole `DocumentView`). The divider is 8 px, a
   `role="separator"` moved by pointer or arrow keys (5% steps), each pane
-  at least 320 px; the ratio is kept in `localStorage` (`splitView.ratio`).
+  at least 320 px; the ratio is kept in `localStorage` (`splitView.ratio`). Opening or closing
+  the pane **replaces** the history entry (2026-10-15), so the browser's Back
+  leaves the page instead of stepping through pane changes; a reload keeps it.
 

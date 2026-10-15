@@ -20,7 +20,6 @@ from app.api.relationship_maps import (
     CardBody,
     CardResponse,
     MapDetailResponse,
-    add_to_free_map,
     arrow_body,
     card_responses,
     create_free_map,
@@ -35,7 +34,6 @@ from app.domain.mention_maps import (
     MentionDepthError,
     MentionGraph,
     NothingToMapError,
-    add_to_board,
     ensure_depth,
     ensure_something_to_map,
     mention_board,
@@ -117,12 +115,10 @@ class CopyMentionMapRequest(BaseModel):
     name: str
 
 
-class AddToMapRequest(BaseModel):
-    """The free map to add the Document's mentions to, and how many steps
-    past the first level to follow (Decisions 2, 15)."""
+class LinkMapRequest(BaseModel):
+    """The free map to show on the Document's page (Decision 15)."""
 
     map_id: uuid.UUID
-    depth: int = Field(default=0, ge=0, le=MAX_MENTION_DEPTH)
 
 
 async def _visible_links(
@@ -464,55 +460,6 @@ async def copy_mention_map(
     return await create_free_map(session, room_id, membership, body.name, board, locale)
 
 
-@router.post("/add-to-map")
-async def add_mention_map_to_map(
-    room_id: uuid.UUID,
-    document_id: uuid.UUID,
-    body: AddToMapRequest,
-    current_user: CurrentUserDep,
-    session: SessionDep,
-    locale: LocaleDep,
-) -> MapDetailResponse:
-    """Decision 15: instead of creating the Document's own mention map, adds
-    what it would show the requester at `depth` to a free map (spec 28) of
-    the Room they manage (404 when hidden from them, 403 otherwise), once:
-    a snapshot, like a copy, that doesn't follow the mentions afterwards.
-    Documents already on that map keep their card; the others get one, laid
-    out around the Document. The map is then linked to the Document, shown
-    on its page, replacing any map linked before; only whoever manages that
-    map may replace it (403, or 404 when that map is hidden from them;
-    nothing added). 409 with nothing added
-    when the requester sees no mention to draw; the map's caps apply
-    (409)."""
-    membership, center = await _center(
-        session, room_id, document_id, uuid.UUID(current_user.id), locale
-    )
-    # Replacing another map on the Document's page is for whoever manages
-    # that map (its creator and the Master), who could also unlink it; a map
-    # hidden from the requester is 404, so the link doesn't leak (VR-07).
-    linked_id = await relationship_maps_repo.get_linked_map_id(session, center.id)
-    if linked_id is not None and linked_id != body.map_id:
-        await ensure_manages_map(session, room_id, linked_id, membership, locale)
-    graph, documents = await _graph(session, center, body.depth, membership)
-    try:
-        ensure_something_to_map(graph)
-    except NothingToMapError as exc:
-        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
-    names = {document_id: document.name for document_id, document in documents.items()}
-    detail = await add_to_free_map(
-        session,
-        room_id,
-        body.map_id,
-        membership,
-        lambda board: add_to_board(board, graph, names, uuid.uuid4),
-        locale,
-    )
-    await relationship_maps_repo.link_map(
-        session, center.id, body.map_id, membership.user_id, _now()
-    )
-    return detail
-
-
 async def _linked_map_id(session: AsyncSession, document_id: uuid.UUID, locale: str) -> uuid.UUID:
     """The free map linked to the Document, or 404 when it has none."""
     map_id = await relationship_maps_repo.get_linked_map_id(session, document_id)
@@ -537,6 +484,34 @@ async def get_linked_map(
     )
     map_id = await _linked_map_id(session, center.id, locale)
     return await visible_map_detail(session, room_id, map_id, membership, locale)
+
+
+@linked_router.put("")
+async def link_map(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    body: LinkMapRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> MapDetailResponse:
+    """Decision 15: shows a free map (spec 28) of the Room the requester
+    manages on the Document's page, exactly as it is: nothing is added to
+    or changed on the map. 404 when the map is hidden from them, 403 when
+    they don't manage it. It replaces any map linked before, which only
+    whoever manages that map may do (403, or 404 when it is hidden from
+    them, so the link doesn't leak, VR-07)."""
+    membership, center = await _center(
+        session, room_id, document_id, uuid.UUID(current_user.id), locale
+    )
+    await ensure_manages_map(session, room_id, body.map_id, membership, locale)
+    linked_id = await relationship_maps_repo.get_linked_map_id(session, center.id)
+    if linked_id is not None and linked_id != body.map_id:
+        await ensure_manages_map(session, room_id, linked_id, membership, locale)
+    await relationship_maps_repo.link_map(
+        session, center.id, body.map_id, membership.user_id, _now()
+    )
+    return await visible_map_detail(session, room_id, body.map_id, membership, locale)
 
 
 @linked_router.delete("", status_code=status.HTTP_204_NO_CONTENT)

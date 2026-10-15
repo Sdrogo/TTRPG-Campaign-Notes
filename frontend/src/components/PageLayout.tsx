@@ -18,8 +18,8 @@ interface PageLayoutProps {
 
 /**
  * The top bar - including the "back" button every nested page has, next to
- * the burger position (`AppHeader` owns its behaviour: it prefers real
- * browser history over the fixed `backTo`) - then a full-width page body with
+ * the burger position (`AppHeader` owns its behaviour: it goes up the
+ * hierarchy to `backTo`, not through browser history) - then a full-width page body with
  * side margins that grow with the screen, as the page's `main` landmark.
  * On a Room page whose address names a Document to open beside it
  * (`?side=`, spec 37), the body shares the width with that Document, on a

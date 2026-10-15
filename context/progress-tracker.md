@@ -125,6 +125,23 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-15
 
+- **Existing map linked unchanged** (spec 36 Decision 15, no migration,
+  Andrea: "use that Map unchanged"): picking an existing map in the
+  Mentions map modal only links it to the Document (`PUT
+  /rooms/{id}/documents/{doc}/linked-map` `{map_id}`); the old
+  `POST .../mention-map/add-to-map`, which copied Documents and relations
+  into the map, is removed. The modal hides depth and preview for it.
+
+- **Hierarchical back** (Andrea: browser history made Back unreliable
+  around maps and the split view): the header's back arrow no longer calls
+  `navigate(-1)`. It goes to the page's fixed parent (Document -> Room ->
+  Rooms list, map -> maps list), or to the page it was opened from when the
+  link says so (`lib/backNav.ts`: `useBackState`/`backDestination`, state
+  `{ from }` put by map-card Document links, the open menu's "open page",
+  the linked/mention map panels and the "copy as free map" redirect). It
+  replaces the current entry, and opening/closing the `?side=` pane now
+  replaces too, so the browser's Back leaves the page instead of stepping
+  through pane changes. Frontend only, no migration.
 - **Linked map on the Document page** (spec 36 Decision 15, migration
   `e8b4d2f6a9c1`, Andrea: the map picked must be added to the Document):
   "Add to map" now also links the map to the Document (one per Document,
