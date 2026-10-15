@@ -130,25 +130,19 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
     (spec 28 Decision 2), the modal (Decision 11) shows a **"Map"** choice:
     "New mentions map" (or "This Document's mentions map" when it exists,
     keeping Save, Delete and Copy) and the free maps they manage, by name.
-    Picking a free map turns the button into **"Add to map"**: what the
-    mention map would show them at the chosen depth is added to that map
-    once (a snapshot, like Copy, Decision 9: it does not follow later
-    mentions), and the map is **linked to the Document**: shown on its page
-    under the images (and under its own mention map, if any), read-only,
-    with a link to the map's page. One linked map per Document: adding to
-    another replaces it, but only for whoever manages the map linked so
-    far (403 otherwise, or 404 when that map is hidden from them, so a
-    hidden link never shows; nothing added). Whoever manages the map takes it off
-    the page with an unlink button (the map stays); deleting the map or the Document
-    removes the link. A viewer who doesn't see the map doesn't see it on
-    the page, and its board shows each viewer what they see (spec 28).
-    A Document already on the map keeps its card (place, color, arrows);
-    the others get new cards laid out as on a mention map (Decision 6),
-    around the Document's card when it is already there, else just right of
-    everything on the board, vertically centered on it; the center's new
-    card is gold. A relation already drawn between the same two cards, in
-    either direction and with any label, is not drawn again. The map's caps
-    apply (spec 28, 409). With no free map to manage the modal is unchanged.
+    Picking a free map turns the button into **"Link to the Document"**
+    and hides the depth and the preview: the map is **linked to the
+    Document unchanged** (product owner, 2026-10-15: "use that Map
+    unchanged"; no cards, relations or Documents are added to it) and shown
+    on its page under the images (and under its own mention map, if any),
+    read-only, with a link to the map's page. One linked map per Document:
+    linking another replaces it, but only for whoever manages the map
+    linked so far (403 otherwise, or 404 when that map is hidden from them,
+    so a hidden link never shows). Whoever manages the map takes it off the
+    page with an unlink button (the map stays); deleting the map or the
+    Document removes the link. A viewer who doesn't see the map doesn't see
+    it on the page, and its board shows each viewer what they see (spec 28).
+    With no free map to manage the modal is unchanged.
 
 ## Design
 
@@ -193,18 +187,14 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
     Document the manager doesn't see on the map is 404; saved cards of
     Documents no longer on the map are kept (they come back in place if the
     mention does).
-  - `POST .../mention-map/add-to-map` `{map_id, depth}` (Decision 15):
-    adds the graph at `depth` to a free map the caller manages (404 hidden or
-    a mention map, 403 not a manager, 409 `nothing_to_map` or a cap) through
-    `relationship_maps.add_to_free_map`, which saves the caller's visible
-    board plus the new cards and arrows (`mention_maps.add_to_board`, pure)
-    through the board save's checks, then links the map to the Document
-    (`document_linked_maps`, migration `e8b4d2f6a9c1`: one row per
-    Document, `ON DELETE CASCADE` from both sides); returns the map like
-    `GET /maps/{map_id}`.
-  - `GET /rooms/{id}/documents/{doc_id}/linked-map`: the linked map as the
-    viewer sees it (404 when none or hidden from them); `DELETE` unlinks it
-    (whoever manages the map, 403 otherwise).
+  - `GET /rooms/{id}/documents/{doc_id}/linked-map` (Decision 15): the
+    linked map as the viewer sees it (404 when none or hidden from them).
+    `PUT` `{map_id}` links a free map the caller manages (404 hidden or a
+    mention map, 403 not a manager; replacing a link needs managing the
+    map linked so far) without touching the map, and returns it like
+    `GET /maps/{map_id}`; `DELETE` unlinks it (whoever manages the map, 403
+    otherwise). Table `document_linked_maps` (migration `e8b4d2f6a9c1`: one
+    row per Document, `ON DELETE CASCADE` from both sides).
   - `POST .../mention-map/copy`: creates an ordinary spec 28 map from the
     manager's current view (cards, positions, colors, relations as plain
     arrows), through the usual create and `save_board` paths and caps.

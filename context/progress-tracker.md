@@ -125,6 +125,13 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-15
 
+- **Existing map linked unchanged** (spec 36 Decision 15, no migration,
+  Andrea: "use that Map unchanged"): picking an existing map in the
+  Mentions map modal only links it to the Document (`PUT
+  /rooms/{id}/documents/{doc}/linked-map` `{map_id}`); the old
+  `POST .../mention-map/add-to-map`, which copied Documents and relations
+  into the map, is removed. The modal hides depth and preview for it.
+
 - **Linked map on the Document page** (spec 36 Decision 15, migration
   `e8b4d2f6a9c1`, Andrea: the map picked must be added to the Document):
   "Add to map" now also links the map to the Document (one per Document,

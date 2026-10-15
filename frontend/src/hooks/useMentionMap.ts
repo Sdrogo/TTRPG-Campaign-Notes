@@ -149,24 +149,19 @@ export function useUnlinkMap(roomId: string, documentId: string) {
 }
 
 /**
- * Adds what the mention map would show at a depth to an existing free map the
- * viewer manages, once, and links that map to the Document (spec 36 Decision
- * 15). The map's board, the list and the Document's linked map reload with it.
+ * Shows an existing free map the viewer manages on the Document's page, as it
+ * is: nothing is added to the map (spec 36 Decision 15).
  */
-export function useAddMentionsToMap(roomId: string, documentId: string) {
+export function useLinkMap(roomId: string, documentId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ mapId, depth }: { mapId: string; depth: number }) =>
+    mutationFn: async (mapId: string) =>
       toMapDetail(
-        await apiFetch<RawMapDetail>(`${mentionMapPath(roomId, documentId)}/add-to-map`, {
-          method: 'POST',
-          json: { map_id: mapId, depth },
+        await apiFetch<RawMapDetail>(`/rooms/${roomId}/documents/${documentId}/linked-map`, {
+          method: 'PUT',
+          json: { map_id: mapId },
         }),
       ),
-    onSuccess: (map) => {
-      queryClient.setQueryData(['rooms', roomId, 'maps', map.id], map);
-      queryClient.setQueryData(linkedMapQueryKey(roomId, documentId), map);
-      return queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'], exact: true });
-    },
+    onSuccess: (map) => queryClient.setQueryData(linkedMapQueryKey(roomId, documentId), map),
   });
 }

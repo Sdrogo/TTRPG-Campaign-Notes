@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMaps } from '../../hooks/useMaps';
 import {
-  useAddMentionsToMap,
+  useLinkMap,
   useCopyMentionMap,
   useDeleteMentionMap,
   useMentionMapPreview,
@@ -22,9 +22,8 @@ const OWN_MAP = '';
  * Creates a Document's mention map or changes it (spec 36 Decision 11): the
  * depth, with what the map would hold at that depth for the viewer, and, for
  * an existing map, copying it as a free map (which then opens) or deleting it.
- * When the viewer manages free maps of the Room, they can instead add what the
- * map would show to one of them (Decision 15), which is then shown on the
- * Document's page.
+ * When the viewer manages free maps of the Room, they can instead pick one of
+ * them to show on the Document's page as it is (Decision 15).
  */
 export function MentionMapModal({
   roomId,
@@ -45,30 +44,20 @@ export function MentionMapModal({
   const [depth, setDepth] = useState(map?.depth ?? 0);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [target, setTarget] = useState(OWN_MAP);
-  const preview = useMentionMapPreview(roomId, documentId, depth, true);
+  const own = target === OWN_MAP;
+  const preview = useMentionMapPreview(roomId, documentId, depth, own);
   const save = useSaveMentionMap(roomId, documentId, map !== null);
   const remove = useDeleteMentionMap(roomId, documentId);
   const copy = useCopyMentionMap(roomId, documentId);
-  const addTo = useAddMentionsToMap(roomId, documentId);
-  // Decision 15: the free maps the viewer may change can take the mentions.
+  const link = useLinkMap(roomId, documentId);
+  // Decision 15: the free maps the viewer manages can be shown instead.
   const editable = (useMaps(roomId, true).data ?? []).filter((free) => free.canEdit);
-  const error = save.error ?? remove.error ?? copy.error ?? addTo.error ?? preview.error;
+  const error = save.error ?? remove.error ?? copy.error ?? link.error ?? preview.error;
   const empty = preview.data?.relations === 0;
-  const own = target === OWN_MAP;
 
   return (
     <Modal opened onClose={onClose} title={t('maps.mention.title')} centered>
       <Stack gap="sm">
-        <Input.Wrapper label={t('maps.mention.depth')} description={t('maps.mention.depthHelp')}>
-          <SegmentedControl
-            mt={6}
-            fullWidth
-            data={DEPTHS}
-            value={String(depth)}
-            onChange={(value) => setDepth(Number(value))}
-            aria-label={t('maps.mention.depth')}
-          />
-        </Input.Wrapper>
         {editable.length > 0 && (
           <NativeSelect
             label={t('maps.mention.target')}
@@ -84,8 +73,20 @@ export function MentionMapModal({
             ]}
           />
         )}
-        {preview.isLoading && <Loader size="xs" aria-label={t('maps.mention.previewLoading')} />}
-        {preview.data && (
+        {own && (
+          <Input.Wrapper label={t('maps.mention.depth')} description={t('maps.mention.depthHelp')}>
+            <SegmentedControl
+              mt={6}
+              fullWidth
+              data={DEPTHS}
+              value={String(depth)}
+              onChange={(value) => setDepth(Number(value))}
+              aria-label={t('maps.mention.depth')}
+            />
+          </Input.Wrapper>
+        )}
+        {own && preview.isLoading && <Loader size="xs" aria-label={t('maps.mention.previewLoading')} />}
+        {own && preview.data && (
           <Text size="sm" c={empty ? 'dimmed' : undefined} role="status">
             {empty
               ? t('maps.mention.nothingYet')
@@ -95,7 +96,7 @@ export function MentionMapModal({
                 })}
           </Text>
         )}
-        {preview.data && preview.data.documentsLeftOut > 0 && (
+        {own && preview.data && preview.data.documentsLeftOut > 0 && (
           <Text size="sm" c="dimmed">
             {t('maps.mention.leftOut', { number: preview.data.documentsLeftOut })}
           </Text>
@@ -149,11 +150,7 @@ export function MentionMapModal({
                 {map ? t('common.save') : t('maps.mention.create')}
               </Button>
             ) : (
-              <Button
-                disabled={!preview.data || empty}
-                loading={addTo.isPending}
-                onClick={() => addTo.mutate({ mapId: target, depth }, { onSuccess: onClose })}
-              >
+              <Button loading={link.isPending} onClick={() => link.mutate(target, { onSuccess: onClose })}>
                 {t('maps.mention.addToMap')}
               </Button>
             )}
