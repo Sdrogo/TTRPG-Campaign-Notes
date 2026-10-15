@@ -40,7 +40,7 @@ describe('SplitView (spec 37 Decision 3)', () => {
     expect(window.localStorage.getItem(SPLIT_STORAGE_KEY)).toBe('0.9');
   });
 
-  it('fits the panes again when the window narrows', () => {
+  it('fits the panes while the window is narrower, and gives the choice back when it widens', () => {
     let resized = () => {};
     vi.stubGlobal(
       'ResizeObserver',
@@ -60,6 +60,11 @@ describe('SplitView (spec 37 Decision 3)', () => {
     vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockReturnValue({ left: 0, width: 800 } as DOMRect);
     act(() => resized());
     expect(divider).toHaveAttribute('aria-valuenow', '60');
+
+    // Wide again: the choice comes back.
+    vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockReturnValue({ left: 0, width: 1000 } as DOMRect);
+    act(() => resized());
+    expect(divider).toHaveAttribute('aria-valuenow', '65');
     unmount();
   });
 

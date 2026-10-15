@@ -13,16 +13,17 @@ const DIVIDER_WIDTH = 8;
 export function SplitView({ left, right }: { left: ReactNode; right: ReactNode }) {
   const { t } = useTranslation();
   const container = useRef<HTMLDivElement>(null);
+  // What the viewer chose, kept as is; what is shown is fitted to the current
+  // width, so a window that narrows and widens again gets the choice back.
   const [ratio, setRatio] = useState(storedRatio);
+  const [width, setWidth] = useState(0);
+  const shown = clampRatio(ratio, width);
 
-  // A width remembered on a wider screen, or kept while the window narrows,
-  // may not fit: fit it before the first paint and on every resize, without
-  // forgetting what was chosen.
   useLayoutEffect(() => {
     const element = container.current!;
-    const fit = () => setRatio((current) => clampRatio(current, element.getBoundingClientRect().width));
-    fit();
-    const observer = new ResizeObserver(fit);
+    const measure = () => setWidth(element.getBoundingClientRect().width);
+    measure();
+    const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
@@ -46,9 +47,9 @@ export function SplitView({ left, right }: { left: ReactNode; right: ReactNode }
   };
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'ArrowLeft') {
-      update(ratio - KEY_STEP);
+      update(shown - KEY_STEP);
     } else if (event.key === 'ArrowRight') {
-      update(ratio + KEY_STEP);
+      update(shown + KEY_STEP);
     }
   };
 
@@ -57,7 +58,7 @@ export function SplitView({ left, right }: { left: ReactNode; right: ReactNode }
       <Box
         pr={8}
         style={{
-          width: `calc(${ratio * 100}% - ${DIVIDER_WIDTH / 2}px)`,
+          width: `calc(${shown * 100}% - ${DIVIDER_WIDTH / 2}px)`,
           minWidth: 0,
         }}
       >
@@ -68,7 +69,7 @@ export function SplitView({ left, right }: { left: ReactNode; right: ReactNode }
         tabIndex={0}
         aria-orientation="vertical"
         aria-label={t('documents.open.resize')}
-        aria-valuenow={Math.round(ratio * 100)}
+        aria-valuenow={Math.round(shown * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
         onPointerDown={handlePointerDown}
