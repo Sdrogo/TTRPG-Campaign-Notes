@@ -365,6 +365,7 @@
       "notFound": "Document introuvable ou non visible.",
       "backToDocuments": "Retour aux Documents",
       "cancelEditing": "Annuler les modifications",
+      "actions": "Actions pour {{name}}",
       "saveChanges": "Enregistrer les modifications",
       "deleteDocument": "Supprimer le Document",
       "deleteConfirmTitle": "Supprimer ce Document ?",

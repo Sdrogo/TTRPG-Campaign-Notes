@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActionIcon, Button, FileButton, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
+import { Button, FileButton, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
 import {
   ArrowSquareOutIcon,
   DownloadSimpleIcon,
@@ -20,6 +20,7 @@ import { notifyError } from '../../lib/notify';
 import { formatAbsoluteTime } from '../../lib/time';
 import type { DocumentFile } from '../../types/documentFile';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 interface DocumentFileListProps {
   roomId: string;
@@ -117,7 +118,7 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                 </Text>
               </Group>
               <Group gap={0} wrap="nowrap" style={{ flexShrink: 0 }}>
-                <ActionIcon
+                <LabeledActionIcon
                   size="sm"
                   variant="subtle"
                   color="gray"
@@ -126,10 +127,10 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                   aria-label={t('files.open', { name: file.name })}
                 >
                   <ArrowSquareOutIcon size={14} />
-                </ActionIcon>
+                </LabeledActionIcon>
                 {/* The signed link is served as an attachment (D-22), so
                     following it downloads under the file's name. */}
-                <ActionIcon
+                <LabeledActionIcon
                   component="a"
                   href={file.url}
                   rel="noopener noreferrer"
@@ -139,9 +140,9 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                   aria-label={t('files.download', { name: file.name })}
                 >
                   <DownloadSimpleIcon size={14} />
-                </ActionIcon>
+                </LabeledActionIcon>
                 {file.canDelete && (
-                  <ActionIcon
+                  <LabeledActionIcon
                     size="sm"
                     variant="subtle"
                     color="red"
@@ -150,7 +151,7 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                     aria-label={t('files.delete', { name: file.name })}
                   >
                     <TrashIcon size={14} />
-                  </ActionIcon>
+                  </LabeledActionIcon>
                 )}
               </Group>
             </Group>

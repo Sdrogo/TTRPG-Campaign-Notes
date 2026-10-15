@@ -365,6 +365,7 @@
       "notFound": "Document niet gevonden of niet zichtbaar.",
       "backToDocuments": "Terug naar Documenten",
       "cancelEditing": "Wijzigingen negeren",
+      "actions": "Acties voor {{name}}",
       "saveChanges": "Wijzigingen opslaan",
       "deleteDocument": "Document verwijderen",
       "deleteConfirmTitle": "Dit Document verwijderen?",

@@ -367,6 +367,7 @@
       "notFound": "Документ не найден или не виден.",
       "backToDocuments": "Назад к Документам",
       "cancelEditing": "Отменить изменения",
+      "actions": "Действия для {{name}}",
       "saveChanges": "Сохранить изменения",
       "deleteDocument": "Удалить Документ",
       "deleteConfirmTitle": "Удалить этот Документ?",

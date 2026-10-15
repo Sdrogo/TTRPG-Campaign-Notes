@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { useMediaQuery } from '@mantine/hooks';
 import { useNavigate } from 'react-router-dom';
-import { Stack, Group, Title, Text, Button, Box, ActionIcon, Modal, Alert, Paper, Divider } from '@mantine/core';
+import { Stack, Group, Title, Text, Button, Box, Modal, Alert, Paper, Divider } from '@mantine/core';
 import {
   ClockCounterClockwiseIcon,
+  DotsThreeVerticalIcon,
   DownloadSimpleIcon,
   EyeIcon,
   GraphIcon,
@@ -63,6 +65,7 @@ import type { Document, DocumentFormValues, DocumentVisibility } from '../../typ
 import type { Member } from '../../types/member';
 import type { Tag } from '../../types/tag';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 /**
  * One Document as its page shows it: its panel (name, Tags, description,
@@ -211,6 +214,8 @@ function DocumentPanel({
   const [imageSearchOpened, setImageSearchOpened] = useState(false);
   const [exportOpened, setExportOpened] = useState(false);
   const [mentionMapOpened, setMentionMapOpened] = useState(false);
+  const phone = useMediaQuery('(max-width: 48em)');
+  const [actionsExpanded, setActionsExpanded] = useState(false);
   // Spec 36: the Document's mention map, drawn under its images when it has a
   // relation the viewer sees.
   const mentionMap = useMentionMap(roomId, document.id);
@@ -232,8 +237,11 @@ function DocumentPanel({
   return (
     <PageCard>
       <Stack gap="md">
+        {/* On a phone the name takes the whole width and the badges and actions sit
+            under it, the actions folded into a "⋮" (Andrea, 2026-10-15), so unfolding
+            them never squeezes the name into a column of letters. */}
         <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
-          <Stack gap={0} style={{ minWidth: 0 }}>
+          <Stack gap={0} style={{ minWidth: 0, flex: 1 }}>
             <Title
               order={1}
               fz={{ base: 'h2', sm: 'h1' }}
@@ -258,19 +266,20 @@ function DocumentPanel({
               </Text>
             )}
           </Stack>
-          <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
+          {!phone && (
+            <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
             {revealed?.document && <RevealedBadge />}
             <VisibilityBadge visibility={document.visibility} />
             {/* Spec 22: the Master reveals what the whole Room doesn't see yet. */}
             {isMaster && document.visibility !== 'room' && (
-              <ActionIcon
+              <LabeledActionIcon
                 variant="subtle"
                 color="gray"
                 onClick={() => setRevealing(true)}
                 aria-label={t('reveal.actionLabel', { name: document.name })}
               >
                 <EyeIcon size={18} />
-              </ActionIcon>
+              </LabeledActionIcon>
             )}
             {/* Spec 30: everyone who sees the Document can hear it: its name,
                 description and the Notes they see. */}
@@ -281,47 +290,126 @@ function DocumentPanel({
             />
             {/* Spec 27: every member who sees the Document exports it, as the member
                 being previewed too (it only reads). */}
-            <ActionIcon
+            <LabeledActionIcon
               variant="subtle"
               color="gray"
               onClick={() => setExportOpened(true)}
               aria-label={t('export.document.action')}
             >
               <DownloadSimpleIcon size={18} />
-            </ActionIcon>
+            </LabeledActionIcon>
             {canOpenMentionMap && (
-              <ActionIcon
+              <LabeledActionIcon
                 variant="subtle"
                 color="gray"
                 onClick={() => setMentionMapOpened(true)}
                 aria-label={t('maps.mention.button')}
               >
                 <GraphIcon size={18} />
-              </ActionIcon>
+              </LabeledActionIcon>
             )}
             {/* Spec 24b: Owners and the Master read the whole Document's history. */}
             {isOwner && (
-              <ActionIcon
+              <LabeledActionIcon
                 variant="subtle"
                 color="gray"
                 onClick={() => setHistoryOpened(true)}
                 aria-label={t('versions.actionFor', { name: document.name })}
               >
                 <ClockCounterClockwiseIcon size={18} />
-              </ActionIcon>
+              </LabeledActionIcon>
             )}
             {isOwner && (
-              <ActionIcon
+              <LabeledActionIcon
                 variant="subtle"
                 color="gray"
                 onClick={() => (editing ? stopEditing() : setEditing(true))}
                 aria-label={editing ? t('documents.detail.cancelEditing') : t('common.edit')}
               >
                 {editing ? <XIcon size={18} /> : <PencilSimpleIcon size={18} />}
-              </ActionIcon>
+              </LabeledActionIcon>
             )}
-          </Group>
+            </Group>
+          )}
         </Group>
+        {phone && (
+          <Group gap="xs" wrap="wrap" preventGrowOverflow={false}>
+            {revealed?.document && <RevealedBadge />}
+            <VisibilityBadge visibility={document.visibility} />
+            {actionsExpanded && (
+              <>
+            {/* Spec 22: the Master reveals what the whole Room doesn't see yet. */}
+            {isMaster && document.visibility !== 'room' && (
+              <LabeledActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => setRevealing(true)}
+                aria-label={t('reveal.actionLabel', { name: document.name })}
+              >
+                <EyeIcon size={18} />
+              </LabeledActionIcon>
+            )}
+            {/* Spec 30: everyone who sees the Document can hear it: its name,
+                description and the Notes they see. */}
+            <ReadAloudControls
+              sourceId={`document:${document.id}`}
+              name={document.name}
+              getText={() => documentSpeech(document)}
+            />
+            {/* Spec 27: every member who sees the Document exports it, as the member
+                being previewed too (it only reads). */}
+            <LabeledActionIcon
+              variant="subtle"
+              color="gray"
+              onClick={() => setExportOpened(true)}
+              aria-label={t('export.document.action')}
+            >
+              <DownloadSimpleIcon size={18} />
+            </LabeledActionIcon>
+            {canOpenMentionMap && (
+              <LabeledActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => setMentionMapOpened(true)}
+                aria-label={t('maps.mention.button')}
+              >
+                <GraphIcon size={18} />
+              </LabeledActionIcon>
+            )}
+            {/* Spec 24b: Owners and the Master read the whole Document's history. */}
+            {isOwner && (
+              <LabeledActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => setHistoryOpened(true)}
+                aria-label={t('versions.actionFor', { name: document.name })}
+              >
+                <ClockCounterClockwiseIcon size={18} />
+              </LabeledActionIcon>
+            )}
+            {isOwner && (
+              <LabeledActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => (editing ? stopEditing() : setEditing(true))}
+                aria-label={editing ? t('documents.detail.cancelEditing') : t('common.edit')}
+              >
+                {editing ? <XIcon size={18} /> : <PencilSimpleIcon size={18} />}
+              </LabeledActionIcon>
+            )}
+              </>
+            )}
+            <LabeledActionIcon
+              variant="subtle"
+              color="gray"
+              aria-label={t('documents.detail.actions', { name: document.name })}
+              aria-expanded={actionsExpanded}
+              onClick={() => setActionsExpanded((current) => !current)}
+            >
+              <DotsThreeVerticalIcon size={18} />
+            </LabeledActionIcon>
+          </Group>
+        )}
 
         {/* The aside, on the right on big screens (spec 10, mirroring
             DocumentCard's layout in RoomDocumentsPage): the images, then the

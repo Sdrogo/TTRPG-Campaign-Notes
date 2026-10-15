@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ActionIcon, Button, Kbd } from '@mantine/core';
+import { Button, Kbd } from '@mantine/core';
 import { useHotkeys } from '@mantine/hooks';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { searchShortcutLabel } from '../../lib/search';
 import { SearchSpotlight } from './SearchSpotlight';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 interface SearchButtonProps {
   roomId: string;
@@ -36,17 +37,16 @@ export function SearchButton({ roomId }: SearchButtonProps) {
       >
         {t('search.open')}
       </Button>
-      <ActionIcon
+      <LabeledActionIcon
         hiddenFrom="md"
         variant="subtle"
         color="gray"
         size="lg"
         onClick={open}
         aria-label={t('search.open')}
-        title={t('search.open')}
       >
         <MagnifyingGlassIcon size={20} />
-      </ActionIcon>
+      </LabeledActionIcon>
       <SearchSpotlight roomId={roomId} opened={opened} onClose={() => setOpened(false)} />
     </>
   );

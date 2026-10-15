@@ -109,7 +109,12 @@ beforeEach(() => {
 const groupingRows = async () =>
   within((await screen.findAllByRole('list')).find((list) => list.tagName === 'OL') as HTMLElement)
     .getAllByRole('listitem')
-    .map((row) => row.textContent);
+    .map((row) => {
+      // A button's tooltip, once hovered, renders inside the row: it is not the row's text.
+      const copy = row.cloneNode(true) as HTMLElement;
+      copy.querySelectorAll('[role="tooltip"]').forEach((tooltip) => tooltip.remove());
+      return copy.textContent;
+    });
 
 /** Whether the page asked for the Room's Tags at all. */
 const tagsWereRequested = () =>

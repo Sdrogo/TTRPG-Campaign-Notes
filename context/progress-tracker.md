@@ -119,6 +119,16 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-15
+
+- **Mobile Document header and icon labels** (frontend only, no migration):
+  below `sm` the Document's name and subtitle take the full width, with the
+  badges and a "⋮" under them that unfolds the actions in place, so the name
+  is never squeezed into a column of letters. Every icon-only button now shows
+  its label as a tooltip on hover or long-press: `LabeledActionIcon` wraps
+  `ActionIcon` + `Tooltip` using the `aria-label`. New key
+  `documents.detail.actions` in all 12 languages.
+
 ### 2026-10-14
 
 - **37, Document preview and split view** (no migration, PR #190 into

@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { ActionIcon, Badge, Group, Popover, Text } from '@mantine/core';
+import { Badge, Group, Popover, Text } from '@mantine/core';
 import { PlusIcon, XIcon } from '@phosphor-icons/react';
 import { UserAvatar } from './UserAvatar';
 import type { Member } from '../types/member';
+import { LabeledActionIcon } from './LabeledActionIcon';
 
 // The label column of the Document info panel, so the rows' values line up.
 const LABEL_WIDTH = 104;
@@ -50,9 +51,9 @@ export function PersonChip({
       leftSection={<UserAvatar user={member} size={16} />}
       rightSection={
         onRemove ? (
-          <ActionIcon size="xs" variant="transparent" color="gray" onClick={onRemove} aria-label={removeLabel}>
+          <LabeledActionIcon size="xs" variant="transparent" color="gray" onClick={onRemove} aria-label={removeLabel}>
             <XIcon size={10} />
-          </ActionIcon>
+          </LabeledActionIcon>
         ) : undefined
       }
     >
@@ -79,17 +80,16 @@ export function AddPopover({
   return (
     <Popover opened={opened} onChange={onChange} position="bottom-start" withArrow shadow="md" width={300} trapFocus>
       <Popover.Target>
-        <ActionIcon
+        <LabeledActionIcon
           size="sm"
           variant="default"
           color="gray"
           aria-label={label}
-          title={label}
           onClick={() => onChange(!opened)}
           style={{ borderStyle: 'dashed' }}
         >
           <PlusIcon size={12} />
-        </ActionIcon>
+        </LabeledActionIcon>
       </Popover.Target>
       <Popover.Dropdown>{children}</Popover.Dropdown>
     </Popover>

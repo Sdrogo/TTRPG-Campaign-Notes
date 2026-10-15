@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActionIcon, Button, Group, Modal, Stack, Text, TextInput } from '@mantine/core';
+import { Button, Group, Modal, Stack, Text, TextInput } from '@mantine/core';
 import { MagnifyingGlassIcon, PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useCreateTag, useDeleteTag, useRenameTag } from '../../hooks/useTags';
@@ -9,6 +9,7 @@ import { sortTagsByName } from '../../lib/tags';
 import type { Tag } from '../../types/tag';
 import { CompactList } from '../CompactList';
 import { TagRow } from './TagRow';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 interface AllTagsListProps {
   roomId: string;
@@ -116,7 +117,7 @@ export function AllTagsList({ roomId, tags, groupedIds }: AllTagsListProps) {
           }}
           error={createError}
           rightSection={
-            <ActionIcon
+            <LabeledActionIcon
               size="sm"
               variant="subtle"
               aria-label={t('setup.tags.all.create')}
@@ -125,7 +126,7 @@ export function AllTagsList({ roomId, tags, groupedIds }: AllTagsListProps) {
               disabled={!newName.trim()}
             >
               <PlusIcon size={14} />
-            </ActionIcon>
+            </LabeledActionIcon>
           }
           style={{ flex: '1 1 200px', maxWidth: 320 }}
         />

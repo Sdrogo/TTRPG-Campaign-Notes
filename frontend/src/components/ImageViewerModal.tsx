@@ -9,6 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import type { DocumentImage } from '../types/document';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from './LabeledActionIcon';
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 5;
@@ -130,7 +131,7 @@ function ZoomableImage({
       </Box>
 
       {onPrevious && (
-        <ActionIcon
+        <LabeledActionIcon
           variant="default"
           size="xl"
           pos="absolute"
@@ -141,10 +142,10 @@ function ZoomableImage({
           aria-label={t('images.viewer.previous')}
         >
           <CaretLeftIcon size={20} weight="bold" />
-        </ActionIcon>
+        </LabeledActionIcon>
       )}
       {onNext && (
-        <ActionIcon
+        <LabeledActionIcon
           variant="default"
           size="xl"
           pos="absolute"
@@ -155,7 +156,7 @@ function ZoomableImage({
           aria-label={t('images.viewer.next')}
         >
           <CaretRightIcon size={20} weight="bold" />
-        </ActionIcon>
+        </LabeledActionIcon>
       )}
 
       <Group

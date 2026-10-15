@@ -1,10 +1,11 @@
-import { ActionIcon, Box, Group, Text } from '@mantine/core';
+import { Box, Group, Text } from '@mantine/core';
 import { NodeResizer, type NodeProps } from '@xyflow/react';
 import { PencilSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { MIN_GROUP_SIZE, colorValue } from '../../lib/maps';
 import type { GroupNodeType } from '../../types/mapNodes';
 import { MapHandle } from './MapHandle';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 /**
  * A group (spec 28 Decision 7): a framed box, with an optional title, that
@@ -48,7 +49,7 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
           {group.title ?? ''}
         </Text>
         {editable && (
-          <ActionIcon
+          <LabeledActionIcon
             size="sm"
             variant="subtle"
             color="gray"
@@ -57,7 +58,7 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
             onClick={() => onEdit(group.id)}
           >
             <PencilSimpleIcon size={14} />
-          </ActionIcon>
+          </LabeledActionIcon>
         )}
       </Group>
     </Box>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActionIcon, Button, Group, Modal, Stack, Text, Title } from '@mantine/core';
+import { Button, Group, Modal, Stack, Text, Title } from '@mantine/core';
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -16,6 +16,7 @@ import { noteSpeech } from '../../lib/speech';
 import type { Member } from '../../types/member';
 import type { Note, NoteFormValues } from '../../types/note';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 interface NoteItemProps {
   note: Note;
@@ -102,7 +103,7 @@ export function NoteItem({
             size="sm"
           />
           {onReveal && (
-            <ActionIcon
+            <LabeledActionIcon
               variant="subtle"
               color="gray"
               size="sm"
@@ -110,11 +111,11 @@ export function NoteItem({
               aria-label={t('reveal.actionLabel', { name: note.title })}
             >
               <EyeIcon size={14} />
-            </ActionIcon>
+            </LabeledActionIcon>
           )}
           {note.canEdit && (
             <>
-              <ActionIcon
+              <LabeledActionIcon
                 variant="subtle"
                 color="gray"
                 size="sm"
@@ -123,8 +124,8 @@ export function NoteItem({
                 aria-label={t('notes.moveUp', { title: note.title })}
               >
                 <ArrowUpIcon size={14} />
-              </ActionIcon>
-              <ActionIcon
+              </LabeledActionIcon>
+              <LabeledActionIcon
                 variant="subtle"
                 color="gray"
                 size="sm"
@@ -133,8 +134,8 @@ export function NoteItem({
                 aria-label={t('notes.moveDown', { title: note.title })}
               >
                 <ArrowDownIcon size={14} />
-              </ActionIcon>
-              <ActionIcon
+              </LabeledActionIcon>
+              <LabeledActionIcon
                 variant="subtle"
                 color="gray"
                 size="sm"
@@ -142,11 +143,11 @@ export function NoteItem({
                 aria-label={t('notes.edit', { title: note.title })}
               >
                 <PencilSimpleIcon size={14} />
-              </ActionIcon>
+              </LabeledActionIcon>
             </>
           )}
           {note.canDelete && (
-            <ActionIcon
+            <LabeledActionIcon
               variant="subtle"
               color="red"
               size="sm"
@@ -154,7 +155,7 @@ export function NoteItem({
               aria-label={t('notes.delete', { title: note.title })}
             >
               <TrashIcon size={14} />
-            </ActionIcon>
+            </LabeledActionIcon>
           )}
         </Group>
       </Group>

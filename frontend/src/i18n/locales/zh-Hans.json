@@ -364,6 +364,7 @@
       "notFound": "文档不存在或不可见。",
       "backToDocuments": "返回文档",
       "cancelEditing": "放弃更改",
+      "actions": "{{name}} 的操作",
       "saveChanges": "保存更改",
       "deleteDocument": "删除文档",
       "deleteConfirmTitle": "删除此文档？",
