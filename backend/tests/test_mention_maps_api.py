@@ -463,3 +463,61 @@ async def test_adding_to_a_map_needs_mentions_and_a_map_the_user_manages(
     assert _names(body) == {"Mira", "Thorn", "Aldric", "Tavern", "Lyra"}
     mira = next(c for c in body["cards"] if c["document_id"] == v["mira"]["id"])
     assert (mira["x"], mira["y"], mira["color"]) == (-80, -120, "gold")
+
+
+async def test_the_map_added_to_is_linked_to_the_document(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    v = await _village(client, room)
+    linked = f"{room.url}/documents/{v['mira']['id']}/linked-map"
+    assert (await client.get(linked, headers=room.master)).status_code == 404
+
+    court, inn = [
+        (await client.post(f"{room.url}/maps", json={"name": name}, headers=room.master)).json()
+        for name in ("Court", "Inn")
+    ]
+    url = _url(room, v["mira"], "/add-to-map")
+    await client.post(url, json={"map_id": court["id"]}, headers=room.master)
+    shown = await client.get(linked, headers=room.master)
+    assert shown.status_code == 200, shown.text
+    assert shown.json()["name"] == "Court"
+    assert _names(shown.json()) == {"Mira", "Thorn", "Aldric", "Tavern"}
+
+    # Another map replaces it.
+    await client.post(url, json={"map_id": inn["id"]}, headers=room.master)
+    assert (await client.get(linked, headers=room.master)).json()["name"] == "Inn"
+
+    # A Player sees it as the map shows to them, but may not unlink it.
+    assert (await client.get(linked, headers=room.player)).status_code == 200
+    assert (await client.delete(linked, headers=room.player)).status_code == 403
+    assert (await client.delete(linked, headers=room.master)).status_code == 204
+    assert (await client.get(linked, headers=room.master)).status_code == 404
+    assert (await client.delete(linked, headers=room.master)).status_code == 404
+    # The map itself stays.
+    assert (
+        await client.get(f"{room.url}/maps/{inn['id']}", headers=room.master)
+    ).status_code == 200
+
+    # Deleting the map takes the link with it.
+    await client.post(url, json={"map_id": court["id"]}, headers=room.master)
+    await client.delete(f"{room.url}/maps/{court['id']}", headers=room.master)
+    assert (await client.get(linked, headers=room.master)).status_code == 404
+
+
+async def test_a_linked_map_hidden_from_the_viewer_is_not_shown(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    v = await _village(client, room)
+    secret = (
+        await client.post(
+            f"{room.url}/maps", json={"name": "Plots", "visibility": "master"}, headers=room.master
+        )
+    ).json()
+    await client.post(
+        _url(room, v["mira"], "/add-to-map"), json={"map_id": secret["id"]}, headers=room.master
+    )
+    linked = f"{room.url}/documents/{v['mira']['id']}/linked-map"
+    assert (await client.get(linked, headers=room.master)).status_code == 200
+    assert (await client.get(linked, headers=room.player)).status_code == 404

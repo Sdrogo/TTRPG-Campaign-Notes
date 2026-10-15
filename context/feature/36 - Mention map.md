@@ -125,22 +125,28 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
 14. **Not in scope**: Tag cards, labels on the generated relations, relations
     drawn by hand on a mention map, a map from a Tag or from search results.
 15. **New map or existing map** (product owner, 2026-10-15: "choose whether
-    to create a new one or use an existing Map"): when the user manages at least one free map
-    of the Room (spec 28 Decision 2), the modal (Decision 11) shows a
-    **"Map"** choice: "New mentions map" (or "This Document's mentions map"
-    when it exists, keeping Save, Delete and Copy) and the free maps they
-    manage, by name. Picking a free map turns the button into **"Add to
-    map"**: what the mention map would show them at the chosen depth is
-    added to that map once, and the map opens. It is a snapshot, like Copy
-    (Decision 9): it does not follow later mentions, and the Document gets
-    no mention map of its own. A Document already on the map keeps its card
-    (the first one, if several), place, color and arrows; the others get new
-    cards laid out as on a mention map (Decision 6), around the Document's
-    card when it is already there, else just right of everything on the
-    board, vertically centered on it; the center's new card is gold. A
-    relation already drawn between the same two cards, in either direction
-    and with any label, is not drawn again. The map's caps apply (spec 28,
-    409). With no free map to manage the modal is unchanged.
+    to create a new one or use an existing Map"; then "it must be added to
+    the Document"): when the user manages at least one free map of the Room
+    (spec 28 Decision 2), the modal (Decision 11) shows a **"Map"** choice:
+    "New mentions map" (or "This Document's mentions map" when it exists,
+    keeping Save, Delete and Copy) and the free maps they manage, by name.
+    Picking a free map turns the button into **"Add to map"**: what the
+    mention map would show them at the chosen depth is added to that map
+    once (a snapshot, like Copy, Decision 9: it does not follow later
+    mentions), and the map is **linked to the Document**: shown on its page
+    under the images (and under its own mention map, if any), read-only,
+    with a link to the map's page. One linked map per Document: adding to
+    another replaces it. Whoever manages the map takes it off the page with
+    an unlink button (the map stays); deleting the map or the Document
+    removes the link. A viewer who doesn't see the map doesn't see it on
+    the page, and its board shows each viewer what they see (spec 28).
+    A Document already on the map keeps its card (place, color, arrows);
+    the others get new cards laid out as on a mention map (Decision 6),
+    around the Document's card when it is already there, else just right of
+    everything on the board, vertically centered on it; the center's new
+    card is gold. A relation already drawn between the same two cards, in
+    either direction and with any label, is not drawn again. The map's caps
+    apply (spec 28, 409). With no free map to manage the modal is unchanged.
 
 ## Design
 
@@ -190,8 +196,13 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
     a mention map, 403 not a manager, 409 `nothing_to_map` or a cap) through
     `relationship_maps.add_to_free_map`, which saves the caller's visible
     board plus the new cards and arrows (`mention_maps.add_to_board`, pure)
-    through the board save's checks; returns the map like `GET
-    /maps/{map_id}`.
+    through the board save's checks, then links the map to the Document
+    (`document_linked_maps`, migration `e8b4d2f6a9c1`: one row per
+    Document, `ON DELETE CASCADE` from both sides); returns the map like
+    `GET /maps/{map_id}`.
+  - `GET /rooms/{id}/documents/{doc_id}/linked-map`: the linked map as the
+    viewer sees it (404 when none or hidden from them); `DELETE` unlinks it
+    (whoever manages the map, 403 otherwise).
   - `POST .../mention-map/copy`: creates an ordinary spec 28 map from the
     manager's current view (cards, positions, colors, relations as plain
     arrows), through the usual create and `save_board` paths and caps.

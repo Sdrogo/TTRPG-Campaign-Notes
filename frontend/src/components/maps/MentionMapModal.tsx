@@ -23,7 +23,8 @@ const OWN_MAP = '';
  * depth, with what the map would hold at that depth for the viewer, and, for
  * an existing map, copying it as a free map (which then opens) or deleting it.
  * When the viewer manages free maps of the Room, they can instead add what the
- * map would show to one of them (Decision 15), which then opens.
+ * map would show to one of them (Decision 15), which is then shown on the
+ * Document's page.
  */
 export function MentionMapModal({
   roomId,
@@ -151,14 +152,7 @@ export function MentionMapModal({
               <Button
                 disabled={!preview.data || empty}
                 loading={addTo.isPending}
-                onClick={() =>
-                  addTo.mutate(
-                    { mapId: target, depth },
-                    {
-                      onSuccess: (changed) => void navigate(`/rooms/${roomId}/maps/${changed.id}`),
-                    },
-                  )
-                }
+                onClick={() => addTo.mutate({ mapId: target, depth }, { onSuccess: onClose })}
               >
                 {t('maps.mention.addToMap')}
               </Button>
