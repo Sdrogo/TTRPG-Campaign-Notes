@@ -122,7 +122,7 @@ One line per unit; dates 2026, newest first. Spec files live in
 ### 2026-10-15
 
 - **Mobile Document header and icon labels** (frontend only, no migration):
-  below `sm` the name, badge, read-aloud controls and a "⋮" share one line (the
+  below `sm` the name, the visibility badge (icon only, `VisibilityBadge compact`, level as tooltip), read-aloud controls and a "⋮" share one line (the
   name may wrap to two lines but stays visible); the "⋮" unfolds the other
   actions on a row under it, so they never squeeze the name. Every icon-only button now shows
   its label as a tooltip on hover or long-press: `LabeledActionIcon` wraps

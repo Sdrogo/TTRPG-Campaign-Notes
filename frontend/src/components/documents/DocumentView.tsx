@@ -256,7 +256,7 @@ function DocumentPanel({
   const badges = (
     <>
       {revealed?.document && <RevealedBadge />}
-      <VisibilityBadge visibility={document.visibility} />
+      <VisibilityBadge visibility={document.visibility} compact={phone} />
     </>
   );
   // Spec 30: everyone who sees the Document can hear it: its name, description and the
