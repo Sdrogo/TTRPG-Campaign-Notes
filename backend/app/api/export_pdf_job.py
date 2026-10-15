@@ -7,9 +7,11 @@ here raises to the caller."""
 
 import asyncio
 import logging
+import multiprocessing
 import tempfile
 import uuid
-from collections.abc import Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable
+from concurrent.futures import ProcessPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -31,7 +33,7 @@ from app.domain.manual import Manual, ManualDocument, ManualOptions, build_manua
 from app.domain.view_as import ensure_can_view_as
 from app.pdf.labels import manual_labels
 from app.pdf.media import merge_attachments, print_image_jpeg
-from app.pdf.render import render_manual_pdf
+from app.pdf.render import lower_priority, render_manual_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +44,12 @@ _IMAGE_DOWNLOADS_AT_ONCE = 6
 # One render at a time per process: WeasyPrint holds the whole document in
 # memory, and the hosting plans are small.
 _render_slot = asyncio.Semaphore(1)
+# The typesetting runs in a child process at a lower priority: it is CPU-bound
+# pure Python that holds the GIL for minutes on a big Room, which in a thread
+# starved the API (status polls, health check) on a 2-core VPS, and a child
+# killed for memory fails only its job instead of taking the backend with it.
+# Tests switch it off to replace the renderer with a fake.
+_ISOLATE_RENDER = True
 _tasks: set["asyncio.Task[None]"] = set()
 
 
@@ -155,14 +163,7 @@ async def _build_pdf(options: PdfOptions, export: Export, room_image_path: str |
         media_dir = Path(folder)
         manual = with_image_urls(manual, await _embed_images(manual.image_urls, media_dir))
         async with _render_slot:
-            pdf = await asyncio.to_thread(
-                render_manual_pdf,
-                manual,
-                options.style,
-                options.page_size,
-                options.locale,
-                media_dir,
-            )
+            pdf = await _render(manual, options, media_dir)
     if options.include_attachments:
         attachments = await _download_attachments(manual, export)
         if attachments:
@@ -178,6 +179,39 @@ def _save_image(data: bytes, path: Path) -> str | None:
         return None
     path.write_bytes(jpeg)
     return path.as_uri()
+
+
+async def _render(manual: Manual, options: PdfOptions, media_dir: Path) -> bytes:
+    """The manual as PDF bytes, typeset in a child process (see
+    `_ISOLATE_RENDER`)."""
+    args = (manual, options.style, options.page_size, options.locale, media_dir)
+    if not _ISOLATE_RENDER:
+        return await asyncio.to_thread(render_manual_pdf, *args)
+    result: bytes = await _run_in_child(render_manual_pdf, args)
+    return result
+
+
+async def _run_in_child(function: Callable[..., Any], args: tuple[Any, ...]) -> Any:
+    """`function(*args)` in a spawned child process, at lower priority. A child
+    that dies (killed for memory) raises `BrokenProcessPool`. The pool is not
+    left through `with`, whose exit would wait for the child on the event loop;
+    whatever ends the call, including a cancellation, the child is killed and
+    not waited for."""
+    # `spawn`: a forked copy of this process would carry its database
+    # connections and event loop into the child.
+    pool = ProcessPoolExecutor(
+        max_workers=1,
+        mp_context=multiprocessing.get_context("spawn"),
+        initializer=lower_priority,
+    )
+    try:
+        return await asyncio.get_running_loop().run_in_executor(pool, function, *args)
+    finally:
+        # The pool has no public way to stop a running task; its processes are
+        # all this job's.
+        for process in list(getattr(pool, "_processes", {}).values()):
+            process.kill()
+        pool.shutdown(wait=False, cancel_futures=True)
 
 
 async def _embed_images(urls: Iterable[str], media_dir: Path) -> dict[str, str]:

@@ -565,3 +565,55 @@ def test_a_chapter_that_fills_its_last_page_adds_no_empty_page(
     for number, page in enumerate(body, start=3):
         assert "Marker" in page.extract_text(), (style, number)
     assert "Glossary" in glossary.extract_text()
+
+
+async def test_the_job_typesets_in_a_child_process(
+    tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The real `_render`: a spawned process gets the manual and a folder of
+    images and comes back with a PDF."""
+    from app.api import export_pdf_job
+    from app.domain.export_jobs import PdfOptions
+
+    _weasyprint()
+    monkeypatch.setattr(export_pdf_job, "_ISOLATE_RENDER", True)
+    options = PdfOptions(
+        style=ManualStyle.GOTHIC,
+        page_size=PageSize.A4,
+        include_comments=False,
+        include_attachments=False,
+        cover_document_id=None,
+        tag_ids=(),
+        locale="en",
+        view_as_user_id=None,
+    )
+
+    pdf = await export_pdf_job._render(_small_room(), options, tmp_path)
+
+    assert len(PdfReader(io.BytesIO(pdf)).pages) >= 3
+
+
+async def test_a_child_killed_mid_render_raises_instead_of_hanging() -> None:
+    from concurrent.futures.process import BrokenProcessPool
+
+    from app.api import export_pdf_job
+
+    with pytest.raises(BrokenProcessPool):
+        await export_pdf_job._run_in_child(os._exit, (1,))
+
+
+def test_the_typesetting_process_lowers_its_priority_and_copes_without_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.pdf.render import lower_priority
+
+    niced: list[int] = []
+    monkeypatch.setattr(os, "nice", niced.append)
+    lower_priority()
+    assert niced == [10]
+
+    def refused(_: int) -> int:
+        raise PermissionError
+
+    monkeypatch.setattr(os, "nice", refused)
+    lower_priority()
