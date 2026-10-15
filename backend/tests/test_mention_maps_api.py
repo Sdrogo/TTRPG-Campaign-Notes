@@ -369,123 +369,108 @@ async def test_a_mention_map_copies_into_a_free_map(
     assert unnamed.status_code == 422
 
 
-async def test_a_document_s_mentions_are_added_to_an_existing_free_map(
+def _linked(room: _Room, document: dict[str, Any]) -> str:
+    return f"{room.url}/documents/{document['id']}/linked-map"
+
+
+async def _free_map(
+    client: AsyncClient, room: _Room, name: str, headers: dict[str, str], **fields: Any
+) -> dict[str, Any]:
+    created = await client.post(f"{room.url}/maps", json={"name": name, **fields}, headers=headers)
+    assert created.status_code == 201, created.text
+    body: dict[str, Any] = created.json()
+    return body
+
+
+async def test_an_existing_map_is_linked_to_the_document_unchanged(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
     v = await _village(client, room)
-    created = await client.post(f"{room.url}/maps", json={"name": "Court"}, headers=room.master)
-    court = created.json()
-    # The board already holds Thorn, a text card and an arrow Mira → Thorn.
-    thorn_card, mira_card, note_card = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    court = await _free_map(client, room, "Court", room.master)
+    thorn_card, note_card = uuid.uuid4(), uuid.uuid4()
     saved = await client.put(
         f"{room.url}/maps/{court['id']}/board",
         json={
             "cards": [
                 {"id": str(thorn_card), "document_id": v["thorn"]["id"], "x": 500, "y": 40},
-                {"id": str(mira_card), "document_id": v["mira"]["id"], "x": 100, "y": 40},
                 {"id": str(note_card), "text": "Old feud", "x": 900, "y": 900},
             ],
             "arrows": [
                 {
                     "id": str(uuid.uuid4()),
-                    "from_end": {"card_id": str(mira_card)},
+                    "from_end": {"card_id": str(note_card)},
                     "to_end": {"card_id": str(thorn_card)},
-                    "label": "loves",
+                    "label": "haunts",
                 }
             ],
         },
         headers=room.master,
     )
     assert saved.status_code == 200, saved.text
-    url = _url(room, v["mira"], "/add-to-map")
-
-    added = await client.post(url, json={"map_id": court["id"]}, headers=room.master)
-    assert added.status_code == 200, added.text
-    body = added.json()
-    # Mira and Thorn keep their cards and places, the text card stays, and
-    # Aldric and the Tavern join; the drawn relation isn't drawn twice.
-    assert sorted(c["document"]["name"] for c in body["cards"] if c["document"]) == [
-        "Aldric",
-        "Mira",
-        "Tavern",
-        "Thorn",
-    ]
-    by_id = {c["id"]: c for c in body["cards"]}
-    assert (by_id[str(thorn_card)]["x"], by_id[str(mira_card)]["x"]) == (500, 100)
-    assert by_id[str(note_card)]["text"] == "Old feud"
-    assert by_id[str(mira_card)]["color"] == "default"
-    assert len(body["arrows"]) == 3
-    assert [a["label"] for a in body["arrows"] if a["label"]] == ["loves"]
-    # The Tavern mentions Mira: laid out around Mira's card, on its left.
-    tavern = next(c for c in body["cards"] if c["document_id"] == v["tavern"]["id"])
-    assert tavern["x"] < 100
-    # No mention map is created for Mira.
-    assert (await client.get(_url(room, v["mira"]), headers=room.master)).status_code == 404
-
-    # Again: nothing new to add.
-    again = (await client.post(url, json={"map_id": court["id"]}, headers=room.master)).json()
-    assert len(again["cards"]) == 5 and len(again["arrows"]) == 3
-
-
-async def test_adding_to_a_map_needs_mentions_and_a_map_the_user_manages(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
-) -> None:
-    room = await _room(client, make_token)
-    v = await _village(client, room)
-    court = (
-        await client.post(f"{room.url}/maps", json={"name": "Court"}, headers=room.master)
-    ).json()
-    url = _url(room, v["mira"], "/add-to-map")
-
-    # A Player may not change the Master's map.
-    refused = await client.post(url, json={"map_id": court["id"]}, headers=room.player)
-    assert refused.status_code == 403
-    # Another Room's map, or none, is not found.
-    missing = await client.post(url, json={"map_id": str(uuid.uuid4())}, headers=room.master)
-    assert missing.status_code == 404
-    # A mention map is not a free map.
-    await _create(client, room, v["tavern"])
-    tavern_map = await _get(client, room, v["tavern"], room.master)
-    mention = await client.post(url, json={"map_id": tavern_map["id"]}, headers=room.master)
-    assert mention.status_code == 404
-    # Nothing to draw: nothing added.
-    loner = await _document(client, room, "Loner")
-    empty = await client.post(
-        _url(room, loner, "/add-to-map"), json={"map_id": court["id"]}, headers=room.master
-    )
-    assert empty.status_code == 409
-
-    # Onto an empty board, the map is laid out as the mention map would be.
-    added = await client.post(url, json={"map_id": court["id"], "depth": 1}, headers=room.master)
-    assert added.status_code == 200, added.text
-    body = added.json()
-    assert _names(body) == {"Mira", "Thorn", "Aldric", "Tavern", "Lyra"}
-    mira = next(c for c in body["cards"] if c["document_id"] == v["mira"]["id"])
-    assert (mira["x"], mira["y"], mira["color"]) == (-80, -120, "gold")
-
-
-async def test_the_map_added_to_is_linked_to_the_document(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
-) -> None:
-    room = await _room(client, make_token)
-    v = await _village(client, room)
-    linked = f"{room.url}/documents/{v['mira']['id']}/linked-map"
+    before = saved.json()
+    linked = _linked(room, v["mira"])
     assert (await client.get(linked, headers=room.master)).status_code == 404
 
-    court, inn = [
-        (await client.post(f"{room.url}/maps", json={"name": name}, headers=room.master)).json()
-        for name in ("Court", "Inn")
-    ]
-    url = _url(room, v["mira"], "/add-to-map")
-    await client.post(url, json={"map_id": court["id"]}, headers=room.master)
-    shown = await client.get(linked, headers=room.master)
-    assert shown.status_code == 200, shown.text
-    assert shown.json()["name"] == "Court"
-    assert _names(shown.json()) == {"Mira", "Thorn", "Aldric", "Tavern"}
+    response = await client.put(linked, json={"map_id": court["id"]}, headers=room.master)
+    assert response.status_code == 200, response.text
+    # Nothing added or changed: Mira and her mentions are not put on it.
+    for body in (response.json(), (await client.get(linked, headers=room.master)).json()):
+        assert body["name"] == "Court"
+        assert body["cards"] == before["cards"]
+        assert body["arrows"] == before["arrows"]
+    after = await client.get(f"{room.url}/maps/{court['id']}", headers=room.master)
+    assert after.json()["cards"] == before["cards"]
+    # No mention map is created, and a Document with no mentions links too.
+    assert (await client.get(_url(room, v["mira"]), headers=room.master)).status_code == 404
+    loner = await _document(client, room, "Loner")
+    assert (
+        await client.put(_linked(room, loner), json={"map_id": court["id"]}, headers=room.master)
+    ).status_code == 200
 
-    # Another map replaces it.
-    await client.post(url, json={"map_id": inn["id"]}, headers=room.master)
+
+async def test_linking_needs_a_free_map_the_user_manages(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    v = await _village(client, room)
+    court = await _free_map(client, room, "Court", room.master)
+    secret = await _free_map(client, room, "Plots", room.master, visibility="master")
+    linked = _linked(room, v["mira"])
+
+    # A Player may not link the Master's map, nor one hidden from them.
+    assert (
+        await client.put(linked, json={"map_id": court["id"]}, headers=room.player)
+    ).status_code == 403
+    assert (
+        await client.put(linked, json={"map_id": secret["id"]}, headers=room.player)
+    ).status_code == 404
+    # No such map, or a mention map, is not found.
+    missing = await client.put(linked, json={"map_id": str(uuid.uuid4())}, headers=room.master)
+    assert missing.status_code == 404
+    await _create(client, room, v["tavern"])
+    tavern_map = await _get(client, room, v["tavern"], room.master)
+    mention = await client.put(linked, json={"map_id": tavern_map["id"]}, headers=room.master)
+    assert mention.status_code == 404
+    assert (await client.get(linked, headers=room.master)).status_code == 404
+
+
+async def test_a_linked_map_is_replaced_and_unlinked_by_who_manages_it(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    v = await _village(client, room)
+    court = await _free_map(client, room, "Court", room.master)
+    inn = await _free_map(client, room, "Inn", room.master)
+    mine = await _free_map(client, room, "Mine", room.player)
+    linked = _linked(room, v["mira"])
+    await client.put(linked, json={"map_id": court["id"]}, headers=room.master)
+
+    # Another map replaces it, for who manages the one linked so far.
+    await client.put(linked, json={"map_id": inn["id"]}, headers=room.master)
+    assert (await client.get(linked, headers=room.master)).json()["name"] == "Inn"
+    refused = await client.put(linked, json={"map_id": mine["id"]}, headers=room.player)
+    assert refused.status_code == 403
     assert (await client.get(linked, headers=room.master)).json()["name"] == "Inn"
 
     # A Player sees it as the map shows to them, but may not unlink it.
@@ -494,83 +479,30 @@ async def test_the_map_added_to_is_linked_to_the_document(
     assert (await client.delete(linked, headers=room.master)).status_code == 204
     assert (await client.get(linked, headers=room.master)).status_code == 404
     assert (await client.delete(linked, headers=room.master)).status_code == 404
-    # The map itself stays.
     assert (
         await client.get(f"{room.url}/maps/{inn['id']}", headers=room.master)
     ).status_code == 200
 
+    # Once unlinked, the Player links their own map.
+    assert (
+        await client.put(linked, json={"map_id": mine["id"]}, headers=room.player)
+    ).status_code == 200
     # Deleting the map takes the link with it.
-    await client.post(url, json={"map_id": court["id"]}, headers=room.master)
-    await client.delete(f"{room.url}/maps/{court['id']}", headers=room.master)
+    await client.delete(f"{room.url}/maps/{mine['id']}", headers=room.player)
     assert (await client.get(linked, headers=room.master)).status_code == 404
 
 
-async def test_a_linked_map_hidden_from_the_viewer_is_not_shown(
+async def test_a_hidden_linked_map_is_neither_shown_nor_revealed(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
     v = await _village(client, room)
-    secret = (
-        await client.post(
-            f"{room.url}/maps", json={"name": "Plots", "visibility": "master"}, headers=room.master
-        )
-    ).json()
-    await client.post(
-        _url(room, v["mira"], "/add-to-map"), json={"map_id": secret["id"]}, headers=room.master
-    )
-    linked = f"{room.url}/documents/{v['mira']['id']}/linked-map"
+    secret = await _free_map(client, room, "Plots", room.master, visibility="master")
+    mine = await _free_map(client, room, "Mine", room.player)
+    linked = _linked(room, v["mira"])
+    await client.put(linked, json={"map_id": secret["id"]}, headers=room.master)
     assert (await client.get(linked, headers=room.master)).status_code == 200
     assert (await client.get(linked, headers=room.player)).status_code == 404
-
-
-async def test_only_who_manages_the_linked_map_may_replace_it(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
-) -> None:
-    room = await _room(client, make_token)
-    v = await _village(client, room)
-    court = (
-        await client.post(f"{room.url}/maps", json={"name": "Court"}, headers=room.master)
-    ).json()
-    mine = (
-        await client.post(f"{room.url}/maps", json={"name": "Mine"}, headers=room.player)
-    ).json()
-    url = _url(room, v["mira"], "/add-to-map")
-    linked = f"{room.url}/documents/{v['mira']['id']}/linked-map"
-    await client.post(url, json={"map_id": court["id"]}, headers=room.master)
-
-    # The Player may not replace the Master's map, and nothing is added.
-    refused = await client.post(url, json={"map_id": mine["id"]}, headers=room.player)
-    assert refused.status_code == 403
-    assert (await client.get(linked, headers=room.master)).json()["name"] == "Court"
-    board = await client.get(f"{room.url}/maps/{mine['id']}", headers=room.player)
-    assert board.json()["cards"] == []
-
-    # Once the Master unlinks it, the Player links their own map.
-    await client.delete(linked, headers=room.master)
-    assert (
-        await client.post(url, json={"map_id": mine["id"]}, headers=room.player)
-    ).status_code == 200
-    assert (await client.get(linked, headers=room.master)).json()["name"] == "Mine"
-    # The Master manages every map, so may replace it.
-    assert (
-        await client.post(url, json={"map_id": court["id"]}, headers=room.master)
-    ).status_code == 200
-
-
-async def test_a_hidden_linked_map_answers_not_found_when_replacing(
-    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
-) -> None:
-    room = await _room(client, make_token)
-    v = await _village(client, room)
-    secret = (
-        await client.post(
-            f"{room.url}/maps", json={"name": "Plots", "visibility": "master"}, headers=room.master
-        )
-    ).json()
-    mine = (
-        await client.post(f"{room.url}/maps", json={"name": "Mine"}, headers=room.player)
-    ).json()
-    url = _url(room, v["mira"], "/add-to-map")
-    await client.post(url, json={"map_id": secret["id"]}, headers=room.master)
-    refused = await client.post(url, json={"map_id": mine["id"]}, headers=room.player)
+    # Replacing it answers as if it weren't there.
+    refused = await client.put(linked, json={"map_id": mine["id"]}, headers=room.player)
     assert refused.status_code == 404

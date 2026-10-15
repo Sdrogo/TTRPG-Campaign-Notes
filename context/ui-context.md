@@ -670,10 +670,10 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   an inline confirm) and "Copia come mappa libera", which opens the copy.
   When the viewer manages free maps, a `NativeSelect` "Mappa" between the
   depth and the preview offers "Nuova mappa delle menzioni" (or the
-  Document's own map) and those maps; picking one hides Delete and Copy,
-  shows a one-line note that it is added once and shown on the page, and
-  the button becomes "Aggiungi alla mappa", which closes the modal; the map
-  then shows on the Document page (spec 36 Decision 15).
+  Document's own map) and those maps; picking one hides the depth, the
+  preview, Delete and Copy, shows a one-line note that the map shows on
+  the page as it is, and the button becomes "Collega al Documento", which
+  links the map unchanged and closes the modal (spec 36 Decision 15).
 - **Linked map**: `LinkedMapPanel`, under `MentionMapPanel` in the aside:
   the map's name, a read-only board 360 px high, "Schermo intero" to the
   map's page and, for its managers outside View As, a `LinkBreakIcon`
