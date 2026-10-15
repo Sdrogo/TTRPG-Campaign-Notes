@@ -16,7 +16,7 @@ from app.domain.manual import ManualStyle, PageSize
 EXPORT_TTL = timedelta(hours=24)
 # A job that has run this long is taken as lost (the process was restarted, or
 # the render hung) so its owner can start another.
-STALE_AFTER = timedelta(minutes=30)
+STALE_AFTER = timedelta(hours=2)
 # PDF Attachments are appended until this many bytes are in the file; later
 # ones are left out rather than building an unbounded PDF in memory.
 MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024

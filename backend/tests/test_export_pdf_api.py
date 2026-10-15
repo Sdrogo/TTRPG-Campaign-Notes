@@ -68,7 +68,9 @@ def renders(monkeypatch: pytest.MonkeyPatch) -> list[Render]:
     """Replaces the typesetting with a two-page PDF and records each call."""
     calls: list[Render] = []
 
-    def fake_render(manual: Manual, style: ManualStyle, page_size: PageSize, locale: str) -> bytes:
+    def fake_render(
+        manual: Manual, style: ManualStyle, page_size: PageSize, locale: str, media_dir: Any = None
+    ) -> bytes:
         calls.append(Render(manual, style, page_size, locale))
         return _pdf(2)
 
@@ -459,11 +461,11 @@ async def test_images_are_embedded_downscaled_and_the_cover_comes_from_a_documen
 
     (render,) = renders
     cover = render.manual.cover_image_url
-    assert cover is not None and cover.startswith("data:image/jpeg;base64,")
+    assert cover is not None and cover.startswith("file:")
     (entry,) = [e for c in render.manual.chapters for e in c.entries]
     assert getattr(entry, "image_url", None) == cover
-    # Nothing left that the renderer would have to fetch from the network.
-    assert all(url.startswith("data:") for url in render.manual.image_urls)
+    # Nothing left for the renderer to fetch from the network: files in the job's folder.
+    assert all(url.startswith("file:") for url in render.manual.image_urls)
 
 
 async def test_the_room_image_is_the_default_cover(
@@ -498,7 +500,7 @@ async def test_the_room_image_is_the_default_cover(
 
     room_cover, document_cover, no_cover = (r.manual.cover_image_url for r in renders)
     (entry,) = [e for c in renders[1].manual.chapters for e in c.entries]
-    assert room_cover is not None and room_cover.startswith("data:image/jpeg;base64,")
+    assert room_cover is not None and room_cover.startswith("file:")
     assert document_cover == getattr(entry, "image_url", None)
     assert document_cover != room_cover
     assert no_cover is None
@@ -742,7 +744,7 @@ async def test_a_job_stuck_active_is_failed_by_the_sweep_so_its_owner_can_retry(
     await export_jobs_repo.sweep(db_session, datetime.now(UTC) + timedelta(minutes=10))
     assert (await _job(db_session, started["id"])).status is ExportStatus.QUEUED
 
-    await export_jobs_repo.sweep(db_session, datetime.now(UTC) + timedelta(minutes=31))
+    await export_jobs_repo.sweep(db_session, datetime.now(UTC) + timedelta(hours=2, minutes=1))
 
     job = await _job(db_session, started["id"])
     assert (job.status, job.error) == (ExportStatus.FAILED, "stale")
