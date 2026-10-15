@@ -15,11 +15,10 @@ from app.domain.export_jobs import MAX_IMAGE_PIXELS
 logger = logging.getLogger(__name__)
 
 
-def print_image_data_uri(data: bytes) -> str | None:
-    """`data` as a `data:` URL of a JPEG whose longer side is at most
+def print_image_jpeg(data: bytes) -> bytes | None:
+    """`data` as the bytes of a JPEG whose longer side is at most
     `MAX_IMAGE_PIXELS` (flattened onto white, so transparency doesn't print
-    black); None when it isn't an image Pillow can read. A `data:` URL is what
-    the renderer is allowed to load without touching the network."""
+    black); None when it isn't an image Pillow can read."""
     try:
         with Image.open(io.BytesIO(data)) as image:
             image.thumbnail((MAX_IMAGE_PIXELS, MAX_IMAGE_PIXELS))
@@ -30,7 +29,16 @@ def print_image_data_uri(data: bytes) -> str | None:
     flat.paste(rgba, mask=rgba.getchannel("A"))
     out = io.BytesIO()
     flat.save(out, format="JPEG", quality=82)
-    return "data:image/jpeg;base64," + base64.b64encode(out.getvalue()).decode("ascii")
+    return out.getvalue()
+
+
+def print_image_data_uri(data: bytes) -> str | None:
+    """`print_image_jpeg` as a `data:` URL, which the renderer may load without
+    touching the network or the disk."""
+    jpeg = print_image_jpeg(data)
+    if jpeg is None:
+        return None
+    return "data:image/jpeg;base64," + base64.b64encode(jpeg).decode("ascii")
 
 
 def merge_attachments(pdf: bytes, attachments: Sequence[bytes]) -> tuple[bytes, int]:

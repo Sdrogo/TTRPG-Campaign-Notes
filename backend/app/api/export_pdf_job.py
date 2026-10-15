@@ -7,9 +7,11 @@ here raises to the caller."""
 
 import asyncio
 import logging
+import tempfile
 import uuid
 from collections.abc import Coroutine, Iterable
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from app.api.export import load_export
@@ -28,7 +30,7 @@ from app.domain.files import MAX_FILE_BYTES
 from app.domain.manual import Manual, ManualDocument, ManualOptions, build_manual, with_image_urls
 from app.domain.view_as import ensure_can_view_as
 from app.pdf.labels import manual_labels
-from app.pdf.media import merge_attachments, print_image_data_uri
+from app.pdf.media import merge_attachments, print_image_jpeg
 from app.pdf.render import render_manual_pdf
 
 logger = logging.getLogger(__name__)
@@ -146,11 +148,21 @@ async def _build_pdf(options: PdfOptions, export: Export, room_image_path: str |
         ),
         manual_labels(options.locale),
     )
-    manual = with_image_urls(manual, await _embed_images(manual.image_urls))
-    async with _render_slot:
-        pdf = await asyncio.to_thread(
-            render_manual_pdf, manual, options.style, options.page_size, options.locale
-        )
+    # The images wait in files, not in the HTML: a Room with hundreds of
+    # Documents and images would otherwise hold them several times over in
+    # memory and be killed for it.
+    with tempfile.TemporaryDirectory(prefix="room-pdf-") as folder:
+        media_dir = Path(folder)
+        manual = with_image_urls(manual, await _embed_images(manual.image_urls, media_dir))
+        async with _render_slot:
+            pdf = await asyncio.to_thread(
+                render_manual_pdf,
+                manual,
+                options.style,
+                options.page_size,
+                options.locale,
+                media_dir,
+            )
     if options.include_attachments:
         attachments = await _download_attachments(manual, export)
         if attachments:
@@ -158,22 +170,33 @@ async def _build_pdf(options: PdfOptions, export: Export, room_image_path: str |
     return pdf
 
 
-async def _embed_images(urls: Iterable[str]) -> dict[str, str]:
-    """Each image link mapped to a downscaled `data:` URL. The links are the
-    backend's own signed Storage links; one that can't be fetched or read is
-    left out, and its page simply has no image."""
+def _save_image(data: bytes, path: Path) -> str | None:
+    """`data` downscaled into the JPEG file `path`; its `file:` URL, or None
+    when it isn't an image."""
+    jpeg = print_image_jpeg(data)
+    if jpeg is None:
+        return None
+    path.write_bytes(jpeg)
+    return path.as_uri()
+
+
+async def _embed_images(urls: Iterable[str], media_dir: Path) -> dict[str, str]:
+    """Each image link mapped to a downscaled JPEG file in `media_dir`, as a
+    `file:` URL. The links are the backend's own signed Storage links; one
+    that can't be fetched or read is left out, and its page simply has no
+    image."""
     gate = asyncio.Semaphore(_IMAGE_DOWNLOADS_AT_ONCE)
 
-    async def one(url: str) -> tuple[str, str | None]:
+    async def one(number: int, url: str) -> tuple[str, str | None]:
         async with gate:
             try:
                 data = await storage.download_signed(url, MAX_IMAGE_DOWNLOAD_BYTES)
             except storage.StorageError:
                 logger.warning("A Room PDF image could not be downloaded; left out")
                 return url, None
-        return url, await asyncio.to_thread(print_image_data_uri, data)
+        return url, await asyncio.to_thread(_save_image, data, media_dir / f"{number}.jpg")
 
-    embedded = await asyncio.gather(*(one(url) for url in urls))
+    embedded = await asyncio.gather(*(one(number, url) for number, url in enumerate(urls)))
     return {url: uri for url, uri in embedded if uri is not None}
 
 
