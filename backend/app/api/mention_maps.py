@@ -480,20 +480,19 @@ async def add_mention_map_to_map(
     Documents already on that map keep their card; the others get one, laid
     out around the Document. The map is then linked to the Document, shown
     on its page, replacing any map linked before; only whoever manages that
-    map may replace it (403, nothing added). 409 with nothing added
+    map may replace it (403, or 404 when that map is hidden from them;
+    nothing added). 409 with nothing added
     when the requester sees no mention to draw; the map's caps apply
     (409)."""
     membership, center = await _center(
         session, room_id, document_id, uuid.UUID(current_user.id), locale
     )
     # Replacing another map on the Document's page is for whoever manages
-    # that map (its creator and the Master), who could also unlink it.
+    # that map (its creator and the Master), who could also unlink it; a map
+    # hidden from the requester is 404, so the link doesn't leak (VR-07).
     linked_id = await relationship_maps_repo.get_linked_map_id(session, center.id)
     if linked_id is not None and linked_id != body.map_id:
-        linked = await relationship_maps_repo.get_map(session, linked_id)
-        assert linked is not None  # the link goes with its map
-        if not can_manage_map(linked, membership.user_id, membership.role):
-            raise http_error(status.HTTP_403_FORBIDDEN, "errors.map.notManager", locale)
+        await ensure_manages_map(session, room_id, linked_id, membership, locale)
     graph, documents = await _graph(session, center, body.depth, membership)
     try:
         ensure_something_to_map(graph)

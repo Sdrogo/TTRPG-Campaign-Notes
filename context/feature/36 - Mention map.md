@@ -137,7 +137,8 @@ Confirmed by the product owner on 2026-10-14 unless marked *proposed*.
     under the images (and under its own mention map, if any), read-only,
     with a link to the map's page. One linked map per Document: adding to
     another replaces it, but only for whoever manages the map linked so
-    far (403 otherwise, nothing added). Whoever manages the map takes it off
+    far (403 otherwise, or 404 when that map is hidden from them, so a
+    hidden link never shows; nothing added). Whoever manages the map takes it off
     the page with an unlink button (the map stays); deleting the map or the Document
     removes the link. A viewer who doesn't see the map doesn't see it on
     the page, and its board shows each viewer what they see (spec 28).

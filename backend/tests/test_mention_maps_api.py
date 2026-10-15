@@ -555,3 +555,22 @@ async def test_only_who_manages_the_linked_map_may_replace_it(
     assert (
         await client.post(url, json={"map_id": court["id"]}, headers=room.master)
     ).status_code == 200
+
+
+async def test_a_hidden_linked_map_answers_not_found_when_replacing(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    v = await _village(client, room)
+    secret = (
+        await client.post(
+            f"{room.url}/maps", json={"name": "Plots", "visibility": "master"}, headers=room.master
+        )
+    ).json()
+    mine = (
+        await client.post(f"{room.url}/maps", json={"name": "Mine"}, headers=room.player)
+    ).json()
+    url = _url(room, v["mira"], "/add-to-map")
+    await client.post(url, json={"map_id": secret["id"]}, headers=room.master)
+    refused = await client.post(url, json={"map_id": mine["id"]}, headers=room.player)
+    assert refused.status_code == 404
