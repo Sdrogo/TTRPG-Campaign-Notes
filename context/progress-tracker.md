@@ -125,6 +125,16 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-15
 
+- **Room PDF, second fix** (no migration; PR #198 was not enough on the VPS):
+  profiling showed the CPU is WeasyPrint's text layout (pure Python, ~0.05-0.1 s
+  per page, run 3 times for page sharing plus its own repaginations), not the
+  image conversion (~0.1 s per image, off the GIL). In a thread it held the GIL
+  for minutes and starved the API (status polls every 3 s, health check). The
+  render now runs in a low-priority child process, so the API stays responsive
+  and an OOM kill fails only the job; images are capped at 1000 px instead of
+  1400. A shared WeasyPrint image cache across the layouts was tried and gave
+  nothing. Stored WebP can't go in a PDF as is, hence the JPEG conversion.
+
 - **Existing map linked unchanged** (spec 36 Decision 15, no migration,
   Andrea: "use that Map unchanged"): picking an existing map in the
   Mentions map modal only links it to the Document (`PUT

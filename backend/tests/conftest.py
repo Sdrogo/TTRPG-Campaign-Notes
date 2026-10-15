@@ -143,3 +143,12 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     for item in items:
         if "db_session" in getattr(item, "fixturenames", ()):
             item.add_marker(pytest.mark.integration)
+
+
+@pytest.fixture(autouse=True)
+def _render_in_process(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The Room PDF job typesets in a child process in production; tests replace
+    the renderer with fakes, which a child could not see."""
+    from app.api import export_pdf_job
+
+    monkeypatch.setattr(export_pdf_job, "_ISOLATE_RENDER", False)

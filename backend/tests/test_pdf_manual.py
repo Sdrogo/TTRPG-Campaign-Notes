@@ -565,3 +565,29 @@ def test_a_chapter_that_fills_its_last_page_adds_no_empty_page(
     for number, page in enumerate(body, start=3):
         assert "Marker" in page.extract_text(), (style, number)
     assert "Glossary" in glossary.extract_text()
+
+
+async def test_the_job_typesets_in_a_child_process(
+    tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The real `_render`: a spawned process gets the manual and a folder of
+    images and comes back with a PDF."""
+    from app.api import export_pdf_job
+    from app.domain.export_jobs import PdfOptions
+
+    _weasyprint()
+    monkeypatch.setattr(export_pdf_job, "_ISOLATE_RENDER", True)
+    options = PdfOptions(
+        style=ManualStyle.GOTHIC,
+        page_size=PageSize.A4,
+        include_comments=False,
+        include_attachments=False,
+        cover_document_id=None,
+        tag_ids=(),
+        locale="en",
+        view_as_user_id=None,
+    )
+
+    pdf = await export_pdf_job._render(_small_room(), options, tmp_path)
+
+    assert len(PdfReader(io.BytesIO(pdf)).pages) >= 3

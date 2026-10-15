@@ -8,6 +8,7 @@ template can't be made to read anything else: its own stylesheets, fonts and
 ornaments (under this package), `data:` URLs, and exactly the image links of the
 `Manual`."""
 
+import os
 import uuid
 from collections.abc import Collection, Mapping, Sequence
 from pathlib import Path
@@ -27,6 +28,7 @@ __all__ = [
     "PageSize",
     "render_manual_html",
     "page_pairs",
+    "lower_priority",
     "render_manual_pdf",
     "url_allowed",
 ]
@@ -150,6 +152,15 @@ def _fetcher(image_urls: Collection[str], media_dir: Path | None = None) -> Any:
     return ManualFetcher(
         timeout=20, allowed_protocols=("file", "https", "data"), allow_redirects=False
     )
+
+
+def lower_priority() -> None:
+    """Makes the calling process yield the CPU to the API (initializer of the
+    process that typesets a Room PDF, which keeps a core busy for minutes)."""
+    try:
+        os.nice(10)
+    except (AttributeError, OSError):
+        pass
 
 
 def render_manual_pdf(
