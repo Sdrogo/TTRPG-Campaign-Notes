@@ -10,7 +10,7 @@ import logging
 import multiprocessing
 import tempfile
 import uuid
-from collections.abc import Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from concurrent.futures import ProcessPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
@@ -187,14 +187,31 @@ async def _render(manual: Manual, options: PdfOptions, media_dir: Path) -> bytes
     args = (manual, options.style, options.page_size, options.locale, media_dir)
     if not _ISOLATE_RENDER:
         return await asyncio.to_thread(render_manual_pdf, *args)
+    result: bytes = await _run_in_child(render_manual_pdf, args)
+    return result
+
+
+async def _run_in_child(function: Callable[..., Any], args: tuple[Any, ...]) -> Any:
+    """`function(*args)` in a spawned child process, at lower priority. A child
+    that dies (killed for memory) raises `BrokenProcessPool`. The pool is not
+    left through `with`, whose exit would wait for the child on the event loop;
+    whatever ends the call, including a cancellation, the child is killed and
+    not waited for."""
     # `spawn`: a forked copy of this process would carry its database
     # connections and event loop into the child.
-    with ProcessPoolExecutor(
+    pool = ProcessPoolExecutor(
         max_workers=1,
         mp_context=multiprocessing.get_context("spawn"),
         initializer=lower_priority,
-    ) as pool:
-        return await asyncio.get_running_loop().run_in_executor(pool, render_manual_pdf, *args)
+    )
+    try:
+        return await asyncio.get_running_loop().run_in_executor(pool, function, *args)
+    finally:
+        # The pool has no public way to stop a running task; its processes are
+        # all this job's.
+        for process in list(getattr(pool, "_processes", {}).values()):
+            process.kill()
+        pool.shutdown(wait=False, cancel_futures=True)
 
 
 async def _embed_images(urls: Iterable[str], media_dir: Path) -> dict[str, str]:

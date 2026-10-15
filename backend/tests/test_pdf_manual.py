@@ -591,3 +591,12 @@ async def test_the_job_typesets_in_a_child_process(
     pdf = await export_pdf_job._render(_small_room(), options, tmp_path)
 
     assert len(PdfReader(io.BytesIO(pdf)).pages) >= 3
+
+
+async def test_a_child_killed_mid_render_raises_instead_of_hanging() -> None:
+    from concurrent.futures.process import BrokenProcessPool
+
+    from app.api import export_pdf_job
+
+    with pytest.raises(BrokenProcessPool):
+        await export_pdf_job._run_in_child(os._exit, (1,))
