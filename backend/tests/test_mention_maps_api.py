@@ -367,3 +367,99 @@ async def test_a_mention_map_copies_into_a_free_map(
         _url(room, v["mira"], "/copy"), json={"name": "  "}, headers=room.master
     )
     assert unnamed.status_code == 422
+
+
+async def test_a_document_s_mentions_are_added_to_an_existing_free_map(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    v = await _village(client, room)
+    created = await client.post(f"{room.url}/maps", json={"name": "Court"}, headers=room.master)
+    court = created.json()
+    # The board already holds Thorn, a text card and an arrow Mira → Thorn.
+    thorn_card, mira_card, note_card = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    saved = await client.put(
+        f"{room.url}/maps/{court['id']}/board",
+        json={
+            "cards": [
+                {"id": str(thorn_card), "document_id": v["thorn"]["id"], "x": 500, "y": 40},
+                {"id": str(mira_card), "document_id": v["mira"]["id"], "x": 100, "y": 40},
+                {"id": str(note_card), "text": "Old feud", "x": 900, "y": 900},
+            ],
+            "arrows": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "from_end": {"card_id": str(mira_card)},
+                    "to_end": {"card_id": str(thorn_card)},
+                    "label": "loves",
+                }
+            ],
+        },
+        headers=room.master,
+    )
+    assert saved.status_code == 200, saved.text
+    url = _url(room, v["mira"], "/add-to-map")
+
+    added = await client.post(url, json={"map_id": court["id"]}, headers=room.master)
+    assert added.status_code == 200, added.text
+    body = added.json()
+    # Mira and Thorn keep their cards and places, the text card stays, and
+    # Aldric and the Tavern join; the drawn relation isn't drawn twice.
+    assert sorted(c["document"]["name"] for c in body["cards"] if c["document"]) == [
+        "Aldric",
+        "Mira",
+        "Tavern",
+        "Thorn",
+    ]
+    by_id = {c["id"]: c for c in body["cards"]}
+    assert (by_id[str(thorn_card)]["x"], by_id[str(mira_card)]["x"]) == (500, 100)
+    assert by_id[str(note_card)]["text"] == "Old feud"
+    assert by_id[str(mira_card)]["color"] == "default"
+    assert len(body["arrows"]) == 3
+    assert [a["label"] for a in body["arrows"] if a["label"]] == ["loves"]
+    # The Tavern mentions Mira: laid out around Mira's card, on its left.
+    tavern = next(c for c in body["cards"] if c["document_id"] == v["tavern"]["id"])
+    assert tavern["x"] < 100
+    # No mention map is created for Mira.
+    assert (await client.get(_url(room, v["mira"]), headers=room.master)).status_code == 404
+
+    # Again: nothing new to add.
+    again = (await client.post(url, json={"map_id": court["id"]}, headers=room.master)).json()
+    assert len(again["cards"]) == 5 and len(again["arrows"]) == 3
+
+
+async def test_adding_to_a_map_needs_mentions_and_a_map_the_user_manages(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    v = await _village(client, room)
+    court = (
+        await client.post(f"{room.url}/maps", json={"name": "Court"}, headers=room.master)
+    ).json()
+    url = _url(room, v["mira"], "/add-to-map")
+
+    # A Player may not change the Master's map.
+    refused = await client.post(url, json={"map_id": court["id"]}, headers=room.player)
+    assert refused.status_code == 403
+    # Another Room's map, or none, is not found.
+    missing = await client.post(url, json={"map_id": str(uuid.uuid4())}, headers=room.master)
+    assert missing.status_code == 404
+    # A mention map is not a free map.
+    await _create(client, room, v["tavern"])
+    tavern_map = await _get(client, room, v["tavern"], room.master)
+    mention = await client.post(url, json={"map_id": tavern_map["id"]}, headers=room.master)
+    assert mention.status_code == 404
+    # Nothing to draw: nothing added.
+    loner = await _document(client, room, "Loner")
+    empty = await client.post(
+        _url(room, loner, "/add-to-map"), json={"map_id": court["id"]}, headers=room.master
+    )
+    assert empty.status_code == 409
+
+    # Onto an empty board, the map is laid out as the mention map would be.
+    added = await client.post(url, json={"map_id": court["id"], "depth": 1}, headers=room.master)
+    assert added.status_code == 200, added.text
+    body = added.json()
+    assert _names(body) == {"Mira", "Thorn", "Aldric", "Tavern", "Lyra"}
+    mira = next(c for c in body["cards"] if c["document_id"] == v["mira"]["id"])
+    assert (mira["x"], mira["y"], mira["color"]) == (-80, -120, "gold")

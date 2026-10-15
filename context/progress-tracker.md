@@ -121,6 +121,14 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-15
 
+- **Mention map into an existing map** (spec 36 Decision 15, no migration,
+  Andrea's request): the "Mentions map" modal lets whoever manages free
+  maps pick one instead of a new mention map; "Add to map" adds the
+  Documents and relations at the chosen depth once (cards already there
+  stay, relations already drawn are not repeated) and opens the map. New
+  route `POST /rooms/{id}/documents/{doc}/mention-map/add-to-map`; new keys
+  `maps.mention.target*` and `addToMap` in all 12 languages.
+
 - **Route code splitting** (frontend only, no migration): Vercel warned the entry
   chunk was 1,665 kB. Every page except `HomePage` is now `React.lazy` in
   `App.tsx` (one `Suspense`), so the entry chunk is about 315 kB and no chunk

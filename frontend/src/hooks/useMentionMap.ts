@@ -115,3 +115,25 @@ export function useCopyMentionMap(roomId: string, documentId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'], exact: true }),
   });
 }
+
+/**
+ * Adds what the mention map would show at a depth to an existing free map the
+ * viewer manages, once (spec 36 Decision 15). The map's board and the list
+ * reload with it.
+ */
+export function useAddMentionsToMap(roomId: string, documentId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ mapId, depth }: { mapId: string; depth: number }) =>
+      toMapDetail(
+        await apiFetch<RawMapDetail>(`${mentionMapPath(roomId, documentId)}/add-to-map`, {
+          method: 'POST',
+          json: { map_id: mapId, depth },
+        }),
+      ),
+    onSuccess: (map) => {
+      queryClient.setQueryData(['rooms', roomId, 'maps', map.id], map);
+      return queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'], exact: true });
+    },
+  });
+}

@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Button, Group, Input, Loader, Modal, SegmentedControl, Stack, Text } from '@mantine/core';
+import { Button, Group, Input, Loader, Modal, NativeSelect, SegmentedControl, Stack, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useMaps } from '../../hooks/useMaps';
 import {
+  useAddMentionsToMap,
   useCopyMentionMap,
   useDeleteMentionMap,
   useMentionMapPreview,
@@ -13,10 +15,15 @@ import type { MentionMap } from '../../types/map';
 /** The depths offered (spec 36 Decision 2): 0, the first level only, to 3. */
 const DEPTHS = ['0', '1', '2', '3'];
 
+/** The target that creates or changes the Document's own mention map. */
+const OWN_MAP = '';
+
 /**
  * Creates a Document's mention map or changes it (spec 36 Decision 11): the
  * depth, with what the map would hold at that depth for the viewer, and, for
  * an existing map, copying it as a free map (which then opens) or deleting it.
+ * When the viewer manages free maps of the Room, they can instead add what the
+ * map would show to one of them (Decision 15), which then opens.
  */
 export function MentionMapModal({
   roomId,
@@ -36,12 +43,17 @@ export function MentionMapModal({
   const navigate = useNavigate();
   const [depth, setDepth] = useState(map?.depth ?? 0);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [target, setTarget] = useState(OWN_MAP);
   const preview = useMentionMapPreview(roomId, documentId, depth, true);
   const save = useSaveMentionMap(roomId, documentId, map !== null);
   const remove = useDeleteMentionMap(roomId, documentId);
   const copy = useCopyMentionMap(roomId, documentId);
-  const error = save.error ?? remove.error ?? copy.error ?? preview.error;
+  const addTo = useAddMentionsToMap(roomId, documentId);
+  // Decision 15: the free maps the viewer may change can take the mentions.
+  const editable = (useMaps(roomId, true).data ?? []).filter((free) => free.canEdit);
+  const error = save.error ?? remove.error ?? copy.error ?? addTo.error ?? preview.error;
   const empty = preview.data?.relations === 0;
+  const own = target === OWN_MAP;
 
   return (
     <Modal opened onClose={onClose} title={t('maps.mention.title')} centered>
@@ -56,6 +68,21 @@ export function MentionMapModal({
             aria-label={t('maps.mention.depth')}
           />
         </Input.Wrapper>
+        {editable.length > 0 && (
+          <NativeSelect
+            label={t('maps.mention.target')}
+            description={own ? undefined : t('maps.mention.targetHelp')}
+            value={target}
+            onChange={(event) => setTarget(event.currentTarget.value)}
+            data={[
+              {
+                value: OWN_MAP,
+                label: map ? t('maps.mention.targetOwn') : t('maps.mention.targetNew'),
+              },
+              ...editable.map((free) => ({ value: free.id, label: free.name })),
+            ]}
+          />
+        )}
         {preview.isLoading && <Loader size="xs" aria-label={t('maps.mention.previewLoading')} />}
         {preview.data && (
           <Text size="sm" c={empty ? 'dimmed' : undefined} role="status">
@@ -93,7 +120,7 @@ export function MentionMapModal({
         ) : (
           <Group justify="space-between">
             <Group gap="xs">
-              {map && (
+              {map && own && (
                 <>
                   <Button variant="subtle" color="red" onClick={() => setConfirmingDelete(true)}>
                     {t('maps.delete')}
@@ -112,13 +139,30 @@ export function MentionMapModal({
                 </>
               )}
             </Group>
-            <Button
-              disabled={!preview.data || empty}
-              loading={save.isPending}
-              onClick={() => save.mutate(depth, { onSuccess: onClose })}
-            >
-              {map ? t('common.save') : t('maps.mention.create')}
-            </Button>
+            {own ? (
+              <Button
+                disabled={!preview.data || empty}
+                loading={save.isPending}
+                onClick={() => save.mutate(depth, { onSuccess: onClose })}
+              >
+                {map ? t('common.save') : t('maps.mention.create')}
+              </Button>
+            ) : (
+              <Button
+                disabled={!preview.data || empty}
+                loading={addTo.isPending}
+                onClick={() =>
+                  addTo.mutate(
+                    { mapId: target, depth },
+                    {
+                      onSuccess: (changed) => void navigate(`/rooms/${roomId}/maps/${changed.id}`),
+                    },
+                  )
+                }
+              >
+                {t('maps.mention.addToMap')}
+              </Button>
+            )}
           </Group>
         )}
       </Stack>
