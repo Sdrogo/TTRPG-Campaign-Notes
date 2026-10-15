@@ -4,7 +4,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { ArrowSquareOutIcon, SquareSplitHorizontalIcon } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { SPLIT_QUERY, useSideDocument } from '../../hooks/useSideDocument';
+import { OpenMenuContext, SPLIT_QUERY, useSideDocument } from '../../hooks/useSideDocument';
 
 interface DocumentOpenMenuProps {
   roomId: string;
@@ -13,6 +13,8 @@ interface DocumentOpenMenuProps {
   children: ReactNode;
   /** `div` around a block (a map card), `span` around inline text (a mention). */
   component?: 'span' | 'div';
+  /** Told when the menu opens or closes (a map card shuts its preview meanwhile). */
+  onOpenChange?: (opened: boolean) => void;
 }
 
 /**
@@ -21,12 +23,22 @@ interface DocumentOpenMenuProps {
  * browser (a link opens in a new tab or window), and on a phone the click is
  * left alone too, so a link opens the Document directly (Decision 5).
  */
-export function DocumentOpenMenu({ roomId, documentId, children, component = 'span' }: DocumentOpenMenuProps) {
+export function DocumentOpenMenu({
+  roomId,
+  documentId,
+  children,
+  component = 'span',
+  onOpenChange,
+}: DocumentOpenMenuProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const wide = useMediaQuery(SPLIT_QUERY, true);
   const { open } = useSideDocument();
-  const [opened, setOpened] = useState(false);
+  const [opened, setOpenedState] = useState(false);
+  const setOpened = (next: boolean) => {
+    setOpenedState(next);
+    onOpenChange?.(next);
+  };
 
   if (!wide) {
     return children;
@@ -39,7 +51,7 @@ export function DocumentOpenMenu({ roomId, documentId, children, component = 'sp
       return;
     }
     event.preventDefault();
-    setOpened((current) => !current);
+    setOpened(!opened);
   };
   const Wrapper = component;
 
@@ -47,7 +59,7 @@ export function DocumentOpenMenu({ roomId, documentId, children, component = 'sp
     <Menu opened={opened} onChange={setOpened} position="bottom-start" shadow="md" withinPortal>
       <Menu.Target>
         <Wrapper onClickCapture={handleClick} style={component === 'span' ? undefined : { cursor: 'pointer' }}>
-          {children}
+          <OpenMenuContext value={opened}>{children}</OpenMenuContext>
         </Wrapper>
       </Menu.Target>
       <Menu.Dropdown>

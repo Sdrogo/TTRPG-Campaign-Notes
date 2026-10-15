@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ActionIcon, Box, Image, Paper, Stack, Text } from '@mantine/core';
 import type { NodeProps } from '@xyflow/react';
 import { DotsSixIcon, PencilSimpleIcon } from '@phosphor-icons/react';
@@ -58,6 +59,8 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
   // The whole Document, for the preview: the page's list, filtered for the viewer.
   const mentions = useDocumentMentions();
   const full = mentions?.documents.find((candidate) => candidate.id === document.id);
+  // The preview wraps the name's menu on an edited card, so it is told directly.
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const name = (
     <Text
@@ -114,7 +117,7 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
       )}
       <Stack gap={4} p={8} pos="relative">
         {editable ? (
-          <DocumentOpenMenu roomId={roomId} documentId={document.id}>
+          <DocumentOpenMenu roomId={roomId} documentId={document.id} onOpenChange={setMenuOpen}>
             {name}
           </DocumentOpenMenu>
         ) : (
@@ -145,7 +148,7 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
   );
   if (full) {
     body = (
-      <DocumentMentionPreview roomId={roomId} document={full} tags={mentions!.tags} disabled={dragging}>
+      <DocumentMentionPreview roomId={roomId} document={full} tags={mentions!.tags} disabled={dragging || menuOpen}>
         {body}
       </DocumentMentionPreview>
     );
@@ -153,7 +156,7 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
   return editable ? (
     body
   ) : (
-    <DocumentOpenMenu roomId={roomId} documentId={document.id} component="div">
+    <DocumentOpenMenu roomId={roomId} documentId={document.id} component="div" onOpenChange={setMenuOpen}>
       {body}
     </DocumentOpenMenu>
   );

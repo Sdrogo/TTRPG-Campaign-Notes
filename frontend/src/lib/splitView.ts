@@ -7,6 +7,7 @@ export const MIN_PANE_WIDTH = 320;
 /** How far an arrow key moves the divider, as a share of the width. */
 export const KEY_STEP = 0.05;
 
+/** The remembered left pane's share of the width, or half when none is stored or storage is blocked. */
 export function storedRatio(): number {
   try {
     const value = Number(window.localStorage.getItem(SPLIT_STORAGE_KEY));
@@ -16,7 +17,8 @@ export function storedRatio(): number {
   }
 }
 
-export function storeRatio(ratio: number) {
+/** Remembers the left pane's share for this viewer; skipped silently if storage is blocked. */
+export function storeRatio(ratio: number): void {
   try {
     window.localStorage.setItem(SPLIT_STORAGE_KEY, String(ratio));
   } catch {

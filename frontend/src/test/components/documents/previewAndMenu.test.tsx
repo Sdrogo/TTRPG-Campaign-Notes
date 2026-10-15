@@ -95,6 +95,29 @@ describe('Mentions on a Document card (spec 37 Decision 2)', () => {
     expect(await screen.findByRole('menuitem', { name: 'Apri a metà schermo' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Apri il Documento' })).toBeInTheDocument();
   });
+
+  // Clicked before the preview's delay ran out: the preview must not cover the menu.
+  it('keeps the preview shut while the menu shows', async () => {
+    restore = matchMediaQueries([SPLIT_QUERY, HOVER_POINTER_QUERY]);
+    const user = userEvent.setup();
+    renderWithProviders(withMentions(<MentionText text="Chiedi a #Thorn." linked="documents" />));
+
+    await user.click(screen.getByTestId('document-mention'));
+    expect(await screen.findByRole('menuitem', { name: 'Apri a metà schermo' })).toBeInTheDocument();
+    await expectNoPreview();
+  });
+
+  it('closes an open preview when the menu opens', async () => {
+    restore = matchMediaQueries([SPLIT_QUERY, HOVER_POINTER_QUERY]);
+    const user = userEvent.setup();
+    renderWithProviders(withMentions(<MentionText text="Chiedi a #Thorn." />));
+
+    await user.hover(screen.getByTestId('document-mention'));
+    expect(await screen.findByRole('heading', { name: 'Thorn' })).toBeInTheDocument();
+    await user.click(screen.getByTestId('document-mention'));
+    expect(await screen.findByRole('menuitem', { name: 'Apri a metà schermo' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Thorn' })).not.toBeInTheDocument());
+  });
 });
 
 describe('A Document card on a map (spec 37 Decisions 1 and 2)', () => {
@@ -148,5 +171,14 @@ describe('A Document card on a map (spec 37 Decisions 1 and 2)', () => {
 
     await user.click(screen.getByRole('link', { name: 'Thorn' }));
     expect(await screen.findByRole('menuitem', { name: 'Apri a metà schermo' })).toBeInTheDocument();
+  });
+
+  it('keeps the card preview shut while its menu shows', async () => {
+    restore = matchMediaQueries([SPLIT_QUERY, HOVER_POINTER_QUERY]);
+    const user = renderNode({ editable: true });
+
+    await user.click(screen.getByRole('link', { name: 'Thorn' }));
+    expect(await screen.findByRole('menuitem', { name: 'Apri a metà schermo' })).toBeInTheDocument();
+    await expectNoPreview();
   });
 });
