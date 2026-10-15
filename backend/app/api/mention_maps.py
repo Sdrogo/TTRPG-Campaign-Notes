@@ -20,6 +20,7 @@ from app.api.relationship_maps import (
     CardBody,
     CardResponse,
     MapDetailResponse,
+    add_to_free_map,
     arrow_body,
     card_responses,
     create_free_map,
@@ -32,6 +33,7 @@ from app.domain.mention_maps import (
     MentionDepthError,
     MentionGraph,
     NothingToMapError,
+    add_to_board,
     ensure_depth,
     ensure_something_to_map,
     mention_board,
@@ -108,6 +110,14 @@ class CopyMentionMapRequest(BaseModel):
     """The name of the free map the copy becomes."""
 
     name: str
+
+
+class AddToMapRequest(BaseModel):
+    """The free map to add the Document's mentions to, and how many steps
+    past the first level to follow (Decisions 2, 15)."""
+
+    map_id: uuid.UUID
+    depth: int = Field(default=0, ge=0, le=MAX_MENTION_DEPTH)
 
 
 async def _visible_links(
@@ -447,3 +457,38 @@ async def copy_mention_map(
         ],
     )
     return await create_free_map(session, room_id, membership, body.name, board, locale)
+
+
+@router.post("/add-to-map")
+async def add_mention_map_to_map(
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    body: AddToMapRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> MapDetailResponse:
+    """Decision 15: instead of creating the Document's own mention map, adds
+    what it would show the requester at `depth` to a free map (spec 28) of
+    the Room they manage (404 when hidden from them, 403 otherwise), once:
+    a snapshot, like a copy, that doesn't follow the mentions afterwards.
+    Documents already on that map keep their card; the others get one, laid
+    out around the Document. 409 with nothing added when the requester sees
+    no mention to draw; the map's caps apply (409)."""
+    membership, center = await _center(
+        session, room_id, document_id, uuid.UUID(current_user.id), locale
+    )
+    graph, documents = await _graph(session, center, body.depth, membership)
+    try:
+        ensure_something_to_map(graph)
+    except NothingToMapError as exc:
+        raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
+    names = {document_id: document.name for document_id, document in documents.items()}
+    return await add_to_free_map(
+        session,
+        room_id,
+        body.map_id,
+        membership,
+        lambda board: add_to_board(board, graph, names, uuid.uuid4),
+        locale,
+    )

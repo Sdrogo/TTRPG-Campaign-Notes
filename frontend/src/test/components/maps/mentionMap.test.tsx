@@ -5,7 +5,7 @@ import { ApiError, apiFetch } from '../../../lib/apiClient';
 import { toMentionMap, type RawMentionMap } from '../../../lib/maps';
 import { MentionMapModal } from '../../../components/maps/MentionMapModal';
 import { MentionMapPanel } from '../../../components/maps/MentionMapPanel';
-import { rawMapDetail, rawMentionMap } from '../../fixtures';
+import { rawMap, rawMapDetail, rawMentionMap } from '../../fixtures';
 import { renderWithProviders } from '../../utils';
 
 vi.mock('../../../lib/apiClient', async (original) => ({
@@ -30,6 +30,8 @@ type Init = { method?: string; json?: unknown };
 
 let preview: (depth: string) => Promise<unknown>;
 let write: (init: Init) => Promise<unknown>;
+let maps: unknown[];
+let addTo: (init: Init) => Promise<unknown>;
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -41,10 +43,14 @@ beforeEach(() => {
         : { documents: 160, relations: 300, documents_left_out: 11 },
     );
   write = (init) => Promise.resolve(init.method === 'DELETE' ? undefined : rawMentionMap());
+  maps = [];
+  addTo = () => Promise.resolve(rawMapDetail({ id: 'map-1' }));
   fetchMock.mockImplementation((path: string, init?: Init) => {
     if (path.startsWith(`${PATH}/preview`)) return preview(path.split('depth=')[1]);
     if (path === `${PATH}/copy`) return Promise.resolve(rawMapDetail({ id: 'map-9' }));
+    if (path === `${PATH}/add-to-map`) return addTo(init!);
     if (path === PATH) return write(init!);
+    if (path === '/rooms/room-1/maps') return Promise.resolve(maps);
     return Promise.resolve([]);
   });
 });
@@ -104,6 +110,44 @@ describe('MentionMapModal', () => {
     await user.click(screen.getByRole('button', { name: 'Elimina' }));
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenCalledWith(PATH, { method: 'DELETE' });
+  });
+
+  it('adds the mentions to an existing map the user manages, which then opens', async () => {
+    maps = [rawMap({ id: 'map-1', name: 'La Corte' }), rawMap({ id: 'map-2', name: 'Altrui', can_edit: false })];
+    const { onClose, user } = renderModal();
+    const select = await screen.findByRole('combobox', { name: 'Mappa' });
+    expect(screen.getByRole('option', { name: 'Nuova mappa delle menzioni' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Altrui' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/una volta sola/)).not.toBeInTheDocument();
+    await screen.findByRole('status');
+    await user.click(screen.getByRole('radio', { name: '1' }));
+
+    await user.selectOptions(select, 'La Corte');
+    expect(screen.getByText(/una volta sola/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Crea mappa' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Aggiungi alla mappa' }));
+    await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/room-1/maps/map-1'));
+    expect(fetchMock).toHaveBeenCalledWith(`${PATH}/add-to-map`, {
+      method: 'POST',
+      json: { map_id: 'map-1', depth: 1 },
+    });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("offers the existing maps beside the Document's own map, and shows a refusal", async () => {
+    maps = [rawMap({ id: 'map-1', name: 'La Corte' })];
+    addTo = () => Promise.reject(new ApiError(409, 'Troppe carte'));
+    const map = toMentionMap(rawMentionMap() as RawMentionMap);
+    const { user } = renderModal(map);
+    const select = await screen.findByRole('combobox', { name: 'Mappa' });
+    expect(screen.getByRole('button', { name: 'Elimina mappa' })).toBeInTheDocument();
+    await user.selectOptions(select, 'La Corte');
+    expect(screen.queryByRole('button', { name: 'Elimina mappa' })).not.toBeInTheDocument();
+    await screen.findByRole('status');
+    await user.click(screen.getByRole('button', { name: 'Aggiungi alla mappa' }));
+    expect(await screen.findByText('Troppe carte')).toBeInTheDocument();
+    await user.selectOptions(select, 'La mappa delle menzioni di questo Documento');
+    expect(screen.getByRole('button', { name: 'Salva' })).toBeInTheDocument();
   });
 
   it('shows why a save was refused', async () => {

@@ -661,6 +661,11 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   `SegmentedControl`), a live preview line ("Documenti: N · Relazioni: N"),
   the cap notice, and Create or Save; for an existing map also Delete (with
   an inline confirm) and "Copia come mappa libera", which opens the copy.
+  When the viewer manages free maps, a `NativeSelect` "Mappa" between the
+  depth and the preview offers "Nuova mappa delle menzioni" (or the
+  Document's own map) and those maps; picking one hides Delete and Copy,
+  shows a one-line note that it is added once, and the button becomes
+  "Aggiungi alla mappa", which opens that map (spec 36 Decision 15).
 - **On the Document page**: `MentionMapPanel` sits in the aside under the
   Document's images (the aside is wide when there is a map), a read-only
   board 360 px high with a "Schermo intero" link, shown only when the map

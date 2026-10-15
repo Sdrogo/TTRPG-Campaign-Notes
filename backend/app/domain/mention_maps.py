@@ -10,7 +10,7 @@ step, and hand them over as links."""
 import math
 import uuid
 from collections import Counter
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -19,6 +19,7 @@ from app.domain.relationship_maps import (
     MAX_CARDS_PER_MAP,
     ArrowDirection,
     ArrowEnd,
+    Board,
     CardSize,
     MapArrow,
     MapCard,
@@ -370,4 +371,100 @@ def mention_board(
         )
         for relation in graph.relations
     ]
+    return cards, arrows
+
+
+def _anchor(
+    board: Board,
+    center_id: uuid.UUID,
+    positions: Mapping[uuid.UUID, tuple[float, float]],
+) -> tuple[float, float]:
+    """How far to shift `ring_layout`'s places to add them to `board`
+    (Decision 15): around the center Document's card when it is already
+    there, else just right of everything on the board, vertically centered on
+    it; as they are on an empty board."""
+    center_card = next((card for card in board.cards if card.document_id == center_id), None)
+    if center_card is not None:
+        x, y = positions[center_id]
+        return center_card.x - x, center_card.y - y
+    boxes = [
+        (card.x, card.y, card.x + CARD_WIDTH, card.y + CARD_HEIGHT) for card in board.cards
+    ] + [
+        (group.x, group.y, group.x + group.width, group.y + group.height) for group in board.groups
+    ]
+    if not boxes:
+        return 0.0, 0.0
+    right = max(box[2] for box in boxes)
+    middle = (min(box[1] for box in boxes) + max(box[3] for box in boxes)) / 2
+    layout_left = min(x for x, _ in positions.values())
+    layout_middle = (
+        min(y for _, y in positions.values()) + max(y for _, y in positions.values()) + CARD_HEIGHT
+    ) / 2
+    return right + SLOT - CARD_WIDTH - layout_left, middle - layout_middle
+
+
+def add_to_board(
+    board: Board,
+    graph: MentionGraph,
+    names: Mapping[uuid.UUID, str],
+    new_id: Callable[[], uuid.UUID],
+) -> tuple[list[MapCard], list[MapArrow]]:
+    """Decision 15: the cards and arrows that add a Document's mention graph
+    to an existing free map, as `board` shows it to the user. A Document
+    already on the board keeps its card (the first one, if several) and
+    place; every other one gets a new card laid out as on a mention map,
+    around the center's card when it is already there, else beside the
+    board. A relation already drawn between the same two cards, in any
+    direction, is not drawn again."""
+    positions = ring_layout(graph, names)
+    center_id = next(card.document_id for card in graph.cards if card.step == 0)
+    dx, dy = _anchor(board, center_id, positions)
+    card_ids: dict[uuid.UUID, uuid.UUID] = {}
+    for existing in board.cards:
+        if existing.document_id is not None:
+            card_ids.setdefault(existing.document_id, existing.id)
+    cards: list[MapCard] = []
+    for card in graph.cards:
+        if card.document_id in card_ids:
+            continue
+        card_ids[card.document_id] = new_id()
+        x, y = positions[card.document_id]
+        cards.append(
+            MapCard(
+                id=card_ids[card.document_id],
+                document_id=card.document_id,
+                text=None,
+                group_id=None,
+                caption=None,
+                size=CardSize.NORMAL,
+                master_only=False,
+                color=CENTER_COLOR if card.step == 0 else MapColor.DEFAULT,
+                struck=False,
+                x=round(x + dx),
+                y=round(y + dy),
+            )
+        )
+    drawn = {
+        frozenset((arrow.from_end.id, arrow.to_end.id))
+        for arrow in board.arrows
+        if arrow.from_end.card_id is not None and arrow.to_end.card_id is not None
+    }
+    arrows: list[MapArrow] = []
+    for relation in graph.relations:
+        ends = (card_ids[relation.from_id], card_ids[relation.to_id])
+        if frozenset(ends) in drawn:
+            continue
+        drawn.add(frozenset(ends))
+        arrows.append(
+            MapArrow(
+                id=new_id(),
+                from_end=ArrowEnd(card_id=ends[0]),
+                to_end=ArrowEnd(card_id=ends[1]),
+                direction=relation.direction,
+                label=None,
+                reverse_label=None,
+                color=MapColor.DEFAULT,
+                master_only=False,
+            )
+        )
     return cards, arrows
