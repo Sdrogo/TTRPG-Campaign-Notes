@@ -1,23 +1,51 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HomePage } from './pages/HomePage';
-import { AcceptInvitePage } from './pages/AcceptInvitePage';
-import { RoomMembersRedirect, RoomSetupPage } from './pages/RoomSetupPage';
-import { RoomDocumentsPage } from './pages/RoomDocumentsPage';
-import { DocumentDetailPage } from './pages/DocumentDetailPage';
-import { AccountPage } from './pages/AccountPage';
-import { AddFriendPage } from './pages/AddFriendPage';
-import { PrivacyPage } from './pages/PrivacyPage';
-import { RoomMapsPage } from './pages/RoomMapsPage';
-import { RelationshipMapPage } from './pages/RelationshipMapPage';
-import { MentionMapPage } from './pages/MentionMapPage';
 import { useScrollbarReveal } from './hooks/useScrollbarReveal';
 import { ViewAsProvider } from './components/ViewAsProvider';
 
+const AcceptInvitePage = lazy(() =>
+  import('./pages/AcceptInvitePage').then((m) => ({ default: m.AcceptInvitePage })),
+);
+const RoomMembersRedirect = lazy(() =>
+  import('./pages/RoomSetupPage').then((m) => ({ default: m.RoomMembersRedirect })),
+);
+const RoomSetupPage = lazy(() =>
+  import('./pages/RoomSetupPage').then((m) => ({ default: m.RoomSetupPage })),
+);
+const RoomDocumentsPage = lazy(() =>
+  import('./pages/RoomDocumentsPage').then((m) => ({ default: m.RoomDocumentsPage })),
+);
+const DocumentDetailPage = lazy(() =>
+  import('./pages/DocumentDetailPage').then((m) => ({ default: m.DocumentDetailPage })),
+);
+const AccountPage = lazy(() =>
+  import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })),
+);
+const AddFriendPage = lazy(() =>
+  import('./pages/AddFriendPage').then((m) => ({ default: m.AddFriendPage })),
+);
+const PrivacyPage = lazy(() =>
+  import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })),
+);
+const RoomMapsPage = lazy(() =>
+  import('./pages/RoomMapsPage').then((m) => ({ default: m.RoomMapsPage })),
+);
+const RelationshipMapPage = lazy(() =>
+  import('./pages/RelationshipMapPage').then((m) => ({ default: m.RelationshipMapPage })),
+);
+const MentionMapPage = lazy(() =>
+  import('./pages/MentionMapPage').then((m) => ({ default: m.MentionMapPage })),
+);
+
 /**
- * The route table. Every page checks the session itself and shows a sign-in
- * prompt when there is none, except the public privacy notice (spec 31_3). `ViewAsProvider` turns a Room's pages into the
- * Master's read-only preview as a member when the URL asks (spec 22b).
+ * The route table. Every page but the home page is loaded on demand so the
+ * entry chunk stays small (the map pages pull in @xyflow/react). Every page
+ * checks the session itself and shows a sign-in prompt when there is none,
+ * except the public privacy notice (spec 31_3). `ViewAsProvider` turns a
+ * Room's pages into the Master's read-only preview as a member when the URL
+ * asks (spec 22b).
  */
 function App() {
   // Subscribes the whole tree to language changes: every page re-renders in
@@ -29,6 +57,7 @@ function App() {
 
   return (
     <ViewAsProvider>
+      <Suspense fallback={null}>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/account" element={<AccountPage />} />
@@ -43,6 +72,7 @@ function App() {
         <Route path="/rooms/:roomId/maps" element={<RoomMapsPage />} />
         <Route path="/rooms/:roomId/maps/:mapId" element={<RelationshipMapPage />} />
       </Routes>
+      </Suspense>
     </ViewAsProvider>
   );
 }

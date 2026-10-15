@@ -1,6 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocumentCardNode } from '../../../components/maps/DocumentCardNode';
 import { GroupNode } from '../../../components/maps/GroupNode';
@@ -10,10 +10,20 @@ import { TextCardNode } from '../../../components/maps/TextCardNode';
 import type { MapArrow as Arrow, MapCard, MapGroup } from '../../../types/map';
 import { flow } from '../../xyflowMock';
 import { renderWithProviders } from '../../utils';
+import { DocumentMentionsContext, type DocumentMentionsValue } from '../../../hooks/useDocumentMentions';
 
 vi.mock('@xyflow/react', async (original) => ({
   ...(await original<object>()),
   ...(await import('../../xyflowMock')).xyflowMock,
+}));
+
+// The preview is replaced by a stand-in that shows whether it was told to stay shut.
+vi.mock('../../../components/mentions/DocumentMentionPreview', () => ({
+  DocumentMentionPreview: ({ disabled, children }: { disabled?: boolean; children: ReactNode }) => (
+    <div data-testid="preview" data-disabled={String(Boolean(disabled))}>
+      {children}
+    </div>
+  ),
 }));
 
 const documentCard: MapCard = {
@@ -66,7 +76,44 @@ beforeEach(() => {
   flow.reset();
 });
 
+const mentions: DocumentMentionsValue = {
+  roomId: 'room-1',
+  documents: [{ id: 'doc-1', roomId: 'room-1', name: 'Hoshino Mirai' } as DocumentMentionsValue['documents'][number]],
+  tags: [],
+  canCreateDocument: false,
+  canCreateTag: false,
+  create: vi.fn(),
+};
+
+function renderCardWithPreview() {
+  return renderWithProviders(
+    <DocumentMentionsContext value={mentions}>
+      <DocumentCardNode
+        {...nodeProps<ComponentProps<typeof DocumentCardNode>>('card-1', {
+          card: documentCard,
+          roomId: 'room-1',
+          editable: false,
+          onEdit: vi.fn(),
+        })}
+      />
+    </DocumentMentionsContext>,
+  );
+}
+
 describe('DocumentCardNode', () => {
+  it('previews the Document on hover when no arrow is being drawn', () => {
+    renderCardWithPreview();
+
+    expect(screen.getByTestId('preview')).toHaveAttribute('data-disabled', 'false');
+  });
+
+  it('does not preview while an arrow is being drawn', () => {
+    flow.connecting = true;
+    renderCardWithPreview();
+
+    expect(screen.getByTestId('preview')).toHaveAttribute('data-disabled', 'true');
+  });
+
   it('shows the name linking to the Document and the subtitle as caption', () => {
     renderWithProviders(
       <DocumentCardNode {...nodeProps<ComponentProps<typeof DocumentCardNode>>('card-1', { card: documentCard, roomId: 'room-1', editable: false, onEdit: vi.fn() })} />,

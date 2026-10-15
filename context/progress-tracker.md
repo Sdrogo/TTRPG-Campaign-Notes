@@ -121,6 +121,29 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-15
 
+- **Room PDF fails on a Room with many Documents** (bug fix, no migration):
+  the job embedded every image as a base64 `data:` URL, so the HTML and
+  WeasyPrint's parsed copy (three layouts) held them several times over: in a
+  repro ~100 images took over 1 GB of RAM (415 MB with files), enough for the
+  OOM killer on the 4 GB VPS; the container restarts and the startup sweep
+  marks the job `interrupted`, which is why Network showed nothing. Now each
+  image is a JPEG file in a per-job temp folder (`file:` URLs allowed only
+  inside it). `STALE_AFTER` also went from 30 minutes to 2 hours so a long
+  render of a big Room isn't failed while it runs.
+
+- **Mention map into an existing map** (spec 36 Decision 15, no migration,
+  Andrea's request): the "Mentions map" modal lets whoever manages free
+  maps pick one instead of a new mention map; "Add to map" adds the
+  Documents and relations at the chosen depth once (cards already there
+  stay, relations already drawn are not repeated) and opens the map. New
+  route `POST /rooms/{id}/documents/{doc}/mention-map/add-to-map`; new keys
+  `maps.mention.target*` and `addToMap` in all 12 languages.
+
+- **Route code splitting** (frontend only, no migration): Vercel warned the entry
+  chunk was 1,665 kB. Every page except `HomePage` is now `React.lazy` in
+  `App.tsx` (one `Suspense`), so the entry chunk is about 315 kB and no chunk
+  is over 500 kB; the warning limit is untouched. `App.test.tsx` awaits the
+  lazy pages with `findByText`.
 - **Mobile Document header, Note actions and icon labels** (frontend only, no
   migration): the Document's actions and each Note's actions are folded into a
   "⋮" on every screen size (uniform, Andrea). On a big screen they unfold in place beside it;
@@ -230,6 +253,10 @@ One line per unit; dates 2026, newest first. Spec files live in
   10-12, PR #160): a card in a group is stored relative to the group, so
   deleting the group left the cards the editor can't see at the board's
   origin; `plan_board_edit` now rewrites them with absolute positions.
+
+- **No card preview while drawing an arrow** (10-15): once an arrow is
+  started (`useConnection().inProgress`), the hover preview of map cards is
+  disabled; it comes back when the arrow is completed or cancelled.
 
 - **Map arrow dot grabbable again** (28_2 fix, 10-12, PR #170): the card
   image and text were laid over the arrow handle and the card's

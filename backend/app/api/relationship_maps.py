@@ -5,7 +5,7 @@ the board as the requester sees it (`visible_board`, Invariant 1), and
 follows `X-View-As` like any read."""
 
 import uuid
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import replace
 from datetime import UTC, datetime
 
@@ -676,6 +676,38 @@ async def save_board(
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     relationship_map, grants = await _get_managed_map(session, room_id, map_id, membership, locale)
     await _apply_board(session, map_id, membership, body, locale)
+    updated = replace(relationship_map, updated_at=_now())
+    await relationship_maps_repo.update_map(session, updated)
+    return await _detail(session, updated, grants, membership)
+
+
+async def add_to_free_map(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    map_id: uuid.UUID,
+    membership: Membership,
+    additions: Callable[[Board], tuple[Sequence[MapCard], Sequence[MapArrow]]],
+    locale: str,
+) -> MapDetailResponse:
+    """Adds `additions(board)` to a free map the requester manages (404 when
+    hidden from them, 403 when they don't manage it), `board` being what they
+    see of it: saved through the board save's checks and caps under the
+    map's lock, as if they had drawn the new items by hand (a Document's
+    mention graph, spec 36 Decision 15)."""
+    relationship_map, grants = await _get_managed_map(session, room_id, map_id, membership, locale)
+    shown = await _detail(session, relationship_map, grants, membership)
+    current = BoardRequest(
+        groups=shown.groups,
+        cards=[CardBody(**card.model_dump(exclude={"document"})) for card in shown.cards],
+        arrows=shown.arrows,
+    )
+    cards, arrows = additions(_submitted_board(current))
+    board = BoardRequest(
+        groups=current.groups,
+        cards=[*current.cards, *(CardBody(**vars(card)) for card in cards)],
+        arrows=[*current.arrows, *(arrow_body(arrow) for arrow in arrows)],
+    )
+    await _apply_board(session, map_id, membership, board, locale)
     updated = replace(relationship_map, updated_at=_now())
     await relationship_maps_repo.update_map(session, updated)
     return await _detail(session, updated, grants, membership)

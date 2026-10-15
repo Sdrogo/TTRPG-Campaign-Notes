@@ -113,20 +113,24 @@ def _shares_one_page(pair: tuple[str, str], following: str, pages: Mapping[str, 
     return pages[second] == pages[first] and pages.get(following) == pages[first] + 1
 
 
-def url_allowed(url: str, image_urls: Collection[str]) -> bool:
+def url_allowed(url: str, image_urls: Collection[str], media_dir: Path | None = None) -> bool:
     """Whether the renderer may fetch `url`: a `data:` URL, a file inside
-    `ASSETS_DIR`, or one of `image_urls` exactly (compared as parsed URLs, so a
-    re-serialized query doesn't matter). Anything else, an `http://` address or a
-    `file:` path elsewhere included, is refused."""
+    `ASSETS_DIR` or `media_dir` (the folder a job put its downscaled images in),
+    or one of `image_urls` exactly (compared as parsed URLs, so a re-serialized
+    query doesn't matter). Anything else, an `http://` address or a `file:` path
+    elsewhere included, is refused."""
     parts = urlsplit(url)
     if parts.scheme.lower() == "data":
         return True
     if parts.scheme.lower() == "file":
-        return Path(url2pathname(parts.path)).resolve().is_relative_to(ASSETS_DIR)
+        path = Path(url2pathname(parts.path)).resolve()
+        return path.is_relative_to(ASSETS_DIR) or (
+            media_dir is not None and path.is_relative_to(media_dir.resolve())
+        )
     return parts.geturl() in {urlsplit(image).geturl() for image in image_urls}
 
 
-def _fetcher(image_urls: Collection[str]) -> Any:
+def _fetcher(image_urls: Collection[str], media_dir: Path | None = None) -> Any:
     """A WeasyPrint URL fetcher that applies `url_allowed`. WeasyPrint is
     imported here, not at module level, so importing the app never needs
     Pango (a refused URL is logged by WeasyPrint and left out of the page)."""
@@ -137,7 +141,7 @@ def _fetcher(image_urls: Collection[str]) -> Any:
 
         def fetch(self, url: str, headers: Any = None) -> Any:
             """Fetches `url` or raises `ValueError` when it isn't allowed."""
-            if not url_allowed(url, image_urls):
+            if not url_allowed(url, image_urls, media_dir):
                 raise ValueError(f"URL not allowed in the Room PDF: {url}")
             return super().fetch(url, headers)
 
@@ -149,10 +153,16 @@ def _fetcher(image_urls: Collection[str]) -> Any:
 
 
 def render_manual_pdf(
-    manual: Manual, style: ManualStyle, page_size: PageSize, locale: str = DEFAULT_LOCALE
+    manual: Manual,
+    style: ManualStyle,
+    page_size: PageSize,
+    locale: str = DEFAULT_LOCALE,
+    media_dir: Path | None = None,
 ) -> bytes:
     """The manual as PDF bytes. CPU-bound and blocking: a caller on the event
-    loop runs it in a thread.
+    loop runs it in a thread. Images may be `file:` URLs inside `media_dir`,
+    which keeps them out of the HTML (a big Room's images as `data:` URLs took
+    over a gigabyte of memory).
 
     Two short Documents share a page when together they fit on it (product
     owner, 2026-10-06). Only a layout can tell, so the manual is laid out with
@@ -167,7 +177,7 @@ def render_manual_pdf(
         return HTML(
             string=html,
             base_url=ASSETS_DIR.as_uri() + "/",
-            url_fetcher=_fetcher(manual.image_urls),
+            url_fetcher=_fetcher(manual.image_urls, media_dir),
         ).render()
 
     def anchor_pages(document: Any) -> dict[str, int]:

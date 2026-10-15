@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Image, Paper, Stack, Text } from '@mantine/core';
-import type { NodeProps } from '@xyflow/react';
+import { useConnection, type NodeProps } from '@xyflow/react';
 import { DotsSixIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -46,7 +46,7 @@ function DragGrip() {
  * card, else the Document's favorite) as the card's background fading into
  * the card towards the bottom, where its name and caption (the map's own, or
  * else the Document's subtitle) are, in the card's color and struck through
- * when it is. Resting the pointer on it previews the Document's card; a
+ * when it is. Resting the pointer on it previews the Document's card (not while an arrow is being drawn); a
  * click on its name (anywhere on it, on a read-only board) offers to open
  * the Document beside the page or to go to it (spec 37).
  */
@@ -62,6 +62,8 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
   const full = mentions?.documents.find((candidate) => candidate.id === document.id);
   // The preview wraps the name's menu on an edited card, so it is told directly.
   const [menuOpen, setMenuOpen] = useState(false);
+  // While an arrow is being drawn (a click or drag already made) no card previews.
+  const drawing = useConnection((connection) => connection.inProgress);
 
   const name = (
     <Text
@@ -149,7 +151,7 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
   );
   if (full) {
     body = (
-      <DocumentMentionPreview roomId={roomId} document={full} tags={mentions!.tags} disabled={dragging || menuOpen}>
+      <DocumentMentionPreview roomId={roomId} document={full} tags={mentions!.tags} disabled={dragging || menuOpen || drawing}>
         {body}
       </DocumentMentionPreview>
     );

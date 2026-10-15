@@ -284,6 +284,21 @@ def test_each_bundled_family_ships_its_license() -> None:
     }
 
 
+def test_the_job_media_folder_is_readable_and_nothing_around_it_is(tmp_path: Any) -> None:
+    media = tmp_path / "media"
+    media.mkdir()
+    (tmp_path / "secret.txt").write_text("x")
+    images: set[str] = set()
+
+    assert url_allowed((media / "1.jpg").as_uri(), images, media)
+    assert not url_allowed((tmp_path / "secret.txt").as_uri(), images, media)
+    assert not url_allowed((media / ".." / "secret.txt").as_uri(), images, media)
+    assert url_allowed((ASSETS_DIR / "styles" / "base.css").as_uri(), images, media)
+    # Without a media folder, a file there is refused as before.
+    assert not url_allowed((media / "1.jpg").as_uri(), images)
+    assert not url_allowed((media / "1.jpg").as_uri(), images, None)
+
+
 def test_the_renderer_fetches_its_own_files_data_urls_and_the_manuals_images_only() -> None:
     images = {"https://storage.example/img/1.webp?token=a&download=x"}
 
