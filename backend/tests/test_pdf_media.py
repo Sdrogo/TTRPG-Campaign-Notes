@@ -26,7 +26,7 @@ from app.domain.manual import (
     build_manual,
     with_image_urls,
 )
-from app.pdf.media import merge_attachments, print_image_data_uri
+from app.pdf.media import merge_attachments, print_image_data_uri, print_image_jpeg
 
 
 def _png(size: tuple[int, int], mode: str = "RGB", color: object = (10, 20, 30)) -> bytes:
@@ -70,6 +70,15 @@ def test_transparency_is_flattened_onto_white_not_black() -> None:
 def test_something_that_is_not_an_image_is_left_out() -> None:
     assert print_image_data_uri(b"not an image") is None
     assert print_image_data_uri(b"") is None
+
+
+def test_the_jpeg_is_downscaled_and_a_non_image_is_left_out() -> None:
+    jpeg = print_image_jpeg(_png((MAX_IMAGE_PIXELS * 2, MAX_IMAGE_PIXELS)))
+
+    assert jpeg is not None and jpeg.startswith(b"\xff\xd8")
+    image = Image.open(io.BytesIO(jpeg))
+    assert image.format == "JPEG" and image.size == (MAX_IMAGE_PIXELS, MAX_IMAGE_PIXELS // 2)
+    assert print_image_jpeg(b"not an image") is None
 
 
 def test_attachments_follow_the_manual_page_by_page_in_order() -> None:
