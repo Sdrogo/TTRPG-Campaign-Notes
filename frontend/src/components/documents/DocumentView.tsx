@@ -259,6 +259,15 @@ function DocumentPanel({
       <VisibilityBadge visibility={document.visibility} />
     </>
   );
+  // Spec 30: everyone who sees the Document can hear it: its name, description and the
+  // Notes they see. Kept out of the folded actions so a phone can always stop the reading.
+  const readAloud = (
+    <ReadAloudControls
+      sourceId={`document:${document.id}`}
+      name={document.name}
+      getText={() => documentSpeech(document)}
+    />
+  );
   const actions = (
     <>
       {/* Spec 22: the Master reveals what the whole Room doesn't see yet. */}
@@ -272,13 +281,6 @@ function DocumentPanel({
           <EyeIcon size={18} />
         </LabeledActionIcon>
       )}
-      {/* Spec 30: everyone who sees the Document can hear it: its name,
-          description and the Notes they see. */}
-      <ReadAloudControls
-        sourceId={`document:${document.id}`}
-        name={document.name}
-        getText={() => documentSpeech(document)}
-      />
       {/* Spec 27: every member who sees the Document exports it, as the member
           being previewed too (it only reads). */}
       <LabeledActionIcon
@@ -358,6 +360,7 @@ function DocumentPanel({
           {!phone && (
             <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
               {badges}
+              {readAloud}
               {actions}
             </Group>
           )}
@@ -365,6 +368,7 @@ function DocumentPanel({
         {phone && (
           <Group gap="xs" wrap="wrap" preventGrowOverflow={false}>
             {badges}
+            {readAloud}
             {actionsExpanded && actions}
             <LabeledActionIcon
               variant="subtle"
