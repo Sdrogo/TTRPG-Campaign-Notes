@@ -76,12 +76,13 @@ here and remind the product owner.
   by hand 2026-10-15 with `.env.staging` loaded; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `c6e2a9f4d8b3`. Applied 2026-10-15 with
-  `alembic upgrade head` and `backend/.env` loaded: `c6e2a9f4d8b3` (mention
-  maps), from `b4d8f2a6c1e7`. Before it, on 2026-10-13: `a9e3c5d7b1f4` (map
+- **Production database**: `e8b4d2f6a9c1` (= head). Applied 2026-10-15 with
+  `alembic upgrade head` and `backend/.env` loaded: `e8b4d2f6a9c1` (document
+  linked maps), from `c6e2a9f4d8b3` (mention maps, applied the same day, from
+  `b4d8f2a6c1e7`). Before it, on 2026-10-13: `a9e3c5d7b1f4` (map
   label positions) and `b4d8f2a6c1e7` (map label offsets), from `d5a1c8e3f2b7`
   (map card image, applied earlier).
-- **Pending on production**: `e8b4d2f6a9c1` (document linked maps).
+- **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
 `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
