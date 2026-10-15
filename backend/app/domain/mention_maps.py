@@ -32,14 +32,14 @@ CENTER_COLOR = MapColor.GOLD
 """Decision 6: the center Document's card stands out in gold."""
 
 # Decision 6, in board pixels: a card is 160 wide and up to 240 tall (an
-# image card, `DocumentCardNode`); SLOT is the room one card takes along a
-# ring, so neighbors never overlap, even on the left and right where they
-# stack vertically.
+# image card, `DocumentCardNode`). Two cards whose centers are at least SLOT
+# apart never overlap (SLOT is just over the card's diagonal, 288), so cards
+# on one ring sit SLOT apart and rings are SLOT apart: as tight as the cards
+# allow.
 CARD_WIDTH = 160
 CARD_HEIGHT = 240
-SLOT = 280
-FIRST_RING_RADIUS = 340
-RING_GAP = 320
+SLOT = 290
+FIRST_RING_RADIUS = 300
 
 
 class MentionDepthError(DomainError):
@@ -137,8 +137,11 @@ def mention_graph(
     order. Rings are walked breadth-first, `depth + 1` of them; each card
     remembers the first card of the previous ring (by name) that reached it.
     Past `limit` cards the nearest rings win, then the Documents with the
-    most mentions, then by name. Every pair of kept cards linked by a
-    mention gets one relation, two-way when they mention each other."""
+    most mentions, then by name. Only the mentions that tie a card to the
+    card that brought it in become relations (the center's own mentions, on
+    the first ring), one per pair, two-way when they mention each other:
+    mentions between the other Documents would drown the map (product
+    owner, 2026-10-14)."""
     counts = Counter((source, target) for source, target in links if source != target)
     neighbors: dict[uuid.UUID, set[uuid.UUID]] = {}
     for source, target in counts:
@@ -170,10 +173,12 @@ def mention_graph(
 
     ranked = sorted(cards, key=lambda c: (c.step, -weight[c.document_id], *order(c.document_id)))
     kept = ranked[:limit]
-    kept_ids = {card.document_id for card in kept}
+    # A card's parent is on an earlier ring, so it ranks before the card and
+    # is kept whenever the card is.
+    tree = {frozenset((card.document_id, card.parent_id)) for card in kept if card.parent_id}
     relations: list[GraphRelation] = []
     for source, target in sorted(counts, key=lambda pair: (*order(pair[0]), *order(pair[1]))):
-        if source not in kept_ids or target not in kept_ids:
+        if frozenset((source, target)) not in tree:
             continue
         if (target, source) in counts:
             if order(source) < order(target):
@@ -198,10 +203,9 @@ def first_ring_side(center_id: uuid.UUID, document_id: uuid.UUID, graph: Mention
     return Side.MUTUAL  # pragma: no cover
 
 
-def _spread(count: int, start: float, end: float) -> list[float]:
-    """`count` angles evenly inside the sector from `start` to `end`."""
-    step = (end - start) / count
-    return [start + step * (index + 0.5) for index in range(count)]
+def _ring_gap(radius: float) -> float:
+    """The angle between two neighbors on a ring of `radius`, SLOT apart."""
+    return 2 * math.asin(min(1.0, SLOT / 2 / radius))
 
 
 def _place_around(desired: Sequence[float], gap: float) -> list[float]:
@@ -216,16 +220,41 @@ def _place_around(desired: Sequence[float], gap: float) -> list[float]:
     return placed
 
 
+def _first_ring(count: int) -> list[tuple[float, float]]:
+    """`count` places (radius, angle) packed around the center, in angular
+    order: rings SLOT apart, each filled with as many cards as it holds, the
+    last one evenly with what is left. Every ring's cards are spread evenly
+    and the rings are interleaved by angle, so going around the center
+    meets the cards in their given order whatever ring they sit on."""
+    slots: list[tuple[float, float]] = []
+    radius = FIRST_RING_RADIUS
+    left = count
+    ring_index = 0
+    while left:
+        holds = max(1, int(2 * math.pi / _ring_gap(radius)))
+        here = min(holds, left)
+        # Staggered by half a slot from the ring inside it.
+        offset = 0.5 * ring_index
+        slots.extend(
+            ((2 * math.pi * (index + offset) / here) % (2 * math.pi), radius)
+            for index in range(here)
+        )
+        left -= here
+        radius += SLOT
+        ring_index += 1
+    return [(radius, angle) for angle, radius in sorted(slots)]
+
+
 def ring_layout(
     graph: MentionGraph, names: Mapping[uuid.UUID, str]
 ) -> dict[uuid.UUID, tuple[float, float]]:
     """Decision 6: each card's top-left corner on the board. The center at
-    the origin; the first ring split in four sectors (mutual ones at the
-    top, those the center mentions on the right, mutual ones at the bottom,
-    those mentioning it on the left), by name inside each; each further
-    ring wider, each card near the angle of the card that brought it in.
-    Rings grow with their number of cards, so cards never overlap.
-    Deterministic for a given graph."""
+    the origin; the first ring packed around it as tightly as the cards
+    allow, in four arcs going clockwise from the top: half the mutual ones,
+    those the center mentions (right), the other mutual ones, those
+    mentioning it (left), by name inside each; each further ring just
+    outside, each card near the angle of the card that brought it in. Cards
+    never overlap. Deterministic for a given graph."""
     centers: dict[uuid.UUID, tuple[float, float]] = {}
     angles: dict[uuid.UUID, float] = {}
     center = next(card for card in graph.cards if card.step == 0)
@@ -246,35 +275,38 @@ def ring_layout(
                     card.document_id
                 )
             mutual = sides[Side.MUTUAL]
-            top, bottom = mutual[: (len(mutual) + 1) // 2], mutual[(len(mutual) + 1) // 2 :]
-            # Screen coordinates: y grows downwards, so -90° is the top.
-            sectors = [
-                (top, -135.0, -45.0),
-                (sides[Side.MENTIONED_BY_CENTER], -45.0, 45.0),
-                (bottom, 45.0, 135.0),
-                (sides[Side.MENTIONS_CENTER], 135.0, 225.0),
+            half = (len(mutual) + 1) // 2
+            around = [
+                *mutual[:half],
+                *sides[Side.MENTIONED_BY_CENTER],
+                *mutual[half:],
+                *sides[Side.MENTIONS_CENTER],
             ]
-            crowded = max(len(ids) for ids, _, _ in sectors)
-            radius = max(FIRST_RING_RADIUS, crowded * SLOT / (math.pi / 2))
-            for ids, start, end in sectors:
-                if ids:
-                    for document_id, angle in zip(
-                        ids, _spread(len(ids), math.radians(start), math.radians(end)), strict=True
-                    ):
-                        angles[document_id] = angle
-        else:
-            radius = max(radius + RING_GAP, len(ring) * SLOT / (2 * math.pi))
-            wanted = sorted(
-                ring,
-                key=lambda c: (angles[c.parent_id or center.document_id], *order(c.document_id)),
-            )
-            placed = _place_around(
-                [angles[card.parent_id or center.document_id] for card in wanted], SLOT / radius
-            )
-            for card, angle in zip(wanted, placed, strict=True):
-                angles[card.document_id] = angle
-        for card in ring:
-            angle = angles[card.document_id]
+            # Screen coordinates: y grows downwards, so -90° is the top and
+            # angles grow clockwise. Turned so the top arc is centered on it.
+            turn = -math.pi / 2 - math.pi * half / len(around)
+            for document_id, (ring_radius, angle) in zip(
+                around, _first_ring(len(around)), strict=True
+            ):
+                angles[document_id] = angle + turn
+                radius = max(radius, ring_radius)
+                centers[document_id] = (
+                    ring_radius * math.cos(angle + turn),
+                    ring_radius * math.sin(angle + turn),
+                )
+            continue
+        # Wide enough for the whole ring evenly spread, SLOT apart.
+        evenly = SLOT / (2 * math.sin(math.pi / len(ring))) if len(ring) > 1 else 0.0
+        radius = max(radius + SLOT, evenly)
+        wanted = sorted(
+            ring,
+            key=lambda c: (angles[c.parent_id or center.document_id], *order(c.document_id)),
+        )
+        placed = _place_around(
+            [angles[card.parent_id or center.document_id] for card in wanted], _ring_gap(radius)
+        )
+        for card, angle in zip(wanted, placed, strict=True):
+            angles[card.document_id] = angle
             centers[card.document_id] = (radius * math.cos(angle), radius * math.sin(angle))
     return {
         document_id: (round(x - CARD_WIDTH / 2), round(y - CARD_HEIGHT / 2))

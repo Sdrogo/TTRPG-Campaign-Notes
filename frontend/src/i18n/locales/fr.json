@@ -380,7 +380,14 @@
     },
     "notYetRead": "Pas encore lu",
     "unreadCount_one": "{{count}} nouveau commentaire",
-    "unreadCount_other": "{{count}} nouveaux commentaires"
+    "unreadCount_other": "{{count}} nouveaux commentaires",
+    "open": {
+      "side": "Ouvrir en demi-écran",
+      "page": "Ouvrir le Document",
+      "resize": "Redimensionner les panneaux",
+      "close": "Fermer le panneau",
+      "pane": "Document à côté"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",

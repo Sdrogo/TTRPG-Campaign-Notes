@@ -384,7 +384,14 @@
     "unreadCount_one": "{{count}} nowy komentarz",
     "unreadCount_few": "{{count}} nowe komentarze",
     "unreadCount_many": "{{count}} nowych komentarzy",
-    "unreadCount_other": "{{count}} nowego komentarza"
+    "unreadCount_other": "{{count}} nowego komentarza",
+    "open": {
+      "side": "Otwórz na pół ekranu",
+      "page": "Otwórz Dokument",
+      "resize": "Zmień rozmiar paneli",
+      "close": "Zamknij panel",
+      "pane": "Dokument obok"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",

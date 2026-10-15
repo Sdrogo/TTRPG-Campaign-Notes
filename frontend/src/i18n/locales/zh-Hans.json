@@ -378,7 +378,14 @@
       "newTagPlaceholder": "例如：派系"
     },
     "notYetRead": "尚未阅读",
-    "unreadCount_other": "{{count}} 条新评论"
+    "unreadCount_other": "{{count}} 条新评论",
+    "open": {
+      "side": "在半屏中打开",
+      "page": "打开文档",
+      "resize": "调整面板大小",
+      "close": "关闭面板",
+      "pane": "并排的文档"
+    }
   },
   "images": {
     "numbered": "{{name}}（{{index}}）",

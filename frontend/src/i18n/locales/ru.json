@@ -384,7 +384,14 @@
     "unreadCount_one": "{{count}} новый Комментарий",
     "unreadCount_few": "{{count}} новых Комментария",
     "unreadCount_many": "{{count}} новых Комментариев",
-    "unreadCount_other": "{{count}} нового Комментария"
+    "unreadCount_other": "{{count}} нового Комментария",
+    "open": {
+      "side": "Открыть на полэкрана",
+      "page": "Открыть Документ",
+      "resize": "Изменить размер панелей",
+      "close": "Закрыть панель",
+      "pane": "Документ рядом"
+    }
   },
   "images": {
     "numbered": "{{name}} ({{index}})",
