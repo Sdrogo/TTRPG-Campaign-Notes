@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, apiFetch } from '../../lib/apiClient';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { useSession } from '../../hooks/useSession';
@@ -17,6 +17,7 @@ import {
   rawComment,
   rawMentionMap,
 } from '../fixtures';
+import { matchMediaQueries } from '../media';
 import { renderWithProviders } from '../utils';
 import { DocumentDetailPage } from '../../pages/DocumentDetailPage';
 import { ViewAsContext } from '../../hooks/useViewAs';
@@ -325,6 +326,39 @@ describe('who may edit', () => {
     ).not.toBeInTheDocument();
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByText('Nessuna revisione.')).not.toBeInTheDocument());
+  });
+});
+
+describe('on a phone', () => {
+  let restore: () => void;
+  beforeEach(() => {
+    restore = matchMediaQueries(['(max-width: 48em)']);
+  });
+  afterEach(() => restore());
+
+  it('keeps the actions folded under the name until the "⋮" is pressed', async () => {
+    const { user } = render();
+
+    const menu = await screen.findByRole('button', { name: /^Azioni per/ });
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+
+    await user.click(menu);
+    expect(menu).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Modifica' })).toBeInTheDocument();
+
+    await user.click(menu);
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+  });
+
+  it('still withholds the Owner-only actions from a Player', async () => {
+    routes.document = rawDocument({ owner_ids: ['user-2'] });
+    routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: /^Azioni per/ }));
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Storico/ })).not.toBeInTheDocument();
   });
 });
 
