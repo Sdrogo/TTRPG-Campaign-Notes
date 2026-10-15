@@ -1,7 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
 import { useNavigate } from 'react-router-dom';
-import { Stack, Group, Title, Text, Button, Box, Modal, Alert, Paper, Divider } from '@mantine/core';
+import {
+  Stack,
+  Group,
+  Title,
+  Text,
+  Button,
+  Box,
+  Modal,
+  Alert,
+  Paper,
+  Divider,
+} from '@mantine/core';
 import {
   ClockCounterClockwiseIcon,
   DotsThreeVerticalIcon,
@@ -106,14 +117,18 @@ export function DocumentView({
 
   if (document.isError || !document.data) {
     return (
-      <FullPageMessage actionLabel={t('documents.detail.backToDocuments')} actionTo={`/rooms/${roomId}/documents`}>
+      <FullPageMessage
+        actionLabel={t('documents.detail.backToDocuments')}
+        actionTo={`/rooms/${roomId}/documents`}
+      >
         {t('documents.detail.notFound')}
       </FullPageMessage>
     );
   }
 
   const memberList = members.data ?? [];
-  const isMaster = memberList.find((m) => m.userId === currentUserId)?.role === 'master' && !readOnly;
+  const isMaster =
+    memberList.find((m) => m.userId === currentUserId)?.role === 'master' && !readOnly;
   // A promotion starts from a Comment in this same cache, so it is loaded.
   const promotion = promoting && {
     comment: promoting.comment,
@@ -136,7 +151,11 @@ export function DocumentView({
           onPromotionEnd={() => setPromoting(null)}
         />
         {/* Spec 20 Decision 6: between the Notes and the Comments. */}
-        <Backlinks roomId={roomId} target={{ kind: 'document', id: document.data.id }} members={memberList} />
+        <Backlinks
+          roomId={roomId}
+          target={{ kind: 'document', id: document.data.id }}
+          members={memberList}
+        />
         <CommentSection
           roomId={roomId}
           documentId={document.data.id}
@@ -214,7 +233,7 @@ function DocumentPanel({
   const [imageSearchOpened, setImageSearchOpened] = useState(false);
   const [exportOpened, setExportOpened] = useState(false);
   const [mentionMapOpened, setMentionMapOpened] = useState(false);
-  const phone = useMediaQuery('(max-width: 48em)');
+  const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
   const [actionsExpanded, setActionsExpanded] = useState(false);
   // Spec 36: the Document's mention map, drawn under its images when it has a
   // relation the viewer sees.
@@ -233,6 +252,76 @@ function DocumentPanel({
   // once it exists, its creator and the Master open it to change it.
   const canOpenMentionMap =
     !readOnly && (mentionMap.data ? mentionMap.data.canManage : canCreateDocuments(me, room.data));
+
+  const badges = (
+    <>
+      {revealed?.document && <RevealedBadge />}
+      <VisibilityBadge visibility={document.visibility} />
+    </>
+  );
+  const actions = (
+    <>
+      {/* Spec 22: the Master reveals what the whole Room doesn't see yet. */}
+      {isMaster && document.visibility !== 'room' && (
+        <LabeledActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={() => setRevealing(true)}
+          aria-label={t('reveal.actionLabel', { name: document.name })}
+        >
+          <EyeIcon size={18} />
+        </LabeledActionIcon>
+      )}
+      {/* Spec 30: everyone who sees the Document can hear it: its name,
+          description and the Notes they see. */}
+      <ReadAloudControls
+        sourceId={`document:${document.id}`}
+        name={document.name}
+        getText={() => documentSpeech(document)}
+      />
+      {/* Spec 27: every member who sees the Document exports it, as the member
+          being previewed too (it only reads). */}
+      <LabeledActionIcon
+        variant="subtle"
+        color="gray"
+        onClick={() => setExportOpened(true)}
+        aria-label={t('export.document.action')}
+      >
+        <DownloadSimpleIcon size={18} />
+      </LabeledActionIcon>
+      {canOpenMentionMap && (
+        <LabeledActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={() => setMentionMapOpened(true)}
+          aria-label={t('maps.mention.button')}
+        >
+          <GraphIcon size={18} />
+        </LabeledActionIcon>
+      )}
+      {/* Spec 24b: Owners and the Master read the whole Document's history. */}
+      {isOwner && (
+        <LabeledActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={() => setHistoryOpened(true)}
+          aria-label={t('versions.actionFor', { name: document.name })}
+        >
+          <ClockCounterClockwiseIcon size={18} />
+        </LabeledActionIcon>
+      )}
+      {isOwner && (
+        <LabeledActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={() => (editing ? stopEditing() : setEditing(true))}
+          aria-label={editing ? t('documents.detail.cancelEditing') : t('common.edit')}
+        >
+          {editing ? <XIcon size={18} /> : <PencilSimpleIcon size={18} />}
+        </LabeledActionIcon>
+      )}
+    </>
+  );
 
   return (
     <PageCard>
@@ -268,137 +357,15 @@ function DocumentPanel({
           </Stack>
           {!phone && (
             <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
-            {revealed?.document && <RevealedBadge />}
-            <VisibilityBadge visibility={document.visibility} />
-            {/* Spec 22: the Master reveals what the whole Room doesn't see yet. */}
-            {isMaster && document.visibility !== 'room' && (
-              <LabeledActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => setRevealing(true)}
-                aria-label={t('reveal.actionLabel', { name: document.name })}
-              >
-                <EyeIcon size={18} />
-              </LabeledActionIcon>
-            )}
-            {/* Spec 30: everyone who sees the Document can hear it: its name,
-                description and the Notes they see. */}
-            <ReadAloudControls
-              sourceId={`document:${document.id}`}
-              name={document.name}
-              getText={() => documentSpeech(document)}
-            />
-            {/* Spec 27: every member who sees the Document exports it, as the member
-                being previewed too (it only reads). */}
-            <LabeledActionIcon
-              variant="subtle"
-              color="gray"
-              onClick={() => setExportOpened(true)}
-              aria-label={t('export.document.action')}
-            >
-              <DownloadSimpleIcon size={18} />
-            </LabeledActionIcon>
-            {canOpenMentionMap && (
-              <LabeledActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => setMentionMapOpened(true)}
-                aria-label={t('maps.mention.button')}
-              >
-                <GraphIcon size={18} />
-              </LabeledActionIcon>
-            )}
-            {/* Spec 24b: Owners and the Master read the whole Document's history. */}
-            {isOwner && (
-              <LabeledActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => setHistoryOpened(true)}
-                aria-label={t('versions.actionFor', { name: document.name })}
-              >
-                <ClockCounterClockwiseIcon size={18} />
-              </LabeledActionIcon>
-            )}
-            {isOwner && (
-              <LabeledActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => (editing ? stopEditing() : setEditing(true))}
-                aria-label={editing ? t('documents.detail.cancelEditing') : t('common.edit')}
-              >
-                {editing ? <XIcon size={18} /> : <PencilSimpleIcon size={18} />}
-              </LabeledActionIcon>
-            )}
+              {badges}
+              {actions}
             </Group>
           )}
         </Group>
         {phone && (
           <Group gap="xs" wrap="wrap" preventGrowOverflow={false}>
-            {revealed?.document && <RevealedBadge />}
-            <VisibilityBadge visibility={document.visibility} />
-            {actionsExpanded && (
-              <>
-            {/* Spec 22: the Master reveals what the whole Room doesn't see yet. */}
-            {isMaster && document.visibility !== 'room' && (
-              <LabeledActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => setRevealing(true)}
-                aria-label={t('reveal.actionLabel', { name: document.name })}
-              >
-                <EyeIcon size={18} />
-              </LabeledActionIcon>
-            )}
-            {/* Spec 30: everyone who sees the Document can hear it: its name,
-                description and the Notes they see. */}
-            <ReadAloudControls
-              sourceId={`document:${document.id}`}
-              name={document.name}
-              getText={() => documentSpeech(document)}
-            />
-            {/* Spec 27: every member who sees the Document exports it, as the member
-                being previewed too (it only reads). */}
-            <LabeledActionIcon
-              variant="subtle"
-              color="gray"
-              onClick={() => setExportOpened(true)}
-              aria-label={t('export.document.action')}
-            >
-              <DownloadSimpleIcon size={18} />
-            </LabeledActionIcon>
-            {canOpenMentionMap && (
-              <LabeledActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => setMentionMapOpened(true)}
-                aria-label={t('maps.mention.button')}
-              >
-                <GraphIcon size={18} />
-              </LabeledActionIcon>
-            )}
-            {/* Spec 24b: Owners and the Master read the whole Document's history. */}
-            {isOwner && (
-              <LabeledActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => setHistoryOpened(true)}
-                aria-label={t('versions.actionFor', { name: document.name })}
-              >
-                <ClockCounterClockwiseIcon size={18} />
-              </LabeledActionIcon>
-            )}
-            {isOwner && (
-              <LabeledActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => (editing ? stopEditing() : setEditing(true))}
-                aria-label={editing ? t('documents.detail.cancelEditing') : t('common.edit')}
-              >
-                {editing ? <XIcon size={18} /> : <PencilSimpleIcon size={18} />}
-              </LabeledActionIcon>
-            )}
-              </>
-            )}
+            {badges}
+            {actionsExpanded && actions}
             <LabeledActionIcon
               variant="subtle"
               color="gray"
@@ -418,7 +385,10 @@ function DocumentPanel({
             no images; stacked under the text below `lg` (`.document-body` in
             index.css). */}
         <Box className="document-body">
-          <Box className="document-body-aside" data-narrow={(document.images.length === 0 && !shownMap) || undefined}>
+          <Box
+            className="document-body-aside"
+            data-narrow={(document.images.length === 0 && !shownMap) || undefined}
+          >
             <Stack gap="sm">
               {document.images.length > 0 && (
                 <DocumentImageGallery
@@ -430,9 +400,13 @@ function DocumentPanel({
                   // Spec 07: not gated on `editing` like deletion - picking the
                   // leading image is reversible, so it needs no edit mode.
                   onSetFavorite={
-                    isOwner ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError }) : undefined
+                    isOwner
+                      ? (imageId) => setFavorite.mutate(imageId, { onError: notifyError })
+                      : undefined
                   }
-                  settingFavoriteId={setFavorite.isPending ? (setFavorite.variables as string) : null}
+                  settingFavoriteId={
+                    setFavorite.isPending ? (setFavorite.variables as string) : null
+                  }
                 />
               )}
               {shownMap && <MentionMapPanel roomId={roomId} map={shownMap} />}
@@ -442,8 +416,15 @@ function DocumentPanel({
                     playedBy={document.playedBy}
                     members={members}
                     canManage={isOwner}
-                    onSet={(userId, addAsOwner) => setPlayer.mutate({ userId, addAsOwner }, { onError: notifyError })}
-                    onUnlink={() => setPlayer.mutate({ userId: null, addAsOwner: false }, { onError: notifyError })}
+                    onSet={(userId, addAsOwner) =>
+                      setPlayer.mutate({ userId, addAsOwner }, { onError: notifyError })
+                    }
+                    onUnlink={() =>
+                      setPlayer.mutate(
+                        { userId: null, addAsOwner: false },
+                        { onError: notifyError },
+                      )
+                    }
                   />
                   <DocumentOwners
                     ownerIds={document.ownerIds}
@@ -462,7 +443,9 @@ function DocumentPanel({
                       <Divider my={4} />
                       {(isOwner || editing) && (
                         <AddDocumentImages
-                          onUploadFiles={(files) => uploadImages.mutate(files, { onError: notifyError })}
+                          onUploadFiles={(files) =>
+                            uploadImages.mutate(files, { onError: notifyError })
+                          }
                           uploading={uploadImages.isPending}
                           onImportUrl={(url, onDone) =>
                             importImage.mutate(url, {
@@ -549,7 +532,9 @@ function DocumentPanel({
           onClose={() => setImageSearchOpened(false)}
           roomId={roomId}
           documentId={document.id}
-          onAdd={(url, onDone) => importImage.mutate(url, { onSuccess: onDone, onError: notifyError })}
+          onAdd={(url, onDone) =>
+            importImage.mutate(url, { onSuccess: onDone, onError: notifyError })
+          }
           addingUrl={importImage.isPending ? importImage.variables : null}
         />
       )}
@@ -611,7 +596,9 @@ function DocumentEditForm({
   const [values, setValues] = useState<DocumentFormValues>({
     name: document.name,
     subtitle: document.subtitle ?? '',
-    description: promotion ? appendPromotedText(document.description, promotion.comment) : document.description,
+    description: promotion
+      ? appendPromotedText(document.description, promotion.comment)
+      : document.description,
     visibility: document.visibility,
     tagIds: document.tagIds,
   });
