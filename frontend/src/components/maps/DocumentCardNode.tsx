@@ -1,5 +1,5 @@
 import { ActionIcon, Box, Image, Paper, Stack, Text } from '@mantine/core';
-import type { NodeProps } from '@xyflow/react';
+import { useConnection, type NodeProps } from '@xyflow/react';
 import { DotsSixIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
