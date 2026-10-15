@@ -231,6 +231,10 @@ One line per unit; dates 2026, newest first. Spec files live in
   deleting the group left the cards the editor can't see at the board's
   origin; `plan_board_edit` now rewrites them with absolute positions.
 
+- **No card preview while drawing an arrow** (10-15): once an arrow is
+  started (`useConnection().inProgress`), the hover preview of map cards is
+  disabled; it comes back when the arrow is completed or cancelled.
+
 - **Map arrow dot grabbable again** (28_2 fix, 10-12, PR #170): the card
   image and text were laid over the arrow handle and the card's
   `overflow: hidden` cut it in half, so arrows could not be drawn; the
