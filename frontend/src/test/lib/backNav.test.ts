@@ -13,6 +13,7 @@ describe('backDestination', () => {
     expect(backDestination({}, '/rooms/r1/maps')).toBe('/rooms/r1/maps');
     expect(backDestination({ from: 42 }, '/rooms/r1/maps')).toBe('/rooms/r1/maps');
     expect(backDestination({ from: 'https://evil.example' }, '/rooms/r1/maps')).toBe('/rooms/r1/maps');
+    expect(backDestination({ from: '/\\evil.example' }, '/rooms/r1/maps')).toBe('/rooms/r1/maps');
     expect(backDestination({ from: '//evil.example' }, '/rooms/r1/maps')).toBe('/rooms/r1/maps');
   });
 });

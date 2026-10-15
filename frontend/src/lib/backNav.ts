@@ -21,5 +21,5 @@ export function useBackState(): { from: string } {
 export function backDestination(state: unknown, fallback: string): string {
   const from = (state as BackState | null)?.from;
   // Only in-app paths: a crafted state can never send the user off-site.
-  return typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : fallback;
+  return typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') && !from.startsWith('/\\') ? from : fallback;
 }

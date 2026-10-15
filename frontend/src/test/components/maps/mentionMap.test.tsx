@@ -100,9 +100,7 @@ describe('MentionMapModal', () => {
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledWith(PATH, { method: 'PATCH', json: { depth: 1 } }));
 
     await user.click(screen.getByRole('button', { name: 'Copia come mappa libera' }));
-    await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/room-1/maps/map-9', {
-        state: { from: '/' },
-      }));
+    await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/room-1/maps/map-9', { state: { from: '/' } }));
     expect(fetchMock).toHaveBeenCalledWith(`${PATH}/copy`, { method: 'POST', json: { name: 'Menzioni di Mira' } });
 
     await user.click(screen.getByRole('button', { name: 'Elimina mappa' }));

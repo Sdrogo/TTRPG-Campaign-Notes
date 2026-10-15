@@ -1,11 +1,15 @@
 // The thin layout wrappers, covered together: each is a handful of lines
 // with one thing worth asserting, and a file apiece would be noise.
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { rawAccount, rawDirectInvitation, rawFriend, rawFriends, rawMyReveal } from '../fixtures';
-import { renderWithProviders } from '../utils';
+import { MantineProvider } from '@mantine/core';
+import { MemoryRouter } from 'react-router-dom';
+import { theme } from '../../theme/theme';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createTestQueryClient, renderWithProviders } from '../utils';
 import { AppHeader } from '../../components/AppHeader';
 import { PageCard } from '../../components/PageCard';
 import { PageLayout } from '../../components/PageLayout';
@@ -168,6 +172,24 @@ describe('AppHeader', () => {
       await user.click(screen.getByRole('button', { name: 'Documenti' }));
 
       expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true });
+    });
+
+    it('returns to the page it was opened from, under a generic name', async () => {
+      render(
+        <MantineProvider theme={theme} forceColorScheme="dark" env="test">
+          <QueryClientProvider client={createTestQueryClient()}>
+            <MemoryRouter initialEntries={[{ pathname: '/x', state: { from: '/rooms/r1/maps/m1' } }]}>
+              <AppHeader backTo="/rooms/room-1/documents" backLabel="Documenti" />
+            </MemoryRouter>
+          </QueryClientProvider>
+        </MantineProvider>,
+      );
+      const user = userEvent.setup();
+
+      expect(screen.queryByRole('button', { name: 'Documenti' })).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
+
+      expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps/m1', { replace: true });
     });
 
     it('ignores browser history even when there is some', async () => {
