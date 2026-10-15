@@ -76,7 +76,7 @@ here and remind the product owner.
   by hand 2026-10-15 with `.env.staging` loaded; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `c6e2a9f4d8b3` (= head). Applied 2026-10-15 with
+- **Production database**: `c6e2a9f4d8b3`. Applied 2026-10-15 with
   `alembic upgrade head` and `backend/.env` loaded: `c6e2a9f4d8b3` (mention
   maps), from `b4d8f2a6c1e7`. Before it, on 2026-10-13: `a9e3c5d7b1f4` (map
   label positions) and `b4d8f2a6c1e7` (map label offsets), from `d5a1c8e3f2b7`
@@ -123,6 +123,13 @@ One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
 ### 2026-10-15
+
+- **Linked map on the Document page** (spec 36 Decision 15, migration
+  `e8b4d2f6a9c1`, Andrea: the map picked must be added to the Document):
+  "Add to map" now also links the map to the Document (one per Document,
+  `document_linked_maps`) and stays on the page, where `LinkedMapPanel`
+  draws it under the images; its managers can unlink it. Routes `GET` /
+  `DELETE /rooms/{id}/documents/{doc}/linked-map`.
 
 - **Room PDF fails on a Room with many Documents** (bug fix, no migration):
   the job embedded every image as a base64 `data:` URL, so the HTML and

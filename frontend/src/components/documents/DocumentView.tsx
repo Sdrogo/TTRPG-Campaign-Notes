@@ -70,7 +70,8 @@ import { MentionText } from '../mentions/MentionText';
 import { Backlinks } from '../mentions/Backlinks';
 import { MentionMapModal } from '../maps/MentionMapModal';
 import { MentionMapPanel } from '../maps/MentionMapPanel';
-import { useMentionMap } from '../../hooks/useMentionMap';
+import { LinkedMapPanel } from '../maps/LinkedMapPanel';
+import { useLinkedMap, useMentionMap } from '../../hooks/useMentionMap';
 import type { Comment, PromotionTarget } from '../../types/comment';
 import type { Document, DocumentFormValues, DocumentVisibility } from '../../types/document';
 import type { Member } from '../../types/member';
@@ -238,6 +239,8 @@ function DocumentPanel({
   // Spec 36: the Document's mention map, drawn under its images when it has a
   // relation the viewer sees.
   const mentionMap = useMentionMap(roomId, document.id);
+  // Spec 36 Decision 15: a free map linked to the Document, drawn there too.
+  const linkedMap = useLinkedMap(roomId, document.id).data ?? null;
   const room = useRoom(roomId, true);
   // Previewing as a member (spec 22b): no write control at all.
   const readOnly = useReadOnly();
@@ -388,7 +391,7 @@ function DocumentPanel({
         <Box className="document-body">
           <Box
             className="document-body-aside"
-            data-narrow={(document.images.length === 0 && !shownMap) || undefined}
+            data-narrow={(document.images.length === 0 && !shownMap && !linkedMap) || undefined}
           >
             <Stack gap="sm">
               {document.images.length > 0 && (
@@ -411,6 +414,14 @@ function DocumentPanel({
                 />
               )}
               {shownMap && <MentionMapPanel roomId={roomId} map={shownMap} />}
+              {linkedMap && (
+                <LinkedMapPanel
+                  roomId={roomId}
+                  documentId={document.id}
+                  map={linkedMap}
+                  canUnlink={!readOnly && linkedMap.canEdit}
+                />
+              )}
               <Paper withBorder radius="md" p="sm" bg="var(--mantine-color-dark-7)">
                 <Stack gap={6}>
                   <DocumentPlayer

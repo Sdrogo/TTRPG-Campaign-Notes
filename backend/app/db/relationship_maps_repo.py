@@ -5,12 +5,14 @@ routes do, through `app.domain.relationship_maps`."""
 import uuid
 from collections import defaultdict
 from collections.abc import Collection, Sequence
+from datetime import datetime
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import (
+    DocumentLinkedMapRow,
     RelationshipMapArrowRow,
     RelationshipMapCardRow,
     RelationshipMapGrantRow,
@@ -136,6 +138,37 @@ async def get_mention_map(session: AsyncSession, document_id: uuid.UUID) -> Rela
     )
     row = result.scalar_one_or_none()
     return _map_from_row(row) if row else None
+
+
+async def get_linked_map_id(session: AsyncSession, document_id: uuid.UUID) -> uuid.UUID | None:
+    """The free map linked to the Document (spec 36 Decision 15), or None."""
+    result = await session.execute(
+        select(DocumentLinkedMapRow.map_id).where(DocumentLinkedMapRow.document_id == document_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def link_map(
+    session: AsyncSession,
+    document_id: uuid.UUID,
+    map_id: uuid.UUID,
+    linked_by: uuid.UUID,
+    linked_at: datetime,
+) -> None:
+    """Links the map to the Document, replacing any map linked before."""
+    values = {"map_id": map_id, "linked_by": linked_by, "linked_at": linked_at}
+    await session.execute(
+        insert(DocumentLinkedMapRow)
+        .values(document_id=document_id, **values)
+        .on_conflict_do_update(index_elements=["document_id"], set_=values)
+    )
+
+
+async def unlink_map(session: AsyncSession, document_id: uuid.UUID) -> None:
+    """Removes the Document's linked map, if any; the map stays."""
+    await session.execute(
+        delete(DocumentLinkedMapRow).where(DocumentLinkedMapRow.document_id == document_id)
+    )
 
 
 async def lock_map(session: AsyncSession, map_id: uuid.UUID) -> RelationshipMap | None:
