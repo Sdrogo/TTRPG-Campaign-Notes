@@ -1,10 +1,11 @@
-import { screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, apiFetch } from '../../../lib/apiClient';
-import { toMentionMap, type RawMentionMap } from '../../../lib/maps';
+import { toMapDetail, toMentionMap, type RawMapDetail, type RawMentionMap } from '../../../lib/maps';
 import { MentionMapModal } from '../../../components/maps/MentionMapModal';
 import { MentionMapPanel } from '../../../components/maps/MentionMapPanel';
+import { LinkedMapPanel } from '../../../components/maps/LinkedMapPanel';
 import { rawMap, rawMapDetail, rawMentionMap } from '../../fixtures';
 import { renderWithProviders } from '../../utils';
 
@@ -112,7 +113,7 @@ describe('MentionMapModal', () => {
     expect(fetchMock).toHaveBeenCalledWith(PATH, { method: 'DELETE' });
   });
 
-  it('adds the mentions to an existing map the user manages, which then opens', async () => {
+  it('adds the mentions to an existing map the user manages, which is linked to the Document', async () => {
     maps = [rawMap({ id: 'map-1', name: 'La Corte' }), rawMap({ id: 'map-2', name: 'Altrui', can_edit: false })];
     const { onClose, user } = renderModal();
     const select = await screen.findByRole('combobox', { name: 'Mappa' });
@@ -126,12 +127,12 @@ describe('MentionMapModal', () => {
     expect(screen.getByText(/una volta sola/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Crea mappa' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Aggiungi alla mappa' }));
-    await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/room-1/maps/map-1'));
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenCalledWith(`${PATH}/add-to-map`, {
       method: 'POST',
       json: { map_id: 'map-1', depth: 1 },
     });
-    expect(onClose).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it("offers the existing maps beside the Document's own map, and shows a refusal", async () => {
@@ -176,5 +177,28 @@ describe('MentionMapPanel', () => {
       <MentionMapPanel roomId="room-1" map={toMentionMap(rawMentionMap({ documents_left_out: 4 }) as RawMentionMap)} />,
     );
     expect(screen.getByText(/150 carte: 4/)).toBeInTheDocument();
+  });
+});
+
+describe('LinkedMapPanel', () => {
+  const LINKED = '/rooms/room-1/documents/doc-1/linked-map';
+  const map = () => toMapDetail(rawMapDetail({ id: 'map-1', name: 'La Corte' }) as RawMapDetail);
+
+  it('draws the map read-only with a link to its page, and unlinks it', async () => {
+    renderWithProviders(<LinkedMapPanel roomId="room-1" documentId="doc-1" map={map()} canUnlink />);
+    expect(screen.getByRole('region', { name: 'La Corte' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Schermo intero' })).toHaveAttribute('href', '/rooms/room-1/maps/map-1');
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Togli dalla pagina del Documento' }));
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledWith(LINKED, { method: 'DELETE' }));
+  });
+
+  it('shows why unlinking failed, and offers no unlink to who may not', async () => {
+    fetchMock.mockImplementation(() => Promise.reject(new ApiError(403, 'Non puoi')));
+    renderWithProviders(<LinkedMapPanel roomId="room-1" documentId="doc-1" map={map()} canUnlink />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Togli dalla pagina del Documento' }));
+    expect(await screen.findByText('Non puoi')).toBeInTheDocument();
+    cleanup();
+    renderWithProviders(<LinkedMapPanel roomId="room-1" documentId="doc-1" map={map()} canUnlink={false} />);
+    expect(screen.queryByRole('button', { name: 'Togli dalla pagina del Documento' })).not.toBeInTheDocument();
   });
 });

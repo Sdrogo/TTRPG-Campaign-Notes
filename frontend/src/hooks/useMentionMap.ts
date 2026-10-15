@@ -8,7 +8,7 @@ import {
   type RawMentionMap,
   type RawMentionMapPreview,
 } from '../lib/maps';
-import type { MentionMap, MentionMapPreview } from '../types/map';
+import type { MentionMap, MentionMapPreview, RelationshipMapDetail } from '../types/map';
 import { documentQueryKey } from './useDocuments';
 
 function mentionMapPath(roomId: string, documentId: string) {
@@ -116,10 +116,42 @@ export function useCopyMentionMap(roomId: string, documentId: string) {
   });
 }
 
+/** Keyed under the Document, like its mention map, so it refreshes with it. */
+function linkedMapQueryKey(roomId: string, documentId: string) {
+  return [...documentQueryKey(roomId, documentId), 'linkedMap'] as const;
+}
+
+/**
+ * The free map linked to the Document, as the viewer sees it, or null when it
+ * has none or the map is hidden from them (spec 36 Decision 15).
+ */
+export function useLinkedMap(roomId: string, documentId: string) {
+  return useQuery<RelationshipMapDetail | null>({
+    queryKey: linkedMapQueryKey(roomId, documentId),
+    queryFn: async () => {
+      try {
+        return toMapDetail(await apiFetch<RawMapDetail>(`/rooms/${roomId}/documents/${documentId}/linked-map`));
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return null;
+        throw error;
+      }
+    },
+  });
+}
+
+/** Takes the linked map off the Document's page; the map stays. */
+export function useUnlinkMap(roomId: string, documentId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiFetch<void>(`/rooms/${roomId}/documents/${documentId}/linked-map`, { method: 'DELETE' }),
+    onSuccess: () => queryClient.setQueryData(linkedMapQueryKey(roomId, documentId), null),
+  });
+}
+
 /**
  * Adds what the mention map would show at a depth to an existing free map the
- * viewer manages, once (spec 36 Decision 15). The map's board and the list
- * reload with it.
+ * viewer manages, once, and links that map to the Document (spec 36 Decision
+ * 15). The map's board, the list and the Document's linked map reload with it.
  */
 export function useAddMentionsToMap(roomId: string, documentId: string) {
   const queryClient = useQueryClient();
@@ -133,6 +165,7 @@ export function useAddMentionsToMap(roomId: string, documentId: string) {
       ),
     onSuccess: (map) => {
       queryClient.setQueryData(['rooms', roomId, 'maps', map.id], map);
+      queryClient.setQueryData(linkedMapQueryKey(roomId, documentId), map);
       return queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'], exact: true });
     },
   });

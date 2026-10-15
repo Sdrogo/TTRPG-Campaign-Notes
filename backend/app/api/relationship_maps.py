@@ -681,6 +681,23 @@ async def save_board(
     return await _detail(session, updated, grants, membership)
 
 
+async def visible_map_detail(
+    session: AsyncSession, room_id: uuid.UUID, map_id: uuid.UUID, viewer: Membership, locale: str
+) -> MapDetailResponse:
+    """A free map and its board as `viewer` sees it; 404 when hidden from
+    them (a Document's linked map, spec 36 Decision 15)."""
+    relationship_map, grants = await _get_visible_map(session, room_id, map_id, viewer, locale)
+    return await _detail(session, relationship_map, grants, viewer)
+
+
+async def ensure_manages_map(
+    session: AsyncSession, room_id: uuid.UUID, map_id: uuid.UUID, viewer: Membership, locale: str
+) -> None:
+    """404 when the free map is hidden from `viewer`, 403 unless they manage
+    it (Decision 2)."""
+    await _get_managed_map(session, room_id, map_id, viewer, locale)
+
+
 async def add_to_free_map(
     session: AsyncSession,
     room_id: uuid.UUID,

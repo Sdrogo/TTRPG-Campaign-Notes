@@ -15,6 +15,7 @@ import {
   rawDocumentFile,
   rawNote,
   rawComment,
+  rawMapDetail,
   rawMentionMap,
 } from '../fixtures';
 import { matchMediaQueries } from '../media';
@@ -56,6 +57,8 @@ interface Routes {
   imageSearch?: unknown;
   /** The Document's mention map (spec 36); none by default. */
   mentionMap?: unknown;
+  /** The free map linked to the Document (spec 36 Decision 15); none by default. */
+  linkedMap?: unknown;
 }
 
 const routes: Routes = { document: rawDocument(), members: [], comments: [], backlinks: [] };
@@ -71,6 +74,11 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
     if (path === `${DOC}/mention-map`) {
       return routes.mentionMap
         ? Promise.resolve(routes.mentionMap)
+        : Promise.reject(new ApiError(404, 'No map'));
+    }
+    if (path === `${DOC}/linked-map`) {
+      return routes.linkedMap
+        ? Promise.resolve(routes.linkedMap)
         : Promise.reject(new ApiError(404, 'No map'));
     }
     if (path.startsWith(`${DOC}/mention-map/preview`)) {
@@ -109,6 +117,7 @@ beforeEach(() => {
   routes.comments = [];
   routes.backlinks = [];
   routes.mentionMap = undefined;
+  routes.linkedMap = undefined;
   fetchMock.mockReset();
   navigate.mockReset();
   vi.mocked(notifyError).mockClear();
@@ -1482,6 +1491,19 @@ describe('DocumentDetailPage mention map (spec 36)', () => {
     expect(button()).not.toBeInTheDocument();
   });
 
+  it('draws the linked map under the images, unlinkable only by its manager outside a preview', async () => {
+    routes.linkedMap = rawMapDetail({ name: 'La Corte' });
+    render();
+    expect(await screen.findByRole('region', { name: 'La Corte' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Togli dalla pagina del Documento' })).toBeInTheDocument();
+    cleanup();
+
+    routes.linkedMap = rawMapDetail({ name: 'La Corte', can_edit: false });
+    render();
+    expect(await screen.findByRole('region', { name: 'La Corte' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Togli dalla pagina del Documento' })).not.toBeInTheDocument();
+  });
+
   it('opens an existing map to its manager, and hides a map with no relation', async () => {
     routes.mentionMap = rawMentionMap({ arrows: [] });
     const { user } = render();
@@ -1501,6 +1523,7 @@ describe('DocumentDetailPage mention map (spec 36)', () => {
     cleanup();
 
     routes.mentionMap = rawMentionMap();
+    routes.linkedMap = rawMapDetail({ name: 'La Corte' });
     renderWithProviders(
       <Routes>
         <Route path="/rooms/:roomId/documents/:documentId" element={<DocumentDetailPage />} />
@@ -1514,5 +1537,7 @@ describe('DocumentDetailPage mention map (spec 36)', () => {
     );
     expect(await screen.findByRole('region', { name: 'Mappa delle menzioni' })).toBeInTheDocument();
     expect(button()).not.toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'La Corte' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Togli dalla pagina del Documento' })).not.toBeInTheDocument();
   });
 });

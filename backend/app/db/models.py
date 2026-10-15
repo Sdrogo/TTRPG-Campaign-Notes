@@ -772,6 +772,22 @@ class RelationshipMapRow(Base):
     mention_depth: Mapped[int | None] = mapped_column(SmallInteger)
 
 
+class DocumentLinkedMapRow(Base):
+    """A free map shown on a Document's page (spec 36 Decision 15): one per
+    Document, gone with the Document or the map."""
+
+    __tablename__ = "document_linked_maps"
+
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True
+    )
+    map_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_maps.id", ondelete="CASCADE"), index=True
+    )
+    linked_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    linked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class RelationshipMapGrantRow(Base):
     """A member who may see a Selective map besides its creator and the
     Master."""

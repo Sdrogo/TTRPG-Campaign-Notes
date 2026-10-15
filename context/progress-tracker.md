@@ -68,20 +68,24 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `c6e2a9f4d8b3` (mention maps, spec 36, PR #188).
+- **Head in the repository**: `e8b4d2f6a9c1` (document linked maps, spec 36
+  Decision 15; the file is on `staging` ahead of its code, which ships with the
+  PR from `claude/project-thread-nnfrdt`).
 - **Pending on staging**: none.
-- **Staging database**: `c6e2a9f4d8b3` (= head, mention maps, applied by hand
-  2026-10-14 with `.env.staging` loaded; `b4d8f2a6c1e7` before it, applied
+- **Staging database**: `e8b4d2f6a9c1` (= head, document linked maps, applied
+  by hand 2026-10-15 with `.env.staging` loaded; `c6e2a9f4d8b3` before it,
+  mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `c6e2a9f4d8b3` (= head). Applied 2026-10-15 with
-  `alembic upgrade head` and `backend/.env` loaded: `c6e2a9f4d8b3` (mention
-  maps), from `b4d8f2a6c1e7`. Before it, on 2026-10-13: `a9e3c5d7b1f4` (map
+- **Production database**: `e8b4d2f6a9c1` (= head). Applied 2026-10-15 with
+  `alembic upgrade head` and `backend/.env` loaded: `e8b4d2f6a9c1` (document
+  linked maps), from `c6e2a9f4d8b3` (mention maps, applied the same day, from
+  `b4d8f2a6c1e7`). Before it, on 2026-10-13: `a9e3c5d7b1f4` (map
   label positions) and `b4d8f2a6c1e7` (map label offsets), from `d5a1c8e3f2b7`
   (map card image, applied earlier).
 - **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
-`c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -120,6 +124,13 @@ One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
 ### 2026-10-15
+
+- **Linked map on the Document page** (spec 36 Decision 15, migration
+  `e8b4d2f6a9c1`, Andrea: the map picked must be added to the Document):
+  "Add to map" now also links the map to the Document (one per Document,
+  `document_linked_maps`) and stays on the page, where `LinkedMapPanel`
+  draws it under the images; its managers can unlink it. Routes `GET` /
+  `DELETE /rooms/{id}/documents/{doc}/linked-map`.
 
 - **Room PDF fails on a Room with many Documents** (bug fix, no migration):
   the job embedded every image as a base64 `data:` URL, so the HTML and
