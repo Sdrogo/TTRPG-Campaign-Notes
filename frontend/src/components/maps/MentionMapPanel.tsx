@@ -1,6 +1,7 @@
 import { ActionIcon, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { ArrowsOutIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
+import { useBackState } from '../../lib/backNav';
 import { useTranslation } from 'react-i18next';
 import { ignoreBoardChange } from '../../lib/maps';
 import type { MentionMap } from '../../types/map';
@@ -16,6 +17,7 @@ const PANEL_HEIGHT = 360;
  */
 export function MentionMapPanel({ roomId, map }: { roomId: string; map: MentionMap }) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const fullPage = `/rooms/${roomId}/documents/${map.documentId}/mention-map`;
   return (
     <Stack gap={4} component="section" aria-label={t('maps.mention.title')}>
@@ -27,6 +29,7 @@ export function MentionMapPanel({ roomId, map }: { roomId: string; map: MentionM
           <ActionIcon
             component={Link}
             to={fullPage}
+            state={backState}
             variant="subtle"
             color="gray"
             aria-label={t('maps.mention.fullScreen')}

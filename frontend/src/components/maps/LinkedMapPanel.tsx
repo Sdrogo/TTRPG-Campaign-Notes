@@ -1,6 +1,7 @@
 import { ActionIcon, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { ArrowsOutIcon, LinkBreakIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
+import { useBackState } from '../../lib/backNav';
 import { useTranslation } from 'react-i18next';
 import { useUnlinkMap } from '../../hooks/useMentionMap';
 import { ignoreBoardChange } from '../../lib/maps';
@@ -27,6 +28,7 @@ export function LinkedMapPanel({
   canUnlink: boolean;
 }) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const unlink = useUnlinkMap(roomId, documentId);
   return (
     <Stack gap={4} component="section" aria-label={map.name}>
@@ -52,6 +54,7 @@ export function LinkedMapPanel({
             <ActionIcon
               component={Link}
               to={`/rooms/${roomId}/maps/${map.id}`}
+              state={backState}
               variant="subtle"
               color="gray"
               aria-label={t('maps.mention.fullScreen')}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, Group, Input, Loader, Modal, NativeSelect, SegmentedControl, Stack, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
+import { useBackState } from '../../lib/backNav';
 import { useTranslation } from 'react-i18next';
 import { useMaps } from '../../hooks/useMaps';
 import {
@@ -42,6 +43,7 @@ export function MentionMapModal({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const backState = useBackState();
   const [depth, setDepth] = useState(map?.depth ?? 0);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [target, setTarget] = useState(OWN_MAP);
@@ -131,7 +133,7 @@ export function MentionMapModal({
                     loading={copy.isPending}
                     onClick={() =>
                       copy.mutate(t('maps.mention.copyName', { name: documentName }), {
-                        onSuccess: (created) => void navigate(`/rooms/${roomId}/maps/${created.id}`),
+                        onSuccess: (created) => void navigate(`/rooms/${roomId}/maps/${created.id}`, { state: backState }),
                       })
                     }
                   >
