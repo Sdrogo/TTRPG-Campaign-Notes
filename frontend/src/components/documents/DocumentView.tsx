@@ -328,9 +328,10 @@ function DocumentPanel({
   return (
     <PageCard>
       <Stack gap="md">
-        {/* On a phone the name takes the whole width and the badges and actions sit
-            under it, the actions folded into a "⋮" (Andrea, 2026-10-15), so unfolding
-            them never squeezes the name into a column of letters. */}
+        {/* One line: the name (which may wrap to two lines and always stays visible), the
+            badge, the read-aloud controls and, on a phone, a "⋮" that unfolds the other
+            actions on a row of their own, so they never squeeze the name (Andrea,
+            2026-10-15). */}
         <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
           <Stack gap={0} style={{ minWidth: 0, flex: 1 }}>
             <Title
@@ -357,28 +358,27 @@ function DocumentPanel({
               </Text>
             )}
           </Stack>
-          {!phone && (
-            <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
-              {badges}
-              {readAloud}
-              {actions}
-            </Group>
-          )}
-        </Group>
-        {phone && (
-          <Group gap="xs" wrap="wrap" preventGrowOverflow={false}>
+          <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
             {badges}
             {readAloud}
-            {actionsExpanded && actions}
-            <LabeledActionIcon
-              variant="subtle"
-              color="gray"
-              aria-label={t('documents.detail.actions', { name: document.name })}
-              aria-expanded={actionsExpanded}
-              onClick={() => setActionsExpanded((current) => !current)}
-            >
-              <DotsThreeVerticalIcon size={18} />
-            </LabeledActionIcon>
+            {phone ? (
+              <LabeledActionIcon
+                variant="subtle"
+                color="gray"
+                aria-label={t('documents.detail.actions', { name: document.name })}
+                aria-expanded={actionsExpanded}
+                onClick={() => setActionsExpanded((current) => !current)}
+              >
+                <DotsThreeVerticalIcon size={18} />
+              </LabeledActionIcon>
+            ) : (
+              actions
+            )}
+          </Group>
+        </Group>
+        {phone && actionsExpanded && (
+          <Group gap="xs" wrap="wrap" preventGrowOverflow={false}>
+            {actions}
           </Group>
         )}
 

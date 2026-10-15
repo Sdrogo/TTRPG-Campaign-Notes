@@ -122,9 +122,9 @@ One line per unit; dates 2026, newest first. Spec files live in
 ### 2026-10-15
 
 - **Mobile Document header and icon labels** (frontend only, no migration):
-  below `sm` the Document's name and subtitle take the full width, with the
-  badges and a "⋮" under them that unfolds the actions in place, so the name
-  is never squeezed into a column of letters. Every icon-only button now shows
+  below `sm` the name, badge, read-aloud controls and a "⋮" share one line (the
+  name may wrap to two lines but stays visible); the "⋮" unfolds the other
+  actions on a row under it, so they never squeeze the name. Every icon-only button now shows
   its label as a tooltip on hover or long-press: `LabeledActionIcon` wraps
   `ActionIcon` + `Tooltip` using the `aria-label`. New key
   `documents.detail.actions` in all 12 languages.
