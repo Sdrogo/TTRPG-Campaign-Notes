@@ -69,10 +69,12 @@ release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
 - **Head in the repository**: `e8b4d2f6a9c1` (document linked maps, spec 36
-  Decision 15).
-- **Pending on staging**: `e8b4d2f6a9c1` (document linked maps).
-- **Staging database**: `c6e2a9f4d8b3` (mention maps, applied by hand
-  2026-10-14 with `.env.staging` loaded; `b4d8f2a6c1e7` before it, applied
+  Decision 15; the file is on `staging` ahead of its code, which ships with the
+  PR from `claude/project-thread-nnfrdt`).
+- **Pending on staging**: none.
+- **Staging database**: `e8b4d2f6a9c1` (= head, document linked maps, applied
+  by hand 2026-10-15 with `.env.staging` loaded; `c6e2a9f4d8b3` before it,
+  mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
 - **Production database**: `c6e2a9f4d8b3`. Applied 2026-10-15 with
   `alembic upgrade head` and `backend/.env` loaded: `c6e2a9f4d8b3` (mention
