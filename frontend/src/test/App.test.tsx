@@ -16,6 +16,10 @@ vi.mock('../pages/RoomSetupPage', () => ({
 }));
 vi.mock('../pages/RoomDocumentsPage', () => ({ RoomDocumentsPage: () => <div>documents</div> }));
 vi.mock('../pages/DocumentDetailPage', () => ({ DocumentDetailPage: () => <div>detail</div> }));
+vi.mock('../pages/PrivacyPage', () => ({ PrivacyPage: () => <div>privacy</div> }));
+vi.mock('../pages/RoomMapsPage', () => ({ RoomMapsPage: () => <div>maps</div> }));
+vi.mock('../pages/RelationshipMapPage', () => ({ RelationshipMapPage: () => <div>map</div> }));
+vi.mock('../pages/MentionMapPage', () => ({ MentionMapPage: () => <div>mention map</div> }));
 vi.mock('../hooks/useSession', () => ({ useSession: vi.fn() }));
 
 beforeEach(() => {
@@ -34,6 +38,10 @@ describe('App routes', () => {
     ['/rooms/room-1/members', 'members redirect'],
     ['/rooms/room-1/documents', 'documents'],
     ['/rooms/room-1/documents/doc-1', 'detail'],
+    ['/privacy', 'privacy'],
+    ['/rooms/room-1/documents/doc-1/mention-map', 'mention map'],
+    ['/rooms/room-1/maps', 'maps'],
+    ['/rooms/room-1/maps/map-1', 'map'],
   ])('renders %s', async (route, marker) => {
     renderWithProviders(<App />, { route });
 
