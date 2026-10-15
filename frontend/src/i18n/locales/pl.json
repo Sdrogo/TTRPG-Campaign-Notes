@@ -453,6 +453,7 @@
     "add": "Dodaj notatkę",
     "edit": "Edytuj notatkę: {{title}}",
     "delete": "Usuń notatkę: {{title}}",
+    "actions": "Akcje dla Notatki: {{title}}",
     "moveUp": "Przesuń w górę notatkę: {{title}}",
     "moveDown": "Przesuń w dół notatkę: {{title}}",
     "deleteConfirmTitle": "Usunąć tę notatkę?",

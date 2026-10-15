@@ -447,6 +447,7 @@
     "add": "노트 추가",
     "edit": "노트 수정: {{title}}",
     "delete": "노트 삭제: {{title}}",
+    "actions": "노트 작업: {{title}}",
     "moveUp": "노트 위로 이동: {{title}}",
     "moveDown": "노트 아래로 이동: {{title}}",
     "deleteConfirmTitle": "이 노트를 삭제할까요?",

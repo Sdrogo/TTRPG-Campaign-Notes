@@ -447,6 +447,7 @@
     "add": "添加笔记",
     "edit": "编辑笔记：{{title}}",
     "delete": "删除笔记：{{title}}",
+    "actions": "笔记的操作：{{title}}",
     "moveUp": "上移笔记：{{title}}",
     "moveDown": "下移笔记：{{title}}",
     "deleteConfirmTitle": "删除这条笔记？",

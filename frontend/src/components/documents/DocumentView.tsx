@@ -329,9 +329,9 @@ function DocumentPanel({
     <PageCard>
       <Stack gap="md">
         {/* One line: the name (which may wrap to two lines and always stays visible), the
-            badge, the read-aloud controls and, on a phone, a "⋮" that unfolds the other
-            actions on a row of their own, so they never squeeze the name (Andrea,
-            2026-10-15). */}
+            badge, the read-aloud controls and a "⋮" that unfolds the other actions: beside it
+            on a big screen, on a row of their own on a phone so they never squeeze the name
+            (Andrea, 2026-10-15). */}
         <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
           <Stack gap={0} style={{ minWidth: 0, flex: 1 }}>
             <Title
@@ -361,19 +361,16 @@ function DocumentPanel({
           <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
             {badges}
             {readAloud}
-            {phone ? (
-              <LabeledActionIcon
-                variant="subtle"
-                color="gray"
-                aria-label={t('documents.detail.actions', { name: document.name })}
-                aria-expanded={actionsExpanded}
-                onClick={() => setActionsExpanded((current) => !current)}
-              >
-                <DotsThreeVerticalIcon size={18} />
-              </LabeledActionIcon>
-            ) : (
-              actions
-            )}
+            {!phone && actionsExpanded && actions}
+            <LabeledActionIcon
+              variant="subtle"
+              color="gray"
+              aria-label={t('documents.detail.actions', { name: document.name })}
+              aria-expanded={actionsExpanded}
+              onClick={() => setActionsExpanded((current) => !current)}
+            >
+              <DotsThreeVerticalIcon size={18} />
+            </LabeledActionIcon>
           </Group>
         </Group>
         {phone && actionsExpanded && (

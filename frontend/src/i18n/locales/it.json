@@ -449,6 +449,7 @@
     "add": "Aggiungi Nota",
     "edit": "Modifica Nota: {{title}}",
     "delete": "Elimina Nota: {{title}}",
+    "actions": "Azioni per la Nota: {{title}}",
     "moveUp": "Sposta su la Nota: {{title}}",
     "moveDown": "Sposta giù la Nota: {{title}}",
     "deleteConfirmTitle": "Eliminare questa Nota?",

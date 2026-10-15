@@ -447,6 +447,7 @@
     "add": "ノートを追加",
     "edit": "ノートを編集: {{title}}",
     "delete": "ノートを削除: {{title}}",
+    "actions": "ノートの操作: {{title}}",
     "moveUp": "ノートを上へ移動: {{title}}",
     "moveDown": "ノートを下へ移動: {{title}}",
     "deleteConfirmTitle": "このノートを削除しますか?",

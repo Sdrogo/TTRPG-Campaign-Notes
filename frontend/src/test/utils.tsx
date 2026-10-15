@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { MantineProvider } from '@mantine/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, renderHook } from '@testing-library/react';
+import { fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { theme } from '../theme/theme';
 
@@ -60,10 +60,7 @@ export function renderWithProviders(ui: ReactElement, options: WrapperOptions = 
   };
 }
 
-export function renderHookWithProviders<Result>(
-  hook: () => Result,
-  options: WrapperOptions = {},
-) {
+export function renderHookWithProviders<Result>(hook: () => Result, options: WrapperOptions = {}) {
   const queryClient = options.queryClient ?? createTestQueryClient();
   return {
     queryClient,
@@ -75,4 +72,11 @@ export function renderHookWithProviders<Result>(
       ),
     }),
   };
+}
+
+/** Unfolds the "⋮" of every Note on screen, which folds their actions. */
+export function openNoteActions() {
+  screen
+    .queryAllByRole('button', { name: /^Azioni per la Nota/ })
+    .forEach((b) => fireEvent.click(b));
 }

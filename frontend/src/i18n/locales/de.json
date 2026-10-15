@@ -449,6 +449,7 @@
     "add": "Notiz hinzufügen",
     "edit": "Notiz bearbeiten: {{title}}",
     "delete": "Notiz löschen: {{title}}",
+    "actions": "Aktionen für Notiz: {{title}}",
     "moveUp": "Notiz nach oben: {{title}}",
     "moveDown": "Notiz nach unten: {{title}}",
     "deleteConfirmTitle": "Diese Notiz löschen?",

@@ -99,9 +99,7 @@ describe('NoteForm', () => {
 
     expect(grants()).not.toBeInTheDocument();
     await user.click(screen.getByRole('combobox', { name: 'Visibilità' }));
-    await user.click(
-      screen.getByText('Selettivo (solo Owner + Master finché non scegli altri)'),
-    );
+    await user.click(screen.getByText('Selettivo (solo Owner + Master finché non scegli altri)'));
 
     expect(grants()).toBeInTheDocument();
   });

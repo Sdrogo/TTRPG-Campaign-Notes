@@ -449,6 +449,7 @@
     "add": "Notitie toevoegen",
     "edit": "Notitie bewerken: {{title}}",
     "delete": "Notitie verwijderen: {{title}}",
+    "actions": "Acties voor Notitie: {{title}}",
     "moveUp": "Notitie omhoog verplaatsen: {{title}}",
     "moveDown": "Notitie omlaag verplaatsen: {{title}}",
     "deleteConfirmTitle": "Deze Notitie verwijderen?",

@@ -69,7 +69,9 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
     if (path === `${DOC}/comments`) return Promise.resolve(routes.comments);
     if (path === `${DOC}/backlinks`) return Promise.resolve(routes.backlinks);
     if (path === `${DOC}/mention-map`) {
-      return routes.mentionMap ? Promise.resolve(routes.mentionMap) : Promise.reject(new ApiError(404, 'No map'));
+      return routes.mentionMap
+        ? Promise.resolve(routes.mentionMap)
+        : Promise.reject(new ApiError(404, 'No map'));
     }
     if (path.startsWith(`${DOC}/mention-map/preview`)) {
       return Promise.resolve({ documents: 1, relations: 1, documents_left_out: 0 });
@@ -92,6 +94,11 @@ function render() {
     { route: DOC },
   );
   return { user: userEvent.setup() };
+}
+
+/** The Document's actions are folded into a "⋮": unfolds them. */
+async function openActions(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: /^Azioni per(?! la Nota)/ }));
 }
 
 const editButton = () => screen.getByRole('button', { name: 'Modifica' });
@@ -147,6 +154,7 @@ describe('DocumentDetailPage', () => {
   it('shows the subtitle under the title and edits it', async () => {
     routes.document = rawDocument({ owner_ids: ['user-1'], subtitle: 'La Idol' });
     const { user } = render();
+    await openActions(user);
 
     await screen.findByRole('heading', { name: 'Il Cancello' });
     expect(screen.getByText('La Idol')).toBeInTheDocument();
@@ -240,6 +248,7 @@ describe('exporting the Document', () => {
     routes.document = rawDocument({ owner_ids: ['user-2'] });
     routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
     const { user } = render();
+    await openActions(user);
 
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: 'Esporta il Documento' }));
@@ -281,7 +290,8 @@ describe('reading the Document aloud', () => {
 // D-12: an Owner or the Master may edit; nobody else.
 describe('who may edit', () => {
   it('offers editing to an Owner', async () => {
-    render();
+    const { user } = render();
+    await openActions(user);
 
     expect(await screen.findByRole('button', { name: 'Modifica' })).toBeInTheDocument();
   });
@@ -289,7 +299,8 @@ describe('who may edit', () => {
   it('offers editing to the Master even without an Owner row', async () => {
     routes.document = rawDocument({ owner_ids: ['user-2'] });
     routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
-    render();
+    const { user } = render();
+    await openActions(user);
 
     expect(await screen.findByRole('button', { name: 'Modifica' })).toBeInTheDocument();
   });
@@ -317,6 +328,7 @@ describe('who may edit', () => {
       return otherRoutes(...args);
     });
     const { user } = render();
+    await openActions(user);
 
     await user.click(await screen.findByRole('button', { name: 'Storico: Il Cancello' }));
     expect(await screen.findByText('Nessuna revisione.')).toBeInTheDocument();
@@ -339,7 +351,7 @@ describe('on a phone', () => {
   it('keeps the actions folded under the name until the "⋮" is pressed', async () => {
     const { user } = render();
 
-    const menu = await screen.findByRole('button', { name: /^Azioni per/ });
+    const menu = await screen.findByRole('button', { name: /^Azioni per(?! la Nota)/ });
     expect(menu).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
 
@@ -356,7 +368,7 @@ describe('on a phone', () => {
     routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
     const { user } = render();
 
-    await user.click(await screen.findByRole('button', { name: /^Azioni per/ }));
+    await user.click(await screen.findByRole('button', { name: /^Azioni per(?! la Nota)/ }));
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Storico/ })).not.toBeInTheDocument();
   });
@@ -365,6 +377,7 @@ describe('on a phone', () => {
 describe('editing', () => {
   it('opens the form with the current values', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     await user.click(editButton());
@@ -384,6 +397,7 @@ describe('editing', () => {
       return Promise.resolve(rawDocument({ owner_ids: ['user-1'], name: 'Nuovo nome' }));
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -396,6 +410,7 @@ describe('editing', () => {
 
   it('cannot save an empty name', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -406,6 +421,7 @@ describe('editing', () => {
 
   it('leaves the form on cancel', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -418,6 +434,7 @@ describe('editing', () => {
   it('reports a rejected save', async () => {
     mockApi(() => Promise.reject(new Error('Only an Owner can edit')));
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -450,6 +467,7 @@ describe('editing', () => {
 describe('deleting the Document', () => {
   it('offers deletion only while editing', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     expect(screen.queryByRole('button', { name: 'Elimina Documento' })).not.toBeInTheDocument();
@@ -465,6 +483,7 @@ describe('deleting the Document', () => {
       return Promise.resolve();
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -481,6 +500,7 @@ describe('deleting the Document', () => {
       return Promise.resolve();
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
     await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
@@ -494,6 +514,7 @@ describe('deleting the Document', () => {
 
   it('dismisses the confirmation on Escape too, not just Cancel', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
     await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
@@ -513,6 +534,7 @@ describe('deleting the Document', () => {
       return Promise.resolve();
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
     await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
@@ -526,6 +548,7 @@ describe('deleting the Document', () => {
   it('reports a rejected deletion and stays on the page', async () => {
     mockApi(() => Promise.reject(new Error('Only an Owner can delete')));
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
     await user.click(screen.getByRole('button', { name: 'Elimina Documento' }));
@@ -543,6 +566,7 @@ describe('creating a Tag while editing', () => {
   it('offers it to the Master', async () => {
     routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     await user.click(editButton());
@@ -552,6 +576,7 @@ describe('creating a Tag while editing', () => {
 
   it('withholds it from an Owner who is a Player', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     await user.click(editButton());
@@ -564,6 +589,7 @@ describe('creating a Tag while editing', () => {
     routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
     mockApi(() => new Promise(() => {}));
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -651,7 +677,10 @@ describe('adding images', () => {
 
     await user.click(screen.getByRole('button', { name: 'Cerca immagini' }));
     const dialog = await screen.findByRole('dialog', { name: 'Cerca immagini' });
-    await user.type(within(dialog).getByRole('textbox', { name: 'Cosa cercare' }), 'castello{Enter}');
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Cosa cercare' }),
+      'castello{Enter}',
+    );
     await user.click(await within(dialog).findByRole('button', { name: 'Aggiungi Castello' }));
 
     await waitFor(() => expect(writes).toContain(`${DOC}/images/from-url`));
@@ -722,6 +751,7 @@ describe('the image gallery', () => {
 
   it('offers deletion only while editing', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
 
     expect(screen.queryByRole('button', { name: 'Elimina immagine' })).not.toBeInTheDocument();
@@ -737,6 +767,7 @@ describe('the image gallery', () => {
       return Promise.resolve();
     });
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -750,6 +781,7 @@ describe('the image gallery', () => {
     let resolveDelete: (value: unknown) => void = () => {};
     mockApi(() => new Promise((resolve) => (resolveDelete = resolve)));
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(editButton());
 
@@ -1142,6 +1174,7 @@ describe('promoting a Comment (spec 19c)', () => {
 
   it('keeps the edits in progress when promoting into an open editor', async () => {
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await user.click(screen.getAllByRole('button', { name: 'Modifica' })[0]);
     await user.type(screen.getByRole('textbox', { name: /^Nome/ }), ' antico');
@@ -1196,6 +1229,7 @@ describe('promoting a Comment (spec 19c)', () => {
 
   it('gives the promotion up on cancel', async () => {
     const user = await startPromotion('Nella descrizione');
+    await openActions(user);
 
     await user.click(screen.getByRole('button', { name: 'Annulla' }));
 
@@ -1210,6 +1244,7 @@ describe('promoting a Comment (spec 19c)', () => {
 
   it('gives the promotion up from the header too', async () => {
     const user = await startPromotion('Nella descrizione');
+    await openActions(user);
 
     await user.click(screen.getByRole('button', { name: 'Annulla modifiche' }));
 
@@ -1269,6 +1304,8 @@ describe('DocumentDetailPage backlinks', () => {
       },
     ];
     const { user } = render();
+    await openActions(user);
+    await openActions(user);
 
     const backlinks = await screen.findByTestId('backlinks');
     const toggle = within(backlinks).getByRole('button', { name: /Menzionato in/ });
@@ -1300,6 +1337,7 @@ describe('revealing the Document', () => {
     const writes = vi.fn((_path: string) => Promise.resolve(routes.document));
     mockApi(writes);
     const { user } = render();
+    await openActions(user);
 
     await user.click(await screen.findByRole('button', { name: 'Rivela: Il Cancello' }));
     const dialog = screen.getByRole('dialog', { name: 'Rivela "Il Cancello"' });
@@ -1321,6 +1359,7 @@ describe('revealing the Document', () => {
   it('reports a refused Reveal and closes on cancel', async () => {
     mockApi(() => Promise.reject(new Error('no')));
     const { user } = render();
+    await openActions(user);
 
     await user.click(await screen.findByRole('button', { name: 'Rivela: Il Cancello' }));
     await user.click(screen.getByRole('radio', { name: 'A tutta la Stanza' }));
@@ -1423,6 +1462,7 @@ describe('DocumentDetailPage mention map (spec 36)', () => {
   it('lets the Master open the modal to create one', async () => {
     routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
     const { user } = render();
+    await openActions(user);
     await screen.findByRole('heading', { name: 'Il Cancello' });
     await waitFor(() => expect(button()).toBeInTheDocument());
     expect(screen.queryByRole('region', { name: 'Mappa delle menzioni' })).not.toBeInTheDocument();
@@ -1430,7 +1470,9 @@ describe('DocumentDetailPage mention map (spec 36)', () => {
     await user.click(button()!);
     expect(await screen.findByRole('button', { name: 'Crea mappa' })).toBeInTheDocument();
     await user.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Crea mappa' })).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Crea mappa' })).not.toBeInTheDocument(),
+    );
   });
 
   it('draws the map under the images, without the button for who cannot manage it', async () => {
@@ -1443,10 +1485,13 @@ describe('DocumentDetailPage mention map (spec 36)', () => {
   it('opens an existing map to its manager, and hides a map with no relation', async () => {
     routes.mentionMap = rawMentionMap({ arrows: [] });
     const { user } = render();
+    await openActions(user);
     await waitFor(() => expect(button()).toBeInTheDocument());
     expect(screen.queryByRole('region', { name: 'Mappa delle menzioni' })).not.toBeInTheDocument();
     await user.click(button()!);
-    expect(await screen.findByRole('button', { name: 'Copia come mappa libera' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: 'Copia come mappa libera' }),
+    ).toBeInTheDocument();
   });
 
   it('offers nothing to a Player of a Room closed to their Documents, nor in a preview', async () => {
