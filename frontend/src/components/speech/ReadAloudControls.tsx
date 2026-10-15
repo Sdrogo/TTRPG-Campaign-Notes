@@ -1,8 +1,9 @@
-import { ActionIcon, Group } from '@mantine/core';
+import { Group } from '@mantine/core';
 import { PauseIcon, PlayIcon, SpeakerHighIcon, StopIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useReadAloud } from '../../hooks/useReadAloud';
 import { speechSupported } from '../../lib/speech';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 interface ReadAloudControlsProps {
   /** Which source this is, unique on the page (`document:…`, `note:…`). */
@@ -35,7 +36,7 @@ export function ReadAloudControls({
 
   if (reading.status === 'idle') {
     return (
-      <ActionIcon
+      <LabeledActionIcon
         variant="subtle"
         color="gray"
         size={actionSize}
@@ -43,14 +44,14 @@ export function ReadAloudControls({
         aria-label={t('speech.listen', { name })}
       >
         <SpeakerHighIcon size={iconSize} />
-      </ActionIcon>
+      </LabeledActionIcon>
     );
   }
 
   const paused = reading.status === 'paused';
   return (
     <Group gap={4} wrap="nowrap">
-      <ActionIcon
+      <LabeledActionIcon
         variant="light"
         color="accent"
         size={actionSize}
@@ -58,8 +59,8 @@ export function ReadAloudControls({
         aria-label={paused ? t('speech.resume') : t('speech.pause')}
       >
         {paused ? <PlayIcon size={iconSize} /> : <PauseIcon size={iconSize} />}
-      </ActionIcon>
-      <ActionIcon
+      </LabeledActionIcon>
+      <LabeledActionIcon
         variant="subtle"
         color="gray"
         size={actionSize}
@@ -67,7 +68,7 @@ export function ReadAloudControls({
         aria-label={t('speech.stop')}
       >
         <StopIcon size={iconSize} />
-      </ActionIcon>
+      </LabeledActionIcon>
     </Group>
   );
 }

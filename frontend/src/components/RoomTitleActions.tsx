@@ -19,6 +19,7 @@ import { ImportDocumentsModal } from './importing/ImportDocumentsModal';
 import { InviteModal } from './InviteModal';
 import { LeaveRoomModal } from './LeaveRoomModal';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from './LabeledActionIcon';
 
 interface RoomTitleActionsProps {
   roomId: string;
@@ -168,7 +169,7 @@ export function RoomTitleActions({
           </Tooltip>
         </>
       )}
-      <ActionIcon
+      <LabeledActionIcon
         variant="subtle"
         color="gray"
         size="lg"
@@ -177,7 +178,7 @@ export function RoomTitleActions({
         onClick={() => setExpanded((current) => !current)}
       >
         <DotsThreeVerticalIcon size={20} />
-      </ActionIcon>
+      </LabeledActionIcon>
       {isAdmin && (
         <InviteModal opened={inviteOpened} onClose={() => setInviteOpened(false)} roomId={roomId} />
       )}

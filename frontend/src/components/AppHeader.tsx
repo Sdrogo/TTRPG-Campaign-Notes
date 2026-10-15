@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ActionIcon, Box, Burger, Group, Title, UnstyledButton } from '@mantine/core';
+import { Box, Burger, Group, Title, UnstyledButton } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { ViewAsBanner } from './ViewAsBanner';
@@ -10,6 +10,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { SearchButton } from './search/SearchButton';
 import { GlossaryIndexDrawer } from './GlossaryIndexDrawer';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from './LabeledActionIcon';
 
 interface AppHeaderProps {
   /** Given on a Room-scoped page, this shows a burger toggling the Room's
@@ -81,16 +82,15 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
       >
         <Group gap="xs" wrap="nowrap">
           {backTo && (
-            <ActionIcon
+            <LabeledActionIcon
               onClick={() => handleBack(backTo)}
               variant="subtle"
               color="gray"
               size="lg"
               aria-label={backLabel}
-              title={backLabel}
             >
               <ArrowLeftIcon size={20} />
-            </ActionIcon>
+            </LabeledActionIcon>
           )}
           {roomId && (
             <Burger

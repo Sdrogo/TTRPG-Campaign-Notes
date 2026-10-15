@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-  ActionIcon,
   Affix,
   Box,
   Collapse,
@@ -48,6 +47,7 @@ import type { Document } from '../types/document';
 import type { Member } from '../types/member';
 import type { MainItem, Tag } from '../types/tag';
 import { itemLabel } from '../lib/mainItems';
+import { LabeledActionIcon } from '../components/LabeledActionIcon';
 
 /**
  * `/rooms/:roomId/documents`: the Documents the viewer can see, filterable by
@@ -157,7 +157,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
           </Group>
           {/* A preview has no Room menu, but the maps are part of what it shows. */}
           {readOnly && (
-            <ActionIcon
+            <LabeledActionIcon
               component={Link}
               to={`/rooms/${roomId}/maps`}
               variant="subtle"
@@ -167,7 +167,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               title={t('maps.title')}
             >
               <MapTrifoldIcon size={20} />
-            </ActionIcon>
+            </LabeledActionIcon>
           )}
           {room.data && me && !readOnly && (
             <RoomTitleActions
@@ -189,7 +189,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
         {/* A round floating "+" at the bottom right, always within reach. */}
         {canCreateDocument && (
           <Affix position={{ bottom: 24, right: 24 }} zIndex={150}>
-            <ActionIcon
+            <LabeledActionIcon
               size={56}
               radius="xl"
               variant="filled"
@@ -199,7 +199,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               style={{ boxShadow: 'var(--mantine-shadow-lg)' }}
             >
               <PlusIcon size={28} weight="bold" />
-            </ActionIcon>
+            </LabeledActionIcon>
           </Affix>
         )}
         {hasControls && (

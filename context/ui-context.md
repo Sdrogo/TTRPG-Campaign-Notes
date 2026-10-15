@@ -115,6 +115,8 @@ Icons: **Phosphor Icons** (`@phosphor-icons/react`), `duotone` or
 states), `regular` for inline UI icons. Do not mix Phosphor with any
 other icon set.
 
+**Every icon-only button is a `LabeledActionIcon`** (2026-10-15): its `aria-label` is also shown as a tooltip on hover or long-press. A bare `ActionIcon` is only used when already wrapped in its own `Tooltip`.
+
 ## Layout Patterns
 
 - **App shell**: persistent top navbar (Room name + role badge for

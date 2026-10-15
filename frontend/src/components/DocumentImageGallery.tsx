@@ -16,6 +16,7 @@ import { ImageViewerModal } from './ImageViewerModal';
 import { imageFrameSize, imageOrientation, type ImageOrientation } from '../lib/images';
 import type { DocumentImage } from '../types/document';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from './LabeledActionIcon';
 
 // Grows with the viewport so the images use the wider card on large screens.
 const GALLERY_HEIGHT = { base: 240, sm: 360, lg: 480 };
@@ -215,7 +216,7 @@ function DeleteImageButton({ onConfirm, loading }: { onConfirm: () => void; load
   return (
     <Popover opened={opened} onChange={setOpened} position="bottom-end" withArrow shadow="md">
       <Popover.Target>
-        <ActionIcon
+        <LabeledActionIcon
           variant="default"
           color="red"
           loading={loading}
@@ -223,7 +224,7 @@ function DeleteImageButton({ onConfirm, loading }: { onConfirm: () => void; load
           aria-label={t('images.delete')}
         >
           <TrashIcon size={16} />
-        </ActionIcon>
+        </LabeledActionIcon>
       </Popover.Target>
       <Popover.Dropdown>
         <Stack gap="xs">

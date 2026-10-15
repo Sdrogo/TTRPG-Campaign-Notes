@@ -1,4 +1,4 @@
-import { ActionIcon, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import { ArrowDownIcon, ArrowUpIcon, XIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { itemKey, resolveMainItems } from '../../lib/mainItems';
@@ -6,6 +6,7 @@ import { moveItem } from '../../lib/mainTags';
 import type { MainItem, Tag } from '../../types/tag';
 import { CompactList, CompactListItem } from '../CompactList';
 import { GroupAdder } from './GroupAdder';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 interface GroupingEditorProps {
   /** Every Tag of the Room, to resolve the items' names from. */
@@ -55,7 +56,7 @@ export function GroupingEditor({ tags, items, onChange }: GroupingEditorProps) {
                 }
                 actions={
                   <>
-                    <ActionIcon
+                    <LabeledActionIcon
                       size="sm"
                       variant="subtle"
                       color="gray"
@@ -64,8 +65,8 @@ export function GroupingEditor({ tags, items, onChange }: GroupingEditorProps) {
                       onClick={() => save(moveItem(resolved, index, -1))}
                     >
                       <ArrowUpIcon size={14} />
-                    </ActionIcon>
-                    <ActionIcon
+                    </LabeledActionIcon>
+                    <LabeledActionIcon
                       size="sm"
                       variant="subtle"
                       color="gray"
@@ -74,8 +75,8 @@ export function GroupingEditor({ tags, items, onChange }: GroupingEditorProps) {
                       onClick={() => save(moveItem(resolved, index, 1))}
                     >
                       <ArrowDownIcon size={14} />
-                    </ActionIcon>
-                    <ActionIcon
+                    </LabeledActionIcon>
+                    <LabeledActionIcon
                       size="sm"
                       variant="subtle"
                       color="red"
@@ -83,7 +84,7 @@ export function GroupingEditor({ tags, items, onChange }: GroupingEditorProps) {
                       onClick={() => save(resolved.filter((other) => itemKey(other) !== key))}
                     >
                       <XIcon size={14} />
-                    </ActionIcon>
+                    </LabeledActionIcon>
                   </>
                 }
               >

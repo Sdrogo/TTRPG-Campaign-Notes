@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { ActionIcon, Button, Group, Modal, Stack, Text, Title } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
+import { Button, Group, Modal, Stack, Text, Title } from '@mantine/core';
 import {
   ArrowDownIcon,
   ArrowUpIcon,
+  DotsThreeVerticalIcon,
   EyeIcon,
   PencilSimpleIcon,
   TrashIcon,
@@ -16,6 +18,7 @@ import { noteSpeech } from '../../lib/speech';
 import type { Member } from '../../types/member';
 import type { Note, NoteFormValues } from '../../types/note';
 import { useTranslation } from 'react-i18next';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 interface NoteItemProps {
   note: Note;
@@ -61,6 +64,8 @@ export function NoteItem({
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [confirmDeleteOpened, setConfirmDeleteOpened] = useState(false);
+  const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
+  const [actionsExpanded, setActionsExpanded] = useState(false);
 
   if (editing) {
     return (
@@ -80,6 +85,75 @@ export function NoteItem({
     );
   }
 
+  const readAloud = (
+    <ReadAloudControls
+      sourceId={`note:${note.id}`}
+      name={note.title}
+      getText={() => noteSpeech(note)}
+      size="sm"
+    />
+  );
+  const actions = (
+    <>
+      {onReveal && (
+        <LabeledActionIcon
+          variant="subtle"
+          color="gray"
+          size="sm"
+          onClick={onReveal}
+          aria-label={t('reveal.actionLabel', { name: note.title })}
+        >
+          <EyeIcon size={14} />
+        </LabeledActionIcon>
+      )}
+      {note.canEdit && (
+        <>
+          <LabeledActionIcon
+            variant="subtle"
+            color="gray"
+            size="sm"
+            disabled={!canMoveUp || moving}
+            onClick={() => onMove(-1)}
+            aria-label={t('notes.moveUp', { title: note.title })}
+          >
+            <ArrowUpIcon size={14} />
+          </LabeledActionIcon>
+          <LabeledActionIcon
+            variant="subtle"
+            color="gray"
+            size="sm"
+            disabled={!canMoveDown || moving}
+            onClick={() => onMove(1)}
+            aria-label={t('notes.moveDown', { title: note.title })}
+          >
+            <ArrowDownIcon size={14} />
+          </LabeledActionIcon>
+          <LabeledActionIcon
+            variant="subtle"
+            color="gray"
+            size="sm"
+            onClick={() => setEditing(true)}
+            aria-label={t('notes.edit', { title: note.title })}
+          >
+            <PencilSimpleIcon size={14} />
+          </LabeledActionIcon>
+        </>
+      )}
+      {note.canDelete && (
+        <LabeledActionIcon
+          variant="subtle"
+          color="red"
+          size="sm"
+          onClick={() => setConfirmDeleteOpened(true)}
+          aria-label={t('notes.delete', { title: note.title })}
+        >
+          <TrashIcon size={14} />
+        </LabeledActionIcon>
+      )}
+    </>
+  );
+  const hasActions = Boolean(onReveal) || note.canEdit || note.canDelete;
+
   return (
     <Stack gap={4} id={`note-${note.id}`} className="note-item" data-testid="note-item">
       <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
@@ -91,73 +165,33 @@ export function NoteItem({
           >
             {note.title}
           </Title>
-          {note.canEdit && <VisibilityBadge visibility={note.visibility} size="xs" />}
+          {note.canEdit && (
+            <VisibilityBadge visibility={note.visibility} size="xs" compact={phone} />
+          )}
           {revealed && <RevealedBadge size="xs" />}
         </Group>
         <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
-          <ReadAloudControls
-            sourceId={`note:${note.id}`}
-            name={note.title}
-            getText={() => noteSpeech(note)}
-            size="sm"
-          />
-          {onReveal && (
-            <ActionIcon
+          {readAloud}
+          {!phone && actionsExpanded && actions}
+          {hasActions && (
+            <LabeledActionIcon
               variant="subtle"
               color="gray"
               size="sm"
-              onClick={onReveal}
-              aria-label={t('reveal.actionLabel', { name: note.title })}
+              aria-label={t('notes.actions', { title: note.title })}
+              aria-expanded={actionsExpanded}
+              onClick={() => setActionsExpanded((current) => !current)}
             >
-              <EyeIcon size={14} />
-            </ActionIcon>
-          )}
-          {note.canEdit && (
-            <>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="sm"
-                disabled={!canMoveUp || moving}
-                onClick={() => onMove(-1)}
-                aria-label={t('notes.moveUp', { title: note.title })}
-              >
-                <ArrowUpIcon size={14} />
-              </ActionIcon>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="sm"
-                disabled={!canMoveDown || moving}
-                onClick={() => onMove(1)}
-                aria-label={t('notes.moveDown', { title: note.title })}
-              >
-                <ArrowDownIcon size={14} />
-              </ActionIcon>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="sm"
-                onClick={() => setEditing(true)}
-                aria-label={t('notes.edit', { title: note.title })}
-              >
-                <PencilSimpleIcon size={14} />
-              </ActionIcon>
-            </>
-          )}
-          {note.canDelete && (
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              size="sm"
-              onClick={() => setConfirmDeleteOpened(true)}
-              aria-label={t('notes.delete', { title: note.title })}
-            >
-              <TrashIcon size={14} />
-            </ActionIcon>
+              <DotsThreeVerticalIcon size={14} />
+            </LabeledActionIcon>
           )}
         </Group>
       </Group>
+      {phone && actionsExpanded && (
+        <Group gap={4} wrap="wrap" justify="flex-end">
+          {actions}
+        </Group>
+      )}
       {note.description && (
         <MentionText
           text={note.description}

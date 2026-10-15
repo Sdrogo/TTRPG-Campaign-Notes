@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ActionIcon, Button, Group, Popover, Tooltip } from '@mantine/core';
+import { Button, Group, Popover, Tooltip } from '@mantine/core';
 import { SmileyIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { EmojiPicker } from './EmojiPicker';
 import { findMember, memberDisplayName } from '../../lib/members';
 import type { Comment, Reaction } from '../../types/comment';
 import type { Member } from '../../types/member';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 /** Different emoji a Comment can carry (spec 19c Decision 1); the backend enforces it too. */
 export const MAX_REACTION_EMOJI = 20;
@@ -84,7 +85,7 @@ export function AddReaction({ comment, onToggle, disabled }: AddReactionProps) {
   return (
     <Popover opened={opened} onChange={setOpened} position="bottom-start" shadow="md">
       <Popover.Target>
-        <ActionIcon
+        <LabeledActionIcon
           variant="subtle"
           color="gray"
           size="sm"
@@ -93,7 +94,7 @@ export function AddReaction({ comment, onToggle, disabled }: AddReactionProps) {
           onClick={() => setOpened((current) => !current)}
         >
           <SmileyIcon size={16} />
-        </ActionIcon>
+        </LabeledActionIcon>
       </Popover.Target>
       <Popover.Dropdown p={0}>
         {opened && (

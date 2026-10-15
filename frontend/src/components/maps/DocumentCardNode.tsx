@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActionIcon, Box, Image, Paper, Stack, Text } from '@mantine/core';
+import { Box, Image, Paper, Stack, Text } from '@mantine/core';
 import type { NodeProps } from '@xyflow/react';
 import { DotsSixIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,7 @@ import { useDocumentMentions } from '../../hooks/useDocumentMentions';
 import { DocumentMentionPreview } from '../mentions/DocumentMentionPreview';
 import { DocumentOpenMenu } from '../documents/DocumentOpenMenu';
 import { MapHandle } from './MapHandle';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 /** How tall a card with an image is: the image is its background, portrait framed. */
 const IMAGE_CARD_HEIGHT = CARD_WIDTH * 1.5;
@@ -132,7 +133,7 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
       {editable && <DragGrip />}
       {editable && (
         <Box pos="absolute" top={2} right={2}>
-          <ActionIcon
+          <LabeledActionIcon
             size="sm"
             variant="filled"
             color="dark"
@@ -141,7 +142,7 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
             onClick={() => onEdit(card.id)}
           >
             <PencilSimpleIcon size={14} />
-          </ActionIcon>
+          </LabeledActionIcon>
         </Box>
       )}
     </Paper>

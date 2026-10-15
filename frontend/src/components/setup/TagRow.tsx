@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ActionIcon, Group, Text, TextInput, Tooltip } from '@mantine/core';
+import { Group, Text, TextInput, Tooltip } from '@mantine/core';
 import { CheckIcon, PencilSimpleIcon, StackIcon, TrashIcon, XIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import type { Tag } from '../../types/tag';
 import { CompactListItem } from '../CompactList';
+import { LabeledActionIcon } from '../LabeledActionIcon';
 
 interface TagRowProps {
   tag: Tag;
@@ -55,7 +56,7 @@ export function TagRow({
         actionsAtEnd
         actions={
           <>
-            <ActionIcon
+            <LabeledActionIcon
               size="sm"
               variant="subtle"
               aria-label={t('setup.tags.all.saveRename')}
@@ -64,8 +65,8 @@ export function TagRow({
               disabled={!trimmed}
             >
               <CheckIcon size={14} />
-            </ActionIcon>
-            <ActionIcon
+            </LabeledActionIcon>
+            <LabeledActionIcon
               size="sm"
               variant="subtle"
               color="gray"
@@ -73,7 +74,7 @@ export function TagRow({
               onClick={onCancelEdit}
             >
               <XIcon size={14} />
-            </ActionIcon>
+            </LabeledActionIcon>
           </>
         }
       >
@@ -101,7 +102,7 @@ export function TagRow({
       actionsAtEnd
       actions={
         <>
-          <ActionIcon
+          <LabeledActionIcon
             size="sm"
             variant="subtle"
             color="gray"
@@ -109,8 +110,8 @@ export function TagRow({
             onClick={onStartEdit}
           >
             <PencilSimpleIcon size={14} />
-          </ActionIcon>
-          <ActionIcon
+          </LabeledActionIcon>
+          <LabeledActionIcon
             size="sm"
             variant="subtle"
             color="red"
@@ -118,7 +119,7 @@ export function TagRow({
             onClick={onDelete}
           >
             <TrashIcon size={14} />
-          </ActionIcon>
+          </LabeledActionIcon>
         </>
       }
     >
