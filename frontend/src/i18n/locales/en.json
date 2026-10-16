@@ -388,7 +388,10 @@
       "page": "Open the Document",
       "resize": "Resize the panes",
       "close": "Close the pane",
-      "pane": "Document side by side"
+      "pane": "Document side by side",
+      "showSplit": "Show the side panel",
+      "hideSplit": "Hide the side panel",
+      "pick": "Select a card to see its info"
     }
   },
   "images": {

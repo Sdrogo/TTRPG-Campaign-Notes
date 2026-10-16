@@ -14,7 +14,11 @@ export const SPLIT_QUERY = '(min-width: 48em)';
 export const OpenMenuContext = createContext(false);
 
 export interface SideDocument {
-  /** The Document in the pane, or null when the page has the whole width. */
+  /**
+   * The Document in the pane, '' when the pane is open with nothing picked
+   * yet (a map's split, before a card is selected), or null when the page has
+   * the whole width.
+   */
   sideId: string | null;
   open: (documentId: string) => void;
   close: () => void;

@@ -192,6 +192,15 @@ One line per unit; dates 2026, newest first. Spec files live in
   `LabeledActionIcon` wraps `ActionIcon` + `Tooltip` using the `aria-label`. New keys
   `documents.detail.actions` and `notes.actions` in all 12 languages.
 
+### 2026-10-16
+
+- **37 rework, maps split by button** (no migration, into `staging`): the map
+  card hover preview and the card open menu are removed. Relationship and
+  mention map pages get a split toggle button; the right pane follows the
+  selected Document card. `?side=` with no value means open with nothing
+  picked. Menu/`?side=` on the Document page and the Documents page are
+  unchanged. Spec 37 text updated (Decisions 1, 2, 3).
+
 ### 2026-10-14
 
 - **37, Document preview and split view** (no migration, PR #190 into

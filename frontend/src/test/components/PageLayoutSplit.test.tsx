@@ -69,6 +69,14 @@ describe('PageLayout with a Document beside the page (spec 37)', () => {
     expect(screen.getByText('La mappa')).toBeInTheDocument();
   });
 
+  it('asks for a card while the pane is open with nothing picked', async () => {
+    restore = matchMediaQueries([SPLIT_QUERY]);
+    const user = renderPage('/rooms/room-1/maps/map-1?side=');
+    expect(screen.getByText('Seleziona una card per vederne le info')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Chiudi il pannello' }));
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
   it('says when the Document is gone or hidden, and still closes', async () => {
     restore = matchMediaQueries([SPLIT_QUERY]);
     fetchMock.mockImplementation((path: string) =>

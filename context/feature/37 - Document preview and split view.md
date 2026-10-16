@@ -11,6 +11,19 @@
 - Lets a Master or Player read a Document next to the map, the Document or
   the list they are working on, without losing their place.
 
+## Rework on maps (2026-10-16, product owner)
+
+The hover preview on maps was awkward. On the maps it is removed, and so is
+the click menu on cards. Instead, a button on the map page (relationship
+map and mention map full page; not below `sm`) splits the screen, and the
+right pane shows the Document of whichever Document card is selected
+(a click on the card or its name; Ctrl/Cmd-click on the name still opens a
+tab). Open with no card picked, the pane asks to select one; closing it or
+pressing the button again gives the width back. The rest of this spec (the
+menu on `#Document` mentions, the `?side=` address, the pane itself) stays.
+Decisions 1 and 2's map parts below are superseded by this; the
+mention map panel under a Document's images has no preview or menu either.
+
 ## Decisions (2026-10-14, confirmed by the product owner)
 
 1. **Hover preview on map cards** (product owner): on a relationship map

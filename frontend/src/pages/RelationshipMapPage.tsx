@@ -12,9 +12,10 @@ import { useTags } from '../hooks/useTags';
 import { useReadOnly } from '../hooks/useViewAs';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
-import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { MapBoard } from '../components/maps/MapBoard';
+import { SplitToggle } from '../components/maps/SplitToggle';
+import { useSideDocument } from '../hooks/useSideDocument';
 import { MapFormModal } from '../components/maps/MapFormModal';
 import type { Board, RelationshipMapDetail } from '../types/map';
 
@@ -39,12 +40,7 @@ export function RelationshipMapPage() {
   if (!roomId || !mapId) return null;
   if (loading) return <FullPageLoader />;
   if (!session) return <SignInRequired>{t('maps.signInRequired')}</SignInRequired>;
-  // The Room's Documents, for the cards' previews (spec 37 Decision 1).
-  return (
-    <DocumentMentionsProvider roomId={roomId} currentUserId={session.user.id}>
-      <MapContent roomId={roomId} mapId={mapId} currentUserId={session.user.id} />
-    </DocumentMentionsProvider>
-  );
+  return <MapContent roomId={roomId} mapId={mapId} currentUserId={session.user.id} />;
 }
 
 function MapContent({
@@ -83,6 +79,9 @@ function MapEditor({
   const navigate = useNavigate();
   const readOnly = useReadOnly();
   const wide = useMediaQuery(WIDE_ENOUGH, true);
+  const split = useSideDocument();
+  // While the split is open, a click on a card shows its Document there (spec 37).
+  const splitOpen = split.sideId !== null && wide;
   const members = useMembers(roomId, true);
   const me = members.data?.find((member) => member.userId === currentUserId);
   const isMaster = me?.role === 'master' && !readOnly;
@@ -156,6 +155,7 @@ function MapEditor({
               {t('maps.retry')}
             </Button>
           )}
+          <SplitToggle />
           {map.canEdit && !readOnly && (
             <>
               <Tooltip label={t('maps.settings')} withArrow>
@@ -197,6 +197,7 @@ function MapEditor({
         documents={documents.data ?? []}
         tags={tags.data ?? []}
         onChange={handleChange}
+        onSelectDocument={splitOpen ? split.open : undefined}
       />
       {settingsOpened && (
         <MapFormModal

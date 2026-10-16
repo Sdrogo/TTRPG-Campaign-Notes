@@ -33,8 +33,8 @@ export function PageLayout({ backTo, backLabel, roomId, children }: PageLayoutPr
     <>
       <AppHeader roomId={roomId} backTo={backTo} backLabel={backLabel} />
       <Container component="main" fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="md">
-        {roomId && sideId && wide ? (
-          <SplitView left={body} right={<DocumentSidePane roomId={roomId} documentId={sideId} onClose={close} />} />
+        {roomId && sideId !== null && wide ? (
+          <SplitView left={body} right={<DocumentSidePane roomId={roomId} documentId={sideId || null} onClose={close} />} />
         ) : (
           body
         )}

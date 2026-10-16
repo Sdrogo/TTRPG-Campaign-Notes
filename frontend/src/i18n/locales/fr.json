@@ -388,7 +388,10 @@
       "page": "Ouvrir le Document",
       "resize": "Redimensionner les panneaux",
       "close": "Fermer le panneau",
-      "pane": "Document à côté"
+      "pane": "Document à côté",
+      "showSplit": "Afficher le panneau latéral",
+      "hideSplit": "Masquer le panneau latéral",
+      "pick": "Sélectionnez une carte pour voir ses infos"
     }
   },
   "images": {

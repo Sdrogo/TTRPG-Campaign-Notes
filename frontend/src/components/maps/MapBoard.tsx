@@ -79,6 +79,11 @@ export interface MapBoardProps {
    * cards. `free` (the default): a spec 28 map.
    */
   mode?: 'free' | 'mention';
+  /**
+   * Given while the split pane follows the selected card (spec 37): clicking
+   * a Document card selects it, even on a read-only board, and reports it.
+   */
+  onSelectDocument?: (documentId: string) => void;
   /** The board's height; the full page's by default. */
   height?: string | number;
 }
@@ -121,6 +126,7 @@ function BoardCanvas({
   tags,
   onChange,
   mode = 'free',
+  onSelectDocument,
   height = 'calc(100dvh - 190px)',
 }: MapBoardProps) {
   const { t } = useTranslation();
@@ -174,7 +180,7 @@ function BoardCanvas({
                 position: { x: card.x, y: card.y },
                 parentId: card.groupId && groupIds.has(card.groupId) ? card.groupId : undefined,
                 draggable: editable,
-                data: { card, roomId, editable, connectable: free, onEdit: onEdit('card') },
+                data: { card, roomId, editable, connectable: free, onEdit: onEdit('card'), onSelect: onSelectDocument },
                 ...kept(card.id),
               }
             : {
@@ -341,7 +347,10 @@ function BoardCanvas({
         selectionMode={SelectionMode.Partial}
         panOnDrag={boxSelect ? [1, 2] : true}
         nodesConnectable={shaping}
-        elementsSelectable={editable}
+        elementsSelectable={editable || !!onSelectDocument}
+        onNodeClick={(_, node) => {
+          if (node.type === 'documentCard') node.data.onSelect?.(node.data.card.documentId!);
+        }}
         deleteKeyCode={shaping ? ['Backspace', 'Delete'] : null}
         connectionMode={ConnectionMode.Loose}
         connectionRadius={40}
