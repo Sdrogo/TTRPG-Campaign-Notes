@@ -41,6 +41,7 @@ export function DocumentFields({
   return (
     <Stack gap="sm">
       <TextInput
+        spellCheck
         label={t('common.name')}
         value={values.name}
         onChange={(event) => set({ name: event.currentTarget.value })}
@@ -49,6 +50,7 @@ export function DocumentFields({
       />
       {/* Spec 28_0: one line under the name, like "La Idol". */}
       <TextInput
+        spellCheck
         label={t('documents.fields.subtitle')}
         description={t('documents.fields.subtitleHint')}
         value={values.subtitle}

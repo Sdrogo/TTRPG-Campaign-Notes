@@ -45,6 +45,7 @@ export function NoteForm({
     >
       <Stack gap="sm">
         <TextInput
+          spellCheck
           label={t('notes.form.title')}
           value={values.title}
           onChange={(event) => set({ title: event.currentTarget.value })}

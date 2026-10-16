@@ -252,6 +252,7 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, .
       <Popover.Target>
         <Box>
           <Textarea
+            spellCheck
             {...props}
             ref={textareaRef}
             value={display}
