@@ -17,13 +17,18 @@ EXPORT_TTL = timedelta(hours=24)
 # A job that has run this long is taken as lost (the process was restarted, or
 # the render hung) so its owner can start another.
 STALE_AFTER = timedelta(hours=2)
-# PDF Attachments are appended until this many bytes are in the file; later
-# ones are left out rather than building an unbounded PDF in memory.
+# The finished file must fit the bucket's per-object limit (Supabase's cap on
+# the free plan is 50 MB; the `document-images` bucket has to be raised to it,
+# it was 10 MB until 2026-10-16). PDF Attachments are appended until this many
+# bytes are in the file, counting the manual itself; later ones are left out
+# rather than building an unbounded PDF in memory or one Storage refuses.
 MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024
+# What the file as a whole may weigh, with a margin for the merge's overhead.
+MAX_EXPORT_BYTES = 48 * 1024 * 1024
 # An image is downscaled so its longer side is at most this many pixels: a
-# template prints one at most about 135 mm wide, so this is 190 dpi or more,
+# template prints one at most about 135 mm wide, so this is 170 dpi or more,
 # plenty for print and cheap to convert, lay out and embed.
-MAX_IMAGE_PIXELS = 1000
+MAX_IMAGE_PIXELS = 900
 
 
 class ExportStatus(StrEnum):

@@ -586,7 +586,14 @@ async def test_attachments_are_appended_in_the_manuals_order_only_when_asked(
     async def gone(url: str, max_bytes: int) -> bytes:
         raise storage.StorageError("gone")
 
+    # The whole file must fit the export limit: with no room left after the
+    # manual itself, no attachment is appended.
     monkeypatch.setattr(export_pdf_job, "MAX_ATTACHMENT_BYTES", 50 * 1024 * 1024)
+    monkeypatch.setattr(export_pdf_job, "MAX_EXPORT_BYTES", 10)
+    full = (await _start(client, room, room.player, include_attachments=True)).json()
+    assert page_count(full) == 2
+
+    monkeypatch.setattr(export_pdf_job, "MAX_EXPORT_BYTES", 48 * 1024 * 1024)
     monkeypatch.setattr(storage, "download_signed", gone)
     unfetched = (await _start(client, room, room.player, include_attachments=True)).json()
     assert page_count(unfetched) == 2
