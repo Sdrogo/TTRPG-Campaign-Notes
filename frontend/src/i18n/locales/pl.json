@@ -392,7 +392,10 @@
       "page": "Otwórz Dokument",
       "resize": "Zmień rozmiar paneli",
       "close": "Zamknij panel",
-      "pane": "Dokument obok"
+      "pane": "Dokument obok",
+      "showSplit": "Pokaż panel boczny",
+      "hideSplit": "Ukryj panel boczny",
+      "pick": "Wybierz kartę, aby zobaczyć jej informacje"
     }
   },
   "images": {

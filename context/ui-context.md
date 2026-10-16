@@ -693,15 +693,20 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
 - **Open menu** (`DocumentOpenMenu`): a click on a `#Document` mention
   (Document page, and the Documents page's cards, where Document mentions
   are links raised above the card's own link while Tag mentions stay
-  plain), on a map card's name while the map is edited, or anywhere on a
-  read-only map card opens a two-item Mantine `Menu`: "Apri a metà schermo"
+  plain), opens a two-item Mantine `Menu`: "Apri a metà schermo"
   (`SquareSplitHorizontalIcon`) and "Apri il Documento"
   (`ArrowSquareOutIcon`). Ctrl/Cmd/Shift-click keeps the browser's default.
   Below `sm` there is no menu: a click just follows the link.
-- **Hover preview on map cards**: as spec 32, through
-  `DocumentMentionPreview`, using the page's `DocumentMentionsProvider`
-  Documents; off while the card is dragged.
-- **Split view**: `?side=<documentId>` on any Room page (`PageLayout`)
+- **Maps (2026-10-16 rework)**: no hover preview and no open menu on map
+  cards. The map pages (relationship map, mention map full page) have a
+  `SplitToggle` button (`SquareSplitHorizontalIcon`, header, `sm` and up)
+  that opens/closes the split (`?side=` with no value = open, nothing
+  picked: the pane says "Seleziona una card per vederne le info"). While it
+  is open, clicking a Document card (or its name, which then does not
+  navigate; Ctrl/Cmd-click still opens a tab) selects it and the pane shows
+  that Document (`MapBoard`'s `onSelectDocument`, read-only boards too).
+- **Split view**: `?side=<documentId>` on any Room page (`PageLayout`; an empty
+  `?side=` counts as open only where `PageLayout` gets `allowEmptySide`, i.e. the two map pages, and is ignored elsewhere)
   splits it in `SplitView`: the page left, `DocumentSidePane` right (sticky
   header with the name, an "Apri il Documento" icon link and a close
   button, then the whole `DocumentView`). The divider is 8 px, a

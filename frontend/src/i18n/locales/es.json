@@ -388,7 +388,10 @@
       "page": "Abrir el Documento",
       "resize": "Cambiar el tamaño de los paneles",
       "close": "Cerrar el panel",
-      "pane": "Documento al lado"
+      "pane": "Documento al lado",
+      "showSplit": "Mostrar el panel lateral",
+      "hideSplit": "Ocultar el panel lateral",
+      "pick": "Selecciona una carta para ver su información"
     }
   },
   "images": {

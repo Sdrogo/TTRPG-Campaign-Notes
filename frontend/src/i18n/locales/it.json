@@ -388,7 +388,10 @@
       "page": "Apri il Documento",
       "resize": "Ridimensiona i pannelli",
       "close": "Chiudi il pannello",
-      "pane": "Documento affiancato"
+      "pane": "Documento affiancato",
+      "showSplit": "Mostra il pannello affiancato",
+      "hideSplit": "Nascondi il pannello affiancato",
+      "pick": "Seleziona una card per vederne le info"
     }
   },
   "images": {

@@ -14,6 +14,8 @@ export type DocumentCardNodeData = NodeActions & {
   roomId: string;
   /** False on a mention map (spec 36), whose relations come from mentions only. */
   connectable?: boolean;
+  /** Set while the split pane follows the selected card (spec 37): a click on the card shows its Document there. */
+  onSelect?: (documentId: string) => void;
 };
 export type TextCardNodeData = NodeActions & { card: MapCard };
 export type GroupNodeData = NodeActions & {

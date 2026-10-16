@@ -1,15 +1,12 @@
-import { useState } from 'react';
+import type { MouseEvent } from 'react';
 import { Box, Image, Paper, Stack, Text } from '@mantine/core';
-import { useConnection, type NodeProps } from '@xyflow/react';
+import { type NodeProps } from '@xyflow/react';
 import { DotsSixIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useBackState } from '../../lib/backNav';
 import { CARD_WIDTH, colorValue } from '../../lib/maps';
 import type { DocumentCardNodeType } from '../../types/mapNodes';
-import { useDocumentMentions } from '../../hooks/useDocumentMentions';
-import { DocumentMentionPreview } from '../mentions/DocumentMentionPreview';
-import { DocumentOpenMenu } from '../documents/DocumentOpenMenu';
 import { MapHandle } from './MapHandle';
 import { LabeledActionIcon } from '../LabeledActionIcon';
 
@@ -47,25 +44,16 @@ function DragGrip() {
  * card, else the Document's favorite) as the card's background fading into
  * the card towards the bottom, where its name and caption (the map's own, or
  * else the Document's subtitle) are, in the card's color and struck through
- * when it is. Resting the pointer on it previews the Document's card (not while an arrow is being drawn); a
- * click on its name (anywhere on it, on a read-only board) offers to open
- * the Document beside the page or to go to it (spec 37).
+ * when it is. A click on its name goes to the Document, unless the split pane
+ * follows the selected card (spec 37), where it selects the card instead.
  */
-export function DocumentCardNode({ data, selected, dragging }: NodeProps<DocumentCardNodeType>) {
+export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeType>) {
   const { t } = useTranslation();
-  const { card, roomId, editable, connectable, onEdit } = data;
+  const { card, roomId, editable, connectable, onEdit, onSelect } = data;
   // Only the Documents the viewer sees reach the board, each with its look.
   const document = card.document!;
   const caption = card.caption ?? document.subtitle;
   const decoration = card.struck ? 'line-through' : undefined;
-  // The whole Document, for the preview: the page's list, filtered for the viewer.
-  const mentions = useDocumentMentions();
-  const full = mentions?.documents.find((candidate) => candidate.id === document.id);
-  // The preview wraps the name's menu on an edited card, so it is told directly.
-  const [menuOpen, setMenuOpen] = useState(false);
-  // While an arrow is being drawn (a click or drag already made) no card previews.
-  const drawing = useConnection((connection) => connection.inProgress);
-
   const backState = useBackState();
   const name = (
     <Text
@@ -77,6 +65,10 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
       c={colorValue(card.color)}
       td={decoration}
       className="nodrag"
+      onClick={(event: MouseEvent) => {
+        // A plain click picks the card for the split pane; Ctrl/Cmd still opens a tab.
+        if (onSelect && !event.ctrlKey && !event.metaKey && !event.shiftKey) event.preventDefault();
+      }}
       style={{
         fontFamily: 'var(--font-display)',
         fontSize: 18,
@@ -87,7 +79,7 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
     </Text>
   );
 
-  let body = (
+  return (
     <Paper
       className="map-card"
       withBorder
@@ -122,13 +114,7 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
         </Box>
       )}
       <Stack gap={4} p={8} pos="relative">
-        {editable ? (
-          <DocumentOpenMenu roomId={roomId} documentId={document.id} onOpenChange={setMenuOpen}>
-            {name}
-          </DocumentOpenMenu>
-        ) : (
-          name
-        )}
+        {name}
         {caption && (
           <Text size="xs" c="dimmed" ta="center" td={decoration} style={{ whiteSpace: 'pre-line' }}>
             {caption}
@@ -151,19 +137,5 @@ export function DocumentCardNode({ data, selected, dragging }: NodeProps<Documen
         </Box>
       )}
     </Paper>
-  );
-  if (full) {
-    body = (
-      <DocumentMentionPreview roomId={roomId} document={full} tags={mentions!.tags} disabled={dragging || menuOpen || drawing}>
-        {body}
-      </DocumentMentionPreview>
-    );
-  }
-  return editable ? (
-    body
-  ) : (
-    <DocumentOpenMenu roomId={roomId} documentId={document.id} component="div" onOpenChange={setMenuOpen}>
-      {body}
-    </DocumentOpenMenu>
   );
 }
