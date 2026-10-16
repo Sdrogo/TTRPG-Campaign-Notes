@@ -22,7 +22,6 @@ from app.db import session as session_module
 from app.domain.errors import DomainError
 from app.domain.export import Export
 from app.domain.export_jobs import (
-    MAX_ATTACHMENT_BYTES,
     MAX_EXPORT_BYTES,
     ExportJob,
     ExportStatus,
@@ -166,7 +165,7 @@ async def _build_pdf(options: PdfOptions, export: Export, room_image_path: str |
         async with _render_slot:
             pdf = await _render(manual, options, media_dir)
     if options.include_attachments:
-        budget = min(MAX_ATTACHMENT_BYTES, MAX_EXPORT_BYTES - len(pdf))
+        budget = MAX_EXPORT_BYTES - len(pdf)
         attachments = await _download_attachments(manual, export, budget)
         if attachments:
             pdf, _appended = await asyncio.to_thread(merge_attachments, pdf, attachments)
