@@ -199,7 +199,7 @@ One line per unit; dates 2026, newest first. Spec files live in
   mention map pages get a split toggle button; the right pane follows the
   selected Document card. `?side=` with no value means open with nothing
   picked. Menu/`?side=` on the Document page and the Documents page are
-  unchanged. Spec 37 text updated (Decisions 1, 2, 3).
+  unchanged. Spec 37 gets a "Rework on maps" section that supersedes the map parts of Decisions 1 and 2.
 
 ### 2026-10-14
 

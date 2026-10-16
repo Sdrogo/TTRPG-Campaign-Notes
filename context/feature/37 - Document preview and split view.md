@@ -26,13 +26,13 @@ mention map panel under a Document's images has no preview or menu either.
 
 ## Decisions (2026-10-14, confirmed by the product owner)
 
-1. **Hover preview on map cards** (product owner): on a relationship map
+1. **Hover preview on map cards** (superseded on maps by the 2026-10-16 rework above; kept for history) (product owner): on a relationship map
    (spec 28) and a mention map (spec 36), resting the pointer on a Document
    card for 400 ms shows that Document's `DocumentCard`, 440 px wide, as
    spec 32 Decisions 2 and 3 (it closes 150 ms after the pointer leaves the
    card and the preview). Not while the card is being dragged, and never
    for text cards or groups.
-2. **The choice on click** (product owner): clicking a Document (a map
+2. **The choice on click** (on map cards superseded by the 2026-10-16 rework above; still valid for `#Document` mentions) (product owner): clicking a Document (a map
    card, a `#Document` mention on the Document page, a card on the
    Documents page) opens a small menu at the pointer with two items:
    "Apri a metà schermo" and "Apri il Documento" (navigate to its page).

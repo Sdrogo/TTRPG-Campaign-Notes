@@ -705,7 +705,8 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   is open, clicking a Document card (or its name, which then does not
   navigate; Ctrl/Cmd-click still opens a tab) selects it and the pane shows
   that Document (`MapBoard`'s `onSelectDocument`, read-only boards too).
-- **Split view**: `?side=<documentId>` on any Room page (`PageLayout`)
+- **Split view**: `?side=<documentId>` on any Room page (`PageLayout`; an empty
+  `?side=` counts as open only where `PageLayout` gets `allowEmptySide`, i.e. the two map pages, and is ignored elsewhere)
   splits it in `SplitView`: the page left, `DocumentSidePane` right (sticky
   header with the name, an "Apri il Documento" icon link and a close
   button, then the whole `DocumentView`). The divider is 8 px, a
