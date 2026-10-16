@@ -123,6 +123,16 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-16
+
+- **Room PDF, real cause found** (no migration): the prod logs showed the
+  upload to Storage refused with 413 `EntityTooLarge`: the `document-images`
+  bucket has a 10 MB per-object limit and a big Room's PDF is larger. Earlier
+  fixes (#198, #204) were real but not the cause. Andrea must raise the bucket
+  limit to 50 MB by hand (prod and staging). In code: images capped at 900 px
+  and JPEG quality 75, and the PDF Attachments budget is what is left under
+  `MAX_EXPORT_BYTES` (48 MB) after the manual itself.
+
 ### 2026-10-15
 
 - **Room PDF, second fix** (no migration; PR #198 was not enough on the VPS):
