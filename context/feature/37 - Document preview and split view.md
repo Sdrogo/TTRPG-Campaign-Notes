@@ -11,15 +11,28 @@
 - Lets a Master or Player read a Document next to the map, the Document or
   the list they are working on, without losing their place.
 
+## Rework on maps (2026-10-16, product owner)
+
+The hover preview on maps was awkward. On the maps it is removed, and so is
+the click menu on cards. Instead, a button on the map page (relationship
+map and mention map full page; not below `sm`) splits the screen, and the
+right pane shows the Document of whichever Document card is selected
+(a click on the card or its name; Ctrl/Cmd-click on the name still opens a
+tab). Open with no card picked, the pane asks to select one; closing it or
+pressing the button again gives the width back. The rest of this spec (the
+menu on `#Document` mentions, the `?side=` address, the pane itself) stays.
+Decisions 1 and 2's map parts below are superseded by this; the
+mention map panel under a Document's images has no preview or menu either.
+
 ## Decisions (2026-10-14, confirmed by the product owner)
 
-1. **Hover preview on map cards** (product owner): on a relationship map
+1. **Hover preview on map cards** (superseded on maps by the 2026-10-16 rework above; kept for history) (product owner): on a relationship map
    (spec 28) and a mention map (spec 36), resting the pointer on a Document
    card for 400 ms shows that Document's `DocumentCard`, 440 px wide, as
    spec 32 Decisions 2 and 3 (it closes 150 ms after the pointer leaves the
    card and the preview). Not while the card is being dragged, and never
    for text cards or groups.
-2. **The choice on click** (product owner): clicking a Document (a map
+2. **The choice on click** (on map cards superseded by the 2026-10-16 rework above; still valid for `#Document` mentions) (product owner): clicking a Document (a map
    card, a `#Document` mention on the Document page, a card on the
    Documents page) opens a small menu at the pointer with two items:
    "Apri a metà schermo" and "Apri il Documento" (navigate to its page).

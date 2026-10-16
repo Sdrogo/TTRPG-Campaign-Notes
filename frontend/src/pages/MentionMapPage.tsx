@@ -11,8 +11,9 @@ import { useReadOnly } from '../hooks/useViewAs';
 import { changedMentionCards } from '../lib/maps';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
-import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { MapBoard } from '../components/maps/MapBoard';
+import { SplitToggle } from '../components/maps/SplitToggle';
+import { useSideDocument } from '../hooks/useSideDocument';
 import { MentionMapModal } from '../components/maps/MentionMapModal';
 import type { Board, MentionMap } from '../types/map';
 import { SAVE_DELAY_MS } from './RelationshipMapPage';
@@ -36,12 +37,7 @@ export function MentionMapPage() {
   if (!roomId || !documentId) return null;
   if (loading) return <FullPageLoader />;
   if (!session) return <SignInRequired>{t('maps.signInRequired')}</SignInRequired>;
-  // The Room's Documents, for the cards' previews (spec 37 Decision 1).
-  return (
-    <DocumentMentionsProvider roomId={roomId} currentUserId={session.user.id}>
-      <MentionMapContent roomId={roomId} documentId={documentId} />
-    </DocumentMentionsProvider>
-  );
+  return <MentionMapContent roomId={roomId} documentId={documentId} />;
 }
 
 function MentionMapContent({ roomId, documentId }: { roomId: string; documentId: string }) {
@@ -80,6 +76,9 @@ function MentionMapEditor({
   const { t } = useTranslation();
   const readOnly = useReadOnly();
   const wide = useMediaQuery(WIDE_ENOUGH, true);
+  const split = useSideDocument();
+  // While the split is open, a click on a card shows its Document there (spec 37).
+  const splitOpen = split.sideId !== null && wide;
   const manage = map.canManage && !readOnly;
   const editable = manage && wide;
   const saveCards = useSaveMentionCards(roomId, map.documentId);
@@ -123,7 +122,7 @@ function MentionMapEditor({
   };
 
   return (
-    <PageLayout
+    <PageLayout allowEmptySide
       backTo={`/rooms/${roomId}/documents/${map.documentId}`}
       backLabel={t('maps.mention.backToDocument')}
       roomId={roomId}
@@ -148,6 +147,7 @@ function MentionMapEditor({
               {t('maps.retry')}
             </Button>
           )}
+          <SplitToggle />
           {manage && (
             <Tooltip label={t('maps.settings')} withArrow>
               <ActionIcon
@@ -181,6 +181,7 @@ function MentionMapEditor({
         documents={[]}
         tags={[]}
         onChange={handleChange}
+        onSelectDocument={splitOpen ? split.open : undefined}
         mode="mention"
       />
       {settingsOpened && (

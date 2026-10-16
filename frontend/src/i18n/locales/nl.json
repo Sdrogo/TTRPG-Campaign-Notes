@@ -388,7 +388,10 @@
       "page": "Document openen",
       "resize": "Panelen aanpassen",
       "close": "Paneel sluiten",
-      "pane": "Document ernaast"
+      "pane": "Document ernaast",
+      "showSplit": "Zijpaneel tonen",
+      "hideSplit": "Zijpaneel verbergen",
+      "pick": "Selecteer een kaart om de info te zien"
     }
   },
   "images": {

@@ -17,9 +17,29 @@ export function DocumentSidePane({
   onClose,
 }: {
   roomId: string;
-  documentId: string;
+  /** Null while nothing is picked yet: the pane then asks for a card. */
+  documentId: string | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+  if (documentId === null) {
+    return (
+      <Box component="aside" aria-label={t('documents.open.pane')} style={{ position: 'sticky', top: 0 }}>
+        <Group justify="space-between" wrap="nowrap" py={6} px="xs" mb="sm" style={{ borderBottom: '1px solid var(--border-default)' }}>
+          <Text c="dimmed">{t('documents.open.pick')}</Text>
+          <Tooltip label={t('documents.open.close')}>
+            <ActionIcon variant="subtle" aria-label={t('documents.open.close')} onClick={onClose}>
+              <XIcon size={18} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      </Box>
+    );
+  }
+  return <PickedPane roomId={roomId} documentId={documentId} onClose={onClose} />;
+}
+
+function PickedPane({ roomId, documentId, onClose }: { roomId: string; documentId: string; onClose: () => void }) {
   const { t } = useTranslation();
   const { session } = useSession();
   // The same cached query the view below uses.

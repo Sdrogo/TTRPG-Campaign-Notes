@@ -123,6 +123,16 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-16
+
+- **Room PDF, real cause found** (no migration): the prod logs showed the
+  upload to Storage refused with 413 `EntityTooLarge`: the `document-images`
+  bucket has a 10 MB per-object limit and a big Room's PDF is larger. Earlier
+  fixes (#198, #204) were real but not the cause. Andrea must raise the bucket
+  limit to 50 MB by hand (prod and staging). In code: images capped at 900 px
+  and JPEG quality 75, and the PDF Attachments budget is what is left under
+  `MAX_EXPORT_BYTES` (48 MB) after the manual itself.
+
 ### 2026-10-15
 
 - **Room PDF, second fix** (no migration; PR #198 was not enough on the VPS):
@@ -191,6 +201,15 @@ One line per unit; dates 2026, newest first. Spec files live in
   Every icon-only button shows its label as a tooltip on hover or long-press:
   `LabeledActionIcon` wraps `ActionIcon` + `Tooltip` using the `aria-label`. New keys
   `documents.detail.actions` and `notes.actions` in all 12 languages.
+
+### 2026-10-16
+
+- **37 rework, maps split by button** (no migration, into `staging`): the map
+  card hover preview and the card open menu are removed. Relationship and
+  mention map pages get a split toggle button; the right pane follows the
+  selected Document card. `?side=` with no value means open with nothing
+  picked. Menu/`?side=` on the Document page and the Documents page are
+  unchanged. Spec 37 gets a "Rework on maps" section that supersedes the map parts of Decisions 1 and 2.
 
 ### 2026-10-14
 

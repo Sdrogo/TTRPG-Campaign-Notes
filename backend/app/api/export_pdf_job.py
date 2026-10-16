@@ -22,7 +22,7 @@ from app.db import session as session_module
 from app.domain.errors import DomainError
 from app.domain.export import Export
 from app.domain.export_jobs import (
-    MAX_ATTACHMENT_BYTES,
+    MAX_EXPORT_BYTES,
     ExportJob,
     ExportStatus,
     PdfOptions,
@@ -165,7 +165,8 @@ async def _build_pdf(options: PdfOptions, export: Export, room_image_path: str |
         async with _render_slot:
             pdf = await _render(manual, options, media_dir)
     if options.include_attachments:
-        attachments = await _download_attachments(manual, export)
+        budget = MAX_EXPORT_BYTES - len(pdf)
+        attachments = await _download_attachments(manual, export, budget)
         if attachments:
             pdf, _appended = await asyncio.to_thread(merge_attachments, pdf, attachments)
     return pdf
@@ -234,9 +235,9 @@ async def _embed_images(urls: Iterable[str], media_dir: Path) -> dict[str, str]:
     return {url: uri for url, uri in embedded if uri is not None}
 
 
-async def _download_attachments(manual: Manual, export: Export) -> list[bytes]:
+async def _download_attachments(manual: Manual, export: Export, budget: int) -> list[bytes]:
     """The PDF Attachments of the Documents printed in the manual, in the
-    manual's order, until `MAX_ATTACHMENT_BYTES`: later ones are left out. They
+    manual's order, until `budget` bytes: later ones are left out. They
     are the requester's to see already (`load_export` filtered them)."""
     files = {document.id: document.files for document in export.documents}
     total = 0
@@ -246,7 +247,7 @@ async def _download_attachments(manual: Manual, export: Export) -> list[bytes]:
             if not isinstance(entry, ManualDocument):
                 continue
             for file in files.get(entry.id, ()):
-                if total + file.size_bytes > MAX_ATTACHMENT_BYTES:
+                if total + file.size_bytes > budget:
                     continue
                 try:
                     data = await storage.download_signed(file.url, MAX_FILE_BYTES)

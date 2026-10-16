@@ -388,7 +388,10 @@
       "page": "Dokument öffnen",
       "resize": "Bereiche anpassen",
       "close": "Bereich schließen",
-      "pane": "Dokument daneben"
+      "pane": "Dokument daneben",
+      "showSplit": "Seitenfenster anzeigen",
+      "hideSplit": "Seitenfenster ausblenden",
+      "pick": "Wähle eine Karte, um ihre Infos zu sehen"
     }
   },
   "images": {

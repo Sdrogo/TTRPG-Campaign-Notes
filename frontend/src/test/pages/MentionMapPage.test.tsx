@@ -25,11 +25,13 @@ vi.mock('../../components/maps/MapBoard', () => ({
     editable,
     mode,
     onChange,
+    onSelectDocument,
   }: {
     board: Board;
     editable: boolean;
     mode: string;
     onChange: (board: Board) => void;
+    onSelectDocument?: (documentId: string) => void;
   }) => (
     <div data-testid="board" data-editable={String(editable)} data-mode={mode}>
       {board.cards.map((card) => `${card.id}@${card.x}`).join(' ')}
@@ -41,6 +43,11 @@ vi.mock('../../components/maps/MapBoard', () => ({
       >
         move
       </button>
+      {onSelectDocument && (
+        <button type="button" onClick={() => onSelectDocument('doc-9')}>
+          select
+        </button>
+      )}
     </div>
   ),
 }));
@@ -233,5 +240,23 @@ describe('MentionMapPage', () => {
     expect(await screen.findByTestId('board')).toHaveAttribute('data-editable', 'false');
     expect(screen.queryByRole('button', { name: 'Impostazioni della mappa' })).not.toBeInTheDocument();
     expect(screen.queryByText(/sola lettura/)).not.toBeInTheDocument();
+  });
+
+  it('splits the screen with a button, and a click on a card shows its Document (spec 37)', async () => {
+    wideScreen();
+    const { user } = render(false, `${DOC}/mention-map`);
+    expect(await screen.findByTestId('board')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'select' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mostra il pannello affiancato' }));
+    expect(await screen.findByText('Seleziona una card per vederne le info')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'select' }));
+    expect(await screen.findByRole('link', { name: 'Apri il Documento' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/documents/doc-9',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Nascondi il pannello affiancato' }));
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 });

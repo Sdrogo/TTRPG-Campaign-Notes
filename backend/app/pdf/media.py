@@ -28,7 +28,7 @@ def print_image_jpeg(data: bytes) -> bytes | None:
     flat = Image.new("RGB", rgba.size, (255, 255, 255))
     flat.paste(rgba, mask=rgba.getchannel("A"))
     out = io.BytesIO()
-    flat.save(out, format="JPEG", quality=82)
+    flat.save(out, format="JPEG", quality=75)
     return out.getvalue()
 
 

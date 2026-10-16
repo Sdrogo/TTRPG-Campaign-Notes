@@ -13,6 +13,8 @@ interface PageLayoutProps {
    *  toggle for this Room (spec 10), and a Document can open beside it
    *  (spec 37). */
   roomId?: string;
+  /** The map pages: an empty `?side=` is the split open with no card picked yet (spec 37). */
+  allowEmptySide?: boolean;
   children: ReactNode;
 }
 
@@ -25,7 +27,7 @@ interface PageLayoutProps {
  * (`?side=`, spec 37), the body shares the width with that Document, on a
  * screen wide enough for both.
  */
-export function PageLayout({ backTo, backLabel, roomId, children }: PageLayoutProps) {
+export function PageLayout({ backTo, backLabel, roomId, allowEmptySide = false, children }: PageLayoutProps) {
   const { sideId, close } = useSideDocument();
   const wide = useMediaQuery(SPLIT_QUERY, true);
   const body = <Stack gap="md">{children}</Stack>;
@@ -33,8 +35,8 @@ export function PageLayout({ backTo, backLabel, roomId, children }: PageLayoutPr
     <>
       <AppHeader roomId={roomId} backTo={backTo} backLabel={backLabel} />
       <Container component="main" fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="md">
-        {roomId && sideId && wide ? (
-          <SplitView left={body} right={<DocumentSidePane roomId={roomId} documentId={sideId} onClose={close} />} />
+        {roomId && (sideId || (allowEmptySide && sideId === '')) && wide ? (
+          <SplitView left={body} right={<DocumentSidePane roomId={roomId} documentId={sideId || null} onClose={close} />} />
         ) : (
           body
         )}

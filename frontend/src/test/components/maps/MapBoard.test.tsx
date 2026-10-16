@@ -141,6 +141,7 @@ function renderBoard({
   isMaster = true,
   docs = documents,
   mode = undefined as 'free' | 'mention' | undefined,
+  onSelectDocument = undefined as ((documentId: string) => void) | undefined,
 } = {}) {
   const changes: Board[] = [];
   function Harness() {
@@ -158,6 +159,7 @@ function renderBoard({
           setBoard(next);
         }}
         mode={mode}
+        onSelectDocument={onSelectDocument}
         height={mode ? 360 : undefined}
       />
     );
@@ -214,6 +216,22 @@ describe('MapBoard', () => {
     await user.click(screen.getByRole('radio', { name: 'Rosso' }));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
     expect(last().cards.find((c) => c.id === 'mira')!.color).toBe('red');
+  });
+
+  it('selects a Document card on click while the split pane follows the selection (spec 37)', () => {
+    const onSelectDocument = vi.fn();
+    renderBoard({ editable: false, onSelectDocument });
+    expect(flow.props.elementsSelectable).toBe(true);
+    call('onNodeClick', null, node('thorn'));
+    call('onNodeClick', null, node('fire'));
+    expect(onSelectDocument).toHaveBeenCalledTimes(1);
+    expect(onSelectDocument).toHaveBeenCalledWith('doc-thorn');
+  });
+
+  it('leaves a read-only board unselectable without the split pane', () => {
+    renderBoard({ editable: false });
+    expect(flow.props.elementsSelectable).toBe(false);
+    call('onNodeClick', null, node('thorn'));
   });
 
   it('is only a view when not editable', async () => {
