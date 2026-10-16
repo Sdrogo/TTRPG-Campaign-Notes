@@ -29,9 +29,9 @@ function Where() {
   return <output data-testid="where">{location.search}</output>;
 }
 
-function renderPage(route: string, roomId: string | null = 'room-1') {
+function renderPage(route: string, roomId: string | null = 'room-1', allowEmptySide = true) {
   renderWithProviders(
-    <PageLayout backTo="/" backLabel="Indietro" roomId={roomId ?? undefined}>
+    <PageLayout backTo="/" backLabel="Indietro" roomId={roomId ?? undefined} allowEmptySide={allowEmptySide}>
       <p>La mappa</p>
       <Where />
     </PageLayout>,
@@ -74,6 +74,12 @@ describe('PageLayout with a Document beside the page (spec 37)', () => {
     const user = renderPage('/rooms/room-1/maps/map-1?side=');
     expect(screen.getByText('Seleziona una card per vederne le info')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Chiudi il pannello' }));
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
+  it('ignores an empty ?side= on a page that is not a map', () => {
+    restore = matchMediaQueries([SPLIT_QUERY]);
+    renderPage('/rooms/room-1/documents?side=', 'room-1', false);
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 

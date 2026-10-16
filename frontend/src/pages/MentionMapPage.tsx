@@ -122,7 +122,7 @@ function MentionMapEditor({
   };
 
   return (
-    <PageLayout
+    <PageLayout allowEmptySide
       backTo={`/rooms/${roomId}/documents/${map.documentId}`}
       backLabel={t('maps.mention.backToDocument')}
       roomId={roomId}

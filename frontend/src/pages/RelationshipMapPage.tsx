@@ -129,7 +129,7 @@ function MapEditor({
   };
 
   return (
-    <PageLayout backTo={`/rooms/${roomId}/maps`} backLabel={t('maps.backToMaps')} roomId={roomId}>
+    <PageLayout allowEmptySide backTo={`/rooms/${roomId}/maps`} backLabel={t('maps.backToMaps')} roomId={roomId}>
       <Group justify="space-between" wrap="nowrap" align="flex-start">
         <Stack gap={0} style={{ minWidth: 0 }}>
           <Group gap="sm" wrap="wrap">
