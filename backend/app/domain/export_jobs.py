@@ -20,9 +20,10 @@ STALE_AFTER = timedelta(hours=2)
 # PDF Attachments are appended until this many bytes are in the file; later
 # ones are left out rather than building an unbounded PDF in memory.
 MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024
-# An image is downscaled so its longer side is at most this many pixels: about
-# 150 dpi on A4, plenty for print and light on memory and file size.
-MAX_IMAGE_PIXELS = 1400
+# An image is downscaled so its longer side is at most this many pixels: a
+# template prints one at most about 135 mm wide, so this is 190 dpi or more,
+# plenty for print and cheap to convert, lay out and embed.
+MAX_IMAGE_PIXELS = 1000
 
 
 class ExportStatus(StrEnum):
