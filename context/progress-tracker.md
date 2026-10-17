@@ -125,6 +125,12 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-16
 
+- **Spellcheck on text fields** (no migration): content fields (Document
+  name/subtitle/description, Note title/body, Comment composer, Map and Card
+  text, Arrow label, profile bio) now set `spellCheck` explicitly, so Firefox
+  also checks the single-line ones. The dictionary language is `<html lang>`,
+  which already follows the App language (`i18n/index.ts`). Not done: a
+  per-Room writing language, and any LanguageTool/Hunspell option.
 - **Room PDF, real cause found** (no migration): the prod logs showed the
   upload to Storage refused with 413 `EntityTooLarge`: the `document-images`
   bucket has a 10 MB per-object limit and a big Room's PDF is larger. Earlier

@@ -80,6 +80,7 @@ export function CardDialog({ card, images = [], isMaster, onSave, onDelete, onCl
           {isDocument ? (
             <>
               <Textarea
+                spellCheck
                 label={t('maps.card.caption')}
                 description={t('maps.card.captionHint')}
                 placeholder={card!.document!.subtitle ?? undefined}
@@ -132,6 +133,7 @@ export function CardDialog({ card, images = [], isMaster, onSave, onDelete, onCl
           ) : (
             <>
               <Textarea
+                spellCheck
                 label={t('maps.card.text')}
                 value={text}
                 onChange={(event) => setText(event.currentTarget.value)}

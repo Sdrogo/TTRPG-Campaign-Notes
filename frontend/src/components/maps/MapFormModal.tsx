@@ -54,6 +54,7 @@ export function MapFormModal({
       >
         <Stack gap="sm">
           <TextInput
+            spellCheck
             label={t('common.name')}
             value={values.name}
             onChange={(event) => set({ name: event.currentTarget.value })}
@@ -62,6 +63,7 @@ export function MapFormModal({
             data-autofocus
           />
           <Textarea
+            spellCheck
             label={t('common.description')}
             value={values.description}
             onChange={(event) => set({ description: event.currentTarget.value })}

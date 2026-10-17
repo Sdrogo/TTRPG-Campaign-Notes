@@ -61,6 +61,7 @@ export function ArrowDialog({ arrow, fromName, toName, isMaster, onSave, onDelet
             />
           </Input.Wrapper>
           <TextInput
+            spellCheck
             label={direction === 'both' ? t('maps.arrow.labelTowards', { name: toName }) : t('maps.arrow.label')}
             value={label}
             onChange={(event) => setLabel(event.currentTarget.value)}
