@@ -8,7 +8,7 @@
 ## Decisions (proposed 2026-10-17, confirm in the PR)
 
 1. **A kind of map, not a new feature**: `relationship_maps.kind` = `free` (today) | `geographic`. A geographic map is created from the same "New map" dialog (a "Free board / Geographic map" choice), appears in the same Maps list, has the same name, description, visibility, creator and managers (spec 28 Decisions 1-3), and can be linked to a Document (spec 36 Decision 15). A map's kind never changes.
-2. **The plane**: a geographic map has a flat plane, `width` × `height` in map units (default 2000 × 1400). It may have a **background image** (the street map, a city plan, a hand-drawn fantasy map), uploaded or picked with image search (spec 29), ≤ 10 MB, PNG, JPEG or WebP, stretched over the whole plane. Without one the plane is the board's plain background. No tiles from an outside map service (the App never calls a third-party map server, and a fictional setting has no real tiles).
+2. **The plane**: a geographic map has a flat plane, `width` × `height` in map units (default 2000 × 1400). It may have a **background image** (the street map, a city plan, a hand-drawn fantasy map), uploaded or picked with image search (spec 29), ≤ 20 MB, PNG, JPEG, WebP or GIF (the App's image rules; stored as WebP, at most 4096 px on its longest side), stretched over the whole plane. An SVG is converted to PNG before upload (see the walkthrough). Without one the plane is the board's plain background. No tiles from an outside map service (the App never calls a third-party map server, and a fictional setting has no real tiles).
 3. **Areas** (the zones): a closed shape of 3 to 60 points, with a **name** (default the bound Document's name), an optional **subtitle**, a **color** from the spec 28 palette, a **dashed outline** flag ("proposed zone", like Meiji Jingū in the example) and an optional **Document**. Bound to a Document, the area's name and subtitle follow it, a click opens it (split pane when open, spec 37), and a Document appears at most once per map as an area. Without a Document the area is a plain label. An area can be **filled** or **outline only**.
 4. **Pins** (the places): a point drawn as a diamond when bound to a Document and as a circle when plain, with a **label side** (left, right, above, below), a color and an optional **Document**, same binding rules as areas. A Document is at most one pin **or** one area on a map, never both. A pin may sit inside an area; it does not belong to it.
 5. **Links**: the arrows of spec 28 Decision 5, stored in their own table (direction, label, reverse label, color, Master only, draggable label) between **pins and areas**, drawn as a dashed curve with a bend the editor can drag. Several line-only links between the same two ends are drawn side by side (spec 28 Decision 5).
@@ -49,7 +49,7 @@ A note for the product owner (2026-10-17): a map like "Shibuya di notte" is mean
 
 - **Top level**: `schema_version` (1), `kind` (`"geographic_map"`), `name` (≤ 100), `description` (optional), `plane` (`width`, `height`, 100 to 20,000 each).
 - **Coordinates**: plane units, origin at the **top left**, `x` to the right, `y` **down**. Every point must be inside the plane. For a real city, project longitude/latitude yourself (a simple equirectangular projection is enough) and scale so the whole map fits the plane; the background image must be drawn on the **same extent**, edge to edge.
-- **`areas`** (≤ 60): `key` (unique in the file), `points` (3 to 60 `[x, y]` pairs in order, a real surface), `color`, `filled` (default true), `dashed` (default false); and either `document` (the exact name of a Document of the Room) **or**, for a plain area, `name` (≤ 80), optional `subtitle` (≤ 80), optional `note` (≤ 500), optional `master_only`.
+- **`areas`** (≤ 60): `key` (unique in the file), `points` (3 to 60 `[x, y]` pairs in order, a real surface), `color`, `filled` (default true), `dashed` (default false); and either `document` (the exact name of a Document of the Room) **or**, for a plain area (`document` left out or `null`), `name` (≤ 80), optional `subtitle` (≤ 80), optional `note` (≤ 500), optional `master_only`.
 - **`pins`** (≤ 300): `key`, `x`, `y`, `label_side` (`left`, `right`, `above`, `below`), `color`; and `document`, or `name` + optional `note` + optional `master_only`, as for an area.
 - **`links`** (≤ 400): `from` and `to` (the `key` of an area or a pin, different), `direction` (`forward`, `both` or `none`), `label`, `reverse_label` (only with `both`), `color`, optional `bend` (how far the curve leaves the straight line, in plane units, negative to the other side), optional `master_only`.
 - **Colors**: `default`, `red`, `green`, `purple`, `blue`, `gold`, `orange`, `midnight`, `silver`, `champagne`, `rose`, `pink`, `cobalt`, `violet`, `emerald`, `brown`, `lime`.
@@ -59,7 +59,7 @@ A note for the product owner (2026-10-17): a map like "Shibuya di notte" is mean
 
 1. **In the App**, open the Room and export it as JSON (spec 27 / 23, "Export"). It holds the exact Document names, so Claude can use them.
 2. **In the other chat**, attach that export, say which places and zones the map should show and, if it helps, attach the notes you already have (like `shibuya.md`). Then paste the prompt below.
-3. **Claude answers with two things**: the JSON file and a background image (SVG or PNG) drawn on the same plane. Save them as `shibuya.json` and `shibuya.svg` (or `.png`). Open the JSON once to check it looks like the example.
+3. **Claude answers with two things**: the JSON file and a background image drawn on the same plane. Save them as `shibuya.json` and `shibuya.png`. The App takes PNG, JPEG, WebP or GIF, not SVG: if Claude could only give an SVG, open it in the browser at full size and save a screenshot as PNG, or ask Claude to render it to PNG with code. Open the JSON once to check it looks like the example.
 4. **In the App**, Maps, **New map**, choose **Geographic map**, then **Import from file** and pick the JSON. The App shows a report before it creates anything: how many areas, pins and links, and the names that matched no Document. Confirm.
 5. In the new map's **Map** dialog, upload the background image. The plane is the same size, so zones and places line up.
 6. Touch up with the editor (38_2): move a pin, fix a corner, bind a plain place to a Document you create later. Import always makes a **new** map; to change the map in the chat, ask Claude for a new file and import it again, then delete the old map.
@@ -74,7 +74,8 @@ background image.
 1. Choose a plane that fits the place (e.g. 2000 x 1400 units, origin top left,
    y down). If it is a real place, project lon/lat onto it and scale to fit.
 2. Draw the background (streets, rails, rivers, labels of streets and stations,
-   no zones, no pins) as an SVG exactly as large as the plane, edge to edge.
+   no zones, no pins) as an SVG exactly as large as the plane, edge to edge,
+   and, if you can run code, render it to a PNG of the same size.
 3. Write the JSON with this shape: schema_version 1, kind "geographic_map",
    name, description, plane {width, height}, areas, pins, links.
    - areas: key, points (3-60 [x, y]), color, filled, dashed, and either
@@ -90,13 +91,14 @@ background image.
    plain name. Put secrets only in notes marked "master_only": true.
 5. Check before answering: every point is inside the plane, every link key
    exists, JSON is valid. Answer with the JSON in one
-   code block and the SVG in another, nothing else.
+   code block and the SVG in another (plus the PNG file if you made one).
 ```
 
 ## Implementation
 
 - **38_1** backend and migration, **38_2** frontend (viewer, then editor), **38_3** import/export, each into `staging`, in that order. The migration goes to the staging database before the merge and to production before the next release to `main`.
 - On approval: update `requirements.md` (§1 scope and a new `FR-`, only at the product owner's request), `architecture.md` (Storage Model, a Geographic maps entry), `ui-context.md` (the geographic board) and `progress-tracker.md`.
+- **Built in 38_1 (2026-10-17), beyond the text above**: links are a table of their own (`relationship_map_links`), so the free board is untouched; a pin's marker (diamond or circle) is not stored, it follows from whether it has a Document; linking a geographic map to a Document (Decision 1) answers 409 until 38_2 can show it on the Document page; a plane change that would leave an area or pin outside the plane is refused (422).
 - **Open for the product owner**: whether 38_3 (import) is wanted at once or later; whether a Tag should pick an area's color; the Shibuya map as the first real test, rebuilt from its data once 38_2 is in.
 
 ## Definition of Done

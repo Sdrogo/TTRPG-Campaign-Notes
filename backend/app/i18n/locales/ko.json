@@ -215,8 +215,19 @@
         "text": "카드 텍스트",
         "caption": "캡션",
         "label": "레이블",
-        "groupTitle": "그룹 제목"
-      }
+        "groupTitle": "그룹 제목",
+        "placeName": "이름",
+        "subtitle": "부제",
+        "note": "메모"
+      },
+      "invalidPlane": "평면은 가로와 세로가 각각 100~20,000 단위여야 하며, 지리 지도에만 있습니다",
+      "planeTooSmall": "그 평면으로는 지도의 일부가 밖으로 나갑니다",
+      "notGeographic": "지리 지도가 아닙니다",
+      "notFree": "지리 지도입니다. 카드 보드가 없습니다",
+      "placeNameRequired": "문서가 없는 구역이나 핀에는 이름이 필요합니다",
+      "tooManyAreas": "지도에는 구역을 최대 {max}개까지 둘 수 있습니다",
+      "tooManyPins": "지도에는 핀을 최대 {max}개까지 둘 수 있습니다",
+      "tooManyLinks": "지도에는 링크를 최대 {max}개까지 둘 수 있습니다"
     },
     "mentionMap": {
       "notFound": "이 문서에는 언급 지도가 없습니다",

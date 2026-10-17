@@ -215,8 +215,19 @@
         "text": "texto de la tarjeta",
         "caption": "pie de imagen",
         "label": "etiqueta",
-        "groupTitle": "título del grupo"
-      }
+        "groupTitle": "título del grupo",
+        "placeName": "nombre",
+        "subtitle": "subtítulo",
+        "note": "nota"
+      },
+      "invalidPlane": "El plano debe medir de 100 a 20.000 unidades de ancho y de alto, y solo un mapa geográfico lo tiene",
+      "planeTooSmall": "Con ese plano parte del mapa quedaría fuera",
+      "notGeographic": "Este no es un mapa geográfico",
+      "notFree": "Este es un mapa geográfico: no tiene tablero de tarjetas",
+      "placeNameRequired": "Una zona o un lugar sin Documento necesita un nombre",
+      "tooManyAreas": "Un mapa puede tener como máximo {max} zonas",
+      "tooManyPins": "Un mapa puede tener como máximo {max} lugares",
+      "tooManyLinks": "Un mapa puede tener como máximo {max} vínculos"
     },
     "mentionMap": {
       "notFound": "Este documento no tiene mapa de menciones",

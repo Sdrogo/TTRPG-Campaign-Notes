@@ -751,6 +751,14 @@ class RelationshipMapRow(Base):
             " OR (source_document_id IS NOT NULL AND mention_depth >= 0 AND mention_depth <= 3)",
             name="ck_relationship_maps_mention_depth",
         ),
+        CheckConstraint(
+            "(kind = 'free' AND plane_width IS NULL AND plane_height IS NULL"
+            " AND background_path IS NULL)"
+            " OR (kind = 'geographic' AND plane_width >= 100 AND plane_width <= 20000"
+            " AND plane_height >= 100 AND plane_height <= 20000"
+            " AND source_document_id IS NULL)",
+            name="ck_relationship_maps_kind",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -770,6 +778,12 @@ class RelationshipMapRow(Base):
         ForeignKey("documents.id", ondelete="CASCADE", name="fk_relationship_maps_source_document"),
     )
     mention_depth: Mapped[int | None] = mapped_column(SmallInteger)
+    # Spec 38: `free` (spec 28) or `geographic`. A geographic map has a flat
+    # plane and may have a stored background image.
+    kind: Mapped[str] = mapped_column(String(12), default="free", server_default="free")
+    plane_width: Mapped[int | None] = mapped_column(Integer)
+    plane_height: Mapped[int | None] = mapped_column(Integer)
+    background_path: Mapped[str | None] = mapped_column(String(300))
 
 
 class DocumentLinkedMapRow(Base):
@@ -938,6 +952,150 @@ class RelationshipMapArrowRow(Base):
     reverse_label_position: Mapped[float | None] = mapped_column(Float)
     # How far the label sits to the side of the arrow, in board pixels
     # (negative to the other side); only with a position.
+    label_offset: Mapped[float | None] = mapped_column(Float)
+    reverse_label_offset: Mapped[float | None] = mapped_column(Float)
+    color: Mapped[str] = mapped_column(String(10))
+    master_only: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class RelationshipMapAreaRow(Base):
+    """An area of a geographic map (spec 38 Decision 3): a closed shape of
+    `points` (a list of `[x, y]`), bound to a Document or plain. A Document is
+    on a map at most once, here or as a pin (checked by `plan_geo_board_edit`)
+    and its area goes with it (`ON DELETE CASCADE`)."""
+
+    __tablename__ = "relationship_map_areas"
+    __table_args__ = (
+        UniqueConstraint("map_id", "document_id", name="uq_relationship_map_areas_document"),
+        CheckConstraint(
+            "(document_id IS NULL) = (name IS NOT NULL)", name="ck_relationship_map_areas_kind"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    map_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_maps.id", ondelete="CASCADE"), index=True
+    )
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str | None] = mapped_column(String(80))
+    subtitle: Mapped[str | None] = mapped_column(String(80))
+    note: Mapped[str | None] = mapped_column(String(500))
+    points: Mapped[list[list[float]]] = mapped_column(JSONB)
+    color: Mapped[str] = mapped_column(String(10))
+    dashed: Mapped[bool] = mapped_column(Boolean, default=False)
+    filled: Mapped[bool] = mapped_column(Boolean, default=True)
+    master_only: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class RelationshipMapPinRow(Base):
+    """A pin of a geographic map (spec 38 Decision 4): a point bound to a
+    Document or plain, with the side its label is written on."""
+
+    __tablename__ = "relationship_map_pins"
+    __table_args__ = (
+        UniqueConstraint("map_id", "document_id", name="uq_relationship_map_pins_document"),
+        CheckConstraint(
+            "(document_id IS NULL) = (name IS NOT NULL)", name="ck_relationship_map_pins_kind"
+        ),
+        CheckConstraint(
+            "label_side IN ('left', 'right', 'above', 'below')",
+            name="ck_relationship_map_pins_label_side",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    map_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_maps.id", ondelete="CASCADE"), index=True
+    )
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str | None] = mapped_column(String(80))
+    note: Mapped[str | None] = mapped_column(String(500))
+    x: Mapped[float]
+    y: Mapped[float]
+    label_side: Mapped[str] = mapped_column(String(6), default="right")
+    color: Mapped[str] = mapped_column(String(10))
+    master_only: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class RelationshipMapLinkRow(Base):
+    """A link between two ends of a geographic map, each an area or a pin
+    (spec 38 Decision 5). Deleted with either end. Same label rules as a free
+    board's arrow (`RelationshipMapArrowRow`)."""
+
+    __tablename__ = "relationship_map_links"
+    __table_args__ = (
+        CheckConstraint(
+            "(from_area_id IS NULL) <> (from_pin_id IS NULL)",
+            name="ck_relationship_map_links_from",
+        ),
+        CheckConstraint(
+            "(to_area_id IS NULL) <> (to_pin_id IS NULL)", name="ck_relationship_map_links_to"
+        ),
+        CheckConstraint(
+            "from_area_id IS DISTINCT FROM to_area_id OR from_area_id IS NULL",
+            name="ck_relationship_map_links_area_ends_differ",
+        ),
+        CheckConstraint(
+            "from_pin_id IS DISTINCT FROM to_pin_id OR from_pin_id IS NULL",
+            name="ck_relationship_map_links_pin_ends_differ",
+        ),
+        CheckConstraint(
+            "direction IN ('forward', 'both', 'none')", name="ck_relationship_map_links_direction"
+        ),
+        CheckConstraint(
+            "reverse_label IS NULL OR direction = 'both'",
+            name="ck_relationship_map_links_reverse_label",
+        ),
+        CheckConstraint(
+            "label_position IS NULL"
+            " OR (label IS NOT NULL AND label_position >= 0 AND label_position <= 1)",
+            name="ck_relationship_map_links_label_position",
+        ),
+        CheckConstraint(
+            "reverse_label_position IS NULL"
+            " OR (reverse_label IS NOT NULL AND reverse_label_position >= 0"
+            " AND reverse_label_position <= 1)",
+            name="ck_relationship_map_links_reverse_label_position",
+        ),
+        CheckConstraint(
+            "label_offset IS NULL"
+            " OR (label_position IS NOT NULL AND label_offset >= -2000 AND label_offset <= 2000)",
+            name="ck_relationship_map_links_label_offset",
+        ),
+        CheckConstraint(
+            "reverse_label_offset IS NULL"
+            " OR (reverse_label_position IS NOT NULL AND reverse_label_offset >= -2000"
+            " AND reverse_label_offset <= 2000)",
+            name="ck_relationship_map_links_reverse_label_offset",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    map_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_maps.id", ondelete="CASCADE"), index=True
+    )
+    from_area_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_map_areas.id", ondelete="CASCADE")
+    )
+    from_pin_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_map_pins.id", ondelete="CASCADE")
+    )
+    to_area_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_map_areas.id", ondelete="CASCADE")
+    )
+    to_pin_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("relationship_map_pins.id", ondelete="CASCADE")
+    )
+    direction: Mapped[str] = mapped_column(String(10))
+    label: Mapped[str | None] = mapped_column(String(60))
+    reverse_label: Mapped[str | None] = mapped_column(String(60))
+    bend: Mapped[float | None] = mapped_column(Float)
+    label_position: Mapped[float | None] = mapped_column(Float)
+    reverse_label_position: Mapped[float | None] = mapped_column(Float)
     label_offset: Mapped[float | None] = mapped_column(Float)
     reverse_label_offset: Mapped[float | None] = mapped_column(Float)
     color: Mapped[str] = mapped_column(String(10))

@@ -215,8 +215,19 @@
         "text": "texto da carta",
         "caption": "legenda",
         "label": "etiqueta",
-        "groupTitle": "título do grupo"
-      }
+        "groupTitle": "título do grupo",
+        "placeName": "nome",
+        "subtitle": "subtítulo",
+        "note": "nota"
+      },
+      "invalidPlane": "O plano deve ter de 100 a 20.000 unidades de largura e de altura, e só um mapa geográfico o tem",
+      "planeTooSmall": "Com esse plano, parte do mapa ficaria fora dele",
+      "notGeographic": "Este não é um mapa geográfico",
+      "notFree": "Este é um mapa geográfico: não tem quadro de cartões",
+      "placeNameRequired": "Uma zona ou um local sem Documento precisa de um nome",
+      "tooManyAreas": "Um mapa pode ter no máximo {max} zonas",
+      "tooManyPins": "Um mapa pode ter no máximo {max} locais",
+      "tooManyLinks": "Um mapa pode ter no máximo {max} ligações"
     },
     "mentionMap": {
       "notFound": "Este documento não tem mapa de menções",

@@ -19,6 +19,7 @@ from app.db import (
     export_jobs_repo,
     files_repo,
     reads_repo,
+    relationship_maps_repo,
     reveals_repo,
     rooms_repo,
     storage,
@@ -362,6 +363,10 @@ async def purge_room(session: AsyncSession, room_id: uuid.UUID) -> None:
     room = await rooms_repo.get_room(session, room_id)
     if room is not None and room.image_path is not None:
         await storage_cleanup.schedule_removal(session, [room.image_path])
+    # And so do its geographic maps' backgrounds (spec 38).
+    backgrounds = await relationship_maps_repo.list_background_paths_in_room(session, room_id)
+    if backgrounds:
+        await storage_cleanup.schedule_removal(session, backgrounds)
     await rooms_repo.delete_room(session, room_id)
 
 

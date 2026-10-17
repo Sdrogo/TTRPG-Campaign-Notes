@@ -215,8 +215,19 @@
         "text": "testo della carta",
         "caption": "didascalia",
         "label": "etichetta",
-        "groupTitle": "titolo del gruppo"
-      }
+        "groupTitle": "titolo del gruppo",
+        "placeName": "nome",
+        "subtitle": "sottotitolo",
+        "note": "nota"
+      },
+      "invalidPlane": "Il piano deve essere largo e alto da 100 a 20.000 unità, e ce l'ha solo una mappa geografica",
+      "planeTooSmall": "Con quel piano una parte della mappa resterebbe fuori",
+      "notGeographic": "Questa non è una mappa geografica",
+      "notFree": "Questa è una mappa geografica: non ha una lavagna di schede",
+      "placeNameRequired": "Una zona o un luogo senza Documento ha bisogno di un nome",
+      "tooManyAreas": "Una mappa può avere al massimo {max} zone",
+      "tooManyPins": "Una mappa può avere al massimo {max} luoghi",
+      "tooManyLinks": "Una mappa può avere al massimo {max} legami"
     },
     "mentionMap": {
       "notFound": "Questo Documento non ha una mappa delle menzioni",
