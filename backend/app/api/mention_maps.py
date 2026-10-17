@@ -48,7 +48,6 @@ from app.domain.relationship_maps import (
     CardSize,
     MapCard,
     MapColor,
-    MapKind,
     RelationshipMap,
     can_create_map,
     can_manage_map,
@@ -477,7 +476,7 @@ async def get_linked_map(
     session: SessionDep,
     locale: LocaleDep,
 ) -> MapDetailResponse:
-    """Decision 15: the free map linked to the Document, as the requester
+    """Decision 15: the map linked to the Document, as the requester
     sees it, for its page. 404 when the Document has none, or when the map is
     hidden from them (then it is simply not shown)."""
     membership, center = await _center(
@@ -496,19 +495,18 @@ async def link_map(
     session: SessionDep,
     locale: LocaleDep,
 ) -> MapDetailResponse:
-    """Decision 15: shows a free map (spec 28) of the Room the requester
-    manages on the Document's page, exactly as it is: nothing is added to
-    or changed on the map. 404 when the map is hidden from them, 403 when
+    """Decision 15: shows a map of the Room the requester manages on the
+    Document's page, exactly as it is: nothing is added to or changed on the
+    map. A free map (spec 28) comes with its board; a geographic one (spec
+    38 Decision 1) with `kind`, and the page reads its content from
+    `.../maps/{map_id}/geo`. 404 when the map is hidden from them, 403 when
     they don't manage it. It replaces any map linked before, which only
     whoever manages that map may do (403, or 404 when it is hidden from
     them, so the link doesn't leak, VR-07)."""
     membership, center = await _center(
         session, room_id, document_id, uuid.UUID(current_user.id), locale
     )
-    target = await ensure_manages_map(session, room_id, body.map_id, membership, locale)
-    if target.kind != MapKind.FREE:
-        # A geographic map (spec 38) can't be shown here before 38_2.
-        raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
+    await ensure_manages_map(session, room_id, body.map_id, membership, locale)
     linked_id = await relationship_maps_repo.get_linked_map_id(session, center.id)
     if linked_id is not None and linked_id != body.map_id:
         await ensure_manages_map(session, room_id, linked_id, membership, locale)

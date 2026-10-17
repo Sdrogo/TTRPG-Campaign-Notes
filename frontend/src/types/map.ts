@@ -27,12 +27,22 @@ export type CardSize = 'normal' | 'large' | 'title';
 /** Which way an arrow points (Decision 5): one way, both ways or neither. */
 export type ArrowDirection = 'forward' | 'both' | 'none';
 
+/**
+ * A free board of cards (spec 28) or a geographic map of areas and pins on a
+ * plane (spec 38). A map's kind never changes.
+ */
+export type MapKind = 'free' | 'geographic';
+
 /** A map as the Room's list of maps shows it (spec 28 Decision 1). */
 export interface RelationshipMap {
   id: string;
   roomId: string;
   name: string;
   description: string;
+  kind: MapKind;
+  /** A geographic map's plane, in map units; null on a free map. */
+  planeWidth: number | null;
+  planeHeight: number | null;
   visibility: DocumentVisibility;
   /** Sent only to who may manage the map (its creator and the Master). */
   selectiveUserIds: string[] | null;
@@ -135,6 +145,8 @@ export interface MapFormValues {
   description: string;
   visibility: DocumentVisibility;
   selectiveUserIds: string[];
+  /** Chosen when the map is created only (spec 38 Decision 1). */
+  kind?: MapKind;
 }
 
 /**

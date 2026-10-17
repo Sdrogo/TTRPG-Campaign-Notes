@@ -11,6 +11,7 @@ import type {
   MapDocument,
   MapGroup,
   MapFormValues,
+  MapKind,
   MentionMap,
   MentionMapPreview,
   RelationshipMap,
@@ -25,6 +26,9 @@ export interface RawMap {
   room_id: string;
   name: string;
   description: string;
+  kind: MapKind;
+  plane_width: number | null;
+  plane_height: number | null;
   visibility: DocumentVisibility;
   selective_user_ids: string[] | null;
   created_by: string;
@@ -99,6 +103,9 @@ export function toMap(raw: RawMap): RelationshipMap {
     roomId: raw.room_id,
     name: raw.name,
     description: raw.description,
+    kind: raw.kind,
+    planeWidth: raw.plane_width,
+    planeHeight: raw.plane_height,
     visibility: raw.visibility,
     selectiveUserIds: raw.selective_user_ids,
     createdBy: raw.created_by,
@@ -265,13 +272,17 @@ export function toBoardBody(board: Board) {
   };
 }
 
-/** A map's create or settings form, as the API takes it. */
+/**
+ * A map's create or settings form, as the API takes it; `kind` only when the
+ * form chose one, on create (spec 38 Decision 1).
+ */
 export function toMapBody(values: MapFormValues) {
   return {
     name: values.name,
     description: values.description,
     visibility: values.visibility,
     selective_user_ids: values.visibility === 'selective' ? values.selectiveUserIds : [],
+    ...(values.kind && { kind: values.kind }),
   };
 }
 

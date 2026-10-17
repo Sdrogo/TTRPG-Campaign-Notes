@@ -6,7 +6,7 @@ import { toMapDetail, toMentionMap, type RawMapDetail, type RawMentionMap } from
 import { MentionMapModal } from '../../../components/maps/MentionMapModal';
 import { MentionMapPanel } from '../../../components/maps/MentionMapPanel';
 import { LinkedMapPanel } from '../../../components/maps/LinkedMapPanel';
-import { rawMap, rawMapDetail, rawMentionMap } from '../../fixtures';
+import { rawGeoMapDetail, rawMap, rawMapDetail, rawMentionMap } from '../../fixtures';
 import { renderWithProviders } from '../../utils';
 
 vi.mock('../../../lib/apiClient', async (original) => ({
@@ -202,5 +202,18 @@ describe('LinkedMapPanel', () => {
     cleanup();
     renderWithProviders(<LinkedMapPanel roomId="room-1" documentId="doc-1" map={map()} canUnlink={false} />);
     expect(screen.queryByRole('button', { name: 'Togli dalla pagina del Documento' })).not.toBeInTheDocument();
+  });
+
+  it('draws a linked geographic map from its content once loaded (spec 38_2)', async () => {
+    let answer: (value: unknown) => void = () => {};
+    fetchMock.mockImplementation(() => new Promise((resolve) => (answer = resolve)));
+    const geo = toMapDetail({ ...rawMapDetail({ id: 'map-1', name: 'Shibuya di notte' }), kind: 'geographic' } as RawMapDetail);
+    renderWithProviders(<LinkedMapPanel roomId="room-1" documentId="doc-1" map={geo} canUnlink={false} />);
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/geo');
+    expect(screen.queryByRole('application', { name: 'Mappa geografica' })).not.toBeInTheDocument();
+    answer(rawGeoMapDetail());
+    expect(await screen.findByRole('application', { name: 'Mappa geografica' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Incrocio' })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: 'Area' })).not.toBeInTheDocument();
   });
 });

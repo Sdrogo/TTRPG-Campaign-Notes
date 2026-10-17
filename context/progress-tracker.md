@@ -134,9 +134,18 @@ One line per unit; dates 2026, newest first. Spec files live in
   Documents or plain, with the spec 28 visibility rules. Routes
   `GET/PUT /rooms/{id}/maps/{map}/geo` and `/background` (upload, from URL,
   delete); the free-board routes answer 409 for a geographic map and back.
-  Not yet: the frontend (38_2), the JSON import/export (38_3), linking a
-  geographic map to a Document (409 until 38_2). `requirements.md` still says
-  geographic maps are out of scope: the product owner's edit only.
+  `requirements.md` still says geographic maps are out of scope: the
+  product owner's edit only.
+- **38_2, Geographic maps viewer and editor** (no migration): the product
+  owner asked for it before the import ("no import without a way to see
+  the map"). "Nuova mappa" offers Free board / Geographic map; the map page
+  draws the plane (background, areas, pins, curved links) in an SVG of its
+  own with pan and zoom, a card per clicked place (its Document, or its
+  note), the split pane for Documents, and a Tag filter for everyone. Its
+  managers draw areas corner by corner, place pins, link two items, drag
+  pins, areas, corners and a link's curve, and set the plane size and
+  background in a "Mappa" dialog (upload or URL; image search not wired).
+  Linking a geographic map to a Document now works (the 409 is gone).
 
 ### 2026-10-16
 
@@ -468,9 +477,9 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-- **38, Geographic maps**: 38_1 (backend) in PR #210; next 38_2 (viewer and
-  editor), then 38_3 (JSON import/export, the main way in for maps made by
-  Claude in another chat). `requirements.md` §1 and a new `FR-` need the
+- **38, Geographic maps**: 38_1 (backend, PR #210) and 38_2 (viewer and
+  editor) built; next 38_3 (JSON import/export, the main way in for maps
+  made by Claude in another chat). `requirements.md` §1 and a new `FR-` need the
   product owner's request.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).

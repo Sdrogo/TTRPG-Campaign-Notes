@@ -99,6 +99,9 @@ describe('the wire shape', () => {
       roomId: 'room-1',
       name: 'La Corte',
       description: 'Chi serve chi',
+      kind: 'free',
+      planeWidth: null,
+      planeHeight: null,
       visibility: 'room',
       selectiveUserIds: null,
       createdBy: 'user-1',
@@ -234,6 +237,12 @@ describe('the wire shape', () => {
     };
     expect(toMapBody(values).selective_user_ids).toEqual([]);
     expect(toMapBody({ ...values, visibility: 'selective' }).selective_user_ids).toEqual(['u']);
+  });
+
+  it('sends a map kind only when the form chose one (spec 38 Decision 1)', () => {
+    const values = { name: 'Shibuya', description: '', visibility: 'room' as const, selectiveUserIds: [] };
+    expect(toMapBody(values)).not.toHaveProperty('kind');
+    expect(toMapBody({ ...values, kind: 'geographic' }).kind).toBe('geographic');
   });
 
   it('keeps the image chosen for a card through a round trip', () => {
