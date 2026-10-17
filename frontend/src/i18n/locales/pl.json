@@ -1079,7 +1079,8 @@
       "noBackground": "Brak tła",
       "uploadBackground": "Prześlij obraz",
       "backgroundFromUrl": "Z adresu URL",
-      "removeBackground": "Usuń tło"
+      "removeBackground": "Usuń tło",
+      "export": "Eksportuj mapę (JSON)"
     },
     "kind": {
       "label": "Rodzaj mapy",
@@ -1088,6 +1089,22 @@
       "freeHelp": "Karty Dokumentów, grupy i strzałki, swobodnie na tablicy.",
       "geographicHelp": "Obszary i miejsca na płaszczyźnie z obrazem tła, powiązane z Dokumentami.",
       "geographicBadge": "Geograficzna"
+    },
+    "import": {
+      "button": "Importuj mapę",
+      "title": "Importuj mapę geograficzną",
+      "help": "Wybierz plik JSON mapy geograficznej, na przykład przygotowany przez Claude w innym czacie. Zobaczysz jego zawartość, zanim mapa zostanie utworzona.",
+      "chooseFile": "Wybierz plik",
+      "noFile": "Nie wybrano pliku",
+      "notJson": "Plik nie jest poprawnym JSON-em.",
+      "counts": "Obszary: {{areas}} · Miejsca: {{pins}} · Połączenia: {{links}}",
+      "plane": "Płaszczyzna {{width}} × {{height}}",
+      "matched": "powiązane z Dokumentem: {{number}}",
+      "notFound": "Brak Dokumentu o tej nazwie, zostaną zwykłymi etykietami:",
+      "ambiguous": "Kilka Dokumentów o tej nazwie, zostaną zwykłymi etykietami:",
+      "repeated": "Dokument jest już na mapie, zostaną zwykłymi etykietami:",
+      "backgroundLater": "Obraz tła wgrasz później, przyciskiem Mapa nowej mapy.",
+      "submit": "Importuj"
     }
   }
 }

@@ -1039,7 +1039,8 @@
       "noBackground": "Sin fondo",
       "uploadBackground": "Subir una imagen",
       "backgroundFromUrl": "Desde una URL",
-      "removeBackground": "Quitar el fondo"
+      "removeBackground": "Quitar el fondo",
+      "export": "Exportar el mapa (JSON)"
     },
     "kind": {
       "label": "Tipo de mapa",
@@ -1048,6 +1049,22 @@
       "freeHelp": "Tarjetas de Documentos, grupos y flechas, libres en la pizarra.",
       "geographicHelp": "Zonas y lugares sobre un plano con imagen de fondo, ligados a Documentos.",
       "geographicBadge": "Geográfico"
+    },
+    "import": {
+      "button": "Importar mapa",
+      "title": "Importar un mapa geográfico",
+      "help": "Elige el archivo JSON de un mapa geográfico, por ejemplo uno hecho por Claude en otro chat. Verás lo que contiene antes de crear el mapa.",
+      "chooseFile": "Elegir archivo",
+      "noFile": "Ningún archivo elegido",
+      "notJson": "El archivo no es un JSON válido.",
+      "counts": "Áreas: {{areas}} · Lugares: {{pins}} · Enlaces: {{links}}",
+      "plane": "Plano {{width}} × {{height}}",
+      "matched": "vinculados a un Documento: {{number}}",
+      "notFound": "Ningún Documento con este nombre, quedarán como etiquetas simples:",
+      "ambiguous": "Varios Documentos con este nombre, quedarán como etiquetas simples:",
+      "repeated": "Documento ya en el mapa, quedarán como etiquetas simples:",
+      "backgroundLater": "La imagen de fondo se sube después, desde el botón Mapa del nuevo mapa.",
+      "submit": "Importar"
     }
   }
 }

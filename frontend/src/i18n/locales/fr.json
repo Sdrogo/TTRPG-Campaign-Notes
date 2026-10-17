@@ -1039,7 +1039,8 @@
       "noBackground": "Aucun fond",
       "uploadBackground": "Téléverser une image",
       "backgroundFromUrl": "Depuis une URL",
-      "removeBackground": "Retirer le fond"
+      "removeBackground": "Retirer le fond",
+      "export": "Exporter la carte (JSON)"
     },
     "kind": {
       "label": "Type de carte",
@@ -1048,6 +1049,22 @@
       "freeHelp": "Cartes de Documents, groupes et flèches, librement sur le tableau.",
       "geographicHelp": "Zones et lieux sur un plan avec une image de fond, liés aux Documents.",
       "geographicBadge": "Géographique"
+    },
+    "import": {
+      "button": "Importer une carte",
+      "title": "Importer une carte géographique",
+      "help": "Choisis le fichier JSON d'une carte géographique, par exemple fait par Claude dans une autre conversation. Tu verras son contenu avant que la carte soit créée.",
+      "chooseFile": "Choisir un fichier",
+      "noFile": "Aucun fichier choisi",
+      "notJson": "Le fichier n'est pas un JSON valide.",
+      "counts": "Zones : {{areas}} · Lieux : {{pins}} · Liens : {{links}}",
+      "plane": "Plan {{width}} × {{height}}",
+      "matched": "liés à un Document : {{number}}",
+      "notFound": "Aucun Document avec ce nom, ils resteront de simples étiquettes :",
+      "ambiguous": "Plusieurs Documents avec ce nom, ils resteront de simples étiquettes :",
+      "repeated": "Document déjà sur la carte, ils resteront de simples étiquettes :",
+      "backgroundLater": "L'image de fond s'ajoute ensuite, depuis le bouton Carte de la nouvelle carte.",
+      "submit": "Importer"
     }
   }
 }

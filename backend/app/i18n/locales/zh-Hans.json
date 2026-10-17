@@ -229,6 +229,16 @@
       "tooManyPins": "一张地图最多可有 {max} 个图钉",
       "tooManyLinks": "一张地图最多可有 {max} 条连线"
     },
+    "mapImport": {
+      "invalidFile": "该文件不是应用能读取的地图(请检查字段“{field}”)",
+      "unsupportedVersion": "该文件使用地图格式的第 {version} 版;应用读取第 1 版",
+      "duplicateKey": "键“{item}”在文件中出现了两次",
+      "unknownKey": "某条连接指向“{item}”,但它不是文件中某个区域或标记的键",
+      "linkToItself": "从“{item}”出发的连接又回到了它自己",
+      "invalidArea": "区域“{item}”需要在平面内有 3 到 60 个顶点,围成真实的面积",
+      "pinOutsidePlane": "标记“{item}”在平面之外",
+      "nameRequired": "地点“{item}”既没有文档也没有名称"
+    },
     "mentionMap": {
       "notFound": "此文档没有提及地图",
       "alreadyExists": "此文档已有提及地图",

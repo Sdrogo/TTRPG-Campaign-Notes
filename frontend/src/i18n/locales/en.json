@@ -1039,7 +1039,8 @@
       "noBackground": "No background",
       "uploadBackground": "Upload an image",
       "backgroundFromUrl": "From a URL",
-      "removeBackground": "Remove the background"
+      "removeBackground": "Remove the background",
+      "export": "Export the map (JSON)"
     },
     "kind": {
       "label": "Kind of map",
@@ -1048,6 +1049,22 @@
       "freeHelp": "Document cards, groups and arrows, anywhere on the board.",
       "geographicHelp": "Areas and places on a plane with a background image, bound to Documents.",
       "geographicBadge": "Geographic"
+    },
+    "import": {
+      "button": "Import map",
+      "title": "Import a geographic map",
+      "help": "Choose the JSON file of a geographic map, for example one Claude made in another chat. You'll see what it holds before the map is created.",
+      "chooseFile": "Choose file",
+      "noFile": "No file chosen",
+      "notJson": "The file isn't valid JSON.",
+      "counts": "Areas: {{areas}} · Places: {{pins}} · Links: {{links}}",
+      "plane": "Plane {{width}} × {{height}}",
+      "matched": "bound to a Document: {{number}}",
+      "notFound": "No Document with this name, kept as plain labels:",
+      "ambiguous": "Several Documents with this name, kept as plain labels:",
+      "repeated": "Document already on the map, kept as plain labels:",
+      "backgroundLater": "Upload the background image afterwards, from the new map's Map button.",
+      "submit": "Import"
     }
   }
 }

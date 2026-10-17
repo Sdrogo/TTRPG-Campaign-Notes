@@ -3,9 +3,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { rawGeoMapDetail } from '../fixtures';
 import { renderHookWithProviders } from '../utils';
-import { useChangeBackground, useGeoMap, useResizePlane, useSaveGeo } from '../../hooks/useGeoMap';
+import {
+  useChangeBackground,
+  useExportMap,
+  useGeoMap,
+  useImportMap,
+  usePreviewMapImport,
+  useResizePlane,
+  useSaveGeo,
+} from '../../hooks/useGeoMap';
+import { saveBlob } from '../../lib/roomExport';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
+vi.mock('../../lib/roomExport', async (original) => ({
+  ...(await original<typeof import('../../lib/roomExport')>()),
+  saveBlob: vi.fn(),
+}));
 
 const fetchMock = vi.mocked(apiFetch);
 const GEO_KEY = ['rooms', 'room-1', 'maps', 'map-1', 'geo'];
@@ -64,5 +77,59 @@ describe('the geographic map hooks (spec 38)', () => {
     await result.current.mutateAsync(null);
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/background', { method: 'DELETE' });
     expect(queryClient.getQueryData(GEO_KEY)).toMatchObject({ kind: 'geographic' });
+  });
+
+  it('previews an import without writing anything (spec 38_3)', async () => {
+    fetchMock.mockResolvedValue({
+      name: 'Shibuya',
+      description: '',
+      plane_width: 2000,
+      plane_height: 1400,
+      areas: 6,
+      pins: 14,
+      links: 4,
+      matched: 8,
+      not_found: ['Elysium'],
+      ambiguous: [],
+      repeated: [],
+    });
+    const { result } = renderHookWithProviders(() => usePreviewMapImport('room-1'));
+    const report = await result.current.mutateAsync({ schema_version: 1 });
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/import/preview', {
+      method: 'POST',
+      json: { map: { schema_version: 1 } },
+    });
+    expect(report).toMatchObject({ planeWidth: 2000, notFound: ['Elysium'], matched: 8 });
+  });
+
+  it('imports a file as a new map and refreshes the list', async () => {
+    const { result, queryClient } = renderHookWithProviders(() => useImportMap('room-1'));
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    const created = await result.current.mutateAsync({
+      map: { schema_version: 1 },
+      values: { name: 'Shibuya', description: '', visibility: 'selective', selectiveUserIds: ['user-2'] },
+    });
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/import', {
+      method: 'POST',
+      json: {
+        map: { schema_version: 1 },
+        name: 'Shibuya',
+        description: '',
+        visibility: 'selective',
+        selective_user_ids: ['user-2'],
+      },
+    });
+    expect(created.kind).toBe('geographic');
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY, exact: true });
+  });
+
+  it('downloads the map as a JSON file', async () => {
+    fetchMock.mockResolvedValue({ schema_version: 1, name: 'Shibuya' });
+    const { result } = renderHookWithProviders(() => useExportMap('room-1', 'map-1', 'Shibuya di notte'));
+    await result.current.mutateAsync();
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/export');
+    const [blob, name] = vi.mocked(saveBlob).mock.calls[0] as [Blob, string];
+    expect(name).toMatch(/^shibuya-di-notte-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(await blob.text()).toBe('{\n  "schema_version": 1,\n  "name": "Shibuya"\n}\n');
   });
 });

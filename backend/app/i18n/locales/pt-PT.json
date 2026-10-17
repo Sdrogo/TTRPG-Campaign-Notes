@@ -229,6 +229,16 @@
       "tooManyPins": "Um mapa pode ter no máximo {max} locais",
       "tooManyLinks": "Um mapa pode ter no máximo {max} ligações"
     },
+    "mapImport": {
+      "invalidFile": "O ficheiro não é um mapa que a App consiga ler (verifica o campo \"{field}\")",
+      "unsupportedVersion": "O ficheiro usa a versão {version} do formato de mapas; a App lê a versão 1",
+      "duplicateKey": "A chave \"{item}\" é usada duas vezes no ficheiro",
+      "unknownKey": "Uma ligação indica \"{item}\", que não é a chave de uma área nem de um marcador do ficheiro",
+      "linkToItself": "A ligação a partir de \"{item}\" volta a si própria",
+      "invalidArea": "A área \"{item}\" precisa de 3 a 60 vértices dentro do plano, à volta de uma superfície real",
+      "pinOutsidePlane": "O marcador \"{item}\" está fora do plano",
+      "nameRequired": "O lugar \"{item}\" não tem Documento nem nome"
+    },
     "mentionMap": {
       "notFound": "Este documento não tem mapa de menções",
       "alreadyExists": "Este documento já tem um mapa de menções",

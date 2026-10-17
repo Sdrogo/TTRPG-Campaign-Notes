@@ -229,6 +229,16 @@
       "tooManyPins": "Una mappa può avere al massimo {max} luoghi",
       "tooManyLinks": "Una mappa può avere al massimo {max} legami"
     },
+    "mapImport": {
+      "invalidFile": "Il file non è una mappa che l'App sa leggere (controlla il campo \"{field}\")",
+      "unsupportedVersion": "Il file usa la versione {version} del formato delle mappe; l'App legge la versione 1",
+      "duplicateKey": "La chiave \"{item}\" è usata due volte nel file",
+      "unknownKey": "Un collegamento nomina \"{item}\", che non è la chiave di un'area o di un segnaposto del file",
+      "linkToItself": "Il collegamento da \"{item}\" torna su sé stesso",
+      "invalidArea": "L'area \"{item}\" ha bisogno di 3-60 vertici dentro il piano, attorno a una superficie vera",
+      "pinOutsidePlane": "Il segnaposto \"{item}\" è fuori dal piano",
+      "nameRequired": "Il luogo \"{item}\" non ha né un Documento né un nome"
+    },
     "mentionMap": {
       "notFound": "Questo Documento non ha una mappa delle menzioni",
       "alreadyExists": "Questo Documento ha già una mappa delle menzioni",

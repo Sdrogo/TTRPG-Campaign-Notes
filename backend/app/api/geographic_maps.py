@@ -244,7 +244,7 @@ async def _document_looks(
     return looks
 
 
-async def _detail(
+async def geo_detail(
     session: AsyncSession,
     relationship_map: RelationshipMap,
     grants: Collection[uuid.UUID],
@@ -406,7 +406,7 @@ async def get_geo(
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     relationship_map, grants = await get_visible_map(session, room_id, map_id, membership, locale)
     _ensure_geographic(relationship_map, locale)
-    return await _detail(session, relationship_map, grants, membership)
+    return await geo_detail(session, relationship_map, grants, membership)
 
 
 @router.put("/geo")
@@ -428,7 +428,7 @@ async def save_geo(
     await apply_geo_board(session, relationship_map, membership, body, locale)
     updated = replace(relationship_map, updated_at=_now())
     await relationship_maps_repo.update_map(session, updated)
-    return await _detail(session, updated, grants, membership)
+    return await geo_detail(session, updated, grants, membership)
 
 
 async def _replace_background(
@@ -448,7 +448,7 @@ async def _replace_background(
         await storage_cleanup.schedule_removal(session, [relationship_map.background_path])
     updated = replace(relationship_map, background_path=new_path, updated_at=_now())
     await relationship_maps_repo.update_map(session, updated)
-    return await _detail(session, updated, grants, membership)
+    return await geo_detail(session, updated, grants, membership)
 
 
 async def _store_background(

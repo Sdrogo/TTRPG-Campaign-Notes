@@ -229,6 +229,16 @@
       "tooManyPins": "1つのマップに置けるピンは最大{max}個です",
       "tooManyLinks": "1つのマップに引けるリンクは最大{max}本です"
     },
+    "mapImport": {
+      "invalidFile": "このファイルはアプリが読めるマップではありません(項目「{field}」を確認してください)",
+      "unsupportedVersion": "このファイルはマップ形式のバージョン {version} を使っています。アプリが読めるのはバージョン 1 です",
+      "duplicateKey": "キー「{item}」がファイル内で2回使われています",
+      "unknownKey": "リンクが「{item}」を指していますが、ファイル内のエリアやピンのキーではありません",
+      "linkToItself": "「{item}」からのリンクが自分自身に戻っています",
+      "invalidArea": "エリア「{item}」には、平面内に面積のある形をつくる3〜60個の頂点が必要です",
+      "pinOutsidePlane": "ピン「{item}」が平面の外にあります",
+      "nameRequired": "場所「{item}」にはドキュメントも名前もありません"
+    },
     "mentionMap": {
       "notFound": "このドキュメントには言及マップがありません",
       "alreadyExists": "このドキュメントにはすでに言及マップがあります",

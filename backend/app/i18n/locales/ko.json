@@ -229,6 +229,16 @@
       "tooManyPins": "지도에는 핀을 최대 {max}개까지 둘 수 있습니다",
       "tooManyLinks": "지도에는 링크를 최대 {max}개까지 둘 수 있습니다"
     },
+    "mapImport": {
+      "invalidFile": "이 파일은 앱이 읽을 수 있는 지도가 아닙니다(\"{field}\" 항목을 확인하세요)",
+      "unsupportedVersion": "이 파일은 지도 형식 버전 {version}을(를) 사용합니다. 앱은 버전 1을 읽습니다",
+      "duplicateKey": "키 \"{item}\"이(가) 파일에서 두 번 사용되었습니다",
+      "unknownKey": "연결이 \"{item}\"을(를) 가리키지만 파일에 있는 영역이나 핀의 키가 아닙니다",
+      "linkToItself": "\"{item}\"에서 시작한 연결이 자기 자신으로 돌아옵니다",
+      "invalidArea": "영역 \"{item}\"에는 평면 안에서 실제 넓이를 이루는 꼭짓점이 3~60개 필요합니다",
+      "pinOutsidePlane": "핀 \"{item}\"이(가) 평면 밖에 있습니다",
+      "nameRequired": "장소 \"{item}\"에는 문서도 이름도 없습니다"
+    },
     "mentionMap": {
       "notFound": "이 문서에는 언급 지도가 없습니다",
       "alreadyExists": "이 문서에는 이미 언급 지도가 있습니다",

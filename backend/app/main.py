@@ -25,6 +25,7 @@ from app.api.image_search import router as image_search_router
 from app.api.imports import router as imports_router
 from app.api.invitations import router as invitations_router
 from app.api.main_items import router as main_items_router
+from app.api.map_files import router as map_files_router
 from app.api.mention_maps import linked_router as linked_maps_router
 from app.api.mention_maps import router as mention_maps_router
 from app.api.mentions import router as mentions_router
@@ -100,6 +101,7 @@ app.include_router(imports_router)
 app.include_router(versions_router)
 app.include_router(relationship_maps_router)
 app.include_router(geographic_maps_router)
+app.include_router(map_files_router)
 app.include_router(mention_maps_router)
 app.include_router(linked_maps_router)
 
