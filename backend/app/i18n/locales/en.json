@@ -215,8 +215,19 @@
         "text": "card text",
         "caption": "caption",
         "label": "label",
-        "groupTitle": "group title"
-      }
+        "groupTitle": "group title",
+        "placeName": "name",
+        "subtitle": "subtitle",
+        "note": "note"
+      },
+      "invalidPlane": "The plane must be 100 to 20,000 units wide and tall, and only a geographic map has one",
+      "planeTooSmall": "That plane would leave part of the map outside it",
+      "notGeographic": "This is not a geographic map",
+      "notFree": "This is a geographic map: it has no board of cards",
+      "placeNameRequired": "An area or pin without a Document needs a name",
+      "tooManyAreas": "A map can have at most {max} areas",
+      "tooManyPins": "A map can have at most {max} pins",
+      "tooManyLinks": "A map can have at most {max} links"
     },
     "mentionMap": {
       "notFound": "This Document has no mention map",

@@ -215,8 +215,19 @@
         "text": "カードのテキスト",
         "caption": "キャプション",
         "label": "ラベル",
-        "groupTitle": "グループのタイトル"
-      }
+        "groupTitle": "グループのタイトル",
+        "placeName": "名前",
+        "subtitle": "サブタイトル",
+        "note": "メモ"
+      },
+      "invalidPlane": "平面は幅・高さとも100〜20,000単位で、地理マップだけが持てます",
+      "planeTooSmall": "その平面ではマップの一部がはみ出します",
+      "notGeographic": "これは地理マップではありません",
+      "notFree": "これは地理マップです。カードのボードはありません",
+      "placeNameRequired": "ドキュメントのないエリアやピンには名前が必要です",
+      "tooManyAreas": "1つのマップに置けるエリアは最大{max}個です",
+      "tooManyPins": "1つのマップに置けるピンは最大{max}個です",
+      "tooManyLinks": "1つのマップに引けるリンクは最大{max}本です"
     },
     "mentionMap": {
       "notFound": "このドキュメントには言及マップがありません",

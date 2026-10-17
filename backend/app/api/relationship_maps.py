@@ -23,9 +23,23 @@ from app.api.errors import http_error, translated_error
 from app.api.image_uploads import ImageResponse, image_responses, sign_images
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, relationship_maps_repo, rooms_repo
+from app.db import (
+    documents_repo,
+    geographic_maps_repo,
+    relationship_maps_repo,
+    rooms_repo,
+    storage_cleanup,
+)
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
+from app.domain.geographic_maps import (
+    InvalidPlaneError,
+    WrongMapKindError,
+    clean_plane,
+    ensure_board_in_plane,
+    geo_document_counts,
+    placed_document_ids,
+)
 from app.domain.models import Document, DocumentImage, DocumentVisibility, Membership
 from app.domain.relationship_maps import (
     MAX_LABEL_OFFSET,
@@ -40,6 +54,7 @@ from app.domain.relationship_maps import (
     MapCard,
     MapColor,
     MapGroup,
+    MapKind,
     MapLimitError,
     MapNameRequiredError,
     MapTextTooLongError,
@@ -64,14 +79,19 @@ router = APIRouter(prefix="/rooms/{room_id}/maps", tags=["maps"])
 
 
 class MapResponse(BaseModel):
-    """A map as the list shows it: `document_count` counts only the
-    Documents the requester sees; `selective_user_ids` is sent only to who
+    """A map as the list shows it: `kind` is `free` or `geographic` (spec
+    38; a geographic map has a plane of `plane_width` by `plane_height`
+    units and its content is read from `.../geo`); `document_count` counts
+    only the Documents the requester sees; `selective_user_ids` is sent only to who
     may manage the map (its creator and the Master), None otherwise."""
 
     id: uuid.UUID
     room_id: uuid.UUID
     name: str
     description: str
+    kind: MapKind
+    plane_width: int | None
+    plane_height: int | None
     visibility: DocumentVisibility
     selective_user_ids: list[uuid.UUID] | None
     created_by: uuid.UUID
@@ -171,10 +191,15 @@ class MapDetailResponse(MapResponse):
 
 class CreateMapRequest(BaseModel):
     """A new, empty map. Without `visibility` it starts at the Room's
-    default (VR-05)."""
+    default (VR-05). A `geographic` map (spec 38) takes a plane size, 100 to
+    20,000 units each way (both or neither; 2000 by 1400 without), which a
+    free map must not send."""
 
     name: str
     description: str = ""
+    kind: MapKind = MapKind.FREE
+    plane_width: int | None = None
+    plane_height: int | None = None
     visibility: DocumentVisibility | None = None
     selective_user_ids: UniqueIds = []
 
@@ -184,6 +209,8 @@ class UpdateMapRequest(BaseModel):
 
     name: str | None = None
     description: str | None = None
+    plane_width: int | None = None
+    plane_height: int | None = None
     visibility: DocumentVisibility | None = None
     selective_user_ids: UniqueIds | None = None
 
@@ -203,7 +230,7 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
-async def _get_visible_map(
+async def get_visible_map(
     session: AsyncSession, room_id: uuid.UUID, map_id: uuid.UUID, viewer: Membership, locale: str
 ) -> tuple[RelationshipMap, list[uuid.UUID]]:
     """The map and its Selective grants once the viewer is known to see it;
@@ -223,13 +250,13 @@ async def _get_visible_map(
     return relationship_map, grants
 
 
-async def _get_managed_map(
+async def get_managed_map(
     session: AsyncSession, room_id: uuid.UUID, map_id: uuid.UUID, viewer: Membership, locale: str
 ) -> tuple[RelationshipMap, list[uuid.UUID]]:
-    """`_get_visible_map`, then 403 unless the viewer may change the map
+    """`get_visible_map`, then 403 unless the viewer may change the map
     (Decision 2), then the map re-read under its row lock, so edits and
     board saves of one map serialize."""
-    relationship_map, grants = await _get_visible_map(session, room_id, map_id, viewer, locale)
+    relationship_map, grants = await get_visible_map(session, room_id, map_id, viewer, locale)
     if not can_manage_map(relationship_map, viewer.user_id, viewer.role):
         raise http_error(status.HTTP_403_FORBIDDEN, "errors.map.notManager", locale)
     locked = await relationship_maps_repo.lock_map(session, map_id)
@@ -238,7 +265,7 @@ async def _get_managed_map(
     return locked, grants
 
 
-async def _visible_document_ids(
+async def visible_document_ids(
     session: AsyncSession, document_ids: Iterable[uuid.UUID], viewer: Membership
 ) -> set[uuid.UUID]:
     """Which of these Documents are the viewer's Room's and visible to them,
@@ -247,7 +274,7 @@ async def _visible_document_ids(
     return {document.id for document in await visible_documents(session, documents, viewer)}
 
 
-def _summary(
+def map_summary(
     relationship_map: RelationshipMap,
     grants: Collection[uuid.UUID],
     viewer: Membership,
@@ -260,6 +287,9 @@ def _summary(
         room_id=relationship_map.room_id,
         name=relationship_map.name,
         description=relationship_map.description,
+        kind=relationship_map.kind,
+        plane_width=relationship_map.plane_width,
+        plane_height=relationship_map.plane_height,
         visibility=relationship_map.visibility,
         selective_user_ids=sorted(grants) if can_edit else None,
         created_by=relationship_map.created_by,
@@ -369,7 +399,7 @@ async def _detail(
     }
     shown = visible_board(board, visible.keys(), viewer.role)
     shown_count = sum(1 for card in shown.cards if card.document_id is not None)
-    summary = _summary(relationship_map, grants, viewer, shown_count)
+    summary = map_summary(relationship_map, grants, viewer, shown_count)
     return MapDetailResponse(
         **summary.model_dump(),
         groups=[GroupBody(**vars(group)) for group in shown.groups],
@@ -389,12 +419,16 @@ async def create_free_map(
     description: str = "",
     visibility: DocumentVisibility | None = None,
     selective_user_ids: Collection[uuid.UUID] = (),
+    kind: MapKind = MapKind.FREE,
+    plane_width: int | None = None,
+    plane_height: int | None = None,
 ) -> MapDetailResponse:
     """Decision 2: a new map, a Player's only while the Room lets Players
     create Documents (403 otherwise); at most 100 per Room (409, Decision
     11). Without `visibility` it starts at the Room's default (VR-05). With
     `board`, it is filled through the board save's checks and caps (a mention
-    map's copy, spec 36)."""
+    map's copy, spec 36). A `geographic` map (spec 38) gets its plane, 422
+    when the size is out of range; a free map takes none (422)."""
     room = await rooms_repo.get_room(session, room_id)
     if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
@@ -403,6 +437,10 @@ async def create_free_map(
     try:
         name, description = clean_map_fields(name, description)
     except (MapNameRequiredError, MapTextTooLongError) as exc:
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
+    try:
+        plane = _plane_for_new_map(kind, plane_width, plane_height)
+    except InvalidPlaneError as exc:
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
     starting = starting_visibility(room, visibility)
     grants = starting_grants(starting, selective_user_ids)
@@ -428,11 +466,27 @@ async def create_free_map(
         created_by=membership.user_id,
         created_at=now,
         updated_at=now,
+        kind=kind,
+        plane_width=plane[0] if plane else None,
+        plane_height=plane[1] if plane else None,
     )
     await relationship_maps_repo.insert_map(session, relationship_map, grants)
     if board is not None:
         await _apply_board(session, relationship_map.id, membership, board, locale)
     return await _detail(session, relationship_map, grants, membership)
+
+
+def _plane_for_new_map(
+    kind: MapKind, plane_width: int | None, plane_height: int | None
+) -> tuple[int, int] | None:
+    """The plane of a map about to be created (spec 38 Decision 2): the
+    checked size for a geographic one, none for a free one, which may not
+    send any."""
+    if kind == MapKind.GEOGRAPHIC:
+        return clean_plane(plane_width, plane_height)
+    if plane_width is not None or plane_height is not None:
+        raise InvalidPlaneError("errors.map.invalidPlane")
+    return None
 
 
 @router.get("")
@@ -449,7 +503,7 @@ async def list_maps(
         m for m in maps if is_map_visible(m, membership.user_id, membership.role, grants[m.id])
     ]
     cards = await relationship_maps_repo.list_cards_for_maps(session, [m.id for m in visible])
-    visible_ids = await _visible_document_ids(
+    visible_ids = await visible_document_ids(
         session,
         (
             card.document_id
@@ -460,7 +514,19 @@ async def list_maps(
         membership,
     )
     counts = document_card_counts(cards, visible_ids)
-    return [_summary(m, grants[m.id], membership, counts.get(m.id, 0)) for m in visible]
+    geographic = [m.id for m in visible if m.kind == MapKind.GEOGRAPHIC]
+    geo_boards = await geographic_maps_repo.get_geo_boards(session, geographic)
+    geo_visible_ids = await visible_document_ids(
+        session,
+        (
+            document_id
+            for board in geo_boards.values()
+            for document_id in placed_document_ids(board.areas, board.pins)
+        ),
+        membership,
+    )
+    counts.update(geo_document_counts(geo_boards, geo_visible_ids))
+    return [map_summary(m, grants[m.id], membership, counts.get(m.id, 0)) for m in visible]
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -485,6 +551,9 @@ async def create_map(
         description=body.description,
         visibility=body.visibility,
         selective_user_ids=body.selective_user_ids,
+        kind=body.kind,
+        plane_width=body.plane_width,
+        plane_height=body.plane_height,
     )
 
 
@@ -498,7 +567,7 @@ async def get_map(
 ) -> MapDetailResponse:
     """The map and its board as the requester sees it (Decisions 4-7)."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    relationship_map, grants = await _get_visible_map(session, room_id, map_id, membership, locale)
+    relationship_map, grants = await get_visible_map(session, room_id, map_id, membership, locale)
     return await _detail(session, relationship_map, grants, membership)
 
 
@@ -515,7 +584,7 @@ async def update_map(
     changes who sees it. A change of level or grants is audited in the same
     transaction (Invariant 7)."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    relationship_map, grants = await _get_managed_map(session, room_id, map_id, membership, locale)
+    relationship_map, grants = await get_managed_map(session, room_id, map_id, membership, locale)
     try:
         name, description = clean_map_fields(
             relationship_map.name if body.name is None else body.name,
@@ -528,10 +597,26 @@ async def update_map(
             session, room_id, body.selective_user_ids, "errors.map.invalidSelectiveUsers", locale
         )
 
+    plane_width, plane_height = relationship_map.plane_width, relationship_map.plane_height
+    if body.plane_width is not None or body.plane_height is not None:
+        try:
+            if relationship_map.kind != MapKind.GEOGRAPHIC:
+                raise WrongMapKindError("errors.map.notGeographic")
+            plane_width, plane_height = clean_plane(
+                body.plane_width or plane_width, body.plane_height or plane_height
+            )
+            board = (await geographic_maps_repo.get_geo_boards(session, [map_id]))[map_id]
+            ensure_board_in_plane(board, plane_width, plane_height)
+        except InvalidPlaneError as exc:
+            raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
+        except WrongMapKindError as exc:
+            raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
     updated = replace(
         relationship_map,
         name=name,
         description=description,
+        plane_width=plane_width,
+        plane_height=plane_height,
         visibility=relationship_map.visibility if body.visibility is None else body.visibility,
         updated_at=_now(),
     )
@@ -558,7 +643,9 @@ async def delete_map(
     """Decision 2: the map's creator or the Master deletes it, with
     everything on it. The Documents themselves stay."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    await _get_managed_map(session, room_id, map_id, membership, locale)
+    relationship_map, _ = await get_managed_map(session, room_id, map_id, membership, locale)
+    if relationship_map.background_path is not None:
+        await storage_cleanup.schedule_removal(session, [relationship_map.background_path])
     await relationship_maps_repo.delete_map(session, map_id)
 
 
@@ -619,7 +706,7 @@ async def _apply_board(
     current = (await relationship_maps_repo.get_boards(session, [map_id]))[map_id]
     try:
         submitted = _submitted_board(body)
-        visible_ids = await _visible_document_ids(
+        visible_ids = await visible_document_ids(
             session,
             (
                 card.document_id
@@ -674,7 +761,9 @@ async def save_board(
     hidden from them or of another map is 422; the caps (409) count every
     item on the map."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    relationship_map, grants = await _get_managed_map(session, room_id, map_id, membership, locale)
+    relationship_map, grants = await get_managed_map(session, room_id, map_id, membership, locale)
+    if relationship_map.kind != MapKind.FREE:
+        raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
     await _apply_board(session, map_id, membership, body, locale)
     updated = replace(relationship_map, updated_at=_now())
     await relationship_maps_repo.update_map(session, updated)
@@ -686,13 +775,14 @@ async def visible_map_detail(
 ) -> MapDetailResponse:
     """A free map and its board as `viewer` sees it; 404 when hidden from
     them (a Document's linked map, spec 36 Decision 15)."""
-    relationship_map, grants = await _get_visible_map(session, room_id, map_id, viewer, locale)
+    relationship_map, grants = await get_visible_map(session, room_id, map_id, viewer, locale)
     return await _detail(session, relationship_map, grants, viewer)
 
 
 async def ensure_manages_map(
     session: AsyncSession, room_id: uuid.UUID, map_id: uuid.UUID, viewer: Membership, locale: str
-) -> None:
-    """404 when the free map is hidden from `viewer`, 403 unless they manage
-    it (Decision 2)."""
-    await _get_managed_map(session, room_id, map_id, viewer, locale)
+) -> RelationshipMap:
+    """The map, once 404 is ruled out (hidden from `viewer`) and 403 too
+    (they don't manage it, Decision 2)."""
+    relationship_map, _ = await get_managed_map(session, room_id, map_id, viewer, locale)
+    return relationship_map

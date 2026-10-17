@@ -215,8 +215,19 @@
         "text": "卡片文本",
         "caption": "说明文字",
         "label": "标签",
-        "groupTitle": "分组标题"
-      }
+        "groupTitle": "分组标题",
+        "placeName": "名称",
+        "subtitle": "副标题",
+        "note": "备注"
+      },
+      "invalidPlane": "平面的宽和高必须为100到20,000个单位，且只有地理地图才有平面",
+      "planeTooSmall": "这个平面会让部分地图落在平面之外",
+      "notGeographic": "这不是地理地图",
+      "notFree": "这是地理地图：没有卡片面板",
+      "placeNameRequired": "没有文档的区域或图钉需要名称",
+      "tooManyAreas": "一张地图最多可有 {max} 个区域",
+      "tooManyPins": "一张地图最多可有 {max} 个图钉",
+      "tooManyLinks": "一张地图最多可有 {max} 条连线"
     },
     "mentionMap": {
       "notFound": "此文档没有提及地图",

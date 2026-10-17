@@ -215,8 +215,19 @@
         "text": "tekst karty",
         "caption": "podpis",
         "label": "etykieta",
-        "groupTitle": "tytuł grupy"
-      }
+        "groupTitle": "tytuł grupy",
+        "placeName": "nazwa",
+        "subtitle": "podtytuł",
+        "note": "notatka"
+      },
+      "invalidPlane": "Płaszczyzna musi mieć od 100 do 20 000 jednostek szerokości i wysokości, a ma ją tylko mapa geograficzna",
+      "planeTooSmall": "Przy takiej płaszczyźnie część mapy znalazłaby się poza nią",
+      "notGeographic": "To nie jest mapa geograficzna",
+      "notFree": "To mapa geograficzna: nie ma tablicy kart",
+      "placeNameRequired": "Obszar lub pinezka bez Dokumentu wymaga nazwy",
+      "tooManyAreas": "Mapa może mieć najwyżej {max} obszarów",
+      "tooManyPins": "Mapa może mieć najwyżej {max} pinezek",
+      "tooManyLinks": "Mapa może mieć najwyżej {max} połączeń"
     },
     "mentionMap": {
       "notFound": "Ten dokument nie ma mapy wzmianek",

@@ -215,8 +215,19 @@
         "text": "Kärtchentext",
         "caption": "Bildunterschrift",
         "label": "Beschriftung",
-        "groupTitle": "Gruppentitel"
-      }
+        "groupTitle": "Gruppentitel",
+        "placeName": "Name",
+        "subtitle": "Untertitel",
+        "note": "Notiz"
+      },
+      "invalidPlane": "Die Fläche muss 100 bis 20.000 Einheiten breit und hoch sein, und nur eine geografische Karte hat eine",
+      "planeTooSmall": "Mit dieser Fläche läge ein Teil der Karte außerhalb",
+      "notGeographic": "Das ist keine geografische Karte",
+      "notFree": "Das ist eine geografische Karte: Sie hat kein Brett mit Karten",
+      "placeNameRequired": "Ein Gebiet oder eine Markierung ohne Dokument braucht einen Namen",
+      "tooManyAreas": "Eine Karte darf höchstens {max} Gebiete haben",
+      "tooManyPins": "Eine Karte darf höchstens {max} Markierungen haben",
+      "tooManyLinks": "Eine Karte darf höchstens {max} Verbindungen haben"
     },
     "mentionMap": {
       "notFound": "Dieses Dokument hat keine Erwähnungskarte",

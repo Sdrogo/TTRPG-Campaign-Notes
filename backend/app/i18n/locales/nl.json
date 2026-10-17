@@ -215,8 +215,19 @@
         "text": "tekst van het kaartje",
         "caption": "bijschrift",
         "label": "label",
-        "groupTitle": "titel van de groep"
-      }
+        "groupTitle": "titel van de groep",
+        "placeName": "naam",
+        "subtitle": "ondertitel",
+        "note": "notitie"
+      },
+      "invalidPlane": "Het vlak moet 100 tot 20.000 eenheden breed en hoog zijn, en alleen een geografische kaart heeft er een",
+      "planeTooSmall": "Met dat vlak zou een deel van de kaart erbuiten vallen",
+      "notGeographic": "Dit is geen geografische kaart",
+      "notFree": "Dit is een geografische kaart: ze heeft geen bord met kaarten",
+      "placeNameRequired": "Een gebied of speld zonder Document heeft een naam nodig",
+      "tooManyAreas": "Een kaart mag maximaal {max} gebieden hebben",
+      "tooManyPins": "Een kaart mag maximaal {max} spelden hebben",
+      "tooManyLinks": "Een kaart mag maximaal {max} verbindingen hebben"
     },
     "mentionMap": {
       "notFound": "Dit document heeft geen vermeldingskaart",

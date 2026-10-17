@@ -19,6 +19,7 @@ from app.api.documents import router as documents_router
 from app.api.export import router as export_router
 from app.api.export_pdf import router as export_pdf_router
 from app.api.friends import router as friends_router
+from app.api.geographic_maps import router as geographic_maps_router
 from app.api.history import router as history_router
 from app.api.image_search import router as image_search_router
 from app.api.imports import router as imports_router
@@ -98,6 +99,7 @@ app.include_router(export_pdf_router)
 app.include_router(imports_router)
 app.include_router(versions_router)
 app.include_router(relationship_maps_router)
+app.include_router(geographic_maps_router)
 app.include_router(mention_maps_router)
 app.include_router(linked_maps_router)
 

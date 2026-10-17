@@ -48,6 +48,7 @@ from app.domain.relationship_maps import (
     CardSize,
     MapCard,
     MapColor,
+    MapKind,
     RelationshipMap,
     can_create_map,
     can_manage_map,
@@ -504,7 +505,10 @@ async def link_map(
     membership, center = await _center(
         session, room_id, document_id, uuid.UUID(current_user.id), locale
     )
-    await ensure_manages_map(session, room_id, body.map_id, membership, locale)
+    target = await ensure_manages_map(session, room_id, body.map_id, membership, locale)
+    if target.kind != MapKind.FREE:
+        # A geographic map (spec 38) can't be shown here before 38_2.
+        raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
     linked_id = await relationship_maps_repo.get_linked_map_id(session, center.id)
     if linked_id is not None and linked_id != body.map_id:
         await ensure_manages_map(session, room_id, linked_id, membership, locale)
