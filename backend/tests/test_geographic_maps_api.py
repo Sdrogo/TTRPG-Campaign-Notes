@@ -445,18 +445,19 @@ async def test_deleting_the_map_or_the_room_removes_the_background(
     assert fake_storage == {}
 
 
-async def test_a_geographic_map_cant_be_linked_to_a_document_yet(
+async def test_a_geographic_map_can_be_linked_to_a_document(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
+    # Spec 38_2: the Document page shows it; its content comes from `.../geo`.
     room = await _room(client, make_token)
     document_id = await _document(client, room, "Shibuya")
     geo = await _geo_map(client, room)
-    response = await client.put(
-        f"/rooms/{room.id}/documents/{document_id}/linked-map",
-        json={"map_id": geo["id"]},
-        headers=room.master.headers,
-    )
-    assert response.status_code == 409
+    linked_url = f"/rooms/{room.id}/documents/{document_id}/linked-map"
+    response = await client.put(linked_url, json={"map_id": geo["id"]}, headers=room.master.headers)
+    assert response.status_code == 200
+    assert response.json()["kind"] == "geographic"
+    shown = await client.get(linked_url, headers=room.master.headers)
+    assert (shown.json()["id"], shown.json()["kind"]) == (geo["id"], "geographic")
 
 
 async def test_a_hidden_geographic_map_is_not_found(

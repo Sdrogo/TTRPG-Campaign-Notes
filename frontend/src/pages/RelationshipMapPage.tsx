@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { UseMutationResult } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ActionIcon, Button, Group, Modal, Stack, Text, Title, Tooltip } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { GearIcon, TrashIcon } from '@phosphor-icons/react';
+import { GearIcon, MapTrifoldIcon, TrashIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
 import { useDeleteMap, useMap, useSaveBoard, useUpdateMap } from '../hooks/useMaps';
+import { useGeoMap, useSaveGeo } from '../hooks/useGeoMap';
 import { useMembers } from '../hooks/useMembers';
 import { useTags } from '../hooks/useTags';
 import { useReadOnly } from '../hooks/useViewAs';
@@ -17,7 +19,10 @@ import { MapBoard } from '../components/maps/MapBoard';
 import { SplitToggle } from '../components/maps/SplitToggle';
 import { useSideDocument } from '../hooks/useSideDocument';
 import { MapFormModal } from '../components/maps/MapFormModal';
-import type { Board, RelationshipMapDetail } from '../types/map';
+import { GeographicBoard } from '../components/maps/GeographicBoard';
+import { GeoMapDialog } from '../components/maps/GeoMapDialog';
+import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
+import type { Board, RelationshipMap, RelationshipMapDetail } from '../types/map';
 
 /** How long the board waits after the last change before saving it. */
 export const SAVE_DELAY_MS = 800;
@@ -28,9 +33,10 @@ const WIDE_ENOUGH = '(min-width: 48em)';
 type SaveState = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
 /**
- * `/rooms/:roomId/maps/:mapId`: one relationship map, full page (spec 28).
- * Its creator and the Master edit it on a screen at least `sm` wide; the
- * board saves itself shortly after each change and says so.
+ * `/rooms/:roomId/maps/:mapId`: one map, full page: a free board (spec 28)
+ * or a geographic map (spec 38). Its creator and the Master edit it on a
+ * screen at least `sm` wide; it saves itself shortly after each change and
+ * says so.
  */
 export function RelationshipMapPage() {
   const { t } = useTranslation();
@@ -54,16 +60,68 @@ function MapContent({
 }) {
   const { t } = useTranslation();
   const map = useMap(roomId, mapId, true);
+  const geographic = map.data?.kind === 'geographic';
+  const geo = useGeoMap(roomId, mapId, geographic);
 
-  if (map.isPending) return <FullPageLoader />;
-  if (map.isError) {
+  if (map.isPending || (geographic && geo.isPending)) return <FullPageLoader />;
+  if (map.isError || (geographic && geo.isError)) {
     return (
       <FullPageMessage actionLabel={t('maps.backToMaps')} actionTo={`/rooms/${roomId}/maps`}>
         {t('maps.notFound')}
       </FullPageMessage>
     );
   }
+  if (geographic) {
+    return <GeoMapEditor key={map.data.id} roomId={roomId} map={geo.data!} currentUserId={currentUserId} />;
+  }
   return <MapEditor key={map.data.id} roomId={roomId} map={map.data} currentUserId={currentUserId} />;
+}
+
+/**
+ * The page's own copy of what is drawn, saved `SAVE_DELAY_MS` after the last
+ * change: a save landing mid-drag moves nothing back.
+ */
+function useAutosave<T>(initial: T, saver: UseMutationResult<unknown, Error, T>) {
+  const [value, setValue] = useState<T>(initial);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const save = (next: T) => {
+    setSaveState('saving');
+    saver.mutate(next, {
+      onSuccess: () => setSaveState('saved'),
+      onError: () => setSaveState('error'),
+    });
+  };
+
+  const change = (next: T) => {
+    setValue(next);
+    setSaveState('pending');
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => save(next), SAVE_DELAY_MS);
+  };
+
+  return { value, saveState, change, retry: () => save(value), error: saver.error };
+}
+
+/** Who looks at the map, and whether they may change it here. */
+function useMapAccess(roomId: string, map: RelationshipMap, currentUserId: string) {
+  const readOnly = useReadOnly();
+  const wide = useMediaQuery(WIDE_ENOUGH, true);
+  const split = useSideDocument();
+  const members = useMembers(roomId, true);
+  const me = members.data?.find((member) => member.userId === currentUserId);
+  return {
+    readOnly,
+    wide,
+    split,
+    members,
+    // While the split is open, a click on a Document shows it there (spec 37).
+    splitOpen: split.sideId !== null && wide,
+    isMaster: me?.role === 'master' && !readOnly,
+    editable: map.canEdit && !readOnly && wide,
+  };
 }
 
 function MapEditor({
@@ -75,57 +133,127 @@ function MapEditor({
   map: RelationshipMapDetail;
   currentUserId: string;
 }) {
+  const access = useMapAccess(roomId, map, currentUserId);
+  const documents = useDocuments(roomId, access.editable);
+  const tags = useTags(roomId, access.editable);
+  const autosave = useAutosave<Board>(
+    { groups: map.groups, cards: map.cards, arrows: map.arrows },
+    useSaveBoard(roomId, map.id),
+  );
+
+  return (
+    <MapChrome roomId={roomId} map={map} access={access} autosave={autosave}>
+      <MapBoard
+        roomId={roomId}
+        board={autosave.value}
+        editable={access.editable}
+        isMaster={access.isMaster}
+        documents={documents.data ?? []}
+        tags={tags.data ?? []}
+        onChange={autosave.change}
+        onSelectDocument={access.splitOpen ? access.split.open : undefined}
+      />
+    </MapChrome>
+  );
+}
+
+/** A geographic map (spec 38): its plane, and a "Map" dialog for its size and background. */
+function GeoMapEditor({
+  roomId,
+  map,
+  currentUserId,
+}: {
+  roomId: string;
+  map: GeoMapDetail;
+  currentUserId: string;
+}) {
+  const { t } = useTranslation();
+  const access = useMapAccess(roomId, map, currentUserId);
+  const documents = useDocuments(roomId, access.editable);
+  // The Tag filter is for everyone who sees the map (Decision 8).
+  const tags = useTags(roomId, true);
+  const autosave = useAutosave<GeoBoard>(
+    { areas: map.areas, pins: map.pins, links: map.links },
+    useSaveGeo(roomId, map.id),
+  );
+  const [planeOpened, setPlaneOpened] = useState(false);
+
+  return (
+    <MapChrome
+      roomId={roomId}
+      map={map}
+      access={access}
+      autosave={autosave}
+      actions={
+        map.canEdit &&
+        !access.readOnly && (
+          <Tooltip label={t('maps.geo.planeTitle')} withArrow>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label={t('maps.geo.planeTitle')}
+              onClick={() => setPlaneOpened(true)}
+            >
+              <MapTrifoldIcon size={20} />
+            </ActionIcon>
+          </Tooltip>
+        )
+      }
+    >
+      <GeographicBoard
+        roomId={roomId}
+        board={autosave.value}
+        planeWidth={map.planeWidth}
+        planeHeight={map.planeHeight}
+        backgroundUrl={map.backgroundUrl}
+        editable={access.editable}
+        isMaster={access.isMaster}
+        documents={documents.data ?? []}
+        tags={tags.data ?? []}
+        onChange={autosave.change}
+        onSelectDocument={access.splitOpen ? access.split.open : undefined}
+      />
+      {planeOpened && <GeoMapDialog roomId={roomId} map={map} onClose={() => setPlaneOpened(false)} />}
+    </MapChrome>
+  );
+}
+
+/**
+ * What every map page has around its board: the name, description and
+ * visibility, the save status, the split toggle, and for whoever manages the
+ * map its settings and its deletion.
+ */
+function MapChrome({
+  roomId,
+  map,
+  access,
+  autosave,
+  actions,
+  children,
+}: {
+  roomId: string;
+  map: RelationshipMap;
+  access: ReturnType<typeof useMapAccess>;
+  autosave: { saveState: SaveState; retry: () => void; error: Error | null };
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const readOnly = useReadOnly();
-  const wide = useMediaQuery(WIDE_ENOUGH, true);
-  const split = useSideDocument();
-  // While the split is open, a click on a card shows its Document there (spec 37).
-  const splitOpen = split.sideId !== null && wide;
-  const members = useMembers(roomId, true);
-  const me = members.data?.find((member) => member.userId === currentUserId);
-  const isMaster = me?.role === 'master' && !readOnly;
-  const editable = map.canEdit && !readOnly && wide;
-
-  const documents = useDocuments(roomId, editable);
-  const tags = useTags(roomId, editable);
-  const saveBoard = useSaveBoard(roomId, map.id);
+  const { readOnly, wide, members } = access;
   const updateMap = useUpdateMap(roomId, map.id);
   const deleteMap = useDeleteMap(roomId, map.id);
   const [settingsOpened, setSettingsOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
-
-  // The page draws its own copy of the board, from the first load on.
-  const [board, setBoard] = useState<Board>(() => ({
-    groups: map.groups,
-    cards: map.cards,
-    arrows: map.arrows,
-  }));
-  const [saveState, setSaveState] = useState<SaveState>('idle');
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const save = (next: Board) => {
-    setSaveState('saving');
-    saveBoard.mutate(next, {
-      onSuccess: () => setSaveState('saved'),
-      onError: () => setSaveState('error'),
-    });
-  };
-
-  const handleChange = (next: Board) => {
-    setBoard(next);
-    setSaveState('pending');
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => save(next), SAVE_DELAY_MS);
-  };
+  const { saveState } = autosave;
 
   const status: Record<SaveState, string | null> = {
     idle: null,
     pending: t('maps.unsaved'),
     saving: t('maps.saving'),
     saved: t('maps.saved'),
-    error: saveBoard.error?.message ?? t('maps.saveError'),
+    error: autosave.error?.message || t('maps.saveError'),
   };
 
   return (
@@ -151,11 +279,12 @@ function MapEditor({
             </Text>
           )}
           {saveState === 'error' && (
-            <Button size="xs" variant="light" onClick={() => save(board)}>
+            <Button size="xs" variant="light" onClick={autosave.retry}>
               {t('maps.retry')}
             </Button>
           )}
           <SplitToggle />
+          {actions}
           {map.canEdit && !readOnly && (
             <>
               <Tooltip label={t('maps.settings')} withArrow>
@@ -189,16 +318,7 @@ function MapEditor({
           {t('maps.readOnlyOnPhone')}
         </Text>
       )}
-      <MapBoard
-        roomId={roomId}
-        board={board}
-        editable={editable}
-        isMaster={isMaster}
-        documents={documents.data ?? []}
-        tags={tags.data ?? []}
-        onChange={handleChange}
-        onSelectDocument={splitOpen ? split.open : undefined}
-      />
+      {children}
       {settingsOpened && (
         <MapFormModal
           title={t('maps.settings')}

@@ -688,6 +688,38 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   connecting, arrow editing, toolbar). Changes save automatically like a
   free map; read-only on phones and in View As. The center card is gold.
 
+## Geographic map (spec 38)
+
+- **Creating**: "Nuova mappa" has a `SegmentedControl` "Tipo di mappa"
+  (Lavagna libera / Mappa geografica) with a one-line description; the Maps
+  list marks a geographic map with a gray "Geografica" badge.
+- **The board** (`GeographicBoard`): the plane on `--bg-surface` (or its
+  background image, stretched) inside the same bordered box as the free
+  board, zoom buttons (+, −, fit) bottom right. Areas: a polygon in their
+  palette color, filled at 22% or outline only, dashed when "proposed",
+  name in the display font at the center with the subtitle under it in
+  `--text-muted`. Pins: a diamond (a Document) or a circle (plain), the name
+  on the chosen side. Links: a dashed curve with an arrowhead, from an
+  area's outline or short of a pin, labels in italic. Every label has a
+  `--bg-base` halo so it reads on any background; pins, labels, handles and
+  strokes keep their screen size whatever the zoom. Master-only items are
+  drawn at 65%, items the Tag filter leaves out at 20%.
+- **Toolbar** (top left): the tools Seleziona / Area / Luogo / Collegamento
+  (a `SegmentedControl`, editors only) and "Filtra per Tag" (a `Select`, for
+  everyone). While a tool is on, a hint bar at the bottom says what to click,
+  with "Togli l'ultimo angolo" and "Chiudi l'area" while drawing, and Annulla.
+- **A clicked place** shows a card top right: name, subtitle, note, "Apri il
+  Documento" for a Document, and Modifica for editors. With the split pane
+  open, a Document's place opens there instead.
+- **Editing**: a selected area shows square corner handles (drag; double
+  click removes one) and round "+" handles mid-side (adds one); a selected
+  link shows a round handle on its curve (drag; double click resets).
+  `AreaDialog` and `PinDialog` pick a Document (or none, then name, subtitle
+  and note), color, fill/dashed or label side, and Master only for plain
+  items; links reuse `ArrowDialog`. The header's `MapTrifoldIcon` "Mappa"
+  opens `GeoMapDialog` (plane width and height, background upload, URL or
+  removal). Delete removes the selection; Escape puts the tool away.
+
 ## Document preview and split view (spec 37)
 
 - **Open menu** (`DocumentOpenMenu`): a click on a `#Document` mention

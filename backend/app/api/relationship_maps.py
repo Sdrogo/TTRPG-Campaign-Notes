@@ -773,8 +773,9 @@ async def save_board(
 async def visible_map_detail(
     session: AsyncSession, room_id: uuid.UUID, map_id: uuid.UUID, viewer: Membership, locale: str
 ) -> MapDetailResponse:
-    """A free map and its board as `viewer` sees it; 404 when hidden from
-    them (a Document's linked map, spec 36 Decision 15)."""
+    """A map and its board as `viewer` sees it (none on a geographic map,
+    spec 38); 404 when hidden from them (a Document's linked map, spec 36
+    Decision 15)."""
     relationship_map, grants = await get_visible_map(session, room_id, map_id, viewer, locale)
     return await _detail(session, relationship_map, grants, viewer)
 

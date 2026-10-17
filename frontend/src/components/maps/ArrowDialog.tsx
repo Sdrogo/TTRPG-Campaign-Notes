@@ -7,14 +7,17 @@ import { MapColorPicker } from './MapColorPicker';
 /** The longest label an arrow takes (the backend's limit). */
 const MAX_LABEL_LENGTH = 60;
 
+/** What the dialog edits: a free map's arrow, or a geographic map's link (spec 38 Decision 5). */
+type ArrowLook = Pick<MapArrow, 'direction' | 'label' | 'reverseLabel' | 'color' | 'masterOnly'>;
+
 interface ArrowDialogProps {
-  arrow: MapArrow;
+  arrow: ArrowLook;
   /** The names of the two ends, so the labels say which way they read. */
   fromName: string;
   toName: string;
   /** Only the Master marks an arrow Master only. */
   isMaster: boolean;
-  onSave: (patch: Partial<MapArrow>) => void;
+  onSave: (patch: Partial<ArrowLook>) => void;
   onDelete: () => void;
   onClose: () => void;
 }

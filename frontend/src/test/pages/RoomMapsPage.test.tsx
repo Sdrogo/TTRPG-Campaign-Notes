@@ -100,6 +100,22 @@ describe('RoomMapsPage', () => {
     expect(screen.getByText(/1 Documento/)).toBeInTheDocument();
   });
 
+  it('marks a geographic map in the list, and creates one (spec 38 Decision 1)', async () => {
+    routes.maps = () => Promise.resolve([rawMap({ kind: 'geographic', plane_width: 2000, plane_height: 1400 })]);
+    const { user } = render();
+    expect(await screen.findByText('Geografica')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Nuova mappa' }));
+    await user.click(screen.getByText('Mappa geografica'));
+    await user.type(screen.getByRole('textbox', { name: /Nome/ }), 'Shibuya di notte');
+    await user.click(screen.getAllByRole('button', { name: 'Nuova mappa' }).at(-1)!);
+    await vi.waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/rooms/room-1/maps',
+        expect.objectContaining({ method: 'POST', json: expect.objectContaining({ kind: 'geographic' }) }),
+      ),
+    );
+  });
+
   it('says when there are no maps, or they could not be loaded', async () => {
     routes.maps = () => Promise.resolve([]);
     render();

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, Group, Loader, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Badge, Button, Card, Group, Loader, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
@@ -74,7 +74,14 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
                 <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
                   {map.name}
                 </Title>
-                <VisibilityBadge visibility={map.visibility} />
+                <Group gap={4} wrap="nowrap">
+                  {map.kind === 'geographic' && (
+                    <Badge variant="light" color="gray">
+                      {t('maps.kind.geographicBadge')}
+                    </Badge>
+                  )}
+                  <VisibilityBadge visibility={map.visibility} />
+                </Group>
               </Group>
               {map.description && (
                 <Text size="sm" c="dimmed" lineClamp={3} style={{ whiteSpace: 'pre-line' }}>
@@ -97,7 +104,9 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
             description: '',
             visibility: room.data?.defaultVisibility ?? 'room',
             selectiveUserIds: [],
+            kind: 'free',
           }}
+          kindChoice
           // `creating` needs `me`, so the members have loaded.
           members={members.data!}
           creatorId={currentUserId}
