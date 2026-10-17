@@ -70,10 +70,10 @@ here and remind the product owner.
 
 - **Head in the repository**: `d7c1f5a9e3b8` (geographic maps, spec 38_1,
   PR #210, on branch `claude/project-thread-e559be` until it merges).
-- **Pending on staging**: `d7c1f5a9e3b8` (geographic maps): apply before
-  PR #210 merges into `staging`.
-- **Staging database**: `e8b4d2f6a9c1` (= head, document linked maps, applied
-  by hand 2026-10-15 with `.env.staging` loaded; `c6e2a9f4d8b3` before it,
+- **Pending on staging**: none.
+- **Staging database**: `d7c1f5a9e3b8` (= head, geographic maps, applied by
+  hand 2026-10-17 with `.env.staging` loaded; `e8b4d2f6a9c1` before it,
+  document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
 - **Production database**: `e8b4d2f6a9c1` (= head). Applied 2026-10-15 with
