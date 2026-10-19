@@ -598,6 +598,26 @@
     "inNote": "Dans la note « {{title}} »",
     "inComment": "Dans un commentaire de {{name}}"
   },
+  "mentionSuggestions": {
+    "action": "Générer des mentions",
+    "title": "Générer des mentions",
+    "introDocument": "Cherche dans la description et les Notes de ce Document les noms des autres Documents que vous voyez, écrits sans mention, pour les transformer en mentions. Choisissez lesquelles appliquer. Les nouveaux noms se lient déjà d'eux-mêmes à l'enregistrement.",
+    "introRoom": "Cherche dans les descriptions et les Notes des Documents que vous pouvez modifier les noms des autres Documents que vous voyez, écrits sans mention, pour les transformer en mentions. Choisissez lesquelles appliquer. Les nouveaux noms se lient déjà d'eux-mêmes à l'enregistrement.",
+    "loading": "Recherche des noms…",
+    "empty": "Aucun nom à lier : rien à transformer en mention.",
+    "description": "Description",
+    "note": "Note « {{title}} »",
+    "inDocument": "{{document}} · {{where}}",
+    "target": "{{kind}} : {{name}}",
+    "matchLabel": "Lier « {{text}} » à {{name}}",
+    "apply": "Appliquer",
+    "selected_one": "{{count}} mention choisie",
+    "selected_many": "{{count}} mentions choisies",
+    "selected_other": "{{count}} mentions choisies",
+    "applied_one": "{{count}} mention ajoutée",
+    "applied_many": "{{count}} mentions ajoutées",
+    "applied_other": "{{count}} mentions ajoutées"
+  },
   "glossary": {
     "title": "Index des Tags",
     "openToggle": "Ouvrir l'index des Tags",

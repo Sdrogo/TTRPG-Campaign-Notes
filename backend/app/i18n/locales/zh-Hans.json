@@ -244,6 +244,9 @@
       "alreadyExists": "此文档已有提及地图",
       "nothingToMap": "暂无提及：图中只会有此文档",
       "invalidDepth": "深度必须是 0 到 3 之间的整数"
+    },
+    "mentionSuggestions": {
+      "stale": "预览之后这些文本已被修改：请重新加载后再试"
     }
   },
   "pdf": {

@@ -126,6 +126,14 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-19
 
+- **39, Generate mentions** (no migration): spec `context/feature/39 -
+  Generate mentions.md`, product owner's request. A "Genera menzioni"
+  button on a Document (Owners, Master) and on the Room (every member,
+  their managed Documents) proposes the names of visible Documents found as
+  plain words, previewed with per-match opt-out, then applied as normal
+  edits. Product owner, same day: saving a description or Note links the
+  Document names it added by itself (Decision 10), and Tags are never
+  linked or proposed. Other defaults picked by Claude, to confirm in the PR.
 - **Fix: mention preview carousel** (frontend only): on a wide screen a click
   inside a `#Document` mention's hover preview (spec 32), such as its image
   carousel arrows, opened the mention's half-screen menu (spec 37), because

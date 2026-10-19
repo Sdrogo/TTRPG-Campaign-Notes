@@ -590,6 +590,22 @@
     "inNote": "ノート「{{title}}」内",
     "inComment": "{{name}}さんのコメント内"
   },
+  "mentionSuggestions": {
+    "action": "言及を生成",
+    "title": "言及を生成",
+    "introDocument": "このドキュメントの説明とノートから、言及なしで書かれた、表示できる他のドキュメントの名前を探し、言及に変えます。適用するものを選んでください。新しい名前は保存時に自動でリンクされます。",
+    "introRoom": "編集できるドキュメントの説明とノートから、言及なしで書かれた、表示できる他のドキュメントの名前を探し、言及に変えます。適用するものを選んでください。新しい名前は保存時に自動でリンクされます。",
+    "loading": "名前を探しています…",
+    "empty": "リンクする名前はありません。言及に変えるものはありません。",
+    "description": "説明",
+    "note": "ノート「{{title}}」",
+    "inDocument": "{{document}} · {{where}}",
+    "target": "{{kind}}: {{name}}",
+    "matchLabel": "「{{text}}」を{{name}}にリンク",
+    "apply": "適用",
+    "selected_other": "{{count}}件の言及を選択",
+    "applied_other": "{{count}}件の言及を追加しました"
+  },
   "glossary": {
     "title": "タグ索引",
     "openToggle": "タグ索引を開く",

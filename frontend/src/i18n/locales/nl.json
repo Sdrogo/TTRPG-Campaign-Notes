@@ -598,6 +598,24 @@
     "inNote": "In de notitie «{{title}}»",
     "inComment": "In een opmerking van {{name}}"
   },
+  "mentionSuggestions": {
+    "action": "Vermeldingen maken",
+    "title": "Vermeldingen maken",
+    "introDocument": "Zoekt in de beschrijving en de Notities van dit Document naar de namen van andere Documenten die je ziet en die zonder vermelding geschreven zijn, om ze in vermeldingen te veranderen. Kies welke je toepast. Nieuwe namen worden bij het opslaan al vanzelf gekoppeld.",
+    "introRoom": "Zoekt in de beschrijvingen en Notities van de Documenten die je kunt bewerken naar de namen van andere Documenten die je ziet en die zonder vermelding geschreven zijn, om ze in vermeldingen te veranderen. Kies welke je toepast. Nieuwe namen worden bij het opslaan al vanzelf gekoppeld.",
+    "loading": "Namen zoeken…",
+    "empty": "Geen namen om te koppelen: er is niets om in een vermelding te veranderen.",
+    "description": "Beschrijving",
+    "note": "Notitie ‘{{title}}’",
+    "inDocument": "{{document}} · {{where}}",
+    "target": "{{kind}}: {{name}}",
+    "matchLabel": "‘{{text}}’ koppelen aan {{name}}",
+    "apply": "Toepassen",
+    "selected_one": "{{count}} vermelding gekozen",
+    "selected_other": "{{count}} vermeldingen gekozen",
+    "applied_one": "{{count}} vermelding toegevoegd",
+    "applied_other": "{{count}} vermeldingen toegevoegd"
+  },
   "glossary": {
     "title": "Tag-index",
     "openToggle": "Tag-index openen",
