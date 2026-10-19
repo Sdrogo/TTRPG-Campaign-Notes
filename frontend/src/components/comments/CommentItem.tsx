@@ -21,6 +21,7 @@ import type { Comment, CommentFormValues, PromotionTarget } from '../../types/co
 import { useReadOnly } from '../../hooks/useViewAs';
 import { useReadAloud } from '../../hooks/useReadAloud';
 import { commentSpeech, speechSupported } from '../../lib/speech';
+import { useDocumentMentions } from '../../hooks/useDocumentMentions';
 import type { DocumentVisibility } from '../../types/document';
 import type { Member } from '../../types/member';
 import { useTranslation } from 'react-i18next';
@@ -371,8 +372,9 @@ function CommentAction({ children, onClick, disabled = false }: CommentActionPro
 // single toggle, without the Pause the icon controls have.
 function ReadCommentAction({ comment, authorName }: { comment: Comment; authorName: string }) {
   const { t } = useTranslation();
+  const mentions = useDocumentMentions();
   const reading = useReadAloud(`comment:${comment.id}`, () =>
-    commentSpeech(t('speech.commentBy', { name: authorName }), comment.body),
+    commentSpeech(t('speech.commentBy', { name: authorName }), comment.body, mentions),
   );
   return reading.status === 'idle' ? (
     <CommentAction onClick={reading.play}>{t('speech.commentListen')}</CommentAction>
