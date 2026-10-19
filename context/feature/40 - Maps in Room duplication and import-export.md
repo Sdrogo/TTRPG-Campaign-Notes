@@ -36,14 +36,18 @@
 - One branch into `staging`, backend and frontend together, **no migration**.
 - **Backend**
   - `app/domain/room_copy.py`: the source holds the maps (`SourceMap`); `plan_room_copy` re-ids them (Decisions 1 to 3). `app/db/room_copy_repo.py` reads them in a fixed number of queries and writes them with the copy.
-  - `app/domain/map_transfer.py` (pure): the map JSON of the export (`export_maps`) and, for the import, `parse_maps` (file → `ImportMap`) and `plan_map_import` (Decisions 9 to 12).
-  - `app/api/export.py`: the Room JSON export reads the requester's maps; `app/domain/export.py` bumps `SCHEMA_VERSION` to 3.
+  - `app/domain/map_transfer.py` (pure): the map JSON of the export (`map_to_json`) and, for the import, `read_map` (file → `FileMap`) and `plan_map` (→ `PlannedMap`, Decisions 9 to 12); `room_copy.copy_map` re-ids a map for both duplication and import. `app/db/map_transfer_repo.py` reads a Room's maps and bulk-inserts them.
+  - `app/api/export.py::export_maps`: the Room JSON export reads the requester's maps; `app/domain/export.py` bumps `SCHEMA_VERSION` to 3.
   - `app/domain/import_files.py` reads `maps`; `app/domain/imports.py` plans them; `app/api/imports.py` previews them and takes `maps` in the choices; `app/api/import_job.py` writes them and then fetches backgrounds and re-points chosen images (Decisions 13, 14).
   - Tests at 100%.
 - **Frontend**
   - The import preview lists the maps with ticks and warnings; the choices send `maps`; the result lists the maps created and skipped; the Room's maps are read again when the job ends.
   - The duplicate confirmation mentions maps. New strings in all 12 locales.
 - Update `architecture.md` (Room duplication, export, import) and `progress-tracker.md`.
+
+## Built (2026-10-19)
+
+As above, in one PR into `staging`, no migration.
 
 ## Definition of Done
 
