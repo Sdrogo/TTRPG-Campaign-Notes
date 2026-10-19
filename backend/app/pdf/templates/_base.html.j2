@@ -62,8 +62,14 @@
     {% endfor %}
   </div>
   {% endif %}
+  {#- A Document that fits in one column is set in one (`single`), in a row that
+      the next one can join (`beside`); every other is a unit of its own, in two
+      columns. -#}
   {% for entry in chapter.entries if entry.paragraphs is defined %}
-  <article class="document{% if entry.id in shared %} shares-page{% endif %}" id="{{ entry.anchor }}">
+  {% if entry.id in single and entry.id not in beside %}
+  <div class="unit document-row{% if loop.nextitem and loop.nextitem.id in beside %} pair{% endif %}{% if entry.id in shared %} shares-page{% endif %}">
+  {% endif %}
+  <article class="document{% if entry.id in single %} single-column{% else %} unit{% if entry.id in shared %} shares-page{% endif %}{% endif %}" id="{{ entry.anchor }}">
     <h2 class="document-title">{{ entry.name }}</h2>
     {% if entry.subtitle %}<p class="document-subtitle">{{ entry.subtitle }}</p>{% endif %}
     {% if entry.image_url %}<figure class="document-image"><img src="{{ entry.image_url }}" alt=""></figure>{% endif %}
@@ -88,6 +94,9 @@
     </section>
     {% endif %}
   </article>
+  {% if entry.id in single and not (loop.nextitem and loop.nextitem.id in beside) %}
+  </div>
+  {% endif %}
   {% endfor %}
   </div>
 </section>

@@ -31,7 +31,11 @@ h1, h2, h3 { font-family: "Lato", "Noto Sans JP", "Noto Sans SC", "Noto Sans KR"
 
 /* Two columns like the others (base.css), kept airy: a wider gap and a pale rule. */
 .chapter-title { font-size: 26pt; margin: 0 0 12mm; color: #0f766e; }
-.document { margin-top: 14mm; column-gap: 11mm; column-rule: 0.5pt solid #d4d9d9; }
+.unit { margin-top: 14mm; }
+.document { column-gap: 11mm; column-rule: 0.5pt solid #d4d9d9; }
+.document-row > .document:first-child { padding-right: 5.5mm; border-right-color: #d4d9d9; }
+.document-row > .document:only-child { width: calc(50% - 5.5mm - 0.5pt); }
+.document-row > .document + .document { padding-left: 5.5mm; }
 .document-image img { max-height: 70mm; }
 .document-title { font-size: 16pt; margin: 0 0 5mm; }
 

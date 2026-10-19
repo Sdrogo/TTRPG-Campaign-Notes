@@ -37,6 +37,14 @@ detail:
   the first ring), no cross relations; the first ring is packed in
   concentric rings one card apart instead of four fixed 90° sectors. No
   migration; saved card positions keep winning.
+- **Room PDF: a Document that fits one column stays in one** (2026-10-19,
+  product owner with before/after pages, no migration, every style): instead
+  of balancing a short Document across both columns (name and image left,
+  text right), it is set whole in the left column with the column rule at
+  its right; the next Document that also fits takes the right column, else
+  it stays empty. Longer Documents keep the two balanced columns. Costs one
+  more layout (a measuring one, every Document alone in one column).
+  Details in `architecture.md` → Typesetting.
 - **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
   Room PDF style, `parchment`, modeled on a fantasy monster compendium the
   product owner shared: parchment-colored pages, brown small-capital
