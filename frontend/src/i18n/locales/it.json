@@ -598,6 +598,24 @@
     "inNote": "Nella nota «{{title}}»",
     "inComment": "In un commento di {{name}}"
   },
+  "mentionSuggestions": {
+    "action": "Genera menzioni",
+    "title": "Genera menzioni",
+    "introDocument": "Cerca nella descrizione e nelle Note di questo Documento i nomi degli altri Documenti che vedi scritti senza menzione, per trasformarli in menzioni. Scegli quali applicare. I nomi nuovi si collegano già da soli quando salvi.",
+    "introRoom": "Cerca nelle descrizioni e nelle Note dei Documenti che puoi modificare i nomi degli altri Documenti che vedi scritti senza menzione, per trasformarli in menzioni. Scegli quali applicare. I nomi nuovi si collegano già da soli quando salvi.",
+    "loading": "Cerco i nomi…",
+    "empty": "Nessun nome da collegare: non c'è niente da trasformare in menzione.",
+    "description": "Descrizione",
+    "note": "Nota «{{title}}»",
+    "inDocument": "{{document}} · {{where}}",
+    "target": "{{kind}}: {{name}}",
+    "matchLabel": "Collega «{{text}}» a {{name}}",
+    "apply": "Applica",
+    "selected_one": "{{count}} menzione scelta",
+    "selected_other": "{{count}} menzioni scelte",
+    "applied_one": "Aggiunta {{count}} menzione",
+    "applied_other": "Aggiunte {{count}} menzioni"
+  },
   "glossary": {
     "title": "Indice dei Tag",
     "openToggle": "Apri indice dei Tag",

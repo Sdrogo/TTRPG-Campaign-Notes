@@ -6,6 +6,7 @@ import {
   DownloadSimpleIcon,
   EyeIcon,
   GearIcon,
+  MagicWandIcon,
   MapTrifoldIcon,
   SignOutIcon,
   UploadSimpleIcon,
@@ -17,6 +18,7 @@ import type { Member } from '../types/member';
 import { ExportRoomModal } from './ExportRoomModal';
 import { ImportDocumentsModal } from './importing/ImportDocumentsModal';
 import { InviteModal } from './InviteModal';
+import { GenerateMentionsModal } from './mentions/GenerateMentionsModal';
 import { LeaveRoomModal } from './LeaveRoomModal';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from './LabeledActionIcon';
@@ -44,7 +46,7 @@ interface RoomTitleActionsProps {
 /**
  * The Room card's actions (setup and invite for an Administrator, setup and
  * "View as" a member (spec 22b) for the Master, the relationship maps (spec
- * 28), export (spec 23) and leave for
+ * 28), export (spec 23), generated mentions (spec 39) and leave for
  * everyone, import of Documents (spec 27) for whoever may create them) beside the Room's title, folded into a "⋮" that unfolds them in
  * place when clicked (Andrea, 2026-10-03).
  */
@@ -65,6 +67,7 @@ export function RoomTitleActions({
   const [leaveOpened, setLeaveOpened] = useState(false);
   const [exportOpened, setExportOpened] = useState(false);
   const [importOpened, setImportOpened] = useState(false);
+  const [generatingMentions, setGeneratingMentions] = useState(false);
 
   return (
     <Group gap={4} wrap="nowrap">
@@ -156,6 +159,18 @@ export function RoomTitleActions({
               </ActionIcon>
             </Tooltip>
           )}
+          {/* Spec 39: every member turns names into mentions in the Documents they manage. */}
+          <Tooltip label={t('mentionSuggestions.action')} withArrow>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label={t('mentionSuggestions.action')}
+              onClick={() => setGeneratingMentions(true)}
+            >
+              <MagicWandIcon size={20} />
+            </ActionIcon>
+          </Tooltip>
           <Tooltip label={t('common.leave')} withArrow>
             <ActionIcon
               variant="subtle"
@@ -192,6 +207,13 @@ export function RoomTitleActions({
           opened={importOpened}
           onClose={() => setImportOpened(false)}
           roomId={roomId}
+        />
+      )}
+      {generatingMentions && (
+        <GenerateMentionsModal
+          roomId={roomId}
+          documentId={null}
+          onClose={() => setGeneratingMentions(false)}
         />
       )}
       <LeaveRoomModal

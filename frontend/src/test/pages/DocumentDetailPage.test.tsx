@@ -84,6 +84,7 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
     if (path.startsWith(`${DOC}/mention-map/preview`)) {
       return Promise.resolve({ documents: 1, relations: 1, documents_left_out: 0 });
     }
+    if (path === `${DOC}/mention-suggestions`) return Promise.resolve({ sources: [] });
     if (path === '/rooms/room-1/documents') return Promise.resolve([routes.document]);
     if (path === '/rooms/room-1/tags') return Promise.resolve(tags);
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
@@ -263,6 +264,21 @@ describe('exporting the Document', () => {
     await user.click(await screen.findByRole('button', { name: 'Esporta il Documento' }));
 
     expect(await screen.findByRole('dialog', { name: 'Esporta il Documento' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+});
+
+// Spec 39: Owners and the Master turn the names in the text into mentions.
+describe('generating mentions', () => {
+  it('opens the dialog for an Owner and closes it', async () => {
+    const { user } = render();
+    await openActions(user);
+
+    await user.click(await screen.findByRole('button', { name: 'Genera menzioni' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Genera menzioni' })).toBeInTheDocument();
+    expect(await screen.findByText(/Nessun nome da collegare/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Annulla' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });

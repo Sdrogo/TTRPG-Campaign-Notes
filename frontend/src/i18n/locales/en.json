@@ -598,6 +598,24 @@
     "inNote": "In the note “{{title}}”",
     "inComment": "In a comment by {{name}}"
   },
+  "mentionSuggestions": {
+    "action": "Generate mentions",
+    "title": "Generate mentions",
+    "introDocument": "Looks in this Document's description and Notes for the names of the other Documents you see, written without a mention, to turn them into mentions. Choose which to apply. New names already link by themselves when you save.",
+    "introRoom": "Looks in the descriptions and Notes of the Documents you can edit for the names of the other Documents you see, written without a mention, to turn them into mentions. Choose which to apply. New names already link by themselves when you save.",
+    "loading": "Looking for names…",
+    "empty": "No names to link: there is nothing to turn into a mention.",
+    "description": "Description",
+    "note": "Note “{{title}}”",
+    "inDocument": "{{document}} · {{where}}",
+    "target": "{{kind}}: {{name}}",
+    "matchLabel": "Link “{{text}}” to {{name}}",
+    "apply": "Apply",
+    "selected_one": "{{count}} mention chosen",
+    "selected_other": "{{count}} mentions chosen",
+    "applied_one": "Added {{count}} mention",
+    "applied_other": "Added {{count}} mentions"
+  },
   "glossary": {
     "title": "Tag Index",
     "openToggle": "Open Tag Index",

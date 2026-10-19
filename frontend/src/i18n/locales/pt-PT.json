@@ -598,6 +598,26 @@
     "inNote": "Na nota «{{title}}»",
     "inComment": "Num comentário de {{name}}"
   },
+  "mentionSuggestions": {
+    "action": "Gerar menções",
+    "title": "Gerar menções",
+    "introDocument": "Procura na descrição e nas Notas deste Documento os nomes dos outros Documentos que vê, escritos sem menção, para os transformar em menções. Escolha quais aplicar. Os nomes novos já se ligam sozinhos ao guardar.",
+    "introRoom": "Procura nas descrições e nas Notas dos Documentos que pode editar os nomes dos outros Documentos que vê, escritos sem menção, para os transformar em menções. Escolha quais aplicar. Os nomes novos já se ligam sozinhos ao guardar.",
+    "loading": "A procurar nomes…",
+    "empty": "Nenhum nome para ligar: não há nada para transformar em menção.",
+    "description": "Descrição",
+    "note": "Nota «{{title}}»",
+    "inDocument": "{{document}} · {{where}}",
+    "target": "{{kind}}: {{name}}",
+    "matchLabel": "Ligar «{{text}}» a {{name}}",
+    "apply": "Aplicar",
+    "selected_one": "{{count}} menção escolhida",
+    "selected_many": "{{count}} menções escolhidas",
+    "selected_other": "{{count}} menções escolhidas",
+    "applied_one": "Adicionada {{count}} menção",
+    "applied_many": "Adicionadas {{count}} menções",
+    "applied_other": "Adicionadas {{count}} menções"
+  },
   "glossary": {
     "title": "Índice de Tags",
     "openToggle": "Abrir índice de Tags",

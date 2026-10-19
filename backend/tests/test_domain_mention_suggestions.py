@@ -1,5 +1,6 @@
-"""Generated mentions (spec 39): which names are looked for, where they are
-found in a text, and how the chosen ones are written as tokens."""
+"""Generated mentions (spec 39): which Document names are looked for, where
+they are found in a text, how the chosen ones are written as tokens, and
+which names a save links by itself."""
 
 import uuid
 
@@ -11,6 +12,8 @@ from app.domain.mention_suggestions import (
     StaleSuggestionsError,
     apply_mentions,
     choose_matches,
+    link_new_names,
+    match_context,
     suggest_mentions,
     usable_candidates,
 )
@@ -28,31 +31,28 @@ def _doc(id_: uuid.UUID, name: str) -> MentionCandidate:
     return MentionCandidate(MentionKind.DOCUMENT, id_, name)
 
 
-def _tag(id_: uuid.UUID, name: str) -> MentionCandidate:
-    return MentionCandidate(MentionKind.TAG, id_, name)
+def _names(text: str, *documents: MentionCandidate) -> list[str]:
+    return [s.text for s in suggest_mentions(text, usable_candidates(list(documents)))]
 
 
-def test_candidates_drop_short_shared_own_and_shadowed_names() -> None:
+def test_candidates_drop_short_shared_and_own_names_longest_first() -> None:
     documents = [
         _doc(LYRA, "Lyra"),
         _doc(INN, "Ox"),
         _doc(CASTLE, "Twin"),
         _doc(TWIN, "twin"),
         _doc(SELF, "Self"),
-        _doc(uuid.uuid4(), "Castello Drakon"),
+        _doc(NORTH, "Castello Drakon"),
     ]
-    tags = [_tag(NORTH, "Nord"), _tag(uuid.uuid4(), "LYRA")]
 
-    names = [c.name for c in usable_candidates(documents, tags, exclude_document_id=SELF)]
+    names = [c.name for c in usable_candidates(documents, exclude_document_id=SELF)]
 
-    assert names == ["Castello Drakon", "Lyra", "Nord"]
+    assert names == ["Castello Drakon", "Lyra"]
 
 
 def test_every_whole_word_occurrence_is_proposed_ignoring_case() -> None:
-    candidates = usable_candidates(
-        [_doc(LYRA, "Lyra"), _doc(INN, "Locanda")], [_tag(NORTH, "Nord")]
-    )
-    text = "Lyra entra nella locanda. LYRA va a nord, non a Lyrabel."
+    candidates = usable_candidates([_doc(LYRA, "Lyra"), _doc(INN, "Locanda")])
+    text = "Lyra entra nella locanda. LYRA, non Lyrabel."
 
     found = suggest_mentions(text, candidates)
 
@@ -60,29 +60,25 @@ def test_every_whole_word_occurrence_is_proposed_ignoring_case() -> None:
         ("Lyra", MentionKind.DOCUMENT, LYRA, "Lyra"),
         ("locanda", MentionKind.DOCUMENT, INN, "Locanda"),
         ("LYRA", MentionKind.DOCUMENT, LYRA, "Lyra"),
-        ("nord", MentionKind.TAG, NORTH, "Nord"),
     ]
     assert all(text[s.start : s.end] == s.text for s in found)
 
 
 def test_accents_count_and_the_longest_name_wins() -> None:
-    candidates = usable_candidates(
-        [_doc(CASTLE, "Castello Drakon"), _doc(LYRA, "Drakon"), _doc(INN, "Città")], []
+    names = _names(
+        "Il castello Drakon domina la citta e la Città.",
+        _doc(CASTLE, "Castello Drakon"),
+        _doc(LYRA, "Drakon"),
+        _doc(INN, "Città"),
     )
 
-    found = suggest_mentions("Il castello Drakon domina la citta e la Città.", candidates)
-
-    assert [(s.text, s.target_id) for s in found] == [
-        ("castello Drakon", CASTLE),
-        ("Città", INN),
-    ]
+    assert names == ["castello Drakon", "Città"]
 
 
 def test_existing_tokens_and_plain_mentions_are_left_alone() -> None:
-    candidates = usable_candidates([_doc(LYRA, "Lyra")], [])
     text = f"#[Lyra](doc:{LYRA}) e #Lyra e @Lyra e Lyra"
 
-    found = suggest_mentions(text, candidates)
+    found = suggest_mentions(text, usable_candidates([_doc(LYRA, "Lyra")]))
 
     assert [(s.start, s.text) for s in found] == [(len(text) - 4, "Lyra")]
 
@@ -92,42 +88,62 @@ def test_nothing_to_look_for_proposes_nothing() -> None:
 
 
 def test_context_reads_like_the_text_and_is_cut_on_words() -> None:
-    candidates = usable_candidates([_doc(LYRA, "Lyra")], [_tag(NORTH, "Nord")])
     before = "uno due tre quattro cinque sei sette otto nove dieci undici"
     after = "alfa beta gamma delta epsilon zeta eta theta iota kappa lambda"
     text = f"{before}\n\n#[Nord](tag:{NORTH}) Lyra   {after}"
+    (found,) = suggest_mentions(text, usable_candidates([_doc(LYRA, "Lyra")]))
 
-    (found,) = suggest_mentions(text, candidates)
-
-    assert found.before == "… sei sette otto nove dieci undici #Nord "
-    assert found.after == " alfa beta gamma delta epsilon zeta eta…"
+    assert match_context(text, found) == (
+        "… sei sette otto nove dieci undici #Nord ",
+        " alfa beta gamma delta epsilon zeta eta…",
+    )
 
 
 def test_context_without_spaces_is_cut_anyway() -> None:
-    candidates = usable_candidates([_doc(LYRA, "Lyra")], [])
-    text = f"{'x' * 50} Lyra {'y' * 50}"
+    text = f"{'x' * 50}(Lyra){'y' * 50}"
+    (found,) = suggest_mentions(text, usable_candidates([_doc(LYRA, "Lyra")]))
 
-    (found,) = suggest_mentions(text, candidates)
-
-    assert found.before == "…" + " " + "x" * 39 or found.before.startswith("…")
-    assert found.after.endswith("…")
+    assert match_context(text, found) == (
+        "…" + "x" * 39 + "(",
+        ")" + "y" * 39 + "…",
+    )
 
 
 def test_chosen_matches_are_written_as_tokens_keeping_the_words() -> None:
-    candidates = usable_candidates([_doc(LYRA, "Lyra"), _doc(INN, "Locanda")], [])
+    candidates = usable_candidates([_doc(LYRA, "Lyra"), _doc(INN, "Locanda")])
     text = "Lyra entra nella locanda] di Lyra."
     found = suggest_mentions(text, candidates)
     chosen = [ChosenMatch(s.start, s.end, s.kind, s.target_id) for s in found[:2]]
 
     written = apply_mentions(text, choose_matches(found, chosen))
 
-    assert written == (f"#[Lyra](doc:{LYRA}) entra nella #[locanda](doc:{INN})] di Lyra.")
+    assert written == f"#[Lyra](doc:{LYRA}) entra nella #[locanda](doc:{INN})] di Lyra."
     assert [m.name for m in find_mentions(written)] == ["Lyra", "locanda"]
 
 
 def test_a_match_no_longer_in_the_text_is_stale() -> None:
-    candidates = usable_candidates([_doc(LYRA, "Lyra")], [])
-    found = suggest_mentions("Ecco Lyra", candidates)
+    found = suggest_mentions("Ecco Lyra", usable_candidates([_doc(LYRA, "Lyra")]))
 
     with pytest.raises(StaleSuggestionsError):
         choose_matches(found, [ChosenMatch(0, 4, MentionKind.DOCUMENT, LYRA)])
+
+
+CANDIDATES = usable_candidates([_doc(LYRA, "Lyra"), _doc(INN, "Locanda")])
+
+
+def test_a_save_links_the_names_it_added() -> None:
+    assert link_new_names("Lyra entra.", "", CANDIDATES) == f"#[Lyra](doc:{LYRA}) entra."
+    assert link_new_names("Lyra e Locanda.", "Lyra e.", CANDIDATES) == (
+        f"Lyra e #[Locanda](doc:{INN})."
+    )
+
+
+def test_a_save_leaves_plain_what_was_already_plain_or_unlinked() -> None:
+    # Unchanged text, and an edit around a name left plain.
+    assert link_new_names("Lyra entra.", "Lyra entra.", CANDIDATES) == "Lyra entra."
+    assert link_new_names("Lyra entra ora.", "Lyra entra.", CANDIDATES) == "Lyra entra ora."
+    # A mention turned back into plain words stays plain.
+    linked = f"Vedi #[Lyra](doc:{LYRA})."
+    assert link_new_names("Vedi Lyra.", linked, CANDIDATES) == "Vedi Lyra."
+    # A name typed again outside the changed part isn't linked there.
+    assert link_new_names("Lyra e Lyra", "Lyra e", CANDIDATES) == (f"Lyra e #[Lyra](doc:{LYRA})")

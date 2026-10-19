@@ -81,32 +81,40 @@ def _chosen(
     }
 
 
+async def _note(
+    client: AsyncClient, room: _Room, document: dict[str, Any], description: str
+) -> dict[str, Any]:
+    created = await client.post(
+        f"{room.url}/documents/{document['id']}/notes",
+        json={"title": "Dopo", "description": description},
+        headers=room.master,
+    )
+    assert created.status_code == 201, created.text
+    note: dict[str, Any] = created.json()
+    return note
+
+
 async def test_a_document_proposes_names_in_its_description_and_notes(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
-    lyra = await _document(client, room, "Lyra", room.master)
-    inn = await _document(client, room, "Locanda", room.master)
-    tag = (await client.post(f"{room.url}/tags", json={"name": "Nord"}, headers=room.master)).json()
+    # Written before the Documents it names exist, so nothing was linked on save.
     tale = await _document(
         client, room, "Racconto", room.master, description="Lyra entra nella locanda, a nord."
     )
-    note = (
-        await client.post(
-            f"{room.url}/documents/{tale['id']}/notes",
-            json={"title": "Dopo", "description": "Poi Lyra dorme."},
-            headers=room.master,
-        )
-    ).json()
+    note = await _note(client, room, tale, "Poi Lyra dorme.")
+    lyra = await _document(client, room, "Lyra", room.master)
+    inn = await _document(client, room, "Locanda", room.master)
+    await client.post(f"{room.url}/tags", json={"name": "Nord"}, headers=room.master)
 
     body = await _get(client, f"{room.url}/documents/{tale['id']}/mention-suggestions", room.master)
 
     description, in_note = body["sources"]
     assert (description["document_name"], description["note_id"]) == ("Racconto", None)
+    # Tags are never proposed (product owner, 2026-10-19).
     assert [(m["text"], m["kind"], m["target_id"]) for m in description["matches"]] == [
         ("Lyra", "doc", lyra["id"]),
         ("locanda", "doc", inn["id"]),
-        ("nord", "tag", tag["id"]),
     ]
     assert description["matches"][1]["before"] == "Lyra entra nella "
     assert description["matches"][1]["after"] == ", a nord."
@@ -129,18 +137,12 @@ async def test_applying_links_only_the_chosen_matches_and_records_them(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
-    lyra = await _document(client, room, "Lyra", room.master)
-    inn = await _document(client, room, "Locanda", room.master)
     tale = await _document(
         client, room, "Racconto", room.master, description="Lyra entra nella Locanda."
     )
-    note = (
-        await client.post(
-            f"{room.url}/documents/{tale['id']}/notes",
-            json={"title": "Dopo", "description": "Poi Lyra dorme."},
-            headers=room.master,
-        )
-    ).json()
+    note = await _note(client, room, tale, "Poi Lyra dorme.")
+    lyra = await _document(client, room, "Lyra", room.master)
+    inn = await _document(client, room, "Locanda", room.master)
     url = f"{room.url}/documents/{tale['id']}/mention-suggestions"
     description, in_note = (await _get(client, url, room.master))["sources"]
 
@@ -185,12 +187,12 @@ async def test_the_room_proposes_only_what_the_caller_sees_and_manages(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
-    await _document(client, room, "Segreto", room.master, visibility="master")
-    await _document(client, room, "Lyra", room.master)
     await _document(client, room, "Diario", room.master, description="Lyra e il Segreto.")
     own = await _document(
         client, room, "Appunti", room.player, description="Lyra cerca il Segreto."
     )
+    await _document(client, room, "Segreto", room.master, visibility="master")
+    await _document(client, room, "Lyra", room.master)
 
     for_player = await _get(client, f"{room.url}/mention-suggestions", room.player)
     for_master = await _get(client, f"{room.url}/mention-suggestions", room.master)
@@ -222,8 +224,8 @@ async def test_choosing_nothing_changes_nothing(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
-    await _document(client, room, "Lyra", room.master)
     own = await _document(client, room, "Appunti", room.player, description="Lyra.")
+    await _document(client, room, "Lyra", room.master)
 
     applied = await client.post(
         f"{room.url}/mention-suggestions/apply",
@@ -234,3 +236,38 @@ async def test_choosing_nothing_changes_nothing(
     assert applied.json() == {"applied": 0, "documents": 0}
     saved = await _get(client, f"{room.url}/documents/{own['id']}", room.player)
     assert saved["description"] == "Lyra."
+
+
+async def test_a_save_links_the_document_names_it_adds(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    lyra = await _document(client, room, "Lyra", room.master)
+    await _document(client, room, "Segreto", room.master, visibility="master")
+    await client.post(f"{room.url}/tags", json={"name": "Nord"}, headers=room.master)
+
+    # Created by the Player: Lyra links, the hidden Document and the Tag don't.
+    own = await _document(
+        client, room, "Appunti", room.player, description="Lyra, il Segreto e il Nord."
+    )
+    assert own["description"] == f"#[Lyra](doc:{lyra['id']}), il Segreto e il Nord."
+
+    # Turned back into plain words, it stays plain; a new name typed in links.
+    url = f"{room.url}/documents/{own['id']}"
+    unlinked = await client.patch(url, json={"description": "Lyra, poi."}, headers=room.player)
+    assert unlinked.json()["description"] == "Lyra, poi."
+    added = await client.patch(url, json={"description": "Lyra, poi Lyra."}, headers=room.player)
+    assert added.json()["description"] == f"Lyra, poi #[Lyra](doc:{lyra['id']})."
+
+    # Notes too, created and edited; a Document's own name is never linked.
+    tale = await _document(client, room, "Racconto", room.master)
+    note = await _note(client, room, tale, "Racconto di Lyra.")
+    assert note["description"] == f"Racconto di #[Lyra](doc:{lyra['id']})."
+    edited = await client.patch(
+        f"{room.url}/documents/{tale['id']}/notes/{note['id']}",
+        json={"description": f"{note['description']} Lyra dorme."},
+        headers=room.master,
+    )
+    assert edited.json()["description"] == (
+        f"Racconto di #[Lyra](doc:{lyra['id']}). #[Lyra](doc:{lyra['id']}) dorme."
+    )

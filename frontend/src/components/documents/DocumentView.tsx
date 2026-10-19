@@ -19,6 +19,7 @@ import {
   DownloadSimpleIcon,
   EyeIcon,
   GraphIcon,
+  MagicWandIcon,
   PencilSimpleIcon,
   XIcon,
 } from '@phosphor-icons/react';
@@ -68,6 +69,7 @@ import { DocumentFileList } from '../files/DocumentFileList';
 import { DocumentMentionsProvider } from '../mentions/DocumentMentionsProvider';
 import { MentionText } from '../mentions/MentionText';
 import { Backlinks } from '../mentions/Backlinks';
+import { GenerateMentionsModal } from '../mentions/GenerateMentionsModal';
 import { MentionMapModal } from '../maps/MentionMapModal';
 import { MentionMapPanel } from '../maps/MentionMapPanel';
 import { LinkedMapPanel } from '../maps/LinkedMapPanel';
@@ -234,6 +236,7 @@ function DocumentPanel({
   const [imageSearchOpened, setImageSearchOpened] = useState(false);
   const [exportOpened, setExportOpened] = useState(false);
   const [mentionMapOpened, setMentionMapOpened] = useState(false);
+  const [generatingMentions, setGeneratingMentions] = useState(false);
   const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
   const [actionsExpanded, setActionsExpanded] = useState(false);
   // Spec 36: the Document's mention map, drawn under its images when it has a
@@ -302,6 +305,17 @@ function DocumentPanel({
           aria-label={t('maps.mention.button')}
         >
           <GraphIcon size={18} />
+        </LabeledActionIcon>
+      )}
+      {/* Spec 39: Owners and the Master turn the names in its text into mentions. */}
+      {isOwner && (
+        <LabeledActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={() => setGeneratingMentions(true)}
+          aria-label={t('mentionSuggestions.action')}
+        >
+          <MagicWandIcon size={18} />
         </LabeledActionIcon>
       )}
       {/* Spec 24b: Owners and the Master read the whole Document's history. */}
@@ -525,6 +539,13 @@ function DocumentPanel({
           documentName={document.name}
           map={mentionMap.data ?? null}
           onClose={() => setMentionMapOpened(false)}
+        />
+      )}
+      {generatingMentions && (
+        <GenerateMentionsModal
+          roomId={roomId}
+          documentId={document.id}
+          onClose={() => setGeneratingMentions(false)}
         />
       )}
       {isOwner && (

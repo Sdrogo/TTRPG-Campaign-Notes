@@ -598,6 +598,24 @@
     "inNote": "In der Notiz „{{title}}“",
     "inComment": "In einem Kommentar von {{name}}"
   },
+  "mentionSuggestions": {
+    "action": "Erwähnungen erzeugen",
+    "title": "Erwähnungen erzeugen",
+    "introDocument": "Sucht in der Beschreibung und den Notizen dieses Dokuments nach den Namen anderer Dokumente, die du siehst und die ohne Erwähnung geschrieben sind, um sie in Erwähnungen zu verwandeln. Wähle aus, welche angewendet werden. Neue Namen werden beim Speichern schon von selbst verknüpft.",
+    "introRoom": "Sucht in den Beschreibungen und Notizen der Dokumente, die du bearbeiten kannst, nach den Namen anderer Dokumente, die du siehst und die ohne Erwähnung geschrieben sind, um sie in Erwähnungen zu verwandeln. Wähle aus, welche angewendet werden. Neue Namen werden beim Speichern schon von selbst verknüpft.",
+    "loading": "Namen werden gesucht…",
+    "empty": "Keine Namen zu verknüpfen: Es gibt nichts, was zur Erwähnung werden könnte.",
+    "description": "Beschreibung",
+    "note": "Notiz „{{title}}“",
+    "inDocument": "{{document}} · {{where}}",
+    "target": "{{kind}}: {{name}}",
+    "matchLabel": "„{{text}}“ mit {{name}} verknüpfen",
+    "apply": "Anwenden",
+    "selected_one": "{{count}} Erwähnung gewählt",
+    "selected_other": "{{count}} Erwähnungen gewählt",
+    "applied_one": "{{count}} Erwähnung hinzugefügt",
+    "applied_other": "{{count}} Erwähnungen hinzugefügt"
+  },
   "glossary": {
     "title": "Tag-Index",
     "openToggle": "Tag-Index öffnen",

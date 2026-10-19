@@ -17,7 +17,13 @@ from app.api.errors import http_error
 from app.auth.dependencies import CurrentUserDep
 from app.db import comments_repo, documents_repo, mentions_repo, notes_repo, tags_repo
 from app.db.session import SessionDep
+from app.domain.mention_suggestions import (
+    MentionCandidate,
+    link_new_names,
+    usable_candidates,
+)
 from app.domain.mentions import (
+    MentionKind,
     content_targets,
     plan_source_mentions,
     target_excerpt,
@@ -56,6 +62,33 @@ async def clean_content_mentions(
     already_linked, _ = content_targets(previous)
     tags = await tags_repo.get_tags_by_ids(session, writer.room_id, list(tag_ids))
     return unlink_unknown_content(text, seen | (in_room & already_linked), {tag.id for tag in tags})
+
+
+async def document_candidates(
+    session: AsyncSession, membership: Membership
+) -> tuple[list[MentionCandidate], list[Document]]:
+    """The Documents of the Room the member sees, as names a mention may be
+    generated for (spec 39 Decision 3), and the Documents themselves."""
+    room_documents = await documents_repo.list_documents_for_room(session, membership.room_id)
+    seen = await visible_documents(session, room_documents, membership)
+    return [MentionCandidate(MentionKind.DOCUMENT, d.id, d.name) for d in seen], seen
+
+
+async def link_document_names(
+    session: AsyncSession,
+    writer: Membership,
+    document_id: uuid.UUID | None,
+    text: str,
+    previous: str = "",
+) -> str:
+    """`text`, a description or a Note of `document_id` being saved over
+    `previous`, with the names of the Documents the writer sees that the
+    save added linked as mentions (spec 39 Decision 10). Tags are never
+    linked; a hidden Document's name never is either (VR-07)."""
+    if text == previous:
+        return text
+    documents, _ = await document_candidates(session, writer)
+    return link_new_names(text, previous, usable_candidates(documents, document_id))
 
 
 async def index_mentions(session: AsyncSession, source: MentionSource, text: str) -> None:

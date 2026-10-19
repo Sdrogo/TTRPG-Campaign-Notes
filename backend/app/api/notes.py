@@ -21,7 +21,7 @@ from app.api.access import (
     require_membership,
 )
 from app.api.errors import http_error, translated_error
-from app.api.mentions import clean_content_mentions, index_mentions
+from app.api.mentions import clean_content_mentions, index_mentions, link_document_names
 from app.api.reveals import (
     RevealRequest,
     audience_of,
@@ -231,7 +231,12 @@ async def create_note(
     # creates can't both slip under the cap or share a position.
     await documents_repo.lock_document(session, document_id)
     existing = await notes_repo.list_notes_for_document(session, document_id)
-    description = await clean_content_mentions(session, membership, body.description)
+    description = await link_document_names(
+        session,
+        membership,
+        document_id,
+        await clean_content_mentions(session, membership, body.description),
+    )
     room = await rooms_repo.get_room(session, room_id)
     if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
@@ -338,8 +343,14 @@ async def update_note(
             description=(
                 None
                 if body.description is None
-                else await clean_content_mentions(
-                    session, membership, body.description, previous=note.description
+                else await link_document_names(
+                    session,
+                    membership,
+                    document_id,
+                    await clean_content_mentions(
+                        session, membership, body.description, previous=note.description
+                    ),
+                    previous=note.description,
                 )
             ),
             visibility=body.visibility,

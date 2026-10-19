@@ -124,6 +124,17 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-19
+
+- **39, Generate mentions** (no migration): spec `context/feature/39 -
+  Generate mentions.md`, product owner's request. A "Genera menzioni"
+  button on a Document (Owners, Master) and on the Room (every member,
+  their managed Documents) proposes the names of visible Documents found as
+  plain words, previewed with per-match opt-out, then applied as normal
+  edits. Product owner, same day: saving a description or Note links the
+  Document names it added by itself (Decision 10), and Tags are never
+  linked or proposed. Other defaults picked by Claude, to confirm in the PR.
+
 ### 2026-10-17
 
 - **38_1, Geographic maps backend** (migration `d7c1f5a9e3b8`, PR #210):

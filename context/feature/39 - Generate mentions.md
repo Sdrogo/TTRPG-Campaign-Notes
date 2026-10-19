@@ -3,14 +3,16 @@
 ## Goals
 
 - Product owner's request (2026-10-19): a "Genera menzioni" button on a
-  Document that looks for the names of the Room's other Documents and Tags
-  in its text and turns them into mentions, so nobody has to type `#` in
-  front of every name by hand. The same for the whole Room at once.
+  Document that looks for the names of the Room's other Documents in its
+  text and turns them into mentions, so nobody has to type `#` in front of
+  every name by hand. The same for the whole Room at once. Then (same day):
+  new Document names link **by themselves on save**, and Tags stay out of
+  both (Decision 10).
 - Builds on the stored mentions of spec 20: a generated mention is the same
   `#[Name](doc|tag:<uuid>)` token a typed one is, so it links, survives a
   rename and feeds "Mentioned in" and the mention map (spec 36).
 
-## Decisions (defaults picked 2026-10-19, to confirm in the PR)
+## Decisions (defaults picked 2026-10-19, to confirm in the PR; 10 is the product owner's)
 
 1. **Preview before applying**: the button never changes text directly. It
    opens a dialog listing every proposed mention, each with a few words
@@ -20,7 +22,8 @@
    is proposed, each with a checkbox (checked by default); a group's
    checkbox selects or clears all of its matches.
 3. **Only what the user sees and may edit**: names come from the Documents
-   the user sees (VR-07) and the Room's Tags; the texts scanned are the
+   the user sees (VR-07), **never from Tags** (product owner, 2026-10-19:
+   too many Tags are ordinary words); the texts scanned are the
    descriptions and the visible Notes of the Documents the user manages
    (an Owner or the Master, D-12). A hidden Document's name is never
    proposed, so the dialog can't reveal that it exists.
@@ -29,8 +32,7 @@
    skipped.
 5. **How a name matches**: as a whole word (it can't start or end inside a
    word), ignoring case but not accents, the longest name first where names
-   overlap ("Castello Drakon" before "Drakon"), a Document before a Tag of
-   the same name. A Document's own name is not proposed in its own text.
+   overlap ("Castello Drakon" before "Drakon"). A Document's own name is not proposed in its own text.
    Names shorter than 3 characters are ignored (too many false hits), and a
    name two visible Documents share is not proposed (it is ambiguous; the
    `#` popup still tells them apart).
@@ -52,14 +54,27 @@
      Documents page, for every member; it scans every Document they manage.
      Someone who manages none sees an empty dialog.
 
+10. **Automatic on save** (product owner, 2026-10-19): saving a
+    description or a Note (created or edited) links, with no preview, the
+    names of the Documents the writer sees that the save **added**: only in
+    the part of the text the save changed, and only for a Document the text
+    now names more often than before (plain words and mentions together).
+    So turning a mention back into plain words, or editing near a name left
+    plain on purpose, never links it again. Same matching rules (Decisions
+    3 to 5), never Tags, not Comments. Text written before this, or before
+    the named Document existed, is what the button is for. A restored
+    revision (spec 24b) is written back as it was.
+
 ## Design
 
 ### Backend (39_1)
 
-- `app/domain/mention_suggestions.py` (pure): `suggest_mentions(text,
-  documents, tags, exclude_document_id)` returns the matches (`start`,
-  `end`, the written text, kind, target id, target name) by Decisions 4 and
-  5; `apply_mentions(text, matches)` writes them as tokens.
+- `app/domain/mention_suggestions.py` (pure): `usable_candidates` and
+  `suggest_mentions` find the matches (`start`, `end`, the written text,
+  target) by Decisions 3 to 5; `apply_mentions` writes them as tokens;
+  `link_new_names(text, previous, candidates)` is Decision 10, called by
+  `app/api/mentions.py::link_document_names` from the create and edit
+  routes of Documents and Notes, after `clean_content_mentions`.
 - `app/api/mention_suggestions.py`:
   - `GET /rooms/{id}/documents/{doc}/mention-suggestions`: 404 for a
     Document the caller can't see, 403 if they don't manage it.
@@ -88,8 +103,10 @@
 
 ## Definition of Done
 
-- A description saying "Lyra entra nella Locanda" in a Room with Documents
-  "Lyra" and "Locanda" and a Tag "Nord" proposes two mentions; unchecking
+- Typing "Lyra" in a description and saving links it to the Document
+  "Lyra"; a Tag "Nord" is never linked.
+- A description saying "Lyra entra nella Locanda", written before the
+  Documents "Lyra" and "Locanda" existed, proposes two mentions; unchecking
   one and applying links only the other, and the target's "Mentioned in"
   lists it.
 - A Player who doesn't see "Locanda" is never offered it; a Player who

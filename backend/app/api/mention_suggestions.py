@@ -1,6 +1,6 @@
 """Generated mentions (spec 39): proposals of mentions where the names of the
-Room's Documents and Tags appear as plain words in the descriptions and
-Notes of the Documents the caller manages, and applying the ones they chose.
+Room's Documents appear as plain words in the descriptions and Notes of the
+Documents the caller manages, and applying the ones they chose.
 Only names the caller sees are proposed (VR-07), only text they may edit is
 scanned or written (D-12), and existing mentions are never touched."""
 
@@ -18,13 +18,12 @@ from app.api.access import (
     get_document_notes,
     get_owned_document,
     require_membership,
-    visible_documents,
 )
 from app.api.errors import http_error, translated_error
-from app.api.mentions import clean_content_mentions, index_mentions
+from app.api.mentions import clean_content_mentions, document_candidates, index_mentions
 from app.api.versions import record_revision
 from app.auth.dependencies import CurrentUserDep
-from app.db import documents_repo, notes_repo, tags_repo
+from app.db import documents_repo, notes_repo
 from app.db.session import SessionDep
 from app.domain.documents import is_owner
 from app.domain.mention_suggestions import (
@@ -34,6 +33,7 @@ from app.domain.mention_suggestions import (
     StaleSuggestionsError,
     apply_mentions,
     choose_matches,
+    match_context,
     suggest_mentions,
     usable_candidates,
 )
@@ -115,21 +115,6 @@ class _ManagedDocument:
     notes: list[Note]
 
 
-async def _candidates(
-    session: AsyncSession, membership: Membership
-) -> tuple[list[MentionCandidate], list[MentionCandidate], list[Document]]:
-    """The Documents the caller sees and the Room's Tags as candidates, and
-    those Documents themselves (Decision 3)."""
-    room_documents = await documents_repo.list_documents_for_room(session, membership.room_id)
-    seen = await visible_documents(session, room_documents, membership)
-    tags = await tags_repo.list_tags(session, membership.room_id)
-    return (
-        [MentionCandidate(MentionKind.DOCUMENT, d.id, d.name) for d in seen],
-        [MentionCandidate(MentionKind.TAG, t.id, t.name) for t in tags],
-        seen,
-    )
-
-
 async def _with_notes(
     session: AsyncSession, membership: Membership, document: Document, owner_ids: list[uuid.UUID]
 ) -> _ManagedDocument:
@@ -141,12 +126,11 @@ async def _with_notes(
 def _suggestions_for(
     managed: Sequence[_ManagedDocument],
     documents: Sequence[MentionCandidate],
-    tags: Sequence[MentionCandidate],
 ) -> MentionSuggestionsResponse:
     """The proposals in every managed Document's description and Notes."""
     sources: list[MentionSourceResponse] = []
     for item in sorted(managed, key=lambda m: (m.document.name.casefold(), str(m.document.id))):
-        candidates = usable_candidates(documents, tags, exclude_document_id=item.document.id)
+        candidates = usable_candidates(documents, exclude_document_id=item.document.id)
         texts: list[tuple[Note | None, str]] = [(None, item.document.description)]
         texts += [(note, note.description) for note in item.notes]
         for note, text in texts:
@@ -158,14 +142,15 @@ def _suggestions_for(
                         document_name=item.document.name,
                         note_id=None if note is None else note.id,
                         note_title=None if note is None else note.title,
-                        matches=[_suggestion_response(s) for s in found],
+                        matches=[_suggestion_response(text, s) for s in found],
                     )
                 )
     return MentionSuggestionsResponse(sources=sources)
 
 
-def _suggestion_response(suggestion: MentionSuggestion) -> MentionSuggestionResponse:
-    """The API shape of one proposal."""
+def _suggestion_response(text: str, suggestion: MentionSuggestion) -> MentionSuggestionResponse:
+    """The API shape of one proposal in `text`, with its context."""
+    before, after = match_context(text, suggestion)
     return MentionSuggestionResponse(
         start=suggestion.start,
         end=suggestion.end,
@@ -173,8 +158,8 @@ def _suggestion_response(suggestion: MentionSuggestion) -> MentionSuggestionResp
         kind=suggestion.kind,
         target_id=suggestion.target_id,
         target_name=suggestion.target_name,
-        before=suggestion.before,
-        after=suggestion.after,
+        before=before,
+        after=after,
     )
 
 
@@ -187,15 +172,15 @@ async def document_mention_suggestions(
     locale: LocaleDep,
 ) -> MentionSuggestionsResponse:
     """Spec 39: the mentions to propose in this Document's description and
-    the Notes the caller sees, from the names of the Documents they see and
-    the Room's Tags. 404 for a Document they can't see, 403 unless they are
+    the Notes the caller sees, from the names of the Documents they see
+    (never Tags). 404 for a Document they can't see, 403 unless they are
     one of its Owners or the Master (D-12). Changes nothing."""
     document, owner_ids, membership = await get_owned_document(
         session, room_id, document_id, uuid.UUID(current_user.id), locale
     )
-    documents, tags, _ = await _candidates(session, membership)
+    documents, _ = await document_candidates(session, membership)
     managed = await _with_notes(session, membership, document, owner_ids)
-    return _suggestions_for([managed], documents, tags)
+    return _suggestions_for([managed], documents)
 
 
 @router.get("/rooms/{room_id}/mention-suggestions")
@@ -207,14 +192,14 @@ async def room_mention_suggestions(
     Someone who manages none gets no source. 403 for a non-member. Changes
     nothing."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    documents, tags, seen = await _candidates(session, membership)
+    documents, seen = await document_candidates(session, membership)
     owners = await documents_repo.list_owner_ids_for_documents(session, [d.id for d in seen])
     managed = [
         await _with_notes(session, membership, document, owners[document.id])
         for document in seen
         if is_owner(membership.role, membership.user_id, owners[document.id])
     ]
-    return _suggestions_for(managed, documents, tags)
+    return _suggestions_for(managed, documents)
 
 
 @router.post("/rooms/{room_id}/mention-suggestions/apply")
@@ -249,7 +234,7 @@ async def apply_mention_suggestions(
     for document_id in sorted(by_document, key=str):
         await documents_repo.lock_document(session, document_id)
 
-    documents, tags, _ = await _candidates(session, membership)
+    documents, _ = await document_candidates(session, membership)
     applied = 0
     changed_documents = 0
     for document_id in sorted(by_document, key=str):
@@ -257,7 +242,7 @@ async def apply_mention_suggestions(
             session, room_id, document_id, requester_id, locale
         )
         managed = await _with_notes(session, membership, document, owner_ids)
-        candidates = usable_candidates(documents, tags, exclude_document_id=document_id)
+        candidates = usable_candidates(documents, exclude_document_id=document_id)
         written = 0
         for note_id, chosen in by_document[document_id].items():
             note = _source_note(managed, note_id, locale)

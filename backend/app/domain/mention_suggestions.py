@@ -1,6 +1,7 @@
-"""Generated mentions (spec 39): where the names of a Room's Documents and Tags
-appear in a text as plain words, so they can be proposed as mentions and,
-once chosen, written as the same tokens a typed mention is (spec 20)."""
+"""Generated mentions (spec 39): where the names of a Room's Documents appear
+in a text as plain words, so they can be proposed as mentions and, once
+chosen, written as the same tokens a typed mention is (spec 20); and the
+Document names a save links by itself (Decision 10)."""
 
 import re
 import uuid
@@ -31,8 +32,8 @@ class MentionCandidate:
 @dataclass(frozen=True)
 class MentionSuggestion:
     """One occurrence of a candidate's name in a text: where it is (`start`
-    inclusive, `end` exclusive), the words as written, what it would link
-    to, and a little of the text around it as a reader sees it."""
+    inclusive, `end` exclusive), the words as written and what it would link
+    to."""
 
     start: int
     end: int
@@ -40,8 +41,6 @@ class MentionSuggestion:
     kind: MentionKind
     target_id: uuid.UUID
     target_name: str
-    before: str
-    after: str
 
 
 @dataclass(frozen=True)
@@ -60,27 +59,20 @@ class StaleSuggestionsError(DomainError):
 
 
 def usable_candidates(
-    documents: Sequence[MentionCandidate],
-    tags: Sequence[MentionCandidate],
-    exclude_document_id: uuid.UUID | None = None,
+    documents: Sequence[MentionCandidate], exclude_document_id: uuid.UUID | None = None
 ) -> list[MentionCandidate]:
-    """The names worth looking for (Decision 5), longest first: no name
-    shorter than `MIN_NAME_LENGTH`, none two Documents share, not the
-    Document's own, and no Tag named like a Document (the Document wins)."""
+    """The Document names worth looking for (Decision 5), longest first: no
+    name shorter than `MIN_NAME_LENGTH`, none two Documents share, and not
+    the Document's own. Tags are never looked for (product owner,
+    2026-10-19)."""
     counts = Counter(document.name.casefold() for document in documents)
-    kept_documents = [
+    usable = [
         document
         for document in documents
-        if counts[document.name.casefold()] == 1 and document.id != exclude_document_id
+        if counts[document.name.casefold()] == 1
+        and document.id != exclude_document_id
+        and len(document.name.strip()) >= MIN_NAME_LENGTH
     ]
-    document_names = set(counts)
-    kept_tags = [tag for tag in tags if tag.name.casefold() not in document_names]
-    usable = [
-        candidate
-        for candidate in kept_documents + kept_tags
-        if len(candidate.name.strip()) >= MIN_NAME_LENGTH
-    ]
-    # Stable, so a Document stays ahead of a Tag of the same length.
     return sorted(usable, key=lambda candidate: -len(candidate.name))
 
 
@@ -116,8 +108,6 @@ def suggest_mentions(text: str, candidates: Sequence[MentionCandidate]) -> list[
                     kind=candidate.kind,
                     target_id=candidate.id,
                     target_name=candidate.name,
-                    before=_tail(text[: match.start()]),
-                    after=_head(text[match.end() :]),
                 )
             )
         start = token_end
@@ -151,6 +141,46 @@ def apply_mentions(text: str, matches: Sequence[MentionSuggestion]) -> str:
         last = match.end
     parts.append(text[last:])
     return "".join(parts)
+
+
+def link_new_names(text: str, previous: str, candidates: Sequence[MentionCandidate]) -> str:
+    """`text`, just saved over `previous`, with the names of `candidates`
+    the save added linked (Decision 10): only in the part of the text the
+    save changed, and only for a target named more often than before
+    (plain words and tokens together), so turning a mention back into plain
+    words, or editing around a name left plain, never links it again."""
+    if text == previous:
+        return text
+    prefix = 0
+    limit = min(len(text), len(previous))
+    while prefix < limit and text[prefix] == previous[prefix]:
+        prefix += 1
+    suffix = 0
+    while suffix < limit - prefix and text[-1 - suffix] == previous[-1 - suffix]:
+        suffix += 1
+    changed_end = len(text) - suffix
+    found = suggest_mentions(text, candidates)
+    grown = _named_counts(text, found) - _named_counts(
+        previous, suggest_mentions(previous, candidates)
+    )
+    picked = [
+        m for m in found if grown[m.target_id] > 0 and m.start < changed_end and m.end > prefix
+    ]
+    return apply_mentions(text, picked)
+
+
+def _named_counts(text: str, found: Sequence[MentionSuggestion]) -> Counter[uuid.UUID]:
+    """How many times `text` names each target: plain occurrences `found`
+    plus Document and Tag tokens."""
+    counts = Counter(m.target_id for m in found)
+    counts.update(m.target_id for m in find_mentions(text) if m.kind is not MentionKind.USER)
+    return counts
+
+
+def match_context(text: str, match: MentionSuggestion) -> tuple[str, str]:
+    """About `CONTEXT_LENGTH` characters of `text` on each side of `match`,
+    as a reader sees them, cut on words, for the preview."""
+    return _tail(text[: match.start]), _head(text[match.end :])
 
 
 def _tail(text: str) -> str:

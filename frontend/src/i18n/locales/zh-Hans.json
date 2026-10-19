@@ -590,6 +590,22 @@
     "inNote": "在笔记“{{title}}”中",
     "inComment": "在 {{name}} 的评论中"
   },
+  "mentionSuggestions": {
+    "action": "生成提及",
+    "title": "生成提及",
+    "introDocument": "在此文档的描述和笔记中查找你能看到、但未以提及形式书写的其他文档名称，并将其变为提及。请选择要应用的项。新名称在保存时已会自动链接。",
+    "introRoom": "在你可编辑的文档的描述和笔记中查找你能看到、但未以提及形式书写的其他文档名称，并将其变为提及。请选择要应用的项。新名称在保存时已会自动链接。",
+    "loading": "正在查找名称…",
+    "empty": "没有可链接的名称：没有可变为提及的内容。",
+    "description": "描述",
+    "note": "笔记“{{title}}”",
+    "inDocument": "{{document}} · {{where}}",
+    "target": "{{kind}}：{{name}}",
+    "matchLabel": "将“{{text}}”链接到{{name}}",
+    "apply": "应用",
+    "selected_other": "已选择 {{count}} 个提及",
+    "applied_other": "已添加 {{count}} 个提及"
+  },
   "glossary": {
     "title": "标签索引",
     "openToggle": "打开标签索引",

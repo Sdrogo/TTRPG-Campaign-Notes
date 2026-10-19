@@ -614,6 +614,28 @@
     "inNote": "W notatce „{{title}}”",
     "inComment": "W komentarzu użytkownika {{name}}"
   },
+  "mentionSuggestions": {
+    "action": "Generuj wzmianki",
+    "title": "Generuj wzmianki",
+    "introDocument": "Szuka w opisie i Notatkach tego Dokumentu nazw innych Dokumentów, które widzisz, zapisanych bez wzmianki, aby zamienić je we wzmianki. Wybierz, które zastosować. Nowe nazwy łączą się już same przy zapisie.",
+    "introRoom": "Szuka w opisach i Notatkach Dokumentów, które możesz edytować, nazw innych Dokumentów, które widzisz, zapisanych bez wzmianki, aby zamienić je we wzmianki. Wybierz, które zastosować. Nowe nazwy łączą się już same przy zapisie.",
+    "loading": "Szukam nazw…",
+    "empty": "Brak nazw do połączenia: nie ma nic do zamiany we wzmiankę.",
+    "description": "Opis",
+    "note": "Notatka „{{title}}”",
+    "inDocument": "{{document}} · {{where}}",
+    "target": "{{kind}}: {{name}}",
+    "matchLabel": "Połącz „{{text}}” z {{name}}",
+    "apply": "Zastosuj",
+    "selected_one": "Wybrano {{count}} wzmiankę",
+    "selected_few": "Wybrano {{count}} wzmianki",
+    "selected_many": "Wybrano {{count}} wzmianek",
+    "selected_other": "Wybrano {{count}} wzmianki",
+    "applied_one": "Dodano {{count}} wzmiankę",
+    "applied_few": "Dodano {{count}} wzmianki",
+    "applied_many": "Dodano {{count}} wzmianek",
+    "applied_other": "Dodano {{count}} wzmianki"
+  },
   "glossary": {
     "title": "Indeks tagów",
     "openToggle": "Otwórz indeks tagów",
