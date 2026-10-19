@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import (
     DocumentFileRow,
     DocumentImageRow,
+    DocumentLinkedMapRow,
     DocumentMentionRow,
     DocumentOwnerRow,
     DocumentRow,
@@ -19,6 +20,13 @@ from app.db.models import (
     MembershipRow,
     NoteRow,
     PostRow,
+    RelationshipMapAreaRow,
+    RelationshipMapArrowRow,
+    RelationshipMapCardRow,
+    RelationshipMapGroupRow,
+    RelationshipMapLinkRow,
+    RelationshipMapPinRow,
+    RelationshipMapRow,
     RevealRow,
     RoomRow,
     TagCombinationRow,
@@ -319,3 +327,229 @@ async def test_the_copy_name_follows_the_language_and_stacks(
     assert italian.json()["room"]["name"] == "Barovia (Copia)"
     assert twice.json()["room"]["name"] == "Barovia (Copy)"
     assert again.json()["room"]["name"] == "Barovia (Copy) (Copy)"
+
+
+async def test_the_copy_holds_the_maps_pointing_into_it(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    """Spec 40 Decisions 1 to 4: free, geographic and mention maps come along
+    with everything on them, re-pointed at the copied Documents and images,
+    created by the duplicator, Selective turned Private; a background shares
+    its Storage object and outlives the original Room."""
+    master = _headers(make_token(str(uuid.uuid4())))
+    room = (await client.post("/rooms", json={"name": "Tokyo"}, headers=master)).json()
+    room_id = room["id"]
+    _, player_id = await _join(client, make_token, room_id, master)
+    docs = f"/rooms/{room_id}/documents"
+    gate = await _post(client, docs, master, name="Gate")
+    ghost = await _post(
+        client,
+        docs,
+        master,
+        name="Ghost",
+        description=mention_token(MentionKind.DOCUMENT, uuid.UUID(gate["id"]), "Gate"),
+    )
+    for _ in range(2):
+        await client.post(
+            f"{docs}/{ghost['id']}/images",
+            files={"file": ("a.png", _png(), "image/png")},
+            headers=master,
+        )
+    chosen = await db_session.scalar(
+        select(DocumentImageRow.id)
+        .where(DocumentImageRow.document_id == uuid.UUID(ghost["id"]))
+        .where(DocumentImageRow.is_favorite.is_(False))
+    )
+    maps = f"/rooms/{room_id}/maps"
+    court = await _post(
+        client,
+        maps,
+        master,
+        name="Court",
+        visibility="selective",
+        selective_user_ids=[player_id],
+    )
+    group, ghost_card, note_card = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    board = await client.put(
+        f"{maps}/{court['id']}/board",
+        json={
+            "groups": [
+                {"id": str(group), "title": "Coterie", "x": 0, "y": 0, "width": 400, "height": 300}
+            ],
+            "cards": [
+                {
+                    "id": str(ghost_card),
+                    "document_id": ghost["id"],
+                    "image_id": str(chosen),
+                    "group_id": str(group),
+                    "x": 10,
+                    "y": 10,
+                },
+                {"id": str(uuid.uuid4()), "document_id": gate["id"], "x": 500, "y": 0},
+                {"id": str(note_card), "text": "Secret", "master_only": True, "x": 0, "y": 500},
+            ],
+            "arrows": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "from_end": {"card_id": str(ghost_card)},
+                    "to_end": {"card_id": str(note_card)},
+                    "label": "knows",
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "from_end": {"group_id": str(group)},
+                    "to_end": {"card_id": str(note_card)},
+                },
+            ],
+        },
+        headers=master,
+    )
+    assert board.status_code == 200, board.text
+    shibuya = await _post(client, maps, master, name="Shibuya", kind="geographic")
+    area, pin = uuid.uuid4(), uuid.uuid4()
+    geo = await client.put(
+        f"{maps}/{shibuya['id']}/geo",
+        json={
+            "areas": [
+                {
+                    "id": str(area),
+                    "document_id": gate["id"],
+                    "points": [[10, 10], [200, 10], [200, 200]],
+                }
+            ],
+            "pins": [{"id": str(pin), "name": "Crossing", "x": 300, "y": 300}],
+            "links": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "from_end": {"area_id": str(area)},
+                    "to_end": {"pin_id": str(pin)},
+                    "bend": 20,
+                }
+            ],
+        },
+        headers=master,
+    )
+    assert geo.status_code == 200, geo.text
+    background = await client.post(
+        f"{maps}/{shibuya['id']}/background",
+        files={"file": ("bg.png", _png(), "image/png")},
+        headers=master,
+    )
+    assert background.status_code == 200, background.text
+    mention = await client.post(
+        f"{docs}/{ghost['id']}/mention-map", json={"depth": 1}, headers=master
+    )
+    assert mention.status_code == 201, mention.text
+    moved = await client.put(
+        f"{docs}/{ghost['id']}/mention-map/cards",
+        json={"cards": [{"document_id": gate["id"], "x": 900, "y": 900, "color": "red"}]},
+        headers=master,
+    )
+    assert moved.status_code == 200, moved.text
+    linked = await client.put(
+        f"{docs}/{gate['id']}/linked-map", json={"map_id": court["id"]}, headers=master
+    )
+    assert linked.status_code == 200, linked.text
+    objects = len(fake_storage)
+
+    response = await client.post(f"/rooms/{room_id}/duplicate", headers=master)
+
+    assert response.status_code == 201, response.text
+    copy_id = uuid.UUID(response.json()["room"]["id"])
+    copies = {
+        d.name: d.id
+        for d in await db_session.scalars(select(DocumentRow).where(DocumentRow.room_id == copy_id))
+    }
+    new_maps = {
+        m.name: m
+        for m in await db_session.scalars(
+            select(RelationshipMapRow).where(RelationshipMapRow.room_id == copy_id)
+        )
+    }
+    assert len(new_maps) == 3 and {"Court", "Shibuya"} <= set(new_maps)
+    new_court, new_shibuya = new_maps["Court"], new_maps["Shibuya"]
+    duplicator = new_court.created_by
+    assert {m.created_by for m in new_maps.values()} == {duplicator}
+    assert new_court.visibility == "private"
+    (new_mention,) = [m for m in new_maps.values() if m.source_document_id is not None]
+    assert new_mention.source_document_id == copies["Ghost"] and new_mention.mention_depth == 1
+
+    cards = {
+        c.document_id or c.text: c
+        for c in await db_session.scalars(
+            select(RelationshipMapCardRow).where(RelationshipMapCardRow.map_id == new_court.id)
+        )
+    }
+    assert set(cards) == {copies["Ghost"], copies["Gate"], "Secret"}
+    new_chosen = await db_session.scalar(
+        select(DocumentImageRow.id)
+        .where(DocumentImageRow.document_id == copies["Ghost"])
+        .where(DocumentImageRow.is_favorite.is_(False))
+    )
+    assert cards[copies["Ghost"]].image_id == new_chosen != chosen
+    assert cards["Secret"].master_only is True
+    (new_group,) = await db_session.scalars(
+        select(RelationshipMapGroupRow).where(RelationshipMapGroupRow.map_id == new_court.id)
+    )
+    assert cards[copies["Ghost"]].group_id == new_group.id != group
+    arrows = (
+        await db_session.scalars(
+            select(RelationshipMapArrowRow).where(RelationshipMapArrowRow.map_id == new_court.id)
+        )
+    ).all()
+    assert {(a.from_card_id, a.from_group_id, a.to_card_id, a.label) for a in arrows} == {
+        (cards[copies["Ghost"]].id, None, cards["Secret"].id, "knows"),
+        (None, new_group.id, cards["Secret"].id, None),
+    }
+    (mention_card,) = await db_session.scalars(
+        select(RelationshipMapCardRow).where(RelationshipMapCardRow.map_id == new_mention.id)
+    )
+    assert (mention_card.document_id, mention_card.x, mention_card.color) == (
+        copies["Gate"],
+        900,
+        "red",
+    )
+    assert (
+        await db_session.scalar(
+            select(DocumentLinkedMapRow.map_id).where(
+                DocumentLinkedMapRow.document_id == copies["Gate"]
+            )
+        )
+        == new_court.id
+    )
+
+    (new_area,) = await db_session.scalars(
+        select(RelationshipMapAreaRow).where(RelationshipMapAreaRow.map_id == new_shibuya.id)
+    )
+    (new_pin,) = await db_session.scalars(
+        select(RelationshipMapPinRow).where(RelationshipMapPinRow.map_id == new_shibuya.id)
+    )
+    (new_link,) = await db_session.scalars(
+        select(RelationshipMapLinkRow).where(RelationshipMapLinkRow.map_id == new_shibuya.id)
+    )
+    assert new_area.document_id == copies["Gate"] and new_area.id != area
+    assert (new_link.from_area_id, new_link.to_pin_id, new_link.bend) == (
+        new_area.id,
+        new_pin.id,
+        20,
+    )
+    original_background = await db_session.scalar(
+        select(RelationshipMapRow.background_path).where(
+            RelationshipMapRow.id == uuid.UUID(shibuya["id"])
+        )
+    )
+    assert new_shibuya.background_path == original_background is not None
+    assert len(fake_storage) == objects  # nothing uploaded
+
+    # The original Room's maps are untouched, and its deletion keeps the copy's background.
+    assert (
+        await _count(
+            db_session, RelationshipMapRow, RelationshipMapRow.room_id, [uuid.UUID(room_id)]
+        )
+        == 3
+    )
+    assert (await client.delete(f"/rooms/{room_id}", headers=master)).status_code == 204
+    assert original_background in fake_storage

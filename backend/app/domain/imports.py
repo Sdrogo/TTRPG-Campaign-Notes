@@ -30,9 +30,21 @@ from app.domain.import_files import (
     MentionRef,
     Text,
 )
+from app.domain.map_transfer import (
+    MAX_MAPS_PER_IMPORT,
+    MapSkipReason,
+    PlannedMap,
+    UnreadableMapError,
+    map_key,
+    map_name,
+    plan_map,
+    read_map,
+    skipped_map,
+)
 from app.domain.mentions import MentionKind, mention_token, unlink_mentions
 from app.domain.models import DocumentVisibility
 from app.domain.notes import MAX_NOTE_TITLE_LENGTH, MAX_NOTES_PER_DOCUMENT
+from app.domain.relationship_maps import MAX_MAPS_PER_ROOM
 
 MAX_FILES = 10
 MAX_DOCUMENTS = 200
@@ -101,15 +113,21 @@ class ImportContext:
     existing: Mapping[uuid.UUID, ExistingDocument]
     room_tags: Mapping[str, tuple[uuid.UUID, str]]
     can_manage_tags: bool
+    # Spec 40: whether the importer is the Master (Master-only map content is
+    # theirs only) and how many maps the Room has (the cap of 100).
+    is_master: bool = False
+    map_count: int = 0
 
 
 @dataclass(frozen=True)
 class ImportChoices:
     """What the importer chose: the keys of the Documents to import (None =
-    all) and, among them, the ones to replace instead of copy."""
+    all) and, among them, the ones to replace instead of copy, and the keys of
+    the maps to import (None = all, spec 40)."""
 
     selected: frozenset[str] | None = None
     replace: frozenset[str] = frozenset()
+    maps: frozenset[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -179,13 +197,15 @@ class PlannedDocument:
 @dataclass(frozen=True)
 class ImportPlan:
     """The whole import: the Documents (selected ones only, in file order),
-    the Tags to create, and the names of the Room's Tags that were matched and
-    of the ones that could not be created."""
+    the Tags to create, the names of the Room's Tags that were matched and of
+    the ones that could not be created, and the maps (selected ones, in file
+    order, the skipped ones included, spec 40)."""
 
     documents: tuple[PlannedDocument, ...]
     new_tags: tuple[PlannedTag, ...]
     matched_tags: tuple[str, ...]
     unavailable_tags: tuple[str, ...]
+    maps: tuple[PlannedMap, ...] = ()
 
 
 def document_key(file_index: int, document_index: int) -> str:
@@ -215,6 +235,8 @@ def validate_files(files: Sequence[ImportFile]) -> None:
         raise ImportRefusedError("errors.import.tooManyDocuments", max=MAX_DOCUMENTS)
     if sum(len(document.images) for document in documents) > MAX_IMAGES:
         raise ImportRefusedError("errors.import.tooManyImages", max=MAX_IMAGES)
+    if sum(len(file.maps) for file in files) > MAX_MAPS_PER_IMPORT:
+        raise ImportRefusedError("errors.import.tooManyMaps", max=MAX_MAPS_PER_IMPORT)
     for document in documents:
         if not document.name.strip():
             raise ImportRefusedError("errors.import.nameRequired")
@@ -413,7 +435,58 @@ def plan_import(
         new_tags=tuple(book.created.values()),
         matched_tags=tuple(book.matched.values()),
         unavailable_tags=tuple(book.unavailable.values()),
+        maps=_plan_maps(files, context, choices, targets, replaced, ids, new_id),
     )
+
+
+def _plan_maps(
+    files: Sequence[ImportFile],
+    context: ImportContext,
+    choices: ImportChoices,
+    targets: Mapping[tuple[int, str], tuple[uuid.UUID, str]],
+    replaced: Mapping[str, ExistingDocument],
+    ids: Mapping[str, uuid.UUID],
+    new_id: Callable[[], uuid.UUID],
+) -> tuple[PlannedMap, ...]:
+    """The selected maps of every file (spec 40 Decisions 9 to 12): each
+    around the Documents of its own file that are imported, and the ones past
+    the Room's cap of 100 maps skipped as `limit`."""
+    copied = {document_id for key, document_id in ids.items() if key not in replaced}
+    room_left = MAX_MAPS_PER_ROOM - context.map_count
+    planned: list[PlannedMap] = []
+    for fi, file in enumerate(files):
+        documents: dict[uuid.UUID, uuid.UUID] = {}
+        for (file_index, source_id), (document_id, _) in targets.items():
+            try:
+                if file_index == fi:
+                    documents[uuid.UUID(source_id)] = document_id
+            except ValueError:
+                continue  # a hand-written id no map can name
+        for mi, raw in enumerate(file.maps):
+            key = map_key(fi, mi)
+            if choices.maps is not None and key not in choices.maps:
+                continue
+            try:
+                file_map = read_map(raw)
+            except UnreadableMapError:
+                planned.append(skipped_map(key, file.name, map_name(raw), MapSkipReason.INVALID))
+                continue
+            plan = plan_map(
+                file_map,
+                key,
+                file.name,
+                _level(file_map.visibility, context),
+                documents,
+                copied,
+                context.is_master,
+                new_id,
+            )
+            if plan.skipped is None:
+                if room_left <= 0:
+                    plan = skipped_map(key, file.name, plan.name, MapSkipReason.LIMIT)
+                room_left -= 1
+            planned.append(plan)
+    return tuple(planned)
 
 
 def _plan_document(

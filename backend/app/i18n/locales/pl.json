@@ -177,6 +177,7 @@
       "tooManyFiles": "Jednorazowo można zaimportować najwyżej {max} plików",
       "tooManyDocuments": "Jednorazowo można zaimportować najwyżej {max} dokumentów",
       "tooManyImages": "Jednorazowo można zaimportować najwyżej {max} obrazów",
+      "tooManyMaps": "Jednorazowo można zaimportować najwyżej {max} map",
       "nameRequired": "Dokument z pliku nie ma nazwy",
       "nameTooLong": "Nazwa dokumentu „{name}...” przekracza {max} znaków",
       "subtitleTooLong": "Podtytuł dokumentu {name} przekracza {max} znaków",

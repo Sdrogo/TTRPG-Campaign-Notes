@@ -177,6 +177,7 @@
       "tooManyFiles": "一度にインポートできるファイルは最大{max}個です",
       "tooManyDocuments": "一度にインポートできるドキュメントは最大{max}件です",
       "tooManyImages": "一度にインポートできる画像は最大{max}枚です",
+      "tooManyMaps": "一度にインポートできるマップは最大{max}個です",
       "nameRequired": "ファイル内に名前のないドキュメントがあります",
       "nameTooLong": "ドキュメント名「{name}...」が{max}文字を超えています",
       "subtitleTooLong": "{name}のサブタイトルが{max}文字を超えています",
