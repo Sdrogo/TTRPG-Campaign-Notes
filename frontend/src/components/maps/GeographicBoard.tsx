@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ActionIcon,
@@ -19,6 +19,7 @@ import { useBackState } from '../../lib/backNav';
 import { canClose, clickDraft, startDraft, undoCorner, type AreaDraft } from '../../lib/areaDraw';
 import {
   addLink,
+  areaCenter,
   arrowHead,
   bendThrough,
   clampToPlane,
@@ -383,30 +384,6 @@ export function GeographicBoard({
     return geometry ? [{ link, ...geometry }] : [];
   });
 
-  const labelAt = (from: Point, to: Point, curve: Curve, position: number, offset: number | null) => {
-    const base = pointOnCurve(curve, position);
-    const side = pointBeside(from, to, position, offset ?? 0);
-    const straight = pointBeside(from, to, position, 0);
-    return { x: base.x + side.x - straight.x, y: base.y + side.y - straight.y };
-  };
-
-  const linkLabels = (link: GeoLink, from: Point, to: Point, curve: Curve) => {
-    const labels: { key: string; text: string; at: Point }[] = [];
-    if (link.direction === 'both') {
-      if (link.label) labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.75, link.labelOffset) });
-      if (link.reverseLabel) {
-        labels.push({
-          key: 'reverse',
-          text: link.reverseLabel,
-          at: labelAt(from, to, curve, link.reverseLabelPosition ?? 0.25, link.reverseLabelOffset),
-        });
-      }
-    } else if (link.label) {
-      labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.5, link.labelOffset) });
-    }
-    return labels;
-  };
-
   const openLink = (link: GeoLink) => {
     if (!canEdit) return;
     setSelected({ kind: 'link', id: link.id });
@@ -423,47 +400,16 @@ export function GeographicBoard({
   const nameOfEnd = (end: GeoLink['from']) => placeName(findItem(board, endRef(end))!);
   const close = () => setEditing(null);
 
-  // What area names keep clear of, in plane units at this zoom: the pins,
-  // their names and the links' labels (spec 38b).
-  const lineHeight = LABEL_FONT * 1.2 * s;
-  const obstacles: LabelBox[] = [
-    ...shown.pins.flatMap((pin) => {
-      const r = (PIN_RADIUS + 2) * s;
-      const label = labelPlacement(pin.labelSide);
-      const width = textWidth(placeName(pin), LABEL_FONT * s);
-      const x = pin.x + label.dx * s;
-      const y = pin.y + label.dy * s;
-      return [
-        { x: pin.x - r, y: pin.y - r, width: 2 * r, height: 2 * r },
-        {
-          x: label.anchor === 'start' ? x : label.anchor === 'end' ? x - width : x - width / 2,
-          y: label.baseline === 'central' ? y - lineHeight / 2 : label.baseline === 'auto' ? y - lineHeight : y,
-          width,
-          height: lineHeight,
-        },
-      ];
-    }),
-    ...linkShapes.flatMap(({ link, curve, from, to }) =>
-      linkLabels(link, from, to, curve).map((label) => {
-        const width = textWidth(label.text, LABEL_FONT * s);
-        return { x: label.at.x - width / 2, y: label.at.y - lineHeight / 2, width, height: lineHeight };
-      }),
-    ),
-  ];
-  const areaLabelAt = placeAreaLabels(
-    shown.areas.map((area) => {
-      const subtitle = placeSubtitle(area);
-      const half = AREA_FONT * 0.65 * s;
-      return {
-        id: area.id,
-        points: area.points,
-        width: Math.max(textWidth(placeName(area), AREA_FONT * 1.05 * s), subtitle ? textWidth(subtitle, LABEL_FONT * s) : 0),
-        above: half,
-        below: subtitle ? AREA_FONT * 1.2 * s + LABEL_FONT * 0.65 * s : half,
-      };
-    }),
-    obstacles,
-  );
+  // Area names are placed on the saved map, at this zoom (spec 38b): while
+  // a drag shows a change, an area's name moves with it and the others stay.
+  const placedLabels = useMemo(() => areaLabelPoints(board, s), [board, s]);
+  const labelPoint = (area: GeoArea) => {
+    const placed = placedLabels.get(area.id)!;
+    const saved = board.areas.find((candidate) => candidate.id === area.id)!;
+    if (saved === area) return placed;
+    const [now, before] = [areaCenter(area.points), areaCenter(saved.points)];
+    return { x: placed.x + now.x - before.x, y: placed.y + now.y - before.y };
+  };
 
   return (
     <Box
@@ -586,7 +532,7 @@ export function GeographicBoard({
             );
           })}
           {shown.areas.map((area) => {
-            const center = areaLabelAt.get(area.id)!;
+            const center = labelPoint(area);
             const subtitle = placeSubtitle(area);
             return (
               <g key={area.id} opacity={itemOpacity(area)} style={{ pointerEvents: 'none', userSelect: 'none' }}>
@@ -972,6 +918,80 @@ export function GeographicBoard({
         />
       )}
     </Box>
+  );
+}
+
+function labelAt(from: Point, to: Point, curve: Curve, position: number, offset: number | null): Point {
+  const base = pointOnCurve(curve, position);
+  const side = pointBeside(from, to, position, offset ?? 0);
+  const straight = pointBeside(from, to, position, 0);
+  return { x: base.x + side.x - straight.x, y: base.y + side.y - straight.y };
+}
+
+/** A link's labels and where they are written. */
+function linkLabels(link: GeoLink, from: Point, to: Point, curve: Curve) {
+  const labels: { key: string; text: string; at: Point }[] = [];
+  if (link.direction === 'both') {
+    if (link.label) labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.75, link.labelOffset) });
+    if (link.reverseLabel) {
+      labels.push({
+        key: 'reverse',
+        text: link.reverseLabel,
+        at: labelAt(from, to, curve, link.reverseLabelPosition ?? 0.25, link.reverseLabelOffset),
+      });
+    }
+  } else if (link.label) {
+    labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.5, link.labelOffset) });
+  }
+  return labels;
+}
+
+/**
+ * Where each area's name goes on `board` when one plane unit is `s` screen
+ * pixels (spec 38b): clear of the pins, their names and the links' labels,
+ * which keep their screen size.
+ */
+function areaLabelPoints(board: GeoBoard, s: number): Map<string, Point> {
+  const lineHeight = LABEL_FONT * 1.2 * s;
+  const obstacles: LabelBox[] = [
+    ...board.pins.flatMap((pin) => {
+      const r = (PIN_RADIUS + 2) * s;
+      const label = labelPlacement(pin.labelSide);
+      const width = textWidth(placeName(pin), LABEL_FONT * s);
+      const x = pin.x + label.dx * s;
+      const y = pin.y + label.dy * s;
+      return [
+        { x: pin.x - r, y: pin.y - r, width: 2 * r, height: 2 * r },
+        {
+          x: label.anchor === 'start' ? x : label.anchor === 'end' ? x - width : x - width / 2,
+          y: label.baseline === 'central' ? y - lineHeight / 2 : label.baseline === 'auto' ? y - lineHeight : y,
+          width,
+          height: lineHeight,
+        },
+      ];
+    }),
+    ...board.links.flatMap((link) => {
+      const geometry = linkGeometry(board, link, (PIN_RADIUS + 3) * s);
+      if (!geometry) return [];
+      return linkLabels(link, geometry.from, geometry.to, geometry.curve).map((label) => {
+        const width = textWidth(label.text, LABEL_FONT * s);
+        return { x: label.at.x - width / 2, y: label.at.y - lineHeight / 2, width, height: lineHeight };
+      });
+    }),
+  ];
+  return placeAreaLabels(
+    board.areas.map((area) => {
+      const subtitle = placeSubtitle(area);
+      const half = AREA_FONT * 0.65 * s;
+      return {
+        id: area.id,
+        points: area.points,
+        width: Math.max(textWidth(placeName(area), AREA_FONT * 1.05 * s), subtitle ? textWidth(subtitle, LABEL_FONT * s) : 0),
+        above: half,
+        below: subtitle ? AREA_FONT * 1.2 * s + LABEL_FONT * 0.65 * s : half,
+      };
+    }),
+    obstacles,
   );
 }
 
