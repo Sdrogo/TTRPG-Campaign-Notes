@@ -244,6 +244,9 @@
       "alreadyExists": "Ce document a déjà une carte des mentions",
       "nothingToMap": "Aucune mention pour l'instant : la carte ne contiendrait que ce document",
       "invalidDepth": "La profondeur doit être un nombre entier de 0 à 3"
+    },
+    "mentionSuggestions": {
+      "stale": "Ces textes ont changé après l'aperçu : rechargez-le et réessayez"
     }
   },
   "pdf": {

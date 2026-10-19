@@ -244,6 +244,9 @@
       "alreadyExists": "Ten dokument ma już mapę wzmianek",
       "nothingToMap": "Brak wzmianek: mapa zawierałaby tylko ten dokument",
       "invalidDepth": "Głębokość musi być liczbą całkowitą od 0 do 3"
+    },
+    "mentionSuggestions": {
+      "stale": "Te teksty zmieniły się po podglądzie: odśwież go i spróbuj ponownie"
     }
   },
   "pdf": {

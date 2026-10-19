@@ -244,6 +244,9 @@
       "alreadyExists": "Este documento ya tiene un mapa de menciones",
       "nothingToMap": "Aún no hay menciones: el mapa solo contendría este documento",
       "invalidDepth": "La profundidad debe ser un número entero de 0 a 3"
+    },
+    "mentionSuggestions": {
+      "stale": "Estos textos cambiaron después de la vista previa: vuelve a cargarla e inténtalo de nuevo"
     }
   },
   "pdf": {

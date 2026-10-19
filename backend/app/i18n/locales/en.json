@@ -244,6 +244,9 @@
       "alreadyExists": "This Document already has a mention map",
       "nothingToMap": "No mentions yet: the map would hold only this Document",
       "invalidDepth": "The depth must be a whole number from 0 to 3"
+    },
+    "mentionSuggestions": {
+      "stale": "These texts changed after the preview: reload it and try again"
     }
   },
   "pdf": {

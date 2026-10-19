@@ -244,6 +244,9 @@
       "alreadyExists": "이 문서에는 이미 언급 지도가 있습니다",
       "nothingToMap": "아직 언급이 없습니다: 맵에는 이 문서만 표시됩니다",
       "invalidDepth": "깊이는 0에서 3까지의 정수여야 합니다"
+    },
+    "mentionSuggestions": {
+      "stale": "미리 보기 후에 텍스트가 바뀌었습니다. 다시 불러온 뒤 다시 시도하세요"
     }
   },
   "pdf": {

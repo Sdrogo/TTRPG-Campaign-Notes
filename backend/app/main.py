@@ -28,6 +28,7 @@ from app.api.main_items import router as main_items_router
 from app.api.map_files import router as map_files_router
 from app.api.mention_maps import linked_router as linked_maps_router
 from app.api.mention_maps import router as mention_maps_router
+from app.api.mention_suggestions import router as mention_suggestions_router
 from app.api.mentions import router as mentions_router
 from app.api.notes import router as notes_router
 from app.api.relationship_maps import router as relationship_maps_router
@@ -92,6 +93,7 @@ app.include_router(history_router)
 app.include_router(document_files_router)
 app.include_router(characters_router)
 app.include_router(mentions_router)
+app.include_router(mention_suggestions_router)
 app.include_router(friends_router)
 app.include_router(search_router)
 app.include_router(image_search_router)

@@ -244,6 +244,9 @@
       "alreadyExists": "Dieses Dokument hat bereits eine Erwähnungskarte",
       "nothingToMap": "Noch keine Erwähnungen: Die Karte enthielte nur dieses Dokument",
       "invalidDepth": "Die Tiefe muss eine ganze Zahl von 0 bis 3 sein"
+    },
+    "mentionSuggestions": {
+      "stale": "Diese Texte wurden nach der Vorschau geändert: Lade sie neu und versuche es noch einmal"
     }
   },
   "pdf": {
