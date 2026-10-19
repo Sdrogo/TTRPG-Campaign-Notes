@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Alert, Button, Modal, Stack, Textarea, TextInput } from '@mantine/core';
+import { Alert, Button, Input, Modal, SegmentedControl, Stack, Textarea, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../../types/member';
-import type { MapFormValues } from '../../types/map';
+import type { MapFormValues, MapKind } from '../../types/map';
 import { MemberMultiSelect } from '../MemberMultiSelect';
 import { VisibilitySelect } from '../VisibilitySelect';
 
@@ -18,6 +18,8 @@ interface MapFormModalProps {
   creatorId: string;
   submitLabel: string;
   submitting: boolean;
+  /** Offers the choice of a free board or a geographic map, on create only (spec 38 Decision 1). */
+  kindChoice?: boolean;
   error: string | null;
   onSubmit: (values: MapFormValues) => void;
   onClose: () => void;
@@ -36,6 +38,7 @@ export function MapFormModal({
   creatorId,
   submitLabel,
   submitting,
+  kindChoice = false,
   error,
   onSubmit,
   onClose,
@@ -53,7 +56,25 @@ export function MapFormModal({
         }}
       >
         <Stack gap="sm">
+          {kindChoice && (
+            <Input.Wrapper
+              label={t('maps.kind.label')}
+              description={values.kind === 'geographic' ? t('maps.kind.geographicHelp') : t('maps.kind.freeHelp')}
+            >
+              <SegmentedControl
+                fullWidth
+                mt={4}
+                value={values.kind ?? 'free'}
+                onChange={(kind) => set({ kind: kind as MapKind })}
+                data={[
+                  { value: 'free', label: t('maps.kind.free') },
+                  { value: 'geographic', label: t('maps.kind.geographic') },
+                ]}
+              />
+            </Input.Wrapper>
+          )}
           <TextInput
+            spellCheck
             label={t('common.name')}
             value={values.name}
             onChange={(event) => set({ name: event.currentTarget.value })}
@@ -62,6 +83,7 @@ export function MapFormModal({
             data-autofocus
           />
           <Textarea
+            spellCheck
             label={t('common.description')}
             value={values.description}
             onChange={(event) => set({ description: event.currentTarget.value })}

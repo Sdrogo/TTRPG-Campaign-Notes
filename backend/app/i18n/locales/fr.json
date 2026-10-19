@@ -215,14 +215,38 @@
         "text": "texte de la fiche",
         "caption": "légende",
         "label": "étiquette",
-        "groupTitle": "titre du groupe"
-      }
+        "groupTitle": "titre du groupe",
+        "placeName": "nom",
+        "subtitle": "sous-titre",
+        "note": "note"
+      },
+      "invalidPlane": "Le plan doit faire de 100 à 20 000 unités de large et de haut, et seule une carte géographique en a un",
+      "planeTooSmall": "Avec ce plan, une partie de la carte serait en dehors",
+      "notGeographic": "Ce n'est pas une carte géographique",
+      "notFree": "C'est une carte géographique : elle n'a pas de tableau de cartes",
+      "placeNameRequired": "Une zone ou un lieu sans Document a besoin d'un nom",
+      "tooManyAreas": "Une carte peut avoir {max} zones au maximum",
+      "tooManyPins": "Une carte peut avoir {max} lieux au maximum",
+      "tooManyLinks": "Une carte peut avoir {max} liens au maximum"
+    },
+    "mapImport": {
+      "invalidFile": "Le fichier n'est pas une carte que l'App sait lire (vérifie le champ \"{field}\")",
+      "unsupportedVersion": "Le fichier utilise la version {version} du format des cartes ; l'App lit la version 1",
+      "duplicateKey": "La clé \"{item}\" est utilisée deux fois dans le fichier",
+      "unknownKey": "Un lien nomme \"{item}\", qui n'est la clé d'aucune zone ni d'aucun repère du fichier",
+      "linkToItself": "Le lien depuis \"{item}\" revient sur lui-même",
+      "invalidArea": "La zone \"{item}\" doit avoir de 3 à 60 sommets dans le plan, autour d'une vraie surface",
+      "pinOutsidePlane": "Le repère \"{item}\" est hors du plan",
+      "nameRequired": "Le lieu \"{item}\" n'a ni Document ni nom"
     },
     "mentionMap": {
       "notFound": "Ce document n'a pas de carte des mentions",
       "alreadyExists": "Ce document a déjà une carte des mentions",
       "nothingToMap": "Aucune mention pour l'instant : la carte ne contiendrait que ce document",
       "invalidDepth": "La profondeur doit être un nombre entier de 0 à 3"
+    },
+    "mentionSuggestions": {
+      "stale": "Ces textes ont changé après l'aperçu : rechargez-le et réessayez"
     }
   },
   "pdf": {

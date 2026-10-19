@@ -68,24 +68,24 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `e8b4d2f6a9c1` (document linked maps, spec 36
-  Decision 15; the file is on `staging` ahead of its code, which ships with the
-  PR from `claude/project-thread-nnfrdt`).
+- **Head in the repository**: `d7c1f5a9e3b8` (geographic maps, spec 38_1,
+  PR #210, on branch `claude/project-thread-e559be` until it merges).
 - **Pending on staging**: none.
-- **Staging database**: `e8b4d2f6a9c1` (= head, document linked maps, applied
-  by hand 2026-10-15 with `.env.staging` loaded; `c6e2a9f4d8b3` before it,
+- **Staging database**: `d7c1f5a9e3b8` (= head, geographic maps, applied by
+  hand 2026-10-17 with `.env.staging` loaded; `e8b4d2f6a9c1` before it,
+  document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `e8b4d2f6a9c1` (= head). Applied 2026-10-15 with
-  `alembic upgrade head` and `backend/.env` loaded: `e8b4d2f6a9c1` (document
-  linked maps), from `c6e2a9f4d8b3` (mention maps, applied the same day, from
-  `b4d8f2a6c1e7`). Before it, on 2026-10-13: `a9e3c5d7b1f4` (map
-  label positions) and `b4d8f2a6c1e7` (map label offsets), from `d5a1c8e3f2b7`
-  (map card image, applied earlier).
+- **Production database**: `d7c1f5a9e3b8` (= head). Applied 2026-10-19 with
+  `alembic upgrade head` and `backend/.env` loaded: `d7c1f5a9e3b8` (geographic
+  maps), from `e8b4d2f6a9c1` (document linked maps, applied 2026-10-15, from
+  `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
+  2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
+  label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
 - **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
-`e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -123,8 +123,67 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-19
+
+- **39, Generate mentions** (no migration): spec `context/feature/39 -
+  Generate mentions.md`, product owner's request. A "Genera menzioni"
+  button on a Document (Owners, Master) and on the Room (every member,
+  their managed Documents) proposes the names of visible Documents found as
+  plain words, previewed with per-match opt-out, then applied as normal
+  edits. Product owner, same day: saving a description or Note links the
+  Document names it added by itself (Decision 10), and Tags are never
+  linked or proposed. Other defaults picked by Claude, to confirm in the PR.
+- **Fix: mention preview carousel** (frontend only): on a wide screen a click
+  inside a `#Document` mention's hover preview (spec 32), such as its image
+  carousel arrows, opened the mention's half-screen menu (spec 37), because
+  React bubbles portal clicks to the mention. The preview's dropdown now marks
+  its clicks as its own (`OWN_CLICKS_ATTRIBUTE`) and `DocumentOpenMenu`
+  ignores them.
+- **30 follow-up, read aloud without `#`**: plain `#Name` mentions (pre-id,
+  spec 20) that match a visible Document or Tag are read without the `#`;
+  tokens read under the current name. `mentionsToSpeech` takes the Room's
+  Documents and Tags from `useDocumentMentions`. Frontend only, no migration.
+
+### 2026-10-17
+
+- **38_1, Geographic maps backend** (migration `d7c1f5a9e3b8`, PR #210):
+  spec `context/feature/38 - Geographic maps.md`, chosen by the product
+  owner on a decision card (a real geographic map, not a background under
+  cards). A map gets `kind` (`free` | `geographic`), a plane and an optional
+  background image; areas, pins and links in their own tables, bound to
+  Documents or plain, with the spec 28 visibility rules. Routes
+  `GET/PUT /rooms/{id}/maps/{map}/geo` and `/background` (upload, from URL,
+  delete); the free-board routes answer 409 for a geographic map and back.
+  `requirements.md` still says geographic maps are out of scope: the
+  product owner's edit only.
+- **38_2, Geographic maps viewer and editor** (no migration): the product
+  owner asked for it before the import ("no import without a way to see
+  the map"). "Nuova mappa" offers Free board / Geographic map; the map page
+  draws the plane (background, areas, pins, curved links) in an SVG of its
+  own with pan and zoom, a card per clicked place (its Document, or its
+  note), the split pane for Documents, and a Tag filter for everyone. Its
+  managers draw areas corner by corner, place pins, link two items, drag
+  pins, areas, corners and a link's curve, and set the plane size and
+  background in a "Mappa" dialog (upload or URL; image search not wired).
+  Linking a geographic map to a Document now works (the 409 is gone).
+- **38_3, Geographic maps import and export** (no migration): the Maps list
+  has "Importa mappa": pick the JSON file (the ticket's format, e.g. made by
+  Claude in another chat), see the report (counts, names kept as plain
+  labels because no visible Document has them, several do, or the Document
+  is already on the map), adjust name, description and visibility, import.
+  A geographic map's header has "Esporta la mappa (JSON)", the same format
+  built from what the viewer sees. Routes `POST /maps/import/preview`,
+  `POST /maps/import`, `GET /maps/{map}/export`. The ticket's example file
+  imports in a backend test.
+
 ### 2026-10-16
 
+- **Spellcheck on text fields** (no migration): content fields (Document
+  name/subtitle/description, Note title/body, Comment composer, Map and Card
+  text, Arrow label, profile bio) now set `spellCheck` explicitly, so Firefox
+  also checks the single-line ones. The dictionary language is `<html lang>`,
+  which already follows the App language (`i18n/index.ts`). Not done: a
+  per-Room writing language, and any LanguageTool/Hunspell option.
 - **Room PDF, real cause found** (no migration): the prod logs showed the
   upload to Storage refused with 413 `EntityTooLarge`: the `document-images`
   bucket has a 10 MB per-object limit and a big Room's PDF is larger. Earlier
@@ -447,6 +506,11 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
+- **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
+  editor, PR #211) and 38_3 (JSON import/export) built; first real test is
+  the Shibuya map. `requirements.md` §1 and a new `FR-` need the product
+  owner's request. Open: image search for the background, dragging link
+  labels, a Tag picking an area's color.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still

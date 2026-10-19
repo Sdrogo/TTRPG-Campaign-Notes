@@ -122,8 +122,9 @@ function linkedMapQueryKey(roomId: string, documentId: string) {
 }
 
 /**
- * The free map linked to the Document, as the viewer sees it, or null when it
- * has none or the map is hidden from them (spec 36 Decision 15).
+ * The map linked to the Document, as the viewer sees it, or null when it has
+ * none or the map is hidden from them (spec 36 Decision 15). A geographic
+ * map (spec 38) comes without its content, read from `useGeoMap`.
  */
 export function useLinkedMap(roomId: string, documentId: string) {
   return useQuery<RelationshipMapDetail | null>({
@@ -149,8 +150,9 @@ export function useUnlinkMap(roomId: string, documentId: string) {
 }
 
 /**
- * Shows an existing free map the viewer manages on the Document's page, as it
- * is: nothing is added to the map (spec 36 Decision 15).
+ * Shows an existing map the viewer manages, free or geographic, on the
+ * Document's page, as it is: nothing is added to the map (spec 36 Decision
+ * 15, spec 38_2).
  */
 export function useLinkMap(roomId: string, documentId: string) {
   const queryClient = useQueryClient();

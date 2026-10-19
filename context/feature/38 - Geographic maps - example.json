@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "geographic_map",
+  "name": "Shibuya di notte",
+  "description": "Le zone di Shibuya e i loro luoghi principali.",
+  "plane": { "width": 2025, "height": 1852 },
+  "areas": [
+    {
+      "key": "incrocio",
+      "document": "Incrocio e Center Gai",
+      "points": [[443, 1263], [621, 1237], [702, 1383], [821, 1435], [821, 1581], [691, 1581], [562, 1495], [432, 1396]],
+      "color": "blue",
+      "filled": true,
+      "dashed": false
+    },
+    {
+      "key": "dogenzaka",
+      "document": "Dōgenzaka",
+      "points": [[432, 1396], [562, 1495], [670, 1594], [594, 1779], [281, 1753], [227, 1521]],
+      "color": "blue",
+      "filled": true,
+      "dashed": false
+    },
+    {
+      "key": "bosco",
+      "document": null,
+      "name": "Meiji Jingū e Yoyogi",
+      "subtitle": "Il bosco sacro",
+      "note": "Zona proposta: nessuno la controlla. Rischio Masquerade 2 nel parco, 5 nel bosco.",
+      "points": [[110, 120], [560, 120], [650, 420], [640, 620], [500, 780], [300, 810], [20, 680], [10, 380]],
+      "color": "emerald",
+      "filled": true,
+      "dashed": true
+    }
+  ],
+  "pins": [
+    { "key": "hachiko", "document": "Statua di Hachikō", "x": 680, "y": 1488, "label_side": "left", "color": "default" },
+    { "key": "sky", "document": "Shibuya Sky", "x": 778, "y": 1535, "label_side": "right", "color": "default" },
+    { "key": "elysium", "document": "Elysium di Shibuya", "x": 637, "y": 1303, "label_side": "right", "color": "default" },
+    {
+      "key": "s109",
+      "document": null,
+      "name": "Shibuya 109",
+      "note": "Il cilindro argentato del 1979, tempio della moda delle ragazze.",
+      "x": 572,
+      "y": 1449,
+      "label_side": "left",
+      "color": "default"
+    }
+  ],
+  "links": [
+    {
+      "from": "sky",
+      "to": "elysium",
+      "direction": "forward",
+      "label": "la finestra della corte",
+      "color": "red",
+      "bend": -80
+    }
+  ]
+}

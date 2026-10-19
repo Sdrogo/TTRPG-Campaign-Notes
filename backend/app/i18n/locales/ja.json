@@ -215,14 +215,38 @@
         "text": "カードのテキスト",
         "caption": "キャプション",
         "label": "ラベル",
-        "groupTitle": "グループのタイトル"
-      }
+        "groupTitle": "グループのタイトル",
+        "placeName": "名前",
+        "subtitle": "サブタイトル",
+        "note": "メモ"
+      },
+      "invalidPlane": "平面は幅・高さとも100〜20,000単位で、地理マップだけが持てます",
+      "planeTooSmall": "その平面ではマップの一部がはみ出します",
+      "notGeographic": "これは地理マップではありません",
+      "notFree": "これは地理マップです。カードのボードはありません",
+      "placeNameRequired": "ドキュメントのないエリアやピンには名前が必要です",
+      "tooManyAreas": "1つのマップに置けるエリアは最大{max}個です",
+      "tooManyPins": "1つのマップに置けるピンは最大{max}個です",
+      "tooManyLinks": "1つのマップに引けるリンクは最大{max}本です"
+    },
+    "mapImport": {
+      "invalidFile": "このファイルはアプリが読めるマップではありません(項目「{field}」を確認してください)",
+      "unsupportedVersion": "このファイルはマップ形式のバージョン {version} を使っています。アプリが読めるのはバージョン 1 です",
+      "duplicateKey": "キー「{item}」がファイル内で2回使われています",
+      "unknownKey": "リンクが「{item}」を指していますが、ファイル内のエリアやピンのキーではありません",
+      "linkToItself": "「{item}」からのリンクが自分自身に戻っています",
+      "invalidArea": "エリア「{item}」には、平面内に面積のある形をつくる3〜60個の頂点が必要です",
+      "pinOutsidePlane": "ピン「{item}」が平面の外にあります",
+      "nameRequired": "場所「{item}」にはドキュメントも名前もありません"
     },
     "mentionMap": {
       "notFound": "このドキュメントには言及マップがありません",
       "alreadyExists": "このドキュメントにはすでに言及マップがあります",
       "nothingToMap": "まだ言及がありません：マップにはこのドキュメントしか表示されません",
       "invalidDepth": "深さは0から3までの整数で指定してください"
+    },
+    "mentionSuggestions": {
+      "stale": "プレビューの後にテキストが変更されました。再読み込みしてもう一度お試しください"
     }
   },
   "pdf": {

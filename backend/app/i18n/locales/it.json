@@ -215,14 +215,38 @@
         "text": "testo della carta",
         "caption": "didascalia",
         "label": "etichetta",
-        "groupTitle": "titolo del gruppo"
-      }
+        "groupTitle": "titolo del gruppo",
+        "placeName": "nome",
+        "subtitle": "sottotitolo",
+        "note": "nota"
+      },
+      "invalidPlane": "Il piano deve essere largo e alto da 100 a 20.000 unità, e ce l'ha solo una mappa geografica",
+      "planeTooSmall": "Con quel piano una parte della mappa resterebbe fuori",
+      "notGeographic": "Questa non è una mappa geografica",
+      "notFree": "Questa è una mappa geografica: non ha una lavagna di schede",
+      "placeNameRequired": "Una zona o un luogo senza Documento ha bisogno di un nome",
+      "tooManyAreas": "Una mappa può avere al massimo {max} zone",
+      "tooManyPins": "Una mappa può avere al massimo {max} luoghi",
+      "tooManyLinks": "Una mappa può avere al massimo {max} legami"
+    },
+    "mapImport": {
+      "invalidFile": "Il file non è una mappa che l'App sa leggere (controlla il campo \"{field}\")",
+      "unsupportedVersion": "Il file usa la versione {version} del formato delle mappe; l'App legge la versione 1",
+      "duplicateKey": "La chiave \"{item}\" è usata due volte nel file",
+      "unknownKey": "Un collegamento nomina \"{item}\", che non è la chiave di un'area o di un segnaposto del file",
+      "linkToItself": "Il collegamento da \"{item}\" torna su sé stesso",
+      "invalidArea": "L'area \"{item}\" ha bisogno di 3-60 vertici dentro il piano, attorno a una superficie vera",
+      "pinOutsidePlane": "Il segnaposto \"{item}\" è fuori dal piano",
+      "nameRequired": "Il luogo \"{item}\" non ha né un Documento né un nome"
     },
     "mentionMap": {
       "notFound": "Questo Documento non ha una mappa delle menzioni",
       "alreadyExists": "Questo Documento ha già una mappa delle menzioni",
       "nothingToMap": "Ancora nessuna menzione: la mappa conterrebbe solo questo Documento",
       "invalidDepth": "La profondità deve essere un numero intero da 0 a 3"
+    },
+    "mentionSuggestions": {
+      "stale": "Questi testi sono cambiati dopo l'anteprima: ricaricala e riprova"
     }
   },
   "pdf": {

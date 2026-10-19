@@ -6,15 +6,23 @@ import { ApiError, apiFetch } from '../../lib/apiClient';
 import { useSession } from '../../hooks/useSession';
 import { ViewAsContext } from '../../hooks/useViewAs';
 import type { Board } from '../../types/map';
-import { fakeSession, rawMapDetail, rawMember } from '../fixtures';
+import type { GeoBoard } from '../../types/geoMap';
+import { fakeSession, rawGeoMapDetail, rawMapDetail, rawMember } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { RelationshipMapPage } from '../../pages/RelationshipMapPage';
+import { saveBlob } from '../../lib/roomExport';
+import { notifyError } from '../../lib/notify';
 
 vi.mock('../../lib/apiClient', async (original) => ({
   ...(await original<typeof import('../../lib/apiClient')>()),
   apiFetch: vi.fn(),
 }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
+vi.mock('../../lib/roomExport', async (original) => ({
+  ...(await original<typeof import('../../lib/roomExport')>()),
+  saveBlob: vi.fn(),
+}));
+vi.mock('../../lib/notify', () => ({ notifyError: vi.fn() }));
 
 // The board has its own tests: here it only reports how it was drawn, and
 // makes one change when asked.
@@ -46,6 +54,36 @@ vi.mock('../../components/maps/MapBoard', () => ({
   ),
 }));
 
+vi.mock('../../components/maps/GeographicBoard', () => ({
+  GeographicBoard: ({
+    board,
+    editable,
+    planeWidth,
+    tags,
+    onChange,
+    onSelectDocument,
+  }: {
+    board: GeoBoard;
+    editable: boolean;
+    planeWidth: number;
+    tags: unknown[];
+    onChange: (board: GeoBoard) => void;
+    onSelectDocument?: (documentId: string) => void;
+  }) => (
+    <div data-testid="geo-board" data-editable={String(editable)} data-plane={planeWidth} data-tags={tags.length}>
+      {board.areas.length} areas
+      <button type="button" onClick={() => onChange({ ...board, areas: board.areas.slice(1) })}>
+        change
+      </button>
+      {onSelectDocument && (
+        <button type="button" onClick={() => onSelectDocument('doc-9')}>
+          select
+        </button>
+      )}
+    </div>
+  ),
+}));
+
 const navigate = vi.fn();
 vi.mock('react-router-dom', async () => ({
   ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
@@ -59,9 +97,12 @@ type Init = { method?: string; json?: unknown };
 
 const routes = {
   map: () => Promise.resolve(rawMapDetail()) as Promise<unknown>,
+  geo: () => Promise.resolve(rawGeoMapDetail()) as Promise<unknown>,
+  saveGeo: () => Promise.resolve(rawGeoMapDetail()) as Promise<unknown>,
   save: () => Promise.resolve(rawMapDetail()) as Promise<unknown>,
   update: () => Promise.resolve(rawMapDetail({ name: 'La Corte rinnovata' })) as Promise<unknown>,
   remove: () => Promise.resolve(undefined) as Promise<unknown>,
+  exportMap: () => Promise.resolve({ schema_version: 1 }) as Promise<unknown>,
   members: [rawMember({ user_id: 'user-1', role: 'master' })] as unknown,
 };
 
@@ -96,13 +137,20 @@ beforeEach(() => {
   fetchMock.mockReset();
   navigate.mockReset();
   routes.map = () => Promise.resolve(rawMapDetail());
+  routes.geo = () => Promise.resolve(rawGeoMapDetail());
+  routes.saveGeo = () => Promise.resolve(rawGeoMapDetail());
   routes.save = () => Promise.resolve(rawMapDetail());
   routes.update = () => Promise.resolve(rawMapDetail({ name: 'La Corte rinnovata' }));
   routes.remove = () => Promise.resolve(undefined);
+  routes.exportMap = () => Promise.resolve({ schema_version: 1 });
   routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
   sessionMock.mockReturnValue({ session: fakeSession('user-1'), loading: false } as SessionState);
   fetchMock.mockImplementation((path: string, init?: Init) => {
     if (path === '/rooms/room-1/maps/map-1/board') return routes.save();
+    if (path === '/rooms/room-1/maps/map-1/export') return routes.exportMap();
+    if (path === '/rooms/room-1/maps/map-1/geo' && init?.method === 'PUT') return routes.saveGeo();
+    if (path === '/rooms/room-1/maps/map-1/geo') return routes.geo();
+    if (path === '/rooms/room-1/tags') return Promise.resolve([{ id: 'tag-1', name: 'Camarilla', category: null, main_position: null }]);
     if (path === '/rooms/room-1/maps/map-1' && init?.method === 'PATCH') return routes.update();
     if (path === '/rooms/room-1/maps/map-1' && init?.method === 'DELETE') return routes.remove();
     if (path === '/rooms/room-1/maps/map-1') return routes.map();
@@ -288,5 +336,83 @@ describe('RelationshipMapPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Nascondi il pannello affiancato' }));
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
+  describe('a geographic map (spec 38)', () => {
+    const geographic = () =>
+      Promise.resolve(rawMapDetail({ kind: 'geographic', plane_width: 2000, plane_height: 1400, groups: [], cards: [], arrows: [] }));
+
+    it('draws its plane, with the Tag filter for everyone, and saves a change', async () => {
+      wideScreen();
+      routes.map = geographic;
+      const { user } = render();
+      const board = await screen.findByTestId('geo-board');
+      expect(board).toHaveAttribute('data-plane', '2000');
+      expect(board).toHaveTextContent('2 areas');
+      await vi.waitFor(() => expect(board).toHaveAttribute('data-tags', '1'));
+      await user.click(screen.getByRole('button', { name: 'change' }));
+      expect(board).toHaveTextContent('1 areas');
+      await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Salvato'), { timeout: 2000 });
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/rooms/room-1/maps/map-1/geo',
+        expect.objectContaining({ method: 'PUT', json: expect.objectContaining({ areas: [expect.objectContaining({ id: 'area-2' })] }) }),
+      );
+    });
+
+    it('opens the plane dialog for whoever manages the map', async () => {
+      wideScreen();
+      routes.map = geographic;
+      const { user } = render();
+      await user.click(await screen.findByRole('button', { name: 'Mappa' }));
+      expect(await screen.findByRole('textbox', { name: 'Larghezza' })).toHaveValue('2000');
+      await user.keyboard('{Escape}');
+      await vi.waitFor(() => expect(screen.queryByRole('textbox', { name: 'Larghezza' })).not.toBeInTheDocument());
+    });
+
+    it('offers no plane dialog to whoever cannot edit, and shows its Documents in the split', async () => {
+      wideScreen();
+      routes.map = () => geographic().then((map) => ({ ...map, can_edit: false }));
+      routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false }));
+      const { user } = render();
+      expect(await screen.findByTestId('geo-board')).toHaveAttribute('data-editable', 'false');
+      expect(screen.queryByRole('button', { name: 'Mappa' })).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Mostra il pannello affiancato' }));
+      await user.click(await screen.findByRole('button', { name: 'select' }));
+      expect(await screen.findByRole('link', { name: 'Apri il Documento' })).toHaveAttribute('href', '/rooms/room-1/documents/doc-9');
+    });
+
+    it('downloads the map as a JSON file for whoever sees it (spec 38_3)', async () => {
+      routes.map = () => geographic().then((map) => ({ ...map, can_edit: false }));
+      routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false }));
+      const { user } = render();
+      await user.click(await screen.findByRole('button', { name: 'Esporta la mappa (JSON)' }));
+      await vi.waitFor(() => expect(saveBlob).toHaveBeenCalled());
+      const [blob, name] = vi.mocked(saveBlob).mock.calls[0] as [Blob, string];
+      expect(name).toMatch(/^shibuya-di-notte-\d{4}-\d{2}-\d{2}\.json$/);
+      expect(JSON.parse(await blob.text())).toEqual({ schema_version: 1 });
+    });
+
+    it('says why the map could not be exported', async () => {
+      routes.map = geographic;
+      routes.exportMap = () => Promise.reject(new ApiError(404, 'Mappa non trovata'));
+      const { user } = render();
+      await user.click(await screen.findByRole('button', { name: 'Esporta la mappa (JSON)' }));
+      await vi.waitFor(() => expect(notifyError).toHaveBeenCalledWith(new ApiError(404, 'Mappa non trovata')));
+    });
+
+    it('waits for its content, and says when it cannot be found', async () => {
+      routes.map = geographic;
+      routes.geo = () => new Promise(() => {});
+      render();
+      await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/geo'));
+      expect(document.querySelector('.mantine-Loader-root')).toBeInTheDocument();
+    });
+
+    it('says the map is not found when its content fails to load', async () => {
+      routes.map = geographic;
+      routes.geo = () => Promise.reject(new ApiError(404, 'Not found'));
+      render();
+      expect(await screen.findByText('Mappa non trovata.')).toBeInTheDocument();
+    });
   });
 });

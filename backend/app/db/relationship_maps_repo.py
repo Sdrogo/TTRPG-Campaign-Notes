@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Collection, Sequence
 from datetime import datetime
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,6 +30,7 @@ from app.domain.relationship_maps import (
     MapCard,
     MapColor,
     MapGroup,
+    MapKind,
     RelationshipMap,
 )
 
@@ -47,6 +48,10 @@ def _map_from_row(row: RelationshipMapRow) -> RelationshipMap:
         updated_at=row.updated_at,
         source_document_id=row.source_document_id,
         mention_depth=row.mention_depth,
+        kind=MapKind(row.kind),
+        plane_width=row.plane_width,
+        plane_height=row.plane_height,
+        background_path=row.background_path,
     )
 
 
@@ -118,6 +123,10 @@ async def insert_map(
             updated_at=relationship_map.updated_at,
             source_document_id=relationship_map.source_document_id,
             mention_depth=relationship_map.mention_depth,
+            kind=relationship_map.kind.value,
+            plane_width=relationship_map.plane_width,
+            plane_height=relationship_map.plane_height,
+            background_path=relationship_map.background_path,
         )
     )
     await session.flush()
@@ -215,8 +224,9 @@ async def count_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> int:
 
 
 async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -> None:
-    """Writes a map's name, description, visibility, mention depth and
-    `updated_at`. Raises `LookupError` if it no longer exists."""
+    """Writes a map's name, description, visibility, mention depth, plane
+    size (spec 38) and `updated_at`. Raises `LookupError` if it no longer
+    exists."""
     row = await session.get(RelationshipMapRow, relationship_map.id)
     if row is None:
         raise LookupError(f"Map {relationship_map.id} not found")
@@ -224,8 +234,33 @@ async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -
     row.description = relationship_map.description
     row.visibility = relationship_map.visibility.value
     row.mention_depth = relationship_map.mention_depth
+    row.plane_width = relationship_map.plane_width
+    row.plane_height = relationship_map.plane_height
     row.updated_at = relationship_map.updated_at
     await session.flush()
+
+
+async def set_background(session: AsyncSession, map_id: uuid.UUID, path: str | None) -> None:
+    """Points a geographic map at a new background image (None removes it,
+    spec 38 Decision 2)."""
+    await session.execute(
+        update(RelationshipMapRow)
+        .where(RelationshipMapRow.id == map_id)
+        .values(background_path=path)
+    )
+    await session.flush()
+
+
+async def list_background_paths_in_room(session: AsyncSession, room_id: uuid.UUID) -> list[str]:
+    """The Storage paths of the Room's maps' background images, for the
+    Room's deletion to remove them from Storage (the rows cascade)."""
+    result = await session.execute(
+        select(RelationshipMapRow.background_path).where(
+            RelationshipMapRow.room_id == room_id,
+            RelationshipMapRow.background_path.is_not(None),
+        )
+    )
+    return [path for path in result.scalars() if path is not None]
 
 
 async def delete_map(session: AsyncSession, map_id: uuid.UUID) -> None:

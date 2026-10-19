@@ -317,6 +317,9 @@ export function rawMap(overrides: Record<string, unknown> = {}) {
     room_id: 'room-1',
     name: 'La Corte',
     description: 'Chi serve chi',
+    kind: 'free',
+    plane_width: null,
+    plane_height: null,
     visibility: 'room',
     selective_user_ids: [],
     created_by: 'user-1',
@@ -422,6 +425,104 @@ export function rawMentionMap(overrides: Record<string, unknown> = {}) {
       },
     ],
     documents_left_out: 0,
+    ...overrides,
+  };
+}
+
+/** A Document's look on a geographic map's area or pin, as the API sends it (spec 38). */
+function rawPlaceDocument(id: string, name: string, overrides: Record<string, unknown> = {}) {
+  return { id, name, subtitle: null, image: null, tag_ids: [], ...overrides };
+}
+
+/**
+ * A geographic map with its content, as `GET .../maps/{id}/geo` sends it
+ * (spec 38): a Document's area and a plain dashed one, a Document's pin and
+ * a plain one, and a link between the two pins.
+ */
+export function rawGeoMapDetail(overrides: Record<string, unknown> = {}) {
+  return {
+    ...rawMap({ name: 'Shibuya di notte', kind: 'geographic', plane_width: 2000, plane_height: 1400 }),
+    background_url: null,
+    areas: [
+      {
+        id: 'area-1',
+        document_id: 'doc-1',
+        name: null,
+        subtitle: null,
+        note: null,
+        points: [
+          [100, 100],
+          [500, 100],
+          [500, 400],
+          [100, 400],
+        ],
+        color: 'blue',
+        dashed: false,
+        filled: true,
+        master_only: false,
+        document: rawPlaceDocument('doc-1', 'Incrocio', { subtitle: 'Il cuore', tag_ids: ['tag-1'] }),
+      },
+      {
+        id: 'area-2',
+        document_id: null,
+        name: 'Il bosco',
+        subtitle: 'Sacro',
+        note: 'Nessuno lo controlla.',
+        points: [
+          [1000, 100],
+          [1400, 100],
+          [1200, 500],
+        ],
+        color: 'emerald',
+        dashed: true,
+        filled: false,
+        master_only: false,
+        document: null,
+      },
+    ],
+    pins: [
+      {
+        id: 'pin-1',
+        document_id: 'doc-2',
+        name: null,
+        note: null,
+        x: 300,
+        y: 250,
+        label_side: 'left',
+        color: 'gold',
+        master_only: false,
+        document: rawPlaceDocument('doc-2', 'Shibuya Sky'),
+      },
+      {
+        id: 'pin-2',
+        document_id: null,
+        name: 'Shibuya 109',
+        note: 'Il cilindro argentato.',
+        x: 800,
+        y: 700,
+        label_side: 'above',
+        color: 'default',
+        master_only: true,
+        document: null,
+      },
+    ],
+    links: [
+      {
+        id: 'link-1',
+        from_end: { area_id: null, pin_id: 'pin-1' },
+        to_end: { area_id: null, pin_id: 'pin-2' },
+        direction: 'forward',
+        label: 'la finestra',
+        reverse_label: null,
+        bend: -80,
+        label_position: null,
+        reverse_label_position: null,
+        label_offset: null,
+        reverse_label_offset: null,
+        color: 'champagne',
+        master_only: false,
+      },
+    ],
     ...overrides,
   };
 }

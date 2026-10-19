@@ -71,6 +71,14 @@ class MapColor(StrEnum):
     LIME = "lime"
 
 
+class MapKind(StrEnum):
+    """What a map is (spec 38 Decision 1): a free board of cards, or a
+    geographic map of areas and pins on a plane. Never changes."""
+
+    FREE = "free"
+    GEOGRAPHIC = "geographic"
+
+
 class CardSize(StrEnum):
     """How large a text card's text is (Decision 6); a Document card is always
     `normal`."""
@@ -133,7 +141,9 @@ class RelationshipMap:
     """A map of a Room. Its creator is its "Owner" for the visibility levels
     and, with the Master, may change it (Decision 2). With
     `source_document_id` it is that Document's live mention map (spec 36),
-    following mentions `mention_depth` steps past the first level."""
+    following mentions `mention_depth` steps past the first level. A
+    `geographic` map (spec 38) has a flat plane of `plane_width` by
+    `plane_height` units and may have a stored background image."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -145,6 +155,10 @@ class RelationshipMap:
     updated_at: datetime
     source_document_id: uuid.UUID | None = None
     mention_depth: int | None = None
+    kind: MapKind = MapKind.FREE
+    plane_width: int | None = None
+    plane_height: int | None = None
+    background_path: str | None = None
 
 
 @dataclass(frozen=True)
@@ -496,7 +510,7 @@ def _clean_card(card: MapCard) -> MapCard:
     )
 
 
-def _clean_position(position: float | None, label: str | None) -> float | None:
+def clean_label_position(position: float | None, label: str | None) -> float | None:
     """A label's place along its arrow: 422 outside 0 to 1, and none for a
     label that does not exist."""
     if position is None or label is None:
@@ -506,7 +520,7 @@ def _clean_position(position: float | None, label: str | None) -> float | None:
     return position
 
 
-def _clean_offset(offset: float | None, position: float | None) -> float | None:
+def clean_label_offset(offset: float | None, position: float | None) -> float | None:
     """A label's distance from its arrow: 422 beyond the largest a board
     allows, and none for a label without a place."""
     if offset is None or position is None:
@@ -525,8 +539,8 @@ def _clean_arrow(arrow: MapArrow) -> MapArrow:
         if arrow.direction == ArrowDirection.BOTH
         else None
     )
-    label_position = _clean_position(arrow.label_position, label)
-    reverse_label_position = _clean_position(arrow.reverse_label_position, reverse_label)
+    label_position = clean_label_position(arrow.label_position, label)
+    reverse_label_position = clean_label_position(arrow.reverse_label_position, reverse_label)
     return MapArrow(
         id=arrow.id,
         from_end=arrow.from_end,
@@ -538,8 +552,8 @@ def _clean_arrow(arrow: MapArrow) -> MapArrow:
         master_only=arrow.master_only,
         label_position=label_position,
         reverse_label_position=reverse_label_position,
-        label_offset=_clean_offset(arrow.label_offset, label_position),
-        reverse_label_offset=_clean_offset(arrow.reverse_label_offset, reverse_label_position),
+        label_offset=clean_label_offset(arrow.label_offset, label_position),
+        reverse_label_offset=clean_label_offset(arrow.reverse_label_offset, reverse_label_position),
     )
 
 

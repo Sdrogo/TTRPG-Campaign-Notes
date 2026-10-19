@@ -134,6 +134,12 @@ describe('without a mentions context', () => {
 
     expect(plainField()).not.toHaveAttribute('aria-autocomplete');
   });
+
+  it('is spell-checked', () => {
+    render({ context: null });
+
+    expect(plainField()).toHaveAttribute('spellcheck', 'true');
+  });
 });
 
 describe('suggesting', () => {

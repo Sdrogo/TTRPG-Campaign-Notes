@@ -52,7 +52,7 @@ export function MentionMapModal({
   const remove = useDeleteMentionMap(roomId, documentId);
   const copy = useCopyMentionMap(roomId, documentId);
   const link = useLinkMap(roomId, documentId);
-  // Decision 15: the free maps the viewer manages can be shown instead.
+  // Decision 15: the maps the viewer manages (free or geographic, spec 38) can be shown instead.
   const editable = (useMaps(roomId, true).data ?? []).filter((free) => free.canEdit);
   const error = save.error ?? remove.error ?? copy.error ?? link.error ?? preview.error;
   const empty = preview.data?.relations === 0;

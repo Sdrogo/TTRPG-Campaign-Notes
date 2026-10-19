@@ -215,14 +215,38 @@
         "text": "Kärtchentext",
         "caption": "Bildunterschrift",
         "label": "Beschriftung",
-        "groupTitle": "Gruppentitel"
-      }
+        "groupTitle": "Gruppentitel",
+        "placeName": "Name",
+        "subtitle": "Untertitel",
+        "note": "Notiz"
+      },
+      "invalidPlane": "Die Fläche muss 100 bis 20.000 Einheiten breit und hoch sein, und nur eine geografische Karte hat eine",
+      "planeTooSmall": "Mit dieser Fläche läge ein Teil der Karte außerhalb",
+      "notGeographic": "Das ist keine geografische Karte",
+      "notFree": "Das ist eine geografische Karte: Sie hat kein Brett mit Karten",
+      "placeNameRequired": "Ein Gebiet oder eine Markierung ohne Dokument braucht einen Namen",
+      "tooManyAreas": "Eine Karte darf höchstens {max} Gebiete haben",
+      "tooManyPins": "Eine Karte darf höchstens {max} Markierungen haben",
+      "tooManyLinks": "Eine Karte darf höchstens {max} Verbindungen haben"
+    },
+    "mapImport": {
+      "invalidFile": "Die Datei ist keine Karte, die die App lesen kann (prüfe das Feld \"{field}\")",
+      "unsupportedVersion": "Die Datei nutzt Version {version} des Kartenformats; die App liest Version 1",
+      "duplicateKey": "Der Schlüssel \"{item}\" kommt in der Datei zweimal vor",
+      "unknownKey": "Eine Verbindung nennt \"{item}\", aber das ist kein Schlüssel eines Gebiets oder einer Markierung der Datei",
+      "linkToItself": "Die Verbindung von \"{item}\" führt zu sich selbst zurück",
+      "invalidArea": "Das Gebiet \"{item}\" braucht 3 bis 60 Ecken innerhalb der Fläche um eine echte Fläche herum",
+      "pinOutsidePlane": "Die Markierung \"{item}\" liegt außerhalb der Fläche",
+      "nameRequired": "Der Ort \"{item}\" hat weder ein Dokument noch einen Namen"
     },
     "mentionMap": {
       "notFound": "Dieses Dokument hat keine Erwähnungskarte",
       "alreadyExists": "Dieses Dokument hat bereits eine Erwähnungskarte",
       "nothingToMap": "Noch keine Erwähnungen: Die Karte enthielte nur dieses Dokument",
       "invalidDepth": "Die Tiefe muss eine ganze Zahl von 0 bis 3 sein"
+    },
+    "mentionSuggestions": {
+      "stale": "Diese Texte wurden nach der Vorschau geändert: Lade sie neu und versuche es noch einmal"
     }
   },
   "pdf": {

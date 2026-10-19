@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { renderWithProviders } from '../../utils';
 import { MentionText } from '../../../components/mentions/MentionText';
 import { HOVER_POINTER_QUERY } from '../../../components/mentions/DocumentMentionPreview';
+import { SPLIT_QUERY } from '../../../hooks/useSideDocument';
 import { DocumentMentionsContext, type DocumentMentionsValue } from '../../../hooks/useDocumentMentions';
 import type { Document } from '../../../types/document';
 
@@ -26,10 +27,10 @@ const GATE: Document = {
   subtitle: null,
 };
 
-function withMentions(children: ReactNode) {
+function withMentions(children: ReactNode, documents: Document[] = [GATE]) {
   const value: DocumentMentionsValue = {
     roomId: 'room-1',
-    documents: [GATE],
+    documents,
     tags: [{ id: 'tag-1', name: 'Luoghi', category: null, mainPosition: null }],
     canCreateDocument: false,
     canCreateTag: false,
@@ -40,9 +41,9 @@ function withMentions(children: ReactNode) {
   return <DocumentMentionsContext value={value}>{children}</DocumentMentionsContext>;
 }
 
-function setCanHover(canHover: boolean) {
+function setCanHover(canHover: boolean, wide = false) {
   window.matchMedia = ((query: string) => ({
-    matches: canHover && query === HOVER_POINTER_QUERY,
+    matches: (canHover && query === HOVER_POINTER_QUERY) || (wide && query === SPLIT_QUERY),
     media: query,
     onchange: null,
     addListener: vi.fn(),
@@ -74,6 +75,29 @@ describe('DocumentMentionPreview', () => {
       'href',
       '/rooms/room-1/documents/doc-1',
     );
+  });
+
+  // On a wide screen the mention also opens the half-screen menu (spec 37);
+  // clicks inside the preview card are the card's, not the mention's.
+  it("lets the preview's carousel arrows work without opening the mention's menu", async () => {
+    setCanHover(true, true);
+    const user = userEvent.setup();
+    const gate: Document = {
+      ...GATE,
+      images: [
+        { id: 'image-1', url: 'http://a/1.webp', isFavorite: true },
+        { id: 'image-2', url: 'http://a/2.webp', isFavorite: false },
+      ],
+    };
+    renderWithProviders(withMentions(<MentionText text="Vai al #Il Cancello subito." />, [gate]));
+
+    await user.hover(screen.getByTestId('document-mention'));
+    await screen.findByRole('heading', { name: 'Il Cancello' });
+    const arrow = document.querySelector<HTMLButtonElement>('.mantine-Carousel-control');
+    expect(arrow).not.toBeNull();
+    await user.click(arrow!);
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('previews nothing for a Tag mention', async () => {

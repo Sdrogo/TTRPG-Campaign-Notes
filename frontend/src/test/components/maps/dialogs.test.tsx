@@ -422,6 +422,31 @@ describe('MapFormModal', () => {
     });
   });
 
+  it('offers a free board or a geographic map on create (spec 38 Decision 1)', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    renderWithProviders(
+      <MapFormModal
+        title="Nuova mappa"
+        initialValues={{ name: 'Shibuya', description: '', visibility: 'room', selectiveUserIds: [] }}
+        members={members}
+        creatorId="user-1"
+        submitLabel="Crea"
+        submitting={false}
+        kindChoice
+        error={null}
+        onSubmit={onSubmit}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('radio', { name: 'Lavagna libera' })).toBeChecked();
+    expect(screen.getByText(/Card di Documenti/)).toBeInTheDocument();
+    await user.click(screen.getByText('Mappa geografica'));
+    expect(screen.getByText(/Aree e luoghi su un piano/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Crea' }));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: 'Shibuya', kind: 'geographic' }));
+  });
+
   it('shows an error', () => {
     renderWithProviders(
       <MapFormModal

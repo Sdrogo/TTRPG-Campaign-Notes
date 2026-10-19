@@ -60,6 +60,7 @@ export function ProfileForm({ profile, onSubmit, saving }: ProfileFormProps) {
           {...form.getInputProps('pronouns')}
         />
         <Textarea
+          spellCheck
           label={t('common.description')}
           description={t('account.profile.bioDescription')}
           autosize

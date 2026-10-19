@@ -19,6 +19,7 @@ import {
   DownloadSimpleIcon,
   EyeIcon,
   GraphIcon,
+  MagicWandIcon,
   PencilSimpleIcon,
   XIcon,
 } from '@phosphor-icons/react';
@@ -41,6 +42,7 @@ import { useRoom } from '../../hooks/useRooms';
 import { useRevealDocument, useRevealedInVisit } from '../../hooks/useReveals';
 import { useReadOnly } from '../../hooks/useViewAs';
 import { useStopReadingOnLeave } from '../../hooks/useReadAloud';
+import { useDocumentMentions } from '../../hooks/useDocumentMentions';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { appendPromotedText, promotionReaches, type PromotionAudience } from '../../lib/promotion';
 import { canCreateDocuments, canManageTags } from '../../lib/roomPermissions';
@@ -68,6 +70,7 @@ import { DocumentFileList } from '../files/DocumentFileList';
 import { DocumentMentionsProvider } from '../mentions/DocumentMentionsProvider';
 import { MentionText } from '../mentions/MentionText';
 import { Backlinks } from '../mentions/Backlinks';
+import { GenerateMentionsModal } from '../mentions/GenerateMentionsModal';
 import { MentionMapModal } from '../maps/MentionMapModal';
 import { MentionMapPanel } from '../maps/MentionMapPanel';
 import { LinkedMapPanel } from '../maps/LinkedMapPanel';
@@ -234,6 +237,7 @@ function DocumentPanel({
   const [imageSearchOpened, setImageSearchOpened] = useState(false);
   const [exportOpened, setExportOpened] = useState(false);
   const [mentionMapOpened, setMentionMapOpened] = useState(false);
+  const [generatingMentions, setGeneratingMentions] = useState(false);
   const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
   const [actionsExpanded, setActionsExpanded] = useState(false);
   // Spec 36: the Document's mention map, drawn under its images when it has a
@@ -246,6 +250,7 @@ function DocumentPanel({
   const readOnly = useReadOnly();
   // Spec 30: leaving the Document (or moving to another) stops reading it.
   useStopReadingOnLeave();
+  const mentions = useDocumentMentions();
 
   const me = members.find((m) => m.userId === currentUserId);
   const isMaster = me?.role === 'master' && !readOnly;
@@ -268,7 +273,7 @@ function DocumentPanel({
     <ReadAloudControls
       sourceId={`document:${document.id}`}
       name={document.name}
-      getText={() => documentSpeech(document)}
+      getText={() => documentSpeech(document, mentions)}
     />
   );
   const actions = (
@@ -302,6 +307,17 @@ function DocumentPanel({
           aria-label={t('maps.mention.button')}
         >
           <GraphIcon size={18} />
+        </LabeledActionIcon>
+      )}
+      {/* Spec 39: Owners and the Master turn the names in its text into mentions. */}
+      {isOwner && (
+        <LabeledActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={() => setGeneratingMentions(true)}
+          aria-label={t('mentionSuggestions.action')}
+        >
+          <MagicWandIcon size={18} />
         </LabeledActionIcon>
       )}
       {/* Spec 24b: Owners and the Master read the whole Document's history. */}
@@ -525,6 +541,13 @@ function DocumentPanel({
           documentName={document.name}
           map={mentionMap.data ?? null}
           onClose={() => setMentionMapOpened(false)}
+        />
+      )}
+      {generatingMentions && (
+        <GenerateMentionsModal
+          roomId={roomId}
+          documentId={document.id}
+          onClose={() => setGeneratingMentions(false)}
         />
       )}
       {isOwner && (

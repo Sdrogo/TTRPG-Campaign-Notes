@@ -215,14 +215,38 @@
         "text": "card text",
         "caption": "caption",
         "label": "label",
-        "groupTitle": "group title"
-      }
+        "groupTitle": "group title",
+        "placeName": "name",
+        "subtitle": "subtitle",
+        "note": "note"
+      },
+      "invalidPlane": "The plane must be 100 to 20,000 units wide and tall, and only a geographic map has one",
+      "planeTooSmall": "That plane would leave part of the map outside it",
+      "notGeographic": "This is not a geographic map",
+      "notFree": "This is a geographic map: it has no board of cards",
+      "placeNameRequired": "An area or pin without a Document needs a name",
+      "tooManyAreas": "A map can have at most {max} areas",
+      "tooManyPins": "A map can have at most {max} pins",
+      "tooManyLinks": "A map can have at most {max} links"
+    },
+    "mapImport": {
+      "invalidFile": "The file isn't a map this App can read (check the field \"{field}\")",
+      "unsupportedVersion": "This file uses version {version} of the map format; the App reads version 1",
+      "duplicateKey": "The key \"{item}\" is used twice in the file",
+      "unknownKey": "A link names \"{item}\", which is not the key of an area or a pin in the file",
+      "linkToItself": "The link from \"{item}\" goes back to itself",
+      "invalidArea": "The area \"{item}\" needs 3 to 60 corners inside the plane, around a real surface",
+      "pinOutsidePlane": "The pin \"{item}\" is outside the plane",
+      "nameRequired": "The place \"{item}\" has no Document and no name"
     },
     "mentionMap": {
       "notFound": "This Document has no mention map",
       "alreadyExists": "This Document already has a mention map",
       "nothingToMap": "No mentions yet: the map would hold only this Document",
       "invalidDepth": "The depth must be a whole number from 0 to 3"
+    },
+    "mentionSuggestions": {
+      "stale": "These texts changed after the preview: reload it and try again"
     }
   },
   "pdf": {

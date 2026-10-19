@@ -215,14 +215,38 @@
         "text": "texto da carta",
         "caption": "legenda",
         "label": "etiqueta",
-        "groupTitle": "título do grupo"
-      }
+        "groupTitle": "título do grupo",
+        "placeName": "nome",
+        "subtitle": "subtítulo",
+        "note": "nota"
+      },
+      "invalidPlane": "O plano deve ter de 100 a 20.000 unidades de largura e de altura, e só um mapa geográfico o tem",
+      "planeTooSmall": "Com esse plano, parte do mapa ficaria fora dele",
+      "notGeographic": "Este não é um mapa geográfico",
+      "notFree": "Este é um mapa geográfico: não tem quadro de cartões",
+      "placeNameRequired": "Uma zona ou um local sem Documento precisa de um nome",
+      "tooManyAreas": "Um mapa pode ter no máximo {max} zonas",
+      "tooManyPins": "Um mapa pode ter no máximo {max} locais",
+      "tooManyLinks": "Um mapa pode ter no máximo {max} ligações"
+    },
+    "mapImport": {
+      "invalidFile": "O ficheiro não é um mapa que a App consiga ler (verifica o campo \"{field}\")",
+      "unsupportedVersion": "O ficheiro usa a versão {version} do formato de mapas; a App lê a versão 1",
+      "duplicateKey": "A chave \"{item}\" é usada duas vezes no ficheiro",
+      "unknownKey": "Uma ligação indica \"{item}\", que não é a chave de uma área nem de um marcador do ficheiro",
+      "linkToItself": "A ligação a partir de \"{item}\" volta a si própria",
+      "invalidArea": "A área \"{item}\" precisa de 3 a 60 vértices dentro do plano, à volta de uma superfície real",
+      "pinOutsidePlane": "O marcador \"{item}\" está fora do plano",
+      "nameRequired": "O lugar \"{item}\" não tem Documento nem nome"
     },
     "mentionMap": {
       "notFound": "Este documento não tem mapa de menções",
       "alreadyExists": "Este documento já tem um mapa de menções",
       "nothingToMap": "Ainda sem menções: o mapa conteria apenas este documento",
       "invalidDepth": "A profundidade tem de ser um número inteiro de 0 a 3"
+    },
+    "mentionSuggestions": {
+      "stale": "Estes textos mudaram depois da pré-visualização: volte a carregá-la e tente de novo"
     }
   },
   "pdf": {

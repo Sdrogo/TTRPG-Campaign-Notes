@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, Group, Loader, SimpleGrid, Stack, Text, Title } from '@mantine/core';
-import { PlusIcon } from '@phosphor-icons/react';
+import { Badge, Button, Card, Group, Loader, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { FileArrowUpIcon, PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useCreateMap, useMaps } from '../hooks/useMaps';
@@ -12,6 +12,7 @@ import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { MapFormModal } from '../components/maps/MapFormModal';
+import { MapImportModal } from '../components/maps/MapImportModal';
 import { canCreateDocuments } from '../lib/roomPermissions';
 import { formatRelativeTime } from '../lib/time';
 
@@ -39,6 +40,7 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
   const members = useMembers(roomId, true);
   const createMap = useCreateMap(roomId);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const readOnly = useReadOnly();
   const me = members.data?.find((member) => member.userId === currentUserId);
   // Decision 2: the same rule as for Documents (D-13).
@@ -51,9 +53,14 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
           {t('maps.title')}
         </Title>
         {canCreate && (
-          <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreating(true)}>
-            {t('maps.create')}
-          </Button>
+          <Group gap="xs" wrap="nowrap">
+            <Button variant="default" leftSection={<FileArrowUpIcon size={16} />} onClick={() => setImporting(true)}>
+              {t('maps.import.button')}
+            </Button>
+            <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreating(true)}>
+              {t('maps.create')}
+            </Button>
+          </Group>
         )}
       </Group>
       {maps.isPending && <Loader />}
@@ -74,7 +81,14 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
                 <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
                   {map.name}
                 </Title>
-                <VisibilityBadge visibility={map.visibility} />
+                <Group gap={4} wrap="nowrap">
+                  {map.kind === 'geographic' && (
+                    <Badge variant="light" color="gray">
+                      {t('maps.kind.geographicBadge')}
+                    </Badge>
+                  )}
+                  <VisibilityBadge visibility={map.visibility} />
+                </Group>
               </Group>
               {map.description && (
                 <Text size="sm" c="dimmed" lineClamp={3} style={{ whiteSpace: 'pre-line' }}>
@@ -97,7 +111,9 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
             description: '',
             visibility: room.data?.defaultVisibility ?? 'room',
             selectiveUserIds: [],
+            kind: 'free',
           }}
+          kindChoice
           // `creating` needs `me`, so the members have loaded.
           members={members.data!}
           creatorId={currentUserId}
@@ -113,6 +129,17 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
               onSuccess: (created) => void navigate(`/rooms/${roomId}/maps/${created.id}`),
             })
           }
+        />
+      )}
+      {importing && (
+        <MapImportModal
+          roomId={roomId}
+          // `importing` needs `me`, so the members have loaded.
+          members={members.data!}
+          creatorId={currentUserId}
+          defaultVisibility={room.data?.defaultVisibility ?? 'room'}
+          onClose={() => setImporting(false)}
+          onImported={(created) => void navigate(`/rooms/${roomId}/maps/${created.id}`)}
         />
       )}
     </PageLayout>

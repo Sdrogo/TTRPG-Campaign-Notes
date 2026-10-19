@@ -72,6 +72,19 @@ describe('RoomTitleActions', () => {
     expect(screen.queryByRole('button', { name: 'Invita' })).not.toBeInTheDocument();
   });
 
+  it('opens the generated mentions dialog for the whole Room, and closes it', async () => {
+    vi.mocked(apiFetch).mockResolvedValue({ sources: [] });
+    const { user } = render(false);
+
+    await user.click(toggle());
+    await user.click(screen.getByRole('button', { name: 'Genera menzioni' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Genera menzioni' })).toBeInTheDocument();
+    expect(apiFetch).toHaveBeenCalledWith('/rooms/room-1/mention-suggestions');
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
   it('opens the invite dialog, and closes it', async () => {
     vi.mocked(apiFetch).mockResolvedValue([]);
     const { user } = render(true);

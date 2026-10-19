@@ -31,7 +31,7 @@ from app.api.image_uploads import (
     sign_images,
     store_image,
 )
-from app.api.mentions import clean_content_mentions, index_mentions
+from app.api.mentions import clean_content_mentions, index_mentions, link_document_names
 from app.api.notes import NoteResponse, visible_note_responses
 from app.api.reveals import (
     RevealDocumentRequest,
@@ -270,7 +270,12 @@ async def create_document(
     if not can_create_document(membership.role, room.players_can_create_documents):
         raise http_error(status.HTTP_403_FORBIDDEN, "errors.document.creationDisabled", locale)
 
-    description = await clean_content_mentions(session, membership, body.description)
+    description = await link_document_names(
+        session,
+        membership,
+        None,
+        await clean_content_mentions(session, membership, body.description),
+    )
     try:
         plan = plan_new_document(
             room_id,
@@ -452,8 +457,14 @@ async def update_document(
     description = (
         document.description
         if body.description is None
-        else await clean_content_mentions(
-            session, membership, body.description, previous=document.description
+        else await link_document_names(
+            session,
+            membership,
+            document_id,
+            await clean_content_mentions(
+                session, membership, body.description, previous=document.description
+            ),
+            previous=document.description,
         )
     )
     updated = replace(
