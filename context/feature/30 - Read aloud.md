@@ -10,8 +10,7 @@
    - **the whole Document**: its name, its description, then each Note the viewer sees, in order (title, then text);
    - **one Note** on its own;
    - **one Comment** on its own (author's shown name, then the text). Replies are read one at a time, not as a thread.
-   - Mentions are read as their name, never with the `#`/`@`: tokens and also plain `#Name` text that matches a Document or Tag the viewer sees (the same matching `MentionText` shows as a link); a token reads under its target's current name (follow-up 2026-10-19).
-   Mentions are read as the name they show (`#Name` reads "Name"), never as the stored token. Tags, badges, file names, image captions and the edit forms are not read.
+   Mentions are read as the name they show (`#Name` reads "Name"), never as the stored token and never with the `#`/`@`: that covers tokens (under their target's current name, else the name written) and plain `#Name` text that matches a Document or Tag the viewer sees, the same matching `MentionText` shows as a link (follow-up 2026-10-19). Tags, badges, file names, image captions and the edit forms are not read.
 3. **Where the controls are** (compact UI, spec 25):
    - Document header: a speaker icon next to Export ("Ascolta «Name»"). While that Document is being read it becomes **Pause/Resume** and **Stop**.
    - Each Note: the same small speaker icon in its row of actions, for every reader (not only who can edit it), with the same Pause/Resume and Stop while it plays.
