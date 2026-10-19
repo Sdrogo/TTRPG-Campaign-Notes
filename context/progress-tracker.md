@@ -132,6 +132,10 @@ One line per unit; dates 2026, newest first. Spec files live in
   React bubbles portal clicks to the mention. The preview's dropdown now marks
   its clicks as its own (`OWN_CLICKS_ATTRIBUTE`) and `DocumentOpenMenu`
   ignores them.
+- **30 follow-up, read aloud without `#`**: plain `#Name` mentions (pre-id,
+  spec 20) that match a visible Document or Tag are read without the `#`;
+  tokens read under the current name. `mentionsToSpeech` takes the Room's
+  Documents and Tags from `useDocumentMentions`. Frontend only, no migration.
 
 ### 2026-10-17
 
