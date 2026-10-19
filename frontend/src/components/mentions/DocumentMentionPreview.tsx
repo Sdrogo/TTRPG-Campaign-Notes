@@ -3,6 +3,7 @@ import { HoverCard } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { DocumentCard } from '../DocumentCard';
 import { useMembers } from '../../hooks/useMembers';
+import { OWN_CLICKS_ATTRIBUTE } from '../documents/DocumentOpenMenu';
 import { OpenMenuContext } from '../../hooks/useSideDocument';
 import type { Document } from '../../types/document';
 import type { Tag } from '../../types/tag';
@@ -57,8 +58,16 @@ export function DocumentMentionPreview({
       shadow="md"
     >
       <HoverCard.Target>{children}</HoverCard.Target>
-      {/* The card brings its own border and background. */}
-      <HoverCard.Dropdown p={0} bg="transparent" bd="none">
+      {/* The card brings its own border and background. Its clicks are its own:
+          through React they'd otherwise reach the mention's open menu (spec 37),
+          which would open on a carousel arrow or a Tag. */}
+      <HoverCard.Dropdown
+        p={0}
+        bg="transparent"
+        bd="none"
+        {...{ [OWN_CLICKS_ATTRIBUTE]: true }}
+        onClick={(event) => event.stopPropagation()}
+      >
         <PreviewCard roomId={roomId} document={document} tags={tags} />
       </HoverCard.Dropdown>
     </HoverCard>

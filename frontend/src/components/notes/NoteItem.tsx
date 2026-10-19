@@ -15,6 +15,7 @@ import { MentionText } from '../mentions/MentionText';
 import { NoteForm } from './NoteForm';
 import { ReadAloudControls } from '../speech/ReadAloudControls';
 import { noteSpeech } from '../../lib/speech';
+import { useDocumentMentions } from '../../hooks/useDocumentMentions';
 import type { Member } from '../../types/member';
 import type { Note, NoteFormValues } from '../../types/note';
 import { useTranslation } from 'react-i18next';
@@ -66,6 +67,7 @@ export function NoteItem({
   const [confirmDeleteOpened, setConfirmDeleteOpened] = useState(false);
   const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
   const [actionsExpanded, setActionsExpanded] = useState(false);
+  const mentions = useDocumentMentions();
 
   if (editing) {
     return (
@@ -89,7 +91,7 @@ export function NoteItem({
     <ReadAloudControls
       sourceId={`note:${note.id}`}
       name={note.title}
-      getText={() => noteSpeech(note)}
+      getText={() => noteSpeech(note, mentions)}
       size="sm"
     />
   );
