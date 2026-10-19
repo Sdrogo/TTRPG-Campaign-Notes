@@ -1000,6 +1000,8 @@
     },
     "geo": {
       "board": "Geografische kaart",
+      "editMap": "Kaart bewerken",
+      "doneEditing": "Klaar met bewerken",
       "tool": "Gereedschap",
       "tools": {
         "select": "Selecteren",

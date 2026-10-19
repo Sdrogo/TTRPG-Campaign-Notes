@@ -292,6 +292,112 @@ function clamp(value: number, low: number, high: number): number {
   return Math.min(high, Math.max(low, value));
 }
 
+/** Whether `point` is inside the shape through `points` (even-odd rule). */
+export function insideShape(point: Point, points: Corner[]): boolean {
+  let inside = false;
+  points.forEach(([x1, y1], index) => {
+    const [x2, y2] = points[(index + 1) % points.length];
+    if (y1 > point.y !== y2 > point.y && point.x < ((x2 - x1) * (point.y - y1)) / (y2 - y1) + x1) {
+      inside = !inside;
+    }
+  });
+  return inside;
+}
+
+/** A label's box, in plane units: its top left corner and its size. */
+export interface LabelBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** How wide a line of text is, roughly: its fonts average this share of the font size per character. */
+export function textWidth(text: string, fontSize: number): number {
+  return text.length * fontSize * 0.58;
+}
+
+function overlap(a: LabelBox, b: LabelBox): number {
+  const width = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+  const height = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+  return width > 0 && height > 0 ? width * height : 0;
+}
+
+/** An area's name block to place: its corners, and its size around the point it is placed at. */
+export interface AreaLabel {
+  id: string;
+  points: Corner[];
+  width: number;
+  /** From the placed point up to the block's top, and down to its bottom. */
+  above: number;
+  below: number;
+}
+
+/** How many steps across an area's bounds (and a name's size around them) the label search tries, each way. */
+const LABEL_GRID = 14;
+/** How much worse covering another label is than sticking out of the area, per unit of surface. */
+const COVER_WEIGHT = 10;
+
+/**
+ * Where each area's name goes (spec 38b): its centroid when the name fits
+ * there inside the area without covering any of `obstacles` (the pins and
+ * their names, the links' labels), else the point of a grid over the area,
+ * and a name's size around it, that covers the least of them and of the
+ * names placed before it, inside the area (and out of the others) and near
+ * its centroid when it can: a name too big for a crowded area goes beside it
+ * rather than over a pin.
+ */
+export function placeAreaLabels(labels: AreaLabel[], obstacles: LabelBox[]): Map<string, Point> {
+  const placed = new Map<string, Point>();
+  const taken = [...obstacles];
+  for (const label of labels) {
+    const center = areaCenter(label.points);
+    const xs = label.points.map(([x]) => x);
+    const ys = label.points.map(([, y]) => y);
+    const [left, top] = [Math.min(...xs) - label.width / 2, Math.min(...ys) - label.above - label.below];
+    const [width, height] = [Math.max(...xs) + label.width / 2 - left, Math.max(...ys) + label.above + label.below - top];
+    const reach = Math.hypot(width, height);
+    const surface = label.width * (label.above + label.below);
+    const boxAt = (at: Point): LabelBox => ({
+      x: at.x - label.width / 2,
+      y: at.y - label.above,
+      width: label.width,
+      height: label.above + label.below,
+    });
+    const score = (at: Point) => {
+      const box = boxAt(at);
+      const covered = taken.reduce((sum, other) => sum + overlap(box, other), 0);
+      const corners: Point[] = [
+        at,
+        { x: box.x, y: box.y },
+        { x: box.x + box.width, y: box.y },
+        { x: box.x, y: box.y + box.height },
+        { x: box.x + box.width, y: box.y + box.height },
+      ];
+      const outside = corners.filter((corner) => !insideShape(corner, label.points)).length;
+      const far = Math.hypot(at.x - center.x, at.y - center.y) / reach;
+      // A name sitting in another area reads as that area's.
+      const elsewhere = labels.some((other) => other !== label && insideShape(at, other.points)) ? surface : 0;
+      return covered * COVER_WEIGHT + (outside / corners.length) * surface + elsewhere + far * surface;
+    };
+    let best = center;
+    let bestScore = score(center);
+    for (let i = 0; i <= LABEL_GRID; i++) {
+      for (let j = 0; j <= LABEL_GRID; j++) {
+        const candidate = { x: left + (width * i) / LABEL_GRID, y: top + (height * j) / LABEL_GRID };
+        const candidateScore = score(candidate);
+        if (candidateScore < bestScore) {
+          best = candidate;
+          bestScore = candidateScore;
+        }
+      }
+    }
+    placed.set(label.id, best);
+    taken.push(boxAt(best));
+  }
+  return placed;
+}
+
 /** A point kept inside the plane. */
 export function clampToPlane(point: Point, width: number, height: number): Point {
   return { x: clamp(point.x, 0, width), y: clamp(point.y, 0, height) };

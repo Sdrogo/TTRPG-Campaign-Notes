@@ -1002,6 +1002,8 @@
     },
     "geo": {
       "board": "Mapa geográfico",
+      "editMap": "Editar o mapa",
+      "doneEditing": "Terminar edição",
       "tool": "Ferramenta",
       "tools": {
         "select": "Selecionar",

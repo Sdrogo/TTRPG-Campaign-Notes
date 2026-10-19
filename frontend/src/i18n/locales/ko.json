@@ -978,6 +978,8 @@
     },
     "geo": {
       "board": "지리 지도",
+      "editMap": "지도 편집",
+      "doneEditing": "편집 완료",
       "tool": "도구",
       "tools": {
         "select": "선택",

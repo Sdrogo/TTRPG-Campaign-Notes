@@ -978,6 +978,8 @@
     },
     "geo": {
       "board": "地理地图",
+      "editMap": "编辑地图",
+      "doneEditing": "完成编辑",
       "tool": "工具",
       "tools": {
         "select": "选择",

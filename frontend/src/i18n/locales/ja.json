@@ -978,6 +978,8 @@
     },
     "geo": {
       "board": "地理マップ",
+      "editMap": "マップを編集",
+      "doneEditing": "編集を終了",
       "tool": "ツール",
       "tools": {
         "select": "選択",

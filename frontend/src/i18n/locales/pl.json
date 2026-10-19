@@ -1044,6 +1044,8 @@
     },
     "geo": {
       "board": "Mapa geograficzna",
+      "editMap": "Edytuj mapę",
+      "doneEditing": "Zakończ edycję",
       "tool": "Narzędzie",
       "tools": {
         "select": "Zaznacz",
