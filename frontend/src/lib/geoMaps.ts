@@ -350,6 +350,11 @@ const COVER_WEIGHT = 10;
 export function placeAreaLabels(labels: AreaLabel[], obstacles: LabelBox[]): Map<string, Point> {
   const placed = new Map<string, Point>();
   const taken = [...obstacles];
+  const bounds = labels.map((label) => {
+    const xs = label.points.map(([x]) => x);
+    const ys = label.points.map(([, y]) => y);
+    return { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) };
+  });
   for (const label of labels) {
     const center = areaCenter(label.points);
     const xs = label.points.map(([x]) => x);
@@ -364,9 +369,14 @@ export function placeAreaLabels(labels: AreaLabel[], obstacles: LabelBox[]): Map
       width: label.width,
       height: label.above + label.below,
     });
+    // Only what reaches the searched region can be covered: on a full map
+    // this keeps the search from scoring every spot against every label.
+    const region = { x: left - label.width / 2, y: top - label.above, width: width + label.width, height: height + label.above + label.below };
+    const near = taken.filter((other) => overlap(region, other) > 0);
+    const neighbors = labels.filter((other, index) => other !== label && overlap(region, bounds[index]) > 0);
     const score = (at: Point) => {
       const box = boxAt(at);
-      const covered = taken.reduce((sum, other) => sum + overlap(box, other), 0);
+      const covered = near.reduce((sum, other) => sum + overlap(box, other), 0);
       const corners: Point[] = [
         at,
         { x: box.x, y: box.y },
@@ -377,7 +387,7 @@ export function placeAreaLabels(labels: AreaLabel[], obstacles: LabelBox[]): Map
       const outside = corners.filter((corner) => !insideShape(corner, label.points)).length;
       const far = Math.hypot(at.x - center.x, at.y - center.y) / reach;
       // A name sitting in another area reads as that area's.
-      const elsewhere = labels.some((other) => other !== label && insideShape(at, other.points)) ? surface : 0;
+      const elsewhere = neighbors.some((other) => insideShape(at, other.points)) ? surface : 0;
       return covered * COVER_WEIGHT + (outside / corners.length) * surface + elsewhere + far * surface;
     };
     let best = center;

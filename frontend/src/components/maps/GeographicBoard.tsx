@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ActionIcon,
@@ -402,7 +402,9 @@ export function GeographicBoard({
 
   // Area names are placed on the saved map, at this zoom (spec 38b): while
   // a drag shows a change, an area's name moves with it and the others stay.
-  const placedLabels = useMemo(() => areaLabelPoints(board, s), [board, s]);
+  // The zoom is deferred, so a full map's placement never holds up a wheel step.
+  const labelZoom = useDeferredValue(s);
+  const placedLabels = useMemo(() => areaLabelPoints(board, labelZoom), [board, labelZoom]);
   const labelPoint = (area: GeoArea) => {
     const placed = placedLabels.get(area.id)!;
     const saved = board.areas.find((candidate) => candidate.id === area.id)!;
