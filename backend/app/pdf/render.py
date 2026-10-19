@@ -18,7 +18,7 @@ from urllib.request import url2pathname
 
 from jinja2 import Environment, FileSystemLoader
 
-from app.domain.manual import Manual, ManualDocument, ManualStyle, PageSize
+from app.domain.manual import Manual, ManualStyle, PageSize
 from app.i18n.translator import DEFAULT_LOCALE, SUPPORTED_LOCALES
 
 ASSETS_DIR = Path(__file__).resolve().parent
@@ -27,7 +27,10 @@ __all__ = [
     "ManualStyle",
     "PageSize",
     "render_manual_html",
+    "one_page",
     "page_pairs",
+    "page_units",
+    "side_by_side",
     "lower_priority",
     "render_manual_pdf",
     "url_allowed",
@@ -48,12 +51,18 @@ def render_manual_html(
     page_size: PageSize,
     locale: str = DEFAULT_LOCALE,
     shared: Collection[uuid.UUID] = frozenset(),
+    single: Collection[uuid.UUID] = frozenset(),
+    beside: Collection[uuid.UUID] = frozenset(),
 ) -> str:
     """The manual as one HTML document in `style`, linking its stylesheets
     relative to this package (`ASSETS_DIR` is the base URL when it is turned
     into a PDF). `locale` sets the page language, which hyphenation follows.
-    The Documents in `shared` continue the page of the one before them instead
-    of starting a new one."""
+
+    The Documents in `single` are set in one column instead of two; one in
+    `beside` (also in `single`, after another of them) takes the column next to
+    the one before it. A page unit (a Document in two columns, or a row of one
+    or two in one column) whose first Document is in `shared` continues the
+    page of the one before it instead of starting a new one."""
     template = _ENVIRONMENT.get_template(f"{style.value}.html.j2")
     lang = locale if locale in SUPPORTED_LOCALES else DEFAULT_LOCALE
     return template.render(
@@ -62,57 +71,89 @@ def render_manual_html(
         page_size=page_size.value,
         lang=lang,
         shared=frozenset(shared),
+        single=frozenset(single),
+        beside=frozenset(beside),
     ).lstrip()
 
 
-def _page_order(manual: Manual) -> list[tuple[str, list[str]]]:
-    """Each chapter's anchor with the anchors of the Documents printed in it,
-    in page order. The glossary closes the list as a chapter of its own."""
-    order = [
-        (chapter.id, [document.anchor for document in chapter.documents])
-        for chapter in manual.chapters
-    ]
-    return [*order, ("glossary", [])]
+Unit = tuple[str, ...]
+"""The anchors of what starts a page together: one Document in two columns, or
+a row of one or two Documents in one column each."""
 
 
-def _following(order: Sequence[tuple[str, Sequence[str]]]) -> dict[str, str]:
-    """Each anchor of `order` mapped to the one after it."""
-    starts = [anchor for chapter, documents in order for anchor in (chapter, *documents)]
-    return dict(zip(starts, starts[1:], strict=False))
+def page_units(manual: Manual, beside: Collection[uuid.UUID]) -> list[list[Unit]]:
+    """Each chapter's units in page order: a Document in `beside` joins the
+    unit of the one before it."""
+    chapters: list[list[Unit]] = []
+    for chapter in manual.chapters:
+        units: list[Unit] = []
+        for document in chapter.documents:
+            if document.id in beside and units:
+                units[-1] = (*units[-1], document.anchor)
+            else:
+                units.append((document.anchor,))
+        chapters.append(units)
+    return chapters
+
+
+def side_by_side(manual: Manual, single: Collection[uuid.UUID]) -> set[uuid.UUID]:
+    """The Documents that take the right column of a row: of two neighbours of
+    one chapter that each fit one column (`single`), the second, paired left to
+    right so a row holds two at most."""
+    beside: set[uuid.UUID] = set()
+    for chapter in manual.chapters:
+        alone = False  # the row before holds one Document in one column
+        for document in chapter.documents:
+            if document.id in single and alone:
+                beside.add(document.id)
+                alone = False
+            else:
+                alone = document.id in single
+    return beside
+
+
+def one_page(unit: Unit, spans: Mapping[str, tuple[int, int]]) -> int | None:
+    """The page every Document of `unit` starts and ends on, or None when the
+    unit takes more than one (or an anchor isn't laid out). `spans` maps an
+    anchor to the first and last page it is on."""
+    pages = {spans.get(anchor) for anchor in unit}
+    if len(pages) != 1:
+        return None
+    (span,) = pages
+    if span is None or span[0] != span[1]:
+        return None
+    return span[0]
+
+
+def _pair_fits(
+    unit: Unit, position: int, spans: Mapping[str, tuple[int, int]], chapter: tuple[int, int] | None
+) -> bool:
+    """Whether a row of two (`unit`, the `position`th of its chapter, which
+    starts on `chapter`'s first page) is on one page. A row never breaks, so a
+    first one too tall for what the chapter title leaves moves to the next
+    page, which counts as spilling."""
+    page = one_page(unit, spans)
+    return page is not None and (position > 0 or (chapter is not None and page == chapter[0]))
 
 
 def page_pairs(
-    order: Sequence[tuple[str, Sequence[str]]], pages: Mapping[str, int]
-) -> list[tuple[str, str]]:
-    """The Documents that could share a page, from a layout where each starts
-    its own: two neighbours of one chapter that each took a single page, paired
-    left to right so a Document is in one pair at most. `order` is
-    `_page_order`'s; `pages` maps an anchor to the page it is on (an anchor
-    that isn't there, a glossary without entries, ends nothing)."""
-    following = _following(order)
-
-    def single_page(anchor: str) -> bool:
-        after = following.get(anchor)
-        return after is not None and pages.get(after) == pages[anchor] + 1
-
-    pairs: list[tuple[str, str]] = []
-    for _chapter, documents in order:
+    chapters: Sequence[Sequence[Unit]], spans: Mapping[str, tuple[int, int]]
+) -> list[tuple[Unit, Unit]]:
+    """The units that could share a page, from a layout where each starts its
+    own: two neighbours of one chapter that each took a single page, paired
+    left to right so a unit is in one pair at most. `chapters` is
+    `page_units`'s."""
+    pairs: list[tuple[Unit, Unit]] = []
+    for units in chapters:
         position = 0
-        while position + 1 < len(documents):
-            first, second = documents[position], documents[position + 1]
-            if single_page(first) and single_page(second):
+        while position + 1 < len(units):
+            first, second = units[position], units[position + 1]
+            if one_page(first, spans) is not None and one_page(second, spans) is not None:
                 pairs.append((first, second))
                 position += 2
             else:
                 position += 1
     return pairs
-
-
-def _shares_one_page(pair: tuple[str, str], following: str, pages: Mapping[str, int]) -> bool:
-    """Whether, laid out together, `pair` ended up on one page with `following`
-    (the next anchor) starting the page after it."""
-    first, second = pair
-    return pages[second] == pages[first] and pages.get(following) == pages[first] + 1
 
 
 def url_allowed(url: str, image_urls: Collection[str], media_dir: Path | None = None) -> bool:
@@ -175,42 +216,60 @@ def render_manual_pdf(
     which keeps them out of the HTML (a big Room's images as `data:` URLs took
     over a gigabyte of memory).
 
-    Two short Documents share a page when together they fit on it (product
-    owner, 2026-10-06). Only a layout can tell, so the manual is laid out with
-    a page per Document, then again with the pairs that each took one page
-    joined; a pair that no longer fits on one page is split again in a last
-    layout. Each pair starts its own page, so splitting one never moves
-    another."""
+    A Document that fits in one column is set in one column, and two such
+    neighbours sit side by side (product owner, 2026-10-19); two short page
+    units share a page when together they fit on it (product owner,
+    2026-10-06). Only a layout can tell, so the manual is laid out with every
+    Document alone in one column on its own page, to see which fit; then with
+    those rows and the other Documents in two columns, a page each; then with
+    the units that each took one page paired on one page, a row that spilled
+    split in two; and a pair that no longer fits on one page is split again in
+    a last layout. Each unit and pair starts its own page, so splitting one
+    never moves another."""
     from weasyprint import HTML
 
-    def layout(shared: Collection[uuid.UUID]) -> Any:
-        html = render_manual_html(manual, style, page_size, locale, shared)
+    def layout(
+        single: Collection[uuid.UUID],
+        beside: Collection[uuid.UUID],
+        shared: Collection[uuid.UUID] = frozenset(),
+    ) -> Any:
+        html = render_manual_html(manual, style, page_size, locale, shared, single, beside)
         return HTML(
             string=html,
             base_url=ASSETS_DIR.as_uri() + "/",
             url_fetcher=_fetcher(manual.image_urls, media_dir),
         ).render()
 
-    def anchor_pages(document: Any) -> dict[str, int]:
-        return {
-            anchor: number for number, page in enumerate(document.pages) for anchor in page.anchors
-        }
+    def anchor_spans(document: Any) -> dict[str, tuple[int, int]]:
+        spans: dict[str, tuple[int, int]] = {}
+        for number, page in enumerate(document.pages):
+            for anchor in page.anchors:
+                spans[anchor] = (spans.get(anchor, (number, number))[0], number)
+        return spans
 
     ids = {
-        entry.anchor: entry.id
+        document.anchor: document.id
         for chapter in manual.chapters
-        for entry in chapter.entries
-        if isinstance(entry, ManualDocument)
+        for document in chapter.documents
     }
-    order = _page_order(manual)
-    document = layout(frozenset())
-    pairs = page_pairs(order, anchor_pages(document))
-    if pairs:
-        document = layout({ids[second] for _first, second in pairs})
-        pages = anchor_pages(document)
-        following = _following(order)
-        kept = [pair for pair in pairs if _shares_one_page(pair, following[pair[1]], pages)]
+    spans = anchor_spans(layout(set(ids.values()), frozenset()))
+    single = {ids[anchor] for anchor in ids if one_page((anchor,), spans) is not None}
+    beside = side_by_side(manual, single)
+    document = layout(single, beside)
+    spans = anchor_spans(document)
+    spilled = {
+        ids[unit[1]]
+        for chapter, units in zip(manual.chapters, page_units(manual, beside), strict=True)
+        for position, unit in enumerate(units)
+        if len(unit) == 2 and not _pair_fits(unit, position, spans, spans.get(chapter.id))
+    }
+    pairs = page_pairs(page_units(manual, beside), spans)
+    if pairs or spilled:
+        beside -= spilled
+        document = layout(single, beside, {ids[second[0]] for _first, second in pairs})
+        spans = anchor_spans(document)
+        kept = [pair for pair in pairs if one_page((*pair[0], *pair[1]), spans) is not None]
         if len(kept) < len(pairs):
-            document = layout({ids[second] for _first, second in kept})
+            document = layout(single, beside, {ids[second[0]] for _first, second in kept})
     pdf: bytes = document.write_pdf()
     return pdf

@@ -56,11 +56,25 @@ a { color: inherit; text-decoration: none; }
    references to Documents printed in earlier chapters) stay above the first
    one, across the page. No rule closes a Document: the page break does, and a
    rule under balanced columns met the column rule when they filled the page.
-   Two short Documents that fit on one page together share it: the renderer
-   marks the second `shares-page` after measuring (render.py). */
-.document { margin-top: 10mm; columns: 2; column-gap: 9mm; column-fill: balance; }
-.document + .document { break-before: page; }
-.document + .document.shares-page { break-before: auto; }
+   A Document that fits whole in one column stays in one (product owner,
+   2026-10-19): it takes the left column of a `document-row`, the rule at its
+   right, and the next one that fits takes the column beside it (a `pair`),
+   or that column stays empty.
+   A `unit` (a Document in two columns, or a row) starts a page; two short ones
+   that fit on one page together share it: the renderer marks the second
+   `shares-page` after measuring (render.py). */
+.unit { margin-top: 10mm; }
+.document { columns: 2; column-gap: 9mm; column-fill: balance; }
+.unit + .unit { break-before: page; }
+.unit + .unit.shares-page { break-before: auto; }
+.document.single-column { columns: auto; }
+.document-row > .document:first-child { padding-right: 4.5mm; border-right: 0.5pt solid; }
+.document-row > .document:only-child { width: calc(50% - 4.5mm - 0.5pt); }
+.document-row > .document + .document { padding-left: 4.5mm; }
+/* Only a pair is a grid, and it never breaks: both fit one column, and
+   WeasyPrint 70 fails on a grid item that breaks with a ::first-letter in it
+   (the renderer measures each Document alone, as a block). */
+.document-row.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); break-inside: avoid; }
 .references { margin-top: 6mm; }
 .document-image { margin: 0 0 5mm; text-align: center; break-inside: avoid; }
 .document-image img { max-width: 100%; max-height: 90mm; object-fit: contain; }
