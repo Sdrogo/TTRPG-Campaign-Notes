@@ -186,6 +186,19 @@ _GALLERY_ORDER = (
 )
 
 
+async def document_ids_in_room(
+    session: AsyncSession, room_id: uuid.UUID, document_ids: Sequence[uuid.UUID]
+) -> list[uuid.UUID]:
+    """Which of `document_ids` are Documents of the Room, in id order; reads
+    ids only, so nothing is loaded into the session."""
+    result = await session.execute(
+        select(DocumentRow.id)
+        .where(DocumentRow.room_id == room_id, DocumentRow.id.in_(document_ids))
+        .order_by(DocumentRow.id)
+    )
+    return list(result.scalars())
+
+
 async def lock_document(session: AsyncSession, document_id: uuid.UUID) -> None:
     """Row lock held until the transaction ends: serializes concurrent image
     additions to one Document, so a count-then-insert can't overshoot the

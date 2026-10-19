@@ -147,3 +147,13 @@ def test_a_save_leaves_plain_what_was_already_plain_or_unlinked() -> None:
     assert link_new_names("Vedi Lyra.", linked, CANDIDATES) == "Vedi Lyra."
     # A name typed again outside the changed part isn't linked there.
     assert link_new_names("Lyra e Lyra", "Lyra e", CANDIDATES) == (f"Lyra e #[Lyra](doc:{LYRA})")
+
+
+def test_a_match_chosen_twice_is_written_once() -> None:
+    found = suggest_mentions("Ecco Lyra", usable_candidates([_doc(LYRA, "Lyra")]))
+    twice = [ChosenMatch(5, 9, MentionKind.DOCUMENT, LYRA)] * 2
+
+    picked = choose_matches(found, twice)
+
+    assert len(picked) == 1
+    assert apply_mentions("Ecco Lyra", picked) == f"Ecco #[Lyra](doc:{LYRA})"

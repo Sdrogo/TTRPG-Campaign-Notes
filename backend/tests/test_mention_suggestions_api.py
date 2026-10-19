@@ -271,3 +271,37 @@ async def test_a_save_links_the_document_names_it_adds(
     assert edited.json()["description"] == (
         f"Racconto di #[Lyra](doc:{lyra['id']}). #[Lyra](doc:{lyra['id']}) dorme."
     )
+
+
+async def test_a_repeated_match_counts_once_and_requests_are_bounded(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    tale = await _document(client, room, "Racconto", room.master, description="Ecco Lyra.")
+    lyra = await _document(client, room, "Lyra", room.master)
+    (source,) = (
+        await _get(client, f"{room.url}/documents/{tale['id']}/mention-suggestions", room.master)
+    )["sources"]
+    chosen = _chosen(source)
+    chosen["matches"] *= 2
+    apply_url = f"{room.url}/mention-suggestions/apply"
+
+    applied = await client.post(apply_url, json={"sources": [chosen]}, headers=room.master)
+
+    assert applied.json() == {"applied": 1, "documents": 1}
+    saved = await _get(client, f"{room.url}/documents/{tale['id']}", room.master)
+    assert saved["description"] == f"Ecco #[Lyra](doc:{lyra['id']})."
+
+    too_many = {"document_id": tale["id"], "matches": []}
+    refused = await client.post(apply_url, json={"sources": [too_many] * 501}, headers=room.master)
+    assert refused.status_code == 422
+
+    # Another Room's Document is not found (and never locked).
+    other = await _room(client, make_token)
+    foreign = await _document(client, other, "Altrove", other.master)
+    missing = await client.post(
+        apply_url,
+        json={"sources": [{"document_id": foreign["id"], "matches": []}]},
+        headers=room.master,
+    )
+    assert missing.status_code == 404

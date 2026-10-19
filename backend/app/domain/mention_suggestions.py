@@ -125,7 +125,9 @@ def choose_matches(
         suggestion = by_key.get((match.start, match.end, match.kind, match.target_id))
         if suggestion is None:
             raise StaleSuggestionsError("errors.mentionSuggestions.stale")
-        picked.append(suggestion)
+        # A match sent twice is written once.
+        if suggestion not in picked:
+            picked.append(suggestion)
     return picked
 
 

@@ -11,7 +11,7 @@ from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import (
@@ -76,6 +76,12 @@ class MentionSuggestionsResponse(BaseModel):
     sources: list[MentionSourceResponse]
 
 
+# What one apply request may carry (422 past it), so a call can't fan out
+# into unbounded locks, queries and revisions.
+MAX_SOURCES = 500
+MAX_MATCHES_PER_SOURCE = 1000
+
+
 class ChosenMatchRequest(BaseModel):
     """A proposal to apply, as the preview gave it."""
 
@@ -91,13 +97,13 @@ class ChosenSourceRequest(BaseModel):
 
     document_id: uuid.UUID
     note_id: uuid.UUID | None = None
-    matches: list[ChosenMatchRequest]
+    matches: list[ChosenMatchRequest] = Field(max_length=MAX_MATCHES_PER_SOURCE)
 
 
 class ApplyMentionSuggestionsRequest(BaseModel):
     """The texts and proposals to apply."""
 
-    sources: list[ChosenSourceRequest]
+    sources: list[ChosenSourceRequest] = Field(max_length=MAX_SOURCES)
 
 
 class ApplyMentionSuggestionsResponse(BaseModel):
@@ -230,8 +236,11 @@ async def apply_mention_suggestions(
         ]
     # Locked in id order before any text is read, so the text the proposals
     # are checked against is the one written over, and two calls can't
-    # deadlock.
-    for document_id in sorted(by_document, key=str):
+    # deadlock. Only the caller's own Room's Documents are locked; any other
+    # id is a 404 below.
+    for document_id in await documents_repo.document_ids_in_room(
+        session, room_id, list(by_document)
+    ):
         await documents_repo.lock_document(session, document_id)
 
     documents, _ = await document_candidates(session, membership)
