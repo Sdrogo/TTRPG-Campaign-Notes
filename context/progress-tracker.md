@@ -126,6 +126,12 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-19
 
+- **Fix: mention preview carousel** (frontend only): on a wide screen a click
+  inside a `#Document` mention's hover preview (spec 32), such as its image
+  carousel arrows, opened the mention's half-screen menu (spec 37), because
+  React bubbles portal clicks to the mention. The preview's dropdown now marks
+  its clicks as its own (`OWN_CLICKS_ATTRIBUTE`) and `DocumentOpenMenu`
+  ignores them.
 - **30 follow-up, read aloud without `#`**: plain `#Name` mentions (pre-id,
   spec 20) that match a visible Document or Tag are read without the `#`;
   tokens read under the current name. `mentionsToSpeech` takes the Room's
