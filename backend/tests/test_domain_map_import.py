@@ -119,7 +119,8 @@ def test_an_import_binds_names_to_documents_and_keeps_the_rest_as_labels() -> No
     assert pins["x" * 80].document_id is None
     (link,) = planned.plan.links
     # Ids follow the file's order, which is the order the map is read back in.
-    ids = [item.id for item in [*planned.plan.areas, *planned.plan.pins, link]]
+    ids = [area.id for area in planned.plan.areas] + [pin.id for pin in planned.plan.pins]
+    ids.append(link.id)
     assert ids == sorted(ids)
     assert link.from_end == LinkEnd(pin_id=pins[str(sky.id)].id)
     assert link.to_end == LinkEnd(area_id=dogen.id)
