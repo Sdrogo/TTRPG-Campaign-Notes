@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "Duplizieren",
       "confirmTitle": "„{{name}}“ duplizieren?",
-      "confirmBody": "Dokumente, Notizen, Tags und Bilder werden kopiert. Kommentare, PDF-Anhänge und Mitglieder nicht. Du wirst der einzige Master der Kopie.",
+      "confirmBody": "Dokumente, Notizen, Tags, Karten und Bilder werden kopiert. Kommentare, PDF-Anhänge und Mitglieder nicht. Du wirst der einzige Master der Kopie.",
       "copyName": "{{name}} (Kopie)",
       "created": "„{{name}}“ erstellt"
     },
@@ -757,7 +757,7 @@
     "action": "Dokumente importieren",
     "title": "Dokumente importieren",
     "intro": "Lade eine oder mehrere JSON- oder Markdown-Dateien hoch, auch den Export eines ganzen Raums. Du siehst zuerst, was importiert würde: Es wird nichts geschrieben, bis du bestätigst.",
-    "jsonHint": "JSON ist das originalgetreue Format; Markdown wird so gut wie möglich gelesen. Kommentare, PDF-Anhänge, Owner und die Verknüpfung zum Spieler werden nicht importiert.",
+    "jsonHint": "JSON ist das originalgetreue Format und das einzige, das Karten mitbringt; Markdown wird so gut wie möglich gelesen. Kommentare, PDF-Anhänge, Owner und die Verknüpfung zum Spieler werden nicht importiert.",
     "files": "Zu importierende Dateien",
     "filesPlaceholder": "Wähle eine oder mehrere .json- oder .md-Dateien",
     "preview": "Vorschau",
@@ -815,6 +815,34 @@
       "limit": "das Dokument hat bereits die maximale Anzahl an Bildern",
       "storage": "Speicher nicht verfügbar",
       "failed": "unerwarteter Fehler"
+    },
+    "maps": {
+      "found_one": "{{count}} Karte gefunden",
+      "found_other": "{{count}} Karten gefunden",
+      "select": "Karte {{name}} importieren",
+      "unnamed": "Karte ohne Namen",
+      "kind": {
+        "free": "Freie Tafel",
+        "geographic": "Geografische Karte"
+      },
+      "documentsCount_one": "{{count}} Dokument darauf",
+      "documentsCount_other": "{{count}} Dokumente darauf",
+      "warning": {
+        "documents_left_out_one": "{{count}} Karte oder Ort eines nicht importierten Dokuments wird ausgelassen",
+        "documents_left_out_other": "{{count}} Karten oder Orte nicht importierter Dokumente werden ausgelassen",
+        "master_only_dropped_one": "{{count}} Element nur für den Master wird ausgelassen",
+        "master_only_dropped_other": "{{count}} Elemente nur für den Master werden ausgelassen",
+        "selective_to_private": "Die selektive Sichtbarkeit wird privat"
+      },
+      "skipReason": {
+        "invalid": "Kann nicht importiert werden: nicht lesbar oder verstößt gegen eine Kartenregel",
+        "limit": "Der Raum hat bereits die Höchstzahl an Karten",
+        "background": "Das Hintergrundbild konnte nicht importiert werden"
+      },
+      "created_one": "{{count}} Karte erstellt",
+      "created_other": "{{count}} Karten erstellt",
+      "skippedTitle_one": "{{count}} Karte nicht vollständig importiert",
+      "skippedTitle_other": "{{count}} Karten nicht vollständig importiert"
     },
     "failed": "Der Import ist fehlgeschlagen. Prüfe die Dokumentliste, bevor du es erneut versuchst.",
     "another": "Weitere Dateien importieren"

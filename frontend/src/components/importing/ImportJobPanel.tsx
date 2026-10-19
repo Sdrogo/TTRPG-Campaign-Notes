@@ -14,7 +14,8 @@ interface ImportJobPanelProps {
 /**
  * Where the import is (spec 27 Decision 9): running in the background (the
  * dialog can be closed meanwhile), done with the Documents it created or
- * replaced as links and every image it skipped, or failed.
+ * replaced and the maps it created (spec 40) as links, and every image or map
+ * it skipped, or failed.
  */
 export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
   const { t } = useTranslation();
@@ -48,7 +49,7 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
     );
   }
 
-  const { created, replaced, skipped } = job.result;
+  const { created, replaced, skipped, maps, skippedMaps } = job.result;
   const documentLinks = (documents: { id: string; name: string }[]) => (
     <Stack gap={2}>
       {documents.map((document) => (
@@ -97,6 +98,43 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
                 {t('documentImport.skipped', {
                   document: item.documentName,
                   reason: t(`documentImport.skipReason.${item.reason}`),
+                })}
+              </Text>
+            ))}
+          </Stack>
+        </>
+      )}
+      {maps.length > 0 && (
+        <>
+          <Text size="xs" c="dimmed">
+            {t('documentImport.maps.created', { count: maps.length })}
+          </Text>
+          <Stack gap={2}>
+            {maps.map((map) => (
+              <Anchor
+                key={map.id}
+                component={Link}
+                to={`/rooms/${roomId}/maps/${map.id}`}
+                size="sm"
+                style={{ overflowWrap: 'anywhere' }}
+              >
+                {map.name}
+              </Anchor>
+            ))}
+          </Stack>
+        </>
+      )}
+      {skippedMaps.length > 0 && (
+        <>
+          <Text size="xs" c="yellow">
+            {t('documentImport.maps.skippedTitle', { count: skippedMaps.length })}
+          </Text>
+          <Stack gap={2}>
+            {skippedMaps.map((item, index) => (
+              <Text key={`${item.name}-${index}`} size="xs" c="dimmed">
+                {t('documentImport.skipped', {
+                  document: item.name || t('documentImport.maps.unnamed'),
+                  reason: t(`documentImport.maps.skipReason.${item.reason}`),
                 })}
               </Text>
             ))}
