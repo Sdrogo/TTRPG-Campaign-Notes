@@ -1019,7 +1019,8 @@
       "noBackground": "배경 없음",
       "uploadBackground": "이미지 업로드",
       "backgroundFromUrl": "URL에서",
-      "removeBackground": "배경 제거"
+      "removeBackground": "배경 제거",
+      "export": "지도 내보내기(JSON)"
     },
     "kind": {
       "label": "지도 종류",
@@ -1028,6 +1029,22 @@
       "freeHelp": "문서 카드, 그룹, 화살표를 보드 위 어디에나.",
       "geographicHelp": "배경 이미지가 있는 평면 위의 구역과 장소, 문서에 연결됩니다.",
       "geographicBadge": "지리"
+    },
+    "import": {
+      "button": "지도 가져오기",
+      "title": "지리 지도 가져오기",
+      "help": "지리 지도의 JSON 파일을 고르세요. 예를 들어 다른 채팅에서 Claude가 만든 파일입니다. 지도를 만들기 전에 내용을 확인할 수 있습니다.",
+      "chooseFile": "파일 선택",
+      "noFile": "선택한 파일 없음",
+      "notJson": "파일이 올바른 JSON이 아닙니다.",
+      "counts": "영역: {{areas}} · 장소: {{pins}} · 연결: {{links}}",
+      "plane": "평면 {{width}} × {{height}}",
+      "matched": "문서와 연결됨: {{number}}",
+      "notFound": "이 이름의 문서가 없어 일반 라벨로 남습니다:",
+      "ambiguous": "이 이름의 문서가 여러 개라 일반 라벨로 남습니다:",
+      "repeated": "문서가 이미 지도에 있어 일반 라벨로 남습니다:",
+      "backgroundLater": "배경 이미지는 나중에 새 지도의 지도 버튼에서 올립니다.",
+      "submit": "가져오기"
     }
   }
 }

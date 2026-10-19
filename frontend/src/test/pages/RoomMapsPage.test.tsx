@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, apiFetch } from '../../lib/apiClient';
 import { useSession } from '../../hooks/useSession';
 import { ViewAsContext } from '../../hooks/useViewAs';
-import { fakeSession, rawAccount, rawMap, rawMapDetail, rawMember, rawRoom } from '../fixtures';
+import { fakeSession, rawAccount, rawGeoMapDetail, rawMap, rawMapDetail, rawMember, rawRoom } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { RoomMapsPage } from '../../pages/RoomMapsPage';
 
@@ -24,6 +24,27 @@ vi.mock('react-router-dom', async () => ({
 const fetchMock = vi.mocked(apiFetch);
 const sessionMock = vi.mocked(useSession);
 type SessionState = ReturnType<typeof useSession>;
+
+const importReport = {
+  name: 'Shibuya di notte',
+  description: '',
+  plane_width: 2000,
+  plane_height: 1400,
+  areas: 1,
+  pins: 2,
+  links: 0,
+  matched: 0,
+  not_found: [],
+  ambiguous: [],
+  repeated: [],
+};
+
+async function importFile(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: 'Importa mappa' }));
+  const file = new File(['{"schema_version": 1}'], 'shibuya.json', { type: 'application/json' });
+  await user.upload(document.querySelector('input[type="file"]') as HTMLInputElement, file);
+  await screen.findByText('Aree: 1 · Luoghi: 2 · Collegamenti: 0');
+}
 
 const routes = {
   maps: () => Promise.resolve([rawMap(), rawMap({ id: 'map-2', name: 'Vuota', description: '', document_count: 1 })]) as Promise<unknown>,
@@ -60,6 +81,8 @@ beforeEach(() => {
   sessionMock.mockReturnValue({ session: fakeSession('user-1'), loading: false } as SessionState);
   fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
     if (path === '/rooms/room-1/maps' && init?.method === 'POST') return routes.create();
+    if (path === '/rooms/room-1/maps/import/preview') return Promise.resolve(importReport);
+    if (path === '/rooms/room-1/maps/import') return Promise.resolve(rawGeoMapDetail({ id: 'map-7' }));
     if (path === '/rooms/room-1/maps') return routes.maps();
     if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
     if (path === '/rooms/room-1') return Promise.resolve(routes.room);
@@ -143,6 +166,23 @@ describe('RoomMapsPage', () => {
     );
   });
 
+  it('imports a map from a file at the Room default visibility and opens it (spec 38_3)', async () => {
+    routes.room = rawRoom({ default_visibility: 'master' });
+    const { user } = render();
+    await importFile(user);
+    expect(screen.getByRole('combobox', { name: 'Visibilità' })).toHaveValue('Solo Master (e te)');
+    await user.click(screen.getByRole('button', { name: 'Importa' }));
+    await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/room-1/maps/map-7'));
+  });
+
+  it('closes the import without creating anything', async () => {
+    const { user } = render();
+    await user.click(await screen.findByRole('button', { name: 'Importa mappa' }));
+    await user.keyboard('{Escape}');
+    await vi.waitFor(() => expect(screen.queryByText('Nessun file scelto')).not.toBeInTheDocument());
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('shows why a map could not be created, and forgets it on close', async () => {
     routes.create = () => Promise.reject(new ApiError(409, 'Troppe mappe'));
     const { user } = render();
@@ -173,6 +213,7 @@ describe('RoomMapsPage', () => {
   it('starts a new map at Room level until the Room loads', async () => {
     routes.room = new Promise(() => {});
     fetchMock.mockImplementation((path: string) => {
+      if (path === '/rooms/room-1/maps/import/preview') return Promise.resolve(importReport);
       if (path === '/rooms/room-1') return new Promise(() => {});
       if (path === '/rooms/room-1/maps') return routes.maps();
       if (path === '/rooms/room-1/members') return Promise.resolve([rawMember({ user_id: 'user-1', role: 'master' })]);
@@ -180,6 +221,9 @@ describe('RoomMapsPage', () => {
     });
     const { user } = render();
     await user.click(await screen.findByRole('button', { name: 'Nuova mappa' }));
+    expect(screen.getByRole('combobox', { name: 'Visibilità' })).toHaveValue('Stanza (tutti i membri)');
+    await user.keyboard('{Escape}');
+    await importFile(user);
     expect(screen.getByRole('combobox', { name: 'Visibilità' })).toHaveValue('Stanza (tutti i membri)');
   });
 

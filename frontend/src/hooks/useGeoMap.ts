@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import { toGeoBody, toGeoMapDetail, type RawGeoMapDetail } from '../lib/geoMaps';
+import { mapExportFileName, toImportBody, toMapImportReport, type RawMapImportReport } from '../lib/mapImport';
+import { saveBlob } from '../lib/roomExport';
 import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
+import type { MapFormValues } from '../types/map';
 
 function mapPath(roomId: string, mapId: string) {
   return `/rooms/${roomId}/maps/${mapId}`;
@@ -81,5 +84,47 @@ export function useChangeBackground(roomId: string, mapId: string) {
       return toGeoMapDetail(await apiFetch<RawGeoMapDetail>(path, { method: 'POST', formData }));
     },
     onSuccess: store,
+  });
+}
+
+/** Reads what importing a map file would create (spec 38_3); nothing is written. */
+export function usePreviewMapImport(roomId: string) {
+  return useMutation({
+    mutationFn: async (map: Record<string, unknown>) =>
+      toMapImportReport(
+        await apiFetch<RawMapImportReport>(`/rooms/${roomId}/maps/import/preview`, {
+          method: 'POST',
+          json: { map },
+        }),
+      ),
+  });
+}
+
+/** Imports a map file as a new geographic map (Decision 10); the list reloads. */
+export function useImportMap(roomId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ map, values }: { map: Record<string, unknown>; values: MapFormValues }) =>
+      toGeoMapDetail(
+        await apiFetch<RawGeoMapDetail>(`/rooms/${roomId}/maps/import`, {
+          method: 'POST',
+          json: toImportBody(map, values),
+        }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'], exact: true }),
+  });
+}
+
+/**
+ * Downloads the map as an import file (Decision 10): what the viewer (or the
+ * member being previewed) sees of it, named `<map>-<date>.json`.
+ */
+export function useExportMap(roomId: string, mapId: string, mapName: string) {
+  return useMutation({
+    mutationFn: async () => {
+      const file = await apiFetch<unknown>(`${mapPath(roomId, mapId)}/export`);
+      const blob = new Blob([`${JSON.stringify(file, null, 2)}\n`], { type: 'application/json' });
+      saveBlob(blob, mapExportFileName(mapName, new Date()));
+    },
   });
 }

@@ -229,6 +229,16 @@
       "tooManyPins": "A map can have at most {max} pins",
       "tooManyLinks": "A map can have at most {max} links"
     },
+    "mapImport": {
+      "invalidFile": "The file isn't a map this App can read (check the field \"{field}\")",
+      "unsupportedVersion": "This file uses version {version} of the map format; the App reads version 1",
+      "duplicateKey": "The key \"{item}\" is used twice in the file",
+      "unknownKey": "A link names \"{item}\", which is not the key of an area or a pin in the file",
+      "linkToItself": "The link from \"{item}\" goes back to itself",
+      "invalidArea": "The area \"{item}\" needs 3 to 60 corners inside the plane, around a real surface",
+      "pinOutsidePlane": "The pin \"{item}\" is outside the plane",
+      "nameRequired": "The place \"{item}\" has no Document and no name"
+    },
     "mentionMap": {
       "notFound": "This Document has no mention map",
       "alreadyExists": "This Document already has a mention map",

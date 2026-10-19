@@ -1039,7 +1039,8 @@
       "noBackground": "Geen achtergrond",
       "uploadBackground": "Afbeelding uploaden",
       "backgroundFromUrl": "Van een URL",
-      "removeBackground": "Achtergrond verwijderen"
+      "removeBackground": "Achtergrond verwijderen",
+      "export": "Kaart exporteren (JSON)"
     },
     "kind": {
       "label": "Soort kaart",
@@ -1048,6 +1049,22 @@
       "freeHelp": "Documentkaarten, groepen en pijlen, vrij op het bord.",
       "geographicHelp": "Gebieden en plaatsen op een vlak met een achtergrondafbeelding, gekoppeld aan Documenten.",
       "geographicBadge": "Geografisch"
+    },
+    "import": {
+      "button": "Kaart importeren",
+      "title": "Een geografische kaart importeren",
+      "help": "Kies het JSON-bestand van een geografische kaart, bijvoorbeeld een die Claude in een andere chat maakte. Je ziet de inhoud voordat de kaart wordt gemaakt.",
+      "chooseFile": "Bestand kiezen",
+      "noFile": "Geen bestand gekozen",
+      "notJson": "Het bestand is geen geldige JSON.",
+      "counts": "Gebieden: {{areas}} · Plekken: {{pins}} · Verbindingen: {{links}}",
+      "plane": "Vlak {{width}} × {{height}}",
+      "matched": "gekoppeld aan een Document: {{number}}",
+      "notFound": "Geen Document met deze naam, blijven gewone labels:",
+      "ambiguous": "Meerdere Documenten met deze naam, blijven gewone labels:",
+      "repeated": "Document staat al op de kaart, blijven gewone labels:",
+      "backgroundLater": "De achtergrondafbeelding upload je daarna via de knop Kaart van de nieuwe kaart.",
+      "submit": "Importeren"
     }
   }
 }

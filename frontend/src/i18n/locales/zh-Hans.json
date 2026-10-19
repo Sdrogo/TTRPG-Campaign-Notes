@@ -1019,7 +1019,8 @@
       "noBackground": "无背景",
       "uploadBackground": "上传图片",
       "backgroundFromUrl": "来自网址",
-      "removeBackground": "移除背景"
+      "removeBackground": "移除背景",
+      "export": "导出地图(JSON)"
     },
     "kind": {
       "label": "地图类型",
@@ -1028,6 +1029,22 @@
       "freeHelp": "文档卡片、分组和箭头，可放在白板任意位置。",
       "geographicHelp": "带背景图片的平面上的区域和地点，与文档关联。",
       "geographicBadge": "地理"
+    },
+    "import": {
+      "button": "导入地图",
+      "title": "导入地理地图",
+      "help": "选择一个地理地图的 JSON 文件,例如 Claude 在另一个对话中生成的文件。创建地图之前会先显示其中的内容。",
+      "chooseFile": "选择文件",
+      "noFile": "未选择文件",
+      "notJson": "该文件不是有效的 JSON。",
+      "counts": "区域:{{areas}} · 地点:{{pins}} · 连接:{{links}}",
+      "plane": "平面 {{width}} × {{height}}",
+      "matched": "已关联文档:{{number}}",
+      "notFound": "没有同名文档,将保留为普通标签:",
+      "ambiguous": "有多个同名文档,将保留为普通标签:",
+      "repeated": "该文档已在地图上,将保留为普通标签:",
+      "backgroundLater": "背景图片之后在新地图的“地图”按钮中上传。",
+      "submit": "导入"
     }
   }
 }

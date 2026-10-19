@@ -229,6 +229,16 @@
       "tooManyPins": "Een kaart mag maximaal {max} spelden hebben",
       "tooManyLinks": "Een kaart mag maximaal {max} verbindingen hebben"
     },
+    "mapImport": {
+      "invalidFile": "Het bestand is geen kaart die de App kan lezen (controleer het veld \"{field}\")",
+      "unsupportedVersion": "Het bestand gebruikt versie {version} van het kaartformaat; de App leest versie 1",
+      "duplicateKey": "De sleutel \"{item}\" komt twee keer voor in het bestand",
+      "unknownKey": "Een verbinding noemt \"{item}\", maar dat is geen sleutel van een gebied of speld in het bestand",
+      "linkToItself": "De verbinding vanaf \"{item}\" gaat terug naar zichzelf",
+      "invalidArea": "Het gebied \"{item}\" heeft 3 tot 60 hoeken binnen het vlak nodig, rond een echt oppervlak",
+      "pinOutsidePlane": "De speld \"{item}\" ligt buiten het vlak",
+      "nameRequired": "De plek \"{item}\" heeft geen Document en geen naam"
+    },
     "mentionMap": {
       "notFound": "Dit document heeft geen vermeldingskaart",
       "alreadyExists": "Dit document heeft al een vermeldingskaart",

@@ -10,12 +10,19 @@ import type { GeoBoard } from '../../types/geoMap';
 import { fakeSession, rawGeoMapDetail, rawMapDetail, rawMember } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { RelationshipMapPage } from '../../pages/RelationshipMapPage';
+import { saveBlob } from '../../lib/roomExport';
+import { notifyError } from '../../lib/notify';
 
 vi.mock('../../lib/apiClient', async (original) => ({
   ...(await original<typeof import('../../lib/apiClient')>()),
   apiFetch: vi.fn(),
 }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
+vi.mock('../../lib/roomExport', async (original) => ({
+  ...(await original<typeof import('../../lib/roomExport')>()),
+  saveBlob: vi.fn(),
+}));
+vi.mock('../../lib/notify', () => ({ notifyError: vi.fn() }));
 
 // The board has its own tests: here it only reports how it was drawn, and
 // makes one change when asked.
@@ -95,6 +102,7 @@ const routes = {
   save: () => Promise.resolve(rawMapDetail()) as Promise<unknown>,
   update: () => Promise.resolve(rawMapDetail({ name: 'La Corte rinnovata' })) as Promise<unknown>,
   remove: () => Promise.resolve(undefined) as Promise<unknown>,
+  exportMap: () => Promise.resolve({ schema_version: 1 }) as Promise<unknown>,
   members: [rawMember({ user_id: 'user-1', role: 'master' })] as unknown,
 };
 
@@ -134,10 +142,12 @@ beforeEach(() => {
   routes.save = () => Promise.resolve(rawMapDetail());
   routes.update = () => Promise.resolve(rawMapDetail({ name: 'La Corte rinnovata' }));
   routes.remove = () => Promise.resolve(undefined);
+  routes.exportMap = () => Promise.resolve({ schema_version: 1 });
   routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
   sessionMock.mockReturnValue({ session: fakeSession('user-1'), loading: false } as SessionState);
   fetchMock.mockImplementation((path: string, init?: Init) => {
     if (path === '/rooms/room-1/maps/map-1/board') return routes.save();
+    if (path === '/rooms/room-1/maps/map-1/export') return routes.exportMap();
     if (path === '/rooms/room-1/maps/map-1/geo' && init?.method === 'PUT') return routes.saveGeo();
     if (path === '/rooms/room-1/maps/map-1/geo') return routes.geo();
     if (path === '/rooms/room-1/tags') return Promise.resolve([{ id: 'tag-1', name: 'Camarilla', category: null, main_position: null }]);
@@ -369,6 +379,25 @@ describe('RelationshipMapPage', () => {
       await user.click(screen.getByRole('button', { name: 'Mostra il pannello affiancato' }));
       await user.click(await screen.findByRole('button', { name: 'select' }));
       expect(await screen.findByRole('link', { name: 'Apri il Documento' })).toHaveAttribute('href', '/rooms/room-1/documents/doc-9');
+    });
+
+    it('downloads the map as a JSON file for whoever sees it (spec 38_3)', async () => {
+      routes.map = () => geographic().then((map) => ({ ...map, can_edit: false }));
+      routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false }));
+      const { user } = render();
+      await user.click(await screen.findByRole('button', { name: 'Esporta la mappa (JSON)' }));
+      await vi.waitFor(() => expect(saveBlob).toHaveBeenCalled());
+      const [blob, name] = vi.mocked(saveBlob).mock.calls[0] as [Blob, string];
+      expect(name).toMatch(/^shibuya-di-notte-\d{4}-\d{2}-\d{2}\.json$/);
+      expect(JSON.parse(await blob.text())).toEqual({ schema_version: 1 });
+    });
+
+    it('says why the map could not be exported', async () => {
+      routes.map = geographic;
+      routes.exportMap = () => Promise.reject(new ApiError(404, 'Mappa non trovata'));
+      const { user } = render();
+      await user.click(await screen.findByRole('button', { name: 'Esporta la mappa (JSON)' }));
+      await vi.waitFor(() => expect(notifyError).toHaveBeenCalledWith(new ApiError(404, 'Mappa non trovata')));
     });
 
     it('waits for its content, and says when it cannot be found', async () => {

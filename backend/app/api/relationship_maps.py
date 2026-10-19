@@ -408,12 +408,11 @@ async def _detail(
     )
 
 
-async def create_free_map(
+async def insert_map(
     session: AsyncSession,
     room_id: uuid.UUID,
     membership: Membership,
     name: str,
-    board: BoardRequest | None,
     locale: str,
     *,
     description: str = "",
@@ -422,13 +421,12 @@ async def create_free_map(
     kind: MapKind = MapKind.FREE,
     plane_width: int | None = None,
     plane_height: int | None = None,
-) -> MapDetailResponse:
-    """Decision 2: a new map, a Player's only while the Room lets Players
-    create Documents (403 otherwise); at most 100 per Room (409, Decision
-    11). Without `visibility` it starts at the Room's default (VR-05). With
-    `board`, it is filled through the board save's checks and caps (a mention
-    map's copy, spec 36). A `geographic` map (spec 38) gets its plane, 422
-    when the size is out of range; a free map takes none (422)."""
+) -> tuple[RelationshipMap, list[uuid.UUID]]:
+    """Decision 2: a new, empty map and its Selective grants, a Player's only
+    while the Room lets Players create Documents (403 otherwise); at most 100
+    per Room (409, Decision 11). Without `visibility` it starts at the Room's
+    default (VR-05). A `geographic` map (spec 38) gets its plane, 422 when the
+    size is out of range; a free map takes none (422)."""
     room = await rooms_repo.get_room(session, room_id)
     if room is None:  # pragma: no cover - only a concurrent Room deletion
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
@@ -471,6 +469,39 @@ async def create_free_map(
         plane_height=plane[1] if plane else None,
     )
     await relationship_maps_repo.insert_map(session, relationship_map, grants)
+    return relationship_map, grants
+
+
+async def create_free_map(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    membership: Membership,
+    name: str,
+    board: BoardRequest | None,
+    locale: str,
+    *,
+    description: str = "",
+    visibility: DocumentVisibility | None = None,
+    selective_user_ids: Collection[uuid.UUID] = (),
+    kind: MapKind = MapKind.FREE,
+    plane_width: int | None = None,
+    plane_height: int | None = None,
+) -> MapDetailResponse:
+    """A new map (`insert_map`). With `board`, it is filled through the board
+    save's checks and caps (a mention map's copy, spec 36)."""
+    relationship_map, grants = await insert_map(
+        session,
+        room_id,
+        membership,
+        name,
+        locale,
+        description=description,
+        visibility=visibility,
+        selective_user_ids=selective_user_ids,
+        kind=kind,
+        plane_width=plane_width,
+        plane_height=plane_height,
+    )
     if board is not None:
         await _apply_board(session, relationship_map.id, membership, board, locale)
     return await _detail(session, relationship_map, grants, membership)

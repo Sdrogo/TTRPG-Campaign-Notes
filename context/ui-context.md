@@ -719,6 +719,15 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   items; links reuse `ArrowDialog`. The header's `MapTrifoldIcon` "Mappa"
   opens `GeoMapDialog` (plane width and height, background upload, URL or
   removal). Delete removes the selection; Escape puts the tool away.
+- **Import and export** (38_3): the Maps list has a default-variant
+  "Importa mappa" button (`FileArrowUpIcon`) beside "Nuova mappa". Its
+  `MapImportModal` picks a `.json` file, reads and checks it, then shows the
+  report (counts, plane, how many are bound to a Document, and lists of names
+  kept as plain labels: not found, ambiguous, already on the map) above the
+  name, description and visibility fields, prefilled from the file; the
+  background is uploaded afterwards on the new map. A geographic map's
+  header has a `DownloadSimpleIcon` "Esporta la mappa (JSON)" for everyone
+  who sees it; a failure shows the error toast.
 
 ## Document preview and split view (spec 37)
 

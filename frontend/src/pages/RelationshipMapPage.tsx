@@ -3,12 +3,12 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ActionIcon, Button, Group, Modal, Stack, Text, Title, Tooltip } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { GearIcon, MapTrifoldIcon, TrashIcon } from '@phosphor-icons/react';
+import { DownloadSimpleIcon, GearIcon, MapTrifoldIcon, TrashIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
 import { useDeleteMap, useMap, useSaveBoard, useUpdateMap } from '../hooks/useMaps';
-import { useGeoMap, useSaveGeo } from '../hooks/useGeoMap';
+import { useExportMap, useGeoMap, useSaveGeo } from '../hooks/useGeoMap';
 import { useMembers } from '../hooks/useMembers';
 import { useTags } from '../hooks/useTags';
 import { useReadOnly } from '../hooks/useViewAs';
@@ -23,6 +23,7 @@ import { GeographicBoard } from '../components/maps/GeographicBoard';
 import { GeoMapDialog } from '../components/maps/GeoMapDialog';
 import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
 import type { Board, RelationshipMap, RelationshipMapDetail } from '../types/map';
+import { notifyError } from '../lib/notify';
 
 /** How long the board waits after the last change before saving it. */
 export const SAVE_DELAY_MS = 800;
@@ -177,6 +178,7 @@ function GeoMapEditor({
     useSaveGeo(roomId, map.id),
   );
   const [planeOpened, setPlaneOpened] = useState(false);
+  const exportMap = useExportMap(roomId, map.id, map.name);
 
   return (
     <MapChrome
@@ -185,20 +187,33 @@ function GeoMapEditor({
       access={access}
       autosave={autosave}
       actions={
-        map.canEdit &&
-        !access.readOnly && (
-          <Tooltip label={t('maps.geo.planeTitle')} withArrow>
+        <>
+          <Tooltip label={t('maps.geo.export')} withArrow>
             <ActionIcon
               variant="subtle"
               color="gray"
               size="lg"
-              aria-label={t('maps.geo.planeTitle')}
-              onClick={() => setPlaneOpened(true)}
+              aria-label={t('maps.geo.export')}
+              loading={exportMap.isPending}
+              onClick={() => exportMap.mutate(undefined, { onError: (error) => notifyError(error) })}
             >
-              <MapTrifoldIcon size={20} />
+              <DownloadSimpleIcon size={20} />
             </ActionIcon>
           </Tooltip>
-        )
+          {map.canEdit && !access.readOnly && (
+            <Tooltip label={t('maps.geo.planeTitle')} withArrow>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="lg"
+                aria-label={t('maps.geo.planeTitle')}
+                onClick={() => setPlaneOpened(true)}
+              >
+                <MapTrifoldIcon size={20} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </>
       }
     >
       <GeographicBoard

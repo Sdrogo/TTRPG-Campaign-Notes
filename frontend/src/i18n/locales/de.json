@@ -1039,7 +1039,8 @@
       "noBackground": "Kein Hintergrund",
       "uploadBackground": "Bild hochladen",
       "backgroundFromUrl": "Von einer URL",
-      "removeBackground": "Hintergrund entfernen"
+      "removeBackground": "Hintergrund entfernen",
+      "export": "Karte exportieren (JSON)"
     },
     "kind": {
       "label": "Art der Karte",
@@ -1048,6 +1049,22 @@
       "freeHelp": "Dokumentkarten, Gruppen und Pfeile, frei auf der Tafel.",
       "geographicHelp": "Gebiete und Orte auf einer Fläche mit Hintergrundbild, mit Dokumenten verknüpft.",
       "geographicBadge": "Geografisch"
+    },
+    "import": {
+      "button": "Karte importieren",
+      "title": "Eine geografische Karte importieren",
+      "help": "Wähle die JSON-Datei einer geografischen Karte, zum Beispiel eine, die Claude in einem anderen Chat erstellt hat. Du siehst ihren Inhalt, bevor die Karte erstellt wird.",
+      "chooseFile": "Datei wählen",
+      "noFile": "Keine Datei gewählt",
+      "notJson": "Die Datei ist kein gültiges JSON.",
+      "counts": "Gebiete: {{areas}} · Orte: {{pins}} · Verbindungen: {{links}}",
+      "plane": "Fläche {{width}} × {{height}}",
+      "matched": "mit einem Dokument verbunden: {{number}}",
+      "notFound": "Kein Dokument mit diesem Namen, bleiben einfache Beschriftungen:",
+      "ambiguous": "Mehrere Dokumente mit diesem Namen, bleiben einfache Beschriftungen:",
+      "repeated": "Dokument schon auf der Karte, bleiben einfache Beschriftungen:",
+      "backgroundLater": "Das Hintergrundbild lädst du danach über die Schaltfläche Karte der neuen Karte hoch.",
+      "submit": "Importieren"
     }
   }
 }

@@ -229,6 +229,16 @@
       "tooManyPins": "Eine Karte darf höchstens {max} Markierungen haben",
       "tooManyLinks": "Eine Karte darf höchstens {max} Verbindungen haben"
     },
+    "mapImport": {
+      "invalidFile": "Die Datei ist keine Karte, die die App lesen kann (prüfe das Feld \"{field}\")",
+      "unsupportedVersion": "Die Datei nutzt Version {version} des Kartenformats; die App liest Version 1",
+      "duplicateKey": "Der Schlüssel \"{item}\" kommt in der Datei zweimal vor",
+      "unknownKey": "Eine Verbindung nennt \"{item}\", aber das ist kein Schlüssel eines Gebiets oder einer Markierung der Datei",
+      "linkToItself": "Die Verbindung von \"{item}\" führt zu sich selbst zurück",
+      "invalidArea": "Das Gebiet \"{item}\" braucht 3 bis 60 Ecken innerhalb der Fläche um eine echte Fläche herum",
+      "pinOutsidePlane": "Die Markierung \"{item}\" liegt außerhalb der Fläche",
+      "nameRequired": "Der Ort \"{item}\" hat weder ein Dokument noch einen Namen"
+    },
     "mentionMap": {
       "notFound": "Dieses Dokument hat keine Erwähnungskarte",
       "alreadyExists": "Dieses Dokument hat bereits eine Erwähnungskarte",

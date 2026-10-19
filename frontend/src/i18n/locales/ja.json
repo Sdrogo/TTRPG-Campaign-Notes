@@ -1019,7 +1019,8 @@
       "noBackground": "背景なし",
       "uploadBackground": "画像をアップロード",
       "backgroundFromUrl": "URLから",
-      "removeBackground": "背景を削除"
+      "removeBackground": "背景を削除",
+      "export": "マップをエクスポート(JSON)"
     },
     "kind": {
       "label": "マップの種類",
@@ -1028,6 +1029,22 @@
       "freeHelp": "ドキュメントのカード、グループ、矢印をボード上に自由に配置。",
       "geographicHelp": "背景画像のある平面上のエリアと場所。ドキュメントに結び付けます。",
       "geographicBadge": "地理"
+    },
+    "import": {
+      "button": "マップをインポート",
+      "title": "地理マップをインポート",
+      "help": "地理マップのJSONファイルを選んでください。たとえば別のチャットでClaudeが作ったものです。マップを作る前に内容を確認できます。",
+      "chooseFile": "ファイルを選択",
+      "noFile": "ファイルが選ばれていません",
+      "notJson": "ファイルが正しいJSONではありません。",
+      "counts": "エリア: {{areas}} · 場所: {{pins}} · リンク: {{links}}",
+      "plane": "平面 {{width}} × {{height}}",
+      "matched": "ドキュメントに結びついたもの: {{number}}",
+      "notFound": "この名前のドキュメントがないため、ただのラベルになります:",
+      "ambiguous": "この名前のドキュメントが複数あるため、ただのラベルになります:",
+      "repeated": "ドキュメントがすでにマップ上にあるため、ただのラベルになります:",
+      "backgroundLater": "背景画像は、新しいマップの「マップ」ボタンからあとでアップロードします。",
+      "submit": "インポート"
     }
   }
 }

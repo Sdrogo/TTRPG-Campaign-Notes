@@ -229,6 +229,16 @@
       "tooManyPins": "Mapa może mieć najwyżej {max} pinezek",
       "tooManyLinks": "Mapa może mieć najwyżej {max} połączeń"
     },
+    "mapImport": {
+      "invalidFile": "Plik nie jest mapą, którą Aplikacja potrafi odczytać (sprawdź pole \"{field}\")",
+      "unsupportedVersion": "Plik używa wersji {version} formatu map; Aplikacja odczytuje wersję 1",
+      "duplicateKey": "Klucz \"{item}\" występuje w pliku dwa razy",
+      "unknownKey": "Połączenie wskazuje \"{item}\", które nie jest kluczem obszaru ani pinezki w pliku",
+      "linkToItself": "Połączenie od \"{item}\" wraca do samego siebie",
+      "invalidArea": "Obszar \"{item}\" potrzebuje od 3 do 60 wierzchołków w płaszczyźnie, wokół prawdziwej powierzchni",
+      "pinOutsidePlane": "Pinezka \"{item}\" leży poza płaszczyzną",
+      "nameRequired": "Miejsce \"{item}\" nie ma ani Dokumentu, ani nazwy"
+    },
     "mentionMap": {
       "notFound": "Ten dokument nie ma mapy wzmianek",
       "alreadyExists": "Ten dokument ma już mapę wzmianek",

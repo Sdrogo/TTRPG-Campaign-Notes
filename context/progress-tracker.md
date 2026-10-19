@@ -146,6 +146,15 @@ One line per unit; dates 2026, newest first. Spec files live in
   pins, areas, corners and a link's curve, and set the plane size and
   background in a "Mappa" dialog (upload or URL; image search not wired).
   Linking a geographic map to a Document now works (the 409 is gone).
+- **38_3, Geographic maps import and export** (no migration): the Maps list
+  has "Importa mappa": pick the JSON file (the ticket's format, e.g. made by
+  Claude in another chat), see the report (counts, names kept as plain
+  labels because no visible Document has them, several do, or the Document
+  is already on the map), adjust name, description and visibility, import.
+  A geographic map's header has "Esporta la mappa (JSON)", the same format
+  built from what the viewer sees. Routes `POST /maps/import/preview`,
+  `POST /maps/import`, `GET /maps/{map}/export`. The ticket's example file
+  imports in a backend test.
 
 ### 2026-10-16
 
@@ -477,10 +486,11 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-- **38, Geographic maps**: 38_1 (backend, PR #210) and 38_2 (viewer and
-  editor) built; next 38_3 (JSON import/export, the main way in for maps
-  made by Claude in another chat). `requirements.md` §1 and a new `FR-` need the
-  product owner's request.
+- **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
+  editor, PR #211) and 38_3 (JSON import/export) built; first real test is
+  the Shibuya map. `requirements.md` §1 and a new `FR-` need the product
+  owner's request. Open: image search for the background, dragging link
+  labels, a Tag picking an area's color.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still
