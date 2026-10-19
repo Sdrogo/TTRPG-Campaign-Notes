@@ -270,7 +270,7 @@ function DocumentPanel({
     <ReadAloudControls
       sourceId={`document:${document.id}`}
       name={document.name}
-      getText={() => documentSpeech(document, mentions ?? undefined)}
+      getText={() => documentSpeech(document, mentions)}
     />
   );
   const actions = (

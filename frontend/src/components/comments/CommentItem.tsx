@@ -374,7 +374,7 @@ function ReadCommentAction({ comment, authorName }: { comment: Comment; authorNa
   const { t } = useTranslation();
   const mentions = useDocumentMentions();
   const reading = useReadAloud(`comment:${comment.id}`, () =>
-    commentSpeech(t('speech.commentBy', { name: authorName }), comment.body, mentions ?? undefined),
+    commentSpeech(t('speech.commentBy', { name: authorName }), comment.body, mentions),
   );
   return reading.status === 'idle' ? (
     <CommentAction onClick={reading.play}>{t('speech.commentListen')}</CommentAction>

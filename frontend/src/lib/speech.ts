@@ -62,7 +62,7 @@ export interface SpeechMentions {
 export function mentionsToSpeech(
   text: string,
   options: TokenOptions = {},
-  known?: SpeechMentions,
+  known?: SpeechMentions | null,
 ): string {
   return splitMentionTokens(text, options)
     .map((segment) => {
@@ -85,7 +85,7 @@ function headed(
   title: string,
   text: string,
   options: TokenOptions = {},
-  known?: SpeechMentions,
+  known?: SpeechMentions | null,
 ): string {
   const heading = title.trim();
   const body = mentionsToSpeech(text, options, known).trim();
@@ -96,7 +96,7 @@ function headed(
 /** What reading one Note says: its title, then its text. */
 export function noteSpeech(
   note: Pick<Note, 'title' | 'description'>,
-  known?: SpeechMentions,
+  known?: SpeechMentions | null,
 ): string {
   return headed(note.title, note.description, {}, known);
 }
@@ -110,7 +110,7 @@ export function documentSpeech(
   document: Pick<Document, 'name' | 'description'> & {
     notes: Pick<Note, 'title' | 'description'>[];
   },
-  known?: SpeechMentions,
+  known?: SpeechMentions | null,
 ): string {
   return [
     headed(document.name, document.description, {}, known),
@@ -124,7 +124,7 @@ export function documentSpeech(
  * What reading one Comment says: `heading` (who wrote it, e.g. "Andrea ha
  * scritto"), then its text with member mentions read as names too.
  */
-export function commentSpeech(heading: string, body: string, known?: SpeechMentions): string {
+export function commentSpeech(heading: string, body: string, known?: SpeechMentions | null): string {
   return headed(heading, body, { users: true }, known);
 }
 

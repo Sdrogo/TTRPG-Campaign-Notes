@@ -91,7 +91,7 @@ export function NoteItem({
     <ReadAloudControls
       sourceId={`note:${note.id}`}
       name={note.title}
-      getText={() => noteSpeech(note, mentions ?? undefined)}
+      getText={() => noteSpeech(note, mentions)}
       size="sm"
     />
   );
