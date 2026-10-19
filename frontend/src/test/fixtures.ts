@@ -294,6 +294,7 @@ export function rawImportPreview(overrides: Record<string, unknown> = {}) {
     matched_tags: ['PNG'],
     tags_to_create: [],
     unavailable_tags: [],
+    maps: [],
     ...overrides,
   };
 }

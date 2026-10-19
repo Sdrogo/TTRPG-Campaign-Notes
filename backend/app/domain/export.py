@@ -41,8 +41,9 @@ from app.domain.visibility import (
 
 # Bumped when the JSON shape changes: 1 is the first release, with replies
 # (spec 19) and mention ids (spec 20) already part of it.
-# 2 since spec 28_0 added a Document's `subtitle`; the import reads 1 and 2.
-SCHEMA_VERSION = 2
+# 2 since spec 28_0 added a Document's `subtitle`; 3 since spec 40 added the
+# Room's `maps`. The import reads 1 to 3.
+SCHEMA_VERSION = 3
 
 # Shown for a member with no display name: emails are never exported
 # (NFR-03).
@@ -226,6 +227,9 @@ class Export:
     # The name of every Document the requester sees, a Tag filter's leftovers
     # included: the Characters Comments were written as are named from it.
     visible_documents: Mapping[uuid.UUID, str]
+    # The maps the requester sees, already as JSON (spec 40,
+    # `map_transfer.map_to_json`): only the Room's JSON export reads them.
+    maps: Sequence[dict[str, Any]] = ()
 
 
 @dataclass(frozen=True)
@@ -473,6 +477,7 @@ def restrict_to_document(export: Export, document_id: uuid.UUID) -> Export:
         tags=[t for t in export.tags if t.id in tag_ids],
         main_items=(),
         tag_filter=(),
+        maps=(),
         documents=[document],
         visible_documents={
             id_: name for id_, name in export.visible_documents.items() if id_ in character_ids
@@ -530,6 +535,7 @@ def render_json(export: Export) -> dict[str, Any]:
         "tags": [{"id": str(t.id), "name": t.name, "category": t.category} for t in export.tags],
         "main_items": [[str(tag_id) for tag_id in item] for item in export.main_items],
         "documents": [_json_document(document) for document in export.documents],
+        "maps": list(export.maps),
     }
 
 

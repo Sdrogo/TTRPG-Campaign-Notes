@@ -177,6 +177,7 @@
       "tooManyFiles": "一次最多可导入 {max} 个文件",
       "tooManyDocuments": "一次最多可导入 {max} 个文档",
       "tooManyImages": "一次最多可导入 {max} 张图片",
+      "tooManyMaps": "一次最多可导入 {max} 张地图",
       "nameRequired": "文件中有一个文档没有名称",
       "nameTooLong": "文档名称“{name}...”超过 {max} 个字符",
       "subtitleTooLong": "{name} 的副标题超过 {max} 个字符",

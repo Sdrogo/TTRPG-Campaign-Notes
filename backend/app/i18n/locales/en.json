@@ -177,6 +177,7 @@
       "tooManyFiles": "At most {max} files can be imported at once",
       "tooManyDocuments": "At most {max} Documents can be imported at once",
       "tooManyImages": "At most {max} images can be imported at once",
+      "tooManyMaps": "At most {max} maps can be imported at once",
       "nameRequired": "A Document in the file has no name",
       "nameTooLong": "The Document name \"{name}...\" is over {max} characters",
       "subtitleTooLong": "The subtitle of {name} is over {max} characters",

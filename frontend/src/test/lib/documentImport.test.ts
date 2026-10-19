@@ -22,6 +22,17 @@ describe('toImportPreview', () => {
         ],
         tags_to_create: [{ name: 'Fazione', category: 'Gruppo' }],
         unavailable_tags: ['Boss'],
+        maps: [
+          {
+            key: '0:map:0',
+            file_name: 'stanza.json',
+            name: 'Il Regno',
+            kind: 'geographic',
+            documents_count: 2,
+            skipped: null,
+            warnings: [{ code: 'documents_left_out', count: 1, names: [] }],
+          },
+        ],
       }) as RawImportPreview,
     );
 
@@ -39,6 +50,17 @@ describe('toImportPreview', () => {
     expect(preview.matchedTags).toEqual(['PNG']);
     expect(preview.tagsToCreate).toEqual([{ name: 'Fazione', category: 'Gruppo' }]);
     expect(preview.unavailableTags).toEqual(['Boss']);
+    expect(preview.maps).toEqual([
+      {
+        key: '0:map:0',
+        fileName: 'stanza.json',
+        name: 'Il Regno',
+        kind: 'geographic',
+        documentsCount: 2,
+        skipped: null,
+        warnings: [{ code: 'documents_left_out', count: 1 }],
+      },
+    ]);
   });
 });
 
@@ -70,6 +92,8 @@ describe('toImportJob', () => {
               reason: 'unreachable',
             },
           ],
+          maps: [{ id: 'map-1', name: 'Il Regno' }],
+          skipped_maps: [{ name: 'La Corte', reason: 'invalid' }],
         },
       }) as RawImportJob,
     );
@@ -85,6 +109,8 @@ describe('toImportJob', () => {
           reason: 'unreachable',
         },
       ],
+      maps: [{ id: 'map-1', name: 'Il Regno' }],
+      skippedMaps: [{ name: 'La Corte', reason: 'invalid' }],
     });
   });
 });
@@ -97,12 +123,13 @@ describe('the uploads', () => {
   });
 
   it('sends the same files and the choices as JSON for the import', () => {
-    const body = importFormData(files, ['0:0', '1:0'], ['1:0']);
+    const body = importFormData(files, ['0:0', '1:0'], ['1:0'], ['0:map:0']);
 
     expect(body.getAll('files')).toHaveLength(2);
     expect(JSON.parse(body.get('choices') as string)).toEqual({
       selected: ['0:0', '1:0'],
       replace: ['1:0'],
+      maps: ['0:map:0'],
     });
   });
 });

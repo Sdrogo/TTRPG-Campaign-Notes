@@ -41,7 +41,12 @@ describe('useStartImport', () => {
 
     let job;
     await act(async () => {
-      job = await result.current.mutateAsync({ files, selected: ['0:0'], replace: [] });
+      job = await result.current.mutateAsync({
+        files,
+        selected: ['0:0'],
+        replace: [],
+        maps: ['0:map:0'],
+      });
     });
 
     const [path, init] = fetchMock.mock.calls[0] as unknown as [string, Upload];
@@ -50,6 +55,7 @@ describe('useStartImport', () => {
     expect(JSON.parse(init.formData.get('choices') as string)).toEqual({
       selected: ['0:0'],
       replace: [],
+      maps: ['0:map:0'],
     });
     expect(job).toMatchObject({ id: 'import-1', status: 'queued' });
   });
@@ -75,7 +81,7 @@ describe('useImportJob', () => {
 
   it('reads the Room again when the job is done (spec 27)', async () => {
     fetchMock.mockResolvedValue(
-      rawImportJob({ status: 'done', result: { created: [], replaced: [], skipped: [] } }),
+      rawImportJob({ status: 'done', result: { created: [], replaced: [], skipped: [], maps: [], skipped_maps: [] } }),
     );
     const queryClient = createTestQueryClient();
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');

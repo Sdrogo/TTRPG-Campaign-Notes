@@ -24,6 +24,8 @@ const doneJob = (result: Record<string, unknown> = {}) =>
       created: [{ id: 'doc-new', name: 'Il Cancello' }],
       replaced: [],
       skipped: [],
+      maps: [],
+      skipped_maps: [],
       ...result,
     },
   });
@@ -107,6 +109,7 @@ describe('ImportDocumentsModal (spec 27)', () => {
     expect(JSON.parse(upload.formData.get('choices') as string)).toEqual({
       selected: ['0:0'],
       replace: [],
+      maps: [],
     });
   });
 
@@ -134,6 +137,7 @@ describe('ImportDocumentsModal (spec 27)', () => {
     expect(JSON.parse((call[1] as { formData: FormData }).formData.get('choices') as string)).toEqual({
       selected: ['0:1'],
       replace: [],
+      maps: [],
     });
   });
 
@@ -225,6 +229,7 @@ describe('ImportDocumentsModal (spec 27)', () => {
     expect(JSON.parse((call[1] as { formData: FormData }).formData.get('choices') as string)).toEqual({
       selected: ['0:0', '0:1', '0:2'],
       replace: ['0:0'],
+      maps: [],
     });
   });
 
@@ -301,6 +306,72 @@ describe('ImportDocumentsModal (spec 27)', () => {
       'href',
       '/rooms/room-1/documents/doc-old',
     );
+  });
+
+  it('lists the maps found, imports the ticked ones and links what was created (spec 40)', async () => {
+    const map = (overrides: Record<string, unknown> = {}) => ({
+      key: '0:map:0',
+      file_name: 'stanza.json',
+      name: 'Il Regno',
+      kind: 'geographic',
+      documents_count: 2,
+      skipped: null,
+      warnings: [],
+      ...overrides,
+    });
+    api.preview = rawImportPreview({
+      maps: [
+        map({
+          warnings: [
+            { code: 'documents_left_out', count: 1, names: [] },
+            { code: 'master_only_dropped', count: 2, names: [] },
+            { code: 'selective_to_private', count: 1, names: [] },
+          ],
+        }),
+        map({ key: '0:map:1', name: 'La Corte', kind: 'free', documents_count: 1 }),
+        map({ key: '0:map:2', name: '', skipped: 'limit' }),
+      ],
+    });
+    api.job = doneJob({
+      maps: [{ id: 'map-new', name: 'Il Regno' }],
+      skipped_maps: [{ name: '', reason: 'background' }],
+    });
+    const { user } = render();
+    await pickAndPreview(user);
+
+    expect(await screen.findByText('3 mappe trovate')).toBeInTheDocument();
+    expect(screen.getByText('Mappa geografica · 2 Documenti sulla mappa')).toBeInTheDocument();
+    expect(screen.getByText('Lavagna libera · 1 Documento sulla mappa')).toBeInTheDocument();
+    expect(
+      screen.getByText('1 carta o luogo di un Documento non importato viene tralasciato'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('2 elementi solo per il Master vengono tralasciati')).toBeInTheDocument();
+    expect(screen.getByText('La visibilità Selettiva diventa Privata')).toBeInTheDocument();
+    expect(screen.getByText('La stanza ha già il numero massimo di mappe')).toBeInTheDocument();
+    const full = screen.getByRole('checkbox', { name: 'Importa la mappa Mappa senza nome' });
+    expect(full).toBeDisabled();
+    expect(full).not.toBeChecked();
+
+    await user.click(screen.getByRole('checkbox', { name: 'Importa la mappa La Corte' }));
+    await user.click(screen.getByRole('button', { name: 'Importa' }));
+
+    expect(await screen.findByText('1 mappa creata')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Il Regno' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/maps/map-new',
+    );
+    expect(screen.getByText('1 mappa non importata del tutto')).toBeInTheDocument();
+    expect(
+      screen.getByText("Mappa senza nome: Non è stato possibile importare l'immagine di sfondo"),
+    ).toBeInTheDocument();
+    const call = fetchMock.mock.calls.find(
+      ([path, init]) => path === '/rooms/room-1/imports' && (init as { method?: string }).method === 'POST',
+    )!;
+    expect(JSON.parse((call[1] as { formData: FormData }).formData.get('choices') as string)).toEqual({
+      selected: ['0:0'],
+      replace: [],
+      maps: ['0:map:0'],
+    });
   });
 
   it('shows a failed import and starts over with "Importa altri file"', async () => {

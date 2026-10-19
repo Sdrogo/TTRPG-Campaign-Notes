@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "複製",
       "confirmTitle": "「{{name}}」を複製しますか?",
-      "confirmBody": "ドキュメント、ノート、タグ、画像がコピーされます。コメント、PDF添付、メンバーはコピーされません。コピーのMasterはあなただけになります。",
+      "confirmBody": "ドキュメント、ノート、タグ、マップ、画像がコピーされます。コメント、PDF添付、メンバーはコピーされません。コピーのMasterはあなただけになります。",
       "copyName": "{{name}}(コピー)",
       "created": "「{{name}}」を作成しました"
     },
@@ -747,7 +747,7 @@
     "action": "ドキュメントをインポート",
     "title": "ドキュメントをインポート",
     "intro": "JSONまたはMarkdownのファイルを1つ以上アップロードします。ルーム全体のエクスポートでも構いません。まずインポートされる内容をプレビューします。確認するまで何も書き込まれません。",
-    "jsonHint": "JSONは忠実な形式です。Markdownはできる限り読み取ります。コメント、PDF添付、Owner、プレイヤーとの関連付けはインポートされません。",
+    "jsonHint": "JSONは忠実な形式で、マップを運べる唯一の形式です。Markdownはできる限り読み取ります。コメント、PDF添付、Owner、プレイヤーとの関連付けはインポートされません。",
     "files": "インポートするファイル",
     "filesPlaceholder": "1つ以上の.jsonまたは.mdファイルを選ぶ",
     "preview": "プレビュー",
@@ -795,6 +795,28 @@
       "limit": "ドキュメントの画像数がすでに上限です",
       "storage": "ストレージを利用できません",
       "failed": "予期しないエラー"
+    },
+    "maps": {
+      "found_other": "マップ{{count}}件が見つかりました",
+      "select": "マップ{{name}}をインポート",
+      "unnamed": "名前のないマップ",
+      "kind": {
+        "free": "フリーボード",
+        "geographic": "地理マップ"
+      },
+      "documentsCount_other": "ドキュメント{{count}}件",
+      "warning": {
+        "documents_left_out_other": "インポートされないドキュメントのカードや場所{{count}}件は省かれます",
+        "master_only_dropped_other": "Master専用の要素{{count}}件は省かれます",
+        "selective_to_private": "選択公開は非公開になります"
+      },
+      "skipReason": {
+        "invalid": "インポートできません:読み取れないか、マップのルールに反しています",
+        "limit": "このルームのマップはすでに上限です",
+        "background": "背景画像をインポートできませんでした"
+      },
+      "created_other": "マップ{{count}}件を作成しました",
+      "skippedTitle_other": "完全にはインポートされなかったマップ{{count}}件"
     },
     "failed": "インポートに失敗しました。再試行する前に、ドキュメントの一覧を確認してください。",
     "another": "他のファイルをインポート"

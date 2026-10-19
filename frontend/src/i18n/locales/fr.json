@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "Dupliquer",
       "confirmTitle": "Dupliquer « {{name}} » ?",
-      "confirmBody": "Les Documents, Notes, Tags et images sont copiés. Pas les Commentaires, les pièces jointes PDF ni les membres. Tu seras le seul Master de la copie.",
+      "confirmBody": "Les Documents, Notes, Tags, cartes et images sont copiés. Pas les Commentaires, les pièces jointes PDF ni les membres. Tu seras le seul Master de la copie.",
       "copyName": "{{name}} (Copie)",
       "created": "« {{name}} » créée"
     },
@@ -759,7 +759,7 @@
     "action": "Importer des Documents",
     "title": "Importer des Documents",
     "intro": "Charge un ou plusieurs fichiers JSON ou Markdown, y compris l'export d'une Salle entière. Tu verras d'abord ce qui serait importé : rien n'est écrit tant que tu ne confirmes pas.",
-    "jsonHint": "Le JSON est le format fidèle ; le Markdown est lu au mieux. Les Commentaires, les pièces jointes PDF, les Owners et le lien avec le joueur ne sont pas importés.",
+    "jsonHint": "Le JSON est le format fidèle, et le seul qui apporte les cartes ; le Markdown est lu au mieux. Les Commentaires, les pièces jointes PDF, les Owners et le lien vers le joueur ne sont pas importés.",
     "files": "Fichiers à importer",
     "filesPlaceholder": "Choisis un ou plusieurs fichiers .json ou .md",
     "preview": "Aperçu",
@@ -817,6 +817,34 @@
       "limit": "le Document a déjà le maximum d'images",
       "storage": "stockage indisponible",
       "failed": "erreur inattendue"
+    },
+    "maps": {
+      "found_one": "{{count}} carte trouvée",
+      "found_other": "{{count}} cartes trouvées",
+      "select": "Importer la carte {{name}}",
+      "unnamed": "Carte sans nom",
+      "kind": {
+        "free": "Tableau libre",
+        "geographic": "Carte géographique"
+      },
+      "documentsCount_one": "{{count}} Document dessus",
+      "documentsCount_other": "{{count}} Documents dessus",
+      "warning": {
+        "documents_left_out_one": "{{count}} carte ou lieu d'un Document non importé est laissé de côté",
+        "documents_left_out_other": "{{count}} cartes ou lieux de Documents non importés sont laissés de côté",
+        "master_only_dropped_one": "{{count}} élément réservé au Master est laissé de côté",
+        "master_only_dropped_other": "{{count}} éléments réservés au Master sont laissés de côté",
+        "selective_to_private": "Sa visibilité Sélective devient Privée"
+      },
+      "skipReason": {
+        "invalid": "Impossible à importer : illisible ou contraire à une règle des cartes",
+        "limit": "La Salle a déjà le nombre maximum de cartes",
+        "background": "Son image de fond n'a pas pu être importée"
+      },
+      "created_one": "{{count}} carte créée",
+      "created_other": "{{count}} cartes créées",
+      "skippedTitle_one": "{{count}} carte pas entièrement importée",
+      "skippedTitle_other": "{{count}} cartes pas entièrement importées"
     },
     "failed": "L'import a échoué. Vérifie la liste des Documents avant de réessayer.",
     "another": "Importer d'autres fichiers"

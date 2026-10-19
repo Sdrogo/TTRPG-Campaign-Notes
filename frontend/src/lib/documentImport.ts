@@ -44,6 +44,29 @@ export interface ImportPreviewDocument {
   warnings: ImportWarning[];
 }
 
+/** Something the import leaves out of a map (spec 40), worded by the client. */
+export type ImportMapWarningCode =
+  | 'documents_left_out'
+  | 'master_only_dropped'
+  | 'selective_to_private';
+
+/** Why a map is not created (`invalid`, `limit`) or came without its background (`background`). */
+export type ImportMapSkipReason = 'invalid' | 'limit' | 'background';
+
+/** A map found in the uploaded files (spec 40). */
+export interface ImportPreviewMap {
+  /** Names it in the import request. */
+  key: string;
+  fileName: string;
+  name: string;
+  kind: 'free' | 'geographic';
+  /** How many Documents it places once imported. */
+  documentsCount: number;
+  /** Why it would not be created, or null. */
+  skipped: ImportMapSkipReason | null;
+  warnings: { code: ImportMapWarningCode; count: number }[];
+}
+
 /** A Tag the import would create. */
 export interface ImportTagToCreate {
   name: string;
@@ -56,6 +79,7 @@ export interface ImportPreview {
   matchedTags: string[];
   tagsToCreate: ImportTagToCreate[];
   unavailableTags: string[];
+  maps: ImportPreviewMap[];
 }
 
 /** Why an image was skipped (`SkippedResponse.reason`). */
@@ -82,11 +106,20 @@ export interface ImportedDocument {
   name: string;
 }
 
+/** A map the import did not create, or created without its background. */
+export interface ImportSkippedMap {
+  name: string;
+  reason: ImportMapSkipReason;
+}
+
 /** What a finished import did. */
 export interface ImportResult {
   created: ImportedDocument[];
   replaced: ImportedDocument[];
   skipped: ImportSkipped[];
+  /** The maps it created (spec 40). */
+  maps: ImportedDocument[];
+  skippedMaps: ImportSkippedMap[];
 }
 
 /** Where an import job is. */
@@ -126,6 +159,15 @@ export interface RawImportPreview {
   matched_tags: string[];
   tags_to_create: { name: string; category: string | null }[];
   unavailable_tags: string[];
+  maps: {
+    key: string;
+    file_name: string;
+    name: string;
+    kind: 'free' | 'geographic';
+    documents_count: number;
+    skipped: ImportMapSkipReason | null;
+    warnings: { code: ImportMapWarningCode; count: number; names: string[] }[];
+  }[];
 }
 
 /** A job as the API sends it (`ImportJobResponse`): converted in `toImportJob` only. */
@@ -143,6 +185,8 @@ export interface RawImportJob {
       url: string;
       reason: ImportSkipReason;
     }[];
+    maps: ImportedDocument[];
+    skipped_maps: ImportSkippedMap[];
   } | null;
 }
 
@@ -163,6 +207,15 @@ export function toImportPreview(raw: RawImportPreview): ImportPreview {
     matchedTags: raw.matched_tags,
     tagsToCreate: raw.tags_to_create,
     unavailableTags: raw.unavailable_tags,
+    maps: raw.maps.map((found) => ({
+      key: found.key,
+      fileName: found.file_name,
+      name: found.name,
+      kind: found.kind,
+      documentsCount: found.documents_count,
+      skipped: found.skipped,
+      warnings: found.warnings.map(({ code, count }) => ({ code, count })),
+    })),
   };
 }
 
@@ -185,6 +238,8 @@ export function toImportJob(raw: RawImportJob): ImportJob {
               url: item.url,
               reason: item.reason,
             })),
+            maps: raw.result.maps,
+            skippedMaps: raw.result.skipped_maps,
           },
   };
 }
@@ -198,12 +253,17 @@ export function previewFormData(files: File[]): FormData {
 
 /**
  * The upload of the import: the files again and the choices, as a JSON field —
- * the Documents to import (`selected`) and, among them, the ones to replace
- * (`replace`).
+ * the Documents to import (`selected`), among them the ones to replace
+ * (`replace`), and the maps to import (`maps`, spec 40).
  */
-export function importFormData(files: File[], selected: string[], replace: string[]): FormData {
+export function importFormData(
+  files: File[],
+  selected: string[],
+  replace: string[],
+  maps: string[],
+): FormData {
   const body = previewFormData(files);
-  body.append('choices', JSON.stringify({ selected, replace }));
+  body.append('choices', JSON.stringify({ selected, replace, maps }));
   return body;
 }
 

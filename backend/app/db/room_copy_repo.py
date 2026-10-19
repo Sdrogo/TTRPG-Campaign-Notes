@@ -10,6 +10,7 @@ from datetime import datetime
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.map_transfer_repo import insert_maps, load_room_maps
 from app.db.models import (
     DocumentImageRow,
     DocumentMentionRow,
@@ -37,8 +38,8 @@ from app.domain.versions import NoteState
 
 
 async def load_source(session: AsyncSession, room_id: uuid.UUID) -> RoomSource | None:
-    """The Room with its Tags, Tag combinations and Documents (Notes and
-    gallery images included, a Comment's images left out), unfiltered: the
+    """The Room with its Tags, Tag combinations, Documents (Notes and gallery
+    images included, a Comment's images left out) and maps (spec 40), unfiltered: the
     caller is the Master, who sees everything. None when the Room is gone."""
     room = await get_room(session, room_id)
     if room is None:  # pragma: no cover - only a concurrent Room deletion
@@ -107,6 +108,7 @@ async def load_source(session: AsyncSession, room_id: uuid.UUID) -> RoomSource |
                     storage_path=image.storage_path,
                     is_favorite=image.is_favorite,
                     created_at=image.created_at,
+                    id=image.id,
                 )
             )
     return RoomSource(
@@ -138,13 +140,15 @@ async def load_source(session: AsyncSession, room_id: uuid.UUID) -> RoomSource |
             )
             for row in document_rows
         ),
+        maps=await load_room_maps(session, room_id),
     )
 
 
 async def insert_copy(session: AsyncSession, plan: RoomCopyPlan, now: datetime) -> None:
     """Writes the copy: the Room with its Master, the Tags and combinations,
     then the Documents with their Owner, Tags, Notes, images, first revision
-    (Decision 9) and backlinks. `now` stamps the Notes and revisions."""
+    (Decision 9) and backlinks, then the maps (spec 40). `now` stamps the
+    Notes, revisions and links of maps to Documents."""
     owner = plan.membership.user_id
     await insert_new_room_rows(session, plan.room, plan.membership, plan.tags)
     session.add_all(
@@ -241,3 +245,4 @@ async def insert_copy(session: AsyncSession, plan: RoomCopyPlan, now: datetime) 
                 for b in plan.backlinks
             ],
         )
+    await insert_maps(session, plan.maps, owner, now)

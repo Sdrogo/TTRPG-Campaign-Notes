@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "复制",
       "confirmTitle": "复制“{{name}}”？",
-      "confirmBody": "文档、笔记、标签和图片会被复制。评论、PDF 附件和成员不会。你将成为副本的唯一 Master。",
+      "confirmBody": "文档、笔记、标签、地图和图片会被复制。评论、PDF 附件和成员不会。你将成为副本的唯一 Master。",
       "copyName": "{{name}}（副本）",
       "created": "已创建“{{name}}”"
     },
@@ -747,7 +747,7 @@
     "action": "导入文档",
     "title": "导入文档",
     "intro": "上传一个或多个 JSON 或 Markdown 文件，也可以是整个房间的导出文件。你会先看到将要导入的内容：在你确认之前不会写入任何数据。",
-    "jsonHint": "JSON 是保真格式；Markdown 会尽力读取。评论、PDF 附件、Owner 以及与玩家的关联不会被导入。",
+    "jsonHint": "JSON 是忠实的格式,也是唯一能带上地图的格式;Markdown 会尽量读取。评论、PDF 附件、Owner 以及与玩家的关联不会被导入。",
     "files": "要导入的文件",
     "filesPlaceholder": "选择一个或多个 .json 或 .md 文件",
     "preview": "预览",
@@ -795,6 +795,28 @@
       "limit": "文档的图片数量已达上限",
       "storage": "存储不可用",
       "failed": "意外错误"
+    },
+    "maps": {
+      "found_other": "找到 {{count}} 张地图",
+      "select": "导入地图 {{name}}",
+      "unnamed": "未命名的地图",
+      "kind": {
+        "free": "自由白板",
+        "geographic": "地理地图"
+      },
+      "documentsCount_other": "其上有 {{count}} 个文档",
+      "warning": {
+        "documents_left_out_other": "未导入文档的 {{count}} 张卡片或地点将被略去",
+        "master_only_dropped_other": "{{count}} 个仅 Master 可见的元素将被略去",
+        "selective_to_private": "选择性可见变为私密"
+      },
+      "skipReason": {
+        "invalid": "无法导入:无法读取或违反地图规则",
+        "limit": "该房间的地图数量已达上限",
+        "background": "无法导入其背景图片"
+      },
+      "created_other": "已创建 {{count}} 张地图",
+      "skippedTitle_other": "{{count}} 张地图未完整导入"
     },
     "failed": "导入失败。重试之前请先检查文档列表。",
     "another": "导入其他文件"

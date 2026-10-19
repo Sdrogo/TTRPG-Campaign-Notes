@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "Duplikuj",
       "confirmTitle": "Zduplikować „{{name}}”?",
-      "confirmBody": "Dokumenty, notatki, tagi i obrazy zostaną skopiowane. Komentarze, załączniki PDF i członkowie nie. Będziesz jedynym Masterem kopii.",
+      "confirmBody": "Dokumenty, notatki, tagi, mapy i obrazy zostaną skopiowane. Komentarze, załączniki PDF i członkowie nie. Będziesz jedynym Masterem kopii.",
       "copyName": "{{name}} (Kopia)",
       "created": "Utworzono „{{name}}”"
     },
@@ -777,7 +777,7 @@
     "action": "Importuj dokumenty",
     "title": "Importuj dokumenty",
     "intro": "Wgraj jeden lub więcej plików JSON albo Markdown, także eksport całego pokoju. Najpierw zobaczysz, co zostałoby zaimportowane: nic nie jest zapisywane, dopóki nie potwierdzisz.",
-    "jsonHint": "JSON to format wierny; Markdown jest odczytywany najlepiej, jak się da. Komentarze, załączniki PDF, Ownerzy i powiązanie z graczem nie są importowane.",
+    "jsonHint": "JSON to format wierny i jedyny, który przenosi mapy; Markdown jest odczytywany najlepiej, jak się da. Komentarze, załączniki PDF, Ownerzy i powiązanie z graczem nie są importowane.",
     "files": "Pliki do importu",
     "filesPlaceholder": "Wybierz jeden lub więcej plików .json lub .md",
     "preview": "Podgląd",
@@ -855,6 +855,46 @@
       "limit": "dokument ma już maksymalną liczbę obrazów",
       "storage": "magazyn niedostępny",
       "failed": "nieoczekiwany błąd"
+    },
+    "maps": {
+      "found_one": "Znaleziono {{count}} mapę",
+      "found_few": "Znaleziono {{count}} mapy",
+      "found_many": "Znaleziono {{count}} map",
+      "found_other": "Znaleziono {{count}} mapy",
+      "select": "Zaimportuj mapę {{name}}",
+      "unnamed": "Mapa bez nazwy",
+      "kind": {
+        "free": "Wolna tablica",
+        "geographic": "Mapa geograficzna"
+      },
+      "documentsCount_one": "{{count}} dokument na mapie",
+      "documentsCount_few": "{{count}} dokumenty na mapie",
+      "documentsCount_many": "{{count}} dokumentów na mapie",
+      "documentsCount_other": "{{count}} dokumentu na mapie",
+      "warning": {
+        "documents_left_out_one": "Pominięto {{count}} kartę lub miejsce dokumentu, który nie jest importowany",
+        "documents_left_out_few": "Pominięto {{count}} karty lub miejsca dokumentów, które nie są importowane",
+        "documents_left_out_many": "Pominięto {{count}} kart lub miejsc dokumentów, które nie są importowane",
+        "documents_left_out_other": "Pominięto {{count}} karty lub miejsca dokumentów, które nie są importowane",
+        "master_only_dropped_one": "Pominięto {{count}} element tylko dla Mastera",
+        "master_only_dropped_few": "Pominięto {{count}} elementy tylko dla Mastera",
+        "master_only_dropped_many": "Pominięto {{count}} elementów tylko dla Mastera",
+        "master_only_dropped_other": "Pominięto {{count}} elementu tylko dla Mastera",
+        "selective_to_private": "Widoczność wybiórcza staje się prywatna"
+      },
+      "skipReason": {
+        "invalid": "Nie można zaimportować: nie da się jej odczytać lub łamie zasadę map",
+        "limit": "Pokój ma już maksymalną liczbę map",
+        "background": "Nie udało się zaimportować obrazu tła"
+      },
+      "created_one": "Utworzono {{count}} mapę",
+      "created_few": "Utworzono {{count}} mapy",
+      "created_many": "Utworzono {{count}} map",
+      "created_other": "Utworzono {{count}} mapy",
+      "skippedTitle_one": "{{count}} mapa nie została w pełni zaimportowana",
+      "skippedTitle_few": "{{count}} mapy nie zostały w pełni zaimportowane",
+      "skippedTitle_many": "{{count}} map nie zostało w pełni zaimportowanych",
+      "skippedTitle_other": "{{count}} mapy nie zostały w pełni zaimportowane"
     },
     "failed": "Import się nie udał. Sprawdź listę dokumentów, zanim spróbujesz ponownie.",
     "another": "Importuj kolejne pliki"

@@ -133,6 +133,13 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-19
 
+- **40, Maps in Room duplication and export/import** (no migration): spec
+  `context/feature/40 - Maps in Room duplication and import-export.md`,
+  product owner's request. Duplicating a Room copies its maps; a Room's JSON
+  export (`schema_version` 3) carries the maps the requester sees, and the
+  import previews them with a tick, re-points them to the imported Documents
+  and leaves out what points elsewhere. Defaults proposed by Claude, all
+  confirmed by the product owner the same day.
 - **38b, Geographic map reading mode** (frontend only, no migration):
   product owner's feedback after the Shibuya test. A click on a Document's
   area or pin opens it in the split pane (no more card with "Apri il

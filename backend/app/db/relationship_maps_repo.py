@@ -173,6 +173,24 @@ async def link_map(
     )
 
 
+async def list_linked_documents(
+    session: AsyncSession, map_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[uuid.UUID]]:
+    """The Documents that show each of these maps on their page (spec 36
+    Decision 15), in one query. A map no Document shows maps to an empty
+    list."""
+    linked: dict[uuid.UUID, list[uuid.UUID]] = defaultdict(list)
+    if map_ids:
+        rows = await session.execute(
+            select(DocumentLinkedMapRow.map_id, DocumentLinkedMapRow.document_id)
+            .where(DocumentLinkedMapRow.map_id.in_(map_ids))
+            .order_by(DocumentLinkedMapRow.document_id)
+        )
+        for map_id, document_id in rows:
+            linked[map_id].append(document_id)
+    return linked
+
+
 async def unlink_map(session: AsyncSession, document_id: uuid.UUID) -> None:
     """Removes the Document's linked map, if any; the map stays."""
     await session.execute(
@@ -205,6 +223,19 @@ async def list_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> list[
             RelationshipMapRow.source_document_id.is_(None),
         )
         .order_by(RelationshipMapRow.updated_at.desc(), RelationshipMapRow.id)
+    )
+    return [_map_from_row(row) for row in result.scalars()]
+
+
+async def list_every_map_for_room(
+    session: AsyncSession, room_id: uuid.UUID
+) -> list[RelationshipMap]:
+    """Every map of the Room, mention maps (spec 36) included, in a fixed
+    order: a Room's duplication copies them all (spec 40)."""
+    result = await session.execute(
+        select(RelationshipMapRow)
+        .where(RelationshipMapRow.room_id == room_id)
+        .order_by(RelationshipMapRow.created_at, RelationshipMapRow.id)
     )
     return [_map_from_row(row) for row in result.scalars()]
 

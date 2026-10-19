@@ -29,11 +29,15 @@ export function usePreviewImport(roomId: string) {
   });
 }
 
-/** What to start the import with: the same files, the Documents chosen and which of them replace. */
+/**
+ * What to start the import with: the same files, the Documents chosen, which of
+ * them replace, and the maps chosen (spec 40).
+ */
 export interface StartImportRequest {
   files: File[];
   selected: string[];
   replace: string[];
+  maps: string[];
 }
 
 /**
@@ -43,11 +47,11 @@ export interface StartImportRequest {
  */
 export function useStartImport(roomId: string) {
   return useMutation({
-    mutationFn: async ({ files, selected, replace }: StartImportRequest) =>
+    mutationFn: async ({ files, selected, replace, maps }: StartImportRequest) =>
       toImportJob(
         await apiFetch<RawImportJob>(`/rooms/${roomId}/imports`, {
           method: 'POST',
-          formData: importFormData(files, selected, replace),
+          formData: importFormData(files, selected, replace, maps),
         }),
       ),
   });
@@ -56,8 +60,8 @@ export function useStartImport(roomId: string) {
 /**
  * The import job, read every couple of seconds while it is queued or running.
  * The request never carries `X-View-As`: the job is the importer's own. When it
- * ends the Room's Documents, Tags and the Documents it touched are read again,
- * since the import wrote all of them.
+ * ends the Room's Documents, Tags and maps are read again, since the import
+ * wrote all of them.
  */
 export function useImportJob(roomId: string, jobId: string | null) {
   const queryClient = useQueryClient();
@@ -76,6 +80,7 @@ export function useImportJob(roomId: string, jobId: string | null) {
     if (finished) {
       void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'documents'] });
       void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'tags'] });
+      void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'] });
     }
   }, [finished, queryClient, roomId]);
 
