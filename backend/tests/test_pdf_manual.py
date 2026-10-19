@@ -39,8 +39,10 @@ from app.pdf.render import (
     PageSize,
     _fetcher,
     page_pairs,
+    page_units,
     render_manual_html,
     render_manual_pdf,
+    side_by_side,
     url_allowed,
 )
 
@@ -143,10 +145,10 @@ def test_the_documents_of_a_chapter_sit_under_its_title_after_its_references() -
     mixed = [
         chapter
         for chapter in html.split('<section class="chapter"')[1:]
-        if 'class="references"' in chapter and 'class="document"' in chapter
+        if 'class="references"' in chapter and 'class="document' in chapter
     ]
     assert len(mixed) == 1
-    assert mixed[0].index('class="references"') < mixed[0].index('class="document"')
+    assert mixed[0].index('class="references"') < mixed[0].index('class="document')
     # No rule closes a chapter: the page break does.
     assert "chapter-end" not in html
 
@@ -219,22 +221,90 @@ def test_every_style_draws_its_header_rule_across_the_page(style: ManualStyle) -
 def test_every_style_sets_each_document_on_its_own_pages_in_two_balanced_columns() -> None:
     """Spec 23b: rulebook-like two columns, balanced on a Document's last page
     (WeasyPrint fills each page in turn and balances only the last one), and
-    every Document after the first of a chapter starts a new page (product
-    owner, 2026-10-06) unless the renderer lets it share one. Set once in
-    `base.css`; no style may go back to one column."""
+    every page unit after the first of a chapter starts a new page (product
+    owner, 2026-10-06) unless the renderer lets it share one. A Document that
+    fits in one column sits in a row of two columns instead (product owner,
+    2026-10-19), with the rule at its right. Set once in `base.css`; no style
+    may go back to one column."""
     styles = ASSETS_DIR / "styles"
     base = (styles / "base.css").read_text("utf-8")
     rule = re.search(r"^\.document\s*\{([^}]*)\}", base, re.M)
 
     assert rule is not None
     assert "columns: 2" in rule.group(1) and "column-fill: balance" in rule.group(1)
-    assert re.search(r"^\.document \+ \.document\s*\{\s*break-before: page;", base, re.M)
-    assert re.search(
-        r"^\.document \+ \.document\.shares-page\s*\{\s*break-before: auto;", base, re.M
-    )
+    assert re.search(r"^\.unit \+ \.unit\s*\{\s*break-before: page;", base, re.M)
+    assert re.search(r"^\.unit \+ \.unit\.shares-page\s*\{\s*break-before: auto;", base, re.M)
+    assert re.search(r"^\.document-row\.pair\s*\{[^}]*grid-template-columns:", base, re.M)
     for style in ManualStyle:
         css = (styles / f"{style.value}.css").read_text(encoding="utf-8")
         assert not re.search(r"column-count:\s*1|columns:\s*1|column-fill:\s*auto", css), style
+        # The rule beside a one-column Document has the color of the column rule.
+        column_rule = re.search(r"^\.document \{[^}]*column-rule: [^;]* (#[0-9a-f]+);", css, re.M)
+        row_rule = re.search(
+            r"^\.document-row > \.document:first-child \{[^}]*border-right-color: (#[0-9a-f]+);",
+            css,
+            re.M,
+        )
+        assert column_rule and row_rule, style
+        assert column_rule.group(1) == row_rule.group(1), style
+
+
+def test_a_document_that_fits_one_column_is_a_row_the_next_one_can_join() -> None:
+    """`single` sets a Document in one column, in a row of its own; one in
+    `beside` joins the row before it as a pair; the others stay units in two
+    columns. `shared` marks the unit, the row for a Document in one column."""
+    export = make_export(
+        main_items=[],
+        documents=[
+            document(CASTLE, "Castle", description=(text("Short."),)),
+            document(IRENA, "Irena", description=(text("Short too."),)),
+            document(uid(34), "Keep", description=(text("Long."),)),
+            document(uid(35), "Moat", description=(text("Short."),)),
+        ],
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+    single = {CASTLE, IRENA, uid(35)}
+
+    html = render_manual_html(
+        manual,
+        ManualStyle.GOTHIC,
+        PageSize.A4,
+        shared={uid(35)},
+        single=single,
+        beside=side_by_side(manual, single),
+    )
+
+    pair = (
+        r'<div class="unit document-row pair">\s*'
+        rf'<article class="document single-column" id="doc-{CASTLE}">.*?</article>\s*'
+        rf'<article class="document single-column" id="doc-{IRENA}">.*?</article>\s*</div>\s*'
+    )
+    keep = rf'<article class="document unit" id="doc-{uid(34)}">.*?</article>\s*'
+    moat = (
+        r'<div class="unit document-row shares-page">\s*'
+        rf'<article class="document single-column" id="doc-{uid(35)}">.*?</article>\s*</div>'
+    )
+    assert re.search(pair + keep + moat, html, re.S)
+
+
+def test_one_column_neighbours_pair_left_to_right_into_units() -> None:
+    """Two neighbours of a chapter that each fit one column share a row, left to
+    right, at most two to a row; a Document in two columns ends the run."""
+    ids = [uid(40 + n) for n in range(6)]
+    export = make_export(
+        main_items=[],
+        documents=[document(doc_id, f"Doc {n}") for n, doc_id in enumerate(ids)],
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+    a, b, c, _d, e, f = ids  # one chapter, in name order
+
+    beside = side_by_side(manual, {a, b, c, e, f})
+
+    assert beside == {b, f}
+    anchors = [f"doc-{doc_id}" for doc_id in ids]
+    assert page_units(manual, beside) == [
+        [(anchors[0], anchors[1]), (anchors[2],), (anchors[3],), (anchors[4], anchors[5])]
+    ]
 
 
 def test_the_language_follows_the_requester_with_english_as_the_fallback() -> None:
@@ -458,15 +528,16 @@ def _line_starts(reader: PdfReader, page: int) -> list[float]:
 
 
 @pytest.mark.parametrize("style", list(ManualStyle))
-@pytest.mark.parametrize("sentences", [60, 14])
-def test_a_chapter_flows_in_two_columns_balanced_on_its_last_page(
-    style: ManualStyle, sentences: int
+@pytest.mark.parametrize(("sentences", "columns"), [(60, 2), (14, 1)])
+def test_a_document_flows_in_two_balanced_columns_unless_it_fits_one(
+    style: ManualStyle, sentences: int, columns: int
 ) -> None:
-    """Spec 23b: every style sets a chapter's Documents in two columns. The text
-    of a description starts at the left margin and also at the second column,
-    well to the right of it: with 60 sentences the chapter spans pages, with 14
-    it would fit one column, and the second column is used all the same because
-    the last page is balanced."""
+    """Spec 23b: a long Document runs in two columns, balanced on its last
+    page: its text starts at the left margin and also well to the right of it.
+    One that fits whole in one column stays in the left one (product owner,
+    2026-10-19). Gothic and Parchment open it with a drop cap, which the
+    measuring layout (a Document alone in one column, breaking across pages)
+    must survive."""
     _weasyprint()
     sentence = "Marker the keep stands above the mist and the road bends toward it. "
     export = make_export(
@@ -482,24 +553,81 @@ def test_a_chapter_flows_in_two_columns_balanced_on_its_last_page(
     left = min(starts)
     width = float(body.mediabox.width)
     to_the_right = [x for x in starts if x > left + width * 0.25]
-    assert to_the_right, (style, sentences, starts)
+    assert bool(to_the_right) == (columns == 2), (style, sentences, starts)
+
+
+@pytest.mark.parametrize("style", list(ManualStyle))
+def test_two_documents_that_each_fit_one_column_sit_side_by_side(style: ManualStyle) -> None:
+    """Each fits one column, so they share a page, one per column: the first
+    in the left half, the second in the right half."""
+    _weasyprint()
+    sentence = "the keep stands above the mist and the road bends toward it. "
+    export = make_export(
+        main_items=[],
+        documents=[
+            document(CASTLE, "Castle", description=(text("Leftward " + sentence * 8),)),
+            document(IRENA, "Irena", description=(text("Rightward " + sentence * 10),)),
+        ],
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+
+    reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
+
+    # Cover, contents, both Documents, glossary.
+    assert len(reader.pages) == 4
+    width = float(reader.pages[2].mediabox.width)
+    found: list[tuple[str, float]] = []
+
+    def visit(piece: str, _cm: Any, tm: Any, _font: Any, _size: Any) -> None:
+        if len(piece.strip()) >= 15:
+            found.append((piece, float(tm[4])))
+
+    reader.pages[2].extract_text(visitor_text=visit)
+    first = [x for line, x in found if "eftward" in line]
+    second = [x for line, x in found if "ightward" in line]
+    assert first and second, (style, found)
+    assert first[0] < width / 2 < second[0], (style, found)
+
+
+def test_a_first_row_the_chapter_title_pushes_down_is_split() -> None:
+    """Irena fits one column on a page of her own, but not under the chapter
+    title (the count was found by sweeping): next to Castle the row would
+    leave the title alone on its page, so each takes a row of her own."""
+    _weasyprint()
+    sentence = "the keep stands above the mist and the road bends toward it. "
+    export = make_export(
+        main_items=[],
+        documents=[
+            document(CASTLE, "Castle", description=(text("Leftward " + sentence),)),
+            document(IRENA, "Irena", description=(text("Rightward " + sentence * 38),)),
+        ],
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+
+    reader = PdfReader(io.BytesIO(render_manual_pdf(manual, ManualStyle.PRINT, PageSize.A4)))
+
+    castle, irena = _page_with(reader, "Leftward"), _page_with(reader, "Rightward")
+    assert (castle, irena) == (3, 4)
+    width = float(reader.pages[3].mediabox.width)
+    assert max(_line_starts(reader, 3)) < width / 2
 
 
 def test_neighbours_that_each_took_one_page_pair_up_left_to_right() -> None:
-    order = [("chapter-1", ["a", "b", "c", "d", "e"]), ("chapter-2", ["f"]), ("glossary", [])]
+    units: list[list[tuple[str, ...]]] = [[("a",), ("b",), ("c",), ("d",), ("e1", "e2")], [("f",)]]
 
     # d takes two pages, so c and e have no one-page neighbour in their chapter,
     # and e and f are in different chapters.
-    pages = {"chapter-1": 2, "a": 2, "b": 3, "c": 4, "d": 5, "e": 7, "chapter-2": 8, "f": 8}
-    assert page_pairs(order, {**pages, "glossary": 9}) == [("a", "b")]
+    spans = {"a": (2, 2), "b": (3, 3), "c": (4, 4), "d": (5, 6), "e1": (7, 7), "e2": (7, 7)}
+    assert page_pairs(units, {**spans, "f": (8, 8)}) == [(("a",), ("b",))]
 
-    # Every Document on one page: pairs left to right, e is left alone.
-    pages = {"chapter-1": 2, "a": 2, "b": 3, "c": 4, "d": 5, "e": 6, "chapter-2": 7, "f": 7}
-    assert page_pairs(order, {**pages, "glossary": 8}) == [("a", "b"), ("c", "d")]
+    # Every unit on one page: pairs left to right, the row of e is left alone.
+    spans = {**spans, "d": (5, 5), "e1": (6, 6), "e2": (6, 6)}
+    assert page_pairs(units, spans) == [(("a",), ("b",)), (("c",), ("d",))]
 
-    # Without the glossary on a page, where the last Document ends is unknown.
-    assert page_pairs(order, pages) == [("a", "b"), ("c", "d")]
-    assert page_pairs([("chapter-1", ["a", "b"]), ("glossary", [])], pages) == []
+    # A row whose second Document goes on to the next page took two.
+    assert page_pairs([[("d",), ("e1", "e2")]], {**spans, "e2": (6, 7)}) == []
+    # An anchor that isn't laid out ends nothing.
+    assert page_pairs([[("a",), ("x",)]], spans) == []
 
 
 @pytest.mark.parametrize(

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ActionIcon,
@@ -13,7 +13,7 @@ import {
   Text,
   Tooltip,
 } from '@mantine/core';
-import { ArrowsInIcon, MinusIcon, PlusIcon } from '@phosphor-icons/react';
+import { ArrowsInIcon, CheckIcon, MinusIcon, PencilSimpleIcon, PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useBackState } from '../../lib/backNav';
 import { canClose, clickDraft, startDraft, undoCorner, type AreaDraft } from '../../lib/areaDraw';
@@ -35,6 +35,7 @@ import {
   moveCorners,
   newArea,
   newPin,
+  placeAreaLabels,
   placeName,
   placeSubtitle,
   placedDocumentIds,
@@ -44,9 +45,11 @@ import {
   removeCorner,
   removeItem,
   removeLink,
+  textWidth,
   toPlane,
   updateLink,
   zoomAt,
+  type LabelBox,
   type Curve,
   type GeoItemRef,
   type View,
@@ -96,7 +99,11 @@ export interface GeographicBoardProps {
   planeWidth: number;
   planeHeight: number;
   backgroundUrl: string | null;
-  /** False on a phone, for a member who can't change the map, and in "View as". */
+  /**
+   * Whether the viewer may change the map here: false on a phone, for a
+   * member who can't change it, and in "View as". The board still opens for
+   * reading; "Modifica la mappa" switches it to editing (spec 38b).
+   */
   editable: boolean;
   isMaster: boolean;
   /** The Room's Documents the viewer sees, for binding an area or pin. */
@@ -104,7 +111,7 @@ export interface GeographicBoardProps {
   /** The Room's Tags, for the filter (Decision 8). */
   tags: Tag[];
   onChange: (board: GeoBoard) => void;
-  /** Given while the split pane is open (spec 37): a click on a Document's area or pin shows it there. */
+  /** Given where the split pane fits (spec 38b): a click on a Document's area or pin shows it there. */
   onSelectDocument?: (documentId: string) => void;
   /** The board's height; the full page's by default. */
   height?: string | number;
@@ -133,11 +140,13 @@ function labelPlacement(side: LabelSide): {
 /**
  * A geographic map (spec 38): the plane with its background, the areas, the
  * links and the pins, in one SVG the viewer pans (drag) and zooms (wheel or
- * buttons). A click on an area or pin shows its card (its Document in the
- * split pane when open); the Tag filter dims what lacks the Tag. While
- * editing: draw an area corner by corner, place a pin, link two items, drag
- * pins, areas, corners and a link's curve, Delete to remove what is
- * selected. Every change goes out through `onChange` as the whole map.
+ * buttons). It opens for reading (spec 38b): a click on a Document's area or
+ * pin shows the Document in the split pane, on any other its card; the Tag
+ * filter dims what lacks the Tag. Area names move off pins and labels.
+ * After "Modifica la mappa": draw an area corner by corner, place a pin, link
+ * two items, drag pins, areas, corners and a link's curve, edit a place from
+ * its card, Delete to remove what is selected. Every change goes out through
+ * `onChange` as the whole map.
  */
 export function GeographicBoard({
   roomId,
@@ -162,6 +171,9 @@ export function GeographicBoard({
   // Null while the whole plane is shown, as on opening; set once panned or zoomed.
   const [moved, setMoved] = useState<View | null>(null);
   const view = moved ?? fitView(planeWidth, planeHeight, box.width, box.height);
+  // The map opens for reading; editing is asked for (spec 38b).
+  const [editMode, setEditMode] = useState(false);
+  const canEdit = editable && editMode;
   const [tool, setTool] = useState<Tool>('select');
   const [draft, setDraft] = useState<AreaDraft | null>(null);
   const [linkStart, setLinkStart] = useState<GeoItemRef | null>(null);
@@ -215,7 +227,7 @@ export function GeographicBoard({
   };
   const planePoint = (event: React.PointerEvent | React.MouseEvent) => toPlane(view, local(event));
 
-  const shaping = editable && tool === 'select';
+  const shaping = canEdit && tool === 'select';
   const taken = placedDocumentIds(board);
 
   // --- Clicks ---------------------------------------------------------------
@@ -346,10 +358,15 @@ export function GeographicBoard({
     setSelected(null);
   };
 
+  const stopEditing = () => {
+    chooseTool('select');
+    setEditMode(false);
+  };
+
   const handleKey = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
       chooseTool('select');
-    } else if ((event.key === 'Delete' || event.key === 'Backspace') && editable && selected) {
+    } else if ((event.key === 'Delete' || event.key === 'Backspace') && canEdit && selected) {
       onChange(selected.kind === 'link' ? removeLink(board, selected.id) : removeItem(board, selected));
       setSelected(null);
     }
@@ -367,42 +384,34 @@ export function GeographicBoard({
     return geometry ? [{ link, ...geometry }] : [];
   });
 
-  const labelAt = (from: Point, to: Point, curve: Curve, position: number, offset: number | null) => {
-    const base = pointOnCurve(curve, position);
-    const side = pointBeside(from, to, position, offset ?? 0);
-    const straight = pointBeside(from, to, position, 0);
-    return { x: base.x + side.x - straight.x, y: base.y + side.y - straight.y };
-  };
-
-  const linkLabels = (link: GeoLink, from: Point, to: Point, curve: Curve) => {
-    const labels: { key: string; text: string; at: Point }[] = [];
-    if (link.direction === 'both') {
-      if (link.label) labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.75, link.labelOffset) });
-      if (link.reverseLabel) {
-        labels.push({
-          key: 'reverse',
-          text: link.reverseLabel,
-          at: labelAt(from, to, curve, link.reverseLabelPosition ?? 0.25, link.reverseLabelOffset),
-        });
-      }
-    } else if (link.label) {
-      labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.5, link.labelOffset) });
-    }
-    return labels;
-  };
-
   const openLink = (link: GeoLink) => {
-    if (!editable) return;
+    if (!canEdit) return;
     setSelected({ kind: 'link', id: link.id });
     setEditing({ kind: 'link', id: link.id });
   };
 
   const selectedItem = selected && selected.kind !== 'link' ? findItem(board, selected) : undefined;
+  // A Document's place shows in the split pane; its card is for editing it,
+  // or where there is no pane (spec 38b).
+  const showCard = canEdit || !selectedItem?.documentId || !onSelectDocument;
   const selectedArea = selected?.kind === 'area' && shaping ? shown.areas.find((area) => area.id === selected.id) : undefined;
   const selectedLink = selected?.kind === 'link' && shaping ? linkShapes.find((shape) => shape.link.id === selected.id) : undefined;
   const editedLink = editing?.kind === 'link' ? board.links.find((link) => link.id === editing.id) : undefined;
   const nameOfEnd = (end: GeoLink['from']) => placeName(findItem(board, endRef(end))!);
   const close = () => setEditing(null);
+
+  // Area names are placed on the saved map, at this zoom (spec 38b): while
+  // a drag shows a change, an area's name moves with it and the others stay.
+  // The zoom is deferred, so a full map's placement never holds up a wheel step.
+  const labelZoom = useDeferredValue(s);
+  const placedLabels = useMemo(() => areaLabelPoints(board, labelZoom), [board, labelZoom]);
+  const labelPoint = (area: GeoArea) => {
+    const placed = placedLabels.get(area.id)!;
+    const saved = board.areas.find((candidate) => candidate.id === area.id)!;
+    if (saved === area) return placed;
+    const [now, before] = [areaCenter(area.points), areaCenter(saved.points)];
+    return { x: placed.x + now.x - before.x, y: placed.y + now.y - before.y };
+  };
 
   return (
     <Box
@@ -485,7 +494,7 @@ export function GeographicBoard({
                   strokeWidth={14 * s}
                   role="button"
                   aria-label={t('maps.geo.linkBetween', { from: nameOfEnd(link.from), to: nameOfEnd(link.to) })}
-                  style={{ cursor: editable ? 'pointer' : 'default' }}
+                  style={{ cursor: canEdit ? 'pointer' : 'default' }}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => openLink(link)}
                 />
@@ -514,7 +523,7 @@ export function GeographicBoard({
                     dominantBaseline="central"
                     fill={color}
                     {...halo}
-                    style={{ cursor: editable ? 'pointer' : 'default', userSelect: 'none' }}
+                    style={{ cursor: canEdit ? 'pointer' : 'default', userSelect: 'none' }}
                     onPointerDown={(event) => event.stopPropagation()}
                     onClick={() => openLink(link)}
                   >
@@ -525,7 +534,7 @@ export function GeographicBoard({
             );
           })}
           {shown.areas.map((area) => {
-            const center = areaCenter(area.points);
+            const center = labelPoint(area);
             const subtitle = placeSubtitle(area);
             return (
               <g key={area.id} opacity={itemOpacity(area)} style={{ pointerEvents: 'none', userSelect: 'none' }}>
@@ -679,19 +688,37 @@ export function GeographicBoard({
 
       <Group gap="xs" pos="absolute" top={8} left={8} right={8} justify="space-between" align="flex-start" style={{ pointerEvents: 'none' }}>
         <Group gap="xs" style={{ pointerEvents: 'auto' }}>
-          {editable && (
-            <SegmentedControl
+          {editable && !editMode && (
+            <Button
               size="xs"
-              value={tool}
-              onChange={(value) => chooseTool(value as Tool)}
-              aria-label={t('maps.geo.tool')}
-              data={[
-                { value: 'select', label: t('maps.geo.tools.select') },
-                { value: 'area', label: t('maps.geo.tools.area') },
-                { value: 'pin', label: t('maps.geo.tools.pin') },
-                { value: 'link', label: t('maps.geo.tools.link') },
-              ]}
-            />
+              variant="default"
+              leftSection={<PencilSimpleIcon size={14} />}
+              onClick={() => {
+                setEditMode(true);
+                setSelected(null);
+              }}
+            >
+              {t('maps.geo.editMap')}
+            </Button>
+          )}
+          {canEdit && (
+            <>
+              <SegmentedControl
+                size="xs"
+                value={tool}
+                onChange={(value) => chooseTool(value as Tool)}
+                aria-label={t('maps.geo.tool')}
+                data={[
+                  { value: 'select', label: t('maps.geo.tools.select') },
+                  { value: 'area', label: t('maps.geo.tools.area') },
+                  { value: 'pin', label: t('maps.geo.tools.pin') },
+                  { value: 'link', label: t('maps.geo.tools.link') },
+                ]}
+              />
+              <Button size="xs" variant="light" leftSection={<CheckIcon size={14} />} onClick={stopEditing}>
+                {t('maps.geo.doneEditing')}
+              </Button>
+            </>
           )}
           {tags.length > 0 && (
             <Select
@@ -708,7 +735,7 @@ export function GeographicBoard({
             />
           )}
         </Group>
-        {selectedItem && (
+        {showCard && selectedItem && (
           <Paper withBorder radius="md" p="sm" w={260} shadow="md" style={{ pointerEvents: 'auto' }}>
             <Stack gap={4}>
               <Group justify="space-between" wrap="nowrap" align="flex-start">
@@ -728,7 +755,7 @@ export function GeographicBoard({
                 </Text>
               )}
               <Group gap="xs" mt={4}>
-                {selectedItem.documentId && (
+                {selectedItem.documentId && !onSelectDocument && (
                   <Button
                     size="xs"
                     variant="light"
@@ -739,7 +766,7 @@ export function GeographicBoard({
                     {t('maps.geo.openDocument')}
                   </Button>
                 )}
-                {editable && (
+                {canEdit && (
                   <Button
                     size="xs"
                     variant="default"
@@ -893,6 +920,80 @@ export function GeographicBoard({
         />
       )}
     </Box>
+  );
+}
+
+function labelAt(from: Point, to: Point, curve: Curve, position: number, offset: number | null): Point {
+  const base = pointOnCurve(curve, position);
+  const side = pointBeside(from, to, position, offset ?? 0);
+  const straight = pointBeside(from, to, position, 0);
+  return { x: base.x + side.x - straight.x, y: base.y + side.y - straight.y };
+}
+
+/** A link's labels and where they are written. */
+function linkLabels(link: GeoLink, from: Point, to: Point, curve: Curve) {
+  const labels: { key: string; text: string; at: Point }[] = [];
+  if (link.direction === 'both') {
+    if (link.label) labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.75, link.labelOffset) });
+    if (link.reverseLabel) {
+      labels.push({
+        key: 'reverse',
+        text: link.reverseLabel,
+        at: labelAt(from, to, curve, link.reverseLabelPosition ?? 0.25, link.reverseLabelOffset),
+      });
+    }
+  } else if (link.label) {
+    labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.5, link.labelOffset) });
+  }
+  return labels;
+}
+
+/**
+ * Where each area's name goes on `board` when one plane unit is `s` screen
+ * pixels (spec 38b): clear of the pins, their names and the links' labels,
+ * which keep their screen size.
+ */
+function areaLabelPoints(board: GeoBoard, s: number): Map<string, Point> {
+  const lineHeight = LABEL_FONT * 1.2 * s;
+  const obstacles: LabelBox[] = [
+    ...board.pins.flatMap((pin) => {
+      const r = (PIN_RADIUS + 2) * s;
+      const label = labelPlacement(pin.labelSide);
+      const width = textWidth(placeName(pin), LABEL_FONT * s);
+      const x = pin.x + label.dx * s;
+      const y = pin.y + label.dy * s;
+      return [
+        { x: pin.x - r, y: pin.y - r, width: 2 * r, height: 2 * r },
+        {
+          x: label.anchor === 'start' ? x : label.anchor === 'end' ? x - width : x - width / 2,
+          y: label.baseline === 'central' ? y - lineHeight / 2 : label.baseline === 'auto' ? y - lineHeight : y,
+          width,
+          height: lineHeight,
+        },
+      ];
+    }),
+    ...board.links.flatMap((link) => {
+      const geometry = linkGeometry(board, link, (PIN_RADIUS + 3) * s);
+      if (!geometry) return [];
+      return linkLabels(link, geometry.from, geometry.to, geometry.curve).map((label) => {
+        const width = textWidth(label.text, LABEL_FONT * s);
+        return { x: label.at.x - width / 2, y: label.at.y - lineHeight / 2, width, height: lineHeight };
+      });
+    }),
+  ];
+  return placeAreaLabels(
+    board.areas.map((area) => {
+      const subtitle = placeSubtitle(area);
+      const half = AREA_FONT * 0.65 * s;
+      return {
+        id: area.id,
+        points: area.points,
+        width: Math.max(textWidth(placeName(area), AREA_FONT * 1.05 * s), subtitle ? textWidth(subtitle, LABEL_FONT * s) : 0),
+        above: half,
+        below: subtitle ? AREA_FONT * 1.2 * s + LABEL_FONT * 0.65 * s : half,
+      };
+    }),
+    obstacles,
   );
 }
 

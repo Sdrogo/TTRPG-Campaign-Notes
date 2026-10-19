@@ -33,6 +33,7 @@ h1, h2, h3 { font-family: "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Ser
 .chapter-title { font-size: 26pt; margin: 0 0 6mm; border-bottom: 1.5pt solid #000; }
 /* The Documents in two columns (base.css), a black rule between them. */
 .document { column-rule: 0.5pt solid #000; }
+.document-row > .document:first-child { border-right-color: #000; }
 .document-title { font-size: 16pt; margin: 0 0 4mm; }
 .document-image img { max-height: 55mm; border: 0.5pt solid #000; }
 

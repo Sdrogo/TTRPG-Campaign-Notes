@@ -46,6 +46,7 @@ h1, h2, h3 { font-family: "Crimson Text", "PT Serif", "Noto Serif JP", "Noto Ser
 /* Chapters: a double ochre rule under the title; each Document in two columns
    (base.css) with an ochre rule between them */
 .document { column-rule: 0.5pt solid #c9a35a; }
+.document-row > .document:first-child { border-right-color: #c9a35a; }
 .chapter-title { font-size: 32pt; line-height: 1.1; margin: 0 0 6mm; padding-bottom: 2mm; border-bottom: 3pt double #c9a35a; }
 .document-title { font-size: 21pt; margin: 0 0 3mm; padding-bottom: 1mm; border-bottom: 0.75pt solid #c9a35a; }
 /* The subtitle (spec 28_0) is the stat-block header: bold brown italic, a pale band. */

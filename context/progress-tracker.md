@@ -37,6 +37,14 @@ detail:
   the first ring), no cross relations; the first ring is packed in
   concentric rings one card apart instead of four fixed 90° sectors. No
   migration; saved card positions keep winning.
+- **Room PDF: a Document that fits one column stays in one** (2026-10-19,
+  product owner with before/after pages, no migration, every style): instead
+  of balancing a short Document across both columns (name and image left,
+  text right), it is set whole in the left column with the column rule at
+  its right; the next Document that also fits takes the right column, else
+  it stays empty. Longer Documents keep the two balanced columns. Costs one
+  more layout (a measuring one, every Document alone in one column).
+  Details in `architecture.md` → Typesetting.
 - **Spec 35, Parchment PDF style** (2026-10-13, no migration): a fourth
   Room PDF style, `parchment`, modeled on a fantasy monster compendium the
   product owner shared: parchment-colored pages, brown small-capital
@@ -125,6 +133,13 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-19
 
+- **38b, Geographic map reading mode** (frontend only, no migration):
+  product owner's feedback after the Shibuya test. A click on a Document's
+  area or pin opens it in the split pane (no more card with "Apri il
+  Documento"); the map opens for reading and its managers press "Modifica
+  la mappa" to get the tools ("Fine modifiche" to leave); area names move
+  off pins, pin names and link labels (`placeAreaLabels` in
+  `lib/geoMaps.ts`). Notes in the spec 38 ticket.
 - **39, Generate mentions** (no migration): spec `context/feature/39 -
   Generate mentions.md`, product owner's request. A "Genera menzioni"
   button on a Document (Owners, Master) and on the Room (every member,
@@ -509,8 +524,9 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 - **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
   editor, PR #211) and 38_3 (JSON import/export) built; first real test is
   the Shibuya map. `requirements.md` §1 and a new `FR-` need the product
-  owner's request. Open: image search for the background, dragging link
-  labels, a Tag picking an area's color.
+  owner's request. 38b (reading mode, area names off pins) built. Open:
+  image search for the background, dragging link labels, dragging area
+  names by hand, a Tag picking an area's color.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still

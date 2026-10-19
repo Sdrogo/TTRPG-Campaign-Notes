@@ -61,6 +61,13 @@ function render(props: HarnessProps = {}) {
   return { user: userEvent.setup(), ...result };
 }
 
+/** The board after "Modifica la mappa": it opens for reading (spec 38b). */
+async function renderEditing(props: HarnessProps = {}) {
+  const result = render(props);
+  await result.user.click(screen.getByRole('button', { name: 'Modifica la mappa' }));
+  return result;
+}
+
 function board() {
   return screen.getByRole('application', { name: 'Mappa geografica' });
 }
@@ -281,6 +288,48 @@ describe('GeographicBoard: looking at a place', () => {
     expect(onSelectDocument).toHaveBeenCalledTimes(1);
   });
 
+  it('opens a Document place beside the map, and keeps the card for the others (spec 38b)', async () => {
+    const onSelectDocument = vi.fn();
+    const { user } = render({ onSelectDocument });
+    tap(screen.getByRole('button', { name: 'Incrocio' }), 300, 150);
+    expect(onSelectDocument).toHaveBeenCalledWith('doc-1');
+    expect(screen.queryByText('Il cuore', { selector: 'p' })).not.toBeInTheDocument();
+    tap(screen.getByRole('button', { name: 'Shibuya 109' }), 800, 700);
+    expect(screen.getByText('Il cilindro argentato.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+
+    // While editing, a Document place still opens beside the map, and its card edits it.
+    await user.click(screen.getByRole('button', { name: 'Modifica la mappa' }));
+    tap(screen.getByRole('button', { name: 'Incrocio' }), 300, 150);
+    expect(onSelectDocument).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('Il cuore', { selector: 'p' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Apri il Documento' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Modifica' })).toBeInTheDocument();
+  });
+
+  it('opens for reading, and edits only after "Modifica la mappa" (spec 38b)', async () => {
+    const { user } = render();
+    expect(screen.queryByRole('radiogroup', { name: 'Strumento' })).not.toBeInTheDocument();
+    // Reading: no dragging, no link dialog, no Delete.
+    drag(screen.getByRole('button', { name: 'Shibuya 109' }), [800, 700], [900, 800]);
+    fireEvent.click(screen.getByText('la finestra'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    tap(screen.getByRole('button', { name: 'Shibuya 109' }), 800, 700);
+    expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+    board().focus();
+    await user.keyboard('{Delete}');
+    expect(onChange).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Modifica la mappa' }));
+    expect(screen.queryByRole('button', { name: 'Modifica la mappa' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Il cilindro argentato.')).not.toBeInTheDocument();
+    await user.click(screen.getByText('Luogo'));
+    await user.click(screen.getByRole('button', { name: 'Fine modifiche' }));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByText('Seleziona')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Modifica la mappa' })).toBeInTheDocument();
+  });
+
   it('a click on a link opens nothing on a read-only map', () => {
     render({ editable: false });
     fireEvent.pointerDown(screen.getByRole('button', { name: /^Collegamento/ }), { button: 0, pointerId: 1 });
@@ -292,7 +341,7 @@ describe('GeographicBoard: looking at a place', () => {
 
 describe('GeographicBoard: editing (Decision 9)', () => {
   it('draws an area corner by corner and names it', async () => {
-    const { user } = render();
+    const { user } = await renderEditing();
     await user.click(screen.getByText('Area'));
     expect(screen.getByRole('status')).toHaveTextContent('Clicca sul piano per aggiungere un angolo');
     tap(plane(), 1500, 900);
@@ -320,7 +369,7 @@ describe('GeographicBoard: editing (Decision 9)', () => {
   });
 
   it('closes an area with its button, or drops it on cancel', async () => {
-    const { user } = render();
+    const { user } = await renderEditing();
     await user.click(screen.getByText('Area'));
     tap(plane(), 1500, 900);
     tap(plane(), 1800, 900);
@@ -338,7 +387,7 @@ describe('GeographicBoard: editing (Decision 9)', () => {
   });
 
   it('places a pin where the plane is clicked', async () => {
-    const { user } = render();
+    const { user } = await renderEditing();
     await user.click(screen.getByText('Luogo'));
     expect(screen.getByRole('status')).toHaveTextContent('aggiungere un luogo');
     tap(plane(), 1000, 1000);
@@ -349,7 +398,7 @@ describe('GeographicBoard: editing (Decision 9)', () => {
   });
 
   it('links two places and edits the link', async () => {
-    const { user } = render();
+    const { user } = await renderEditing();
     await user.click(screen.getByText('Collegamento'));
     expect(screen.getByRole('status')).toHaveTextContent('Clicca il primo luogo');
     tap(screen.getByRole('button', { name: 'Il bosco' }), 1200, 200);
@@ -369,7 +418,7 @@ describe('GeographicBoard: editing (Decision 9)', () => {
   });
 
   it('opens a link by its line or label, then deletes it', async () => {
-    const { user } = render();
+    const { user } = await renderEditing();
     await user.click(screen.getByText('la finestra'));
     await screen.findByRole('dialog', { name: 'Relazione' });
     await user.keyboard('{Escape}');
@@ -379,7 +428,7 @@ describe('GeographicBoard: editing (Decision 9)', () => {
   });
 
   it("drags a link's curve, and a double click straightens it back to the default", async () => {
-    const { user } = render();
+    const { user } = await renderEditing();
     await user.click(screen.getByRole('button', { name: /^Collegamento/ }));
     await user.keyboard('{Escape}');
     const handle = screen.getByRole('button', { name: 'Curvatura del collegamento' });
@@ -393,8 +442,8 @@ describe('GeographicBoard: editing (Decision 9)', () => {
     expect(lastBoard().links[0].bend).toBeNull();
   });
 
-  it('drags pins and areas, kept inside the plane', () => {
-    render();
+  it('drags pins and areas, kept inside the plane', async () => {
+    await renderEditing();
     drag(screen.getByRole('button', { name: 'Shibuya Sky' }), [300, 250], [-500, 260]);
     expect(lastBoard().pins[0]).toMatchObject({ x: 0, y: 260 });
     drag(screen.getByRole('button', { name: 'Il bosco' }), [1200, 200], [1300, 150]);
@@ -402,7 +451,7 @@ describe('GeographicBoard: editing (Decision 9)', () => {
   });
 
   it("moves, adds and removes an area's corners", async () => {
-    render();
+    await renderEditing();
     tap(screen.getByRole('button', { name: 'Il bosco' }), 1200, 200);
     drag(screen.getByRole('button', { name: 'Angolo 1' }), [1000, 100], [950, 80]);
     expect(lastBoard().areas[1].points[0]).toEqual([950, 80]);
@@ -413,7 +462,7 @@ describe('GeographicBoard: editing (Decision 9)', () => {
   });
 
   it('edits and deletes a place from its card', async () => {
-    const { user } = render();
+    const { user } = await renderEditing();
     tap(screen.getByRole('button', { name: 'Il bosco' }), 1200, 200);
     await user.click(screen.getByRole('button', { name: 'Modifica' }));
     let dialog = await screen.findByRole('dialog', { name: "Modifica l'area" });
@@ -442,7 +491,7 @@ describe('GeographicBoard: editing (Decision 9)', () => {
   });
 
   it('removes what is selected with Delete, and Escape puts the tools away', async () => {
-    const { user } = render();
+    const { user } = await renderEditing();
     board().focus();
     await user.keyboard('{Delete}');
     expect(onChange).not.toHaveBeenCalled();
@@ -458,7 +507,7 @@ describe('GeographicBoard: editing (Decision 9)', () => {
   });
 
   it('removes a selected link with Backspace', async () => {
-    const { user } = render();
+    const { user } = await renderEditing();
     await user.click(screen.getByText('la finestra'));
     await user.keyboard('{Escape}');
     board().focus();

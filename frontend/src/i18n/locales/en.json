@@ -1000,6 +1000,8 @@
     },
     "geo": {
       "board": "Geographic map",
+      "editMap": "Edit map",
+      "doneEditing": "Done editing",
       "tool": "Tool",
       "tools": {
         "select": "Select",

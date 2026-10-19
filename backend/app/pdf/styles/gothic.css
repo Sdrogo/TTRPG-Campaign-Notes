@@ -48,6 +48,7 @@ h1, h2, h3 { font-family: "IM Fell English", "PT Serif", "Noto Serif JP", "Noto 
 /* Chapters: a red rule under the title, then each Document in two columns like a
    rulebook (base.css) with a red rule between them */
 .document { column-rule: 0.5pt solid #8a0f1c; }
+.document-row > .document:first-child { border-right-color: #8a0f1c; }
 .chapter-title { font-size: 30pt; line-height: 1.1; margin: 0 0 6mm; padding-bottom: 3mm; border-bottom: 2pt solid #8a0f1c; }
 .document-title { font-size: 20pt; margin: 0 0 4mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #1a1a1a; }
 .document-image img { max-height: 70mm; border: 0.75pt solid #1a1a1a; }
