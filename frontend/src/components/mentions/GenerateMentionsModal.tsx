@@ -23,7 +23,7 @@ function matchKey(source: MentionSuggestionSource, match: MentionSuggestion): st
 
 /**
  * The "Genera menzioni" dialog (spec 39 Decisions 1, 2 and 7): every place the
- * name of a Document or Tag the viewer sees appears as plain words in the
+ * name of a Document the viewer sees (never a Tag) appears as plain words in the
  * texts they manage, each checked by default with its own checkbox and one
  * per text, then "Applica" writes the checked ones as mentions. Mounted only
  * while open, so each opening reads the proposals afresh.

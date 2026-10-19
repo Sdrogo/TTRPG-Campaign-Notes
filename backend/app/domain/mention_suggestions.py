@@ -22,7 +22,7 @@ _SPACES = re.compile(r"\s+")
 
 @dataclass(frozen=True)
 class MentionCandidate:
-    """A Document or a Tag whose name may be proposed as a mention."""
+    """A Document whose name may be proposed as a mention (never a Tag)."""
 
     kind: MentionKind
     id: uuid.UUID
