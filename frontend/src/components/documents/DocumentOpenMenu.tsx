@@ -7,6 +7,12 @@ import { useTranslation } from 'react-i18next';
 import { useBackState } from '../../lib/backNav';
 import { OpenMenuContext, SPLIT_QUERY, useSideDocument } from '../../hooks/useSideDocument';
 
+/**
+ * Marks an element shown from a `DocumentOpenMenu`'s children whose clicks are
+ * its own; it must also stop them bubbling, or the menu's target toggles.
+ */
+export const OWN_CLICKS_ATTRIBUTE = 'data-own-clicks';
+
 interface DocumentOpenMenuProps {
   roomId: string;
   documentId: string;
@@ -47,6 +53,12 @@ export function DocumentOpenMenu({
   }
 
   const handleClick = (event: MouseEvent) => {
+    // A click inside something shown from `children` with clicks of its own
+    // (a mention's hover preview: its carousel arrows, its links) belongs to
+    // it, not to this menu. Through a portal it still bubbles here via React.
+    if ((event.target as Element).closest(`[${OWN_CLICKS_ATTRIBUTE}]`)) {
+      return;
+    }
     // Seen before the link: it neither navigates nor reaches the menu's own toggle.
     event.stopPropagation();
     if (event.ctrlKey || event.metaKey || event.shiftKey) {

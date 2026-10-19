@@ -124,6 +124,15 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-19
+
+- **Fix: mention preview carousel** (frontend only): on a wide screen a click
+  inside a `#Document` mention's hover preview (spec 32), such as its image
+  carousel arrows, opened the mention's half-screen menu (spec 37), because
+  React bubbles portal clicks to the mention. The preview's dropdown now marks
+  its clicks as its own (`OWN_CLICKS_ATTRIBUTE`) and `DocumentOpenMenu`
+  ignores them.
+
 ### 2026-10-17
 
 - **38_1, Geographic maps backend** (migration `d7c1f5a9e3b8`, PR #210):
