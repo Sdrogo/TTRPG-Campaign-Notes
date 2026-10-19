@@ -704,13 +704,19 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   `--bg-base` halo so it reads on any background; pins, labels, handles and
   strokes keep their screen size whatever the zoom. Master-only items are
   drawn at 65%, items the Tag filter leaves out at 20%.
-- **Toolbar** (top left): the tools Seleziona / Area / Luogo / Collegamento
-  (a `SegmentedControl`, editors only) and "Filtra per Tag" (a `Select`, for
-  everyone). While a tool is on, a hint bar at the bottom says what to click,
+- **Toolbar** (top left): the map opens for reading (38b); its managers see
+  a default-variant "Modifica la mappa" button (`PencilSimpleIcon`), which
+  swaps in the tools Seleziona / Area / Luogo / Collegamento (a
+  `SegmentedControl`) and a light "Fine modifiche" (`CheckIcon`); "Filtra
+  per Tag" (a `Select`) is for everyone. While a tool is on, a hint bar at the bottom says what to click,
   with "Togli l'ultimo angolo" and "Chiudi l'area" while drawing, and Annulla.
-- **A clicked place** shows a card top right: name, subtitle, note, "Apri il
-  Documento" for a Document, and Modifica for editors. With the split pane
-  open, a Document's place opens there instead.
+- **A clicked place** (38b): a Document's place opens in the split pane
+  (opening it if needed) on a screen wide enough for it; a plain place shows
+  a card top right with name, subtitle and note. While editing, every
+  selected place shows the card with Modifica; on a phone a Document's card
+  has "Apri il Documento". Area names (display font, subtitle under them)
+  sit at the centroid unless pins or labels are there, then at the nearest
+  free spot, inside their area when they fit.
 - **Editing**: a selected area shows square corner handles (drag; double
   click removes one) and round "+" handles mid-side (adds one); a selected
   link shows a round handle on its curve (drag; double click resets).

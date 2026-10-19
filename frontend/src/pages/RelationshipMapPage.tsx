@@ -227,7 +227,8 @@ function GeoMapEditor({
         documents={documents.data ?? []}
         tags={tags.data ?? []}
         onChange={autosave.change}
-        onSelectDocument={access.splitOpen ? access.split.open : undefined}
+        // A click on a Document's place opens it beside the map (spec 38b).
+        onSelectDocument={access.wide ? access.split.open : undefined}
       />
       {planeOpened && <GeoMapDialog roomId={roomId} map={map} onClose={() => setPlaneOpened(false)} />}
     </MapChrome>

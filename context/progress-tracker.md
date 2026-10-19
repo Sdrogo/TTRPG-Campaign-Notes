@@ -133,6 +133,13 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-19
 
+- **38b, Geographic map reading mode** (frontend only, no migration):
+  product owner's feedback after the Shibuya test. A click on a Document's
+  area or pin opens it in the split pane (no more card with "Apri il
+  Documento"); the map opens for reading and its managers press "Modifica
+  la mappa" to get the tools ("Fine modifiche" to leave); area names move
+  off pins, pin names and link labels (`placeAreaLabels` in
+  `lib/geoMaps.ts`). Notes in the spec 38 ticket.
 - **39, Generate mentions** (no migration): spec `context/feature/39 -
   Generate mentions.md`, product owner's request. A "Genera menzioni"
   button on a Document (Owners, Master) and on the Room (every member,
@@ -517,8 +524,9 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 - **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
   editor, PR #211) and 38_3 (JSON import/export) built; first real test is
   the Shibuya map. `requirements.md` §1 and a new `FR-` need the product
-  owner's request. Open: image search for the background, dragging link
-  labels, a Tag picking an area's color.
+  owner's request. 38b (reading mode, area names off pins) built. Open:
+  image search for the background, dragging link labels, dragging area
+  names by hand, a Tag picking an area's color.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08).
 - **28, Relationship maps**: built (PR #159). `requirements.md` still

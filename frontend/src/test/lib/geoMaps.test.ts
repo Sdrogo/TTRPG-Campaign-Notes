@@ -17,6 +17,9 @@ import {
   findItem,
   fitView,
   insertCorner,
+  insideShape,
+  placeAreaLabels,
+  textWidth,
   isDimmed,
   linkBend,
   linkCurve,
@@ -309,5 +312,39 @@ describe('editing a map', () => {
     const withoutArea = removeItem(linked, { kind: 'area', id: 'area-2' });
     expect(withoutArea.areas.map((area) => area.id)).toEqual(['area-1']);
     expect(withoutArea.links.map((link) => link.id)).toEqual(['link-1']);
+  });
+});
+
+describe('area names kept clear of other labels (spec 38b)', () => {
+  const square: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+  const label = { id: 'a', points: square, width: 30, above: 5, below: 5 };
+
+  it('tells inside from outside a shape', () => {
+    expect(insideShape({ x: 50, y: 50 }, square)).toBe(true);
+    expect(insideShape({ x: 150, y: 50 }, square)).toBe(false);
+    expect(textWidth('abcd', 10)).toBeCloseTo(23.2);
+  });
+
+  it('keeps a name at the centroid when nothing is there', () => {
+    expect(placeAreaLabels([label], [{ x: 0, y: 0, width: 10, height: 10 }]).get('a')).toEqual({ x: 50, y: 50 });
+  });
+
+  it('moves a name off what covers the centroid, staying inside the area', () => {
+    const at = placeAreaLabels([label], [{ x: 30, y: 40, width: 40, height: 20 }]).get('a')!;
+    expect(Math.abs(at.y - 50)).toBeGreaterThanOrEqual(10);
+    expect(insideShape(at, square)).toBe(true);
+  });
+
+  it('keeps two names apart', () => {
+    const placed = placeAreaLabels([label, { ...label, id: 'b' }], []);
+    const [a, b] = [placed.get('a')!, placed.get('b')!];
+    expect(Math.abs(a.x - b.x) >= 30 || Math.abs(a.y - b.y) >= 10).toBe(true);
+  });
+
+  it('uses the centroid of an area too narrow for any grid point', () => {
+    const sliver: [number, number][] = [[0, 0], [100, 0], [0, 0.0001]];
+    expect(placeAreaLabels([{ ...label, points: sliver }], []).get('a')).toBeDefined();
+    const line: [number, number][] = [[0, 0], [0, 0], [0, 0]];
+    expect(placeAreaLabels([{ ...label, points: line }], []).get('a')).toEqual({ x: 0, y: 0 });
   });
 });
