@@ -41,6 +41,7 @@ import { useRoom } from '../../hooks/useRooms';
 import { useRevealDocument, useRevealedInVisit } from '../../hooks/useReveals';
 import { useReadOnly } from '../../hooks/useViewAs';
 import { useStopReadingOnLeave } from '../../hooks/useReadAloud';
+import { useDocumentMentions } from '../../hooks/useDocumentMentions';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { appendPromotedText, promotionReaches, type PromotionAudience } from '../../lib/promotion';
 import { canCreateDocuments, canManageTags } from '../../lib/roomPermissions';
@@ -246,6 +247,7 @@ function DocumentPanel({
   const readOnly = useReadOnly();
   // Spec 30: leaving the Document (or moving to another) stops reading it.
   useStopReadingOnLeave();
+  const mentions = useDocumentMentions();
 
   const me = members.find((m) => m.userId === currentUserId);
   const isMaster = me?.role === 'master' && !readOnly;
@@ -268,7 +270,7 @@ function DocumentPanel({
     <ReadAloudControls
       sourceId={`document:${document.id}`}
       name={document.name}
-      getText={() => documentSpeech(document)}
+      getText={() => documentSpeech(document, mentions ?? undefined)}
     />
   );
   const actions = (

@@ -15,6 +15,8 @@ import {
   voiceSpeaks,
 } from '../../lib/speech';
 import { installFakeSpeech } from '../speech';
+import type { Document } from '../../types/document';
+import type { Tag } from '../../types/tag';
 
 const DOC_ID = '11111111-1111-1111-1111-111111111111';
 const USER_ID = '22222222-2222-2222-2222-222222222222';
@@ -40,6 +42,35 @@ describe('mentionsToSpeech', () => {
     const text = `Ciao @[Bea](user:${USER_ID})`;
     expect(mentionsToSpeech(text)).toBe(text);
     expect(mentionsToSpeech(text, { users: true })).toBe('Ciao Bea');
+  });
+
+  describe('with the Room\'s Documents and Tags', () => {
+    const TAG_ID = '33333333-3333-3333-3333-333333333333';
+    const known = {
+      documents: [{ id: DOC_ID, name: 'La Torre Nera' } as Document],
+      tags: [{ id: TAG_ID, name: 'Cultisti', category: null, mainPosition: null } as Tag],
+    };
+
+    it('reads a plain #Name that matches one without its #', () => {
+      expect(mentionsToSpeech('Alla #La Torre Nera con i #Cultisti, #3 volte', {}, known)).toBe(
+        'Alla La Torre Nera con i Cultisti, #3 volte',
+      );
+    });
+
+    it('reads a token under its target\'s current name, else the name written', () => {
+      expect(mentionsToSpeech(`Vedi #[La Torre](doc:${DOC_ID})`, {}, known)).toBe('Vedi La Torre Nera');
+      const hidden = '44444444-4444-4444-4444-444444444444';
+      expect(mentionsToSpeech(`Vedi #[Segreto](doc:${hidden})`, {}, known)).toBe('Vedi Segreto');
+    });
+
+    it('reaches Notes, Documents and Comments', () => {
+      const note = { title: 'Dove', description: 'Alla #La Torre Nera' };
+      expect(noteSpeech(note, known)).toBe('Dove.\n\nAlla La Torre Nera');
+      expect(documentSpeech({ name: 'Mira', description: '#Cultisti', notes: [note] }, known)).toBe(
+        'Mira.\n\nCultisti\n\nDove.\n\nAlla La Torre Nera',
+      );
+      expect(commentSpeech('Bea ha scritto', 'Ai #Cultisti', known)).toBe('Bea ha scritto.\n\nAi Cultisti');
+    });
   });
 });
 

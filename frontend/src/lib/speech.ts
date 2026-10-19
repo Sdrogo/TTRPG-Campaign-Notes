@@ -1,6 +1,8 @@
 import { isLanguage, type Language } from '../i18n';
 import type { Document } from '../types/document';
 import type { Note } from '../types/note';
+import type { Tag } from '../types/tag';
+import { resolveContentToken, splitMentions } from './documentMentions';
 import { splitMentionTokens, type TokenOptions } from './mentionTokens';
 
 // Read aloud (spec 30): the browser's own speech synthesis, nothing on the
@@ -43,27 +45,60 @@ export function speechSupported(): boolean {
 }
 
 /**
- * Stored text as it should be heard: every mention token read as its name,
- * without the `#`/`@` sigil (spec 30 Decision 2).
+ * The Room's Documents and Tags the viewer sees, where the text is read: a
+ * plain `#Name` matching one (written before mentions had ids, spec 20) is
+ * then a mention too, and a token reads under its target's current name.
  */
-export function mentionsToSpeech(text: string, options: TokenOptions = {}): string {
+export interface SpeechMentions {
+  documents: Document[];
+  tags: Tag[];
+}
+
+/**
+ * Stored text as it should be heard: every mention read as its name, without
+ * the `#`/`@` sigil (spec 30 Decision 2). Without `known`, only tokens are
+ * mentions and each reads under the name stored with it.
+ */
+export function mentionsToSpeech(
+  text: string,
+  options: TokenOptions = {},
+  known?: SpeechMentions,
+): string {
   return splitMentionTokens(text, options)
-    .map((segment) => (segment.kind === 'text' ? segment.stored : segment.name))
+    .map((segment) => {
+      if (segment.kind === 'text') {
+        if (!known) return segment.stored;
+        return splitMentions(segment.stored, known.documents, known.tags)
+          .map((run) => (run.kind === 'text' ? run.text : run.text.slice(1)))
+          .join('');
+      }
+      if (segment.kind === 'user' || !known) return segment.name;
+      const resolved = resolveContentToken(segment, known.documents, known.tags);
+      return resolved.kind === 'text' ? segment.name : resolved.text.slice(1);
+    })
     .join('');
 }
 
 // A heading followed by its text: a full stop after the heading makes the
 // voice pause there, unless it already ends in punctuation.
-function headed(title: string, text: string, options: TokenOptions = {}): string {
+function headed(
+  title: string,
+  text: string,
+  options: TokenOptions = {},
+  known?: SpeechMentions,
+): string {
   const heading = title.trim();
-  const body = mentionsToSpeech(text, options).trim();
+  const body = mentionsToSpeech(text, options, known).trim();
   const spokenHeading = heading && !/[.!?:;]$/.test(heading) ? `${heading}.` : heading;
   return [spokenHeading, body].filter(Boolean).join('\n\n');
 }
 
 /** What reading one Note says: its title, then its text. */
-export function noteSpeech(note: Pick<Note, 'title' | 'description'>): string {
-  return headed(note.title, note.description);
+export function noteSpeech(
+  note: Pick<Note, 'title' | 'description'>,
+  known?: SpeechMentions,
+): string {
+  return headed(note.title, note.description, {}, known);
 }
 
 /**
@@ -75,8 +110,12 @@ export function documentSpeech(
   document: Pick<Document, 'name' | 'description'> & {
     notes: Pick<Note, 'title' | 'description'>[];
   },
+  known?: SpeechMentions,
 ): string {
-  return [headed(document.name, document.description), ...document.notes.map(noteSpeech)]
+  return [
+    headed(document.name, document.description, {}, known),
+    ...document.notes.map((note) => noteSpeech(note, known)),
+  ]
     .filter(Boolean)
     .join('\n\n');
 }
@@ -85,8 +124,8 @@ export function documentSpeech(
  * What reading one Comment says: `heading` (who wrote it, e.g. "Andrea ha
  * scritto"), then its text with member mentions read as names too.
  */
-export function commentSpeech(heading: string, body: string): string {
-  return headed(heading, body, { users: true });
+export function commentSpeech(heading: string, body: string, known?: SpeechMentions): string {
+  return headed(heading, body, { users: true }, known);
 }
 
 // `text` cut into pieces of at most `max` characters at the last match of

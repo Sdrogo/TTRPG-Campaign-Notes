@@ -124,6 +124,13 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-19
+
+- **30 follow-up, read aloud without `#`**: plain `#Name` mentions (pre-id,
+  spec 20) that match a visible Document or Tag are read without the `#`;
+  tokens read under the current name. `mentionsToSpeech` takes the Room's
+  Documents and Tags from `useDocumentMentions`. Frontend only, no migration.
+
 ### 2026-10-17
 
 - **38_1, Geographic maps backend** (migration `d7c1f5a9e3b8`, PR #210):
