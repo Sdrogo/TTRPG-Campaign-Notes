@@ -5,7 +5,7 @@
 - The **JSON Room export** (spec 23) carries the maps the requester sees, and the **import** (spec 27) recreates them, so a Room moved or restored through a file keeps its maps.
 - No migration: every table already exists.
 
-## Decisions (proposed by Claude 2026-10-19, to confirm in the PR)
+## Decisions (proposed by Claude, confirmed by the product owner 2026-10-19)
 
 ### Duplicate Room
 
