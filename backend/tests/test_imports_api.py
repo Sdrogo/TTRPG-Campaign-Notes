@@ -991,7 +991,7 @@ async def test_an_image_whose_document_is_gone_is_dropped(
     served["https://img.test/a.png"] = _png()
     original = import_job._store_image
 
-    async def delete_first(*args: Any) -> str | None:
+    async def delete_first(*args: Any) -> uuid.UUID | str | None:
         await documents_repo.delete_document(db_session, args[2].id)
         return await original(*args)
 
