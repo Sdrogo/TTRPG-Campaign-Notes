@@ -16,10 +16,12 @@
 
 ## Decisions
 
-Defaults picked 2026-10-21, to confirm in the PR.
+Decision 1 confirmed by the product owner on 2026-10-21; the others are
+defaults picked the same day, to confirm in the PR.
 
-1. **Only flagged Notes feed the mention map** (recommended to the product
-   owner on a decision card, 2026-10-21): a mention counts for a mention map
+1. **Only flagged Notes feed the mention map** (product owner, 2026-10-21,
+   on a decision card, over "flagged Notes plus descriptions and
+   Comments"): a mention counts for a mention map
    only when it is written in a Note flagged as a Relational link.
    Descriptions, unflagged Notes and Comments no longer draw relations on a
    mention map. Everything else that reads mentions is unchanged: "Mentioned
@@ -42,9 +44,9 @@ Defaults picked 2026-10-21, to confirm in the PR.
    A → B on A's map and on B's map, like any mention (spec 36 Decision 5).
    The flag is about where the mention is written, not about which map shows
    it.
-6. **The modal says why it is empty**: when the mention map modal finds
-   nothing (spec 36 Decision 11), its message says that only the mentions
-   written in Notes flagged as Relational links count.
+6. **The modal says what counts**: the mention map modal (spec 36 Decision
+   11) says, under the preview, that only the mentions written in Notes
+   flagged as Relational links count, so an empty map explains itself.
 7. **Copies**: duplicating a Room (spec 33) keeps each Note's flag. Restoring
    a deleted Note from the History brings it back unflagged. The JSON
    export/import (spec 27, 40) does not carry the flag (*proposed*; a later
@@ -78,7 +80,8 @@ Defaults picked 2026-10-21, to confirm in the PR.
   scritte nelle Note con questo flag disegnano frecce nella mappa delle
   menzioni."
 - `NoteItem`: a small badge next to the title when flagged, for every reader.
-- Mention map modal: the "No mentions yet" text mentions flagged Notes.
+- Mention map modal: a dimmed line under the preview, "Contano solo le
+  menzioni scritte nelle Note segnate come Link relazionale."
 - Strings in all 12 languages; "Relational link" added to the i18n glossary.
 
 ## Tests

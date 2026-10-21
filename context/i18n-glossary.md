@@ -26,6 +26,7 @@ content.
 | Administrator | Admin | Admin | Admin | Admin | Admin (role label); administrateur in prose | Admin | Admin (Administrator in long forms) | Admin (long form: Administrador) | Admin | Admin (prose: 管理者) | Admin (prose: 管理员) | Admin (long form: 관리자) |
 | Owner | Owner | Owner | Owner | Owner | Owner | Owner | Owner | Owner | Owner | Owner | Owner | Owner |
 | Character | Personaggio | Character | Charakter | Personaje | Personnage | Personage | Postać | Personagem | Персонаж | キャラクター | 角色 | 캐릭터 |
+| Relational link (a flagged Note, spec 41) | Link relazionale | Relational link | Beziehungslink | Enlace relacional | Lien relationnel | Relatielink | Link relacyjny | Ligação relacional | Связующая ссылка | 関係リンク | 关系链接 | 관계 링크 |
 
 The Italian and English columns were taken from `it.json` and `en.json` on
 2026-10-12 (the role names "Master", "Player", "Admin" and "Owner" stay in
