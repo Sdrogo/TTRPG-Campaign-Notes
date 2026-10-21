@@ -86,9 +86,13 @@ here and remind the product owner.
 
 - **Head in the repository**: `a4d9e2c7f1b6` (`document_notes.relational_link`,
   spec 41_1, on branch `claude/project-thread-xvs0d5` until it merges).
-- **Pending on staging**: `a4d9e2c7f1b6` (add column, no data change).
-- **Staging database**: `d7c1f5a9e3b8` (= head, geographic maps, applied by
-  hand 2026-10-17 with `.env.staging` loaded; `e8b4d2f6a9c1` before it,
+- **Staging database**: `a4d9e2c7f1b6` (= head, note relational link, applied
+  by hand 2026-10-21 with `.env.staging` loaded, the migration file taken
+  from the branch before it merged: until `claude/project-thread-xvs0d5`
+  merges into `staging`, staging's code does not know this revision and
+  `alembic upgrade head` there fails with "Can't locate revision");
+  `d7c1f5a9e3b8` before it (geographic maps, applied 2026-10-17;
+  `e8b4d2f6a9c1` before that,
   document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
