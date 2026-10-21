@@ -7,7 +7,7 @@ from collections.abc import Collection, Sequence
 from sqlalchemy import delete, insert, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import DocumentMentionRow
+from app.db.models import DocumentMentionRow, NoteRow
 from app.domain.mentions import PlannedMention
 from app.domain.models import DocumentMention, MentionSource, MentionSourceKind
 
@@ -80,11 +80,17 @@ async def list_document_mentions_touching(
     session: AsyncSession, document_ids: Collection[uuid.UUID]
 ) -> list[DocumentMention]:
     """Every mention of a Document by a Document where either end is one of
-    these Documents, unfiltered, in one query: one step of a mention map
-    (spec 36), never called with none. Tag mentions are left out."""
+    these Documents, in one query: one step of a mention map (spec 36),
+    never called with none. Tag mentions are left out, and so is every
+    mention not written in a Note flagged as a Relational link (spec 41
+    Decision 1). Not filtered for any viewer."""
     ids = list(document_ids)
     rows = await session.scalars(
-        select(DocumentMentionRow).where(
+        select(DocumentMentionRow)
+        .join(NoteRow, NoteRow.id == DocumentMentionRow.note_id)
+        .where(
+            DocumentMentionRow.source_kind == MentionSourceKind.NOTE.value,
+            NoteRow.relational_link.is_(True),
             DocumentMentionRow.target_document_id.is_not(None),
             or_(
                 DocumentMentionRow.source_document_id.in_(ids),

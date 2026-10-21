@@ -458,10 +458,13 @@
     "moveDown": "Descendre la Note : {{title}}",
     "deleteConfirmTitle": "Supprimer cette Note ?",
     "deleteConfirmBody": "« {{title}} » sera supprimée. Tu peux la récupérer depuis l'Historique du Document.",
+    "relationalLink": "Lien relationnel",
     "form": {
       "title": "Titre",
       "selectiveLabel": "Membres qui peuvent voir la Note",
-      "selectivePlaceholder": "Qui peut la voir"
+      "selectivePlaceholder": "Qui peut la voir",
+      "relationalLink": "Lien relationnel",
+      "relationalLinkHint": "Les mentions écrites dans cette Note tracent des flèches sur la carte des mentions"
     }
   },
   "files": {
@@ -1014,6 +1017,7 @@
       "previewLoading": "Chargement de l'aperçu",
       "leftOut": "Non affichés, une carte contenant 150 cartes : {{number}}",
       "nothingYet": "Aucune mention pour l'instant",
+      "relationalLinksOnly": "Seules comptent les mentions écrites dans les Notes marquées comme Lien relationnel.",
       "create": "Créer la carte",
       "target": "Carte",
       "targetNew": "Nouvelle carte des mentions",

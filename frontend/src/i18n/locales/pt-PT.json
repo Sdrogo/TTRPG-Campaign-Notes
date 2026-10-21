@@ -458,10 +458,13 @@
     "moveDown": "Descer a Nota: {{title}}",
     "deleteConfirmTitle": "Eliminar esta Nota?",
     "deleteConfirmBody": "\"{{title}}\" será eliminada. Podes recuperá-la no Histórico do Documento.",
+    "relationalLink": "Ligação relacional",
     "form": {
       "title": "Título",
       "selectiveLabel": "Membros que podem ver a Nota",
-      "selectivePlaceholder": "Quem a pode ver"
+      "selectivePlaceholder": "Quem a pode ver",
+      "relationalLink": "Ligação relacional",
+      "relationalLinkHint": "As menções escritas nesta Nota desenham setas no mapa de menções"
     }
   },
   "files": {
@@ -1014,6 +1017,7 @@
       "previewLoading": "A carregar a pré-visualização",
       "leftOut": "Não mostrados, pois um mapa contém 150 cartões: {{number}}",
       "nothingYet": "Ainda sem menções",
+      "relationalLinksOnly": "Só contam as menções escritas em Notas marcadas como Ligação relacional.",
       "create": "Criar mapa",
       "target": "Mapa",
       "targetNew": "Novo mapa de menções",

@@ -23,6 +23,7 @@ function note(overrides: Partial<Note> = {}): Note {
     position: 0,
     createdAt: '2026-10-01T12:00:00Z',
     updatedAt: '2026-10-01T12:00:00Z',
+    relationalLink: false,
     canEdit: true,
     canDelete: true,
     ...overrides,
@@ -217,13 +218,37 @@ describe('reordering', () => {
   });
 });
 
+describe('Relational link (spec 41)', () => {
+  it('marks a flagged Note for every reader', () => {
+    render({ note: { relationalLink: true, canEdit: false, canDelete: false } });
+    expect(screen.getByText('Link relazionale')).toBeInTheDocument();
+  });
+
+  it('keeps only the icon on a phone, with the name for screen readers', () => {
+    const restore = matchMediaQueries(['(max-width: 48em)']);
+    try {
+      render({ note: { relationalLink: true } });
+      expect(screen.queryByText('Link relazionale')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('Link relazionale')).toBeInTheDocument();
+    } finally {
+      restore();
+    }
+  });
+
+  it('shows nothing on an unflagged Note', () => {
+    render();
+    expect(screen.queryByText('Link relazionale')).not.toBeInTheDocument();
+  });
+});
+
 describe('editing', () => {
   it('opens the form on the saved values and saves them', async () => {
     const { onUpdate, user } = render({
-      note: { visibility: 'selective', selectiveUserIds: ['user-1'] },
+      note: { visibility: 'selective', selectiveUserIds: ['user-1'], relationalLink: true },
     });
 
     await user.click(editButton()!);
+    expect(screen.getByRole('switch', { name: /Link relazionale/ })).toBeChecked();
     const title = screen.getByRole('textbox', { name: /Titolo/ });
     expect(title).toHaveValue('Porta segreta');
     await user.clear(title);
@@ -236,6 +261,7 @@ describe('editing', () => {
         description: 'Dietro la libreria.',
         visibility: 'selective',
         selectiveUserIds: ['user-1'],
+        relationalLink: true,
       },
       expect.any(Function),
     );

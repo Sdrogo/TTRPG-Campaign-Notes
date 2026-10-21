@@ -18,6 +18,8 @@ export interface Note {
   position: number;
   createdAt: string;
   updatedAt: string;
+  /** Spec 41: only a flagged Note's mentions draw relations on mention maps. */
+  relationalLink: boolean;
   /** Decided by the backend for the current viewer. */
   canEdit: boolean;
   canDelete: boolean;
@@ -29,4 +31,5 @@ export interface NoteFormValues {
   description: string;
   visibility: DocumentVisibility;
   selectiveUserIds: string[];
+  relationalLink: boolean;
 }

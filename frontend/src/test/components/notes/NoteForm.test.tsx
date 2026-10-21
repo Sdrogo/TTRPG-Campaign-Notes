@@ -52,6 +52,7 @@ describe('NoteForm', () => {
       description: 'Dietro la libreria.',
       visibility: 'master',
       selectiveUserIds: [],
+      relationalLink: false,
     });
 
     expect(title()).toHaveValue('Porta segreta');
@@ -89,6 +90,7 @@ describe('NoteForm', () => {
       description: 'Un dardo avvelenato.',
       visibility: 'room',
       selectiveUserIds: [],
+      relationalLink: false,
     });
   });
 
@@ -110,6 +112,7 @@ describe('NoteForm', () => {
       description: '',
       visibility: 'selective',
       selectiveUserIds: [],
+      relationalLink: false,
     });
 
     await user.click(screen.getByRole('combobox', { name: 'Membri che possono vedere la Nota' }));
@@ -119,6 +122,16 @@ describe('NoteForm', () => {
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ selectiveUserIds: ['user-2'] }),
     );
+  });
+
+  it('flags the Note as a Relational link (spec 41)', async () => {
+    const { onSubmit, user } = render();
+
+    await user.type(title(), 'Alleati');
+    await user.click(screen.getByRole('switch', { name: /Link relazionale/ }));
+    await user.click(submit());
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ relationalLink: true }));
   });
 
   it('cancels without saving', async () => {

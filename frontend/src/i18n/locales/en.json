@@ -458,10 +458,13 @@
     "moveDown": "Move Note down: {{title}}",
     "deleteConfirmTitle": "Delete this Note?",
     "deleteConfirmBody": "\"{{title}}\" will be deleted. You can bring it back from the Document's History.",
+    "relationalLink": "Relational link",
     "form": {
       "title": "Title",
       "selectiveLabel": "Members who can see the Note",
-      "selectivePlaceholder": "Who can see it"
+      "selectivePlaceholder": "Who can see it",
+      "relationalLink": "Relational link",
+      "relationalLinkHint": "Mentions written in this Note draw arrows on the mention map"
     }
   },
   "files": {
@@ -1012,6 +1015,7 @@
       "previewLoading": "Loading the preview",
       "leftOut": "Not shown, since a map holds 150 cards: {{number}}",
       "nothingYet": "No mentions yet",
+      "relationalLinksOnly": "Only mentions written in Notes flagged as Relational links count.",
       "create": "Create map",
       "target": "Map",
       "targetNew": "New mentions map",

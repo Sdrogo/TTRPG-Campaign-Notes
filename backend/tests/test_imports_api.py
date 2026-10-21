@@ -1293,6 +1293,17 @@ async def _seed_maps(
         headers=room.master,
     )
     assert background.status_code == 200, background.text
+    # Only a flagged Note's mentions feed a mention map (spec 41).
+    ties = await client.post(
+        f"{docs}/{castle['id']}/notes",
+        json={
+            "title": "Ties",
+            "description": f"#[Lair](doc:{lair['id']})",
+            "relational_link": True,
+        },
+        headers=room.master,
+    )
+    assert ties.status_code == 201, ties.text
     mention = await client.post(
         f"{docs}/{castle['id']}/mention-map", json={"depth": 0}, headers=room.master
     )

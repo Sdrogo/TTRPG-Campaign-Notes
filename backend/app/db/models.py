@@ -320,6 +320,10 @@ class NoteRow(Base):
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Spec 41: only a flagged Note's mentions feed the mention map.
+    relational_link: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false"), default=False
+    )
     # Spec 21: the title weighs more than the text.
     search_vector: Mapped[str | None] = mapped_column(
         TSVECTOR,

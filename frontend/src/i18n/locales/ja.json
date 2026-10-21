@@ -456,10 +456,13 @@
     "moveDown": "ノートを下へ移動: {{title}}",
     "deleteConfirmTitle": "このノートを削除しますか?",
     "deleteConfirmBody": "「{{title}}」を削除します。ドキュメントの履歴から復元できます。",
+    "relationalLink": "関係リンク",
     "form": {
       "title": "タイトル",
       "selectiveLabel": "ノートを見られるメンバー",
-      "selectivePlaceholder": "見られる人"
+      "selectivePlaceholder": "見られる人",
+      "relationalLink": "関係リンク",
+      "relationalLinkHint": "このノートに書かれた言及は言及マップに矢印を描きます"
     }
   },
   "files": {
@@ -984,6 +987,7 @@
       "previewLoading": "プレビューを読み込み中",
       "leftOut": "マップには 150 枚までしか置けないため非表示: {{number}}",
       "nothingYet": "まだ言及がありません",
+      "relationalLinksOnly": "関係リンクとして印を付けたノートに書かれた言及だけが数えられます。",
       "create": "マップを作成",
       "target": "マップ",
       "targetNew": "新しい言及マップ",

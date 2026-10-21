@@ -345,13 +345,18 @@ async def test_the_copy_holds_the_maps_pointing_into_it(
     _, player_id = await _join(client, make_token, room_id, master)
     docs = f"/rooms/{room_id}/documents"
     gate = await _post(client, docs, master, name="Gate")
-    ghost = await _post(
-        client,
-        docs,
-        master,
-        name="Ghost",
-        description=mention_token(MentionKind.DOCUMENT, uuid.UUID(gate["id"]), "Gate"),
+    ghost = await _post(client, docs, master, name="Ghost")
+    # Only a flagged Note's mentions feed a mention map (spec 41).
+    ties = await client.post(
+        f"{docs}/{ghost['id']}/notes",
+        json={
+            "title": "Ties",
+            "description": mention_token(MentionKind.DOCUMENT, uuid.UUID(gate["id"]), "Gate"),
+            "relational_link": True,
+        },
+        headers=master,
     )
+    assert ties.status_code == 201, ties.text
     for _ in range(2):
         await client.post(
             f"{docs}/{ghost['id']}/images",
@@ -476,6 +481,13 @@ async def test_the_copy_holds_the_maps_pointing_into_it(
     assert new_court.visibility == "private"
     (new_mention,) = [m for m in new_maps.values() if m.source_document_id is not None]
     assert new_mention.source_document_id == copies["Ghost"] and new_mention.mention_depth == 1
+    # The copied Note stays a Relational link, so the copy's map still draws (spec 41).
+    assert (
+        await db_session.scalar(
+            select(NoteRow.relational_link).where(NoteRow.document_id == copies["Ghost"])
+        )
+        is True
+    )
 
     cards = {
         c.document_id or c.text: c
