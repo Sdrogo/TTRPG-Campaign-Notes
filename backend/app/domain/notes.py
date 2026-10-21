@@ -84,6 +84,7 @@ def plan_new_note(
     visibility: DocumentVisibility,
     existing: Sequence[Note],
     now: datetime,
+    relational_link: bool = False,
 ) -> Note:
     """Spec 12: a new Note, placed after every existing one. `existing` is
     *all* of the Document's Notes, hidden from the creator or not, so the cap
@@ -101,6 +102,7 @@ def plan_new_note(
         created_by=creator_id,
         created_at=now,
         updated_at=now,
+        relational_link=relational_link,
     )
 
 
@@ -114,6 +116,7 @@ def plan_note_edit(
     visibility: DocumentVisibility | None = None,
     current_selective_ids: Collection[uuid.UUID] = (),
     new_selective_ids: Collection[uuid.UUID] | None = None,
+    relational_link: bool | None = None,
 ) -> NoteEditPlan:
     """Edits a Note; omitted fields stay. Changing its visibility level or its
     Selective grants produces an audit entry (VR-08, Invariant 7); editing
@@ -123,6 +126,7 @@ def plan_note_edit(
         title=note.title if title is None else _clean_title(title),
         description=note.description if description is None else description,
         visibility=note.visibility if visibility is None else visibility,
+        relational_link=note.relational_link if relational_link is None else relational_link,
         updated_at=now,
     )
 

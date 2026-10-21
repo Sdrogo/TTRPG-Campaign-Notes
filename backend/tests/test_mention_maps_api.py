@@ -1,10 +1,12 @@
 """Mention maps (spec 36): a Document's live map, computed from the mentions
 each viewer sees (Decision 7), with its depth, saved card places, preview
-and copy as a free map."""
+and copy as a free map. Only the mentions written in Notes flagged as
+Relational links count (spec 41), so the helpers write a Document's ties in
+a flagged "Ties" Note."""
 
 import uuid
 from collections.abc import AsyncIterator, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import pytest_asyncio
@@ -33,6 +35,8 @@ class _Room:
     player: dict[str, str]
     player_id: str
     other: dict[str, str]
+    # Each Document's flagged "Ties" Note, by Document id.
+    ties: dict[str, str] = field(default_factory=dict)
 
 
 async def _join(
@@ -61,6 +65,7 @@ async def _document(
     room: _Room,
     name: str,
     headers: dict[str, str] | None = None,
+    ties: str | None = None,
     **fields: Any,
 ) -> dict[str, Any]:
     created = await client.post(
@@ -70,12 +75,27 @@ async def _document(
     )
     assert created.status_code == 201, created.text
     document: dict[str, Any] = created.json()
+    if ties is not None:
+        await _describe(client, room, document, ties)
     return document
 
 
 async def _describe(client: AsyncClient, room: _Room, document: dict[str, Any], text: str) -> None:
+    """Writes `text` in the Document's flagged "Ties" Note, created the
+    first time."""
+    notes = f"{room.url}/documents/{document['id']}/notes"
+    note_id = room.ties.get(document["id"])
+    if note_id is None:
+        response = await client.post(
+            notes,
+            json={"title": "Ties", "description": text, "relational_link": True},
+            headers=room.master,
+        )
+        assert response.status_code == 201, response.text
+        room.ties[document["id"]] = response.json()["id"]
+        return
     response = await client.patch(
-        f"{room.url}/documents/{document['id']}", json={"description": text}, headers=room.master
+        f"{notes}/{note_id}", json={"description": text}, headers=room.master
     )
     assert response.status_code == 200, response.text
 
@@ -129,10 +149,10 @@ async def _village(client: AsyncClient, room: _Room) -> dict[str, dict[str, Any]
     mentions Aldric, and Lyra (two steps away) mentions the Tavern."""
     thorn = await _document(client, room, "Thorn")
     aldric = await _document(client, room, "Aldric")
-    mira = await _document(client, room, "Mira", description=_doc(thorn, aldric))
-    tavern = await _document(client, room, "Tavern", description=_doc(mira))
+    mira = await _document(client, room, "Mira", ties=_doc(thorn, aldric))
+    tavern = await _document(client, room, "Tavern", ties=_doc(mira))
     await _describe(client, room, thorn, _doc(aldric))
-    lyra = await _document(client, room, "Lyra", description=_doc(tavern))
+    lyra = await _document(client, room, "Lyra", ties=_doc(tavern))
     return {"thorn": thorn, "aldric": aldric, "mira": mira, "tavern": tavern, "lyra": lyra}
 
 
@@ -184,13 +204,13 @@ async def test_the_map_follows_the_mentions_as_they_change(
 ) -> None:
     room = await _room(client, make_token)
     thorn = await _document(client, room, "Thorn")
-    mira = await _document(client, room, "Mira", description=_doc(thorn))
+    mira = await _document(client, room, "Mira", ties=_doc(thorn))
     await _create(client, room, mira)
 
     lyra = await _document(client, room, "Lyra")
     note = await client.post(
         f"{room.url}/documents/{mira['id']}/notes",
-        json={"title": "Friends", "description": _doc(lyra)},
+        json={"title": "Friends", "description": _doc(lyra), "relational_link": True},
         headers=room.master,
     )
     assert note.status_code == 201, note.text
@@ -212,12 +232,17 @@ async def test_hidden_mentions_and_documents_never_show(
     thorn = await _document(client, room, "Thorn", visibility="master")
     aldric = await _document(client, room, "Aldric")
     secret_friend = await _document(client, room, "Vex")
-    mira = await _document(client, room, "Mira", description=_doc(thorn))
+    mira = await _document(client, room, "Mira", ties=_doc(thorn))
     # Aldric mentions Mira only in a Master-only Note; Vex is linked to the
     # map only through Aldric's hidden Note.
     hidden = await client.post(
         f"{room.url}/documents/{aldric['id']}/notes",
-        json={"title": "Secret", "description": _doc(mira, secret_friend), "visibility": "master"},
+        json={
+            "title": "Secret",
+            "description": _doc(mira, secret_friend),
+            "visibility": "master",
+            "relational_link": True,
+        },
         headers=room.master,
     )
     assert hidden.status_code == 201, hidden.text
@@ -277,9 +302,7 @@ async def test_who_may_create_and_manage(
     v = await _village(client, room)
     outsider = _headers(make_token, str(uuid.uuid4()))
     assert (await client.get(_url(room, v["mira"]), headers=outsider)).status_code == 403
-    hidden = await _document(
-        client, room, "Hidden", visibility="master", description=_doc(v["mira"])
-    )
+    hidden = await _document(client, room, "Hidden", visibility="master", ties=_doc(v["mira"]))
     assert (await client.get(_url(room, hidden), headers=room.player)).status_code == 404
 
     await client.patch(room.url, json={"players_can_create_documents": False}, headers=room.master)
@@ -506,3 +529,50 @@ async def test_a_hidden_linked_map_is_neither_shown_nor_revealed(
     # Replacing it answers as if it weren't there.
     refused = await client.put(linked, json={"map_id": mine["id"]}, headers=room.player)
     assert refused.status_code == 404
+
+
+async def test_only_notes_flagged_as_relational_links_draw(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 41 Decision 1: a description, an unflagged Note and a Comment
+    draw nothing; flagging the Note draws its mentions, on both ends' maps,
+    and unflagging takes them away."""
+    room = await _room(client, make_token)
+    thorn = await _document(client, room, "Thorn")
+    aldric = await _document(client, room, "Aldric")
+    lyra = await _document(client, room, "Lyra")
+    mira = await _document(client, room, "Mira", description=_doc(thorn))
+    note = await client.post(
+        f"{room.url}/documents/{mira['id']}/notes",
+        json={"title": "Plain", "description": _doc(aldric)},
+        headers=room.master,
+    )
+    assert note.status_code == 201, note.text
+    assert note.json()["relational_link"] is False
+    comment = await client.post(
+        f"{room.url}/documents/{mira['id']}/comments",
+        json={"body": _doc(lyra)},
+        headers=room.master,
+    )
+    assert comment.status_code == 201, comment.text
+
+    refused = await client.post(_url(room, mira), json={"depth": 0}, headers=room.master)
+    assert refused.status_code == 409, refused.text
+
+    note_url = f"{room.url}/documents/{mira['id']}/notes/{note.json()['id']}"
+    flagged = await client.patch(note_url, json={"relational_link": True}, headers=room.master)
+    assert flagged.status_code == 200, flagged.text
+    assert flagged.json()["relational_link"] is True
+    await _create(client, room, mira)
+    assert _relations(await _get(client, room, mira, room.master)) == {
+        ("Mira", "forward", "Aldric")
+    }
+    await _create(client, room, aldric)
+    assert _names(await _get(client, room, aldric, room.player)) == {"Aldric", "Mira"}
+
+    # An edit that leaves the flag out keeps it.
+    renamed = await client.patch(note_url, json={"title": "Ties"}, headers=room.master)
+    assert renamed.json()["relational_link"] is True
+
+    await client.patch(note_url, json={"relational_link": False}, headers=room.master)
+    assert (await _get(client, room, mira, room.master))["arrows"] == []

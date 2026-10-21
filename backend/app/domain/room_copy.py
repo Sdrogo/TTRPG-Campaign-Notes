@@ -56,6 +56,7 @@ class SourceNote:
     text: str
     visibility: DocumentVisibility
     position: int
+    relational_link: bool = False
 
 
 @dataclass(frozen=True)

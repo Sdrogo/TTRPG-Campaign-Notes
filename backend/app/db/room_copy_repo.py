@@ -91,6 +91,7 @@ async def load_source(session: AsyncSession, room_id: uuid.UUID) -> RoomSource |
                     text=note.description,
                     visibility=DocumentVisibility(note.visibility),
                     position=note.position,
+                    relational_link=note.relational_link,
                 )
             )
         for image in await session.scalars(
@@ -188,6 +189,7 @@ async def insert_copy(session: AsyncSession, plan: RoomCopyPlan, now: datetime) 
             description=n.text,
             visibility=n.visibility.value,
             position=n.position,
+            relational_link=n.relational_link,
             created_by=owner,
             created_at=now,
             updated_at=now,

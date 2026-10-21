@@ -88,6 +88,8 @@ class NoteResponse(BaseModel):
     position: int
     created_at: datetime
     updated_at: datetime
+    # Spec 41: whether its mentions draw relations on mention maps.
+    relational_link: bool
     # What the requester may do with this Note, decided by the domain layer
     # so the UI never re-derives permission rules.
     can_edit: bool
@@ -102,6 +104,7 @@ class CreateNoteRequest(BaseModel):
     description: str = ""
     visibility: DocumentVisibility | None = None
     selective_user_ids: UniqueIds = []
+    relational_link: bool = False
 
 
 class UpdateNoteRequest(BaseModel):
@@ -112,6 +115,7 @@ class UpdateNoteRequest(BaseModel):
     description: str | None = None
     visibility: DocumentVisibility | None = None
     selective_user_ids: UniqueIds | None = None
+    relational_link: bool | None = None
 
 
 class NoteOrderRequest(BaseModel):
@@ -140,6 +144,7 @@ def note_response(
         position=note.position,
         created_at=note.created_at,
         updated_at=note.updated_at,
+        relational_link=note.relational_link,
         can_edit=can_manage,
         can_delete=can_manage,
     )
@@ -249,6 +254,7 @@ async def create_note(
             starting_visibility(room, body.visibility),
             existing,
             datetime.now(UTC),
+            relational_link=body.relational_link,
         )
     except (NoteTitleRequiredError, NoteTitleTooLongError) as exc:
         raise _title_error(exc, locale) from exc
@@ -318,10 +324,10 @@ async def update_note(
     session: SessionDep,
     locale: LocaleDep,
 ) -> NoteResponse | None:
-    """An Owner (or the Master) edits a Note's title, description, visibility
-    or grants. A change of who can see it is audited in the same transaction
-    (VR-08, Invariant 7). Returns null if the edit hides the Note from the
-    requester (VR-07)."""
+    """An Owner (or the Master) edits a Note's title, description, visibility,
+    grants or Relational link flag (spec 41). A change of who can see it is
+    audited in the same transaction (VR-08, Invariant 7). Returns null if the
+    edit hides the Note from the requester (VR-07)."""
     requester_id = uuid.UUID(current_user.id)
     membership, owner_ids = await _require_document(
         session, room_id, document_id, requester_id, locale
@@ -356,6 +362,7 @@ async def update_note(
             visibility=body.visibility,
             current_selective_ids=selective_ids,
             new_selective_ids=body.selective_user_ids,
+            relational_link=body.relational_link,
         )
     except (NoteTitleRequiredError, NoteTitleTooLongError) as exc:
         raise _title_error(exc, locale) from exc
