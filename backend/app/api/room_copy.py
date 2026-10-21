@@ -27,13 +27,15 @@ router = APIRouter(prefix="/rooms", tags=["rooms"])
 async def duplicate_room(
     room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> MyRoomResponse:
-    """Spec 33: copies the Room as "<name> (Copy)" with its setup, Tags and
-    Documents with their Notes and images, and makes the caller its only
+    """Spec 33: copies the Room as "<name> (Copy)" with its setup, Tags,
+    Documents with their Notes and images, and maps (spec 40, re-pointed at
+    the copied Documents), and makes the caller its only
     member, as Master and Administrator. 403 for a non-member and for any
     member but the Master. Comments, PDF Attachments, Reveals, Owners, the
     Character player and the other members are not copied; Selective content
     becomes Private and mentions of members become plain text. The copy's
-    images share the original's Storage objects, so no Storage call is made."""
+    images and map backgrounds share the original's Storage objects, so no
+    Storage call is made."""
     requester = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     try:
         ensure_can_duplicate(requester)

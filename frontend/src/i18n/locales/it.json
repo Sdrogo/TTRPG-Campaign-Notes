@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "Duplica",
       "confirmTitle": "Duplicare \"{{name}}\"?",
-      "confirmBody": "Documenti, Note, Tag e immagini vengono copiati. Commenti, Allegati PDF e membri no. Tu sarai l'unico Master della copia.",
+      "confirmBody": "Documenti, Note, Tag, mappe e immagini vengono copiati. Commenti, Allegati PDF e membri no. Tu sarai l'unico Master della copia.",
       "copyName": "{{name}} (Copia)",
       "created": "Creata \"{{name}}\""
     },
@@ -458,10 +458,13 @@
     "moveDown": "Sposta giù la Nota: {{title}}",
     "deleteConfirmTitle": "Eliminare questa Nota?",
     "deleteConfirmBody": "\"{{title}}\" verrà eliminata. Puoi recuperarla dallo Storico del Documento.",
+    "relationalLink": "Link relazionale",
     "form": {
       "title": "Titolo",
       "selectiveLabel": "Membri che possono vedere la Nota",
-      "selectivePlaceholder": "Chi può vederla"
+      "selectivePlaceholder": "Chi può vederla",
+      "relationalLink": "Link relazionale",
+      "relationalLinkHint": "Le menzioni scritte in questa Nota disegnano frecce nella mappa delle menzioni"
     }
   },
   "files": {
@@ -757,7 +760,7 @@
     "action": "Importa Documenti",
     "title": "Importa Documenti",
     "intro": "Carica uno o più file JSON o Markdown, anche l'esportazione di un'intera Stanza. Prima vedrai cosa verrebbe importato: non viene scritto nulla finché non confermi.",
-    "jsonHint": "Il JSON è il formato fedele; il Markdown è letto al meglio che si può. I Commenti, gli allegati PDF, i Proprietari e il collegamento al giocatore non vengono importati.",
+    "jsonHint": "Il JSON è il formato fedele, e l'unico che porta con sé le mappe; il Markdown è letto al meglio che si può. I Commenti, gli allegati PDF, i Proprietari e il collegamento al giocatore non vengono importati.",
     "files": "File da importare",
     "filesPlaceholder": "Scegli uno o più file .json o .md",
     "preview": "Anteprima",
@@ -815,6 +818,34 @@
       "limit": "il Documento ha già il massimo di immagini",
       "storage": "archiviazione non disponibile",
       "failed": "errore imprevisto"
+    },
+    "maps": {
+      "found_one": "{{count}} mappa trovata",
+      "found_other": "{{count}} mappe trovate",
+      "select": "Importa la mappa {{name}}",
+      "unnamed": "Mappa senza nome",
+      "kind": {
+        "free": "Lavagna libera",
+        "geographic": "Mappa geografica"
+      },
+      "documentsCount_one": "{{count}} Documento sulla mappa",
+      "documentsCount_other": "{{count}} Documenti sulla mappa",
+      "warning": {
+        "documents_left_out_one": "{{count}} carta o luogo di un Documento non importato viene tralasciato",
+        "documents_left_out_other": "{{count}} carte o luoghi di Documenti non importati vengono tralasciati",
+        "master_only_dropped_one": "{{count}} elemento solo per il Master viene tralasciato",
+        "master_only_dropped_other": "{{count}} elementi solo per il Master vengono tralasciati",
+        "selective_to_private": "La visibilità Selettiva diventa Privata"
+      },
+      "skipReason": {
+        "invalid": "Non si può importare: non è leggibile o non rispetta le regole delle mappe",
+        "limit": "La stanza ha già il numero massimo di mappe",
+        "background": "Non è stato possibile importare l'immagine di sfondo"
+      },
+      "created_one": "{{count}} mappa creata",
+      "created_other": "{{count}} mappe create",
+      "skippedTitle_one": "{{count}} mappa non importata del tutto",
+      "skippedTitle_other": "{{count}} mappe non importate del tutto"
     },
     "failed": "L'importazione non è riuscita. Controlla l'elenco dei Documenti prima di riprovare.",
     "another": "Importa altri file"
@@ -984,6 +1015,7 @@
       "previewLoading": "Calcolo dell'anteprima",
       "leftOut": "Non mostrati, perché una mappa contiene 150 carte: {{number}}",
       "nothingYet": "Ancora nessuna menzione",
+      "relationalLinksOnly": "Contano solo le menzioni scritte nelle Note segnate come Link relazionale.",
       "create": "Crea mappa",
       "target": "Mappa",
       "targetNew": "Nuova mappa delle menzioni",

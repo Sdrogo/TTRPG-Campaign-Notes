@@ -98,6 +98,11 @@ export function MentionMapModal({
                 })}
           </Text>
         )}
+        {own && (
+          <Text size="xs" c="dimmed">
+            {t('maps.mention.relationalLinksOnly')}
+          </Text>
+        )}
         {own && preview.data && preview.data.documentsLeftOut > 0 && (
           <Text size="sm" c="dimmed">
             {t('maps.mention.leftOut', { number: preview.data.documentsLeftOut })}

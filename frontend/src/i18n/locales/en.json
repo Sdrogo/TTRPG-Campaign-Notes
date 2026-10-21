@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "Duplicate",
       "confirmTitle": "Duplicate \"{{name}}\"?",
-      "confirmBody": "Documents, Notes, Tags and images are copied. Comments, PDF Attachments and members are not. You will be the only Master of the copy.",
+      "confirmBody": "Documents, Notes, Tags, maps and images are copied. Comments, PDF Attachments and members are not. You will be the only Master of the copy.",
       "copyName": "{{name}} (Copy)",
       "created": "Created \"{{name}}\""
     },
@@ -458,10 +458,13 @@
     "moveDown": "Move Note down: {{title}}",
     "deleteConfirmTitle": "Delete this Note?",
     "deleteConfirmBody": "\"{{title}}\" will be deleted. You can bring it back from the Document's History.",
+    "relationalLink": "Relational link",
     "form": {
       "title": "Title",
       "selectiveLabel": "Members who can see the Note",
-      "selectivePlaceholder": "Who can see it"
+      "selectivePlaceholder": "Who can see it",
+      "relationalLink": "Relational link",
+      "relationalLinkHint": "Mentions written in this Note draw arrows on the mention map"
     }
   },
   "files": {
@@ -757,7 +760,7 @@
     "action": "Import Documents",
     "title": "Import Documents",
     "intro": "Upload one or more JSON or Markdown files, a whole Room export included. You will see what would be imported first: nothing is written until you confirm.",
-    "jsonHint": "JSON is the faithful format; Markdown is read on a best-effort basis. Comments, PDF attachments, Owners and the link to the player are not imported.",
+    "jsonHint": "JSON is the faithful format, and the only one that brings maps; Markdown is read on a best-effort basis. Comments, PDF attachments, Owners and the link to the player are not imported.",
     "files": "Files to import",
     "filesPlaceholder": "Choose one or more .json or .md files",
     "preview": "Preview",
@@ -815,6 +818,34 @@
       "limit": "the Document already has the maximum of images",
       "storage": "storage unavailable",
       "failed": "unexpected error"
+    },
+    "maps": {
+      "found_one": "{{count}} map found",
+      "found_other": "{{count}} maps found",
+      "select": "Import the map {{name}}",
+      "unnamed": "Map without a name",
+      "kind": {
+        "free": "Free board",
+        "geographic": "Geographic map"
+      },
+      "documentsCount_one": "{{count}} Document on it",
+      "documentsCount_other": "{{count}} Documents on it",
+      "warning": {
+        "documents_left_out_one": "{{count}} card or place of a Document that is not imported is left out",
+        "documents_left_out_other": "{{count}} cards or places of Documents that are not imported are left out",
+        "master_only_dropped_one": "{{count}} Master-only item is left out",
+        "master_only_dropped_other": "{{count}} Master-only items are left out",
+        "selective_to_private": "Its Selective visibility becomes Private"
+      },
+      "skipReason": {
+        "invalid": "Can't be imported: it can't be read or breaks a map rule",
+        "limit": "The Room already has the maximum number of maps",
+        "background": "Its background image could not be imported"
+      },
+      "created_one": "{{count}} map created",
+      "created_other": "{{count}} maps created",
+      "skippedTitle_one": "{{count}} map not fully imported",
+      "skippedTitle_other": "{{count}} maps not fully imported"
     },
     "failed": "The import failed. Check the list of Documents before trying again.",
     "another": "Import more files"
@@ -984,6 +1015,7 @@
       "previewLoading": "Loading the preview",
       "leftOut": "Not shown, since a map holds 150 cards: {{number}}",
       "nothingYet": "No mentions yet",
+      "relationalLinksOnly": "Only mentions written in Notes flagged as Relational links count.",
       "create": "Create map",
       "target": "Map",
       "targetNew": "New mentions map",

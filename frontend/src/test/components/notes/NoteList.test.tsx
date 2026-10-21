@@ -119,6 +119,7 @@ describe('adding a Note', () => {
           description: 'Un dardo.',
           visibility: 'room',
           selective_user_ids: [],
+          relational_link: false,
         },
       }),
     );

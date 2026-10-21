@@ -567,7 +567,7 @@ async def test_a_file_that_is_refused_writes_nothing(
         "too big": (("big.json", b"{" + b" " * (5 * 1024 * 1024)), 413),
         "not json": (("bad.json", b"{oops"), 422),
         "not utf-8": (("bad.md", b"\xff\xfe\x00"), 422),
-        "newer schema": (_json_file({"name": "A"}, schema_version=3), 422),
+        "newer schema": (_json_file({"name": "A"}, schema_version=4), 422),
         "no document": (("empty.json", b'{"documents": []}'), 422),
         "too many documents": (_json_file(*many), 422),
         "too many images": (_json_file(images), 422),
@@ -991,7 +991,7 @@ async def test_an_image_whose_document_is_gone_is_dropped(
     served["https://img.test/a.png"] = _png()
     original = import_job._store_image
 
-    async def delete_first(*args: Any) -> str | None:
+    async def delete_first(*args: Any) -> uuid.UUID | str | None:
         await documents_repo.delete_document(db_session, args[2].id)
         return await original(*args)
 
@@ -1174,3 +1174,581 @@ async def test_a_failure_to_record_the_failure_is_only_logged(
     await import_job._fail(uuid.uuid4(), "failed")
 
     assert "Could not mark import" in caplog.text
+
+
+# --- maps (spec 40) -------------------------------------------------------------
+
+
+async def _maps(client: AsyncClient, room: _Room, headers: dict[str, str] | None = None) -> Any:
+    response = await client.get(f"{room.url}/maps", headers=headers or room.master)
+    assert response.status_code == 200, response.text
+    return {m["name"]: m for m in response.json()}
+
+
+async def _seed_maps(
+    client: AsyncClient, room: _Room, db_session: AsyncSession, fake_storage: dict[str, bytes]
+) -> dict[str, Any]:
+    """Room A's maps: a Selective free map with a group, a Document card that
+    chose its second image, a hidden Document's card, a Master-only text card
+    and arrows, shown on the Castle's page; a geographic map with a
+    background, an area, a pin and a link; and the Castle's mention map."""
+    seeded = await _seed(client, room)
+    castle, lair = seeded["castle"], seeded["lair"]
+    docs = f"{room.url}/documents"
+    second = await client.post(
+        f"{docs}/{castle['id']}/images",
+        files={"file": ("b.png", _png((1, 2, 3)), "image/png")},
+        headers=room.master,
+    )
+    assert second.status_code == 201, second.text
+    chosen = next(i["id"] for i in second.json()["images"] if not i["is_favorite"])
+    court = await _post(
+        client,
+        f"{room.url}/maps",
+        room.master,
+        name="Court",
+        visibility="selective",
+        selective_user_ids=[room.player_id],
+    )
+    group, castle_card, lair_card, note_card = (str(uuid.uuid4()) for _ in range(4))
+    board = await client.put(
+        f"{room.url}/maps/{court['id']}/board",
+        json={
+            "groups": [{"id": group, "title": "Keep", "x": 0, "y": 0, "width": 400, "height": 300}],
+            "cards": [
+                {
+                    "id": castle_card,
+                    "document_id": castle["id"],
+                    "image_id": chosen,
+                    "group_id": group,
+                    "caption": "Home",
+                    "x": 10,
+                    "y": 10,
+                },
+                {"id": lair_card, "document_id": lair["id"], "x": 600, "y": 0},
+                {"id": note_card, "text": "Trap", "master_only": True, "x": 0, "y": 500},
+            ],
+            "arrows": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "from_end": {"card_id": castle_card},
+                    "to_end": {"card_id": lair_card},
+                    "direction": "both",
+                    "label": "rules",
+                    "reverse_label": "serves",
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "from_end": {"group_id": group},
+                    "to_end": {"card_id": note_card},
+                },
+            ],
+        },
+        headers=room.master,
+    )
+    assert board.status_code == 200, board.text
+    linked = await client.put(
+        f"{docs}/{castle['id']}/linked-map", json={"map_id": court["id"]}, headers=room.master
+    )
+    assert linked.status_code == 200, linked.text
+    valley = await _post(
+        client,
+        f"{room.url}/maps",
+        room.master,
+        name="Valley",
+        kind="geographic",
+        visibility="room",
+        plane_width=1000,
+        plane_height=800,
+    )
+    area, pin = str(uuid.uuid4()), str(uuid.uuid4())
+    geo = await client.put(
+        f"{room.url}/maps/{valley['id']}/geo",
+        json={
+            "areas": [
+                {
+                    "id": area,
+                    "document_id": castle["id"],
+                    "points": [[10, 10], [300, 10], [300, 300]],
+                    "color": "red",
+                }
+            ],
+            "pins": [{"id": pin, "name": "Crossroads", "note": "Fog", "x": 500, "y": 500}],
+            "links": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "from_end": {"area_id": area},
+                    "to_end": {"pin_id": pin},
+                    "bend": 30,
+                    "label": "road",
+                }
+            ],
+        },
+        headers=room.master,
+    )
+    assert geo.status_code == 200, geo.text
+    background = await client.post(
+        f"{room.url}/maps/{valley['id']}/background",
+        files={"file": ("bg.png", _png((9, 9, 9)), "image/png")},
+        headers=room.master,
+    )
+    assert background.status_code == 200, background.text
+    # Only a flagged Note's mentions feed a mention map (spec 41).
+    ties = await client.post(
+        f"{docs}/{castle['id']}/notes",
+        json={
+            "title": "Ties",
+            "description": f"#[Lair](doc:{lair['id']})",
+            "relational_link": True,
+        },
+        headers=room.master,
+    )
+    assert ties.status_code == 201, ties.text
+    mention = await client.post(
+        f"{docs}/{castle['id']}/mention-map", json={"depth": 0}, headers=room.master
+    )
+    assert mention.status_code == 201, mention.text
+    return {**seeded, "court": court, "valley": valley, "chosen": chosen}
+
+
+async def test_a_room_export_carries_its_maps_into_another_room(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+) -> None:
+    """Spec 40 Decisions 6 to 15: the JSON export holds the free and
+    geographic maps (not the mention map); importing it recreates them around
+    the imported Documents, with the chosen image, the background, the link to
+    the Castle's page, and Selective turned Private."""
+    room = await _room(client, make_token)
+    seeded = await _seed_maps(client, room, db_session, fake_storage)
+    target = await _second_room(client, room)
+    exported = await _export(client, room, room.master, "json")
+    data = json.loads(exported)
+    assert data["schema_version"] == 3
+    maps = {m["name"]: m for m in data["maps"]}
+    assert set(maps) == {"Court", "Valley"}
+    assert maps["Court"]["linked_document_ids"] == [seeded["castle"]["id"]]
+    assert maps["Valley"]["background_url"].startswith("https://signed.test/")
+    assert len(maps["Court"]["cards"]) == 3 and maps["Court"]["areas"] == []
+    # Markdown has no maps.
+    assert b"Court" not in await _export(client, room, room.master, "md")
+
+    preview = await _preview(client, target, target.master, ("room.json", exported))
+    assert preview.status_code == 200, preview.text
+    previewed = {m["name"]: m for m in preview.json()["maps"]}
+    assert previewed["Court"]["documents_count"] == 2
+    assert previewed["Court"]["skipped"] is None
+    assert [w["code"] for w in previewed["Court"]["warnings"]] == ["selective_to_private"]
+    assert previewed["Valley"]["kind"] == "geographic" and previewed["Valley"]["warnings"] == []
+    assert await _maps(client, target) == {}
+
+    job = await _import(client, target, target.master, ("room.json", exported))
+
+    assert job["status"] == "done", job
+    assert {m["name"] for m in job["result"]["maps"]} == {"Court", "Valley"}
+    assert job["result"]["skipped_maps"] == []
+    documents = await _documents(client, target)
+    created = await _maps(client, target)
+    assert created["Court"]["visibility"] == "private"
+    assert created["Court"]["created_by"] == target.master_id
+    court = (
+        await client.get(f"{target.url}/maps/{created['Court']['id']}", headers=target.master)
+    ).json()
+    cards = {c["document_id"] or c["text"]: c for c in court["cards"]}
+    assert set(cards) == {documents["Castle"]["id"], documents["Lair"]["id"], "Trap"}
+    castle_card = cards[documents["Castle"]["id"]]
+    assert castle_card["caption"] == "Home" and castle_card["group_id"] == court["groups"][0]["id"]
+    castle = await _detail(client, target, documents["Castle"]["id"])
+    second = next(i for i in castle["images"] if not i["is_favorite"])
+    assert castle_card["image_id"] == second["id"] != seeded["chosen"]
+    assert cards["Trap"]["master_only"] is True
+    assert {(a["label"], a["reverse_label"]) for a in court["arrows"]} == {
+        ("rules", "serves"),
+        (None, None),
+    }
+    linked = await client.get(
+        f"{target.url}/documents/{documents['Castle']['id']}/linked-map", headers=target.master
+    )
+    assert linked.json()["id"] == created["Court"]["id"]
+    valley = (
+        await client.get(f"{target.url}/maps/{created['Valley']['id']}/geo", headers=target.master)
+    ).json()
+    assert (valley["plane_width"], valley["plane_height"]) == (1000, 800)
+    assert valley["areas"][0]["document_id"] == documents["Castle"]["id"]
+    assert valley["pins"][0]["note"] == "Fog"
+    assert valley["links"][0]["bend"] == 30
+    assert valley["background_url"] is not None
+    source_background = next(p for p in fake_storage if seeded["valley"]["id"] in p)
+    assert sum(1 for p in fake_storage if p.startswith("map-backgrounds/")) == 2
+    assert source_background.startswith("map-backgrounds/")
+
+
+async def test_a_players_export_holds_only_the_maps_and_cards_they_see(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+) -> None:
+    room = await _room(client, make_token)
+    seeded = await _seed_maps(client, room, db_session, fake_storage)
+    await _post(client, f"{room.url}/maps", room.master, name="Secret", visibility="master")
+
+    data = json.loads(await _export(client, room, room.player, "json"))
+
+    maps = {m["name"]: m for m in data["maps"]}
+    assert set(maps) == {"Court", "Valley"}
+    court = maps["Court"]
+    # The Master-only Lair and text card, and the arrows to them, are not there.
+    assert [c["document_id"] for c in court["cards"]] == [seeded["castle"]["id"]]
+    assert court["arrows"] == []
+    # The Castle's player sees the image the card chose.
+    assert court["cards"][0]["image_id"] == seeded["chosen"]
+
+
+def _map(**fields: Any) -> dict[str, Any]:
+    return {"id": str(uuid.uuid4()), "name": "Board", **fields}
+
+
+async def test_an_imported_map_leaves_out_what_points_outside_the_file(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+) -> None:
+    """Decisions 10 and 11: a card of a Document not imported, and a Player's
+    Master-only content, are left out with the arrows touching them; a map
+    that breaks a board rule, or can't be read, is skipped whole."""
+    room = await _room(client, make_token)
+    await client.patch(room.url, json={"players_can_create_documents": True}, headers=room.master)
+    inn, gone, secret, text = (str(uuid.uuid4()) for _ in range(4))
+    card = str(uuid.uuid4())
+    good = _map(
+        name="Inn board",
+        visibility="selective",
+        linked_document_ids=[inn],
+        cards=[
+            {"id": card, "document_id": inn, "image_id": str(uuid.uuid4()), "x": 0, "y": 0},
+            {"id": gone, "document_id": str(uuid.uuid4()), "x": 300, "y": 0},
+            {"id": secret, "text": "Only for the Master", "master_only": True, "x": 0, "y": 300},
+            {"id": text, "text": "Rain", "x": 300, "y": 300},
+        ],
+        arrows=[
+            {"id": str(uuid.uuid4()), "from_end": {"card_id": card}, "to_end": {"card_id": gone}},
+            {"id": str(uuid.uuid4()), "from_end": {"card_id": card}, "to_end": {"card_id": text}},
+            {
+                "id": str(uuid.uuid4()),
+                "from_end": {"card_id": card},
+                "to_end": {"card_id": text},
+                "master_only": True,
+            },
+        ],
+    )
+    area = str(uuid.uuid4())
+    geo = _map(
+        name="Town",
+        kind="geographic",
+        plane_width=500,
+        plane_height=500,
+        areas=[
+            {"id": area, "name": "Square", "points": [[0, 0], [100, 0], [100, 100]]},
+            {
+                "id": str(uuid.uuid4()),
+                "document_id": str(uuid.uuid4()),
+                "points": [[0, 0], [10, 0], [10, 10]],
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "name": "Vault",
+                "master_only": True,
+                "points": [[0, 0], [10, 0], [10, 10]],
+            },
+        ],
+        pins=[
+            {"id": str(uuid.uuid4()), "document_id": inn, "x": 50, "y": 50},
+            {"id": str(uuid.uuid4()), "name": "Hideout", "master_only": True, "x": 1, "y": 1},
+        ],
+        links=[
+            {
+                "id": str(uuid.uuid4()),
+                "from_end": {"area_id": area},
+                "to_end": {"pin_id": str(uuid.uuid4())},
+            }
+        ],
+    )
+    off_plane = _map(
+        name="Off the plane",
+        kind="geographic",
+        plane_width=200,
+        plane_height=200,
+        pins=[{"id": str(uuid.uuid4()), "name": "Far", "x": 900, "y": 900}],
+    )
+    file = _json_file(
+        {"id": inn, "name": "Inn"},
+        maps=[good, geo, off_plane, {"name": "Broken", "kind": "mention"}, "not a map"[:0] or {}],
+    )
+
+    preview = await _preview(client, room, room.player, file)
+
+    assert preview.status_code == 200, preview.text
+    found = {m["name"]: m for m in preview.json()["maps"]}
+    assert {w["code"]: w["count"] for w in found["Inn board"]["warnings"]} == {
+        "documents_left_out": 1,
+        "master_only_dropped": 2,
+        "selective_to_private": 1,
+    }
+    assert found["Inn board"]["documents_count"] == 1
+    assert {w["code"]: w["count"] for w in found["Town"]["warnings"]} == {
+        "documents_left_out": 1,
+        "master_only_dropped": 2,
+    }
+    assert found["Off the plane"]["skipped"] == "invalid"
+    assert found["Broken"]["skipped"] == "invalid"
+    assert found[""]["skipped"] == "invalid"
+
+    job = await _import(client, room, room.player, file)
+
+    assert job["status"] == "done", job
+    assert {m["name"] for m in job["result"]["maps"]} == {"Inn board", "Town"}
+    assert sorted((m["name"], m["reason"]) for m in job["result"]["skipped_maps"]) == [
+        ("", "invalid"),
+        ("Broken", "invalid"),
+        ("Off the plane", "invalid"),
+    ]
+    maps = await _maps(client, room, room.player)
+    board = (
+        await client.get(f"{room.url}/maps/{maps['Inn board']['id']}", headers=room.player)
+    ).json()
+    assert sorted(c["text"] or "doc" for c in board["cards"]) == ["Rain", "doc"]
+    assert len(board["arrows"]) == 1
+    # The card's image was never in the file: it shows the favorite.
+    assert next(c for c in board["cards"] if c["document_id"])["image_id"] is None
+    inn_id = job["result"]["created"][0]["id"]
+    linked = await client.get(f"{room.url}/documents/{inn_id}/linked-map", headers=room.player)
+    assert linked.json()["id"] == maps["Inn board"]["id"]
+    town = (
+        await client.get(f"{room.url}/maps/{maps['Town']['id']}/geo", headers=room.player)
+    ).json()
+    assert [a["name"] for a in town["areas"]] == ["Square"]
+    assert [p["document_id"] for p in town["pins"]] == [inn_id]
+    assert town["links"] == []
+
+
+async def test_unticked_maps_and_maps_past_the_cap_are_not_created(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.api import import_job
+    from app.domain import imports as imports_domain
+
+    room = await _room(client, make_token)
+    await _post(client, f"{room.url}/maps", room.master, name="Already here")
+    monkeypatch.setattr(imports_domain, "MAX_MAPS_PER_ROOM", 2)
+    file = _json_file(
+        {"name": "Inn"},
+        maps=[_map(name="First"), _map(name="Second"), _map(name="Third")],
+    )
+    preview = await _preview(client, room, room.master, file)
+    assert [(m["name"], m["skipped"]) for m in preview.json()["maps"]] == [
+        ("First", None),
+        ("Second", "limit"),
+        ("Third", "limit"),
+    ]
+    keys = [m["key"] for m in preview.json()["maps"]]
+
+    # Unticking the first leaves room for the second, but another map takes it
+    # before the job writes: the job counts again under the Room's lock.
+    monkeypatch.setattr(import_job, "MAX_MAPS_PER_ROOM", 1)
+    started = await client.post(
+        f"{room.url}/imports",
+        files=_upload(file),
+        data={
+            "choices": json.dumps(
+                {"selected": [d["key"] for d in preview.json()["documents"]], "maps": keys[1:2]}
+            )
+        },
+        headers=room.master,
+    )
+    assert started.status_code == 202, started.text
+    job = (
+        await client.get(f"{room.url}/imports/{started.json()['id']}", headers=room.master)
+    ).json()
+
+    assert job["result"]["maps"] == []
+    assert job["result"]["skipped_maps"] == [{"name": "Second", "reason": "limit"}]
+    assert set(await _maps(client, room)) == {"Already here"}
+
+
+async def test_a_map_background_is_read_from_storage_or_skipped(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    own_bucket: Callable[[str], str],
+    inline_jobs: None,
+) -> None:
+    """Decision 13: a background of this app's Storage is read straight from
+    it when the importer sees a map that has it; one they don't see, or a
+    link that fails, is listed and the map stays without it."""
+    room = await _room(client, make_token)
+    paths = {}
+    for name, visibility in (("Seen", "room"), ("Hidden", "master")):
+        created = await _post(
+            client,
+            f"{room.url}/maps",
+            room.master,
+            name=name,
+            kind="geographic",
+            visibility=visibility,
+        )
+        before = set(fake_storage)
+        uploaded = await client.post(
+            f"{room.url}/maps/{created['id']}/background",
+            files={"file": ("bg.png", _png(), "image/png")},
+            headers=room.master,
+        )
+        assert uploaded.status_code == 200, uploaded.text
+        (paths[name],) = set(fake_storage) - before
+    served["https://img.test/not-an-image"] = b"nope"
+    file = _json_file(
+        {"name": "Inn"},
+        maps=[
+            _map(name=f"{name} copy", kind="geographic", background_url=url)
+            for name, url in (
+                ("Seen", own_bucket(paths["Seen"])),
+                ("Hidden", own_bucket(paths["Hidden"])),
+                ("Bad", "https://img.test/not-an-image"),
+            )
+        ],
+    )
+    await client.patch(room.url, json={"players_can_create_documents": True}, headers=room.master)
+
+    job = await _import(client, room, room.player, file)
+
+    assert job["status"] == "done", job
+    assert sorted((m["name"], m["reason"]) for m in job["result"]["skipped_maps"]) == [
+        ("Bad copy", "background"),
+        ("Hidden copy", "background"),
+    ]
+    assert served["calls"] == [own_bucket(paths["Hidden"]), "https://img.test/not-an-image"]
+    maps = await _maps(client, room, room.player)
+    seen = (
+        await client.get(f"{room.url}/maps/{maps['Seen copy']['id']}/geo", headers=room.player)
+    ).json()
+    assert seen["background_url"] is not None
+
+
+async def test_a_replaced_documents_card_keeps_the_image_it_still_has(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    await _image_on(client, room, fake_storage, name="Castle")
+    castle = (await _documents(client, room))["Castle"]
+    image_id = (await _detail(client, room, castle["id"]))["images"][0]["id"]
+    card = {
+        "id": str(uuid.uuid4()),
+        "document_id": castle["id"],
+        "image_id": image_id,
+        "x": 0,
+        "y": 0,
+    }
+    file = _json_file(
+        {
+            "id": castle["id"],
+            "name": "Castle",
+            "images": [{"id": image_id, "url": "https://x.test/a"}],
+        },
+        maps=[_map(name="Keep", cards=[card])],
+    )
+    preview = await _preview(client, room, room.master, file)
+    key = preview.json()["documents"][0]["key"]
+
+    job = await _import(client, room, room.master, file, selected=[key], replace=[key])
+
+    assert job["result"]["replaced"][0]["id"] == castle["id"]
+    keep = (await _maps(client, room))["Keep"]
+    board = (await client.get(f"{room.url}/maps/{keep['id']}", headers=room.master)).json()
+    assert board["cards"][0]["image_id"] == image_id
+    assert served["calls"] == []  # the image it still has is not fetched again
+
+
+@pytest.mark.parametrize("failure", [storage.StorageError("503"), RuntimeError("bug")])
+async def test_a_background_that_cannot_be_stored_is_listed(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: Exception,
+) -> None:
+    room = await _room(client, make_token)
+    served["https://img.test/bg.png"] = _png()
+
+    async def down(*args: Any) -> None:
+        raise failure
+
+    monkeypatch.setattr(storage, "upload", down)
+    file = _json_file(
+        {"name": "Inn"},
+        maps=[_map(name="Town", kind="geographic", background_url="https://img.test/bg.png")],
+    )
+
+    job = await _import(client, room, room.master, file)
+
+    assert job["result"]["skipped_maps"] == [{"name": "Town", "reason": "background"}]
+    assert "Town" in await _maps(client, room)
+
+
+async def test_a_background_storage_read_that_fails_falls_back_to_the_link(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    own_bucket: Callable[[str], str],
+    inline_jobs: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    room = await _room(client, make_token)
+    created = await _post(client, f"{room.url}/maps", room.master, name="Town", kind="geographic")
+    before = set(fake_storage)
+    await client.post(
+        f"{room.url}/maps/{created['id']}/background",
+        files={"file": ("bg.png", _png(), "image/png")},
+        headers=room.master,
+    )
+    (path,) = set(fake_storage) - before
+    served[own_bucket(path)] = _png()
+
+    async def down(path: str, max_bytes: int) -> bytes:
+        raise storage.StorageError("Storage answered 503")
+
+    monkeypatch.setattr(storage, "download", down)
+    file = _json_file(
+        {"name": "Inn"},
+        maps=[_map(name="Copy", kind="geographic", background_url=own_bucket(path))],
+    )
+
+    job = await _import(client, room, room.master, file)
+
+    assert job["result"]["skipped_maps"] == []
+    assert served["calls"] == [own_bucket(path)]

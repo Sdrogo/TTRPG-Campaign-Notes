@@ -61,6 +61,7 @@ export function rawNote(overrides: Record<string, unknown> = {}) {
     position: 0,
     created_at: '2026-10-01T12:00:00Z',
     updated_at: '2026-10-01T12:00:00Z',
+    relational_link: false,
     can_edit: true,
     can_delete: true,
     ...overrides,
@@ -294,6 +295,7 @@ export function rawImportPreview(overrides: Record<string, unknown> = {}) {
     matched_tags: ['PNG'],
     tags_to_create: [],
     unavailable_tags: [],
+    maps: [],
     ...overrides,
   };
 }

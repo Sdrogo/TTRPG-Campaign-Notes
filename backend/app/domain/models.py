@@ -205,7 +205,8 @@ class Note:
     requirements.md calls a Detail (D-18), stored in its own table and managed
     by the Document's Owners and the Master rather than written by any member
     as a Thread Post (a deliberate departure from D-19). `position` orders a
-    Document's Notes, ascending."""
+    Document's Notes, ascending. Only the mentions of a Note flagged as a
+    `relational_link` draw relations on a mention map (spec 41)."""
 
     id: uuid.UUID
     document_id: uuid.UUID
@@ -216,6 +217,7 @@ class Note:
     created_by: uuid.UUID
     created_at: datetime
     updated_at: datetime
+    relational_link: bool = False
 
 
 class PostKind(StrEnum):

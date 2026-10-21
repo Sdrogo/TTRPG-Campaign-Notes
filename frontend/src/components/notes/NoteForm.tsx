@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Group, Stack, TextInput } from '@mantine/core';
+import { Button, Group, Stack, Switch, TextInput } from '@mantine/core';
 import { MemberMultiSelect } from '../MemberMultiSelect';
 import { VisibilitySelect } from '../VisibilitySelect';
 import { MentionTextarea } from '../mentions/MentionTextarea';
@@ -18,9 +18,10 @@ interface NoteFormProps {
 }
 
 /**
- * Title, description (with the same `#` mentions as a Document's), visibility
- * and, at the Selective level, who else may read a Note. Mounted fresh each
- * time editing starts, so "cancel" is just unmounting it.
+ * Title, description (with the same `#` mentions as a Document's), visibility,
+ * at the Selective level who else may read a Note, and whether it is a
+ * Relational link whose mentions draw the mention map (spec 41). Mounted
+ * fresh each time editing starts, so "cancel" is just unmounting it.
  */
 export function NoteForm({
   initialValues,
@@ -76,6 +77,12 @@ export function NoteForm({
             onChange={(selectiveUserIds) => set({ selectiveUserIds })}
           />
         )}
+        <Switch
+          label={t('notes.form.relationalLink')}
+          description={t('notes.form.relationalLinkHint')}
+          checked={values.relationalLink}
+          onChange={(event) => set({ relationalLink: event.currentTarget.checked })}
+        />
         <Group>
           <Button type="submit" loading={submitting} disabled={!canSubmitNote(values)}>
             {submitLabel}

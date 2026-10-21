@@ -383,7 +383,7 @@ def test_json_carries_the_version_ids_and_references() -> None:
         )
     )
 
-    assert data["schema_version"] == SCHEMA_VERSION == 2
+    assert data["schema_version"] == SCHEMA_VERSION == 3
     assert data["generated_at"] == T0.isoformat()
     assert data["links_expire_within_seconds"] == 3600
     assert data["room"] == {"id": str(ROOM_ID), "name": "Barovia", "game_system": "D&D 5e"}

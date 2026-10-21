@@ -42,7 +42,9 @@ from app.domain.imports import (
     plan_import,
     validate_files,
 )
+from app.domain.map_transfer import MapSkipReason, PlannedMap
 from app.domain.models import Membership
+from app.domain.relationship_maps import MapKind
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/imports", tags=["import"])
@@ -76,6 +78,22 @@ class PreviewDocumentResponse(BaseModel):
     warnings: list[ImportWarningResponse]
 
 
+class PreviewMapResponse(BaseModel):
+    """A map found in the files (spec 40). `key` names it in the import
+    request. `documents_count` is how many Documents it places once imported;
+    `skipped` says why it would not be created (`invalid`, `limit`), else
+    null. Its warnings: `documents_left_out` (cards or places of Documents not
+    imported), `master_only_dropped`, `selective_to_private`."""
+
+    key: str
+    file_name: str
+    name: str
+    kind: MapKind
+    documents_count: int
+    skipped: MapSkipReason | None
+    warnings: list[ImportWarningResponse]
+
+
 class PreviewTagResponse(BaseModel):
     """A Tag the import would create."""
 
@@ -93,14 +111,17 @@ class ImportPreviewResponse(BaseModel):
     matched_tags: list[str]
     tags_to_create: list[PreviewTagResponse]
     unavailable_tags: list[str]
+    maps: list[PreviewMapResponse]
 
 
 class ImportChoicesRequest(BaseModel):
     """The importer's choices: `selected` are the keys of the Documents to
-    import and `replace` the ones among them to replace instead of copy."""
+    import and `replace` the ones among them to replace instead of copy;
+    `maps` the keys of the maps to import, all of them when absent."""
 
     selected: list[str]
     replace: list[str] = []
+    maps: list[str] | None = None
 
 
 class SkippedResponse(BaseModel):
@@ -122,12 +143,23 @@ class ImportedDocumentResponse(BaseModel):
     name: str
 
 
+class SkippedMapResponse(BaseModel):
+    """A map the import did not create (`invalid`, `limit`), or whose
+    background it could not attach (`background`, the map exists)."""
+
+    name: str
+    reason: str
+
+
 class ImportResultResponse(BaseModel):
-    """What a finished import did."""
+    """What a finished import did: the Documents, the maps it created (spec
+    40) and what it skipped."""
 
     created: list[ImportedDocumentResponse]
     replaced: list[ImportedDocumentResponse]
     skipped: list[SkippedResponse]
+    maps: list[ImportedDocumentResponse] = []
+    skipped_maps: list[SkippedMapResponse] = []
 
 
 class ImportJobResponse(BaseModel):
@@ -237,8 +269,9 @@ async def preview_import(
     """What importing the uploaded files (up to 10, JSON or Markdown, each at
     most 5 MB) would do, without writing or fetching anything: the Documents
     found, which of them still exist in the Room (they can be copied or
-    replaced), the Tags matched and to create, and per Document what is
-    dropped or changed. For whoever may create Documents here (403
+    replaced), the Tags matched and to create, per Document what is dropped or
+    changed, and the maps of a JSON export (spec 40) with what each leaves
+    out or why it would be skipped. For whoever may create Documents here (403
     otherwise); 413 for a file over the limit, 422 for an unreadable file or
     one over a limit."""
     importer = await _importer(session, room_id, uuid.UUID(current_user.id), locale)
@@ -251,6 +284,29 @@ async def preview_import(
             PreviewTagResponse(name=t.name, category=t.category) for t in plan.new_tags
         ],
         unavailable_tags=list(plan.unavailable_tags),
+        maps=[_preview_map(m) for m in plan.maps],
+    )
+
+
+def _preview_map(planned: PlannedMap) -> PreviewMapResponse:
+    """A planned map as the preview shows it."""
+    warnings = [
+        _warning(code, count, ())
+        for code, count in (
+            ("documents_left_out", planned.left_out),
+            ("master_only_dropped", planned.master_only_dropped),
+            ("selective_to_private", int(planned.selective_to_private)),
+        )
+        if count and planned.skipped is None
+    ]
+    return PreviewMapResponse(
+        key=planned.key,
+        file_name=planned.file_name,
+        name=planned.name,
+        kind=planned.kind,
+        documents_count=planned.document_count,
+        skipped=planned.skipped,
+        warnings=warnings,
     )
 
 
@@ -293,7 +349,11 @@ async def start_import(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.import.badChoices", locale
         ) from exc
     parsed = await _read_files(files, locale)
-    import_choices = ImportChoices(frozenset(chosen.selected), frozenset(chosen.replace))
+    import_choices = ImportChoices(
+        frozenset(chosen.selected),
+        frozenset(chosen.replace),
+        None if chosen.maps is None else frozenset(chosen.maps),
+    )
     await _plan(session, room_id, importer, parsed, import_choices, locale)
 
     job = ImportJob(

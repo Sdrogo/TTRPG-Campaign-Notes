@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "Duplicar",
       "confirmTitle": "Duplicar \"{{name}}\"?",
-      "confirmBody": "Documentos, Notas, Tags e imagens são copiados. Comentários, anexos PDF e membros não. Serás o único Master da cópia.",
+      "confirmBody": "Documentos, Notas, Tags, mapas e imagens são copiados. Comentários, anexos PDF e membros não. Serás o único Master da cópia.",
       "copyName": "{{name}} (Cópia)",
       "created": "\"{{name}}\" criada"
     },
@@ -458,10 +458,13 @@
     "moveDown": "Descer a Nota: {{title}}",
     "deleteConfirmTitle": "Eliminar esta Nota?",
     "deleteConfirmBody": "\"{{title}}\" será eliminada. Podes recuperá-la no Histórico do Documento.",
+    "relationalLink": "Ligação relacional",
     "form": {
       "title": "Título",
       "selectiveLabel": "Membros que podem ver a Nota",
-      "selectivePlaceholder": "Quem a pode ver"
+      "selectivePlaceholder": "Quem a pode ver",
+      "relationalLink": "Ligação relacional",
+      "relationalLinkHint": "As menções escritas nesta Nota desenham setas no mapa de menções"
     }
   },
   "files": {
@@ -759,7 +762,7 @@
     "action": "Importar Documentos",
     "title": "Importar Documentos",
     "intro": "Carrega um ou mais ficheiros JSON ou Markdown, incluindo a exportação de uma Sala inteira. Primeiro verás o que seria importado: nada é escrito até confirmares.",
-    "jsonHint": "O JSON é o formato fiel; o Markdown é lido da melhor forma possível. Os Comentários, os anexos PDF, os Owner e a ligação ao jogador não são importados.",
+    "jsonHint": "O JSON é o formato fiel, e o único que traz os mapas; o Markdown é lido o melhor possível. Comentários, anexos PDF, Owners e a ligação ao jogador não são importados.",
     "files": "Ficheiros a importar",
     "filesPlaceholder": "Escolhe um ou mais ficheiros .json ou .md",
     "preview": "Pré-visualização",
@@ -817,6 +820,34 @@
       "limit": "o Documento já tem o máximo de imagens",
       "storage": "armazenamento indisponível",
       "failed": "erro inesperado"
+    },
+    "maps": {
+      "found_one": "{{count}} mapa encontrado",
+      "found_other": "{{count}} mapas encontrados",
+      "select": "Importar o mapa {{name}}",
+      "unnamed": "Mapa sem nome",
+      "kind": {
+        "free": "Quadro livre",
+        "geographic": "Mapa geográfico"
+      },
+      "documentsCount_one": "{{count}} Documento no mapa",
+      "documentsCount_other": "{{count}} Documentos no mapa",
+      "warning": {
+        "documents_left_out_one": "{{count}} cartão ou lugar de um Documento não importado fica de fora",
+        "documents_left_out_other": "{{count}} cartões ou lugares de Documentos não importados ficam de fora",
+        "master_only_dropped_one": "{{count}} elemento só para o Master fica de fora",
+        "master_only_dropped_other": "{{count}} elementos só para o Master ficam de fora",
+        "selective_to_private": "A visibilidade Seletiva passa a Privada"
+      },
+      "skipReason": {
+        "invalid": "Não pode ser importado: não se consegue ler ou viola uma regra dos mapas",
+        "limit": "A Sala já tem o número máximo de mapas",
+        "background": "Não foi possível importar a imagem de fundo"
+      },
+      "created_one": "{{count}} mapa criado",
+      "created_other": "{{count}} mapas criados",
+      "skippedTitle_one": "{{count}} mapa não importado por completo",
+      "skippedTitle_other": "{{count}} mapas não importados por completo"
     },
     "failed": "A importação falhou. Verifica a lista de Documentos antes de tentares novamente.",
     "another": "Importar outros ficheiros"
@@ -986,6 +1017,7 @@
       "previewLoading": "A carregar a pré-visualização",
       "leftOut": "Não mostrados, pois um mapa contém 150 cartões: {{number}}",
       "nothingYet": "Ainda sem menções",
+      "relationalLinksOnly": "Só contam as menções escritas em Notas marcadas como Ligação relacional.",
       "create": "Criar mapa",
       "target": "Mapa",
       "targetNew": "Novo mapa de menções",

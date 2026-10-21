@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "Duplicar",
       "confirmTitle": "¿Duplicar \"{{name}}\"?",
-      "confirmBody": "Se copian Documentos, Notas, Etiquetas e imágenes. No se copian Comentarios, adjuntos PDF ni miembros. Serás el único Master de la copia.",
+      "confirmBody": "Se copian Documentos, Notas, Etiquetas, mapas e imágenes. No se copian Comentarios, adjuntos PDF ni miembros. Serás el único Master de la copia.",
       "copyName": "{{name}} (Copia)",
       "created": "Creada \"{{name}}\""
     },
@@ -458,10 +458,13 @@
     "moveDown": "Bajar la Nota: {{title}}",
     "deleteConfirmTitle": "¿Eliminar esta Nota?",
     "deleteConfirmBody": "\"{{title}}\" se eliminará. Puedes recuperarla desde el Historial del Documento.",
+    "relationalLink": "Enlace relacional",
     "form": {
       "title": "Título",
       "selectiveLabel": "Miembros que pueden ver la Nota",
-      "selectivePlaceholder": "Quién puede verla"
+      "selectivePlaceholder": "Quién puede verla",
+      "relationalLink": "Enlace relacional",
+      "relationalLinkHint": "Las menciones escritas en esta Nota dibujan flechas en el mapa de menciones"
     }
   },
   "files": {
@@ -757,7 +760,7 @@
     "action": "Importar Documentos",
     "title": "Importar Documentos",
     "intro": "Sube uno o más archivos JSON o Markdown, también la exportación de una Sala entera. Primero verás qué se importaría: no se escribe nada hasta que confirmes.",
-    "jsonHint": "El JSON es el formato fiel; el Markdown se lee lo mejor posible. Los Comentarios, los adjuntos PDF, los Owner y el vínculo con el jugador no se importan.",
+    "jsonHint": "JSON es el formato fiel, y el único que trae los mapas; Markdown se lee lo mejor posible. No se importan los Comentarios, los adjuntos PDF, los Owners ni el vínculo con el jugador.",
     "files": "Archivos que importar",
     "filesPlaceholder": "Elige uno o más archivos .json o .md",
     "preview": "Vista previa",
@@ -815,6 +818,34 @@
       "limit": "el Documento ya tiene el máximo de imágenes",
       "storage": "almacenamiento no disponible",
       "failed": "error inesperado"
+    },
+    "maps": {
+      "found_one": "{{count}} mapa encontrado",
+      "found_other": "{{count}} mapas encontrados",
+      "select": "Importar el mapa {{name}}",
+      "unnamed": "Mapa sin nombre",
+      "kind": {
+        "free": "Pizarra libre",
+        "geographic": "Mapa geográfico"
+      },
+      "documentsCount_one": "{{count}} Documento en él",
+      "documentsCount_other": "{{count}} Documentos en él",
+      "warning": {
+        "documents_left_out_one": "Se omite {{count}} tarjeta o lugar de un Documento que no se importa",
+        "documents_left_out_other": "Se omiten {{count}} tarjetas o lugares de Documentos que no se importan",
+        "master_only_dropped_one": "Se omite {{count}} elemento solo para el Master",
+        "master_only_dropped_other": "Se omiten {{count}} elementos solo para el Master",
+        "selective_to_private": "Su visibilidad Selectiva pasa a Privada"
+      },
+      "skipReason": {
+        "invalid": "No se puede importar: no se puede leer o incumple una regla de los mapas",
+        "limit": "La Sala ya tiene el número máximo de mapas",
+        "background": "No se pudo importar su imagen de fondo"
+      },
+      "created_one": "{{count}} mapa creado",
+      "created_other": "{{count}} mapas creados",
+      "skippedTitle_one": "{{count}} mapa no importado del todo",
+      "skippedTitle_other": "{{count}} mapas no importados del todo"
     },
     "failed": "La importación ha fallado. Revisa la lista de Documentos antes de volver a intentarlo.",
     "another": "Importar otros archivos"
@@ -984,6 +1015,7 @@
       "previewLoading": "Cargando la vista previa",
       "leftOut": "No mostrados, ya que un mapa admite 150 tarjetas: {{number}}",
       "nothingYet": "Aún no hay menciones",
+      "relationalLinksOnly": "Solo cuentan las menciones escritas en Notas marcadas como Enlace relacional.",
       "create": "Crear mapa",
       "target": "Mapa",
       "targetNew": "Nuevo mapa de menciones",

@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "복제",
       "confirmTitle": "\"{{name}}\"을(를) 복제할까요?",
-      "confirmBody": "문서, 노트, 태그, 이미지가 복사됩니다. 댓글, PDF 첨부 파일, 멤버는 복사되지 않습니다. 사본의 Master는 나 혼자입니다.",
+      "confirmBody": "문서, 노트, 태그, 지도, 이미지가 복사됩니다. 댓글, PDF 첨부 파일, 멤버는 복사되지 않습니다. 사본의 Master는 나 혼자입니다.",
       "copyName": "{{name}} (복사본)",
       "created": "\"{{name}}\"을(를) 만들었습니다"
     },
@@ -456,10 +456,13 @@
     "moveDown": "노트 아래로 이동: {{title}}",
     "deleteConfirmTitle": "이 노트를 삭제할까요?",
     "deleteConfirmBody": "\"{{title}}\"이(가) 삭제됩니다. 문서의 기록에서 복구할 수 있습니다.",
+    "relationalLink": "관계 링크",
     "form": {
       "title": "제목",
       "selectiveLabel": "노트를 볼 수 있는 멤버",
-      "selectivePlaceholder": "볼 수 있는 사람"
+      "selectivePlaceholder": "볼 수 있는 사람",
+      "relationalLink": "관계 링크",
+      "relationalLinkHint": "이 노트에 쓴 언급은 언급 지도에 화살표를 그립니다"
     }
   },
   "files": {
@@ -747,7 +750,7 @@
     "action": "문서 가져오기",
     "title": "문서 가져오기",
     "intro": "JSON 또는 Markdown 파일을 하나 이상 올리세요. 룸 전체를 내보낸 파일도 가능합니다. 먼저 가져올 내용을 미리 보여 주며, 확인하기 전에는 아무것도 기록되지 않습니다.",
-    "jsonHint": "JSON은 원본을 충실히 가져오는 형식이고, Markdown은 최대한 읽어 들입니다. 댓글, PDF 첨부 파일, Owner, 플레이어 연결은 가져오지 않습니다.",
+    "jsonHint": "JSON은 원본에 충실한 형식이며 지도를 옮길 수 있는 유일한 형식입니다. Markdown은 최대한 읽어 들입니다. 댓글, PDF 첨부 파일, Owner, 플레이어 연결은 가져오지 않습니다.",
     "files": "가져올 파일",
     "filesPlaceholder": ".json 또는 .md 파일을 하나 이상 선택",
     "preview": "미리보기",
@@ -795,6 +798,28 @@
       "limit": "문서가 이미 최대 이미지 수에 도달함",
       "storage": "저장소를 사용할 수 없음",
       "failed": "예기치 않은 오류"
+    },
+    "maps": {
+      "found_other": "지도 {{count}}개를 찾았습니다",
+      "select": "지도 {{name}} 가져오기",
+      "unnamed": "이름 없는 지도",
+      "kind": {
+        "free": "자유 보드",
+        "geographic": "지리 지도"
+      },
+      "documentsCount_other": "문서 {{count}}개",
+      "warning": {
+        "documents_left_out_other": "가져오지 않는 문서의 카드나 장소 {{count}}개는 빠집니다",
+        "master_only_dropped_other": "Master 전용 항목 {{count}}개는 빠집니다",
+        "selective_to_private": "선택 공개는 비공개가 됩니다"
+      },
+      "skipReason": {
+        "invalid": "가져올 수 없습니다: 읽을 수 없거나 지도 규칙에 어긋납니다",
+        "limit": "이 룸에는 이미 지도가 최대 개수만큼 있습니다",
+        "background": "배경 이미지를 가져오지 못했습니다"
+      },
+      "created_other": "지도 {{count}}개를 만들었습니다",
+      "skippedTitle_other": "완전히 가져오지 못한 지도 {{count}}개"
     },
     "failed": "가져오기에 실패했습니다. 다시 시도하기 전에 문서 목록을 확인하세요.",
     "another": "다른 파일 가져오기"
@@ -962,6 +987,7 @@
       "previewLoading": "미리보기 불러오는 중",
       "leftOut": "지도에는 카드 150장까지만 놓을 수 있어 표시하지 않음: {{number}}",
       "nothingYet": "아직 언급이 없습니다",
+      "relationalLinksOnly": "관계 링크로 표시한 노트에 쓴 언급만 반영됩니다.",
       "create": "지도 만들기",
       "target": "지도",
       "targetNew": "새 언급 지도",

@@ -23,6 +23,7 @@ def _note_from_row(row: NoteRow) -> Note:
         created_by=row.created_by,
         created_at=row.created_at,
         updated_at=row.updated_at,
+        relational_link=row.relational_link,
     )
 
 
@@ -42,6 +43,7 @@ async def insert_note(
             created_by=note.created_by,
             created_at=note.created_at,
             updated_at=note.updated_at,
+            relational_link=note.relational_link,
         )
     )
     await session.flush()
@@ -88,14 +90,15 @@ async def get_notes_by_ids(session: AsyncSession, note_ids: Sequence[uuid.UUID])
 
 
 async def update_note(session: AsyncSession, note: Note) -> None:
-    """Writes a Note's text, visibility and timestamp. Raises `LookupError` if
-    it no longer exists."""
+    """Writes a Note's text, visibility, Relational link flag and timestamp.
+    Raises `LookupError` if it no longer exists."""
     row = await session.get(NoteRow, note.id)
     if row is None:
         raise LookupError(f"Note {note.id} not found")
     row.title = note.title
     row.description = note.description
     row.visibility = note.visibility.value
+    row.relational_link = note.relational_link
     row.updated_at = note.updated_at
     await session.flush()
 

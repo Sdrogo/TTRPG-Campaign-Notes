@@ -19,6 +19,7 @@ const form: NoteFormValues = {
   description: 'Dietro la libreria.',
   visibility: 'selective',
   selectiveUserIds: ['user-2'],
+  relationalLink: true,
 };
 
 beforeEach(() => {
@@ -46,6 +47,7 @@ describe('useCreateNote', () => {
         description: 'Dietro la libreria.',
         visibility: 'selective',
         selective_user_ids: ['user-2'],
+        relational_link: true,
       },
     });
     expect(created?.title).toBe('Porta segreta');
@@ -82,6 +84,7 @@ describe('useUpdateNote', () => {
         description: 'Dietro la libreria.',
         visibility: 'room',
         selective_user_ids: [],
+        relational_link: true,
       },
     });
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY }));

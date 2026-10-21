@@ -1,8 +1,10 @@
 """The background work of a Document import (spec 27 Decisions 9 and 15):
 starts from a queued `import_jobs` row, checks again that the importer may do
-it, plans against the Room as it is then, writes Tags, Documents and Notes in
-one transaction (all or nothing), then fetches and attaches the images best
-effort. Any failure marks the job failed; nothing here raises to the caller."""
+it, plans against the Room as it is then, writes Tags, Documents, Notes and
+maps (spec 40) in one transaction (all or nothing), then fetches and attaches
+the images and map backgrounds best effort and points map cards at the images
+they chose. Any failure marks the job failed; nothing here raises to the
+caller."""
 
 import asyncio
 import logging
@@ -11,6 +13,7 @@ from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlsplit
 
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import get_visible_images, get_visible_images_for_documents
@@ -19,7 +22,9 @@ from app.db import (
     documents_repo,
     import_jobs_repo,
     imports_repo,
+    map_transfer_repo,
     mentions_repo,
+    relationship_maps_repo,
     remote_images,
     rooms_repo,
     storage,
@@ -27,6 +32,7 @@ from app.db import (
     tags_repo,
 )
 from app.db import session as session_module
+from app.db.models import DocumentImageRow, RelationshipMapCardRow, RelationshipMapRow
 from app.domain.documents import (
     MAX_IMAGES_PER_DOCUMENT,
     can_create_document,
@@ -34,6 +40,7 @@ from app.domain.documents import (
     plan_new_image,
 )
 from app.domain.errors import DomainError
+from app.domain.geographic_maps import MAX_BACKGROUND_DIMENSION, plan_background_path
 from app.domain.images import (
     MAX_INPUT_BYTES,
     ImageTooLargeError,
@@ -52,8 +59,10 @@ from app.domain.imports import (
     fold,
     plan_import,
 )
+from app.domain.map_transfer import MapSkipReason, PlannedMap, to_source_map
 from app.domain.mentions import plan_source_mentions
 from app.domain.models import Membership, MentionSource, MentionSourceKind, Room, RoomRole
+from app.domain.relationship_maps import MAX_MAPS_PER_ROOM, is_map_visible
 from app.domain.visibility import is_document_visible
 
 logger = logging.getLogger(__name__)
@@ -73,16 +82,21 @@ def job_payload(files: list[ImportFile], choices: ImportChoices) -> dict[str, An
         "files": [file_to_json(file) for file in files],
         "selected": None if choices.selected is None else sorted(choices.selected),
         "replace": sorted(choices.replace),
+        "maps": None if choices.maps is None else sorted(choices.maps),
     }
 
 
 def _from_payload(payload: dict[str, Any]) -> tuple[list[ImportFile], ImportChoices]:
     """The inverse of `job_payload`."""
     selected = payload["selected"]
+    # Absent from the payload of a job queued before spec 40: every map.
+    maps = payload.get("maps")
     return (
         [file_from_json(data) for data in payload["files"]],
         ImportChoices(
-            None if selected is None else frozenset(selected), frozenset(payload["replace"])
+            None if selected is None else frozenset(selected),
+            frozenset(payload["replace"]),
+            None if maps is None else frozenset(maps),
         ),
     )
 
@@ -119,6 +133,8 @@ async def load_import_context(
         },
         room_tags={fold(tag.name): (tag.id, tag.name) for tag in tags},
         can_manage_tags=importer.is_admin or importer.role is RoomRole.MASTER,
+        is_master=importer.role is RoomRole.MASTER,
+        map_count=await relationship_maps_repo.count_maps_for_room(session, room.id),
     )
 
 
@@ -130,9 +146,23 @@ async def run_import_job(job_id: uuid.UUID) -> None:
         if started is None:
             return
         job, importer, plan = started
-        created, replaced = await _write(job, importer, plan)
-        skipped = await _attach_images(job.room_id, importer.user_id, plan)
-        result = {"created": created, "replaced": replaced, "skipped": skipped}
+        created, replaced, maps = await _write(job, importer, plan)
+        skipped, attached = await _attach_images(job.room_id, importer.user_id, plan)
+        created_keys = {m.key for m in maps}
+        skipped_maps = [
+            {"name": m.name, "reason": (m.skipped or MapSkipReason.LIMIT).value}
+            for m in plan.maps
+            if m.key not in created_keys
+        ]
+        skipped_maps += await _attach_backgrounds(job.room_id, importer.user_id, maps)
+        await _point_card_images(maps, attached)
+        result = {
+            "created": created,
+            "replaced": replaced,
+            "skipped": skipped,
+            "maps": [{"id": str(m.id), "name": m.name} for m in maps],
+            "skipped_maps": skipped_maps,
+        }
         async with session_module.independent_session() as session:
             await import_jobs_repo.mark_done(session, job.id, result, datetime.now(UTC))
             await session.commit()
@@ -179,10 +209,12 @@ async def _start(job_id: uuid.UUID) -> tuple[ImportJob, Membership, ImportPlan] 
 
 async def _write(
     job: ImportJob, importer: Membership, plan: ImportPlan
-) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+) -> tuple[list[dict[str, str]], list[dict[str, str]], list[PlannedMap]]:
     """The one transaction of the import (Decision 9): Tags, copied Documents,
-    replaced information, backlinks and history. Returns the Documents created
-    and replaced as `{id, name}`."""
+    replaced information, backlinks, history and the maps (spec 40). Returns
+    the Documents created and replaced as `{id, name}`, and the maps created:
+    the planned ones the Room still has room for, counted under its lock (a
+    map created meanwhile pushes the last ones out, as `limit`)."""
     now = datetime.now(UTC)
     copies = [d for d in plan.documents if not d.replaces]
     replaced = [d for d in plan.documents if d.replaces]
@@ -197,10 +229,24 @@ async def _write(
         for document in replaced:
             # One new revision, so the replace can be undone from the history.
             await record_revision(session, document.id, importer.user_id, now=now, force_new=True)
+        maps = [m for m in plan.maps if m.skipped is None]
+        if maps:
+            await rooms_repo.lock_room(session, job.room_id)
+            room_left = MAX_MAPS_PER_ROOM - await relationship_maps_repo.count_maps_for_room(
+                session, job.room_id
+            )
+            maps = maps[: max(room_left, 0)]
+            await map_transfer_repo.insert_maps(
+                session,
+                [to_source_map(m, job.room_id, importer.user_id, now) for m in maps],
+                importer.user_id,
+                now,
+            )
         await session.commit()
     return (
         [{"id": str(d.id), "name": d.name} for d in copies],
         [{"id": str(d.id), "name": d.name} for d in replaced],
+        maps,
     )
 
 
@@ -238,11 +284,14 @@ def _skip(plan_document: PlannedDocument, url: str, reason: str) -> dict[str, st
 
 async def _attach_images(
     room_id: uuid.UUID, importer_id: uuid.UUID, plan: ImportPlan
-) -> list[dict[str, str]]:
+) -> tuple[list[dict[str, str]], dict[tuple[uuid.UUID, str], uuid.UUID]]:
     """Fetches and attaches every planned image, a few at a time, each
     Document's in order so its favorite is stored first. One that fails is
-    skipped and listed, never failing the import (Decision 15)."""
+    skipped and listed, never failing the import (Decision 15). Also returns
+    the new image of each Document by the image's id in the file, for the map
+    cards that chose it (spec 40 Decision 13)."""
     skipped: list[dict[str, str]] = []
+    attached: dict[tuple[uuid.UUID, str], uuid.UUID] = {}
     gate = asyncio.Semaphore(_IMAGES_AT_ONCE)
     database = asyncio.Lock()
 
@@ -258,11 +307,14 @@ async def _attach_images(
                         continue
             async with database:
                 reason = await _store_image(room_id, importer_id, document, data)
-            if reason is not None:
+            if isinstance(reason, uuid.UUID):
+                if image.source_id is not None:
+                    attached[(document.id, image.source_id)] = reason
+            elif reason is not None:
                 skipped.append(_skip(document, image.url, reason))
 
     await asyncio.gather(*(one_document(d) for d in plan.documents if d.images))
-    return skipped
+    return skipped, attached
 
 
 async def _read_own_image(url: str, importer_id: uuid.UUID) -> bytes | None:
@@ -300,11 +352,12 @@ async def _read_own_image(url: str, importer_id: uuid.UUID) -> bytes | None:
 
 async def _store_image(
     room_id: uuid.UUID, importer_id: uuid.UUID, document: PlannedDocument, data: bytes
-) -> str | None:
+) -> uuid.UUID | str | None:
     """Attaches one fetched image to its Document in the usual order
     (`record_pending_upload`, upload, row and `confirm_upload` in one
-    transaction), so a crash leaks nothing. None when it is stored, else why
-    it was skipped; a Document deleted meanwhile just drops its images."""
+    transaction), so a crash leaks nothing. The new image's id when it is
+    stored, else why it was skipped; None for a Document deleted meanwhile,
+    which just drops its images."""
     try:
         normalized = await asyncio.to_thread(normalize_image, data)
     except ImageTooLargeError:
@@ -331,4 +384,118 @@ async def _store_image(
     except Exception:
         logger.exception("An imported image could not be attached")
         return "failed"
-    return None
+    return image.id
+
+
+async def _point_card_images(
+    maps: list[PlannedMap], attached: dict[tuple[uuid.UUID, str], uuid.UUID]
+) -> None:
+    """Points each created card at the image it chose in the file (spec 40
+    Decision 13): the image the job just attached, or for a replaced
+    Document one it still has under the file's id. A card whose image never
+    came keeps showing its Document's favorite. One query and one statement."""
+    wanted = [image for planned in maps for image in planned.card_images]
+    if not wanted:
+        return
+    async with session_module.independent_session() as session:
+        # A card's image id in the file is a UUID (`read_map` checks it).
+        candidates = {image.card_id: uuid.UUID(image.source_id) for image in wanted}
+        kept = {
+            (document_id, image_id)
+            for document_id, image_id in await session.execute(
+                select(DocumentImageRow.document_id, DocumentImageRow.id).where(
+                    DocumentImageRow.id.in_(list(candidates.values())),
+                    DocumentImageRow.post_id.is_(None),
+                )
+            )
+        }
+        values = []
+        for image in wanted:
+            found = attached.get((image.document_id, image.source_id))
+            existing = candidates.get(image.card_id)
+            if found is None and (image.document_id, existing) in kept:
+                found = existing
+            if found is not None:
+                values.append({"id": image.card_id, "image_id": found})
+        if values:
+            # ORM bulk UPDATE by primary key: one statement for every card.
+            await session.execute(update(RelationshipMapCardRow), values)
+        await session.commit()
+
+
+async def _attach_backgrounds(
+    room_id: uuid.UUID, importer_id: uuid.UUID, maps: list[PlannedMap]
+) -> list[dict[str, str]]:
+    """Fetches and stores the background of each created geographic map that
+    has one (spec 40 Decision 13), like an uploaded background: validated, at
+    most `MAX_BACKGROUND_DIMENSION` px, the usual Storage order. One that
+    fails is listed as `background` and its map stays without it."""
+    skipped: list[dict[str, str]] = []
+    for planned in maps:
+        if planned.background_url is None:
+            continue
+        if not await _store_background(room_id, importer_id, planned, planned.background_url):
+            skipped.append({"name": planned.name, "reason": "background"})
+    return skipped
+
+
+async def _store_background(
+    room_id: uuid.UUID, importer_id: uuid.UUID, planned: PlannedMap, url: str
+) -> bool:
+    """One map's background, read from this app's Storage when the importer
+    sees a map that has it, else fetched from `url`. Whether it is stored; a
+    map deleted meanwhile counts as done."""
+    data = await _read_own_background(url, importer_id)
+    try:
+        if data is None:
+            data = await remote_images.fetch_image_bytes(url)
+        normalized = await asyncio.to_thread(normalize_image, data, MAX_BACKGROUND_DIMENSION)
+    except (remote_images.RemoteImageError, ImageTooLargeError, InvalidImageError):
+        return False
+    path = plan_background_path(room_id, planned.id, normalized.extension)
+    try:
+        async with session_module.independent_session() as session:
+            if await relationship_maps_repo.lock_map(session, planned.id) is None:
+                return True  # pragma: no cover - only a deletion while the job runs
+            await storage_cleanup.record_pending_upload(path)
+            await storage.upload(path, normalized.data, normalized.content_type)
+            await relationship_maps_repo.set_background(session, planned.id, path)
+            await storage_cleanup.confirm_upload(session, path)
+            await session.commit()
+    except storage.StorageError:
+        return False
+    except Exception:
+        logger.exception("An imported map background could not be attached")
+        return False
+    return True
+
+
+async def _read_own_background(url: str, importer_id: uuid.UUID) -> bytes | None:
+    """The bytes of a map background the file links in this app's own bucket,
+    read straight from Storage like `_read_own_image`, only when the importer
+    sees, right now, a map that has it as its background (Invariant 1)."""
+    path = storage.own_object_path(url)
+    if path is None:
+        return None
+    async with session_module.independent_session() as session:
+        maps = (
+            await session.scalars(
+                select(RelationshipMapRow).where(RelationshipMapRow.background_path == path)
+            )
+        ).all()
+        grants = await relationship_maps_repo.list_grants_for_maps(session, [m.id for m in maps])
+        visible = False
+        for row in maps:
+            viewer = await rooms_repo.get_membership(session, row.room_id, importer_id)
+            relationship_map = await relationship_maps_repo.get_map(session, row.id)
+            if viewer is not None and relationship_map is not None:
+                visible = visible or is_map_visible(
+                    relationship_map, viewer.user_id, viewer.role, grants[row.id]
+                )
+        if not visible:
+            return None
+    try:
+        return await storage.download(path, MAX_INPUT_BYTES)
+    except storage.StorageError:
+        logger.warning("An imported map background could not be read from Storage", exc_info=True)
+        return None

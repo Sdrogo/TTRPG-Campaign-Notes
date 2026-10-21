@@ -83,6 +83,9 @@ describe('MentionMapModal', () => {
     preview = () => Promise.resolve({ documents: 0, relations: 0, documents_left_out: 0 });
     renderModal();
     expect(await screen.findByText('Ancora nessuna menzione')).toBeInTheDocument();
+    expect(
+      screen.getByText('Contano solo le menzioni scritte nelle Note segnate come Link relazionale.'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Crea mappa' })).toBeDisabled();
   });
 

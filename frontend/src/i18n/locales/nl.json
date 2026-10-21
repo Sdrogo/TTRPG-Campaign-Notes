@@ -189,7 +189,7 @@
     "duplicate": {
       "action": "Dupliceren",
       "confirmTitle": "\"{{name}}\" dupliceren?",
-      "confirmBody": "Documenten, Notities, Tags en afbeeldingen worden gekopieerd. Opmerkingen, pdf-bijlagen en leden niet. Jij wordt de enige Master van de kopie.",
+      "confirmBody": "Documenten, Notities, Tags, kaarten en afbeeldingen worden gekopieerd. Opmerkingen, pdf-bijlagen en leden niet. Jij wordt de enige Master van de kopie.",
       "copyName": "{{name}} (Kopie)",
       "created": "\"{{name}}\" gemaakt"
     },
@@ -458,10 +458,13 @@
     "moveDown": "Notitie omlaag verplaatsen: {{title}}",
     "deleteConfirmTitle": "Deze Notitie verwijderen?",
     "deleteConfirmBody": "\"{{title}}\" wordt verwijderd. Je kunt hem terughalen via de Geschiedenis van het Document.",
+    "relationalLink": "Relatielink",
     "form": {
       "title": "Titel",
       "selectiveLabel": "Leden die de Notitie kunnen zien",
-      "selectivePlaceholder": "Wie kan hem zien"
+      "selectivePlaceholder": "Wie kan hem zien",
+      "relationalLink": "Relatielink",
+      "relationalLinkHint": "Vermeldingen in deze Notitie tekenen pijlen op de vermeldingenkaart"
     }
   },
   "files": {
@@ -757,7 +760,7 @@
     "action": "Documenten importeren",
     "title": "Documenten importeren",
     "intro": "Upload een of meer JSON- of Markdown-bestanden, ook de export van een hele Kamer. Je ziet eerst wat er zou worden geïmporteerd: er wordt niets geschreven tot je bevestigt.",
-    "jsonHint": "JSON is het getrouwe formaat; Markdown wordt zo goed mogelijk gelezen. Opmerkingen, pdf-bijlagen, Owners en de koppeling aan de speler worden niet geïmporteerd.",
+    "jsonHint": "JSON is het getrouwe formaat, en het enige dat kaarten meeneemt; Markdown wordt zo goed mogelijk gelezen. Opmerkingen, pdf-bijlagen, Owners en de koppeling met de speler worden niet geïmporteerd.",
     "files": "Bestanden om te importeren",
     "filesPlaceholder": "Kies een of meer .json- of .md-bestanden",
     "preview": "Voorbeeld",
@@ -815,6 +818,34 @@
       "limit": "het Document heeft al het maximum aan afbeeldingen",
       "storage": "opslag niet beschikbaar",
       "failed": "onverwachte fout"
+    },
+    "maps": {
+      "found_one": "{{count}} kaart gevonden",
+      "found_other": "{{count}} kaarten gevonden",
+      "select": "De kaart {{name}} importeren",
+      "unnamed": "Kaart zonder naam",
+      "kind": {
+        "free": "Vrij bord",
+        "geographic": "Geografische kaart"
+      },
+      "documentsCount_one": "{{count}} Document erop",
+      "documentsCount_other": "{{count}} Documenten erop",
+      "warning": {
+        "documents_left_out_one": "{{count}} kaartje of plaats van een Document dat niet wordt geïmporteerd, wordt weggelaten",
+        "documents_left_out_other": "{{count}} kaartjes of plaatsen van Documenten die niet worden geïmporteerd, worden weggelaten",
+        "master_only_dropped_one": "{{count}} element alleen voor de Master wordt weggelaten",
+        "master_only_dropped_other": "{{count}} elementen alleen voor de Master worden weggelaten",
+        "selective_to_private": "De selectieve zichtbaarheid wordt privé"
+      },
+      "skipReason": {
+        "invalid": "Kan niet worden geïmporteerd: onleesbaar of in strijd met een kaartregel",
+        "limit": "De Kamer heeft al het maximale aantal kaarten",
+        "background": "De achtergrondafbeelding kon niet worden geïmporteerd"
+      },
+      "created_one": "{{count}} kaart gemaakt",
+      "created_other": "{{count}} kaarten gemaakt",
+      "skippedTitle_one": "{{count}} kaart niet volledig geïmporteerd",
+      "skippedTitle_other": "{{count}} kaarten niet volledig geïmporteerd"
     },
     "failed": "Het importeren is mislukt. Controleer de lijst met Documenten voordat je het opnieuw probeert.",
     "another": "Meer bestanden importeren"
@@ -984,6 +1015,7 @@
       "previewLoading": "Voorbeeld laden",
       "leftOut": "Niet getoond, omdat een kaart 150 kaarten bevat: {{number}}",
       "nothingYet": "Nog geen vermeldingen",
+      "relationalLinksOnly": "Alleen vermeldingen in Notities die als Relatielink zijn gemarkeerd tellen mee.",
       "create": "Kaart maken",
       "target": "Kaart",
       "targetNew": "Nieuwe vermeldingenkaart",

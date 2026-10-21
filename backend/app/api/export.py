@@ -6,6 +6,7 @@ one per Document (NFR-04)."""
 
 import json
 import uuid
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
@@ -20,13 +21,22 @@ from app.api.access import (
 )
 from app.api.document_files import sign_files
 from app.api.errors import http_error
+from app.api.geographic_maps import AreaBody, LinkBody, PinBody
 from app.api.image_uploads import sign_images
+from app.api.relationship_maps import (
+    ArrowBody,
+    CardBody,
+    GroupBody,
+    visible_document_ids,
+)
 from app.auth.dependencies import CurrentUserDep
 from app.db import (
     comments_repo,
     documents_repo,
     files_repo,
+    geographic_maps_repo,
     notes_repo,
+    relationship_maps_repo,
     rooms_repo,
     storage,
     tags_repo,
@@ -44,7 +54,15 @@ from app.domain.export import (
     render_markdown,
     restrict_to_document,
 )
-from app.domain.models import Membership, Room
+from app.domain.geographic_maps import GeoBoard, placed_document_ids, visible_geo_board
+from app.domain.map_transfer import map_to_json
+from app.domain.models import DocumentVisibility, Membership, Room
+from app.domain.relationship_maps import (
+    Board,
+    MapKind,
+    is_map_visible,
+    visible_board,
+)
 from app.domain.tags import ordered_main_items
 from app.domain.visibility import is_document_visible
 from app.i18n.dependencies import LocaleDep
@@ -166,8 +184,33 @@ class TagJson(BaseModel):
     category: str | None
 
 
+class MapJson(BaseModel):
+    """A map the requester sees (spec 40), with its content as they see it: a
+    free map's `groups`, `cards` and `arrows`, a geographic map's `areas`,
+    `pins` and `links` (the other lists are empty). `background_url` expires
+    like the image links; `linked_document_ids` are the Documents of the file
+    that show the map on their page."""
+
+    id: uuid.UUID
+    name: str
+    description: str
+    kind: MapKind
+    visibility: DocumentVisibility
+    plane_width: int | None
+    plane_height: int | None
+    background_url: str | None
+    linked_document_ids: list[uuid.UUID]
+    groups: list[GroupBody]
+    cards: list[CardBody]
+    arrows: list[ArrowBody]
+    areas: list[AreaBody]
+    pins: list[PinBody]
+    links: list[LinkBody]
+
+
 class ExportJson(BaseModel):
-    """The JSON export (`schema_version` 2; 1 had no Document `subtitle`).
+    """The JSON export (`schema_version` 3; 1 had no Document `subtitle`, 2 no
+    `maps`).
     Every object carries its UUID and refers to others by id. `main_items` is
     the Room's grouping in order, each a list of Tag ids (one Tag, or a
     combination a Document belongs to when it carries all of them).
@@ -184,6 +227,7 @@ class ExportJson(BaseModel):
     tags: list[TagJson]
     main_items: list[list[uuid.UUID]]
     documents: list[DocumentJson]
+    maps: list[MapJson]
 
 
 EXPORT_MEDIA_TYPES = {
@@ -302,6 +346,53 @@ async def load_export(
     return export if document_id is None else restrict_to_document(export, document_id)
 
 
+async def export_maps(
+    session: AsyncSession, room_id: uuid.UUID, viewer: Membership, export: Export
+) -> list[dict[str, Any]]:
+    """The Room's free and geographic maps `viewer` sees, each with its content
+    as the map page shows it to them (spec 40 Decision 7, Invariant 1): a
+    card, area or pin only for a Document they see, a card's chosen image
+    only when it is one of the file's, the links to the pages of the file's
+    Documents. Mention maps are left out. A fixed number of queries."""
+    maps = await relationship_maps_repo.list_maps_for_room(session, room_id)
+    grants = await relationship_maps_repo.list_grants_for_maps(session, [m.id for m in maps])
+    shown = [m for m in maps if is_map_visible(m, viewer.user_id, viewer.role, grants[m.id])]
+    ids = [m.id for m in shown]
+    boards = await relationship_maps_repo.get_boards(
+        session, [m.id for m in shown if m.kind is MapKind.FREE]
+    )
+    geo = await geographic_maps_repo.get_geo_boards(
+        session, [m.id for m in shown if m.kind is MapKind.GEOGRAPHIC]
+    )
+    placed = [c.document_id for b in boards.values() for c in b.cards if c.document_id]
+    placed += [d for g in geo.values() for d in placed_document_ids(g.areas, g.pins)]
+    visible = await visible_document_ids(session, placed, viewer)
+    in_file = {document.id for document in export.documents}
+    images = {image.id for document in export.documents for image in document.images}
+    linked = await relationship_maps_repo.list_linked_documents(session, ids)
+    backgrounds = await storage.signed_urls([m.background_path for m in shown if m.background_path])
+    result = []
+    for relationship_map in shown:
+        board = visible_board(boards.get(relationship_map.id, Board()), visible, viewer.role)
+        board = replace(
+            board,
+            cards=[
+                card if card.image_id in images else replace(card, image_id=None)
+                for card in board.cards
+            ],
+        )
+        result.append(
+            map_to_json(
+                relationship_map,
+                board,
+                visible_geo_board(geo.get(relationship_map.id, GeoBoard()), visible, viewer.role),
+                backgrounds.get(relationship_map.background_path or ""),
+                [d for d in linked[relationship_map.id] if d in in_file],
+            )
+        )
+    return result
+
+
 @router.get(
     "/rooms/{room_id}/export",
     response_class=Response,
@@ -326,7 +417,8 @@ async def export_room(
     """Downloads the Room as `<room>-<date>.json` or `.md` (`format`, JSON by
     default): the Room, its Tags and Main items, and the Documents the
     requester sees with their Notes, Comments and replies, mentions by id, and
-    images and PDF Attachments as signed links that expire (no binaries).
+    images and PDF Attachments as signed links that expire (no binaries). The
+    JSON file also holds the maps they see (spec 40).
     Nothing the requester can't see is in it, and nothing about invitations,
     the AuditLog or member emails (VR-07, NFR-03). Each `tag` keeps only
     Documents carrying all of them (like the list filter). For members only
@@ -341,6 +433,8 @@ async def export_room(
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.room.notFound", locale)
 
     export = await load_export(session, room, viewer, tag_ids)
+    if export_format is ExportFormat.JSON:
+        export = replace(export, maps=await export_maps(session, room_id, viewer, export))
     return _file_response(
         export, export_filename(room.name, export.generated_at, export_format), export_format
     )

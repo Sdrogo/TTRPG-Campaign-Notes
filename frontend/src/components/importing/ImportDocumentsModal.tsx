@@ -23,7 +23,7 @@ type Step = 'pick' | 'review' | 'existing' | 'job';
 
 /**
  * The import dialog (spec 27 Frontend): pick the files, read the preview and
- * untick what is not wanted, choose Copy or Replace for the Documents that
+ * untick the Documents and maps (spec 40) that are not wanted, choose Copy or Replace for the Documents that
  * already exist in the Room, then follow the background job to its result. Only
  * offered to members who may create Documents, and never while previewing as a
  * member; the backend checks both and decides every rule (what is dropped,
@@ -36,6 +36,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
   const [files, setFiles] = useState<File[]>([]);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectedMaps, setSelectedMaps] = useState<Set<string>>(new Set());
   const [resolutions, setResolutions] = useState<Record<string, ImportResolution>>({});
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
     setFiles([]);
     setPreview(null);
     setSelected(new Set());
+    setSelectedMaps(new Set());
     setResolutions({});
     setJobId(null);
     setError(null);
@@ -66,6 +68,9 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
       onSuccess: (found) => {
         setPreview(found);
         setSelected(new Set(found.documents.map((document) => document.key)));
+        setSelectedMaps(
+          new Set(found.maps.filter((map) => map.skipped === null).map((map) => map.key)),
+        );
         setResolutions({});
         setStep('review');
       },
@@ -82,7 +87,12 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
       .filter((document) => document.canReplace && resolutions[document.key] === 'replace')
       .map((document) => document.key);
     startImport.mutate(
-      { files, selected: ticked.map((document) => document.key), replace },
+      {
+        files,
+        selected: ticked.map((document) => document.key),
+        replace,
+        maps: [...selectedMaps],
+      },
       {
         onSuccess: (started) => {
           setJobId(started.id);
@@ -93,8 +103,8 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
     );
   };
 
-  const toggle = (key: string) =>
-    setSelected((current) => {
+  const toggleIn = (setter: typeof setSelected) => (key: string) =>
+    setter((current) => {
       const next = new Set(current);
       if (!next.delete(key)) next.add(key);
       return next;
@@ -131,7 +141,13 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
           </>
         )}
         {step === 'review' && preview && (
-          <ImportReviewStep preview={preview} selected={selected} onToggle={toggle} />
+          <ImportReviewStep
+            preview={preview}
+            selected={selected}
+            onToggle={toggleIn(setSelected)}
+            selectedMaps={selectedMaps}
+            onToggleMap={toggleIn(setSelectedMaps)}
+          />
         )}
         {step === 'existing' && (
           <ImportExistingStep
