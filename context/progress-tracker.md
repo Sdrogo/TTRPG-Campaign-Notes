@@ -142,6 +142,13 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-21
+
+- **Room PDF without `#`** (no migration, product owner's request): Tag
+  mentions, mentions of Documents the PDF doesn't hold and plain `#Name`
+  text print as the bare name in every style (`app/domain/manual.py`);
+  member mentions keep their `@`. Spec 23b Decision 3 updated.
+
 ### 2026-10-19
 
 - **40, Maps in Room duplication and export/import** (no migration): spec
