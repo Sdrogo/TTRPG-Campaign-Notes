@@ -103,15 +103,36 @@ def test_a_mention_links_only_to_a_printed_document() -> None:
     first, second = castle.paragraphs
     assert list(first) == [Run("Ruled by "), Run("Irena", f"doc-{IRENA}"), Run(".")]
     # "Gone" is not in the PDF (a Tag filter left it out) and a Tag has no
-    # page of its own: plain `#Name`.
+    # page of its own: its bare name, without the "#" (product owner,
+    # 2026-10-21). A member keeps its "@".
     assert list(second) == [
         Run("Second paragraph, near "),
-        Run("#Gone"),
+        Run("Gone"),
         Run(", for "),
-        Run("#NPC"),
+        Run("NPC"),
         Run(" and "),
         Run("@Alice"),
         Run("."),
+    ]
+
+
+def test_a_plain_hashtag_in_the_text_loses_its_hash() -> None:
+    """A `#Name` written before mentions had ids, or a token that doesn't
+    resolve for the requester, prints as the bare name (product owner,
+    2026-10-21). A "#" that doesn't open a word, or not before a letter, stays."""
+    export = make_export(
+        documents=[
+            document(
+                CASTLE,
+                "Castle",
+                description=(text("#Ghoul and (#Élise), room #3, a#b, # alone, #_x"),),
+            ),
+        ]
+    )
+    manual = build_manual(export, ManualOptions(), LABELS)
+
+    assert [list(p) for p in _documents(manual)["Castle"].paragraphs] == [
+        [Run("Ghoul and (Élise), room #3, a#b, # alone, #_x")]
     ]
 
 
@@ -275,8 +296,9 @@ def test_only_comments_written_as_a_character_are_printed_depth_first() -> None:
     assert thread[0].written_on == T0.date()
 
 
-def test_a_description_opening_with_a_tag_or_member_mention_has_no_drop_cap() -> None:
-    """The large initial would take the sigil and the letter after it."""
+def test_a_description_opening_with_a_member_mention_has_no_drop_cap() -> None:
+    """The large initial would take the "@" and the letter after it. A Tag
+    prints as its bare name (product owner, 2026-10-21), so it has one."""
     opening = {
         "Tag": (mention(MentionKind.TAG, NPC, "Ghoul"), text(" di Irena")),
         "User": (mention(MentionKind.USER, ALICE, "Alice"), text(" knows")),
@@ -294,7 +316,7 @@ def test_a_description_opening_with_a_tag_or_member_mention_has_no_drop_cap() ->
     documents = _documents(build_manual(export, ManualOptions(), LABELS))
 
     assert {name: documents[name].drop_cap for name in opening} == {
-        "Tag": False,
+        "Tag": True,
         "User": False,
         "Link": True,
         "Plain": True,
@@ -414,7 +436,7 @@ def test_nothing_hidden_from_the_requester_reaches_the_manual() -> None:
     assert "Seen by all" in printed and "Seen comment" in printed
     assert "TOP SECRET" not in printed
     assert "Master note" not in printed
-    assert "#Vault" in printed
+    assert "Vault" in printed and "#Vault" not in printed
 
     # The Master's own manual does have them: the filter is the viewer's, not the text's.
     as_master = _all_text(

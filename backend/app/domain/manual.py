@@ -47,6 +47,10 @@ class PageSize(StrEnum):
 
 _PARAGRAPH_BREAK = re.compile(r"\n[ \t]*\n\s*")
 _SIGILS = ("#", "@")
+# A `#` that opens a word, as a plain `#Name` mention reads (spec 20: at the
+# start of the text, after whitespace or after an opening bracket). Only
+# before a letter, so "#1" or a lone "#" stay as written.
+_PLAIN_HASHTAG = re.compile(r"(?<![^\s(\[{])#(?=[^\W\d_])")
 
 
 @dataclass(frozen=True)
@@ -131,8 +135,9 @@ class ManualDocument:
     @property
     def drop_cap(self) -> bool:
         """Whether the description opens with a large initial. Not when it
-        opens with a Tag or member mention: the initial would take the "#" or
-        "@" and the letter after it together ("#G" over "houl")."""
+        opens with a member mention or a "#" that stayed: the initial would
+        take the "@" or "#" and the letter after it together ("@G" over
+        "ina")."""
         if not self.paragraphs:
             return False
         return not self.paragraphs[0][0].text.startswith(_SIGILS)
@@ -234,11 +239,13 @@ def _trim(runs: list[Run]) -> list[Run]:
 def _paragraphs(spans: Sequence[Span], resolve: Callable[[MentionSpan], Run]) -> list[Paragraph]:
     """`spans` as paragraphs, split at blank lines (a single line break stays
     inside its paragraph; the CSS keeps it). Mentions become runs through
-    `resolve`; paragraphs with nothing but whitespace are dropped."""
+    `resolve`; paragraphs with nothing but whitespace are dropped. A plain
+    `#Name` in the text (written before mentions had ids, or a mention that
+    doesn't resolve for the requester) loses its `#`, as a mention does."""
     paragraphs: list[list[Run]] = [[]]
     for span in spans:
         if isinstance(span, TextSpan):
-            first, *rest = _PARAGRAPH_BREAK.split(span.text)
+            first, *rest = _PARAGRAPH_BREAK.split(_PLAIN_HASHTAG.sub("", span.text))
             if first:
                 paragraphs[-1].append(Run(first))
             for piece in rest:
@@ -258,7 +265,9 @@ def build_manual(export: Export, options: ManualOptions, labels: ManualLabels) -
     has no Main item), then the glossary of every printed Document. A
     mention of a printed Document becomes a link; any other mention (a Tag,
     a member, a Document the PDF doesn't hold) stays plain text, so it can't
-    point at something the PDF doesn't hold (Decision 3)."""
+    point at something the PDF doesn't hold (Decision 3). A Tag or Document
+    reads as its bare name, without the "#" (product owner, 2026-10-21); a
+    member keeps its "@"."""
     all_groups = group_documents(export)
     groups = [(item, documents) for item, documents in all_groups if documents]
     first_group: dict[uuid.UUID, int] = {}
@@ -269,7 +278,7 @@ def build_manual(export: Export, options: ManualOptions, labels: ManualLabels) -
     def resolve(span: MentionSpan) -> Run:
         if span.kind is MentionKind.DOCUMENT and span.target_id in first_group:
             return Run(span.name, f"doc-{span.target_id}")
-        return Run(f"@{span.name}" if span.kind is MentionKind.USER else f"#{span.name}")
+        return Run(f"@{span.name}" if span.kind is MentionKind.USER else span.name)
 
     members = {member.id: member.name or labels.unknown_member for member in export.members}
     tag_names = {tag.id: tag.name for tag in export.tags}
