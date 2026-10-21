@@ -20,6 +20,7 @@ describe('toNote', () => {
       position: 0,
       createdAt: '2026-10-01T12:00:00Z',
       updatedAt: '2026-10-01T12:00:00Z',
+      relationalLink: false,
       canEdit: true,
       canDelete: true,
     });

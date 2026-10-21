@@ -456,10 +456,13 @@
     "moveDown": "下移笔记：{{title}}",
     "deleteConfirmTitle": "删除这条笔记？",
     "deleteConfirmBody": "“{{title}}”将被删除。你可以从文档的历史中恢复它。",
+    "relationalLink": "关系链接",
     "form": {
       "title": "标题",
       "selectiveLabel": "可以看到该笔记的成员",
-      "selectivePlaceholder": "谁可以看到"
+      "selectivePlaceholder": "谁可以看到",
+      "relationalLink": "关系链接",
+      "relationalLinkHint": "写在这条笔记中的提及会在提及地图上画出箭头"
     }
   },
   "files": {
@@ -984,6 +987,7 @@
       "previewLoading": "正在加载预览",
       "leftOut": "因地图最多容纳 150 张卡片而未显示：{{number}}",
       "nothingYet": "暂无提及",
+      "relationalLinksOnly": "只计算写在标记为关系链接的笔记中的提及。",
       "create": "创建地图",
       "target": "地图",
       "targetNew": "新的提及地图",

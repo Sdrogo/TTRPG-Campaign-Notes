@@ -458,10 +458,13 @@
     "moveDown": "Notiz nach unten: {{title}}",
     "deleteConfirmTitle": "Diese Notiz löschen?",
     "deleteConfirmBody": "„{{title}}“ wird gelöscht. Du kannst sie über den Verlauf des Dokuments wiederherstellen.",
+    "relationalLink": "Beziehungslink",
     "form": {
       "title": "Titel",
       "selectiveLabel": "Mitglieder, die die Notiz sehen können",
-      "selectivePlaceholder": "Wer sie sehen kann"
+      "selectivePlaceholder": "Wer sie sehen kann",
+      "relationalLink": "Beziehungslink",
+      "relationalLinkHint": "In dieser Notiz geschriebene Erwähnungen zeichnen Pfeile auf der Erwähnungskarte"
     }
   },
   "files": {
@@ -1012,6 +1015,7 @@
       "previewLoading": "Vorschau wird geladen",
       "leftOut": "Nicht angezeigt, da eine Karte 150 Karten fasst: {{number}}",
       "nothingYet": "Noch keine Erwähnungen",
+      "relationalLinksOnly": "Es zählen nur Erwähnungen in Notizen, die als Beziehungslink markiert sind.",
       "create": "Karte erstellen",
       "target": "Karte",
       "targetNew": "Neue Erwähnungskarte",

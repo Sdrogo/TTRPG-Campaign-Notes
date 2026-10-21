@@ -458,10 +458,13 @@
     "moveDown": "Notitie omlaag verplaatsen: {{title}}",
     "deleteConfirmTitle": "Deze Notitie verwijderen?",
     "deleteConfirmBody": "\"{{title}}\" wordt verwijderd. Je kunt hem terughalen via de Geschiedenis van het Document.",
+    "relationalLink": "Relatielink",
     "form": {
       "title": "Titel",
       "selectiveLabel": "Leden die de Notitie kunnen zien",
-      "selectivePlaceholder": "Wie kan hem zien"
+      "selectivePlaceholder": "Wie kan hem zien",
+      "relationalLink": "Relatielink",
+      "relationalLinkHint": "Vermeldingen in deze Notitie tekenen pijlen op de vermeldingenkaart"
     }
   },
   "files": {
@@ -1012,6 +1015,7 @@
       "previewLoading": "Voorbeeld laden",
       "leftOut": "Niet getoond, omdat een kaart 150 kaarten bevat: {{number}}",
       "nothingYet": "Nog geen vermeldingen",
+      "relationalLinksOnly": "Alleen vermeldingen in Notities die als Relatielink zijn gemarkeerd tellen mee.",
       "create": "Kaart maken",
       "target": "Kaart",
       "targetNew": "Nieuwe vermeldingenkaart",

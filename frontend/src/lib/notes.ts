@@ -10,6 +10,7 @@ export const EMPTY_NOTE_VALUES: NoteFormValues = {
   description: '',
   visibility: 'room',
   selectiveUserIds: [],
+  relationalLink: false,
 };
 
 /** A Note as the backend sends it. */
@@ -23,6 +24,7 @@ export interface RawNote {
   position: number;
   created_at: string;
   updated_at: string;
+  relational_link: boolean;
   can_edit: boolean;
   can_delete: boolean;
 }
@@ -39,6 +41,7 @@ export function toNote(raw: RawNote): Note {
     position: raw.position,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
+    relationalLink: raw.relational_link,
     canEdit: raw.can_edit,
     canDelete: raw.can_delete,
   };
@@ -52,6 +55,7 @@ export function toNoteBody(values: NoteFormValues) {
     visibility: values.visibility,
     // Grants only mean something at the Selective level.
     selective_user_ids: values.visibility === 'selective' ? values.selectiveUserIds : [],
+    relational_link: values.relationalLink,
   };
 }
 

@@ -462,10 +462,13 @@
     "moveDown": "Przesuń w dół notatkę: {{title}}",
     "deleteConfirmTitle": "Usunąć tę notatkę?",
     "deleteConfirmBody": "„{{title}}” zostanie usunięta. Możesz ją odzyskać z historii dokumentu.",
+    "relationalLink": "Link relacyjny",
     "form": {
       "title": "Tytuł",
       "selectiveLabel": "Członkowie, którzy widzą notatkę",
-      "selectivePlaceholder": "Kto może ją widzieć"
+      "selectivePlaceholder": "Kto może ją widzieć",
+      "relationalLink": "Link relacyjny",
+      "relationalLinkHint": "Wzmianki zapisane w tej Notatce rysują strzałki na mapie wzmianek"
     }
   },
   "files": {
@@ -1068,6 +1071,7 @@
       "previewLoading": "Wczytywanie podglądu",
       "leftOut": "Niepokazane, bo mapa mieści 150 kart: {{number}}",
       "nothingYet": "Brak wzmianek",
+      "relationalLinksOnly": "Liczą się tylko wzmianki zapisane w Notatkach oznaczonych jako Link relacyjny.",
       "create": "Utwórz mapę",
       "target": "Mapa",
       "targetNew": "Nowa mapa wzmianek",

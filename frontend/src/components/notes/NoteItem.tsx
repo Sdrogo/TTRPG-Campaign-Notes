@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
-import { Button, Group, Modal, Stack, Text, Title } from '@mantine/core';
+import { Badge, Button, Group, Modal, Stack, Text, Title } from '@mantine/core';
 import {
   ArrowDownIcon,
   ArrowUpIcon,
   DotsThreeVerticalIcon,
   EyeIcon,
+  GraphIcon,
   PencilSimpleIcon,
   TrashIcon,
 } from '@phosphor-icons/react';
@@ -46,7 +47,8 @@ interface NoteItemProps {
  * visibility badge is shown to the same people, since only they need it.
  * The Master can also reveal it, and a Note this visit opened as revealed to
  * the viewer is marked so (spec 22). Every reader can hear it read aloud
- * on its own (spec 30).
+ * on its own (spec 30), and sees whether it is a Relational link, whose
+ * mentions draw the mention map (spec 41).
  */
 export function NoteItem({
   note,
@@ -77,6 +79,7 @@ export function NoteItem({
           description: note.description,
           visibility: note.visibility,
           selectiveUserIds: note.selectiveUserIds,
+          relationalLink: note.relationalLink,
         }}
         members={members}
         submitLabel={t('common.save')}
@@ -171,6 +174,17 @@ export function NoteItem({
             <VisibilityBadge visibility={note.visibility} size="xs" compact={phone} />
           )}
           {revealed && <RevealedBadge size="xs" />}
+          {note.relationalLink && (
+            <Badge
+              size="xs"
+              variant="light"
+              color="gray"
+              leftSection={<GraphIcon size={10} />}
+              aria-label={phone ? t('notes.relationalLink') : undefined}
+            >
+              {phone ? null : t('notes.relationalLink')}
+            </Badge>
+          )}
         </Group>
         <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
           {readAloud}
