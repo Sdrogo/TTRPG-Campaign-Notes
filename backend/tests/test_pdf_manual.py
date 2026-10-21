@@ -15,6 +15,7 @@ from urllib.request import HTTPRedirectHandler
 import pytest
 from manual_fixtures import (
     ALICE,
+    BOB,
     CASTLE,
     IRENA,
     LABELS,
@@ -187,18 +188,20 @@ def test_comments_close_a_document_as_boxed_sidebars() -> None:
         assert not re.search(r"\.comment\s*\{[^}]*break-inside:\s*avoid", css), style
 
 
-def test_the_drop_cap_is_left_out_when_the_description_opens_with_a_mention() -> None:
-    """A "#Tag" opening would put "#G" in the initial (product owner, 2026-10-06)."""
+def test_the_drop_cap_is_left_out_when_the_description_opens_with_a_member() -> None:
+    """An "@Name" opening would put "@G" in the initial (product owner,
+    2026-10-06). A Tag prints without its "#" (2026-10-21), so it keeps it."""
     export = make_export()
     castle, irena, *others = export.documents
-    irena = replace(irena, description=(mention(MentionKind.TAG, NPC, "Ghoul"), text(" bites.")))
+    irena = replace(irena, description=(mention(MentionKind.USER, BOB, "Gina"), text(" bites.")))
+    castle = replace(castle, description=(mention(MentionKind.TAG, NPC, "Ghoul"), text(" rules.")))
     export = replace(export, documents=[castle, irena, *others])
     html = render_manual_html(
         build_manual(export, ManualOptions(), LABELS), ManualStyle.GOTHIC, PageSize.A4
     )
 
-    assert '<div class="description drop-cap">\n      <p>Ruled by' in html
-    assert '<div class="description">\n      <p>#Ghoul bites.' in html
+    assert '<div class="description drop-cap">\n      <p>Ghoul rules.' in html
+    assert '<div class="description">\n      <p>@Gina bites.' in html
     gothic = (ASSETS_DIR / "styles" / "gothic.css").read_text(encoding="utf-8")
     assert ".description.drop-cap p:first-child::first-letter" in gothic
 
