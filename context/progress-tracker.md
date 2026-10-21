@@ -85,25 +85,23 @@ release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
 - **Head in the repository**: `a4d9e2c7f1b6` (`document_notes.relational_link`,
-  spec 41_1, on branch `claude/project-thread-xvs0d5` until it merges).
+  spec 41_1, merged into `staging` by PR #222).
 - **Staging database**: `a4d9e2c7f1b6` (= head, note relational link, applied
-  by hand 2026-10-21 with `.env.staging` loaded, the migration file taken
-  from the branch before it merged: until `claude/project-thread-xvs0d5`
-  merges into `staging`, staging's code does not know this revision and
-  `alembic upgrade head` there fails with "Can't locate revision");
+  by hand 2026-10-21 with `.env.staging` loaded, before PR #222 merged);
   `d7c1f5a9e3b8` before it (geographic maps, applied 2026-10-17;
-  `e8b4d2f6a9c1` before that,
-  document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
+  `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `d7c1f5a9e3b8` (= head). Applied 2026-10-19 with
-  `alembic upgrade head` and `backend/.env` loaded: `d7c1f5a9e3b8` (geographic
+- **Production database**: `a4d9e2c7f1b6` (= head). Applied 2026-10-21 with
+  `backend/.env` loaded: `a4d9e2c7f1b6` (note relational link, spec 41), ahead
+  of release PR #223 (staging to `main`), so until that merges production's
+  code does not carry the migration file. Before it, applied 2026-10-19:
+  `d7c1f5a9e3b8` (geographic
   maps), from `e8b4d2f6a9c1` (document linked maps, applied 2026-10-15, from
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: `a4d9e2c7f1b6` (spec 41), before the next
-  release to `main`.
+- **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
 `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
