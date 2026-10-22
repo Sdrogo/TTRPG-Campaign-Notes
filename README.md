@@ -1,6 +1,6 @@
-# TTRPG Campaign Notes
+# Ex Libris
 
-A web app where the members of a tabletop RPG campaign build and maintain the
+Ex Libris (https://exlibris.world) is a web app where the members of a tabletop RPG campaign build and maintain the
 notes and lore of that campaign together: places, NPCs, events, artifacts and
 anything else worth recording. Each campaign is a **Room**; the Game Master
 (the *Master*) and the players work in it, with fine-grained control over who
