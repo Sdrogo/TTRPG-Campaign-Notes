@@ -204,6 +204,24 @@ describe('GeographicBoard: moving around', () => {
     expect(viewTransform()).toMatch(/scale\(0\.38\)/);
   });
 
+  it('zooms and pans with a two-finger pinch, which is never a click', () => {
+    const onSelectDocument = vi.fn();
+    render({ editable: false, onSelectDocument });
+    fireEvent.pointerDown(plane(), { button: 0, pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Shibuya Sky' }), { button: 0, pointerId: 2, clientX: 200, clientY: 100 });
+    // The fingers twice as far apart, and their middle 50px to the right.
+    fireEvent.pointerMove(board(), { pointerId: 2, clientX: 300, clientY: 100 });
+    expect(viewTransform()).toBe('translate(-60 -32) scale(0.76)');
+    fireEvent.pointerUp(board(), { pointerId: 2, clientX: 300, clientY: 100 });
+    fireEvent.pointerUp(board(), { pointerId: 1, clientX: 100, clientY: 100 });
+    expect(viewTransform()).toBe('translate(-60 -32) scale(0.76)');
+    expect(onSelectDocument).not.toHaveBeenCalled();
+    // One finger pans again afterwards.
+    fireEvent.pointerDown(plane(), { button: 0, pointerId: 3, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(board(), { pointerId: 3, clientX: 110, clientY: 100 });
+    expect(viewTransform()).toBe('translate(-50 -32) scale(0.76)');
+  });
+
   it('ignores a press with another button, and a cancelled one', () => {
     render();
     fireEvent.pointerDown(plane(), { button: 2, pointerId: 1, clientX: 100, clientY: 100 });

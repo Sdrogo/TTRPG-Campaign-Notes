@@ -19,7 +19,7 @@ import { MapBoard } from '../components/maps/MapBoard';
 import { SplitToggle } from '../components/maps/SplitToggle';
 import { useSideDocument } from '../hooks/useSideDocument';
 import { MapFormModal } from '../components/maps/MapFormModal';
-import { GeographicBoard } from '../components/maps/GeographicBoard';
+import { FULL_HEIGHT, GeographicBoard } from '../components/maps/GeographicBoard';
 import { GeoMapDialog } from '../components/maps/GeoMapDialog';
 import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
 import type { Board, RelationshipMap, RelationshipMapDetail } from '../types/map';
@@ -229,6 +229,9 @@ function GeoMapEditor({
         onChange={autosave.change}
         // A click on a Document's place opens it beside the map (spec 38b).
         onSelectDocument={access.wide ? access.split.open : undefined}
+        // On a phone the board is no taller than the plane shown across the
+        // screen's width, so the map fills it with no empty bands.
+        height={access.wide ? undefined : `min(${FULL_HEIGHT}, calc((100vw - 32px) * ${map.planeHeight / map.planeWidth}))`}
       />
       {planeOpened && <GeoMapDialog roomId={roomId} map={map} onClose={() => setPlaneOpened(false)} />}
     </MapChrome>
@@ -274,61 +277,63 @@ function MapChrome({
 
   return (
     <PageLayout allowEmptySide backTo={`/rooms/${roomId}/maps`} backLabel={t('maps.backToMaps')} roomId={roomId}>
-      <Group justify="space-between" wrap="nowrap" align="flex-start">
-        <Stack gap={0} style={{ minWidth: 0 }}>
-          <Group gap="sm" wrap="wrap">
-            <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
+      {/* Beside the name, or on a row of their own under it on a phone, the
+          buttons never narrow the description, which takes the full width. */}
+      <Stack gap={4}>
+        <Group justify="space-between" wrap={wide ? 'nowrap' : 'wrap'} align="flex-start" gap="xs">
+          <Group gap="sm" wrap="wrap" style={{ minWidth: 0, flex: wide ? '1 1 0' : '1 1 100%' }}>
+            <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)', overflowWrap: 'anywhere' }}>
               {map.name}
             </Title>
             <VisibilityBadge visibility={map.visibility} />
           </Group>
-          {map.description && (
-            <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-line' }}>
-              {map.description}
-            </Text>
-          )}
-        </Stack>
-        <Group gap="xs" wrap="nowrap">
-          {status[saveState] && (
-            <Text size="sm" c={saveState === 'error' ? 'red' : 'dimmed'} role="status">
-              {status[saveState]}
-            </Text>
-          )}
-          {saveState === 'error' && (
-            <Button size="xs" variant="light" onClick={autosave.retry}>
-              {t('maps.retry')}
-            </Button>
-          )}
-          <SplitToggle />
-          {actions}
-          {map.canEdit && !readOnly && (
-            <>
-              <Tooltip label={t('maps.settings')} withArrow>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="lg"
-                  aria-label={t('maps.settings')}
-                  onClick={() => setSettingsOpened(true)}
-                >
-                  <GearIcon size={20} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label={t('maps.delete')} withArrow>
-                <ActionIcon
-                  variant="subtle"
-                  color="red"
-                  size="lg"
-                  aria-label={t('maps.delete')}
-                  onClick={() => setDeleteOpened(true)}
-                >
-                  <TrashIcon size={20} />
-                </ActionIcon>
-              </Tooltip>
-            </>
-          )}
+          <Group gap="xs" wrap={wide ? 'nowrap' : 'wrap'}>
+            {status[saveState] && (
+              <Text size="sm" c={saveState === 'error' ? 'red' : 'dimmed'} role="status">
+                {status[saveState]}
+              </Text>
+            )}
+            {saveState === 'error' && (
+              <Button size="xs" variant="light" onClick={autosave.retry}>
+                {t('maps.retry')}
+              </Button>
+            )}
+            <SplitToggle />
+            {actions}
+            {map.canEdit && !readOnly && (
+              <>
+                <Tooltip label={t('maps.settings')} withArrow>
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="lg"
+                    aria-label={t('maps.settings')}
+                    onClick={() => setSettingsOpened(true)}
+                  >
+                    <GearIcon size={20} />
+                  </ActionIcon>
+                </Tooltip>
+                <Tooltip label={t('maps.delete')} withArrow>
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    size="lg"
+                    aria-label={t('maps.delete')}
+                    onClick={() => setDeleteOpened(true)}
+                  >
+                    <TrashIcon size={20} />
+                  </ActionIcon>
+                </Tooltip>
+              </>
+            )}
+          </Group>
         </Group>
-      </Group>
+        {map.description && (
+          <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-line' }}>
+            {map.description}
+          </Text>
+        )}
+      </Stack>
       {map.canEdit && !readOnly && !wide && (
         <Text size="sm" c="dimmed">
           {t('maps.readOnlyOnPhone')}

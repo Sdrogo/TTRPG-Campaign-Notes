@@ -71,6 +71,8 @@ const PIN_RADIUS = 7;
 const HANDLE_SIZE = 9;
 const AREA_FONT = 14;
 const LABEL_FONT = 12;
+/** The board's height unless it is given one: the page's, below the header. */
+export const FULL_HEIGHT = 'calc(100dvh - 190px)';
 /** How much one press of a zoom button zooms. */
 const ZOOM_STEP = 1.25;
 
@@ -78,11 +80,13 @@ type Tool = 'select' | 'area' | 'pin' | 'link';
 
 /**
  * A press on the board, until it is released: `pan` moves the view (and is a
- * click on `click` or the plane when it doesn't move), the others drag an
- * item, a corner or a link's bend while editing.
+ * click on `click` or the plane when it doesn't move), `pinch` zooms and pans
+ * it with two fingers, the others drag an item, a corner or a link's bend
+ * while editing.
  */
 type Drag =
   | { kind: 'pan'; start: Point; view: View; moved: boolean; click: GeoItemRef | null }
+  | { kind: 'pinch'; distance: number; middle: Point; view: View }
   | { kind: 'item'; ref: GeoItemRef; start: Point; moved: boolean }
   | { kind: 'corner'; areaId: string; index: number; start: Point; moved: boolean }
   | { kind: 'bend'; linkId: string; start: Point; moved: boolean };
@@ -117,6 +121,11 @@ export interface GeographicBoardProps {
   height?: string | number;
 }
 
+/** The point halfway between two others. */
+function midpoint(a: Point, b: Point): Point {
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+
 /** Where a pin's name sits, from its point, in screen pixels, and how it is anchored. */
 function labelPlacement(side: LabelSide): {
   dx: number;
@@ -139,10 +148,10 @@ function labelPlacement(side: LabelSide): {
 
 /**
  * A geographic map (spec 38): the plane with its background, the areas, the
- * links and the pins, in one SVG the viewer pans (drag) and zooms (wheel or
- * buttons). It opens for reading (spec 38b): a click on a Document's area or
- * pin shows the Document in the split pane, on any other its card; the Tag
- * filter dims what lacks the Tag. Area names move off pins and labels.
+ * links and the pins, in one SVG the viewer pans (drag) and zooms (wheel,
+ * two-finger pinch or buttons). It opens for reading (spec 38b): a click on
+ * a Document's area or pin shows the Document in the split pane, on any
+ * other its card; the Tag filter dims what lacks the Tag. Area names move off pins and labels.
  * After "Modifica la mappa": draw an area corner by corner, place a pin, link
  * two items, drag pins, areas, corners and a link's curve, edit a place from
  * its card, Delete to remove what is selected. Every change goes out through
@@ -160,7 +169,7 @@ export function GeographicBoard({
   tags,
   onChange,
   onSelectDocument,
-  height = 'calc(100dvh - 190px)',
+  height = FULL_HEIGHT,
 }: GeographicBoardProps) {
   const { t } = useTranslation();
   const backState = useBackState();
@@ -183,6 +192,8 @@ export function GeographicBoard({
   // What a drag shows until it is dropped, when it becomes a change.
   const [preview, setPreview] = useState<GeoBoard | null>(null);
   const drag = useRef<Drag | null>(null);
+  // The fingers (or the mouse) on the board, for a two-finger pinch.
+  const pointers = useRef(new Map<number, Point>());
   // The wheel listener lives outside React's renders: it reads the view here.
   const viewRef = useRef(view);
   useEffect(() => {
@@ -278,7 +289,16 @@ export function GeographicBoard({
     if (event.button !== 0) return;
     event.stopPropagation();
     svg.current!.setPointerCapture?.(event.pointerId);
-    drag.current = next;
+    pointers.current.set(event.pointerId, local(event));
+    // A second finger turns whatever the first one started into a pinch.
+    const [first, second] = [...pointers.current.values()];
+    if (second) {
+      setPreview(null);
+      const distance = Math.hypot(second.x - first.x, second.y - first.y);
+      drag.current = { kind: 'pinch', distance, middle: midpoint(first, second), view };
+    } else {
+      drag.current = next;
+    }
   };
 
   const pressPlane = (event: React.PointerEvent) =>
@@ -296,6 +316,16 @@ export function GeographicBoard({
     const current = drag.current;
     if (!current) return;
     const at = local(event);
+    if (pointers.current.has(event.pointerId)) pointers.current.set(event.pointerId, at);
+    if (current.kind === 'pinch') {
+      const [first, second] = [...pointers.current.values()];
+      if (!second) return;
+      const middle = midpoint(first, second);
+      const factor = Math.hypot(second.x - first.x, second.y - first.y) / current.distance;
+      const zoomed = zoomAt(current.view, factor, current.middle);
+      setMoved({ ...zoomed, x: zoomed.x + middle.x - current.middle.x, y: zoomed.y + middle.y - current.middle.y });
+      return;
+    }
     const dx = at.x - current.start.x;
     const dy = at.y - current.start.y;
     if (!current.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
@@ -326,9 +356,11 @@ export function GeographicBoard({
   };
 
   const release = (event: React.PointerEvent) => {
+    pointers.current.delete(event.pointerId);
     const current = drag.current;
     drag.current = null;
-    if (!current) return;
+    // Lifting a finger ends a pinch; it is never a click.
+    if (!current || current.kind === 'pinch') return;
     if (current.moved) {
       // A drag of the view changes nothing on the map; any other is dropped.
       if (current.kind !== 'pan') {
@@ -344,7 +376,8 @@ export function GeographicBoard({
     else if (current.kind === 'pan') clickPlane(planePoint(event));
   };
 
-  const cancel = () => {
+  const cancel = (event: React.PointerEvent) => {
+    pointers.current.delete(event.pointerId);
     drag.current = null;
     setPreview(null);
   };

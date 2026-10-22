@@ -55,6 +55,7 @@ vi.mock('../../components/maps/MapBoard', () => ({
 }));
 
 vi.mock('../../components/maps/GeographicBoard', () => ({
+  FULL_HEIGHT: 'calc(100dvh - 190px)',
   GeographicBoard: ({
     board,
     editable,
