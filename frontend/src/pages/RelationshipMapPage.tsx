@@ -19,7 +19,7 @@ import { MapBoard } from '../components/maps/MapBoard';
 import { SplitToggle } from '../components/maps/SplitToggle';
 import { useSideDocument } from '../hooks/useSideDocument';
 import { MapFormModal } from '../components/maps/MapFormModal';
-import { FULL_HEIGHT, GeographicBoard } from '../components/maps/GeographicBoard';
+import { GeographicBoard } from '../components/maps/GeographicBoard';
 import { GeoMapDialog } from '../components/maps/GeoMapDialog';
 import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
 import type { Board, RelationshipMap, RelationshipMapDetail } from '../types/map';
@@ -229,9 +229,8 @@ function GeoMapEditor({
         onChange={autosave.change}
         // A click on a Document's place opens it beside the map (spec 38b).
         onSelectDocument={access.wide ? access.split.open : undefined}
-        // On a phone the board is no taller than the plane shown across the
-        // screen's width, so the map fills it with no empty bands.
-        height={access.wide ? undefined : `min(${FULL_HEIGHT}, calc((100vw - 32px) * ${map.planeHeight / map.planeWidth}))`}
+        // On a phone the board takes the plane's shape, so the map fills it.
+        fitToPlane={!access.wide}
       />
       {planeOpened && <GeoMapDialog roomId={roomId} map={map} onClose={() => setPlaneOpened(false)} />}
     </MapChrome>

@@ -72,7 +72,7 @@ const HANDLE_SIZE = 9;
 const AREA_FONT = 14;
 const LABEL_FONT = 12;
 /** The board's height unless it is given one: the page's, below the header. */
-export const FULL_HEIGHT = 'calc(100dvh - 190px)';
+const FULL_HEIGHT = 'calc(100dvh - 190px)';
 /** How much one press of a zoom button zooms. */
 const ZOOM_STEP = 1.25;
 
@@ -119,6 +119,12 @@ export interface GeographicBoardProps {
   onSelectDocument?: (documentId: string) => void;
   /** The board's height; the full page's by default. */
   height?: string | number;
+  /**
+   * Shape the board like the plane instead (on a phone): no taller than the
+   * full page's height and never under the board's minimum, so the map
+   * opens filling it with no empty bands.
+   */
+  fitToPlane?: boolean;
 }
 
 /** The point halfway between two others. */
@@ -170,6 +176,7 @@ export function GeographicBoard({
   onChange,
   onSelectDocument,
   height = FULL_HEIGHT,
+  fitToPlane = false,
 }: GeographicBoardProps) {
   const { t } = useTranslation();
   const backState = useBackState();
@@ -451,10 +458,11 @@ export function GeographicBoard({
   return (
     <Box
       ref={wrapper}
-      h={height}
+      h={fitToPlane ? undefined : height}
       mih={300}
       pos="relative"
       style={{
+        ...(fitToPlane && { aspectRatio: `${planeWidth} / ${planeHeight}`, maxHeight: FULL_HEIGHT }),
         border: '1px solid var(--border-default)',
         borderRadius: 'var(--mantine-radius-lg)',
         overflow: 'hidden',

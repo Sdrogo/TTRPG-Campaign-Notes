@@ -29,11 +29,12 @@ interface HarnessProps {
   backgroundUrl?: string | null;
   planeWidth?: number;
   onSelectDocument?: (documentId: string) => void;
+  fitToPlane?: boolean;
 }
 
 const onChange = vi.fn();
 
-function Harness({ board = initial, editable = true, isMaster = true, backgroundUrl = null, planeWidth = 2000, onSelectDocument }: HarnessProps) {
+function Harness({ board = initial, editable = true, isMaster = true, backgroundUrl = null, planeWidth = 2000, onSelectDocument, fitToPlane }: HarnessProps) {
   const [current, setCurrent] = useState(board);
   return (
     <GeographicBoard
@@ -51,6 +52,7 @@ function Harness({ board = initial, editable = true, isMaster = true, background
         setCurrent(next);
       }}
       onSelectDocument={onSelectDocument}
+      fitToPlane={fitToPlane}
     />
   );
 }
@@ -220,6 +222,14 @@ describe('GeographicBoard: moving around', () => {
     fireEvent.pointerDown(plane(), { button: 0, pointerId: 3, clientX: 100, clientY: 100 });
     fireEvent.pointerMove(board(), { pointerId: 3, clientX: 110, clientY: 100 });
     expect(viewTransform()).toBe('translate(-50 -32) scale(0.76)');
+  });
+
+  it('takes the plane\'s shape when asked to fit it (phones)', () => {
+    render({ fitToPlane: true });
+    const box = board().parentElement!;
+    expect(box.style.aspectRatio).toBe('2000 / 1400');
+    expect(box.style.maxHeight).toBe('calc(100dvh - 190px)');
+    expect(box.style.height).toBe('');
   });
 
   it('starts afresh on a new first touch, even after a release it missed', () => {
