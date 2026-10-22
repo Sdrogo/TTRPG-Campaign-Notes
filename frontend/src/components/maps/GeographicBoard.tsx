@@ -323,12 +323,12 @@ export function GeographicBoard({
 
   const move = (event: React.PointerEvent) => {
     const current = drag.current;
-    if (!current) return;
+    // Only a pointer that pressed the board moves it (not a mouse hovering during a touch).
+    if (!current || !pointers.current.has(event.pointerId)) return;
     const at = local(event);
-    if (pointers.current.has(event.pointerId)) pointers.current.set(event.pointerId, at);
+    pointers.current.set(event.pointerId, at);
     if (current.kind === 'pinch') {
       const [first, second] = [...pointers.current.values()];
-      if (!second) return;
       const middle = midpoint(first, second);
       const factor = Math.hypot(second.x - first.x, second.y - first.y) / current.distance;
       const zoomed = zoomAt(current.view, factor, current.middle);

@@ -214,6 +214,9 @@ describe('GeographicBoard: moving around', () => {
     // The fingers twice as far apart, and their middle 50px to the right.
     fireEvent.pointerMove(board(), { pointerId: 2, clientX: 300, clientY: 100 });
     expect(viewTransform()).toBe('translate(-60 -32) scale(0.76)');
+    // A pointer that never pressed the board moves nothing.
+    fireEvent.pointerMove(board(), { pointerId: 9, clientX: 400, clientY: 400 });
+    expect(viewTransform()).toBe('translate(-60 -32) scale(0.76)');
     fireEvent.pointerUp(board(), { pointerId: 2, clientX: 300, clientY: 100 });
     fireEvent.pointerUp(board(), { pointerId: 1, clientX: 100, clientY: 100 });
     expect(viewTransform()).toBe('translate(-60 -32) scale(0.76)');
