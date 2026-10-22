@@ -886,6 +886,7 @@
   },
   "maps": {
     "title": "マップ",
+    "actions": "マップ「{{name}}」の操作",
     "create": "新しいマップ",
     "settings": "マップの設定",
     "delete": "マップを削除",

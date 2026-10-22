@@ -912,6 +912,7 @@
   },
   "maps": {
     "title": "Kaarten",
+    "actions": "Acties voor de kaart {{name}}",
     "create": "Nieuwe kaart",
     "settings": "Instellingen van de kaart",
     "delete": "Kaart verwijderen",

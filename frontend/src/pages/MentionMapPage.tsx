@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ActionIcon, Button, Group, Stack, Text, Title, Tooltip } from '@mantine/core';
+import { ActionIcon, Box, Button, Group, Stack, Text, Title, Tooltip } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { GearIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
@@ -173,17 +173,20 @@ function MentionMapEditor({
           {t('maps.mention.leftOut', { number: map.documentsLeftOut })}
         </Text>
       )}
-      <MapBoard
-        roomId={roomId}
-        board={board}
-        editable={editable}
-        isMaster={false}
-        documents={[]}
-        tags={[]}
-        onChange={handleChange}
-        onSelectDocument={splitOpen ? split.open : undefined}
-        mode="mention"
-      />
+      <Box data-split-anchor>
+        <MapBoard
+          roomId={roomId}
+          board={board}
+          editable={editable}
+          isMaster={false}
+          documents={[]}
+          tags={[]}
+          onChange={handleChange}
+          // On a phone a Document opens under the map.
+          onSelectDocument={splitOpen || !wide ? split.open : undefined}
+          mode="mention"
+        />
+      </Box>
       {settingsOpened && (
         <MentionMapModal
           roomId={roomId}
