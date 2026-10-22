@@ -13,6 +13,17 @@ detail:
 
 ## Current Status (2026-10-10)
 
+- **Rebranding to Ex Libris** (2026-10-22, no migration): `app.name` is
+  "Ex Libris" in all 12 languages (header, home page), browser title and
+  meta description, favicon drawn from the placeholder logo (spiral and
+  open book on parchment), FastAPI title, outgoing User-Agents, backend
+  package name (`ex-libris-backend`), READMEs and context docs. Kept on
+  purpose so nothing breaks: the GitHub repo name, the GHCR image
+  `ttrpg-campaign-notes-backend`, the Vercel/Render project URLs in CORS,
+  and the `ttrpg.language` / `ttrpg.speech` localStorage keys (renaming
+  them would reset every user's language and voice). `requirements.md`
+  still says "Collaborative TTRPG notes platform" (protected file).
+
 - **Everything on `staging` is released to `main`** (release PR #155,
   2026-10-10). Features 12 to 31 are built except the ones listed under
   Next Up; 23c, 25 and 25b were dropped by the product owner.

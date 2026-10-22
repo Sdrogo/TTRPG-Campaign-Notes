@@ -109,7 +109,8 @@ Adopted 2026-09-24 (spec 09); see `architecture.md` → UI Language.
   validation messages) comes from `src/i18n/locales/*.json` through `t()`:
   `useTranslation()` in a component, `i18n.t()` from `src/i18n` in a plain
   helper. Brand names (sign-in providers) and user content are the only
-  literals.
+  literals. The app's own name, "Ex Libris", is the `app.name` key, the
+  same in every language (see `i18n-glossary.md`).
 - **A new string goes in every language in the same change.** `it.json`
   is the typed source (`i18next.d.ts`), and `locales.test.ts` fails on a
   key missing from another language, a placeholder that differs, or a

@@ -122,7 +122,10 @@ other icon set.
 - **App shell**: persistent top navbar (Room name + role badge for
   the current user + account menu) over a two/three-column body,
   using Mantine's `AppShell`. **Built so far** (2026-09-22): the
-  `AppHeader` component — app name (links to the Rooms list) **always at
+  `AppHeader` component — app name ("Ex Libris" since 2026-10-22, from
+  `app.name`; `index.html` is the one exception to i18n and theme tokens:
+  its English meta description and parchment `theme-color` `#efe0bc`, from
+  the logo, load before the app; links to the Rooms list) **always at
   the exact center** (2026-10-03, Andrea: it shifted between pages): the
   header is a 3-column grid (`1fr minmax(0, auto) 1fr` in `.app-header`), so
   whatever sits on either side never moves it. **On the left, the back arrow

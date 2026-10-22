@@ -13,7 +13,7 @@ from app.domain.image_search import PAGE_SIZE, ImageSearchError
 
 API_URL = "https://api.openverse.org/v1"
 TIMEOUT_SECONDS = 10
-USER_AGENT = "ExLibris/1.0 (TTRPG campaign notes; image search)"
+USER_AGENT = "ExLibris/1.0 (+https://exlibris.world; image search)"
 # A token is renewed this many seconds before Openverse says it expires.
 TOKEN_MARGIN_SECONDS = 60
 
