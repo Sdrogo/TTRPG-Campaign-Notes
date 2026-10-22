@@ -289,12 +289,14 @@ export function GeographicBoard({
     if (event.button !== 0) return;
     event.stopPropagation();
     svg.current!.setPointerCapture?.(event.pointerId);
+    // A primary pointer starts a new gesture: any finger still listed lost its release.
+    if (event.isPrimary) pointers.current.clear();
     pointers.current.set(event.pointerId, local(event));
     // A second finger turns whatever the first one started into a pinch.
     const [first, second] = [...pointers.current.values()];
     if (second) {
       setPreview(null);
-      const distance = Math.hypot(second.x - first.x, second.y - first.y);
+      const distance = Math.max(1, Math.hypot(second.x - first.x, second.y - first.y));
       drag.current = { kind: 'pinch', distance, middle: midpoint(first, second), view };
     } else {
       drag.current = next;

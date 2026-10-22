@@ -222,6 +222,15 @@ describe('GeographicBoard: moving around', () => {
     expect(viewTransform()).toBe('translate(-50 -32) scale(0.76)');
   });
 
+  it('starts afresh on a new first touch, even after a release it missed', () => {
+    render({ editable: false });
+    fireEvent.pointerDown(plane(), { button: 0, pointerId: 1, isPrimary: true, clientX: 100, clientY: 100 });
+    // No release for pointer 1: the next first touch pans, it doesn't pinch.
+    fireEvent.pointerDown(plane(), { button: 0, pointerId: 2, isPrimary: true, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(board(), { pointerId: 2, clientX: 150, clientY: 130 });
+    expect(viewTransform()).toBe('translate(70 64) scale(0.38)');
+  });
+
   it('ignores a press with another button, and a cancelled one', () => {
     render();
     fireEvent.pointerDown(plane(), { button: 2, pointerId: 1, clientX: 100, clientY: 100 });
