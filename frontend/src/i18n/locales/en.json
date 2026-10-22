@@ -912,6 +912,7 @@
   },
   "maps": {
     "title": "Maps",
+    "actions": "Actions for the map {{name}}",
     "create": "New map",
     "settings": "Map settings",
     "delete": "Delete map",

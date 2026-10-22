@@ -149,7 +149,11 @@ One line per unit; dates 2026, newest first. Spec files live in
   a no-wrap row, so the description takes the full width (buttons on their
   own row under the name on a phone); a geographic map pans and zooms with a
   two-finger pinch, and on a phone its board is no taller than the plane
-  across the screen, so it opens filled with no empty bands.
+  across the screen, so it opens filled with no empty bands. Then, at the
+  product owner's request: the map's buttons are grouped in a ⋮ menu beside
+  the name (one line, cut short), the description is cut to two lines and a
+  tap opens or closes it, and on a phone a Document picked on any map opens
+  in the lower half of the screen under the map (spec 37 Decision 5 changed).
 
 ### 2026-10-21
 

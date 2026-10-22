@@ -73,7 +73,11 @@ mention map panel under a Document's images has no preview or menu either.
 5. **Phones and touch**: below the `sm` breakpoint there is no
    split view and no menu: a tap opens the Document as today. The hover
    preview needs a device that can hover (`(hover: hover) and (pointer:
-   fine)`), like spec 32.
+   fine)`), like spec 32. **Changed 2026-10-22 (product owner)**: on a
+   phone, a map page (free, mention or geographic) splits horizontally
+   instead: a tap on a Document card or place opens it in the lower half
+   of the screen, fixed, scrolling on its own, while the page scrolls
+   above it with the map brought to the top (`PageLayout`, map pages only).
 6. **Visibility (Invariant 1, VR-07)**: unchanged. The preview uses the
    Document the page already has for the viewer (spec 32 Decision 4); the
    right pane loads the Document with the same request as its page, so a

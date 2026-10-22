@@ -886,6 +886,7 @@
   },
   "maps": {
     "title": "지도",
+    "actions": "지도 {{name}} 작업",
     "create": "새 지도",
     "settings": "지도 설정",
     "delete": "지도 삭제",

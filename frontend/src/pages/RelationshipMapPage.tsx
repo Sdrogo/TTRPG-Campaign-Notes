@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ActionIcon, Button, Group, Modal, Stack, Text, Title, Tooltip } from '@mantine/core';
+import { Box, Button, Group, Menu, Modal, Stack, Text, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { DownloadSimpleIcon, GearIcon, MapTrifoldIcon, TrashIcon } from '@phosphor-icons/react';
+import {
+  DotsThreeVerticalIcon,
+  DownloadSimpleIcon,
+  GearIcon,
+  MapTrifoldIcon,
+  SquareSplitHorizontalIcon,
+  TrashIcon,
+} from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
@@ -15,8 +22,8 @@ import { useReadOnly } from '../hooks/useViewAs';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { VisibilityBadge } from '../components/VisibilityBadge';
+import { LabeledActionIcon } from '../components/LabeledActionIcon';
 import { MapBoard } from '../components/maps/MapBoard';
-import { SplitToggle } from '../components/maps/SplitToggle';
 import { useSideDocument } from '../hooks/useSideDocument';
 import { MapFormModal } from '../components/maps/MapFormModal';
 import { GeographicBoard } from '../components/maps/GeographicBoard';
@@ -152,7 +159,8 @@ function MapEditor({
         documents={documents.data ?? []}
         tags={tags.data ?? []}
         onChange={autosave.change}
-        onSelectDocument={access.splitOpen ? access.split.open : undefined}
+        // On a phone a Document opens under the map.
+        onSelectDocument={access.splitOpen || !access.wide ? access.split.open : undefined}
       />
     </MapChrome>
   );
@@ -188,30 +196,17 @@ function GeoMapEditor({
       autosave={autosave}
       actions={
         <>
-          <Tooltip label={t('maps.geo.export')} withArrow>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="lg"
-              aria-label={t('maps.geo.export')}
-              loading={exportMap.isPending}
-              onClick={() => exportMap.mutate(undefined, { onError: (error) => notifyError(error) })}
-            >
-              <DownloadSimpleIcon size={20} />
-            </ActionIcon>
-          </Tooltip>
+          <Menu.Item
+            leftSection={<DownloadSimpleIcon size={16} />}
+            disabled={exportMap.isPending}
+            onClick={() => exportMap.mutate(undefined, { onError: (error) => notifyError(error) })}
+          >
+            {t('maps.geo.export')}
+          </Menu.Item>
           {map.canEdit && !access.readOnly && (
-            <Tooltip label={t('maps.geo.planeTitle')} withArrow>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="lg"
-                aria-label={t('maps.geo.planeTitle')}
-                onClick={() => setPlaneOpened(true)}
-              >
-                <MapTrifoldIcon size={20} />
-              </ActionIcon>
-            </Tooltip>
+            <Menu.Item leftSection={<MapTrifoldIcon size={16} />} onClick={() => setPlaneOpened(true)}>
+              {t('maps.geo.planeTitle')}
+            </Menu.Item>
           )}
         </>
       }
@@ -227,8 +222,8 @@ function GeoMapEditor({
         documents={documents.data ?? []}
         tags={tags.data ?? []}
         onChange={autosave.change}
-        // A click on a Document's place opens it beside the map (spec 38b).
-        onSelectDocument={access.wide ? access.split.open : undefined}
+        // A click on a Document's place opens it beside the map (spec 38b), or under it on a phone.
+        onSelectDocument={access.split.open}
         // On a phone the board takes the plane's shape, so the map fills it.
         fitToPlane={!access.wide}
       />
@@ -239,8 +234,8 @@ function GeoMapEditor({
 
 /**
  * What every map page has around its board: the name, description and
- * visibility, the save status, the split toggle, and for whoever manages the
- * map its settings and its deletion.
+ * visibility, the save status, and a ⋮ menu with the split toggle, the map's
+ * own `actions` and, for whoever manages the map, its settings and deletion.
  */
 function MapChrome({
   roomId,
@@ -264,7 +259,12 @@ function MapChrome({
   const deleteMap = useDeleteMap(roomId, map.id);
   const [settingsOpened, setSettingsOpened] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
   const { saveState } = autosave;
+  const { split } = access;
+  const splitShown = split.sideId !== null;
+  const manages = map.canEdit && !readOnly;
+  const hasActions = wide || actions !== undefined || manages;
 
   const status: Record<SaveState, string | null> = {
     idle: null,
@@ -276,17 +276,22 @@ function MapChrome({
 
   return (
     <PageLayout allowEmptySide backTo={`/rooms/${roomId}/maps`} backLabel={t('maps.backToMaps')} roomId={roomId}>
-      {/* Beside the name, or on a row of their own under it on a phone, the
-          buttons never narrow the description, which takes the full width. */}
+      {/* One line: the name, cut short if long, and the actions in a ⋮
+          menu beside it; under it the description, cut to two lines until a
+          tap opens it in full (and another closes it). */}
       <Stack gap={4}>
-        <Group justify="space-between" wrap={wide ? 'nowrap' : 'wrap'} align="flex-start" gap="xs">
-          <Group gap="sm" wrap="wrap" style={{ minWidth: 0, flex: wide ? '1 1 0' : '1 1 100%' }}>
-            <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)', overflowWrap: 'anywhere' }}>
-              {map.name}
-            </Title>
-            <VisibilityBadge visibility={map.visibility} />
-          </Group>
-          <Group gap="xs" wrap={wide ? 'nowrap' : 'wrap'}>
+        <Group gap="xs" wrap="nowrap" align="center">
+          <Title
+            order={1}
+            fz="h2"
+            lineClamp={1}
+            title={map.name}
+            style={{ fontFamily: 'var(--font-display)', minWidth: 0, flex: '0 1 auto' }}
+          >
+            {map.name}
+          </Title>
+          <VisibilityBadge visibility={map.visibility} compact={!wide} />
+          <Group gap="xs" wrap="nowrap" ml="auto" style={{ flexShrink: 0 }}>
             {status[saveState] && (
               <Text size="sm" c={saveState === 'error' ? 'red' : 'dimmed'} role="status">
                 {status[saveState]}
@@ -297,38 +302,56 @@ function MapChrome({
                 {t('maps.retry')}
               </Button>
             )}
-            <SplitToggle />
-            {actions}
-            {map.canEdit && !readOnly && (
-              <>
-                <Tooltip label={t('maps.settings')} withArrow>
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    size="lg"
-                    aria-label={t('maps.settings')}
-                    onClick={() => setSettingsOpened(true)}
-                  >
-                    <GearIcon size={20} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label={t('maps.delete')} withArrow>
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    size="lg"
-                    aria-label={t('maps.delete')}
-                    onClick={() => setDeleteOpened(true)}
-                  >
-                    <TrashIcon size={20} />
-                  </ActionIcon>
-                </Tooltip>
-              </>
+            {hasActions && (
+              <Menu position="bottom-end" shadow="md">
+                <Menu.Target>
+                  <LabeledActionIcon variant="subtle" color="gray" size="lg" aria-label={t('maps.actions', { name: map.name })}>
+                    <DotsThreeVerticalIcon size={20} />
+                  </LabeledActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  {wide && (
+                    <Menu.Item
+                      leftSection={<SquareSplitHorizontalIcon size={16} />}
+                      onClick={() => (splitShown ? split.close() : split.open(''))}
+                    >
+                      {splitShown ? t('documents.open.hideSplit') : t('documents.open.showSplit')}
+                    </Menu.Item>
+                  )}
+                  {actions}
+                  {manages && (
+                    <>
+                      <Menu.Item leftSection={<GearIcon size={16} />} onClick={() => setSettingsOpened(true)}>
+                        {t('maps.settings')}
+                      </Menu.Item>
+                      <Menu.Divider />
+                      <Menu.Item color="red" leftSection={<TrashIcon size={16} />} onClick={() => setDeleteOpened(true)}>
+                        {t('maps.delete')}
+                      </Menu.Item>
+                    </>
+                  )}
+                </Menu.Dropdown>
+              </Menu>
             )}
           </Group>
         </Group>
         {map.description && (
-          <Text size="sm" c="dimmed" style={{ whiteSpace: 'pre-line' }}>
+          <Text
+            size="sm"
+            c="dimmed"
+            lineClamp={descriptionOpen ? undefined : 2}
+            role="button"
+            tabIndex={0}
+            aria-expanded={descriptionOpen}
+            onClick={() => setDescriptionOpen((open) => !open)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setDescriptionOpen((open) => !open);
+              }
+            }}
+            style={{ whiteSpace: 'pre-line', cursor: 'pointer' }}
+          >
             {map.description}
           </Text>
         )}
@@ -338,7 +361,7 @@ function MapChrome({
           {t('maps.readOnlyOnPhone')}
         </Text>
       )}
-      {children}
+      <Box data-split-anchor>{children}</Box>
       {settingsOpened && (
         <MapFormModal
           title={t('maps.settings')}

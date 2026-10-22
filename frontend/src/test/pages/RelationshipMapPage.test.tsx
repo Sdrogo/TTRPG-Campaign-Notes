@@ -163,6 +163,19 @@ afterEach(() => {
   window.matchMedia = originalMatchMedia;
 });
 
+type User = ReturnType<typeof userEvent.setup>;
+
+/** Unfolds the map's ⋮ menu. */
+async function openActions(user: User) {
+  await user.click(await screen.findByRole('button', { name: /^Azioni per la mappa/ }));
+}
+
+/** An entry of the map's ⋮ menu, unfolding it first. */
+async function menuItem(user: User, name: string) {
+  await openActions(user);
+  return screen.findByRole('menuitem', { name });
+}
+
 describe('RelationshipMapPage', () => {
   it('waits for the session, and asks to sign in without one', () => {
     sessionMock.mockReturnValue({ session: null, loading: true } as SessionState);
@@ -193,6 +206,23 @@ describe('RelationshipMapPage', () => {
     expect(screen.getByText('Chi serve chi')).toBeInTheDocument();
     expect(await screen.findByText(/sola lettura/)).toBeInTheDocument();
     expect(screen.getByTestId('board')).toHaveAttribute('data-editable', 'false');
+  });
+
+  it('cuts the description short until a tap or a key opens it, and closes it again', async () => {
+    const { user } = render();
+    const description = await screen.findByRole('button', { name: 'Chi serve chi' });
+    expect(description).toHaveAttribute('aria-expanded', 'false');
+    await user.click(description);
+    expect(description).toHaveAttribute('aria-expanded', 'true');
+    await user.click(description);
+    expect(description).toHaveAttribute('aria-expanded', 'false');
+    description.focus();
+    await user.keyboard('{Enter}');
+    expect(description).toHaveAttribute('aria-expanded', 'true');
+    await user.keyboard(' ');
+    expect(description).toHaveAttribute('aria-expanded', 'false');
+    await user.keyboard('a');
+    expect(description).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('saves the board shortly after a change and says so', async () => {
@@ -236,7 +266,7 @@ describe('RelationshipMapPage', () => {
 
   it('changes the map settings', async () => {
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Impostazioni della mappa' }));
+    await user.click(await menuItem(user, 'Impostazioni della mappa'));
     const name = screen.getByRole('textbox', { name: /Nome/ });
     await user.clear(name);
     await user.type(name, 'La Corte rinnovata');
@@ -253,19 +283,19 @@ describe('RelationshipMapPage', () => {
   it('shows why the settings were refused, and forgets it on close', async () => {
     routes.update = () => Promise.reject(new ApiError(422, 'Nome già usato'));
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Impostazioni della mappa' }));
+    await user.click(await menuItem(user, 'Impostazioni della mappa'));
     await user.click(screen.getByRole('button', { name: 'Salva' }));
     expect(await screen.findByText('Nome già usato')).toBeInTheDocument();
     await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('button', { name: 'Impostazioni della mappa' }));
+    await user.click(await menuItem(user, 'Impostazioni della mappa'));
     expect(screen.queryByText('Nome già usato')).not.toBeInTheDocument();
   });
 
   it('deletes the map after confirming, then goes back to the maps', async () => {
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Elimina mappa' }));
+    await user.click(await menuItem(user, 'Elimina mappa'));
     await user.click(screen.getByRole('button', { name: 'Annulla' }));
-    await user.click(screen.getByRole('button', { name: 'Elimina mappa' }));
+    await user.click(await menuItem(user, 'Elimina mappa'));
     await user.click(await screen.findByRole('button', { name: 'Elimina' }));
     await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/room-1/maps'));
   });
@@ -273,18 +303,19 @@ describe('RelationshipMapPage', () => {
   it('shows why the map could not be deleted', async () => {
     routes.remove = () => Promise.reject(new ApiError(403, 'Non puoi'));
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Elimina mappa' }));
+    await user.click(await menuItem(user, 'Elimina mappa'));
     await user.click(await screen.findByRole('button', { name: 'Elimina' }));
     expect(await screen.findByText('Non puoi')).toBeInTheDocument();
   });
 
   it('offers no editing in a preview, nor to whoever cannot edit', async () => {
     wideScreen();
-    render(true);
+    const { user } = render(true);
     const board = await screen.findByTestId('board');
     expect(board).toHaveAttribute('data-editable', 'false');
     expect(board).toHaveAttribute('data-master', 'false');
-    expect(screen.queryByRole('button', { name: 'Impostazioni della mappa' })).not.toBeInTheDocument();
+    await openActions(user);
+    expect(screen.queryByRole('menuitem', { name: 'Impostazioni della mappa' })).not.toBeInTheDocument();
     expect(screen.queryByText(/sola lettura/)).not.toBeInTheDocument();
   });
 
@@ -292,14 +323,15 @@ describe('RelationshipMapPage', () => {
     routes.map = () => Promise.resolve(rawMapDetail({ description: '', can_edit: false }));
     render();
     await screen.findByRole('heading', { name: 'La Corte' });
-    expect(screen.queryByRole('button', { name: 'Elimina mappa' })).not.toBeInTheDocument();
+    // On a phone, with nothing to manage, there is no ⋮ at all.
+    expect(screen.queryByRole('button', { name: /^Azioni per la mappa/ })).not.toBeInTheDocument();
   });
 
   it('opens the settings before the members load, with no selective list', async () => {
     routes.map = () => Promise.resolve(rawMapDetail({ selective_user_ids: null }));
     routes.members = new Promise(() => {});
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Impostazioni della mappa' }));
+    await user.click(await menuItem(user, 'Impostazioni della mappa'));
     expect(screen.getByRole('textbox', { name: /Nome/ })).toHaveValue('La Corte');
   });
 
@@ -314,7 +346,7 @@ describe('RelationshipMapPage', () => {
 
   it('closes the delete confirmation with Escape', async () => {
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Elimina mappa' }));
+    await user.click(await menuItem(user, 'Elimina mappa'));
     expect(await screen.findByText('Eliminare questa mappa?')).toBeInTheDocument();
     await user.keyboard('{Escape}');
     await vi.waitFor(() => expect(screen.queryByText('Eliminare questa mappa?')).not.toBeInTheDocument());
@@ -326,7 +358,7 @@ describe('RelationshipMapPage', () => {
     expect(await screen.findByTestId('board')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'select' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Mostra il pannello affiancato' }));
+    await user.click(await menuItem(user, 'Mostra il pannello affiancato'));
     expect(await screen.findByText('Seleziona una card per vederne le info')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'select' }));
     expect(await screen.findByRole('link', { name: 'Apri il Documento' })).toHaveAttribute(
@@ -334,7 +366,7 @@ describe('RelationshipMapPage', () => {
       '/rooms/room-1/documents/doc-9',
     );
 
-    await user.click(screen.getByRole('button', { name: 'Nascondi il pannello affiancato' }));
+    await user.click(await menuItem(user, 'Nascondi il pannello affiancato'));
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 
@@ -363,7 +395,7 @@ describe('RelationshipMapPage', () => {
       wideScreen();
       routes.map = geographic;
       const { user } = render();
-      await user.click(await screen.findByRole('button', { name: 'Mappa' }));
+      await user.click(await menuItem(user, 'Mappa'));
       expect(await screen.findByRole('textbox', { name: 'Larghezza' })).toHaveValue('2000');
       await user.keyboard('{Escape}');
       await vi.waitFor(() => expect(screen.queryByRole('textbox', { name: 'Larghezza' })).not.toBeInTheDocument());
@@ -375,8 +407,10 @@ describe('RelationshipMapPage', () => {
       routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false }));
       const { user } = render();
       expect(await screen.findByTestId('geo-board')).toHaveAttribute('data-editable', 'false');
-      expect(screen.queryByRole('button', { name: 'Mappa' })).not.toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Mostra il pannello affiancato' }));
+      await openActions(user);
+      expect(screen.queryByRole('menuitem', { name: 'Mappa' })).not.toBeInTheDocument();
+      await user.keyboard('{Escape}');
+      await user.click(await menuItem(user, 'Mostra il pannello affiancato'));
       await user.click(await screen.findByRole('button', { name: 'select' }));
       expect(await screen.findByRole('link', { name: 'Apri il Documento' })).toHaveAttribute('href', '/rooms/room-1/documents/doc-9');
     });
@@ -385,7 +419,7 @@ describe('RelationshipMapPage', () => {
       routes.map = () => geographic().then((map) => ({ ...map, can_edit: false }));
       routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false }));
       const { user } = render();
-      await user.click(await screen.findByRole('button', { name: 'Esporta la mappa (JSON)' }));
+      await user.click(await menuItem(user, 'Esporta la mappa (JSON)'));
       await vi.waitFor(() => expect(saveBlob).toHaveBeenCalled());
       const [blob, name] = vi.mocked(saveBlob).mock.calls[0] as [Blob, string];
       expect(name).toMatch(/^shibuya-di-notte-\d{4}-\d{2}-\d{2}\.json$/);
@@ -396,7 +430,7 @@ describe('RelationshipMapPage', () => {
       routes.map = geographic;
       routes.exportMap = () => Promise.reject(new ApiError(404, 'Mappa non trovata'));
       const { user } = render();
-      await user.click(await screen.findByRole('button', { name: 'Esporta la mappa (JSON)' }));
+      await user.click(await menuItem(user, 'Esporta la mappa (JSON)'));
       await vi.waitFor(() => expect(notifyError).toHaveBeenCalledWith(new ApiError(404, 'Mappa non trovata')));
     });
 

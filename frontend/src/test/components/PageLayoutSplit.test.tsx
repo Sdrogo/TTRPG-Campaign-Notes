@@ -103,8 +103,35 @@ describe('PageLayout with a Document beside the page (spec 37)', () => {
     expect(screen.queryByText('Vista di doc-2')).not.toBeInTheDocument();
   });
 
-  it('keeps the whole width on a phone, or outside a Room', () => {
+  it('opens the Document under the map on a phone, bringing the map to the top', async () => {
+    // jsdom has no scrolling: the call is only recorded.
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro" roomId="room-1" allowEmptySide>
+        <div data-split-anchor>La mappa</div>
+      </PageLayout>,
+      { route: '/rooms/room-1/maps/map-1?side=doc-2' },
+    );
+    expect(screen.getByRole('complementary', { name: 'Documento affiancato' })).toBeInTheDocument();
+    expect(await screen.findByText('Vista di doc-2')).toBeInTheDocument();
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+    delete (Element.prototype as Partial<Element>).scrollIntoView;
+  });
+
+  it('opens the Document under a page with no map to scroll to', async () => {
     renderPage('/rooms/room-1/maps/map-1?side=doc-2');
+    expect(await screen.findByText('Vista di doc-2')).toBeInTheDocument();
+  });
+
+  it('keeps the whole width on a phone with nothing picked', () => {
+    renderPage('/rooms/room-1/maps/map-1?side=');
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
+  it('keeps the whole width on a phone off a map page', () => {
+    renderPage('/rooms/room-1/documents?side=doc-2', 'room-1', false);
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 

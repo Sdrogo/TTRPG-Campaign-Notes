@@ -886,6 +886,7 @@
   },
   "maps": {
     "title": "地图",
+    "actions": "地图 {{name}} 的操作",
     "create": "新建地图",
     "settings": "地图设置",
     "delete": "删除地图",
