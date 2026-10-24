@@ -33,6 +33,12 @@ covers both, because (A) is what makes (B) a real problem.
   salvare solo l'elemento modificato invece dell'intera mappa, anche per il
   salvataggio automatico ok". Saves, the 800 ms autosave included, send only
   the items that changed, not the whole board.
+- **B2 is enough, no push** (product owner, 2026-10-24): "Può andare bene
+  anche un refresh automatico ogni tot di secondi." The scope is B1 + B2;
+  B3 (SSE) and B4 (presence) are not planned.
+- **No editing on phones** (product owner, 2026-10-24): "Non si modifica da
+  telefono." The editor keeps needing a screen at least `sm` wide, unlocked
+  maps included.
 
 ## How it works today
 
@@ -218,9 +224,5 @@ already adds `revision`.
 
 ## Open questions for the product owner
 
-Who may unlock a map, and whether Players may delete items others placed,
-are settled in spec 42's Decisions.
-
-1. Is a few seconds of delay (step 2) enough, or is instant push (step 3)
-   wanted from the start?
-2. Should phones edit unlocked maps? Today editing needs a wide screen.
+None left. Who may unlock a map, and whether Players may delete items others
+placed, are settled in spec 42's Decisions.

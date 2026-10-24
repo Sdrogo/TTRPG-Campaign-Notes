@@ -570,12 +570,11 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-- **43, Real-time map editing** (analysis only, 2026-10-24,
-  `context/feature/43 - Real-time map editing - analysis.md`): multi-user
-  map editing on top of spec 42 (unlock). B1 per-item saves (autosave
-  included, reusing spec 42's `revision`) confirmed by the product owner
-  2026-10-24, to build after PR #230 merges; then polling. Open questions in
-  the file.
+- **43, Real-time map editing** (analysis, 2026-10-24,
+  `context/feature/43 - Real-time map editing - analysis.md`): scope set by
+  the product owner: B1 per-item saves (autosave included, reusing spec 42's
+  `revision`) + B2 refresh every few seconds; no push, no phone editing.
+  To build after spec 42 (PR #230) merges, about 4-5 days, no migration.
 - **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
   editor, PR #211) and 38_3 (JSON import/export) built; first real test is
   the Shibuya map. `requirements.md` §1 and a new `FR-` need the product
