@@ -19,7 +19,15 @@ covers both, because (A) is what makes (B) a real problem.
 
 - Unlocking maps for Players (Part A below) is specced and built separately
   as spec 42 (`42 - Maps editable by players.md`, PR #230); this file covers
-  the multi-user sync.
+  the multi-user sync. Spec 42 keeps whole-board saves with a stale-save
+  guard (product owner's pick there, 2026-10-24): `relationship_maps.revision`
+  (migration `e2b7c4f9a1d6`), raised on every save, and an optional
+  `base_revision` on `PUT .../board` and `.../geo` that answers 412.
+- **Per-item saves are built here, on top of spec 42**, once PR #230 merges:
+  B1 reuses `revision` as its version number (so B1 needs no migration of
+  its own), replaces the whole-board body and drops the 412 reload
+  (`useReloadIfStale`). The unlock flag in Part A is spec 42's
+  `players_can_edit`.
 
 - **B1 confirmed** (product owner, 2026-10-24): "Mi piace l'idea di far
   salvare solo l'elemento modificato invece dell'intera mappa, anche per il
