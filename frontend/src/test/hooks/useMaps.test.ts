@@ -1,11 +1,12 @@
 import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, apiFetch } from '../../lib/apiClient';
+import { apiFetch } from '../../lib/apiClient';
 import { rawMap, rawMapDetail } from '../fixtures';
 import { renderHookWithProviders } from '../utils';
 import {
   useCreateMap,
   useDeleteMap,
+  MAP_REFRESH_MS,
   useMap,
   useMaps,
   useSaveBoard,
@@ -46,6 +47,23 @@ describe('the map queries', () => {
     const { result } = renderHookWithProviders(() => useMap('room-1', 'map-1', true));
     await waitFor(() => expect(result.current.data?.cards).toHaveLength(3));
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1');
+  });
+
+  it('reads an open free map again every few seconds, not a geographic one (spec 43_2)', async () => {
+    fetchMock.mockResolvedValue(rawMapDetail());
+    const { result, queryClient } = renderHookWithProviders(() => useMap('room-1', 'map-1', true, true));
+    await waitFor(() => expect(result.current.data).toBeDefined());
+    const query = queryClient.getQueryCache().find({ queryKey: DETAIL_KEY })!;
+    const interval = (query.options as { refetchInterval?: unknown }).refetchInterval as (q: typeof query) => number | false;
+    expect(interval(query)).toBe(MAP_REFRESH_MS);
+    query.setData({ ...result.current.data!, kind: 'geographic' });
+    expect(interval(query)).toBe(false);
+
+    const { queryClient: quiet } = renderHookWithProviders(() => useMap('room-1', 'map-1', true));
+    await waitFor(() => expect(quiet.getQueryCache().find({ queryKey: DETAIL_KEY })?.state.data).toBeDefined());
+    const still = quiet.getQueryCache().find({ queryKey: DETAIL_KEY })!;
+    const quietInterval = (still.options as { refetchInterval?: unknown }).refetchInterval as (q: typeof still) => number | false;
+    expect(quietInterval(still)).toBe(false);
   });
 });
 
@@ -92,32 +110,20 @@ describe('the map mutations', () => {
     expect(queryClient.getQueryData(DETAIL_KEY)).toBeUndefined();
   });
 
-  it('saves the board and refreshes the map and the list', async () => {
+  it('saves only the changes and refreshes the map and the list (spec 43)', async () => {
     fetchMock.mockResolvedValue(rawMapDetail());
     const { result, queryClient } = renderHookWithProviders(() => useSaveBoard('room-1', 'map-1'));
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    const none = { changed: [], createdIds: [], deletedIds: [] };
+    const changes = { groups: none, cards: { changed: [], createdIds: [], deletedIds: ['card-9'] }, arrows: none };
 
-    await result.current.mutateAsync({ value: { groups: [], cards: [], arrows: [] }, baseRevision: 3 });
+    await result.current.mutateAsync({ changes, baseRevision: 3 });
 
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/board', {
-      method: 'PUT',
-      json: { base_revision: 3, groups: [], cards: [], arrows: [] },
+      method: 'PATCH',
+      json: { base_revision: 3, groups: [], cards: [], arrows: [], created_ids: [], deleted_ids: ['card-9'] },
     });
     expect(queryClient.getQueryData(DETAIL_KEY)).toBeDefined();
     expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY, exact: true });
-  });
-
-  it('reloads the map when a save is refused as stale, and only then (spec 42)', async () => {
-    const { result, queryClient } = renderHookWithProviders(() => useSaveBoard('room-1', 'map-1'));
-    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
-    const board = { value: { groups: [], cards: [], arrows: [] }, baseRevision: 1 };
-
-    fetchMock.mockRejectedValueOnce(new ApiError(422, 'No'));
-    await expect(result.current.mutateAsync(board)).rejects.toThrow('No');
-    expect(invalidate).not.toHaveBeenCalled();
-
-    fetchMock.mockRejectedValueOnce(new ApiError(412, 'Stale'));
-    await expect(result.current.mutateAsync(board)).rejects.toThrow('Stale');
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY });
   });
 });

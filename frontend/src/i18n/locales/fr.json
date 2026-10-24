@@ -939,7 +939,6 @@
     "playersCanEdit": "Les Player peuvent modifier la carte",
     "playersCanEditHelp": "Toute personne qui voit la carte peut ajouter, déplacer et retirer ce qu'elle contient. Le nom, la visibilité et la suppression restent à son créateur et au Master.",
     "unlockedBadge": "Modifiable par les Player",
-    "changedByOthers": "Quelqu'un d'autre a modifié la carte entre-temps : elle a été rechargée et ta dernière modification n'a pas été enregistrée. Refais-la.",
     "addDocuments": "Ajouter des Documents",
     "addText": "Ajouter du texte",
     "selectHint": "Fais glisser sur l'arrière-plan pour sélectionner plusieurs cartes. Déplace la carte avec le clic droit ou central de la souris, ou maintiens la barre Espace.",

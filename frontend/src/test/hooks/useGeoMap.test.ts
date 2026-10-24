@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { rawGeoMapDetail } from '../fixtures';
 import { renderHookWithProviders } from '../utils';
+import { MAP_REFRESH_MS } from '../../hooks/useMaps';
 import {
   useChangeBackground,
   useExportMap,
@@ -36,13 +37,21 @@ describe('the geographic map hooks (spec 38)', () => {
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/geo');
   });
 
-  it('saves the whole map, keeps the answer and refreshes the list', async () => {
+  it('reads an open map again every few seconds only when asked (spec 43_2)', async () => {
+    const { queryClient } = renderHookWithProviders(() => useGeoMap('room-1', 'map-1', true, true));
+    await waitFor(() => expect(queryClient.getQueryData(GEO_KEY)).toBeDefined());
+    const options = queryClient.getQueryCache().find({ queryKey: GEO_KEY })!.options as { refetchInterval?: unknown };
+    expect(options.refetchInterval).toBe(MAP_REFRESH_MS);
+  });
+
+  it('saves only the changes, keeps the answer and refreshes the list (spec 43)', async () => {
     const { result, queryClient } = renderHookWithProviders(() => useSaveGeo('room-1', 'map-1'));
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
-    await result.current.mutateAsync({ value: { areas: [], pins: [], links: [] }, baseRevision: 3 });
+    const none = { changed: [], createdIds: [], deletedIds: [] };
+    await result.current.mutateAsync({ changes: { areas: none, pins: none, links: none }, baseRevision: 3 });
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/geo', {
-      method: 'PUT',
-      json: { base_revision: 3, areas: [], pins: [], links: [] },
+      method: 'PATCH',
+      json: { base_revision: 3, areas: [], pins: [], links: [], created_ids: [], deleted_ids: [] },
     });
     expect(queryClient.getQueryData(GEO_KEY)).toMatchObject({ name: 'Shibuya di notte' });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY, exact: true });
