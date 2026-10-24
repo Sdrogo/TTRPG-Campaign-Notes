@@ -8,7 +8,7 @@ steps.
 
 Product owner, 2026-10-24: "Vorrei che si possa sbloccare una mappa per
 essere modificata dai giocatori. Inoltre penserei ad un sistema per rendere
-più efficace la modifica in tempo reale tra più persone, farei un'analisi del
+Product owner, 2026-10-24: "I'd like a map to be unlockable so players can edit it. I'd also like a system that makes real-time editing between several people more effective; please analyse the implementation cost of this kind of feature."
 peso implementativo di questo tipo di feature."
 
 Two asks: (A) a map can be **unlocked** so Players edit it too; (B) make
