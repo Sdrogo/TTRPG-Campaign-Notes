@@ -1,4 +1,4 @@
-# 42 - Real-time map editing (analysis)
+# 43 - Real-time map editing (analysis)
 
 Analysis only: no decision is taken here and nothing is built. It sizes the
 work so the product owner can pick a path; a ticket follows for the chosen
@@ -16,6 +16,10 @@ Two asks: (A) a map can be **unlocked** so Players edit it too; (B) make
 covers both, because (A) is what makes (B) a real problem.
 
 ## Decisions so far
+
+- Unlocking maps for Players (Part A below) is specced and built separately
+  as spec 42 (`42 - Maps editable by players.md`, PR #230); this file covers
+  the multi-user sync.
 
 - **B1 confirmed** (product owner, 2026-10-24): "Mi piace l'idea di far
   salvare solo l'elemento modificato invece dell'intera mappa, anche per il

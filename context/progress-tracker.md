@@ -570,8 +570,8 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-- **42, Real-time map editing** (analysis only, 2026-10-24,
-  `context/feature/42 - Real-time map editing - analysis.md`): unlocking maps
+- **43, Real-time map editing** (analysis only, 2026-10-24,
+  `context/feature/43 - Real-time map editing - analysis.md`): unlocking maps
   for Players plus multi-user editing. Recommended first step: unlock flag +
   patch saves with a board version (one migration), then polling. B1 (patch
   saves, autosave included) confirmed 2026-10-24; other choices pending
