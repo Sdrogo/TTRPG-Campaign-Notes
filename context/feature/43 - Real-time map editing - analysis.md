@@ -90,7 +90,8 @@ the Master). Unlocking maps for Players makes it the normal case.
 
 ## Part A: unlocking a map for Players
 
-Small and independent of the sync work.
+Now spec 42 (PR #230); kept here as the original sizing. Small and
+independent of the sync work.
 
 - **DB**: one migration, `relationship_maps.players_can_edit boolean not null
   default false`.
@@ -200,21 +201,26 @@ The real bug is that a save means "this is the whole board". Instead:
 
 ## Recommended path
 
-1. **Part A + B1** together (about 4 days, one migration): unlocking without
-   B1 would turn the deletion bug into an everyday one.
+All steps build on spec 42 (PR #230), which brings the unlock switch and the
+`revision` column; Part A above is kept only as the analysis that led to it.
+
+1. **B1** per-item saves (2-3 days, confirmed by the product owner), once
+   spec 42 merges: replaces the whole-board save and spec 42's 412 reload,
+   reusing `revision` as the version.
 2. **B2** polling and merge (about 2 days): others' changes show up in a few
    seconds. Stop here if it feels good enough at the table.
 3. **B3 SSE** (2-3 days) if polling feels slow, then **B4** presence and soft
    locks (2-3 days) on the same stream.
 
-Total for the full path: about 10-12 days; the first useful release (steps 1
-and 2) about 6 days. Migrations: one (`players_can_edit` + `board_version`),
-to apply to staging before merge and to prod before the release to main.
+Total for the full path: about 9-10 days; the first useful release (steps 1
+and 2) about 4-5 days. No migration of its own: spec 42's `e2b7c4f9a1d6`
+already adds `revision`.
 
 ## Open questions for the product owner
 
-1. Who may unlock a map: creator and Master (proposed), or the Master only?
-2. May Players delete items others placed on an unlocked map?
-3. Is a few seconds of delay (step 2) enough, or is instant push (step 3)
+Who may unlock a map, and whether Players may delete items others placed,
+are settled in spec 42's Decisions.
+
+1. Is a few seconds of delay (step 2) enough, or is instant push (step 3)
    wanted from the start?
-4. Should phones edit unlocked maps? Today editing needs a wide screen.
+2. Should phones edit unlocked maps? Today editing needs a wide screen.
