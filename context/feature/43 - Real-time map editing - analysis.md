@@ -1,15 +1,15 @@
 # 43 - Real-time map editing (analysis)
 
-Analysis only: no decision is taken here and nothing is built. It sizes the
-work so the product owner can pick a path; a ticket follows for the chosen
-steps.
+Analysis only, nothing is built here. It sized the work so the product owner
+could pick a path; the choices are under "Decisions so far", and a ticket
+follows for the chosen steps.
 
 ## Request
 
-Product owner, 2026-10-24: "Vorrei che si possa sbloccare una mappa per
-essere modificata dai giocatori. Inoltre penserei ad un sistema per rendere
-Product owner, 2026-10-24: "I'd like a map to be unlockable so players can edit it. I'd also like a system that makes real-time editing between several people more effective; please analyse the implementation cost of this kind of feature."
-peso implementativo di questo tipo di feature."
+Product owner, 2026-10-24: "I'd like a map to be unlockable so players can
+edit it. I'd also like a system that makes real-time editing between several
+people more effective; please analyse the implementation cost of this kind of
+feature."
 
 Two asks: (A) a map can be **unlocked** so Players edit it too; (B) make
 **several people editing the same map at once** work well. This document
@@ -29,15 +29,14 @@ covers both, because (A) is what makes (B) a real problem.
   (`useReloadIfStale`). The unlock flag in Part A is spec 42's
   `players_can_edit`.
 
-- **B1 confirmed** (product owner, 2026-10-24): "Mi piace l'idea di far
-  salvare solo l'elemento modificato invece dell'intera mappa, anche per il
-  salvataggio automatico ok". Saves, the 800 ms autosave included, send only
+- **B1 confirmed** (product owner, 2026-10-24): "I like the idea of saving only
+  the changed item instead of the whole map, the autosave included". Saves, the 800 ms autosave included, send only
   the items that changed, not the whole board.
-- **B2 is enough, no push** (product owner, 2026-10-24): "Può andare bene
-  anche un refresh automatico ogni tot di secondi." The scope is B1 + B2;
+- **B2 is enough, no push** (product owner, 2026-10-24): "An automatic
+  refresh every few seconds is fine too." The scope is B1 + B2;
   B3 (SSE) and B4 (presence) are not planned.
-- **No editing on phones** (product owner, 2026-10-24): "Non si modifica da
-  telefono." The editor keeps needing a screen at least `sm` wide, unlocked
+- **No editing on phones** (product owner, 2026-10-24): "No editing from
+  phones." The editor keeps needing a screen at least `sm` wide, unlocked
   maps included.
 
 ## How it works today
