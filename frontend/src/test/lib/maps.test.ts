@@ -27,7 +27,6 @@ import {
   removeArrow,
   removeCards,
   removeGroup,
-  isStaleBoard,
   toBoardBody,
   toMap,
   toMapBody,
@@ -38,7 +37,6 @@ import {
   updateGroup,
   type RawMapDetail,
 } from '../../lib/maps';
-import { ApiError } from '../../lib/apiClient';
 import type { Board, MapArrow, MapCard, MapGroup } from '../../types/map';
 import type { Document } from '../../types/document';
 import { rawMap, rawMapDetail } from '../fixtures';
@@ -95,14 +93,10 @@ function arrow(id: string, from: string, to: string, overrides: Partial<MapArrow
 }
 
 describe('the wire shape', () => {
-  it('sends the revision a board started from, and tells a stale save apart (spec 42)', () => {
+  it('sends the revision a board started from (spec 42)', () => {
     const board = { groups: [], cards: [], arrows: [] };
     expect(toBoardBody(board, 7)).toEqual({ base_revision: 7, groups: [], cards: [], arrows: [] });
     expect(toBoardBody(board)).not.toHaveProperty('base_revision');
-    expect(isStaleBoard(new ApiError(412, 'Stale'))).toBe(true);
-    expect(isStaleBoard(new ApiError(409, 'Full'))).toBe(false);
-    expect(isStaleBoard(new Error('Offline'))).toBe(false);
-    expect(isStaleBoard('412')).toBe(false);
   });
 
   it("sends the Players' switch only from the settings", () => {

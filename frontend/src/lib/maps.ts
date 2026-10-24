@@ -219,15 +219,6 @@ export function toMentionMapPreview(raw: RawMentionMapPreview): MentionMapPrevie
   };
 }
 
-/**
- * Whether a board save was refused because someone else saved the map since
- * the revision it started from (412, spec 42 Decision 7).
- */
-export function isStaleBoard(error: unknown): boolean {
-  // Read off the error rather than `instanceof ApiError`, so tests that mock the API client still match.
-  return error instanceof Error && 'status' in error && error.status === 412;
-}
-
 /** For a board drawn read-only, which never changes (the mention map panel). */
 export function ignoreBoardChange(): void {}
 
@@ -251,8 +242,9 @@ function toEndBody(end: ArrowEnd): RawArrowEnd {
 }
 
 /**
- * The board as `PUT .../board` takes it: the whole board the editor sees, and
- * the map revision it started from (spec 42 Decision 7).
+ * The board as the API takes it, item by item: the whole board for
+ * `PUT .../board` with the map revision it started from (spec 42 Decision 7),
+ * or only the changed items for `PATCH .../board` (spec 43, `toChangesBody`).
  */
 export function toBoardBody(board: Board, baseRevision?: number) {
   return {

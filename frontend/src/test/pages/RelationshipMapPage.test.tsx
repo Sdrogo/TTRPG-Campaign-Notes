@@ -7,7 +7,7 @@ import { useSession } from '../../hooks/useSession';
 import { ViewAsContext } from '../../hooks/useViewAs';
 import type { Board } from '../../types/map';
 import type { GeoBoard } from '../../types/geoMap';
-import { fakeSession, rawGeoMapDetail, rawMapDetail, rawMember } from '../fixtures';
+import { fakeSession, rawGeoMapDetail, rawMapCard, rawMapDetail, rawMember } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { RelationshipMapPage } from '../../pages/RelationshipMapPage';
 import { saveBlob } from '../../lib/roomExport';
@@ -148,7 +148,7 @@ beforeEach(() => {
   fetchMock.mockImplementation((path: string, init?: Init) => {
     if (path === '/rooms/room-1/maps/map-1/board') return routes.save();
     if (path === '/rooms/room-1/maps/map-1/export') return routes.exportMap();
-    if (path === '/rooms/room-1/maps/map-1/geo' && init?.method === 'PUT') return routes.saveGeo();
+    if (path === '/rooms/room-1/maps/map-1/geo' && init?.method === 'PATCH') return routes.saveGeo();
     if (path === '/rooms/room-1/maps/map-1/geo') return routes.geo();
     if (path === '/rooms/room-1/tags') return Promise.resolve([{ id: 'tag-1', name: 'Camarilla', category: null, main_position: null }]);
     if (path === '/rooms/room-1/maps/map-1' && init?.method === 'PATCH') return routes.update();
@@ -238,7 +238,7 @@ describe('RelationshipMapPage', () => {
     await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Salvato'), { timeout: 2000 });
     expect(fetchMock).toHaveBeenCalledWith(
       '/rooms/room-1/maps/map-1/board',
-      expect.objectContaining({ method: 'PUT' }),
+      expect.objectContaining({ method: 'PATCH', json: expect.objectContaining({ deleted_ids: ['card-1'] }) }),
     );
   });
 
@@ -387,7 +387,7 @@ describe('RelationshipMapPage', () => {
       await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Salvato'), { timeout: 2000 });
       expect(fetchMock).toHaveBeenCalledWith(
         '/rooms/room-1/maps/map-1/geo',
-        expect.objectContaining({ method: 'PUT', json: expect.objectContaining({ areas: [expect.objectContaining({ id: 'area-2' })] }) }),
+        expect.objectContaining({ method: 'PATCH', json: expect.objectContaining({ areas: [], deleted_ids: ['area-1'] }) }),
       );
     });
 
@@ -498,27 +498,25 @@ describe('RelationshipMapPage', () => {
       expect(screen.getByTestId('board')).toHaveTextContent('1 cards');
     });
 
-    it('reloads the map when someone else saved first, and says the change was lost', async () => {
+    it("keeps another editor's card from a save's answer and the editor's own deletion (spec 43)", async () => {
       wideScreen();
-      routes.save = () => Promise.reject(new ApiError(412, 'Stale'));
+      const theirs = rawMapCard({ id: 'card-9', document_id: null, text: 'Il debito di Mira', document: null });
+      routes.save = () => Promise.resolve(rawMapDetail({ revision: 5, cards: [...rawMapDetail().cards, theirs] }));
       const { user } = render();
       await user.click(await screen.findByRole('button', { name: 'change' }));
       expect(screen.getByTestId('board')).toHaveTextContent('2 cards');
 
-      routes.map = () => Promise.resolve(rawMapDetail({ revision: 4 }));
-      await vi.waitFor(() => expect(notifyError).toHaveBeenCalledWith(expect.stringMatching(/Qualcun altro/)), {
-        timeout: 2000,
-      });
-      await vi.waitFor(() => expect(screen.getByTestId('board')).toHaveTextContent('3 cards'));
-      expect(screen.queryByRole('button', { name: 'Riprova' })).not.toBeInTheDocument();
-
-      routes.save = () => Promise.resolve(rawMapDetail({ revision: 5 }));
-      await user.click(screen.getByRole('button', { name: 'change' }));
       await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Salvato'), { timeout: 2000 });
-      expect(fetchMock).toHaveBeenLastCalledWith(
+      // The answer still has card-1 (as mocked) and adds card-9: card-1 stays deleted here.
+      expect(screen.getByTestId('board')).toHaveTextContent('3 cards');
+      expect(notifyError).not.toHaveBeenCalled();
+
+      // The next save is based on the answer, which (as mocked) still had card-1.
+      await user.click(screen.getByRole('button', { name: 'change' }));
+      await vi.waitFor(() => expect(fetchMock).toHaveBeenLastCalledWith(
         '/rooms/room-1/maps/map-1/board',
-        expect.objectContaining({ json: expect.objectContaining({ base_revision: 4 }) }),
-      );
+        expect.objectContaining({ json: expect.objectContaining({ base_revision: 5, deleted_ids: ['card-1', 'card-2'] }) }),
+      ), { timeout: 2000 });
     });
   });
 });

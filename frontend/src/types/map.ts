@@ -158,12 +158,6 @@ export interface MapFormValues {
   playersCanEdit?: boolean;
 }
 
-/** A board save and the map revision its board started from (spec 42 Decision 7). */
-export interface RevisionedSave<T> {
-  value: T;
-  baseRevision: number;
-}
-
 /**
  * A Document's live mention map (spec 36) as the viewer sees it: computed from
  * the mentions they see on every load. It has no groups; `canManage` lets its

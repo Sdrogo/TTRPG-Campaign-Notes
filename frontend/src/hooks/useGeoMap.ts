@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
+import { toChangesBody } from '../lib/boardChanges';
 import { toGeoBody, toGeoMapDetail, type RawGeoMapDetail } from '../lib/geoMaps';
 import { mapExportFileName, toImportBody, toMapImportReport, type RawMapImportReport } from '../lib/mapImport';
 import { saveBlob } from '../lib/roomExport';
 import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
-import type { MapFormValues, RevisionedSave } from '../types/map';
-import { useReloadIfStale } from './useMaps';
+import type { MapFormValues } from '../types/map';
+import type { ChangesSave } from '../types/boardChanges';
+import { MAP_REFRESH_MS } from './useMaps';
 
 function mapPath(roomId: string, mapId: string) {
   return `/rooms/${roomId}/maps/${mapId}`;
@@ -16,12 +18,16 @@ function geoQueryKey(roomId: string, mapId: string) {
   return ['rooms', roomId, 'maps', mapId, 'geo'] as const;
 }
 
-/** A geographic map with its content as the viewer sees it (spec 38 Decision 6). */
-export function useGeoMap(roomId: string, mapId: string, enabled: boolean) {
+/**
+ * A geographic map with its content as the viewer sees it (spec 38 Decision
+ * 6). With `refresh` it is read again every `MAP_REFRESH_MS` (spec 43_2).
+ */
+export function useGeoMap(roomId: string, mapId: string, enabled: boolean, refresh = false) {
   return useQuery<GeoMapDetail>({
     queryKey: geoQueryKey(roomId, mapId),
     queryFn: async () => toGeoMapDetail(await apiFetch<RawGeoMapDetail>(`${mapPath(roomId, mapId)}/geo`)),
     enabled,
+    refetchInterval: refresh ? MAP_REFRESH_MS : false,
   });
 }
 
@@ -35,24 +41,22 @@ function useStoreAnswer(roomId: string, mapId: string) {
 }
 
 /**
- * Saves everything the editor sees on the map (Decision 9), refused (412)
- * when someone else saved since `baseRevision` (spec 42), which reloads it.
- * The page keeps drawing its own copy, so a save landing mid-drag moves
- * nothing back.
+ * Saves only what the editor changed on the map (spec 43), laid over the
+ * stored map; the answer is the whole map as they now see it. The page keeps
+ * drawing its own copy, rebased on the answer, so a save landing mid-drag
+ * moves nothing back.
  */
 export function useSaveGeo(roomId: string, mapId: string) {
   const store = useStoreAnswer(roomId, mapId);
-  const reloadIfStale = useReloadIfStale(roomId, mapId);
   return useMutation({
-    mutationFn: async ({ value, baseRevision }: RevisionedSave<GeoBoard>) =>
+    mutationFn: async ({ changes, baseRevision }: ChangesSave<GeoBoard>) =>
       toGeoMapDetail(
         await apiFetch<RawGeoMapDetail>(`${mapPath(roomId, mapId)}/geo`, {
-          method: 'PUT',
-          json: toGeoBody(value, baseRevision),
+          method: 'PATCH',
+          json: toChangesBody(changes, toGeoBody, baseRevision),
         }),
       ),
     onSuccess: store,
-    onError: reloadIfStale,
   });
 }
 

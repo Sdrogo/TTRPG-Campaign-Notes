@@ -71,6 +71,7 @@ from app.domain.relationship_maps import (
     ensure_room_for_another_map,
     is_map_visible,
     map_visibility_audit,
+    merge_board_changes,
     plan_board_edit,
     visible_board,
 )
@@ -238,6 +239,24 @@ class BoardRequest(BaseModel):
     groups: list[GroupBody] = []
     cards: list[CardBody] = []
     arrows: list[ArrowBody] = []
+
+
+class BoardChangesRequest(BaseModel):
+    """What an editor changed on the board since their last save (spec 43
+    Decision 1): every created or changed group, card and arrow, whole, with
+    `created_ids` naming the new ones (ids the client made up), and
+    `deleted_ids` what they removed. The rest of the board stays as stored,
+    so another editor's work in the meantime is kept. `base_revision`, the
+    revision the client last saw, is informative only: a change is never
+    refused for being late (Decision 2)."""
+
+    base_revision: int | None = None
+
+    groups: list[GroupBody] = []
+    cards: list[CardBody] = []
+    arrows: list[ArrowBody] = []
+    created_ids: UniqueIds = []
+    deleted_ids: UniqueIds = []
 
 
 def _now() -> datetime:
@@ -736,7 +755,7 @@ def _arrow_end(end: ArrowEndBody) -> ArrowEnd:
     return ArrowEnd(card_id=end.card_id, group_id=end.group_id)
 
 
-def _submitted_board(body: BoardRequest) -> Board:
+def _submitted_board(body: BoardRequest | BoardChangesRequest) -> Board:
     """The board as sent, in domain terms (not yet checked)."""
     return Board(
         groups=[MapGroup(**group.model_dump()) for group in body.groups],
@@ -775,25 +794,33 @@ async def _apply_board(
     session: AsyncSession,
     map_id: uuid.UUID,
     membership: Membership,
-    body: BoardRequest,
+    body: BoardRequest | BoardChangesRequest,
     locale: str,
 ) -> None:
     """Saves the board `membership` sends (`plan_board_edit`): what they see
-    is created, moved, rewritten or removed, what they can't see stays. A
-    card for a Document they don't see, or of another Room, is 404; an id of
-    something hidden from them or of another map is 422; the caps (409)
-    count every item on the map. Callers hold the map's lock."""
+    is created, moved, rewritten or removed, what they can't see stays. Their
+    changes alone (`BoardChangesRequest`, spec 43) are first laid over the
+    stored board (`merge_board_changes`). A card for a Document they don't
+    see, or of another Room, is 404; an id of something hidden from them or
+    of another map is 422; the caps (409) count every item on the map.
+    Callers hold the map's lock."""
     current = (await relationship_maps_repo.get_boards(session, [map_id]))[map_id]
     try:
-        submitted = _submitted_board(body)
+        sent = _submitted_board(body)
         visible_ids = await visible_document_ids(
             session,
             (
                 card.document_id
-                for card in [*current.cards, *submitted.cards]
+                for card in [*current.cards, *sent.cards]
                 if card.document_id is not None
             ),
             membership,
+        )
+        shown = visible_board(current, visible_ids, membership.role)
+        submitted = (
+            merge_board_changes(current, shown, sent, body.created_ids, body.deleted_ids)
+            if isinstance(body, BoardChangesRequest)
+            else sent
         )
         sent_ids = (
             {group.id for group in submitted.groups}
@@ -809,7 +836,7 @@ async def _apply_board(
         visible_images = await get_visible_images_for_documents(session, choosing, membership)
         plan = plan_board_edit(
             current,
-            visible_board(current, visible_ids, membership.role),
+            shown,
             submitted,
             membership.role,
             visible_ids,
@@ -844,6 +871,34 @@ async def save_board(
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     relationship_map, grants = await get_editable_map(
         session, room_id, map_id, membership, body.base_revision, locale
+    )
+    if relationship_map.kind != MapKind.FREE:
+        raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
+    await _apply_board(session, map_id, membership, body, locale)
+    updated = await relationship_maps_repo.update_map(
+        session, replace(relationship_map, updated_at=_now())
+    )
+    return await _detail(session, updated, grants, membership)
+
+
+@router.patch("/{map_id}/board")
+async def save_board_changes(
+    room_id: uuid.UUID,
+    map_id: uuid.UUID,
+    body: BoardChangesRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> MapDetailResponse:
+    """Spec 43: saves only what the editor changed, under the map's lock, and
+    answers the whole board as they now see it, other editors' work
+    included. A change to something deleted meanwhile, or hidden from them,
+    is dropped; otherwise the rules of `PUT .../board` apply (404, 422, 403
+    for Master-only content, 409 for the caps). 403 unless the requester may
+    edit the board (spec 42); never 412."""
+    membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
+    relationship_map, grants = await get_editable_map(
+        session, room_id, map_id, membership, None, locale
     )
     if relationship_map.kind != MapKind.FREE:
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)

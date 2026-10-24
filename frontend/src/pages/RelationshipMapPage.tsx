@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { UseMutationResult } from '@tanstack/react-query';
+import { useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Badge, Box, Button, Group, Menu, Modal, Stack, Text, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
@@ -29,17 +28,16 @@ import { MapFormModal } from '../components/maps/MapFormModal';
 import { GeographicBoard } from '../components/maps/GeographicBoard';
 import { GeoMapDialog } from '../components/maps/GeoMapDialog';
 import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
-import type { Board, RelationshipMap, RelationshipMapDetail, RevisionedSave } from '../types/map';
-import { isStaleBoard } from '../lib/maps';
+import type { Board, RelationshipMap, RelationshipMapDetail } from '../types/map';
+import { toBoardBody } from '../lib/maps';
+import { toGeoBody } from '../lib/geoMaps';
 import { notifyError } from '../lib/notify';
+import { useBoardAutosave, type SaveState } from '../hooks/useBoardAutosave';
 
-/** How long the board waits after the last change before saving it. */
-export const SAVE_DELAY_MS = 800;
+export { SAVE_DELAY_MS } from '../hooks/useBoardAutosave';
 
 /** Mantine's `sm` breakpoint: below it a map is read-only (Decision 13). */
 const WIDE_ENOUGH = '(min-width: 48em)';
-
-type SaveState = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
 /**
  * `/rooms/:roomId/maps/:mapId`: one map, full page: a free board (spec 28)
@@ -67,97 +65,29 @@ function MapContent({
   mapId: string;
   currentUserId: string;
 }) {
-  const { t } = useTranslation();
-  const map = useMap(roomId, mapId, true);
+  // Read again every few seconds (spec 43_2): a free map's board comes with
+  // the map, a geographic map's content from `.../geo`.
+  const map = useMap(roomId, mapId, true, true);
   const geographic = map.data?.kind === 'geographic';
-  const geo = useGeoMap(roomId, mapId, geographic);
+  const geo = useGeoMap(roomId, mapId, geographic, true);
 
-  if (map.isPending || (geographic && geo.isPending)) return <FullPageLoader />;
-  if (map.isError || (geographic && geo.isError)) {
-    return (
-      <FullPageMessage actionLabel={t('maps.backToMaps')} actionTo={`/rooms/${roomId}/maps`}>
-        {t('maps.notFound')}
-      </FullPageMessage>
-    );
-  }
+  // A refresh that fails keeps the map drawn: only a first read that fails shows the error.
+  if (map.isError && !map.data) return <MapNotFound roomId={roomId} />;
+  if (geographic && geo.isError && !geo.data) return <MapNotFound roomId={roomId} />;
+  if (!map.data || (geographic && !geo.data)) return <FullPageLoader />;
   if (geographic) {
     return <GeoMapEditor key={map.data.id} roomId={roomId} map={geo.data!} currentUserId={currentUserId} />;
   }
   return <MapEditor key={map.data.id} roomId={roomId} map={map.data} currentUserId={currentUserId} />;
 }
 
-/**
- * The page's own copy of what is drawn, saved `SAVE_DELAY_MS` after the last
- * change: a save landing mid-drag moves nothing back. Saves go one at a time,
- * each from the revision the previous one answered with (spec 42 Decision 7).
- * When the stored map moves past that revision while nothing waits to be
- * saved (a settings change, a reload after someone else's save), the page
- * takes the stored board. A save refused as stale drops the change and says
- * so; the map reloads (`useReloadIfStale`) and is taken as above.
- */
-function useAutosave<T>(
-  stored: T,
-  storedRevision: number,
-  saver: UseMutationResult<{ revision: number }, Error, RevisionedSave<T>>,
-) {
+function MapNotFound({ roomId }: { roomId: string }) {
   const { t } = useTranslation();
-  const [value, setValue] = useState<T>(stored);
-  const [saveState, setSaveState] = useState<SaveState>('idle');
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const base = useRef(storedRevision);
-  const inFlight = useRef(false);
-  const queued = useRef<{ next: T } | null>(null);
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const waiting = saveState === 'pending' || saveState === 'saving';
-  useEffect(() => {
-    if (storedRevision > base.current && !waiting) {
-      base.current = storedRevision;
-      setValue(stored);
-    }
-  }, [stored, storedRevision, waiting]);
-
-  const save = (next: T) => {
-    setSaveState('saving');
-    if (inFlight.current) {
-      queued.current = { next };
-      return;
-    }
-    inFlight.current = true;
-    saver.mutate(
-      { value: next, baseRevision: base.current },
-      {
-        onSuccess: (saved) => {
-          base.current = saved.revision;
-          inFlight.current = false;
-          const later = queued.current;
-          queued.current = null;
-          if (later) save(later.next);
-          else setSaveState('saved');
-        },
-        onError: (error) => {
-          inFlight.current = false;
-          queued.current = null;
-          if (isStaleBoard(error)) {
-            clearTimeout(timer.current);
-            setSaveState('idle');
-            notifyError(t('maps.changedByOthers'));
-          } else {
-            setSaveState('error');
-          }
-        },
-      },
-    );
-  };
-
-  const change = (next: T) => {
-    setValue(next);
-    setSaveState('pending');
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => save(next), SAVE_DELAY_MS);
-  };
-
-  return { value, saveState, change, retry: () => save(value), error: saver.error };
+  return (
+    <FullPageMessage actionLabel={t('maps.backToMaps')} actionTo={`/rooms/${roomId}/maps`}>
+      {t('maps.notFound')}
+    </FullPageMessage>
+  );
 }
 
 /** Who looks at the map, and whether they may change it here. */
@@ -193,10 +123,12 @@ function MapEditor({
   const access = useMapAccess(roomId, map, currentUserId);
   const documents = useDocuments(roomId, access.editable);
   const tags = useTags(roomId, access.editable);
-  const autosave = useAutosave<Board>(
+  const autosave = useBoardAutosave<Board, RelationshipMapDetail>(
     { groups: map.groups, cards: map.cards, arrows: map.arrows },
     map.revision,
     useSaveBoard(roomId, map.id),
+    toBoardBody,
+    (saved) => ({ groups: saved.groups, cards: saved.cards, arrows: saved.arrows }),
   );
 
   return (
@@ -231,10 +163,12 @@ function GeoMapEditor({
   const documents = useDocuments(roomId, access.editable);
   // The Tag filter is for everyone who sees the map (Decision 8).
   const tags = useTags(roomId, true);
-  const autosave = useAutosave<GeoBoard>(
+  const autosave = useBoardAutosave<GeoBoard, GeoMapDetail>(
     { areas: map.areas, pins: map.pins, links: map.links },
     map.revision,
     useSaveGeo(roomId, map.id),
+    toGeoBody,
+    (saved) => ({ areas: saved.areas, pins: saved.pins, links: saved.links }),
   );
   const [planeOpened, setPlaneOpened] = useState(false);
   const exportMap = useExportMap(roomId, map.id, map.name);

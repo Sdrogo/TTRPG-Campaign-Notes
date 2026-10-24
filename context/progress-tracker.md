@@ -32,6 +32,12 @@ detail:
   30/30b (read aloud with the browser's voices, best installed voice by
   default, first reading waits for the voice list, PRs #146, #148, #154).
   Neither has a migration.
+- **Spec 43, Real-time map editing** (2026-10-24, PR #229, no migration):
+  map saves send only what changed (`PATCH .../board`, `PATCH .../geo`),
+  laid over the stored board, so editors no longer overwrite each other and
+  spec 42's 412 reload is gone from the page; an open map is read again every
+  5 s and the editor's unsaved changes are laid over it, never under a drag.
+  Push, presence and phone editing not built (product owner, 2026-10-24).
 - **Spec 42, Maps editable by players** (2026-10-24, PR #230, migration
   `e2b7c4f9a1d6`): a switch in a free or geographic map's settings ("I
   Player possono modificare la mappa", off by default) lets every member who
@@ -165,6 +171,12 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
+
+### 2026-10-24
+
+- **43_1, 43_2 Real-time map editing** (PR #229, no migration): per-item
+  saves (backend merge + `PATCH` routes, frontend diff/rebase autosave) and
+  a 5 s refresh of the open map.
 
 ### 2026-10-22
 
