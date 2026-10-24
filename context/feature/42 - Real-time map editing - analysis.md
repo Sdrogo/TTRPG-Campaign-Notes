@@ -15,6 +15,13 @@ Two asks: (A) a map can be **unlocked** so Players edit it too; (B) make
 **several people editing the same map at once** work well. This document
 covers both, because (A) is what makes (B) a real problem.
 
+## Decisions so far
+
+- **B1 confirmed** (product owner, 2026-10-24): "Mi piace l'idea di far
+  salvare solo l'elemento modificato invece dell'intera mappa, anche per il
+  salvataggio automatico ok". Saves, the 800 ms autosave included, send only
+  the items that changed, not the whole board.
+
 ## How it works today
 
 Free boards (spec 28) and geographic maps (spec 38) save the same way.
