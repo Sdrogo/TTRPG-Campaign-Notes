@@ -51,7 +51,14 @@ export interface RelationshipMap {
   updatedAt: string;
   /** The Documents on the map the viewer sees. */
   documentCount: number;
+  /** Spec 42: every member who sees the map edits its board. */
+  playersCanEdit: boolean;
+  /** Counts the map's writes; a board save sends the one it started from (spec 42 Decision 7). */
+  revision: number;
+  /** May change the board: its managers, or anyone while `playersCanEdit`. */
   canEdit: boolean;
+  /** May change its settings or delete it: its creator and the Master. */
+  canManage: boolean;
 }
 
 /** What a Document card shows of its Document. */
@@ -147,6 +154,14 @@ export interface MapFormValues {
   selectiveUserIds: string[];
   /** Chosen when the map is created only (spec 38 Decision 1). */
   kind?: MapKind;
+  /** In the settings of an existing map only (spec 42 Decision 1). */
+  playersCanEdit?: boolean;
+}
+
+/** A board save and the map revision its board started from (spec 42 Decision 7). */
+export interface RevisionedSave<T> {
+  value: T;
+  baseRevision: number;
 }
 
 /**

@@ -17,7 +17,10 @@
   the meantime. This ticket adds a **guard** so that never happens
   (Decision 7). Real merging of concurrent edits and seeing others' edits
   live are a separate, heavier piece of work (the "Real-time editing"
-  analysis, 2026-10-24), not part of this ticket.
+  analysis, 2026-10-24), not part of this ticket: on 2026-10-24 the
+  product owner chose the guard only here, and per-item saves (only the
+  changed items sent) as their own spec 43, which replaces this whole-board
+  save and its 412 while keeping `revision` as the version number.
 - `requirements.md` has no requirement for maps (spec 28, 36, 38); this
   ticket adds none.
 
@@ -123,6 +126,13 @@
   board from it and shows the notice of Decision 7.
 - Mention map modal: the copy target list filters on `canManage`.
 - Strings in all 12 languages.
+- Built 2026-10-24 with two refinements: saves go one at a time (a change
+  made while a save is in flight waits for its answer, so it never carries
+  a stale revision), and the page takes the stored board, without
+  remounting, whenever the stored revision moves past its own while nothing
+  is pending (after a 412 reload, a settings or a background change).
+  Settings changes also refresh a geographic map's `.../geo` read, where
+  its page reads the revision.
 
 ## Tests
 

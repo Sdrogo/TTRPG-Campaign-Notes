@@ -35,7 +35,10 @@ export interface RawMap {
   created_at: string;
   updated_at: string;
   document_count: number;
+  players_can_edit: boolean;
+  revision: number;
   can_edit: boolean;
+  can_manage: boolean;
 }
 
 export interface RawMapGroup {
@@ -112,7 +115,10 @@ export function toMap(raw: RawMap): RelationshipMap {
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
     documentCount: raw.document_count,
+    playersCanEdit: raw.players_can_edit,
+    revision: raw.revision,
     canEdit: raw.can_edit,
+    canManage: raw.can_manage,
   };
 }
 
@@ -213,6 +219,15 @@ export function toMentionMapPreview(raw: RawMentionMapPreview): MentionMapPrevie
   };
 }
 
+/**
+ * Whether a board save was refused because someone else saved the map since
+ * the revision it started from (412, spec 42 Decision 7).
+ */
+export function isStaleBoard(error: unknown): boolean {
+  // Read off the error rather than `instanceof ApiError`, so tests that mock the API client still match.
+  return error instanceof Error && 'status' in error && error.status === 412;
+}
+
 /** For a board drawn read-only, which never changes (the mention map panel). */
 export function ignoreBoardChange(): void {}
 
@@ -235,9 +250,13 @@ function toEndBody(end: ArrowEnd): RawArrowEnd {
   return { card_id: end.cardId, group_id: end.groupId };
 }
 
-/** The board as `PUT .../board` takes it: the whole board the editor sees. */
-export function toBoardBody(board: Board) {
+/**
+ * The board as `PUT .../board` takes it: the whole board the editor sees, and
+ * the map revision it started from (spec 42 Decision 7).
+ */
+export function toBoardBody(board: Board, baseRevision?: number) {
   return {
+    ...(baseRevision !== undefined && { base_revision: baseRevision }),
     groups: board.groups.map((group) => ({ ...group })),
     cards: board.cards.map((card) => ({
       id: card.id,
@@ -283,6 +302,7 @@ export function toMapBody(values: MapFormValues) {
     visibility: values.visibility,
     selective_user_ids: values.visibility === 'selective' ? values.selectiveUserIds : [],
     ...(values.kind && { kind: values.kind }),
+    ...(values.playersCanEdit !== undefined && { players_can_edit: values.playersCanEdit }),
   };
 }
 
