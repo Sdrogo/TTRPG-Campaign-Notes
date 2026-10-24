@@ -107,7 +107,9 @@ here and remind the product owner.
 
 - **Head in the repository**: `e2b7c4f9a1d6` (`relationship_maps.players_can_edit`
   and `.revision`, spec 42_1, PR #230, not yet merged into `staging`).
-- **Staging database**: `a4d9e2c7f1b6` (= head, note relational link, applied
+- **Staging database**: `e2b7c4f9a1d6` (= head, map players_can_edit and
+  revision, spec 42, applied by hand 2026-10-24 before PR #230 merged);
+  `a4d9e2c7f1b6` before it (note relational link, applied
   by hand 2026-10-21 with `.env.staging` loaded, before PR #222 merged);
   `d7c1f5a9e3b8` before it (geographic maps, applied 2026-10-17;
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
@@ -122,7 +124,6 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on staging**: `e2b7c4f9a1d6` (spec 42), before PR #230 merges.
 - **Pending on production**: `e2b7c4f9a1d6` (spec 42), before the release to
   `main` that ships it.
 
