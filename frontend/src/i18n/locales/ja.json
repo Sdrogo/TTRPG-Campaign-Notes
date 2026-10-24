@@ -7,7 +7,7 @@
     "beta": "ベータ"
   },
   "app": {
-    "name": "TTRPG Campaign Notes"
+    "name": "Ex Libris"
   },
   "common": {
     "add": "追加",
@@ -886,6 +886,7 @@
   },
   "maps": {
     "title": "マップ",
+    "actions": "マップ「{{name}}」の操作",
     "create": "新しいマップ",
     "settings": "マップの設定",
     "delete": "マップを削除",
@@ -906,6 +907,9 @@
     "saveError": "保存されていません",
     "retry": "再試行",
     "readOnlyOnPhone": "画面が小さいため、マップは閲覧のみです。",
+    "playersCanEdit": "Playerもマップを編集できる",
+    "playersCanEditHelp": "マップを見られる人は誰でも、マップ上の要素を追加・移動・削除できます。名前、公開範囲、削除を変更できるのは作成者とMasterだけです。",
+    "unlockedBadge": "Playerも編集可",
     "addDocuments": "ドキュメントを追加",
     "addText": "テキストを追加",
     "selectHint": "背景をドラッグすると複数のカードを選択できます。マップの移動は、マウスの右ボタンか中ボタン、またはスペースキーを押したままで行います。",

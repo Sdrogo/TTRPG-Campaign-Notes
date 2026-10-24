@@ -7,7 +7,7 @@
     "beta": "bêta"
   },
   "app": {
-    "name": "TTRPG Campaign Notes"
+    "name": "Ex Libris"
   },
   "common": {
     "add": "Ajouter",
@@ -914,6 +914,7 @@
   },
   "maps": {
     "title": "Cartes",
+    "actions": "Actions pour la carte {{name}}",
     "create": "Nouvelle carte",
     "settings": "Paramètres de la carte",
     "delete": "Supprimer la carte",
@@ -935,6 +936,9 @@
     "saveError": "Non enregistré",
     "retry": "Réessayer",
     "readOnlyOnPhone": "Sur un écran aussi petit, la carte est en lecture seule.",
+    "playersCanEdit": "Les Player peuvent modifier la carte",
+    "playersCanEditHelp": "Toute personne qui voit la carte peut ajouter, déplacer et retirer ce qu'elle contient. Le nom, la visibilité et la suppression restent à son créateur et au Master.",
+    "unlockedBadge": "Modifiable par les Player",
     "addDocuments": "Ajouter des Documents",
     "addText": "Ajouter du texte",
     "selectHint": "Fais glisser sur l'arrière-plan pour sélectionner plusieurs cartes. Déplace la carte avec le clic droit ou central de la souris, ou maintiens la barre Espace.",

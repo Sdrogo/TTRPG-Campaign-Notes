@@ -328,7 +328,10 @@ export function rawMap(overrides: Record<string, unknown> = {}) {
     created_at: '2026-10-12T10:00:00Z',
     updated_at: '2026-10-12T10:00:00Z',
     document_count: 2,
+    players_can_edit: false,
+    revision: 3,
     can_edit: true,
+    can_manage: true,
     ...overrides,
   };
 }

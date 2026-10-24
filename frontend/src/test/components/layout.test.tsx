@@ -135,7 +135,7 @@ describe('AppHeader', () => {
   it('links the app name back to the Rooms list', () => {
     renderWithProviders(<AppHeader />);
 
-    expect(screen.getByRole('link', { name: 'TTRPG Campaign Notes' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Ex Libris' })).toHaveAttribute(
       'href',
       '/',
     );

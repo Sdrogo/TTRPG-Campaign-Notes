@@ -7,7 +7,7 @@
     "beta": "beta"
   },
   "app": {
-    "name": "TTRPG Campaign Notes"
+    "name": "Ex Libris"
   },
   "common": {
     "add": "Toevoegen",
@@ -912,6 +912,7 @@
   },
   "maps": {
     "title": "Kaarten",
+    "actions": "Acties voor de kaart {{name}}",
     "create": "Nieuwe kaart",
     "settings": "Instellingen van de kaart",
     "delete": "Kaart verwijderen",
@@ -933,6 +934,9 @@
     "saveError": "Niet opgeslagen",
     "retry": "Opnieuw proberen",
     "readOnlyOnPhone": "Op zo'n klein scherm is de kaart alleen-lezen.",
+    "playersCanEdit": "Player kunnen de kaart bewerken",
+    "playersCanEditHelp": "Iedereen die de kaart ziet, kan er dingen aan toevoegen, verplaatsen en weghalen. Naam, zichtbaarheid en verwijderen blijven bij wie de kaart heeft gemaakt en de Master.",
+    "unlockedBadge": "Bewerkbaar door Player",
     "addDocuments": "Documenten toevoegen",
     "addText": "Tekst toevoegen",
     "selectHint": "Sleep over de achtergrond om meerdere kaarten te selecteren. Verplaats de kaart met de rechter- of middelste muisknop, of houd de spatiebalk ingedrukt.",

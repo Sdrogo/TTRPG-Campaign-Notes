@@ -73,7 +73,7 @@ def add_cors(target: FastAPI, config: Settings) -> None:
     )
 
 
-app = FastAPI(title="TTRPG Campaign Notes API", lifespan=lifespan)
+app = FastAPI(title="Ex Libris API", lifespan=lifespan)
 add_cors(app, settings)
 
 app.include_router(auth_router)

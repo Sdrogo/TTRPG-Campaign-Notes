@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
+import { toChangesBody } from '../lib/boardChanges';
 import {
   toBoardBody,
   toMap,
@@ -8,7 +9,13 @@ import {
   type RawMap,
   type RawMapDetail,
 } from '../lib/maps';
-import type { Board, MapFormValues, RelationshipMap, RelationshipMapDetail } from '../types/map';
+import type {
+  Board,
+  MapFormValues,
+  RelationshipMap,
+  RelationshipMapDetail,
+} from '../types/map';
+import type { ChangesSave } from '../types/boardChanges';
 
 function mapsPath(roomId: string) {
   return `/rooms/${roomId}/maps`;
@@ -31,12 +38,23 @@ export function useMaps(roomId: string, enabled: boolean) {
   });
 }
 
-/** One map with its board as the viewer sees it; 404 when hidden from them. */
-export function useMap(roomId: string, mapId: string, enabled: boolean) {
+/**
+ * How often an open map is read again (spec 43_2), so everyone on it sees the
+ * others' changes within a few seconds; never while the tab is hidden.
+ */
+export const MAP_REFRESH_MS = 5000;
+
+/**
+ * One map with its board as the viewer sees it; 404 when hidden from them.
+ * With `refresh` a free map is read again every `MAP_REFRESH_MS` (spec 43_2);
+ * a geographic map's content is refreshed from `.../geo` instead.
+ */
+export function useMap(roomId: string, mapId: string, enabled: boolean, refresh = false) {
   return useQuery<RelationshipMapDetail>({
     queryKey: mapQueryKey(roomId, mapId),
     queryFn: async () => toMapDetail(await apiFetch<RawMapDetail>(`${mapsPath(roomId)}/${mapId}`)),
     enabled,
+    refetchInterval: (query) => (refresh && query.state.data?.kind === 'free' ? MAP_REFRESH_MS : false),
   });
 }
 
@@ -65,6 +83,8 @@ export function useUpdateMap(roomId: string, mapId: string) {
       ),
     onSuccess: (detail) => {
       queryClient.setQueryData(mapQueryKey(roomId, mapId), detail);
+      // A geographic map's page reads its revision from `.../geo` (spec 42 Decision 7).
+      void queryClient.invalidateQueries({ queryKey: [...mapQueryKey(roomId, mapId), 'geo'] });
       return queryClient.invalidateQueries({ queryKey: mapsQueryKey(roomId), exact: true });
     },
   });
@@ -83,18 +103,19 @@ export function useDeleteMap(roomId: string, mapId: string) {
 }
 
 /**
- * Saves the whole board the editor sees (Decision 12). The answer only
- * refreshes the cache: the page keeps drawing its own copy, so a save landing
- * mid-drag doesn't move anything back.
+ * Saves only what the editor changed (spec 43): `PATCH .../board` lays it over
+ * the stored board and answers the whole board as they now see it, other
+ * editors' work included. The page keeps drawing its own copy, rebased on the
+ * answer, so a save landing mid-drag doesn't move anything back.
  */
 export function useSaveBoard(roomId: string, mapId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (board: Board) =>
+    mutationFn: async ({ changes, baseRevision }: ChangesSave<Board>) =>
       toMapDetail(
         await apiFetch<RawMapDetail>(`${mapsPath(roomId)}/${mapId}/board`, {
-          method: 'PUT',
-          json: toBoardBody(board),
+          method: 'PATCH',
+          json: toChangesBody(changes, toBoardBody, baseRevision),
         }),
       ),
     onSuccess: (detail) => {

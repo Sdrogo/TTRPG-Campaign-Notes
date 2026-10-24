@@ -7,7 +7,7 @@
     "beta": "测试版"
   },
   "app": {
-    "name": "TTRPG Campaign Notes"
+    "name": "Ex Libris"
   },
   "common": {
     "add": "添加",
@@ -886,6 +886,7 @@
   },
   "maps": {
     "title": "地图",
+    "actions": "地图 {{name}} 的操作",
     "create": "新建地图",
     "settings": "地图设置",
     "delete": "删除地图",
@@ -906,6 +907,9 @@
     "saveError": "未保存",
     "retry": "重试",
     "readOnlyOnPhone": "在这么小的屏幕上，地图为只读。",
+    "playersCanEdit": "Player 可以编辑地图",
+    "playersCanEditHelp": "能看到地图的人都可以添加、移动和删除地图上的内容。名称、可见性和删除仍由创建者和 Master 决定。",
+    "unlockedBadge": "Player 可编辑",
     "addDocuments": "添加文档",
     "addText": "添加文本",
     "selectHint": "在背景上拖动可框选多张卡片。用鼠标右键或中键移动地图，或按住空格键。",

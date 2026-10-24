@@ -199,6 +199,8 @@
     "map": {
       "notFound": "未找到地图",
       "notManager": "只有地图的创建者（或 Master）可以更改此地图",
+      "notEditor": "此地图已锁定：只有创建者（或 Master）可以编辑",
+      "changedByOthers": "其他人在此期间更改了地图：请重新加载后再做一次修改",
       "creationDisabled": "此房间中 Player 不能创建地图",
       "invalidSelectiveUsers": "selective_user_ids 必须全部是此房间的成员",
       "nameRequired": "地图需要名称",

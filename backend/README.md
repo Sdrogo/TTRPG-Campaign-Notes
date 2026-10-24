@@ -1,6 +1,6 @@
 # Backend
 
-The FastAPI service for TTRPG Campaign Notes. It is the only component that
+The FastAPI service for Ex Libris. It is the only component that
 talks to Postgres and Storage: it verifies the user's Supabase token and applies
 every visibility and ownership rule before answering. Overview of the whole
 project: [../README.md](../README.md).

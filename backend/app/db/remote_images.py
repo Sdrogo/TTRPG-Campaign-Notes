@@ -77,7 +77,10 @@ async def fetch_image_bytes(url: str, transport: httpx.AsyncBaseTransport | None
     """Downloads the image at `url`, following at most `MAX_REDIRECTS`
     redirects and validating each hop again. The bytes are not yet checked to
     be an image - that's `normalize_image`'s job. `transport` is for tests."""
-    headers = {"User-Agent": "TTRPG-Campaign-Notes/0.1 (image import)", "Accept": "image/*"}
+    headers = {
+        "User-Agent": "ExLibris/1.0 (+https://exlibris.world; image import)",
+        "Accept": "image/*",
+    }
     async with httpx.AsyncClient(
         timeout=TIMEOUT_SECONDS, follow_redirects=False, transport=transport
     ) as client:

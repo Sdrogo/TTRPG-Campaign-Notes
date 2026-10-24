@@ -93,6 +93,18 @@ function arrow(id: string, from: string, to: string, overrides: Partial<MapArrow
 }
 
 describe('the wire shape', () => {
+  it('sends the revision a board started from (spec 42)', () => {
+    const board = { groups: [], cards: [], arrows: [] };
+    expect(toBoardBody(board, 7)).toEqual({ base_revision: 7, groups: [], cards: [], arrows: [] });
+    expect(toBoardBody(board)).not.toHaveProperty('base_revision');
+  });
+
+  it("sends the Players' switch only from the settings", () => {
+    const values = { name: 'La Corte', description: '', visibility: 'room' as const, selectiveUserIds: [] };
+    expect(toMapBody(values)).not.toHaveProperty('players_can_edit');
+    expect(toMapBody({ ...values, playersCanEdit: false })).toMatchObject({ players_can_edit: false });
+  });
+
   it('reads a map and its board', () => {
     expect(toMap(rawMap({ selective_user_ids: null, can_edit: false }) as never)).toEqual({
       id: 'map-1',
@@ -108,7 +120,10 @@ describe('the wire shape', () => {
       createdAt: '2026-10-12T10:00:00Z',
       updatedAt: '2026-10-12T10:00:00Z',
       documentCount: 2,
+      playersCanEdit: false,
+      revision: 3,
       canEdit: false,
+      canManage: true,
     });
     const detail = toMapDetail(rawMapDetail() as unknown as RawMapDetail);
     expect(detail.groups[0]).toMatchObject({

@@ -29,11 +29,12 @@ interface HarnessProps {
   backgroundUrl?: string | null;
   planeWidth?: number;
   onSelectDocument?: (documentId: string) => void;
+  fitToPlane?: boolean;
 }
 
 const onChange = vi.fn();
 
-function Harness({ board = initial, editable = true, isMaster = true, backgroundUrl = null, planeWidth = 2000, onSelectDocument }: HarnessProps) {
+function Harness({ board = initial, editable = true, isMaster = true, backgroundUrl = null, planeWidth = 2000, onSelectDocument, fitToPlane }: HarnessProps) {
   const [current, setCurrent] = useState(board);
   return (
     <GeographicBoard
@@ -51,6 +52,7 @@ function Harness({ board = initial, editable = true, isMaster = true, background
         setCurrent(next);
       }}
       onSelectDocument={onSelectDocument}
+      fitToPlane={fitToPlane}
     />
   );
 }
@@ -202,6 +204,44 @@ describe('GeographicBoard: moving around', () => {
     expect(viewTransform()).toMatch(/scale\(0\.475\)/);
     await user.click(screen.getByRole('button', { name: 'Rimpicciolisci' }));
     expect(viewTransform()).toMatch(/scale\(0\.38\)/);
+  });
+
+  it('zooms and pans with a two-finger pinch, which is never a click', () => {
+    const onSelectDocument = vi.fn();
+    render({ editable: false, onSelectDocument });
+    fireEvent.pointerDown(plane(), { button: 0, pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Shibuya Sky' }), { button: 0, pointerId: 2, clientX: 200, clientY: 100 });
+    // The fingers twice as far apart, and their middle 50px to the right.
+    fireEvent.pointerMove(board(), { pointerId: 2, clientX: 300, clientY: 100 });
+    expect(viewTransform()).toBe('translate(-60 -32) scale(0.76)');
+    // A pointer that never pressed the board moves nothing.
+    fireEvent.pointerMove(board(), { pointerId: 9, clientX: 400, clientY: 400 });
+    expect(viewTransform()).toBe('translate(-60 -32) scale(0.76)');
+    fireEvent.pointerUp(board(), { pointerId: 2, clientX: 300, clientY: 100 });
+    fireEvent.pointerUp(board(), { pointerId: 1, clientX: 100, clientY: 100 });
+    expect(viewTransform()).toBe('translate(-60 -32) scale(0.76)');
+    expect(onSelectDocument).not.toHaveBeenCalled();
+    // One finger pans again afterwards.
+    fireEvent.pointerDown(plane(), { button: 0, pointerId: 3, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(board(), { pointerId: 3, clientX: 110, clientY: 100 });
+    expect(viewTransform()).toBe('translate(-50 -32) scale(0.76)');
+  });
+
+  it('takes the plane\'s shape when asked to fit it (phones)', () => {
+    render({ fitToPlane: true });
+    const box = board().parentElement!;
+    expect(box.style.aspectRatio).toBe('2000 / 1400');
+    expect(box.style.maxHeight).toBe('calc(100dvh - 190px)');
+    expect(box.style.height).toBe('');
+  });
+
+  it('starts afresh on a new first touch, even after a release it missed', () => {
+    render({ editable: false });
+    fireEvent.pointerDown(plane(), { button: 0, pointerId: 1, isPrimary: true, clientX: 100, clientY: 100 });
+    // No release for pointer 1: the next first touch pans, it doesn't pinch.
+    fireEvent.pointerDown(plane(), { button: 0, pointerId: 2, isPrimary: true, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(board(), { pointerId: 2, clientX: 150, clientY: 130 });
+    expect(viewTransform()).toBe('translate(70 64) scale(0.38)');
   });
 
   it('ignores a press with another button, and a cancelled one', () => {

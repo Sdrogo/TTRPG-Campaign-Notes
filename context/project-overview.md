@@ -1,8 +1,9 @@
-# TTRPG Campaign Notes
+# Ex Libris
 
 ## Overview
 
-A web application where the members of a tabletop RPG (TTRPG)
+Ex Libris (`exlibris.world`; the repository is still named
+`TTRPG-Campaign-Notes`) is a web application where the members of a tabletop RPG (TTRPG)
 campaign collaboratively build and maintain the notes and lore of
 that campaign — places, NPCs, events, artifacts, and anything else
 worth recording. Players and the Game Master (called Master here)

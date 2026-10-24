@@ -1,6 +1,6 @@
 # Frontend
 
-The React single-page app for TTRPG Campaign Notes. It talks only to the
+The React single-page app for Ex Libris. It talks only to the
 backend API; it never reaches Postgres or Storage directly. Overview of the
 whole project: [../README.md](../README.md).
 

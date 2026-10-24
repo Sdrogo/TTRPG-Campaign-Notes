@@ -13,6 +13,17 @@ detail:
 
 ## Current Status (2026-10-10)
 
+- **Rebranding to Ex Libris** (2026-10-22, no migration): `app.name` is
+  "Ex Libris" in all 12 languages (header, home page), browser title and
+  meta description, favicon drawn from the placeholder logo (spiral and
+  open book on parchment), FastAPI title, outgoing User-Agents, backend
+  package name (`ex-libris-backend`), READMEs and context docs. Kept on
+  purpose so nothing breaks: the GitHub repo name, the GHCR image
+  `ttrpg-campaign-notes-backend`, the Vercel/Render project URLs in CORS,
+  and the `ttrpg.language` / `ttrpg.speech` localStorage keys (renaming
+  them would reset every user's language and voice). `requirements.md`
+  still says "Collaborative TTRPG notes platform" (protected file).
+
 - **Everything on `staging` is released to `main`** (release PR #155,
   2026-10-10). Features 12 to 31 are built except the ones listed under
   Next Up; 23c, 25 and 25b were dropped by the product owner.
@@ -21,6 +32,25 @@ detail:
   30/30b (read aloud with the browser's voices, best installed voice by
   default, first reading waits for the voice list, PRs #146, #148, #154).
   Neither has a migration.
+- **Spec 43, Real-time map editing** (2026-10-24, PR #229, no migration):
+  map saves send only what changed (`PATCH .../board`, `PATCH .../geo`),
+  laid over the stored board, so editors no longer overwrite each other and
+  spec 42's 412 reload is gone from the page; an open map is read again every
+  5 s and the editor's unsaved changes are laid over it, never under a drag.
+  Push, presence and phone editing not built (product owner, 2026-10-24).
+- **Spec 42, Maps editable by players** (2026-10-24, PR #230, migration
+  `e2b7c4f9a1d6`): a switch in a free or geographic map's settings ("I
+  Player possono modificare la mappa", off by default) lets every member who
+  sees the map edit its board; settings, deletion, plane, background and
+  linking stay with its creator and the Master. Every map write raises
+  `relationship_maps.revision`; a board save based on an older revision is
+  412 and the page reloads the map, telling the editor to redo the last
+  change. Real-time merging/live updates: analysed (Claude Doc "Modifica
+  delle mappe in tempo reale"), product owner chose the guard only
+  (2026-10-24). Defaults in the spec's Decisions to confirm in the PR.
+  Applied to staging and to production 2026-10-24 (production with
+  `backend/.env` loaded, product owner's go-ahead), so the `staging` →
+  `main` release that ships spec 42 can be merged.
 - **Spec 41, Relational link Notes** (2026-10-21, migration
   `a4d9e2c7f1b6`): a Note can be flagged as a Relational link (switch in
   the Note form, badge next to its title for every reader), and **only the
@@ -84,16 +114,20 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `a4d9e2c7f1b6` (`document_notes.relational_link`,
-  spec 41_1, merged into `staging` by PR #222).
-- **Staging database**: `a4d9e2c7f1b6` (= head, note relational link, applied
+- **Head in the repository**: `e2b7c4f9a1d6` (`relationship_maps.players_can_edit`
+  and `.revision`, spec 42_1, PR #230, not yet merged into `staging`).
+- **Staging database**: `e2b7c4f9a1d6` (= head, map players_can_edit and
+  revision, spec 42, applied by hand 2026-10-24 before PR #230 merged);
+  `a4d9e2c7f1b6` before it (note relational link, applied
   by hand 2026-10-21 with `.env.staging` loaded, before PR #222 merged);
   `d7c1f5a9e3b8` before it (geographic maps, applied 2026-10-17;
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `a4d9e2c7f1b6` (= head). Applied 2026-10-21 with
-  `backend/.env` loaded: `a4d9e2c7f1b6` (note relational link, spec 41), ahead
+- **Production database**: `e2b7c4f9a1d6` (= head, map players_can_edit and
+  revision, spec 42, applied 2026-10-24 with `backend/.env` loaded, ahead of
+  the release that ships it). Before it, `a4d9e2c7f1b6`, applied 2026-10-21 with
+  `backend/.env` loaded (note relational link, spec 41), ahead
   of release PR #223 (staging to `main`), so until that merges production's
   code does not carry the migration file. Before it, applied 2026-10-19:
   `d7c1f5a9e3b8` (geographic
@@ -104,7 +138,7 @@ here and remind the product owner.
 - **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
-`a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -141,6 +175,25 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
+
+### 2026-10-24
+
+- **43_1, 43_2 Real-time map editing** (PR #229, no migration): per-item
+  saves (backend merge + `PATCH` routes, frontend diff/rebase autosave) and
+  a 5 s refresh of the open map.
+
+### 2026-10-22
+
+- **Maps on phones** (frontend only, no migration, product owner's
+  request): on a map page the name, description and buttons no longer share
+  a no-wrap row, so the description takes the full width (buttons on their
+  own row under the name on a phone); a geographic map pans and zooms with a
+  two-finger pinch, and on a phone its board is no taller than the plane
+  across the screen, so it opens filled with no empty bands. Then, at the
+  product owner's request: the map's buttons are grouped in a ⋮ menu beside
+  the name (one line, cut short), the description is cut to two lines and a
+  tap opens or closes it, and on a phone a Document picked on any map opens
+  in the lower half of the screen under the map (spec 37 Decision 5 changed).
 
 ### 2026-10-21
 

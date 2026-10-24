@@ -163,12 +163,14 @@ function toLinkEndBody(end: GeoLinkEnd): RawGeoLinkEnd {
 }
 
 /**
- * The map as `PUT .../geo` takes it: everything the editor sees. A
+ * The map as the API takes it, item by item: everything the editor sees for
+ * `PUT .../geo`, or only the changed items for `PATCH .../geo` (spec 43). A
  * Document's area or pin sends no texts of its own (they follow the
  * Document); a two-way link's reverse label only on a two-way link.
  */
-export function toGeoBody(board: GeoBoard) {
+export function toGeoBody(board: GeoBoard, baseRevision?: number) {
   return {
+    ...(baseRevision !== undefined && { base_revision: baseRevision }),
     areas: board.areas.map((area) => ({
       id: area.id,
       document_id: area.documentId,

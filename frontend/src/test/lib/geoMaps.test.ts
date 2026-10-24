@@ -93,6 +93,10 @@ describe('the wire shape', () => {
     expect(map.pins[0].document?.image).not.toBeNull();
   });
 
+  it('sends the revision the map started from (spec 42)', () => {
+    expect(toGeoBody({ areas: [], pins: [], links: [] }, 4)).toEqual({ base_revision: 4, areas: [], pins: [], links: [] });
+  });
+
   it("sends no texts of their own for a Document's places, and no reverse label one way", () => {
     const map = detail();
     const body = toGeoBody({

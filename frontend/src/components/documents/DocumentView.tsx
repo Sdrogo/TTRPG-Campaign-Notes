@@ -435,7 +435,7 @@ function DocumentPanel({
                   roomId={roomId}
                   documentId={document.id}
                   map={linkedMap}
-                  canUnlink={!readOnly && linkedMap.canEdit}
+                  canUnlink={!readOnly && linkedMap.canManage}
                 />
               )}
               <Paper withBorder radius="md" p="sm" bg="var(--mantine-color-dark-7)">

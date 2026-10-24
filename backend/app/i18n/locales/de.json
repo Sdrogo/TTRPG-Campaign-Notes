@@ -199,6 +199,8 @@
     "map": {
       "notFound": "Karte nicht gefunden",
       "notManager": "Nur wer die Karte erstellt hat (oder der Master) kann sie ändern",
+      "notEditor": "Diese Karte ist gesperrt: Nur wer sie erstellt hat (oder der Master) kann sie bearbeiten",
+      "changedByOthers": "Jemand anderes hat die Karte inzwischen geändert: Lade sie neu und wiederhole deine Änderung",
       "creationDisabled": "In diesem Raum können Player keine Karten erstellen",
       "invalidSelectiveUsers": "selective_user_ids darf nur Mitglieder dieses Raums enthalten",
       "nameRequired": "Eine Karte braucht einen Namen",

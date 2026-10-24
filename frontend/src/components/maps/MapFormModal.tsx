@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Button, Input, Modal, SegmentedControl, Stack, Textarea, TextInput } from '@mantine/core';
+import { Alert, Button, Input, Modal, SegmentedControl, Stack, Switch, Textarea, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '../../types/member';
 import type { MapFormValues, MapKind } from '../../types/map';
@@ -29,7 +29,8 @@ interface MapFormModalProps {
  * A map's name, description and who sees it (spec 28 Decisions 1, 3): the
  * Comment levels, the creator standing for the Owner. Used to create a map
  * and for its settings; mounted while open, so it starts from
- * `initialValues`.
+ * `initialValues`. In the settings (`playersCanEdit` given) it also holds
+ * the switch that lets every member who sees the map edit it (spec 42).
  */
 export function MapFormModal({
   title,
@@ -104,6 +105,14 @@ export function MapFormModal({
               excludeUserIds={[creatorId]}
               value={values.selectiveUserIds}
               onChange={(selectiveUserIds) => set({ selectiveUserIds })}
+            />
+          )}
+          {values.playersCanEdit !== undefined && (
+            <Switch
+              label={t('maps.playersCanEdit')}
+              description={t('maps.playersCanEditHelp')}
+              checked={values.playersCanEdit}
+              onChange={(event) => set({ playersCanEdit: event.currentTarget.checked })}
             />
           )}
           {error && <Alert color="red">{error}</Alert>}

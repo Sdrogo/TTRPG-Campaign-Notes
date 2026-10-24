@@ -7,7 +7,7 @@
     "beta": "beta"
   },
   "app": {
-    "name": "TTRPG Campaign Notes"
+    "name": "Ex Libris"
   },
   "common": {
     "add": "Adicionar",
@@ -914,6 +914,7 @@
   },
   "maps": {
     "title": "Mapas",
+    "actions": "Ações do mapa {{name}}",
     "create": "Novo mapa",
     "settings": "Definições do mapa",
     "delete": "Eliminar mapa",
@@ -935,6 +936,9 @@
     "saveError": "Não guardado",
     "retry": "Tentar novamente",
     "readOnlyOnPhone": "Num ecrã tão pequeno o mapa é só de leitura.",
+    "playersCanEdit": "Os Player podem editar o mapa",
+    "playersCanEditHelp": "Quem vê o mapa pode adicionar, mover e remover o que lá está. O nome, a visibilidade e a eliminação ficam com quem o criou e com o Master.",
+    "unlockedBadge": "Editável pelos Player",
     "addDocuments": "Adicionar Documentos",
     "addText": "Adicionar texto",
     "selectHint": "Arrasta sobre o fundo para selecionar várias cartas. Move o mapa com o botão direito ou do meio do rato, ou mantém premida a barra de espaços.",

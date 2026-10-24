@@ -1514,7 +1514,7 @@ describe('DocumentDetailPage mention map (spec 36)', () => {
     expect(screen.getByRole('button', { name: 'Togli dalla pagina del Documento' })).toBeInTheDocument();
     cleanup();
 
-    routes.linkedMap = rawMapDetail({ name: 'La Corte', can_edit: false });
+    routes.linkedMap = rawMapDetail({ name: 'La Corte', can_edit: false, can_manage: false });
     render();
     expect(await screen.findByRole('region', { name: 'La Corte' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Togli dalla pagina del Documento' })).not.toBeInTheDocument();

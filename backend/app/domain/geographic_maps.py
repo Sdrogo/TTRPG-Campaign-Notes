@@ -11,9 +11,10 @@ Who may see what (Invariant 1, VR-07), the same rules as a free board:
   Document; a Master-only plain one only for a Master (Decision 6);
 - a link shows when both its ends show and, when Master-only, to a Master.
 
-Editing (spec 28 Decision 12, spec 38 Decision 9): an editor sends the whole
-map as they see it; whatever they don't see is left exactly as it is
-(`plan_geo_board_edit`)."""
+Editing (spec 28 Decision 12, spec 38 Decision 9): an editor sends only what
+they changed (spec 43, `merge_geo_changes`), laid over the stored map, then
+checked as the whole map they see; whatever they don't see is left exactly as
+it is (`plan_geo_board_edit`)."""
 
 import math
 import uuid
@@ -35,6 +36,7 @@ from app.domain.relationship_maps import (
     clean_label_position,
     clean_line,
     clean_lines,
+    merge_items,
 )
 
 MAX_AREAS_PER_MAP = 60
@@ -534,6 +536,59 @@ def plan_geo_board_edit(
         delete_pin_ids=frozenset(shown_pins.keys() - pin_ids),
         delete_link_ids=frozenset(shown_links.keys() - {link.id for link in links}),
     )
+
+
+def merge_geo_changes(
+    current: GeoBoard,
+    shown: GeoBoard,
+    changed: GeoBoard,
+    created_ids: Collection[uuid.UUID],
+    deleted_ids: Collection[uuid.UUID],
+) -> GeoBoard:
+    """Spec 43 Decision 1, as `merge_board_changes` on a free board: the map
+    an editor sees once their changes are laid over the stored one, ready for
+    `plan_geo_board_edit`. A change that can no longer apply is dropped
+    (Decision 2): an update or deletion of something no longer on the map or
+    hidden from the editor, a new area or pin for a Document already on the
+    map, a link whose end is gone. 422 when the same id is sent twice."""
+    for items in (changed.areas, changed.pins, changed.links):
+        _ensure_unique_ids(items)
+
+    every_id = (
+        {area.id for area in current.areas}
+        | {pin.id for pin in current.pins}
+        | {link.id for link in current.links}
+    )
+    shown_ids = {area.id for area in shown.areas} | {pin.id for pin in shown.pins}
+    areas = merge_items(shown.areas, changed.areas, created_ids, deleted_ids, every_id)
+    pins = merge_items(shown.pins, changed.pins, created_ids, deleted_ids, every_id)
+
+    # Places already on the map (hidden ones included) keep their Document; a
+    # new place for one of them, or a second new one, is dropped.
+    hidden_areas = [area for area in current.areas if area.id not in shown_ids]
+    hidden_pins = [pin for pin in current.pins if pin.id not in shown_ids]
+    on_map = set(placed_document_ids(hidden_areas, hidden_pins))
+    placed: list[Area | Pin] = [*areas, *pins]
+    on_map |= {item.document_id for item in placed if item.id in shown_ids and item.document_id}
+
+    def claims(item: Area | Pin) -> bool:
+        """False for a new place whose Document is already on the map."""
+        if item.id in shown_ids or item.document_id is None:
+            return True
+        if item.document_id in on_map:
+            return False
+        on_map.add(item.document_id)
+        return True
+
+    areas = [area for area in areas if claims(area)]
+    pins = [pin for pin in pins if claims(pin)]
+    ends = {area.id for area in areas} | {pin.id for pin in pins}
+    links = [
+        link
+        for link in merge_items(shown.links, changed.links, created_ids, deleted_ids, every_id)
+        if link.from_end.id in ends and link.to_end.id in ends
+    ]
+    return GeoBoard(areas=areas, pins=pins, links=links)
 
 
 def geo_document_counts(
