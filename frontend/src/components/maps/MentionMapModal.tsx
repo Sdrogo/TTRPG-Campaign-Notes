@@ -53,7 +53,7 @@ export function MentionMapModal({
   const copy = useCopyMentionMap(roomId, documentId);
   const link = useLinkMap(roomId, documentId);
   // Decision 15: the maps the viewer manages (free or geographic, spec 38) can be shown instead.
-  const editable = (useMaps(roomId, true).data ?? []).filter((free) => free.canEdit);
+  const editable = (useMaps(roomId, true).data ?? []).filter((free) => free.canManage);
   const error = save.error ?? remove.error ?? copy.error ?? link.error ?? preview.error;
   const empty = preview.data?.relations === 0;
 

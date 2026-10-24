@@ -4,7 +4,8 @@ import { toGeoBody, toGeoMapDetail, type RawGeoMapDetail } from '../lib/geoMaps'
 import { mapExportFileName, toImportBody, toMapImportReport, type RawMapImportReport } from '../lib/mapImport';
 import { saveBlob } from '../lib/roomExport';
 import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
-import type { MapFormValues } from '../types/map';
+import type { MapFormValues, RevisionedSave } from '../types/map';
+import { useReloadIfStale } from './useMaps';
 
 function mapPath(roomId: string, mapId: string) {
   return `/rooms/${roomId}/maps/${mapId}`;
@@ -34,17 +35,24 @@ function useStoreAnswer(roomId: string, mapId: string) {
 }
 
 /**
- * Saves everything the editor sees on the map (Decision 9). The page keeps
- * drawing its own copy, so a save landing mid-drag moves nothing back.
+ * Saves everything the editor sees on the map (Decision 9), refused (412)
+ * when someone else saved since `baseRevision` (spec 42), which reloads it.
+ * The page keeps drawing its own copy, so a save landing mid-drag moves
+ * nothing back.
  */
 export function useSaveGeo(roomId: string, mapId: string) {
   const store = useStoreAnswer(roomId, mapId);
+  const reloadIfStale = useReloadIfStale(roomId, mapId);
   return useMutation({
-    mutationFn: async (board: GeoBoard) =>
+    mutationFn: async ({ value, baseRevision }: RevisionedSave<GeoBoard>) =>
       toGeoMapDetail(
-        await apiFetch<RawGeoMapDetail>(`${mapPath(roomId, mapId)}/geo`, { method: 'PUT', json: toGeoBody(board) }),
+        await apiFetch<RawGeoMapDetail>(`${mapPath(roomId, mapId)}/geo`, {
+          method: 'PUT',
+          json: toGeoBody(value, baseRevision),
+        }),
       ),
     onSuccess: store,
+    onError: reloadIfStale,
   });
 }
 

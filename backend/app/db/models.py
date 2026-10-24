@@ -788,6 +788,13 @@ class RelationshipMapRow(Base):
     plane_width: Mapped[int | None] = mapped_column(Integer)
     plane_height: Mapped[int | None] = mapped_column(Integer)
     background_path: Mapped[str | None] = mapped_column(String(300))
+    # Spec 42: every member who sees the map edits its board, not only its
+    # creator and the Master; `revision` counts the map's writes, so a board
+    # save based on an older one is refused (Decision 7).
+    players_can_edit: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
+    revision: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
 
 
 class DocumentLinkedMapRow(Base):

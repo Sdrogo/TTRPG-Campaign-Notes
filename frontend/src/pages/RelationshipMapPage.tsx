@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, Group, Menu, Modal, Stack, Text, Title } from '@mantine/core';
+import { Badge, Box, Button, Group, Menu, Modal, Stack, Text, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import {
   DotsThreeVerticalIcon,
@@ -29,7 +29,8 @@ import { MapFormModal } from '../components/maps/MapFormModal';
 import { GeographicBoard } from '../components/maps/GeographicBoard';
 import { GeoMapDialog } from '../components/maps/GeoMapDialog';
 import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
-import type { Board, RelationshipMap, RelationshipMapDetail } from '../types/map';
+import type { Board, RelationshipMap, RelationshipMapDetail, RevisionedSave } from '../types/map';
+import { isStaleBoard } from '../lib/maps';
 import { notifyError } from '../lib/notify';
 
 /** How long the board waits after the last change before saving it. */
@@ -43,8 +44,8 @@ type SaveState = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 /**
  * `/rooms/:roomId/maps/:mapId`: one map, full page: a free board (spec 28)
  * or a geographic map (spec 38). Its creator and the Master edit it on a
- * screen at least `sm` wide; it saves itself shortly after each change and
- * says so.
+ * screen at least `sm` wide, and so does every member who sees it once it is
+ * unlocked (spec 42); it saves itself shortly after each change and says so.
  */
 export function RelationshipMapPage() {
   const { t } = useTranslation();
@@ -87,20 +88,66 @@ function MapContent({
 
 /**
  * The page's own copy of what is drawn, saved `SAVE_DELAY_MS` after the last
- * change: a save landing mid-drag moves nothing back.
+ * change: a save landing mid-drag moves nothing back. Saves go one at a time,
+ * each from the revision the previous one answered with (spec 42 Decision 7).
+ * When the stored map moves past that revision while nothing waits to be
+ * saved (a settings change, a reload after someone else's save), the page
+ * takes the stored board. A save refused as stale drops the change and says
+ * so; the map reloads (`useReloadIfStale`) and is taken as above.
  */
-function useAutosave<T>(initial: T, saver: UseMutationResult<unknown, Error, T>) {
-  const [value, setValue] = useState<T>(initial);
+function useAutosave<T>(
+  stored: T,
+  storedRevision: number,
+  saver: UseMutationResult<{ revision: number }, Error, RevisionedSave<T>>,
+) {
+  const { t } = useTranslation();
+  const [value, setValue] = useState<T>(stored);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const base = useRef(storedRevision);
+  const inFlight = useRef(false);
+  const queued = useRef<{ next: T } | null>(null);
   useEffect(() => () => clearTimeout(timer.current), []);
+
+  const waiting = saveState === 'pending' || saveState === 'saving';
+  useEffect(() => {
+    if (storedRevision > base.current && !waiting) {
+      base.current = storedRevision;
+      setValue(stored);
+    }
+  }, [stored, storedRevision, waiting]);
 
   const save = (next: T) => {
     setSaveState('saving');
-    saver.mutate(next, {
-      onSuccess: () => setSaveState('saved'),
-      onError: () => setSaveState('error'),
-    });
+    if (inFlight.current) {
+      queued.current = { next };
+      return;
+    }
+    inFlight.current = true;
+    saver.mutate(
+      { value: next, baseRevision: base.current },
+      {
+        onSuccess: (saved) => {
+          base.current = saved.revision;
+          inFlight.current = false;
+          const later = queued.current;
+          queued.current = null;
+          if (later) save(later.next);
+          else setSaveState('saved');
+        },
+        onError: (error) => {
+          inFlight.current = false;
+          queued.current = null;
+          if (isStaleBoard(error)) {
+            clearTimeout(timer.current);
+            setSaveState('idle');
+            notifyError(t('maps.changedByOthers'));
+          } else {
+            setSaveState('error');
+          }
+        },
+      },
+    );
   };
 
   const change = (next: T) => {
@@ -129,6 +176,8 @@ function useMapAccess(roomId: string, map: RelationshipMap, currentUserId: strin
     splitOpen: split.sideId !== null && wide,
     isMaster: me?.role === 'master' && !readOnly,
     editable: map.canEdit && !readOnly && wide,
+    // Settings, deletion and a geographic map's plane stay with its creator and the Master (spec 42 Decision 5).
+    manages: map.canManage && !readOnly,
   };
 }
 
@@ -146,6 +195,7 @@ function MapEditor({
   const tags = useTags(roomId, access.editable);
   const autosave = useAutosave<Board>(
     { groups: map.groups, cards: map.cards, arrows: map.arrows },
+    map.revision,
     useSaveBoard(roomId, map.id),
   );
 
@@ -183,6 +233,7 @@ function GeoMapEditor({
   const tags = useTags(roomId, true);
   const autosave = useAutosave<GeoBoard>(
     { areas: map.areas, pins: map.pins, links: map.links },
+    map.revision,
     useSaveGeo(roomId, map.id),
   );
   const [planeOpened, setPlaneOpened] = useState(false);
@@ -203,7 +254,7 @@ function GeoMapEditor({
           >
             {t('maps.geo.export')}
           </Menu.Item>
-          {map.canEdit && !access.readOnly && (
+          {access.manages && (
             <Menu.Item leftSection={<MapTrifoldIcon size={16} />} onClick={() => setPlaneOpened(true)}>
               {t('maps.geo.planeTitle')}
             </Menu.Item>
@@ -263,7 +314,7 @@ function MapChrome({
   const { saveState } = autosave;
   const { split } = access;
   const splitShown = split.sideId !== null;
-  const manages = map.canEdit && !readOnly;
+  const { manages } = access;
   const hasActions = wide || actions !== undefined || manages;
 
   const status: Record<SaveState, string | null> = {
@@ -291,6 +342,11 @@ function MapChrome({
             {map.name}
           </Title>
           <VisibilityBadge visibility={map.visibility} compact={!wide} />
+          {map.playersCanEdit && (
+            <Badge variant="light" color="gray" size="sm" style={{ flexShrink: 0 }}>
+              {t('maps.unlockedBadge')}
+            </Badge>
+          )}
           <Group gap="xs" wrap="nowrap" ml="auto" style={{ flexShrink: 0 }}>
             {status[saveState] && (
               <Text size="sm" c={saveState === 'error' ? 'red' : 'dimmed'} role="status">
@@ -370,6 +426,7 @@ function MapChrome({
             description: map.description,
             visibility: map.visibility,
             selectiveUserIds: map.selectiveUserIds ?? [],
+            playersCanEdit: map.playersCanEdit,
           }}
           members={members.data ?? []}
           creatorId={map.createdBy}

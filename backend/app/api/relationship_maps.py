@@ -60,11 +60,14 @@ from app.domain.relationship_maps import (
     MapTextTooLongError,
     MasterOnlyNotAllowedError,
     RelationshipMap,
+    StaleBoardError,
     TooManyMapsError,
     can_create_map,
+    can_edit_map,
     can_manage_map,
     clean_map_fields,
     document_card_counts,
+    ensure_base_revision,
     ensure_room_for_another_map,
     is_map_visible,
     map_visibility_audit,
@@ -83,7 +86,11 @@ class MapResponse(BaseModel):
     38; a geographic map has a plane of `plane_width` by `plane_height`
     units and its content is read from `.../geo`); `document_count` counts
     only the Documents the requester sees; `selective_user_ids` is sent only to who
-    may manage the map (its creator and the Master), None otherwise."""
+    may manage the map (its creator and the Master), None otherwise.
+    `can_manage` is whether they change its settings or delete it,
+    `can_edit` whether they change its board (spec 42: also every member
+    while `players_can_edit`); `revision` is what a board save sends back as
+    `base_revision`."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -98,7 +105,10 @@ class MapResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     document_count: int
+    players_can_edit: bool
+    revision: int
     can_edit: bool
+    can_manage: bool
 
 
 class MapDocumentResponse(BaseModel):
@@ -213,12 +223,17 @@ class UpdateMapRequest(BaseModel):
     plane_height: int | None = None
     visibility: DocumentVisibility | None = None
     selective_user_ids: UniqueIds | None = None
+    players_can_edit: bool | None = None
 
 
 class BoardRequest(BaseModel):
     """The whole board as the editor sees it (Decision 12): new items with
     ids the client made up, the others with their own ids. What the editor
-    sees and leaves out is deleted; what they can't see stays as it is."""
+    sees and leaves out is deleted; what they can't see stays as it is.
+    `base_revision` is the map's revision the board was loaded at (spec 42
+    Decision 7): 412 if the map has moved on since."""
+
+    base_revision: int | None = None
 
     groups: list[GroupBody] = []
     cards: list[CardBody] = []
@@ -265,6 +280,31 @@ async def get_managed_map(
     return locked, grants
 
 
+async def get_editable_map(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    map_id: uuid.UUID,
+    viewer: Membership,
+    base_revision: int | None,
+    locale: str,
+) -> tuple[RelationshipMap, list[uuid.UUID]]:
+    """`get_visible_map`, then 403 unless the viewer may change the board
+    (spec 42: its managers, or anyone while it is unlocked), then the map
+    re-read under its row lock and 412 if it has moved past
+    `base_revision` (Decision 7)."""
+    relationship_map, grants = await get_visible_map(session, room_id, map_id, viewer, locale)
+    if not can_edit_map(relationship_map, viewer.user_id, viewer.role):
+        raise http_error(status.HTTP_403_FORBIDDEN, "errors.map.notEditor", locale)
+    locked = await relationship_maps_repo.lock_map(session, map_id)
+    if locked is None:  # pragma: no cover - only a concurrent deletion
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.map.notFound", locale)
+    try:
+        ensure_base_revision(locked, base_revision)
+    except StaleBoardError as exc:
+        raise translated_error(status.HTTP_412_PRECONDITION_FAILED, exc, locale) from exc
+    return locked, grants
+
+
 async def visible_document_ids(
     session: AsyncSession, document_ids: Iterable[uuid.UUID], viewer: Membership
 ) -> set[uuid.UUID]:
@@ -281,7 +321,7 @@ def map_summary(
     document_count: int,
 ) -> MapResponse:
     """A map's list entry for `viewer`."""
-    can_edit = can_manage_map(relationship_map, viewer.user_id, viewer.role)
+    can_manage = can_manage_map(relationship_map, viewer.user_id, viewer.role)
     return MapResponse(
         id=relationship_map.id,
         room_id=relationship_map.room_id,
@@ -291,12 +331,15 @@ def map_summary(
         plane_width=relationship_map.plane_width,
         plane_height=relationship_map.plane_height,
         visibility=relationship_map.visibility,
-        selective_user_ids=sorted(grants) if can_edit else None,
+        selective_user_ids=sorted(grants) if can_manage else None,
         created_by=relationship_map.created_by,
         created_at=relationship_map.created_at,
         updated_at=relationship_map.updated_at,
         document_count=document_count,
-        can_edit=can_edit,
+        players_can_edit=relationship_map.players_can_edit,
+        revision=relationship_map.revision,
+        can_edit=can_edit_map(relationship_map, viewer.user_id, viewer.role),
+        can_manage=can_manage,
     )
 
 
@@ -611,9 +654,10 @@ async def update_map(
     session: SessionDep,
     locale: LocaleDep,
 ) -> MapDetailResponse:
-    """Decisions 2 and 3: the map's creator or the Master renames it or
-    changes who sees it. A change of level or grants is audited in the same
-    transaction (Invariant 7)."""
+    """Decisions 2 and 3: the map's creator or the Master renames it,
+    changes who sees it or (spec 42) lets every member who sees it edit its
+    board. A change of level or grants is audited in the same transaction
+    (Invariant 7); the switch isn't (spec 42 Decision 8)."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     relationship_map, grants = await get_managed_map(session, room_id, map_id, membership, locale)
     try:
@@ -649,9 +693,14 @@ async def update_map(
         plane_width=plane_width,
         plane_height=plane_height,
         visibility=relationship_map.visibility if body.visibility is None else body.visibility,
+        players_can_edit=(
+            relationship_map.players_can_edit
+            if body.players_can_edit is None
+            else body.players_can_edit
+        ),
         updated_at=_now(),
     )
-    await relationship_maps_repo.update_map(session, updated)
+    updated = await relationship_maps_repo.update_map(session, updated)
     if body.selective_user_ids is not None:
         await relationship_maps_repo.set_map_grants(session, map_id, body.selective_user_ids)
     audit_entry = map_visibility_audit(
@@ -790,14 +839,18 @@ async def save_board(
     see, and leaves what they can't see exactly as it is. A card for a
     Document they don't see, or of another Room, is 404; an id of something
     hidden from them or of another map is 422; the caps (409) count every
-    item on the map."""
+    item on the map. Spec 42: 403 unless the requester may edit the board,
+    412 when it was saved by someone else since `base_revision`."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    relationship_map, grants = await get_managed_map(session, room_id, map_id, membership, locale)
+    relationship_map, grants = await get_editable_map(
+        session, room_id, map_id, membership, body.base_revision, locale
+    )
     if relationship_map.kind != MapKind.FREE:
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
     await _apply_board(session, map_id, membership, body, locale)
-    updated = replace(relationship_map, updated_at=_now())
-    await relationship_maps_repo.update_map(session, updated)
+    updated = await relationship_maps_repo.update_map(
+        session, replace(relationship_map, updated_at=_now())
+    )
     return await _detail(session, updated, grants, membership)
 
 

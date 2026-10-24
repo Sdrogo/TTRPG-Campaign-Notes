@@ -293,6 +293,11 @@ async def test_creating_needs_something_to_map_and_happens_once(
     assert (
         await client.get(f"{room.url}/maps/{mine['id']}", headers=room.master)
     ).status_code == 404
+    # So a mention map can never be unlocked for Players (spec 42 Decision 1).
+    unlock = await client.patch(
+        f"{room.url}/maps/{mine['id']}", json={"players_can_edit": True}, headers=room.master
+    )
+    assert unlock.status_code == 404
 
 
 async def test_who_may_create_and_manage(

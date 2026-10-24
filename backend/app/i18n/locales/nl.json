@@ -199,6 +199,8 @@
     "map": {
       "notFound": "Kaart niet gevonden",
       "notManager": "Alleen wie de kaart heeft gemaakt (of de Master) kan hem wijzigen",
+      "notEditor": "Deze kaart is vergrendeld: alleen wie hem heeft gemaakt (of de Master) kan hem bewerken",
+      "changedByOthers": "Iemand anders heeft de kaart intussen gewijzigd: laad hem opnieuw en doe je wijziging opnieuw",
       "creationDisabled": "In deze Kamer kunnen Players geen kaarten maken",
       "invalidSelectiveUsers": "selective_user_ids mag alleen leden van deze Kamer bevatten",
       "nameRequired": "Een kaart moet een naam hebben",

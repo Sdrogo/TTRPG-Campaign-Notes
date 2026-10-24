@@ -33,13 +33,16 @@ from app.domain.relationship_maps import (
     MapTextTooLongError,
     MasterOnlyNotAllowedError,
     RelationshipMap,
+    StaleBoardError,
     TooManyMapsError,
     can_create_map,
+    can_edit_map,
     can_manage_map,
     clean_line,
     clean_lines,
     clean_map_fields,
     document_card_counts,
+    ensure_base_revision,
     ensure_room_for_another_map,
     is_map_visible,
     map_visibility_audit,
@@ -154,6 +157,25 @@ def test_the_creator_and_the_master_manage_a_map() -> None:
     assert can_manage_map(relationship_map, CREATOR, RoomRole.PLAYER)
     assert can_manage_map(relationship_map, OTHER, RoomRole.MASTER)
     assert not can_manage_map(relationship_map, OTHER, RoomRole.PLAYER)
+
+
+def test_an_unlocked_map_is_edited_by_everyone_but_a_mention_map_never_is() -> None:
+    locked = _map()
+    assert can_edit_map(locked, CREATOR, RoomRole.PLAYER)
+    assert not can_edit_map(locked, OTHER, RoomRole.PLAYER)
+    unlocked = replace(locked, players_can_edit=True)
+    assert can_edit_map(unlocked, OTHER, RoomRole.PLAYER)
+    mention_map = replace(unlocked, source_document_id=uuid.uuid4(), mention_depth=1)
+    assert not can_edit_map(mention_map, OTHER, RoomRole.PLAYER)
+    assert can_edit_map(mention_map, OTHER, RoomRole.MASTER)
+
+
+def test_a_board_save_must_start_from_the_current_revision() -> None:
+    relationship_map = replace(_map(), revision=4)
+    ensure_base_revision(relationship_map, 4)
+    ensure_base_revision(relationship_map, None)
+    with pytest.raises(StaleBoardError):
+        ensure_base_revision(relationship_map, 3)
 
 
 def test_a_map_uses_the_comment_levels_with_its_creator_as_owner() -> None:

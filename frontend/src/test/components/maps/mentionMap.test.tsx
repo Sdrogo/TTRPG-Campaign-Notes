@@ -119,7 +119,7 @@ describe('MentionMapModal', () => {
   });
 
   it('links an existing map the user manages to the Document, unchanged', async () => {
-    maps = [rawMap({ id: 'map-1', name: 'La Corte' }), rawMap({ id: 'map-2', name: 'Altrui', can_edit: false })];
+    maps = [rawMap({ id: 'map-1', name: 'La Corte' }), rawMap({ id: 'map-2', name: 'Altrui', can_edit: true, can_manage: false })];
     const { onClose, user } = renderModal();
     const select = await screen.findByRole('combobox', { name: 'Mappa' });
     expect(screen.getByRole('option', { name: 'Nuova mappa delle menzioni' })).toBeInTheDocument();

@@ -39,10 +39,10 @@ describe('the geographic map hooks (spec 38)', () => {
   it('saves the whole map, keeps the answer and refreshes the list', async () => {
     const { result, queryClient } = renderHookWithProviders(() => useSaveGeo('room-1', 'map-1'));
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
-    await result.current.mutateAsync({ areas: [], pins: [], links: [] });
+    await result.current.mutateAsync({ value: { areas: [], pins: [], links: [] }, baseRevision: 3 });
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/geo', {
       method: 'PUT',
-      json: { areas: [], pins: [], links: [] },
+      json: { base_revision: 3, areas: [], pins: [], links: [] },
     });
     expect(queryClient.getQueryData(GEO_KEY)).toMatchObject({ name: 'Shibuya di notte' });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY, exact: true });

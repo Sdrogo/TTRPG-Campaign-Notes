@@ -1,6 +1,6 @@
 import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiFetch } from '../../lib/apiClient';
+import { ApiError, apiFetch } from '../../lib/apiClient';
 import { rawMap, rawMapDetail } from '../fixtures';
 import { renderHookWithProviders } from '../utils';
 import {
@@ -13,7 +13,10 @@ import {
 } from '../../hooks/useMaps';
 import type { MapFormValues } from '../../types/map';
 
-vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
+vi.mock('../../lib/apiClient', async (original) => ({
+  ...(await original<typeof import('../../lib/apiClient')>()),
+  apiFetch: vi.fn(),
+}));
 
 const fetchMock = vi.mocked(apiFetch);
 const LIST_KEY = ['rooms', 'room-1', 'maps'];
@@ -67,11 +70,15 @@ describe('the map mutations', () => {
     const { result, queryClient } = renderHookWithProviders(() => useUpdateMap('room-1', 'map-1'));
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
 
-    await result.current.mutateAsync(form);
+    await result.current.mutateAsync({ ...form, playersCanEdit: true });
 
-    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1', expect.objectContaining({ method: 'PATCH' }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1', {
+      method: 'PATCH',
+      json: expect.objectContaining({ players_can_edit: true }),
+    });
     expect(queryClient.getQueryData<{ name: string }>(DETAIL_KEY)?.name).toBe('Nuova');
     expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY, exact: true });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: [...DETAIL_KEY, 'geo'] });
   });
 
   it('deletes a map and drops it from the cache', async () => {
@@ -90,13 +97,27 @@ describe('the map mutations', () => {
     const { result, queryClient } = renderHookWithProviders(() => useSaveBoard('room-1', 'map-1'));
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
 
-    await result.current.mutateAsync({ groups: [], cards: [], arrows: [] });
+    await result.current.mutateAsync({ value: { groups: [], cards: [], arrows: [] }, baseRevision: 3 });
 
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/maps/map-1/board', {
       method: 'PUT',
-      json: { groups: [], cards: [], arrows: [] },
+      json: { base_revision: 3, groups: [], cards: [], arrows: [] },
     });
     expect(queryClient.getQueryData(DETAIL_KEY)).toBeDefined();
     expect(invalidate).toHaveBeenCalledWith({ queryKey: LIST_KEY, exact: true });
+  });
+
+  it('reloads the map when a save is refused as stale, and only then (spec 42)', async () => {
+    const { result, queryClient } = renderHookWithProviders(() => useSaveBoard('room-1', 'map-1'));
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    const board = { value: { groups: [], cards: [], arrows: [] }, baseRevision: 1 };
+
+    fetchMock.mockRejectedValueOnce(new ApiError(422, 'No'));
+    await expect(result.current.mutateAsync(board)).rejects.toThrow('No');
+    expect(invalidate).not.toHaveBeenCalled();
+
+    fetchMock.mockRejectedValueOnce(new ApiError(412, 'Stale'));
+    await expect(result.current.mutateAsync(board)).rejects.toThrow('Stale');
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: DETAIL_KEY });
   });
 });

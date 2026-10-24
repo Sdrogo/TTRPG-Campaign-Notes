@@ -199,6 +199,8 @@
     "map": {
       "notFound": "Mappa non trovata",
       "notManager": "Solo chi ha creato la mappa (o il Master) può modificarla",
+      "notEditor": "Questa mappa è bloccata: solo chi l'ha creata (o il Master) può modificarla",
+      "changedByOthers": "Qualcun altro ha modificato la mappa nel frattempo: ricaricala e rifai la modifica",
       "creationDisabled": "In questa stanza i Giocatori non possono creare mappe",
       "invalidSelectiveUsers": "selective_user_ids deve contenere solo membri di questa stanza",
       "nameRequired": "Una mappa deve avere un nome",

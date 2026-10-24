@@ -199,6 +199,8 @@
     "map": {
       "notFound": "Carte introuvable",
       "notManager": "Seul le créateur de la carte (ou le Master) peut la modifier",
+      "notEditor": "Cette carte est verrouillée : seul son créateur (ou le Master) peut la modifier",
+      "changedByOthers": "Quelqu'un d'autre a modifié la carte entre-temps : rechargez-la et refaites votre modification",
       "creationDisabled": "Dans cette Salle, les Players ne peuvent pas créer de cartes",
       "invalidSelectiveUsers": "selective_user_ids doit contenir uniquement des membres de cette Salle",
       "nameRequired": "Une carte doit avoir un nom",
