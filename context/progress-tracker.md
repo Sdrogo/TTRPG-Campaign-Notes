@@ -48,6 +48,9 @@ detail:
   change. Real-time merging/live updates: analysed (Claude Doc "Modifica
   delle mappe in tempo reale"), product owner chose the guard only
   (2026-10-24). Defaults in the spec's Decisions to confirm in the PR.
+  Applied to staging and to production 2026-10-24 (production with
+  `backend/.env` loaded, product owner's go-ahead), so the `staging` →
+  `main` release that ships spec 42 can be merged.
 - **Spec 41, Relational link Notes** (2026-10-21, migration
   `a4d9e2c7f1b6`): a Note can be flagged as a Relational link (switch in
   the Note form, badge next to its title for every reader), and **only the
@@ -121,8 +124,10 @@ here and remind the product owner.
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `a4d9e2c7f1b6` (= head). Applied 2026-10-21 with
-  `backend/.env` loaded: `a4d9e2c7f1b6` (note relational link, spec 41), ahead
+- **Production database**: `e2b7c4f9a1d6` (= head, map players_can_edit and
+  revision, spec 42, applied 2026-10-24 with `backend/.env` loaded, ahead of
+  the release that ships it). Before it, `a4d9e2c7f1b6`, applied 2026-10-21 with
+  `backend/.env` loaded (note relational link, spec 41), ahead
   of release PR #223 (staging to `main`), so until that merges production's
   code does not carry the migration file. Before it, applied 2026-10-19:
   `d7c1f5a9e3b8` (geographic
@@ -130,8 +135,7 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: `e2b7c4f9a1d6` (spec 42), before the release to
-  `main` that ships it.
+- **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
 `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
