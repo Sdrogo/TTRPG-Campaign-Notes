@@ -116,7 +116,7 @@ Effort is for one developer, backend + frontend + tests, on both map kinds.
 
 | Option | What it fixes | Backend | Frontend | DB | Effort | Risk |
 |---|---|---|---|---|---|---|
-| B1 Patch saves + version | Lost items, whole-save failures | Save endpoints take a diff; version counter | Diff last-saved vs current | `board_version` column | 2-3 d | Low |
+| B1 Patch saves + version | Lost items, whole-save failures | Save endpoints take a diff against `revision` | Diff last-saved vs current | none (spec 42's `revision`) | 2-3 d | Low |
 | B2 Polling + merge | Others' changes appear in a few s | `GET .../version` (cheap) | Poll while visible, merge remote into local | none | 1.5-2 d | Low |
 | B3 Push (SSE) | Changes appear at once, no polling | In-process broker, SSE route | Stream reader, same merge as B2 | none | 2-3 d | Medium |
 | B3' Push (Supabase Broadcast) | Same as B3 | Send ping via Realtime REST | supabase-js channel | RLS on `realtime.messages` | 2-3 d | Medium |
@@ -131,16 +131,16 @@ The real bug is that a save means "this is the whole board". Instead:
 
 - The client keeps the last board the server confirmed and sends only the
   difference: `created`, `updated` (whole items, per-item last-write-wins),
-  `deleted` ids, plus the `base_version` it started from.
+  `deleted` ids, plus the `base_revision` it started from.
 - The backend applies it under the same lock, keeps every rule of
   `plan_board_edit` (visibility, Master-only, caps, foreign ids), bumps
-  `board_version` and returns the new board as the editor sees it.
+  `revision` and returns the new board as the editor sees it.
 - Conflicts become per item and harmless: an update or delete of an item that
   no longer exists is skipped (no resurrection); a second card for the same
   Document is dropped and reported, not the whole save; an arrow whose end was
   deleted by someone else is dropped.
-- `base_version` is informative (it tells the client to refetch), not a
-  reason to refuse the save: refusing would bring back "save failed" for
+- `base_revision` is informative (it tells the client to refetch), not a
+  reason to refuse the save (unlike spec 42's 412): refusing would bring back "save failed" for
   ordinary concurrent work.
 - Same change for `PUT .../geo` (areas, pins, links). Import, duplication and
   export (specs 38, 40) are untouched: they don't go through the editor.
@@ -149,7 +149,7 @@ The real bug is that a save means "this is the whole board". Instead:
 
 ### B2. Polling and merge
 
-- `GET .../maps/{map}/version` returns `board_version` (one indexed read,
+- `GET .../maps/{map}/version` returns `revision` (one indexed read,
   no board). The editor and the read-only viewer poll it every ~4 s while the
   tab is visible; when it moves they fetch the board and **merge**: remote
   items replace local ones except items with an unsaved local change or being
