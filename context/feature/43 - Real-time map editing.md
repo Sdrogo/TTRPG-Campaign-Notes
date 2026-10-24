@@ -1,8 +1,9 @@
-# 43 - Real-time map editing (analysis)
+# 43 - Real-time map editing
 
-Analysis only, nothing is built here. It sized the work so the product owner
-could pick a path; the choices are under "Decisions so far", and a ticket
-follows for the chosen steps.
+The analysis that sized the work comes first; the product owner's choices
+are under "Decisions so far", and what was built (units 43_1 and 43_2,
+2026-10-24) under "Built" right after them. Nothing below "How it works
+today" describes the code as it is now: it is the state before this spec.
 
 ## Request
 
@@ -38,6 +39,77 @@ covers both, because (A) is what makes (B) a real problem.
 - **No editing on phones** (product owner, 2026-10-24): "No editing from
   phones." The editor keeps needing a screen at least `sm` wide, unlocked
   maps included.
+
+## Built (2026-10-24)
+
+### Decisions
+
+1. **Saves send only what changed** (B1, product owner): a save names the
+   groups, cards and arrows (areas, pins and links on a geographic map) the
+   editor created or changed, each whole, which of them are new
+   (`created_ids`) and what they removed (`deleted_ids`). The server lays
+   that over the stored board and checks the result exactly like a
+   whole-board save (`plan_board_edit`, `plan_geo_board_edit`): visibility,
+   Master-only content, Documents, caps. Everything the editor didn't touch
+   stays as stored, so another editor's work is never lost. On the same
+   item, the last save wins.
+2. **A late change is dropped, never refused**: an update or deletion of
+   something no longer on the map (someone deleted it) or hidden from the
+   editor is skipped; a new card or place for a Document already on the map
+   (hidden ones included) is skipped; an arrow or link whose end is gone is
+   skipped. A card left in a group someone deleted stays where the stored
+   card stands (or where it was drawn, out of a group deleted in the same
+   save). No 412: `base_revision` is sent but informative only.
+3. **Refresh every 5 seconds** (B2, product owner): an open map page reads
+   the map again every 5 s while the tab is visible (a free map from
+   `GET .../maps/{id}`, a geographic one from `.../geo`) and lays the
+   editor's unsaved changes over what it reads. A read-only viewer sees
+   others' changes the same way. A refresh that fails keeps the map drawn.
+4. **Nothing moves under a drag**: a newer board is drawn only once no
+   pointer is down; a save sent meanwhile may repeat changes already saved,
+   which the server takes again harmlessly (creating an id already on the
+   map is an update, deleting one already gone is nothing).
+5. **Not built**: push (SSE), presence, live cursors, locks (B3-B6), editing
+   on phones. `PUT .../board` and `PUT .../geo` with spec 42's 412 stay for
+   an old tab during a release; the frontend no longer calls them.
+
+### Backend (43_1)
+
+- `app/domain/relationship_maps.py`: `merge_items` (one kind of item) and
+  `merge_board_changes`; `app/domain/geographic_maps.py`:
+  `merge_geo_changes`. Pure functions, 422 on an id sent twice.
+- `PATCH /rooms/{room}/maps/{map}/board` (`BoardChangesRequest`) and
+  `PATCH .../geo` (`GeoChangesRequest`): `get_editable_map` (403 unless the
+  requester may edit the board, spec 42, row lock), then `_apply_board` /
+  `apply_geo_board`, which merge first; 409 for the wrong kind of map. The
+  answer is the whole board as the editor now sees it, with the new
+  revision. No migration: `revision` comes from spec 42.
+
+### Frontend (43_1, 43_2)
+
+- `lib/boardChanges.ts`: `diffBoard` (compares items as they are sent, so
+  server-filled fields like signed image links never count as changes),
+  `applyChanges`, `isUnchanged`, `toChangesBody`; types in
+  `types/boardChanges.ts`.
+- `hooks/useBoardAutosave.ts` replaces the page's own autosave: one save at
+  a time, the copy rebased on every newer board (a save's answer or a
+  refresh) once no pointer is down.
+- `useSaveBoard` / `useSaveGeo` send `PATCH`; `useMap` / `useGeoMap` take
+  `refresh` (`MAP_REFRESH_MS` = 5000). The 412 notice and
+  `useReloadIfStale` are gone, with the `maps.changedByOthers` string.
+
+### Tests
+
+- Backend: `tests/test_domain_board_changes.py` (every merge rule, both
+  kinds), `tests/test_map_changes_api.py` (a Master and a Player saving in
+  turn keep each other's cards; a change to a deleted card is dropped; a
+  second card for a Document is dropped; a guessed hidden id changes
+  nothing; Master-only from a Player 403; repeated id 422; geographic map;
+  wrong kind 409). Full suite 100% coverage.
+- Frontend: `boardChanges.test.ts`, `useBoardAutosave.test.ts` (diff only,
+  rebase on a newer board, wait for the pointer, queued save, error and
+  retry), the refresh interval in `useMaps` / `useGeoMap`, and the page
+  keeping another editor's card from a save's answer. 100% coverage.
 
 ## How it works today
 
