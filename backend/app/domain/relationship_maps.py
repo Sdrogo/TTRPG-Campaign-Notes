@@ -14,8 +14,9 @@ Who may see what (Invariant 1, VR-07):
   (Decision 5).
 
 Editing (Decision 12): the creator and the Master edit a map, and every
-member who sees it once it is unlocked (spec 42, `can_edit_map`); an editor
-sends the whole board as they see it;
+member who sees it once it is unlocked (spec 42, `can_edit_map`). An editor
+sends only what they changed (spec 43, `merge_board_changes`), which is laid
+over the stored board, then checked as the whole board they see;
 whatever they don't see is left exactly as it is (`plan_board_edit`)."""
 
 import math
@@ -24,6 +25,7 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import StrEnum
+from typing import Protocol
 
 from app.domain.errors import DomainError
 from app.domain.models import AuditLogEntry, DocumentVisibility, RoomRole
@@ -48,6 +50,13 @@ MIN_GROUP_SIZE = 40.0
 MAX_GROUP_SIZE = 20_000.0
 
 MAP_VISIBILITY_CHANGED = "map_visibility_changed"
+
+
+class _HasId(Protocol):
+    """Anything on a board: it has an id."""
+
+    @property
+    def id(self) -> uuid.UUID: ...  # pragma: no cover - a protocol
 
 
 class MapColor(StrEnum):
@@ -723,6 +732,99 @@ def plan_board_edit(
         delete_card_ids=frozenset(shown_cards.keys() - card_ids),
         delete_arrow_ids=frozenset(shown_arrows.keys() - {arrow.id for arrow in arrows}),
     )
+
+
+def merge_items[Item: _HasId](
+    shown_items: Sequence[Item],
+    changed_items: Sequence[Item],
+    created_ids: Collection[uuid.UUID],
+    deleted_ids: Collection[uuid.UUID],
+    every_id: Collection[uuid.UUID],
+) -> list[Item]:
+    """Spec 43: one kind of item an editor sees, with their changes laid
+    over it: a changed item replaces the shown one with its id, a new one
+    (in `created_ids` and not already among `every_id`, the ids on the map)
+    goes at the end, a deleted one goes. A change to an id that isn't shown
+    (deleted by someone else, or hidden from the editor) is dropped."""
+    by_id = {item.id: item for item in shown_items}
+    added: list[Item] = []
+    for item in changed_items:
+        if item.id in by_id:
+            by_id[item.id] = item
+        elif item.id in created_ids and item.id not in every_id:
+            added.append(item)
+    return [item for item in [*by_id.values(), *added] if item.id not in deleted_ids]
+
+
+def merge_board_changes(
+    current: Board,
+    shown: Board,
+    changed: Board,
+    created_ids: Collection[uuid.UUID],
+    deleted_ids: Collection[uuid.UUID],
+) -> Board:
+    """Spec 43 Decision 1: the board an editor sees once their changes are
+    laid over the stored one, ready for `plan_board_edit`. `shown` is what
+    they see of the stored board (`visible_board`), `changed` the items they
+    created or changed (each whole), `created_ids` which of those are new,
+    `deleted_ids` what they removed. Everything else stays as stored, so a
+    concurrent editor's work is kept; the last change of an item wins.
+
+    A change that can no longer apply is dropped, not refused (Decision 2): an
+    update or deletion of something no longer on the map (someone deleted
+    it) or hidden from the editor, a new Document card for a Document
+    already on the map, an arrow whose end is gone. A card left in a group
+    that is gone stays where it was drawn: out of a group deleted here, or,
+    when someone else deleted it, where the stored card stands. 422 when the
+    same id is sent twice."""
+    for items in (changed.groups, changed.cards, changed.arrows):
+        _ensure_unique_ids(items)
+
+    every_id = (
+        {group.id for group in current.groups}
+        | {card.id for card in current.cards}
+        | {arrow.id for arrow in current.arrows}
+    )
+
+    def merged[Item: _HasId](shown: Sequence[Item], changed: Sequence[Item]) -> list[Item]:
+        return merge_items(shown, changed, created_ids, deleted_ids, every_id)
+
+    groups = merged(shown.groups, changed.groups)
+    group_ids = {group.id for group in groups}
+    shown_groups = {group.id: group for group in shown.groups}
+    stored_cards = {card.id: card for card in shown.cards}
+
+    def placed(card: MapCard) -> MapCard:
+        """`card`, out of its group when that group is gone."""
+        if card.group_id is None or card.group_id in group_ids:
+            return card
+        if card.group_id in shown_groups:
+            return _release_from_group(card, shown_groups[card.group_id])
+        stored = stored_cards.get(card.id)
+        if stored is not None and (stored.group_id is None or stored.group_id in group_ids):
+            return replace(card, group_id=stored.group_id, x=stored.x, y=stored.y)
+        return replace(card, group_id=None)
+
+    merged_cards = merged(shown.cards, changed.cards)
+    # Cards already on the map (hidden ones included) keep their Document; a
+    # new card for one of them, or a second new one, is dropped.
+    on_map = {card.document_id for card in current.cards if card.id not in stored_cards}
+    on_map |= {card.document_id for card in merged_cards if card.id in stored_cards}
+    cards: list[MapCard] = []
+    for card in merged_cards:
+        if card.id not in stored_cards and card.document_id is not None:
+            if card.document_id in on_map:
+                continue
+            on_map.add(card.document_id)
+        cards.append(placed(card))
+
+    ends = group_ids | {card.id for card in cards}
+    arrows = [
+        arrow
+        for arrow in merged(shown.arrows, changed.arrows)
+        if arrow.from_end.id in ends and arrow.to_end.id in ends
+    ]
+    return Board(groups=groups, cards=cards, arrows=arrows)
 
 
 def _release_from_group(card: MapCard, group: MapGroup) -> MapCard:

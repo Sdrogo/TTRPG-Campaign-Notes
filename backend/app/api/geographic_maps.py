@@ -35,6 +35,7 @@ from app.api.relationship_maps import (
     map_summary,
     visible_document_ids,
 )
+from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
 from app.db import (
     documents_repo,
@@ -55,6 +56,7 @@ from app.domain.geographic_maps import (
     Pin,
     PlaceNameRequiredError,
     geo_document_count,
+    merge_geo_changes,
     placed_document_ids,
     plan_background_path,
     plan_geo_board_edit,
@@ -165,6 +167,20 @@ class GeoRequest(BaseModel):
     areas: list[AreaBody] = []
     pins: list[PinBody] = []
     links: list[LinkBody] = []
+
+
+class GeoChangesRequest(BaseModel):
+    """What an editor changed on the map since their last save (spec 43
+    Decision 1), as `BoardChangesRequest` on a free board: every created or
+    changed area, pin and link, whole, `created_ids` naming the new ones,
+    `deleted_ids` what they removed. `base_revision` is informative only."""
+
+    base_revision: int | None = None
+    areas: list[AreaBody] = []
+    pins: list[PinBody] = []
+    links: list[LinkBody] = []
+    created_ids: UniqueIds = []
+    deleted_ids: UniqueIds = []
 
 
 class GeoDetailResponse(MapResponse):
@@ -317,7 +333,7 @@ def _link_end(end: LinkEndBody) -> LinkEnd:
     return LinkEnd(area_id=end.area_id, pin_id=end.pin_id)
 
 
-def _submitted(body: GeoRequest) -> GeoBoard:
+def _submitted(body: GeoRequest | GeoChangesRequest) -> GeoBoard:
     """The map as sent, in domain terms (not yet checked)."""
     return GeoBoard(
         areas=[Area(**{**area.model_dump(), "points": tuple(area.points)}) for area in body.areas],
@@ -357,25 +373,33 @@ async def apply_geo_board(
     session: AsyncSession,
     relationship_map: RelationshipMap,
     membership: Membership,
-    body: GeoRequest,
+    body: GeoRequest | GeoChangesRequest,
     locale: str,
 ) -> None:
     """Saves the map `membership` sends (`plan_geo_board_edit`): what they
-    see is created, moved, rewritten or removed, what they can't see stays. An
-    area or pin for a Document they don't see, or of another Room, is 404; an
-    id of something hidden from them or of another map is 422; the caps (409)
-    count every item on the map. Callers hold the map's lock."""
+    see is created, moved, rewritten or removed, what they can't see stays.
+    Their changes alone (`GeoChangesRequest`, spec 43) are first laid over
+    the stored map (`merge_geo_changes`). An area or pin for a Document they
+    don't see, or of another Room, is 404; an id of something hidden from
+    them or of another map is 422; the caps (409) count every item on the
+    map. Callers hold the map's lock."""
     assert relationship_map.plane_width is not None
     assert relationship_map.plane_height is not None
     current = (await geographic_maps_repo.get_geo_boards(session, [relationship_map.id]))[
         relationship_map.id
     ]
     try:
-        submitted = _submitted(body)
+        sent = _submitted(body)
         document_ids = placed_document_ids(
-            [*current.areas, *submitted.areas], [*current.pins, *submitted.pins]
+            [*current.areas, *sent.areas], [*current.pins, *sent.pins]
         )
         visible_ids = await visible_document_ids(session, document_ids, membership)
+        shown = visible_geo_board(current, visible_ids, membership.role)
+        submitted = (
+            merge_geo_changes(current, shown, sent, body.created_ids, body.deleted_ids)
+            if isinstance(body, GeoChangesRequest)
+            else sent
+        )
         sent_ids = (
             {area.id for area in submitted.areas}
             | {pin.id for pin in submitted.pins}
@@ -383,7 +407,7 @@ async def apply_geo_board(
         )
         plan = plan_geo_board_edit(
             current,
-            visible_geo_board(current, visible_ids, membership.role),
+            shown,
             submitted,
             membership.role,
             visible_ids,
@@ -429,6 +453,32 @@ async def save_geo(
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     relationship_map, grants = await get_editable_map(
         session, room_id, map_id, membership, body.base_revision, locale
+    )
+    _ensure_geographic(relationship_map, locale)
+    await apply_geo_board(session, relationship_map, membership, body, locale)
+    updated = await relationship_maps_repo.update_map(
+        session, replace(relationship_map, updated_at=_now())
+    )
+    return await geo_detail(session, updated, grants, membership)
+
+
+@router.patch("/geo")
+async def save_geo_changes(
+    room_id: uuid.UUID,
+    map_id: uuid.UUID,
+    body: GeoChangesRequest,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> GeoDetailResponse:
+    """Spec 43: saves only what the editor changed, under the map's lock, and
+    answers the whole map as they now see it, other editors' work included.
+    A change to something deleted meanwhile, or hidden from them, is
+    dropped; otherwise the rules of `PUT .../geo` apply. 403 unless they may
+    edit the map (spec 42); 409 for a free map; never 412."""
+    membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
+    relationship_map, grants = await get_editable_map(
+        session, room_id, map_id, membership, None, locale
     )
     _ensure_geographic(relationship_map, locale)
     await apply_geo_board(session, relationship_map, membership, body, locale)
