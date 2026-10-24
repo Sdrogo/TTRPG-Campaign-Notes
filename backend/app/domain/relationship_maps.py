@@ -13,7 +13,9 @@ Who may see what (Invariant 1, VR-07):
 - an arrow shows when both its ends show and, when Master-only, to a Master
   (Decision 5).
 
-Editing (Decision 12): an editor sends the whole board as they see it;
+Editing (Decision 12): the creator and the Master edit a map, and every
+member who sees it once it is unlocked (spec 42, `can_edit_map`); an editor
+sends the whole board as they see it;
 whatever they don't see is left exactly as it is (`plan_board_edit`)."""
 
 import math
@@ -136,6 +138,12 @@ class BoardImageNotFoundError(DomainError):
     doesn't see. Answered with 404, like the image itself."""
 
 
+class StaleBoardError(DomainError):
+    """A board save was based on an older revision of the map than the
+    stored one: someone else saved in between (spec 42 Decision 7). Answered
+    with 412; nothing is written."""
+
+
 @dataclass(frozen=True)
 class RelationshipMap:
     """A map of a Room. Its creator is its "Owner" for the visibility levels
@@ -143,7 +151,9 @@ class RelationshipMap:
     `source_document_id` it is that Document's live mention map (spec 36),
     following mentions `mention_depth` steps past the first level. A
     `geographic` map (spec 38) has a flat plane of `plane_width` by
-    `plane_height` units and may have a stored background image."""
+    `plane_height` units and may have a stored background image. With
+    `players_can_edit` every member who sees it edits its board (spec 42);
+    `revision` counts its writes (Decision 7)."""
 
     id: uuid.UUID
     room_id: uuid.UUID
@@ -159,6 +169,8 @@ class RelationshipMap:
     plane_width: int | None = None
     plane_height: int | None = None
     background_path: str | None = None
+    players_can_edit: bool = False
+    revision: int = 0
 
 
 @dataclass(frozen=True)
@@ -273,6 +285,22 @@ def can_manage_map(relationship_map: RelationshipMap, user_id: uuid.UUID, role: 
     """Decision 2: the map's creator and the Master edit, rename and delete
     it; everyone else only looks at it."""
     return role == RoomRole.MASTER or user_id == relationship_map.created_by
+
+
+def can_edit_map(relationship_map: RelationshipMap, user_id: uuid.UUID, role: RoomRole) -> bool:
+    """Spec 42 Decisions 3 and 4: who changes the board. Its managers always;
+    every member who sees an unlocked free or geographic map too (the caller
+    has checked that they see it). A mention map is never unlocked."""
+    unlocked = relationship_map.players_can_edit and relationship_map.source_document_id is None
+    return unlocked or can_manage_map(relationship_map, user_id, role)
+
+
+def ensure_base_revision(relationship_map: RelationshipMap, base_revision: int | None) -> None:
+    """Spec 42 Decision 7: a board save names the revision its board was
+    loaded at; refused when the map has moved on since. Without one (an old
+    client) it isn't checked."""
+    if base_revision is not None and base_revision != relationship_map.revision:
+        raise StaleBoardError("errors.map.changedByOthers")
 
 
 def is_map_visible(

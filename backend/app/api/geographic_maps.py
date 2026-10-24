@@ -29,6 +29,7 @@ from app.api.image_uploads import (
 from app.api.relationship_maps import (
     MapDocumentResponse,
     MapResponse,
+    get_editable_map,
     get_managed_map,
     get_visible_map,
     map_summary,
@@ -157,8 +158,10 @@ class LinkBody(BaseModel):
 class GeoRequest(BaseModel):
     """The whole map as the editor sees it: new items with ids the client
     made up, the others with their own ids. What the editor sees and leaves
-    out is deleted; what they can't see stays as it is."""
+    out is deleted; what they can't see stays as it is. `base_revision` as
+    on a free board (spec 42 Decision 7)."""
 
+    base_revision: int | None = None
     areas: list[AreaBody] = []
     pins: list[PinBody] = []
     links: list[LinkBody] = []
@@ -420,14 +423,18 @@ async def save_geo(
 ) -> GeoDetailResponse:
     """Decision 9: saves the map the editor sees, in one transaction under
     the map's lock: creates, moves, rewrites and removes what they see, and
-    leaves what they can't see exactly as it is. 403 unless they manage the
-    map; 409 for a free map."""
+    leaves what they can't see exactly as it is. 403 unless they may edit the
+    map (its managers, or anyone who sees it while unlocked, spec 42); 412
+    when someone else saved since `base_revision`; 409 for a free map."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    relationship_map, grants = await get_managed_map(session, room_id, map_id, membership, locale)
+    relationship_map, grants = await get_editable_map(
+        session, room_id, map_id, membership, body.base_revision, locale
+    )
     _ensure_geographic(relationship_map, locale)
     await apply_geo_board(session, relationship_map, membership, body, locale)
-    updated = replace(relationship_map, updated_at=_now())
-    await relationship_maps_repo.update_map(session, updated)
+    updated = await relationship_maps_repo.update_map(
+        session, replace(relationship_map, updated_at=_now())
+    )
     return await geo_detail(session, updated, grants, membership)
 
 
@@ -446,8 +453,9 @@ async def _replace_background(
         await storage_cleanup.confirm_upload(session, new_path)
     if relationship_map.background_path is not None:
         await storage_cleanup.schedule_removal(session, [relationship_map.background_path])
-    updated = replace(relationship_map, background_path=new_path, updated_at=_now())
-    await relationship_maps_repo.update_map(session, updated)
+    updated = await relationship_maps_repo.update_map(
+        session, replace(relationship_map, background_path=new_path, updated_at=_now())
+    )
     return await geo_detail(session, updated, grants, membership)
 
 

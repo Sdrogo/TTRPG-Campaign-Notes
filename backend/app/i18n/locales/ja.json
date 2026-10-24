@@ -199,6 +199,8 @@
     "map": {
       "notFound": "マップが見つかりません",
       "notManager": "このマップを変更できるのは、マップの作成者(またはMaster)だけです",
+      "notEditor": "このマップはロックされています。編集できるのは作成者(またはMaster)だけです",
+      "changedByOthers": "その間に他の人がマップを変更しました。再読み込みして、変更をやり直してください",
       "creationDisabled": "このルームでは、Playerはマップを作成できません",
       "invalidSelectiveUsers": "selective_user_idsはすべてこのルームのメンバーである必要があります",
       "nameRequired": "マップには名前が必要です",

@@ -27,8 +27,9 @@
    `false` for every new map and every existing one. In the map's settings
    (the dialog that already holds name, description and visibility):
    "Players can edit the map" ("I giocatori possono modificare la mappa").
-   A free map and a geographic map have it; a mention map does not (422 if
-   sent for one; it has no settings dialog).
+   A free map and a geographic map have it; a mention map does not (it has
+   no settings dialog, the map routes answer 404 for it, and `can_edit_map`
+   ignores the flag on one).
 2. **Who flips it**: whoever manages the map today (its creator and the
    Master, spec 28 Decision 2), like the rest of its settings. So a Player
    who made a map can open it to the others too. Not while previewing as a
@@ -93,11 +94,13 @@
   `can_manage_map` or (`players_can_edit` and not a mention map).
   `ensure_base_revision(map, base_revision)` raises `StaleBoardError`
   (412, `errors.map.changedByOthers`) when given and different.
+  `update_map` returns the map with its new revision, so every response
+  carries it.
 - `app/api/relationship_maps.py`: `get_editable_map` (like `get_managed_map`:
   404 for a hidden map, 403 `errors.map.notEditor`, then the row lock).
   `PUT /board` and `PUT /geo` go through it and check `base_revision`
   (optional field of `BoardRequest` and `GeoRequest`). Everything else keeps
-  `get_managed_map`. `PATCH` takes `players_can_edit` (422 on a mention map).
+  `get_managed_map`. `PATCH` takes `players_can_edit`.
 - Responses: `MapResponse` gets `players_can_edit`, `revision` and
   `can_manage`; `can_edit` now means "may change the board" (`can_edit_map`).
   `selective_user_ids` still goes only to managers. The Maps list's `can_edit`
@@ -127,8 +130,8 @@
   and its geographic board; locked, 403; a Player still gets 403 on rename,
   visibility, the switch, delete, plane, background and linking; a hidden
   unlocked map is 404; a Player's save keeps the Master-only and hidden
-  items and can't add Master-only content; `players_can_edit` on a mention
-  map is 422; a stale `base_revision` is 412 and writes nothing; every write
+  items and can't add Master-only content; a mention map's flag edits
+  nothing for a Player; a stale `base_revision` is 412 and writes nothing; every write
   raises the revision; duplicated and imported maps start locked.
 - Frontend: the switch round-trips; a Player sees an unlocked map editable
   but no Settings or Delete; 412 reloads the board and shows the notice.

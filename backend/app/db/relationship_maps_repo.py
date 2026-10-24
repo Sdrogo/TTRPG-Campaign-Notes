@@ -5,6 +5,7 @@ routes do, through `app.domain.relationship_maps`."""
 import uuid
 from collections import defaultdict
 from collections.abc import Collection, Sequence
+from dataclasses import replace
 from datetime import datetime
 
 from sqlalchemy import delete, func, select, update
@@ -52,6 +53,8 @@ def _map_from_row(row: RelationshipMapRow) -> RelationshipMap:
         plane_width=row.plane_width,
         plane_height=row.plane_height,
         background_path=row.background_path,
+        players_can_edit=row.players_can_edit,
+        revision=row.revision,
     )
 
 
@@ -254,10 +257,11 @@ async def count_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> int:
     return result.scalar_one()
 
 
-async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -> None:
+async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -> RelationshipMap:
     """Writes a map's name, description, visibility, mention depth, plane
-    size (spec 38) and `updated_at`. Raises `LookupError` if it no longer
-    exists."""
+    size (spec 38), Players' switch (spec 42) and `updated_at`, and raises
+    its revision by one (spec 42 Decision 7: every write counts). Returns
+    `relationship_map` with that revision. Raises `LookupError` if it no longer exists."""
     row = await session.get(RelationshipMapRow, relationship_map.id)
     if row is None:
         raise LookupError(f"Map {relationship_map.id} not found")
@@ -267,8 +271,11 @@ async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -
     row.mention_depth = relationship_map.mention_depth
     row.plane_width = relationship_map.plane_width
     row.plane_height = relationship_map.plane_height
+    row.players_can_edit = relationship_map.players_can_edit
     row.updated_at = relationship_map.updated_at
+    row.revision = row.revision + 1
     await session.flush()
+    return replace(relationship_map, revision=row.revision)
 
 
 async def set_background(session: AsyncSession, map_id: uuid.UUID, path: str | None) -> None:

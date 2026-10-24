@@ -199,6 +199,8 @@
     "map": {
       "notFound": "Nie znaleziono mapy",
       "notManager": "Tylko osoba, która utworzyła mapę (lub Master), może ją edytować",
+      "notEditor": "Ta mapa jest zablokowana: edytować ją może tylko osoba, która ją utworzyła (lub Master)",
+      "changedByOthers": "Ktoś inny zmienił w międzyczasie mapę: wczytaj ją ponownie i powtórz swoją zmianę",
       "creationDisabled": "W tym pokoju Playerzy nie mogą tworzyć map",
       "invalidSelectiveUsers": "selective_user_ids może zawierać tylko członków tego pokoju",
       "nameRequired": "Mapa musi mieć nazwę",
