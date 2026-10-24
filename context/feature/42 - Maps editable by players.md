@@ -87,7 +87,7 @@
 
 - **Migration** `e2b7c4f9a1d6`: `relationship_maps.players_can_edit BOOLEAN
   NOT NULL DEFAULT false` and `relationship_maps.revision INTEGER NOT NULL
-  DEFAULT 0`. Reversible. Apply to the staging database before the merge,
+  DEFAULT 0`. Reversible. Applied to the staging database 2026-10-24; apply
   to production before the next release to `main`.
 - `RelationshipMap.players_can_edit` and `.revision` (domain), mapped by
   `relationship_maps_repo`; `update_map` writes the flag and raises the
