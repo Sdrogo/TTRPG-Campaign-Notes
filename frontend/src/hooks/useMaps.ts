@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import {
+  isStaleBoard,
   toBoardBody,
   toMap,
   toMapBody,
@@ -8,7 +9,13 @@ import {
   type RawMap,
   type RawMapDetail,
 } from '../lib/maps';
-import type { Board, MapFormValues, RelationshipMap, RelationshipMapDetail } from '../types/map';
+import type {
+  Board,
+  MapFormValues,
+  RelationshipMap,
+  RelationshipMapDetail,
+  RevisionedSave,
+} from '../types/map';
 
 function mapsPath(roomId: string) {
   return `/rooms/${roomId}/maps`;
@@ -20,6 +27,17 @@ function mapsQueryKey(roomId: string) {
 
 function mapQueryKey(roomId: string, mapId: string) {
   return ['rooms', roomId, 'maps', mapId] as const;
+}
+
+/**
+ * After a board save refused as stale (spec 42 Decision 7), reloads the map
+ * (its geographic content too, under the same key) so the page can take it.
+ */
+export function useReloadIfStale(roomId: string, mapId: string) {
+  const queryClient = useQueryClient();
+  return (error: Error) => {
+    if (isStaleBoard(error)) void queryClient.invalidateQueries({ queryKey: mapQueryKey(roomId, mapId) });
+  };
 }
 
 /** The Room's maps the viewer sees, last edited first (spec 28 Decision 1). */
@@ -65,6 +83,8 @@ export function useUpdateMap(roomId: string, mapId: string) {
       ),
     onSuccess: (detail) => {
       queryClient.setQueryData(mapQueryKey(roomId, mapId), detail);
+      // A geographic map's page reads its revision from `.../geo` (spec 42 Decision 7).
+      void queryClient.invalidateQueries({ queryKey: [...mapQueryKey(roomId, mapId), 'geo'] });
       return queryClient.invalidateQueries({ queryKey: mapsQueryKey(roomId), exact: true });
     },
   });
@@ -83,20 +103,23 @@ export function useDeleteMap(roomId: string, mapId: string) {
 }
 
 /**
- * Saves the whole board the editor sees (Decision 12). The answer only
- * refreshes the cache: the page keeps drawing its own copy, so a save landing
- * mid-drag doesn't move anything back.
+ * Saves the whole board the editor sees (Decision 12), refused (412) when
+ * someone else saved since `baseRevision` (spec 42), which reloads the map.
+ * The answer only refreshes the cache: the page keeps drawing its own copy,
+ * so a save landing mid-drag doesn't move anything back.
  */
 export function useSaveBoard(roomId: string, mapId: string) {
   const queryClient = useQueryClient();
+  const reloadIfStale = useReloadIfStale(roomId, mapId);
   return useMutation({
-    mutationFn: async (board: Board) =>
+    mutationFn: async ({ value, baseRevision }: RevisionedSave<Board>) =>
       toMapDetail(
         await apiFetch<RawMapDetail>(`${mapsPath(roomId)}/${mapId}/board`, {
           method: 'PUT',
-          json: toBoardBody(board),
+          json: toBoardBody(value, baseRevision),
         }),
       ),
+    onError: reloadIfStale,
     onSuccess: (detail) => {
       queryClient.setQueryData(mapQueryKey(roomId, mapId), detail);
       void queryClient.invalidateQueries({ queryKey: mapsQueryKey(roomId), exact: true });

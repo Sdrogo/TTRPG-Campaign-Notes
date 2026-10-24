@@ -320,7 +320,7 @@ describe('RelationshipMapPage', () => {
   });
 
   it('shows a map without a description to someone who cannot edit it', async () => {
-    routes.map = () => Promise.resolve(rawMapDetail({ description: '', can_edit: false }));
+    routes.map = () => Promise.resolve(rawMapDetail({ description: '', can_edit: false, can_manage: false }));
     render();
     await screen.findByRole('heading', { name: 'La Corte' });
     // On a phone, with nothing to manage, there is no ⋮ at all.
@@ -403,8 +403,8 @@ describe('RelationshipMapPage', () => {
 
     it('offers no plane dialog to whoever cannot edit, and shows its Documents in the split', async () => {
       wideScreen();
-      routes.map = () => geographic().then((map) => ({ ...map, can_edit: false }));
-      routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false }));
+      routes.map = () => geographic().then((map) => ({ ...map, can_edit: false, can_manage: false }));
+      routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false, can_manage: false }));
       const { user } = render();
       expect(await screen.findByTestId('geo-board')).toHaveAttribute('data-editable', 'false');
       await openActions(user);
@@ -416,8 +416,8 @@ describe('RelationshipMapPage', () => {
     });
 
     it('downloads the map as a JSON file for whoever sees it (spec 38_3)', async () => {
-      routes.map = () => geographic().then((map) => ({ ...map, can_edit: false }));
-      routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false }));
+      routes.map = () => geographic().then((map) => ({ ...map, can_edit: false, can_manage: false }));
+      routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false, can_manage: false }));
       const { user } = render();
       await user.click(await menuItem(user, 'Esporta la mappa (JSON)'));
       await vi.waitFor(() => expect(saveBlob).toHaveBeenCalled());
@@ -447,6 +447,78 @@ describe('RelationshipMapPage', () => {
       routes.geo = () => Promise.reject(new ApiError(404, 'Not found'));
       render();
       expect(await screen.findByText('Mappa non trovata.')).toBeInTheDocument();
+    });
+  });
+
+  describe('maps editable by players (spec 42)', () => {
+    it('lets a Player edit an unlocked map, without its settings or deletion', async () => {
+      wideScreen();
+      routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
+      routes.map = () =>
+        Promise.resolve(rawMapDetail({ players_can_edit: true, can_edit: true, can_manage: false, selective_user_ids: null }));
+      const { user } = render();
+      expect(await screen.findByTestId('board')).toHaveAttribute('data-editable', 'true');
+      expect(screen.getByText('Modificabile dai Player')).toBeInTheDocument();
+      await openActions(user);
+      expect(screen.queryByRole('menuitem', { name: 'Impostazioni della mappa' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Elimina mappa' })).not.toBeInTheDocument();
+    });
+
+    it('unlocks the map from its settings', async () => {
+      const { user } = render();
+      await user.click(await menuItem(user, 'Impostazioni della mappa'));
+      await user.click(screen.getByRole('switch', { name: /I Player possono modificare la mappa/ }));
+      await user.click(screen.getByRole('button', { name: 'Salva' }));
+      await vi.waitFor(() =>
+        expect(fetchMock).toHaveBeenCalledWith(
+          '/rooms/room-1/maps/map-1',
+          expect.objectContaining({ method: 'PATCH', json: expect.objectContaining({ players_can_edit: true }) }),
+        ),
+      );
+    });
+
+    it('saves from the last revision, one save at a time', async () => {
+      wideScreen();
+      let answer: (value: unknown) => void = () => {};
+      routes.save = () => new Promise((resolve) => (answer = resolve));
+      const { user } = render();
+      await user.click(await screen.findByRole('button', { name: 'change' }));
+      await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Salvataggio'), { timeout: 2000 });
+      await user.click(screen.getByRole('button', { name: 'change' }));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const saves = () => fetchMock.mock.calls.filter(([path]) => path === '/rooms/room-1/maps/map-1/board');
+      expect(saves()).toHaveLength(1);
+      expect(saves()[0][1]).toMatchObject({ json: { base_revision: 3 } });
+
+      routes.save = () => Promise.resolve(rawMapDetail({ revision: 5 }));
+      answer(rawMapDetail({ revision: 4 }));
+      await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Salvato'));
+      expect(saves()).toHaveLength(2);
+      expect(saves()[1][1]).toMatchObject({ json: { base_revision: 4 } });
+      expect(screen.getByTestId('board')).toHaveTextContent('1 cards');
+    });
+
+    it('reloads the map when someone else saved first, and says the change was lost', async () => {
+      wideScreen();
+      routes.save = () => Promise.reject(new ApiError(412, 'Stale'));
+      const { user } = render();
+      await user.click(await screen.findByRole('button', { name: 'change' }));
+      expect(screen.getByTestId('board')).toHaveTextContent('2 cards');
+
+      routes.map = () => Promise.resolve(rawMapDetail({ revision: 4 }));
+      await vi.waitFor(() => expect(notifyError).toHaveBeenCalledWith(expect.stringMatching(/Qualcun altro/)), {
+        timeout: 2000,
+      });
+      await vi.waitFor(() => expect(screen.getByTestId('board')).toHaveTextContent('3 cards'));
+      expect(screen.queryByRole('button', { name: 'Riprova' })).not.toBeInTheDocument();
+
+      routes.save = () => Promise.resolve(rawMapDetail({ revision: 5 }));
+      await user.click(screen.getByRole('button', { name: 'change' }));
+      await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Salvato'), { timeout: 2000 });
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        '/rooms/room-1/maps/map-1/board',
+        expect.objectContaining({ json: expect.objectContaining({ base_revision: 4 }) }),
+      );
     });
   });
 });

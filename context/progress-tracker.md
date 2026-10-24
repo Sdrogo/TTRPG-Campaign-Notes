@@ -32,6 +32,16 @@ detail:
   30/30b (read aloud with the browser's voices, best installed voice by
   default, first reading waits for the voice list, PRs #146, #148, #154).
   Neither has a migration.
+- **Spec 42, Maps editable by players** (2026-10-24, PR #230, migration
+  `e2b7c4f9a1d6`): a switch in a free or geographic map's settings ("I
+  Player possono modificare la mappa", off by default) lets every member who
+  sees the map edit its board; settings, deletion, plane, background and
+  linking stay with its creator and the Master. Every map write raises
+  `relationship_maps.revision`; a board save based on an older revision is
+  412 and the page reloads the map, telling the editor to redo the last
+  change. Real-time merging/live updates: analysed (Claude Doc "Modifica
+  delle mappe in tempo reale"), product owner chose the guard only
+  (2026-10-24). Defaults in the spec's Decisions to confirm in the PR.
 - **Spec 41, Relational link Notes** (2026-10-21, migration
   `a4d9e2c7f1b6`): a Note can be flagged as a Relational link (switch in
   the Note form, badge next to its title for every reader), and **only the
@@ -95,9 +105,11 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `a4d9e2c7f1b6` (`document_notes.relational_link`,
-  spec 41_1, merged into `staging` by PR #222).
-- **Staging database**: `a4d9e2c7f1b6` (= head, note relational link, applied
+- **Head in the repository**: `e2b7c4f9a1d6` (`relationship_maps.players_can_edit`
+  and `.revision`, spec 42_1, PR #230, not yet merged into `staging`).
+- **Staging database**: `e2b7c4f9a1d6` (= head, map players_can_edit and
+  revision, spec 42, applied by hand 2026-10-24 before PR #230 merged);
+  `a4d9e2c7f1b6` before it (note relational link, applied
   by hand 2026-10-21 with `.env.staging` loaded, before PR #222 merged);
   `d7c1f5a9e3b8` before it (geographic maps, applied 2026-10-17;
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
@@ -112,10 +124,11 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: none.
+- **Pending on production**: `e2b7c4f9a1d6` (spec 42), before the release to
+  `main` that ships it.
 
 Recent chain, newest first (where each came from):
-`a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←

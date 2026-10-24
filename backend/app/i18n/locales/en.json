@@ -199,6 +199,8 @@
     "map": {
       "notFound": "Map not found",
       "notManager": "Only the map's creator (or the Master) can change this map",
+      "notEditor": "This map is locked: only its creator (or the Master) can edit it",
+      "changedByOthers": "Someone else changed the map in the meantime: reload it and redo your change",
       "creationDisabled": "Players can't create maps in this room",
       "invalidSelectiveUsers": "selective_user_ids must all be members of this room",
       "nameRequired": "A map needs a name",

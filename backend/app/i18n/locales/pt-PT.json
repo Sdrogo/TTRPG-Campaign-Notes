@@ -199,6 +199,8 @@
     "map": {
       "notFound": "Mapa não encontrado",
       "notManager": "Só quem criou o mapa (ou o Master) o pode alterar",
+      "notEditor": "Este mapa está bloqueado: só quem o criou (ou o Master) o pode editar",
+      "changedByOthers": "Outra pessoa alterou o mapa entretanto: recarrega-o e repete a tua alteração",
       "creationDisabled": "Nesta Sala os Players não podem criar mapas",
       "invalidSelectiveUsers": "selective_user_ids só pode conter membros desta Sala",
       "nameRequired": "Um mapa tem de ter um nome",
