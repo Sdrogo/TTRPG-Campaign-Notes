@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Box, Button, Group, Stack, Switch, Text, TextInput } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { MemberMultiSelect } from '../MemberMultiSelect';
@@ -37,6 +37,7 @@ export function NoteForm({
   const { t } = useTranslation();
   const [values, setValues] = useState(initialValues);
   const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
+  const hintId = useId();
   const set = (patch: Partial<NoteFormValues>) => setValues((current) => ({ ...current, ...patch }));
 
   return (
@@ -80,13 +81,14 @@ export function NoteForm({
               mt="calc(var(--mantine-font-size-sm) * var(--mantine-line-height) + 0.5rem)"
               label={t('notes.form.relationalLink')}
               description={phone ? undefined : t('notes.form.relationalLinkHint')}
+              aria-describedby={phone ? hintId : undefined}
               checked={values.relationalLink}
               onChange={(event) => set({ relationalLink: event.currentTarget.checked })}
               style={{ flex: phone ? '0 0 auto' : 1 }}
             />
           </Group>
           {phone && (
-            <Text size="xs" c="dimmed" mt={4}>
+            <Text id={hintId} size="xs" c="dimmed" mt={4}>
               {t('notes.form.relationalLinkHint')}
             </Text>
           )}
