@@ -3,6 +3,8 @@ import { Box, Group, Title, UnstyledButton } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { ViewAsBanner } from './ViewAsBanner';
+import { DemoBanner } from './demo/DemoBanner';
+import { isDemoMode } from '../lib/demo/demoMode';
 import { useViewAs } from '../hooks/useViewAs';
 import { AccountButton } from './account/AccountButton';
 import { LanguageSelector } from './LanguageSelector';
@@ -39,7 +41,8 @@ const HEADER_FIXED_AT = 80;
  * the top of the page (`.app-header` in `index.css`), but slides away while
  * scrolling down and comes back as soon as the scroll turns up, so a phone
  * shows more content. While the Master previews the Room as a member (spec
- * 22b) it carries the preview's banner and stays put.
+ * 22b) it carries the preview's banner and stays put. In the Demo (spec
+ * 45_2) the Demo's banner takes its place, with its own View-as switch.
  */
 export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const { t } = useTranslation();
@@ -94,7 +97,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
           <LanguageSelector />
           <AccountButton />
         </Group>
-        {viewAs && <ViewAsBanner viewAs={viewAs} />}
+        {isDemoMode() ? <DemoBanner /> : viewAs && <ViewAsBanner viewAs={viewAs} />}
       </Box>
     </>
   );

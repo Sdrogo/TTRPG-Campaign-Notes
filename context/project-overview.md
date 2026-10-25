@@ -63,7 +63,7 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 
 ## Features
 
-### Landing page and Demo (spec 45; 45_1 built, Demo and tour planned)
+### Landing page and Demo (spec 45; 45_1 and 45_2 built, tour planned)
 - A visitor without a session opening the site sees a landing page that
   explains Ex Libris, with sign-in and a **Demo**: the real app pages over
   a sample Room kept in the browser (no account, nothing saved), with a

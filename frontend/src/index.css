@@ -55,6 +55,15 @@ body {
   border-radius: var(--mantine-radius-md);
 }
 
+/* The Demo's banner (spec 45_2): the same full-width row, in a raised
+   neutral so it never reads as the Master's preview. */
+.demo-banner {
+  grid-column: 1 / -1;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--mantine-radius-md);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .app-header {
     transition: none;

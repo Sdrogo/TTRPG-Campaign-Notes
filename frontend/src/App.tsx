@@ -36,6 +36,7 @@ const RoomMapsPage = lazy(() =>
 const RelationshipMapPage = lazy(() =>
   import('./pages/RelationshipMapPage').then((m) => ({ default: m.RelationshipMapPage })),
 );
+const DemoPage = lazy(() => import('./pages/DemoPage').then((m) => ({ default: m.DemoPage })));
 const MentionMapPage = lazy(() =>
   import('./pages/MentionMapPage').then((m) => ({ default: m.MentionMapPage })),
 );
@@ -67,6 +68,7 @@ function App() {
         <Route path="/invite/:code" element={<AcceptInvitePage />} />
         <Route path="/friends/add/:code" element={<AddFriendPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/demo" element={<DemoPage />} />
         <Route path="/rooms/:roomId/setup" element={<RoomSetupPage />} />
         <Route path="/rooms/:roomId/members" element={<RoomMembersRedirect />} />
         <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />

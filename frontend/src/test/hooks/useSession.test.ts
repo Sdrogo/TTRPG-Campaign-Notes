@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { supabase } from '../../lib/supabaseClient';
 import { useSession } from '../../hooks/useSession';
+import { DEMO_SESSION, setDemoMode } from '../../lib/demo/demoMode';
 
 vi.mock('../../lib/supabaseClient', () => ({
   supabase: { auth: { getSession: vi.fn(), onAuthStateChange: vi.fn() } },
@@ -99,5 +100,15 @@ describe('useSession', () => {
     unmount();
 
     expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('is the sample Room Master while the Demo is on', () => {
+    getSession.mockReturnValue(new Promise(() => {}) as ReturnType<typeof supabase.auth.getSession>);
+    setDemoMode(true);
+
+    const { result } = renderHook(() => useSession());
+
+    expect(result.current).toEqual({ session: DEMO_SESSION, loading: false });
+    setDemoMode(false);
   });
 });

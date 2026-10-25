@@ -76,6 +76,7 @@
     "intro": "Ex Libris 是桌面角色扮演小组共同撰写战役的地方：地点、角色、事件和秘密，每一项都只让该知道的人看到。",
     "signIn": "登录",
     "openMyRooms": "打开我的房间",
+    "tryDemo": "试用演示",
     "featuresTitle": "你可以做什么",
     "features": {
       "rooms": {
@@ -116,6 +117,14 @@
     "home": "首页",
     "rooms": "房间",
     "noRooms": "还没有房间"
+  },
+  "demo": {
+    "banner": "演示：一个示例战役，只读。",
+    "viewAs": "查看身份",
+    "exit": "退出演示",
+    "readOnly": "演示为只读：登录即可创建你自己的房间。",
+    "unavailable": "演示需要网站数据，但此浏览器已将其阻止。",
+    "accountNotice": "演示中没有账户：登录即可拥有你自己的账户。"
   },
   "header": {
     "account": "你的账户",

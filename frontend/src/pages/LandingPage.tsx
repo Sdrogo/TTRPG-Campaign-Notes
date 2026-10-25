@@ -88,15 +88,21 @@ export function LandingPage({ signedIn }: LandingPageProps) {
             <Text c="dimmed" maw={640}>
               {t('landing.intro')}
             </Text>
-            {signedIn ? (
-              <Button component={Link} to="/rooms" size="md">
-                {t('landing.openMyRooms')}
+            <Group justify="center" gap="sm">
+              {/* A plain link: entering the Demo is a full page load (spec 45_2). */}
+              <Button component="a" href="/demo" size="md">
+                {t('landing.tryDemo')}
               </Button>
-            ) : (
-              <Button size="md" onClick={scrollToSignIn}>
-                {t('landing.signIn')}
-              </Button>
-            )}
+              {signedIn ? (
+                <Button component={Link} to="/rooms" size="md" variant="default">
+                  {t('landing.openMyRooms')}
+                </Button>
+              ) : (
+                <Button size="md" variant="default" onClick={scrollToSignIn}>
+                  {t('landing.signIn')}
+                </Button>
+              )}
+            </Group>
           </Stack>
 
           <Stack component="section" gap="lg" aria-labelledby="landing-features">

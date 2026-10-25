@@ -76,6 +76,7 @@
     "intro": "Ex Libris는 TRPG 그룹이 캠페인을 함께 써 내려가는 곳입니다. 장소, 캐릭터, 사건, 비밀을 기록하고, 각각 알아야 할 사람에게만 보여 줍니다.",
     "signIn": "로그인",
     "openMyRooms": "내 룸 열기",
+    "tryDemo": "데모 체험하기",
     "featuresTitle": "할 수 있는 일",
     "features": {
       "rooms": {
@@ -116,6 +117,14 @@
     "home": "홈",
     "rooms": "룸",
     "noRooms": "아직 룸이 없습니다"
+  },
+  "demo": {
+    "banner": "데모: 예시 캠페인, 읽기 전용.",
+    "viewAs": "보기 기준",
+    "exit": "데모 종료",
+    "readOnly": "데모는 읽기 전용입니다. 로그인하여 나만의 룸을 만드세요.",
+    "unavailable": "데모에는 사이트 데이터가 필요하지만 이 브라우저가 차단하고 있습니다.",
+    "accountNotice": "데모에는 계정이 없습니다. 로그인하면 나만의 계정을 가질 수 있습니다."
   },
   "header": {
     "account": "내 계정",

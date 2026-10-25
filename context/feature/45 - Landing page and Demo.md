@@ -149,6 +149,41 @@ navigation between the landing page, the Rooms page and each Room.
     them out; the demo flag simply wins while it is on, and Exit returns
     them to their Rooms.
 
+### Demo as built (45_2, 2026-10-25)
+
+What changed from the plan above while building it:
+
+- **Sample Room**: 11 Documents, 5 Notes (two Relational links, one
+  Master-only, one Selective), 4 Comments (a reply, reactions, one
+  Master-only), 7 Tags, a free map and a geographic map, all in one file
+  (`lib/demo/demoData.ts`, English and Italian side by side). **No
+  images** yet: the cards and maps read well without them, and bundled
+  pictures can come later.
+- **Players**: two sample Players, Marco (plays Brann, owns a Private
+  Document) and Giulia (plays Seren, has a Selective Note). The Master is
+  "Morgan". The banner's switch is a SegmentedControl Master / Marco /
+  Giulia.
+- **Entering, leaving and switching are full page loads** (`/demo`,
+  Exit, Sign in, and the View-as switch), instead of clearing the
+  react-query cache: an open page's queries stay bound to the cache they
+  started in, so a switch in place kept showing the previous viewer's
+  data. A reload starts clean and costs nothing in the Demo.
+- **The banner** is rendered by `AppHeader` (so every page with the top
+  bar has it, the landing page included), in place of spec 22b's preview
+  banner. It has Exit demo and Sign in; Restart tour comes with 45_3. A
+  change of UI language reloads the sample data in the new language.
+- **The backend** (`lib/demo/demoBackend.ts`) holds the visibility filter
+  too (no separate `demoVisibility.ts`). Unknown GET routes answer 404,
+  as the API does (the hooks already treat a 404 linked map as "none").
+  Opening a Document sends `POST .../read`, which is answered (nothing
+  stored) so no error shows. Every other write answers 403 with the
+  localized read-only notice, which the forms and `notifyError` show.
+- **Mention maps** (spec 36) are live in the Demo: every Document tied to
+  others has a depth-1 map, built from its description and Relational
+  links.
+- **Account page**: shows "In the demo there is no account" with a way
+  back to the Rooms.
+
 ### Tour (45_3)
 
 15. **What the tour is**: a sequence of about 12 steps, each a small card

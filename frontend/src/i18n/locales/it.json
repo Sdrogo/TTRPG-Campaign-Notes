@@ -76,6 +76,7 @@
     "intro": "Ex Libris è dove un gruppo di gioco di ruolo scrive insieme la propria campagna: luoghi, personaggi, eventi e segreti, ognuno visibile solo a chi deve conoscerlo.",
     "signIn": "Accedi",
     "openMyRooms": "Apri le mie Stanze",
+    "tryDemo": "Prova la demo",
     "featuresTitle": "Cosa puoi fare",
     "features": {
       "rooms": {
@@ -116,6 +117,14 @@
     "home": "Home",
     "rooms": "Stanze",
     "noRooms": "Ancora nessuna Stanza"
+  },
+  "demo": {
+    "banner": "Demo: una campagna di esempio, in sola lettura.",
+    "viewAs": "Vedi come",
+    "exit": "Esci dalla demo",
+    "readOnly": "La demo è in sola lettura: accedi per creare la tua Stanza.",
+    "unavailable": "La demo ha bisogno dei dati del sito, che questo browser blocca.",
+    "accountNotice": "Nella demo non c'è un account: accedi per avere il tuo."
   },
   "header": {
     "account": "Il tuo account",

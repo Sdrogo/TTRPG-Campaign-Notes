@@ -76,6 +76,7 @@
     "intro": "Ex Libris is where a tabletop RPG group writes its campaign together: places, characters, events and secrets, each one seen only by the players who should know it.",
     "signIn": "Sign in",
     "openMyRooms": "Open my Rooms",
+    "tryDemo": "Try the demo",
     "featuresTitle": "What you can do",
     "features": {
       "rooms": {
@@ -116,6 +117,14 @@
     "home": "Home",
     "rooms": "Rooms",
     "noRooms": "No Rooms yet"
+  },
+  "demo": {
+    "banner": "Demo: a sample campaign, read-only.",
+    "viewAs": "View as",
+    "exit": "Exit demo",
+    "readOnly": "The demo is read-only: sign in to create your own Room.",
+    "unavailable": "The demo needs site storage, which this browser is blocking.",
+    "accountNotice": "In the demo there is no account: sign in to have your own."
   },
   "header": {
     "account": "Your account",

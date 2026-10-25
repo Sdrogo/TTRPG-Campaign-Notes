@@ -76,6 +76,7 @@
     "intro": "O Ex Libris é onde um grupo de RPG escreve a sua campanha em conjunto: locais, personagens, acontecimentos e segredos, cada um visível só para quem o deve conhecer.",
     "signIn": "Iniciar sessão",
     "openMyRooms": "Abrir as minhas Salas",
+    "tryDemo": "Experimentar a demo",
     "featuresTitle": "O que podes fazer",
     "features": {
       "rooms": {
@@ -116,6 +117,14 @@
     "home": "Início",
     "rooms": "Salas",
     "noRooms": "Ainda sem Salas"
+  },
+  "demo": {
+    "banner": "Demo: uma campanha de exemplo, só de leitura.",
+    "viewAs": "Ver como",
+    "exit": "Sair da demo",
+    "readOnly": "A demo é só de leitura: inicia sessão para criares a tua própria Sala.",
+    "unavailable": "A demo precisa dos dados do site, que este navegador bloqueia.",
+    "accountNotice": "Na demo não há conta: inicia sessão para teres a tua."
   },
   "header": {
     "account": "A tua conta",
