@@ -67,8 +67,9 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 - A visitor without a session opening the site sees a landing page that
   explains Ex Libris, with sign-in and a **Demo**: the real app pages over
   a sample Room kept in the browser (no account, nothing saved), with a
-  guided tour of the main features. Also at `/welcome` for signed-in
-  users.
+  guided tour of the main features. Signed-in users see it too (Rooms
+  list moves to `/rooms`), and a header burger menu jumps between the
+  landing page, the Rooms page and each Room.
 
 ### Authentication & Account
 - Google sign‑in (FR-A1), plus Discord and GitHub

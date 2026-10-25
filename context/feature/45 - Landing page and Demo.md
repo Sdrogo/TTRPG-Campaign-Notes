@@ -21,18 +21,51 @@
 ## Decisions
 
 Defaults picked on 2026-10-25 from the request, **to confirm in the PR**
-before any code is written.
+before any code is written. The product owner answered on 2026-10-25: the
+Demo is **read-only**, the landing page is shown **to everyone** (signed-in
+users included), and the header gets back a **burger menu** for quick
+navigation between the landing page, the Rooms page and each Room.
 
 ### Landing page (45_1)
 
-1. **Who sees it**: a visitor **without a session** opening `/`. A signed-in
-   user opening `/` still lands on their Rooms, as today, since the landing
-   page would only be a step in their way. The same page is also reachable
-   by anyone at **`/welcome`**, linked from the Account page ("About Ex
-   Libris"), so a signed-in user can open the Demo or share the page.
-2. **Pending links keep working**: an invite link (`/invite/:code`) or a
-   friend link opened without a session still goes through its own page
-   and sign-in, unchanged; the landing page is only `/` and `/welcome`.
+1. **Who sees it** (product owner, 2026-10-25: "Vede comunque la landing.
+   Da lì c'è la possibilità di navigare nelle Room"): **everyone** opening
+   `/`, signed in or not. The Rooms list moves from `/` to its own route,
+   **`/rooms`**. For a signed-in user the landing page's sign-in actions
+   are replaced by **Open my Rooms** (to `/rooms`), and the header is the
+   normal `AppHeader` with the burger (see 2a).
+2. **Pending links and sign-in keep working**: an invite link
+   (`/invite/:code`) or a friend link opened without a session still goes
+   through its own page and sign-in, unchanged. Sign-in still returns to
+   the site's origin (no change to Supabase's Redirect URLs); a
+   `sessionStorage` marker set when a sign-in button is pressed (like the
+   pending invite) sends the user on to `/rooms` right after signing in,
+   after the pending invite and friend link checks, so signing in from the
+   landing page lands on the Rooms, while opening the site later shows the
+   landing page. Every link and back arrow that today means "my Rooms"
+   (header back from a Room, invite and friend pages, Room deletion, the
+   Room setup page) points to `/rooms`; the header's app name points to
+   `/`.
+2a. **Burger menu, quick navigation** (product owner, 2026-10-25: "il
+   Burger menù consente una quick navigation tra la landing, la Room Page
+   ed una sottolista con tutte le diverse Room di cui facciamo parte"): a
+   burger button **back in the header's left column, before the back
+   arrow**, on every signed-in page (landing page included). It opens a
+   Mantine `Menu` (`bottom-start`) with:
+   - **Home** -> the landing page (`/`);
+   - **My Rooms** -> the Rooms page (`/rooms`);
+   - a **Rooms** sub-list with every Room the user is a member of
+     (`GET /rooms`, the same list the Rooms page shows, archived Rooms
+     left out), alphabetical, each with its small Room image and name,
+     linking to the Room's Documents page; the current Room is checked.
+     On desktop it is a nested sub-menu (Mantine 9 `Menu.Sub`) opening to
+     the right; on a phone, where a side sub-menu has no room, the Rooms
+     are listed inline under a "Rooms" label in the same menu, scrolling
+     inside it when long. With no Room, the sub-list shows "No Rooms yet".
+   - The Rooms list is fetched when the menu first opens. The burger is
+     not shown without a session (the landing page's own top bar, 4) and
+     does not replace spec 44's Room Index tab, which stays the index of
+     the current Room's sections.
 3. **Sections, top to bottom** (one page, scrolls, no separate routes):
    - **Hero**: logo, "Ex Libris", a one-line tagline ("The shared notebook
      of your campaign"), a short paragraph, and two actions: **Try the
@@ -51,10 +84,11 @@ before any code is written.
      D-07), the privacy link.
    - **Footer**: privacy notice link, language selector, GitHub link to
      the repository.
-4. **Header**: no `AppHeader` (it needs a session); a light top bar with
-   the logo and app name on the left, the language selector and a "Sign
-   in" button on the right, so a visitor can switch language before
-   reading.
+4. **Header**: without a session, no `AppHeader` (it needs one); a light
+   top bar with the logo and app name on the left, the language selector
+   and a "Sign in" button on the right, so a visitor can switch language
+   before reading. With a session, the normal `AppHeader` (burger, app
+   name, language, avatar).
 5. **No screenshots in round one**: the feature cards use icons, since the
    Demo is the live picture. Screenshots or a short looping video can come
    later.
@@ -81,15 +115,15 @@ before any code is written.
    (`lib/demo/`) instead of `fetch`: the same JSON shapes as the real API,
    built from a fixed sample Room. The demo code is a lazy chunk, loaded
    only when the Demo starts, so the normal app bundle does not grow.
-10. **Writes are kept in memory**: creating or editing a Document, a Note
-    or a Comment, moving a map card, revealing content and the like work
-    and are kept in browser memory until the visitor leaves the Demo or
-    closes the tab; nothing is saved. Features that need a real server
-    (image upload and image search, PDF and file exports, JSON import,
-    invitations, friends, Room duplication, account settings) show a
-    "Not available in the demo: sign in to use it" notice instead.
-    **Alternative to confirm**: a read-only Demo (every write shows the
-    notice), smaller to build and maintain; see Open choices.
+10. **Read-only** (product owner, 2026-10-25): the demo backend answers
+    reads only. Every write (create, edit, delete, reveal, move a map card,
+    upload, export, import, invite, account settings) is refused with a
+    "The demo is read-only: sign in to create your own Room" notice, and
+    nothing changes. The buttons stay where they are, so the visitor sees
+    what the app can do; the notice comes when an action is sent. Map
+    pages open in their reading mode, and the 5 s map refresh (spec 43)
+    keeps reading the same sample data. The View-as switch (12) is a read
+    and works.
 11. **The sample Room**: a short fantasy campaign ("The Lost Lighthouse"):
     about 12 Documents across the default Main Tags (NPC, PC, Place, Event,
     Artifact) with images bundled in `public/demo/`, a few Notes (one
@@ -106,11 +140,12 @@ before any code is written.
     mechanism: the demo backend reads the same `X-View-As` header and
     filters with the same rules (Room, Master-only, Private, Selective).
 13. **Demo banner**: on every page while the Demo is on, a slim bar under
-    the header: "You're exploring the demo: nothing is saved", the View-as
+    the header: "You're exploring the demo (read-only)", the View-as
     switch, **Restart tour**, **Exit demo** (back to the landing page,
-    clearing the flag and the in-memory changes) and **Sign up** (back to
+    clearing the flag) and **Sign up** (back to
     the landing page's sign-in block). The header's account avatar shows
     the demo user; the Account page shows a notice instead of settings.
+    The burger (2a) lists only the sample Room while the Demo is on.
 14. **Signed-in users**: starting the Demo while signed in does not sign
     them out; the demo flag simply wins while it is on, and Exit returns
     them to their Rooms.
@@ -126,7 +161,8 @@ before any code is written.
     tab (spec 44), 3 a Document card, 4 a Document page (description,
     images, Owners), 5 Notes and mentions ("Mentioned in"), 6 Comments and
     replies, 7 Visibility of a post, 8 View as Player (flips the switch),
-    9 Reveal, 10 search, 11 the relationship map, 12 the geographic map,
+    9 Reveal (explained on the button, since the Demo is read-only), 10
+    search, 11 the relationship map, 12 the geographic map,
     then a last card: "That's Ex Libris" with **Sign in to create your
     Room** and **Keep exploring**.
 17. **Starts on its own** the first time the Demo opens; can be skipped at
@@ -141,36 +177,41 @@ before any code is written.
 
 19. A marketing site separate from the app, pricing, a blog, analytics or
     cookie banners (no tracking is added), screenshots/video (see 5), a
-    tour inside a real Room for signed-in users, and saving demo changes
-    into a real Room after signing in.
+    tour inside a real Room for signed-in users, and writing in the Demo
+    (product owner, 2026-10-25: read-only).
 
 ## Open choices for the product owner
 
-- **A. Demo interactivity**: in-memory writes (default, 10) or read-only.
-  In-memory writes let the visitor actually try writing a Note or moving a
-  map card; read-only is about half the demo backend.
-- **B. Signed-in users at `/`**: straight to their Rooms (default, 1), or
-  the landing page for everyone with an "Open my Rooms" button.
+- ~~A. Demo interactivity~~: read-only (product owner, 2026-10-25).
+- ~~B. Signed-in users at `/`~~: the landing page for everyone, Rooms at
+  `/rooms`, plus the burger (product owner, 2026-10-25).
 - **C. Sample content languages**: English and Italian (default, 11), or
   English only.
 
 ## Design (frontend only, no backend change, no migration)
 
-- **Routes** (`App.tsx`): `HomePage` renders `<LandingPage />` instead of
-  the sign-in screen when there is no session; new lazy route `/welcome`
-  renders it for everyone; `/demo` (optionally `/demo?step=N`) turns the
+- **Routes** (`App.tsx`): `/` renders `<LandingPage />` for everyone
+  (`HomePage` keeps the pending invite / friend link / just-signed-in
+  redirects); new route `/rooms` renders `RoomsPage` behind the session
+  check that `HomePage` does today; every "my Rooms" link moves to
+  `/rooms` (2); `/demo` (optionally `/demo?step=N`) turns the
   demo flag on and opens the sample Room's Documents page,
   `/rooms/demo/documents`, so every real page and link works unchanged.
 - **`pages/LandingPage.tsx`** and `components/landing/` (hero, feature
   grid, steps, sign-in block, footer); the sign-in buttons move from
-  `HomePage` into a shared `SignInButtons` component.
+  `HomePage` into a shared `SignInButtons` component, which also sets the
+  just-signed-in marker (`lib/pendingInvite.ts` style).
+- **`components/QuickNavMenu.tsx`**: the burger and its `Menu` (Home, My
+  Rooms, the Rooms sub-list from `useRooms`, enabled on first open; nested
+  `Menu.Sub` from `sm`, inline below it), rendered by `AppHeader` in the
+  left column before the back arrow whenever there is a session.
 - **`lib/demo/`** (lazy chunk): `demoMode.ts` (flag on/off in
   `sessionStorage`, read synchronously by `apiClient` and `useSession`),
   `demoData.en.ts` / `demoData.it.ts` (the sample Room), `demoBackend.ts`
-  (a small router: method + path pattern -> handler over an in-memory
-  copy of the sample data, returning the same shapes as the API types in
-  `src/types/`; unknown or server-only routes throw an `ApiError(501)`
-  that `notifyError` shows as the "Not available in the demo" notice),
+  (a small router: `GET` + path pattern -> handler over the sample data,
+  returning the same shapes as the API types in `src/types/`; any other
+  method, or an unknown route, throws an `ApiError(403)` whose message is
+  the localized "The demo is read-only" notice, shown by `notifyError`),
   `demoVisibility.ts` (the view-as filter, mirroring the backend's
   visibility rules for the sample data only).
 - **`apiClient.request`**: when the demo flag is on, hand the call to
@@ -185,8 +226,8 @@ before any code is written.
   (steps in `lib/demo/tourSteps.ts`: target `data-tour` id, route, i18n
   keys); `data-tour` attributes added to the targets in the existing
   components.
-- **The 5 s map refresh** (spec 43) and any polling read the in-memory
-  data, so they keep working with no network.
+- **The 5 s map refresh** (spec 43) and any polling read the sample data,
+  so they keep working with no network.
 - **i18n**: new `landing.*`, `demo.*` and `tour.*` keys in all 12 locale
   files; `context/i18n-glossary.md` gains "demo" and "tour".
 - **Docs**: `project-overview.md` (Features, Scope), `architecture.md`
@@ -197,22 +238,29 @@ before any code is written.
 
 One unit at a time, each its own PR into `staging`:
 
-1. **45_1 Landing page**: page, `/welcome`, sign-in moved, Open Graph tags,
-   12 languages. "Try the demo" hidden until 45_2 ships.
+1. **45_1 Landing page and quick navigation**: page at `/`, Rooms moved to
+   `/rooms`, sign-in moved, burger menu, Open Graph tags, 12 languages.
+   "Try the demo" hidden until 45_2 ships.
 2. **45_2 Demo**: demo flag, in-browser backend, sample Room (en/it),
    banner, view-as, not-available notices.
 3. **45_3 Tour**: steps, highlight card, deep links from the landing page.
 
 ## Tests
 
-- `LandingPage.test.tsx`: shows without a session, not with one at `/`;
-  `/welcome` shows it with a session; the sign-in buttons call
-  `signInWithOAuth` with the right provider; "Try the demo" goes to
-  `/demo`; an invite link without a session still reaches its page.
+- `LandingPage.test.tsx`: shows at `/` with and without a session; with
+  one it offers Open my Rooms instead of sign-in; the sign-in buttons call
+  `signInWithOAuth` with the right provider and set the marker; right
+  after sign-in `/` goes on to `/rooms`, later visits stay on the landing
+  page; a pending invite still wins; "Try the demo" goes to `/demo`.
+- `QuickNavMenu.test.tsx`: Home and My Rooms link to `/` and `/rooms`;
+  the Rooms sub-list shows each Room alphabetically, links to it, checks
+  the current one, says "No Rooms yet" when empty; nothing is fetched
+  before the first open; no burger without a session.
+- `layout.test.tsx` / page tests: back from a Room and the other "my Rooms"
+  links go to `/rooms`.
 - `demoBackend.test.ts`: every GET a demo page makes returns the sample
-  data in the API's shape; a write changes the in-memory copy and the
-  next read sees it; a server-only route throws the not-available error;
-  `fetch` is never called while the flag is on.
+  data in the API's shape; any write throws the read-only error and
+  changes nothing; `fetch` is never called while the flag is on.
 - `demoVisibility.test.ts`: as the Player, the Master-only Document and
   the Selective Note are absent from the list, search and mention map.
 - `DemoBanner.test.tsx` / `DemoTour.test.tsx`: Exit clears the flag and the
