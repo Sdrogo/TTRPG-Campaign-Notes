@@ -620,9 +620,11 @@
     "applied_other": "{{count}} vermeldingen toegevoegd"
   },
   "glossary": {
-    "title": "Tag-index",
-    "openToggle": "Tag-index openen",
-    "closeToggle": "Tag-index sluiten",
+    "title": "Kamerindex",
+    "openToggle": "Kamerindex openen",
+    "closeToggle": "Kamerindex sluiten",
+    "tab": "Index",
+    "allMaps": "Alle kaarten",
     "mainTags": "Hoofdtags",
     "otherTags": "Andere Tags",
     "empty": "Geen Tags in deze Kamer."

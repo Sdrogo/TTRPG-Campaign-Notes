@@ -610,9 +610,11 @@
     "applied_other": "{{count}}件の言及を追加しました"
   },
   "glossary": {
-    "title": "タグ索引",
-    "openToggle": "タグ索引を開く",
-    "closeToggle": "タグ索引を閉じる",
+    "title": "ルームの索引",
+    "openToggle": "ルームの索引を開く",
+    "closeToggle": "ルームの索引を閉じる",
+    "tab": "索引",
+    "allMaps": "すべてのマップ",
     "mainTags": "メインタグ",
     "otherTags": "その他のタグ",
     "empty": "このルームにはタグがありません。"

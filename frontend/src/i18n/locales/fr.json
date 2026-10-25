@@ -622,9 +622,11 @@
     "applied_other": "{{count}} mentions ajoutées"
   },
   "glossary": {
-    "title": "Index des Tags",
-    "openToggle": "Ouvrir l'index des Tags",
-    "closeToggle": "Fermer l'index des Tags",
+    "title": "Index de la Salle",
+    "openToggle": "Ouvrir l'index de la Salle",
+    "closeToggle": "Fermer l'index de la Salle",
+    "tab": "Index",
+    "allMaps": "Toutes les cartes",
     "mainTags": "Tags principaux",
     "otherTags": "Autres Tags",
     "empty": "Aucun Tag dans cette Salle."

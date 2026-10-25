@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Box, Burger, Group, Title, UnstyledButton } from '@mantine/core';
+import { Box, Group, Title, UnstyledButton } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { ViewAsBanner } from './ViewAsBanner';
@@ -8,19 +7,18 @@ import { useViewAs } from '../hooks/useViewAs';
 import { AccountButton } from './account/AccountButton';
 import { LanguageSelector } from './LanguageSelector';
 import { SearchButton } from './search/SearchButton';
-import { GlossaryIndexDrawer } from './GlossaryIndexDrawer';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from './LabeledActionIcon';
 import { backDestination } from '../lib/backNav';
 
 interface AppHeaderProps {
-  /** Given on a Room-scoped page, this shows a burger toggling the Room's
-   *  Glossary/Tag index sidebar (spec `10 - UX Refinment`) and the Room's
-   *  search (spec 21). Omitted elsewhere (the Rooms list, the Account page),
-   *  where there is no Room to index or search. */
+  /** Given on a Room-scoped page, this shows the Room's search (spec 21).
+   *  Omitted elsewhere (the Rooms list, the Account page), where there is no
+   *  Room to search. The Room's Index is a tab on the page's left edge
+   *  (`RoomIndex`, rendered by `PageLayout`, spec 44), not in this bar. */
   roomId?: string;
   /** Given on any nested page, this shows a "back" arrow (icon only, named
-   *  by `backLabel` for screen readers) before the burger, to the page it was
+   *  by `backLabel` for screen readers), to the page it was
    *  opened from or else to `backTo`, its parent. Omitted on the
    *  Rooms list (`HomePage`), which is the app's own root and has nowhere to
    *  go back to. */
@@ -33,8 +31,8 @@ interface AppHeaderProps {
 const HEADER_FIXED_AT = 80;
 
 /**
- * The top navigation bar shown on every signed-in page: the back arrow and,
- * on a Room page, the Glossary Index burger, on the left; the app name (also
+ * The top navigation bar shown on every signed-in page: the back arrow on the
+ * left; the app name (also
  * back to the Rooms list) always at the exact center; on the right, on a Room
  * page, the search (spec 21), then the language flag and the account avatar
  * (spec 09, spec 10). It is pinned to
@@ -46,7 +44,6 @@ const HEADER_FIXED_AT = 80;
 export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [glossaryOpened, setGlossaryOpened] = useState(false);
   const { pinned } = useHeadroom({ fixedAt: HEADER_FIXED_AT });
   // While previewing as a member, the bar and its banner never slide away.
   const viewAs = useViewAs();
@@ -85,14 +82,6 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
               <ArrowLeftIcon size={20} />
             </LabeledActionIcon>
           )}
-          {roomId && (
-            <Burger
-              opened={glossaryOpened}
-              onClick={() => setGlossaryOpened((current) => !current)}
-              size="sm"
-              aria-label={glossaryOpened ? t('glossary.closeToggle') : t('glossary.openToggle')}
-            />
-          )}
         </Group>
         <UnstyledButton component={Link} to="/" style={{ minWidth: 0 }}>
           <Title order={3} lineClamp={1} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
@@ -106,13 +95,6 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
         </Group>
         {viewAs && <ViewAsBanner viewAs={viewAs} />}
       </Box>
-      {roomId && (
-        <GlossaryIndexDrawer
-          roomId={roomId}
-          opened={glossaryOpened}
-          onClose={() => setGlossaryOpened(false)}
-        />
-      )}
     </>
   );
 }
