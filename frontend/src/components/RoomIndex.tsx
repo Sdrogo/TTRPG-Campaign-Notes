@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Anchor, Box, Drawer, Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { Anchor, Box, Drawer, Loader, Stack, Text, Title, UnstyledButton } from '@mantine/core';
 import { CaretRightIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -38,6 +38,9 @@ export function RoomIndex({ roomId }: RoomIndexProps) {
   const mainItems = useMainItems(roomId, opened);
   const maps = useMaps(roomId, opened);
   const groups = groupTagsByCategory(tags.data ?? [], mainItems.data ?? []);
+  // "No Tags" only once the Tags are known to be none: not while they load,
+  // and not when they failed (the Maps section still works then).
+  const tagsLoading = tags.isPending || mainItems.isPending;
   const sortedMaps = [...(maps.data ?? [])].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
@@ -64,7 +67,9 @@ export function RoomIndex({ roomId }: RoomIndexProps) {
         styles={{ title: { fontFamily: 'var(--font-display)', fontSize: 'var(--mantine-font-size-lg)' } }}
       >
         <Stack gap="md">
-          {groups.length === 0 ? (
+          {tagsLoading ? (
+            <Loader size="xs" />
+          ) : tags.isError ? null : groups.length === 0 ? (
             <Text c="dimmed" size="sm">
               {t('glossary.empty')}
             </Text>

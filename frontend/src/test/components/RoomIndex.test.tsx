@@ -155,6 +155,26 @@ describe('RoomIndex', () => {
     expect(await screen.findByText('Nessun Tag in questa Stanza.')).toBeInTheDocument();
   });
 
+  it('does not say there are no Tags while they are loading', async () => {
+    fetchMock.mockImplementation((path: string) =>
+      path === '/rooms/room-1/maps' ? Promise.resolve([]) : new Promise(() => {}),
+    );
+    await renderOpened();
+
+    await screen.findByText('Tutte le mappe');
+    expect(screen.queryByText('Nessun Tag in questa Stanza.')).not.toBeInTheDocument();
+  });
+
+  it('does not say there are no Tags when they fail to load, and still lists the maps', async () => {
+    fetchMock.mockImplementation((path: string) =>
+      path === '/rooms/room-1/maps' ? Promise.resolve([rawMap()]) : Promise.reject(new Error('boom')),
+    );
+    await renderOpened();
+
+    expect(await screen.findByText('La Corte')).toBeInTheDocument();
+    expect(screen.queryByText('Nessun Tag in questa Stanza.')).not.toBeInTheDocument();
+  });
+
   // Spec 44 Decision 5: the maps close the card, alphabetical, after a link
   // to the Maps page.
   it("lists the Room's maps alphabetically after a link to the Maps page", async () => {
