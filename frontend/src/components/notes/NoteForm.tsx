@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Button, Group, Stack, Switch, TextInput } from '@mantine/core';
+import { useId, useState } from 'react';
+import { Box, Button, Group, Stack, Switch, Text, TextInput } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { MemberMultiSelect } from '../MemberMultiSelect';
 import { VisibilitySelect } from '../VisibilitySelect';
 import { MentionTextarea } from '../mentions/MentionTextarea';
@@ -22,6 +23,8 @@ interface NoteFormProps {
  * at the Selective level who else may read a Note, and whether it is a
  * Relational link whose mentions draw the mention map (spec 41). Mounted
  * fresh each time editing starts, so "cancel" is just unmounting it.
+ * Visibility and the Relational link switch share one row; on a phone the
+ * switch's hint moves under the row so the select keeps its width.
  */
 export function NoteForm({
   initialValues,
@@ -33,6 +36,8 @@ export function NoteForm({
 }: NoteFormProps) {
   const { t } = useTranslation();
   const [values, setValues] = useState(initialValues);
+  const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
+  const hintId = useId();
   const set = (patch: Partial<NoteFormValues>) => setValues((current) => ({ ...current, ...patch }));
 
   return (
@@ -44,7 +49,7 @@ export function NoteForm({
         }
       }}
     >
-      <Stack gap="sm">
+      <Stack gap={phone ? 'xs' : 'sm'}>
         <TextInput
           spellCheck
           label={t('notes.form.title')}
@@ -62,12 +67,32 @@ export function NoteForm({
           minRows={3}
           autosize
         />
-        <VisibilitySelect
-          label={t('visibility.label')}
-          subject="document"
-          value={values.visibility}
-          onChange={(visibility) => set({ visibility })}
-        />
+        <Box>
+          <Group align="flex-start" wrap="nowrap" gap={phone ? 'sm' : 'lg'}>
+            <VisibilitySelect
+              label={t('visibility.label')}
+              subject="document"
+              value={values.visibility}
+              onChange={(visibility) => set({ visibility })}
+              style={{ flex: 1, minWidth: 0 }}
+            />
+            {/* Skips the select's label so the switch sits level with its input. */}
+            <Switch
+              mt="calc(var(--mantine-font-size-sm) * var(--mantine-line-height) + 0.5rem)"
+              label={t('notes.form.relationalLink')}
+              description={phone ? undefined : t('notes.form.relationalLinkHint')}
+              aria-describedby={phone ? hintId : undefined}
+              checked={values.relationalLink}
+              onChange={(event) => set({ relationalLink: event.currentTarget.checked })}
+              style={{ flex: phone ? '0 0 auto' : 1 }}
+            />
+          </Group>
+          {phone && (
+            <Text id={hintId} size="xs" c="dimmed" mt={4}>
+              {t('notes.form.relationalLinkHint')}
+            </Text>
+          )}
+        </Box>
         {values.visibility === 'selective' && (
           <MemberMultiSelect
             label={t('notes.form.selectiveLabel')}
@@ -77,12 +102,6 @@ export function NoteForm({
             onChange={(selectiveUserIds) => set({ selectiveUserIds })}
           />
         )}
-        <Switch
-          label={t('notes.form.relationalLink')}
-          description={t('notes.form.relationalLinkHint')}
-          checked={values.relationalLink}
-          onChange={(event) => set({ relationalLink: event.currentTarget.checked })}
-        />
         <Group>
           <Button type="submit" loading={submitting} disabled={!canSubmitNote(values)}>
             {submitLabel}

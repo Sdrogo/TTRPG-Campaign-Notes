@@ -253,7 +253,8 @@
         "addHint": "Un Tag è un Tag principale, due o più una combinazione.",
         "add": "Aggiungi",
         "alreadyMain": "Questo Tag è già una voce del raggruppamento.",
-        "alreadyCombination": "Questa combinazione è già nel raggruppamento."
+        "alreadyCombination": "Questa combinazione è già nel raggruppamento.",
+        "mapsRow": "Riga delle Mappe"
       },
       "all": {
         "title": "Tutti i Tag",
@@ -620,9 +621,11 @@
     "applied_other": "Aggiunte {{count}} menzioni"
   },
   "glossary": {
-    "title": "Indice dei Tag",
-    "openToggle": "Apri indice dei Tag",
-    "closeToggle": "Chiudi indice dei Tag",
+    "title": "Indice della Stanza",
+    "openToggle": "Apri l'indice della Stanza",
+    "closeToggle": "Chiudi l'indice della Stanza",
+    "tab": "Indice",
+    "allMaps": "Tutte le mappe",
     "mainTags": "Tag principali",
     "otherTags": "Altri Tag",
     "empty": "Nessun Tag in questa Stanza."
@@ -1121,6 +1124,10 @@
       "repeated": "Documento già sulla mappa, resteranno etichette semplici:",
       "backgroundLater": "L'immagine di sfondo si carica dopo, dal pulsante Mappa della nuova mappa.",
       "submit": "Importa"
+    },
+    "strip": {
+      "all_one": "Tutte le mappe ({{count}})",
+      "all_other": "Tutte le mappe ({{count}})"
     }
   }
 }

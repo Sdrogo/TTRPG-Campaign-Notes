@@ -253,7 +253,8 @@
         "addHint": "Eén Tag is een hoofdtag, twee of meer vormen een combinatie.",
         "add": "Toevoegen",
         "alreadyMain": "Deze Tag is al een item van de groepering.",
-        "alreadyCombination": "Deze combinatie zit al in de groepering."
+        "alreadyCombination": "Deze combinatie zit al in de groepering.",
+        "mapsRow": "Kaartenrij"
       },
       "all": {
         "title": "Alle Tags",
@@ -620,9 +621,11 @@
     "applied_other": "{{count}} vermeldingen toegevoegd"
   },
   "glossary": {
-    "title": "Tag-index",
-    "openToggle": "Tag-index openen",
-    "closeToggle": "Tag-index sluiten",
+    "title": "Kamerindex",
+    "openToggle": "Kamerindex openen",
+    "closeToggle": "Kamerindex sluiten",
+    "tab": "Index",
+    "allMaps": "Alle kaarten",
     "mainTags": "Hoofdtags",
     "otherTags": "Andere Tags",
     "empty": "Geen Tags in deze Kamer."
@@ -1121,6 +1124,10 @@
       "repeated": "Document staat al op de kaart, blijven gewone labels:",
       "backgroundLater": "De achtergrondafbeelding upload je daarna via de knop Kaart van de nieuwe kaart.",
       "submit": "Importeren"
+    },
+    "strip": {
+      "all_one": "Alle kaarten ({{count}})",
+      "all_other": "Alle kaarten ({{count}})"
     }
   }
 }

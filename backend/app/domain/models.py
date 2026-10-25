@@ -50,6 +50,9 @@ class Room:
     # The Room's own image (spec 26): a private Storage path, the PDF's default
     # cover. None without one.
     image_path: str | None = None
+    # Where the maps row sits among the Documents page's groups: how many
+    # Main items come before it (0 = above them all). Set with the grouping.
+    maps_position: int = 0
 
 
 @dataclass(frozen=True)

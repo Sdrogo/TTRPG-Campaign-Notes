@@ -253,7 +253,8 @@
         "addHint": "Un Tag est un Tag principal, deux ou plus forment une combinaison.",
         "add": "Ajouter",
         "alreadyMain": "Ce Tag est déjà une entrée du regroupement.",
-        "alreadyCombination": "Cette combinaison est déjà dans le regroupement."
+        "alreadyCombination": "Cette combinaison est déjà dans le regroupement.",
+        "mapsRow": "Ligne des cartes"
       },
       "all": {
         "title": "Tous les Tags",
@@ -622,9 +623,11 @@
     "applied_other": "{{count}} mentions ajoutées"
   },
   "glossary": {
-    "title": "Index des Tags",
-    "openToggle": "Ouvrir l'index des Tags",
-    "closeToggle": "Fermer l'index des Tags",
+    "title": "Index de la Salle",
+    "openToggle": "Ouvrir l'index de la Salle",
+    "closeToggle": "Fermer l'index de la Salle",
+    "tab": "Index",
+    "allMaps": "Toutes les cartes",
     "mainTags": "Tags principaux",
     "otherTags": "Autres Tags",
     "empty": "Aucun Tag dans cette Salle."
@@ -1123,6 +1126,10 @@
       "repeated": "Document déjà sur la carte, ils resteront de simples étiquettes :",
       "backgroundLater": "L'image de fond s'ajoute ensuite, depuis le bouton Carte de la nouvelle carte.",
       "submit": "Importer"
+    },
+    "strip": {
+      "all_one": "Toutes les cartes ({{count}})",
+      "all_other": "Toutes les cartes ({{count}})"
     }
   }
 }

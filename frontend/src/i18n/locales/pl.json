@@ -253,7 +253,8 @@
         "addHint": "Jeden tag to tag główny, dwa lub więcej to kombinacja.",
         "add": "Dodaj",
         "alreadyMain": "Ten tag jest już pozycją grupowania.",
-        "alreadyCombination": "Ta kombinacja jest już w grupowaniu."
+        "alreadyCombination": "Ta kombinacja jest już w grupowaniu.",
+        "mapsRow": "Wiersz map"
       },
       "all": {
         "title": "Wszystkie tagi",
@@ -640,9 +641,11 @@
     "applied_other": "Dodano {{count}} wzmianki"
   },
   "glossary": {
-    "title": "Indeks tagów",
-    "openToggle": "Otwórz indeks tagów",
-    "closeToggle": "Zamknij indeks tagów",
+    "title": "Indeks Pokoju",
+    "openToggle": "Otwórz indeks Pokoju",
+    "closeToggle": "Zamknij indeks Pokoju",
+    "tab": "Indeks",
+    "allMaps": "Wszystkie mapy",
     "mainTags": "Tagi główne",
     "otherTags": "Pozostałe tagi",
     "empty": "Ten pokój nie ma tagów."
@@ -1177,6 +1180,12 @@
       "repeated": "Dokument jest już na mapie, zostaną zwykłymi etykietami:",
       "backgroundLater": "Obraz tła wgrasz później, przyciskiem Mapa nowej mapy.",
       "submit": "Importuj"
+    },
+    "strip": {
+      "all_one": "Wszystkie mapy ({{count}})",
+      "all_few": "Wszystkie mapy ({{count}})",
+      "all_many": "Wszystkie mapy ({{count}})",
+      "all_other": "Wszystkie mapy ({{count}})"
     }
   }
 }

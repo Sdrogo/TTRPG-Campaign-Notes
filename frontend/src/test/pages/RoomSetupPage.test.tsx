@@ -105,7 +105,7 @@ beforeEach(() => {
   });
 });
 
-/** The text of each grouping row, in order, once the list is on screen. */
+/** The text of each grouping item row, in order, once the list is on screen (the maps row left out). */
 const groupingRows = async () =>
   within((await screen.findAllByRole('list')).find((list) => list.tagName === 'OL') as HTMLElement)
     .getAllByRole('listitem')
@@ -114,7 +114,8 @@ const groupingRows = async () =>
       const copy = row.cloneNode(true) as HTMLElement;
       copy.querySelectorAll('[role="tooltip"]').forEach((tooltip) => tooltip.remove());
       return copy.textContent;
-    });
+    })
+    .filter((text) => text !== 'Riga delle Mappe');
 
 /** Whether the page asked for the Room's Tags at all. */
 const tagsWereRequested = () =>
@@ -305,6 +306,37 @@ describe('RoomSetupPage', () => {
     );
     expect(screen.queryByRole('button', { name: 'Salva ordine' })).not.toBeInTheDocument();
     expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  // The Room page's maps row sits among the items and saves its own place.
+  it('moves the maps row among the items and saves its place at once', async () => {
+    routes.patch = () => Promise.resolve(rawRoom({ maps_position: 1 }));
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Sposta Riga delle Mappe giù' }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1', {
+        method: 'PATCH',
+        json: { maps_position: 1 },
+      }),
+    );
+    expect(fetchMock).not.toHaveBeenCalledWith('/rooms/room-1/tags/main', expect.objectContaining({ method: 'PUT' }));
+    const list = (await screen.findAllByRole('list')).find((l) => l.tagName === 'OL') as HTMLElement;
+    expect(within(list).getAllByRole('listitem')[1]).toHaveTextContent('Riga delle Mappe');
+  });
+
+  it('puts the maps row back and reports it when its save fails', async () => {
+    routes.patch = () => Promise.reject(new Error('boom'));
+    const { user } = render();
+
+    await user.click(await screen.findByRole('button', { name: 'Sposta Riga delle Mappe giù' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    const list = (await screen.findAllByRole('list')).find((l) => l.tagName === 'OL') as HTMLElement;
+    await waitFor(() =>
+      expect(within(list).getAllByRole('listitem')[0]).toHaveTextContent('Riga delle Mappe'),
+    );
   });
 
   // Spec 11_2: a combination is saved as an item of several Tags.

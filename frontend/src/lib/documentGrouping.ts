@@ -19,6 +19,8 @@ export interface DocumentGroup {
   key: string;
   tags: Tag[];
   documents: Document[];
+  /** The item's place among the Main items (0-based); their count for the fallback group. */
+  position: number;
 }
 
 /**
@@ -38,16 +40,17 @@ export function groupDocumentsByMainItems(
   const matched = new Set<string>();
   const groups: DocumentGroup[] = [];
 
-  for (const itemTags of resolveMainItems(items, tags)) {
+  const resolved = resolveMainItems(items, tags);
+  resolved.forEach((itemTags, position) => {
     const inItem = documents.filter((document) =>
       itemTags.every((tag) => document.tagIds.includes(tag.id)),
     );
     inItem.forEach((document) => matched.add(document.id));
-    groups.push({ key: itemKey(itemTags), tags: itemTags, documents: inItem });
-  }
+    groups.push({ key: itemKey(itemTags), tags: itemTags, documents: inItem, position });
+  });
 
   const ungrouped = documents.filter((document) => !matched.has(document.id));
-  groups.push({ key: UNGROUPED_KEY, tags: [], documents: ungrouped });
+  groups.push({ key: UNGROUPED_KEY, tags: [], documents: ungrouped, position: resolved.length });
 
   return groups.filter((group) => group.documents.length > 0);
 }

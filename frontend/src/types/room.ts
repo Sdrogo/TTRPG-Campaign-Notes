@@ -20,6 +20,11 @@ export interface Room {
   defaultVisibility: DocumentVisibility;
   /** The Room's image (spec 26), a short-lived signed link; the PDF's default cover. */
   imageUrl: string | null;
+  /**
+   * Where the maps row sits among the Documents page's groups: how many Main
+   * items come before it (0 = above them all). Set in the setup's Grouping.
+   */
+  mapsPosition: number;
 }
 
 /** One of the signed-in user's Rooms, with their role in it. */

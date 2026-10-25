@@ -30,6 +30,7 @@ def _room() -> Room:
         players_can_create_documents=False,
         default_visibility=DocumentVisibility.MASTER,
         image_path="rooms/x/cover.webp",
+        maps_position=2,
     )
 
 
@@ -106,6 +107,7 @@ def test_the_copy_is_a_new_room_with_the_duplicator_as_only_member() -> None:
     assert plan.room.players_can_create_documents is False
     assert plan.room.default_visibility is DocumentVisibility.MASTER
     assert plan.room.image_path == "rooms/x/cover.webp"
+    assert plan.room.maps_position == 2
     assert plan.room.created_by == master.user_id
     assert plan.membership.room_id == plan.room.id
     assert plan.membership.user_id == master.user_id

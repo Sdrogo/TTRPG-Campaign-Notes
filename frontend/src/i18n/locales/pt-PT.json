@@ -253,7 +253,8 @@
         "addHint": "Uma Tag é uma Tag principal, duas ou mais uma combinação.",
         "add": "Adicionar",
         "alreadyMain": "Esta Tag já é uma entrada do agrupamento.",
-        "alreadyCombination": "Esta combinação já está no agrupamento."
+        "alreadyCombination": "Esta combinação já está no agrupamento.",
+        "mapsRow": "Linha dos mapas"
       },
       "all": {
         "title": "Todas as Tags",
@@ -622,9 +623,11 @@
     "applied_other": "Adicionadas {{count}} menções"
   },
   "glossary": {
-    "title": "Índice de Tags",
-    "openToggle": "Abrir índice de Tags",
-    "closeToggle": "Fechar índice de Tags",
+    "title": "Índice da Sala",
+    "openToggle": "Abrir o índice da Sala",
+    "closeToggle": "Fechar o índice da Sala",
+    "tab": "Índice",
+    "allMaps": "Todos os mapas",
     "mainTags": "Tags principais",
     "otherTags": "Outras Tags",
     "empty": "Nenhuma Tag nesta Sala."
@@ -1123,6 +1126,10 @@
       "repeated": "Documento já no mapa, ficarão como etiquetas simples:",
       "backgroundLater": "A imagem de fundo carrega-se depois, no botão Mapa do novo mapa.",
       "submit": "Importar"
+    },
+    "strip": {
+      "all_one": "Todos os mapas ({{count}})",
+      "all_other": "Todos os mapas ({{count}})"
     }
   }
 }

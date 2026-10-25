@@ -114,19 +114,23 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `e2b7c4f9a1d6` (`relationship_maps.players_can_edit`
-  and `.revision`, spec 42_1, PR #230, not yet merged into `staging`).
-- **Staging database**: `e2b7c4f9a1d6` (= head, map players_can_edit and
+- **Head in the repository**: `b5f1d8e3a7c2` (`rooms.maps_position`, maps row
+  placed among the Grouping items, PR #236, merged into `staging`; applied to
+  the staging and production DBs).
+- **Staging database**: `b5f1d8e3a7c2` (= head, room maps_position, PR #236,
+  applied by hand 2026-10-25 with `.env.staging` loaded, before the PR
+  merges); `e2b7c4f9a1d6` before it (map players_can_edit and
   revision, spec 42, applied by hand 2026-10-24 before PR #230 merged);
-  `a4d9e2c7f1b6` before it (note relational link, applied
+  `a4d9e2c7f1b6` before that (note relational link, applied
   by hand 2026-10-21 with `.env.staging` loaded, before PR #222 merged);
   `d7c1f5a9e3b8` before it (geographic maps, applied 2026-10-17;
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `e2b7c4f9a1d6` (= head, map players_can_edit and
-  revision, spec 42, applied 2026-10-24 with `backend/.env` loaded, ahead of
-  the release that ships it). Before it, `a4d9e2c7f1b6`, applied 2026-10-21 with
+- **Production database**: `b5f1d8e3a7c2` (= head, room maps_position, PR #236,
+  applied 2026-10-25 with `backend/.env` loaded, ahead of the release that
+  ships it). Before it, `e2b7c4f9a1d6` (map players_can_edit and revision,
+  spec 42, applied 2026-10-24). Before it, `a4d9e2c7f1b6`, applied 2026-10-21 with
   `backend/.env` loaded (note relational link, spec 41), ahead
   of release PR #223 (staging to `main`), so until that merges production's
   code does not carry the migration file. Before it, applied 2026-10-19:
@@ -135,10 +139,10 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: none.
+- **Pending on production**: none (the database is at head).
 
 Recent chain, newest first (where each came from):
-`e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -175,6 +179,30 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
+
+### 2026-10-25
+
+- **Maps row on the Room page** (no spec, Andrea's request, PR #236;
+  migration `b5f1d8e3a7c2`): `RoomMapsStrip` under the Room title lists the maps the
+  viewer sees as small cards (kind + Document count; they wrap, one per row on a phone;
+  "All maps (N)" → Maps page). Its "Maps" heading folds it with a caret like a
+  Document group (starts open, not remembered; follow-up PR). With none, "New map" for who may create opens the dialog via `?new=1`.
+  Administrators place the row among the setup's Grouping items (a "Maps
+  row" entry moved like them, never removed): `rooms.maps_position` (Main
+  items before it, 0 = top; migration `b5f1d8e3a7c2`), saved through
+  `PATCH /rooms/{id}`. Grouped by Main Tag, the row sits before the first
+  group placed after it (past the last item, still before "No Main Tag");
+  ungrouped, on top. Duplication copies it; JSON export/import does not.
+- **Spec 44, Room Index tab** (PR #235, frontend only, no migration):
+  the header's burger is gone; every Room page has a tab on the left edge
+  (`RoomIndex`, replacing `GlossaryIndexDrawer`) that opens a card narrow in
+  width and as tall as the screen (product owner, 2026-10-25), with the
+  same Tag sections as before plus a Maps section ("All maps", then every
+  visible map, alphabetical). Its strings moved from hardcoded Italian to
+  the `glossary.*` keys in all 12 languages (title now "Room Index").
+- **Compact Note form** (no migration): Visibility and the Relational link
+  switch share one row in `NoteForm`; on a phone the switch's hint sits
+  under the row and the form's gaps tighten.
 
 ### 2026-10-24
 

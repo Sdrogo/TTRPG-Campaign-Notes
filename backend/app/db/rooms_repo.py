@@ -34,6 +34,7 @@ def room_from_row(row: RoomRow) -> Room:
         players_can_create_documents=row.players_can_create_documents,
         default_visibility=DocumentVisibility(row.default_visibility),
         image_path=row.image_path,
+        maps_position=row.maps_position,
     )
 
 
@@ -70,6 +71,7 @@ async def insert_new_room_rows(
             players_can_create_documents=room.players_can_create_documents,
             default_visibility=room.default_visibility.value,
             image_path=room.image_path,
+            maps_position=room.maps_position,
         )
     )
     # Flushed separately so the Room row exists before its dependents are
@@ -187,13 +189,15 @@ async def delete_membership(session: AsyncSession, room_id: uuid.UUID, user_id: 
 
 
 async def update_room_settings(session: AsyncSession, room: Room) -> None:
-    """Writes the Room's settings: Players' Document creation (D-13) and the
-    default visibility (VR-05). Raises `LookupError` for an unknown Room."""
+    """Writes the Room's settings: Players' Document creation (D-13), the
+    default visibility (VR-05) and the maps row's place among the groups.
+    Raises `LookupError` for an unknown Room."""
     row = await session.get(RoomRow, room.id)
     if row is None:
         raise LookupError(f"Room {room.id} not found")
     row.players_can_create_documents = room.players_can_create_documents
     row.default_visibility = room.default_visibility.value
+    row.maps_position = room.maps_position
     await session.flush()
 
 

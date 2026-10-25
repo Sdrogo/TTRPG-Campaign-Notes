@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Badge, Button, Card, Group, Loader, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { FileArrowUpIcon, PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
@@ -45,6 +45,18 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
   const me = members.data?.find((member) => member.userId === currentUserId);
   // Decision 2: the same rule as for Documents (D-13).
   const canCreate = canCreateDocuments(me, room.data) && !readOnly;
+  // `?new=1`: "New map" on the Room's page when it has none opens the dialog
+  // here; closing it drops the parameter.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const showCreate = creating || (searchParams.get('new') === '1' && canCreate);
+  const closeCreate = () => {
+    setCreating(false);
+    if (searchParams.has('new')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('new');
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   return (
     <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('maps.backToDocuments')} roomId={roomId}>
@@ -103,7 +115,7 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
           </Card>
         ))}
       </SimpleGrid>
-      {creating && (
+      {showCreate && (
         <MapFormModal
           title={t('maps.create')}
           initialValues={{
@@ -114,7 +126,7 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
             kind: 'free',
           }}
           kindChoice
-          // `creating` needs `me`, so the members have loaded.
+          // `showCreate` needs `me`, so the members have loaded.
           members={members.data!}
           creatorId={currentUserId}
           submitLabel={t('maps.create')}
@@ -122,7 +134,7 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
           error={createMap.error?.message ?? null}
           onClose={() => {
             createMap.reset();
-            setCreating(false);
+            closeCreate();
           }}
           onSubmit={(values) =>
             createMap.mutate(values, {
