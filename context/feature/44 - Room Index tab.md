@@ -38,10 +38,15 @@ Defaults picked on 2026-10-25 from the request, to confirm in the PR.
    vertically; on a phone it is the icon only, narrower, so it covers as
    little content as possible. Its accessible name is "Open Room Index" /
    "Close Room Index".
-3. **What the click opens**: a Mantine `Popover` (a card, not a drawer)
-   to the right of the tab, 260px wide, its list scrolling inside when it is
-   taller than 60% of the viewport. A second click on the tab, a click
-   outside, Escape or picking an entry closes it.
+3. **What the click opens** (product owner, 2026-10-25: "La card è
+   compatta in larghezza, ma occupa l'interezza della height dello
+   screen"): a card **narrow in width (260px) and as tall as the whole
+   screen** (`100dvh`), sliding out from the left edge; the tab rides on
+   its right side while it is open, so a second click closes it. Its list
+   scrolls inside the card when it is longer than the screen. A click
+   outside, Escape or picking an entry also closes it. On a phone the card
+   keeps the same width (at most 85% of the screen), so the page stays
+   visible beside it.
 4. **Same sections as today, in the same order**: the Room's Main items in
    the Documents page's order ("Main Tags"), then the other Tags by
    category, uncategorized last ("Other Tags"), each linking to the
@@ -64,14 +69,15 @@ Defaults picked on 2026-10-25 from the request, to confirm in the PR.
 ## Design (frontend only, no backend change, no migration)
 
 - `components/RoomIndex.tsx` replaces `GlossaryIndexDrawer.tsx`: owns the
-  open state, renders the tab as `Popover.Target` and the card as
-  `Popover.Dropdown`; the Tag groups come from `groupTagsByCategory`
+  open state, renders the tab and the full-height card (a Mantine `Drawer`
+  on the left, `size` 260px, no overlay blur, title "Room Index", with the
+  tab moving to the card's right edge while open); the Tag groups come from `groupTagsByCategory`
   (unchanged), the maps from `useMaps(roomId, opened)`.
 - `PageLayout` renders `<RoomIndex roomId>` when given a `roomId`;
   `AppHeader` drops the `Burger`, its state and the drawer.
 - `index.css`: `.room-index-tab` (fixed, `left: 0`, `top: 40%`, z-index
-  between the header's 100 and Mantine overlays' 200, so the open card and
-  modals cover it), the vertical label `.room-index-tab-label`
+  between the header's 100 and Mantine overlays' 200, so modals cover it;
+  while open it sits beside the card, above the drawer's overlay), the vertical label `.room-index-tab-label`
   (`writing-mode: vertical-rl`), hover and `data-opened` states in the
   accent color.
 - i18n, all 12 languages: `glossary.title` becomes "Room Index",
