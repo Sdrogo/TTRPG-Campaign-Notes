@@ -184,8 +184,9 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 - **Maps row on the Room page** (no spec, Andrea's request, PR #236;
   migration `b5f1d8e3a7c2`): `RoomMapsStrip` under the Room title lists the maps the
-  viewer sees as small cards (kind + Document count; they wrap, one per row on a phone; "Maps" + count → Maps page);
-  with none, "New map" for who may create opens the dialog via `?new=1`.
+  viewer sees as small cards (kind + Document count; they wrap, one per row on a phone;
+  "All maps (N)" → Maps page). Its "Maps" heading folds it with a caret like a
+  Document group (starts open, not remembered; follow-up PR). With none, "New map" for who may create opens the dialog via `?new=1`.
   Administrators place the row among the setup's Grouping items (a "Maps
   row" entry moved like them, never removed): `rooms.maps_position` (Main
   items before it, 0 = top; migration `b5f1d8e3a7c2`), saved through
