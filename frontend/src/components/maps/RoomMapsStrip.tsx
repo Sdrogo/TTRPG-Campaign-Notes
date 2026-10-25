@@ -4,6 +4,7 @@ import { CaretDownIcon, CaretRightIcon, GraphIcon, MapTrifoldIcon, PlusIcon } fr
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMaps } from '../../hooks/useMaps';
+import { useBackState } from '../../lib/backNav';
 
 interface RoomMapsStripProps {
   roomId: string;
@@ -25,6 +26,7 @@ interface RoomMapsStripProps {
  */
 export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const maps = useMaps(roomId, true);
   const [expanded, setExpanded] = useState(true);
 
@@ -51,7 +53,7 @@ export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
         <Badge size="sm" variant="light" color="gray" circle aria-hidden="true">
           {maps.data.length}
         </Badge>
-        <Anchor component={Link} to={`/rooms/${roomId}/maps`} size="xs" c="dimmed">
+        <Anchor component={Link} to={`/rooms/${roomId}/maps`} state={backState} size="xs" c="dimmed">
           {t('maps.strip.all', { count: maps.data.length })}
         </Anchor>
       </Group>
@@ -62,6 +64,7 @@ export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
               key={map.id}
               component={Link}
               to={`/rooms/${roomId}/maps/${map.id}`}
+              state={backState}
               withBorder
               radius="md"
               padding="sm"
@@ -87,6 +90,7 @@ export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
             <Card
               component={Link}
               to={`/rooms/${roomId}/maps?new=1`}
+              state={backState}
               withBorder
               radius="md"
               padding="sm"

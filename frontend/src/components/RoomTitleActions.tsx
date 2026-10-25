@@ -22,6 +22,7 @@ import { GenerateMentionsModal } from './mentions/GenerateMentionsModal';
 import { LeaveRoomModal } from './LeaveRoomModal';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from './LabeledActionIcon';
+import { useBackState } from '../lib/backNav';
 
 interface RoomTitleActionsProps {
   roomId: string;
@@ -61,6 +62,7 @@ export function RoomTitleActions({
   viewAsMembers,
 }: RoomTitleActionsProps) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [inviteOpened, setInviteOpened] = useState(false);
@@ -100,6 +102,7 @@ export function RoomTitleActions({
               <ActionIcon
                 component={Link}
                 to={`/rooms/${roomId}/setup`}
+                state={backState}
                 variant="subtle"
                 color="gray"
                 size="lg"
@@ -127,6 +130,7 @@ export function RoomTitleActions({
             <ActionIcon
               component={Link}
               to={`/rooms/${roomId}/maps`}
+              state={backState}
               variant="subtle"
               color="gray"
               size="lg"

@@ -15,6 +15,7 @@ import { MapFormModal } from '../components/maps/MapFormModal';
 import { MapImportModal } from '../components/maps/MapImportModal';
 import { canCreateDocuments } from '../lib/roomPermissions';
 import { formatRelativeTime } from '../lib/time';
+import { useBackState } from '../lib/backNav';
 
 /**
  * `/rooms/:roomId/maps`: the Room's relationship maps the viewer sees (spec 28
@@ -34,6 +35,7 @@ export function RoomMapsPage() {
 
 function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUserId: string }) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const navigate = useNavigate();
   const room = useRoom(roomId, true);
   const maps = useMaps(roomId, true);
@@ -84,6 +86,7 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
             key={map.id}
             component={Link}
             to={`/rooms/${roomId}/maps/${map.id}`}
+            state={backState}
             withBorder
             radius="md"
             p="md"

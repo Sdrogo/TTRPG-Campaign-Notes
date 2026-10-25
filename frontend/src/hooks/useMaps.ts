@@ -29,6 +29,14 @@ function mapQueryKey(roomId: string, mapId: string) {
   return ['rooms', roomId, 'maps', mapId] as const;
 }
 
+/** How one map is read and cached, shared by `useMap` and the header's back check. */
+export function mapQuery(roomId: string, mapId: string) {
+  return {
+    queryKey: mapQueryKey(roomId, mapId),
+    queryFn: async () => toMapDetail(await apiFetch<RawMapDetail>(`${mapsPath(roomId)}/${mapId}`)),
+  };
+}
+
 /** The Room's maps the viewer sees, last edited first (spec 28 Decision 1). */
 export function useMaps(roomId: string, enabled: boolean) {
   return useQuery<RelationshipMap[]>({
@@ -51,8 +59,7 @@ export const MAP_REFRESH_MS = 5000;
  */
 export function useMap(roomId: string, mapId: string, enabled: boolean, refresh = false) {
   return useQuery<RelationshipMapDetail>({
-    queryKey: mapQueryKey(roomId, mapId),
-    queryFn: async () => toMapDetail(await apiFetch<RawMapDetail>(`${mapsPath(roomId)}/${mapId}`)),
+    ...mapQuery(roomId, mapId),
     enabled,
     refetchInterval: (query) => (refresh && query.state.data?.kind === 'free' ? MAP_REFRESH_MS : false),
   });

@@ -49,6 +49,7 @@ import type { Member } from '../types/member';
 import type { MainItem, Tag } from '../types/tag';
 import { itemLabel } from '../lib/mainItems';
 import { LabeledActionIcon } from '../components/LabeledActionIcon';
+import { useBackState } from '../lib/backNav';
 
 /**
  * `/rooms/:roomId/documents`: the Documents the viewer can see, filterable by
@@ -79,6 +80,7 @@ export function RoomDocumentsPage() {
 
 function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; currentUserId: string }) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const navigate = useNavigate();
   const [createOpened, setCreateOpened] = useState(false);
   const room = useRoom(roomId, true);
@@ -165,6 +167,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             <LabeledActionIcon
               component={Link}
               to={`/rooms/${roomId}/maps`}
+              state={backState}
               variant="subtle"
               color="gray"
               size="lg"

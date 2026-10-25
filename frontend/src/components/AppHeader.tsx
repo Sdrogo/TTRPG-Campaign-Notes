@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Box, Group, Title, UnstyledButton } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
@@ -12,7 +12,7 @@ import { QuickNavMenu } from './QuickNavMenu';
 import { SearchButton } from './search/SearchButton';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from './LabeledActionIcon';
-import { backDestination } from '../lib/backNav';
+import { useHierarchicalBack } from '../hooks/useHierarchicalBack';
 
 interface AppHeaderProps {
   /** Given on a Room-scoped page, this shows the Room's search (spec 21).
@@ -46,20 +46,17 @@ const HEADER_FIXED_AT = 80;
  */
 export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { pinned } = useHeadroom({ fixedAt: HEADER_FIXED_AT });
   // While previewing as a member, the bar and its banner never slide away.
   const viewAs = useViewAs();
 
-  const location = useLocation();
-
   // Hierarchical, never the browser history: the page this one was opened
-  // from (a map from a Document...), else its fixed parent. It replaces the
-  // current entry so back and the browser's Back never ping-pong.
-  const destination = backDestination(location.state, backTo ?? '/');
+  // from (a map from a Document...), skipping Documents and maps deleted
+  // since, else its fixed parent.
+  const { destination, goBack } = useHierarchicalBack(backTo ?? '/');
   const label = backTo && destination !== backTo ? t('common.back') : backLabel;
   const handleBack = () => {
-    void navigate(destination, { replace: true });
+    void goBack();
   };
 
   return (
