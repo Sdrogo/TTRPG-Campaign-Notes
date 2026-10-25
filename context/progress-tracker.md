@@ -182,6 +182,9 @@ One line per unit; dates 2026, newest first. Spec files live in
   no migration): `RoomMapsStrip` under the Room title lists the maps the
   viewer sees (one sideways-scrolling line, "Maps" + count → Maps page);
   with none, "New map" for who may create opens the dialog via `?new=1`.
+- **Compact Note form** (no migration): Visibility and the Relational link
+  switch share one row in `NoteForm`; on a phone the switch's hint sits
+  under the row and the form's gaps tighten.
 
 ### 2026-10-24
 
