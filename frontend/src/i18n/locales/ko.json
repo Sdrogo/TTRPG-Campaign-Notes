@@ -610,9 +610,11 @@
     "applied_other": "언급 {{count}}개를 추가했습니다"
   },
   "glossary": {
-    "title": "태그 색인",
-    "openToggle": "태그 색인 열기",
-    "closeToggle": "태그 색인 닫기",
+    "title": "룸 색인",
+    "openToggle": "룸 색인 열기",
+    "closeToggle": "룸 색인 닫기",
+    "tab": "색인",
+    "allMaps": "모든 지도",
     "mainTags": "주요 태그",
     "otherTags": "기타 태그",
     "empty": "이 룸에는 태그가 없습니다."

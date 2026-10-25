@@ -176,6 +176,16 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-25
+
+- **Spec 44, Room Index tab** (PR #235, frontend only, no migration):
+  the header's burger is gone; every Room page has a tab on the left edge
+  (`RoomIndex`, replacing `GlossaryIndexDrawer`) that opens a card narrow in
+  width and as tall as the screen (product owner, 2026-10-25), with the
+  same Tag sections as before plus a Maps section ("All maps", then every
+  visible map, alphabetical). Its strings moved from hardcoded Italian to
+  the `glossary.*` keys in all 12 languages (title now "Room Index").
+
 ### 2026-10-24
 
 - **43_1, 43_2 Real-time map editing** (PR #229, no migration): per-item
@@ -599,11 +609,6 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-- **44, Room Index tab** (product owner, 2026-10-25): ticket in
-  `context/feature/44 - Room Index tab.md`. The Room's Index leaves the
-  header's burger for a tab fixed on the left edge of every Room page that
-  opens a small card, and gains a Maps section. Frontend only, no
-  migration. Next: build it once the ticket is confirmed.
 - **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
   editor, PR #211) and 38_3 (JSON import/export) built; first real test is
   the Shibuya map. `requirements.md` §1 and a new `FR-` need the product
