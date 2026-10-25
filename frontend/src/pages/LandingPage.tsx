@@ -14,17 +14,23 @@ import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { SignInButtons } from '../components/SignInButtons';
+import type { TourStepId } from '../lib/demo/tour';
 
 /** The anchor of the sign-in block; `SignInRequired` links to `/#sign-in`. */
 const SIGN_IN_ANCHOR = 'sign-in';
 
-const FEATURES: readonly { key: 'rooms' | 'documents' | 'visibility' | 'comments' | 'maps' | 'export'; icon: Icon }[] = [
-  { key: 'rooms', icon: UsersThreeIcon },
-  { key: 'documents', icon: ScrollIcon },
-  { key: 'visibility', icon: EyeSlashIcon },
-  { key: 'comments', icon: ChatsCircleIcon },
-  { key: 'maps', icon: MapTrifoldIcon },
-  { key: 'export', icon: ExportIcon },
+// `tour`: the step of the Demo's tour that shows the feature (spec 45_3).
+const FEATURES: readonly {
+  key: 'rooms' | 'documents' | 'visibility' | 'comments' | 'maps' | 'export';
+  icon: Icon;
+  tour: TourStepId | null;
+}[] = [
+  { key: 'rooms', icon: UsersThreeIcon, tour: 'room' },
+  { key: 'documents', icon: ScrollIcon, tour: 'document' },
+  { key: 'visibility', icon: EyeSlashIcon, tour: 'visibility' },
+  { key: 'comments', icon: ChatsCircleIcon, tour: 'comments' },
+  { key: 'maps', icon: MapTrifoldIcon, tour: 'freeMap' },
+  { key: 'export', icon: ExportIcon, tour: null },
 ];
 
 const STEPS = ['create', 'invite', 'write'] as const;
@@ -110,7 +116,7 @@ export function LandingPage({ signedIn }: LandingPageProps) {
               {t('landing.featuresTitle')}
             </Title>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-              {FEATURES.map(({ key, icon: FeatureIcon }) => (
+              {FEATURES.map(({ key, icon: FeatureIcon, tour }) => (
                 <Card key={key} withBorder radius="md" p="lg">
                   <Stack gap="xs">
                     <FeatureIcon size={32} weight="duotone" color="var(--text-muted)" aria-hidden="true" />
@@ -120,6 +126,11 @@ export function LandingPage({ signedIn }: LandingPageProps) {
                     <Text size="sm" c="dimmed">
                       {t(`landing.features.${key}.text`)}
                     </Text>
+                    {tour && (
+                      <Anchor href={`/demo?step=${tour}`} size="sm">
+                        {t('landing.seeInDemo')}
+                      </Anchor>
+                    )}
                   </Stack>
                 </Card>
               ))}

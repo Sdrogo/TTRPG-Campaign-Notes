@@ -77,6 +77,7 @@
     "signIn": "Anmelden",
     "openMyRooms": "Meine Räume öffnen",
     "tryDemo": "Demo ausprobieren",
+    "seeInDemo": "In der Demo ansehen",
     "featuresTitle": "Was du tun kannst",
     "features": {
       "rooms": {
@@ -124,7 +125,71 @@
     "exit": "Demo verlassen",
     "readOnly": "Die Demo ist schreibgeschützt: Melde dich an, um deinen eigenen Raum zu erstellen.",
     "unavailable": "Die Demo braucht Websitedaten, die dieser Browser blockiert.",
-    "accountNotice": "In der Demo gibt es kein Konto: Melde dich an, um dein eigenes zu haben."
+    "accountNotice": "In der Demo gibt es kein Konto: Melde dich an, um dein eigenes zu haben.",
+    "restartTour": "Tour neu starten"
+  },
+  "tour": {
+    "counter": "{{current}} von {{total}}",
+    "next": "Weiter",
+    "back": "Zurück",
+    "skip": "Tour überspringen",
+    "signIn": "Anmelden und eigenen Raum erstellen",
+    "keepExploring": "Weiter erkunden",
+    "label": "Demo-Tour",
+    "steps": {
+      "room": {
+        "title": "Ein Raum ist eine Kampagne",
+        "body": "Die ganze Kampagne lebt hier, gruppiert unter den Haupt-Tags: Charaktere, Orte, Ereignisse. Der Master leitet den Raum; Player treten über einen Link bei."
+      },
+      "roomIndex": {
+        "title": "Der Index des Raums",
+        "body": "Dieser Reiter öffnet den Index des Raums: jeder Tag und jede Karte, von jeder Seite aus einen Klick entfernt."
+      },
+      "documentCard": {
+        "title": "Dokumente",
+        "body": "Jede Karte ist ein Dokument: ein Charakter, ein Ort, ein Gegenstand. Das Abzeichen zeigt, wer es sehen kann."
+      },
+      "document": {
+        "title": "Die Seite eines Dokuments",
+        "body": "Name, Untertitel und Beschreibung, daneben Bilder und Owner. Owner können es bearbeiten, der Master ebenso."
+      },
+      "documentText": {
+        "title": "Notizen und Erwähnungen",
+        "body": "Notizen fügen Absätze unter der Beschreibung hinzu. Eine #Erwähnung verlinkt ein anderes Dokument, und der Link gilt in beide Richtungen."
+      },
+      "mentionMap": {
+        "title": "Die Erwähnungskarte",
+        "body": "Erwähnungen zeichnen eine lebendige Karte, wie Dokumente zusammenhängen. Sie folgt dem, was du schreibst."
+      },
+      "comments": {
+        "title": "Kommentare und Antworten",
+        "body": "Jedes Dokument hat seinen Thread: Antworten, Reaktionen, Beiträge als Charakter und Kommentare, die nur manche Mitglieder sehen."
+      },
+      "visibility": {
+        "title": "Sichtbarkeit und Enthüllung",
+        "body": "Dieses Dokument ist nur für den Master. Jedes Dokument, jede Notiz und jeder Kommentar hat eine eigene Sichtbarkeit, und der Master enthüllt sie über das ⋮-Menü, wenn die Geschichte es verlangt."
+      },
+      "viewAs": {
+        "title": "Sieh, was die Player sehen",
+        "body": "Wechsle zu Marco oder Giulia: Was sie nicht sehen dürfen, verschwindet. Der Master kann den Raum genauso aus Sicht jedes Mitglieds ansehen."
+      },
+      "search": {
+        "title": "Suche",
+        "body": "Durchsuche jedes Dokument, jede Notiz und jeden Kommentar, den du sehen kannst. Strg K öffnet sie überall im Raum."
+      },
+      "freeMap": {
+        "title": "Freie Tafeln",
+        "body": "Dokumentkarten und Pfeile auf einer freien Tafel, um zu verfolgen, wer was will. Der Master kann auch Player darauf zeichnen lassen."
+      },
+      "geoMap": {
+        "title": "Geografische Karten",
+        "body": "Setze Orte auf ein Kartenbild und umreiße Gebiete; jeder Ort führt zu seinem Dokument."
+      },
+      "end": {
+        "title": "Das ist Ex Libris",
+        "body": "Melde dich an, um deinen eigenen Raum zu erstellen, oder erkunde die Demo weiter."
+      }
+    }
   },
   "header": {
     "account": "Dein Konto",

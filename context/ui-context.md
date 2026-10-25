@@ -823,5 +823,14 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   where that action shows its errors (form error or `notifyError` toast).
 - The Account page shows a `FullPageMessage` ("there is no account in the
   demo") with a way back to the Rooms.
-- Screenshots: `demo/` in the project files.
+- **Tour** (spec 45_3): a fixed `Paper` card (340px, `withBorder`,
+  `shadow="lg"`, `md` radius, z-index 151) with a dimmed "Demo tour · N of
+  13" line, an `h2` at `h4` size, `sm` body, then Skip (subtle gray) on
+  the left and Back (default) / Next (filled) on the right, all
+  `compact-sm`; the last card has Keep exploring (default) and Sign in
+  (filled). The lit element is `.demo-tour-spot` (z-index 150, `md`
+  radius, a 55% black shadow around it); with nothing to light the whole
+  page dims at 40%. The banner gains "Restart tour" (default). Landing
+  feature cards gain a `sm` "See it in the demo" anchor.
+- Screenshots: `demo/` (and `demo/tour/`) in the project files.
 

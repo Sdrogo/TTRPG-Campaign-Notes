@@ -28,6 +28,7 @@ content.
 | Character | Personaggio | Character | Charakter | Personaje | Personnage | Personage | Postać | Personagem | Персонаж | キャラクター | 角色 | 캐릭터 |
 | Relational link (a flagged Note, spec 41) | Link relazionale | Relational link | Beziehungslink | Enlace relacional | Lien relationnel | Relatielink | Link relacyjny | Ligação relacional | Связующая ссылка | 関係リンク | 关系链接 | 관계 링크 |
 | Demo (the sample Room, spec 45_2) | Demo | Demo | Demo | Demo | Démo | Demo | Demo | Demo | Демо | デモ | 演示 | 데모 |
+| Tour (the Demo's guided tour, spec 45_3) | Tour | Tour | Tour | Tour | Visite | Rondleiding | Przewodnik | Visita | Тур | ツアー | 导览 | 투어 |
 
 The Italian and English columns were taken from `it.json` and `en.json` on
 2026-10-12 (the role names "Master", "Player", "Admin" and "Owner" stay in

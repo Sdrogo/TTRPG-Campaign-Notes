@@ -77,6 +77,7 @@
     "signIn": "Iniciar sesión",
     "openMyRooms": "Abrir mis Salas",
     "tryDemo": "Prueba la demo",
+    "seeInDemo": "Verlo en la demo",
     "featuresTitle": "Qué puedes hacer",
     "features": {
       "rooms": {
@@ -124,7 +125,71 @@
     "exit": "Salir de la demo",
     "readOnly": "La demo es de solo lectura: inicia sesión para crear tu propia Sala.",
     "unavailable": "La demo necesita los datos del sitio, que este navegador bloquea.",
-    "accountNotice": "En la demo no hay cuenta: inicia sesión para tener la tuya."
+    "accountNotice": "En la demo no hay cuenta: inicia sesión para tener la tuya.",
+    "restartTour": "Repetir el tour"
+  },
+  "tour": {
+    "counter": "{{current}} de {{total}}",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "skip": "Saltar el tour",
+    "signIn": "Inicia sesión y crea tu Sala",
+    "keepExploring": "Seguir explorando",
+    "label": "Tour de la demo",
+    "steps": {
+      "room": {
+        "title": "Una Sala es una campaña",
+        "body": "Toda la campaña vive aquí, agrupada bajo las Etiquetas principales: personajes, lugares, eventos. El Master dirige la Sala; los Players entran con un enlace."
+      },
+      "roomIndex": {
+        "title": "El Índice de la Sala",
+        "body": "Esta pestaña abre el índice de la Sala: cada Etiqueta y cada mapa, a un clic desde cualquier página."
+      },
+      "documentCard": {
+        "title": "Los Documentos",
+        "body": "Cada tarjeta es un Documento: un personaje, un lugar, un objeto. La insignia indica quién puede verlo."
+      },
+      "document": {
+        "title": "La página de un Documento",
+        "body": "Nombre, subtítulo y descripción, con imágenes y Owners al lado. Los Owners pueden editarlo, y el Master también."
+      },
+      "documentText": {
+        "title": "Notas y menciones",
+        "body": "Las Notas añaden párrafos bajo la descripción. Una #mención enlaza otro Documento, y el enlace funciona en los dos sentidos."
+      },
+      "mentionMap": {
+        "title": "El mapa de menciones",
+        "body": "Las menciones dibujan un mapa vivo de cómo se relacionan los Documentos. Sigue lo que escribes."
+      },
+      "comments": {
+        "title": "Comentarios y respuestas",
+        "body": "Cada Documento tiene su hilo: respuestas, reacciones, mensajes como personaje y Comentarios que solo algunos miembros ven."
+      },
+      "visibility": {
+        "title": "Visibilidad y Revelar",
+        "body": "Este Documento es solo para el Master. Cada Documento, Nota y Comentario tiene su propia visibilidad, y el Master lo revela desde el menú ⋮ cuando la historia lo pide."
+      },
+      "viewAs": {
+        "title": "Mira lo que ven los Players",
+        "body": "Cambia a Marco o Giulia: lo que no pueden ver desaparece. El Master puede ver la Sala como cualquier miembro de la misma forma."
+      },
+      "search": {
+        "title": "Buscar",
+        "body": "Busca en cada Documento, Nota y Comentario que puedes ver. Ctrl K lo abre desde cualquier punto de la Sala."
+      },
+      "freeMap": {
+        "title": "Pizarras libres",
+        "body": "Tarjetas de Documentos y flechas en una pizarra libre, para seguir quién quiere qué. El Master puede dejar que los Players dibujen también."
+      },
+      "geoMap": {
+        "title": "Mapas geográficos",
+        "body": "Fija lugares sobre una imagen y traza regiones; cada lugar lleva a su Documento."
+      },
+      "end": {
+        "title": "Esto es Ex Libris",
+        "body": "Inicia sesión para crear tu propia Sala, o sigue explorando la demo."
+      }
+    }
   },
   "header": {
     "account": "Tu cuenta",

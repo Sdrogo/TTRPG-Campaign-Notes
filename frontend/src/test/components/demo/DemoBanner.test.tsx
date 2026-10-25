@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import i18n from '../../../i18n';
 import { apiFetch } from '../../../lib/apiClient';
 import { isDemoMode, setDemoMode } from '../../../lib/demo/demoMode';
+import { tourStep } from '../../../lib/demo/tour';
 import { rawAccount } from '../../fixtures';
 import { renderWithProviders } from '../../utils';
 import { AppHeader } from '../../../components/AppHeader';
@@ -102,5 +103,14 @@ describe('DemoBanner', () => {
     await act(() => i18n.changeLanguage('en'));
 
     expect(invalidate).toHaveBeenCalled();
+  });
+
+  it('restarts the tour from its first step', async () => {
+    const { user } = render('/rooms/demo/maps');
+
+    await user.click(screen.getByRole('button', { name: 'Rivedi il tour' }));
+
+    expect(tourStep()).toBe(0);
+    expect(screen.getByRole('dialog', { name: 'Una Stanza è una campagna' })).toBeInTheDocument();
   });
 });

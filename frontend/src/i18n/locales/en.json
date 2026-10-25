@@ -77,6 +77,7 @@
     "signIn": "Sign in",
     "openMyRooms": "Open my Rooms",
     "tryDemo": "Try the demo",
+    "seeInDemo": "See it in the demo",
     "featuresTitle": "What you can do",
     "features": {
       "rooms": {
@@ -124,7 +125,71 @@
     "exit": "Exit demo",
     "readOnly": "The demo is read-only: sign in to create your own Room.",
     "unavailable": "The demo needs site storage, which this browser is blocking.",
-    "accountNotice": "In the demo there is no account: sign in to have your own."
+    "accountNotice": "In the demo there is no account: sign in to have your own.",
+    "restartTour": "Restart tour"
+  },
+  "tour": {
+    "counter": "{{current}} of {{total}}",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip tour",
+    "signIn": "Sign in to create your Room",
+    "keepExploring": "Keep exploring",
+    "label": "Demo tour",
+    "steps": {
+      "room": {
+        "title": "A Room is one campaign",
+        "body": "Everything in the campaign lives here, grouped under the Main Tags: characters, places, events. The Master runs the Room; Players join with a link."
+      },
+      "roomIndex": {
+        "title": "The Room Index",
+        "body": "This tab opens the Room's index: every Tag and every map, one click away from any page."
+      },
+      "documentCard": {
+        "title": "Documents",
+        "body": "Each card is a Document: a character, a place, an object. The badge says who can see it."
+      },
+      "document": {
+        "title": "A Document's page",
+        "body": "Name, subtitle and description, with images and Owners beside them. Owners can edit it, and so can the Master."
+      },
+      "documentText": {
+        "title": "Notes and mentions",
+        "body": "Notes add paragraphs under the description. A #mention links another Document, and the link works both ways."
+      },
+      "mentionMap": {
+        "title": "The mention map",
+        "body": "Mentions draw a live map of how Documents are tied together. It follows what you write."
+      },
+      "comments": {
+        "title": "Comments and replies",
+        "body": "Every Document has its thread: replies, reactions, posts in character, and Comments only some members see."
+      },
+      "visibility": {
+        "title": "Visibility and Reveal",
+        "body": "This Document is for the Master only. Every Document, Note and Comment has its own visibility, and the Master reveals it from the ⋮ menu when the story calls for it."
+      },
+      "viewAs": {
+        "title": "See what the Players see",
+        "body": "Switch to Marco or Giulia: what they cannot see disappears. The Master can preview the Room as any member in the same way."
+      },
+      "search": {
+        "title": "Search",
+        "body": "Search every Document, Note and Comment you can see. Ctrl K opens it from anywhere in the Room."
+      },
+      "freeMap": {
+        "title": "Free boards",
+        "body": "Document cards and arrows on a free board, to follow who wants what. The Master can let Players draw on it too."
+      },
+      "geoMap": {
+        "title": "Geographic maps",
+        "body": "Pin places on a map image and outline regions; each place leads to its Document."
+      },
+      "end": {
+        "title": "That's Ex Libris",
+        "body": "Sign in to create your own Room, or keep exploring the demo."
+      }
+    }
   },
   "header": {
     "account": "Your account",

@@ -77,6 +77,7 @@
     "signIn": "Se connecter",
     "openMyRooms": "Ouvrir mes Salles",
     "tryDemo": "Essayer la démo",
+    "seeInDemo": "Voir dans la démo",
     "featuresTitle": "Ce que tu peux faire",
     "features": {
       "rooms": {
@@ -124,7 +125,71 @@
     "exit": "Quitter la démo",
     "readOnly": "La démo est en lecture seule : connectez-vous pour créer votre propre Salle.",
     "unavailable": "La démo a besoin des données du site, que ce navigateur bloque.",
-    "accountNotice": "Dans la démo, il n'y a pas de compte : connectez-vous pour avoir le vôtre."
+    "accountNotice": "Dans la démo, il n'y a pas de compte : connectez-vous pour avoir le vôtre.",
+    "restartTour": "Revoir la visite"
+  },
+  "tour": {
+    "counter": "{{current}} sur {{total}}",
+    "next": "Suivant",
+    "back": "Retour",
+    "skip": "Passer la visite",
+    "signIn": "Se connecter et créer sa Salle",
+    "keepExploring": "Continuer à explorer",
+    "label": "Visite de la démo",
+    "steps": {
+      "room": {
+        "title": "Une Salle est une campagne",
+        "body": "Toute la campagne vit ici, rangée sous les Tags principaux : personnages, lieux, événements. Le Master dirige la Salle ; les Players la rejoignent par un lien."
+      },
+      "roomIndex": {
+        "title": "L'Index de la Salle",
+        "body": "Cet onglet ouvre l'index de la Salle : chaque Tag et chaque carte, à un clic de n'importe quelle page."
+      },
+      "documentCard": {
+        "title": "Les Documents",
+        "body": "Chaque carte est un Document : un personnage, un lieu, un objet. Le badge indique qui peut le voir."
+      },
+      "document": {
+        "title": "La page d'un Document",
+        "body": "Nom, sous-titre et description, avec les images et les Owners à côté. Les Owners peuvent le modifier, le Master aussi."
+      },
+      "documentText": {
+        "title": "Notes et mentions",
+        "body": "Les Notes ajoutent des paragraphes sous la description. Une #mention relie un autre Document, et le lien vaut dans les deux sens."
+      },
+      "mentionMap": {
+        "title": "La carte des mentions",
+        "body": "Les mentions dessinent une carte vivante des liens entre Documents. Elle suit ce que vous écrivez."
+      },
+      "comments": {
+        "title": "Commentaires et réponses",
+        "body": "Chaque Document a son fil : réponses, réactions, messages en personnage et Commentaires que seuls certains membres voient."
+      },
+      "visibility": {
+        "title": "Visibilité et Révélation",
+        "body": "Ce Document est réservé au Master. Chaque Document, Note et Commentaire a sa propre visibilité, et le Master le révèle depuis le menu ⋮ quand l'histoire le demande."
+      },
+      "viewAs": {
+        "title": "Voir ce que voient les Players",
+        "body": "Passez à Marco ou Giulia : ce qu'ils ne peuvent pas voir disparaît. Le Master peut voir la Salle comme n'importe quel membre de la même façon."
+      },
+      "search": {
+        "title": "Rechercher",
+        "body": "Cherchez dans chaque Document, Note et Commentaire que vous pouvez voir. Ctrl K l'ouvre de n'importe où dans la Salle."
+      },
+      "freeMap": {
+        "title": "Tableaux libres",
+        "body": "Des cartes de Documents et des flèches sur un tableau libre, pour suivre qui veut quoi. Le Master peut aussi laisser les Players y dessiner."
+      },
+      "geoMap": {
+        "title": "Cartes géographiques",
+        "body": "Placez des lieux sur une image et tracez des régions ; chaque lieu mène à son Document."
+      },
+      "end": {
+        "title": "Voilà Ex Libris",
+        "body": "Connectez-vous pour créer votre propre Salle, ou continuez à explorer la démo."
+      }
+    }
   },
   "header": {
     "account": "Ton compte",

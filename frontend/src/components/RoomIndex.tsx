@@ -49,6 +49,7 @@ export function RoomIndex({ roomId }: RoomIndexProps) {
     <>
       <UnstyledButton
         className="room-index-tab"
+        data-tour="room-index"
         aria-label={opened ? t('glossary.closeToggle') : t('glossary.openToggle')}
         aria-expanded={opened}
         data-opened={opened || undefined}

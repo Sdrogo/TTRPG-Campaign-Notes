@@ -351,7 +351,13 @@ function DocumentPanel({
             badge, the read-aloud controls and a "⋮" that unfolds the other actions: beside it
             on a big screen, on a row of their own on a phone so they never squeeze the name
             (Andrea, 2026-10-15). */}
-        <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
+        <Group
+          justify="space-between"
+          align="flex-start"
+          wrap="nowrap"
+          preventGrowOverflow={false}
+          data-tour="document"
+        >
           <Stack gap={0} style={{ minWidth: 0, flex: 1 }}>
             <Title
               order={1}
@@ -377,7 +383,13 @@ function DocumentPanel({
               </Text>
             )}
           </Stack>
-          <Group gap="xs" wrap="nowrap" preventGrowOverflow={false} style={{ flexShrink: 0 }}>
+          <Group
+            gap="xs"
+            wrap="nowrap"
+            preventGrowOverflow={false}
+            style={{ flexShrink: 0 }}
+            data-tour="document-visibility"
+          >
             {badges}
             {readAloud}
             {!phone && actionsExpanded && actions}
@@ -497,7 +509,7 @@ function DocumentPanel({
               </Paper>
             </Stack>
           </Box>
-          <Stack gap="md" className="document-body-text">
+          <Stack gap="md" className="document-body-text" data-tour="document-text">
             {editing ? (
               <DocumentEditForm
                 roomId={roomId}

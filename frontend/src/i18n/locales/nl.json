@@ -77,6 +77,7 @@
     "signIn": "Inloggen",
     "openMyRooms": "Mijn Kamers openen",
     "tryDemo": "Probeer de demo",
+    "seeInDemo": "Bekijk het in de demo",
     "featuresTitle": "Wat je kunt doen",
     "features": {
       "rooms": {
@@ -124,7 +125,71 @@
     "exit": "Demo verlaten",
     "readOnly": "De demo is alleen-lezen: log in om je eigen Kamer te maken.",
     "unavailable": "De demo heeft sitegegevens nodig, die deze browser blokkeert.",
-    "accountNotice": "In de demo is er geen account: log in om je eigen account te hebben."
+    "accountNotice": "In de demo is er geen account: log in om je eigen account te hebben.",
+    "restartTour": "Rondleiding opnieuw"
+  },
+  "tour": {
+    "counter": "{{current}} van {{total}}",
+    "next": "Volgende",
+    "back": "Terug",
+    "skip": "Rondleiding overslaan",
+    "signIn": "Log in en maak je Kamer",
+    "keepExploring": "Verder verkennen",
+    "label": "Rondleiding door de demo",
+    "steps": {
+      "room": {
+        "title": "Een Kamer is een campagne",
+        "body": "De hele campagne leeft hier, gegroepeerd onder de hoofdtags: personages, plaatsen, gebeurtenissen. De Master leidt de Kamer; Players doen mee via een link."
+      },
+      "roomIndex": {
+        "title": "De Index van de Kamer",
+        "body": "Dit tabblad opent de index van de Kamer: elke Tag en elke kaart, één klik vanaf elke pagina."
+      },
+      "documentCard": {
+        "title": "Documenten",
+        "body": "Elke kaart is een Document: een personage, een plaats, een voorwerp. Het label zegt wie het kan zien."
+      },
+      "document": {
+        "title": "De pagina van een Document",
+        "body": "Naam, ondertitel en beschrijving, met afbeeldingen en Owners ernaast. Owners kunnen het bewerken, de Master ook."
+      },
+      "documentText": {
+        "title": "Notities en vermeldingen",
+        "body": "Notities voegen alinea's toe onder de beschrijving. Een #vermelding linkt naar een ander Document, en de link werkt in beide richtingen."
+      },
+      "mentionMap": {
+        "title": "De vermeldingskaart",
+        "body": "Vermeldingen tekenen een levende kaart van hoe Documenten samenhangen. Ze volgt wat je schrijft."
+      },
+      "comments": {
+        "title": "Opmerkingen en antwoorden",
+        "body": "Elk Document heeft zijn draad: antwoorden, reacties, berichten als personage en Opmerkingen die alleen sommige leden zien."
+      },
+      "visibility": {
+        "title": "Zichtbaarheid en Onthullen",
+        "body": "Dit Document is alleen voor de Master. Elk Document, elke Notitie en Opmerking heeft een eigen zichtbaarheid, en de Master onthult het via het ⋮-menu als het verhaal erom vraagt."
+      },
+      "viewAs": {
+        "title": "Zie wat de Players zien",
+        "body": "Wissel naar Marco of Giulia: wat zij niet mogen zien verdwijnt. De Master kan de Kamer zo bekijken als elk lid."
+      },
+      "search": {
+        "title": "Zoeken",
+        "body": "Zoek in elk Document, elke Notitie en Opmerking die je kunt zien. Ctrl K opent het overal in de Kamer."
+      },
+      "freeMap": {
+        "title": "Vrije borden",
+        "body": "Documentkaarten en pijlen op een vrij bord, om bij te houden wie wat wil. De Master kan Players er ook op laten tekenen."
+      },
+      "geoMap": {
+        "title": "Geografische kaarten",
+        "body": "Zet plaatsen op een kaartafbeelding en omlijn gebieden; elke plaats leidt naar zijn Document."
+      },
+      "end": {
+        "title": "Dit is Ex Libris",
+        "body": "Log in om je eigen Kamer te maken, of verken de demo verder."
+      }
+    }
   },
   "header": {
     "account": "Jouw account",
