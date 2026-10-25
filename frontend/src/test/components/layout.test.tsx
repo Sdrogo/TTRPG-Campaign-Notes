@@ -265,6 +265,29 @@ describe('AppHeader', () => {
       expect(fetchMock).toHaveBeenCalledWith('/rooms/r1/documents/d1');
     });
 
+    it('navigates once on a double click while the check runs', async () => {
+      let answer: (value: unknown) => void = () => {};
+      fetchMock.mockImplementation((path: string) =>
+        path === '/rooms/r1/documents/d1'
+          ? new Promise((resolve) => (answer = resolve))
+          : Promise.resolve(rawAccount()),
+      );
+      const checks = () => fetchMock.mock.calls.filter(([path]) => path === '/rooms/r1/documents/d1').length;
+      renderOpenedFrom({ from: '/rooms/r1/documents/d1' });
+      const user = userEvent.setup();
+
+      await user.dblClick(screen.getByRole('button', { name: /Back|Indietro/ }));
+      answer(rawDocument({ id: 'd1' }));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/documents/d1', { replace: true }));
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(checks()).toBe(1);
+
+      // Once it has gone, the arrow works again.
+      await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
+      await waitFor(() => expect(checks()).toBe(2));
+    });
+
     it('goes to a list page on the trail without checking it', async () => {
       renderOpenedFrom({ from: '/rooms/r1/maps' });
       const user = userEvent.setup();

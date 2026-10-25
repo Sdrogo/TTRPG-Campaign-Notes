@@ -1,4 +1,5 @@
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiError } from '../lib/apiClient';
 import { backCandidates, backDestination, backTarget } from '../lib/backNav';
@@ -29,22 +30,32 @@ async function stillThere(queryClient: QueryClient, path: string): Promise<boole
  * The header's back arrow (`lib/backNav.ts`): where it goes first, and the
  * handler that goes to the nearest place on the trail still there, else to
  * the page's fixed parent `fallback`. It replaces the current entry so back
- * and the browser's Back never ping-pong.
+ * and the browser's Back never ping-pong. A click while the checks are
+ * still running does nothing, so a double click navigates once.
  */
 export function useHierarchicalBack(fallback: string) {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const going = useRef(false);
+
   const goBack = async () => {
-    const candidates = backCandidates(location.state, fallback);
-    for (const candidate of candidates.slice(0, -1)) {
-      if (await stillThere(queryClient, candidate.path)) {
-        void navigate(candidate.path, { replace: true, state: candidate.state });
-        return;
+    if (going.current) return;
+    going.current = true;
+    try {
+      const candidates = backCandidates(location.state, fallback);
+      for (const candidate of candidates.slice(0, -1)) {
+        if (await stillThere(queryClient, candidate.path)) {
+          void navigate(candidate.path, { replace: true, state: candidate.state });
+          return;
+        }
       }
+      void navigate(fallback, { replace: true });
+    } finally {
+      // The header can stay mounted (one Document to another), so the next back works.
+      going.current = false;
     }
-    void navigate(fallback, { replace: true });
   };
 
   return { destination: backDestination(location.state, fallback), goBack };
