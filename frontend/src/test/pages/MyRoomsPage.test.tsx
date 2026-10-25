@@ -26,6 +26,13 @@ describe('MyRoomsPage', () => {
     expect(await screen.findByText('La Cripta')).toBeInTheDocument();
   });
 
+  it('waits on a loader while the session is resolving', () => {
+    sessionMock.mockReturnValue({ session: null, loading: true } as SessionState);
+    const { container } = renderWithProviders(<MyRoomsPage />, { route: '/rooms' });
+
+    expect(container.querySelector('.mantine-Loader-root')).toBeInTheDocument();
+  });
+
   it('sends a signed-out visitor to the sign-in block', () => {
     sessionMock.mockReturnValue({ session: null, loading: false } as SessionState);
     renderWithProviders(<MyRoomsPage />, { route: '/rooms' });

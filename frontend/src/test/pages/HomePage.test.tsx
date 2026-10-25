@@ -198,4 +198,32 @@ describe('HomePage', () => {
 
     expect(screen.getByText('friend link page')).toBeInTheDocument();
   });
+
+  describe('the sign-in block', () => {
+    const scrollIntoView = vi.fn();
+    beforeEach(() => {
+      scrollIntoView.mockReset();
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it('is where the Sign in buttons scroll to', async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<HomePage />);
+
+      for (const button of screen.getAllByRole('button', { name: 'Accedi' })) {
+        await user.click(button);
+      }
+
+      expect(scrollIntoView).toHaveBeenCalledTimes(2);
+      expect(scrollIntoView.mock.contexts[0]).toHaveAttribute('id', 'sign-in');
+    });
+
+    // "Go to sign in" links point to /#sign-in.
+    it('is scrolled to when the address names it', () => {
+      renderWithProviders(<HomePage />, { route: '/#sign-in' });
+
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    });
+  });
 });
+

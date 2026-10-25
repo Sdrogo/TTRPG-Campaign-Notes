@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
@@ -39,6 +39,9 @@ describe('QuickNavMenu', () => {
 
     expect(await screen.findByRole('menuitem', { name: 'Home' })).toHaveAttribute('href', '/');
     expect(screen.getByRole('menuitem', { name: 'Le mie Stanze' })).toHaveAttribute('href', '/rooms');
+
+    await user.click(screen.getByRole('button', { name: 'Navigazione rapida' }));
+    await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Home' })).not.toBeInTheDocument());
   });
 
   // Inline on every screen (product owner, 2026-10-25), no side sub-menu.
@@ -71,5 +74,17 @@ describe('QuickNavMenu', () => {
     await user.click(screen.getByRole('button', { name: 'Navigazione rapida' }));
 
     expect(await screen.findByText('Ancora nessuna Stanza')).toBeInTheDocument();
+  });
+
+  it('shows a loader, then the error, when the Rooms cannot be loaded', async () => {
+    let fail: (reason: Error) => void = () => {};
+    fetchMock.mockReturnValue(new Promise((_, reject) => (fail = reject)));
+    const user = render();
+
+    await user.click(screen.getByRole('button', { name: 'Navigazione rapida' }));
+    expect(document.querySelector('.mantine-Loader-root')).toBeInTheDocument();
+
+    fail(new Error('offline'));
+    expect(await screen.findByText('Errore nel caricamento delle Stanze.')).toBeInTheDocument();
   });
 });
