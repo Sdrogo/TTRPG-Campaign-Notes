@@ -78,7 +78,7 @@ function render(route = '/rooms/room-1/documents') {
   renderWithProviders(
     <Routes>
       <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />
-      <Route path="/" element={<p>Le mie Stanze</p>} />
+      <Route path="/rooms" element={<p>Le mie Stanze</p>} />
     </Routes>,
     { route },
   );

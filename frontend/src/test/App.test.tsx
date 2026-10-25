@@ -7,6 +7,7 @@ import App from '../App';
 // Each page has its own tests; here only the routing table is under test, so
 // the pages are stubbed down to a marker.
 vi.mock('../pages/HomePage', () => ({ HomePage: () => <div>home</div> }));
+vi.mock('../pages/MyRoomsPage', () => ({ MyRoomsPage: () => <div>my rooms</div> }));
 vi.mock('../pages/AccountPage', () => ({ AccountPage: () => <div>account</div> }));
 vi.mock('../pages/AcceptInvitePage', () => ({ AcceptInvitePage: () => <div>invite</div> }));
 vi.mock('../pages/AddFriendPage', () => ({ AddFriendPage: () => <div>add friend</div> }));
@@ -31,6 +32,7 @@ beforeEach(() => {
 describe('App routes', () => {
   it.each([
     ['/', 'home'],
+    ['/rooms', 'my rooms'],
     ['/account', 'account'],
     ['/invite/ABC123', 'invite'],
     ['/friends/add/FRIEND1', 'add friend'],

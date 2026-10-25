@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HomePage } from './pages/HomePage';
+import { MyRoomsPage } from './pages/MyRoomsPage';
 import { useScrollbarReveal } from './hooks/useScrollbarReveal';
 import { ViewAsProvider } from './components/ViewAsProvider';
 
@@ -40,7 +41,8 @@ const MentionMapPage = lazy(() =>
 );
 
 /**
- * The route table. Every page but the home page is loaded on demand so the
+ * The route table. Every page but the landing page (`/`) and the Rooms list
+ * (`/rooms`) is loaded on demand so the
  * entry chunk stays small (the map pages pull in @xyflow/react). Every page
  * checks the session itself and shows a sign-in prompt when there is none,
  * except the public privacy notice (spec 31_3). `ViewAsProvider` turns a
@@ -60,6 +62,7 @@ function App() {
       <Suspense fallback={null}>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/rooms" element={<MyRoomsPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/invite/:code" element={<AcceptInvitePage />} />
         <Route path="/friends/add/:code" element={<AddFriendPage />} />

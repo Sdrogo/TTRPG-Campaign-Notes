@@ -131,7 +131,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   ];
 
   return (
-    <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
+    <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId}>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         {/* The Room's actions sit at the end of the title row, folded in "⋮". */}
         <Group justify="space-between" wrap="nowrap">
@@ -177,7 +177,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               isMaster={isMaster}
               canImport={canCreateDocument}
               currentUserId={currentUserId}
-              onLeft={() => navigate('/')}
+              onLeft={() => navigate('/rooms')}
               viewAsMembers={
                 isMaster ? members.data!.filter((m) => m.userId !== currentUserId) : undefined
               }

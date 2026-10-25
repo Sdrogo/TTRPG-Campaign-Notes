@@ -46,7 +46,7 @@ export function AcceptInvitePage() {
     return (
       <Stack component="main" align="center" justify="center" gap="md" style={{ minHeight: '100svh' }}>
         <Text>{t('invite.signInRequired')}</Text>
-        <Button component={Link} to="/">
+        <Button component={Link} to="/#sign-in">
           {t('common.goToLogin')}
         </Button>
       </Stack>
@@ -59,7 +59,7 @@ export function AcceptInvitePage() {
       {acceptInvitation.isError && (
         <>
           <Text c="red">{t('invite.invalid')}</Text>
-          <Button component={Link} to="/">
+          <Button component={Link} to="/rooms">
             {t('common.backToMyRooms')}
           </Button>
         </>
@@ -69,7 +69,7 @@ export function AcceptInvitePage() {
           <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
             {t('invite.joined', { room: acceptInvitation.data.name })}
           </Title>
-          <Button onClick={() => navigate('/')}>{t('invite.goToMyRooms')}</Button>
+          <Button onClick={() => navigate('/rooms')}>{t('invite.goToMyRooms')}</Button>
         </>
       )}
     </Stack>

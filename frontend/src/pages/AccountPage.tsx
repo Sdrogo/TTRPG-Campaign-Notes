@@ -55,7 +55,7 @@ function AccountLoader() {
 
   if (account.isError || !account.data) {
     return (
-      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/">
+      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
         {t('account.loadError')}
       </FullPageMessage>
     );
@@ -81,7 +81,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
         : null;
 
   return (
-    <PageLayout backTo="/" backLabel={t('common.myRooms')}>
+    <PageLayout backTo="/rooms" backLabel={t('common.myRooms')}>
       <Stack gap={2}>
         <Title order={1} fz={{ base: 'h2', sm: 'h1' }} style={{ fontFamily: 'var(--font-display)' }}>
           {t('account.title')}

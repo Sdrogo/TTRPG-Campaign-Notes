@@ -71,6 +71,52 @@
     "signInWith": "Inloggen met {{provider}}",
     "privacy": "Privacy"
   },
+  "landing": {
+    "tagline": "Het gedeelde notitieboek van je campagne",
+    "intro": "In Ex Libris schrijft een rollenspelgroep samen zijn campagne: plaatsen, personages, gebeurtenissen en geheimen, elk alleen zichtbaar voor wie het mag weten.",
+    "signIn": "Inloggen",
+    "openMyRooms": "Mijn Kamers openen",
+    "featuresTitle": "Wat je kunt doen",
+    "features": {
+      "rooms": {
+        "title": "Kamers en rollen",
+        "text": "Eén Kamer per campagne. De Master leidt haar, Players doen mee via een link, en elke rol geldt alleen in zijn eigen Kamer."
+      },
+      "documents": {
+        "title": "Documenten en Notities",
+        "text": "Plaatsen, personages, gebeurtenissen, voorwerpen: schrijf ze als Documenten, voeg Notities toe en koppel ze met vermeldingen die in twee richtingen werken."
+      },
+      "visibility": {
+        "title": "Zichtbaarheid en Onthulling",
+        "text": "Verberg alles voor iedereen. De Master ziet altijd alles, Players zien wat hun getoond wordt, en een Onthulling maakt het zichtbaar wanneer het verhaal erom vraagt."
+      },
+      "comments": {
+        "title": "Opmerkingen en discussies",
+        "text": "Bespreek elk Document in een discussie van Opmerkingen en antwoorden, met reacties, vastgezette berichten en berichten als personage."
+      },
+      "maps": {
+        "title": "Kaarten",
+        "text": "Teken relatiekaarten tussen Documenten of zet plaatsen op een geografische kaart, en bewerk ze samen."
+      },
+      "export": {
+        "title": "Exporteren",
+        "text": "Neem je campagne mee: een PDF-handboek in drie stijlen, of JSON en Markdown voor je eigen tools."
+      }
+    },
+    "stepsTitle": "Hoe het werkt",
+    "steps": {
+      "create": "Maak een Kamer voor je campagne.",
+      "invite": "Nodig je Players uit met een link.",
+      "write": "Schrijf samen de campagne, ieder ziet wat hij hoort te zien."
+    },
+    "signInTitle": "Begin je campagne"
+  },
+  "nav": {
+    "menu": "Snelle navigatie",
+    "home": "Start",
+    "rooms": "Kamers",
+    "noRooms": "Nog geen Kamers"
+  },
   "header": {
     "account": "Jouw account",
     "accountPending": "Jouw account: {{count}} om te bekijken"

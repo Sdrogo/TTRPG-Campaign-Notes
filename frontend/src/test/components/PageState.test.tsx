@@ -51,6 +51,6 @@ describe('SignInRequired', () => {
     renderWithProviders(<SignInRequired>Accedi per vedere questa stanza</SignInRequired>);
 
     expect(screen.getByText('Accedi per vedere questa stanza')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Vai al login' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Vai al login' })).toHaveAttribute('href', '/#sign-in');
   });
 });

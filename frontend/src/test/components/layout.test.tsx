@@ -176,7 +176,7 @@ describe('AppHeader', () => {
   });
 
   // Given by every nested page through PageLayout; the Rooms list
-  // (`HomePage`) renders AppHeader without it since it's the app's own root.
+  // (`MyRoomsPage`) renders AppHeader without it since it has no parent.
   it('offers no back button without a backTo', () => {
     renderWithProviders(<AppHeader />);
 

@@ -71,6 +71,52 @@
     "signInWith": "Iniciar sessão com {{provider}}",
     "privacy": "Privacidade"
   },
+  "landing": {
+    "tagline": "O caderno partilhado da tua campanha",
+    "intro": "O Ex Libris é onde um grupo de RPG escreve a sua campanha em conjunto: locais, personagens, acontecimentos e segredos, cada um visível só para quem o deve conhecer.",
+    "signIn": "Iniciar sessão",
+    "openMyRooms": "Abrir as minhas Salas",
+    "featuresTitle": "O que podes fazer",
+    "features": {
+      "rooms": {
+        "title": "Salas e funções",
+        "text": "Uma Sala por campanha. O Master conduz, os Player entram com uma ligação, e cada função vale só dentro da sua Sala."
+      },
+      "documents": {
+        "title": "Documentos e Notas",
+        "text": "Locais, personagens, acontecimentos, objetos: escreve-os como Documentos, acrescenta Notas e liga-os com menções que funcionam nos dois sentidos."
+      },
+      "visibility": {
+        "title": "Visibilidade e Revelação",
+        "text": "Esconde o que quiseres de quem quiseres. O Master vê sempre tudo, os Player veem o que lhes é mostrado, e uma Revelação abre-o quando a história o pede."
+      },
+      "comments": {
+        "title": "Comentários e conversas",
+        "text": "Discutam cada Documento numa conversa de Comentários e respostas, com reações, mensagens afixadas e mensagens na pele da personagem."
+      },
+      "maps": {
+        "title": "Mapas",
+        "text": "Desenha mapas de relações entre Documentos ou marca locais num mapa geográfico, e editem-nos em conjunto."
+      },
+      "export": {
+        "title": "Exportação",
+        "text": "Leva a campanha contigo: um manual em PDF com três estilos, ou JSON e Markdown para as tuas ferramentas."
+      }
+    },
+    "stepsTitle": "Como funciona",
+    "steps": {
+      "create": "Cria uma Sala para a tua campanha.",
+      "invite": "Convida os teus Player com uma ligação.",
+      "write": "Escrevam a campanha em conjunto, cada um vê o que deve ver."
+    },
+    "signInTitle": "Começa a tua campanha"
+  },
+  "nav": {
+    "menu": "Navegação rápida",
+    "home": "Início",
+    "rooms": "Salas",
+    "noRooms": "Ainda sem Salas"
+  },
   "header": {
     "account": "A tua conta",
     "accountPending": "A tua conta: {{count}} por ver"

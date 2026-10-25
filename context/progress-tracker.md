@@ -13,6 +13,17 @@ detail:
 
 ## Current Status (2026-10-10)
 
+- **Spec 45_1, Landing page and quick navigation** (2026-10-25, PR #237,
+  no migration): `/` is a landing page for everyone (what Ex Libris is, six
+  feature cards, three steps, sign-in for visitors, "Open my Rooms" once
+  signed in), the Rooms list moved to `/rooms`, every "my Rooms" link and
+  back arrow follows, "Go to sign in" goes to `/#sign-in`; a sign-in
+  started on the page goes on to `/rooms` after the OAuth round trip
+  (sessionStorage marker), pending invites and friend links first. The
+  header has a burger again (`QuickNavMenu`: Home, My Rooms, a sub-list of
+  the user's Rooms). Open Graph tags and `public/og-image.png`. 12
+  languages. Next: 45_2 read-only Demo, 45_3 tour.
+
 - **Rebranding to Ex Libris** (2026-10-22, no migration): `app.name` is
   "Ex Libris" in all 12 languages (header, home page), browser title and
   meta description, favicon drawn from the placeholder logo (spiral and

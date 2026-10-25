@@ -71,6 +71,52 @@
     "signInWith": "Sign in with {{provider}}",
     "privacy": "Privacy"
   },
+  "landing": {
+    "tagline": "The shared notebook of your campaign",
+    "intro": "Ex Libris is where a tabletop RPG group writes its campaign together: places, characters, events and secrets, each one seen only by the players who should know it.",
+    "signIn": "Sign in",
+    "openMyRooms": "Open my Rooms",
+    "featuresTitle": "What you can do",
+    "features": {
+      "rooms": {
+        "title": "Rooms and roles",
+        "text": "One Room per campaign. The Master runs it, Players join with a link, and each role holds only inside its Room."
+      },
+      "documents": {
+        "title": "Documents and Notes",
+        "text": "Places, characters, events, objects: write them as Documents, add Notes, and link them with mentions that work both ways."
+      },
+      "visibility": {
+        "title": "Visibility and Reveal",
+        "text": "Hide anything from anyone. The Master always sees everything, Players see what is shown to them, and a Reveal opens it up when the story calls for it."
+      },
+      "comments": {
+        "title": "Comments and threads",
+        "text": "Discuss every Document in a thread of Comments and replies, with reactions, pins and posts in character."
+      },
+      "maps": {
+        "title": "Maps",
+        "text": "Draw relationship maps between Documents or pin places on a geographic map, and edit them together."
+      },
+      "export": {
+        "title": "Export",
+        "text": "Take the campaign with you: a PDF manual in three styles, or JSON and Markdown for your own tools."
+      }
+    },
+    "stepsTitle": "How it works",
+    "steps": {
+      "create": "Create a Room for your campaign.",
+      "invite": "Invite your players with a link.",
+      "write": "Write the campaign together, each of you seeing what you should."
+    },
+    "signInTitle": "Start your campaign"
+  },
+  "nav": {
+    "menu": "Quick navigation",
+    "home": "Home",
+    "rooms": "Rooms",
+    "noRooms": "No Rooms yet"
+  },
   "header": {
     "account": "Your account",
     "accountPending": "Your account: {{count}} waiting"

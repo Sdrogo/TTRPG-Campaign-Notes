@@ -71,6 +71,52 @@
     "signInWith": "Mit {{provider}} anmelden",
     "privacy": "Datenschutz"
   },
+  "landing": {
+    "tagline": "Das gemeinsame Notizbuch deiner Kampagne",
+    "intro": "In Ex Libris schreibt eine Rollenspielgruppe ihre Kampagne gemeinsam: Orte, Charaktere, Ereignisse und Geheimnisse, jedes nur für die sichtbar, die davon wissen sollen.",
+    "signIn": "Anmelden",
+    "openMyRooms": "Meine Räume öffnen",
+    "featuresTitle": "Was du tun kannst",
+    "features": {
+      "rooms": {
+        "title": "Räume und Rollen",
+        "text": "Ein Raum pro Kampagne. Der Master leitet ihn, Player treten über einen Link bei, und jede Rolle gilt nur in ihrem Raum."
+      },
+      "documents": {
+        "title": "Dokumente und Notizen",
+        "text": "Orte, Charaktere, Ereignisse, Gegenstände: Schreib sie als Dokumente, füge Notizen hinzu und verknüpfe sie mit Erwähnungen, die in beide Richtungen funktionieren."
+      },
+      "visibility": {
+        "title": "Sichtbarkeit und Enthüllung",
+        "text": "Verbirg alles vor jedem. Der Master sieht immer alles, Player sehen, was ihnen gezeigt wird, und eine Enthüllung macht es sichtbar, wenn die Geschichte es verlangt."
+      },
+      "comments": {
+        "title": "Kommentare und Diskussionen",
+        "text": "Besprecht jedes Dokument in einer Diskussion aus Kommentaren und Antworten, mit Reaktionen, angehefteten Beiträgen und Beiträgen als Charakter."
+      },
+      "maps": {
+        "title": "Karten",
+        "text": "Zeichne Beziehungskarten zwischen Dokumenten oder markiere Orte auf einer geografischen Karte, und bearbeitet sie gemeinsam."
+      },
+      "export": {
+        "title": "Export",
+        "text": "Nimm die Kampagne mit: ein PDF-Handbuch in drei Stilen oder JSON und Markdown für deine eigenen Werkzeuge."
+      }
+    },
+    "stepsTitle": "So funktioniert es",
+    "steps": {
+      "create": "Erstelle einen Raum für deine Kampagne.",
+      "invite": "Lade deine Player mit einem Link ein.",
+      "write": "Schreibt die Kampagne gemeinsam, jeder sieht, was er sehen soll."
+    },
+    "signInTitle": "Starte deine Kampagne"
+  },
+  "nav": {
+    "menu": "Schnellnavigation",
+    "home": "Start",
+    "rooms": "Räume",
+    "noRooms": "Noch keine Räume"
+  },
   "header": {
     "account": "Dein Konto",
     "accountPending": "Dein Konto: {{count}} offen"

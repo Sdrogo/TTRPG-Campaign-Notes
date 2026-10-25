@@ -273,7 +273,7 @@ describe('RoomSetupPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Esci' }));
 
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms'));
   });
 
   it('reports a failed Tags load', async () => {
@@ -402,7 +402,7 @@ describe('RoomMembersRedirect', () => {
     await user.type(screen.getByLabelText('Scrivi "La Cripta" per confermare'), 'La Cripta');
     await user.click(screen.getByRole('button', { name: 'Elimina' }));
 
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms'));
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1', { method: 'DELETE' });
   });
 

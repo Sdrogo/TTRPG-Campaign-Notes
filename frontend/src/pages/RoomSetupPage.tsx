@@ -56,7 +56,7 @@ export function RoomSetupPage() {
 
   if (members.isError) {
     return (
-      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/">
+      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
         {t('setup.loadError')}
       </FullPageMessage>
     );
@@ -68,14 +68,14 @@ export function RoomSetupPage() {
 
   if (!isAdmin && !isMaster) {
     return (
-      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/">
+      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
         {t('setup.adminOnly')}
       </FullPageMessage>
     );
   }
 
   return (
-    <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
+    <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId}>
       <Group justify="space-between" wrap="nowrap">
         <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
           {t('setup.title')}
@@ -110,7 +110,7 @@ export function RoomSetupPage() {
                   roomId={roomId}
                   members={members.data}
                   currentUserId={session.user.id}
-                  onLeft={() => navigate('/')}
+                  onLeft={() => navigate('/rooms')}
                 />
               </Stack>
 
@@ -130,7 +130,7 @@ export function RoomSetupPage() {
                 <DeleteRoomSection
                   roomId={roomId}
                   roomName={room.data.name}
-                  onDeleted={() => navigate('/')}
+                  onDeleted={() => navigate('/rooms')}
                 />
               )}
             </Stack>

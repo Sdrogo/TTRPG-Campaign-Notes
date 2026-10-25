@@ -71,6 +71,52 @@
     "signInWith": "使用 {{provider}} 登录",
     "privacy": "隐私"
   },
+  "landing": {
+    "tagline": "你的战役共享笔记本",
+    "intro": "Ex Libris 是桌面角色扮演小组共同撰写战役的地方：地点、角色、事件和秘密，每一项都只让该知道的人看到。",
+    "signIn": "登录",
+    "openMyRooms": "打开我的房间",
+    "featuresTitle": "你可以做什么",
+    "features": {
+      "rooms": {
+        "title": "房间与角色",
+        "text": "每个战役一个房间。Master 主持，Player 通过链接加入，每个角色只在自己的房间内有效。"
+      },
+      "documents": {
+        "title": "文档与笔记",
+        "text": "地点、角色、事件、物品：把它们写成文档，添加笔记，并用双向生效的提及把它们连接起来。"
+      },
+      "visibility": {
+        "title": "可见性与揭示",
+        "text": "可以对任何人隐藏任何内容。Master 始终能看到一切，Player 只看到展示给他们的内容，剧情需要时用揭示将其公开。"
+      },
+      "comments": {
+        "title": "评论与讨论串",
+        "text": "在由评论和回复组成的讨论串中讨论每个文档，支持表情回应、置顶以及以角色身份发言。"
+      },
+      "maps": {
+        "title": "地图",
+        "text": "绘制文档之间的关系地图，或在地理地图上标记地点，大家一起编辑。"
+      },
+      "export": {
+        "title": "导出",
+        "text": "把战役带走：三种风格的 PDF 手册，或供你自己的工具使用的 JSON 和 Markdown。"
+      }
+    },
+    "stepsTitle": "如何使用",
+    "steps": {
+      "create": "为你的战役创建一个房间。",
+      "invite": "用链接邀请你的 Player。",
+      "write": "一起撰写战役，每个人看到自己该看到的内容。"
+    },
+    "signInTitle": "开始你的战役"
+  },
+  "nav": {
+    "menu": "快速导航",
+    "home": "首页",
+    "rooms": "房间",
+    "noRooms": "还没有房间"
+  },
   "header": {
     "account": "你的账户",
     "accountPending": "你的账户：{{count}} 项待查看"

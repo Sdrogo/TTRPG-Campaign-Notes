@@ -70,7 +70,7 @@ navigation between the landing page, the Rooms page and each Room.
    - **Hero**: logo, "Ex Libris", a one-line tagline ("The shared notebook
      of your campaign"), a short paragraph, and two actions: **Try the
      demo** (accent, primary) and **Sign in** (scrolls to the sign-in
-     block, or opens it in a modal on a phone; see 4).
+     block; see 4).
    - **Features**: six cards, each an icon, a title and two lines, in a
      3-column grid on desktop, 2 on tablet, 1 on a phone: Rooms and roles
      (Master and Players), Documents and Notes with mentions, Visibility
@@ -82,8 +82,8 @@ navigation between the landing page, the Rooms page and each Room.
      players, Write the campaign together).
    - **Sign in**: the provider buttons as today (Google first and filled,
      D-07), the privacy link.
-   - **Footer**: privacy notice link, language selector, GitHub link to
-     the repository.
+   - **Footer**: privacy notice link (the language selector is in the top
+     bar; no GitHub link, the repository is not a public page).
 4. **Header**: without a session, no `AppHeader` (it needs one); a light
    top bar with the logo and app name on the left, the language selector
    and a "Sign in" button on the right, so a visitor can switch language
