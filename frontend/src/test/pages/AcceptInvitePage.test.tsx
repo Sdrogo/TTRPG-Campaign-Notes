@@ -63,7 +63,7 @@ describe('AcceptInvitePage', () => {
     render();
 
     expect(screen.getByText('Accedi per unirti a questa Stanza.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Vai al login' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Vai al login' })).toHaveAttribute('href', '/#sign-in');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -125,7 +125,7 @@ describe('AcceptInvitePage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Vai alle mie Stanze' }));
 
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(navigate).toHaveBeenCalledWith('/rooms');
   });
 
   // Expired, already used, or simply wrong: one message, and a way out.
@@ -138,7 +138,7 @@ describe('AcceptInvitePage', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Torna alle mie Stanze' })).toHaveAttribute(
       'href',
-      '/',
+      '/rooms',
     );
   });
 

@@ -13,6 +13,17 @@ detail:
 
 ## Current Status (2026-10-10)
 
+- **Spec 45_1, Landing page and quick navigation** (2026-10-25, PR #237,
+  no migration): `/` is a landing page for everyone (what Ex Libris is, six
+  feature cards, three steps, sign-in for visitors, "Open my Rooms" once
+  signed in), the Rooms list moved to `/rooms`, every "my Rooms" link and
+  back arrow follows, "Go to sign in" goes to `/#sign-in`; a sign-in
+  started on the page goes on to `/rooms` after the OAuth round trip
+  (sessionStorage marker), pending invites and friend links first. The
+  header has a burger again (`QuickNavMenu`: Home, My Rooms, a sub-list of
+  the user's Rooms). Open Graph tags and `public/og-image.png`. 12
+  languages. Next: 45_2 read-only Demo, 45_3 tour.
+
 - **Rebranding to Ex Libris** (2026-10-22, no migration): `app.name` is
   "Ex Libris" in all 12 languages (header, home page), browser title and
   meta description, favicon drawn from the placeholder logo (spiral and
@@ -627,6 +638,15 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
+- **45, Landing page and Demo** (product owner, 2026-10-25): ticket in
+  `context/feature/45 - Landing page and Demo.md`, defaults to confirm in
+  the PR before code. Landing page at `/` for everyone (Rooms list moves
+  to `/rooms`), header burger for quick navigation (landing, Rooms, each
+  Room); a read-only Demo of the real pages over an in-browser sample Room
+  (no account, no backend calls, no DB writes) with a guided tour. Product
+  owner answered A (read-only) and B (landing for all + burger) on
+  2026-10-25, and C (sample content en+it) too. Build order 45_1
+  landing + burger, 45_2 demo, 45_3 tour. Frontend only, no migration.
 - **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
   editor, PR #211) and 38_3 (JSON import/export) built; first real test is
   the Shibuya map. `requirements.md` §1 and a new `FR-` need the product

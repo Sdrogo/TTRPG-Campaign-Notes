@@ -71,6 +71,52 @@
     "signInWith": "Accedi con {{provider}}",
     "privacy": "Privacy"
   },
+  "landing": {
+    "tagline": "Il taccuino condiviso della tua campagna",
+    "intro": "Ex Libris è dove un gruppo di gioco di ruolo scrive insieme la propria campagna: luoghi, personaggi, eventi e segreti, ognuno visibile solo a chi deve conoscerlo.",
+    "signIn": "Accedi",
+    "openMyRooms": "Apri le mie Stanze",
+    "featuresTitle": "Cosa puoi fare",
+    "features": {
+      "rooms": {
+        "title": "Stanze e ruoli",
+        "text": "Una Stanza per ogni campagna. Il Master la guida, i Player entrano con un link, e ogni ruolo vale solo nella sua Stanza."
+      },
+      "documents": {
+        "title": "Documenti e Note",
+        "text": "Luoghi, personaggi, eventi, oggetti: scrivili come Documenti, aggiungi Note e collegali con menzioni che funzionano nei due sensi."
+      },
+      "visibility": {
+        "title": "Visibilità e Rivela",
+        "text": "Nascondi qualsiasi cosa a chiunque. Il Master vede sempre tutto, i Player vedono ciò che è mostrato loro, e Rivela lo apre quando la storia lo richiede."
+      },
+      "comments": {
+        "title": "Commenti e discussioni",
+        "text": "Discuti ogni Documento in una discussione di Commenti e risposte, con reazioni, messaggi fissati e interventi nei panni del tuo personaggio."
+      },
+      "maps": {
+        "title": "Mappe",
+        "text": "Disegna mappe delle relazioni tra Documenti o segna i luoghi su una mappa geografica, e modificale insieme."
+      },
+      "export": {
+        "title": "Esportazione",
+        "text": "Porta la campagna con te: un manuale PDF in tre stili, oppure JSON e Markdown per i tuoi strumenti."
+      }
+    },
+    "stepsTitle": "Come funziona",
+    "steps": {
+      "create": "Crea una Stanza per la tua campagna.",
+      "invite": "Invita i tuoi Player con un link.",
+      "write": "Scrivete la campagna insieme, ognuno vede ciò che deve vedere."
+    },
+    "signInTitle": "Inizia la tua campagna"
+  },
+  "nav": {
+    "menu": "Navigazione rapida",
+    "home": "Home",
+    "rooms": "Stanze",
+    "noRooms": "Ancora nessuna Stanza"
+  },
   "header": {
     "account": "Il tuo account",
     "accountPending": "Il tuo account: {{count}} da vedere"

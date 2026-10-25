@@ -11,7 +11,7 @@ interface RoomsPageProps {
   currentUserId: string;
 }
 
-/** The signed-in user's Rooms, with a button to create one. Shown by `HomePage`. */
+/** The signed-in user's Rooms, with a button to create one. Shown by `MyRoomsPage` at `/rooms`. */
 export function RoomsPage({ currentUserId }: RoomsPageProps) {
   const { t } = useTranslation();
   const [createOpened, setCreateOpened] = useState(false);

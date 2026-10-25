@@ -71,6 +71,52 @@
     "signInWith": "{{provider}}(으)로 로그인",
     "privacy": "개인정보"
   },
+  "landing": {
+    "tagline": "캠페인을 위한 공유 노트",
+    "intro": "Ex Libris는 TRPG 그룹이 캠페인을 함께 써 내려가는 곳입니다. 장소, 캐릭터, 사건, 비밀을 기록하고, 각각 알아야 할 사람에게만 보여 줍니다.",
+    "signIn": "로그인",
+    "openMyRooms": "내 룸 열기",
+    "featuresTitle": "할 수 있는 일",
+    "features": {
+      "rooms": {
+        "title": "룸과 역할",
+        "text": "캠페인마다 하나의 룸. Master가 운영하고 Player는 링크로 참여하며, 각 역할은 해당 룸 안에서만 유효합니다."
+      },
+      "documents": {
+        "title": "문서와 노트",
+        "text": "장소, 캐릭터, 사건, 물건을 문서로 작성하고, 노트를 추가하고, 양방향으로 작동하는 멘션으로 연결하세요."
+      },
+      "visibility": {
+        "title": "공개 범위와 공개",
+        "text": "무엇이든 누구에게서든 숨길 수 있습니다. Master는 항상 모든 것을 보고, Player는 보여 준 것만 보며, 이야기가 필요로 할 때 공개로 드러냅니다."
+      },
+      "comments": {
+        "title": "댓글과 스레드",
+        "text": "각 문서를 댓글과 답글 스레드에서 논의하세요. 반응, 고정, 캐릭터로 글쓰기도 지원합니다."
+      },
+      "maps": {
+        "title": "지도",
+        "text": "문서 사이의 관계 지도를 그리거나 지리 지도에 장소를 표시하고 함께 편집하세요."
+      },
+      "export": {
+        "title": "내보내기",
+        "text": "캠페인을 가져가세요. 세 가지 스타일의 PDF 매뉴얼, 또는 직접 쓰는 도구를 위한 JSON과 Markdown."
+      }
+    },
+    "stepsTitle": "사용 방법",
+    "steps": {
+      "create": "캠페인을 위한 룸을 만드세요.",
+      "invite": "링크로 Player를 초대하세요.",
+      "write": "함께 캠페인을 쓰고, 각자 봐야 할 것을 봅니다."
+    },
+    "signInTitle": "캠페인을 시작하세요"
+  },
+  "nav": {
+    "menu": "빠른 이동",
+    "home": "홈",
+    "rooms": "룸",
+    "noRooms": "아직 룸이 없습니다"
+  },
   "header": {
     "account": "내 계정",
     "accountPending": "내 계정: 확인할 항목 {{count}}개"

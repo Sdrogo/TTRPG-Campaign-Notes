@@ -121,7 +121,7 @@ describe('AccountPage', () => {
     expect(await screen.findByText('Impossibile caricare il tuo account.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Torna alle mie Stanze' })).toHaveAttribute(
       'href',
-      '/',
+      '/rooms',
     );
   });
 });

@@ -128,7 +128,14 @@ other icon set.
   the logo, load before the app; links to the Rooms list) **always at
   the exact center** (2026-10-03, Andrea: it shifted between pages): the
   header is a 3-column grid (`1fr minmax(0, auto) 1fr` in `.app-header`), so
-  whatever sits on either side never moves it. **On the left, the back arrow** (same
+  whatever sits on either side never moves it. **On the left, the quick
+  navigation burger** (spec 45, 2026-10-25), then the back arrow: the burger
+  (`QuickNavMenu`, Mantine `Burger` + `Menu`, `bottom-start`, 260px) lists
+  Home (the landing page `/`), My Rooms (`/rooms`) and "Rooms", the user's
+  active Rooms alphabetically with a 22px `Avatar` (Room image or initials),
+  the current Room checked, inline under a `Menu.Label` on every screen
+  (product owner, 2026-10-25: no side sub-menu on desktop), scrolling past
+  50dvh; fetched on first open. **The back arrow** (same
   date; the Glossary burger that followed it moved to the Room Index tab,
   spec 44, 2026-10-25): the back button is an icon-only
   `ActionIcon` (`ArrowLeftIcon`), its destination's name kept as
@@ -775,4 +782,23 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   at least 320 px; the ratio is kept in `localStorage` (`splitView.ratio`). Opening or closing
   the pane **replaces** the history entry (2026-10-15), so the browser's Back
   leaves the page instead of stepping through pane changes; a reload keeps it.
+
+## Landing page (spec 45_1)
+
+- `/` is the landing page for everyone (`LandingPage`); the Rooms list moved
+  to `/rooms` (`MyRoomsPage`). Signed out it has its own top bar (32px logo
+  from `/favicon.svg`, app name, `LanguageSelector`, a default "Sign in"
+  button that scrolls to the sign-in block); signed in it has the
+  `AppHeader`, whose centered app name links to `/`.
+- One `Container size="lg"` column, sections 64px apart: hero (96px logo,
+  `h1` 40/56px, tagline `xl`, intro dimmed at most 640px wide, one filled
+  button: "Sign in" signed out, "Open my Rooms" signed in), "What you can
+  do" (six bordered `Card`s, 1/2/3 columns at base/sm/md, a 32px duotone
+  muted icon, `h4` title, dimmed `sm` text; no accent, it is decoration),
+  "How it works" (an `ol` of three steps with a large muted display-font
+  number), the sign-in block (`#sign-in`, signed out only: `SignInButtons`,
+  Google filled), and a footer with the privacy link.
+- "Go to sign in" links (`SignInRequired`, the invite page) point to
+  `/#sign-in`; the page scrolls there on load.
+- Screenshots: `landing-page/` in the project files.
 

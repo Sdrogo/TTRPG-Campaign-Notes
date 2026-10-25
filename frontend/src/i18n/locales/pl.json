@@ -71,6 +71,52 @@
     "signInWith": "Zaloguj się przez {{provider}}",
     "privacy": "Prywatność"
   },
+  "landing": {
+    "tagline": "Wspólny notatnik twojej kampanii",
+    "intro": "Ex Libris to miejsce, w którym drużyna RPG wspólnie pisze swoją kampanię: miejsca, postacie, wydarzenia i sekrety, każde widoczne tylko dla tych, którzy powinni o nim wiedzieć.",
+    "signIn": "Zaloguj się",
+    "openMyRooms": "Otwórz moje pokoje",
+    "featuresTitle": "Co możesz robić",
+    "features": {
+      "rooms": {
+        "title": "Pokoje i role",
+        "text": "Jeden pokój na kampanię. Master go prowadzi, Playerzy dołączają przez link, a każda rola obowiązuje tylko w swoim pokoju."
+      },
+      "documents": {
+        "title": "Dokumenty i notatki",
+        "text": "Miejsca, postacie, wydarzenia, przedmioty: zapisz je jako dokumenty, dodaj notatki i połącz je wzmiankami działającymi w obie strony."
+      },
+      "visibility": {
+        "title": "Widoczność i ujawnienie",
+        "text": "Ukryj cokolwiek przed kimkolwiek. Master zawsze widzi wszystko, Playerzy widzą to, co im pokazano, a ujawnienie odsłania treść, gdy wymaga tego fabuła."
+      },
+      "comments": {
+        "title": "Komentarze i wątki",
+        "text": "Omawiajcie każdy dokument w wątku komentarzy i odpowiedzi, z reakcjami, przypięciami i wpisami w roli postaci."
+      },
+      "maps": {
+        "title": "Mapy",
+        "text": "Rysuj mapy relacji między dokumentami albo zaznaczaj miejsca na mapie geograficznej i edytujcie je razem."
+      },
+      "export": {
+        "title": "Eksport",
+        "text": "Zabierz kampanię ze sobą: podręcznik PDF w trzech stylach albo JSON i Markdown do własnych narzędzi."
+      }
+    },
+    "stepsTitle": "Jak to działa",
+    "steps": {
+      "create": "Utwórz pokój dla swojej kampanii.",
+      "invite": "Zaproś swoich Playerów linkiem.",
+      "write": "Piszcie kampanię razem, każdy widzi to, co powinien."
+    },
+    "signInTitle": "Rozpocznij kampanię"
+  },
+  "nav": {
+    "menu": "Szybka nawigacja",
+    "home": "Start",
+    "rooms": "Pokoje",
+    "noRooms": "Nie ma jeszcze pokoi"
+  },
   "header": {
     "account": "Twoje konto",
     "accountPending": "Twoje konto: do zobaczenia {{count}}"

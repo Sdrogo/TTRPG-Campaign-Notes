@@ -6,6 +6,7 @@ import { ViewAsBanner } from './ViewAsBanner';
 import { useViewAs } from '../hooks/useViewAs';
 import { AccountButton } from './account/AccountButton';
 import { LanguageSelector } from './LanguageSelector';
+import { QuickNavMenu } from './QuickNavMenu';
 import { SearchButton } from './search/SearchButton';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from './LabeledActionIcon';
@@ -20,8 +21,7 @@ interface AppHeaderProps {
   /** Given on any nested page, this shows a "back" arrow (icon only, named
    *  by `backLabel` for screen readers), to the page it was
    *  opened from or else to `backTo`, its parent. Omitted on the
-   *  Rooms list (`HomePage`), which is the app's own root and has nowhere to
-   *  go back to. */
+   *  Rooms list and the landing page, which have nowhere to go back to. */
   backTo?: string;
   backLabel?: string;
 }
@@ -31,9 +31,9 @@ interface AppHeaderProps {
 const HEADER_FIXED_AT = 80;
 
 /**
- * The top navigation bar shown on every signed-in page: the back arrow on the
- * left; the app name (also
- * back to the Rooms list) always at the exact center; on the right, on a Room
+ * The top navigation bar shown on every signed-in page: the quick navigation
+ * burger (spec 45) and the back arrow on the left; the app name (also a link
+ * to the landing page) always at the exact center; on the right, on a Room
  * page, the search (spec 21), then the language flag and the account avatar
  * (spec 09, spec 10). It is pinned to
  * the top of the page (`.app-header` in `index.css`), but slides away while
@@ -71,6 +71,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
         data-hidden={(!pinned && !viewAs) || undefined}
       >
         <Group gap="xs" wrap="nowrap">
+          <QuickNavMenu />
           {backTo && (
             <LabeledActionIcon
               onClick={handleBack}

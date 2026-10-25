@@ -1,85 +1,53 @@
-import { Anchor, Stack, Title, Text, Button, Loader } from '@mantine/core';
-import { Link, Navigate } from 'react-router-dom';
-import { BookOpenIcon } from '@phosphor-icons/react';
-import { readPendingFriendCode, readPendingInvite } from '../lib/pendingInvite';
-import { AUTH_PROVIDERS, type AuthProvider } from '../lib/authProviders';
-import { supabase } from '../lib/supabaseClient';
+import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import {
+  clearSigningIn,
+  readPendingFriendCode,
+  readPendingInvite,
+  readSigningIn,
+} from '../lib/pendingInvite';
 import { useSession } from '../hooks/useSession';
-import { AppHeader } from '../components/AppHeader';
-import { RoomsPage } from './RoomsPage';
-import { useTranslation } from 'react-i18next';
+import { FullPageLoader } from '../components/PageState';
+import { LandingPage } from './LandingPage';
 
-/** `/`: the sign-in screen (one button per provider), or the user's Rooms once signed in. */
+/**
+ * `/`: the landing page, for everyone (spec 45). Right after the sign-in
+ * round trip it carries the user on instead: to a pending invite or friend
+ * link first, else to their Rooms.
+ */
 export function HomePage() {
-  const { t } = useTranslation();
   const { session, loading: sessionLoading } = useSession();
+  // Read once: the marker is cleared below once the session is known.
+  const [justSignedIn] = useState(readSigningIn);
 
-  const signInWith = (provider: AuthProvider) => {
-    // Come back to whatever origin we're on (production, a Vercel preview,
-    // or localhost) instead of Supabase's single configured Site URL. Each
-    // origin must be listed in Supabase's Redirect URLs allowlist.
-    void supabase.auth.signInWithOAuth({
-      provider: provider.id,
-      options: { redirectTo: window.location.origin },
-    });
-  };
+  // Signed in, it has done its job; signed out once the session has loaded
+  // (Supabase reads the OAuth return before that), the sign-in was cancelled
+  // and must not redirect a later visit.
+  useEffect(() => {
+    if (!sessionLoading) clearSigningIn();
+  }, [session, sessionLoading]);
 
   if (sessionLoading) {
-    return (
-      <Stack component="main" align="center" justify="center" style={{ minHeight: '100svh' }}>
-        <Loader color="accent" />
-      </Stack>
-    );
+    return <FullPageLoader />;
   }
 
-  if (!session) {
-    return (
-      <Stack component="main" align="center" justify="center" gap="md" px="md" style={{ minHeight: '100svh' }}>
-        <BookOpenIcon size={48} weight="duotone" color="var(--text-muted)" />
-        <Title order={1} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('app.name')}
-        </Title>
-        <Text c="dimmed" ta="center">
-          {t('auth.prompt')}
-        </Text>
-        <Stack gap="sm" w="100%" maw={320}>
-          {/* Google stays the primary action: it's the preferred login (D-07). */}
-          {AUTH_PROVIDERS.map((provider) => (
-            <Button
-              key={provider.id}
-              fullWidth
-              variant={provider.id === 'google' ? 'filled' : 'default'}
-              leftSection={<provider.icon size={20} aria-hidden="true" />}
-              onClick={() => signInWith(provider)}
-            >
-              {t('auth.signInWith', { provider: provider.label })}
-            </Button>
-          ))}
-        </Stack>
-        {/* The privacy notice is readable before signing in (spec 31_3). */}
-        <Anchor component={Link} to="/privacy" size="sm" c="dimmed">
-          {t('auth.privacy')}
-        </Anchor>
-      </Stack>
-    );
+  if (session) {
+    // Signed in right after opening an invite link: finish joining the Room.
+    const pendingInvite = readPendingInvite();
+    if (pendingInvite) {
+      return <Navigate to={`/invite/${encodeURIComponent(pendingInvite)}`} replace />;
+    }
+
+    // Signed in right after opening a friend link: finish sending the request.
+    const pendingFriendCode = readPendingFriendCode();
+    if (pendingFriendCode) {
+      return <Navigate to={`/friends/add/${encodeURIComponent(pendingFriendCode)}`} replace />;
+    }
+
+    if (justSignedIn) {
+      return <Navigate to="/rooms" replace />;
+    }
   }
 
-  // Signed in right after opening an invite link: finish joining the Room.
-  const pendingInvite = readPendingInvite();
-  if (pendingInvite) {
-    return <Navigate to={`/invite/${encodeURIComponent(pendingInvite)}`} replace />;
-  }
-
-  // Signed in right after opening a friend link: finish sending the request.
-  const pendingFriendCode = readPendingFriendCode();
-  if (pendingFriendCode) {
-    return <Navigate to={`/friends/add/${encodeURIComponent(pendingFriendCode)}`} replace />;
-  }
-
-  return (
-    <Stack gap={0}>
-      <AppHeader />
-      <RoomsPage currentUserId={session.user.id} />
-    </Stack>
-  );
+  return <LandingPage signedIn={Boolean(session)} />;
 }
