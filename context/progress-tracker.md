@@ -176,6 +176,12 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-25
+
+- **Compact Note form** (no migration): Visibility and the Relational link
+  switch share one row in `NoteForm`; on a phone the switch's hint sits
+  under the row and the form's gaps tighten.
+
 ### 2026-10-24
 
 - **43_1, 43_2 Real-time map editing** (PR #229, no migration): per-item
