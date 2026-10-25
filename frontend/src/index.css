@@ -357,6 +357,24 @@ html body[data-scroll-locked] {
   }
 }
 
+/* The maps row on the Room's page: small cards that wrap, one per row on a
+   phone, so a name is never cut by the screen's edge. */
+.room-maps-cards {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+}
+
+.room-map-card {
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 150ms ease;
+}
+
+.room-map-card:hover {
+  border-color: var(--mantine-color-accent-filled);
+}
+
 /* A result in the search panel (spec 21): highlighted (arrow keys or hover)
    like a mention suggestion, and a link without a link's look. */
 .search-option {

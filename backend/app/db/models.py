@@ -88,6 +88,8 @@ class RoomRow(Base):
     )
     # The Room's image (spec 26), a Storage path like `users.avatar_path`.
     image_path: Mapped[str | None] = mapped_column(String(500))
+    # How many Main items the Documents page shows before the maps row.
+    maps_position: Mapped[int] = mapped_column(Integer, server_default=text("0"), default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

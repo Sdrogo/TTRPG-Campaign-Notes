@@ -39,7 +39,18 @@ describe('groupDocumentsByMainItems', () => {
   it('groups a Document under its Main Tag', () => {
     const groups = groupDocumentsByMainItems([doc('a', ['npc'])], tags, [item('npc')]);
 
-    expect(groups).toEqual([{ key: 'npc', tags: [npc], documents: [doc('a', ['npc'])] }]);
+    expect(groups).toEqual([{ key: 'npc', tags: [npc], documents: [doc('a', ['npc'])], position: 0 }]);
+  });
+
+  // The Room page places its maps row among the groups by these positions.
+  it("gives each group its item's place, the fallback group last", () => {
+    const docs = [doc('a', ['pc']), doc('b', [])];
+    const groups = groupDocumentsByMainItems(docs, tags, [item('npc'), item('pc')]);
+
+    expect(groups.map((g) => [g.key, g.position])).toEqual([
+      ['pc', 1],
+      [UNGROUPED_KEY, 2],
+    ]);
   });
 
   // Spec 11: the Room's Administrators order the groups, not the alphabet.

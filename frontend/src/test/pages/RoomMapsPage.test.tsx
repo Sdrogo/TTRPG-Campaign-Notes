@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -53,14 +53,14 @@ const routes = {
   members: [rawMember({ user_id: 'user-1', role: 'player' })] as unknown,
 };
 
-function render(previewing = false) {
+function render(previewing = false, route = '/rooms/room-1/maps') {
   renderWithProviders(
     <Routes>
       <Route path="/rooms/:roomId/maps" element={<RoomMapsPage />} />
       <Route path="/rooms/:roomId" element={<RoomMapsPage />} />
     </Routes>,
     {
-      route: '/rooms/room-1/maps',
+      route,
       wrapper: previewing
         ? ({ children }) => (
             <ViewAsContext.Provider value={{ roomId: 'room-1', userId: 'user-2' }}>{children}</ViewAsContext.Provider>
@@ -164,6 +164,30 @@ describe('RoomMapsPage', () => {
       '/rooms/room-1/maps',
       expect.objectContaining({ method: 'POST', json: expect.objectContaining({ name: 'Kindred', visibility: 'master' }) }),
     );
+  });
+
+  it('opens the new map dialog from the Room page link (?new=1)', async () => {
+    render(false, '/rooms/room-1/maps?new=1');
+
+    expect(await screen.findByRole('textbox', { name: /Nome/ })).toBeInTheDocument();
+  });
+
+  it('closes the dialog opened by ?new=1 for good', async () => {
+    render(false, '/rooms/room-1/maps?new=1');
+    const user = userEvent.setup();
+    await screen.findByRole('textbox', { name: /Nome/ });
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: /Nome/ })).not.toBeInTheDocument());
+  });
+
+  it('ignores ?new=1 for who may not create maps', async () => {
+    routes.room = rawRoom({ players_can_create_documents: false });
+    render(false, '/rooms/room-1/maps?new=1');
+    await screen.findByText('La Corte');
+
+    expect(screen.queryByRole('textbox', { name: /Nome/ })).not.toBeInTheDocument();
   });
 
   it('imports a map from a file at the Room default visibility and opens it (spec 38_3)', async () => {

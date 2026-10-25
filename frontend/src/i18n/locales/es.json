@@ -253,7 +253,8 @@
         "addHint": "Una Etiqueta es una Etiqueta principal; dos o más, una combinación.",
         "add": "Añadir",
         "alreadyMain": "Esta Etiqueta ya es una entrada de la agrupación.",
-        "alreadyCombination": "Esta combinación ya está en la agrupación."
+        "alreadyCombination": "Esta combinación ya está en la agrupación.",
+        "mapsRow": "Fila de mapas"
       },
       "all": {
         "title": "Todas las Etiquetas",
@@ -1123,6 +1124,10 @@
       "repeated": "Documento ya en el mapa, quedarán como etiquetas simples:",
       "backgroundLater": "La imagen de fondo se sube después, desde el botón Mapa del nuevo mapa.",
       "submit": "Importar"
+    },
+    "strip": {
+      "all_one": "Todos los mapas ({{count}})",
+      "all_other": "Todos los mapas ({{count}})"
     }
   }
 }

@@ -120,10 +120,17 @@ export function RoomSetupPage() {
                 <DefaultVisibilitySection roomId={roomId} value={room.data.defaultVisibility} />
               )}
 
-              {(tags.isLoading || mainItems.isLoading) && <Loader color="accent" />}
-              {(tags.isError || mainItems.isError) && <Text c="red">{t('setup.loadError')}</Text>}
-              {tags.data && mainItems.data && (
-                <TagsSection roomId={roomId} tags={tags.data} items={mainItems.data} />
+              {(tags.isLoading || mainItems.isLoading || room.isLoading) && <Loader color="accent" />}
+              {(tags.isError || mainItems.isError || room.isError) && (
+                <Text c="red">{t('setup.loadError')}</Text>
+              )}
+              {tags.data && mainItems.data && room.data && (
+                <TagsSection
+                  roomId={roomId}
+                  tags={tags.data}
+                  items={mainItems.data}
+                  mapsPosition={room.data.mapsPosition}
+                />
               )}
 
               {room.data && (

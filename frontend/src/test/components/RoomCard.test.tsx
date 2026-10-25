@@ -23,6 +23,7 @@ function myRoom(overrides: Partial<MyRoom> = {}): MyRoom {
       playersCanCreateDocuments: true,
       defaultVisibility: 'room',
       imageUrl: null,
+      mapsPosition: 0,
     },
     role: 'player',
     isAdmin: false,

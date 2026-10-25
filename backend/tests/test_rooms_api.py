@@ -253,3 +253,50 @@ async def test_listing_members_is_withheld_from_a_non_member(
     )
 
     assert response.status_code == 403
+
+
+async def test_an_administrator_places_the_maps_row(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    admin_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(admin_token))
+    ).json()
+    assert room["maps_position"] == 0
+
+    response = await client.patch(
+        f"/rooms/{room['id']}", json={"maps_position": 2}, headers=_auth_headers(admin_token)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["maps_position"] == 2
+    read = await client.get(f"/rooms/{room['id']}", headers=_auth_headers(admin_token))
+    assert read.json()["maps_position"] == 2
+    negative = await client.patch(
+        f"/rooms/{room['id']}", json={"maps_position": -1}, headers=_auth_headers(admin_token)
+    )
+    assert negative.status_code == 422
+
+
+async def test_only_an_administrator_places_the_maps_row(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    admin_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(admin_token))
+    ).json()
+    invite = (
+        await client.post(
+            f"/rooms/{room['id']}/invitations",
+            json={"role": "player"},
+            headers=_auth_headers(admin_token),
+        )
+    ).json()
+    player_token = make_token(str(uuid.uuid4()))
+    await client.post(f"/invitations/{invite['code']}/accept", headers=_auth_headers(player_token))
+
+    response = await client.patch(
+        f"/rooms/{room['id']}", json={"maps_position": 1}, headers=_auth_headers(player_token)
+    )
+
+    assert response.status_code == 403

@@ -253,7 +253,8 @@
         "addHint": "태그 하나는 주요 태그, 둘 이상은 조합입니다.",
         "add": "추가",
         "alreadyMain": "이 태그는 이미 묶기 항목입니다.",
-        "alreadyCombination": "이 조합은 이미 묶기에 있습니다."
+        "alreadyCombination": "이 조합은 이미 묶기에 있습니다.",
+        "mapsRow": "지도 줄"
       },
       "all": {
         "title": "모든 태그",
@@ -1095,6 +1096,9 @@
       "repeated": "문서가 이미 지도에 있어 일반 라벨로 남습니다:",
       "backgroundLater": "배경 이미지는 나중에 새 지도의 지도 버튼에서 올립니다.",
       "submit": "가져오기"
+    },
+    "strip": {
+      "all_other": "모든 지도 ({{count}})"
     }
   }
 }

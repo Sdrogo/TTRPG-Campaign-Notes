@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Affix,
@@ -27,6 +27,7 @@ import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { RoomPdfExports } from '../components/pdf/RoomPdfExports';
 import { RoomTitleActions } from '../components/RoomTitleActions';
+import { RoomMapsStrip } from '../components/maps/RoomMapsStrip';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { TagFilter } from '../components/TagFilter';
 import { Backlinks } from '../components/mentions/Backlinks';
@@ -120,6 +121,10 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   const shown = documents.data ? filterDocumentsByTags(documents.data, tagFilter) : undefined;
   const sorted = shown ? sortDocuments(shown, sort) : undefined;
   const hasControls = Boolean((isMaster && room.data) || (documents.data && documents.data.length > 0));
+  // The maps in sight, not only behind the Room's "⋮" (Andrea, 2026-10-25):
+  // among the groups where the setup's Grouping places them, else on top.
+  const mapsRow = <RoomMapsStrip roomId={roomId} canCreate={canCreateDocument} />;
+  const mapsAmongGroups = groupBy === 'main-tag' && Boolean(sorted && sorted.length > 0);
 
   const groupByOptions: { value: DocumentGroupBy; label: string }[] = [
     { value: 'main-tag', label: t('documents.groupByMainTag') },
@@ -243,6 +248,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             </Group>
           </Collapse>
         )}
+        {!mapsAmongGroups && mapsRow}
         {documents.isLoading && <Loader color="accent" />}
         {documents.isError && <Text c="red">{t('documents.loadError')}</Text>}
         {documents.data && documents.data.length === 0 && (
@@ -264,6 +270,8 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             mainItems={mainItems.data ?? []}
             memberList={members.data ?? []}
             groupBy={groupBy}
+            mapsRow={mapsRow}
+            mapsPosition={room.data?.mapsPosition ?? 0}
           />
         )}
         {/* A Tag has no page, so where it is mentioned shows on the list
@@ -298,6 +306,8 @@ function DocumentsGrid({
   mainItems,
   memberList,
   groupBy,
+  mapsRow,
+  mapsPosition,
 }: {
   documents: Document[];
   roomId: string;
@@ -305,6 +315,10 @@ function DocumentsGrid({
   mainItems: MainItem[];
   memberList: Member[];
   groupBy: DocumentGroupBy;
+  /** The Room's maps row, shown among the groups (only when grouped). */
+  mapsRow: ReactNode;
+  /** How many Main items come before the maps row. */
+  mapsPosition: number;
 }) {
   const { t } = useTranslation();
   // Content revealed to the viewer they haven't opened yet marks its card
@@ -346,34 +360,45 @@ function DocumentsGrid({
   }
 
   const groups = groupDocumentsByMainItems(documents, tags, mainItems);
+  // Before the first group the setup places after the maps row; past the last
+  // Main item it still comes before the "no Main Tag" group, which isn't one.
+  // A stored place past the items (a Tag deleted since) still stops there.
+  const found = groups.findIndex(
+    (group) => group.key === UNGROUPED_KEY || group.position >= mapsPosition,
+  );
+  const mapsAt = found === -1 ? groups.length : found;
   return (
     <Stack gap="lg">
-      {groups.map((group) => {
+      {groups.map((group, index) => {
         const key = group.key;
         const isExpanded = !collapsed.has(key);
         const label =
           group.key === UNGROUPED_KEY ? t('documents.ungroupedTag') : itemLabel(group.tags);
         return (
-          <Stack key={key} gap="xs">
-            <Title order={2} fz="h5" style={{ fontFamily: 'var(--font-display)' }}>
-              <UnstyledButton
-                onClick={() => toggleGroup(key)}
-                aria-expanded={isExpanded}
-                c="dimmed"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-              >
-                {isExpanded ? (
-                  <CaretDownIcon size={16} aria-hidden="true" />
-                ) : (
-                  <CaretRightIcon size={16} aria-hidden="true" />
-                )}
-                {label}
-              </UnstyledButton>
-            </Title>
-            <Collapse expanded={isExpanded}>{cards(group.documents, 3)}</Collapse>
-          </Stack>
+          <Fragment key={key}>
+            {index === mapsAt && mapsRow}
+            <Stack gap="xs">
+              <Title order={2} fz="h5" style={{ fontFamily: 'var(--font-display)' }}>
+                <UnstyledButton
+                  onClick={() => toggleGroup(key)}
+                  aria-expanded={isExpanded}
+                  c="dimmed"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  {isExpanded ? (
+                    <CaretDownIcon size={16} aria-hidden="true" />
+                  ) : (
+                    <CaretRightIcon size={16} aria-hidden="true" />
+                  )}
+                  {label}
+                </UnstyledButton>
+              </Title>
+              <Collapse expanded={isExpanded}>{cards(group.documents, 3)}</Collapse>
+            </Stack>
+          </Fragment>
         );
       })}
+      {mapsAt === groups.length && mapsRow}
     </Stack>
   );
 }
