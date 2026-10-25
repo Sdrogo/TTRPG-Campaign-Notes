@@ -192,6 +192,13 @@ One line per unit; dates 2026, newest first. Spec files live in
   `PATCH /rooms/{id}`. Grouped by Main Tag, the row sits before the first
   group placed after it (past the last item, still before "No Main Tag");
   ungrouped, on top. Duplication copies it; JSON export/import does not.
+- **Spec 44, Room Index tab** (PR #235, frontend only, no migration):
+  the header's burger is gone; every Room page has a tab on the left edge
+  (`RoomIndex`, replacing `GlossaryIndexDrawer`) that opens a card narrow in
+  width and as tall as the screen (product owner, 2026-10-25), with the
+  same Tag sections as before plus a Maps section ("All maps", then every
+  visible map, alphabetical). Its strings moved from hardcoded Italian to
+  the `glossary.*` keys in all 12 languages (title now "Room Index").
 - **Compact Note form** (no migration): Visibility and the Relational link
   switch share one row in `NoteForm`; on a phone the switch's hint sits
   under the row and the form's gaps tighten.

@@ -61,6 +61,73 @@ body {
   }
 }
 
+/* The Room's Index tab (spec 44): a narrow pill fixed on the screen's left
+   edge, at 40% of its height so it stays above the lower half a map page
+   gives to a Document on a phone (spec 37). Above the page and the header
+   (100), below Mantine's overlays (200) while closed; while its card is open
+   it rides on the card's right side (`min(260px, 85vw)`, `CARD_WIDTH` in
+   `RoomIndex`) above the drawer's overlay, so a second click closes it. */
+.room-index-tab {
+  position: fixed;
+  left: 0;
+  top: 40%;
+  transform: translateY(-50%);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px;
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  border-left: none;
+  border-radius: 0 var(--mantine-radius-md) var(--mantine-radius-md) 0;
+  transition: left 200ms ease, color 150ms ease;
+}
+
+/* No accent red, open or not (product owner, 2026-10-25: too aggressive):
+   hovering only brightens it to the primary text color. */
+.room-index-tab:hover {
+  color: var(--text-primary);
+}
+
+/* A horizontal arrow (product owner, 2026-10-25): pointing right, "expand",
+   while closed; turned to point left, "collapse", while open. */
+.room-index-tab-arrow {
+  transition: transform 200ms ease;
+}
+
+.room-index-tab[data-opened] .room-index-tab-arrow {
+  transform: rotate(180deg);
+}
+
+.room-index-tab[data-opened] {
+  left: min(260px, 85vw);
+  z-index: 250;
+}
+
+.room-index-tab-label {
+  writing-mode: vertical-rl;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 48em) {
+  .room-index-tab {
+    padding: 12px 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-index-tab,
+  .room-index-tab-arrow {
+    transition: none;
+  }
+}
+
 /* Whatever the page scrolls to (`scrollIntoView`, `#anchors`) lands below
    the pinned top bar instead of under it. */
 html {

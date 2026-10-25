@@ -621,9 +621,11 @@
     "applied_other": "{{count}} Erwähnungen hinzugefügt"
   },
   "glossary": {
-    "title": "Tag-Index",
-    "openToggle": "Tag-Index öffnen",
-    "closeToggle": "Tag-Index schließen",
+    "title": "Raumindex",
+    "openToggle": "Raumindex öffnen",
+    "closeToggle": "Raumindex schließen",
+    "tab": "Index",
+    "allMaps": "Alle Karten",
     "mainTags": "Haupt-Tags",
     "otherTags": "Weitere Tags",
     "empty": "Keine Tags in diesem Raum."

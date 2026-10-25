@@ -621,9 +621,11 @@
     "applied_other": "Se añadieron {{count}} menciones"
   },
   "glossary": {
-    "title": "Índice de Etiquetas",
-    "openToggle": "Abrir índice de Etiquetas",
-    "closeToggle": "Cerrar índice de Etiquetas",
+    "title": "Índice de la Sala",
+    "openToggle": "Abrir el índice de la Sala",
+    "closeToggle": "Cerrar el índice de la Sala",
+    "tab": "Índice",
+    "allMaps": "Todos los mapas",
     "mainTags": "Etiquetas principales",
     "otherTags": "Otras Etiquetas",
     "empty": "No hay Etiquetas en esta Sala."

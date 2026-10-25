@@ -128,8 +128,9 @@ other icon set.
   the logo, load before the app; links to the Rooms list) **always at
   the exact center** (2026-10-03, Andrea: it shifted between pages): the
   header is a 3-column grid (`1fr minmax(0, auto) 1fr` in `.app-header`), so
-  whatever sits on either side never moves it. **On the left, the back arrow
-  then the Glossary burger** (same date): the back button is an icon-only
+  whatever sits on either side never moves it. **On the left, the back arrow** (same
+  date; the Glossary burger that followed it moved to the Room Index tab,
+  spec 44, 2026-10-25): the back button is an icon-only
   `ActionIcon` (`ArrowLeftIcon`), its destination's name kept as
   `aria-label`/`title`. **Back is hierarchical** (2026-10-15, Andrea: browser
   history made it unreliable around maps and the split view): it goes to
@@ -477,22 +478,32 @@ other icon set.
   `aria-expanded` on the button reflects the state. Every group starts
   expanded; collapsing one doesn't affect the others, and the state isn't
   persisted (a reload starts fresh).
-- **Glossary Index** (`GlossaryIndexDrawer`, 2026-09-25, spec 10; Main items
-  2026-10-01, spec 11_3): a left-anchored Mantine `Drawer`, toggled by a
-  `Burger` on the left of `AppHeader`, after the back arrow — shown
-  only on a Room-scoped page (`PageLayout`'s `roomId` prop). It opens with
-  "Tag principali": the Room's Main items — single Tags and Tag combinations
-  (`#A + #B`) — **in exactly the order the Documents page groups by**; both
-  read the same `useMainItems` list through `resolveMainItems`, so they can't
-  diverge, and saving on the Room setup page updates the index without a
-  reload. Then the other Tags by category (alphabetical), uncategorized under
-  "Altri Tag". A Tag that is a single Main item is listed only under
-  "Tag principali". Each entry links to the Documents list filtered by its
-  Tag, or by all the Tags of a combination — the same destination a `#Tag`
-  mention leads to, and the same Documents its group holds. Not the Glossary
-  entity from `requirements.md` (FR-N3/FR-N4, terms with their own
-  definitions) — that remains unbuilt; this is a navigational index over
-  Tags, a deliberate scope decision for this spec.
+- **Room Index** (`RoomIndex`, spec 44, 2026-10-25; before it the
+  Glossary Index drawer behind a header burger, spec 10, Main items from
+  spec 11_3): a tab fixed on the screen's left edge of every Room-scoped
+  page (`PageLayout`'s `roomId` prop), at 40% of the screen's height so it
+  stays above a phone map page's lower half (spec 37). The tab
+  (`.room-index-tab` in `index.css`) is a narrow pill on `--bg-raised`,
+  rounded on the right only, with a horizontal arrow (`CaretRightIcon`,
+  turned to point left while open; product owner, 2026-10-25) and, from `sm`, the
+  word "Index" written vertically; icon only on a phone. It opens a card
+  narrow in width (`min(260px, 85vw)`) and as tall as the screen, a
+  left-anchored Mantine `Drawer` titled "Room Index"; while open the tab
+  rides on the card's right edge (z-index above the drawer's overlay), so a
+  second click closes it, as do the ×, a click outside, Escape and picking
+  an entry. The card opens with "Main Tags": the Room's Main items — single
+  Tags and Tag combinations (`#A + #B`) — **in exactly the order the
+  Documents page groups by**; both read the same `useMainItems` list
+  through `resolveMainItems`, so they can't diverge, and saving on the Room
+  setup page updates the index without a reload. Then the other Tags by
+  category (alphabetical), uncategorized under "Other Tags". A Tag that is
+  a single Main item is listed only under "Main Tags". Each entry links to
+  the Documents list filtered by its Tag, or by all the Tags of a
+  combination — the same destination a `#Tag` mention leads to. Last,
+  "Maps": an "All maps" link to the maps page, then every map the viewer
+  sees, alphabetical. Tags, Main items and maps are fetched only once the
+  card first opens. Not the Glossary entity from `requirements.md`
+  (FR-N3/FR-N4) — that remains unbuilt; this is a navigational index.
 - **Room search** (`components/search/`, 2026-10-05, spec 21): on every
   Room page the top bar's right side starts with the search: from `md` a
   `default` Button "Cerca" with a `Kbd` showing `Ctrl K` (`⌘ K` on Apple

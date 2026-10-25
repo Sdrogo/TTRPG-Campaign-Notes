@@ -621,9 +621,11 @@
     "applied_other": "Added {{count}} mentions"
   },
   "glossary": {
-    "title": "Tag Index",
-    "openToggle": "Open Tag Index",
-    "closeToggle": "Close Tag Index",
+    "title": "Room Index",
+    "openToggle": "Open Room Index",
+    "closeToggle": "Close Room Index",
+    "tab": "Index",
+    "allMaps": "All maps",
     "mainTags": "Main Tags",
     "otherTags": "Other Tags",
     "empty": "No Tags in this Room."

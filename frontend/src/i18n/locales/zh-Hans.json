@@ -611,9 +611,11 @@
     "applied_other": "已添加 {{count}} 个提及"
   },
   "glossary": {
-    "title": "标签索引",
-    "openToggle": "打开标签索引",
-    "closeToggle": "关闭标签索引",
+    "title": "房间索引",
+    "openToggle": "打开房间索引",
+    "closeToggle": "关闭房间索引",
+    "tab": "索引",
+    "allMaps": "所有地图",
     "mainTags": "主标签",
     "otherTags": "其他标签",
     "empty": "此房间没有标签。"

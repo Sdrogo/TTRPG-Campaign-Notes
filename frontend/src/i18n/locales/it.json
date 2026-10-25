@@ -621,9 +621,11 @@
     "applied_other": "Aggiunte {{count}} menzioni"
   },
   "glossary": {
-    "title": "Indice dei Tag",
-    "openToggle": "Apri indice dei Tag",
-    "closeToggle": "Chiudi indice dei Tag",
+    "title": "Indice della Stanza",
+    "openToggle": "Apri l'indice della Stanza",
+    "closeToggle": "Chiudi l'indice della Stanza",
+    "tab": "Indice",
+    "allMaps": "Tutte le mappe",
     "mainTags": "Tag principali",
     "otherTags": "Altri Tag",
     "empty": "Nessun Tag in questa Stanza."

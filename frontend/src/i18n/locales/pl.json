@@ -641,9 +641,11 @@
     "applied_other": "Dodano {{count}} wzmianki"
   },
   "glossary": {
-    "title": "Indeks tagów",
-    "openToggle": "Otwórz indeks tagów",
-    "closeToggle": "Zamknij indeks tagów",
+    "title": "Indeks Pokoju",
+    "openToggle": "Otwórz indeks Pokoju",
+    "closeToggle": "Zamknij indeks Pokoju",
+    "tab": "Indeks",
+    "allMaps": "Wszystkie mapy",
     "mainTags": "Tagi główne",
     "otherTags": "Pozostałe tagi",
     "empty": "Ten pokój nie ma tagów."

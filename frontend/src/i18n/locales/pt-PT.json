@@ -623,9 +623,11 @@
     "applied_other": "Adicionadas {{count}} menções"
   },
   "glossary": {
-    "title": "Índice de Tags",
-    "openToggle": "Abrir índice de Tags",
-    "closeToggle": "Fechar índice de Tags",
+    "title": "Índice da Sala",
+    "openToggle": "Abrir o índice da Sala",
+    "closeToggle": "Fechar o índice da Sala",
+    "tab": "Índice",
+    "allMaps": "Todos os mapas",
     "mainTags": "Tags principais",
     "otherTags": "Outras Tags",
     "empty": "Nenhuma Tag nesta Sala."
