@@ -619,7 +619,7 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
   Room); a read-only Demo of the real pages over an in-browser sample Room
   (no account, no backend calls, no DB writes) with a guided tour. Product
   owner answered A (read-only) and B (landing for all + burger) on
-  2026-10-25; C (sample content en+it) still open. Build order 45_1
+  2026-10-25, and C (sample content en+it) too. Build order 45_1
   landing + burger, 45_2 demo, 45_3 tour. Frontend only, no migration.
 - **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
   editor, PR #211) and 38_3 (JSON import/export) built; first real test is

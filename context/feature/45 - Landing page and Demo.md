@@ -185,8 +185,8 @@ navigation between the landing page, the Rooms page and each Room.
 - ~~A. Demo interactivity~~: read-only (product owner, 2026-10-25).
 - ~~B. Signed-in users at `/`~~: the landing page for everyone, Rooms at
   `/rooms`, plus the burger (product owner, 2026-10-25).
-- **C. Sample content languages**: English and Italian (default, 11), or
-  English only.
+- ~~C. Sample content languages~~: English and Italian (product owner,
+  2026-10-25).
 
 ## Design (frontend only, no backend change, no migration)
 
