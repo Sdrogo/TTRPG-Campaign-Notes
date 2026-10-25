@@ -141,12 +141,17 @@ other icon set.
   `ActionIcon` (`ArrowLeftIcon`), its destination's name kept as
   `aria-label`/`title`. **Back is hierarchical** (2026-10-15, Andrea: browser
   history made it unreliable around maps and the split view): it goes to
-  the page's fixed parent (Document -> Room -> Rooms list, map -> maps
-  list), never `navigate(-1)`, replacing the current history entry; a link
-  that opens a page on purpose from elsewhere (a map from a Document, a
-  Document from a map card or the open menu, a copied map) puts
-  `{ from }` (`lib/backNav.ts`) in the navigation state and back returns
-  there, labelled with the generic `common.back`; the current user's circular avatar on the right
+  the page's fixed parent (Document -> Room -> Rooms list, Room setup ->
+  Room, map -> maps list), never `navigate(-1)`, replacing the current
+  history entry; a link that opens a page on purpose from elsewhere (a map
+  from a Document, the Room page's Maps row, Maps icon or the Room Index; a
+  Document from a map card or the open menu; the setup from a Room card; a
+  copied map) puts `{ from, backStack }` (`lib/backNav.ts`, a trail of at
+  most 20 places, cut when a page already on it comes back) in the
+  navigation state and back walks that trail, labelled with the generic
+  `common.back`. Before going to a Document or map on the trail it reads it
+  afresh and skips it on a 404 (deleted or hidden), falling back to the
+  page's parent (Andrea, 2026-10-25); the current user's circular avatar on the right
   (`AccountButton`, 36px, thin `--border-default` ring that turns
   `--accent-primary` on hover/focus and while on `/account`). It is
   rendered by `HomePage` and by `PageLayout`, so every signed-in page

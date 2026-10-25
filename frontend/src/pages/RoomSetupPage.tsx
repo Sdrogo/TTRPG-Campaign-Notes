@@ -75,7 +75,7 @@ export function RoomSetupPage() {
   }
 
   return (
-    <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId}>
+    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('documents.title')} roomId={roomId}>
       <Group justify="space-between" wrap="nowrap">
         <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
           {t('setup.title')}

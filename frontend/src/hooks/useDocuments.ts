@@ -74,12 +74,16 @@ export function useDocuments(roomId: string, enabled: boolean) {
  * backend doesn't say which.
  */
 export function useDocument(roomId: string, documentId: string, enabled: boolean) {
-  return useQuery<Document>({
+  return useQuery<Document>({ ...documentQuery(roomId, documentId), enabled });
+}
+
+/** How one Document is read and cached, shared by `useDocument` and the header's back check. */
+export function documentQuery(roomId: string, documentId: string) {
+  return {
     queryKey: documentQueryKey(roomId, documentId),
     queryFn: async () =>
       toDocument(await apiFetch<RawDocument>(`/rooms/${roomId}/documents/${documentId}`)),
-    enabled,
-  });
+  };
 }
 
 interface RawDocumentRead {

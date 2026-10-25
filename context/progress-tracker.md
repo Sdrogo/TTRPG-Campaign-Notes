@@ -193,6 +193,15 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-10-25
 
+- **Back arrow fixes** (Andrea, frontend only, no migration): Room setup's
+  parent is now the Room page (it went to the Rooms list); a Room card's
+  "Setup" carries the Rooms list as origin. The Room page's Maps row, Maps
+  icon, the Room Index map links and the Maps page cards carry their page as
+  origin, so back from a map returns there instead of the Maps page. The
+  `{ from }` state became a trail (`from` + `backStack`, max 20) walked by
+  `useHierarchicalBack`, which reads each Document/map afresh and skips it
+  on a 404, so a deleted one never shows its empty state.
+
 - **Maps row on the Room page** (no spec, Andrea's request, PR #236;
   migration `b5f1d8e3a7c2`): `RoomMapsStrip` under the Room title lists the maps the
   viewer sees as small cards (kind + Document count; they wrap, one per row on a phone;

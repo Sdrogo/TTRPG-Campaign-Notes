@@ -3,7 +3,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiFetch } from '../../lib/apiClient';
+import { ApiError, apiFetch } from '../../lib/apiClient';
 import { rawAccount, rawDirectInvitation, rawFriend, rawFriends, rawMyReveal } from '../fixtures';
 import { MantineProvider } from '@mantine/core';
 import { MemoryRouter } from 'react-router-dom';
@@ -16,7 +16,10 @@ import { PageLayout } from '../../components/PageLayout';
 import { AccountSection } from '../../components/account/AccountSection';
 import { AccountButton } from '../../components/account/AccountButton';
 
-vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
+vi.mock('../../lib/apiClient', async () => ({
+  ...(await vi.importActual<typeof import('../../lib/apiClient')>('../../lib/apiClient')),
+  apiFetch: vi.fn(),
+}));
 
 const navigate = vi.fn();
 vi.mock('react-router-dom', async () => ({
@@ -210,7 +213,52 @@ describe('AppHeader', () => {
       expect(screen.queryByRole('button', { name: 'Documenti' })).not.toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
 
-      expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps/m1', { replace: true });
+      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps/m1', { replace: true }));
+    });
+
+    function renderOpenedFrom(state: unknown) {
+      render(
+        <MantineProvider theme={theme} forceColorScheme="dark" env="test">
+          <QueryClientProvider client={createTestQueryClient()}>
+            <MemoryRouter initialEntries={[{ pathname: '/x', state }]}>
+              <AppHeader backTo="/rooms/r1/documents" backLabel="Documenti" />
+            </MemoryRouter>
+          </QueryClientProvider>
+        </MantineProvider>,
+      );
+    }
+
+    // Andrea, 2026-10-25: a deleted Document or map on the way back is skipped.
+    it('skips a deleted Document and keeps walking the trail', async () => {
+      fetchMock.mockImplementation((path: string) =>
+        path === '/rooms/r1/documents/gone'
+          ? Promise.reject(new ApiError(404, 'Not found'))
+          : Promise.resolve(rawAccount()),
+      );
+      renderOpenedFrom({ from: '/rooms/r1/documents/gone', backStack: ['/rooms/r1/documents', '/rooms/r1/maps/m1'] });
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
+
+      await waitFor(() =>
+        expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps/m1', {
+          replace: true,
+          state: { from: '/rooms/r1/documents' },
+        }),
+      );
+      expect(navigate).toHaveBeenCalledTimes(1);
+    });
+
+    it('falls back to the parent when everything on the trail is gone', async () => {
+      fetchMock.mockImplementation(() => Promise.reject(new ApiError(404, 'Not found')));
+      renderOpenedFrom({ from: '/rooms/r1/maps/m1', backStack: ['/rooms/r1/documents/d1/mention-map'] });
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/documents', { replace: true }));
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/r1/maps/m1');
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/r1/documents/d1');
     });
 
     it('ignores browser history even when there is some', async () => {
