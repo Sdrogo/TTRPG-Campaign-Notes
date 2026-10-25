@@ -290,23 +290,12 @@ html body[data-scroll-locked] {
   }
 }
 
-/* The maps row on the Room's page: small cards that wrap on a wide screen
-   and, on a phone, stay one row that scrolls sideways. */
+/* The maps row on the Room's page: small cards that wrap, one per row on a
+   phone, so a name is never cut by the screen's edge. */
 .room-maps-cards {
   display: grid;
   gap: var(--mantine-spacing-sm);
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-}
-
-@media (max-width: 47.99em) {
-  .room-maps-cards {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(200px, 70%);
-    overflow-x: auto;
-    scrollbar-width: thin;
-    padding-bottom: 2px;
-  }
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
 }
 
 .room-map-card {

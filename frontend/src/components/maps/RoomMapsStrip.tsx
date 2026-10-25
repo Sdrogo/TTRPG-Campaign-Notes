@@ -14,8 +14,8 @@ interface RoomMapsStripProps {
  * The maps the viewer sees on the Room's main page, as small cards, last
  * edited first, so they are in sight without opening the Room's "⋮" (Andrea,
  * 2026-10-25). "Maps" with its count leads to the Maps page; each card opens
- * its map and says its kind and how many Documents it shows. The cards wrap
- * on a wide screen and scroll sideways on a phone, so they stay one row there.
+ * its map and says its kind and how many Documents it shows. The cards wrap,
+ * one per row on a phone (Andrea, 2026-10-25: no sideways scrolling).
  * Hidden while loading, on an error, and when there is no map and nothing to
  * create. The list already follows each map's visibility (and "View as"),
  * like the Maps page.
