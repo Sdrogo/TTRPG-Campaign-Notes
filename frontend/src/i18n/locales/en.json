@@ -1121,6 +1121,10 @@
       "repeated": "Document already on the map, kept as plain labels:",
       "backgroundLater": "Upload the background image afterwards, from the new map's Map button.",
       "submit": "Import"
+    },
+    "strip": {
+      "all_one": "All maps ({{count}})",
+      "all_other": "All maps ({{count}})"
     }
   }
 }

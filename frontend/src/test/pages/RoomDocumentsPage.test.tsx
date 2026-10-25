@@ -4,7 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
 import { useSession } from '../../hooks/useSession';
-import { fakeSession, rawAccount, rawDocument, rawMember, rawRoom } from '../fixtures';
+import { fakeSession, rawAccount, rawDocument, rawMap, rawMember, rawRoom } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { RoomDocumentsPage } from '../../pages/RoomDocumentsPage';
 import { ViewAsProvider } from '../../components/ViewAsProvider';
@@ -27,6 +27,7 @@ interface Routes {
   members: unknown;
   room: unknown;
   mainItems: unknown;
+  maps: unknown;
 }
 
 const routes: Routes = {
@@ -34,6 +35,7 @@ const routes: Routes = {
   members: [rawMember()],
   room: rawRoom(),
   mainItems: [],
+  maps: [],
 };
 
 const BACKLINKS = [
@@ -57,6 +59,7 @@ function mockApi(onWrite: (path: string) => Promise<unknown> = () => Promise.res
   fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
     if (init?.method) return onWrite(path);
     if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
+    if (path === '/rooms/room-1/maps') return Promise.resolve(routes.maps);
     if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
     if (path.endsWith('/backlinks')) return Promise.resolve(BACKLINKS);
     if (path === '/rooms/room-1/tags') return Promise.resolve(tags);
@@ -90,12 +93,58 @@ beforeEach(() => {
   routes.members = [rawMember({ user_id: 'user-1', role: 'master' })];
   routes.room = rawRoom();
   routes.mainItems = [];
+  routes.maps = [];
   fetchMock.mockReset();
   sessionMock.mockReturnValue({ session: fakeSession('user-1'), loading: false } as SessionState);
   mockApi();
 });
 
 describe('RoomDocumentsPage', () => {
+  it('shows the maps the viewer sees in a row on the page', async () => {
+    routes.maps = [
+      rawMap({ id: 'map-1', name: 'La Corte' }),
+      rawMap({ id: 'map-2', name: 'Shibuya', kind: 'geographic' }),
+    ];
+    render();
+
+    const strip = await screen.findByRole('navigation', { name: 'Mappe' });
+    expect(within(strip).getByRole('link', { name: 'Tutte le mappe (2)' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/maps',
+    );
+    expect(within(strip).getByRole('link', { name: 'La Corte' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/maps/map-1',
+    );
+    expect(within(strip).getByRole('link', { name: 'Shibuya' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/maps/map-2',
+    );
+    expect(within(strip).queryByRole('link', { name: 'Nuova mappa' })).not.toBeInTheDocument();
+  });
+
+  it('offers a new map when the Room has none and the viewer may create one', async () => {
+    render();
+
+    const strip = await screen.findByRole('navigation', { name: 'Mappe' });
+    expect(within(strip).getByRole('link', { name: 'Nuova mappa' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/maps?new=1',
+    );
+  });
+
+  it('shows no maps row to a Player who sees no map and may not create one', async () => {
+    routes.members = [
+      rawMember({ user_id: 'user-1', display_name: 'Io' }),
+      rawMember({ user_id: 'user-2', role: 'master', display_name: 'Master' }),
+    ];
+    routes.room = rawRoom({ players_can_create_documents: false });
+    render();
+    await screen.findByText('Il Cancello');
+
+    expect(screen.queryByRole('navigation', { name: 'Mappe' })).not.toBeInTheDocument();
+  });
+
   it('waits on a loader while the session is resolving', () => {
     sessionMock.mockReturnValue({ session: null, loading: true } as SessionState);
 
@@ -343,7 +392,8 @@ describe('grouping and sorting', () => {
     fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
       if (init?.method) return Promise.resolve();
       if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
-      if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
+      if (path === '/rooms/room-1/maps') return Promise.resolve(routes.maps);
+    if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
       if (path === '/rooms/room-1/tags')
         return Promise.resolve([...tags, { id: 'tag-npc', name: 'NPC', category: 'Type', main_position: 0 }]);
       if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
@@ -617,7 +667,8 @@ describe('collapsing a group', () => {
     fetchMock.mockImplementation((path: string, init?: { method?: string }) => {
       if (init?.method) return Promise.resolve();
       if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
-      if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
+      if (path === '/rooms/room-1/maps') return Promise.resolve(routes.maps);
+    if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
       if (path === '/rooms/room-1/tags')
         return Promise.resolve([...tags, { id: 'tag-npc', name: 'NPC', category: 'Type', main_position: 0 }]);
       if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);

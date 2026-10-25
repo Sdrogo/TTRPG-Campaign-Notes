@@ -1093,6 +1093,9 @@
       "repeated": "该文档已在地图上,将保留为普通标签:",
       "backgroundLater": "背景图片之后在新地图的“地图”按钮中上传。",
       "submit": "导入"
+    },
+    "strip": {
+      "all_other": "全部地图（{{count}}）"
     }
   }
 }

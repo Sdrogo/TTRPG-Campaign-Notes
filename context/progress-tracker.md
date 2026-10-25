@@ -176,6 +176,13 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-25
+
+- **Maps row on the Room page** (no spec, Andrea's request; frontend only,
+  no migration): `RoomMapsStrip` under the Room title lists the maps the
+  viewer sees (one sideways-scrolling line, "Maps" + count → Maps page);
+  with none, "New map" for who may create opens the dialog via `?new=1`.
+
 ### 2026-10-24
 
 - **43_1, 43_2 Real-time map editing** (PR #229, no migration): per-item

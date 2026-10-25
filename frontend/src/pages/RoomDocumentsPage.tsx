@@ -27,6 +27,7 @@ import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { RoomPdfExports } from '../components/pdf/RoomPdfExports';
 import { RoomTitleActions } from '../components/RoomTitleActions';
+import { RoomMapsStrip } from '../components/maps/RoomMapsStrip';
 import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 import { TagFilter } from '../components/TagFilter';
 import { Backlinks } from '../components/mentions/Backlinks';
@@ -243,6 +244,8 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             </Group>
           </Collapse>
         )}
+        {/* The maps in sight, not only behind the Room's "⋮" (Andrea, 2026-10-25). */}
+        <RoomMapsStrip roomId={roomId} canCreate={canCreateDocument} />
         {documents.isLoading && <Loader color="accent" />}
         {documents.isError && <Text c="red">{t('documents.loadError')}</Text>}
         {documents.data && documents.data.length === 0 && (

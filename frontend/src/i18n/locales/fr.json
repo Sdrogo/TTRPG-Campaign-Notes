@@ -1123,6 +1123,10 @@
       "repeated": "Document déjà sur la carte, ils resteront de simples étiquettes :",
       "backgroundLater": "L'image de fond s'ajoute ensuite, depuis le bouton Carte de la nouvelle carte.",
       "submit": "Importer"
+    },
+    "strip": {
+      "all_one": "Toutes les cartes ({{count}})",
+      "all_other": "Toutes les cartes ({{count}})"
     }
   }
 }

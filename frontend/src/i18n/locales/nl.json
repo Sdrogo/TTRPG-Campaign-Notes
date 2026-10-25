@@ -1121,6 +1121,10 @@
       "repeated": "Document staat al op de kaart, blijven gewone labels:",
       "backgroundLater": "De achtergrondafbeelding upload je daarna via de knop Kaart van de nieuwe kaart.",
       "submit": "Importeren"
+    },
+    "strip": {
+      "all_one": "Alle kaarten ({{count}})",
+      "all_other": "Alle kaarten ({{count}})"
     }
   }
 }

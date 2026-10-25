@@ -1177,6 +1177,12 @@
       "repeated": "Dokument jest już na mapie, zostaną zwykłymi etykietami:",
       "backgroundLater": "Obraz tła wgrasz później, przyciskiem Mapa nowej mapy.",
       "submit": "Importuj"
+    },
+    "strip": {
+      "all_one": "Wszystkie mapy ({{count}})",
+      "all_few": "Wszystkie mapy ({{count}})",
+      "all_many": "Wszystkie mapy ({{count}})",
+      "all_other": "Wszystkie mapy ({{count}})"
     }
   }
 }

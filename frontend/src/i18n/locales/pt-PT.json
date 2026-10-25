@@ -1123,6 +1123,10 @@
       "repeated": "Documento já no mapa, ficarão como etiquetas simples:",
       "backgroundLater": "A imagem de fundo carrega-se depois, no botão Mapa do novo mapa.",
       "submit": "Importar"
+    },
+    "strip": {
+      "all_one": "Todos os mapas ({{count}})",
+      "all_other": "Todos os mapas ({{count}})"
     }
   }
 }

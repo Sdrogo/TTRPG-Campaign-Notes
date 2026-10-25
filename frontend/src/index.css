@@ -290,6 +290,14 @@ html body[data-scroll-locked] {
   }
 }
 
+/* The maps row on the Room's page: one line that scrolls sideways when the
+   maps don't fit, with the same thin scrollbar as the page. */
+.room-maps-strip {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+
 /* A result in the search panel (spec 21): highlighted (arrow keys or hover)
    like a mention suggestion, and a link without a link's look. */
 .search-option {

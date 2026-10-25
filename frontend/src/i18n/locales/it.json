@@ -1121,6 +1121,10 @@
       "repeated": "Documento già sulla mappa, resteranno etichette semplici:",
       "backgroundLater": "L'immagine di sfondo si carica dopo, dal pulsante Mappa della nuova mappa.",
       "submit": "Importa"
+    },
+    "strip": {
+      "all_one": "Tutte le mappe ({{count}})",
+      "all_other": "Tutte le mappe ({{count}})"
     }
   }
 }
