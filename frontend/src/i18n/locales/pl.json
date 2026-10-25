@@ -76,6 +76,7 @@
     "intro": "Ex Libris to miejsce, w którym drużyna RPG wspólnie pisze swoją kampanię: miejsca, postacie, wydarzenia i sekrety, każde widoczne tylko dla tych, którzy powinni o nim wiedzieć.",
     "signIn": "Zaloguj się",
     "openMyRooms": "Otwórz moje pokoje",
+    "tryDemo": "Wypróbuj demo",
     "featuresTitle": "Co możesz robić",
     "features": {
       "rooms": {
@@ -116,6 +117,14 @@
     "home": "Start",
     "rooms": "Pokoje",
     "noRooms": "Nie ma jeszcze pokoi"
+  },
+  "demo": {
+    "banner": "Demo: przykładowa kampania, tylko do odczytu.",
+    "viewAs": "Wyświetl jako",
+    "exit": "Wyjdź z demo",
+    "readOnly": "Demo jest tylko do odczytu: zaloguj się, aby utworzyć własny Pokój.",
+    "unavailable": "Demo potrzebuje danych witryny, które ta przeglądarka blokuje.",
+    "accountNotice": "W demo nie ma konta: zaloguj się, aby mieć własne."
   },
   "header": {
     "account": "Twoje konto",

@@ -801,4 +801,22 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
 - "Go to sign in" links (`SignInRequired`, the invite page) point to
   `/#sign-in`; the page scrolls there on load.
 - Screenshots: `landing-page/` in the project files.
+- The hero has two buttons side by side: "Try the demo" (filled, a plain
+  `<a href="/demo">`, since entering the Demo is a full page load) and
+  "Sign in" / "Open my Rooms" (default variant).
+
+## Demo (spec 45_2)
+
+- While the Demo is on, `AppHeader` shows `DemoBanner` as a full-width row
+  under its three columns (`.demo-banner`: raised background, default
+  border, `md` radius; deliberately not the accent, which belongs to the
+  "view as" preview banner it replaces): a flask icon and "Demo: a sample
+  campaign, read-only.", then "View as" + a `SegmentedControl` (Master /
+  Marco / Giulia, `xs`), "Exit demo" (default) and "Sign in" (filled),
+  `compact-sm`. It wraps onto two or three lines on a phone.
+- All the real controls stay visible; a write shows the read-only notice
+  where that action shows its errors (form error or `notifyError` toast).
+- The Account page shows a `FullPageMessage` ("there is no account in the
+  demo") with a way back to the Rooms.
+- Screenshots: `demo/` in the project files.
 

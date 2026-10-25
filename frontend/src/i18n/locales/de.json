@@ -76,6 +76,7 @@
     "intro": "In Ex Libris schreibt eine Rollenspielgruppe ihre Kampagne gemeinsam: Orte, Charaktere, Ereignisse und Geheimnisse, jedes nur für die sichtbar, die davon wissen sollen.",
     "signIn": "Anmelden",
     "openMyRooms": "Meine Räume öffnen",
+    "tryDemo": "Demo ausprobieren",
     "featuresTitle": "Was du tun kannst",
     "features": {
       "rooms": {
@@ -116,6 +117,14 @@
     "home": "Start",
     "rooms": "Räume",
     "noRooms": "Noch keine Räume"
+  },
+  "demo": {
+    "banner": "Demo: eine Beispielkampagne, nur lesbar.",
+    "viewAs": "Ansehen als",
+    "exit": "Demo verlassen",
+    "readOnly": "Die Demo ist schreibgeschützt: Melde dich an, um deinen eigenen Raum zu erstellen.",
+    "unavailable": "Die Demo braucht Websitedaten, die dieser Browser blockiert.",
+    "accountNotice": "In der Demo gibt es kein Konto: Melde dich an, um dein eigenes zu haben."
   },
   "header": {
     "account": "Dein Konto",

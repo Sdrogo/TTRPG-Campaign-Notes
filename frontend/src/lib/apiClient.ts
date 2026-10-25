@@ -1,6 +1,7 @@
 import { currentLanguage } from '../i18n';
 import { supabase } from './supabaseClient';
 import { VIEW_AS_HEADER, viewAsUser } from './viewAs';
+import { isDemoMode } from './demo/demoMode';
 
 /**
  * A non-2xx response from the backend. `message` is its `detail` when the body
@@ -25,17 +26,8 @@ interface ApiFetchInit extends Omit<RequestInit, 'body'> {
   ignoreViewAs?: boolean;
 }
 
-/**
- * Sends a request to the backend at `VITE_API_BASE_URL` with the current
- * Supabase access token and returns the response once it is known to be 2xx;
- * throws `ApiError` otherwise.
- *
- * Sends the UI's current language as `Accept-Language`, so the backend's
- * error text matches the flag selector rather than the browser's locale.
- * While the Master previews a Room as a member (spec 22b), sends
- * `X-View-As` too, unless `ignoreViewAs` is set.
- */
-async function request(path: string, init: ApiFetchInit): Promise<Response> {
+/** Sends the request over the network, with the headers `request` describes. */
+async function send(path: string, init: ApiFetchInit): Promise<Response> {
   const { json, formData, ignoreViewAs, ...rest } = init;
   const {
     data: { session },
@@ -57,11 +49,34 @@ async function request(path: string, init: ApiFetchInit): Promise<Response> {
     headers.set('Authorization', `Bearer ${session.access_token}`);
   }
 
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
+  return fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
     ...rest,
     headers,
     body: json !== undefined ? JSON.stringify(json) : formData,
   });
+}
+
+/**
+ * Sends a request to the backend at `VITE_API_BASE_URL` with the current
+ * Supabase access token and returns the response once it is known to be 2xx;
+ * throws `ApiError` otherwise.
+ *
+ * Sends the UI's current language as `Accept-Language`, so the backend's
+ * error text matches the flag selector rather than the browser's locale.
+ * While the Master previews a Room as a member (spec 22b), sends
+ * `X-View-As` too, unless `ignoreViewAs` is set.
+ *
+ * While the Demo is on (spec 45_2), the in-browser demo backend answers
+ * instead, and nothing goes over the network.
+ */
+async function request(path: string, init: ApiFetchInit): Promise<Response> {
+  const response = isDemoMode()
+    ? (await import('./demo/demoBackend')).demoFetch(
+        path,
+        init.method ?? 'GET',
+        init.ignoreViewAs ? null : viewAsUser(),
+      )
+    : await send(path, init);
 
   if (!response.ok) {
     const body = await response.text();

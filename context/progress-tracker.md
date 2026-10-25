@@ -13,6 +13,17 @@ detail:
 
 ## Current Status (2026-10-10)
 
+- **Spec 45_2, read-only Demo** (2026-10-25, no migration, frontend
+  only): "Try the demo" on the landing page opens `/demo`, which turns on a
+  per-tab flag and reloads into a sample Room ("The Lost Lighthouse",
+  English or Italian) kept in the browser: `apiClient` answers from
+  `lib/demo/demoBackend.ts`, nothing reaches the backend, every write is
+  refused with a read-only notice. A banner under the header switches the
+  view between the Master and two Players (spec 22b's preview, by full page
+  load), and has Exit demo and Sign in. Live mention maps, both map kinds,
+  search, backlinks and Comments work. No images in the sample yet.
+  Next: 45_3 guided tour.
+
 - **Spec 45_1, Landing page and quick navigation** (2026-10-25, PR #237,
   no migration): `/` is a landing page for everyone (what Ex Libris is, six
   feature cards, three steps, sign-in for visitors, "Open my Rooms" once

@@ -76,6 +76,7 @@
     "intro": "Ex Libris es donde un grupo de rol escribe su campaña en común: lugares, personajes, sucesos y secretos, cada uno visible solo para quien deba conocerlo.",
     "signIn": "Iniciar sesión",
     "openMyRooms": "Abrir mis Salas",
+    "tryDemo": "Prueba la demo",
     "featuresTitle": "Qué puedes hacer",
     "features": {
       "rooms": {
@@ -116,6 +117,14 @@
     "home": "Inicio",
     "rooms": "Salas",
     "noRooms": "Aún no hay Salas"
+  },
+  "demo": {
+    "banner": "Demo: una campaña de ejemplo, de solo lectura.",
+    "viewAs": "Ver como",
+    "exit": "Salir de la demo",
+    "readOnly": "La demo es de solo lectura: inicia sesión para crear tu propia Sala.",
+    "unavailable": "La demo necesita los datos del sitio, que este navegador bloquea.",
+    "accountNotice": "En la demo no hay cuenta: inicia sesión para tener la tuya."
   },
   "header": {
     "account": "Tu cuenta",

@@ -76,6 +76,7 @@
     "intro": "In Ex Libris schrijft een rollenspelgroep samen zijn campagne: plaatsen, personages, gebeurtenissen en geheimen, elk alleen zichtbaar voor wie het mag weten.",
     "signIn": "Inloggen",
     "openMyRooms": "Mijn Kamers openen",
+    "tryDemo": "Probeer de demo",
     "featuresTitle": "Wat je kunt doen",
     "features": {
       "rooms": {
@@ -116,6 +117,14 @@
     "home": "Start",
     "rooms": "Kamers",
     "noRooms": "Nog geen Kamers"
+  },
+  "demo": {
+    "banner": "Demo: een voorbeeldcampagne, alleen-lezen.",
+    "viewAs": "Bekijken als",
+    "exit": "Demo verlaten",
+    "readOnly": "De demo is alleen-lezen: log in om je eigen Kamer te maken.",
+    "unavailable": "De demo heeft sitegegevens nodig, die deze browser blokkeert.",
+    "accountNotice": "In de demo is er geen account: log in om je eigen account te hebben."
   },
   "header": {
     "account": "Jouw account",

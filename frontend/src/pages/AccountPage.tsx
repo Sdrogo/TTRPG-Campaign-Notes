@@ -1,6 +1,7 @@
 import { Button, Divider, Grid, Group, Stack, Text, TextInput, Title } from '@mantine/core';
 import { EnvelopeSimpleIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
+import { isDemoMode } from '../lib/demo/demoMode';
 import {
   useAccount,
   useImportAvatar,
@@ -40,6 +41,15 @@ export function AccountPage() {
 
   if (!session) {
     return <SignInRequired>{t('account.signInRequired')}</SignInRequired>;
+  }
+
+  // The Demo's user has no account to manage (spec 45_2).
+  if (isDemoMode()) {
+    return (
+      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
+        {t('demo.accountNotice')}
+      </FullPageMessage>
+    );
   }
 
   return <AccountLoader />;

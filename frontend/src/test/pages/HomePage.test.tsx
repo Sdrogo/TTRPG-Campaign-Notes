@@ -58,6 +58,8 @@ describe('HomePage', () => {
     // The visitor's own top bar: no account avatar, a way to sign in.
     expect(screen.queryByRole('link', { name: 'Il tuo account' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Accedi' })).toHaveLength(2);
+    // Spec 45_2: the Demo starts with a full page load, so a plain link.
+    expect(screen.getByRole('link', { name: 'Prova la demo' })).toHaveAttribute('href', '/demo');
     // Spec 31_3: the privacy notice can be read before signing in.
     expect(screen.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
   });
