@@ -28,6 +28,7 @@ export function SearchButton({ roomId }: SearchButtonProps) {
     <>
       <Button
         visibleFrom="md"
+        data-tour="search"
         variant="default"
         size="sm"
         onClick={open}
@@ -39,6 +40,7 @@ export function SearchButton({ roomId }: SearchButtonProps) {
       </Button>
       <LabeledActionIcon
         hiddenFrom="md"
+        data-tour="search"
         variant="subtle"
         color="gray"
         size="lg"

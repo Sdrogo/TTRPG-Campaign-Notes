@@ -139,7 +139,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
     <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId}>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         {/* The Room's actions sit at the end of the title row, folded in "⋮". */}
-        <Group justify="space-between" wrap="nowrap">
+        <Group justify="space-between" wrap="nowrap" data-tour="room">
           <Group gap="sm" align="center" wrap="wrap" style={{ minWidth: 0 }}>
             <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
               {room.data ? room.data.name : t('documents.title')}

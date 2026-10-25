@@ -351,7 +351,9 @@ function MapChrome({
           {t('maps.readOnlyOnPhone')}
         </Text>
       )}
-      <Box data-split-anchor>{children}</Box>
+      <Box data-split-anchor data-tour="map">
+        {children}
+      </Box>
       {settingsOpened && (
         <MapFormModal
           title={t('maps.settings')}

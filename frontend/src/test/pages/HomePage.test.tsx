@@ -60,6 +60,14 @@ describe('HomePage', () => {
     expect(screen.getAllByRole('button', { name: 'Accedi' })).toHaveLength(2);
     // Spec 45_2: the Demo starts with a full page load, so a plain link.
     expect(screen.getByRole('link', { name: 'Prova la demo' })).toHaveAttribute('href', '/demo');
+    // Spec 45_3: a feature card opens the tour at the step that shows it.
+    expect(screen.getAllByRole('link', { name: 'Guardalo nella demo' }).map((link) => link.getAttribute('href'))).toEqual([
+      '/demo?step=room',
+      '/demo?step=document',
+      '/demo?step=visibility',
+      '/demo?step=comments',
+      '/demo?step=freeMap',
+    ]);
     // Spec 31_3: the privacy notice can be read before signing in.
     expect(screen.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
   });

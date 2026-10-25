@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { DEMO_START_PATH, exitDemo } from '../../lib/demo/demoMode';
 import { VIEW_AS_PARAM } from '../../lib/viewAs';
 import { useViewAs } from '../../hooks/useViewAs';
+import { useGoToTourStep } from '../../lib/demo/tour';
+import { DemoTour } from './DemoTour';
 
 // The sample Room's Players (`lib/demo/demoData.ts`): fixed, so the switch
 // needs no request.
@@ -20,13 +22,14 @@ const PREVIEW_PAGES = ['/rooms/:roomId/documents/*', '/rooms/:roomId/maps/*'];
 /**
  * The bar under the top bar while the Demo is on (spec 45_2, Decision 13):
  * what this is, who the visitor sees the Room as (the Master, or a Player
- * through spec 22b's preview), and the ways out.
+ * through spec 22b's preview), the guided tour (spec 45_3) and the ways out.
  */
 export function DemoBanner() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const queryClient = useQueryClient();
   const viewAs = useViewAs();
+  const goToStep = useGoToTourStep();
 
   // The sample content follows the UI language (Italian or English): a
   // change of language reloads it.
@@ -55,19 +58,24 @@ export function DemoBanner() {
         </Text>
       </Group>
       <Group gap="xs">
-        <Text size="sm" c="dimmed" component="span" id="demo-view-as">
-          {t('demo.viewAs')}
-        </Text>
-        <SegmentedControl
-          size="xs"
-          aria-labelledby="demo-view-as"
-          value={viewAs?.userId ?? 'master'}
-          onChange={switchTo}
-          data={[
-            { value: 'master', label: t('roles.master') },
-            ...DEMO_PLAYERS.map((player) => ({ value: player.id, label: player.name })),
-          ]}
-        />
+        <Group gap="xs" data-tour="view-as">
+          <Text size="sm" c="dimmed" component="span" id="demo-view-as">
+            {t('demo.viewAs')}
+          </Text>
+          <SegmentedControl
+            size="xs"
+            aria-labelledby="demo-view-as"
+            value={viewAs?.userId ?? 'master'}
+            onChange={switchTo}
+            data={[
+              { value: 'master', label: t('roles.master') },
+              ...DEMO_PLAYERS.map((player) => ({ value: player.id, label: player.name })),
+            ]}
+          />
+        </Group>
+        <Button size="compact-sm" variant="default" onClick={() => goToStep(0)}>
+          {t('demo.restartTour')}
+        </Button>
         <Button size="compact-sm" variant="default" onClick={() => exitDemo('/')}>
           {t('demo.exit')}
         </Button>
@@ -75,6 +83,7 @@ export function DemoBanner() {
           {t('landing.signIn')}
         </Button>
       </Group>
+      <DemoTour />
     </Group>
   );
 }

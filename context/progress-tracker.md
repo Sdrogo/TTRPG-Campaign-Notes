@@ -13,6 +13,15 @@ detail:
 
 ## Current Status (2026-10-10)
 
+- **Spec 45_3, guided tour** (2026-10-25, no migration, frontend only):
+  the Demo opens a 13-card tour of the real pages (Room, Index, Documents,
+  Notes and mentions, mention map, Comments, Visibility and Reveal, View
+  as, search, both maps, a last card to sign in). Each card lights its
+  element (`data-tour` attributes) and dims the rest; Back/Next open the
+  step's page; Skip, Escape, "Restart tour" in the banner; landing cards
+  link `/demo?step=<id>`. Docked at the bottom on a phone. 12 languages.
+  Spec 45 is complete.
+
 - **Spec 45_2, read-only Demo** (2026-10-25, no migration, frontend
   only): "Try the demo" on the landing page opens `/demo`, which turns on a
   per-tab flag and reloads into a sample Room ("The Lost Lighthouse",

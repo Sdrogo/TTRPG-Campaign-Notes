@@ -207,6 +207,34 @@ What changed from the plan above while building it:
     elements, rather than adding a tour dependency; on a phone the card
     docks to the bottom of the screen instead of pointing.
 
+### Tour as built (45_3, 2026-10-25)
+
+- **13 cards**: 1 the Room (title row), 2 the Room Index tab, 3 a
+  Document card, 4 a Document page (Ilsa Varn: name, badges, actions), 5
+  its description and Notes ("Notes and mentions"), 6 its mention map, 7
+  the Comments (The Night of the Dark Lamp), 8 Visibility and Reveal (The
+  Drowned Prophet, Master only: the badge and the ⋮ actions, since Reveal
+  is in that menu and the Demo is read-only), 9 the banner's View-as
+  switch, 10 search, 11 the free board, 12 the geographic map, 13 "That's
+  Ex Libris" with **Sign in to create your Room** and **Keep exploring**.
+  "Mentioned in" is not a step: it is closed by default, and the mention
+  map shows the same links.
+- **State**: the open step lives in `sessionStorage`
+  (`exlibris.demo.tour`, `lib/demo/tour.ts`), so it survives the Demo's
+  full page loads and ends with the tab. `/demo` opens the tour at step 1,
+  `/demo?step=<id>` at that step (the landing cards link `room`,
+  `document`, `visibility`, `comments`, `freeMap`; Export has no step).
+  Next/Back open the step's page in place, or with a full page load when
+  leaving a Player's preview. Skip, Escape and Keep exploring close it;
+  **Restart tour** in the banner opens it at step 1.
+- **Highlight**: targets carry `data-tour` attributes; the tour lights the
+  first visible one (the search button has a phone twin) with a box whose
+  huge shadow dims the rest, follows it while the page loads, scrolls or
+  resizes, and scrolls it into view once per step. The page stays usable
+  underneath. The card sits under the element, else over it, else docked
+  at the bottom of the screen; always docked on a phone; centered when the
+  step has no element or the visitor is on another page.
+
 ### Not in scope
 
 19. A marketing site separate from the app, pricing, a blog, analytics or

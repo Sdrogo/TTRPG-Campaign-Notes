@@ -267,7 +267,7 @@ export function CommentSection({
 
   return (
     <PageCard>
-      <Stack gap="md">
+      <Stack gap="md" data-tour="comments">
         <Group gap="xs">
           <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
             {t('comments.title')}

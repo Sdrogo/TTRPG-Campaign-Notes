@@ -77,6 +77,7 @@
     "signIn": "Accedi",
     "openMyRooms": "Apri le mie Stanze",
     "tryDemo": "Prova la demo",
+    "seeInDemo": "Guardalo nella demo",
     "featuresTitle": "Cosa puoi fare",
     "features": {
       "rooms": {
@@ -124,7 +125,71 @@
     "exit": "Esci dalla demo",
     "readOnly": "La demo è in sola lettura: accedi per creare la tua Stanza.",
     "unavailable": "La demo ha bisogno dei dati del sito, che questo browser blocca.",
-    "accountNotice": "Nella demo non c'è un account: accedi per avere il tuo."
+    "accountNotice": "Nella demo non c'è un account: accedi per avere il tuo.",
+    "restartTour": "Rivedi il tour"
+  },
+  "tour": {
+    "counter": "{{current}} di {{total}}",
+    "next": "Avanti",
+    "back": "Indietro",
+    "skip": "Salta il tour",
+    "signIn": "Accedi e crea la tua Stanza",
+    "keepExploring": "Continua a esplorare",
+    "label": "Tour della demo",
+    "steps": {
+      "room": {
+        "title": "Una Stanza è una campagna",
+        "body": "Tutta la campagna vive qui, raggruppata sotto i Tag principali: personaggi, luoghi, eventi. Il Master guida la Stanza; i Player entrano con un link."
+      },
+      "roomIndex": {
+        "title": "L'Indice della Stanza",
+        "body": "Questa linguetta apre l'indice della Stanza: ogni Tag e ogni mappa, a un clic da qualsiasi pagina."
+      },
+      "documentCard": {
+        "title": "I Documenti",
+        "body": "Ogni scheda è un Documento: un personaggio, un luogo, un oggetto. L'etichetta dice chi può vederlo."
+      },
+      "document": {
+        "title": "La pagina di un Documento",
+        "body": "Nome, sottotitolo e descrizione, con accanto immagini e Owner. Gli Owner possono modificarlo, e il Master pure."
+      },
+      "documentText": {
+        "title": "Note e menzioni",
+        "body": "Le Note aggiungono paragrafi sotto la descrizione. Una #menzione collega un altro Documento, e il collegamento vale nei due sensi."
+      },
+      "mentionMap": {
+        "title": "La mappa delle menzioni",
+        "body": "Le menzioni disegnano una mappa viva dei legami tra i Documenti. Segue quello che scrivi."
+      },
+      "comments": {
+        "title": "Commenti e risposte",
+        "body": "Ogni Documento ha la sua discussione: risposte, reazioni, interventi in personaggio e Commenti che solo alcuni membri vedono."
+      },
+      "visibility": {
+        "title": "Visibilità e Rivela",
+        "body": "Questo Documento è solo per il Master. Ogni Documento, Nota e Commento ha la sua visibilità, e il Master lo rivela dal menu ⋮ quando la storia lo chiede."
+      },
+      "viewAs": {
+        "title": "Guarda con gli occhi dei Player",
+        "body": "Passa a Marco o Giulia: quello che non possono vedere sparisce. Il Master può vedere la Stanza come qualsiasi membro, allo stesso modo."
+      },
+      "search": {
+        "title": "Cerca",
+        "body": "Cerca in ogni Documento, Nota e Commento che puoi vedere. Ctrl K la apre da qualsiasi punto della Stanza."
+      },
+      "freeMap": {
+        "title": "Lavagne libere",
+        "body": "Card di Documenti e frecce su una lavagna libera, per seguire chi vuole cosa. Il Master può lasciar disegnare anche i Player."
+      },
+      "geoMap": {
+        "title": "Mappe geografiche",
+        "body": "Fissa luoghi su un'immagine e traccia regioni; ogni luogo porta al suo Documento."
+      },
+      "end": {
+        "title": "Questo è Ex Libris",
+        "body": "Accedi per creare la tua Stanza, o continua a esplorare la demo."
+      }
+    }
   },
   "header": {
     "account": "Il tuo account",

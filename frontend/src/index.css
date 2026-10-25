@@ -64,8 +64,37 @@ body {
   border-radius: var(--mantine-radius-md);
 }
 
+/* The Demo's tour (spec 45_3): the lit element is a hole in a dimmed page
+   (a huge shadow around a transparent box), with the card above it. Both sit
+   over the header (100) and under Mantine's overlays (200), so a dialog the
+   visitor opens covers them; the page underneath stays clickable. */
+.demo-tour-spot {
+  position: fixed;
+  z-index: 150;
+  pointer-events: none;
+  border-radius: var(--mantine-radius-md);
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 55%);
+  transition:
+    top 150ms ease,
+    left 150ms ease,
+    width 150ms ease,
+    height 150ms ease;
+}
+
+.demo-tour-spot:not([data-lit]) {
+  inset: 0;
+  box-shadow: none;
+  background: rgb(0 0 0 / 40%);
+}
+
+.demo-tour-card {
+  position: fixed;
+  z-index: 151;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .app-header {
+  .app-header,
+  .demo-tour-spot {
     transition: none;
   }
 }
