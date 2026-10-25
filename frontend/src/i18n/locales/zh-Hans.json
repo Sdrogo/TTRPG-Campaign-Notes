@@ -253,7 +253,8 @@
         "addHint": "一个标签是主标签，两个或更多标签则是一个组合。",
         "add": "添加",
         "alreadyMain": "此标签已是分组中的一个条目。",
-        "alreadyCombination": "此组合已在分组中。"
+        "alreadyCombination": "此组合已在分组中。",
+        "mapsRow": "地图行"
       },
       "all": {
         "title": "所有标签",

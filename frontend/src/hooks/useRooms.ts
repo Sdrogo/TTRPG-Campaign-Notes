@@ -13,6 +13,7 @@ export interface RawRoom {
   players_can_create_documents: boolean;
   default_visibility: DocumentVisibility;
   image_url: string | null;
+  maps_position?: number;
 }
 
 interface RawMyRoom {
@@ -37,6 +38,7 @@ export function toRoom(raw: RawRoom): Room {
     playersCanCreateDocuments: raw.players_can_create_documents,
     defaultVisibility: raw.default_visibility,
     imageUrl: raw.image_url,
+    mapsPosition: raw.maps_position ?? 0,
   };
 }
 
@@ -125,6 +127,37 @@ export function useUpdateRoomSettings(roomId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['rooms', roomId] });
       void queryClient.invalidateQueries({ queryKey: ROOMS_QUERY_KEY });
+    },
+  });
+}
+
+/**
+ * Places the maps row among the Documents page's groups (Administrators): how
+ * many Main items come before it. Optimistic like the Main items it sits
+ * between (spec 25c), and run one at a time in order, so quick moves land in
+ * the order made; a failed save puts the Room back and reloads it.
+ */
+export function useSetMapsPosition(roomId: string) {
+  const queryClient = useQueryClient();
+  const queryKey = ['rooms', roomId];
+  return useMutation({
+    scope: { id: `maps-position-${roomId}` },
+    mutationFn: async (mapsPosition: number) =>
+      toRoom(
+        await apiFetch<RawRoom>(`/rooms/${roomId}`, {
+          method: 'PATCH',
+          json: { maps_position: mapsPosition },
+        }),
+      ),
+    onMutate: async (mapsPosition) => {
+      await queryClient.cancelQueries({ queryKey, exact: true });
+      const previous = queryClient.getQueryData<Room>(queryKey);
+      if (previous) queryClient.setQueryData(queryKey, { ...previous, mapsPosition });
+      return { previous };
+    },
+    onError: (_error, _position, context) => {
+      queryClient.setQueryData(queryKey, context?.previous);
+      void queryClient.invalidateQueries({ queryKey, exact: true });
     },
   });
 }

@@ -114,8 +114,9 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `e2b7c4f9a1d6` (`relationship_maps.players_can_edit`
-  and `.revision`, spec 42_1, PR #230, not yet merged into `staging`).
+- **Head in the repository**: `b5f1d8e3a7c2` (`rooms.maps_position`, maps row
+  placed among the Grouping items, PR #236, not yet merged into `staging`:
+  apply to the staging DB before it merges).
 - **Staging database**: `e2b7c4f9a1d6` (= head, map players_can_edit and
   revision, spec 42, applied by hand 2026-10-24 before PR #230 merged);
   `a4d9e2c7f1b6` before it (note relational link, applied
@@ -135,10 +136,11 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: none.
+- **Pending on production**: `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236),
+  once it reaches `staging`.
 
 Recent chain, newest first (where each came from):
-`e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -182,6 +184,12 @@ One line per unit; dates 2026, newest first. Spec files live in
   no migration): `RoomMapsStrip` under the Room title lists the maps the
   viewer sees (one sideways-scrolling line, "Maps" + count → Maps page);
   with none, "New map" for who may create opens the dialog via `?new=1`.
+  Administrators place the row among the setup's Grouping items (a "Maps
+  row" entry moved like them, never removed): `rooms.maps_position` (Main
+  items before it, 0 = top; migration `b5f1d8e3a7c2`), saved through
+  `PATCH /rooms/{id}`. Grouped by Main Tag, the row sits before the first
+  group placed after it (past the last item, still before "No Main Tag");
+  ungrouped, on top. Duplication copies it; JSON export/import does not.
 
 ### 2026-10-24
 

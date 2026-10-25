@@ -253,7 +253,8 @@
         "addHint": "Uma Tag é uma Tag principal, duas ou mais uma combinação.",
         "add": "Adicionar",
         "alreadyMain": "Esta Tag já é uma entrada do agrupamento.",
-        "alreadyCombination": "Esta combinação já está no agrupamento."
+        "alreadyCombination": "Esta combinação já está no agrupamento.",
+        "mapsRow": "Linha dos mapas"
       },
       "all": {
         "title": "Todas as Tags",

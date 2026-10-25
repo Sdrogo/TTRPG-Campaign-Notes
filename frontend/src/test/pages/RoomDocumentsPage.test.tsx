@@ -414,6 +414,71 @@ describe('grouping and sorting', () => {
       .filter((h) => !isGroupHeading(h))
       .map((h) => h.textContent);
 
+  // The setup's Grouping places the maps row among the groups.
+  const mapsRowAfter = () => {
+    const strip = screen.getByRole('navigation', { name: 'Mappe' });
+    return pageHeadings(2)
+      .filter(isGroupHeading)
+      .filter((h) => h.compareDocumentPosition(strip) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .map((h) => h.textContent);
+  };
+
+  it('shows the maps row above the groups by default', async () => {
+    routes.maps = [rawMap()];
+    mockApiWithMainTags();
+    render();
+
+    await screen.findByRole('navigation', { name: 'Mappe' });
+    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
+    expect(mapsRowAfter()).toEqual([]);
+  });
+
+  it('shows the maps row after the Main items the setup places before it', async () => {
+    routes.maps = [rawMap()];
+    routes.room = rawRoom({ maps_position: 1 });
+    mockApiWithMainTags();
+    render();
+
+    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
+    await screen.findByRole('navigation', { name: 'Mappe' });
+    // Past the last Main item, still before the fallback group.
+    expect(mapsRowAfter()).toEqual(['#NPC']);
+  });
+
+  it('shows the maps row after every group when no group follows its place', async () => {
+    routes.maps = [rawMap()];
+    routes.room = rawRoom({ maps_position: 1 });
+    routes.documents = [rawDocument({ id: 'doc-1', name: 'Zanna', tag_ids: ['tag-npc'] })];
+    mockApiWithMainTags();
+    render();
+
+    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC']));
+    await screen.findByRole('navigation', { name: 'Mappe' });
+    expect(mapsRowAfter()).toEqual(['#NPC']);
+  });
+
+  it('shows the maps row above the groups while the Room is still loading', async () => {
+    routes.maps = [rawMap()];
+    routes.room = new Promise(() => {});
+    mockApiWithMainTags();
+    render();
+
+    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
+    await screen.findByRole('navigation', { name: 'Mappe' });
+    expect(mapsRowAfter()).toEqual([]);
+  });
+
+  it('shows the maps row on top when the Documents are not grouped', async () => {
+    routes.maps = [rawMap()];
+    routes.room = rawRoom({ maps_position: 1 });
+    mockApiWithMainTags();
+    render('/rooms/room-1/documents?groupBy=none');
+
+    await screen.findByRole('navigation', { name: 'Mappe' });
+    expect(screen.getByRole('link', { name: 'La Corte' })).toBeInTheDocument();
+    expect(groupHeadings()).toEqual([]);
+  });
+
   // The outline never skips a level: h1 page title, h2 group, h3 card - or
   // h2 card when there are no groups.
   it('nests card titles one level under their group heading', async () => {

@@ -253,7 +253,8 @@
         "addHint": "Ein Tag ergibt einen Haupt-Tag, zwei oder mehr eine Kombination.",
         "add": "Hinzufügen",
         "alreadyMain": "Dieser Tag ist bereits ein Eintrag der Gruppierung.",
-        "alreadyCombination": "Diese Kombination ist bereits in der Gruppierung."
+        "alreadyCombination": "Diese Kombination ist bereits in der Gruppierung.",
+        "mapsRow": "Kartenzeile"
       },
       "all": {
         "title": "Alle Tags",

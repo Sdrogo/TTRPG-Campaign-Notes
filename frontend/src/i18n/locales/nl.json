@@ -253,7 +253,8 @@
         "addHint": "Eén Tag is een hoofdtag, twee of meer vormen een combinatie.",
         "add": "Toevoegen",
         "alreadyMain": "Deze Tag is al een item van de groepering.",
-        "alreadyCombination": "Deze combinatie zit al in de groepering."
+        "alreadyCombination": "Deze combinatie zit al in de groepering.",
+        "mapsRow": "Kaartenrij"
       },
       "all": {
         "title": "Alle Tags",

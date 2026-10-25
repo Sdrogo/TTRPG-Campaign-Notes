@@ -6,7 +6,7 @@ import uuid
 from collections.abc import Iterable, Mapping
 
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.document_files import remove_files
@@ -46,6 +46,7 @@ from app.domain.models import (
 from app.domain.rooms import (
     InvalidDefaultVisibilityError,
     OnlyAdministratorChangesDefaultVisibilityError,
+    OnlyAdministratorChangesMapsPositionError,
     OnlyMasterChangesSettingsError,
     RoomNameRequiredError,
     plan_new_room,
@@ -76,6 +77,8 @@ class RoomResponse(BaseModel):
     # The Room's image (spec 26) as a short-lived signed link, never the
     # Storage path; null without one or when Storage can't sign it right now.
     image_url: str | None
+    # How many Main items the Documents page shows before the maps row.
+    maps_position: int
 
 
 class MyRoomResponse(BaseModel):
@@ -110,6 +113,9 @@ class UpdateRoomSettingsRequest(BaseModel):
 
     players_can_create_documents: bool | None = None
     default_visibility: DocumentVisibility | None = None
+    # The maps row's place among the Main items (Administrators): how many
+    # come before it. A value past the last item puts it after them all.
+    maps_position: int | None = Field(default=None, ge=0, le=1000)
 
 
 def member_response(
@@ -145,6 +151,7 @@ def room_to_response(room: Room, image_urls: Mapping[str, str]) -> RoomResponse:
         players_can_create_documents=room.players_can_create_documents,
         default_visibility=room.default_visibility,
         image_url=image_urls.get(room.image_path) if room.image_path else None,
+        maps_position=room.maps_position,
     )
 
 
@@ -215,7 +222,8 @@ async def update_room_settings(
     """Changes the Room's settings: the Master switches Players' Document
     creation on or off (D-13, FR-D7), an Administrator picks the level new
     content starts at (VR-05, spec 22: Room, Master or Private; 422 for
-    Selective). 403 for a non-member or a setting the requester may not
+    Selective) and where the maps row sits among the Documents page's
+    groups. 403 for a non-member or a setting the requester may not
     change. Existing content keeps its visibility."""
     requester_id = uuid.UUID(current_user.id)
     membership = await rooms_repo.get_membership(session, room_id, requester_id)
@@ -227,9 +235,17 @@ async def update_room_settings(
 
     try:
         updated = plan_room_settings(
-            room, membership, body.players_can_create_documents, body.default_visibility
+            room,
+            membership,
+            body.players_can_create_documents,
+            body.default_visibility,
+            body.maps_position,
         )
-    except (OnlyMasterChangesSettingsError, OnlyAdministratorChangesDefaultVisibilityError) as exc:
+    except (
+        OnlyMasterChangesSettingsError,
+        OnlyAdministratorChangesDefaultVisibilityError,
+        OnlyAdministratorChangesMapsPositionError,
+    ) as exc:
         raise translated_error(status.HTTP_403_FORBIDDEN, exc, locale) from exc
     except InvalidDefaultVisibilityError as exc:
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc

@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -170,6 +170,16 @@ describe('RoomMapsPage', () => {
     render(false, '/rooms/room-1/maps?new=1');
 
     expect(await screen.findByRole('textbox', { name: /Nome/ })).toBeInTheDocument();
+  });
+
+  it('closes the dialog opened by ?new=1 for good', async () => {
+    render(false, '/rooms/room-1/maps?new=1');
+    const user = userEvent.setup();
+    await screen.findByRole('textbox', { name: /Nome/ });
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: /Nome/ })).not.toBeInTheDocument());
   });
 
   it('ignores ?new=1 for who may not create maps', async () => {

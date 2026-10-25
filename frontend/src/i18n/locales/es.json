@@ -253,7 +253,8 @@
         "addHint": "Una Etiqueta es una Etiqueta principal; dos o más, una combinación.",
         "add": "Añadir",
         "alreadyMain": "Esta Etiqueta ya es una entrada de la agrupación.",
-        "alreadyCombination": "Esta combinación ya está en la agrupación."
+        "alreadyCombination": "Esta combinación ya está en la agrupación.",
+        "mapsRow": "Fila de mapas"
       },
       "all": {
         "title": "Todas las Etiquetas",

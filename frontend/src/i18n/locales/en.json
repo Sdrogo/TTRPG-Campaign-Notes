@@ -253,7 +253,8 @@
         "addHint": "One Tag makes a Main Tag, two or more a combination.",
         "add": "Add",
         "alreadyMain": "This Tag is already an item of the grouping.",
-        "alreadyCombination": "This combination is already in the grouping."
+        "alreadyCombination": "This combination is already in the grouping.",
+        "mapsRow": "Maps row"
       },
       "all": {
         "title": "All Tags",

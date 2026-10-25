@@ -12,6 +12,7 @@ import {
   useMyRooms,
   useRemoveRoomImage,
   useRoom,
+  useSetMapsPosition,
   useUpdateRoomSettings,
   useUploadNewRoomImage,
   useUploadRoomImage,
@@ -43,6 +44,7 @@ describe('useMyRooms', () => {
           playersCanCreateDocuments: true,
           defaultVisibility: 'room',
           imageUrl: null,
+          mapsPosition: 0,
         },
         role: 'master',
         isAdmin: true,
@@ -162,6 +164,32 @@ describe('useUpdateRoomSettings', () => {
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1'] });
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms'] });
     });
+  });
+});
+
+describe('useSetMapsPosition', () => {
+  it('shows the new place at once and keeps it once saved', async () => {
+    fetchMock.mockResolvedValue(rawRoom({ maps_position: 2 }));
+    const { result, queryClient } = renderHookWithProviders(() => useSetMapsPosition('room-1'));
+    queryClient.setQueryData(['rooms', 'room-1'], { id: 'room-1', mapsPosition: 0 });
+
+    const room = await result.current.mutateAsync(2);
+
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1', {
+      method: 'PATCH',
+      json: { maps_position: 2 },
+    });
+    expect(room.mapsPosition).toBe(2);
+    expect(queryClient.getQueryData(['rooms', 'room-1'])).toEqual({ id: 'room-1', mapsPosition: 2 });
+  });
+
+  it('saves even when the Room is not in the cache, and leaves the cache empty on failure', async () => {
+    fetchMock.mockRejectedValue(new Error('boom'));
+    const { result, queryClient } = renderHookWithProviders(() => useSetMapsPosition('room-1'));
+
+    await expect(result.current.mutateAsync(1)).rejects.toThrow('boom');
+
+    expect(queryClient.getQueryData(['rooms', 'room-1'])).toBeUndefined();
   });
 });
 

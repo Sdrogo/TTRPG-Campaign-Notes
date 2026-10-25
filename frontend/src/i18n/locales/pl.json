@@ -253,7 +253,8 @@
         "addHint": "Jeden tag to tag główny, dwa lub więcej to kombinacja.",
         "add": "Dodaj",
         "alreadyMain": "Ten tag jest już pozycją grupowania.",
-        "alreadyCombination": "Ta kombinacja jest już w grupowaniu."
+        "alreadyCombination": "Ta kombinacja jest już w grupowaniu.",
+        "mapsRow": "Wiersz map"
       },
       "all": {
         "title": "Wszystkie tagi",
