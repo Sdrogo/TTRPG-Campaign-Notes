@@ -127,6 +127,25 @@ describe('RoomDocumentsPage', () => {
     expect(within(strip).queryByRole('link', { name: 'Nuova mappa' })).not.toBeInTheDocument();
   });
 
+  it('folds the maps row from its heading, like a group of Documents', async () => {
+    routes.maps = [rawMap({ id: 'map-1', name: 'La Corte' })];
+    render();
+    await screen.findByText('Il Cancello');
+
+    const strip = await screen.findByRole('navigation', { name: 'Mappe' });
+    const toggle = within(strip).getByRole('button', { name: 'Mappe' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    // The count and the link to the Maps page stay in sight.
+    expect(within(strip).getByRole('link', { name: 'Tutte le mappe (1)' })).toBeVisible();
+
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(await within(strip).findByRole('link', { name: /^La Corte/ })).toBeVisible();
+  });
+
   it('offers a new map when the Room has none and the viewer may create one', async () => {
     render();
 
@@ -411,11 +430,14 @@ describe('grouping and sorting', () => {
   // toggle) and a DocumentCard's title is h3 inside a group, h2 without one.
   const pageHeadings = (...levels: number[]) =>
     Array.from(screen.getByRole('main').querySelectorAll(levels.map((l) => `h${l}`).join(', ')));
-  const isGroupHeading = (h: Element) => h.querySelector('[aria-expanded]') !== null;
+  // The maps row's own folding heading is not a group of Documents.
+  const inMapsRow = (h: Element) => h.closest('nav') !== null;
+  const isGroupHeading = (h: Element) =>
+    h.querySelector('[aria-expanded]') !== null && !inMapsRow(h);
   const groupHeadings = () => pageHeadings(2).filter(isGroupHeading).map((h) => h.textContent);
   const cardTitles = () =>
     pageHeadings(2, 3)
-      .filter((h) => !isGroupHeading(h))
+      .filter((h) => !isGroupHeading(h) && !inMapsRow(h))
       .map((h) => h.textContent);
 
   // The setup's Grouping places the maps row among the groups.
