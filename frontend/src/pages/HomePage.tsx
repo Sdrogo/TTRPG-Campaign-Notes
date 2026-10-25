@@ -17,12 +17,15 @@ import { LandingPage } from './LandingPage';
  */
 export function HomePage() {
   const { session, loading: sessionLoading } = useSession();
-  // Read once: the marker is cleared below as soon as the session is there.
+  // Read once: the marker is cleared below once the session is known.
   const [justSignedIn] = useState(readSigningIn);
 
+  // Signed in, it has done its job; signed out once the session has loaded
+  // (Supabase reads the OAuth return before that), the sign-in was cancelled
+  // and must not redirect a later visit.
   useEffect(() => {
-    if (session) clearSigningIn();
-  }, [session]);
+    if (!sessionLoading) clearSigningIn();
+  }, [session, sessionLoading]);
 
   if (sessionLoading) {
     return <FullPageLoader />;

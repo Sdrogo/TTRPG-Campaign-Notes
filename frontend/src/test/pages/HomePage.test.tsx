@@ -143,6 +143,23 @@ describe('HomePage', () => {
     expect(sessionStorage.getItem('pendingSignIn')).toBeNull();
   });
 
+  // A sign-in cancelled at the provider comes back with no session: the
+  // marker goes, so a later signed-in visit still shows the landing page.
+  it('forgets a sign-in that came back without a session', () => {
+    sessionStorage.setItem('pendingSignIn', '1');
+    renderWithProviders(<HomePage />);
+
+    expect(sessionStorage.getItem('pendingSignIn')).toBeNull();
+  });
+
+  it('keeps the marker while the session is still loading', () => {
+    sessionStorage.setItem('pendingSignIn', '1');
+    sessionMock.mockReturnValue({ session: null, loading: true } as SessionState);
+    renderWithProviders(<HomePage />);
+
+    expect(sessionStorage.getItem('pendingSignIn')).toBe('1');
+  });
+
   it('stays on the landing page when no sign-in was started here', () => {
     signedIn();
     renderWithProviders(
