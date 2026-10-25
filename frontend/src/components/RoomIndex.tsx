@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Anchor, Box, Drawer, Stack, Text, Title, UnstyledButton } from '@mantine/core';
-import { ListBulletsIcon } from '@phosphor-icons/react';
+import { CaretRightIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useMainItems } from '../hooks/useMainItems';
@@ -49,7 +49,7 @@ export function RoomIndex({ roomId }: RoomIndexProps) {
         data-opened={opened || undefined}
         onClick={() => setOpened((current) => !current)}
       >
-        <ListBulletsIcon size={18} />
+        <CaretRightIcon size={18} className="room-index-tab-arrow" />
         <Box component="span" className="room-index-tab-label" visibleFrom="sm">
           {t('glossary.tab')}
         </Box>

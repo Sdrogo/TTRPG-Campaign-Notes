@@ -33,10 +33,14 @@ Defaults picked on 2026-10-25 from the request, to confirm in the PR.
    Document on a phone (spec 37). It does not scroll with the page and does
    not slide away with the header.
 2. **What the tab looks like**: a narrow pill attached to the edge (rounded
-   on the right only), surface color with the default border, a list icon.
-   From the `sm` breakpoint it also shows the word "Index" written
-   vertically; on a phone it is the icon only, narrower, so it covers as
-   little content as possible. Its accessible name is "Open Room Index" /
+   on the right only), surface color with the default border, and a
+   horizontal arrow (product owner, 2026-10-25, replacing a list icon):
+   pointing right while closed (expand), turned to point left while open
+   (collapse). From the `sm` breakpoint it also shows the word "Index"
+   written vertically; on a phone it is the arrow only, narrower, so it
+   covers as little content as possible. It stays muted text color, open or
+   not, and only brightens on hover: no accent red (product owner,
+   2026-10-25: too aggressive). Its accessible name is "Open Room Index" /
    "Close Room Index".
 3. **What the click opens** (product owner, 2026-10-25: "La card è
    compatta in larghezza, ma occupa l'interezza della height dello
@@ -77,9 +81,10 @@ Defaults picked on 2026-10-25 from the request, to confirm in the PR.
   `AppHeader` drops the `Burger`, its state and the drawer.
 - `index.css`: `.room-index-tab` (fixed, `left: 0`, `top: 40%`, z-index
   between the header's 100 and Mantine overlays' 200, so modals cover it;
-  while open it sits beside the card, above the drawer's overlay), the vertical label `.room-index-tab-label`
-  (`writing-mode: vertical-rl`), hover and `data-opened` states in the
-  accent color.
+  while open it sits beside the card, above the drawer's overlay), the
+  vertical label `.room-index-tab-label` (`writing-mode: vertical-rl`), the
+  arrow `.room-index-tab-arrow` turned 180° while open, muted text color
+  that brightens to primary text on hover, never the accent red.
 - i18n, all 12 languages: `glossary.title` becomes "Room Index",
   `glossary.openToggle` / `closeToggle` "Open / Close Room Index", new
   `glossary.tab` ("Index") and `glossary.allMaps` ("All maps"); the Maps

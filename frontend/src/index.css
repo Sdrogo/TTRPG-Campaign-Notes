@@ -86,9 +86,20 @@ body {
   transition: left 200ms ease, color 150ms ease;
 }
 
-.room-index-tab:hover,
-.room-index-tab[data-opened] {
-  color: var(--accent-primary);
+/* No accent red, open or not (product owner, 2026-10-25: too aggressive):
+   hovering only brightens it to the primary text color. */
+.room-index-tab:hover {
+  color: var(--text-primary);
+}
+
+/* A horizontal arrow (product owner, 2026-10-25): pointing right, "expand",
+   while closed; turned to point left, "collapse", while open. */
+.room-index-tab-arrow {
+  transition: transform 200ms ease;
+}
+
+.room-index-tab[data-opened] .room-index-tab-arrow {
+  transform: rotate(180deg);
 }
 
 .room-index-tab[data-opened] {
@@ -111,7 +122,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .room-index-tab {
+  .room-index-tab,
+  .room-index-tab-arrow {
     transition: none;
   }
 }

@@ -484,7 +484,8 @@ other icon set.
   page (`PageLayout`'s `roomId` prop), at 40% of the screen's height so it
   stays above a phone map page's lower half (spec 37). The tab
   (`.room-index-tab` in `index.css`) is a narrow pill on `--bg-raised`,
-  rounded on the right only, with `ListBulletsIcon` and, from `sm`, the
+  rounded on the right only, with a horizontal arrow (`CaretRightIcon`,
+  turned to point left while open; product owner, 2026-10-25) and, from `sm`, the
   word "Index" written vertically; icon only on a phone. It opens a card
   narrow in width (`min(260px, 85vw)`) and as tall as the screen, a
   left-anchored Mantine `Drawer` titled "Room Index"; while open the tab
