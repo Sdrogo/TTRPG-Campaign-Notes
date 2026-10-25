@@ -185,6 +185,9 @@ One line per unit; dates 2026, newest first. Spec files live in
   same Tag sections as before plus a Maps section ("All maps", then every
   visible map, alphabetical). Its strings moved from hardcoded Italian to
   the `glossary.*` keys in all 12 languages (title now "Room Index").
+- **Compact Note form** (no migration): Visibility and the Relational link
+  switch share one row in `NoteForm`; on a phone the switch's hint sits
+  under the row and the form's gaps tighten.
 
 ### 2026-10-24
 

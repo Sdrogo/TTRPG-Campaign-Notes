@@ -2,6 +2,7 @@ import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../../utils';
+import { matchMediaQueries } from '../../media';
 import { NoteForm } from '../../../components/notes/NoteForm';
 import { EMPTY_NOTE_VALUES, MAX_NOTE_TITLE_LENGTH } from '../../../lib/notes';
 import type { Member } from '../../../types/member';
@@ -132,6 +133,19 @@ describe('NoteForm', () => {
     await user.click(submit());
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ relationalLink: true }));
+  });
+
+  it('keeps the Relational link hint tied to its switch on a phone', () => {
+    const restore = matchMediaQueries(['(max-width: 48em)']);
+    try {
+      render();
+
+      expect(screen.getByRole('switch', { name: /Link relazionale/ })).toHaveAccessibleDescription(
+        /disegnano frecce nella mappa delle menzioni/,
+      );
+    } finally {
+      restore();
+    }
   });
 
   it('cancels without saving', async () => {
