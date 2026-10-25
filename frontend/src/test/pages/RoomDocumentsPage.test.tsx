@@ -393,7 +393,7 @@ describe('grouping and sorting', () => {
       if (init?.method) return Promise.resolve();
       if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
       if (path === '/rooms/room-1/maps') return Promise.resolve(routes.maps);
-    if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
+      if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
       if (path === '/rooms/room-1/tags')
         return Promise.resolve([...tags, { id: 'tag-npc', name: 'NPC', category: 'Type', main_position: 0 }]);
       if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
@@ -668,7 +668,7 @@ describe('collapsing a group', () => {
       if (init?.method) return Promise.resolve();
       if (path === '/rooms/room-1/documents') return Promise.resolve(routes.documents);
       if (path === '/rooms/room-1/maps') return Promise.resolve(routes.maps);
-    if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
+      if (path === '/rooms/room-1/tags/main') return Promise.resolve(routes.mainItems);
       if (path === '/rooms/room-1/tags')
         return Promise.resolve([...tags, { id: 'tag-npc', name: 'NPC', category: 'Type', main_position: 0 }]);
       if (path === '/rooms/room-1/members') return Promise.resolve(routes.members);
