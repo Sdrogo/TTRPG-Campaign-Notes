@@ -599,6 +599,11 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
+- **44, Room Index tab** (product owner, 2026-10-25): ticket in
+  `context/feature/44 - Room Index tab.md`. The Room's Index leaves the
+  header's burger for a tab fixed on the left edge of every Room page that
+  opens a small card, and gains a Maps section. Frontend only, no
+  migration. Next: build it once the ticket is confirmed.
 - **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
   editor, PR #211) and 38_3 (JSON import/export) built; first real test is
   the Shibuya map. `requirements.md` §1 and a new `FR-` need the product
