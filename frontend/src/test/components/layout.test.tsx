@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, apiFetch } from '../../lib/apiClient';
-import { rawAccount, rawDirectInvitation, rawFriend, rawFriends, rawMyReveal } from '../fixtures';
+import { rawAccount, rawDirectInvitation, rawDocument, rawFriend, rawFriends, rawMyReveal } from '../fixtures';
 import { MantineProvider } from '@mantine/core';
 import { MemoryRouter } from 'react-router-dom';
 import { theme } from '../../theme/theme';
@@ -247,6 +247,32 @@ describe('AppHeader', () => {
         }),
       );
       expect(navigate).toHaveBeenCalledTimes(1);
+    });
+
+    it('goes to a Document still there, reading it afresh', async () => {
+      fetchMock.mockImplementation(() => Promise.resolve(rawDocument({ id: 'd1' })));
+      renderOpenedFrom({ from: '/rooms/r1/documents/d1', backStack: ['/rooms/r1/maps'] });
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
+
+      await waitFor(() =>
+        expect(navigate).toHaveBeenCalledWith('/rooms/r1/documents/d1', {
+          replace: true,
+          state: { from: '/rooms/r1/maps' },
+        }),
+      );
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/r1/documents/d1');
+    });
+
+    it('goes to a list page on the trail without checking it', async () => {
+      renderOpenedFrom({ from: '/rooms/r1/maps' });
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps', { replace: true }));
+      expect(fetchMock).not.toHaveBeenCalledWith('/rooms/r1/maps');
     });
 
     it('falls back to the parent when everything on the trail is gone', async () => {
