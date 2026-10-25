@@ -115,11 +115,13 @@ release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
 - **Head in the repository**: `b5f1d8e3a7c2` (`rooms.maps_position`, maps row
-  placed among the Grouping items, PR #236, not yet merged into `staging`:
-  apply to the staging DB before it merges).
-- **Staging database**: `e2b7c4f9a1d6` (= head, map players_can_edit and
+  placed among the Grouping items, PR #236, not yet merged into `staging`;
+  already applied to the staging DB).
+- **Staging database**: `b5f1d8e3a7c2` (= head, room maps_position, PR #236,
+  applied by hand 2026-10-25 with `.env.staging` loaded, before the PR
+  merges); `e2b7c4f9a1d6` before it (map players_can_edit and
   revision, spec 42, applied by hand 2026-10-24 before PR #230 merged);
-  `a4d9e2c7f1b6` before it (note relational link, applied
+  `a4d9e2c7f1b6` before that (note relational link, applied
   by hand 2026-10-21 with `.env.staging` loaded, before PR #222 merged);
   `d7c1f5a9e3b8` before it (geographic maps, applied 2026-10-17;
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
