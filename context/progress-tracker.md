@@ -190,6 +190,9 @@ One line per unit; dates 2026, newest first. Spec files live in
   `PATCH /rooms/{id}`. Grouped by Main Tag, the row sits before the first
   group placed after it (past the last item, still before "No Main Tag");
   ungrouped, on top. Duplication copies it; JSON export/import does not.
+- **Compact Note form** (no migration): Visibility and the Relational link
+  switch share one row in `NoteForm`; on a phone the switch's hint sits
+  under the row and the form's gaps tighten.
 
 ### 2026-10-24
 
