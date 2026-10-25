@@ -612,6 +612,12 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
+- **45, Landing page and Demo** (product owner, 2026-10-25): ticket in
+  `context/feature/45 - Landing page and Demo.md`, defaults to confirm in
+  the PR before code. Landing page at `/` without a session and at
+  `/welcome`; a Demo of the real pages over an in-browser sample Room (no
+  account, no backend calls, no DB writes) with a guided tour. Build order
+  45_1 landing, 45_2 demo, 45_3 tour. Frontend only, no migration.
 - **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
   editor, PR #211) and 38_3 (JSON import/export) built; first real test is
   the Shibuya map. `requirements.md` §1 and a new `FR-` need the product
