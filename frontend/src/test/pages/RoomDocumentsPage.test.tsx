@@ -112,13 +112,17 @@ describe('RoomDocumentsPage', () => {
       'href',
       '/rooms/room-1/maps',
     );
-    expect(within(strip).getByRole('link', { name: 'La Corte' })).toHaveAttribute(
+    expect(within(strip).getByRole('link', { name: /^La Corte/ })).toHaveAttribute(
       'href',
       '/rooms/room-1/maps/map-1',
     );
-    expect(within(strip).getByRole('link', { name: 'Shibuya' })).toHaveAttribute(
+    expect(within(strip).getByRole('link', { name: /^Shibuya/ })).toHaveAttribute(
       'href',
       '/rooms/room-1/maps/map-2',
+    );
+    // Each card says the map's kind and how many Documents it shows.
+    expect(within(strip).getByRole('link', { name: /^Shibuya/ })).toHaveTextContent(
+      'ShibuyaMappa geografica · 2 Documenti',
     );
     expect(within(strip).queryByRole('link', { name: 'Nuova mappa' })).not.toBeInTheDocument();
   });
@@ -445,6 +449,17 @@ describe('grouping and sorting', () => {
     expect(mapsRowAfter()).toEqual(['#NPC']);
   });
 
+  it('keeps the maps row before the fallback group when its place is past every item', async () => {
+    routes.maps = [rawMap()];
+    routes.room = rawRoom({ maps_position: 5 });
+    mockApiWithMainTags();
+    render();
+
+    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
+    await screen.findByRole('navigation', { name: 'Mappe' });
+    expect(mapsRowAfter()).toEqual(['#NPC']);
+  });
+
   it('shows the maps row after every group when no group follows its place', async () => {
     routes.maps = [rawMap()];
     routes.room = rawRoom({ maps_position: 1 });
@@ -475,7 +490,7 @@ describe('grouping and sorting', () => {
     render('/rooms/room-1/documents?groupBy=none');
 
     await screen.findByRole('navigation', { name: 'Mappe' });
-    expect(screen.getByRole('link', { name: 'La Corte' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^La Corte/ })).toBeInTheDocument();
     expect(groupHeadings()).toEqual([]);
   });
 

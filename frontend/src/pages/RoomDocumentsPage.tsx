@@ -362,7 +362,10 @@ function DocumentsGrid({
   const groups = groupDocumentsByMainItems(documents, tags, mainItems);
   // Before the first group the setup places after the maps row; past the last
   // Main item it still comes before the "no Main Tag" group, which isn't one.
-  const found = groups.findIndex((group) => group.position >= mapsPosition);
+  // A stored place past the items (a Tag deleted since) still stops there.
+  const found = groups.findIndex(
+    (group) => group.key === UNGROUPED_KEY || group.position >= mapsPosition,
+  );
   const mapsAt = found === -1 ? groups.length : found;
   return (
     <Stack gap="lg">

@@ -1,4 +1,4 @@
-import { Badge, Button, Group, Text, UnstyledButton } from '@mantine/core';
+import { Badge, Card, Group, Stack, Text, ThemeIcon, UnstyledButton } from '@mantine/core';
 import { GraphIcon, MapTrifoldIcon, PlusIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,13 +11,14 @@ interface RoomMapsStripProps {
 }
 
 /**
- * One compact row on the Room's main page with the maps the viewer sees, last
- * edited first, so the maps are in sight without opening the Room's "⋮"
- * (Andrea, 2026-10-25). "Maps" with its count leads to the Maps page; each
- * map opens directly. The row scrolls sideways rather than wrapping, so it
- * stays one line on a phone. Hidden while loading, on an error, and when
- * there is no map and nothing to create. The list already follows each
- * map's visibility (and "View as"), like the Maps page.
+ * The maps the viewer sees on the Room's main page, as small cards, last
+ * edited first, so they are in sight without opening the Room's "⋮" (Andrea,
+ * 2026-10-25). "Maps" with its count leads to the Maps page; each card opens
+ * its map and says its kind and how many Documents it shows. The cards wrap
+ * on a wide screen and scroll sideways on a phone, so they stay one row there.
+ * Hidden while loading, on an error, and when there is no map and nothing to
+ * create. The list already follows each map's visibility (and "View as"),
+ * like the Maps page.
  */
 export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
   const { t } = useTranslation();
@@ -26,61 +27,68 @@ export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
   if (!maps.data || (maps.data.length === 0 && !canCreate)) return null;
 
   return (
-    <Group
-      component="nav"
-      aria-label={t('maps.title')}
-      gap="xs"
-      wrap="nowrap"
-      className="room-maps-strip"
-    >
+    <Stack component="nav" aria-label={t('maps.title')} gap="xs">
       <UnstyledButton
         component={Link}
         to={`/rooms/${roomId}/maps`}
         aria-label={t('maps.strip.all', { count: maps.data.length })}
         c="dimmed"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start' }}
       >
-        <MapTrifoldIcon size={18} aria-hidden="true" />
-        <Text span fw={600} size="sm" style={{ fontFamily: 'var(--font-display)' }}>
+        <MapTrifoldIcon size={16} aria-hidden="true" />
+        <Text span fz="h5" style={{ fontFamily: 'var(--font-display)' }}>
           {t('maps.title')}
         </Text>
         <Badge size="sm" variant="light" color="gray" circle aria-hidden="true">
           {maps.data.length}
         </Badge>
       </UnstyledButton>
-      {maps.data.map((map) => (
-        <Button
-          key={map.id}
-          component={Link}
-          to={`/rooms/${roomId}/maps/${map.id}`}
-          size="compact-sm"
-          variant="default"
-          radius="xl"
-          leftSection={
-            map.kind === 'geographic' ? (
-              <MapTrifoldIcon size={14} aria-hidden="true" />
-            ) : (
-              <GraphIcon size={14} aria-hidden="true" />
-            )
-          }
-          style={{ flexShrink: 0, maxWidth: 240 }}
-        >
-          {map.name}
-        </Button>
-      ))}
-      {maps.data.length === 0 && (
-        <Button
-          component={Link}
-          to={`/rooms/${roomId}/maps?new=1`}
-          size="compact-sm"
-          variant="subtle"
-          radius="xl"
-          leftSection={<PlusIcon size={14} aria-hidden="true" />}
-          style={{ flexShrink: 0 }}
-        >
-          {t('maps.create')}
-        </Button>
-      )}
-    </Group>
+      <div className="room-maps-cards">
+        {maps.data.map((map) => (
+          <Card
+            key={map.id}
+            component={Link}
+            to={`/rooms/${roomId}/maps/${map.id}`}
+            withBorder
+            radius="md"
+            padding="sm"
+            className="room-map-card"
+          >
+            <Group gap="sm" wrap="nowrap">
+              <ThemeIcon variant="light" color="accent" size="lg" radius="md" aria-hidden="true">
+                {map.kind === 'geographic' ? <MapTrifoldIcon size={18} /> : <GraphIcon size={18} />}
+              </ThemeIcon>
+              <Stack gap={0} style={{ minWidth: 0 }}>
+                <Text fw={600} truncate="end" title={map.name} style={{ fontFamily: 'var(--font-display)' }}>
+                  {map.name}
+                </Text>
+                <Text size="xs" c="dimmed" truncate="end">
+                  {t(map.kind === 'geographic' ? 'maps.kind.geographic' : 'maps.kind.free')} ·{' '}
+                  {t('maps.documentCount', { count: map.documentCount })}
+                </Text>
+              </Stack>
+            </Group>
+          </Card>
+        ))}
+        {maps.data.length === 0 && (
+          <Card
+            component={Link}
+            to={`/rooms/${roomId}/maps?new=1`}
+            withBorder
+            radius="md"
+            padding="sm"
+            className="room-map-card"
+            style={{ borderStyle: 'dashed' }}
+          >
+            <Group gap="sm" wrap="nowrap" c="dimmed">
+              <ThemeIcon variant="default" size="lg" radius="md" aria-hidden="true">
+                <PlusIcon size={18} />
+              </ThemeIcon>
+              <Text fw={600}>{t('maps.create')}</Text>
+            </Group>
+          </Card>
+        )}
+      </div>
+    </Stack>
   );
 }
