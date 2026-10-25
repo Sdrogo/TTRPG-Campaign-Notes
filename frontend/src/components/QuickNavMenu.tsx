@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { Link, useMatch } from 'react-router-dom';
 import { Avatar, Burger, Loader, Menu, ScrollArea, Text } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
 import { BooksIcon, CheckIcon, HouseIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useMyRooms } from '../hooks/useRooms';
-import { SPLIT_QUERY } from '../hooks/useSideDocument';
 import { currentLanguage } from '../i18n';
 import type { MyRoom } from '../types/room';
 
@@ -20,15 +18,13 @@ function sortedRooms(myRooms: MyRoom[]): MyRoom[] {
 /**
  * The burger at the left of the header (spec 45, Decision 2a): quick
  * navigation to the landing page, the Rooms page and each of the user's
- * Rooms. The Rooms are fetched on the first open. From the `sm` breakpoint
- * they open in a sub-menu to the right; on a phone, where a side sub-menu has
- * no room, they are listed inline under a label.
+ * Rooms. The Rooms are fetched on the first open and listed inline under a
+ * label, on every screen (product owner, 2026-10-25: no side sub-menu).
  */
 export function QuickNavMenu() {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [requested, setRequested] = useState(false);
-  const wide = useMediaQuery(SPLIT_QUERY, true);
   const currentRoomId = useMatch('/rooms/:roomId/*')?.params.roomId;
   const myRooms = useMyRooms(requested);
 
@@ -81,22 +77,9 @@ export function QuickNavMenu() {
         <Menu.Item component={Link} to="/rooms" leftSection={<BooksIcon size={16} aria-hidden="true" />}>
           {t('common.myRooms')}
         </Menu.Item>
-        {wide ? (
-          <Menu.Sub position="right-start" offset={4}>
-            <Menu.Sub.Target>
-              <Menu.Sub.Item>{t('nav.rooms')}</Menu.Sub.Item>
-            </Menu.Sub.Target>
-            <Menu.Sub.Dropdown miw={240}>
-              <ScrollArea.Autosize mah="60dvh">{roomItems}</ScrollArea.Autosize>
-            </Menu.Sub.Dropdown>
-          </Menu.Sub>
-        ) : (
-          <>
-            <Menu.Divider />
-            <Menu.Label>{t('nav.rooms')}</Menu.Label>
-            <ScrollArea.Autosize mah="50dvh">{roomItems}</ScrollArea.Autosize>
-          </>
-        )}
+        <Menu.Divider />
+        <Menu.Label>{t('nav.rooms')}</Menu.Label>
+        <ScrollArea.Autosize mah="50dvh">{roomItems}</ScrollArea.Autosize>
       </Menu.Dropdown>
     </Menu>
   );

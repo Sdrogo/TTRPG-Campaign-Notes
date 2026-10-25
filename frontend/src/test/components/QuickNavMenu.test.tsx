@@ -1,17 +1,14 @@
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
-import { SPLIT_QUERY } from '../../hooks/useSideDocument';
 import { rawMyRoom, rawRoom } from '../fixtures';
-import { matchMediaQueries } from '../media';
 import { renderWithProviders } from '../utils';
 import { QuickNavMenu } from '../../components/QuickNavMenu';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 
 const fetchMock = vi.mocked(apiFetch);
-let restoreMedia: (() => void) | null = null;
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -20,11 +17,6 @@ beforeEach(() => {
     rawMyRoom(),
     rawMyRoom({ room: rawRoom({ id: 'room-3', name: 'Archivio', status: 'archived' }) }),
   ]);
-});
-
-afterEach(() => {
-  restoreMedia?.();
-  restoreMedia = null;
 });
 
 function render(route = '/') {
@@ -49,8 +41,8 @@ describe('QuickNavMenu', () => {
     expect(screen.getByRole('menuitem', { name: 'Le mie Stanze' })).toHaveAttribute('href', '/rooms');
   });
 
-  // On a phone there is no room for a side sub-menu: the Rooms are inline.
-  it('lists the Rooms in use alphabetically, inline on a phone', async () => {
+  // Inline on every screen (product owner, 2026-10-25), no side sub-menu.
+  it('lists the Rooms in use alphabetically, inline', async () => {
     const user = render();
 
     await user.click(screen.getByRole('button', { name: 'Navigazione rapida' }));
@@ -79,19 +71,5 @@ describe('QuickNavMenu', () => {
     await user.click(screen.getByRole('button', { name: 'Navigazione rapida' }));
 
     expect(await screen.findByText('Ancora nessuna Stanza')).toBeInTheDocument();
-  });
-
-  it('opens the Rooms in a sub-menu on a wider screen', async () => {
-    restoreMedia = matchMediaQueries([SPLIT_QUERY]);
-    const user = render();
-
-    await user.click(screen.getByRole('button', { name: 'Navigazione rapida' }));
-    const sub = await screen.findByRole('menuitem', { name: 'Stanze' });
-    expect(screen.queryByRole('menuitem', { name: /La Cripta/ })).not.toBeInTheDocument();
-
-    await user.click(sub);
-
-    const dropdown = (await screen.findByRole('menuitem', { name: /La Cripta/ })).closest('[role="menu"]');
-    expect(within(dropdown as HTMLElement).getByRole('menuitem', { name: /Il Bosco/ })).toBeInTheDocument();
   });
 });

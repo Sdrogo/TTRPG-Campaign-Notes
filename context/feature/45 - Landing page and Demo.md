@@ -58,10 +58,9 @@ navigation between the landing page, the Rooms page and each Room.
      (`GET /rooms`, the same list the Rooms page shows, archived Rooms
      left out), alphabetical, each with its small Room image and name,
      linking to the Room's Documents page; the current Room is checked.
-     On desktop it is a nested sub-menu (Mantine 9 `Menu.Sub`) opening to
-     the right; on a phone, where a side sub-menu has no room, the Rooms
-     are listed inline under a "Rooms" label in the same menu, scrolling
-     inside it when long. With no Room, the sub-list shows "No Rooms yet".
+     The Rooms are listed inline under a "Rooms" label in the same menu,
+     scrolling inside it when long, on desktop as on a phone (product
+     owner, 2026-10-25: no side sub-menu). With no Room, the list shows "No Rooms yet".
    - The Rooms list is fetched when the menu first opens. The burger is
      not shown without a session (the landing page's own top bar, 4) and
      does not replace spec 44's Room Index tab, which stays the index of
@@ -202,8 +201,8 @@ navigation between the landing page, the Rooms page and each Room.
   `HomePage` into a shared `SignInButtons` component, which also sets the
   just-signed-in marker (`lib/pendingInvite.ts` style).
 - **`components/QuickNavMenu.tsx`**: the burger and its `Menu` (Home, My
-  Rooms, the Rooms sub-list from `useRooms`, enabled on first open; nested
-  `Menu.Sub` from `sm`, inline below it), rendered by `AppHeader` in the
+  Rooms, the Rooms list from `useMyRooms`, enabled on first open, inline
+  under a label), rendered by `AppHeader` in the
   left column before the back arrow whenever there is a session.
 - **`lib/demo/`** (lazy chunk): `demoMode.ts` (flag on/off in
   `sessionStorage`, read synchronously by `apiClient` and `useSession`),
@@ -247,7 +246,7 @@ One unit at a time, each its own PR into `staging`:
 
 ## Tests
 
-- `LandingPage.test.tsx`: shows at `/` with and without a session; with
+- `HomePage.test.tsx` (the landing page through `/`): shows at `/` with and without a session; with
   one it offers Open my Rooms instead of sign-in; the sign-in buttons call
   `signInWithOAuth` with the right provider and set the marker; right
   after sign-in `/` goes on to `/rooms`, later visits stay on the landing

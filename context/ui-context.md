@@ -133,8 +133,8 @@ other icon set.
   (`QuickNavMenu`, Mantine `Burger` + `Menu`, `bottom-start`, 260px) lists
   Home (the landing page `/`), My Rooms (`/rooms`) and "Rooms", the user's
   active Rooms alphabetically with a 22px `Avatar` (Room image or initials),
-  the current Room checked; from `sm` the Rooms open in a `Menu.Sub` to the
-  right, on a phone they are inline under a `Menu.Label`, scrolling past
+  the current Room checked, inline under a `Menu.Label` on every screen
+  (product owner, 2026-10-25: no side sub-menu on desktop), scrolling past
   50dvh; fetched on first open. **The back arrow** (same
   date; the Glossary burger that followed it moved to the Room Index tab,
   spec 44, 2026-10-25): the back button is an icon-only
