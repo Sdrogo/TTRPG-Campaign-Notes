@@ -8,12 +8,16 @@ import { DEMO_ROOM_ID, DEMO_USER_ID } from './demoMode';
 
 type Lang = 'en' | 'it';
 
+/** The sample Room's fixed id number `n`, as a UUID. */
 function uid(n: number): string {
   return `d3e0c0de-0000-4000-8000-${String(n).padStart(12, '0')}`;
 }
 
+/** The Master, Morgan: the visitor. */
 export const MASTER_ID = DEMO_USER_ID;
+/** Marco, a Player: plays Brann and owns a Private Document. */
 export const MARCO_ID = uid(2);
+/** Giulia, a Player: plays Seren and wrote a Selective Note. */
 export const GIULIA_ID = uid(3);
 
 const TAG = { npc: uid(101), pc: uid(102), place: uid(103), event: uid(104), artifact: uid(105), coast: uid(106), cult: uid(107) };
@@ -31,8 +35,10 @@ const DOC = {
   cove: uid(211),
 };
 
+/** The four visibilities of the API (section 8). */
 export type Visibility = 'room' | 'master' | 'private' | 'selective';
 
+/** A sample Document, with what the visibility rules read. */
 export interface DemoDocument {
   id: string;
   name: string;
@@ -45,6 +51,7 @@ export interface DemoDocument {
   played_by: string | null;
 }
 
+/** A sample Note; `author_id` counts as its owner for visibility. */
 export interface DemoNote {
   id: string;
   document_id: string;
@@ -56,6 +63,7 @@ export interface DemoNote {
   relational_link: boolean;
 }
 
+/** A sample Comment, with its reactions by user. */
 export interface DemoComment {
   id: string;
   document_id: string;
@@ -69,6 +77,7 @@ export interface DemoComment {
   as_character: string | null;
 }
 
+/** The whole sample Room, in the API's wire shapes where the pages read it directly. */
 export interface DemoData {
   room: { id: string; name: string; game_system: string; status: 'active'; players_can_create_documents: boolean; default_visibility: 'room'; image_url: null };
   members: { user_id: string; role: 'master' | 'player'; is_admin: boolean; email: string; display_name: string; pronouns: string | null; bio: string | null; avatar_url: null }[];
@@ -84,6 +93,7 @@ function mention(name: string, id: string): string {
   return `#[${name}](doc:${id})`;
 }
 
+/** Builds the sample Room in one language. */
 function build(lang: Lang): DemoData {
   const t = (en: string, it: string) => (lang === 'it' ? it : en);
   const names = {

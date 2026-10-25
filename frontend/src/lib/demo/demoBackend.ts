@@ -19,6 +19,10 @@ function plain(text: string): string {
   return text.replace(DOC_TOKEN, (_, name: string) => name.replace(/\\(.)/g, '$1'));
 }
 
+/**
+ * Who a request answers to: the visitor (the sample Room's Master) or the
+ * Player they preview, with the visibility rules that decide what they see.
+ */
 class Viewer {
   readonly id: string;
   readonly data: DemoData;
@@ -28,6 +32,7 @@ class Viewer {
     this.data = data;
   }
 
+  /** The Master sees everything (VR-01). */
   get isMaster(): boolean {
     return this.id === MASTER_ID;
   }
@@ -40,19 +45,23 @@ class Viewer {
     return visibility === 'selective' && selective.includes(this.id);
   }
 
+  /** Whether the Document exists and its visibility lets the viewer see it. */
   seesDocument(doc: DemoDocument | undefined): doc is DemoDocument {
     return Boolean(doc && this.sees(doc.visibility, doc.owner_ids, doc.selective_user_ids));
   }
 
+  /** The Document, or undefined when it is hidden from the viewer, as the API's 404. */
   document(id: string): DemoDocument | undefined {
     const doc = this.data.documents.find((d) => d.id === id);
     return this.seesDocument(doc) ? doc : undefined;
   }
 
+  /** The Room's Documents the viewer sees. */
   documents(): DemoDocument[] {
     return this.data.documents.filter((doc) => this.seesDocument(doc));
   }
 
+  /** The Document's Notes the viewer sees; a Note's author counts as its owner. */
   notes(documentId: string) {
     return this.data.notes.filter(
       (note) =>
@@ -61,11 +70,17 @@ class Viewer {
     );
   }
 
+  /** Whether the viewer sees the Comment; its author counts as its owner. */
   seesComment(comment: DemoComment): boolean {
     return this.sees(comment.visibility, [comment.author_id], comment.selective_user_ids);
   }
 }
 
+/**
+ * A Document in the API's wire shape (`RawDocument`): with `unread_count`
+ * for the list (`GET .../documents`), with its Notes and Files for
+ * `GET .../documents/{id}`. Nothing in the sample Room is unread.
+ */
 function rawDocument(viewer: Viewer, doc: DemoDocument, detail: boolean) {
   const raw: Record<string, unknown> = {
     id: doc.id,
@@ -102,6 +117,11 @@ function rawDocument(viewer: Viewer, doc: DemoDocument, detail: boolean) {
   };
 }
 
+/**
+ * A Document's Thread as `GET .../documents/{id}/comments` returns it
+ * (`RawComment[]`): the Comments the viewer sees, with their reactions and
+ * what the viewer may do with each.
+ */
 function rawComments(viewer: Viewer, documentId: string) {
   const doc = viewer.data.documents.find((d) => d.id === documentId)!;
   const canModerate = viewer.isMaster || doc.owner_ids.includes(viewer.id);
@@ -183,6 +203,7 @@ function backlinks(viewer: Viewer, targetId: string) {
   return [...groups.values()];
 }
 
+/** The text with the first match of `query` (lower case) marked, or null without one. */
 function highlight(text: string, query: string) {
   const at = text.toLowerCase().indexOf(query);
   return at < 0 ? null : { text, highlights: [[at, at + query.length]] };
@@ -191,7 +212,7 @@ function highlight(text: string, query: string) {
 /** A plain substring search over what the viewer sees (spec 21's shape, not its ranking). */
 function search(viewer: Viewer, params: URLSearchParams) {
   const query = (params.get('q') ?? '').trim().toLowerCase();
-  const limit = Number(params.get('limit') ?? 5);
+  const limit = Number(params.get('limit')) || 5;
   const kind = params.get('kind');
   const tagIds = params.getAll('tag');
   const docs = viewer
@@ -230,10 +251,15 @@ function search(viewer: Viewer, params: URLSearchParams) {
   return { documents: group('documents'), notes: group('notes'), comments: group('comments'), tags: group('tags') };
 }
 
+/** The Document as a map card or place carries it (`RawMapDocument`). */
 function placeDocument(doc: DemoDocument) {
   return { id: doc.id, name: doc.name, subtitle: doc.subtitle, image: null, tag_ids: doc.tag_ids };
 }
 
+/**
+ * A map as the maps list returns it: no content, the number of Documents
+ * on it the viewer sees, and edit rights for the Master only.
+ */
 function mapSummary(map: Record<string, unknown>, viewer: Viewer) {
   const { groups: _groups, cards, arrows: _arrows, areas: _areas, pins, links: _links, background_url: _bg, ...summary } = map;
   const ids = [...((cards as { document_id: string | null }[] | undefined) ?? []), ...((pins as { document_id: string | null }[] | undefined) ?? [])]
@@ -256,6 +282,7 @@ function freeMapDetail(map: Record<string, unknown>, viewer: Viewer) {
   return { ...mapSummary(map, viewer), groups: map.groups, cards, arrows };
 }
 
+/** A geographic map's content (`.../geo`): hidden places and the links to them left out. */
 function geoMapDetail(map: Record<string, unknown>, viewer: Viewer) {
   const keep = (item: Record<string, unknown>) =>
     (viewer.isMaster || !item.master_only) && (!item.document_id || Boolean(viewer.document(item.document_id as string)));
@@ -346,6 +373,7 @@ type Answer = { status: number; body: unknown };
 
 const NOT_FOUND: Answer = { status: 404, body: { detail: 'Not found' } };
 
+/** Routes a GET to the sample Room's answer; an unknown route is 404, as on the API. */
 function answer(path: string, viewer: Viewer): Answer {
   const url = new URL(path, 'http://demo');
   const parts = url.pathname.split('/').filter(Boolean);
