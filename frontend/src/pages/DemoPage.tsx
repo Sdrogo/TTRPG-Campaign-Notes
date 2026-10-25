@@ -18,7 +18,7 @@ export function DemoPage() {
   const [started] = useState(() => setDemoMode(true));
 
   // The tour opens on its own, at the step a landing page link names
-  // (`/demo?step=maps`), else at the start.
+  // (`/demo?step=freeMap`), else at the start.
   const { search } = useLocation();
   const step = new URLSearchParams(search).get('step');
   useEffect(() => {
