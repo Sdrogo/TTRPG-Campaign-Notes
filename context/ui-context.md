@@ -574,7 +574,10 @@ color per icon.
 Administrators of that Room only; anyone else who reaches the URL gets a
 full-page "Solo un Amministratore…" message with a way back (the backend
 enforces the same on every write). It has two sections under a `Title`
-order 2, each with an order-3 `Title`:
+order 2, each with an order-3 `Title`. At the top (2026-10-26), **Membri**
+and **Immagine della Stanza** + **Visibilità predefinita** are two bordered
+`Paper` cards (`--bg-surface`) side by side from `lg` (7/12 and 5/12, equal
+height), stacked below:
 
 - **Membri** (`setup/MemberManagement`): the table that used to be the
   members page — avatar, name, pronouns, bio, role `Select`, Administrator

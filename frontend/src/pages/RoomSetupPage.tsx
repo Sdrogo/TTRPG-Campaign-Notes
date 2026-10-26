@@ -1,22 +1,36 @@
-import { useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { Button, Group, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
-import { DownloadSimpleIcon } from '@phosphor-icons/react';
-import { useTranslation } from 'react-i18next';
-import { useSession } from '../hooks/useSession';
-import { useMembers } from '../hooks/useMembers';
-import { useMainItems } from '../hooks/useMainItems';
-import { useTags } from '../hooks/useTags';
-import { useRoom } from '../hooks/useRooms';
-import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
-import { ExportRoomModal } from '../components/ExportRoomModal';
-import { PageLayout } from '../components/PageLayout';
-import { MemberManagement } from '../components/setup/MemberManagement';
-import { TagsSection } from '../components/setup/TagsSection';
-import { DeleteRoomSection } from '../components/setup/DeleteRoomSection';
-import { DefaultVisibilitySection } from '../components/setup/DefaultVisibilitySection';
-import { RoomImageSection } from '../components/setup/RoomImageSection';
-import { VisibilityHistory } from '../components/setup/VisibilityHistory';
+import { useState } from "react";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import {
+  Button,
+  Grid,
+  Group,
+  Loader,
+  Paper,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+} from "@mantine/core";
+import { DownloadSimpleIcon } from "@phosphor-icons/react";
+import { useTranslation } from "react-i18next";
+import { useSession } from "../hooks/useSession";
+import { useMembers } from "../hooks/useMembers";
+import { useMainItems } from "../hooks/useMainItems";
+import { useTags } from "../hooks/useTags";
+import { useRoom } from "../hooks/useRooms";
+import {
+  FullPageLoader,
+  FullPageMessage,
+  SignInRequired,
+} from "../components/PageState";
+import { ExportRoomModal } from "../components/ExportRoomModal";
+import { PageLayout } from "../components/PageLayout";
+import { MemberManagement } from "../components/setup/MemberManagement";
+import { TagsSection } from "../components/setup/TagsSection";
+import { DeleteRoomSection } from "../components/setup/DeleteRoomSection";
+import { DefaultVisibilitySection } from "../components/setup/DefaultVisibilitySection";
+import { RoomImageSection } from "../components/setup/RoomImageSection";
+import { VisibilityHistory } from "../components/setup/VisibilityHistory";
 
 /**
  * `/rooms/:roomId/setup` (spec 11): the Room's setup, reachable only by an
@@ -33,13 +47,15 @@ export function RoomSetupPage() {
   const navigate = useNavigate();
   const { session, loading: sessionLoading } = useSession();
   const signedIn = Boolean(session) && Boolean(roomId);
-  const members = useMembers(roomId ?? '', signedIn);
-  const currentMember = members.data?.find((m) => m.userId === session?.user.id);
+  const members = useMembers(roomId ?? "", signedIn);
+  const currentMember = members.data?.find(
+    (m) => m.userId === session?.user.id,
+  );
   const isAdmin = currentMember?.isAdmin ?? false;
-  const isMaster = currentMember?.role === 'master';
-  const tags = useTags(roomId ?? '', isAdmin);
-  const mainItems = useMainItems(roomId ?? '', isAdmin);
-  const room = useRoom(roomId ?? '', isAdmin);
+  const isMaster = currentMember?.role === "master";
+  const tags = useTags(roomId ?? "", isAdmin);
+  const mainItems = useMainItems(roomId ?? "", isAdmin);
+  const room = useRoom(roomId ?? "", isAdmin);
   const [exportOpened, setExportOpened] = useState(false);
 
   if (!roomId) {
@@ -51,13 +67,16 @@ export function RoomSetupPage() {
   }
 
   if (!session) {
-    return <SignInRequired>{t('setup.signInRequired')}</SignInRequired>;
+    return <SignInRequired>{t("setup.signInRequired")}</SignInRequired>;
   }
 
   if (members.isError) {
     return (
-      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
-        {t('setup.loadError')}
+      <FullPageMessage
+        actionLabel={t("common.backToMyRooms")}
+        actionTo="/rooms"
+      >
+        {t("setup.loadError")}
       </FullPageMessage>
     );
   }
@@ -68,24 +87,31 @@ export function RoomSetupPage() {
 
   if (!isAdmin && !isMaster) {
     return (
-      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
-        {t('setup.adminOnly')}
+      <FullPageMessage
+        actionLabel={t("common.backToMyRooms")}
+        actionTo="/rooms"
+      >
+        {t("setup.adminOnly")}
       </FullPageMessage>
     );
   }
 
   return (
-    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('documents.title')} roomId={roomId}>
+    <PageLayout
+      backTo={`/rooms/${roomId}/documents`}
+      backLabel={t("documents.title")}
+      roomId={roomId}
+    >
       <Group justify="space-between" wrap="nowrap">
-        <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('setup.title')}
+        <Title order={1} fz="h2" style={{ fontFamily: "var(--font-display)" }}>
+          {t("setup.title")}
         </Title>
         <Button
           variant="light"
           leftSection={<DownloadSimpleIcon size={16} />}
           onClick={() => setExportOpened(true)}
         >
-          {t('export.action')}
+          {t("export.action")}
         </Button>
       </Group>
       <ExportRoomModal
@@ -94,35 +120,73 @@ export function RoomSetupPage() {
         roomId={roomId}
       />
 
-      <Tabs defaultValue={isAdmin ? 'settings' : 'history'} keepMounted={false}>
+      <Tabs defaultValue={isAdmin ? "settings" : "history"} keepMounted={false}>
         <Tabs.List mb="lg">
-          {isAdmin && <Tabs.Tab value="settings">{t('setup.tabs.settings')}</Tabs.Tab>}
-          <Tabs.Tab value="history">{t('setup.tabs.history')}</Tabs.Tab>
+          {isAdmin && (
+            <Tabs.Tab value="settings">{t("setup.tabs.settings")}</Tabs.Tab>
+          )}
+          <Tabs.Tab value="history">{t("setup.tabs.history")}</Tabs.Tab>
         </Tabs.List>
         {isAdmin && (
           <Tabs.Panel value="settings">
             <Stack gap="md">
-              <Stack gap="sm">
-                <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
-                  {t('members.title')}
-                </Title>
-                <MemberManagement
-                  roomId={roomId}
-                  members={members.data}
-                  currentUserId={session.user.id}
-                  onLeft={() => navigate('/rooms')}
-                />
-              </Stack>
+              {/* Members beside the Room image and default visibility from `lg`, stacked below. */}
+              <Grid gap="md" align="stretch">
+                <Grid.Col span={{ base: 12, lg: 7 }}>
+                  <Paper
+                    withBorder
+                    radius="md"
+                    p="md"
+                    bg="var(--bg-surface)"
+                    h="100%"
+                  >
+                    <Stack gap="sm">
+                      <Title
+                        order={2}
+                        fz="h3"
+                        style={{ fontFamily: "var(--font-display)" }}
+                      >
+                        {t("members.title")}
+                      </Title>
+                      <MemberManagement
+                        roomId={roomId}
+                        members={members.data}
+                        currentUserId={session.user.id}
+                        onLeft={() => navigate("/rooms")}
+                      />
+                    </Stack>
+                  </Paper>
+                </Grid.Col>
 
-              {room.data && <RoomImageSection roomId={roomId} imageUrl={room.data.imageUrl} />}
+                {room.data && (
+                  <Grid.Col span={{ base: 12, lg: 5 }}>
+                    <Paper
+                      withBorder
+                      radius="md"
+                      p="md"
+                      bg="var(--bg-surface)"
+                      h="100%"
+                    >
+                      <Stack gap="lg">
+                        <RoomImageSection
+                          roomId={roomId}
+                          imageUrl={room.data.imageUrl}
+                        />
+                        <DefaultVisibilitySection
+                          roomId={roomId}
+                          value={room.data.defaultVisibility}
+                        />
+                      </Stack>
+                    </Paper>
+                  </Grid.Col>
+                )}
+              </Grid>
 
-              {room.data && (
-                <DefaultVisibilitySection roomId={roomId} value={room.data.defaultVisibility} />
+              {(tags.isLoading || mainItems.isLoading || room.isLoading) && (
+                <Loader color="accent" />
               )}
-
-              {(tags.isLoading || mainItems.isLoading || room.isLoading) && <Loader color="accent" />}
               {(tags.isError || mainItems.isError || room.isError) && (
-                <Text c="red">{t('setup.loadError')}</Text>
+                <Text c="red">{t("setup.loadError")}</Text>
               )}
               {tags.data && mainItems.data && room.data && (
                 <TagsSection
@@ -137,7 +201,7 @@ export function RoomSetupPage() {
                 <DeleteRoomSection
                   roomId={roomId}
                   roomName={room.data.name}
-                  onDeleted={() => navigate('/rooms')}
+                  onDeleted={() => navigate("/rooms")}
                 />
               )}
             </Stack>
