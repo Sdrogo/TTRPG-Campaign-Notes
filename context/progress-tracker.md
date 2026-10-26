@@ -218,6 +218,12 @@ One line per unit; dates 2026, newest first. Spec files live in
   bordered `Paper` cards side by side from `lg` (half each, equal
   height), stacked below. The Tags parts (Grouping, All Tags) went from
   5/12 + 7/12 to half each, so all four cards share one width.
+- **Compact Document edit form** (Andrea, frontend only, no migration):
+  in the Document edit form, Visibility, Tags and New tag (+ Add) share
+  one row from `md` (3/5/4 of 12; Tags takes 9 when the viewer can't
+  create Tags), stacked below. `DocumentFields` gets an `inlineMeta`
+  prop that only `DocumentEditForm` sets; the create and comment-promotion
+  modals keep the stacked layout. Save / Cancel / Delete stay on their row.
 
 ### 2026-10-25
 

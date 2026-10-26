@@ -741,6 +741,7 @@ function DocumentEditForm({
           roomId={roomId}
           canCreateTag={canManageTags}
           onTagCreatePendingChange={setTagCreatePending}
+          inlineMeta
         />
         <Group justify="space-between">
           <Group>
