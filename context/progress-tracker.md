@@ -215,8 +215,9 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 - **Compact Room setup** (Andrea, frontend only, no migration): on the
   Settings tab, Members and the Room image + default visibility are two
-  bordered `Paper` cards side by side from `lg` (7/12 and 5/12, equal
-  height), stacked below.
+  bordered `Paper` cards side by side from `lg` (half each, equal
+  height), stacked below. The Tags parts (Grouping, All Tags) went from
+  5/12 + 7/12 to half each, so all four cards share one width.
 
 ### 2026-10-25
 

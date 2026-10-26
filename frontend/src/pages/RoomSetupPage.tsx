@@ -104,7 +104,7 @@ export function RoomSetupPage() {
             <Stack gap="md">
               {/* Members beside the Room image and default visibility from `lg`, stacked below. */}
               <Grid gap="md" align="stretch">
-                <Grid.Col span={{ base: 12, lg: 7 }}>
+                <Grid.Col span={{ base: 12, lg: 6 }}>
                   <Paper withBorder radius="md" p="md" bg="var(--bg-surface)" h="100%">
                     <Stack gap="sm">
                       <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
@@ -121,7 +121,7 @@ export function RoomSetupPage() {
                 </Grid.Col>
 
                 {room.data && (
-                  <Grid.Col span={{ base: 12, lg: 5 }}>
+                  <Grid.Col span={{ base: 12, lg: 6 }}>
                     <Paper withBorder radius="md" p="md" bg="var(--bg-surface)" h="100%">
                       <Stack gap="lg">
                         <RoomImageSection roomId={roomId} imageUrl={room.data.imageUrl} />
