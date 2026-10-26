@@ -1,4 +1,4 @@
-import { MultiSelect, Stack, TextInput } from '@mantine/core';
+import { Grid, MultiSelect, Stack, TextInput } from '@mantine/core';
 import { VisibilitySelect } from './VisibilitySelect';
 import { MentionTextarea } from './mentions/MentionTextarea';
 import { TagCreateInline } from './TagCreateInline';
@@ -20,6 +20,10 @@ interface DocumentFieldsProps {
   canCreateTag: boolean;
   onTagCreatePendingChange?: (pending: boolean) => void;
   autoFocus?: boolean;
+  /** Puts Visibility, Tags and New tag side by side on one row from `md` up
+   *  (stacked below it) - the Document edit form uses it, the modals that
+   *  share these fields are too narrow for it. */
+  inlineMeta?: boolean;
 }
 
 /** The backend's limit on a subtitle (spec 28_0 S1). */
@@ -34,9 +38,41 @@ export function DocumentFields({
   canCreateTag,
   onTagCreatePendingChange,
   autoFocus,
+  inlineMeta = false,
 }: DocumentFieldsProps) {
   const { t } = useTranslation();
   const set = (patch: Partial<DocumentFormValues>) => onChange({ ...values, ...patch });
+
+  const visibilityField = (
+    <VisibilitySelect
+      label={t('visibility.label')}
+      subject="document"
+      value={values.visibility}
+      onChange={(visibility) => set({ visibility })}
+    />
+  );
+  const tagsField = (
+    <MultiSelect
+      label={t('documents.fields.tags')}
+      data={tags.map((t) => ({ value: t.id, label: t.name }))}
+      value={values.tagIds}
+      onChange={(tagIds) => set({ tagIds })}
+      searchable
+    />
+  );
+  const newTagField = canCreateTag && (
+    <TagCreateInline
+      roomId={roomId}
+      // Functional update: creation is async, so `values` here could be
+      // stale by the time it resolves - appending to whatever the form
+      // holds *then* keeps a Name/Description edit made while it was
+      // pending instead of overwriting it with this render's snapshot.
+      onCreated={(tag) =>
+        onChange((previous) => ({ ...previous, tagIds: [...previous.tagIds, tag.id] }))
+      }
+      onPendingChange={onTagCreatePendingChange}
+    />
+  );
 
   return (
     <Stack gap="sm">
@@ -65,31 +101,18 @@ export function DocumentFields({
         minRows={3}
         autosize
       />
-      <VisibilitySelect
-        label={t('visibility.label')}
-        subject="document"
-        value={values.visibility}
-        onChange={(visibility) => set({ visibility })}
-      />
-      <MultiSelect
-        label={t('documents.fields.tags')}
-        data={tags.map((t) => ({ value: t.id, label: t.name }))}
-        value={values.tagIds}
-        onChange={(tagIds) => set({ tagIds })}
-        searchable
-      />
-      {canCreateTag && (
-        <TagCreateInline
-          roomId={roomId}
-          // Functional update: creation is async, so `values` here could be
-          // stale by the time it resolves - appending to whatever the form
-          // holds *then* keeps a Name/Description edit made while it was
-          // pending instead of overwriting it with this render's snapshot.
-          onCreated={(tag) =>
-            onChange((previous) => ({ ...previous, tagIds: [...previous.tagIds, tag.id] }))
-          }
-          onPendingChange={onTagCreatePendingChange}
-        />
+      {inlineMeta ? (
+        <Grid gap="sm" align="flex-start">
+          <Grid.Col span={{ base: 12, md: 3 }}>{visibilityField}</Grid.Col>
+          <Grid.Col span={{ base: 12, md: newTagField ? 5 : 9 }}>{tagsField}</Grid.Col>
+          {newTagField && <Grid.Col span={{ base: 12, md: 4 }}>{newTagField}</Grid.Col>}
+        </Grid>
+      ) : (
+        <>
+          {visibilityField}
+          {tagsField}
+          {newTagField}
+        </>
       )}
     </Stack>
   );
