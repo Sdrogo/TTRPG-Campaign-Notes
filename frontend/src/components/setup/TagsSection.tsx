@@ -56,7 +56,7 @@ function Part({
 /**
  * The Room setup's one Tags section (spec 25c Decision 1): Grouping (the Main
  * items the Documents page groups by) beside All Tags, side by side from `lg`
- * (about 5/12 and 7/12) and stacked below. The Grouping saves on every change,
+ * (half each) and stacked below. The Grouping saves on every change,
  * optimistically; a failed save is reported and rolled back.
  */
 export function TagsSection({ roomId, tags, items, mapsPosition }: TagsSectionProps) {
@@ -77,7 +77,7 @@ export function TagsSection({ roomId, tags, items, mapsPosition }: TagsSectionPr
         </Text>
       </Stack>
       <Grid gap="md" align="flex-start">
-        <Grid.Col span={{ base: 12, lg: 5 }}>
+        <Grid.Col span={{ base: 12, lg: 6 }}>
           <Part
             title={t('setup.tags.grouping.title')}
             count={resolved.length}
@@ -94,7 +94,7 @@ export function TagsSection({ roomId, tags, items, mapsPosition }: TagsSectionPr
             />
           </Part>
         </Grid.Col>
-        <Grid.Col span={{ base: 12, lg: 7 }}>
+        <Grid.Col span={{ base: 12, lg: 6 }}>
           <Part
             title={t('setup.tags.all.title')}
             count={tags.length}

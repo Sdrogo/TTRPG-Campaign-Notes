@@ -211,6 +211,14 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-26
+
+- **Compact Room setup** (Andrea, frontend only, no migration): on the
+  Settings tab, Members and the Room image + default visibility are two
+  bordered `Paper` cards side by side from `lg` (half each, equal
+  height), stacked below. The Tags parts (Grouping, All Tags) went from
+  5/12 + 7/12 to half each, so all four cards share one width.
+
 ### 2026-10-25
 
 - **Back arrow fixes** (Andrea, frontend only, no migration): Room setup's

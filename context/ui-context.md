@@ -574,7 +574,10 @@ color per icon.
 Administrators of that Room only; anyone else who reaches the URL gets a
 full-page "Solo un Amministratore…" message with a way back (the backend
 enforces the same on every write). It has two sections under a `Title`
-order 2, each with an order-3 `Title`:
+order 2, each with an order-3 `Title`. At the top (2026-10-26), **Membri**
+and **Immagine della Stanza** + **Visibilità predefinita** are two bordered
+`Paper` cards (`--bg-surface`) side by side from `lg` (half each, equal
+height), stacked below:
 
 - **Membri** (`setup/MemberManagement`): the table that used to be the
   members page — avatar, name, pronouns, bio, role `Select`, Administrator
@@ -583,7 +586,7 @@ order 2, each with an order-3 `Title`:
 - **Tag** (`setup/TagsSection`, spec 25c, 2026-10-07; it replaced the
   separate "Tag principali" editor, its combination adder and "Salva ordine",
   and the boxed Tag list): one section, two bordered `Paper` parts side by
-  side from `lg` (Grouping 5/12, All Tags 7/12), stacked below. Each part has
+  side from `lg` (half each since 2026-10-26), stacked below. Each part has
   an `h3` (`fz="h5"`), a gray count `Badge` and a one-line dimmed description.
   - **Raggruppamento** (`GroupingEditor`): the Main items as a `CompactList`
     `ol` (position, `#A` or `#A + #B`, up / down / remove `ActionIcon`s
