@@ -153,18 +153,16 @@ describe('DocumentCard', () => {
     expect(screen.getByAltText('Il Cancello')).toHaveAttribute('src', 'http://a/1.webp');
   });
 
-  // On a wide card the image panel would otherwise be a short strip that crops
-  // the image to a sliver: a square floor keeps the card at least that tall.
-  it('keeps the image panel at least square', () => {
+  it('puts the image in its wide cover frame', () => {
     render({ images: [{ id: 'image-1', url: 'http://a/1.webp', isFavorite: true }] });
 
-    expect(screen.getByTestId('card-image-floor')).toHaveStyle({ aspectRatio: '1' });
+    expect(screen.getByTestId('card-image-frame')).toBeInTheDocument();
   });
 
-  it('has no image floor without images', () => {
+  it('has no image frame without images', () => {
     render();
 
-    expect(screen.queryByTestId('card-image-floor')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('card-image-frame')).not.toBeInTheDocument();
   });
 
   // The card is a link already, and an <a> may not contain another - so a

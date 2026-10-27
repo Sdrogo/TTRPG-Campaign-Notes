@@ -259,8 +259,12 @@ other icon set.
   filters open into a quiet bordered work panel, maps read as a distinct
   archive section, and each collapsible Main Tag heading shows its item count.
   Document cards keep their complete information and image behavior but gain
-  a restrained top-edge accent and lift on hover. The sticky create action has
-  a visible text label rather than relying on an unexplained plus icon.
+  a restrained top-edge accent and lift on hover. Cards with images use a wide
+  cover frame above full-width text instead of splitting the card 50/50: this
+  keeps the visual prominent without compressing long titles, Tags and
+  descriptions in multi-column grids. Their carousel, crop, badges and full-card
+  link remain unchanged. The sticky create action has a visible text label
+  rather than relying on an unexplained plus icon.
 - **Maps index** (`/rooms/:roomId/maps`): reads as a cartographic archive,
   not a generic card grid. The Room name is a small folio label above the
   large page title; create/import actions wrap safely on narrow screens.

@@ -671,6 +671,9 @@ html body[data-scroll-locked] {
 }
 
 .document-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   overflow: hidden;
   background: var(--bg-surface);
   border-top: 2px solid var(--border-default);
@@ -679,6 +682,36 @@ html body[data-scroll-locked] {
     transform 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease;
+}
+
+.document-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 168px;
+  overflow: hidden;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.document-card-media-marks {
+  position: absolute;
+  top: var(--mantine-spacing-sm);
+  right: var(--mantine-spacing-sm);
+  z-index: 2;
+  padding: 2px;
+  background: color-mix(in srgb, var(--bg-base) 88%, transparent);
+  border: 1px solid var(--border-default);
+  border-radius: var(--mantine-radius-md);
+  pointer-events: none;
+}
+
+.document-card-content {
+  flex: 1;
+}
+
+.document-card-description {
+  flex: 1;
 }
 
 .document-card:hover {

@@ -15,6 +15,8 @@ const FADE_INTO_CARD = 'linear-gradient(to right, var(--mantine-color-dark-6) 0%
 interface DocumentCardImagesProps {
   images: DocumentImage[];
   documentName: string;
+  /** The edge that blends into surrounding card content. */
+  fade?: 'left' | 'bottom';
 }
 
 /** Fill the box it's placed in with the Document's images, in their supplied
@@ -22,7 +24,11 @@ interface DocumentCardImagesProps {
  *  left edge fading into the card. Multiple images use a carousel. Returns
  *  null when there are no images. Read-only: managing them (adding, deleting,
  *  moving the favorite) stays on the detail page. */
-export function DocumentCardImages({ images, documentName }: DocumentCardImagesProps) {
+export function DocumentCardImages({
+  images,
+  documentName,
+  fade = 'left',
+}: DocumentCardImagesProps) {
   const { t } = useTranslation();
 
   if (images.length === 0) {
@@ -59,7 +65,13 @@ export function DocumentCardImages({ images, documentName }: DocumentCardImagesP
         data-testid="card-image-fade"
         pos="absolute"
         inset={0}
-        style={{ background: FADE_INTO_CARD, pointerEvents: 'none' }}
+        style={{
+          background:
+            fade === 'bottom'
+              ? 'linear-gradient(to bottom, transparent 55%, var(--bg-surface) 100%)'
+              : FADE_INTO_CARD,
+          pointerEvents: 'none',
+        }}
       />
     </Box>
   );

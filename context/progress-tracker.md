@@ -754,6 +754,9 @@ in line with what was built since.
 - Reframed the Maps index as a cartographic archive: Room/title hierarchy,
   responsive actions, distinct free/geographic icon plates, numbered map cards,
   clearer metadata and a designed empty state, without changing map workflows.
+- Refined image-bearing Document cards after visual review: the image is now a
+  wide cover above full-width content rather than a narrow side panel, retaining
+  carousel controls, badges, crop behavior and the complete-card link.
 
 ## Architecture Decisions
 
