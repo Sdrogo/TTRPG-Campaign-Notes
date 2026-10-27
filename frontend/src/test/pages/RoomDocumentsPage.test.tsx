@@ -434,7 +434,14 @@ describe('grouping and sorting', () => {
   const inMapsRow = (h: Element) => h.closest('nav') !== null;
   const isGroupHeading = (h: Element) =>
     h.querySelector('[aria-expanded]') !== null && !inMapsRow(h);
-  const groupHeadings = () => pageHeadings(2).filter(isGroupHeading).map((h) => h.textContent);
+  // A group heading's name, without its item count (a visual badge hidden from
+  // assistive tech).
+  const groupName = (heading: Element) => {
+    const copy = heading.cloneNode(true) as Element;
+    copy.querySelectorAll('[aria-hidden="true"]').forEach((node) => node.remove());
+    return copy.textContent;
+  };
+  const groupHeadings = () => pageHeadings(2).filter(isGroupHeading).map(groupName);
   const cardTitles = () =>
     pageHeadings(2, 3)
       .filter((h) => !isGroupHeading(h) && !inMapsRow(h))
@@ -446,7 +453,7 @@ describe('grouping and sorting', () => {
     return pageHeadings(2)
       .filter(isGroupHeading)
       .filter((h) => h.compareDocumentPosition(strip) & Node.DOCUMENT_POSITION_FOLLOWING)
-      .map((h) => h.textContent);
+      .map(groupName);
   };
 
   it('shows the maps row above the groups by default', async () => {

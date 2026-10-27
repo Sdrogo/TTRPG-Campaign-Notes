@@ -7,9 +7,25 @@ import { Card, type MantineSpacing } from '@mantine/core';
  * Shared by the Document, Comments and Account cards. `py` overrides the
  * vertical padding with a spacing token (a compact card, e.g. "Mentioned in").
  */
-export function PageCard({ children, py }: { children: ReactNode; py?: MantineSpacing }) {
+export function PageCard({
+  children,
+  py,
+  className,
+}: {
+  children: ReactNode;
+  py?: MantineSpacing;
+  /** Optional page-specific visual treatment layered over the shared card. */
+  className?: string;
+}) {
   return (
-    <Card withBorder radius="md" w="100%" p={{ base: 'md', sm: 'lg', lg: 'xl' }} py={py}>
+    <Card
+      withBorder
+      radius="md"
+      w="100%"
+      p={{ base: 'md', sm: 'lg', lg: 'xl' }}
+      py={py}
+      className={className}
+    >
       {children}
     </Card>
   );

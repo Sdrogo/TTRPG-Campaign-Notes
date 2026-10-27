@@ -2,6 +2,7 @@ import { Fragment, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Affix,
+  Badge,
   Box,
   Collapse,
   Group,
@@ -141,18 +142,35 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
     <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId} showIndex>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         {/* The Room's actions sit at the end of the title row, folded in "⋮". */}
-        <Group justify="space-between" wrap="nowrap" data-tour="room">
+        <Group
+          justify="space-between"
+          align="flex-end"
+          wrap="nowrap"
+          data-tour="room"
+          className="documents-page-heading"
+        >
           <Group gap="sm" align="center" wrap="wrap" style={{ minWidth: 0 }}>
-            <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-              {room.data ? room.data.name : t('documents.title')}
-            </Title>
+            <Stack gap={2}>
+              {room.data && (
+                <Text size="xs" c="dimmed" tt="uppercase" fw={600} className="documents-kicker">
+                  {t('documents.title')}
+                </Text>
+              )}
+              <Title
+                order={1}
+                className="documents-page-title"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                {room.data ? room.data.name : t('documents.title')}
+              </Title>
+            </Stack>
             {hasControls && (
               <UnstyledButton
                 onClick={() => setControlsExpanded((current) => !current)}
                 aria-expanded={controlsExpanded}
                 aria-label={controlsExpanded ? t('documents.hideControls') : t('documents.showControls')}
                 c="dimmed"
-                style={{ display: 'inline-flex', alignItems: 'center' }}
+                className="documents-controls-toggle"
               >
                 {controlsExpanded ? (
                   <CaretDownIcon size={16} aria-hidden="true" />
@@ -194,25 +212,23 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
         </Group>
         {/* The user's PDFs still being made or not yet taken (spec 23b); not while previewing as a member. */}
         {!readOnly && <RoomPdfExports roomId={roomId} userId={currentUserId} />}
-        {/* A round floating "+" at the bottom right, always within reach. */}
+        {/* The primary creation action stays within reach while browsing a long archive. */}
         {canCreateDocument && (
           <Affix position={{ bottom: 24, right: 24 }} zIndex={150}>
-            <LabeledActionIcon
-              size={56}
-              radius="xl"
-              variant="filled"
+            <Button
+              size="md"
+              radius="md"
+              leftSection={<PlusIcon size={18} weight="bold" />}
               onClick={() => setCreateOpened(true)}
-              aria-label={t('documents.create')}
-              title={t('documents.create')}
-              style={{ boxShadow: 'var(--mantine-shadow-lg)' }}
+              className="documents-create-action"
             >
-              <PlusIcon size={28} weight="bold" />
-            </LabeledActionIcon>
+              {t('documents.create')}
+            </Button>
           </Affix>
         )}
         {hasControls && (
           <Collapse expanded={controlsExpanded}>
-            <Group gap="sm" align="flex-end" wrap="wrap">
+            <Group gap="sm" align="flex-end" wrap="wrap" className="documents-controls-panel">
               {isMaster && room.data && (
                 <Switch
                   label={t('documents.playersCanCreate')}
@@ -380,20 +396,32 @@ function DocumentsGrid({
         return (
           <Fragment key={key}>
             {index === mapsAt && mapsRow}
-            <Stack gap="xs">
-              <Title order={2} fz="h5" style={{ fontFamily: 'var(--font-display)' }}>
+            <Stack gap="sm" className="document-group">
+              <Title
+                order={2}
+                fz="h5"
+                w="100%"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
                 <UnstyledButton
                   onClick={() => toggleGroup(key)}
                   aria-expanded={isExpanded}
                   c="dimmed"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  className="document-group-toggle"
                 >
-                  {isExpanded ? (
-                    <CaretDownIcon size={16} aria-hidden="true" />
-                  ) : (
-                    <CaretRightIcon size={16} aria-hidden="true" />
-                  )}
-                  {label}
+                  <Group gap="xs" wrap="nowrap">
+                    {isExpanded ? (
+                      <CaretDownIcon size={16} aria-hidden="true" />
+                    ) : (
+                      <CaretRightIcon size={16} aria-hidden="true" />
+                    )}
+                    <Text component="span" inherit>
+                      {label}
+                    </Text>
+                  </Group>
+                  <Badge size="sm" variant="light" color="gray" circle aria-hidden="true">
+                    {group.documents.length}
+                  </Badge>
                 </UnstyledButton>
               </Title>
               <Collapse expanded={isExpanded}>{cards(group.documents, 3)}</Collapse>
