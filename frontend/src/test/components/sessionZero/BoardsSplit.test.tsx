@@ -1,6 +1,11 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { BoardsSplit, DEFAULT_SIDE_PERCENT, MAX_SIDE_PERCENT } from '../../../components/sessionZero/BoardsSplit';
+import {
+  BoardsSplit,
+  DEFAULT_SIDE_PERCENT,
+  MAX_SIDE_PERCENT,
+  MIN_BOARDS_HEIGHT,
+} from '../../../components/sessionZero/BoardsSplit';
 import { renderWithProviders } from '../../utils';
 
 const KEY = 'sessionZero:linesVeilsWidth';
@@ -104,5 +109,40 @@ describe('BoardsSplit', () => {
     expect(handle).toHaveAttribute('aria-valuenow', '33');
     fireEvent.keyDown(handle, { key: 'ArrowLeft' });
     expect(handle).toHaveAttribute('aria-valuenow', '35');
+  });
+
+  // Spec 46d Decision 5: the boards fill the screen under the header, refitted as the page changes.
+  it('fills the height under the header, again on resize and when the page above changes', () => {
+    let observed: ResizeObserverCallback = () => {};
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          observed = callback;
+        }
+        observe() {}
+        disconnect = disconnect;
+      },
+    );
+    let top = 200;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => ({ top, width: 1000 }) as DOMRect);
+    const { unmount } = renderWithProviders(<BoardsSplit left={<p>Retro</p>} right={<p>Linee</p>} />);
+    const frame = screen.getByRole('separator').parentElement!;
+    expect(frame.style.height).toBe(`${window.innerHeight - 200 - 16}px`);
+
+    top = 240;
+    act(() => observed([], {} as ResizeObserver));
+    expect(frame.style.height).toBe(`${window.innerHeight - 240 - 16}px`);
+
+    top = window.innerHeight;
+    act(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
+    expect(frame.style.height).toBe(`${MIN_BOARDS_HEIGHT}px`);
+
+    unmount();
+    expect(disconnect).toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });

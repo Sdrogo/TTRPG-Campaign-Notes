@@ -160,9 +160,11 @@ describe('boardWrites', () => {
 describe('roundLabel', () => {
   const round = { id: 'r', startedAt: '', closedAt: null };
 
-  it('names the first round Session 0 and later ones Session 0.5 with their number and title', () => {
+  // Spec 46d Decision 3: a session's own name replaces the default.
+  it('names the first round Session 0, later ones Session 0.5 with their number, or by their own name', () => {
     expect(roundLabel({ ...round, number: 1, title: null })).toBe('Sessione 0');
-    expect(roundLabel({ ...round, number: 3, title: 'Fine arco 1' })).toBe('Sessione 0.5 #2 · Fine arco 1');
+    expect(roundLabel({ ...round, number: 3, title: null })).toBe('Sessione 0.5 #2');
+    expect(roundLabel({ ...round, number: 3, title: 'Fine arco 1' })).toBe('Fine arco 1');
   });
 });
 

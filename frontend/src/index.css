@@ -1087,6 +1087,14 @@ html body[data-scroll-locked] {
    and the board snaps to each; Lines & Veils are rows, one under the
    other, their post-its side by side; the handle between the two boards resizes them,
    drawn like the Document split view's divider. */
+/* Spec 46d Decision 5: beside each other, each board scrolls on its own. */
+.sz-pane {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sz-retro-scroll {
+  overflow-x: auto;
+}
 .sz-retro-column {
   flex: 1 1 0;
   min-width: 220px;
@@ -1156,4 +1164,23 @@ html body[data-scroll-locked] {
   .sz-group[data-glow] {
     animation: none;
   }
+}
+
+/* Spec 46d Decision 6: a post-it's reactions, emoji large enough to read at a glance. */
+.reaction-chip-lg {
+  font-size: 13px;
+}
+.reaction-chip-lg .mantine-Button-label {
+  gap: 4px;
+}
+.reaction-emoji-lg {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Spec 46d Decision 4: the session selector stands in for the page title. */
+.sz-session-picker input {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--mantine-font-size-md);
 }

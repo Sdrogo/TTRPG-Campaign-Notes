@@ -1299,8 +1299,8 @@
       "anonymousHint": "Niemand sieht, wer es geschrieben hat, auch nicht der Master."
     },
     "publishAll": {
-      "button_one": "Alle Entwürfe veröffentlichen ({{count}})",
-      "button_other": "Alle Entwürfe veröffentlichen ({{count}})",
+      "button_one": "Entwürfe veröffentlichen ({{count}})",
+      "button_other": "Entwürfe veröffentlichen ({{count}})",
       "title": "Alle deine Entwürfe veröffentlichen",
       "body_one": "Dein Entwurf in dieser Runde wird für alle Mitglieder sichtbar. Das lässt sich nicht rückgängig machen.",
       "body_other": "Deine {{count}} Entwürfe in dieser Runde werden für alle Mitglieder sichtbar. Das lässt sich nicht rückgängig machen.",
@@ -1334,12 +1334,12 @@
       "first": "Session 0",
       "later": "Session 0.5 #{{number}}",
       "pick": "Angezeigte Session",
-      "start": "Session 0.5 starten",
+      "start": "Neue Session",
       "startBody": "Das aktuelle Retro-Board wird geschlossen und bleibt schreibgeschützt lesbar; nie veröffentlichte Entwürfe werden gelöscht. Das neue Board beginnt leer, mit denselben Spalten. Grenzen & Schleier bleibt, wie es ist.",
-      "title": "Titel (optional)",
-      "titlePlaceholder": "Ende von Arc 1",
-      "startButton": "Starten",
-      "closed": "Diese Session ist geschlossen: Das Board ist schreibgeschützt."
+      "title": "Name",
+      "startButton": "Erstellen",
+      "closed": "Diese Session ist geschlossen: Das Board ist schreibgeschützt.",
+      "closedBadge": "Geschlossen"
     },
     "timer": {
       "label": "Timer",

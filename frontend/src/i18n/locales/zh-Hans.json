@@ -1269,7 +1269,7 @@
       "anonymousHint": "没有人能看到是谁写的，Master 也不例外。"
     },
     "publishAll": {
-      "button_other": "发布全部草稿（{{count}}）",
+      "button_other": "发布草稿（{{count}}）",
       "title": "发布你的全部草稿",
       "body_other": "你在本轮的 {{count}} 张草稿将对所有成员可见。此操作无法撤销。",
       "overLimit_other": "看板快满了：{{count}} 张草稿将保持为草稿。"
@@ -1300,12 +1300,12 @@
       "first": "第 0 次会话",
       "later": "第 0.5 次会话 #{{number}}",
       "pick": "要显示的会话",
-      "start": "开始第 0.5 次会话",
+      "start": "新会话",
       "startBody": "当前的回顾看板将关闭，仍可只读查看；从未发布的草稿会被删除。新看板从空白开始，沿用相同的列。底线与帷幕保持不变。",
-      "title": "标题（可选）",
-      "titlePlaceholder": "第 1 篇章结束",
-      "startButton": "开始",
-      "closed": "此会话已关闭：看板为只读。"
+      "title": "名称",
+      "startButton": "创建",
+      "closed": "此会话已关闭：看板为只读。",
+      "closedBadge": "已关闭"
     },
     "timer": {
       "label": "计时器",

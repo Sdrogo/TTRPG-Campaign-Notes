@@ -1299,8 +1299,8 @@
       "anonymousHint": "Nadie verá quién la escribió, ni siquiera el Master."
     },
     "publishAll": {
-      "button_one": "Publicar todos los borradores ({{count}})",
-      "button_other": "Publicar todos los borradores ({{count}})",
+      "button_one": "Publicar borradores ({{count}})",
+      "button_other": "Publicar borradores ({{count}})",
       "title": "Publicar todos tus borradores",
       "body_one": "Tu borrador de esta ronda será visible para todos los miembros. No se puede deshacer.",
       "body_other": "Tus {{count}} borradores de esta ronda serán visibles para todos los miembros. No se puede deshacer.",
@@ -1334,12 +1334,12 @@
       "first": "Sesión 0",
       "later": "Sesión 0.5 #{{number}}",
       "pick": "Sesión que mostrar",
-      "start": "Iniciar Sesión 0.5",
+      "start": "Nueva sesión",
       "startBody": "El tablero Retro actual se cierra y sigue disponible en solo lectura; los borradores nunca publicados se eliminan. El nuevo tablero empieza vacío, con las mismas columnas. Líneas y Velos se queda como está.",
-      "title": "Título (opcional)",
-      "titlePlaceholder": "Fin del arco 1",
-      "startButton": "Iniciar",
-      "closed": "Esta sesión está cerrada: el tablero es de solo lectura."
+      "title": "Nombre",
+      "startButton": "Crear",
+      "closed": "Esta sesión está cerrada: el tablero es de solo lectura.",
+      "closedBadge": "Cerrada"
     },
     "timer": {
       "label": "Temporizador",

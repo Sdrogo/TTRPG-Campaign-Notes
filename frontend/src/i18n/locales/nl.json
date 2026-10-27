@@ -1299,8 +1299,8 @@
       "anonymousHint": "Niemand ziet wie hem schreef, ook de Master niet."
     },
     "publishAll": {
-      "button_one": "Alle concepten publiceren ({{count}})",
-      "button_other": "Alle concepten publiceren ({{count}})",
+      "button_one": "Concepten publiceren ({{count}})",
+      "button_other": "Concepten publiceren ({{count}})",
       "title": "Al je concepten publiceren",
       "body_one": "Je concept in deze ronde wordt zichtbaar voor alle leden. Dit kan niet ongedaan worden gemaakt.",
       "body_other": "Je {{count}} concepten in deze ronde worden zichtbaar voor alle leden. Dit kan niet ongedaan worden gemaakt.",
@@ -1334,12 +1334,12 @@
       "first": "Sessie 0",
       "later": "Sessie 0.5 #{{number}}",
       "pick": "Te tonen sessie",
-      "start": "Sessie 0.5 starten",
+      "start": "Nieuwe sessie",
       "startBody": "Het huidige Retro-bord sluit en blijft alleen-lezen beschikbaar; nooit gepubliceerde concepten worden verwijderd. Het nieuwe bord begint leeg, met dezelfde kolommen. Lijnen en Sluiers blijft zoals het is.",
-      "title": "Titel (optioneel)",
-      "titlePlaceholder": "Einde van arc 1",
-      "startButton": "Starten",
-      "closed": "Deze sessie is gesloten: het bord is alleen-lezen."
+      "title": "Naam",
+      "startButton": "Aanmaken",
+      "closed": "Deze sessie is gesloten: het bord is alleen-lezen.",
+      "closedBadge": "Gesloten"
     },
     "timer": {
       "label": "Timer",

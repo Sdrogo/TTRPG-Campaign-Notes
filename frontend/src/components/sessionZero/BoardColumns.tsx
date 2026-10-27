@@ -76,7 +76,7 @@ function ColumnFrame({ id, title, color, menu, dropTarget = false, onDrop, fill 
     >
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap" gap={4}>
-          <Title order={3} fz="sm" style={{ overflowWrap: 'anywhere' }}>
+          <Title order={2} fz="md" fw={700} ff="var(--font-display)" style={{ overflowWrap: 'anywhere' }}>
             {title}
           </Title>
           {menu}
@@ -349,15 +349,15 @@ export function AddColumn() {
   };
   if (!adding) {
     return (
-      <Button
+      <LabeledActionIcon
         variant="default"
-        leftSection={<PlusIcon size={14} />}
-        miw={COLUMN_WIDTH / 2}
+        size={32}
+        aria-label={t('sessionZero.columns.add')}
         style={{ alignSelf: 'flex-start', flexShrink: 0 }}
         onClick={() => setAdding(true)}
       >
-        {t('sessionZero.columns.add')}
-      </Button>
+        <PlusIcon size={16} />
+      </LabeledActionIcon>
     );
   }
   return (

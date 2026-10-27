@@ -1359,10 +1359,10 @@
       "anonymousHint": "Nikt nie zobaczy, kto ją napisał, nawet Master."
     },
     "publishAll": {
-      "button_one": "Opublikuj wszystkie szkice ({{count}})",
-      "button_few": "Opublikuj wszystkie szkice ({{count}})",
-      "button_many": "Opublikuj wszystkie szkice ({{count}})",
-      "button_other": "Opublikuj wszystkie szkice ({{count}})",
+      "button_one": "Opublikuj szkice ({{count}})",
+      "button_few": "Opublikuj szkice ({{count}})",
+      "button_many": "Opublikuj szkice ({{count}})",
+      "button_other": "Opublikuj szkice ({{count}})",
       "title": "Opublikuj wszystkie swoje szkice",
       "body_one": "Twój szkic z tej rundy zobaczą wszyscy członkowie. Tego nie da się cofnąć.",
       "body_few": "Twoje {{count}} szkice z tej rundy zobaczą wszyscy członkowie. Tego nie da się cofnąć.",
@@ -1402,12 +1402,12 @@
       "first": "Sesja 0",
       "later": "Sesja 0.5 #{{number}}",
       "pick": "Pokazywana sesja",
-      "start": "Rozpocznij Sesję 0.5",
+      "start": "Nowa sesja",
       "startBody": "Obecna tablica Retro zostanie zamknięta i pozostanie dostępna tylko do odczytu; nigdy nieopublikowane szkice zostaną usunięte. Nowa tablica zaczyna się pusta, z tymi samymi kolumnami. Linie i Zasłony pozostają bez zmian.",
-      "title": "Tytuł (opcjonalnie)",
-      "titlePlaceholder": "Koniec łuku 1",
-      "startButton": "Rozpocznij",
-      "closed": "Ta sesja jest zamknięta: tablica jest tylko do odczytu."
+      "title": "Nazwa",
+      "startButton": "Utwórz",
+      "closed": "Ta sesja jest zamknięta: tablica jest tylko do odczytu.",
+      "closedBadge": "Zamknięta"
     },
     "timer": {
       "label": "Minutnik",

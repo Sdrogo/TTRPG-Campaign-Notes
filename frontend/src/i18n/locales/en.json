@@ -1299,8 +1299,8 @@
       "anonymousHint": "Nobody will see who wrote it, not even the Master."
     },
     "publishAll": {
-      "button_one": "Publish all drafts ({{count}})",
-      "button_other": "Publish all drafts ({{count}})",
+      "button_one": "Publish drafts ({{count}})",
+      "button_other": "Publish drafts ({{count}})",
       "title": "Publish all your drafts",
       "body_one": "Your draft in this round will be shown to every member. It can't be undone.",
       "body_other": "Your {{count}} drafts in this round will be shown to every member. It can't be undone.",
@@ -1334,12 +1334,12 @@
       "first": "Session 0",
       "later": "Session 0.5 #{{number}}",
       "pick": "Session to show",
-      "start": "Start Session 0.5",
+      "start": "New session",
       "startBody": "The current Retro board closes and stays readable, read-only; drafts never published are deleted. The new board starts empty, with the same columns. Lines & Veils stays as it is.",
-      "title": "Title (optional)",
-      "titlePlaceholder": "End of arc 1",
-      "startButton": "Start",
-      "closed": "This session is closed: the board is read-only."
+      "title": "Name",
+      "startButton": "Create",
+      "closed": "This session is closed: the board is read-only.",
+      "closedBadge": "Closed"
     },
     "timer": {
       "label": "Timer",

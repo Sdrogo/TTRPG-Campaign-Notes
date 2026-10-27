@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Button, Group, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
-import { PaperPlaneTiltIcon } from '@phosphor-icons/react';
 import { useMediaQuery } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
@@ -14,10 +13,8 @@ import { PageLayout } from '../components/PageLayout';
 import { AddColumn, LinesVeilsColumn, RetroColumn } from '../components/sessionZero/BoardColumns';
 import { BoardContext, useBoard, type BoardContextValue } from '../components/sessionZero/boardContext';
 import { BoardsSplit } from '../components/sessionZero/BoardsSplit';
-import { PublishModal } from '../components/sessionZero/PostItCard';
-import { RoundsBar } from '../components/sessionZero/RoundsBar';
-import { SessionZeroTitle } from '../components/sessionZero/SessionZeroTitle';
-import { MAX_CARDS_PER_BOARD, MAX_RETRO_COLUMNS, boardWrites } from '../lib/sessionZero';
+import { SessionZeroHeader } from '../components/sessionZero/SessionZeroHeader';
+import { MAX_RETRO_COLUMNS, boardWrites } from '../lib/sessionZero';
 import { notifyError } from '../lib/notify';
 
 /** Wide enough for the Retro board beside Lines & Veils; narrower, two tabs (Decision 13). */
@@ -94,9 +91,9 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
       )}
       {context?.board.started && (
         <BoardContext.Provider value={context}>
-          <SessionZeroTitle readAtMs={board.dataUpdatedAt} />
+          <SessionZeroHeader readAtMs={board.dataUpdatedAt} onPick={setRoundId} />
           {wide ? (
-            <BoardsSplit left={<RetroBoard onPick={setRoundId} />} right={<LinesVeilsBoard />} />
+            <BoardsSplit left={<RetroBoard />} right={<LinesVeilsBoard />} />
           ) : (
             <Tabs defaultValue="retro" keepMounted={false}>
               <Tabs.List mb="sm" grow>
@@ -104,7 +101,7 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
                 <Tabs.Tab value="linesVeils">{t('sessionZero.linesVeils.title')}</Tabs.Tab>
               </Tabs.List>
               <Tabs.Panel value="retro">
-                <RetroBoard onPick={setRoundId} />
+                <RetroBoard />
               </Tabs.Panel>
               <Tabs.Panel value="linesVeils">
                 <LinesVeilsBoard />
@@ -117,70 +114,20 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
   );
 }
 
-/** The Retro board of the round picked, its columns side by side, scrolling sideways. */
-function RetroBoard({ onPick }: { onPick: (roundId: string | null) => void }) {
+/** The Retro board of the session picked, its columns side by side, scrolling sideways. */
+function RetroBoard() {
   const { t } = useTranslation();
   const { board, writable } = useBoard();
   const open = board.rounds.find((round) => round.id === board.roundId)?.closedAt === null;
   return (
-    <Stack gap="xs" component="section" aria-label={t('sessionZero.retro.title')}>
-      <Title order={2} fz="h4">
-        {t('sessionZero.retro.title')}
-      </Title>
-      <RoundsBar onPick={onPick} />
-      {writable && open && <PublishAll />}
-      <Box className="sz-retro-scroll" style={{ overflowX: 'auto' }} pb="xs">
-        <Group align="flex-start" wrap="nowrap" gap="sm">
-          {board.retro.map((column, index) => (
-            <RetroColumn key={column.id} column={column} index={index} count={board.retro.length} open={open} />
-          ))}
-          {writable && open && board.canManage && board.retro.length < MAX_RETRO_COLUMNS && <AddColumn />}
-        </Group>
-      </Box>
-    </Stack>
-  );
-}
-
-/**
- * "Publish all drafts (N)" above the Retro board while the viewer has drafts
- * in the open round (spec 46c Decision 8): one dialog, one signed or
- * anonymous choice for all of them. Drafts past the board's limit stay
- * drafts, and the dialog says how many.
- */
-function PublishAll() {
-  const { t } = useTranslation();
-  const { board, act, busy } = useBoard();
-  const [asking, setAsking] = useState(false);
-  const cards = board.retro.flatMap((column) => column.cards);
-  const drafts = cards.filter((card) => card.canPublish).length;
-  if (drafts === 0) return null;
-  const room = MAX_CARDS_PER_BOARD - cards.filter((card) => !card.draft).length;
-  const staying = Math.max(0, drafts - Math.max(0, room));
-  return (
-    <>
-      <Button
-        size="compact-sm"
-        leftSection={<PaperPlaneTiltIcon size={14} />}
-        style={{ alignSelf: 'flex-start' }}
-        onClick={() => setAsking(true)}
-      >
-        {t('sessionZero.publishAll.button', { count: drafts })}
-      </Button>
-      {asking && (
-        <PublishModal
-          title={t('sessionZero.publishAll.title')}
-          body={
-            <>
-              {t('sessionZero.publishAll.body', { count: drafts })}
-              {staying > 0 && ` ${t('sessionZero.publishAll.overLimit', { count: staying })}`}
-            </>
-          }
-          busy={busy}
-          onClose={() => setAsking(false)}
-          onPublish={(anonymous) => act(boardWrites.publishAll(anonymous), () => setAsking(false))}
-        />
-      )}
-    </>
+    <Box component="section" aria-label={t('sessionZero.retro.title')} className="sz-retro-scroll" pb="xs">
+      <Group align="flex-start" wrap="nowrap" gap="sm">
+        {board.retro.map((column, index) => (
+          <RetroColumn key={column.id} column={column} index={index} count={board.retro.length} open={open} />
+        ))}
+        {writable && open && board.canManage && board.retro.length < MAX_RETRO_COLUMNS && <AddColumn />}
+      </Group>
+    </Box>
   );
 }
 
@@ -193,15 +140,10 @@ function LinesVeilsBoard() {
   const { t } = useTranslation();
   const { board } = useBoard();
   return (
-    <Stack gap="xs" component="section" aria-label={t('sessionZero.linesVeils.title')}>
-      <Title order={2} fz="h4">
-        {t('sessionZero.linesVeils.title')}
-      </Title>
-      <div className="sz-lines-veils">
-        {board.linesVeils.map((column) => (
-          <LinesVeilsColumn key={column.id} column={column} />
-        ))}
-      </div>
-    </Stack>
+    <Box component="section" aria-label={t('sessionZero.linesVeils.title')} className="sz-lines-veils">
+      {board.linesVeils.map((column) => (
+        <LinesVeilsColumn key={column.id} column={column} />
+      ))}
+    </Box>
   );
 }

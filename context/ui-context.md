@@ -879,16 +879,31 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   feature cards gain a `sm` "See it in the demo" anchor.
 - Screenshots: `demo/` (and `demo/tour/`) in the project files.
 
-## Session 0 (specs 46 and 46c)
+## Session 0 (specs 46, 46c and 46d)
 
-- Title row (`SessionZeroTitle`): "Session 0" (`h1` at `h2` size, display
-  font), then on the same line the timer chip: a pill on `--bg-raised`
+- Header (`SessionZeroHeader`, spec 46d Decision 4): one wrapping row
+  above the boards, no section titles. The session selector
+  (`SessionPicker`, `.sz-session-picker`: display font, bold, 16px)
+  stands in for the title; the page's `h1` "Session 0" is visually
+  hidden. A closed session carries a grey "Closed" badge whose tooltip
+  says it is read-only. Then the timer chip, "Publish drafts (N)" (filled,
+  small) while the viewer has drafts, and, pushed right (`ml="auto"`), the
+  Master's "New session" (default, small, "+") and "⋮". On a phone the
+  row takes two lines. Sessions are named freely: the name replaces
+  "Session 0.5 #N", which is only the prefilled default.
+- Timer chip: a pill on `--bg-raised`
   with the default border, a clock icon and the time left in monospace
   (`9:58`; "Paused" beside it, dimmed; "Time's up" in `--state-warning`).
   For the Master the chip is the button that opens the timer menu, and
   with no timer it is the clock alone; a Player without a timer sees no
   chip. Nothing is sticky. The Master's "⋮" at the end of the row holds
   "Delete Session 0" (red), which asks first.
+- Headings (spec 46d Decision 1): Retro column and Lines & Veils row
+  titles are `h2` in the display font, 16px, bold. "Add column" is a 32px
+  "+" icon button (tooltip) at the end of the columns.
+- Reactions on post-its (spec 46d Decision 6): `ReactionChips` and
+  `AddReaction` with `size="lg"`: the emoji at 18px, the count at 13px,
+  the add smiley at 20px. Comments keep the small size.
 - Columns (`.sz-column` in `index.css`): a 4px band on top in the column's
   colour (`--sz-color`, set inline from `colorValue`, the maps' palette)
   and a 6% tint of it over `--bg-surface`. Presets are green ("We want it
@@ -923,6 +938,11 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   other (`.sz-lines-veils-row`, a 4px band in the column's colour on the
   left), each with its post-its side by side in a grid
   (`.sz-lines-veils-cards`, `repeat(auto-fill, minmax(200px, 1fr))`).
+  Side by side, the two boards fill the screen's height under the header
+  and each scrolls on its own (`.sz-pane`, spec 46d Decision 5;
+  `BoardsSplit` refits the height on window resize and through a
+  `ResizeObserver` on the page, at least 360px); on a phone the
+  page scrolls as before.
 - Live updates (spec 46_4): what another member just changed (a post-it,
   a Retro column, a group) glows once for 1.5 s, a 3px ring in its own
   `--sz-color` fading out (`[data-glow]`, `@keyframes sz-glow`); no
