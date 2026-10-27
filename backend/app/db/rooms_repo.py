@@ -7,6 +7,7 @@ from sqlalchemy import delete, func, select, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from app.db import session as session_module
 from app.db.models import AuditLogRow, MembershipRow, RoomRow, TagRow, UserRow
 from app.db.users_repo import profile_from_row
 from app.domain.models import (
@@ -21,6 +22,7 @@ from app.domain.models import (
     UserProfile,
 )
 from app.domain.rooms import NewRoomPlan
+from app.realtime.broker import broker
 
 
 def room_from_row(row: RoomRow) -> Room:
@@ -179,13 +181,19 @@ async def update_membership(session: AsyncSession, membership: Membership) -> No
 
 
 async def delete_membership(session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID) -> None:
-    """Removes the user from the Room. Their content stays (D-15)."""
+    """Removes the user from the Room. Their content stays (D-15). Once
+    committed, their open Session 0 streams close (spec 46_2)."""
     await session.execute(
         delete(MembershipRow).where(
             MembershipRow.room_id == room_id, MembershipRow.user_id == user_id
         )
     )
     await session.flush()
+
+    async def close_streams(_: AsyncSession) -> None:
+        broker.disconnect(room_id, user_id)
+
+    session_module.on_commit(session, close_streams)
 
 
 async def update_room_settings(session: AsyncSession, room: Room) -> None:
@@ -228,9 +236,15 @@ async def delete_room(session: AsyncSession, room_id: uuid.UUID) -> None:
     AuditLog rows cascade at the database level (`ondelete="CASCADE"`). Call
     only after every Document image has gone through
     `image_uploads.remove_images`: the cascade would delete the
-    `document_images` rows but not their Storage objects."""
+    `document_images` rows but not their Storage objects. Once committed,
+    the Room's open Session 0 streams close (spec 46_2)."""
     await session.execute(delete(RoomRow).where(RoomRow.id == room_id))
     await session.flush()
+
+    async def close_streams(_: AsyncSession) -> None:
+        broker.disconnect(room_id)
+
+    session_module.on_commit(session, close_streams)
 
 
 async def insert_audit_log(session: AsyncSession, entry: AuditLogEntry) -> None:

@@ -4,17 +4,24 @@ authors (Decision 1). Every write answers with the open round's boards as
 the caller sees them, and every write the other members see bumps the
 Session 0's `revision` (Decision 3, for the live updates)."""
 
+import asyncio
+import json
 import uuid
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import require_membership
 from app.api.errors import http_error, translated_error
-from app.auth.dependencies import VIEW_AS_HEADER, CurrentUserDep
+from app.auth.dependencies import VIEW_AS_HEADER, CurrentUserDep, authenticated_user
+from app.db import session as session_module
 from app.db import session_zero_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
@@ -64,6 +71,7 @@ from app.domain.session_zero import (
 )
 from app.i18n.dependencies import LocaleDep
 from app.i18n.translator import translate
+from app.realtime.broker import Event, Subscription, broker
 
 router = APIRouter(prefix="/rooms/{room_id}/session-zero", tags=["session-zero"])
 
@@ -75,6 +83,12 @@ PRESET_COLUMN_KEYS = (
     "sessionZero.presets.avoid",
     "sessionZero.presets.questions",
 )
+
+# A comment line this often keeps proxies (Caddy, Render) from closing an
+# idle stream (spec 46_2).
+KEEPALIVE_S = 25.0
+
+_bearer = HTTPBearer(auto_error=False)
 
 _STATUS_FOR: dict[type[DomainError], int] = {
     NotMasterError: status.HTTP_403_FORBIDDEN,
@@ -395,6 +409,7 @@ class _Write:
 
     viewer: Membership
     board: _Board
+    revision: int
 
 
 async def _begin_write(
@@ -403,9 +418,10 @@ async def _begin_write(
     """Checks membership, then takes the Session 0's row lock (409 before it
     is started), so the Room's board writes happen one at a time."""
     viewer = await require_membership(session, room_id, user_id, locale)
-    if await session_zero_repo.get_state(session, room_id, lock=True) is None:
+    state = await session_zero_repo.get_state(session, room_id, lock=True)
+    if state is None:
         raise http_error(status.HTTP_409_CONFLICT, "errors.sessionZero.notStarted", locale)
-    return _Write(viewer=viewer, board=await _load_board(session, room_id))
+    return _Write(viewer=viewer, board=await _load_board(session, room_id), revision=state[0])
 
 
 def _column_or_404(write: _Write, column_id: uuid.UUID, locale: str) -> Column:
@@ -430,9 +446,36 @@ async def _card_or_404(
     return card, write.board.columns[card.column_id]
 
 
-async def _shared(session: AsyncSession, room_id: uuid.UUID) -> None:
-    """Marks a write every member sees (Decision 3); a draft's never is."""
-    await session_zero_repo.bump_revision(session, room_id)
+def _push(
+    session: AsyncSession, room_id: uuid.UUID, event: Event, user_id: uuid.UUID | None = None
+) -> None:
+    """Sends `event` once the write has committed (spec 46_2): to the whole
+    Room, or to `user_id`'s own streams only."""
+
+    async def send(_: AsyncSession) -> None:
+        broker.publish(room_id, event, user_id=user_id)
+
+    session_module.on_commit(session, send)
+
+
+async def _shared(
+    session: AsyncSession, room_id: uuid.UUID, kind: str, item_id: uuid.UUID | None = None
+) -> None:
+    """Marks a write every member sees (Decision 3) and tells their open
+    streams; a draft's never is."""
+    revision = await session_zero_repo.bump_revision(session, room_id)
+    _push(session, room_id, Event(revision, kind, item_id))
+
+
+def _private(session: AsyncSession, write: _Write, card_id: uuid.UUID) -> None:
+    """A draft's write: only its author's other tabs hear of it, at the
+    unchanged revision, so nobody else learns the draft exists."""
+    _push(
+        session,
+        write.viewer.room_id,
+        Event(write.revision, "card", card_id),
+        user_id=write.viewer.user_id,
+    )
 
 
 async def _answer(
@@ -477,7 +520,7 @@ async def start_session_zero(
     viewer = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     titles = [translate(key, locale) for key in PRESET_COLUMN_KEYS]
     if await session_zero_repo.start(session, room_id, titles, datetime.now(UTC)):
-        await _shared(session, room_id)
+        await _shared(session, room_id, "start")
     return await _board_response(session, room_id, viewer, None, locale)
 
 
@@ -505,9 +548,10 @@ async def add_card(
         ensure_can_add_card(column, round_, count)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
-    await session_zero_repo.add_card(
+    card_id = await session_zero_repo.add_card(
         session, room_id, column.id, write.viewer.user_id, text, datetime.now(UTC)
     )
+    _private(session, write, card_id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -530,8 +574,10 @@ async def edit_card(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     await session_zero_repo.update_card(session, card.id, datetime.now(UTC), body=text)
-    if not card.is_draft:
-        await _shared(session, room_id)
+    if card.is_draft:
+        _private(session, write, card.id)
+    else:
+        await _shared(session, room_id, "card", card.id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -555,8 +601,10 @@ async def delete_card(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     await session_zero_repo.delete_card(session, card.id)
-    if not card.is_draft:
-        await _shared(session, room_id)
+    if card.is_draft:
+        _private(session, write, card.id)
+    else:
+        await _shared(session, room_id, "card", card.id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -586,7 +634,7 @@ async def publish_card(
     await session_zero_repo.update_card(
         session, card.id, now, published_at=now, anonymous=body.anonymous
     )
-    await _shared(session, room_id)
+    await _shared(session, room_id, "card", card.id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -617,10 +665,10 @@ async def promote_card(
         )
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
-    await session_zero_repo.copy_card(
+    copy_id = await session_zero_repo.copy_card(
         session, card, target.id, write.viewer.user_id, datetime.now(UTC)
     )
-    await _shared(session, room_id)
+    await _shared(session, room_id, "card", copy_id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -653,7 +701,7 @@ async def move_card(
         await session_zero_repo.update_card(
             session, card.id, datetime.now(UTC), column_id=target.id
         )
-        await _shared(session, room_id)
+        await _shared(session, room_id, "card", card.id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -685,7 +733,7 @@ async def add_reaction(
     if await session_zero_repo.add_reaction(
         session, card.id, write.viewer.user_id, clean, datetime.now(UTC)
     ):
-        await _shared(session, room_id)
+        await _shared(session, room_id, "reaction", card.id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -708,7 +756,7 @@ async def remove_reaction(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     if await session_zero_repo.remove_reaction(session, card.id, write.viewer.user_id, clean):
-        await _shared(session, room_id)
+        await _shared(session, room_id, "reaction", card.id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -731,8 +779,8 @@ async def add_column(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     position = max((c.position for c in columns), default=-1) + 1
-    await session_zero_repo.add_column(session, room_id, open_round.id, title, position)
-    await _shared(session, room_id)
+    column_id = await session_zero_repo.add_column(session, room_id, open_round.id, title, position)
+    await _shared(session, room_id, "column", column_id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -755,7 +803,7 @@ async def rename_column(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     await session_zero_repo.rename_column(session, column.id, title)
-    await _shared(session, room_id)
+    await _shared(session, room_id, "column", column.id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -777,7 +825,7 @@ async def delete_column(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     await session_zero_repo.delete_column(session, column.id)
-    await _shared(session, room_id)
+    await _shared(session, room_id, "column", column.id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -802,7 +850,7 @@ async def reorder_columns(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.sessionZero.columnOrder", locale
         )
     await session_zero_repo.set_column_positions(session, body.column_ids)
-    await _shared(session, room_id)
+    await _shared(session, room_id, "column")
     return await _answer(session, room_id, write, locale)
 
 
@@ -834,7 +882,7 @@ async def start_round(
         [column.title for column in write.board.retro_columns(current.id)],
         now,
     )
-    await _shared(session, room_id)
+    await _shared(session, room_id, "round")
     return await _answer(session, room_id, write, locale)
 
 
@@ -857,5 +905,50 @@ async def set_timer(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     await session_zero_repo.set_timer(session, room_id, timer)
-    await _shared(session, room_id)
+    await _shared(session, room_id, "timer")
     return await _answer(session, room_id, write, locale)
+
+
+def _sse(event: Event) -> str:
+    payload = {"revision": event.revision, "kind": event.kind, "id": event.id}
+    return f"data: {json.dumps(payload, default=str)}\n\n"
+
+
+async def _stream(subscription: Subscription) -> AsyncIterator[str]:
+    """The stream's lines until it is closed (`None`): the member left, the
+    Room is gone, or they fell too far behind. Forgets the stream however it
+    ends, the client hanging up included."""
+    try:
+        yield ": open\n\n"
+        while True:
+            try:
+                event = await asyncio.wait_for(subscription.queue.get(), KEEPALIVE_S)
+            except TimeoutError:
+                yield ": keep-alive\n\n"
+                continue
+            if event is None:
+                return
+            yield _sse(event)
+    finally:
+        broker.unsubscribe(subscription)
+
+
+@router.get("/events")
+async def session_zero_events(
+    room_id: uuid.UUID,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+    locale: LocaleDep,
+) -> StreamingResponse:
+    """Spec 46_2: Server-Sent Events, one line per write the caller may hear
+    of, `{"revision", "kind", "id"}` and never any content; the client then
+    re-reads the board with `GET`. Membership is checked once, on a session
+    closed before the stream starts, so an open stream holds no database
+    connection. A "View as" header is ignored: the stream is the caller's."""
+    user_id = uuid.UUID(authenticated_user(credentials, locale).id)
+    async with session_module.independent_session() as session:
+        await require_membership(session, room_id, user_id, locale)
+    return StreamingResponse(
+        _stream(broker.subscribe(room_id, user_id)),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
