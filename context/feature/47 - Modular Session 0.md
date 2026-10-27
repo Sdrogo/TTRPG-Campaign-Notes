@@ -262,7 +262,13 @@ release.
   Master only, also in the stream; creating the Document sets name,
   subtitle, description sections, Notes with their visibility, Tag, Owner
   and Character player, works with D-13 off, and is 409 the second time;
-  "all" skips Players without a Name answer or with a Document; DDI
+  "all" skips Players without a Name answer or with a Document;
+  revealed answers reach every member who reached the module, hidden ones
+  only author and Master; "Privata" Note answers become Private Notes;
+  a "New Document" question creates a separate Public Document with its
+  Tag, owned by the Player, no Character player; with the module's bypass
+  switch off and D-13 off, a Player's own creation is 403 and the
+  Master's "all" still works; DDI
   acceptance per Player, reset when the Document changes; data export and
   account deletion cover answers and acceptances.
 - Frontend: stepper hides later steps from a Player; "Avanti" moves every
