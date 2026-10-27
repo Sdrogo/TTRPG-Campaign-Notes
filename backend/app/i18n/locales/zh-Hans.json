@@ -274,7 +274,10 @@
       "cardNotFound": "找不到便签",
       "columnNotFound": "找不到列",
       "roundNotFound": "找不到这一轮",
-      "columnOrder": "新顺序必须把本轮每一列各列出一次"
+      "columnOrder": "新顺序必须把本轮每一列各列出一次",
+      "notGroupable": "只能将当前轮次同一回顾列中两张及以上已发布的便利贴编组",
+      "groupNotFound": "未找到分组",
+      "nothingToChange": "没有需要更改的内容"
     }
   },
   "pdf": {
@@ -294,8 +297,7 @@
     "presets": {
       "want": "我们想在桌上看到的",
       "care": "需谨慎处理",
-      "avoid": "要避免的",
-      "questions": "问题"
+      "avoid": "要避免的"
     }
   }
 }

@@ -1188,6 +1188,29 @@ class SessionZeroColumnRow(Base):
     kind: Mapped[str | None] = mapped_column(String(10))
     title: Mapped[str] = mapped_column(String(60), default="")
     position: Mapped[int] = mapped_column(Integer)
+    # Spec 46c Decision 5: a `MapColor`. The Lines & Veils columns take
+    # theirs from `kind` instead.
+    color: Mapped[str] = mapped_column(
+        String(10), default="default", server_default=text("'default'")
+    )
+
+
+class SessionZeroGroupRow(Base):
+    """A group of related post-its in one Retro column (spec 46c Decision 9),
+    made by the Master. Goes with its column; its post-its are ungrouped
+    when it is deleted."""
+
+    __tablename__ = "session_zero_groups"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE"), index=True
+    )
+    column_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_columns.id", ondelete="CASCADE"), index=True
+    )
+    title: Mapped[str | None] = mapped_column(String(60))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class SessionZeroCardRow(Base):
@@ -1216,6 +1239,10 @@ class SessionZeroCardRow(Base):
         UUID(as_uuid=True), ForeignKey("session_zero_cards.id", ondelete="SET NULL")
     )
     promoted_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    # Spec 46c Decision 9.
+    group_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_groups.id", ondelete="SET NULL"), index=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

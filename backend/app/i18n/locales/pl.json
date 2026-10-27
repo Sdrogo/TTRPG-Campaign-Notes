@@ -274,7 +274,10 @@
       "cardNotFound": "Nie znaleziono karteczki",
       "columnNotFound": "Nie znaleziono kolumny",
       "roundNotFound": "Nie znaleziono rundy",
-      "columnOrder": "Nowa kolejność musi wymieniać każdą kolumnę rundy raz"
+      "columnOrder": "Nowa kolejność musi wymieniać każdą kolumnę rundy raz",
+      "notGroupable": "Grupować można tylko co najmniej dwie opublikowane karteczki z jednej kolumny Retro otwartej rundy",
+      "groupNotFound": "Nie znaleziono grupy",
+      "nothingToChange": "Nie ma nic do zmiany"
     }
   },
   "pdf": {
@@ -294,8 +297,7 @@
     "presets": {
       "want": "Chcemy tego przy stole",
       "care": "Ostrożnie",
-      "avoid": "Do unikania",
-      "questions": "Pytania"
+      "avoid": "Do unikania"
     }
   }
 }

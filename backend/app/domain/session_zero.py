@@ -11,6 +11,7 @@ from enum import StrEnum
 
 from app.domain.errors import DomainError
 from app.domain.models import RoomRole
+from app.domain.relationship_maps import MapColor
 
 # Decision 12.
 MAX_BODY_LENGTH = 500
@@ -18,6 +19,7 @@ MAX_CARDS_PER_BOARD = 200
 MAX_RETRO_COLUMNS = 8
 MAX_COLUMN_TITLE_LENGTH = 60
 MAX_ROUND_TITLE_LENGTH = 100
+MAX_GROUP_TITLE_LENGTH = 60
 # Reactions per post-it, as on Comments (spec 19c Decision 1).
 MAX_EMOJI_PER_CARD = 20
 # Decision 4: a custom length up to an hour.
@@ -27,11 +29,20 @@ MAX_TIMER_SECONDS = 3600
 
 class LinesVeilsKind(StrEnum):
     """The three fixed columns of the Lines & Veils board (Decision 10), in
-    the order they are shown."""
+    the order they are shown: from what the group wants to the hardest
+    limit, like a traffic light (spec 46c Decision 5)."""
 
     MUST = "must"
-    LINES = "lines"
     VEILS = "veils"
+    LINES = "lines"
+
+
+# Spec 46c Decision 5: the traffic light, from the maps' palette.
+LINES_VEILS_COLORS: dict[LinesVeilsKind, MapColor] = {
+    LinesVeilsKind.MUST: MapColor.GREEN,
+    LinesVeilsKind.VEILS: MapColor.GOLD,
+    LinesVeilsKind.LINES: MapColor.RED,
+}
 
 
 class TimerAction(StrEnum):
@@ -67,11 +78,18 @@ class Column:
     kind: LinesVeilsKind | None
     title: str
     position: int
+    color: MapColor = MapColor.DEFAULT
 
     @property
     def is_retro(self) -> bool:
         """Whether the column is on the Retro board."""
         return self.round_id is not None
+
+    @property
+    def shown_color(self) -> MapColor:
+        """Its colour: a Retro column's own, a Lines & Veils one's from its
+        kind (spec 46c Decision 5)."""
+        return LINES_VEILS_COLORS[self.kind] if self.kind else self.color
 
 
 @dataclass(frozen=True)
@@ -92,6 +110,7 @@ class Card:
     promoted_by: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
+    group_id: uuid.UUID | None = None
 
     @property
     def is_copy(self) -> bool:
@@ -103,6 +122,16 @@ class Card:
     def is_draft(self) -> bool:
         """Whether only its author sees it."""
         return self.published_at is None
+
+
+@dataclass(frozen=True)
+class Group:
+    """Related post-its of one Retro column, gathered by the Master (spec
+    46c Decision 9)."""
+
+    id: uuid.UUID
+    column_id: uuid.UUID
+    title: str | None
 
 
 @dataclass(frozen=True)
@@ -177,6 +206,11 @@ class TooManyCardEmojiError(DomainError):
     """A post-it holds at most `MAX_EMOJI_PER_CARD` different emoji."""
 
 
+class NotGroupableError(DomainError):
+    """Only two or more published post-its of one Retro column group (spec
+    46c Decision 9)."""
+
+
 def is_master(role: RoomRole) -> bool:
     """Whether the member runs the boards (the Master, D-08)."""
     return role is RoomRole.MASTER
@@ -228,6 +262,14 @@ def clean_round_title(raw: str | None) -> str | None:
     return title or None
 
 
+def clean_group_title(raw: str | None) -> str | None:
+    """A group's optional title (spec 46c Decision 9), trimmed; blank is none."""
+    title = (raw or "").strip()
+    if len(title) > MAX_GROUP_TITLE_LENGTH:
+        raise InvalidTitleError("errors.sessionZero.invalidTitle", max=MAX_GROUP_TITLE_LENGTH)
+    return title or None
+
+
 def ensure_round_open(round_: Round | None) -> None:
     """409 when a Retro write targets a closed round. `None` stands for the
     Lines & Veils board, which has no rounds and is always open."""
@@ -235,14 +277,17 @@ def ensure_round_open(round_: Round | None) -> None:
         raise RoundClosedError("errors.sessionZero.roundClosed")
 
 
-def ensure_can_add_card(column: Column, round_: Round | None, cards_on_board: int) -> None:
-    """Decision 1: any member writes post-its, on the open round's Retro
-    columns only - the Lines & Veils board is filled by promotion
-    (Decision 2). At most `MAX_CARDS_PER_BOARD` per board, counted as the
-    writer sees it (published post-its plus their own drafts), so the limit
-    never tells them someone else holds drafts."""
+def ensure_can_add_card(
+    column: Column, round_: Round | None, cards_on_board: int, role: RoomRole
+) -> None:
+    """Decision 1: any member writes post-its on the open round's Retro
+    columns. On Lines & Veils only the Master writes directly (spec 46c
+    Decision 6); everyone else's limits come by promotion (Decision 2). At
+    most `MAX_CARDS_PER_BOARD` per board, counted as the writer sees it
+    (published post-its plus their own drafts), so the limit never tells
+    them someone else holds drafts."""
     if not column.is_retro:
-        raise WrongBoardError("errors.sessionZero.notRetroColumn")
+        ensure_master(role)
     ensure_round_open(round_)
     if cards_on_board >= MAX_CARDS_PER_BOARD:
         raise BoardFullError("errors.sessionZero.boardFull", max=MAX_CARDS_PER_BOARD)
@@ -291,6 +336,15 @@ def ensure_can_publish(
         raise AlreadyPublishedError("errors.sessionZero.alreadyPublished")
     if published_on_board >= MAX_CARDS_PER_BOARD:
         raise BoardFullError("errors.sessionZero.boardFull", max=MAX_CARDS_PER_BOARD)
+
+
+def publishable_count(drafts: int, published_on_board: int) -> int:
+    """Spec 46c Decision 8: how many of the caller's `drafts` "publish all"
+    publishes, as many as the board has room for; 409 when it has none."""
+    room_left = MAX_CARDS_PER_BOARD - published_on_board
+    if room_left <= 0:
+        raise BoardFullError("errors.sessionZero.boardFull", max=MAX_CARDS_PER_BOARD)
+    return min(drafts, room_left)
 
 
 def can_promote(card: Card, source_column: Column, role: RoomRole) -> bool:
@@ -354,6 +408,33 @@ def ensure_can_react(
     distinct = set(emoji_on_card)
     if emoji not in distinct and len(distinct) >= MAX_EMOJI_PER_CARD:
         raise TooManyCardEmojiError("errors.sessionZero.tooManyEmoji", max=MAX_EMOJI_PER_CARD)
+
+
+def can_group(card: Card, column: Column, round_: Round | None, role: RoomRole) -> bool:
+    """Spec 46c Decision 9: the Master groups published post-its of a Retro
+    column of the open round."""
+    return (
+        is_master(role)
+        and column.is_retro
+        and not card.is_draft
+        and round_ is not None
+        and round_.closed_at is None
+    )
+
+
+def ensure_can_group(
+    cards: Collection[Card], column: Column, round_: Round | None, role: RoomRole
+) -> None:
+    """Raises unless the Master may group `cards`: at least two, every one
+    published and in `column`, a Retro column of the open round."""
+    ensure_master(role)
+    ensure_round_open(round_)
+    if (
+        len(cards) < 2
+        or not column.is_retro
+        or any(card.is_draft or card.column_id != column.id for card in cards)
+    ):
+        raise NotGroupableError("errors.sessionZero.notGroupable")
 
 
 def ensure_can_add_column(round_: Round, retro_columns: int) -> None:

@@ -274,7 +274,10 @@
       "cardNotFound": "Post-it não encontrado",
       "columnNotFound": "Coluna não encontrada",
       "roundNotFound": "Ronda não encontrada",
-      "columnOrder": "A nova ordem deve indicar uma vez cada coluna da ronda"
+      "columnOrder": "A nova ordem deve indicar uma vez cada coluna da ronda",
+      "notGroupable": "Só se agrupam dois ou mais post-its publicados da mesma coluna da Retro da ronda aberta",
+      "groupNotFound": "Grupo não encontrado",
+      "nothingToChange": "Nada a alterar"
     }
   },
   "pdf": {
@@ -294,8 +297,7 @@
     "presets": {
       "want": "Queremos isto à mesa",
       "care": "Com cuidado",
-      "avoid": "A evitar",
-      "questions": "Perguntas"
+      "avoid": "A evitar"
     }
   }
 }

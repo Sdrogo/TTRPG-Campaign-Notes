@@ -274,7 +274,10 @@
       "cardNotFound": "Pósit no encontrado",
       "columnNotFound": "Columna no encontrada",
       "roundNotFound": "Ronda no encontrada",
-      "columnOrder": "El nuevo orden debe incluir una vez cada columna de la ronda"
+      "columnOrder": "El nuevo orden debe incluir una vez cada columna de la ronda",
+      "notGroupable": "Solo se agrupan dos o más pósits publicados de una misma columna de la Retro de la ronda abierta",
+      "groupNotFound": "Grupo no encontrado",
+      "nothingToChange": "No hay nada que cambiar"
     }
   },
   "pdf": {
@@ -294,8 +297,7 @@
     "presets": {
       "want": "Lo queremos en la mesa",
       "care": "Con cuidado",
-      "avoid": "A evitar",
-      "questions": "Preguntas"
+      "avoid": "A evitar"
     }
   }
 }

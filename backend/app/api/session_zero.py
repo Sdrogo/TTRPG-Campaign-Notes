@@ -27,6 +27,7 @@ from app.db.session import SessionDep
 from app.domain.errors import DomainError
 from app.domain.models import Membership
 from app.domain.reactions import InvalidEmojiError, parse_emoji, summarize_reactions
+from app.domain.relationship_maps import MapColor
 from app.domain.session_zero import (
     AlreadyPromotedError,
     AlreadyPublishedError,
@@ -35,10 +36,13 @@ from app.domain.session_zero import (
     Column,
     CopyNotEditableError,
     DraftCardError,
+    Group,
     InvalidCardError,
     InvalidTimerError,
     InvalidTitleError,
+    LinesVeilsKind,
     NotAuthorError,
+    NotGroupableError,
     NotMasterError,
     Round,
     RoundClosedError,
@@ -49,14 +53,17 @@ from app.domain.session_zero import (
     WrongBoardError,
     apply_timer,
     can_delete_card,
+    can_group,
     can_promote,
     clean_body,
     clean_column_title,
+    clean_group_title,
     clean_round_title,
     ensure_can_add_card,
     ensure_can_add_column,
     ensure_can_delete_card,
     ensure_can_edit_card,
+    ensure_can_group,
     ensure_can_move,
     ensure_can_promote,
     ensure_can_publish,
@@ -66,6 +73,7 @@ from app.domain.session_zero import (
     ensure_round_open,
     is_card_visible,
     is_master,
+    publishable_count,
     remaining_seconds,
     shown_author,
 )
@@ -76,12 +84,12 @@ from app.realtime.broker import Event, broker
 router = APIRouter(prefix="/rooms/{room_id}/session-zero", tags=["session-zero"])
 
 # Decision 10: the Retro board's first columns, named in the language of
-# whoever starts the Session 0.
-PRESET_COLUMN_KEYS = (
-    "sessionZero.presets.want",
-    "sessionZero.presets.care",
-    "sessionZero.presets.avoid",
-    "sessionZero.presets.questions",
+# whoever starts the Session 0, coloured like a traffic light (spec 46c
+# Decisions 4 and 5).
+PRESET_COLUMNS = (
+    ("sessionZero.presets.want", MapColor.GREEN),
+    ("sessionZero.presets.care", MapColor.GOLD),
+    ("sessionZero.presets.avoid", MapColor.RED),
 )
 
 # A comment line this often keeps proxies (Caddy, Render) from closing an
@@ -105,6 +113,7 @@ _STATUS_FOR: dict[type[DomainError], int] = {
     BoardFullError: status.HTTP_409_CONFLICT,
     TooManyColumnsError: status.HTTP_409_CONFLICT,
     TooManyCardEmojiError: status.HTTP_409_CONFLICT,
+    NotGroupableError: status.HTTP_422_UNPROCESSABLE_CONTENT,
 }
 
 
@@ -126,10 +135,12 @@ class ReactionResponse(BaseModel):
 class CardResponse(BaseModel):
     """A post-it as the caller sees it. `author_id` is empty on someone
     else's anonymous post-it (Decision 7); `from_retro` marks a Lines &
-    Veils copy (Decision 2). The `can_*` flags drive the menu."""
+    Veils copy (Decision 2); `group_id` its group (spec 46c Decision 9).
+    The `can_*` flags drive the menu."""
 
     id: uuid.UUID
     column_id: uuid.UUID
+    group_id: uuid.UUID | None
     body: str
     author_id: uuid.UUID | None
     anonymous: bool
@@ -146,15 +157,26 @@ class CardResponse(BaseModel):
     can_promote: bool
     can_move: bool
     can_react: bool
+    can_group: bool
+
+
+class GroupResponse(BaseModel):
+    """A group of post-its in a Retro column (spec 46c Decision 9)."""
+
+    id: uuid.UUID
+    title: str | None
 
 
 class ColumnResponse(BaseModel):
-    """A column and its post-its, oldest first. `kind` is set on the Lines &
-    Veils columns (`must`, `lines`, `veils`), whose title the client names."""
+    """A column, its groups and its post-its, oldest first. `kind` is set on
+    the Lines & Veils columns (`must`, `veils`, `lines`), whose title the
+    client names; `color` is a `MapColor` (spec 46c Decision 5)."""
 
     id: uuid.UUID
     kind: str | None
     title: str
+    color: str
+    groups: list[GroupResponse]
     cards: list[CardResponse]
 
 
@@ -195,7 +217,7 @@ class SessionZeroResponse(BaseModel):
 
 
 class NewCardBody(BaseModel):
-    """A new post-it in a Retro column."""
+    """A new post-it: in a Retro column, or the Master's on Lines & Veils."""
 
     column_id: uuid.UUID
     body: str
@@ -220,9 +242,22 @@ class TargetColumnBody(BaseModel):
 
 
 class ColumnBody(BaseModel):
-    """A Retro column's title."""
+    """A Retro column's title and colour; on a change, what changes."""
 
-    title: str
+    title: str | None = None
+    color: MapColor | None = None
+
+
+class GroupBody(BaseModel):
+    """The post-its to group (spec 46c Decision 9)."""
+
+    card_ids: list[uuid.UUID]
+
+
+class GroupTitleBody(BaseModel):
+    """A group's title; empty clears it."""
+
+    title: str | None = None
 
 
 class ColumnOrderBody(BaseModel):
@@ -265,8 +300,11 @@ class _Board:
         return [c for c in self.columns.values() if c.round_id == round_id]
 
     def lines_veils_columns(self) -> list[Column]:
-        """The three Lines & Veils columns, in order."""
-        return [c for c in self.columns.values() if not c.is_retro]
+        """The three Lines & Veils columns, in their fixed order (spec 46c
+        Decision 5), whatever order they were stored in."""
+        order = list(LinesVeilsKind)
+        found = [c for c in self.columns.values() if c.kind is not None]
+        return sorted(found, key=lambda c: order.index(c.kind))  # type: ignore[arg-type]
 
 
 async def _load_board(session: AsyncSession, room_id: uuid.UUID) -> _Board:
@@ -338,6 +376,7 @@ async def _board_response(
     reactions = await session_zero_repo.list_reactions(
         session, [card.id for card in cards if not card.is_draft]
     )
+    groups = await session_zero_repo.list_groups(session, [column.id for column in retro])
 
     def card_response(card: Card) -> CardResponse:
         column = board.columns[card.column_id]
@@ -347,6 +386,7 @@ async def _board_response(
         return CardResponse(
             id=card.id,
             column_id=card.column_id,
+            group_id=card.group_id,
             body=card.body,
             author_id=shown_author(card, viewer.user_id),
             anonymous=card.anonymous,
@@ -371,6 +411,7 @@ async def _board_response(
             can_promote=can_promote(card, column, viewer.role),
             can_move=is_master(viewer.role) and not column.is_retro,
             can_react=open_ and not card.is_draft,
+            can_group=can_group(card, column, round_, viewer.role),
         )
 
     def column_response(column: Column) -> ColumnResponse:
@@ -378,6 +419,12 @@ async def _board_response(
             id=column.id,
             kind=column.kind.value if column.kind else None,
             title=column.title,
+            color=column.shown_color.value,
+            groups=[
+                GroupResponse(id=group.id, title=group.title)
+                for group in groups
+                if group.column_id == column.id
+            ],
             cards=[card_response(card) for card in cards if card.column_id == column.id],
         )
 
@@ -444,6 +491,16 @@ async def _card_or_404(
     ):
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.cardNotFound", locale)
     return card, write.board.columns[card.column_id]
+
+
+async def _group_or_404(
+    session: AsyncSession, write: _Write, group_id: uuid.UUID, locale: str
+) -> tuple[Group, Column]:
+    found = await session_zero_repo.get_group(session, group_id)
+    if found is None or found[1] != write.viewer.room_id:
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.groupNotFound", locale)
+    group = found[0]
+    return group, write.board.columns[group.column_id]
 
 
 def _push(
@@ -515,11 +572,11 @@ async def start_session_zero(
     room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
 ) -> SessionZeroResponse:
     """Decision 10: the first member to open the page starts the Room's
-    Session 0 - round 1 with the four preset Retro columns, named in their
-    language, and the Must / Lines / Veils columns. Idempotent."""
+    Session 0 - round 1 with the three preset Retro columns, named in their
+    language, and the Must / Veils / Lines columns. Idempotent."""
     viewer = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    titles = [translate(key, locale) for key in PRESET_COLUMN_KEYS]
-    if await session_zero_repo.start(session, room_id, titles, datetime.now(UTC)):
+    columns = [(translate(key, locale), color) for key, color in PRESET_COLUMNS]
+    if await session_zero_repo.start(session, room_id, columns, datetime.now(UTC)):
         await _shared(session, room_id, "start")
     return await _board_response(session, room_id, viewer, None, locale)
 
@@ -533,25 +590,38 @@ async def add_card(
     locale: LocaleDep,
 ) -> SessionZeroResponse:
     """Decision 1: any member writes a post-it in a Retro column of the open
-    round. It starts as a draft only they see, so nobody else is told."""
+    round. It starts as a draft only they see, so nobody else is told. The
+    Master also writes directly on Lines & Veils, published at once (spec
+    46c Decision 6)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     column = _column_or_404(write, body.column_id, locale)
     round_ = write.board.round_of(column)
+    board_columns = (
+        write.board.retro_columns(round_.id)
+        if round_ is not None
+        else write.board.lines_veils_columns()
+    )
     try:
         text = clean_body(body.body)
-        count = 0
-        if round_ is not None:
-            round_columns = [c.id for c in write.board.retro_columns(round_.id)]
-            count = await session_zero_repo.count_cards(
-                session, round_columns, drafts_of=write.viewer.user_id
-            )
-        ensure_can_add_card(column, round_, count)
+        count = await session_zero_repo.count_cards(
+            session, [c.id for c in board_columns], drafts_of=write.viewer.user_id
+        )
+        ensure_can_add_card(column, round_, count, write.viewer.role)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     card_id = await session_zero_repo.add_card(
-        session, room_id, column.id, write.viewer.user_id, text, datetime.now(UTC)
+        session,
+        room_id,
+        column.id,
+        write.viewer.user_id,
+        text,
+        datetime.now(UTC),
+        published=not column.is_retro,
     )
-    _private(session, write, card_id)
+    if column.is_retro:
+        _private(session, write, card_id)
+    else:
+        await _shared(session, room_id, "card", card_id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -601,6 +671,8 @@ async def delete_card(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     await session_zero_repo.delete_card(session, card.id)
+    if card.group_id is not None:
+        await session_zero_repo.prune_groups(session, column.id)
     if card.is_draft:
         _private(session, write, card.id)
     else:
@@ -635,6 +707,34 @@ async def publish_card(
         session, card.id, now, published_at=now, anonymous=body.anonymous
     )
     await _shared(session, room_id, "card", card.id)
+    return await _answer(session, room_id, write, locale)
+
+
+@router.post("/cards/publish-all")
+async def publish_all_cards(
+    room_id: uuid.UUID,
+    body: PublishBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 46c Decision 8: the caller publishes all their drafts of the open
+    round at once, all signed or all anonymous, oldest first while the board
+    has room; the rest stay drafts. Nothing to publish changes nothing; a
+    full board with drafts waiting is 409."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    round_columns = [c.id for c in write.board.retro_columns(write.board.open_round.id)]
+    drafts = await session_zero_repo.list_drafts(session, round_columns, write.viewer.user_id)
+    if drafts:
+        published = await session_zero_repo.count_cards(session, round_columns)
+        try:
+            count = publishable_count(len(drafts), published)
+        except DomainError as exc:
+            raise _domain_error(exc, locale) from exc
+        await session_zero_repo.publish_cards(
+            session, drafts[:count], body.anonymous, datetime.now(UTC)
+        )
+        await _shared(session, room_id, "card")
     return await _answer(session, room_id, write, locale)
 
 
@@ -768,18 +868,21 @@ async def add_column(
     session: SessionDep,
     locale: LocaleDep,
 ) -> SessionZeroResponse:
-    """Decision 10: the Master adds a Retro column, last, to the open round."""
+    """Decision 10: the Master adds a Retro column, last, to the open round,
+    in the colour they pick (spec 46c Decision 5; `default` when none)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     open_round = write.board.open_round
     columns = write.board.retro_columns(open_round.id)
     try:
         ensure_master(write.viewer.role)
-        title = clean_column_title(body.title)
+        title = clean_column_title(body.title or "")
         ensure_can_add_column(open_round, len(columns))
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     position = max((c.position for c in columns), default=-1) + 1
-    column_id = await session_zero_repo.add_column(session, room_id, open_round.id, title, position)
+    column_id = await session_zero_repo.add_column(
+        session, room_id, open_round.id, title, body.color or MapColor.DEFAULT, position
+    )
     await _shared(session, room_id, "column", column_id)
     return await _answer(session, room_id, write, locale)
 
@@ -793,16 +896,25 @@ async def rename_column(
     session: SessionDep,
     locale: LocaleDep,
 ) -> SessionZeroResponse:
-    """Decision 10: the Master renames a Retro column of the open round."""
+    """Decision 10: the Master renames a Retro column of the open round, or
+    changes its colour (spec 46c Decision 5)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     column = _column_or_404(write, column_id, locale)
+    values: dict[str, object] = {}
     try:
         ensure_master(write.viewer.role)
         ensure_retro_column(column, write.board.round_of(column))
-        title = clean_column_title(body.title)
+        if body.title is not None:
+            values["title"] = clean_column_title(body.title)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
-    await session_zero_repo.rename_column(session, column.id, title)
+    if body.color is not None:
+        values["color"] = body.color.value
+    if not values:
+        raise http_error(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.sessionZero.nothingToChange", locale
+        )
+    await session_zero_repo.update_column(session, column.id, **values)
     await _shared(session, room_id, "column", column.id)
     return await _answer(session, room_id, write, locale)
 
@@ -864,7 +976,8 @@ async def start_round(
 ) -> SessionZeroResponse:
     """Decision 16: the Master starts a Session 0.5. The open round closes
     (read-only, its drafts dropped) and a new one opens, empty, with the
-    same Retro column titles. Lines & Veils carries over."""
+    same Retro column titles and colours, without groups. Lines & Veils
+    carries over."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     try:
         ensure_master(write.viewer.role)
@@ -879,10 +992,133 @@ async def start_round(
         room_id,
         current.number + 1,
         title,
-        [column.title for column in write.board.retro_columns(current.id)],
+        [(column.title, column.color) for column in write.board.retro_columns(current.id)],
         now,
     )
     await _shared(session, room_id, "round")
+    return await _answer(session, room_id, write, locale)
+
+
+@router.post("/groups")
+async def group_cards(
+    room_id: uuid.UUID,
+    body: GroupBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 46c Decision 9: the Master groups published post-its of one
+    Retro column of the open round. Post-its already grouped bring their
+    groups along: everything lands in the first post-it's group (or a new
+    one), and the groups left empty go."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    card_ids = list(dict.fromkeys(body.card_ids))
+    found = [await _card_or_404(session, write, card_id, locale) for card_id in card_ids]
+    cards = [card for card, _ in found]
+    column = found[0][1] if found else None
+    try:
+        ensure_master(write.viewer.role)
+        if column is None:
+            raise NotGroupableError("errors.sessionZero.notGroupable")
+        ensure_can_group(cards, column, write.board.round_of(column), write.viewer.role)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    assert column is not None
+    existing = list(dict.fromkeys(c.group_id for c in cards if c.group_id is not None))
+    if existing:
+        target, merged = existing[0], existing[1:]
+        await session_zero_repo.move_group_cards(session, merged, target)
+        await session_zero_repo.delete_groups(session, merged)
+    else:
+        target = await session_zero_repo.add_group(session, room_id, column.id, datetime.now(UTC))
+    await session_zero_repo.set_group(session, card_ids, target)
+    await _shared(session, room_id, "group", target)
+    return await _answer(session, room_id, write, locale)
+
+
+@router.patch("/groups/{group_id}")
+async def rename_group(
+    room_id: uuid.UUID,
+    group_id: uuid.UUID,
+    body: GroupTitleBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 46c Decision 9: the Master titles a group; empty clears it."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    group, column = await _group_or_404(session, write, group_id, locale)
+    try:
+        ensure_master(write.viewer.role)
+        ensure_round_open(write.board.round_of(column))
+        title = clean_group_title(body.title)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    await session_zero_repo.rename_group(session, group.id, title)
+    await _shared(session, room_id, "group", group.id)
+    return await _answer(session, room_id, write, locale)
+
+
+@router.delete("/groups/{group_id}")
+async def ungroup_all(
+    room_id: uuid.UUID,
+    group_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 46c Decision 9: the Master dissolves a group; its post-its stay."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    group, column = await _group_or_404(session, write, group_id, locale)
+    try:
+        ensure_master(write.viewer.role)
+        ensure_round_open(write.board.round_of(column))
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    await session_zero_repo.delete_groups(session, [group.id])
+    await _shared(session, room_id, "group", group.id)
+    return await _answer(session, room_id, write, locale)
+
+
+@router.post("/cards/{card_id}/ungroup")
+async def ungroup_card(
+    room_id: uuid.UUID,
+    card_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 46c Decision 9: the Master takes a post-it out of its group; a
+    group left with one post-it dissolves. A post-it in no group changes
+    nothing."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    card, column = await _card_or_404(session, write, card_id, locale)
+    try:
+        ensure_master(write.viewer.role)
+        ensure_round_open(write.board.round_of(column))
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    if card.group_id is not None:
+        await session_zero_repo.set_group(session, [card.id], None)
+        await session_zero_repo.prune_groups(session, column.id)
+        await _shared(session, room_id, "group", card.group_id)
+    return await _answer(session, room_id, write, locale)
+
+
+@router.delete("")
+async def delete_session_zero(
+    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
+) -> SessionZeroResponse:
+    """Spec 46c Decision 3: the Master deletes the Room's Session 0 and
+    everything in it, drafts included; any member can then start a new one.
+    Every open page is told (`reset`)."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    try:
+        ensure_master(write.viewer.role)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    await session_zero_repo.delete_session_zero(session, room_id)
+    _push(session, room_id, Event(write.revision + 1, "reset", None))
     return await _answer(session, room_id, write, locale)
 
 

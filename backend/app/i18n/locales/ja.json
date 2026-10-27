@@ -274,7 +274,10 @@
       "cardNotFound": "付箋が見つかりません",
       "columnNotFound": "列が見つかりません",
       "roundNotFound": "ラウンドが見つかりません",
-      "columnOrder": "新しい順序にはラウンドのすべての列を一度ずつ含めてください"
+      "columnOrder": "新しい順序にはラウンドのすべての列を一度ずつ含めてください",
+      "notGroupable": "グループにできるのは、進行中のラウンドの同じレトロ列にある公開済みの付箋2枚以上だけです",
+      "groupNotFound": "グループが見つかりません",
+      "nothingToChange": "変更する内容がありません"
     }
   },
   "pdf": {
@@ -294,8 +297,7 @@
     "presets": {
       "want": "卓でやりたいこと",
       "care": "慎重に扱うこと",
-      "avoid": "避けること",
-      "questions": "質問"
+      "avoid": "避けること"
     }
   }
 }
