@@ -215,7 +215,24 @@ those items stay out entirely). The ticket is confirmed.
   `LISTEN/NOTIFY`, noted in `architecture.md` as the next step.
 - A comment line every 25 s keeps proxies (Caddy, Render) from closing the
   stream; the client reconnects with backoff and re-reads on reconnect. A
-  member who leaves the Room gets their stream closed on the next event.
+  member who leaves the Room (or is removed, or deletes their account) has
+  their streams closed as soon as that commits, and deleting the Room
+  closes all of its streams (`rooms_repo.delete_membership` /
+  `delete_room` queue it with `on_commit`). A stream that falls 64 events
+  behind is closed too; the client reconnects and re-reads.
+- As built (46_2): `app/realtime/broker.py` (`Event`, `Broker`, the
+  process-wide `broker`); the route is in `app/api/session_zero.py`. It
+  authenticates the `Authorization` header itself instead of using
+  `CurrentUserDep`, whose request session would stay open as long as the
+  stream; membership is read on `independent_session()`, closed before the
+  first line. A "View as" header is ignored there (the stream is the
+  caller's, and carries no content). The token is checked when the stream
+  opens only; an open stream outlives its expiry, harmless for the same
+  reason. Events: `start`, `card` (the copy's id
+  on a promotion), `reaction` (the post-it's id), `column` (no id for a
+  reorder), `round`, `timer`. The production Caddyfile routes
+  `/rooms/*/session-zero/events` around `encode` and with
+  `flush_interval -1`, so events aren't held back by compression.
 - The stream is read with `fetch` and a `ReadableStream` (not
   `EventSource`), so it sends the usual `Authorization` header.
 

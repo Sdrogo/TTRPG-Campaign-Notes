@@ -1,7 +1,9 @@
 """Session 0 boards (spec 46): `/rooms/{id}/session-zero` - the Retro board
-in rounds, the Lines & Veils board, drafts, promotion, reactions and the
-shared timer."""
+in rounds, the Lines & Veils board, drafts, promotion, reactions, the
+shared timer and the live event stream (46_2)."""
 
+import asyncio
+import json
 import uuid
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
@@ -13,8 +15,10 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api import session_zero as session_zero_api
 from app.domain import session_zero
 from app.main import app
+from app.realtime.broker import broker
 
 
 @pytest_asyncio.fixture
@@ -663,3 +667,107 @@ async def test_the_board_limit_never_counts_someone_elses_drafts(
         headers=room.other_player.headers,
     )
     assert more.status_code == 409
+
+
+async def _listen(client: AsyncClient, room: _Room, member: _Member) -> "asyncio.Task[Response]":
+    """Opens `member`'s event stream; returns once it is subscribed. The
+    test transport hands the body over only when the stream ends, so each
+    test closes the streams before reading them."""
+    room_id = uuid.UUID(room.id)
+    before = broker.count(room_id)
+    task = asyncio.create_task(client.get(f"{room.url}/events", headers=member.headers))
+    async with asyncio.timeout(5):
+        while broker.count(room_id) == before:
+            await asyncio.sleep(0.01)
+    return task
+
+
+async def _heard(task: "asyncio.Task[Response]") -> list[Any]:
+    async with asyncio.timeout(5):
+        response = await task
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    return [
+        json.loads(line.removeprefix("data: "))
+        for line in response.text.splitlines()
+        if line.startswith("data: ")
+    ]
+
+
+async def test_members_hear_of_shared_writes_and_only_the_author_of_drafts(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room, board = await _started(client, make_token)
+    revision = board["revision"]
+    master = await _listen(client, room, room.master)
+    player = await _listen(client, room, room.player)
+
+    card_id = await _write(client, room, room.player, board["retro"][0]["id"], "Secret")
+    await client.patch(
+        f"{room.url}/cards/{card_id}", json={"body": "Still secret"}, headers=room.player.headers
+    )
+    await _publish(client, room, room.player, card_id)
+    await client.post(
+        f"{room.url}/timer", json={"action": "start", "duration_s": 60}, headers=room.master.headers
+    )
+    broker.disconnect(uuid.UUID(room.id))
+
+    draft_events = [
+        {"revision": revision, "kind": "card", "id": card_id},
+        {"revision": revision, "kind": "card", "id": card_id},
+    ]
+    shared_events = [
+        {"revision": revision + 1, "kind": "card", "id": card_id},
+        {"revision": revision + 2, "kind": "timer", "id": None},
+    ]
+    assert await _heard(player) == draft_events + shared_events
+    # The Master never hears of the draft, not even its id or a revision gap.
+    assert await _heard(master) == shared_events
+    assert broker.count(uuid.UUID(room.id)) == 0
+
+
+async def test_a_stream_closes_when_its_member_leaves_or_the_room_goes(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+) -> None:
+    room, _ = await _started(client, make_token)
+    player = await _listen(client, room, room.player)
+    master = await _listen(client, room, room.master)
+
+    removed = await client.delete(
+        f"/rooms/{room.id}/members/{room.player.id}", headers=room.master.headers
+    )
+    assert removed.status_code == 204
+    assert await _heard(player) == []
+    assert not master.done()
+
+    deleted = await client.delete(f"/rooms/{room.id}", headers=room.master.headers)
+    assert deleted.status_code == 204
+    assert await _heard(master) == []
+
+
+async def test_only_signed_in_members_open_a_stream(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room, _ = await _started(client, make_token)
+    stranger = _new_member(make_token)
+    assert (await client.get(f"{room.url}/events", headers=stranger.headers)).status_code == 403
+    assert (await client.get(f"{room.url}/events")).status_code == 401
+
+
+async def test_an_idle_stream_sends_keep_alives(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(session_zero_api, "KEEPALIVE_S", 0.01)
+    room, _ = await _started(client, make_token)
+    task = await _listen(client, room, room.player)
+    await asyncio.sleep(0.05)
+    broker.disconnect(uuid.UUID(room.id))
+
+    response = await task
+    assert response.text.startswith(": open\n\n: keep-alive\n\n")
