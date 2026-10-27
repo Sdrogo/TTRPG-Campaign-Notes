@@ -24,8 +24,9 @@
 
 ## Decisions
 
-Proposed by Claude on 2026-10-27; 6 confirmed by the product owner the same
-day, the others to be confirmed.
+Proposed by Claude on 2026-10-27 and confirmed by the product owner the same
+day (6 on a decision card; 5 amended: custom colours from the maps'
+palette). The ticket is confirmed.
 
 1. **Room Index only on the Documents page** (amends spec 44): the Index
    tab on the left edge shows on `/rooms/:roomId/documents` only. Every
@@ -47,19 +48,23 @@ day, the others to be confirmed.
 4. **Three preset Retro columns**: "Lo vogliamo al tavolo", "Con cura",
    "Da evitare". "Domande" goes from new Session 0s and new rounds started
    from scratch; existing Session 0s keep their columns.
-5. **Column colours, traffic light**: every column has a colour, one of
-   **green**, **yellow**, **red** or **neutral** (grey).
-   - Presets: "Lo vogliamo al tavolo" green, "Con cura" yellow, "Da
+5. **Column colours, traffic light**: every column has a colour from the
+   relationship maps' palette (spec 28 Decision 8, `MapColor`: default,
+   red, green, purple, blue, gold, orange and the others; product owner,
+   2026-10-27: "usa la palette che abbiamo fornito per la definizione delle
+   relazioni sulle Maps"). The traffic light is green, gold and red.
+   - Presets: "Lo vogliamo al tavolo" green, "Con cura" gold, "Da
      evitare" red.
-   - Lines & Veils, fixed: Must green, Veils yellow, Lines red. The board's
+   - Lines & Veils, fixed: Must green, Veils gold, Lines red. The board's
      order becomes Must, Veils, Lines (from the softest to the hardest
      limit) so it reads like a traffic light.
    - A new Retro column: the Master picks the colour when creating it
-     (default neutral) and can change it from the column's "⋮" ("Colore").
+     (default `default`, the neutral text colour) with the maps' colour
+     picker, and can change it from the column's "⋮" ("Colore").
    - A new round copies each column's colour with its title.
    - Look: a coloured band on top of the column, the column's background
-     lightly tinted, its post-its tinted with the same colour. Colours come
-     from theme tokens that work in light and dark mode.
+     lightly tinted, its post-its tinted with the same colour (a tint mixed
+     from the palette colour, so it works in light and dark mode).
 6. **Lines & Veils written directly**: each Lines & Veils column gets
    "Aggiungi" at the bottom. **Only the Master** writes there (as only the
    Master promotes, spec 46 Decision 8); the post-it is published at once
@@ -97,13 +102,13 @@ day, the others to be confirmed.
 
 ### Backend (46c_1)
 
-- Migration (one): `session_zero_columns.color` (`green` | `yellow` |
-  `red` | `neutral`, default `neutral`, check constraint); new table
+- Migration (one): `session_zero_columns.color` (`String(10)`, default
+  `default`, validated against `MapColor` like the maps' colours); new table
   `session_zero_groups` (`id`, `column_id` FK cascade, `title` null,
   `created_at`; RLS + deny policy like the other Session 0 tables);
   `session_zero_cards.group_id` FK `ON DELETE SET NULL`. Lines & Veils
   colours come from `kind` in the API, not stored. Existing preset
-  columns on staging keep `neutral`.
+  columns on staging keep `default`.
 - `PRESET_COLUMN_KEYS` loses `questions`; each preset carries its colour.
   The `questions` translation stays unused (or is removed from the 12
   backend locale files).
@@ -132,9 +137,9 @@ day, the others to be confirmed.
 - `SessionZeroTitle`: title, timer chip (`TimerChip`, replaces
   `TimerBar`; its custom-length dialog closes only once the write
   succeeds, review of PR #251), Master "⋮" with "Elimina Sessione 0".
-- Column colours as theme tokens (`--sz-green`, `--sz-yellow`, `--sz-red`,
-  `--sz-neutral` with tint variants) in the theme CSS; `ui-context.md`
-  documents them.
+- Column colours through `colorValue` (`lib/maps.ts`) and the existing
+  `MapColorPicker`; tints with `color-mix()`; `ui-context.md` documents
+  the look.
 - `PostItCard` restyle (Decision 7) and the inline "Pubblica" button;
   "Pubblica tutte le bozze" above the Retro board.
 - `PostItGroup` component; drop on a post-it groups (same native drag
