@@ -1256,18 +1256,25 @@
     "loadError": "Impossibile caricare la Sessione 0.",
     "notStarted": "La Sessione 0 di questa Stanza non è ancora iniziata. Avviala per aprire la lavagna Retro e quella di Linee e Veli.",
     "start": "Avvia la Sessione 0",
+    "actions": "Azioni della Sessione 0",
+    "delete": {
+      "action": "Elimina Sessione 0",
+      "title": "Eliminare questa Sessione 0?",
+      "body": "Spariscono per sempre tutti i giri, i post-it (bozze comprese), le reazioni, i gruppi, Linee e Veli e il timer. Dopo, qualsiasi membro può avviare una nuova Sessione 0 da zero."
+    },
     "indexLink": "Lavagne della Sessione 0",
     "retro": {
       "title": "Retro"
     },
     "linesVeils": {
       "title": "Linee e Veli",
-      "empty": "Ancora nessun post-it."
+      "empty": "Ancora nessun post-it.",
+      "add": "Aggiungi"
     },
     "kinds": {
       "must": "Must",
-      "lines": "Linee",
-      "veils": "Veli"
+      "veils": "Veli",
+      "lines": "Linee"
     },
     "postIt": {
       "text": "Testo del post-it",
@@ -1290,6 +1297,27 @@
       "anonymous": "Pubblica in anonimo",
       "anonymousHint": "Nessuno vedrà chi l'ha scritto, nemmeno il Master."
     },
+    "publishAll": {
+      "button_one": "Pubblica tutte le bozze ({{count}})",
+      "button_other": "Pubblica tutte le bozze ({{count}})",
+      "title": "Pubblica tutte le tue bozze",
+      "body_one": "La tua bozza di questo giro sarà visibile a tutti i membri. Non si può annullare.",
+      "body_other": "Le tue {{count}} bozze di questo giro saranno visibili a tutti i membri. Non si può annullare.",
+      "overLimit_one": "La bacheca è quasi piena: {{count}} bozza resta bozza.",
+      "overLimit_other": "La bacheca è quasi piena: {{count}} bozze restano bozze."
+    },
+    "groups": {
+      "groupWith": "Raggruppa con…",
+      "groupWithBody": "Scegli un post-it o un gruppo di questa colonna.",
+      "takeOut": "Togli dal gruppo",
+      "untitled": "Gruppo",
+      "title": "Titolo del gruppo",
+      "actions": "Azioni del gruppo {{title}}",
+      "rename": "Rinomina gruppo",
+      "ungroupAll": "Sciogli gruppo",
+      "count_one": "{{count}} post-it",
+      "count_other": "{{count}} post-it"
+    },
     "columns": {
       "actions": "Azioni della colonna {{title}}",
       "add": "Aggiungi colonna",
@@ -1298,7 +1326,8 @@
       "moveRight": "Sposta a destra",
       "title": "Titolo della colonna",
       "deleteTitle": "Eliminare la colonna?",
-      "deleteBody": "La colonna «{{title}}» verrà eliminata insieme a tutti i suoi post-it."
+      "deleteBody": "La colonna «{{title}}» verrà eliminata insieme a tutti i suoi post-it.",
+      "color": "Colore"
     },
     "rounds": {
       "first": "Sessione 0",

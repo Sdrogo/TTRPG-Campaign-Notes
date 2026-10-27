@@ -7,8 +7,8 @@ import type { SessionZero } from '../../types/sessionZero';
 export interface BoardContextValue {
   board: SessionZero;
   members: Member[];
-  /** Sends a write; a failure shows as a toast. */
-  act: (write: BoardWrite) => void;
+  /** Sends a write; a failure shows as a toast, `onDone` runs once it succeeds. */
+  act: (write: BoardWrite, onDone?: () => void) => void;
   /** A write is on its way: controls wait for it. */
   busy: boolean;
   /** False while the Master previews the Room as a member (spec 22b): nothing writes. */

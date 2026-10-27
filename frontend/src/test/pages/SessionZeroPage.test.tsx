@@ -176,4 +176,53 @@ describe('SessionZeroPage', () => {
     expect(await screen.findByText('Questa sessione è chiusa: la lavagna è in sola lettura.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aggiungi post-it' })).not.toBeInTheDocument();
   });
+
+  // Spec 46c Decision 8: all the viewer's drafts of the open round at once.
+  it('publishes all the viewer\'s drafts at once', async () => {
+    const drafts = [
+      rawPostIt({ id: 'd1', draft: true, can_publish: true }),
+      rawPostIt({ id: 'd2', draft: true, can_publish: true }),
+    ];
+    board = () => Promise.resolve(rawSessionZero({ retro: [rawPostItColumn({ cards: drafts })] }));
+    const { user } = render();
+    await user.click(await screen.findByRole('button', { name: 'Pubblica tutte le bozze (2)' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Pubblica tutte le tue bozze' });
+    expect(dialog).toHaveTextContent('Le tue 2 bozze di questo giro');
+    expect(dialog).not.toHaveTextContent('quasi piena');
+    await user.click(within(dialog).getByRole('switch', { name: /Pubblica in anonimo/ }));
+    await user.click(within(dialog).getByRole('button', { name: 'Pubblica' }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero/cards/publish-all', {
+      method: 'POST',
+      json: { anonymous: true },
+    });
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /Pubblica tutte le bozze/ })).not.toBeInTheDocument();
+  });
+
+  it('says which drafts stay drafts past the board\'s limit, and cancels', async () => {
+    // Bare post-its (no menu, no reactions) keep the 199 quick to render.
+    const bare = { mine: false, can_edit: false, can_delete: false, can_react: false };
+    const published = Array.from({ length: 199 }, (_, i) => rawPostIt({ ...bare, id: `p${i}` }));
+    const drafts = Array.from({ length: 3 }, (_, i) => rawPostIt({ id: `d${i}`, draft: true, can_publish: true }));
+    board = () => Promise.resolve(rawSessionZero({ retro: [rawPostItColumn({ cards: [...published, ...drafts] })] }));
+    const { user } = render();
+    await user.click(await screen.findByRole('button', { name: 'Pubblica tutte le bozze (3)' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('La bacheca è quasi piena: 2 bozze restano bozze.');
+    await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
+    expect(fetchMock).not.toHaveBeenCalledWith('/rooms/room-1/session-zero/cards/publish-all', expect.anything());
+  }, 20_000);
+
+  // Spec 46c Decision 3: once deleted the page is "not started" again, showing the open round.
+  it('goes back to "not started" once the Master deletes the Session 0', async () => {
+    board = () => Promise.resolve(rawSessionZero({ can_manage: true }));
+    write = () => Promise.resolve(rawSessionZero({ started: false, rounds: [], round_id: null, retro: [], lines_veils: [] }));
+    const { user } = render();
+    await user.click(await screen.findByRole('button', { name: 'Azioni della Sessione 0' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Elimina Sessione 0' }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Elimina' }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero', { method: 'DELETE', json: undefined });
+    expect(await screen.findByText(/non è ancora iniziata/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Sessione 0' })).toBeInTheDocument();
+  });
 });

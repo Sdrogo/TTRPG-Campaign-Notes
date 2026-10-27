@@ -1227,18 +1227,25 @@
     "loadError": "セッション0を読み込めませんでした。",
     "notStarted": "このルームのセッション0はまだ始まっていません。開始すると、レトロボードとライン&ヴェールのボードが開きます。",
     "start": "セッション0を開始",
+    "actions": "セッション0の操作",
+    "delete": {
+      "action": "セッション0を削除",
+      "title": "このセッション0を削除しますか？",
+      "body": "すべてのラウンド、付箋（下書きを含む）、リアクション、グループ、ライン&ヴェール、タイマーが完全に消えます。その後は、どのメンバーでも新しいセッション0を一から始められます。"
+    },
     "indexLink": "セッション0のボード",
     "retro": {
       "title": "レトロ"
     },
     "linesVeils": {
       "title": "ライン&ヴェール",
-      "empty": "付箋はまだありません。"
+      "empty": "付箋はまだありません。",
+      "add": "追加"
     },
     "kinds": {
       "must": "Must",
-      "lines": "ライン",
-      "veils": "ヴェール"
+      "veils": "ヴェール",
+      "lines": "ライン"
     },
     "postIt": {
       "text": "付箋のテキスト",
@@ -1260,6 +1267,23 @@
       "anonymous": "匿名で公開",
       "anonymousHint": "誰が書いたかは、Masterを含め誰にも表示されません。"
     },
+    "publishAll": {
+      "button_other": "下書きをすべて公開（{{count}}）",
+      "title": "下書きをすべて公開",
+      "body_other": "このラウンドのあなたの下書き{{count}}件が全メンバーに表示されます。元に戻せません。",
+      "overLimit_other": "ボードがほぼいっぱいです。{{count}}件は下書きのまま残ります。"
+    },
+    "groups": {
+      "groupWith": "グループにする…",
+      "groupWithBody": "この列の付箋かグループを選んでください。",
+      "takeOut": "グループから外す",
+      "untitled": "グループ",
+      "title": "グループ名",
+      "actions": "グループ「{{title}}」の操作",
+      "rename": "グループ名を変更",
+      "ungroupAll": "グループを解除",
+      "count_other": "付箋{{count}}枚"
+    },
     "columns": {
       "actions": "列「{{title}}」の操作",
       "add": "列を追加",
@@ -1268,7 +1292,8 @@
       "moveRight": "右へ移動",
       "title": "列のタイトル",
       "deleteTitle": "列を削除しますか？",
-      "deleteBody": "列「{{title}}」は、そのすべての付箋とともに削除されます。"
+      "deleteBody": "列「{{title}}」は、そのすべての付箋とともに削除されます。",
+      "color": "色"
     },
     "rounds": {
       "first": "セッション0",

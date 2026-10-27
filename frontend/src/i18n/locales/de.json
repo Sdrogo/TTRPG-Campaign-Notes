@@ -1256,18 +1256,25 @@
     "loadError": "Die Session 0 konnte nicht geladen werden.",
     "notStarted": "Die Session 0 dieses Raums hat noch nicht begonnen. Starte sie, um das Retro-Board und das Board Grenzen & Schleier zu öffnen.",
     "start": "Session 0 starten",
+    "actions": "Aktionen der Session 0",
+    "delete": {
+      "action": "Session 0 löschen",
+      "title": "Diese Session 0 löschen?",
+      "body": "Alle Runden, Post-its (auch Entwürfe), Reaktionen, Gruppen, Grenzen & Schleier und der Timer sind endgültig weg. Danach kann jedes Mitglied eine neue Session 0 von vorn beginnen."
+    },
     "indexLink": "Boards der Session 0",
     "retro": {
       "title": "Retro"
     },
     "linesVeils": {
       "title": "Grenzen & Schleier",
-      "empty": "Noch keine Post-its."
+      "empty": "Noch keine Post-its.",
+      "add": "Hinzufügen"
     },
     "kinds": {
       "must": "Must",
-      "lines": "Grenzen",
-      "veils": "Schleier"
+      "veils": "Schleier",
+      "lines": "Grenzen"
     },
     "postIt": {
       "text": "Text des Post-its",
@@ -1290,6 +1297,27 @@
       "anonymous": "Anonym veröffentlichen",
       "anonymousHint": "Niemand sieht, wer es geschrieben hat, auch nicht der Master."
     },
+    "publishAll": {
+      "button_one": "Alle Entwürfe veröffentlichen ({{count}})",
+      "button_other": "Alle Entwürfe veröffentlichen ({{count}})",
+      "title": "Alle deine Entwürfe veröffentlichen",
+      "body_one": "Dein Entwurf in dieser Runde wird für alle Mitglieder sichtbar. Das lässt sich nicht rückgängig machen.",
+      "body_other": "Deine {{count}} Entwürfe in dieser Runde werden für alle Mitglieder sichtbar. Das lässt sich nicht rückgängig machen.",
+      "overLimit_one": "Das Board ist fast voll: {{count}} Entwurf bleibt ein Entwurf.",
+      "overLimit_other": "Das Board ist fast voll: {{count}} Entwürfe bleiben Entwürfe."
+    },
+    "groups": {
+      "groupWith": "Gruppieren mit…",
+      "groupWithBody": "Wähle ein Post-it oder eine Gruppe dieser Spalte.",
+      "takeOut": "Aus der Gruppe nehmen",
+      "untitled": "Gruppe",
+      "title": "Titel der Gruppe",
+      "actions": "Aktionen der Gruppe {{title}}",
+      "rename": "Gruppe umbenennen",
+      "ungroupAll": "Gruppe auflösen",
+      "count_one": "{{count}} Post-it",
+      "count_other": "{{count}} Post-its"
+    },
     "columns": {
       "actions": "Aktionen für die Spalte {{title}}",
       "add": "Spalte hinzufügen",
@@ -1298,7 +1326,8 @@
       "moveRight": "Nach rechts",
       "title": "Titel der Spalte",
       "deleteTitle": "Spalte löschen?",
-      "deleteBody": "Die Spalte „{{title}}“ wird mit allen ihren Post-its gelöscht."
+      "deleteBody": "Die Spalte „{{title}}“ wird mit allen ihren Post-its gelöscht.",
+      "color": "Farbe"
     },
     "rounds": {
       "first": "Session 0",

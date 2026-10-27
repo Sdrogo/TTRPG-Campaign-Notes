@@ -1,4 +1,6 @@
 import i18n from '../i18n';
+import { colorValue } from './maps';
+import type { MapColor } from '../types/map';
 import type {
   LinesVeilsKind,
   PostIt,
@@ -16,6 +18,9 @@ export const MAX_POST_IT_LENGTH = 500;
 export const MAX_COLUMN_TITLE_LENGTH = 60;
 export const MAX_ROUND_TITLE_LENGTH = 100;
 
+/** The most post-its a board holds (Decision 12). */
+export const MAX_CARDS_PER_BOARD = 200;
+
 /** The most columns a Retro round holds (Decision 12). */
 export const MAX_RETRO_COLUMNS = 8;
 
@@ -26,8 +31,11 @@ export const TIMER_PRESETS_MIN = [5, 10, 15] as const;
 export const TIMER_MIN_MIN = 1;
 export const TIMER_MAX_MIN = 60;
 
-/** The Lines & Veils columns in board order. */
-export const LINES_VEILS_KINDS: LinesVeilsKind[] = ['must', 'lines', 'veils'];
+/** The Lines & Veils columns in board order, a traffic light (spec 46c Decision 5). */
+export const LINES_VEILS_KINDS: LinesVeilsKind[] = ['must', 'veils', 'lines'];
+
+/** A group's longest title (the backend's limit). */
+export const MAX_GROUP_TITLE_LENGTH = 60;
 
 interface RawReaction {
   emoji: string;
@@ -39,6 +47,7 @@ interface RawReaction {
 interface RawPostIt {
   id: string;
   column_id: string;
+  group_id: string | null;
   body: string;
   author_id: string | null;
   anonymous: boolean;
@@ -55,12 +64,15 @@ interface RawPostIt {
   can_promote: boolean;
   can_move: boolean;
   can_react: boolean;
+  can_group: boolean;
 }
 
 interface RawColumn {
   id: string;
   kind: LinesVeilsKind | null;
   title: string;
+  color: MapColor;
+  groups: { id: string; title: string | null }[];
   cards: RawPostIt[];
 }
 
@@ -96,6 +108,7 @@ function toPostIt(raw: RawPostIt): PostIt {
   return {
     id: raw.id,
     columnId: raw.column_id,
+    groupId: raw.group_id,
     body: raw.body,
     authorId: raw.author_id,
     anonymous: raw.anonymous,
@@ -117,11 +130,19 @@ function toPostIt(raw: RawPostIt): PostIt {
     canPromote: raw.can_promote,
     canMove: raw.can_move,
     canReact: raw.can_react,
+    canGroup: raw.can_group,
   };
 }
 
 function toColumn(raw: RawColumn): PostItColumn {
-  return { id: raw.id, kind: raw.kind, title: raw.title, cards: raw.cards.map(toPostIt) };
+  return {
+    id: raw.id,
+    kind: raw.kind,
+    title: raw.title,
+    color: raw.color,
+    groups: raw.groups.map((group) => ({ id: group.id, title: group.title })),
+    cards: raw.cards.map(toPostIt),
+  };
 }
 
 function toRound(raw: RawRound): SessionZeroRound {
@@ -176,6 +197,11 @@ export const boardWrites = {
     method: 'POST',
     json: { anonymous },
   }),
+  publishAll: (anonymous: boolean): BoardWrite => ({
+    path: '/cards/publish-all',
+    method: 'POST',
+    json: { anonymous },
+  }),
   promote: (id: string, columnId: string): BoardWrite => ({
     path: `/cards/${id}/promote`,
     method: 'POST',
@@ -190,11 +216,20 @@ export const boardWrites = {
     path: `/cards/${id}/reactions/${encodeURIComponent(emoji)}`,
     method: add ? 'PUT' : 'DELETE',
   }),
-  addColumn: (title: string): BoardWrite => ({ path: '/columns', method: 'POST', json: { title } }),
+  addColumn: (title: string, color: MapColor): BoardWrite => ({
+    path: '/columns',
+    method: 'POST',
+    json: { title, color },
+  }),
   renameColumn: (id: string, title: string): BoardWrite => ({
     path: `/columns/${id}`,
     method: 'PATCH',
     json: { title },
+  }),
+  recolorColumn: (id: string, color: MapColor): BoardWrite => ({
+    path: `/columns/${id}`,
+    method: 'PATCH',
+    json: { color },
   }),
   deleteColumn: (id: string): BoardWrite => ({ path: `/columns/${id}`, method: 'DELETE' }),
   reorderColumns: (ids: string[]): BoardWrite => ({
@@ -207,6 +242,15 @@ export const boardWrites = {
     method: 'POST',
     json: { title: title.trim() || null },
   }),
+  group: (cardIds: string[]): BoardWrite => ({ path: '/groups', method: 'POST', json: { card_ids: cardIds } }),
+  renameGroup: (id: string, title: string): BoardWrite => ({
+    path: `/groups/${id}`,
+    method: 'PATCH',
+    json: { title: title.trim() || null },
+  }),
+  ungroupAll: (id: string): BoardWrite => ({ path: `/groups/${id}`, method: 'DELETE' }),
+  ungroup: (cardId: string): BoardWrite => ({ path: `/cards/${cardId}/ungroup`, method: 'POST' }),
+  deleteSessionZero: (): BoardWrite => ({ path: '', method: 'DELETE' }),
   timer: (action: TimerAction, minutes?: number): BoardWrite => ({
     path: '/timer',
     method: 'POST',
@@ -242,12 +286,17 @@ export function formatClock(seconds: number): string {
   return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+/** A column's colour as CSS (`--sz-color`), from the maps' palette (spec 46c Decision 5). */
+export function columnColor(column: PostItColumn): string {
+  return colorValue(column.color);
+}
+
 /** The data a dragged post-it carries (native HTML5 drag, spec 46 Design 46_3). */
 export const POST_IT_DRAG_TYPE = 'application/x-exlibris-post-it';
 
 export interface DraggedPostIt {
   id: string;
-  /** Promote a Retro post-it, or move a Lines & Veils one. */
+  /** Promote a Retro post-it (or group it, dropped on one of its column), or move a Lines & Veils one. */
   action: 'promote' | 'move';
   columnId: string;
 }

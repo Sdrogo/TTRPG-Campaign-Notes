@@ -160,6 +160,27 @@ palette). The ticket is confirmed.
   dialog; colour picker; inline publish and publish-all; group drag and
   "Raggruppa con…"; Lines & Veils "Aggiungi" only for the Master.
 
+## As built
+
+- 46c_1 (backend): migration `c3f8a1d6e9b4`; `app/domain/session_zero.py`
+  (`LINES_VEILS_COLORS`, `Column.shown_color`, `Group`, `can_group`,
+  `ensure_can_group`, `clean_group_title`, `publishable_count`,
+  `ensure_can_add_card` taking the role); `app/db/session_zero_repo.py`
+  (groups, `prune_groups`, `publish_cards`, `delete_session_zero`,
+  `update_column`); routes in `app/api/session_zero.py`. New error keys
+  `notGroupable`, `groupNotFound`, `nothingToChange` in 12 languages; the
+  `questions` preset string is gone. `POST /groups` merges every group its
+  post-its already belong to into the first post-it's.
+- 46c_2 (frontend): `PageLayout`'s `showIndex`;
+  `components/sessionZero/SessionZeroTitle.tsx` (title, `TimerChip`,
+  delete; replaces `TimerBar.tsx`), `PostItGroup.tsx`, `PostItCard.tsx`
+  (tint, inline Publish, drop to group, "Group with…", "Take out of the
+  group", `PublishModal` shared with "Publish all"), `BoardColumns.tsx`
+  (colours, "Colour" dialog, Lines & Veils "Add"); styles `.sz-column`,
+  `.sz-post-it`, `.sz-group` in `index.css`. The board context's `act`
+  takes an `onDone`, so a dialog closes only once its write succeeds.
+- Screenshots: `session-zero/` in the project files.
+
 ## Build estimate
 
 Claude's build time: 46c_1 and 46c_2 in one session. One migration, to apply

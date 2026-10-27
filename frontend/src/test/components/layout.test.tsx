@@ -123,15 +123,26 @@ describe('PageLayout', () => {
     scrollTo(0);
   });
 
-  // Spec 44: the Room's Index is a tab on the left edge of a Room page.
-  it('shows the Room Index tab on a Room page', () => {
+  // Spec 44: the Room's Index is a tab on the left edge of the Room's Documents page.
+  it('shows the Room Index tab on the page that asks for it', () => {
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro" roomId="room-1" showIndex>
+        <p>Contenuto</p>
+      </PageLayout>,
+    );
+
+    expect(screen.getByRole('button', { name: /Apri l.indice della Stanza/ })).toBeInTheDocument();
+  });
+
+  // Spec 46c Decision 1: every other Room page goes without it.
+  it('shows no Room Index tab on other Room pages', () => {
     renderWithProviders(
       <PageLayout backTo="/" backLabel="Indietro" roomId="room-1">
         <p>Contenuto</p>
       </PageLayout>,
     );
 
-    expect(screen.getByRole('button', { name: /Apri l.indice della Stanza/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /indice della Stanza/ })).not.toBeInTheDocument();
   });
 
   it('shows no Room Index tab without a Room', () => {
@@ -149,7 +160,7 @@ describe('PageLayout', () => {
       path.endsWith('/tags') ? Promise.resolve(oneTag) : Promise.resolve(path.endsWith('/maps') ? [] : rawAccount()),
     );
     renderWithProviders(
-      <PageLayout backTo="/" backLabel="Indietro" roomId="room-1">
+      <PageLayout backTo="/" backLabel="Indietro" roomId="room-1" showIndex>
         <p>Contenuto</p>
       </PageLayout>,
     );

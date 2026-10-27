@@ -1258,18 +1258,25 @@
     "loadError": "Impossible de charger la Session 0.",
     "notStarted": "La Session 0 de cette Salle n'a pas encore commencé. Lancez-la pour ouvrir le tableau Rétro et celui des Lignes et Voiles.",
     "start": "Lancer la Session 0",
+    "actions": "Actions de la Session 0",
+    "delete": {
+      "action": "Supprimer la Session 0",
+      "title": "Supprimer cette Session 0 ?",
+      "body": "Tous les tours, post-it (brouillons compris), réactions, groupes, Lignes et Voiles et le minuteur disparaissent définitivement. Ensuite, n'importe quel membre peut lancer une nouvelle Session 0 à partir de zéro."
+    },
     "indexLink": "Tableaux de la Session 0",
     "retro": {
       "title": "Rétro"
     },
     "linesVeils": {
       "title": "Lignes et Voiles",
-      "empty": "Aucun post-it pour l'instant."
+      "empty": "Aucun post-it pour l'instant.",
+      "add": "Ajouter"
     },
     "kinds": {
       "must": "Must",
-      "lines": "Lignes",
-      "veils": "Voiles"
+      "veils": "Voiles",
+      "lines": "Lignes"
     },
     "postIt": {
       "text": "Texte du post-it",
@@ -1292,6 +1299,27 @@
       "anonymous": "Publier anonymement",
       "anonymousHint": "Personne ne verra qui l'a écrit, pas même le Master."
     },
+    "publishAll": {
+      "button_one": "Publier tous les brouillons ({{count}})",
+      "button_other": "Publier tous les brouillons ({{count}})",
+      "title": "Publier tous vos brouillons",
+      "body_one": "Votre brouillon de ce tour sera visible par tous les membres. C'est irréversible.",
+      "body_other": "Vos {{count}} brouillons de ce tour seront visibles par tous les membres. C'est irréversible.",
+      "overLimit_one": "Le tableau est presque plein : {{count}} brouillon reste un brouillon.",
+      "overLimit_other": "Le tableau est presque plein : {{count}} brouillons restent des brouillons."
+    },
+    "groups": {
+      "groupWith": "Grouper avec…",
+      "groupWithBody": "Choisissez un post-it ou un groupe de cette colonne.",
+      "takeOut": "Retirer du groupe",
+      "untitled": "Groupe",
+      "title": "Titre du groupe",
+      "actions": "Actions du groupe {{title}}",
+      "rename": "Renommer le groupe",
+      "ungroupAll": "Dissoudre le groupe",
+      "count_one": "{{count}} post-it",
+      "count_other": "{{count}} post-it"
+    },
     "columns": {
       "actions": "Actions de la colonne {{title}}",
       "add": "Ajouter une colonne",
@@ -1300,7 +1328,8 @@
       "moveRight": "Déplacer à droite",
       "title": "Titre de la colonne",
       "deleteTitle": "Supprimer la colonne ?",
-      "deleteBody": "La colonne « {{title}} » sera supprimée avec tous ses post-its."
+      "deleteBody": "La colonne « {{title}} » sera supprimée avec tous ses post-its.",
+      "color": "Couleur"
     },
     "rounds": {
       "first": "Session 0",

@@ -1,11 +1,20 @@
-import { useState, type DragEvent, type ReactNode } from 'react';
+import { useState, type CSSProperties, type DragEvent, type ReactNode } from 'react';
 import { Button, Group, Menu, Modal, Paper, Stack, Text, TextInput, Title } from '@mantine/core';
 import { DotsThreeVerticalIcon, PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from '../LabeledActionIcon';
-import { MAX_COLUMN_TITLE_LENGTH, POST_IT_DRAG_TYPE, boardWrites, type DraggedPostIt } from '../../lib/sessionZero';
-import type { PostItColumn } from '../../types/sessionZero';
+import {
+  MAX_COLUMN_TITLE_LENGTH,
+  POST_IT_DRAG_TYPE,
+  boardWrites,
+  columnColor,
+  type DraggedPostIt,
+} from '../../lib/sessionZero';
+import type { MapColor } from '../../types/map';
+import type { PostIt, PostItColumn } from '../../types/sessionZero';
+import { MapColorPicker } from '../maps/MapColorPicker';
 import { PostItCard } from './PostItCard';
+import { PostItGroup } from './PostItGroup';
 import { PostItEditor } from './PostItEditor';
 import { useBoard } from './boardContext';
 
@@ -14,6 +23,8 @@ export const COLUMN_WIDTH = 260;
 
 interface ColumnFrameProps {
   title: ReactNode;
+  /** Its colour: a band on top, a light tint (spec 46c Decision 5). */
+  color: string;
   menu?: ReactNode;
   dropTarget?: boolean;
   onDrop?: (dragged: DraggedPostIt) => void;
@@ -23,7 +34,7 @@ interface ColumnFrameProps {
 }
 
 /** A column's frame: heading, its menu, the post-its, and (on Lines & Veils) a drop target. */
-function ColumnFrame({ title, menu, dropTarget = false, onDrop, fill = false, children }: ColumnFrameProps) {
+function ColumnFrame({ title, color, menu, dropTarget = false, onDrop, fill = false, children }: ColumnFrameProps) {
   const [over, setOver] = useState(false);
   const accepts = (event: DragEvent) => dropTarget && event.dataTransfer.types.includes(POST_IT_DRAG_TYPE);
   return (
@@ -33,8 +44,15 @@ function ColumnFrame({ title, menu, dropTarget = false, onDrop, fill = false, ch
       p="xs"
       w={fill ? '100%' : COLUMN_WIDTH}
       miw={fill ? undefined : COLUMN_WIDTH}
+      className="sz-column"
       data-drop-over={over || undefined}
-      style={{ borderColor: over ? 'var(--accent-primary)' : undefined, alignSelf: 'flex-start' }}
+      style={
+        {
+          '--sz-color': color,
+          borderColor: over ? 'var(--accent-primary)' : undefined,
+          alignSelf: 'flex-start',
+        } as CSSProperties
+      }
       onDragOver={(event) => {
         if (!accepts(event)) return;
         event.preventDefault();
@@ -70,9 +88,11 @@ interface RetroColumnProps {
 }
 
 /**
- * A column of the Retro board: its post-its and, in the open round, "Add
- * post-it" for every member. The Master renames, moves and deletes it
- * (spec 46 Decision 10); deleting asks first, since its post-its go too.
+ * A column of the Retro board: its post-its, related ones framed together in
+ * their groups (spec 46c Decision 9), and, in the open round, "Add post-it"
+ * for every member. The Master renames, recolours, moves and deletes it
+ * (spec 46 Decision 10, 46c Decision 5); deleting asks first, since its
+ * post-its go too.
  */
 export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
   const { t } = useTranslation();
@@ -80,6 +100,7 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
   const [adding, setAdding] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [recoloring, setRecoloring] = useState(false);
   const [title, setTitle] = useState(column.title);
   const manage = writable && open && board.canManage;
   const ids = board.retro.map((other) => other.id);
@@ -111,6 +132,7 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
         >
           {t('sessionZero.columns.rename')}
         </Menu.Item>
+        <Menu.Item onClick={() => setRecoloring(true)}>{t('sessionZero.columns.color')}</Menu.Item>
         {index > 0 && <Menu.Item onClick={() => moveTo(index - 1)}>{t('sessionZero.columns.moveLeft')}</Menu.Item>}
         {index < count - 1 && (
           <Menu.Item onClick={() => moveTo(index + 1)}>{t('sessionZero.columns.moveRight')}</Menu.Item>
@@ -146,11 +168,16 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
           column.title
         )
       }
+      color={columnColor(column)}
       menu={menu}
     >
-      {column.cards.map((postIt) => (
-        <PostItCard key={postIt.id} postIt={postIt} onLinesVeils={false} />
-      ))}
+      {stacks(column).map((stack) =>
+        stack.groupId === null ? (
+          <PostItCard key={stack.cards[0].id} postIt={stack.cards[0]} column={column} onLinesVeils={false} />
+        ) : (
+          <PostItGroup key={stack.groupId} groupId={stack.groupId} column={column} cards={stack.cards} open={open} />
+        ),
+      )}
       {writable && open && !adding && (
         <Button
           size="compact-sm"
@@ -172,6 +199,14 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
             setAdding(false);
           }}
         />
+      )}
+      {recoloring && (
+        <Modal opened onClose={() => setRecoloring(false)} title={t('sessionZero.columns.color')} centered>
+          <MapColorPicker
+            value={column.color}
+            onChange={(color) => act(boardWrites.recolorColumn(column.id, color), () => setRecoloring(false))}
+          />
+        </Modal>
       )}
       {deleting && (
         <Modal opened onClose={() => setDeleting(false)} title={t('sessionZero.columns.deleteTitle')} centered>
@@ -199,47 +234,104 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
   );
 }
 
+/** A lone post-it, or a group's post-its, in the column's order. */
+interface CardStack {
+  groupId: string | null;
+  cards: PostIt[];
+}
+
+/** The column's post-its in order, a group standing where its first post-it does. */
+function stacks(column: PostItColumn): CardStack[] {
+  const result: CardStack[] = [];
+  const groups = new Map<string, CardStack>();
+  for (const card of column.cards) {
+    if (card.groupId === null) {
+      result.push({ groupId: null, cards: [card] });
+      continue;
+    }
+    const stack = groups.get(card.groupId);
+    if (stack) {
+      stack.cards.push(card);
+    } else {
+      const created = { groupId: card.groupId, cards: [card] };
+      groups.set(card.groupId, created);
+      result.push(created);
+    }
+  }
+  return result;
+}
+
 /**
- * A Lines & Veils column (Must, Lines or Veils, spec 46 Decision 10), the
- * board's full width, the three one under the other. For the
- * Master it is a drop target: a Retro post-it dropped here is promoted as a
- * copy, a Lines & Veils one is moved here (Decisions 2, 8 and 16).
+ * A Lines & Veils column (Must, Veils or Lines, spec 46 Decision 10), the
+ * board's full width, the three one under the other, green, gold and red
+ * (spec 46c Decision 5). For the Master it is a drop target: a Retro
+ * post-it dropped here is promoted as a copy, a Lines & Veils one is moved
+ * here (Decisions 2, 8 and 16); and the Master writes in it directly,
+ * published at once (spec 46c Decision 6).
  */
 export function LinesVeilsColumn({ column }: { column: PostItColumn }) {
   const { t } = useTranslation();
-  const { board, act, writable } = useBoard();
+  const { board, act, busy, writable } = useBoard();
+  const [adding, setAdding] = useState(false);
+  const manage = writable && board.canManage;
   return (
     <ColumnFrame
       title={t(`sessionZero.kinds.${column.kind!}`)}
+      color={columnColor(column)}
       fill
-      dropTarget={writable && board.canManage}
+      dropTarget={manage}
       onDrop={(dragged) => {
         if (dragged.action === 'promote') act(boardWrites.promote(dragged.id, column.id));
         else if (dragged.columnId !== column.id) act(boardWrites.move(dragged.id, column.id));
       }}
     >
-      {column.cards.length === 0 && (
+      {column.cards.length === 0 && !adding && (
         <Text size="xs" c="dimmed">
           {t('sessionZero.linesVeils.empty')}
         </Text>
       )}
       {column.cards.map((postIt) => (
-        <PostItCard key={postIt.id} postIt={postIt} onLinesVeils />
+        <PostItCard key={postIt.id} postIt={postIt} column={column} onLinesVeils />
       ))}
+      {manage && !adding && (
+        <Button
+          size="compact-sm"
+          variant="subtle"
+          color="gray"
+          leftSection={<PlusIcon size={14} />}
+          style={{ alignSelf: 'flex-start' }}
+          onClick={() => setAdding(true)}
+        >
+          {t('sessionZero.linesVeils.add')}
+        </Button>
+      )}
+      {adding && (
+        <PostItEditor
+          submitLabel={t('common.add')}
+          busy={busy}
+          onCancel={() => setAdding(false)}
+          onSubmit={(body) => act(boardWrites.addPostIt(column.id, body), () => setAdding(false))}
+        />
+      )}
     </ColumnFrame>
   );
 }
 
-/** The Master's "Add column" at the end of the open round's Retro board (Decision 10, at most 8). */
+/**
+ * The Master's "Add column" at the end of the open round's Retro board
+ * (Decision 10, at most 8), in the colour they pick (spec 46c Decision 5).
+ */
 export function AddColumn() {
   const { t } = useTranslation();
   const { act, busy } = useBoard();
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState('');
+  const [color, setColor] = useState<MapColor>('default');
   const add = () => {
-    act(boardWrites.addColumn(title.trim()));
+    act(boardWrites.addColumn(title.trim(), color));
     setAdding(false);
     setTitle('');
+    setColor('default');
   };
   if (!adding) {
     return (
@@ -269,6 +361,7 @@ export function AddColumn() {
             if (event.key === 'Enter' && title.trim()) add();
           }}
         />
+        <MapColorPicker value={color} onChange={setColor} />
         <Group gap={4} justify="flex-end">
           <Button size="compact-sm" variant="default" onClick={() => setAdding(false)}>
             {t('common.cancel')}

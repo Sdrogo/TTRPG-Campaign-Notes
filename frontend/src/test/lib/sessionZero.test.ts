@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   boardWrites,
+  columnColor,
   formatClock,
   roundLabel,
   secondsLeft,
@@ -8,7 +9,7 @@ import {
   type RawSessionZero,
 } from '../../lib/sessionZero';
 import type { SessionZeroTimer } from '../../types/sessionZero';
-import { rawPostIt, rawSessionZero } from '../fixtures';
+import { rawPostIt, rawPostItColumn, rawSessionZero } from '../fixtures';
 
 function timer(overrides: Partial<SessionZeroTimer> = {}): SessionZeroTimer {
   return {
@@ -27,18 +28,20 @@ describe('toSessionZero', () => {
       rawSessionZero({
         can_manage: true,
         retro: [
-          {
-            id: 'col-1',
-            kind: null,
-            title: 'Domande',
+          rawPostItColumn({
+            title: 'Con cura',
+            color: 'gold',
+            groups: [{ id: 'g-1', title: 'Draghi' }],
             cards: [
               rawPostIt({
                 from_retro: true,
+                group_id: 'g-1',
                 reactions: [{ emoji: '🎲', count: 1, reacted_by_me: true, user_ids: ['user-1'] }],
                 can_promote: true,
+                can_group: true,
               }),
             ],
-          },
+          }),
         ],
         timer: { state: 'paused', duration_s: 300, ends_at: null, remaining_s: 120, now: '2026-10-27T10:00:00Z' },
       }) as RawSessionZero,
@@ -55,11 +58,19 @@ describe('toSessionZero', () => {
     expect(board.retro[0].cards[0]).toMatchObject({
       columnId: 'col-1',
       authorId: 'user-1',
+      groupId: 'g-1',
       fromRetro: true,
       canPromote: true,
+      canGroup: true,
       reactions: [{ emoji: '🎲', count: 1, reactedByMe: true, userIds: ['user-1'] }],
     });
-    expect(board.linesVeils.map((column) => column.kind)).toEqual(['must', 'lines', 'veils']);
+    expect(board.retro[0]).toMatchObject({ color: 'gold', groups: [{ id: 'g-1', title: 'Draghi' }] });
+    expect(board.linesVeils.map((column) => [column.kind, column.color])).toEqual([
+      ['must', 'green'],
+      ['veils', 'gold'],
+      ['lines', 'red'],
+    ]);
+    expect(columnColor(board.retro[0])).toBe('var(--mantine-color-yellow-5)');
     expect(board.timer).toEqual({
       state: 'paused',
       durationS: 300,
@@ -100,7 +111,21 @@ describe('boardWrites', () => {
       method: 'PUT',
     });
     expect(boardWrites.react('c', '👍', false).method).toBe('DELETE');
-    expect(boardWrites.addColumn('X')).toEqual({ path: '/columns', method: 'POST', json: { title: 'X' } });
+    expect(boardWrites.publishAll(false)).toEqual({
+      path: '/cards/publish-all',
+      method: 'POST',
+      json: { anonymous: false },
+    });
+    expect(boardWrites.addColumn('X', 'blue')).toEqual({
+      path: '/columns',
+      method: 'POST',
+      json: { title: 'X', color: 'blue' },
+    });
+    expect(boardWrites.recolorColumn('k', 'red')).toEqual({
+      path: '/columns/k',
+      method: 'PATCH',
+      json: { color: 'red' },
+    });
     expect(boardWrites.renameColumn('k', 'Y')).toEqual({ path: '/columns/k', method: 'PATCH', json: { title: 'Y' } });
     expect(boardWrites.deleteColumn('k')).toEqual({ path: '/columns/k', method: 'DELETE' });
     expect(boardWrites.reorderColumns(['b', 'a'])).toEqual({
@@ -120,6 +145,15 @@ describe('boardWrites', () => {
       json: { action: 'start', duration_s: 600 },
     });
     expect(boardWrites.timer('pause').json).toEqual({ action: 'pause' });
+    expect(boardWrites.group(['a', 'b'])).toEqual({ path: '/groups', method: 'POST', json: { card_ids: ['a', 'b'] } });
+    expect(boardWrites.renameGroup('g', ' Draghi ')).toEqual({
+      path: '/groups/g',
+      method: 'PATCH',
+      json: { title: 'Draghi' },
+    });
+    expect(boardWrites.ungroupAll('g')).toEqual({ path: '/groups/g', method: 'DELETE' });
+    expect(boardWrites.ungroup('c')).toEqual({ path: '/cards/c/ungroup', method: 'POST' });
+    expect(boardWrites.deleteSessionZero()).toEqual({ path: '', method: 'DELETE' });
   });
 });
 

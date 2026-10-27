@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Button, Group, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
+import { PaperPlaneTiltIcon } from '@phosphor-icons/react';
 import { useMediaQuery } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
@@ -11,9 +12,10 @@ import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { AddColumn, LinesVeilsColumn, RetroColumn } from '../components/sessionZero/BoardColumns';
 import { BoardContext, useBoard, type BoardContextValue } from '../components/sessionZero/boardContext';
+import { PublishModal } from '../components/sessionZero/PostItCard';
 import { RoundsBar } from '../components/sessionZero/RoundsBar';
-import { TimerBar } from '../components/sessionZero/TimerBar';
-import { MAX_RETRO_COLUMNS, boardWrites } from '../lib/sessionZero';
+import { SessionZeroTitle } from '../components/sessionZero/SessionZeroTitle';
+import { MAX_CARDS_PER_BOARD, MAX_RETRO_COLUMNS, boardWrites } from '../lib/sessionZero';
 import { notifyError } from '../lib/notify';
 
 /** Wide enough for the Retro board beside Lines & Veils; narrower, two tabs (Decision 13). */
@@ -21,7 +23,8 @@ const BOARDS_SIDE_BY_SIDE_QUERY = '(min-width: 62em)';
 
 /**
  * `/rooms/:roomId/session-zero`: the Room's Session 0 (spec 46), its Retro
- * board and its Lines & Veils board, with the shared timer on top.
+ * board and its Lines & Veils board, with the shared timer on the title line
+ * (spec 46c Decision 2).
  */
 export function SessionZeroPage() {
   const { t } = useTranslation();
@@ -48,7 +51,15 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
     ? {
         board: board.data,
         members: members.data ?? [],
-        act: (request) => write.mutate(request, { onError: notifyError }),
+        act: (request, onDone) =>
+          write.mutate(request, {
+            onError: notifyError,
+            onSuccess: (next) => {
+              // A deleted Session 0 (spec 46c Decision 3) has no rounds left to show.
+              if (!next.started) setRoundId(null);
+              onDone?.();
+            },
+          }),
         busy: write.isPending,
         writable,
       }
@@ -56,9 +67,11 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
 
   return (
     <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('maps.backToDocuments')} roomId={roomId}>
-      <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-        {t('sessionZero.title')}
-      </Title>
+      {!context?.board.started && (
+        <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
+          {t('sessionZero.title')}
+        </Title>
+      )}
       {board.isPending && <Loader />}
       {board.isError && <Text c="red">{t('sessionZero.loadError')}</Text>}
       {context && !context.board.started && (
@@ -76,7 +89,7 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
       )}
       {context?.board.started && (
         <BoardContext.Provider value={context}>
-          <TimerBar readAtMs={board.dataUpdatedAt} />
+          <SessionZeroTitle readAtMs={board.dataUpdatedAt} />
           {wide ? (
             <Group align="flex-start" wrap="nowrap" gap="lg">
               <Box style={{ flex: 2, minWidth: 0 }}>
@@ -117,6 +130,7 @@ function RetroBoard({ onPick }: { onPick: (roundId: string | null) => void }) {
         {t('sessionZero.retro.title')}
       </Title>
       <RoundsBar onPick={onPick} />
+      {writable && open && <PublishAll />}
       <Box style={{ overflowX: 'auto' }} pb="xs">
         <Group align="flex-start" wrap="nowrap" gap="sm">
           {board.retro.map((column, index) => (
@@ -129,7 +143,50 @@ function RetroBoard({ onPick }: { onPick: (roundId: string | null) => void }) {
   );
 }
 
-/** The Room's one Lines & Veils board: Must, Lines and Veils, whatever the round. */
+/**
+ * "Publish all drafts (N)" above the Retro board while the viewer has drafts
+ * in the open round (spec 46c Decision 8): one dialog, one signed or
+ * anonymous choice for all of them. Drafts past the board's limit stay
+ * drafts, and the dialog says how many.
+ */
+function PublishAll() {
+  const { t } = useTranslation();
+  const { board, act, busy } = useBoard();
+  const [asking, setAsking] = useState(false);
+  const cards = board.retro.flatMap((column) => column.cards);
+  const drafts = cards.filter((card) => card.canPublish).length;
+  if (drafts === 0) return null;
+  const room = MAX_CARDS_PER_BOARD - cards.filter((card) => !card.draft).length;
+  const staying = Math.max(0, drafts - Math.max(0, room));
+  return (
+    <>
+      <Button
+        size="compact-sm"
+        leftSection={<PaperPlaneTiltIcon size={14} />}
+        style={{ alignSelf: 'flex-start' }}
+        onClick={() => setAsking(true)}
+      >
+        {t('sessionZero.publishAll.button', { count: drafts })}
+      </Button>
+      {asking && (
+        <PublishModal
+          title={t('sessionZero.publishAll.title')}
+          body={
+            <>
+              {t('sessionZero.publishAll.body', { count: drafts })}
+              {staying > 0 && ` ${t('sessionZero.publishAll.overLimit', { count: staying })}`}
+            </>
+          }
+          busy={busy}
+          onClose={() => setAsking(false)}
+          onPublish={(anonymous) => act(boardWrites.publishAll(anonymous), () => setAsking(false))}
+        />
+      )}
+    </>
+  );
+}
+
+/** The Room's one Lines & Veils board: Must, Veils and Lines, whatever the round. */
 function LinesVeilsBoard() {
   const { t } = useTranslation();
   const { board } = useBoard();

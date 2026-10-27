@@ -2,12 +2,12 @@ import { createEvent, fireEvent, screen, waitFor, within } from '@testing-librar
 import { describe, expect, it } from 'vitest';
 import { AddColumn, LinesVeilsColumn, RetroColumn } from '../../../components/sessionZero/BoardColumns';
 import { boardWrites, toSessionZero, type RawSessionZero } from '../../../lib/sessionZero';
-import { rawSessionZero } from '../../fixtures';
-import { renderBoard } from './harness';
+import { rawPostIt, rawSessionZero } from '../../fixtures';
+import { column, renderBoard } from './harness';
 
 const board = toSessionZero(rawSessionZero() as RawSessionZero);
 const [first, second] = board.retro;
-const [must, lines] = board.linesVeils;
+const [must, , lines] = board.linesVeils;
 const master = { board: { can_manage: true } };
 const DRAG_TYPE = 'application/x-exlibris-post-it';
 
@@ -113,6 +113,53 @@ describe('RetroColumn', () => {
     expect(act).toHaveBeenCalledWith(boardWrites.deleteColumn('col-1'));
   });
 
+  // Spec 46c Decision 5: a band and a tint in the column's colour, which the Master changes.
+  it('wears its colour, which the Master changes from its menu', async () => {
+    const { act, user } = renderBoard(<RetroColumn column={first} index={0} count={2} open />, master);
+    const frame = screen.getByRole('heading', { name: 'Lo vogliamo al tavolo' }).closest('.sz-column') as HTMLElement;
+    expect(frame.style.getPropertyValue('--sz-color')).toBe('var(--mantine-color-green-5)');
+
+    await user.click(screen.getByRole('button', { name: 'Azioni della colonna Lo vogliamo al tavolo' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Colore' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Colore' });
+    expect(within(dialog).getByRole('radio', { name: 'Verde' })).toHaveAttribute('aria-checked', 'true');
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(act).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Azioni della colonna Lo vogliamo al tavolo' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Colore' }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('radio', { name: 'Fucsia' }));
+    expect(act).toHaveBeenCalledWith(boardWrites.recolorColumn('col-1', 'purple'), expect.any(Function));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  // Spec 46c Decision 9: a group stands where its first post-it does, with its post-its framed together.
+  it('frames grouped post-its together, in the column order', () => {
+    const grouped = column({
+      groups: [{ id: 'g-1', title: 'Draghi' }],
+      cards: [
+        rawPostIt({ id: 'a', body: 'Solo' }),
+        rawPostIt({ id: 'b', body: 'Draghi rossi', group_id: 'g-1' }),
+        rawPostIt({ id: 'c', body: 'Ancora solo' }),
+        rawPostIt({ id: 'd', body: 'Draghi blu', group_id: 'g-1' }),
+      ],
+    });
+    renderBoard(<RetroColumn column={grouped} index={0} count={1} open />);
+    const group = screen.getByRole('group', { name: 'Draghi' });
+    expect(within(group).getAllByRole('article').map((a) => a.textContent)).toEqual([
+      expect.stringContaining('Draghi rossi'),
+      expect.stringContaining('Draghi blu'),
+    ]);
+    expect(group).toHaveTextContent('2 post-it');
+    expect(screen.getAllByRole('article').map((a) => a.textContent?.split('Tu')[0])).toEqual([
+      'Solo',
+      'Draghi rossi',
+      'Draghi blu',
+      'Ancora solo',
+    ]);
+  });
+
   it('is no drop target', () => {
     const { act } = renderBoard(<RetroColumn column={first} index={0} count={2} open />, master);
     const frame = screen.getByRole('heading', { name: 'Lo vogliamo al tavolo' }).closest('.mantine-Paper-root')!;
@@ -163,10 +210,27 @@ describe('LinesVeilsColumn', () => {
     expect(act).not.toHaveBeenCalled();
   });
 
-  it('is no drop target for a Player', () => {
+  it('is no drop target for a Player, who writes nothing in it', () => {
     const { act } = renderBoard(<LinesVeilsColumn column={lines} />);
     expect(drop(frameOf('Linee'), drag({ id: 'card-1', action: 'promote', columnId: 'col-1' }))).toBe(false);
     expect(act).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Aggiungi' })).not.toBeInTheDocument();
+  });
+
+  // Spec 46c Decision 6: the Master writes a limit directly, published at once.
+  it('lets the Master write in it directly', async () => {
+    const { act, user } = renderBoard(<LinesVeilsColumn column={lines} />, master);
+    expect(frameOf('Linee').style.getPropertyValue('--sz-color')).toBe('var(--accent-strong)');
+    await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    expect(screen.queryByText('Ancora nessun post-it.')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+    expect(screen.getByText('Ancora nessun post-it.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    await user.type(screen.getByRole('textbox', { name: 'Testo del post-it' }), 'Niente tortura');
+    await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    expect(act).toHaveBeenCalledWith(boardWrites.addPostIt('lv-lines', 'Niente tortura'), expect.any(Function));
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 });
 
@@ -179,12 +243,17 @@ describe('AddColumn', () => {
     expect(act).not.toHaveBeenCalled();
     await user.type(screen.getByRole('textbox', { name: 'Titolo della colonna' }), ' Toni ');
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
-    expect(act).toHaveBeenCalledWith(boardWrites.addColumn('Toni'));
+    expect(act).toHaveBeenCalledWith(boardWrites.addColumn('Toni', 'default'));
 
     await user.click(screen.getByRole('button', { name: 'Aggiungi colonna' }));
     expect(screen.getByRole('textbox', { name: 'Titolo della colonna' })).toHaveValue('');
+    await user.click(screen.getByRole('radio', { name: 'Fucsia' }));
     await user.type(screen.getByRole('textbox', { name: 'Titolo della colonna' }), 'Ritmo{Enter}');
-    expect(act).toHaveBeenLastCalledWith(boardWrites.addColumn('Ritmo'));
+    expect(act).toHaveBeenLastCalledWith(boardWrites.addColumn('Ritmo', 'purple'));
+
+    // The colour starts over at the default.
+    await user.click(screen.getByRole('button', { name: 'Aggiungi colonna' }));
+    expect(screen.getByRole('radio', { name: 'Predefinito' })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('closes on Escape or Cancel', async () => {

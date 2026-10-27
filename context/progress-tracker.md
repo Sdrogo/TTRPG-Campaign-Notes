@@ -719,11 +719,15 @@ on `main`.
   timer, rounds, drag to promote or move, strings in 12 languages; no
   migration. Next: 46_4 (live client).
 - **46c, Session 0 refinements** (ticket confirmed by the product owner
-  2026-10-27, building): Index only
-  on the Documents page, compact timer on the title line, delete the
-  Session 0, three presets, traffic-light column colours, Lines & Veils
-  written directly, post-it elevation, inline publish and publish-all,
-  groups of post-its. One migration.
+  2026-10-27, built, in PR #251 with 46_3): Index only on the Documents
+  page, compact timer on the title line, delete the Session 0, three
+  presets, traffic-light column colours (maps' palette), Lines & Veils
+  written directly by the Master, post-it elevation, inline publish and
+  publish-all, groups of post-its. **Migration `c3f8a1d6e9b4`**: to apply
+  to the staging DB before PR #251 merges, and to production before the
+  next release (with `4797859660e2`). The live client (46_4) must handle
+  the new events `group` and `reset` (re-read the board; after `reset`
+  the revision restarts at 1).
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product

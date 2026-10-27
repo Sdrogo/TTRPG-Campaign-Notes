@@ -1,7 +1,8 @@
 import type { Reaction } from './comment';
+import type { MapColor } from './map';
 
 /** The three fixed columns of the Lines & Veils board (spec 46 Decision 10). */
-export type LinesVeilsKind = 'must' | 'lines' | 'veils';
+export type LinesVeilsKind = 'must' | 'veils' | 'lines';
 
 /** What the Master can do with the shared timer (spec 46 Decision 4). */
 export type TimerAction = 'start' | 'pause' | 'resume' | 'stop';
@@ -9,11 +10,13 @@ export type TimerAction = 'start' | 'pause' | 'resume' | 'stop';
 /**
  * A post-it as the viewer sees it. `authorId` is null on someone else's
  * anonymous post-it (Decision 7); `fromRetro` marks a Lines & Veils copy
- * (Decision 2). The `can*` flags come from the backend and drive the menu.
+ * (Decision 2); `groupId` its group (spec 46c Decision 9). The `can*` flags
+ * come from the backend and drive the menu.
  */
 export interface PostIt {
   id: string;
   columnId: string;
+  groupId: string | null;
   body: string;
   authorId: string | null;
   anonymous: boolean;
@@ -30,13 +33,25 @@ export interface PostIt {
   canPromote: boolean;
   canMove: boolean;
   canReact: boolean;
+  canGroup: boolean;
 }
 
-/** A column and its post-its, oldest first; `kind` is set on Lines & Veils. */
+/** Related post-its of a Retro column, gathered by the Master (spec 46c Decision 9). */
+export interface PostItGroup {
+  id: string;
+  title: string | null;
+}
+
+/**
+ * A column, its groups and its post-its, oldest first; `kind` is set on
+ * Lines & Veils; `color` comes from the maps' palette (spec 46c Decision 5).
+ */
 export interface PostItColumn {
   id: string;
   kind: LinesVeilsKind | null;
   title: string;
+  color: MapColor;
+  groups: PostItGroup[];
   cards: PostIt[];
 }
 

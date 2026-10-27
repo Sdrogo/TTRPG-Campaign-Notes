@@ -1227,18 +1227,25 @@
     "loadError": "세션 0을 불러오지 못했습니다.",
     "notStarted": "이 룸의 세션 0이 아직 시작되지 않았습니다. 시작하면 레트로 보드와 라인과 베일 보드가 열립니다.",
     "start": "세션 0 시작",
+    "actions": "세션 0 작업",
+    "delete": {
+      "action": "세션 0 삭제",
+      "title": "이 세션 0을 삭제할까요?",
+      "body": "모든 라운드, 포스트잇(초안 포함), 반응, 그룹, 라인과 베일, 타이머가 영구히 사라집니다. 그 후에는 어떤 멤버든 새 세션 0을 처음부터 시작할 수 있습니다."
+    },
     "indexLink": "세션 0 보드",
     "retro": {
       "title": "레트로"
     },
     "linesVeils": {
       "title": "라인과 베일",
-      "empty": "아직 포스트잇이 없습니다."
+      "empty": "아직 포스트잇이 없습니다.",
+      "add": "추가"
     },
     "kinds": {
       "must": "Must",
-      "lines": "라인",
-      "veils": "베일"
+      "veils": "베일",
+      "lines": "라인"
     },
     "postIt": {
       "text": "포스트잇 내용",
@@ -1260,6 +1267,23 @@
       "anonymous": "익명으로 게시",
       "anonymousHint": "Master를 포함해 누구도 작성자를 볼 수 없습니다."
     },
+    "publishAll": {
+      "button_other": "초안 모두 게시 ({{count}})",
+      "title": "내 초안 모두 게시",
+      "body_other": "이 라운드의 내 초안 {{count}}개가 모든 멤버에게 보입니다. 되돌릴 수 없습니다.",
+      "overLimit_other": "보드가 거의 찼습니다. {{count}}개는 초안으로 남습니다."
+    },
+    "groups": {
+      "groupWith": "함께 묶기…",
+      "groupWithBody": "이 열의 포스트잇이나 그룹을 고르세요.",
+      "takeOut": "그룹에서 빼기",
+      "untitled": "그룹",
+      "title": "그룹 제목",
+      "actions": "{{title}} 그룹 작업",
+      "rename": "그룹 이름 바꾸기",
+      "ungroupAll": "그룹 해제",
+      "count_other": "포스트잇 {{count}}개"
+    },
     "columns": {
       "actions": "{{title}} 열 작업",
       "add": "열 추가",
@@ -1268,7 +1292,8 @@
       "moveRight": "오른쪽으로 이동",
       "title": "열 제목",
       "deleteTitle": "열을 삭제할까요?",
-      "deleteBody": "‘{{title}}’ 열이 모든 포스트잇과 함께 삭제됩니다."
+      "deleteBody": "‘{{title}}’ 열이 모든 포스트잇과 함께 삭제됩니다.",
+      "color": "색"
     },
     "rounds": {
       "first": "세션 0",

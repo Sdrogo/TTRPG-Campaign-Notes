@@ -1256,18 +1256,25 @@
     "loadError": "Couldn't load the Session 0.",
     "notStarted": "This Room's Session 0 hasn't started yet. Start it to open the Retro board and the Lines & Veils board.",
     "start": "Start Session 0",
+    "actions": "Session 0 actions",
+    "delete": {
+      "action": "Delete Session 0",
+      "title": "Delete this Session 0?",
+      "body": "Every round, post-it (drafts included), reaction, group, Lines & Veils and the timer go for good. Afterwards any member can start a new Session 0 from scratch."
+    },
     "indexLink": "Session 0 boards",
     "retro": {
       "title": "Retro"
     },
     "linesVeils": {
       "title": "Lines & Veils",
-      "empty": "No post-its yet."
+      "empty": "No post-its yet.",
+      "add": "Add"
     },
     "kinds": {
       "must": "Must",
-      "lines": "Lines",
-      "veils": "Veils"
+      "veils": "Veils",
+      "lines": "Lines"
     },
     "postIt": {
       "text": "Post-it text",
@@ -1290,6 +1297,27 @@
       "anonymous": "Publish anonymously",
       "anonymousHint": "Nobody will see who wrote it, not even the Master."
     },
+    "publishAll": {
+      "button_one": "Publish all drafts ({{count}})",
+      "button_other": "Publish all drafts ({{count}})",
+      "title": "Publish all your drafts",
+      "body_one": "Your draft in this round will be shown to every member. It can't be undone.",
+      "body_other": "Your {{count}} drafts in this round will be shown to every member. It can't be undone.",
+      "overLimit_one": "The board is nearly full: {{count}} draft stays a draft.",
+      "overLimit_other": "The board is nearly full: {{count}} drafts stay drafts."
+    },
+    "groups": {
+      "groupWith": "Group with…",
+      "groupWithBody": "Pick a post-it or a group of this column.",
+      "takeOut": "Take out of the group",
+      "untitled": "Group",
+      "title": "Group title",
+      "actions": "Actions of the group {{title}}",
+      "rename": "Rename group",
+      "ungroupAll": "Ungroup all",
+      "count_one": "{{count}} post-it",
+      "count_other": "{{count}} post-its"
+    },
     "columns": {
       "actions": "Actions for column {{title}}",
       "add": "Add column",
@@ -1298,7 +1326,8 @@
       "moveRight": "Move right",
       "title": "Column title",
       "deleteTitle": "Delete the column?",
-      "deleteBody": "The column “{{title}}” will be deleted along with all its post-its."
+      "deleteBody": "The column “{{title}}” will be deleted along with all its post-its.",
+      "color": "Colour"
     },
     "rounds": {
       "first": "Session 0",

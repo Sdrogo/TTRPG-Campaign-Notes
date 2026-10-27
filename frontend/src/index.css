@@ -488,3 +488,55 @@ html body[data-scroll-locked] {
 .react-flow__node.draggable.dragging .map-card {
   cursor: grabbing;
 }
+
+/* Session 0 (spec 46c Decisions 5 and 7): a column's colour (`--sz-color`,
+   from the maps' palette) bands its top and tints its background and its
+   post-its; mixed into the theme's surfaces so it reads in light and dark.
+   Post-its are sticky notes with a soft shadow; a draft stays flat and dashed. */
+.sz-column {
+  border-top: 4px solid var(--sz-color);
+  background: color-mix(in srgb, var(--sz-color) 6%, var(--bg-surface));
+}
+
+.sz-post-it {
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--sz-color) 16%, var(--bg-raised));
+  border-color: color-mix(in srgb, var(--sz-color) 30%, var(--border-default));
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 16%),
+    0 3px 8px rgb(0 0 0 / 10%);
+  transition:
+    box-shadow 120ms ease,
+    transform 120ms ease;
+}
+.sz-post-it:hover {
+  box-shadow:
+    0 2px 4px rgb(0 0 0 / 18%),
+    0 8px 18px rgb(0 0 0 / 14%);
+  transform: translateY(-1px);
+}
+.sz-post-it[data-draft] {
+  background: var(--bg-raised);
+  border-style: dashed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.85;
+}
+.sz-post-it[data-drop-over] {
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+
+/* A group of post-its (spec 46c Decision 9): a framed stack in its column. */
+.sz-group {
+  border: 1px solid color-mix(in srgb, var(--sz-color) 45%, var(--border-default));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sz-color) 8%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sz-post-it,
+  .sz-post-it:hover {
+    transition: none;
+    transform: none;
+  }
+}

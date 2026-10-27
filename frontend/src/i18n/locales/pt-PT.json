@@ -1258,18 +1258,25 @@
     "loadError": "Não foi possível carregar a Sessão 0.",
     "notStarted": "A Sessão 0 desta Sala ainda não começou. Inicia-a para abrir o quadro Retro e o de Linhas e Véus.",
     "start": "Iniciar a Sessão 0",
+    "actions": "Ações da Sessão 0",
+    "delete": {
+      "action": "Eliminar a Sessão 0",
+      "title": "Eliminar esta Sessão 0?",
+      "body": "Todas as rondas, post-its (rascunhos incluídos), reações, grupos, Linhas e Véus e o temporizador desaparecem para sempre. Depois, qualquer membro pode começar uma nova Sessão 0 do zero."
+    },
     "indexLink": "Quadros da Sessão 0",
     "retro": {
       "title": "Retro"
     },
     "linesVeils": {
       "title": "Linhas e Véus",
-      "empty": "Ainda não há post-its."
+      "empty": "Ainda não há post-its.",
+      "add": "Adicionar"
     },
     "kinds": {
       "must": "Must",
-      "lines": "Linhas",
-      "veils": "Véus"
+      "veils": "Véus",
+      "lines": "Linhas"
     },
     "postIt": {
       "text": "Texto do post-it",
@@ -1292,6 +1299,27 @@
       "anonymous": "Publicar anonimamente",
       "anonymousHint": "Ninguém verá quem o escreveu, nem o Mestre."
     },
+    "publishAll": {
+      "button_one": "Publicar todos os rascunhos ({{count}})",
+      "button_other": "Publicar todos os rascunhos ({{count}})",
+      "title": "Publicar todos os teus rascunhos",
+      "body_one": "O teu rascunho desta ronda ficará visível para todos os membros. Não pode ser anulado.",
+      "body_other": "Os teus {{count}} rascunhos desta ronda ficarão visíveis para todos os membros. Não pode ser anulado.",
+      "overLimit_one": "O quadro está quase cheio: {{count}} rascunho continua rascunho.",
+      "overLimit_other": "O quadro está quase cheio: {{count}} rascunhos continuam rascunhos."
+    },
+    "groups": {
+      "groupWith": "Agrupar com…",
+      "groupWithBody": "Escolhe um post-it ou um grupo desta coluna.",
+      "takeOut": "Tirar do grupo",
+      "untitled": "Grupo",
+      "title": "Título do grupo",
+      "actions": "Ações do grupo {{title}}",
+      "rename": "Mudar o nome do grupo",
+      "ungroupAll": "Desfazer grupo",
+      "count_one": "{{count}} post-it",
+      "count_other": "{{count}} post-its"
+    },
     "columns": {
       "actions": "Ações da coluna {{title}}",
       "add": "Adicionar coluna",
@@ -1300,7 +1328,8 @@
       "moveRight": "Mover para a direita",
       "title": "Título da coluna",
       "deleteTitle": "Eliminar a coluna?",
-      "deleteBody": "A coluna «{{title}}» será eliminada com todos os seus post-its."
+      "deleteBody": "A coluna «{{title}}» será eliminada com todos os seus post-its.",
+      "color": "Cor"
     },
     "rounds": {
       "first": "Sessão 0",

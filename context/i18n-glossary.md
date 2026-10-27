@@ -36,6 +36,7 @@ content.
 | Must (Lines & Veils column) | Must | Must | Must | Must | Must | Must | Must | Must | Must | Must | Must | Must |
 | post-it (spec 46) | post-it | post-it | Post-it | nota | post-it | post-it | karteczka | post-it | стикер | 付箋 | 便签 | 포스트잇 |
 | Draft (an unpublished post-it) | Bozza | Draft | Entwurf | Borrador | Brouillon | Concept | Szkic | Rascunho | Черновик | 下書き | 草稿 | 초안 |
+| Group (of post-its, spec 46c) | Gruppo | Group | Gruppe | Grupo | Groupe | Groep | Grupa | Grupo | Группа | グループ | 分组 | 그룹 |
 
 The Italian and English columns were taken from `it.json` and `en.json` on
 2026-10-12 (the role names "Master", "Player", "Admin" and "Owner" stay in
