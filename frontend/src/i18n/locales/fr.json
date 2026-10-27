@@ -1023,7 +1023,7 @@
       },
       "retention": {
         "title": "Combien de temps nous les conservons",
-        "body": "- Ton compte et ton profil restent tant que tu ne supprimes pas le compte.\n- Quand tu supprimes le compte, le profil, l'avatar, les Amis, les réactions et le compte de connexion sont effacés immédiatement. Les Salles dont tu étais le seul membre sont supprimées avec tout leur contenu. Dans les Salles partagées avec d'autres, ce que tu as écrit reste comme partie de la campagne, affiché comme écrit par un utilisateur inconnu.\n- Une Salle que tu supprimes est effacée avec tout son contenu.\n- Les PDF des Salles sont effacés 24 heures après leur génération, et les imports de Documents 7 jours après leur fin.\n- Les journaux des serveurs sont conservés uniquement le temps nécessaire au fonctionnement et à la sécurité, et sont écrasés en rotation.\n- Les sauvegardes de nos prestataires sont écrasées dans le cadre de leur cycle de sauvegarde."
+        "body": "- Ton compte et ton profil restent tant que tu ne supprimes pas le compte.\n- Quand tu supprimes le compte, le profil, l'avatar, les Amis, les réactions, les post-it de la Session 0 et le compte de connexion sont effacés immédiatement. Les Salles dont tu étais le seul membre sont supprimées avec tout leur contenu. Dans les Salles partagées avec d'autres, ce que tu as écrit reste comme partie de la campagne, affiché comme écrit par un utilisateur inconnu.\n- Une Salle que tu supprimes est effacée avec tout son contenu.\n- Les PDF des Salles sont effacés 24 heures après leur génération, et les imports de Documents 7 jours après leur fin.\n- Les journaux des serveurs sont conservés uniquement le temps nécessaire au fonctionnement et à la sécurité, et sont écrasés en rotation.\n- Les sauvegardes de nos prestataires sont écrasées dans le cadre de leur cycle de sauvegarde."
       },
       "rights": {
         "title": "Tes droits",
@@ -1250,6 +1250,115 @@
     "strip": {
       "all_one": "Toutes les cartes ({{count}})",
       "all_other": "Toutes les cartes ({{count}})"
+    }
+  },
+  "sessionZero": {
+    "title": "Session 0",
+    "signInRequired": "Connectez-vous pour voir la Session 0 de cette Salle.",
+    "loadError": "Impossible de charger la Session 0.",
+    "notStarted": "La Session 0 de cette Salle n'a pas encore commencé. Lancez-la pour ouvrir le tableau Rétro et celui des Lignes et Voiles.",
+    "start": "Lancer la Session 0",
+    "actions": "Actions de la Session 0",
+    "resize": "Redimensionner Lignes et Voiles",
+    "delete": {
+      "action": "Supprimer la Session 0",
+      "title": "Supprimer cette Session 0 ?",
+      "body": "Tous les tours, post-it (brouillons compris), réactions, groupes, Lignes et Voiles et le minuteur disparaissent définitivement. Ensuite, n'importe quel membre peut lancer une nouvelle Session 0 à partir de zéro."
+    },
+    "indexLink": "Tableaux de la Session 0",
+    "retro": {
+      "title": "Rétro"
+    },
+    "linesVeils": {
+      "title": "Lignes et Voiles",
+      "empty": "Aucun post-it pour l'instant.",
+      "add": "Ajouter"
+    },
+    "kinds": {
+      "must": "Must",
+      "veils": "Voiles",
+      "lines": "Lignes"
+    },
+    "postIt": {
+      "text": "Texte du post-it",
+      "charactersLeft_one": "{{count}} caractère restant",
+      "charactersLeft_other": "{{count}} caractères restants",
+      "anonymous": "Anonyme",
+      "actions": "Actions du post-it",
+      "publish": "Publier",
+      "moveTo": "Déplacer vers {{column}}",
+      "promoteTo": "Promouvoir vers {{column}}",
+      "draft": "Brouillon",
+      "fromRetro": "de la Rétro",
+      "label": "Post-it de {{author}}",
+      "add": "Ajouter un post-it",
+      "saveDraft": "Enregistrer le brouillon"
+    },
+    "publish": {
+      "title": "Publier le post-it",
+      "body": "Une fois publié, le post-it est visible par tous les membres de la Salle et ne redevient pas un brouillon. Vous pourrez toujours le modifier ou le supprimer.",
+      "anonymous": "Publier anonymement",
+      "anonymousHint": "Personne ne verra qui l'a écrit, pas même le Master."
+    },
+    "publishAll": {
+      "button_one": "Publier tous les brouillons ({{count}})",
+      "button_other": "Publier tous les brouillons ({{count}})",
+      "title": "Publier tous vos brouillons",
+      "body_one": "Votre brouillon de ce tour sera visible par tous les membres. C'est irréversible.",
+      "body_other": "Vos {{count}} brouillons de ce tour seront visibles par tous les membres. C'est irréversible.",
+      "overLimit_one": "Le tableau est presque plein : {{count}} brouillon reste un brouillon.",
+      "overLimit_other": "Le tableau est presque plein : {{count}} brouillons restent des brouillons."
+    },
+    "groups": {
+      "groupWith": "Grouper avec…",
+      "groupWithBody": "Choisissez un post-it ou un groupe de cette colonne.",
+      "takeOut": "Retirer du groupe",
+      "untitled": "Groupe",
+      "title": "Titre du groupe",
+      "actions": "Actions du groupe {{title}}",
+      "rename": "Renommer le groupe",
+      "ungroupAll": "Dissoudre le groupe",
+      "count_one": "{{count}} post-it",
+      "count_other": "{{count}} post-it"
+    },
+    "columns": {
+      "actions": "Actions de la colonne {{title}}",
+      "add": "Ajouter une colonne",
+      "rename": "Renommer",
+      "moveLeft": "Déplacer à gauche",
+      "moveRight": "Déplacer à droite",
+      "title": "Titre de la colonne",
+      "deleteTitle": "Supprimer la colonne ?",
+      "deleteBody": "La colonne « {{title}} » sera supprimée avec tous ses post-its.",
+      "color": "Couleur"
+    },
+    "rounds": {
+      "first": "Session 0",
+      "later": "Session 0.5 #{{number}}",
+      "pick": "Session à afficher",
+      "start": "Lancer la Session 0.5",
+      "startBody": "Le tableau Rétro actuel se ferme et reste consultable en lecture seule ; les brouillons jamais publiés sont supprimés. Le nouveau tableau commence vide, avec les mêmes colonnes. Lignes et Voiles reste tel quel.",
+      "title": "Titre (facultatif)",
+      "titlePlaceholder": "Fin de l'arc 1",
+      "startButton": "Lancer",
+      "closed": "Cette session est close : le tableau est en lecture seule."
+    },
+    "timer": {
+      "label": "Minuteur",
+      "none": "Aucun minuteur",
+      "expired": "Temps écoulé",
+      "paused": "En pause",
+      "actions": "Gérer le minuteur",
+      "start": "Lancer un minuteur",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes",
+      "custom": "Durée personnalisée",
+      "length": "Minutes",
+      "lengthHint": "De {{min}} à {{max}} minutes",
+      "startButton": "Lancer",
+      "pause": "Mettre en pause",
+      "resume": "Reprendre",
+      "stop": "Arrêter et effacer"
     }
   }
 }

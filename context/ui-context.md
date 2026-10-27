@@ -10,6 +10,15 @@ closer to a grimoire or a vampire's study than a generic dark IDE
 theme — restrained ornamentation (thin borders, subtle glow on
 accent elements), never gaudy or neon.
 
+The public landing page and primary collection pages express that direction
+through an editorial "campaign archive" composition: EB Garamond headings at
+the usual Mantine heading sizes (the larger display sizes of the first Figma
+pass were dropped as too big, Andrea 2026-10-27), ruled sections, small monospaced folio numbers, asymmetric whitespace and
+quiet solid surfaces. Avoid generic equal-card marketing grids, decorative
+gradients, excessive pills and stock fantasy imagery; hierarchy should come
+from typography, spacing and fine borders. Cards may lift subtly on hover, but
+the red accent remains a narrow interactive signal rather than decoration.
+
 ## Colors
 
 Tokens are defined as CSS custom properties and also registered as
@@ -246,6 +255,25 @@ other icon set.
   page, with its Comments under it; a second Document or a map can open
   beside it in the split view (spec 37). *(The original plan of a left
   sidebar plus a right Thread panel was never built.)*
+  The page uses the same campaign-archive hierarchy as the public surface:
+  the Room name is the heading (h2 size) under a small "Documents" folio label,
+  filters open into a quiet bordered work panel, maps read as a distinct
+  archive section, and each collapsible Main Tag heading shows its item count.
+  Document cards keep their complete information and image behavior but gain
+  a restrained top-edge accent and lift on hover. Cards with images keep the
+  earlier layout: text on the left half, images filling the right half and
+  fading into the card (a wide cover-above-text variant was tried and dropped,
+  Andrea 2026-10-27). Room cards on My Rooms are unchanged by the editorial
+  pass. The sticky create action has a visible text label
+  rather than relying on an unexplained plus icon.
+- **Maps index** (`/rooms/:roomId/maps`): reads as a cartographic archive,
+  not a generic card grid. The Room name is a small folio label above the
+  page title (h2 size); create/import actions wrap safely on narrow screens.
+  Each map is one horizontal index card with a numbered icon plate that
+  distinguishes a free relationship board from a geographic map, followed by
+  its visibility, description and activity metadata. Hover exposes a restrained
+  accent edge and directional cue; the empty state is a quiet dashed archive
+  frame. Map creation, import, ordering and permissions are unchanged.
 - **Document detail**: description at the top, Tags and Owner(s)
   directly under the title, Notes (the spec's Details) rendered as a
   distinct, visually lighter list of titled entries above the Comment
@@ -265,6 +293,15 @@ other icon set.
   (spec 07.1, shared via `lib/images.ts::imageFrameSize`), so a portrait
   image isn't stretched into the fixed-height box's full width. Its
   delete/favorite controls and the fullscreen viewer are unchanged.
+  The detail surface follows the archive hierarchy introduced on the lists:
+  a small "Documents" folio label leads into the title and subtitle (h1/h2
+  from sm, h2/h3 on a phone, as before),
+  separated from the body by a fine rule. Description text has a calmer reading
+  rhythm; the image/map/info aside stays secondary on a raised surface. Notes
+  remain visually quiet in the content flow without individual highlighted
+  surfaces, while Comments sit in a clearly separate Thread card below
+  backlinks. All editing, visibility and action controls retain their existing
+  placement and behavior.
   **Info panel** (2026-10-03, Andrea chose option A of a mockup: the
   Played by, Owner and PDF sections were heavy, always-open forms at the
   bottom of the page): a bordered `Paper` under the gallery, in the same
@@ -493,8 +530,9 @@ other icon set.
   persisted (a reload starts fresh).
 - **Room Index** (`RoomIndex`, spec 44, 2026-10-25; before it the
   Glossary Index drawer behind a header burger, spec 10, Main items from
-  spec 11_3): a tab fixed on the screen's left edge of every Room-scoped
-  page (`PageLayout`'s `roomId` prop), at 40% of the screen's height so it
+  spec 11_3): a tab fixed on the screen's left edge of the Room's
+  Documents page only (`PageLayout`'s `showIndex` prop; every other Room
+  page lost it with spec 46c Decision 1), at 40% of the screen's height so it
   stays above a phone map page's lower half (spec 37). The tab
   (`.room-index-tab` in `index.css`) is a narrow pill on `--bg-raised`,
   rounded on the right only, with a horizontal arrow (`CaretRightIcon`,
@@ -841,3 +879,52 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   feature cards gain a `sm` "See it in the demo" anchor.
 - Screenshots: `demo/` (and `demo/tour/`) in the project files.
 
+## Session 0 (specs 46 and 46c)
+
+- Title row (`SessionZeroTitle`): "Session 0" (`h1` at `h2` size, display
+  font), then on the same line the timer chip: a pill on `--bg-raised`
+  with the default border, a clock icon and the time left in monospace
+  (`9:58`; "Paused" beside it, dimmed; "Time's up" in `--state-warning`).
+  For the Master the chip is the button that opens the timer menu, and
+  with no timer it is the clock alone; a Player without a timer sees no
+  chip. Nothing is sticky. The Master's "⋮" at the end of the row holds
+  "Delete Session 0" (red), which asks first.
+- Columns (`.sz-column` in `index.css`): a 4px band on top in the column's
+  colour (`--sz-color`, set inline from `colorValue`, the maps' palette)
+  and a 6% tint of it over `--bg-surface`. Presets are green ("We want it
+  at the table"), gold ("Handle with care") and red ("To avoid"); Lines &
+  Veils are Must green, Veils gold, Lines red, in that order. The Master
+  picks a new column's colour with `MapColorPicker`, and changes it from
+  the column's "⋮" → "Colour" (a dialog with the same picker).
+- Post-its (`.sz-post-it`): sticky notes, 10px radius, a 16% tint of the
+  column's colour over `--bg-raised`, a two-layer soft shadow that grows
+  (and lifts 1px) on hover; reduced motion drops the lift. A draft
+  (`data-draft`) is flat: `--bg-raised`, dashed border, no shadow, 85%
+  opacity, with a filled `compact-xs` "Publish" at the end of its author
+  line. A post-it a drag can group with shows the accent ring
+  (`data-drop-over`).
+- "Publish all drafts (N)" (filled `compact-sm`, paper-plane icon) sits
+  above the Retro columns while the viewer has drafts in the open round.
+- Groups (`.sz-group`): a frame of the column's colour (45% into the
+  border, 8% tint) around its post-its, headed by the title (bold `xs`,
+  "Group" when untitled) and the count (dimmed); the Master's "⋮" renames
+  it inline or ungroups all.
+- Layout (spec 46c Decisions 10 and 11): from 62em the two boards sit
+  side by side with a handle between them (`BoardsSplit`,
+  `.sz-split-handle`: the Document split view's divider, an 8px
+  `col-resize` strip with a quiet 2px line in `--border-default`; product
+  owner, 2026-10-27: the accent line was too loud); Lines &
+  Veils starts at a third, stays between 280px and 60%, double click
+  resets, arrows/Home/End move it, the width is kept in `localStorage`.
+  Retro columns share the board's width (`flex: 1 1 0`, at least 220px);
+  on a phone each takes the board's whole width and the board snaps from
+  one to the next. Lines & Veils alternates the layout (product owner,
+  2026-10-27): Must, Veils and Lines are horizontal rows one under the
+  other (`.sz-lines-veils-row`, a 4px band in the column's colour on the
+  left), each with its post-its side by side in a grid
+  (`.sz-lines-veils-cards`, `repeat(auto-fill, minmax(200px, 1fr))`).
+- Live updates (spec 46_4): what another member just changed (a post-it,
+  a Retro column, a group) glows once for 1.5 s, a 3px ring in its own
+  `--sz-color` fading out (`[data-glow]`, `@keyframes sz-glow`); no
+  animation with `prefers-reduced-motion`.
+- Screenshots: `session-zero/` in the project files.

@@ -250,6 +250,34 @@
     },
     "mentionSuggestions": {
       "stale": "Estes textos mudaram depois da pré-visualização: volte a carregá-la e tente de novo"
+    },
+    "sessionZero": {
+      "notMaster": "Só o Master pode fazer isto",
+      "notAuthor": "Só o autor do post-it pode fazer isto",
+      "roundClosed": "Esta ronda está fechada e só de leitura",
+      "notRetroColumn": "Só funciona numa coluna Retro da ronda aberta",
+      "notLinesVeils": "Só funciona no quadro Linhas e Véus",
+      "promoteRetroToLinesVeils": "Só um post-it da Retro pode ser promovido, para uma coluna de Linhas e Véus",
+      "invalidBody": "Um post-it precisa de texto, no máximo {max} caracteres",
+      "invalidTitle": "O título deve ter de 1 a {max} caracteres",
+      "alreadyPublished": "Este post-it já está publicado",
+      "draft": "Um rascunho ainda não está partilhado",
+      "alreadyPromoted": "Essa coluna já tem uma cópia deste post-it",
+      "copyNotEditable": "Uma cópia em Linhas e Véus não pode ser editada",
+      "boardFull": "Um quadro tem no máximo {max} post-its",
+      "tooManyColumns": "Uma ronda tem no máximo {max} colunas",
+      "timerLength": "O temporizador vai de {min} a {max} segundos",
+      "timerNotRunning": "O temporizador não está a correr",
+      "timerNotPaused": "O temporizador não está em pausa",
+      "tooManyEmoji": "Um post-it pode ter no máximo {max} emojis diferentes",
+      "notStarted": "A Sessão 0 desta Sala ainda não começou",
+      "cardNotFound": "Post-it não encontrado",
+      "columnNotFound": "Coluna não encontrada",
+      "roundNotFound": "Ronda não encontrada",
+      "columnOrder": "A nova ordem deve indicar uma vez cada coluna da ronda",
+      "notGroupable": "Só se agrupam dois ou mais post-its publicados da mesma coluna da Retro da ronda aberta",
+      "groupNotFound": "Grupo não encontrado",
+      "nothingToChange": "Nada a alterar"
     }
   },
   "pdf": {
@@ -264,5 +292,12 @@
   },
   "room": {
     "copySuffix": " (Cópia)"
+  },
+  "sessionZero": {
+    "presets": {
+      "want": "Queremos isto à mesa",
+      "care": "Com cuidado",
+      "avoid": "A evitar"
+    }
   }
 }

@@ -33,7 +33,7 @@ export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
   if (!maps.data || (maps.data.length === 0 && !canCreate)) return null;
 
   return (
-    <Stack component="nav" aria-label={t('maps.title')} gap="xs">
+    <Stack component="nav" aria-label={t('maps.title')} gap="sm" className="room-maps-strip">
       <Group gap="xs" wrap="nowrap">
         <Title order={2} fz="h5" style={{ fontFamily: 'var(--font-display)' }}>
           <UnstyledButton

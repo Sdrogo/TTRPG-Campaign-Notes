@@ -702,6 +702,45 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **46, Session 0 boards** (ticket confirmed by the product owner
+  2026-10-27, building): a Room's Session 0 page with a Retro board and a
+  Lines & Veils board (Must, Lines, Veils), draft/publish post-its
+  (anonymous or signed), promotion as a copy by the Master (button +
+  drag), reactions, a shared non-blocking timer, Session 0.5 rounds and
+  live push updates (SSE, the app's first). One migration.
+  **46_1 (backend boards) built** in PR #249: tables, rules, routes,
+  translations in 12 languages, export and account deletion. Migration
+  `4797859660e2` applied to the staging DB by the product owner
+  (2026-10-27); it must reach production before the next release. PR #249 merged into staging
+  2026-10-27. **46_2 (live push, SSE) built**: broker, `/events` stream,
+  Caddyfile route without compression; no migration. PR #250 merged into
+  staging 2026-10-27. **46_3 (page) built**: `/rooms/:roomId/session-zero`,
+  entries in the Room Index and the Room title menu, post-its, columns,
+  timer, rounds, drag to promote or move, strings in 12 languages; no
+  migration; PR #251 merged into staging 2026-10-27. **46_4 (live client)
+  built**: the page keeps the stream open while the tab is visible and
+  re-reads the boards on each event; reconnects with a growing pause
+  (1 s to 30 s), re-reading every 30 s while down; `reset` brings back
+  the open round; another member's change glows for 1.5 s. No migration.
+  Ticket 46 is complete once its PR merges.
+- **46c, Session 0 refinements** (ticket confirmed by the product owner
+  2026-10-27, built, in PR #251 with 46_3): Index only on the Documents
+  page, compact timer on the title line, delete the Session 0, three
+  presets, traffic-light column colours (maps' palette), Lines & Veils
+  written directly by the Master, post-it elevation, inline publish and
+  publish-all, groups of post-its; then (Decisions 10 and 11, confirmed
+  the same day) a resizable Lines & Veils board and columns that fit the
+  screen; Lines & Veils then became horizontal rows (Must, Veils, Lines
+  stacked, post-its side by side) while Retro keeps vertical columns.
+  PR #251 merged into staging 2026-10-27. **Migration `c3f8a1d6e9b4`**:
+  applied to the staging DB by the product owner (2026-10-27); to apply
+  to production before the next release (after `4797859660e2`).
+- **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
+  (the DDI's six sections). If a Room has one, its invitation opens the
+  DDI read-only with an "accept and join" button at the end (product
+  owner, 2026-10-27). Ticket not written yet.
+- **Room landing page**: product owner's idea (2026-10-27), separate
+  ticket, not written yet.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08). Ticket written, decisions proposed, no migration expected.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
@@ -739,6 +778,32 @@ on `main`.
 None. The 15 questions open at the time were closed with the product owner
 on 2026-10-03 (`requirements.md` v0.5); v0.6 (2026-10-27) brought the spec
 in line with what was built since.
+
+## Latest UI refinement
+
+- Refined the shared visual language around an editorial "campaign archive":
+  the landing page now uses an asymmetric, type-led composition with ruled
+  feature and process sections, while the app header and Room collection use
+  quieter surfaces, stronger hierarchy and restrained tactile feedback. All
+  routes, actions, localized copy and dark-theme tokens remain unchanged.
+- Extended that hierarchy to the Documents page: clearer Room/title framing,
+  a dedicated controls panel, counted archive groups, a distinct maps section,
+  more tactile Document cards and a labeled sticky create action, with filters,
+  grouping, maps, permissions and card content unchanged.
+- Reframed the Maps index as a cartographic archive: Room/title hierarchy,
+  responsive actions, distinct free/geographic icon plates, numbered map cards,
+  clearer metadata and a designed empty state, without changing map workflows.
+- Refined the Document detail composition: title under a folio label, separated
+  header metadata, improved description rhythm, lighter secondary info panel,
+  archival Note entries and a distinct Thread surface, preserving every action,
+  permission, visibility rule and content workflow.
+- Removed individual Note highlighting from Document detail after visual review;
+  Notes now remain quiet within the editorial content flow.
+- After Andrea's review (2026-10-27, PR #252) headings use the usual Mantine
+  sizes (Document title h1/h2, Documents and Maps page titles h2, a smaller
+  landing hero), image-bearing Document cards keep the side-by-side layout
+  (images on the right half) with the new hover and top-edge accent, and Room
+  cards keep their previous look.
 
 ## Architecture Decisions
 

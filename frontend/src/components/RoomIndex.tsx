@@ -28,7 +28,8 @@ const CARD_WIDTH = 'min(260px, 85vw)';
  * and Tag combinations - in the same order the Documents page groups by (both
  * read `useMainItems`), then the other Tags by category, each a shortcut to
  * the Documents list filtered by its Tag or Tags (the same destination a
- * `#Tag` mention leads to); last the maps, after a link to the Maps page.
+ * `#Tag` mention leads to); then the Session 0 boards (spec 46); last the
+ * maps, after a link to the Maps page.
  * Picking an entry closes the card. Nothing is fetched before it first opens.
  */
 export function RoomIndex({ roomId }: RoomIndexProps) {
@@ -99,6 +100,14 @@ export function RoomIndex({ roomId }: RoomIndexProps) {
               </Stack>
             ))
           )}
+          <Stack gap={4}>
+            <Title order={6} c="dimmed" tt="uppercase">
+              {t('sessionZero.title')}
+            </Title>
+            <Anchor component={Link} to={`/rooms/${roomId}/session-zero`} state={backState} onClick={close} size="sm" fw={600}>
+              {t('sessionZero.indexLink')}
+            </Anchor>
+          </Stack>
           <Stack gap={4}>
             <Title order={6} c="dimmed" tt="uppercase">
               {t('maps.title')}

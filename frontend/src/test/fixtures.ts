@@ -531,3 +531,68 @@ export function rawGeoMapDetail(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+/** A post-it as `GET /rooms/{id}/session-zero` sends it (spec 46): published, signed, by user-1. */
+export function rawPostIt(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'card-1',
+    column_id: 'col-1',
+    group_id: null,
+    body: 'Niente ragni',
+    author_id: 'user-1',
+    anonymous: false,
+    mine: true,
+    draft: false,
+    from_retro: false,
+    published_at: '2026-10-27T10:00:00Z',
+    created_at: '2026-10-27T09:59:00Z',
+    updated_at: '2026-10-27T10:00:00Z',
+    reactions: [],
+    can_edit: true,
+    can_delete: true,
+    can_publish: false,
+    can_promote: false,
+    can_move: false,
+    can_react: true,
+    can_group: false,
+    ...overrides,
+  };
+}
+
+/** A Session 0 column; `kind` set makes it a Lines & Veils one. */
+export function rawPostItColumn(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'col-1',
+    kind: null,
+    title: 'Lo vogliamo al tavolo',
+    color: 'green',
+    groups: [],
+    cards: [],
+    ...overrides,
+  };
+}
+
+/**
+ * A started Session 0 seen by a Player: round 1 open, two Retro columns (the
+ * first with one post-it), the three Lines & Veils columns, no timer.
+ */
+export function rawSessionZero(overrides: Record<string, unknown> = {}) {
+  return {
+    started: true,
+    revision: 3,
+    can_manage: false,
+    rounds: [{ id: 'round-1', number: 1, title: null, started_at: '2026-10-27T09:00:00Z', closed_at: null }],
+    round_id: 'round-1',
+    retro: [
+      rawPostItColumn({ cards: [rawPostIt()] }),
+      rawPostItColumn({ id: 'col-2', title: 'Da evitare', color: 'red' }),
+    ],
+    lines_veils: [
+      rawPostItColumn({ id: 'lv-must', kind: 'must', title: 'must', color: 'green' }),
+      rawPostItColumn({ id: 'lv-veils', kind: 'veils', title: 'veils', color: 'gold' }),
+      rawPostItColumn({ id: 'lv-lines', kind: 'lines', title: 'lines', color: 'red' }),
+    ],
+    timer: null,
+    ...overrides,
+  };
+}

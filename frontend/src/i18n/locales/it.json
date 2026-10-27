@@ -1021,7 +1021,7 @@
       },
       "retention": {
         "title": "Per quanto tempo li conserviamo",
-        "body": "- Il tuo account e il tuo profilo restano finché non elimini l'account.\n- Quando elimini l'account, profilo, avatar, Amici, reazioni e account di accesso vengono cancellati subito. Le Stanze in cui eri l'unico membro vengono eliminate con tutto il loro contenuto. Nelle Stanze condivise con altri, ciò che hai scritto resta come parte della campagna, mostrato come scritto da un utente sconosciuto.\n- Una Stanza che elimini viene cancellata con tutto il suo contenuto.\n- I PDF delle Stanze vengono cancellati 24 ore dopo la generazione, e le importazioni di Documenti 7 giorni dopo la fine.\n- I log dei server vengono conservati solo per il tempo necessario al funzionamento e alla sicurezza, e vengono sovrascritti a rotazione.\n- I backup dei nostri fornitori vengono sovrascritti entro il loro ciclo di backup."
+        "body": "- Il tuo account e il tuo profilo restano finché non elimini l'account.\n- Quando elimini l'account, profilo, avatar, Amici, reazioni, post-it della Sessione 0 e account di accesso vengono cancellati subito. Le Stanze in cui eri l'unico membro vengono eliminate con tutto il loro contenuto. Nelle Stanze condivise con altri, ciò che hai scritto resta come parte della campagna, mostrato come scritto da un utente sconosciuto.\n- Una Stanza che elimini viene cancellata con tutto il suo contenuto.\n- I PDF delle Stanze vengono cancellati 24 ore dopo la generazione, e le importazioni di Documenti 7 giorni dopo la fine.\n- I log dei server vengono conservati solo per il tempo necessario al funzionamento e alla sicurezza, e vengono sovrascritti a rotazione.\n- I backup dei nostri fornitori vengono sovrascritti entro il loro ciclo di backup."
       },
       "rights": {
         "title": "I tuoi diritti",
@@ -1248,6 +1248,115 @@
     "strip": {
       "all_one": "Tutte le mappe ({{count}})",
       "all_other": "Tutte le mappe ({{count}})"
+    }
+  },
+  "sessionZero": {
+    "title": "Sessione 0",
+    "signInRequired": "Accedi per vedere la Sessione 0 di questa Stanza.",
+    "loadError": "Impossibile caricare la Sessione 0.",
+    "notStarted": "La Sessione 0 di questa Stanza non è ancora iniziata. Avviala per aprire la lavagna Retro e quella di Linee e Veli.",
+    "start": "Avvia la Sessione 0",
+    "actions": "Azioni della Sessione 0",
+    "resize": "Ridimensiona Linee e Veli",
+    "delete": {
+      "action": "Elimina Sessione 0",
+      "title": "Eliminare questa Sessione 0?",
+      "body": "Spariscono per sempre tutti i giri, i post-it (bozze comprese), le reazioni, i gruppi, Linee e Veli e il timer. Dopo, qualsiasi membro può avviare una nuova Sessione 0 da zero."
+    },
+    "indexLink": "Lavagne della Sessione 0",
+    "retro": {
+      "title": "Retro"
+    },
+    "linesVeils": {
+      "title": "Linee e Veli",
+      "empty": "Ancora nessun post-it.",
+      "add": "Aggiungi"
+    },
+    "kinds": {
+      "must": "Must",
+      "veils": "Veli",
+      "lines": "Linee"
+    },
+    "postIt": {
+      "text": "Testo del post-it",
+      "charactersLeft_one": "{{count}} carattere rimasto",
+      "charactersLeft_other": "{{count}} caratteri rimasti",
+      "anonymous": "Anonimo",
+      "actions": "Azioni del post-it",
+      "publish": "Pubblica",
+      "moveTo": "Sposta in {{column}}",
+      "promoteTo": "Promuovi in {{column}}",
+      "draft": "Bozza",
+      "fromRetro": "dalla Retro",
+      "label": "Post-it di {{author}}",
+      "add": "Aggiungi post-it",
+      "saveDraft": "Salva bozza"
+    },
+    "publish": {
+      "title": "Pubblica il post-it",
+      "body": "Una volta pubblicato, il post-it è visibile a tutti i membri della Stanza e non torna bozza. Potrai comunque modificarlo o eliminarlo.",
+      "anonymous": "Pubblica in anonimo",
+      "anonymousHint": "Nessuno vedrà chi l'ha scritto, nemmeno il Master."
+    },
+    "publishAll": {
+      "button_one": "Pubblica tutte le bozze ({{count}})",
+      "button_other": "Pubblica tutte le bozze ({{count}})",
+      "title": "Pubblica tutte le tue bozze",
+      "body_one": "La tua bozza di questo giro sarà visibile a tutti i membri. Non si può annullare.",
+      "body_other": "Le tue {{count}} bozze di questo giro saranno visibili a tutti i membri. Non si può annullare.",
+      "overLimit_one": "La bacheca è quasi piena: {{count}} bozza resta bozza.",
+      "overLimit_other": "La bacheca è quasi piena: {{count}} bozze restano bozze."
+    },
+    "groups": {
+      "groupWith": "Raggruppa con…",
+      "groupWithBody": "Scegli un post-it o un gruppo di questa colonna.",
+      "takeOut": "Togli dal gruppo",
+      "untitled": "Gruppo",
+      "title": "Titolo del gruppo",
+      "actions": "Azioni del gruppo {{title}}",
+      "rename": "Rinomina gruppo",
+      "ungroupAll": "Sciogli gruppo",
+      "count_one": "{{count}} post-it",
+      "count_other": "{{count}} post-it"
+    },
+    "columns": {
+      "actions": "Azioni della colonna {{title}}",
+      "add": "Aggiungi colonna",
+      "rename": "Rinomina",
+      "moveLeft": "Sposta a sinistra",
+      "moveRight": "Sposta a destra",
+      "title": "Titolo della colonna",
+      "deleteTitle": "Eliminare la colonna?",
+      "deleteBody": "La colonna «{{title}}» verrà eliminata insieme a tutti i suoi post-it.",
+      "color": "Colore"
+    },
+    "rounds": {
+      "first": "Sessione 0",
+      "later": "Sessione 0.5 #{{number}}",
+      "pick": "Sessione da mostrare",
+      "start": "Avvia Sessione 0.5",
+      "startBody": "La lavagna Retro attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova lavagna parte vuota, con le stesse colonne. Linee e Veli resta com'è.",
+      "title": "Titolo (facoltativo)",
+      "titlePlaceholder": "Fine arco 1",
+      "startButton": "Avvia",
+      "closed": "Questa sessione è chiusa: la lavagna è in sola lettura."
+    },
+    "timer": {
+      "label": "Timer",
+      "none": "Nessun timer",
+      "expired": "Tempo scaduto",
+      "paused": "In pausa",
+      "actions": "Gestisci il timer",
+      "start": "Avvia un timer",
+      "minutes_one": "{{count}} minuto",
+      "minutes_other": "{{count}} minuti",
+      "custom": "Durata personalizzata",
+      "length": "Minuti",
+      "lengthHint": "Da {{min}} a {{max}} minuti",
+      "startButton": "Avvia",
+      "pause": "Metti in pausa",
+      "resume": "Riprendi",
+      "stop": "Ferma e azzera"
     }
   }
 }

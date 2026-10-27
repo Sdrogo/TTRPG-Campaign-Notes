@@ -266,9 +266,9 @@ export function CommentSection({
   );
 
   return (
-    <PageCard>
+    <PageCard className="document-thread-card">
       <Stack gap="md" data-tour="comments">
-        <Group gap="xs">
+        <Group gap="xs" className="document-thread-heading">
           <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
             {t('comments.title')}
           </Title>

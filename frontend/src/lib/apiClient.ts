@@ -108,6 +108,25 @@ export async function apiFetch<T>(path: string, init: ApiFetchInit = {}): Promis
 }
 
 /**
+ * Opens a Server-Sent Events stream (spec 46_4) and returns the response once
+ * it is known to be 2xx, its body still to be read; throws `ApiError`
+ * otherwise. `fetch`, not `EventSource`, because the stream needs the
+ * `Authorization` header. A stream is always the caller's own, so no
+ * `X-View-As`. Never called in the Demo, which has no backend to stream from.
+ */
+export async function apiOpenStream(path: string, signal: AbortSignal): Promise<Response> {
+  const response = await send(path, {
+    headers: { Accept: 'text/event-stream' },
+    ignoreViewAs: true,
+    signal,
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
+  return response;
+}
+
+/**
  * Calls the backend for a file (the Room export, spec 23) and returns its
  * bytes. Same headers and errors as `apiFetch`, so a preview as a member
  * (spec 22b) downloads what that member sees.

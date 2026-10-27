@@ -1021,7 +1021,7 @@
       },
       "retention": {
         "title": "How long we keep it",
-        "body": "- Your account and profile are kept until you delete your account.\n- When you delete your account, your profile, avatar, Friends, reactions and sign-in account are erased at once. Rooms where you were the only member are deleted with everything in them. In Rooms shared with others, what you wrote stays as part of the campaign, shown as written by an unknown user.\n- A Room you delete is erased with everything in it.\n- Room PDFs are deleted 24 hours after they are generated, and Document imports 7 days after they finish.\n- Server logs are kept only as long as needed for operation and security, and are overwritten on a rolling basis.\n- Backups kept by our providers are overwritten within their backup cycle."
+        "body": "- Your account and profile are kept until you delete your account.\n- When you delete your account, your profile, avatar, Friends, reactions, Session 0 post-its and sign-in account are erased at once. Rooms where you were the only member are deleted with everything in them. In Rooms shared with others, what you wrote stays as part of the campaign, shown as written by an unknown user.\n- A Room you delete is erased with everything in it.\n- Room PDFs are deleted 24 hours after they are generated, and Document imports 7 days after they finish.\n- Server logs are kept only as long as needed for operation and security, and are overwritten on a rolling basis.\n- Backups kept by our providers are overwritten within their backup cycle."
       },
       "rights": {
         "title": "Your rights",
@@ -1248,6 +1248,115 @@
     "strip": {
       "all_one": "All maps ({{count}})",
       "all_other": "All maps ({{count}})"
+    }
+  },
+  "sessionZero": {
+    "title": "Session 0",
+    "signInRequired": "Sign in to see this Room's Session 0.",
+    "loadError": "Couldn't load the Session 0.",
+    "notStarted": "This Room's Session 0 hasn't started yet. Start it to open the Retro board and the Lines & Veils board.",
+    "start": "Start Session 0",
+    "actions": "Session 0 actions",
+    "resize": "Resize Lines & Veils",
+    "delete": {
+      "action": "Delete Session 0",
+      "title": "Delete this Session 0?",
+      "body": "Every round, post-it (drafts included), reaction, group, Lines & Veils and the timer go for good. Afterwards any member can start a new Session 0 from scratch."
+    },
+    "indexLink": "Session 0 boards",
+    "retro": {
+      "title": "Retro"
+    },
+    "linesVeils": {
+      "title": "Lines & Veils",
+      "empty": "No post-its yet.",
+      "add": "Add"
+    },
+    "kinds": {
+      "must": "Must",
+      "veils": "Veils",
+      "lines": "Lines"
+    },
+    "postIt": {
+      "text": "Post-it text",
+      "charactersLeft_one": "{{count}} character left",
+      "charactersLeft_other": "{{count}} characters left",
+      "anonymous": "Anonymous",
+      "actions": "Post-it actions",
+      "publish": "Publish",
+      "moveTo": "Move to {{column}}",
+      "promoteTo": "Promote to {{column}}",
+      "draft": "Draft",
+      "fromRetro": "from the Retro",
+      "label": "Post-it by {{author}}",
+      "add": "Add post-it",
+      "saveDraft": "Save draft"
+    },
+    "publish": {
+      "title": "Publish the post-it",
+      "body": "Once published, the post-it is visible to every member of the Room and can't go back to being a draft. You can still edit or delete it.",
+      "anonymous": "Publish anonymously",
+      "anonymousHint": "Nobody will see who wrote it, not even the Master."
+    },
+    "publishAll": {
+      "button_one": "Publish all drafts ({{count}})",
+      "button_other": "Publish all drafts ({{count}})",
+      "title": "Publish all your drafts",
+      "body_one": "Your draft in this round will be shown to every member. It can't be undone.",
+      "body_other": "Your {{count}} drafts in this round will be shown to every member. It can't be undone.",
+      "overLimit_one": "The board is nearly full: {{count}} draft stays a draft.",
+      "overLimit_other": "The board is nearly full: {{count}} drafts stay drafts."
+    },
+    "groups": {
+      "groupWith": "Group with…",
+      "groupWithBody": "Pick a post-it or a group of this column.",
+      "takeOut": "Take out of the group",
+      "untitled": "Group",
+      "title": "Group title",
+      "actions": "Actions of the group {{title}}",
+      "rename": "Rename group",
+      "ungroupAll": "Ungroup all",
+      "count_one": "{{count}} post-it",
+      "count_other": "{{count}} post-its"
+    },
+    "columns": {
+      "actions": "Actions for column {{title}}",
+      "add": "Add column",
+      "rename": "Rename",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "title": "Column title",
+      "deleteTitle": "Delete the column?",
+      "deleteBody": "The column “{{title}}” will be deleted along with all its post-its.",
+      "color": "Colour"
+    },
+    "rounds": {
+      "first": "Session 0",
+      "later": "Session 0.5 #{{number}}",
+      "pick": "Session to show",
+      "start": "Start Session 0.5",
+      "startBody": "The current Retro board closes and stays readable, read-only; drafts never published are deleted. The new board starts empty, with the same columns. Lines & Veils stays as it is.",
+      "title": "Title (optional)",
+      "titlePlaceholder": "End of arc 1",
+      "startButton": "Start",
+      "closed": "This session is closed: the board is read-only."
+    },
+    "timer": {
+      "label": "Timer",
+      "none": "No timer",
+      "expired": "Time's up",
+      "paused": "Paused",
+      "actions": "Manage the timer",
+      "start": "Start a timer",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes",
+      "custom": "Custom length",
+      "length": "Minutes",
+      "lengthHint": "From {{min}} to {{max}} minutes",
+      "startButton": "Start",
+      "pause": "Pause",
+      "resume": "Resume",
+      "stop": "Stop and clear"
     }
   }
 }

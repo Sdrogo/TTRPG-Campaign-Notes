@@ -250,6 +250,34 @@
     },
     "mentionSuggestions": {
       "stale": "These texts changed after the preview: reload it and try again"
+    },
+    "sessionZero": {
+      "notMaster": "Only the Master can do this",
+      "notAuthor": "Only the post-it's author can do this",
+      "roundClosed": "This round is closed and read-only",
+      "notRetroColumn": "This works only on a Retro column of the open round",
+      "notLinesVeils": "This works only on the Lines & Veils board",
+      "promoteRetroToLinesVeils": "Only a Retro post-it can be promoted, into a Lines & Veils column",
+      "invalidBody": "A post-it needs some text, at most {max} characters",
+      "invalidTitle": "The title must be 1 to {max} characters",
+      "alreadyPublished": "This post-it is already published",
+      "draft": "A draft isn't shared yet",
+      "alreadyPromoted": "That column already has a copy of this post-it",
+      "copyNotEditable": "A Lines & Veils copy can't be edited",
+      "boardFull": "A board holds at most {max} post-its",
+      "tooManyColumns": "A round holds at most {max} columns",
+      "timerLength": "The timer runs from {min} to {max} seconds",
+      "timerNotRunning": "The timer isn't running",
+      "timerNotPaused": "The timer isn't paused",
+      "tooManyEmoji": "A post-it can have at most {max} different emoji",
+      "notStarted": "This Room's Session 0 hasn't started yet",
+      "cardNotFound": "Post-it not found",
+      "columnNotFound": "Column not found",
+      "roundNotFound": "Round not found",
+      "columnOrder": "The new order must list every column of the round once",
+      "notGroupable": "Only two or more published post-its of one Retro column of the open round can be grouped",
+      "groupNotFound": "Group not found",
+      "nothingToChange": "Nothing to change"
     }
   },
   "pdf": {
@@ -264,5 +292,12 @@
   },
   "room": {
     "copySuffix": " (Copy)"
+  },
+  "sessionZero": {
+    "presets": {
+      "want": "We want it at the table",
+      "care": "Handle with care",
+      "avoid": "To avoid"
+    }
   }
 }

@@ -84,7 +84,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
             </LabeledActionIcon>
           )}
         </Group>
-        <UnstyledButton component={Link} to="/" style={{ minWidth: 0 }}>
+        <UnstyledButton component={Link} to="/" className="app-header-brand">
           <Title order={3} lineClamp={1} ta="center" style={{ fontFamily: 'var(--font-display)' }}>
             {t('app.name')}
           </Title>

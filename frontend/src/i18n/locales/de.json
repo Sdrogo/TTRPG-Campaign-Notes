@@ -1021,7 +1021,7 @@
       },
       "retention": {
         "title": "Wie lange wir sie speichern",
-        "body": "- Dein Konto und dein Profil bleiben bestehen, bis du dein Konto löschst.\n- Wenn du dein Konto löschst, werden Profil, Avatar, Freunde, Reaktionen und Anmeldekonto sofort gelöscht. Räume, in denen du das einzige Mitglied warst, werden mit allen Inhalten gelöscht. In Räumen, die du mit anderen teilst, bleibt das, was du geschrieben hast, als Teil der Kampagne erhalten und wird als von einem unbekannten Nutzer geschrieben angezeigt.\n- Ein Raum, den du löschst, wird mit allen Inhalten gelöscht.\n- Raum-PDFs werden 24 Stunden nach der Erstellung gelöscht, Dokumentimporte 7 Tage nach ihrem Ende.\n- Server-Logs werden nur so lange aufbewahrt, wie es für Betrieb und Sicherheit nötig ist, und fortlaufend überschrieben.\n- Backups unserer Anbieter werden innerhalb ihres Backup-Zyklus überschrieben."
+        "body": "- Dein Konto und dein Profil bleiben bestehen, bis du dein Konto löschst.\n- Wenn du dein Konto löschst, werden Profil, Avatar, Freunde, Reaktionen, Session-0-Post-its und Anmeldekonto sofort gelöscht. Räume, in denen du das einzige Mitglied warst, werden mit allen Inhalten gelöscht. In Räumen, die du mit anderen teilst, bleibt das, was du geschrieben hast, als Teil der Kampagne erhalten und wird als von einem unbekannten Nutzer geschrieben angezeigt.\n- Ein Raum, den du löschst, wird mit allen Inhalten gelöscht.\n- Raum-PDFs werden 24 Stunden nach der Erstellung gelöscht, Dokumentimporte 7 Tage nach ihrem Ende.\n- Server-Logs werden nur so lange aufbewahrt, wie es für Betrieb und Sicherheit nötig ist, und fortlaufend überschrieben.\n- Backups unserer Anbieter werden innerhalb ihres Backup-Zyklus überschrieben."
       },
       "rights": {
         "title": "Deine Rechte",
@@ -1248,6 +1248,115 @@
     "strip": {
       "all_one": "Alle Karten ({{count}})",
       "all_other": "Alle Karten ({{count}})"
+    }
+  },
+  "sessionZero": {
+    "title": "Session 0",
+    "signInRequired": "Melde dich an, um die Session 0 dieses Raums zu sehen.",
+    "loadError": "Die Session 0 konnte nicht geladen werden.",
+    "notStarted": "Die Session 0 dieses Raums hat noch nicht begonnen. Starte sie, um das Retro-Board und das Board Grenzen & Schleier zu öffnen.",
+    "start": "Session 0 starten",
+    "actions": "Aktionen der Session 0",
+    "resize": "Grenzen & Schleier skalieren",
+    "delete": {
+      "action": "Session 0 löschen",
+      "title": "Diese Session 0 löschen?",
+      "body": "Alle Runden, Post-its (auch Entwürfe), Reaktionen, Gruppen, Grenzen & Schleier und der Timer sind endgültig weg. Danach kann jedes Mitglied eine neue Session 0 von vorn beginnen."
+    },
+    "indexLink": "Boards der Session 0",
+    "retro": {
+      "title": "Retro"
+    },
+    "linesVeils": {
+      "title": "Grenzen & Schleier",
+      "empty": "Noch keine Post-its.",
+      "add": "Hinzufügen"
+    },
+    "kinds": {
+      "must": "Must",
+      "veils": "Schleier",
+      "lines": "Grenzen"
+    },
+    "postIt": {
+      "text": "Text des Post-its",
+      "charactersLeft_one": "{{count}} Zeichen übrig",
+      "charactersLeft_other": "{{count}} Zeichen übrig",
+      "anonymous": "Anonym",
+      "actions": "Aktionen für das Post-it",
+      "publish": "Veröffentlichen",
+      "moveTo": "Nach {{column}} verschieben",
+      "promoteTo": "Nach {{column}} übernehmen",
+      "draft": "Entwurf",
+      "fromRetro": "aus der Retro",
+      "label": "Post-it von {{author}}",
+      "add": "Post-it hinzufügen",
+      "saveDraft": "Entwurf speichern"
+    },
+    "publish": {
+      "title": "Post-it veröffentlichen",
+      "body": "Nach dem Veröffentlichen sehen alle Mitglieder des Raums das Post-it, und es wird nicht wieder zum Entwurf. Du kannst es weiterhin bearbeiten oder löschen.",
+      "anonymous": "Anonym veröffentlichen",
+      "anonymousHint": "Niemand sieht, wer es geschrieben hat, auch nicht der Master."
+    },
+    "publishAll": {
+      "button_one": "Alle Entwürfe veröffentlichen ({{count}})",
+      "button_other": "Alle Entwürfe veröffentlichen ({{count}})",
+      "title": "Alle deine Entwürfe veröffentlichen",
+      "body_one": "Dein Entwurf in dieser Runde wird für alle Mitglieder sichtbar. Das lässt sich nicht rückgängig machen.",
+      "body_other": "Deine {{count}} Entwürfe in dieser Runde werden für alle Mitglieder sichtbar. Das lässt sich nicht rückgängig machen.",
+      "overLimit_one": "Das Board ist fast voll: {{count}} Entwurf bleibt ein Entwurf.",
+      "overLimit_other": "Das Board ist fast voll: {{count}} Entwürfe bleiben Entwürfe."
+    },
+    "groups": {
+      "groupWith": "Gruppieren mit…",
+      "groupWithBody": "Wähle ein Post-it oder eine Gruppe dieser Spalte.",
+      "takeOut": "Aus der Gruppe nehmen",
+      "untitled": "Gruppe",
+      "title": "Titel der Gruppe",
+      "actions": "Aktionen der Gruppe {{title}}",
+      "rename": "Gruppe umbenennen",
+      "ungroupAll": "Gruppe auflösen",
+      "count_one": "{{count}} Post-it",
+      "count_other": "{{count}} Post-its"
+    },
+    "columns": {
+      "actions": "Aktionen für die Spalte {{title}}",
+      "add": "Spalte hinzufügen",
+      "rename": "Umbenennen",
+      "moveLeft": "Nach links",
+      "moveRight": "Nach rechts",
+      "title": "Titel der Spalte",
+      "deleteTitle": "Spalte löschen?",
+      "deleteBody": "Die Spalte „{{title}}“ wird mit allen ihren Post-its gelöscht.",
+      "color": "Farbe"
+    },
+    "rounds": {
+      "first": "Session 0",
+      "later": "Session 0.5 #{{number}}",
+      "pick": "Angezeigte Session",
+      "start": "Session 0.5 starten",
+      "startBody": "Das aktuelle Retro-Board wird geschlossen und bleibt schreibgeschützt lesbar; nie veröffentlichte Entwürfe werden gelöscht. Das neue Board beginnt leer, mit denselben Spalten. Grenzen & Schleier bleibt, wie es ist.",
+      "title": "Titel (optional)",
+      "titlePlaceholder": "Ende von Arc 1",
+      "startButton": "Starten",
+      "closed": "Diese Session ist geschlossen: Das Board ist schreibgeschützt."
+    },
+    "timer": {
+      "label": "Timer",
+      "none": "Kein Timer",
+      "expired": "Zeit abgelaufen",
+      "paused": "Pausiert",
+      "actions": "Timer verwalten",
+      "start": "Timer starten",
+      "minutes_one": "{{count}} Minute",
+      "minutes_other": "{{count}} Minuten",
+      "custom": "Eigene Dauer",
+      "length": "Minuten",
+      "lengthHint": "Von {{min}} bis {{max}} Minuten",
+      "startButton": "Starten",
+      "pause": "Pausieren",
+      "resume": "Fortsetzen",
+      "stop": "Stoppen und zurücksetzen"
     }
   }
 }

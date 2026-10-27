@@ -118,7 +118,10 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
 
     expect(await screen.findByRole('link', { name: 'Il tuo account' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1, name: 'Ex Libris' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Il taccuino condiviso della tua campagna' }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('Ex Libris').length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: 'Apri le mie Stanze' })).toHaveAttribute('href', '/rooms');
     expect(screen.queryByRole('button', { name: /Accedi con Google/ })).not.toBeInTheDocument();
   });

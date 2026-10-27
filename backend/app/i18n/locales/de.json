@@ -250,6 +250,34 @@
     },
     "mentionSuggestions": {
       "stale": "Diese Texte wurden nach der Vorschau geändert: Lade sie neu und versuche es noch einmal"
+    },
+    "sessionZero": {
+      "notMaster": "Nur der Master kann das tun",
+      "notAuthor": "Nur der Autor des Post-its kann das tun",
+      "roundClosed": "Diese Runde ist geschlossen und schreibgeschützt",
+      "notRetroColumn": "Das geht nur in einer Retro-Spalte der offenen Runde",
+      "notLinesVeils": "Das geht nur auf dem Board Grenzen & Schleier",
+      "promoteRetroToLinesVeils": "Nur ein Retro-Post-it kann in eine Spalte von Grenzen & Schleier übernommen werden",
+      "invalidBody": "Ein Post-it braucht Text, höchstens {max} Zeichen",
+      "invalidTitle": "Der Titel muss 1 bis {max} Zeichen haben",
+      "alreadyPublished": "Dieses Post-it ist bereits veröffentlicht",
+      "draft": "Ein Entwurf ist noch nicht geteilt",
+      "alreadyPromoted": "Diese Spalte hat schon eine Kopie dieses Post-its",
+      "copyNotEditable": "Eine Kopie in Grenzen & Schleier kann nicht bearbeitet werden",
+      "boardFull": "Ein Board fasst höchstens {max} Post-its",
+      "tooManyColumns": "Eine Runde hat höchstens {max} Spalten",
+      "timerLength": "Der Timer läuft {min} bis {max} Sekunden",
+      "timerNotRunning": "Der Timer läuft nicht",
+      "timerNotPaused": "Der Timer ist nicht pausiert",
+      "tooManyEmoji": "Ein Post-it kann höchstens {max} verschiedene Emoji haben",
+      "notStarted": "Die Session 0 dieses Raums hat noch nicht begonnen",
+      "cardNotFound": "Post-it nicht gefunden",
+      "columnNotFound": "Spalte nicht gefunden",
+      "roundNotFound": "Runde nicht gefunden",
+      "columnOrder": "Die neue Reihenfolge muss jede Spalte der Runde einmal nennen",
+      "notGroupable": "Gruppieren lassen sich nur zwei oder mehr veröffentlichte Post-its derselben Retro-Spalte der offenen Runde",
+      "groupNotFound": "Gruppe nicht gefunden",
+      "nothingToChange": "Nichts zu ändern"
     }
   },
   "pdf": {
@@ -264,5 +292,12 @@
   },
   "room": {
     "copySuffix": " (Kopie)"
+  },
+  "sessionZero": {
+    "presets": {
+      "want": "Das wollen wir am Tisch",
+      "care": "Mit Vorsicht",
+      "avoid": "Zu vermeiden"
+    }
   }
 }

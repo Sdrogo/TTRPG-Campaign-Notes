@@ -1,6 +1,17 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Anchor, Box, Button, Card, Container, Group, Image, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import {
+  Anchor,
+  Box,
+  Button,
+  Container,
+  Group,
+  Image,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 import {
   ChatsCircleIcon,
   ExportIcon,
@@ -43,7 +54,12 @@ function scrollToSignIn() {
 function LandingTopBar() {
   const { t } = useTranslation();
   return (
-    <Box component="header" px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="sm">
+    <Box
+      component="header"
+      px={{ base: 'sm', sm: 'lg', lg: 'xl' }}
+      py="sm"
+      className="landing-topbar"
+    >
       <Group justify="space-between" wrap="nowrap">
         <Group gap="xs" wrap="nowrap">
           <Image src="/favicon.svg" alt="" w={32} h={32} />
@@ -83,43 +99,65 @@ export function LandingPage({ signedIn }: LandingPageProps) {
   return (
     <>
       {signedIn ? <AppHeader /> : <LandingTopBar />}
-      <Container component="main" size="lg" px={{ base: 'md', sm: 'lg' }} pb="xl">
-        <Stack gap={64}>
-          <Stack component="section" align="center" gap="md" pt={{ base: 'xl', sm: 64 }} ta="center">
-            <Image src="/favicon.svg" alt="" w={96} h={96} />
-            <Title order={1} fz={{ base: 40, sm: 56 }}>
-              {t('app.name')}
-            </Title>
-            <Text fz="xl">{t('landing.tagline')}</Text>
-            <Text c="dimmed" maw={640}>
-              {t('landing.intro')}
-            </Text>
-            <Group justify="center" gap="sm">
-              {/* A plain link: entering the Demo is a full page load (spec 45_2). */}
-              <Button component="a" href="/demo" size="md">
-                {t('landing.tryDemo')}
-              </Button>
-              {signedIn ? (
-                <Button component={Link} to="/rooms" size="md" variant="default">
-                  {t('landing.openMyRooms')}
+      <Container component="main" size="xl" px={{ base: 'md', sm: 'xl' }} pb="xl">
+        <Stack gap="xl" className="landing-sections">
+          <Box component="section" className="landing-hero">
+            <Stack gap="lg" className="landing-hero-copy">
+              <Group gap="sm" wrap="nowrap" className="landing-wordmark">
+                <Image src="/favicon.svg" alt="" w={40} h={40} />
+                <Text tt="uppercase" fw={600} size="xs">
+                  {t('app.name')}
+                </Text>
+              </Group>
+              <Title order={1} className="landing-hero-title">
+                {t('landing.tagline')}
+              </Title>
+              <Text c="dimmed" size="lg" maw={640}>
+                {t('landing.intro')}
+              </Text>
+              <Group gap="sm">
+                {/* A plain link: entering the Demo is a full page load (spec 45_2). */}
+                <Button component="a" href="/demo" size="md">
+                  {t('landing.tryDemo')}
                 </Button>
-              ) : (
-                <Button size="md" variant="default" onClick={scrollToSignIn}>
-                  {t('landing.signIn')}
-                </Button>
-              )}
-            </Group>
-          </Stack>
+                {signedIn ? (
+                  <Button component={Link} to="/rooms" size="md" variant="default">
+                    {t('landing.openMyRooms')}
+                  </Button>
+                ) : (
+                  <Button size="md" variant="default" onClick={scrollToSignIn}>
+                    {t('landing.signIn')}
+                  </Button>
+                )}
+              </Group>
+            </Stack>
+            <Box className="landing-hero-mark" aria-hidden="true">
+              <Image src="/favicon.svg" alt="" w="100%" h="100%" />
+            </Box>
+          </Box>
 
-          <Stack component="section" gap="lg" aria-labelledby="landing-features">
-            <Title order={2} id="landing-features" ta="center">
-              {t('landing.featuresTitle')}
-            </Title>
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-              {FEATURES.map(({ key, icon: FeatureIcon, tour }) => (
-                <Card key={key} withBorder radius="md" p="lg">
-                  <Stack gap="xs">
-                    <FeatureIcon size={32} weight="duotone" color="var(--text-muted)" aria-hidden="true" />
+          <Box component="section" className="landing-editorial-section" aria-labelledby="landing-features">
+            <Box className="landing-section-heading">
+              <Text className="landing-section-index" aria-hidden="true">
+                I
+              </Text>
+              <Title order={2} id="landing-features">
+                {t('landing.featuresTitle')}
+              </Title>
+            </Box>
+            <Box className="landing-feature-list">
+              {FEATURES.map(({ key, icon: FeatureIcon, tour }, index) => (
+                <Box key={key} className="landing-feature">
+                  <Text className="landing-feature-number" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </Text>
+                  <FeatureIcon
+                    size={28}
+                    weight="duotone"
+                    color="var(--text-muted)"
+                    aria-hidden="true"
+                  />
+                  <Stack gap={6}>
                     <Title order={3} fz="h4">
                       {t(`landing.features.${key}.title`)}
                     </Title>
@@ -132,41 +170,64 @@ export function LandingPage({ signedIn }: LandingPageProps) {
                       </Anchor>
                     )}
                   </Stack>
-                </Card>
+                </Box>
               ))}
-            </SimpleGrid>
-          </Stack>
+            </Box>
+          </Box>
 
-          <Stack component="section" gap="lg" aria-labelledby="landing-steps">
-            <Title order={2} id="landing-steps" ta="center">
-              {t('landing.stepsTitle')}
-            </Title>
-            <SimpleGrid component="ol" cols={{ base: 1, sm: 3 }} spacing="md" p={0} m={0} style={{ listStyle: 'none' }}>
+          <Box component="section" className="landing-steps" aria-labelledby="landing-steps">
+            <Group justify="space-between" align="baseline">
+              <Title order={2} id="landing-steps">
+                {t('landing.stepsTitle')}
+              </Title>
+              <Text className="landing-section-index" aria-hidden="true">
+                II
+              </Text>
+            </Group>
+            <SimpleGrid
+              component="ol"
+              cols={{ base: 1, sm: 3 }}
+              spacing={0}
+              p={0}
+              m={0}
+              className="landing-step-list"
+            >
               {STEPS.map((step, index) => (
-                <Group component="li" key={step} gap="md" wrap="nowrap" align="flex-start">
-                  <Text fz={36} lh={1} c="dimmed" ff="var(--font-display)" aria-hidden="true">
-                    {index + 1}
+                <Stack component="li" key={step} gap="sm" className="landing-step">
+                  <Text className="landing-step-number" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
                   </Text>
                   <Text>{t(`landing.steps.${step}`)}</Text>
-                </Group>
+                </Stack>
               ))}
             </SimpleGrid>
-          </Stack>
+          </Box>
 
           {!signedIn && (
-            <Stack component="section" id={SIGN_IN_ANCHOR} align="center" gap="md" aria-labelledby="landing-sign-in">
-              <Title order={2} id="landing-sign-in" ta="center">
-                {t('landing.signInTitle')}
-              </Title>
-              <Text c="dimmed" ta="center">
-                {t('auth.prompt')}
-              </Text>
+            <Box
+              component="section"
+              id={SIGN_IN_ANCHOR}
+              className="landing-sign-in"
+              aria-labelledby="landing-sign-in"
+            >
+              <Stack gap="xs">
+                <Text className="landing-section-index" aria-hidden="true">
+                  III
+                </Text>
+                <Title order={2} id="landing-sign-in">
+                  {t('landing.signInTitle')}
+                </Title>
+                <Text c="dimmed">{t('auth.prompt')}</Text>
+              </Stack>
               <SignInButtons />
-            </Stack>
+            </Box>
           )}
 
           {/* The privacy notice is readable before signing in (spec 31_3). */}
-          <Group component="footer" justify="center">
+          <Group component="footer" justify="space-between" className="landing-footer">
+            <Text size="sm" c="dimmed">
+              {t('app.name')}
+            </Text>
             <Anchor component={Link} to="/privacy" size="sm" c="dimmed">
               {t('auth.privacy')}
             </Anchor>

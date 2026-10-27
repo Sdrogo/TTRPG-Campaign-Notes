@@ -250,6 +250,34 @@
     },
     "mentionSuggestions": {
       "stale": "Ces textes ont changé après l'aperçu : rechargez-le et réessayez"
+    },
+    "sessionZero": {
+      "notMaster": "Seul le Master peut faire cela",
+      "notAuthor": "Seul l'auteur du post-it peut faire cela",
+      "roundClosed": "Ce tour est clos et en lecture seule",
+      "notRetroColumn": "Cela ne marche que sur une colonne Rétro du tour ouvert",
+      "notLinesVeils": "Cela ne marche que sur le tableau Lignes et Voiles",
+      "promoteRetroToLinesVeils": "Seul un post-it de la Rétro peut être promu, dans une colonne de Lignes et Voiles",
+      "invalidBody": "Un post-it doit avoir un texte, {max} caractères au plus",
+      "invalidTitle": "Le titre doit faire de 1 à {max} caractères",
+      "alreadyPublished": "Ce post-it est déjà publié",
+      "draft": "Un brouillon n'est pas encore partagé",
+      "alreadyPromoted": "Cette colonne a déjà une copie de ce post-it",
+      "copyNotEditable": "Une copie dans Lignes et Voiles ne peut pas être modifiée",
+      "boardFull": "Un tableau contient au plus {max} post-its",
+      "tooManyColumns": "Un tour a au plus {max} colonnes",
+      "timerLength": "Le minuteur va de {min} à {max} secondes",
+      "timerNotRunning": "Le minuteur ne tourne pas",
+      "timerNotPaused": "Le minuteur n'est pas en pause",
+      "tooManyEmoji": "Un post-it peut avoir au plus {max} emoji différents",
+      "notStarted": "La Session 0 de cette Salle n'a pas encore commencé",
+      "cardNotFound": "Post-it introuvable",
+      "columnNotFound": "Colonne introuvable",
+      "roundNotFound": "Tour introuvable",
+      "columnOrder": "Le nouvel ordre doit citer une fois chaque colonne du tour",
+      "notGroupable": "Seuls deux post-it publiés ou plus d'une même colonne de la Rétro du tour ouvert peuvent être groupés",
+      "groupNotFound": "Groupe introuvable",
+      "nothingToChange": "Rien à modifier"
     }
   },
   "pdf": {
@@ -264,5 +292,12 @@
   },
   "room": {
     "copySuffix": " (Copie)"
+  },
+  "sessionZero": {
+    "presets": {
+      "want": "On le veut à la table",
+      "care": "Avec précaution",
+      "avoid": "À éviter"
+    }
   }
 }
