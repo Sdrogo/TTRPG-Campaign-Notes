@@ -35,6 +35,16 @@ describe('TimerBar', () => {
     expect(screen.queryByRole('button', { name: 'Gestisci il timer' })).not.toBeInTheDocument();
   });
 
+  it('counts a timer started after a long pause from the moment it was read', () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    vi.setSystemTime(NOW);
+    const later = NOW + 600_000;
+    renderBoard(<TimerBar readAtMs={later} />, {
+      board: { timer: { ...running(0), ends_at: at(later + 300_000), now: at(later) } },
+    });
+    expect(screen.getByRole('timer')).toHaveTextContent('5:00');
+  });
+
   it("says time's up at zero, and lets the Master stop it but not pause it", async () => {
     const { act, user } = renderBoard(<TimerBar readAtMs={Date.now()} />, {
       board: { can_manage: true, timer: { ...running(0), ends_at: at(NOW - 5000) } },

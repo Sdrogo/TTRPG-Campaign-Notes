@@ -32,7 +32,9 @@ export function TimerBar({ readAtMs }: TimerBarProps) {
   const [custom, setCustom] = useState(false);
   const timer = board.timer;
   const running = timer?.state === 'running';
-  const left = timer ? secondsLeft(timer, now, readAtMs) : null;
+  // `now` stands still while the timer does: a board read since then (a
+  // start or resume) is the later clock reading until the next tick.
+  const left = timer ? secondsLeft(timer, Math.max(now, readAtMs), readAtMs) : null;
   const manage = writable && board.canManage;
 
   useEffect(() => {
