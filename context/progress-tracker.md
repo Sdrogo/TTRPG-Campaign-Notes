@@ -751,7 +751,8 @@ on `main`.
   groups their own post-its. **Migration `d4a7e2c9f1b3`** (post-it and
   group `position`): **applied to the staging DB** on 2026-10-27
   (`alembic upgrade head` with `.env.staging`, staging = `d4a7e2c9f1b3`,
-  head); still to apply to production before the next release to main.
+  head) and **to production** the same day (`alembic upgrade head` with
+  `.env`, production = `d4a7e2c9f1b3`, head).
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product
