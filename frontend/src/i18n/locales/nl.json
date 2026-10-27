@@ -1021,7 +1021,7 @@
       },
       "retention": {
         "title": "Hoe lang we ze bewaren",
-        "body": "- Je account en je profiel blijven bestaan tot je het account verwijdert.\n- Wanneer je het account verwijdert, worden profiel, avatar, Vrienden, reacties en inlogaccount meteen gewist. Kamers waarin jij het enige lid was, worden met alle inhoud verwijderd. In Kamers die je met anderen deelt, blijft wat je hebt geschreven staan als onderdeel van de campagne, getoond als geschreven door een onbekende gebruiker.\n- Een Kamer die je verwijdert, wordt met alle inhoud gewist.\n- De pdf's van Kamers worden 24 uur na het aanmaken gewist, en de importen van Documenten 7 dagen na afloop.\n- Serverlogs worden alleen bewaard zolang dat nodig is voor de werking en de beveiliging, en worden roulerend overschreven.\n- Back-ups van onze leveranciers worden overschreven binnen hun back-upcyclus."
+        "body": "- Je account en je profiel blijven bestaan tot je het account verwijdert.\n- Wanneer je het account verwijdert, worden profiel, avatar, Vrienden, reacties, Sessie 0-post-its en inlogaccount meteen gewist. Kamers waarin jij het enige lid was, worden met alle inhoud verwijderd. In Kamers die je met anderen deelt, blijft wat je hebt geschreven staan als onderdeel van de campagne, getoond als geschreven door een onbekende gebruiker.\n- Een Kamer die je verwijdert, wordt met alle inhoud gewist.\n- De pdf's van Kamers worden 24 uur na het aanmaken gewist, en de importen van Documenten 7 dagen na afloop.\n- Serverlogs worden alleen bewaard zolang dat nodig is voor de werking en de beveiliging, en worden roulerend overschreven.\n- Back-ups van onze leveranciers worden overschreven binnen hun back-upcyclus."
       },
       "rights": {
         "title": "Jouw rechten",

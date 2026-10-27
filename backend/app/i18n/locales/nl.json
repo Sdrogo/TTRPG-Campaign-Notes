@@ -250,6 +250,31 @@
     },
     "mentionSuggestions": {
       "stale": "Deze teksten zijn na de voorvertoning gewijzigd: laad die opnieuw en probeer het nog eens"
+    },
+    "sessionZero": {
+      "notMaster": "Alleen de Master kan dit doen",
+      "notAuthor": "Alleen de auteur van het post-it kan dit doen",
+      "roundClosed": "Deze ronde is gesloten en alleen-lezen",
+      "notRetroColumn": "Dit werkt alleen in een Retro-kolom van de open ronde",
+      "notLinesVeils": "Dit werkt alleen op het bord Lijnen en Sluiers",
+      "promoteRetroToLinesVeils": "Alleen een Retro-post-it kan worden gepromoveerd, naar een kolom van Lijnen en Sluiers",
+      "invalidBody": "Een post-it heeft tekst nodig, hoogstens {max} tekens",
+      "invalidTitle": "De titel moet 1 tot {max} tekens hebben",
+      "alreadyPublished": "Dit post-it is al gepubliceerd",
+      "draft": "Een concept is nog niet gedeeld",
+      "alreadyPromoted": "Die kolom heeft al een kopie van dit post-it",
+      "copyNotEditable": "Een kopie in Lijnen en Sluiers kan niet worden bewerkt",
+      "boardFull": "Een bord bevat hoogstens {max} post-its",
+      "tooManyColumns": "Een ronde heeft hoogstens {max} kolommen",
+      "timerLength": "De timer loopt van {min} tot {max} seconden",
+      "timerNotRunning": "De timer loopt niet",
+      "timerNotPaused": "De timer is niet gepauzeerd",
+      "tooManyEmoji": "Een post-it kan hoogstens {max} verschillende emoji hebben",
+      "notStarted": "Sessie 0 van deze Kamer is nog niet begonnen",
+      "cardNotFound": "Post-it niet gevonden",
+      "columnNotFound": "Kolom niet gevonden",
+      "roundNotFound": "Ronde niet gevonden",
+      "columnOrder": "De nieuwe volgorde moet elke kolom van de ronde één keer noemen"
     }
   },
   "pdf": {
@@ -264,5 +289,13 @@
   },
   "room": {
     "copySuffix": " (Kopie)"
+  },
+  "sessionZero": {
+    "presets": {
+      "want": "Dit willen we aan tafel",
+      "care": "Met zorg",
+      "avoid": "Te vermijden",
+      "questions": "Vragen"
+    }
   }
 }

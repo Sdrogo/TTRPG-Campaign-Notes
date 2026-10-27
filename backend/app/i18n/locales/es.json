@@ -250,6 +250,31 @@
     },
     "mentionSuggestions": {
       "stale": "Estos textos cambiaron después de la vista previa: vuelve a cargarla e inténtalo de nuevo"
+    },
+    "sessionZero": {
+      "notMaster": "Solo el Master puede hacerlo",
+      "notAuthor": "Solo el autor del pósit puede hacerlo",
+      "roundClosed": "Esta ronda está cerrada y es de solo lectura",
+      "notRetroColumn": "Solo funciona en una columna de la Retro de la ronda abierta",
+      "notLinesVeils": "Solo funciona en el tablero Líneas y Velos",
+      "promoteRetroToLinesVeils": "Solo un pósit de la Retro se puede promover, a una columna de Líneas y Velos",
+      "invalidBody": "Un pósit necesita texto, como máximo {max} caracteres",
+      "invalidTitle": "El título debe tener de 1 a {max} caracteres",
+      "alreadyPublished": "Este pósit ya está publicado",
+      "draft": "Un borrador aún no está compartido",
+      "alreadyPromoted": "Esa columna ya tiene una copia de este pósit",
+      "copyNotEditable": "Una copia en Líneas y Velos no se puede editar",
+      "boardFull": "Un tablero admite como máximo {max} pósits",
+      "tooManyColumns": "Una ronda tiene como máximo {max} columnas",
+      "timerLength": "El temporizador va de {min} a {max} segundos",
+      "timerNotRunning": "El temporizador no está en marcha",
+      "timerNotPaused": "El temporizador no está en pausa",
+      "tooManyEmoji": "Un pósit puede tener como máximo {max} emojis distintos",
+      "notStarted": "La Sesión 0 de esta Sala aún no ha empezado",
+      "cardNotFound": "Pósit no encontrado",
+      "columnNotFound": "Columna no encontrada",
+      "roundNotFound": "Ronda no encontrada",
+      "columnOrder": "El nuevo orden debe incluir una vez cada columna de la ronda"
     }
   },
   "pdf": {
@@ -264,5 +289,13 @@
   },
   "room": {
     "copySuffix": " (Copia)"
+  },
+  "sessionZero": {
+    "presets": {
+      "want": "Lo queremos en la mesa",
+      "care": "Con cuidado",
+      "avoid": "A evitar",
+      "questions": "Preguntas"
+    }
   }
 }

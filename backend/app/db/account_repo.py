@@ -25,6 +25,8 @@ from app.db.models import (
     PostVisibilityGrantRow,
     RelationshipMapGrantRow,
     RevealRecipientRow,
+    SessionZeroCardReactionRow,
+    SessionZeroCardRow,
     UserRow,
 )
 from app.domain.models import Comment, PostKind
@@ -34,9 +36,11 @@ async def erase_personal_rows(session: AsyncSession, user_id: uuid.UUID) -> None
     """Spec 31_1 Decision 3: deletes everything that records the user as a
     person - profile, Friendships and friend code, reactions, reads, Reveal
     receipts, Ownerships, visibility grants (relationship maps' included,
-    spec 28_1) and invitations addressed to them. Their Memberships are gone
-    already (left or deleted with their Room); what they wrote stays, with no
-    profile behind it. Ids left in audit entries, versions and `created_by`
+    spec 28_1) and invitations addressed to them, plus their Session 0
+    post-its (anonymous ones and copies too) and reactions on post-its
+    (spec 46 Decision 14). Their Memberships are gone already (left or
+    deleted with their Room); what else they wrote stays, with no profile
+    behind it. Ids left in audit entries, versions and `created_by`
     columns no longer lead to anyone once the auth account is deleted too."""
     await session.execute(
         delete(FriendshipRow).where(
@@ -53,8 +57,10 @@ async def erase_personal_rows(session: AsyncSession, user_id: uuid.UUID) -> None
         NoteVisibilityGrantRow,
         PostVisibilityGrantRow,
         RelationshipMapGrantRow,
+        SessionZeroCardReactionRow,
     ):
         await session.execute(delete(model).where(model.user_id == user_id))
+    await session.execute(delete(SessionZeroCardRow).where(SessionZeroCardRow.author_id == user_id))
     await session.execute(delete(InvitationRow).where(InvitationRow.invitee_user_id == user_id))
     await session.execute(delete(UserRow).where(UserRow.id == user_id))
     await session.flush()

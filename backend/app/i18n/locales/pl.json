@@ -250,6 +250,31 @@
     },
     "mentionSuggestions": {
       "stale": "Te teksty zmieniły się po podglądzie: odśwież go i spróbuj ponownie"
+    },
+    "sessionZero": {
+      "notMaster": "Tylko Master może to zrobić",
+      "notAuthor": "Tylko autor karteczki może to zrobić",
+      "roundClosed": "Ta runda jest zamknięta i tylko do odczytu",
+      "notRetroColumn": "Działa tylko w kolumnie Retro otwartej rundy",
+      "notLinesVeils": "Działa tylko na tablicy Linie i Zasłony",
+      "promoteRetroToLinesVeils": "Awansować można tylko karteczkę z Retro, do kolumny Linii i Zasłon",
+      "invalidBody": "Karteczka potrzebuje tekstu, najwyżej {max} znaków",
+      "invalidTitle": "Tytuł musi mieć od 1 do {max} znaków",
+      "alreadyPublished": "Ta karteczka jest już opublikowana",
+      "draft": "Szkic nie jest jeszcze udostępniony",
+      "alreadyPromoted": "Ta kolumna ma już kopię tej karteczki",
+      "copyNotEditable": "Kopii w Liniach i Zasłonach nie można edytować",
+      "boardFull": "Tablica mieści najwyżej {max} karteczek",
+      "tooManyColumns": "Runda ma najwyżej {max} kolumn",
+      "timerLength": "Minutnik trwa od {min} do {max} sekund",
+      "timerNotRunning": "Minutnik nie działa",
+      "timerNotPaused": "Minutnik nie jest wstrzymany",
+      "tooManyEmoji": "Karteczka może mieć najwyżej {max} różnych emoji",
+      "notStarted": "Sesja 0 tego Pokoju jeszcze się nie zaczęła",
+      "cardNotFound": "Nie znaleziono karteczki",
+      "columnNotFound": "Nie znaleziono kolumny",
+      "roundNotFound": "Nie znaleziono rundy",
+      "columnOrder": "Nowa kolejność musi wymieniać każdą kolumnę rundy raz"
     }
   },
   "pdf": {
@@ -264,5 +289,13 @@
   },
   "room": {
     "copySuffix": " (Kopia)"
+  },
+  "sessionZero": {
+    "presets": {
+      "want": "Chcemy tego przy stole",
+      "care": "Ostrożnie",
+      "avoid": "Do unikania",
+      "questions": "Pytania"
+    }
   }
 }

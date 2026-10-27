@@ -136,31 +136,42 @@ those items stay out entirely). The ticket is confirmed.
   - `session_zero_rounds` (`id`, `room_id`, `number`, `title`,
     `started_at`, `closed_at` null = the open round); one open round per
     Room (partial unique index);
-  - `session_zero_columns` (`id`, `room_id`, `board` `'retro'|'lines_veils'`,
-    `round_id` for Retro columns, null for Lines & Veils, `kind` null or
-    `'must'|'lines'|'veils'`, `title`, `position`);
+  - `session_zero_columns` (`id`, `room_id`, `round_id` for Retro columns,
+    null for Lines & Veils, `kind` null or `'must'|'lines'|'veils'`,
+    `title`, `position`); a check constraint keeps exactly one of
+    `round_id` and `kind` set, and each `kind` exists once per Room;
   - `session_zero_cards` (`id`, `room_id`, `column_id`, `author_id`, `body`,
     `anonymous`, `published_at` null = draft, `source_card_id` null or the
     Retro original (`ON DELETE SET NULL`), `promoted_by` null or the user
-    who promoted it, `position`, `created_at`, `updated_at`); unique
+    who promoted it, `created_at`, `updated_at`; post-its are listed
+    oldest first, with no manual order); unique
     (`source_card_id`, `column_id`). A promoted copy takes the original's
     `author_id`, `anonymous` and `body`, and is published at once, so
-    Decisions 7 and 8 still work once the original is deleted;
+    Decisions 7 and 8 still work once the original is deleted. A copy
+    can't be edited (409); it can be moved, and deleted by the Master or
+    the original's author;
   - `session_zero_card_reactions` (`card_id`, `user_id`, `emoji`,
     `created_at`), as `comment_reactions`.
-- Domain `app/domain/session_zero.py` (pure): `plan_publish`,
-  `plan_promote` (published Retro original, target is a Lines & Veils
+- Domain `app/domain/session_zero.py` (pure): `ensure_can_publish`,
+  `ensure_can_promote` (published Retro original, target is a Lines & Veils
   column, Master only (Decision 8), 409 on a second copy in the same column),
-  `ensure_can_edit_card` / `ensure_can_delete_card`, column rules, timer
+  `ensure_can_move`, `ensure_can_edit_card` / `ensure_can_delete_card`,
+  column rules, timer
   rules (`start`, `pause`, `resume`, `stop`, a remaining time computed from
   `timer_ends_at` so clients only need the end time), limits. Emoji parsing
   reuses `app/domain/reactions.py::parse_emoji`.
 - Routes `app/api/session_zero.py` under `/rooms/{id}/session-zero`:
-  `GET` (`?round=` defaults to the open round; both boards as the caller
+  `GET` (`?round_id=` defaults to the open round; both boards as the caller
   sees them, plus the list of rounds: their own drafts plus all
   published post-its, `author` omitted on anonymous ones unless the caller
-  wrote it, `mine`, `can_edit`, `can_delete`, `can_promote`, reactions,
-  timer, `revision`); `POST .../cards`, `PATCH`/`DELETE .../cards/{card}`,
+  wrote it, `mine`, `can_edit`, `can_delete`, `can_publish`,
+  `can_promote`, `can_move`, `can_react`, reactions, timer, `revision`;
+  `started: false` and empty boards before the Room's Session 0 starts);
+  `POST .../start` (any member, idempotent: round 1 with the four preset
+  Retro columns in the starter's language plus Must / Lines / Veils; a
+  separate write because `GET` never writes, and other writes answer 409
+  before it); `POST .../cards` `{column_id, body}`, `PATCH`/`DELETE
+  .../cards/{card}`,
   `POST .../cards/{card}/publish` `{anonymous}`,
   `POST .../cards/{card}/promote` `{column_id}`, `PUT`/`DELETE
   .../cards/{card}/reactions/{emoji}`, `POST/PATCH/DELETE .../columns`,
@@ -172,7 +183,8 @@ those items stay out entirely). The ticket is confirmed.
   shared write (anything but a draft) bumps `revision` under the Room's
   `session_zero` row lock. 404 for a
   draft that isn't the caller's (never 403, so a draft's existence never
-  leaks). View-as refuses writes as usual.
+  leaks). View-as refuses writes as usual. Every write answers with the
+  boards as the caller now sees them, like `GET`.
 - Account deletion and data export (spec 31) cover the new rows.
 
 ### Backend: live push (46_2)

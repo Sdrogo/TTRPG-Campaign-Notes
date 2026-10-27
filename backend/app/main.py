@@ -37,6 +37,7 @@ from app.api.room_copy import router as room_copy_router
 from app.api.room_image import router as room_image_router
 from app.api.rooms import router as rooms_router
 from app.api.search import router as search_router
+from app.api.session_zero import router as session_zero_router
 from app.api.tags import router as tags_router
 from app.api.versions import router as versions_router
 from app.config import Settings, settings
@@ -106,6 +107,7 @@ app.include_router(geographic_maps_router)
 app.include_router(map_files_router)
 app.include_router(mention_maps_router)
 app.include_router(linked_maps_router)
+app.include_router(session_zero_router)
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
