@@ -21,9 +21,9 @@
 
 ## Decisions
 
-Decisions 1-6 were taken with the product owner in the brainstorm thread on
-2026-10-27; 7-15 are defaults picked the same day, to confirm on this
-ticket.
+Decisions 1-6 and 8 were taken with the product owner in the brainstorm
+thread on 2026-10-27; 7 and 9-15 are defaults picked the same day, to
+confirm on this ticket.
 
 1. **Draft, then publish** (product owner): a new post-it is a draft only
    its author sees, the Master included. "Publish" makes it visible to every
@@ -59,8 +59,9 @@ ticket.
    included; the server keeps `author_id` only so the author can edit or
    delete it, and never sends it to anyone else. A promoted copy keeps its
    original's choice and shows the original author the same way.
-8. **Who promotes**: the Master promotes any published post-it; a Player
-   promotes their own. Players cannot move others' post-its. A Lines &
+8. **Only the Master promotes** (product owner, 2026-10-27): the Master
+   promotes any published post-it, by button or drag; Players never
+   promote, not even their own (403), and see no Promote action or drag. A Lines &
    Veils copy is deleted by the Master or by the original's author.
 9. **Editing and deleting**: the author edits the text of their draft or
    published post-it (published edits go live, Decision 3) and deletes it;
@@ -112,7 +113,7 @@ ticket.
     `created_at`), as `comment_reactions`.
 - Domain `app/domain/session_zero.py` (pure): `plan_publish`,
   `plan_promote` (published Retro original, target is a Lines & Veils
-  column, Decision 8 rights, 409 on a second copy in the same column),
+  column, Master only (Decision 8), 409 on a second copy in the same column),
   `ensure_can_edit_card` / `ensure_can_delete_card`, column rules, timer
   rules (`start`, `pause`, `resume`, `stop`, a remaining time computed from
   `timer_ends_at` so clients only need the end time), limits. Emoji parsing
@@ -170,7 +171,7 @@ ticket.
   generalised), "⋮" with Publish, Edit, Promote to Lines / Veils, Delete as
   allowed. Publishing opens a small dialog with the anonymous switch.
 - Drag and drop with native HTML5 drag (no new dependency; the app has no
-  drag-and-drop library besides `@xyflow/react` for maps), only from a published Retro post-it the caller may promote
+  drag-and-drop library besides `@xyflow/react` for maps), only from a published Retro post-it, for the Master only,
   onto a Lines & Veils column; dropping calls promote.
 - Master tools: timer menu (5/10/15/custom, pause, resume, stop), column
   add/rename/reorder/delete.
@@ -190,8 +191,8 @@ ticket.
 
 - Backend: a draft is invisible (404) to everyone but its author, the
   Master included; publish shows it to all; anonymous hides the author from
-  everyone else in every response; promote rights (Master any, Player own,
-  not a draft, not to the Retro, 409 twice to the same column); editing the
+  everyone else in every response; promote rights (Master any, a Player never,
+  their own included, 403; not a draft, not to the Retro, 409 twice to the same column); editing the
   original leaves the copy; deleting it keeps the copy; reactions only on
   published post-its; timer start/pause/resume/stop and remaining time;
   column rules and limits; shared writes bump `revision`; view-as refuses writes;
@@ -203,7 +204,7 @@ ticket.
 - Promotion: the copy keeps the original's author and anonymity after the
   original is deleted, and that author can still delete it.
 - Frontend: drafts render with the badge; Promote menu and drop call the
-  same mutation; an event triggers a refetch; the timer counts down from
+  same mutation and are absent for a Player; an event triggers a refetch; the timer counts down from
   `timer_ends_at`.
 
 ## Build estimate
