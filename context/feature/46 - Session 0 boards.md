@@ -103,8 +103,11 @@ ticket.
     `kind` null or `'lines'|'veils'`, `title`, `position`);
   - `session_zero_cards` (`id`, `room_id`, `column_id`, `author_id`, `body`,
     `anonymous`, `published_at` null = draft, `source_card_id` null or the
-    Retro original (`ON DELETE SET NULL`), `position`, `created_at`,
-    `updated_at`); unique (`source_card_id`, `column_id`);
+    Retro original (`ON DELETE SET NULL`), `promoted_by` null or the user
+    who promoted it, `position`, `created_at`, `updated_at`); unique
+    (`source_card_id`, `column_id`). A promoted copy takes the original's
+    `author_id`, `anonymous` and `body`, and is published at once, so
+    Decisions 7 and 8 still work once the original is deleted;
   - `session_zero_card_reactions` (`card_id`, `user_id`, `emoji`,
     `created_at`), as `comment_reactions`.
 - Domain `app/domain/session_zero.py` (pure): `plan_publish`,
@@ -123,7 +126,8 @@ ticket.
   `POST .../cards/{card}/promote` `{column_id}`, `PUT`/`DELETE
   .../cards/{card}/reactions/{emoji}`, `POST/PATCH/DELETE .../columns`,
   `PUT .../columns/order`, `POST .../timer` `{action, duration_s}`. Every
-  write bumps `revision` under the Room's `session_zero` row lock. 404 for a
+  shared write (anything but a draft) bumps `revision` under the Room's
+  `session_zero` row lock. 404 for a
   draft that isn't the caller's (never 403, so a draft's existence never
   leaks). View-as refuses writes as usual.
 - Account deletion and data export (spec 31) cover the new rows.
@@ -137,8 +141,15 @@ ticket.
   (`card`, `column`, `timer`, `reaction`). The client then re-reads the
   board with the normal `GET`, so the visibility rules stay in one place and
   a draft can never travel through the stream.
+- **Drafts stay invisible in the stream too**: creating, editing or
+  deleting a draft emits an event only to its author's own streams (other
+  tabs of the same user), and it does not bump the Room's shared
+  `revision`, so neither an `id` nor a gap in the revision tells others a
+  draft exists. Publishing is the first event everyone gets for that
+  post-it.
 - An in-process broker (`app/realtime/broker.py`, a set of `asyncio.Queue`
-  per Room) fans out after each write commits. One backend process serves
+  per Room, each tagged with its user id, so an event goes either to the
+  whole Room or to one user) fans out after each write commits. One backend process serves
   each environment (uvicorn without workers, on the VPS and on Render), so
   in-process is enough; more processes would need Postgres
   `LISTEN/NOTIFY`, noted in `architecture.md` as the next step.
@@ -183,10 +194,14 @@ ticket.
   not a draft, not to the Retro, 409 twice to the same column); editing the
   original leaves the copy; deleting it keeps the copy; reactions only on
   published post-its; timer start/pause/resume/stop and remaining time;
-  column rules and limits; writes bump `revision`; view-as refuses writes;
+  column rules and limits; shared writes bump `revision`; view-as refuses writes;
   account deletion and data export cover post-its.
-- Live push: a write emits one event per open stream of that Room only;
-  events carry no text; a non-member cannot open a stream.
+- Live push: a shared write emits one event per open stream of that Room
+  only; a draft write emits nothing to other members and leaves the shared
+  `revision` unchanged; events carry no text; a non-member cannot open a
+  stream.
+- Promotion: the copy keeps the original's author and anonymity after the
+  original is deleted, and that author can still delete it.
 - Frontend: drafts render with the badge; Promote menu and drop call the
   same mutation; an event triggers a refetch; the timer counts down from
   `timer_ends_at`.
