@@ -71,7 +71,7 @@ from app.domain.session_zero import (
 )
 from app.i18n.dependencies import LocaleDep
 from app.i18n.translator import translate
-from app.realtime.broker import Event, Subscription, broker
+from app.realtime.broker import Event, broker
 
 router = APIRouter(prefix="/rooms/{room_id}/session-zero", tags=["session-zero"])
 
@@ -914,10 +914,12 @@ def _sse(event: Event) -> str:
     return f"data: {json.dumps(payload, default=str)}\n\n"
 
 
-async def _stream(subscription: Subscription) -> AsyncIterator[str]:
+async def _stream(room_id: uuid.UUID, user_id: uuid.UUID) -> AsyncIterator[str]:
     """The stream's lines until it is closed (`None`): the member left, the
-    Room is gone, or they fell too far behind. Forgets the stream however it
-    ends, the client hanging up included."""
+    Room is gone, or they fell too far behind. Subscribes only once the
+    response starts streaming, in the same `try` that forgets the stream
+    however it ends, the client hanging up included."""
+    subscription = broker.subscribe(room_id, user_id)
     try:
         yield ": open\n\n"
         while True:
@@ -943,12 +945,15 @@ async def session_zero_events(
     of, `{"revision", "kind", "id"}` and never any content; the client then
     re-reads the board with `GET`. Membership is checked once, on a session
     closed before the stream starts, so an open stream holds no database
-    connection. A "View as" header is ignored: the stream is the caller's."""
+    connection. A "View as" header is ignored: the stream is the caller's.
+    The token is checked when the stream opens only: an open stream outlives
+    its expiry, which is harmless since it carries no content, and the
+    client's next `GET` needs a fresh token anyway."""
     user_id = uuid.UUID(authenticated_user(credentials, locale).id)
     async with session_module.independent_session() as session:
         await require_membership(session, room_id, user_id, locale)
     return StreamingResponse(
-        _stream(broker.subscribe(room_id, user_id)),
+        _stream(room_id, user_id),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

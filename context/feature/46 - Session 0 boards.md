@@ -226,7 +226,9 @@ those items stay out entirely). The ticket is confirmed.
   `CurrentUserDep`, whose request session would stay open as long as the
   stream; membership is read on `independent_session()`, closed before the
   first line. A "View as" header is ignored there (the stream is the
-  caller's, and carries no content). Events: `start`, `card` (the copy's id
+  caller's, and carries no content). The token is checked when the stream
+  opens only; an open stream outlives its expiry, harmless for the same
+  reason. Events: `start`, `card` (the copy's id
   on a promotion), `reaction` (the post-it's id), `column` (no id for a
   reorder), `round`, `timer`. The production Caddyfile routes
   `/rooms/*/session-zero/events` around `encode` and with
