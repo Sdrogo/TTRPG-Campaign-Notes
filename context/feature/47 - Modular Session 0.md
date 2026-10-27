@@ -31,8 +31,8 @@
 ## Decisions
 
 Proposed by Claude on 2026-10-27; the product owner answered Q1-Q7 the same
-day (see "Answers" below) and the Decisions now follow those answers. Still
-missing: the six DDI sections (Q1).
+day (see "Answers" below) and the Decisions now follow those answers. The
+DDI sections come from the manual the product owner shared (Decision 8a).
 
 1. **Session = chain of modules.** Every session (round) has an ordered list
    of modules. The same module type can appear more than once (e.g. two
@@ -88,6 +88,34 @@ missing: the six DDI sections (Q1).
    è cambiata dopo che l'hai accettata" with the button again. The
    invitation flow of 46b (an invitee reads the DDI before joining) is
    **not** in this ticket (Q1).
+8a. **DDI template.** From "I GDR e la Dichiarazione d'Intenti" by
+   Riccardo "Musta" Caverni (PDF shared by the product owner, 2026-10-27):
+   six sections in two groups, each with the manual's checklist as
+   bullets the Master fills in or deletes. The template is Italian
+   product text in every UI language for now (it is a Document's
+   content, not a UI string); only the headings are translated, in
+   `<lang>.json`. Description Markdown:
+   - `## Dietro il Tavolo` (l'ossatura di un buon gioco)
+     - `### Incontro`: Beer-first o Game-first; Dove; Quando (durata,
+       frequenza, tempistiche, vacanze); Numero di giocatori (giocatori
+       assenti); Periodo di tolleranza (grace period).
+     - `### Regole`: Sistema; Regole scartate; Regole opzionali; Home
+       rules.
+     - `### Ambientazione`: Risorse; Descrizione; Integrazione dei
+       personaggi.
+   - `## Sul Tavolo` (ciò che rende una partita strepitosa)
+     - `### Tematiche`: Principali (3+); Secondarie (5-); Non presenti;
+       Scomode; Dettagli: PG contro PG, introdurre nuove tematiche, la
+       morte del personaggio.
+     - `### Tono`: Parole chiave (5-); Riferimenti multimediali; Dettagli:
+       contesto di metagame, rompere la quarta parete, umorismo, controllo
+       della scena, dialoghi.
+     - `### Personaggi`: Obiettivi; Limiti; Creazione; Esperienza;
+       Background.
+   A last line credits the source ("Struttura dalla Dichiarazione
+   d'Intenti di Riccardo \"Musta\" Caverni"). The new Document gets the
+   name "Dichiarazione d'Intenti", the Master as creator and Owner, and
+   the Room's default visibility; it is a normal Document from then on.
 9. **Questions: setup.** The Master writes a list of questions (up to 30,
    each up to 300 characters, optional hint text) and maps each one to
    where its answer goes in the Player's Document:
@@ -157,9 +185,8 @@ missing: the six DDI sections (Q1).
 ## Answers (product owner, 2026-10-27)
 
 - **Q1 - DDI and invitation**: the 46b invitation flow stays a separate
-  ticket after 47. **Still open: the six DDI sections** (titles, and a
-  one-line hint each if wanted) for the DDI template (Decision 8). 47_3
-  can't start without them.
+  ticket after 47. The six DDI sections and their checklist come from the
+  manual the product owner shared (Decision 8a).
 - **Q2 - Who sees answers**: only the author and the Master at first; once
   finished, the Master can reveal all answers (Decision 10).
 - **Q3 - Created Documents**: Public; Notes can be made Private by the
