@@ -754,23 +754,17 @@ in line with what was built since.
 - Reframed the Maps index as a cartographic archive: Room/title hierarchy,
   responsive actions, distinct free/geographic icon plates, numbered map cards,
   clearer metadata and a designed empty state, without changing map workflows.
-- Refined image-bearing Document cards after visual review: the image is now a
-  wide cover above full-width content rather than a narrow side panel, retaining
-  carousel controls, badges, crop behavior and the complete-card link.
-- Tuned that cover by image shape: panoramic art still crops to fill the compact
-  frame, while square and portrait art uses a lightly zoomed contained fit plus
-  the existing lower fade, reducing crop without making cards taller.
-- Refined the Document detail composition: editorial title treatment, separated
+- Refined the Document detail composition: title under a folio label, separated
   header metadata, improved description rhythm, lighter secondary info panel,
   archival Note entries and a distinct Thread surface, preserving every action,
   permission, visibility rule and content workflow.
 - Removed individual Note highlighting from Document detail after visual review;
   Notes now remain quiet within the editorial content flow.
-- Review of the Figma pass (Andrea, 2026-10-27, PR #252): headings brought
-  back to the usual Mantine sizes (Document title h1/h2, Documents and Maps
-  page titles h2, landing hero smaller); image-bearing Document cards back to
-  the side-by-side layout (images on the right half), keeping the new hover
-  and top-edge accent; Room cards back to their previous look.
+- After Andrea's review (2026-10-27, PR #252) headings use the usual Mantine
+  sizes (Document title h1/h2, Documents and Maps page titles h2, a smaller
+  landing hero), image-bearing Document cards keep the side-by-side layout
+  (images on the right half) with the new hover and top-edge accent, and Room
+  cards keep their previous look.
 
 ## Architecture Decisions
 
