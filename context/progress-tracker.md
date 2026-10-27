@@ -738,12 +738,14 @@ on `main`.
   `c3f8a1d6e9b4` applied to production** on 2026-10-27 (`alembic upgrade
   head` from `b5f1d8e3a7c2`; `alembic current` on production =
   `c3f8a1d6e9b4`, head).
-- **46d, Session 0 header and layout** (ticket written 2026-10-27, to
-  confirm): bigger column and row headings, a compact "+" to add a column,
+- **46d, Session 0 header and layout** (ticket confirmed 2026-10-27):
+  bigger column and row headings, a compact "+" to add a column,
   freely named sessions, one header line above the boards, the two panels
   scrolling on their own, bigger reaction emoji (frontend only); drag and
   drop to reorder post-its, groups and columns (one migration, one route).
-  Open questions Q1 and Q2 below.
+  Ticket confirmed 2026-10-27 (Q1 free session names; Q2 the Master moves
+  any post-it, a Player their own and may group their own). 46d_1
+  (decisions 1-6) in PR #256, then 46d_2 (decision 7).
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product
@@ -784,12 +786,8 @@ on `main`.
 
 ## Open Questions
 
-- **46d Q1**: may Session 0 sessions be freely named, the name replacing
-  "Sessione 0.5 #N"? (proposed: yes)
-- **46d Q2**: who may move a post-it by drag and drop? (proposed: the
-  Master any post-it, a Player their own)
-
-Earlier: the 15 questions open at the time were closed with the product owner
+None. 46d Q1 and Q2 were answered by the product owner on 2026-10-27
+(see the ticket). Earlier, the 15 questions open at the time were closed with the product owner
 on 2026-10-03 (`requirements.md` v0.5); v0.6 (2026-10-27) brought the spec
 in line with what was built since.
 

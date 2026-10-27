@@ -54,8 +54,7 @@ Sessione 0.5") suggests there is just one more.
    1", "Retro di metà campagna"...). The selector and the header show the
    name alone: the title, when there is one, replaces the default name
    instead of following it. The first session stays "Sessione 0". Same data
-   as today (the round's optional `title`), so no backend change. *Open
-   question Q1 below.*
+   as today (the round's optional `title`), so no backend change. Confirmed (Q1).
 4. **One header line**: everything above the boards becomes one row, left to
    right:
    - the session selector, always shown (a compact dropdown; with one
@@ -86,17 +85,17 @@ Sessione 0.5") suggests there is just one more.
    - **Post-its**: dragged within their column to change their place, or
      into another Retro column of the same session. Lines & Veils post-its
      can be reordered within their row too (moving them between Must,
-     Veils and Lines exists already). *Who may move a post-it: open
-     question Q2 below; proposed default: the Master any post-it, a Player
-     their own (drafts included).*
+     Veils and Lines exists already). The Master moves any post-it, a
+     Player their own, drafts included (Q2).
    - **Moving vs grouping, shown while dragging**: the post-it being dragged
      lifts (shadow, slight tilt, the original place left as a faded
      placeholder). Between two post-its a coloured insertion line opens a
      gap, and the others slide apart (about 150 ms): dropping there moves
      it. Over the middle of another post-it, that post-it gets a ring in
      the column's colour and a small "Raggruppa" label: dropping there
-     groups them (as today, Master only). Dropping onto a group adds the
-     post-it to it. Esc or a drop outside cancels and it slides back.
+     groups them (the Master any two; a Player two of their own, see Q2).
+     Dropping onto a group adds the post-it to it (the Master only, or a
+     Player when every post-it in the group is theirs). Esc or a drop outside cancels and it slides back.
    - **Groups** (Master only): dragged by their heading, as one block,
      within the column or into another Retro column, with the same
      insertion line.
@@ -109,14 +108,18 @@ Sessione 0.5") suggests there is just one more.
    - Every move is one write; other members see it through the live
      updates (spec 46_4), the moved item glowing.
 
-## Open questions (product owner)
+## Answers (product owner, 2026-10-27)
 
-- **Q1 (decision 3)**: may sessions be freely named, with the name
-  replacing "Sessione 0.5 #N" (proposed), or did "più sessioni" mean
-  something else, such as a different kind of session?
-- **Q2 (decision 7)**: who may move a post-it: proposed, the Master any
-  post-it and a Player only their own; or every member any post-it; or the
-  Master only?
+The ticket is confirmed.
+
+- **Q1 (decision 3)**: yes, sessions are freely named, the name replacing
+  "Sessione 0.5 #N".
+- **Q2 (decision 7)**: the Master moves every post-it; a Player moves only
+  their own. A Player may also **group their own post-its** (both the one
+  dragged and the one dropped on are theirs; a group holding anyone
+  else's stays the Master's), which amends spec 46c Decision 9 (groups
+  were Master only). Titling, ungrouping and moving groups stay Master
+  only.
 
 ## Design
 
@@ -137,7 +140,8 @@ Sessione 0.5") suggests there is just one more.
   full order (`[{"type": "card" | "group", "id", "cards"?: [ids]}]`); an
   item from another column of the same session moves it here. Checked in
   `app/domain/session_zero.py` (open session, same board, rights of Q2,
-  every item listed once), bumps `revision`, pushes `card` or `group`. The
+  every item listed once), bumps `revision`, pushes `card` or `group`. `can_group` lets a Player group post-its that are all
+  their own (Q2). The
   existing `PUT /columns/order` serves column drags.
 - Decision 7, frontend: `@dnd-kit/core` and `@dnd-kit/sortable` (pointer,
   touch and keyboard sensors, sorting animations) replace the native HTML
