@@ -745,8 +745,12 @@ on `main`.
   drop to reorder post-its, groups and columns (one migration, one route).
   Ticket confirmed 2026-10-27 (Q1 free session names; Q2 the Master moves
   any post-it, a Player their own and may group their own). **46d_1
-  (decisions 1-6) built** in PR #256, no migration; next 46d_2 (decision
-  7, drag and drop).
+  (decisions 1-6) built** in PR #256, merged into staging, no migration.
+  **46d_2 (decision 7, drag and drop) built** 2026-10-27: `PUT
+  /cards/{id}/place` and `/groups/{id}/place`, `@dnd-kit/core`, a Player
+  groups their own post-its. **Migration `d4a7e2c9f1b3`** (post-it and
+  group `position`): to apply to the staging DB before merging, and to
+  production before the next release to main.
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product

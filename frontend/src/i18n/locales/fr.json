@@ -1359,6 +1359,15 @@
       "pause": "Mettre en pause",
       "resume": "Reprendre",
       "stop": "Arrêter et effacer"
+    },
+    "dnd": {
+      "groupHere": "Grouper",
+      "instructions": "Pour le déplacer, appuyez sur Espace ou Entrée, déplacez-le avec les flèches, puis appuyez sur Espace ou Entrée pour le déposer. Échap annule.",
+      "pickedUp": "{{name}} pris.",
+      "over": "Au-dessus de {{name}}.",
+      "noTarget": "Pas au-dessus d'un endroit où le déposer.",
+      "dropped": "{{name}} déposé.",
+      "cancelled": "Annulé : {{name}} retrouve sa place."
     }
   }
 }

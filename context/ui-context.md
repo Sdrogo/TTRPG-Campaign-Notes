@@ -916,8 +916,19 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   (and lifts 1px) on hover; reduced motion drops the lift. A draft
   (`data-draft`) is flat: `--bg-raised`, dashed border, no shadow, 85%
   opacity, with a filled `compact-xs` "Publish" at the end of its author
-  line. A post-it a drag can group with shows the accent ring
-  (`data-drop-over`).
+  line.
+- Drag and drop (spec 46d Decision 7): a post-it the viewer can place
+  shows a `grab` cursor; a group and a Retro column are picked up by their
+  heading. While dragging, the item stays in place at 35% opacity
+  (`[data-dragging]`) and a copy tilted 2° with a deeper shadow follows
+  the pointer (`.sz-drag-overlay`). Where it lands, a 3px accent line
+  opens a gap (`.sz-drop-line`, vertical `.sz-drop-line-x` between Lines &
+  Veils post-its and between columns); the post-it or group it would join
+  shows the accent ring, scales up 2% and wears a small "Group" badge at
+  its top right (`[data-group-target]`, `.sz-group-here`); a Lines & Veils
+  row it would be promoted to takes the accent border
+  (`.sz-column[data-drop-over]`). Reduced motion: no gap animation, no
+  scale, nothing slides back after a drop.
 - "Publish all drafts (N)" (filled `compact-sm`, paper-plane icon) sits
   above the Retro columns while the viewer has drafts in the open round.
 - Groups (`.sz-group`): a frame of the column's colour (45% into the

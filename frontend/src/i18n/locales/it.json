@@ -1357,6 +1357,15 @@
       "pause": "Metti in pausa",
       "resume": "Riprendi",
       "stop": "Ferma e azzera"
+    },
+    "dnd": {
+      "groupHere": "Raggruppa",
+      "instructions": "Per spostarlo premi Spazio o Invio, muovilo con le frecce, poi premi Spazio o Invio per lasciarlo. Esc annulla.",
+      "pickedUp": "Hai preso {{name}}.",
+      "over": "Sopra {{name}}.",
+      "noTarget": "Non sei sopra un punto dove lasciarlo.",
+      "dropped": "Hai lasciato {{name}}.",
+      "cancelled": "Annullato: {{name}} è tornato al suo posto."
     }
   }
 }

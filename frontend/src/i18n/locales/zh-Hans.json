@@ -1322,6 +1322,15 @@
       "pause": "暂停",
       "resume": "继续",
       "stop": "停止并清除"
+    },
+    "dnd": {
+      "groupHere": "编组",
+      "instructions": "要移动，请按空格键或回车键，用方向键移动，再按空格键或回车键放下。按 Esc 取消。",
+      "pickedUp": "已拿起 {{name}}。",
+      "over": "位于 {{name}} 上方。",
+      "noTarget": "此处不能放下。",
+      "dropped": "已放下 {{name}}。",
+      "cancelled": "已取消：{{name}} 已回到原处。"
     }
   }
 }

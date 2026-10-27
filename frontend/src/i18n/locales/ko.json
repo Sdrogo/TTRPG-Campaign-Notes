@@ -1322,6 +1322,15 @@
       "pause": "일시정지",
       "resume": "재개",
       "stop": "정지 후 지우기"
+    },
+    "dnd": {
+      "groupHere": "묶기",
+      "instructions": "옮기려면 Space 또는 Enter를 누르고 화살표로 움직인 뒤 Space 또는 Enter를 눌러 놓으세요. Esc를 누르면 취소됩니다.",
+      "pickedUp": "{{name}}을(를) 집었습니다.",
+      "over": "{{name}} 위에 있습니다.",
+      "noTarget": "놓을 수 있는 곳 위가 아닙니다.",
+      "dropped": "{{name}}을(를) 놓았습니다.",
+      "cancelled": "취소했습니다. {{name}}이(가) 제자리로 돌아갔습니다."
     }
   }
 }

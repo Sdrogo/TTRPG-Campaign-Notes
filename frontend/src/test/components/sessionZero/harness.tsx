@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { BoardContext } from '../../../components/sessionZero/boardContext';
+import { DndStateContext, type DndState } from '../../../components/sessionZero/boardDrag';
 import { toSessionZero, type RawSessionZero } from '../../../lib/sessionZero';
 import type { Member } from '../../../types/member';
 import type { PostIt, PostItColumn } from '../../../types/sessionZero';
@@ -36,13 +37,15 @@ interface Options {
   writable?: boolean;
   busy?: boolean;
   glowing?: string[];
+  /** A drag in progress, for what the post-its, groups and columns show while it lasts. */
+  dnd?: DndState;
 }
 
 /**
  * Renders a piece of the Session 0 page inside its board context; `act`
  * records the writes and reports each one done at once.
  */
-export function renderBoard(ui: ReactElement, { board = {}, writable = true, busy = false, glowing = [] }: Options = {}) {
+export function renderBoard(ui: ReactElement, { board = {}, writable = true, busy = false, glowing = [], dnd = { active: null, intent: null } }: Options = {}) {
   const act = vi.fn((_write: unknown, onDone?: () => void) => onDone?.());
   const value = {
     board: toSessionZero(rawSessionZero(board) as RawSessionZero),
@@ -52,6 +55,10 @@ export function renderBoard(ui: ReactElement, { board = {}, writable = true, bus
     writable,
     glowing: new Set(glowing),
   };
-  renderWithProviders(<BoardContext.Provider value={value}>{ui}</BoardContext.Provider>);
+  renderWithProviders(
+    <BoardContext.Provider value={value}>
+      <DndStateContext.Provider value={dnd}>{ui}</DndStateContext.Provider>
+    </BoardContext.Provider>,
+  );
   return { act, user: userEvent.setup() };
 }

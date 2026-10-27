@@ -1322,6 +1322,15 @@
       "pause": "一時停止",
       "resume": "再開",
       "stop": "停止してクリア"
+    },
+    "dnd": {
+      "groupHere": "グループにする",
+      "instructions": "移動するには Space か Enter を押し、矢印キーで動かしてから Space か Enter で置きます。Esc で取り消します。",
+      "pickedUp": "{{name}} をつかみました。",
+      "over": "{{name}} の上です。",
+      "noTarget": "置ける場所の上ではありません。",
+      "dropped": "{{name}} を置きました。",
+      "cancelled": "取り消しました。{{name}} は元の位置に戻りました。"
     }
   }
 }

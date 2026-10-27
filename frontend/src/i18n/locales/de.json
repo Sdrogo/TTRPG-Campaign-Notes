@@ -1357,6 +1357,15 @@
       "pause": "Pausieren",
       "resume": "Fortsetzen",
       "stop": "Stoppen und zurücksetzen"
+    },
+    "dnd": {
+      "groupHere": "Gruppieren",
+      "instructions": "Zum Verschieben Leertaste oder Eingabe drücken, mit den Pfeiltasten bewegen, dann Leertaste oder Eingabe zum Ablegen. Esc bricht ab.",
+      "pickedUp": "{{name}} aufgenommen.",
+      "over": "Über {{name}}.",
+      "noTarget": "Nicht über einer Stelle zum Ablegen.",
+      "dropped": "{{name}} abgelegt.",
+      "cancelled": "Abgebrochen: {{name}} ist wieder an seinem Platz."
     }
   }
 }

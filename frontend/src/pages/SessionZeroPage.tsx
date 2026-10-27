@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Button, Group, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
+import { Box, Button, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
@@ -10,11 +10,12 @@ import { useSessionZeroEvents } from '../hooks/useSessionZeroEvents';
 import { useReadOnly } from '../hooks/useViewAs';
 import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
-import { AddColumn, LinesVeilsColumn, RetroColumn } from '../components/sessionZero/BoardColumns';
+import { LinesVeilsColumn, RetroBoard } from '../components/sessionZero/BoardColumns';
 import { BoardContext, useBoard, type BoardContextValue } from '../components/sessionZero/boardContext';
+import { BoardDnd } from '../components/sessionZero/BoardDnd';
 import { BoardsSplit } from '../components/sessionZero/BoardsSplit';
 import { SessionZeroHeader } from '../components/sessionZero/SessionZeroHeader';
-import { MAX_RETRO_COLUMNS, boardWrites } from '../lib/sessionZero';
+import { boardWrites } from '../lib/sessionZero';
 import { notifyError } from '../lib/notify';
 
 /** Wide enough for the Retro board beside Lines & Veils; narrower, two tabs (Decision 13). */
@@ -52,15 +53,18 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
     ? {
         board: board.data,
         members: members.data ?? [],
-        act: (request, onDone) =>
-          write.mutate(request, {
-            onError: notifyError,
-            onSuccess: (next) => {
-              // A deleted Session 0 (spec 46c Decision 3) has no rounds left to show.
-              if (!next.started) setRoundId(null);
-              onDone?.();
+        act: (request, onDone, preview) =>
+          write.mutate(
+            { write: request, preview },
+            {
+              onError: notifyError,
+              onSuccess: (next) => {
+                // A deleted Session 0 (spec 46c Decision 3) has no rounds left to show.
+                if (!next.started) setRoundId(null);
+                onDone?.();
+              },
             },
-          }),
+          ),
         busy: write.isPending,
         writable,
         glowing,
@@ -92,42 +96,27 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
       {context?.board.started && (
         <BoardContext.Provider value={context}>
           <SessionZeroHeader readAtMs={board.dataUpdatedAt} onPick={setRoundId} />
-          {wide ? (
-            <BoardsSplit left={<RetroBoard />} right={<LinesVeilsBoard />} />
-          ) : (
-            <Tabs defaultValue="retro" keepMounted={false}>
-              <Tabs.List mb="sm" grow>
-                <Tabs.Tab value="retro">{t('sessionZero.retro.title')}</Tabs.Tab>
-                <Tabs.Tab value="linesVeils">{t('sessionZero.linesVeils.title')}</Tabs.Tab>
-              </Tabs.List>
-              <Tabs.Panel value="retro">
-                <RetroBoard />
-              </Tabs.Panel>
-              <Tabs.Panel value="linesVeils">
-                <LinesVeilsBoard />
-              </Tabs.Panel>
-            </Tabs>
-          )}
+          <BoardDnd>
+            {wide ? (
+              <BoardsSplit left={<RetroBoard />} right={<LinesVeilsBoard />} />
+            ) : (
+              <Tabs defaultValue="retro" keepMounted={false}>
+                <Tabs.List mb="sm" grow>
+                  <Tabs.Tab value="retro">{t('sessionZero.retro.title')}</Tabs.Tab>
+                  <Tabs.Tab value="linesVeils">{t('sessionZero.linesVeils.title')}</Tabs.Tab>
+                </Tabs.List>
+                <Tabs.Panel value="retro">
+                  <RetroBoard />
+                </Tabs.Panel>
+                <Tabs.Panel value="linesVeils">
+                  <LinesVeilsBoard />
+                </Tabs.Panel>
+              </Tabs>
+            )}
+          </BoardDnd>
         </BoardContext.Provider>
       )}
     </PageLayout>
-  );
-}
-
-/** The Retro board of the session picked, its columns side by side, scrolling sideways. */
-function RetroBoard() {
-  const { t } = useTranslation();
-  const { board, writable } = useBoard();
-  const open = board.rounds.find((round) => round.id === board.roundId)?.closedAt === null;
-  return (
-    <Box component="section" aria-label={t('sessionZero.retro.title')} className="sz-retro-scroll" pb="xs">
-      <Group align="flex-start" wrap="nowrap" gap="sm">
-        {board.retro.map((column, index) => (
-          <RetroColumn key={column.id} column={column} index={index} count={board.retro.length} open={open} />
-        ))}
-        {writable && open && board.canManage && board.retro.length < MAX_RETRO_COLUMNS && <AddColumn />}
-      </Group>
-    </Box>
   );
 }
 

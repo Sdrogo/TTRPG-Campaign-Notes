@@ -1359,6 +1359,15 @@
       "pause": "Pausar",
       "resume": "Retomar",
       "stop": "Parar e limpar"
+    },
+    "dnd": {
+      "groupHere": "Agrupar",
+      "instructions": "Para mover, prima Espaço ou Enter, mova com as setas e prima Espaço ou Enter para largar. Esc cancela.",
+      "pickedUp": "Pegou em {{name}}.",
+      "over": "Sobre {{name}}.",
+      "noTarget": "Não está sobre um sítio onde largar.",
+      "dropped": "Largou {{name}}.",
+      "cancelled": "Cancelado: {{name}} voltou ao seu lugar."
     }
   }
 }
