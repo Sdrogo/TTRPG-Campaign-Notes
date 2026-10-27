@@ -16,12 +16,17 @@
 - Post-its are private drafts until their author publishes them; published
   post-its take reactions; a shared timer paces the writing; every change
   reaches every member's screen at once (push, not polling).
+- **Session 0.5** (product owner, 2026-10-27, from the manual "Il tavolo
+  non è per tutti" by @Sfogatto): the boards are not filled once and for
+  all. At the end of a story arc, or whenever the group needs it, the
+  Master opens a new round of the Retro board and revisits the limits: a
+  Line can become a Veil, a Veil can go away, a new Line can be added.
 - `requirements.md` has no requirement for Session 0; this ticket adds none
   until the product owner asks.
 
 ## Decisions
 
-Decisions 1-6 and 8 were taken with the product owner in the brainstorm
+Decisions 1-6, 8 and 16 were taken with the product owner in the brainstorm
 thread on 2026-10-27; 7 and 9-15 are defaults picked the same day, to
 confirm on this ticket.
 
@@ -69,11 +74,11 @@ confirm on this ticket.
    original does not change its copies. Deleting an original keeps its
    copies (their link just goes away).
 10. **One Session 0 per Room**, created empty the first time someone opens
-    the page; the Retro board starts with the four preset columns. The
+    the page; the Retro board starts with the four preset columns (round 1,
+    "Sessione 0"; later rounds, Decision 16). The
     Master adds, renames, reorders and deletes Retro columns (a column with
     published post-its asks for confirmation; its post-its go with it).
-    Lines & Veils columns are fixed. Several boards per Room (one per story
-    arc) is a later ticket.
+    Lines & Veils columns are fixed.
 11. **Who sees it**: every member of the Room, both roles. No per-post-it
     visibility beyond draft/published. "View as" (spec 22b) shows the board
     as the member sees it, read-only, with their drafts hidden (drafts are
@@ -89,8 +94,23 @@ confirm on this ticket.
     post-its, drafts too) and erased with the account (anonymous or not).
 15. **Not in scope**: a Table Pact Document generated from the boards
     (later ticket 46b, proposed), a ready-made list of common themes, the
-    X-card and end-of-session check-in, PC bond questions, presence and
-    live cursors.
+    X-card, Script Change and OK check-in during play, Stars and Wishes
+    for the debrief (product owner, 2026-10-27: a separate tool later), PC
+    bond questions, presence and live cursors, a reminder to hold a
+    Session 0.5.
+16. **Session 0.5 rounds** (product owner): the Master starts a new round
+    ("Avvia Sessione 0.5", with an optional title such as "Fine arco 1").
+    The current Retro round closes and stays readable, read-only, from a
+    round selector on the page (its drafts are dropped: a draft never
+    published was never shared). The new round starts empty, with the
+    previous round's column titles. Lines & Veils is **one board for the
+    whole Room**, not per round: it carries over, and the Master can at any
+    time move a post-it between Lines and Veils ("Sposta in Veli" / "Sposta
+    in Linee"; 409 if a copy of the same original is already there) or
+    delete it. Post-its of any round can still be promoted, so a new limit
+    raised in a later round reaches the same board. Reactions and the
+    timer work the same in every round; a closed round takes no new
+    reactions.
 
 ## Design
 
@@ -100,8 +120,12 @@ confirm on this ticket.
   `comment_reactions`):
   - `session_zero` (`room_id` PK, `revision` int, `timer_duration_s`,
     `timer_ends_at`, `timer_paused_remaining_s`, `created_at`);
+  - `session_zero_rounds` (`id`, `room_id`, `number`, `title`,
+    `started_at`, `closed_at` null = the open round); one open round per
+    Room (partial unique index);
   - `session_zero_columns` (`id`, `room_id`, `board` `'retro'|'lines_veils'`,
-    `kind` null or `'lines'|'veils'`, `title`, `position`);
+    `round_id` for Retro columns, null for Lines & Veils, `kind` null or
+    `'lines'|'veils'`, `title`, `position`);
   - `session_zero_cards` (`id`, `room_id`, `column_id`, `author_id`, `body`,
     `anonymous`, `published_at` null = draft, `source_card_id` null or the
     Retro original (`ON DELETE SET NULL`), `promoted_by` null or the user
@@ -119,14 +143,19 @@ confirm on this ticket.
   `timer_ends_at` so clients only need the end time), limits. Emoji parsing
   reuses `app/domain/reactions.py::parse_emoji`.
 - Routes `app/api/session_zero.py` under `/rooms/{id}/session-zero`:
-  `GET` (both boards as the caller sees them: their own drafts plus all
+  `GET` (`?round=` defaults to the open round; both boards as the caller
+  sees them, plus the list of rounds: their own drafts plus all
   published post-its, `author` omitted on anonymous ones unless the caller
   wrote it, `mine`, `can_edit`, `can_delete`, `can_promote`, reactions,
   timer, `revision`); `POST .../cards`, `PATCH`/`DELETE .../cards/{card}`,
   `POST .../cards/{card}/publish` `{anonymous}`,
   `POST .../cards/{card}/promote` `{column_id}`, `PUT`/`DELETE
   .../cards/{card}/reactions/{emoji}`, `POST/PATCH/DELETE .../columns`,
-  `PUT .../columns/order`, `POST .../timer` `{action, duration_s}`. Every
+  `PUT .../columns/order`, `POST .../timer` `{action, duration_s}`,
+  `POST .../rounds` `{title}` (Master: closes the open round, copies its
+  column titles), `POST .../cards/{card}/move` `{column_id}` (Master, a
+  Lines & Veils post-it to the other Lines & Veils column). Writes to a
+  closed round's columns or post-its answer 409. Every
   shared write (anything but a draft) bumps `revision` under the Room's
   `session_zero` row lock. 404 for a
   draft that isn't the caller's (never 403, so a draft's existence never
@@ -174,7 +203,11 @@ confirm on this ticket.
   drag-and-drop library besides `@xyflow/react` for maps), only from a published Retro post-it, for the Master only,
   onto a Lines & Veils column; dropping calls promote.
 - Master tools: timer menu (5/10/15/custom, pause, resume, stop), column
-  add/rename/reorder/delete.
+  add/rename/reorder/delete, "Avvia Sessione 0.5" (confirm dialog with an
+  optional title), "Sposta in Veli/Linee" on Lines & Veils post-its (also
+  by dragging between the two columns on desktop).
+- Round selector above the Retro board ("Sessione 0", "Sessione 0.5 - Fine
+  arco 1", ...); a closed round shows read-only with a dimmed banner.
 - Strings in all 12 languages; "Session 0", "Lines", "Veils", "post-it"
   added to the i18n glossary.
 
@@ -195,7 +228,10 @@ confirm on this ticket.
   their own included, 403; not a draft, not to the Retro, 409 twice to the same column); editing the
   original leaves the copy; deleting it keeps the copy; reactions only on
   published post-its; timer start/pause/resume/stop and remaining time;
-  column rules and limits; shared writes bump `revision`; view-as refuses writes;
+  column rules and limits; a new round closes the previous one, copies its
+  column titles, drops its drafts and refuses writes to it (409); Lines &
+  Veils carries over across rounds; move between Lines and Veils is Master
+  only and 409 on a duplicate; a later round's post-it can be promoted; shared writes bump `revision`; view-as refuses writes;
   account deletion and data export cover post-its.
 - Live push: a shared write emits one event per open stream of that Room
   only; a draft write emits nothing to other members and leaves the shared

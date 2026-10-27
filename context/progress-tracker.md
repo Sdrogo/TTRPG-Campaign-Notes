@@ -707,7 +707,9 @@ on `main`.
   board and a Lines & Veils board, draft/publish post-its (anonymous or
   signed), promotion as a copy by the Master (button + drag), reactions, a shared
   non-blocking timer and live push updates (SSE, the app's first). One
-  migration. Table Pact Document proposed as 46b.
+  migration. Session 0.5 rounds (Lines & Veils carry over, a Line can
+  become a Veil). Table Pact Document proposed as 46b; Stars and Wishes
+  debrief is a separate tool, later.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08). Ticket written, decisions proposed, no migration expected.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
