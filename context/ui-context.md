@@ -923,4 +923,8 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   other (`.sz-lines-veils-row`, a 4px band in the column's colour on the
   left), each with its post-its side by side in a grid
   (`.sz-lines-veils-cards`, `repeat(auto-fill, minmax(200px, 1fr))`).
+- Live updates (spec 46_4): what another member just changed (a post-it,
+  a Retro column, a group) glows once for 1.5 s, a 3px ring in its own
+  `--sz-color` fading out (`[data-glow]`, `@keyframes sz-glow`); no
+  animation with `prefers-reduced-motion`.
 - Screenshots: `session-zero/` in the project files.

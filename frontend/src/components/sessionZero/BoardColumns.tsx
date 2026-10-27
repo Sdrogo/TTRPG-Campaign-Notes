@@ -27,6 +27,8 @@ import { useBoard } from './boardContext';
 export const COLUMN_WIDTH = 260;
 
 interface ColumnFrameProps {
+  /** The column's id: it glows when another member changes it (spec 46_4). */
+  id: string;
   title: ReactNode;
   /** Its colour: a band on top, a light tint (spec 46c Decision 5). */
   color: string;
@@ -39,7 +41,8 @@ interface ColumnFrameProps {
 }
 
 /** A column's frame: heading, its menu, the post-its, and (on Lines & Veils) a drop target. */
-function ColumnFrame({ title, color, menu, dropTarget = false, onDrop, fill = false, children }: ColumnFrameProps) {
+function ColumnFrame({ id, title, color, menu, dropTarget = false, onDrop, fill = false, children }: ColumnFrameProps) {
+  const { glowing } = useBoard();
   const [over, setOver] = useState(false);
   const accepts = (event: DragEvent) => dropTarget && event.dataTransfer.types.includes(POST_IT_DRAG_TYPE);
   return (
@@ -50,6 +53,7 @@ function ColumnFrame({ title, color, menu, dropTarget = false, onDrop, fill = fa
       w={fill ? '100%' : undefined}
       className={fill ? 'sz-column sz-lines-veils-row' : 'sz-column sz-retro-column'}
       data-drop-over={over || undefined}
+      data-glow={glowing.has(id) || undefined}
       style={
         {
           '--sz-color': color,
@@ -150,6 +154,7 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
 
   return (
     <ColumnFrame
+      id={column.id}
       title={
         renaming ? (
           <TextInput
@@ -280,6 +285,7 @@ export function LinesVeilsColumn({ column }: { column: PostItColumn }) {
   const manage = writable && board.canManage;
   return (
     <ColumnFrame
+      id={column.id}
       title={t(`sessionZero.kinds.${column.kind!}`)}
       color={columnColor(column)}
       fill

@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,12 +10,14 @@ import { fakeSession, rawAccount, rawMember, rawPostIt, rawPostItColumn, rawSess
 import { matchMediaQueries } from '../media';
 import { renderWithProviders } from '../utils';
 import { SessionZeroPage } from '../../pages/SessionZeroPage';
+import { useSessionZeroEvents } from '../../hooks/useSessionZeroEvents';
 
 vi.mock('../../lib/apiClient', async (original) => ({
   ...(await original<typeof import('../../lib/apiClient')>()),
   apiFetch: vi.fn(),
 }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
+vi.mock('../../hooks/useSessionZeroEvents', () => ({ useSessionZeroEvents: vi.fn() }));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
 const fetchMock = vi.mocked(apiFetch);
@@ -46,6 +48,7 @@ function render(previewing = false) {
 beforeEach(() => {
   fetchMock.mockReset();
   vi.mocked(notifyError).mockReset();
+  vi.mocked(useSessionZeroEvents).mockReturnValue(new Set());
   board = () => Promise.resolve(rawSessionZero());
   write = () => Promise.resolve(rawSessionZero());
   sessionMock.mockReturnValue({ session: fakeSession('user-1'), loading: false } as SessionState);
@@ -177,6 +180,22 @@ describe('SessionZeroPage', () => {
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero?round_id=round-1');
     expect(await screen.findByText('Questa sessione è chiusa: la lavagna è in sola lettura.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aggiungi post-it' })).not.toBeInTheDocument();
+
+    // Spec 46_4: another member deleted the Session 0, so the open round comes back.
+    board = () => Promise.resolve(rawSessionZero({ rounds, round_id: 'round-2' }));
+    const onReset = vi.mocked(useSessionZeroEvents).mock.calls.at(-1)![1];
+    act(() => onReset());
+    expect(await screen.findAllByRole('button', { name: 'Aggiungi post-it' })).not.toHaveLength(0);
+  });
+
+  // Spec 46_4: what another member just changed glows.
+  it('makes what another member changed glow', async () => {
+    vi.mocked(useSessionZeroEvents).mockReturnValue(new Set(['card-1']));
+    board = () => Promise.resolve(rawSessionZero({ retro: [rawPostItColumn({ cards: [rawPostIt()] })] }));
+    render();
+    const card = (await screen.findByText('Niente ragni')).closest('.sz-post-it');
+    expect(card).toHaveAttribute('data-glow', 'true');
+    expect(useSessionZeroEvents).toHaveBeenCalledWith('room-1', expect.any(Function));
   });
 
   // Spec 46c Decision 8: all the viewer's drafts of the open round at once.

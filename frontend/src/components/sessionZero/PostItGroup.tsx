@@ -24,7 +24,7 @@ interface PostItGroupProps {
  */
 export function PostItGroup({ groupId, column, cards, open }: PostItGroupProps) {
   const { t } = useTranslation();
-  const { board, act, writable } = useBoard();
+  const { board, act, writable, glowing } = useBoard();
   const [renaming, setRenaming] = useState(false);
   const group = column.groups.find((g) => g.id === groupId);
   const [title, setTitle] = useState(group?.title ?? '');
@@ -36,6 +36,7 @@ export function PostItGroup({ groupId, column, cards, open }: PostItGroupProps) 
       gap={6}
       p={6}
       className="sz-group"
+      data-glow={glowing.has(groupId) || undefined}
       role="group"
       aria-label={shownTitle}
       style={{ '--sz-color': columnColor(column) } as CSSProperties}

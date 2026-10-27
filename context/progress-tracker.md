@@ -717,7 +717,12 @@ on `main`.
   staging 2026-10-27. **46_3 (page) built**: `/rooms/:roomId/session-zero`,
   entries in the Room Index and the Room title menu, post-its, columns,
   timer, rounds, drag to promote or move, strings in 12 languages; no
-  migration. Next: 46_4 (live client).
+  migration; PR #251 merged into staging 2026-10-27. **46_4 (live client)
+  built**: the page keeps the stream open while the tab is visible and
+  re-reads the boards on each event; reconnects with a growing pause
+  (1 s to 30 s), re-reading every 30 s while down; `reset` brings back
+  the open round; another member's change glows for 1.5 s. No migration.
+  Ticket 46 is complete once its PR merges.
 - **46c, Session 0 refinements** (ticket confirmed by the product owner
   2026-10-27, built, in PR #251 with 46_3): Index only on the Documents
   page, compact timer on the title line, delete the Session 0, three
@@ -727,11 +732,9 @@ on `main`.
   the same day) a resizable Lines & Veils board and columns that fit the
   screen; Lines & Veils then became horizontal rows (Must, Veils, Lines
   stacked, post-its side by side) while Retro keeps vertical columns.
-  **Migration `c3f8a1d6e9b4`**: to apply
-  to the staging DB before PR #251 merges, and to production before the
-  next release (with `4797859660e2`). The live client (46_4) must handle
-  the new events `group` and `reset` (re-read the board; after `reset`
-  the revision restarts at 1).
+  PR #251 merged into staging 2026-10-27. **Migration `c3f8a1d6e9b4`**:
+  applied to the staging DB by the product owner (2026-10-27); to apply
+  to production before the next release (after `4797859660e2`).
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product

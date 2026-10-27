@@ -30,7 +30,7 @@ interface PostItCardProps {
  */
 export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
   const { t } = useTranslation();
-  const { board, members, act, busy, writable } = useBoard();
+  const { board, members, act, busy, writable, glowing } = useBoard();
   const [editing, setEditing] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [groupingWith, setGroupingWith] = useState(false);
@@ -98,6 +98,7 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
       p="xs"
       className="sz-post-it"
       data-draft={postIt.draft || undefined}
+      data-glow={glowing.has(postIt.id) || undefined}
       data-drop-over={over || undefined}
       draggable={canPromote || canMove}
       onDragStart={onDragStart}
