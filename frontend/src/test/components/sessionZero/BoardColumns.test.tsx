@@ -1,6 +1,6 @@
-import { createEvent, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { AddColumn, LinesVeilsColumn, RetroColumn } from '../../../components/sessionZero/BoardColumns';
+import { AddColumn, LinesVeilsColumn, RetroBoard, RetroColumn } from '../../../components/sessionZero/BoardColumns';
 import { boardWrites, toSessionZero, type RawSessionZero } from '../../../lib/sessionZero';
 import { rawPostIt, rawSessionZero } from '../../fixtures';
 import { column, renderBoard } from './harness';
@@ -9,20 +9,7 @@ const board = toSessionZero(rawSessionZero() as RawSessionZero);
 const [first, second] = board.retro;
 const [must, , lines] = board.linesVeils;
 const master = { board: { can_manage: true } };
-const DRAG_TYPE = 'application/x-exlibris-post-it';
-
-function drag(payload: object, types = [DRAG_TYPE]) {
-  return { types, getData: (type: string) => (type === DRAG_TYPE ? JSON.stringify(payload) : '') };
-}
-
-/** Drops onto `target`, returning whether the page took the drop (prevented the default). */
-function drop(target: HTMLElement, dataTransfer: object) {
-  const over = createEvent.dragOver(target, { dataTransfer });
-  fireEvent(target, over);
-  const event = createEvent.drop(target, { dataTransfer });
-  fireEvent(target, event);
-  return over.defaultPrevented && event.defaultPrevented;
-}
+const lineCount = (container: HTMLElement | Document = document) => container.querySelectorAll('.sz-drop-line').length;
 
 describe('RetroColumn', () => {
   it('lets every member add a post-it as a draft', async () => {
@@ -134,15 +121,15 @@ describe('RetroColumn', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  // Spec 46c Decision 9: a group stands where its first post-it does, with its post-its framed together.
+  // Spec 46c Decision 9 and 46d Decision 7: groups and lone post-its in their order, a group's post-its framed together.
   it('frames grouped post-its together, in the column order', () => {
     const grouped = column({
-      groups: [{ id: 'g-1', title: 'Draghi' }],
+      groups: [{ id: 'g-1', title: 'Draghi', position: 1 }],
       cards: [
-        rawPostIt({ id: 'a', body: 'Solo' }),
-        rawPostIt({ id: 'b', body: 'Draghi rossi', group_id: 'g-1' }),
-        rawPostIt({ id: 'c', body: 'Ancora solo' }),
-        rawPostIt({ id: 'd', body: 'Draghi blu', group_id: 'g-1' }),
+        rawPostIt({ id: 'c', body: 'Ancora solo', position: 2 }),
+        rawPostIt({ id: 'd', body: 'Draghi blu', group_id: 'g-1', position: 1 }),
+        rawPostIt({ id: 'a', body: 'Solo', position: 0 }),
+        rawPostIt({ id: 'b', body: 'Draghi rossi', group_id: 'g-1', position: 0 }),
       ],
     });
     renderBoard(<RetroColumn column={grouped} index={0} count={1} open />);
@@ -160,11 +147,68 @@ describe('RetroColumn', () => {
     ]);
   });
 
-  it('is no drop target', () => {
-    const { act } = renderBoard(<RetroColumn column={first} index={0} count={2} open />, master);
-    const frame = screen.getByRole('heading', { name: 'Lo vogliamo al tavolo' }).closest('.mantine-Paper-root')!;
-    expect(drop(frame as HTMLElement, drag({ id: 'x', action: 'promote', columnId: 'col-2' }))).toBe(false);
-    expect(act).not.toHaveBeenCalled();
+  // Spec 46d Decision 7: a dragged post-it or group shows a line where it lands.
+  it('shows a line where the dragged post-it lands', () => {
+    const two = column({ cards: [rawPostIt({ id: 'a', body: 'Primo' }), rawPostIt({ id: 'b', body: 'Secondo', position: 1 })] });
+    const dragging = (beforeId: string | null) => ({
+      active: { kind: 'card' as const, id: 'x' },
+      intent: { kind: 'place' as const, columnId: 'col-1', groupId: null, beforeId },
+    });
+    renderBoard(<RetroColumn column={two} index={0} count={1} open />, { dnd: dragging('b') });
+    const line = document.querySelector('.sz-drop-line')!;
+    expect(line.nextElementSibling).toHaveTextContent('Secondo');
+    expect(lineCount()).toBe(1);
+  });
+
+  it('shows the line at the end, and none for a drag elsewhere', () => {
+    const at = (columnId: string) => ({
+      active: { kind: 'card' as const, id: 'x' },
+      intent: { kind: 'place' as const, columnId, groupId: null, beforeId: null },
+    });
+    renderBoard(
+      <>
+        <RetroColumn column={first} index={0} count={2} open />
+        <RetroColumn column={second} index={1} count={2} open />
+      </>,
+      { dnd: at('col-2') },
+    );
+    const frame = screen.getByRole('heading', { name: 'Da evitare' }).closest('.sz-column') as HTMLElement;
+    expect(lineCount(frame)).toBe(1);
+    expect(lineCount()).toBe(1);
+  });
+
+  // The Master drags a column by its heading; a Player's heading is no handle.
+  it("makes the Master's heading the column's drag handle", () => {
+    renderBoard(
+      <>
+        <RetroColumn column={first} index={0} count={2} open />
+        <RetroColumn column={second} index={1} count={2} open={false} />
+      </>,
+      master,
+    );
+    expect(screen.getByRole('heading', { name: 'Lo vogliamo al tavolo' })).toHaveStyle({ cursor: 'grab' });
+    expect(screen.getByRole('heading', { name: 'Da evitare' })).not.toHaveStyle({ cursor: 'grab' });
+  });
+});
+
+// Spec 46d Decision 7: a column the Master drags shows a line where it lands.
+describe('RetroBoard', () => {
+  const dragging = (beforeId: string | null) => ({
+    ...master,
+    dnd: { active: { kind: 'column' as const, id: 'col-1' }, intent: { kind: 'column' as const, beforeId } },
+  });
+
+  it('shows a line before the column it would go before', () => {
+    renderBoard(<RetroBoard />, dragging('col-2'));
+    const line = document.querySelector('.sz-drop-line-x')!;
+    expect(line.nextElementSibling).toContainElement(screen.getByRole('heading', { name: 'Da evitare' }));
+  });
+
+  it('shows the line after the last column, and offers "Add column"', () => {
+    renderBoard(<RetroBoard />, dragging(null));
+    const line = document.querySelector('.sz-drop-line-x')!;
+    expect(line.previousElementSibling).toContainElement(screen.getByRole('heading', { name: 'Da evitare' }));
+    expect(screen.getByRole('button', { name: 'Aggiungi colonna' })).toBeInTheDocument();
   });
 });
 
@@ -185,35 +229,42 @@ describe('LinesVeilsColumn', () => {
     expect(screen.queryByText('Ancora nessun post-it.')).not.toBeInTheDocument();
   });
 
-  // Decisions 2, 8 and 16: the Master drops a Retro post-it to promote it, a Lines & Veils one to move it.
-  it('promotes or moves the post-it the Master drops on it', () => {
-    const { act } = renderBoard(<LinesVeilsColumn column={lines} />, master);
-    const frame = frameOf('Linee');
-
-    fireEvent.dragOver(frame, { dataTransfer: drag({}) });
-    expect(frame).toHaveAttribute('data-drop-over', 'true');
-    fireEvent.dragLeave(frame);
-    expect(frame).not.toHaveAttribute('data-drop-over');
-
-    expect(drop(frame, drag({ id: 'card-1', action: 'promote', columnId: 'col-1' }))).toBe(true);
-    expect(act).toHaveBeenLastCalledWith(boardWrites.promote('card-1', 'lv-lines'));
-    expect(frame).not.toHaveAttribute('data-drop-over');
-    drop(frame, drag({ id: 'card-2', action: 'move', columnId: 'lv-must' }));
-    expect(act).toHaveBeenLastCalledWith(boardWrites.move('card-2', 'lv-lines'));
-    drop(frame, drag({ id: 'card-3', action: 'move', columnId: 'lv-lines' }));
-    expect(act).toHaveBeenCalledTimes(2);
+  // Decisions 2 and 8: a Retro post-it dragged over the row would be promoted there.
+  it('lights up as where a dragged Retro post-it is promoted', () => {
+    renderBoard(
+      <>
+        <LinesVeilsColumn column={lines} />
+        <LinesVeilsColumn column={must} />
+      </>,
+      { ...master, dnd: { active: { kind: 'card', id: 'card-1' }, intent: { kind: 'promote', columnId: 'lv-lines' } } },
+    );
+    expect(frameOf('Linee')).toHaveAttribute('data-drop-over', 'true');
+    expect(frameOf('Must')).not.toHaveAttribute('data-drop-over');
   });
 
-  it('ignores anything else dropped on it, and every drop for a Player', () => {
-    const { act } = renderBoard(<LinesVeilsColumn column={lines} />, master);
-    expect(drop(frameOf('Linee'), drag({}, ['text/plain']))).toBe(false);
-    expect(act).not.toHaveBeenCalled();
+  // Decision 16, spec 46d Decision 7: a Lines & Veils post-it lands where the line shows, between or after.
+  it('shows a line before a post-it or after the last', () => {
+    const row = {
+      ...lines,
+      cards: column({ cards: [rawPostIt({ id: 'a', column_id: 'lv-lines' }), rawPostIt({ id: 'b', column_id: 'lv-lines', position: 1 })] }).cards,
+    };
+    const at = (beforeId: string | null) => ({
+      ...master,
+      dnd: {
+        active: { kind: 'card' as const, id: 'x' },
+        intent: { kind: 'place' as const, columnId: 'lv-lines', groupId: null, beforeId },
+      },
+    });
+    renderBoard(<LinesVeilsColumn column={row} />, at('b'));
+    expect(document.querySelector('.sz-drop-line-x:not([data-end])')).toBeInTheDocument();
+    expect(document.querySelector('[data-end]')).not.toBeInTheDocument();
+    cleanup();
+    renderBoard(<LinesVeilsColumn column={row} />, at(null));
+    expect(document.querySelectorAll('.sz-drop-line-x[data-end]')).toHaveLength(1);
   });
 
-  it('is no drop target for a Player, who writes nothing in it', () => {
-    const { act } = renderBoard(<LinesVeilsColumn column={lines} />);
-    expect(drop(frameOf('Linee'), drag({ id: 'card-1', action: 'promote', columnId: 'col-1' }))).toBe(false);
-    expect(act).not.toHaveBeenCalled();
+  it('takes no new post-its from a Player, who writes nothing in it', () => {
+    renderBoard(<LinesVeilsColumn column={lines} />);
     expect(screen.queryByRole('button', { name: 'Aggiungi' })).not.toBeInTheDocument();
   });
 

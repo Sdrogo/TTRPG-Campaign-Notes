@@ -1357,6 +1357,15 @@
       "pause": "Pausar",
       "resume": "Reanudar",
       "stop": "Detener y borrar"
+    },
+    "dnd": {
+      "groupHere": "Agrupar",
+      "instructions": "Para moverlo, pulsa Espacio o Intro, muévelo con las flechas y pulsa Espacio o Intro para soltarlo. Esc cancela.",
+      "pickedUp": "Has cogido {{name}}.",
+      "over": "Sobre {{name}}.",
+      "noTarget": "No estás sobre un sitio donde soltarlo.",
+      "dropped": "Has soltado {{name}}.",
+      "cancelled": "Cancelado: {{name}} vuelve a su sitio."
     }
   }
 }

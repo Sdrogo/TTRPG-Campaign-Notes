@@ -538,6 +538,7 @@ export function rawPostIt(overrides: Record<string, unknown> = {}) {
     id: 'card-1',
     column_id: 'col-1',
     group_id: null,
+    position: 0,
     body: 'Niente ragni',
     author_id: 'user-1',
     anonymous: false,
@@ -555,6 +556,7 @@ export function rawPostIt(overrides: Record<string, unknown> = {}) {
     can_move: false,
     can_react: true,
     can_group: false,
+    can_place: false,
     ...overrides,
   };
 }

@@ -19,6 +19,7 @@ from app.domain.session_zero import (
     STOPPED_TIMER,
     AlreadyPromotedError,
     AlreadyPublishedError,
+    BadPlaceError,
     BoardFullError,
     Card,
     Column,
@@ -42,6 +43,7 @@ from app.domain.session_zero import (
     apply_timer,
     can_delete_card,
     can_group,
+    can_place,
     can_promote,
     clean_body,
     clean_column_title,
@@ -53,12 +55,15 @@ from app.domain.session_zero import (
     ensure_can_edit_card,
     ensure_can_group,
     ensure_can_move,
+    ensure_can_place_card,
+    ensure_can_place_group,
     ensure_can_promote,
     ensure_can_publish,
     ensure_can_react,
     ensure_master,
     ensure_retro_column,
     is_card_visible,
+    placed,
     remaining_seconds,
     shown_author,
 )
@@ -166,26 +171,117 @@ def test_group_titles_are_optional_and_bounded() -> None:
 
 
 def test_the_master_groups_published_post_its_of_an_open_retro_column() -> None:
-    assert can_group(_card(), RETRO, OPEN, MASTER)
-    assert not can_group(_card(), RETRO, OPEN, PLAYER)
-    assert not can_group(_card(published_at=None), RETRO, OPEN, MASTER)
-    assert not can_group(_card(), RETRO, CLOSED, MASTER)
-    assert not can_group(_card(column_id=LINES.id), LINES, None, MASTER)
-    pair = [_card(), _card()]
-    ensure_can_group(pair, RETRO, OPEN, MASTER)
-    with pytest.raises(NotMasterError):
-        ensure_can_group(pair, RETRO, OPEN, PLAYER)
+    assert can_group(_card(), RETRO, OPEN, OTHER, MASTER)
+    assert not can_group(_card(published_at=None), RETRO, OPEN, AUTHOR, MASTER)
+    assert not can_group(_card(), RETRO, CLOSED, OTHER, MASTER)
+    assert not can_group(_card(column_id=LINES.id), LINES, None, OTHER, MASTER)
+    pair = [_card(), _card(author_id=OTHER)]
+    ensure_can_group(pair, RETRO, OPEN, OTHER, MASTER)
     with pytest.raises(RoundClosedError):
-        ensure_can_group(pair, RETRO, CLOSED, MASTER)
+        ensure_can_group(pair, RETRO, CLOSED, OTHER, MASTER)
     with pytest.raises(NotGroupableError):
-        ensure_can_group(pair[:1], RETRO, OPEN, MASTER)
+        ensure_can_group(pair[:1], RETRO, OPEN, OTHER, MASTER)
     with pytest.raises(NotGroupableError):
-        ensure_can_group([_card(), _card(published_at=None)], RETRO, OPEN, MASTER)
+        ensure_can_group([_card(), _card(published_at=None)], RETRO, OPEN, OTHER, MASTER)
     with pytest.raises(NotGroupableError):
-        ensure_can_group([_card(), _card(column_id=VEILS.id)], RETRO, OPEN, MASTER)
+        ensure_can_group([_card(), _card(column_id=VEILS.id)], RETRO, OPEN, OTHER, MASTER)
     lines_pair = [_card(column_id=LINES.id), _card(column_id=LINES.id)]
     with pytest.raises(NotGroupableError):
-        ensure_can_group(lines_pair, LINES, None, MASTER)
+        ensure_can_group(lines_pair, LINES, None, OTHER, MASTER)
+
+
+def test_a_player_groups_only_their_own_post_its() -> None:
+    """Spec 46d Q2: theirs, into groups holding nobody else's."""
+    assert can_group(_card(), RETRO, OPEN, AUTHOR, PLAYER)
+    assert not can_group(_card(), RETRO, OPEN, OTHER, PLAYER)
+    mine = [_card(), _card()]
+    ensure_can_group(mine, RETRO, OPEN, AUTHOR, PLAYER, mates=[_card()])
+    with pytest.raises(NotAuthorError):
+        ensure_can_group([_card(), _card(author_id=OTHER)], RETRO, OPEN, AUTHOR, PLAYER)
+    with pytest.raises(NotAuthorError):
+        ensure_can_group(mine, RETRO, OPEN, AUTHOR, PLAYER, mates=[_card(author_id=OTHER)])
+
+
+def test_who_drags_a_post_it() -> None:
+    """Spec 46d Decision 7 and Q2."""
+    assert can_place(_card(), RETRO, OPEN, OTHER, MASTER)
+    assert can_place(_card(), RETRO, OPEN, AUTHOR, PLAYER)
+    assert can_place(_card(published_at=None), RETRO, OPEN, AUTHOR, PLAYER)
+    assert not can_place(_card(), RETRO, OPEN, OTHER, PLAYER)
+    assert not can_place(_card(), RETRO, CLOSED, OTHER, MASTER)
+    assert can_place(_card(column_id=LINES.id), LINES, None, OTHER, MASTER)
+    assert not can_place(_card(column_id=LINES.id), LINES, None, AUTHOR, PLAYER)
+
+
+def test_a_dragged_post_it_stays_on_its_board_and_follows_the_rights() -> None:
+    other_retro = replace(RETRO, id=uuid.uuid4())
+    later_round = replace(RETRO, id=uuid.uuid4(), round_id=uuid.uuid4())
+    card = _card()
+    ensure_can_place_card(card, RETRO, other_retro, OPEN, AUTHOR, PLAYER, into_group=False)
+    ensure_can_place_card(card, RETRO, RETRO, OPEN, OTHER, MASTER, into_group=True)
+    for target in (LINES, later_round):
+        with pytest.raises(WrongBoardError):
+            ensure_can_place_card(card, RETRO, target, OPEN, OTHER, MASTER, into_group=False)
+    with pytest.raises(RoundClosedError):
+        ensure_can_place_card(card, RETRO, RETRO, CLOSED, OTHER, MASTER, into_group=False)
+    with pytest.raises(NotAuthorError):
+        ensure_can_place_card(card, RETRO, RETRO, OPEN, OTHER, PLAYER, into_group=False)
+    # Leaving or joining a group: a Player's only among their own.
+    ensure_can_place_card(
+        card, RETRO, RETRO, OPEN, AUTHOR, PLAYER, into_group=True, mates=[_card()]
+    )
+    with pytest.raises(NotAuthorError):
+        ensure_can_place_card(
+            card,
+            RETRO,
+            RETRO,
+            OPEN,
+            AUTHOR,
+            PLAYER,
+            into_group=True,
+            mates=[_card(author_id=OTHER)],
+        )
+    with pytest.raises(NotGroupableError):
+        ensure_can_place_card(
+            _card(published_at=None), RETRO, RETRO, OPEN, AUTHOR, PLAYER, into_group=True
+        )
+    # Lines & Veils: the Master's, without two copies of one original in a row.
+    copy = _card(column_id=LINES.id, source_card_id=card.id, promoted_by=OTHER)
+    ensure_can_place_card(copy, LINES, VEILS, None, OTHER, MASTER, into_group=False)
+    with pytest.raises(NotMasterError):
+        ensure_can_place_card(copy, LINES, LINES, None, AUTHOR, PLAYER, into_group=False)
+    with pytest.raises(AlreadyPromotedError):
+        ensure_can_place_card(
+            copy, LINES, VEILS, None, OTHER, MASTER, into_group=False, sources_in_target=[card.id]
+        )
+
+
+def test_the_master_drags_groups_within_the_open_round() -> None:
+    other_retro = replace(RETRO, id=uuid.uuid4())
+    ensure_can_place_group(RETRO, other_retro, OPEN, MASTER)
+    with pytest.raises(NotMasterError):
+        ensure_can_place_group(RETRO, RETRO, OPEN, PLAYER)
+    with pytest.raises(WrongBoardError):
+        ensure_can_place_group(RETRO, LINES, OPEN, MASTER)
+    with pytest.raises(WrongBoardError):
+        ensure_can_place_group(RETRO, replace(RETRO, round_id=uuid.uuid4()), OPEN, MASTER)
+    with pytest.raises(RoundClosedError):
+        ensure_can_place_group(RETRO, RETRO, CLOSED, MASTER)
+
+
+def test_placing_puts_an_item_before_another_or_last() -> None:
+    a, b, c = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    assert placed([a, b, c], c, a) == [c, a, b]
+    assert placed([a, b, c], a, None) == [b, c, a]
+    assert placed([a, b, c], a, c) == [b, a, c]
+    new = uuid.uuid4()
+    assert placed([a, b], new, b) == [a, new, b]
+    with pytest.raises(BadPlaceError):
+        placed([a, b], a, a)
+    with pytest.raises(BadPlaceError):
+        placed([a, b], a, uuid.uuid4())
+    with pytest.raises(BadPlaceError):
+        placed([a, b, c], a, c, hidden={c})
 
 
 def test_the_author_edits_retro_post_its_of_the_open_round() -> None:

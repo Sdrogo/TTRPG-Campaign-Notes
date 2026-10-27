@@ -1357,6 +1357,15 @@
       "pause": "Pauzeren",
       "resume": "Hervatten",
       "stop": "Stoppen en wissen"
+    },
+    "dnd": {
+      "groupHere": "Groeperen",
+      "instructions": "Druk op Spatie of Enter om te verplaatsen, beweeg met de pijltjestoetsen en druk op Spatie of Enter om los te laten. Esc annuleert.",
+      "pickedUp": "{{name}} opgepakt.",
+      "over": "Boven {{name}}.",
+      "noTarget": "Niet boven een plek om los te laten.",
+      "dropped": "{{name}} losgelaten.",
+      "cancelled": "Geannuleerd: {{name}} staat weer op zijn plek."
     }
   }
 }

@@ -1427,6 +1427,15 @@
       "pause": "Wstrzymaj",
       "resume": "Wznów",
       "stop": "Zatrzymaj i wyczyść"
+    },
+    "dnd": {
+      "groupHere": "Grupuj",
+      "instructions": "Aby przenieść, naciśnij Spację lub Enter, przesuwaj strzałkami, a potem naciśnij Spację lub Enter, by upuścić. Esc anuluje.",
+      "pickedUp": "Podniesiono: {{name}}.",
+      "over": "Nad: {{name}}.",
+      "noTarget": "Nie nad miejscem do upuszczenia.",
+      "dropped": "Upuszczono: {{name}}.",
+      "cancelled": "Anulowano: {{name}} wraca na swoje miejsce."
     }
   }
 }

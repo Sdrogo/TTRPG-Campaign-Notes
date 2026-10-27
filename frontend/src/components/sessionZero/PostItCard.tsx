@@ -1,12 +1,15 @@
-import { useState, type CSSProperties, type DragEvent, type ReactNode } from 'react';
+import { useCallback, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { Badge, Button, Group, Menu, Modal, Paper, Stack, Switch, Text, UnstyledButton } from '@mantine/core';
 import { DotsThreeVerticalIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { AddReaction, ReactionChips } from '../comments/CommentReactions';
 import { LabeledActionIcon } from '../LabeledActionIcon';
 import { displayNameFor } from '../../lib/members';
-import { POST_IT_DRAG_TYPE, boardWrites, columnColor, type DraggedPostIt } from '../../lib/sessionZero';
+import { boardWrites, columnColor } from '../../lib/sessionZero';
+import { dragKey } from '../../lib/sessionZeroDnd';
 import type { PostIt, PostItColumn } from '../../types/sessionZero';
+import { useDndState, type DropData } from './boardDrag';
 import { PostItEditor } from './PostItEditor';
 import { useBoard } from './boardContext';
 
@@ -24,9 +27,11 @@ interface PostItCardProps {
  * ("Anonymous" for someone else's anonymous one), a "Draft" or "from the
  * Retro" badge, the reactions, a visible "Publish" on the viewer's draft
  * (Decision 8), and a "⋮" with what the backend allows the viewer: publish,
- * edit, promote to or move between Must / Veils / Lines, group, delete. The
- * Master drags it onto a Lines & Veils column, or onto another post-it of
- * its Retro column to group them (Decision 9).
+ * edit, promote to or move between Must / Veils / Lines, group, delete.
+ * Dragged into place by whoever may move it (spec 46d Decision 7: the
+ * Master any, a Player their own), onto a Lines & Veils row to promote it,
+ * or onto another post-it to group them: that one then shows a ring and
+ * "Group". Dragged, it stays in place faded.
  */
 export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
   const { t } = useTranslation();
@@ -34,7 +39,7 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
   const [editing, setEditing] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [groupingWith, setGroupingWith] = useState(false);
-  const [over, setOver] = useState(false);
+  const { intent } = useDndState();
   const canEdit = writable && postIt.canEdit;
   const canDelete = writable && postIt.canDelete;
   const canPublish = writable && postIt.canPublish;
@@ -42,7 +47,8 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
   const canMove = writable && postIt.canMove;
   const canReact = writable && postIt.canReact;
   const canGroup = writable && postIt.canGroup;
-  const partners = canGroup ? groupPartners(postIt, column) : [];
+  const canDrag = writable && (postIt.canPlace || postIt.canPromote);
+  const partners = canGroup ? groupPartners(postIt, column, board.canManage) : [];
   const targets = board.linesVeils.filter((other) => !(canMove && other.id === postIt.columnId));
   const hasMenu = canEdit || canDelete || canPublish || canPromote || canMove || canGroup;
   const tint = { '--sz-color': columnColor(column) } as CSSProperties;
@@ -54,26 +60,32 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
         ? t('common.you')
         : displayNameFor(members, postIt.authorId);
 
-  const onDragStart = (event: DragEvent<HTMLDivElement>) => {
-    const dragged: DraggedPostIt = {
-      id: postIt.id,
-      action: onLinesVeils ? 'move' : 'promote',
-      columnId: postIt.columnId,
-    };
-    event.dataTransfer.setData(POST_IT_DRAG_TYPE, JSON.stringify(dragged));
-    event.dataTransfer.effectAllowed = onLinesVeils ? 'move' : 'copyMove';
-  };
-  // Another published post-it of this column, dropped here, joins it (Decision 9).
-  const accepts = (event: DragEvent) => canGroup && event.dataTransfer.types.includes(POST_IT_DRAG_TYPE);
-  const onDrop = (event: DragEvent) => {
-    setOver(false);
-    if (!accepts(event)) return;
-    event.preventDefault();
-    const dragged = JSON.parse(event.dataTransfer.getData(POST_IT_DRAG_TYPE)) as DraggedPostIt;
-    if (dragged.action === 'promote' && dragged.columnId === postIt.columnId && dragged.id !== postIt.id) {
-      act(boardWrites.group([postIt.id, dragged.id]));
-    }
-  };
+  const key = dragKey({ kind: 'card', id: postIt.id });
+  const draggable = useDraggable({ id: key, disabled: !canDrag });
+  const data: DropData = { ref: { kind: 'card', id: postIt.id }, axis: onLinesVeils ? 'x' : 'y' };
+  const droppable = useDroppable({ id: key, data });
+  const { setNodeRef: setDragRef } = draggable;
+  const { setNodeRef: setDropRef } = droppable;
+  const nodeRef = useCallback(
+    (node: HTMLElement | null) => {
+      setDragRef(node);
+      setDropRef(node);
+    },
+    [setDragRef, setDropRef],
+  );
+  const groupTarget = intent?.kind === 'group' && intent.withId === postIt.id;
+  // Space or Enter on the post-it itself picks it up; on its buttons they press them.
+  const { onKeyDown, ...pointerListeners } = draggable.listeners ?? {};
+  const dragProps = canDrag
+    ? {
+        ...pointerListeners,
+        tabIndex: 0,
+        'aria-describedby': draggable.attributes['aria-describedby'],
+        onKeyDown: (event: KeyboardEvent) => {
+          if (event.target === event.currentTarget) onKeyDown?.(event);
+        },
+      }
+    : {};
 
   if (editing) {
     return (
@@ -99,20 +111,19 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
       className="sz-post-it"
       data-draft={postIt.draft || undefined}
       data-glow={glowing.has(postIt.id) || undefined}
-      data-drop-over={over || undefined}
-      draggable={canPromote || canMove}
-      onDragStart={onDragStart}
-      onDragOver={(event) => {
-        if (!accepts(event)) return;
-        event.preventDefault();
-        setOver(true);
-      }}
-      onDragLeave={() => setOver(false)}
-      onDrop={onDrop}
+      data-group-target={groupTarget || undefined}
+      data-dragging={draggable.isDragging || undefined}
+      ref={nodeRef}
+      {...dragProps}
       aria-label={t('sessionZero.postIt.label', { author })}
       role="article"
-      style={{ ...tint, cursor: canPromote || canMove ? 'grab' : undefined }}
+      style={{ ...tint, cursor: canDrag ? 'grab' : undefined, userSelect: canDrag ? 'none' : undefined }}
     >
+      {groupTarget && (
+        <Badge size="sm" className="sz-group-here">
+          {t('sessionZero.dnd.groupHere')}
+        </Badge>
+      )}
       <Stack gap={6}>
         <Group justify="space-between" wrap="nowrap" align="flex-start" gap="xs">
           <Text size="sm" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
@@ -150,7 +161,7 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
                 {partners.length > 0 && (
                   <Menu.Item onClick={() => setGroupingWith(true)}>{t('sessionZero.groups.groupWith')}</Menu.Item>
                 )}
-                {canGroup && postIt.groupId && (
+                {canGroup && board.canManage && postIt.groupId && (
                   <Menu.Item onClick={() => act(boardWrites.ungroup(postIt.id))}>
                     {t('sessionZero.groups.takeOut')}
                   </Menu.Item>
@@ -240,8 +251,12 @@ interface GroupPartner {
   group?: { title: string | null; count: number };
 }
 
-/** What `postIt` can be grouped with: the other groups and lone post-its of its column. */
-function groupPartners(postIt: PostIt, column: PostItColumn): GroupPartner[] {
+/**
+ * What `postIt` can be grouped with: the other groups and lone post-its of
+ * its column; for a Player, only theirs and groups holding only theirs
+ * (spec 46d Q2).
+ */
+function groupPartners(postIt: PostIt, column: PostItColumn, manage: boolean): GroupPartner[] {
   const partners: GroupPartner[] = [];
   const seen = new Set<string>();
   for (const card of column.cards) {
@@ -250,14 +265,13 @@ function groupPartners(postIt: PostIt, column: PostItColumn): GroupPartner[] {
       partners.push({ cardId: card.id, label: card.body });
     } else if (card.groupId !== postIt.groupId && !seen.has(card.groupId)) {
       seen.add(card.groupId);
+      const mates = column.cards.filter((c) => c.groupId === card.groupId);
+      if (!manage && !mates.every((mate) => mate.mine)) continue;
       const group = column.groups.find((g) => g.id === card.groupId);
       partners.push({
         cardId: card.id,
         label: card.body,
-        group: {
-          title: group?.title ?? null,
-          count: column.cards.filter((c) => c.groupId === card.groupId).length,
-        },
+        group: { title: group?.title ?? null, count: mates.length },
       });
     }
   }

@@ -31,19 +31,37 @@ export function useSessionZero(roomId: string, roundId: string | null) {
   });
 }
 
+/** One write, and the open round's boards to show until it is answered (a drag's, spec 46d). */
+export interface SessionZeroWriteRequest {
+  write: BoardWrite;
+  preview?: SessionZero;
+}
+
 /**
  * Sends one write to the boards (`boardWrites` in `lib/sessionZero`). Every
  * write answers with the open round's boards, which replace the open round's
  * cache at once; a closed round on screen is read again, since a promotion
- * from it changes what it shows.
+ * from it changes what it shows. A `preview` shows meanwhile, and the
+ * boards go back to what they were if the write fails.
  */
 export function useSessionZeroWrite(roomId: string) {
   const queryClient = useQueryClient();
+  const openKey = roundQueryKey(roomId, null);
   return useMutation({
-    mutationFn: async ({ path, method, json }: BoardWrite) =>
+    mutationFn: async ({ write: { path, method, json } }: SessionZeroWriteRequest) =>
       toSessionZero(await apiFetch<RawSessionZero>(`${sessionZeroPath(roomId)}${path}`, { method, json })),
+    onMutate: async ({ preview }) => {
+      if (!preview) return undefined;
+      await queryClient.cancelQueries({ queryKey: openKey });
+      const previous = queryClient.getQueryData<SessionZero>(openKey);
+      queryClient.setQueryData(openKey, preview);
+      return { previous };
+    },
+    onError: (_error, _request, context) => {
+      if (context?.previous) queryClient.setQueryData(openKey, context.previous);
+    },
     onSuccess: (board) => {
-      queryClient.setQueryData(roundQueryKey(roomId, null), board);
+      queryClient.setQueryData(openKey, board);
       return queryClient.invalidateQueries({
         queryKey: sessionZeroQueryKey(roomId),
         predicate: (query) => query.queryKey[3] !== 'open',

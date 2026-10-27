@@ -920,10 +920,11 @@ async def test_the_master_groups_related_post_its(
             f"{room.url}/groups", json={"card_ids": list(card_ids)}, headers=member.headers
         )
 
+    # A Player groups their own published post-its only (spec 46d Q2).
     player_view = _cards(await _get(client, room, room.player))
-    assert not any(c["can_group"] for c in player_view)
+    assert {c["id"] for c in player_view if c["can_group"]} == {one, three, elsewhere}
     assert (await group(room.player, one, two)).status_code == 403
-    assert (await group(room.player)).status_code == 403
+    assert (await group(room.player)).status_code == 422
     assert (await group(room.master)).status_code == 422
     assert (await group(room.master, one)).status_code == 422
     assert (await group(room.master, one, elsewhere)).status_code == 422
@@ -1040,3 +1041,220 @@ async def test_the_master_deletes_the_session_zero(
     assert [r["number"] for r in again["rounds"]] == [1]
     assert [c["color"] for c in again["retro"]] == ["green", "gold", "red"]
     assert _cards(again) == []
+
+
+def _order(column: Any) -> list[Any]:
+    """A column as drawn (spec 46d Decision 7): its post-its in no group and
+    its groups by `position`, a group as the list of its post-its."""
+    groups = {g["id"]: g["position"] for g in column["groups"]}
+    items: list[tuple[int, Any]] = [
+        (c["position"], c["body"]) for c in column["cards"] if c["group_id"] is None
+    ]
+    for group_id, position in groups.items():
+        members = sorted(
+            (c["position"], c["body"]) for c in column["cards"] if c["group_id"] == group_id
+        )
+        items.append((position, [body for _, body in members]))
+    return [item for _, item in sorted(items, key=lambda pair: pair[0])]
+
+
+async def test_members_drag_post_its_into_place(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 46d Decision 7 and Q2: the Master moves any post-it, a Player
+    their own, drafts included, within the open round's Retro board."""
+    room, board = await _started(client, make_token)
+    want, care = board["retro"][0]["id"], board["retro"][1]["id"]
+    one = await _posted(client, room, room.player, want, "Dragons")
+    two = await _posted(client, room, room.other_player, want, "Wyverns")
+    draft = await _write(client, room, room.player, want, "Drakes")
+
+    async def place(member: _Member, card_id: str, **body: str | None) -> Response:
+        return await client.put(
+            f"{room.url}/cards/{card_id}/place", json=body, headers=member.headers
+        )
+
+    # New post-its come last; only the viewer's own carry the handle.
+    player_view = await _get(client, room, room.player)
+    assert _order(player_view["retro"][0]) == ["Dragons", "Wyverns", "Drakes"]
+    assert {c["id"] for c in _cards(player_view) if c["can_place"]} == {one, draft}
+    assert all(c["can_place"] for c in _cards(await _get(client, room, room.master)))
+
+    # A Player's draft moves first; nobody else hears of it.
+    revision = player_view["revision"]
+    moved = await place(room.player, draft, column_id=want, before_id=one)
+    assert moved.status_code == 200, moved.text
+    assert _order(moved.json()["retro"][0]) == ["Drakes", "Dragons", "Wyverns"]
+    assert moved.json()["revision"] == revision
+    assert _order((await _get(client, room, room.master))["retro"][0]) == ["Dragons", "Wyverns"]
+    # ...not even as where something else lands: like a missing id.
+    hidden = await place(room.master, two, column_id=want, before_id=draft)
+    assert hidden.status_code == 422
+    assert (
+        hidden.json()
+        == (await place(room.master, two, column_id=want, before_id=str(uuid.uuid4()))).json()
+    )
+
+    # Someone else's post-it is the Master's to move; theirs goes to another column, last.
+    assert (await place(room.player, two, column_id=want)).status_code == 403
+    across = await place(room.master, two, column_id=care)
+    assert across.json()["revision"] == revision + 1
+    assert [c["body"] for c in across.json()["retro"][1]["cards"]] == ["Wyverns"]
+
+    # Where it lands must be in that column; it stays on its board.
+    assert (await place(room.player, one, column_id=want, before_id=two)).status_code == 422
+    assert (await place(room.player, one, column_id=want, before_id=one)).status_code == 422
+    lines = await place(room.master, one, column_id=_column(board, "lines"))
+    assert lines.status_code == 422
+    assert lines.json()["detail"] == (
+        "A post-it or group only moves within its own board and session"
+    )
+    assert (await place(room.player, one, column_id=str(uuid.uuid4()))).status_code == 404
+
+    # A closed round's post-its stay put.
+    await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
+    assert (await place(room.master, one, column_id=want)).status_code == 409
+
+
+async def test_dragging_post_its_into_and_out_of_groups(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 46d Decision 7: groups keep their place in the column, and a
+    Player groups their own post-its only (Q2)."""
+    room, board = await _started(client, make_token)
+    want, care = board["retro"][0]["id"], board["retro"][1]["id"]
+    one = await _posted(client, room, room.player, want, "Dragons")
+    two = await _posted(client, room, room.player, want, "Drakes")
+    three = await _posted(client, room, room.other_player, want, "Wyverns")
+    four = await _posted(client, room, room.player, want, "Basilisks")
+    draft = await _write(client, room, room.player, want, "Hydras")
+
+    async def place(member: _Member, card_id: str, **body: str | None) -> Response:
+        return await client.put(
+            f"{room.url}/cards/{card_id}/place", json=body, headers=member.headers
+        )
+
+    async def group(member: _Member, *card_ids: str) -> Response:
+        return await client.post(
+            f"{room.url}/groups", json={"card_ids": list(card_ids)}, headers=member.headers
+        )
+
+    # A Player drops their post-it on another of theirs: the group stands
+    # where the one dropped on did.
+    grouped = await group(room.player, two, four)
+    assert grouped.status_code == 200, grouped.text
+    column = grouped.json()["retro"][0]
+    assert _order(column) == ["Dragons", ["Drakes", "Basilisks"], "Wyverns", "Hydras"]
+    (made,) = column["groups"]
+    assert (await group(room.player, one, three)).status_code == 403
+    assert (await group(room.player, three, two)).status_code == 403
+
+    # Dropped into the group: theirs, published, into a group of theirs only.
+    joined = await place(room.player, one, column_id=want, group_id=made["id"], before_id=four)
+    assert _order(joined.json()["retro"][0]) == [
+        ["Drakes", "Dragons", "Basilisks"],
+        "Wyverns",
+        "Hydras",
+    ]
+    assert (await place(room.player, draft, column_id=want, group_id=made["id"])).status_code == 422
+    assert (
+        await place(room.player, one, column_id=want, group_id=made["id"], before_id=three)
+    ).status_code == 422
+    assert (await place(room.player, one, column_id=care, group_id=made["id"])).status_code == 422
+    missing = await place(room.player, one, column_id=want, group_id=str(uuid.uuid4()))
+    assert missing.status_code == 404
+    mixed = await place(room.master, three, column_id=want, group_id=made["id"])
+    assert _order(mixed.json()["retro"][0])[0] == ["Drakes", "Dragons", "Basilisks", "Wyverns"]
+    assert (await place(room.player, one, column_id=want)).status_code == 403
+    assert (await place(room.player, one, column_id=want, group_id=made["id"])).status_code == 200
+
+    # Taken out, a post-it lands just after its group; left alone, the last
+    # one takes the group's place.
+    out = await client.post(f"{room.url}/cards/{three}/ungroup", headers=room.master.headers)
+    assert _order(out.json()["retro"][0]) == [["Drakes", "Basilisks", "Dragons"], "Wyverns"]
+    await place(room.player, one, column_id=want, before_id=draft)
+    alone = await place(room.player, four, column_id=care)
+    assert _order(alone.json()["retro"][0]) == ["Drakes", "Wyverns", "Dragons", "Hydras"]
+    assert alone.json()["retro"][0]["groups"] == []
+
+    # "Ungroup all" leaves the post-its where the group stood.
+    regrouped = (await group(room.master, three, two, one)).json()["retro"][0]
+    assert _order(regrouped) == [["Wyverns", "Drakes", "Dragons"]]
+    (kept,) = regrouped["groups"]
+    ungrouped = await client.delete(f"{room.url}/groups/{kept['id']}", headers=room.master.headers)
+    assert _order(ungrouped.json()["retro"][0]) == ["Wyverns", "Drakes", "Dragons"]
+    player_view = await _get(client, room, room.player)
+    assert _order(player_view["retro"][0]) == ["Wyverns", "Drakes", "Dragons", "Hydras"]
+
+
+async def test_the_master_drags_groups_and_lines_and_veils(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 46d Decision 7: a group moves as one block; Lines & Veils is
+    ordered by the Master."""
+    room, board = await _started(client, make_token)
+    want, care = board["retro"][0]["id"], board["retro"][1]["id"]
+    one = await _posted(client, room, room.player, want, "Dragons")
+    two = await _posted(client, room, room.player, want, "Drakes")
+    three = await _posted(client, room, room.player, care, "Wyverns")
+    made = (
+        await client.post(
+            f"{room.url}/groups", json={"card_ids": [one, two]}, headers=room.master.headers
+        )
+    ).json()["retro"][0]["groups"][0]
+
+    async def place_group(member: _Member, **body: str | None) -> Response:
+        return await client.put(
+            f"{room.url}/groups/{made['id']}/place", json=body, headers=member.headers
+        )
+
+    assert (await place_group(room.player, column_id=care)).status_code == 403
+    assert (await place_group(room.master, column_id=care, before_id=one)).status_code == 422
+    assert (await place_group(room.master, column_id=_column(board, "must"))).status_code == 422
+    moved = await place_group(room.master, column_id=care, before_id=three)
+    assert moved.status_code == 200, moved.text
+    assert _order(moved.json()["retro"][0]) == []
+    assert _order(moved.json()["retro"][1]) == [["Dragons", "Drakes"], "Wyverns"]
+    last = await place_group(room.master, column_id=care)
+    assert _order(last.json()["retro"][1]) == ["Wyverns", ["Dragons", "Drakes"]]
+
+    # Lines & Veils: copies come last; the Master reorders them and moves
+    # them between rows.
+    must, lines = _column(board, "must"), _column(board, "lines")
+    for card_id in (one, three):
+        await client.post(
+            f"{room.url}/cards/{card_id}/promote",
+            json={"column_id": must},
+            headers=room.master.headers,
+        )
+    copies = {
+        c["body"]: c["id"]
+        for c in (await _get(client, room, room.master))["lines_veils"][0]["cards"]
+    }
+    assert list(copies) == ["Dragons", "Wyverns"]
+    assert (
+        await client.put(
+            f"{room.url}/cards/{copies['Wyverns']}/place",
+            json={"column_id": must, "before_id": copies["Dragons"]},
+            headers=room.player.headers,
+        )
+    ).status_code == 403
+    reordered = await client.put(
+        f"{room.url}/cards/{copies['Wyverns']}/place",
+        json={"column_id": must, "before_id": copies["Dragons"]},
+        headers=room.master.headers,
+    )
+    assert [c["body"] for c in reordered.json()["lines_veils"][0]["cards"]] == [
+        "Wyverns",
+        "Dragons",
+    ]
+    to_lines = await client.put(
+        f"{room.url}/cards/{copies['Wyverns']}/place",
+        json={"column_id": lines},
+        headers=room.master.headers,
+    )
+    assert [c["body"] for c in to_lines.json()["lines_veils"][2]["cards"]] == ["Wyverns"]
+
+    # A closed round's groups stay put.
+    await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
+    assert (await place_group(room.master, column_id=care)).status_code == 409

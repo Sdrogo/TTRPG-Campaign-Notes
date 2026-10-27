@@ -1357,6 +1357,15 @@
       "pause": "Pause",
       "resume": "Resume",
       "stop": "Stop and clear"
+    },
+    "dnd": {
+      "groupHere": "Group",
+      "instructions": "To move it, press Space or Enter, move with the arrow keys, then press Space or Enter to drop. Esc cancels.",
+      "pickedUp": "Picked up {{name}}.",
+      "over": "Over {{name}}.",
+      "noTarget": "Not over a place to drop.",
+      "dropped": "Dropped {{name}}.",
+      "cancelled": "Cancelled: {{name}} is back in its place."
     }
   }
 }

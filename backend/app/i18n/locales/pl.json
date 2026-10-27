@@ -277,7 +277,9 @@
       "columnOrder": "Nowa kolejność musi wymieniać każdą kolumnę rundy raz",
       "notGroupable": "Grupować można tylko co najmniej dwie opublikowane karteczki z jednej kolumny Retro otwartej rundy",
       "groupNotFound": "Nie znaleziono grupy",
-      "nothingToChange": "Nie ma nic do zmiany"
+      "nothingToChange": "Nie ma nic do zmiany",
+      "badPlace": "Tego miejsca nie ma we wskazanej kolumnie ani grupie",
+      "sameBoard": "Karteczkę lub grupę można przenieść tylko w obrębie jej tablicy i sesji"
     }
   },
   "pdf": {

@@ -10,13 +10,16 @@ export type TimerAction = 'start' | 'pause' | 'resume' | 'stop';
 /**
  * A post-it as the viewer sees it. `authorId` is null on someone else's
  * anonymous post-it (Decision 7); `fromRetro` marks a Lines & Veils copy
- * (Decision 2); `groupId` its group (spec 46c Decision 9). The `can*` flags
- * come from the backend and drive the menu.
+ * (Decision 2); `groupId` its group (spec 46c Decision 9); `position` its
+ * place in its group, or among its column's post-its in no group and its
+ * groups (spec 46d Decision 7). The `can*` flags come from the backend and
+ * drive the menu and the drag (`canPlace`).
  */
 export interface PostIt {
   id: string;
   columnId: string;
   groupId: string | null;
+  position: number;
   body: string;
   authorId: string | null;
   anonymous: boolean;
@@ -34,16 +37,22 @@ export interface PostIt {
   canMove: boolean;
   canReact: boolean;
   canGroup: boolean;
-}
-
-/** Related post-its of a Retro column, gathered by the Master (spec 46c Decision 9). */
-export interface PostItGroup {
-  id: string;
-  title: string | null;
+  canPlace: boolean;
 }
 
 /**
- * A column, its groups and its post-its, oldest first; `kind` is set on
+ * Related post-its of a Retro column (spec 46c Decision 9), gathered by the
+ * Master or by a Player from their own (spec 46d Q2), at `position` among
+ * the column's post-its in no group.
+ */
+export interface PostItGroup {
+  id: string;
+  title: string | null;
+  position: number;
+}
+
+/**
+ * A column, its groups and its post-its, in order; `kind` is set on
  * Lines & Veils; `color` comes from the maps' palette (spec 46c Decision 5).
  */
 export interface PostItColumn {

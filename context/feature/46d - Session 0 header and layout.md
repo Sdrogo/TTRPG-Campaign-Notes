@@ -167,6 +167,46 @@ The ticket is confirmed.
   `rounds.startButton` "Create", new `rounds.closedBadge`; `publishAll.button`
   shortened; `rounds.titlePlaceholder` removed (12 languages).
 
+## As built (46d_2, 2026-10-27)
+
+- Migration `d4a7e2c9f1b3` (after `c3f8a1d6e9b4`): `position` (integer,
+  default 0) on `session_zero_cards` and `session_zero_groups`. A group's
+  post-its are numbered by `created_at`; a column's top level (post-its in
+  no group, and groups, a group counted at its oldest post-it) likewise.
+- Routes: instead of one `columns/{id}/layout` with the column's whole
+  order, two smaller ones that say where one item lands, so two members
+  dragging at once don't overwrite each other's order:
+  `PUT /cards/{id}/place` and `PUT /groups/{id}/place`, body
+  `{column_id, group_id?, before_id?}` (`before_id` null: last). An
+  unknown or foreign `before_id` is 422 `errors.sessionZero.badPlace`;
+  another board or round 409 `errors.sessionZero.sameBoard`. New post-its,
+  moves from the menu and promotions go last; "Ungroup all" leaves the
+  post-its where the group was, "Take out" puts the post-it right after its
+  group; a group of one dissolves and its post-it takes its place.
+- Rights (Q2), in `app/domain/session_zero.py`: `can_place` (the Master
+  any, a Player their own, drafts included); joining or leaving a group
+  holding someone else's post-its, and dragging groups and columns, are
+  the Master's. `can_group` lets a Player group post-its that are all their
+  own. Lines & Veils stays the Master's (Decision 16): a Player's
+  `can_place` is false there. "Take out" of a group stays the Master's in
+  the menu.
+- Frontend: `@dnd-kit/core` only (no `@dnd-kit/sortable`): post-its, groups
+  (by their heading) and columns (by their heading, pointer only; the menu
+  keeps "Move left / right") are draggables, and post-its, groups and
+  columns droppables. The pure rules are in `lib/sessionZeroDnd.ts`: the
+  pointer's third of what it is over picks before, onto (group) or after;
+  onto a group joins it at its end; onto a Lines & Veils row promotes a
+  Retro post-it. While dragging, a line opens a gap where the item lands,
+  the post-it or group it would join shows a ring and "Group", a row it
+  would be promoted to lights up; the dragged item stays faded in place
+  and a tilted copy follows the pointer. Mouse (5 px), a long press on a
+  phone (250 ms, so a swipe still scrolls) and the keyboard (Space, arrows,
+  Space; Esc cancels), with screen reader announcements. The new order
+  shows at once (`useSessionZeroWrite` `preview`) and goes back if the
+  write fails. Less motion: no slide back after a drop, no gap animation.
+- Strings: `sessionZero.dnd.*` (12 languages), backend
+  `errors.sessionZero.badPlace` and `sameBoard`.
+
 ## Tests
 
 - The header shows selector, timer, publish and the Master's actions on one
@@ -176,7 +216,7 @@ The ticket is confirmed.
   the selector lists sessions by name; a closed one carries the badge.
 - "Aggiungi colonna" is an icon button with its accessible name.
 - Comments' reactions keep the small size; post-its' use the large one.
-- Backend: layout route moves and reorders, keeps groups' post-its
+- Backend (as built: the place routes): place moves and reorders, keeps groups' post-its
   together, refuses a closed session, another board, a missing or repeated
   item, a Player moving someone else's post-it or any group; `revision`
   bumps once; the migration keeps today's order.

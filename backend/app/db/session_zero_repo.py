@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Collection, Sequence
 from datetime import datetime
 
-from sqlalchemy import ColumnElement, delete, func, or_, select, update
+from sqlalchemy import ColumnElement, case, delete, func, literal, or_, select, union_all, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,7 +72,12 @@ def _card(row: SessionZeroCardRow) -> Card:
         created_at=row.created_at,
         updated_at=row.updated_at,
         group_id=row.group_id,
+        position=row.position,
     )
+
+
+def _group(row: SessionZeroGroupRow) -> Group:
+    return Group(id=row.id, column_id=row.column_id, title=row.title, position=row.position)
 
 
 async def get_state(
@@ -274,14 +279,106 @@ async def set_column_positions(session: AsyncSession, column_ids: Sequence[uuid.
         )
 
 
+_CARD_ORDER = (SessionZeroCardRow.position, SessionZeroCardRow.created_at, SessionZeroCardRow.id)
+
+
 async def list_cards(session: AsyncSession, column_ids: Collection[uuid.UUID]) -> list[Card]:
-    """Every post-it in these columns, drafts included, oldest first."""
+    """Every post-it in these columns, drafts included, by `position`
+    (spec 46d Decision 7), the oldest first among equals."""
     result = await session.execute(
         select(SessionZeroCardRow)
         .where(SessionZeroCardRow.column_id.in_(column_ids))
-        .order_by(SessionZeroCardRow.created_at, SessionZeroCardRow.id)
+        .order_by(*_CARD_ORDER)
     )
     return [_card(row) for row in result.scalars()]
+
+
+async def list_group_cards(session: AsyncSession, group_ids: Collection[uuid.UUID]) -> list[Card]:
+    """The post-its of these groups, drafts never among them, in order."""
+    result = await session.execute(
+        select(SessionZeroCardRow)
+        .where(SessionZeroCardRow.group_id.in_(group_ids))
+        .order_by(*_CARD_ORDER)
+    )
+    return [_card(row) for row in result.scalars()]
+
+
+async def column_order(session: AsyncSession, column_id: uuid.UUID) -> list[tuple[uuid.UUID, bool]]:
+    """Spec 46d Decision 7: the column's post-its in no group and its
+    groups, everyone's drafts included, in their one order; each id with
+    whether it is a group."""
+    cards = select(
+        SessionZeroCardRow.id,
+        literal(False).label("is_group"),
+        SessionZeroCardRow.position,
+        SessionZeroCardRow.created_at,
+    ).where(SessionZeroCardRow.column_id == column_id, SessionZeroCardRow.group_id.is_(None))
+    groups = select(
+        SessionZeroGroupRow.id,
+        literal(True).label("is_group"),
+        SessionZeroGroupRow.position,
+        SessionZeroGroupRow.created_at,
+    ).where(SessionZeroGroupRow.column_id == column_id)
+    items = union_all(cards, groups).subquery()
+    result = await session.execute(
+        select(items.c.id, items.c.is_group).order_by(
+            items.c.position, items.c.created_at, items.c.id
+        )
+    )
+    return [(row.id, row.is_group) for row in result]
+
+
+async def list_hidden_drafts(
+    session: AsyncSession, column_id: uuid.UUID, viewer_id: uuid.UUID
+) -> set[uuid.UUID]:
+    """The column's drafts written by anyone but `viewer_id` (Decision 1)."""
+    result = await session.execute(
+        select(SessionZeroCardRow.id).where(
+            SessionZeroCardRow.column_id == column_id,
+            SessionZeroCardRow.published_at.is_(None),
+            SessionZeroCardRow.author_id != viewer_id,
+        )
+    )
+    return set(result.scalars())
+
+
+async def next_position(session: AsyncSession, column_id: uuid.UUID) -> int:
+    """The place after the column's last post-it in no group or group."""
+    cards = select(func.max(SessionZeroCardRow.position)).where(
+        SessionZeroCardRow.column_id == column_id, SessionZeroCardRow.group_id.is_(None)
+    )
+    groups = select(func.max(SessionZeroGroupRow.position)).where(
+        SessionZeroGroupRow.column_id == column_id
+    )
+    last = (
+        await session.execute(
+            select(func.greatest(cards.scalar_subquery(), groups.scalar_subquery()))
+        )
+    ).scalar_one()
+    return 0 if last is None else last + 1
+
+
+async def set_order(
+    session: AsyncSession, ids: Sequence[uuid.UUID], group_ids: Collection[uuid.UUID] = ()
+) -> None:
+    """Numbers these post-its and groups (`group_ids` says which are
+    groups) 0, 1, 2... in the order given: a column's, or a group's."""
+    positions = {item: index for index, item in enumerate(ids)}
+    cards = {item: index for item, index in positions.items() if item not in group_ids}
+    groups = {item: index for item, index in positions.items() if item in group_ids}
+    if cards:
+        await session.execute(
+            update(SessionZeroCardRow)
+            .where(SessionZeroCardRow.id.in_(cards))
+            .values(position=case(cards, value=SessionZeroCardRow.id))
+        )
+    if groups:
+        await session.execute(
+            update(SessionZeroGroupRow)
+            .where(SessionZeroGroupRow.id.in_(groups))
+            .values(position=case(groups, value=SessionZeroGroupRow.id))
+        )
+    await session.flush()
 
 
 async def get_card(session: AsyncSession, card_id: uuid.UUID) -> Card | None:
@@ -320,7 +417,7 @@ async def add_card(
     published: bool = False,
 ) -> uuid.UUID:
     """Adds a draft (Decision 1), or a post-it published at once (the
-    Master's own on Lines & Veils, spec 46c Decision 6)."""
+    Master's own on Lines & Veils, spec 46c Decision 6), last in its column."""
     card_id = uuid.uuid4()
     session.add(
         SessionZeroCardRow(
@@ -331,6 +428,7 @@ async def add_card(
             body=body,
             anonymous=False,
             published_at=now if published else None,
+            position=await next_position(session, column_id),
             created_at=now,
             updated_at=now,
         )
@@ -343,7 +441,8 @@ async def update_card(
     session: AsyncSession, card_id: uuid.UUID, now: datetime, **values: object
 ) -> None:
     """Writes the given columns of a post-it (`body`, `anonymous`,
-    `published_at`, `column_id`) and stamps it updated."""
+    `published_at`, `column_id`, `group_id`, `position`) and stamps it
+    updated."""
     await session.execute(
         update(SessionZeroCardRow)
         .where(SessionZeroCardRow.id == card_id)
@@ -360,7 +459,8 @@ async def copy_card(
     now: datetime,
 ) -> uuid.UUID:
     """The Lines & Veils copy of a published Retro post-it: same author,
-    text and anonymity, published at once (Decisions 2 and 7)."""
+    text and anonymity, published at once (Decisions 2 and 7), last in its
+    column."""
     card_id = uuid.uuid4()
     session.add(
         SessionZeroCardRow(
@@ -373,6 +473,7 @@ async def copy_card(
             published_at=now,
             source_card_id=original.id,
             promoted_by=promoted_by,
+            position=await next_position(session, column_id),
             created_at=now,
             updated_at=now,
         )
@@ -411,13 +512,15 @@ async def publish_cards(
 
 
 async def list_groups(session: AsyncSession, column_ids: Collection[uuid.UUID]) -> list[Group]:
-    """The groups of these columns, oldest first."""
+    """The groups of these columns, by `position`."""
     result = await session.execute(
         select(SessionZeroGroupRow)
         .where(SessionZeroGroupRow.column_id.in_(column_ids))
-        .order_by(SessionZeroGroupRow.created_at, SessionZeroGroupRow.id)
+        .order_by(
+            SessionZeroGroupRow.position, SessionZeroGroupRow.created_at, SessionZeroGroupRow.id
+        )
     )
-    return [Group(id=row.id, column_id=row.column_id, title=row.title) for row in result.scalars()]
+    return [_group(row) for row in result.scalars()]
 
 
 async def get_group(session: AsyncSession, group_id: uuid.UUID) -> tuple[Group, uuid.UUID] | None:
@@ -425,17 +528,22 @@ async def get_group(session: AsyncSession, group_id: uuid.UUID) -> tuple[Group, 
     row = await session.get(SessionZeroGroupRow, group_id)
     if row is None:
         return None
-    return Group(id=row.id, column_id=row.column_id, title=row.title), row.room_id
+    return _group(row), row.room_id
 
 
 async def add_group(
-    session: AsyncSession, room_id: uuid.UUID, column_id: uuid.UUID, now: datetime
+    session: AsyncSession, room_id: uuid.UUID, column_id: uuid.UUID, position: int, now: datetime
 ) -> uuid.UUID:
-    """A new, untitled group in a column."""
+    """A new, untitled group in a column, at `position`."""
     group_id = uuid.uuid4()
     session.add(
         SessionZeroGroupRow(
-            id=group_id, room_id=room_id, column_id=column_id, title=None, created_at=now
+            id=group_id,
+            room_id=room_id,
+            column_id=column_id,
+            title=None,
+            position=position,
+            created_at=now,
         )
     )
     await session.flush()
@@ -454,14 +562,18 @@ async def set_group(
     await session.flush()
 
 
-async def move_group_cards(
-    session: AsyncSession, from_group_ids: Collection[uuid.UUID], to_group_id: uuid.UUID
-) -> None:
-    """Moves every post-it of these groups into another one."""
+async def move_group(session: AsyncSession, group_id: uuid.UUID, column_id: uuid.UUID) -> None:
+    """Moves a group and its post-its into another column (spec 46d
+    Decision 7)."""
+    await session.execute(
+        update(SessionZeroGroupRow)
+        .where(SessionZeroGroupRow.id == group_id)
+        .values(column_id=column_id)
+    )
     await session.execute(
         update(SessionZeroCardRow)
-        .where(SessionZeroCardRow.group_id.in_(from_group_ids))
-        .values(group_id=to_group_id)
+        .where(SessionZeroCardRow.group_id == group_id)
+        .values(column_id=column_id)
     )
     await session.flush()
 
@@ -481,7 +593,8 @@ async def delete_groups(session: AsyncSession, group_ids: Collection[uuid.UUID])
 
 async def prune_groups(session: AsyncSession, column_id: uuid.UUID) -> bool:
     """Spec 46c Decision 9: a group left with fewer than two post-its
-    dissolves. Whether any did."""
+    dissolves, the one left taking the group's place in the column (spec
+    46d Decision 7). Whether any did."""
     members = (
         select(func.count())
         .select_from(SessionZeroCardRow)
@@ -489,13 +602,21 @@ async def prune_groups(session: AsyncSession, column_id: uuid.UUID) -> bool:
         .correlate(SessionZeroGroupRow)
         .scalar_subquery()
     )
-    result = await session.execute(
-        delete(SessionZeroGroupRow)
-        .where(SessionZeroGroupRow.column_id == column_id, members < 2)
-        .returning(SessionZeroGroupRow.id)
-    )
-    await session.flush()
-    return bool(result.scalars().all())
+    doomed = (
+        await session.execute(
+            select(SessionZeroGroupRow.id, SessionZeroGroupRow.position).where(
+                SessionZeroGroupRow.column_id == column_id, members < 2
+            )
+        )
+    ).all()
+    for group_id, position in doomed:
+        await session.execute(
+            update(SessionZeroCardRow)
+            .where(SessionZeroCardRow.group_id == group_id)
+            .values(position=position)
+        )
+    await delete_groups(session, [group_id for group_id, _ in doomed])
+    return bool(doomed)
 
 
 async def list_copy_columns(session: AsyncSession, source_card_id: uuid.UUID) -> set[uuid.UUID]:

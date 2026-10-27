@@ -48,6 +48,7 @@ interface RawPostIt {
   id: string;
   column_id: string;
   group_id: string | null;
+  position: number;
   body: string;
   author_id: string | null;
   anonymous: boolean;
@@ -65,6 +66,7 @@ interface RawPostIt {
   can_move: boolean;
   can_react: boolean;
   can_group: boolean;
+  can_place: boolean;
 }
 
 interface RawColumn {
@@ -72,7 +74,7 @@ interface RawColumn {
   kind: LinesVeilsKind | null;
   title: string;
   color: MapColor;
-  groups: { id: string; title: string | null }[];
+  groups: { id: string; title: string | null; position: number }[];
   cards: RawPostIt[];
 }
 
@@ -109,6 +111,7 @@ function toPostIt(raw: RawPostIt): PostIt {
     id: raw.id,
     columnId: raw.column_id,
     groupId: raw.group_id,
+    position: raw.position,
     body: raw.body,
     authorId: raw.author_id,
     anonymous: raw.anonymous,
@@ -131,6 +134,7 @@ function toPostIt(raw: RawPostIt): PostIt {
     canMove: raw.can_move,
     canReact: raw.can_react,
     canGroup: raw.can_group,
+    canPlace: raw.can_place,
   };
 }
 
@@ -140,7 +144,7 @@ function toColumn(raw: RawColumn): PostItColumn {
     kind: raw.kind,
     title: raw.title,
     color: raw.color,
-    groups: raw.groups.map((group) => ({ id: group.id, title: group.title })),
+    groups: raw.groups.map((group) => ({ id: group.id, title: group.title, position: group.position })),
     cards: raw.cards.map(toPostIt),
   };
 }
@@ -250,6 +254,18 @@ export const boardWrites = {
   }),
   ungroupAll: (id: string): BoardWrite => ({ path: `/groups/${id}`, method: 'DELETE' }),
   ungroup: (cardId: string): BoardWrite => ({ path: `/cards/${cardId}/ungroup`, method: 'POST' }),
+  /** Spec 46d Decision 7: a post-it dropped in a column, in a group or none, before another or last. */
+  placeCard: (id: string, columnId: string, groupId: string | null, beforeId: string | null): BoardWrite => ({
+    path: `/cards/${id}/place`,
+    method: 'PUT',
+    json: { column_id: columnId, group_id: groupId, before_id: beforeId },
+  }),
+  /** Spec 46d Decision 7: a group dropped in a column, before a post-it or group, or last. */
+  placeGroup: (id: string, columnId: string, beforeId: string | null): BoardWrite => ({
+    path: `/groups/${id}/place`,
+    method: 'PUT',
+    json: { column_id: columnId, before_id: beforeId },
+  }),
   deleteSessionZero: (): BoardWrite => ({ path: '', method: 'DELETE' }),
   timer: (action: TimerAction, minutes?: number): BoardWrite => ({
     path: '/timer',
@@ -292,14 +308,4 @@ export function formatClock(seconds: number): string {
 /** A column's colour as CSS (`--sz-color`), from the maps' palette (spec 46c Decision 5). */
 export function columnColor(column: PostItColumn): string {
   return colorValue(column.color);
-}
-
-/** The data a dragged post-it carries (native HTML5 drag, spec 46 Design 46_3). */
-export const POST_IT_DRAG_TYPE = 'application/x-exlibris-post-it';
-
-export interface DraggedPostIt {
-  id: string;
-  /** Promote a Retro post-it (or group it, dropped on one of its column), or move a Lines & Veils one. */
-  action: 'promote' | 'move';
-  columnId: string;
 }
