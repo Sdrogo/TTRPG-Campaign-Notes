@@ -63,7 +63,7 @@ describe('NewSession', () => {
     await user.clear(name);
     await user.type(name, 'Retro di metà campagna');
     await user.click(screen.getByRole('button', { name: 'Crea' }));
-    expect(act).toHaveBeenCalledWith(boardWrites.startRound('Retro di metà campagna'));
+    expect(act).toHaveBeenCalledWith(boardWrites.startRound('Retro di metà campagna', ['retro', 'lines_veils']));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -72,6 +72,6 @@ describe('NewSession', () => {
     await user.click(screen.getByRole('button', { name: 'Nuova sessione' }));
     expect(await screen.findByRole('textbox', { name: 'Nome' })).toHaveValue('Sessione 0.5 #1');
     await user.click(screen.getByRole('button', { name: 'Crea' }));
-    expect(act).toHaveBeenCalledWith(boardWrites.startRound(''));
+    expect(act).toHaveBeenCalledWith(boardWrites.startRound('', ['retro', 'lines_veils']));
   });
 });

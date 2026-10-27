@@ -879,7 +879,29 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   feature cards gain a `sm` "See it in the demo" anchor.
 - Screenshots: `demo/` (and `demo/tour/`) in the project files.
 
-## Session 0 (specs 46, 46c and 46d)
+## Session 0 (specs 46, 46c, 46d and 47)
+
+- Steps (spec 47, `ModuleStepper` in `components/sessionZero/ModuleChain.tsx`):
+  a wrapping row under the header, `nav` "Steps". Each step is a
+  `compact-sm` button "1. Retro": the current one `filled` (with
+  `aria-current="step"`), the one on screen but not current `light`, the
+  others `default`; a click opens that step on this screen only. A
+  Player's steps not reached yet are a grey light badge with a padlock,
+  "+N", whose tooltip says how many are hidden. Pushed right, the
+  Master's "Next" (filled, caret right) or, while another step is on
+  screen, "Bring the table here"; then "Edit steps" (subtle grey).
+- "Edit steps" and the chain in "Start Session 0" / "New session": one
+  bordered row per step ("2. Stars and Wishes") with "Move up", "Move
+  down" and "Remove" icon buttons (arrows rather than a drag, the same
+  on a phone), then a "Step" select and "Add step" (default, "+"); "At
+  most 10 steps." in dimmed `xs` at the limit. In "Edit steps" each
+  change goes at once; removing a step with post-its asks first, inside
+  the same dialog.
+- The body shows the step on screen: Retro is the two boards as below,
+  Lines & Veils alone at full width, Stars and Wishes the post-it board
+  with its two fixed columns, Stars (gold) and Wishes (blue), named in
+  the viewer's language, with no column menu, no drag by the heading and
+  no "Add column".
 
 - Header (`SessionZeroHeader`, spec 46d Decision 4): one wrapping row
   above the boards, no section titles. The session selector

@@ -578,23 +578,40 @@ export function rawPostItColumn(overrides: Record<string, unknown> = {}) {
  * A started Session 0 seen by a Player: round 1 open, two Retro columns (the
  * first with one post-it), the three Lines & Veils columns, no timer.
  */
+/**
+ * A Session 0 as the backend answers it. A `retro` override is the columns
+ * of the chain's first step, a Retro one (spec 47), followed by Lines &
+ * Veils; `modules` replaces the whole chain.
+ */
 export function rawSessionZero(overrides: Record<string, unknown> = {}) {
+  const {
+    retro = [
+      rawPostItColumn({ cards: [rawPostIt()] }),
+      rawPostItColumn({ id: 'col-2', title: 'Da evitare', color: 'red' }),
+    ],
+    ...rest
+  } = overrides;
+  const started = rest.started ?? true;
   return {
     started: true,
     revision: 3,
     can_manage: false,
     rounds: [{ id: 'round-1', number: 1, title: null, started_at: '2026-10-27T09:00:00Z', closed_at: null }],
     round_id: 'round-1',
-    retro: [
-      rawPostItColumn({ cards: [rawPostIt()] }),
-      rawPostItColumn({ id: 'col-2', title: 'Da evitare', color: 'red' }),
-    ],
+    modules: started
+      ? [
+          { id: 'module-retro', kind: 'retro', position: 0, columns: retro },
+          { id: 'module-lv', kind: 'lines_veils', position: 1, columns: [] },
+        ]
+      : [],
+    current_module_id: started ? 'module-retro' : null,
+    hidden_modules: 0,
     lines_veils: [
       rawPostItColumn({ id: 'lv-must', kind: 'must', title: 'must', color: 'green' }),
       rawPostItColumn({ id: 'lv-veils', kind: 'veils', title: 'veils', color: 'gold' }),
       rawPostItColumn({ id: 'lv-lines', kind: 'lines', title: 'lines', color: 'red' }),
     ],
     timer: null,
-    ...overrides,
+    ...rest,
   };
 }

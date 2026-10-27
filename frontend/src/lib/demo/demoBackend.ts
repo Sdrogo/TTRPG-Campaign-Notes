@@ -437,7 +437,9 @@ function answer(path: string, viewer: Viewer): Answer {
             can_manage: viewer.isMaster,
             rounds: [],
             round_id: null,
-            retro: [],
+            modules: [],
+            current_module_id: null,
+            hidden_modules: 0,
             lines_veils: [],
             timer: null,
           })

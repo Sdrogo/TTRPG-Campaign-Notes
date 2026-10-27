@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { BoardContext } from '../../../components/sessionZero/boardContext';
 import { DndStateContext, type DndState } from '../../../components/sessionZero/boardDrag';
-import { toSessionZero, type RawSessionZero } from '../../../lib/sessionZero';
+import { shownModule, toSessionZero, viewOf, type RawSessionZero } from '../../../lib/sessionZero';
 import type { Member } from '../../../types/member';
 import type { PostIt, PostItColumn } from '../../../types/sessionZero';
 import { rawPostIt, rawPostItColumn, rawSessionZero } from '../../fixtures';
@@ -39,16 +39,21 @@ interface Options {
   glowing?: string[];
   /** A drag in progress, for what the post-its, groups and columns show while it lasts. */
   dnd?: DndState;
+  /** The step on screen (spec 47); the current one when left out. */
+  shownId?: string;
 }
 
 /**
  * Renders a piece of the Session 0 page inside its board context; `act`
  * records the writes and reports each one done at once.
  */
-export function renderBoard(ui: ReactElement, { board = {}, writable = true, busy = false, glowing = [], dnd = { active: null, intent: null } }: Options = {}) {
+export function renderBoard(ui: ReactElement, { board = {}, writable = true, busy = false, glowing = [], dnd = { active: null, intent: null }, shownId }: Options = {}) {
   const act = vi.fn((_write: unknown, onDone?: () => void) => onDone?.());
+  const raw = toSessionZero(rawSessionZero(board) as RawSessionZero);
+  const module = shownModule(raw, shownId ?? null);
   const value = {
-    board: toSessionZero(rawSessionZero(board) as RawSessionZero),
+    board: viewOf(raw, module),
+    module,
     members,
     act,
     busy,

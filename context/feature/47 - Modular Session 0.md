@@ -276,6 +276,24 @@ one in 47_2 (questions and answers), one in 47_3 (acceptances), each to
 apply to the staging database before merging and to production before the
 release.
 
+### As built (47_1, 2026-10-27)
+
+- Built: the chain (Retro, Lines & Veils, Stars and Wishes), "Next",
+  "Bring the table here", "Edit steps", the chain in "Start Session 0"
+  (Master) and "New session", Stars and Wishes with fixed columns,
+  Decision 5 visibility, Decision 13 migration. Migration `e5c1a8f3b7d2`.
+- Differences from the design above: the chain table has no `title` or
+  `settings` yet (they come with 47_2 and 47_3, which need them); the
+  current step is set with `PUT .../modules/current`, not `POST`; `GET`
+  returns every visible step with its columns, so there is no
+  `?module_id=`. Steps are reordered with arrow buttons ("Move up",
+  "Move down") on every screen rather than a drag, and "Edit steps"
+  sends each change at once. Clicking a step opens it on the viewer's
+  screen only; the Master moves the table with "Next" or "Bring the
+  table here" (Decision 4). The stepper is its own row under the header,
+  on a phone too, rather than a "2/4" menu.
+- Removing a step with post-its asks first; the post-its go with it.
+
 ## Tests
 
 - Backend: any member starts Session 0 (a Player gets the default chain,

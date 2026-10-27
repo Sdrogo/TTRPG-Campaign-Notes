@@ -107,11 +107,11 @@ async def _post_it(client: AsyncClient, room_id: str, author: _User, body: str) 
     board = (await client.post(f"{url}/start", headers=author.headers)).json()
     added = await client.post(
         f"{url}/cards",
-        json={"column_id": board["retro"][0]["id"], "body": body},
+        json={"column_id": board["modules"][0]["columns"][0]["id"], "body": body},
         headers=author.headers,
     )
     assert added.status_code == 200, added.text
-    card_id = str(next(c["id"] for c in added.json()["retro"][0]["cards"] if c["body"] == body))
+    card_id = str(next(c["id"] for c in added.json()["modules"][0]["columns"][0]["cards"] if c["body"] == body))
     published = await client.post(
         f"{url}/cards/{card_id}/publish", json={"anonymous": True}, headers=author.headers
     )

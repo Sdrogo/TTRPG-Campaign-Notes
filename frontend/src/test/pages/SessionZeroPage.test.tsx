@@ -246,4 +246,111 @@ describe('SessionZeroPage', () => {
     expect(await screen.findByText(/non è ancora iniziata/)).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Sessione 0' })).toBeInTheDocument();
   });
+  // Spec 47 Decision 2: the Master composes the first session's chain.
+  it('lets the Master compose the chain when starting', async () => {
+    board = () =>
+      Promise.resolve(rawSessionZero({ started: false, can_manage: true, rounds: [], round_id: null, retro: [], lines_veils: [] }));
+    const { user } = render();
+    await user.click(await screen.findByRole('button', { name: 'Avvia la Sessione 0' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Avvia la Sessione 0' });
+    await user.click(within(dialog).getAllByRole('button', { name: 'Rimuovi' })[1]);
+    await user.click(within(dialog).getByRole('combobox', { name: 'Tappa' }));
+    await user.click(await screen.findByRole('option', { name: 'Stelle e Desideri' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Aggiungi tappa' }));
+    await user.click(within(dialog).getAllByRole('button', { name: 'Sposta su' })[1]);
+    await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Avvia la Sessione 0' }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Avvia' }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero/start', {
+      method: 'POST',
+      json: { modules: ['stars_wishes', 'retro'] },
+    });
+  });
+
+  // Spec 47 Decisions 4, 5 and 7: each step shows its own board; the table's move brings every page along.
+  it('opens each step of the chain and follows the table', async () => {
+    restoreMedia = matchMediaQueries(['(min-width: 62em)']);
+    const modules = [
+      { id: 'module-retro', kind: 'retro', position: 0, columns: [rawPostItColumn({ cards: [rawPostIt()] })] },
+      {
+        id: 'module-sw',
+        kind: 'stars_wishes',
+        position: 1,
+        columns: [
+          rawPostItColumn({ id: 'sw-stars', kind: 'stars', title: '', color: 'gold' }),
+          rawPostItColumn({ id: 'sw-wishes', kind: 'wishes', title: '', color: 'blue' }),
+        ],
+      },
+      { id: 'module-lv', kind: 'lines_veils', position: 2, columns: [] },
+    ];
+    board = () => Promise.resolve(rawSessionZero({ can_manage: true, modules }));
+    const { user } = render();
+    const nav = await screen.findByRole('navigation', { name: 'Tappe' });
+    expect(screen.getByRole('region', { name: 'Retro' })).toBeInTheDocument();
+
+    await user.click(within(nav).getByRole('button', { name: '2. Stelle e Desideri' }));
+    const starsWishes = screen.getByRole('region', { name: 'Stelle e Desideri' });
+    expect(within(starsWishes).getByRole('heading', { name: 'Stelle' })).toBeInTheDocument();
+    expect(within(starsWishes).getByRole('heading', { name: 'Desideri' })).toBeInTheDocument();
+    expect(within(starsWishes).queryByRole('button', { name: /Azioni della colonna/ })).not.toBeInTheDocument();
+    expect(within(starsWishes).queryByRole('button', { name: 'Aggiungi colonna' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Linee e Veli' })).not.toBeInTheDocument();
+
+    await user.click(within(nav).getByRole('button', { name: '3. Linee e Veli' }));
+    expect(screen.getByRole('region', { name: 'Linee e Veli' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
+
+    // The Master brings the table to Stars and Wishes: every page goes there.
+    write = () => Promise.resolve(rawSessionZero({ can_manage: true, modules, current_module_id: 'module-sw' }));
+    await user.click(within(nav).getByRole('button', { name: '2. Stelle e Desideri' }));
+    await user.click(within(nav).getByRole('button', { name: 'Porta qui il tavolo' }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero/modules/current', {
+      method: 'PUT',
+      json: { module_id: 'module-sw' },
+    });
+    await vi.waitFor(() =>
+      expect(within(nav).getByRole('button', { name: '2. Stelle e Desideri' })).toHaveAttribute('aria-current', 'step'),
+    );
+    await user.click(within(nav).getByRole('button', { name: '1. Retro' }));
+    expect(screen.getByRole('region', { name: 'Retro' })).toBeInTheDocument();
+    await user.click(within(nav).getByRole('button', { name: '2. Stelle e Desideri' }));
+    expect(screen.getByRole('region', { name: 'Stelle e Desideri' })).toBeInTheDocument();
+  });
+
+  it('goes back to the current step when another session is picked', async () => {
+    const rounds = [
+      { id: 'round-1', number: 1, title: null, started_at: '2026-10-01T09:00:00Z', closed_at: '2026-10-20T09:00:00Z' },
+      { id: 'round-2', number: 2, title: null, started_at: '2026-10-20T09:00:00Z', closed_at: null },
+    ];
+    const modules = [
+      { id: 'module-retro', kind: 'retro', position: 0, columns: [rawPostItColumn()] },
+      { id: 'module-lv', kind: 'lines_veils', position: 1, columns: [] },
+    ];
+    board = () => Promise.resolve(rawSessionZero({ rounds, round_id: 'round-2', modules }));
+    const { user } = render();
+    await user.click(await screen.findByRole('button', { name: '2. Linee e Veli' }));
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: 'Sessione da mostrare' }));
+    board = () => Promise.resolve(rawSessionZero({ rounds, round_id: 'round-1' }));
+    await user.click(await screen.findByRole('option', { name: 'Sessione 0' }));
+    expect(await screen.findByRole('tab', { name: 'Retro' })).toBeInTheDocument();
+  });
+
+  // Spec 47: "Publish drafts" counts the drafts of every step of the open session.
+  it('counts the drafts of every step', async () => {
+    const draft = (id: string) => rawPostIt({ id, draft: true, can_publish: true });
+    const modules = [
+      { id: 'module-retro', kind: 'retro', position: 0, columns: [rawPostItColumn({ cards: [draft('d1')] })] },
+      {
+        id: 'module-sw',
+        kind: 'stars_wishes',
+        position: 1,
+        columns: [rawPostItColumn({ id: 'sw-stars', kind: 'stars', title: '', cards: [draft('d2'), draft('d3')] })],
+      },
+    ];
+    board = () => Promise.resolve(rawSessionZero({ modules }));
+    render();
+    expect(await screen.findByRole('button', { name: 'Pubblica bozze (3)' })).toBeInTheDocument();
+  });
 });

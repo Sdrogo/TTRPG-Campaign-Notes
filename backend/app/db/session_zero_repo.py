@@ -16,15 +16,29 @@ from app.db.models import (
     SessionZeroCardRow,
     SessionZeroColumnRow,
     SessionZeroGroupRow,
+    SessionZeroModuleRow,
     SessionZeroRoundRow,
     SessionZeroRow,
 )
 from app.domain.models import Reaction
 from app.domain.relationship_maps import MapColor
-from app.domain.session_zero import Card, Column, Group, LinesVeilsKind, Round, Timer
+from app.domain.session_zero import (
+    Card,
+    Column,
+    Group,
+    LinesVeilsKind,
+    Module,
+    ModuleKind,
+    Round,
+    StarsWishesKind,
+    Timer,
+    column_kind,
+)
 
 # A Retro column to create: its title and colour (spec 46c Decision 5).
 RetroColumnSpec = tuple[str, MapColor]
+# A module to create (spec 47): its kind, and a Retro module's columns.
+ModuleSpec = tuple[ModuleKind, Sequence[RetroColumnSpec]]
 
 
 def _timer(row: SessionZeroRow) -> Timer:
@@ -43,6 +57,13 @@ def _round(row: SessionZeroRoundRow) -> Round:
         title=row.title,
         started_at=row.started_at,
         closed_at=row.closed_at,
+        current_module_id=row.current_module_id,
+    )
+
+
+def _module(row: SessionZeroModuleRow) -> Module:
+    return Module(
+        id=row.id, round_id=row.round_id, kind=ModuleKind(row.kind), position=row.position
     )
 
 
@@ -51,10 +72,11 @@ def _column(row: SessionZeroColumnRow) -> Column:
         id=row.id,
         room_id=row.room_id,
         round_id=row.round_id,
-        kind=LinesVeilsKind(row.kind) if row.kind else None,
+        kind=column_kind(row.kind) if row.kind else None,
         title=row.title,
         position=row.position,
         color=MapColor(row.color),
+        module_id=row.module_id,
     )
 
 
@@ -96,12 +118,13 @@ async def get_state(
 async def start(
     session: AsyncSession,
     room_id: uuid.UUID,
-    retro_columns: Sequence[RetroColumnSpec],
+    chain: Sequence[ModuleSpec],
     now: datetime,
 ) -> bool:
-    """Creates the Room's Session 0 with round 1, its Retro columns and the
-    three Lines & Veils columns. Returns `False`, changing nothing, when it
-    already exists (two members starting it at once both succeed)."""
+    """Creates the Room's Session 0 with round 1, its chain of modules (the
+    first one current) and the three Lines & Veils columns. Returns
+    `False`, changing nothing, when it already exists (two members starting
+    it at once both succeed)."""
     created = await session.execute(
         insert(SessionZeroRow)
         .values(room_id=room_id, revision=0, created_at=now)
@@ -110,12 +133,7 @@ async def start(
     )
     if created.scalar_one_or_none() is None:
         return False
-    round_id = uuid.uuid4()
-    session.add(
-        SessionZeroRoundRow(id=round_id, room_id=room_id, number=1, title=None, started_at=now)
-    )
-    await session.flush()
-    _add_retro_columns(session, room_id, round_id, retro_columns)
+    await add_round(session, room_id, 1, None, chain, now)
     for position, kind in enumerate(LinesVeilsKind):
         session.add(
             SessionZeroColumnRow(
@@ -126,23 +144,88 @@ async def start(
     return True
 
 
-def _add_retro_columns(
+async def add_module(
     session: AsyncSession,
     room_id: uuid.UUID,
     round_id: uuid.UUID,
-    columns: Sequence[RetroColumnSpec],
-) -> None:
-    for position, (title, color) in enumerate(columns):
+    spec: ModuleSpec,
+    position: int,
+    now: datetime,
+) -> uuid.UUID:
+    """Adds a module to a round's chain at `position`, with its columns: a
+    Retro module's given ones, a Stars and Wishes module's two fixed ones
+    (spec 47 Decision 7), none for Lines & Veils (Room-wide)."""
+    kind, retro_columns = spec
+    module_id = uuid.uuid4()
+    session.add(
+        SessionZeroModuleRow(
+            id=module_id,
+            room_id=room_id,
+            round_id=round_id,
+            kind=kind.value,
+            position=position,
+            created_at=now,
+        )
+    )
+    await session.flush()
+    columns: list[tuple[str, MapColor, str | None]] = []
+    if kind is ModuleKind.RETRO:
+        columns = [(title, color, None) for title, color in retro_columns]
+    elif kind is ModuleKind.STARS_WISHES:
+        columns = [("", MapColor.DEFAULT, fixed.value) for fixed in StarsWishesKind]
+    for column_position, (title, color, fixed_kind) in enumerate(columns):
         session.add(
             SessionZeroColumnRow(
                 id=uuid.uuid4(),
                 room_id=room_id,
                 round_id=round_id,
+                module_id=module_id,
+                kind=fixed_kind,
                 title=title,
-                position=position,
+                position=column_position,
                 color=color.value,
             )
         )
+    await session.flush()
+    return module_id
+
+
+async def list_modules(session: AsyncSession, room_id: uuid.UUID) -> list[Module]:
+    """Every module of the Room, round by round, each chain in order."""
+    result = await session.execute(
+        select(SessionZeroModuleRow)
+        .where(SessionZeroModuleRow.room_id == room_id)
+        .order_by(SessionZeroModuleRow.position, SessionZeroModuleRow.id)
+    )
+    return [_module(row) for row in result.scalars()]
+
+
+async def delete_module(session: AsyncSession, module_id: uuid.UUID) -> None:
+    """Deletes a module; its columns and their post-its go with it."""
+    await session.execute(delete(SessionZeroModuleRow).where(SessionZeroModuleRow.id == module_id))
+    await session.flush()
+
+
+async def set_module_positions(session: AsyncSession, module_ids: Sequence[uuid.UUID]) -> None:
+    """Stores a chain's order, first to last."""
+    for position, module_id in enumerate(module_ids):
+        await session.execute(
+            update(SessionZeroModuleRow)
+            .where(SessionZeroModuleRow.id == module_id)
+            .values(position=position)
+        )
+
+
+async def set_current_module(
+    session: AsyncSession, round_id: uuid.UUID, module_id: uuid.UUID | None
+) -> None:
+    """Moves the table to another step of the round's chain (spec 47
+    Decision 4)."""
+    await session.execute(
+        update(SessionZeroRoundRow)
+        .where(SessionZeroRoundRow.id == round_id)
+        .values(current_module_id=module_id)
+    )
 
 
 async def delete_session_zero(session: AsyncSession, room_id: uuid.UUID) -> None:
@@ -206,10 +289,11 @@ async def add_round(
     room_id: uuid.UUID,
     number: int,
     title: str | None,
-    retro_columns: Sequence[RetroColumnSpec],
+    chain: Sequence[ModuleSpec],
     now: datetime,
 ) -> uuid.UUID:
-    """Opens a new round with these Retro columns, in order."""
+    """Opens a new round with this chain of modules, in order, on its first
+    step (spec 47 Decision 2)."""
     round_id = uuid.uuid4()
     session.add(
         SessionZeroRoundRow(
@@ -217,7 +301,11 @@ async def add_round(
         )
     )
     await session.flush()
-    _add_retro_columns(session, room_id, round_id, retro_columns)
+    module_ids = [
+        await add_module(session, room_id, round_id, spec, position, now)
+        for position, spec in enumerate(chain)
+    ]
+    await set_current_module(session, round_id, module_ids[0])
     await session.flush()
     return round_id
 
@@ -235,18 +323,19 @@ async def list_columns(session: AsyncSession, room_id: uuid.UUID) -> list[Column
 async def add_column(
     session: AsyncSession,
     room_id: uuid.UUID,
-    round_id: uuid.UUID,
+    module: Module,
     title: str,
     color: MapColor,
     position: int,
 ) -> uuid.UUID:
-    """Adds a Retro column to a round."""
+    """Adds a column to a Retro module."""
     column_id = uuid.uuid4()
     session.add(
         SessionZeroColumnRow(
             id=column_id,
             room_id=room_id,
-            round_id=round_id,
+            round_id=module.round_id,
+            module_id=module.id,
             title=title,
             position=position,
             color=color.value,

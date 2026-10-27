@@ -4,6 +4,12 @@ import type { MapColor } from './map';
 /** The three fixed columns of the Lines & Veils board (spec 46 Decision 10). */
 export type LinesVeilsKind = 'must' | 'veils' | 'lines';
 
+/** The two fixed columns of a Stars and Wishes step (spec 47 Decision 7). */
+export type StarsWishesKind = 'stars' | 'wishes';
+
+/** What a step of a session's chain is (spec 47 Decision 1). */
+export type ModuleKind = 'retro' | 'lines_veils' | 'stars_wishes';
+
 /** What the Master can do with the shared timer (spec 46 Decision 4). */
 export type TimerAction = 'start' | 'pause' | 'resume' | 'stop';
 
@@ -52,19 +58,31 @@ export interface PostItGroup {
 }
 
 /**
- * A column, its groups and its post-its, in order; `kind` is set on
- * Lines & Veils; `color` comes from the maps' palette (spec 46c Decision 5).
+ * A column, its groups and its post-its, in order; `kind` is set on the
+ * fixed ones, Lines & Veils and Stars and Wishes; `color` comes from the
+ * maps' palette (spec 46c Decision 5).
  */
 export interface PostItColumn {
   id: string;
-  kind: LinesVeilsKind | null;
+  kind: LinesVeilsKind | StarsWishesKind | null;
   title: string;
   color: MapColor;
   groups: PostItGroup[];
   cards: PostIt[];
 }
 
-/** A round of the Retro board: 1 is the Session 0, later ones Session 0.5 (Decision 16). */
+/**
+ * A step of the shown session's chain (spec 47): a Retro or Stars and
+ * Wishes step's columns; none for Lines & Veils, whose board is the Room's.
+ */
+export interface SessionZeroModule {
+  id: string;
+  kind: ModuleKind;
+  position: number;
+  columns: PostItColumn[];
+}
+
+/** A session (round): 1 is the Session 0, later ones freely named (Decision 16, spec 46d). */
 export interface SessionZeroRound {
   id: string;
   number: number;
@@ -88,8 +106,14 @@ export interface SessionZero {
   revision: number;
   canManage: boolean;
   rounds: SessionZeroRound[];
-  /** The round shown on the Retro board. */
+  /** The session shown. */
   roundId: string | null;
+  /** Its chain as the viewer sees it (spec 47 Decision 5: a Player the steps reached). */
+  modules: SessionZeroModule[];
+  currentModuleId: string | null;
+  /** How many later steps a Player doesn't see yet. */
+  hiddenModules: number;
+  /** The post-it board of the step on screen (`viewOf`): what the boards and the drag work on. */
   retro: PostItColumn[];
   linesVeils: PostItColumn[];
   timer: SessionZeroTimer | null;

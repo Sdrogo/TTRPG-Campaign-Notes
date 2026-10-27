@@ -1275,7 +1275,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Veli",
-      "lines": "Linee"
+      "lines": "Linee",
+      "stars": "Stelle",
+      "wishes": "Desideri"
     },
     "postIt": {
       "text": "Testo del post-it",
@@ -1335,7 +1337,7 @@
       "later": "Sessione 0.5 #{{number}}",
       "pick": "Sessione da mostrare",
       "start": "Nuova sessione",
-      "startBody": "La lavagna Retro attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova lavagna parte vuota, con le stesse colonne. Linee e Veli resta com'è.",
+      "startBody": "La sessione attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova parte vuota con le tappe qui sotto, e le sue lavagne Retro mantengono le stesse colonne. Linee e Veli resta com'è.",
       "title": "Nome",
       "startButton": "Crea",
       "closed": "Questa sessione è chiusa: la lavagna è in sola lettura.",
@@ -1366,6 +1368,31 @@
       "noTarget": "Non sei sopra un punto dove lasciarlo.",
       "dropped": "Hai lasciato {{name}}.",
       "cancelled": "Annullato: {{name}} è tornato al suo posto."
+    },
+    "modules": {
+      "label": "Tappe",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Linee e Veli",
+        "stars_wishes": "Stelle e Desideri"
+      },
+      "hiddenHint": "Tappe ancora nascoste: {{count}}",
+      "next": "Avanti",
+      "bringHere": "Porta qui il tavolo",
+      "current": "Tappa attuale",
+      "edit": "Modifica tappe",
+      "editHint": "Le modifiche valgono subito, per tutti i membri.",
+      "add": "Aggiungi tappa",
+      "kind": "Tappa",
+      "moveUp": "Sposta su",
+      "moveDown": "Sposta giù",
+      "remove": "Rimuovi",
+      "removeTitle": "Rimuovere la tappa?",
+      "removeBody": "I post-it di «{{name}}» vengono eliminati con lei. Linee e Veli non viene mai toccato.",
+      "chain": "Tappe della sessione",
+      "chainHint": "Scegli le tappe e il loro ordine; potrai cambiarle in seguito.",
+      "max": "Al massimo {{max}} tappe.",
+      "startButton": "Avvia"
     }
   }
 }

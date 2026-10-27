@@ -1275,7 +1275,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Schleier",
-      "lines": "Grenzen"
+      "lines": "Grenzen",
+      "stars": "Sterne",
+      "wishes": "Wünsche"
     },
     "postIt": {
       "text": "Text des Post-its",
@@ -1335,7 +1337,7 @@
       "later": "Session 0.5 #{{number}}",
       "pick": "Angezeigte Session",
       "start": "Neue Session",
-      "startBody": "Das aktuelle Retro-Board wird geschlossen und bleibt schreibgeschützt lesbar; nie veröffentlichte Entwürfe werden gelöscht. Das neue Board beginnt leer, mit denselben Spalten. Grenzen & Schleier bleibt, wie es ist.",
+      "startBody": "Die aktuelle Sitzung wird geschlossen und bleibt schreibgeschützt lesbar; nie veröffentlichte Entwürfe werden gelöscht. Die neue beginnt leer mit den Etappen unten, und ihre Retro-Boards behalten dieselben Spalten. Grenzen & Schleier bleibt, wie es ist.",
       "title": "Name",
       "startButton": "Erstellen",
       "closed": "Diese Session ist geschlossen: Das Board ist schreibgeschützt.",
@@ -1366,6 +1368,31 @@
       "noTarget": "Nicht über einer Stelle zum Ablegen.",
       "dropped": "{{name}} abgelegt.",
       "cancelled": "Abgebrochen: {{name}} ist wieder an seinem Platz."
+    },
+    "modules": {
+      "label": "Etappen",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Grenzen & Schleier",
+        "stars_wishes": "Sterne und Wünsche"
+      },
+      "hiddenHint": "Noch verborgene Etappen: {{count}}",
+      "next": "Weiter",
+      "bringHere": "Den Tisch hierher bringen",
+      "current": "Aktuelle Etappe",
+      "edit": "Etappen bearbeiten",
+      "editHint": "Änderungen gelten sofort, für alle Mitglieder.",
+      "add": "Etappe hinzufügen",
+      "kind": "Etappe",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "remove": "Entfernen",
+      "removeTitle": "Diese Etappe entfernen?",
+      "removeBody": "Die Post-its von „{{name}}“ werden mit ihr gelöscht. Grenzen & Schleier bleibt immer unberührt.",
+      "chain": "Etappen der Sitzung",
+      "chainHint": "Wähle die Etappen und ihre Reihenfolge; du kannst sie später ändern.",
+      "max": "Höchstens {{max}} Etappen.",
+      "startButton": "Starten"
     }
   }
 }

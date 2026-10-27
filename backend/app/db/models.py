@@ -1156,17 +1156,43 @@ class SessionZeroRoundRow(Base):
     title: Mapped[str | None] = mapped_column(String(100))
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Spec 47 Decision 4: the step of its chain the table is on.
+    current_module_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("session_zero_modules.id", ondelete="SET NULL", use_alter=True),
+    )
+
+
+class SessionZeroModuleRow(Base):
+    """A step of a round's chain (spec 47 Decision 1): a Retro board, the
+    Lines & Veils board, Stars and Wishes. Its columns go with it."""
+
+    __tablename__ = "session_zero_modules"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    round_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_rounds.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(String(20))
+    position: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class SessionZeroColumnRow(Base):
-    """A column: of a Retro round (titled by the Master), or one of the three
-    fixed Lines & Veils columns (no round, a `kind`; spec 46 Decision 10)."""
+    """A column: of a round's module, a Retro one (titled by the Master) or
+    one of the two fixed Stars and Wishes ones (spec 47 Decision 7); or one
+    of the three fixed Lines & Veils columns (no round, no module, a
+    `kind`; spec 46 Decision 10)."""
 
     __tablename__ = "session_zero_columns"
     __table_args__ = (
         CheckConstraint(
-            "(round_id IS NOT NULL AND kind IS NULL)"
-            " OR (round_id IS NULL AND kind IN ('must', 'lines', 'veils'))",
+            "(round_id IS NOT NULL AND module_id IS NOT NULL"
+            " AND (kind IS NULL OR kind IN ('stars', 'wishes')))"
+            " OR (round_id IS NULL AND module_id IS NULL AND kind IN ('must', 'lines', 'veils'))",
             name="ck_session_zero_columns_board",
         ),
         Index(
@@ -1174,7 +1200,7 @@ class SessionZeroColumnRow(Base):
             "room_id",
             "kind",
             unique=True,
-            postgresql_where=text("kind IS NOT NULL"),
+            postgresql_where=text("round_id IS NULL"),
         ),
     )
 
@@ -1184,6 +1210,9 @@ class SessionZeroColumnRow(Base):
     )
     round_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("session_zero_rounds.id", ondelete="CASCADE")
+    )
+    module_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_modules.id", ondelete="CASCADE"), index=True
     )
     kind: Mapped[str | None] = mapped_column(String(10))
     title: Mapped[str] = mapped_column(String(60), default="")

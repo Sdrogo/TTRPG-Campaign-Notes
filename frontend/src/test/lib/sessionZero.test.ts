@@ -3,9 +3,13 @@ import {
   boardWrites,
   columnColor,
   formatClock,
+  moduleLabel,
   roundLabel,
   secondsLeft,
+  shownModule,
   toSessionZero,
+  viewOf,
+  withView,
   type RawSessionZero,
 } from '../../lib/sessionZero';
 import type { SessionZeroTimer } from '../../types/sessionZero';
@@ -116,10 +120,10 @@ describe('boardWrites', () => {
       method: 'POST',
       json: { anonymous: false },
     });
-    expect(boardWrites.addColumn('X', 'blue')).toEqual({
+    expect(boardWrites.addColumn('X', 'blue', 'm')).toEqual({
       path: '/columns',
       method: 'POST',
-      json: { title: 'X', color: 'blue' },
+      json: { title: 'X', color: 'blue', module_id: 'm' },
     });
     expect(boardWrites.recolorColumn('k', 'red')).toEqual({
       path: '/columns/k',
@@ -133,12 +137,29 @@ describe('boardWrites', () => {
       method: 'PUT',
       json: { column_ids: ['b', 'a'] },
     });
-    expect(boardWrites.startRound('  Fine arco 1 ')).toEqual({
+    expect(boardWrites.startRound('  Fine arco 1 ', ['retro'])).toEqual({
       path: '/rounds',
       method: 'POST',
-      json: { title: 'Fine arco 1' },
+      json: { title: 'Fine arco 1', modules: ['retro'] },
     });
-    expect(boardWrites.startRound('  ').json).toEqual({ title: null });
+    expect(boardWrites.startRound('  ', ['stars_wishes']).json).toEqual({ title: null, modules: ['stars_wishes'] });
+    expect(boardWrites.start(['retro', 'stars_wishes']).json).toEqual({ modules: ['retro', 'stars_wishes'] });
+    expect(boardWrites.addModule('lines_veils')).toEqual({
+      path: '/modules',
+      method: 'POST',
+      json: { kind: 'lines_veils' },
+    });
+    expect(boardWrites.removeModule('m')).toEqual({ path: '/modules/m', method: 'DELETE' });
+    expect(boardWrites.reorderModules(['b', 'a'])).toEqual({
+      path: '/modules/order',
+      method: 'PUT',
+      json: { module_ids: ['b', 'a'] },
+    });
+    expect(boardWrites.setCurrentModule('m')).toEqual({
+      path: '/modules/current',
+      method: 'PUT',
+      json: { module_id: 'm' },
+    });
     expect(boardWrites.timer('start', 10)).toEqual({
       path: '/timer',
       method: 'POST',
@@ -154,6 +175,33 @@ describe('boardWrites', () => {
     expect(boardWrites.ungroupAll('g')).toEqual({ path: '/groups/g', method: 'DELETE' });
     expect(boardWrites.ungroup('c')).toEqual({ path: '/cards/c/ungroup', method: 'POST' });
     expect(boardWrites.deleteSessionZero()).toEqual({ path: '', method: 'DELETE' });
+  });
+});
+
+describe('the step on screen', () => {
+  const modules = [
+    { id: 'm1', kind: 'retro', position: 0, columns: [rawPostItColumn({ id: 'a' })] },
+    { id: 'm2', kind: 'stars_wishes', position: 1, columns: [rawPostItColumn({ id: 'b', kind: 'stars' })] },
+  ];
+  const board = toSessionZero(rawSessionZero({ modules, current_module_id: 'm2' }) as RawSessionZero);
+
+  // Spec 47: the step opened, else the current one, else the first.
+  it('picks the step opened, the current one or the first', () => {
+    expect(board.retro.map((column) => column.id)).toEqual(['b']);
+    expect(shownModule(board, 'm1')?.id).toBe('m1');
+    expect(shownModule(board, 'gone')?.id).toBe('m2');
+    expect(shownModule({ ...board, currentModuleId: null }, null)?.id).toBe('m1');
+    expect(shownModule({ ...board, modules: [] }, null)).toBeUndefined();
+    expect(moduleLabel('stars_wishes')).toBe('Stelle e Desideri');
+  });
+
+  it('shows a step\'s columns and writes a preview back into it', () => {
+    const view = viewOf(board, board.modules[0]);
+    expect(view.retro.map((column) => column.id)).toEqual(['a']);
+    expect(viewOf(board, undefined).retro).toEqual([]);
+    const preview = { ...view, retro: [] };
+    expect(withView(preview, 'm1')!.modules.map((module) => module.columns.length)).toEqual([0, 1]);
+    expect(withView(undefined, 'm1')).toBeUndefined();
   });
 });
 

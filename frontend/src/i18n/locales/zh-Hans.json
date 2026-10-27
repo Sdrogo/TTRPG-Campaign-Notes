@@ -1246,7 +1246,9 @@
     "kinds": {
       "must": "Must",
       "veils": "帷幕",
-      "lines": "底线"
+      "lines": "底线",
+      "stars": "星星",
+      "wishes": "愿望"
     },
     "postIt": {
       "text": "便签内容",
@@ -1301,7 +1303,7 @@
       "later": "第 0.5 次会话 #{{number}}",
       "pick": "要显示的会话",
       "start": "新会话",
-      "startBody": "当前的回顾看板将关闭，仍可只读查看；从未发布的草稿会被删除。新看板从空白开始，沿用相同的列。底线与帷幕保持不变。",
+      "startBody": "当前会话将关闭并保持只读可查阅；从未发布的草稿会被删除。新会话以下面的步骤从空白开始，其回顾面板保留相同的列。底线与帷幕保持不变。",
       "title": "名称",
       "startButton": "创建",
       "closed": "此会话已关闭：看板为只读。",
@@ -1331,6 +1333,31 @@
       "noTarget": "此处不能放下。",
       "dropped": "已放下 {{name}}。",
       "cancelled": "已取消：{{name}} 已回到原处。"
+    },
+    "modules": {
+      "label": "步骤",
+      "kinds": {
+        "retro": "回顾",
+        "lines_veils": "底线与帷幕",
+        "stars_wishes": "星星与愿望"
+      },
+      "hiddenHint": "仍隐藏的步骤：{{count}}",
+      "next": "下一步",
+      "bringHere": "把大家带到这里",
+      "current": "当前步骤",
+      "edit": "编辑步骤",
+      "editHint": "更改会立即对所有成员生效。",
+      "add": "添加步骤",
+      "kind": "步骤",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "remove": "移除",
+      "removeTitle": "移除此步骤？",
+      "removeBody": "“{{name}}”的便签将一并删除。底线与帷幕不会被改动。",
+      "chain": "本次会话的步骤",
+      "chainHint": "选择步骤及其顺序；之后可以更改。",
+      "max": "最多 {{max}} 个步骤。",
+      "startButton": "开始"
     }
   }
 }
