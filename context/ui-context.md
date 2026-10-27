@@ -262,7 +262,10 @@ other icon set.
   a restrained top-edge accent and lift on hover. Cards with images use a wide
   cover frame above full-width text instead of splitting the card 50/50: this
   keeps the visual prominent without compressing long titles, Tags and
-  descriptions in multi-column grids. Their carousel, crop, badges and full-card
+  descriptions in multi-column grids. The cover remains compact: wide images
+  crop to fill it, while square-ish and portrait images are gently enlarged
+  inside the same frame to avoid destructive 16:9 crops. A lower gradient
+  blends every orientation into the card. Their carousel, badges and full-card
   link remain unchanged. The sticky create action has a visible text label
   rather than relying on an unexplained plus icon.
 - **Maps index** (`/rooms/:roomId/maps`): reads as a cartographic archive,

@@ -694,6 +694,23 @@ html body[data-scroll-locked] {
   border-bottom: 1px solid var(--border-default);
 }
 
+.document-card-image {
+  display: block;
+  object-fit: cover;
+  object-position: center top;
+  transition: transform 180ms ease;
+}
+
+/* Keep the cover compact while protecting square and vertical artwork from a
+   harsh 16:9 crop. The small scale keeps a little crop, so it still feels like
+   a cover rather than a letterboxed gallery. */
+.document-card-image[data-frame='balanced'],
+.document-card-image[data-frame='portrait'] {
+  object-fit: contain;
+  object-position: center;
+  transform: scale(1.06);
+}
+
 .document-card-media-marks {
   position: absolute;
   top: var(--mantine-spacing-sm);
@@ -961,7 +978,8 @@ html body[data-scroll-locked] {
 @media (prefers-reduced-motion: reduce) {
   .documents-controls-toggle,
   .document-group-toggle,
-  .document-card {
+  .document-card,
+  .document-card-image {
     transition: none;
   }
 

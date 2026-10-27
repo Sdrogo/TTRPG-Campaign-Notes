@@ -757,6 +757,9 @@ in line with what was built since.
 - Refined image-bearing Document cards after visual review: the image is now a
   wide cover above full-width content rather than a narrow side panel, retaining
   carousel controls, badges, crop behavior and the complete-card link.
+- Tuned that cover by image shape: panoramic art still crops to fill the compact
+  frame, while square and portrait art uses a lightly zoomed contained fit plus
+  the existing lower fade, reducing crop without making cards taller.
 
 ## Architecture Decisions
 

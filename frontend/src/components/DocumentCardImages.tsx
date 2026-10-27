@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Box } from '@mantine/core';
 import { Carousel } from '@mantine/carousel';
+import { imageOrientation } from '../lib/images';
 import type { DocumentImage } from '../types/document';
 import { useTranslation } from 'react-i18next';
 
@@ -11,6 +13,8 @@ const ABOVE_CARD_LINK = 2;
 // The panel's left edge fades into the card's own background (Mantine's dark
 // Card surface), so the image melts into the card instead of ending on a seam.
 const FADE_INTO_CARD = 'linear-gradient(to right, var(--mantine-color-dark-6) 0%, transparent 35%)';
+
+type CardImageFrame = 'wide' | 'balanced' | 'portrait';
 
 interface DocumentCardImagesProps {
   images: DocumentImage[];
@@ -77,9 +81,14 @@ export function DocumentCardImages({
   );
 }
 
-/** An image cropped to cover its box, anchored at the top so a portrait's
- *  face survives the crop. */
+/**
+ * The compact card image. Wide images cover the frame; square-ish and portrait
+ * images are only gently enlarged inside it, avoiding aggressive 16:9 crops
+ * without making the card taller.
+ */
 function CardImage({ image, alt }: { image: DocumentImage; alt: string }) {
+  const [frame, setFrame] = useState<CardImageFrame | null>(null);
+
   return (
     <Box
       component="img"
@@ -89,7 +98,19 @@ function CardImage({ image, alt }: { image: DocumentImage; alt: string }) {
       draggable={false}
       w="100%"
       h="100%"
-      style={{ display: 'block', objectFit: 'cover', objectPosition: 'center top' }}
+      data-frame={frame ?? undefined}
+      onLoad={(event) => {
+        const { naturalWidth, naturalHeight } = event.currentTarget;
+        const orientation = imageOrientation(naturalWidth, naturalHeight);
+        setFrame(
+          orientation === 'portrait'
+            ? 'portrait'
+            : naturalWidth / naturalHeight < 1.4
+              ? 'balanced'
+              : 'wide',
+        );
+      }}
+      className="document-card-image"
     />
   );
 }
