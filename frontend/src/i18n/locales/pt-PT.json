@@ -71,6 +71,126 @@
     "signInWith": "Iniciar sessão com {{provider}}",
     "privacy": "Privacidade"
   },
+  "landing": {
+    "tagline": "O caderno partilhado da tua campanha",
+    "intro": "O Ex Libris é onde um grupo de RPG escreve a sua campanha em conjunto: locais, personagens, acontecimentos e segredos, cada um visível só para quem o deve conhecer.",
+    "signIn": "Iniciar sessão",
+    "openMyRooms": "Abrir as minhas Salas",
+    "tryDemo": "Experimentar a demo",
+    "seeInDemo": "Ver na demo",
+    "featuresTitle": "O que podes fazer",
+    "features": {
+      "rooms": {
+        "title": "Salas e funções",
+        "text": "Uma Sala por campanha. O Master conduz, os Player entram com uma ligação, e cada função vale só dentro da sua Sala."
+      },
+      "documents": {
+        "title": "Documentos e Notas",
+        "text": "Locais, personagens, acontecimentos, objetos: escreve-os como Documentos, acrescenta Notas e liga-os com menções que funcionam nos dois sentidos."
+      },
+      "visibility": {
+        "title": "Visibilidade e Revelação",
+        "text": "Esconde o que quiseres de quem quiseres. O Master vê sempre tudo, os Player veem o que lhes é mostrado, e uma Revelação abre-o quando a história o pede."
+      },
+      "comments": {
+        "title": "Comentários e conversas",
+        "text": "Discutam cada Documento numa conversa de Comentários e respostas, com reações, mensagens afixadas e mensagens na pele da personagem."
+      },
+      "maps": {
+        "title": "Mapas",
+        "text": "Desenha mapas de relações entre Documentos ou marca locais num mapa geográfico, e editem-nos em conjunto."
+      },
+      "export": {
+        "title": "Exportação",
+        "text": "Leva a campanha contigo: um manual em PDF com três estilos, ou JSON e Markdown para as tuas ferramentas."
+      }
+    },
+    "stepsTitle": "Como funciona",
+    "steps": {
+      "create": "Cria uma Sala para a tua campanha.",
+      "invite": "Convida os teus Player com uma ligação.",
+      "write": "Escrevam a campanha em conjunto, cada um vê o que deve ver."
+    },
+    "signInTitle": "Começa a tua campanha"
+  },
+  "nav": {
+    "menu": "Navegação rápida",
+    "home": "Início",
+    "rooms": "Salas",
+    "noRooms": "Ainda sem Salas"
+  },
+  "demo": {
+    "banner": "Demo: uma campanha de exemplo, só de leitura.",
+    "viewAs": "Ver como",
+    "exit": "Sair da demo",
+    "readOnly": "A demo é só de leitura: inicia sessão para criares a tua própria Sala.",
+    "unavailable": "A demo precisa dos dados do site, que este navegador bloqueia.",
+    "accountNotice": "Na demo não há conta: inicia sessão para teres a tua.",
+    "restartTour": "Rever a visita"
+  },
+  "tour": {
+    "counter": "{{current}} de {{total}}",
+    "next": "Seguinte",
+    "back": "Voltar",
+    "skip": "Saltar a visita",
+    "signIn": "Inicia sessão e cria a tua Sala",
+    "keepExploring": "Continuar a explorar",
+    "label": "Visita da demo",
+    "steps": {
+      "room": {
+        "title": "Uma Sala é uma campanha",
+        "body": "Toda a campanha vive aqui, agrupada nas Tags principais: personagens, locais, eventos. O Master gere a Sala; os Players entram com uma ligação."
+      },
+      "roomIndex": {
+        "title": "O Índice da Sala",
+        "body": "Este separador abre o índice da Sala: cada Tag e cada mapa, a um clique de qualquer página."
+      },
+      "documentCard": {
+        "title": "Os Documentos",
+        "body": "Cada cartão é um Documento: uma personagem, um local, um objeto. O distintivo diz quem o pode ver."
+      },
+      "document": {
+        "title": "A página de um Documento",
+        "body": "Nome, subtítulo e descrição, com imagens e Owners ao lado. Os Owners podem editá-lo, e o Master também."
+      },
+      "documentText": {
+        "title": "Notas e menções",
+        "body": "As Notas acrescentam parágrafos sob a descrição. Uma #menção liga outro Documento, e a ligação vale nos dois sentidos."
+      },
+      "mentionMap": {
+        "title": "O mapa de menções",
+        "body": "As menções desenham um mapa vivo de como os Documentos se ligam. Acompanha o que escreves."
+      },
+      "comments": {
+        "title": "Comentários e respostas",
+        "body": "Cada Documento tem a sua conversa: respostas, reações, mensagens como personagem e Comentários que só alguns membros veem."
+      },
+      "visibility": {
+        "title": "Visibilidade e Revelação",
+        "body": "Este Documento é só para o Master. Cada Documento, Nota e Comentário tem a sua visibilidade, e o Master revela-o no menu ⋮ quando a história o pede."
+      },
+      "viewAs": {
+        "title": "Vê o que os Players veem",
+        "body": "Muda para o Marco ou a Giulia: o que não podem ver desaparece. O Master pode ver a Sala como qualquer membro da mesma forma."
+      },
+      "search": {
+        "title": "Pesquisar",
+        "body": "Pesquisa em cada Documento, Nota e Comentário que podes ver. Ctrl K abre a pesquisa em qualquer ponto da Sala."
+      },
+      "freeMap": {
+        "title": "Quadros livres",
+        "body": "Cartões de Documentos e setas num quadro livre, para acompanhar quem quer o quê. O Master pode deixar os Players desenhar também."
+      },
+      "geoMap": {
+        "title": "Mapas geográficos",
+        "body": "Coloca locais numa imagem e traça regiões; cada local leva ao seu Documento."
+      },
+      "end": {
+        "title": "Isto é o Ex Libris",
+        "body": "Inicia sessão para criares a tua Sala, ou continua a explorar a demo."
+      }
+    }
+  },
   "header": {
     "account": "A tua conta",
     "accountPending": "A tua conta: {{count}} por ver"

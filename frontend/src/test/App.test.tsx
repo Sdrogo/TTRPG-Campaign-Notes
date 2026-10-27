@@ -7,6 +7,7 @@ import App from '../App';
 // Each page has its own tests; here only the routing table is under test, so
 // the pages are stubbed down to a marker.
 vi.mock('../pages/HomePage', () => ({ HomePage: () => <div>home</div> }));
+vi.mock('../pages/MyRoomsPage', () => ({ MyRoomsPage: () => <div>my rooms</div> }));
 vi.mock('../pages/AccountPage', () => ({ AccountPage: () => <div>account</div> }));
 vi.mock('../pages/AcceptInvitePage', () => ({ AcceptInvitePage: () => <div>invite</div> }));
 vi.mock('../pages/AddFriendPage', () => ({ AddFriendPage: () => <div>add friend</div> }));
@@ -17,6 +18,7 @@ vi.mock('../pages/RoomSetupPage', () => ({
 vi.mock('../pages/RoomDocumentsPage', () => ({ RoomDocumentsPage: () => <div>documents</div> }));
 vi.mock('../pages/DocumentDetailPage', () => ({ DocumentDetailPage: () => <div>detail</div> }));
 vi.mock('../pages/PrivacyPage', () => ({ PrivacyPage: () => <div>privacy</div> }));
+vi.mock('../pages/DemoPage', () => ({ DemoPage: () => <div>demo</div> }));
 vi.mock('../pages/RoomMapsPage', () => ({ RoomMapsPage: () => <div>maps</div> }));
 vi.mock('../pages/RelationshipMapPage', () => ({ RelationshipMapPage: () => <div>map</div> }));
 vi.mock('../pages/MentionMapPage', () => ({ MentionMapPage: () => <div>mention map</div> }));
@@ -31,6 +33,7 @@ beforeEach(() => {
 describe('App routes', () => {
   it.each([
     ['/', 'home'],
+    ['/rooms', 'my rooms'],
     ['/account', 'account'],
     ['/invite/ABC123', 'invite'],
     ['/friends/add/FRIEND1', 'add friend'],
@@ -39,6 +42,7 @@ describe('App routes', () => {
     ['/rooms/room-1/documents', 'documents'],
     ['/rooms/room-1/documents/doc-1', 'detail'],
     ['/privacy', 'privacy'],
+    ['/demo', 'demo'],
     ['/rooms/room-1/documents/doc-1/mention-map', 'mention map'],
     ['/rooms/room-1/maps', 'maps'],
     ['/rooms/room-1/maps/map-1', 'map'],

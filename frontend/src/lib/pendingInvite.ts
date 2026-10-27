@@ -1,8 +1,10 @@
 const INVITE_KEY = 'pendingInviteCode';
 const FRIEND_KEY = 'pendingFriendCode';
+const SIGN_IN_KEY = 'pendingSignIn';
 
 /*
- * Remembers a code from a shared link across the sign-in round trip. OAuth
+ * Remembers a code from a shared link, or that a sign-in was just started,
+ * across the sign-in round trip. OAuth
  * sends the user back to the site origin, so the `/invite/:code` or
  * `/friends/add/:code` URL is otherwise lost. Storage can be unavailable
  * (private window, blocked site data): every access is guarded and the link
@@ -61,4 +63,23 @@ export function readPendingFriendCode(): string | null {
 /** Forgets the saved Friend code once it has been handed to the friend-link page. */
 export function clearPendingFriendCode(): void {
   clear(FRIEND_KEY);
+}
+
+/**
+ * Remembers that a sign-in button was just pressed, so the round trip back to
+ * the site origin goes on to the Rooms list instead of the landing page (spec
+ * 45, Decision 2).
+ */
+export function markSigningIn(): void {
+  save(SIGN_IN_KEY, '1');
+}
+
+/** Whether a sign-in was started on this tab and not yet followed through. */
+export function readSigningIn(): boolean {
+  return read(SIGN_IN_KEY) !== null;
+}
+
+/** Forgets the started sign-in once the user is signed in. */
+export function clearSigningIn(): void {
+  clear(SIGN_IN_KEY);
 }

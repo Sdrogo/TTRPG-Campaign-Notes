@@ -128,18 +128,30 @@ other icon set.
   the logo, load before the app; links to the Rooms list) **always at
   the exact center** (2026-10-03, Andrea: it shifted between pages): the
   header is a 3-column grid (`1fr minmax(0, auto) 1fr` in `.app-header`), so
-  whatever sits on either side never moves it. **On the left, the back arrow** (same
+  whatever sits on either side never moves it. **On the left, the quick
+  navigation burger** (spec 45, 2026-10-25), then the back arrow: the burger
+  (`QuickNavMenu`, Mantine `Burger` + `Menu`, `bottom-start`, 260px) lists
+  Home (the landing page `/`), My Rooms (`/rooms`) and "Rooms", the user's
+  active Rooms alphabetically with a 22px `Avatar` (Room image or initials),
+  the current Room checked, inline under a `Menu.Label` on every screen
+  (product owner, 2026-10-25: no side sub-menu on desktop), scrolling past
+  50dvh; fetched on first open. **The back arrow** (same
   date; the Glossary burger that followed it moved to the Room Index tab,
   spec 44, 2026-10-25): the back button is an icon-only
   `ActionIcon` (`ArrowLeftIcon`), its destination's name kept as
   `aria-label`/`title`. **Back is hierarchical** (2026-10-15, Andrea: browser
   history made it unreliable around maps and the split view): it goes to
-  the page's fixed parent (Document -> Room -> Rooms list, map -> maps
-  list), never `navigate(-1)`, replacing the current history entry; a link
-  that opens a page on purpose from elsewhere (a map from a Document, a
-  Document from a map card or the open menu, a copied map) puts
-  `{ from }` (`lib/backNav.ts`) in the navigation state and back returns
-  there, labelled with the generic `common.back`; the current user's circular avatar on the right
+  the page's fixed parent (Document -> Room -> Rooms list, Room setup ->
+  Room, map -> maps list), never `navigate(-1)`, replacing the current
+  history entry; a link that opens a page on purpose from elsewhere (a map
+  from a Document, the Room page's Maps row, Maps icon or the Room Index; a
+  Document from a map card or the open menu; the setup from a Room card; a
+  copied map) puts `{ from, backStack }` (`lib/backNav.ts`, a trail of at
+  most 20 places, cut when a page already on it comes back) in the
+  navigation state and back walks that trail, labelled with the generic
+  `common.back`. Before going to a Document or map on the trail it reads it
+  afresh and skips it on a 404 (deleted or hidden), falling back to the
+  page's parent (Andrea, 2026-10-25); the current user's circular avatar on the right
   (`AccountButton`, 36px, thin `--border-default` ring that turns
   `--accent-primary` on hover/focus and while on `/account`). It is
   rendered by `HomePage` and by `PageLayout`, so every signed-in page
@@ -228,16 +240,17 @@ other icon set.
   16px `UserAvatar`. "Interpretato da" on the detail page is the first row
   of the info panel, above the Owners (see Document detail); the Document card adds a "Played by" line
   with a 20px avatar above the Owners line.
-- **Room view**: left sidebar for navigation (Tags, Glossary, Members),
-  center column for the Document list or an open Document, right
-  panel (collapsible) for the Document's Thread when a Document is
-  open — so reading a Document and following its discussion never
-  requires a full page navigation.
+- **Room view**: the Room page shows the maps row and the Documents
+  grouped by Main Tag; navigation is the Room Index tab on the left edge
+  (spec 44) and the header burger (spec 45). A Document opens on its own
+  page, with its Comments under it; a second Document or a map can open
+  beside it in the split view (spec 37). *(The original plan of a left
+  sidebar plus a right Thread panel was never built.)*
 - **Document detail**: description at the top, Tags and Owner(s)
-  directly under the title, Details rendered as a distinct,
-  visually lighter list of titled entries above the general Comment
-  thread (Details and Comments are both Posts, but Details are
-  visually promoted so they read like structured facts, not chat).
+  directly under the title, Notes (the spec's Details) rendered as a
+  distinct, visually lighter list of titled entries above the Comment
+  thread, so they read like structured facts, not chat (Notes are not
+  Posts since spec 12; `requirements.md` D-18).
   **Images sit beside the text on big screens** (2026-09-25, spec 10,
   mirroring `DocumentCard`'s side-by-side layout): `DocumentImageGallery`
   sits on the right at 45% width from `lg`; below `lg` it stacks, image
@@ -535,16 +548,19 @@ other icon set.
 
 ## Language
 
-The UI is in **Italian and English** (spec 09; see `architecture.md` →
-UI Language). The browser locale picks the language (English for
-anything that isn't Italian), and the flag selector in the top bar
-overrides it for good. Terminology is the spec's in both languages:
-Room/Stanza, Document/Documento, Tag, Owner, Master, Player,
-Comment/Commento (English/Italian). UI strings quoted in this file are the
+The UI is in **twelve languages** (spec 09, then 34: English, Italian,
+German, Spanish, French, Dutch, Polish, European Portuguese, Russian,
+Japanese, Korean, Simplified Chinese; see `architecture.md` → UI
+Language). The browser locale picks the language (English for anything
+unsupported), and the flag selector in the top bar overrides it for
+good. Terminology is the spec's in every language (shared
+terms in `context/i18n-glossary.md`), e.g. Room/Stanza,
+Document/Documento, Tag, Owner, Master, Player, Comment/Commento
+(English/Italian). UI strings quoted in this file are the
 English ones; the Italian text is in `it.json` under the same keys. Roles
 and "Owner" stay English in Italian too, as
-before. The sign-in screen has no top bar, so a signed-out visitor
-sees the browser's language.
+before. The landing page (spec 45) carries the language selector too,
+so a signed-out visitor can switch before signing in.
 
 ## Icons
 
@@ -562,7 +578,10 @@ color per icon.
 Administrators of that Room only; anyone else who reaches the URL gets a
 full-page "Solo un Amministratore…" message with a way back (the backend
 enforces the same on every write). It has two sections under a `Title`
-order 2, each with an order-3 `Title`:
+order 2, each with an order-3 `Title`. At the top (2026-10-26), **Membri**
+and **Immagine della Stanza** + **Visibilità predefinita** are two bordered
+`Paper` cards (`--bg-surface`) side by side from `lg` (half each, equal
+height), stacked below:
 
 - **Membri** (`setup/MemberManagement`): the table that used to be the
   members page — avatar, name, pronouns, bio, role `Select`, Administrator
@@ -571,7 +590,7 @@ order 2, each with an order-3 `Title`:
 - **Tag** (`setup/TagsSection`, spec 25c, 2026-10-07; it replaced the
   separate "Tag principali" editor, its combination adder and "Salva ordine",
   and the boxed Tag list): one section, two bordered `Paper` parts side by
-  side from `lg` (Grouping 5/12, All Tags 7/12), stacked below. Each part has
+  side from `lg` (half each since 2026-10-26), stacked below. Each part has
   an `h3` (`fz="h5"`), a gray count `Badge` and a one-line dimmed description.
   - **Raggruppamento** (`GroupingEditor`): the Main items as a `CompactList`
     `ol` (position, `#A` or `#A + #B`, up / down / remove `ActionIcon`s
@@ -775,4 +794,50 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   at least 320 px; the ratio is kept in `localStorage` (`splitView.ratio`). Opening or closing
   the pane **replaces** the history entry (2026-10-15), so the browser's Back
   leaves the page instead of stepping through pane changes; a reload keeps it.
+
+## Landing page (spec 45_1)
+
+- `/` is the landing page for everyone (`LandingPage`); the Rooms list moved
+  to `/rooms` (`MyRoomsPage`). Signed out it has its own top bar (32px logo
+  from `/favicon.svg`, app name, `LanguageSelector`, a default "Sign in"
+  button that scrolls to the sign-in block); signed in it has the
+  `AppHeader`, whose centered app name links to `/`.
+- One `Container size="lg"` column, sections 64px apart: hero (96px logo,
+  `h1` 40/56px, tagline `xl`, intro dimmed at most 640px wide, one filled
+  button: "Sign in" signed out, "Open my Rooms" signed in), "What you can
+  do" (six bordered `Card`s, 1/2/3 columns at base/sm/md, a 32px duotone
+  muted icon, `h4` title, dimmed `sm` text; no accent, it is decoration),
+  "How it works" (an `ol` of three steps with a large muted display-font
+  number), the sign-in block (`#sign-in`, signed out only: `SignInButtons`,
+  Google filled), and a footer with the privacy link.
+- "Go to sign in" links (`SignInRequired`, the invite page) point to
+  `/#sign-in`; the page scrolls there on load.
+- Screenshots: `landing-page/` in the project files.
+- The hero has two buttons side by side: "Try the demo" (filled, a plain
+  `<a href="/demo">`, since entering the Demo is a full page load) and
+  "Sign in" / "Open my Rooms" (default variant).
+
+## Demo (spec 45_2)
+
+- While the Demo is on, `AppHeader` shows `DemoBanner` as a full-width row
+  under its three columns (`.demo-banner`: raised background, default
+  border, `md` radius; deliberately not the accent, which belongs to the
+  "view as" preview banner it replaces): a flask icon and "Demo: a sample
+  campaign, read-only.", then "View as" + a `SegmentedControl` (Master /
+  Marco / Giulia, `xs`), "Exit demo" (default) and "Sign in" (filled),
+  `compact-sm`. It wraps onto two or three lines on a phone.
+- All the real controls stay visible; a write shows the read-only notice
+  where that action shows its errors (form error or `notifyError` toast).
+- The Account page shows a `FullPageMessage` ("there is no account in the
+  demo") with a way back to the Rooms.
+- **Tour** (spec 45_3): a fixed `Paper` card (340px, `withBorder`,
+  `shadow="lg"`, `md` radius, z-index 151) with a dimmed "Demo tour · N of
+  13" line, an `h2` at `h4` size, `sm` body, then Skip (subtle gray) on
+  the left and Back (default) / Next (filled) on the right, all
+  `compact-sm`; the last card has Keep exploring (default) and Sign in
+  (filled). The lit element is `.demo-tour-spot` (z-index 150, `md`
+  radius, a 55% black shadow around it); with nothing to light the whole
+  page dims at 40%. The banner gains "Restart tour" (default). Landing
+  feature cards gain a `sm` "See it in the demo" anchor.
+- Screenshots: `demo/` (and `demo/tour/`) in the project files.
 

@@ -202,8 +202,9 @@ pytest, split by what a test needs rather than by what it covers.
   one domain function, translate the result/exception to a response.
   No business rules inline in a route handler.
 - One router module per resource, matching the boundaries in
-  `architecture.md` (`rooms`, `documents`, `threads`, `tags`,
-  `glossary`, `visibility`, `invitations`, `export`).
+  `architecture.md` → System Boundaries (`rooms`, `documents`,
+  `notes`, `comments`, `tags`, `relationship_maps`, `invitations`,
+  `export`, …).
 - Dependency-injected auth: every protected route takes the
   authenticated user (resolved from the Supabase JWT in
   `backend/app/auth/`) as a FastAPI dependency — never re-parse the
@@ -266,8 +267,8 @@ pytest, split by what a test needs rather than by what it covers.
   policy for them (including dashboard-suggested ones).
 
 - Metadata belongs in Postgres (Supabase): Rooms, Memberships,
-  Documents, Tags, GlossaryEntries, Threads/Posts, Invitations,
-  VisibilityRule, AuditLog.
+  Documents, Notes, Tags, Comments, maps, Invitations, visibility
+  grants, AuditLog.
 - Document images and other uploaded media belong in Supabase
   Storage; Postgres stores only the reference (path/URL), never the
   file bytes.

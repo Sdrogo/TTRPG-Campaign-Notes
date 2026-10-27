@@ -16,6 +16,7 @@ import { LeaveRoomModal } from './LeaveRoomModal';
 import type { MyRoom } from '../types/room';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from './LabeledActionIcon';
+import { useBackState } from '../lib/backNav';
 
 // With an image the card grows so its right half reads as a picture, not a
 // strip (as a DocumentCard does, though shorter: a Room card has less text).
@@ -39,6 +40,7 @@ interface RoomCardProps {
  */
 export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const [inviteOpened, setInviteOpened] = useState(false);
   const [duplicateOpened, setDuplicateOpened] = useState(false);
   const [leaveOpened, setLeaveOpened] = useState(false);
@@ -113,6 +115,7 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
                 <Menu.Item
                   component={Link}
                   to={`/rooms/${room.id}/setup`}
+                  state={backState}
                   leftSection={<GearIcon size={16} />}
                 >
                   {t('rooms.setup')}

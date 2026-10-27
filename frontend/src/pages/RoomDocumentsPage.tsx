@@ -49,6 +49,7 @@ import type { Member } from '../types/member';
 import type { MainItem, Tag } from '../types/tag';
 import { itemLabel } from '../lib/mainItems';
 import { LabeledActionIcon } from '../components/LabeledActionIcon';
+import { useBackState } from '../lib/backNav';
 
 /**
  * `/rooms/:roomId/documents`: the Documents the viewer can see, filterable by
@@ -79,6 +80,7 @@ export function RoomDocumentsPage() {
 
 function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; currentUserId: string }) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const navigate = useNavigate();
   const [createOpened, setCreateOpened] = useState(false);
   const room = useRoom(roomId, true);
@@ -136,10 +138,10 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   ];
 
   return (
-    <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
+    <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId}>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         {/* The Room's actions sit at the end of the title row, folded in "⋮". */}
-        <Group justify="space-between" wrap="nowrap">
+        <Group justify="space-between" wrap="nowrap" data-tour="room">
           <Group gap="sm" align="center" wrap="wrap" style={{ minWidth: 0 }}>
             <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
               {room.data ? room.data.name : t('documents.title')}
@@ -165,6 +167,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             <LabeledActionIcon
               component={Link}
               to={`/rooms/${roomId}/maps`}
+              state={backState}
               variant="subtle"
               color="gray"
               size="lg"
@@ -182,7 +185,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               isMaster={isMaster}
               canImport={canCreateDocument}
               currentUserId={currentUserId}
-              onLeft={() => navigate('/')}
+              onLeft={() => navigate('/rooms')}
               viewAsMembers={
                 isMaster ? members.data!.filter((m) => m.userId !== currentUserId) : undefined
               }

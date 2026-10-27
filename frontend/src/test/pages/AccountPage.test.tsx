@@ -9,6 +9,7 @@ import i18n from '../../i18n';
 import { fakeSession, rawAccount, rawMyReveal } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { AccountPage } from '../../pages/AccountPage';
+import { setDemoMode } from '../../lib/demo/demoMode';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
@@ -45,6 +46,16 @@ beforeEach(() => {
 });
 
 describe('AccountPage', () => {
+  it('has no account to manage in the Demo', () => {
+    setDemoMode(true);
+    render();
+
+    expect(screen.getByText("Nella demo non c'è un account: accedi per avere il tuo.")).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Torna alle mie Stanze' })).toHaveAttribute('href', '/rooms');
+    expect(fetchMock).not.toHaveBeenCalled();
+    setDemoMode(false);
+  });
+
   it('waits on a loader while the session is resolving', () => {
     sessionMock.mockReturnValue({ session: null, loading: true } as SessionState);
 
@@ -121,7 +132,7 @@ describe('AccountPage', () => {
     expect(await screen.findByText('Impossibile caricare il tuo account.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Torna alle mie Stanze' })).toHaveAttribute(
       'href',
-      '/',
+      '/rooms',
     );
   });
 });

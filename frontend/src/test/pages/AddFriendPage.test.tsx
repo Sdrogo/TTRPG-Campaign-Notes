@@ -105,6 +105,6 @@ describe('AddFriendPage', () => {
       await screen.findByRole('heading', { name: 'Impossibile inviare la richiesta di amicizia.' }),
     ).toBeInTheDocument();
     expect(screen.getByText('You are already Friends')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Torna alle mie Stanze' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Torna alle mie Stanze' })).toHaveAttribute('href', '/rooms');
   });
 });

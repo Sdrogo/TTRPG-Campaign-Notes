@@ -1,15 +1,18 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Box, Group, Title, UnstyledButton } from '@mantine/core';
 import { useHeadroom } from '@mantine/hooks';
 import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { ViewAsBanner } from './ViewAsBanner';
+import { DemoBanner } from './demo/DemoBanner';
+import { isDemoMode } from '../lib/demo/demoMode';
 import { useViewAs } from '../hooks/useViewAs';
 import { AccountButton } from './account/AccountButton';
 import { LanguageSelector } from './LanguageSelector';
+import { QuickNavMenu } from './QuickNavMenu';
 import { SearchButton } from './search/SearchButton';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from './LabeledActionIcon';
-import { backDestination } from '../lib/backNav';
+import { useHierarchicalBack } from '../hooks/useHierarchicalBack';
 
 interface AppHeaderProps {
   /** Given on a Room-scoped page, this shows the Room's search (spec 21).
@@ -20,8 +23,7 @@ interface AppHeaderProps {
   /** Given on any nested page, this shows a "back" arrow (icon only, named
    *  by `backLabel` for screen readers), to the page it was
    *  opened from or else to `backTo`, its parent. Omitted on the
-   *  Rooms list (`HomePage`), which is the app's own root and has nowhere to
-   *  go back to. */
+   *  Rooms list and the landing page, which have nowhere to go back to. */
   backTo?: string;
   backLabel?: string;
 }
@@ -31,32 +33,30 @@ interface AppHeaderProps {
 const HEADER_FIXED_AT = 80;
 
 /**
- * The top navigation bar shown on every signed-in page: the back arrow on the
- * left; the app name (also
- * back to the Rooms list) always at the exact center; on the right, on a Room
+ * The top navigation bar shown on every signed-in page: the quick navigation
+ * burger (spec 45) and the back arrow on the left; the app name (also a link
+ * to the landing page) always at the exact center; on the right, on a Room
  * page, the search (spec 21), then the language flag and the account avatar
  * (spec 09, spec 10). It is pinned to
  * the top of the page (`.app-header` in `index.css`), but slides away while
  * scrolling down and comes back as soon as the scroll turns up, so a phone
  * shows more content. While the Master previews the Room as a member (spec
- * 22b) it carries the preview's banner and stays put.
+ * 22b) it carries the preview's banner and stays put. In the Demo (spec
+ * 45_2) the Demo's banner takes its place, with its own View-as switch.
  */
 export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { pinned } = useHeadroom({ fixedAt: HEADER_FIXED_AT });
   // While previewing as a member, the bar and its banner never slide away.
   const viewAs = useViewAs();
 
-  const location = useLocation();
-
   // Hierarchical, never the browser history: the page this one was opened
-  // from (a map from a Document...), else its fixed parent. It replaces the
-  // current entry so back and the browser's Back never ping-pong.
-  const destination = backDestination(location.state, backTo ?? '/');
+  // from (a map from a Document...), skipping Documents and maps deleted
+  // since, else its fixed parent.
+  const { destination, goBack } = useHierarchicalBack(backTo ?? '/');
   const label = backTo && destination !== backTo ? t('common.back') : backLabel;
   const handleBack = () => {
-    void navigate(destination, { replace: true });
+    void goBack();
   };
 
   return (
@@ -71,6 +71,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
         data-hidden={(!pinned && !viewAs) || undefined}
       >
         <Group gap="xs" wrap="nowrap">
+          <QuickNavMenu />
           {backTo && (
             <LabeledActionIcon
               onClick={handleBack}
@@ -93,7 +94,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
           <LanguageSelector />
           <AccountButton />
         </Group>
-        {viewAs && <ViewAsBanner viewAs={viewAs} />}
+        {isDemoMode() ? <DemoBanner /> : viewAs && <ViewAsBanner viewAs={viewAs} />}
       </Box>
     </>
   );

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { Button, Group, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
+import { Button, Grid, Group, Loader, Paper, Stack, Tabs, Text, Title } from '@mantine/core';
 import { DownloadSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
@@ -56,7 +56,7 @@ export function RoomSetupPage() {
 
   if (members.isError) {
     return (
-      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/">
+      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
         {t('setup.loadError')}
       </FullPageMessage>
     );
@@ -68,14 +68,14 @@ export function RoomSetupPage() {
 
   if (!isAdmin && !isMaster) {
     return (
-      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/">
+      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
         {t('setup.adminOnly')}
       </FullPageMessage>
     );
   }
 
   return (
-    <PageLayout backTo="/" backLabel={t('common.myRooms')} roomId={roomId}>
+    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('documents.title')} roomId={roomId}>
       <Group justify="space-between" wrap="nowrap">
         <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
           {t('setup.title')}
@@ -102,23 +102,35 @@ export function RoomSetupPage() {
         {isAdmin && (
           <Tabs.Panel value="settings">
             <Stack gap="md">
-              <Stack gap="sm">
-                <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
-                  {t('members.title')}
-                </Title>
-                <MemberManagement
-                  roomId={roomId}
-                  members={members.data}
-                  currentUserId={session.user.id}
-                  onLeft={() => navigate('/')}
-                />
-              </Stack>
+              {/* Members beside the Room image and default visibility from `lg`, stacked below. */}
+              <Grid gap="md" align="stretch">
+                <Grid.Col span={{ base: 12, lg: 6 }}>
+                  <Paper withBorder radius="md" p="md" bg="var(--bg-surface)" h="100%">
+                    <Stack gap="sm">
+                      <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
+                        {t('members.title')}
+                      </Title>
+                      <MemberManagement
+                        roomId={roomId}
+                        members={members.data}
+                        currentUserId={session.user.id}
+                        onLeft={() => navigate('/rooms')}
+                      />
+                    </Stack>
+                  </Paper>
+                </Grid.Col>
 
-              {room.data && <RoomImageSection roomId={roomId} imageUrl={room.data.imageUrl} />}
-
-              {room.data && (
-                <DefaultVisibilitySection roomId={roomId} value={room.data.defaultVisibility} />
-              )}
+                {room.data && (
+                  <Grid.Col span={{ base: 12, lg: 6 }}>
+                    <Paper withBorder radius="md" p="md" bg="var(--bg-surface)" h="100%">
+                      <Stack gap="lg">
+                        <RoomImageSection roomId={roomId} imageUrl={room.data.imageUrl} />
+                        <DefaultVisibilitySection roomId={roomId} value={room.data.defaultVisibility} />
+                      </Stack>
+                    </Paper>
+                  </Grid.Col>
+                )}
+              </Grid>
 
               {(tags.isLoading || mainItems.isLoading || room.isLoading) && <Loader color="accent" />}
               {(tags.isError || mainItems.isError || room.isError) && (
@@ -137,7 +149,7 @@ export function RoomSetupPage() {
                 <DeleteRoomSection
                   roomId={roomId}
                   roomName={room.data.name}
-                  onDeleted={() => navigate('/')}
+                  onDeleted={() => navigate('/rooms')}
                 />
               )}
             </Stack>

@@ -35,11 +35,11 @@ export function FullPageMessage({ children, actionLabel, actionTo }: FullPageMes
   );
 }
 
-/** The message for a signed-out visitor, with a link to the sign-in page. */
+/** The message for a signed-out visitor, with a link to the landing page's sign-in block. */
 export function SignInRequired({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   return (
-    <FullPageMessage actionLabel={t('common.goToLogin')} actionTo="/">
+    <FullPageMessage actionLabel={t('common.goToLogin')} actionTo="/#sign-in">
       {children}
     </FullPageMessage>
   );

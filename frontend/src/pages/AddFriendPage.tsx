@@ -71,7 +71,7 @@ export function AddFriendPage() {
           <Button component={Link} to="/account">
             {t('friendLink.goToAccount')}
           </Button>
-          <Button component={Link} to="/" variant="default">
+          <Button component={Link} to="/rooms" variant="default">
             {t('common.backToMyRooms')}
           </Button>
         </Group>

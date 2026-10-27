@@ -3,6 +3,7 @@ import { setLanguage } from '../../i18n';
 import { ApiError, apiDownload, apiFetch } from '../../lib/apiClient';
 import { supabase } from '../../lib/supabaseClient';
 import { setViewAsUser } from '../../lib/viewAs';
+import { setDemoMode } from '../../lib/demo/demoMode';
 
 vi.mock('../../lib/supabaseClient', () => ({
   supabase: { auth: { getSession: vi.fn() } },
@@ -283,6 +284,36 @@ describe('apiDownload', () => {
     await expect(apiDownload('/rooms/room-1/export')).rejects.toMatchObject({
       status: 403,
       message: 'Not a member',
+    });
+  });
+});
+
+describe('while the Demo is on', () => {
+  beforeEach(() => setDemoMode(true));
+  afterEach(() => setDemoMode(false));
+
+  it('answers from the in-browser demo backend, with nothing sent over the network', async () => {
+    const fetchMock = respondWith('{}');
+
+    await expect(apiFetch('/rooms/demo')).resolves.toMatchObject({ id: 'demo' });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('answers as the member being previewed unless told to ignore it', async () => {
+    setViewAsUser('d3e0c0de-0000-4000-8000-000000000002');
+    try {
+      await expect(apiFetch('/rooms/demo/characters/mine')).resolves.toHaveLength(1);
+      await expect(apiFetch('/rooms/demo/characters/mine', { ignoreViewAs: true })).resolves.toEqual([]);
+    } finally {
+      setViewAsUser(null);
+    }
+  });
+
+  it('turns a refused write into an ApiError with the read-only notice', async () => {
+    await expect(apiFetch('/rooms', { method: 'POST', json: { name: 'x' } })).rejects.toMatchObject({
+      status: 403,
+      message: 'La demo è in sola lettura: accedi per creare la tua Stanza.',
     });
   });
 });

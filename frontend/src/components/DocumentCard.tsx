@@ -75,6 +75,7 @@ export function DocumentCard({
 
   return (
     <Card
+      data-tour="document-card"
       withBorder
       padding="md"
       radius="md"

@@ -71,6 +71,126 @@
     "signInWith": "使用 {{provider}} 登录",
     "privacy": "隐私"
   },
+  "landing": {
+    "tagline": "你的战役共享笔记本",
+    "intro": "Ex Libris 是桌面角色扮演小组共同撰写战役的地方：地点、角色、事件和秘密，每一项都只让该知道的人看到。",
+    "signIn": "登录",
+    "openMyRooms": "打开我的房间",
+    "tryDemo": "试用演示",
+    "seeInDemo": "在演示中查看",
+    "featuresTitle": "你可以做什么",
+    "features": {
+      "rooms": {
+        "title": "房间与角色",
+        "text": "每个战役一个房间。Master 主持，Player 通过链接加入，每个角色只在自己的房间内有效。"
+      },
+      "documents": {
+        "title": "文档与笔记",
+        "text": "地点、角色、事件、物品：把它们写成文档，添加笔记，并用双向生效的提及把它们连接起来。"
+      },
+      "visibility": {
+        "title": "可见性与揭示",
+        "text": "可以对任何人隐藏任何内容。Master 始终能看到一切，Player 只看到展示给他们的内容，剧情需要时用揭示将其公开。"
+      },
+      "comments": {
+        "title": "评论与讨论串",
+        "text": "在由评论和回复组成的讨论串中讨论每个文档，支持表情回应、置顶以及以角色身份发言。"
+      },
+      "maps": {
+        "title": "地图",
+        "text": "绘制文档之间的关系地图，或在地理地图上标记地点，大家一起编辑。"
+      },
+      "export": {
+        "title": "导出",
+        "text": "把战役带走：三种风格的 PDF 手册，或供你自己的工具使用的 JSON 和 Markdown。"
+      }
+    },
+    "stepsTitle": "如何使用",
+    "steps": {
+      "create": "为你的战役创建一个房间。",
+      "invite": "用链接邀请你的 Player。",
+      "write": "一起撰写战役，每个人看到自己该看到的内容。"
+    },
+    "signInTitle": "开始你的战役"
+  },
+  "nav": {
+    "menu": "快速导航",
+    "home": "首页",
+    "rooms": "房间",
+    "noRooms": "还没有房间"
+  },
+  "demo": {
+    "banner": "演示：一个示例战役，只读。",
+    "viewAs": "查看身份",
+    "exit": "退出演示",
+    "readOnly": "演示为只读：登录即可创建你自己的房间。",
+    "unavailable": "演示需要网站数据，但此浏览器已将其阻止。",
+    "accountNotice": "演示中没有账户：登录即可拥有你自己的账户。",
+    "restartTour": "重新开始导览"
+  },
+  "tour": {
+    "counter": "第 {{current}} 步，共 {{total}} 步",
+    "next": "下一步",
+    "back": "上一步",
+    "skip": "跳过导览",
+    "signIn": "登录并创建你的房间",
+    "keepExploring": "继续探索",
+    "label": "演示导览",
+    "steps": {
+      "room": {
+        "title": "一个房间就是一个战役",
+        "body": "战役的一切都在这里，按主要标签分组：角色、地点、事件。Master 管理房间；Player 通过链接加入。"
+      },
+      "roomIndex": {
+        "title": "房间索引",
+        "body": "这个标签页打开房间的索引：每个标签和每张地图，在任何页面都只需一次点击。"
+      },
+      "documentCard": {
+        "title": "文档",
+        "body": "每张卡片都是一个文档：一个角色、一个地点、一件物品。徽章显示谁能看到它。"
+      },
+      "document": {
+        "title": "文档页面",
+        "body": "名称、副标题和描述，旁边是图片和 Owner。Owner 和 Master 都可以编辑它。"
+      },
+      "documentText": {
+        "title": "笔记与提及",
+        "body": "笔记在描述下方添加段落。#提及会链接另一个文档，链接是双向的。"
+      },
+      "mentionMap": {
+        "title": "提及地图",
+        "body": "提及会绘制一张文档关系的实时地图，随你的书写而变化。"
+      },
+      "comments": {
+        "title": "评论与回复",
+        "body": "每个文档都有自己的讨论串：回复、表情回应、以角色身份发言，以及只有部分成员能看到的评论。"
+      },
+      "visibility": {
+        "title": "可见性与揭示",
+        "body": "这个文档仅 Master 可见。每个文档、笔记和评论都有自己的可见性，剧情需要时，Master 可以从 ⋮ 菜单揭示它。"
+      },
+      "viewAs": {
+        "title": "以 Player 的视角查看",
+        "body": "切换到 Marco 或 Giulia：他们看不到的内容会消失。Master 也可以用同样的方式以任何成员的视角查看房间。"
+      },
+      "search": {
+        "title": "搜索",
+        "body": "搜索你能看到的所有文档、笔记和评论。在房间任何位置按 Ctrl K 即可打开。"
+      },
+      "freeMap": {
+        "title": "自由白板",
+        "body": "自由白板上的文档卡片和箭头，用来梳理谁想要什么。Master 也可以让 Player 一起绘制。"
+      },
+      "geoMap": {
+        "title": "地理地图",
+        "body": "在地图图片上标记地点并勾勒区域；每个地点都通向它的文档。"
+      },
+      "end": {
+        "title": "这就是 Ex Libris",
+        "body": "登录以创建你自己的房间，或继续探索演示。"
+      }
+    }
+  },
   "header": {
     "account": "你的账户",
     "accountPending": "你的账户：{{count}} 项待查看"

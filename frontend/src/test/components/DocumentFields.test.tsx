@@ -11,7 +11,10 @@ const tags: Tag[] = [
   { id: 'tag-2', name: 'PNG', category: null, mainPosition: null },
 ];
 
-function render(overrides: Partial<DocumentFormValues> = {}) {
+function render(
+  overrides: Partial<DocumentFormValues> = {},
+  props: { inlineMeta?: boolean; canCreateTag?: boolean } = {},
+) {
   const onChange = vi.fn();
   renderWithProviders(
     <DocumentFields
@@ -26,13 +29,31 @@ function render(overrides: Partial<DocumentFormValues> = {}) {
       onChange={onChange}
       tags={tags}
       roomId="room-1"
-      canCreateTag={false}
+      canCreateTag={props.canCreateTag ?? false}
+      inlineMeta={props.inlineMeta}
     />,
   );
   return { onChange, user: userEvent.setup() };
 }
 
 describe('DocumentFields', () => {
+  // The Document edit form puts Visibility, Tags and New tag on one row.
+  it.each([true, false])('keeps every field with inlineMeta (canCreateTag %s)', (canCreateTag) => {
+    render({}, { inlineMeta: true, canCreateTag });
+
+    expect(screen.getByRole('combobox', { name: 'Visibilità' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Tag' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Nuovo tag' }) !== null).toBe(canCreateTag);
+    expect(document.querySelector('.mantine-Grid-root')).not.toBeNull();
+  });
+
+  it('stacks Visibility, Tags and New tag without inlineMeta', () => {
+    render({}, { canCreateTag: true });
+
+    expect(screen.getByRole('textbox', { name: 'Nuovo tag' })).toBeInTheDocument();
+    expect(document.querySelector('.mantine-Grid-root')).toBeNull();
+  });
+
   // Spec 28_0 S1: an optional one-line subtitle, capped like the backend.
   it('edits the subtitle under the name, at most 120 characters', async () => {
     const { onChange, user } = render({ name: 'Mirai', subtitle: 'La' });

@@ -11,7 +11,51 @@ detail:
 - [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md):
   the original log up to 2026-09-30 (specs 01 to 11).
 
-## Current Status (2026-10-10)
+## Current Status (2026-10-27)
+
+- **Docs aligned with the app** (2026-10-27, product owner's request, docs
+  only): `requirements.md` v0.6 adds the Decisions, requirements, rules
+  and use cases for everything built while developing (maps, Relational
+  links, subtitle, Room image and duplication, export/import/PDF, GDPR,
+  twelve languages, landing and Demo; D-30…D-45, FR-M1…M9 and others),
+  marks FR-G2 dropped, and records per requirement what is built,
+  partial, not built or dropped (§14). `project-overview.md`,
+  `architecture.md`, `ui-context.md`, `code-standards.md` and
+  `ai-workflow-rules.md` lost their stale Glossary, two-language and
+  sidebar wording. Not built from the original plan: Glossary entries
+  (FR-N3/N4), draft status (FR-D6), notifications (FR-T9), Thread
+  pagination (FR-T3), sealed content (VR-09).
+
+- **Spec 45_3, guided tour** (2026-10-25, no migration, frontend only):
+  the Demo opens a 13-card tour of the real pages (Room, Index, Documents,
+  Notes and mentions, mention map, Comments, Visibility and Reveal, View
+  as, search, both maps, a last card to sign in). Each card lights its
+  element (`data-tour` attributes) and dims the rest; Back/Next open the
+  step's page; Skip, Escape, "Restart tour" in the banner; landing cards
+  link `/demo?step=<id>`. Docked at the bottom on a phone. 12 languages.
+  Spec 45 is complete.
+
+- **Spec 45_2, read-only Demo** (2026-10-25, no migration, frontend
+  only): "Try the demo" on the landing page opens `/demo`, which turns on a
+  per-tab flag and reloads into a sample Room ("The Lost Lighthouse",
+  English or Italian) kept in the browser: `apiClient` answers from
+  `lib/demo/demoBackend.ts`, nothing reaches the backend, every write is
+  refused with a read-only notice. A banner under the header switches the
+  view between the Master and two Players (spec 22b's preview, by full page
+  load), and has Exit demo and Sign in. Live mention maps, both map kinds,
+  search, backlinks and Comments work. No images in the sample yet.
+  Next: 45_3 guided tour.
+
+- **Spec 45_1, Landing page and quick navigation** (2026-10-25, PR #237,
+  no migration): `/` is a landing page for everyone (what Ex Libris is, six
+  feature cards, three steps, sign-in for visitors, "Open my Rooms" once
+  signed in), the Rooms list moved to `/rooms`, every "my Rooms" link and
+  back arrow follows, "Go to sign in" goes to `/#sign-in`; a sign-in
+  started on the page goes on to `/rooms` after the OAuth round trip
+  (sessionStorage marker), pending invites and friend links first. The
+  header has a burger again (`QuickNavMenu`: Home, My Rooms, a sub-list of
+  the user's Rooms). Open Graph tags and `public/og-image.png`. 12
+  languages. Next: 45_2 read-only Demo, 45_3 tour.
 
 - **Rebranding to Ex Libris** (2026-10-22, no migration): `app.name` is
   "Ex Libris" in all 12 languages (header, home page), browser title and
@@ -22,11 +66,14 @@ detail:
   `ttrpg-campaign-notes-backend`, the Vercel/Render project URLs in CORS,
   and the `ttrpg.language` / `ttrpg.speech` localStorage keys (renaming
   them would reset every user's language and voice). `requirements.md`
-  still says "Collaborative TTRPG notes platform" (protected file).
+  is titled "Ex Libris" since v0.6 (2026-10-27).
 
-- **Everything on `staging` is released to `main`** (release PR #155,
-  2026-10-10). Features 12 to 31 are built except the ones listed under
-  Next Up; 23c, 25 and 25b were dropped by the product owner.
+- **Release state** (2026-10-27): everything on `staging` is released to
+  `main` with release PR #246 (landing, Demo and tour, back fixes,
+  dependency bump, compact Room setup and Document form, and these docs;
+  conflicts with Dependabot bumps on `main` fixed by #247). No migration
+  was needed: production was already at head. Features 01 to 45 are built except 27b (listed under Next Up); 23c, 25
+  and 25b were dropped by the product owner.
 - **Latest work**: spec 31 (GDPR: `GET /account/export`, `DELETE /account`,
   public `/privacy` notice, PR #150, controller named in PR #152) and spec
   30/30b (read aloud with the browser's voices, best installed voice by
@@ -180,7 +227,30 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-26
+
+- **Compact Room setup** (Andrea, frontend only, no migration): on the
+  Settings tab, Members and the Room image + default visibility are two
+  bordered `Paper` cards side by side from `lg` (half each, equal
+  height), stacked below. The Tags parts (Grouping, All Tags) went from
+  5/12 + 7/12 to half each, so all four cards share one width.
+- **Compact Document edit form** (Andrea, frontend only, no migration):
+  in the Document edit form, Visibility, Tags and New tag (+ Add) share
+  one row from `md` (3/5/4 of 12; Tags takes 9 when the viewer can't
+  create Tags), stacked below. `DocumentFields` gets an `inlineMeta`
+  prop that only `DocumentEditForm` sets; the create and comment-promotion
+  modals keep the stacked layout. Save / Cancel / Delete stay on their row.
+
 ### 2026-10-25
+
+- **Back arrow fixes** (Andrea, frontend only, no migration): Room setup's
+  parent is now the Room page (it went to the Rooms list); a Room card's
+  "Setup" carries the Rooms list as origin. The Room page's Maps row, Maps
+  icon, the Room Index map links and the Maps page cards carry their page as
+  origin, so back from a map returns there instead of the Maps page. The
+  `{ from }` state became a trail (`from` + `backStack`, max 20) walked by
+  `useHierarchicalBack`, which reads each Document/map afresh and skips it
+  on a 404, so a deleted one never shows its empty state.
 
 - **Maps row on the Room page** (no spec, Andrea's request, PR #236;
   migration `b5f1d8e3a7c2`): `RoomMapsStrip` under the Room title lists the maps the
@@ -275,8 +345,8 @@ One line per unit; dates 2026, newest first. Spec files live in
   Documents or plain, with the spec 28 visibility rules. Routes
   `GET/PUT /rooms/{id}/maps/{map}/geo` and `/background` (upload, from URL,
   delete); the free-board routes answer 409 for a geographic map and back.
-  `requirements.md` still says geographic maps are out of scope: the
-  product owner's edit only.
+  `requirements.md` brought geographic maps into scope in v0.6
+  (2026-10-27, D-32).
 - **38_2, Geographic maps viewer and editor** (no migration): the product
   owner asked for it before the import ("no import without a way to see
   the map"). "Nuova mappa" offers Free board / Geographic map; the map page
@@ -627,23 +697,27 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-- **38, Geographic maps**: 38_1 (backend, PR #210), 38_2 (viewer and
-  editor, PR #211) and 38_3 (JSON import/export) built; first real test is
-  the Shibuya map. `requirements.md` §1 and a new `FR-` need the product
-  owner's request. 38b (reading mode, area names off pins) built. Open:
-  image search for the background, dragging link labels, dragging area
-  names by hand, a Tag picking an area's color.
+Nothing is waiting for release: `staging` and `main` match after release
+PR #246 (2026-10-27), and production's database is at head. Before the
+next release, merge `main` into `staging` first, since Dependabot PRs land
+on `main`.
+
 - **27b, PDF of one Document**: next to build (product owner,
-  2026-10-08).
-- **28, Relationship maps**: built (PR #159). `requirements.md` still
-  needs its `FR-`/`VR-` entry (product owner's edit only).
-- **34, More UI languages** (scope confirmed 2026-10-12): spec in
-  `context/feature/34 - More UI languages.md`. Round one: de, fr, es, pt-PT,
-  ru, ja, zh-Hans, ko, pl, nl, all beta; tr and zh-Hant later. Next: 34_1
-  foundations.
+  2026-10-08). Ticket written, decisions proposed, no migration expected.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).
+- **38, Geographic maps, open follow-ups**: image search for the
+  background, dragging link labels, dragging area names by hand (needs a
+  migration), a Tag picking an area's color.
+- **43, Real-time maps, not built**: push, presence, editing from a phone
+  (product owner, 2026-10-24).
+- **45, Demo**: the sample Room has no images yet.
+- **34, More UI languages, round two**: tr and zh-Hant, later.
+- **Requirements not built** (`requirements.md` §14): Glossary entries
+  (FR-N3/N4, VR-10), draft/published (FR-D6), notifications (FR-T9),
+  sealed content (VR-09). The product owner decides whether they stay.
+- **Parked**: Thread pagination (FR-T3), until Threads get long in practice.
 - **Browser walk-through** (product owner): several features are built and
   unit-tested but never seen running: Notes (12), PDF Attachments (16),
   Characters (17), Friends (18), mention backlinks (20), search (21),
@@ -651,10 +725,11 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
   width (23), early card and modal UI (07, 13). The full checklist is in the
   2026-10-10 archive under Next Up. A Playwright script is possible on
   request.
-- **Parked**: Thread pagination (FR-T3), until Threads get long in practice.
+- **Owed by the product owner**: legal review of `/privacy` and the DPAs
+  with Supabase, OVHcloud and Vercel (spec 31).
 - **Ops, later**: delete the suspended Render production and old native
   staging services after quiet weeks; backups and monitoring for the VPS
-  (`vps-migration-plan.md` §7/§8).
+  (`vps-migration-plan.md` §7/§8; NFR-07).
 - **Decisions taken while building, still to confirm**: many units list
   "choices beyond the ticket" (specs 21 to 27); they are in the 2026-10-10
   archive under each unit.
@@ -662,7 +737,8 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 ## Open Questions
 
 None. The 15 questions open at the time were closed with the product owner
-on 2026-10-03; the spec changes are in `requirements.md` v0.5.
+on 2026-10-03 (`requirements.md` v0.5); v0.6 (2026-10-27) brought the spec
+in line with what was built since.
 
 ## Architecture Decisions
 

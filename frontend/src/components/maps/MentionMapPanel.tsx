@@ -20,7 +20,7 @@ export function MentionMapPanel({ roomId, map }: { roomId: string; map: MentionM
   const backState = useBackState();
   const fullPage = `/rooms/${roomId}/documents/${map.documentId}/mention-map`;
   return (
-    <Stack gap={4} component="section" aria-label={t('maps.mention.title')}>
+    <Stack gap={4} component="section" aria-label={t('maps.mention.title')} data-tour="mention-map">
       <Group justify="space-between" wrap="nowrap">
         <Text size="sm" fw={600}>
           {t('maps.mention.title')}

@@ -1,6 +1,7 @@
 import { Button, Divider, Grid, Group, Stack, Text, TextInput, Title } from '@mantine/core';
 import { EnvelopeSimpleIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
+import { isDemoMode } from '../lib/demo/demoMode';
 import {
   useAccount,
   useImportAvatar,
@@ -42,6 +43,15 @@ export function AccountPage() {
     return <SignInRequired>{t('account.signInRequired')}</SignInRequired>;
   }
 
+  // The Demo's user has no account to manage (spec 45_2).
+  if (isDemoMode()) {
+    return (
+      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
+        {t('demo.accountNotice')}
+      </FullPageMessage>
+    );
+  }
+
   return <AccountLoader />;
 }
 
@@ -55,7 +65,7 @@ function AccountLoader() {
 
   if (account.isError || !account.data) {
     return (
-      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/">
+      <FullPageMessage actionLabel={t('common.backToMyRooms')} actionTo="/rooms">
         {t('account.loadError')}
       </FullPageMessage>
     );
@@ -81,7 +91,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
         : null;
 
   return (
-    <PageLayout backTo="/" backLabel={t('common.myRooms')}>
+    <PageLayout backTo="/rooms" backLabel={t('common.myRooms')}>
       <Stack gap={2}>
         <Title order={1} fz={{ base: 'h2', sm: 'h1' }} style={{ fontFamily: 'var(--font-display)' }}>
           {t('account.title')}

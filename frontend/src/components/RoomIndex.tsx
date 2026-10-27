@@ -9,6 +9,7 @@ import { useTags } from '../hooks/useTags';
 import { documentsWithTagsHref } from '../lib/documentMentions';
 import { itemKey, itemLabel } from '../lib/mainItems';
 import { groupTagsByCategory } from '../lib/tags';
+import { useBackState } from '../lib/backNav';
 
 interface RoomIndexProps {
   roomId: string;
@@ -32,6 +33,7 @@ const CARD_WIDTH = 'min(260px, 85vw)';
  */
 export function RoomIndex({ roomId }: RoomIndexProps) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const [opened, setOpened] = useState(false);
   const close = () => setOpened(false);
   const tags = useTags(roomId, opened);
@@ -47,6 +49,7 @@ export function RoomIndex({ roomId }: RoomIndexProps) {
     <>
       <UnstyledButton
         className="room-index-tab"
+        data-tour="room-index"
         aria-label={opened ? t('glossary.closeToggle') : t('glossary.openToggle')}
         aria-expanded={opened}
         data-opened={opened || undefined}
@@ -100,7 +103,7 @@ export function RoomIndex({ roomId }: RoomIndexProps) {
             <Title order={6} c="dimmed" tt="uppercase">
               {t('maps.title')}
             </Title>
-            <Anchor component={Link} to={`/rooms/${roomId}/maps`} onClick={close} size="sm" fw={600}>
+            <Anchor component={Link} to={`/rooms/${roomId}/maps`} state={backState} onClick={close} size="sm" fw={600}>
               {t('glossary.allMaps')}
             </Anchor>
             {sortedMaps.map((map) => (
@@ -108,6 +111,7 @@ export function RoomIndex({ roomId }: RoomIndexProps) {
                 key={map.id}
                 component={Link}
                 to={`/rooms/${roomId}/maps/${map.id}`}
+                state={backState}
                 onClick={close}
                 size="sm"
               >

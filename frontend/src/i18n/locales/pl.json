@@ -71,6 +71,126 @@
     "signInWith": "Zaloguj się przez {{provider}}",
     "privacy": "Prywatność"
   },
+  "landing": {
+    "tagline": "Wspólny notatnik twojej kampanii",
+    "intro": "Ex Libris to miejsce, w którym drużyna RPG wspólnie pisze swoją kampanię: miejsca, postacie, wydarzenia i sekrety, każde widoczne tylko dla tych, którzy powinni o nim wiedzieć.",
+    "signIn": "Zaloguj się",
+    "openMyRooms": "Otwórz moje pokoje",
+    "tryDemo": "Wypróbuj demo",
+    "seeInDemo": "Zobacz w demo",
+    "featuresTitle": "Co możesz robić",
+    "features": {
+      "rooms": {
+        "title": "Pokoje i role",
+        "text": "Jeden pokój na kampanię. Master go prowadzi, Playerzy dołączają przez link, a każda rola obowiązuje tylko w swoim pokoju."
+      },
+      "documents": {
+        "title": "Dokumenty i notatki",
+        "text": "Miejsca, postacie, wydarzenia, przedmioty: zapisz je jako dokumenty, dodaj notatki i połącz je wzmiankami działającymi w obie strony."
+      },
+      "visibility": {
+        "title": "Widoczność i ujawnienie",
+        "text": "Ukryj cokolwiek przed kimkolwiek. Master zawsze widzi wszystko, Playerzy widzą to, co im pokazano, a ujawnienie odsłania treść, gdy wymaga tego fabuła."
+      },
+      "comments": {
+        "title": "Komentarze i wątki",
+        "text": "Omawiajcie każdy dokument w wątku komentarzy i odpowiedzi, z reakcjami, przypięciami i wpisami w roli postaci."
+      },
+      "maps": {
+        "title": "Mapy",
+        "text": "Rysuj mapy relacji między dokumentami albo zaznaczaj miejsca na mapie geograficznej i edytujcie je razem."
+      },
+      "export": {
+        "title": "Eksport",
+        "text": "Zabierz kampanię ze sobą: podręcznik PDF w trzech stylach albo JSON i Markdown do własnych narzędzi."
+      }
+    },
+    "stepsTitle": "Jak to działa",
+    "steps": {
+      "create": "Utwórz pokój dla swojej kampanii.",
+      "invite": "Zaproś swoich Playerów linkiem.",
+      "write": "Piszcie kampanię razem, każdy widzi to, co powinien."
+    },
+    "signInTitle": "Rozpocznij kampanię"
+  },
+  "nav": {
+    "menu": "Szybka nawigacja",
+    "home": "Start",
+    "rooms": "Pokoje",
+    "noRooms": "Nie ma jeszcze pokoi"
+  },
+  "demo": {
+    "banner": "Demo: przykładowa kampania, tylko do odczytu.",
+    "viewAs": "Wyświetl jako",
+    "exit": "Wyjdź z demo",
+    "readOnly": "Demo jest tylko do odczytu: zaloguj się, aby utworzyć własny Pokój.",
+    "unavailable": "Demo potrzebuje danych witryny, które ta przeglądarka blokuje.",
+    "accountNotice": "W demo nie ma konta: zaloguj się, aby mieć własne.",
+    "restartTour": "Uruchom przewodnik ponownie"
+  },
+  "tour": {
+    "counter": "{{current}} z {{total}}",
+    "next": "Dalej",
+    "back": "Wstecz",
+    "skip": "Pomiń przewodnik",
+    "signIn": "Zaloguj się i utwórz Pokój",
+    "keepExploring": "Zwiedzaj dalej",
+    "label": "Przewodnik po demo",
+    "steps": {
+      "room": {
+        "title": "Pokój to jedna kampania",
+        "body": "Cała kampania żyje tutaj, pogrupowana pod głównymi Tagami: postacie, miejsca, wydarzenia. Master prowadzi Pokój; Playerzy dołączają przez link."
+      },
+      "roomIndex": {
+        "title": "Indeks Pokoju",
+        "body": "Ta zakładka otwiera indeks Pokoju: każdy Tag i każda mapa, jedno kliknięcie z dowolnej strony."
+      },
+      "documentCard": {
+        "title": "Dokumenty",
+        "body": "Każda karta to Dokument: postać, miejsce, przedmiot. Plakietka mówi, kto może go zobaczyć."
+      },
+      "document": {
+        "title": "Strona Dokumentu",
+        "body": "Nazwa, podtytuł i opis, obok obrazy i Ownerzy. Ownerzy mogą go edytować, Master również."
+      },
+      "documentText": {
+        "title": "Notatki i wzmianki",
+        "body": "Notatki dodają akapity pod opisem. #Wzmianka łączy inny Dokument, a link działa w obie strony."
+      },
+      "mentionMap": {
+        "title": "Mapa wzmianek",
+        "body": "Wzmianki rysują żywą mapę powiązań między Dokumentami. Podąża za tym, co piszesz."
+      },
+      "comments": {
+        "title": "Komentarze i odpowiedzi",
+        "body": "Każdy Dokument ma swój wątek: odpowiedzi, reakcje, wpisy w roli postaci i Komentarze widoczne tylko dla niektórych członków."
+      },
+      "visibility": {
+        "title": "Widoczność i Ujawnienie",
+        "body": "Ten Dokument jest tylko dla Mastera. Każdy Dokument, Notatka i Komentarz ma własną widoczność, a Master ujawnia je z menu ⋮, gdy wymaga tego fabuła."
+      },
+      "viewAs": {
+        "title": "Zobacz to, co widzą Playerzy",
+        "body": "Przełącz na Marco lub Giulię: to, czego nie mogą widzieć, znika. Master może tak samo podejrzeć Pokój jako dowolny członek."
+      },
+      "search": {
+        "title": "Szukaj",
+        "body": "Przeszukuj każdy Dokument, Notatkę i Komentarz, które widzisz. Ctrl K otwiera wyszukiwarkę w dowolnym miejscu Pokoju."
+      },
+      "freeMap": {
+        "title": "Wolne tablice",
+        "body": "Karty Dokumentów i strzałki na wolnej tablicy, by śledzić, kto czego chce. Master może pozwolić rysować także Playerom."
+      },
+      "geoMap": {
+        "title": "Mapy geograficzne",
+        "body": "Umieszczaj miejsca na obrazie mapy i zaznaczaj obszary; każde miejsce prowadzi do swojego Dokumentu."
+      },
+      "end": {
+        "title": "To jest Ex Libris",
+        "body": "Zaloguj się, aby utworzyć własny Pokój, albo zwiedzaj demo dalej."
+      }
+    }
+  },
   "header": {
     "account": "Twoje konto",
     "accountPending": "Twoje konto: do zobaczenia {{count}}"
