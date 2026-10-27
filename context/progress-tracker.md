@@ -727,9 +727,11 @@ on `main`.
   the same day) a resizable Lines & Veils board and columns that fit the
   screen; Lines & Veils then became horizontal rows (Must, Veils, Lines
   stacked, post-its side by side) while Retro keeps vertical columns.
-  **Migration `c3f8a1d6e9b4`**: to apply
-  to the staging DB before PR #251 merges, and to production before the
-  next release (with `4797859660e2`). The live client (46_4) must handle
+  **Migration `c3f8a1d6e9b4`**: applied to the staging DB (verified
+  2026-10-27: `alembic current` on staging = `c3f8a1d6e9b4`, head). **Both
+  `4797859660e2` and `c3f8a1d6e9b4` applied to production** on 2026-10-27
+  (`alembic upgrade head` from `b5f1d8e3a7c2`; `alembic current` on
+  production = `c3f8a1d6e9b4`, head). The live client (46_4) must handle
   the new events `group` and `reset` (re-read the board; after `reset`
   the revision restarts at 1).
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
