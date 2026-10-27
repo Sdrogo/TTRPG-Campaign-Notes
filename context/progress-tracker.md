@@ -702,6 +702,12 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **46, Session 0 boards** (ticket written 2026-10-27, waiting for the
+  product owner's confirmation): a Room's Session 0 page with a Retro
+  board and a Lines & Veils board, draft/publish post-its (anonymous or
+  signed), promotion as a copy (button + drag), reactions, a shared
+  non-blocking timer and live push updates (SSE, the app's first). One
+  migration. Table Pact Document proposed as 46b.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08). Ticket written, decisions proposed, no migration expected.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
