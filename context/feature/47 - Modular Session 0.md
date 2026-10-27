@@ -42,9 +42,12 @@ Decision is a default to confirm or amend.
    and orders them by drag (button arrows on a phone). Defaults: the first
    session proposes Retro + Lines & Veils (today's page); a new session
    proposes the previous session's chain, with each Questions module's
-   questions copied (not its answers). Only the Master starts a session:
-   today any member can press "Start Session 0" (spec 46); that changes, a
-   Player sees "Il Master non ha ancora avviato la Sessione 0".
+   questions copied (not its answers). Starting stays open to any member,
+   as in spec 46 (`architecture.md`: `POST .../start` "which any member
+   calls"): a Player who presses "Start Session 0" gets the default chain
+   (Retro + Lines & Veils) with no dialog, and the Master can change it
+   afterwards (Decision 3). Only the Master sees the compose dialog when
+   starting, and only the Master creates later sessions (as today).
 3. **Changing the chain later.** The Master can add, remove and reorder
    modules of the open session at any time, from a "Modifica tappe" dialog.
    Removing a module that holds content (post-its, answers, acceptances)
@@ -197,8 +200,8 @@ Decision is a default to confirm or amend.
   Name, at most one Subtitle), `visible_modules(role, chain, current)`
   (Decision 5) and the Document built from answers (a pure function:
   answers + mapping → name, subtitle, description Markdown, Notes).
-- Routes under `/rooms/{id}/session-zero`: `POST .../start` takes the chain
-  (Master only now); `POST .../rounds` takes `{title, modules}`;
+- Routes under `/rooms/{id}/session-zero`: `POST .../start` takes an optional chain
+  (Master only; without one, the default chain); `POST .../rounds` takes `{title, modules}`;
   `POST/PATCH/DELETE .../modules`, `PUT .../modules/order`,
   `POST .../modules/current` `{module_id}`; Questions:
   `PUT .../modules/{m}/questions` (the whole list, Master),
@@ -236,7 +239,9 @@ release.
 
 ## Tests
 
-- Backend: only the Master starts a session, composes and advances; the
+- Backend: any member starts Session 0 (a Player gets the default chain,
+  a chain sent by a Player is refused); only the Master composes and
+  advances; the
   migration turns an existing round into one current Retro module with its
   columns; Players get only reached modules (404 on a later one), the
   Master all; a closed session refuses writes in every module; Stars and
