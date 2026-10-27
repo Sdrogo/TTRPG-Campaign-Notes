@@ -16,6 +16,7 @@
      senza motivo."
   5. "Voglio che i due panel delle colonne e delle righe scrollino
      individualmente."
+  6. "Voglio che le emoji delle reaction siano più grandi e visibili."
 - Frontend only: no API change, no migration. Everything else in specs 46
   and 46c stays as decided.
 
@@ -71,6 +72,11 @@ Sessione 0.5") suggests there is just one more.
    their own (the Retro panel also sideways, as today). The handle between
    them keeps its full height. On a phone nothing changes (tabs, page
    scroll).
+6. **Bigger reactions on post-its**: the reaction chips on a post-it show
+   the emoji at 18px (today about 12px, Mantine `compact-xs`) with the
+   count beside it at 13px, and the "add reaction" smiley at 20px. Only on
+   Session 0 post-its (a `size` prop on the shared `ReactionChips` and
+   `AddReaction`, default unchanged), so Comments keep their look.
 
 ## Design
 
@@ -95,6 +101,7 @@ Sessione 0.5") suggests there is just one more.
 - A new session sends the typed name; the prefilled default when unchanged;
   the selector lists sessions by name; a closed one carries the badge.
 - "Aggiungi colonna" is an icon button with its accessible name.
+- Comments' reactions keep the small size; post-its' use the large one.
 - Visual check (screenshots): headings size, one-line header, each panel
   scrolling alone with long columns.
 
