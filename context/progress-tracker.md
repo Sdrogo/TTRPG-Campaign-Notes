@@ -766,6 +766,11 @@ in line with what was built since.
   permission, visibility rule and content workflow.
 - Removed individual Note highlighting from Document detail after visual review;
   Notes now remain quiet within the editorial content flow.
+- Review of the Figma pass (Andrea, 2026-10-27, PR #252): headings brought
+  back to the usual Mantine sizes (Document title h1/h2, Documents and Maps
+  page titles h2, landing hero smaller); image-bearing Document cards back to
+  the side-by-side layout (images on the right half), keeping the new hover
+  and top-edge accent; Room cards back to their previous look.
 
 ## Architecture Decisions
 

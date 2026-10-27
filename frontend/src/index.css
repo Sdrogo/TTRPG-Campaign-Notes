@@ -101,10 +101,8 @@ body {
 
 .landing-hero-title {
   max-width: 820px;
-  font-size: clamp(3rem, 8vw, 7rem);
-  font-weight: 400;
-  line-height: 0.92;
-  letter-spacing: -0.035em;
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  line-height: 1.1;
   text-wrap: balance;
 }
 
@@ -178,7 +176,7 @@ body {
 .landing-step-number {
   color: var(--text-muted);
   font-family: var(--font-display);
-  font-size: 3.5rem;
+  font-size: 2.25rem;
   line-height: 1;
 }
 
@@ -198,35 +196,6 @@ body {
 .rooms-heading {
   padding-bottom: var(--mantine-spacing-md);
   border-bottom: 1px solid var(--border-default);
-}
-
-.room-card {
-  overflow: hidden;
-  background: var(--bg-surface);
-  border-left: 2px solid var(--border-default);
-  box-shadow: 0 12px 30px rgb(0 0 0 / 12%);
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.room-card:hover {
-  transform: translateY(-3px);
-  border-left-color: var(--accent-primary);
-  box-shadow: 0 18px 42px rgb(0 0 0 / 22%);
-}
-
-.room-card:not([data-has-image])::after {
-  content: '';
-  position: absolute;
-  right: var(--mantine-spacing-md);
-  bottom: var(--mantine-spacing-md);
-  width: 36px;
-  height: 36px;
-  border-right: 1px solid var(--border-default);
-  border-bottom: 1px solid var(--border-default);
-  pointer-events: none;
 }
 
 @media (min-width: 48em) {
@@ -260,13 +229,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .app-header-brand::after,
-  .landing-feature,
-  .room-card {
+  .landing-feature {
     transition: none;
-  }
-
-  .room-card:hover {
-    transform: none;
   }
 }
 
@@ -571,18 +535,30 @@ html body[data-scroll-locked] {
   letter-spacing: 0.14em;
 }
 
+/* The sizes the title and subtitle had before the editorial pass (h2/h3 on a
+   phone, h1/h2 from sm): the display sizes read as too large (Andrea,
+   2026-10-27). */
 .document-detail-title {
-  font-size: clamp(2.5rem, 5vw, 4.75rem);
-  font-weight: 400;
-  line-height: 0.94;
-  letter-spacing: -0.035em;
+  font-size: var(--mantine-h2-font-size);
+  line-height: var(--mantine-h2-line-height);
   text-wrap: balance;
 }
 
 .document-detail-subtitle {
-  margin-top: var(--mantine-spacing-xs);
-  font-size: clamp(1.35rem, 2.5vw, 2rem);
-  line-height: 1.05;
+  font-size: var(--mantine-h3-font-size);
+  line-height: var(--mantine-h3-line-height);
+}
+
+@media (min-width: 48em) {
+  .document-detail-title {
+    font-size: var(--mantine-h1-font-size);
+    line-height: var(--mantine-h1-line-height);
+  }
+
+  .document-detail-subtitle {
+    font-size: var(--mantine-h2-font-size);
+    line-height: var(--mantine-h2-line-height);
+  }
 }
 
 .document-detail-meta {
@@ -694,7 +670,6 @@ html body[data-scroll-locked] {
 }
 
 .documents-page-heading {
-  min-height: 96px;
   padding: var(--mantine-spacing-md) 0 var(--mantine-spacing-lg);
   border-bottom: 1px solid var(--border-default);
 }
@@ -703,11 +678,10 @@ html body[data-scroll-locked] {
   letter-spacing: 0.14em;
 }
 
-.documents-page-title {
-  font-size: clamp(2.25rem, 5vw, 4.5rem);
-  font-weight: 400;
-  line-height: 0.95;
-  letter-spacing: -0.025em;
+.documents-page-title,
+.maps-page-title {
+  font-size: var(--mantine-h2-font-size);
+  line-height: var(--mantine-h2-line-height);
 }
 
 .documents-controls-toggle {
@@ -775,53 +749,6 @@ html body[data-scroll-locked] {
     transform 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease;
-}
-
-.document-card-media {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  min-height: 168px;
-  overflow: hidden;
-  background: var(--bg-base);
-  border-bottom: 1px solid var(--border-default);
-}
-
-.document-card-image {
-  display: block;
-  object-fit: cover;
-  object-position: center top;
-  transition: transform 180ms ease;
-}
-
-/* Keep the cover compact while protecting square and vertical artwork from a
-   harsh 16:9 crop. The small scale keeps a little crop, so it still feels like
-   a cover rather than a letterboxed gallery. */
-.document-card-image[data-frame='balanced'],
-.document-card-image[data-frame='portrait'] {
-  object-fit: contain;
-  object-position: center;
-  transform: scale(1.06);
-}
-
-.document-card-media-marks {
-  position: absolute;
-  top: var(--mantine-spacing-sm);
-  right: var(--mantine-spacing-sm);
-  z-index: 2;
-  padding: 2px;
-  background: color-mix(in srgb, var(--bg-base) 88%, transparent);
-  border: 1px solid var(--border-default);
-  border-radius: var(--mantine-radius-md);
-  pointer-events: none;
-}
-
-.document-card-content {
-  flex: 1;
-}
-
-.document-card-description {
-  flex: 1;
 }
 
 .document-card:hover {
@@ -898,20 +825,12 @@ html body[data-scroll-locked] {
 }
 
 .maps-page-heading {
-  min-height: 112px;
   padding: var(--mantine-spacing-md) 0 var(--mantine-spacing-lg);
   border-bottom: 1px solid var(--border-default);
 }
 
 .maps-page-kicker {
   letter-spacing: 0.14em;
-}
-
-.maps-page-title {
-  font-size: clamp(2.75rem, 6vw, 5.5rem);
-  font-weight: 400;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
 }
 
 .maps-page-actions {
@@ -1071,8 +990,7 @@ html body[data-scroll-locked] {
 @media (prefers-reduced-motion: reduce) {
   .documents-controls-toggle,
   .document-group-toggle,
-  .document-card,
-  .document-card-image {
+  .document-card {
     transition: none;
   }
 

@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders } from '../utils';
 import { DocumentCardImages } from '../../components/DocumentCardImages';
@@ -42,26 +42,14 @@ describe('DocumentCardImages', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('frames wide images as covers', () => {
-    renderWithProviders(<DocumentCardImages images={[images[0]]} documentName="Il Cancello" />);
-    const image = screen.getByAltText('Il Cancello');
-    Object.defineProperty(image, 'naturalWidth', { value: 1600 });
-    Object.defineProperty(image, 'naturalHeight', { value: 900 });
+  // The images fill the card's right half edge to edge, so they're cropped to
+  // cover it rather than letterboxed.
+  it('crops each image to cover its box', () => {
+    renderWithProviders(<DocumentCardImages images={images} documentName="Il Cancello" />);
 
-    fireEvent.load(image);
-
-    expect(image).toHaveAttribute('data-frame', 'wide');
-  });
-
-  it('protects portrait images from an aggressive wide crop', () => {
-    renderWithProviders(<DocumentCardImages images={[images[0]]} documentName="Il Cancello" />);
-    const image = screen.getByAltText('Il Cancello');
-    Object.defineProperty(image, 'naturalWidth', { value: 800 });
-    Object.defineProperty(image, 'naturalHeight', { value: 1200 });
-
-    fireEvent.load(image);
-
-    expect(image).toHaveAttribute('data-frame', 'portrait');
+    for (const img of [screen.getByAltText('Il Cancello (1)'), screen.getByAltText('Il Cancello (2)')]) {
+      expect(img).toHaveStyle({ width: '100%', height: '100%', objectFit: 'cover' });
+    }
   });
 
   it('fades the images into the card', () => {

@@ -11,8 +11,9 @@ theme — restrained ornamentation (thin borders, subtle glow on
 accent elements), never gaudy or neon.
 
 The public landing page and primary collection pages express that direction
-through an editorial "campaign archive" composition: large EB Garamond display
-type, ruled sections, small monospaced folio numbers, asymmetric whitespace and
+through an editorial "campaign archive" composition: EB Garamond headings at
+the usual Mantine heading sizes (the larger display sizes of the first Figma
+pass were dropped as too big, Andrea 2026-10-27), ruled sections, small monospaced folio numbers, asymmetric whitespace and
 quiet solid surfaces. Avoid generic equal-card marketing grids, decorative
 gradients, excessive pills and stock fantasy imagery; hierarchy should come
 from typography, spacing and fine borders. Cards may lift subtly on hover, but
@@ -255,22 +256,19 @@ other icon set.
   beside it in the split view (spec 37). *(The original plan of a left
   sidebar plus a right Thread panel was never built.)*
   The page uses the same campaign-archive hierarchy as the public surface:
-  the Room name is the display heading under a small "Documents" folio label,
+  the Room name is the heading (h2 size) under a small "Documents" folio label,
   filters open into a quiet bordered work panel, maps read as a distinct
   archive section, and each collapsible Main Tag heading shows its item count.
   Document cards keep their complete information and image behavior but gain
-  a restrained top-edge accent and lift on hover. Cards with images use a wide
-  cover frame above full-width text instead of splitting the card 50/50: this
-  keeps the visual prominent without compressing long titles, Tags and
-  descriptions in multi-column grids. The cover remains compact: wide images
-  crop to fill it, while square-ish and portrait images are gently enlarged
-  inside the same frame to avoid destructive 16:9 crops. A lower gradient
-  blends every orientation into the card. Their carousel, badges and full-card
-  link remain unchanged. The sticky create action has a visible text label
+  a restrained top-edge accent and lift on hover. Cards with images keep the
+  earlier layout: text on the left half, images filling the right half and
+  fading into the card (a wide cover-above-text variant was tried and dropped,
+  Andrea 2026-10-27). Room cards on My Rooms are unchanged by the editorial
+  pass. The sticky create action has a visible text label
   rather than relying on an unexplained plus icon.
 - **Maps index** (`/rooms/:roomId/maps`): reads as a cartographic archive,
   not a generic card grid. The Room name is a small folio label above the
-  large page title; create/import actions wrap safely on narrow screens.
+  page title (h2 size); create/import actions wrap safely on narrow screens.
   Each map is one horizontal index card with a numbered icon plate that
   distinguishes a free relationship board from a geographic map, followed by
   its visibility, description and activity metadata. Hover exposes a restrained
@@ -296,7 +294,8 @@ other icon set.
   image isn't stretched into the fixed-height box's full width. Its
   delete/favorite controls and the fullscreen viewer are unchanged.
   The detail surface follows the archive hierarchy introduced on the lists:
-  a small "Documents" folio label leads into a large display title and subtitle,
+  a small "Documents" folio label leads into the title and subtitle (h1/h2
+  from sm, h2/h3 on a phone, as before),
   separated from the body by a fine rule. Description text has a calmer reading
   rhythm; the image/map/info aside stays secondary on a raised surface. Notes
   remain visually quiet in the content flow without individual highlighted

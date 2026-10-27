@@ -12,6 +12,13 @@ import type { Member } from '../types/member';
 import type { Tag } from '../types/tag';
 import { useTranslation } from 'react-i18next';
 
+// Tall enough that the image panel on the right reads as a picture, not a strip.
+const CARD_WITH_IMAGES_MIN_HEIGHT = { base: 220, sm: 260 };
+
+// Width / height of the image panel at its shortest: square, so a wide card
+// grows taller instead of cropping its image to a strip.
+const CARD_IMAGE_MIN_ASPECT_RATIO = '1';
+
 interface DocumentCardProps {
   document: Document;
   roomId: string;
@@ -35,7 +42,7 @@ interface DocumentCardProps {
 
 /**
  * A Document in the Room's list: name, visibility, Tags and description, with
- * its images leading in a wide cover frame, its player (for a Character) and
+ * its images filling the card's right half, its player (for a Character) and
  * Owners, and what is new in its Thread since the viewer last opened it (spec
  * 19b): a count, or a "not yet read" dot for a Document never opened, and a
  * "Revealed" mark (spec 22). The whole card links to the Document.
@@ -70,34 +77,34 @@ export function DocumentCard({
     <Card
       data-tour="document-card"
       data-has-images={hasImages ? true : undefined}
+      className="document-card"
       withBorder
-      padding={hasImages ? 0 : 'md'}
+      padding="md"
       radius="md"
       pos="relative"
-      className="document-card"
+      mih={hasImages ? CARD_WITH_IMAGES_MIN_HEIGHT : undefined}
+      // With images, the text column and the image's floor (below) sit side by side.
+      style={hasImages ? { flexDirection: 'row' } : undefined}
     >
-      {/* A wide cover preserves the image without squeezing the card's text
-          into a narrow half-column. The badges stay readable over its corner. */}
+      {/* With images, they fill the card's right half edge to edge, fading
+          into the card on their left, and the badges sit on top of them. */}
       {hasImages && (
-        <Box className="document-card-media" data-testid="card-image-frame">
-          <DocumentCardImages
-            images={document.images}
-            documentName={document.name}
-            fade="bottom"
-          />
+        <Box pos="absolute" top={0} right={0} bottom={0} w="50%">
+          <DocumentCardImages images={document.images} documentName={document.name} />
         </Box>
       )}
       {hasImages && (
-        <Box className="document-card-media-marks">
+        <Box pos="absolute" top="var(--mantine-spacing-md)" right="var(--mantine-spacing-md)">
           {marks}
         </Box>
       )}
 
       <Stack
         gap="xs"
+        // Above the images, which are positioned and would otherwise paint over it.
         pos="relative"
-        p={hasImages ? 'md' : undefined}
-        className="document-card-content"
+        w={hasImages ? 'calc(50% - var(--mantine-spacing-sm))' : undefined}
+        style={hasImages ? { flexShrink: 0 } : undefined}
       >
         {/* Title block: name and visibility on top, Tags on their own line. */}
         <Stack gap={4}>
@@ -127,9 +134,9 @@ export function DocumentCard({
           <TagList tags={tags} tagIds={document.tagIds} roomId={roomId} />
         </Stack>
 
-        {/* The description grows so the Played by and Owner lines close the
-            card at the bottom. */}
-        <Box className="document-card-description">
+        {/* The description takes the left column, growing so the Played by
+            and Owner lines close the card at the bottom. */}
+        <Box style={hasImages ? { flex: 1 } : undefined}>
           {document.description ? (
             // The card's link lies over it: mentions are only colored here,
             // or Document mentions sit above it as links of their own.
@@ -138,7 +145,7 @@ export function DocumentCard({
               linked={mentionLinks ? 'documents' : false}
               c="dimmed"
               size="sm"
-              lineClamp={hasImages ? 3 : 2}
+              lineClamp={hasImages ? 5 : 2}
             />
           ) : (
             <Text size="sm" c="dimmed" fs="italic">
@@ -163,6 +170,20 @@ export function DocumentCard({
           </Text>
         )}
       </Stack>
+
+      {/* The image panel's floor: an empty square under it, so the card is at
+          least as tall as the panel is wide. On a wide card a fixed minimum
+          height would leave a short, wide strip that crops a portrait to a
+          sliver; this keeps the panel square or taller at any width. */}
+      {hasImages && (
+        <Box
+          data-testid="card-image-floor"
+          aria-hidden
+          w="50%"
+          ml="auto"
+          style={{ aspectRatio: CARD_IMAGE_MIN_ASPECT_RATIO, alignSelf: 'flex-start', flexShrink: 0 }}
+        />
+      )}
 
       {/* The link covers the card rather than wrapping it: an <a> may not
           contain the carousel's buttons, which sit above this (see

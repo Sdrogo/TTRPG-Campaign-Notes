@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { Box } from '@mantine/core';
 import { Carousel } from '@mantine/carousel';
-import { imageOrientation } from '../lib/images';
 import type { DocumentImage } from '../types/document';
 import { useTranslation } from 'react-i18next';
 
@@ -10,17 +8,14 @@ import { useTranslation } from 'react-i18next';
 // come back out on top of it, or they'd just navigate too.
 const ABOVE_CARD_LINK = 2;
 
-// The panel's left edge fades into the card's own background (Mantine's dark
-// Card surface), so the image melts into the card instead of ending on a seam.
-const FADE_INTO_CARD = 'linear-gradient(to right, var(--mantine-color-dark-6) 0%, transparent 35%)';
-
-type CardImageFrame = 'wide' | 'balanced' | 'portrait';
+// The panel's left edge fades into the card's own background (`--bg-surface`,
+// see `.document-card`), so the image melts into the card instead of
+// ending on a seam.
+const FADE_INTO_CARD = 'linear-gradient(to right, var(--bg-surface) 0%, transparent 35%)';
 
 interface DocumentCardImagesProps {
   images: DocumentImage[];
   documentName: string;
-  /** The edge that blends into surrounding card content. */
-  fade?: 'left' | 'bottom';
 }
 
 /** Fill the box it's placed in with the Document's images, in their supplied
@@ -28,11 +23,7 @@ interface DocumentCardImagesProps {
  *  left edge fading into the card. Multiple images use a carousel. Returns
  *  null when there are no images. Read-only: managing them (adding, deleting,
  *  moving the favorite) stays on the detail page. */
-export function DocumentCardImages({
-  images,
-  documentName,
-  fade = 'left',
-}: DocumentCardImagesProps) {
+export function DocumentCardImages({ images, documentName }: DocumentCardImagesProps) {
   const { t } = useTranslation();
 
   if (images.length === 0) {
@@ -69,26 +60,15 @@ export function DocumentCardImages({
         data-testid="card-image-fade"
         pos="absolute"
         inset={0}
-        style={{
-          background:
-            fade === 'bottom'
-              ? 'linear-gradient(to bottom, transparent 55%, var(--bg-surface) 100%)'
-              : FADE_INTO_CARD,
-          pointerEvents: 'none',
-        }}
+        style={{ background: FADE_INTO_CARD, pointerEvents: 'none' }}
       />
     </Box>
   );
 }
 
-/**
- * The compact card image. Wide images cover the frame; square-ish and portrait
- * images are only gently enlarged inside it, avoiding aggressive 16:9 crops
- * without making the card taller.
- */
+/** An image cropped to cover its box, anchored at the top so a portrait's
+ *  face survives the crop. */
 function CardImage({ image, alt }: { image: DocumentImage; alt: string }) {
-  const [frame, setFrame] = useState<CardImageFrame | null>(null);
-
   return (
     <Box
       component="img"
@@ -98,19 +78,7 @@ function CardImage({ image, alt }: { image: DocumentImage; alt: string }) {
       draggable={false}
       w="100%"
       h="100%"
-      data-frame={frame ?? undefined}
-      onLoad={(event) => {
-        const { naturalWidth, naturalHeight } = event.currentTarget;
-        const orientation = imageOrientation(naturalWidth, naturalHeight);
-        setFrame(
-          orientation === 'portrait'
-            ? 'portrait'
-            : naturalWidth / naturalHeight < 1.4
-              ? 'balanced'
-              : 'wide',
-        );
-      }}
-      className="document-card-image"
+      style={{ display: 'block', objectFit: 'cover', objectPosition: 'center top' }}
     />
   );
 }
