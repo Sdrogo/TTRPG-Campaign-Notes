@@ -8,9 +8,10 @@ import { useTranslation } from 'react-i18next';
 // come back out on top of it, or they'd just navigate too.
 const ABOVE_CARD_LINK = 2;
 
-// The panel's left edge fades into the card's own background (Mantine's dark
-// Card surface), so the image melts into the card instead of ending on a seam.
-const FADE_INTO_CARD = 'linear-gradient(to right, var(--mantine-color-dark-6) 0%, transparent 35%)';
+// The panel's left edge fades into the card's own background (`--bg-surface`,
+// see `.document-card`), so the image melts into the card instead of
+// ending on a seam.
+const FADE_INTO_CARD = 'linear-gradient(to right, var(--bg-surface) 0%, transparent 35%)';
 
 interface DocumentCardImagesProps {
   images: DocumentImage[];

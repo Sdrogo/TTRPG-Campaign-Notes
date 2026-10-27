@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Stack, Group, Title, Button, SimpleGrid, Text, Loader } from '@mantine/core';
+import { Container, Stack, Group, Title, Button, SimpleGrid, Text, Loader } from '@mantine/core';
 import { PlusIcon } from '@phosphor-icons/react';
 import { useMyRooms } from '../hooks/useRooms';
 import { RoomCard } from '../components/RoomCard';
@@ -18,8 +18,9 @@ export function RoomsPage({ currentUserId }: RoomsPageProps) {
   const myRooms = useMyRooms(true);
 
   return (
-    <Stack component="main" gap="md" p="md">
-      <Group justify="space-between">
+    <Container component="main" fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="lg">
+      <Stack gap="xl">
+      <Group justify="space-between" align="flex-end" className="rooms-heading">
         <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
           {t('common.myRooms')}
         </Title>
@@ -34,7 +35,7 @@ export function RoomsPage({ currentUserId }: RoomsPageProps) {
         <Text c="dimmed">{t('rooms.empty')}</Text>
       )}
       {myRooms.data && myRooms.data.length > 0 && (
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
           {myRooms.data.map((myRoom) => (
             <RoomCard key={myRoom.room.id} myRoom={myRoom} currentUserId={currentUserId} />
           ))}
@@ -42,6 +43,7 @@ export function RoomsPage({ currentUserId }: RoomsPageProps) {
       )}
 
       <CreateRoomModal opened={createOpened} onClose={() => setCreateOpened(false)} />
-    </Stack>
+      </Stack>
+    </Container>
   );
 }

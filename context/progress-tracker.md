@@ -759,6 +759,32 @@ None. The 15 questions open at the time were closed with the product owner
 on 2026-10-03 (`requirements.md` v0.5); v0.6 (2026-10-27) brought the spec
 in line with what was built since.
 
+## Latest UI refinement
+
+- Refined the shared visual language around an editorial "campaign archive":
+  the landing page now uses an asymmetric, type-led composition with ruled
+  feature and process sections, while the app header and Room collection use
+  quieter surfaces, stronger hierarchy and restrained tactile feedback. All
+  routes, actions, localized copy and dark-theme tokens remain unchanged.
+- Extended that hierarchy to the Documents page: clearer Room/title framing,
+  a dedicated controls panel, counted archive groups, a distinct maps section,
+  more tactile Document cards and a labeled sticky create action, with filters,
+  grouping, maps, permissions and card content unchanged.
+- Reframed the Maps index as a cartographic archive: Room/title hierarchy,
+  responsive actions, distinct free/geographic icon plates, numbered map cards,
+  clearer metadata and a designed empty state, without changing map workflows.
+- Refined the Document detail composition: title under a folio label, separated
+  header metadata, improved description rhythm, lighter secondary info panel,
+  archival Note entries and a distinct Thread surface, preserving every action,
+  permission, visibility rule and content workflow.
+- Removed individual Note highlighting from Document detail after visual review;
+  Notes now remain quiet within the editorial content flow.
+- After Andrea's review (2026-10-27, PR #252) headings use the usual Mantine
+  sizes (Document title h1/h2, Documents and Maps page titles h2, a smaller
+  landing hero), image-bearing Document cards keep the side-by-side layout
+  (images on the right half) with the new hover and top-edge accent, and Room
+  cards keep their previous look.
+
 ## Architecture Decisions
 
 Full reasoning lives in `architecture.md`; this is the index.
