@@ -8,10 +8,12 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import quote
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domain import session_zero
 from app.main import app
 
 
@@ -632,3 +634,32 @@ async def test_the_master_runs_the_shared_timer(
     assert resumed["state"] == "running"
     stopped = (await timer(room.master, action="stop")).json()["timer"]
     assert stopped == {**stopped, "state": "stopped", "ends_at": None, "remaining_s": None}
+
+
+async def test_the_board_limit_never_counts_someone_elses_drafts(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Decision 1: a full board is counted as the writer sees it, so a 409
+    never reveals other members' drafts; publishing is capped too."""
+    monkeypatch.setattr(session_zero, "MAX_CARDS_PER_BOARD", 2)
+    room, board = await _started(client, make_token)
+    want = board["retro"][0]["id"]
+    first = await _write(client, room, room.player, want, "One")
+    second = await _write(client, room, room.player, want, "Two")
+    # Two drafts the other player can't see don't fill their board.
+    late = await _write(client, room, room.other_player, want, "Late")
+    for card_id in (first, second):
+        assert (await _publish(client, room, room.player, card_id)).status_code == 200
+
+    full = await _publish(client, room, room.other_player, late)
+    assert full.status_code == 409
+    assert full.json()["detail"] == "A board holds at most 2 post-its"
+    more = await client.post(
+        f"{room.url}/cards",
+        json={"column_id": want, "body": "x"},
+        headers=room.other_player.headers,
+    )
+    assert more.status_code == 409

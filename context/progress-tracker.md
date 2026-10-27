@@ -710,8 +710,8 @@ on `main`.
   live push updates (SSE, the app's first). One migration.
   **46_1 (backend boards) built** in PR #249: tables, rules, routes,
   translations in 12 languages, export and account deletion. Migration
-  `4797859660e2` must be applied to the staging DB before merging and to
-  production before the next release. Next: 46_2 (SSE), 46_3 (page),
+  `4797859660e2` applied to the staging DB by the product owner
+  (2026-10-27); it must reach production before the next release. Next: 46_2 (SSE), 46_3 (page),
   46_4 (live client).
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the

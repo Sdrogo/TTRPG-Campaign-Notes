@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Collection, Sequence
 from datetime import datetime
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import ColumnElement, delete, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -258,12 +258,21 @@ async def get_card(session: AsyncSession, card_id: uuid.UUID) -> Card | None:
     return None if row is None else _card(row)
 
 
-async def count_cards(session: AsyncSession, column_ids: Collection[uuid.UUID]) -> int:
-    """How many post-its these columns hold, drafts included."""
+async def count_cards(
+    session: AsyncSession,
+    column_ids: Collection[uuid.UUID],
+    *,
+    drafts_of: uuid.UUID | None = None,
+) -> int:
+    """How many published post-its these columns hold, plus the drafts of
+    `drafts_of` when given: never anyone else's drafts (Decision 1)."""
+    seen: ColumnElement[bool] = SessionZeroCardRow.published_at.is_not(None)
+    if drafts_of is not None:
+        seen = or_(seen, SessionZeroCardRow.author_id == drafts_of)
     result = await session.execute(
         select(func.count())
         .select_from(SessionZeroCardRow)
-        .where(SessionZeroCardRow.column_id.in_(column_ids))
+        .where(SessionZeroCardRow.column_id.in_(column_ids), seen)
     )
     return result.scalar_one()
 

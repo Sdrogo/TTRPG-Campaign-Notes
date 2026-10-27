@@ -499,7 +499,9 @@ async def add_card(
         count = 0
         if round_ is not None:
             round_columns = [c.id for c in write.board.retro_columns(round_.id)]
-            count = await session_zero_repo.count_cards(session, round_columns)
+            count = await session_zero_repo.count_cards(
+                session, round_columns, drafts_of=write.viewer.user_id
+            )
         ensure_can_add_card(column, round_, count)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
@@ -571,8 +573,13 @@ async def publish_card(
     signed or anonymous. Can't be undone (409 the second time)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     card, column = await _card_or_404(session, write, card_id, locale)
+    round_ = write.board.round_of(column)
+    published = 0
+    if round_ is not None:
+        round_columns = [c.id for c in write.board.retro_columns(round_.id)]
+        published = await session_zero_repo.count_cards(session, round_columns)
     try:
-        ensure_can_publish(card, write.board.round_of(column), write.viewer.user_id)
+        ensure_can_publish(card, round_, write.viewer.user_id, published)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     now = datetime.now(UTC)

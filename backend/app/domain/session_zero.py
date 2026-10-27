@@ -238,7 +238,9 @@ def ensure_round_open(round_: Round | None) -> None:
 def ensure_can_add_card(column: Column, round_: Round | None, cards_on_board: int) -> None:
     """Decision 1: any member writes post-its, on the open round's Retro
     columns only - the Lines & Veils board is filled by promotion
-    (Decision 2). At most `MAX_CARDS_PER_BOARD` per board."""
+    (Decision 2). At most `MAX_CARDS_PER_BOARD` per board, counted as the
+    writer sees it (published post-its plus their own drafts), so the limit
+    never tells them someone else holds drafts."""
     if not column.is_retro:
         raise WrongBoardError("errors.sessionZero.notRetroColumn")
     ensure_round_open(round_)
@@ -277,13 +279,18 @@ def ensure_can_delete_card(
         raise NotAuthorError("errors.sessionZero.notAuthor")
 
 
-def ensure_can_publish(card: Card, round_: Round | None, publisher_id: uuid.UUID) -> None:
-    """Decision 1: only the author publishes, once, while the round is open."""
+def ensure_can_publish(
+    card: Card, round_: Round | None, publisher_id: uuid.UUID, published_on_board: int
+) -> None:
+    """Decision 1: only the author publishes, once, while the round is open
+    and the board has fewer than `MAX_CARDS_PER_BOARD` published post-its."""
     if card.author_id != publisher_id:
         raise NotAuthorError("errors.sessionZero.notAuthor")
     ensure_round_open(round_)
     if not card.is_draft:
         raise AlreadyPublishedError("errors.sessionZero.alreadyPublished")
+    if published_on_board >= MAX_CARDS_PER_BOARD:
+        raise BoardFullError("errors.sessionZero.boardFull", max=MAX_CARDS_PER_BOARD)
 
 
 def can_promote(card: Card, source_column: Column, role: RoomRole) -> bool:

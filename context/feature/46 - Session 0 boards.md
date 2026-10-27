@@ -185,7 +185,10 @@ those items stay out entirely). The ticket is confirmed.
   draft that isn't the caller's (never 403, so a draft's existence never
   leaks). View-as refuses writes as usual, and its `GET` leaves out the
   previewed member's drafts too (a draft is its author's alone, Decision 1).
-  Reactions and moves that change nothing don't bump `revision`. Every write answers with the
+  Reactions and moves that change nothing don't bump `revision`.
+  The board limit counts what the writer sees (published post-its plus
+  their own drafts), and publishing is capped too, so a 409 never reveals
+  someone else's drafts. Every write answers with the
   boards as the caller now sees them, like `GET`.
 - Account deletion and data export (spec 31) cover the new rows.
 

@@ -162,13 +162,15 @@ def test_deleting_is_the_authors_or_the_masters_on_published_post_its() -> None:
 
 def test_the_author_publishes_a_draft_once() -> None:
     draft = _card(published_at=None)
-    ensure_can_publish(draft, OPEN, AUTHOR)
+    ensure_can_publish(draft, OPEN, AUTHOR, MAX_CARDS_PER_BOARD - 1)
     with pytest.raises(NotAuthorError):
-        ensure_can_publish(draft, OPEN, OTHER)
+        ensure_can_publish(draft, OPEN, OTHER, 0)
     with pytest.raises(RoundClosedError):
-        ensure_can_publish(draft, CLOSED, AUTHOR)
+        ensure_can_publish(draft, CLOSED, AUTHOR, 0)
     with pytest.raises(AlreadyPublishedError):
-        ensure_can_publish(_card(), OPEN, AUTHOR)
+        ensure_can_publish(_card(), OPEN, AUTHOR, 0)
+    with pytest.raises(BoardFullError):
+        ensure_can_publish(draft, OPEN, AUTHOR, MAX_CARDS_PER_BOARD)
 
 
 def test_only_the_master_promotes_published_retro_post_its() -> None:
