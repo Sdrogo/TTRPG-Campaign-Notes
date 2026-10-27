@@ -874,8 +874,9 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   it inline or ungroups all.
 - Layout (spec 46c Decisions 10 and 11): from 62em the two boards sit
   side by side with a handle between them (`BoardsSplit`,
-  `.sz-split-handle`: a 16px `col-resize` strip with a 2px line in
-  `--border-default`, `--accent-primary` on hover, focus or drag); Lines &
+  `.sz-split-handle`: the Document split view's divider, an 8px
+  `col-resize` strip with a quiet 2px line in `--border-default`; product
+  owner, 2026-10-27: the accent line was too loud); Lines &
   Veils starts at a third, stays between 280px and 60%, double click
   resets, arrows/Home/End move it, the width is kept in `localStorage`.
   Retro columns share the board's width (`flex: 1 1 0`, at least 220px);
