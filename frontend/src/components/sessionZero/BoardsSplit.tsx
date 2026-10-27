@@ -51,7 +51,8 @@ interface BoardsSplitProps {
  * back to a third. The width is remembered in this browser.
  *
  * The two fill the screen's height under the header and each scrolls on its
- * own (spec 46d Decision 5), fitted again when the window is resized.
+ * own (spec 46d Decision 5), fitted again when the window or the page
+ * above them changes size.
  */
 export function BoardsSplit({ left, right }: BoardsSplitProps) {
   const { t } = useTranslation();
@@ -67,7 +68,14 @@ export function BoardsSplit({ left, right }: BoardsSplitProps) {
     };
     fit();
     window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
+    // The header above can grow or shrink with no window resize (a button
+    // comes, the row wraps): the page's height moves with it.
+    const observer = new ResizeObserver(fit);
+    observer.observe(document.body);
+    return () => {
+      window.removeEventListener('resize', fit);
+      observer.disconnect();
+    };
   }, []);
 
   // The narrowest share the page's width allows, never above the widest.

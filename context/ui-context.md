@@ -940,7 +940,8 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   (`.sz-lines-veils-cards`, `repeat(auto-fill, minmax(200px, 1fr))`).
   Side by side, the two boards fill the screen's height under the header
   and each scrolls on its own (`.sz-pane`, spec 46d Decision 5;
-  `BoardsSplit` fits the height on resize, at least 360px); on a phone the
+  `BoardsSplit` refits the height on window resize and through a
+  `ResizeObserver` on the page, at least 360px); on a phone the
   page scrolls as before.
 - Live updates (spec 46_4): what another member just changed (a post-it,
   a Retro column, a group) glows once for 1.5 s, a 3px ring in its own
