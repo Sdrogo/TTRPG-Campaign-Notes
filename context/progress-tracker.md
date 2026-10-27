@@ -733,8 +733,11 @@ on `main`.
   screen; Lines & Veils then became horizontal rows (Must, Veils, Lines
   stacked, post-its side by side) while Retro keeps vertical columns.
   PR #251 merged into staging 2026-10-27. **Migration `c3f8a1d6e9b4`**:
-  applied to the staging DB by the product owner (2026-10-27); to apply
-  to production before the next release (after `4797859660e2`).
+  applied to the staging DB (verified 2026-10-27: `alembic current` on
+  staging = `c3f8a1d6e9b4`, head). **Both `4797859660e2` and
+  `c3f8a1d6e9b4` applied to production** on 2026-10-27 (`alembic upgrade
+  head` from `b5f1d8e3a7c2`; `alembic current` on production =
+  `c3f8a1d6e9b4`, head).
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product
