@@ -68,6 +68,14 @@ describe('demoFetch', () => {
     expect((await get('/rooms/demo/mention-suggestions')).body).toEqual({ sources: [] });
   });
 
+  // Spec 46: the sample Room's Session 0 was never started, and starting it is a write.
+  it('answers the Session 0 as not started, manageable by the Master only', async () => {
+    const master = (await get('/rooms/demo/session-zero')).body;
+    expect(master).toMatchObject({ started: false, can_manage: true, retro: [], timer: null });
+    expect((await get('/rooms/demo/session-zero', MARCO_ID)).body.can_manage).toBe(false);
+    expect((await get('/rooms/demo/session-zero/events')).status).toBe(404);
+  });
+
   it('lists the characters the viewer plays', async () => {
     expect((await get('/rooms/demo/characters/mine')).body).toEqual([]);
     expect((await get('/rooms/demo/characters/mine', MARCO_ID)).body).toEqual([

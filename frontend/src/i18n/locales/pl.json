@@ -1307,5 +1307,88 @@
       "all_many": "Wszystkie mapy ({{count}})",
       "all_other": "Wszystkie mapy ({{count}})"
     }
+  },
+  "sessionZero": {
+    "title": "Sesja 0",
+    "signInRequired": "Zaloguj się, aby zobaczyć Sesję 0 tego Pokoju.",
+    "loadError": "Nie udało się wczytać Sesji 0.",
+    "notStarted": "Sesja 0 tego Pokoju jeszcze się nie zaczęła. Rozpocznij ją, aby otworzyć tablicę Retro i tablicę Linii i Zasłon.",
+    "start": "Rozpocznij Sesję 0",
+    "indexLink": "Tablice Sesji 0",
+    "retro": {
+      "title": "Retro"
+    },
+    "linesVeils": {
+      "title": "Linie i Zasłony",
+      "empty": "Brak karteczek."
+    },
+    "kinds": {
+      "must": "Must",
+      "lines": "Linie",
+      "veils": "Zasłony"
+    },
+    "postIt": {
+      "text": "Tekst karteczki",
+      "charactersLeft_one": "Został {{count}} znak",
+      "charactersLeft_few": "Zostały {{count}} znaki",
+      "charactersLeft_many": "Zostało {{count}} znaków",
+      "charactersLeft_other": "Zostało {{count}} znaku",
+      "anonymous": "Anonim",
+      "actions": "Działania na karteczce",
+      "publish": "Opublikuj",
+      "moveTo": "Przenieś do: {{column}}",
+      "promoteTo": "Awansuj do: {{column}}",
+      "draft": "Szkic",
+      "fromRetro": "z Retro",
+      "label": "Karteczka: {{author}}",
+      "add": "Dodaj karteczkę",
+      "saveDraft": "Zapisz szkic"
+    },
+    "publish": {
+      "title": "Opublikuj karteczkę",
+      "body": "Po opublikowaniu karteczkę widzą wszyscy członkowie Pokoju i nie wraca ona do szkicu. Nadal możesz ją edytować lub usunąć.",
+      "anonymous": "Opublikuj anonimowo",
+      "anonymousHint": "Nikt nie zobaczy, kto ją napisał, nawet Master."
+    },
+    "columns": {
+      "actions": "Działania na kolumnie {{title}}",
+      "add": "Dodaj kolumnę",
+      "rename": "Zmień nazwę",
+      "moveLeft": "Przesuń w lewo",
+      "moveRight": "Przesuń w prawo",
+      "title": "Tytuł kolumny",
+      "deleteTitle": "Usunąć kolumnę?",
+      "deleteBody": "Kolumna „{{title}}” zostanie usunięta razem ze wszystkimi karteczkami."
+    },
+    "rounds": {
+      "first": "Sesja 0",
+      "later": "Sesja 0.5 #{{number}}",
+      "pick": "Pokazywana sesja",
+      "start": "Rozpocznij Sesję 0.5",
+      "startBody": "Obecna tablica Retro zostanie zamknięta i pozostanie dostępna tylko do odczytu; nigdy nieopublikowane szkice zostaną usunięte. Nowa tablica zaczyna się pusta, z tymi samymi kolumnami. Linie i Zasłony pozostają bez zmian.",
+      "title": "Tytuł (opcjonalnie)",
+      "titlePlaceholder": "Koniec łuku 1",
+      "startButton": "Rozpocznij",
+      "closed": "Ta sesja jest zamknięta: tablica jest tylko do odczytu."
+    },
+    "timer": {
+      "label": "Minutnik",
+      "none": "Brak minutnika",
+      "expired": "Czas minął",
+      "paused": "Wstrzymany",
+      "actions": "Zarządzaj minutnikiem",
+      "start": "Uruchom minutnik",
+      "minutes_one": "{{count}} minuta",
+      "minutes_few": "{{count}} minuty",
+      "minutes_many": "{{count}} minut",
+      "minutes_other": "{{count}} minuty",
+      "custom": "Własny czas",
+      "length": "Minuty",
+      "lengthHint": "Od {{min}} do {{max}} minut",
+      "startButton": "Uruchom",
+      "pause": "Wstrzymaj",
+      "resume": "Wznów",
+      "stop": "Zatrzymaj i wyczyść"
+    }
   }
 }

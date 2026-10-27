@@ -29,6 +29,13 @@ content.
 | Relational link (a flagged Note, spec 41) | Link relazionale | Relational link | Beziehungslink | Enlace relacional | Lien relationnel | Relatielink | Link relacyjny | Ligação relacional | Связующая ссылка | 関係リンク | 关系链接 | 관계 링크 |
 | Demo (the sample Room, spec 45_2) | Demo | Demo | Demo | Demo | Démo | Demo | Demo | Demo | Демо | デモ | 演示 | 데모 |
 | Tour (the Demo's guided tour, spec 45_3) | Tour | Tour | Tour | Tour | Visite | Rondleiding | Przewodnik | Visita | Тур | ツアー | 导览 | 투어 |
+| Session 0 (spec 46) | Sessione 0 | Session 0 | Session 0 | Sesión 0 | Session 0 | Sessie 0 | Sesja 0 | Sessão 0 | Сессия 0 | セッション0 | 第 0 次会话 | 세션 0 |
+| Session 0.5 (a later round, spec 46) | Sessione 0.5 | Session 0.5 | Session 0.5 | Sesión 0.5 | Session 0.5 | Sessie 0.5 | Sesja 0.5 | Sessão 0.5 | Сессия 0.5 | セッション0.5 | 第 0.5 次会话 | 세션 0.5 |
+| Retro (board, spec 46) | Retro | Retro | Retro | Retro | Rétro | Retro | Retro | Retro | Ретро | レトロ | 回顾 | 레트로 |
+| Lines & Veils (board, spec 46) | Linee e Veli | Lines & Veils | Grenzen & Schleier | Líneas y Velos | Lignes et Voiles | Lijnen en Sluiers | Linie i Zasłony | Linhas e Véus | Линии и Завесы | ライン&ヴェール | 底线与帷幕 | 라인과 베일 |
+| Must (Lines & Veils column) | Must | Must | Must | Must | Must | Must | Must | Must | Must | Must | Must | Must |
+| post-it (spec 46) | post-it | post-it | Post-it | nota | post-it | post-it | karteczka | post-it | стикер | 付箋 | 便签 | 포스트잇 |
+| Draft (an unpublished post-it) | Bozza | Draft | Entwurf | Borrador | Brouillon | Concept | Szkic | Rascunho | Черновик | 下書き | 草稿 | 초안 |
 
 The Italian and English columns were taken from `it.json` and `en.json` on
 2026-10-12 (the role names "Master", "Player", "Admin" and "Owner" stay in

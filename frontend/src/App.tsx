@@ -36,6 +36,9 @@ const RoomMapsPage = lazy(() =>
 const RelationshipMapPage = lazy(() =>
   import('./pages/RelationshipMapPage').then((m) => ({ default: m.RelationshipMapPage })),
 );
+const SessionZeroPage = lazy(() =>
+  import('./pages/SessionZeroPage').then((m) => ({ default: m.SessionZeroPage })),
+);
 const DemoPage = lazy(() => import('./pages/DemoPage').then((m) => ({ default: m.DemoPage })));
 const MentionMapPage = lazy(() =>
   import('./pages/MentionMapPage').then((m) => ({ default: m.MentionMapPage })),
@@ -76,6 +79,7 @@ function App() {
         <Route path="/rooms/:roomId/documents/:documentId/mention-map" element={<MentionMapPage />} />
         <Route path="/rooms/:roomId/maps" element={<RoomMapsPage />} />
         <Route path="/rooms/:roomId/maps/:mapId" element={<RelationshipMapPage />} />
+        <Route path="/rooms/:roomId/session-zero" element={<SessionZeroPage />} />
       </Routes>
       </Suspense>
     </ViewAsProvider>

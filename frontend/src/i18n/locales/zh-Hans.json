@@ -1220,5 +1220,82 @@
     "strip": {
       "all_other": "全部地图（{{count}}）"
     }
+  },
+  "sessionZero": {
+    "title": "第 0 次会话",
+    "signInRequired": "登录后即可查看此房间的第 0 次会话。",
+    "loadError": "无法加载第 0 次会话。",
+    "notStarted": "此房间的第 0 次会话尚未开始。开始后即可打开回顾看板和底线与帷幕看板。",
+    "start": "开始第 0 次会话",
+    "indexLink": "第 0 次会话看板",
+    "retro": {
+      "title": "回顾"
+    },
+    "linesVeils": {
+      "title": "底线与帷幕",
+      "empty": "还没有便签。"
+    },
+    "kinds": {
+      "must": "Must",
+      "lines": "底线",
+      "veils": "帷幕"
+    },
+    "postIt": {
+      "text": "便签内容",
+      "charactersLeft_other": "还可输入 {{count}} 个字符",
+      "anonymous": "匿名",
+      "actions": "便签操作",
+      "publish": "发布",
+      "moveTo": "移到{{column}}",
+      "promoteTo": "提升到{{column}}",
+      "draft": "草稿",
+      "fromRetro": "来自回顾",
+      "label": "{{author}} 的便签",
+      "add": "添加便签",
+      "saveDraft": "保存草稿"
+    },
+    "publish": {
+      "title": "发布便签",
+      "body": "发布后，房间的所有成员都能看到这张便签，且无法再变回草稿。你仍可以编辑或删除它。",
+      "anonymous": "匿名发布",
+      "anonymousHint": "没有人能看到是谁写的，Master 也不例外。"
+    },
+    "columns": {
+      "actions": "“{{title}}”列操作",
+      "add": "添加列",
+      "rename": "重命名",
+      "moveLeft": "左移",
+      "moveRight": "右移",
+      "title": "列标题",
+      "deleteTitle": "删除此列？",
+      "deleteBody": "“{{title}}”列及其所有便签都将被删除。"
+    },
+    "rounds": {
+      "first": "第 0 次会话",
+      "later": "第 0.5 次会话 #{{number}}",
+      "pick": "要显示的会话",
+      "start": "开始第 0.5 次会话",
+      "startBody": "当前的回顾看板将关闭，仍可只读查看；从未发布的草稿会被删除。新看板从空白开始，沿用相同的列。底线与帷幕保持不变。",
+      "title": "标题（可选）",
+      "titlePlaceholder": "第 1 篇章结束",
+      "startButton": "开始",
+      "closed": "此会话已关闭：看板为只读。"
+    },
+    "timer": {
+      "label": "计时器",
+      "none": "无计时器",
+      "expired": "时间到",
+      "paused": "已暂停",
+      "actions": "管理计时器",
+      "start": "开始计时",
+      "minutes_other": "{{count}} 分钟",
+      "custom": "自定义时长",
+      "length": "分钟",
+      "lengthHint": "{{min}} 到 {{max}} 分钟",
+      "startButton": "开始",
+      "pause": "暂停",
+      "resume": "继续",
+      "stop": "停止并清除"
+    }
   }
 }

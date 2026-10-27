@@ -1249,5 +1249,84 @@
       "all_one": "All maps ({{count}})",
       "all_other": "All maps ({{count}})"
     }
+  },
+  "sessionZero": {
+    "title": "Session 0",
+    "signInRequired": "Sign in to see this Room's Session 0.",
+    "loadError": "Couldn't load the Session 0.",
+    "notStarted": "This Room's Session 0 hasn't started yet. Start it to open the Retro board and the Lines & Veils board.",
+    "start": "Start Session 0",
+    "indexLink": "Session 0 boards",
+    "retro": {
+      "title": "Retro"
+    },
+    "linesVeils": {
+      "title": "Lines & Veils",
+      "empty": "No post-its yet."
+    },
+    "kinds": {
+      "must": "Must",
+      "lines": "Lines",
+      "veils": "Veils"
+    },
+    "postIt": {
+      "text": "Post-it text",
+      "charactersLeft_one": "{{count}} character left",
+      "charactersLeft_other": "{{count}} characters left",
+      "anonymous": "Anonymous",
+      "actions": "Post-it actions",
+      "publish": "Publish",
+      "moveTo": "Move to {{column}}",
+      "promoteTo": "Promote to {{column}}",
+      "draft": "Draft",
+      "fromRetro": "from the Retro",
+      "label": "Post-it by {{author}}",
+      "add": "Add post-it",
+      "saveDraft": "Save draft"
+    },
+    "publish": {
+      "title": "Publish the post-it",
+      "body": "Once published, the post-it is visible to every member of the Room and can't go back to being a draft. You can still edit or delete it.",
+      "anonymous": "Publish anonymously",
+      "anonymousHint": "Nobody will see who wrote it, not even the Master."
+    },
+    "columns": {
+      "actions": "Actions for column {{title}}",
+      "add": "Add column",
+      "rename": "Rename",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "title": "Column title",
+      "deleteTitle": "Delete the column?",
+      "deleteBody": "The column “{{title}}” will be deleted along with all its post-its."
+    },
+    "rounds": {
+      "first": "Session 0",
+      "later": "Session 0.5 #{{number}}",
+      "pick": "Session to show",
+      "start": "Start Session 0.5",
+      "startBody": "The current Retro board closes and stays readable, read-only; drafts never published are deleted. The new board starts empty, with the same columns. Lines & Veils stays as it is.",
+      "title": "Title (optional)",
+      "titlePlaceholder": "End of arc 1",
+      "startButton": "Start",
+      "closed": "This session is closed: the board is read-only."
+    },
+    "timer": {
+      "label": "Timer",
+      "none": "No timer",
+      "expired": "Time's up",
+      "paused": "Paused",
+      "actions": "Manage the timer",
+      "start": "Start a timer",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes",
+      "custom": "Custom length",
+      "length": "Minutes",
+      "lengthHint": "From {{min}} to {{max}} minutes",
+      "startButton": "Start",
+      "pause": "Pause",
+      "resume": "Resume",
+      "stop": "Stop and clear"
+    }
   }
 }

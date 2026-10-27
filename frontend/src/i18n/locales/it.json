@@ -1249,5 +1249,84 @@
       "all_one": "Tutte le mappe ({{count}})",
       "all_other": "Tutte le mappe ({{count}})"
     }
+  },
+  "sessionZero": {
+    "title": "Sessione 0",
+    "signInRequired": "Accedi per vedere la Sessione 0 di questa Stanza.",
+    "loadError": "Impossibile caricare la Sessione 0.",
+    "notStarted": "La Sessione 0 di questa Stanza non è ancora iniziata. Avviala per aprire la lavagna Retro e quella di Linee e Veli.",
+    "start": "Avvia la Sessione 0",
+    "indexLink": "Lavagne della Sessione 0",
+    "retro": {
+      "title": "Retro"
+    },
+    "linesVeils": {
+      "title": "Linee e Veli",
+      "empty": "Ancora nessun post-it."
+    },
+    "kinds": {
+      "must": "Must",
+      "lines": "Linee",
+      "veils": "Veli"
+    },
+    "postIt": {
+      "text": "Testo del post-it",
+      "charactersLeft_one": "{{count}} carattere rimasto",
+      "charactersLeft_other": "{{count}} caratteri rimasti",
+      "anonymous": "Anonimo",
+      "actions": "Azioni del post-it",
+      "publish": "Pubblica",
+      "moveTo": "Sposta in {{column}}",
+      "promoteTo": "Promuovi in {{column}}",
+      "draft": "Bozza",
+      "fromRetro": "dalla Retro",
+      "label": "Post-it di {{author}}",
+      "add": "Aggiungi post-it",
+      "saveDraft": "Salva bozza"
+    },
+    "publish": {
+      "title": "Pubblica il post-it",
+      "body": "Una volta pubblicato, il post-it è visibile a tutti i membri della Stanza e non torna bozza. Potrai comunque modificarlo o eliminarlo.",
+      "anonymous": "Pubblica in anonimo",
+      "anonymousHint": "Nessuno vedrà chi l'ha scritto, nemmeno il Master."
+    },
+    "columns": {
+      "actions": "Azioni della colonna {{title}}",
+      "add": "Aggiungi colonna",
+      "rename": "Rinomina",
+      "moveLeft": "Sposta a sinistra",
+      "moveRight": "Sposta a destra",
+      "title": "Titolo della colonna",
+      "deleteTitle": "Eliminare la colonna?",
+      "deleteBody": "La colonna «{{title}}» verrà eliminata insieme a tutti i suoi post-it."
+    },
+    "rounds": {
+      "first": "Sessione 0",
+      "later": "Sessione 0.5 #{{number}}",
+      "pick": "Sessione da mostrare",
+      "start": "Avvia Sessione 0.5",
+      "startBody": "La lavagna Retro attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova lavagna parte vuota, con le stesse colonne. Linee e Veli resta com'è.",
+      "title": "Titolo (facoltativo)",
+      "titlePlaceholder": "Fine arco 1",
+      "startButton": "Avvia",
+      "closed": "Questa sessione è chiusa: la lavagna è in sola lettura."
+    },
+    "timer": {
+      "label": "Timer",
+      "none": "Nessun timer",
+      "expired": "Tempo scaduto",
+      "paused": "In pausa",
+      "actions": "Gestisci il timer",
+      "start": "Avvia un timer",
+      "minutes_one": "{{count}} minuto",
+      "minutes_other": "{{count}} minuti",
+      "custom": "Durata personalizzata",
+      "length": "Minuti",
+      "lengthHint": "Da {{min}} a {{max}} minuti",
+      "startButton": "Avvia",
+      "pause": "Metti in pausa",
+      "resume": "Riprendi",
+      "stop": "Ferma e azzera"
+    }
   }
 }

@@ -257,6 +257,21 @@ those items stay out entirely). The ticket is confirmed.
   arco 1", ...); a closed round shows read-only with a dimmed banner.
 - Strings in all 12 languages; "Session 0", "Lines", "Veils", "post-it"
   added to the i18n glossary.
+- As built (46_3): `pages/SessionZeroPage.tsx`, `components/sessionZero/`
+  (`PostItCard`, `PostItEditor`, `BoardColumns` with `RetroColumn`,
+  `LinesVeilsColumn` and `AddColumn`, `TimerBar`, `RoundsBar`, and
+  `boardContext`, which hands the board, the members and `act(write)` to
+  every part), `hooks/useSessionZero.ts` and `lib/sessionZero.ts` (every
+  write as a `boardWrites` entry; each answer replaces the open round's
+  cache). A Session 0 never started shows a "Start Session 0" button to
+  any member (the `GET` never writes); the Demo answers it not started.
+  Side by side from 62em (Retro wider, scrolling sideways; the three Lines
+  & Veils columns one under the other), two tabs below. Every action is
+  hidden in "View as". `AddReaction` now takes the reactions list, so
+  post-its reuse it. A dragged post-it carries `{id, action, columnId}`
+  under `application/x-exlibris-post-it`; Lines & Veils columns accept it
+  only for the Master. Glossary rows: Session 0, Session 0.5, Retro, Lines
+  & Veils, Must, post-it, Draft.
 
 ### Frontend: live client (46_4)
 

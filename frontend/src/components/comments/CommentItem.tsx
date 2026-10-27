@@ -303,7 +303,7 @@ export function CommentItem({
             )}
             {!comment.deleted && !readOnly && (
               <AddReaction
-                comment={comment}
+                reactions={comment.reactions}
                 onToggle={onToggleReaction}
                 disabled={toggleReaction.isPending}
               />

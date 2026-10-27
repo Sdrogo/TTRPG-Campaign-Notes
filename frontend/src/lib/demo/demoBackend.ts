@@ -428,6 +428,20 @@ function answer(path: string, viewer: Viewer): Answer {
     case 'exports':
     case 'mention-suggestions':
       return ok(section === 'exports' ? [] : { sources: [] });
+    case 'session-zero':
+      // The sample Room's Session 0 was never started (spec 46); starting it is a write.
+      return rest.length === 1
+        ? ok({
+            started: false,
+            revision: 0,
+            can_manage: viewer.isMaster,
+            rounds: [],
+            round_id: null,
+            retro: [],
+            lines_veils: [],
+            timer: null,
+          })
+        : NOT_FOUND;
     case 'maps': {
       if (rest.length === 1) return ok(data.maps.map((map) => mapSummary(map, viewer)));
       const map = data.maps.find((candidate) => candidate.id === id);

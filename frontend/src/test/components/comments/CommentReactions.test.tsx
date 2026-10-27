@@ -7,7 +7,7 @@ import {
   MAX_REACTION_EMOJI,
   ReactionChips,
 } from '../../../components/comments/CommentReactions';
-import type { Comment, Reaction } from '../../../types/comment';
+import type { Reaction } from '../../../types/comment';
 import type { Member } from '../../../types/member';
 
 vi.mock('../../../components/comments/EmojiPicker', () => ({
@@ -34,36 +34,6 @@ const members: Member[] = [
 
 function reaction(overrides: Partial<Reaction> = {}): Reaction {
   return { emoji: '👍', count: 2, reactedByMe: false, userIds: ['user-1', 'gone'], ...overrides };
-}
-
-function comment(reactions: Reaction[]): Comment {
-  return {
-    id: 'comment-1',
-    documentId: 'doc-1',
-    authorId: 'user-1',
-    body: 'Ricordate il sigillo.',
-    visibility: 'room',
-    selectiveUserIds: [],
-    createdAt: '2026-09-21T12:00:00Z',
-    updatedAt: '2026-09-21T12:00:00Z',
-    deleted: false,
-    images: [],
-    canEdit: true,
-    canDelete: true,
-    asCharacter: null,
-    parentId: null,
-    parentHidden: false,
-    reactions,
-    pinnedAt: null,
-    resolvedAt: null,
-    resolvedBy: null,
-    canPin: false,
-    canResolve: false,
-    promotedAt: null,
-    promotedTo: null,
-    promotedDocumentId: null,
-    canPromote: false,
-  };
 }
 
 describe('ReactionChips', () => {
@@ -110,7 +80,7 @@ describe('AddReaction', () => {
     const user = userEvent.setup();
     renderWithProviders(
       <AddReaction
-        comment={comment([reaction({ reactedByMe: true })])}
+        reactions={[reaction({ reactedByMe: true })]}
         onToggle={onToggle}
         disabled={false}
       />,
@@ -130,7 +100,7 @@ describe('AddReaction', () => {
     const onToggle = vi.fn();
     const user = userEvent.setup();
     renderWithProviders(
-      <AddReaction comment={comment([reaction()])} onToggle={onToggle} disabled={false} />,
+      <AddReaction reactions={[reaction()]} onToggle={onToggle} disabled={false} />,
     );
 
     await user.click(screen.getByRole('button', { name: 'Aggiungi una reazione' }));
@@ -143,7 +113,7 @@ describe('AddReaction', () => {
     const full = Array.from({ length: MAX_REACTION_EMOJI }, (_, i) =>
       reaction({ emoji: String.fromCodePoint(0x1f600 + i) }),
     );
-    renderWithProviders(<AddReaction comment={comment(full)} onToggle={vi.fn()} disabled={false} />);
+    renderWithProviders(<AddReaction reactions={full} onToggle={vi.fn()} disabled={false} />);
     expect(screen.queryByRole('button', { name: 'Aggiungi una reazione' })).not.toBeInTheDocument();
   });
 });

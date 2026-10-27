@@ -1249,5 +1249,84 @@
       "all_one": "Todos los mapas ({{count}})",
       "all_other": "Todos los mapas ({{count}})"
     }
+  },
+  "sessionZero": {
+    "title": "Sesión 0",
+    "signInRequired": "Inicia sesión para ver la Sesión 0 de esta Sala.",
+    "loadError": "No se pudo cargar la Sesión 0.",
+    "notStarted": "La Sesión 0 de esta Sala aún no ha empezado. Iníciala para abrir el tablero Retro y el de Líneas y Velos.",
+    "start": "Iniciar la Sesión 0",
+    "indexLink": "Tableros de la Sesión 0",
+    "retro": {
+      "title": "Retro"
+    },
+    "linesVeils": {
+      "title": "Líneas y Velos",
+      "empty": "Aún no hay notas."
+    },
+    "kinds": {
+      "must": "Must",
+      "lines": "Líneas",
+      "veils": "Velos"
+    },
+    "postIt": {
+      "text": "Texto de la nota",
+      "charactersLeft_one": "Queda {{count}} carácter",
+      "charactersLeft_other": "Quedan {{count}} caracteres",
+      "anonymous": "Anónimo",
+      "actions": "Acciones de la nota",
+      "publish": "Publicar",
+      "moveTo": "Mover a {{column}}",
+      "promoteTo": "Promover a {{column}}",
+      "draft": "Borrador",
+      "fromRetro": "de la Retro",
+      "label": "Nota de {{author}}",
+      "add": "Añadir nota",
+      "saveDraft": "Guardar borrador"
+    },
+    "publish": {
+      "title": "Publicar la nota",
+      "body": "Una vez publicada, la nota es visible para todos los miembros de la Sala y no vuelve a ser borrador. Aun así podrás editarla o eliminarla.",
+      "anonymous": "Publicar de forma anónima",
+      "anonymousHint": "Nadie verá quién la escribió, ni siquiera el Master."
+    },
+    "columns": {
+      "actions": "Acciones de la columna {{title}}",
+      "add": "Añadir columna",
+      "rename": "Renombrar",
+      "moveLeft": "Mover a la izquierda",
+      "moveRight": "Mover a la derecha",
+      "title": "Título de la columna",
+      "deleteTitle": "¿Eliminar la columna?",
+      "deleteBody": "La columna «{{title}}» se eliminará junto con todas sus notas."
+    },
+    "rounds": {
+      "first": "Sesión 0",
+      "later": "Sesión 0.5 #{{number}}",
+      "pick": "Sesión que mostrar",
+      "start": "Iniciar Sesión 0.5",
+      "startBody": "El tablero Retro actual se cierra y sigue disponible en solo lectura; los borradores nunca publicados se eliminan. El nuevo tablero empieza vacío, con las mismas columnas. Líneas y Velos se queda como está.",
+      "title": "Título (opcional)",
+      "titlePlaceholder": "Fin del arco 1",
+      "startButton": "Iniciar",
+      "closed": "Esta sesión está cerrada: el tablero es de solo lectura."
+    },
+    "timer": {
+      "label": "Temporizador",
+      "none": "Sin temporizador",
+      "expired": "Se acabó el tiempo",
+      "paused": "En pausa",
+      "actions": "Gestionar el temporizador",
+      "start": "Iniciar un temporizador",
+      "minutes_one": "{{count}} minuto",
+      "minutes_other": "{{count}} minutos",
+      "custom": "Duración personalizada",
+      "length": "Minutos",
+      "lengthHint": "De {{min}} a {{max}} minutos",
+      "startButton": "Iniciar",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "stop": "Detener y borrar"
+    }
   }
 }

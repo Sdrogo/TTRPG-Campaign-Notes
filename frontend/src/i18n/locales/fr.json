@@ -1251,5 +1251,84 @@
       "all_one": "Toutes les cartes ({{count}})",
       "all_other": "Toutes les cartes ({{count}})"
     }
+  },
+  "sessionZero": {
+    "title": "Session 0",
+    "signInRequired": "Connectez-vous pour voir la Session 0 de cette Salle.",
+    "loadError": "Impossible de charger la Session 0.",
+    "notStarted": "La Session 0 de cette Salle n'a pas encore commencé. Lancez-la pour ouvrir le tableau Rétro et celui des Lignes et Voiles.",
+    "start": "Lancer la Session 0",
+    "indexLink": "Tableaux de la Session 0",
+    "retro": {
+      "title": "Rétro"
+    },
+    "linesVeils": {
+      "title": "Lignes et Voiles",
+      "empty": "Aucun post-it pour l'instant."
+    },
+    "kinds": {
+      "must": "Must",
+      "lines": "Lignes",
+      "veils": "Voiles"
+    },
+    "postIt": {
+      "text": "Texte du post-it",
+      "charactersLeft_one": "{{count}} caractère restant",
+      "charactersLeft_other": "{{count}} caractères restants",
+      "anonymous": "Anonyme",
+      "actions": "Actions du post-it",
+      "publish": "Publier",
+      "moveTo": "Déplacer vers {{column}}",
+      "promoteTo": "Promouvoir vers {{column}}",
+      "draft": "Brouillon",
+      "fromRetro": "de la Rétro",
+      "label": "Post-it de {{author}}",
+      "add": "Ajouter un post-it",
+      "saveDraft": "Enregistrer le brouillon"
+    },
+    "publish": {
+      "title": "Publier le post-it",
+      "body": "Une fois publié, le post-it est visible par tous les membres de la Salle et ne redevient pas un brouillon. Vous pourrez toujours le modifier ou le supprimer.",
+      "anonymous": "Publier anonymement",
+      "anonymousHint": "Personne ne verra qui l'a écrit, pas même le Master."
+    },
+    "columns": {
+      "actions": "Actions de la colonne {{title}}",
+      "add": "Ajouter une colonne",
+      "rename": "Renommer",
+      "moveLeft": "Déplacer à gauche",
+      "moveRight": "Déplacer à droite",
+      "title": "Titre de la colonne",
+      "deleteTitle": "Supprimer la colonne ?",
+      "deleteBody": "La colonne « {{title}} » sera supprimée avec tous ses post-its."
+    },
+    "rounds": {
+      "first": "Session 0",
+      "later": "Session 0.5 #{{number}}",
+      "pick": "Session à afficher",
+      "start": "Lancer la Session 0.5",
+      "startBody": "Le tableau Rétro actuel se ferme et reste consultable en lecture seule ; les brouillons jamais publiés sont supprimés. Le nouveau tableau commence vide, avec les mêmes colonnes. Lignes et Voiles reste tel quel.",
+      "title": "Titre (facultatif)",
+      "titlePlaceholder": "Fin de l'arc 1",
+      "startButton": "Lancer",
+      "closed": "Cette session est close : le tableau est en lecture seule."
+    },
+    "timer": {
+      "label": "Minuteur",
+      "none": "Aucun minuteur",
+      "expired": "Temps écoulé",
+      "paused": "En pause",
+      "actions": "Gérer le minuteur",
+      "start": "Lancer un minuteur",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes",
+      "custom": "Durée personnalisée",
+      "length": "Minutes",
+      "lengthHint": "De {{min}} à {{max}} minutes",
+      "startButton": "Lancer",
+      "pause": "Mettre en pause",
+      "resume": "Reprendre",
+      "stop": "Arrêter et effacer"
+    }
   }
 }

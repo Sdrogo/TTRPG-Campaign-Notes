@@ -713,8 +713,11 @@ on `main`.
   `4797859660e2` applied to the staging DB by the product owner
   (2026-10-27); it must reach production before the next release. PR #249 merged into staging
   2026-10-27. **46_2 (live push, SSE) built**: broker, `/events` stream,
-  Caddyfile route without compression; no migration. Next: 46_3 (page),
-  46_4 (live client).
+  Caddyfile route without compression; no migration. PR #250 merged into
+  staging 2026-10-27. **46_3 (page) built**: `/rooms/:roomId/session-zero`,
+  entries in the Room Index and the Room title menu, post-its, columns,
+  timer, rounds, drag to promote or move, strings in 12 languages; no
+  migration. Next: 46_4 (live client).
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product
