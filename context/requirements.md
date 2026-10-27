@@ -4,7 +4,7 @@
 |---|---|
 | **Version** | 0.6 |
 | **Date** | 27 October 2026 |
-| **Status** | Aligned with what is built on `staging` (specs 01–45); implementation status per requirement in section 14 |
+| **Status** | Aligned with what is built and released (specs 01–45); implementation status per requirement in section 14 |
 | **Audience** | Project team and the Agents that will use this document as their base Context |
 
 **New in 0.2:** resolved Open points OQ-01…OQ-08 (now Decisions D-11…D-18); introduced the Administrator role; a Document's "fields" are now Details in the main Thread; the Glossary can be filtered by Tag; new Open points OQ-09…OQ-12.
@@ -503,7 +503,7 @@ erDiagram
 | **Added while building (0.6)** | FR-A3, FR-A4; FR-R9, FR-R10; FR-D10–D15; FR-N7; FR-M1–M9; FR-G3, FR-G4; FR-L1, FR-L2; NFR-10 |
 | **Won't (for now)** | Real-time editing of text (maps: D-36); native mobile app; login providers beyond those of FR-A1 |
 
-**Implementation status** (27 October 2026, branch `staging`; tickets in `context/feature/`, details in `progress-tracker.md`):
+**Implementation status** (27 October 2026, released to production with PR #246; tickets in `context/feature/`, details in `progress-tracker.md`):
 
 | Status | Requirements |
 |---|---|

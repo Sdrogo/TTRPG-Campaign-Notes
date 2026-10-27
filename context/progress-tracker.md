@@ -68,9 +68,11 @@ detail:
   them would reset every user's language and voice). `requirements.md`
   is titled "Ex Libris" since v0.6 (2026-10-27).
 
-- **Release state** (2026-10-27): `main` was last released with PR #239
-  (2026-10-25); what is on `staging` since is listed at the top of Next Up.
-  Features 01 to 45 are built except 27b (listed under Next Up); 23c, 25
+- **Release state** (2026-10-27): everything on `staging` is released to
+  `main` with release PR #246 (landing, Demo and tour, back fixes,
+  dependency bump, compact Room setup and Document form, and these docs;
+  conflicts with Dependabot bumps on `main` fixed by #247). No migration
+  was needed: production was already at head. Features 01 to 45 are built except 27b (listed under Next Up); 23c, 25
   and 25b were dropped by the product owner.
 - **Latest work**: spec 31 (GDPR: `GET /account/export`, `DELETE /account`,
   public `/privacy` notice, PR #150, controller named in PR #152) and spec
@@ -695,10 +697,10 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-Release first: `staging` holds PRs #237 and #240–#245 (landing, Demo and
-tour, back fixes, dependency bump, compact setup and Document form), not on
-`main` yet (release PR #246, its conflicts fixed by #247). None needs a
-migration: production is at head.
+Nothing is waiting for release: `staging` and `main` match after release
+PR #246 (2026-10-27), and production's database is at head. Before the
+next release, merge `main` into `staging` first, since Dependabot PRs land
+on `main`.
 
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08). Ticket written, decisions proposed, no migration expected.
