@@ -182,8 +182,8 @@ function PublishAll() {
 
 /**
  * The Room's one Lines & Veils board: Must, Veils and Lines, whatever the
- * round; side by side when it has room for three of 220px, one under the
- * other when it hasn't (spec 46c Decision 11, `.sz-lines-veils`).
+ * round, as rows one under the other, against the Retro board's columns
+ * (spec 46c Decision 11, `.sz-lines-veils`).
  */
 function LinesVeilsBoard() {
   const { t } = useTranslation();

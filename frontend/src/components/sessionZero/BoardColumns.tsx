@@ -33,7 +33,7 @@ interface ColumnFrameProps {
   menu?: ReactNode;
   dropTarget?: boolean;
   onDrop?: (dragged: DraggedPostIt) => void;
-  /** Takes the whole width (Lines & Veils columns sit one under the other). */
+  /** A Lines & Veils row: the whole width, its band on the left (spec 46c Decision 11). */
   fill?: boolean;
   children: ReactNode;
 }
@@ -48,7 +48,7 @@ function ColumnFrame({ title, color, menu, dropTarget = false, onDrop, fill = fa
       radius="md"
       p="xs"
       w={fill ? '100%' : undefined}
-      className={fill ? 'sz-column' : 'sz-column sz-retro-column'}
+      className={fill ? 'sz-column sz-lines-veils-row' : 'sz-column sz-retro-column'}
       data-drop-over={over || undefined}
       style={
         {
@@ -266,9 +266,9 @@ function stacks(column: PostItColumn): CardStack[] {
 }
 
 /**
- * A Lines & Veils column (Must, Veils or Lines, spec 46 Decision 10), the
- * board's full width, the three one under the other, green, gold and red
- * (spec 46c Decision 5). For the Master it is a drop target: a Retro
+ * A Lines & Veils column (Must, Veils or Lines, spec 46 Decision 10), drawn
+ * as a row: the board's full width, the three one under the other, green,
+ * gold and red (spec 46c Decisions 5 and 11), its post-its side by side. For the Master it is a drop target: a Retro
  * post-it dropped here is promoted as a copy, a Lines & Veils one is moved
  * here (Decisions 2, 8 and 16); and the Master writes in it directly,
  * published at once (spec 46c Decision 6).
@@ -294,9 +294,13 @@ export function LinesVeilsColumn({ column }: { column: PostItColumn }) {
           {t('sessionZero.linesVeils.empty')}
         </Text>
       )}
-      {column.cards.map((postIt) => (
-        <PostItCard key={postIt.id} postIt={postIt} column={column} onLinesVeils />
-      ))}
+      {column.cards.length > 0 && (
+        <div className="sz-lines-veils-cards">
+          {column.cards.map((postIt) => (
+            <PostItCard key={postIt.id} postIt={postIt} column={column} onLinesVeils />
+          ))}
+        </div>
+      )}
       {manage && !adding && (
         <Button
           size="compact-sm"

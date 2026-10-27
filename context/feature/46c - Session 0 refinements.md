@@ -116,10 +116,10 @@ palette). The ticket is confirmed.
       260px, each at least 220px; when the round has more columns than fit
       at 220px, the board scrolls sideways as today. The "Add column"
       button keeps its small width at the end.
-    - Lines & Veils columns sit side by side (Must, Veils, Lines) when the
-      board is wide enough for three of 220px, and one under the other
-      when it isn't, so widening it with the handle lays them out in a
-      row.
+    - Lines & Veils alternates the layout (product owner, 2026-10-27):
+      Must, Veils and Lines are horizontal rows one under the other, each
+      with its post-its side by side, so widening the board with the
+      handle fits more post-its on a row.
     - On a phone a Retro column takes the screen's width (less the page
       margins), so one column shows at a time and the board scrolls
       sideways to the next.
@@ -177,8 +177,8 @@ palette). The ticket is confirmed.
   (`aria-valuenow` in percent, pointer events for mouse and touch, keys);
   the width in `localStorage` (wrapped in try/catch, a per-viewer
   convenience). Retro columns `flex: 1 1 0` with `min-width: 220px`
-  (phone: `calc(100vw - margins)`); Lines & Veils columns in a CSS grid
-  `repeat(auto-fit, minmax(220px, 1fr))`. `ui-context.md` documents both.
+  (phone: `calc(100vw - margins)`); Lines & Veils rows stacked, each row's
+  post-its in a CSS grid `repeat(auto-fill, minmax(200px, 1fr))`. `ui-context.md` documents both.
 
 ## Tests
 

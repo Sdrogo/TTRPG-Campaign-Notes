@@ -881,7 +881,9 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   resets, arrows/Home/End move it, the width is kept in `localStorage`.
   Retro columns share the board's width (`flex: 1 1 0`, at least 220px);
   on a phone each takes the board's whole width and the board snaps from
-  one to the next. Lines & Veils columns are a grid
-  `repeat(auto-fit, minmax(220px, 1fr))`: a row when there is room, a
-  stack when there isn't.
+  one to the next. Lines & Veils alternates the layout (product owner,
+  2026-10-27): Must, Veils and Lines are horizontal rows one under the
+  other (`.sz-lines-veils-row`, a 4px band in the column's colour on the
+  left), each with its post-its side by side in a grid
+  (`.sz-lines-veils-cards`, `repeat(auto-fill, minmax(200px, 1fr))`).
 - Screenshots: `session-zero/` in the project files.

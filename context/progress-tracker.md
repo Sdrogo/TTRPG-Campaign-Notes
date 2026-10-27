@@ -725,7 +725,9 @@ on `main`.
   written directly by the Master, post-it elevation, inline publish and
   publish-all, groups of post-its; then (Decisions 10 and 11, confirmed
   the same day) a resizable Lines & Veils board and columns that fit the
-  screen. **Migration `c3f8a1d6e9b4`**: to apply
+  screen; Lines & Veils then became horizontal rows (Must, Veils, Lines
+  stacked, post-its side by side) while Retro keeps vertical columns.
+  **Migration `c3f8a1d6e9b4`**: to apply
   to the staging DB before PR #251 merges, and to production before the
   next release (with `4797859660e2`). The live client (46_4) must handle
   the new events `group` and `reset` (re-read the board; after `reset`

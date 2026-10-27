@@ -543,8 +543,8 @@ html body[data-scroll-locked] {
 
 /* Session 0 layout (spec 46c Decisions 10 and 11): Retro columns share the
    board's width, at least 220px each, and on a phone one fills the screen
-   and the board snaps to each; Lines & Veils' columns go side by side when
-   there is room for three; the handle between the two boards resizes them,
+   and the board snaps to each; Lines & Veils are rows, one under the
+   other, their post-its side by side; the handle between the two boards resizes them,
    drawn like the Document split view's divider. */
 .sz-retro-column {
   flex: 1 1 0;
@@ -561,8 +561,18 @@ html body[data-scroll-locked] {
 }
 
 .sz-lines-veils {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+}
+/* A Lines & Veils row: its band on the left, its post-its side by side. */
+.sz-lines-veils-row {
+  border-top: 1px solid var(--border-default);
+  border-left: 4px solid var(--sz-color);
+}
+.sz-lines-veils-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--mantine-spacing-xs);
   align-items: start;
 }
