@@ -16,6 +16,11 @@ body {
   min-height: 100svh;
 }
 
+::selection {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+}
+
 /* The top bar stays pinned while the page scrolls (Andrea, 2026-10-03). It
    sits above the page's own stacking (card links, image controls) but below
    Mantine's overlays (popovers, drawers, modals: z-index 200 and up), and it
@@ -30,9 +35,239 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--bg-base);
+  background: color-mix(in srgb, var(--bg-base) 94%, transparent);
   border-bottom: 1px solid var(--border-default);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(12px);
   transition: transform 200ms ease;
+}
+
+.app-header-brand {
+  min-width: 0;
+  padding-inline: var(--mantine-spacing-sm);
+}
+
+.app-header-brand::after {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  margin: 4px auto 0;
+  background: var(--accent-primary);
+  transform: scaleX(0.35);
+  transition: transform 150ms ease;
+}
+
+.app-header-brand:hover::after,
+.app-header-brand:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* The public header reads as the cover of the archive rather than a second
+   app toolbar. It stays visible while the long landing page scrolls. */
+.landing-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--bg-base) 94%, transparent);
+  border-bottom: 1px solid var(--border-default);
+  backdrop-filter: blur(12px);
+}
+
+.landing-sections {
+  gap: 72px;
+}
+
+.landing-hero {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-height: min(760px, calc(100svh - 72px));
+  padding-block: clamp(56px, 10vw, 128px);
+  border-bottom: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.landing-hero-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+}
+
+.landing-wordmark {
+  color: var(--text-muted);
+  letter-spacing: 0.16em;
+}
+
+.landing-hero-title {
+  max-width: 820px;
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.landing-hero-mark {
+  position: absolute;
+  right: clamp(-120px, -6vw, -48px);
+  width: clamp(280px, 42vw, 620px);
+  height: clamp(280px, 42vw, 620px);
+  opacity: 0.055;
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+
+.landing-editorial-section {
+  display: grid;
+  gap: var(--mantine-spacing-xl);
+}
+
+.landing-section-heading {
+  border-top: 1px solid var(--border-default);
+  padding-top: var(--mantine-spacing-md);
+}
+
+.landing-section-index,
+.landing-feature-number {
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+  font-size: var(--mantine-font-size-xs);
+  letter-spacing: 0.12em;
+}
+
+.landing-feature-list {
+  border-top: 1px solid var(--border-default);
+}
+
+.landing-feature {
+  display: grid;
+  grid-template-columns: 36px 36px minmax(0, 1fr);
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+  padding-block: var(--mantine-spacing-lg);
+  border-bottom: 1px solid var(--border-default);
+  transition:
+    background-color 150ms ease,
+    padding-inline 150ms ease;
+}
+
+.landing-feature:hover {
+  padding-inline: var(--mantine-spacing-sm);
+  background: var(--bg-surface);
+}
+
+.landing-steps {
+  padding: var(--mantine-spacing-xl);
+  background: var(--bg-surface);
+  border-block: 1px solid var(--border-default);
+}
+
+.landing-step-list {
+  list-style: none;
+  border-top: 1px solid var(--border-default);
+  margin-top: var(--mantine-spacing-xl);
+}
+
+.landing-step {
+  min-height: 180px;
+  padding: var(--mantine-spacing-lg);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.landing-step-number {
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.landing-sign-in {
+  display: grid;
+  gap: var(--mantine-spacing-xl);
+  align-items: center;
+  padding-block: var(--mantine-spacing-xl);
+  border-block: 1px solid var(--border-default);
+}
+
+.landing-footer {
+  padding-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--border-default);
+}
+
+.rooms-heading {
+  padding-bottom: var(--mantine-spacing-md);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.room-card {
+  overflow: hidden;
+  background: var(--bg-surface);
+  border-left: 2px solid var(--border-default);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 12%);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.room-card:hover {
+  transform: translateY(-3px);
+  border-left-color: var(--accent-primary);
+  box-shadow: 0 18px 42px rgb(0 0 0 / 22%);
+}
+
+.room-card:not([data-has-image])::after {
+  content: '';
+  position: absolute;
+  right: var(--mantine-spacing-md);
+  bottom: var(--mantine-spacing-md);
+  width: 36px;
+  height: 36px;
+  border-right: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+  pointer-events: none;
+}
+
+@media (min-width: 48em) {
+  .landing-sections {
+    gap: 104px;
+  }
+
+  .landing-editorial-section {
+    grid-template-columns: minmax(180px, 0.7fr) minmax(0, 2fr);
+  }
+
+  .landing-section-heading {
+    position: sticky;
+    top: 88px;
+    align-self: start;
+  }
+
+  .landing-step {
+    border-right: 1px solid var(--border-default);
+    border-bottom: 0;
+  }
+
+  .landing-step:last-child {
+    border-right: 0;
+  }
+
+  .landing-sign-in {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.65fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-header-brand::after,
+  .landing-feature,
+  .room-card {
+    transition: none;
+  }
+
+  .room-card:hover {
+    transform: none;
+  }
 }
 
 .app-header[data-hidden] {

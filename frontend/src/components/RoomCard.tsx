@@ -57,6 +57,8 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
       radius="md"
       pos="relative"
       mih={imageUrl ? CARD_WITH_IMAGE_MIN_HEIGHT : undefined}
+      className="room-card"
+      data-has-image={imageUrl ? true : undefined}
     >
       {imageUrl && (
         <Box pos="absolute" top={0} right={0} bottom={0} w="50%">

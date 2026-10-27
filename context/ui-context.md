@@ -10,6 +10,14 @@ closer to a grimoire or a vampire's study than a generic dark IDE
 theme — restrained ornamentation (thin borders, subtle glow on
 accent elements), never gaudy or neon.
 
+The public landing page and primary collection pages express that direction
+through an editorial "campaign archive" composition: large EB Garamond display
+type, ruled sections, small monospaced folio numbers, asymmetric whitespace and
+quiet solid surfaces. Avoid generic equal-card marketing grids, decorative
+gradients, excessive pills and stock fantasy imagery; hierarchy should come
+from typography, spacing and fine borders. Cards may lift subtly on hover, but
+the red accent remains a narrow interactive signal rather than decoration.
+
 ## Colors
 
 Tokens are defined as CSS custom properties and also registered as
@@ -840,4 +848,3 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   page dims at 40%. The banner gains "Restart tour" (default). Landing
   feature cards gain a `sm` "See it in the demo" anchor.
 - Screenshots: `demo/` (and `demo/tour/`) in the project files.
-

@@ -740,6 +740,14 @@ None. The 15 questions open at the time were closed with the product owner
 on 2026-10-03 (`requirements.md` v0.5); v0.6 (2026-10-27) brought the spec
 in line with what was built since.
 
+## Latest UI refinement
+
+- Refined the shared visual language around an editorial "campaign archive":
+  the landing page now uses an asymmetric, type-led composition with ruled
+  feature and process sections, while the app header and Room collection use
+  quieter surfaces, stronger hierarchy and restrained tactile feedback. All
+  routes, actions, localized copy and dark-theme tokens remain unchanged.
+
 ## Architecture Decisions
 
 Full reasoning lives in `architecture.md`; this is the index.
