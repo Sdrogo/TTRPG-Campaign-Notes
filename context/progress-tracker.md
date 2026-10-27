@@ -709,8 +709,9 @@ on `main`.
   drag), reactions, a shared non-blocking timer, Session 0.5 rounds and
   live push updates (SSE, the app's first). One migration.
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
-  (the DDI's six sections), not shown to invitees before they join
-  (product owner, 2026-10-27). Ticket not written yet.
+  (the DDI's six sections). If a Room has one, its invitation opens the
+  DDI read-only with an "accept and join" button at the end (product
+  owner, 2026-10-27). Ticket not written yet.
 - **Room landing page**: product owner's idea (2026-10-27), separate
   ticket, not written yet.
 - **27b, PDF of one Document**: next to build (product owner,

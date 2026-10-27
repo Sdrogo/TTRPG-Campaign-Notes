@@ -107,8 +107,10 @@ those items stay out entirely). The ticket is confirmed.
     Session 0.5. The **Dichiarazione d'Intenti** (DDI) is ticket 46b: a
     suggested, editable Document template (the six sections of the DDI
     checklist as a starting structure the Master can change freely),
-    replacing the Table Pact idea; it is not shown to invitees before they
-    join (product owner, 2026-10-27).
+    replacing the Table Pact idea. When a Room has a DDI, its invitation
+    opens that Document read-only, with a button at the end to accept and
+    join the Room (product owner, 2026-10-27, replacing an earlier "not
+    shown to invitees").
 16. **Session 0.5 rounds** (product owner): the Master starts a new round
     ("Avvia Sessione 0.5", with an optional title such as "Fine arco 1").
     The current Retro round closes and stays readable, read-only, from a
