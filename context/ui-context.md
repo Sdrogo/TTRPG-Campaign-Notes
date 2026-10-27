@@ -240,16 +240,17 @@ other icon set.
   16px `UserAvatar`. "Interpretato da" on the detail page is the first row
   of the info panel, above the Owners (see Document detail); the Document card adds a "Played by" line
   with a 20px avatar above the Owners line.
-- **Room view**: left sidebar for navigation (Tags, Glossary, Members),
-  center column for the Document list or an open Document, right
-  panel (collapsible) for the Document's Thread when a Document is
-  open — so reading a Document and following its discussion never
-  requires a full page navigation.
+- **Room view**: the Room page shows the maps row and the Documents
+  grouped by Main Tag; navigation is the Room Index tab on the left edge
+  (spec 44) and the header burger (spec 45). A Document opens on its own
+  page, with its Comments under it; a second Document or a map can open
+  beside it in the split view (spec 37). *(The original plan of a left
+  sidebar plus a right Thread panel was never built.)*
 - **Document detail**: description at the top, Tags and Owner(s)
-  directly under the title, Details rendered as a distinct,
-  visually lighter list of titled entries above the general Comment
-  thread (Details and Comments are both Posts, but Details are
-  visually promoted so they read like structured facts, not chat).
+  directly under the title, Notes (the spec's Details) rendered as a
+  distinct, visually lighter list of titled entries above the Comment
+  thread, so they read like structured facts, not chat (Notes are not
+  Posts since spec 12; `requirements.md` D-18).
   **Images sit beside the text on big screens** (2026-09-25, spec 10,
   mirroring `DocumentCard`'s side-by-side layout): `DocumentImageGallery`
   sits on the right at 45% width from `lg`; below `lg` it stacks, image
@@ -547,16 +548,19 @@ other icon set.
 
 ## Language
 
-The UI is in **Italian and English** (spec 09; see `architecture.md` →
-UI Language). The browser locale picks the language (English for
-anything that isn't Italian), and the flag selector in the top bar
-overrides it for good. Terminology is the spec's in both languages:
-Room/Stanza, Document/Documento, Tag, Owner, Master, Player,
-Comment/Commento (English/Italian). UI strings quoted in this file are the
+The UI is in **twelve languages** (spec 09, then 34: English, Italian,
+German, Spanish, French, Dutch, Polish, European Portuguese, Russian,
+Japanese, Korean, Simplified Chinese; see `architecture.md` → UI
+Language). The browser locale picks the language (English for anything
+unsupported), and the flag selector in the top bar overrides it for
+good. Terminology is the spec's in every language (shared
+terms in `context/i18n-glossary.md`), e.g. Room/Stanza,
+Document/Documento, Tag, Owner, Master, Player, Comment/Commento
+(English/Italian). UI strings quoted in this file are the
 English ones; the Italian text is in `it.json` under the same keys. Roles
 and "Owner" stay English in Italian too, as
-before. The sign-in screen has no top bar, so a signed-out visitor
-sees the browser's language.
+before. The landing page (spec 45) carries the language selector too,
+so a signed-out visitor can switch before signing in.
 
 ## Icons
 

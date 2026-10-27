@@ -24,52 +24,59 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
 1. A signed‑in user can create a Room and invite others, who join
    with a role (Master or Player) that applies only to that Room.
 2. Members can create Documents (places, NPCs, events, artifacts,
-   or anything else — Documents are not rigidly typed, see D-05)
-   and organize them with Tags and a Glossary.
-3. Members can discuss and enrich a Document through a thread of
-   Comments and titled Details, each with its own visibility.
-4. Every piece of content (Document, Detail, Comment, Glossary
-   entry) can be hidden from specific members; visibility is
-   enforced server‑side on every read path, not just in the UI
-   (NFR-01, VR-07).
-5. A Room's content can be exported as structured context, scoped
-   to the visibility of the requesting user, for consumption by an
-   AI Agent (FR-G1, FR-G2).
+   or anything else — Documents are not rigidly typed, see D-05),
+   organize them with Tags and find them through the Room Index and
+   full‑text search.
+3. Members can discuss and enrich a Document through Notes (titled
+   Details) and a thread of Comments, each with its own visibility.
+4. Every piece of content (Document, Note, Comment, map) can be hidden
+   from specific members; visibility is enforced server‑side on every
+   read path, not just in the UI (NFR-01, VR-07).
+5. Members can see how the campaign's Documents relate: live mention
+   maps, hand‑drawn relationship maps and geographic maps (D-30…D-36).
+6. A Room's content can be exported (JSON, Markdown, a printable PDF
+   manual) scoped to the visibility of the requesting user, for people
+   and for AI Agents (FR-G1, FR-G3).
 
 ## Core User Flow
 
-1. User signs in with Google (FR-A1), or with Discord or GitHub
-   (spec 08). Their provider name and picture
-   become their display name and avatar by default (copied once, then
-   theirs to change or remove), and they can adjust their profile on
-   the Account page: display name, avatar, pronouns and a short
-   description (FR-A2). The display name is shown instead of
-   their email wherever the app names them.
+1. A visitor lands on the public landing page, can try the read‑only
+   Demo, and signs in with Google (FR-A1), Discord or GitHub. Their
+   provider name and picture become their display name and avatar by
+   default (copied once, then theirs to change or remove), and they can
+   adjust their profile on the Account page: display name, avatar,
+   pronouns and a short description (FR-A2). The display name is shown
+   instead of their email wherever the app names them.
 2. User creates a Room (becomes Administrator + Master, UC-02) or
    joins one via an invite link (becomes Player by default, UC-04).
 3. A member creates a Document (a place, an NPC, an event, …),
-   gives it a name, description, image and Tags, and sets its
-   visibility (UC-06).
-4. Other members browse Documents by Tag or search, and read the
-   ones visible to them (UC-09, UC-15).
-5. Members add Comments and Details to a Document's thread, each
+   gives it a name, subtitle, description, images and Tags, and sets
+   its visibility (UC-06). Names of other Documents are linked as
+   mentions on save.
+4. Other members browse Documents by Tag, through the Room Index or
+   search, and read the ones visible to them (UC-09, UC-15).
+5. Members add Comments (and Owners add Notes) to a Document, each
    with its own visibility (UC-11, UC-18).
 6. The Master reveals previously hidden content when the story
-   calls for it (UC-13).
-7. An Owner of a Document may promote a thread contribution into
-   the Document's own description (UC-16).
-8. An Agent, acting on behalf of a specific user, requests a
-   context export and receives only what that user can see (UC-17).
+   calls for it (UC-13), checking first with "View as" (UC-14).
+7. Members draw maps of the campaign: a Document's mention map, free
+   relationship boards, geographic maps (UC-26…UC-29).
+8. A member exports the Room as a PDF manual, JSON or Markdown, or a
+   user (or an Agent acting for them) uses the export as context
+   (UC-17, UC-31).
 
 ## Features
 
 ### Landing page and Demo (spec 45, built)
-- A visitor without a session opening the site sees a landing page that
-  explains Ex Libris, with sign-in and a **Demo**: the real app pages over
-  a sample Room kept in the browser (no account, nothing saved), with a
-  guided tour of the main features. Signed-in users see it too (Rooms
-  list moves to `/rooms`), and a header burger menu jumps between the
-  landing page, the Rooms page and each Room.
+- `/` is a public landing page for everyone: what Ex Libris is, six
+  feature cards, sign‑in for visitors, "Open my Rooms" once signed in.
+  The Rooms list is at `/rooms`, and a header burger menu jumps between
+  the landing page, the Rooms page and each Room (FR-L1).
+- A **Demo** shows the real app pages over a sample Room kept in the
+  browser ("The Lost Lighthouse", English or Italian): no account,
+  nothing reaches the backend, every write is refused. A banner switches
+  the viewer between the Master and two Players, and a 13‑step guided
+  tour points at the main features (FR-L2, D-44).
 
 ### Authentication & Account
 - Google sign‑in (FR-A1), plus Discord and GitHub
@@ -90,121 +97,185 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   "Name (email)", since names aren't unique.
 
 ### Language
-- The UI is in Italian and English (spec 09, 2026-09-24). It starts in the
-  browser's language (English for any other locale), and a flag
-  selector just before the account avatar switches it. The choice is
-  remembered on that browser.
+- The UI is in twelve languages (D-42, NFR-09): English and Italian,
+  plus German, Spanish, French, Dutch, Polish, European Portuguese,
+  Russian, Japanese, Korean and Simplified Chinese, marked beta until a
+  native speaker reviews them. It starts in the browser's language
+  (English for any other locale), and a flag selector before the
+  account avatar switches it; the choice is remembered on that browser.
+  The API's error messages follow the same choice.
 - Every UI string lives in a resource file per language, so adding a
-  language means adding a file (plus its flag).
+  language means adding a file (plus its flag); terms shared across
+  languages are in `context/i18n-glossary.md`.
+
+### Account and personal data (spec 31)
+- From the Account page a user downloads all their personal data as a
+  file and can delete their account: permanent and immediate; content
+  written in shared Rooms stays, shown as "Unknown user" (FR-A3, FR-A4,
+  D-41). A public `/privacy` notice is reachable without signing in.
+  The legal review of that notice and the processing agreements with
+  Supabase, OVHcloud and Vercel are owed by the product owner.
 
 ### Rooms
-- Create / edit / archive / delete a Room (FR-R1).
-- Invite via link or code, with expiry and revocation (FR-R2, FR-R3).
+- Create / edit / archive / delete a Room (FR-R1), with an optional
+  Room image set by an Administrator (FR-R9, spec 26).
+- Invite via link or code, with expiry and revocation (FR-R2, FR-R3);
+  invite a Friend directly (FR-F5).
 - Per‑Room roles: Administrator, Master, Player — a role is scoped
   to one Room, not global to the user (D-06). Administrator is a
   third, stackable role (assignable to multiple users) that manages
   Room membership and settings; Master owns the content (D-11,
-  OQ-09). The Room creator starts as both.
-- Manage members and roles; designate a new Master or Administrator
-  (FR-R4, FR-R5). The last Administrator cannot leave without
-  naming a successor (D-16, FR-R7).
+  D-28). The Room creator starts as both. Several Masters are allowed.
+- Manage members and roles on the Room setup page; designate a new
+  Master or Administrator (FR-R4, FR-R5). The last Administrator or
+  Master cannot leave without naming a successor (D-16, D-29, FR-R7).
 - A departing/removed member's content stays, unless deleted;
   Document ownership they held is reassignable (D-15, FR-R8).
+- The Master can duplicate a Room from the Room card's menu: setup,
+  Tags, Documents with Notes and images, and maps are copied; Comments,
+  Attachments and members are not (FR-R10, specs 33, 40).
 
 ### Documents
-- CRUD with name, image, description (rich text/Markdown), Tags
-  (FR-D1). No rigid "type" field — types are just Tags (D-05). An
-  Owner can also delete a Document outright (behind a confirmation
-  modal, 2026-09-25), taking its Comments, images and Tag links with
-  it.
+- CRUD with name, optional subtitle, up to 20 images (one favorite),
+  description (Markdown), Tags (FR-D1, FR-D10). No rigid "type" field —
+  types are just Tags (D-05). An Owner can delete a Document behind a
+  confirmation.
 - Ownership model: creator is Owner by default, Master is always an
-  implicit Owner, Owners can be added/removed (D-12, FR-D2).
-- Only an Owner edits the description; everyone else contributes
-  via the thread (D-03).
-- Details: titled sub‑descriptions posted to the Document's main
-  thread (e.g. "Distinguishing marks: a wooden leg that creaks with
-  every step") — the mechanism for arbitrary extra information, in
-  place of custom fields (D-18, FR-D3).
-- Cross‑Document links via mentions, with backlinks (FR-D4).
-- Version history with restore (FR-D5).
-- Per‑Room toggle for whether Players can create Documents,
-  default on (D-13, FR-D7).
+  implicit Owner, Owners can be added/removed (D-12, FR-D2). Only an
+  Owner edits the description; everyone else contributes via Comments
+  (D-03).
+- **Notes** (the spec's Details): titled sub‑descriptions under the
+  description, managed by the Owners and the Master, each with its own
+  visibility, no replies (D-18, D-19, FR-D3). A Note can be flagged as a
+  **Relational link**, the only source of a mention map's relations
+  (D-33, spec 41).
+- Mentions `#Document` with backlinks ("Mentioned in", FR-D4); names
+  are linked automatically on save and "Generate mentions" links them in
+  existing text (D-34, spec 39); a mention shows the Document's card on
+  hover (spec 32); a Document or map opens side by side in a split view
+  (spec 37).
+- One version history per Document (name, description, every Note)
+  with restore (FR-D5, specs 24, 24b).
+- PDF Attachments (FR-D8, spec 16) and Characters with Posts written
+  in character (FR-D9, FR-T11, spec 17).
+- Image search over free libraries (Openverse) and read aloud with the
+  browser's voices (FR-D13, FR-D14, specs 29, 30, 30b).
+- Per‑Room toggle for whether Players can create Documents, default
+  on (D-13, FR-D7).
+- **Not built**: draft/published status (FR-D6).
 
-### Tags, Glossary & Navigation
-- Room‑scoped Tags with optional category; default "Main" Tags (NPC,
-  PC, Place, Event, Artifact) created with the Room (D-14, FR-N1),
-  used to group the Documents list (spec `10 - UX Refinment`).
+### Tags, Room Index & Search
+- Room‑scoped Tags with optional category; default Tags created with
+  the Room (D-14, FR-N1). An Administrator picks and orders the **Main
+  Tags**, which group the Documents list and the Room Index.
 - Filter Documents by one or more Tags (FR-N2).
-- Glossary of terms, filterable by Tag, linked to related Documents
-  (FR-N3, FR-N4).
-- Full‑text search across Documents, Posts and Glossary, always
-  visibility‑filtered (FR-N5).
+- **Room Index** (spec 44): a tab on the left edge of every Room page
+  opens a small card with links to each Main Tag's Documents and to the
+  Room's maps (FR-N7).
+- Full‑text search across Documents, Notes, Comments and Tags, always
+  visibility‑filtered, also from `Ctrl+K` (FR-N5, spec 21).
+- **Not built**: the Glossary as its own entity of terms and
+  definitions (FR-N3, FR-N4, FR-N6); the Room Index is the navigation
+  that exists.
 
 ### Threads
-- Every Document has one main thread; Comments and Details are
-  posts within it, with nested replies (FR-T1).
+- Every Document has one main thread of Comments with nested replies,
+  limited indentation and collapsible branches (FR-T1, FR-T2, FR-T4);
+  unread replies are marked (spec 19b).
 - A reply is never more visible than its parent post (D-17, FR-V6).
 - Edit/delete own posts; Master can moderate (FR-T5).
-- Mentions, reactions, pinning, marking resolved (FR-T6, FR-T7).
-- Promote a post/Detail into the Document's description or into a
-  new Document (FR-T8).
+- @member mentions, reactions, pinning, marking resolved (FR-T6,
+  FR-T7, spec 19c); images on Comments.
+- Promote a Comment into the Document's description or into a new
+  Document (FR-T8).
+- **Not built**: paginated loading (FR-T3, parked) and general
+  notifications (FR-T9; only the "Revealed" marks exist).
 
 ### Visibility
 - Levels: Room (all members), Master‑only, Private (author/Owner +
-  Master), Selective (explicit user list) — section 8 of the spec.
-- Applies to a Document, a block within it, and any post (FR-V1).
+  Master), Selective (explicit user list) — section 8 of the spec. A
+  Room sets the default level for new content (VR-05).
+- Applies to Documents, Notes, Comments and maps (FR-V1, VR-14).
 - Master always sees everything in their Room (D-01, VR-01).
 - A Player controls the visibility of their own contributions
   relative to other Players (D-08, VR-02).
-- "Reveal" action widens visibility and is audit‑logged (FR-V2).
-- Enforced server‑side on every read path — lists, search, tag
-  filters, glossary, counts, backlinks, exports, API (FR-V4, VR-07).
+- **Reveal** widens visibility in one step; the members who gain the
+  content see it marked "Revealed" and a counter on the header avatar
+  (FR-V2, spec 22). The visibility history is readable (FR-V5).
+- **View as**: the Master previews the Room exactly as one member sees
+  it (FR-V3, spec 22b).
+- Enforced server‑side on every read path — lists, search, Tag
+  filters, counts, backlinks, maps, history, exports (FR-V4, VR-07).
+- **Not built**: sealed content hidden from the Master too (VR-09).
 
-### Agent Integration
+### Maps (specs 28, 36, 38, 41–43)
+- **Free maps** (relationship maps): boards of Document cards (the
+  Document's image as background, subtitle as caption), text cards,
+  groups and labeled relations, with a color palette, strike‑through and
+  Master‑only items. A relation belongs to its map only (FR-M1, FR-M2,
+  D-30).
+- **Mention maps**: a Document's live map of the Documents it mentions
+  and that mention it, depth 0–3, drawn under its images; full‑screen
+  page to arrange cards, copy as a free map (FR-M3, D-31).
+- **Geographic maps**: a plane with a background image, areas, pins
+  bound to Documents and labeled links; reading mode opens a Document
+  beside the map; JSON import with a preview report, and export
+  (FR-M4, FR-M5, D-32, specs 38, 38b).
+- A map can be linked to a Document and shown on its page (FR-M6); the
+  Room page shows a row of map cards that an Administrator can place
+  among the Main Tag groups.
+- A map can be unlocked so Players edit it (FR-M7, D-35); saves are
+  sent change by change and an open map refreshes every 5 seconds
+  (FR-M8, D-36). Maps work on phones (pinch zoom), but are edited from
+  a larger screen.
+
+### Export, Import and Agent Integration
 - Structured Room export (JSON/Markdown) with stable IDs, Tags,
-  Document links and thread structure (FR-G1). One Document can be
-  exported on its own in the same format, and one or more Documents
-  (or a whole Room export) imported back from a JSON or Markdown file,
-  copying or replacing the information only: no Comments, Owners,
-  grants or PDF Attachments (spec 27).
-- API access scoped to the requesting user's own visibility — an
-  Agent never sees more than the user it acts for (FR-G2, I-01).
-  **Not built**: spec 23c (Agent access tokens) was dropped by the product
-  owner on 2026-10-06; the per-user export of FR-G1 is the only
-  Agent-facing surface. `requirements.md` still lists FR-G2, since it is
-  protected: marking it dropped there needs the product owner's go-ahead.
+  Document links, Notes and thread structure (FR-G1, spec 23). One
+  Document can be exported on its own in the same format (spec 27).
+- **Room PDF**: the Room laid out like a game manual, in four styles
+  (Gothic, Modern, Print, Parchment), A4 or Letter, built as a
+  background job (FR-G3, specs 23b, 35). The PDF of one Document (spec
+  27b) is specified, not built yet.
+- Import one or more Documents, or a whole Room export, from JSON or
+  Markdown, copying or replacing, with a preview first (FR-G4, spec 27).
+  Maps travel in the Room's JSON export and import (spec 40).
+- Everything exported is only what the requester sees; an Agent uses
+  that export. **Dropped**: direct API access with personal tokens for
+  Agents (FR-G2, spec 23c, D-45).
 
 ## Scope
 
 ### In Scope
 - OAuth authentication: Google (preferred), Discord, GitHub.
-- A per‑user profile (display name, avatar, pronouns, description)
-  managed on the Account page.
-- Rooms, per‑Room roles (Administrator, Master, Player) and invites.
-- Documents with Tags, Glossary, and version history.
-- Threaded Comments and Details per Document.
-- Multi‑level, server‑enforced visibility, including the Reveal
-  action and an audit log.
-- Structured export / API for Agent consumption, scoped per user.
-- Mobile‑usable web UI.
-- UI in Italian and English, chosen by browser locale or flag selector.
+- Landing page, read‑only Demo and guided tour.
+- A per‑user profile managed on the Account page, personal data
+  download and account deletion.
+- Rooms, per‑Room roles (Administrator, Master, Player), invites,
+  Friends, Room duplication.
+- Documents with subtitle, images, Notes, Tags, mentions, Attachments,
+  Characters and version history.
+- Threaded Comments per Document.
+- Multi‑level, server‑enforced visibility, including Reveal, "View as"
+  and an audit log.
+- Free, mention and geographic maps.
+- Export (JSON, Markdown, PDF) and import, scoped per user.
+- Mobile‑usable web UI in twelve languages.
 
 ### Out of Scope (for now)
-- Real‑time collaborative editing (D-04) — concurrent contribution
-  is fine, live co‑editing is not.
-- Game‑system mechanics: character sheets, dice rolling, combat,
-  maps.
+- Real‑time collaborative editing of text (D-04): concurrent
+  contribution is fine, live co‑editing is not. Maps only refresh
+  every few seconds (D-36).
+- Game‑system mechanics: character sheets (beyond a PDF Attachment),
+  dice rolling, combat, battle maps.
 - Native mobile apps.
-- Email/password or magic-link login; providers beyond the five above.
-- Changing the login email or deleting the account from inside the
-  app — the email comes from the account and the Account page
-  only shows it.
-- Fully sealed content hidden even from the Master (VR-09) — future
-  evolution, not prioritized.
-- Localized backend messages (API error texts are still Italian; a
-  separate task, see `architecture.md` → UI Language), languages
-  beyond Italian and English, and translating user content (Documents,
-  Comments, Tag names).
+- Email/password or magic-link login; providers beyond the three above.
+- Changing the login email from inside the app.
+- Direct API access for Agents (FR-G2, dropped).
+- Translating user content (Documents, Notes, Comments, Tag names).
+- Not built, still in the spec: Glossary entries (FR-N3/N4), draft
+  status (FR-D6), notifications (FR-T9), sealed content (VR-09); see
+  `requirements.md` §14.
 
 ## Success Criteria
 
@@ -212,12 +283,11 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
    that user joins as a Player while the creator is Administrator
    and Master (UC-01–UC-04).
 2. A Player can create a Document, and a different Player cannot
-   edit its description but can add a Comment or a Detail with
-   independently chosen visibility (D-03, D-08, UC-06, UC-07,
-   UC-11, UC-18).
+   edit its description but can add a Comment with independently
+   chosen visibility (D-03, D-08, UC-06, UC-07, UC-11).
 3. Content set to "Master‑only" is invisible to Players in every
-   list, search result and export until the Master reveals it, and
-   that action is recorded (UC-13, VR-06, VR-07).
+   list, search result, map and export until the Master reveals it,
+   and that action is recorded (UC-13, VR-06, VR-07, VR-14).
 4. A reply can never be set to a wider visibility than its parent
    post (D-17, VR-04) — enforced, not just documented.
 5. Removing or leaving a member preserves their existing content
@@ -225,4 +295,6 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
    leaving a Room without a Master or without an Administrator
    (D-15, D-16, UC-19).
 6. A context export for a given user contains only Documents,
-   Details and Comments that user is allowed to see (UC-17).
+   Notes and Comments that user is allowed to see (UC-17).
+7. A visitor can try the Demo without an account, and nothing they do
+   in it reaches the server (UC-33).

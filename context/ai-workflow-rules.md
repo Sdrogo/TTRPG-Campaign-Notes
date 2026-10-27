@@ -69,7 +69,9 @@ Do not modify the following unless explicitly instructed:
   edit in place.
 - `context/requirements.md` — this is the negotiated product spec; a
   code-driven change to it (rather than a product conversation) is
-  out of bounds. Propose an addition to Open Questions instead.
+  out of bounds. Propose an addition to Open Questions instead. It is
+  changed only when the product owner asks (last: v0.6, 2026-10-27,
+  aligned with everything built up to spec 45).
 - Any third-party library internals (`node_modules`, installed
   Python packages).
 - Supabase-generated migration/type files — regenerate, don't hand-edit.
