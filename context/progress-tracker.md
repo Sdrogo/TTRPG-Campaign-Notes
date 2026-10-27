@@ -753,12 +753,13 @@ on `main`.
   (`alembic upgrade head` with `.env.staging`, staging = `d4a7e2c9f1b3`,
   head) and **to production** the same day (`alembic upgrade head` with
   `.env`, production = `d4a7e2c9f1b3`, head).
-- **47, Modular Session 0** (ticket written 2026-10-27, awaiting the
-  product owner's answers Q1-Q7): each session becomes a chain of modules
+- **47, Modular Session 0** (ticket written 2026-10-27; Q1-Q7 answered
+  the same day, the six DDI sections still to receive): each session becomes a chain of modules
   the Master composes, reorders and advances with "Avanti" (Retro, Lines &
   Veils, DDI with per-Player acceptance, Stars and Wishes, Questions whose
-  answers become Player-owned PC Documents). Absorbs 46b's DDI template;
-  46b's invitation flow stays separate unless Q1 says otherwise. Build in
+  answers become Player-owned PC Documents, plus extra Documents such as
+  an NPC; answers revealed by the Master). Absorbs 46b's DDI template;
+  46b's invitation flow stays a separate ticket. Build in
   47_1 (chain + Stars and Wishes), 47_2 (Questions), 47_3 (DDI), one
   migration each.
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template

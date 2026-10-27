@@ -28,10 +28,11 @@
 - `requirements.md` has no requirement for Session 0; this ticket adds none
   until the product owner asks.
 
-## Decisions (proposed by Claude, 2026-10-27, to confirm)
+## Decisions
 
-Q1-Q7 at the end are the points the product owner must answer; every other
-Decision is a default to confirm or amend.
+Proposed by Claude on 2026-10-27; the product owner answered Q1-Q7 the same
+day (see "Answers" below) and the Decisions now follow those answers. Still
+missing: the six DDI sections (Q1).
 
 1. **Session = chain of modules.** Every session (round) has an ordered list
    of modules. The same module type can appear more than once (e.g. two
@@ -95,27 +96,43 @@ Decision is a default to confirm or amend.
    - **Description** (any number: the description is built as one
      section per question, the question as a heading, the answer below);
    - **Note** (any number: each answer becomes a Note titled with the
-     question; the Master chooses the Note's visibility per question,
-     "Privata" by default, so a secret answer stays between the Player and
-     the Master);
+     question; Q3);
+   - **New Document** (up to 5 per module; Q6): the answer becomes a
+     separate Document with a Tag the Master picks for that question
+     (e.g. "Nomina un PNG legato al tuo PG" → `NPC`); the answer's first
+     line is its name, the rest its description;
    - **Not in the Document** (talk material only).
-   The module also sets the **Tag** given to the Documents (default `PC`,
-   the Room's preset Tag) and the Documents' visibility (Q3).
+   The module also sets the **Tag** given to the main Documents (default
+   `PC`, the Room's preset Tag).
 10. **Questions: answering.** Each Player answers in a form on the module.
     Answers are saved as they type (draft) and are seen by their author and
-    the Master only (Q2). Players don't see each other's answers. The
-    Master sees a table, one row per Player, with every answer and who has
-    finished. Plain text, up to 2000 characters per answer (the description
+    the Master only. Players don't see each other's answers. The Master
+    sees a table, one row per Player, with every answer and who has
+    finished. When the round of answers is over, the Master can **"Rivela
+    le risposte"**: every member who has reached the module then sees
+    everyone's answers, read-only (Q2). The Master can hide them again.
+    Revealing changes nothing in the Documents already created. Plain text, up to 2000 characters per answer (the description
     and Notes take Markdown later, once they are a Document).
 11. **Questions: creating the Documents.** A Player who has answered the
     Name question gets **"Crea il mio Documento"**; the Master also has
     **"Crea i Documenti di tutti"** (only for Players who answered the
     Name and have none yet). Creating builds a normal Document:
     name/subtitle/description/Notes from the mapping (Decision 9), the
-    module's Tag, the Player as **Owner** (D-12) and as its **Character
-    player** (D-23). Proposed: it works even when the Room turned off
-    Document creation by Players (D-13), since the Master set up the
-    module; this is an exception to D-13 (Q7).
+    module's Tag, visibility **Pubblico** (Q3), the Player as **Owner**
+    (D-12) and as its **Character player** (D-23). Notes are created
+    Public too, except those the Player marked **"Privata"** next to the
+    answer in the form (Private = the Document's Owners and the Master,
+    D-19); as Owner the Player can change any of them later (Q3). The same
+    action creates the answer's extra Documents ("New Document" questions):
+    Public, the module's chosen Tag for that question, the Player as Owner,
+    no Character player.
+    **Creation rights (Q7):** the module has a switch, set by the Master
+    when adding it, "I Player creano i propri Documenti anche se la Room
+    non lo permette", **on by default**. On: a Player creates their own
+    Documents even in a Room where Document creation by Players is off
+    (D-13), as an exception the Master chose. Off: the Room's D-13 setting
+    decides; with Player creation off, only the Master's "Crea i Documenti
+    di tutti" works (the Player still becomes Owner and Character player).
     One Document per Player per Questions module (409 on a second); the
     module then shows "Apri il tuo Documento". From then on it is an
     ordinary Document: the Player edits it freely (and the Master, D-12);
@@ -129,45 +146,35 @@ Decision is a default to confirm or amend.
     chain of one Retro module, made current, that takes over its columns,
     groups and post-its, so nothing changes on screen for a Room that
     already used Session 0.
-14. **Not in scope**: templates saved across Rooms or sessions (Q4), the
-    46b invitation flow (Q1), Questions answered by the Master, questions
-    that create more than one Document per Player (Q6), X-card and other
+14. **Not in scope**: templates saved across Rooms (Q4), the 46b
+    invitation flow (Q1, separate ticket after 47), Questions answered by
+    the Master, X-card and other
     in-play tools, a timer per module (the one shared timer stays). Not in
     Room duplication, JSON/PDF export or search, like spec 46; Questions
     answers, acceptances and Stars and Wishes post-its are in the user's
     own data export and erased with the account (spec 31).
 
-## Open questions for the product owner
+## Answers (product owner, 2026-10-27)
 
-- **Q1 - DDI sections and invitation.** What are the six sections of the
-  DDI (titles and, if you want, the one-line hint under each)? And should
-  the invitation flow of 46b (the invitee reads the DDI and accepts to
-  join) come in this ticket or stay separate? Proposed: separate, after 47.
-- **Q2 - Who sees answers.** Proposed: the author and the Master only. The
-  alternative is a per-question switch "Risposte visibili a tutti" (useful
-  for "Come vi siete conosciuti?").
-- **Q3 - Visibility of the created Documents.** Proposed: the module sets
-  it, default **Pubblico** (every member of the Room sees PCs, Notes stay
-  as set per question). Alternative: Private (Player + Master) until the
-  Player opens it up.
-- **Q4 - Templates.** Proposed for this ticket: the chain is chosen per
-  session and a new session copies the previous one. Saving named
-  templates ("Il mio template horror") reusable across Rooms would be a
-  later ticket. OK?
-- **Q5 - Players and later steps.** Proposed: Players see only steps
-  already reached (Decision 5). Alternative: the whole chain visible from
-  the start, with future steps' content still hidden.
-- **Q6 - Extra Documents.** Should a question be able to create a separate
-  Document (e.g. "Nomina un PNG legato al tuo PG" → an NPC Document owned
-  by the Player)? Proposed: not now, PC Documents only.
-- **Q7 - Exception to D-13.** A Room can turn off Document creation by
-  Players (D-13). Proposed: a Questions module still creates the Players'
-  Documents there, because the Master chose to add the module. The
-  alternative keeps D-13 strict: in such a Room only the Master's "Crea i
-  Documenti di tutti" works (the Master creates, the Player still becomes
-  Owner and Character player). If the exception is accepted, it is
-  recorded in `architecture.md` and flagged as a candidate change to
-  `requirements.md` (protected file, edited only on request).
+- **Q1 - DDI and invitation**: the 46b invitation flow stays a separate
+  ticket after 47. **Still open: the six DDI sections** (titles, and a
+  one-line hint each if wanted) for the DDI template (Decision 8). 47_3
+  can't start without them.
+- **Q2 - Who sees answers**: only the author and the Master at first; once
+  finished, the Master can reveal all answers (Decision 10).
+- **Q3 - Created Documents**: Public; Notes can be made Private by the
+  Owner (Decision 11).
+- **Q4 - Templates**: "Una nuova sessione è un'entità a sé": it sets its
+  own chain, and the previous session's chain is offered as the starting
+  template (Decision 2). Named templates across Rooms: not in this ticket.
+- **Q5 - Later steps**: Players see only steps already reached
+  (Decision 5).
+- **Q6 - Extra Documents**: yes ("Si può fare"): the "New Document"
+  question target (Decision 9).
+- **Q7 - D-13**: the Master decides per module whether to keep the Room's
+  creation rule or make the exception, exception by default (Decision 11).
+  Recorded in `architecture.md` when built, and flagged as a candidate
+  change to `requirements.md` (protected file, edited only on request).
 
 ## Design
 
@@ -177,7 +184,8 @@ Decision is a default to confirm or amend.
   - `session_zero_modules` (`id`, `room_id`, `round_id`, `kind`
     `'retro'|'lines_veils'|'ddi'|'stars_wishes'|'questions'`, `position`,
     `title` null = the kind's default name, `settings` jsonb (DDI:
-    `document_id`; Questions: `tag_id`, `visibility`), `created_at`);
+    `document_id`; Questions: `tag_id`, `answers_revealed`,
+    `players_bypass_creation_rule` default true), `created_at`);
   - `session_zero_rounds.current_module_id` (null before the session
     starts);
   - `session_zero_columns.module_id` (Retro and Stars and Wishes columns;
@@ -186,12 +194,15 @@ Decision is a default to confirm or amend.
     onto it and makes it current (Decision 13). Stars and Wishes columns
     get `kind` `'stars'|'wishes'`;
   - `session_zero_questions` (`id`, `module_id`, `position`, `body`,
-    `hint`, `target` `'name'|'subtitle'|'description'|'note'|'none'`,
-    `note_visibility`);
+    `hint`, `target`
+    `'name'|'subtitle'|'description'|'note'|'document'|'none'`, `tag_id`
+    for `'document'`);
   - `session_zero_answers` (`question_id`, `user_id`, `body`,
-    `updated_at`; PK on both), `session_zero_answer_documents`
-    (`module_id`, `user_id`, `document_id` `ON DELETE CASCADE`; PK on
-    module and user);
+    `note_private` for Note answers, `updated_at`; PK on both),
+    `session_zero_answer_documents` (`module_id`, `user_id`,
+    `document_id` `ON DELETE CASCADE`, `question_id` null = the main
+    Document, else the "New Document" question; unique on module, user
+    and question);
   - `session_zero_acceptances` (`module_id`, `user_id`, `accepted_at`,
     `document_version` the DDI's revision when accepted).
   All backend-only (RLS + deny policy), as spec 46.
@@ -206,6 +217,7 @@ Decision is a default to confirm or amend.
   `POST .../modules/current` `{module_id}`; Questions:
   `PUT .../modules/{m}/questions` (the whole list, Master),
   `PUT .../modules/{m}/answers` (the caller's own), `POST
+  .../modules/{m}/reveal` `{revealed}` (Master), `POST
   .../modules/{m}/documents` (own) and `POST .../modules/{m}/documents/all`
   (Master); DDI: `POST/DELETE .../modules/{m}/acceptance`. `GET` returns
   the chain as the caller sees it and the current module's content; other
