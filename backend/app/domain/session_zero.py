@@ -513,15 +513,19 @@ def ensure_can_place_group(
 
 
 def placed(
-    order: Sequence[uuid.UUID], item: uuid.UUID, before: uuid.UUID | None
+    order: Sequence[uuid.UUID],
+    item: uuid.UUID,
+    before: uuid.UUID | None,
+    hidden: Collection[uuid.UUID] = (),
 ) -> list[uuid.UUID]:
     """`order` with `item` put just before `before`, or last when `None`,
     taken out of where it was. 422 when `before` isn't in `order` (or is
-    `item` itself)."""
+    `item` itself), or is in `hidden`: someone else's draft, answered like
+    a missing id so its existence never leaks (Decision 1)."""
     rest = [other for other in order if other != item]
     if before is None:
         return [*rest, item]
-    if before not in rest:
+    if before not in rest or before in hidden:
         raise BadPlaceError("errors.sessionZero.badPlace")
     index = rest.index(before)
     return [*rest[:index], item, *rest[index:]]

@@ -280,6 +280,8 @@ def test_placing_puts_an_item_before_another_or_last() -> None:
         placed([a, b], a, a)
     with pytest.raises(BadPlaceError):
         placed([a, b], a, uuid.uuid4())
+    with pytest.raises(BadPlaceError):
+        placed([a, b, c], a, c, hidden={c})
 
 
 def test_the_author_edits_retro_post_its_of_the_open_round() -> None:

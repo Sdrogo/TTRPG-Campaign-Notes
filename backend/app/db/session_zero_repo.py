@@ -328,6 +328,20 @@ async def column_order(session: AsyncSession, column_id: uuid.UUID) -> list[tupl
     return [(row.id, row.is_group) for row in result]
 
 
+async def list_hidden_drafts(
+    session: AsyncSession, column_id: uuid.UUID, viewer_id: uuid.UUID
+) -> set[uuid.UUID]:
+    """The column's drafts written by anyone but `viewer_id` (Decision 1)."""
+    result = await session.execute(
+        select(SessionZeroCardRow.id).where(
+            SessionZeroCardRow.column_id == column_id,
+            SessionZeroCardRow.published_at.is_(None),
+            SessionZeroCardRow.author_id != viewer_id,
+        )
+    )
+    return set(result.scalars())
+
+
 async def next_position(session: AsyncSession, column_id: uuid.UUID) -> int:
     """The place after the column's last post-it in no group or group."""
     cards = select(func.max(SessionZeroCardRow.position)).where(

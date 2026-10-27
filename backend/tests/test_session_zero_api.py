@@ -1087,6 +1087,13 @@ async def test_members_drag_post_its_into_place(
     assert _order(moved.json()["retro"][0]) == ["Drakes", "Dragons", "Wyverns"]
     assert moved.json()["revision"] == revision
     assert _order((await _get(client, room, room.master))["retro"][0]) == ["Dragons", "Wyverns"]
+    # ...not even as where something else lands: like a missing id.
+    hidden = await place(room.master, two, column_id=want, before_id=draft)
+    assert hidden.status_code == 422
+    assert (
+        hidden.json()
+        == (await place(room.master, two, column_id=want, before_id=str(uuid.uuid4()))).json()
+    )
 
     # Someone else's post-it is the Master's to move; theirs goes to another column, last.
     assert (await place(room.player, two, column_id=want)).status_code == 403

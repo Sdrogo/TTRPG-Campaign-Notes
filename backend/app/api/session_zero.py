@@ -1216,7 +1216,10 @@ async def place_card(
             groups: set[uuid.UUID] = set()
         else:
             items = await session_zero_repo.column_order(session, target.id)
-            order = placed([item for item, _ in items], card.id, body.before_id)
+            hidden = await session_zero_repo.list_hidden_drafts(
+                session, target.id, write.viewer.user_id
+            )
+            order = placed([item for item, _ in items], card.id, body.before_id, hidden)
             groups = {item for item, is_group in items if is_group}
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
@@ -1248,10 +1251,13 @@ async def place_group(
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     group, column = await _group_or_404(session, write, group_id, locale)
     target = _column_or_404(write, body.column_id, locale)
-    items = await session_zero_repo.column_order(session, target.id)
     try:
         ensure_can_place_group(column, target, write.board.round_of(column), write.viewer.role)
-        order = placed([item for item, _ in items], group.id, body.before_id)
+        items = await session_zero_repo.column_order(session, target.id)
+        hidden = await session_zero_repo.list_hidden_drafts(
+            session, target.id, write.viewer.user_id
+        )
+        order = placed([item for item, _ in items], group.id, body.before_id, hidden)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     if target.id != column.id:
