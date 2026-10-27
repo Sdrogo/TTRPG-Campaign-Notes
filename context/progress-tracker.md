@@ -718,6 +718,12 @@ on `main`.
   entries in the Room Index and the Room title menu, post-its, columns,
   timer, rounds, drag to promote or move, strings in 12 languages; no
   migration. Next: 46_4 (live client).
+- **46c, Session 0 refinements** (ticket written 2026-10-27 from the
+  product owner's feedback on the page, awaiting confirmation): Index only
+  on the Documents page, compact timer on the title line, delete the
+  Session 0, three presets, traffic-light column colours, Lines & Veils
+  written directly, post-it elevation, inline publish and publish-all,
+  groups of post-its. One migration.
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product
