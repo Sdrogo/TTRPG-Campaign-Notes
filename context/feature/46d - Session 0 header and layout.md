@@ -17,8 +17,13 @@
   5. "Voglio che i due panel delle colonne e delle righe scrollino
      individualmente."
   6. "Voglio che le emoji delle reaction siano più grandi e visibili."
-- Frontend only: no API change, no migration. Everything else in specs 46
-  and 46c stays as decided.
+  7. "Voglio poter riordinare i post-it con un drag and drop, che ci sia una
+     animazione che mi faccia capire che sto spostando o accorpando un
+     ticket, voglio anche poter spostare i gruppi (solo master) e le colonne
+     come drag and Drop."
+- Decisions 1-6 are frontend only. Decision 7 needs an order for post-its
+  and groups, so one migration and one new route. Everything else in specs
+  46 and 46c stays as decided.
 
 ## Today
 
@@ -49,8 +54,8 @@ Sessione 0.5") suggests there is just one more.
    1", "Retro di metà campagna"...). The selector and the header show the
    name alone: the title, when there is one, replaces the default name
    instead of following it. The first session stays "Sessione 0". Same data
-   as today (the round's optional `title`), so no backend change. *Open:
-   see the question to the product owner.*
+   as today (the round's optional `title`), so no backend change. *Open
+   question Q1 below.*
 4. **One header line**: everything above the boards becomes one row, left to
    right:
    - the session selector, always shown (a compact dropdown; with one
@@ -77,6 +82,41 @@ Sessione 0.5") suggests there is just one more.
    count beside it at 13px, and the "add reaction" smiley at 20px. Only on
    Session 0 post-its (a `size` prop on the shared `ReactionChips` and
    `AddReaction`, default unchanged), so Comments keep their look.
+7. **Drag and drop to arrange the boards**, with the open session only:
+   - **Post-its**: dragged within their column to change their place, or
+     into another Retro column of the same session. Lines & Veils post-its
+     can be reordered within their row too (moving them between Must,
+     Veils and Lines exists already). *Who may move a post-it: open
+     question Q2 below; proposed default: the Master any post-it, a Player
+     their own (drafts included).*
+   - **Moving vs grouping, shown while dragging**: the post-it being dragged
+     lifts (shadow, slight tilt, the original place left as a faded
+     placeholder). Between two post-its a coloured insertion line opens a
+     gap, and the others slide apart (about 150 ms): dropping there moves
+     it. Over the middle of another post-it, that post-it gets a ring in
+     the column's colour and a small "Raggruppa" label: dropping there
+     groups them (as today, Master only). Dropping onto a group adds the
+     post-it to it. Esc or a drop outside cancels and it slides back.
+   - **Groups** (Master only): dragged by their heading, as one block,
+     within the column or into another Retro column, with the same
+     insertion line.
+   - **Columns** (Master only): dragged by their heading, sideways; the
+     others slide aside. This replaces the "move left / right" items in
+     the column ⋮ menu, which stay for keyboard use.
+   - With `prefers-reduced-motion` nothing slides or tilts: the insertion
+     line and the ring are still shown. On a phone a drag starts with a
+     long press (about 250 ms) so scrolling still works.
+   - Every move is one write; other members see it through the live
+     updates (spec 46_4), the moved item glowing.
+
+## Open questions (product owner)
+
+- **Q1 (decision 3)**: may sessions be freely named, with the name
+  replacing "Sessione 0.5 #N" (proposed), or did "più sessioni" mean
+  something else, such as a different kind of session?
+- **Q2 (decision 7)**: who may move a post-it: proposed, the Master any
+  post-it and a Player only their own; or every member any post-it; or the
+  Master only?
 
 ## Design
 
@@ -89,6 +129,20 @@ Sessione 0.5") suggests there is just one more.
   under the app header; `BoardsSplit` takes the rest (`flex: 1; min-height:
   0`), each side `overflow: auto`. CSS in `index.css` next to
   `.sz-retro-scroll`.
+- Decision 7, backend: migration adding `position` (integer) to
+  `session_zero_cards` and `session_zero_groups`, filled from today's
+  `created_at` order. In a column, ungrouped post-its and groups share one
+  order; post-its inside a group have their own. New route `PUT
+  /rooms/{id}/session-zero/columns/{column_id}/layout` with the column's
+  full order (`[{"type": "card" | "group", "id", "cards"?: [ids]}]`); an
+  item from another column of the same session moves it here. Checked in
+  `app/domain/session_zero.py` (open session, same board, rights of Q2,
+  every item listed once), bumps `revision`, pushes `card` or `group`. The
+  existing `PUT /columns/order` serves column drags.
+- Decision 7, frontend: `@dnd-kit/core` and `@dnd-kit/sortable` (pointer,
+  touch and keyboard sensors, sorting animations) replace the native HTML
+  drag used today for promote, move and group; the board answers the
+  write, with the order shown at once and put back if the write fails.
 - Strings: "Nuova sessione", "Pubblica bozze ({{count}})", "chiusa",
   "Aggiungi colonna" (exists) in 12 languages; "Avvia Sessione 0.5" and the
   closed-round sentence go if unused.
@@ -102,9 +156,18 @@ Sessione 0.5") suggests there is just one more.
   the selector lists sessions by name; a closed one carries the badge.
 - "Aggiungi colonna" is an icon button with its accessible name.
 - Comments' reactions keep the small size; post-its' use the large one.
+- Backend: layout route moves and reorders, keeps groups' post-its
+  together, refuses a closed session, another board, a missing or repeated
+  item, a Player moving someone else's post-it or any group; `revision`
+  bumps once; the migration keeps today's order.
+- Frontend: drop between post-its moves, onto one groups, onto a group
+  joins it; Esc cancels; a failed write restores the order; a Player has no
+  handle on groups and columns.
 - Visual check (screenshots): headings size, one-line header, each panel
   scrolling alone with long columns.
 
 ## Estimate
 
-Claude's build time: one session, frontend only.
+Claude's build time: one session for decisions 1-6 (frontend), one for
+decision 7 (migration, route, drag and drop). Two PRs: 46d_1 (layout) and
+46d_2 (drag and drop).

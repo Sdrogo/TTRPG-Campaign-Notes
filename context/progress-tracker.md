@@ -741,7 +741,9 @@ on `main`.
 - **46d, Session 0 header and layout** (ticket written 2026-10-27, to
   confirm): bigger column and row headings, a compact "+" to add a column,
   freely named sessions, one header line above the boards, the two panels
-  scrolling on their own, bigger reaction emoji. Frontend only, no migration.
+  scrolling on their own, bigger reaction emoji (frontend only); drag and
+  drop to reorder post-its, groups and columns (one migration, one route).
+  Open questions Q1 and Q2 below.
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product
@@ -782,7 +784,12 @@ on `main`.
 
 ## Open Questions
 
-None. The 15 questions open at the time were closed with the product owner
+- **46d Q1**: may Session 0 sessions be freely named, the name replacing
+  "Sessione 0.5 #N"? (proposed: yes)
+- **46d Q2**: who may move a post-it by drag and drop? (proposed: the
+  Master any post-it, a Player their own)
+
+Earlier: the 15 questions open at the time were closed with the product owner
 on 2026-10-03 (`requirements.md` v0.5); v0.6 (2026-10-27) brought the spec
 in line with what was built since.
 
