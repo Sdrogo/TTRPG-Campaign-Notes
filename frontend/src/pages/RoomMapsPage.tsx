@@ -1,7 +1,25 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Badge, Button, Card, Group, Loader, SimpleGrid, Stack, Text, Title } from '@mantine/core';
-import { FileArrowUpIcon, PlusIcon } from '@phosphor-icons/react';
+import {
+  Badge,
+  Box,
+  Button,
+  Card,
+  Group,
+  Loader,
+  SimpleGrid,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from '@mantine/core';
+import {
+  ArrowUpRightIcon,
+  FileArrowUpIcon,
+  GraphIcon,
+  MapTrifoldIcon,
+  PlusIcon,
+} from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useCreateMap, useMaps } from '../hooks/useMaps';
@@ -62,12 +80,19 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
 
   return (
     <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('maps.backToDocuments')} roomId={roomId}>
-      <Group justify="space-between" wrap="nowrap">
-        <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('maps.title')}
-        </Title>
+      <Group justify="space-between" align="flex-end" wrap="wrap" className="maps-page-heading">
+        <Stack gap={2}>
+          {room.data && (
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600} className="maps-page-kicker">
+              {room.data.name}
+            </Text>
+          )}
+          <Title order={1} className="maps-page-title" style={{ fontFamily: 'var(--font-display)' }}>
+            {t('maps.title')}
+          </Title>
+        </Stack>
         {canCreate && (
-          <Group gap="xs" wrap="nowrap">
+          <Group gap="xs" wrap="wrap" justify="flex-end" className="maps-page-actions">
             <Button variant="default" leftSection={<FileArrowUpIcon size={16} />} onClick={() => setImporting(true)}>
               {t('maps.import.button')}
             </Button>
@@ -79,9 +104,20 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
       </Group>
       {maps.isPending && <Loader />}
       {maps.isError && <Text c="red">{t('maps.loadError')}</Text>}
-      {maps.data?.length === 0 && <Text c="dimmed">{t('maps.empty')}</Text>}
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-        {maps.data?.map((map) => (
+      {maps.data?.length === 0 && (
+        <Card withBorder radius="md" p="xl" className="maps-empty-state">
+          <Stack align="center" gap="md">
+            <ThemeIcon variant="light" color="gray" size="xl" radius="md" aria-hidden="true">
+              <MapTrifoldIcon size={28} weight="duotone" />
+            </ThemeIcon>
+            <Text c="dimmed" ta="center">
+              {t('maps.empty')}
+            </Text>
+          </Stack>
+        </Card>
+      )}
+      <SimpleGrid cols={{ base: 1, sm: 2, xl: 3 }} spacing="lg" className="maps-page-grid">
+        {maps.data?.map((map, index) => (
           <Card
             key={map.id}
             component={Link}
@@ -89,31 +125,56 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
             state={backState}
             withBorder
             radius="md"
-            p="md"
+            p={0}
+            className="maps-page-card"
+            data-kind={map.kind}
           >
-            <Stack gap={4}>
-              <Group justify="space-between" wrap="nowrap" align="flex-start">
-                <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
-                  {map.name}
-                </Title>
-                <Group gap={4} wrap="nowrap">
-                  {map.kind === 'geographic' && (
-                    <Badge variant="light" color="gray">
-                      {t('maps.kind.geographicBadge')}
-                    </Badge>
-                  )}
+            <Box className="maps-page-card-visual" aria-hidden="true">
+              <Text className="maps-page-card-index">
+                {String(index + 1).padStart(2, '0')}
+              </Text>
+              <ThemeIcon variant="transparent" color="gray" size={64}>
+                {map.kind === 'geographic' ? (
+                  <MapTrifoldIcon size={48} weight="duotone" />
+                ) : (
+                  <GraphIcon size={48} weight="duotone" />
+                )}
+              </ThemeIcon>
+            </Box>
+            <Stack gap="md" p="lg" className="maps-page-card-body">
+              <Stack gap="xs">
+                <Group justify="space-between" wrap="nowrap" align="flex-start">
+                  <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
+                    {map.name}
+                  </Title>
                   <VisibilityBadge visibility={map.visibility} />
                 </Group>
-              </Group>
-              {map.description && (
-                <Text size="sm" c="dimmed" lineClamp={3} style={{ whiteSpace: 'pre-line' }}>
-                  {map.description}
+                <Badge variant="light" color="gray" w="fit-content">
+                  {t(
+                    map.kind === 'geographic'
+                      ? 'maps.kind.geographicBadge'
+                      : 'maps.kind.free',
+                  )}
+                </Badge>
+              </Stack>
+              <Box className="maps-page-card-description">
+                {map.description ? (
+                  <Text size="sm" c="dimmed" lineClamp={3} style={{ whiteSpace: 'pre-line' }}>
+                    {map.description}
+                  </Text>
+                ) : (
+                  <Text size="sm" c="dimmed" fs="italic">
+                    {t('common.noDescription')}
+                  </Text>
+                )}
+              </Box>
+              <Group justify="space-between" gap="md" wrap="nowrap" className="maps-page-card-footer">
+                <Text size="xs" c="dimmed">
+                  {t('maps.documentCount', { count: map.documentCount })} ·{' '}
+                  {t('maps.lastEdit', { when: formatRelativeTime(map.updatedAt) })}
                 </Text>
-              )}
-              <Text size="xs" c="dimmed">
-                {t('maps.documentCount', { count: map.documentCount })} ·{' '}
-                {t('maps.lastEdit', { when: formatRelativeTime(map.updatedAt) })}
-              </Text>
+                <ArrowUpRightIcon size={18} aria-hidden="true" />
+              </Group>
             </Stack>
           </Card>
         ))}

@@ -754,6 +754,132 @@ html body[data-scroll-locked] {
   border-color: var(--mantine-color-accent-filled);
 }
 
+.maps-page-heading {
+  min-height: 112px;
+  padding: var(--mantine-spacing-md) 0 var(--mantine-spacing-lg);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.maps-page-kicker {
+  letter-spacing: 0.14em;
+}
+
+.maps-page-title {
+  font-size: clamp(2.75rem, 6vw, 5.5rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.maps-page-actions {
+  padding-bottom: var(--mantine-spacing-xs);
+}
+
+.maps-page-grid {
+  align-items: stretch;
+}
+
+.maps-page-card {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.35fr) minmax(0, 1fr);
+  min-height: 240px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  background: var(--bg-surface);
+  border-top: 2px solid var(--border-default);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 10%);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.maps-page-card:hover {
+  transform: translateY(-3px);
+  border-top-color: var(--accent-primary);
+  box-shadow: 0 18px 42px rgb(0 0 0 / 22%);
+}
+
+.maps-page-card-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  color: var(--text-muted);
+  background: var(--bg-raised);
+  border-right: 1px solid var(--border-default);
+}
+
+.maps-page-card[data-kind='geographic'] .maps-page-card-visual {
+  background: var(--bg-base);
+}
+
+.maps-page-card-index {
+  position: absolute;
+  top: var(--mantine-spacing-sm);
+  left: var(--mantine-spacing-sm);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--mantine-font-size-xs);
+  letter-spacing: 0.12em;
+}
+
+.maps-page-card-body {
+  min-width: 0;
+}
+
+.maps-page-card-description {
+  flex: 1;
+}
+
+.maps-page-card-footer {
+  padding-top: var(--mantine-spacing-sm);
+  border-top: 1px solid var(--border-default);
+}
+
+.maps-page-card-footer svg {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  transition:
+    color 120ms ease,
+    transform 120ms ease;
+}
+
+.maps-page-card:hover .maps-page-card-footer svg {
+  color: var(--accent-strong);
+  transform: translate(2px, -2px);
+}
+
+.maps-empty-state {
+  background: transparent;
+  border-style: dashed;
+}
+
+@media (max-width: 36em) {
+  .maps-page-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .maps-page-card {
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .maps-page-card,
+  .maps-page-card-footer svg {
+    transition: none;
+  }
+
+  .maps-page-card:hover,
+  .maps-page-card:hover .maps-page-card-footer svg {
+    transform: none;
+  }
+}
+
 /* A result in the search panel (spec 21): highlighted (arrow keys or hover)
    like a mention suggestion, and a link without a link's look. */
 .search-option {

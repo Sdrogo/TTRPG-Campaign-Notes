@@ -261,6 +261,14 @@ other icon set.
   Document cards keep their complete information and image behavior but gain
   a restrained top-edge accent and lift on hover. The sticky create action has
   a visible text label rather than relying on an unexplained plus icon.
+- **Maps index** (`/rooms/:roomId/maps`): reads as a cartographic archive,
+  not a generic card grid. The Room name is a small folio label above the
+  large page title; create/import actions wrap safely on narrow screens.
+  Each map is one horizontal index card with a numbered icon plate that
+  distinguishes a free relationship board from a geographic map, followed by
+  its visibility, description and activity metadata. Hover exposes a restrained
+  accent edge and directional cue; the empty state is a quiet dashed archive
+  frame. Map creation, import, ordering and permissions are unchanged.
 - **Document detail**: description at the top, Tags and Owner(s)
   directly under the title, Notes (the spec's Details) rendered as a
   distinct, visually lighter list of titled entries above the Comment

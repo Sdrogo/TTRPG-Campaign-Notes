@@ -751,6 +751,9 @@ in line with what was built since.
   a dedicated controls panel, counted archive groups, a distinct maps section,
   more tactile Document cards and a labeled sticky create action, with filters,
   grouping, maps, permissions and card content unchanged.
+- Reframed the Maps index as a cartographic archive: Room/title hierarchy,
+  responsive actions, distinct free/geographic icon plates, numbered map cards,
+  clearer metadata and a designed empty state, without changing map workflows.
 
 ## Architecture Decisions
 
