@@ -299,8 +299,8 @@ other icon set.
   a small "Documents" folio label leads into a large display title and subtitle,
   separated from the body by a fine rule. Description text has a calmer reading
   rhythm; the image/map/info aside stays secondary on a raised surface. Notes
-  read as individual archival entries with a quiet left rule that accents on
-  hover, while Comments remain in a clearly separate Thread card below
+  remain visually quiet in the content flow without individual highlighted
+  surfaces, while Comments sit in a clearly separate Thread card below
   backlinks. All editing, visibility and action controls retain their existing
   placement and behavior.
   **Info panel** (2026-10-03, Andrea chose option A of a mockup: the

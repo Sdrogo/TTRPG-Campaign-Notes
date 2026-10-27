@@ -618,18 +618,7 @@ html body[data-scroll-locked] {
 
 .note-item {
   position: relative;
-  padding: var(--mantine-spacing-md) var(--mantine-spacing-md)
-    var(--mantine-spacing-md) var(--mantine-spacing-lg);
-  background: color-mix(in srgb, var(--bg-raised) 56%, transparent);
-  border-left: 2px solid var(--border-default);
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease;
-}
-
-.note-item:hover {
-  background: var(--bg-raised);
-  border-left-color: var(--accent-primary);
+  padding-block: var(--mantine-spacing-sm);
 }
 
 .document-thread-card {
@@ -1083,8 +1072,7 @@ html body[data-scroll-locked] {
   .documents-controls-toggle,
   .document-group-toggle,
   .document-card,
-  .document-card-image,
-  .note-item {
+  .document-card-image {
     transition: none;
   }
 

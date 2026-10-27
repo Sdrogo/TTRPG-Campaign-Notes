@@ -764,6 +764,8 @@ in line with what was built since.
   header metadata, improved description rhythm, lighter secondary info panel,
   archival Note entries and a distinct Thread surface, preserving every action,
   permission, visibility rule and content workflow.
+- Removed individual Note highlighting from Document detail after visual review;
+  Notes now remain quiet within the editorial content flow.
 
 ## Architecture Decisions
 
