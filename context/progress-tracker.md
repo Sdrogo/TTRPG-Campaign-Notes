@@ -738,6 +738,10 @@ on `main`.
   `c3f8a1d6e9b4` applied to production** on 2026-10-27 (`alembic upgrade
   head` from `b5f1d8e3a7c2`; `alembic current` on production =
   `c3f8a1d6e9b4`, head).
+- **46d, Session 0 header and layout** (ticket written 2026-10-27, to
+  confirm): bigger column and row headings, a compact "+" to add a column,
+  freely named sessions, one header line above the boards, the two panels
+  scrolling on their own. Frontend only, no migration.
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product
