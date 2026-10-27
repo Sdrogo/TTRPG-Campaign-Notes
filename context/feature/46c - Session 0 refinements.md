@@ -24,7 +24,8 @@
 
 ## Decisions
 
-Proposed by Claude on 2026-10-27; to be confirmed by the product owner.
+Proposed by Claude on 2026-10-27; 6 confirmed by the product owner the same
+day, the others to be confirmed.
 
 1. **Room Index only on the Documents page** (amends spec 44): the Index
    tab on the left edge shows on `/rooms/:roomId/documents` only. Every
@@ -64,9 +65,8 @@ Proposed by Claude on 2026-10-27; to be confirmed by the product owner.
    Master promotes, spec 46 Decision 8); the post-it is published at once
    (no draft), signed by the Master, and the Master can edit and delete it.
    A Player who wants a new limit writes it on the Retro board (anonymous
-   if they wish) and the Master promotes it. *Alternative to confirm:
-   every member writes directly, as a draft they publish, signed or
-   anonymous.*
+   if they wish) and the Master promotes it (product owner, 2026-10-27:
+   "Solo il Master").
 7. **Post-its with elevation**: a sticky-note look: the column's tint as
    background, a soft shadow that grows on hover, a slightly larger corner
    radius. A draft stays recognisable: dashed border, no shadow, lighter.
@@ -130,7 +130,8 @@ Proposed by Claude on 2026-10-27; to be confirmed by the product owner.
 - `PageLayout` gets an explicit `showIndex` used only by
   `RoomDocumentsPage` (Decision 1); tests of other pages lose the Index.
 - `SessionZeroTitle`: title, timer chip (`TimerChip`, replaces
-  `TimerBar`), Master "⋮" with "Elimina Sessione 0".
+  `TimerBar`; its custom-length dialog closes only once the write
+  succeeds, review of PR #251), Master "⋮" with "Elimina Sessione 0".
 - Column colours as theme tokens (`--sz-green`, `--sz-yellow`, `--sz-red`,
   `--sz-neutral` with tint variants) in the theme CSS; `ui-context.md`
   documents them.
