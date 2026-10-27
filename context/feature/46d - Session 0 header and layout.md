@@ -151,6 +151,22 @@ The ticket is confirmed.
   "Aggiungi colonna" (exists) in 12 languages; "Avvia Sessione 0.5" and the
   closed-round sentence go if unused.
 
+## As built (46d_1, 2026-10-27)
+
+- `SessionZeroTitle` became `SessionZeroHeader` and `RoundsBar` became
+  `SessionPicker` (`SessionPicker`, `NewSession`); `PublishAll` moved into
+  the header. The header is one wrapping `Group`, the Master's actions
+  pushed right, so a phone shows it on two lines.
+- A new session left with its prefilled default stores no title, so the
+  default shows in each viewer's language; any other name is stored as the
+  round's `title`. `lib/sessionZero.defaultRoundName` gives the default.
+- `BoardsSplit` sets its height to the window's height under its top (at
+  least `MIN_BOARDS_HEIGHT`, 360px), again on resize; each side is a
+  `.sz-pane` with its own vertical scroll.
+- Strings: `rounds.start` is now "New session", `rounds.title` "Name",
+  `rounds.startButton` "Create", new `rounds.closedBadge`; `publishAll.button`
+  shortened; `rounds.titlePlaceholder` removed (12 languages).
+
 ## Tests
 
 - The header shows selector, timer, publish and the Master's actions on one

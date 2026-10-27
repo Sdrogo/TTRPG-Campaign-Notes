@@ -1301,8 +1301,8 @@
       "anonymousHint": "Personne ne verra qui l'a écrit, pas même le Master."
     },
     "publishAll": {
-      "button_one": "Publier tous les brouillons ({{count}})",
-      "button_other": "Publier tous les brouillons ({{count}})",
+      "button_one": "Publier les brouillons ({{count}})",
+      "button_other": "Publier les brouillons ({{count}})",
       "title": "Publier tous vos brouillons",
       "body_one": "Votre brouillon de ce tour sera visible par tous les membres. C'est irréversible.",
       "body_other": "Vos {{count}} brouillons de ce tour seront visibles par tous les membres. C'est irréversible.",
@@ -1336,12 +1336,12 @@
       "first": "Session 0",
       "later": "Session 0.5 #{{number}}",
       "pick": "Session à afficher",
-      "start": "Lancer la Session 0.5",
+      "start": "Nouvelle session",
       "startBody": "Le tableau Rétro actuel se ferme et reste consultable en lecture seule ; les brouillons jamais publiés sont supprimés. Le nouveau tableau commence vide, avec les mêmes colonnes. Lignes et Voiles reste tel quel.",
-      "title": "Titre (facultatif)",
-      "titlePlaceholder": "Fin de l'arc 1",
-      "startButton": "Lancer",
-      "closed": "Cette session est close : le tableau est en lecture seule."
+      "title": "Nom",
+      "startButton": "Créer",
+      "closed": "Cette session est close : le tableau est en lecture seule.",
+      "closedBadge": "Close"
     },
     "timer": {
       "label": "Minuteur",

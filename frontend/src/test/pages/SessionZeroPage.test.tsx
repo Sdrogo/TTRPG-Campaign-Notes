@@ -178,7 +178,7 @@ describe('SessionZeroPage', () => {
     board = () => Promise.resolve(rawSessionZero({ rounds, round_id: 'round-1' }));
     await user.click(await screen.findByRole('option', { name: 'Sessione 0' }));
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero?round_id=round-1');
-    expect(await screen.findByText('Questa sessione è chiusa: la lavagna è in sola lettura.')).toBeInTheDocument();
+    expect(await screen.findByText('Chiusa')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aggiungi post-it' })).not.toBeInTheDocument();
 
     // Spec 46_4: another member deleted the Session 0, so the open round comes back.
@@ -206,7 +206,7 @@ describe('SessionZeroPage', () => {
     ];
     board = () => Promise.resolve(rawSessionZero({ retro: [rawPostItColumn({ cards: drafts })] }));
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Pubblica tutte le bozze (2)' }));
+    await user.click(await screen.findByRole('button', { name: 'Pubblica bozze (2)' }));
     const dialog = await screen.findByRole('dialog', { name: 'Pubblica tutte le tue bozze' });
     expect(dialog).toHaveTextContent('Le tue 2 bozze di questo giro');
     expect(dialog).not.toHaveTextContent('quasi piena');
@@ -217,7 +217,7 @@ describe('SessionZeroPage', () => {
       json: { anonymous: true },
     });
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(screen.queryByRole('button', { name: /Pubblica tutte le bozze/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Pubblica bozze/ })).not.toBeInTheDocument();
   });
 
   it('says which drafts stay drafts past the board\'s limit, and cancels', async () => {
@@ -227,7 +227,7 @@ describe('SessionZeroPage', () => {
     const drafts = Array.from({ length: 3 }, (_, i) => rawPostIt({ id: `d${i}`, draft: true, can_publish: true }));
     board = () => Promise.resolve(rawSessionZero({ retro: [rawPostItColumn({ cards: [...published, ...drafts] })] }));
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Pubblica tutte le bozze (3)' }));
+    await user.click(await screen.findByRole('button', { name: 'Pubblica bozze (3)' }));
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('La bacheca è quasi piena: 2 bozze restano bozze.');
     await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));

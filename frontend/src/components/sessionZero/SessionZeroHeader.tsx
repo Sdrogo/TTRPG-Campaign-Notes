@@ -9,11 +9,13 @@ import {
   Text,
   Title,
   UnstyledButton,
+  VisuallyHidden,
 } from '@mantine/core';
-import { DotsThreeVerticalIcon, TimerIcon } from '@phosphor-icons/react';
+import { DotsThreeVerticalIcon, PaperPlaneTiltIcon, TimerIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from '../LabeledActionIcon';
 import {
+  MAX_CARDS_PER_BOARD,
   TIMER_MAX_MIN,
   TIMER_MIN_MIN,
   TIMER_PRESETS_MIN,
@@ -22,42 +24,56 @@ import {
   secondsLeft,
 } from '../../lib/sessionZero';
 import { useBoard } from './boardContext';
+import { PublishModal } from './PostItCard';
+import { NewSession, SessionPicker } from './SessionPicker';
 
-interface SessionZeroTitleProps {
+interface TimerChipProps {
   /** When the board was read (`Date.now()`), to correct for the server's clock. */
   readAtMs: number;
 }
 
+interface SessionZeroHeaderProps extends TimerChipProps {
+  /** Shows another session on the Retro board; null is the open one. */
+  onPick: (roundId: string | null) => void;
+}
+
 /**
- * The page's title row (spec 46c Decisions 2 and 3): "Session 0", the timer
- * chip on the same line and, for the Master, a "⋮" to delete the Session 0.
+ * Everything above the boards on one line (spec 46d Decision 4): the session
+ * selector, which names the page, the timer chip, "Publish drafts (N)" while
+ * the viewer has some and, on the right for the Master, "New session" and a
+ * "⋮" to delete the Session 0. Wraps on a phone. The page's `h1` is for
+ * screen readers only: the selector already says which session this is.
  */
-export function SessionZeroTitle({ readAtMs }: SessionZeroTitleProps) {
+export function SessionZeroHeader({ readAtMs, onPick }: SessionZeroHeaderProps) {
   const { t } = useTranslation();
   const { board, act, busy, writable } = useBoard();
   const [deleting, setDeleting] = useState(false);
   const manage = writable && board.canManage;
+  const open = board.rounds.find((round) => round.id === board.roundId)?.closedAt === null;
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xs">
-      <Group gap="sm" wrap="wrap" style={{ minWidth: 0 }}>
-        <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('sessionZero.title')}
-        </Title>
-        <TimerChip readAtMs={readAtMs} />
-      </Group>
+    <Group gap="xs" className="sz-header">
+      <VisuallyHidden>
+        <Title order={1}>{t('sessionZero.title')}</Title>
+      </VisuallyHidden>
+      <SessionPicker onPick={onPick} />
+      <TimerChip readAtMs={readAtMs} />
+      {writable && open && <PublishAll />}
       {manage && (
-        <Menu position="bottom-end" shadow="md">
-          <Menu.Target>
-            <LabeledActionIcon variant="subtle" color="gray" aria-label={t('sessionZero.actions')}>
-              <DotsThreeVerticalIcon size={20} />
-            </LabeledActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item color="red" onClick={() => setDeleting(true)}>
-              {t('sessionZero.delete.action')}
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+        <Group gap="xs" wrap="nowrap" ml="auto">
+          {open && <NewSession />}
+          <Menu position="bottom-end" shadow="md">
+            <Menu.Target>
+              <LabeledActionIcon variant="subtle" color="gray" aria-label={t('sessionZero.actions')}>
+                <DotsThreeVerticalIcon size={20} />
+              </LabeledActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item color="red" onClick={() => setDeleting(true)}>
+                {t('sessionZero.delete.action')}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
       )}
       {deleting && (
         <Modal opened onClose={() => setDeleting(false)} title={t('sessionZero.delete.title')} centered>
@@ -83,6 +99,45 @@ export function SessionZeroTitle({ readAtMs }: SessionZeroTitleProps) {
 }
 
 /**
+ * "Publish drafts (N)" while the viewer has drafts in the open session (spec
+ * 46c Decision 8), in the header so nothing below moves when it comes and
+ * goes (spec 46d Decision 4): one dialog, one signed or anonymous choice for
+ * all of them. Drafts past the board's limit stay drafts, and the dialog
+ * says how many.
+ */
+function PublishAll() {
+  const { t } = useTranslation();
+  const { board, act, busy } = useBoard();
+  const [asking, setAsking] = useState(false);
+  const cards = board.retro.flatMap((column) => column.cards);
+  const drafts = cards.filter((card) => card.canPublish).length;
+  if (drafts === 0) return null;
+  const room = MAX_CARDS_PER_BOARD - cards.filter((card) => !card.draft).length;
+  const staying = Math.max(0, drafts - Math.max(0, room));
+  return (
+    <>
+      <Button size="compact-sm" leftSection={<PaperPlaneTiltIcon size={14} />} onClick={() => setAsking(true)}>
+        {t('sessionZero.publishAll.button', { count: drafts })}
+      </Button>
+      {asking && (
+        <PublishModal
+          title={t('sessionZero.publishAll.title')}
+          body={
+            <>
+              {t('sessionZero.publishAll.body', { count: drafts })}
+              {staying > 0 && ` ${t('sessionZero.publishAll.overLimit', { count: staying })}`}
+            </>
+          }
+          busy={busy}
+          onClose={() => setAsking(false)}
+          onPublish={(anonymous) => act(boardWrites.publishAll(anonymous), () => setAsking(false))}
+        />
+      )}
+    </>
+  );
+}
+
+/**
  * The shared timer (spec 46 Decision 4) as a chip on the title line (spec
  * 46c Decision 2): the time left, counted down here from the server's end
  * time; "Time's up" at zero until the Master stops it. It blocks nothing.
@@ -90,7 +145,7 @@ export function SessionZeroTitle({ readAtMs }: SessionZeroTitleProps) {
  * chosen length, pause, resume, stop), and without a timer it is the clock
  * icon alone; a Player sees nothing without a timer.
  */
-function TimerChip({ readAtMs }: SessionZeroTitleProps) {
+function TimerChip({ readAtMs }: TimerChipProps) {
   const { t } = useTranslation();
   const { board, act, busy, writable } = useBoard();
   const [now, setNow] = useState(() => Date.now());

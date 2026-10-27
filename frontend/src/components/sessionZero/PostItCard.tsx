@@ -194,6 +194,7 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
         {(postIt.reactions.length > 0 || canReact) && (
           <Group gap={4} wrap="wrap">
             <ReactionChips
+              size="lg"
               reactions={postIt.reactions}
               members={members}
               disabled={!canReact || busy}
@@ -201,6 +202,7 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
             />
             {canReact && (
               <AddReaction
+                size="lg"
                 reactions={postIt.reactions}
                 disabled={busy}
                 onToggle={(emoji, add) => act(boardWrites.react(postIt.id, emoji, add))}

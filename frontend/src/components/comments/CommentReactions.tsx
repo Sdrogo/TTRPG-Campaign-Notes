@@ -17,13 +17,15 @@ interface ReactionChipsProps {
   /** Adds (`add`) or takes back the viewer's reaction with this emoji. */
   onToggle: (emoji: string, add: boolean) => void;
   disabled: boolean;
+  /** `lg` on Session 0 post-its (spec 46d Decision 6): bigger emoji and count. */
+  size?: 'sm' | 'lg';
 }
 
 /**
  * The emoji already on a Comment, one chip each with its count. A click joins
  * or leaves it; hovering, focusing or a long press lists who reacted.
  */
-export function ReactionChips({ reactions, members, onToggle, disabled }: ReactionChipsProps) {
+export function ReactionChips({ reactions, members, onToggle, disabled, size = 'sm' }: ReactionChipsProps) {
   const { t } = useTranslation();
   if (reactions.length === 0) {
     return null;
@@ -44,7 +46,8 @@ export function ReactionChips({ reactions, members, onToggle, disabled }: Reacti
             withArrow
           >
             <Button
-              size="compact-xs"
+              size={size === 'lg' ? 'compact-sm' : 'compact-xs'}
+              className={size === 'lg' ? 'reaction-chip-lg' : undefined}
               radius="xl"
               variant={reaction.reactedByMe ? 'light' : 'default'}
               aria-pressed={reaction.reactedByMe}
@@ -56,7 +59,14 @@ export function ReactionChips({ reactions, members, onToggle, disabled }: Reacti
               disabled={disabled}
               onClick={() => onToggle(reaction.emoji, !reaction.reactedByMe)}
             >
-              {reaction.emoji} {reaction.count}
+              {size === 'lg' ? (
+                <>
+                  <span className="reaction-emoji-lg">{reaction.emoji}</span>
+                  {reaction.count}
+                </>
+              ) : (
+                `${reaction.emoji} ${reaction.count}`
+              )}
             </Button>
           </Tooltip>
         );
@@ -70,6 +80,8 @@ interface AddReactionProps {
   reactions: Reaction[];
   onToggle: (emoji: string, add: boolean) => void;
   disabled: boolean;
+  /** `lg` on Session 0 post-its (spec 46d Decision 6). */
+  size?: 'sm' | 'lg';
 }
 
 /**
@@ -77,7 +89,7 @@ interface AddReactionProps {
  * carries `MAX_REACTION_EMOJI` different emoji: the chips can still be joined.
  * Picking an emoji the viewer already used changes nothing.
  */
-export function AddReaction({ reactions, onToggle, disabled }: AddReactionProps) {
+export function AddReaction({ reactions, onToggle, disabled, size = 'sm' }: AddReactionProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   if (reactions.length >= MAX_REACTION_EMOJI) {
@@ -89,12 +101,12 @@ export function AddReaction({ reactions, onToggle, disabled }: AddReactionProps)
         <LabeledActionIcon
           variant="subtle"
           color="gray"
-          size="sm"
+          size={size === 'lg' ? 'md' : 'sm'}
           aria-label={t('comments.reactions.add')}
           disabled={disabled}
           onClick={() => setOpened((current) => !current)}
         >
-          <SmileyIcon size={16} />
+          <SmileyIcon size={size === 'lg' ? 20 : 16} />
         </LabeledActionIcon>
       </Popover.Target>
       <Popover.Dropdown p={0}>

@@ -1299,8 +1299,8 @@
       "anonymousHint": "Nessuno vedrà chi l'ha scritto, nemmeno il Master."
     },
     "publishAll": {
-      "button_one": "Pubblica tutte le bozze ({{count}})",
-      "button_other": "Pubblica tutte le bozze ({{count}})",
+      "button_one": "Pubblica bozze ({{count}})",
+      "button_other": "Pubblica bozze ({{count}})",
       "title": "Pubblica tutte le tue bozze",
       "body_one": "La tua bozza di questo giro sarà visibile a tutti i membri. Non si può annullare.",
       "body_other": "Le tue {{count}} bozze di questo giro saranno visibili a tutti i membri. Non si può annullare.",
@@ -1334,12 +1334,12 @@
       "first": "Sessione 0",
       "later": "Sessione 0.5 #{{number}}",
       "pick": "Sessione da mostrare",
-      "start": "Avvia Sessione 0.5",
+      "start": "Nuova sessione",
       "startBody": "La lavagna Retro attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova lavagna parte vuota, con le stesse colonne. Linee e Veli resta com'è.",
-      "title": "Titolo (facoltativo)",
-      "titlePlaceholder": "Fine arco 1",
-      "startButton": "Avvia",
-      "closed": "Questa sessione è chiusa: la lavagna è in sola lettura."
+      "title": "Nome",
+      "startButton": "Crea",
+      "closed": "Questa sessione è chiusa: la lavagna è in sola lettura.",
+      "closedBadge": "Chiusa"
     },
     "timer": {
       "label": "Timer",

@@ -1301,8 +1301,8 @@
       "anonymousHint": "Ninguém verá quem o escreveu, nem o Mestre."
     },
     "publishAll": {
-      "button_one": "Publicar todos os rascunhos ({{count}})",
-      "button_other": "Publicar todos os rascunhos ({{count}})",
+      "button_one": "Publicar rascunhos ({{count}})",
+      "button_other": "Publicar rascunhos ({{count}})",
       "title": "Publicar todos os teus rascunhos",
       "body_one": "O teu rascunho desta ronda ficará visível para todos os membros. Não pode ser anulado.",
       "body_other": "Os teus {{count}} rascunhos desta ronda ficarão visíveis para todos os membros. Não pode ser anulado.",
@@ -1336,12 +1336,12 @@
       "first": "Sessão 0",
       "later": "Sessão 0.5 #{{number}}",
       "pick": "Sessão a mostrar",
-      "start": "Iniciar Sessão 0.5",
+      "start": "Nova sessão",
       "startBody": "O quadro Retro atual fecha e continua disponível só para leitura; os rascunhos nunca publicados são eliminados. O novo quadro começa vazio, com as mesmas colunas. Linhas e Véus fica como está.",
-      "title": "Título (opcional)",
-      "titlePlaceholder": "Fim do arco 1",
-      "startButton": "Iniciar",
-      "closed": "Esta sessão está fechada: o quadro é só de leitura."
+      "title": "Nome",
+      "startButton": "Criar",
+      "closed": "Esta sessão está fechada: o quadro é só de leitura.",
+      "closedBadge": "Fechada"
     },
     "timer": {
       "label": "Temporizador",

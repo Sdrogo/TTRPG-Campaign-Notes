@@ -258,13 +258,16 @@ export const boardWrites = {
   }),
 };
 
-/** "Session 0" for the first round, "Session 0.5 #n" after it, with the round's title. */
+/** A session's name (spec 46d Decision 3): its own when the Master gave one, else the default. */
 export function roundLabel(round: SessionZeroRound): string {
-  const name =
-    round.number === 1
-      ? i18n.t('sessionZero.rounds.first')
-      : i18n.t('sessionZero.rounds.later', { number: round.number - 1 });
-  return round.title ? `${name} · ${round.title}` : name;
+  return round.title ?? defaultRoundName(round.number);
+}
+
+/** The default name of the `number`th session: "Session 0", then "Session 0.5 #N". */
+export function defaultRoundName(number: number): string {
+  return number === 1
+    ? i18n.t('sessionZero.rounds.first')
+    : i18n.t('sessionZero.rounds.later', { number: number - 1 });
 }
 
 /**
