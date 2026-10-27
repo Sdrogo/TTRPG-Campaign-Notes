@@ -530,8 +530,9 @@ other icon set.
   persisted (a reload starts fresh).
 - **Room Index** (`RoomIndex`, spec 44, 2026-10-25; before it the
   Glossary Index drawer behind a header burger, spec 10, Main items from
-  spec 11_3): a tab fixed on the screen's left edge of every Room-scoped
-  page (`PageLayout`'s `roomId` prop), at 40% of the screen's height so it
+  spec 11_3): a tab fixed on the screen's left edge of the Room's
+  Documents page only (`PageLayout`'s `showIndex` prop; every other Room
+  page lost it with spec 46c Decision 1), at 40% of the screen's height so it
   stays above a phone map page's lower half (spec 37). The tab
   (`.room-index-tab` in `index.css`) is a narrow pill on `--bg-raised`,
   rounded on the right only, with a horizontal arrow (`CaretRightIcon`,
@@ -877,3 +878,49 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   page dims at 40%. The banner gains "Restart tour" (default). Landing
   feature cards gain a `sm` "See it in the demo" anchor.
 - Screenshots: `demo/` (and `demo/tour/`) in the project files.
+
+## Session 0 (specs 46 and 46c)
+
+- Title row (`SessionZeroTitle`): "Session 0" (`h1` at `h2` size, display
+  font), then on the same line the timer chip: a pill on `--bg-raised`
+  with the default border, a clock icon and the time left in monospace
+  (`9:58`; "Paused" beside it, dimmed; "Time's up" in `--state-warning`).
+  For the Master the chip is the button that opens the timer menu, and
+  with no timer it is the clock alone; a Player without a timer sees no
+  chip. Nothing is sticky. The Master's "⋮" at the end of the row holds
+  "Delete Session 0" (red), which asks first.
+- Columns (`.sz-column` in `index.css`): a 4px band on top in the column's
+  colour (`--sz-color`, set inline from `colorValue`, the maps' palette)
+  and a 6% tint of it over `--bg-surface`. Presets are green ("We want it
+  at the table"), gold ("Handle with care") and red ("To avoid"); Lines &
+  Veils are Must green, Veils gold, Lines red, in that order. The Master
+  picks a new column's colour with `MapColorPicker`, and changes it from
+  the column's "⋮" → "Colour" (a dialog with the same picker).
+- Post-its (`.sz-post-it`): sticky notes, 10px radius, a 16% tint of the
+  column's colour over `--bg-raised`, a two-layer soft shadow that grows
+  (and lifts 1px) on hover; reduced motion drops the lift. A draft
+  (`data-draft`) is flat: `--bg-raised`, dashed border, no shadow, 85%
+  opacity, with a filled `compact-xs` "Publish" at the end of its author
+  line. A post-it a drag can group with shows the accent ring
+  (`data-drop-over`).
+- "Publish all drafts (N)" (filled `compact-sm`, paper-plane icon) sits
+  above the Retro columns while the viewer has drafts in the open round.
+- Groups (`.sz-group`): a frame of the column's colour (45% into the
+  border, 8% tint) around its post-its, headed by the title (bold `xs`,
+  "Group" when untitled) and the count (dimmed); the Master's "⋮" renames
+  it inline or ungroups all.
+- Layout (spec 46c Decisions 10 and 11): from 62em the two boards sit
+  side by side with a handle between them (`BoardsSplit`,
+  `.sz-split-handle`: the Document split view's divider, an 8px
+  `col-resize` strip with a quiet 2px line in `--border-default`; product
+  owner, 2026-10-27: the accent line was too loud); Lines &
+  Veils starts at a third, stays between 280px and 60%, double click
+  resets, arrows/Home/End move it, the width is kept in `localStorage`.
+  Retro columns share the board's width (`flex: 1 1 0`, at least 220px);
+  on a phone each takes the board's whole width and the board snaps from
+  one to the next. Lines & Veils alternates the layout (product owner,
+  2026-10-27): Must, Veils and Lines are horizontal rows one under the
+  other (`.sz-lines-veils-row`, a 4px band in the column's colour on the
+  left), each with its post-its side by side in a grid
+  (`.sz-lines-veils-cards`, `repeat(auto-fill, minmax(200px, 1fr))`).
+- Screenshots: `session-zero/` in the project files.

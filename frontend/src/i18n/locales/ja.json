@@ -1220,5 +1220,108 @@
     "strip": {
       "all_other": "すべてのマップ（{{count}}）"
     }
+  },
+  "sessionZero": {
+    "title": "セッション0",
+    "signInRequired": "このルームのセッション0を見るにはサインインしてください。",
+    "loadError": "セッション0を読み込めませんでした。",
+    "notStarted": "このルームのセッション0はまだ始まっていません。開始すると、レトロボードとライン&ヴェールのボードが開きます。",
+    "start": "セッション0を開始",
+    "actions": "セッション0の操作",
+    "resize": "ライン&ヴェールのサイズを変更",
+    "delete": {
+      "action": "セッション0を削除",
+      "title": "このセッション0を削除しますか？",
+      "body": "すべてのラウンド、付箋（下書きを含む）、リアクション、グループ、ライン&ヴェール、タイマーが完全に消えます。その後は、どのメンバーでも新しいセッション0を一から始められます。"
+    },
+    "indexLink": "セッション0のボード",
+    "retro": {
+      "title": "レトロ"
+    },
+    "linesVeils": {
+      "title": "ライン&ヴェール",
+      "empty": "付箋はまだありません。",
+      "add": "追加"
+    },
+    "kinds": {
+      "must": "Must",
+      "veils": "ヴェール",
+      "lines": "ライン"
+    },
+    "postIt": {
+      "text": "付箋のテキスト",
+      "charactersLeft_other": "残り{{count}}文字",
+      "anonymous": "匿名",
+      "actions": "付箋の操作",
+      "publish": "公開",
+      "moveTo": "{{column}}へ移動",
+      "promoteTo": "{{column}}へ昇格",
+      "draft": "下書き",
+      "fromRetro": "レトロから",
+      "label": "{{author}}の付箋",
+      "add": "付箋を追加",
+      "saveDraft": "下書きを保存"
+    },
+    "publish": {
+      "title": "付箋を公開",
+      "body": "公開すると、付箋はルームのメンバー全員に表示され、下書きには戻せません。編集や削除はその後もできます。",
+      "anonymous": "匿名で公開",
+      "anonymousHint": "誰が書いたかは、Masterを含め誰にも表示されません。"
+    },
+    "publishAll": {
+      "button_other": "下書きをすべて公開（{{count}}）",
+      "title": "下書きをすべて公開",
+      "body_other": "このラウンドのあなたの下書き{{count}}件が全メンバーに表示されます。元に戻せません。",
+      "overLimit_other": "ボードがほぼいっぱいです。{{count}}件は下書きのまま残ります。"
+    },
+    "groups": {
+      "groupWith": "グループにする…",
+      "groupWithBody": "この列の付箋かグループを選んでください。",
+      "takeOut": "グループから外す",
+      "untitled": "グループ",
+      "title": "グループ名",
+      "actions": "グループ「{{title}}」の操作",
+      "rename": "グループ名を変更",
+      "ungroupAll": "グループを解除",
+      "count_other": "付箋{{count}}枚"
+    },
+    "columns": {
+      "actions": "列「{{title}}」の操作",
+      "add": "列を追加",
+      "rename": "名前を変更",
+      "moveLeft": "左へ移動",
+      "moveRight": "右へ移動",
+      "title": "列のタイトル",
+      "deleteTitle": "列を削除しますか？",
+      "deleteBody": "列「{{title}}」は、そのすべての付箋とともに削除されます。",
+      "color": "色"
+    },
+    "rounds": {
+      "first": "セッション0",
+      "later": "セッション0.5 #{{number}}",
+      "pick": "表示するセッション",
+      "start": "セッション0.5を開始",
+      "startBody": "現在のレトロボードは閉じられ、読み取り専用で閲覧できます。公開されなかった下書きは削除されます。新しいボードは同じ列で空の状態から始まります。ライン&ヴェールはそのままです。",
+      "title": "タイトル（任意）",
+      "titlePlaceholder": "第1アーク終了",
+      "startButton": "開始",
+      "closed": "このセッションは終了しています。ボードは読み取り専用です。"
+    },
+    "timer": {
+      "label": "タイマー",
+      "none": "タイマーなし",
+      "expired": "時間切れ",
+      "paused": "一時停止中",
+      "actions": "タイマーを管理",
+      "start": "タイマーを開始",
+      "minutes_other": "{{count}}分",
+      "custom": "時間を指定",
+      "length": "分",
+      "lengthHint": "{{min}}〜{{max}}分",
+      "startButton": "開始",
+      "pause": "一時停止",
+      "resume": "再開",
+      "stop": "停止してクリア"
+    }
   }
 }

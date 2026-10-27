@@ -9,6 +9,7 @@ import {
   MagicWandIcon,
   MapTrifoldIcon,
   SignOutIcon,
+  StickerIcon,
   UploadSimpleIcon,
   UserPlusIcon,
 } from '@phosphor-icons/react';
@@ -47,7 +48,7 @@ interface RoomTitleActionsProps {
 /**
  * The Room card's actions (setup and invite for an Administrator, setup and
  * "View as" a member (spec 22b) for the Master, the relationship maps (spec
- * 28), export (spec 23), generated mentions (spec 39) and leave for
+ * 28), the Session 0 boards (spec 46), export (spec 23), generated mentions (spec 39) and leave for
  * everyone, import of Documents (spec 27) for whoever may create them) beside the Room's title, folded into a "⋮" that unfolds them in
  * place when clicked (Andrea, 2026-10-03).
  */
@@ -137,6 +138,19 @@ export function RoomTitleActions({
               aria-label={t('maps.title')}
             >
               <MapTrifoldIcon size={20} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label={t('sessionZero.title')} withArrow>
+            <ActionIcon
+              component={Link}
+              to={`/rooms/${roomId}/session-zero`}
+              state={backState}
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label={t('sessionZero.title')}
+            >
+              <StickerIcon size={20} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label={t('export.action')} withArrow>

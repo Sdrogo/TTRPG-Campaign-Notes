@@ -274,7 +274,10 @@
       "cardNotFound": "Post-it introuvable",
       "columnNotFound": "Colonne introuvable",
       "roundNotFound": "Tour introuvable",
-      "columnOrder": "Le nouvel ordre doit citer une fois chaque colonne du tour"
+      "columnOrder": "Le nouvel ordre doit citer une fois chaque colonne du tour",
+      "notGroupable": "Seuls deux post-it publiés ou plus d'une même colonne de la Rétro du tour ouvert peuvent être groupés",
+      "groupNotFound": "Groupe introuvable",
+      "nothingToChange": "Rien à modifier"
     }
   },
   "pdf": {
@@ -294,8 +297,7 @@
     "presets": {
       "want": "On le veut à la table",
       "care": "Avec précaution",
-      "avoid": "À éviter",
-      "questions": "Questions"
+      "avoid": "À éviter"
     }
   }
 }

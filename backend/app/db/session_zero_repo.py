@@ -15,11 +15,16 @@ from app.db.models import (
     SessionZeroCardReactionRow,
     SessionZeroCardRow,
     SessionZeroColumnRow,
+    SessionZeroGroupRow,
     SessionZeroRoundRow,
     SessionZeroRow,
 )
 from app.domain.models import Reaction
-from app.domain.session_zero import Card, Column, LinesVeilsKind, Round, Timer
+from app.domain.relationship_maps import MapColor
+from app.domain.session_zero import Card, Column, Group, LinesVeilsKind, Round, Timer
+
+# A Retro column to create: its title and colour (spec 46c Decision 5).
+RetroColumnSpec = tuple[str, MapColor]
 
 
 def _timer(row: SessionZeroRow) -> Timer:
@@ -49,6 +54,7 @@ def _column(row: SessionZeroColumnRow) -> Column:
         kind=LinesVeilsKind(row.kind) if row.kind else None,
         title=row.title,
         position=row.position,
+        color=MapColor(row.color),
     )
 
 
@@ -65,6 +71,7 @@ def _card(row: SessionZeroCardRow) -> Card:
         promoted_by=row.promoted_by,
         created_at=row.created_at,
         updated_at=row.updated_at,
+        group_id=row.group_id,
     )
 
 
@@ -82,7 +89,10 @@ async def get_state(
 
 
 async def start(
-    session: AsyncSession, room_id: uuid.UUID, retro_titles: Sequence[str], now: datetime
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    retro_columns: Sequence[RetroColumnSpec],
+    now: datetime,
 ) -> bool:
     """Creates the Room's Session 0 with round 1, its Retro columns and the
     three Lines & Veils columns. Returns `False`, changing nothing, when it
@@ -100,12 +110,7 @@ async def start(
         SessionZeroRoundRow(id=round_id, room_id=room_id, number=1, title=None, started_at=now)
     )
     await session.flush()
-    for position, title in enumerate(retro_titles):
-        session.add(
-            SessionZeroColumnRow(
-                id=uuid.uuid4(), room_id=room_id, round_id=round_id, title=title, position=position
-            )
-        )
+    _add_retro_columns(session, room_id, round_id, retro_columns)
     for position, kind in enumerate(LinesVeilsKind):
         session.add(
             SessionZeroColumnRow(
@@ -114,6 +119,32 @@ async def start(
         )
     await session.flush()
     return True
+
+
+def _add_retro_columns(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    round_id: uuid.UUID,
+    columns: Sequence[RetroColumnSpec],
+) -> None:
+    for position, (title, color) in enumerate(columns):
+        session.add(
+            SessionZeroColumnRow(
+                id=uuid.uuid4(),
+                room_id=room_id,
+                round_id=round_id,
+                title=title,
+                position=position,
+                color=color.value,
+            )
+        )
+
+
+async def delete_session_zero(session: AsyncSession, room_id: uuid.UUID) -> None:
+    """Deletes the Room's Session 0 and everything in it (spec 46c
+    Decision 3): rounds, columns, groups, post-its, reactions, timer."""
+    await session.execute(delete(SessionZeroRow).where(SessionZeroRow.room_id == room_id))
+    await session.flush()
 
 
 async def bump_revision(session: AsyncSession, room_id: uuid.UUID) -> int:
@@ -170,7 +201,7 @@ async def add_round(
     room_id: uuid.UUID,
     number: int,
     title: str | None,
-    retro_titles: Sequence[str],
+    retro_columns: Sequence[RetroColumnSpec],
     now: datetime,
 ) -> uuid.UUID:
     """Opens a new round with these Retro columns, in order."""
@@ -181,16 +212,7 @@ async def add_round(
         )
     )
     await session.flush()
-    for position, column_title in enumerate(retro_titles):
-        session.add(
-            SessionZeroColumnRow(
-                id=uuid.uuid4(),
-                room_id=room_id,
-                round_id=round_id,
-                title=column_title,
-                position=position,
-            )
-        )
+    _add_retro_columns(session, room_id, round_id, retro_columns)
     await session.flush()
     return round_id
 
@@ -206,23 +228,33 @@ async def list_columns(session: AsyncSession, room_id: uuid.UUID) -> list[Column
 
 
 async def add_column(
-    session: AsyncSession, room_id: uuid.UUID, round_id: uuid.UUID, title: str, position: int
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    round_id: uuid.UUID,
+    title: str,
+    color: MapColor,
+    position: int,
 ) -> uuid.UUID:
     """Adds a Retro column to a round."""
     column_id = uuid.uuid4()
     session.add(
         SessionZeroColumnRow(
-            id=column_id, room_id=room_id, round_id=round_id, title=title, position=position
+            id=column_id,
+            room_id=room_id,
+            round_id=round_id,
+            title=title,
+            position=position,
+            color=color.value,
         )
     )
     await session.flush()
     return column_id
 
 
-async def rename_column(session: AsyncSession, column_id: uuid.UUID, title: str) -> None:
-    """Renames a Retro column."""
+async def update_column(session: AsyncSession, column_id: uuid.UUID, **values: object) -> None:
+    """Writes a Retro column's `title` and/or `color`."""
     await session.execute(
-        update(SessionZeroColumnRow).where(SessionZeroColumnRow.id == column_id).values(title=title)
+        update(SessionZeroColumnRow).where(SessionZeroColumnRow.id == column_id).values(**values)
     )
 
 
@@ -284,8 +316,11 @@ async def add_card(
     author_id: uuid.UUID,
     body: str,
     now: datetime,
+    *,
+    published: bool = False,
 ) -> uuid.UUID:
-    """Adds a draft (Decision 1)."""
+    """Adds a draft (Decision 1), or a post-it published at once (the
+    Master's own on Lines & Veils, spec 46c Decision 6)."""
     card_id = uuid.uuid4()
     session.add(
         SessionZeroCardRow(
@@ -295,6 +330,7 @@ async def add_card(
             author_id=author_id,
             body=body,
             anonymous=False,
+            published_at=now if published else None,
             created_at=now,
             updated_at=now,
         )
@@ -343,6 +379,123 @@ async def copy_card(
     )
     await session.flush()
     return card_id
+
+
+async def list_drafts(
+    session: AsyncSession, column_ids: Collection[uuid.UUID], author_id: uuid.UUID
+) -> list[uuid.UUID]:
+    """The author's drafts in these columns, oldest first."""
+    result = await session.execute(
+        select(SessionZeroCardRow.id)
+        .where(
+            SessionZeroCardRow.column_id.in_(column_ids),
+            SessionZeroCardRow.author_id == author_id,
+            SessionZeroCardRow.published_at.is_(None),
+        )
+        .order_by(SessionZeroCardRow.created_at, SessionZeroCardRow.id)
+    )
+    return list(result.scalars())
+
+
+async def publish_cards(
+    session: AsyncSession, card_ids: Collection[uuid.UUID], anonymous: bool, now: datetime
+) -> None:
+    """Publishes these drafts at once, all signed or all anonymous (spec 46c
+    Decision 8)."""
+    await session.execute(
+        update(SessionZeroCardRow)
+        .where(SessionZeroCardRow.id.in_(card_ids))
+        .values(published_at=now, anonymous=anonymous, updated_at=now)
+    )
+    await session.flush()
+
+
+async def list_groups(session: AsyncSession, column_ids: Collection[uuid.UUID]) -> list[Group]:
+    """The groups of these columns, oldest first."""
+    result = await session.execute(
+        select(SessionZeroGroupRow)
+        .where(SessionZeroGroupRow.column_id.in_(column_ids))
+        .order_by(SessionZeroGroupRow.created_at, SessionZeroGroupRow.id)
+    )
+    return [Group(id=row.id, column_id=row.column_id, title=row.title) for row in result.scalars()]
+
+
+async def get_group(session: AsyncSession, group_id: uuid.UUID) -> tuple[Group, uuid.UUID] | None:
+    """A group and its Room."""
+    row = await session.get(SessionZeroGroupRow, group_id)
+    if row is None:
+        return None
+    return Group(id=row.id, column_id=row.column_id, title=row.title), row.room_id
+
+
+async def add_group(
+    session: AsyncSession, room_id: uuid.UUID, column_id: uuid.UUID, now: datetime
+) -> uuid.UUID:
+    """A new, untitled group in a column."""
+    group_id = uuid.uuid4()
+    session.add(
+        SessionZeroGroupRow(
+            id=group_id, room_id=room_id, column_id=column_id, title=None, created_at=now
+        )
+    )
+    await session.flush()
+    return group_id
+
+
+async def set_group(
+    session: AsyncSession, card_ids: Collection[uuid.UUID], group_id: uuid.UUID | None
+) -> None:
+    """Puts these post-its in a group, or takes them out of theirs (`None`)."""
+    await session.execute(
+        update(SessionZeroCardRow)
+        .where(SessionZeroCardRow.id.in_(card_ids))
+        .values(group_id=group_id)
+    )
+    await session.flush()
+
+
+async def move_group_cards(
+    session: AsyncSession, from_group_ids: Collection[uuid.UUID], to_group_id: uuid.UUID
+) -> None:
+    """Moves every post-it of these groups into another one."""
+    await session.execute(
+        update(SessionZeroCardRow)
+        .where(SessionZeroCardRow.group_id.in_(from_group_ids))
+        .values(group_id=to_group_id)
+    )
+    await session.flush()
+
+
+async def rename_group(session: AsyncSession, group_id: uuid.UUID, title: str | None) -> None:
+    """Sets a group's title; `None` clears it."""
+    await session.execute(
+        update(SessionZeroGroupRow).where(SessionZeroGroupRow.id == group_id).values(title=title)
+    )
+
+
+async def delete_groups(session: AsyncSession, group_ids: Collection[uuid.UUID]) -> None:
+    """Deletes these groups; their post-its stay, ungrouped."""
+    await session.execute(delete(SessionZeroGroupRow).where(SessionZeroGroupRow.id.in_(group_ids)))
+    await session.flush()
+
+
+async def prune_groups(session: AsyncSession, column_id: uuid.UUID) -> bool:
+    """Spec 46c Decision 9: a group left with fewer than two post-its
+    dissolves. Whether any did."""
+    members = (
+        select(func.count())
+        .select_from(SessionZeroCardRow)
+        .where(SessionZeroCardRow.group_id == SessionZeroGroupRow.id)
+        .correlate(SessionZeroGroupRow)
+        .scalar_subquery()
+    )
+    result = await session.execute(
+        delete(SessionZeroGroupRow)
+        .where(SessionZeroGroupRow.column_id == column_id, members < 2)
+        .returning(SessionZeroGroupRow.id)
+    )
+    await session.flush()
+    return bool(result.scalars().all())
 
 
 async def list_copy_columns(session: AsyncSession, source_card_id: uuid.UUID) -> set[uuid.UUID]:

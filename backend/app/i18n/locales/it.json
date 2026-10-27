@@ -274,7 +274,10 @@
       "cardNotFound": "Post-it non trovato",
       "columnNotFound": "Colonna non trovata",
       "roundNotFound": "Giro non trovato",
-      "columnOrder": "Il nuovo ordine deve elencare una volta ogni colonna del giro"
+      "columnOrder": "Il nuovo ordine deve elencare una volta ogni colonna del giro",
+      "notGroupable": "Si raggruppano solo due o più post-it pubblicati della stessa colonna della Retro nel giro aperto",
+      "groupNotFound": "Gruppo non trovato",
+      "nothingToChange": "Niente da cambiare"
     }
   },
   "pdf": {
@@ -294,8 +297,7 @@
     "presets": {
       "want": "Lo vogliamo al tavolo",
       "care": "Con cura",
-      "avoid": "Da evitare",
-      "questions": "Domande"
+      "avoid": "Da evitare"
     }
   }
 }

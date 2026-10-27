@@ -4,7 +4,7 @@ import { SmileyIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { EmojiPicker } from './EmojiPicker';
 import { findMember, memberDisplayName } from '../../lib/members';
-import type { Comment, Reaction } from '../../types/comment';
+import type { Reaction } from '../../types/comment';
 import type { Member } from '../../types/member';
 import { LabeledActionIcon } from '../LabeledActionIcon';
 
@@ -66,20 +66,21 @@ export function ReactionChips({ reactions, members, onToggle, disabled }: Reacti
 }
 
 interface AddReactionProps {
-  comment: Comment;
+  /** The reactions already there: a Comment's, or a Session 0 post-it's (spec 46). */
+  reactions: Reaction[];
   onToggle: (emoji: string, add: boolean) => void;
   disabled: boolean;
 }
 
 /**
- * Opens the emoji picker to react to a Comment. Hidden once the Comment
+ * Opens the emoji picker to react to a Comment or a post-it. Hidden once it
  * carries `MAX_REACTION_EMOJI` different emoji: the chips can still be joined.
  * Picking an emoji the viewer already used changes nothing.
  */
-export function AddReaction({ comment, onToggle, disabled }: AddReactionProps) {
+export function AddReaction({ reactions, onToggle, disabled }: AddReactionProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
-  if (comment.reactions.length >= MAX_REACTION_EMOJI) {
+  if (reactions.length >= MAX_REACTION_EMOJI) {
     return null;
   }
   return (
@@ -101,7 +102,7 @@ export function AddReaction({ comment, onToggle, disabled }: AddReactionProps) {
           <EmojiPicker
             onSelect={(emoji) => {
               setOpened(false);
-              const existing = comment.reactions.find((reaction) => reaction.emoji === emoji);
+              const existing = reactions.find((reaction) => reaction.emoji === emoji);
               if (!existing?.reactedByMe) {
                 onToggle(emoji, true);
               }

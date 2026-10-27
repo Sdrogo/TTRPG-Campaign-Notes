@@ -1220,5 +1220,108 @@
     "strip": {
       "all_other": "全部地图（{{count}}）"
     }
+  },
+  "sessionZero": {
+    "title": "第 0 次会话",
+    "signInRequired": "登录后即可查看此房间的第 0 次会话。",
+    "loadError": "无法加载第 0 次会话。",
+    "notStarted": "此房间的第 0 次会话尚未开始。开始后即可打开回顾看板和底线与帷幕看板。",
+    "start": "开始第 0 次会话",
+    "actions": "第 0 次会议操作",
+    "resize": "调整底线与帷幕的大小",
+    "delete": {
+      "action": "删除第 0 次会议",
+      "title": "删除这次第 0 次会议？",
+      "body": "所有轮次、便签（包括草稿）、回应、分组、底线与帷幕以及计时器都将永久删除。之后任何成员都可以从头开始新的第 0 次会议。"
+    },
+    "indexLink": "第 0 次会话看板",
+    "retro": {
+      "title": "回顾"
+    },
+    "linesVeils": {
+      "title": "底线与帷幕",
+      "empty": "还没有便签。",
+      "add": "添加"
+    },
+    "kinds": {
+      "must": "Must",
+      "veils": "帷幕",
+      "lines": "底线"
+    },
+    "postIt": {
+      "text": "便签内容",
+      "charactersLeft_other": "还可输入 {{count}} 个字符",
+      "anonymous": "匿名",
+      "actions": "便签操作",
+      "publish": "发布",
+      "moveTo": "移到{{column}}",
+      "promoteTo": "提升到{{column}}",
+      "draft": "草稿",
+      "fromRetro": "来自回顾",
+      "label": "{{author}} 的便签",
+      "add": "添加便签",
+      "saveDraft": "保存草稿"
+    },
+    "publish": {
+      "title": "发布便签",
+      "body": "发布后，房间的所有成员都能看到这张便签，且无法再变回草稿。你仍可以编辑或删除它。",
+      "anonymous": "匿名发布",
+      "anonymousHint": "没有人能看到是谁写的，Master 也不例外。"
+    },
+    "publishAll": {
+      "button_other": "发布全部草稿（{{count}}）",
+      "title": "发布你的全部草稿",
+      "body_other": "你在本轮的 {{count}} 张草稿将对所有成员可见。此操作无法撤销。",
+      "overLimit_other": "看板快满了：{{count}} 张草稿将保持为草稿。"
+    },
+    "groups": {
+      "groupWith": "编组到…",
+      "groupWithBody": "选择本列的一张便签或一个分组。",
+      "takeOut": "移出分组",
+      "untitled": "分组",
+      "title": "分组标题",
+      "actions": "分组“{{title}}”的操作",
+      "rename": "重命名分组",
+      "ungroupAll": "解散分组",
+      "count_other": "{{count}} 张便签"
+    },
+    "columns": {
+      "actions": "“{{title}}”列操作",
+      "add": "添加列",
+      "rename": "重命名",
+      "moveLeft": "左移",
+      "moveRight": "右移",
+      "title": "列标题",
+      "deleteTitle": "删除此列？",
+      "deleteBody": "“{{title}}”列及其所有便签都将被删除。",
+      "color": "颜色"
+    },
+    "rounds": {
+      "first": "第 0 次会话",
+      "later": "第 0.5 次会话 #{{number}}",
+      "pick": "要显示的会话",
+      "start": "开始第 0.5 次会话",
+      "startBody": "当前的回顾看板将关闭，仍可只读查看；从未发布的草稿会被删除。新看板从空白开始，沿用相同的列。底线与帷幕保持不变。",
+      "title": "标题（可选）",
+      "titlePlaceholder": "第 1 篇章结束",
+      "startButton": "开始",
+      "closed": "此会话已关闭：看板为只读。"
+    },
+    "timer": {
+      "label": "计时器",
+      "none": "无计时器",
+      "expired": "时间到",
+      "paused": "已暂停",
+      "actions": "管理计时器",
+      "start": "开始计时",
+      "minutes_other": "{{count}} 分钟",
+      "custom": "自定义时长",
+      "length": "分钟",
+      "lengthHint": "{{min}} 到 {{max}} 分钟",
+      "startButton": "开始",
+      "pause": "暂停",
+      "resume": "继续",
+      "stop": "停止并清除"
+    }
   }
 }

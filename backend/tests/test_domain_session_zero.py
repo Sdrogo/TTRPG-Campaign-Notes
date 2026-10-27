@@ -7,11 +7,13 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from app.domain.models import RoomRole
+from app.domain.relationship_maps import MapColor
 from app.domain.session_zero import (
     MAX_BODY_LENGTH,
     MAX_CARDS_PER_BOARD,
     MAX_COLUMN_TITLE_LENGTH,
     MAX_EMOJI_PER_CARD,
+    MAX_GROUP_TITLE_LENGTH,
     MAX_RETRO_COLUMNS,
     MAX_ROUND_TITLE_LENGTH,
     STOPPED_TIMER,
@@ -22,11 +24,13 @@ from app.domain.session_zero import (
     Column,
     CopyNotEditableError,
     DraftCardError,
+    Group,
     InvalidCardError,
     InvalidTimerError,
     InvalidTitleError,
     LinesVeilsKind,
     NotAuthorError,
+    NotGroupableError,
     NotMasterError,
     Round,
     RoundClosedError,
@@ -37,14 +41,17 @@ from app.domain.session_zero import (
     WrongBoardError,
     apply_timer,
     can_delete_card,
+    can_group,
     can_promote,
     clean_body,
     clean_column_title,
+    clean_group_title,
     clean_round_title,
     ensure_can_add_card,
     ensure_can_add_column,
     ensure_can_delete_card,
     ensure_can_edit_card,
+    ensure_can_group,
     ensure_can_move,
     ensure_can_promote,
     ensure_can_publish,
@@ -126,13 +133,59 @@ def test_only_the_master_manages() -> None:
 
 
 def test_post_its_go_in_open_retro_columns_while_the_board_has_room() -> None:
-    ensure_can_add_card(RETRO, OPEN, 0)
-    with pytest.raises(WrongBoardError):
-        ensure_can_add_card(LINES, None, 0)
+    ensure_can_add_card(RETRO, OPEN, 0, PLAYER)
     with pytest.raises(RoundClosedError):
-        ensure_can_add_card(RETRO, CLOSED, 0)
+        ensure_can_add_card(RETRO, CLOSED, 0, PLAYER)
     with pytest.raises(BoardFullError):
-        ensure_can_add_card(RETRO, OPEN, MAX_CARDS_PER_BOARD)
+        ensure_can_add_card(RETRO, OPEN, MAX_CARDS_PER_BOARD, PLAYER)
+
+
+def test_only_the_master_writes_lines_and_veils_directly() -> None:
+    ensure_can_add_card(LINES, None, 0, MASTER)
+    with pytest.raises(NotMasterError):
+        ensure_can_add_card(LINES, None, 0, PLAYER)
+    with pytest.raises(BoardFullError):
+        ensure_can_add_card(LINES, None, MAX_CARDS_PER_BOARD, MASTER)
+
+
+def test_lines_and_veils_read_like_a_traffic_light() -> None:
+    assert list(LinesVeilsKind) == [LinesVeilsKind.MUST, LinesVeilsKind.VEILS, LinesVeilsKind.LINES]
+    assert LINES.shown_color is MapColor.RED
+    assert VEILS.shown_color is MapColor.GOLD
+    assert RETRO.shown_color is MapColor.DEFAULT
+    assert replace(RETRO, color=MapColor.GREEN).shown_color is MapColor.GREEN
+
+
+def test_group_titles_are_optional_and_bounded() -> None:
+    assert clean_group_title(None) is None
+    assert clean_group_title("  ") is None
+    assert clean_group_title(" Horror ") == "Horror"
+    with pytest.raises(InvalidTitleError):
+        clean_group_title("x" * (MAX_GROUP_TITLE_LENGTH + 1))
+    assert Group(uuid.uuid4(), RETRO.id, None).title is None
+
+
+def test_the_master_groups_published_post_its_of_an_open_retro_column() -> None:
+    assert can_group(_card(), RETRO, OPEN, MASTER)
+    assert not can_group(_card(), RETRO, OPEN, PLAYER)
+    assert not can_group(_card(published_at=None), RETRO, OPEN, MASTER)
+    assert not can_group(_card(), RETRO, CLOSED, MASTER)
+    assert not can_group(_card(column_id=LINES.id), LINES, None, MASTER)
+    pair = [_card(), _card()]
+    ensure_can_group(pair, RETRO, OPEN, MASTER)
+    with pytest.raises(NotMasterError):
+        ensure_can_group(pair, RETRO, OPEN, PLAYER)
+    with pytest.raises(RoundClosedError):
+        ensure_can_group(pair, RETRO, CLOSED, MASTER)
+    with pytest.raises(NotGroupableError):
+        ensure_can_group(pair[:1], RETRO, OPEN, MASTER)
+    with pytest.raises(NotGroupableError):
+        ensure_can_group([_card(), _card(published_at=None)], RETRO, OPEN, MASTER)
+    with pytest.raises(NotGroupableError):
+        ensure_can_group([_card(), _card(column_id=VEILS.id)], RETRO, OPEN, MASTER)
+    lines_pair = [_card(column_id=LINES.id), _card(column_id=LINES.id)]
+    with pytest.raises(NotGroupableError):
+        ensure_can_group(lines_pair, LINES, None, MASTER)
 
 
 def test_the_author_edits_retro_post_its_of_the_open_round() -> None:

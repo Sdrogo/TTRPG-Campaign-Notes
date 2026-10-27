@@ -10,10 +10,12 @@ import { SPLIT_QUERY, useSideDocument } from '../hooks/useSideDocument';
 interface PageLayoutProps {
   backTo: string;
   backLabel: string;
-  /** Given on a Room-scoped page, so the Room's Index tab sits on the left
-   *  edge (`RoomIndex`, spec 44), `AppHeader` offers the Room's search, and a
-   *  Document can open beside it (spec 37). */
+  /** Given on a Room-scoped page, so `AppHeader` offers the Room's search
+   *  and a Document can open beside it (spec 37). */
   roomId?: string;
+  /** The Room's Index tab on the left edge (`RoomIndex`, spec 44): only the
+   *  Room's Documents page shows it (spec 46c Decision 1). */
+  showIndex?: boolean;
   /**
    * The map pages: an empty `?side=` is the split open with no card picked
    * yet (spec 37), and on a phone a picked Document opens in the lower half
@@ -26,15 +28,22 @@ interface PageLayoutProps {
 /**
  * The top bar - including the "back" button every nested page has
  * (`AppHeader` owns its behaviour: it goes up the hierarchy to `backTo`, not
- * through browser history) -, on a Room page the Index tab on the left edge
- * (spec 44), then a full-width page body with
+ * through browser history) -, on the Room's Documents page the Index tab on
+ * the left edge (spec 44), then a full-width page body with
  * side margins that grow with the screen, as the page's `main` landmark.
  * On a Room page whose address names a Document to open beside it
  * (`?side=`, spec 37), the body shares the width with that Document, on a
  * screen wide enough for both; on a phone, a map page shows it in the lower
  * half of the screen instead, the page scrolling above it.
  */
-export function PageLayout({ backTo, backLabel, roomId, allowEmptySide = false, children }: PageLayoutProps) {
+export function PageLayout({
+  backTo,
+  backLabel,
+  roomId,
+  showIndex = false,
+  allowEmptySide = false,
+  children,
+}: PageLayoutProps) {
   const { sideId, close } = useSideDocument();
   const wide = useMediaQuery(SPLIT_QUERY, true);
   const below = Boolean(roomId && allowEmptySide && sideId && !wide);
@@ -51,7 +60,7 @@ export function PageLayout({ backTo, backLabel, roomId, allowEmptySide = false, 
   return (
     <>
       <AppHeader roomId={roomId} backTo={backTo} backLabel={backLabel} />
-      {roomId && <RoomIndex roomId={roomId} />}
+      {roomId && showIndex && <RoomIndex roomId={roomId} />}
       <Container component="main" fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="md">
         {roomId && (sideId || (allowEmptySide && sideId === '')) && wide ? (
           <SplitView left={body} right={<DocumentSidePane roomId={roomId} documentId={sideId || null} onClose={close} />} />

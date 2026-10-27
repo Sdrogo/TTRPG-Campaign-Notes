@@ -1249,5 +1249,114 @@
       "all_one": "Alle kaarten ({{count}})",
       "all_other": "Alle kaarten ({{count}})"
     }
+  },
+  "sessionZero": {
+    "title": "Sessie 0",
+    "signInRequired": "Log in om de Sessie 0 van deze Kamer te zien.",
+    "loadError": "Sessie 0 kon niet worden geladen.",
+    "notStarted": "De Sessie 0 van deze Kamer is nog niet begonnen. Start hem om het Retro-bord en het bord Lijnen en Sluiers te openen.",
+    "start": "Sessie 0 starten",
+    "actions": "Acties van Sessie 0",
+    "resize": "Grootte van Lijnen en Sluiers aanpassen",
+    "delete": {
+      "action": "Sessie 0 verwijderen",
+      "title": "Deze Sessie 0 verwijderen?",
+      "body": "Alle rondes, post-its (ook concepten), reacties, groepen, Lijnen en Sluiers en de timer verdwijnen voorgoed. Daarna kan elk lid een nieuwe Sessie 0 vanaf nul beginnen."
+    },
+    "indexLink": "Borden van Sessie 0",
+    "retro": {
+      "title": "Retro"
+    },
+    "linesVeils": {
+      "title": "Lijnen en Sluiers",
+      "empty": "Nog geen post-its.",
+      "add": "Toevoegen"
+    },
+    "kinds": {
+      "must": "Must",
+      "veils": "Sluiers",
+      "lines": "Lijnen"
+    },
+    "postIt": {
+      "text": "Tekst van de post-it",
+      "charactersLeft_one": "Nog {{count}} teken",
+      "charactersLeft_other": "Nog {{count}} tekens",
+      "anonymous": "Anoniem",
+      "actions": "Acties voor de post-it",
+      "publish": "Publiceren",
+      "moveTo": "Verplaatsen naar {{column}}",
+      "promoteTo": "Promoveren naar {{column}}",
+      "draft": "Concept",
+      "fromRetro": "uit de Retro",
+      "label": "Post-it van {{author}}",
+      "add": "Post-it toevoegen",
+      "saveDraft": "Concept opslaan"
+    },
+    "publish": {
+      "title": "Post-it publiceren",
+      "body": "Eenmaal gepubliceerd is de post-it zichtbaar voor alle leden van de Kamer en wordt hij geen concept meer. Je kunt hem nog steeds bewerken of verwijderen.",
+      "anonymous": "Anoniem publiceren",
+      "anonymousHint": "Niemand ziet wie hem schreef, ook de Master niet."
+    },
+    "publishAll": {
+      "button_one": "Alle concepten publiceren ({{count}})",
+      "button_other": "Alle concepten publiceren ({{count}})",
+      "title": "Al je concepten publiceren",
+      "body_one": "Je concept in deze ronde wordt zichtbaar voor alle leden. Dit kan niet ongedaan worden gemaakt.",
+      "body_other": "Je {{count}} concepten in deze ronde worden zichtbaar voor alle leden. Dit kan niet ongedaan worden gemaakt.",
+      "overLimit_one": "Het bord is bijna vol: {{count}} concept blijft een concept.",
+      "overLimit_other": "Het bord is bijna vol: {{count}} concepten blijven concepten."
+    },
+    "groups": {
+      "groupWith": "Groeperen met…",
+      "groupWithBody": "Kies een post-it of een groep uit deze kolom.",
+      "takeOut": "Uit de groep halen",
+      "untitled": "Groep",
+      "title": "Titel van de groep",
+      "actions": "Acties van de groep {{title}}",
+      "rename": "Groep hernoemen",
+      "ungroupAll": "Groep opheffen",
+      "count_one": "{{count}} post-it",
+      "count_other": "{{count}} post-its"
+    },
+    "columns": {
+      "actions": "Acties voor kolom {{title}}",
+      "add": "Kolom toevoegen",
+      "rename": "Hernoemen",
+      "moveLeft": "Naar links",
+      "moveRight": "Naar rechts",
+      "title": "Titel van de kolom",
+      "deleteTitle": "Kolom verwijderen?",
+      "deleteBody": "De kolom ‘{{title}}’ wordt verwijderd, samen met al zijn post-its.",
+      "color": "Kleur"
+    },
+    "rounds": {
+      "first": "Sessie 0",
+      "later": "Sessie 0.5 #{{number}}",
+      "pick": "Te tonen sessie",
+      "start": "Sessie 0.5 starten",
+      "startBody": "Het huidige Retro-bord sluit en blijft alleen-lezen beschikbaar; nooit gepubliceerde concepten worden verwijderd. Het nieuwe bord begint leeg, met dezelfde kolommen. Lijnen en Sluiers blijft zoals het is.",
+      "title": "Titel (optioneel)",
+      "titlePlaceholder": "Einde van arc 1",
+      "startButton": "Starten",
+      "closed": "Deze sessie is gesloten: het bord is alleen-lezen."
+    },
+    "timer": {
+      "label": "Timer",
+      "none": "Geen timer",
+      "expired": "Tijd is om",
+      "paused": "Gepauzeerd",
+      "actions": "Timer beheren",
+      "start": "Timer starten",
+      "minutes_one": "{{count}} minuut",
+      "minutes_other": "{{count}} minuten",
+      "custom": "Eigen duur",
+      "length": "Minuten",
+      "lengthHint": "Van {{min}} tot {{max}} minuten",
+      "startButton": "Starten",
+      "pause": "Pauzeren",
+      "resume": "Hervatten",
+      "stop": "Stoppen en wissen"
+    }
   }
 }

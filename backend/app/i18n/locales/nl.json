@@ -274,7 +274,10 @@
       "cardNotFound": "Post-it niet gevonden",
       "columnNotFound": "Kolom niet gevonden",
       "roundNotFound": "Ronde niet gevonden",
-      "columnOrder": "De nieuwe volgorde moet elke kolom van de ronde één keer noemen"
+      "columnOrder": "De nieuwe volgorde moet elke kolom van de ronde één keer noemen",
+      "notGroupable": "Alleen twee of meer gepubliceerde post-its uit één Retro-kolom van de open ronde kunnen worden gegroepeerd",
+      "groupNotFound": "Groep niet gevonden",
+      "nothingToChange": "Niets te wijzigen"
     }
   },
   "pdf": {
@@ -294,8 +297,7 @@
     "presets": {
       "want": "Dit willen we aan tafel",
       "care": "Met zorg",
-      "avoid": "Te vermijden",
-      "questions": "Vragen"
+      "avoid": "Te vermijden"
     }
   }
 }
