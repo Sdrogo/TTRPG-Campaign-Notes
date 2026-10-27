@@ -702,14 +702,17 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
-- **46, Session 0 boards** (ticket written 2026-10-27, waiting for the
-  product owner's confirmation): a Room's Session 0 page with a Retro
-  board and a Lines & Veils board, draft/publish post-its (anonymous or
-  signed), promotion as a copy by the Master (button + drag), reactions, a shared
-  non-blocking timer and live push updates (SSE, the app's first). One
-  migration. Session 0.5 rounds (Lines & Veils carry over, a Line can
-  become a Veil). Table Pact Document proposed as 46b; Stars and Wishes
-  debrief is a separate tool, later.
+- **46, Session 0 boards** (ticket confirmed by the product owner
+  2026-10-27, building): a Room's Session 0 page with a Retro board and a
+  Lines & Veils board (Must, Lines, Veils), draft/publish post-its
+  (anonymous or signed), promotion as a copy by the Master (button +
+  drag), reactions, a shared non-blocking timer, Session 0.5 rounds and
+  live push updates (SSE, the app's first). One migration.
+- **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
+  (the DDI's six sections), not shown to invitees before they join
+  (product owner, 2026-10-27). Ticket not written yet.
+- **Room landing page**: product owner's idea (2026-10-27), separate
+  ticket, not written yet.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08). Ticket written, decisions proposed, no migration expected.
 - **Two small tickets, not written yet**: default Tags in the creator's UI

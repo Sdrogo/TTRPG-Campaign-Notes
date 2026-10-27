@@ -10,9 +10,10 @@
   - a **Retro board**: columns the Master names (preset "Lo vogliamo al
     tavolo", "Con cura", "Da evitare", "Domande"), where every member writes
     post-its;
-  - a **Lines & Veils board** ("Linee e Veli"): two fixed columns, **Lines**
-    (never in the game) and **Veils** (happens off screen, only hinted at),
-    filled by promoting post-its from the Retro board.
+  - a **Lines & Veils board** ("Linee e Veli"): three fixed columns,
+    **Must** (what the group wants at the table), **Lines** (never in the
+    game) and **Veils** (happens off screen, only hinted at), filled by
+    promoting post-its from the Retro board.
 - Post-its are private drafts until their author publishes them; published
   post-its take reactions; a shared timer paces the writing; every change
   reaches every member's screen at once (push, not polling).
@@ -27,21 +28,23 @@
 ## Decisions
 
 Decisions 1-6, 8 and 16 were taken with the product owner in the brainstorm
-thread on 2026-10-27; 7 and 9-15 are defaults picked the same day, to
-confirm on this ticket.
+thread on 2026-10-27; 7 and 9-15 were proposed the same day and confirmed
+or amended by the product owner on 2026-10-27 (10: a Must column; 12: a
+characters-left counter; 13: a Room landing page is a separate ticket; 15:
+those items stay out entirely). The ticket is confirmed.
 
 1. **Draft, then publish** (product owner): a new post-it is a draft only
    its author sees, the Master included. "Publish" makes it visible to every
    member of the Room. Publishing cannot be undone (the author can still
    delete it, Decision 9). There is no Master reveal on the boards.
 2. **Promote = copy** (product owner): a published Retro post-it can be
-   promoted to Lines or Veils, by a **"Promote" button** on the post-it
+   promoted to Must, Lines or Veils, by a **"Promote" button** on the post-it
    (main path, works on a phone) and by drag and drop from the Retro board
    onto a Lines & Veils column (desktop, same action). Promoting creates a
    copy on the Lines & Veils board linked to the original ("from the
-   Retro"); the original stays where it is. A post-it promoted to Lines can
-   still be promoted to Veils too (two copies), but not twice to the same
-   column (409).
+   Retro"); the original stays where it is. A post-it promoted to one
+   column can still be promoted to another (one copy each), but not twice
+   to the same column (409).
 3. **Live updates** (product owner): every create, publish, edit, delete,
    promotion, reaction, column change and timer change appears on every open
    Session 0 page within about a second, without reloading, and the changed
@@ -78,26 +81,34 @@ confirm on this ticket.
     "Sessione 0"; later rounds, Decision 16). The
     Master adds, renames, reorders and deletes Retro columns (a column with
     published post-its asks for confirmation; its post-its go with it).
-    Lines & Veils columns are fixed.
+    Lines & Veils has three fixed columns, in this order: **Must**
+    ("Must", what the group wants to have at the table; product owner,
+    2026-10-27), **Lines** ("Linee") and **Veils** ("Veli").
 11. **Who sees it**: every member of the Room, both roles. No per-post-it
     visibility beyond draft/published. "View as" (spec 22b) shows the board
     as the member sees it, read-only, with their drafts hidden (drafts are
     never shown to anyone but the author).
 12. **Limits**: post-it text up to 500 characters, plain text; at most 200
-    post-its per board and 8 Retro columns.
+    post-its per board and 8 Retro columns. The editor shows the characters
+    left while typing (product owner, 2026-10-27).
 13. **Where it lives**: a "Session 0" entry in the Room Index (spec 44) and
     in the Room title's "⋮" menu; route `/rooms/:roomId/session-zero`. On a
     phone the two boards are two tabs, and promotion is the button only.
+    A landing page for each Room is a separate ticket (product owner,
+    2026-10-27).
 14. **Not audited**, no History revisions (spec 24b), not in Room
     duplication (spec 33), JSON/PDF export (spec 23, 27) or search (spec 21)
     for now. Included in the user's own data export (spec 31: their own
     post-its, drafts too) and erased with the account (anonymous or not).
-15. **Not in scope**: a Table Pact Document generated from the boards
-    (later ticket 46b, proposed), a ready-made list of common themes, the
-    X-card, Script Change and OK check-in during play, Stars and Wishes
-    for the debrief (product owner, 2026-10-27: a separate tool later), PC
-    bond questions, presence and live cursors, a reminder to hold a
-    Session 0.5.
+15. **Not in scope** (product owner, 2026-10-27: these stay out
+    entirely): a ready-made list of common themes, the X-card, Script
+    Change and OK check-in during play, Stars and Wishes for the debrief,
+    PC bond questions, presence and live cursors, a reminder to hold a
+    Session 0.5. The **Dichiarazione d'Intenti** (DDI) is ticket 46b: a
+    suggested, editable Document template (the six sections of the DDI
+    checklist as a starting structure the Master can change freely),
+    replacing the Table Pact idea; it is not shown to invitees before they
+    join (product owner, 2026-10-27).
 16. **Session 0.5 rounds** (product owner): the Master starts a new round
     ("Avvia Sessione 0.5", with an optional title such as "Fine arco 1").
     The current Retro round closes and stays readable, read-only, from a
@@ -105,8 +116,8 @@ confirm on this ticket.
     published was never shared). The new round starts empty, with the
     previous round's column titles. Lines & Veils is **one board for the
     whole Room**, not per round: it carries over, and the Master can at any
-    time move a post-it between Lines and Veils ("Sposta in Veli" / "Sposta
-    in Linee"; 409 if a copy of the same original is already there) or
+    time move a post-it between Must, Lines and Veils ("Sposta in Must /
+    Linee / Veli"; 409 if a copy of the same original is already there) or
     delete it. Post-its of any round can still be promoted, so a new limit
     raised in a later round reaches the same board. Reactions and the
     timer work the same in every round; a closed round takes no new
@@ -125,7 +136,7 @@ confirm on this ticket.
     Room (partial unique index);
   - `session_zero_columns` (`id`, `room_id`, `board` `'retro'|'lines_veils'`,
     `round_id` for Retro columns, null for Lines & Veils, `kind` null or
-    `'lines'|'veils'`, `title`, `position`);
+    `'must'|'lines'|'veils'`, `title`, `position`);
   - `session_zero_cards` (`id`, `room_id`, `column_id`, `author_id`, `body`,
     `anonymous`, `published_at` null = draft, `source_card_id` null or the
     Retro original (`ON DELETE SET NULL`), `promoted_by` null or the user
@@ -154,7 +165,7 @@ confirm on this ticket.
   `PUT .../columns/order`, `POST .../timer` `{action, duration_s}`,
   `POST .../rounds` `{title}` (Master: closes the open round, copies its
   column titles), `POST .../cards/{card}/move` `{column_id}` (Master, a
-  Lines & Veils post-it to the other Lines & Veils column). Writes to a
+  Lines & Veils post-it to another Lines & Veils column). Writes to a
   closed round's columns or post-its answer 409. Every
   shared write (anything but a draft) bumps `revision` under the Room's
   `session_zero` row lock. 404 for a
@@ -197,15 +208,15 @@ confirm on this ticket.
   vertical lists. Phone: two tabs. The timer bar sits on top, sticky.
 - Post-it card: text, author or "Anonimo", "Bozza" badge on drafts,
   "dalla Retro" on copies, reactions row (`CommentReactions` reused or
-  generalised), "⋮" with Publish, Edit, Promote to Lines / Veils, Delete as
-  allowed. Publishing opens a small dialog with the anonymous switch.
+  generalised), "⋮" with Publish, Edit, Promote to Must / Lines / Veils,
+  Delete as allowed. The post-it editor shows the characters left (500). Publishing opens a small dialog with the anonymous switch.
 - Drag and drop with native HTML5 drag (no new dependency; the app has no
   drag-and-drop library besides `@xyflow/react` for maps), only from a published Retro post-it, for the Master only,
   onto a Lines & Veils column; dropping calls promote.
 - Master tools: timer menu (5/10/15/custom, pause, resume, stop), column
   add/rename/reorder/delete, "Avvia Sessione 0.5" (confirm dialog with an
-  optional title), "Sposta in Veli/Linee" on Lines & Veils post-its (also
-  by dragging between the two columns on desktop).
+  optional title), "Sposta in Must/Linee/Veli" on Lines & Veils post-its
+  (also by dragging between its columns on desktop).
 - Round selector above the Retro board ("Sessione 0", "Sessione 0.5 - Fine
   arco 1", ...); a closed round shows read-only with a dimmed banner.
 - Strings in all 12 languages; "Session 0", "Lines", "Veils", "post-it"
@@ -230,8 +241,8 @@ confirm on this ticket.
   published post-its; timer start/pause/resume/stop and remaining time;
   column rules and limits; a new round closes the previous one, copies its
   column titles, drops its drafts and refuses writes to it (409); Lines &
-  Veils carries over across rounds; move between Lines and Veils is Master
-  only and 409 on a duplicate; a later round's post-it can be promoted; shared writes bump `revision`; view-as refuses writes;
+  Veils carries over across rounds; move between Must, Lines and Veils is
+  Master only and 409 on a duplicate; a later round's post-it can be promoted; shared writes bump `revision`; view-as refuses writes;
   account deletion and data export cover post-its.
 - Live push: a shared write emits one event per open stream of that Room
   only; a draft write emits nothing to other members and leaves the shared
