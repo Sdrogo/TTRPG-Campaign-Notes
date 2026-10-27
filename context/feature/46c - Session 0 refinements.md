@@ -101,8 +101,8 @@ palette). The ticket is confirmed.
    - Groups belong to their round's column: a new round starts without
      them; deleting the column or the post-its removes them.
 
-10. **Resizable Lines & Veils** (proposed 2026-10-27, awaiting the
-    product owner's confirmation): on a screen wide enough for both boards
+10. **Resizable Lines & Veils** (confirmed by the product owner
+    2026-10-27): on a screen wide enough for both boards
     (from 62em), a vertical handle between the Retro board and Lines &
     Veils; dragging it widens one board and narrows the other. Lines &
     Veils stays between 280px and 60% of the page; it starts at a third.
@@ -111,8 +111,7 @@ palette). The ticket is confirmed.
     a third. The width is remembered in this browser only, for this
     viewer (not shared, not stored on the server). On a phone nothing
     changes: the two boards stay two tabs.
-11. **Columns that fit the screen** (proposed 2026-10-27, awaiting
-    confirmation):
+11. **Columns that fit the screen** (confirmed 2026-10-27):
     - Retro columns share the board's width equally instead of a fixed
       260px, each at least 220px; when the round has more columns than fit
       at 220px, the board scrolls sideways as today. The "Add column"
@@ -213,6 +212,10 @@ palette). The ticket is confirmed.
   (colours, "Colour" dialog, Lines & Veils "Add"); styles `.sz-column`,
   `.sz-post-it`, `.sz-group` in `index.css`. The board context's `act`
   takes an `onDone`, so a dialog closes only once its write succeeds.
+- Decisions 10 and 11: `components/sessionZero/BoardsSplit.tsx` (handle,
+  `localStorage` key `sessionZero:linesVeilsWidth`); `.sz-retro-column`,
+  `.sz-retro-scroll`, `.sz-lines-veils`, `.sz-split-handle` in
+  `index.css`; string `sessionZero.resize` in 12 languages.
 - Screenshots: `session-zero/` in the project files.
 
 ## Build estimate

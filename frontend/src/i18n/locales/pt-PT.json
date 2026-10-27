@@ -1259,6 +1259,7 @@
     "notStarted": "A Sessão 0 desta Sala ainda não começou. Inicia-a para abrir o quadro Retro e o de Linhas e Véus.",
     "start": "Iniciar a Sessão 0",
     "actions": "Ações da Sessão 0",
+    "resize": "Redimensionar Linhas e Véus",
     "delete": {
       "action": "Eliminar a Sessão 0",
       "title": "Eliminar esta Sessão 0?",

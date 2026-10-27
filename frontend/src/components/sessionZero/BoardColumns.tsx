@@ -18,7 +18,12 @@ import { PostItGroup } from './PostItGroup';
 import { PostItEditor } from './PostItEditor';
 import { useBoard } from './boardContext';
 
-/** A column's width on the boards; the Retro board scrolls sideways past the screen. */
+/**
+ * The width of the "Add column" form. Columns themselves fit the board
+ * (spec 46c Decision 11, `.sz-retro-column` in `index.css`): Retro ones share
+ * its width, at least 220px each (a phone's width on a phone), and the
+ * board scrolls sideways past that.
+ */
 export const COLUMN_WIDTH = 260;
 
 interface ColumnFrameProps {
@@ -42,9 +47,8 @@ function ColumnFrame({ title, color, menu, dropTarget = false, onDrop, fill = fa
       withBorder
       radius="md"
       p="xs"
-      w={fill ? '100%' : COLUMN_WIDTH}
-      miw={fill ? undefined : COLUMN_WIDTH}
-      className="sz-column"
+      w={fill ? '100%' : undefined}
+      className={fill ? 'sz-column' : 'sz-column sz-retro-column'}
       data-drop-over={over || undefined}
       style={
         {

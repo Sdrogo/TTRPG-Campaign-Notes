@@ -1257,6 +1257,7 @@
     "notStarted": "This Room's Session 0 hasn't started yet. Start it to open the Retro board and the Lines & Veils board.",
     "start": "Start Session 0",
     "actions": "Session 0 actions",
+    "resize": "Resize Lines & Veils",
     "delete": {
       "action": "Delete Session 0",
       "title": "Delete this Session 0?",

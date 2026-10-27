@@ -1257,6 +1257,7 @@
     "notStarted": "La Sessione 0 di questa Stanza non è ancora iniziata. Avviala per aprire la lavagna Retro e quella di Linee e Veli.",
     "start": "Avvia la Sessione 0",
     "actions": "Azioni della Sessione 0",
+    "resize": "Ridimensiona Linee e Veli",
     "delete": {
       "action": "Elimina Sessione 0",
       "title": "Eliminare questa Sessione 0?",

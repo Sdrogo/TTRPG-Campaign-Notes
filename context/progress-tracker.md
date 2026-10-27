@@ -723,7 +723,9 @@ on `main`.
   page, compact timer on the title line, delete the Session 0, three
   presets, traffic-light column colours (maps' palette), Lines & Veils
   written directly by the Master, post-it elevation, inline publish and
-  publish-all, groups of post-its. **Migration `c3f8a1d6e9b4`**: to apply
+  publish-all, groups of post-its; then (Decisions 10 and 11, confirmed
+  the same day) a resizable Lines & Veils board and columns that fit the
+  screen. **Migration `c3f8a1d6e9b4`**: to apply
   to the staging DB before PR #251 merges, and to production before the
   next release (with `4797859660e2`). The live client (46_4) must handle
   the new events `group` and `reset` (re-read the board; after `reset`

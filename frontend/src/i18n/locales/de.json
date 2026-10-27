@@ -1257,6 +1257,7 @@
     "notStarted": "Die Session 0 dieses Raums hat noch nicht begonnen. Starte sie, um das Retro-Board und das Board Grenzen & Schleier zu öffnen.",
     "start": "Session 0 starten",
     "actions": "Aktionen der Session 0",
+    "resize": "Grenzen & Schleier skalieren",
     "delete": {
       "action": "Session 0 löschen",
       "title": "Diese Session 0 löschen?",

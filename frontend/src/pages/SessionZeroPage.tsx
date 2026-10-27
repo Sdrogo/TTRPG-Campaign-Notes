@@ -12,6 +12,7 @@ import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { AddColumn, LinesVeilsColumn, RetroColumn } from '../components/sessionZero/BoardColumns';
 import { BoardContext, useBoard, type BoardContextValue } from '../components/sessionZero/boardContext';
+import { BoardsSplit } from '../components/sessionZero/BoardsSplit';
 import { PublishModal } from '../components/sessionZero/PostItCard';
 import { RoundsBar } from '../components/sessionZero/RoundsBar';
 import { SessionZeroTitle } from '../components/sessionZero/SessionZeroTitle';
@@ -91,14 +92,7 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
         <BoardContext.Provider value={context}>
           <SessionZeroTitle readAtMs={board.dataUpdatedAt} />
           {wide ? (
-            <Group align="flex-start" wrap="nowrap" gap="lg">
-              <Box style={{ flex: 2, minWidth: 0 }}>
-                <RetroBoard onPick={setRoundId} />
-              </Box>
-              <Box style={{ flex: 1, minWidth: 280 }}>
-                <LinesVeilsBoard />
-              </Box>
-            </Group>
+            <BoardsSplit left={<RetroBoard onPick={setRoundId} />} right={<LinesVeilsBoard />} />
           ) : (
             <Tabs defaultValue="retro" keepMounted={false}>
               <Tabs.List mb="sm" grow>
@@ -131,7 +125,7 @@ function RetroBoard({ onPick }: { onPick: (roundId: string | null) => void }) {
       </Title>
       <RoundsBar onPick={onPick} />
       {writable && open && <PublishAll />}
-      <Box style={{ overflowX: 'auto' }} pb="xs">
+      <Box className="sz-retro-scroll" style={{ overflowX: 'auto' }} pb="xs">
         <Group align="flex-start" wrap="nowrap" gap="sm">
           {board.retro.map((column, index) => (
             <RetroColumn key={column.id} column={column} index={index} count={board.retro.length} open={open} />
@@ -186,7 +180,11 @@ function PublishAll() {
   );
 }
 
-/** The Room's one Lines & Veils board: Must, Veils and Lines, whatever the round. */
+/**
+ * The Room's one Lines & Veils board: Must, Veils and Lines, whatever the
+ * round; side by side when it has room for three of 220px, one under the
+ * other when it hasn't (spec 46c Decision 11, `.sz-lines-veils`).
+ */
 function LinesVeilsBoard() {
   const { t } = useTranslation();
   const { board } = useBoard();
@@ -195,9 +193,11 @@ function LinesVeilsBoard() {
       <Title order={2} fz="h4">
         {t('sessionZero.linesVeils.title')}
       </Title>
-      {board.linesVeils.map((column) => (
-        <LinesVeilsColumn key={column.id} column={column} />
-      ))}
+      <div className="sz-lines-veils">
+        {board.linesVeils.map((column) => (
+          <LinesVeilsColumn key={column.id} column={column} />
+        ))}
+      </div>
     </Stack>
   );
 }

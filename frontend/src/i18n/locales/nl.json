@@ -1257,6 +1257,7 @@
     "notStarted": "De Sessie 0 van deze Kamer is nog niet begonnen. Start hem om het Retro-bord en het bord Lijnen en Sluiers te openen.",
     "start": "Sessie 0 starten",
     "actions": "Acties van Sessie 0",
+    "resize": "Grootte van Lijnen en Sluiers aanpassen",
     "delete": {
       "action": "Sessie 0 verwijderen",
       "title": "Deze Sessie 0 verwijderen?",

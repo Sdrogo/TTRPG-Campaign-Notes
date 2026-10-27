@@ -872,4 +872,15 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   border, 8% tint) around its post-its, headed by the title (bold `xs`,
   "Group" when untitled) and the count (dimmed); the Master's "⋮" renames
   it inline or ungroups all.
+- Layout (spec 46c Decisions 10 and 11): from 62em the two boards sit
+  side by side with a handle between them (`BoardsSplit`,
+  `.sz-split-handle`: a 16px `col-resize` strip with a 2px line in
+  `--border-default`, `--accent-primary` on hover, focus or drag); Lines &
+  Veils starts at a third, stays between 280px and 60%, double click
+  resets, arrows/Home/End move it, the width is kept in `localStorage`.
+  Retro columns share the board's width (`flex: 1 1 0`, at least 220px);
+  on a phone each takes the board's whole width and the board snaps from
+  one to the next. Lines & Veils columns are a grid
+  `repeat(auto-fit, minmax(220px, 1fr))`: a row when there is room, a
+  stack when there isn't.
 - Screenshots: `session-zero/` in the project files.

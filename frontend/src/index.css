@@ -540,3 +540,56 @@ html body[data-scroll-locked] {
     transform: none;
   }
 }
+
+/* Session 0 layout (spec 46c Decisions 10 and 11): Retro columns share the
+   board's width, at least 220px each, and on a phone one fills the screen
+   and the board snaps to each; Lines & Veils' columns go side by side when
+   there is room for three; the handle between the two boards resizes them. */
+.sz-retro-column {
+  flex: 1 1 0;
+  min-width: 220px;
+}
+@media (max-width: 48em) {
+  .sz-retro-scroll {
+    scroll-snap-type: x mandatory;
+  }
+  .sz-retro-column {
+    min-width: 100%;
+    scroll-snap-align: start;
+  }
+}
+
+.sz-lines-veils {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--mantine-spacing-xs);
+  align-items: start;
+}
+
+.sz-split-handle {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 16px;
+  margin: 0 4px;
+  cursor: col-resize;
+  touch-action: none;
+  position: relative;
+  border-radius: var(--mantine-radius-sm);
+}
+.sz-split-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0 7px;
+  background: var(--border-default);
+  border-radius: 1px;
+  transition: background 120ms ease;
+}
+.sz-split-handle:hover::after,
+.sz-split-handle:focus-visible::after,
+.sz-split-handle[data-dragging]::after {
+  background: var(--accent-primary);
+}
+.sz-split-handle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}

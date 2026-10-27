@@ -1259,6 +1259,7 @@
     "notStarted": "La Session 0 de cette Salle n'a pas encore commencé. Lancez-la pour ouvrir le tableau Rétro et celui des Lignes et Voiles.",
     "start": "Lancer la Session 0",
     "actions": "Actions de la Session 0",
+    "resize": "Redimensionner Lignes et Voiles",
     "delete": {
       "action": "Supprimer la Session 0",
       "title": "Supprimer cette Session 0 ?",

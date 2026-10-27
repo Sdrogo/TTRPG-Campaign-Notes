@@ -1315,6 +1315,7 @@
     "notStarted": "Sesja 0 tego Pokoju jeszcze się nie zaczęła. Rozpocznij ją, aby otworzyć tablicę Retro i tablicę Linii i Zasłon.",
     "start": "Rozpocznij Sesję 0",
     "actions": "Działania Sesji 0",
+    "resize": "Zmień rozmiar Linii i Zasłon",
     "delete": {
       "action": "Usuń Sesję 0",
       "title": "Usunąć tę Sesję 0?",

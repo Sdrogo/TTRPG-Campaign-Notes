@@ -1257,6 +1257,7 @@
     "notStarted": "La Sesión 0 de esta Sala aún no ha empezado. Iníciala para abrir el tablero Retro y el de Líneas y Velos.",
     "start": "Iniciar la Sesión 0",
     "actions": "Acciones de la Sesión 0",
+    "resize": "Cambiar el tamaño de Líneas y Velos",
     "delete": {
       "action": "Eliminar la Sesión 0",
       "title": "¿Eliminar esta Sesión 0?",

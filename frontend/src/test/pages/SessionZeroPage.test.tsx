@@ -139,6 +139,8 @@ describe('SessionZeroPage', () => {
     expect(within(retro).getByRole('button', { name: 'Aggiungi colonna' })).toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Linee e Veli' })).getByRole('heading', { name: 'Veli' })).toBeInTheDocument();
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    // Spec 46c Decision 10: a handle between the two boards resizes them.
+    expect(screen.getByRole('separator', { name: 'Ridimensiona Linee e Veli' })).toBeInTheDocument();
     expect(screen.getByRole('timer')).toHaveTextContent('1:05');
   });
 
