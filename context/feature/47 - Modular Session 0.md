@@ -111,7 +111,7 @@ Decision is a default to confirm or amend.
     name/subtitle/description/Notes from the mapping (Decision 9), the
     module's Tag, the Player as **Owner** (D-12) and as its **Character
     player** (D-23). It works even when the Room turned off Document
-    creation by Players (D-13), since the Master set up the module.
+    creation by Players (D-13) as proposed in Q7.
     One Document per Player per Questions module (409 on a second); the
     module then shows "Apri il tuo Documento". From then on it is an
     ordinary Document: the Player edits it freely (and the Master, D-12);
