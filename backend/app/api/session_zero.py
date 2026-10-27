@@ -31,6 +31,7 @@ from app.domain.relationship_maps import MapColor
 from app.domain.session_zero import (
     AlreadyPromotedError,
     AlreadyPublishedError,
+    BadPlaceError,
     BoardFullError,
     Card,
     Column,
@@ -54,6 +55,7 @@ from app.domain.session_zero import (
     apply_timer,
     can_delete_card,
     can_group,
+    can_place,
     can_promote,
     clean_body,
     clean_column_title,
@@ -65,6 +67,8 @@ from app.domain.session_zero import (
     ensure_can_edit_card,
     ensure_can_group,
     ensure_can_move,
+    ensure_can_place_card,
+    ensure_can_place_group,
     ensure_can_promote,
     ensure_can_publish,
     ensure_can_react,
@@ -73,6 +77,7 @@ from app.domain.session_zero import (
     ensure_round_open,
     is_card_visible,
     is_master,
+    placed,
     publishable_count,
     remaining_seconds,
     shown_author,
@@ -114,6 +119,7 @@ _STATUS_FOR: dict[type[DomainError], int] = {
     TooManyColumnsError: status.HTTP_409_CONFLICT,
     TooManyCardEmojiError: status.HTTP_409_CONFLICT,
     NotGroupableError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    BadPlaceError: status.HTTP_422_UNPROCESSABLE_CONTENT,
 }
 
 
@@ -136,11 +142,14 @@ class CardResponse(BaseModel):
     """A post-it as the caller sees it. `author_id` is empty on someone
     else's anonymous post-it (Decision 7); `from_retro` marks a Lines &
     Veils copy (Decision 2); `group_id` its group (spec 46c Decision 9).
-    The `can_*` flags drive the menu."""
+    `position` is its place in its group, or among its column's post-its in
+    no group and its groups (spec 46d Decision 7). The `can_*` flags drive
+    the menu and the drag (`can_place`)."""
 
     id: uuid.UUID
     column_id: uuid.UUID
     group_id: uuid.UUID | None
+    position: int
     body: str
     author_id: uuid.UUID | None
     anonymous: bool
@@ -158,17 +167,20 @@ class CardResponse(BaseModel):
     can_move: bool
     can_react: bool
     can_group: bool
+    can_place: bool
 
 
 class GroupResponse(BaseModel):
-    """A group of post-its in a Retro column (spec 46c Decision 9)."""
+    """A group of post-its in a Retro column (spec 46c Decision 9), at
+    `position` among the column's post-its in no group (spec 46d)."""
 
     id: uuid.UUID
     title: str | None
+    position: int
 
 
 class ColumnResponse(BaseModel):
-    """A column, its groups and its post-its, oldest first. `kind` is set on
+    """A column, its groups and its post-its, in order. `kind` is set on
     the Lines & Veils columns (`must`, `veils`, `lines`), whose title the
     client names; `color` is a `MapColor` (spec 46c Decision 5)."""
 
@@ -258,6 +270,16 @@ class GroupTitleBody(BaseModel):
     """A group's title; empty clears it."""
 
     title: str | None = None
+
+
+class PlaceBody(BaseModel):
+    """Where a dragged post-it or group lands (spec 46d Decision 7): in
+    `column_id`, in its group `group_id` (a post-it only), just before
+    `before_id` (a post-it or group there), or last when none."""
+
+    column_id: uuid.UUID
+    group_id: uuid.UUID | None = None
+    before_id: uuid.UUID | None = None
 
 
 class ColumnOrderBody(BaseModel):
@@ -387,6 +409,7 @@ async def _board_response(
             id=card.id,
             column_id=card.column_id,
             group_id=card.group_id,
+            position=card.position,
             body=card.body,
             author_id=shown_author(card, viewer.user_id),
             anonymous=card.anonymous,
@@ -411,7 +434,8 @@ async def _board_response(
             can_promote=can_promote(card, column, viewer.role),
             can_move=is_master(viewer.role) and not column.is_retro,
             can_react=open_ and not card.is_draft,
-            can_group=can_group(card, column, round_, viewer.role),
+            can_group=can_group(card, column, round_, viewer.user_id, viewer.role),
+            can_place=can_place(card, column, round_, viewer.user_id, viewer.role),
         )
 
     def column_response(column: Column) -> ColumnResponse:
@@ -421,7 +445,7 @@ async def _board_response(
             title=column.title,
             color=column.shown_color.value,
             groups=[
-                GroupResponse(id=group.id, title=group.title)
+                GroupResponse(id=group.id, title=group.title, position=group.position)
                 for group in groups
                 if group.column_id == column.id
             ],
@@ -799,7 +823,11 @@ async def move_card(
         raise _domain_error(exc, locale) from exc
     if target.id != column.id:
         await session_zero_repo.update_card(
-            session, card.id, datetime.now(UTC), column_id=target.id
+            session,
+            card.id,
+            datetime.now(UTC),
+            column_id=target.id,
+            position=await session_zero_repo.next_position(session, target.id),
         )
         await _shared(session, room_id, "card", card.id)
     return await _answer(session, room_id, write, locale)
@@ -1008,30 +1036,45 @@ async def group_cards(
     locale: LocaleDep,
 ) -> SessionZeroResponse:
     """Spec 46c Decision 9: the Master groups published post-its of one
-    Retro column of the open round. Post-its already grouped bring their
-    groups along: everything lands in the first post-it's group (or a new
-    one), and the groups left empty go."""
+    Retro column of the open round; a Player their own, into groups holding
+    only theirs (spec 46d Q2). Post-its already grouped bring their groups
+    along: everything lands in the first post-it's group, after the post-its
+    it holds, or in a new one where the first post-it stood (spec 46d
+    Decision 7, the post-it dropped on first), and the groups left empty
+    go."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     card_ids = list(dict.fromkeys(body.card_ids))
     found = [await _card_or_404(session, write, card_id, locale) for card_id in card_ids]
     cards = [card for card, _ in found]
     column = found[0][1] if found else None
+    existing = list(dict.fromkeys(c.group_id for c in cards if c.group_id is not None))
+    members = await session_zero_repo.list_group_cards(session, existing)
     try:
-        ensure_master(write.viewer.role)
         if column is None:
             raise NotGroupableError("errors.sessionZero.notGroupable")
-        ensure_can_group(cards, column, write.board.round_of(column), write.viewer.role)
+        ensure_can_group(
+            cards,
+            column,
+            write.board.round_of(column),
+            write.viewer.user_id,
+            write.viewer.role,
+            members,
+        )
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     assert column is not None
-    existing = list(dict.fromkeys(c.group_id for c in cards if c.group_id is not None))
     if existing:
         target, merged = existing[0], existing[1:]
-        await session_zero_repo.move_group_cards(session, merged, target)
         await session_zero_repo.delete_groups(session, merged)
     else:
-        target = await session_zero_repo.add_group(session, room_id, column.id, datetime.now(UTC))
-    await session_zero_repo.set_group(session, card_ids, target)
+        target = await session_zero_repo.add_group(
+            session, room_id, column.id, cards[0].position, datetime.now(UTC)
+        )
+    # The first group's post-its first, then the merged groups', then the rest.
+    by_group = sorted(members, key=lambda card: existing.index(card.group_id))  # type: ignore[arg-type]
+    order = list(dict.fromkeys([*(card.id for card in by_group), *card_ids]))
+    await session_zero_repo.set_group(session, order, target)
+    await session_zero_repo.set_order(session, order)
     await _shared(session, room_id, "group", target)
     return await _answer(session, room_id, write, locale)
 
@@ -1067,7 +1110,8 @@ async def ungroup_all(
     session: SessionDep,
     locale: LocaleDep,
 ) -> SessionZeroResponse:
-    """Spec 46c Decision 9: the Master dissolves a group; its post-its stay."""
+    """Spec 46c Decision 9: the Master dissolves a group; its post-its stay,
+    where the group stood (spec 46d Decision 7)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     group, column = await _group_or_404(session, write, group_id, locale)
     try:
@@ -1075,7 +1119,15 @@ async def ungroup_all(
         ensure_round_open(write.board.round_of(column))
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
+    items = await session_zero_repo.column_order(session, column.id)
+    members = [card.id for card in await session_zero_repo.list_group_cards(session, [group.id])]
+    order: list[uuid.UUID] = []
+    for item, _ in items:
+        order.extend(members if item == group.id else [item])
     await session_zero_repo.delete_groups(session, [group.id])
+    await session_zero_repo.set_order(
+        session, order, {item for item, is_group in items if is_group}
+    )
     await _shared(session, room_id, "group", group.id)
     return await _answer(session, room_id, write, locale)
 
@@ -1088,9 +1140,9 @@ async def ungroup_card(
     session: SessionDep,
     locale: LocaleDep,
 ) -> SessionZeroResponse:
-    """Spec 46c Decision 9: the Master takes a post-it out of its group; a
-    group left with one post-it dissolves. A post-it in no group changes
-    nothing."""
+    """Spec 46c Decision 9: the Master takes a post-it out of its group,
+    just after it (spec 46d Decision 7); a group left with one post-it
+    dissolves. A post-it in no group changes nothing."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     card, column = await _card_or_404(session, write, card_id, locale)
     try:
@@ -1099,9 +1151,115 @@ async def ungroup_card(
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     if card.group_id is not None:
+        items = await session_zero_repo.column_order(session, column.id)
+        ids = [item for item, _ in items]
+        after = ids.index(card.group_id) + 1
+        before = ids[after] if after < len(ids) else None
         await session_zero_repo.set_group(session, [card.id], None)
+        await session_zero_repo.set_order(
+            session,
+            placed(ids, card.id, before),
+            {item for item, is_group in items if is_group},
+        )
         await session_zero_repo.prune_groups(session, column.id)
         await _shared(session, room_id, "group", card.group_id)
+    return await _answer(session, room_id, write, locale)
+
+
+@router.put("/cards/{card_id}/place")
+async def place_card(
+    room_id: uuid.UUID,
+    card_id: uuid.UUID,
+    body: PlaceBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 46d Decision 7: a dragged post-it lands in `column_id` (its own
+    or another of its board and round), in `group_id` or in none, before
+    `before_id` or last. The Master moves any, a Player their own, drafts
+    included; joining or leaving a group holding someone else's post-its
+    is the Master's (Q2). A group left with one post-it dissolves. On Lines
+    & Veils the Master orders and moves (Decision 16)."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    card, column = await _card_or_404(session, write, card_id, locale)
+    target = _column_or_404(write, body.column_id, locale)
+    group: Group | None = None
+    if body.group_id is not None:
+        group, group_column = await _group_or_404(session, write, body.group_id, locale)
+        if group_column.id != target.id:
+            raise http_error(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.sessionZero.badPlace", locale
+            )
+    regrouped = body.group_id != card.group_id
+    left_or_joined = [g for g in (card.group_id, body.group_id) if regrouped and g is not None]
+    mates = [
+        mate
+        for mate in await session_zero_repo.list_group_cards(session, left_or_joined)
+        if mate.id != card.id
+    ]
+    try:
+        ensure_can_place_card(
+            card,
+            column,
+            target,
+            write.board.round_of(column),
+            write.viewer.user_id,
+            write.viewer.role,
+            into_group=group is not None,
+            mates=mates,
+            sources_in_target=await session_zero_repo.list_sources_in_column(session, target.id),
+        )
+        if group is not None:
+            members = await session_zero_repo.list_group_cards(session, [group.id])
+            order = placed([m.id for m in members], card.id, body.before_id)
+            groups: set[uuid.UUID] = set()
+        else:
+            items = await session_zero_repo.column_order(session, target.id)
+            order = placed([item for item, _ in items], card.id, body.before_id)
+            groups = {item for item, is_group in items if is_group}
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    await session_zero_repo.update_card(
+        session, card.id, datetime.now(UTC), column_id=target.id, group_id=body.group_id
+    )
+    await session_zero_repo.set_order(session, order, groups)
+    if regrouped and card.group_id is not None:
+        await session_zero_repo.prune_groups(session, column.id)
+    if card.is_draft:
+        _private(session, write, card.id)
+    else:
+        await _shared(session, room_id, "card", card.id)
+    return await _answer(session, room_id, write, locale)
+
+
+@router.put("/groups/{group_id}/place")
+async def place_group(
+    room_id: uuid.UUID,
+    group_id: uuid.UUID,
+    body: PlaceBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 46d Decision 7: the Master drags a group, its post-its with it,
+    within its column or into another Retro column of the open round,
+    before `before_id` (a post-it in no group, or a group) or last."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    group, column = await _group_or_404(session, write, group_id, locale)
+    target = _column_or_404(write, body.column_id, locale)
+    items = await session_zero_repo.column_order(session, target.id)
+    try:
+        ensure_can_place_group(column, target, write.board.round_of(column), write.viewer.role)
+        order = placed([item for item, _ in items], group.id, body.before_id)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    if target.id != column.id:
+        await session_zero_repo.move_group(session, group.id, target.id)
+    await session_zero_repo.set_order(
+        session, order, {group.id, *(item for item, is_group in items if is_group)}
+    )
+    await _shared(session, room_id, "group", group.id)
     return await _answer(session, room_id, write, locale)
 
 

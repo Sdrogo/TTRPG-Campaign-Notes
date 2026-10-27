@@ -277,7 +277,9 @@
       "columnOrder": "Die neue Reihenfolge muss jede Spalte der Runde einmal nennen",
       "notGroupable": "Gruppieren lassen sich nur zwei oder mehr veröffentlichte Post-its derselben Retro-Spalte der offenen Runde",
       "groupNotFound": "Gruppe nicht gefunden",
-      "nothingToChange": "Nichts zu ändern"
+      "nothingToChange": "Nichts zu ändern",
+      "badPlace": "Diese Stelle liegt nicht in der angegebenen Spalte oder Gruppe",
+      "sameBoard": "Ein Post-it oder eine Gruppe lässt sich nur innerhalb der eigenen Tafel und Sitzung verschieben"
     }
   },
   "pdf": {

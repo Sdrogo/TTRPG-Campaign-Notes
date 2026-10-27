@@ -4,7 +4,7 @@ to a post-it, the timer, and the limits. Pure: the repository reads and
 writes the rows, the API turns these decisions into responses."""
 
 import uuid
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -111,6 +111,9 @@ class Card:
     created_at: datetime
     updated_at: datetime
     group_id: uuid.UUID | None = None
+    # Spec 46d Decision 7: its place in its group, or among its column's
+    # post-its in no group and its groups.
+    position: int = 0
 
     @property
     def is_copy(self) -> bool:
@@ -126,12 +129,14 @@ class Card:
 
 @dataclass(frozen=True)
 class Group:
-    """Related post-its of one Retro column, gathered by the Master (spec
-    46c Decision 9)."""
+    """Related post-its of one Retro column (spec 46c Decision 9), gathered
+    by the Master, or by a Player from their own (spec 46d Q2). `position`
+    is its place among its column's post-its in no group."""
 
     id: uuid.UUID
     column_id: uuid.UUID
     title: str | None
+    position: int = 0
 
 
 @dataclass(frozen=True)
@@ -209,6 +214,11 @@ class TooManyCardEmojiError(DomainError):
 class NotGroupableError(DomainError):
     """Only two or more published post-its of one Retro column group (spec
     46c Decision 9)."""
+
+
+class BadPlaceError(DomainError):
+    """The post-it or group to drop before isn't in the column or group it
+    is dropped into (spec 46d Decision 7)."""
 
 
 def is_master(role: RoomRole) -> bool:
@@ -410,11 +420,13 @@ def ensure_can_react(
         raise TooManyCardEmojiError("errors.sessionZero.tooManyEmoji", max=MAX_EMOJI_PER_CARD)
 
 
-def can_group(card: Card, column: Column, round_: Round | None, role: RoomRole) -> bool:
+def can_group(
+    card: Card, column: Column, round_: Round | None, viewer_id: uuid.UUID, role: RoomRole
+) -> bool:
     """Spec 46c Decision 9: the Master groups published post-its of a Retro
-    column of the open round."""
+    column of the open round; a Player groups their own (spec 46d Q2)."""
     return (
-        is_master(role)
+        (is_master(role) or card.author_id == viewer_id)
         and column.is_retro
         and not card.is_draft
         and round_ is not None
@@ -423,11 +435,20 @@ def can_group(card: Card, column: Column, round_: Round | None, role: RoomRole) 
 
 
 def ensure_can_group(
-    cards: Collection[Card], column: Column, round_: Round | None, role: RoomRole
+    cards: Collection[Card],
+    column: Column,
+    round_: Round | None,
+    viewer_id: uuid.UUID,
+    role: RoomRole,
+    mates: Collection[Card] = (),
 ) -> None:
-    """Raises unless the Master may group `cards`: at least two, every one
-    published and in `column`, a Retro column of the open round."""
-    ensure_master(role)
+    """Raises unless the caller may group `cards`: at least two, every one
+    published and in `column`, a Retro column of the open round. The Master
+    groups any; a Player only their own, and only into groups (`mates`, the
+    post-its already in the groups `cards` bring along) that hold nobody
+    else's (spec 46d Q2)."""
+    if not is_master(role) and any(card.author_id != viewer_id for card in [*cards, *mates]):
+        raise NotAuthorError("errors.sessionZero.notAuthor")
     ensure_round_open(round_)
     if (
         len(cards) < 2
@@ -435,6 +456,75 @@ def ensure_can_group(
         or any(card.is_draft or card.column_id != column.id for card in cards)
     ):
         raise NotGroupableError("errors.sessionZero.notGroupable")
+
+
+def can_place(
+    card: Card, column: Column, round_: Round | None, viewer_id: uuid.UUID, role: RoomRole
+) -> bool:
+    """Spec 46d Decision 7: who drags a post-it. On the open round's Retro
+    board the Master drags any, a Player their own (Q2); on Lines & Veils
+    the Master (Decision 16)."""
+    if not column.is_retro:
+        return is_master(role)
+    open_ = round_ is not None and round_.closed_at is None
+    return open_ and (is_master(role) or card.author_id == viewer_id)
+
+
+def ensure_can_place_card(
+    card: Card,
+    source: Column,
+    target: Column,
+    round_: Round | None,
+    viewer_id: uuid.UUID,
+    role: RoomRole,
+    *,
+    into_group: bool,
+    mates: Collection[Card] = (),
+    sources_in_target: Collection[uuid.UUID] = (),
+) -> None:
+    """Spec 46d Decision 7: raises unless the caller may drop `card` into
+    `target` (into a group of it when `into_group`). It stays on its board
+    and, on the Retro board, in its round, which must be open. On the Retro
+    board the Master moves any post-it, a Player their own, drafts included;
+    one leaving or joining a group takes a Player's only when every other
+    post-it of that group (`mates`) is theirs too (Q2), and a draft joins
+    none. Lines & Veils is the Master's (`ensure_can_move`)."""
+    if source.is_retro != target.is_retro or source.round_id != target.round_id:
+        raise WrongBoardError("errors.sessionZero.sameBoard")
+    if not target.is_retro:
+        ensure_can_move(card, source, target, role, sources_in_target)
+        return
+    ensure_round_open(round_)
+    if not is_master(role) and any(other.author_id != viewer_id for other in [card, *mates]):
+        raise NotAuthorError("errors.sessionZero.notAuthor")
+    if into_group and card.is_draft:
+        raise NotGroupableError("errors.sessionZero.notGroupable")
+
+
+def ensure_can_place_group(
+    source: Column, target: Column, round_: Round | None, role: RoomRole
+) -> None:
+    """Spec 46d Decision 7: the Master drags a group, as one block, within
+    its column or into another Retro column of the same open round."""
+    ensure_master(role)
+    if not target.is_retro or source.round_id != target.round_id:
+        raise WrongBoardError("errors.sessionZero.sameBoard")
+    ensure_round_open(round_)
+
+
+def placed(
+    order: Sequence[uuid.UUID], item: uuid.UUID, before: uuid.UUID | None
+) -> list[uuid.UUID]:
+    """`order` with `item` put just before `before`, or last when `None`,
+    taken out of where it was. 422 when `before` isn't in `order` (or is
+    `item` itself)."""
+    rest = [other for other in order if other != item]
+    if before is None:
+        return [*rest, item]
+    if before not in rest:
+        raise BadPlaceError("errors.sessionZero.badPlace")
+    index = rest.index(before)
+    return [*rest[:index], item, *rest[index:]]
 
 
 def ensure_can_add_column(round_: Round, retro_columns: int) -> None:

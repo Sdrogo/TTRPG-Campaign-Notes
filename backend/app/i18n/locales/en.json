@@ -277,7 +277,9 @@
       "columnOrder": "The new order must list every column of the round once",
       "notGroupable": "Only two or more published post-its of one Retro column of the open round can be grouped",
       "groupNotFound": "Group not found",
-      "nothingToChange": "Nothing to change"
+      "nothingToChange": "Nothing to change",
+      "badPlace": "That place isn't in the column or group named",
+      "sameBoard": "A post-it or group only moves within its own board and session"
     }
   },
   "pdf": {

@@ -277,7 +277,9 @@
       "columnOrder": "A nova ordem deve indicar uma vez cada coluna da ronda",
       "notGroupable": "Só se agrupam dois ou mais post-its publicados da mesma coluna da Retro da ronda aberta",
       "groupNotFound": "Grupo não encontrado",
-      "nothingToChange": "Nada a alterar"
+      "nothingToChange": "Nada a alterar",
+      "badPlace": "Esse lugar não está na coluna ou no grupo indicados",
+      "sameBoard": "Um post-it ou um grupo só se move dentro do seu próprio quadro e sessão"
     }
   },
   "pdf": {

@@ -277,7 +277,9 @@
       "columnOrder": "Le nouvel ordre doit citer une fois chaque colonne du tour",
       "notGroupable": "Seuls deux post-it publiés ou plus d'une même colonne de la Rétro du tour ouvert peuvent être groupés",
       "groupNotFound": "Groupe introuvable",
-      "nothingToChange": "Rien à modifier"
+      "nothingToChange": "Rien à modifier",
+      "badPlace": "Cet emplacement n'est pas dans la colonne ou le groupe indiqués",
+      "sameBoard": "Un post-it ou un groupe ne se déplace que dans son propre tableau et sa propre session"
     }
   },
   "pdf": {

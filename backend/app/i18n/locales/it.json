@@ -277,7 +277,9 @@
       "columnOrder": "Il nuovo ordine deve elencare una volta ogni colonna del giro",
       "notGroupable": "Si raggruppano solo due o più post-it pubblicati della stessa colonna della Retro nel giro aperto",
       "groupNotFound": "Gruppo non trovato",
-      "nothingToChange": "Niente da cambiare"
+      "nothingToChange": "Niente da cambiare",
+      "badPlace": "Quel punto non è nella colonna o nel gruppo indicati",
+      "sameBoard": "Un post-it o un gruppo si sposta solo nella sua lavagna e nella sua sessione"
     }
   },
   "pdf": {

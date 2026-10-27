@@ -277,7 +277,9 @@
       "columnOrder": "新顺序必须把本轮每一列各列出一次",
       "notGroupable": "只能将当前轮次同一回顾列中两张及以上已发布的便利贴编组",
       "groupNotFound": "未找到分组",
-      "nothingToChange": "没有需要更改的内容"
+      "nothingToChange": "没有需要更改的内容",
+      "badPlace": "该位置不在指定的列或分组中",
+      "sameBoard": "便利贴或分组只能在其所在的看板和场次内移动"
     }
   },
   "pdf": {

@@ -1197,7 +1197,8 @@ class SessionZeroColumnRow(Base):
 
 class SessionZeroGroupRow(Base):
     """A group of related post-its in one Retro column (spec 46c Decision 9),
-    made by the Master. Goes with its column; its post-its are ungrouped
+    made by the Master, or by a Player of their own post-its (spec 46d Q2).
+    Goes with its column; its post-its are ungrouped
     when it is deleted."""
 
     __tablename__ = "session_zero_groups"
@@ -1210,6 +1211,8 @@ class SessionZeroGroupRow(Base):
         UUID(as_uuid=True), ForeignKey("session_zero_columns.id", ondelete="CASCADE"), index=True
     )
     title: Mapped[str | None] = mapped_column(String(60))
+    # Spec 46d Decision 7: its place among its column's post-its in no group.
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
@@ -1243,6 +1246,9 @@ class SessionZeroCardRow(Base):
     group_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("session_zero_groups.id", ondelete="SET NULL"), index=True
     )
+    # Spec 46d Decision 7: its place in its group, or, in none, among its
+    # column's post-its in no group and its groups.
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

@@ -277,7 +277,9 @@
       "columnOrder": "El nuevo orden debe incluir una vez cada columna de la ronda",
       "notGroupable": "Solo se agrupan dos o más pósits publicados de una misma columna de la Retro de la ronda abierta",
       "groupNotFound": "Grupo no encontrado",
-      "nothingToChange": "No hay nada que cambiar"
+      "nothingToChange": "No hay nada que cambiar",
+      "badPlace": "Ese lugar no está en la columna o el grupo indicados",
+      "sameBoard": "Un pósit o un grupo solo se mueve dentro de su propio tablero y sesión"
     }
   },
   "pdf": {
