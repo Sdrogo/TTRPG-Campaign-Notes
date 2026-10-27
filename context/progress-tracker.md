@@ -702,6 +702,23 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **46, Session 0 boards** (ticket confirmed by the product owner
+  2026-10-27, building): a Room's Session 0 page with a Retro board and a
+  Lines & Veils board (Must, Lines, Veils), draft/publish post-its
+  (anonymous or signed), promotion as a copy by the Master (button +
+  drag), reactions, a shared non-blocking timer, Session 0.5 rounds and
+  live push updates (SSE, the app's first). One migration.
+  **46_1 (backend boards) built** in PR #249: tables, rules, routes,
+  translations in 12 languages, export and account deletion. Migration
+  `4797859660e2` applied to the staging DB by the product owner
+  (2026-10-27); it must reach production before the next release. Next: 46_2 (SSE), 46_3 (page),
+  46_4 (live client).
+- **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
+  (the DDI's six sections). If a Room has one, its invitation opens the
+  DDI read-only with an "accept and join" button at the end (product
+  owner, 2026-10-27). Ticket not written yet.
+- **Room landing page**: product owner's idea (2026-10-27), separate
+  ticket, not written yet.
 - **27b, PDF of one Document**: next to build (product owner,
   2026-10-08). Ticket written, decisions proposed, no migration expected.
 - **Two small tickets, not written yet**: default Tags in the creator's UI

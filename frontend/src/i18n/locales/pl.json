@@ -1073,7 +1073,7 @@
       },
       "retention": {
         "title": "Jak długo je przechowujemy",
-        "body": "- Twoje konto i profil istnieją, dopóki nie usuniesz konta.\n- Gdy usuniesz konto, profil, awatar, znajomi, reakcje i konto logowania są od razu kasowane. Pokoje z jednym członkiem są usuwane wraz z całą zawartością. W pokojach współdzielonych z innymi to, co napisano, zostaje jako część kampanii i jest pokazywane jako napisane przez nieznanego użytkownika.\n- Pokój, który usuniesz, jest kasowany wraz z całą zawartością.\n- PDF-y pokoi są kasowane 24 godziny po wygenerowaniu, a importy dokumentów 7 dni po zakończeniu.\n- Logi serwerów są przechowywane tylko tak długo, jak jest to potrzebne do działania i bezpieczeństwa, i są nadpisywane cyklicznie.\n- Kopie zapasowe naszych dostawców są nadpisywane w ramach ich cyklu kopii."
+        "body": "- Twoje konto i profil istnieją, dopóki nie usuniesz konta.\n- Gdy usuniesz konto, profil, awatar, znajomi, reakcje, karteczki z Sesji 0 i konto logowania są od razu kasowane. Pokoje z jednym członkiem są usuwane wraz z całą zawartością. W pokojach współdzielonych z innymi to, co napisano, zostaje jako część kampanii i jest pokazywane jako napisane przez nieznanego użytkownika.\n- Pokój, który usuniesz, jest kasowany wraz z całą zawartością.\n- PDF-y pokoi są kasowane 24 godziny po wygenerowaniu, a importy dokumentów 7 dni po zakończeniu.\n- Logi serwerów są przechowywane tylko tak długo, jak jest to potrzebne do działania i bezpieczeństwa, i są nadpisywane cyklicznie.\n- Kopie zapasowe naszych dostawców są nadpisywane w ramach ich cyklu kopii."
       },
       "rights": {
         "title": "Twoje prawa",

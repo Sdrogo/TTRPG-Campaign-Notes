@@ -1021,7 +1021,7 @@
       },
       "retention": {
         "title": "How long we keep it",
-        "body": "- Your account and profile are kept until you delete your account.\n- When you delete your account, your profile, avatar, Friends, reactions and sign-in account are erased at once. Rooms where you were the only member are deleted with everything in them. In Rooms shared with others, what you wrote stays as part of the campaign, shown as written by an unknown user.\n- A Room you delete is erased with everything in it.\n- Room PDFs are deleted 24 hours after they are generated, and Document imports 7 days after they finish.\n- Server logs are kept only as long as needed for operation and security, and are overwritten on a rolling basis.\n- Backups kept by our providers are overwritten within their backup cycle."
+        "body": "- Your account and profile are kept until you delete your account.\n- When you delete your account, your profile, avatar, Friends, reactions, Session 0 post-its and sign-in account are erased at once. Rooms where you were the only member are deleted with everything in them. In Rooms shared with others, what you wrote stays as part of the campaign, shown as written by an unknown user.\n- A Room you delete is erased with everything in it.\n- Room PDFs are deleted 24 hours after they are generated, and Document imports 7 days after they finish.\n- Server logs are kept only as long as needed for operation and security, and are overwritten on a rolling basis.\n- Backups kept by our providers are overwritten within their backup cycle."
       },
       "rights": {
         "title": "Your rights",

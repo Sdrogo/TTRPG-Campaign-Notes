@@ -21,6 +21,7 @@ from app.db import (
     documents_repo,
     friends_repo,
     rooms_repo,
+    session_zero_repo,
     storage,
     storage_cleanup,
     users_repo,
@@ -116,6 +117,18 @@ class ExportedUpload(BaseModel):
     created_at: datetime
 
 
+class ExportedPostIt(BaseModel):
+    """A Session 0 post-it the user wrote (spec 46), drafts and Lines &
+    Veils copies included."""
+
+    room_id: uuid.UUID
+    body: str
+    anonymous: bool
+    published_at: datetime | None
+    lines_veils_copy: bool
+    created_at: datetime
+
+
 class ExportedFriend(BaseModel):
     """A Friend or a pending request, as the user sees it in the app."""
 
@@ -137,6 +150,7 @@ class PersonalDataExport(BaseModel):
     comments: list[ExportedComment]
     reactions: list[ExportedReaction]
     uploads: list[ExportedUpload]
+    post_its: list[ExportedPostIt]
     friends: list[ExportedFriend]
     friend_code: str | None
 
@@ -158,7 +172,8 @@ async def export_personal_data(
 ) -> PersonalDataExport:
     """Spec 31_2 (GDPR art. 15 and 20): the caller's personal data as JSON -
     profile, Rooms and roles, the Documents they created, own or play, every
-    Comment they wrote, their reactions, uploads, Friends and friend code.
+    Comment they wrote, their reactions, uploads, Session 0 post-its, Friends
+    and friend code.
     Document names are given only for Documents they still see
     (Invariant 1); their own Comments are always theirs to read (VR-02)."""
     user_id = uuid.UUID(current_user.id)
@@ -175,6 +190,7 @@ async def export_personal_data(
     reactions = await account_repo.list_reactions_by_user(session, user_id)
     files = await account_repo.list_files_uploaded_by(session, user_id)
     images = await account_repo.list_images_added_by(session, user_id)
+    post_its = await session_zero_repo.list_cards_by_author(session, user_id)
 
     referenced = (
         {row.id for row in created_or_played}
@@ -279,6 +295,17 @@ async def export_personal_data(
                 created_at=file.created_at,
             )
             for file in files
+        ],
+        post_its=[
+            ExportedPostIt(
+                room_id=card.room_id,
+                body=card.body,
+                anonymous=card.anonymous,
+                published_at=card.published_at,
+                lines_veils_copy=card.is_copy,
+                created_at=card.created_at,
+            )
+            for card in post_its
         ],
         friends=[
             ExportedFriend(

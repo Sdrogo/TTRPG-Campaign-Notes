@@ -250,6 +250,31 @@
     },
     "mentionSuggestions": {
       "stale": "Questi testi sono cambiati dopo l'anteprima: ricaricala e riprova"
+    },
+    "sessionZero": {
+      "notMaster": "Solo il Master può farlo",
+      "notAuthor": "Solo l'autore del post-it può farlo",
+      "roundClosed": "Questo giro è chiuso e in sola lettura",
+      "notRetroColumn": "Funziona solo su una colonna della Retro nel giro aperto",
+      "notLinesVeils": "Funziona solo sulla board Linee e Veli",
+      "promoteRetroToLinesVeils": "Si promuove solo un post-it della Retro, in una colonna di Linee e Veli",
+      "invalidBody": "Un post-it deve avere un testo, al massimo {max} caratteri",
+      "invalidTitle": "Il titolo deve avere da 1 a {max} caratteri",
+      "alreadyPublished": "Questo post-it è già pubblicato",
+      "draft": "Una bozza non è ancora condivisa",
+      "alreadyPromoted": "Quella colonna ha già una copia di questo post-it",
+      "copyNotEditable": "Una copia in Linee e Veli non si può modificare",
+      "boardFull": "Una board contiene al massimo {max} post-it",
+      "tooManyColumns": "Un giro ha al massimo {max} colonne",
+      "timerLength": "Il timer va da {min} a {max} secondi",
+      "timerNotRunning": "Il timer non è in corso",
+      "timerNotPaused": "Il timer non è in pausa",
+      "tooManyEmoji": "Un post-it può avere al massimo {max} emoji diverse",
+      "notStarted": "La Sessione 0 di questa Room non è ancora iniziata",
+      "cardNotFound": "Post-it non trovato",
+      "columnNotFound": "Colonna non trovata",
+      "roundNotFound": "Giro non trovato",
+      "columnOrder": "Il nuovo ordine deve elencare una volta ogni colonna del giro"
     }
   },
   "pdf": {
@@ -264,5 +289,13 @@
   },
   "room": {
     "copySuffix": " (Copia)"
+  },
+  "sessionZero": {
+    "presets": {
+      "want": "Lo vogliamo al tavolo",
+      "care": "Con cura",
+      "avoid": "Da evitare",
+      "questions": "Domande"
+    }
   }
 }

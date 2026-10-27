@@ -1113,3 +1113,124 @@ class RelationshipMapLinkRow(Base):
     reverse_label_offset: Mapped[float | None] = mapped_column(Float)
     color: Mapped[str] = mapped_column(String(10))
     master_only: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class SessionZeroRow(Base):
+    """A Room's Session 0 (spec 46), created when a member first starts it.
+    `revision` counts the writes every member sees (drafts excluded,
+    Decision 3), for the live updates. The one shared timer lives here
+    (Decision 4)."""
+
+    __tablename__ = "session_zero"
+
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), primary_key=True
+    )
+    revision: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    timer_duration_s: Mapped[int | None] = mapped_column(Integer)
+    timer_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    timer_paused_remaining_s: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroRoundRow(Base):
+    """A round of the Retro board: Session 0, then each Session 0.5 (spec 46
+    Decision 16). One open round (no `closed_at`) per Room."""
+
+    __tablename__ = "session_zero_rounds"
+    __table_args__ = (
+        UniqueConstraint("room_id", "number", name="uq_session_zero_rounds_number"),
+        Index(
+            "uq_session_zero_rounds_open",
+            "room_id",
+            unique=True,
+            postgresql_where=text("closed_at IS NULL"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    number: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str | None] = mapped_column(String(100))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroColumnRow(Base):
+    """A column: of a Retro round (titled by the Master), or one of the three
+    fixed Lines & Veils columns (no round, a `kind`; spec 46 Decision 10)."""
+
+    __tablename__ = "session_zero_columns"
+    __table_args__ = (
+        CheckConstraint(
+            "(round_id IS NOT NULL AND kind IS NULL)"
+            " OR (round_id IS NULL AND kind IN ('must', 'lines', 'veils'))",
+            name="ck_session_zero_columns_board",
+        ),
+        Index(
+            "uq_session_zero_columns_kind",
+            "room_id",
+            "kind",
+            unique=True,
+            postgresql_where=text("kind IS NOT NULL"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE"), index=True
+    )
+    round_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_rounds.id", ondelete="CASCADE")
+    )
+    kind: Mapped[str | None] = mapped_column(String(10))
+    title: Mapped[str] = mapped_column(String(60), default="")
+    position: Mapped[int] = mapped_column(Integer)
+
+
+class SessionZeroCardRow(Base):
+    """A post-it (spec 46). A draft has no `published_at` and exists for its
+    author only. A Lines & Veils copy points at its Retro original while it
+    exists and records who promoted it; it carries the original's author and
+    anonymity (Decisions 2 and 7). Goes with its column."""
+
+    __tablename__ = "session_zero_cards"
+    __table_args__ = (
+        UniqueConstraint("source_card_id", "column_id", name="uq_session_zero_cards_copy"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE"), index=True
+    )
+    column_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_columns.id", ondelete="CASCADE"), index=True
+    )
+    author_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
+    body: Mapped[str] = mapped_column(Text)
+    anonymous: Mapped[bool] = mapped_column(Boolean, default=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    source_card_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_cards.id", ondelete="SET NULL")
+    )
+    promoted_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroCardReactionRow(Base):
+    """One member's emoji on a published post-it (spec 46 Decision 5), like
+    `comment_reactions`."""
+
+    __tablename__ = "session_zero_card_reactions"
+
+    card_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("session_zero_cards.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    emoji: Mapped[str] = mapped_column(String(32), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

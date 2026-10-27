@@ -23,6 +23,8 @@ from app.db.models import (
     MembershipRow,
     PostRow,
     RoomRow,
+    SessionZeroCardReactionRow,
+    SessionZeroCardRow,
     UserRow,
 )
 from app.main import app
@@ -99,6 +101,24 @@ async def _comment(
     return str(response.json()["id"])
 
 
+async def _post_it(client: AsyncClient, room_id: str, author: _User, body: str) -> str:
+    """A published Session 0 post-it in the first Retro column (spec 46)."""
+    url = f"/rooms/{room_id}/session-zero"
+    board = (await client.post(f"{url}/start", headers=author.headers)).json()
+    added = await client.post(
+        f"{url}/cards",
+        json={"column_id": board["retro"][0]["id"], "body": body},
+        headers=author.headers,
+    )
+    assert added.status_code == 200, added.text
+    card_id = str(next(c["id"] for c in added.json()["retro"][0]["cards"] if c["body"] == body))
+    published = await client.post(
+        f"{url}/cards/{card_id}/publish", json={"anonymous": True}, headers=author.headers
+    )
+    assert published.status_code == 200, published.text
+    return card_id
+
+
 async def _befriend(client: AsyncClient, alice: _User, bob: _User) -> None:
     asked = await client.post("/friends/requests", json={"user_id": bob.id}, headers=alice.headers)
     assert asked.status_code == 201, asked.text
@@ -163,6 +183,13 @@ async def test_deleting_erases_the_person_and_keeps_shared_content(
         headers=player.headers,
     )
     assert reacted.status_code in (200, 201, 204), reacted.text
+    master_post_it = await _post_it(client, shared, master, "No spiders")
+    await _post_it(client, shared, player, "No gore")
+    reacted = await client.put(
+        f"/rooms/{shared}/session-zero/cards/{master_post_it}/reactions/%F0%9F%91%8D",
+        headers=player.headers,
+    )
+    assert reacted.status_code == 200, reacted.text
     await _befriend(client, player, master)
     await client.post("/account/friend-code", headers=player.headers)
     avatar = await client.post(
@@ -187,10 +214,13 @@ async def test_deleting_erases_the_person_and_keeps_shared_content(
     kept = await db_session.get(PostRow, uuid.UUID(comment))
     assert kept is not None and kept.body == "He watches."
     assert await db_session.get(UserRow, player_id) is None
+    assert await db_session.get(SessionZeroCardRow, uuid.UUID(master_post_it)) is not None
     for model, column in (
         (CommentReactionRow, CommentReactionRow.user_id),
         (DocumentOwnerRow, DocumentOwnerRow.user_id),
         (FriendCodeRow, FriendCodeRow.user_id),
+        (SessionZeroCardRow, SessionZeroCardRow.author_id),
+        (SessionZeroCardReactionRow, SessionZeroCardReactionRow.user_id),
     ):
         assert not await _count(db_session, model, column == player_id)
     assert not await _count(
@@ -280,6 +310,8 @@ async def test_export_holds_the_callers_data_and_nothing_hidden_from_them(
     )
     assert hidden.status_code == 200, hidden.text
     await _befriend(client, player, master)
+    await _post_it(client, room, player, "No spiders")
+    await _post_it(client, room, master, "Not mine")
 
     response = await client.get("/account/export", headers=player.headers)
 
@@ -299,6 +331,10 @@ async def test_export_holds_the_callers_data_and_nothing_hidden_from_them(
     assert "Strahd's plan" not in response.text
     assert [(f["display_name"], f["status"]) for f in data["friends"]] == [("The DM", "friend")]
     assert data["friend_code"] is None
+    assert [(p["body"], p["anonymous"], p["lines_veils_copy"]) for p in data["post_its"]] == [
+        ("No spiders", True, False)
+    ]
+    assert "Not mine" not in response.text
 
 
 async def test_export_of_a_user_with_nothing_yet(
@@ -308,4 +344,4 @@ async def test_export_of_a_user_with_nothing_yet(
     data = (await client.get("/account/export", headers=user.headers)).json()
     assert data["profile"]["email"] == "new@example.com"
     assert data["profile"]["created_at"] is None
-    assert data["rooms"] == data["comments"] == data["uploads"] == []
+    assert data["rooms"] == data["comments"] == data["uploads"] == data["post_its"] == []
