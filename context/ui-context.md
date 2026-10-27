@@ -295,6 +295,14 @@ other icon set.
   (spec 07.1, shared via `lib/images.ts::imageFrameSize`), so a portrait
   image isn't stretched into the fixed-height box's full width. Its
   delete/favorite controls and the fullscreen viewer are unchanged.
+  The detail surface follows the archive hierarchy introduced on the lists:
+  a small "Documents" folio label leads into a large display title and subtitle,
+  separated from the body by a fine rule. Description text has a calmer reading
+  rhythm; the image/map/info aside stays secondary on a raised surface. Notes
+  read as individual archival entries with a quiet left rule that accents on
+  hover, while Comments remain in a clearly separate Thread card below
+  backlinks. All editing, visibility and action controls retain their existing
+  placement and behavior.
   **Info panel** (2026-10-03, Andrea chose option A of a mockup: the
   Played by, Owner and PDF sections were heavy, always-open forms at the
   bottom of the page): a bordered `Paper` under the gallery, in the same

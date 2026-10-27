@@ -760,6 +760,10 @@ in line with what was built since.
 - Tuned that cover by image shape: panoramic art still crops to fill the compact
   frame, while square and portrait art uses a lightly zoomed contained fit plus
   the existing lower fade, reducing crop without making cards taller.
+- Refined the Document detail composition: editorial title treatment, separated
+  header metadata, improved description rhythm, lighter secondary info panel,
+  archival Note entries and a distinct Thread surface, preserving every action,
+  permission, visibility rule and content workflow.
 
 ## Architecture Decisions
 

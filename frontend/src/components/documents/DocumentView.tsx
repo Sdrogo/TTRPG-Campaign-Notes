@@ -345,8 +345,8 @@ function DocumentPanel({
   );
 
   return (
-    <PageCard>
-      <Stack gap="md">
+    <PageCard className="document-detail-card">
+      <Stack gap="md" className="document-detail-shell">
         {/* One line: the name (which may wrap to two lines and always stays visible), the
             badge, the read-aloud controls and a "⋮" that unfolds the other actions: beside it
             on a big screen, on a row of their own on a phone so they never squeeze the name
@@ -357,11 +357,21 @@ function DocumentPanel({
           wrap="nowrap"
           preventGrowOverflow={false}
           data-tour="document"
+          className="document-detail-heading"
         >
           <Stack gap={0} style={{ minWidth: 0, flex: 1 }}>
+            <Text
+              size="xs"
+              c="dimmed"
+              tt="uppercase"
+              fw={600}
+              className="document-detail-kicker"
+            >
+              {t('documents.title')}
+            </Text>
             <Title
               order={1}
-              fz={{ base: 'h2', sm: 'h1' }}
+              className="document-detail-title"
               style={{
                 fontFamily: 'var(--font-display)',
                 overflowWrap: 'anywhere',
@@ -372,8 +382,8 @@ function DocumentPanel({
             {/* Spec 28_0 S3: one typography level below the name, dimmed. */}
             {document.subtitle && (
               <Text
-                fz={{ base: 'h3', sm: 'h2' }}
                 c="dimmed"
+                className="document-detail-subtitle"
                 style={{
                   fontFamily: 'var(--font-display)',
                   overflowWrap: 'anywhere',
@@ -389,6 +399,7 @@ function DocumentPanel({
             preventGrowOverflow={false}
             style={{ flexShrink: 0 }}
             data-tour="document-visibility"
+            className="document-detail-meta"
           >
             {badges}
             {readAloud}
@@ -405,7 +416,12 @@ function DocumentPanel({
           </Group>
         </Group>
         {phone && actionsExpanded && (
-          <Group gap="xs" wrap="wrap" preventGrowOverflow={false}>
+          <Group
+            gap="xs"
+            wrap="wrap"
+            preventGrowOverflow={false}
+            className="document-detail-mobile-actions"
+          >
             {actions}
           </Group>
         )}
@@ -450,7 +466,13 @@ function DocumentPanel({
                   canUnlink={!readOnly && linkedMap.canManage}
                 />
               )}
-              <Paper withBorder radius="md" p="sm" bg="var(--mantine-color-dark-7)">
+              <Paper
+                withBorder
+                radius="md"
+                p="sm"
+                bg="var(--bg-raised)"
+                className="document-info-panel"
+              >
                 <Stack gap={6}>
                   <DocumentPlayer
                     playedBy={document.playedBy}
