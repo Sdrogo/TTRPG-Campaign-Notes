@@ -76,11 +76,13 @@ export function DocumentCard({
   return (
     <Card
       data-tour="document-card"
+      data-has-images={hasImages ? true : undefined}
       withBorder
       padding="md"
       radius="md"
       pos="relative"
       mih={hasImages ? CARD_WITH_IMAGES_MIN_HEIGHT : undefined}
+      className="document-card"
       // With images, the text column and the image's floor (below) sit side by side.
       style={hasImages ? { flexDirection: 'row' } : undefined}
     >

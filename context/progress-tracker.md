@@ -747,6 +747,10 @@ in line with what was built since.
   feature and process sections, while the app header and Room collection use
   quieter surfaces, stronger hierarchy and restrained tactile feedback. All
   routes, actions, localized copy and dark-theme tokens remain unchanged.
+- Extended that hierarchy to the Documents page: clearer Room/title framing,
+  a dedicated controls panel, counted archive groups, a distinct maps section,
+  more tactile Document cards and a labeled sticky create action, with filters,
+  grouping, maps, permissions and card content unchanged.
 
 ## Architecture Decisions
 

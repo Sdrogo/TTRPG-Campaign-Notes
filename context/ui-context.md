@@ -254,6 +254,13 @@ other icon set.
   page, with its Comments under it; a second Document or a map can open
   beside it in the split view (spec 37). *(The original plan of a left
   sidebar plus a right Thread panel was never built.)*
+  The page uses the same campaign-archive hierarchy as the public surface:
+  the Room name is the display heading under a small "Documents" folio label,
+  filters open into a quiet bordered work panel, maps read as a distinct
+  archive section, and each collapsible Main Tag heading shows its item count.
+  Document cards keep their complete information and image behavior but gain
+  a restrained top-edge accent and lift on hover. The sticky create action has
+  a visible text label rather than relying on an unexplained plus icon.
 - **Document detail**: description at the top, Tags and Owner(s)
   directly under the title, Notes (the spec's Details) rendered as a
   distinct, visually lighter list of titled entries above the Comment

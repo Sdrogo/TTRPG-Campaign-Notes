@@ -596,8 +596,107 @@ html body[data-scroll-locked] {
    were each over 1000px wide, and the square image floor made them huge). */
 .documents-grid {
   display: grid;
-  gap: var(--mantine-spacing-md);
+  gap: var(--mantine-spacing-lg);
   grid-template-columns: minmax(0, 1fr);
+}
+
+.documents-page-heading {
+  min-height: 96px;
+  padding: var(--mantine-spacing-md) 0 var(--mantine-spacing-lg);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.documents-kicker {
+  letter-spacing: 0.14em;
+}
+
+.documents-page-title {
+  font-size: clamp(2.25rem, 5vw, 4.5rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+}
+
+.documents-controls-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--mantine-radius-sm);
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.documents-controls-toggle:hover,
+.documents-controls-toggle:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  background: var(--bg-raised);
+}
+
+.documents-controls-panel {
+  padding: var(--mantine-spacing-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-left: 2px solid var(--text-muted);
+  border-radius: var(--mantine-radius-md);
+}
+
+.documents-create-action {
+  box-shadow: var(--mantine-shadow-lg);
+}
+
+.document-group {
+  padding-top: var(--mantine-spacing-sm);
+  border-top: 1px solid var(--border-default);
+}
+
+.document-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+  width: 100%;
+  padding: var(--mantine-spacing-xs) 0;
+  transition: color 120ms ease;
+}
+
+.document-group-toggle:hover,
+.document-group-toggle:focus-visible {
+  color: var(--text-primary);
+}
+
+.document-card {
+  overflow: hidden;
+  background: var(--bg-surface);
+  border-top: 2px solid var(--border-default);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 10%);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.document-card:hover {
+  transform: translateY(-3px);
+  border-top-color: var(--accent-primary);
+  box-shadow: 0 18px 42px rgb(0 0 0 / 22%);
+}
+
+.document-card:not([data-has-images])::after {
+  content: '';
+  position: absolute;
+  right: var(--mantine-spacing-md);
+  bottom: var(--mantine-spacing-md);
+  width: 32px;
+  height: 32px;
+  border-right: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+  pointer-events: none;
 }
 
 @media (min-width: 48em) {
@@ -636,6 +735,13 @@ html body[data-scroll-locked] {
   display: grid;
   gap: var(--mantine-spacing-sm);
   grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+}
+
+.room-maps-strip {
+  padding: var(--mantine-spacing-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--mantine-radius-md);
 }
 
 .room-map-card {
@@ -690,6 +796,18 @@ html body[data-scroll-locked] {
 @media (prefers-reduced-motion: reduce) {
   .anchor-flash {
     animation-duration: 0.01ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .documents-controls-toggle,
+  .document-group-toggle,
+  .document-card {
+    transition: none;
+  }
+
+  .document-card:hover {
+    transform: none;
   }
 }
 
