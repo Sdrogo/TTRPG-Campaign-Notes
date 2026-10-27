@@ -372,6 +372,57 @@ async def test_the_master_promotes_and_moves_post_its_on_lines_and_veils(
     assert card_id in [c["id"] for c in _cards(removed.json())]
 
 
+async def test_a_copy_outlives_its_original(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Decision 2: editing the original leaves the copy as it was; once the
+    original is gone the copy keeps its author and anonymity, and that
+    author can still delete it."""
+    room, board = await _started(client, make_token)
+    lines = _column(board, "lines")
+    card_id = await _write(client, room, room.player, board["retro"][2]["id"], "Spiders")
+    await _publish(client, room, room.player, card_id, anonymous=True)
+    await client.post(
+        f"{room.url}/cards/{card_id}/promote",
+        json={"column_id": lines},
+        headers=room.master.headers,
+    )
+    await client.patch(
+        f"{room.url}/cards/{card_id}", json={"body": "Big spiders"}, headers=room.player.headers
+    )
+    gone = await client.delete(f"{room.url}/cards/{card_id}", headers=room.player.headers)
+    (copy,) = _cards(gone.json())
+    assert (copy["body"], copy["author_id"], copy["mine"]) == ("Spiders", room.player.id, True)
+    (seen,) = _cards(await _get(client, room, room.other_player))
+    assert (seen["anonymous"], seen["author_id"]) == (True, None)
+    removed = await client.delete(f"{room.url}/cards/{copy['id']}", headers=room.player.headers)
+    assert _cards(removed.json()) == []
+
+
+async def test_view_as_reads_the_boards_but_never_writes(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room, board = await _started(client, make_token)
+    want = board["retro"][0]["id"]
+    await _write(client, room, room.player, want, "Secret draft")
+    await _posted(client, room, room.player, want, "Shared")
+    view_as = {**room.master.headers, "X-View-As": room.player.id}
+
+    # The Master sees the board as the player does, minus the player's
+    # drafts: those are the author's alone (Decision 1).
+    seen = await _get(client, room, _Member(room.master.id, view_as))
+    assert [(c["body"], c["mine"]) for c in _cards(seen)] == [("Shared", True)]
+    for response in (
+        await client.post(f"{room.url}/start", headers=view_as),
+        await client.post(
+            f"{room.url}/cards",
+            json={"column_id": board["retro"][0]["id"], "body": "x"},
+            headers=view_as,
+        ),
+    ):
+        assert response.status_code == 403
+
+
 async def test_members_react_to_published_post_its(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
@@ -392,6 +443,16 @@ async def test_members_react_to_published_post_its(
     assert (await client.put(url(card_id, "ok"), headers=room.master.headers)).status_code == 422
     assert (await client.delete(url(card_id, "ok"), headers=room.master.headers)).status_code == 422
     assert (await client.put(url(draft, "👍"), headers=room.player.headers)).status_code == 409
+    # Nothing changes, so the revision stays: the same emoji again, one never
+    # added, and taking one back from the caller's own draft.
+    revision = added.json()["revision"]
+    for response in (
+        await client.put(url(card_id, "👍"), headers=room.other_player.headers),
+        await client.delete(url(card_id, "🎲"), headers=room.other_player.headers),
+        await client.delete(url(draft, "👍"), headers=room.player.headers),
+    ):
+        assert response.status_code == 200
+        assert response.json()["revision"] == revision
 
     removed = await client.delete(url(card_id, "👍"), headers=room.other_player.headers)
     assert removed.status_code == 200

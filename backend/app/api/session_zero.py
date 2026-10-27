@@ -8,13 +8,13 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import require_membership
 from app.api.errors import http_error, translated_error
-from app.auth.dependencies import CurrentUserDep
+from app.auth.dependencies import VIEW_AS_HEADER, CurrentUserDep
 from app.db import session_zero_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
@@ -283,9 +283,13 @@ async def _board_response(
     viewer: Membership,
     round_id: uuid.UUID | None,
     locale: str,
+    *,
+    previewed: bool = False,
 ) -> SessionZeroResponse:
     """The boards as `viewer` sees them, with the Retro board of `round_id`
-    (the open round when `None`; 404 for a round of another Room)."""
+    (the open round when `None`; 404 for a round of another Room). A
+    `previewed` viewer is the Master's "View as": their drafts stay hidden,
+    since a draft is its author's alone (Decision 1)."""
     now = datetime.now(UTC)
     state = await session_zero_repo.get_state(session, room_id)
     if state is None:
@@ -315,7 +319,7 @@ async def _board_response(
         for card in await session_zero_repo.list_cards(
             session, [column.id for column in retro + lines_veils]
         )
-        if is_card_visible(card, viewer.user_id)
+        if is_card_visible(card, viewer.user_id) and not (previewed and card.is_draft)
     ]
     reactions = await session_zero_repo.list_reactions(
         session, [card.id for card in cards if not card.is_draft]
@@ -446,6 +450,7 @@ def _parse_emoji(emoji: str, locale: str) -> str:
 
 @router.get("")
 async def get_session_zero(
+    request: Request,
     room_id: uuid.UUID,
     current_user: CurrentUserDep,
     session: SessionDep,
@@ -455,9 +460,11 @@ async def get_session_zero(
     """The Session 0 page as the caller sees it: their own drafts and every
     published post-it, the Retro board of `round_id` (the open round by
     default) and the Lines & Veils board. Never writes (a "View as" preview
-    reads it too); a member starts the Session 0 with `POST .../start`."""
+    reads it too, without the member's drafts); a member starts the
+    Session 0 with `POST .../start`."""
     viewer = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    return await _board_response(session, room_id, viewer, round_id, locale)
+    previewed = VIEW_AS_HEADER in request.headers
+    return await _board_response(session, room_id, viewer, round_id, locale, previewed=previewed)
 
 
 @router.post("/start")
@@ -653,7 +660,8 @@ async def add_reaction(
     locale: LocaleDep,
 ) -> SessionZeroResponse:
     """Decision 5: any member reacts to a published post-it with one emoji
-    (422 otherwise), not in a closed round. Idempotent."""
+    (422 otherwise), not in a closed round. Idempotent: an emoji already
+    there changes nothing, so it doesn't bump `revision`."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     card, column = await _card_or_404(session, write, card_id, locale)
     clean = _parse_emoji(emoji, locale)
@@ -667,10 +675,10 @@ async def add_reaction(
         )
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
-    await session_zero_repo.add_reaction(
+    if await session_zero_repo.add_reaction(
         session, card.id, write.viewer.user_id, clean, datetime.now(UTC)
-    )
-    await _shared(session, room_id)
+    ):
+        await _shared(session, room_id)
     return await _answer(session, room_id, write, locale)
 
 
@@ -683,7 +691,8 @@ async def remove_reaction(
     session: SessionDep,
     locale: LocaleDep,
 ) -> SessionZeroResponse:
-    """The caller takes back their own emoji. Idempotent."""
+    """The caller takes back their own emoji. Idempotent: `revision` moves
+    only when there was one to take back (never on a draft, which has none)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     card, column = await _card_or_404(session, write, card_id, locale)
     clean = _parse_emoji(emoji, locale)
@@ -691,8 +700,8 @@ async def remove_reaction(
         ensure_round_open(write.board.round_of(column))
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
-    await session_zero_repo.remove_reaction(session, card.id, write.viewer.user_id, clean)
-    await _shared(session, room_id)
+    if await session_zero_repo.remove_reaction(session, card.id, write.viewer.user_id, clean):
+        await _shared(session, room_id)
     return await _answer(session, room_id, write, locale)
 
 

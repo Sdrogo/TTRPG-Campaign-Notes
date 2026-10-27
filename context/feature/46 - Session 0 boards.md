@@ -183,7 +183,9 @@ those items stay out entirely). The ticket is confirmed.
   shared write (anything but a draft) bumps `revision` under the Room's
   `session_zero` row lock. 404 for a
   draft that isn't the caller's (never 403, so a draft's existence never
-  leaks). View-as refuses writes as usual. Every write answers with the
+  leaks). View-as refuses writes as usual, and its `GET` leaves out the
+  previewed member's drafts too (a draft is its author's alone, Decision 1).
+  Reactions and moves that change nothing don't bump `revision`. Every write answers with the
   boards as the caller now sees them, like `GET`.
 - Account deletion and data export (spec 31) cover the new rows.
 

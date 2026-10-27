@@ -390,21 +390,23 @@ async def list_reactions(
 
 async def add_reaction(
     session: AsyncSession, card_id: uuid.UUID, user_id: uuid.UUID, emoji: str, now: datetime
-) -> None:
-    """Adds the member's emoji; already there is a no-op."""
-    await session.execute(
+) -> bool:
+    """Adds the member's emoji; already there is a no-op. Whether it was
+    added."""
+    result = await session.execute(
         insert(SessionZeroCardReactionRow)
         .values(card_id=card_id, user_id=user_id, emoji=emoji, created_at=now)
         .on_conflict_do_nothing()
     )
     await session.flush()
+    return bool(result.rowcount)  # type: ignore[attr-defined]
 
 
 async def remove_reaction(
     session: AsyncSession, card_id: uuid.UUID, user_id: uuid.UUID, emoji: str
-) -> None:
-    """Removes the member's emoji, if it was there."""
-    await session.execute(
+) -> bool:
+    """Removes the member's emoji, if it was there. Whether it was."""
+    result = await session.execute(
         delete(SessionZeroCardReactionRow).where(
             SessionZeroCardReactionRow.card_id == card_id,
             SessionZeroCardReactionRow.user_id == user_id,
@@ -412,6 +414,7 @@ async def remove_reaction(
         )
     )
     await session.flush()
+    return bool(result.rowcount)  # type: ignore[attr-defined]
 
 
 async def list_cards_by_author(session: AsyncSession, user_id: uuid.UUID) -> list[Card]:
