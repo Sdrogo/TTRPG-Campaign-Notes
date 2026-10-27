@@ -754,7 +754,7 @@ on `main`.
   head) and **to production** the same day (`alembic upgrade head` with
   `.env`, production = `d4a7e2c9f1b3`, head).
 - **47, Modular Session 0** (ticket written 2026-10-27, awaiting the
-  product owner's answers Q1-Q6): each session becomes a chain of modules
+  product owner's answers Q1-Q7): each session becomes a chain of modules
   the Master composes, reorders and advances with "Avanti" (Retro, Lines &
   Veils, DDI with per-Player acceptance, Stars and Wishes, Questions whose
   answers become Player-owned PC Documents). Absorbs 46b's DDI template;

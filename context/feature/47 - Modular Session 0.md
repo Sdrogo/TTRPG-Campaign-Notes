@@ -30,7 +30,7 @@
 
 ## Decisions (proposed by Claude, 2026-10-27, to confirm)
 
-Q1-Q6 at the end are the points the product owner must answer; every other
+Q1-Q7 at the end are the points the product owner must answer; every other
 Decision is a default to confirm or amend.
 
 1. **Session = chain of modules.** Every session (round) has an ordered list
@@ -110,8 +110,9 @@ Decision is a default to confirm or amend.
     Name and have none yet). Creating builds a normal Document:
     name/subtitle/description/Notes from the mapping (Decision 9), the
     module's Tag, the Player as **Owner** (D-12) and as its **Character
-    player** (D-23). It works even when the Room turned off Document
-    creation by Players (D-13) as proposed in Q7.
+    player** (D-23). Proposed: it works even when the Room turned off
+    Document creation by Players (D-13), since the Master set up the
+    module; this is an exception to D-13 (Q7).
     One Document per Player per Questions module (409 on a second); the
     module then shows "Apri il tuo Documento". From then on it is an
     ordinary Document: the Player edits it freely (and the Master, D-12);
@@ -156,6 +157,14 @@ Decision is a default to confirm or amend.
 - **Q6 - Extra Documents.** Should a question be able to create a separate
   Document (e.g. "Nomina un PNG legato al tuo PG" → an NPC Document owned
   by the Player)? Proposed: not now, PC Documents only.
+- **Q7 - Exception to D-13.** A Room can turn off Document creation by
+  Players (D-13). Proposed: a Questions module still creates the Players'
+  Documents there, because the Master chose to add the module. The
+  alternative keeps D-13 strict: in such a Room only the Master's "Crea i
+  Documenti di tutti" works (the Master creates, the Player still becomes
+  Owner and Character player). If the exception is accepted, it is
+  recorded in `architecture.md` and flagged as a candidate change to
+  `requirements.md` (protected file, edited only on request).
 
 ## Design
 
