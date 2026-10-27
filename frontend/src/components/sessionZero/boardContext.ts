@@ -13,6 +13,8 @@ export interface BoardContextValue {
   busy: boolean;
   /** False while the Master previews the Room as a member (spec 22b): nothing writes. */
   writable: boolean;
+  /** Ids of the post-its, columns and groups another member just changed (spec 46_4). */
+  glowing: ReadonlySet<string>;
 }
 
 export const BoardContext = createContext<BoardContextValue | null>(null);

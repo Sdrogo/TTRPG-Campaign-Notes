@@ -1135,3 +1135,25 @@ html body[data-scroll-locked] {
   background: var(--border-default);
   border-radius: 1px;
 }
+
+/* Spec 46_4: what another member just changed glows once, in its own colour. */
+.sz-post-it[data-glow],
+.sz-column[data-glow],
+.sz-group[data-glow] {
+  animation: sz-glow 1.5s ease-out;
+}
+@keyframes sz-glow {
+  from {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sz-color) 70%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sz-post-it[data-glow],
+  .sz-column[data-glow],
+  .sz-group[data-glow] {
+    animation: none;
+  }
+}

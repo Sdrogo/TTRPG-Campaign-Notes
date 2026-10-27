@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setLanguage } from '../../i18n';
-import { ApiError, apiDownload, apiFetch } from '../../lib/apiClient';
+import { ApiError, apiDownload, apiFetch, apiOpenStream } from '../../lib/apiClient';
 import { supabase } from '../../lib/supabaseClient';
 import { setViewAsUser } from '../../lib/viewAs';
 import { setDemoMode } from '../../lib/demo/demoMode';
@@ -250,6 +250,36 @@ describe('ApiError', () => {
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toBe('Room not found');
     expect(error.status).toBe(404);
+  });
+});
+
+// The Session 0 stream (spec 46_4) needs the token, so it goes through fetch.
+describe('apiOpenStream', () => {
+  afterEach(() => {
+    setViewAsUser(null);
+  });
+
+  it('asks for an event stream with the token and never as another member', async () => {
+    setViewAsUser('user-2');
+    const fetchMock = respondWith(': open\n\n');
+    const signal = new AbortController().signal;
+
+    const response = await apiOpenStream('/rooms/room-1/session-zero/events', signal);
+
+    const { url, init, headers } = callInit(fetchMock);
+    expect(url).toBe('http://api.test/rooms/room-1/session-zero/events');
+    expect(init.signal).toBe(signal);
+    expect(headers.get('Accept')).toBe('text/event-stream');
+    expect(headers.get('Authorization')).toBe('Bearer jwt-token');
+    expect(headers.has('X-View-As')).toBe(false);
+    expect(await response.text()).toBe(': open\n\n');
+  });
+
+  it('throws ApiError when the stream is refused', async () => {
+    respondWith('Not a member', { status: 403 });
+    await expect(apiOpenStream('/rooms/room-1/session-zero/events', new AbortController().signal)).rejects.toEqual(
+      new ApiError(403, 'Not a member'),
+    );
   });
 });
 

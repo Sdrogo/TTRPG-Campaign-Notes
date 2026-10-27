@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useMembers } from '../hooks/useMembers';
 import { useSessionZero, useSessionZeroWrite } from '../hooks/useSessionZero';
+import { useSessionZeroEvents } from '../hooks/useSessionZeroEvents';
 import { useReadOnly } from '../hooks/useViewAs';
 import { FullPageLoader, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
@@ -47,6 +48,8 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
   const write = useSessionZeroWrite(roomId);
   const writable = !useReadOnly();
   const wide = useMediaQuery(BOARDS_SIDE_BY_SIDE_QUERY, true);
+  // A deleted Session 0 (spec 46c Decision 3) has no closed round left to show.
+  const glowing = useSessionZeroEvents(roomId, () => setRoundId(null));
 
   const context: BoardContextValue | null = board.data
     ? {
@@ -63,6 +66,7 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
           }),
         busy: write.isPending,
         writable,
+        glowing,
       }
     : null;
 

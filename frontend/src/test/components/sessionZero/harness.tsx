@@ -35,13 +35,14 @@ interface Options {
   board?: Record<string, unknown>;
   writable?: boolean;
   busy?: boolean;
+  glowing?: string[];
 }
 
 /**
  * Renders a piece of the Session 0 page inside its board context; `act`
  * records the writes and reports each one done at once.
  */
-export function renderBoard(ui: ReactElement, { board = {}, writable = true, busy = false }: Options = {}) {
+export function renderBoard(ui: ReactElement, { board = {}, writable = true, busy = false, glowing = [] }: Options = {}) {
   const act = vi.fn((_write: unknown, onDone?: () => void) => onDone?.());
   const value = {
     board: toSessionZero(rawSessionZero(board) as RawSessionZero),
@@ -49,6 +50,7 @@ export function renderBoard(ui: ReactElement, { board = {}, writable = true, bus
     act,
     busy,
     writable,
+    glowing: new Set(glowing),
   };
   renderWithProviders(<BoardContext.Provider value={value}>{ui}</BoardContext.Provider>);
   return { act, user: userEvent.setup() };

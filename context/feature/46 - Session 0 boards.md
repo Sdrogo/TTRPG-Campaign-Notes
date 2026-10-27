@@ -281,6 +281,19 @@ those items stay out entirely). The ticket is confirmed.
   re-read every 30 s if the stream is down.
 - The changed post-it or column glows for about 1.5 s (event `id`); the
   timer counts down locally from `timer_ends_at`.
+- As built (46_4): `lib/sessionZeroEvents.ts` reads the stream with
+  `fetch` (`apiClient.apiOpenStream`), since `EventSource` cannot send
+  the `Authorization` header; the stream never sends `X-View-As`.
+  `hooks/useSessionZeroEvents.ts` opens it while the page is mounted and
+  the tab visible (never in the Demo). Each event invalidates the Session
+  0 queries. A closed or failed stream is opened again after 1, 2, 5, 10,
+  then 30 s; while it is down the boards are re-read every 30 s, and once
+  it is back they are re-read at once. A 403 or 404 (no longer a member,
+  Room gone) stops it. `reset` sends the page back to the open round
+  (a closed round no longer exists). An event whose revision is above the
+  board on screen glows its `id` (post-it, Retro column or group, via
+  `data-glow`, off with reduced motion); one at the board's own revision
+  is the viewer's own write, already on screen, and doesn't glow.
 
 ## Tests
 
