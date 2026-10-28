@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Accordion,
@@ -107,42 +107,48 @@ function MasterQuestions({ roomId, tags, module, step, editable }: StepProps & {
   const { t } = useTranslation();
   const { act, busy, members } = useBoard();
   const [editing, setEditing] = useState(false);
+  const tagSelectId = useId();
   const players = members.filter((member) => member.role === 'player');
   const tagOptions = tags.map((tag) => ({ value: tag.id, label: tag.name }));
   return (
     <Stack gap="md">
       <Stack gap="xs">
-        <Group justify="space-between">
+        {/* Title, settings and "Edit questions" share one row, wrapping on a narrow screen. */}
+        <Group gap="md" align="center">
           <Title order={2} fz="h4">
             {t('sessionZero.questions.title')}
           </Title>
           {editable && (
-            <Button size="compact-sm" variant="default" onClick={() => setEditing(true)}>
-              {t('sessionZero.questions.edit')}
-            </Button>
+            <>
+              <Group gap={6} wrap="nowrap">
+                <Text component="label" htmlFor={tagSelectId} size="xs" fw={500}>
+                  {t('sessionZero.questions.tag')}
+                </Text>
+                <Select
+                  id={tagSelectId}
+                  size="xs"
+                  w={140}
+                  placeholder={t('sessionZero.questions.noTag')}
+                  clearable
+                  data={tagOptions}
+                  value={step.tagId}
+                  disabled={busy}
+                  onChange={(value) => act(boardWrites.setQuestionsTag(module.id, value))}
+                />
+              </Group>
+              <Switch
+                size="sm"
+                label={t('sessionZero.questions.bypass')}
+                checked={step.playersBypassCreationRule}
+                disabled={busy}
+                onChange={(event) => act(boardWrites.setCreationBypass(module.id, event.currentTarget.checked))}
+              />
+              <Button size="compact-sm" variant="default" ml="auto" onClick={() => setEditing(true)}>
+                {t('sessionZero.questions.edit')}
+              </Button>
+            </>
           )}
         </Group>
-        {editable && (
-          <Group align="flex-end" gap="md">
-            <Select
-              size="xs"
-              label={t('sessionZero.questions.tag')}
-              placeholder={t('sessionZero.questions.noTag')}
-              clearable
-              data={tagOptions}
-              value={step.tagId}
-              disabled={busy}
-              onChange={(value) => act(boardWrites.setQuestionsTag(module.id, value))}
-            />
-            <Switch
-              size="sm"
-              label={t('sessionZero.questions.bypass')}
-              checked={step.playersBypassCreationRule}
-              disabled={busy}
-              onChange={(event) => act(boardWrites.setCreationBypass(module.id, event.currentTarget.checked))}
-            />
-          </Group>
-        )}
         {step.questions.length === 0 ? (
           <Text size="sm" c="dimmed">
             {t('sessionZero.questions.noneMaster')}

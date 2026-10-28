@@ -903,8 +903,9 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   the viewer's language, with no column menu, no drag by the heading and
   no "Add column".
 - Questions step (spec 47_2, `QuestionsBoard`): an `h4` "Questions". The
-  Master sees "Edit questions" (default, `compact-sm`), a "Tag of the
-  Players' Documents" select and the creation switch on one wrapping row,
+  Master has one wrapping row: the title, the "Tag of the Players'
+  Documents" label beside its 140 px select, the creation switch and
+  "Edit questions" (default, `compact-sm`) pushed right,
   then one bordered row per question with a grey light badge for where
   its answer goes ("New Document · NPC") and the hint dimmed; below, an
   `h5` "Answers" with "Reveal the answers" / "Hide the answers" and
