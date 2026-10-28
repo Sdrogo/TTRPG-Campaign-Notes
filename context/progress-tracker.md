@@ -13,6 +13,21 @@ detail:
 
 ## Current Status (2026-10-28)
 
+- **Spec 48, Markdown in Documents and Notes** (2026-10-28, no migration,
+  PR #262 into `staging`): descriptions and Note texts read as Markdown
+  (CommonMark + tables, strikethrough, task lists; single line breaks
+  kept; raw HTML as text; only http/https/mailto links; images only as
+  links), with mentions working anywhere in it. Cards and excerpts show
+  plain words; read aloud skips the signs. The Document and Note forms
+  have a toolbar, Ctrl/Cmd+B/I/K, Write / Preview and a cheat sheet (12
+  languages). The PDF prints the formatting in all four styles; search
+  excerpts lose the signs; generated and auto-linked mentions skip code
+  and links. Comments stay plain (product owner). New dependencies:
+  `react-markdown`, `remark-gfm`, `remark-breaks`, `unified`,
+  `remark-parse` (frontend), `markdown-it-py` (backend). See
+  `architecture.md` → Markdown text and `ui-context.md` → Markdown text
+  and editor.
+
 - **Spec 47b, separate Session 0 sessions** (2026-10-28, product owner's
   request, no migration, in PR #263): a new session starts empty; each
   Retro, Questions or DDI step carries an earlier session's columns,
@@ -744,6 +759,9 @@ Nothing is waiting for release: `staging` and `main` match after release
 PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
+
+- **48, Markdown in Documents and Notes** (ticket confirmed by the product
+  owner 2026-10-28, built in PR #262): see Current Status. No migration.
 
 - **46, Session 0 boards** (ticket confirmed by the product owner
   2026-10-27, building): a Room's Session 0 page with a Retro board and a

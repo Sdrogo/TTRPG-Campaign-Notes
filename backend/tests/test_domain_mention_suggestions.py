@@ -157,3 +157,16 @@ def test_a_match_chosen_twice_is_written_once() -> None:
 
     assert len(picked) == 1
     assert apply_mentions("Ecco Lyra", picked) == f"Ecco #[Lyra](doc:{LYRA})"
+
+
+def test_names_in_code_and_markdown_links_are_left_alone() -> None:
+    """Spec 48 Decision 11: never inside code, a link's text or address, or
+    a bare address."""
+    text = (
+        "`Lyra` [Lyra](https://x.test/Lyra) https://Lyra.test\n"
+        f"```\nLyra\n```\n#[Lyra](doc:{LYRA}) Lyra"
+    )
+
+    found = suggest_mentions(text, usable_candidates([_doc(LYRA, "Lyra")]))
+
+    assert [(s.start, s.text) for s in found] == [(len(text) - 4, "Lyra")]

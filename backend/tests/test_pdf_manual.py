@@ -115,6 +115,36 @@ def test_text_is_escaped_and_paragraphs_stay_on_one_line() -> None:
     assert "<p>three</p>" in html
 
 
+def test_a_markdown_description_prints_formatted_with_its_mentions() -> None:
+    """Spec 48: headings under the Note titles, lists, tables and links; a
+    mention keeps its page inside a list item; nothing adds line breaks."""
+    export = make_export(
+        documents=[
+            document(
+                CASTLE,
+                "Castle",
+                description=(
+                    text("# Who\n\n- ruled by "),
+                    mention(MentionKind.DOCUMENT, IRENA, "Irena"),
+                    text("\n- *old*\n\n| a |\n| - |\n| 1 |\n\n[web](https://x.test) <b>x</b>"),
+                ),
+            ),
+            document(IRENA, "Irena"),
+        ]
+    )
+    html = render_manual_html(
+        build_manual(export, ManualOptions(), LABELS), ManualStyle.MODERN, PageSize.A4
+    )
+
+    assert "<h4>Who</h4>" in html
+    assert (
+        f'<ul><li>ruled by <a class="xref" href="#doc-{IRENA}" data-page="p.">Irena</a></li>'
+        "<li><em>old</em></li></ul>"
+    ) in html
+    assert '<table class="markdown-table"><thead><tr><th>a</th></tr></thead>' in html
+    assert '<p><a class="link" href="https://x.test">web</a> &lt;b&gt;x&lt;/b&gt;</p>' in html
+
+
 def test_a_reference_and_the_glossary_link_to_where_the_document_is_printed() -> None:
     html = render_manual_html(_manual(), ManualStyle.MODERN, PageSize.A4)
 

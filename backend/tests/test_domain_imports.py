@@ -330,6 +330,16 @@ Just a place.
     assert barovia.tag_names == ()
 
 
+def test_markdown_inside_a_hand_written_section_is_kept() -> None:
+    """Spec 48 Decision 12: `#` and `##` still split Documents and Notes;
+    anything else is the Document's own Markdown."""
+    text = "# Keep\n\n### Rooms\n\n- **hall**\n- crypt\n\n| a | b |\n| - | - |\n| 1 | 2 |\n"
+
+    (keep,) = parse_file("k.md", text.encode()).documents
+
+    assert keep.text == ("### Rooms\n\n- **hall**\n- crypt\n\n| a | b |\n| - | - |\n| 1 | 2 |",)
+
+
 def test_tags_are_only_read_on_the_first_line_under_the_heading() -> None:
     parsed = parse_file("n.md", b"# Doc\n\nText first\nTags: late\n")
 

@@ -68,7 +68,7 @@ import { PromoteToDocumentModal, WideningConfirmModal } from '../comments/Commen
 import { NoteList } from '../notes/NoteList';
 import { DocumentFileList } from '../files/DocumentFileList';
 import { DocumentMentionsProvider } from '../mentions/DocumentMentionsProvider';
-import { MentionText } from '../mentions/MentionText';
+import { MarkdownText } from '../mentions/MarkdownText';
 import { Backlinks } from '../mentions/Backlinks';
 import { GenerateMentionsModal } from '../mentions/GenerateMentionsModal';
 import { MentionMapModal } from '../maps/MentionMapModal';
@@ -545,10 +545,7 @@ function DocumentPanel({
               <Stack gap="xs" className="document-description">
                 <TagList tags={tags} tagIds={document.tagIds} roomId={roomId} />
                 {document.description ? (
-                  <MentionText
-                    text={document.description}
-                    style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-                  />
+                  <MarkdownText text={document.description} style={{ overflowWrap: 'anywhere' }} />
                 ) : (
                   <Text c="dimmed">{t('common.noDescription')}</Text>
                 )}

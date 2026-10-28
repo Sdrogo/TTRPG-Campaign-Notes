@@ -625,6 +625,28 @@ exception is a Badge's left/right section, at 14px. Icon color always follows `-
 rest and `--accent-primary` on hover/active — never a hardcoded
 color per icon.
 
+## Markdown text and editor (spec 48)
+
+- **Reading**: `MarkdownText` shows a description or Note text formatted on
+  the Document page, the split view and the Session 0 DDI step. Markdown
+  `#` is an h3 at the size of a Note title, `##` smaller, the rest body
+  size in bold (`.markdown-heading`, display font). Paragraphs are `div`s
+  (a mention's hover card can't nest in a `<p>`). Quotes have an
+  accent-coloured left bar; code and table headers sit on `--bg-raised`; a
+  table scrolls sideways on its own on a phone and keeps words whole. Web
+  links open in a new tab.
+- **Short previews stay plain**: the Document card and "Mentioned in"
+  excerpts show the words without the signs (`markdownToPlain`).
+- **Editing**: `MarkdownEditor` wraps `MentionTextarea` in the Document and
+  Note forms: a row with the toolbar (bold, italic, heading `##`, bulleted
+  and numbered list, quote, link; subtle gray icon buttons) on the left and
+  a Write / Preview `SegmentedControl` on the right. The toolbar only adds
+  signs around the selection, so mentions inside it stay whole;
+  Ctrl/Cmd+B, I and K do the same. In Preview the toolbar goes away. The
+  hint under the label ends with a "Markdown supported" link opening a
+  cheat sheet popover. A `#` at the start of a line opens no `#`
+  suggestions until a letter follows (it may be a heading).
+
 ## Room setup page (spec 11)
 
 `/rooms/:roomId/setup` (`RoomSetupPage`, 2026-09-30), opened from the

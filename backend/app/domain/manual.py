@@ -25,6 +25,13 @@ from app.domain.export import (
     TextSpan,
     group_documents,
 )
+from app.domain.markdown import (
+    Node,
+    markdown_tree,
+    placeholder,
+    split_placeholders,
+    without_placeholder_marks,
+)
 from app.domain.mentions import MentionKind
 
 
@@ -93,13 +100,17 @@ class Run:
 
 Paragraph = Sequence[Run]
 
+# A block of a description or a Note read as Markdown (spec 48): its leaves
+# are runs, so a mention keeps its page cross-reference anywhere in it.
+Block = Node[Run]
+
 
 @dataclass(frozen=True)
 class ManualNote:
-    """A Note, printed as a subheading and paragraphs after the description."""
+    """A Note, printed as a subheading and its text after the description."""
 
     title: str
-    paragraphs: Sequence[Paragraph]
+    blocks: Sequence[Block]
 
 
 @dataclass(frozen=True)
@@ -122,7 +133,7 @@ class ManualDocument:
     id: uuid.UUID
     name: str
     image_url: str | None
-    paragraphs: Sequence[Paragraph]
+    blocks: Sequence[Block]
     notes: Sequence[ManualNote]
     comments: Sequence[ManualComment]
     subtitle: str | None = None
@@ -137,10 +148,12 @@ class ManualDocument:
         """Whether the description opens with a large initial. Not when it
         opens with a member mention or a "#" that stayed: the initial would
         take the "@" or "#" and the letter after it together ("@G" over
-        "ina")."""
-        if not self.paragraphs:
+        "ina"). Nor when it opens with anything but a paragraph (a heading,
+        a list: spec 48 Decision 9)."""
+        if not self.blocks or self.blocks[0].tag != "p" or not self.blocks[0].children:
             return False
-        return not self.paragraphs[0][0].text.startswith(_SIGILS)
+        first = self.blocks[0].children[0]
+        return isinstance(first, Run) and not first.text.startswith(_SIGILS)
 
 
 @dataclass(frozen=True)
@@ -256,6 +269,34 @@ def _paragraphs(spans: Sequence[Span], resolve: Callable[[MentionSpan], Run]) ->
     return [tuple(paragraph) for paragraph in trimmed if paragraph]
 
 
+def _blocks(spans: Sequence[Span], resolve: Callable[[MentionSpan], Run]) -> list[Block]:
+    """A description or Note text read as Markdown (spec 48): each mention
+    is lifted out before parsing and comes back as its run through `resolve`
+    (Decision 4), so a token never reads as a Markdown link. Inside code a
+    mention is printed as its plain name. A plain `#Name` loses its `#`, as
+    in `_paragraphs`. Markdown `#` headings sit under the Note titles (h3)."""
+    runs: list[Run] = []
+    parts: list[str] = []
+    for span in spans:
+        if isinstance(span, TextSpan):
+            parts.append(without_placeholder_marks(_PLAIN_HASHTAG.sub("", span.text)))
+        else:
+            parts.append(placeholder(len(runs)))
+            runs.append(resolve(span))
+
+    def leaf(value: str) -> Run:
+        return Run(
+            "".join(
+                runs[part].text if isinstance(part, int) else part
+                for part in split_placeholders(value)
+            )
+        )
+
+    return markdown_tree(
+        "".join(parts), leaf=leaf, mention=lambda index: runs[index], top_heading=4
+    )
+
+
 def build_manual(export: Export, options: ManualOptions, labels: ManualLabels) -> Manual:
     """The manual for `export` (spec 23b Decision 1).
 
@@ -354,10 +395,9 @@ def _manual_document(
         name=document.name,
         subtitle=document.subtitle,
         image_url=_chosen_image(document.images),
-        paragraphs=_paragraphs(document.description, resolve),
+        blocks=_blocks(document.description, resolve),
         notes=[
-            ManualNote(note.title, _paragraphs(note.description, resolve))
-            for note in document.notes
+            ManualNote(note.title, _blocks(note.description, resolve)) for note in document.notes
         ],
         comments=(
             _comment_thread(document.comments, export, members, labels, resolve)

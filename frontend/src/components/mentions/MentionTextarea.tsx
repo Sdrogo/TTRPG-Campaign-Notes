@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { Box, Popover, Textarea, type TextareaProps } from '@mantine/core';
 import { useDocumentMentions } from '../../hooks/useDocumentMentions';
 import { notifyError } from '../../lib/notify';
@@ -12,12 +12,14 @@ import {
   USER_MENTION_PREFIX,
   type TokenOptions,
 } from '../../lib/mentionTokens';
+import type { Insertion } from '../../lib/markdownEditing';
 import type { Member } from '../../types/member';
 import {
   creatableKinds,
   filterMentionCandidates,
   findMentionQuery,
   insertMention,
+  isHeadingStart,
   isFinishedMention,
   mentionKeyAction,
   mentionOptionId,
@@ -39,6 +41,24 @@ interface MentionTextareaProps extends Omit<TextareaProps, 'value' | 'onChange'>
    * `value` also holds `@[Name](user:<uuid>)` tokens, shown as `@Name`.
    */
   members?: Member[];
+  /** For a toolbar acting on the text (spec 48): the textarea and a way to add to it. */
+  controlRef?: Ref<MentionTextareaControl>;
+  /**
+   * A Markdown text (spec 48): a `#` at the start of a line opens no
+   * suggestions until a name starts, since it may be a heading.
+   */
+  markdown?: boolean;
+}
+
+/** What `controlRef` gives a toolbar. */
+export interface MentionTextareaControl {
+  /** The textarea, to read its selection; it shows `#Name` for each token. */
+  textarea: () => HTMLTextAreaElement | null;
+  /**
+   * Adds `insertions` (positions in what the textarea shows), keeping every
+   * token whole, then focuses the textarea and selects `selection`.
+   */
+  insert: (insertions: Insertion[], selection: [number, number]) => void;
 }
 
 /**
@@ -50,10 +70,19 @@ interface MentionTextareaProps extends Omit<TextareaProps, 'value' | 'onChange'>
  * suggests them the same way. Works as a plain textarea outside a
  * `DocumentMentionsProvider` and without `members`.
  */
-export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, ...props }: MentionTextareaProps) {
+export function MentionTextarea({
+  value,
+  onChange,
+  onKeyDown,
+  onBlur,
+  members,
+  controlRef,
+  markdown = false,
+  ...props
+}: MentionTextareaProps) {
   const mentions = useDocumentMentions();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const pendingCaret = useRef<number | null>(null);
+  const pendingCaret = useRef<number | [number, number] | null>(null);
   // Latest value/onChange, for when a create request finishes later.
   const latest = useRef({ value, onChange });
   const listId = useId();
@@ -113,6 +142,7 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, .
     mention !== null &&
     !finished &&
     mention.start !== dismissedStart &&
+    !(markdown && display[mention.start] === '#' && isHeadingStart(display, mention)) &&
     (candidates.length > 0 || createAvailable || !/\s/.test(mention.query));
   const active = Math.min(activeIndex, Math.max(candidates.length - 1, 0));
 
@@ -121,11 +151,27 @@ export function MentionTextarea({ value, onChange, onKeyDown, onBlur, members, .
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
     if (textarea && pendingCaret.current !== null) {
+      const [start, end] =
+        typeof pendingCaret.current === 'number'
+          ? [pendingCaret.current, pendingCaret.current]
+          : pendingCaret.current;
       textarea.focus();
-      textarea.setSelectionRange(pendingCaret.current, pendingCaret.current);
+      textarea.setSelectionRange(start, end);
       pendingCaret.current = null;
     }
   }, [value]);
+
+  useImperativeHandle(controlRef, () => ({
+    textarea: () => textareaRef.current,
+    insert: (insertions, selection) => {
+      // From the end back, so earlier positions still hold.
+      const stored = insertions
+        .toSorted((a, b) => b.at - a.at)
+        .reduce((text, insertion) => replaceDisplayRange(text, insertion.at, insertion.at, insertion.text, tokens), value);
+      pendingCaret.current = selection;
+      latest.current.onChange(stored);
+    },
+  }));
 
   const trackCaret = (textarea: HTMLTextAreaElement) => {
     const next = textarea.selectionStart === textarea.selectionEnd ? textarea.selectionStart : null;

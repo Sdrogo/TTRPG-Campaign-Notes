@@ -1474,5 +1474,30 @@
       "open": "Open the Document",
       "loadError": "Couldn't read the DDI."
     }
+  },
+  "markdown": {
+    "write": "Write",
+    "preview": "Preview",
+    "previewEmpty": "Nothing to preview yet.",
+    "toolbar": "Formatting",
+    "help": "Markdown supported",
+    "helpTitle": "Markdown cheat sheet",
+    "sample": {
+      "text": "text",
+      "heading": "Heading",
+      "item": "item"
+    },
+    "actions": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "strike": "Strikethrough",
+      "heading": "Heading",
+      "bulleted": "Bulleted list",
+      "numbered": "Numbered list",
+      "quote": "Quote",
+      "link": "Link",
+      "code": "Code",
+      "table": "Table"
+    }
   }
 }

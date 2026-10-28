@@ -2,6 +2,7 @@
 mention links, the glossary, Comments and what never reaches a page."""
 
 import uuid
+from collections.abc import Sequence
 from dataclasses import replace
 from typing import Any
 
@@ -27,6 +28,7 @@ from manual_fixtures import (
 
 from app.domain.export import DocumentSource, ExportInput, build_export
 from app.domain.manual import (
+    Block,
     Manual,
     ManualDocument,
     ManualOptions,
@@ -34,6 +36,7 @@ from app.domain.manual import (
     Run,
     build_manual,
 )
+from app.domain.markdown import Node
 from app.domain.mentions import MentionKind
 from app.domain.models import (
     Comment,
@@ -100,12 +103,12 @@ def test_a_combination_is_titled_by_its_tags_and_empty_chapters_are_dropped() ->
 def test_a_mention_links_only_to_a_printed_document() -> None:
     castle = _documents(_manual())["Castle"]
 
-    first, second = castle.paragraphs
-    assert list(first) == [Run("Ruled by "), Run("Irena", f"doc-{IRENA}"), Run(".")]
+    first, second = castle.blocks
+    assert list(first.children) == [Run("Ruled by "), Run("Irena", f"doc-{IRENA}"), Run(".")]
     # "Gone" is not in the PDF (a Tag filter left it out) and a Tag has no
     # page of its own: its bare name, without the "#" (product owner,
     # 2026-10-21). A member keeps its "@".
-    assert list(second) == [
+    assert list(second.children) == [
         Run("Second paragraph, near "),
         Run("Gone"),
         Run(", for "),
@@ -131,7 +134,7 @@ def test_a_plain_hashtag_in_the_text_loses_its_hash() -> None:
     )
     manual = build_manual(export, ManualOptions(), LABELS)
 
-    assert [list(p) for p in _documents(manual)["Castle"].paragraphs] == [
+    assert [list(p.children) for p in _documents(manual)["Castle"].blocks] == [
         [Run("Ghoul and (Élise), room #3, a#b, # alone, #_x")]
     ]
 
@@ -153,11 +156,12 @@ def test_descriptions_split_at_blank_lines_and_keep_single_breaks() -> None:
     manual = build_manual(export, ManualOptions(), LABELS)
 
     documents = _documents(manual)
-    assert [list(p) for p in documents["Castle"].paragraphs] == [
-        [Run("One\nstill one")],
-        [Run("Two "), Run("@Bob")],
+    # Spec 48 Decision 2: a single line break stays one.
+    assert documents["Castle"].blocks == [
+        Node("p", (Run("One"), Node("br"), Run("still one"))),
+        Node("p", (Run("Two "), Run("@Bob"))),
     ]
-    assert documents["Irena"].paragraphs == []
+    assert documents["Irena"].blocks == []
 
 
 def test_notes_become_sidebars_in_order() -> None:
@@ -165,7 +169,7 @@ def test_notes_become_sidebars_in_order() -> None:
 
     (sidebar,) = castle.notes
     assert sidebar.title == "Read aloud"
-    assert [list(p) for p in sidebar.paragraphs] == [[Run("The gates creak.")]]
+    assert sidebar.blocks == [Node("p", (Run("The gates creak."),))]
 
 
 def test_the_glossary_lists_each_printed_document_once_by_letter_with_its_tags() -> None:
@@ -296,6 +300,36 @@ def test_only_comments_written_as_a_character_are_printed_depth_first() -> None:
     assert thread[0].written_on == T0.date()
 
 
+def test_comments_stay_plain_text_split_at_blank_lines() -> None:
+    """Comments are not Markdown (spec 48 Decision 1): paragraphs at blank
+    lines, a single break kept, the signs printed as written."""
+    export = make_export(
+        documents=[
+            document(
+                CASTLE,
+                "Castle",
+                comments=(
+                    replace(
+                        comment(1, ALICE, "", as_character=IRENA),
+                        body=(
+                            text("\n\n**One**\nstill\n\n\nTwo, "),
+                            mention(MentionKind.DOCUMENT, IRENA, "Irena"),
+                        ),
+                    ),
+                ),
+            ),
+            document(IRENA, "Irena"),
+        ]
+    )
+    manual = build_manual(export, ManualOptions(include_comments=True), LABELS)
+
+    (only,) = _documents(manual)["Castle"].comments
+    assert [list(p) for p in only.paragraphs] == [
+        [Run("**One**\nstill")],
+        [Run("Two, "), Run("Irena", f"doc-{IRENA}")],
+    ]
+
+
 def test_a_description_opening_with_a_member_mention_has_no_drop_cap() -> None:
     """The large initial would take the "@" and the letter after it. A Tag
     prints as its bare name (product owner, 2026-10-21), so it has one."""
@@ -305,6 +339,10 @@ def test_a_description_opening_with_a_member_mention_has_no_drop_cap() -> None:
         "Link": (mention(MentionKind.DOCUMENT, IRENA, "Irena"), text(" rules")),
         "Plain": (text("  A vampire."),),
         "Empty": (),
+        # Spec 48 Decision 9: only a text opening with a paragraph.
+        "Heading": (text("# The keep\n\nA vampire."),),
+        "List": (text("- a vampire"),),
+        "Linked": (text("[A vampire](https://example.com)"),),
     }
     export = make_export(
         documents=[
@@ -321,7 +359,21 @@ def test_a_description_opening_with_a_member_mention_has_no_drop_cap() -> None:
         "Link": True,
         "Plain": True,
         "Empty": False,
+        "Heading": False,
+        "List": False,
+        "Linked": False,
     }
+
+
+def _leaves(nodes: Sequence[Block | Run]) -> list[str]:
+    """The text of every run under `nodes`."""
+    texts: list[str] = []
+    for node in nodes:
+        if isinstance(node, Run):
+            texts.append(node.text)
+        else:
+            texts += _leaves(node.children)
+    return texts
 
 
 def _all_text(manual: Manual) -> str:
@@ -332,13 +384,12 @@ def _all_text(manual: Manual) -> str:
         for entry in chapter.entries:
             parts.append(entry.name)
             if isinstance(entry, ManualDocument):
-                paragraphs = list(entry.paragraphs)
+                parts += _leaves(entry.blocks)
                 for sidebar in entry.notes:
                     parts.append(sidebar.title)
-                    paragraphs += list(sidebar.paragraphs)
-                for c in entry.comments:
-                    parts.append(c.author)
-                    paragraphs += list(c.paragraphs)
+                    parts += _leaves(sidebar.blocks)
+                paragraphs = [p for c in entry.comments for p in c.paragraphs]
+                parts += [c.author for c in entry.comments]
                 parts += [run.text for paragraph in paragraphs for run in paragraph]
     for group in manual.glossary:
         for glossary_entry in group.entries:
@@ -455,3 +506,53 @@ def test_a_document_subtitle_is_printed_under_its_name() -> None:
 
     assert _documents(manual)["Castle"].subtitle == "The lord"
     assert _documents(manual)["Irena"].subtitle is None
+
+
+def test_descriptions_and_notes_read_as_markdown_with_mentions_anywhere() -> None:
+    """Spec 48: a mention token looks like a Markdown link but stays a
+    mention, with its page, in a heading, a list or a table; inside code it
+    prints as its plain name. `#` sits under the Note titles (h4)."""
+    irena = mention(MentionKind.DOCUMENT, IRENA, "Irena")
+    export = make_export(
+        documents=[
+            document(
+                CASTLE,
+                "Castle",
+                description=(
+                    text("# Who\n\n- **"),
+                    irena,
+                    text("**\n\n| a |\n| - |\n| "),
+                    irena,
+                    text(" |\n\n`"),
+                    irena,
+                    text("`"),
+                ),
+            ),
+            document(IRENA, "Irena"),
+        ]
+    )
+    castle = _documents(build_manual(export, ManualOptions(), LABELS))["Castle"]
+
+    link = Run("Irena", f"doc-{IRENA}")
+    heading, bullets, table, code = castle.blocks
+    assert heading == Block("h4", (Run("Who"),))
+    assert bullets == Block("ul", (Block("li", (Block("strong", (link,)),)),))
+    assert link in _nodes(table)
+    assert code == Block("p", (Block("code", (Run("Irena"),)),))
+
+
+def test_a_pasted_placeholder_does_not_break_the_manual() -> None:
+    """Spec 48: private-use characters in the text are no lifted mention."""
+    export = make_export(
+        documents=[document(CASTLE, "Castle", description=(text("\ue0007\ue001 Walls"),))]
+    )
+    castle = _documents(build_manual(export, ManualOptions(), LABELS))["Castle"]
+
+    assert castle.blocks == [Block("p", (Run("7 Walls"),))]
+
+
+def _nodes(node: Block | Run) -> list[Block | Run]:
+    """`node` and everything under it."""
+    if isinstance(node, Run):
+        return [node]
+    return [node, *(n for child in node.children for n in _nodes(child))]

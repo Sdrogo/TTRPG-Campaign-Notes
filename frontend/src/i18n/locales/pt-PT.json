@@ -1476,5 +1476,30 @@
       "open": "Abrir o Documento",
       "loadError": "Não foi possível ler a DDI."
     }
+  },
+  "markdown": {
+    "write": "Escrever",
+    "preview": "Pré-visualizar",
+    "previewEmpty": "Ainda não há nada para mostrar.",
+    "toolbar": "Formatação",
+    "help": "Suporta Markdown",
+    "helpTitle": "Guia rápido de Markdown",
+    "sample": {
+      "text": "texto",
+      "heading": "Título",
+      "item": "item"
+    },
+    "actions": {
+      "bold": "Negrito",
+      "italic": "Itálico",
+      "strike": "Rasurado",
+      "heading": "Título",
+      "bulleted": "Lista com marcas",
+      "numbered": "Lista numerada",
+      "quote": "Citação",
+      "link": "Ligação",
+      "code": "Código",
+      "table": "Tabela"
+    }
   }
 }

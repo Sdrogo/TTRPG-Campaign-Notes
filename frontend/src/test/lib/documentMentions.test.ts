@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isHeadingStart,
   compareRankedMentions,
   creatableKinds,
   documentsWithTagsHref,
@@ -129,6 +130,24 @@ describe('member targets', () => {
   it('Documents and Tags are keyed by their id', () => {
     expect(mentionTargetId({ kind: 'document', document: documents[0], tags: [] })).toBe('d-castle');
     expect(mentionTargetId({ kind: 'tag', tag: npcTag, documentCount: 0 })).toBe('t-npc');
+  });
+});
+
+describe('isHeadingStart', () => {
+  // Spec 48: a `#` that may open a Markdown heading suggests nothing yet.
+  const heading = (text: string) => isHeadingStart(text, findMentionQuery(text, text.length)!);
+
+  it('is true for a # at the start of a line, with nothing after', () => {
+    expect(heading('#')).toBe(true);
+    expect(heading('riga\n#')).toBe(true);
+    // A second `#` is no mention start at all.
+    expect(findMentionQuery('##', 2)).toBeNull();
+  });
+
+  it('is false once a name starts or mid-line', () => {
+    expect(heading('#Na')).toBe(false);
+    expect(heading('testo #')).toBe(false);
+    expect(heading('riga\n#Na')).toBe(false);
   });
 });
 

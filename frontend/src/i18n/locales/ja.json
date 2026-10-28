@@ -1439,5 +1439,30 @@
       "open": "ドキュメントを開く",
       "loadError": "DDIを読み込めませんでした。"
     }
+  },
+  "markdown": {
+    "write": "書く",
+    "preview": "プレビュー",
+    "previewEmpty": "まだ表示する内容がありません。",
+    "toolbar": "書式",
+    "help": "Markdown に対応",
+    "helpTitle": "Markdown 早見表",
+    "sample": {
+      "text": "テキスト",
+      "heading": "見出し",
+      "item": "項目"
+    },
+    "actions": {
+      "bold": "太字",
+      "italic": "斜体",
+      "strike": "取り消し線",
+      "heading": "見出し",
+      "bulleted": "箇条書き",
+      "numbered": "番号付きリスト",
+      "quote": "引用",
+      "link": "リンク",
+      "code": "コード",
+      "table": "表"
+    }
   }
 }

@@ -82,6 +82,23 @@ a { color: inherit; text-decoration: none; }
 .note { margin: 5mm 0 0; }
 .note h3 { margin: 0 0 2mm; }
 
+/* Descriptions and Notes read as Markdown (spec 48). Headings sit under the
+   Note titles (h4 to h6); a web link prints its address after its text. */
+.description h4, .description h5, .description h6,
+.note-text h4, .note-text h5, .note-text h6 { margin: 4mm 0 2mm; break-after: avoid; }
+.description h4, .note-text h4 { font-size: 1.1em; }
+.description h5, .note-text h5 { font-size: 1em; }
+.description h6, .note-text h6 { font-size: 1em; font-style: italic; }
+.description ul, .description ol, .note-text ul, .note-text ol { margin: 0 0 3mm; padding-left: 6mm; }
+.description li > p, .note-text li > p { margin-bottom: 1mm; }
+.description blockquote, .note-text blockquote { margin: 0 0 3mm; padding-left: 4mm; border-left: 1pt solid; font-style: italic; }
+.description pre, .note-text pre { margin: 0 0 3mm; white-space: pre-wrap; font-size: 0.85em; }
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 0.9em; }
+.markdown-table { margin: 0 0 3mm; border-collapse: collapse; font-size: 0.9em; break-inside: avoid; }
+.markdown-table th, .markdown-table td { padding: 1mm 2mm; border: 0.5pt solid; text-align: left; vertical-align: top; }
+.description hr, .note-text hr { margin: 3mm 0; border: 0; border-top: 0.5pt solid; }
+.link::after { content: " (" attr(href) ")"; font-size: 0.8em; word-break: break-all; }
+
 /* A link to something printed elsewhere shows where: "Name → p. 12". */
 .xref::after { content: " \2192 " attr(data-page) " " target-counter(attr(href), page); }
 .reference { margin: 2mm 0; }

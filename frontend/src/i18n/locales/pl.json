@@ -1544,5 +1544,30 @@
       "open": "Otwórz Dokument",
       "loadError": "Nie można odczytać DDI."
     }
+  },
+  "markdown": {
+    "write": "Pisz",
+    "preview": "Podgląd",
+    "previewEmpty": "Na razie nie ma czego pokazać.",
+    "toolbar": "Formatowanie",
+    "help": "Obsługuje Markdown",
+    "helpTitle": "Ściągawka Markdown",
+    "sample": {
+      "text": "tekst",
+      "heading": "Nagłówek",
+      "item": "pozycja"
+    },
+    "actions": {
+      "bold": "Pogrubienie",
+      "italic": "Kursywa",
+      "strike": "Przekreślenie",
+      "heading": "Nagłówek",
+      "bulleted": "Lista punktowana",
+      "numbered": "Lista numerowana",
+      "quote": "Cytat",
+      "link": "Link",
+      "code": "Kod",
+      "table": "Tabela"
+    }
   }
 }

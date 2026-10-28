@@ -60,6 +60,14 @@ def test_searchable_text_is_what_the_reader_sees() -> None:
     assert searchable_text(raw) == "Il #Drago vive qui"
 
 
+def test_an_excerpt_loses_its_markdown_signs() -> None:
+    target = uuid.uuid4()
+    raw = f"## Il **#[Drago](doc:{target})**\n\n- vive [qui](https://a.b)"
+    assert searchable_text(raw, markdown=True) == "Il #Drago vive qui"
+    # A title is not Markdown.
+    assert searchable_text("A *B*") == "A *B*"
+
+
 def test_a_whole_text_has_no_ellipsis() -> None:
     source = "La Città del Drago"
     assert read_headline(f"La {_mark('Città')} del {_mark('Drago')}", source) == Highlighted(

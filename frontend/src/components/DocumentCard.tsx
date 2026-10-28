@@ -5,6 +5,7 @@ import { RevealedBadge } from './RevealedBadge';
 import { TagList } from './TagList';
 import { DocumentCardImages } from './DocumentCardImages';
 import { MentionText } from './mentions/MentionText';
+import { markdownToPlain } from '../lib/markdownText';
 import { UserAvatar } from './UserAvatar';
 import { displayNameFor, findMember, memberDisplayName } from '../lib/members';
 import type { Document } from '../types/document';
@@ -141,7 +142,7 @@ export function DocumentCard({
             // The card's link lies over it: mentions are only colored here,
             // or Document mentions sit above it as links of their own.
             <MentionText
-              text={document.description}
+              text={markdownToPlain(document.description, { separator: ' ' })}
               linked={mentionLinks ? 'documents' : false}
               c="dimmed"
               size="sm"
