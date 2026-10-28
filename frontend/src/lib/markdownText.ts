@@ -21,6 +21,11 @@ export function mentionPlaceholder(index: number): string {
   return `${OPEN}${index}${CLOSE}`;
 }
 
+/** `text` without the placeholder characters, so a pasted one never reads as a mention. */
+export function withoutPlaceholderMarks(text: string): string {
+  return text.replaceAll(OPEN, '').replaceAll(CLOSE, '');
+}
+
 /** Text split into plain runs and the indexes of the placeholders in it. */
 export function splitPlaceholders(text: string): (string | number)[] {
   const parts: (string | number)[] = [];
@@ -82,7 +87,7 @@ function toPlain(text: string, separator: string, sentences: boolean): string {
   const tokens: string[] = [];
   const lifted = splitMentionTokens(text, { users: true })
     .map((segment) => {
-      if (segment.kind === 'text') return segment.stored;
+      if (segment.kind === 'text') return withoutPlaceholderMarks(segment.stored);
       tokens.push(segment.stored);
       return mentionPlaceholder(tokens.length - 1);
     })

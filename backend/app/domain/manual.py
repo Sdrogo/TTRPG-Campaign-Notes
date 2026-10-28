@@ -25,7 +25,13 @@ from app.domain.export import (
     TextSpan,
     group_documents,
 )
-from app.domain.markdown import Node, markdown_tree, placeholder, split_placeholders
+from app.domain.markdown import (
+    Node,
+    markdown_tree,
+    placeholder,
+    split_placeholders,
+    without_placeholder_marks,
+)
 from app.domain.mentions import MentionKind
 
 
@@ -273,7 +279,7 @@ def _blocks(spans: Sequence[Span], resolve: Callable[[MentionSpan], Run]) -> lis
     parts: list[str] = []
     for span in spans:
         if isinstance(span, TextSpan):
-            parts.append(_PLAIN_HASHTAG.sub("", span.text))
+            parts.append(without_placeholder_marks(_PLAIN_HASHTAG.sub("", span.text)))
         else:
             parts.append(placeholder(len(runs)))
             runs.append(resolve(span))

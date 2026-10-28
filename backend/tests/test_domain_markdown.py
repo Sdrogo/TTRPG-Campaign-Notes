@@ -9,6 +9,7 @@ from app.domain.markdown import (
     protected_ranges,
     safe_url,
     split_placeholders,
+    without_placeholder_marks,
 )
 
 # Explicit, so mypy needn't infer a nested literal's leaf type.
@@ -140,3 +141,11 @@ def test_protected_ranges_cover_code_links_and_addresses() -> None:
 def test_an_unclosed_fence_runs_to_the_end_and_ranges_merge() -> None:
     text = "a\n~~~\nDrakon `x`"
     assert protected_ranges(text) == [(2, len(text))]
+
+
+def test_a_pasted_placeholder_is_not_a_mention() -> None:
+    """Private-use characters typed or pasted in the text (an icon font)
+    are dropped before lifting, so they never stand for a mention."""
+    pasted = f"{placeholder(7)} {TOKEN}"
+    assert without_placeholder_marks(pasted) == f"7 {TOKEN}"
+    assert markdown_plain(pasted) == f"7 {TOKEN}"

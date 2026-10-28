@@ -541,6 +541,16 @@ def test_descriptions_and_notes_read_as_markdown_with_mentions_anywhere() -> Non
     assert code == Block("p", (Block("code", (Run("Irena"),)),))
 
 
+def test_a_pasted_placeholder_does_not_break_the_manual() -> None:
+    """Spec 48: private-use characters in the text are no lifted mention."""
+    export = make_export(
+        documents=[document(CASTLE, "Castle", description=(text("\ue0007\ue001 Walls"),))]
+    )
+    castle = _documents(build_manual(export, ManualOptions(), LABELS))["Castle"]
+
+    assert castle.blocks == [Block("p", (Run("7 Walls"),))]
+
+
 def _nodes(node: Block | Run) -> list[Block | Run]:
     """`node` and everything under it."""
     if isinstance(node, Run):

@@ -38,6 +38,12 @@ def placeholder(index: int) -> str:
     return f"{_OPEN}{index}{_CLOSE}"
 
 
+def without_placeholder_marks(text: str) -> str:
+    """`text` without the placeholder characters, so one the writer pasted
+    never reads as a lifted mention."""
+    return text.replace(_OPEN, "").replace(_CLOSE, "")
+
+
 def split_placeholders(text: str) -> list[str | int]:
     """`text` split into plain runs and the indexes of its placeholders."""
     parts: list[str | int] = []
@@ -48,7 +54,7 @@ def split_placeholders(text: str) -> list[str | int]:
         parts.append(int(match.group(1)))
         last = match.end()
     if last < len(text):
-        parts.append(text[last:])
+        parts.append(without_placeholder_marks(text[last:]))
     return parts
 
 
@@ -150,7 +156,7 @@ def markdown_plain(text: str) -> str:
     parts: list[str] = []
     last = 0
     for found in find_mentions(text):
-        parts.append(text[last : found.start])
+        parts.append(without_placeholder_marks(text[last : found.start]))
         parts.append(placeholder(len(tokens)))
         tokens.append(text[found.start : found.end])
         last = found.end

@@ -3,7 +3,12 @@ import { Anchor, Box, type BoxProps } from '@mantine/core';
 import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
-import { mentionPlaceholder, rehypePlaceMentions, safeLinkUrl } from '../../lib/markdownText';
+import {
+  mentionPlaceholder,
+  rehypePlaceMentions,
+  safeLinkUrl,
+  withoutPlaceholderMarks,
+} from '../../lib/markdownText';
 import type { Root as MdastRoot, RootContent as MdastContent } from 'mdast';
 import { useMentionSegments } from '../../hooks/useMentionSegments';
 import { MentionSegmentView } from './MentionText';
@@ -43,7 +48,7 @@ export function MarkdownText({ text, className, ...boxProps }: MarkdownTextProps
     const asWritten: string[] = [];
     const lifted = segments
       .map((segment) => {
-        if (segment.kind === 'text') return segment.text;
+        if (segment.kind === 'text') return withoutPlaceholderMarks(segment.text);
         found.push(segment);
         // No member tokens here: `useMentionSegments` gets no members.
         asWritten.push((segment as { text: string }).text);

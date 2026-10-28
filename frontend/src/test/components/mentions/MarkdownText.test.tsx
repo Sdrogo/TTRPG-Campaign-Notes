@@ -74,6 +74,12 @@ describe('MarkdownText', () => {
     expect(container.querySelector('br')).not.toBeNull();
   });
 
+  it('drops pasted placeholder characters, so they are no mention', () => {
+    renderWithProviders(withMentions(<MarkdownText text={'\uE0007\uE001 Mura'} />));
+
+    expect(screen.getByText('7 Mura')).toBeInTheDocument();
+  });
+
   it('renders paragraphs as divs, so a mention preview can nest', () => {
     const { container } = renderWithProviders(withMentions(<MarkdownText text="Solo testo." />));
 
