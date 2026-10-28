@@ -14,8 +14,8 @@ detail:
 ## Current Status (2026-10-28)
 
 - **Spec 47_3, Session 0 DDI** (2026-10-28, migration `a7d3f9b2c6e1`,
-  PR to `staging`; the migration must reach the staging DB before it
-  merges, and production before the release): a DDI step showing one of
+  PR #261 to `staging`; migration applied to staging 2026-10-28, pending
+  on production): a DDI step showing one of
   the Room's Documents (picked, or created from the Declaration of Intent
   template), accepted by each Player, again once it changed. Spec 47 is
   complete with it. See `architecture.md` → Session 0 boards, DDI.
@@ -181,10 +181,10 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending on staging**: `a7d3f9b2c6e1` (47_3), before its PR merges.
 - **Pending on production only**: `e5c1a8f3b7d2`, `f3a9c1e7b5d4` and
   `a7d3f9b2c6e1`, all before the next release to `main`.
-- **Staging database**: `f3a9c1e7b5d4` (head minus one, Session 0 Questions,
+- **Staging database**: `a7d3f9b2c6e1` (= head, Session 0 DDI, 47_3, PR
+  #261, applied by the product owner 2026-10-28); `f3a9c1e7b5d4` before it (Session 0 Questions,
   47_2, PR #260, applied by the product owner 2026-10-28 with
   `.env.staging` loaded); `e5c1a8f3b7d2` before it (Session 0 chain,
   47_1, applied 2026-10-28), then `d4a7e2c9f1b3`, `c3f8a1d6e9b4` and
@@ -793,8 +793,8 @@ on `main`.
   (2026-10-28); it must reach production before the next release.
   **47_3 (DDI) built** (2026-10-28): DDI steps, the Document picker and
   template, per-Player acceptance (again once the Document changed);
-  strings in 12 languages. **Migration `a7d3f9b2c6e1`**: to the staging
-  DB before the PR merges, to production before the next release. Spec
+  strings in 12 languages. **Migration `a7d3f9b2c6e1`**: applied to the staging
+  DB by the product owner (2026-10-28); to production before the next release. Spec
   47 is complete. Each session becomes a chain of modules
   the Master composes, reorders and advances with "Avanti" (Retro, Lines &
   Veils, DDI with per-Player acceptance, Stars and Wishes, Questions whose
