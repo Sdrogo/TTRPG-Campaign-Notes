@@ -1275,7 +1275,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Sluiers",
-      "lines": "Lijnen"
+      "lines": "Lijnen",
+      "stars": "Sterren",
+      "wishes": "Wensen"
     },
     "postIt": {
       "text": "Tekst van de post-it",
@@ -1335,7 +1337,7 @@
       "later": "Sessie 0.5 #{{number}}",
       "pick": "Te tonen sessie",
       "start": "Nieuwe sessie",
-      "startBody": "Het huidige Retro-bord sluit en blijft alleen-lezen beschikbaar; nooit gepubliceerde concepten worden verwijderd. Het nieuwe bord begint leeg, met dezelfde kolommen. Lijnen en Sluiers blijft zoals het is.",
+      "startBody": "De huidige sessie sluit en blijft alleen-lezen te bekijken; nooit gepubliceerde concepten worden verwijderd. De nieuwe begint leeg met de stappen hieronder, en de Retro-borden houden dezelfde kolommen. Lijnen en Sluiers blijft zoals het is.",
       "title": "Naam",
       "startButton": "Aanmaken",
       "closed": "Deze sessie is gesloten: het bord is alleen-lezen.",
@@ -1366,6 +1368,31 @@
       "noTarget": "Niet boven een plek om los te laten.",
       "dropped": "{{name}} losgelaten.",
       "cancelled": "Geannuleerd: {{name}} staat weer op zijn plek."
+    },
+    "modules": {
+      "label": "Stappen",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Lijnen en Sluiers",
+        "stars_wishes": "Sterren en Wensen"
+      },
+      "hiddenHint": "Nog verborgen stappen: {{count}}",
+      "next": "Volgende",
+      "bringHere": "Breng de tafel hierheen",
+      "current": "Huidige stap",
+      "edit": "Stappen bewerken",
+      "editHint": "Wijzigingen gelden meteen, voor alle leden.",
+      "add": "Stap toevoegen",
+      "kind": "Stap",
+      "moveUp": "Omhoog",
+      "moveDown": "Omlaag",
+      "remove": "Verwijderen",
+      "removeTitle": "Deze stap verwijderen?",
+      "removeBody": "De post-its van ‘{{name}}’ worden mee verwijderd. Lijnen en Sluiers blijft altijd onaangeroerd.",
+      "chain": "Stappen van de sessie",
+      "chainHint": "Kies de stappen en hun volgorde; je kunt ze later nog wijzigen.",
+      "max": "Hoogstens {{max}} stappen.",
+      "startButton": "Starten"
     }
   }
 }

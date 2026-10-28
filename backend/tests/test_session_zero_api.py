@@ -86,8 +86,14 @@ async def _get(client: AsyncClient, room: _Room, member: _Member, **params: str)
     return response.json()
 
 
+def _retro(board: Any) -> list[Any]:
+    """The columns of the shown session's first Retro module (spec 47)."""
+    return list(next(m["columns"] for m in board["modules"] if m["kind"] == "retro"))
+
+
 def _cards(board: Any) -> list[Any]:
-    return [card for column in board["retro"] + board["lines_veils"] for card in column["cards"]]
+    columns = [c for m in board["modules"] for c in m["columns"]] + board["lines_veils"]
+    return [card for column in columns for card in column["cards"]]
 
 
 def _column(board: Any, kind: str) -> str:
@@ -143,12 +149,12 @@ async def test_session_zero_starts_once_with_the_preset_columns(
     board = started.json()
     assert board["started"] is True
     assert board["revision"] == 1
-    assert [c["title"] for c in board["retro"]] == [
+    assert [c["title"] for c in _retro(board)] == [
         "Lo vogliamo al tavolo",
         "Con cura",
         "Da evitare",
     ]
-    assert [c["color"] for c in board["retro"]] == ["green", "gold", "red"]
+    assert [c["color"] for c in _retro(board)] == ["green", "gold", "red"]
     assert [(c["kind"], c["color"]) for c in board["lines_veils"]] == [
         ("must", "green"),
         ("veils", "gold"),
@@ -161,7 +167,7 @@ async def test_session_zero_starts_once_with_the_preset_columns(
     again = (await client.post(f"{room.url}/start", headers=room.master.headers)).json()
     assert again["revision"] == 1
     assert again["can_manage"] is True
-    assert again["retro"] == board["retro"]
+    assert _retro(again) == _retro(board)
 
 
 async def test_only_members_reach_the_boards(
@@ -181,7 +187,7 @@ async def test_drafts_stay_with_their_author_until_published(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room, board = await _started(client, make_token)
-    want = board["retro"][0]["id"]
+    want = _retro(board)[0]["id"]
 
     card_id = await _write(client, room, room.player, want, "  No spiders  ")
     mine = _cards(await _get(client, room, room.player))
@@ -234,7 +240,7 @@ async def test_anonymous_post_its_hide_their_author_from_the_others(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room, board = await _started(client, make_token)
-    card_id = await _write(client, room, room.player, board["retro"][2]["id"], "Gore")
+    card_id = await _write(client, room, room.player, _retro(board)[2]["id"], "Gore")
     await _publish(client, room, room.player, card_id, anonymous=True)
 
     for member in (room.master, room.other_player):
@@ -249,7 +255,7 @@ async def test_writing_post_its_follows_the_rules(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room, board = await _started(client, make_token)
-    want = board["retro"][0]["id"]
+    want = _retro(board)[0]["id"]
 
     async def add(column_id: str, body: str) -> Response:
         return await client.post(
@@ -283,7 +289,7 @@ async def test_writing_post_its_follows_the_rules(
     # A post-it of another Room is not found here.
     elsewhere, other_board = await _started(client, make_token)
     foreign = await _write(
-        client, elsewhere, elsewhere.player, other_board["retro"][0]["id"], "Elsewhere"
+        client, elsewhere, elsewhere.player, _retro(other_board)[0]["id"], "Elsewhere"
     )
     missing = await client.delete(f"{room.url}/cards/{foreign}", headers=room.master.headers)
     assert missing.status_code == 404
@@ -293,7 +299,7 @@ async def test_deleting_post_its(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room, board = await _started(client, make_token)
-    want = board["retro"][0]["id"]
+    want = _retro(board)[0]["id"]
     draft = await _write(client, room, room.player, want, "Draft")
     posted = await _posted(client, room, room.player, want, "Posted")
     revision = (await _get(client, room, room.player))["revision"]
@@ -310,7 +316,7 @@ async def test_the_master_promotes_and_moves_post_its_on_lines_and_veils(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room, board = await _started(client, make_token)
-    avoid = board["retro"][2]["id"]
+    avoid = _retro(board)[2]["id"]
     lines, veils, must = _column(board, "lines"), _column(board, "veils"), _column(board, "must")
     card_id = await _posted(client, room, room.player, avoid, "Spiders")
     (shown,) = _cards(await _get(client, room, room.master))
@@ -391,7 +397,7 @@ async def test_a_copy_outlives_its_original(
     author can still delete it."""
     room, board = await _started(client, make_token)
     lines = _column(board, "lines")
-    card_id = await _write(client, room, room.player, board["retro"][2]["id"], "Spiders")
+    card_id = await _write(client, room, room.player, _retro(board)[2]["id"], "Spiders")
     await _publish(client, room, room.player, card_id, anonymous=True)
     await client.post(
         f"{room.url}/cards/{card_id}/promote",
@@ -414,7 +420,7 @@ async def test_view_as_reads_the_boards_but_never_writes(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room, board = await _started(client, make_token)
-    want = board["retro"][0]["id"]
+    want = _retro(board)[0]["id"]
     await _write(client, room, room.player, want, "Secret draft")
     await _posted(client, room, room.player, want, "Shared")
     view_as = {**room.master.headers, "X-View-As": room.player.id}
@@ -427,7 +433,7 @@ async def test_view_as_reads_the_boards_but_never_writes(
         await client.post(f"{room.url}/start", headers=view_as),
         await client.post(
             f"{room.url}/cards",
-            json={"column_id": board["retro"][0]["id"], "body": "x"},
+            json={"column_id": _retro(board)[0]["id"], "body": "x"},
             headers=view_as,
         ),
     ):
@@ -438,7 +444,7 @@ async def test_members_react_to_published_post_its(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room, board = await _started(client, make_token)
-    want = board["retro"][0]["id"]
+    want = _retro(board)[0]["id"]
     card_id = await _posted(client, room, room.player, want, "Horror")
     draft = await _write(client, room, room.player, want, "Draft")
 
@@ -474,7 +480,7 @@ async def test_the_master_manages_the_retro_columns(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room, board = await _started(client, make_token)
-    first = board["retro"][0]["id"]
+    first = _retro(board)[0]["id"]
     lines = _column(board, "lines")
 
     for response in (
@@ -493,7 +499,7 @@ async def test_the_master_manages_the_retro_columns(
         f"{room.url}/columns", json={"title": " Tone "}, headers=room.master.headers
     )
     assert added.status_code == 200
-    assert [c["title"] for c in added.json()["retro"]][-1] == "Tone"
+    assert [c["title"] for c in _retro(added.json())][-1] == "Tone"
     blank = await client.post(
         f"{room.url}/columns", json={"title": ""}, headers=room.master.headers
     )
@@ -503,7 +509,7 @@ async def test_the_master_manages_the_retro_columns(
     renamed = await client.patch(
         f"{room.url}/columns/{first}", json={"title": "Wishes"}, headers=room.master.headers
     )
-    assert renamed.json()["retro"][0]["title"] == "Wishes"
+    assert _retro(renamed.json())[0]["title"] == "Wishes"
     not_retro = await client.patch(
         f"{room.url}/columns/{lines}", json={"title": "X"}, headers=room.master.headers
     )
@@ -513,11 +519,11 @@ async def test_the_master_manages_the_retro_columns(
     )
     assert missing.status_code == 404
 
-    ids = [c["id"] for c in renamed.json()["retro"]]
+    ids = [c["id"] for c in _retro(renamed.json())]
     reordered = await client.put(
         f"{room.url}/columns/order", json={"column_ids": ids[::-1]}, headers=room.master.headers
     )
-    assert [c["id"] for c in reordered.json()["retro"]] == ids[::-1]
+    assert [c["id"] for c in _retro(reordered.json())] == ids[::-1]
     for wrong in (ids[1:], ids + [ids[0]], [*ids[1:], lines]):
         bad = await client.put(
             f"{room.url}/columns/order", json={"column_ids": wrong}, headers=room.master.headers
@@ -526,13 +532,13 @@ async def test_the_master_manages_the_retro_columns(
 
     await _posted(client, room, room.player, first, "Gone with the column")
     deleted = await client.delete(f"{room.url}/columns/{first}", headers=room.master.headers)
-    assert first not in [c["id"] for c in deleted.json()["retro"]]
+    assert first not in [c["id"] for c in _retro(deleted.json())]
     assert _cards(deleted.json()) == []
     assert (
         await client.delete(f"{room.url}/columns/{lines}", headers=room.master.headers)
     ).status_code == 422
 
-    for n in range(8 - len(deleted.json()["retro"])):
+    for n in range(8 - len(_retro(deleted.json()))):
         await client.post(
             f"{room.url}/columns", json={"title": f"C{n}"}, headers=room.master.headers
         )
@@ -546,7 +552,7 @@ async def test_a_new_round_closes_the_last_one_and_keeps_lines_and_veils(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room, board = await _started(client, make_token)
-    old_want = board["retro"][0]["id"]
+    old_want = _retro(board)[0]["id"]
     lines = _column(board, "lines")
     kept = await _posted(client, room, room.player, old_want, "Kept")
     draft = await _write(client, room, room.player, old_want, "Dropped draft")
@@ -570,12 +576,12 @@ async def test_a_new_round_closes_the_last_one_and_keeps_lines_and_veils(
     assert [(r["number"], r["title"]) for r in data["rounds"]] == [(1, None), (2, "Session 0.5")]
     assert data["rounds"][0]["closed_at"] is not None
     assert data["round_id"] == data["rounds"][1]["id"]
-    assert [c["title"] for c in data["retro"]] == [c["title"] for c in board["retro"]]
-    assert all(not c["cards"] for c in data["retro"])
+    assert [c["title"] for c in _retro(data)] == [c["title"] for c in _retro(board)]
+    assert all(not c["cards"] for c in _retro(data))
     assert [c["body"] for c in _cards(data)] == ["Kept"]
 
     old = await _get(client, room, room.player, round_id=board["round_id"])
-    (card,) = old["retro"][0]["cards"]
+    (card,) = _retro(old)[0]["cards"]
     assert card["id"] == kept
     assert (card["can_edit"], card["can_delete"], card["can_react"]) == (False, False, False)
     # Its drafts went with the round.
@@ -655,7 +661,7 @@ async def test_the_board_limit_never_counts_someone_elses_drafts(
     never reveals other members' drafts; publishing is capped too."""
     monkeypatch.setattr(session_zero, "MAX_CARDS_PER_BOARD", 2)
     room, board = await _started(client, make_token)
-    want = board["retro"][0]["id"]
+    want = _retro(board)[0]["id"]
     first = await _write(client, room, room.player, want, "One")
     second = await _write(client, room, room.player, want, "Two")
     # Two drafts the other player can't see don't fill their board.
@@ -707,7 +713,7 @@ async def test_members_hear_of_shared_writes_and_only_the_author_of_drafts(
     master = await _listen(client, room, room.master)
     player = await _listen(client, room, room.player)
 
-    card_id = await _write(client, room, room.player, board["retro"][0]["id"], "Secret")
+    card_id = await _write(client, room, room.player, _retro(board)[0]["id"], "Secret")
     await client.patch(
         f"{room.url}/cards/{card_id}", json={"body": "Still secret"}, headers=room.player.headers
     )
@@ -824,7 +830,7 @@ async def test_publish_all_publishes_the_callers_drafts_of_the_open_round(
     all signed; someone else's drafts stay theirs."""
     monkeypatch.setattr(session_zero, "MAX_CARDS_PER_BOARD", 4)
     room, board = await _started(client, make_token)
-    want, avoid = board["retro"][0]["id"], board["retro"][2]["id"]
+    want, avoid = _retro(board)[0]["id"], _retro(board)[2]["id"]
     ids = [
         await _write(client, room, room.player, want, "One"),
         await _write(client, room, room.player, avoid, "Two"),
@@ -867,18 +873,18 @@ async def test_columns_have_colours(
 ) -> None:
     """Spec 46c Decision 5: picked on create, changed later, kept by a new round."""
     room, board = await _started(client, make_token)
-    first = board["retro"][0]["id"]
+    first = _retro(board)[0]["id"]
 
     plain = await client.post(
         f"{room.url}/columns", json={"title": "Tone"}, headers=room.master.headers
     )
-    assert plain.json()["retro"][-1]["color"] == "default"
+    assert _retro(plain.json())[-1]["color"] == "default"
     added = await client.post(
         f"{room.url}/columns",
         json={"title": "Themes", "color": "purple"},
         headers=room.master.headers,
     )
-    assert added.json()["retro"][-1]["color"] == "purple"
+    assert _retro(added.json())[-1]["color"] == "purple"
     bad = await client.post(
         f"{room.url}/columns", json={"title": "X", "color": "plaid"}, headers=room.master.headers
     )
@@ -887,8 +893,8 @@ async def test_columns_have_colours(
     recoloured = await client.patch(
         f"{room.url}/columns/{first}", json={"color": "blue"}, headers=room.master.headers
     )
-    assert (recoloured.json()["retro"][0]["title"], recoloured.json()["retro"][0]["color"]) == (
-        board["retro"][0]["title"],
+    assert (_retro(recoloured.json())[0]["title"], _retro(recoloured.json())[0]["color"]) == (
+        _retro(board)[0]["title"],
         "blue",
     )
     nothing = await client.patch(
@@ -898,8 +904,8 @@ async def test_columns_have_colours(
     assert nothing.json()["detail"] == "Nothing to change"
 
     new_round = await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
-    assert [(c["title"], c["color"]) for c in new_round.json()["retro"]] == [
-        (c["title"], c["color"]) for c in recoloured.json()["retro"]
+    assert [(c["title"], c["color"]) for c in _retro(new_round.json())] == [
+        (c["title"], c["color"]) for c in _retro(recoloured.json())
     ]
 
 
@@ -908,7 +914,7 @@ async def test_the_master_groups_related_post_its(
 ) -> None:
     """Spec 46c Decision 9."""
     room, board = await _started(client, make_token)
-    want, avoid = board["retro"][0]["id"], board["retro"][2]["id"]
+    want, avoid = _retro(board)[0]["id"], _retro(board)[2]["id"]
     one = await _posted(client, room, room.player, want, "Dragons")
     two = await _posted(client, room, room.other_player, want, "Wyverns")
     three = await _posted(client, room, room.player, want, "Drakes")
@@ -933,7 +939,7 @@ async def test_the_master_groups_related_post_its(
 
     grouped = await group(room.master, one, two)
     assert grouped.status_code == 200
-    column = grouped.json()["retro"][0]
+    column = _retro(grouped.json())[0]
     (made,) = column["groups"]
     assert made["title"] is None
     by_id = {c["id"]: c for c in column["cards"]}
@@ -941,14 +947,14 @@ async def test_the_master_groups_related_post_its(
     assert by_id[three]["group_id"] is None
 
     # A third joins the group, in either order.
-    joined = (await group(room.master, three, one)).json()["retro"][0]
+    joined = _retro((await group(room.master, three, one)).json())[0]
     assert [g["id"] for g in joined["groups"]] == [made["id"]]
     assert {c["group_id"] for c in joined["cards"]} == {made["id"]}
 
     titled = await client.patch(
         f"{room.url}/groups/{made['id']}", json={"title": " Dragons "}, headers=room.master.headers
     )
-    assert titled.json()["retro"][0]["groups"][0]["title"] == "Dragons"
+    assert _retro(titled.json())[0]["groups"][0]["title"] == "Dragons"
     long_title = await client.patch(
         f"{room.url}/groups/{made['id']}", json={"title": "x" * 61}, headers=room.master.headers
     )
@@ -966,38 +972,38 @@ async def test_the_master_groups_related_post_its(
 
     # Taking one out keeps the group while two remain; deleting one more dissolves it.
     out = await client.post(f"{room.url}/cards/{three}/ungroup", headers=room.master.headers)
-    assert len(out.json()["retro"][0]["groups"]) == 1
+    assert len(_retro(out.json())[0]["groups"]) == 1
     unchanged = await client.post(f"{room.url}/cards/{three}/ungroup", headers=room.master.headers)
     assert unchanged.json()["revision"] == out.json()["revision"]
     assert (
         await client.post(f"{room.url}/cards/{one}/ungroup", headers=room.player.headers)
     ).status_code == 403
     dissolved = await client.delete(f"{room.url}/cards/{two}", headers=room.master.headers)
-    assert dissolved.json()["retro"][0]["groups"] == []
-    assert {c["group_id"] for c in dissolved.json()["retro"][0]["cards"]} == {None}
+    assert _retro(dissolved.json())[0]["groups"] == []
+    assert {c["group_id"] for c in _retro(dissolved.json())[0]["cards"]} == {None}
 
     # Two groups merge into the first post-it's; "Ungroup all" keeps the post-its.
     four = await _posted(client, room, room.player, want, "Basilisks")
     five = await _posted(client, room, room.player, want, "Hydras")
     await group(room.master, one, three)
     await group(room.master, four, five)
-    merged = (await group(room.master, five, one)).json()["retro"][0]
+    merged = _retro((await group(room.master, five, one)).json())[0]
     (kept,) = merged["groups"]
     assert {c["group_id"] for c in merged["cards"] if c["id"] != draft} == {kept["id"]}
     assert (
         await client.delete(f"{room.url}/groups/{kept['id']}", headers=room.player.headers)
     ).status_code == 403
     ungrouped = await client.delete(f"{room.url}/groups/{kept['id']}", headers=room.master.headers)
-    assert ungrouped.json()["retro"][0]["groups"] == []
-    assert len(ungrouped.json()["retro"][0]["cards"]) == 4
+    assert _retro(ungrouped.json())[0]["groups"] == []
+    assert len(_retro(ungrouped.json())[0]["cards"]) == 4
 
     # A new round starts without groups; the closed round's are read-only.
     await group(room.master, one, three)
     closed_round = (await _get(client, room, room.master))["round_id"]
     fresh = (await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)).json()
-    assert all(c["groups"] == [] for c in fresh["retro"])
+    assert all(c["groups"] == [] for c in _retro(fresh))
     old = await _get(client, room, room.master, round_id=closed_round)
-    (old_group,) = old["retro"][0]["groups"]
+    (old_group,) = _retro(old)[0]["groups"]
     assert not any(c["can_group"] for c in _cards(old))
     for response in (
         await group(room.master, four, five),
@@ -1015,7 +1021,7 @@ async def test_the_master_deletes_the_session_zero(
 ) -> None:
     """Spec 46c Decision 3: everything goes, then anyone starts afresh."""
     room, board = await _started(client, make_token)
-    want = board["retro"][0]["id"]
+    want = _retro(board)[0]["id"]
     card_id = await _posted(client, room, room.player, want, "Dragons")
     await _write(client, room, room.player, want, "Draft")
     await client.post(
@@ -1039,7 +1045,7 @@ async def test_the_master_deletes_the_session_zero(
     again = (await client.post(f"{room.url}/start", headers=room.player.headers)).json()
     assert again["revision"] == 1
     assert [r["number"] for r in again["rounds"]] == [1]
-    assert [c["color"] for c in again["retro"]] == ["green", "gold", "red"]
+    assert [c["color"] for c in _retro(again)] == ["green", "gold", "red"]
     assert _cards(again) == []
 
 
@@ -1064,7 +1070,7 @@ async def test_members_drag_post_its_into_place(
     """Spec 46d Decision 7 and Q2: the Master moves any post-it, a Player
     their own, drafts included, within the open round's Retro board."""
     room, board = await _started(client, make_token)
-    want, care = board["retro"][0]["id"], board["retro"][1]["id"]
+    want, care = _retro(board)[0]["id"], _retro(board)[1]["id"]
     one = await _posted(client, room, room.player, want, "Dragons")
     two = await _posted(client, room, room.other_player, want, "Wyverns")
     draft = await _write(client, room, room.player, want, "Drakes")
@@ -1076,7 +1082,7 @@ async def test_members_drag_post_its_into_place(
 
     # New post-its come last; only the viewer's own carry the handle.
     player_view = await _get(client, room, room.player)
-    assert _order(player_view["retro"][0]) == ["Dragons", "Wyverns", "Drakes"]
+    assert _order(_retro(player_view)[0]) == ["Dragons", "Wyverns", "Drakes"]
     assert {c["id"] for c in _cards(player_view) if c["can_place"]} == {one, draft}
     assert all(c["can_place"] for c in _cards(await _get(client, room, room.master)))
 
@@ -1084,9 +1090,9 @@ async def test_members_drag_post_its_into_place(
     revision = player_view["revision"]
     moved = await place(room.player, draft, column_id=want, before_id=one)
     assert moved.status_code == 200, moved.text
-    assert _order(moved.json()["retro"][0]) == ["Drakes", "Dragons", "Wyverns"]
+    assert _order(_retro(moved.json())[0]) == ["Drakes", "Dragons", "Wyverns"]
     assert moved.json()["revision"] == revision
-    assert _order((await _get(client, room, room.master))["retro"][0]) == ["Dragons", "Wyverns"]
+    assert _order(_retro(await _get(client, room, room.master))[0]) == ["Dragons", "Wyverns"]
     # ...not even as where something else lands: like a missing id.
     hidden = await place(room.master, two, column_id=want, before_id=draft)
     assert hidden.status_code == 422
@@ -1099,7 +1105,7 @@ async def test_members_drag_post_its_into_place(
     assert (await place(room.player, two, column_id=want)).status_code == 403
     across = await place(room.master, two, column_id=care)
     assert across.json()["revision"] == revision + 1
-    assert [c["body"] for c in across.json()["retro"][1]["cards"]] == ["Wyverns"]
+    assert [c["body"] for c in _retro(across.json())[1]["cards"]] == ["Wyverns"]
 
     # Where it lands must be in that column; it stays on its board.
     assert (await place(room.player, one, column_id=want, before_id=two)).status_code == 422
@@ -1122,7 +1128,7 @@ async def test_dragging_post_its_into_and_out_of_groups(
     """Spec 46d Decision 7: groups keep their place in the column, and a
     Player groups their own post-its only (Q2)."""
     room, board = await _started(client, make_token)
-    want, care = board["retro"][0]["id"], board["retro"][1]["id"]
+    want, care = _retro(board)[0]["id"], _retro(board)[1]["id"]
     one = await _posted(client, room, room.player, want, "Dragons")
     two = await _posted(client, room, room.player, want, "Drakes")
     three = await _posted(client, room, room.other_player, want, "Wyverns")
@@ -1143,7 +1149,7 @@ async def test_dragging_post_its_into_and_out_of_groups(
     # where the one dropped on did.
     grouped = await group(room.player, two, four)
     assert grouped.status_code == 200, grouped.text
-    column = grouped.json()["retro"][0]
+    column = _retro(grouped.json())[0]
     assert _order(column) == ["Dragons", ["Drakes", "Basilisks"], "Wyverns", "Hydras"]
     (made,) = column["groups"]
     assert (await group(room.player, one, three)).status_code == 403
@@ -1151,7 +1157,7 @@ async def test_dragging_post_its_into_and_out_of_groups(
 
     # Dropped into the group: theirs, published, into a group of theirs only.
     joined = await place(room.player, one, column_id=want, group_id=made["id"], before_id=four)
-    assert _order(joined.json()["retro"][0]) == [
+    assert _order(_retro(joined.json())[0]) == [
         ["Drakes", "Dragons", "Basilisks"],
         "Wyverns",
         "Hydras",
@@ -1164,27 +1170,27 @@ async def test_dragging_post_its_into_and_out_of_groups(
     missing = await place(room.player, one, column_id=want, group_id=str(uuid.uuid4()))
     assert missing.status_code == 404
     mixed = await place(room.master, three, column_id=want, group_id=made["id"])
-    assert _order(mixed.json()["retro"][0])[0] == ["Drakes", "Dragons", "Basilisks", "Wyverns"]
+    assert _order(_retro(mixed.json())[0])[0] == ["Drakes", "Dragons", "Basilisks", "Wyverns"]
     assert (await place(room.player, one, column_id=want)).status_code == 403
     assert (await place(room.player, one, column_id=want, group_id=made["id"])).status_code == 200
 
     # Taken out, a post-it lands just after its group; left alone, the last
     # one takes the group's place.
     out = await client.post(f"{room.url}/cards/{three}/ungroup", headers=room.master.headers)
-    assert _order(out.json()["retro"][0]) == [["Drakes", "Basilisks", "Dragons"], "Wyverns"]
+    assert _order(_retro(out.json())[0]) == [["Drakes", "Basilisks", "Dragons"], "Wyverns"]
     await place(room.player, one, column_id=want, before_id=draft)
     alone = await place(room.player, four, column_id=care)
-    assert _order(alone.json()["retro"][0]) == ["Drakes", "Wyverns", "Dragons", "Hydras"]
-    assert alone.json()["retro"][0]["groups"] == []
+    assert _order(_retro(alone.json())[0]) == ["Drakes", "Wyverns", "Dragons", "Hydras"]
+    assert _retro(alone.json())[0]["groups"] == []
 
     # "Ungroup all" leaves the post-its where the group stood.
-    regrouped = (await group(room.master, three, two, one)).json()["retro"][0]
+    regrouped = _retro((await group(room.master, three, two, one)).json())[0]
     assert _order(regrouped) == [["Wyverns", "Drakes", "Dragons"]]
     (kept,) = regrouped["groups"]
     ungrouped = await client.delete(f"{room.url}/groups/{kept['id']}", headers=room.master.headers)
-    assert _order(ungrouped.json()["retro"][0]) == ["Wyverns", "Drakes", "Dragons"]
+    assert _order(_retro(ungrouped.json())[0]) == ["Wyverns", "Drakes", "Dragons"]
     player_view = await _get(client, room, room.player)
-    assert _order(player_view["retro"][0]) == ["Wyverns", "Drakes", "Dragons", "Hydras"]
+    assert _order(_retro(player_view)[0]) == ["Wyverns", "Drakes", "Dragons", "Hydras"]
 
 
 async def test_the_master_drags_groups_and_lines_and_veils(
@@ -1193,15 +1199,17 @@ async def test_the_master_drags_groups_and_lines_and_veils(
     """Spec 46d Decision 7: a group moves as one block; Lines & Veils is
     ordered by the Master."""
     room, board = await _started(client, make_token)
-    want, care = board["retro"][0]["id"], board["retro"][1]["id"]
+    want, care = _retro(board)[0]["id"], _retro(board)[1]["id"]
     one = await _posted(client, room, room.player, want, "Dragons")
     two = await _posted(client, room, room.player, want, "Drakes")
     three = await _posted(client, room, room.player, care, "Wyverns")
-    made = (
-        await client.post(
-            f"{room.url}/groups", json={"card_ids": [one, two]}, headers=room.master.headers
-        )
-    ).json()["retro"][0]["groups"][0]
+    made = _retro(
+        (
+            await client.post(
+                f"{room.url}/groups", json={"card_ids": [one, two]}, headers=room.master.headers
+            )
+        ).json()
+    )[0]["groups"][0]
 
     async def place_group(member: _Member, **body: str | None) -> Response:
         return await client.put(
@@ -1213,10 +1221,10 @@ async def test_the_master_drags_groups_and_lines_and_veils(
     assert (await place_group(room.master, column_id=_column(board, "must"))).status_code == 422
     moved = await place_group(room.master, column_id=care, before_id=three)
     assert moved.status_code == 200, moved.text
-    assert _order(moved.json()["retro"][0]) == []
-    assert _order(moved.json()["retro"][1]) == [["Dragons", "Drakes"], "Wyverns"]
+    assert _order(_retro(moved.json())[0]) == []
+    assert _order(_retro(moved.json())[1]) == [["Dragons", "Drakes"], "Wyverns"]
     last = await place_group(room.master, column_id=care)
-    assert _order(last.json()["retro"][1]) == ["Wyverns", ["Dragons", "Drakes"]]
+    assert _order(_retro(last.json())[1]) == ["Wyverns", ["Dragons", "Drakes"]]
 
     # Lines & Veils: copies come last; the Master reorders them and moves
     # them between rows.
@@ -1258,3 +1266,304 @@ async def test_the_master_drags_groups_and_lines_and_veils(
     # A closed round's groups stay put.
     await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
     assert (await place_group(room.master, column_id=care)).status_code == 409
+
+
+# Spec 47: a modular Session 0.
+
+
+def _module(board: Any, kind: str, index: int = 0) -> Any:
+    return [m for m in board["modules"] if m["kind"] == kind][index]
+
+
+async def _composed(
+    client: AsyncClient, make_token: Callable[..., str], *kinds: str
+) -> tuple[_Room, Any]:
+    room = await _room(client, make_token)
+    response = await client.post(
+        f"{room.url}/start", json={"modules": list(kinds)}, headers=room.master.headers
+    )
+    assert response.status_code == 200, response.text
+    return room, response.json()
+
+
+async def test_session_zero_starts_with_a_chain(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Decision 2: anyone starts with the default chain, only the Master
+    composes one; Stars and Wishes brings its two fixed columns."""
+    room, started = await _started(client, make_token)
+    # The Player who started it sees the first step only.
+    assert [m["kind"] for m in started["modules"]] == ["retro"]
+    assert started["hidden_modules"] == 1
+    board = await _get(client, room, room.master)
+    assert [m["kind"] for m in board["modules"]] == ["retro", "lines_veils"]
+    assert board["current_module_id"] == board["modules"][0]["id"]
+    assert board["hidden_modules"] == 0
+    assert _module(board, "lines_veils")["columns"] == []
+
+    other = await _room(client, make_token)
+    refused = await client.post(
+        f"{other.url}/start", json={"modules": ["retro"]}, headers=other.player.headers
+    )
+    assert refused.status_code == 403
+    for chain in ([], ["retro"] * 11):
+        bad = await client.post(
+            f"{other.url}/start", json={"modules": chain}, headers=other.master.headers
+        )
+        assert bad.status_code == 422
+
+    _, composed = await _composed(client, make_token, "stars_wishes", "retro")
+    stars = _module(composed, "stars_wishes")
+    assert [(c["kind"], c["color"]) for c in stars["columns"]] == [
+        ("stars", "gold"),
+        ("wishes", "blue"),
+    ]
+    assert composed["current_module_id"] == stars["id"]
+
+
+async def test_players_see_only_the_steps_reached(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Decisions 4 and 5: later steps are hidden from Players (404 when
+    written to) until the Master moves the table on."""
+    room, board = await _composed(client, make_token, "retro", "stars_wishes")
+    retro, stars = board["modules"]
+    star_column = stars["columns"][0]["id"]
+    master_card = await _posted(client, room, room.master, star_column, "Mine")
+    group_id = str(
+        _module(
+            (
+                await client.post(
+                    f"{room.url}/groups",
+                    json={"card_ids": [master_card, await _posted(
+                        client, room, room.master, star_column, "Also mine"
+                    )]},
+                    headers=room.master.headers,
+                )
+            ).json(),
+            "stars_wishes",
+        )["columns"][0]["groups"][0]["id"]
+    )
+
+    seen = await _get(client, room, room.player)
+    assert [m["id"] for m in seen["modules"]] == [retro["id"]]
+    assert seen["hidden_modules"] == 1
+    hidden_write = await client.post(
+        f"{room.url}/cards",
+        json={"column_id": star_column, "body": "Early"},
+        headers=room.player.headers,
+    )
+    assert hidden_write.status_code == 404
+    hidden_card = await client.put(
+        f"{room.url}/cards/{master_card}/reactions/{quote('👍')}", headers=room.player.headers
+    )
+    assert hidden_card.status_code == 404
+    hidden_group = await client.delete(
+        f"{room.url}/groups/{group_id}", headers=room.player.headers
+    )
+    assert hidden_group.status_code == 404
+
+    async def move(member: _Member, module_id: str) -> Response:
+        return await client.put(
+            f"{room.url}/modules/current", json={"module_id": module_id}, headers=member.headers
+        )
+
+    assert (await move(room.player, stars["id"])).status_code == 403
+    assert (await move(room.master, str(uuid.uuid4()))).status_code == 404
+    revision = board["revision"]
+    same = await move(room.master, retro["id"])
+    assert same.json()["revision"] == (await _get(client, room, room.master))["revision"]
+    moved = await move(room.master, stars["id"])
+    assert moved.status_code == 200
+    assert moved.json()["revision"] > revision
+    now_seen = await _get(client, room, room.player)
+    assert [m["id"] for m in now_seen["modules"]] == [retro["id"], stars["id"]]
+    assert now_seen["current_module_id"] == stars["id"]
+    assert await _write(client, room, room.player, star_column, "Now") != ""
+
+
+async def test_the_master_composes_the_open_sessions_chain(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Decision 3: add, reorder and remove steps; removing the current one
+    moves the table back; the chain keeps one."""
+    room, _ = await _started(client, make_token)
+    board = await _get(client, room, room.master)
+    retro, lines = board["modules"]
+
+    refused = await client.post(
+        f"{room.url}/modules", json={"kind": "retro"}, headers=room.player.headers
+    )
+    assert refused.status_code == 403
+    added = await client.post(
+        f"{room.url}/modules", json={"kind": "stars_wishes"}, headers=room.master.headers
+    )
+    assert added.status_code == 200
+    stars = added.json()["modules"][-1]
+    assert (stars["kind"], stars["position"]) == ("stars_wishes", 2)
+    for _ in range(7):
+        more = await client.post(
+            f"{room.url}/modules", json={"kind": "retro"}, headers=room.master.headers
+        )
+        assert more.status_code == 200
+    full = await client.post(
+        f"{room.url}/modules", json={"kind": "retro"}, headers=room.master.headers
+    )
+    assert full.status_code == 422
+    # The added Retro modules start with the preset columns.
+    assert len(_module(more.json(), "retro", 1)["columns"]) == 3
+
+    ids = [m["id"] for m in more.json()["modules"]]
+    async def order(member: _Member, module_ids: list[str]) -> Response:
+        return await client.put(
+            f"{room.url}/modules/order", json={"module_ids": module_ids}, headers=member.headers
+        )
+
+    assert (await order(room.player, ids[::-1])).status_code == 403
+    assert (await order(room.master, ids[1:])).status_code == 422
+    reordered = await order(room.master, ids[::-1])
+    assert [m["id"] for m in reordered.json()["modules"]] == ids[::-1]
+    assert reordered.json()["current_module_id"] == retro["id"]
+
+    async def remove(member: _Member, module_id: str) -> Response:
+        return await client.delete(f"{room.url}/modules/{module_id}", headers=member.headers)
+
+    assert (await remove(room.player, stars["id"])).status_code == 403
+    # Removing the current step moves the table to the one before it.
+    removed = await remove(room.master, retro["id"])
+    assert removed.status_code == 200
+    data = removed.json()
+    remaining = [m["id"] for m in data["modules"]]
+    assert retro["id"] not in remaining
+    assert data["current_module_id"] == ids[::-1][-2]
+    assert [m["position"] for m in data["modules"]] == list(range(len(remaining)))
+    for module_id in remaining[1:]:
+        assert (await remove(room.master, module_id)).status_code == 200
+    last = await remove(room.master, remaining[0])
+    assert last.status_code == 409
+    assert lines["id"] in remaining
+
+
+async def test_a_new_session_takes_its_own_chain(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Decision 2: a new session copies the previous chain, or takes the one
+    the Master composes; its Nth Retro module copies the previous Nth
+    Retro columns, presets beyond. The closed session's steps can't move."""
+    room, board = await _composed(client, make_token, "retro", "stars_wishes")
+    retro_columns = _module(board, "retro")["columns"]
+    renamed = await client.patch(
+        f"{room.url}/columns/{retro_columns[0]['id']}",
+        json={"title": "Hopes"},
+        headers=room.master.headers,
+    )
+    assert renamed.status_code == 200
+    copied = await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
+    assert [m["kind"] for m in copied.json()["modules"]] == ["retro", "stars_wishes"]
+    assert _retro(copied.json())[0]["title"] == "Hopes"
+    assert copied.json()["current_module_id"] == copied.json()["modules"][0]["id"]
+
+    composed = await client.post(
+        f"{room.url}/rounds",
+        json={"title": "Fine arco", "modules": ["lines_veils", "retro", "retro"]},
+        headers=room.master.headers,
+    )
+    assert composed.status_code == 200
+    data = composed.json()
+    assert [m["kind"] for m in data["modules"]] == ["lines_veils", "retro", "retro"]
+    assert _module(data, "retro", 0)["columns"][0]["title"] == "Hopes"
+    assert len(_module(data, "retro", 1)["columns"]) == 3
+    bad = await client.post(
+        f"{room.url}/rounds", json={"modules": []}, headers=room.master.headers
+    )
+    assert bad.status_code == 422
+
+    first_round = data["rounds"][0]["id"]
+    old = await _get(client, room, room.master, round_id=first_round)
+    old_stars = _module(old, "stars_wishes")["id"]
+    closed_move = await client.put(
+        f"{room.url}/modules/current", json={"module_id": old_stars}, headers=room.master.headers
+    )
+    assert closed_move.status_code == 409
+    closed_remove = await client.delete(
+        f"{room.url}/modules/{old_stars}", headers=room.master.headers
+    )
+    assert closed_remove.status_code == 409
+
+
+async def test_stars_and_wishes_is_a_fixed_post_it_board(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Decision 7: drafts, publishing and reactions as on the Retro, but its
+    columns can't be renamed, reordered or added to, and nothing is
+    promoted from it. Columns go to Retro modules only."""
+    room, board = await _composed(client, make_token, "stars_wishes", "retro")
+    stars, retro = board["modules"]
+    star_column = stars["columns"][0]["id"]
+    card_id = await _posted(client, room, room.master, star_column, "The finale")
+    must = _column(board, "must")
+    promote = await client.post(
+        f"{room.url}/cards/{card_id}/promote",
+        json={"column_id": must},
+        headers=room.master.headers,
+    )
+    assert promote.status_code == 422
+    rename = await client.patch(
+        f"{room.url}/columns/{star_column}", json={"title": "x"}, headers=room.master.headers
+    )
+    assert rename.status_code == 422
+    reorder = await client.put(
+        f"{room.url}/columns/order",
+        json={"column_ids": [c["id"] for c in stars["columns"]][::-1]},
+        headers=room.master.headers,
+    )
+    assert reorder.status_code == 422
+    for module_id, expected in ((stars["id"], 422), (str(uuid.uuid4()), 404)):
+        added = await client.post(
+            f"{room.url}/columns",
+            json={"title": "More", "module_id": module_id},
+            headers=room.master.headers,
+        )
+        assert added.status_code == expected
+    to_retro = await client.post(
+        f"{room.url}/columns",
+        json={"title": "More", "module_id": retro["id"]},
+        headers=room.master.headers,
+    )
+    assert _retro(to_retro.json())[-1]["title"] == "More"
+
+    # A chain with no Retro module takes no column without one named.
+    only_stars, _ = await _composed(client, make_token, "stars_wishes")
+    nowhere = await client.post(
+        f"{only_stars.url}/columns", json={"title": "More"}, headers=only_stars.master.headers
+    )
+    assert nowhere.status_code == 422
+
+
+async def test_publish_all_fills_each_module_up_to_its_limit(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Publish-all goes module by module: a full board's drafts wait while
+    another module's are published."""
+    monkeypatch.setattr(session_zero, "MAX_CARDS_PER_BOARD", 1)
+    room, board = await _composed(client, make_token, "retro", "stars_wishes")
+    retro, stars = board["modules"]
+    await client.put(
+        f"{room.url}/modules/current", json={"module_id": stars["id"]}, headers=room.master.headers
+    )
+    waiting = await _write(client, room, room.player, retro["columns"][1]["id"], "Waits")
+    await _posted(client, room, room.master, retro["columns"][0]["id"], "Full")
+    only = await client.post(
+        f"{room.url}/cards/publish-all", json={"anonymous": False}, headers=room.player.headers
+    )
+    assert only.status_code == 409
+    star = await _write(client, room, room.player, stars["columns"][0]["id"], "Shines")
+    published = await client.post(
+        f"{room.url}/cards/publish-all", json={"anonymous": False}, headers=room.player.headers
+    )
+    assert published.status_code == 200
+    by_id = {c["id"]: c for c in _cards(published.json())}
+    assert (by_id[star]["draft"], by_id[waiting]["draft"]) == (False, True)

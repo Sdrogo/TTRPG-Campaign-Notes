@@ -753,6 +753,21 @@ on `main`.
   (`alembic upgrade head` with `.env.staging`, staging = `d4a7e2c9f1b3`,
   head) and **to production** the same day (`alembic upgrade head` with
   `.env`, production = `d4a7e2c9f1b3`, head).
+- **47, Modular Session 0** (ticket written 2026-10-27; Q1-Q7 answered
+  the same day, DDI sections from the manual the product owner shared;
+  go-ahead to build the same day). **47_1 (chain + Stars and Wishes)
+  built** in PR #259: steps table, "Next", "Edit steps", the chain when
+  starting a session, Stars and Wishes, strings in 12 languages.
+  **Migration `e5c1a8f3b7d2`**: applied to the staging DB by the product
+  owner (2026-10-28); it must reach production before the next release. Next: 47_2
+  (Questions), then 47_3 (DDI). Each session becomes a chain of modules
+  the Master composes, reorders and advances with "Avanti" (Retro, Lines &
+  Veils, DDI with per-Player acceptance, Stars and Wishes, Questions whose
+  answers become Player-owned PC Documents, plus extra Documents such as
+  an NPC; answers revealed by the Master). Absorbs 46b's DDI template;
+  46b's invitation flow stays a separate ticket. Build in
+  47_1 (chain + Stars and Wishes), 47_2 (Questions), 47_3 (DDI), one
+  migration each.
 - **46b, Dichiarazione d'Intenti**: a suggested, editable Document template
   (the DDI's six sections). If a Room has one, its invitation opens the
   DDI read-only with an "accept and join" button at the end (product

@@ -77,7 +77,7 @@ PLAYER = RoomRole.PLAYER
 
 OPEN = Round(uuid.uuid4(), ROOM, 1, None, NOW, None)
 CLOSED = replace(OPEN, closed_at=NOW)
-RETRO = Column(uuid.uuid4(), ROOM, OPEN.id, None, "Want", 0)
+RETRO = Column(uuid.uuid4(), ROOM, OPEN.id, None, "Want", 0, module_id=uuid.uuid4())
 LINES = Column(uuid.uuid4(), ROOM, None, LinesVeilsKind.LINES, "", 1)
 VEILS = Column(uuid.uuid4(), ROOM, None, LinesVeilsKind.VEILS, "", 2)
 
@@ -215,7 +215,7 @@ def test_who_drags_a_post_it() -> None:
 
 def test_a_dragged_post_it_stays_on_its_board_and_follows_the_rights() -> None:
     other_retro = replace(RETRO, id=uuid.uuid4())
-    later_round = replace(RETRO, id=uuid.uuid4(), round_id=uuid.uuid4())
+    later_round = replace(RETRO, id=uuid.uuid4(), round_id=uuid.uuid4(), module_id=uuid.uuid4())
     card = _card()
     ensure_can_place_card(card, RETRO, other_retro, OPEN, AUTHOR, PLAYER, into_group=False)
     ensure_can_place_card(card, RETRO, RETRO, OPEN, OTHER, MASTER, into_group=True)
@@ -264,7 +264,7 @@ def test_the_master_drags_groups_within_the_open_round() -> None:
     with pytest.raises(WrongBoardError):
         ensure_can_place_group(RETRO, LINES, OPEN, MASTER)
     with pytest.raises(WrongBoardError):
-        ensure_can_place_group(RETRO, replace(RETRO, round_id=uuid.uuid4()), OPEN, MASTER)
+        ensure_can_place_group(RETRO, replace(RETRO, module_id=uuid.uuid4()), OPEN, MASTER)
     with pytest.raises(RoundClosedError):
         ensure_can_place_group(RETRO, RETRO, CLOSED, MASTER)
 

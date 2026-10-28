@@ -1275,7 +1275,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Veils",
-      "lines": "Lines"
+      "lines": "Lines",
+      "stars": "Stars",
+      "wishes": "Wishes"
     },
     "postIt": {
       "text": "Post-it text",
@@ -1335,7 +1337,7 @@
       "later": "Session 0.5 #{{number}}",
       "pick": "Session to show",
       "start": "New session",
-      "startBody": "The current Retro board closes and stays readable, read-only; drafts never published are deleted. The new board starts empty, with the same columns. Lines & Veils stays as it is.",
+      "startBody": "The current session closes and stays readable, read-only; drafts never published are deleted. The new one starts empty with the steps below, and its Retro boards keep the same columns. Lines & Veils stays as it is.",
       "title": "Name",
       "startButton": "Create",
       "closed": "This session is closed: the board is read-only.",
@@ -1366,6 +1368,31 @@
       "noTarget": "Not over a place to drop.",
       "dropped": "Dropped {{name}}.",
       "cancelled": "Cancelled: {{name}} is back in its place."
+    },
+    "modules": {
+      "label": "Steps",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Lines & Veils",
+        "stars_wishes": "Stars and Wishes"
+      },
+      "hiddenHint": "Steps still hidden: {{count}}",
+      "next": "Next",
+      "bringHere": "Bring the table here",
+      "current": "Current step",
+      "edit": "Edit steps",
+      "editHint": "Changes apply at once, for every member.",
+      "add": "Add step",
+      "kind": "Step",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove",
+      "removeTitle": "Remove this step?",
+      "removeBody": "The post-its of “{{name}}” are deleted with it. Lines & Veils is never touched.",
+      "chain": "Steps of the session",
+      "chainHint": "Pick the steps and their order; you can change them later.",
+      "max": "At most {{max}} steps.",
+      "startButton": "Start"
     }
   }
 }

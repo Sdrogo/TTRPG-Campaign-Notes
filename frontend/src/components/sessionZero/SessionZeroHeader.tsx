@@ -100,20 +100,25 @@ export function SessionZeroHeader({ readAtMs, onPick }: SessionZeroHeaderProps) 
 
 /**
  * "Publish drafts (N)" while the viewer has drafts in the open session (spec
- * 46c Decision 8), in the header so nothing below moves when it comes and
- * goes (spec 46d Decision 4): one dialog, one signed or anonymous choice for
- * all of them. Drafts past the board's limit stay drafts, and the dialog
- * says how many.
+ * 46c Decision 8), in any of its steps (spec 47), in the header so nothing
+ * below moves when it comes and goes (spec 46d Decision 4): one dialog, one
+ * signed or anonymous choice for all of them. Drafts past a board's limit
+ * stay drafts, and the dialog says how many.
  */
 function PublishAll() {
   const { t } = useTranslation();
   const { board, act, busy } = useBoard();
   const [asking, setAsking] = useState(false);
-  const cards = board.retro.flatMap((column) => column.cards);
-  const drafts = cards.filter((card) => card.canPublish).length;
+  let drafts = 0;
+  let staying = 0;
+  for (const module of board.modules) {
+    const cards = module.columns.flatMap((column) => column.cards);
+    const mine = cards.filter((card) => card.canPublish).length;
+    const room = MAX_CARDS_PER_BOARD - cards.filter((card) => !card.draft).length;
+    drafts += mine;
+    staying += Math.max(0, mine - Math.max(0, room));
+  }
   if (drafts === 0) return null;
-  const room = MAX_CARDS_PER_BOARD - cards.filter((card) => !card.draft).length;
-  const staying = Math.max(0, drafts - Math.max(0, room));
   return (
     <>
       <Button size="compact-sm" leftSection={<PaperPlaneTiltIcon size={14} />} onClick={() => setAsking(true)}>

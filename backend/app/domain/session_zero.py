@@ -1,6 +1,7 @@
-"""Session 0 boards (spec 46): a Room's Retro board, run in rounds, and its
+"""Session 0 boards (spec 46): a Room's sessions (rounds), each a chain of
+modules the Master walks the table through (spec 47), and its Room-wide
 Lines & Veils board. Who may see, write, publish, promote, move and react
-to a post-it, the timer, and the limits. Pure: the repository reads and
+to a post-it, the chain, the timer, and the limits. Pure: the repository reads and
 writes the rows, the API turns these decisions into responses."""
 
 import uuid
@@ -22,6 +23,8 @@ MAX_ROUND_TITLE_LENGTH = 100
 MAX_GROUP_TITLE_LENGTH = 60
 # Reactions per post-it, as on Comments (spec 19c Decision 1).
 MAX_EMOJI_PER_CARD = 20
+# Spec 47 Decision 1.
+MAX_MODULES = 10
 # Decision 4: a custom length up to an hour.
 MIN_TIMER_SECONDS = 60
 MAX_TIMER_SECONDS = 3600
@@ -45,6 +48,41 @@ LINES_VEILS_COLORS: dict[LinesVeilsKind, MapColor] = {
 }
 
 
+class StarsWishesKind(StrEnum):
+    """The two fixed columns of a Stars and Wishes module (spec 47
+    Decision 7)."""
+
+    STARS = "stars"
+    WISHES = "wishes"
+
+
+STARS_WISHES_COLORS: dict[StarsWishesKind, MapColor] = {
+    StarsWishesKind.STARS: MapColor.GOLD,
+    StarsWishesKind.WISHES: MapColor.BLUE,
+}
+
+ColumnKind = LinesVeilsKind | StarsWishesKind
+
+
+def column_kind(raw: str) -> ColumnKind:
+    """A stored column `kind`, as its enum."""
+    if raw in StarsWishesKind:
+        return StarsWishesKind(raw)
+    return LinesVeilsKind(raw)
+
+
+class ModuleKind(StrEnum):
+    """What a step of a session's chain is (spec 47 Decision 1)."""
+
+    RETRO = "retro"
+    LINES_VEILS = "lines_veils"
+    STARS_WISHES = "stars_wishes"
+
+
+# Spec 47 Decision 2: a chain nobody composed, as the page was before.
+DEFAULT_CHAIN = (ModuleKind.RETRO, ModuleKind.LINES_VEILS)
+
+
 class TimerAction(StrEnum):
     """What the Master does with the shared timer (Decision 4)."""
 
@@ -65,30 +103,54 @@ class Round:
     title: str | None
     started_at: datetime
     closed_at: datetime | None
+    # Spec 47 Decision 4: the step the table is on.
+    current_module_id: uuid.UUID | None = None
+
+
+@dataclass(frozen=True)
+class Module:
+    """A step of a round's chain (spec 47 Decision 1), at `position`."""
+
+    id: uuid.UUID
+    round_id: uuid.UUID
+    kind: ModuleKind
+    position: int
 
 
 @dataclass(frozen=True)
 class Column:
-    """A column: a Retro one belongs to a round and has a title the Master
-    sets; a Lines & Veils one has no round and a fixed `kind`."""
+    """A column of a round's post-it board: a Retro one, titled by the
+    Master, or a fixed Stars and Wishes one (a `kind`; spec 47 Decision 7),
+    in its module. Or a Lines & Veils one: no round, no module, a fixed
+    `kind`."""
 
     id: uuid.UUID
     room_id: uuid.UUID
     round_id: uuid.UUID | None
-    kind: LinesVeilsKind | None
+    kind: ColumnKind | None
     title: str
     position: int
     color: MapColor = MapColor.DEFAULT
+    module_id: uuid.UUID | None = None
 
     @property
     def is_retro(self) -> bool:
-        """Whether the column is on the Retro board."""
+        """Whether the column is on a round's post-it board (a Retro or a
+        Stars and Wishes module) rather than on Lines & Veils."""
         return self.round_id is not None
 
     @property
+    def is_promotable(self) -> bool:
+        """Whether its post-its can be promoted to Lines & Veils: a Retro
+        column's only (spec 47 Decision 7)."""
+        return self.is_retro and self.kind is None
+
+    @property
     def shown_color(self) -> MapColor:
-        """Its colour: a Retro column's own, a Lines & Veils one's from its
-        kind (spec 46c Decision 5)."""
+        """Its colour: a Retro column's own, a fixed one's from its kind
+        (spec 46c Decision 5, spec 47 Decision 7)."""
+        if isinstance(self.kind, StarsWishesKind):
+            return STARS_WISHES_COLORS[self.kind]
         return LINES_VEILS_COLORS[self.kind] if self.kind else self.color
 
 
@@ -197,6 +259,14 @@ class CopyNotEditableError(DomainError):
 
 class BoardFullError(DomainError):
     """The board already holds `MAX_CARDS_PER_BOARD` post-its (Decision 12)."""
+
+
+class InvalidChainError(DomainError):
+    """A chain holds 1 to `MAX_MODULES` modules (spec 47 Decision 1)."""
+
+
+class LastModuleError(DomainError):
+    """A session keeps at least one module (spec 47 Decision 3)."""
 
 
 class TooManyColumnsError(DomainError):
@@ -360,7 +430,7 @@ def publishable_count(drafts: int, published_on_board: int) -> int:
 def can_promote(card: Card, source_column: Column, role: RoomRole) -> bool:
     """Decisions 2, 8 and 16: the Master promotes any published Retro
     post-it, of any round; Players never do, not even their own."""
-    return is_master(role) and source_column.is_retro and not card.is_draft
+    return is_master(role) and source_column.is_promotable and not card.is_draft
 
 
 def ensure_can_promote(
@@ -377,7 +447,7 @@ def ensure_can_promote(
     ensure_master(role)
     if card.is_draft:
         raise DraftCardError("errors.sessionZero.draft")
-    if not source_column.is_retro or target.is_retro:
+    if not source_column.is_promotable or target.is_retro:
         raise WrongBoardError("errors.sessionZero.promoteRetroToLinesVeils")
     if target.id in copied_to:
         raise AlreadyPromotedError("errors.sessionZero.alreadyPromoted")
@@ -489,7 +559,7 @@ def ensure_can_place_card(
     one leaving or joining a group takes a Player's only when every other
     post-it of that group (`mates`) is theirs too (Q2), and a draft joins
     none. Lines & Veils is the Master's (`ensure_can_move`)."""
-    if source.is_retro != target.is_retro or source.round_id != target.round_id:
+    if source.is_retro != target.is_retro or source.module_id != target.module_id:
         raise WrongBoardError("errors.sessionZero.sameBoard")
     if not target.is_retro:
         ensure_can_move(card, source, target, role, sources_in_target)
@@ -505,9 +575,9 @@ def ensure_can_place_group(
     source: Column, target: Column, round_: Round | None, role: RoomRole
 ) -> None:
     """Spec 46d Decision 7: the Master drags a group, as one block, within
-    its column or into another Retro column of the same open round."""
+    its column or into another column of the same module of the open round."""
     ensure_master(role)
-    if not target.is_retro or source.round_id != target.round_id:
+    if not target.is_retro or source.module_id != target.module_id:
         raise WrongBoardError("errors.sessionZero.sameBoard")
     ensure_round_open(round_)
 
@@ -540,11 +610,62 @@ def ensure_can_add_column(round_: Round, retro_columns: int) -> None:
 
 
 def ensure_retro_column(column: Column, round_: Round | None) -> None:
-    """Lines & Veils columns are fixed (Decision 10); a closed round's are
-    read-only (Decision 16)."""
-    if not column.is_retro:
+    """Lines & Veils columns are fixed (Decision 10), and so are Stars and
+    Wishes ones (spec 47 Decision 7); a closed round's are read-only
+    (Decision 16)."""
+    if not column.is_promotable:
         raise WrongBoardError("errors.sessionZero.notRetroColumn")
     ensure_round_open(round_)
+
+
+def clean_chain(kinds: Sequence[ModuleKind]) -> list[ModuleKind]:
+    """Spec 47 Decision 1: a chain of 1 to `MAX_MODULES` modules, any kind
+    any number of times."""
+    if not 1 <= len(kinds) <= MAX_MODULES:
+        raise InvalidChainError("errors.sessionZero.invalidChain", max=MAX_MODULES)
+    return list(kinds)
+
+
+def ensure_can_add_module(round_: Round, modules: int) -> None:
+    """Spec 47 Decision 3: the Master adds a module to the open round's
+    chain, at most `MAX_MODULES` (the caller has checked the role)."""
+    ensure_round_open(round_)
+    if modules >= MAX_MODULES:
+        raise InvalidChainError("errors.sessionZero.invalidChain", max=MAX_MODULES)
+
+
+def ensure_can_remove_module(round_: Round, modules: int) -> None:
+    """Spec 47 Decision 3: the open round's chain keeps at least one module."""
+    ensure_round_open(round_)
+    if modules <= 1:
+        raise LastModuleError("errors.sessionZero.lastModule")
+
+
+def current_after_removal(
+    chain: Sequence[Module], removed: uuid.UUID, current: uuid.UUID | None
+) -> uuid.UUID | None:
+    """The step the table is on once `removed` leaves the chain: unchanged,
+    or, when it was the current one, the step before it (the next one when
+    it was first)."""
+    if current != removed:
+        return current
+    ids = [module.id for module in chain]
+    index = ids.index(removed)
+    rest = ids[:index] + ids[index + 1 :]
+    return rest[max(index - 1, 0)] if rest else None
+
+
+def visible_modules(
+    chain: Sequence[Module], current: uuid.UUID | None, role: RoomRole
+) -> list[Module]:
+    """Spec 47 Decision 5: the Master sees every step, to prepare the later
+    ones; a Player the steps already reached, the current one included."""
+    if is_master(role):
+        return list(chain)
+    positions = [module.position for module in chain if module.id == current]
+    if not positions:
+        return []
+    return [module for module in chain if module.position <= positions[0]]
 
 
 def remaining_seconds(timer: Timer, now: datetime) -> int | None:

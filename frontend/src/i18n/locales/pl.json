@@ -1333,7 +1333,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Zasłony",
-      "lines": "Linie"
+      "lines": "Linie",
+      "stars": "Gwiazdy",
+      "wishes": "Życzenia"
     },
     "postIt": {
       "text": "Tekst karteczki",
@@ -1403,7 +1405,7 @@
       "later": "Sesja 0.5 #{{number}}",
       "pick": "Pokazywana sesja",
       "start": "Nowa sesja",
-      "startBody": "Obecna tablica Retro zostanie zamknięta i pozostanie dostępna tylko do odczytu; nigdy nieopublikowane szkice zostaną usunięte. Nowa tablica zaczyna się pusta, z tymi samymi kolumnami. Linie i Zasłony pozostają bez zmian.",
+      "startBody": "Bieżąca sesja zostaje zamknięta i pozostaje dostępna tylko do odczytu; nigdy nieopublikowane szkice są usuwane. Nowa zaczyna się pusta z etapami poniżej, a jej tablice Retro zachowują te same kolumny. Linie i Zasłony pozostają bez zmian.",
       "title": "Nazwa",
       "startButton": "Utwórz",
       "closed": "Ta sesja jest zamknięta: tablica jest tylko do odczytu.",
@@ -1436,6 +1438,31 @@
       "noTarget": "Nie nad miejscem do upuszczenia.",
       "dropped": "Upuszczono: {{name}}.",
       "cancelled": "Anulowano: {{name}} wraca na swoje miejsce."
+    },
+    "modules": {
+      "label": "Etapy",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Linie i Zasłony",
+        "stars_wishes": "Gwiazdy i Życzenia"
+      },
+      "hiddenHint": "Etapy wciąż ukryte: {{count}}",
+      "next": "Dalej",
+      "bringHere": "Przenieś tu stół",
+      "current": "Bieżący etap",
+      "edit": "Edytuj etapy",
+      "editHint": "Zmiany działają od razu, dla wszystkich członków.",
+      "add": "Dodaj etap",
+      "kind": "Etap",
+      "moveUp": "W górę",
+      "moveDown": "W dół",
+      "remove": "Usuń",
+      "removeTitle": "Usunąć ten etap?",
+      "removeBody": "Karteczki z „{{name}}” zostaną usunięte razem z nim. Linie i Zasłony nigdy nie są ruszane.",
+      "chain": "Etapy sesji",
+      "chainHint": "Wybierz etapy i ich kolejność; możesz je później zmienić.",
+      "max": "Najwyżej {{max}} etapów.",
+      "startButton": "Rozpocznij"
     }
   }
 }

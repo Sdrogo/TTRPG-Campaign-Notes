@@ -3,11 +3,14 @@ import { colorValue } from './maps';
 import type { MapColor } from '../types/map';
 import type {
   LinesVeilsKind,
+  ModuleKind,
   PostIt,
   PostItColumn,
   SessionZero,
+  SessionZeroModule,
   SessionZeroRound,
   SessionZeroTimer,
+  StarsWishesKind,
   TimerAction,
 } from '../types/sessionZero';
 
@@ -36,6 +39,15 @@ export const LINES_VEILS_KINDS: LinesVeilsKind[] = ['must', 'veils', 'lines'];
 
 /** A group's longest title (the backend's limit). */
 export const MAX_GROUP_TITLE_LENGTH = 60;
+
+/** The most steps a session's chain holds (spec 47 Decision 1). */
+export const MAX_MODULES = 10;
+
+/** The steps the Master picks from (spec 47), in the order they are offered. */
+export const MODULE_KINDS: ModuleKind[] = ['retro', 'lines_veils', 'stars_wishes'];
+
+/** A chain nobody composed: the page as it was before spec 47 (Decision 2). */
+export const DEFAULT_CHAIN: ModuleKind[] = ['retro', 'lines_veils'];
 
 interface RawReaction {
   emoji: string;
@@ -71,11 +83,18 @@ interface RawPostIt {
 
 interface RawColumn {
   id: string;
-  kind: LinesVeilsKind | null;
+  kind: LinesVeilsKind | StarsWishesKind | null;
   title: string;
   color: MapColor;
   groups: { id: string; title: string | null; position: number }[];
   cards: RawPostIt[];
+}
+
+interface RawModule {
+  id: string;
+  kind: ModuleKind;
+  position: number;
+  columns: RawColumn[];
 }
 
 interface RawRound {
@@ -101,7 +120,9 @@ export interface RawSessionZero {
   can_manage: boolean;
   rounds: RawRound[];
   round_id: string | null;
-  retro: RawColumn[];
+  modules: RawModule[];
+  current_module_id: string | null;
+  hidden_modules: number;
   lines_veils: RawColumn[];
   timer: RawTimer | null;
 }
@@ -159,15 +180,24 @@ function toRound(raw: RawRound): SessionZeroRound {
   };
 }
 
-/** The page's model, from the backend's snake_case answer. */
+/** The page's model, from the backend's snake_case answer, showing the current step. */
 export function toSessionZero(raw: RawSessionZero): SessionZero {
+  const modules: SessionZeroModule[] = raw.modules.map((module) => ({
+    id: module.id,
+    kind: module.kind,
+    position: module.position,
+    columns: module.columns.map(toColumn),
+  }));
   return {
     started: raw.started,
     revision: raw.revision,
     canManage: raw.can_manage,
     rounds: raw.rounds.map(toRound),
     roundId: raw.round_id,
-    retro: raw.retro.map(toColumn),
+    modules,
+    currentModuleId: raw.current_module_id,
+    hiddenModules: raw.hidden_modules,
+    retro: modules.find((module) => module.id === raw.current_module_id)?.columns ?? [],
     linesVeils: raw.lines_veils.map(toColumn),
     timer: raw.timer && {
       state: raw.timer.state,
@@ -176,6 +206,31 @@ export function toSessionZero(raw: RawSessionZero): SessionZero {
       remainingS: raw.timer.remaining_s,
       now: raw.timer.now,
     },
+  };
+}
+
+/** The step on screen: `moduleId` when the viewer still sees it, else the current one. */
+export function shownModule(board: SessionZero, moduleId: string | null): SessionZeroModule | undefined {
+  return (
+    board.modules.find((module) => module.id === moduleId) ??
+    board.modules.find((module) => module.id === board.currentModuleId) ??
+    board.modules[0]
+  );
+}
+
+/** The board with `module`'s columns as its post-it board (`retro`), which the boards and the drag work on. */
+export function viewOf(board: SessionZero, module: SessionZeroModule | undefined): SessionZero {
+  return { ...board, retro: module?.columns ?? [] };
+}
+
+/** A preview of the step on screen (a drag's), written back into its module so the page shows it. */
+export function withView(preview: SessionZero | undefined, moduleId: string | undefined): SessionZero | undefined {
+  if (!preview) return undefined;
+  return {
+    ...preview,
+    modules: preview.modules.map((module) =>
+      module.id === moduleId ? { ...module, columns: preview.retro } : module,
+    ),
   };
 }
 
@@ -188,7 +243,12 @@ export interface BoardWrite {
 
 /** Every write the page sends; each answers with the open round's boards. */
 export const boardWrites = {
-  start: (): BoardWrite => ({ path: '/start', method: 'POST' }),
+  /** Spec 47 Decision 2: the Master's chain; none for a Player, who gets the default. */
+  start: (modules?: ModuleKind[]): BoardWrite => ({
+    path: '/start',
+    method: 'POST',
+    json: modules ? { modules } : undefined,
+  }),
   addPostIt: (columnId: string, body: string): BoardWrite => ({
     path: '/cards',
     method: 'POST',
@@ -220,10 +280,10 @@ export const boardWrites = {
     path: `/cards/${id}/reactions/${encodeURIComponent(emoji)}`,
     method: add ? 'PUT' : 'DELETE',
   }),
-  addColumn: (title: string, color: MapColor): BoardWrite => ({
+  addColumn: (title: string, color: MapColor, moduleId: string | null): BoardWrite => ({
     path: '/columns',
     method: 'POST',
-    json: { title, color },
+    json: { title, color, module_id: moduleId },
   }),
   renameColumn: (id: string, title: string): BoardWrite => ({
     path: `/columns/${id}`,
@@ -241,10 +301,24 @@ export const boardWrites = {
     method: 'PUT',
     json: { column_ids: ids },
   }),
-  startRound: (title: string): BoardWrite => ({
+  startRound: (title: string, modules: ModuleKind[]): BoardWrite => ({
     path: '/rounds',
     method: 'POST',
-    json: { title: title.trim() || null },
+    json: { title: title.trim() || null, modules },
+  }),
+  /** Spec 47 Decision 3: a step added at the end of the open session's chain. */
+  addModule: (kind: ModuleKind): BoardWrite => ({ path: '/modules', method: 'POST', json: { kind } }),
+  removeModule: (id: string): BoardWrite => ({ path: `/modules/${id}`, method: 'DELETE' }),
+  reorderModules: (ids: string[]): BoardWrite => ({
+    path: '/modules/order',
+    method: 'PUT',
+    json: { module_ids: ids },
+  }),
+  /** Spec 47 Decision 4: the table moves to this step ("Next" is the one after the current). */
+  setCurrentModule: (id: string): BoardWrite => ({
+    path: '/modules/current',
+    method: 'PUT',
+    json: { module_id: id },
   }),
   group: (cardIds: string[]): BoardWrite => ({ path: '/groups', method: 'POST', json: { card_ids: cardIds } }),
   renameGroup: (id: string, title: string): BoardWrite => ({
@@ -273,6 +347,11 @@ export const boardWrites = {
     json: minutes === undefined ? { action } : { action, duration_s: minutes * 60 },
   }),
 };
+
+/** A step's name in the viewer's language (spec 47). */
+export function moduleLabel(kind: ModuleKind): string {
+  return i18n.t(`sessionZero.modules.kinds.${kind}`);
+}
 
 /** A session's name (spec 46d Decision 3): its own when the Master gave one, else the default. */
 export function roundLabel(round: SessionZeroRound): string {

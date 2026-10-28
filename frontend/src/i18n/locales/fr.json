@@ -1277,7 +1277,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Voiles",
-      "lines": "Lignes"
+      "lines": "Lignes",
+      "stars": "Étoiles",
+      "wishes": "Souhaits"
     },
     "postIt": {
       "text": "Texte du post-it",
@@ -1337,7 +1339,7 @@
       "later": "Session 0.5 #{{number}}",
       "pick": "Session à afficher",
       "start": "Nouvelle session",
-      "startBody": "Le tableau Rétro actuel se ferme et reste consultable en lecture seule ; les brouillons jamais publiés sont supprimés. Le nouveau tableau commence vide, avec les mêmes colonnes. Lignes et Voiles reste tel quel.",
+      "startBody": "La session actuelle se ferme et reste consultable en lecture seule ; les brouillons jamais publiés sont supprimés. La nouvelle démarre vide avec les étapes ci-dessous, et ses tableaux Rétro gardent les mêmes colonnes. Lignes et Voiles reste tel quel.",
       "title": "Nom",
       "startButton": "Créer",
       "closed": "Cette session est close : le tableau est en lecture seule.",
@@ -1368,6 +1370,31 @@
       "noTarget": "Pas au-dessus d'un endroit où le déposer.",
       "dropped": "{{name}} déposé.",
       "cancelled": "Annulé : {{name}} retrouve sa place."
+    },
+    "modules": {
+      "label": "Étapes",
+      "kinds": {
+        "retro": "Rétro",
+        "lines_veils": "Lignes et Voiles",
+        "stars_wishes": "Étoiles et Souhaits"
+      },
+      "hiddenHint": "Étapes encore cachées : {{count}}",
+      "next": "Suivant",
+      "bringHere": "Amener la table ici",
+      "current": "Étape actuelle",
+      "edit": "Modifier les étapes",
+      "editHint": "Les changements s’appliquent tout de suite, pour tous les membres.",
+      "add": "Ajouter une étape",
+      "kind": "Étape",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "remove": "Retirer",
+      "removeTitle": "Retirer cette étape ?",
+      "removeBody": "Les post-its de « {{name}} » sont supprimés avec elle. Lignes et Voiles n’est jamais touché.",
+      "chain": "Étapes de la session",
+      "chainHint": "Choisis les étapes et leur ordre ; tu pourras les changer plus tard.",
+      "max": "Au plus {{max}} étapes.",
+      "startButton": "Lancer"
     }
   }
 }

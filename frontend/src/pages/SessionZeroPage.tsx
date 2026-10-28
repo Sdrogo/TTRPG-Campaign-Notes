@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Button, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
+import { Box, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
@@ -14,17 +14,19 @@ import { LinesVeilsColumn, RetroBoard } from '../components/sessionZero/BoardCol
 import { BoardContext, useBoard, type BoardContextValue } from '../components/sessionZero/boardContext';
 import { BoardDnd } from '../components/sessionZero/BoardDnd';
 import { BoardsSplit } from '../components/sessionZero/BoardsSplit';
+import { ModuleStepper, StartSessionZero } from '../components/sessionZero/ModuleChain';
 import { SessionZeroHeader } from '../components/sessionZero/SessionZeroHeader';
-import { boardWrites } from '../lib/sessionZero';
+import { boardWrites, shownModule, viewOf, withView } from '../lib/sessionZero';
 import { notifyError } from '../lib/notify';
 
 /** Wide enough for the Retro board beside Lines & Veils; narrower, two tabs (Decision 13). */
 const BOARDS_SIDE_BY_SIDE_QUERY = '(min-width: 62em)';
 
 /**
- * `/rooms/:roomId/session-zero`: the Room's Session 0 (spec 46), its Retro
- * board and its Lines & Veils board, with the shared timer on the title line
- * (spec 46c Decision 2).
+ * `/rooms/:roomId/session-zero`: the Room's Session 0 (spec 46), each
+ * session a chain of steps (spec 47): a Retro board with Lines & Veils
+ * beside it, Lines & Veils alone, or Stars and Wishes; the shared timer on
+ * the title line (spec 46c Decision 2).
  */
 export function SessionZeroPage() {
   const { t } = useTranslation();
@@ -41,6 +43,9 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
   const { t } = useTranslation();
   // The round on the Retro board: null is the open one.
   const [roundId, setRoundId] = useState<string | null>(null);
+  // A step this viewer opened (spec 47 Decision 5), while the table stays
+  // where it was: once the Master moves it, every page follows.
+  const [viewed, setViewed] = useState<{ id: string; current: string | null } | null>(null);
   const board = useSessionZero(roomId, roundId);
   const members = useMembers(roomId, true);
   const write = useSessionZeroWrite(roomId);
@@ -49,13 +54,21 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
   // A deleted Session 0 (spec 46c Decision 3) has no closed round left to show.
   const glowing = useSessionZeroEvents(roomId, () => setRoundId(null));
 
+  const pickRound = (id: string | null) => {
+    setViewed(null);
+    setRoundId(id);
+  };
+  const shown =
+    board.data && shownModule(board.data, viewed?.current === board.data.currentModuleId ? viewed.id : null);
+
   const context: BoardContextValue | null = board.data
     ? {
-        board: board.data,
+        board: viewOf(board.data, shown),
+        module: shown,
         members: members.data ?? [],
         act: (request, onDone, preview) =>
           write.mutate(
-            { write: request, preview },
+            { write: request, preview: withView(preview, shown?.id) },
             {
               onError: notifyError,
               onSuccess: (next) => {
@@ -84,20 +97,26 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
         <Stack gap="sm" align="flex-start">
           <Text c="dimmed">{t('sessionZero.notStarted')}</Text>
           {writable && (
-            <Button
-              disabled={write.isPending}
-              onClick={() => context.act(boardWrites.start())}
-            >
-              {t('sessionZero.start')}
-            </Button>
+            <StartSessionZero
+              canManage={context.board.canManage}
+              busy={write.isPending}
+              onStart={(modules) => context.act(boardWrites.start(modules))}
+            />
           )}
         </Stack>
       )}
       {context?.board.started && (
         <BoardContext.Provider value={context}>
-          <SessionZeroHeader readAtMs={board.dataUpdatedAt} onPick={setRoundId} />
+          <SessionZeroHeader readAtMs={board.dataUpdatedAt} onPick={pickRound} />
+          <ModuleStepper
+            onView={(id) => setViewed(id === null ? null : { id, current: context.board.currentModuleId })}
+          />
           <BoardDnd>
-            {wide ? (
+            {shown?.kind === 'lines_veils' ? (
+              <LinesVeilsBoard />
+            ) : shown?.kind === 'stars_wishes' ? (
+              <RetroBoard />
+            ) : wide ? (
               <BoardsSplit left={<RetroBoard />} right={<LinesVeilsBoard />} />
             ) : (
               <Tabs defaultValue="retro" keepMounted={false}>

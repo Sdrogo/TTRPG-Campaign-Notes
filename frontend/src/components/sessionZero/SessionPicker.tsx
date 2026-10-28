@@ -3,6 +3,8 @@ import { Badge, Button, Group, Modal, Select, Stack, Text, TextInput, Tooltip } 
 import { PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { MAX_ROUND_TITLE_LENGTH, boardWrites, defaultRoundName, roundLabel } from '../../lib/sessionZero';
+import type { ModuleKind } from '../../types/sessionZero';
+import { ChainEditor } from './ModuleChain';
 import { useBoard } from './boardContext';
 
 interface SessionPickerProps {
@@ -47,7 +49,9 @@ export function SessionPicker({ onPick }: SessionPickerProps) {
 
 /**
  * The Master's "New session" (spec 46d Decision 3): the session on screen
- * closes, its unpublished drafts go, the new one keeps its columns. Its name
+ * closes, its unpublished drafts go. Its chain is the Master's, the open
+ * session's proposed (spec 47 Decision 2), and its Retro steps keep the
+ * columns of the matching ones. Its name
  * is free, prefilled with the next default ("Session 0.5 #N"); left as it is,
  * nothing is stored and the default shows in each viewer's language.
  */
@@ -63,10 +67,11 @@ export function NewSession() {
       {opened && (
         <NewSessionModal
           suggested={defaultRoundName(board.rounds.length + 1)}
+          chain={board.modules.map((module) => module.kind)}
           busy={busy}
           onClose={() => setOpened(false)}
-          onStart={(title) => {
-            act(boardWrites.startRound(title));
+          onStart={(title, modules) => {
+            act(boardWrites.startRound(title, modules));
             setOpened(false);
           }}
         />
@@ -77,14 +82,16 @@ export function NewSession() {
 
 interface NewSessionModalProps {
   suggested: string;
+  chain: ModuleKind[];
   busy: boolean;
   onClose: () => void;
-  onStart: (title: string) => void;
+  onStart: (title: string, modules: ModuleKind[]) => void;
 }
 
-function NewSessionModal({ suggested, busy, onClose, onStart }: NewSessionModalProps) {
+function NewSessionModal({ suggested, chain: proposed, busy, onClose, onStart }: NewSessionModalProps) {
   const { t } = useTranslation();
   const [name, setName] = useState(suggested);
+  const [chain, setChain] = useState(proposed);
   return (
     <Modal opened onClose={onClose} title={t('sessionZero.rounds.start')} centered>
       <Stack>
@@ -96,11 +103,12 @@ function NewSessionModal({ suggested, busy, onClose, onStart }: NewSessionModalP
           onChange={(event) => setName(event.currentTarget.value)}
           data-autofocus
         />
+        <ChainEditor value={chain} onChange={setChain} />
         <Group justify="flex-end">
           <Button variant="default" onClick={onClose}>
             {t('common.cancel')}
           </Button>
-          <Button disabled={busy} onClick={() => onStart(name.trim() === suggested ? '' : name)}>
+          <Button disabled={busy} onClick={() => onStart(name.trim() === suggested ? '' : name, chain)}>
             {t('sessionZero.rounds.startButton')}
           </Button>
         </Group>

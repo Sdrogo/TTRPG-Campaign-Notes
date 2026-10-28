@@ -1,11 +1,14 @@
 import { createContext, useContext } from 'react';
 import type { BoardWrite } from '../../lib/sessionZero';
 import type { Member } from '../../types/member';
-import type { SessionZero } from '../../types/sessionZero';
+import type { SessionZero, SessionZeroModule } from '../../types/sessionZero';
 
 /** What every part of the Session 0 page needs to act on the boards. */
 export interface BoardContextValue {
+  /** The page's boards, with the step on screen's columns as `retro` (`viewOf`). */
   board: SessionZero;
+  /** The step on screen (spec 47): what "Add column" adds to, whether its columns are fixed. */
+  module?: SessionZeroModule;
   members: Member[];
   /**
    * Sends a write; a failure shows as a toast, `onDone` runs once it

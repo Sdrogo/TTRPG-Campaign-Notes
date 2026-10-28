@@ -1,6 +1,8 @@
-"""Session 0 boards (spec 46): a Room's Retro board, run in rounds, and its
-Lines & Veils board. Every member reads and writes; drafts stay with their
-authors (Decision 1). Every write answers with the open round's boards as
+"""Session 0 boards (spec 46): a Room's sessions (rounds), each a chain of
+modules the Master composes and walks the table through (spec 47), and its
+Room-wide Lines & Veils board. Every member reads and writes; drafts stay
+with their authors (Decision 1); a Player sees the steps already reached
+(spec 47 Decision 5). Every write answers with the open round's boards as
 the caller sees them, and every write the other members see bumps the
 Session 0's `revision` (Decision 3, for the live updates)."""
 
@@ -29,6 +31,7 @@ from app.domain.models import Membership
 from app.domain.reactions import InvalidEmojiError, parse_emoji, summarize_reactions
 from app.domain.relationship_maps import MapColor
 from app.domain.session_zero import (
+    DEFAULT_CHAIN,
     AlreadyPromotedError,
     AlreadyPublishedError,
     BadPlaceError,
@@ -39,9 +42,13 @@ from app.domain.session_zero import (
     DraftCardError,
     Group,
     InvalidCardError,
+    InvalidChainError,
     InvalidTimerError,
     InvalidTitleError,
+    LastModuleError,
     LinesVeilsKind,
+    Module,
+    ModuleKind,
     NotAuthorError,
     NotGroupableError,
     NotMasterError,
@@ -58,11 +65,14 @@ from app.domain.session_zero import (
     can_place,
     can_promote,
     clean_body,
+    clean_chain,
     clean_column_title,
     clean_group_title,
     clean_round_title,
+    current_after_removal,
     ensure_can_add_card,
     ensure_can_add_column,
+    ensure_can_add_module,
     ensure_can_delete_card,
     ensure_can_edit_card,
     ensure_can_group,
@@ -72,6 +82,7 @@ from app.domain.session_zero import (
     ensure_can_promote,
     ensure_can_publish,
     ensure_can_react,
+    ensure_can_remove_module,
     ensure_master,
     ensure_retro_column,
     ensure_round_open,
@@ -81,6 +92,7 @@ from app.domain.session_zero import (
     publishable_count,
     remaining_seconds,
     shown_author,
+    visible_modules,
 )
 from app.i18n.dependencies import LocaleDep
 from app.i18n.translator import translate
@@ -120,6 +132,8 @@ _STATUS_FOR: dict[type[DomainError], int] = {
     TooManyCardEmojiError: status.HTTP_409_CONFLICT,
     NotGroupableError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     BadPlaceError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    InvalidChainError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    LastModuleError: status.HTTP_409_CONFLICT,
 }
 
 
@@ -181,8 +195,9 @@ class GroupResponse(BaseModel):
 
 class ColumnResponse(BaseModel):
     """A column, its groups and its post-its, in order. `kind` is set on
-    the Lines & Veils columns (`must`, `veils`, `lines`), whose title the
-    client names; `color` is a `MapColor` (spec 46c Decision 5)."""
+    the fixed columns, Lines & Veils (`must`, `veils`, `lines`) and Stars
+    and Wishes (`stars`, `wishes`), whose title the client names; `color`
+    is a `MapColor` (spec 46c Decision 5)."""
 
     id: uuid.UUID
     kind: str | None
@@ -192,8 +207,19 @@ class ColumnResponse(BaseModel):
     cards: list[CardResponse]
 
 
+class ModuleResponse(BaseModel):
+    """A step of the shown session's chain (spec 47), with its columns: a
+    Retro or Stars and Wishes module's own; none for Lines & Veils, whose
+    board is the Room-wide `lines_veils`."""
+
+    id: uuid.UUID
+    kind: ModuleKind
+    position: int
+    columns: list[ColumnResponse]
+
+
 class RoundResponse(BaseModel):
-    """A round of the Retro board (Decision 16)."""
+    """A session (round, Decision 16)."""
 
     id: uuid.UUID
     number: int
@@ -216,14 +242,19 @@ class TimerResponse(BaseModel):
 
 class SessionZeroResponse(BaseModel):
     """The Session 0 page. Before anyone starts it, `started` is false and
-    the rest is empty. `round_id` is the round shown on the Retro board."""
+    the rest is empty. `round_id` is the session shown; `modules` its chain
+    as the caller sees it (spec 47 Decision 5: a Player the steps already
+    reached, `hidden_modules` counting the later ones), on
+    `current_module_id`."""
 
     started: bool
     revision: int
     can_manage: bool
     rounds: list[RoundResponse]
     round_id: uuid.UUID | None
-    retro: list[ColumnResponse]
+    modules: list[ModuleResponse]
+    current_module_id: uuid.UUID | None
+    hidden_modules: int
     lines_veils: list[ColumnResponse]
     timer: TimerResponse | None
 
@@ -254,10 +285,13 @@ class TargetColumnBody(BaseModel):
 
 
 class ColumnBody(BaseModel):
-    """A Retro column's title and colour; on a change, what changes."""
+    """A Retro column's title and colour; on a change, what changes. A new
+    one goes to `module_id`, the open session's first Retro module when
+    none."""
 
     title: str | None = None
     color: MapColor | None = None
+    module_id: uuid.UUID | None = None
 
 
 class GroupBody(BaseModel):
@@ -283,15 +317,42 @@ class PlaceBody(BaseModel):
 
 
 class ColumnOrderBody(BaseModel):
-    """The open round's Retro columns, every one, in their new order."""
+    """A Retro module's columns, every one, in their new order."""
 
     column_ids: list[uuid.UUID]
 
 
+class StartBody(BaseModel):
+    """The first session's chain (spec 47 Decision 2), the Master's to
+    choose; `DEFAULT_CHAIN` when none."""
+
+    modules: list[ModuleKind] | None = None
+
+
 class RoundBody(BaseModel):
-    """A new round's optional title (Decision 16)."""
+    """A new session's optional title (Decision 16) and its chain (spec 47
+    Decision 2); the previous session's chain when none."""
 
     title: str | None = None
+    modules: list[ModuleKind] | None = None
+
+
+class ModuleBody(BaseModel):
+    """A module to add at the end of the open session's chain."""
+
+    kind: ModuleKind
+
+
+class ModuleOrderBody(BaseModel):
+    """The open session's modules, every one, in their new order."""
+
+    module_ids: list[uuid.UUID]
+
+
+class CurrentModuleBody(BaseModel):
+    """The step the table moves to (spec 47 Decision 4)."""
+
+    module_id: uuid.UUID
 
 
 class TimerBody(BaseModel):
@@ -303,10 +364,12 @@ class TimerBody(BaseModel):
 
 @dataclass(frozen=True)
 class _Board:
-    """The Room's Session 0 as stored: rounds, columns and where each lives."""
+    """The Room's Session 0 as stored: rounds, their chains, columns and
+    where each lives."""
 
     rounds: list[Round]
     columns: dict[uuid.UUID, Column]
+    modules: list[Module]
 
     @property
     def open_round(self) -> Round:
@@ -317,22 +380,38 @@ class _Board:
         """The column's round, or `None` on the Lines & Veils board."""
         return next((r for r in self.rounds if r.id == column.round_id), None)
 
-    def retro_columns(self, round_id: uuid.UUID) -> list[Column]:
-        """A round's Retro columns, in order."""
-        return [c for c in self.columns.values() if c.round_id == round_id]
+    def chain(self, round_id: uuid.UUID) -> list[Module]:
+        """A round's modules, in order."""
+        return [module for module in self.modules if module.round_id == round_id]
+
+    def module_columns(self, module_id: uuid.UUID | None) -> list[Column]:
+        """A module's columns, in order."""
+        return [c for c in self.columns.values() if c.module_id == module_id]
+
+    def visible_chain(self, round_: Round, viewer: Membership) -> list[Module]:
+        """The round's steps `viewer` sees (spec 47 Decision 5)."""
+        return visible_modules(self.chain(round_.id), round_.current_module_id, viewer.role)
+
+    def hidden_modules(self, viewer: Membership) -> set[uuid.UUID]:
+        """The modules, of every round, `viewer` hasn't reached yet."""
+        seen = {m.id for round_ in self.rounds for m in self.visible_chain(round_, viewer)}
+        return {module.id for module in self.modules} - seen
 
     def lines_veils_columns(self) -> list[Column]:
         """The three Lines & Veils columns, in their fixed order (spec 46c
         Decision 5), whatever order they were stored in."""
         order = list(LinesVeilsKind)
-        found = [c for c in self.columns.values() if c.kind is not None]
+        found = [c for c in self.columns.values() if not c.is_retro]
         return sorted(found, key=lambda c: order.index(c.kind))  # type: ignore[arg-type]
 
 
 async def _load_board(session: AsyncSession, room_id: uuid.UUID) -> _Board:
     rounds = await session_zero_repo.list_rounds(session, room_id)
     columns = await session_zero_repo.list_columns(session, room_id)
-    return _Board(rounds=rounds, columns={column.id: column for column in columns})
+    modules = await session_zero_repo.list_modules(session, room_id)
+    return _Board(
+        rounds=rounds, columns={column.id: column for column in columns}, modules=modules
+    )
 
 
 def _timer_response(timer: Timer, now: datetime) -> TimerResponse:
@@ -373,7 +452,9 @@ async def _board_response(
             can_manage=is_master(viewer.role),
             rounds=[],
             round_id=None,
-            retro=[],
+            modules=[],
+            current_module_id=None,
+            hidden_modules=0,
             lines_veils=[],
             timer=None,
         )
@@ -386,7 +467,8 @@ async def _board_response(
         if found is None:
             raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.roundNotFound", locale)
         shown = found
-    retro = board.retro_columns(shown.id)
+    chain = board.visible_chain(shown, viewer)
+    retro = [column for module in chain for column in board.module_columns(module.id)]
     lines_veils = board.lines_veils_columns()
     cards = [
         card
@@ -467,7 +549,17 @@ async def _board_response(
             for r in board.rounds
         ],
         round_id=shown.id,
-        retro=[column_response(column) for column in retro],
+        modules=[
+            ModuleResponse(
+                id=module.id,
+                kind=module.kind,
+                position=module.position,
+                columns=[column_response(c) for c in board.module_columns(module.id)],
+            )
+            for module in chain
+        ],
+        current_module_id=shown.current_module_id,
+        hidden_modules=len(board.chain(shown.id)) - len(chain),
         lines_veils=[column_response(column) for column in lines_veils],
         timer=_timer_response(timer, now),
     )
@@ -481,6 +573,12 @@ class _Write:
     viewer: Membership
     board: _Board
     revision: int
+
+    @property
+    def hidden(self) -> set[uuid.UUID]:
+        """The modules the caller hasn't reached: their columns, groups and
+        post-its answer 404 (spec 47 Decision 5)."""
+        return self.board.hidden_modules(self.viewer)
 
 
 async def _begin_write(
@@ -497,7 +595,7 @@ async def _begin_write(
 
 def _column_or_404(write: _Write, column_id: uuid.UUID, locale: str) -> Column:
     column = write.board.columns.get(column_id)
-    if column is None:
+    if column is None or column.module_id in write.hidden:
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.columnNotFound", locale)
     return column
 
@@ -512,6 +610,7 @@ async def _card_or_404(
         card is None
         or card.room_id != write.viewer.room_id
         or not is_card_visible(card, write.viewer.user_id)
+        or write.board.columns[card.column_id].module_id in write.hidden
     ):
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.cardNotFound", locale)
     return card, write.board.columns[card.column_id]
@@ -521,7 +620,11 @@ async def _group_or_404(
     session: AsyncSession, write: _Write, group_id: uuid.UUID, locale: str
 ) -> tuple[Group, Column]:
     found = await session_zero_repo.get_group(session, group_id)
-    if found is None or found[1] != write.viewer.room_id:
+    if (
+        found is None
+        or found[1] != write.viewer.room_id
+        or write.board.columns[found[0].column_id].module_id in write.hidden
+    ):
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.groupNotFound", locale)
     group = found[0]
     return group, write.board.columns[group.column_id]
@@ -591,16 +694,35 @@ async def get_session_zero(
     return await _board_response(session, room_id, viewer, round_id, locale, previewed=previewed)
 
 
+def _preset_columns(locale: str) -> list[session_zero_repo.RetroColumnSpec]:
+    """A new Retro module's columns, named in `locale` (Decision 10)."""
+    return [(translate(key, locale), color) for key, color in PRESET_COLUMNS]
+
+
 @router.post("/start")
 async def start_session_zero(
-    room_id: uuid.UUID, current_user: CurrentUserDep, session: SessionDep, locale: LocaleDep
+    room_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+    body: StartBody | None = None,
 ) -> SessionZeroResponse:
-    """Decision 10: the first member to open the page starts the Room's
-    Session 0 - round 1 with the three preset Retro columns, named in their
-    language, and the Must / Veils / Lines columns. Idempotent."""
+    """Decision 10, spec 47 Decision 2: any member starts the Room's Session
+    0 - round 1 with its chain (only the Master chooses one, 403 for anyone
+    else; `DEFAULT_CHAIN` otherwise), the Retro modules with the preset
+    columns named in their language, and the Must / Veils / Lines columns.
+    Idempotent."""
     viewer = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    columns = [(translate(key, locale), color) for key, color in PRESET_COLUMNS]
-    if await session_zero_repo.start(session, room_id, columns, datetime.now(UTC)):
+    kinds = body.modules if body is not None else None
+    try:
+        if kinds is not None:
+            ensure_master(viewer.role)
+        chain = clean_chain(kinds if kinds is not None else DEFAULT_CHAIN)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    presets = _preset_columns(locale)
+    specs = [(kind, presets) for kind in chain]
+    if await session_zero_repo.start(session, room_id, specs, datetime.now(UTC)):
         await _shared(session, room_id, "start")
     return await _board_response(session, room_id, viewer, None, locale)
 
@@ -621,8 +743,8 @@ async def add_card(
     column = _column_or_404(write, body.column_id, locale)
     round_ = write.board.round_of(column)
     board_columns = (
-        write.board.retro_columns(round_.id)
-        if round_ is not None
+        write.board.module_columns(column.module_id)
+        if column.is_retro
         else write.board.lines_veils_columns()
     )
     try:
@@ -719,9 +841,9 @@ async def publish_card(
     card, column = await _card_or_404(session, write, card_id, locale)
     round_ = write.board.round_of(column)
     published = 0
-    if round_ is not None:
-        round_columns = [c.id for c in write.board.retro_columns(round_.id)]
-        published = await session_zero_repo.count_cards(session, round_columns)
+    if column.is_retro:
+        module_columns = [c.id for c in write.board.module_columns(column.module_id)]
+        published = await session_zero_repo.count_cards(session, module_columns)
     try:
         ensure_can_publish(card, round_, write.viewer.user_id, published)
     except DomainError as exc:
@@ -743,20 +865,27 @@ async def publish_all_cards(
     locale: LocaleDep,
 ) -> SessionZeroResponse:
     """Spec 46c Decision 8: the caller publishes all their drafts of the open
-    round at once, all signed or all anonymous, oldest first while the board
-    has room; the rest stay drafts. Nothing to publish changes nothing; a
-    full board with drafts waiting is 409."""
+    round at once, all signed or all anonymous, oldest first while each
+    module's board has room (spec 47); the rest stay drafts. Nothing to
+    publish changes nothing; drafts waiting only on full boards is 409."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
-    round_columns = [c.id for c in write.board.retro_columns(write.board.open_round.id)]
-    drafts = await session_zero_repo.list_drafts(session, round_columns, write.viewer.user_id)
-    if drafts:
-        published = await session_zero_repo.count_cards(session, round_columns)
+    to_publish: list[uuid.UUID] = []
+    full: DomainError | None = None
+    for module in write.board.chain(write.board.open_round.id):
+        module_columns = [c.id for c in write.board.module_columns(module.id)]
+        drafts = await session_zero_repo.list_drafts(session, module_columns, write.viewer.user_id)
+        if not drafts:
+            continue
+        published = await session_zero_repo.count_cards(session, module_columns)
         try:
-            count = publishable_count(len(drafts), published)
+            to_publish += drafts[: publishable_count(len(drafts), published)]
         except DomainError as exc:
-            raise _domain_error(exc, locale) from exc
+            full = exc
+    if not to_publish and full is not None:
+        raise _domain_error(full, locale)
+    if to_publish:
         await session_zero_repo.publish_cards(
-            session, drafts[:count], body.anonymous, datetime.now(UTC)
+            session, to_publish, body.anonymous, datetime.now(UTC)
         )
         await _shared(session, room_id, "card")
     return await _answer(session, room_id, write, locale)
@@ -896,20 +1025,22 @@ async def add_column(
     session: SessionDep,
     locale: LocaleDep,
 ) -> SessionZeroResponse:
-    """Decision 10: the Master adds a Retro column, last, to the open round,
-    in the colour they pick (spec 46c Decision 5; `default` when none)."""
+    """Decision 10: the Master adds a column, last, to a Retro module of the
+    open round (`module_id`, its first Retro module when none), in the
+    colour they pick (spec 46c Decision 5; `default` when none)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     open_round = write.board.open_round
-    columns = write.board.retro_columns(open_round.id)
     try:
         ensure_master(write.viewer.role)
+        module = _retro_module(write, body.module_id, locale)
+        columns = write.board.module_columns(module.id)
         title = clean_column_title(body.title or "")
         ensure_can_add_column(open_round, len(columns))
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     position = max((c.position for c in columns), default=-1) + 1
     column_id = await session_zero_repo.add_column(
-        session, room_id, open_round.id, title, body.color or MapColor.DEFAULT, position
+        session, room_id, module, title, body.color or MapColor.DEFAULT, position
     )
     await _shared(session, room_id, "column", column_id)
     return await _answer(session, room_id, write, locale)
@@ -977,14 +1108,17 @@ async def reorder_columns(
     session: SessionDep,
     locale: LocaleDep,
 ) -> SessionZeroResponse:
-    """Decision 10: the Master reorders the open round's Retro columns. The
-    list must name each of them exactly once (422 otherwise)."""
+    """Decision 10: the Master reorders the columns of a Retro module of the
+    open round. The list must name each of them exactly once (422
+    otherwise)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    first = write.board.columns.get(body.column_ids[0]) if body.column_ids else None
     try:
         ensure_master(write.viewer.role)
+        module = _retro_module(write, first.module_id if first else None, locale)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
-    current = {c.id for c in write.board.retro_columns(write.board.open_round.id)}
+    current = {c.id for c in write.board.module_columns(module.id)}
     if len(body.column_ids) != len(current) or set(body.column_ids) != current:
         raise http_error(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.sessionZero.columnOrder", locale
@@ -1002,28 +1136,181 @@ async def start_round(
     session: SessionDep,
     locale: LocaleDep,
 ) -> SessionZeroResponse:
-    """Decision 16: the Master starts a Session 0.5. The open round closes
-    (read-only, its drafts dropped) and a new one opens, empty, with the
-    same Retro column titles and colours, without groups. Lines & Veils
-    carries over."""
+    """Decision 16, spec 47 Decision 2: the Master starts a new session. The
+    open one closes (read-only, its drafts dropped) and the new one opens,
+    empty, with the chain the Master composed (the previous one when none),
+    on its first step. Its Nth Retro module takes the previous session's
+    Nth Retro column titles and colours, without groups (the presets when
+    there was none). Lines & Veils carries over."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    current = write.board.open_round
+    previous = write.board.chain(current.id)
     try:
         ensure_master(write.viewer.role)
         title = clean_round_title(body.title)
+        chain = clean_chain(
+            body.modules if body.modules is not None else [m.kind for m in previous]
+        )
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
-    current = write.board.open_round
+    previous_retro = [
+        [(column.title, column.color) for column in write.board.module_columns(module.id)]
+        for module in previous
+        if module.kind is ModuleKind.RETRO
+    ]
+    presets = _preset_columns(locale)
+    specs: list[session_zero_repo.ModuleSpec] = []
+    for kind in chain:
+        retro_index = sum(1 for k, _ in specs if k is ModuleKind.RETRO)
+        columns = presets
+        if kind is ModuleKind.RETRO and retro_index < len(previous_retro):
+            columns = previous_retro[retro_index]
+        specs.append((kind, columns))
     now = datetime.now(UTC)
     await session_zero_repo.close_round(session, current.id, now)
-    await session_zero_repo.add_round(
+    await session_zero_repo.add_round(session, room_id, current.number + 1, title, specs, now)
+    await _shared(session, room_id, "round")
+    return await _answer(session, room_id, write, locale)
+
+
+def _retro_module(write: _Write, module_id: uuid.UUID | None, locale: str) -> Module:
+    """A Retro module of the open round: `module_id`, or its first one when
+    `None`. 404 for no such module; 422 for another kind's or a closed
+    round's (a closed round's columns are read-only, Decision 16)."""
+    chain = write.board.chain(write.board.open_round.id)
+    retro = [module for module in chain if module.kind is ModuleKind.RETRO]
+    if module_id is None:
+        if not retro:
+            raise WrongBoardError("errors.sessionZero.notRetroColumn")
+        return retro[0]
+    module = _module_or_404(write, module_id, locale)
+    if module not in retro:
+        raise WrongBoardError("errors.sessionZero.notRetroColumn")
+    return module
+
+
+def _module_or_404(write: _Write, module_id: uuid.UUID, locale: str) -> Module:
+    module = next((m for m in write.board.modules if m.id == module_id), None)
+    if module is None or module.id in write.hidden:
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.moduleNotFound", locale)
+    return module
+
+
+def _open_module(write: _Write, module_id: uuid.UUID, locale: str) -> Module:
+    """A module of the open round, the Master's to change (409 for a closed
+    round's)."""
+    module = _module_or_404(write, module_id, locale)
+    ensure_round_open(next(r for r in write.board.rounds if r.id == module.round_id))
+    return module
+
+
+@router.post("/modules")
+async def add_module(
+    room_id: uuid.UUID,
+    body: ModuleBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 47 Decision 3: the Master adds a module at the end of the open
+    session's chain (a Retro one with the preset columns)."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    open_round = write.board.open_round
+    chain = write.board.chain(open_round.id)
+    try:
+        ensure_master(write.viewer.role)
+        ensure_can_add_module(open_round, len(chain))
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    module_id = await session_zero_repo.add_module(
         session,
         room_id,
-        current.number + 1,
-        title,
-        [(column.title, column.color) for column in write.board.retro_columns(current.id)],
-        now,
+        open_round.id,
+        (body.kind, _preset_columns(locale)),
+        max(module.position for module in chain) + 1,
+        datetime.now(UTC),
     )
-    await _shared(session, room_id, "round")
+    await _shared(session, room_id, "module", module_id)
+    return await _answer(session, room_id, write, locale)
+
+
+@router.delete("/modules/{module_id}")
+async def remove_module(
+    room_id: uuid.UUID,
+    module_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 47 Decision 3: the Master removes a module of the open session,
+    with its columns and post-its (the client asks first; Lines & Veils'
+    board is the Room's and stays). The chain keeps one at least. When it
+    was the current step, the table moves to the one before it."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    open_round = write.board.open_round
+    chain = write.board.chain(open_round.id)
+    try:
+        ensure_master(write.viewer.role)
+        module = _open_module(write, module_id, locale)
+        ensure_can_remove_module(open_round, len(chain))
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    current = current_after_removal(chain, module.id, open_round.current_module_id)
+    await session_zero_repo.delete_module(session, module.id)
+    await session_zero_repo.set_module_positions(
+        session, [m.id for m in chain if m.id != module.id]
+    )
+    await session_zero_repo.set_current_module(session, open_round.id, current)
+    await _shared(session, room_id, "module", module.id)
+    return await _answer(session, room_id, write, locale)
+
+
+@router.put("/modules/order")
+async def reorder_modules(
+    room_id: uuid.UUID,
+    body: ModuleOrderBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 47 Decision 3: the Master reorders the open session's chain. The
+    list must name each module exactly once (422 otherwise). The table stays
+    on the same step, wherever it now stands."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    try:
+        ensure_master(write.viewer.role)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    current = {m.id for m in write.board.chain(write.board.open_round.id)}
+    if len(body.module_ids) != len(current) or set(body.module_ids) != current:
+        raise http_error(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.sessionZero.moduleOrder", locale
+        )
+    await session_zero_repo.set_module_positions(session, body.module_ids)
+    await _shared(session, room_id, "module")
+    return await _answer(session, room_id, write, locale)
+
+
+@router.put("/modules/current")
+async def set_current_module(
+    room_id: uuid.UUID,
+    body: CurrentModuleBody,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroResponse:
+    """Spec 47 Decision 4: the Master moves the table to a step of the open
+    session ("Avanti" is the next one); every open page follows."""
+    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    open_round = write.board.open_round
+    try:
+        ensure_master(write.viewer.role)
+        module = _open_module(write, body.module_id, locale)
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
+    if module.id != open_round.current_module_id:
+        await session_zero_repo.set_current_module(session, open_round.id, module.id)
+        await _shared(session, room_id, "module", module.id)
     return await _answer(session, room_id, write, locale)
 
 

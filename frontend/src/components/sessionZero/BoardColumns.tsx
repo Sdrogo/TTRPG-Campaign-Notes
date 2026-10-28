@@ -126,6 +126,8 @@ interface RetroColumnProps {
  * renames, recolours, moves and deletes it (spec 46 Decision 10, 46c
  * Decision 5), and drags it by its heading; deleting asks first, since its
  * post-its go too. A dragged post-it or group shows a line where it lands.
+ * The Stars and Wishes columns are fixed (spec 47 Decision 7): their names
+ * are the app's, in the viewer's language, and the Master has no menu.
  */
 export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
   const { t } = useTranslation();
@@ -136,7 +138,8 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
   const [deleting, setDeleting] = useState(false);
   const [recoloring, setRecoloring] = useState(false);
   const [title, setTitle] = useState(column.title);
-  const manage = writable && open && board.canManage;
+  const fixed = column.kind !== null;
+  const manage = writable && open && board.canManage && !fixed;
   const draggable = useDraggable({ id: dragKey({ kind: 'column', id: column.id }), disabled: !manage || renaming });
   // The pointer drags the column; keyboard users have "Move left / right" in its menu.
   const { onKeyDown: _keyboard, ...pointerListeners } = draggable.listeners ?? {};
@@ -202,6 +205,8 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
               }
             }}
           />
+        ) : fixed ? (
+          t(`sessionZero.kinds.${column.kind!}`)
         ) : (
           column.title
         )
@@ -287,18 +292,25 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
 }
 
 /**
- * The Retro board of the session picked, its columns side by side, scrolling
- * sideways; a column dragged by the Master shows where it lands (spec 46d
- * Decision 7).
+ * The post-it board of the step on screen, a Retro or a Stars and Wishes one
+ * (spec 47), its columns side by side, scrolling sideways; a column dragged
+ * by the Master shows where it lands (spec 46d Decision 7). Only a Retro
+ * step takes new columns.
  */
 export function RetroBoard() {
   const { t } = useTranslation();
-  const { board, writable } = useBoard();
+  const { board, module, writable } = useBoard();
+  const starsWishes = module?.kind === 'stars_wishes';
   const { intent } = useDndState();
   const open = board.rounds.find((round) => round.id === board.roundId)?.closedAt === null;
   const lineBefore = (id: string | null) => intent?.kind === 'column' && intent.beforeId === id;
   return (
-    <Box component="section" aria-label={t('sessionZero.retro.title')} className="sz-retro-scroll" pb="xs">
+    <Box
+      component="section"
+      aria-label={starsWishes ? t('sessionZero.modules.kinds.stars_wishes') : t('sessionZero.retro.title')}
+      className="sz-retro-scroll"
+      pb="xs"
+    >
       <Group align="flex-start" wrap="nowrap" gap="sm">
         {board.retro.map((column, index) => (
           <Fragment key={column.id}>
@@ -307,7 +319,9 @@ export function RetroBoard() {
           </Fragment>
         ))}
         {lineBefore(null) && <DropLine axis="x" />}
-        {writable && open && board.canManage && board.retro.length < MAX_RETRO_COLUMNS && <AddColumn />}
+        {writable && open && board.canManage && !starsWishes && board.retro.length < MAX_RETRO_COLUMNS && (
+          <AddColumn />
+        )}
       </Group>
     </Box>
   );
@@ -379,17 +393,17 @@ export function LinesVeilsColumn({ column }: { column: PostItColumn }) {
 }
 
 /**
- * The Master's "Add column" at the end of the open round's Retro board
+ * The Master's "Add column" at the end of the Retro step on screen
  * (Decision 10, at most 8), in the colour they pick (spec 46c Decision 5).
  */
 export function AddColumn() {
   const { t } = useTranslation();
-  const { act, busy } = useBoard();
+  const { module, act, busy } = useBoard();
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState('');
   const [color, setColor] = useState<MapColor>('default');
   const add = () => {
-    act(boardWrites.addColumn(title.trim(), color));
+    act(boardWrites.addColumn(title.trim(), color, module?.id ?? null));
     setAdding(false);
     setTitle('');
     setColor('default');

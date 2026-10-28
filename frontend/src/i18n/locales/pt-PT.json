@@ -1277,7 +1277,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Véus",
-      "lines": "Linhas"
+      "lines": "Linhas",
+      "stars": "Estrelas",
+      "wishes": "Desejos"
     },
     "postIt": {
       "text": "Texto do post-it",
@@ -1337,7 +1339,7 @@
       "later": "Sessão 0.5 #{{number}}",
       "pick": "Sessão a mostrar",
       "start": "Nova sessão",
-      "startBody": "O quadro Retro atual fecha e continua disponível só para leitura; os rascunhos nunca publicados são eliminados. O novo quadro começa vazio, com as mesmas colunas. Linhas e Véus fica como está.",
+      "startBody": "A sessão atual fecha e fica disponível só para leitura; os rascunhos nunca publicados são eliminados. A nova começa vazia com as etapas abaixo, e os quadros Retro mantêm as mesmas colunas. Linhas e Véus fica como está.",
       "title": "Nome",
       "startButton": "Criar",
       "closed": "Esta sessão está fechada: o quadro é só de leitura.",
@@ -1368,6 +1370,31 @@
       "noTarget": "Não está sobre um sítio onde largar.",
       "dropped": "Largou {{name}}.",
       "cancelled": "Cancelado: {{name}} voltou ao seu lugar."
+    },
+    "modules": {
+      "label": "Etapas",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Linhas e Véus",
+        "stars_wishes": "Estrelas e Desejos"
+      },
+      "hiddenHint": "Etapas ainda ocultas: {{count}}",
+      "next": "Seguinte",
+      "bringHere": "Trazer a mesa para aqui",
+      "current": "Etapa atual",
+      "edit": "Editar etapas",
+      "editHint": "As alterações aplicam-se de imediato, para todos os membros.",
+      "add": "Adicionar etapa",
+      "kind": "Etapa",
+      "moveUp": "Mover para cima",
+      "moveDown": "Mover para baixo",
+      "remove": "Remover",
+      "removeTitle": "Remover esta etapa?",
+      "removeBody": "Os post-its de «{{name}}» são eliminados com ela. Linhas e Véus nunca é tocado.",
+      "chain": "Etapas da sessão",
+      "chainHint": "Escolhe as etapas e a sua ordem; podes alterá-las mais tarde.",
+      "max": "No máximo {{max}} etapas.",
+      "startButton": "Iniciar"
     }
   }
 }

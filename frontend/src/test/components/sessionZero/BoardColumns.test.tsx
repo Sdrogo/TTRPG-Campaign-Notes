@@ -294,17 +294,24 @@ describe('AddColumn', () => {
     expect(act).not.toHaveBeenCalled();
     await user.type(screen.getByRole('textbox', { name: 'Titolo della colonna' }), ' Toni ');
     await user.click(screen.getByRole('button', { name: 'Aggiungi' }));
-    expect(act).toHaveBeenCalledWith(boardWrites.addColumn('Toni', 'default'));
+    expect(act).toHaveBeenCalledWith(boardWrites.addColumn('Toni', 'default', 'module-retro'));
 
     await user.click(screen.getByRole('button', { name: 'Aggiungi colonna' }));
     expect(screen.getByRole('textbox', { name: 'Titolo della colonna' })).toHaveValue('');
     await user.click(screen.getByRole('radio', { name: 'Fucsia' }));
     await user.type(screen.getByRole('textbox', { name: 'Titolo della colonna' }), 'Ritmo{Enter}');
-    expect(act).toHaveBeenLastCalledWith(boardWrites.addColumn('Ritmo', 'purple'));
+    expect(act).toHaveBeenLastCalledWith(boardWrites.addColumn('Ritmo', 'purple', 'module-retro'));
 
     // The colour starts over at the default.
     await user.click(screen.getByRole('button', { name: 'Aggiungi colonna' }));
     expect(screen.getByRole('radio', { name: 'Predefinito' })).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('names no step when none is on screen', async () => {
+    const { act, user } = renderBoard(<AddColumn />, { board: { can_manage: true, modules: [], current_module_id: null } });
+    await user.click(screen.getByRole('button', { name: 'Aggiungi colonna' }));
+    await user.type(screen.getByRole('textbox', { name: 'Titolo della colonna' }), 'Toni{Enter}');
+    expect(act).toHaveBeenCalledWith(boardWrites.addColumn('Toni', 'default', null));
   });
 
   it('closes on Escape or Cancel', async () => {
