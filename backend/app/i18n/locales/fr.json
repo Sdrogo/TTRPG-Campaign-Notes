@@ -297,7 +297,11 @@
       "notQuestionsModule": "Cela ne marche que sur une étape Questions",
       "masterDoesNotAnswer": "Le MJ écrit les questions ; les joueurs y répondent",
       "nameAnswerMissing": "Réponds d’abord à la question du nom",
-      "documentExists": "Tu as déjà créé ton Document ici"
+      "documentExists": "Tu as déjà créé ton Document ici",
+      "notDdiModule": "Cette étape n'est pas une DDI.",
+      "noDdiDocument": "Le Maître n'a pas encore choisi le Document de la DDI.",
+      "masterDoesNotAccept": "Le Maître écrit la DDI ; les Joueurs l'acceptent.",
+      "ddiDocumentInvalid": "Le Document de la DDI doit appartenir à cette Salle."
     }
   },
   "pdf": {
@@ -318,6 +322,19 @@
       "want": "On le veut à la table",
       "care": "Avec précaution",
       "avoid": "À éviter"
+    },
+    "ddi": {
+      "name": "Déclaration d'intention",
+      "behind": "Derrière la table",
+      "behindHint": "L'ossature d'une bonne partie.",
+      "onTable": "Sur la table",
+      "onTableHint": "Ce qui rend une partie formidable.",
+      "meeting": "Rencontre",
+      "rules": "Règles",
+      "setting": "Univers",
+      "themes": "Thèmes",
+      "tone": "Ton",
+      "characters": "Personnages"
     }
   }
 }

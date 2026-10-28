@@ -1445,7 +1445,8 @@
         "retro": "Retro",
         "lines_veils": "Linie i Zasłony",
         "stars_wishes": "Gwiazdy i Życzenia",
-        "questions": "Pytania"
+        "questions": "Pytania",
+        "ddi": "DDI"
       },
       "hiddenHint": "Etapy wciąż ukryte: {{count}}",
       "next": "Dalej",
@@ -1519,6 +1520,25 @@
         "oneSubtitle": "Najwyżej jedno pytanie o Podtytuł.",
         "documents": "Najwyżej {{max}} pytań „Nowy Dokument”."
       }
+    },
+    "ddi": {
+      "document": "Dokument DDI",
+      "pick": "Wybierz Dokument",
+      "fromTemplate": "Utwórz z szablonu",
+      "noneMaster": "Wybierz Dokument DDI lub utwórz go z szablonu.",
+      "acceptances": "Akceptacje",
+      "noPlayers": "Brak Graczy w Pokoju.",
+      "notYet": "Jeszcze nie",
+      "outdated": "Do ponownej akceptacji",
+      "accepted": "Zaakceptował",
+      "hidden": "Mistrz nie udostępnił ci jeszcze DDI.",
+      "nonePlayer": "Mistrz nie wybrał jeszcze DDI.",
+      "changed": "DDI zmieniła się po twojej akceptacji.",
+      "accept": "Przeczytałem i akceptuję",
+      "youAccepted": "Zaakceptowałeś DDI.",
+      "withdraw": "Wycofaj",
+      "open": "Otwórz Dokument",
+      "loadError": "Nie można odczytać DDI."
     }
   }
 }

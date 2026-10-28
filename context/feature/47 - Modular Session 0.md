@@ -316,6 +316,27 @@ release.
   its author's and the Master's even once the answers are revealed. Removing a Questions step that has
   questions asks first; Documents already created stay.
 
+### As built (47_3, 2026-10-28)
+
+- Built: DDI steps (Decisions 8, 8a), migration `a7d3f9b2c6e1`. The
+  Master picks one of the Room's Documents or creates one from the
+  template and sees each Player's acceptance; a Player reads the DDI on
+  the step and clicks "I have read and accept" at its end, again once it
+  changed, or withdraws it.
+- Differences from the decisions above: the Document is a column on the
+  step (`document_id`), not a `settings` JSON. Routes: `PUT
+  .../modules/{id}/document`, `POST .../modules/{id}/document/template`,
+  `POST`/`DELETE .../modules/{id}/acceptance`. The template's name and
+  section headings follow the Master's language, the checklist and the
+  credit line stay in Italian (the manual's); it is plain text, so its
+  `##` headings show as written, like the Questions descriptions.
+  "Changed" means the Document's latest version is later than the
+  acceptance. Pointing the step at another Document clears its
+  acceptances. The Master doesn't accept. A new session copies the
+  previous session's Nth DDI step's Document, not its acceptances.
+  Removing a DDI step doesn't ask first (nothing is lost but the
+  acceptances).
+
 ## Tests
 
 - Backend: any member starts Session 0 (a Player gets the default chain,

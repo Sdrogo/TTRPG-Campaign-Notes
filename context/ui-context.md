@@ -923,6 +923,19 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   my Document" (filled; it opens the new Document), "Open your Document"
   (light) once made, or a dimmed line on what it waits for; once
   revealed, the other Players' answers in the same accordion.
+- DDI step (spec 47_3, `DdiBoard`): the Master sees a searchable,
+  clearable "DDI Document" select of the Room's Documents and "Create
+  from the template" (default) on one row, then a bordered box
+  "Acceptances" with one badge per Player (green light with a check once
+  accepted, yellow light "To accept again" once the Document changed
+  after, default "Not yet"), then the Document. The Document is a
+  bordered `md` paper: its name as an `h4`, "Open the Document" (light,
+  `compact-sm`) on the right, the description and each Note the viewer
+  sees (bold title, text in `pre-wrap`). A Player sees the Document, a
+  yellow light alert when it changed after they accepted, and at the
+  end "I have read and accept" (filled), or a green "You accepted the
+  DDI." with a subtle "Withdraw"; a dimmed line when there is no DDI yet
+  or they don't see it.
 
 - Header (`SessionZeroHeader`, spec 46d Decision 4): one wrapping row
   above the boards, no section titles. The session selector

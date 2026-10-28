@@ -50,7 +50,7 @@ function toDocument(raw: RawDocument): Document {
   };
 }
 
-function documentsQueryKey(roomId: string) {
+export function documentsQueryKey(roomId: string) {
   return ['rooms', roomId, 'documents'] as const;
 }
 

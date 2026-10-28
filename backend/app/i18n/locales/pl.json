@@ -297,7 +297,11 @@
       "notQuestionsModule": "Działa tylko na etapie Pytania",
       "masterDoesNotAnswer": "Master pisze pytania; gracze na nie odpowiadają",
       "nameAnswerMissing": "Najpierw odpowiedz na pytanie o nazwę",
-      "documentExists": "Twój Dokument już tu powstał"
+      "documentExists": "Twój Dokument już tu powstał",
+      "notDdiModule": "Ten etap nie jest DDI.",
+      "noDdiDocument": "Mistrz nie wybrał jeszcze Dokumentu DDI.",
+      "masterDoesNotAccept": "Mistrz pisze DDI; Gracze ją akceptują.",
+      "ddiDocumentInvalid": "Dokument DDI musi należeć do tego Pokoju."
     }
   },
   "pdf": {
@@ -318,6 +322,19 @@
       "want": "Chcemy tego przy stole",
       "care": "Ostrożnie",
       "avoid": "Do unikania"
+    },
+    "ddi": {
+      "name": "Deklaracja intencji",
+      "behind": "Za stołem",
+      "behindHint": "Szkielet dobrej gry.",
+      "onTable": "Na stole",
+      "onTableHint": "To, co czyni sesję wspaniałą.",
+      "meeting": "Spotkanie",
+      "rules": "Zasady",
+      "setting": "Świat",
+      "themes": "Tematy",
+      "tone": "Ton",
+      "characters": "Postacie"
     }
   }
 }

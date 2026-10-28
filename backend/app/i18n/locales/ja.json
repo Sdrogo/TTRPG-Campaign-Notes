@@ -297,7 +297,11 @@
       "notQuestionsModule": "質問ステップでのみ使えます",
       "masterDoesNotAnswer": "質問はマスターが書き、プレイヤーが答えます",
       "nameAnswerMissing": "先に名前の質問に答えてください",
-      "documentExists": "ここではすでにドキュメントを作成しています"
+      "documentExists": "ここではすでにドキュメントを作成しています",
+      "notDdiModule": "このステップはDDIではありません。",
+      "noDdiDocument": "マスターはまだDDIのドキュメントを選んでいません。",
+      "masterDoesNotAccept": "DDIはマスターが書き、プレイヤーが承認します。",
+      "ddiDocumentInvalid": "DDIのドキュメントはこのルームのものである必要があります。"
     }
   },
   "pdf": {
@@ -318,6 +322,19 @@
       "want": "卓でやりたいこと",
       "care": "慎重に扱うこと",
       "avoid": "避けること"
+    },
+    "ddi": {
+      "name": "意図の宣言",
+      "behind": "卓の裏側",
+      "behindHint": "良いゲームの骨組み。",
+      "onTable": "卓の上",
+      "onTableHint": "セッションを最高にするもの。",
+      "meeting": "集まり",
+      "rules": "ルール",
+      "setting": "世界観",
+      "themes": "テーマ",
+      "tone": "トーン",
+      "characters": "キャラクター"
     }
   }
 }

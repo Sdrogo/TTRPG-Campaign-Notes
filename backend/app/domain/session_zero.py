@@ -78,6 +78,7 @@ class ModuleKind(StrEnum):
     LINES_VEILS = "lines_veils"
     STARS_WISHES = "stars_wishes"
     QUESTIONS = "questions"
+    DDI = "ddi"
 
 
 # Spec 47 Decision 2: a chain nobody composed, as the page was before.
@@ -113,7 +114,8 @@ class Module:
     """A step of a round's chain (spec 47 Decision 1), at `position`. A
     Questions module's settings (spec 47 Decisions 9-11): the Tag of its
     Documents, whether every member reads the answers, whether Players
-    create their Documents even where the Room doesn't let them (Q7)."""
+    create their Documents even where the Room doesn't let them (Q7). A
+    DDI module's Document (spec 47 Decision 8)."""
 
     id: uuid.UUID
     round_id: uuid.UUID
@@ -122,6 +124,7 @@ class Module:
     tag_id: uuid.UUID | None = None
     answers_revealed: bool = False
     players_bypass_creation_rule: bool = True
+    document_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)

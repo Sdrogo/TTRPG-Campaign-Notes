@@ -8,7 +8,29 @@ export type LinesVeilsKind = 'must' | 'veils' | 'lines';
 export type StarsWishesKind = 'stars' | 'wishes';
 
 /** What a step of a session's chain is (spec 47 Decision 1). */
-export type ModuleKind = 'retro' | 'lines_veils' | 'stars_wishes' | 'questions';
+export type ModuleKind = 'retro' | 'lines_veils' | 'stars_wishes' | 'questions' | 'ddi';
+
+/** A Player's "I have read and accept" (spec 47 Decision 8); `outdated` once the Document changed after it. */
+export interface Acceptance {
+  userId: string;
+  acceptedAt: string;
+  outdated: boolean;
+  mine: boolean;
+}
+
+/**
+ * A DDI step (spec 47 Decision 8): `documentId` is its Document when the
+ * viewer sees it, `documentHidden` says there is one they don't see yet.
+ * The Master gets every acceptance, a Player their own; `canAccept` while
+ * the viewer may accept (again, once the Document changed).
+ */
+export interface DdiStep {
+  documentId: string | null;
+  documentHidden: boolean;
+  changedAt: string | null;
+  acceptances: Acceptance[];
+  canAccept: boolean;
+}
 
 /** Where a question's answer goes in the Player's Document (spec 47 Decision 9). */
 export type QuestionTarget = 'name' | 'subtitle' | 'description' | 'note' | 'document' | 'none';
@@ -123,7 +145,7 @@ export interface PostItColumn {
 /**
  * A step of the shown session's chain (spec 47): a Retro or Stars and
  * Wishes step's columns; none for Lines & Veils, whose board is the Room's,
- * or for Questions, which has `questions`.
+ * or for Questions and DDI, which have `questions` and `ddi`.
  */
 export interface SessionZeroModule {
   id: string;
@@ -132,6 +154,8 @@ export interface SessionZeroModule {
   columns: PostItColumn[];
   /** A Questions step's content (spec 47_2). */
   questions?: QuestionsStep;
+  /** A DDI step's content (spec 47_3). */
+  ddi?: DdiStep;
 }
 
 /** A session (round): 1 is the Session 0, later ones freely named (Decision 16, spec 46d). */

@@ -297,7 +297,11 @@
       "notQuestionsModule": "Dit werkt alleen in een Vragen-stap",
       "masterDoesNotAnswer": "De Master schrijft de vragen; de spelers beantwoorden ze",
       "nameAnswerMissing": "Beantwoord eerst de naamvraag",
-      "documentExists": "Je hebt je Document hier al gemaakt"
+      "documentExists": "Je hebt je Document hier al gemaakt",
+      "notDdiModule": "Deze etappe is geen DDI.",
+      "noDdiDocument": "De Master heeft het Document van de DDI nog niet gekozen.",
+      "masterDoesNotAccept": "De Master schrijft de DDI; de Spelers accepteren hem.",
+      "ddiDocumentInvalid": "Het Document van de DDI moet van deze Kamer zijn."
     }
   },
   "pdf": {
@@ -318,6 +322,19 @@
       "want": "Dit willen we aan tafel",
       "care": "Met zorg",
       "avoid": "Te vermijden"
+    },
+    "ddi": {
+      "name": "Intentieverklaring",
+      "behind": "Achter de tafel",
+      "behindHint": "Het geraamte van een goed spel.",
+      "onTable": "Op de tafel",
+      "onTableHint": "Wat een spel geweldig maakt.",
+      "meeting": "Bijeenkomst",
+      "rules": "Regels",
+      "setting": "Setting",
+      "themes": "Thema's",
+      "tone": "Toon",
+      "characters": "Personages"
     }
   }
 }

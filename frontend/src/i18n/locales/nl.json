@@ -1375,7 +1375,8 @@
         "retro": "Retro",
         "lines_veils": "Lijnen en Sluiers",
         "stars_wishes": "Sterren en Wensen",
-        "questions": "Vragen"
+        "questions": "Vragen",
+        "ddi": "DDI"
       },
       "hiddenHint": "Nog verborgen stappen: {{count}}",
       "next": "Volgende",
@@ -1449,6 +1450,25 @@
         "oneSubtitle": "Hoogstens één vraag voor de Ondertitel.",
         "documents": "Hoogstens {{max}} vragen ‘Nieuw Document’."
       }
+    },
+    "ddi": {
+      "document": "Document van de DDI",
+      "pick": "Kies een Document",
+      "fromTemplate": "Maken vanuit het sjabloon",
+      "noneMaster": "Kies het Document van de DDI of maak het vanuit het sjabloon.",
+      "acceptances": "Akkoorden",
+      "noPlayers": "Geen Spelers in de Kamer.",
+      "notYet": "Nog niet",
+      "outdated": "Opnieuw akkoord geven",
+      "accepted": "Akkoord",
+      "hidden": "De Master heeft de DDI nog niet zichtbaar voor je gemaakt.",
+      "nonePlayer": "De Master heeft de DDI nog niet gekozen.",
+      "changed": "De DDI is veranderd nadat je akkoord gaf.",
+      "accept": "Gelezen en akkoord",
+      "youAccepted": "Je bent akkoord met de DDI.",
+      "withdraw": "Intrekken",
+      "open": "Document openen",
+      "loadError": "De DDI kan niet gelezen worden."
     }
   }
 }

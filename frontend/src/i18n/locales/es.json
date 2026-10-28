@@ -1375,7 +1375,8 @@
         "retro": "Retro",
         "lines_veils": "Líneas y Velos",
         "stars_wishes": "Estrellas y Deseos",
-        "questions": "Preguntas"
+        "questions": "Preguntas",
+        "ddi": "DDI"
       },
       "hiddenHint": "Etapas aún ocultas: {{count}}",
       "next": "Siguiente",
@@ -1449,6 +1450,25 @@
         "oneSubtitle": "Como mucho una pregunta para el Subtítulo.",
         "documents": "Como mucho {{max}} preguntas «Nuevo Documento»."
       }
+    },
+    "ddi": {
+      "document": "Documento de la DDI",
+      "pick": "Elige un Documento",
+      "fromTemplate": "Crear desde la plantilla",
+      "noneMaster": "Elige el Documento de la DDI o créalo desde la plantilla.",
+      "acceptances": "Aceptaciones",
+      "noPlayers": "No hay Jugadores en la Sala.",
+      "notYet": "Aún no",
+      "outdated": "Por aceptar de nuevo",
+      "accepted": "Ha aceptado",
+      "hidden": "El Máster aún no te ha hecho visible la DDI.",
+      "nonePlayer": "El Máster aún no ha elegido la DDI.",
+      "changed": "La DDI ha cambiado desde que la aceptaste.",
+      "accept": "He leído y acepto",
+      "youAccepted": "Has aceptado la DDI.",
+      "withdraw": "Retirar",
+      "open": "Abrir el Documento",
+      "loadError": "No se puede leer la DDI."
     }
   }
 }
