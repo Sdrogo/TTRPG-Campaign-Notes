@@ -149,3 +149,8 @@ def test_a_pasted_placeholder_is_not_a_mention() -> None:
     pasted = f"{placeholder(7)} {TOKEN}"
     assert without_placeholder_marks(pasted) == f"7 {TOKEN}"
     assert markdown_plain(pasted) == f"7 {TOKEN}"
+
+
+def test_an_address_with_brackets_is_protected_whole() -> None:
+    text = "[il drago](https://it.wikipedia.org/wiki/Drago_(mitologia)) vola"
+    assert protected_ranges(text) == [(0, text.index(" vola"))]

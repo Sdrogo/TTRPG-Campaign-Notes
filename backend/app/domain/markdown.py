@@ -196,7 +196,8 @@ _BLOCKS = frozenset(
 
 _FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 _INLINE_CODE = re.compile(r"(`+)(?!`).+?(?<!`)\1(?!`)", re.DOTALL)
-_LINK = re.compile(r"!?\[[^\]\n]*\]\([^)\n]*\)")
+# The address may hold one level of brackets, as in a Wikipedia link.
+_LINK = re.compile(r"!?\[[^\]\n]*\]\((?:[^()\n]|\([^()\n]*\))*\)")
 _AUTOLINK = re.compile(r"<(?:https?://|mailto:)[^>\s]*>|\bhttps?://[^\s<>()]+", re.IGNORECASE)
 
 
