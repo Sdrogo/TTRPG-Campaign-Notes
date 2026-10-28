@@ -894,7 +894,11 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   bordered row per step ("2. Stars and Wishes") with "Move up", "Move
   down" and "Remove" icon buttons (arrows rather than a drag, the same
   on a phone), then a "Step" select and "Add step" (default, "+"); "At
-  most 10 steps." in dimmed `xs` at the limit. In "Edit steps" each
+  most 10 steps." in dimmed `xs` at the limit. In "New session" each
+  Retro, Questions and DDI row has an `xs` "Carry over from the previous
+  session" checkbox beside its name, off (spec 47b); "Edit steps" has
+  the same checkbox under "Add step" for those kinds once the Room has
+  an earlier session. In "Edit steps" each
   change goes at once; removing a step with post-its or questions asks
   first, inside the same dialog.
 - The body shows the step on screen: Retro is the two boards as below,
@@ -903,15 +907,19 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   the viewer's language, with no column menu, no drag by the heading and
   no "Add column".
 - Questions step (spec 47_2, `QuestionsBoard`): an `h4` "Questions". The
-  Master sees "Edit questions" (default, `compact-sm`), a "Tag of the
-  Players' Documents" select and the creation switch on one wrapping row,
+  Master has one wrapping row: the title, the "Tag of the Players'
+  Documents" label beside its 140 px select, the creation switch and
+  "Edit questions" (default, `compact-sm`) pushed right,
   then one bordered row per question with a grey light badge for where
   its answer goes ("New Document · NPC") and the hint dimmed; below, an
   `h5` "Answers" with "Reveal the answers" / "Hide the answers" and
   "Create everyone's Documents (N)", a dimmed line on who reads the
   answers, and a separated accordion, one item per Player ("2/5
   answered"), with each answer (dimmed "—" when missing) and "Open the
-  Document". "Edit questions" is a `lg` dialog: one bordered block per
+  Document". "Edit questions" is an `xl` dialog (full screen on a
+  phone) that a click outside doesn't close; closing it with unsaved
+  changes (×, Esc, Cancel) swaps the buttons for "You have unsaved
+  changes." with "Keep editing" and "Discard" (red light): one bordered block per
   question (text, hint, "Where the answer goes" select, a Tag select for
   "New Document"), "Move up" / "Move down" / "Remove" icons, "Add
   question", the first problem in red `xs`, and Save disabled while there

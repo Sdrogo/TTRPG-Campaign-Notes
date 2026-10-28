@@ -871,7 +871,8 @@ async def test_publish_all_publishes_the_callers_drafts_of_the_open_round(
 async def test_columns_have_colours(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
-    """Spec 46c Decision 5: picked on create, changed later, kept by a new round."""
+    """Spec 46c Decision 5: picked on create, changed later, kept by a new
+    round's Retro step that carries them over (spec 47b)."""
     room, board = await _started(client, make_token)
     first = _retro(board)[0]["id"]
 
@@ -903,7 +904,11 @@ async def test_columns_have_colours(
     assert nothing.status_code == 422
     assert nothing.json()["detail"] == "Nothing to change"
 
-    new_round = await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
+    new_round = await client.post(
+        f"{room.url}/rounds",
+        json={"modules": [{"kind": "retro", "carry": True}, "lines_veils"]},
+        headers=room.master.headers,
+    )
     assert [(c["title"], c["color"]) for c in _retro(new_round.json())] == [
         (c["title"], c["color"]) for c in _retro(recoloured.json())
     ]
@@ -1335,9 +1340,12 @@ async def test_players_see_only_the_steps_reached(
             (
                 await client.post(
                     f"{room.url}/groups",
-                    json={"card_ids": [master_card, await _posted(
-                        client, room, room.master, star_column, "Also mine"
-                    )]},
+                    json={
+                        "card_ids": [
+                            master_card,
+                            await _posted(client, room, room.master, star_column, "Also mine"),
+                        ]
+                    },
                     headers=room.master.headers,
                 )
             ).json(),
@@ -1358,9 +1366,7 @@ async def test_players_see_only_the_steps_reached(
         f"{room.url}/cards/{master_card}/reactions/{quote('👍')}", headers=room.player.headers
     )
     assert hidden_card.status_code == 404
-    hidden_group = await client.delete(
-        f"{room.url}/groups/{group_id}", headers=room.player.headers
-    )
+    hidden_group = await client.delete(f"{room.url}/groups/{group_id}", headers=room.player.headers)
     assert hidden_group.status_code == 404
 
     async def move(member: _Member, module_id: str) -> Response:
@@ -1414,6 +1420,7 @@ async def test_the_master_composes_the_open_sessions_chain(
     assert len(_module(more.json(), "retro", 1)["columns"]) == 3
 
     ids = [m["id"] for m in more.json()["modules"]]
+
     async def order(member: _Member, module_ids: list[str]) -> Response:
         return await client.put(
             f"{room.url}/modules/order", json={"module_ids": module_ids}, headers=member.headers
@@ -1448,8 +1455,10 @@ async def test_a_new_session_takes_its_own_chain(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     """Decision 2: a new session copies the previous chain, or takes the one
-    the Master composes; its Nth Retro module copies the previous Nth
-    Retro columns, presets beyond. The closed session's steps can't move."""
+    the Master composes. Its steps start empty (spec 47b): a Retro step
+    carrying over takes the newest session's Nth Retro columns (its last
+    when it has fewer), presets otherwise. The closed session's steps can't
+    move."""
     room, board = await _composed(client, make_token, "retro", "stars_wishes")
     retro_columns = _module(board, "retro")["columns"]
     renamed = await client.patch(
@@ -1460,22 +1469,42 @@ async def test_a_new_session_takes_its_own_chain(
     assert renamed.status_code == 200
     copied = await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
     assert [m["kind"] for m in copied.json()["modules"]] == ["retro", "stars_wishes"]
-    assert _retro(copied.json())[0]["title"] == "Hopes"
+    assert _retro(copied.json())[0]["title"] != "Hopes"
     assert copied.json()["current_module_id"] == copied.json()["modules"][0]["id"]
+
+    # A step added with "carry" takes the closed session's (its only Retro
+    # step for a second one); Stars and Wishes has nothing to carry.
+    nothing = await client.post(
+        f"{room.url}/modules",
+        json={"kind": "stars_wishes", "carry": True},
+        headers=room.master.headers,
+    )
+    assert nothing.status_code == 200
+    carried = await client.post(
+        f"{room.url}/modules", json={"kind": "retro", "carry": True}, headers=room.master.headers
+    )
+    assert _module(carried.json(), "retro", 1)["columns"][0]["title"] == "Hopes"
 
     composed = await client.post(
         f"{room.url}/rounds",
-        json={"title": "Fine arco", "modules": ["lines_veils", "retro", "retro"]},
+        json={
+            "title": "Fine arco",
+            "modules": [
+                "lines_veils",
+                {"kind": "retro", "carry": True},
+                {"kind": "retro", "carry": True},
+                {"kind": "retro", "carry": True},
+                "retro",
+            ],
+        },
         headers=room.master.headers,
     )
     assert composed.status_code == 200
     data = composed.json()
-    assert [m["kind"] for m in data["modules"]] == ["lines_veils", "retro", "retro"]
-    assert _module(data, "retro", 0)["columns"][0]["title"] == "Hopes"
-    assert len(_module(data, "retro", 1)["columns"]) == 3
-    bad = await client.post(
-        f"{room.url}/rounds", json={"modules": []}, headers=room.master.headers
-    )
+    assert [m["kind"] for m in data["modules"]] == ["lines_veils", *["retro"] * 4]
+    titles = [_module(data, "retro", i)["columns"][0]["title"] for i in range(4)]
+    assert titles[1] == titles[2] == "Hopes" != titles[0] == titles[3]
+    bad = await client.post(f"{room.url}/rounds", json={"modules": []}, headers=room.master.headers)
     assert bad.status_code == 422
 
     first_round = data["rounds"][0]["id"]

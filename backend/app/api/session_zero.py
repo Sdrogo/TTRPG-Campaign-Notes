@@ -72,6 +72,7 @@ from app.domain.session_zero import (
     can_group,
     can_place,
     can_promote,
+    carry_source,
     clean_body,
     clean_chain,
     clean_column_title,
@@ -443,18 +444,29 @@ class StartBody(BaseModel):
     modules: list[ModuleKind] | None = None
 
 
+class ChainStepBody(BaseModel):
+    """A step of a new session's chain; `carry` brings an earlier session's
+    content over (spec 47b Decision 2)."""
+
+    kind: ModuleKind
+    carry: bool = False
+
+
 class RoundBody(BaseModel):
     """A new session's optional title (Decision 16) and its chain (spec 47
-    Decision 2); the previous session's chain when none."""
+    Decision 2; a bare kind carries nothing); the previous session's chain,
+    carrying nothing, when none."""
 
     title: str | None = None
-    modules: list[ModuleKind] | None = None
+    modules: list[ChainStepBody | ModuleKind] | None = None
 
 
 class ModuleBody(BaseModel):
-    """A module to add at the end of the open session's chain."""
+    """A module to add at the end of the open session's chain; `carry`
+    brings an earlier session's content over (spec 47b Decision 2)."""
 
     kind: ModuleKind
+    carry: bool = False
 
 
 class ModuleOrderBody(BaseModel):
@@ -981,15 +993,18 @@ async def _set_up_modules(
     round_id: uuid.UUID,
     sources: list[Module | None],
     now: datetime,
+    *,
+    only: uuid.UUID | None = None,
 ) -> None:
     """A new round's Questions and DDI modules, in chain order: each takes
-    its source's settings (a new session copies the previous one's, spec
-    47 Decision 2): a Questions one its questions too, or the default Tag
-    when it has no source; a DDI one its Document, without acceptances."""
+    its source's settings when it carries one over (spec 47b): a Questions
+    one its questions too, or the default Tag when it has no source; a DDI
+    one its Document, without acceptances. `only` sets up that one module
+    of the round, with the one source."""
     created = [
         module
         for module in await session_zero_repo.list_modules(session, room_id)
-        if module.round_id == round_id
+        if module.round_id == round_id and only in (None, module.id)
     ]
     default: uuid.UUID | None = None
     for module, source in zip(created, sources, strict=True):
@@ -1446,6 +1461,28 @@ async def reorder_columns(
     return await _answer(session, room_id, write, locale)
 
 
+def _earlier_chains(write: _Write, *, include_open: bool) -> list[list[Module]]:
+    """The sessions' chains, newest first, a step can carry content over
+    from (spec 47b Decision 4): the open one too when a new session
+    replaces it."""
+    rounds = sorted(write.board.rounds, key=lambda round_: round_.number, reverse=True)
+    return [
+        write.board.chain(round_.id)
+        for round_ in rounds
+        if include_open or round_.closed_at is not None
+    ]
+
+
+def _carried_columns(
+    write: _Write, source: Module | None, presets: list[session_zero_repo.RetroColumnSpec]
+) -> list[session_zero_repo.RetroColumnSpec]:
+    """A new Retro step's columns: its source's titles and colours, or the
+    presets."""
+    if source is None or source.kind is not ModuleKind.RETRO:
+        return presets
+    return [(column.title, column.color) for column in write.board.module_columns(source.id)]
+
+
 @router.post("/rounds")
 async def start_round(
     room_id: uuid.UUID,
@@ -1457,43 +1494,32 @@ async def start_round(
     """Decision 16, spec 47 Decision 2: the Master starts a new session. The
     open one closes (read-only, its drafts dropped) and the new one opens,
     empty, with the chain the Master composed (the previous one when none),
-    on its first step. Its Nth Retro module takes the previous session's
-    Nth Retro column titles and colours, without groups (the presets when
-    there was none), its Nth Questions module the previous one's
-    questions and settings, without answers (spec 47_2), and its Nth DDI
-    module the previous one's Document, without acceptances (47_3). Lines
-    & Veils carries over."""
+    on its first step. Each step starts empty (spec 47b) unless it carries
+    an earlier session's content over: a Retro step its column titles and
+    colours, without groups (the presets otherwise), a Questions step its
+    questions and settings, without answers, a DDI step its Document,
+    without acceptances. Lines & Veils carries over."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     current = write.board.open_round
     previous = write.board.chain(current.id)
+    steps = [
+        step if isinstance(step, ChainStepBody) else ChainStepBody(kind=step)
+        for step in (body.modules if body.modules is not None else [m.kind for m in previous])
+    ]
     try:
         ensure_master(write.viewer.role)
         title = clean_round_title(body.title)
-        chain = clean_chain(
-            body.modules if body.modules is not None else [m.kind for m in previous]
-        )
+        chain = clean_chain([step.kind for step in steps])
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
-    previous_retro = [
-        [(column.title, column.color) for column in write.board.module_columns(module.id)]
-        for module in previous
-        if module.kind is ModuleKind.RETRO
-    ]
-    previous_of = {
-        kind: [m for m in previous if m.kind is kind]
-        for kind in (ModuleKind.QUESTIONS, ModuleKind.DDI)
-    }
+    earlier = _earlier_chains(write, include_open=True)
     presets = _preset_columns(locale)
     specs: list[session_zero_repo.ModuleSpec] = []
     sources: list[Module | None] = []
-    for kind in chain:
+    for kind, step in zip(chain, steps, strict=True):
         index = sum(1 for k, _ in specs if k is kind)
-        columns = presets
-        if kind is ModuleKind.RETRO and index < len(previous_retro):
-            columns = previous_retro[index]
-        same_kind = previous_of.get(kind, [])
-        source = same_kind[index] if index < len(same_kind) else None
-        specs.append((kind, columns))
+        source = carry_source(earlier, kind, index) if step.carry else None
+        specs.append((kind, _carried_columns(write, source, presets)))
         sources.append(source)
     now = datetime.now(UTC)
     await session_zero_repo.close_round(session, current.id, now)
@@ -1545,7 +1571,8 @@ async def add_module(
     locale: LocaleDep,
 ) -> SessionZeroResponse:
     """Spec 47 Decision 3: the Master adds a module at the end of the open
-    session's chain (a Retro one with the preset columns)."""
+    session's chain, empty (a Retro one with the preset columns) unless it
+    carries an earlier session's content over (spec 47b)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     open_round = write.board.open_round
     chain = write.board.chain(open_round.id)
@@ -1554,18 +1581,22 @@ async def add_module(
         ensure_can_add_module(open_round, len(chain))
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
+    index = sum(1 for module in chain if module.kind is body.kind)
+    source = (
+        carry_source(_earlier_chains(write, include_open=False), body.kind, index)
+        if body.carry
+        else None
+    )
+    now = datetime.now(UTC)
     module_id = await session_zero_repo.add_module(
         session,
         room_id,
         open_round.id,
-        (body.kind, _preset_columns(locale)),
+        (body.kind, _carried_columns(write, source, _preset_columns(locale))),
         max(module.position for module in chain) + 1,
-        datetime.now(UTC),
+        now,
     )
-    if body.kind is ModuleKind.QUESTIONS:
-        await session_zero_repo.set_module_settings(
-            session, module_id, tag_id=await _default_tag(session, room_id)
-        )
+    await _set_up_modules(session, room_id, open_round.id, [source], now, only=module_id)
     await _shared(session, room_id, "module", module_id)
     return await _answer(session, room_id, write, locale)
 

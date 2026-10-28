@@ -10,6 +10,12 @@ export type StarsWishesKind = 'stars' | 'wishes';
 /** What a step of a session's chain is (spec 47 Decision 1). */
 export type ModuleKind = 'retro' | 'lines_veils' | 'stars_wishes' | 'questions' | 'ddi';
 
+/** A step of a new session's chain; `carry` brings an earlier session's content over (spec 47b). */
+export interface ChainStep {
+  kind: ModuleKind;
+  carry: boolean;
+}
+
 /** A Player's "I have read and accept" (spec 47 Decision 8); `outdated` once the Document changed after it. */
 export interface Acceptance {
   userId: string;

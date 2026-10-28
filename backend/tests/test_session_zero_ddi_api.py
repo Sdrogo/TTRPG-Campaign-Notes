@@ -291,8 +291,8 @@ async def test_the_ddi_follows_the_chain(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     """A Player can't accept a step not reached yet (404) nor in a closed
-    session (409); a new session's DDI keeps the Document, not the
-    acceptances; a DDI added later starts empty."""
+    session (409); a new session's DDI carries the Document over when asked
+    (spec 47b), not the acceptances; a DDI added later starts empty."""
     room, board = await _room(client, make_token, "retro", "ddi")
     module_id = _ddi(board)["id"]
     document_id = await _new_document(client, room)
@@ -304,7 +304,11 @@ async def test_the_ddi_follows_the_chain(
     )
     await _accept(client, room, room.player, module_id)
 
-    fresh = await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
+    fresh = await client.post(
+        f"{room.url}/rounds",
+        json={"modules": ["retro", {"kind": "ddi", "carry": True}]},
+        headers=room.master.headers,
+    )
     assert fresh.status_code == 200, fresh.text
     copied = _ddi(fresh.json())
     assert copied["document_id"] == document_id and copied["acceptances"] == []
@@ -315,7 +319,9 @@ async def test_the_ddi_follows_the_chain(
     )
     assert _ddi(added.json(), 1)["document_id"] is None
     composed = await client.post(
-        f"{room.url}/rounds", json={"modules": ["ddi", "ddi", "ddi"]}, headers=room.master.headers
+        f"{room.url}/rounds",
+        json={"modules": [{"kind": "ddi", "carry": True}, "ddi", "ddi"]},
+        headers=room.master.headers,
     )
     chain = [_ddi(composed.json(), i)["document_id"] for i in range(3)]
     assert chain == [document_id, None, None]
