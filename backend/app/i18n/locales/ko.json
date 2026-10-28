@@ -297,7 +297,11 @@
       "notQuestionsModule": "질문 단계에서만 작동합니다",
       "masterDoesNotAnswer": "질문은 마스터가 쓰고 플레이어가 답합니다",
       "nameAnswerMissing": "먼저 이름 질문에 답하세요",
-      "documentExists": "이미 여기서 문서를 만들었습니다"
+      "documentExists": "이미 여기서 문서를 만들었습니다",
+      "notDdiModule": "이 단계는 DDI가 아닙니다.",
+      "noDdiDocument": "마스터가 아직 DDI 문서를 고르지 않았습니다.",
+      "masterDoesNotAccept": "DDI는 마스터가 쓰고 플레이어가 수락합니다.",
+      "ddiDocumentInvalid": "DDI 문서는 이 룸의 문서여야 합니다."
     }
   },
   "pdf": {
@@ -318,6 +322,19 @@
       "want": "테이블에서 원하는 것",
       "care": "조심해서 다룰 것",
       "avoid": "피할 것"
+    },
+    "ddi": {
+      "name": "의도 선언",
+      "behind": "테이블 뒤에서",
+      "behindHint": "좋은 게임의 뼈대.",
+      "onTable": "테이블 위에서",
+      "onTableHint": "게임을 멋지게 만드는 것.",
+      "meeting": "모임",
+      "rules": "규칙",
+      "setting": "배경",
+      "themes": "주제",
+      "tone": "톤",
+      "characters": "캐릭터"
     }
   }
 }

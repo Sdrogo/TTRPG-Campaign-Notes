@@ -297,7 +297,11 @@
       "notQuestionsModule": "Das geht nur in einer Fragen-Etappe",
       "masterDoesNotAnswer": "Der Master schreibt die Fragen; die Spieler beantworten sie",
       "nameAnswerMissing": "Beantworte zuerst die Namensfrage",
-      "documentExists": "Du hast dein Dokument hier schon erstellt"
+      "documentExists": "Du hast dein Dokument hier schon erstellt",
+      "notDdiModule": "Diese Etappe ist keine DDI.",
+      "noDdiDocument": "Der Master hat das Dokument der DDI noch nicht gewählt.",
+      "masterDoesNotAccept": "Der Master schreibt die DDI; die Spieler akzeptieren sie.",
+      "ddiDocumentInvalid": "Das Dokument der DDI muss zu diesem Raum gehören."
     }
   },
   "pdf": {
@@ -318,6 +322,19 @@
       "want": "Das wollen wir am Tisch",
       "care": "Mit Vorsicht",
       "avoid": "Zu vermeiden"
+    },
+    "ddi": {
+      "name": "Absichtserklärung",
+      "behind": "Hinter dem Tisch",
+      "behindHint": "Das Gerüst eines guten Spiels.",
+      "onTable": "Auf dem Tisch",
+      "onTableHint": "Was eine Partie großartig macht.",
+      "meeting": "Treffen",
+      "rules": "Regeln",
+      "setting": "Setting",
+      "themes": "Themen",
+      "tone": "Ton",
+      "characters": "Charaktere"
     }
   }
 }

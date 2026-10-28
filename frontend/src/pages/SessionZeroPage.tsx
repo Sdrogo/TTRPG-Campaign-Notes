@@ -16,6 +16,7 @@ import { BoardContext, useBoard, type BoardContextValue } from '../components/se
 import { BoardDnd } from '../components/sessionZero/BoardDnd';
 import { BoardsSplit } from '../components/sessionZero/BoardsSplit';
 import { ModuleStepper, StartSessionZero } from '../components/sessionZero/ModuleChain';
+import { DdiBoard } from '../components/sessionZero/DdiModule';
 import { QuestionsBoard } from '../components/sessionZero/QuestionsModule';
 import { SessionZeroHeader } from '../components/sessionZero/SessionZeroHeader';
 import { boardWrites, shownModule, viewOf, withView } from '../lib/sessionZero';
@@ -27,7 +28,7 @@ const BOARDS_SIDE_BY_SIDE_QUERY = '(min-width: 62em)';
 /**
  * `/rooms/:roomId/session-zero`: the Room's Session 0 (spec 46), each
  * session a chain of steps (spec 47): a Retro board with Lines & Veils
- * beside it, Lines & Veils alone, Stars and Wishes, or Questions; the shared timer on
+ * beside it, Lines & Veils alone, Stars and Wishes, Questions, or a DDI; the shared timer on
  * the title line (spec 46c Decision 2).
  */
 export function SessionZeroPage() {
@@ -115,7 +116,9 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
             onView={(id) => setViewed(id === null ? null : { id, current: context.board.currentModuleId })}
           />
           <BoardDnd>
-            {shown?.kind === 'questions' ? (
+            {shown?.kind === 'ddi' ? (
+              <DdiBoard roomId={roomId} />
+            ) : shown?.kind === 'questions' ? (
               <QuestionsBoard roomId={roomId} tags={tags.data ?? []} />
             ) : shown?.kind === 'lines_veils' ? (
               <LinesVeilsBoard />

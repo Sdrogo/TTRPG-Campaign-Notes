@@ -70,6 +70,7 @@ def _module(row: SessionZeroModuleRow) -> Module:
         tag_id=row.tag_id,
         answers_revealed=row.answers_revealed,
         players_bypass_creation_rule=row.players_bypass_creation_rule,
+        document_id=row.document_id,
     )
 
 
@@ -225,8 +226,9 @@ async def set_module_positions(session: AsyncSession, module_ids: Sequence[uuid.
 async def set_module_settings(
     session: AsyncSession, module_id: uuid.UUID, **values: object
 ) -> None:
-    """Changes a Questions module's settings (`tag_id`, `answers_revealed`,
-    `players_bypass_creation_rule`; spec 47_2)."""
+    """Changes a module's settings: a Questions one's `tag_id`,
+    `answers_revealed`, `players_bypass_creation_rule` (spec 47_2), a DDI
+    one's `document_id` (47_3)."""
     await session.execute(
         update(SessionZeroModuleRow).where(SessionZeroModuleRow.id == module_id).values(**values)
     )

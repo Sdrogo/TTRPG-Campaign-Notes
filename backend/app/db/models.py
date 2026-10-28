@@ -1165,7 +1165,8 @@ class SessionZeroRoundRow(Base):
 
 class SessionZeroModuleRow(Base):
     """A step of a round's chain (spec 47 Decision 1): a Retro board, the
-    Lines & Veils board, Stars and Wishes. Its columns go with it."""
+    Lines & Veils board, Stars and Wishes, Questions, a DDI. Its columns go
+    with it."""
 
     __tablename__ = "session_zero_modules"
 
@@ -1191,6 +1192,29 @@ class SessionZeroModuleRow(Base):
     players_bypass_creation_rule: Mapped[bool] = mapped_column(
         Boolean, default=True, server_default=text("true")
     )
+    # Spec 47_3: a DDI module's Document; its acceptances go when it changes.
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL")
+    )
+
+
+class SessionZeroAcceptanceRow(Base):
+    """A Player's "I have read and accept" on a DDI module (spec 47
+    Decision 8), at `accepted_at`: a later revision of the Document makes
+    it out of date."""
+
+    __tablename__ = "session_zero_acceptances"
+
+    module_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("session_zero_modules.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, index=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    accepted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class SessionZeroQuestionRow(Base):

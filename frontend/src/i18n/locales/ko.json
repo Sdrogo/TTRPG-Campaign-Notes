@@ -1340,7 +1340,8 @@
         "retro": "레트로",
         "lines_veils": "라인과 베일",
         "stars_wishes": "별과 소원",
-        "questions": "질문"
+        "questions": "질문",
+        "ddi": "DDI"
       },
       "hiddenHint": "아직 숨겨진 단계: {{count}}",
       "next": "다음",
@@ -1414,6 +1415,25 @@
         "oneSubtitle": "부제 질문은 하나까지입니다.",
         "documents": "\"새 문서\" 질문은 {{max}}개까지입니다."
       }
+    },
+    "ddi": {
+      "document": "DDI 문서",
+      "pick": "문서 선택",
+      "fromTemplate": "템플릿으로 만들기",
+      "noneMaster": "DDI 문서를 고르거나 템플릿으로 만드세요.",
+      "acceptances": "수락",
+      "noPlayers": "룸에 플레이어가 없습니다.",
+      "notYet": "아직",
+      "outdated": "다시 수락 필요",
+      "accepted": "수락함",
+      "hidden": "마스터가 아직 DDI를 공개하지 않았습니다.",
+      "nonePlayer": "마스터가 아직 DDI를 고르지 않았습니다.",
+      "changed": "수락한 뒤에 DDI가 바뀌었습니다.",
+      "accept": "읽었으며 수락합니다",
+      "youAccepted": "DDI를 수락했습니다.",
+      "withdraw": "철회",
+      "open": "문서 열기",
+      "loadError": "DDI를 읽을 수 없습니다."
     }
   }
 }

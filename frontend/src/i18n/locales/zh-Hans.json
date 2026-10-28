@@ -1340,7 +1340,8 @@
         "retro": "回顾",
         "lines_veils": "底线与帷幕",
         "stars_wishes": "星星与愿望",
-        "questions": "问题"
+        "questions": "问题",
+        "ddi": "DDI"
       },
       "hiddenHint": "仍隐藏的步骤：{{count}}",
       "next": "下一步",
@@ -1414,6 +1415,25 @@
         "oneSubtitle": "副标题问题最多一个。",
         "documents": "“新文档”问题最多 {{max}} 个。"
       }
+    },
+    "ddi": {
+      "document": "DDI 文档",
+      "pick": "选择文档",
+      "fromTemplate": "从模板创建",
+      "noneMaster": "选择 DDI 的文档，或从模板创建。",
+      "acceptances": "接受情况",
+      "noPlayers": "房间里没有玩家。",
+      "notYet": "尚未",
+      "outdated": "需重新接受",
+      "accepted": "已接受",
+      "hidden": "主持人还没有向你公开 DDI。",
+      "nonePlayer": "主持人还没有选择 DDI。",
+      "changed": "你接受之后 DDI 已更改。",
+      "accept": "我已阅读并接受",
+      "youAccepted": "你已接受 DDI。",
+      "withdraw": "撤回",
+      "open": "打开文档",
+      "loadError": "无法读取 DDI。"
     }
   }
 }

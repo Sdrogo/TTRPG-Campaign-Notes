@@ -23,11 +23,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.access import require_membership
 from app.api.errors import http_error, translated_error
 from app.auth.dependencies import VIEW_AS_HEADER, CurrentUserDep, authenticated_user
-from app.db import rooms_repo, session_zero_questions_repo, session_zero_repo, tags_repo
+from app.db import (
+    documents_repo,
+    rooms_repo,
+    session_zero_ddi_repo,
+    session_zero_questions_repo,
+    session_zero_repo,
+    tags_repo,
+    versions_repo,
+)
 from app.db import session as session_module
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
-from app.domain.models import Membership, RoomRole
+from app.domain.models import Document, Membership, RoomRole
 from app.domain.reactions import InvalidEmojiError, parse_emoji, summarize_reactions
 from app.domain.relationship_maps import MapColor
 from app.domain.session_zero import (
@@ -94,6 +102,13 @@ from app.domain.session_zero import (
     shown_author,
     visible_modules,
 )
+from app.domain.session_zero_ddi import (
+    MasterDoesNotAcceptError,
+    NoDdiDocumentError,
+    NotDdiModuleError,
+    can_read_acceptance,
+    is_outdated,
+)
 from app.domain.session_zero_questions import (
     CreationDisabledError,
     DocumentExistsError,
@@ -106,6 +121,7 @@ from app.domain.session_zero_questions import (
     can_read_answer,
     may_create,
 )
+from app.domain.visibility import is_document_visible
 from app.i18n.dependencies import LocaleDep
 from app.i18n.translator import translate
 from app.realtime.broker import Event, broker
@@ -153,6 +169,9 @@ _STATUS_FOR: dict[type[DomainError], int] = {
     NameAnswerMissingError: status.HTTP_409_CONFLICT,
     DocumentExistsError: status.HTTP_409_CONFLICT,
     CreationDisabledError: status.HTTP_403_FORBIDDEN,
+    NotDdiModuleError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    NoDdiDocumentError: status.HTTP_409_CONFLICT,
+    MasterDoesNotAcceptError: status.HTTP_403_FORBIDDEN,
 }
 
 
@@ -275,17 +294,42 @@ class QuestionsResponse(BaseModel):
     creatable: int
 
 
+class AcceptanceResponse(BaseModel):
+    """A Player's acceptance of a DDI (spec 47 Decision 8); `outdated` once
+    the Document changed after it."""
+
+    user_id: uuid.UUID
+    accepted_at: datetime
+    outdated: bool
+    mine: bool
+
+
+class DdiResponse(BaseModel):
+    """A DDI module (spec 47 Decision 8). `document_id` is its Document when
+    the caller sees it; `document_hidden` says there is one they don't see
+    yet. `changed_at` is the Document's last revision. The Master gets every
+    acceptance, a Player their own; `can_accept` while the caller may accept
+    (again, once the Document changed)."""
+
+    document_id: uuid.UUID | None
+    document_hidden: bool
+    changed_at: datetime | None
+    acceptances: list[AcceptanceResponse]
+    can_accept: bool
+
+
 class ModuleResponse(BaseModel):
     """A step of the shown session's chain (spec 47), with its columns: a
     Retro or Stars and Wishes module's own; none for Lines & Veils, whose
     board is the Room-wide `lines_veils`. A Questions module has
-    `questions`."""
+    `questions`, a DDI one `ddi`."""
 
     id: uuid.UUID
     kind: ModuleKind
     position: int
     columns: list[ColumnResponse]
     questions: QuestionsResponse | None = None
+    ddi: DdiResponse | None = None
 
 
 class RoundResponse(BaseModel):
@@ -552,6 +596,9 @@ async def _board_response(
     questions = await _questions_responses(
         session, room_id, viewer, [m for m in chain if m.kind is ModuleKind.QUESTIONS], shown
     )
+    ddis = await _ddi_responses(
+        session, room_id, viewer, [m for m in chain if m.kind is ModuleKind.DDI], shown
+    )
 
     def card_response(card: Card) -> CardResponse:
         column = board.columns[card.column_id]
@@ -627,6 +674,7 @@ async def _board_response(
                 position=module.position,
                 columns=[column_response(c) for c in board.module_columns(module.id)],
                 questions=questions.get(module.id),
+                ddi=ddis.get(module.id),
             )
             for module in chain
         ],
@@ -635,6 +683,71 @@ async def _board_response(
         lines_veils=[column_response(column) for column in lines_veils],
         timer=_timer_response(timer, now),
     )
+
+
+async def _ddi_responses(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    viewer: Membership,
+    modules: list[Module],
+    round_: Round,
+) -> dict[uuid.UUID, DdiResponse]:
+    """The DDI modules on screen as `viewer` sees them (spec 47 Decision 8):
+    the Document only when they see it (D-08), the acceptances theirs or,
+    for the Master, everyone's."""
+    if not modules:
+        return {}
+    acceptances = await session_zero_ddi_repo.list_acceptances(session, [m.id for m in modules])
+    open_ = round_.closed_at is None
+    responses: dict[uuid.UUID, DdiResponse] = {}
+    for module in modules:
+        document = (
+            await documents_repo.get_document(session, module.document_id)
+            if module.document_id
+            else None
+        )
+        visible = document is not None and await _sees_document(session, document, viewer)
+        changed_at = await _changed_at(session, document) if visible and document else None
+        mine = next(
+            (a for a in acceptances if a.module_id == module.id and a.user_id == viewer.user_id),
+            None,
+        )
+        responses[module.id] = DdiResponse(
+            document_id=document.id if visible and document else None,
+            document_hidden=document is not None and not visible,
+            changed_at=changed_at,
+            acceptances=[
+                AcceptanceResponse(
+                    user_id=a.user_id,
+                    accepted_at=a.accepted_at,
+                    outdated=is_outdated(a, changed_at),
+                    mine=a.user_id == viewer.user_id,
+                )
+                for a in acceptances
+                if a.module_id == module.id
+                and document is not None
+                and can_read_acceptance(a, viewer.user_id, viewer.role)
+            ],
+            can_accept=open_
+            and visible
+            and not is_master(viewer.role)
+            and (mine is None or is_outdated(mine, changed_at)),
+        )
+    return responses
+
+
+async def _sees_document(session: AsyncSession, document: Document, viewer: Membership) -> bool:
+    """Whether `viewer` sees the Document (D-08, Invariant 1)."""
+    owners = await documents_repo.list_owner_ids(session, document.id)
+    grants = await documents_repo.list_selective_grant_ids(session, document.id)
+    return is_document_visible(document, viewer.user_id, viewer.role, owners, grants)
+
+
+async def _changed_at(session: AsyncSession, document: Document) -> datetime | None:
+    """When the Document last changed: its latest revision's time (spec 24b:
+    name, description and Notes); None for one with no history yet."""
+    latest = await versions_repo.get_latest_version(session, document.id)
+    return latest.updated_at if latest else None
 
 
 async def _questions_responses(
@@ -862,16 +975,17 @@ async def _default_tag(session: AsyncSession, room_id: uuid.UUID) -> uuid.UUID |
     return next((tag.id for tag in tags if tag.name.casefold() == "pc"), None)
 
 
-async def _set_up_questions(
+async def _set_up_modules(
     session: AsyncSession,
     room_id: uuid.UUID,
     round_id: uuid.UUID,
     sources: list[Module | None],
     now: datetime,
 ) -> None:
-    """A new round's Questions modules, in chain order: each takes its
-    source's settings and questions (a new session copies the previous
-    one's, spec 47 Decision 2), or the default Tag when it has none."""
+    """A new round's Questions and DDI modules, in chain order: each takes
+    its source's settings (a new session copies the previous one's, spec
+    47 Decision 2): a Questions one its questions too, or the default Tag
+    when it has no source; a DDI one its Document, without acceptances."""
     created = [
         module
         for module in await session_zero_repo.list_modules(session, room_id)
@@ -879,6 +993,10 @@ async def _set_up_questions(
     ]
     default: uuid.UUID | None = None
     for module, source in zip(created, sources, strict=True):
+        if module.kind is ModuleKind.DDI and source is not None:
+            await session_zero_repo.set_module_settings(
+                session, module.id, document_id=source.document_id
+            )
         if module.kind is not ModuleKind.QUESTIONS:
             continue
         if source is None:
@@ -922,7 +1040,7 @@ async def start_session_zero(
     now = datetime.now(UTC)
     if await session_zero_repo.start(session, room_id, specs, now):
         first = (await session_zero_repo.list_rounds(session, room_id))[0]
-        await _set_up_questions(session, room_id, first.id, [None] * len(chain), now)
+        await _set_up_modules(session, room_id, first.id, [None] * len(chain), now)
         await _shared(session, room_id, "start")
     return await _board_response(session, room_id, viewer, None, locale)
 
@@ -1341,9 +1459,10 @@ async def start_round(
     empty, with the chain the Master composed (the previous one when none),
     on its first step. Its Nth Retro module takes the previous session's
     Nth Retro column titles and colours, without groups (the presets when
-    there was none), and its Nth Questions module the previous one's
-    questions and settings, without answers (spec 47_2). Lines & Veils
-    carries over."""
+    there was none), its Nth Questions module the previous one's
+    questions and settings, without answers (spec 47_2), and its Nth DDI
+    module the previous one's Document, without acceptances (47_3). Lines
+    & Veils carries over."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     current = write.board.open_round
     previous = write.board.chain(current.id)
@@ -1360,19 +1479,20 @@ async def start_round(
         for module in previous
         if module.kind is ModuleKind.RETRO
     ]
-    previous_questions = [m for m in previous if m.kind is ModuleKind.QUESTIONS]
+    previous_of = {
+        kind: [m for m in previous if m.kind is kind]
+        for kind in (ModuleKind.QUESTIONS, ModuleKind.DDI)
+    }
     presets = _preset_columns(locale)
     specs: list[session_zero_repo.ModuleSpec] = []
     sources: list[Module | None] = []
     for kind in chain:
-        retro_index = sum(1 for k, _ in specs if k is ModuleKind.RETRO)
-        questions_index = sum(1 for k, _ in specs if k is ModuleKind.QUESTIONS)
+        index = sum(1 for k, _ in specs if k is kind)
         columns = presets
-        if kind is ModuleKind.RETRO and retro_index < len(previous_retro):
-            columns = previous_retro[retro_index]
-        source = None
-        if kind is ModuleKind.QUESTIONS and questions_index < len(previous_questions):
-            source = previous_questions[questions_index]
+        if kind is ModuleKind.RETRO and index < len(previous_retro):
+            columns = previous_retro[index]
+        same_kind = previous_of.get(kind, [])
+        source = same_kind[index] if index < len(same_kind) else None
         specs.append((kind, columns))
         sources.append(source)
     now = datetime.now(UTC)
@@ -1380,7 +1500,7 @@ async def start_round(
     round_id = await session_zero_repo.add_round(
         session, room_id, current.number + 1, title, specs, now
     )
-    await _set_up_questions(session, room_id, round_id, sources, now)
+    await _set_up_modules(session, room_id, round_id, sources, now)
     await _shared(session, room_id, "round")
     return await _answer(session, room_id, write, locale)
 

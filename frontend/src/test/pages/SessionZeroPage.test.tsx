@@ -349,6 +349,22 @@ describe('SessionZeroPage', () => {
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags');
   });
 
+  // Spec 47_3: a DDI step shows the DDI's Document, or says there is none yet.
+  it('shows a DDI step', async () => {
+    const ddi = { document_id: null, document_hidden: false, changed_at: null, acceptances: [], can_accept: false };
+    board = () =>
+      Promise.resolve(
+        rawSessionZero({
+          modules: [{ id: 'module-ddi', kind: 'ddi', position: 0, columns: [], ddi }],
+          current_module_id: 'module-ddi',
+        }),
+      );
+    render();
+    const section = await screen.findByRole('region', { name: 'DDI' });
+    expect(within(section).getByText('Il Master non ha ancora scelto la DDI.')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
+  });
+
   it('goes back to the current step when another session is picked', async () => {
     const rounds = [
       { id: 'round-1', number: 1, title: null, started_at: '2026-10-01T09:00:00Z', closed_at: '2026-10-20T09:00:00Z' },

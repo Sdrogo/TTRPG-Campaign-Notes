@@ -21,6 +21,7 @@ from app.db import (
     documents_repo,
     friends_repo,
     rooms_repo,
+    session_zero_ddi_repo,
     session_zero_questions_repo,
     session_zero_repo,
     storage,
@@ -140,6 +141,13 @@ class ExportedAnswer(BaseModel):
     updated_at: datetime
 
 
+class ExportedAcceptance(BaseModel):
+    """A Session 0 DDI the user accepted (spec 47 Decision 14)."""
+
+    room_id: uuid.UUID
+    accepted_at: datetime
+
+
 class ExportedFriend(BaseModel):
     """A Friend or a pending request, as the user sees it in the app."""
 
@@ -163,6 +171,7 @@ class PersonalDataExport(BaseModel):
     uploads: list[ExportedUpload]
     post_its: list[ExportedPostIt]
     answers: list[ExportedAnswer]
+    acceptances: list[ExportedAcceptance]
     friends: list[ExportedFriend]
     friend_code: str | None
 
@@ -204,6 +213,7 @@ async def export_personal_data(
     images = await account_repo.list_images_added_by(session, user_id)
     post_its = await session_zero_repo.list_cards_by_author(session, user_id)
     answers = await session_zero_questions_repo.list_answers_by_user(session, user_id)
+    acceptances = await session_zero_ddi_repo.list_acceptances_by_user(session, user_id)
 
     referenced = (
         {row.id for row in created_or_played}
@@ -329,6 +339,10 @@ async def export_personal_data(
                 updated_at=answer.updated_at,
             )
             for room_id, question, answer in answers
+        ],
+        acceptances=[
+            ExportedAcceptance(room_id=room_id, accepted_at=acceptance.accepted_at)
+            for room_id, acceptance in acceptances
         ],
         friends=[
             ExportedFriend(

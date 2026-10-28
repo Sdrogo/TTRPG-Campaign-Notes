@@ -1375,7 +1375,8 @@
         "retro": "Retro",
         "lines_veils": "Lines & Veils",
         "stars_wishes": "Stars and Wishes",
-        "questions": "Questions"
+        "questions": "Questions",
+        "ddi": "DDI"
       },
       "hiddenHint": "Steps still hidden: {{count}}",
       "next": "Next",
@@ -1449,6 +1450,25 @@
         "oneSubtitle": "At most one question for the Subtitle.",
         "documents": "At most {{max}} \"New Document\" questions."
       }
+    },
+    "ddi": {
+      "document": "DDI Document",
+      "pick": "Pick a Document",
+      "fromTemplate": "Create from the template",
+      "noneMaster": "Pick the DDI's Document or create it from the template.",
+      "acceptances": "Acceptances",
+      "noPlayers": "No Players in the Room.",
+      "notYet": "Not yet",
+      "outdated": "To accept again",
+      "accepted": "Accepted",
+      "hidden": "The Master hasn't made the DDI visible to you yet.",
+      "nonePlayer": "The Master hasn't picked the DDI yet.",
+      "changed": "The DDI changed after you accepted it.",
+      "accept": "I have read and accept",
+      "youAccepted": "You accepted the DDI.",
+      "withdraw": "Withdraw",
+      "open": "Open the Document",
+      "loadError": "Couldn't read the DDI."
     }
   }
 }

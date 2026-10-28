@@ -2,6 +2,7 @@ import i18n from '../i18n';
 import { colorValue } from './maps';
 import type { MapColor } from '../types/map';
 import type {
+  DdiStep,
   LinesVeilsKind,
   ModuleKind,
   PostIt,
@@ -46,7 +47,7 @@ export const MAX_GROUP_TITLE_LENGTH = 60;
 export const MAX_MODULES = 10;
 
 /** The steps the Master picks from (spec 47), in the order they are offered. */
-export const MODULE_KINDS: ModuleKind[] = ['retro', 'lines_veils', 'stars_wishes', 'questions'];
+export const MODULE_KINDS: ModuleKind[] = ['retro', 'lines_veils', 'stars_wishes', 'questions', 'ddi'];
 
 /** Where an answer can go (spec 47 Decision 9), in the order the Master picks from. */
 export const QUESTION_TARGETS: QuestionTarget[] = ['name', 'subtitle', 'description', 'note', 'document', 'none'];
@@ -122,6 +123,15 @@ interface RawModule {
   position: number;
   columns: RawColumn[];
   questions?: RawQuestions | null;
+  ddi?: RawDdi | null;
+}
+
+interface RawDdi {
+  document_id: string | null;
+  document_hidden: boolean;
+  changed_at: string | null;
+  acceptances: { user_id: string; accepted_at: string; outdated: boolean; mine: boolean }[];
+  can_accept: boolean;
 }
 
 interface RawRound {
@@ -239,6 +249,21 @@ function toQuestions(raw: RawQuestions): QuestionsStep {
   };
 }
 
+function toDdi(raw: RawDdi): DdiStep {
+  return {
+    documentId: raw.document_id,
+    documentHidden: raw.document_hidden,
+    changedAt: raw.changed_at,
+    acceptances: raw.acceptances.map((acceptance) => ({
+      userId: acceptance.user_id,
+      acceptedAt: acceptance.accepted_at,
+      outdated: acceptance.outdated,
+      mine: acceptance.mine,
+    })),
+    canAccept: raw.can_accept,
+  };
+}
+
 /** The page's model, from the backend's snake_case answer, showing the current step. */
 export function toSessionZero(raw: RawSessionZero): SessionZero {
   const modules: SessionZeroModule[] = raw.modules.map((module) => ({
@@ -247,6 +272,7 @@ export function toSessionZero(raw: RawSessionZero): SessionZero {
     position: module.position,
     columns: module.columns.map(toColumn),
     ...(module.questions ? { questions: toQuestions(module.questions) } : {}),
+    ...(module.ddi ? { ddi: toDdi(module.ddi) } : {}),
   }));
   return {
     started: raw.started,
@@ -453,6 +479,19 @@ export const boardWrites = {
   createMyDocument: (id: string): BoardWrite => ({ path: `/modules/${id}/documents`, method: 'POST' }),
   /** Decision 11: the Master's "Create everyone's Documents". */
   createEveryoneDocuments: (id: string): BoardWrite => ({ path: `/modules/${id}/documents/all`, method: 'POST' }),
+  /** Spec 47 Decision 8: the Room's Document that holds the DDI (null: none yet). */
+  setDdiDocument: (id: string, documentId: string | null): BoardWrite => ({
+    path: `/modules/${id}/document`,
+    method: 'PUT',
+    json: { document_id: documentId },
+  }),
+  /** Decision 8a: a new Document from the DDI template, shown by the step. */
+  createDdiFromTemplate: (id: string): BoardWrite => ({ path: `/modules/${id}/document/template`, method: 'POST' }),
+  /** Decision 8: "I have read and accept", or taking it back. */
+  acceptDdi: (id: string, accept: boolean): BoardWrite => ({
+    path: `/modules/${id}/acceptance`,
+    method: accept ? 'POST' : 'DELETE',
+  }),
   group: (cardIds: string[]): BoardWrite => ({ path: '/groups', method: 'POST', json: { card_ids: cardIds } }),
   renameGroup: (id: string, title: string): BoardWrite => ({
     path: `/groups/${id}`,

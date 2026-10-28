@@ -297,7 +297,11 @@
       "notQuestionsModule": "Solo funciona en una etapa de Preguntas",
       "masterDoesNotAnswer": "El Máster escribe las preguntas; responden los jugadores",
       "nameAnswerMissing": "Responde primero a la pregunta del nombre",
-      "documentExists": "Ya creaste tu Documento aquí"
+      "documentExists": "Ya creaste tu Documento aquí",
+      "notDdiModule": "Esta etapa no es una DDI.",
+      "noDdiDocument": "El Máster aún no ha elegido el Documento de la DDI.",
+      "masterDoesNotAccept": "El Máster escribe la DDI; los Jugadores la aceptan.",
+      "ddiDocumentInvalid": "El Documento de la DDI debe ser de esta Sala."
     }
   },
   "pdf": {
@@ -318,6 +322,19 @@
       "want": "Lo queremos en la mesa",
       "care": "Con cuidado",
       "avoid": "A evitar"
+    },
+    "ddi": {
+      "name": "Declaración de intenciones",
+      "behind": "Detrás de la mesa",
+      "behindHint": "El esqueleto de una buena partida.",
+      "onTable": "Sobre la mesa",
+      "onTableHint": "Lo que hace genial una partida.",
+      "meeting": "Encuentro",
+      "rules": "Reglas",
+      "setting": "Ambientación",
+      "themes": "Temáticas",
+      "tone": "Tono",
+      "characters": "Personajes"
     }
   }
 }

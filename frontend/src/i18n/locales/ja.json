@@ -1340,7 +1340,8 @@
         "retro": "レトロ",
         "lines_veils": "ライン&ヴェール",
         "stars_wishes": "スターとウィッシュ",
-        "questions": "質問"
+        "questions": "質問",
+        "ddi": "DDI"
       },
       "hiddenHint": "まだ非表示のステップ：{{count}}",
       "next": "次へ",
@@ -1414,6 +1415,25 @@
         "oneSubtitle": "サブタイトルの質問は1つまでです。",
         "documents": "「新しいドキュメント」の質問は{{max}}個までです。"
       }
+    },
+    "ddi": {
+      "document": "DDIのドキュメント",
+      "pick": "ドキュメントを選択",
+      "fromTemplate": "テンプレートから作成",
+      "noneMaster": "DDIのドキュメントを選ぶか、テンプレートから作成してください。",
+      "acceptances": "承認",
+      "noPlayers": "ルームにプレイヤーがいません。",
+      "notYet": "まだ",
+      "outdated": "再承認が必要",
+      "accepted": "承認済み",
+      "hidden": "マスターはまだDDIをあなたに公開していません。",
+      "nonePlayer": "マスターはまだDDIを選んでいません。",
+      "changed": "承認した後にDDIが変更されました。",
+      "accept": "読んで承認します",
+      "youAccepted": "DDIを承認しました。",
+      "withdraw": "取り消す",
+      "open": "ドキュメントを開く",
+      "loadError": "DDIを読み込めませんでした。"
     }
   }
 }

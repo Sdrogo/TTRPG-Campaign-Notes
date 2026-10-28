@@ -297,7 +297,11 @@
       "notQuestionsModule": "This only works on a Questions step",
       "masterDoesNotAnswer": "The Master writes the questions; the Players answer them",
       "nameAnswerMissing": "Answer the name question first",
-      "documentExists": "You already made your Document here"
+      "documentExists": "You already made your Document here",
+      "notDdiModule": "This step isn't a DDI.",
+      "noDdiDocument": "The Master hasn't picked the DDI's Document yet.",
+      "masterDoesNotAccept": "The Master writes the DDI; the Players accept it.",
+      "ddiDocumentInvalid": "The DDI's Document must belong to this Room."
     }
   },
   "pdf": {
@@ -318,6 +322,19 @@
       "want": "We want it at the table",
       "care": "Handle with care",
       "avoid": "To avoid"
+    },
+    "ddi": {
+      "name": "Declaration of Intent",
+      "behind": "Behind the Table",
+      "behindHint": "The backbone of a good game.",
+      "onTable": "On the Table",
+      "onTableHint": "What makes a game great.",
+      "meeting": "Meeting",
+      "rules": "Rules",
+      "setting": "Setting",
+      "themes": "Themes",
+      "tone": "Tone",
+      "characters": "Characters"
     }
   }
 }

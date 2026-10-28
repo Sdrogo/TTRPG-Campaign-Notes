@@ -13,6 +13,13 @@ detail:
 
 ## Current Status (2026-10-28)
 
+- **Spec 47_3, Session 0 DDI** (2026-10-28, migration `a7d3f9b2c6e1`,
+  PR #261 to `staging`; migration applied to staging 2026-10-28, pending
+  on production): a DDI step showing one of
+  the Room's Documents (picked, or created from the Declaration of Intent
+  template), accepted by each Player, again once it changed. Spec 47 is
+  complete with it. See `architecture.md` → Session 0 boards, DDI.
+
 - **Spec 47_2, Session 0 Questions → Documents** (2026-10-28, migration
   `f3a9c1e7b5d4`, PR #260 merged into `staging`, migration applied to
   staging, pending on production): a Questions step whose answers become the Player's
@@ -169,13 +176,15 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `f3a9c1e7b5d4` (Session 0 Questions steps,
-  spec 47_2), after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
+- **Head in the repository**: `a7d3f9b2c6e1` (Session 0 DDI steps, spec
+  47_3), after `f3a9c1e7b5d4` (Session 0 Questions steps, 47_2, PR #260),
+  after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending on production only**: `e5c1a8f3b7d2` and `f3a9c1e7b5d4`,
-  both before the next release to `main`.
-- **Staging database**: `f3a9c1e7b5d4` (= head, Session 0 Questions,
+- **Pending on production only**: `e5c1a8f3b7d2`, `f3a9c1e7b5d4` and
+  `a7d3f9b2c6e1`, all before the next release to `main`.
+- **Staging database**: `a7d3f9b2c6e1` (= head, Session 0 DDI, 47_3, PR
+  #261, applied by the product owner 2026-10-28); `f3a9c1e7b5d4` before it (Session 0 Questions,
   47_2, PR #260, applied by the product owner 2026-10-28 with
   `.env.staging` loaded); `e5c1a8f3b7d2` before it (Session 0 chain,
   47_1, applied 2026-10-28), then `d4a7e2c9f1b3`, `c3f8a1d6e9b4` and
@@ -201,10 +210,10 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: `e5c1a8f3b7d2` and `f3a9c1e7b5d4` (production is at `d4a7e2c9f1b3`).
+- **Pending on production**: `e5c1a8f3b7d2`, `f3a9c1e7b5d4` and `a7d3f9b2c6e1` (production is at `d4a7e2c9f1b3`).
 
 Recent chain, newest first (where each came from):
-`f3a9c1e7b5d4` Session 0 Questions (47_2) ← `e5c1a8f3b7d2` Session 0 chain (47_1) ← `d4a7e2c9f1b3` post-it order (46d_2) ← `c3f8a1d6e9b4` colours and groups (46c) ← `4797859660e2` Session 0 boards (46_1) ← `b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`a7d3f9b2c6e1` Session 0 DDI (47_3) ← `f3a9c1e7b5d4` Session 0 Questions (47_2) ← `e5c1a8f3b7d2` Session 0 chain (47_1) ← `d4a7e2c9f1b3` post-it order (46d_2) ← `c3f8a1d6e9b4` colours and groups (46c) ← `4797859660e2` Session 0 boards (46_1) ← `b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -782,7 +791,11 @@ on `main`.
   PR #260, merged into `staging` 2026-10-28. **Migration
   `f3a9c1e7b5d4`**: applied to the staging DB by the product owner
   (2026-10-28); it must reach production before the next release.
-  Next: 47_3 (DDI). Each session becomes a chain of modules
+  **47_3 (DDI) built** (2026-10-28): DDI steps, the Document picker and
+  template, per-Player acceptance (again once the Document changed);
+  strings in 12 languages. **Migration `a7d3f9b2c6e1`**: applied to the staging
+  DB by the product owner (2026-10-28); to production before the next release. Spec
+  47 is complete. Each session becomes a chain of modules
   the Master composes, reorders and advances with "Avanti" (Retro, Lines &
   Veils, DDI with per-Player acceptance, Stars and Wishes, Questions whose
   answers become Player-owned PC Documents, plus extra Documents such as
