@@ -1221,7 +1221,11 @@
       "uploadBackground": "Carregar uma imagem",
       "backgroundFromUrl": "A partir de um URL",
       "removeBackground": "Retirar o fundo",
-      "export": "Exportar o mapa (JSON)"
+      "export": "Exportar o mapa (JSON)",
+      "placePane": "Local aberto ao lado do mapa",
+      "noNote": "Sem nota",
+      "placeNotFound": "Local não encontrado",
+      "connections": "Ligações"
     },
     "kind": {
       "label": "Tipo de mapa",

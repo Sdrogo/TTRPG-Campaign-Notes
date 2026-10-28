@@ -1275,7 +1275,11 @@
       "uploadBackground": "Prześlij obraz",
       "backgroundFromUrl": "Z adresu URL",
       "removeBackground": "Usuń tło",
-      "export": "Eksportuj mapę (JSON)"
+      "export": "Eksportuj mapę (JSON)",
+      "placePane": "Miejsce otwarte obok mapy",
+      "noNote": "Brak notatki",
+      "placeNotFound": "Nie znaleziono miejsca",
+      "connections": "Połączenia"
     },
     "kind": {
       "label": "Rodzaj mapy",

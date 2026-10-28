@@ -141,3 +141,46 @@ describe('PageLayout with a Document beside the page (spec 37)', () => {
     expect(screen.queryByRole('separator')).not.toBeInTheDocument();
   });
 });
+
+describe('PageLayout with a map place beside the page (spec 50)', () => {
+  let restore = () => {};
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue([]);
+    sessionMock.mockReturnValue({ session: fakeSession('user-1'), loading: false } as SessionState);
+  });
+  afterEach(() => restore());
+
+  const renderSide = (sideId: string) => (sideId.startsWith('place:') ? <p>Luogo {sideId}</p> : null);
+
+  it('shows what the page renders for a place, beside it or under it on a phone', () => {
+    restore = matchMediaQueries([SPLIT_QUERY]);
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro" roomId="room-1" allowEmptySide renderSide={renderSide}>
+        <p>La mappa</p>
+      </PageLayout>,
+      { route: '/rooms/room-1/maps/map-1?side=place:pin:pin-2' },
+    );
+    expect(screen.getByText('Luogo place:pin:pin-2')).toBeInTheDocument();
+    expect(screen.getByRole('separator')).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith('/rooms/room-1/documents/place:pin:pin-2', expect.anything());
+  });
+
+  it('shows a place under the map on a phone', () => {
+    restore = matchMediaQueries([]);
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro" roomId="room-1" allowEmptySide renderSide={renderSide}>
+        <p>La mappa</p>
+      </PageLayout>,
+      { route: '/rooms/room-1/maps/map-1?side=place:area:area-2' },
+    );
+    expect(screen.getByText('Luogo place:area:area-2')).toBeInTheDocument();
+  });
+
+  it('keeps the whole width for a place on a page that cannot show it', () => {
+    restore = matchMediaQueries([SPLIT_QUERY]);
+    renderPage('/rooms/room-1/documents?side=place:pin:pin-2', 'room-1', false);
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+});

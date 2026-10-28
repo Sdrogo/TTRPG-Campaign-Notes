@@ -1219,7 +1219,11 @@
       "uploadBackground": "Bild hochladen",
       "backgroundFromUrl": "Von einer URL",
       "removeBackground": "Hintergrund entfernen",
-      "export": "Karte exportieren (JSON)"
+      "export": "Karte exportieren (JSON)",
+      "placePane": "Ort neben der Karte geöffnet",
+      "noNote": "Keine Notiz",
+      "placeNotFound": "Ort nicht gefunden",
+      "connections": "Verbindungen"
     },
     "kind": {
       "label": "Art der Karte",

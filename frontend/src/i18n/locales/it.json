@@ -1219,7 +1219,11 @@
       "uploadBackground": "Carica un'immagine",
       "backgroundFromUrl": "Da un URL",
       "removeBackground": "Rimuovi lo sfondo",
-      "export": "Esporta la mappa (JSON)"
+      "export": "Esporta la mappa (JSON)",
+      "placePane": "Luogo aperto accanto alla mappa",
+      "noNote": "Nessuna nota",
+      "placeNotFound": "Luogo non trovato",
+      "connections": "Collegamenti"
     },
     "kind": {
       "label": "Tipo di mappa",

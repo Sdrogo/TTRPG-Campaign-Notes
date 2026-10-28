@@ -28,8 +28,8 @@
 
 ## Decisions
 
-Defaults proposed by Claude on 2026-10-28, to be confirmed by the product
-owner.
+Defaults proposed by Claude on 2026-10-28 and confirmed by the product
+owner the same day ("procedi"). Built in PR #265.
 
 1. **Reading mode: plain places open in the pane.** A click on a plain area
    or pin opens the split pane (or the lower half on a phone) on that place,

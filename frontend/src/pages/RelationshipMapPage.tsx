@@ -23,14 +23,15 @@ import { PageLayout } from '../components/PageLayout';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { LabeledActionIcon } from '../components/LabeledActionIcon';
 import { MapBoard } from '../components/maps/MapBoard';
-import { useSideDocument } from '../hooks/useSideDocument';
+import { parsePlaceSide, placeSide, useSideDocument } from '../hooks/useSideDocument';
 import { MapFormModal } from '../components/maps/MapFormModal';
 import { GeographicBoard } from '../components/maps/GeographicBoard';
 import { GeoMapDialog } from '../components/maps/GeoMapDialog';
+import { PlaceSidePane } from '../components/maps/PlaceSidePane';
 import type { GeoBoard, GeoMapDetail } from '../types/geoMap';
 import type { Board, RelationshipMap, RelationshipMapDetail } from '../types/map';
 import { toBoardBody } from '../lib/maps';
-import { toGeoBody } from '../lib/geoMaps';
+import { placeOfDocument, toGeoBody, type GeoItemRef } from '../lib/geoMaps';
 import { notifyError } from '../lib/notify';
 import { useBoardAutosave, type SaveState } from '../hooks/useBoardAutosave';
 
@@ -172,6 +173,12 @@ function GeoMapEditor({
   );
   const [planeOpened, setPlaneOpened] = useState(false);
   const exportMap = useExportMap(roomId, map.id, map.name);
+  const { split } = access;
+  const board = autosave.value;
+  // What the pane shows on the map: a plain place (spec 50) or a Document's place.
+  const pickedPlace = parsePlaceSide(split.sideId);
+  const paneItem = pickedPlace ?? (split.sideId ? placeOfDocument(board, split.sideId) : null);
+  const openPlace = (ref: GeoItemRef) => split.open(placeSide(ref));
 
   return (
     <MapChrome
@@ -179,6 +186,17 @@ function GeoMapEditor({
       map={map}
       access={access}
       autosave={autosave}
+      renderSide={() =>
+        pickedPlace && (
+          <PlaceSidePane
+            board={board}
+            place={pickedPlace}
+            // A linked Document's place opens the Document, a plain one opens here.
+            onPick={(item, ref) => (item.documentId ? split.open(item.documentId) : openPlace(ref))}
+            onClose={split.close}
+          />
+        )
+      }
       actions={
         <>
           <Menu.Item
@@ -209,6 +227,9 @@ function GeoMapEditor({
         onChange={autosave.change}
         // A click on a Document's place opens it beside the map (spec 38b), or under it on a phone.
         onSelectDocument={access.split.open}
+        // A plain place opens there too (spec 50).
+        onSelectPlace={openPlace}
+        paneItem={paneItem}
         // On a phone the board takes the plane's shape, so the map fills it.
         fitToPlane={!access.wide}
       />
@@ -228,6 +249,7 @@ function MapChrome({
   access,
   autosave,
   actions,
+  renderSide,
   children,
 }: {
   roomId: string;
@@ -235,6 +257,8 @@ function MapChrome({
   access: ReturnType<typeof useMapAccess>;
   autosave: { saveState: SaveState; retry: () => void; error: Error | null };
   actions?: ReactNode;
+  /** What the split shows for a geographic map's place (spec 50). */
+  renderSide?: (sideId: string) => ReactNode | null;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -260,7 +284,7 @@ function MapChrome({
   };
 
   return (
-    <PageLayout allowEmptySide backTo={`/rooms/${roomId}/maps`} backLabel={t('maps.backToMaps')} roomId={roomId}>
+    <PageLayout allowEmptySide renderSide={renderSide} backTo={`/rooms/${roomId}/maps`} backLabel={t('maps.backToMaps')} roomId={roomId}>
       {/* One line: the name, cut short if long, and the actions in a ⋮
           menu beside it; under it the description, cut to two lines until a
           tap opens it in full (and another closes it). */}
