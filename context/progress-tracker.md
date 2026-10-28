@@ -858,7 +858,10 @@ on `main`.
 - **Room landing page**: product owner's idea (2026-10-27), separate
   ticket, not written yet.
 - **27b, PDF of one Document**: next to build (product owner,
-  2026-10-08). Ticket written, decisions proposed, no migration expected.
+  2026-10-08; backlog restarted with it 2026-10-28). Ticket refreshed
+  2026-10-28 (full-width single column, Markdown, 12 languages, three
+  questions for the product owner), waiting for confirmation. No migration
+  expected.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).
