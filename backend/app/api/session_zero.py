@@ -245,6 +245,7 @@ class AnswerResponse(BaseModel):
     body: str
     note_private: bool
     updated_at: datetime
+    mine: bool
 
 
 class AnswerDocumentResponse(BaseModel):
@@ -254,6 +255,7 @@ class AnswerDocumentResponse(BaseModel):
     user_id: uuid.UUID
     question_id: uuid.UUID | None
     document_id: uuid.UUID
+    mine: bool
 
 
 class QuestionsResponse(BaseModel):
@@ -694,13 +696,17 @@ async def _questions_responses(
                     body=a.body,
                     note_private=a.note_private,
                     updated_at=a.updated_at,
+                    mine=a.user_id == viewer.user_id,
                 )
                 for a in answers
                 if can_read_answer(a, viewer.user_id, viewer.role, module.answers_revealed)
             ],
             documents=[
                 AnswerDocumentResponse(
-                    user_id=link.user_id, question_id=link.question_id, document_id=link.document_id
+                    user_id=link.user_id,
+                    question_id=link.question_id,
+                    document_id=link.document_id,
+                    mine=link.user_id == viewer.user_id,
                 )
                 for link in documents
                 if master or module.answers_revealed or link.user_id == viewer.user_id

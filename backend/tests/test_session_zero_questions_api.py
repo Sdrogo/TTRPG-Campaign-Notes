@@ -349,6 +349,7 @@ async def test_answers_are_their_authors_and_the_masters_until_revealed(
     assert _questions(revealed.json())["answers_revealed"] is True
     other = _questions(await _get(client, room, room.other_player))
     assert len(other["answers"]) == 3
+    assert sorted(a["mine"] for a in other["answers"]) == [False, False, True]
     # Saving a revealed answer is news for everyone; revealing twice changes nothing.
     await _answer(
         client,
@@ -399,6 +400,7 @@ async def test_a_player_makes_their_document_from_their_answers(
     module_after = _questions(made.json())
     assert module_after["can_create"] is False
     links = {link["question_id"]: link["document_id"] for link in module_after["documents"]}
+    assert all(link["mine"] for link in module_after["documents"])
     assert set(links) == {None, q[6]}
 
     document = await _document(client, room, room.player, links[None])
