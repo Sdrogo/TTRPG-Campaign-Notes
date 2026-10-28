@@ -1275,7 +1275,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Schleier",
-      "lines": "Grenzen"
+      "lines": "Grenzen",
+      "stars": "Sterne",
+      "wishes": "Wünsche"
     },
     "postIt": {
       "text": "Text des Post-its",
@@ -1299,8 +1301,8 @@
       "anonymousHint": "Niemand sieht, wer es geschrieben hat, auch nicht der Master."
     },
     "publishAll": {
-      "button_one": "Alle Entwürfe veröffentlichen ({{count}})",
-      "button_other": "Alle Entwürfe veröffentlichen ({{count}})",
+      "button_one": "Entwürfe veröffentlichen ({{count}})",
+      "button_other": "Entwürfe veröffentlichen ({{count}})",
       "title": "Alle deine Entwürfe veröffentlichen",
       "body_one": "Dein Entwurf in dieser Runde wird für alle Mitglieder sichtbar. Das lässt sich nicht rückgängig machen.",
       "body_other": "Deine {{count}} Entwürfe in dieser Runde werden für alle Mitglieder sichtbar. Das lässt sich nicht rückgängig machen.",
@@ -1334,12 +1336,12 @@
       "first": "Session 0",
       "later": "Session 0.5 #{{number}}",
       "pick": "Angezeigte Session",
-      "start": "Session 0.5 starten",
-      "startBody": "Das aktuelle Retro-Board wird geschlossen und bleibt schreibgeschützt lesbar; nie veröffentlichte Entwürfe werden gelöscht. Das neue Board beginnt leer, mit denselben Spalten. Grenzen & Schleier bleibt, wie es ist.",
-      "title": "Titel (optional)",
-      "titlePlaceholder": "Ende von Arc 1",
-      "startButton": "Starten",
-      "closed": "Diese Session ist geschlossen: Das Board ist schreibgeschützt."
+      "start": "Neue Session",
+      "startBody": "Die aktuelle Sitzung wird geschlossen und bleibt schreibgeschützt lesbar; nie veröffentlichte Entwürfe werden gelöscht. Die neue beginnt leer mit den Etappen unten, und ihre Retro-Boards behalten dieselben Spalten. Grenzen & Schleier bleibt, wie es ist.",
+      "title": "Name",
+      "startButton": "Erstellen",
+      "closed": "Diese Session ist geschlossen: Das Board ist schreibgeschützt.",
+      "closedBadge": "Geschlossen"
     },
     "timer": {
       "label": "Timer",
@@ -1357,6 +1359,116 @@
       "pause": "Pausieren",
       "resume": "Fortsetzen",
       "stop": "Stoppen und zurücksetzen"
+    },
+    "dnd": {
+      "groupHere": "Gruppieren",
+      "instructions": "Zum Verschieben Leertaste oder Eingabe drücken, mit den Pfeiltasten bewegen, dann Leertaste oder Eingabe zum Ablegen. Esc bricht ab.",
+      "pickedUp": "{{name}} aufgenommen.",
+      "over": "Über {{name}}.",
+      "noTarget": "Nicht über einer Stelle zum Ablegen.",
+      "dropped": "{{name}} abgelegt.",
+      "cancelled": "Abgebrochen: {{name}} ist wieder an seinem Platz."
+    },
+    "modules": {
+      "label": "Etappen",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Grenzen & Schleier",
+        "stars_wishes": "Sterne und Wünsche",
+        "questions": "Fragen",
+        "ddi": "DDI"
+      },
+      "hiddenHint": "Noch verborgene Etappen: {{count}}",
+      "next": "Weiter",
+      "bringHere": "Den Tisch hierher bringen",
+      "current": "Aktuelle Etappe",
+      "edit": "Etappen bearbeiten",
+      "editHint": "Änderungen gelten sofort, für alle Mitglieder.",
+      "add": "Etappe hinzufügen",
+      "kind": "Etappe",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "remove": "Entfernen",
+      "removeTitle": "Diese Etappe entfernen?",
+      "removeBody": "Die Post-its von „{{name}}“ werden mit ihr gelöscht. Grenzen & Schleier bleibt immer unberührt.",
+      "removeQuestionsBody": "Die Fragen und Antworten von „{{name}}“ werden mit ihr gelöscht. Bereits erstellte Dokumente bleiben.",
+      "chain": "Etappen der Sitzung",
+      "chainHint": "Wähle die Etappen und ihre Reihenfolge; du kannst sie später ändern.",
+      "max": "Höchstens {{max}} Etappen.",
+      "startButton": "Starten"
+    },
+    "questions": {
+      "title": "Fragen",
+      "edit": "Fragen bearbeiten",
+      "editHint": "Die Fragen werden zusammen gespeichert. Eine entfernte Frage löscht ihre Antworten.",
+      "tag": "Tag der Dokumente der Spieler",
+      "noTag": "Kein Tag",
+      "bypass": "Spieler erstellen ihre eigenen Dokumente, auch wenn der Raum es nicht erlaubt",
+      "noneMaster": "Noch keine Fragen: schreibe sie mit „Fragen bearbeiten“.",
+      "nonePlayer": "Der Master hat die Fragen noch nicht geschrieben.",
+      "answers": "Antworten",
+      "reveal": "Antworten aufdecken",
+      "hide": "Antworten verbergen",
+      "createAll": "Dokumente für alle erstellen ({{count}})",
+      "privateHint": "Jeder Spieler sieht nur seine eigenen Antworten.",
+      "revealedHint": "Alle Mitglieder sehen alle Antworten.",
+      "noPlayers": "Keine Spieler im Raum.",
+      "answered": "{{count}}/{{total}} beantwortet",
+      "openDocument": "Dokument öffnen",
+      "private": "Privat",
+      "openMine": "Dein Dokument öffnen",
+      "createMine": "Mein Dokument erstellen",
+      "masterCreates": "Der Master erstellt dein Dokument.",
+      "nameFirst": "Beantworte die Frage nach dem Namen, um dein Dokument zu erstellen.",
+      "everyone": "Die Antworten aller",
+      "autosave": "Antworten werden beim Tippen gespeichert; nur du und der Master sehen sie.",
+      "number": "Frage {{number}}",
+      "question": "Frage",
+      "hint": "Hinweis (optional)",
+      "target": "Wohin die Antwort geht",
+      "documentTag": "Tag des neuen Dokuments",
+      "add": "Frage hinzufügen",
+      "targets": {
+        "name": "Name",
+        "subtitle": "Untertitel",
+        "description": "Beschreibung",
+        "note": "Notiz",
+        "document": "Neues Dokument",
+        "none": "Nicht im Dokument"
+      },
+      "goesTo": {
+        "name": "Wird der Name deines Dokuments.",
+        "subtitle": "Wird der Untertitel deines Dokuments.",
+        "description": "Kommt in die Beschreibung deines Dokuments.",
+        "note": "Wird eine Notiz deines Dokuments.",
+        "document": "Wird ein eigenes Dokument: die erste Zeile ist sein Name, der Rest seine Beschreibung.",
+        "none": "Bleibt hier, um am Tisch darüber zu sprechen."
+      },
+      "problems": {
+        "empty": "Jede Frage braucht einen Text.",
+        "oneName": "Genau eine Frage muss für den Namen sein.",
+        "oneSubtitle": "Höchstens eine Frage für den Untertitel.",
+        "documents": "Höchstens {{max}} Fragen „Neues Dokument“."
+      }
+    },
+    "ddi": {
+      "document": "Dokument der DDI",
+      "pick": "Dokument wählen",
+      "fromTemplate": "Aus der Vorlage erstellen",
+      "noneMaster": "Wähle das Dokument der DDI oder erstelle es aus der Vorlage.",
+      "acceptances": "Zustimmungen",
+      "noPlayers": "Keine Spieler im Raum.",
+      "notYet": "Noch nicht",
+      "outdated": "Erneut zustimmen",
+      "accepted": "Hat zugestimmt",
+      "hidden": "Der Master hat dir die DDI noch nicht sichtbar gemacht.",
+      "nonePlayer": "Der Master hat die DDI noch nicht gewählt.",
+      "changed": "Die DDI hat sich geändert, nachdem du zugestimmt hast.",
+      "accept": "Gelesen und akzeptiert",
+      "youAccepted": "Du hast der DDI zugestimmt.",
+      "withdraw": "Zurückziehen",
+      "open": "Dokument öffnen",
+      "loadError": "Die DDI konnte nicht gelesen werden."
     }
   }
 }

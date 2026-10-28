@@ -1246,7 +1246,9 @@
     "kinds": {
       "must": "Must",
       "veils": "帷幕",
-      "lines": "底线"
+      "lines": "底线",
+      "stars": "星星",
+      "wishes": "愿望"
     },
     "postIt": {
       "text": "便签内容",
@@ -1269,7 +1271,7 @@
       "anonymousHint": "没有人能看到是谁写的，Master 也不例外。"
     },
     "publishAll": {
-      "button_other": "发布全部草稿（{{count}}）",
+      "button_other": "发布草稿（{{count}}）",
       "title": "发布你的全部草稿",
       "body_other": "你在本轮的 {{count}} 张草稿将对所有成员可见。此操作无法撤销。",
       "overLimit_other": "看板快满了：{{count}} 张草稿将保持为草稿。"
@@ -1300,12 +1302,12 @@
       "first": "第 0 次会话",
       "later": "第 0.5 次会话 #{{number}}",
       "pick": "要显示的会话",
-      "start": "开始第 0.5 次会话",
-      "startBody": "当前的回顾看板将关闭，仍可只读查看；从未发布的草稿会被删除。新看板从空白开始，沿用相同的列。底线与帷幕保持不变。",
-      "title": "标题（可选）",
-      "titlePlaceholder": "第 1 篇章结束",
-      "startButton": "开始",
-      "closed": "此会话已关闭：看板为只读。"
+      "start": "新会话",
+      "startBody": "当前会话将关闭并保持只读可查阅；从未发布的草稿会被删除。新会话以下面的步骤从空白开始，其回顾面板保留相同的列。底线与帷幕保持不变。",
+      "title": "名称",
+      "startButton": "创建",
+      "closed": "此会话已关闭：看板为只读。",
+      "closedBadge": "已关闭"
     },
     "timer": {
       "label": "计时器",
@@ -1322,6 +1324,116 @@
       "pause": "暂停",
       "resume": "继续",
       "stop": "停止并清除"
+    },
+    "dnd": {
+      "groupHere": "编组",
+      "instructions": "要移动，请按空格键或回车键，用方向键移动，再按空格键或回车键放下。按 Esc 取消。",
+      "pickedUp": "已拿起 {{name}}。",
+      "over": "位于 {{name}} 上方。",
+      "noTarget": "此处不能放下。",
+      "dropped": "已放下 {{name}}。",
+      "cancelled": "已取消：{{name}} 已回到原处。"
+    },
+    "modules": {
+      "label": "步骤",
+      "kinds": {
+        "retro": "回顾",
+        "lines_veils": "底线与帷幕",
+        "stars_wishes": "星星与愿望",
+        "questions": "问题",
+        "ddi": "DDI"
+      },
+      "hiddenHint": "仍隐藏的步骤：{{count}}",
+      "next": "下一步",
+      "bringHere": "把大家带到这里",
+      "current": "当前步骤",
+      "edit": "编辑步骤",
+      "editHint": "更改会立即对所有成员生效。",
+      "add": "添加步骤",
+      "kind": "步骤",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "remove": "移除",
+      "removeTitle": "移除此步骤？",
+      "removeBody": "“{{name}}”的便签将一并删除。底线与帷幕不会被改动。",
+      "removeQuestionsBody": "“{{name}}”的问题和回答会一并删除。已创建的文档会保留。",
+      "chain": "本次会话的步骤",
+      "chainHint": "选择步骤及其顺序；之后可以更改。",
+      "max": "最多 {{max}} 个步骤。",
+      "startButton": "开始"
+    },
+    "questions": {
+      "title": "问题",
+      "edit": "编辑问题",
+      "editHint": "问题会一起保存。删除问题会同时删除其回答。",
+      "tag": "玩家文档的标签",
+      "noTag": "无标签",
+      "bypass": "即使房间不允许，玩家也可以创建自己的文档",
+      "noneMaster": "还没有问题：用“编辑问题”来写。",
+      "nonePlayer": "主持人还没有写问题。",
+      "answers": "回答",
+      "reveal": "公开回答",
+      "hide": "隐藏回答",
+      "createAll": "为所有人创建文档（{{count}}）",
+      "privateHint": "每位玩家只能看到自己的回答。",
+      "revealedHint": "所有成员都能看到所有人的回答。",
+      "noPlayers": "房间里没有玩家。",
+      "answered": "已回答 {{count}}/{{total}}",
+      "openDocument": "打开文档",
+      "private": "私密",
+      "openMine": "打开你的文档",
+      "createMine": "创建我的文档",
+      "masterCreates": "主持人会为你创建文档。",
+      "nameFirst": "回答名字问题后即可创建你的文档。",
+      "everyone": "所有人的回答",
+      "autosave": "回答会在输入时保存；只有你和主持人能看到。",
+      "number": "问题 {{number}}",
+      "question": "问题",
+      "hint": "提示（可选）",
+      "target": "回答去向",
+      "documentTag": "新文档的标签",
+      "add": "添加问题",
+      "targets": {
+        "name": "名称",
+        "subtitle": "副标题",
+        "description": "描述",
+        "note": "笔记",
+        "document": "新文档",
+        "none": "不放入文档"
+      },
+      "goesTo": {
+        "name": "成为你文档的名称。",
+        "subtitle": "成为你文档的副标题。",
+        "description": "放入你文档的描述。",
+        "note": "成为你文档的一条笔记。",
+        "document": "成为一个独立文档：第一行是名称，其余是描述。",
+        "none": "留在这里，在桌上讨论。"
+      },
+      "problems": {
+        "empty": "每个问题都需要文字。",
+        "oneName": "必须正好有一个名称问题。",
+        "oneSubtitle": "副标题问题最多一个。",
+        "documents": "“新文档”问题最多 {{max}} 个。"
+      }
+    },
+    "ddi": {
+      "document": "DDI 文档",
+      "pick": "选择文档",
+      "fromTemplate": "从模板创建",
+      "noneMaster": "选择 DDI 的文档，或从模板创建。",
+      "acceptances": "接受情况",
+      "noPlayers": "房间里没有玩家。",
+      "notYet": "尚未",
+      "outdated": "需重新接受",
+      "accepted": "已接受",
+      "hidden": "主持人还没有向你公开 DDI。",
+      "nonePlayer": "主持人还没有选择 DDI。",
+      "changed": "你接受之后 DDI 已更改。",
+      "accept": "我已阅读并接受",
+      "youAccepted": "你已接受 DDI。",
+      "withdraw": "撤回",
+      "open": "打开文档",
+      "loadError": "无法读取 DDI。"
     }
   }
 }

@@ -256,6 +256,10 @@
       "notAuthor": "只有便签的作者可以这样做",
       "roundClosed": "本轮已结束，只读",
       "notRetroColumn": "只能在进行中一轮的回顾列中使用",
+      "invalidChain": "一个会话包含 1 到 {max} 个步骤",
+      "lastModule": "会话至少要保留一个步骤",
+      "moduleNotFound": "找不到该步骤",
+      "moduleOrder": "请将会话的每个步骤各列出一次",
       "notLinesVeils": "只能在界线与帷幕看板上使用",
       "promoteRetroToLinesVeils": "只能把回顾便签提升到界线与帷幕的列中",
       "invalidBody": "便签需要文字，最多 {max} 个字符",
@@ -277,7 +281,27 @@
       "columnOrder": "新顺序必须把本轮每一列各列出一次",
       "notGroupable": "只能将当前轮次同一回顾列中两张及以上已发布的便利贴编组",
       "groupNotFound": "未找到分组",
-      "nothingToChange": "没有需要更改的内容"
+      "nothingToChange": "没有需要更改的内容",
+      "badPlace": "该位置不在指定的列或分组中",
+      "sameBoard": "便利贴或分组只能在其所在的看板和场次内移动",
+      "tooManyQuestions": "问题步骤最多 {max} 个问题",
+      "questionRequired": "问题需要内容",
+      "questionTooLong": "问题最多 {max} 个字符",
+      "hintTooLong": "提示最多 {max} 个字符",
+      "oneNameQuestion": "恰好一个问题为文档命名",
+      "oneSubtitleQuestion": "最多一个问题提供副标题",
+      "tooManyDocumentQuestions": "最多 {max} 个问题生成单独的文档",
+      "questionOrder": "每个问题只列一次，并带上其 id",
+      "answerTooLong": "回答最多 {max} 个字符",
+      "questionNotFound": "未找到问题",
+      "notQuestionsModule": "仅适用于问题步骤",
+      "masterDoesNotAnswer": "主持人写问题，玩家回答",
+      "nameAnswerMissing": "请先回答名称问题",
+      "documentExists": "你已在此创建了文档",
+      "notDdiModule": "此步骤不是 DDI。",
+      "noDdiDocument": "主持人还没有选择 DDI 的文档。",
+      "masterDoesNotAccept": "DDI 由主持人撰写，玩家接受。",
+      "ddiDocumentInvalid": "DDI 的文档必须属于这个房间。"
     }
   },
   "pdf": {
@@ -298,6 +322,19 @@
       "want": "我们想在桌上看到的",
       "care": "需谨慎处理",
       "avoid": "要避免的"
+    },
+    "ddi": {
+      "name": "意图声明",
+      "behind": "桌子背后",
+      "behindHint": "一场好游戏的骨架。",
+      "onTable": "桌子之上",
+      "onTableHint": "让一场游戏精彩的东西。",
+      "meeting": "聚会",
+      "rules": "规则",
+      "setting": "设定",
+      "themes": "主题",
+      "tone": "基调",
+      "characters": "角色"
     }
   }
 }

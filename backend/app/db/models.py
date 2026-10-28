@@ -1156,17 +1156,170 @@ class SessionZeroRoundRow(Base):
     title: Mapped[str | None] = mapped_column(String(100))
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Spec 47 Decision 4: the step of its chain the table is on.
+    current_module_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("session_zero_modules.id", ondelete="SET NULL", use_alter=True),
+    )
+
+
+class SessionZeroModuleRow(Base):
+    """A step of a round's chain (spec 47 Decision 1): a Retro board, the
+    Lines & Veils board, Stars and Wishes, Questions, a DDI. Its columns go
+    with it."""
+
+    __tablename__ = "session_zero_modules"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    round_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_rounds.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(String(20))
+    position: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Spec 47_2, a Questions module's settings: the Tag its Documents get,
+    # whether every member reads the answers, and whether Players create
+    # their Documents even where the Room doesn't let them (D-13, Q7).
+    tag_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tags.id", ondelete="SET NULL")
+    )
+    answers_revealed: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
+    players_bypass_creation_rule: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default=text("true")
+    )
+    # Spec 47_3: a DDI module's Document; its acceptances go when it changes.
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL")
+    )
+
+
+class SessionZeroAcceptanceRow(Base):
+    """A Player's "I have read and accept" on a DDI module (spec 47
+    Decision 8), at `accepted_at`: a later revision of the Document makes
+    it out of date."""
+
+    __tablename__ = "session_zero_acceptances"
+
+    module_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("session_zero_modules.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, index=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    accepted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroQuestionRow(Base):
+    """A question of a Questions module (spec 47 Decision 9) and where its
+    answer goes in the Player's Document; `tag_id` for a `document` one."""
+
+    __tablename__ = "session_zero_questions"
+    __table_args__ = (
+        CheckConstraint(
+            "target IN ('name', 'subtitle', 'description', 'note', 'document', 'none')",
+            name="ck_session_zero_questions_target",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    module_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_modules.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    body: Mapped[str] = mapped_column(String(200))
+    hint: Mapped[str | None] = mapped_column(String(300))
+    target: Mapped[str] = mapped_column(String(20))
+    tag_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tags.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroAnswerRow(Base):
+    """A Player's answer to a question (spec 47 Decision 10): theirs and the
+    Master's to read until the Master reveals them; `note_private` on a
+    Note answer makes its Note Private (Q3)."""
+
+    __tablename__ = "session_zero_answers"
+
+    question_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("session_zero_questions.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, index=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    body: Mapped[str] = mapped_column(Text)
+    note_private: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroAnswerDocumentRow(Base):
+    """A Document made from a Player's answers (spec 47 Decision 11): their
+    main one (`question_id` null) or a "New Document" question's. One each
+    per Player and module; deleting the Document lets them make it again."""
+
+    __tablename__ = "session_zero_answer_documents"
+    __table_args__ = (
+        Index(
+            "uq_session_zero_answer_documents_main",
+            "module_id",
+            "user_id",
+            unique=True,
+            postgresql_where=text("question_id IS NULL"),
+        ),
+        Index(
+            "uq_session_zero_answer_documents_extra",
+            "module_id",
+            "user_id",
+            "question_id",
+            unique=True,
+            postgresql_where=text("question_id IS NOT NULL"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    module_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_modules.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
+    question_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_questions.id", ondelete="CASCADE")
+    )
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class SessionZeroColumnRow(Base):
-    """A column: of a Retro round (titled by the Master), or one of the three
-    fixed Lines & Veils columns (no round, a `kind`; spec 46 Decision 10)."""
+    """A column: of a round's module, a Retro one (titled by the Master) or
+    one of the two fixed Stars and Wishes ones (spec 47 Decision 7); or one
+    of the three fixed Lines & Veils columns (no round, no module, a
+    `kind`; spec 46 Decision 10)."""
 
     __tablename__ = "session_zero_columns"
     __table_args__ = (
         CheckConstraint(
-            "(round_id IS NOT NULL AND kind IS NULL)"
-            " OR (round_id IS NULL AND kind IN ('must', 'lines', 'veils'))",
+            "(round_id IS NOT NULL AND module_id IS NOT NULL"
+            " AND (kind IS NULL OR kind IN ('stars', 'wishes')))"
+            " OR (round_id IS NULL AND module_id IS NULL AND kind IN ('must', 'lines', 'veils'))",
             name="ck_session_zero_columns_board",
         ),
         Index(
@@ -1174,7 +1327,7 @@ class SessionZeroColumnRow(Base):
             "room_id",
             "kind",
             unique=True,
-            postgresql_where=text("kind IS NOT NULL"),
+            postgresql_where=text("round_id IS NULL"),
         ),
     )
 
@@ -1184,6 +1337,9 @@ class SessionZeroColumnRow(Base):
     )
     round_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("session_zero_rounds.id", ondelete="CASCADE")
+    )
+    module_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_modules.id", ondelete="CASCADE"), index=True
     )
     kind: Mapped[str | None] = mapped_column(String(10))
     title: Mapped[str] = mapped_column(String(60), default="")
@@ -1197,7 +1353,8 @@ class SessionZeroColumnRow(Base):
 
 class SessionZeroGroupRow(Base):
     """A group of related post-its in one Retro column (spec 46c Decision 9),
-    made by the Master. Goes with its column; its post-its are ungrouped
+    made by the Master, or by a Player of their own post-its (spec 46d Q2).
+    Goes with its column; its post-its are ungrouped
     when it is deleted."""
 
     __tablename__ = "session_zero_groups"
@@ -1210,6 +1367,8 @@ class SessionZeroGroupRow(Base):
         UUID(as_uuid=True), ForeignKey("session_zero_columns.id", ondelete="CASCADE"), index=True
     )
     title: Mapped[str | None] = mapped_column(String(60))
+    # Spec 46d Decision 7: its place among its column's post-its in no group.
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
@@ -1243,6 +1402,9 @@ class SessionZeroCardRow(Base):
     group_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("session_zero_groups.id", ondelete="SET NULL"), index=True
     )
+    # Spec 46d Decision 7: its place in its group, or, in none, among its
+    # column's post-its in no group and its groups.
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

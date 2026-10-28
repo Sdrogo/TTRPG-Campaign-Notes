@@ -1275,7 +1275,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Veils",
-      "lines": "Lines"
+      "lines": "Lines",
+      "stars": "Stars",
+      "wishes": "Wishes"
     },
     "postIt": {
       "text": "Post-it text",
@@ -1299,8 +1301,8 @@
       "anonymousHint": "Nobody will see who wrote it, not even the Master."
     },
     "publishAll": {
-      "button_one": "Publish all drafts ({{count}})",
-      "button_other": "Publish all drafts ({{count}})",
+      "button_one": "Publish drafts ({{count}})",
+      "button_other": "Publish drafts ({{count}})",
       "title": "Publish all your drafts",
       "body_one": "Your draft in this round will be shown to every member. It can't be undone.",
       "body_other": "Your {{count}} drafts in this round will be shown to every member. It can't be undone.",
@@ -1334,12 +1336,12 @@
       "first": "Session 0",
       "later": "Session 0.5 #{{number}}",
       "pick": "Session to show",
-      "start": "Start Session 0.5",
-      "startBody": "The current Retro board closes and stays readable, read-only; drafts never published are deleted. The new board starts empty, with the same columns. Lines & Veils stays as it is.",
-      "title": "Title (optional)",
-      "titlePlaceholder": "End of arc 1",
-      "startButton": "Start",
-      "closed": "This session is closed: the board is read-only."
+      "start": "New session",
+      "startBody": "The current session closes and stays readable, read-only; drafts never published are deleted. The new one starts empty with the steps below, and its Retro boards keep the same columns. Lines & Veils stays as it is.",
+      "title": "Name",
+      "startButton": "Create",
+      "closed": "This session is closed: the board is read-only.",
+      "closedBadge": "Closed"
     },
     "timer": {
       "label": "Timer",
@@ -1357,6 +1359,116 @@
       "pause": "Pause",
       "resume": "Resume",
       "stop": "Stop and clear"
+    },
+    "dnd": {
+      "groupHere": "Group",
+      "instructions": "To move it, press Space or Enter, move with the arrow keys, then press Space or Enter to drop. Esc cancels.",
+      "pickedUp": "Picked up {{name}}.",
+      "over": "Over {{name}}.",
+      "noTarget": "Not over a place to drop.",
+      "dropped": "Dropped {{name}}.",
+      "cancelled": "Cancelled: {{name}} is back in its place."
+    },
+    "modules": {
+      "label": "Steps",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Lines & Veils",
+        "stars_wishes": "Stars and Wishes",
+        "questions": "Questions",
+        "ddi": "DDI"
+      },
+      "hiddenHint": "Steps still hidden: {{count}}",
+      "next": "Next",
+      "bringHere": "Bring the table here",
+      "current": "Current step",
+      "edit": "Edit steps",
+      "editHint": "Changes apply at once, for every member.",
+      "add": "Add step",
+      "kind": "Step",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove",
+      "removeTitle": "Remove this step?",
+      "removeBody": "The post-its of “{{name}}” are deleted with it. Lines & Veils is never touched.",
+      "removeQuestionsBody": "The questions and answers of “{{name}}” are deleted with it. Documents already created stay.",
+      "chain": "Steps of the session",
+      "chainHint": "Pick the steps and their order; you can change them later.",
+      "max": "At most {{max}} steps.",
+      "startButton": "Start"
+    },
+    "questions": {
+      "title": "Questions",
+      "edit": "Edit questions",
+      "editHint": "The questions are saved together. Removing a question deletes its answers.",
+      "tag": "Tag of the Players' Documents",
+      "noTag": "No Tag",
+      "bypass": "Players create their own Documents even if the Room doesn't allow it",
+      "noneMaster": "No questions yet: write them with \"Edit questions\".",
+      "nonePlayer": "The Master hasn't written the questions yet.",
+      "answers": "Answers",
+      "reveal": "Reveal the answers",
+      "hide": "Hide the answers",
+      "createAll": "Create everyone's Documents ({{count}})",
+      "privateHint": "Each Player sees only their own answers.",
+      "revealedHint": "Every member sees everyone's answers.",
+      "noPlayers": "No Players in the Room.",
+      "answered": "{{count}}/{{total}} answered",
+      "openDocument": "Open the Document",
+      "private": "Private",
+      "openMine": "Open your Document",
+      "createMine": "Create my Document",
+      "masterCreates": "The Master will create your Document.",
+      "nameFirst": "Answer the name question to create your Document.",
+      "everyone": "Everyone's answers",
+      "autosave": "Answers save as you type; only you and the Master see them.",
+      "number": "Question {{number}}",
+      "question": "Question",
+      "hint": "Hint (optional)",
+      "target": "Where the answer goes",
+      "documentTag": "Tag of the new Document",
+      "add": "Add question",
+      "targets": {
+        "name": "Name",
+        "subtitle": "Subtitle",
+        "description": "Description",
+        "note": "Note",
+        "document": "New Document",
+        "none": "Not in the Document"
+      },
+      "goesTo": {
+        "name": "Becomes your Document's name.",
+        "subtitle": "Becomes your Document's subtitle.",
+        "description": "Goes in your Document's description.",
+        "note": "Becomes a Note of your Document.",
+        "document": "Becomes a Document of its own: the first line is its name, the rest its description.",
+        "none": "Stays here, to talk about at the table."
+      },
+      "problems": {
+        "empty": "Every question needs a text.",
+        "oneName": "Exactly one question must be for the Name.",
+        "oneSubtitle": "At most one question for the Subtitle.",
+        "documents": "At most {{max}} \"New Document\" questions."
+      }
+    },
+    "ddi": {
+      "document": "DDI Document",
+      "pick": "Pick a Document",
+      "fromTemplate": "Create from the template",
+      "noneMaster": "Pick the DDI's Document or create it from the template.",
+      "acceptances": "Acceptances",
+      "noPlayers": "No Players in the Room.",
+      "notYet": "Not yet",
+      "outdated": "To accept again",
+      "accepted": "Accepted",
+      "hidden": "The Master hasn't made the DDI visible to you yet.",
+      "nonePlayer": "The Master hasn't picked the DDI yet.",
+      "changed": "The DDI changed after you accepted it.",
+      "accept": "I have read and accept",
+      "youAccepted": "You accepted the DDI.",
+      "withdraw": "Withdraw",
+      "open": "Open the Document",
+      "loadError": "Couldn't read the DDI."
     }
   }
 }

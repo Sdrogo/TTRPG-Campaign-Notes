@@ -879,16 +879,87 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   feature cards gain a `sm` "See it in the demo" anchor.
 - Screenshots: `demo/` (and `demo/tour/`) in the project files.
 
-## Session 0 (specs 46 and 46c)
+## Session 0 (specs 46, 46c, 46d and 47)
 
-- Title row (`SessionZeroTitle`): "Session 0" (`h1` at `h2` size, display
-  font), then on the same line the timer chip: a pill on `--bg-raised`
+- Steps (spec 47, `ModuleStepper` in `components/sessionZero/ModuleChain.tsx`):
+  a wrapping row under the header, `nav` "Steps". Each step is a
+  `compact-sm` button "1. Retro": the current one `filled` (with
+  `aria-current="step"`), the one on screen but not current `light`, the
+  others `default`; a click opens that step on this screen only. A
+  Player's steps not reached yet are a grey light badge with a padlock,
+  "+N", whose tooltip says how many are hidden. Pushed right, the
+  Master's "Next" (filled, caret right) or, while another step is on
+  screen, "Bring the table here"; then "Edit steps" (subtle grey).
+- "Edit steps" and the chain in "Start Session 0" / "New session": one
+  bordered row per step ("2. Stars and Wishes") with "Move up", "Move
+  down" and "Remove" icon buttons (arrows rather than a drag, the same
+  on a phone), then a "Step" select and "Add step" (default, "+"); "At
+  most 10 steps." in dimmed `xs` at the limit. In "Edit steps" each
+  change goes at once; removing a step with post-its or questions asks
+  first, inside the same dialog.
+- The body shows the step on screen: Retro is the two boards as below,
+  Lines & Veils alone at full width, Stars and Wishes the post-it board
+  with its two fixed columns, Stars (gold) and Wishes (blue), named in
+  the viewer's language, with no column menu, no drag by the heading and
+  no "Add column".
+- Questions step (spec 47_2, `QuestionsBoard`): an `h4` "Questions". The
+  Master sees "Edit questions" (default, `compact-sm`), a "Tag of the
+  Players' Documents" select and the creation switch on one wrapping row,
+  then one bordered row per question with a grey light badge for where
+  its answer goes ("New Document · NPC") and the hint dimmed; below, an
+  `h5` "Answers" with "Reveal the answers" / "Hide the answers" and
+  "Create everyone's Documents (N)", a dimmed line on who reads the
+  answers, and a separated accordion, one item per Player ("2/5
+  answered"), with each answer (dimmed "—" when missing) and "Open the
+  Document". "Edit questions" is a `lg` dialog: one bordered block per
+  question (text, hint, "Where the answer goes" select, a Tag select for
+  "New Document"), "Move up" / "Move down" / "Remove" icons, "Add
+  question", the first problem in red `xs`, and Save disabled while there
+  is one. A Player sees one bordered block per question (one-line input
+  for Name and Subtitle, an autosized textarea otherwise, the hint as
+  description), a dimmed line saying where the answer goes and a
+  "Private" checkbox on Note answers; answers save 800 ms after typing
+  stops, when a field is left and when the step goes away. Then "Create
+  my Document" (filled; it opens the new Document), "Open your Document"
+  (light) once made, or a dimmed line on what it waits for; once
+  revealed, the other Players' answers in the same accordion.
+- DDI step (spec 47_3, `DdiBoard`): the Master sees a searchable,
+  clearable "DDI Document" select of the Room's Documents and "Create
+  from the template" (default) on one row, then a bordered box
+  "Acceptances" with one badge per Player (green light with a check once
+  accepted, yellow light "To accept again" once the Document changed
+  after, default "Not yet"), then the Document. The Document is a
+  bordered `md` paper: its name as an `h4`, "Open the Document" (light,
+  `compact-sm`) on the right, the description and each Note the viewer
+  sees (bold title, text in `pre-wrap`). A Player sees the Document, a
+  yellow light alert when it changed after they accepted, and at the
+  end "I have read and accept" (filled), or a green "You accepted the
+  DDI." with a subtle "Withdraw"; a dimmed line when there is no DDI yet
+  or they don't see it.
+
+- Header (`SessionZeroHeader`, spec 46d Decision 4): one wrapping row
+  above the boards, no section titles. The session selector
+  (`SessionPicker`, `.sz-session-picker`: display font, bold, 16px)
+  stands in for the title; the page's `h1` "Session 0" is visually
+  hidden. A closed session carries a grey "Closed" badge whose tooltip
+  says it is read-only. Then the timer chip, "Publish drafts (N)" (filled,
+  small) while the viewer has drafts, and, pushed right (`ml="auto"`), the
+  Master's "New session" (default, small, "+") and "⋮". On a phone the
+  row takes two lines. Sessions are named freely: the name replaces
+  "Session 0.5 #N", which is only the prefilled default.
+- Timer chip: a pill on `--bg-raised`
   with the default border, a clock icon and the time left in monospace
   (`9:58`; "Paused" beside it, dimmed; "Time's up" in `--state-warning`).
   For the Master the chip is the button that opens the timer menu, and
   with no timer it is the clock alone; a Player without a timer sees no
   chip. Nothing is sticky. The Master's "⋮" at the end of the row holds
   "Delete Session 0" (red), which asks first.
+- Headings (spec 46d Decision 1): Retro column and Lines & Veils row
+  titles are `h2` in the display font, 16px, bold. "Add column" is a 32px
+  "+" icon button (tooltip) at the end of the columns.
+- Reactions on post-its (spec 46d Decision 6): `ReactionChips` and
+  `AddReaction` with `size="lg"`: the emoji at 18px, the count at 13px,
+  the add smiley at 20px. Comments keep the small size.
 - Columns (`.sz-column` in `index.css`): a 4px band on top in the column's
   colour (`--sz-color`, set inline from `colorValue`, the maps' palette)
   and a 6% tint of it over `--bg-surface`. Presets are green ("We want it
@@ -901,8 +972,19 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   (and lifts 1px) on hover; reduced motion drops the lift. A draft
   (`data-draft`) is flat: `--bg-raised`, dashed border, no shadow, 85%
   opacity, with a filled `compact-xs` "Publish" at the end of its author
-  line. A post-it a drag can group with shows the accent ring
-  (`data-drop-over`).
+  line.
+- Drag and drop (spec 46d Decision 7): a post-it the viewer can place
+  shows a `grab` cursor; a group and a Retro column are picked up by their
+  heading. While dragging, the item stays in place at 35% opacity
+  (`[data-dragging]`) and a copy tilted 2° with a deeper shadow follows
+  the pointer (`.sz-drag-overlay`). Where it lands, a 3px accent line
+  opens a gap (`.sz-drop-line`, vertical `.sz-drop-line-x` between Lines &
+  Veils post-its and between columns); the post-it or group it would join
+  shows the accent ring, scales up 2% and wears a small "Group" badge at
+  its top right (`[data-group-target]`, `.sz-group-here`); a Lines & Veils
+  row it would be promoted to takes the accent border
+  (`.sz-column[data-drop-over]`). Reduced motion: no gap animation, no
+  scale, nothing slides back after a drop.
 - "Publish all drafts (N)" (filled `compact-sm`, paper-plane icon) sits
   above the Retro columns while the viewer has drafts in the open round.
 - Groups (`.sz-group`): a frame of the column's colour (45% into the
@@ -923,6 +1005,11 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   other (`.sz-lines-veils-row`, a 4px band in the column's colour on the
   left), each with its post-its side by side in a grid
   (`.sz-lines-veils-cards`, `repeat(auto-fill, minmax(200px, 1fr))`).
+  Side by side, the two boards fill the screen's height under the header
+  and each scrolls on its own (`.sz-pane`, spec 46d Decision 5;
+  `BoardsSplit` refits the height on window resize and through a
+  `ResizeObserver` on the page, at least 360px); on a phone the
+  page scrolls as before.
 - Live updates (spec 46_4): what another member just changed (a post-it,
   a Retro column, a group) glows once for 1.5 s, a 3px ring in its own
   `--sz-color` fading out (`[data-glow]`, `@keyframes sz-glow`); no

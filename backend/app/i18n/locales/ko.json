@@ -256,6 +256,10 @@
       "notAuthor": "포스트잇 작성자만 할 수 있습니다",
       "roundClosed": "이 라운드는 종료되어 읽기 전용입니다",
       "notRetroColumn": "진행 중인 라운드의 회고 열에서만 가능합니다",
+      "invalidChain": "세션의 단계는 1~{max}개입니다",
+      "lastModule": "세션에는 단계가 하나 이상 있어야 합니다",
+      "moduleNotFound": "단계를 찾을 수 없습니다",
+      "moduleOrder": "세션의 각 단계를 정확히 한 번씩 지정하세요",
       "notLinesVeils": "선과 장막 보드에서만 가능합니다",
       "promoteRetroToLinesVeils": "회고 포스트잇만 선과 장막 열로 올릴 수 있습니다",
       "invalidBody": "포스트잇에는 최대 {max}자의 텍스트가 필요합니다",
@@ -277,7 +281,27 @@
       "columnOrder": "새 순서에는 라운드의 모든 열이 한 번씩 있어야 합니다",
       "notGroupable": "진행 중인 라운드의 같은 레트로 열에 있는 게시된 포스트잇 두 장 이상만 묶을 수 있습니다",
       "groupNotFound": "그룹을 찾을 수 없습니다",
-      "nothingToChange": "변경할 내용이 없습니다"
+      "nothingToChange": "변경할 내용이 없습니다",
+      "badPlace": "그 위치는 지정한 열이나 그룹에 없습니다",
+      "sameBoard": "포스트잇이나 그룹은 같은 보드와 같은 세션 안에서만 옮길 수 있습니다",
+      "tooManyQuestions": "질문 단계에는 질문이 최대 {max}개입니다",
+      "questionRequired": "질문에는 내용이 필요합니다",
+      "questionTooLong": "질문은 최대 {max}자입니다",
+      "hintTooLong": "힌트는 최대 {max}자입니다",
+      "oneNameQuestion": "문서 이름을 정하는 질문은 정확히 하나입니다",
+      "oneSubtitleQuestion": "부제목을 정하는 질문은 최대 하나입니다",
+      "tooManyDocumentQuestions": "별도의 문서를 만드는 질문은 최대 {max}개입니다",
+      "questionOrder": "각 질문을 ID와 함께 한 번씩만 나열하세요",
+      "answerTooLong": "답변은 최대 {max}자입니다",
+      "questionNotFound": "질문을 찾을 수 없습니다",
+      "notQuestionsModule": "질문 단계에서만 작동합니다",
+      "masterDoesNotAnswer": "질문은 마스터가 쓰고 플레이어가 답합니다",
+      "nameAnswerMissing": "먼저 이름 질문에 답하세요",
+      "documentExists": "이미 여기서 문서를 만들었습니다",
+      "notDdiModule": "이 단계는 DDI가 아닙니다.",
+      "noDdiDocument": "마스터가 아직 DDI 문서를 고르지 않았습니다.",
+      "masterDoesNotAccept": "DDI는 마스터가 쓰고 플레이어가 수락합니다.",
+      "ddiDocumentInvalid": "DDI 문서는 이 룸의 문서여야 합니다."
     }
   },
   "pdf": {
@@ -298,6 +322,19 @@
       "want": "테이블에서 원하는 것",
       "care": "조심해서 다룰 것",
       "avoid": "피할 것"
+    },
+    "ddi": {
+      "name": "의도 선언",
+      "behind": "테이블 뒤에서",
+      "behindHint": "좋은 게임의 뼈대.",
+      "onTable": "테이블 위에서",
+      "onTableHint": "게임을 멋지게 만드는 것.",
+      "meeting": "모임",
+      "rules": "규칙",
+      "setting": "배경",
+      "themes": "주제",
+      "tone": "톤",
+      "characters": "캐릭터"
     }
   }
 }

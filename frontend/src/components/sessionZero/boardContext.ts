@@ -1,14 +1,21 @@
 import { createContext, useContext } from 'react';
 import type { BoardWrite } from '../../lib/sessionZero';
 import type { Member } from '../../types/member';
-import type { SessionZero } from '../../types/sessionZero';
+import type { SessionZero, SessionZeroModule } from '../../types/sessionZero';
 
 /** What every part of the Session 0 page needs to act on the boards. */
 export interface BoardContextValue {
+  /** The page's boards, with the step on screen's columns as `retro` (`viewOf`). */
   board: SessionZero;
+  /** The step on screen (spec 47): what "Add column" adds to, whether its columns are fixed. */
+  module?: SessionZeroModule;
   members: Member[];
-  /** Sends a write; a failure shows as a toast, `onDone` runs once it succeeds. */
-  act: (write: BoardWrite, onDone?: () => void) => void;
+  /**
+   * Sends a write; a failure shows as a toast, `onDone` runs once it
+   * succeeds, with the boards it answered. A `preview` (a drag's, spec 46d Decision 7) shows at once,
+   * until the answer replaces it or a failure puts the board back.
+   */
+  act: (write: BoardWrite, onDone?: (next: SessionZero) => void, preview?: SessionZero) => void;
   /** A write is on its way: controls wait for it. */
   busy: boolean;
   /** False while the Master previews the Room as a member (spec 22b): nothing writes. */

@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
@@ -8,6 +8,10 @@ export const DEFAULT_SIDE_PERCENT = 100 / 3;
 export const MAX_SIDE_PERCENT = 60;
 /** The narrowest, in pixels. */
 export const MIN_SIDE_PX = 280;
+/** The boards never get shorter than this, in pixels: below it the page scrolls. */
+export const MIN_BOARDS_HEIGHT = 360;
+/** The space left under the boards, the page's bottom padding. */
+const BOTTOM_GAP_PX = 16;
 /** How far an arrow key moves the handle, in percent. */
 const KEY_STEP_PERCENT = 2;
 
@@ -45,12 +49,34 @@ interface BoardsSplitProps {
  * (Home and End go to the limits), widens one and narrows the other. Lines
  * & Veils stays between 280px and 60% of the page; a double click puts it
  * back to a third. The width is remembered in this browser.
+ *
+ * The two fill the screen's height under the header and each scrolls on its
+ * own (spec 46d Decision 5), fitted again when the window or the page
+ * above them changes size.
  */
 export function BoardsSplit({ left, right }: BoardsSplitProps) {
   const { t } = useTranslation();
   const frame = useRef<HTMLDivElement>(null);
   const [percent, setPercent] = useState(readSaved);
   const [dragging, setDragging] = useState(false);
+  const [height, setHeight] = useState<number>();
+
+  useLayoutEffect(() => {
+    const fit = () => {
+      const top = frame.current!.getBoundingClientRect().top + window.scrollY;
+      setHeight(Math.max(MIN_BOARDS_HEIGHT, window.innerHeight - top - BOTTOM_GAP_PX));
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    // The header above can grow or shrink with no window resize (a button
+    // comes, the row wraps): the page's height moves with it.
+    const observer = new ResizeObserver(fit);
+    observer.observe(document.body);
+    return () => {
+      window.removeEventListener('resize', fit);
+      observer.disconnect();
+    };
+  }, []);
 
   // The narrowest share the page's width allows, never above the widest.
   const clamp = (value: number) => {
@@ -82,8 +108,10 @@ export function BoardsSplit({ left, right }: BoardsSplitProps) {
   };
 
   return (
-    <Box ref={frame} style={{ display: 'flex', alignItems: 'flex-start' }}>
-      <Box style={{ flex: '1 1 0', minWidth: 0 }}>{left}</Box>
+    <Box ref={frame} style={{ display: 'flex', height }}>
+      <Box className="sz-pane" style={{ flex: '1 1 0', minWidth: 0 }}>
+        {left}
+      </Box>
       <div
         role="separator"
         tabIndex={0}
@@ -105,7 +133,9 @@ export function BoardsSplit({ left, right }: BoardsSplitProps) {
         onDoubleClick={() => apply(DEFAULT_SIDE_PERCENT)}
         onKeyDown={onKeyDown}
       />
-      <Box style={{ flex: `0 0 ${percent}%`, minWidth: MIN_SIDE_PX }}>{right}</Box>
+      <Box className="sz-pane" style={{ flex: `0 0 ${percent}%`, minWidth: MIN_SIDE_PX }}>
+        {right}
+      </Box>
     </Box>
   );
 }

@@ -1040,6 +1040,7 @@ html body[data-scroll-locked] {
 }
 
 .sz-post-it {
+  position: relative;
   border-radius: 10px;
   background: color-mix(in srgb, var(--sz-color) 16%, var(--bg-raised));
   border-color: color-mix(in srgb, var(--sz-color) 30%, var(--border-default));
@@ -1063,9 +1064,6 @@ html body[data-scroll-locked] {
   transform: none;
   opacity: 0.85;
 }
-.sz-post-it[data-drop-over] {
-  box-shadow: 0 0 0 2px var(--accent-primary);
-}
 
 /* A group of post-its (spec 46c Decision 9): a framed stack in its column. */
 .sz-group {
@@ -1087,6 +1085,14 @@ html body[data-scroll-locked] {
    and the board snaps to each; Lines & Veils are rows, one under the
    other, their post-its side by side; the handle between the two boards resizes them,
    drawn like the Document split view's divider. */
+/* Spec 46d Decision 5: beside each other, each board scrolls on its own. */
+.sz-pane {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sz-retro-scroll {
+  overflow-x: auto;
+}
 .sz-retro-column {
   flex: 1 1 0;
   min-width: 220px;
@@ -1156,4 +1162,121 @@ html body[data-scroll-locked] {
   .sz-group[data-glow] {
     animation: none;
   }
+}
+
+/* Spec 46d Decision 7: drag and drop. The item dragged lifts (shadow, a
+   slight tilt) and its place stays, faded; between two items a line in the
+   column's colour opens a gap, pushing the others apart; dropped onto a
+   post-it or group, that one gets a ring and "Group". Without motion,
+   nothing slides or tilts: the line and the ring still show. */
+.sz-drop-line {
+  flex: none;
+  height: 4px;
+  margin-block: 4px;
+  border-radius: 2px;
+  background: var(--sz-color, var(--accent-primary));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sz-color, var(--accent-primary)) 25%, transparent);
+  animation: sz-gap-open 150ms ease-out;
+}
+@keyframes sz-gap-open {
+  from {
+    height: 0;
+    margin-block: 0;
+    opacity: 0;
+  }
+}
+.sz-drop-line-x {
+  align-self: stretch;
+  width: 4px;
+  height: auto;
+  margin-block: 0;
+  margin-inline: 2px;
+  animation-name: sz-gap-open-x;
+}
+@keyframes sz-gap-open-x {
+  from {
+    width: 0;
+    margin-inline: 0;
+    opacity: 0;
+  }
+}
+/* Lines & Veils post-its sit in a grid: the line stands at a post-it's edge. */
+.sz-lv-slot {
+  position: relative;
+}
+.sz-lv-slot > .sz-drop-line-x {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -6px;
+  margin: 0;
+}
+.sz-lv-slot > .sz-drop-line-x[data-end] {
+  left: auto;
+  right: -6px;
+}
+.sz-post-it[data-dragging],
+.sz-group[data-dragging],
+.sz-column[data-dragging] {
+  opacity: 0.35;
+}
+.sz-post-it[data-group-target],
+.sz-group[data-group-target] {
+  position: relative;
+  box-shadow:
+    0 0 0 3px var(--sz-color),
+    0 6px 16px rgb(0 0 0 / 18%);
+  transform: scale(1.02);
+  transition:
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+.sz-group-here {
+  position: absolute;
+  top: -10px;
+  right: 8px;
+  z-index: 1;
+  color: var(--text-primary);
+  background: var(--bg-raised);
+  border: 2px solid var(--sz-color);
+}
+.sz-column[data-drop-over] {
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+.sz-drag-overlay {
+  cursor: grabbing;
+  box-shadow:
+    0 12px 28px rgb(0 0 0 / 28%),
+    0 4px 10px rgb(0 0 0 / 18%);
+  transform: rotate(2deg) scale(1.03);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sz-drop-line {
+    animation: none;
+  }
+  .sz-drag-overlay,
+  .sz-post-it[data-group-target],
+  .sz-group[data-group-target] {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Spec 46d Decision 6: a post-it's reactions, emoji large enough to read at a glance. */
+.reaction-chip-lg {
+  font-size: 13px;
+}
+.reaction-chip-lg .mantine-Button-label {
+  gap: 4px;
+}
+.reaction-emoji-lg {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Spec 46d Decision 4: the session selector stands in for the page title. */
+.sz-session-picker input {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--mantine-font-size-md);
 }

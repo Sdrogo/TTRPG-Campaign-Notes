@@ -256,6 +256,10 @@
       "notAuthor": "Nur der Autor des Post-its kann das tun",
       "roundClosed": "Diese Runde ist geschlossen und schreibgeschützt",
       "notRetroColumn": "Das geht nur in einer Retro-Spalte der offenen Runde",
+      "invalidChain": "Eine Sitzung hat 1 bis {max} Schritte",
+      "lastModule": "Eine Sitzung braucht mindestens einen Schritt",
+      "moduleNotFound": "Schritt nicht gefunden",
+      "moduleOrder": "Nenne jeden Schritt der Sitzung genau einmal",
       "notLinesVeils": "Das geht nur auf dem Board Grenzen & Schleier",
       "promoteRetroToLinesVeils": "Nur ein Retro-Post-it kann in eine Spalte von Grenzen & Schleier übernommen werden",
       "invalidBody": "Ein Post-it braucht Text, höchstens {max} Zeichen",
@@ -277,7 +281,27 @@
       "columnOrder": "Die neue Reihenfolge muss jede Spalte der Runde einmal nennen",
       "notGroupable": "Gruppieren lassen sich nur zwei oder mehr veröffentlichte Post-its derselben Retro-Spalte der offenen Runde",
       "groupNotFound": "Gruppe nicht gefunden",
-      "nothingToChange": "Nichts zu ändern"
+      "nothingToChange": "Nichts zu ändern",
+      "badPlace": "Diese Stelle liegt nicht in der angegebenen Spalte oder Gruppe",
+      "sameBoard": "Ein Post-it oder eine Gruppe lässt sich nur innerhalb der eigenen Tafel und Sitzung verschieben",
+      "tooManyQuestions": "Eine Fragen-Etappe hat höchstens {max} Fragen",
+      "questionRequired": "Eine Frage braucht einen Text",
+      "questionTooLong": "Eine Frage hat höchstens {max} Zeichen",
+      "hintTooLong": "Ein Hinweis hat höchstens {max} Zeichen",
+      "oneNameQuestion": "Genau eine Frage gibt dem Dokument seinen Namen",
+      "oneSubtitleQuestion": "Höchstens eine Frage gibt den Untertitel",
+      "tooManyDocumentQuestions": "Höchstens {max} Fragen erstellen ein eigenes Dokument",
+      "questionOrder": "Nenne jede Frage einmal, mit ihrer eigenen ID",
+      "answerTooLong": "Eine Antwort hat höchstens {max} Zeichen",
+      "questionNotFound": "Frage nicht gefunden",
+      "notQuestionsModule": "Das geht nur in einer Fragen-Etappe",
+      "masterDoesNotAnswer": "Der Master schreibt die Fragen; die Spieler beantworten sie",
+      "nameAnswerMissing": "Beantworte zuerst die Namensfrage",
+      "documentExists": "Du hast dein Dokument hier schon erstellt",
+      "notDdiModule": "Diese Etappe ist keine DDI.",
+      "noDdiDocument": "Der Master hat das Dokument der DDI noch nicht gewählt.",
+      "masterDoesNotAccept": "Der Master schreibt die DDI; die Spieler akzeptieren sie.",
+      "ddiDocumentInvalid": "Das Dokument der DDI muss zu diesem Raum gehören."
     }
   },
   "pdf": {
@@ -298,6 +322,19 @@
       "want": "Das wollen wir am Tisch",
       "care": "Mit Vorsicht",
       "avoid": "Zu vermeiden"
+    },
+    "ddi": {
+      "name": "Absichtserklärung",
+      "behind": "Hinter dem Tisch",
+      "behindHint": "Das Gerüst eines guten Spiels.",
+      "onTable": "Auf dem Tisch",
+      "onTableHint": "Was eine Partie großartig macht.",
+      "meeting": "Treffen",
+      "rules": "Regeln",
+      "setting": "Setting",
+      "themes": "Themen",
+      "tone": "Ton",
+      "characters": "Charaktere"
     }
   }
 }

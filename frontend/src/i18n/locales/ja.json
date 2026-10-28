@@ -1246,7 +1246,9 @@
     "kinds": {
       "must": "Must",
       "veils": "ヴェール",
-      "lines": "ライン"
+      "lines": "ライン",
+      "stars": "スター",
+      "wishes": "ウィッシュ"
     },
     "postIt": {
       "text": "付箋のテキスト",
@@ -1269,7 +1271,7 @@
       "anonymousHint": "誰が書いたかは、Masterを含め誰にも表示されません。"
     },
     "publishAll": {
-      "button_other": "下書きをすべて公開（{{count}}）",
+      "button_other": "下書きを公開（{{count}}）",
       "title": "下書きをすべて公開",
       "body_other": "このラウンドのあなたの下書き{{count}}件が全メンバーに表示されます。元に戻せません。",
       "overLimit_other": "ボードがほぼいっぱいです。{{count}}件は下書きのまま残ります。"
@@ -1300,12 +1302,12 @@
       "first": "セッション0",
       "later": "セッション0.5 #{{number}}",
       "pick": "表示するセッション",
-      "start": "セッション0.5を開始",
-      "startBody": "現在のレトロボードは閉じられ、読み取り専用で閲覧できます。公開されなかった下書きは削除されます。新しいボードは同じ列で空の状態から始まります。ライン&ヴェールはそのままです。",
-      "title": "タイトル（任意）",
-      "titlePlaceholder": "第1アーク終了",
-      "startButton": "開始",
-      "closed": "このセッションは終了しています。ボードは読み取り専用です。"
+      "start": "新しいセッション",
+      "startBody": "現在のセッションは閉じられ、読み取り専用で閲覧できます。公開されなかった下書きは削除されます。新しいセッションは下のステップで空の状態から始まり、レトロボードは同じ列を引き継ぎます。ライン&ヴェールはそのままです。",
+      "title": "名前",
+      "startButton": "作成",
+      "closed": "このセッションは終了しています。ボードは読み取り専用です。",
+      "closedBadge": "終了"
     },
     "timer": {
       "label": "タイマー",
@@ -1322,6 +1324,116 @@
       "pause": "一時停止",
       "resume": "再開",
       "stop": "停止してクリア"
+    },
+    "dnd": {
+      "groupHere": "グループにする",
+      "instructions": "移動するには Space か Enter を押し、矢印キーで動かしてから Space か Enter で置きます。Esc で取り消します。",
+      "pickedUp": "{{name}} をつかみました。",
+      "over": "{{name}} の上です。",
+      "noTarget": "置ける場所の上ではありません。",
+      "dropped": "{{name}} を置きました。",
+      "cancelled": "取り消しました。{{name}} は元の位置に戻りました。"
+    },
+    "modules": {
+      "label": "ステップ",
+      "kinds": {
+        "retro": "レトロ",
+        "lines_veils": "ライン&ヴェール",
+        "stars_wishes": "スターとウィッシュ",
+        "questions": "質問",
+        "ddi": "DDI"
+      },
+      "hiddenHint": "まだ非表示のステップ：{{count}}",
+      "next": "次へ",
+      "bringHere": "ここにテーブルを移す",
+      "current": "現在のステップ",
+      "edit": "ステップを編集",
+      "editHint": "変更はすぐに全メンバーに反映されます。",
+      "add": "ステップを追加",
+      "kind": "ステップ",
+      "moveUp": "上へ",
+      "moveDown": "下へ",
+      "remove": "削除",
+      "removeTitle": "このステップを削除しますか？",
+      "removeBody": "「{{name}}」の付箋も一緒に削除されます。ライン&ヴェールは変更されません。",
+      "removeQuestionsBody": "「{{name}}」の質問と回答も一緒に削除されます。作成済みのドキュメントは残ります。",
+      "chain": "セッションのステップ",
+      "chainHint": "ステップとその順番を選んでください。後から変更できます。",
+      "max": "ステップは最大{{max}}個です。",
+      "startButton": "開始"
+    },
+    "questions": {
+      "title": "質問",
+      "edit": "質問を編集",
+      "editHint": "質問はまとめて保存されます。質問を削除するとその回答も消えます。",
+      "tag": "プレイヤーのドキュメントのタグ",
+      "noTag": "タグなし",
+      "bypass": "ルームが許可していなくても、プレイヤーが自分のドキュメントを作成できる",
+      "noneMaster": "まだ質問がありません。「質問を編集」で書いてください。",
+      "nonePlayer": "マスターはまだ質問を書いていません。",
+      "answers": "回答",
+      "reveal": "回答を公開",
+      "hide": "回答を隠す",
+      "createAll": "全員のドキュメントを作成（{{count}}）",
+      "privateHint": "各プレイヤーは自分の回答だけを見られます。",
+      "revealedHint": "全メンバーが全員の回答を見られます。",
+      "noPlayers": "ルームにプレイヤーがいません。",
+      "answered": "{{count}}/{{total}} 回答済み",
+      "openDocument": "ドキュメントを開く",
+      "private": "非公開",
+      "openMine": "自分のドキュメントを開く",
+      "createMine": "自分のドキュメントを作成",
+      "masterCreates": "マスターがあなたのドキュメントを作成します。",
+      "nameFirst": "名前の質問に答えるとドキュメントを作成できます。",
+      "everyone": "全員の回答",
+      "autosave": "回答は入力中に保存されます。見られるのはあなたとマスターだけです。",
+      "number": "質問 {{number}}",
+      "question": "質問",
+      "hint": "ヒント（任意）",
+      "target": "回答の行き先",
+      "documentTag": "新しいドキュメントのタグ",
+      "add": "質問を追加",
+      "targets": {
+        "name": "名前",
+        "subtitle": "サブタイトル",
+        "description": "説明",
+        "note": "ノート",
+        "document": "新しいドキュメント",
+        "none": "ドキュメントに入れない"
+      },
+      "goesTo": {
+        "name": "ドキュメントの名前になります。",
+        "subtitle": "ドキュメントのサブタイトルになります。",
+        "description": "ドキュメントの説明に入ります。",
+        "note": "ドキュメントのノートになります。",
+        "document": "独立したドキュメントになります。1行目が名前、残りが説明です。",
+        "none": "ここに残り、卓での話題になります。"
+      },
+      "problems": {
+        "empty": "すべての質問に本文が必要です。",
+        "oneName": "名前の質問はちょうど1つ必要です。",
+        "oneSubtitle": "サブタイトルの質問は1つまでです。",
+        "documents": "「新しいドキュメント」の質問は{{max}}個までです。"
+      }
+    },
+    "ddi": {
+      "document": "DDIのドキュメント",
+      "pick": "ドキュメントを選択",
+      "fromTemplate": "テンプレートから作成",
+      "noneMaster": "DDIのドキュメントを選ぶか、テンプレートから作成してください。",
+      "acceptances": "承認",
+      "noPlayers": "ルームにプレイヤーがいません。",
+      "notYet": "まだ",
+      "outdated": "再承認が必要",
+      "accepted": "承認済み",
+      "hidden": "マスターはまだDDIをあなたに公開していません。",
+      "nonePlayer": "マスターはまだDDIを選んでいません。",
+      "changed": "承認した後にDDIが変更されました。",
+      "accept": "読んで承認します",
+      "youAccepted": "DDIを承認しました。",
+      "withdraw": "取り消す",
+      "open": "ドキュメントを開く",
+      "loadError": "DDIを読み込めませんでした。"
     }
   }
 }

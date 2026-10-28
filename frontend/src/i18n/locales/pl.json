@@ -1333,7 +1333,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Zasłony",
-      "lines": "Linie"
+      "lines": "Linie",
+      "stars": "Gwiazdy",
+      "wishes": "Życzenia"
     },
     "postIt": {
       "text": "Tekst karteczki",
@@ -1359,10 +1361,10 @@
       "anonymousHint": "Nikt nie zobaczy, kto ją napisał, nawet Master."
     },
     "publishAll": {
-      "button_one": "Opublikuj wszystkie szkice ({{count}})",
-      "button_few": "Opublikuj wszystkie szkice ({{count}})",
-      "button_many": "Opublikuj wszystkie szkice ({{count}})",
-      "button_other": "Opublikuj wszystkie szkice ({{count}})",
+      "button_one": "Opublikuj szkice ({{count}})",
+      "button_few": "Opublikuj szkice ({{count}})",
+      "button_many": "Opublikuj szkice ({{count}})",
+      "button_other": "Opublikuj szkice ({{count}})",
       "title": "Opublikuj wszystkie swoje szkice",
       "body_one": "Twój szkic z tej rundy zobaczą wszyscy członkowie. Tego nie da się cofnąć.",
       "body_few": "Twoje {{count}} szkice z tej rundy zobaczą wszyscy członkowie. Tego nie da się cofnąć.",
@@ -1402,12 +1404,12 @@
       "first": "Sesja 0",
       "later": "Sesja 0.5 #{{number}}",
       "pick": "Pokazywana sesja",
-      "start": "Rozpocznij Sesję 0.5",
-      "startBody": "Obecna tablica Retro zostanie zamknięta i pozostanie dostępna tylko do odczytu; nigdy nieopublikowane szkice zostaną usunięte. Nowa tablica zaczyna się pusta, z tymi samymi kolumnami. Linie i Zasłony pozostają bez zmian.",
-      "title": "Tytuł (opcjonalnie)",
-      "titlePlaceholder": "Koniec łuku 1",
-      "startButton": "Rozpocznij",
-      "closed": "Ta sesja jest zamknięta: tablica jest tylko do odczytu."
+      "start": "Nowa sesja",
+      "startBody": "Bieżąca sesja zostaje zamknięta i pozostaje dostępna tylko do odczytu; nigdy nieopublikowane szkice są usuwane. Nowa zaczyna się pusta z etapami poniżej, a jej tablice Retro zachowują te same kolumny. Linie i Zasłony pozostają bez zmian.",
+      "title": "Nazwa",
+      "startButton": "Utwórz",
+      "closed": "Ta sesja jest zamknięta: tablica jest tylko do odczytu.",
+      "closedBadge": "Zamknięta"
     },
     "timer": {
       "label": "Minutnik",
@@ -1427,6 +1429,116 @@
       "pause": "Wstrzymaj",
       "resume": "Wznów",
       "stop": "Zatrzymaj i wyczyść"
+    },
+    "dnd": {
+      "groupHere": "Grupuj",
+      "instructions": "Aby przenieść, naciśnij Spację lub Enter, przesuwaj strzałkami, a potem naciśnij Spację lub Enter, by upuścić. Esc anuluje.",
+      "pickedUp": "Podniesiono: {{name}}.",
+      "over": "Nad: {{name}}.",
+      "noTarget": "Nie nad miejscem do upuszczenia.",
+      "dropped": "Upuszczono: {{name}}.",
+      "cancelled": "Anulowano: {{name}} wraca na swoje miejsce."
+    },
+    "modules": {
+      "label": "Etapy",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Linie i Zasłony",
+        "stars_wishes": "Gwiazdy i Życzenia",
+        "questions": "Pytania",
+        "ddi": "DDI"
+      },
+      "hiddenHint": "Etapy wciąż ukryte: {{count}}",
+      "next": "Dalej",
+      "bringHere": "Przenieś tu stół",
+      "current": "Bieżący etap",
+      "edit": "Edytuj etapy",
+      "editHint": "Zmiany działają od razu, dla wszystkich członków.",
+      "add": "Dodaj etap",
+      "kind": "Etap",
+      "moveUp": "W górę",
+      "moveDown": "W dół",
+      "remove": "Usuń",
+      "removeTitle": "Usunąć ten etap?",
+      "removeBody": "Karteczki z „{{name}}” zostaną usunięte razem z nim. Linie i Zasłony nigdy nie są ruszane.",
+      "removeQuestionsBody": "Pytania i odpowiedzi z „{{name}}” zostaną usunięte razem z nim. Utworzone Dokumenty zostają.",
+      "chain": "Etapy sesji",
+      "chainHint": "Wybierz etapy i ich kolejność; możesz je później zmienić.",
+      "max": "Najwyżej {{max}} etapów.",
+      "startButton": "Rozpocznij"
+    },
+    "questions": {
+      "title": "Pytania",
+      "edit": "Edytuj pytania",
+      "editHint": "Pytania zapisują się razem. Usunięcie pytania kasuje odpowiedzi na nie.",
+      "tag": "Tag Dokumentów Graczy",
+      "noTag": "Bez tagu",
+      "bypass": "Gracze tworzą własne Dokumenty, nawet jeśli Pokój na to nie pozwala",
+      "noneMaster": "Jeszcze nie ma pytań: napisz je w „Edytuj pytania”.",
+      "nonePlayer": "Mistrz nie napisał jeszcze pytań.",
+      "answers": "Odpowiedzi",
+      "reveal": "Odsłoń odpowiedzi",
+      "hide": "Ukryj odpowiedzi",
+      "createAll": "Utwórz Dokumenty wszystkich ({{count}})",
+      "privateHint": "Każdy Gracz widzi tylko swoje odpowiedzi.",
+      "revealedHint": "Wszyscy członkowie widzą odpowiedzi wszystkich.",
+      "noPlayers": "Brak Graczy w Pokoju.",
+      "answered": "{{count}}/{{total}} odpowiedzi",
+      "openDocument": "Otwórz Dokument",
+      "private": "Prywatna",
+      "openMine": "Otwórz swój Dokument",
+      "createMine": "Utwórz mój Dokument",
+      "masterCreates": "Mistrz utworzy twój Dokument.",
+      "nameFirst": "Odpowiedz na pytanie o nazwę, aby utworzyć swój Dokument.",
+      "everyone": "Odpowiedzi wszystkich",
+      "autosave": "Odpowiedzi zapisują się podczas pisania; widzisz je tylko ty i Mistrz.",
+      "number": "Pytanie {{number}}",
+      "question": "Pytanie",
+      "hint": "Podpowiedź (opcjonalnie)",
+      "target": "Dokąd trafia odpowiedź",
+      "documentTag": "Tag nowego Dokumentu",
+      "add": "Dodaj pytanie",
+      "targets": {
+        "name": "Nazwa",
+        "subtitle": "Podtytuł",
+        "description": "Opis",
+        "note": "Notatka",
+        "document": "Nowy Dokument",
+        "none": "Poza Dokumentem"
+      },
+      "goesTo": {
+        "name": "Staje się nazwą twojego Dokumentu.",
+        "subtitle": "Staje się podtytułem twojego Dokumentu.",
+        "description": "Trafia do opisu twojego Dokumentu.",
+        "note": "Staje się Notatką twojego Dokumentu.",
+        "document": "Staje się osobnym Dokumentem: pierwszy wiersz to nazwa, reszta to opis.",
+        "none": "Zostaje tutaj, do rozmowy przy stole."
+      },
+      "problems": {
+        "empty": "Każde pytanie potrzebuje tekstu.",
+        "oneName": "Potrzebne jest dokładnie jedno pytanie o Nazwę.",
+        "oneSubtitle": "Najwyżej jedno pytanie o Podtytuł.",
+        "documents": "Najwyżej {{max}} pytań „Nowy Dokument”."
+      }
+    },
+    "ddi": {
+      "document": "Dokument DDI",
+      "pick": "Wybierz Dokument",
+      "fromTemplate": "Utwórz z szablonu",
+      "noneMaster": "Wybierz Dokument DDI lub utwórz go z szablonu.",
+      "acceptances": "Akceptacje",
+      "noPlayers": "Brak Graczy w Pokoju.",
+      "notYet": "Jeszcze nie",
+      "outdated": "Do ponownej akceptacji",
+      "accepted": "Zaakceptował",
+      "hidden": "Mistrz nie udostępnił ci jeszcze DDI.",
+      "nonePlayer": "Mistrz nie wybrał jeszcze DDI.",
+      "changed": "DDI zmieniła się po twojej akceptacji.",
+      "accept": "Przeczytałem i akceptuję",
+      "youAccepted": "Zaakceptowałeś DDI.",
+      "withdraw": "Wycofaj",
+      "open": "Otwórz Dokument",
+      "loadError": "Nie można odczytać DDI."
     }
   }
 }

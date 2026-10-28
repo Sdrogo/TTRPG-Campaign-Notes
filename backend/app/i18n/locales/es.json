@@ -256,6 +256,10 @@
       "notAuthor": "Solo el autor del pósit puede hacerlo",
       "roundClosed": "Esta ronda está cerrada y es de solo lectura",
       "notRetroColumn": "Solo funciona en una columna de la Retro de la ronda abierta",
+      "invalidChain": "Una sesión tiene de 1 a {max} etapas",
+      "lastModule": "Una sesión necesita al menos una etapa",
+      "moduleNotFound": "Etapa no encontrada",
+      "moduleOrder": "Indica cada etapa de la sesión una sola vez",
       "notLinesVeils": "Solo funciona en el tablero Líneas y Velos",
       "promoteRetroToLinesVeils": "Solo un pósit de la Retro se puede promover, a una columna de Líneas y Velos",
       "invalidBody": "Un pósit necesita texto, como máximo {max} caracteres",
@@ -277,7 +281,27 @@
       "columnOrder": "El nuevo orden debe incluir una vez cada columna de la ronda",
       "notGroupable": "Solo se agrupan dos o más pósits publicados de una misma columna de la Retro de la ronda abierta",
       "groupNotFound": "Grupo no encontrado",
-      "nothingToChange": "No hay nada que cambiar"
+      "nothingToChange": "No hay nada que cambiar",
+      "badPlace": "Ese lugar no está en la columna o el grupo indicados",
+      "sameBoard": "Un pósit o un grupo solo se mueve dentro de su propio tablero y sesión",
+      "tooManyQuestions": "Una etapa de Preguntas tiene como máximo {max} preguntas",
+      "questionRequired": "Una pregunta necesita un texto",
+      "questionTooLong": "Una pregunta tiene como máximo {max} caracteres",
+      "hintTooLong": "Una pista tiene como máximo {max} caracteres",
+      "oneNameQuestion": "Exactamente una pregunta da nombre al Documento",
+      "oneSubtitleQuestion": "Como máximo una pregunta da el subtítulo",
+      "tooManyDocumentQuestions": "Como máximo {max} preguntas crean un Documento propio",
+      "questionOrder": "Indica cada pregunta una sola vez, con su id",
+      "answerTooLong": "Una respuesta tiene como máximo {max} caracteres",
+      "questionNotFound": "Pregunta no encontrada",
+      "notQuestionsModule": "Solo funciona en una etapa de Preguntas",
+      "masterDoesNotAnswer": "El Máster escribe las preguntas; responden los jugadores",
+      "nameAnswerMissing": "Responde primero a la pregunta del nombre",
+      "documentExists": "Ya creaste tu Documento aquí",
+      "notDdiModule": "Esta etapa no es una DDI.",
+      "noDdiDocument": "El Máster aún no ha elegido el Documento de la DDI.",
+      "masterDoesNotAccept": "El Máster escribe la DDI; los Jugadores la aceptan.",
+      "ddiDocumentInvalid": "El Documento de la DDI debe ser de esta Sala."
     }
   },
   "pdf": {
@@ -298,6 +322,19 @@
       "want": "Lo queremos en la mesa",
       "care": "Con cuidado",
       "avoid": "A evitar"
+    },
+    "ddi": {
+      "name": "Declaración de intenciones",
+      "behind": "Detrás de la mesa",
+      "behindHint": "El esqueleto de una buena partida.",
+      "onTable": "Sobre la mesa",
+      "onTableHint": "Lo que hace genial una partida.",
+      "meeting": "Encuentro",
+      "rules": "Reglas",
+      "setting": "Ambientación",
+      "themes": "Temáticas",
+      "tone": "Tono",
+      "characters": "Personajes"
     }
   }
 }

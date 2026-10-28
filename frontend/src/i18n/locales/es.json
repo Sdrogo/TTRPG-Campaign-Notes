@@ -1275,7 +1275,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Velos",
-      "lines": "Líneas"
+      "lines": "Líneas",
+      "stars": "Estrellas",
+      "wishes": "Deseos"
     },
     "postIt": {
       "text": "Texto de la nota",
@@ -1299,8 +1301,8 @@
       "anonymousHint": "Nadie verá quién la escribió, ni siquiera el Master."
     },
     "publishAll": {
-      "button_one": "Publicar todos los borradores ({{count}})",
-      "button_other": "Publicar todos los borradores ({{count}})",
+      "button_one": "Publicar borradores ({{count}})",
+      "button_other": "Publicar borradores ({{count}})",
       "title": "Publicar todos tus borradores",
       "body_one": "Tu borrador de esta ronda será visible para todos los miembros. No se puede deshacer.",
       "body_other": "Tus {{count}} borradores de esta ronda serán visibles para todos los miembros. No se puede deshacer.",
@@ -1334,12 +1336,12 @@
       "first": "Sesión 0",
       "later": "Sesión 0.5 #{{number}}",
       "pick": "Sesión que mostrar",
-      "start": "Iniciar Sesión 0.5",
-      "startBody": "El tablero Retro actual se cierra y sigue disponible en solo lectura; los borradores nunca publicados se eliminan. El nuevo tablero empieza vacío, con las mismas columnas. Líneas y Velos se queda como está.",
-      "title": "Título (opcional)",
-      "titlePlaceholder": "Fin del arco 1",
-      "startButton": "Iniciar",
-      "closed": "Esta sesión está cerrada: el tablero es de solo lectura."
+      "start": "Nueva sesión",
+      "startBody": "La sesión actual se cierra y sigue disponible en solo lectura; los borradores nunca publicados se eliminan. La nueva empieza vacía con las etapas de abajo, y sus tableros Retro conservan las mismas columnas. Líneas y Velos queda como está.",
+      "title": "Nombre",
+      "startButton": "Crear",
+      "closed": "Esta sesión está cerrada: el tablero es de solo lectura.",
+      "closedBadge": "Cerrada"
     },
     "timer": {
       "label": "Temporizador",
@@ -1357,6 +1359,116 @@
       "pause": "Pausar",
       "resume": "Reanudar",
       "stop": "Detener y borrar"
+    },
+    "dnd": {
+      "groupHere": "Agrupar",
+      "instructions": "Para moverlo, pulsa Espacio o Intro, muévelo con las flechas y pulsa Espacio o Intro para soltarlo. Esc cancela.",
+      "pickedUp": "Has cogido {{name}}.",
+      "over": "Sobre {{name}}.",
+      "noTarget": "No estás sobre un sitio donde soltarlo.",
+      "dropped": "Has soltado {{name}}.",
+      "cancelled": "Cancelado: {{name}} vuelve a su sitio."
+    },
+    "modules": {
+      "label": "Etapas",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Líneas y Velos",
+        "stars_wishes": "Estrellas y Deseos",
+        "questions": "Preguntas",
+        "ddi": "DDI"
+      },
+      "hiddenHint": "Etapas aún ocultas: {{count}}",
+      "next": "Siguiente",
+      "bringHere": "Llevar la mesa aquí",
+      "current": "Etapa actual",
+      "edit": "Editar etapas",
+      "editHint": "Los cambios se aplican al momento, para todos los miembros.",
+      "add": "Añadir etapa",
+      "kind": "Etapa",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "remove": "Quitar",
+      "removeTitle": "¿Quitar esta etapa?",
+      "removeBody": "Los pósits de «{{name}}» se eliminan con ella. Líneas y Velos nunca se toca.",
+      "removeQuestionsBody": "Las preguntas y respuestas de «{{name}}» se eliminan con ella. Los Documentos ya creados se quedan.",
+      "chain": "Etapas de la sesión",
+      "chainHint": "Elige las etapas y su orden; podrás cambiarlas más adelante.",
+      "max": "Como máximo {{max}} etapas.",
+      "startButton": "Iniciar"
+    },
+    "questions": {
+      "title": "Preguntas",
+      "edit": "Editar preguntas",
+      "editHint": "Las preguntas se guardan juntas. Quitar una pregunta borra sus respuestas.",
+      "tag": "Etiqueta de los Documentos de los Jugadores",
+      "noTag": "Sin etiqueta",
+      "bypass": "Los Jugadores crean sus propios Documentos aunque la Sala no lo permita",
+      "noneMaster": "Aún no hay preguntas: escríbelas con «Editar preguntas».",
+      "nonePlayer": "El Máster aún no ha escrito las preguntas.",
+      "answers": "Respuestas",
+      "reveal": "Revelar las respuestas",
+      "hide": "Ocultar las respuestas",
+      "createAll": "Crear los Documentos de todos ({{count}})",
+      "privateHint": "Cada Jugador ve solo sus propias respuestas.",
+      "revealedHint": "Todos los miembros ven las respuestas de todos.",
+      "noPlayers": "No hay Jugadores en la Sala.",
+      "answered": "{{count}}/{{total}} respondidas",
+      "openDocument": "Abrir el Documento",
+      "private": "Privada",
+      "openMine": "Abrir tu Documento",
+      "createMine": "Crear mi Documento",
+      "masterCreates": "El Máster creará tu Documento.",
+      "nameFirst": "Responde a la pregunta del nombre para crear tu Documento.",
+      "everyone": "Las respuestas de todos",
+      "autosave": "Las respuestas se guardan mientras escribes; solo tú y el Máster las veis.",
+      "number": "Pregunta {{number}}",
+      "question": "Pregunta",
+      "hint": "Pista (opcional)",
+      "target": "Adónde va la respuesta",
+      "documentTag": "Etiqueta del nuevo Documento",
+      "add": "Añadir pregunta",
+      "targets": {
+        "name": "Nombre",
+        "subtitle": "Subtítulo",
+        "description": "Descripción",
+        "note": "Nota",
+        "document": "Nuevo Documento",
+        "none": "Fuera del Documento"
+      },
+      "goesTo": {
+        "name": "Se convierte en el nombre de tu Documento.",
+        "subtitle": "Se convierte en el subtítulo de tu Documento.",
+        "description": "Va en la descripción de tu Documento.",
+        "note": "Se convierte en una Nota de tu Documento.",
+        "document": "Se convierte en un Documento propio: la primera línea es su nombre, el resto su descripción.",
+        "none": "Se queda aquí, para hablarlo en la mesa."
+      },
+      "problems": {
+        "empty": "Cada pregunta necesita un texto.",
+        "oneName": "Hace falta exactamente una pregunta para el Nombre.",
+        "oneSubtitle": "Como mucho una pregunta para el Subtítulo.",
+        "documents": "Como mucho {{max}} preguntas «Nuevo Documento»."
+      }
+    },
+    "ddi": {
+      "document": "Documento de la DDI",
+      "pick": "Elige un Documento",
+      "fromTemplate": "Crear desde la plantilla",
+      "noneMaster": "Elige el Documento de la DDI o créalo desde la plantilla.",
+      "acceptances": "Aceptaciones",
+      "noPlayers": "No hay Jugadores en la Sala.",
+      "notYet": "Aún no",
+      "outdated": "Por aceptar de nuevo",
+      "accepted": "Ha aceptado",
+      "hidden": "El Máster aún no te ha hecho visible la DDI.",
+      "nonePlayer": "El Máster aún no ha elegido la DDI.",
+      "changed": "La DDI ha cambiado desde que la aceptaste.",
+      "accept": "He leído y acepto",
+      "youAccepted": "Has aceptado la DDI.",
+      "withdraw": "Retirar",
+      "open": "Abrir el Documento",
+      "loadError": "No se puede leer la DDI."
     }
   }
 }

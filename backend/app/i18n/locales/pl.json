@@ -256,6 +256,10 @@
       "notAuthor": "Tylko autor karteczki może to zrobić",
       "roundClosed": "Ta runda jest zamknięta i tylko do odczytu",
       "notRetroColumn": "Działa tylko w kolumnie Retro otwartej rundy",
+      "invalidChain": "Sesja ma od 1 do {max} etapów",
+      "lastModule": "Sesja musi mieć co najmniej jeden etap",
+      "moduleNotFound": "Nie znaleziono etapu",
+      "moduleOrder": "Podaj każdy etap sesji dokładnie raz",
       "notLinesVeils": "Działa tylko na tablicy Linie i Zasłony",
       "promoteRetroToLinesVeils": "Awansować można tylko karteczkę z Retro, do kolumny Linii i Zasłon",
       "invalidBody": "Karteczka potrzebuje tekstu, najwyżej {max} znaków",
@@ -277,7 +281,27 @@
       "columnOrder": "Nowa kolejność musi wymieniać każdą kolumnę rundy raz",
       "notGroupable": "Grupować można tylko co najmniej dwie opublikowane karteczki z jednej kolumny Retro otwartej rundy",
       "groupNotFound": "Nie znaleziono grupy",
-      "nothingToChange": "Nie ma nic do zmiany"
+      "nothingToChange": "Nie ma nic do zmiany",
+      "badPlace": "Tego miejsca nie ma we wskazanej kolumnie ani grupie",
+      "sameBoard": "Karteczkę lub grupę można przenieść tylko w obrębie jej tablicy i sesji",
+      "tooManyQuestions": "Etap Pytania ma najwyżej {max} pytań",
+      "questionRequired": "Pytanie musi mieć treść",
+      "questionTooLong": "Pytanie ma najwyżej {max} znaków",
+      "hintTooLong": "Podpowiedź ma najwyżej {max} znaków",
+      "oneNameQuestion": "Dokładnie jedno pytanie nadaje nazwę Dokumentowi",
+      "oneSubtitleQuestion": "Najwyżej jedno pytanie nadaje podtytuł",
+      "tooManyDocumentQuestions": "Najwyżej {max} pytań tworzy osobny Dokument",
+      "questionOrder": "Podaj każde pytanie raz, z jego id",
+      "answerTooLong": "Odpowiedź ma najwyżej {max} znaków",
+      "questionNotFound": "Nie znaleziono pytania",
+      "notQuestionsModule": "Działa tylko na etapie Pytania",
+      "masterDoesNotAnswer": "Master pisze pytania; gracze na nie odpowiadają",
+      "nameAnswerMissing": "Najpierw odpowiedz na pytanie o nazwę",
+      "documentExists": "Twój Dokument już tu powstał",
+      "notDdiModule": "Ten etap nie jest DDI.",
+      "noDdiDocument": "Mistrz nie wybrał jeszcze Dokumentu DDI.",
+      "masterDoesNotAccept": "Mistrz pisze DDI; Gracze ją akceptują.",
+      "ddiDocumentInvalid": "Dokument DDI musi należeć do tego Pokoju."
     }
   },
   "pdf": {
@@ -298,6 +322,19 @@
       "want": "Chcemy tego przy stole",
       "care": "Ostrożnie",
       "avoid": "Do unikania"
+    },
+    "ddi": {
+      "name": "Deklaracja intencji",
+      "behind": "Za stołem",
+      "behindHint": "Szkielet dobrej gry.",
+      "onTable": "Na stole",
+      "onTableHint": "To, co czyni sesję wspaniałą.",
+      "meeting": "Spotkanie",
+      "rules": "Zasady",
+      "setting": "Świat",
+      "themes": "Tematy",
+      "tone": "Ton",
+      "characters": "Postacie"
     }
   }
 }

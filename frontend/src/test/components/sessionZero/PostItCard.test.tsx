@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { BoardDnd } from '../../../components/sessionZero/BoardDnd';
 import { PostItCard } from '../../../components/sessionZero/PostItCard';
 import { boardWrites } from '../../../lib/sessionZero';
 import { rawPostIt } from '../../fixtures';
@@ -17,7 +18,7 @@ describe('PostItCard', () => {
   it("shows the viewer's own signed post-it, which they edit", async () => {
     const { act, user } = renderBoard(<PostItCard postIt={postIt()} column={column()} onLinesVeils={false} />);
     expect(screen.getByRole('article', { name: 'Post-it di Tu' })).toHaveTextContent('Niente ragni');
-    expect(card()).not.toHaveAttribute('draggable', 'true');
+    expect(card()).not.toHaveAttribute('tabindex');
 
     await user.click(screen.getByRole('button', { name: 'Azioni del post-it' }));
     expect(screen.queryByRole('menuitem', { name: 'Pubblica' })).not.toBeInTheDocument();
@@ -99,14 +100,8 @@ describe('PostItCard', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Promuovi in Veli' }));
     expect(act).toHaveBeenCalledWith(boardWrites.promote('card-1', 'lv-veils'));
 
-    const dataTransfer = { setData: vi.fn(), effectAllowed: '' };
-    expect(card()).toHaveAttribute('draggable', 'true');
-    fireEvent.dragStart(card(), { dataTransfer });
-    expect(dataTransfer.setData).toHaveBeenCalledWith(
-      'application/x-exlibris-post-it',
-      JSON.stringify({ id: 'card-1', action: 'promote', columnId: 'col-1' }),
-    );
-    expect(dataTransfer.effectAllowed).toBe('copyMove');
+    expect(card()).toHaveAttribute('tabindex', '0');
+    expect(card()).toHaveStyle({ cursor: 'grab' });
   });
 
   // Decision 16: a Lines & Veils post-it moves to the other two columns.
@@ -119,14 +114,6 @@ describe('PostItCard', () => {
     expect(screen.queryByRole('menuitem', { name: 'Sposta in Must' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('menuitem', { name: 'Sposta in Veli' }));
     expect(act).toHaveBeenCalledWith(boardWrites.move('card-1', 'lv-veils'));
-
-    const dataTransfer = { setData: vi.fn(), effectAllowed: '' };
-    fireEvent.dragStart(card(), { dataTransfer });
-    expect(dataTransfer.setData).toHaveBeenCalledWith(
-      'application/x-exlibris-post-it',
-      JSON.stringify({ id: 'card-1', action: 'move', columnId: 'lv-must' }),
-    );
-    expect(dataTransfer.effectAllowed).toBe('move');
   });
 
   it('reacts with a chip or the picker', async () => {
@@ -142,13 +129,14 @@ describe('PostItCard', () => {
   // Spec 22b: in "View as" nothing writes, so no menu, no picker, no drag.
   it('only shows the post-it while the Master previews the Room', () => {
     const reactions = [{ emoji: '👍', count: 1, reacted_by_me: false, user_ids: ['user-2'] }];
-    renderBoard(<PostItCard postIt={postIt({ reactions, can_promote: true })} column={column()} onLinesVeils={false} />, {
-      writable: false,
-    });
+    renderBoard(
+      <PostItCard postIt={postIt({ reactions, can_promote: true, can_place: true })} column={column()} onLinesVeils={false} />,
+      { writable: false },
+    );
     expect(screen.queryByRole('button', { name: 'Azioni del post-it' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aggiungi una reazione' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^👍/ })).toBeDisabled();
-    expect(card()).not.toHaveAttribute('draggable', 'true');
+    expect(card()).not.toHaveAttribute('tabindex');
   });
 
   it('shows no reactions row on a post-it that takes none and has none', () => {
@@ -158,39 +146,36 @@ describe('PostItCard', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  // Spec 46c Decision 9: the Master drops a post-it of the same column on another to group them.
-  it('groups the post-it dropped on it from the same column', () => {
-    const { act } = renderBoard(
-      <PostItCard postIt={postIt({ can_group: true })} column={column()} onLinesVeils={false} />,
-    );
-    const drag = (dragged: object) => {
-      const dataTransfer = {
-        types: ['application/x-exlibris-post-it'],
-        getData: () => JSON.stringify(dragged),
-      };
-      fireEvent.dragOver(card(), { dataTransfer });
-      expect(card()).toHaveAttribute('data-drop-over');
-      fireEvent.drop(card(), { dataTransfer });
-      expect(card()).not.toHaveAttribute('data-drop-over');
-    };
-    drag({ id: 'card-1', action: 'promote', columnId: 'col-1' });
-    drag({ id: 'card-9', action: 'promote', columnId: 'col-2' });
-    drag({ id: 'card-9', action: 'move', columnId: 'col-1' });
-    expect(act).not.toHaveBeenCalled();
-    drag({ id: 'card-2', action: 'promote', columnId: 'col-1' });
-    expect(act).toHaveBeenCalledWith(boardWrites.group(['card-1', 'card-2']));
-
-    fireEvent.dragOver(card(), { dataTransfer: { types: ['text/plain'] } });
-    expect(card()).not.toHaveAttribute('data-drop-over');
-    fireEvent.dragLeave(card());
-    fireEvent.drop(card(), { dataTransfer: { types: ['text/plain'] } });
-    expect(act).toHaveBeenCalledTimes(1);
+  // Spec 46d Decision 7: dragged onto another post-it, that one rings and says "Group".
+  it('rings as the post-it a drag would group with', () => {
+    renderBoard(<PostItCard postIt={postIt()} column={column()} onLinesVeils={false} />, {
+      dnd: { active: { kind: 'card', id: 'card-2' }, intent: { kind: 'group', withId: 'card-1' } },
+    });
+    expect(card()).toHaveAttribute('data-group-target');
+    expect(within(card()).getByText('Raggruppa')).toBeInTheDocument();
   });
 
-  it('takes no drop where it cannot be grouped', () => {
-    renderBoard(<PostItCard postIt={postIt()} column={column()} onLinesVeils={false} />);
-    fireEvent.dragOver(card(), { dataTransfer: { types: ['application/x-exlibris-post-it'] } });
-    expect(card()).not.toHaveAttribute('data-drop-over');
+  it('shows no ring while a drag would land elsewhere', () => {
+    renderBoard(<PostItCard postIt={postIt()} column={column()} onLinesVeils={false} />, {
+      dnd: { active: { kind: 'card', id: 'card-2' }, intent: { kind: 'group', withId: 'card-3' } },
+    });
+    expect(card()).not.toHaveAttribute('data-group-target');
+  });
+
+  // Space on the post-it picks it up; on one of its buttons it presses the button.
+  it('is picked up with the keyboard from the post-it, not from its buttons', async () => {
+    const { user } = renderBoard(
+      <BoardDnd>
+        <PostItCard postIt={postIt({ can_place: true })} column={column()} onLinesVeils={false} />
+      </BoardDnd>,
+    );
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Azioni del post-it' }), { key: ' ', code: 'Space' });
+    expect(card()).not.toHaveAttribute('data-dragging');
+    card().focus();
+    await user.keyboard(' ');
+    await waitFor(() => expect(card()).toHaveAttribute('data-dragging'));
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(card()).not.toHaveAttribute('data-dragging'));
   });
 
   // "Group with…" lists the column's other groups and lone post-its, not its own group.
@@ -213,6 +198,7 @@ describe('PostItCard', () => {
     });
     const { act, user } = renderBoard(
       <PostItCard postIt={own.cards[0]} column={own} onLinesVeils={false} />,
+      { board: { can_manage: true } },
     );
 
     await user.click(screen.getByRole('button', { name: 'Azioni del post-it' }));
@@ -242,6 +228,29 @@ describe('PostItCard', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'Raggruppa con…' }));
     await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: /Basilischi/ }));
     expect(act).toHaveBeenLastCalledWith(boardWrites.group(['card-5', 'card-1']), expect.any(Function));
+  });
+
+  // Spec 46d Q2: a Player groups their own post-its, and never takes one out.
+  it("offers a Player only their own post-its and groups to group with", async () => {
+    const own = column({
+      groups: [
+        { id: 'g-1', title: 'Miei', position: 1 },
+        { id: 'g-2', title: 'Misti', position: 2 },
+      ],
+      cards: [
+        rawPostIt({ can_group: true, group_id: 'g-1' }),
+        rawPostIt({ id: 'card-2', can_group: true, group_id: 'g-1', body: 'Anche mio' }),
+        rawPostIt({ id: 'card-3', can_group: true, group_id: 'g-2', body: 'Mio' }),
+        rawPostIt({ id: 'card-4', can_group: false, group_id: 'g-2', mine: false, body: 'Di Bianca' }),
+        rawPostIt({ id: 'card-5', can_group: true, body: 'Sciolto' }),
+      ],
+    });
+    const { user } = renderBoard(<PostItCard postIt={own.cards[4]} column={own} onLinesVeils={false} />);
+    await user.click(screen.getByRole('button', { name: 'Azioni del post-it' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Raggruppa con…' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Raggruppa con…' });
+    const choices = within(dialog).getAllByRole('button').filter((b) => b.textContent !== '');
+    expect(choices.map((b) => b.textContent)).toEqual(['Miei2 post-it']);
   });
 
   it('offers no grouping when the column has nothing to group with', async () => {

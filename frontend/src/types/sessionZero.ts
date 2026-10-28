@@ -4,19 +4,99 @@ import type { MapColor } from './map';
 /** The three fixed columns of the Lines & Veils board (spec 46 Decision 10). */
 export type LinesVeilsKind = 'must' | 'veils' | 'lines';
 
+/** The two fixed columns of a Stars and Wishes step (spec 47 Decision 7). */
+export type StarsWishesKind = 'stars' | 'wishes';
+
+/** What a step of a session's chain is (spec 47 Decision 1). */
+export type ModuleKind = 'retro' | 'lines_veils' | 'stars_wishes' | 'questions' | 'ddi';
+
+/** A Player's "I have read and accept" (spec 47 Decision 8); `outdated` once the Document changed after it. */
+export interface Acceptance {
+  userId: string;
+  acceptedAt: string;
+  outdated: boolean;
+  mine: boolean;
+}
+
+/**
+ * A DDI step (spec 47 Decision 8): `documentId` is its Document when the
+ * viewer sees it, `documentHidden` says there is one they don't see yet.
+ * The Master gets every acceptance, a Player their own; `canAccept` while
+ * the viewer may accept (again, once the Document changed).
+ */
+export interface DdiStep {
+  documentId: string | null;
+  documentHidden: boolean;
+  changedAt: string | null;
+  acceptances: Acceptance[];
+  canAccept: boolean;
+}
+
+/** Where a question's answer goes in the Player's Document (spec 47 Decision 9). */
+export type QuestionTarget = 'name' | 'subtitle' | 'description' | 'note' | 'document' | 'none';
+
+/** A question of a Questions step; `tagId` is the Tag of a "New Document" question's Document. */
+export interface Question {
+  id: string;
+  position: number;
+  body: string;
+  hint: string | null;
+  target: QuestionTarget;
+  tagId: string | null;
+}
+
+/** An answer the viewer may read (Decision 10): their own, or everyone's for the Master or once revealed. */
+export interface Answer {
+  questionId: string;
+  userId: string;
+  body: string;
+  /** A Note answer's Note is made Private (Q3). */
+  notePrivate: boolean;
+  updatedAt: string;
+  mine: boolean;
+}
+
+/** A Document made from a Player's answers: their own (`questionId` null) or a "New Document" question's. */
+export interface AnswerDocument {
+  userId: string;
+  questionId: string | null;
+  documentId: string;
+  mine: boolean;
+}
+
+/**
+ * A Questions step (spec 47 Decisions 9-11): its settings, questions, the
+ * answers and Documents the viewer may see. `canCreate`: the viewer may make
+ * their Document now; `creatable`: for the Master, how many Players
+ * "Create everyone's Documents" would make one for.
+ */
+export interface QuestionsStep {
+  tagId: string | null;
+  answersRevealed: boolean;
+  playersBypassCreationRule: boolean;
+  questions: Question[];
+  answers: Answer[];
+  documents: AnswerDocument[];
+  canCreate: boolean;
+  creatable: number;
+}
+
 /** What the Master can do with the shared timer (spec 46 Decision 4). */
 export type TimerAction = 'start' | 'pause' | 'resume' | 'stop';
 
 /**
  * A post-it as the viewer sees it. `authorId` is null on someone else's
  * anonymous post-it (Decision 7); `fromRetro` marks a Lines & Veils copy
- * (Decision 2); `groupId` its group (spec 46c Decision 9). The `can*` flags
- * come from the backend and drive the menu.
+ * (Decision 2); `groupId` its group (spec 46c Decision 9); `position` its
+ * place in its group, or among its column's post-its in no group and its
+ * groups (spec 46d Decision 7). The `can*` flags come from the backend and
+ * drive the menu and the drag (`canPlace`).
  */
 export interface PostIt {
   id: string;
   columnId: string;
   groupId: string | null;
+  position: number;
   body: string;
   authorId: string | null;
   anonymous: boolean;
@@ -34,28 +114,51 @@ export interface PostIt {
   canMove: boolean;
   canReact: boolean;
   canGroup: boolean;
-}
-
-/** Related post-its of a Retro column, gathered by the Master (spec 46c Decision 9). */
-export interface PostItGroup {
-  id: string;
-  title: string | null;
+  canPlace: boolean;
 }
 
 /**
- * A column, its groups and its post-its, oldest first; `kind` is set on
- * Lines & Veils; `color` comes from the maps' palette (spec 46c Decision 5).
+ * Related post-its of a Retro column (spec 46c Decision 9), gathered by the
+ * Master or by a Player from their own (spec 46d Q2), at `position` among
+ * the column's post-its in no group.
+ */
+export interface PostItGroup {
+  id: string;
+  title: string | null;
+  position: number;
+}
+
+/**
+ * A column, its groups and its post-its, in order; `kind` is set on the
+ * fixed ones, Lines & Veils and Stars and Wishes; `color` comes from the
+ * maps' palette (spec 46c Decision 5).
  */
 export interface PostItColumn {
   id: string;
-  kind: LinesVeilsKind | null;
+  kind: LinesVeilsKind | StarsWishesKind | null;
   title: string;
   color: MapColor;
   groups: PostItGroup[];
   cards: PostIt[];
 }
 
-/** A round of the Retro board: 1 is the Session 0, later ones Session 0.5 (Decision 16). */
+/**
+ * A step of the shown session's chain (spec 47): a Retro or Stars and
+ * Wishes step's columns; none for Lines & Veils, whose board is the Room's,
+ * or for Questions and DDI, which have `questions` and `ddi`.
+ */
+export interface SessionZeroModule {
+  id: string;
+  kind: ModuleKind;
+  position: number;
+  columns: PostItColumn[];
+  /** A Questions step's content (spec 47_2). */
+  questions?: QuestionsStep;
+  /** A DDI step's content (spec 47_3). */
+  ddi?: DdiStep;
+}
+
+/** A session (round): 1 is the Session 0, later ones freely named (Decision 16, spec 46d). */
 export interface SessionZeroRound {
   id: string;
   number: number;
@@ -79,8 +182,14 @@ export interface SessionZero {
   revision: number;
   canManage: boolean;
   rounds: SessionZeroRound[];
-  /** The round shown on the Retro board. */
+  /** The session shown. */
   roundId: string | null;
+  /** Its chain as the viewer sees it (spec 47 Decision 5: a Player the steps reached). */
+  modules: SessionZeroModule[];
+  currentModuleId: string | null;
+  /** How many later steps a Player doesn't see yet. */
+  hiddenModules: number;
+  /** The post-it board of the step on screen (`viewOf`): what the boards and the drag work on. */
   retro: PostItColumn[];
   linesVeils: PostItColumn[];
   timer: SessionZeroTimer | null;

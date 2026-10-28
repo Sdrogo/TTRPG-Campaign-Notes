@@ -178,7 +178,7 @@ describe('SessionZeroPage', () => {
     board = () => Promise.resolve(rawSessionZero({ rounds, round_id: 'round-1' }));
     await user.click(await screen.findByRole('option', { name: 'Sessione 0' }));
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero?round_id=round-1');
-    expect(await screen.findByText('Questa sessione è chiusa: la lavagna è in sola lettura.')).toBeInTheDocument();
+    expect(await screen.findByText('Chiusa')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aggiungi post-it' })).not.toBeInTheDocument();
 
     // Spec 46_4: another member deleted the Session 0, so the open round comes back.
@@ -206,7 +206,7 @@ describe('SessionZeroPage', () => {
     ];
     board = () => Promise.resolve(rawSessionZero({ retro: [rawPostItColumn({ cards: drafts })] }));
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Pubblica tutte le bozze (2)' }));
+    await user.click(await screen.findByRole('button', { name: 'Pubblica bozze (2)' }));
     const dialog = await screen.findByRole('dialog', { name: 'Pubblica tutte le tue bozze' });
     expect(dialog).toHaveTextContent('Le tue 2 bozze di questo giro');
     expect(dialog).not.toHaveTextContent('quasi piena');
@@ -217,7 +217,7 @@ describe('SessionZeroPage', () => {
       json: { anonymous: true },
     });
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(screen.queryByRole('button', { name: /Pubblica tutte le bozze/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Pubblica bozze/ })).not.toBeInTheDocument();
   });
 
   it('says which drafts stay drafts past the board\'s limit, and cancels', async () => {
@@ -227,7 +227,7 @@ describe('SessionZeroPage', () => {
     const drafts = Array.from({ length: 3 }, (_, i) => rawPostIt({ id: `d${i}`, draft: true, can_publish: true }));
     board = () => Promise.resolve(rawSessionZero({ retro: [rawPostItColumn({ cards: [...published, ...drafts] })] }));
     const { user } = render();
-    await user.click(await screen.findByRole('button', { name: 'Pubblica tutte le bozze (3)' }));
+    await user.click(await screen.findByRole('button', { name: 'Pubblica bozze (3)' }));
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('La bacheca è quasi piena: 2 bozze restano bozze.');
     await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
@@ -245,5 +245,159 @@ describe('SessionZeroPage', () => {
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero', { method: 'DELETE', json: undefined });
     expect(await screen.findByText(/non è ancora iniziata/)).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Sessione 0' })).toBeInTheDocument();
+  });
+  // Spec 47 Decision 2: the Master composes the first session's chain.
+  it('lets the Master compose the chain when starting', async () => {
+    board = () =>
+      Promise.resolve(rawSessionZero({ started: false, can_manage: true, rounds: [], round_id: null, retro: [], lines_veils: [] }));
+    const { user } = render();
+    await user.click(await screen.findByRole('button', { name: 'Avvia la Sessione 0' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Avvia la Sessione 0' });
+    await user.click(within(dialog).getAllByRole('button', { name: 'Rimuovi' })[1]);
+    await user.click(within(dialog).getByRole('combobox', { name: 'Tappa' }));
+    await user.click(await screen.findByRole('option', { name: 'Stelle e Desideri' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Aggiungi tappa' }));
+    await user.click(within(dialog).getAllByRole('button', { name: 'Sposta su' })[1]);
+    await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Avvia la Sessione 0' }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Avvia' }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero/start', {
+      method: 'POST',
+      json: { modules: ['stars_wishes', 'retro'] },
+    });
+  });
+
+  // Spec 47 Decisions 4, 5 and 7: each step shows its own board; the table's move brings every page along.
+  it('opens each step of the chain and follows the table', async () => {
+    restoreMedia = matchMediaQueries(['(min-width: 62em)']);
+    const modules = [
+      { id: 'module-retro', kind: 'retro', position: 0, columns: [rawPostItColumn({ cards: [rawPostIt()] })] },
+      {
+        id: 'module-sw',
+        kind: 'stars_wishes',
+        position: 1,
+        columns: [
+          rawPostItColumn({ id: 'sw-stars', kind: 'stars', title: '', color: 'gold' }),
+          rawPostItColumn({ id: 'sw-wishes', kind: 'wishes', title: '', color: 'blue' }),
+        ],
+      },
+      { id: 'module-lv', kind: 'lines_veils', position: 2, columns: [] },
+    ];
+    board = () => Promise.resolve(rawSessionZero({ can_manage: true, modules }));
+    const { user } = render();
+    const nav = await screen.findByRole('navigation', { name: 'Tappe' });
+    expect(screen.getByRole('region', { name: 'Retro' })).toBeInTheDocument();
+
+    await user.click(within(nav).getByRole('button', { name: '2. Stelle e Desideri' }));
+    const starsWishes = screen.getByRole('region', { name: 'Stelle e Desideri' });
+    expect(within(starsWishes).getByRole('heading', { name: 'Stelle' })).toBeInTheDocument();
+    expect(within(starsWishes).getByRole('heading', { name: 'Desideri' })).toBeInTheDocument();
+    expect(within(starsWishes).queryByRole('button', { name: /Azioni della colonna/ })).not.toBeInTheDocument();
+    expect(within(starsWishes).queryByRole('button', { name: 'Aggiungi colonna' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Linee e Veli' })).not.toBeInTheDocument();
+
+    await user.click(within(nav).getByRole('button', { name: '3. Linee e Veli' }));
+    expect(screen.getByRole('region', { name: 'Linee e Veli' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
+
+    // The Master brings the table to Stars and Wishes: every page goes there.
+    write = () => Promise.resolve(rawSessionZero({ can_manage: true, modules, current_module_id: 'module-sw' }));
+    await user.click(within(nav).getByRole('button', { name: '2. Stelle e Desideri' }));
+    await user.click(within(nav).getByRole('button', { name: 'Porta qui il tavolo' }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero/modules/current', {
+      method: 'PUT',
+      json: { module_id: 'module-sw' },
+    });
+    await vi.waitFor(() =>
+      expect(within(nav).getByRole('button', { name: '2. Stelle e Desideri' })).toHaveAttribute('aria-current', 'step'),
+    );
+    await user.click(within(nav).getByRole('button', { name: '1. Retro' }));
+    expect(screen.getByRole('region', { name: 'Retro' })).toBeInTheDocument();
+    await user.click(within(nav).getByRole('button', { name: '2. Stelle e Desideri' }));
+    expect(screen.getByRole('region', { name: 'Stelle e Desideri' })).toBeInTheDocument();
+  });
+
+  // Spec 47_2: a Questions step shows its questions, with the Room's Tags.
+  it('shows a Questions step', async () => {
+    const questions = {
+      tag_id: null,
+      answers_revealed: false,
+      players_bypass_creation_rule: true,
+      questions: [{ id: 'q-1', position: 0, body: 'Come ti chiami?', hint: null, target: 'name', tag_id: null }],
+      answers: [],
+      documents: [],
+      can_create: false,
+      creatable: 0,
+    };
+    board = () =>
+      Promise.resolve(
+        rawSessionZero({
+          modules: [{ id: 'module-q', kind: 'questions', position: 0, columns: [], questions }],
+          current_module_id: 'module-q',
+        }),
+      );
+    // The Tags come later than the boards.
+    const others = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
+      path === '/rooms/room-1/tags' ? new Promise(() => {}) : others(path, init),
+    );
+    render();
+    const section = await screen.findByRole('region', { name: 'Domande' });
+    expect(within(section).getByRole('textbox', { name: 'Come ti chiami?' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags');
+  });
+
+  // Spec 47_3: a DDI step shows the DDI's Document, or says there is none yet.
+  it('shows a DDI step', async () => {
+    const ddi = { document_id: null, document_hidden: false, changed_at: null, acceptances: [], can_accept: false };
+    board = () =>
+      Promise.resolve(
+        rawSessionZero({
+          modules: [{ id: 'module-ddi', kind: 'ddi', position: 0, columns: [], ddi }],
+          current_module_id: 'module-ddi',
+        }),
+      );
+    render();
+    const section = await screen.findByRole('region', { name: 'DDI' });
+    expect(within(section).getByText('Il Master non ha ancora scelto la DDI.')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
+  });
+
+  it('goes back to the current step when another session is picked', async () => {
+    const rounds = [
+      { id: 'round-1', number: 1, title: null, started_at: '2026-10-01T09:00:00Z', closed_at: '2026-10-20T09:00:00Z' },
+      { id: 'round-2', number: 2, title: null, started_at: '2026-10-20T09:00:00Z', closed_at: null },
+    ];
+    const modules = [
+      { id: 'module-retro', kind: 'retro', position: 0, columns: [rawPostItColumn()] },
+      { id: 'module-lv', kind: 'lines_veils', position: 1, columns: [] },
+    ];
+    board = () => Promise.resolve(rawSessionZero({ rounds, round_id: 'round-2', modules }));
+    const { user } = render();
+    await user.click(await screen.findByRole('button', { name: '2. Linee e Veli' }));
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: 'Sessione da mostrare' }));
+    board = () => Promise.resolve(rawSessionZero({ rounds, round_id: 'round-1' }));
+    await user.click(await screen.findByRole('option', { name: 'Sessione 0' }));
+    expect(await screen.findByRole('tab', { name: 'Retro' })).toBeInTheDocument();
+  });
+
+  // Spec 47: "Publish drafts" counts the drafts of every step of the open session.
+  it('counts the drafts of every step', async () => {
+    const draft = (id: string) => rawPostIt({ id, draft: true, can_publish: true });
+    const modules = [
+      { id: 'module-retro', kind: 'retro', position: 0, columns: [rawPostItColumn({ cards: [draft('d1')] })] },
+      {
+        id: 'module-sw',
+        kind: 'stars_wishes',
+        position: 1,
+        columns: [rawPostItColumn({ id: 'sw-stars', kind: 'stars', title: '', cards: [draft('d2'), draft('d3')] })],
+      },
+    ];
+    board = () => Promise.resolve(rawSessionZero({ modules }));
+    render();
+    expect(await screen.findByRole('button', { name: 'Pubblica bozze (3)' })).toBeInTheDocument();
   });
 });

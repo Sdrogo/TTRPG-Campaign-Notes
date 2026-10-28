@@ -1275,7 +1275,9 @@
     "kinds": {
       "must": "Must",
       "veils": "Sluiers",
-      "lines": "Lijnen"
+      "lines": "Lijnen",
+      "stars": "Sterren",
+      "wishes": "Wensen"
     },
     "postIt": {
       "text": "Tekst van de post-it",
@@ -1299,8 +1301,8 @@
       "anonymousHint": "Niemand ziet wie hem schreef, ook de Master niet."
     },
     "publishAll": {
-      "button_one": "Alle concepten publiceren ({{count}})",
-      "button_other": "Alle concepten publiceren ({{count}})",
+      "button_one": "Concepten publiceren ({{count}})",
+      "button_other": "Concepten publiceren ({{count}})",
       "title": "Al je concepten publiceren",
       "body_one": "Je concept in deze ronde wordt zichtbaar voor alle leden. Dit kan niet ongedaan worden gemaakt.",
       "body_other": "Je {{count}} concepten in deze ronde worden zichtbaar voor alle leden. Dit kan niet ongedaan worden gemaakt.",
@@ -1334,12 +1336,12 @@
       "first": "Sessie 0",
       "later": "Sessie 0.5 #{{number}}",
       "pick": "Te tonen sessie",
-      "start": "Sessie 0.5 starten",
-      "startBody": "Het huidige Retro-bord sluit en blijft alleen-lezen beschikbaar; nooit gepubliceerde concepten worden verwijderd. Het nieuwe bord begint leeg, met dezelfde kolommen. Lijnen en Sluiers blijft zoals het is.",
-      "title": "Titel (optioneel)",
-      "titlePlaceholder": "Einde van arc 1",
-      "startButton": "Starten",
-      "closed": "Deze sessie is gesloten: het bord is alleen-lezen."
+      "start": "Nieuwe sessie",
+      "startBody": "De huidige sessie sluit en blijft alleen-lezen te bekijken; nooit gepubliceerde concepten worden verwijderd. De nieuwe begint leeg met de stappen hieronder, en de Retro-borden houden dezelfde kolommen. Lijnen en Sluiers blijft zoals het is.",
+      "title": "Naam",
+      "startButton": "Aanmaken",
+      "closed": "Deze sessie is gesloten: het bord is alleen-lezen.",
+      "closedBadge": "Gesloten"
     },
     "timer": {
       "label": "Timer",
@@ -1357,6 +1359,116 @@
       "pause": "Pauzeren",
       "resume": "Hervatten",
       "stop": "Stoppen en wissen"
+    },
+    "dnd": {
+      "groupHere": "Groeperen",
+      "instructions": "Druk op Spatie of Enter om te verplaatsen, beweeg met de pijltjestoetsen en druk op Spatie of Enter om los te laten. Esc annuleert.",
+      "pickedUp": "{{name}} opgepakt.",
+      "over": "Boven {{name}}.",
+      "noTarget": "Niet boven een plek om los te laten.",
+      "dropped": "{{name}} losgelaten.",
+      "cancelled": "Geannuleerd: {{name}} staat weer op zijn plek."
+    },
+    "modules": {
+      "label": "Stappen",
+      "kinds": {
+        "retro": "Retro",
+        "lines_veils": "Lijnen en Sluiers",
+        "stars_wishes": "Sterren en Wensen",
+        "questions": "Vragen",
+        "ddi": "DDI"
+      },
+      "hiddenHint": "Nog verborgen stappen: {{count}}",
+      "next": "Volgende",
+      "bringHere": "Breng de tafel hierheen",
+      "current": "Huidige stap",
+      "edit": "Stappen bewerken",
+      "editHint": "Wijzigingen gelden meteen, voor alle leden.",
+      "add": "Stap toevoegen",
+      "kind": "Stap",
+      "moveUp": "Omhoog",
+      "moveDown": "Omlaag",
+      "remove": "Verwijderen",
+      "removeTitle": "Deze stap verwijderen?",
+      "removeBody": "De post-its van ‘{{name}}’ worden mee verwijderd. Lijnen en Sluiers blijft altijd onaangeroerd.",
+      "removeQuestionsBody": "De vragen en antwoorden van ‘{{name}}’ worden ermee verwijderd. Al gemaakte Documenten blijven.",
+      "chain": "Stappen van de sessie",
+      "chainHint": "Kies de stappen en hun volgorde; je kunt ze later nog wijzigen.",
+      "max": "Hoogstens {{max}} stappen.",
+      "startButton": "Starten"
+    },
+    "questions": {
+      "title": "Vragen",
+      "edit": "Vragen bewerken",
+      "editHint": "De vragen worden samen opgeslagen. Een vraag verwijderen wist de antwoorden erop.",
+      "tag": "Tag van de Documenten van de Spelers",
+      "noTag": "Geen tag",
+      "bypass": "Spelers maken hun eigen Documenten, ook als de Kamer dat niet toestaat",
+      "noneMaster": "Nog geen vragen: schrijf ze met ‘Vragen bewerken’.",
+      "nonePlayer": "De Master heeft de vragen nog niet geschreven.",
+      "answers": "Antwoorden",
+      "reveal": "Antwoorden onthullen",
+      "hide": "Antwoorden verbergen",
+      "createAll": "Documenten van iedereen maken ({{count}})",
+      "privateHint": "Elke Speler ziet alleen de eigen antwoorden.",
+      "revealedHint": "Alle leden zien ieders antwoorden.",
+      "noPlayers": "Geen Spelers in de Kamer.",
+      "answered": "{{count}}/{{total}} beantwoord",
+      "openDocument": "Document openen",
+      "private": "Privé",
+      "openMine": "Je Document openen",
+      "createMine": "Mijn Document maken",
+      "masterCreates": "De Master maakt je Document.",
+      "nameFirst": "Beantwoord de vraag over de naam om je Document te maken.",
+      "everyone": "Ieders antwoorden",
+      "autosave": "Antwoorden worden opgeslagen terwijl je typt; alleen jij en de Master zien ze.",
+      "number": "Vraag {{number}}",
+      "question": "Vraag",
+      "hint": "Hint (optioneel)",
+      "target": "Waar het antwoord heen gaat",
+      "documentTag": "Tag van het nieuwe Document",
+      "add": "Vraag toevoegen",
+      "targets": {
+        "name": "Naam",
+        "subtitle": "Ondertitel",
+        "description": "Beschrijving",
+        "note": "Notitie",
+        "document": "Nieuw Document",
+        "none": "Niet in het Document"
+      },
+      "goesTo": {
+        "name": "Wordt de naam van je Document.",
+        "subtitle": "Wordt de ondertitel van je Document.",
+        "description": "Komt in de beschrijving van je Document.",
+        "note": "Wordt een Notitie van je Document.",
+        "document": "Wordt een eigen Document: de eerste regel is de naam, de rest de beschrijving.",
+        "none": "Blijft hier, om aan tafel te bespreken."
+      },
+      "problems": {
+        "empty": "Elke vraag heeft een tekst nodig.",
+        "oneName": "Er moet precies één vraag voor de Naam zijn.",
+        "oneSubtitle": "Hoogstens één vraag voor de Ondertitel.",
+        "documents": "Hoogstens {{max}} vragen ‘Nieuw Document’."
+      }
+    },
+    "ddi": {
+      "document": "Document van de DDI",
+      "pick": "Kies een Document",
+      "fromTemplate": "Maken vanuit het sjabloon",
+      "noneMaster": "Kies het Document van de DDI of maak het vanuit het sjabloon.",
+      "acceptances": "Akkoorden",
+      "noPlayers": "Geen Spelers in de Kamer.",
+      "notYet": "Nog niet",
+      "outdated": "Opnieuw akkoord geven",
+      "accepted": "Akkoord",
+      "hidden": "De Master heeft de DDI nog niet zichtbaar voor je gemaakt.",
+      "nonePlayer": "De Master heeft de DDI nog niet gekozen.",
+      "changed": "De DDI is veranderd nadat je akkoord gaf.",
+      "accept": "Gelezen en akkoord",
+      "youAccepted": "Je bent akkoord met de DDI.",
+      "withdraw": "Intrekken",
+      "open": "Document openen",
+      "loadError": "De DDI kan niet gelezen worden."
     }
   }
 }

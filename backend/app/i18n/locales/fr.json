@@ -256,6 +256,10 @@
       "notAuthor": "Seul l'auteur du post-it peut faire cela",
       "roundClosed": "Ce tour est clos et en lecture seule",
       "notRetroColumn": "Cela ne marche que sur une colonne Rétro du tour ouvert",
+      "invalidChain": "Une séance compte de 1 à {max} étapes",
+      "lastModule": "Une séance garde au moins une étape",
+      "moduleNotFound": "Étape introuvable",
+      "moduleOrder": "Indiquez chaque étape de la séance une seule fois",
       "notLinesVeils": "Cela ne marche que sur le tableau Lignes et Voiles",
       "promoteRetroToLinesVeils": "Seul un post-it de la Rétro peut être promu, dans une colonne de Lignes et Voiles",
       "invalidBody": "Un post-it doit avoir un texte, {max} caractères au plus",
@@ -277,7 +281,27 @@
       "columnOrder": "Le nouvel ordre doit citer une fois chaque colonne du tour",
       "notGroupable": "Seuls deux post-it publiés ou plus d'une même colonne de la Rétro du tour ouvert peuvent être groupés",
       "groupNotFound": "Groupe introuvable",
-      "nothingToChange": "Rien à modifier"
+      "nothingToChange": "Rien à modifier",
+      "badPlace": "Cet emplacement n'est pas dans la colonne ou le groupe indiqués",
+      "sameBoard": "Un post-it ou un groupe ne se déplace que dans son propre tableau et sa propre session",
+      "tooManyQuestions": "Une étape Questions compte au plus {max} questions",
+      "questionRequired": "Une question doit avoir un texte",
+      "questionTooLong": "Une question fait au plus {max} caractères",
+      "hintTooLong": "Une indication fait au plus {max} caractères",
+      "oneNameQuestion": "Exactement une question donne son nom au Document",
+      "oneSubtitleQuestion": "Au plus une question donne le sous-titre",
+      "tooManyDocumentQuestions": "Au plus {max} questions créent un Document à part",
+      "questionOrder": "Indique chaque question une seule fois, avec son id",
+      "answerTooLong": "Une réponse fait au plus {max} caractères",
+      "questionNotFound": "Question introuvable",
+      "notQuestionsModule": "Cela ne marche que sur une étape Questions",
+      "masterDoesNotAnswer": "Le MJ écrit les questions ; les joueurs y répondent",
+      "nameAnswerMissing": "Réponds d’abord à la question du nom",
+      "documentExists": "Tu as déjà créé ton Document ici",
+      "notDdiModule": "Cette étape n'est pas une DDI.",
+      "noDdiDocument": "Le Maître n'a pas encore choisi le Document de la DDI.",
+      "masterDoesNotAccept": "Le Maître écrit la DDI ; les Joueurs l'acceptent.",
+      "ddiDocumentInvalid": "Le Document de la DDI doit appartenir à cette Salle."
     }
   },
   "pdf": {
@@ -298,6 +322,19 @@
       "want": "On le veut à la table",
       "care": "Avec précaution",
       "avoid": "À éviter"
+    },
+    "ddi": {
+      "name": "Déclaration d'intention",
+      "behind": "Derrière la table",
+      "behindHint": "L'ossature d'une bonne partie.",
+      "onTable": "Sur la table",
+      "onTableHint": "Ce qui rend une partie formidable.",
+      "meeting": "Rencontre",
+      "rules": "Règles",
+      "setting": "Univers",
+      "themes": "Thèmes",
+      "tone": "Ton",
+      "characters": "Personnages"
     }
   }
 }

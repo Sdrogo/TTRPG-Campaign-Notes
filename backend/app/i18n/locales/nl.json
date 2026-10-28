@@ -256,6 +256,10 @@
       "notAuthor": "Alleen de auteur van het post-it kan dit doen",
       "roundClosed": "Deze ronde is gesloten en alleen-lezen",
       "notRetroColumn": "Dit werkt alleen in een Retro-kolom van de open ronde",
+      "invalidChain": "Een sessie heeft 1 tot {max} stappen",
+      "lastModule": "Een sessie houdt minstens één stap",
+      "moduleNotFound": "Stap niet gevonden",
+      "moduleOrder": "Noem elke stap van de sessie precies één keer",
       "notLinesVeils": "Dit werkt alleen op het bord Lijnen en Sluiers",
       "promoteRetroToLinesVeils": "Alleen een Retro-post-it kan worden gepromoveerd, naar een kolom van Lijnen en Sluiers",
       "invalidBody": "Een post-it heeft tekst nodig, hoogstens {max} tekens",
@@ -277,7 +281,27 @@
       "columnOrder": "De nieuwe volgorde moet elke kolom van de ronde één keer noemen",
       "notGroupable": "Alleen twee of meer gepubliceerde post-its uit één Retro-kolom van de open ronde kunnen worden gegroepeerd",
       "groupNotFound": "Groep niet gevonden",
-      "nothingToChange": "Niets te wijzigen"
+      "nothingToChange": "Niets te wijzigen",
+      "badPlace": "Die plek ligt niet in de genoemde kolom of groep",
+      "sameBoard": "Een post-it of groep verplaats je alleen binnen het eigen bord en de eigen sessie",
+      "tooManyQuestions": "Een Vragen-stap heeft hoogstens {max} vragen",
+      "questionRequired": "Een vraag heeft een tekst nodig",
+      "questionTooLong": "Een vraag heeft hoogstens {max} tekens",
+      "hintTooLong": "Een hint heeft hoogstens {max} tekens",
+      "oneNameQuestion": "Precies één vraag geeft het Document zijn naam",
+      "oneSubtitleQuestion": "Hoogstens één vraag geeft de ondertitel",
+      "tooManyDocumentQuestions": "Hoogstens {max} vragen maken een eigen Document",
+      "questionOrder": "Noem elke vraag één keer, met haar eigen id",
+      "answerTooLong": "Een antwoord heeft hoogstens {max} tekens",
+      "questionNotFound": "Vraag niet gevonden",
+      "notQuestionsModule": "Dit werkt alleen in een Vragen-stap",
+      "masterDoesNotAnswer": "De Master schrijft de vragen; de spelers beantwoorden ze",
+      "nameAnswerMissing": "Beantwoord eerst de naamvraag",
+      "documentExists": "Je hebt je Document hier al gemaakt",
+      "notDdiModule": "Deze etappe is geen DDI.",
+      "noDdiDocument": "De Master heeft het Document van de DDI nog niet gekozen.",
+      "masterDoesNotAccept": "De Master schrijft de DDI; de Spelers accepteren hem.",
+      "ddiDocumentInvalid": "Het Document van de DDI moet van deze Kamer zijn."
     }
   },
   "pdf": {
@@ -298,6 +322,19 @@
       "want": "Dit willen we aan tafel",
       "care": "Met zorg",
       "avoid": "Te vermijden"
+    },
+    "ddi": {
+      "name": "Intentieverklaring",
+      "behind": "Achter de tafel",
+      "behindHint": "Het geraamte van een goed spel.",
+      "onTable": "Op de tafel",
+      "onTableHint": "Wat een spel geweldig maakt.",
+      "meeting": "Bijeenkomst",
+      "rules": "Regels",
+      "setting": "Setting",
+      "themes": "Thema's",
+      "tone": "Toon",
+      "characters": "Personages"
     }
   }
 }

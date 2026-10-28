@@ -256,6 +256,10 @@
       "notAuthor": "Solo l'autore del post-it può farlo",
       "roundClosed": "Questo giro è chiuso e in sola lettura",
       "notRetroColumn": "Funziona solo su una colonna della Retro nel giro aperto",
+      "invalidChain": "Una sessione ha da 1 a {max} tappe",
+      "lastModule": "Una sessione deve avere almeno una tappa",
+      "moduleNotFound": "Tappa non trovata",
+      "moduleOrder": "Elenca ogni tappa della sessione una sola volta",
       "notLinesVeils": "Funziona solo sulla board Linee e Veli",
       "promoteRetroToLinesVeils": "Si promuove solo un post-it della Retro, in una colonna di Linee e Veli",
       "invalidBody": "Un post-it deve avere un testo, al massimo {max} caratteri",
@@ -277,7 +281,27 @@
       "columnOrder": "Il nuovo ordine deve elencare una volta ogni colonna del giro",
       "notGroupable": "Si raggruppano solo due o più post-it pubblicati della stessa colonna della Retro nel giro aperto",
       "groupNotFound": "Gruppo non trovato",
-      "nothingToChange": "Niente da cambiare"
+      "nothingToChange": "Niente da cambiare",
+      "badPlace": "Quel punto non è nella colonna o nel gruppo indicati",
+      "sameBoard": "Un post-it o un gruppo si sposta solo nella sua lavagna e nella sua sessione",
+      "tooManyQuestions": "Una tappa Domande ha al massimo {max} domande",
+      "questionRequired": "Una domanda deve avere un testo",
+      "questionTooLong": "Una domanda ha al massimo {max} caratteri",
+      "hintTooLong": "Un suggerimento ha al massimo {max} caratteri",
+      "oneNameQuestion": "Esattamente una domanda dà il nome al Documento",
+      "oneSubtitleQuestion": "Al massimo una domanda dà il sottotitolo",
+      "tooManyDocumentQuestions": "Al massimo {max} domande creano un Documento a sé",
+      "questionOrder": "Elenca ogni domanda una sola volta, con il suo id",
+      "answerTooLong": "Una risposta ha al massimo {max} caratteri",
+      "questionNotFound": "Domanda non trovata",
+      "notQuestionsModule": "Funziona solo su una tappa Domande",
+      "masterDoesNotAnswer": "Il Master scrive le domande; rispondono i Player",
+      "nameAnswerMissing": "Rispondi prima alla domanda del nome",
+      "documentExists": "Hai già creato il tuo Documento qui",
+      "notDdiModule": "Questa tappa non è una DDI.",
+      "noDdiDocument": "Il Master non ha ancora scelto il Documento della DDI.",
+      "masterDoesNotAccept": "Il Master scrive la DDI: la accettano i Player.",
+      "ddiDocumentInvalid": "Il Documento della DDI deve essere di questa Stanza."
     }
   },
   "pdf": {
@@ -298,6 +322,19 @@
       "want": "Lo vogliamo al tavolo",
       "care": "Con cura",
       "avoid": "Da evitare"
+    },
+    "ddi": {
+      "name": "Dichiarazione d'Intenti",
+      "behind": "Dietro il Tavolo",
+      "behindHint": "L'ossatura di un buon gioco.",
+      "onTable": "Sul Tavolo",
+      "onTableHint": "Ciò che rende una partita strepitosa.",
+      "meeting": "Incontro",
+      "rules": "Regole",
+      "setting": "Ambientazione",
+      "themes": "Tematiche",
+      "tone": "Tono",
+      "characters": "Personaggi"
     }
   }
 }

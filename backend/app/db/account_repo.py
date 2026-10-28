@@ -25,6 +25,9 @@ from app.db.models import (
     PostVisibilityGrantRow,
     RelationshipMapGrantRow,
     RevealRecipientRow,
+    SessionZeroAcceptanceRow,
+    SessionZeroAnswerDocumentRow,
+    SessionZeroAnswerRow,
     SessionZeroCardReactionRow,
     SessionZeroCardRow,
     UserRow,
@@ -38,10 +41,13 @@ async def erase_personal_rows(session: AsyncSession, user_id: uuid.UUID) -> None
     receipts, Ownerships, visibility grants (relationship maps' included,
     spec 28_1) and invitations addressed to them, plus their Session 0
     post-its (anonymous ones and copies too) and reactions on post-its
-    (spec 46 Decision 14). Their Memberships are gone already (left or
-    deleted with their Room); what else they wrote stays, with no profile
-    behind it. Ids left in audit entries, versions and `created_by`
-    columns no longer lead to anyone once the auth account is deleted too."""
+    (spec 46 Decision 14), their Session 0 answers and the record of which
+    Documents those made, and their DDI acceptances (spec 47 Decision 14;
+    the Documents stay). Their
+    Memberships are gone already (left or deleted with their Room); what
+    else they wrote stays, with no profile behind it. Ids left in audit
+    entries, versions and `created_by` columns no longer lead to anyone
+    once the auth account is deleted too."""
     await session.execute(
         delete(FriendshipRow).where(
             or_(FriendshipRow.user_low == user_id, FriendshipRow.user_high == user_id)
@@ -58,6 +64,9 @@ async def erase_personal_rows(session: AsyncSession, user_id: uuid.UUID) -> None
         PostVisibilityGrantRow,
         RelationshipMapGrantRow,
         SessionZeroCardReactionRow,
+        SessionZeroAnswerRow,
+        SessionZeroAnswerDocumentRow,
+        SessionZeroAcceptanceRow,
     ):
         await session.execute(delete(model).where(model.user_id == user_id))
     await session.execute(delete(SessionZeroCardRow).where(SessionZeroCardRow.author_id == user_id))

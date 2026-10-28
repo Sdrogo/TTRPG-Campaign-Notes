@@ -1,7 +1,7 @@
 import { waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '../../lib/apiClient';
-import { boardWrites } from '../../lib/sessionZero';
+import { boardWrites, toSessionZero, type RawSessionZero } from '../../lib/sessionZero';
 import { rawSessionZero } from '../fixtures';
 import { createTestQueryClient, renderHookWithProviders } from '../utils';
 import { sessionZeroQueryKey, useSessionZero, useSessionZeroWrite } from '../../hooks/useSessionZero';
@@ -43,7 +43,7 @@ describe('useSessionZeroWrite', () => {
     fetchMock.mockResolvedValue(rawSessionZero({ revision: 4 }));
 
     const { result } = renderHookWithProviders(() => useSessionZeroWrite('room-1'), { queryClient });
-    result.current.mutate(boardWrites.publish('card-1', false));
+    result.current.mutate({ write: boardWrites.publish('card-1', false) });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero/cards/card-1/publish', {
@@ -53,5 +53,35 @@ describe('useSessionZeroWrite', () => {
     expect(queryClient.getQueryData<{ revision: number }>([...key, 'open'])?.revision).toBe(4);
     expect(queryClient.getQueryState([...key, 'open'])?.isInvalidated).toBe(false);
     expect(queryClient.getQueryState([...key, 'round-0'])?.isInvalidated).toBe(true);
+  });
+
+  // Spec 46d Decision 7: a drop shows at once, and goes back if the write fails.
+  it('shows a preview at once and puts the board back when the write fails', async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setDefaultOptions({ queries: { gcTime: Infinity, retry: false } });
+    const key = [...sessionZeroQueryKey('room-1'), 'open'];
+    queryClient.setQueryData(key, 'old');
+    let fail: (error: Error) => void = () => {};
+    fetchMock.mockReturnValue(new Promise((_resolve, reject) => (fail = reject)));
+
+    const { result } = renderHookWithProviders(() => useSessionZeroWrite('room-1'), { queryClient });
+    const preview = toSessionZero(rawSessionZero({ revision: 9 }) as RawSessionZero);
+    result.current.mutate({ write: boardWrites.placeCard('card-1', 'col-2', null, null), preview });
+    await waitFor(() => expect(queryClient.getQueryData(key)).toBe(preview));
+    fail(new Error('no'));
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(queryClient.getQueryData(key)).toBe('old');
+  });
+
+  it('leaves the board alone when a write without a preview fails', async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setDefaultOptions({ queries: { gcTime: Infinity, retry: false } });
+    const key = [...sessionZeroQueryKey('room-1'), 'open'];
+    queryClient.setQueryData(key, 'old');
+    fetchMock.mockRejectedValue(new Error('no'));
+    const { result } = renderHookWithProviders(() => useSessionZeroWrite('room-1'), { queryClient });
+    result.current.mutate({ write: boardWrites.publish('card-1', false) });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(queryClient.getQueryData(key)).toBe('old');
   });
 });
