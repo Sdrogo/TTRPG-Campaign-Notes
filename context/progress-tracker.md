@@ -758,8 +758,8 @@ on `main`.
   go-ahead to build the same day). **47_1 (chain + Stars and Wishes)
   built** in PR #259: steps table, "Next", "Edit steps", the chain when
   starting a session, Stars and Wishes, strings in 12 languages.
-  **Migration `e5c1a8f3b7d2`**: to apply to the staging DB before the
-  merge and to production before the next release. Next: 47_2
+  **Migration `e5c1a8f3b7d2`**: applied to the staging DB by the product
+  owner (2026-10-28); it must reach production before the next release. Next: 47_2
   (Questions), then 47_3 (DDI). Each session becomes a chain of modules
   the Master composes, reorders and advances with "Avanti" (Retro, Lines &
   Veils, DDI with per-Player acceptance, Stars and Wishes, Questions whose
