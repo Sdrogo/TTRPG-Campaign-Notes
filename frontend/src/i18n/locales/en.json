@@ -860,6 +860,7 @@
       "retry": "Try again",
       "listTitle": "Your PDFs",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "Queued",
         "running": "Being made",

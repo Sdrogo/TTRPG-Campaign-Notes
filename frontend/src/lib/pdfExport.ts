@@ -29,6 +29,8 @@ export interface PdfExportOptions {
   roomCover: boolean;
   /** Only the Documents carrying all of these Tags; none = the whole Room. */
   tagIds: string[];
+  /** The PDF of this one Document instead of the Room (spec 27b): no Tag filter and no cover. */
+  documentId?: string | null;
 }
 
 /**
@@ -57,6 +59,9 @@ export interface PdfJob {
   expiresAt: string | null;
   /** A signed link that downloads the file; null until it is done (or while it can't be signed). */
   downloadUrl: string | null;
+  /** The Document it is the PDF of (spec 27b), with its name when it was asked for; null for a Room PDF. */
+  documentId: string | null;
+  documentName: string | null;
 }
 
 /** A job as the API sends it (`ExportJobResponse`): converted in `toPdfJob` only. */
@@ -69,6 +74,8 @@ export interface RawPdfJob {
   finished_at: string | null;
   expires_at: string | null;
   download_url: string | null;
+  document_id?: string | null;
+  document_name?: string | null;
 }
 
 /** Maps the API's job to the app's. */
@@ -82,15 +89,29 @@ export function toPdfJob(raw: RawPdfJob): PdfJob {
     finishedAt: raw.finished_at,
     expiresAt: raw.expires_at,
     downloadUrl: raw.download_url,
+    documentId: raw.document_id ?? null,
+    documentName: raw.document_name ?? null,
   };
 }
 
 /**
  * The body of `POST /rooms/{id}/exports/pdf`. While the Master previews the
  * Room as a member (spec 22b) `viewAsUserId` goes here, not in the
- * `X-View-As` header, which the backend refuses on every write.
+ * `X-View-As` header, which the backend refuses on every write. The PDF of
+ * one Document (spec 27b) sends its id and neither a Tag filter nor a cover.
  */
 export function pdfRequestBody(options: PdfExportOptions, viewAsUserId: string | null) {
+  const documentId = options.documentId ?? null;
+  if (documentId) {
+    return {
+      style: options.style,
+      page_size: options.pageSize,
+      include_comments: options.includeComments,
+      include_attachments: options.includeAttachments,
+      document_id: documentId,
+      view_as_user_id: viewAsUserId,
+    };
+  }
   return {
     style: options.style,
     page_size: options.pageSize,

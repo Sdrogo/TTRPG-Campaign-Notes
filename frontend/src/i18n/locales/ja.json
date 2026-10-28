@@ -850,6 +850,7 @@
       "retry": "再試行",
       "listTitle": "あなたのPDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "待機中",
         "running": "作成中",

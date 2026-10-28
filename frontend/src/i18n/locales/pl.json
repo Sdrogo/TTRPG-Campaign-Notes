@@ -880,6 +880,7 @@
       "retry": "Spróbuj ponownie",
       "listTitle": "Twoje PDF-y",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "W kolejce",
         "running": "W przygotowaniu",

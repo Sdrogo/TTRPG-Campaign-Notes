@@ -31,7 +31,7 @@ from manual_fixtures import (
 from pypdf import PdfReader
 
 from app.domain.export import ExportImage
-from app.domain.manual import Manual, ManualOptions, build_manual
+from app.domain.manual import Manual, ManualOptions, build_document_manual, build_manual
 from app.domain.mentions import MentionKind
 from app.pdf.labels import manual_labels
 from app.pdf.render import (
@@ -778,3 +778,41 @@ def test_the_typesetting_process_lowers_its_priority_and_copes_without_it(
 
     monkeypatch.setattr(os, "nice", refused)
     lower_priority()
+
+
+def test_a_single_document_pdf_has_no_cover_or_contents() -> None:
+    """Spec 27b (product owner, 2026-10-28): the PDF of one Document starts on
+    page 1 with its chapter, titled with the Room's name."""
+    manual = build_document_manual(make_export(), CASTLE, ManualOptions(), LABELS)
+
+    html = render_manual_html(manual, ManualStyle.GOTHIC, PageSize.A4)
+
+    assert 'class="cover' not in html and 'class="toc"' not in html
+    assert 'id="glossary"' not in html
+    assert 'class="chapter-title">Barovia<' in html and f'id="doc-{CASTLE}"' in html
+    assert "<title>Castle</title>" in html
+
+
+@pytest.mark.parametrize("style", list(ManualStyle))
+@pytest.mark.parametrize(("sentences", "columns"), [(60, 2), (14, 1)])
+def test_a_single_document_pdf_starts_on_page_one_in_the_manuals_columns(
+    style: ManualStyle, sentences: int, columns: int
+) -> None:
+    """The same column rule as the Room PDF (product owner, 2026-10-28): two
+    balanced columns, one when the Document fits it."""
+    _weasyprint()
+    sentence = "Marker the keep stands above the mist and the road bends toward it. "
+    export = make_export(
+        main_items=[],
+        documents=[document(CASTLE, "Castle", description=(text(sentence * sentences),))],
+    )
+    manual = build_document_manual(export, CASTLE, ManualOptions(), LABELS)
+
+    reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
+
+    assert "Castle" in reader.pages[0].extract_text()
+    starts = sorted({round(x) for x in _line_starts(reader, 0)})
+    left = min(starts)
+    width = float(reader.pages[0].mediabox.width)
+    to_the_right = [x for x in starts if x > left + width * 0.25]
+    assert bool(to_the_right) == (columns == 2), (style, sentences, starts)

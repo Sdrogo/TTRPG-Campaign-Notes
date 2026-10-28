@@ -862,6 +862,7 @@
       "retry": "Tentar novamente",
       "listTitle": "Os teus PDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "Em fila",
         "running": "A preparar",

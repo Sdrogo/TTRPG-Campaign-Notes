@@ -13,6 +13,15 @@ detail:
 
 ## Current Status (2026-10-28)
 
+- **27b, PDF of one Document** (2026-10-28, no migration, PR #266 into
+  `staging`): the Document's Export dialog offers PDF next to Markdown
+  and JSON, with the Room PDF's styles, page size, Comments and
+  Attachments. No cover and no contents: page 1 opens with the Room's
+  name and the Document, laid out with the Room PDF's column logic
+  (product owner's answers, 2026-10-28). Same job, same one-at-a-time
+  rule, listed on the Room page with the Document's name, file
+  `<document>-<date>.pdf`.
+
 - **Spec 48, Markdown in Documents and Notes** (2026-10-28, no migration,
   PR #262 into `staging`): descriptions and Note texts read as Markdown
   (CommonMark + tables, strikethrough, task lists; single line breaks
@@ -115,7 +124,7 @@ detail:
   `main` with release PR #246 (landing, Demo and tour, back fixes,
   dependency bump, compact Room setup and Document form, and these docs;
   conflicts with Dependabot bumps on `main` fixed by #247). No migration
-  was needed: production was already at head. Features 01 to 45 are built except 27b (listed under Next Up); 23c, 25
+  was needed: production was already at head. Features 01 to 45 are built (27b on 2026-10-28); 23c, 25
   and 25b were dropped by the product owner.
 - **Latest work**: spec 31 (GDPR: `GET /account/export`, `DELETE /account`,
   public `/privacy` notice, PR #150, controller named in PR #152) and spec
@@ -857,11 +866,6 @@ on `main`.
   owner, 2026-10-27). Ticket not written yet.
 - **Room landing page**: product owner's idea (2026-10-27), separate
   ticket, not written yet.
-- **27b, PDF of one Document**: next to build (product owner,
-  2026-10-08; backlog restarted with it 2026-10-28). Ticket refreshed
-  2026-10-28 (full-width single column, Markdown, 12 languages, three
-  questions for the product owner), waiting for confirmation. No migration
-  expected.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).

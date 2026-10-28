@@ -42,6 +42,13 @@ describe('RoomPdfExports', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
+  it('names the Document of a single-Document PDF (spec 27b)', async () => {
+    render([rawPdfJob({ document_id: 'doc-1', document_name: 'Il Cancello' })]);
+
+    const list = await screen.findByRole('region', { name: 'I tuoi PDF' });
+    expect(list).toHaveTextContent('Il Cancello · Gotico · A4');
+  });
+
   it('lists a ready PDF until it is downloaded, then stops listing it', async () => {
     const { user } = render([
       rawPdfJob({

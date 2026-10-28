@@ -880,6 +880,7 @@
       "retry": "Повторить",
       "listTitle": "PDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "В очереди",
         "running": "Готовится",

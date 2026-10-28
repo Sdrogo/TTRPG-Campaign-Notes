@@ -1,15 +1,20 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiDownload } from '../../lib/apiClient';
+import { apiDownload, apiFetch } from '../../lib/apiClient';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { saveBlob } from '../../lib/roomExport';
+import { rawPdfJob } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { ExportDocumentModal } from '../../components/ExportDocumentModal';
 
 vi.mock('../../lib/apiClient', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../lib/apiClient')>()),
   apiDownload: vi.fn(),
+  apiFetch: vi.fn(),
+}));
+vi.mock('../../hooks/useSession', () => ({
+  useSession: () => ({ session: { user: { id: 'user-1' } }, loading: false }),
 }));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 vi.mock('../../lib/roomExport', async (importOriginal) => ({
@@ -33,7 +38,18 @@ function render() {
   return { user: userEvent.setup() };
 }
 
+// What `GET .../exports` answers once the PDF has been requested.
+let jobs: unknown[] = [];
+
 beforeEach(() => {
+  jobs = [];
+  vi.mocked(apiFetch)
+    .mockReset()
+    .mockImplementation((path: string) => {
+      if (path === '/rooms/room-1/exports') return Promise.resolve(jobs);
+      if (path === '/rooms/room-1/exports/pdf') return Promise.resolve(rawPdfJob());
+      return Promise.resolve(undefined);
+    });
   vi.mocked(apiDownload).mockReset().mockResolvedValue(blob);
   vi.mocked(saveBlob).mockReset();
   vi.mocked(notifyError).mockReset();
@@ -92,6 +108,43 @@ describe('ExportDocumentModal (spec 27)', () => {
     await user.click(screen.getByRole('button', { name: 'Annulla' }));
 
     expect(onClose).toHaveBeenCalled();
+    expect(apiDownload).not.toHaveBeenCalled();
+  });
+
+  it('makes a PDF of the Document with no Tag filter or cover, then follows it (spec 27b)', async () => {
+    const { user } = render();
+
+    await screen.findByRole('dialog', { name: 'Esporta il Documento' });
+    await user.click(screen.getByText('PDF'));
+    expect(screen.getByRole('radio', { name: /Gotico/ })).toBeChecked();
+    expect(
+      screen.queryByRole('combobox', { name: 'Immagine di copertina' }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('checkbox', { name: 'Includi i Commenti in appendice' }));
+    jobs = [
+      rawPdfJob({
+        status: 'running',
+        document_id: 'doc-1',
+        document_name: 'Il Cancello',
+      }),
+    ];
+    await user.click(screen.getByRole('button', { name: 'Genera PDF' }));
+
+    await waitFor(() =>
+      expect(apiFetch).toHaveBeenCalledWith('/rooms/room-1/exports/pdf', {
+        method: 'POST',
+        json: {
+          style: 'gothic',
+          page_size: 'A4',
+          include_comments: true,
+          include_attachments: false,
+          document_id: 'doc-1',
+          view_as_user_id: null,
+        },
+        ignoreViewAs: true,
+      }),
+    );
+    expect(await screen.findByRole('status')).toHaveTextContent(/PDF/);
     expect(apiDownload).not.toHaveBeenCalled();
   });
 });

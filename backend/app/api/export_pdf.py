@@ -8,10 +8,10 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.access import require_membership
+from app.api.access import get_visible_document, require_membership
 from app.api.errors import http_error, translated_error
 from app.api.export_pdf_job import run_export_job, spawn
 from app.auth.dependencies import CurrentUserDep
@@ -19,7 +19,7 @@ from app.db import export_jobs_repo, rooms_repo, storage, tags_repo
 from app.db import session as session_module
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
-from app.domain.export import pdf_filename
+from app.domain.export import document_pdf_filename, pdf_filename
 from app.domain.export_jobs import (
     EXPORT_TTL,
     ExportAlreadyRunningError,
@@ -45,7 +45,8 @@ class PdfExportRequest(BaseModel):
     (spec 26 Decision 5): on unless the requester clears it.
     `view_as_user_id`, for the Master only, makes the PDF what that member
     sees; it is sent here and not as the `X-View-As` header, which refuses
-    writes."""
+    writes. `document_id` makes it the PDF of that one Document (spec 27b),
+    which takes no Tag filter and no cover."""
 
     style: ManualStyle = ManualStyle.GOTHIC
     page_size: PageSize = PageSize.A4
@@ -55,6 +56,14 @@ class PdfExportRequest(BaseModel):
     room_cover: bool = True
     tag_ids: list[uuid.UUID] = Field(default_factory=list)
     view_as_user_id: uuid.UUID | None = None
+    document_id: uuid.UUID | None = None
+
+    @model_validator(mode="after")
+    def _one_document_takes_no_filter(self) -> "PdfExportRequest":
+        """A single-Document PDF has no Tag filter and no cover to pick."""
+        if self.document_id is not None and (self.tag_ids or self.cover_document_id):
+            raise ValueError("document_id takes no tag_ids and no cover_document_id")
+        return self
 
 
 class ExportJobResponse(BaseModel):
@@ -72,6 +81,8 @@ class ExportJobResponse(BaseModel):
     finished_at: datetime | None
     expires_at: datetime | None
     download_url: str | None
+    document_id: uuid.UUID | None = None
+    document_name: str | None = None
 
 
 async def _response(
@@ -84,7 +95,10 @@ async def _response(
     if job.status is ExportStatus.DONE and job.storage_path and job.finished_at:
         expires_at = job.finished_at + EXPORT_TTL
         signed = await storage.signed_urls([job.storage_path])
-        if job.storage_path in signed:
+        if job.storage_path in signed and job.options.document_id is not None:
+            filename = document_pdf_filename(job.options.document_name or "", job.finished_at)
+            url = storage.as_download(signed[job.storage_path], filename)
+        elif job.storage_path in signed:
             if room_name is None:
                 room = await rooms_repo.get_room(session, job.room_id)
                 room_name = room.name if room is not None else "room"
@@ -100,6 +114,8 @@ async def _response(
         finished_at=job.finished_at,
         expires_at=expires_at,
         download_url=url,
+        document_id=job.options.document_id,
+        document_name=job.options.document_name,
     )
 
 
@@ -116,16 +132,24 @@ async def create_pdf_export(
     Members only (403 otherwise); 404 for a Tag of another Room; 409 when the
     requester already has a PDF queued or running in this Room; 403 when
     `view_as_user_id` is set by someone who isn't the Master or names a
-    non-member. The PDF holds only what the requester (or that member) sees,
-    read when the job starts. Not audited: it reads."""
+    non-member. With `document_id`, the PDF of that Document (spec 27b): 404
+    when the requester (or the member it is made as) can't see it, 422 with a
+    Tag filter or a cover. The PDF holds only what the requester (or that
+    member) sees, read when the job starts. Not audited: it reads."""
     requester_id = uuid.UUID(current_user.id)
     viewer = await require_membership(session, room_id, requester_id, locale)
     if body.view_as_user_id is not None:
         target = await rooms_repo.get_membership(session, room_id, body.view_as_user_id)
         try:
-            ensure_can_view_as(viewer, target)
+            viewer = ensure_can_view_as(viewer, target)
         except DomainError as exc:
             raise translated_error(status.HTTP_403_FORBIDDEN, exc, locale) from exc
+    document_name: str | None = None
+    if body.document_id is not None:
+        document, _, _ = await get_visible_document(
+            session, room_id, body.document_id, viewer.user_id, viewer.role, locale
+        )
+        document_name = document.name
     tag_ids = list(dict.fromkeys(body.tag_ids))
     if tag_ids and len(await tags_repo.get_tags_by_ids(session, room_id, tag_ids)) != len(tag_ids):
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.tag.notFound", locale)
@@ -144,6 +168,8 @@ async def create_pdf_export(
             locale=locale,
             view_as_user_id=body.view_as_user_id,
             room_cover=body.room_cover,
+            document_id=body.document_id,
+            document_name=document_name,
         ),
         status=ExportStatus.QUEUED,
         storage_path=None,

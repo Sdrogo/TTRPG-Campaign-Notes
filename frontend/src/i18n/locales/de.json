@@ -860,6 +860,7 @@
       "retry": "Erneut versuchen",
       "listTitle": "Deine PDFs",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "In der Warteschlange",
         "running": "Wird erstellt",
