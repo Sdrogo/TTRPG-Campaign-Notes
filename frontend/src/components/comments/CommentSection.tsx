@@ -325,7 +325,7 @@ export function CommentSection({
                     data-testid="pinned-comments"
                   >
                     <Group gap={6}>
-                      <PushPinIcon size={14} weight="fill" color="var(--accent-primary)" />
+                      <PushPinIcon size={16} weight="fill" color="var(--accent-primary)" />
                       <Text size="xs" fw={600} c="dimmed" tt="uppercase">
                         {t('comments.pinnedSection')}
                       </Text>

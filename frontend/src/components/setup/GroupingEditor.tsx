@@ -91,7 +91,7 @@ export function GroupingEditor({
                   disabled={index === 0}
                   onClick={() => move(index, -1)}
                 >
-                  <ArrowUpIcon size={14} />
+                  <ArrowUpIcon size={16} />
                 </LabeledActionIcon>
                 <LabeledActionIcon
                   size="sm"
@@ -101,7 +101,7 @@ export function GroupingEditor({
                   disabled={index === entries.length - 1}
                   onClick={() => move(index, 1)}
                 >
-                  <ArrowDownIcon size={14} />
+                  <ArrowDownIcon size={16} />
                 </LabeledActionIcon>
               </>
             );
@@ -112,7 +112,7 @@ export function GroupingEditor({
                   actionsAtEnd
                   leading={
                     <Text c="dimmed" w={18} style={{ flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
-                      <MapTrifoldIcon size={14} aria-hidden="true" />
+                      <MapTrifoldIcon size={16} aria-hidden="true" />
                     </Text>
                   }
                   actions={
@@ -152,7 +152,7 @@ export function GroupingEditor({
                       aria-label={t('setup.tags.grouping.remove', { name })}
                       onClick={() => remove(itemIndex)}
                     >
-                      <XIcon size={14} />
+                      <XIcon size={16} />
                     </LabeledActionIcon>
                   </>
                 }

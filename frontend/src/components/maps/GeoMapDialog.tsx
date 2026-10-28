@@ -84,14 +84,14 @@ export function GeoMapDialog({
             <Group gap="xs">
               <FileButton accept={ACCEPTED_IMAGE_TYPES} onChange={(file) => file && background.mutate({ file })}>
                 {(props) => (
-                  <Button {...props} size="xs" variant="default" leftSection={<ImageIcon size={14} />} loading={background.isPending}>
+                  <Button {...props} size="xs" variant="default" leftSection={<ImageIcon size={16} />} loading={background.isPending}>
                     {t('maps.geo.uploadBackground')}
                   </Button>
                 )}
               </FileButton>
               <ImageUrlPopover onAddUrl={(url) => background.mutate({ url })} position="bottom-start">
                 {(toggle) => (
-                  <Button size="xs" variant="default" leftSection={<LinkIcon size={14} />} onClick={toggle}>
+                  <Button size="xs" variant="default" leftSection={<LinkIcon size={16} />} onClick={toggle}>
                     {t('maps.geo.backgroundFromUrl')}
                   </Button>
                 )}
@@ -101,7 +101,7 @@ export function GeoMapDialog({
                   size="xs"
                   variant="subtle"
                   color="red"
-                  leftSection={<TrashIcon size={14} />}
+                  leftSection={<TrashIcon size={16} />}
                   onClick={() => background.mutate(null)}
                 >
                   {t('maps.geo.removeBackground')}

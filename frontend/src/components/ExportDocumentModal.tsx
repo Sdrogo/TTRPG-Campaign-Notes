@@ -63,7 +63,7 @@ export function ExportDocumentModal({
             {t('common.cancel')}
           </Button>
           <Button
-            leftSection={<DownloadSimpleIcon size={16} />}
+            leftSection={<DownloadSimpleIcon size={18} />}
             loading={exportDocument.isPending}
             onClick={handleExport}
           >

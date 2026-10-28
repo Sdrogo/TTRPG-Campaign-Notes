@@ -69,6 +69,15 @@ of dense content (Thread posts, Glossary entries, forms all use
 Inter). `--font-mono` shows up rarely in this app — mainly for
 technical identifiers if ever surfaced to an Administrator.
 
+**Text scale** (spec 49, 2026-10-28, `theme.ts` `fontSizes`): two pixels
+larger per step than Mantine's default, because the product owner found the
+app's text too small: `xs` 14px (small text), `sm` 16px (body text in
+lists, Comments, Notes, forms), `md` 18px, `lg` 20px, `xl` 22px. Headings
+h1-h3 keep Mantine's 34 / 26 / 22px (larger display sizes were rejected in
+PR #252); h4 20px, h5 18px, h6 16px, so a small heading is never smaller
+than the text under it. Badges are 11 / 12 / 13 / 15px (`xs`-`lg`) on
+20-30px heights (`index.css`).
+
 **Heading levels follow the page outline, not the look** (2026-10-03,
 Andrea's accessibility audit: "heading levels should only increase by
 one"). Every page has one `h1` (the Room's Documents, the Document's name,
@@ -85,6 +94,12 @@ an `h3`, which axe allows (only skipping *down* a level is an error).
   `Container`, the Rooms list (`RoomsPage`), the sign-in screen, the
   invite and friend-link pages and `PageState`'s full-screen messages
   render as `main`; the top bar is the `header` (banner).
+- **Icon buttons at least 24px, 40px on touch screens** (spec 49):
+  `index.css` redefines Mantine's `--ai-size-*` on `.mantine-ActionIcon-root`
+  (`xs` 24, `sm` 28, `md` 32, `lg` 38px) and, under `@media (pointer:
+  coarse)`, raises `xs`-`md` to 40px and `lg` to 44px, plus a dialog's
+  close button to 40px; buttons inside an input section keep the input's
+  height. Give an icon button a size token, not a number, so it follows.
 - **Tap targets at least 24px** (WCAG 2.5.8): the Tag links in `TagList`
   get 4px of vertical padding taken back by an equal negative margin, so
   the line looks the same while the link is 24px tall, and wrapped rows are
@@ -602,10 +617,11 @@ so a signed-out visitor can switch before signing in.
 
 ## Icons
 
-**Phosphor Icons**, `regular` weight for inline/UI icons at 16px
-(`size={16}`), `bold` weight for standalone action icons at 20px
-(`size={20}`), `duotone` weight reserved for empty states and
-onboarding at 32px+. Icon color always follows `--text-muted` at
+**Phosphor Icons**, `regular` weight for inline/UI icons at 18px
+(`size={18}`), `bold` weight for standalone action icons at 24px
+(`size={24}`), `duotone` weight reserved for empty states and
+onboarding at 32px+. Since spec 49 no UI icon is under 16px; the only
+exception is a Badge's left/right section, at 14px. Icon color always follows `--text-muted` at
 rest and `--accent-primary` on hover/active — never a hardcoded
 color per icon.
 

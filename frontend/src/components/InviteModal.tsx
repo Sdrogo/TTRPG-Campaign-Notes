@@ -47,10 +47,10 @@ export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
     <Modal opened={opened} onClose={handleClose} title={t('invite.modalTitle')} centered>
       <Tabs defaultValue="link" keepMounted={false}>
         <Tabs.List mb="md">
-          <Tabs.Tab value="link" leftSection={<LinkIcon size={16} />}>
+          <Tabs.Tab value="link" leftSection={<LinkIcon size={18} />}>
             {t('invite.tabLink')}
           </Tabs.Tab>
-          <Tabs.Tab value="friends" leftSection={<UsersIcon size={16} />}>
+          <Tabs.Tab value="friends" leftSection={<UsersIcon size={18} />}>
             {t('invite.tabFriends')}
           </Tabs.Tab>
         </Tabs.List>
@@ -88,7 +88,7 @@ export function InviteModal({ opened, onClose, roomId }: InviteModalProps) {
                         onClick={copy}
                         aria-label={copied ? t('common.copied') : t('common.copy')}
                       >
-                        {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+                        {copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
                       </ActionIcon>
                     </Tooltip>
                   )}

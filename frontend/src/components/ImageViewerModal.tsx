@@ -141,7 +141,7 @@ function ZoomableImage({
           onClick={onPrevious}
           aria-label={t('images.viewer.previous')}
         >
-          <CaretLeftIcon size={20} weight="bold" />
+          <CaretLeftIcon size={24} weight="bold" />
         </LabeledActionIcon>
       )}
       {onNext && (
@@ -155,7 +155,7 @@ function ZoomableImage({
           onClick={onNext}
           aria-label={t('images.viewer.next')}
         >
-          <CaretRightIcon size={20} weight="bold" />
+          <CaretRightIcon size={24} weight="bold" />
         </LabeledActionIcon>
       )}
 
@@ -180,7 +180,7 @@ function ZoomableImage({
             onClick={() => setZoom((current) => clampZoom(current - ZOOM_STEP))}
             aria-label={t('images.viewer.zoomOut')}
           >
-            <MagnifyingGlassMinusIcon size={20} weight="bold" />
+            <MagnifyingGlassMinusIcon size={24} weight="bold" />
           </ActionIcon>
         </Tooltip>
         <Text size="sm" c="dimmed" w={48} ta="center">
@@ -194,7 +194,7 @@ function ZoomableImage({
             onClick={() => setZoom((current) => clampZoom(current + ZOOM_STEP))}
             aria-label={t('images.viewer.zoomIn')}
           >
-            <MagnifyingGlassPlusIcon size={20} weight="bold" />
+            <MagnifyingGlassPlusIcon size={24} weight="bold" />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={t('images.viewer.fit')}>
@@ -205,7 +205,7 @@ function ZoomableImage({
             onClick={() => setZoom(MIN_ZOOM)}
             aria-label={t('images.viewer.fit')}
           >
-            <ArrowsInIcon size={20} weight="bold" />
+            <ArrowsInIcon size={24} weight="bold" />
           </ActionIcon>
         </Tooltip>
       </Group>

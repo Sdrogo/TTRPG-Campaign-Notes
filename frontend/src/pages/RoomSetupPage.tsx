@@ -82,7 +82,7 @@ export function RoomSetupPage() {
         </Title>
         <Button
           variant="light"
-          leftSection={<DownloadSimpleIcon size={16} />}
+          leftSection={<DownloadSimpleIcon size={18} />}
           onClick={() => setExportOpened(true)}
         >
           {t('export.action')}

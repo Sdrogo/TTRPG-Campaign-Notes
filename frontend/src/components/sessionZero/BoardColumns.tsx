@@ -160,7 +160,7 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
           size="sm"
           aria-label={t('sessionZero.columns.actions', { title: column.title })}
         >
-          <DotsThreeVerticalIcon size={16} />
+          <DotsThreeVerticalIcon size={18} />
         </LabeledActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
@@ -240,7 +240,7 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
           size="compact-sm"
           variant="subtle"
           color="gray"
-          leftSection={<PlusIcon size={14} />}
+          leftSection={<PlusIcon size={16} />}
           onClick={() => setAdding(true)}
         >
           {t('sessionZero.postIt.add')}
@@ -373,7 +373,7 @@ export function LinesVeilsColumn({ column }: { column: PostItColumn }) {
           size="compact-sm"
           variant="subtle"
           color="gray"
-          leftSection={<PlusIcon size={14} />}
+          leftSection={<PlusIcon size={16} />}
           style={{ alignSelf: 'flex-start' }}
           onClick={() => setAdding(true)}
         >
@@ -412,12 +412,12 @@ export function AddColumn() {
     return (
       <LabeledActionIcon
         variant="default"
-        size={32}
+        size="md"
         aria-label={t('sessionZero.columns.add')}
         style={{ alignSelf: 'flex-start', flexShrink: 0 }}
         onClick={() => setAdding(true)}
       >
-        <PlusIcon size={16} />
+        <PlusIcon size={18} />
       </LabeledActionIcon>
     );
   }

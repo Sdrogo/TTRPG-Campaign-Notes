@@ -34,7 +34,7 @@ function DragGrip() {
         color: 'var(--text-primary)',
       }}
     >
-      <DotsSixIcon size={16} weight="bold" />
+      <DotsSixIcon size={18} weight="bold" />
     </Box>
   );
 }
@@ -132,7 +132,7 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
             aria-label={t('maps.editCard', { name: document.name })}
             onClick={() => onEdit(card.id)}
           >
-            <PencilSimpleIcon size={14} />
+            <PencilSimpleIcon size={16} />
           </LabeledActionIcon>
         </Box>
       )}

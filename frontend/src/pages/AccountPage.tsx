@@ -149,7 +149,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
               description={t('account.access.emailDescription')}
               value={profile.email ?? ''}
               placeholder={t('account.access.noEmail')}
-              leftSection={<EnvelopeSimpleIcon size={16} aria-hidden="true" />}
+              leftSection={<EnvelopeSimpleIcon size={18} aria-hidden="true" />}
               readOnly
             />
           </Grid.Col>
@@ -161,7 +161,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
               <Button
                 variant="outline"
                 color="gray"
-                leftSection={<SignOutIcon size={16} />}
+                leftSection={<SignOutIcon size={18} />}
                 loading={signOut.isPending}
                 onClick={() => signOut.mutate(undefined, { onError: notifyError })}
                 style={{ flexShrink: 0 }}

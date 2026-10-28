@@ -57,7 +57,7 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeType>) {
             aria-label={t('maps.editGroup')}
             onClick={() => onEdit(group.id)}
           >
-            <PencilSimpleIcon size={14} />
+            <PencilSimpleIcon size={16} />
           </LabeledActionIcon>
         )}
       </Group>

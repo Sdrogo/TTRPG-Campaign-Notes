@@ -55,9 +55,9 @@ export function Backlinks({ roomId, target, members }: BacklinksProps) {
         >
           <Group gap="xs">
             {expanded ? (
-              <CaretDownIcon size={16} aria-hidden="true" />
+              <CaretDownIcon size={18} aria-hidden="true" />
             ) : (
-              <CaretRightIcon size={16} aria-hidden="true" />
+              <CaretRightIcon size={18} aria-hidden="true" />
             )}
             <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
               {t('backlinks.title')}

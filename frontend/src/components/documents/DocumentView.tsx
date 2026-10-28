@@ -286,7 +286,7 @@ function DocumentPanel({
           onClick={() => setRevealing(true)}
           aria-label={t('reveal.actionLabel', { name: document.name })}
         >
-          <EyeIcon size={18} />
+          <EyeIcon size={20} />
         </LabeledActionIcon>
       )}
       {/* Spec 27: every member who sees the Document exports it, as the member
@@ -297,7 +297,7 @@ function DocumentPanel({
         onClick={() => setExportOpened(true)}
         aria-label={t('export.document.action')}
       >
-        <DownloadSimpleIcon size={18} />
+        <DownloadSimpleIcon size={20} />
       </LabeledActionIcon>
       {canOpenMentionMap && (
         <LabeledActionIcon
@@ -306,7 +306,7 @@ function DocumentPanel({
           onClick={() => setMentionMapOpened(true)}
           aria-label={t('maps.mention.button')}
         >
-          <GraphIcon size={18} />
+          <GraphIcon size={20} />
         </LabeledActionIcon>
       )}
       {/* Spec 39: Owners and the Master turn the names in its text into mentions. */}
@@ -317,7 +317,7 @@ function DocumentPanel({
           onClick={() => setGeneratingMentions(true)}
           aria-label={t('mentionSuggestions.action')}
         >
-          <MagicWandIcon size={18} />
+          <MagicWandIcon size={20} />
         </LabeledActionIcon>
       )}
       {/* Spec 24b: Owners and the Master read the whole Document's history. */}
@@ -328,7 +328,7 @@ function DocumentPanel({
           onClick={() => setHistoryOpened(true)}
           aria-label={t('versions.actionFor', { name: document.name })}
         >
-          <ClockCounterClockwiseIcon size={18} />
+          <ClockCounterClockwiseIcon size={20} />
         </LabeledActionIcon>
       )}
       {isOwner && (
@@ -338,7 +338,7 @@ function DocumentPanel({
           onClick={() => (editing ? stopEditing() : setEditing(true))}
           aria-label={editing ? t('documents.detail.cancelEditing') : t('common.edit')}
         >
-          {editing ? <XIcon size={18} /> : <PencilSimpleIcon size={18} />}
+          {editing ? <XIcon size={20} /> : <PencilSimpleIcon size={20} />}
         </LabeledActionIcon>
       )}
     </>
@@ -411,7 +411,7 @@ function DocumentPanel({
               aria-expanded={actionsExpanded}
               onClick={() => setActionsExpanded((current) => !current)}
             >
-              <DotsThreeVerticalIcon size={18} />
+              <DotsThreeVerticalIcon size={20} />
             </LabeledActionIcon>
           </Group>
         </Group>

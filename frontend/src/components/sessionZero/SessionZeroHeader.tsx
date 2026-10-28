@@ -64,7 +64,7 @@ export function SessionZeroHeader({ readAtMs, onPick }: SessionZeroHeaderProps) 
           <Menu position="bottom-end" shadow="md">
             <Menu.Target>
               <LabeledActionIcon variant="subtle" color="gray" aria-label={t('sessionZero.actions')}>
-                <DotsThreeVerticalIcon size={20} />
+                <DotsThreeVerticalIcon size={24} />
               </LabeledActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
@@ -121,7 +121,7 @@ function PublishAll() {
   if (drafts === 0) return null;
   return (
     <>
-      <Button size="compact-sm" leftSection={<PaperPlaneTiltIcon size={14} />} onClick={() => setAsking(true)}>
+      <Button size="compact-sm" leftSection={<PaperPlaneTiltIcon size={16} />} onClick={() => setAsking(true)}>
         {t('sessionZero.publishAll.button', { count: drafts })}
       </Button>
       {asking && (
@@ -188,7 +188,7 @@ function TimerChip({ readAtMs }: TimerChipProps) {
     );
   const chip = (
     <Group gap={6} wrap="nowrap">
-      <TimerIcon size={16} aria-hidden />
+      <TimerIcon size={18} aria-hidden />
       {shown}
     </Group>
   );

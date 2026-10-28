@@ -98,7 +98,7 @@ export function AllTagsList({ roomId, tags, groupedIds }: AllTagsListProps) {
           size="sm"
           aria-label={t('setup.tags.all.filterLabel')}
           placeholder={t('setup.tags.all.filterPlaceholder')}
-          leftSection={<MagnifyingGlassIcon size={14} />}
+          leftSection={<MagnifyingGlassIcon size={16} />}
           value={filter}
           onChange={(event) => setFilter(event.currentTarget.value)}
           style={{ flex: '1 1 200px', maxWidth: 320 }}
@@ -125,7 +125,7 @@ export function AllTagsList({ roomId, tags, groupedIds }: AllTagsListProps) {
               loading={createTag.isPending}
               disabled={!newName.trim()}
             >
-              <PlusIcon size={14} />
+              <PlusIcon size={16} />
             </LabeledActionIcon>
           }
           style={{ flex: '1 1 200px', maxWidth: 320 }}

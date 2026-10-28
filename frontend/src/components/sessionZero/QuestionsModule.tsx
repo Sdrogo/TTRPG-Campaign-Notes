@@ -496,7 +496,7 @@ function QuestionsEditor({
                     disabled={index === 0}
                     onClick={() => move(index, index - 1)}
                   >
-                    <ArrowUpIcon size={14} />
+                    <ArrowUpIcon size={16} />
                   </LabeledActionIcon>
                   <LabeledActionIcon
                     variant="subtle"
@@ -506,7 +506,7 @@ function QuestionsEditor({
                     disabled={index === rows.length - 1}
                     onClick={() => move(index, index + 1)}
                   >
-                    <ArrowDownIcon size={14} />
+                    <ArrowDownIcon size={16} />
                   </LabeledActionIcon>
                   <LabeledActionIcon
                     variant="subtle"
@@ -515,7 +515,7 @@ function QuestionsEditor({
                     aria-label={t('sessionZero.modules.remove')}
                     onClick={() => setRows(rows.filter((other) => other.key !== row.key))}
                   >
-                    <TrashIcon size={14} />
+                    <TrashIcon size={16} />
                   </LabeledActionIcon>
                 </Group>
               </Group>
@@ -561,7 +561,7 @@ function QuestionsEditor({
           <Button
             size="xs"
             variant="default"
-            leftSection={<PlusIcon size={14} />}
+            leftSection={<PlusIcon size={16} />}
             disabled={rows.length >= MAX_QUESTIONS}
             onClick={add}
           >

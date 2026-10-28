@@ -231,7 +231,7 @@ export function CommentItem({
                   size="xs"
                   variant="light"
                   color="accent"
-                  leftSection={<PushPinIcon size={10} weight="fill" />}
+                  leftSection={<PushPinIcon size={14} weight="fill" />}
                 >
                   {t('comments.pinned')}
                 </Badge>
@@ -249,7 +249,7 @@ export function CommentItem({
                     variant="light"
                     color="gray"
                     leftSection={
-                      <CheckCircleIcon size={10} weight="fill" color="var(--state-success)" />
+                      <CheckCircleIcon size={14} weight="fill" color="var(--state-success)" />
                     }
                   >
                     {t('comments.resolved')}
@@ -401,7 +401,7 @@ function PromotedBadge({
       size="xs"
       variant="light"
       color="accent"
-      leftSection={<ArrowFatLineUpIcon size={10} weight="fill" />}
+      leftSection={<ArrowFatLineUpIcon size={14} weight="fill" />}
     >
       {t('comments.promotion.promoted')}
     </Badge>

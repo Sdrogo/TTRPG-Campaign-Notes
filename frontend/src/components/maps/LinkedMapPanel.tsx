@@ -49,7 +49,7 @@ export function LinkedMapPanel({
                 onClick={() => unlink.mutate()}
                 aria-label={t('maps.mention.unlink')}
               >
-                <LinkBreakIcon size={16} />
+                <LinkBreakIcon size={18} />
               </ActionIcon>
             </Tooltip>
           )}
@@ -62,7 +62,7 @@ export function LinkedMapPanel({
               color="gray"
               aria-label={t('maps.mention.fullScreen')}
             >
-              <ArrowsOutIcon size={16} />
+              <ArrowsOutIcon size={18} />
             </ActionIcon>
           </Tooltip>
         </Group>

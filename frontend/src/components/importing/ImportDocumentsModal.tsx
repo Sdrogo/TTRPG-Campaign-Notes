@@ -171,7 +171,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
               {t('common.cancel')}
             </Button>
             <Button
-              leftSection={<UploadSimpleIcon size={16} />}
+              leftSection={<UploadSimpleIcon size={18} />}
               disabled={files.length === 0}
               loading={previewImport.isPending}
               onClick={handlePreview}

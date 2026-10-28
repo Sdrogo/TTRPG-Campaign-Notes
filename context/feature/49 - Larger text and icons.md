@@ -29,43 +29,35 @@
   24px WCAG 2.5.8 minimum** that `ui-context.md` promises, and the same
   22px on a phone.
 
-## Decisions (proposed by Claude, 2026-10-28)
+## Decisions
 
-1. **Text scale +1px per step** (theme `fontSizes`): `xs` 12 → **13**,
-   `sm` 14 → **15**, `md` 16 → **17**, `lg` 18 → **19**, `xl` 20 → **21**.
-   Line heights stay Mantine's. The few hard-coded sizes in `index.css`
-   (e.g. 13px) move with it.
+Proposed by Claude on 2026-10-28 with +1px steps; the product owner answered
+the same day ("farei un doppio step: testi piccoli da 14px, normale a 16px,
+icone da 16 a 24 px, bottoni a icona almeno 24px su desktop e 40 su tablet e
+telefono") and the Decisions below follow that answer.
+
+1. **Text scale +2px per step** (theme `fontSizes`): `xs` 12 → **14**,
+   `sm` 14 → **16**, `md` 16 → **18**, `lg` 18 → **20**, `xl` 20 → **22**.
+   Line heights stay Mantine's. Hard-coded sizes in `index.css` move with it.
 2. **Headings h1-h3 unchanged** (34 / 26 / 22px). Only the small headings
    move with the body so they never end up smaller than the text under
-   them: `h4` 18 → 19, `h5` 16 → 17, `h6` 14 → 15.
-3. **Icons one step up**: 10 → 12, 12 → 14, 14 → 16, 16 → 18, 18 → 20,
-   20 → 22. Icons of 24px and more (empty states, avatars, Room icon) stay
-   as they are. The `ui-context.md` rule becomes 18px inline, 22px for
-   standalone actions.
-4. **Icon button targets** (theme `ActionIcon` sizes): `xs` 18 → **24**,
+   them: `h4` 18 → 20, `h5` 16 → 18, `h6` 14 → 16.
+3. **Icons from 16px to 24px**: nothing under 16px; every UI icon moves up
+   (≤ 14 → 16, 16 → 18, 18 → 20, 20 and 22 → 24). Icons of 24px and more
+   (empty states, avatars, Room icon) stay as they are. The `ui-context.md`
+   rule becomes 18px inline, 24px for standalone actions.
+4. **Icon button targets** (Mantine `--ai-size-*`): `xs` 18 → **24**,
    `sm` 22 → **28**, `md` 28 → **32**, `lg` 34 → **38**, `xl` unchanged
    (44). Nothing in the app is under 24px any more.
 5. **Touch screens get bigger targets** (`@media (pointer: coarse)`, i.e.
    phones and tablets, not a mouse): every icon button is at least **40px**
-   (`xs`-`md` → 40, `lg` → 44), compact buttons (`Button size="xs"`, the
-   `compact-*` sizes) at least 36px, `CloseButton` 32px. The icon inside
+   (`xs`-`md` → 40, `lg` → 44), `CloseButton` 40px too. The icon inside
    keeps Decision 3's size; only the hit area grows. Rows with several
-   actions (Note actions, PDF rows, Room setup lists) get taller on a phone
-   because of this; that is accepted.
-6. **Tag links** keep their invisible padding trick (`TagList`), now 28px
-   tall on desktop and 36px on touch screens.
+   actions (Note actions, PDF rows, Room setup lists) get taller on a phone;
+   that is accepted.
+6. **Tag links** keep their invisible padding trick (`TagList`).
 7. **No user setting** for text size in this ticket: one scale for
-   everyone. A "Testo: normale / grande" switch in Account can come later
-   if the new scale is still not enough.
-
-## Questions for the product owner
-
-- **Q1, step size.** +1px per step (Decision 1, `sm` becomes 15px) or a
-  bolder +2px (`sm` 16px, `xs` 14px)? Claude recommends +1px: it is clearly
-  more readable without making dense pages (Room setup, Comments) spill.
-- **Q2, phone targets.** 40px minimum (Decision 5) or the 44px Apple /
-  WCAG AAA size? Claude recommends 40px: 44px makes rows of three or four
-  actions noticeably taller.
+   everyone.
 
 ## Design
 
@@ -87,6 +79,25 @@ Comments with reactions and replies), Room setup (Members, Tags lists,
 Grouping), Maps page and a map's toolbar, Session 0 (boards, post-its,
 module chain), Search modal, Landing page.
 
+## As built (2026-10-28)
+
+- `theme.ts`: `fontSizes` and `headings.sizes.h4-h6` as in Decisions 1-2.
+- `index.css`: `--ai-size-*` on `.mantine-ActionIcon-root` (Decision 4), the
+  `(pointer: coarse)` block (Decision 5; buttons in an input section are
+  left out so they never overflow the input), Badge font sizes and heights
+  two pixels up per size (11/12/13/15px on 20/22/24/30px), the Session 0
+  reaction chip 13 → 15px.
+- About 200 Phosphor `size={n}` literals moved per Decision 3. Exception:
+  icons in a Badge's section (pinned, promoted, accepted, relational link,
+  revealed, lock, the Owner chip's ✕) are 14px, since a 16px icon would
+  fill a 20px badge.
+- `BoardColumns`' add-column button was `size={32}`, now `size="md"` (32px,
+  40px on touch).
+- Text inside the mention map's cards uses the theme sizes, so it grew too;
+  the free and geographic boards' own fonts are unchanged.
+- Checked on the Demo at 1920px and on an iPhone 13 profile: every icon
+  button ≥ 24px on desktop and ≥ 40px on the phone, no horizontal scroll.
+
 ## Tests
 
 - Existing frontend tests stay green (no logic changes).
@@ -98,6 +109,6 @@ module chain), Search modal, Landing page.
 
 ## Estimate
 
-About an hour of Claude's build time: theme and CSS are small; the icon
+About an hour and a half of Claude's build time: theme and CSS are small; the icon
 bump is mechanical; most of the time goes to screenshots and fixing any
 row that overflows.

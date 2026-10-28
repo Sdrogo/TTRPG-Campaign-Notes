@@ -213,7 +213,7 @@ export function CommentComposer({
               size="xs"
               loading={submitting}
               disabled={!canSubmit}
-              rightSection={<PaperPlaneRightIcon size={14} />}
+              rightSection={<PaperPlaneRightIcon size={16} />}
             >
               {submitLabel}
             </Button>

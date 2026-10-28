@@ -64,7 +64,7 @@ export function MemberManagement({
         <Button
           size="compact-xs"
           variant="light"
-          leftSection={<UserPlusIcon size={14} />}
+          leftSection={<UserPlusIcon size={16} />}
           loading={sendRequest.isPending && sendRequest.variables?.userId === member.userId}
           onClick={() => handleAddFriend(member)}
           style={{ alignSelf: 'flex-start' }}

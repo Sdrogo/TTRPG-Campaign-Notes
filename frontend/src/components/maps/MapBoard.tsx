@@ -363,13 +363,13 @@ function BoardCanvas({
         {shaping && (
           <Panel position="top-left">
             <Group gap="xs">
-              <Button size="xs" leftSection={<PlusIcon size={14} />} onClick={() => setAddOpened(true)}>
+              <Button size="xs" leftSection={<PlusIcon size={16} />} onClick={() => setAddOpened(true)}>
                 {t('maps.addDocuments')}
               </Button>
               <Button
                 size="xs"
                 variant="default"
-                leftSection={<FileTextIcon size={14} />}
+                leftSection={<FileTextIcon size={16} />}
                 onClick={() => setEditing({ kind: 'newText' })}
               >
                 {t('maps.addText')}
@@ -377,7 +377,7 @@ function BoardCanvas({
               <Button
                 size="xs"
                 variant="default"
-                leftSection={<BoundingBoxIcon size={14} />}
+                leftSection={<BoundingBoxIcon size={16} />}
                 disabled={selectedCardIds.length === 0}
                 onClick={handleGroup}
               >

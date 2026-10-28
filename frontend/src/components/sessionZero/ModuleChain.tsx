@@ -42,7 +42,7 @@ function ChainRows({ kinds, disabled = false, onMove, onRemove, onAdd }: ChainRo
                 disabled={disabled || index === 0}
                 onClick={() => onMove(index, index - 1)}
               >
-                <ArrowUpIcon size={14} />
+                <ArrowUpIcon size={16} />
               </LabeledActionIcon>
               <LabeledActionIcon
                 variant="subtle"
@@ -52,7 +52,7 @@ function ChainRows({ kinds, disabled = false, onMove, onRemove, onAdd }: ChainRo
                 disabled={disabled || index === kinds.length - 1}
                 onClick={() => onMove(index, index + 1)}
               >
-                <ArrowDownIcon size={14} />
+                <ArrowDownIcon size={16} />
               </LabeledActionIcon>
               <LabeledActionIcon
                 variant="subtle"
@@ -62,7 +62,7 @@ function ChainRows({ kinds, disabled = false, onMove, onRemove, onAdd }: ChainRo
                 disabled={disabled || kinds.length === 1}
                 onClick={() => onRemove(index)}
               >
-                <TrashIcon size={14} />
+                <TrashIcon size={16} />
               </LabeledActionIcon>
             </Group>
           </Group>
@@ -81,7 +81,7 @@ function ChainRows({ kinds, disabled = false, onMove, onRemove, onAdd }: ChainRo
         <Button
           size="xs"
           variant="default"
-          leftSection={<PlusIcon size={14} />}
+          leftSection={<PlusIcon size={16} />}
           disabled={disabled || full}
           onClick={() => onAdd(kind)}
         >
@@ -211,7 +211,7 @@ export function ModuleStepper({ onView }: ModuleStepperProps) {
       })}
       {board.hiddenModules > 0 && (
         <Tooltip label={t('sessionZero.modules.hiddenHint', { count: board.hiddenModules })} withArrow>
-          <Badge color="gray" variant="light" tabIndex={0} leftSection={<LockSimpleIcon size={12} />}>
+          <Badge color="gray" variant="light" tabIndex={0} leftSection={<LockSimpleIcon size={14} />}>
             +{board.hiddenModules}
           </Badge>
         </Tooltip>
@@ -226,7 +226,7 @@ export function ModuleStepper({ onView }: ModuleStepperProps) {
             next && (
               <Button
                 size="compact-sm"
-                rightSection={<CaretRightIcon size={14} />}
+                rightSection={<CaretRightIcon size={16} />}
                 disabled={busy}
                 onClick={() => act(boardWrites.setCurrentModule(next.id))}
               >

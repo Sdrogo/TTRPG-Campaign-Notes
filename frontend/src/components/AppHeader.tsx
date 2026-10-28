@@ -80,7 +80,7 @@ export function AppHeader({ roomId, backTo, backLabel }: AppHeaderProps) {
               size="lg"
               aria-label={label}
             >
-              <ArrowLeftIcon size={20} />
+              <ArrowLeftIcon size={24} />
             </LabeledActionIcon>
           )}
         </Group>
