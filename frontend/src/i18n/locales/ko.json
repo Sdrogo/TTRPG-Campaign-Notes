@@ -1339,7 +1339,8 @@
       "kinds": {
         "retro": "레트로",
         "lines_veils": "라인과 베일",
-        "stars_wishes": "별과 소원"
+        "stars_wishes": "별과 소원",
+        "questions": "질문"
       },
       "hiddenHint": "아직 숨겨진 단계: {{count}}",
       "next": "다음",
@@ -1354,10 +1355,65 @@
       "remove": "제거",
       "removeTitle": "이 단계를 제거할까요?",
       "removeBody": "“{{name}}”의 포스트잇도 함께 삭제됩니다. 라인과 베일은 변경되지 않습니다.",
+      "removeQuestionsBody": "\"{{name}}\"의 질문과 답변이 함께 삭제됩니다. 이미 만든 문서는 남습니다.",
       "chain": "세션 단계",
       "chainHint": "단계와 순서를 고르세요. 나중에 바꿀 수 있습니다.",
       "max": "단계는 최대 {{max}}개입니다.",
       "startButton": "시작"
+    },
+    "questions": {
+      "title": "질문",
+      "edit": "질문 편집",
+      "editHint": "질문은 함께 저장됩니다. 질문을 삭제하면 그 답변도 지워집니다.",
+      "tag": "플레이어 문서의 태그",
+      "noTag": "태그 없음",
+      "bypass": "룸이 허용하지 않아도 플레이어가 자신의 문서를 만들 수 있음",
+      "noneMaster": "아직 질문이 없습니다. \"질문 편집\"으로 작성하세요.",
+      "nonePlayer": "마스터가 아직 질문을 작성하지 않았습니다.",
+      "answers": "답변",
+      "reveal": "답변 공개",
+      "hide": "답변 숨기기",
+      "createAll": "모두의 문서 만들기 ({{count}})",
+      "privateHint": "각 플레이어는 자신의 답변만 봅니다.",
+      "revealedHint": "모든 멤버가 모두의 답변을 봅니다.",
+      "noPlayers": "룸에 플레이어가 없습니다.",
+      "answered": "{{count}}/{{total}} 답변함",
+      "openDocument": "문서 열기",
+      "private": "비공개",
+      "openMine": "내 문서 열기",
+      "createMine": "내 문서 만들기",
+      "masterCreates": "마스터가 문서를 만들어 줍니다.",
+      "nameFirst": "이름 질문에 답하면 문서를 만들 수 있습니다.",
+      "everyone": "모두의 답변",
+      "autosave": "답변은 입력하는 동안 저장되며, 나와 마스터만 볼 수 있습니다.",
+      "number": "질문 {{number}}",
+      "question": "질문",
+      "hint": "힌트 (선택)",
+      "target": "답변이 들어갈 곳",
+      "documentTag": "새 문서의 태그",
+      "add": "질문 추가",
+      "targets": {
+        "name": "이름",
+        "subtitle": "부제",
+        "description": "설명",
+        "note": "노트",
+        "document": "새 문서",
+        "none": "문서에 넣지 않음"
+      },
+      "goesTo": {
+        "name": "문서의 이름이 됩니다.",
+        "subtitle": "문서의 부제가 됩니다.",
+        "description": "문서의 설명에 들어갑니다.",
+        "note": "문서의 노트가 됩니다.",
+        "document": "별도의 문서가 됩니다. 첫 줄은 이름, 나머지는 설명입니다.",
+        "none": "여기에 남아 테이블에서 이야기합니다."
+      },
+      "problems": {
+        "empty": "모든 질문에 내용이 필요합니다.",
+        "oneName": "이름 질문은 정확히 하나여야 합니다.",
+        "oneSubtitle": "부제 질문은 하나까지입니다.",
+        "documents": "\"새 문서\" 질문은 {{max}}개까지입니다."
+      }
     }
   }
 }

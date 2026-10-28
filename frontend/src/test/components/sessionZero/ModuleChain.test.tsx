@@ -139,6 +139,38 @@ describe('Edit steps', () => {
     expect(within(dialog).getAllByRole('button', { name: 'Rimuovi' })).toHaveLength(3);
   });
 
+  // Spec 47_2: a Questions step's questions and answers go with it.
+  it('asks before removing a Questions step with questions, not an empty one', async () => {
+    const step = (id: string, count: number) => ({
+      id,
+      kind: 'questions',
+      position: 0,
+      columns: [],
+      questions: {
+        tag_id: null,
+        answers_revealed: false,
+        players_bypass_creation_rule: true,
+        questions: Array.from({ length: count }, (_, i) => ({
+          id: `${id}-${i}`,
+          position: i,
+          body: 'Nome?',
+          hint: null,
+          target: 'name',
+          tag_id: null,
+        })),
+        answers: [],
+        documents: [],
+        can_create: false,
+        creatable: 0,
+      },
+    });
+    const { act, user, dialog } = await openEditor({ ...master, modules: [step('m-q', 1), step('m-empty', 0)], current_module_id: 'm-q' });
+    await user.click(within(dialog).getAllByRole('button', { name: 'Rimuovi' })[1]);
+    expect(act).toHaveBeenLastCalledWith(boardWrites.removeModule('m-empty'), expect.any(Function));
+    await user.click(within(dialog).getAllByRole('button', { name: 'Rimuovi' })[0]);
+    expect(dialog).toHaveTextContent('Le domande e le risposte di «Domande» vengono eliminate con lei.');
+  });
+
   it('keeps the last step and stops at ten', async () => {
     const one = await openEditor({ ...master, modules: chain.slice(2), current_module_id: 'm-lv' });
     expect(within(one.dialog).getByRole('button', { name: 'Rimuovi' })).toBeDisabled();

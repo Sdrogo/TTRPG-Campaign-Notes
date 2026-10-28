@@ -283,7 +283,21 @@
       "groupNotFound": "Grupo não encontrado",
       "nothingToChange": "Nada a alterar",
       "badPlace": "Esse lugar não está na coluna ou no grupo indicados",
-      "sameBoard": "Um post-it ou um grupo só se move dentro do seu próprio quadro e sessão"
+      "sameBoard": "Um post-it ou um grupo só se move dentro do seu próprio quadro e sessão",
+      "tooManyQuestions": "Uma etapa de Perguntas tem no máximo {max} perguntas",
+      "questionRequired": "Uma pergunta precisa de um texto",
+      "questionTooLong": "Uma pergunta tem no máximo {max} caracteres",
+      "hintTooLong": "Uma dica tem no máximo {max} caracteres",
+      "oneNameQuestion": "Exatamente uma pergunta dá o nome ao Documento",
+      "oneSubtitleQuestion": "No máximo uma pergunta dá o subtítulo",
+      "tooManyDocumentQuestions": "No máximo {max} perguntas criam um Documento próprio",
+      "questionOrder": "Indica cada pergunta uma só vez, com o seu id",
+      "answerTooLong": "Uma resposta tem no máximo {max} caracteres",
+      "questionNotFound": "Pergunta não encontrada",
+      "notQuestionsModule": "Só funciona numa etapa de Perguntas",
+      "masterDoesNotAnswer": "O Mestre escreve as perguntas; os jogadores respondem",
+      "nameAnswerMissing": "Responde primeiro à pergunta do nome",
+      "documentExists": "Já criaste o teu Documento aqui"
     }
   },
   "pdf": {

@@ -283,7 +283,21 @@
       "groupNotFound": "Gruppo non trovato",
       "nothingToChange": "Niente da cambiare",
       "badPlace": "Quel punto non è nella colonna o nel gruppo indicati",
-      "sameBoard": "Un post-it o un gruppo si sposta solo nella sua lavagna e nella sua sessione"
+      "sameBoard": "Un post-it o un gruppo si sposta solo nella sua lavagna e nella sua sessione",
+      "tooManyQuestions": "Una tappa Domande ha al massimo {max} domande",
+      "questionRequired": "Una domanda deve avere un testo",
+      "questionTooLong": "Una domanda ha al massimo {max} caratteri",
+      "hintTooLong": "Un suggerimento ha al massimo {max} caratteri",
+      "oneNameQuestion": "Esattamente una domanda dà il nome al Documento",
+      "oneSubtitleQuestion": "Al massimo una domanda dà il sottotitolo",
+      "tooManyDocumentQuestions": "Al massimo {max} domande creano un Documento a sé",
+      "questionOrder": "Elenca ogni domanda una sola volta, con il suo id",
+      "answerTooLong": "Una risposta ha al massimo {max} caratteri",
+      "questionNotFound": "Domanda non trovata",
+      "notQuestionsModule": "Funziona solo su una tappa Domande",
+      "masterDoesNotAnswer": "Il Master scrive le domande; rispondono i Player",
+      "nameAnswerMissing": "Rispondi prima alla domanda del nome",
+      "documentExists": "Hai già creato il tuo Documento qui"
     }
   },
   "pdf": {

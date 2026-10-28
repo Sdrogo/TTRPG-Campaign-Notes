@@ -5,6 +5,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useMembers } from '../hooks/useMembers';
+import { useTags } from '../hooks/useTags';
 import { useSessionZero, useSessionZeroWrite } from '../hooks/useSessionZero';
 import { useSessionZeroEvents } from '../hooks/useSessionZeroEvents';
 import { useReadOnly } from '../hooks/useViewAs';
@@ -15,6 +16,7 @@ import { BoardContext, useBoard, type BoardContextValue } from '../components/se
 import { BoardDnd } from '../components/sessionZero/BoardDnd';
 import { BoardsSplit } from '../components/sessionZero/BoardsSplit';
 import { ModuleStepper, StartSessionZero } from '../components/sessionZero/ModuleChain';
+import { QuestionsBoard } from '../components/sessionZero/QuestionsModule';
 import { SessionZeroHeader } from '../components/sessionZero/SessionZeroHeader';
 import { boardWrites, shownModule, viewOf, withView } from '../lib/sessionZero';
 import { notifyError } from '../lib/notify';
@@ -25,7 +27,7 @@ const BOARDS_SIDE_BY_SIDE_QUERY = '(min-width: 62em)';
 /**
  * `/rooms/:roomId/session-zero`: the Room's Session 0 (spec 46), each
  * session a chain of steps (spec 47): a Retro board with Lines & Veils
- * beside it, Lines & Veils alone, or Stars and Wishes; the shared timer on
+ * beside it, Lines & Veils alone, Stars and Wishes, or Questions; the shared timer on
  * the title line (spec 46c Decision 2).
  */
 export function SessionZeroPage() {
@@ -48,6 +50,7 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
   const [viewed, setViewed] = useState<{ id: string; current: string | null } | null>(null);
   const board = useSessionZero(roomId, roundId);
   const members = useMembers(roomId, true);
+  const tags = useTags(roomId, true);
   const write = useSessionZeroWrite(roomId);
   const writable = !useReadOnly();
   const wide = useMediaQuery(BOARDS_SIDE_BY_SIDE_QUERY, true);
@@ -74,7 +77,7 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
               onSuccess: (next) => {
                 // A deleted Session 0 (spec 46c Decision 3) has no rounds left to show.
                 if (!next.started) setRoundId(null);
-                onDone?.();
+                onDone?.(next);
               },
             },
           ),
@@ -112,7 +115,9 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
             onView={(id) => setViewed(id === null ? null : { id, current: context.board.currentModuleId })}
           />
           <BoardDnd>
-            {shown?.kind === 'lines_veils' ? (
+            {shown?.kind === 'questions' ? (
+              <QuestionsBoard roomId={roomId} tags={tags.data ?? []} />
+            ) : shown?.kind === 'lines_veils' ? (
               <LinesVeilsBoard />
             ) : shown?.kind === 'stars_wishes' ? (
               <RetroBoard />

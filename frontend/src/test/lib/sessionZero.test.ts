@@ -4,6 +4,7 @@ import {
   columnColor,
   formatClock,
   moduleLabel,
+  questionsProblem,
   roundLabel,
   secondsLeft,
   shownModule,
@@ -82,6 +83,34 @@ describe('toSessionZero', () => {
       remainingS: 120,
       now: '2026-10-27T10:00:00Z',
     });
+  });
+
+  // Spec 47_2: a Questions step's content.
+  it('reads a Questions step', () => {
+    const questions = {
+      tag_id: 'tag',
+      answers_revealed: true,
+      players_bypass_creation_rule: false,
+      questions: [{ id: 'q', position: 0, body: 'Nome?', hint: 'Il tuo', target: 'name', tag_id: null }],
+      answers: [{ question_id: 'q', user_id: 'u', body: 'Ireena', note_private: false, updated_at: 'now', mine: true }],
+      documents: [{ user_id: 'u', question_id: null, document_id: 'd', mine: true }],
+      can_create: false,
+      creatable: 2,
+    };
+    const board = toSessionZero(
+      rawSessionZero({ modules: [{ id: 'm', kind: 'questions', position: 0, columns: [], questions }] }) as RawSessionZero,
+    );
+    expect(board.modules[0].questions).toEqual({
+      tagId: 'tag',
+      answersRevealed: true,
+      playersBypassCreationRule: false,
+      questions: [{ id: 'q', position: 0, body: 'Nome?', hint: 'Il tuo', target: 'name', tagId: null }],
+      answers: [{ questionId: 'q', userId: 'u', body: 'Ireena', notePrivate: false, updatedAt: 'now', mine: true }],
+      documents: [{ userId: 'u', questionId: null, documentId: 'd', mine: true }],
+      canCreate: false,
+      creatable: 2,
+    });
+    expect(toSessionZero(rawSessionZero() as RawSessionZero).modules[0]).not.toHaveProperty('questions');
   });
 
   it('keeps a missing timer missing', () => {
@@ -175,6 +204,59 @@ describe('boardWrites', () => {
     expect(boardWrites.ungroupAll('g')).toEqual({ path: '/groups/g', method: 'DELETE' });
     expect(boardWrites.ungroup('c')).toEqual({ path: '/cards/c/ungroup', method: 'POST' });
     expect(boardWrites.deleteSessionZero()).toEqual({ path: '', method: 'DELETE' });
+  });
+
+  // Spec 47_2: the Questions step's writes.
+  it('names the Questions step\'s writes', () => {
+    expect(boardWrites.setQuestionsTag('m', null)).toEqual({ path: '/modules/m', method: 'PATCH', json: { tag_id: null } });
+    expect(boardWrites.setCreationBypass('m', false)).toEqual({
+      path: '/modules/m',
+      method: 'PATCH',
+      json: { players_bypass_creation_rule: false },
+    });
+    expect(
+      boardWrites.setQuestions('m', [
+        { id: 'q', body: 'Nome?', hint: '  ', target: 'name', tagId: 'tag' },
+        { id: null, body: 'PNG?', hint: ' Uno ', target: 'document', tagId: 'tag' },
+      ]),
+    ).toEqual({
+      path: '/modules/m/questions',
+      method: 'PUT',
+      json: {
+        questions: [
+          { id: 'q', body: 'Nome?', hint: null, target: 'name', tag_id: null },
+          { id: null, body: 'PNG?', hint: 'Uno', target: 'document', tag_id: 'tag' },
+        ],
+      },
+    });
+    expect(boardWrites.saveAnswers('m', [{ questionId: 'q', body: 'Ireena', notePrivate: true }])).toEqual({
+      path: '/modules/m/answers',
+      method: 'PUT',
+      json: { answers: [{ question_id: 'q', body: 'Ireena', note_private: true }] },
+    });
+    expect(boardWrites.revealAnswers('m', true)).toEqual({ path: '/modules/m/reveal', method: 'PUT', json: { revealed: true } });
+    expect(boardWrites.createMyDocument('m')).toEqual({ path: '/modules/m/documents', method: 'POST' });
+    expect(boardWrites.createEveryoneDocuments('m')).toEqual({ path: '/modules/m/documents/all', method: 'POST' });
+  });
+});
+
+describe('questionsProblem', () => {
+  const question = (target: string, body = 'Domanda?') =>
+    ({ id: null, body, hint: '', target, tagId: null }) as Parameters<typeof questionsProblem>[0][number];
+
+  // Spec 47 Decision 9.
+  it('wants text, one Name, at most one Subtitle and five New Documents', () => {
+    expect(questionsProblem([])).toBeNull();
+    expect(questionsProblem([question('name'), question('subtitle'), question('none')])).toBeNull();
+    expect(questionsProblem([question('name', ' ')])).toBe('sessionZero.questions.problems.empty');
+    expect(questionsProblem([question('note')])).toBe('sessionZero.questions.problems.oneName');
+    expect(questionsProblem([question('name'), question('name')])).toBe('sessionZero.questions.problems.oneName');
+    expect(questionsProblem([question('name'), question('subtitle'), question('subtitle')])).toBe(
+      'sessionZero.questions.problems.oneSubtitle',
+    );
+    expect(questionsProblem([question('name'), ...Array.from({ length: 6 }, () => question('document'))])).toBe(
+      'sessionZero.questions.problems.documents',
+    );
   });
 });
 

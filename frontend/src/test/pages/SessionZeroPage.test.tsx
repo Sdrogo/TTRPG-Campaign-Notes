@@ -318,6 +318,37 @@ describe('SessionZeroPage', () => {
     expect(screen.getByRole('region', { name: 'Stelle e Desideri' })).toBeInTheDocument();
   });
 
+  // Spec 47_2: a Questions step shows its questions, with the Room's Tags.
+  it('shows a Questions step', async () => {
+    const questions = {
+      tag_id: null,
+      answers_revealed: false,
+      players_bypass_creation_rule: true,
+      questions: [{ id: 'q-1', position: 0, body: 'Come ti chiami?', hint: null, target: 'name', tag_id: null }],
+      answers: [],
+      documents: [],
+      can_create: false,
+      creatable: 0,
+    };
+    board = () =>
+      Promise.resolve(
+        rawSessionZero({
+          modules: [{ id: 'module-q', kind: 'questions', position: 0, columns: [], questions }],
+          current_module_id: 'module-q',
+        }),
+      );
+    // The Tags come later than the boards.
+    const others = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
+      path === '/rooms/room-1/tags' ? new Promise(() => {}) : others(path, init),
+    );
+    render();
+    const section = await screen.findByRole('region', { name: 'Domande' });
+    expect(within(section).getByRole('textbox', { name: 'Come ti chiami?' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags');
+  });
+
   it('goes back to the current step when another session is picked', async () => {
     const rounds = [
       { id: 'round-1', number: 1, title: null, started_at: '2026-10-01T09:00:00Z', closed_at: '2026-10-20T09:00:00Z' },

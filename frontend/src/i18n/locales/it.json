@@ -1374,7 +1374,8 @@
       "kinds": {
         "retro": "Retro",
         "lines_veils": "Linee e Veli",
-        "stars_wishes": "Stelle e Desideri"
+        "stars_wishes": "Stelle e Desideri",
+        "questions": "Domande"
       },
       "hiddenHint": "Tappe ancora nascoste: {{count}}",
       "next": "Avanti",
@@ -1389,10 +1390,65 @@
       "remove": "Rimuovi",
       "removeTitle": "Rimuovere la tappa?",
       "removeBody": "I post-it di «{{name}}» vengono eliminati con lei. Linee e Veli non viene mai toccato.",
+      "removeQuestionsBody": "Le domande e le risposte di «{{name}}» vengono eliminate con lei. I Documenti già creati restano.",
       "chain": "Tappe della sessione",
       "chainHint": "Scegli le tappe e il loro ordine; potrai cambiarle in seguito.",
       "max": "Al massimo {{max}} tappe.",
       "startButton": "Avvia"
+    },
+    "questions": {
+      "title": "Domande",
+      "edit": "Modifica domande",
+      "editHint": "Le domande si salvano tutte insieme. Togliere una domanda cancella le sue risposte.",
+      "tag": "Tag dei Documenti dei Player",
+      "noTag": "Nessun Tag",
+      "bypass": "I Player creano i propri Documenti anche se la Stanza non lo permette",
+      "noneMaster": "Ancora nessuna domanda: scrivile con «Modifica domande».",
+      "nonePlayer": "Il Master non ha ancora scritto le domande.",
+      "answers": "Risposte",
+      "reveal": "Rivela le risposte",
+      "hide": "Nascondi le risposte",
+      "createAll": "Crea i Documenti di tutti ({{count}})",
+      "privateHint": "Ogni Player vede solo le proprie risposte.",
+      "revealedHint": "Tutti i membri vedono le risposte di tutti.",
+      "noPlayers": "Nessun Player nella Stanza.",
+      "answered": "{{count}}/{{total}} risposte",
+      "openDocument": "Apri il Documento",
+      "private": "Privata",
+      "openMine": "Apri il tuo Documento",
+      "createMine": "Crea il mio Documento",
+      "masterCreates": "Il Master creerà il tuo Documento.",
+      "nameFirst": "Rispondi alla domanda sul nome per creare il tuo Documento.",
+      "everyone": "Le risposte di tutti",
+      "autosave": "Le risposte si salvano mentre scrivi; le vedete solo tu e il Master.",
+      "number": "Domanda {{number}}",
+      "question": "Domanda",
+      "hint": "Suggerimento (facoltativo)",
+      "target": "Dove va la risposta",
+      "documentTag": "Tag del nuovo Documento",
+      "add": "Aggiungi domanda",
+      "targets": {
+        "name": "Nome",
+        "subtitle": "Sottotitolo",
+        "description": "Descrizione",
+        "note": "Nota",
+        "document": "Nuovo Documento",
+        "none": "Non nel Documento"
+      },
+      "goesTo": {
+        "name": "Diventa il nome del tuo Documento.",
+        "subtitle": "Diventa il sottotitolo del tuo Documento.",
+        "description": "Va nella descrizione del tuo Documento.",
+        "note": "Diventa una Nota del tuo Documento.",
+        "document": "Diventa un Documento a sé: la prima riga è il nome, il resto la descrizione.",
+        "none": "Resta qui, per parlarne al tavolo."
+      },
+      "problems": {
+        "empty": "Ogni domanda ha bisogno di un testo.",
+        "oneName": "Serve esattamente una domanda per il Nome.",
+        "oneSubtitle": "Al massimo una domanda per il Sottotitolo.",
+        "documents": "Al massimo {{max}} domande «Nuovo Documento»."
+      }
     }
   }
 }

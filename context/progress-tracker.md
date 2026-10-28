@@ -11,7 +11,14 @@ detail:
 - [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md):
   the original log up to 2026-09-30 (specs 01 to 11).
 
-## Current Status (2026-10-27)
+## Current Status (2026-10-28)
+
+- **Spec 47_2, Session 0 Questions → Documents** (2026-10-28, migration
+  `f3a9c1e7b5d4`): a Questions step whose answers become the Player's
+  own Document (Public, Owner and Character player, the step's Tag) and
+  extra Documents ("New Document" questions); answers private to their
+  author and the Master until revealed. See `architecture.md` → Session 0
+  boards, Questions.
 
 - **Docs aligned with the app** (2026-10-27, product owner's request, docs
   only): `requirements.md` v0.6 adds the Decisions, requirements, rules
@@ -161,9 +168,13 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `b5f1d8e3a7c2` (`rooms.maps_position`, maps row
-  placed among the Grouping items, PR #236, merged into `staging`; applied to
-  the staging and production DBs).
+- **Head in the repository**: `f3a9c1e7b5d4` (Session 0 Questions steps,
+  spec 47_2), after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
+  #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
+  (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
+- **Pending**: `f3a9c1e7b5d4` on staging (before the 47_2 PR merges) and
+  on production; `e5c1a8f3b7d2` on production (applied to staging
+  2026-10-28). Both before the next release to `main`.
 - **Staging database**: `b5f1d8e3a7c2` (= head, room maps_position, PR #236,
   applied by hand 2026-10-25 with `.env.staging` loaded, before the PR
   merges); `e2b7c4f9a1d6` before it (map players_can_edit and
@@ -186,10 +197,10 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: none (the database is at head).
+- **Pending on production**: `e5c1a8f3b7d2` and `f3a9c1e7b5d4` (see Pending above; production is at `d4a7e2c9f1b3`).
 
 Recent chain, newest first (where each came from):
-`b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`f3a9c1e7b5d4` Session 0 Questions (47_2) ← `e5c1a8f3b7d2` Session 0 chain (47_1) ← `d4a7e2c9f1b3` post-it order (46d_2) ← `c3f8a1d6e9b4` colours and groups (46c) ← `4797859660e2` Session 0 boards (46_1) ← `b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -759,8 +770,13 @@ on `main`.
   built** in PR #259: steps table, "Next", "Edit steps", the chain when
   starting a session, Stars and Wishes, strings in 12 languages.
   **Migration `e5c1a8f3b7d2`**: applied to the staging DB by the product
-  owner (2026-10-28); it must reach production before the next release. Next: 47_2
-  (Questions), then 47_3 (DDI). Each session becomes a chain of modules
+  owner (2026-10-28); it must reach production before the next release.
+  **47_2 (Questions → Documents) built** (2026-10-28): Questions steps,
+  the Master's question editor and answers accordion, reveal, the
+  Player's autosaved form, "Create my Document" / "Create everyone's
+  Documents", the Q7 creation switch; strings in 12 languages.
+  **Migration `f3a9c1e7b5d4`**: to apply to the staging DB before the PR
+  merges, and to production before the next release. Next: 47_3 (DDI). Each session becomes a chain of modules
   the Master composes, reorders and advances with "Avanti" (Retro, Lines &
   Veils, DDI with per-Player acceptance, Stars and Wishes, Questions whose
   answers become Player-owned PC Documents, plus extra Documents such as

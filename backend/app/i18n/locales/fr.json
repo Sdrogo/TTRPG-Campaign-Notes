@@ -283,7 +283,21 @@
       "groupNotFound": "Groupe introuvable",
       "nothingToChange": "Rien à modifier",
       "badPlace": "Cet emplacement n'est pas dans la colonne ou le groupe indiqués",
-      "sameBoard": "Un post-it ou un groupe ne se déplace que dans son propre tableau et sa propre session"
+      "sameBoard": "Un post-it ou un groupe ne se déplace que dans son propre tableau et sa propre session",
+      "tooManyQuestions": "Une étape Questions compte au plus {max} questions",
+      "questionRequired": "Une question doit avoir un texte",
+      "questionTooLong": "Une question fait au plus {max} caractères",
+      "hintTooLong": "Une indication fait au plus {max} caractères",
+      "oneNameQuestion": "Exactement une question donne son nom au Document",
+      "oneSubtitleQuestion": "Au plus une question donne le sous-titre",
+      "tooManyDocumentQuestions": "Au plus {max} questions créent un Document à part",
+      "questionOrder": "Indique chaque question une seule fois, avec son id",
+      "answerTooLong": "Une réponse fait au plus {max} caractères",
+      "questionNotFound": "Question introuvable",
+      "notQuestionsModule": "Cela ne marche que sur une étape Questions",
+      "masterDoesNotAnswer": "Le MJ écrit les questions ; les joueurs y répondent",
+      "nameAnswerMissing": "Réponds d’abord à la question du nom",
+      "documentExists": "Tu as déjà créé ton Document ici"
     }
   },
   "pdf": {
