@@ -215,8 +215,11 @@ def ensure_can_answer(role: RoomRole) -> None:
 
 def can_read_answer(answer: Answer, viewer_id: uuid.UUID, role: RoomRole, revealed: bool) -> bool:
     """Decision 10, Q2: an answer is its author's and the Master's to read,
-    every member's once the Master reveals them."""
-    return revealed or role is RoomRole.MASTER or answer.user_id == viewer_id
+    every member's once the Master reveals them, except a Note answer the
+    Player marked Private (Q3), which stays theirs and the Master's."""
+    if role is RoomRole.MASTER or answer.user_id == viewer_id:
+        return True
+    return revealed and not answer.note_private
 
 
 def may_create(

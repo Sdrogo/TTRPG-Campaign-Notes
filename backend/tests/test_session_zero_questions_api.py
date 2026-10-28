@@ -286,7 +286,8 @@ async def test_answers_are_their_authors_and_the_masters_until_revealed(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     """Decision 10, Q2: Players answer, each sees only their own; the Master
-    sees all; once revealed, everyone does, read-only for the others."""
+    sees all; once revealed, everyone does (but Private Note answers),
+    read-only for the others."""
     room, module = await _with_questions(client, make_token)
     questions = module["questions"]
     name, note = questions[0]["id"], questions[4]["id"]
@@ -339,7 +340,7 @@ async def test_answers_are_their_authors_and_the_masters_until_revealed(
     )
     assert master_answer.status_code == 403
 
-    # Revealed: every member reads every answer; hidden again: back to before.
+    # Revealed: every member reads the answers; hidden again: back to before.
     assert (
         await client.put(f"{url}/reveal", json={"revealed": True}, headers=room.player.headers)
     ).status_code == 403
@@ -348,8 +349,9 @@ async def test_answers_are_their_authors_and_the_masters_until_revealed(
     )
     assert _questions(revealed.json())["answers_revealed"] is True
     other = _questions(await _get(client, room, room.other_player))
-    assert len(other["answers"]) == 3
-    assert sorted(a["mine"] for a in other["answers"]) == [False, False, True]
+    # A Note answer marked Private stays its author's and the Master's (Q3).
+    assert sorted(a["mine"] for a in other["answers"]) == [False, True]
+    assert note not in {a["question_id"] for a in other["answers"]}
     # Saving a revealed answer is news for everyone; revealing twice changes nothing.
     await _answer(
         client,

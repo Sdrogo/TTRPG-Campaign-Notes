@@ -312,7 +312,8 @@ release.
   the Masters (everyone once revealed), `document` to everyone. A new
   session copies the previous session's Nth Questions step (settings and
   questions, no answers). The Master doesn't answer (Decision 14), so
-  the Master's own view has no form. Removing a Questions step that has
+  the Master's own view has no form. A Note answer marked Private stays
+  its author's and the Master's even once the answers are revealed. Removing a Questions step that has
   questions asks first; Documents already created stay.
 
 ## Tests
