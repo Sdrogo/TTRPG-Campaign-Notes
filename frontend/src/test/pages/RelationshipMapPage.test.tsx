@@ -461,6 +461,20 @@ describe('RelationshipMapPage', () => {
       expect(screen.getByTestId('geo-board')).toHaveAttribute('data-pane', 'area:area-2');
     });
 
+    it('opens a linked plain place in the pane', async () => {
+      wideScreen();
+      routes.map = geographic;
+      const raw = rawGeoMapDetail();
+      // Il bosco (plain) links to Shibuya 109 (plain).
+      const link = { ...raw.links[0], from_end: { area_id: 'area-2', pin_id: null } };
+      routes.geo = () => Promise.resolve(rawGeoMapDetail({ links: [link] }));
+      const { user } = render(false, '/rooms/room-1/maps/map-1?side=place:area:area-2');
+      await screen.findByRole('complementary', { name: 'Luogo aperto accanto alla mappa' });
+      await user.click(screen.getByRole('button', { name: /Shibuya 109/ }));
+      await vi.waitFor(() => expect(screen.getByTestId('geo-board')).toHaveAttribute('data-pane', 'pin:pin-2'));
+      expect(screen.getByRole('complementary')).toHaveTextContent('Il cilindro argentato.');
+    });
+
     it('downloads the map as a JSON file for whoever sees it (spec 38_3)', async () => {
       routes.map = () => geographic().then((map) => ({ ...map, can_edit: false, can_manage: false }));
       routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false, can_manage: false }));

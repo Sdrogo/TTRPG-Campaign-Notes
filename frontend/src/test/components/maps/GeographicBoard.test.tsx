@@ -394,6 +394,17 @@ describe('GeographicBoard: looking at a place', () => {
     expect(screen.getByRole('button', { name: 'Il bosco' })).toHaveAttribute('aria-pressed', 'false');
   });
 
+  it('keeps the selection while editing when the pane changes (spec 50)', async () => {
+    const props = { onSelectPlace: vi.fn(), onSelectDocument: vi.fn() };
+    const user = userEvent.setup();
+    const { rerender } = renderWithProviders(<Harness {...props} paneItem={null} />);
+    await user.click(screen.getByRole('button', { name: 'Modifica la mappa' }));
+    tap(screen.getByRole('button', { name: 'Shibuya 109' }), 800, 700);
+    rerender(<Harness {...props} paneItem={{ kind: 'area', id: 'area-2' }} />);
+    expect(screen.getByRole('button', { name: 'Shibuya 109' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Il bosco' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('opens for reading, and edits only after "Modifica la mappa" (spec 38b)', async () => {
     const { user } = render();
     expect(screen.queryByRole('radiogroup', { name: 'Strumento' })).not.toBeInTheDocument();

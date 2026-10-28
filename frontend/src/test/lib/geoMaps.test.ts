@@ -15,6 +15,8 @@ import {
   endPoint,
   endRef,
   findItem,
+  placeConnections,
+  placeOfDocument,
   fitView,
   insertCorner,
   insideShape,
@@ -148,6 +150,32 @@ describe('reading a map', () => {
     expect(findItem(map, { kind: 'pin', id: 'gone' })).toBeUndefined();
     expect(endRef({ areaId: 'area-1', pinId: null })).toEqual({ kind: 'area', id: 'area-1' });
     expect(endRef({ areaId: null, pinId: 'pin-1' })).toEqual({ kind: 'pin', id: 'pin-1' });
+  });
+
+  it("finds where a Document is placed, if it is (spec 50)", () => {
+    expect(placeOfDocument(map, 'doc-1')).toEqual({ kind: 'area', id: 'area-1' });
+    expect(placeOfDocument(map, 'doc-2')).toEqual({ kind: 'pin', id: 'pin-1' });
+    expect(placeOfDocument(map, 'doc-9')).toBeNull();
+  });
+
+  it("lists a place's links, labelled from its side, skipping a gone end (spec 50)", () => {
+    const link = map.links[0];
+    const board = {
+      ...map,
+      links: [
+        link,
+        { ...link, id: 'link-2', from: { areaId: 'area-2', pinId: null }, reverseLabel: 'il ritorno' },
+        { ...link, id: 'link-3', to: { areaId: null, pinId: 'gone' } },
+      ],
+    };
+    expect(placeConnections(board, { kind: 'pin', id: 'pin-1' })).toEqual([
+      { linkId: 'link-1', item: map.pins[1], ref: { kind: 'pin', id: 'pin-2' }, label: 'la finestra' },
+    ]);
+    expect(placeConnections(board, { kind: 'pin', id: 'pin-2' })).toEqual([
+      { linkId: 'link-1', item: map.pins[0], ref: { kind: 'pin', id: 'pin-1' }, label: 'la finestra' },
+      { linkId: 'link-2', item: map.areas[1], ref: { kind: 'area', id: 'area-2' }, label: 'il ritorno' },
+    ]);
+    expect(placeConnections(board, { kind: 'area', id: 'area-1' })).toEqual([]);
   });
 
   it('dims what has no Document with the filtered Tag (Decision 8)', () => {
