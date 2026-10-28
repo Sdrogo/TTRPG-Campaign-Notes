@@ -1,10 +1,9 @@
 import { useMemo, type ReactNode } from 'react';
 import { Anchor, Box, type BoxProps } from '@mantine/core';
-import type { Element, ElementContent, Root, RootContent } from 'hast';
 import Markdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
-import { mentionPlaceholder, safeLinkUrl, splitPlaceholders } from '../../lib/markdownText';
+import { mentionPlaceholder, rehypePlaceMentions, safeLinkUrl } from '../../lib/markdownText';
 import type { Root as MdastRoot, RootContent as MdastContent } from 'mdast';
 import { useMentionSegments } from '../../hooks/useMentionSegments';
 import { MentionSegmentView } from './MentionText';
@@ -12,55 +11,6 @@ import { MentionSegmentView } from './MentionText';
 interface MarkdownTextProps extends BoxProps {
   /** A Document description or a Note text, as stored. */
   text: string;
-}
-
-// Each placeholder becomes `<span data-mention="i">`, rendered by
-// `components.span` as the mention it stands for. Inside code the mention is
-// shown as written, not linked (Decision 4); inside a Markdown link it is
-// only colored, since links can't nest.
-function placeMentions(written: string[]) {
-  const visit = (node: Root | Element, inLink: boolean) => {
-    const children: (RootContent | ElementContent)[] = [];
-    for (const child of node.children) {
-      if (child.type === 'element') {
-        if (child.tagName === 'code' || child.tagName === 'pre') {
-          restoreWritten(child, written);
-        } else {
-          visit(child, inLink || child.tagName === 'a');
-        }
-        children.push(child);
-      } else if (child.type === 'text') {
-        for (const part of splitPlaceholders(child.value)) {
-          children.push(
-            typeof part === 'number'
-              ? {
-                  type: 'element',
-                  tagName: 'span',
-                  properties: { dataMention: String(part), dataInLink: inLink ? 'true' : undefined },
-                  children: [],
-                }
-              : { type: 'text', value: part },
-          );
-        }
-      } else {
-        children.push(child);
-      }
-    }
-    node.children = children as typeof node.children;
-  };
-  return () => (tree: Root) => visit(tree, false);
-}
-
-function restoreWritten(node: Element, written: string[]) {
-  for (const child of node.children) {
-    if (child.type === 'text') {
-      child.value = splitPlaceholders(child.value)
-        .map((part) => (typeof part === 'number' ? (written[part] ?? '') : part))
-        .join('');
-    } else if (child.type === 'element') {
-      restoreWritten(child, written);
-    }
-  }
 }
 
 // Decision 3: raw HTML is shown as the text it is, never run.
@@ -95,14 +45,15 @@ export function MarkdownText({ text, className, ...boxProps }: MarkdownTextProps
       .map((segment) => {
         if (segment.kind === 'text') return segment.text;
         found.push(segment);
-        asWritten.push(segment.kind === 'user' ? segment.display : segment.text);
+        // No member tokens here: `useMentionSegments` gets no members.
+        asWritten.push((segment as { text: string }).text);
         return mentionPlaceholder(found.length - 1);
       })
       .join('');
     return { source: lifted, mentions: found, written: asWritten };
   }, [segments]);
 
-  const rehypePlugins = useMemo(() => [placeMentions(written)], [written]);
+  const rehypePlugins = useMemo(() => [rehypePlaceMentions(written)], [written]);
 
   const components = useMemo((): Components => {
     const headings = Object.fromEntries(
@@ -118,15 +69,15 @@ export function MarkdownText({ text, className, ...boxProps }: MarkdownTextProps
       ...headings,
       // A div, not a <p>: a Document mention's hover preview renders a whole card.
       p: ({ children }) => <div className="markdown-p">{children}</div>,
-      span: ({ node, children, ...props }) => {
-        const index = node?.properties?.dataMention;
-        if (index === undefined) return <span {...props}>{children}</span>;
-        const segment = mentions[Number(index)];
-        if (!segment) return null;
-        return <MentionSegmentView segment={segment} linked={node?.properties?.dataInLink === undefined} />;
+      span: ({ node }) => {
+        // Every span is a mention: raw HTML never makes one (Decision 3).
+        const { dataMention, dataInLink } = node!.properties;
+        return (
+          <MentionSegmentView segment={mentions[Number(dataMention)]} linked={dataInLink === undefined} />
+        );
       },
       a: ({ href, children }) => {
-        const url = safeLinkUrl(href ?? '');
+        const url = safeLinkUrl(href!);
         return url ? (
           <Anchor href={url} target="_blank" rel="noopener noreferrer" inherit>
             {children}
@@ -136,7 +87,7 @@ export function MarkdownText({ text, className, ...boxProps }: MarkdownTextProps
         );
       },
       img: ({ src, alt }) => {
-        const url = typeof src === 'string' ? safeLinkUrl(src) : '';
+        const url = safeLinkUrl(src as string);
         const label = alt || url;
         return url ? (
           <Anchor href={url} target="_blank" rel="noopener noreferrer" inherit>

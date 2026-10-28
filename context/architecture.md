@@ -182,6 +182,32 @@ Added 2026-10-02, spec `context/feature/18 - Friends.md` (D-26, D-27, FR-F1 to F
 - **A new table that stores a user id** must be added to `erase_personal_rows` (or say in its migration why its rows stay, e.g. Room content), and to the export when the data is about the person.
 - **Privacy notice**: the public `/privacy` page (`frontend/src/pages/PrivacyPage.tsx`, text in the locale files under `privacy.*`). A change in what the app stores, where, or which third party it calls updates that text in the same PR.
 
+## Markdown text (spec 48)
+
+Document descriptions and Note texts are Markdown; Comments, subtitles and
+Room descriptions are not. Nothing changes in storage or the API: the text
+is the same string, mention tokens included, so the JSON export, Room
+duplication and the History are untouched.
+
+- **One rule on both sides**: CommonMark plus GitHub tables and
+  strikethrough (the browser also reads task lists and bare links), a single
+  line break kept as one, raw HTML read as text, only `http`, `https` and
+  `mailto` links, an image only a link to it.
+- **Mentions are lifted out before parsing**: a token `#[Name](doc:<uuid>)`
+  looks like a Markdown link, so each mention is swapped for a placeholder
+  of private-use characters (`\uE000<n>\uE001`), the text parsed, and the
+  placeholders put back as mentions (as written inside code).
+- **Frontend**: `react-markdown` + `remark-gfm` + `remark-breaks` renders
+  (`components/mentions/MarkdownText.tsx`, React elements only, never
+  `innerHTML`); `lib/markdownText.ts::markdownToPlain` (unified +
+  remark-parse) gives the plain words for cards, backlink excerpts and read
+  aloud.
+- **Backend**: `markdown-it-py` (`app/domain/markdown.py`): the PDF prints
+  `markdown_tree` blocks whose leaves are the manual's runs, so a mention
+  keeps its page cross-reference anywhere; search excerpts go through
+  `markdown_plain`; generating and auto-linking mentions skip
+  `protected_ranges` (code, Markdown links, bare addresses).
+
 ## Browser-only: read aloud (spec 30)
 
 - Reading Documents, Notes and Comments aloud uses the browser's **Web Speech API** (`window.speechSynthesis`) and nothing else: no backend route, no external service, no migration. It reads only what the page already shows, so it adds no visibility rule.

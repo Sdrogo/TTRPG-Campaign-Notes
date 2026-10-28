@@ -107,10 +107,11 @@ export function MarkdownEditor({
   const [preview, setPreview] = useState(false);
 
   const apply = (action: MarkdownAction) => {
-    const textarea = control.current?.textarea();
-    if (!textarea || !control.current) return;
+    // The toolbar and the shortcuts only exist while the textarea does.
+    const current = control.current!;
+    const textarea = current.textarea()!;
     const edit = markdownEdit(action, textarea.value, textarea.selectionStart, textarea.selectionEnd);
-    control.current.insert(edit.insertions, edit.selection);
+    current.insert(edit.insertions, edit.selection);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -163,11 +164,7 @@ export function MarkdownEditor({
         />
       </Group>
       {preview ? (
-        <Box
-          className="markdown-preview"
-          data-testid="markdown-preview"
-          style={{ minHeight: `${(textareaProps.minRows ?? 3) * 1.6}em` }}
-        >
+        <Box className="markdown-preview" data-testid="markdown-preview" style={{ minHeight: '4.8em' }}>
           {value.trim() ? (
             <MarkdownText text={value} style={{ overflowWrap: 'anywhere' }} />
           ) : (

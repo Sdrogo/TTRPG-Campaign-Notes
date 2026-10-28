@@ -84,7 +84,7 @@ export function markdownEdit(action: MarkdownAction, text: string, start: number
   const starts = lineStarts(text, start, end);
   const insertions = starts.map((at, index) => ({
     at,
-    text: action === 'numbered' ? `${index + 1}. ` : (LINE_PREFIXES[action] ?? ''),
+    text: action === 'numbered' ? `${index + 1}. ` : LINE_PREFIXES[action]!,
   }));
   return { insertions, selection: [shift(start, insertions), shift(end, insertions)] };
 }

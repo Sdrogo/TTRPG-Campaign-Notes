@@ -113,6 +113,19 @@ describe('MarkdownText', () => {
     expect(screen.getByText('mappa').closest('a')).toHaveAttribute('href', 'https://example.com/m.png');
   });
 
+  it('labels an image link by its address without alt text, and keeps a local image as text', () => {
+    const { container } = renderWithProviders(
+      withMentions(<MarkdownText text={'![](https://example.com/n.png) ![locale](/m.png)'} />),
+    );
+
+    expect(screen.getByText('https://example.com/n.png').closest('a')).toHaveAttribute(
+      'href',
+      'https://example.com/n.png',
+    );
+    expect(screen.getByText('locale').closest('a')).toBeNull();
+    expect(container.querySelector('img')).toBeNull();
+  });
+
   // Decision 4: a token looks like a Markdown link but stays a mention.
   it('links a Document mention inside bold, a list and a table', () => {
     renderWithProviders(

@@ -10,6 +10,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+from app.domain.markdown import markdown_plain
 from app.domain.mentions import display_text
 
 
@@ -76,11 +77,16 @@ def first_page[T](items: Sequence[T], limit: int) -> tuple[list[T], bool]:
     return list(items[:limit]), len(items) > limit
 
 
-def searchable_text(text: str) -> str:
+def searchable_text(text: str, markdown: bool = False) -> str:
     """`text` as the reader sees it, ready for an excerpt: mention tokens as
     their names (spec 20), whitespace collapsed, and the highlight markers
-    removed so only Postgres can add them."""
-    shown = display_text(text).replace(START_MARK, "").replace(STOP_MARK, "")
+    removed so only Postgres can add them. A `markdown` text (an excerpt,
+    spec 48 Decision 6) also loses its Markdown signs."""
+    shown = (
+        display_text(markdown_plain(text) if markdown else text)
+        .replace(START_MARK, "")
+        .replace(STOP_MARK, "")
+    )
     return _SPACES.sub(" ", shown).strip()
 
 

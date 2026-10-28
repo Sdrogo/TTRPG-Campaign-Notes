@@ -14,7 +14,7 @@
   mention tokens of spec 20), so **no migration** and no change to the
   API, the JSON export or the History.
 
-## Decisions (defaults picked 2026-10-28, to confirm before building)
+## Decisions (defaults picked 2026-10-28, confirmed by the product owner the same day)
 
 1. **Which texts**: Document descriptions and Note texts. Not Comments
    (spec 19, short chat-like replies, with `@` member mentions), not the
@@ -83,21 +83,24 @@
 
 1. **Editor**: answered 2026-10-28, textarea + toolbar + Write/Preview
    (Decision 7).
-2. **Comments**: leave them plain (Decision 1, proposed) or give them
-   Markdown too?
+2. **Comments**: answered 2026-10-28 ("ok prosegui" on the proposal):
+   plain (Decision 1).
 
 ## Design
 
 ### 48_1 Frontend rendering
 
-- Dependencies: `react-markdown`, `remark-gfm`, `remark-breaks` (exact
-  versions pinned like the others). `react-markdown` builds React
+- Dependencies: `react-markdown`, `remark-gfm`, `remark-breaks`,
+  `unified`, `remark-parse` (and `@types/mdast`, `@types/hast` for the
+  types), caret ranges like the others. `react-markdown` builds React
   elements, never `innerHTML`, and drops raw HTML by default.
-- `lib/markdownText.ts`: `liftMentions(text)` swaps every token and plain
-  `#Name` (the segments `MentionText` already computes) for a placeholder
-  of private-use characters and returns the list; `toPlainText(text)`
-  strips Markdown for Decision 6 and 8 (parse, keep text nodes, join
-  blocks with a space).
+- `lib/markdownText.ts`: placeholders (`mentionPlaceholder`,
+  `splitPlaceholders`), `safeLinkUrl`, and `markdownToPlain(text)` that
+  strips Markdown for Decision 6 and 8 (tokens kept; blocks joined by a
+  separator; `sentences` adds a full stop to headings, list items and
+  rows). The segments `MentionText` computes moved to
+  `hooks/useMentionSegments.ts`, and one mention renders through the
+  exported `MentionSegmentView`.
 - `components/mentions/MarkdownText.tsx`: parses the lifted text,
   maps text nodes back through the same rendering `MentionText` uses
   (split into `MentionSegment`s), maps elements to Mantine (`Title`
@@ -113,16 +116,21 @@
 - Styles in `index.css` under `.markdown-text` (spacing, table borders,
   quote bar in `--accent-primary`), light and dark.
 
+Built: a link that is not `http`, `https` or `mailto` is shown as its
+text; a `javascript:` address is not even read as a link by the parsers.
+
 ### 48_2 Frontend editor
 
-- `components/mentions/MarkdownToolbar.tsx` over `MentionTextarea` in
-  `DocumentFields` and `NoteForm`: buttons with tooltips, shortcuts,
-  acting on the textarea selection in display coordinates and writing
-  through `replaceDisplayRange` so tokens survive.
+- `components/mentions/MarkdownEditor.tsx` around `MentionTextarea` in
+  `DocumentFields` and `NoteForm`: buttons with tooltips, shortcuts. Each
+  action (`lib/markdownEditing.ts::markdownEdit`) is a list of insertions
+  in display coordinates, applied through the textarea's new `controlRef`
+  (`replaceDisplayRange` with empty ranges), so tokens survive.
 - Write / Preview `SegmentedControl` above the field; Preview renders
   `MarkdownText` with the current value.
-- The `#` popup does not open for a `#` at the start of a line followed
-  by a space or another `#` (a heading being typed).
+- The `#` popup does not open for a `#` at the start of a line until a
+  name starts (`isHeadingStart`, only with `MentionTextarea`'s `markdown`
+  prop, so Comments keep the old behaviour).
 - Cheat sheet: a small `Popover` from the hint link.
 - Strings in all 12 languages; "Markdown" kept as is in the glossary.
 
@@ -130,15 +138,18 @@
 
 - Dependency: `markdown-it-py` (+ `mdit-py-plugins` for tables, task
   lists, strikethrough), `html` option off.
-- PDF (`domain/manual.py`, `pdf/templates/_base.html.j2`): `_paragraphs`
-  becomes `_blocks`: the description's spans are lifted (mention →
-  placeholder), parsed, and turned into a list of blocks (paragraph,
-  heading, list, quote, table, code), each holding runs as today, so a
-  mention still prints its `p.` cross-reference. The template renders
-  blocks; each style's CSS gets heading, list, table and quote rules.
-- Search excerpts (`search_repo.headlines`) and backlink excerpts: the
-  shown excerpt is stripped of Markdown signs (the `<b>` match marks
-  kept).
+- `domain/markdown.py`: `markdown_tree` (blocks of `Node`s whose leaves
+  the caller chooses), `markdown_plain`, `protected_ranges`.
+- PDF (`domain/manual.py`, `pdf/templates/_base.html.j2`): descriptions and
+  Notes carry `blocks` (`Node[Run]`) instead of `paragraphs`: the spans are
+  lifted (mention → placeholder), parsed, and every leaf is a run, so a
+  mention still prints its `p.` cross-reference. Comments keep
+  `paragraphs`. The template renders blocks with a recursive `markdown`
+  macro; `base.css` styles headings (h4-h6), lists, quotes, code, tables
+  and prints a web link's address after it.
+- Search excerpts: `searchable_text(text, markdown=True)` strips the
+  signs before Postgres marks the matches (titles are left as they are).
+  Backlink excerpts are stripped in the browser.
 - `domain/mention_suggestions.py` (generate + `link_new_names`): skip
   ranges inside inline code, fenced code and Markdown links.
 - `domain/import_files.py`: no change in rules; a test that a `###`

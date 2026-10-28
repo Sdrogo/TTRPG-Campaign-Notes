@@ -35,7 +35,7 @@ interface MentionSegmentViewProps {
 export function MentionSegmentView({ segment, linked = true, members }: MentionSegmentViewProps) {
   const mentions = useDocumentMentions();
   if (segment.kind === 'user') {
-    const resolved = resolveUserMention(segment, members ?? []);
+    const resolved = resolveUserMention(segment, members!);
     return resolved.member ? (
       <Text span inherit fw={600} c="var(--accent-primary)" data-testid="user-mention">
         {resolved.text}

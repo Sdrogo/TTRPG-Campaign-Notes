@@ -110,6 +110,14 @@ describe('MarkdownEditor', () => {
     expect(field()).toHaveValue('## Luoghi\n\n**forte**');
   });
 
+  it('says when there is nothing to preview', async () => {
+    const { user } = render('  ');
+
+    await user.click(screen.getByText('Anteprima'));
+
+    expect(screen.getByTestId('markdown-preview')).toHaveTextContent('Ancora niente da mostrare.');
+  });
+
   it('opens no suggestions for a # starting a heading', async () => {
     const { user } = render();
 

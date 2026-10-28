@@ -59,6 +59,7 @@ describe('markdownShortcut', () => {
     expect(markdownShortcut(key('I', { metaKey: true }))).toBe('italic');
     expect(markdownShortcut(key('k', { ctrlKey: true }))).toBe('link');
     expect(markdownShortcut(key('b'))).toBeNull();
+    expect(markdownShortcut(key('x', { ctrlKey: true }))).toBeNull();
     expect(markdownShortcut(key('b', { ctrlKey: true, shiftKey: true }))).toBeNull();
   });
 });

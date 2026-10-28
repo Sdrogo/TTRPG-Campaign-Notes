@@ -1,3 +1,4 @@
+import type { Element, ElementContent, Root as HastRoot, RootContent } from 'hast';
 import type { Nodes, Root } from 'mdast';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
@@ -96,7 +97,7 @@ function toPlain(text: string, separator: string, sentences: boolean): string {
       case 'break':
         return '\n';
       case 'image':
-        return node.alt ?? '';
+        return node.alt as string;
       case 'html':
         return node.value;
       default:
@@ -142,6 +143,57 @@ function toPlain(text: string, separator: string, sentences: boolean): string {
 
   block(parser.parse(lifted) as Root);
   return splitPlaceholders(blocks.join(separator))
-    .map((part) => (typeof part === 'number' ? (tokens[part] ?? '') : part))
+    .map((part) => (typeof part === 'number' ? tokens[part] : part))
     .join('');
+}
+
+/**
+ * A rehype plugin for `MarkdownText`: each placeholder becomes `<span data-mention="i">`, rendered by
+ * `components.span` as the mention it stands for. Inside code the mention is
+ * shown as written (`written`), not linked (Decision 4); inside a Markdown
+ * link it is only colored, since links can't nest.
+ */
+export function rehypePlaceMentions(written: string[]) {
+  const visit = (node: HastRoot | Element, inLink: boolean) => {
+    const children: (RootContent | ElementContent)[] = [];
+    for (const child of node.children) {
+      if (child.type === 'element') {
+        if (child.tagName === 'code' || child.tagName === 'pre') {
+          restoreWritten(child, written);
+        } else {
+          visit(child, inLink || child.tagName === 'a');
+        }
+        children.push(child);
+      } else if (child.type === 'text') {
+        for (const part of splitPlaceholders(child.value)) {
+          children.push(
+            typeof part === 'number'
+              ? {
+                  type: 'element',
+                  tagName: 'span',
+                  properties: { dataMention: String(part), dataInLink: inLink ? 'true' : undefined },
+                  children: [],
+                }
+              : { type: 'text', value: part },
+          );
+        }
+      } else {
+        children.push(child);
+      }
+    }
+    node.children = children as typeof node.children;
+  };
+  return () => (tree: HastRoot) => visit(tree, false);
+}
+
+function restoreWritten(node: Element, written: string[]) {
+  for (const child of node.children) {
+    if (child.type === 'text') {
+      child.value = splitPlaceholders(child.value)
+        .map((part) => (typeof part === 'number' ? written[part] : part))
+        .join('');
+    } else if (child.type === 'element') {
+      restoreWritten(child, written);
+    }
+  }
 }
