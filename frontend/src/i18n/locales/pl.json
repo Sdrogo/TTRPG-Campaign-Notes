@@ -1519,7 +1519,10 @@
         "oneName": "Potrzebne jest dokładnie jedno pytanie o Nazwę.",
         "oneSubtitle": "Najwyżej jedno pytanie o Podtytuł.",
         "documents": "Najwyżej {{max}} pytań „Nowy Dokument”."
-      }
+      },
+      "unsaved": "Masz niezapisane zmiany.",
+      "keepEditing": "Edytuj dalej",
+      "discard": "Odrzuć"
     },
     "ddi": {
       "document": "Dokument DDI",

@@ -1449,7 +1449,10 @@
         "oneName": "Er moet precies één vraag voor de Naam zijn.",
         "oneSubtitle": "Hoogstens één vraag voor de Ondertitel.",
         "documents": "Hoogstens {{max}} vragen ‘Nieuw Document’."
-      }
+      },
+      "unsaved": "Je hebt niet-opgeslagen wijzigingen.",
+      "keepEditing": "Verder bewerken",
+      "discard": "Verwerpen"
     },
     "ddi": {
       "document": "Document van de DDI",

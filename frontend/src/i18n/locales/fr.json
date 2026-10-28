@@ -1451,7 +1451,10 @@
         "oneName": "Il faut exactement une question pour le Nom.",
         "oneSubtitle": "Au plus une question pour le Sous-titre.",
         "documents": "Au plus {{max}} questions « Nouveau Document »."
-      }
+      },
+      "unsaved": "Vous avez des modifications non enregistrées.",
+      "keepEditing": "Continuer à modifier",
+      "discard": "Abandonner"
     },
     "ddi": {
       "document": "Document de la DDI",

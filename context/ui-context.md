@@ -911,7 +911,10 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   "Create everyone's Documents (N)", a dimmed line on who reads the
   answers, and a separated accordion, one item per Player ("2/5
   answered"), with each answer (dimmed "—" when missing) and "Open the
-  Document". "Edit questions" is a `lg` dialog: one bordered block per
+  Document". "Edit questions" is an `xl` dialog (full screen on a
+  phone) that a click outside doesn't close; closing it with unsaved
+  changes (×, Esc, Cancel) swaps the buttons for "You have unsaved
+  changes." with "Keep editing" and "Discard" (red light): one bordered block per
   question (text, hint, "Where the answer goes" select, a Tag select for
   "New Document"), "Move up" / "Move down" / "Remove" icons, "Add
   question", the first problem in red `xs`, and Save disabled while there

@@ -1449,7 +1449,10 @@
         "oneName": "Exactly one question must be for the Name.",
         "oneSubtitle": "At most one question for the Subtitle.",
         "documents": "At most {{max}} \"New Document\" questions."
-      }
+      },
+      "unsaved": "You have unsaved changes.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
     },
     "ddi": {
       "document": "DDI Document",

@@ -1451,7 +1451,10 @@
         "oneName": "É preciso exatamente uma pergunta para o Nome.",
         "oneSubtitle": "No máximo uma pergunta para o Subtítulo.",
         "documents": "No máximo {{max}} perguntas «Novo Documento»."
-      }
+      },
+      "unsaved": "Tens alterações por guardar.",
+      "keepEditing": "Continuar a editar",
+      "discard": "Descartar"
     },
     "ddi": {
       "document": "Documento da DDI",

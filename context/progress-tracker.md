@@ -13,6 +13,11 @@ detail:
 
 ## Current Status (2026-10-28)
 
+- **Edit questions dialog fix** (2026-10-28, product owner's bug report,
+  frontend only, no migration): the dialog is `xl` (full screen on a
+  phone), a click outside no longer closes it and closing with unsaved
+  questions asks first, so they aren't lost.
+
 - **Spec 47_3, Session 0 DDI** (2026-10-28, migration `a7d3f9b2c6e1`,
   PR #261 merged into `staging`; migration applied to staging and to
   production 2026-10-28): a DDI step showing one of

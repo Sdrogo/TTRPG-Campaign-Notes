@@ -1449,7 +1449,10 @@
         "oneName": "Genau eine Frage muss für den Namen sein.",
         "oneSubtitle": "Höchstens eine Frage für den Untertitel.",
         "documents": "Höchstens {{max}} Fragen „Neues Dokument“."
-      }
+      },
+      "unsaved": "Du hast ungespeicherte Änderungen.",
+      "keepEditing": "Weiter bearbeiten",
+      "discard": "Verwerfen"
     },
     "ddi": {
       "document": "Dokument der DDI",

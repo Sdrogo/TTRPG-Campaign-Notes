@@ -17,6 +17,7 @@ import {
   Textarea,
   Title,
 } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from '../LabeledActionIcon';
@@ -429,10 +430,16 @@ interface DraftRow extends QuestionDraft {
   key: number;
 }
 
+/** What the editor would save, to tell whether anything changed. */
+function draftSignature(rows: DraftRow[]): string {
+  return JSON.stringify(rows.map(({ key: _key, ...row }) => row));
+}
+
 /**
  * "Edit questions" (Decision 9): the whole list, saved together; a question
  * removed takes its answers with it. The first question added asks for the
- * Name, the next ones for the description.
+ * Name, the next ones for the description. A click outside doesn't close
+ * it, and closing with unsaved changes asks first.
  */
 function QuestionsEditor({
   module,
@@ -458,7 +465,12 @@ function QuestionsEditor({
       tagId: question.tagId,
     })),
   );
+  const [initial] = useState(() => draftSignature(rows));
+  const [leaving, setLeaving] = useState(false);
+  const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
   const problem = questionsProblem(rows);
+  // Unsaved questions are only dropped once the Master says so.
+  const close = () => (draftSignature(rows) === initial ? onClose() : setLeaving(true));
   const update = (key: number, changes: Partial<QuestionDraft>) =>
     setRows((previous) => previous.map((row) => (row.key === key ? { ...row, ...changes } : row)));
   const move = (index: number, to: number) =>
@@ -475,7 +487,15 @@ function QuestionsEditor({
   const tagOptions = tags.map((tag) => ({ value: tag.id, label: tag.name }));
 
   return (
-    <Modal opened onClose={onClose} title={t('sessionZero.questions.edit')} size="lg" centered>
+    <Modal
+      opened
+      onClose={close}
+      title={t('sessionZero.questions.edit')}
+      size="xl"
+      fullScreen={phone}
+      closeOnClickOutside={false}
+      centered
+    >
       <Stack>
         <Text size="xs" c="dimmed">
           {t('sessionZero.questions.editHint')}
@@ -573,14 +593,31 @@ function QuestionsEditor({
             </Text>
           )}
         </Group>
-        <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button disabled={busy || problem !== null} onClick={() => act(boardWrites.setQuestions(module.id, rows), onClose)}>
-            {t('common.save')}
-          </Button>
-        </Group>
+        {leaving ? (
+          <Group justify="flex-end" gap="sm">
+            <Text size="sm" c="dimmed" mr="auto">
+              {t('sessionZero.questions.unsaved')}
+            </Text>
+            <Button variant="default" onClick={() => setLeaving(false)}>
+              {t('sessionZero.questions.keepEditing')}
+            </Button>
+            <Button color="red" variant="light" onClick={onClose}>
+              {t('sessionZero.questions.discard')}
+            </Button>
+          </Group>
+        ) : (
+          <Group justify="flex-end">
+            <Button variant="default" onClick={close}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              disabled={busy || problem !== null}
+              onClick={() => act(boardWrites.setQuestions(module.id, rows), onClose)}
+            >
+              {t('common.save')}
+            </Button>
+          </Group>
+        )}
       </Stack>
     </Modal>
   );

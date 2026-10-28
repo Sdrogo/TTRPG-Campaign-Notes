@@ -1449,7 +1449,10 @@
         "oneName": "Hace falta exactamente una pregunta para el Nombre.",
         "oneSubtitle": "Como mucho una pregunta para el Subtítulo.",
         "documents": "Como mucho {{max}} preguntas «Nuevo Documento»."
-      }
+      },
+      "unsaved": "Tienes cambios sin guardar.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
     },
     "ddi": {
       "document": "Documento de la DDI",

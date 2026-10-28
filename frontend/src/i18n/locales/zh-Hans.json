@@ -1414,7 +1414,10 @@
         "oneName": "必须正好有一个名称问题。",
         "oneSubtitle": "副标题问题最多一个。",
         "documents": "“新文档”问题最多 {{max}} 个。"
-      }
+      },
+      "unsaved": "你有未保存的更改。",
+      "keepEditing": "继续编辑",
+      "discard": "放弃"
     },
     "ddi": {
       "document": "DDI 文档",
