@@ -33,7 +33,7 @@ export function CommentToolbar({ filters, onChange, authorOptions }: CommentTool
         size="xs"
         aria-label={t('comments.toolbar.searchLabel')}
         placeholder={t('comments.toolbar.searchPlaceholder')}
-        leftSection={<MagnifyingGlassIcon size={14} />}
+        leftSection={<MagnifyingGlassIcon size={16} />}
         value={filters.query}
         onChange={(event) => set({ query: event.currentTarget.value })}
         style={{ flex: '1 1 160px' }}
@@ -79,7 +79,7 @@ export function CommentToolbar({ filters, onChange, authorOptions }: CommentTool
           size="xs"
           variant="subtle"
           color="gray"
-          leftSection={<ArrowCounterClockwiseIcon size={14} />}
+          leftSection={<ArrowCounterClockwiseIcon size={16} />}
           onClick={() => onChange({ ...DEFAULT_COMMENT_FILTERS, sort: filters.sort })}
         >
           {t('common.resetFilters')}

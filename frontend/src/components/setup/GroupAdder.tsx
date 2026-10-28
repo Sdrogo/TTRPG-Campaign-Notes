@@ -60,7 +60,7 @@ export function GroupAdder({ tags, listed, onAdd }: GroupAdderProps) {
         <Button
           size="sm"
           variant="light"
-          leftSection={<PlusIcon size={14} />}
+          leftSection={<PlusIcon size={16} />}
           onClick={handleAdd}
           disabled={picked.length === 0 || duplicate}
         >

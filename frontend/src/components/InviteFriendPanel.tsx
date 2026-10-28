@@ -93,7 +93,7 @@ export function InviteFriendPanel({ roomId }: { roomId: string }) {
         allowDeselect={false}
       />
       <Button
-        leftSection={<PaperPlaneTiltIcon size={16} />}
+        leftSection={<PaperPlaneTiltIcon size={18} />}
         disabled={!chosen}
         loading={invite.isPending}
         onClick={() => chosen && handleSend(chosen)}

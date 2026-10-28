@@ -15,8 +15,12 @@ const accent: MantineColorsTuple = [
 ];
 
 /**
- * The Mantine theme: the red accent scale, the app's fonts and the radius
- * scale from context/ui-context.md. Dark only.
+ * The Mantine theme: the red accent scale, the app's fonts, the text scale and the
+ * radius scale from context/ui-context.md. Dark only.
+ *
+ * Spec 49: text is two pixels larger per step than Mantine's default (`sm` 16px for
+ * body text, `xs` 14px for small text); h1-h3 keep Mantine's sizes, h4-h6 follow the
+ * body so a small heading is never smaller than the text under it.
  */
 export const theme = createTheme({
   primaryColor: 'accent',
@@ -24,7 +28,21 @@ export const theme = createTheme({
   colors: { accent },
   fontFamily: 'var(--font-sans)',
   fontFamilyMonospace: 'var(--font-mono)',
-  headings: { fontFamily: 'var(--font-display)' },
+  fontSizes: {
+    xs: '0.875rem',
+    sm: '1rem',
+    md: '1.125rem',
+    lg: '1.25rem',
+    xl: '1.375rem',
+  },
+  headings: {
+    fontFamily: 'var(--font-display)',
+    sizes: {
+      h4: { fontSize: '1.25rem' },
+      h5: { fontSize: '1.125rem' },
+      h6: { fontSize: '1rem' },
+    },
+  },
   defaultRadius: 'md',
   radius: {
     sm: '4px',

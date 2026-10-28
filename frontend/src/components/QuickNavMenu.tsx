@@ -56,7 +56,7 @@ export function QuickNavMenu() {
             component={Link}
             to={`/rooms/${room.id}/documents`}
             leftSection={<Avatar src={room.imageUrl} name={room.name} size={22} radius="sm" />}
-            rightSection={room.id === currentRoomId ? <CheckIcon size={14} aria-hidden="true" /> : null}
+            rightSection={room.id === currentRoomId ? <CheckIcon size={16} aria-hidden="true" /> : null}
             aria-current={room.id === currentRoomId ? 'page' : undefined}
           >
             {room.name}
@@ -71,10 +71,10 @@ export function QuickNavMenu() {
         <Burger opened={opened} size="sm" aria-label={t('nav.menu')} />
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Item component={Link} to="/" leftSection={<HouseIcon size={16} aria-hidden="true" />}>
+        <Menu.Item component={Link} to="/" leftSection={<HouseIcon size={18} aria-hidden="true" />}>
           {t('nav.home')}
         </Menu.Item>
-        <Menu.Item component={Link} to="/rooms" leftSection={<BooksIcon size={16} aria-hidden="true" />}>
+        <Menu.Item component={Link} to="/rooms" leftSection={<BooksIcon size={18} aria-hidden="true" />}>
           {t('common.myRooms')}
         </Menu.Item>
         <Menu.Divider />

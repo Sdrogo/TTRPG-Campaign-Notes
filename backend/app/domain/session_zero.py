@@ -636,6 +636,25 @@ def clean_chain(kinds: Sequence[ModuleKind]) -> list[ModuleKind]:
     return list(kinds)
 
 
+CARRYABLE_KINDS = frozenset({ModuleKind.RETRO, ModuleKind.QUESTIONS, ModuleKind.DDI})
+
+
+def carry_source(
+    earlier: Sequence[Sequence[Module]], kind: ModuleKind, index: int
+) -> Module | None:
+    """Spec 47b Decision 4: the step a new `index`-th step of `kind` carries
+    over from. `earlier` holds the earlier sessions' chains, newest first;
+    the newest with a step of that kind gives its `index`-th one, or its
+    last when it has fewer. None when no earlier session has one."""
+    if kind not in CARRYABLE_KINDS:
+        return None
+    for chain in earlier:
+        same = [module for module in chain if module.kind is kind]
+        if same:
+            return same[min(index, len(same) - 1)]
+    return None
+
+
 def ensure_can_add_module(round_: Round, modules: int) -> None:
     """Spec 47 Decision 3: the Master adds a module to the open round's
     chain, at most `MAX_MODULES` (the caller has checked the role)."""

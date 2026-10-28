@@ -129,7 +129,7 @@ function Acceptances({ step }: { step: DdiStep }) {
                 key={player.userId}
                 variant="light"
                 color="green"
-                leftSection={<CheckIcon size={12} aria-hidden="true" />}
+                leftSection={<CheckIcon size={14} aria-hidden="true" />}
                 title={t('sessionZero.ddi.accepted')}
               >
                 {name}

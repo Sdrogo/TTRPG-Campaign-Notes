@@ -127,7 +127,7 @@ function SpeechSettings() {
             <Button
               variant="outline"
               color="gray"
-              leftSection={<SpeakerHighIcon size={16} />}
+              leftSection={<SpeakerHighIcon size={18} />}
               onClick={sample.play}
             >
               {t('account.speech.try')}
@@ -136,7 +136,7 @@ function SpeechSettings() {
             <Button
               variant="outline"
               color="gray"
-              leftSection={<StopIcon size={16} />}
+              leftSection={<StopIcon size={18} />}
               onClick={sample.stop}
             >
               {t('speech.stop')}

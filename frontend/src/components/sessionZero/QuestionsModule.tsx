@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Accordion,
@@ -17,6 +17,7 @@ import {
   Textarea,
   Title,
 } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from '../LabeledActionIcon';
@@ -106,42 +107,48 @@ function MasterQuestions({ roomId, tags, module, step, editable }: StepProps & {
   const { t } = useTranslation();
   const { act, busy, members } = useBoard();
   const [editing, setEditing] = useState(false);
+  const tagSelectId = useId();
   const players = members.filter((member) => member.role === 'player');
   const tagOptions = tags.map((tag) => ({ value: tag.id, label: tag.name }));
   return (
     <Stack gap="md">
       <Stack gap="xs">
-        <Group justify="space-between">
+        {/* Title, settings and "Edit questions" share one row, wrapping on a narrow screen. */}
+        <Group gap="md" align="center">
           <Title order={2} fz="h4">
             {t('sessionZero.questions.title')}
           </Title>
           {editable && (
-            <Button size="compact-sm" variant="default" onClick={() => setEditing(true)}>
-              {t('sessionZero.questions.edit')}
-            </Button>
+            <>
+              <Group gap={6} wrap="nowrap">
+                <Text component="label" htmlFor={tagSelectId} size="xs" fw={500}>
+                  {t('sessionZero.questions.tag')}
+                </Text>
+                <Select
+                  id={tagSelectId}
+                  size="xs"
+                  w={140}
+                  placeholder={t('sessionZero.questions.noTag')}
+                  clearable
+                  data={tagOptions}
+                  value={step.tagId}
+                  disabled={busy}
+                  onChange={(value) => act(boardWrites.setQuestionsTag(module.id, value))}
+                />
+              </Group>
+              <Switch
+                size="sm"
+                label={t('sessionZero.questions.bypass')}
+                checked={step.playersBypassCreationRule}
+                disabled={busy}
+                onChange={(event) => act(boardWrites.setCreationBypass(module.id, event.currentTarget.checked))}
+              />
+              <Button size="compact-sm" variant="default" ml="auto" onClick={() => setEditing(true)}>
+                {t('sessionZero.questions.edit')}
+              </Button>
+            </>
           )}
         </Group>
-        {editable && (
-          <Group align="flex-end" gap="md">
-            <Select
-              size="xs"
-              label={t('sessionZero.questions.tag')}
-              placeholder={t('sessionZero.questions.noTag')}
-              clearable
-              data={tagOptions}
-              value={step.tagId}
-              disabled={busy}
-              onChange={(value) => act(boardWrites.setQuestionsTag(module.id, value))}
-            />
-            <Switch
-              size="sm"
-              label={t('sessionZero.questions.bypass')}
-              checked={step.playersBypassCreationRule}
-              disabled={busy}
-              onChange={(event) => act(boardWrites.setCreationBypass(module.id, event.currentTarget.checked))}
-            />
-          </Group>
-        )}
         {step.questions.length === 0 ? (
           <Text size="sm" c="dimmed">
             {t('sessionZero.questions.noneMaster')}
@@ -429,10 +436,16 @@ interface DraftRow extends QuestionDraft {
   key: number;
 }
 
+/** What the editor would save, to tell whether anything changed. */
+function draftSignature(rows: DraftRow[]): string {
+  return JSON.stringify(rows.map(({ key: _key, ...row }) => row));
+}
+
 /**
  * "Edit questions" (Decision 9): the whole list, saved together; a question
  * removed takes its answers with it. The first question added asks for the
- * Name, the next ones for the description.
+ * Name, the next ones for the description. A click outside doesn't close
+ * it, and closing with unsaved changes asks first.
  */
 function QuestionsEditor({
   module,
@@ -458,7 +471,12 @@ function QuestionsEditor({
       tagId: question.tagId,
     })),
   );
+  const [initial] = useState(() => draftSignature(rows));
+  const [leaving, setLeaving] = useState(false);
+  const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
   const problem = questionsProblem(rows);
+  // Unsaved questions are only dropped once the Master says so.
+  const close = () => (draftSignature(rows) === initial ? onClose() : setLeaving(true));
   const update = (key: number, changes: Partial<QuestionDraft>) =>
     setRows((previous) => previous.map((row) => (row.key === key ? { ...row, ...changes } : row)));
   const move = (index: number, to: number) =>
@@ -475,7 +493,15 @@ function QuestionsEditor({
   const tagOptions = tags.map((tag) => ({ value: tag.id, label: tag.name }));
 
   return (
-    <Modal opened onClose={onClose} title={t('sessionZero.questions.edit')} size="lg" centered>
+    <Modal
+      opened
+      onClose={close}
+      title={t('sessionZero.questions.edit')}
+      size="xl"
+      fullScreen={phone}
+      closeOnClickOutside={false}
+      centered
+    >
       <Stack>
         <Text size="xs" c="dimmed">
           {t('sessionZero.questions.editHint')}
@@ -496,7 +522,7 @@ function QuestionsEditor({
                     disabled={index === 0}
                     onClick={() => move(index, index - 1)}
                   >
-                    <ArrowUpIcon size={14} />
+                    <ArrowUpIcon size={16} />
                   </LabeledActionIcon>
                   <LabeledActionIcon
                     variant="subtle"
@@ -506,7 +532,7 @@ function QuestionsEditor({
                     disabled={index === rows.length - 1}
                     onClick={() => move(index, index + 1)}
                   >
-                    <ArrowDownIcon size={14} />
+                    <ArrowDownIcon size={16} />
                   </LabeledActionIcon>
                   <LabeledActionIcon
                     variant="subtle"
@@ -515,7 +541,7 @@ function QuestionsEditor({
                     aria-label={t('sessionZero.modules.remove')}
                     onClick={() => setRows(rows.filter((other) => other.key !== row.key))}
                   >
-                    <TrashIcon size={14} />
+                    <TrashIcon size={16} />
                   </LabeledActionIcon>
                 </Group>
               </Group>
@@ -561,7 +587,7 @@ function QuestionsEditor({
           <Button
             size="xs"
             variant="default"
-            leftSection={<PlusIcon size={14} />}
+            leftSection={<PlusIcon size={16} />}
             disabled={rows.length >= MAX_QUESTIONS}
             onClick={add}
           >
@@ -573,14 +599,31 @@ function QuestionsEditor({
             </Text>
           )}
         </Group>
-        <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button disabled={busy || problem !== null} onClick={() => act(boardWrites.setQuestions(module.id, rows), onClose)}>
-            {t('common.save')}
-          </Button>
-        </Group>
+        {leaving ? (
+          <Group justify="flex-end" gap="sm">
+            <Text size="sm" c="dimmed" mr="auto">
+              {t('sessionZero.questions.unsaved')}
+            </Text>
+            <Button variant="default" onClick={() => setLeaving(false)}>
+              {t('sessionZero.questions.keepEditing')}
+            </Button>
+            <Button color="red" variant="light" onClick={onClose}>
+              {t('sessionZero.questions.discard')}
+            </Button>
+          </Group>
+        ) : (
+          <Group justify="flex-end">
+            <Button variant="default" onClick={close}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              disabled={busy || problem !== null}
+              onClick={() => act(boardWrites.setQuestions(module.id, rows), onClose)}
+            >
+              {t('common.save')}
+            </Button>
+          </Group>
+        )}
       </Stack>
     </Modal>
   );

@@ -68,7 +68,7 @@ export function AddDocumentImages({
                 variant="subtle"
                 size="compact-xs"
                 loading={uploading}
-                leftSection={<UploadSimpleIcon size={12} />}
+                leftSection={<UploadSimpleIcon size={16} />}
               >
                 {t('images.upload')}
               </Button>
@@ -89,7 +89,7 @@ export function AddDocumentImages({
             <Button
               variant="subtle"
               size="compact-xs"
-              leftSection={<LinkIcon size={12} />}
+              leftSection={<LinkIcon size={16} />}
               onClick={() => setUrlOpened((current) => !current)}
             >
               {t('images.fromUrlShort')}
@@ -126,7 +126,7 @@ export function AddDocumentImages({
         <Button
           variant="subtle"
           size="compact-xs"
-          leftSection={<MagnifyingGlassIcon size={12} />}
+          leftSection={<MagnifyingGlassIcon size={16} />}
           onClick={onSearch}
           aria-label={t('imageSearch.title')}
         >

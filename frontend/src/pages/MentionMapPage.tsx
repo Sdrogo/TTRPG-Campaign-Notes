@@ -157,7 +157,7 @@ function MentionMapEditor({
                 aria-label={t('maps.settings')}
                 onClick={() => setSettingsOpened(true)}
               >
-                <GearIcon size={20} />
+                <GearIcon size={24} />
               </ActionIcon>
             </Tooltip>
           )}

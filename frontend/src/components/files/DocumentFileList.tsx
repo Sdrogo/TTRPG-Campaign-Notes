@@ -87,7 +87,7 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                   size="compact-xs"
                   disabled={full}
                   loading={upload.isPending}
-                  leftSection={<UploadSimpleIcon size={12} />}
+                  leftSection={<UploadSimpleIcon size={16} />}
                 >
                   {t('files.upload')}
                 </Button>
@@ -104,7 +104,7 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
           {files.map((file) => (
             <Group key={file.id} component="li" gap="xs" wrap="nowrap" justify="space-between">
               <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
-                <FilePdfIcon size={16} color="var(--accent-primary)" style={{ flexShrink: 0 }} aria-hidden />
+                <FilePdfIcon size={18} color="var(--accent-primary)" style={{ flexShrink: 0 }} aria-hidden />
                 <Text size="sm" truncate="end" title={file.name}>
                   {file.name}
                 </Text>
@@ -126,7 +126,7 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                   loading={openingId === file.id}
                   aria-label={t('files.open', { name: file.name })}
                 >
-                  <ArrowSquareOutIcon size={14} />
+                  <ArrowSquareOutIcon size={16} />
                 </LabeledActionIcon>
                 {/* The signed link is served as an attachment (D-22), so
                     following it downloads under the file's name. */}
@@ -139,7 +139,7 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                   color="gray"
                   aria-label={t('files.download', { name: file.name })}
                 >
-                  <DownloadSimpleIcon size={14} />
+                  <DownloadSimpleIcon size={16} />
                 </LabeledActionIcon>
                 {file.canDelete && (
                   <LabeledActionIcon
@@ -150,7 +150,7 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                     loading={deleteFile.isPending && deleteFile.variables === file.id}
                     aria-label={t('files.delete', { name: file.name })}
                   >
-                    <TrashIcon size={14} />
+                    <TrashIcon size={16} />
                   </LabeledActionIcon>
                 )}
               </Group>

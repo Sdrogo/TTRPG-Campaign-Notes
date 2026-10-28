@@ -166,18 +166,20 @@ describe('boardWrites', () => {
       method: 'PUT',
       json: { column_ids: ['b', 'a'] },
     });
-    expect(boardWrites.startRound('  Fine arco 1 ', ['retro'])).toEqual({
+    const retro = { kind: 'retro' as const, carry: true };
+    expect(boardWrites.startRound('  Fine arco 1 ', [retro])).toEqual({
       path: '/rounds',
       method: 'POST',
-      json: { title: 'Fine arco 1', modules: ['retro'] },
+      json: { title: 'Fine arco 1', modules: [retro] },
     });
-    expect(boardWrites.startRound('  ', ['stars_wishes']).json).toEqual({ title: null, modules: ['stars_wishes'] });
+    expect(boardWrites.startRound('  ', []).json).toEqual({ title: null, modules: [] });
     expect(boardWrites.start(['retro', 'stars_wishes']).json).toEqual({ modules: ['retro', 'stars_wishes'] });
     expect(boardWrites.addModule('lines_veils')).toEqual({
       path: '/modules',
       method: 'POST',
-      json: { kind: 'lines_veils' },
+      json: { kind: 'lines_veils', carry: false },
     });
+    expect(boardWrites.addModule('questions', true).json).toEqual({ kind: 'questions', carry: true });
     expect(boardWrites.removeModule('m')).toEqual({ path: '/modules/m', method: 'DELETE' });
     expect(boardWrites.reorderModules(['b', 'a'])).toEqual({
       path: '/modules/order',

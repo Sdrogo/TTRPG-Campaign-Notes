@@ -1405,7 +1405,7 @@
       "later": "Sesja 0.5 #{{number}}",
       "pick": "Pokazywana sesja",
       "start": "Nowa sesja",
-      "startBody": "Bieżąca sesja zostaje zamknięta i pozostaje dostępna tylko do odczytu; nigdy nieopublikowane szkice są usuwane. Nowa zaczyna się pusta z etapami poniżej, a jej tablice Retro zachowują te same kolumny. Linie i Zasłony pozostają bez zmian.",
+      "startBody": "Bieżąca sesja zostaje zamknięta i pozostaje dostępna tylko do odczytu; nieopublikowane szkice są usuwane. Nowa zaczyna się pusta z krokami poniżej: zaznacz „Przenieś z poprzedniej sesji”, aby przywrócić kolumny, pytania lub DDI. Linie i Zasłony zostają bez zmian.",
       "title": "Nazwa",
       "startButton": "Utwórz",
       "closed": "Ta sesja jest zamknięta: tablica jest tylko do odczytu.",
@@ -1465,7 +1465,8 @@
       "chain": "Etapy sesji",
       "chainHint": "Wybierz etapy i ich kolejność; możesz je później zmienić.",
       "max": "Najwyżej {{max}} etapów.",
-      "startButton": "Rozpocznij"
+      "startButton": "Rozpocznij",
+      "carry": "Przenieś z poprzedniej sesji"
     },
     "questions": {
       "title": "Pytania",
@@ -1519,7 +1520,10 @@
         "oneName": "Potrzebne jest dokładnie jedno pytanie o Nazwę.",
         "oneSubtitle": "Najwyżej jedno pytanie o Podtytuł.",
         "documents": "Najwyżej {{max}} pytań „Nowy Dokument”."
-      }
+      },
+      "unsaved": "Masz niezapisane zmiany.",
+      "keepEditing": "Edytuj dalej",
+      "discard": "Odrzuć"
     },
     "ddi": {
       "document": "Dokument DDI",

@@ -3,7 +3,7 @@ import { Badge, Button, Group, Modal, Select, Stack, Text, TextInput, Tooltip } 
 import { PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { MAX_ROUND_TITLE_LENGTH, boardWrites, defaultRoundName, roundLabel } from '../../lib/sessionZero';
-import type { ModuleKind } from '../../types/sessionZero';
+import type { ChainStep } from '../../types/sessionZero';
 import { ChainEditor } from './ModuleChain';
 import { useBoard } from './boardContext';
 
@@ -50,8 +50,8 @@ export function SessionPicker({ onPick }: SessionPickerProps) {
 /**
  * The Master's "New session" (spec 46d Decision 3): the session on screen
  * closes, its unpublished drafts go. Its chain is the Master's, the open
- * session's proposed (spec 47 Decision 2), and its Retro steps keep the
- * columns of the matching ones. Its name
+ * session's proposed (spec 47 Decision 2); each step starts empty unless
+ * the Master ticks "Carry over from the previous session" (spec 47b). Its name
  * is free, prefilled with the next default ("Session 0.5 #N"); left as it is,
  * nothing is stored and the default shows in each viewer's language.
  */
@@ -61,13 +61,13 @@ export function NewSession() {
   const [opened, setOpened] = useState(false);
   return (
     <>
-      <Button size="compact-sm" variant="default" leftSection={<PlusIcon size={14} />} onClick={() => setOpened(true)}>
+      <Button size="compact-sm" variant="default" leftSection={<PlusIcon size={16} />} onClick={() => setOpened(true)}>
         {t('sessionZero.rounds.start')}
       </Button>
       {opened && (
         <NewSessionModal
           suggested={defaultRoundName(board.rounds.length + 1)}
-          chain={board.modules.map((module) => module.kind)}
+          chain={board.modules.map((module) => ({ kind: module.kind, carry: false }))}
           busy={busy}
           onClose={() => setOpened(false)}
           onStart={(title, modules) => {
@@ -82,10 +82,10 @@ export function NewSession() {
 
 interface NewSessionModalProps {
   suggested: string;
-  chain: ModuleKind[];
+  chain: ChainStep[];
   busy: boolean;
   onClose: () => void;
-  onStart: (title: string, modules: ModuleKind[]) => void;
+  onStart: (title: string, modules: ChainStep[]) => void;
 }
 
 function NewSessionModal({ suggested, chain: proposed, busy, onClose, onStart }: NewSessionModalProps) {
@@ -103,7 +103,7 @@ function NewSessionModal({ suggested, chain: proposed, busy, onClose, onStart }:
           onChange={(event) => setName(event.currentTarget.value)}
           data-autofocus
         />
-        <ChainEditor value={chain} onChange={setChain} />
+        <ChainEditor value={chain} onChange={setChain} carry />
         <Group justify="flex-end">
           <Button variant="default" onClick={onClose}>
             {t('common.cancel')}

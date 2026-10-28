@@ -173,9 +173,9 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
                 className="documents-controls-toggle"
               >
                 {controlsExpanded ? (
-                  <CaretDownIcon size={16} aria-hidden="true" />
+                  <CaretDownIcon size={18} aria-hidden="true" />
                 ) : (
-                  <CaretRightIcon size={16} aria-hidden="true" />
+                  <CaretRightIcon size={18} aria-hidden="true" />
                 )}
               </UnstyledButton>
             )}
@@ -192,7 +192,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
               aria-label={t('maps.title')}
               title={t('maps.title')}
             >
-              <MapTrifoldIcon size={20} />
+              <MapTrifoldIcon size={24} />
             </LabeledActionIcon>
           )}
           {room.data && me && !readOnly && (
@@ -218,7 +218,7 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
             <Button
               size="md"
               radius="md"
-              leftSection={<PlusIcon size={18} weight="bold" />}
+              leftSection={<PlusIcon size={20} weight="bold" />}
               onClick={() => setCreateOpened(true)}
               className="documents-create-action"
             >
@@ -411,9 +411,9 @@ function DocumentsGrid({
                 >
                   <Group gap="xs" wrap="nowrap">
                     {isExpanded ? (
-                      <CaretDownIcon size={16} aria-hidden="true" />
+                      <CaretDownIcon size={18} aria-hidden="true" />
                     ) : (
-                      <CaretRightIcon size={16} aria-hidden="true" />
+                      <CaretRightIcon size={18} aria-hidden="true" />
                     )}
                     <Text component="span" inherit>
                       {label}

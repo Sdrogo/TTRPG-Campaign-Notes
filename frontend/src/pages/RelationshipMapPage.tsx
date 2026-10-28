@@ -182,14 +182,14 @@ function GeoMapEditor({
       actions={
         <>
           <Menu.Item
-            leftSection={<DownloadSimpleIcon size={16} />}
+            leftSection={<DownloadSimpleIcon size={18} />}
             disabled={exportMap.isPending}
             onClick={() => exportMap.mutate(undefined, { onError: (error) => notifyError(error) })}
           >
             {t('maps.geo.export')}
           </Menu.Item>
           {access.manages && (
-            <Menu.Item leftSection={<MapTrifoldIcon size={16} />} onClick={() => setPlaneOpened(true)}>
+            <Menu.Item leftSection={<MapTrifoldIcon size={18} />} onClick={() => setPlaneOpened(true)}>
               {t('maps.geo.planeTitle')}
             </Menu.Item>
           )}
@@ -296,13 +296,13 @@ function MapChrome({
               <Menu position="bottom-end" shadow="md">
                 <Menu.Target>
                   <LabeledActionIcon variant="subtle" color="gray" size="lg" aria-label={t('maps.actions', { name: map.name })}>
-                    <DotsThreeVerticalIcon size={20} />
+                    <DotsThreeVerticalIcon size={24} />
                   </LabeledActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
                   {wide && (
                     <Menu.Item
-                      leftSection={<SquareSplitHorizontalIcon size={16} />}
+                      leftSection={<SquareSplitHorizontalIcon size={18} />}
                       onClick={() => (splitShown ? split.close() : split.open(''))}
                     >
                       {splitShown ? t('documents.open.hideSplit') : t('documents.open.showSplit')}
@@ -311,11 +311,11 @@ function MapChrome({
                   {actions}
                   {manages && (
                     <>
-                      <Menu.Item leftSection={<GearIcon size={16} />} onClick={() => setSettingsOpened(true)}>
+                      <Menu.Item leftSection={<GearIcon size={18} />} onClick={() => setSettingsOpened(true)}>
                         {t('maps.settings')}
                       </Menu.Item>
                       <Menu.Divider />
-                      <Menu.Item color="red" leftSection={<TrashIcon size={16} />} onClick={() => setDeleteOpened(true)}>
+                      <Menu.Item color="red" leftSection={<TrashIcon size={18} />} onClick={() => setDeleteOpened(true)}>
                         {t('maps.delete')}
                       </Menu.Item>
                     </>

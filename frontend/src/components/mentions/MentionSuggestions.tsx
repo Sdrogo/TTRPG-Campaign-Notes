@@ -170,7 +170,7 @@ function MentionCreateRow({ id, name, kinds, kind, onKindChange, highlighted, cr
           <Button
             size="xs"
             variant={highlighted ? 'filled' : 'light'}
-            leftSection={kind === 'document' ? <FilePlusIcon size={14} /> : <TagIcon size={14} />}
+            leftSection={kind === 'document' ? <FilePlusIcon size={16} /> : <TagIcon size={16} />}
             loading={creating}
             onClick={onCreate}
           >

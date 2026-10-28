@@ -24,6 +24,7 @@ from app.domain.session_zero import (
     StarsWishesKind,
     WrongBoardError,
     can_promote,
+    carry_source,
     clean_chain,
     column_kind,
     current_after_removal,
@@ -105,3 +106,16 @@ def test_players_see_the_steps_already_reached() -> None:
     assert visible_modules(chain, first.id, RoomRole.PLAYER) == [first]
     assert visible_modules(chain, second.id, RoomRole.PLAYER) == [first, second]
     assert visible_modules(chain, None, RoomRole.PLAYER) == []
+
+
+def test_a_step_carries_over_from_the_newest_session_with_its_kind() -> None:
+    """Spec 47b Decision 4."""
+    newest = _chain(ModuleKind.STARS_WISHES)
+    older = _chain(ModuleKind.QUESTIONS, ModuleKind.RETRO, ModuleKind.QUESTIONS)
+    earlier = [newest, older]
+    assert carry_source(earlier, ModuleKind.QUESTIONS, 0) == older[0]
+    assert carry_source(earlier, ModuleKind.QUESTIONS, 1) == older[2]
+    assert carry_source(earlier, ModuleKind.QUESTIONS, 5) == older[2]
+    assert carry_source(earlier, ModuleKind.DDI, 0) is None
+    assert carry_source(earlier, ModuleKind.STARS_WISHES, 0) is None
+    assert carry_source([], ModuleKind.RETRO, 0) is None

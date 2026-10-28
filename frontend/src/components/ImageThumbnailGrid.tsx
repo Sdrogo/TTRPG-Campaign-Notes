@@ -61,7 +61,7 @@ export function ImageThumbnailGrid({ images, size = 96, onOpen, onRemove }: Imag
                 onClick={() => onRemove(image.id)}
                 aria-label={t('images.removeNamed', { name: image.label })}
               >
-                <XIcon size={12} />
+                <XIcon size={16} />
               </LabeledActionIcon>
             )}
           </Box>

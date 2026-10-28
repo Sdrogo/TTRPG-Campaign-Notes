@@ -31,7 +31,7 @@ export function PrivacySection() {
       <Group gap="sm">
         <Button
           variant="default"
-          leftSection={<DownloadSimpleIcon size={16} aria-hidden="true" />}
+          leftSection={<DownloadSimpleIcon size={18} aria-hidden="true" />}
           loading={exportData.isPending}
           onClick={() =>
             exportData.mutate(undefined, {
@@ -55,7 +55,7 @@ export function PrivacySection() {
           <Button
             variant="outline"
             color="red"
-            leftSection={<TrashIcon size={16} aria-hidden="true" />}
+            leftSection={<TrashIcon size={18} aria-hidden="true" />}
             onClick={() => setOpened(true)}
           >
             {t('account.privacy.delete')}

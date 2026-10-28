@@ -13,6 +13,19 @@ detail:
 
 ## Current Status (2026-10-28)
 
+- **Spec 47b, separate Session 0 sessions** (2026-10-28, product owner's
+  request, no migration, in PR #263): a new session starts empty; each
+  Retro, Questions or DDI step carries an earlier session's columns,
+  questions or DDI Document over only when the Master ticks "Carry over
+  from the previous session" (in "New session" and beside "Add step").
+  Same PR: the Questions step's title, Tag, switch and "Edit questions"
+  on one row.
+
+- **Edit questions dialog fix** (2026-10-28, product owner's bug report,
+  frontend only, no migration): the dialog is `xl` (full screen on a
+  phone), a click outside no longer closes it and closing with unsaved
+  questions asks first, so they aren't lost.
+
 - **Spec 47_3, Session 0 DDI** (2026-10-28, migration `a7d3f9b2c6e1`,
   PR #261 merged into `staging`; migration applied to staging and to
   production 2026-10-28): a DDI step showing one of
@@ -791,6 +804,10 @@ on `main`.
   (`alembic upgrade head` with `.env.staging`, staging = `d4a7e2c9f1b3`,
   head) and **to production** the same day (`alembic upgrade head` with
   `.env`, production = `d4a7e2c9f1b3`, head).
+- **49, Larger text and icons** (ticket confirmed 2026-10-28 with a double
+  step, built in PR #264): text +2px per step (`xs` 14, `sm` 16px), h1-h3
+  unchanged, UI icons 16-24px, Badges larger, icon buttons at least 24px on
+  desktop and 40px on touch screens. Theme and CSS only, no migration.
 - **47, Modular Session 0** (ticket written 2026-10-27; Q1-Q7 answered
   the same day, DDI sections from the manual the product owner shared;
   go-ahead to build the same day). **47_1 (chain + Stars and Wishes)
