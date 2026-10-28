@@ -1191,7 +1191,11 @@
       "uploadBackground": "画像をアップロード",
       "backgroundFromUrl": "URLから",
       "removeBackground": "背景を削除",
-      "export": "マップをエクスポート(JSON)"
+      "export": "マップをエクスポート(JSON)",
+      "placePane": "地図の横に開いた場所",
+      "noNote": "メモなし",
+      "placeNotFound": "場所が見つかりません",
+      "connections": "つながり"
     },
     "kind": {
       "label": "マップの種類",

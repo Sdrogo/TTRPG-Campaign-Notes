@@ -1191,7 +1191,11 @@
       "uploadBackground": "上传图片",
       "backgroundFromUrl": "来自网址",
       "removeBackground": "移除背景",
-      "export": "导出地图(JSON)"
+      "export": "导出地图(JSON)",
+      "placePane": "在地图旁打开的地点",
+      "noNote": "没有备注",
+      "placeNotFound": "找不到地点",
+      "connections": "连接"
     },
     "kind": {
       "label": "地图类型",

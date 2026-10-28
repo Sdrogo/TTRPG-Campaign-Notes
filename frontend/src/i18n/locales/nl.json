@@ -1219,7 +1219,11 @@
       "uploadBackground": "Afbeelding uploaden",
       "backgroundFromUrl": "Van een URL",
       "removeBackground": "Achtergrond verwijderen",
-      "export": "Kaart exporteren (JSON)"
+      "export": "Kaart exporteren (JSON)",
+      "placePane": "Plaats geopend naast de kaart",
+      "noNote": "Geen notitie",
+      "placeNotFound": "Plaats niet gevonden",
+      "connections": "Verbindingen"
     },
     "kind": {
       "label": "Soort kaart",

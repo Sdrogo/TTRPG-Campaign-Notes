@@ -1275,7 +1275,11 @@
       "uploadBackground": "Загрузить изображение",
       "backgroundFromUrl": "По URL",
       "removeBackground": "Убрать фон",
-      "export": "Экспортировать карту (JSON)"
+      "export": "Экспортировать карту (JSON)",
+      "placePane": "Место открыто рядом с картой",
+      "noNote": "Нет заметки",
+      "placeNotFound": "Место не найдено",
+      "connections": "Связи"
     },
     "kind": {
       "label": "Тип карты",

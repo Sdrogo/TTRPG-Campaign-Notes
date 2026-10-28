@@ -1191,7 +1191,11 @@
       "uploadBackground": "이미지 업로드",
       "backgroundFromUrl": "URL에서",
       "removeBackground": "배경 제거",
-      "export": "지도 내보내기(JSON)"
+      "export": "지도 내보내기(JSON)",
+      "placePane": "지도 옆에 연 장소",
+      "noNote": "메모 없음",
+      "placeNotFound": "장소를 찾을 수 없습니다",
+      "connections": "연결"
     },
     "kind": {
       "label": "지도 종류",

@@ -1,8 +1,29 @@
 import { createContext, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import type { GeoItemRef } from '../lib/geoMaps';
 
 /** The address parameter holding the Document open beside the page (spec 37 Decision 3). */
 export const SIDE_PARAM = 'side';
+
+/** What starts a geographic map's plain place in `?side=` (spec 50 Decision 2). */
+const PLACE_PREFIX = 'place:';
+
+/** The `?side=` value showing a geographic map's plain area or pin (spec 50). */
+export function placeSide(ref: GeoItemRef): string {
+  return `${PLACE_PREFIX}${ref.kind}:${ref.id}`;
+}
+
+/** Whether a `?side=` value names a map place rather than a Document. */
+export function isPlaceSide(sideId: string | null): boolean {
+  return sideId?.startsWith(PLACE_PREFIX) ?? false;
+}
+
+/** The place a `?side=` value names, or null when it names none. */
+export function parsePlaceSide(sideId: string | null): GeoItemRef | null {
+  if (!sideId || !isPlaceSide(sideId)) return null;
+  const [kind, id] = sideId.slice(PLACE_PREFIX.length).split(':');
+  return (kind === 'area' || kind === 'pin') && id ? { kind, id } : null;
+}
 
 /** Wide enough for two panes side by side, and for the open menu (spec 37 Decision 5). */
 export const SPLIT_QUERY = '(min-width: 48em)';

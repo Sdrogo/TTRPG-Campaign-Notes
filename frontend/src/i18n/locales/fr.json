@@ -1221,7 +1221,11 @@
       "uploadBackground": "Téléverser une image",
       "backgroundFromUrl": "Depuis une URL",
       "removeBackground": "Retirer le fond",
-      "export": "Exporter la carte (JSON)"
+      "export": "Exporter la carte (JSON)",
+      "placePane": "Lieu ouvert à côté de la carte",
+      "noNote": "Aucune note",
+      "placeNotFound": "Lieu introuvable",
+      "connections": "Liens"
     },
     "kind": {
       "label": "Type de carte",

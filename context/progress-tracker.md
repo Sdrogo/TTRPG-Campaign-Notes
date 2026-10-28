@@ -760,6 +760,13 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **50, Map places in the split pane** (ticket confirmed by the product
+  owner 2026-10-28, built in PR #265): on a geographic map being read, a
+  plain area or pin opens in the split pane (`?side=place:<kind>:<id>`,
+  `PlaceSidePane` with subtitle, Markdown note and linked places) instead of
+  the small floating card; the map's selection follows the pane; editing
+  keeps the card. Frontend only, no migration.
+
 - **48, Markdown in Documents and Notes** (ticket confirmed by the product
   owner 2026-10-28, built in PR #262): see Current Status. No migration.
 

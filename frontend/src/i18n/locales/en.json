@@ -1219,7 +1219,11 @@
       "uploadBackground": "Upload an image",
       "backgroundFromUrl": "From a URL",
       "removeBackground": "Remove the background",
-      "export": "Export the map (JSON)"
+      "export": "Export the map (JSON)",
+      "placePane": "Place opened beside the map",
+      "noNote": "No note",
+      "placeNotFound": "Place not found",
+      "connections": "Links"
     },
     "kind": {
       "label": "Kind of map",

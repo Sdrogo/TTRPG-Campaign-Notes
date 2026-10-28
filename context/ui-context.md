@@ -819,10 +819,14 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   `SegmentedControl`) and a light "Fine modifiche" (`CheckIcon`); "Filtra
   per Tag" (a `Select`) is for everyone. While a tool is on, a hint bar at the bottom says what to click,
   with "Togli l'ultimo angolo" and "Chiudi l'area" while drawing, and Annulla.
-- **A clicked place** (38b): a Document's place opens in the split pane
-  (opening it if needed) on a screen wide enough for it; a plain place shows
-  a card top right with name, subtitle and note. While editing, every
-  selected place shows the card with Modifica; on a phone a Document's card
+- **A clicked place** (38b, 50): while reading, a Document's place opens in
+  the split pane (opening it if needed), and so does a plain place
+  (`?side=place:<area|pin>:<id>`, `PlaceSidePane`: sticky header with the
+  name and close button, then the area's subtitle, the note as Markdown or a
+  dimmed "Nessuna nota", and "Collegamenti", the linked places, each opening
+  in the pane; "Luogo non trovato" once it is gone); on a phone both open in
+  the lower half. The map's selection follows the pane. While editing, every
+  selected place shows the card top right with Modifica; on a phone a Document's card
   has "Apri il Documento". Area names (display font, subtitle under them)
   sit at the centroid unless pins or labels are there, then at the nearest
   free spot, inside their area when they fit.
@@ -862,7 +866,7 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   navigate; Ctrl/Cmd-click still opens a tab) selects it and the pane shows
   that Document (`MapBoard`'s `onSelectDocument`, read-only boards too).
 - **Split view**: `?side=<documentId>` on any Room page (`PageLayout`; an empty
-  `?side=` counts as open only where `PageLayout` gets `allowEmptySide`, i.e. the two map pages, and is ignored elsewhere)
+  `?side=` counts as open only where `PageLayout` gets `allowEmptySide`, i.e. the two map pages, and is ignored elsewhere); a `place:` value shows what `PageLayout`'s `renderSide` gives (a geographic map's place, spec 50) and is ignored on a page without it
   splits it in `SplitView`: the page left, `DocumentSidePane` right (sticky
   header with the name, an "Apri il Documento" icon link and a close
   button, then the whole `DocumentView`). The divider is 8 px, a
