@@ -1337,7 +1337,7 @@
       "later": "Sessione 0.5 #{{number}}",
       "pick": "Sessione da mostrare",
       "start": "Nuova sessione",
-      "startBody": "La sessione attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova parte vuota con le tappe qui sotto, e le sue lavagne Retro mantengono le stesse colonne. Linee e Veli resta com'è.",
+      "startBody": "La sessione attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova parte vuota con le tappe qui sotto: spunta «Porta dalla sessione precedente» per riprendere colonne, domande o DDI. Linee e Veli resta com'è.",
       "title": "Nome",
       "startButton": "Crea",
       "closed": "Questa sessione è chiusa: la lavagna è in sola lettura.",
@@ -1395,7 +1395,8 @@
       "chain": "Tappe della sessione",
       "chainHint": "Scegli le tappe e il loro ordine; potrai cambiarle in seguito.",
       "max": "Al massimo {{max}} tappe.",
-      "startButton": "Avvia"
+      "startButton": "Avvia",
+      "carry": "Porta dalla sessione precedente"
     },
     "questions": {
       "title": "Domande",

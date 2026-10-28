@@ -13,6 +13,14 @@ detail:
 
 ## Current Status (2026-10-28)
 
+- **Spec 47b, separate Session 0 sessions** (2026-10-28, product owner's
+  request, no migration, in PR #263): a new session starts empty; each
+  Retro, Questions or DDI step carries an earlier session's columns,
+  questions or DDI Document over only when the Master ticks "Carry over
+  from the previous session" (in "New session" and beside "Add step").
+  Same PR: the Questions step's title, Tag, switch and "Edit questions"
+  on one row.
+
 - **Edit questions dialog fix** (2026-10-28, product owner's bug report,
   frontend only, no migration): the dialog is `xl` (full screen on a
   phone), a click outside no longer closes it and closing with unsaved

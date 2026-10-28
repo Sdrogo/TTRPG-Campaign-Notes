@@ -894,7 +894,11 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   bordered row per step ("2. Stars and Wishes") with "Move up", "Move
   down" and "Remove" icon buttons (arrows rather than a drag, the same
   on a phone), then a "Step" select and "Add step" (default, "+"); "At
-  most 10 steps." in dimmed `xs` at the limit. In "Edit steps" each
+  most 10 steps." in dimmed `xs` at the limit. In "New session" each
+  Retro, Questions and DDI row has an `xs` "Carry over from the previous
+  session" checkbox beside its name, off (spec 47b); "Edit steps" has
+  the same checkbox under "Add step" for those kinds once the Room has
+  an earlier session. In "Edit steps" each
   change goes at once; removing a step with post-its or questions asks
   first, inside the same dialog.
 - The body shows the step on screen: Retro is the two boards as below,

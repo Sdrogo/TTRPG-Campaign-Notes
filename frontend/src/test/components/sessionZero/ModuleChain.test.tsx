@@ -120,9 +120,28 @@ describe('Edit steps', () => {
     await user.click(await screen.findByRole('option', { name: 'Stelle e Desideri' }));
     await user.click(within(dialog).getByRole('button', { name: 'Aggiungi tappa' }));
     expect(act).toHaveBeenLastCalledWith(boardWrites.addModule('stars_wishes'));
+    // With no earlier session there is nothing to carry over (spec 47b).
+    expect(within(dialog).queryByRole('checkbox')).not.toBeInTheDocument();
 
     await user.click(within(dialog).getByRole('button', { name: 'Chiudi' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  // Spec 47b Decision 2: a step added can carry an earlier session's content over.
+  it('adds a step carrying an earlier session\'s content over when ticked', async () => {
+    const rounds = [
+      { id: 'round-1', number: 1, title: null, started_at: '2026-10-01T09:00:00Z', closed_at: '2026-10-20T09:00:00Z' },
+      { id: 'round-2', number: 2, title: null, started_at: '2026-10-20T09:00:00Z', closed_at: null },
+    ];
+    const { act, user, dialog } = await openEditor({ ...master, rounds, round_id: 'round-2' });
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Porta dalla sessione precedente' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Aggiungi tappa' }));
+    expect(act).toHaveBeenLastCalledWith(boardWrites.addModule('retro', true));
+    await user.click(within(dialog).getByRole('combobox', { name: 'Tappa' }));
+    await user.click(await screen.findByRole('option', { name: 'Stelle e Desideri' }));
+    expect(within(dialog).queryByRole('checkbox')).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Aggiungi tappa' }));
+    expect(act).toHaveBeenLastCalledWith(boardWrites.addModule('stars_wishes', false));
   });
 
   it('asks before removing a step that holds post-its', async () => {

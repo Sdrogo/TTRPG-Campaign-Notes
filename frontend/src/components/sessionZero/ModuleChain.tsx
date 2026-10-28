@@ -1,18 +1,23 @@
 import { useState } from 'react';
-import { Badge, Button, Group, Modal, Paper, Select, Stack, Text, Tooltip } from '@mantine/core';
+import { Badge, Button, Checkbox, Group, Modal, Paper, Select, Stack, Text, Tooltip } from '@mantine/core';
 import { ArrowDownIcon, ArrowUpIcon, CaretRightIcon, LockSimpleIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from '../LabeledActionIcon';
-import { DEFAULT_CHAIN, MAX_MODULES, MODULE_KINDS, boardWrites, moduleLabel } from '../../lib/sessionZero';
-import type { ModuleKind, SessionZeroModule } from '../../types/sessionZero';
+import { CARRYABLE_KINDS, DEFAULT_CHAIN, MAX_MODULES, MODULE_KINDS, boardWrites, moduleLabel } from '../../lib/sessionZero';
+import type { ChainStep, ModuleKind, SessionZeroModule } from '../../types/sessionZero';
 import { useBoard } from './boardContext';
 
 interface ChainRowsProps {
   kinds: ModuleKind[];
   disabled?: boolean;
+  /** Each step's "Carry over from the previous session" (spec 47b), shown on the steps that have one. */
+  carry?: boolean[];
+  onCarry?: (index: number, carry: boolean) => void;
+  /** Shows the checkbox beside "Add step" too, for the kinds that have one. */
+  addCarry?: boolean;
   onMove: (index: number, to: number) => void;
   onRemove: (index: number) => void;
-  onAdd: (kind: ModuleKind) => void;
+  onAdd: (kind: ModuleKind, carry: boolean) => void;
 }
 
 /**
@@ -21,18 +26,38 @@ interface ChainRowsProps {
  * drag, the same on a phone). The last step stays: a session has at least
  * one.
  */
-function ChainRows({ kinds, disabled = false, onMove, onRemove, onAdd }: ChainRowsProps) {
+function ChainRows({
+  kinds,
+  disabled = false,
+  carry,
+  onCarry,
+  addCarry = false,
+  onMove,
+  onRemove,
+  onAdd,
+}: ChainRowsProps) {
   const { t } = useTranslation();
   const [kind, setKind] = useState<ModuleKind>('retro');
+  const [carryNew, setCarryNew] = useState(false);
   const full = kinds.length >= MAX_MODULES;
   return (
     <Stack gap={6}>
       {kinds.map((step, index) => (
         <Paper key={index} withBorder radius="sm" px="xs" py={4}>
           <Group justify="space-between" wrap="nowrap" gap={4}>
-            <Text size="sm">
-              {index + 1}. {moduleLabel(step)}
-            </Text>
+            <Group gap="sm" wrap="wrap">
+              <Text size="sm">
+                {index + 1}. {moduleLabel(step)}
+              </Text>
+              {carry && CARRYABLE_KINDS.includes(step) && (
+                <Checkbox
+                  size="xs"
+                  label={t('sessionZero.modules.carry')}
+                  checked={carry[index]}
+                  onChange={(event) => onCarry?.(index, event.currentTarget.checked)}
+                />
+              )}
+            </Group>
             <Group gap={2} wrap="nowrap">
               <LabeledActionIcon
                 variant="subtle"
@@ -83,11 +108,19 @@ function ChainRows({ kinds, disabled = false, onMove, onRemove, onAdd }: ChainRo
           variant="default"
           leftSection={<PlusIcon size={14} />}
           disabled={disabled || full}
-          onClick={() => onAdd(kind)}
+          onClick={() => onAdd(kind, addCarry && carryNew && CARRYABLE_KINDS.includes(kind))}
         >
           {t('sessionZero.modules.add')}
         </Button>
       </Group>
+      {addCarry && CARRYABLE_KINDS.includes(kind) && (
+        <Checkbox
+          size="xs"
+          label={t('sessionZero.modules.carry')}
+          checked={carryNew}
+          onChange={(event) => setCarryNew(event.currentTarget.checked)}
+        />
+      )}
       {full && (
         <Text size="xs" c="dimmed">
           {t('sessionZero.modules.max', { max: MAX_MODULES })}
@@ -105,12 +138,14 @@ function moved<T>(items: T[], index: number, to: number): T[] {
 }
 
 interface ChainEditorProps {
-  value: ModuleKind[];
-  onChange: (kinds: ModuleKind[]) => void;
+  value: ChainStep[];
+  onChange: (steps: ChainStep[]) => void;
+  /** Offers "Carry over from the previous session" on each step that has one (spec 47b). */
+  carry?: boolean;
 }
 
 /** A chain being composed, before the session exists: nothing is sent until "Start" or "Create". */
-export function ChainEditor({ value, onChange }: ChainEditorProps) {
+export function ChainEditor({ value, onChange, carry = false }: ChainEditorProps) {
   const { t } = useTranslation();
   return (
     <Stack gap={4}>
@@ -121,10 +156,14 @@ export function ChainEditor({ value, onChange }: ChainEditorProps) {
         {t('sessionZero.modules.chainHint')}
       </Text>
       <ChainRows
-        kinds={value}
+        kinds={value.map((step) => step.kind)}
+        carry={carry ? value.map((step) => step.carry) : undefined}
+        onCarry={(index, checked) =>
+          onChange(value.map((step, other) => (other === index ? { ...step, carry: checked } : step)))
+        }
         onMove={(index, to) => onChange(moved(value, index, to))}
         onRemove={(index) => onChange(value.filter((_, other) => other !== index))}
-        onAdd={(kind) => onChange([...value, kind])}
+        onAdd={(kind) => onChange([...value, { kind, carry: false }])}
       />
     </Stack>
   );
@@ -144,7 +183,7 @@ interface StartSessionZeroProps {
 export function StartSessionZero({ canManage, busy, onStart }: StartSessionZeroProps) {
   const { t } = useTranslation();
   const [composing, setComposing] = useState(false);
-  const [chain, setChain] = useState<ModuleKind[]>(DEFAULT_CHAIN);
+  const [chain, setChain] = useState<ChainStep[]>(DEFAULT_CHAIN.map((kind) => ({ kind, carry: false })));
   return (
     <>
       <Button disabled={busy} onClick={() => (canManage ? setComposing(true) : onStart())}>
@@ -158,7 +197,7 @@ export function StartSessionZero({ canManage, busy, onStart }: StartSessionZeroP
               <Button variant="default" onClick={() => setComposing(false)}>
                 {t('common.cancel')}
               </Button>
-              <Button disabled={busy} onClick={() => onStart(chain)}>
+              <Button disabled={busy} onClick={() => onStart(chain.map((step) => step.kind))}>
                 {t('sessionZero.modules.startButton')}
               </Button>
             </Group>
@@ -290,7 +329,8 @@ function EditStepsModal({ onClose }: { onClose: () => void }) {
               if (holds) setRemoving(module);
               else remove(module);
             }}
-            onAdd={(kind) => act(boardWrites.addModule(kind))}
+            addCarry={board.rounds.length > 1}
+            onAdd={(kind, carry) => act(boardWrites.addModule(kind, carry))}
           />
           <Group justify="flex-end">
             <Button variant="default" onClick={onClose}>

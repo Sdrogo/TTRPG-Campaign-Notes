@@ -2,6 +2,7 @@ import i18n from '../i18n';
 import { colorValue } from './maps';
 import type { MapColor } from '../types/map';
 import type {
+  ChainStep,
   DdiStep,
   LinesVeilsKind,
   ModuleKind,
@@ -64,6 +65,9 @@ export const MAX_SUBTITLE_ANSWER_LENGTH = 120;
 
 /** A chain nobody composed: the page as it was before spec 47 (Decision 2). */
 export const DEFAULT_CHAIN: ModuleKind[] = ['retro', 'lines_veils'];
+
+/** The steps that can carry an earlier session's content over (spec 47b Decision 2). */
+export const CARRYABLE_KINDS: ModuleKind[] = ['retro', 'questions', 'ddi'];
 
 interface RawReaction {
   emoji: string;
@@ -412,13 +416,17 @@ export const boardWrites = {
     method: 'PUT',
     json: { column_ids: ids },
   }),
-  startRound: (title: string, modules: ModuleKind[]): BoardWrite => ({
+  startRound: (title: string, modules: ChainStep[]): BoardWrite => ({
     path: '/rounds',
     method: 'POST',
     json: { title: title.trim() || null, modules },
   }),
-  /** Spec 47 Decision 3: a step added at the end of the open session's chain. */
-  addModule: (kind: ModuleKind): BoardWrite => ({ path: '/modules', method: 'POST', json: { kind } }),
+  /** Spec 47 Decision 3: a step added at the end of the open session's chain; `carry` as in spec 47b. */
+  addModule: (kind: ModuleKind, carry = false): BoardWrite => ({
+    path: '/modules',
+    method: 'POST',
+    json: { kind, carry },
+  }),
   removeModule: (id: string): BoardWrite => ({ path: `/modules/${id}`, method: 'DELETE' }),
   reorderModules: (ids: string[]): BoardWrite => ({
     path: '/modules/order',

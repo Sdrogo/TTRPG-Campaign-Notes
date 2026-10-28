@@ -1337,7 +1337,7 @@
       "later": "Sessie 0.5 #{{number}}",
       "pick": "Te tonen sessie",
       "start": "Nieuwe sessie",
-      "startBody": "De huidige sessie sluit en blijft alleen-lezen te bekijken; nooit gepubliceerde concepten worden verwijderd. De nieuwe begint leeg met de stappen hieronder, en de Retro-borden houden dezelfde kolommen. Lijnen en Sluiers blijft zoals het is.",
+      "startBody": "De huidige sessie sluit en blijft alleen-lezen te bekijken; nooit gepubliceerde concepten worden verwijderd. De nieuwe begint leeg met de stappen hieronder: vink „Overnemen uit de vorige sessie” aan om kolommen, vragen of de DDI terug te halen. Lines & Veils blijft zoals het is.",
       "title": "Naam",
       "startButton": "Aanmaken",
       "closed": "Deze sessie is gesloten: het bord is alleen-lezen.",
@@ -1395,7 +1395,8 @@
       "chain": "Stappen van de sessie",
       "chainHint": "Kies de stappen en hun volgorde; je kunt ze later nog wijzigen.",
       "max": "Hoogstens {{max}} stappen.",
-      "startButton": "Starten"
+      "startButton": "Starten",
+      "carry": "Overnemen uit de vorige sessie"
     },
     "questions": {
       "title": "Vragen",

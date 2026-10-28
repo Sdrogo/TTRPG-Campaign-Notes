@@ -542,8 +542,8 @@ async def test_questions_follow_the_chain_rules(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     """Decision 5: a Questions step not reached yet is 404 to a Player;
-    Decision 2: a new session copies the questions, not the answers, and
-    the closed one is read-only."""
+    a new session carries the questions over when asked (spec 47b), not the
+    answers, and the closed one is read-only."""
     room, board = await _room(client, make_token, "retro", "questions")
     module_id = _questions(board)["id"]
     board = await _set_questions(client, room, module_id, [{"body": "Name", "target": "name"}])
@@ -567,7 +567,11 @@ async def test_questions_follow_the_chain_rules(
         headers=room.master.headers,
     )
 
-    next_session = await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
+    next_session = await client.post(
+        f"{room.url}/rounds",
+        json={"modules": ["retro", {"kind": "questions", "carry": True}]},
+        headers=room.master.headers,
+    )
     assert next_session.status_code == 200, next_session.text
     copied = _questions(next_session.json())
     assert copied["id"] != module_id
@@ -593,14 +597,17 @@ async def test_questions_follow_the_chain_rules(
     )
     assert _questions(master_old.json())["creatable"] == 0
 
-    # A chain composed anew gets fresh Questions modules.
-    fresh = await client.post(
-        f"{room.url}/rounds",
-        json={"modules": ["questions", "questions"]},
+    # A session starts empty (spec 47b); a step added with "carry" copies the
+    # newest closed session's.
+    fresh = await client.post(f"{room.url}/rounds", json={}, headers=room.master.headers)
+    empty = _questions(fresh.json())
+    assert empty["questions"] == [] and empty["tag_id"] == tags["PC"]
+    added = await client.post(
+        f"{room.url}/modules",
+        json={"kind": "questions", "carry": True},
         headers=room.master.headers,
     )
-    second = _questions(fresh.json(), 1)
-    assert second["questions"] == [] and second["tag_id"] == tags["PC"]
+    assert [q["body"] for q in _questions(added.json(), 1)["questions"]] == ["Name"]
 
 
 async def test_answers_reach_only_their_readers_streams(
