@@ -2,8 +2,8 @@
 
 ## Goals
 
-- Product owner's request (2026-10-28): "Vorrei che i Documenti e le note
-  che abbiamo in app supportino il formato Markdown."
+- Product owner's request (2026-10-28, translated): "I'd like the
+  Documents and Notes we have in the app to support the Markdown format."
 - A Document's description and a Note's text are read as **Markdown**:
   headings, bold and italics, lists, quotes, links, tables, code. Wherever
   the app shows that text in full (the Document page, the split view, the
