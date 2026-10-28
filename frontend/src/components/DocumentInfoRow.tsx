@@ -52,7 +52,7 @@ export function PersonChip({
       rightSection={
         onRemove ? (
           <LabeledActionIcon size="xs" variant="transparent" color="gray" onClick={onRemove} aria-label={removeLabel}>
-            <XIcon size={10} />
+            <XIcon size={14} />
           </LabeledActionIcon>
         ) : undefined
       }
@@ -88,7 +88,7 @@ export function AddPopover({
           onClick={() => onChange(!opened)}
           style={{ borderStyle: 'dashed' }}
         >
-          <PlusIcon size={12} />
+          <PlusIcon size={16} />
         </LabeledActionIcon>
       </Popover.Target>
       <Popover.Dropdown>{children}</Popover.Dropdown>

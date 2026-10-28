@@ -122,7 +122,7 @@ export function PostItGroup({ groupId, column, cards, open }: PostItGroupProps) 
                 size="sm"
                 aria-label={t('sessionZero.groups.actions', { title: shownTitle })}
               >
-                <DotsThreeVerticalIcon size={16} />
+                <DotsThreeVerticalIcon size={18} />
               </LabeledActionIcon>
             </Menu.Target>
             <Menu.Dropdown>

@@ -43,9 +43,9 @@ export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
             {expanded ? (
-              <CaretDownIcon size={16} aria-hidden="true" />
+              <CaretDownIcon size={18} aria-hidden="true" />
             ) : (
-              <CaretRightIcon size={16} aria-hidden="true" />
+              <CaretRightIcon size={18} aria-hidden="true" />
             )}
             {t('maps.title')}
           </UnstyledButton>
@@ -72,7 +72,7 @@ export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
             >
               <Group gap="sm" wrap="nowrap">
                 <ThemeIcon variant="light" color="accent" size="lg" radius="md" aria-hidden="true">
-                  {map.kind === 'geographic' ? <MapTrifoldIcon size={18} /> : <GraphIcon size={18} />}
+                  {map.kind === 'geographic' ? <MapTrifoldIcon size={20} /> : <GraphIcon size={20} />}
                 </ThemeIcon>
                 <Stack gap={0} style={{ minWidth: 0 }}>
                   <Text fw={600} truncate="end" title={map.name} style={{ fontFamily: 'var(--font-display)' }}>
@@ -99,7 +99,7 @@ export function RoomMapsStrip({ roomId, canCreate }: RoomMapsStripProps) {
             >
               <Group gap="sm" wrap="nowrap" c="dimmed">
                 <ThemeIcon variant="default" size="lg" radius="md" aria-hidden="true">
-                  <PlusIcon size={18} />
+                  <PlusIcon size={20} />
                 </ThemeIcon>
                 <Text fw={600}>{t('maps.create')}</Text>
               </Group>

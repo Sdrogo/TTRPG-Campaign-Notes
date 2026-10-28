@@ -29,7 +29,7 @@ export function DocumentSidePane({
           <Text c="dimmed">{t('documents.open.pick')}</Text>
           <Tooltip label={t('documents.open.close')}>
             <ActionIcon variant="subtle" aria-label={t('documents.open.close')} onClick={onClose}>
-              <XIcon size={18} />
+              <XIcon size={20} />
             </ActionIcon>
           </Tooltip>
         </Group>
@@ -81,12 +81,12 @@ function PickedPane({ roomId, documentId, onClose }: { roomId: string; documentI
               variant="subtle"
               aria-label={t('documents.open.page')}
             >
-              <ArrowSquareOutIcon size={18} />
+              <ArrowSquareOutIcon size={20} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label={t('documents.open.close')}>
             <ActionIcon variant="subtle" aria-label={t('documents.open.close')} onClick={onClose}>
-              <XIcon size={18} />
+              <XIcon size={20} />
             </ActionIcon>
           </Tooltip>
         </Group>

@@ -54,7 +54,7 @@ export function PdfJobPanel({ job, onDownload, onNew }: PdfJobPanelProps) {
               component="a"
               href={job.downloadUrl}
               onClick={() => onDownload(job.id)}
-              leftSection={<DownloadSimpleIcon size={16} />}
+              leftSection={<DownloadSimpleIcon size={18} />}
             >
               {t('export.pdf.download')}
             </Button>

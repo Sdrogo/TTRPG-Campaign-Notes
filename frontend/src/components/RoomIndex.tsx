@@ -56,7 +56,7 @@ export function RoomIndex({ roomId }: RoomIndexProps) {
         data-opened={opened || undefined}
         onClick={() => setOpened((current) => !current)}
       >
-        <CaretRightIcon size={18} className="room-index-tab-arrow" />
+        <CaretRightIcon size={20} className="room-index-tab-arrow" />
         <Box component="span" className="room-index-tab-label" visibleFrom="sm">
           {t('glossary.tab')}
         </Box>

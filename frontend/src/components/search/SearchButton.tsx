@@ -32,7 +32,7 @@ export function SearchButton({ roomId }: SearchButtonProps) {
         variant="default"
         size="sm"
         onClick={open}
-        leftSection={<MagnifyingGlassIcon size={16} />}
+        leftSection={<MagnifyingGlassIcon size={18} />}
         rightSection={<Kbd size="xs">{searchShortcutLabel()}</Kbd>}
         aria-keyshortcuts="Control+K Meta+K /"
       >
@@ -47,7 +47,7 @@ export function SearchButton({ roomId }: SearchButtonProps) {
         onClick={open}
         aria-label={t('search.open')}
       >
-        <MagnifyingGlassIcon size={20} />
+        <MagnifyingGlassIcon size={24} />
       </LabeledActionIcon>
       <SearchSpotlight roomId={roomId} opened={opened} onClose={() => setOpened(false)} />
     </>

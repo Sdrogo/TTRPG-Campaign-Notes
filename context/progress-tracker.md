@@ -796,6 +796,10 @@ on `main`.
   (`alembic upgrade head` with `.env.staging`, staging = `d4a7e2c9f1b3`,
   head) and **to production** the same day (`alembic upgrade head` with
   `.env`, production = `d4a7e2c9f1b3`, head).
+- **49, Larger text and icons** (ticket confirmed 2026-10-28 with a double
+  step, built in PR #264): text +2px per step (`xs` 14, `sm` 16px), h1-h3
+  unchanged, UI icons 16-24px, Badges larger, icon buttons at least 24px on
+  desktop and 40px on touch screens. Theme and CSS only, no migration.
 - **47, Modular Session 0** (ticket written 2026-10-27; Q1-Q7 answered
   the same day, DDI sections from the manual the product owner shared;
   go-ahead to build the same day). **47_1 (chain + Stars and Wishes)

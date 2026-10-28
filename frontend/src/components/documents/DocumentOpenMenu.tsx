@@ -77,11 +77,11 @@ export function DocumentOpenMenu({
         </Wrapper>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Item leftSection={<SquareSplitHorizontalIcon size={16} />} onClick={() => open(documentId)}>
+        <Menu.Item leftSection={<SquareSplitHorizontalIcon size={18} />} onClick={() => open(documentId)}>
           {t('documents.open.side')}
         </Menu.Item>
         <Menu.Item
-          leftSection={<ArrowSquareOutIcon size={16} />}
+          leftSection={<ArrowSquareOutIcon size={18} />}
           onClick={() => void navigate(`/rooms/${roomId}/documents/${documentId}`, { state: backState })}
         >
           {t('documents.open.page')}

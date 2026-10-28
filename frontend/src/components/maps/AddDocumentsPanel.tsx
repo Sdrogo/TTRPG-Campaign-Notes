@@ -65,7 +65,7 @@ export function AddDocumentsPanel({
     >
       <Stack gap="sm">
         <TextInput
-          leftSection={<MagnifyingGlassIcon size={16} />}
+          leftSection={<MagnifyingGlassIcon size={18} />}
           placeholder={t('maps.searchDocuments')}
           aria-label={t('maps.searchDocuments')}
           value={query}

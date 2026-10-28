@@ -148,7 +148,7 @@ export function ExportRoomModal({ opened, onClose, roomId }: ExportRoomModalProp
               </Button>
               <Button
                 leftSection={
-                  format === 'pdf' ? <FilePdfIcon size={16} /> : <DownloadSimpleIcon size={16} />
+                  format === 'pdf' ? <FilePdfIcon size={18} /> : <DownloadSimpleIcon size={18} />
                 }
                 loading={format === 'pdf' ? startPdf.isPending : exportRoom.isPending}
                 disabled={!room.data}

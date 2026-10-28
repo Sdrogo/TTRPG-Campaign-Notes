@@ -107,7 +107,7 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
                 color="gray"
                 aria-label={t('rooms.actions', { name: room.name })}
               >
-                <DotsThreeVerticalIcon size={18} />
+                <DotsThreeVerticalIcon size={20} />
               </LabeledActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
@@ -116,14 +116,14 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
                   component={Link}
                   to={`/rooms/${room.id}/setup`}
                   state={backState}
-                  leftSection={<GearIcon size={16} />}
+                  leftSection={<GearIcon size={18} />}
                 >
                   {t('rooms.setup')}
                 </Menu.Item>
               )}
               {isAdmin && (
                 <Menu.Item
-                  leftSection={<UserPlusIcon size={16} />}
+                  leftSection={<UserPlusIcon size={18} />}
                   onClick={() => setInviteOpened(true)}
                 >
                   {t('rooms.invite')}
@@ -131,7 +131,7 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
               )}
               {canDuplicate && (
                 <Menu.Item
-                  leftSection={<CopyIcon size={16} />}
+                  leftSection={<CopyIcon size={18} />}
                   onClick={() => setDuplicateOpened(true)}
                 >
                   {t('rooms.duplicate.action')}
@@ -140,7 +140,7 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
               {hasOtherActions && <Menu.Divider />}
               <Menu.Item
                 color="red"
-                leftSection={<SignOutIcon size={16} />}
+                leftSection={<SignOutIcon size={18} />}
                 onClick={() => setLeaveOpened(true)}
               >
                 {t('common.leave')}

@@ -61,7 +61,7 @@ export function NewSession() {
   const [opened, setOpened] = useState(false);
   return (
     <>
-      <Button size="compact-sm" variant="default" leftSection={<PlusIcon size={14} />} onClick={() => setOpened(true)}>
+      <Button size="compact-sm" variant="default" leftSection={<PlusIcon size={16} />} onClick={() => setOpened(true)}>
         {t('sessionZero.rounds.start')}
       </Button>
       {opened && (

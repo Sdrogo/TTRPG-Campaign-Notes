@@ -98,7 +98,7 @@ export function CreateRoomModal({ opened, onClose }: CreateRoomModalProps) {
                         {...props}
                         variant="light"
                         size="xs"
-                        leftSection={<UploadSimpleIcon size={16} />}
+                        leftSection={<UploadSimpleIcon size={18} />}
                       >
                         {image
                           ? t('rooms.createModal.changeImage')
@@ -112,7 +112,7 @@ export function CreateRoomModal({ opened, onClose }: CreateRoomModalProps) {
                       color="red"
                       size="xs"
                       onClick={() => pickImage(null)}
-                      leftSection={<TrashIcon size={16} />}
+                      leftSection={<TrashIcon size={18} />}
                     >
                       {t('common.remove')}
                     </Button>

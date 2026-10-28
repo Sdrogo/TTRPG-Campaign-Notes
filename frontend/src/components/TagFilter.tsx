@@ -25,7 +25,7 @@ export function TagFilter({ tags, value, onChange, ...props }: TagFilterProps) {
     <MultiSelect
       aria-label={t('documents.filterByTag')}
       placeholder={value.length === 0 ? t('documents.filterByTag') : undefined}
-      leftSection={<FunnelIcon size={16} />}
+      leftSection={<FunnelIcon size={18} />}
       data={tags.map((tag) => ({ value: tag.id, label: `#${tag.name}` }))}
       value={value}
       onChange={onChange}

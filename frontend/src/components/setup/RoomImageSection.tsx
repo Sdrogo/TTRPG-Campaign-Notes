@@ -47,7 +47,7 @@ export function RoomImageSection({ roomId, imageUrl }: RoomImageSectionProps) {
                   variant="light"
                   size="xs"
                   loading={upload.isPending}
-                  leftSection={<UploadSimpleIcon size={16} />}
+                  leftSection={<UploadSimpleIcon size={18} />}
                 >
                   {t('setup.roomImage.upload')}
                 </Button>
@@ -65,7 +65,7 @@ export function RoomImageSection({ roomId, imageUrl }: RoomImageSectionProps) {
                   disabled={busy}
                   loading={importUrl.isPending}
                   onClick={toggle}
-                  leftSection={<LinkIcon size={16} />}
+                  leftSection={<LinkIcon size={18} />}
                 >
                   {t('account.avatar.fromUrl')}
                 </Button>
@@ -79,7 +79,7 @@ export function RoomImageSection({ roomId, imageUrl }: RoomImageSectionProps) {
                 disabled={busy}
                 loading={remove.isPending}
                 onClick={() => remove.mutate(undefined, { onError: notifyError })}
-                leftSection={<TrashIcon size={16} />}
+                leftSection={<TrashIcon size={18} />}
               >
                 {t('common.remove')}
               </Button>

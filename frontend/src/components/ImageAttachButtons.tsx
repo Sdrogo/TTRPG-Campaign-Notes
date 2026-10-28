@@ -31,7 +31,7 @@ export function ImageAttachButtons({ remaining, onAddFiles, onAddUrl }: ImageAtt
         {(props) => (
           <Tooltip label={hint ?? t('images.attachFilesTooltip')} withArrow>
             <ActionIcon {...props} variant="subtle" color="gray" aria-label={t('images.attachFiles')}>
-              <ImageIcon size={18} />
+              <ImageIcon size={20} />
             </ActionIcon>
           </Tooltip>
         )}
@@ -46,7 +46,7 @@ export function ImageAttachButtons({ remaining, onAddFiles, onAddUrl }: ImageAtt
               onClick={toggle}
               aria-label={t('images.attachUrl')}
             >
-              <LinkIcon size={18} />
+              <LinkIcon size={20} />
             </ActionIcon>
           </Tooltip>
         )}

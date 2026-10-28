@@ -735,7 +735,7 @@ export function GeographicBoard({
             <Button
               size="xs"
               variant="default"
-              leftSection={<PencilSimpleIcon size={14} />}
+              leftSection={<PencilSimpleIcon size={16} />}
               onClick={() => {
                 setEditMode(true);
                 setSelected(null);
@@ -758,7 +758,7 @@ export function GeographicBoard({
                   { value: 'link', label: t('maps.geo.tools.link') },
                 ]}
               />
-              <Button size="xs" variant="light" leftSection={<CheckIcon size={14} />} onClick={stopEditing}>
+              <Button size="xs" variant="light" leftSection={<CheckIcon size={16} />} onClick={stopEditing}>
                 {t('maps.geo.doneEditing')}
               </Button>
             </>
@@ -883,7 +883,7 @@ export function GeographicBoard({
             aria-label={t('maps.geo.zoomIn')}
             onClick={() => setMoved(zoomAt(view, ZOOM_STEP, { x: box.width / 2, y: box.height / 2 }))}
           >
-            <PlusIcon size={16} />
+            <PlusIcon size={18} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={t('maps.geo.zoomOut')} position="left" withArrow>
@@ -892,12 +892,12 @@ export function GeographicBoard({
             aria-label={t('maps.geo.zoomOut')}
             onClick={() => setMoved(zoomAt(view, 1 / ZOOM_STEP, { x: box.width / 2, y: box.height / 2 }))}
           >
-            <MinusIcon size={16} />
+            <MinusIcon size={18} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={t('maps.geo.fit')} position="left" withArrow>
           <ActionIcon variant="default" aria-label={t('maps.geo.fit')} onClick={() => setMoved(null)}>
-            <ArrowsInIcon size={16} />
+            <ArrowsInIcon size={18} />
           </ActionIcon>
         </Tooltip>
       </Stack>

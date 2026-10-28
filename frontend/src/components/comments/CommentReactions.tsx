@@ -106,7 +106,7 @@ export function AddReaction({ reactions, onToggle, disabled, size = 'sm' }: AddR
           disabled={disabled}
           onClick={() => setOpened((current) => !current)}
         >
-          <SmileyIcon size={size === 'lg' ? 20 : 16} />
+          <SmileyIcon size={size === 'lg' ? 24 : 18} />
         </LabeledActionIcon>
       </Popover.Target>
       <Popover.Dropdown p={0}>

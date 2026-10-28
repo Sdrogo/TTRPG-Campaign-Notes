@@ -182,7 +182,7 @@ export function SearchSpotlight({ roomId, opened, onClose }: SearchSpotlightProp
           onKeyDown={onKeyDown}
           placeholder={t('search.placeholder')}
           aria-label={t('search.inputLabel')}
-          leftSection={<MagnifyingGlassIcon size={16} />}
+          leftSection={<MagnifyingGlassIcon size={18} />}
           role="combobox"
           aria-expanded={hits.length > 0}
           aria-controls={listId}

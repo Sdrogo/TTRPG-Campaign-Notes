@@ -24,7 +24,7 @@ export function RoomsPage({ currentUserId }: RoomsPageProps) {
         <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
           {t('common.myRooms')}
         </Title>
-        <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreateOpened(true)}>
+        <Button leftSection={<PlusIcon size={18} />} onClick={() => setCreateOpened(true)}>
           {t('rooms.create')}
         </Button>
       </Group>

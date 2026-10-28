@@ -38,7 +38,7 @@ export function TextCardNode({ data, selected }: NodeProps<TextCardNodeType>) {
       <Group gap={4} wrap="nowrap" align="flex-start">
         {card.masterOnly && (
           <Tooltip label={t('maps.masterOnly')} withArrow>
-            <EyeSlashIcon size={14} aria-label={t('maps.masterOnly')} style={{ flexShrink: 0 }} />
+            <EyeSlashIcon size={16} aria-label={t('maps.masterOnly')} style={{ flexShrink: 0 }} />
           </Tooltip>
         )}
         <Text
@@ -65,7 +65,7 @@ export function TextCardNode({ data, selected }: NodeProps<TextCardNodeType>) {
             aria-label={t('maps.editText')}
             onClick={() => onEdit(card.id)}
           >
-            <PencilSimpleIcon size={14} />
+            <PencilSimpleIcon size={16} />
           </LabeledActionIcon>
         </Box>
       )}

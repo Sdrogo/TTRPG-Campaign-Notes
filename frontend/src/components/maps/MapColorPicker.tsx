@@ -28,7 +28,7 @@ export function MapColorPicker({
             onClick={() => onChange(color)}
           >
             <ColorSwatch color={colorValue(color)} size={24}>
-              {value === color && <CheckIcon size={12} color="var(--bg-base)" />}
+              {value === color && <CheckIcon size={16} color="var(--bg-base)" />}
             </ColorSwatch>
           </UnstyledButton>
         ))}

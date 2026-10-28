@@ -64,7 +64,7 @@ export function TagRow({
               loading={saving}
               disabled={!trimmed}
             >
-              <CheckIcon size={14} />
+              <CheckIcon size={16} />
             </LabeledActionIcon>
             <LabeledActionIcon
               size="sm"
@@ -73,7 +73,7 @@ export function TagRow({
               aria-label={t('setup.tags.all.cancelRename')}
               onClick={onCancelEdit}
             >
-              <XIcon size={14} />
+              <XIcon size={16} />
             </LabeledActionIcon>
           </>
         }
@@ -109,7 +109,7 @@ export function TagRow({
             aria-label={t('setup.tags.all.rename', { name: tag.name })}
             onClick={onStartEdit}
           >
-            <PencilSimpleIcon size={14} />
+            <PencilSimpleIcon size={16} />
           </LabeledActionIcon>
           <LabeledActionIcon
             size="sm"
@@ -118,7 +118,7 @@ export function TagRow({
             aria-label={t('setup.tags.delete', { name: tag.name })}
             onClick={onDelete}
           >
-            <TrashIcon size={14} />
+            <TrashIcon size={16} />
           </LabeledActionIcon>
         </>
       }
@@ -135,7 +135,7 @@ export function TagRow({
         {inGrouping && (
           <Tooltip label={t('setup.tags.all.inGrouping')}>
             <StackIcon
-              size={14}
+              size={16}
               color="var(--text-muted)"
               aria-label={t('setup.tags.all.inGrouping')}
               role="img"
