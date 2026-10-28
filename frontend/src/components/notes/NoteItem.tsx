@@ -12,7 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { VisibilityBadge } from '../VisibilityBadge';
 import { RevealedBadge } from '../RevealedBadge';
-import { MentionText } from '../mentions/MentionText';
+import { MarkdownText } from '../mentions/MarkdownText';
 import { NoteForm } from './NoteForm';
 import { ReadAloudControls } from '../speech/ReadAloudControls';
 import { noteSpeech } from '../../lib/speech';
@@ -209,10 +209,7 @@ export function NoteItem({
         </Group>
       )}
       {note.description && (
-        <MentionText
-          text={note.description}
-          style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-        />
+        <MarkdownText text={note.description} style={{ overflowWrap: 'anywhere' }} />
       )}
 
       <Modal

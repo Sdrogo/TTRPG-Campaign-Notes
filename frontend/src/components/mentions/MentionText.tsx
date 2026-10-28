@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
 import { Anchor, Text, type TextProps } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { DocumentMentionPreview } from './DocumentMentionPreview';
 import { DocumentOpenMenu } from '../documents/DocumentOpenMenu';
 import { useDocumentMentions } from '../../hooks/useDocumentMentions';
-import { mentionHref, resolveContentToken, splitMentions, type MentionSegment } from '../../lib/documentMentions';
-import { resolveUserMention, splitMentionTokens, type UserMention } from '../../lib/mentionTokens';
+import { useMentionSegments } from '../../hooks/useMentionSegments';
+import { mentionHref, type MentionSegment } from '../../lib/documentMentions';
+import { resolveUserMention, type UserMention } from '../../lib/mentionTokens';
 import type { Member } from '../../types/member';
 
 interface MentionTextProps extends TextProps {
@@ -25,6 +25,56 @@ interface MentionTextProps extends TextProps {
   members?: Member[];
 }
 
+interface MentionSegmentViewProps {
+  segment: Exclude<MentionSegment, { kind: 'text' }> | UserMention;
+  linked?: MentionTextProps['linked'];
+  members?: Member[];
+}
+
+/** One mention of `MentionText` (or of `MarkdownText`, spec 48). */
+export function MentionSegmentView({ segment, linked = true, members }: MentionSegmentViewProps) {
+  const mentions = useDocumentMentions();
+  if (segment.kind === 'user') {
+    const resolved = resolveUserMention(segment, members ?? []);
+    return resolved.member ? (
+      <Text span inherit fw={600} c="var(--accent-primary)" data-testid="user-mention">
+        {resolved.text}
+      </Text>
+    ) : (
+      resolved.text
+    );
+  }
+  const testId = `${segment.kind}-mention`;
+  if (mentions && (linked === true || (linked === 'documents' && segment.kind === 'document'))) {
+    const link = (
+      <Anchor
+        component={Link}
+        to={mentionHref(mentions.roomId, segment)}
+        inherit
+        c="var(--accent-primary)"
+        data-testid={testId}
+        style={linked === 'documents' ? { position: 'relative', zIndex: 2 } : undefined}
+      >
+        {segment.text}
+      </Anchor>
+    );
+    return segment.kind === 'document' ? (
+      <DocumentOpenMenu roomId={mentions.roomId} documentId={segment.document.id}>
+        <DocumentMentionPreview roomId={mentions.roomId} document={segment.document} tags={mentions.tags}>
+          {link}
+        </DocumentMentionPreview>
+      </DocumentOpenMenu>
+    ) : (
+      link
+    );
+  }
+  return (
+    <Text span inherit c="var(--accent-primary)" data-testid={testId}>
+      {segment.text}
+    </Text>
+  );
+}
+
 /**
  * Text with `#` mentions rendered as accent-colored links: a Document
  * mention opens the Document (and, hovered with a mouse, previews its card:
@@ -35,70 +85,19 @@ interface MentionTextProps extends TextProps {
  * name; one of someone who has left reads as plain text with the name written.
  */
 export function MentionText({ text, linked = true, members, ...textProps }: MentionTextProps) {
-  const mentions = useDocumentMentions();
-  const segments = useMemo(() => {
-    const documents = mentions?.documents ?? [];
-    const tags = mentions?.tags ?? [];
-    return splitMentionTokens(text, { users: members !== undefined }).flatMap(
-      (run): (MentionSegment | UserMention)[] => {
-        if (run.kind === 'text') {
-          // Plain `#Name` from before mentions had ids (spec 20).
-          return splitMentions(run.stored, documents, tags);
-        }
-        return run.kind === 'user' ? [run as UserMention] : [resolveContentToken(run, documents, tags)];
-      },
-    );
-  }, [text, members, mentions?.documents, mentions?.tags]);
+  const segments = useMentionSegments(text, members);
 
   // A div, not Mantine's default <p>: a Document mention's hover preview
   // renders a whole card (headings, divs, paragraphs), which can't nest in a <p>.
   return (
     <Text component="div" {...textProps}>
-      {segments.map((segment, index) => {
-        if (segment.kind === 'text') {
-          return segment.text;
-        }
-        if (segment.kind === 'user') {
-          const resolved = resolveUserMention(segment, members!);
-          return resolved.member ? (
-            <Text key={index} span inherit fw={600} c="var(--accent-primary)" data-testid="user-mention">
-              {resolved.text}
-            </Text>
-          ) : (
-            resolved.text
-          );
-        }
-        const testId = `${segment.kind}-mention`;
-        if (mentions && (linked === true || (linked === 'documents' && segment.kind === 'document'))) {
-          const link = (
-            <Anchor
-              key={index}
-              component={Link}
-              to={mentionHref(mentions.roomId, segment)}
-              inherit
-              c="var(--accent-primary)"
-              data-testid={testId}
-              style={linked === 'documents' ? { position: 'relative', zIndex: 2 } : undefined}
-            >
-              {segment.text}
-            </Anchor>
-          );
-          return segment.kind === 'document' ? (
-            <DocumentOpenMenu key={index} roomId={mentions.roomId} documentId={segment.document.id}>
-              <DocumentMentionPreview roomId={mentions.roomId} document={segment.document} tags={mentions.tags}>
-                {link}
-              </DocumentMentionPreview>
-            </DocumentOpenMenu>
-          ) : (
-            link
-          );
-        }
-        return (
-          <Text key={index} span inherit c="var(--accent-primary)" data-testid={testId}>
-            {segment.text}
-          </Text>
-        );
-      })}
+      {segments.map((segment, index) =>
+        segment.kind === 'text' ? (
+          segment.text
+        ) : (
+          <MentionSegmentView key={index} segment={segment} linked={linked} members={members} />
+        ),
+      )}
     </Text>
   );
 }

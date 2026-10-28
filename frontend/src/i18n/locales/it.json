@@ -1474,5 +1474,30 @@
       "open": "Apri il Documento",
       "loadError": "Non riesco a leggere la DDI."
     }
+  },
+  "markdown": {
+    "write": "Scrivi",
+    "preview": "Anteprima",
+    "previewEmpty": "Ancora niente da mostrare.",
+    "toolbar": "Formattazione",
+    "help": "Supporta Markdown",
+    "helpTitle": "Promemoria Markdown",
+    "sample": {
+      "text": "testo",
+      "heading": "Titolo",
+      "item": "voce"
+    },
+    "actions": {
+      "bold": "Grassetto",
+      "italic": "Corsivo",
+      "strike": "Barrato",
+      "heading": "Titolo",
+      "bulleted": "Elenco puntato",
+      "numbered": "Elenco numerato",
+      "quote": "Citazione",
+      "link": "Link",
+      "code": "Codice",
+      "table": "Tabella"
+    }
   }
 }

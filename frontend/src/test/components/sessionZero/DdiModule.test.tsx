@@ -96,7 +96,8 @@ describe('DdiBoard for the Master', () => {
       roomMembers,
     });
     expect(await screen.findByRole('heading', { name: "Dichiarazione d'Intenti" })).toBeInTheDocument();
-    expect(screen.getByText('## Dietro il Tavolo')).toBeInTheDocument();
+    // Spec 48: the template's Markdown headings read as headings.
+    expect(screen.getByRole('heading', { name: 'Dietro il Tavolo' })).toBeInTheDocument();
     expect(screen.getByText('Orari')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Apri il Documento' })).toHaveAttribute('href', '/rooms/room-1/documents/doc-ddi');
     expect(screen.getByTitle('Ha accettato')).toHaveTextContent('Bianca');

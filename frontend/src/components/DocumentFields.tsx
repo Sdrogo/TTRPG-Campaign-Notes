@@ -1,6 +1,6 @@
 import { Grid, MultiSelect, Stack, TextInput } from '@mantine/core';
 import { VisibilitySelect } from './VisibilitySelect';
-import { MentionTextarea } from './mentions/MentionTextarea';
+import { MarkdownEditor } from './mentions/MarkdownEditor';
 import { TagCreateInline } from './TagCreateInline';
 import type { DocumentFormValues } from '../types/document';
 import type { Tag } from '../types/tag';
@@ -93,7 +93,7 @@ export function DocumentFields({
         onChange={(event) => set({ subtitle: event.currentTarget.value })}
         maxLength={SUBTITLE_MAX_LENGTH}
       />
-      <MentionTextarea
+      <MarkdownEditor
         label={t('common.description')}
         description={t('documents.fields.descriptionHint')}
         value={values.description}

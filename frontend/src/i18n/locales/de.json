@@ -1474,5 +1474,30 @@
       "open": "Dokument öffnen",
       "loadError": "Die DDI konnte nicht gelesen werden."
     }
+  },
+  "markdown": {
+    "write": "Schreiben",
+    "preview": "Vorschau",
+    "previewEmpty": "Noch nichts zur Vorschau.",
+    "toolbar": "Formatierung",
+    "help": "Markdown wird unterstützt",
+    "helpTitle": "Markdown-Spickzettel",
+    "sample": {
+      "text": "Text",
+      "heading": "Überschrift",
+      "item": "Punkt"
+    },
+    "actions": {
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "strike": "Durchgestrichen",
+      "heading": "Überschrift",
+      "bulleted": "Aufzählung",
+      "numbered": "Nummerierte Liste",
+      "quote": "Zitat",
+      "link": "Link",
+      "code": "Code",
+      "table": "Tabelle"
+    }
   }
 }

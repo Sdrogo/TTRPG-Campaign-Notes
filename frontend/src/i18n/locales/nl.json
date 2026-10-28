@@ -1474,5 +1474,30 @@
       "open": "Document openen",
       "loadError": "De DDI kan niet gelezen worden."
     }
+  },
+  "markdown": {
+    "write": "Schrijven",
+    "preview": "Voorbeeld",
+    "previewEmpty": "Nog niets om te tonen.",
+    "toolbar": "Opmaak",
+    "help": "Markdown wordt ondersteund",
+    "helpTitle": "Markdown-spiekbriefje",
+    "sample": {
+      "text": "tekst",
+      "heading": "Kop",
+      "item": "item"
+    },
+    "actions": {
+      "bold": "Vet",
+      "italic": "Cursief",
+      "strike": "Doorgehaald",
+      "heading": "Kop",
+      "bulleted": "Opsomming",
+      "numbered": "Genummerde lijst",
+      "quote": "Citaat",
+      "link": "Link",
+      "code": "Code",
+      "table": "Tabel"
+    }
   }
 }
