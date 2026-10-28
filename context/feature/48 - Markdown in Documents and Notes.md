@@ -136,8 +136,8 @@ text; a `javascript:` address is not even read as a link by the parsers.
 
 ### 48_3 Backend
 
-- Dependency: `markdown-it-py` (+ `mdit-py-plugins` for tables, task
-  lists, strikethrough), `html` option off.
+- Dependency: `markdown-it-py` with its built-in tables and
+  strikethrough, `html` option off (a task list prints as its `[ ]`).
 - `domain/markdown.py`: `markdown_tree` (blocks of `Node`s whose leaves
   the caller chooses), `markdown_plain`, `protected_ranges`.
 - PDF (`domain/manual.py`, `pdf/templates/_base.html.j2`): descriptions and
