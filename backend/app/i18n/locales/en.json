@@ -283,7 +283,21 @@
       "groupNotFound": "Group not found",
       "nothingToChange": "Nothing to change",
       "badPlace": "That place isn't in the column or group named",
-      "sameBoard": "A post-it or group only moves within its own board and session"
+      "sameBoard": "A post-it or group only moves within its own board and session",
+      "tooManyQuestions": "A Questions step holds at most {max} questions",
+      "questionRequired": "A question needs a text",
+      "questionTooLong": "A question has at most {max} characters",
+      "hintTooLong": "A hint has at most {max} characters",
+      "oneNameQuestion": "Exactly one question gives the Document its name",
+      "oneSubtitleQuestion": "At most one question gives the subtitle",
+      "tooManyDocumentQuestions": "At most {max} questions make a Document of their own",
+      "questionOrder": "List each question once, with its own id",
+      "answerTooLong": "An answer has at most {max} characters",
+      "questionNotFound": "Question not found",
+      "notQuestionsModule": "This only works on a Questions step",
+      "masterDoesNotAnswer": "The Master writes the questions; the Players answer them",
+      "nameAnswerMissing": "Answer the name question first",
+      "documentExists": "You already made your Document here"
     }
   },
   "pdf": {

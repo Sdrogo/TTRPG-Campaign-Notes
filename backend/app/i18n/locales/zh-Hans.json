@@ -283,7 +283,21 @@
       "groupNotFound": "未找到分组",
       "nothingToChange": "没有需要更改的内容",
       "badPlace": "该位置不在指定的列或分组中",
-      "sameBoard": "便利贴或分组只能在其所在的看板和场次内移动"
+      "sameBoard": "便利贴或分组只能在其所在的看板和场次内移动",
+      "tooManyQuestions": "问题步骤最多 {max} 个问题",
+      "questionRequired": "问题需要内容",
+      "questionTooLong": "问题最多 {max} 个字符",
+      "hintTooLong": "提示最多 {max} 个字符",
+      "oneNameQuestion": "恰好一个问题为文档命名",
+      "oneSubtitleQuestion": "最多一个问题提供副标题",
+      "tooManyDocumentQuestions": "最多 {max} 个问题生成单独的文档",
+      "questionOrder": "每个问题只列一次，并带上其 id",
+      "answerTooLong": "回答最多 {max} 个字符",
+      "questionNotFound": "未找到问题",
+      "notQuestionsModule": "仅适用于问题步骤",
+      "masterDoesNotAnswer": "主持人写问题，玩家回答",
+      "nameAnswerMissing": "请先回答名称问题",
+      "documentExists": "你已在此创建了文档"
     }
   },
   "pdf": {

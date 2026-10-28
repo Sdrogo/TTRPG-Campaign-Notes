@@ -283,7 +283,21 @@
       "groupNotFound": "グループが見つかりません",
       "nothingToChange": "変更する内容がありません",
       "badPlace": "その位置は指定した列またはグループにありません",
-      "sameBoard": "付箋やグループは、同じボードと同じセッションの中でのみ移動できます"
+      "sameBoard": "付箋やグループは、同じボードと同じセッションの中でのみ移動できます",
+      "tooManyQuestions": "質問ステップの質問は最大{max}個です",
+      "questionRequired": "質問には本文が必要です",
+      "questionTooLong": "質問は最大{max}文字です",
+      "hintTooLong": "ヒントは最大{max}文字です",
+      "oneNameQuestion": "ドキュメントの名前になる質問はちょうど1つです",
+      "oneSubtitleQuestion": "サブタイトルになる質問は最大1つです",
+      "tooManyDocumentQuestions": "独自のドキュメントを作る質問は最大{max}個です",
+      "questionOrder": "各質問を1回ずつ、そのIDとともに指定してください",
+      "answerTooLong": "回答は最大{max}文字です",
+      "questionNotFound": "質問が見つかりません",
+      "notQuestionsModule": "質問ステップでのみ使えます",
+      "masterDoesNotAnswer": "質問はマスターが書き、プレイヤーが答えます",
+      "nameAnswerMissing": "先に名前の質問に答えてください",
+      "documentExists": "ここではすでにドキュメントを作成しています"
     }
   },
   "pdf": {

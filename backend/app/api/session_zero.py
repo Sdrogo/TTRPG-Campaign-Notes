@@ -23,11 +23,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.access import require_membership
 from app.api.errors import http_error, translated_error
 from app.auth.dependencies import VIEW_AS_HEADER, CurrentUserDep, authenticated_user
+from app.db import rooms_repo, session_zero_questions_repo, session_zero_repo, tags_repo
 from app.db import session as session_module
-from app.db import session_zero_repo
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
-from app.domain.models import Membership
+from app.domain.models import Membership, RoomRole
 from app.domain.reactions import InvalidEmojiError, parse_emoji, summarize_reactions
 from app.domain.relationship_maps import MapColor
 from app.domain.session_zero import (
@@ -94,6 +94,18 @@ from app.domain.session_zero import (
     shown_author,
     visible_modules,
 )
+from app.domain.session_zero_questions import (
+    CreationDisabledError,
+    DocumentExistsError,
+    InvalidAnswerError,
+    InvalidQuestionsError,
+    MasterDoesNotAnswerError,
+    NameAnswerMissingError,
+    NotQuestionsModuleError,
+    QuestionTarget,
+    can_read_answer,
+    may_create,
+)
 from app.i18n.dependencies import LocaleDep
 from app.i18n.translator import translate
 from app.realtime.broker import Event, broker
@@ -134,6 +146,13 @@ _STATUS_FOR: dict[type[DomainError], int] = {
     BadPlaceError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     InvalidChainError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     LastModuleError: status.HTTP_409_CONFLICT,
+    InvalidQuestionsError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    InvalidAnswerError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    NotQuestionsModuleError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    MasterDoesNotAnswerError: status.HTTP_403_FORBIDDEN,
+    NameAnswerMissingError: status.HTTP_409_CONFLICT,
+    DocumentExistsError: status.HTTP_409_CONFLICT,
+    CreationDisabledError: status.HTTP_403_FORBIDDEN,
 }
 
 
@@ -207,15 +226,64 @@ class ColumnResponse(BaseModel):
     cards: list[CardResponse]
 
 
+class QuestionResponse(BaseModel):
+    """A question and where its answer goes (spec 47 Decision 9)."""
+
+    id: uuid.UUID
+    position: int
+    body: str
+    hint: str | None
+    target: QuestionTarget
+    tag_id: uuid.UUID | None
+
+
+class AnswerResponse(BaseModel):
+    """An answer the caller may read (Decision 10, Q2)."""
+
+    question_id: uuid.UUID
+    user_id: uuid.UUID
+    body: str
+    note_private: bool
+    updated_at: datetime
+
+
+class AnswerDocumentResponse(BaseModel):
+    """A Document made from a Player's answers: their main one
+    (`question_id` null) or a "New Document" question's (Decision 11)."""
+
+    user_id: uuid.UUID
+    question_id: uuid.UUID | None
+    document_id: uuid.UUID
+
+
+class QuestionsResponse(BaseModel):
+    """A Questions module (spec 47 Decisions 9-11): its settings, its
+    questions, the answers and Documents the caller may see (their own, all
+    of them for the Master or once revealed). `can_create`: the caller may
+    make their Document now; `creatable`: for the Master, how many Players
+    "Create everyone's Documents" would make one for."""
+
+    tag_id: uuid.UUID | None
+    answers_revealed: bool
+    players_bypass_creation_rule: bool
+    questions: list[QuestionResponse]
+    answers: list[AnswerResponse]
+    documents: list[AnswerDocumentResponse]
+    can_create: bool
+    creatable: int
+
+
 class ModuleResponse(BaseModel):
     """A step of the shown session's chain (spec 47), with its columns: a
     Retro or Stars and Wishes module's own; none for Lines & Veils, whose
-    board is the Room-wide `lines_veils`."""
+    board is the Room-wide `lines_veils`. A Questions module has
+    `questions`."""
 
     id: uuid.UUID
     kind: ModuleKind
     position: int
     columns: list[ColumnResponse]
+    questions: QuestionsResponse | None = None
 
 
 class RoundResponse(BaseModel):
@@ -409,9 +477,7 @@ async def _load_board(session: AsyncSession, room_id: uuid.UUID) -> _Board:
     rounds = await session_zero_repo.list_rounds(session, room_id)
     columns = await session_zero_repo.list_columns(session, room_id)
     modules = await session_zero_repo.list_modules(session, room_id)
-    return _Board(
-        rounds=rounds, columns={column.id: column for column in columns}, modules=modules
-    )
+    return _Board(rounds=rounds, columns={column.id: column for column in columns}, modules=modules)
 
 
 def _timer_response(timer: Timer, now: datetime) -> TimerResponse:
@@ -481,6 +547,9 @@ async def _board_response(
         session, [card.id for card in cards if not card.is_draft]
     )
     groups = await session_zero_repo.list_groups(session, [column.id for column in retro])
+    questions = await _questions_responses(
+        session, room_id, viewer, [m for m in chain if m.kind is ModuleKind.QUESTIONS], shown
+    )
 
     def card_response(card: Card) -> CardResponse:
         column = board.columns[card.column_id]
@@ -555,6 +624,7 @@ async def _board_response(
                 kind=module.kind,
                 position=module.position,
                 columns=[column_response(c) for c in board.module_columns(module.id)],
+                questions=questions.get(module.id),
             )
             for module in chain
         ],
@@ -563,6 +633,86 @@ async def _board_response(
         lines_veils=[column_response(column) for column in lines_veils],
         timer=_timer_response(timer, now),
     )
+
+
+async def _questions_responses(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    viewer: Membership,
+    modules: list[Module],
+    round_: Round,
+) -> dict[uuid.UUID, QuestionsResponse]:
+    """The Questions modules on screen as `viewer` sees them (spec 47
+    Decisions 10 and 11)."""
+    if not modules:
+        return {}
+    module_ids = [module.id for module in modules]
+    all_questions = await session_zero_questions_repo.list_questions(session, module_ids)
+    all_answers = await session_zero_questions_repo.list_answers(
+        session, [question.id for question in all_questions]
+    )
+    links = await session_zero_questions_repo.list_answer_documents(session, module_ids)
+    room = await rooms_repo.get_room(session, room_id)
+    players = {
+        m.user_id
+        for m in await rooms_repo.list_memberships(session, room_id)
+        if m.role is RoomRole.PLAYER
+    }
+    master = is_master(viewer.role)
+    open_ = round_.closed_at is None
+    responses: dict[uuid.UUID, QuestionsResponse] = {}
+    for module in modules:
+        questions = [q for q in all_questions if q.module_id == module.id]
+        ids = {q.id for q in questions}
+        answers = [a for a in all_answers if a.question_id in ids]
+        name_id = next((q.id for q in questions if q.target is QuestionTarget.NAME), None)
+        named = {a.user_id for a in answers if a.question_id == name_id}
+        documents = [link for link in links if link.module_id == module.id]
+        with_document = {link.user_id for link in documents if link.question_id is None}
+        allowed = room is not None and may_create(
+            viewer.role, room.players_can_create_documents, module.players_bypass_creation_rule
+        )
+        responses[module.id] = QuestionsResponse(
+            tag_id=module.tag_id,
+            answers_revealed=module.answers_revealed,
+            players_bypass_creation_rule=module.players_bypass_creation_rule,
+            questions=[
+                QuestionResponse(
+                    id=q.id,
+                    position=q.position,
+                    body=q.body,
+                    hint=q.hint,
+                    target=q.target,
+                    tag_id=q.tag_id,
+                )
+                for q in questions
+            ],
+            answers=[
+                AnswerResponse(
+                    question_id=a.question_id,
+                    user_id=a.user_id,
+                    body=a.body,
+                    note_private=a.note_private,
+                    updated_at=a.updated_at,
+                )
+                for a in answers
+                if can_read_answer(a, viewer.user_id, viewer.role, module.answers_revealed)
+            ],
+            documents=[
+                AnswerDocumentResponse(
+                    user_id=link.user_id, question_id=link.question_id, document_id=link.document_id
+                )
+                for link in documents
+                if master or module.answers_revealed or link.user_id == viewer.user_id
+            ],
+            can_create=open_
+            and not master
+            and allowed
+            and viewer.user_id in named
+            and viewer.user_id not in with_document,
+            creatable=len((named & players) - with_document) if master and open_ else 0,
+        )
+    return responses
 
 
 @dataclass(frozen=True)
@@ -699,6 +849,47 @@ def _preset_columns(locale: str) -> list[session_zero_repo.RetroColumnSpec]:
     return [(translate(key, locale), color) for key, color in PRESET_COLUMNS]
 
 
+async def _default_tag(session: AsyncSession, room_id: uuid.UUID) -> uuid.UUID | None:
+    """A new Questions module's Tag (spec 47 Decision 9): the Room's `PC`,
+    if it still has one."""
+    tags = await tags_repo.list_tags(session, room_id)
+    return next((tag.id for tag in tags if tag.name.casefold() == "pc"), None)
+
+
+async def _set_up_questions(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    round_id: uuid.UUID,
+    sources: list[Module | None],
+    now: datetime,
+) -> None:
+    """A new round's Questions modules, in chain order: each takes its
+    source's settings and questions (a new session copies the previous
+    one's, spec 47 Decision 2), or the default Tag when it has none."""
+    created = [
+        module
+        for module in await session_zero_repo.list_modules(session, room_id)
+        if module.round_id == round_id
+    ]
+    default: uuid.UUID | None = None
+    for module, source in zip(created, sources, strict=True):
+        if module.kind is not ModuleKind.QUESTIONS:
+            continue
+        if source is None:
+            default = default or await _default_tag(session, room_id)
+            await session_zero_repo.set_module_settings(session, module.id, tag_id=default)
+            continue
+        await session_zero_repo.set_module_settings(
+            session,
+            module.id,
+            tag_id=source.tag_id,
+            players_bypass_creation_rule=source.players_bypass_creation_rule,
+        )
+        await session_zero_questions_repo.copy_questions(
+            session, room_id, source.id, module.id, now
+        )
+
+
 @router.post("/start")
 async def start_session_zero(
     room_id: uuid.UUID,
@@ -722,7 +913,10 @@ async def start_session_zero(
         raise _domain_error(exc, locale) from exc
     presets = _preset_columns(locale)
     specs = [(kind, presets) for kind in chain]
-    if await session_zero_repo.start(session, room_id, specs, datetime.now(UTC)):
+    now = datetime.now(UTC)
+    if await session_zero_repo.start(session, room_id, specs, now):
+        first = (await session_zero_repo.list_rounds(session, room_id))[0]
+        await _set_up_questions(session, room_id, first.id, [None] * len(chain), now)
         await _shared(session, room_id, "start")
     return await _board_response(session, room_id, viewer, None, locale)
 
@@ -1141,7 +1335,9 @@ async def start_round(
     empty, with the chain the Master composed (the previous one when none),
     on its first step. Its Nth Retro module takes the previous session's
     Nth Retro column titles and colours, without groups (the presets when
-    there was none). Lines & Veils carries over."""
+    there was none), and its Nth Questions module the previous one's
+    questions and settings, without answers (spec 47_2). Lines & Veils
+    carries over."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     current = write.board.open_round
     previous = write.board.chain(current.id)
@@ -1158,17 +1354,27 @@ async def start_round(
         for module in previous
         if module.kind is ModuleKind.RETRO
     ]
+    previous_questions = [m for m in previous if m.kind is ModuleKind.QUESTIONS]
     presets = _preset_columns(locale)
     specs: list[session_zero_repo.ModuleSpec] = []
+    sources: list[Module | None] = []
     for kind in chain:
         retro_index = sum(1 for k, _ in specs if k is ModuleKind.RETRO)
+        questions_index = sum(1 for k, _ in specs if k is ModuleKind.QUESTIONS)
         columns = presets
         if kind is ModuleKind.RETRO and retro_index < len(previous_retro):
             columns = previous_retro[retro_index]
+        source = None
+        if kind is ModuleKind.QUESTIONS and questions_index < len(previous_questions):
+            source = previous_questions[questions_index]
         specs.append((kind, columns))
+        sources.append(source)
     now = datetime.now(UTC)
     await session_zero_repo.close_round(session, current.id, now)
-    await session_zero_repo.add_round(session, room_id, current.number + 1, title, specs, now)
+    round_id = await session_zero_repo.add_round(
+        session, room_id, current.number + 1, title, specs, now
+    )
+    await _set_up_questions(session, room_id, round_id, sources, now)
     await _shared(session, room_id, "round")
     return await _answer(session, room_id, write, locale)
 
@@ -1230,6 +1436,10 @@ async def add_module(
         max(module.position for module in chain) + 1,
         datetime.now(UTC),
     )
+    if body.kind is ModuleKind.QUESTIONS:
+        await session_zero_repo.set_module_settings(
+            session, module_id, tag_id=await _default_tag(session, room_id)
+        )
     await _shared(session, room_id, "module", module_id)
     return await _answer(session, room_id, write, locale)
 

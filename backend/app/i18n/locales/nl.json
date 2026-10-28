@@ -283,7 +283,21 @@
       "groupNotFound": "Groep niet gevonden",
       "nothingToChange": "Niets te wijzigen",
       "badPlace": "Die plek ligt niet in de genoemde kolom of groep",
-      "sameBoard": "Een post-it of groep verplaats je alleen binnen het eigen bord en de eigen sessie"
+      "sameBoard": "Een post-it of groep verplaats je alleen binnen het eigen bord en de eigen sessie",
+      "tooManyQuestions": "Een Vragen-stap heeft hoogstens {max} vragen",
+      "questionRequired": "Een vraag heeft een tekst nodig",
+      "questionTooLong": "Een vraag heeft hoogstens {max} tekens",
+      "hintTooLong": "Een hint heeft hoogstens {max} tekens",
+      "oneNameQuestion": "Precies één vraag geeft het Document zijn naam",
+      "oneSubtitleQuestion": "Hoogstens één vraag geeft de ondertitel",
+      "tooManyDocumentQuestions": "Hoogstens {max} vragen maken een eigen Document",
+      "questionOrder": "Noem elke vraag één keer, met haar eigen id",
+      "answerTooLong": "Een antwoord heeft hoogstens {max} tekens",
+      "questionNotFound": "Vraag niet gevonden",
+      "notQuestionsModule": "Dit werkt alleen in een Vragen-stap",
+      "masterDoesNotAnswer": "De Master schrijft de vragen; de spelers beantwoorden ze",
+      "nameAnswerMissing": "Beantwoord eerst de naamvraag",
+      "documentExists": "Je hebt je Document hier al gemaakt"
     }
   },
   "pdf": {

@@ -1179,6 +1179,109 @@ class SessionZeroModuleRow(Base):
     kind: Mapped[str] = mapped_column(String(20))
     position: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Spec 47_2, a Questions module's settings: the Tag its Documents get,
+    # whether every member reads the answers, and whether Players create
+    # their Documents even where the Room doesn't let them (D-13, Q7).
+    tag_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tags.id", ondelete="SET NULL")
+    )
+    answers_revealed: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
+    players_bypass_creation_rule: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default=text("true")
+    )
+
+
+class SessionZeroQuestionRow(Base):
+    """A question of a Questions module (spec 47 Decision 9) and where its
+    answer goes in the Player's Document; `tag_id` for a `document` one."""
+
+    __tablename__ = "session_zero_questions"
+    __table_args__ = (
+        CheckConstraint(
+            "target IN ('name', 'subtitle', 'description', 'note', 'document', 'none')",
+            name="ck_session_zero_questions_target",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    module_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_modules.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    body: Mapped[str] = mapped_column(String(200))
+    hint: Mapped[str | None] = mapped_column(String(300))
+    target: Mapped[str] = mapped_column(String(20))
+    tag_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tags.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroAnswerRow(Base):
+    """A Player's answer to a question (spec 47 Decision 10): theirs and the
+    Master's to read until the Master reveals them; `note_private` on a
+    Note answer makes its Note Private (Q3)."""
+
+    __tablename__ = "session_zero_answers"
+
+    question_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("session_zero_questions.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, index=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    body: Mapped[str] = mapped_column(Text)
+    note_private: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroAnswerDocumentRow(Base):
+    """A Document made from a Player's answers (spec 47 Decision 11): their
+    main one (`question_id` null) or a "New Document" question's. One each
+    per Player and module; deleting the Document lets them make it again."""
+
+    __tablename__ = "session_zero_answer_documents"
+    __table_args__ = (
+        Index(
+            "uq_session_zero_answer_documents_main",
+            "module_id",
+            "user_id",
+            unique=True,
+            postgresql_where=text("question_id IS NULL"),
+        ),
+        Index(
+            "uq_session_zero_answer_documents_extra",
+            "module_id",
+            "user_id",
+            "question_id",
+            unique=True,
+            postgresql_where=text("question_id IS NOT NULL"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    module_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_modules.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
+    question_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_questions.id", ondelete="CASCADE")
+    )
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class SessionZeroColumnRow(Base):

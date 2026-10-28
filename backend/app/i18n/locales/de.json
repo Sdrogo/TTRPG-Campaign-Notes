@@ -283,7 +283,21 @@
       "groupNotFound": "Gruppe nicht gefunden",
       "nothingToChange": "Nichts zu ändern",
       "badPlace": "Diese Stelle liegt nicht in der angegebenen Spalte oder Gruppe",
-      "sameBoard": "Ein Post-it oder eine Gruppe lässt sich nur innerhalb der eigenen Tafel und Sitzung verschieben"
+      "sameBoard": "Ein Post-it oder eine Gruppe lässt sich nur innerhalb der eigenen Tafel und Sitzung verschieben",
+      "tooManyQuestions": "Eine Fragen-Etappe hat höchstens {max} Fragen",
+      "questionRequired": "Eine Frage braucht einen Text",
+      "questionTooLong": "Eine Frage hat höchstens {max} Zeichen",
+      "hintTooLong": "Ein Hinweis hat höchstens {max} Zeichen",
+      "oneNameQuestion": "Genau eine Frage gibt dem Dokument seinen Namen",
+      "oneSubtitleQuestion": "Höchstens eine Frage gibt den Untertitel",
+      "tooManyDocumentQuestions": "Höchstens {max} Fragen erstellen ein eigenes Dokument",
+      "questionOrder": "Nenne jede Frage einmal, mit ihrer eigenen ID",
+      "answerTooLong": "Eine Antwort hat höchstens {max} Zeichen",
+      "questionNotFound": "Frage nicht gefunden",
+      "notQuestionsModule": "Das geht nur in einer Fragen-Etappe",
+      "masterDoesNotAnswer": "Der Master schreibt die Fragen; die Spieler beantworten sie",
+      "nameAnswerMissing": "Beantworte zuerst die Namensfrage",
+      "documentExists": "Du hast dein Dokument hier schon erstellt"
     }
   },
   "pdf": {

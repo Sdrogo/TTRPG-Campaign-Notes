@@ -63,7 +63,13 @@ def _round(row: SessionZeroRoundRow) -> Round:
 
 def _module(row: SessionZeroModuleRow) -> Module:
     return Module(
-        id=row.id, round_id=row.round_id, kind=ModuleKind(row.kind), position=row.position
+        id=row.id,
+        round_id=row.round_id,
+        kind=ModuleKind(row.kind),
+        position=row.position,
+        tag_id=row.tag_id,
+        answers_revealed=row.answers_revealed,
+        players_bypass_creation_rule=row.players_bypass_creation_rule,
     )
 
 
@@ -214,6 +220,16 @@ async def set_module_positions(session: AsyncSession, module_ids: Sequence[uuid.
             .where(SessionZeroModuleRow.id == module_id)
             .values(position=position)
         )
+
+
+async def set_module_settings(
+    session: AsyncSession, module_id: uuid.UUID, **values: object
+) -> None:
+    """Changes a Questions module's settings (`tag_id`, `answers_revealed`,
+    `players_bypass_creation_rule`; spec 47_2)."""
+    await session.execute(
+        update(SessionZeroModuleRow).where(SessionZeroModuleRow.id == module_id).values(**values)
+    )
 
 
 async def set_current_module(
