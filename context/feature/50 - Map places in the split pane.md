@@ -50,8 +50,9 @@ owner the same day ("procedi"). Built in PR #265.
 4. **Picking another place replaces it**, Document or plain, one at a time;
    closing the pane clears the selection on the map.
 5. **A place that disappears** (deleted by another editor, seen on the next
-   5 s refresh of spec 43, or hidden by the Tag filter) leaves the pane with
-   its close button and a dimmed "Luogo non trovato" line.
+   5 s refresh of spec 43) leaves the pane with its close button and a
+   dimmed "Luogo non trovato" line. The Tag filter only dims places (spec 38
+   Decision 8) and never hides them, so a dimmed place stays in the pane.
 6. **Editing mode is unchanged**: while the map is being edited, the small
    card stays for every place, since it carries **Modifica**.
 7. **The split toggle** (spec 37b) works as today: with the pane open and
