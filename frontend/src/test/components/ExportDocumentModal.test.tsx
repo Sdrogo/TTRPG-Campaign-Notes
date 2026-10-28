@@ -147,4 +147,29 @@ describe('ExportDocumentModal (spec 27)', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(/PDF/);
     expect(apiDownload).not.toHaveBeenCalled();
   });
+
+  it("follows this Document's PDF being made, not a Room PDF", async () => {
+    jobs = [rawPdfJob({ id: 'room-job', status: 'running' })];
+    const { user } = render();
+
+    await screen.findByRole('dialog', { name: 'Esporta il Documento' });
+    await user.click(screen.getByText('PDF'));
+
+    await waitFor(() =>
+      expect(apiFetch).toHaveBeenCalledWith('/rooms/room-1/exports', expect.anything()),
+    );
+    expect(screen.getByRole('button', { name: 'Genera PDF' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('opens on a PDF of this Document that is still being made', async () => {
+    jobs = [rawPdfJob({ status: 'running', document_id: 'doc-1', document_name: 'Il Cancello' })];
+    const { user } = render();
+
+    await screen.findByRole('dialog', { name: 'Esporta il Documento' });
+    await user.click(screen.getByText('PDF'));
+
+    expect(await screen.findByRole('status')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Genera PDF' })).not.toBeInTheDocument();
+  });
 });

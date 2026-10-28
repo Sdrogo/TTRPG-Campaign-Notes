@@ -57,10 +57,11 @@ export function ExportDocumentModal({
   const jobs = usePdfExports(roomId, opened && format === 'pdf');
   const startPdf = useStartPdfExport(roomId);
 
-  // The job this dialog follows: the one it started, or one still being made
-  // (only one PDF of the Room can run at a time per user).
+  // The job this dialog follows: the one it started, or a PDF of this Document
+  // still being made (a Room PDF being made stays on the Room page).
   const tracked =
-    jobs.data?.find((job) => job.id === startedJobId) ?? jobs.data?.find(isActivePdfJob);
+    jobs.data?.find((job) => job.id === startedJobId) ??
+    jobs.data?.find((job) => isActivePdfJob(job) && job.documentId === documentId);
 
   const handleExport = () => {
     if (format === 'pdf') {
