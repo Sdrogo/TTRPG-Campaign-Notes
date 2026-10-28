@@ -45,7 +45,8 @@
    the map-card preview show the text **without** its Markdown signs
    (`**Drakon**` reads `Drakon`; a list item reads as its words), so a
    clamped card never shows a half table or a raw `##`.
-7. **The editor stays a textarea** (*proposed*, see Question 1): the same
+7. **The editor stays a textarea** (product owner, 2026-10-28, on a
+   decision card, over a plain textarea and a WYSIWYG editor): the same
    `MentionTextarea` with the `#` popup, plus a small toolbar above it
    (bold, italic, heading, bulleted list, numbered list, quote, link) that
    wraps or prefixes the selected text, the usual shortcuts (Ctrl/Cmd+B,
@@ -80,10 +81,8 @@
 
 ## Questions for the product owner
 
-1. **Editor**: textarea + toolbar + Write/Preview (Decision 7, proposed),
-   only a textarea with the "Markdown supported" hint, or a WYSIWYG editor
-   where you never see the signs (much more work, and it has to
-   rebuild the `#` mention popup inside it)?
+1. **Editor**: answered 2026-10-28, textarea + toolbar + Write/Preview
+   (Decision 7).
 2. **Comments**: leave them plain (Decision 1, proposed) or give them
    Markdown too?
 
