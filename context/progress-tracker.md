@@ -732,6 +732,14 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **48, Markdown in Documents and Notes** (product owner's request
+  2026-10-28, ticket written, waiting for confirmation): descriptions and
+  Note texts read as Markdown (CommonMark + tables, strikethrough, task
+  lists; single line breaks kept; no raw HTML, no inline images), with
+  mentions working inside it, plain previews on cards, a toolbar and
+  Write/Preview in the editor, formatted PDF. No migration. Parts 48_1
+  rendering, 48_2 editor, 48_3 backend (PDF, excerpts, generate mentions).
+
 - **46, Session 0 boards** (ticket confirmed by the product owner
   2026-10-27, building): a Room's Session 0 page with a Retro board and a
   Lines & Veils board (Must, Lines, Veils), draft/publish post-its
