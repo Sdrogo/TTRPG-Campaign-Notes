@@ -1444,7 +1444,8 @@
       "kinds": {
         "retro": "Retro",
         "lines_veils": "Linie i Zasłony",
-        "stars_wishes": "Gwiazdy i Życzenia"
+        "stars_wishes": "Gwiazdy i Życzenia",
+        "questions": "Pytania"
       },
       "hiddenHint": "Etapy wciąż ukryte: {{count}}",
       "next": "Dalej",
@@ -1459,10 +1460,65 @@
       "remove": "Usuń",
       "removeTitle": "Usunąć ten etap?",
       "removeBody": "Karteczki z „{{name}}” zostaną usunięte razem z nim. Linie i Zasłony nigdy nie są ruszane.",
+      "removeQuestionsBody": "Pytania i odpowiedzi z „{{name}}” zostaną usunięte razem z nim. Utworzone Dokumenty zostają.",
       "chain": "Etapy sesji",
       "chainHint": "Wybierz etapy i ich kolejność; możesz je później zmienić.",
       "max": "Najwyżej {{max}} etapów.",
       "startButton": "Rozpocznij"
+    },
+    "questions": {
+      "title": "Pytania",
+      "edit": "Edytuj pytania",
+      "editHint": "Pytania zapisują się razem. Usunięcie pytania kasuje odpowiedzi na nie.",
+      "tag": "Tag Dokumentów Graczy",
+      "noTag": "Bez tagu",
+      "bypass": "Gracze tworzą własne Dokumenty, nawet jeśli Pokój na to nie pozwala",
+      "noneMaster": "Jeszcze nie ma pytań: napisz je w „Edytuj pytania”.",
+      "nonePlayer": "Mistrz nie napisał jeszcze pytań.",
+      "answers": "Odpowiedzi",
+      "reveal": "Odsłoń odpowiedzi",
+      "hide": "Ukryj odpowiedzi",
+      "createAll": "Utwórz Dokumenty wszystkich ({{count}})",
+      "privateHint": "Każdy Gracz widzi tylko swoje odpowiedzi.",
+      "revealedHint": "Wszyscy członkowie widzą odpowiedzi wszystkich.",
+      "noPlayers": "Brak Graczy w Pokoju.",
+      "answered": "{{count}}/{{total}} odpowiedzi",
+      "openDocument": "Otwórz Dokument",
+      "private": "Prywatna",
+      "openMine": "Otwórz swój Dokument",
+      "createMine": "Utwórz mój Dokument",
+      "masterCreates": "Mistrz utworzy twój Dokument.",
+      "nameFirst": "Odpowiedz na pytanie o nazwę, aby utworzyć swój Dokument.",
+      "everyone": "Odpowiedzi wszystkich",
+      "autosave": "Odpowiedzi zapisują się podczas pisania; widzisz je tylko ty i Mistrz.",
+      "number": "Pytanie {{number}}",
+      "question": "Pytanie",
+      "hint": "Podpowiedź (opcjonalnie)",
+      "target": "Dokąd trafia odpowiedź",
+      "documentTag": "Tag nowego Dokumentu",
+      "add": "Dodaj pytanie",
+      "targets": {
+        "name": "Nazwa",
+        "subtitle": "Podtytuł",
+        "description": "Opis",
+        "note": "Notatka",
+        "document": "Nowy Dokument",
+        "none": "Poza Dokumentem"
+      },
+      "goesTo": {
+        "name": "Staje się nazwą twojego Dokumentu.",
+        "subtitle": "Staje się podtytułem twojego Dokumentu.",
+        "description": "Trafia do opisu twojego Dokumentu.",
+        "note": "Staje się Notatką twojego Dokumentu.",
+        "document": "Staje się osobnym Dokumentem: pierwszy wiersz to nazwa, reszta to opis.",
+        "none": "Zostaje tutaj, do rozmowy przy stole."
+      },
+      "problems": {
+        "empty": "Każde pytanie potrzebuje tekstu.",
+        "oneName": "Potrzebne jest dokładnie jedno pytanie o Nazwę.",
+        "oneSubtitle": "Najwyżej jedno pytanie o Podtytuł.",
+        "documents": "Najwyżej {{max}} pytań „Nowy Dokument”."
+      }
     }
   }
 }

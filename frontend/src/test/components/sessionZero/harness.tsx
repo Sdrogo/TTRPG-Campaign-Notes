@@ -5,7 +5,7 @@ import { BoardContext } from '../../../components/sessionZero/boardContext';
 import { DndStateContext, type DndState } from '../../../components/sessionZero/boardDrag';
 import { shownModule, toSessionZero, viewOf, type RawSessionZero } from '../../../lib/sessionZero';
 import type { Member } from '../../../types/member';
-import type { PostIt, PostItColumn } from '../../../types/sessionZero';
+import type { PostIt, PostItColumn, SessionZero } from '../../../types/sessionZero';
 import { rawPostIt, rawPostItColumn, rawSessionZero } from '../../fixtures';
 import { renderWithProviders } from '../../utils';
 
@@ -41,20 +41,25 @@ interface Options {
   dnd?: DndState;
   /** The step on screen (spec 47); the current one when left out. */
   shownId?: string;
+  /** The boards a write answers with (`board` when left out). */
+  next?: Record<string, unknown>;
+  /** The Room's members (`members` above when left out). */
+  roomMembers?: Member[];
 }
 
 /**
  * Renders a piece of the Session 0 page inside its board context; `act`
  * records the writes and reports each one done at once.
  */
-export function renderBoard(ui: ReactElement, { board = {}, writable = true, busy = false, glowing = [], dnd = { active: null, intent: null }, shownId }: Options = {}) {
-  const act = vi.fn((_write: unknown, onDone?: () => void) => onDone?.());
+export function renderBoard(ui: ReactElement, { board = {}, writable = true, busy = false, glowing = [], dnd = { active: null, intent: null }, shownId, next, roomMembers = members }: Options = {}) {
   const raw = toSessionZero(rawSessionZero(board) as RawSessionZero);
+  const answer = next ? toSessionZero(rawSessionZero(next) as RawSessionZero) : raw;
+  const act = vi.fn((_write: unknown, onDone?: (next: SessionZero) => void) => onDone?.(answer));
   const module = shownModule(raw, shownId ?? null);
   const value = {
     board: viewOf(raw, module),
     module,
-    members,
+    members: roomMembers,
     act,
     busy,
     writable,

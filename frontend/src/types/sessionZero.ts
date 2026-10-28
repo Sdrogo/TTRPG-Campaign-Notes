@@ -8,7 +8,56 @@ export type LinesVeilsKind = 'must' | 'veils' | 'lines';
 export type StarsWishesKind = 'stars' | 'wishes';
 
 /** What a step of a session's chain is (spec 47 Decision 1). */
-export type ModuleKind = 'retro' | 'lines_veils' | 'stars_wishes';
+export type ModuleKind = 'retro' | 'lines_veils' | 'stars_wishes' | 'questions';
+
+/** Where a question's answer goes in the Player's Document (spec 47 Decision 9). */
+export type QuestionTarget = 'name' | 'subtitle' | 'description' | 'note' | 'document' | 'none';
+
+/** A question of a Questions step; `tagId` is the Tag of a "New Document" question's Document. */
+export interface Question {
+  id: string;
+  position: number;
+  body: string;
+  hint: string | null;
+  target: QuestionTarget;
+  tagId: string | null;
+}
+
+/** An answer the viewer may read (Decision 10): their own, or everyone's for the Master or once revealed. */
+export interface Answer {
+  questionId: string;
+  userId: string;
+  body: string;
+  /** A Note answer's Note is made Private (Q3). */
+  notePrivate: boolean;
+  updatedAt: string;
+  mine: boolean;
+}
+
+/** A Document made from a Player's answers: their own (`questionId` null) or a "New Document" question's. */
+export interface AnswerDocument {
+  userId: string;
+  questionId: string | null;
+  documentId: string;
+  mine: boolean;
+}
+
+/**
+ * A Questions step (spec 47 Decisions 9-11): its settings, questions, the
+ * answers and Documents the viewer may see. `canCreate`: the viewer may make
+ * their Document now; `creatable`: for the Master, how many Players
+ * "Create everyone's Documents" would make one for.
+ */
+export interface QuestionsStep {
+  tagId: string | null;
+  answersRevealed: boolean;
+  playersBypassCreationRule: boolean;
+  questions: Question[];
+  answers: Answer[];
+  documents: AnswerDocument[];
+  canCreate: boolean;
+  creatable: number;
+}
 
 /** What the Master can do with the shared timer (spec 46 Decision 4). */
 export type TimerAction = 'start' | 'pause' | 'resume' | 'stop';
@@ -73,13 +122,16 @@ export interface PostItColumn {
 
 /**
  * A step of the shown session's chain (spec 47): a Retro or Stars and
- * Wishes step's columns; none for Lines & Veils, whose board is the Room's.
+ * Wishes step's columns; none for Lines & Veils, whose board is the Room's,
+ * or for Questions, which has `questions`.
  */
 export interface SessionZeroModule {
   id: string;
   kind: ModuleKind;
   position: number;
   columns: PostItColumn[];
+  /** A Questions step's content (spec 47_2). */
+  questions?: QuestionsStep;
 }
 
 /** A session (round): 1 is the Session 0, later ones freely named (Decision 16, spec 46d). */

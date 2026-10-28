@@ -895,13 +895,34 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   down" and "Remove" icon buttons (arrows rather than a drag, the same
   on a phone), then a "Step" select and "Add step" (default, "+"); "At
   most 10 steps." in dimmed `xs` at the limit. In "Edit steps" each
-  change goes at once; removing a step with post-its asks first, inside
-  the same dialog.
+  change goes at once; removing a step with post-its or questions asks
+  first, inside the same dialog.
 - The body shows the step on screen: Retro is the two boards as below,
   Lines & Veils alone at full width, Stars and Wishes the post-it board
   with its two fixed columns, Stars (gold) and Wishes (blue), named in
   the viewer's language, with no column menu, no drag by the heading and
   no "Add column".
+- Questions step (spec 47_2, `QuestionsBoard`): an `h4` "Questions". The
+  Master sees "Edit questions" (default, `compact-sm`), a "Tag of the
+  Players' Documents" select and the creation switch on one wrapping row,
+  then one bordered row per question with a grey light badge for where
+  its answer goes ("New Document · NPC") and the hint dimmed; below, an
+  `h5` "Answers" with "Reveal the answers" / "Hide the answers" and
+  "Create everyone's Documents (N)", a dimmed line on who reads the
+  answers, and a separated accordion, one item per Player ("2/5
+  answered"), with each answer (dimmed "—" when missing) and "Open the
+  Document". "Edit questions" is a `lg` dialog: one bordered block per
+  question (text, hint, "Where the answer goes" select, a Tag select for
+  "New Document"), "Move up" / "Move down" / "Remove" icons, "Add
+  question", the first problem in red `xs`, and Save disabled while there
+  is one. A Player sees one bordered block per question (one-line input
+  for Name and Subtitle, an autosized textarea otherwise, the hint as
+  description), a dimmed line saying where the answer goes and a
+  "Private" checkbox on Note answers; answers save 800 ms after typing
+  stops, when a field is left and when the step goes away. Then "Create
+  my Document" (filled; it opens the new Document), "Open your Document"
+  (light) once made, or a dimmed line on what it waits for; once
+  revealed, the other Players' answers in the same accordion.
 
 - Header (`SessionZeroHeader`, spec 46d Decision 4): one wrapping row
   above the boards, no section titles. The session selector

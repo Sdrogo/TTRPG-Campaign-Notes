@@ -1374,7 +1374,8 @@
       "kinds": {
         "retro": "Retro",
         "lines_veils": "Líneas y Velos",
-        "stars_wishes": "Estrellas y Deseos"
+        "stars_wishes": "Estrellas y Deseos",
+        "questions": "Preguntas"
       },
       "hiddenHint": "Etapas aún ocultas: {{count}}",
       "next": "Siguiente",
@@ -1389,10 +1390,65 @@
       "remove": "Quitar",
       "removeTitle": "¿Quitar esta etapa?",
       "removeBody": "Los pósits de «{{name}}» se eliminan con ella. Líneas y Velos nunca se toca.",
+      "removeQuestionsBody": "Las preguntas y respuestas de «{{name}}» se eliminan con ella. Los Documentos ya creados se quedan.",
       "chain": "Etapas de la sesión",
       "chainHint": "Elige las etapas y su orden; podrás cambiarlas más adelante.",
       "max": "Como máximo {{max}} etapas.",
       "startButton": "Iniciar"
+    },
+    "questions": {
+      "title": "Preguntas",
+      "edit": "Editar preguntas",
+      "editHint": "Las preguntas se guardan juntas. Quitar una pregunta borra sus respuestas.",
+      "tag": "Etiqueta de los Documentos de los Jugadores",
+      "noTag": "Sin etiqueta",
+      "bypass": "Los Jugadores crean sus propios Documentos aunque la Sala no lo permita",
+      "noneMaster": "Aún no hay preguntas: escríbelas con «Editar preguntas».",
+      "nonePlayer": "El Máster aún no ha escrito las preguntas.",
+      "answers": "Respuestas",
+      "reveal": "Revelar las respuestas",
+      "hide": "Ocultar las respuestas",
+      "createAll": "Crear los Documentos de todos ({{count}})",
+      "privateHint": "Cada Jugador ve solo sus propias respuestas.",
+      "revealedHint": "Todos los miembros ven las respuestas de todos.",
+      "noPlayers": "No hay Jugadores en la Sala.",
+      "answered": "{{count}}/{{total}} respondidas",
+      "openDocument": "Abrir el Documento",
+      "private": "Privada",
+      "openMine": "Abrir tu Documento",
+      "createMine": "Crear mi Documento",
+      "masterCreates": "El Máster creará tu Documento.",
+      "nameFirst": "Responde a la pregunta del nombre para crear tu Documento.",
+      "everyone": "Las respuestas de todos",
+      "autosave": "Las respuestas se guardan mientras escribes; solo tú y el Máster las veis.",
+      "number": "Pregunta {{number}}",
+      "question": "Pregunta",
+      "hint": "Pista (opcional)",
+      "target": "Adónde va la respuesta",
+      "documentTag": "Etiqueta del nuevo Documento",
+      "add": "Añadir pregunta",
+      "targets": {
+        "name": "Nombre",
+        "subtitle": "Subtítulo",
+        "description": "Descripción",
+        "note": "Nota",
+        "document": "Nuevo Documento",
+        "none": "Fuera del Documento"
+      },
+      "goesTo": {
+        "name": "Se convierte en el nombre de tu Documento.",
+        "subtitle": "Se convierte en el subtítulo de tu Documento.",
+        "description": "Va en la descripción de tu Documento.",
+        "note": "Se convierte en una Nota de tu Documento.",
+        "document": "Se convierte en un Documento propio: la primera línea es su nombre, el resto su descripción.",
+        "none": "Se queda aquí, para hablarlo en la mesa."
+      },
+      "problems": {
+        "empty": "Cada pregunta necesita un texto.",
+        "oneName": "Hace falta exactamente una pregunta para el Nombre.",
+        "oneSubtitle": "Como mucho una pregunta para el Subtítulo.",
+        "documents": "Como mucho {{max}} preguntas «Nuevo Documento»."
+      }
     }
   }
 }

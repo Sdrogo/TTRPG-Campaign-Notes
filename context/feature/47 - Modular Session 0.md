@@ -294,6 +294,27 @@ release.
   on a phone too, rather than a "2/4" menu.
 - Removing a step with post-its asks first; the post-its go with it.
 
+### As built (47_2, 2026-10-28)
+
+- Built: Questions steps (Decisions 9-11, Q2, Q3, Q6, Q7), migration
+  `f3a9c1e7b5d4`. The Master writes the questions in an "Edit questions"
+  dialog, saved together; sets the Players' Documents Tag (the Room's
+  `PC` by default) and the creation switch on the step; follows every
+  Player's answers in an accordion; reveals or hides them; creates
+  everyone's Documents. A Player answers in a form saved as they type
+  and creates their Document, which then opens.
+- Differences from the decisions above: a question is up to **200**
+  characters, not 300, since it titles a Note (a Note's title limit);
+  the settings are columns on the step rather than a `settings` JSON;
+  reveal is `PUT .../modules/{id}/reveal` `{revealed}`; a Name answer is
+  one line up to 200 characters and a Subtitle one up to 120 (the
+  Document limits). Events as Decision 12: `answer` to its author and
+  the Masters (everyone once revealed), `document` to everyone. A new
+  session copies the previous session's Nth Questions step (settings and
+  questions, no answers). The Master doesn't answer (Decision 14), so
+  the Master's own view has no form. Removing a Questions step that has
+  questions asks first; Documents already created stay.
+
 ## Tests
 
 - Backend: any member starts Session 0 (a Player gets the default chain,

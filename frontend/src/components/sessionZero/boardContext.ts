@@ -12,10 +12,10 @@ export interface BoardContextValue {
   members: Member[];
   /**
    * Sends a write; a failure shows as a toast, `onDone` runs once it
-   * succeeds. A `preview` (a drag's, spec 46d Decision 7) shows at once,
+   * succeeds, with the boards it answered. A `preview` (a drag's, spec 46d Decision 7) shows at once,
    * until the answer replaces it or a failure puts the board back.
    */
-  act: (write: BoardWrite, onDone?: () => void, preview?: SessionZero) => void;
+  act: (write: BoardWrite, onDone?: (next: SessionZero) => void, preview?: SessionZero) => void;
   /** A write is on its way: controls wait for it. */
   busy: boolean;
   /** False while the Master previews the Room as a member (spec 22b): nothing writes. */

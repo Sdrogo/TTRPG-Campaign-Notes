@@ -6,6 +6,8 @@ import type {
   ModuleKind,
   PostIt,
   PostItColumn,
+  QuestionTarget,
+  QuestionsStep,
   SessionZero,
   SessionZeroModule,
   SessionZeroRound,
@@ -44,7 +46,20 @@ export const MAX_GROUP_TITLE_LENGTH = 60;
 export const MAX_MODULES = 10;
 
 /** The steps the Master picks from (spec 47), in the order they are offered. */
-export const MODULE_KINDS: ModuleKind[] = ['retro', 'lines_veils', 'stars_wishes'];
+export const MODULE_KINDS: ModuleKind[] = ['retro', 'lines_veils', 'stars_wishes', 'questions'];
+
+/** Where an answer can go (spec 47 Decision 9), in the order the Master picks from. */
+export const QUESTION_TARGETS: QuestionTarget[] = ['name', 'subtitle', 'description', 'note', 'document', 'none'];
+
+/** A Questions step's limits (Decisions 9 and 10); the backend enforces them too. */
+export const MAX_QUESTIONS = 30;
+export const MAX_QUESTION_LENGTH = 200;
+export const MAX_HINT_LENGTH = 300;
+export const MAX_DOCUMENT_QUESTIONS = 5;
+export const MAX_ANSWER_LENGTH = 2000;
+/** A Name answer names a Document, a Subtitle one subtitles it. */
+export const MAX_NAME_ANSWER_LENGTH = 200;
+export const MAX_SUBTITLE_ANSWER_LENGTH = 120;
 
 /** A chain nobody composed: the page as it was before spec 47 (Decision 2). */
 export const DEFAULT_CHAIN: ModuleKind[] = ['retro', 'lines_veils'];
@@ -90,11 +105,23 @@ interface RawColumn {
   cards: RawPostIt[];
 }
 
+interface RawQuestions {
+  tag_id: string | null;
+  answers_revealed: boolean;
+  players_bypass_creation_rule: boolean;
+  questions: { id: string; position: number; body: string; hint: string | null; target: QuestionTarget; tag_id: string | null }[];
+  answers: { question_id: string; user_id: string; body: string; note_private: boolean; updated_at: string; mine: boolean }[];
+  documents: { user_id: string; question_id: string | null; document_id: string; mine: boolean }[];
+  can_create: boolean;
+  creatable: number;
+}
+
 interface RawModule {
   id: string;
   kind: ModuleKind;
   position: number;
   columns: RawColumn[];
+  questions?: RawQuestions | null;
 }
 
 interface RawRound {
@@ -180,6 +207,38 @@ function toRound(raw: RawRound): SessionZeroRound {
   };
 }
 
+function toQuestions(raw: RawQuestions): QuestionsStep {
+  return {
+    tagId: raw.tag_id,
+    answersRevealed: raw.answers_revealed,
+    playersBypassCreationRule: raw.players_bypass_creation_rule,
+    questions: raw.questions.map((question) => ({
+      id: question.id,
+      position: question.position,
+      body: question.body,
+      hint: question.hint,
+      target: question.target,
+      tagId: question.tag_id,
+    })),
+    answers: raw.answers.map((answer) => ({
+      questionId: answer.question_id,
+      userId: answer.user_id,
+      body: answer.body,
+      notePrivate: answer.note_private,
+      updatedAt: answer.updated_at,
+      mine: answer.mine,
+    })),
+    documents: raw.documents.map((link) => ({
+      userId: link.user_id,
+      questionId: link.question_id,
+      documentId: link.document_id,
+      mine: link.mine,
+    })),
+    canCreate: raw.can_create,
+    creatable: raw.creatable,
+  };
+}
+
 /** The page's model, from the backend's snake_case answer, showing the current step. */
 export function toSessionZero(raw: RawSessionZero): SessionZero {
   const modules: SessionZeroModule[] = raw.modules.map((module) => ({
@@ -187,6 +246,7 @@ export function toSessionZero(raw: RawSessionZero): SessionZero {
     kind: module.kind,
     position: module.position,
     columns: module.columns.map(toColumn),
+    ...(module.questions ? { questions: toQuestions(module.questions) } : {}),
   }));
   return {
     started: raw.started,
@@ -232,6 +292,31 @@ export function withView(preview: SessionZero | undefined, moduleId: string | un
       module.id === moduleId ? { ...module, columns: preview.retro } : module,
     ),
   };
+}
+
+/** A question as the Master edits it: `id` null for a new one, `hint` blank for none. */
+export interface QuestionDraft {
+  id: string | null;
+  body: string;
+  hint: string;
+  target: QuestionTarget;
+  tagId: string | null;
+}
+
+/**
+ * What stops the Master's list from saving (Decision 9), as a translation
+ * key: exactly one Name question once there are any, at most one Subtitle,
+ * at most `MAX_DOCUMENT_QUESTIONS` "New Document" ones, none without text.
+ */
+export function questionsProblem(
+  questions: QuestionDraft[],
+): `sessionZero.questions.problems.${'empty' | 'oneName' | 'oneSubtitle' | 'documents'}` | null {
+  const count = (target: QuestionTarget) => questions.filter((question) => question.target === target).length;
+  if (questions.some((question) => !question.body.trim())) return 'sessionZero.questions.problems.empty';
+  if (questions.length > 0 && count('name') !== 1) return 'sessionZero.questions.problems.oneName';
+  if (count('subtitle') > 1) return 'sessionZero.questions.problems.oneSubtitle';
+  if (count('document') > MAX_DOCUMENT_QUESTIONS) return 'sessionZero.questions.problems.documents';
+  return null;
 }
 
 /** One write to the boards: the path under `/rooms/{id}/session-zero`, the method and the body. */
@@ -320,6 +405,54 @@ export const boardWrites = {
     method: 'PUT',
     json: { module_id: id },
   }),
+  /** Spec 47 Decision 9: a Questions step's Tag for the main Documents (null: none). */
+  setQuestionsTag: (id: string, tagId: string | null): BoardWrite => ({
+    path: `/modules/${id}`,
+    method: 'PATCH',
+    json: { tag_id: tagId },
+  }),
+  /** Q7: Players create their own Documents even where the Room doesn't let them. */
+  setCreationBypass: (id: string, bypass: boolean): BoardWrite => ({
+    path: `/modules/${id}`,
+    method: 'PATCH',
+    json: { players_bypass_creation_rule: bypass },
+  }),
+  /** Decision 9: the whole list, in order; a question with an `id` keeps its answers. */
+  setQuestions: (id: string, questions: QuestionDraft[]): BoardWrite => ({
+    path: `/modules/${id}/questions`,
+    method: 'PUT',
+    json: {
+      questions: questions.map((question) => ({
+        id: question.id,
+        body: question.body,
+        hint: question.hint.trim() || null,
+        target: question.target,
+        tag_id: question.target === 'document' ? question.tagId : null,
+      })),
+    },
+  }),
+  /** Decision 10: the viewer's answers that changed; an empty one is removed. */
+  saveAnswers: (id: string, answers: { questionId: string; body: string; notePrivate: boolean }[]): BoardWrite => ({
+    path: `/modules/${id}/answers`,
+    method: 'PUT',
+    json: {
+      answers: answers.map((answer) => ({
+        question_id: answer.questionId,
+        body: answer.body,
+        note_private: answer.notePrivate,
+      })),
+    },
+  }),
+  /** Decision 10: every member reads every answer, or only their own again. */
+  revealAnswers: (id: string, revealed: boolean): BoardWrite => ({
+    path: `/modules/${id}/reveal`,
+    method: 'PUT',
+    json: { revealed },
+  }),
+  /** Decision 11: the Player's Document from their answers. */
+  createMyDocument: (id: string): BoardWrite => ({ path: `/modules/${id}/documents`, method: 'POST' }),
+  /** Decision 11: the Master's "Create everyone's Documents". */
+  createEveryoneDocuments: (id: string): BoardWrite => ({ path: `/modules/${id}/documents/all`, method: 'POST' }),
   group: (cardIds: string[]): BoardWrite => ({ path: '/groups', method: 'POST', json: { card_ids: cardIds } }),
   renameGroup: (id: string, title: string): BoardWrite => ({
     path: `/groups/${id}`,

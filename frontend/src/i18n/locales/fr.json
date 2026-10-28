@@ -1376,7 +1376,8 @@
       "kinds": {
         "retro": "Rétro",
         "lines_veils": "Lignes et Voiles",
-        "stars_wishes": "Étoiles et Souhaits"
+        "stars_wishes": "Étoiles et Souhaits",
+        "questions": "Questions"
       },
       "hiddenHint": "Étapes encore cachées : {{count}}",
       "next": "Suivant",
@@ -1391,10 +1392,65 @@
       "remove": "Retirer",
       "removeTitle": "Retirer cette étape ?",
       "removeBody": "Les post-its de « {{name}} » sont supprimés avec elle. Lignes et Voiles n’est jamais touché.",
+      "removeQuestionsBody": "Les questions et réponses de « {{name}} » sont supprimées avec elle. Les Documents déjà créés restent.",
       "chain": "Étapes de la session",
       "chainHint": "Choisis les étapes et leur ordre ; tu pourras les changer plus tard.",
       "max": "Au plus {{max}} étapes.",
       "startButton": "Lancer"
+    },
+    "questions": {
+      "title": "Questions",
+      "edit": "Modifier les questions",
+      "editHint": "Les questions sont enregistrées ensemble. Retirer une question supprime ses réponses.",
+      "tag": "Tag des Documents des Joueurs",
+      "noTag": "Aucun Tag",
+      "bypass": "Les Joueurs créent leurs propres Documents même si la Salle ne le permet pas",
+      "noneMaster": "Pas encore de questions : écrivez-les avec « Modifier les questions ».",
+      "nonePlayer": "Le Maître n'a pas encore écrit les questions.",
+      "answers": "Réponses",
+      "reveal": "Révéler les réponses",
+      "hide": "Masquer les réponses",
+      "createAll": "Créer les Documents de tous ({{count}})",
+      "privateHint": "Chaque Joueur ne voit que ses propres réponses.",
+      "revealedHint": "Tous les membres voient les réponses de tous.",
+      "noPlayers": "Aucun Joueur dans la Salle.",
+      "answered": "{{count}}/{{total}} réponses",
+      "openDocument": "Ouvrir le Document",
+      "private": "Privée",
+      "openMine": "Ouvrir votre Document",
+      "createMine": "Créer mon Document",
+      "masterCreates": "Le Maître créera votre Document.",
+      "nameFirst": "Répondez à la question du nom pour créer votre Document.",
+      "everyone": "Les réponses de tous",
+      "autosave": "Les réponses s'enregistrent pendant la saisie ; seuls vous et le Maître les voyez.",
+      "number": "Question {{number}}",
+      "question": "Question",
+      "hint": "Indice (facultatif)",
+      "target": "Où va la réponse",
+      "documentTag": "Tag du nouveau Document",
+      "add": "Ajouter une question",
+      "targets": {
+        "name": "Nom",
+        "subtitle": "Sous-titre",
+        "description": "Description",
+        "note": "Note",
+        "document": "Nouveau Document",
+        "none": "Pas dans le Document"
+      },
+      "goesTo": {
+        "name": "Devient le nom de votre Document.",
+        "subtitle": "Devient le sous-titre de votre Document.",
+        "description": "Va dans la description de votre Document.",
+        "note": "Devient une Note de votre Document.",
+        "document": "Devient un Document à part : la première ligne est son nom, le reste sa description.",
+        "none": "Reste ici, pour en parler à la table."
+      },
+      "problems": {
+        "empty": "Chaque question a besoin d'un texte.",
+        "oneName": "Il faut exactement une question pour le Nom.",
+        "oneSubtitle": "Au plus une question pour le Sous-titre.",
+        "documents": "Au plus {{max}} questions « Nouveau Document »."
+      }
     }
   }
 }

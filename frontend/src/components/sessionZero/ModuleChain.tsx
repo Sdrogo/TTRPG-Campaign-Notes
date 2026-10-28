@@ -246,8 +246,8 @@ export function ModuleStepper({ onView }: ModuleStepperProps) {
 
 /**
  * "Edit steps" (spec 47 Decision 3): the open session's chain, each change
- * sent at once. Removing a step that holds post-its asks first, since they
- * go with it; Lines & Veils is the Room's and never goes.
+ * sent at once. Removing a step that holds post-its or questions asks first,
+ * since they go with it; Lines & Veils is the Room's and never goes.
  */
 function EditStepsModal({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
@@ -260,7 +260,11 @@ function EditStepsModal({ onClose }: { onClose: () => void }) {
       {removing ? (
         <Stack>
           <Text fw={600}>{t('sessionZero.modules.removeTitle')}</Text>
-          <Text size="sm">{t('sessionZero.modules.removeBody', { name: moduleLabel(removing.kind) })}</Text>
+          <Text size="sm">
+            {removing.kind === 'questions'
+              ? t('sessionZero.modules.removeQuestionsBody', { name: moduleLabel(removing.kind) })
+              : t('sessionZero.modules.removeBody', { name: moduleLabel(removing.kind) })}
+          </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setRemoving(null)}>
               {t('common.cancel')}
@@ -281,7 +285,9 @@ function EditStepsModal({ onClose }: { onClose: () => void }) {
             onMove={(index, to) => act(boardWrites.reorderModules(moved(ids, index, to)))}
             onRemove={(index) => {
               const module = board.modules[index];
-              if (module.columns.some((column) => column.cards.length > 0)) setRemoving(module);
+              const holds =
+                module.columns.some((column) => column.cards.length > 0) || Boolean(module.questions?.questions.length);
+              if (holds) setRemoving(module);
               else remove(module);
             }}
             onAdd={(kind) => act(boardWrites.addModule(kind))}
