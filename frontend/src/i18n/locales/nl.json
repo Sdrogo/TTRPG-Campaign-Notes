@@ -860,6 +860,7 @@
       "retry": "Opnieuw proberen",
       "listTitle": "Jouw pdf's",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "In de wachtrij",
         "running": "Wordt voorbereid",

@@ -901,3 +901,96 @@ async def test_a_job_the_sweep_failed_as_lost_is_not_revived_when_it_finishes(
     assert (job.status, job.error, job.storage_path) == (ExportStatus.FAILED, "stale", None)
     assert path not in fake_storage
     assert await _cleanup_rows(db_session) == 0
+
+
+# --- the PDF of one Document (spec 27b) ---------------------------------------
+
+
+async def test_a_player_gets_the_pdf_of_one_document_with_only_what_they_see(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    renders: list[Render],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    seeded = await _seed(client, room)
+    castle = seeded["castle"]["id"]
+
+    started = await _start(client, room, document_id=castle, include_comments=True)
+
+    assert started.status_code == 202, started.text
+    assert (started.json()["document_id"], started.json()["document_name"]) == (castle, "Castle")
+    done = (await _status(client, room, started.json()["id"])).json()
+    assert done["download_url"].endswith(f"&download=castle-{datetime.now(UTC):%Y-%m-%d}.pdf")
+    listed = (await client.get(f"{room.url}/exports", headers=room.player)).json()
+    assert [(job["document_id"], job["document_name"]) for job in listed] == [(castle, "Castle")]
+    (render,) = renders
+    assert render.manual.single_document
+    (chapter,) = render.manual.chapters
+    assert chapter.title == "Barovia" and [d.name for d in chapter.documents] == ["Castle"]
+    assert "Heard in town" in render.text and "Hello there" in render.text
+    for hidden in ("Village", "Vampire lair", "Strahd lives", "Beware"):
+        assert hidden not in render.text
+
+
+async def test_the_pdf_of_a_hidden_document_is_a_404_and_takes_no_filter(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    renders: list[Render],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    seeded = await _seed(client, room)
+    lair = await _document(client, room, "Hidden keep", visibility="master")
+    npc = seeded["tags"]["NPC"]["id"]
+    castle = seeded["castle"]["id"]
+
+    hidden = await _start(client, room, document_id=lair["id"])
+    as_player = await _start(
+        client, room, room.master, document_id=lair["id"], view_as_user_id=room.player_id
+    )
+    unknown = await _start(client, room, document_id=str(uuid.uuid4()))
+    filtered = await _start(client, room, document_id=castle, tag_ids=[npc])
+    covered = await _start(client, room, document_id=castle, cover_document_id=castle)
+    master = await _start(client, room, room.master, document_id=lair["id"])
+
+    assert [r.status_code for r in (hidden, as_player, unknown)] == [404, 404, 404]
+    assert [r.status_code for r in (filtered, covered)] == [422, 422]
+    assert master.status_code == 202
+    (render,) = renders
+    assert "Hidden keep" in render.text
+
+
+async def test_the_pdf_of_a_document_hidden_before_it_starts_is_refused(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    renders: list[Render],
+    held_jobs: list[Coroutine[Any, Any, None]],
+) -> None:
+    room = await _room(client, make_token)
+    hidden = await _document(client, room, "Inn")
+    deleted = await _document(client, room, "Mill")
+    first = (await _start(client, room, room.player, document_id=hidden["id"])).json()
+    second = (await _start(client, room, room.other, document_id=deleted["id"])).json()
+    blocked = await _start(client, room, room.player)  # one PDF at a time, any kind
+    changed = await client.patch(
+        f"{room.url}/documents/{hidden['id']}", json={"visibility": "master"}, headers=room.master
+    )
+    assert changed.status_code == 200, changed.text
+    gone = await client.delete(f"{room.url}/documents/{deleted['id']}", headers=room.master)
+    assert gone.status_code == 204, gone.text
+
+    for coroutine in list(held_jobs):
+        await coroutine
+    held_jobs.clear()
+
+    assert blocked.status_code == 409
+    for job_id in (first["id"], second["id"]):
+        job = await _job(db_session, job_id)
+        assert (job.status, job.error) == (ExportStatus.FAILED, "refused")
+    assert renders == []

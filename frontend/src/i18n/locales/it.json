@@ -860,6 +860,7 @@
       "retry": "Riprova",
       "listTitle": "I tuoi PDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "In coda",
         "running": "In preparazione",

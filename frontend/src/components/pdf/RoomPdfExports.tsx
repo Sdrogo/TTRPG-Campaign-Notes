@@ -35,10 +35,14 @@ export function RoomPdfExports({ roomId, userId }: { roomId: string; userId: str
 
 function Row({ job, onDismiss }: { job: PdfJob; onDismiss: () => void }) {
   const { t } = useTranslation();
-  const label = t('export.pdf.listItem', {
+  const details = {
     style: t(`export.pdf.styles.${job.style}`),
     size: job.pageSize,
-  });
+  };
+  // The PDF of one Document (spec 27b) carries its name.
+  const label = job.documentName
+    ? t('export.pdf.listItemDocument', { ...details, name: job.documentName })
+    : t('export.pdf.listItem', details);
   return (
     <Group justify="space-between" wrap="nowrap" gap="sm">
       <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>

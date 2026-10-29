@@ -211,7 +211,9 @@ class GlossaryLetter:
 
 @dataclass(frozen=True)
 class Manual:
-    """The whole PDF before it is typeset."""
+    """The whole PDF before it is typeset. A `single_document` manual is the
+    PDF of one Document (spec 27b): no cover and no contents, its one chapter
+    (titled with the Room's name) starts on page 1."""
 
     title: str
     game_system: str | None
@@ -220,6 +222,7 @@ class Manual:
     labels: ManualLabels
     chapters: Sequence[ManualChapter]
     glossary: Sequence[GlossaryLetter]
+    single_document: bool = False
 
     @property
     def image_urls(self) -> frozenset[str]:
@@ -349,6 +352,36 @@ def build_manual(export: Export, options: ManualOptions, labels: ManualLabels) -
         labels=labels,
         chapters=chapters,
         glossary=_glossary(export, first_group),
+    )
+
+
+def build_document_manual(
+    export: Export, document_id: uuid.UUID, options: ManualOptions, labels: ManualLabels
+) -> Manual:
+    """The PDF of one Document of `export` (spec 27b): its section exactly as
+    in the Room manual, alone in a chapter titled with the Room's name, with
+    no cover, contents or glossary (product owner, 2026-10-28). A mention of
+    another Document reads as its bare name, since the PDF doesn't hold it;
+    one of the Document itself links to its own section. `export` holds the
+    Document (the caller checked the requester sees it)."""
+    document = next(document for document in export.documents if document.id == document_id)
+
+    def resolve(span: MentionSpan) -> Run:
+        if span.kind is MentionKind.DOCUMENT and span.target_id == document_id:
+            return Run(span.name, f"doc-{document_id}")
+        return Run(f"@{span.name}" if span.kind is MentionKind.USER else span.name)
+
+    members = {member.id: member.name or labels.unknown_member for member in export.members}
+    section = _manual_document(document, export, options, members, labels, resolve)
+    return Manual(
+        title=document.name,
+        game_system=export.game_system,
+        generated_on=export.generated_at.date(),
+        cover_image_url=None,
+        labels=labels,
+        chapters=[ManualChapter("chapter-1", export.room_name, [section])],
+        glossary=[],
+        single_document=True,
     )
 
 

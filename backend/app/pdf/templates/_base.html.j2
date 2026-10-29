@@ -1,5 +1,7 @@
 {#- The structure shared by every style of the Room PDF (spec 23b Decision 1):
-    cover, contents, one chapter per Main item, the glossary of Documents. A style's
+    cover, contents, one chapter per Main item, the glossary of Documents. The
+    PDF of one Document (spec 27b) has no cover and no contents: its chapter is
+    page 1. A style's
     template only extends it (an ornament for the cover); its look is its CSS.
     Page numbers are never written here: a link carries `data-page` (the
     localized "p.") and the CSS prints the page of its target. Each paragraph is
@@ -34,6 +36,7 @@
 </head>
 <body class="style-{{ style }}">
 
+{% if not manual.single_document %}
 <section class="cover">
   <div class="cover-inner">
     {% if manual.game_system %}<p class="cover-system">{{ manual.game_system }}</p>{% endif %}
@@ -61,6 +64,7 @@
     {% endif %}
   </ol>
 </nav>
+{% endif %}
 
 {% for chapter in manual.chapters %}
 <section class="chapter" id="{{ chapter.id }}">

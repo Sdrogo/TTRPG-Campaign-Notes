@@ -490,6 +490,12 @@ def pdf_filename(room_name: str, generated_at: datetime) -> str:
     return f"{_file_stem(room_name, generated_at)}.pdf"
 
 
+def document_pdf_filename(document_name: str, generated_at: datetime) -> str:
+    """`<document>-<date>.pdf` (spec 27b), `document` when the name has no
+    ASCII letter."""
+    return f"{_file_stem(document_name, generated_at, 'document')}.pdf"
+
+
 # --- JSON --------------------------------------------------------------------
 
 

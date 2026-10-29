@@ -235,8 +235,8 @@ them for day‑to‑day implementation use; IDs like `D-01`, `FR-D1`,
   Document can be exported on its own in the same format (spec 27).
 - **Room PDF**: the Room laid out like a game manual, in four styles
   (Gothic, Modern, Print, Parchment), A4 or Letter, built as a
-  background job (FR-G3, specs 23b, 35). The PDF of one Document (spec
-  27b) is specified, not built yet.
+  background job (FR-G3, specs 23b, 35). One Document can be exported
+  as a PDF too, from its Export dialog (spec 27b).
 - Import one or more Documents, or a whole Room export, from JSON or
   Markdown, copying or replacing, with a preview first (FR-G4, spec 27).
   Maps travel in the Room's JSON export and import (spec 40).

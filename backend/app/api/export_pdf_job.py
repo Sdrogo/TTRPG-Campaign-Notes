@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from app.api.export import load_export
-from app.db import export_jobs_repo, rooms_repo, storage, storage_cleanup
+from app.db import documents_repo, export_jobs_repo, rooms_repo, storage, storage_cleanup
 from app.db import session as session_module
 from app.domain.errors import DomainError
 from app.domain.export import Export
@@ -29,8 +29,16 @@ from app.domain.export_jobs import (
     export_storage_path,
 )
 from app.domain.files import MAX_FILE_BYTES
-from app.domain.manual import Manual, ManualDocument, ManualOptions, build_manual, with_image_urls
+from app.domain.manual import (
+    Manual,
+    ManualDocument,
+    ManualOptions,
+    build_document_manual,
+    build_manual,
+    with_image_urls,
+)
 from app.domain.view_as import ensure_can_view_as
+from app.domain.visibility import is_document_visible
 from app.pdf.labels import manual_labels
 from app.pdf.media import merge_attachments, print_image_jpeg
 from app.pdf.render import lower_priority, render_manual_pdf
@@ -55,7 +63,8 @@ _tasks: set["asyncio.Task[None]"] = set()
 
 class ExportRefusedError(Exception):
     """The job can't run any more as asked: the requester left the Room, the
-    member to view as did, or the Room is gone."""
+    member to view as did, the Room is gone, or the one Document it is the
+    PDF of (spec 27b) is gone or no longer visible to them."""
 
 
 async def spawn(coroutine: Coroutine[Any, Any, None]) -> None:
@@ -136,7 +145,16 @@ async def _start(job_id: uuid.UUID) -> tuple[ExportJob, Export, str | None] | No
                 viewer = ensure_can_view_as(requester, target)
             except DomainError as exc:
                 raise ExportRefusedError from exc
-        export = await load_export(session, room, viewer, list(job.options.tag_ids))
+        document_id = job.options.document_id
+        if document_id is not None:
+            document = await documents_repo.get_document(session, document_id)
+            if document is None or document.room_id != room.id:
+                raise ExportRefusedError
+            owners = await documents_repo.list_owner_ids(session, document_id)
+            grants = await documents_repo.list_selective_grant_ids(session, document_id)
+            if not is_document_visible(document, viewer.user_id, viewer.role, owners, grants):
+                raise ExportRefusedError
+        export = await load_export(session, room, viewer, list(job.options.tag_ids), document_id)
         return job, export, room.image_path
 
 
@@ -145,17 +163,18 @@ async def _build_pdf(options: PdfOptions, export: Export, room_image_path: str |
     asked for and set, is the cover unless a Document gives one (spec 26);
     every member sees it, so it needs no visibility check."""
     room_cover_url: str | None = None
-    if options.room_cover and room_image_path is not None:
+    if options.room_cover and options.document_id is None and room_image_path is not None:
         room_cover_url = (await storage.signed_urls([room_image_path])).get(room_image_path)
-    manual = build_manual(
-        export,
-        ManualOptions(
-            include_comments=options.include_comments,
-            cover_document_id=options.cover_document_id,
-            room_cover_url=room_cover_url,
-        ),
-        manual_labels(options.locale),
+    manual_options = ManualOptions(
+        include_comments=options.include_comments,
+        cover_document_id=options.cover_document_id,
+        room_cover_url=room_cover_url,
     )
+    labels = manual_labels(options.locale)
+    if options.document_id is not None:
+        manual = build_document_manual(export, options.document_id, manual_options, labels)
+    else:
+        manual = build_manual(export, manual_options, labels)
     # The images wait in files, not in the HTML: a Room with hundreds of
     # Documents and images would otherwise hold them several times over in
     # memory and be killed for it.

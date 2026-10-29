@@ -20,15 +20,23 @@ interface PdfExportFormProps {
   documents: Document[];
   /** Whether the Room has an image (spec 26): then it is offered first, and is the default. */
   hasRoomImage: boolean;
+  /** Whether to offer the cover; the PDF of one Document has none (spec 27b). Defaults to true. */
+  withCover?: boolean;
 }
 
 /**
  * The PDF options (spec 23b Frontend): style with previews, page size,
  * Comments and PDF Attachments (both off by default), and the cover: the
  * Room's image when it has one (spec 26, the default), the favorite image of a
- * Document, or none (the field cleared).
+ * Document, or none (the field cleared). Without `withCover`, all but the cover.
  */
-export function PdfExportForm({ value, onChange, documents, hasRoomImage }: PdfExportFormProps) {
+export function PdfExportForm({
+  value,
+  onChange,
+  documents,
+  hasRoomImage,
+  withCover = true,
+}: PdfExportFormProps) {
   const { t } = useTranslation();
   const covers = [
     ...(hasRoomImage ? [{ value: ROOM_COVER, label: t('export.pdf.coverRoom') }] : []),
@@ -57,27 +65,31 @@ export function PdfExportForm({ value, onChange, documents, hasRoomImage }: PdfE
           onChange({ ...value, includeAttachments: event.currentTarget.checked })
         }
       />
-      <Select
-        label={t('export.pdf.cover')}
-        placeholder={t('export.pdf.coverNone')}
-        data={covers}
-        value={cover}
-        onChange={(choice) =>
-          onChange({
-            ...value,
-            coverDocumentId: choice === ROOM_COVER ? null : choice,
-            // A Document the PDF can't show falls back to the Room's image.
-            roomCover: choice !== null,
-          })
-        }
-        clearable
-        clearButtonProps={{ 'aria-label': t('export.pdf.coverClear') }}
-        searchable
-        nothingFoundMessage={t('export.pdf.coverNothing')}
-      />
-      <Text size="xs" c="dimmed">
-        {t(hasRoomImage ? 'export.pdf.coverHintRoom' : 'export.pdf.coverHint')}
-      </Text>
+      {withCover && (
+        <>
+          <Select
+            label={t('export.pdf.cover')}
+            placeholder={t('export.pdf.coverNone')}
+            data={covers}
+            value={cover}
+            onChange={(choice) =>
+              onChange({
+                ...value,
+                coverDocumentId: choice === ROOM_COVER ? null : choice,
+                // A Document the PDF can't show falls back to the Room's image.
+                roomCover: choice !== null,
+              })
+            }
+            clearable
+            clearButtonProps={{ 'aria-label': t('export.pdf.coverClear') }}
+            searchable
+            nothingFoundMessage={t('export.pdf.coverNothing')}
+          />
+          <Text size="xs" c="dimmed">
+            {t(hasRoomImage ? 'export.pdf.coverHintRoom' : 'export.pdf.coverHint')}
+          </Text>
+        </>
+      )}
     </Stack>
   );
 }

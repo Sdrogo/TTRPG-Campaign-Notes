@@ -850,6 +850,7 @@
       "retry": "다시 시도",
       "listTitle": "내 PDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "대기 중",
         "running": "준비 중",

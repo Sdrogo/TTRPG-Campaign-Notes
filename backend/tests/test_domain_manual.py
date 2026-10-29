@@ -34,6 +34,7 @@ from app.domain.manual import (
     ManualOptions,
     ManualReference,
     Run,
+    build_document_manual,
     build_manual,
 )
 from app.domain.markdown import Node
@@ -556,3 +557,41 @@ def _nodes(node: Block | Run) -> list[Block | Run]:
     if isinstance(node, Run):
         return [node]
     return [node, *(n for child in node.children for n in _nodes(child))]
+
+
+def test_a_single_document_manual_holds_that_document_alone() -> None:
+    """Spec 27b: one chapter titled with the Room's name, no cover image (the
+    Room's included), no glossary. A mention of another Document reads as its
+    bare name; one of the Document itself links to its section."""
+    export = make_export()
+    castle = next(d for d in export.documents if d.id == CASTLE)
+    castle = replace(
+        castle,
+        images=(image(1, favorite=True),),
+        description=(
+            text("Ruled by "),
+            mention(MentionKind.DOCUMENT, IRENA, "Irena"),
+            text(" from "),
+            mention(MentionKind.DOCUMENT, CASTLE, "Castle"),
+            text("."),
+        ),
+    )
+    export = replace(export, documents=[castle])
+    options = ManualOptions(include_comments=True, room_cover_url="https://room")
+
+    manual = build_document_manual(export, CASTLE, options, LABELS)
+
+    assert manual.single_document and manual.title == "Castle"
+    assert manual.cover_image_url is None and manual.glossary == []
+    (chapter,) = manual.chapters
+    assert chapter.title == export.room_name
+    (section,) = chapter.documents
+    assert section.image_url is not None
+    assert list(section.blocks[0].children) == [
+        Run("Ruled by "),
+        Run("Irena"),
+        Run(" from "),
+        Run("Castle", f"doc-{CASTLE}"),
+        Run("."),
+    ]
+    assert not _manual().single_document

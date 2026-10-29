@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { Button, Group, Modal, SegmentedControl, Stack, Text } from '@mantine/core';
-import { DownloadSimpleIcon } from '@phosphor-icons/react';
+import { DownloadSimpleIcon, FilePdfIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
+import { usePdfExports, useStartPdfExport } from '../hooks/usePdfExports';
 import { useExportDocument } from '../hooks/useRoomExport';
+import { useViewAs } from '../hooks/useViewAs';
 import { notifyError, notifySuccess } from '../lib/notify';
+import { DEFAULT_PDF_OPTIONS, isActivePdfJob } from '../lib/pdfExport';
 import { EXPORT_FORMATS, type ExportFormat } from '../lib/roomExport';
+import { PdfExportForm, type PdfFormValue } from './pdf/PdfExportForm';
+import { TrackedPdfJob } from './pdf/TrackedPdfJob';
 
 interface ExportDocumentModalProps {
   opened: boolean;
@@ -14,12 +19,19 @@ interface ExportDocumentModalProps {
   documentName: string;
 }
 
+/** The formats the dialog offers: the two files of spec 27, then the PDF of spec 27b. */
+type DialogFormat = ExportFormat | 'pdf';
+
+const DIALOG_FORMATS: DialogFormat[] = [...EXPORT_FORMATS, 'pdf'];
+
 /**
- * The single-Document export dialog (spec 27 Decisions 1 to 4): JSON for tools
- * and for importing it again, or Markdown for reading, then a download of what
- * the signed-in user sees of it (or the member being previewed, spec 22b). The
- * file is the Room export with this Document alone. The backend decides what
- * goes in; nothing is filtered here.
+ * The single-Document export dialog (spec 27 Decisions 1 to 4, spec 27b): JSON
+ * for tools and for importing it again, Markdown for reading, or a PDF laid out
+ * like the Document's pages of the Room manual, then what the signed-in user
+ * sees of it (or the member being previewed, spec 22b). A file downloads at
+ * once; a PDF is made in the background like the Room's, so the dialog follows
+ * it (or the Room page does, once it is closed). The backend decides what goes
+ * in; nothing is filtered here.
  */
 export function ExportDocumentModal({
   opened,
@@ -29,10 +41,28 @@ export function ExportDocumentModal({
   documentName,
 }: ExportDocumentModalProps) {
   const { t } = useTranslation();
-  const [format, setFormat] = useState<ExportFormat>('md');
+  const [format, setFormat] = useState<DialogFormat>('md');
+  const [pdfOptions, setPdfOptions] = useState<PdfFormValue>(DEFAULT_PDF_OPTIONS);
+  const [startedJobId, setStartedJobId] = useState<string | null>(null);
+  const viewAs = useViewAs();
   const exportDocument = useExportDocument(roomId, documentId, documentName);
+  const jobs = usePdfExports(roomId, opened && format === 'pdf');
+  const startPdf = useStartPdfExport(roomId);
 
-  const handleExport = () =>
+  // The job this dialog follows: the one it started, or a PDF of this Document
+  // still being made (a Room PDF being made stays on the Room page).
+  const tracked =
+    jobs.data?.find((job) => job.id === startedJobId) ??
+    jobs.data?.find((job) => isActivePdfJob(job) && job.documentId === documentId);
+
+  const handleExport = () => {
+    if (format === 'pdf') {
+      startPdf.mutate(
+        { ...pdfOptions, tagIds: [], documentId },
+        { onSuccess: (job) => setStartedJobId(job.id), onError: notifyError },
+      );
+      return;
+    }
     exportDocument.mutate(format, {
       onSuccess: () => {
         notifySuccess(t('export.done'));
@@ -40,6 +70,9 @@ export function ExportDocumentModal({
       },
       onError: notifyError,
     });
+  };
+
+  const showingJob = format === 'pdf' && tracked !== undefined;
 
   return (
     <Modal opened={opened} onClose={onClose} title={t('export.document.title')} centered>
@@ -49,27 +82,58 @@ export function ExportDocumentModal({
           fullWidth
           aria-label={t('export.format')}
           value={format}
-          onChange={(value) => setFormat(value as ExportFormat)}
-          data={EXPORT_FORMATS.map((value) => ({ value, label: t(`export.formats.${value}`) }))}
+          onChange={(value) => setFormat(value as DialogFormat)}
+          data={DIALOG_FORMATS.map((value) => ({
+            value,
+            label: t(`export.formats.${value}`),
+          }))}
         />
         <Text size="xs" c="dimmed">
           {t(`export.formatHint.${format}`)}
         </Text>
-        <Text size="xs" c="dimmed">
-          {t('export.linksExpire')}
-        </Text>
-        <Group justify="flex-end">
-          <Button variant="subtle" color="gray" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            leftSection={<DownloadSimpleIcon size={18} />}
-            loading={exportDocument.isPending}
-            onClick={handleExport}
-          >
-            {t('export.action')}
-          </Button>
-        </Group>
+        {showingJob ? (
+          <>
+            <TrackedPdfJob roomId={roomId} job={tracked} onNew={() => setStartedJobId(null)} />
+            <Group justify="flex-end">
+              <Button variant="subtle" color="gray" onClick={onClose}>
+                {t('common.close')}
+              </Button>
+            </Group>
+          </>
+        ) : (
+          <>
+            {format === 'pdf' && (
+              <PdfExportForm
+                value={pdfOptions}
+                onChange={setPdfOptions}
+                documents={[]}
+                hasRoomImage={false}
+                withCover={false}
+              />
+            )}
+            <Text size="xs" c="dimmed">
+              {format === 'pdf'
+                ? viewAs
+                  ? t('export.pdf.asMember')
+                  : t('export.pdf.visibility')
+                : t('export.linksExpire')}
+            </Text>
+            <Group justify="flex-end">
+              <Button variant="subtle" color="gray" onClick={onClose}>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                leftSection={
+                  format === 'pdf' ? <FilePdfIcon size={18} /> : <DownloadSimpleIcon size={18} />
+                }
+                loading={format === 'pdf' ? startPdf.isPending : exportDocument.isPending}
+                onClick={handleExport}
+              >
+                {format === 'pdf' ? t('export.pdf.action') : t('export.action')}
+              </Button>
+            </Group>
+          </>
+        )}
       </Stack>
     </Modal>
   );

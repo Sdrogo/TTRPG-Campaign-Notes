@@ -850,6 +850,7 @@
       "retry": "重试",
       "listTitle": "你的 PDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "排队中",
         "running": "准备中",
