@@ -40,11 +40,8 @@ function Row({ job, onDismiss }: { job: PdfJob; onDismiss: () => void }) {
     size: job.pageSize,
   };
   // The PDF of one Document (spec 27b) carries its name.
-  const label = job.documentId
-    ? t('export.pdf.listItemDocument', {
-        ...details,
-        name: job.documentName ?? '',
-      })
+  const label = job.documentName
+    ? t('export.pdf.listItemDocument', { ...details, name: job.documentName })
     : t('export.pdf.listItem', details);
   return (
     <Group justify="space-between" wrap="nowrap" gap="sm">

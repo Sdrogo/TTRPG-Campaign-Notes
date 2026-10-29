@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { Button, Group, Modal, SegmentedControl, Stack, Text } from '@mantine/core';
 import { DownloadSimpleIcon, FilePdfIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
-import { useDismissedPdfJobs, usePdfExports, useStartPdfExport } from '../hooks/usePdfExports';
+import { usePdfExports, useStartPdfExport } from '../hooks/usePdfExports';
 import { useExportDocument } from '../hooks/useRoomExport';
-import { useSession } from '../hooks/useSession';
 import { useViewAs } from '../hooks/useViewAs';
 import { notifyError, notifySuccess } from '../lib/notify';
-import { DEFAULT_PDF_OPTIONS, isActivePdfJob, type PdfJob } from '../lib/pdfExport';
+import { DEFAULT_PDF_OPTIONS, isActivePdfJob } from '../lib/pdfExport';
 import { EXPORT_FORMATS, type ExportFormat } from '../lib/roomExport';
 import { PdfExportForm, type PdfFormValue } from './pdf/PdfExportForm';
-import { PdfJobPanel } from './pdf/PdfJobPanel';
+import { TrackedPdfJob } from './pdf/TrackedPdfJob';
 
 interface ExportDocumentModalProps {
   opened: boolean;
@@ -24,13 +23,6 @@ interface ExportDocumentModalProps {
 type DialogFormat = ExportFormat | 'pdf';
 
 const DIALOG_FORMATS: DialogFormat[] = [...EXPORT_FORMATS, 'pdf'];
-
-/** The panel of the job the dialog follows; taking the file stops the Room page listing it. */
-function TrackedPdfJob({ roomId, job, onNew }: { roomId: string; job: PdfJob; onNew: () => void }) {
-  const { session } = useSession();
-  const { dismiss } = useDismissedPdfJobs(session?.user.id ?? '', roomId);
-  return <PdfJobPanel job={job} onDownload={dismiss} onNew={onNew} />;
-}
 
 /**
  * The single-Document export dialog (spec 27 Decisions 1 to 4, spec 27b): JSON

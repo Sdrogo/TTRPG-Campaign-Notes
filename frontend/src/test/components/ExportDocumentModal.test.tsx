@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiDownload, apiFetch } from '../../lib/apiClient';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { saveBlob } from '../../lib/roomExport';
+import { ViewAsContext } from '../../hooks/useViewAs';
 import { rawPdfJob } from '../fixtures';
 import { renderWithProviders } from '../utils';
 import { ExportDocumentModal } from '../../components/ExportDocumentModal';
@@ -25,7 +26,7 @@ vi.mock('../../lib/roomExport', async (importOriginal) => ({
 const onClose = vi.fn();
 const blob = new Blob(['# Il Cancello']);
 
-function render() {
+function render(wrapper?: Parameters<typeof renderWithProviders>[1]) {
   renderWithProviders(
     <ExportDocumentModal
       opened
@@ -34,6 +35,7 @@ function render() {
       documentId="doc-1"
       documentName="Il Cancello"
     />,
+    wrapper,
   );
   return { user: userEvent.setup() };
 }
@@ -171,5 +173,37 @@ describe('ExportDocumentModal (spec 27)', () => {
 
     expect(await screen.findByRole('status')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Genera PDF' })).not.toBeInTheDocument();
+  });
+
+  it('goes back to the form after a failed PDF, and closes from the job panel', async () => {
+    const { user } = render();
+    await screen.findByRole('dialog', { name: 'Esporta il Documento' });
+    await user.click(screen.getByText('PDF'));
+    jobs = [rawPdfJob({ status: 'failed', document_id: 'doc-1', document_name: 'Il Cancello' })];
+    await user.click(screen.getByRole('button', { name: 'Genera PDF' }));
+
+    await user.click(await screen.findByRole('button', { name: 'Riprova' }));
+    expect(screen.getByRole('button', { name: 'Genera PDF' })).toBeInTheDocument();
+
+    jobs = [rawPdfJob({ status: 'running', document_id: 'doc-1', document_name: 'Il Cancello' })];
+    await user.click(screen.getByRole('button', { name: 'Genera PDF' }));
+    await screen.findByRole('status');
+    await user.click(screen.getByRole('button', { name: 'Chiudi' }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('says the PDF is made as the member being previewed (spec 22b)', async () => {
+    const { user } = render({
+      wrapper: ({ children }) => (
+        <ViewAsContext.Provider value={{ roomId: 'room-1', userId: 'alice' }}>
+          {children}
+        </ViewAsContext.Provider>
+      ),
+    });
+
+    await screen.findByRole('dialog', { name: 'Esporta il Documento' });
+    await user.click(screen.getByText('PDF'));
+
+    expect(screen.getByText(/come un altro membro/)).toBeInTheDocument();
   });
 });
