@@ -35,7 +35,8 @@
 
 ## Decisions
 
-Proposed by Claude on 2026-10-29, to be confirmed by the product owner.
+Proposed by Claude on 2026-10-29; the product owner merged the ticket (PR
+#268) the same day.
 
 1. **Full width**: the page's main area spans the whole window, with the
    same side gutters as the Documents page (`sm` / `lg` / `xl`). The
