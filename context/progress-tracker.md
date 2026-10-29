@@ -13,6 +13,14 @@ detail:
 
 ## Current Status (2026-10-29)
 
+- **Document page on a phone** (2026-10-29, no migration, PR into
+  `staging`): below `sm` the heading's actions (badge, read aloud, ⋮)
+  share the kicker's line instead of a row under the name and subtitle
+  (the column stacking came from the Figma refactor #252). The info
+  panel's "+" buttons and a person chip's "x" keep their desktop size
+  (24px) on touch screens, with an invisible ring that keeps the 40px tap
+  area of spec 49 (`.compact-touch-target`).
+
 - **Hotfix, mention map buttons on the Document page** (2026-10-29, no
   migration, PR into `staging`): from `lg` the Notes' boxes
   (`.note-item`, positioned since the Figma refactor #252) ran under the

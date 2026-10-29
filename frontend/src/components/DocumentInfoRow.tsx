@@ -51,7 +51,14 @@ export function PersonChip({
       leftSection={<UserAvatar user={member} size={16} />}
       rightSection={
         onRemove ? (
-          <LabeledActionIcon size="xs" variant="transparent" color="gray" onClick={onRemove} aria-label={removeLabel}>
+          <LabeledActionIcon
+            size="xs"
+            variant="transparent"
+            color="gray"
+            className="compact-touch-target"
+            onClick={onRemove}
+            aria-label={removeLabel}
+          >
             <XIcon size={14} />
           </LabeledActionIcon>
         ) : undefined
@@ -81,14 +88,15 @@ export function AddPopover({
     <Popover opened={opened} onChange={onChange} position="bottom-start" withArrow shadow="md" width={300} trapFocus>
       <Popover.Target>
         <LabeledActionIcon
-          size="sm"
+          size="xs"
           variant="default"
           color="gray"
+          className="compact-touch-target"
           aria-label={label}
           onClick={() => onChange(!opened)}
           style={{ borderStyle: 'dashed' }}
         >
-          <PlusIcon size={16} />
+          <PlusIcon size={14} />
         </LabeledActionIcon>
       </Popover.Target>
       <Popover.Dropdown>{children}</Popover.Dropdown>

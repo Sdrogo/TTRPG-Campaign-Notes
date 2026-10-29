@@ -349,8 +349,9 @@ function DocumentPanel({
       <Stack gap="md" className="document-detail-shell">
         {/* One line: the name (which may wrap to two lines and always stays visible), the
             badge, the read-aloud controls and a "⋮" that unfolds the other actions: beside it
-            on a big screen, on a row of their own on a phone so they never squeeze the name
-            (Andrea, 2026-10-15). */}
+            on a big screen, on the kicker's line on a phone so they never squeeze the name
+            (Andrea, 2026-10-15 and 2026-10-29). The unfolded actions get a row of their own
+            on a phone. */}
         <Group
           justify="space-between"
           align="flex-start"
@@ -359,7 +360,7 @@ function DocumentPanel({
           data-tour="document"
           className="document-detail-heading"
         >
-          <Stack gap={0} style={{ minWidth: 0, flex: 1 }}>
+          <Stack gap={0} style={{ minWidth: 0, flex: 1 }} className="document-detail-titles">
             <Text
               size="xs"
               c="dimmed"

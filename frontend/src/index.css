@@ -561,6 +561,40 @@ html body[data-scroll-locked] {
   }
 }
 
+/* On a phone the actions share the kicker's line, top right, instead of a row
+   of their own under the name; the name and subtitle below keep the full width
+   (Andrea, 2026-10-29). */
+@media (max-width: 48em) {
+  .document-detail-heading.mantine-Group-root {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--mantine-spacing-xs);
+  }
+
+  .document-detail-titles {
+    display: contents;
+  }
+
+  .document-detail-kicker {
+    grid-area: 1 / 1;
+    margin-bottom: 0;
+  }
+
+  .document-detail-heading .document-detail-meta {
+    grid-area: 1 / 2;
+  }
+
+  .document-detail-title,
+  .document-detail-subtitle {
+    grid-column: 1 / -1;
+  }
+
+  .document-detail-title {
+    margin-top: var(--mantine-spacing-xs);
+  }
+}
+
 .document-detail-meta {
   padding: 3px;
   background: var(--bg-raised);
@@ -722,17 +756,6 @@ html body[data-scroll-locked] {
 .document-thread-heading {
   padding-bottom: var(--mantine-spacing-md);
   border-bottom: 1px solid var(--border-default);
-}
-
-@media (max-width: 48em) {
-  .document-detail-heading {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .document-detail-meta {
-    align-self: flex-end;
-  }
 }
 
 .document-body-aside {
@@ -1439,5 +1462,25 @@ html body[data-scroll-locked] {
   .mantine-Modal-close,
   .mantine-Drawer-close {
     --cb-size: 40px;
+  }
+
+  /* A small button inside dense content (the info panel's "+" and a person
+     chip's "x") keeps its desktop size, so it doesn't crowd the row on a phone,
+     and gets the 40px to tap from an invisible ring around it (Andrea,
+     2026-10-29). */
+  .mantine-ActionIcon-root.compact-touch-target {
+    --ai-size-xs: 24px;
+    --ai-size-sm: 28px;
+    position: relative;
+    overflow: visible;
+  }
+  .compact-touch-target::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+  /* A chip clips its content; let the "x" ring reach past it. */
+  .mantine-Badge-root:has(.compact-touch-target) {
+    overflow: visible;
   }
 }
