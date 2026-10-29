@@ -11,7 +11,15 @@ detail:
 - [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md):
   the original log up to 2026-09-30 (specs 01 to 11).
 
-## Current Status (2026-10-28)
+## Current Status (2026-10-29)
+
+- **Hotfix, mention map buttons on the Document page** (2026-10-29, no
+  migration, PR into `staging`): from `lg` the Notes' boxes
+  (`.note-item`, positioned since the Figma refactor #252) ran under the
+  floated aside and painted over it, so the mention map's zoom buttons
+  and lower cards ignored clicks. The aside is now `position: relative;
+  z-index: 1`. Broken since v.0.3.0 (main). Regression test reads
+  `index.css` (jsdom does no layout).
 
 - **27b, PDF of one Document** (2026-10-28, no migration, PR #266 into
   `staging`): the Document's Export dialog offers PDF next to Markdown
