@@ -769,6 +769,12 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **51, Rooms page layout** (ticket PR #268 merged by the product owner
+  2026-10-29, built in the PR after it): My Rooms uses the full width (the
+  Container was shrinking to its content inside a flex column), 1 to 6
+  columns by available width, and Room card images fade into the card's
+  own grey instead of a dark band. Frontend only, no migration.
+
 - **50, Map places in the split pane** (ticket confirmed by the product
   owner 2026-10-28, built in PR #265): on a geographic map being read, a
   plain area or pin opens in the split pane (`?side=place:<kind>:<id>`,

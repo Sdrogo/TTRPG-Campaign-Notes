@@ -11,6 +11,10 @@ interface RoomsPageProps {
   currentUserId: string;
 }
 
+// Columns by the width the grid actually has (spec 51), so a card stays
+// between about 300px and 480px wide however wide the screen.
+const ROOM_COLUMNS = { base: 1, '640px': 2, '1040px': 3, '1440px': 4, '1840px': 5, '2240px': 6 };
+
 /** The signed-in user's Rooms, with a button to create one. Shown by `MyRoomsPage` at `/rooms`. */
 export function RoomsPage({ currentUserId }: RoomsPageProps) {
   const { t } = useTranslation();
@@ -18,7 +22,9 @@ export function RoomsPage({ currentUserId }: RoomsPageProps) {
   const myRooms = useMyRooms(true);
 
   return (
-    <Container component="main" fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="lg">
+    // w: inside MyRoomsPage's column Stack, the Container's auto margins
+    // would otherwise shrink it to its content in the middle of the page.
+    <Container component="main" fluid w="100%" px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="lg">
       <Stack gap="xl">
       <Group justify="space-between" align="flex-end" className="rooms-heading">
         <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
@@ -35,7 +41,7 @@ export function RoomsPage({ currentUserId }: RoomsPageProps) {
         <Text c="dimmed">{t('rooms.empty')}</Text>
       )}
       {myRooms.data && myRooms.data.length > 0 && (
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+        <SimpleGrid type="container" cols={ROOM_COLUMNS} spacing="lg">
           {myRooms.data.map((myRoom) => (
             <RoomCard key={myRoom.room.id} myRoom={myRoom} currentUserId={currentUserId} />
           ))}

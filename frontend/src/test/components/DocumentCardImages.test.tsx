@@ -57,4 +57,14 @@ describe('DocumentCardImages', () => {
 
     expect(screen.getByTestId('card-image-fade')).toBeInTheDocument();
   });
+
+  // Spec 51: the fade colour is the card's, `--bg-surface` unless the card
+  // sets `--card-image-fade`.
+  it('fades into the card-set colour, defaulting to --bg-surface', () => {
+    renderWithProviders(<DocumentCardImages images={[images[0]]} documentName="Il Cancello" />);
+
+    expect(screen.getByTestId('card-image-fade').getAttribute('style')).toContain(
+      'var(--card-image-fade, var(--bg-surface))',
+    );
+  });
 });

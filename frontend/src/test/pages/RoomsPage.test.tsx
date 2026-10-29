@@ -31,6 +31,17 @@ describe('RoomsPage', () => {
     expect(screen.getByText('Il Bosco')).toBeInTheDocument();
   });
 
+  // Spec 51: full width (not shrunk to its content in the middle) and
+  // columns by the grid's own width.
+  it('spans the full width with a container grid', async () => {
+    fetchMock.mockResolvedValue([rawMyRoom()]);
+    render();
+
+    await screen.findByText('La Cripta');
+    expect(screen.getByRole('main')).toHaveStyle({ width: '100%' });
+    expect(document.querySelector('.mantine-SimpleGrid-container')).not.toBeNull();
+  });
+
   it('invites the first Room when there are none', async () => {
     fetchMock.mockResolvedValue([]);
     render();

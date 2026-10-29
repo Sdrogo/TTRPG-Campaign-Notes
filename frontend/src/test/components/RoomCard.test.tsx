@@ -66,6 +66,17 @@ describe('RoomCard', () => {
     );
   });
 
+  // Spec 51: the image fades into the card's grey, not the near-black of a
+  // DocumentCard.
+  it('fades the image into its own background', () => {
+    render({
+      room: { ...myRoom().room, imageUrl: 'http://signed/rooms/room-1/a.webp' },
+    });
+
+    const card = screen.getByRole('img', { name: 'La Cripta' }).closest('.mantine-Card-root');
+    expect(card?.getAttribute('style')).toContain('--card-image-fade: var(--mantine-color-dark-6)');
+  });
+
   it('shows no image without one', () => {
     render();
 

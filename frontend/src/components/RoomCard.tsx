@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { Box, Card, Group, Menu, Stack, Title, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import {
@@ -21,6 +21,10 @@ import { useBackState } from '../lib/backNav';
 // With an image the card grows so its right half reads as a picture, not a
 // strip (as a DocumentCard does, though shorter: a Room card has less text).
 const CARD_WITH_IMAGE_MIN_HEIGHT = { base: 160, sm: 180 };
+
+// The image fades into the card's own grey (Mantine's dark Card), not the
+// near-black `--bg-surface` of a DocumentCard, which drew a dark band (spec 51).
+const FADE_INTO_ROOM_CARD = { '--card-image-fade': 'var(--mantine-color-dark-6)' } as CSSProperties;
 
 interface RoomCardProps {
   myRoom: MyRoom;
@@ -57,6 +61,7 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
       radius="md"
       pos="relative"
       mih={imageUrl ? CARD_WITH_IMAGE_MIN_HEIGHT : undefined}
+      style={FADE_INTO_ROOM_CARD}
     >
       {imageUrl && (
         <Box pos="absolute" top={0} right={0} bottom={0} w="50%">
