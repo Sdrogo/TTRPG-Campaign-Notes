@@ -3,7 +3,7 @@ import { Box, Button, Group, Stack, Switch, Text, TextInput } from '@mantine/cor
 import { useMediaQuery } from '@mantine/hooks';
 import { MemberMultiSelect } from '../MemberMultiSelect';
 import { VisibilitySelect } from '../VisibilitySelect';
-import { MentionTextarea } from '../mentions/MentionTextarea';
+import { MarkdownEditor } from '../mentions/MarkdownEditor';
 import { MAX_NOTE_TITLE_LENGTH, canSubmitNote } from '../../lib/notes';
 import type { Member } from '../../types/member';
 import type { NoteFormValues } from '../../types/note';
@@ -59,7 +59,7 @@ export function NoteForm({
           required
           autoFocus
         />
-        <MentionTextarea
+        <MarkdownEditor
           label={t('common.description')}
           description={t('documents.fields.descriptionHint')}
           value={values.description}

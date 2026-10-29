@@ -3,7 +3,7 @@ import { Alert, Badge, Box, Button, Group, Loader, Paper, Select, Stack, Text, T
 import { CheckIcon } from '@phosphor-icons/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { MentionText } from '../mentions/MentionText';
+import { MarkdownText } from '../mentions/MarkdownText';
 import { documentsQueryKey, useDocument, useDocuments } from '../../hooks/useDocuments';
 import { displayNameFor } from '../../lib/members';
 import { boardWrites } from '../../lib/sessionZero';
@@ -129,7 +129,7 @@ function Acceptances({ step }: { step: DdiStep }) {
                 key={player.userId}
                 variant="light"
                 color="green"
-                leftSection={<CheckIcon size={12} aria-hidden="true" />}
+                leftSection={<CheckIcon size={14} aria-hidden="true" />}
                 title={t('sessionZero.ddi.accepted')}
               >
                 {name}
@@ -230,12 +230,12 @@ function DdiDocument({ roomId, documentId }: { roomId: string; documentId: strin
           </Button>
         </Group>
         {description && (
-          <MentionText text={description} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }} />
+          <MarkdownText text={description} style={{ overflowWrap: 'anywhere' }} />
         )}
         {notes.map((note) => (
           <Box key={note.id}>
             <Text fw={600}>{note.title}</Text>
-            <MentionText text={note.description} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }} />
+            <MarkdownText text={note.description} style={{ overflowWrap: 'anywhere' }} />
           </Box>
         ))}
       </Stack>

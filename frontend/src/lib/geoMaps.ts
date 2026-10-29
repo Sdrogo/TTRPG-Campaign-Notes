@@ -241,9 +241,40 @@ export function findItem(board: GeoBoard, ref: GeoItemRef): GeoArea | GeoPin | u
     : board.pins.find((pin) => pin.id === ref.id);
 }
 
+/** Where a Document is placed on the map, if it is (each Document at most once, Decision 4). */
+export function placeOfDocument(board: GeoBoard, documentId: string): GeoItemRef | null {
+  const area = board.areas.find((item) => item.documentId === documentId);
+  if (area) return { kind: 'area', id: area.id };
+  const pin = board.pins.find((item) => item.documentId === documentId);
+  return pin ? { kind: 'pin', id: pin.id } : null;
+}
+
 /** A link end as a reference to its area or pin. */
 export function endRef(end: GeoLinkEnd): GeoItemRef {
   return end.areaId ? { kind: 'area', id: end.areaId } : { kind: 'pin', id: end.pinId! };
+}
+
+/** A place linked to another on the map, as its split pane lists it (spec 50 Decision 3). */
+export interface PlaceConnection {
+  linkId: string;
+  item: GeoArea | GeoPin;
+  ref: GeoItemRef;
+  /** The link's label read from the place the pane shows, if any. */
+  label: string | null;
+}
+
+/** The places linked to `ref` on the map, by the links' order, each link once. */
+export function placeConnections(board: GeoBoard, ref: GeoItemRef): PlaceConnection[] {
+  const isRef = (end: GeoLinkEnd) => (ref.kind === 'area' ? end.areaId : end.pinId) === ref.id;
+  return board.links.flatMap((link) => {
+    const outgoing = isRef(link.from);
+    if (!outgoing && !isRef(link.to)) return [];
+    const other = endRef(outgoing ? link.to : link.from);
+    const item = findItem(board, other);
+    if (!item) return [];
+    const label = outgoing ? link.label : (link.reverseLabel ?? link.label);
+    return [{ linkId: link.id, item, ref: other, label }];
+  });
 }
 
 /**

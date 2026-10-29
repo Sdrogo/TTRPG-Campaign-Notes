@@ -3,6 +3,7 @@ import type { Document } from '../types/document';
 import type { Note } from '../types/note';
 import type { Tag } from '../types/tag';
 import { resolveContentToken, splitMentions } from './documentMentions';
+import { markdownToPlain } from './markdownText';
 import { splitMentionTokens, type TokenOptions } from './mentionTokens';
 
 // Read aloud (spec 30): the browser's own speech synthesis, nothing on the
@@ -80,15 +81,19 @@ export function mentionsToSpeech(
 }
 
 // A heading followed by its text: a full stop after the heading makes the
-// voice pause there, unless it already ends in punctuation.
+// voice pause there, unless it already ends in punctuation. A `markdown`
+// text (a description or a Note, spec 48) is read without its signs, each
+// heading, list item and table row as a sentence of its own.
 function headed(
   title: string,
   text: string,
   options: TokenOptions = {},
   known?: SpeechMentions | null,
+  markdown = false,
 ): string {
   const heading = title.trim();
-  const body = mentionsToSpeech(text, options, known).trim();
+  const words = markdown ? markdownToPlain(text, { separator: '\n\n', sentences: true }) : text;
+  const body = mentionsToSpeech(words, options, known).trim();
   const spokenHeading = heading && !/[.!?:;]$/.test(heading) ? `${heading}.` : heading;
   return [spokenHeading, body].filter(Boolean).join('\n\n');
 }
@@ -98,7 +103,7 @@ export function noteSpeech(
   note: Pick<Note, 'title' | 'description'>,
   known?: SpeechMentions | null,
 ): string {
-  return headed(note.title, note.description, {}, known);
+  return headed(note.title, note.description, {}, known, true);
 }
 
 /**
@@ -113,7 +118,7 @@ export function documentSpeech(
   known?: SpeechMentions | null,
 ): string {
   return [
-    headed(document.name, document.description, {}, known),
+    headed(document.name, document.description, {}, known, true),
     ...document.notes.map((note) => noteSpeech(note, known)),
   ]
     .filter(Boolean)

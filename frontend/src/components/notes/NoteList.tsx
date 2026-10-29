@@ -134,7 +134,7 @@ export function NoteList({
             variant="subtle"
             color="gray"
             size="xs"
-            leftSection={<PlusIcon size={14} />}
+            leftSection={<PlusIcon size={16} />}
             onClick={() => setAdding(true)}
             style={{ alignSelf: 'flex-start' }}
           >

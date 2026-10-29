@@ -58,7 +58,10 @@ class PdfOptions:
     (spec 22b). `locale` is the requester's language, for the PDF's fixed
     texts. `room_cover` puts the Room's image on the cover when no Document
     gives one (spec 26 Decision 5); a job stored before it existed reads as
-    off, as it was made."""
+    off, as it was made. `document_id` makes it the PDF of that one Document
+    (spec 27b), `document_name` its name when the job was asked for, which
+    names the file and labels it in the list; a job stored before spec 27b
+    reads as a Room PDF."""
 
     style: ManualStyle
     page_size: PageSize
@@ -69,6 +72,8 @@ class PdfOptions:
     locale: str
     view_as_user_id: uuid.UUID | None
     room_cover: bool = False
+    document_id: uuid.UUID | None = None
+    document_name: str | None = None
 
     def to_json(self) -> dict[str, Any]:
         """The options as the plain JSON stored on the job."""
@@ -82,6 +87,8 @@ class PdfOptions:
             "locale": self.locale,
             "view_as_user_id": str(self.view_as_user_id) if self.view_as_user_id else None,
             "room_cover": self.room_cover,
+            "document_id": str(self.document_id) if self.document_id else None,
+            "document_name": self.document_name,
         }
 
     @staticmethod
@@ -89,6 +96,7 @@ class PdfOptions:
         """The inverse of `to_json`."""
         cover = data["cover_document_id"]
         view_as = data["view_as_user_id"]
+        document = data.get("document_id")
         return PdfOptions(
             style=ManualStyle(data["style"]),
             page_size=PageSize(data["page_size"]),
@@ -99,6 +107,8 @@ class PdfOptions:
             locale=data["locale"],
             view_as_user_id=uuid.UUID(view_as) if view_as else None,
             room_cover=data.get("room_cover", False),
+            document_id=uuid.UUID(document) if document else None,
+            document_name=data.get("document_name"),
         )
 
 

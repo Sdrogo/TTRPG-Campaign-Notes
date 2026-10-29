@@ -5,7 +5,7 @@ import { AppHeader } from './AppHeader';
 import { RoomIndex } from './RoomIndex';
 import { SplitView } from './layout/SplitView';
 import { DocumentSidePane } from './documents/DocumentSidePane';
-import { SPLIT_QUERY, useSideDocument } from '../hooks/useSideDocument';
+import { isPlaceSide, SPLIT_QUERY, useSideDocument } from '../hooks/useSideDocument';
 
 interface PageLayoutProps {
   backTo: string;
@@ -22,6 +22,12 @@ interface PageLayoutProps {
    * of the screen, under the map.
    */
   allowEmptySide?: boolean;
+  /**
+   * What the split shows for a `?side=` value that is not a Document's (a
+   * geographic map's place, spec 50), or null to show the Document. A place
+   * value on a page without it counts as no pane.
+   */
+  renderSide?: (sideId: string) => ReactNode | null;
   children: ReactNode;
 }
 
@@ -42,9 +48,15 @@ export function PageLayout({
   roomId,
   showIndex = false,
   allowEmptySide = false,
+  renderSide,
   children,
 }: PageLayoutProps) {
-  const { sideId, close } = useSideDocument();
+  const side = useSideDocument();
+  const { close } = side;
+  const custom = side.sideId && renderSide ? renderSide(side.sideId) : null;
+  const sideId = isPlaceSide(side.sideId) && !custom ? null : side.sideId;
+  const pane = (documentId: string | null) =>
+    custom ?? <DocumentSidePane roomId={roomId!} documentId={documentId} onClose={close} />;
   const wide = useMediaQuery(SPLIT_QUERY, true);
   const below = Boolean(roomId && allowEmptySide && sideId && !wide);
   const page = useRef<HTMLDivElement>(null);
@@ -63,7 +75,7 @@ export function PageLayout({
       {roomId && showIndex && <RoomIndex roomId={roomId} />}
       <Container component="main" fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="md">
         {roomId && (sideId || (allowEmptySide && sideId === '')) && wide ? (
-          <SplitView left={body} right={<DocumentSidePane roomId={roomId} documentId={sideId || null} onClose={close} />} />
+          <SplitView left={body} right={pane(sideId || null)} />
         ) : (
           body
         )}
@@ -78,7 +90,7 @@ export function PageLayout({
             bg="var(--bg-base)"
             style={{ zIndex: 150, overflowY: 'auto', borderTop: '1px solid var(--border-default)' }}
           >
-            <DocumentSidePane roomId={roomId!} documentId={sideId} onClose={close} />
+            {pane(sideId)}
           </Box>
         )}
       </Container>

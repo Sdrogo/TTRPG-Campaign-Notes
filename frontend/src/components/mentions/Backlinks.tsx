@@ -8,6 +8,7 @@ import { backlinkHref } from '../../lib/backlinks';
 import { displayNameFor } from '../../lib/members';
 import { PageCard } from '../PageCard';
 import { MentionText } from './MentionText';
+import { markdownToPlain } from '../../lib/markdownText';
 import type { Backlink, BacklinkTarget } from '../../types/backlink';
 import type { Member } from '../../types/member';
 
@@ -55,9 +56,9 @@ export function Backlinks({ roomId, target, members }: BacklinksProps) {
         >
           <Group gap="xs">
             {expanded ? (
-              <CaretDownIcon size={16} aria-hidden="true" />
+              <CaretDownIcon size={18} aria-hidden="true" />
             ) : (
-              <CaretRightIcon size={16} aria-hidden="true" />
+              <CaretRightIcon size={18} aria-hidden="true" />
             )}
             <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
               {t('backlinks.title')}
@@ -94,7 +95,7 @@ export function Backlinks({ roomId, target, members }: BacklinksProps) {
                     >
                       {where(mention)}
                     </Anchor>
-                    <MentionText size="sm" text={mention.excerpt} style={{ overflowWrap: 'anywhere' }} />
+                    <MentionText size="sm" text={markdownToPlain(mention.excerpt, { separator: ' ' })} style={{ overflowWrap: 'anywhere' }} />
                   </Stack>
                 ))}
               </Stack>

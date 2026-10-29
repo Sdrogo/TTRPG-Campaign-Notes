@@ -199,10 +199,10 @@ jobs:
             --entrypoint python ttrpg-backend -c "
           import datetime, io, uuid
           from pypdf import PdfReader
-          from app.domain.manual import Manual, ManualChapter, ManualDocument, Run
+          from app.domain.manual import Block, Manual, ManualChapter, ManualDocument, Run
           from app.pdf.labels import manual_labels
           from app.pdf.render import ManualStyle, PageSize, render_manual_pdf
-          doc = ManualDocument(uuid.uuid4(), 'Castle', None, [[Run('Città dell Ovest')]], [], [])
+          doc = ManualDocument(uuid.uuid4(), 'Castle', None, [Block('p', (Run('Città dell Ovest'),))], [], [])
           chapter = ManualChapter('chapter-1', 'Places', [doc])
           manual = Manual('Barovia', None, datetime.date.today(), None, manual_labels('en'), [chapter], [])
           for style in ManualStyle:

@@ -25,7 +25,7 @@ export function SplitToggle() {
         aria-pressed={on}
         onClick={() => (on ? close() : open(''))}
       >
-        <SquareSplitHorizontalIcon size={20} />
+        <SquareSplitHorizontalIcon size={24} />
       </ActionIcon>
     </Tooltip>
   );

@@ -49,7 +49,7 @@ export function VisibilityBadge({ visibility, size, leftSection, compact }: Visi
           px={6}
           style={{ flexShrink: 0 }}
         >
-          <LevelIcon size={14} style={{ display: 'block' }} />
+          <LevelIcon size={16} style={{ display: 'block' }} />
         </Badge>
       </Tooltip>
     );

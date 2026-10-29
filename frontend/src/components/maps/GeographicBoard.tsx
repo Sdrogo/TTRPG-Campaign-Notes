@@ -117,6 +117,14 @@ export interface GeographicBoardProps {
   onChange: (board: GeoBoard) => void;
   /** Given where the split pane fits (spec 38b): a click on a Document's area or pin shows it there. */
   onSelectDocument?: (documentId: string) => void;
+  /** Given where the split pane fits (spec 50): a click on a plain area or pin, while reading, shows it there. */
+  onSelectPlace?: (ref: GeoItemRef) => void;
+  /**
+   * The place the split pane shows, null when it shows none: the selection
+   * follows it while reading, so a reload or a pick in the pane highlights
+   * it on the map (spec 50). Left out, the selection is the board's own.
+   */
+  paneItem?: GeoItemRef | null;
   /** The board's height; the full page's by default. */
   height?: string | number;
   /**
@@ -175,6 +183,8 @@ export function GeographicBoard({
   tags,
   onChange,
   onSelectDocument,
+  onSelectPlace,
+  paneItem,
   height = FULL_HEIGHT,
   fitToPlane = false,
 }: GeographicBoardProps) {
@@ -193,7 +203,14 @@ export function GeographicBoard({
   const [tool, setTool] = useState<Tool>('select');
   const [draft, setDraft] = useState<AreaDraft | null>(null);
   const [linkStart, setLinkStart] = useState<GeoItemRef | null>(null);
-  const [selected, setSelected] = useState<GeoItemRef | { kind: 'link'; id: string } | null>(null);
+  const [selected, setSelected] = useState<GeoItemRef | { kind: 'link'; id: string } | null>(paneItem ?? null);
+  // A new place in the pane selects it, and closing the pane clears it, while reading.
+  const paneKey = paneItem ? `${paneItem.kind}:${paneItem.id}` : null;
+  const [followed, setFollowed] = useState(paneKey);
+  if (paneItem !== undefined && followed !== paneKey) {
+    setFollowed(paneKey);
+    if (!canEdit) setSelected(paneItem);
+  }
   const [editing, setEditing] = useState<Editing>(null);
   const [tagId, setTagId] = useState<string | null>(null);
   // What a drag shows until it is dropped, when it becomes a change.
@@ -287,6 +304,7 @@ export function GeographicBoard({
       setSelected(ref);
       const documentId = findItem(board, ref)!.documentId;
       if (documentId) onSelectDocument?.(documentId);
+      else if (!canEdit) onSelectPlace?.(ref);
     }
   };
 
@@ -433,9 +451,9 @@ export function GeographicBoard({
   };
 
   const selectedItem = selected && selected.kind !== 'link' ? findItem(board, selected) : undefined;
-  // A Document's place shows in the split pane; its card is for editing it,
-  // or where there is no pane (spec 38b).
-  const showCard = canEdit || !selectedItem?.documentId || !onSelectDocument;
+  // A place shows in the split pane while reading, a Document's (spec 38b)
+  // and a plain one (spec 50); the card is for editing it, or where there is no pane.
+  const showCard = canEdit || (selectedItem?.documentId ? !onSelectDocument : !onSelectPlace);
   const selectedArea = selected?.kind === 'area' && shaping ? shown.areas.find((area) => area.id === selected.id) : undefined;
   const selectedLink = selected?.kind === 'link' && shaping ? linkShapes.find((shape) => shape.link.id === selected.id) : undefined;
   const editedLink = editing?.kind === 'link' ? board.links.find((link) => link.id === editing.id) : undefined;
@@ -735,7 +753,7 @@ export function GeographicBoard({
             <Button
               size="xs"
               variant="default"
-              leftSection={<PencilSimpleIcon size={14} />}
+              leftSection={<PencilSimpleIcon size={16} />}
               onClick={() => {
                 setEditMode(true);
                 setSelected(null);
@@ -758,7 +776,7 @@ export function GeographicBoard({
                   { value: 'link', label: t('maps.geo.tools.link') },
                 ]}
               />
-              <Button size="xs" variant="light" leftSection={<CheckIcon size={14} />} onClick={stopEditing}>
+              <Button size="xs" variant="light" leftSection={<CheckIcon size={16} />} onClick={stopEditing}>
                 {t('maps.geo.doneEditing')}
               </Button>
             </>
@@ -883,7 +901,7 @@ export function GeographicBoard({
             aria-label={t('maps.geo.zoomIn')}
             onClick={() => setMoved(zoomAt(view, ZOOM_STEP, { x: box.width / 2, y: box.height / 2 }))}
           >
-            <PlusIcon size={16} />
+            <PlusIcon size={18} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={t('maps.geo.zoomOut')} position="left" withArrow>
@@ -892,12 +910,12 @@ export function GeographicBoard({
             aria-label={t('maps.geo.zoomOut')}
             onClick={() => setMoved(zoomAt(view, 1 / ZOOM_STEP, { x: box.width / 2, y: box.height / 2 }))}
           >
-            <MinusIcon size={16} />
+            <MinusIcon size={18} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={t('maps.geo.fit')} position="left" withArrow>
           <ActionIcon variant="default" aria-label={t('maps.geo.fit')} onClick={() => setMoved(null)}>
-            <ArrowsInIcon size={16} />
+            <ArrowsInIcon size={18} />
           </ActionIcon>
         </Tooltip>
       </Stack>

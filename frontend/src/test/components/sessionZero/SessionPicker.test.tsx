@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { NewSession, SessionPicker } from '../../../components/sessionZero/SessionPicker';
 import { boardWrites } from '../../../lib/sessionZero';
@@ -63,7 +63,12 @@ describe('NewSession', () => {
     await user.clear(name);
     await user.type(name, 'Retro di metà campagna');
     await user.click(screen.getByRole('button', { name: 'Crea' }));
-    expect(act).toHaveBeenCalledWith(boardWrites.startRound('Retro di metà campagna', ['retro', 'lines_veils']));
+    expect(act).toHaveBeenCalledWith(
+      boardWrites.startRound('Retro di metà campagna', [
+        { kind: 'retro', carry: false },
+        { kind: 'lines_veils', carry: false },
+      ]),
+    );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -72,6 +77,28 @@ describe('NewSession', () => {
     await user.click(screen.getByRole('button', { name: 'Nuova sessione' }));
     expect(await screen.findByRole('textbox', { name: 'Nome' })).toHaveValue('Sessione 0.5 #1');
     await user.click(screen.getByRole('button', { name: 'Crea' }));
-    expect(act).toHaveBeenCalledWith(boardWrites.startRound('', ['retro', 'lines_veils']));
+    expect(act).toHaveBeenCalledWith(
+      boardWrites.startRound('', [
+        { kind: 'retro', carry: false },
+        { kind: 'lines_veils', carry: false },
+      ]),
+    );
+  });
+
+  // Spec 47b: each step starts empty unless it carries the previous session's content over.
+  it('carries a step over only when ticked', async () => {
+    const { act, user } = renderBoard(<NewSession />, { board: { can_manage: true } });
+    await user.click(screen.getByRole('button', { name: 'Nuova sessione' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Nuova sessione' });
+    const boxes = within(dialog).getAllByRole('checkbox', { name: 'Porta dalla sessione precedente' });
+    expect(boxes).toHaveLength(1);
+    await user.click(boxes[0]);
+    await user.click(within(dialog).getByRole('button', { name: 'Crea' }));
+    expect(act).toHaveBeenCalledWith(
+      boardWrites.startRound('', [
+        { kind: 'retro', carry: true },
+        { kind: 'lines_veils', carry: false },
+      ]),
+    );
   });
 });

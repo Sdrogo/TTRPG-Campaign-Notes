@@ -62,7 +62,7 @@ export function LanguageSelector() {
             leftSection={<Flag language={option} width={20} />}
             rightSection={
               option === language ? (
-                <CheckIcon size={14} aria-hidden="true" />
+                <CheckIcon size={16} aria-hidden="true" />
               ) : BETA_LANGUAGES.includes(option) ? (
                 <Badge size="xs" variant="light" color="gray">
                   {t('language.beta')}

@@ -93,10 +93,10 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
         </Stack>
         {canCreate && (
           <Group gap="xs" wrap="wrap" justify="flex-end" className="maps-page-actions">
-            <Button variant="default" leftSection={<FileArrowUpIcon size={16} />} onClick={() => setImporting(true)}>
+            <Button variant="default" leftSection={<FileArrowUpIcon size={18} />} onClick={() => setImporting(true)}>
               {t('maps.import.button')}
             </Button>
-            <Button leftSection={<PlusIcon size={16} />} onClick={() => setCreating(true)}>
+            <Button leftSection={<PlusIcon size={18} />} onClick={() => setCreating(true)}>
               {t('maps.create')}
             </Button>
           </Group>
@@ -173,7 +173,7 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
                   {t('maps.documentCount', { count: map.documentCount })} ·{' '}
                   {t('maps.lastEdit', { when: formatRelativeTime(map.updatedAt) })}
                 </Text>
-                <ArrowUpRightIcon size={18} aria-hidden="true" />
+                <ArrowUpRightIcon size={20} aria-hidden="true" />
               </Group>
             </Stack>
           </Card>

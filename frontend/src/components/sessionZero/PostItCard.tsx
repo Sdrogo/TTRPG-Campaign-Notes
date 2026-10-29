@@ -133,7 +133,7 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
             <Menu position="bottom-end" shadow="md">
               <Menu.Target>
                 <LabeledActionIcon variant="subtle" color="gray" size="sm" aria-label={t('sessionZero.postIt.actions')}>
-                  <DotsThreeVerticalIcon size={16} />
+                  <DotsThreeVerticalIcon size={18} />
                 </LabeledActionIcon>
               </Menu.Target>
               <Menu.Dropdown>

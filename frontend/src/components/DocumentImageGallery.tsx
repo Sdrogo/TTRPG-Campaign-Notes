@@ -200,7 +200,7 @@ function FavoriteButton({
         aria-pressed={isFavorite}
       >
         <HeartIcon
-          size={16}
+          size={18}
           weight={isFavorite ? 'fill' : 'regular'}
           color={isFavorite ? 'var(--accent-primary)' : undefined}
         />
@@ -223,7 +223,7 @@ function DeleteImageButton({ onConfirm, loading }: { onConfirm: () => void; load
           onClick={() => setOpened((current) => !current)}
           aria-label={t('images.delete')}
         >
-          <TrashIcon size={16} />
+          <TrashIcon size={18} />
         </LabeledActionIcon>
       </Popover.Target>
       <Popover.Dropdown>

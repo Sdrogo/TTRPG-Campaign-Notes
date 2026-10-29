@@ -860,6 +860,7 @@
       "retry": "Reintentar",
       "listTitle": "Tus PDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "En cola",
         "running": "En preparación",
@@ -1219,7 +1220,11 @@
       "uploadBackground": "Subir una imagen",
       "backgroundFromUrl": "Desde una URL",
       "removeBackground": "Quitar el fondo",
-      "export": "Exportar el mapa (JSON)"
+      "export": "Exportar el mapa (JSON)",
+      "placePane": "Lugar abierto junto al mapa",
+      "noNote": "Sin nota",
+      "placeNotFound": "Lugar no encontrado",
+      "connections": "Conexiones"
     },
     "kind": {
       "label": "Tipo de mapa",
@@ -1337,7 +1342,7 @@
       "later": "Sesión 0.5 #{{number}}",
       "pick": "Sesión que mostrar",
       "start": "Nueva sesión",
-      "startBody": "La sesión actual se cierra y sigue disponible en solo lectura; los borradores nunca publicados se eliminan. La nueva empieza vacía con las etapas de abajo, y sus tableros Retro conservan las mismas columnas. Líneas y Velos queda como está.",
+      "startBody": "La sesión actual se cierra y queda consultable en solo lectura; los borradores nunca publicados se eliminan. La nueva empieza vacía con los pasos de abajo: marca «Traer de la sesión anterior» para recuperar columnas, preguntas o la DDI. Líneas y Velos se queda como está.",
       "title": "Nombre",
       "startButton": "Crear",
       "closed": "Esta sesión está cerrada: el tablero es de solo lectura.",
@@ -1395,7 +1400,8 @@
       "chain": "Etapas de la sesión",
       "chainHint": "Elige las etapas y su orden; podrás cambiarlas más adelante.",
       "max": "Como máximo {{max}} etapas.",
-      "startButton": "Iniciar"
+      "startButton": "Iniciar",
+      "carry": "Traer de la sesión anterior"
     },
     "questions": {
       "title": "Preguntas",
@@ -1449,7 +1455,10 @@
         "oneName": "Hace falta exactamente una pregunta para el Nombre.",
         "oneSubtitle": "Como mucho una pregunta para el Subtítulo.",
         "documents": "Como mucho {{max}} preguntas «Nuevo Documento»."
-      }
+      },
+      "unsaved": "Tienes cambios sin guardar.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
     },
     "ddi": {
       "document": "Documento de la DDI",
@@ -1469,6 +1478,31 @@
       "withdraw": "Retirar",
       "open": "Abrir el Documento",
       "loadError": "No se puede leer la DDI."
+    }
+  },
+  "markdown": {
+    "write": "Escribir",
+    "preview": "Vista previa",
+    "previewEmpty": "Aún no hay nada que mostrar.",
+    "toolbar": "Formato",
+    "help": "Admite Markdown",
+    "helpTitle": "Guía rápida de Markdown",
+    "sample": {
+      "text": "texto",
+      "heading": "Título",
+      "item": "elemento"
+    },
+    "actions": {
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "strike": "Tachado",
+      "heading": "Título",
+      "bulleted": "Lista con viñetas",
+      "numbered": "Lista numerada",
+      "quote": "Cita",
+      "link": "Enlace",
+      "code": "Código",
+      "table": "Tabla"
     }
   }
 }

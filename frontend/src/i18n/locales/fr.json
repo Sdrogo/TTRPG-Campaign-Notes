@@ -862,6 +862,7 @@
       "retry": "Réessayer",
       "listTitle": "Tes PDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "En attente",
         "running": "En préparation",
@@ -1221,7 +1222,11 @@
       "uploadBackground": "Téléverser une image",
       "backgroundFromUrl": "Depuis une URL",
       "removeBackground": "Retirer le fond",
-      "export": "Exporter la carte (JSON)"
+      "export": "Exporter la carte (JSON)",
+      "placePane": "Lieu ouvert à côté de la carte",
+      "noNote": "Aucune note",
+      "placeNotFound": "Lieu introuvable",
+      "connections": "Liens"
     },
     "kind": {
       "label": "Type de carte",
@@ -1339,7 +1344,7 @@
       "later": "Session 0.5 #{{number}}",
       "pick": "Session à afficher",
       "start": "Nouvelle session",
-      "startBody": "La session actuelle se ferme et reste consultable en lecture seule ; les brouillons jamais publiés sont supprimés. La nouvelle démarre vide avec les étapes ci-dessous, et ses tableaux Rétro gardent les mêmes colonnes. Lignes et Voiles reste tel quel.",
+      "startBody": "La session actuelle se ferme et reste consultable en lecture seule ; les brouillons jamais publiés sont supprimés. La nouvelle commence vide avec les étapes ci-dessous : coche « Reprendre de la session précédente » pour récupérer colonnes, questions ou la DDI. Lignes et Voiles reste tel quel.",
       "title": "Nom",
       "startButton": "Créer",
       "closed": "Cette session est close : le tableau est en lecture seule.",
@@ -1397,7 +1402,8 @@
       "chain": "Étapes de la session",
       "chainHint": "Choisis les étapes et leur ordre ; tu pourras les changer plus tard.",
       "max": "Au plus {{max}} étapes.",
-      "startButton": "Lancer"
+      "startButton": "Lancer",
+      "carry": "Reprendre de la session précédente"
     },
     "questions": {
       "title": "Questions",
@@ -1451,7 +1457,10 @@
         "oneName": "Il faut exactement une question pour le Nom.",
         "oneSubtitle": "Au plus une question pour le Sous-titre.",
         "documents": "Au plus {{max}} questions « Nouveau Document »."
-      }
+      },
+      "unsaved": "Vous avez des modifications non enregistrées.",
+      "keepEditing": "Continuer à modifier",
+      "discard": "Abandonner"
     },
     "ddi": {
       "document": "Document de la DDI",
@@ -1471,6 +1480,31 @@
       "withdraw": "Retirer",
       "open": "Ouvrir le Document",
       "loadError": "Impossible de lire la DDI."
+    }
+  },
+  "markdown": {
+    "write": "Écrire",
+    "preview": "Aperçu",
+    "previewEmpty": "Rien à prévisualiser pour l’instant.",
+    "toolbar": "Mise en forme",
+    "help": "Markdown pris en charge",
+    "helpTitle": "Aide-mémoire Markdown",
+    "sample": {
+      "text": "texte",
+      "heading": "Titre",
+      "item": "élément"
+    },
+    "actions": {
+      "bold": "Gras",
+      "italic": "Italique",
+      "strike": "Barré",
+      "heading": "Titre",
+      "bulleted": "Liste à puces",
+      "numbered": "Liste numérotée",
+      "quote": "Citation",
+      "link": "Lien",
+      "code": "Code",
+      "table": "Tableau"
     }
   }
 }

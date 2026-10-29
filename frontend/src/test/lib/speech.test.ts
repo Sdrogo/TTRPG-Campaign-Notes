@@ -86,6 +86,12 @@ describe('the text of a Document, a Note and a Comment', () => {
     expect(noteSpeech(notes[1])).toBe('Vuota?');
   });
 
+  // Spec 48 Decision 8: the words, never the Markdown signs.
+  it('reads a Markdown Note without its signs, each list item as a sentence', () => {
+    const note = { title: 'Luoghi', description: `## Porto\n\n- **#[Mira](doc:${DOC_ID})**\n- la *torre*` };
+    expect(noteSpeech(note)).toBe('Luoghi.\n\nPorto.\n\nMira.\n\nla torre.');
+  });
+
   it('reads a Document as its name, description, then each Note it carries in order', () => {
     expect(documentSpeech({ name: 'Mira', description: 'Una ladra.', notes })).toBe(
       'Mira.\n\nUna ladra.\n\nSegreti.\n\nConosce Mira.\n\nVuota?',

@@ -49,11 +49,37 @@ describe('toPdfJob', () => {
       finishedAt: '2026-10-05T12:01:00Z',
       expiresAt: '2026-10-06T12:01:00Z',
       downloadUrl: 'https://signed.test/x.pdf',
+      documentId: null,
+      documentName: null,
     });
+  });
+
+  it('keeps the Document of a single-Document PDF (spec 27b)', () => {
+    const mapped = toPdfJob(
+      rawPdfJob({
+        document_id: 'doc-1',
+        document_name: 'Il Cancello',
+      }) as Parameters<typeof toPdfJob>[0],
+    );
+
+    expect([mapped.documentId, mapped.documentName]).toEqual(['doc-1', 'Il Cancello']);
   });
 });
 
 describe('pdfRequestBody', () => {
+  it('sends the Document of a single-Document PDF, with no Tag filter or cover (spec 27b)', () => {
+    expect(
+      pdfRequestBody({ ...DEFAULT_PDF_OPTIONS, tagIds: ['t1'], documentId: 'doc-1' }, 'alice'),
+    ).toEqual({
+      style: 'gothic',
+      page_size: 'A4',
+      include_comments: false,
+      include_attachments: false,
+      document_id: 'doc-1',
+      view_as_user_id: 'alice',
+    });
+  });
+
   it('starts from Gothic, A4 and nothing optional (spec 23b Decisions 2, 4, 5, 7)', () => {
     expect(pdfRequestBody(DEFAULT_PDF_OPTIONS, null)).toEqual({
       style: 'gothic',

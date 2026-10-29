@@ -130,7 +130,7 @@ export function MapImportModal({
                 <Button
                   {...props}
                   variant="default"
-                  leftSection={<FileArrowUpIcon size={16} />}
+                  leftSection={<FileArrowUpIcon size={18} />}
                   loading={preview.isPending}
                 >
                   {t('maps.import.chooseFile')}

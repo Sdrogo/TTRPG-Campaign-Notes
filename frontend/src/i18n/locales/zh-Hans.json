@@ -850,6 +850,7 @@
       "retry": "重试",
       "listTitle": "你的 PDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "排队中",
         "running": "准备中",
@@ -1191,7 +1192,11 @@
       "uploadBackground": "上传图片",
       "backgroundFromUrl": "来自网址",
       "removeBackground": "移除背景",
-      "export": "导出地图(JSON)"
+      "export": "导出地图(JSON)",
+      "placePane": "在地图旁打开的地点",
+      "noNote": "没有备注",
+      "placeNotFound": "找不到地点",
+      "connections": "连接"
     },
     "kind": {
       "label": "地图类型",
@@ -1303,7 +1308,7 @@
       "later": "第 0.5 次会话 #{{number}}",
       "pick": "要显示的会话",
       "start": "新会话",
-      "startBody": "当前会话将关闭并保持只读可查阅；从未发布的草稿会被删除。新会话以下面的步骤从空白开始，其回顾面板保留相同的列。底线与帷幕保持不变。",
+      "startBody": "当前会话将关闭并保持只读可查看；从未发布的草稿会被删除。新会话以下面的步骤从空白开始：勾选“从上一次会话带入”可带回列、问题或 DDI。Lines & Veils 保持不变。",
       "title": "名称",
       "startButton": "创建",
       "closed": "此会话已关闭：看板为只读。",
@@ -1360,7 +1365,8 @@
       "chain": "本次会话的步骤",
       "chainHint": "选择步骤及其顺序；之后可以更改。",
       "max": "最多 {{max}} 个步骤。",
-      "startButton": "开始"
+      "startButton": "开始",
+      "carry": "从上一次会话带入"
     },
     "questions": {
       "title": "问题",
@@ -1414,7 +1420,10 @@
         "oneName": "必须正好有一个名称问题。",
         "oneSubtitle": "副标题问题最多一个。",
         "documents": "“新文档”问题最多 {{max}} 个。"
-      }
+      },
+      "unsaved": "你有未保存的更改。",
+      "keepEditing": "继续编辑",
+      "discard": "放弃"
     },
     "ddi": {
       "document": "DDI 文档",
@@ -1434,6 +1443,31 @@
       "withdraw": "撤回",
       "open": "打开文档",
       "loadError": "无法读取 DDI。"
+    }
+  },
+  "markdown": {
+    "write": "编写",
+    "preview": "预览",
+    "previewEmpty": "暂无可预览的内容。",
+    "toolbar": "格式",
+    "help": "支持 Markdown",
+    "helpTitle": "Markdown 速查",
+    "sample": {
+      "text": "文本",
+      "heading": "标题",
+      "item": "条目"
+    },
+    "actions": {
+      "bold": "粗体",
+      "italic": "斜体",
+      "strike": "删除线",
+      "heading": "标题",
+      "bulleted": "项目符号列表",
+      "numbered": "编号列表",
+      "quote": "引用",
+      "link": "链接",
+      "code": "代码",
+      "table": "表格"
     }
   }
 }

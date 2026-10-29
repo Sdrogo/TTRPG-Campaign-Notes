@@ -74,7 +74,7 @@ export function ImageSearchModal({
               placeholder={t('imageSearch.placeholder')}
               value={text}
               onChange={(event) => setText(event.currentTarget.value)}
-              leftSection={<MagnifyingGlassIcon size={16} />}
+              leftSection={<MagnifyingGlassIcon size={18} />}
               maxLength={200}
               style={{ flex: 1 }}
               data-autofocus
@@ -142,7 +142,7 @@ export function ImageSearchModal({
                             <Loader size="sm" color="white" />
                           ) : (
                             <Group gap={4} c="white">
-                              <CheckIcon size={16} />
+                              <CheckIcon size={18} />
                               <Text size="xs" fw={600}>
                                 {t('imageSearch.added')}
                               </Text>

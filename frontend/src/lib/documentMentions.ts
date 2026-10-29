@@ -103,6 +103,15 @@ function isMentionStart(text: string, index: number, prefixes: string): boolean 
   return prefixes.includes(text[index]) && (index === 0 || MENTION_BOUNDARY.test(text[index - 1]));
 }
 
+/**
+ * True for a `#` that may be opening a Markdown heading (spec 48): nothing
+ * typed after it yet, and only `#`s before it on its line. No suggestions
+ * pop up for it until a name starts.
+ */
+export function isHeadingStart(text: string, query: MentionQuery): boolean {
+  return query.query === '' && /(^|\n)#*$/.test(text.slice(0, query.start));
+}
+
 /** Lowercase and without accents, so "citta" finds "Città". */
 export function normalizeForSearch(value: string): string {
   return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase();

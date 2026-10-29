@@ -34,7 +34,7 @@ export function PrivacyPage() {
     <Container component="main" size="md" px={{ base: 'sm', sm: 'lg' }} py="lg">
       <Stack gap="md">
         <Anchor component={Link} to="/" size="sm">
-          <ArrowLeftIcon size={14} aria-hidden="true" /> {t('privacy.back')}
+          <ArrowLeftIcon size={16} aria-hidden="true" /> {t('privacy.back')}
         </Anchor>
         <Stack gap={2}>
           <Title order={1} fz={{ base: 'h2', sm: 'h1' }} style={{ fontFamily: 'var(--font-display)' }}>

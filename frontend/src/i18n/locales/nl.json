@@ -860,6 +860,7 @@
       "retry": "Opnieuw proberen",
       "listTitle": "Jouw pdf's",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "In de wachtrij",
         "running": "Wordt voorbereid",
@@ -1219,7 +1220,11 @@
       "uploadBackground": "Afbeelding uploaden",
       "backgroundFromUrl": "Van een URL",
       "removeBackground": "Achtergrond verwijderen",
-      "export": "Kaart exporteren (JSON)"
+      "export": "Kaart exporteren (JSON)",
+      "placePane": "Plaats geopend naast de kaart",
+      "noNote": "Geen notitie",
+      "placeNotFound": "Plaats niet gevonden",
+      "connections": "Verbindingen"
     },
     "kind": {
       "label": "Soort kaart",
@@ -1337,7 +1342,7 @@
       "later": "Sessie 0.5 #{{number}}",
       "pick": "Te tonen sessie",
       "start": "Nieuwe sessie",
-      "startBody": "De huidige sessie sluit en blijft alleen-lezen te bekijken; nooit gepubliceerde concepten worden verwijderd. De nieuwe begint leeg met de stappen hieronder, en de Retro-borden houden dezelfde kolommen. Lijnen en Sluiers blijft zoals het is.",
+      "startBody": "De huidige sessie sluit en blijft alleen-lezen te bekijken; nooit gepubliceerde concepten worden verwijderd. De nieuwe begint leeg met de stappen hieronder: vink „Overnemen uit de vorige sessie” aan om kolommen, vragen of de DDI terug te halen. Lines & Veils blijft zoals het is.",
       "title": "Naam",
       "startButton": "Aanmaken",
       "closed": "Deze sessie is gesloten: het bord is alleen-lezen.",
@@ -1395,7 +1400,8 @@
       "chain": "Stappen van de sessie",
       "chainHint": "Kies de stappen en hun volgorde; je kunt ze later nog wijzigen.",
       "max": "Hoogstens {{max}} stappen.",
-      "startButton": "Starten"
+      "startButton": "Starten",
+      "carry": "Overnemen uit de vorige sessie"
     },
     "questions": {
       "title": "Vragen",
@@ -1449,7 +1455,10 @@
         "oneName": "Er moet precies één vraag voor de Naam zijn.",
         "oneSubtitle": "Hoogstens één vraag voor de Ondertitel.",
         "documents": "Hoogstens {{max}} vragen ‘Nieuw Document’."
-      }
+      },
+      "unsaved": "Je hebt niet-opgeslagen wijzigingen.",
+      "keepEditing": "Verder bewerken",
+      "discard": "Verwerpen"
     },
     "ddi": {
       "document": "Document van de DDI",
@@ -1469,6 +1478,31 @@
       "withdraw": "Intrekken",
       "open": "Document openen",
       "loadError": "De DDI kan niet gelezen worden."
+    }
+  },
+  "markdown": {
+    "write": "Schrijven",
+    "preview": "Voorbeeld",
+    "previewEmpty": "Nog niets om te tonen.",
+    "toolbar": "Opmaak",
+    "help": "Markdown wordt ondersteund",
+    "helpTitle": "Markdown-spiekbriefje",
+    "sample": {
+      "text": "tekst",
+      "heading": "Kop",
+      "item": "item"
+    },
+    "actions": {
+      "bold": "Vet",
+      "italic": "Cursief",
+      "strike": "Doorgehaald",
+      "heading": "Kop",
+      "bulleted": "Opsomming",
+      "numbered": "Genummerde lijst",
+      "quote": "Citaat",
+      "link": "Link",
+      "code": "Code",
+      "table": "Tabel"
     }
   }
 }

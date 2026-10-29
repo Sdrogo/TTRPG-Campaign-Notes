@@ -14,7 +14,7 @@ export function RevealedBadge({ size = 'sm' }: { size?: MantineSize }) {
       size={size}
       variant="light"
       color="accent"
-      leftSection={<EyeIcon size={12} aria-hidden="true" />}
+      leftSection={<EyeIcon size={14} aria-hidden="true" />}
       title={t('reveal.revealedLabel')}
       style={{ flexShrink: 0 }}
     >

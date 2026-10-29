@@ -81,7 +81,7 @@ export function RoomTitleActions({
               <Menu.Target>
                 <Tooltip label={t('viewAs.action')} withArrow>
                   <ActionIcon variant="subtle" color="gray" size="lg" aria-label={t('viewAs.action')}>
-                    <EyeIcon size={20} />
+                    <EyeIcon size={24} />
                   </ActionIcon>
                 </Tooltip>
               </Menu.Target>
@@ -109,7 +109,7 @@ export function RoomTitleActions({
                 size="lg"
                 aria-label={t('rooms.setup')}
               >
-                <GearIcon size={20} />
+                <GearIcon size={24} />
               </ActionIcon>
             </Tooltip>
           )}
@@ -122,7 +122,7 @@ export function RoomTitleActions({
                   aria-label={t('rooms.invite')}
                   onClick={() => setInviteOpened(true)}
                 >
-                  <UserPlusIcon size={20} />
+                  <UserPlusIcon size={24} />
                 </ActionIcon>
               </Tooltip>
             </>
@@ -137,7 +137,7 @@ export function RoomTitleActions({
               size="lg"
               aria-label={t('maps.title')}
             >
-              <MapTrifoldIcon size={20} />
+              <MapTrifoldIcon size={24} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label={t('sessionZero.title')} withArrow>
@@ -150,7 +150,7 @@ export function RoomTitleActions({
               size="lg"
               aria-label={t('sessionZero.title')}
             >
-              <StickerIcon size={20} />
+              <StickerIcon size={24} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label={t('export.action')} withArrow>
@@ -161,7 +161,7 @@ export function RoomTitleActions({
               aria-label={t('export.action')}
               onClick={() => setExportOpened(true)}
             >
-              <DownloadSimpleIcon size={20} />
+              <DownloadSimpleIcon size={24} />
             </ActionIcon>
           </Tooltip>
           {canImport && (
@@ -173,7 +173,7 @@ export function RoomTitleActions({
                 aria-label={t('documentImport.action')}
                 onClick={() => setImportOpened(true)}
               >
-                <UploadSimpleIcon size={20} />
+                <UploadSimpleIcon size={24} />
               </ActionIcon>
             </Tooltip>
           )}
@@ -186,7 +186,7 @@ export function RoomTitleActions({
               aria-label={t('mentionSuggestions.action')}
               onClick={() => setGeneratingMentions(true)}
             >
-              <MagicWandIcon size={20} />
+              <MagicWandIcon size={24} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label={t('common.leave')} withArrow>
@@ -197,7 +197,7 @@ export function RoomTitleActions({
               aria-label={t('common.leave')}
               onClick={() => setLeaveOpened(true)}
             >
-              <SignOutIcon size={20} />
+              <SignOutIcon size={24} />
             </ActionIcon>
           </Tooltip>
         </>
@@ -210,7 +210,7 @@ export function RoomTitleActions({
         aria-expanded={expanded}
         onClick={() => setExpanded((current) => !current)}
       >
-        <DotsThreeVerticalIcon size={20} />
+        <DotsThreeVerticalIcon size={24} />
       </LabeledActionIcon>
       {isAdmin && (
         <InviteModal opened={inviteOpened} onClose={() => setInviteOpened(false)} roomId={roomId} />

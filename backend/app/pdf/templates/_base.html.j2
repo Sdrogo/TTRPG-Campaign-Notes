@@ -1,5 +1,7 @@
 {#- The structure shared by every style of the Room PDF (spec 23b Decision 1):
-    cover, contents, one chapter per Main item, the glossary of Documents. A style's
+    cover, contents, one chapter per Main item, the glossary of Documents. The
+    PDF of one Document (spec 27b) has no cover and no contents: its chapter is
+    page 1. A style's
     template only extends it (an ornament for the cover); its look is its CSS.
     Page numbers are never written here: a link carries `data-page` (the
     localized "p.") and the CSS prints the page of its target. Each paragraph is
@@ -8,6 +10,20 @@
 {%- for paragraph in items -%}
 <p>{% for run in paragraph %}{% if run.target %}<a class="xref" href="#{{ run.target }}" data-page="{{ manual.labels.page_abbreviation }}">{{ run.text }}</a>{% else %}{{ run.text }}{% endif %}{% endfor %}</p>
 {% endfor -%}
+{%- endmacro -%}
+{#- A description or Note read as Markdown (spec 48): blocks of elements whose
+    leaves are runs. Written without line breaks, since the CSS keeps them in
+    <p>. A link prints its address after it (the CSS). -#}
+{%- macro markdown(nodes) -%}
+{%- for node in nodes -%}
+{%- if node.tag is not defined -%}
+{%- if node.target %}<a class="xref" href="#{{ node.target }}" data-page="{{ manual.labels.page_abbreviation }}">{{ node.text }}</a>{% else %}{{ node.text }}{% endif -%}
+{%- elif node.tag in ("br", "hr") -%}<{{ node.tag }}>
+{%- elif node.tag == "a" -%}<a class="link" href="{{ node.href }}">{{ markdown(node.children) }}</a>
+{%- elif node.tag == "table" -%}<table class="markdown-table">{{ markdown(node.children) }}</table>
+{%- else -%}<{{ node.tag }}>{{ markdown(node.children) }}</{{ node.tag }}>
+{%- endif -%}
+{%- endfor -%}
 {%- endmacro -%}
 <!doctype html>
 <html lang="{{ lang }}">
@@ -20,6 +36,7 @@
 </head>
 <body class="style-{{ style }}">
 
+{% if not manual.single_document %}
 <section class="cover">
   <div class="cover-inner">
     {% if manual.game_system %}<p class="cover-system">{{ manual.game_system }}</p>{% endif %}
@@ -47,6 +64,7 @@
     {% endif %}
   </ol>
 </nav>
+{% endif %}
 
 {% for chapter in manual.chapters %}
 <section class="chapter" id="{{ chapter.id }}">
@@ -54,7 +72,7 @@
   <div class="chapter-body">
   {#- A chapter's references (Documents printed in an earlier chapter) come first,
       under its title, so every Document can end its own page. -#}
-  {% set references = chapter.entries | rejectattr("paragraphs", "defined") | list %}
+  {% set references = chapter.entries | rejectattr("blocks", "defined") | list %}
   {% if references %}
   <div class="references">
     {% for entry in references %}
@@ -65,7 +83,7 @@
   {#- A Document that fits in one column is set in one (`single`), in a row that
       the next one can join (`beside`); every other is a unit of its own, in two
       columns. -#}
-  {% for entry in chapter.entries if entry.paragraphs is defined %}
+  {% for entry in chapter.entries if entry.blocks is defined %}
   {% if entry.id in single and entry.id not in beside %}
   <div class="unit document-row{% if loop.nextitem and loop.nextitem.id in beside %} pair{% endif %}{% if entry.id in shared %} shares-page{% endif %}">
   {% endif %}
@@ -74,12 +92,12 @@
     {% if entry.subtitle %}<p class="document-subtitle">{{ entry.subtitle }}</p>{% endif %}
     {% if entry.image_url %}<figure class="document-image"><img src="{{ entry.image_url }}" alt=""></figure>{% endif %}
     <div class="description{% if entry.drop_cap %} drop-cap{% endif %}">
-      {{ paragraphs(entry.paragraphs) }}
+      {{ markdown(entry.blocks) }}
     </div>
     {% for note in entry.notes %}
     <section class="note">
       <h3>{{ note.title }}</h3>
-      {{ paragraphs(note.paragraphs) }}
+      <div class="note-text">{{ markdown(note.blocks) }}</div>
     </section>
     {% endfor %}
     {% if entry.comments %}

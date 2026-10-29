@@ -43,7 +43,7 @@ export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }:
                 variant="light"
                 size="xs"
                 loading={pending === 'upload'}
-                leftSection={<UploadSimpleIcon size={16} />}
+                leftSection={<UploadSimpleIcon size={18} />}
               >
                 {t('account.avatar.upload')}
               </Button>
@@ -57,7 +57,7 @@ export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }:
                 disabled={busy}
                 loading={pending === 'import'}
                 onClick={toggle}
-                leftSection={<LinkIcon size={16} />}
+                leftSection={<LinkIcon size={18} />}
               >
                 {t('account.avatar.fromUrl')}
               </Button>
@@ -71,7 +71,7 @@ export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }:
               disabled={busy}
               loading={pending === 'remove'}
               onClick={onRemove}
-              leftSection={<TrashIcon size={16} />}
+              leftSection={<TrashIcon size={18} />}
             >
               {t('common.remove')}
             </Button>

@@ -39,7 +39,7 @@ export function ViewAsBanner({ viewAs }: { viewAs: ViewAs }) {
       py={6}
     >
       <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-        <EyeIcon size={18} aria-hidden="true" style={{ flexShrink: 0 }} />
+        <EyeIcon size={20} aria-hidden="true" style={{ flexShrink: 0 }} />
         <Text size="sm" fw={500} truncate>
           {t('viewAs.banner', { name })}
         </Text>
@@ -50,7 +50,7 @@ export function ViewAsBanner({ viewAs }: { viewAs: ViewAs }) {
           size="compact-sm"
           variant="outline"
           color="dark"
-          leftSection={<DownloadSimpleIcon size={14} aria-hidden="true" />}
+          leftSection={<DownloadSimpleIcon size={16} aria-hidden="true" />}
           onClick={() => setExportOpened(true)}
         >
           {t('export.action')}

@@ -860,6 +860,7 @@
       "retry": "Erneut versuchen",
       "listTitle": "Deine PDFs",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "In der Warteschlange",
         "running": "Wird erstellt",
@@ -1219,7 +1220,11 @@
       "uploadBackground": "Bild hochladen",
       "backgroundFromUrl": "Von einer URL",
       "removeBackground": "Hintergrund entfernen",
-      "export": "Karte exportieren (JSON)"
+      "export": "Karte exportieren (JSON)",
+      "placePane": "Ort neben der Karte geöffnet",
+      "noNote": "Keine Notiz",
+      "placeNotFound": "Ort nicht gefunden",
+      "connections": "Verbindungen"
     },
     "kind": {
       "label": "Art der Karte",
@@ -1337,7 +1342,7 @@
       "later": "Session 0.5 #{{number}}",
       "pick": "Angezeigte Session",
       "start": "Neue Session",
-      "startBody": "Die aktuelle Sitzung wird geschlossen und bleibt schreibgeschützt lesbar; nie veröffentlichte Entwürfe werden gelöscht. Die neue beginnt leer mit den Etappen unten, und ihre Retro-Boards behalten dieselben Spalten. Grenzen & Schleier bleibt, wie es ist.",
+      "startBody": "Die aktuelle Sitzung wird geschlossen und bleibt schreibgeschützt lesbar; nie veröffentlichte Entwürfe werden gelöscht. Die neue beginnt leer mit den Schritten unten: Hake „Aus der vorherigen Sitzung übernehmen“ an, um Spalten, Fragen oder die DDI zu übernehmen. Lines & Veils bleibt, wie es ist.",
       "title": "Name",
       "startButton": "Erstellen",
       "closed": "Diese Session ist geschlossen: Das Board ist schreibgeschützt.",
@@ -1395,7 +1400,8 @@
       "chain": "Etappen der Sitzung",
       "chainHint": "Wähle die Etappen und ihre Reihenfolge; du kannst sie später ändern.",
       "max": "Höchstens {{max}} Etappen.",
-      "startButton": "Starten"
+      "startButton": "Starten",
+      "carry": "Aus der vorherigen Sitzung übernehmen"
     },
     "questions": {
       "title": "Fragen",
@@ -1449,7 +1455,10 @@
         "oneName": "Genau eine Frage muss für den Namen sein.",
         "oneSubtitle": "Höchstens eine Frage für den Untertitel.",
         "documents": "Höchstens {{max}} Fragen „Neues Dokument“."
-      }
+      },
+      "unsaved": "Du hast ungespeicherte Änderungen.",
+      "keepEditing": "Weiter bearbeiten",
+      "discard": "Verwerfen"
     },
     "ddi": {
       "document": "Dokument der DDI",
@@ -1469,6 +1478,31 @@
       "withdraw": "Zurückziehen",
       "open": "Dokument öffnen",
       "loadError": "Die DDI konnte nicht gelesen werden."
+    }
+  },
+  "markdown": {
+    "write": "Schreiben",
+    "preview": "Vorschau",
+    "previewEmpty": "Noch nichts zur Vorschau.",
+    "toolbar": "Formatierung",
+    "help": "Markdown wird unterstützt",
+    "helpTitle": "Markdown-Spickzettel",
+    "sample": {
+      "text": "Text",
+      "heading": "Überschrift",
+      "item": "Punkt"
+    },
+    "actions": {
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "strike": "Durchgestrichen",
+      "heading": "Überschrift",
+      "bulleted": "Aufzählung",
+      "numbered": "Nummerierte Liste",
+      "quote": "Zitat",
+      "link": "Link",
+      "code": "Code",
+      "table": "Tabelle"
     }
   }
 }

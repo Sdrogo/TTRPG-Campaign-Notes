@@ -186,7 +186,7 @@ function Change({ entry, members }: { entry: HistoryEntry; members: Member[] }) 
     <Stack gap={4}>
       <Group gap={6} wrap="wrap">
         <VisibilityBadge visibility={entry.fromVisibility} size="xs" />
-        <ArrowRightIcon size={12} aria-hidden="true" />
+        <ArrowRightIcon size={16} aria-hidden="true" />
         <VisibilityBadge visibility={entry.toVisibility} size="xs" />
         {entry.isReveal && (
           <Badge size="xs" variant="filled" color="accent">

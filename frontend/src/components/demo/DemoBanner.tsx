@@ -52,7 +52,7 @@ export function DemoBanner() {
   return (
     <Group className="demo-banner" role="status" justify="space-between" gap="xs" px="sm" py={6}>
       <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-        <FlaskIcon size={18} aria-hidden="true" style={{ flexShrink: 0 }} />
+        <FlaskIcon size={20} aria-hidden="true" style={{ flexShrink: 0 }} />
         <Text size="sm" fw={500}>
           {t('demo.banner')}
         </Text>

@@ -75,7 +75,7 @@ export function CommentThread(props: CommentThreadProps) {
             borderRadius: 'var(--mantine-radius-md)',
           }}
         >
-          <EyeSlashIcon size={16} color="var(--text-muted)" />
+          <EyeSlashIcon size={18} color="var(--text-muted)" />
           <Text size="sm" c="dimmed" fs="italic">
             {t('comments.parentHidden')}
           </Text>

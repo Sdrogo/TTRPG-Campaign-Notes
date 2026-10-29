@@ -880,6 +880,7 @@
       "retry": "Spróbuj ponownie",
       "listTitle": "Twoje PDF-y",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "W kolejce",
         "running": "W przygotowaniu",
@@ -1275,7 +1276,11 @@
       "uploadBackground": "Prześlij obraz",
       "backgroundFromUrl": "Z adresu URL",
       "removeBackground": "Usuń tło",
-      "export": "Eksportuj mapę (JSON)"
+      "export": "Eksportuj mapę (JSON)",
+      "placePane": "Miejsce otwarte obok mapy",
+      "noNote": "Brak notatki",
+      "placeNotFound": "Nie znaleziono miejsca",
+      "connections": "Połączenia"
     },
     "kind": {
       "label": "Rodzaj mapy",
@@ -1405,7 +1410,7 @@
       "later": "Sesja 0.5 #{{number}}",
       "pick": "Pokazywana sesja",
       "start": "Nowa sesja",
-      "startBody": "Bieżąca sesja zostaje zamknięta i pozostaje dostępna tylko do odczytu; nigdy nieopublikowane szkice są usuwane. Nowa zaczyna się pusta z etapami poniżej, a jej tablice Retro zachowują te same kolumny. Linie i Zasłony pozostają bez zmian.",
+      "startBody": "Bieżąca sesja zostaje zamknięta i pozostaje dostępna tylko do odczytu; nieopublikowane szkice są usuwane. Nowa zaczyna się pusta z krokami poniżej: zaznacz „Przenieś z poprzedniej sesji”, aby przywrócić kolumny, pytania lub DDI. Linie i Zasłony zostają bez zmian.",
       "title": "Nazwa",
       "startButton": "Utwórz",
       "closed": "Ta sesja jest zamknięta: tablica jest tylko do odczytu.",
@@ -1465,7 +1470,8 @@
       "chain": "Etapy sesji",
       "chainHint": "Wybierz etapy i ich kolejność; możesz je później zmienić.",
       "max": "Najwyżej {{max}} etapów.",
-      "startButton": "Rozpocznij"
+      "startButton": "Rozpocznij",
+      "carry": "Przenieś z poprzedniej sesji"
     },
     "questions": {
       "title": "Pytania",
@@ -1519,7 +1525,10 @@
         "oneName": "Potrzebne jest dokładnie jedno pytanie o Nazwę.",
         "oneSubtitle": "Najwyżej jedno pytanie o Podtytuł.",
         "documents": "Najwyżej {{max}} pytań „Nowy Dokument”."
-      }
+      },
+      "unsaved": "Masz niezapisane zmiany.",
+      "keepEditing": "Edytuj dalej",
+      "discard": "Odrzuć"
     },
     "ddi": {
       "document": "Dokument DDI",
@@ -1539,6 +1548,31 @@
       "withdraw": "Wycofaj",
       "open": "Otwórz Dokument",
       "loadError": "Nie można odczytać DDI."
+    }
+  },
+  "markdown": {
+    "write": "Pisz",
+    "preview": "Podgląd",
+    "previewEmpty": "Na razie nie ma czego pokazać.",
+    "toolbar": "Formatowanie",
+    "help": "Obsługuje Markdown",
+    "helpTitle": "Ściągawka Markdown",
+    "sample": {
+      "text": "tekst",
+      "heading": "Nagłówek",
+      "item": "pozycja"
+    },
+    "actions": {
+      "bold": "Pogrubienie",
+      "italic": "Kursywa",
+      "strike": "Przekreślenie",
+      "heading": "Nagłówek",
+      "bulleted": "Lista punktowana",
+      "numbered": "Lista numerowana",
+      "quote": "Cytat",
+      "link": "Link",
+      "code": "Kod",
+      "table": "Tabela"
     }
   }
 }

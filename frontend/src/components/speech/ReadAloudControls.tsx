@@ -29,7 +29,7 @@ export function ReadAloudControls({
 }: ReadAloudControlsProps) {
   const { t } = useTranslation();
   const reading = useReadAloud(sourceId, getText);
-  const iconSize = size === 'sm' ? 14 : 18;
+  const iconSize = size === 'sm' ? 16 : 20;
   const actionSize = size === 'sm' ? 'sm' : undefined;
 
   if (!speechSupported()) return null;

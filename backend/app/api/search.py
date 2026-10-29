@@ -234,7 +234,10 @@ async def _mark_up(
 ) -> list[Highlighted | None]:
     """Each text marked up by Postgres, in one query; None where the text is
     None or empty once shown as the reader sees it."""
-    shown = [None if value is None else searchable_text(value) for value in texts]
+    # An excerpt may come from a description or a Note: Markdown (spec 48).
+    shown = [
+        None if value is None else searchable_text(value, markdown=not whole) for value in texts
+    ]
     wanted = [value for value in shown if value]
     marked = iter(await search_repo.headlines(session, tsquery, wanted, whole))
     return [read_headline(next(marked), value) if value else None for value in shown]

@@ -35,17 +35,21 @@ export function RoomPdfExports({ roomId, userId }: { roomId: string; userId: str
 
 function Row({ job, onDismiss }: { job: PdfJob; onDismiss: () => void }) {
   const { t } = useTranslation();
-  const label = t('export.pdf.listItem', {
+  const details = {
     style: t(`export.pdf.styles.${job.style}`),
     size: job.pageSize,
-  });
+  };
+  // The PDF of one Document (spec 27b) carries its name.
+  const label = job.documentName
+    ? t('export.pdf.listItemDocument', { ...details, name: job.documentName })
+    : t('export.pdf.listItem', details);
   return (
     <Group justify="space-between" wrap="nowrap" gap="sm">
       <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
         {isActivePdfJob(job) ? (
           <Loader size={16} aria-hidden="true" />
         ) : (
-          <FilePdfIcon size={18} aria-hidden="true" />
+          <FilePdfIcon size={20} aria-hidden="true" />
         )}
         <Text size="sm" truncate>
           {label}
@@ -64,7 +68,7 @@ function Row({ job, onDismiss }: { job: PdfJob; onDismiss: () => void }) {
               onClick={onDismiss}
               aria-label={t('export.pdf.downloadNamed', { name: label })}
             >
-              <DownloadSimpleIcon size={16} />
+              <DownloadSimpleIcon size={18} />
             </ActionIcon>
           </Tooltip>
         )}
@@ -76,7 +80,7 @@ function Row({ job, onDismiss }: { job: PdfJob; onDismiss: () => void }) {
               onClick={onDismiss}
               aria-label={t('export.pdf.dismissNamed', { name: label })}
             >
-              <XIcon size={14} />
+              <XIcon size={16} />
             </ActionIcon>
           </Tooltip>
         )}

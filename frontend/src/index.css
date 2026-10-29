@@ -583,6 +583,122 @@ html body[data-scroll-locked] {
   line-height: 1.75;
 }
 
+/* Spec 48: a description or Note text read as Markdown. Headings stay
+   under a Note title (Decision 5); a table scrolls on its own on a phone. */
+.markdown-text > * + * {
+  margin-top: var(--mantine-spacing-xs);
+}
+
+.markdown-text .markdown-heading {
+  margin: var(--mantine-spacing-md) 0 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.markdown-text > .markdown-heading:first-child {
+  margin-top: 0;
+}
+
+.markdown-text .markdown-h1 {
+  font-size: 1.25rem;
+}
+
+.markdown-text .markdown-h2 {
+  font-size: 1.125rem;
+}
+
+.markdown-text .markdown-h3,
+.markdown-text .markdown-h4,
+.markdown-text .markdown-h5,
+.markdown-text .markdown-h6 {
+  font-size: 1rem;
+}
+
+.markdown-text ul,
+.markdown-text ol {
+  margin: 0;
+  padding-left: 1.5em;
+}
+
+.markdown-text li + li {
+  margin-top: 2px;
+}
+
+.markdown-text li > .markdown-p + .markdown-p {
+  margin-top: var(--mantine-spacing-xs);
+}
+
+.markdown-text li:has(> input[type='checkbox']) {
+  list-style: none;
+  margin-left: -1.5em;
+}
+
+.markdown-text input[type='checkbox'] {
+  margin: 0 0.5em 0 0;
+  vertical-align: middle;
+  accent-color: var(--accent-primary);
+}
+
+.markdown-text blockquote {
+  margin: 0;
+  padding: 2px 0 2px var(--mantine-spacing-sm);
+  border-left: 3px solid var(--accent-primary);
+  color: var(--text-muted);
+}
+
+.markdown-text code {
+  padding: 1px 4px;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--bg-raised);
+  border-radius: var(--mantine-radius-xs);
+}
+
+.markdown-text pre {
+  margin: 0;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  overflow-x: auto;
+  background: var(--bg-raised);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.markdown-text pre code {
+  padding: 0;
+  background: none;
+}
+
+.markdown-text hr {
+  margin: var(--mantine-spacing-sm) 0;
+  border: 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.markdown-text .markdown-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.markdown-text table {
+  border-collapse: collapse;
+  line-height: 1.5;
+}
+
+.markdown-text th,
+.markdown-text td {
+  padding: 4px var(--mantine-spacing-sm);
+  border: 1px solid var(--border-default);
+  text-align: left;
+  vertical-align: top;
+  /* Words stay whole in a cell: the table scrolls instead. */
+  overflow-wrap: normal;
+}
+
+.markdown-text th {
+  background: var(--bg-raised);
+  font-weight: 600;
+}
+
 .document-info-panel {
   border-left: 2px solid var(--text-muted);
 }
@@ -1264,7 +1380,7 @@ html body[data-scroll-locked] {
 
 /* Spec 46d Decision 6: a post-it's reactions, emoji large enough to read at a glance. */
 .reaction-chip-lg {
-  font-size: 13px;
+  font-size: 15px;
 }
 .reaction-chip-lg .mantine-Button-label {
   gap: 4px;
@@ -1279,4 +1395,44 @@ html body[data-scroll-locked] {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--mantine-font-size-md);
+}
+
+/* Spec 49 Decision 4: icon buttons are never under 24px (WCAG 2.5.8). Mantine's
+   sizes are 18 / 22 / 28 / 34px; the tokens are redefined on the button itself,
+   which is where Mantine declares them. */
+.mantine-ActionIcon-root {
+  --ai-size-xs: 24px;
+  --ai-size-sm: 28px;
+  --ai-size-md: 32px;
+  --ai-size-lg: 38px;
+}
+
+/* Spec 49 Decision 3: badges follow the text, two pixels larger per size than
+   Mantine's 9-13px, and tall enough for a 14px icon. */
+.mantine-Badge-root {
+  --badge-fz-xs: 11px;
+  --badge-fz-sm: 12px;
+  --badge-fz-md: 13px;
+  --badge-fz-lg: 15px;
+  --badge-height-xs: 20px;
+  --badge-height-sm: 22px;
+  --badge-height-md: 24px;
+  --badge-height-lg: 30px;
+}
+
+/* Spec 49 Decision 5: on a touch screen (phones, tablets) every icon button and a
+   dialog's close button is at least 40px to tap. The icon keeps its size; only the
+   hit area grows. Buttons inside an input (a copy or clear button) keep the
+   input's height. */
+@media (pointer: coarse) {
+  .mantine-ActionIcon-root:not(.mantine-Input-section *) {
+    --ai-size-xs: 40px;
+    --ai-size-sm: 40px;
+    --ai-size-md: 40px;
+    --ai-size-lg: 44px;
+  }
+  .mantine-Modal-close,
+  .mantine-Drawer-close {
+    --cb-size: 40px;
+  }
 }

@@ -62,6 +62,8 @@ vi.mock('../../components/maps/GeographicBoard', () => ({
     tags,
     onChange,
     onSelectDocument,
+    onSelectPlace,
+    paneItem,
   }: {
     board: GeoBoard;
     editable: boolean;
@@ -69,8 +71,16 @@ vi.mock('../../components/maps/GeographicBoard', () => ({
     tags: unknown[];
     onChange: (board: GeoBoard) => void;
     onSelectDocument?: (documentId: string) => void;
+    onSelectPlace?: (ref: { kind: 'area' | 'pin'; id: string }) => void;
+    paneItem?: { kind: string; id: string } | null;
   }) => (
-    <div data-testid="geo-board" data-editable={String(editable)} data-plane={planeWidth} data-tags={tags.length}>
+    <div
+      data-testid="geo-board"
+      data-editable={String(editable)}
+      data-plane={planeWidth}
+      data-tags={tags.length}
+      data-pane={paneItem ? `${paneItem.kind}:${paneItem.id}` : ''}
+    >
       {board.areas.length} areas
       <button type="button" onClick={() => onChange({ ...board, areas: board.areas.slice(1) })}>
         change
@@ -78,6 +88,11 @@ vi.mock('../../components/maps/GeographicBoard', () => ({
       {onSelectDocument && (
         <button type="button" onClick={() => onSelectDocument('doc-9')}>
           select
+        </button>
+      )}
+      {onSelectPlace && (
+        <button type="button" onClick={() => onSelectPlace({ kind: 'pin', id: 'pin-2' })}>
+          select place
         </button>
       )}
     </div>
@@ -413,6 +428,51 @@ describe('RelationshipMapPage', () => {
       await user.click(await menuItem(user, 'Mostra il pannello affiancato'));
       await user.click(await screen.findByRole('button', { name: 'select' }));
       expect(await screen.findByRole('link', { name: 'Apri il Documento' })).toHaveAttribute('href', '/rooms/room-1/documents/doc-9');
+    });
+
+    it('opens a plain place beside the map, and its linked Document from there (spec 50)', async () => {
+      wideScreen();
+      routes.map = () => geographic().then((map) => ({ ...map, can_edit: false, can_manage: false }));
+      routes.geo = () => Promise.resolve(rawGeoMapDetail({ can_edit: false, can_manage: false }));
+      const { user } = render();
+      await user.click(await screen.findByRole('button', { name: 'select place' }));
+      const pane = await screen.findByRole('complementary', { name: 'Luogo aperto accanto alla mappa' });
+      expect(pane).toHaveTextContent('Shibuya 109');
+      expect(pane).toHaveTextContent('Il cilindro argentato.');
+      expect(screen.getByTestId('geo-board')).toHaveAttribute('data-pane', 'pin:pin-2');
+
+      // Shibuya Sky is doc-2's pin: it opens the Document, still selected on the map.
+      await user.click(screen.getByRole('button', { name: /Shibuya Sky/ }));
+      expect(await screen.findByRole('complementary', { name: 'Documento affiancato' })).toBeInTheDocument();
+      expect(screen.getByTestId('geo-board')).toHaveAttribute('data-pane', 'pin:pin-1');
+
+      await user.click(screen.getByRole('button', { name: 'Chiudi il pannello' }));
+      expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+      expect(screen.getByTestId('geo-board')).toHaveAttribute('data-pane', '');
+    });
+
+    it('reopens a place from the address', async () => {
+      wideScreen();
+      routes.map = geographic;
+      render(false, '/rooms/room-1/maps/map-1?side=place:area:area-2');
+      const pane = await screen.findByRole('complementary', { name: 'Luogo aperto accanto alla mappa' });
+      expect(pane).toHaveTextContent('Il bosco');
+      expect(pane).toHaveTextContent('Sacro');
+      expect(screen.getByTestId('geo-board')).toHaveAttribute('data-pane', 'area:area-2');
+    });
+
+    it('opens a linked plain place in the pane', async () => {
+      wideScreen();
+      routes.map = geographic;
+      const raw = rawGeoMapDetail();
+      // Il bosco (plain) links to Shibuya 109 (plain).
+      const link = { ...raw.links[0], from_end: { area_id: 'area-2', pin_id: null } };
+      routes.geo = () => Promise.resolve(rawGeoMapDetail({ links: [link] }));
+      const { user } = render(false, '/rooms/room-1/maps/map-1?side=place:area:area-2');
+      await screen.findByRole('complementary', { name: 'Luogo aperto accanto alla mappa' });
+      await user.click(screen.getByRole('button', { name: /Shibuya 109/ }));
+      await vi.waitFor(() => expect(screen.getByTestId('geo-board')).toHaveAttribute('data-pane', 'pin:pin-2'));
+      expect(screen.getByRole('complementary')).toHaveTextContent('Il cilindro argentato.');
     });
 
     it('downloads the map as a JSON file for whoever sees it (spec 38_3)', async () => {

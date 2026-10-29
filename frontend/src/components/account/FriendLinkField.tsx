@@ -31,7 +31,7 @@ export function FriendLinkField() {
         description={t('account.friends.linkDescription')}
         value={link}
         readOnly
-        leftSection={<LinkIcon size={16} aria-hidden="true" />}
+        leftSection={<LinkIcon size={18} aria-hidden="true" />}
         style={{ flex: 1, minWidth: 240 }}
       />
       <Group gap="xs" wrap="nowrap">
@@ -45,14 +45,14 @@ export function FriendLinkField() {
                 disabled={!link}
                 aria-label={copied ? t('common.copied') : t('common.copy')}
               >
-                {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+                {copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
               </ActionIcon>
             </Tooltip>
           )}
         </CopyButton>
         <Button
           variant="default"
-          leftSection={<ArrowClockwiseIcon size={16} />}
+          leftSection={<ArrowClockwiseIcon size={18} />}
           loading={regenerate.isPending}
           disabled={!link}
           onClick={() =>

@@ -69,6 +69,15 @@ of dense content (Thread posts, Glossary entries, forms all use
 Inter). `--font-mono` shows up rarely in this app — mainly for
 technical identifiers if ever surfaced to an Administrator.
 
+**Text scale** (spec 49, 2026-10-28, `theme.ts` `fontSizes`): two pixels
+larger per step than Mantine's default, because the product owner found the
+app's text too small: `xs` 14px (small text), `sm` 16px (body text in
+lists, Comments, Notes, forms), `md` 18px, `lg` 20px, `xl` 22px. Headings
+h1-h3 keep Mantine's 34 / 26 / 22px (larger display sizes were rejected in
+PR #252); h4 20px, h5 18px, h6 16px, so a small heading is never smaller
+than the text under it. Badges are 11 / 12 / 13 / 15px (`xs`-`lg`) on
+20-30px heights (`index.css`).
+
 **Heading levels follow the page outline, not the look** (2026-10-03,
 Andrea's accessibility audit: "heading levels should only increase by
 one"). Every page has one `h1` (the Room's Documents, the Document's name,
@@ -85,6 +94,12 @@ an `h3`, which axe allows (only skipping *down* a level is an error).
   `Container`, the Rooms list (`RoomsPage`), the sign-in screen, the
   invite and friend-link pages and `PageState`'s full-screen messages
   render as `main`; the top bar is the `header` (banner).
+- **Icon buttons at least 24px, 40px on touch screens** (spec 49):
+  `index.css` redefines Mantine's `--ai-size-*` on `.mantine-ActionIcon-root`
+  (`xs` 24, `sm` 28, `md` 32, `lg` 38px) and, under `@media (pointer:
+  coarse)`, raises `xs`-`md` to 40px and `lg` to 44px, plus a dialog's
+  close button to 40px; buttons inside an input section keep the input's
+  height. Give an icon button a size token, not a number, so it follows.
 - **Tap targets at least 24px** (WCAG 2.5.8): the Tag links in `TagList`
   get 4px of vertical padding taken back by an equal negative margin, so
   the line looks the same while the link is 24px tall, and wrapped rows are
@@ -602,12 +617,35 @@ so a signed-out visitor can switch before signing in.
 
 ## Icons
 
-**Phosphor Icons**, `regular` weight for inline/UI icons at 16px
-(`size={16}`), `bold` weight for standalone action icons at 20px
-(`size={20}`), `duotone` weight reserved for empty states and
-onboarding at 32px+. Icon color always follows `--text-muted` at
+**Phosphor Icons**, `regular` weight for inline/UI icons at 18px
+(`size={18}`), `bold` weight for standalone action icons at 24px
+(`size={24}`), `duotone` weight reserved for empty states and
+onboarding at 32px+. Since spec 49 no UI icon is under 16px; the only
+exception is a Badge's left/right section, at 14px. Icon color always follows `--text-muted` at
 rest and `--accent-primary` on hover/active — never a hardcoded
 color per icon.
+
+## Markdown text and editor (spec 48)
+
+- **Reading**: `MarkdownText` shows a description or Note text formatted on
+  the Document page, the split view and the Session 0 DDI step. Markdown
+  `#` is an h3 at the size of a Note title, `##` smaller, the rest body
+  size in bold (`.markdown-heading`, display font). Paragraphs are `div`s
+  (a mention's hover card can't nest in a `<p>`). Quotes have an
+  accent-coloured left bar; code and table headers sit on `--bg-raised`; a
+  table scrolls sideways on its own on a phone and keeps words whole. Web
+  links open in a new tab.
+- **Short previews stay plain**: the Document card and "Mentioned in"
+  excerpts show the words without the signs (`markdownToPlain`).
+- **Editing**: `MarkdownEditor` wraps `MentionTextarea` in the Document and
+  Note forms: a row with the toolbar (bold, italic, heading `##`, bulleted
+  and numbered list, quote, link; subtle gray icon buttons) on the left and
+  a Write / Preview `SegmentedControl` on the right. The toolbar only adds
+  signs around the selection, so mentions inside it stay whole;
+  Ctrl/Cmd+B, I and K do the same. In Preview the toolbar goes away. The
+  hint under the label ends with a "Markdown supported" link opening a
+  cheat sheet popover. A `#` at the start of a line opens no `#`
+  suggestions until a letter follows (it may be a heading).
 
 ## Room setup page (spec 11)
 
@@ -781,10 +819,14 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   `SegmentedControl`) and a light "Fine modifiche" (`CheckIcon`); "Filtra
   per Tag" (a `Select`) is for everyone. While a tool is on, a hint bar at the bottom says what to click,
   with "Togli l'ultimo angolo" and "Chiudi l'area" while drawing, and Annulla.
-- **A clicked place** (38b): a Document's place opens in the split pane
-  (opening it if needed) on a screen wide enough for it; a plain place shows
-  a card top right with name, subtitle and note. While editing, every
-  selected place shows the card with Modifica; on a phone a Document's card
+- **A clicked place** (38b, 50): while reading, a Document's place opens in
+  the split pane (opening it if needed), and so does a plain place
+  (`?side=place:<area|pin>:<id>`, `PlaceSidePane`: sticky header with the
+  name and close button, then the area's subtitle, the note as Markdown or a
+  dimmed "Nessuna nota", and "Collegamenti", the linked places, each opening
+  in the pane; "Luogo non trovato" once it is gone); on a phone both open in
+  the lower half. The map's selection follows the pane. While editing, every
+  selected place shows the card top right with Modifica; on a phone a Document's card
   has "Apri il Documento". Area names (display font, subtitle under them)
   sit at the centroid unless pins or labels are there, then at the nearest
   free spot, inside their area when they fit.
@@ -824,7 +866,7 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   navigate; Ctrl/Cmd-click still opens a tab) selects it and the pane shows
   that Document (`MapBoard`'s `onSelectDocument`, read-only boards too).
 - **Split view**: `?side=<documentId>` on any Room page (`PageLayout`; an empty
-  `?side=` counts as open only where `PageLayout` gets `allowEmptySide`, i.e. the two map pages, and is ignored elsewhere)
+  `?side=` counts as open only where `PageLayout` gets `allowEmptySide`, i.e. the two map pages, and is ignored elsewhere); a `place:` value shows what `PageLayout`'s `renderSide` gives (a geographic map's place, spec 50) and is ignored on a page without it
   splits it in `SplitView`: the page left, `DocumentSidePane` right (sticky
   header with the name, an "Apri il Documento" icon link and a close
   button, then the whole `DocumentView`). The divider is 8 px, a
@@ -894,7 +936,11 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   bordered row per step ("2. Stars and Wishes") with "Move up", "Move
   down" and "Remove" icon buttons (arrows rather than a drag, the same
   on a phone), then a "Step" select and "Add step" (default, "+"); "At
-  most 10 steps." in dimmed `xs` at the limit. In "Edit steps" each
+  most 10 steps." in dimmed `xs` at the limit. In "New session" each
+  Retro, Questions and DDI row has an `xs` "Carry over from the previous
+  session" checkbox beside its name, off (spec 47b); "Edit steps" has
+  the same checkbox under "Add step" for those kinds once the Room has
+  an earlier session. In "Edit steps" each
   change goes at once; removing a step with post-its or questions asks
   first, inside the same dialog.
 - The body shows the step on screen: Retro is the two boards as below,
@@ -903,15 +949,19 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   the viewer's language, with no column menu, no drag by the heading and
   no "Add column".
 - Questions step (spec 47_2, `QuestionsBoard`): an `h4` "Questions". The
-  Master sees "Edit questions" (default, `compact-sm`), a "Tag of the
-  Players' Documents" select and the creation switch on one wrapping row,
+  Master has one wrapping row: the title, the "Tag of the Players'
+  Documents" label beside its 140 px select, the creation switch and
+  "Edit questions" (default, `compact-sm`) pushed right,
   then one bordered row per question with a grey light badge for where
   its answer goes ("New Document · NPC") and the hint dimmed; below, an
   `h5` "Answers" with "Reveal the answers" / "Hide the answers" and
   "Create everyone's Documents (N)", a dimmed line on who reads the
   answers, and a separated accordion, one item per Player ("2/5
   answered"), with each answer (dimmed "—" when missing) and "Open the
-  Document". "Edit questions" is a `lg` dialog: one bordered block per
+  Document". "Edit questions" is an `xl` dialog (full screen on a
+  phone) that a click outside doesn't close; closing it with unsaved
+  changes (×, Esc, Cancel) swaps the buttons for "You have unsaved
+  changes." with "Keep editing" and "Discard" (red light): one bordered block per
   question (text, hint, "Where the answer goes" select, a Tag select for
   "New Document"), "Move up" / "Move down" / "Remove" icons, "Add
   question", the first problem in red `xs`, and Save disabled while there

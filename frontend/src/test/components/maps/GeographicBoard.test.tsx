@@ -3,7 +3,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GeographicBoard } from '../../../components/maps/GeographicBoard';
-import { toGeoMapDetail, type RawGeoMapDetail } from '../../../lib/geoMaps';
+import { toGeoMapDetail, type GeoItemRef, type RawGeoMapDetail } from '../../../lib/geoMaps';
 import type { Document } from '../../../types/document';
 import type { GeoBoard, GeoLink } from '../../../types/geoMap';
 import { rawGeoMapDetail } from '../../fixtures';
@@ -29,12 +29,24 @@ interface HarnessProps {
   backgroundUrl?: string | null;
   planeWidth?: number;
   onSelectDocument?: (documentId: string) => void;
+  onSelectPlace?: (ref: GeoItemRef) => void;
+  paneItem?: GeoItemRef | null;
   fitToPlane?: boolean;
 }
 
 const onChange = vi.fn();
 
-function Harness({ board = initial, editable = true, isMaster = true, backgroundUrl = null, planeWidth = 2000, onSelectDocument, fitToPlane }: HarnessProps) {
+function Harness({
+  board = initial,
+  editable = true,
+  isMaster = true,
+  backgroundUrl = null,
+  planeWidth = 2000,
+  onSelectDocument,
+  onSelectPlace,
+  paneItem,
+  fitToPlane,
+}: HarnessProps) {
   const [current, setCurrent] = useState(board);
   return (
     <GeographicBoard
@@ -52,6 +64,8 @@ function Harness({ board = initial, editable = true, isMaster = true, background
         setCurrent(next);
       }}
       onSelectDocument={onSelectDocument}
+      onSelectPlace={onSelectPlace}
+      paneItem={paneItem}
       fitToPlane={fitToPlane}
     />
   );
@@ -345,6 +359,50 @@ describe('GeographicBoard: looking at a place', () => {
     expect(screen.getByText('Il cuore', { selector: 'p' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Apri il Documento' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Modifica' })).toBeInTheDocument();
+  });
+
+  it('opens a plain place beside the map while reading, with no card (spec 50)', async () => {
+    const onSelectDocument = vi.fn();
+    const onSelectPlace = vi.fn();
+    const { user } = render({ onSelectDocument, onSelectPlace });
+    tap(screen.getByRole('button', { name: 'Shibuya 109' }), 800, 700);
+    expect(onSelectPlace).toHaveBeenCalledWith({ kind: 'pin', id: 'pin-2' });
+    expect(screen.queryByText('Il cilindro argentato.')).not.toBeInTheDocument();
+    tap(screen.getByRole('button', { name: 'Il bosco' }), 1200, 200);
+    expect(onSelectPlace).toHaveBeenLastCalledWith({ kind: 'area', id: 'area-2' });
+    // A Document's place still goes to the Document.
+    tap(screen.getByRole('button', { name: 'Shibuya Sky' }), 300, 250);
+    expect(onSelectDocument).toHaveBeenCalledWith('doc-2');
+    expect(onSelectPlace).toHaveBeenCalledTimes(2);
+
+    // While editing, the card stays, with "Modifica" (Decision 6).
+    await user.click(screen.getByRole('button', { name: 'Modifica la mappa' }));
+    tap(screen.getByRole('button', { name: 'Shibuya 109' }), 800, 700);
+    expect(onSelectPlace).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('Il cilindro argentato.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Modifica' })).toBeInTheDocument();
+  });
+
+  it('selects the place the pane shows, and lets it go when the pane closes (spec 50)', () => {
+    const props = { editable: false, onSelectPlace: vi.fn(), onSelectDocument: vi.fn() };
+    const { rerender } = renderWithProviders(<Harness {...props} paneItem={{ kind: 'pin', id: 'pin-2' }} />);
+    expect(screen.getByRole('button', { name: 'Shibuya 109' })).toHaveAttribute('aria-pressed', 'true');
+    rerender(<Harness {...props} paneItem={{ kind: 'area', id: 'area-2' }} />);
+    expect(screen.getByRole('button', { name: 'Shibuya 109' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Il bosco' })).toHaveAttribute('aria-pressed', 'true');
+    rerender(<Harness {...props} paneItem={null} />);
+    expect(screen.getByRole('button', { name: 'Il bosco' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('keeps the selection while editing when the pane changes (spec 50)', async () => {
+    const props = { onSelectPlace: vi.fn(), onSelectDocument: vi.fn() };
+    const user = userEvent.setup();
+    const { rerender } = renderWithProviders(<Harness {...props} paneItem={null} />);
+    await user.click(screen.getByRole('button', { name: 'Modifica la mappa' }));
+    tap(screen.getByRole('button', { name: 'Shibuya 109' }), 800, 700);
+    rerender(<Harness {...props} paneItem={{ kind: 'area', id: 'area-2' }} />);
+    expect(screen.getByRole('button', { name: 'Shibuya 109' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Il bosco' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('opens for reading, and edits only after "Modifica la mappa" (spec 38b)', async () => {

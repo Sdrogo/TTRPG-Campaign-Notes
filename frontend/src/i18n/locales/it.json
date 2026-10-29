@@ -860,6 +860,7 @@
       "retry": "Riprova",
       "listTitle": "I tuoi PDF",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "In coda",
         "running": "In preparazione",
@@ -1219,7 +1220,11 @@
       "uploadBackground": "Carica un'immagine",
       "backgroundFromUrl": "Da un URL",
       "removeBackground": "Rimuovi lo sfondo",
-      "export": "Esporta la mappa (JSON)"
+      "export": "Esporta la mappa (JSON)",
+      "placePane": "Luogo aperto accanto alla mappa",
+      "noNote": "Nessuna nota",
+      "placeNotFound": "Luogo non trovato",
+      "connections": "Collegamenti"
     },
     "kind": {
       "label": "Tipo di mappa",
@@ -1337,7 +1342,7 @@
       "later": "Sessione 0.5 #{{number}}",
       "pick": "Sessione da mostrare",
       "start": "Nuova sessione",
-      "startBody": "La sessione attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova parte vuota con le tappe qui sotto, e le sue lavagne Retro mantengono le stesse colonne. Linee e Veli resta com'è.",
+      "startBody": "La sessione attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova parte vuota con le tappe qui sotto: spunta «Porta dalla sessione precedente» per riprendere colonne, domande o DDI. Linee e Veli resta com'è.",
       "title": "Nome",
       "startButton": "Crea",
       "closed": "Questa sessione è chiusa: la lavagna è in sola lettura.",
@@ -1395,7 +1400,8 @@
       "chain": "Tappe della sessione",
       "chainHint": "Scegli le tappe e il loro ordine; potrai cambiarle in seguito.",
       "max": "Al massimo {{max}} tappe.",
-      "startButton": "Avvia"
+      "startButton": "Avvia",
+      "carry": "Porta dalla sessione precedente"
     },
     "questions": {
       "title": "Domande",
@@ -1449,7 +1455,10 @@
         "oneName": "Serve esattamente una domanda per il Nome.",
         "oneSubtitle": "Al massimo una domanda per il Sottotitolo.",
         "documents": "Al massimo {{max}} domande «Nuovo Documento»."
-      }
+      },
+      "unsaved": "Hai modifiche non salvate.",
+      "keepEditing": "Continua a modificare",
+      "discard": "Scarta"
     },
     "ddi": {
       "document": "Documento della DDI",
@@ -1469,6 +1478,31 @@
       "withdraw": "Ritira",
       "open": "Apri il Documento",
       "loadError": "Non riesco a leggere la DDI."
+    }
+  },
+  "markdown": {
+    "write": "Scrivi",
+    "preview": "Anteprima",
+    "previewEmpty": "Ancora niente da mostrare.",
+    "toolbar": "Formattazione",
+    "help": "Supporta Markdown",
+    "helpTitle": "Promemoria Markdown",
+    "sample": {
+      "text": "testo",
+      "heading": "Titolo",
+      "item": "voce"
+    },
+    "actions": {
+      "bold": "Grassetto",
+      "italic": "Corsivo",
+      "strike": "Barrato",
+      "heading": "Titolo",
+      "bulleted": "Elenco puntato",
+      "numbered": "Elenco numerato",
+      "quote": "Citazione",
+      "link": "Link",
+      "code": "Codice",
+      "table": "Tabella"
     }
   }
 }

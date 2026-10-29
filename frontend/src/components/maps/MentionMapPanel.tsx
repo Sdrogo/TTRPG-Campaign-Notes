@@ -34,7 +34,7 @@ export function MentionMapPanel({ roomId, map }: { roomId: string; map: MentionM
             color="gray"
             aria-label={t('maps.mention.fullScreen')}
           >
-            <ArrowsOutIcon size={16} />
+            <ArrowsOutIcon size={18} />
           </ActionIcon>
         </Tooltip>
       </Group>

@@ -12,7 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { VisibilityBadge } from '../VisibilityBadge';
 import { RevealedBadge } from '../RevealedBadge';
-import { MentionText } from '../mentions/MentionText';
+import { MarkdownText } from '../mentions/MarkdownText';
 import { NoteForm } from './NoteForm';
 import { ReadAloudControls } from '../speech/ReadAloudControls';
 import { noteSpeech } from '../../lib/speech';
@@ -108,7 +108,7 @@ export function NoteItem({
           onClick={onReveal}
           aria-label={t('reveal.actionLabel', { name: note.title })}
         >
-          <EyeIcon size={14} />
+          <EyeIcon size={16} />
         </LabeledActionIcon>
       )}
       {note.canEdit && (
@@ -121,7 +121,7 @@ export function NoteItem({
             onClick={() => onMove(-1)}
             aria-label={t('notes.moveUp', { title: note.title })}
           >
-            <ArrowUpIcon size={14} />
+            <ArrowUpIcon size={16} />
           </LabeledActionIcon>
           <LabeledActionIcon
             variant="subtle"
@@ -131,7 +131,7 @@ export function NoteItem({
             onClick={() => onMove(1)}
             aria-label={t('notes.moveDown', { title: note.title })}
           >
-            <ArrowDownIcon size={14} />
+            <ArrowDownIcon size={16} />
           </LabeledActionIcon>
           <LabeledActionIcon
             variant="subtle"
@@ -140,7 +140,7 @@ export function NoteItem({
             onClick={() => setEditing(true)}
             aria-label={t('notes.edit', { title: note.title })}
           >
-            <PencilSimpleIcon size={14} />
+            <PencilSimpleIcon size={16} />
           </LabeledActionIcon>
         </>
       )}
@@ -152,7 +152,7 @@ export function NoteItem({
           onClick={() => setConfirmDeleteOpened(true)}
           aria-label={t('notes.delete', { title: note.title })}
         >
-          <TrashIcon size={14} />
+          <TrashIcon size={16} />
         </LabeledActionIcon>
       )}
     </>
@@ -179,7 +179,7 @@ export function NoteItem({
               size="xs"
               variant="light"
               color="gray"
-              leftSection={<GraphIcon size={10} />}
+              leftSection={<GraphIcon size={14} />}
               aria-label={phone ? t('notes.relationalLink') : undefined}
             >
               {phone ? null : t('notes.relationalLink')}
@@ -198,7 +198,7 @@ export function NoteItem({
               aria-expanded={actionsExpanded}
               onClick={() => setActionsExpanded((current) => !current)}
             >
-              <DotsThreeVerticalIcon size={14} />
+              <DotsThreeVerticalIcon size={16} />
             </LabeledActionIcon>
           )}
         </Group>
@@ -209,10 +209,7 @@ export function NoteItem({
         </Group>
       )}
       {note.description && (
-        <MentionText
-          text={note.description}
-          style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-        />
+        <MarkdownText text={note.description} style={{ overflowWrap: 'anywhere' }} />
       )}
 
       <Modal

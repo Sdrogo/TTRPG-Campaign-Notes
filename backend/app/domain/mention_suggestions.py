@@ -10,6 +10,7 @@ from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 
 from app.domain.errors import DomainError
+from app.domain.markdown import merge_ranges, protected_ranges
 from app.domain.mentions import MentionKind, display_text, find_mentions, mention_token
 
 # Shorter names would be found inside too much ordinary prose (Decision 5).
@@ -96,7 +97,10 @@ def suggest_mentions(text: str, candidates: Sequence[MentionCandidate]) -> list[
     pattern = _pattern(candidates)
     found: list[MentionSuggestion] = []
     start = 0
-    bounds = [(m.start, m.end) for m in find_mentions(text)] + [(len(text), len(text))]
+    # Never inside a token, nor in code or a Markdown link (spec 48 Decision 11).
+    bounds = merge_ranges(
+        [(m.start, m.end) for m in find_mentions(text)] + protected_ranges(text)
+    ) + [(len(text), len(text))]
     for token_start, token_end in bounds:
         for match in pattern.finditer(text, start, token_start):
             candidate = candidates[int(str(match.lastgroup)[1:])]

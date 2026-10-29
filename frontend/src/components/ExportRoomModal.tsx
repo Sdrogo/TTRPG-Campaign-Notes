@@ -3,17 +3,16 @@ import { Button, Group, Modal, SegmentedControl, Stack, Text } from '@mantine/co
 import { DownloadSimpleIcon, FilePdfIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../hooks/useDocuments';
-import { useDismissedPdfJobs, usePdfExports, useStartPdfExport } from '../hooks/usePdfExports';
-import { useSession } from '../hooks/useSession';
+import { usePdfExports, useStartPdfExport } from '../hooks/usePdfExports';
 import { useExportRoom } from '../hooks/useRoomExport';
 import { useRoom } from '../hooks/useRooms';
 import { useTags } from '../hooks/useTags';
 import { useViewAs } from '../hooks/useViewAs';
 import { notifyError, notifySuccess } from '../lib/notify';
-import { DEFAULT_PDF_OPTIONS, isActivePdfJob, type PdfJob } from '../lib/pdfExport';
+import { DEFAULT_PDF_OPTIONS, isActivePdfJob } from '../lib/pdfExport';
 import { EXPORT_FORMATS, type ExportFormat } from '../lib/roomExport';
 import { PdfExportForm, type PdfFormValue } from './pdf/PdfExportForm';
-import { PdfJobPanel } from './pdf/PdfJobPanel';
+import { TrackedPdfJob } from './pdf/TrackedPdfJob';
 import { TagFilter } from './TagFilter';
 
 interface ExportRoomModalProps {
@@ -26,16 +25,6 @@ interface ExportRoomModalProps {
 type DialogFormat = ExportFormat | 'pdf';
 
 const DIALOG_FORMATS: DialogFormat[] = [...EXPORT_FORMATS, 'pdf'];
-
-/**
- * The panel of the job the dialog follows. Taking the file is remembered for the
- * signed-in user, so the Room page stops listing it.
- */
-function TrackedPdfJob({ roomId, job, onNew }: { roomId: string; job: PdfJob; onNew: () => void }) {
-  const { session } = useSession();
-  const { dismiss } = useDismissedPdfJobs(session?.user.id ?? '', roomId);
-  return <PdfJobPanel job={job} onDownload={dismiss} onNew={onNew} />;
-}
 
 /**
  * The Room export dialog (spec 23 Decision 5, spec 23b Frontend): a format
@@ -148,7 +137,7 @@ export function ExportRoomModal({ opened, onClose, roomId }: ExportRoomModalProp
               </Button>
               <Button
                 leftSection={
-                  format === 'pdf' ? <FilePdfIcon size={16} /> : <DownloadSimpleIcon size={16} />
+                  format === 'pdf' ? <FilePdfIcon size={18} /> : <DownloadSimpleIcon size={18} />
                 }
                 loading={format === 'pdf' ? startPdf.isPending : exportRoom.isPending}
                 disabled={!room.data}

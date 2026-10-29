@@ -860,6 +860,7 @@
       "retry": "Try again",
       "listTitle": "Your PDFs",
       "listItem": "{{style}} · {{size}}",
+      "listItemDocument": "{{name}} · {{style}} · {{size}}",
       "listStatus": {
         "queued": "Queued",
         "running": "Being made",
@@ -1219,7 +1220,11 @@
       "uploadBackground": "Upload an image",
       "backgroundFromUrl": "From a URL",
       "removeBackground": "Remove the background",
-      "export": "Export the map (JSON)"
+      "export": "Export the map (JSON)",
+      "placePane": "Place opened beside the map",
+      "noNote": "No note",
+      "placeNotFound": "Place not found",
+      "connections": "Links"
     },
     "kind": {
       "label": "Kind of map",
@@ -1337,7 +1342,7 @@
       "later": "Session 0.5 #{{number}}",
       "pick": "Session to show",
       "start": "New session",
-      "startBody": "The current session closes and stays readable, read-only; drafts never published are deleted. The new one starts empty with the steps below, and its Retro boards keep the same columns. Lines & Veils stays as it is.",
+      "startBody": "The current session closes and stays readable, read-only; drafts never published are deleted. The new one starts empty with the steps below: tick “Carry over from the previous session” to bring back columns, questions or the DDI. Lines & Veils stays as it is.",
       "title": "Name",
       "startButton": "Create",
       "closed": "This session is closed: the board is read-only.",
@@ -1395,7 +1400,8 @@
       "chain": "Steps of the session",
       "chainHint": "Pick the steps and their order; you can change them later.",
       "max": "At most {{max}} steps.",
-      "startButton": "Start"
+      "startButton": "Start",
+      "carry": "Carry over from the previous session"
     },
     "questions": {
       "title": "Questions",
@@ -1449,7 +1455,10 @@
         "oneName": "Exactly one question must be for the Name.",
         "oneSubtitle": "At most one question for the Subtitle.",
         "documents": "At most {{max}} \"New Document\" questions."
-      }
+      },
+      "unsaved": "You have unsaved changes.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
     },
     "ddi": {
       "document": "DDI Document",
@@ -1469,6 +1478,31 @@
       "withdraw": "Withdraw",
       "open": "Open the Document",
       "loadError": "Couldn't read the DDI."
+    }
+  },
+  "markdown": {
+    "write": "Write",
+    "preview": "Preview",
+    "previewEmpty": "Nothing to preview yet.",
+    "toolbar": "Formatting",
+    "help": "Markdown supported",
+    "helpTitle": "Markdown cheat sheet",
+    "sample": {
+      "text": "text",
+      "heading": "Heading",
+      "item": "item"
+    },
+    "actions": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "strike": "Strikethrough",
+      "heading": "Heading",
+      "bulleted": "Bulleted list",
+      "numbered": "Numbered list",
+      "quote": "Quote",
+      "link": "Link",
+      "code": "Code",
+      "table": "Table"
     }
   }
 }

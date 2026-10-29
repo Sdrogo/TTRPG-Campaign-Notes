@@ -31,7 +31,7 @@ from manual_fixtures import (
 from pypdf import PdfReader
 
 from app.domain.export import ExportImage
-from app.domain.manual import Manual, ManualOptions, build_manual
+from app.domain.manual import Manual, ManualOptions, build_document_manual, build_manual
 from app.domain.mentions import MentionKind
 from app.pdf.labels import manual_labels
 from app.pdf.render import (
@@ -113,6 +113,36 @@ def test_text_is_escaped_and_paragraphs_stay_on_one_line() -> None:
     # The CSS keeps line breaks inside <p>, so markup mustn't add any.
     assert "<p>one &lt;b&gt;two&lt;/b&gt;</p>" in html
     assert "<p>three</p>" in html
+
+
+def test_a_markdown_description_prints_formatted_with_its_mentions() -> None:
+    """Spec 48: headings under the Note titles, lists, tables and links; a
+    mention keeps its page inside a list item; nothing adds line breaks."""
+    export = make_export(
+        documents=[
+            document(
+                CASTLE,
+                "Castle",
+                description=(
+                    text("# Who\n\n- ruled by "),
+                    mention(MentionKind.DOCUMENT, IRENA, "Irena"),
+                    text("\n- *old*\n\n| a |\n| - |\n| 1 |\n\n[web](https://x.test) <b>x</b>"),
+                ),
+            ),
+            document(IRENA, "Irena"),
+        ]
+    )
+    html = render_manual_html(
+        build_manual(export, ManualOptions(), LABELS), ManualStyle.MODERN, PageSize.A4
+    )
+
+    assert "<h4>Who</h4>" in html
+    assert (
+        f'<ul><li>ruled by <a class="xref" href="#doc-{IRENA}" data-page="p.">Irena</a></li>'
+        "<li><em>old</em></li></ul>"
+    ) in html
+    assert '<table class="markdown-table"><thead><tr><th>a</th></tr></thead>' in html
+    assert '<p><a class="link" href="https://x.test">web</a> &lt;b&gt;x&lt;/b&gt;</p>' in html
 
 
 def test_a_reference_and_the_glossary_link_to_where_the_document_is_printed() -> None:
@@ -748,3 +778,41 @@ def test_the_typesetting_process_lowers_its_priority_and_copes_without_it(
 
     monkeypatch.setattr(os, "nice", refused)
     lower_priority()
+
+
+def test_a_single_document_pdf_has_no_cover_or_contents() -> None:
+    """Spec 27b (product owner, 2026-10-28): the PDF of one Document starts on
+    page 1 with its chapter, titled with the Room's name."""
+    manual = build_document_manual(make_export(), CASTLE, ManualOptions(), LABELS)
+
+    html = render_manual_html(manual, ManualStyle.GOTHIC, PageSize.A4)
+
+    assert 'class="cover' not in html and 'class="toc"' not in html
+    assert 'id="glossary"' not in html
+    assert 'class="chapter-title">Barovia<' in html and f'id="doc-{CASTLE}"' in html
+    assert "<title>Castle</title>" in html
+
+
+@pytest.mark.parametrize("style", list(ManualStyle))
+@pytest.mark.parametrize(("sentences", "columns"), [(60, 2), (14, 1)])
+def test_a_single_document_pdf_starts_on_page_one_in_the_manuals_columns(
+    style: ManualStyle, sentences: int, columns: int
+) -> None:
+    """The same column rule as the Room PDF (product owner, 2026-10-28): two
+    balanced columns, one when the Document fits it."""
+    _weasyprint()
+    sentence = "Marker the keep stands above the mist and the road bends toward it. "
+    export = make_export(
+        main_items=[],
+        documents=[document(CASTLE, "Castle", description=(text(sentence * sentences),))],
+    )
+    manual = build_document_manual(export, CASTLE, ManualOptions(), LABELS)
+
+    reader = PdfReader(io.BytesIO(render_manual_pdf(manual, style, PageSize.A4)))
+
+    assert "Castle" in reader.pages[0].extract_text()
+    starts = sorted({round(x) for x in _line_starts(reader, 0)})
+    left = min(starts)
+    width = float(reader.pages[0].mediabox.width)
+    to_the_right = [x for x in starts if x > left + width * 0.25]
+    assert bool(to_the_right) == (columns == 2), (style, sentences, starts)

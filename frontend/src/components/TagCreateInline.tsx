@@ -52,7 +52,7 @@ export function TagCreateInline({ roomId, onCreated, onPendingChange }: TagCreat
       />
       <Button
         variant="light"
-        leftSection={<PlusIcon size={16} />}
+        leftSection={<PlusIcon size={18} />}
         onClick={handleAdd}
         loading={createTag.isPending}
         disabled={!name.trim()}

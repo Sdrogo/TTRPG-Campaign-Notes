@@ -13,6 +13,43 @@ detail:
 
 ## Current Status (2026-10-28)
 
+- **27b, PDF of one Document** (2026-10-28, no migration, PR #266 into
+  `staging`): the Document's Export dialog offers PDF next to Markdown
+  and JSON, with the Room PDF's styles, page size, Comments and
+  Attachments. No cover and no contents: page 1 opens with the Room's
+  name and the Document, laid out with the Room PDF's column logic
+  (product owner's answers, 2026-10-28). Same job, same one-at-a-time
+  rule, listed on the Room page with the Document's name, file
+  `<document>-<date>.pdf`.
+
+- **Spec 48, Markdown in Documents and Notes** (2026-10-28, no migration,
+  PR #262 into `staging`): descriptions and Note texts read as Markdown
+  (CommonMark + tables, strikethrough, task lists; single line breaks
+  kept; raw HTML as text; only http/https/mailto links; images only as
+  links), with mentions working anywhere in it. Cards and excerpts show
+  plain words; read aloud skips the signs. The Document and Note forms
+  have a toolbar, Ctrl/Cmd+B/I/K, Write / Preview and a cheat sheet (12
+  languages). The PDF prints the formatting in all four styles; search
+  excerpts lose the signs; generated and auto-linked mentions skip code
+  and links. Comments stay plain (product owner). New dependencies:
+  `react-markdown`, `remark-gfm`, `remark-breaks`, `unified`,
+  `remark-parse` (frontend), `markdown-it-py` (backend). See
+  `architecture.md` → Markdown text and `ui-context.md` → Markdown text
+  and editor.
+
+- **Spec 47b, separate Session 0 sessions** (2026-10-28, product owner's
+  request, no migration, in PR #263): a new session starts empty; each
+  Retro, Questions or DDI step carries an earlier session's columns,
+  questions or DDI Document over only when the Master ticks "Carry over
+  from the previous session" (in "New session" and beside "Add step").
+  Same PR: the Questions step's title, Tag, switch and "Edit questions"
+  on one row.
+
+- **Edit questions dialog fix** (2026-10-28, product owner's bug report,
+  frontend only, no migration): the dialog is `xl` (full screen on a
+  phone), a click outside no longer closes it and closing with unsaved
+  questions asks first, so they aren't lost.
+
 - **Spec 47_3, Session 0 DDI** (2026-10-28, migration `a7d3f9b2c6e1`,
   PR #261 merged into `staging`; migration applied to staging and to
   production 2026-10-28): a DDI step showing one of
@@ -87,7 +124,7 @@ detail:
   `main` with release PR #246 (landing, Demo and tour, back fixes,
   dependency bump, compact Room setup and Document form, and these docs;
   conflicts with Dependabot bumps on `main` fixed by #247). No migration
-  was needed: production was already at head. Features 01 to 45 are built except 27b (listed under Next Up); 23c, 25
+  was needed: production was already at head. Features 01 to 45 are built (27b on 2026-10-28); 23c, 25
   and 25b were dropped by the product owner.
 - **Latest work**: spec 31 (GDPR: `GET /account/export`, `DELETE /account`,
   public `/privacy` notice, PR #150, controller named in PR #152) and spec
@@ -732,6 +769,16 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **50, Map places in the split pane** (ticket confirmed by the product
+  owner 2026-10-28, built in PR #265): on a geographic map being read, a
+  plain area or pin opens in the split pane (`?side=place:<kind>:<id>`,
+  `PlaceSidePane` with subtitle, Markdown note and linked places) instead of
+  the small floating card; the map's selection follows the pane; editing
+  keeps the card. Frontend only, no migration.
+
+- **48, Markdown in Documents and Notes** (ticket confirmed by the product
+  owner 2026-10-28, built in PR #262): see Current Status. No migration.
+
 - **46, Session 0 boards** (ticket confirmed by the product owner
   2026-10-27, building): a Room's Session 0 page with a Retro board and a
   Lines & Veils board (Must, Lines, Veils), draft/publish post-its
@@ -783,6 +830,10 @@ on `main`.
   (`alembic upgrade head` with `.env.staging`, staging = `d4a7e2c9f1b3`,
   head) and **to production** the same day (`alembic upgrade head` with
   `.env`, production = `d4a7e2c9f1b3`, head).
+- **49, Larger text and icons** (ticket confirmed 2026-10-28 with a double
+  step, built in PR #264): text +2px per step (`xs` 14, `sm` 16px), h1-h3
+  unchanged, UI icons 16-24px, Badges larger, icon buttons at least 24px on
+  desktop and 40px on touch screens. Theme and CSS only, no migration.
 - **47, Modular Session 0** (ticket written 2026-10-27; Q1-Q7 answered
   the same day, DDI sections from the manual the product owner shared;
   go-ahead to build the same day). **47_1 (chain + Stars and Wishes)
@@ -815,8 +866,6 @@ on `main`.
   owner, 2026-10-27). Ticket not written yet.
 - **Room landing page**: product owner's idea (2026-10-27), separate
   ticket, not written yet.
-- **27b, PDF of one Document**: next to build (product owner,
-  2026-10-08). Ticket written, decisions proposed, no migration expected.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).

@@ -190,13 +190,24 @@ describe('Edit questions', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('starts an empty list with the Name question, and cancels', async () => {
+  it('starts an empty list with the Name question, and asks before dropping it', async () => {
     const { act, user, dialog } = await openEditor({ questions: [] });
     await user.click(within(dialog).getByRole('button', { name: 'Aggiungi domanda' }));
     expect(within(dialog).getByRole('combobox', { name: 'Dove va la risposta' })).toHaveValue('Nome');
     await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
+    expect(within(dialog).getByText('Hai modifiche non salvate.')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Continua a modificare' }));
+    expect(within(dialog).getByRole('combobox', { name: 'Dove va la risposta' })).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Scarta' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(act).not.toHaveBeenCalled();
+  });
+
+  it('closes at once when nothing changed', async () => {
+    const { user, dialog } = await openEditor({ questions: questions.slice(0, 1) });
+    await user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('stops at the most questions a step holds', async () => {
