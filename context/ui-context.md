@@ -465,8 +465,9 @@ other icon set.
   2026-10-03): the images fill the card's **right half edge to edge and full
   height** (absolutely positioned, `objectFit: cover` anchored at the top so
   a portrait's face survives the crop), and their left edge fades into the
-  card's background (a `linear-gradient` from `--mantine-color-dark-6`, the
-  Card surface, to transparent over the first 35%). The badges move out of
+  card's background (a `linear-gradient` from the card's colour,
+  `--card-image-fade` or else `--bg-surface`, half transparent at 20% and
+  clear at 50%; spec 51). The badges move out of
   the title row and sit over the image at the top right; the text column
   takes the left half, the description grows (5 clamped lines) so the
   Played by and Owner lines close the card at the bottom, and the card is at
@@ -498,6 +499,13 @@ other icon set.
   cropped and fading into the card like a Document card's, with the card at
   least 160px (180px from `sm`) tall. The setup, invite and menu buttons sit
   on a `--bg-base` backing so they stay readable on a light image.
+  The card sets `--card-image-fade` to its own grey
+  (`--mantine-color-dark-6`) so the image melts into it (spec 51).
+- **My Rooms grid** (`RoomsPage`, spec 51, 2026-10-29): the page spans the
+  full window width (`w="100%"` on the Container, which otherwise shrinks
+  inside `MyRoomsPage`'s column Stack) and the Room cards sit in a container
+  `SimpleGrid`: 1 column, 2 from 640px of grid width, 3 from 1040px, 4 from
+  1440px, 5 from 1840px, 6 from 2240px. No maximum page width.
 - **Documents list Tag filter** (`TagFilter`, 2026-09-22): a searchable,
   clearable `MultiSelect` with a `Funnel` icon above the grid (max 480px
   from `sm` up), options shown as `#Tag`. It is bound to the URL

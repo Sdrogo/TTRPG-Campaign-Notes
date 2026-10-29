@@ -8,10 +8,12 @@ import { useTranslation } from 'react-i18next';
 // come back out on top of it, or they'd just navigate too.
 const ABOVE_CARD_LINK = 2;
 
-// The panel's left edge fades into the card's own background (`--bg-surface`,
-// see `.document-card`), so the image melts into the card instead of
-// ending on a seam.
-const FADE_INTO_CARD = 'linear-gradient(to right, var(--bg-surface) 0%, transparent 35%)';
+// The panel's left edge fades into the card's own background, so the image
+// melts into the card instead of ending on a seam. A card whose background
+// isn't `--bg-surface` (a DocumentCard's, see `.document-card`) sets
+// `--card-image-fade` to its own colour, as a RoomCard does (spec 51).
+const FADE_COLOR = 'var(--card-image-fade, var(--bg-surface))';
+const FADE_INTO_CARD = `linear-gradient(to right, ${FADE_COLOR} 0%, color-mix(in srgb, ${FADE_COLOR} 55%, transparent) 20%, transparent 50%)`;
 
 interface DocumentCardImagesProps {
   images: DocumentImage[];
