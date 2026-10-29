@@ -1479,4 +1479,8 @@ html body[data-scroll-locked] {
     position: absolute;
     inset: -8px;
   }
+  /* A chip clips its content; let the "x" ring reach past it. */
+  .mantine-Badge-root:has(.compact-touch-target) {
+    overflow: visible;
+  }
 }

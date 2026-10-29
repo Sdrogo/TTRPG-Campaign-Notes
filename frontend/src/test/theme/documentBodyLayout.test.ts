@@ -44,5 +44,7 @@ describe('Compact touch targets', () => {
     const touch = css.slice(css.indexOf('@media (pointer: coarse)'));
     expect(declarations(touch, '.mantine-ActionIcon-root.compact-touch-target')).toMatch(/--ai-size-xs:\s*24px/);
     expect(declarations(touch, '.compact-touch-target::before')).toMatch(/inset:\s*-8px/);
+    // A person chip (a Badge) clips its content, which would cut the "x" ring.
+    expect(declarations(touch, '.mantine-Badge-root:has(.compact-touch-target)')).toMatch(/overflow:\s*visible/);
   });
 });
