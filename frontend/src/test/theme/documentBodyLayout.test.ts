@@ -27,3 +27,22 @@ describe('Document page aside', () => {
     expect(aside).toMatch(/z-index:\s*1/);
   });
 });
+
+describe('Document page heading on a phone', () => {
+  const phone = css.slice(css.indexOf('@media (max-width: 48em) {\n  .document-detail-heading'));
+
+  it('puts the actions on the kicker line instead of a row under the name', () => {
+    expect(declarations(phone, '.document-detail-heading.mantine-Group-root')).toMatch(/display:\s*grid/);
+    expect(declarations(phone, '.document-detail-titles')).toMatch(/display:\s*contents/);
+    expect(declarations(phone, '.document-detail-heading .document-detail-meta')).toMatch(/grid-area:\s*1 \/ 2/);
+    expect(css).not.toMatch(/flex-direction:\s*column;\s*align-items:\s*stretch;/);
+  });
+});
+
+describe('Compact touch targets', () => {
+  it('keep their desktop size on a touch screen and a 40px ring to tap', () => {
+    const touch = css.slice(css.indexOf('@media (pointer: coarse)'));
+    expect(declarations(touch, '.mantine-ActionIcon-root.compact-touch-target')).toMatch(/--ai-size-xs:\s*24px/);
+    expect(declarations(touch, '.compact-touch-target::before')).toMatch(/inset:\s*-8px/);
+  });
+});
