@@ -785,6 +785,14 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **52, Live updates for maps and comments** (ticket written 2026-10-29,
+  waiting for the product owner's confirmation): one Server-Sent Events
+  stream per Room per tab (`GET /rooms/{id}/events`) carrying Session 0,
+  map, Document and Comment events, each sent only to members who may see
+  the object; maps drop the 5 s polling; a Document page re-reads its
+  Comments live. Units 52_1 backend, 52_2 frontend maps, 52_3 comments. No
+  migration.
+
 - **51, Rooms page layout** (ticket PR #268 merged by the product owner
   2026-10-29, built in the PR after it): My Rooms uses the full width (the
   Container was shrinking to its content inside a flex column), 1 to 6
