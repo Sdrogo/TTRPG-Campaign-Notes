@@ -744,8 +744,13 @@ html body[data-scroll-locked] {
     display: flow-root;
   }
 
+  /* Positioned and stacked above the text: a Note (`.note-item`, positioned)
+     spans the full width behind the float and would otherwise paint over it,
+     swallowing the clicks on the mention map's buttons and cards. */
   .document-body-aside {
     float: right;
+    position: relative;
+    z-index: 1;
     width: 45%;
     margin: 0 0 var(--mantine-spacing-md) var(--mantine-spacing-md);
   }
