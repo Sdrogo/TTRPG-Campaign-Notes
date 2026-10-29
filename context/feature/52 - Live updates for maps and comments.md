@@ -80,7 +80,10 @@ Proposed by Claude on 2026-10-29, to be confirmed by the product owner.
    names, subtitles and images, and a reveal can add a card the viewer
    couldn't see, whose id they don't know yet). Re-reads are coalesced: at
    most one per second, and none while a pointer is down (the spec 43 rebase
-   rule). An event whose `revision` the map already has is the viewer's own
+   rule). An event that arrives during a drag or inside the 1 s window is
+   never dropped: it leaves a pending flag, and the coalescer fires exactly
+   one re-read once the pointer is up and the window has passed, whichever
+   is later. An event whose `revision` the map already has is the viewer's own
    write and changes nothing. A `deleted` event, or a 404 on the re-read,
    shows the existing "map not found" state.
 6. **While the stream is down**, a map is read every `MAP_REFRESH_MS` (5 s,
@@ -195,7 +198,8 @@ Proposed by Claude on 2026-10-29, to be confirmed by the product owner.
   rollback; the alias sends only `session_zero`; leaving the Room closes
   the Room stream.
 - Frontend: one stream for two listeners in one tab; coalescing (burst ->
-  one re-read per second, none while the pointer is down); own revision
+  one re-read per second, none while the pointer is down; event during a
+  drag -> exactly one re-read after pointer up); own revision
   ignored; fallback interval only while down; Document edit form not reset
   by a `document` event; Comment glow; the Demo opens nothing.
 - Manual (staging, two browsers): a Player sees a Master's map edit within
