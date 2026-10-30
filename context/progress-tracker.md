@@ -235,10 +235,11 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending on staging and production**: `b9e4c2a7d1f3` (Session 0 polls,
-  spec 53, PR #276): staging before the PR merges, production before the
-  next release to `main`.
-- **Staging database**: `a7d3f9b2c6e1` (= head, Session 0 DDI, 47_3, PR
+- **Pending on production only**: `b9e4c2a7d1f3` (Session 0 polls, spec 53,
+  PR #276), before the next release to `main`.
+- **Staging database**: `b9e4c2a7d1f3` (= head, Session 0 polls, spec 53,
+  PR #276, applied by the product owner 2026-10-30 before the merge);
+  `a7d3f9b2c6e1` before it (Session 0 DDI, 47_3, PR
   #261, applied by the product owner 2026-10-28); `f3a9c1e7b5d4` before it (Session 0 Questions,
   47_2, PR #260, applied by the product owner 2026-10-28 with
   `.env.staging` loaded); `e5c1a8f3b7d2` before it (Session 0 chain,
@@ -796,8 +797,8 @@ on `main`.
   nobody) and a live or secret tally (with "Reveal results"). "Voted: N
   of M", an "Everyone has voted" badge and toast, close/reopen, carry
   over like Questions. **Migration `b9e4c2a7d1f3`** (revises
-  `a7d3f9b2c6e1`): the product owner applies it to staging before the PR
-  merges and to production before the next release. Same PR: a new
+  `a7d3f9b2c6e1`): applied to the staging DB by the product owner
+  2026-10-30; pending on production before the next release. Same PR: a new
   session's default name is "Sessione 1", "Sessione 2"... instead of
   "Sessione 0.5 #1" (frontend strings only), and a fix for a flaky
   ungroup answer (`delete_groups` now clears the post-its' `group_id`
