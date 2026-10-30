@@ -24,11 +24,14 @@ export type PollResults = 'live' | 'hidden';
 
 /**
  * A choice of a poll: `count` is null while the tally is hidden from the
- * viewer, `voters` while the names are; `winner` once the poll is closed.
+ * viewer, `voters` while the names are; `winner` once the poll shows its
+ * results (closed, or a revealed secret one, spec 54 Decision 7). The
+ * `body` is the title, the `description` Markdown with mentions (spec 54).
  */
 export interface PollOption {
   id: string;
   body: string;
+  description: string | null;
   count: number | null;
   voters: string[] | null;
   winner: boolean;

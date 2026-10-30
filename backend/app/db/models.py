@@ -1355,6 +1355,8 @@ class SessionZeroPollOptionRow(Base):
     )
     position: Mapped[int] = mapped_column(Integer)
     body: Mapped[str] = mapped_column(String(200))
+    # Spec 54 Decision 1: Markdown with mentions, up to 2000 characters.
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class SessionZeroPollVoteRow(Base):

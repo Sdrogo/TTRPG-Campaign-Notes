@@ -4,6 +4,8 @@ import {
   columnColor,
   formatClock,
   moduleLabel,
+  pollShares,
+  pollShowsResults,
   pollsProblem,
   questionsProblem,
   type PollDraft,
@@ -339,8 +341,8 @@ describe('polls (spec 53)', () => {
     votersVisible: 'master',
     results: 'live',
     options: [
-      { id: null, body: 'D&D' },
-      { id: 'o-2', body: 'PbtA' },
+      { id: null, body: 'D&D', description: '' },
+      { id: 'o-2', body: 'PbtA', description: '' },
     ],
     ...overrides,
   });
@@ -366,7 +368,7 @@ describe('polls (spec 53)', () => {
               revealed: true,
               closed: false,
               has_votes: true,
-              options: [{ id: 'o-1', body: 'A', count: 1, voters: ['user-2'], winner: false }],
+              options: [{ id: 'o-1', body: 'A', description: null, count: 1, voters: ['user-2'], winner: false }],
               my_option_ids: ['o-1'],
               voter_count: 1,
               electorate: 3,
@@ -391,7 +393,7 @@ describe('polls (spec 53)', () => {
         revealed: true,
         closed: false,
         hasVotes: true,
-        options: [{ id: 'o-1', body: 'A', count: 1, voters: ['user-2'], winner: false }],
+        options: [{ id: 'o-1', body: 'A', description: null, count: 1, voters: ['user-2'], winner: false }],
         myOptionIds: ['o-1'],
         voterCount: 1,
         electorate: 3,
@@ -416,7 +418,7 @@ describe('polls (spec 53)', () => {
             master_votes: false,
             voters_visible: 'master',
             results: 'live',
-            options: [{ body: 'D&D' }, { id: 'o-2', body: 'PbtA' }],
+            options: [{ body: 'D&D', description: null }, { id: 'o-2', body: 'PbtA', description: null }],
           },
           {
             id: 'p-2',
@@ -426,7 +428,7 @@ describe('polls (spec 53)', () => {
             master_votes: false,
             voters_visible: 'master',
             results: 'live',
-            options: [{ body: 'D&D' }, { id: 'o-2', body: 'PbtA' }],
+            options: [{ body: 'D&D', description: null }, { id: 'o-2', body: 'PbtA', description: null }],
           },
         ],
       },
@@ -444,16 +446,39 @@ describe('polls (spec 53)', () => {
     expect(pollsProblem([])).toBeNull();
     expect(pollsProblem([draft()])).toBeNull();
     expect(pollsProblem([draft({ body: ' ' })])).toBe('sessionZero.polls.problems.empty');
-    expect(pollsProblem([draft({ options: [{ id: null, body: 'A' }, { id: null, body: '' }] })])).toBe(
+    expect(pollsProblem([draft({ options: [{ id: null, body: 'A', description: '' }, { id: null, body: '', description: '' }] })])).toBe(
       'sessionZero.polls.problems.empty',
     );
-    expect(pollsProblem([draft({ options: [{ id: null, body: 'A' }] })])).toBe('sessionZero.polls.problems.options');
-    const many = Array.from({ length: 21 }, (_, index) => ({ id: null, body: `${index}` }));
+    expect(pollsProblem([draft({ options: [{ id: null, body: 'A', description: '' }] })])).toBe('sessionZero.polls.problems.options');
+    const many = Array.from({ length: 21 }, (_, index) => ({ id: null, body: `${index}`, description: '' }));
     expect(pollsProblem([draft({ options: many })])).toBe('sessionZero.polls.problems.options');
-    expect(pollsProblem([draft({ options: [{ id: null, body: 'Dark  souls' }, { id: null, body: ' dark souls' }] })])).toBe(
+    expect(pollsProblem([draft({ options: [{ id: null, body: 'Dark  souls', description: '' }, { id: null, body: ' dark souls', description: '' }] })])).toBe(
       'sessionZero.polls.problems.duplicate',
     );
     expect(pollsProblem([draft({ maxChoices: 0 })])).toBe('sessionZero.polls.problems.maxChoices');
     expect(pollsProblem([draft({ maxChoices: 3 })])).toBe('sessionZero.polls.problems.maxChoices');
+  });
+
+  // Spec 54 Decision 5: shares of all the votes cast, adding up to 100.
+  it('computes each choice\'s share of the votes', () => {
+    const shares = pollShares({
+      options: [
+        { id: 'a', body: 'A', description: null, count: 3, voters: null, winner: true },
+        { id: 'b', body: 'B', description: null, count: 1, voters: null, winner: false },
+      ],
+    });
+    expect([...shares.values()]).toEqual([75, 25]);
+    const none = pollShares({ options: [{ id: 'a', body: 'A', description: null, count: 0, voters: null, winner: false }] });
+    expect(none.get('a')).toBe(0);
+    const hidden = pollShares({ options: [{ id: 'a', body: 'A', description: null, count: null, voters: null, winner: false }] });
+    expect(hidden.get('a')).toBeNull();
+  });
+
+  // Spec 54 Decision 6: closed, or a revealed secret poll.
+  it('knows when a poll shows its results', () => {
+    expect(pollShowsResults({ closed: false, results: 'live', revealed: false })).toBe(false);
+    expect(pollShowsResults({ closed: true, results: 'live', revealed: false })).toBe(true);
+    expect(pollShowsResults({ closed: false, results: 'hidden', revealed: false })).toBe(false);
+    expect(pollShowsResults({ closed: false, results: 'hidden', revealed: true })).toBe(true);
   });
 });

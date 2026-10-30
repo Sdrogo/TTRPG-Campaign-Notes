@@ -1003,20 +1003,35 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   question (bold) and its hint (dimmed), light badges on the right
   ("Closed" grey, "Secret vote"/"Results revealed" grape, "Anonymous"
   grey) and, for a voter with more than one vote, a filled blue badge
-  "N votes left" (grey at 0). A voter gets radios (one vote) or
-  checkboxes (unticked ones disabled once no votes are left), saved on
-  each change, and a subtle "Withdraw vote"; anyone else reads the
-  choices, their own vote with a filled check, the winner bold with a
-  trophy once closed. When the viewer sees the tally each choice shows
-  "N votes" (a tooltip with the names when they may see them) and a small
-  bar (green for a winner). Under it "Voted: N of M", a green light
+  "N votes left" (grey at 0). Since spec 54 the choices are **cards in
+  one centred column** (at most 44rem, `.sz-poll-cards` in `index.css`):
+  `bg-raised`, `md` radius, the title bold and under it the description
+  (`MarkdownText`, `sm`). A voter's card has its radio (one vote) or
+  checkbox (unticked ones dimmed once no votes are left) before the title
+  and a click anywhere on it but a link ticks it, saved on each change;
+  the voter's card has an accent border; a subtle "Withdraw vote" under the
+  column. Anyone else sees their own vote with a filled check. When the
+  viewer sees the tally each card shows "N votes" on the right (a tooltip
+  with the names when they may see them) and its **left edge** (5px) fills
+  from the bottom in `--accent-primary` to the choice's share of all the
+  votes cast. Once the poll shows its results (closed, or a secret one
+  revealed) the cards **turn over** (rotateY 600ms, 80ms apart, the
+  description folding away) to a back with only the title and the share in
+  `--font-display` 2rem accent, the count under it; the winner card(s) get
+  an accent ring and glow, scale 1.04 (1.02 on a phone) and a trophy. A
+  subtle "Show the options"/"Show the results" turns them back for the
+  viewer. Transitions run only after mount (`data-ready`), so a page opened
+  on results shows them at once; with reduced motion nothing turns, folds
+  or grows. Under it "Voted: N of M", a green light
   "Everyone has voted" badge once complete (and a success toast for the
   Master when it happens live), the Master's "Reveal results"/"Hide
   results" (secret polls) and "Close poll"/"Reopen", and a dimmed "Still
   to vote: ..." for whoever sees names. "Edit polls" is an `xl` modal
   like "Edit questions" (full screen on a phone, no close on outside
   click, asks before dropping changes): per poll the question, hint, the
-  choices (2 to 20, each removable down to 2) with "Add choice", then
+  choices (2 to 20, each removable down to 2, each with an autosizing
+  "Choice N description (optional)" mention textarea under it, spec 54)
+  with "Add choice", then
   "Votes per person" (number), "Who sees the names" and "Results"
   selects on one row and the "The Master votes too" switch; a voted
   poll's settings are disabled with a dimmed note.

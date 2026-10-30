@@ -337,10 +337,12 @@ class DdiResponse(BaseModel):
 class PollOptionResponse(BaseModel):
     """A choice of a poll. `count` is null while the tally is hidden from
     the caller, `voters` too while the names are (spec 53 Decision 5);
-    `winner` once the poll is closed and the caller sees the tally."""
+    `winner` once the poll shows its results (closed, or a revealed secret
+    one, spec 54 Decision 7) and the caller sees the tally."""
 
     id: uuid.UUID
     body: str
+    description: str | None
     count: int | None
     voters: list[uuid.UUID] | None
     winner: bool
@@ -779,7 +781,7 @@ async def _poll_responses(
         names = sees_names(poll, viewer.role)
         poll_options = [o for o in options if o.poll_id == poll.id]
         counts = {o.id: sum(1 for v in poll_votes if v.option_id == o.id) for o in poll_options}
-        best = winners(counts) if poll.closed and tally else set()
+        best = winners(counts) if poll.showing_results and tally else set()
         responses[poll.module_id].append(
             PollResponse(
                 id=poll.id,
@@ -797,6 +799,7 @@ async def _poll_responses(
                     PollOptionResponse(
                         id=o.id,
                         body=o.body,
+                        description=o.description,
                         count=counts[o.id] if tally else None,
                         voters=[v.user_id for v in poll_votes if v.option_id == o.id]
                         if names

@@ -50,6 +50,7 @@ class OptionBody(BaseModel):
 
     id: uuid.UUID | None = None
     body: str
+    description: str | None = None
 
 
 class PollBody(BaseModel):
@@ -140,7 +141,7 @@ async def set_polls(
                     master_votes=p.master_votes,
                     voters_visible=p.voters_visible,
                     results=p.results,
-                    options=tuple(OptionSpec(o.id, o.body) for o in p.options),
+                    options=tuple(OptionSpec(o.id, o.body, o.description) for o in p.options),
                 )
                 for p in body.polls
             ]
