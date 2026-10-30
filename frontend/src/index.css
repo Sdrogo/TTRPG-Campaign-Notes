@@ -1308,6 +1308,24 @@ html body[data-scroll-locked] {
   }
 }
 
+/* Spec 52_3: a Comment another member just added or edited glows once. */
+.comment-bubble[data-glow] {
+  animation: comment-glow 1.5s ease-out;
+}
+@keyframes comment-glow {
+  from {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mantine-color-accent-6) 60%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .comment-bubble[data-glow] {
+    animation: none;
+  }
+}
+
 /* Spec 46d Decision 7: drag and drop. The item dragged lifts (shadow, a
    slight tilt) and its place stays, faded; between two items a line in the
    column's colour opens a gap, pushing the others apart; dropped onto a

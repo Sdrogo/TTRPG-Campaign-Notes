@@ -10,12 +10,12 @@ from collections.abc import Collection
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import documents_repo, rooms_repo
+from app.db import comments_repo, documents_repo, rooms_repo
 from app.db import session as session_module
 from app.domain.models import Document
 from app.domain.relationship_maps import RelationshipMap, is_map_visible
-from app.domain.visibility import is_document_visible
-from app.realtime.broker import DOCUMENT, MAP, Event, broker
+from app.domain.visibility import is_comment_visible_in_thread, is_document_visible
+from app.realtime.broker import COMMENTS, DOCUMENT, MAP, Event, broker
 
 CHANGED = "changed"
 DELETED = "deleted"
@@ -102,3 +102,39 @@ async def push_document(
         return
     after = await document_audience(session, document)
     push(session, room_id, Event(None, CHANGED, document_id, DOCUMENT), after | set(before))
+
+
+async def comment_audience(
+    session: AsyncSession, document_id: uuid.UUID, comment_id: uuid.UUID
+) -> set[uuid.UUID]:
+    """The members who see the Document and, in its thread, the Comment
+    (every Comment above it included) as they now are (spec 52 Decision 4)."""
+    document = await documents_repo.get_document(session, document_id)
+    comments = await comments_repo.get_comments_with_ancestors(session, [comment_id])
+    comment = comments.get(comment_id)
+    if document is None or comment is None:
+        return set()
+    readers = await document_audience(session, document)
+    grants = await comments_repo.list_grants_for_comments(session, list(comments))
+    members = await rooms_repo.list_memberships(session, document.room_id)
+    return {
+        member.user_id
+        for member in members
+        if member.user_id in readers
+        and is_comment_visible_in_thread(comment, comments, grants, member.user_id, member.role)
+    }
+
+
+async def push_comment(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    document_id: uuid.UUID,
+    comment_id: uuid.UUID,
+    *,
+    before: Collection[uuid.UUID] = (),
+) -> None:
+    """Tells who sees the Comment after the write, and `before`, that the
+    Document's Comments changed. The event names the Document, never the
+    Comment, so nobody learns the id of one they can't see."""
+    after = await comment_audience(session, document_id, comment_id)
+    push(session, room_id, Event(None, CHANGED, document_id, COMMENTS), after | set(before))

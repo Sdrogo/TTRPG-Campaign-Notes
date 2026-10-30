@@ -13,7 +13,7 @@ from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.main import app
-from app.realtime.audience import push
+from app.realtime.audience import comment_audience, push
 from app.realtime.broker import Event, broker
 
 
@@ -283,6 +283,84 @@ async def test_an_owner_removed_from_a_private_document_hears_it_go(
 
     (heard,) = await _heard(room, player)
     assert heard == [_document_event(document_id)]
+
+
+def _comments_event(document_id: str) -> dict[str, Any]:
+    return {"topic": "comments", "revision": None, "kind": "changed", "id": document_id}
+
+
+async def _comment(
+    client: AsyncClient, room: _Room, document_id: str, author: _Member, visibility: str
+) -> str:
+    response = await client.post(
+        f"{room.url}/documents/{document_id}/comments",
+        json={"body": "Ballots, not blades", "visibility": visibility},
+        headers=author.headers,
+    )
+    assert response.status_code == 201, response.text
+    return str(response.json()["id"])
+
+
+async def test_comment_writes_reach_who_sees_the_comment(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 52_3: the event names the Document, never the Comment."""
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    master = await _listen(client, room, room.master)
+    player = await _listen(client, room, room.player)
+
+    shared = await _comment(client, room, document_id, room.master, "room")
+    await _comment(client, room, document_id, room.master, "master")
+    reacted = await client.put(
+        f"{room.url}/documents/{document_id}/comments/{shared}/reactions/%F0%9F%94%A5",
+        headers=room.player.headers,
+    )
+    assert reacted.status_code == 200, reacted.text
+
+    heard_master, heard_player = await _heard(room, master, player)
+    assert heard_player == [_comments_event(document_id)] * 2
+    assert heard_master == [_comments_event(document_id)] * 3
+
+
+async def test_a_member_who_loses_a_comment_hears_it_go(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room)
+    comment_id = await _comment(client, room, document_id, room.master, "room")
+    player = await _listen(client, room, room.player)
+
+    hidden = await client.patch(
+        f"{room.url}/documents/{document_id}/comments/{comment_id}",
+        json={"visibility": "master"},
+        headers=room.master.headers,
+    )
+    assert hidden.status_code == 200, hidden.text
+    deleted = await client.delete(
+        f"{room.url}/documents/{document_id}/comments/{comment_id}", headers=room.master.headers
+    )
+    assert deleted.status_code == 204, deleted.text
+
+    (heard,) = await _heard(room, player)
+    assert heard == [_comments_event(document_id)]
+
+
+async def test_comments_on_a_hidden_document_stay_unheard(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    document_id = await _document(client, room, visibility="master")
+    player = await _listen(client, room, room.player)
+
+    await _comment(client, room, document_id, room.master, "room")
+
+    (heard,) = await _heard(room, player)
+    assert heard == []
+
+
+async def test_nobody_sees_a_comment_that_is_not_there(db_session: AsyncSession) -> None:
+    assert await comment_audience(db_session, uuid.uuid4(), uuid.uuid4()) == set()
 
 
 async def test_only_members_open_the_room_stream(

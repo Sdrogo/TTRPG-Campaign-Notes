@@ -358,7 +358,10 @@ other icon set.
   (initials, accent light) + a **full-width** bubble (it stretches to
   the row even for a one-word Comment) on `--bg-raised` with
   `--border-default` and `md` radius holding the author's name, a
-  `VisibilityBadge` (size `xs`, omitted for "Room") and the text; under
+  `VisibilityBadge` (size `xs`, omitted for "Room") and the text (spec
+  52_3: a bubble another member just added or edited arrives live and
+  glows once for 1.5 s, a 3px accent ring fading out, none with reduced
+  motion; class `comment-bubble`, `data-glow`); under
   it a muted meta line (relative time, "Edited", text actions
   "Edit"/"Delete" that turn `--accent-strong` on hover). Reactions (spec
   19c) sit between the bubble and the meta line as round `compact-xs`

@@ -226,3 +226,15 @@ day ("ok", after Decision 1 was explained in the thread).
   (Decision 5), `RelationshipMapPage` polling only while the stream is down
   and showing "map not found" on a `deleted` event or a 404 re-read. The
   linked map panel never polled and is unchanged.
+- **52_3** (2026-10-30, PR #274): backend `comment_audience` /
+  `push_comment` in `app/realtime/audience.py` (members who see the
+  Document and the Comment through its thread; the event's `id` is the
+  Document), pushed by every write in `comments.py` (an edit takes the
+  "before" audience too; deletion keeps the placeholder, so its audience
+  doesn't change). Frontend `hooks/useDocumentEvents.ts` in `DocumentView`
+  (page and split pane): a `comments` or `document` event for the Document
+  invalidates its key (the Document, its Comments, Notes and files), 30 s
+  re-reads while the stream is down, and Comments another member added or
+  edited (new id or new `updatedAt`) glow 1.5 s (`CommentItem`
+  `glowing`). Decision 7's edit form needed no special case: the form
+  copies the Document when it opens and a re-read never resets it.

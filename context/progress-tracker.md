@@ -793,8 +793,10 @@ on `main`.
   backend built** (Room stream, Session 0 alias, map and Document pushes,
   Caddyfile); **52_2 frontend built** (one shared stream per Room per tab,
   Session 0 on it, maps re-read on events, at most once a second and never
-  mid-drag, 5 s polling only while the stream is down); next 52_3
-  (comments). No migration; the changed Caddyfile is copied and reloaded by the
+  mid-drag, 5 s polling only while the stream is down); **52_3 built**
+  (Comment events to who sees the Comment, Document page re-reads its
+  Comments live and others' new or edited ones glow). Spec 52 complete;
+  to test on staging with two browsers. No migration; the changed Caddyfile is copied and reloaded by the
   prod deploy (`deploy.sh`).
 
 - **51, Rooms page layout** (ticket PR #268 merged by the product owner

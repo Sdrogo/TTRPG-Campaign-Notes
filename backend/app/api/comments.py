@@ -119,6 +119,7 @@ from app.domain.visibility import (
     starting_grants,
 )
 from app.i18n.dependencies import LocaleDep
+from app.realtime.audience import comment_audience, push_comment
 
 router = APIRouter(prefix="/rooms/{room_id}/documents/{document_id}/comments", tags=["comments"])
 
@@ -657,6 +658,7 @@ async def create_comment(
     await comments_repo.insert_comment(session, comment, selective_ids)
     await index_mentions(session, _comment_source(comment), comment.body)
     characters = await _characters_for(session, [comment], membership)
+    await push_comment(session, room_id, document_id, comment.id)
     return _to_response(
         comment,
         set(selective_ids),
@@ -689,6 +691,7 @@ async def update_comment(
     membership = viewer.membership
     found = await _get_visible_comment(session, document_id, comment_id, membership, locale)
     comment, selective_ids = found.comment, found.selective_ids
+    before = await comment_audience(session, document_id, comment_id)
 
     change_character = "as_document_id" in body.model_fields_set
     try:
@@ -750,6 +753,7 @@ async def update_comment(
     if plan.audit_entry is not None:
         await rooms_repo.insert_audit_log(session, plan.audit_entry)
 
+    await push_comment(session, room_id, document_id, comment_id, before=before)
     return await _single_response(
         session, found, viewer, comment=plan.comment, selective_ids=selective_ids
     )
@@ -792,6 +796,7 @@ async def delete_comment(
     # Its placeholder mentions nothing any more.
     await index_mentions(session, _comment_source(deleted), deleted.body)
     await comments_repo.set_pin_and_resolution(session, deleted)
+    await push_comment(session, room_id, document_id, comment_id)
 
 
 async def _attach_image(
@@ -820,6 +825,7 @@ async def _attach_image(
     image = await store_image(
         session, document, membership.user_id, data, document_images, locale, post_id=comment.id
     )
+    await push_comment(session, document.room_id, document.id, comment_id)
     return await _single_response(session, found, viewer, images=[*images, image])
 
 
@@ -886,6 +892,7 @@ async def delete_comment_image(
     if image is None:
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.image.notFound", locale)
     await remove_images(session, [image])
+    await push_comment(session, room_id, document_id, comment_id)
 
 
 def _parse_emoji(emoji: str, locale: str) -> str:
@@ -931,6 +938,7 @@ async def add_reaction(
     except (ReactionOnDeletedCommentError, TooManyReactionEmojiError) as exc:
         raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
     await reactions_repo.add_reaction(session, comment_id, requester_id, clean, datetime.now(UTC))
+    await push_comment(session, room_id, document_id, comment_id)
     return await _single_response(session, found, viewer)
 
 
@@ -954,6 +962,7 @@ async def remove_reaction(
     found = await _get_visible_comment(session, document_id, comment_id, membership, locale)
     clean = _parse_emoji(emoji, locale)
     await reactions_repo.remove_reaction(session, comment_id, requester_id, clean)
+    await push_comment(session, room_id, document_id, comment_id)
     return await _single_response(session, found, viewer)
 
 
@@ -1014,6 +1023,7 @@ async def pin_comment(
     ) as exc:
         raise _pin_or_resolve_error(exc, locale) from exc
     await comments_repo.set_pin_and_resolution(session, pinned)
+    await push_comment(session, room_id, document_id, comment_id)
     return await _single_response(session, found, viewer, comment=pinned)
 
 
@@ -1036,6 +1046,7 @@ async def unpin_comment(
     except CannotPinCommentError as exc:
         raise _pin_or_resolve_error(exc, locale) from exc
     await comments_repo.set_pin_and_resolution(session, unpinned)
+    await push_comment(session, room_id, document_id, comment_id)
     return await _single_response(session, found, viewer, comment=unpinned)
 
 
@@ -1062,6 +1073,7 @@ async def resolve_comment(
     except (CannotResolveCommentError, NotTopLevelCommentError) as exc:
         raise _pin_or_resolve_error(exc, locale) from exc
     await comments_repo.set_pin_and_resolution(session, resolved)
+    await push_comment(session, room_id, document_id, comment_id)
     return await _single_response(session, found, viewer, comment=resolved)
 
 
@@ -1085,6 +1097,7 @@ async def reopen_comment(
     except (CannotResolveCommentError, NotTopLevelCommentError) as exc:
         raise _pin_or_resolve_error(exc, locale) from exc
     await comments_repo.set_pin_and_resolution(session, reopened)
+    await push_comment(session, room_id, document_id, comment_id)
     return await _single_response(session, found, viewer, comment=reopened)
 
 
@@ -1166,6 +1179,7 @@ async def promote_comment(
         raise _promotion_error(exc, locale) from exc
     await comments_repo.set_promotion(session, plan.comment)
     await rooms_repo.insert_audit_log(session, plan.audit_entry)
+    await push_comment(session, room_id, document_id, comment_id)
     return await _single_response(session, found, viewer, comment=plan.comment)
 
 
@@ -1262,6 +1276,7 @@ async def reveal_comment(
     await comments_repo.update_comment(session, revealed)
     await comments_repo.set_comment_grants(session, comment_id, sorted(plan.selective_user_ids))
     await record_reveal(session, plan)
+    await push_comment(session, room_id, document_id, comment_id)
     return await _single_response(
         session, found, viewer, comment=revealed, selective_ids=plan.selective_user_ids
     )

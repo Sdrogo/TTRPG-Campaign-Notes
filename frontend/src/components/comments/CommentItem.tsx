@@ -49,6 +49,8 @@ interface CommentItemProps {
   granteeIds?: string[] | null;
   /** Posted since the viewer's previous visit (spec 19b): marked "New". */
   isNew?: boolean;
+  /** Another member just added or edited it (spec 52_3): it glows once. */
+  glowing?: boolean;
   /**
    * Pins or unpins it, resolves or reopens its branch (spec 19c). Offered
    * only where the backend's `canPin`/`canResolve` allow it.
@@ -90,6 +92,7 @@ export function CommentItem({
   visibilityLevels,
   granteeIds,
   isNew = false,
+  glowing = false,
   onSetFlag,
   settingFlag = false,
   onPromote,
@@ -180,6 +183,8 @@ export function CommentItem({
           />
         ) : (
           <Box
+            className="comment-bubble"
+            data-glow={glowing || undefined}
             px="sm"
             py={8}
             // Always the full width of the thread, however short the text.
