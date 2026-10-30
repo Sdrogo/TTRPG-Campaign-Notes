@@ -30,6 +30,7 @@ from app.db.models import (
     SessionZeroAnswerRow,
     SessionZeroCardReactionRow,
     SessionZeroCardRow,
+    SessionZeroPollVoteRow,
     UserRow,
 )
 from app.domain.models import Comment, PostKind
@@ -42,8 +43,8 @@ async def erase_personal_rows(session: AsyncSession, user_id: uuid.UUID) -> None
     spec 28_1) and invitations addressed to them, plus their Session 0
     post-its (anonymous ones and copies too) and reactions on post-its
     (spec 46 Decision 14), their Session 0 answers and the record of which
-    Documents those made, and their DDI acceptances (spec 47 Decision 14;
-    the Documents stay). Their
+    Documents those made, their DDI acceptances (spec 47 Decision 14;
+    the Documents stay) and their poll votes (spec 53). Their
     Memberships are gone already (left or deleted with their Room); what
     else they wrote stays, with no profile behind it. Ids left in audit
     entries, versions and `created_by` columns no longer lead to anyone
@@ -67,6 +68,7 @@ async def erase_personal_rows(session: AsyncSession, user_id: uuid.UUID) -> None
         SessionZeroAnswerRow,
         SessionZeroAnswerDocumentRow,
         SessionZeroAcceptanceRow,
+        SessionZeroPollVoteRow,
     ):
         await session.execute(delete(model).where(model.user_id == user_id))
     await session.execute(delete(SessionZeroCardRow).where(SessionZeroCardRow.author_id == user_id))

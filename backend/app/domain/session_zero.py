@@ -79,6 +79,7 @@ class ModuleKind(StrEnum):
     STARS_WISHES = "stars_wishes"
     QUESTIONS = "questions"
     DDI = "ddi"
+    POLL = "poll"
 
 
 # Spec 47 Decision 2: a chain nobody composed, as the page was before.
@@ -636,7 +637,9 @@ def clean_chain(kinds: Sequence[ModuleKind]) -> list[ModuleKind]:
     return list(kinds)
 
 
-CARRYABLE_KINDS = frozenset({ModuleKind.RETRO, ModuleKind.QUESTIONS, ModuleKind.DDI})
+CARRYABLE_KINDS = frozenset(
+    {ModuleKind.RETRO, ModuleKind.QUESTIONS, ModuleKind.DDI, ModuleKind.POLL}
+)
 
 
 def carry_source(

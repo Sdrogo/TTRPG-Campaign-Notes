@@ -1381,7 +1381,8 @@
         "lines_veils": "Lijnen en Sluiers",
         "stars_wishes": "Sterren en Wensen",
         "questions": "Vragen",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "Peiling"
       },
       "hiddenHint": "Nog verborgen stappen: {{count}}",
       "next": "Volgende",
@@ -1397,6 +1398,7 @@
       "removeTitle": "Deze stap verwijderen?",
       "removeBody": "De post-its van ‘{{name}}’ worden mee verwijderd. Lijnen en Sluiers blijft altijd onaangeroerd.",
       "removeQuestionsBody": "De vragen en antwoorden van ‘{{name}}’ worden ermee verwijderd. Al gemaakte Documenten blijven.",
+      "removePollBody": "De peilingen en stemmen van ‘{{name}}’ worden mee verwijderd.",
       "chain": "Stappen van de sessie",
       "chainHint": "Kies de stappen en hun volgorde; je kunt ze later nog wijzigen.",
       "max": "Hoogstens {{max}} stappen.",
@@ -1478,6 +1480,62 @@
       "withdraw": "Intrekken",
       "open": "Document openen",
       "loadError": "De DDI kan niet gelezen worden."
+    },
+    "polls": {
+      "title": "Peilingen",
+      "edit": "Peilingen bewerken",
+      "editHint": "Een verwijderde peiling of keuze neemt haar stemmen mee. De instellingen van een peiling zitten vast bij de eerste stem.",
+      "noneMaster": "Nog geen peilingen: voeg er een toe met ‘Peilingen bewerken’.",
+      "nonePlayer": "De Master heeft de peilingen nog niet klaargezet.",
+      "number": "Peiling {{number}}",
+      "question": "Vraag",
+      "hint": "Hint (optioneel)",
+      "choices": "Keuzes",
+      "choice": "Keuze {{number}}",
+      "removeChoice": "Keuze {{number}} verwijderen",
+      "addChoice": "Keuze toevoegen",
+      "add": "Peiling toevoegen",
+      "maxChoices": "Stemmen per persoon",
+      "masterVotes": "De Master stemt ook",
+      "votersVisible": "Wie de namen ziet",
+      "resultsLabel": "Resultaten",
+      "locked": "Deze peiling heeft al stemmen: de instellingen zitten vast.",
+      "closed": "Gesloten",
+      "secret": "Geheime stemming",
+      "revealed": "Resultaten onthuld",
+      "anonymous": "Anoniem",
+      "secretHint": "De resultaten blijven geheim tot de Master ze onthult.",
+      "progress": "Gestemd: {{count}} van {{total}}",
+      "everyoneVoted": "Iedereen heeft gestemd",
+      "everyoneVotedToast": "Iedereen heeft gestemd: ‘{{poll}}’",
+      "notVoted": "Nog niet gestemd: {{names}}",
+      "reveal": "Resultaten onthullen",
+      "hide": "Resultaten verbergen",
+      "close": "Peiling sluiten",
+      "reopen": "Heropenen",
+      "withdraw": "Stem intrekken",
+      "yourVote": "Jouw stem",
+      "winner": "Meeste stemmen",
+      "noVotes": "Geen stemmen",
+      "votes_one": "{{count}} stem",
+      "votes_other": "{{count}} stemmen",
+      "votesLeft_one": "{{count}} stem over",
+      "votesLeft_other": "{{count}} stemmen over",
+      "visibility": {
+        "master": "Alleen de Master",
+        "everyone": "Iedereen",
+        "nobody": "Niemand (anoniem)"
+      },
+      "results": {
+        "live": "Live",
+        "hidden": "Geheim tot onthulling"
+      },
+      "problems": {
+        "empty": "Elke peiling heeft een vraag en al haar keuzes nodig.",
+        "options": "Elke peiling heeft {{min}} tot {{max}} keuzes.",
+        "duplicate": "Twee keuzes van dezelfde peiling zijn gelijk.",
+        "maxChoices": "Stemmen per persoon gaan van 1 tot het aantal keuzes."
+      }
     }
   },
   "markdown": {

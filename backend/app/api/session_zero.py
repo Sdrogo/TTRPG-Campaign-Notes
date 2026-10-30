@@ -25,6 +25,7 @@ from app.db import (
     documents_repo,
     rooms_repo,
     session_zero_ddi_repo,
+    session_zero_polls_repo,
     session_zero_questions_repo,
     session_zero_repo,
     tags_repo,
@@ -107,6 +108,20 @@ from app.domain.session_zero_ddi import (
     can_read_acceptance,
     is_outdated,
 )
+from app.domain.session_zero_polls import (
+    InvalidPollsError,
+    InvalidVoteError,
+    NotAVoterError,
+    NotPollModuleError,
+    PollClosedError,
+    PollResults,
+    PollSettingsLockedError,
+    VotersVisible,
+    is_voter,
+    sees_names,
+    sees_tally,
+    winners,
+)
 from app.domain.session_zero_questions import (
     CreationDisabledError,
     DocumentExistsError,
@@ -167,6 +182,12 @@ _STATUS_FOR: dict[type[DomainError], int] = {
     NotDdiModuleError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     NoDdiDocumentError: status.HTTP_409_CONFLICT,
     MasterDoesNotAcceptError: status.HTTP_403_FORBIDDEN,
+    NotPollModuleError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    InvalidPollsError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    PollSettingsLockedError: status.HTTP_409_CONFLICT,
+    PollClosedError: status.HTTP_409_CONFLICT,
+    InvalidVoteError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    NotAVoterError: status.HTTP_403_FORBIDDEN,
 }
 
 
@@ -313,11 +334,48 @@ class DdiResponse(BaseModel):
     can_accept: bool
 
 
+class PollOptionResponse(BaseModel):
+    """A choice of a poll. `count` is null while the tally is hidden from
+    the caller, `voters` too while the names are (spec 53 Decision 5);
+    `winner` once the poll is closed and the caller sees the tally."""
+
+    id: uuid.UUID
+    body: str
+    count: int | None
+    voters: list[uuid.UUID] | None
+    winner: bool
+
+
+class PollResponse(BaseModel):
+    """A poll (spec 53 Decisions 2-6). `voter_count` of `electorate` have
+    voted; `not_voted` lists who hasn't, for a caller who sees names.
+    `can_vote` while the caller may vote on it."""
+
+    id: uuid.UUID
+    position: int
+    body: str
+    hint: str | None
+    max_choices: int
+    master_votes: bool
+    voters_visible: VotersVisible
+    results: PollResults
+    revealed: bool
+    closed: bool
+    has_votes: bool
+    options: list[PollOptionResponse]
+    my_option_ids: list[uuid.UUID]
+    voter_count: int
+    electorate: int
+    not_voted: list[uuid.UUID] | None
+    tally_visible: bool
+    can_vote: bool
+
+
 class ModuleResponse(BaseModel):
     """A step of the shown session's chain (spec 47), with its columns: a
     Retro or Stars and Wishes module's own; none for Lines & Veils, whose
     board is the Room-wide `lines_veils`. A Questions module has
-    `questions`, a DDI one `ddi`."""
+    `questions`, a DDI one `ddi`, a Poll one `polls` (spec 53)."""
 
     id: uuid.UUID
     kind: ModuleKind
@@ -325,6 +383,7 @@ class ModuleResponse(BaseModel):
     columns: list[ColumnResponse]
     questions: QuestionsResponse | None = None
     ddi: DdiResponse | None = None
+    polls: list[PollResponse] | None = None
 
 
 class RoundResponse(BaseModel):
@@ -605,6 +664,9 @@ async def _board_response(
     ddis = await _ddi_responses(
         session, room_id, viewer, [m for m in chain if m.kind is ModuleKind.DDI], shown
     )
+    polls = await _poll_responses(
+        session, room_id, viewer, [m for m in chain if m.kind is ModuleKind.POLL], shown
+    )
 
     def card_response(card: Card) -> CardResponse:
         column = board.columns[card.column_id]
@@ -681,6 +743,7 @@ async def _board_response(
                 columns=[column_response(c) for c in board.module_columns(module.id)],
                 questions=questions.get(module.id),
                 ddi=ddis.get(module.id),
+                polls=polls.get(module.id),
             )
             for module in chain
         ],
@@ -689,6 +752,68 @@ async def _board_response(
         lines_veils=[column_response(column) for column in lines_veils],
         timer=_timer_response(timer, now),
     )
+
+
+async def _poll_responses(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    viewer: Membership,
+    modules: list[Module],
+    round_: Round,
+) -> dict[uuid.UUID, list[PollResponse]]:
+    """The Poll modules on screen as `viewer` sees them (spec 53 Decision
+    5): the tally and the names only when the poll lets them see those."""
+    if not modules:
+        return {}
+    polls = await session_zero_polls_repo.list_polls(session, [m.id for m in modules])
+    options = await session_zero_polls_repo.list_options(session, [p.id for p in polls])
+    votes = await session_zero_polls_repo.list_votes(session, [p.id for p in polls])
+    memberships = await rooms_repo.list_memberships(session, room_id)
+    open_ = round_.closed_at is None
+    responses: dict[uuid.UUID, list[PollResponse]] = {m.id: [] for m in modules}
+    for poll in polls:
+        poll_votes = [v for v in votes if v.poll_id == poll.id]
+        electorate = [m.user_id for m in memberships if is_voter(poll, m.role)]
+        voted = {v.user_id for v in poll_votes}
+        tally = sees_tally(poll, viewer.role)
+        names = sees_names(poll, viewer.role)
+        poll_options = [o for o in options if o.poll_id == poll.id]
+        counts = {o.id: sum(1 for v in poll_votes if v.option_id == o.id) for o in poll_options}
+        best = winners(counts) if poll.closed and tally else set()
+        responses[poll.module_id].append(
+            PollResponse(
+                id=poll.id,
+                position=poll.position,
+                body=poll.body,
+                hint=poll.hint,
+                max_choices=poll.max_choices,
+                master_votes=poll.master_votes,
+                voters_visible=poll.voters_visible,
+                results=poll.results,
+                revealed=poll.revealed,
+                closed=poll.closed,
+                has_votes=bool(poll_votes),
+                options=[
+                    PollOptionResponse(
+                        id=o.id,
+                        body=o.body,
+                        count=counts[o.id] if tally else None,
+                        voters=[v.user_id for v in poll_votes if v.option_id == o.id]
+                        if names
+                        else None,
+                        winner=o.id in best,
+                    )
+                    for o in poll_options
+                ],
+                my_option_ids=[v.option_id for v in poll_votes if v.user_id == viewer.user_id],
+                voter_count=len(voted),
+                electorate=len(electorate),
+                not_voted=[u for u in electorate if u not in voted] if names else None,
+                tally_visible=tally,
+                can_vote=open_ and not poll.closed and is_voter(poll, viewer.role),
+            )
+        )
+    return responses
 
 
 async def _ddi_responses(
@@ -986,10 +1111,11 @@ async def _set_up_modules(
     *,
     only: uuid.UUID | None = None,
 ) -> None:
-    """A new round's Questions and DDI modules, in chain order: each takes
-    its source's settings when it carries one over (spec 47b): a Questions
-    one its questions too, or the default Tag when it has no source; a DDI
-    one its Document, without acceptances. `only` sets up that one module
+    """A new round's Questions, DDI and Poll modules, in chain order: each
+    takes its source's settings when it carries one over (spec 47b): a
+    Questions one its questions too, or the default Tag when it has no
+    source; a DDI one its Document, without acceptances; a Poll one its
+    polls, without votes (spec 53 Decision 7). `only` sets up that one module
     of the round, with the one source."""
     created = [
         module
@@ -1002,6 +1128,8 @@ async def _set_up_modules(
             await session_zero_repo.set_module_settings(
                 session, module.id, document_id=source.document_id
             )
+        if module.kind is ModuleKind.POLL and source is not None:
+            await session_zero_polls_repo.copy_polls(session, room_id, source.id, module.id, now)
         if module.kind is not ModuleKind.QUESTIONS:
             continue
         if source is None:

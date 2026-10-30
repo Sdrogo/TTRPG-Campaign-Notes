@@ -1346,7 +1346,8 @@
         "lines_veils": "ライン&ヴェール",
         "stars_wishes": "スターとウィッシュ",
         "questions": "質問",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "投票"
       },
       "hiddenHint": "まだ非表示のステップ：{{count}}",
       "next": "次へ",
@@ -1362,6 +1363,7 @@
       "removeTitle": "このステップを削除しますか？",
       "removeBody": "「{{name}}」の付箋も一緒に削除されます。ライン&ヴェールは変更されません。",
       "removeQuestionsBody": "「{{name}}」の質問と回答も一緒に削除されます。作成済みのドキュメントは残ります。",
+      "removePollBody": "「{{name}}」の投票と票も一緒に削除されます。",
       "chain": "セッションのステップ",
       "chainHint": "ステップとその順番を選んでください。後から変更できます。",
       "max": "ステップは最大{{max}}個です。",
@@ -1443,6 +1445,60 @@
       "withdraw": "取り消す",
       "open": "ドキュメントを開く",
       "loadError": "DDIを読み込めませんでした。"
+    },
+    "polls": {
+      "title": "投票",
+      "edit": "投票を編集",
+      "editHint": "削除した投票や選択肢は、その票も一緒に消えます。投票の設定は最初の票が入ると固定されます。",
+      "noneMaster": "まだ投票はありません。「投票を編集」で追加してください。",
+      "nonePlayer": "マスターはまだ投票を用意していません。",
+      "number": "投票{{number}}",
+      "question": "質問",
+      "hint": "ヒント（任意）",
+      "choices": "選択肢",
+      "choice": "選択肢{{number}}",
+      "removeChoice": "選択肢{{number}}を削除",
+      "addChoice": "選択肢を追加",
+      "add": "投票を追加",
+      "maxChoices": "1人あたりの票数",
+      "masterVotes": "マスターも投票する",
+      "votersVisible": "名前を見られる人",
+      "resultsLabel": "結果",
+      "locked": "この投票にはすでに票があるため、設定は固定されています。",
+      "closed": "締め切り",
+      "secret": "秘密投票",
+      "revealed": "結果公開済み",
+      "anonymous": "匿名",
+      "secretHint": "マスターが公開するまで結果は秘密です。",
+      "progress": "投票済み：{{total}}人中{{count}}人",
+      "everyoneVoted": "全員が投票しました",
+      "everyoneVotedToast": "全員が投票しました：「{{poll}}」",
+      "notVoted": "未投票：{{names}}",
+      "reveal": "結果を公開",
+      "hide": "結果を隠す",
+      "close": "投票を締め切る",
+      "reopen": "再開",
+      "withdraw": "票を取り消す",
+      "yourVote": "あなたの票",
+      "winner": "最多得票",
+      "noVotes": "票なし",
+      "votes_other": "{{count}}票",
+      "votesLeft_other": "残り{{count}}票",
+      "visibility": {
+        "master": "マスターのみ",
+        "everyone": "全員",
+        "nobody": "誰も（匿名）"
+      },
+      "results": {
+        "live": "リアルタイム",
+        "hidden": "公開まで秘密"
+      },
+      "problems": {
+        "empty": "各投票には質問とすべての選択肢が必要です。",
+        "options": "各投票の選択肢は{{min}}〜{{max}}個です。",
+        "duplicate": "同じ投票に同じ選択肢が2つあります。",
+        "maxChoices": "1人あたりの票数は1から選択肢の数までです。"
+      }
     }
   },
   "markdown": {

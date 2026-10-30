@@ -1383,7 +1383,8 @@
         "lines_veils": "Linhas e Véus",
         "stars_wishes": "Estrelas e Desejos",
         "questions": "Perguntas",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "Sondagem"
       },
       "hiddenHint": "Etapas ainda ocultas: {{count}}",
       "next": "Seguinte",
@@ -1399,6 +1400,7 @@
       "removeTitle": "Remover esta etapa?",
       "removeBody": "Os post-its de «{{name}}» são eliminados com ela. Linhas e Véus nunca é tocado.",
       "removeQuestionsBody": "As perguntas e respostas de «{{name}}» são eliminadas com ela. Os Documentos já criados ficam.",
+      "removePollBody": "As sondagens e os votos de «{{name}}» são eliminados com ela.",
       "chain": "Etapas da sessão",
       "chainHint": "Escolhe as etapas e a sua ordem; podes alterá-las mais tarde.",
       "max": "No máximo {{max}} etapas.",
@@ -1480,6 +1482,62 @@
       "withdraw": "Retirar",
       "open": "Abrir o Documento",
       "loadError": "Não foi possível ler a DDI."
+    },
+    "polls": {
+      "title": "Sondagens",
+      "edit": "Editar sondagens",
+      "editHint": "Uma sondagem ou opção removida leva os seus votos. As definições de uma sondagem bloqueiam-se ao primeiro voto.",
+      "noneMaster": "Ainda não há sondagens: adicione uma com «Editar sondagens».",
+      "nonePlayer": "O Mestre ainda não preparou as sondagens.",
+      "number": "Sondagem {{number}}",
+      "question": "Pergunta",
+      "hint": "Dica (opcional)",
+      "choices": "Opções",
+      "choice": "Opção {{number}}",
+      "removeChoice": "Remover a opção {{number}}",
+      "addChoice": "Adicionar opção",
+      "add": "Adicionar sondagem",
+      "maxChoices": "Votos por pessoa",
+      "masterVotes": "O Mestre também vota",
+      "votersVisible": "Quem vê os nomes",
+      "resultsLabel": "Resultados",
+      "locked": "Esta sondagem já tem votos: as definições estão bloqueadas.",
+      "closed": "Fechada",
+      "secret": "Voto secreto",
+      "revealed": "Resultados revelados",
+      "anonymous": "Anónima",
+      "secretHint": "Os resultados ficam secretos até o Mestre os revelar.",
+      "progress": "Votaram: {{count}} de {{total}}",
+      "everyoneVoted": "Todos votaram",
+      "everyoneVotedToast": "Todos votaram: «{{poll}}»",
+      "notVoted": "Faltam: {{names}}",
+      "reveal": "Revelar resultados",
+      "hide": "Ocultar resultados",
+      "close": "Fechar sondagem",
+      "reopen": "Reabrir",
+      "withdraw": "Retirar voto",
+      "yourVote": "O seu voto",
+      "winner": "Mais votada",
+      "noVotes": "Sem votos",
+      "votes_one": "{{count}} voto",
+      "votes_other": "{{count}} votos",
+      "votesLeft_one": "{{count}} voto restante",
+      "votesLeft_other": "{{count}} votos restantes",
+      "visibility": {
+        "master": "Só o Mestre",
+        "everyone": "Todos",
+        "nobody": "Ninguém (anónimo)"
+      },
+      "results": {
+        "live": "Em direto",
+        "hidden": "Secretos até serem revelados"
+      },
+      "problems": {
+        "empty": "Cada sondagem precisa da pergunta e de todas as opções.",
+        "options": "Cada sondagem tem de {{min}} a {{max}} opções.",
+        "duplicate": "Duas opções da mesma sondagem são iguais.",
+        "maxChoices": "Os votos por pessoa vão de 1 ao número de opções."
+      }
     }
   },
   "markdown": {

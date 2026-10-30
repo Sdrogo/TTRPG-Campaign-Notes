@@ -301,7 +301,19 @@
       "notDdiModule": "Diese Etappe ist keine DDI.",
       "noDdiDocument": "Der Master hat das Dokument der DDI noch nicht gewählt.",
       "masterDoesNotAccept": "Der Master schreibt die DDI; die Spieler akzeptieren sie.",
-      "ddiDocumentInvalid": "Das Dokument der DDI muss zu diesem Raum gehören."
+      "ddiDocumentInvalid": "Das Dokument der DDI muss zu diesem Raum gehören.",
+      "notPollModule": "Dieser Schritt ist keine Umfrage.",
+      "tooManyPolls": "Ein Schritt enthält höchstens 10 Umfragen.",
+      "pollOptions": "Eine Umfrage braucht 2 bis 20 Optionen.",
+      "pollDuplicateOption": "Zwei Optionen einer Umfrage dürfen nicht gleich sein.",
+      "pollMaxChoices": "Stimmen pro Person reichen von 1 bis zur Anzahl der Optionen.",
+      "pollText": "Eine Frage oder Option ist leer oder zu lang (200 Zeichen, 300 für einen Hinweis).",
+      "pollSettingsLocked": "Diese Umfrage hat bereits Stimmen: Ihre Einstellungen können sich nicht ändern.",
+      "pollClosed": "Diese Umfrage ist geschlossen.",
+      "pollVote": "Zu viele Optionen, eine doppelte oder eine aus einer anderen Umfrage.",
+      "notAVoter": "Der Master stimmt in dieser Umfrage nicht ab.",
+      "pollNotFound": "Umfrage nicht gefunden.",
+      "pollOrder": "Eine Umfrage oder Option gehört nicht zu diesem Schritt."
     }
   },
   "pdf": {

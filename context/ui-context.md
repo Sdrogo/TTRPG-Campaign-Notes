@@ -997,6 +997,29 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   end "I have read and accept" (filled), or a green "You accepted the
   DDI." with a subtle "Withdraw"; a dimmed line when there is no DDI yet
   or they don't see it.
+- Poll step (spec 53, `PollBoard` in `components/sessionZero/PollModule.tsx`):
+  an `h4` "Polls" with the Master's "Edit polls" (default,
+  `compact-sm`) on the right, then one bordered `md` paper per poll: the
+  question (bold) and its hint (dimmed), light badges on the right
+  ("Closed" grey, "Secret vote"/"Results revealed" grape, "Anonymous"
+  grey) and, for a voter with more than one vote, a filled blue badge
+  "N votes left" (grey at 0). A voter gets radios (one vote) or
+  checkboxes (unticked ones disabled once no votes are left), saved on
+  each change, and a subtle "Withdraw vote"; anyone else reads the
+  choices, their own vote with a filled check, the winner bold with a
+  trophy once closed. When the viewer sees the tally each choice shows
+  "N votes" (a tooltip with the names when they may see them) and a small
+  bar (green for a winner). Under it "Voted: N of M", a green light
+  "Everyone has voted" badge once complete (and a success toast for the
+  Master when it happens live), the Master's "Reveal results"/"Hide
+  results" (secret polls) and "Close poll"/"Reopen", and a dimmed "Still
+  to vote: ..." for whoever sees names. "Edit polls" is an `xl` modal
+  like "Edit questions" (full screen on a phone, no close on outside
+  click, asks before dropping changes): per poll the question, hint, the
+  choices (2 to 20, each removable down to 2) with "Add choice", then
+  "Votes per person" (number), "Who sees the names" and "Results"
+  selects on one row and the "The Master votes too" switch; a voted
+  poll's settings are disabled with a dimmed note.
 
 - Header (`SessionZeroHeader`, spec 46d Decision 4): one wrapping row
   above the boards, no section titles. The session selector

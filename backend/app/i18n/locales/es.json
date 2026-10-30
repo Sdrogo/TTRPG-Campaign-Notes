@@ -301,7 +301,19 @@
       "notDdiModule": "Esta etapa no es una DDI.",
       "noDdiDocument": "El Máster aún no ha elegido el Documento de la DDI.",
       "masterDoesNotAccept": "El Máster escribe la DDI; los Jugadores la aceptan.",
-      "ddiDocumentInvalid": "El Documento de la DDI debe ser de esta Sala."
+      "ddiDocumentInvalid": "El Documento de la DDI debe ser de esta Sala.",
+      "notPollModule": "Este paso no es una encuesta.",
+      "tooManyPolls": "Un paso tiene como máximo 10 encuestas.",
+      "pollOptions": "Una encuesta necesita de 2 a 20 opciones.",
+      "pollDuplicateOption": "Dos opciones de una encuesta no pueden ser iguales.",
+      "pollMaxChoices": "Los votos por persona van de 1 al número de opciones.",
+      "pollText": "Una pregunta u opción está vacía o es demasiado larga (200 caracteres, 300 para una pista).",
+      "pollSettingsLocked": "Esta encuesta ya tiene votos: su configuración no puede cambiar.",
+      "pollClosed": "Esta encuesta está cerrada.",
+      "pollVote": "Demasiadas opciones, una repetida o una de otra encuesta.",
+      "notAVoter": "El Máster no vota en esta encuesta.",
+      "pollNotFound": "Encuesta no encontrada.",
+      "pollOrder": "Una encuesta u opción no es de este paso."
     }
   },
   "pdf": {

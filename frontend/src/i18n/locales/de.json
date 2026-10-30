@@ -1381,7 +1381,8 @@
         "lines_veils": "Grenzen & Schleier",
         "stars_wishes": "Sterne und Wünsche",
         "questions": "Fragen",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "Umfrage"
       },
       "hiddenHint": "Noch verborgene Etappen: {{count}}",
       "next": "Weiter",
@@ -1397,6 +1398,7 @@
       "removeTitle": "Diese Etappe entfernen?",
       "removeBody": "Die Post-its von „{{name}}“ werden mit ihr gelöscht. Grenzen & Schleier bleibt immer unberührt.",
       "removeQuestionsBody": "Die Fragen und Antworten von „{{name}}“ werden mit ihr gelöscht. Bereits erstellte Dokumente bleiben.",
+      "removePollBody": "Die Umfragen und Stimmen von „{{name}}“ werden mit gelöscht.",
       "chain": "Etappen der Sitzung",
       "chainHint": "Wähle die Etappen und ihre Reihenfolge; du kannst sie später ändern.",
       "max": "Höchstens {{max}} Etappen.",
@@ -1478,6 +1480,62 @@
       "withdraw": "Zurückziehen",
       "open": "Dokument öffnen",
       "loadError": "Die DDI konnte nicht gelesen werden."
+    },
+    "polls": {
+      "title": "Umfragen",
+      "edit": "Umfragen bearbeiten",
+      "editHint": "Eine entfernte Umfrage oder Option nimmt ihre Stimmen mit. Die Einstellungen einer Umfrage sperren sich bei der ersten Stimme.",
+      "noneMaster": "Noch keine Umfragen: füge eine mit „Umfragen bearbeiten“ hinzu.",
+      "nonePlayer": "Der Master hat die Umfragen noch nicht vorbereitet.",
+      "number": "Umfrage {{number}}",
+      "question": "Frage",
+      "hint": "Hinweis (optional)",
+      "choices": "Optionen",
+      "choice": "Option {{number}}",
+      "removeChoice": "Option {{number}} entfernen",
+      "addChoice": "Option hinzufügen",
+      "add": "Umfrage hinzufügen",
+      "maxChoices": "Stimmen pro Person",
+      "masterVotes": "Der Master stimmt auch ab",
+      "votersVisible": "Wer die Namen sieht",
+      "resultsLabel": "Ergebnisse",
+      "locked": "Diese Umfrage hat bereits Stimmen: Ihre Einstellungen sind gesperrt.",
+      "closed": "Geschlossen",
+      "secret": "Geheime Abstimmung",
+      "revealed": "Ergebnisse aufgedeckt",
+      "anonymous": "Anonym",
+      "secretHint": "Die Ergebnisse bleiben geheim, bis der Master sie aufdeckt.",
+      "progress": "Abgestimmt: {{count}} von {{total}}",
+      "everyoneVoted": "Alle haben abgestimmt",
+      "everyoneVotedToast": "Alle haben abgestimmt: „{{poll}}“",
+      "notVoted": "Fehlen noch: {{names}}",
+      "reveal": "Ergebnisse aufdecken",
+      "hide": "Ergebnisse verbergen",
+      "close": "Umfrage schließen",
+      "reopen": "Wieder öffnen",
+      "withdraw": "Stimme zurückziehen",
+      "yourVote": "Deine Stimme",
+      "winner": "Meiste Stimmen",
+      "noVotes": "Keine Stimmen",
+      "votes_one": "{{count}} Stimme",
+      "votes_other": "{{count}} Stimmen",
+      "votesLeft_one": "{{count}} Stimme übrig",
+      "votesLeft_other": "{{count}} Stimmen übrig",
+      "visibility": {
+        "master": "Nur der Master",
+        "everyone": "Alle",
+        "nobody": "Niemand (anonym)"
+      },
+      "results": {
+        "live": "Live",
+        "hidden": "Geheim bis zur Aufdeckung"
+      },
+      "problems": {
+        "empty": "Jede Umfrage braucht ihre Frage und alle Optionen.",
+        "options": "Jede Umfrage hat {{min}} bis {{max}} Optionen.",
+        "duplicate": "Zwei Optionen derselben Umfrage sind gleich.",
+        "maxChoices": "Stimmen pro Person reichen von 1 bis zur Anzahl der Optionen."
+      }
     }
   },
   "markdown": {

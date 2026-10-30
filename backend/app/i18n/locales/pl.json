@@ -301,7 +301,19 @@
       "notDdiModule": "Ten etap nie jest DDI.",
       "noDdiDocument": "Mistrz nie wybrał jeszcze Dokumentu DDI.",
       "masterDoesNotAccept": "Mistrz pisze DDI; Gracze ją akceptują.",
-      "ddiDocumentInvalid": "Dokument DDI musi należeć do tego Pokoju."
+      "ddiDocumentInvalid": "Dokument DDI musi należeć do tego Pokoju.",
+      "notPollModule": "Ten etap nie jest ankietą.",
+      "tooManyPolls": "Etap zawiera najwyżej 10 ankiet.",
+      "pollOptions": "Ankieta potrzebuje od 2 do 20 opcji.",
+      "pollDuplicateOption": "Dwie opcje ankiety nie mogą być takie same.",
+      "pollMaxChoices": "Głosy na osobę wynoszą od 1 do liczby opcji.",
+      "pollText": "Pytanie lub opcja jest puste lub za długie (200 znaków, 300 dla podpowiedzi).",
+      "pollSettingsLocked": "Ta ankieta ma już głosy: jej ustawień nie można zmienić.",
+      "pollClosed": "Ta ankieta jest zamknięta.",
+      "pollVote": "Za dużo opcji, powtórzona opcja lub opcja z innej ankiety.",
+      "notAVoter": "Mistrz nie głosuje w tej ankiecie.",
+      "pollNotFound": "Nie znaleziono ankiety.",
+      "pollOrder": "Ankieta lub opcja nie należy do tego etapu."
     }
   },
   "pdf": {
