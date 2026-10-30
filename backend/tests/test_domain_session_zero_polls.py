@@ -1,4 +1,4 @@
-"""The Poll module's pure rules (spec 53)."""
+"""The Poll module's pure rules (specs 53 and 54)."""
 
 import uuid
 from datetime import UTC, datetime
@@ -77,6 +77,27 @@ def test_clean_polls_trims_texts_and_drops_an_empty_hint() -> None:
     assert hinted.hint == "pick"
 
 
+def test_clean_polls_keeps_a_trimmed_description() -> None:
+    """Spec 54 Decision 1: optional, trimmed, empty is none."""
+    spec = _spec("a", "b")
+    described = PollSpec(
+        **{
+            **spec.__dict__,
+            "options": (
+                OptionSpec(None, "a", "  At the #Hotel Kaguya  "),
+                OptionSpec(None, "b", " "),
+            ),
+        }
+    )
+    [cleaned] = clean_polls([described])
+    assert [o.description for o in cleaned.options] == ["At the #Hotel Kaguya", None]
+    too_long = PollSpec(
+        **{**spec.__dict__, "options": (OptionSpec(None, "a", "d" * 2001), OptionSpec(None, "b"))}
+    )
+    with pytest.raises(InvalidPollsError):
+        clean_polls([too_long])
+
+
 @pytest.mark.parametrize(
     ("specs", "key"),
     [
@@ -139,6 +160,14 @@ def test_tally_and_names() -> None:
         _poll(voters_visible=VotersVisible.EVERYONE, results=PollResults.HIDDEN), player
     )
     assert not sees_names(_poll(voters_visible=VotersVisible.NOBODY), master)
+
+
+def test_showing_results() -> None:
+    """Spec 54 Decision 6: closed, or a revealed secret poll."""
+    assert not _poll().showing_results
+    assert _poll(closed_at=datetime.now(UTC)).showing_results
+    assert not _poll(results=PollResults.HIDDEN).showing_results
+    assert _poll(results=PollResults.HIDDEN, revealed=True).showing_results
 
 
 def test_winners() -> None:

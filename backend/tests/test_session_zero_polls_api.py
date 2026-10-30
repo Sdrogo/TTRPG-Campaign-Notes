@@ -282,6 +282,9 @@ async def test_tally_names_and_progress(
     shown = (await _view(client, room, room.other_player))[3]
     assert shown["revealed"] is True and shown["options"][0]["count"] == 1
     assert shown["options"][0]["voters"] == [room.player.id]
+    # Spec 54 Decision 7: a revealed secret poll shows its winner while open.
+    assert [o["winner"] for o in shown["options"]] == [True, False]
+    assert all(not o["winner"] for o in player[1]["options"])
 
 
 async def test_closing(
@@ -307,6 +310,64 @@ async def test_closing(
     reopened = await client.put(url, json={"closed": False}, headers=room.master.headers)
     assert _module(reopened.json())["polls"][0]["closed"] is False
     assert (await _vote(client, room, room.player, poll, 2)).status_code == 200
+
+
+async def test_choice_descriptions(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    """Spec 54 Decisions 1 and 12: a choice's description is stored
+    trimmed, editable once the poll has votes (keeping them), 422 when too
+    long, and carried over with the choice."""
+    room, board = await _room(client, make_token, "poll")
+    module_id = _module(board)["id"]
+    [poll] = await _set(
+        client,
+        room,
+        module_id,
+        {
+            "body": "Hook?",
+            "options": [
+                {"body": "Stanza 404", "description": "  All'#Hotel Kaguya...  "},
+                {"body": "Budōkan"},
+            ],
+        },
+    )
+    assert [o["description"] for o in poll["options"]] == ["All'#Hotel Kaguya...", None]
+    await _vote(client, room, room.player, poll, 0)
+    [edited] = await _set(
+        client,
+        room,
+        module_id,
+        {
+            "id": poll["id"],
+            "body": "Hook?",
+            "options": [
+                {"id": poll["options"][0]["id"], "body": "Stanza 404", "description": ""},
+                {"id": poll["options"][1]["id"], "body": "Budōkan", "description": "#SHITE"},
+            ],
+        },
+    )
+    assert [o["description"] for o in edited["options"]] == [None, "#SHITE"]
+    assert edited["options"][0]["count"] == 1
+    too_long = await client.put(
+        f"{room.url}/modules/{module_id}/polls",
+        json={
+            "polls": [
+                _poll() | {"options": [{"body": "a", "description": "d" * 2001}, {"body": "b"}]}
+            ]
+        },
+        headers=room.master.headers,
+    )
+    assert too_long.status_code == 422
+
+    fresh = await client.post(
+        f"{room.url}/rounds",
+        json={"modules": [{"kind": "poll", "carry": True}]},
+        headers=room.master.headers,
+    )
+    assert fresh.status_code == 200, fresh.text
+    copied = _module(fresh.json())["polls"][0]
+    assert [o["description"] for o in copied["options"]] == [None, "#SHITE"]
 
 
 async def test_hidden_steps_closed_sessions_and_other_rooms(

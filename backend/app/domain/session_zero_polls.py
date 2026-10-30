@@ -20,6 +20,7 @@ MAX_OPTIONS = 20
 MAX_POLL_LENGTH = 200
 MAX_HINT_LENGTH = 300
 MAX_OPTION_LENGTH = 200
+MAX_DESCRIPTION_LENGTH = 2000
 
 
 class VotersVisible(StrEnum):
@@ -45,6 +46,7 @@ class PollOption:
     poll_id: uuid.UUID
     position: int
     body: str
+    description: str | None = None
 
 
 @dataclass(frozen=True)
@@ -68,6 +70,12 @@ class Poll:
         """Whether the Master closed it (Decision 6)."""
         return self.closed_at is not None
 
+    @property
+    def showing_results(self) -> bool:
+        """Spec 54 Decision 6: closed, or a secret poll the Master
+        revealed; its cards show the results side."""
+        return self.closed or (self.results is PollResults.HIDDEN and self.revealed)
+
 
 @dataclass(frozen=True)
 class Vote:
@@ -81,10 +89,12 @@ class Vote:
 
 @dataclass(frozen=True)
 class OptionSpec:
-    """A choice as the Master sends it; `id` keeps an existing one."""
+    """A choice as the Master sends it; `id` keeps an existing one. The
+    description (spec 54) is Markdown with mentions."""
 
     id: uuid.UUID | None
     body: str
+    description: str | None = None
 
 
 @dataclass(frozen=True)
@@ -147,6 +157,15 @@ def _text(raw: str, limit: int) -> str:
     return text
 
 
+def _description(raw: str | None) -> str | None:
+    """Spec 54 Decision 1: trimmed, empty is none, up to
+    `MAX_DESCRIPTION_LENGTH`."""
+    text = (raw or "").strip() or None
+    if text is not None and len(text) > MAX_DESCRIPTION_LENGTH:
+        raise InvalidPollsError("errors.sessionZero.pollText")
+    return text
+
+
 def _key(text: str) -> str:
     return " ".join(text.split()).casefold()
 
@@ -163,7 +182,12 @@ def clean_polls(specs: Sequence[PollSpec]) -> list[PollSpec]:
         if not MIN_OPTIONS <= len(spec.options) <= MAX_OPTIONS:
             raise InvalidPollsError("errors.sessionZero.pollOptions")
         options = tuple(
-            OptionSpec(option.id, _text(option.body, MAX_OPTION_LENGTH)) for option in spec.options
+            OptionSpec(
+                option.id,
+                _text(option.body, MAX_OPTION_LENGTH),
+                _description(option.description),
+            )
+            for option in spec.options
         )
         if len({_key(option.body) for option in options}) != len(options):
             raise InvalidPollsError("errors.sessionZero.pollDuplicateOption")
