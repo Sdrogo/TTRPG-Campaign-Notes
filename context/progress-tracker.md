@@ -13,6 +13,17 @@ detail:
 
 ## Current Status (2026-10-30)
 
+- **Document heading, no "Documents" kicker** (2026-10-30, no migration,
+  pushed to `staging`): the small uppercase `documents.title` text above the
+  Document's name is gone, with its `.document-detail-kicker` CSS. On a
+  phone the actions (badge, read aloud, ⋮) now sit alone at the top right
+  and the name starts on the row below. The `documents.title` key stays
+  (back-link labels, Room Documents page).
+
+- **Production migration `b9e4c2a7d1f3`** (2026-10-30): Session 0 polls
+  (spec 53) applied to the production database by hand, before the release
+  to `main` that ships the code.
+
 - **Fix, editing the full-page mention map** (2026-10-30, no migration,
   PR into `staging`): quick moves on `MentionMapPage` were undone when an
   autosave answered in the middle of them (the page kept its own older
@@ -29,7 +40,7 @@ detail:
 
 - **Document page on a phone** (2026-10-29, no migration, PR into
   `staging`): below `sm` the heading's actions (badge, read aloud, ⋮)
-  share the kicker's line instead of a row under the name and subtitle
+  share a line instead of a row under the name and subtitle
   (the column stacking came from the Figma refactor #252). The info
   panel's "+" buttons and a person chip's "x" keep their desktop size
   (24px) on touch screens, with an invisible ring that keeps the 40px tap
@@ -249,8 +260,6 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending on production only**: `b9e4c2a7d1f3` (Session 0 polls, spec 53,
-  PR #276), before the next release to `main`.
 - **Staging database**: `b9e4c2a7d1f3` (= head, Session 0 polls, spec 53,
   PR #276, applied by the product owner 2026-10-30 before the merge);
   `a7d3f9b2c6e1` before it (Session 0 DDI, 47_3, PR
@@ -268,7 +277,11 @@ here and remind the product owner.
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `a7d3f9b2c6e1` (= head, Session 0 DDI, 47_3, PR
+- **Production database**: `b9e4c2a7d1f3` (= head, Session 0 polls, spec 53,
+  PR #276), applied 2026-10-30 with `backend/.env` loaded (plain `alembic
+  upgrade head`) ahead of the release to `main` that ships it, so until it
+  merges production's code does not carry the migration file. Before it,
+  `a7d3f9b2c6e1` (Session 0 DDI, 47_3, PR
   #261), applied 2026-10-28 with `backend/.env` loaded (plain `alembic
   upgrade head`, no `.env.staging` exported), together with `e5c1a8f3b7d2`
   (Session 0 chain, 47_1) and `f3a9c1e7b5d4` (Session 0 Questions, 47_2),
@@ -287,7 +300,7 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: `b9e4c2a7d1f3` (Session 0 polls, spec 53).
+- **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
 `b9e4c2a7d1f3` Session 0 polls (53) ← `a7d3f9b2c6e1` Session 0 DDI (47_3) ← `f3a9c1e7b5d4` Session 0 Questions (47_2) ← `e5c1a8f3b7d2` Session 0 chain (47_1) ← `d4a7e2c9f1b3` post-it order (46d_2) ← `c3f8a1d6e9b4` colours and groups (46c) ← `4797859660e2` Session 0 boards (46_1) ← `b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
