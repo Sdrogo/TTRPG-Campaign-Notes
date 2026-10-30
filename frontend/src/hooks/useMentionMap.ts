@@ -7,9 +7,12 @@ import {
   type RawMapDetail,
   type RawMentionMap,
   type RawMentionMapPreview,
+  toMentionCardsBody,
 } from '../lib/maps';
-import type { MentionMap, MentionMapPreview, RelationshipMapDetail } from '../types/map';
+import type { ChangesSave } from '../types/boardChanges';
+import type { Board, MentionMap, MentionMapPreview, RelationshipMapDetail } from '../types/map';
 import { documentQueryKey } from './useDocuments';
+import { MAP_REFRESH_MS } from './useMaps';
 
 function mentionMapPath(roomId: string, documentId: string) {
   return `/rooms/${roomId}/documents/${documentId}/mention-map`;
@@ -20,17 +23,19 @@ function mentionMapPath(roomId: string, documentId: string) {
  * description, a Note, a Comment, any Document of the Room) refreshes the map
  * too: the map follows the mentions (spec 36 Decision 1).
  */
-function mentionMapQueryKey(roomId: string, documentId: string) {
+export function mentionMapQueryKey(roomId: string, documentId: string) {
   return [...documentQueryKey(roomId, documentId), 'mentionMap'] as const;
 }
 
 /**
  * The Document's mention map as the viewer sees it, or null when it has none
- * (spec 36).
+ * (spec 36). With `refresh`, while the Room stream is down, it is read
+ * again every `MAP_REFRESH_MS`, like a free map (spec 52).
  */
-export function useMentionMap(roomId: string, documentId: string) {
+export function useMentionMap(roomId: string, documentId: string, refresh = false) {
   return useQuery<MentionMap | null>({
     queryKey: mentionMapQueryKey(roomId, documentId),
+    refetchInterval: refresh ? MAP_REFRESH_MS : false,
     queryFn: async () => {
       try {
         return toMentionMap(await apiFetch<RawMentionMap>(mentionMapPath(roomId, documentId)));
@@ -84,17 +89,19 @@ export function useDeleteMentionMap(roomId: string, documentId: string) {
 }
 
 /**
- * Saves the cards a manager moved or recolored (Decision 9). The answer only
- * refreshes the cache, like a free map's board save.
+ * Saves the cards a manager moved or recolored since the board the page
+ * last had from the server (Decision 9, per item as in spec 43): the others
+ * keep their place. The answer only refreshes the cache, like a free map's
+ * board save.
  */
 export function useSaveMentionCards(roomId: string, documentId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (cards: { document_id: string; x: number; y: number; color: string }[]) =>
+    mutationFn: async ({ changes }: ChangesSave<Board>) =>
       toMentionMap(
         await apiFetch<RawMentionMap>(`${mentionMapPath(roomId, documentId)}/cards`, {
           method: 'PUT',
-          json: { cards },
+          json: { cards: toMentionCardsBody(changes) },
         }),
       ),
     onSuccess: (map) => queryClient.setQueryData(mentionMapQueryKey(roomId, documentId), map),

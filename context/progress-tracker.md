@@ -11,7 +11,21 @@ detail:
 - [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md):
   the original log up to 2026-09-30 (specs 01 to 11).
 
-## Current Status (2026-10-29)
+## Current Status (2026-10-30)
+
+- **Fix, editing the full-page mention map** (2026-10-30, no migration,
+  PR into `staging`): quick moves on `MentionMapPage` were undone when an
+  autosave answered in the middle of them (the page kept its own older
+  save loop: one copy of the board, replaced by the server's whenever no
+  save was pending, and "saved" set even with a newer move waiting). It now
+  uses the free maps' `useBoardAutosave` (spec 43: only changed cards sent,
+  unsaved moves laid over whatever arrives, nothing redrawn mid-drag) and
+  `useMapEvents` (spec 52: re-read on another manager's save and on any
+  Document event, 5 s polling only while the stream is down). The mention
+  map response now carries `revision`; saving cards, changing the depth
+  and deleting it push a `map` event to whoever sees its Document.
+  `useBoardAutosave` also takes a board at the same revision with other
+  content (a mention map following the mentions, a renamed Document).
 
 - **Document page on a phone** (2026-10-29, no migration, PR into
   `staging`): below `sm` the heading's actions (badge, read aloud, ⋮)

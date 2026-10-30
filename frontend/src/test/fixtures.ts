@@ -404,6 +404,7 @@ export function rawMentionMap(overrides: Record<string, unknown> = {}) {
     created_by: 'user-1',
     updated_at: '2026-10-14T10:00:00Z',
     can_manage: true,
+    revision: 1,
     cards: [
       rawMapCard({ color: 'gold' }),
       rawMapCard({

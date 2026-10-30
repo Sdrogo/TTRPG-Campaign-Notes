@@ -203,6 +203,51 @@ async def test_geographic_map_writes_are_announced(
     ]
 
 
+async def test_mention_map_writes_reach_who_sees_its_document(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    thorn = await _document(client, room)
+    center = await _document(client, room)
+    note = await client.post(
+        f"{room.url}/documents/{center}/notes",
+        json={
+            "title": "Ties",
+            "description": f"#[Niv-Mizzet](doc:{thorn})",
+            "relational_link": True,
+        },
+        headers=room.master.headers,
+    )
+    assert note.status_code == 201, note.text
+    url = f"{room.url}/documents/{center}/mention-map"
+    created = await client.post(url, json={"depth": 0}, headers=room.master.headers)
+    assert created.status_code == 201, created.text
+    mention_map = created.json()
+    master = await _listen(client, room, room.master)
+    player = await _listen(client, room, room.player)
+
+    moved = await client.put(
+        f"{url}/cards",
+        json={"cards": [{"document_id": thorn, "x": 10, "y": 20}]},
+        headers=room.master.headers,
+    )
+    deepened = await client.patch(url, json={"depth": 1}, headers=room.master.headers)
+    deleted = await client.delete(url, headers=room.master.headers)
+    assert deleted.status_code == 204
+
+    # Every save raises the revision the page rebases on (spec 43).
+    assert moved.json()["revision"] == mention_map["revision"] + 1
+    assert deepened.json()["revision"] == mention_map["revision"] + 2
+    events = [
+        _map_event(mention_map["id"], moved.json()["revision"]),
+        _map_event(mention_map["id"], deepened.json()["revision"]),
+        _map_event(mention_map["id"], deepened.json()["revision"], "deleted"),
+    ]
+    heard_master, heard_player = await _heard(room, master, player)
+    assert heard_master == events
+    assert heard_player == events
+
+
 async def test_document_writes_reach_who_sees_the_document(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
