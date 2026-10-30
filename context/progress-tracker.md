@@ -792,8 +792,8 @@ on `main`.
   drop the 5 s polling; a Document page re-reads its Comments live. **52_1
   backend built** (Room stream, Session 0 alias, map and Document pushes,
   Caddyfile); next 52_2 (frontend shared stream + live maps), then 52_3
-  (comments). No migration. Deploy note: the Caddyfile changed, so the VPS
-  needs it reloaded with the backend.
+  (comments). No migration; the changed Caddyfile is copied and reloaded by the
+  prod deploy (`deploy.sh`).
 
 - **51, Rooms page layout** (ticket PR #268 merged by the product owner
   2026-10-29, built in the PR after it): My Rooms uses the full width (the
