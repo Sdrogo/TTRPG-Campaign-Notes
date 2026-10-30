@@ -1339,7 +1339,7 @@
     },
     "rounds": {
       "first": "Sesión 0",
-      "later": "Sesión 0.5 #{{number}}",
+      "later": "Sesión {{number}}",
       "pick": "Sesión que mostrar",
       "start": "Nueva sesión",
       "startBody": "La sesión actual se cierra y queda consultable en solo lectura; los borradores nunca publicados se eliminan. La nueva empieza vacía con los pasos de abajo: marca «Traer de la sesión anterior» para recuperar columnas, preguntas o la DDI. Líneas y Velos se queda como está.",
@@ -1381,7 +1381,8 @@
         "lines_veils": "Líneas y Velos",
         "stars_wishes": "Estrellas y Deseos",
         "questions": "Preguntas",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "Encuesta"
       },
       "hiddenHint": "Etapas aún ocultas: {{count}}",
       "next": "Siguiente",
@@ -1397,6 +1398,7 @@
       "removeTitle": "¿Quitar esta etapa?",
       "removeBody": "Los pósits de «{{name}}» se eliminan con ella. Líneas y Velos nunca se toca.",
       "removeQuestionsBody": "Las preguntas y respuestas de «{{name}}» se eliminan con ella. Los Documentos ya creados se quedan.",
+      "removePollBody": "Las encuestas y los votos de «{{name}}» se eliminan con ella.",
       "chain": "Etapas de la sesión",
       "chainHint": "Elige las etapas y su orden; podrás cambiarlas más adelante.",
       "max": "Como máximo {{max}} etapas.",
@@ -1478,6 +1480,62 @@
       "withdraw": "Retirar",
       "open": "Abrir el Documento",
       "loadError": "No se puede leer la DDI."
+    },
+    "polls": {
+      "title": "Encuestas",
+      "edit": "Editar encuestas",
+      "editHint": "Una encuesta u opción que quites se lleva sus votos. La configuración de una encuesta se bloquea con el primer voto.",
+      "noneMaster": "Aún no hay encuestas: añade una con «Editar encuestas».",
+      "nonePlayer": "El Máster aún no ha preparado las encuestas.",
+      "number": "Encuesta {{number}}",
+      "question": "Pregunta",
+      "hint": "Pista (opcional)",
+      "choices": "Opciones",
+      "choice": "Opción {{number}}",
+      "removeChoice": "Quitar la opción {{number}}",
+      "addChoice": "Añadir opción",
+      "add": "Añadir encuesta",
+      "maxChoices": "Votos por persona",
+      "masterVotes": "El Máster también vota",
+      "votersVisible": "Quién ve los nombres",
+      "resultsLabel": "Resultados",
+      "locked": "Esta encuesta ya tiene votos: su configuración está bloqueada.",
+      "closed": "Cerrada",
+      "secret": "Voto secreto",
+      "revealed": "Resultados revelados",
+      "anonymous": "Anónima",
+      "secretHint": "Los resultados son secretos hasta que el Máster los revele.",
+      "progress": "Han votado: {{count}} de {{total}}",
+      "everyoneVoted": "Han votado todos",
+      "everyoneVotedToast": "Han votado todos: «{{poll}}»",
+      "notVoted": "Faltan: {{names}}",
+      "reveal": "Revelar resultados",
+      "hide": "Ocultar resultados",
+      "close": "Cerrar encuesta",
+      "reopen": "Reabrir",
+      "withdraw": "Retirar voto",
+      "yourVote": "Tu voto",
+      "winner": "Más votada",
+      "noVotes": "Sin votos",
+      "votes_one": "{{count}} voto",
+      "votes_other": "{{count}} votos",
+      "votesLeft_one": "Te queda {{count}} voto",
+      "votesLeft_other": "Te quedan {{count}} votos",
+      "visibility": {
+        "master": "Solo el Máster",
+        "everyone": "Todos",
+        "nobody": "Nadie (anónimo)"
+      },
+      "results": {
+        "live": "En directo",
+        "hidden": "Secretos hasta revelarlos"
+      },
+      "problems": {
+        "empty": "Cada encuesta necesita su pregunta y todas sus opciones.",
+        "options": "Cada encuesta tiene de {{min}} a {{max}} opciones.",
+        "duplicate": "Dos opciones de la misma encuesta son iguales.",
+        "maxChoices": "Los votos por persona van de 1 al número de opciones."
+      }
     }
   },
   "markdown": {

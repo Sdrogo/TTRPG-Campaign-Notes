@@ -1305,7 +1305,7 @@
     },
     "rounds": {
       "first": "第 0 次会话",
-      "later": "第 0.5 次会话 #{{number}}",
+      "later": "第 {{number}} 次会话",
       "pick": "要显示的会话",
       "start": "新会话",
       "startBody": "当前会话将关闭并保持只读可查看；从未发布的草稿会被删除。新会话以下面的步骤从空白开始：勾选“从上一次会话带入”可带回列、问题或 DDI。Lines & Veils 保持不变。",
@@ -1346,7 +1346,8 @@
         "lines_veils": "底线与帷幕",
         "stars_wishes": "星星与愿望",
         "questions": "问题",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "投票"
       },
       "hiddenHint": "仍隐藏的步骤：{{count}}",
       "next": "下一步",
@@ -1362,6 +1363,7 @@
       "removeTitle": "移除此步骤？",
       "removeBody": "“{{name}}”的便签将一并删除。底线与帷幕不会被改动。",
       "removeQuestionsBody": "“{{name}}”的问题和回答会一并删除。已创建的文档会保留。",
+      "removePollBody": "“{{name}}”的投票和票数将一并删除。",
       "chain": "本次会话的步骤",
       "chainHint": "选择步骤及其顺序；之后可以更改。",
       "max": "最多 {{max}} 个步骤。",
@@ -1443,6 +1445,60 @@
       "withdraw": "撤回",
       "open": "打开文档",
       "loadError": "无法读取 DDI。"
+    },
+    "polls": {
+      "title": "投票",
+      "edit": "编辑投票",
+      "editHint": "删除的投票或选项会带走其票数。投票的设置在第一票后锁定。",
+      "noneMaster": "还没有投票：用“编辑投票”添加一个。",
+      "nonePlayer": "主持人还没有准备投票。",
+      "number": "投票 {{number}}",
+      "question": "问题",
+      "hint": "提示（可选）",
+      "choices": "选项",
+      "choice": "选项 {{number}}",
+      "removeChoice": "删除选项 {{number}}",
+      "addChoice": "添加选项",
+      "add": "添加投票",
+      "maxChoices": "每人票数",
+      "masterVotes": "主持人也投票",
+      "votersVisible": "谁能看到名字",
+      "resultsLabel": "结果",
+      "locked": "此投票已有投票，设置已锁定。",
+      "closed": "已关闭",
+      "secret": "秘密投票",
+      "revealed": "结果已公开",
+      "anonymous": "匿名",
+      "secretHint": "在主持人公开之前，结果保密。",
+      "progress": "已投票：{{count}} / {{total}}",
+      "everyoneVoted": "所有人都已投票",
+      "everyoneVotedToast": "所有人都已投票：“{{poll}}”",
+      "notVoted": "尚未投票：{{names}}",
+      "reveal": "公开结果",
+      "hide": "隐藏结果",
+      "close": "关闭投票",
+      "reopen": "重新开放",
+      "withdraw": "撤回投票",
+      "yourVote": "你的投票",
+      "winner": "得票最多",
+      "noVotes": "没有投票",
+      "votes_other": "{{count}} 票",
+      "votesLeft_other": "剩余 {{count}} 票",
+      "visibility": {
+        "master": "仅主持人",
+        "everyone": "所有人",
+        "nobody": "无人（匿名）"
+      },
+      "results": {
+        "live": "实时",
+        "hidden": "公开前保密"
+      },
+      "problems": {
+        "empty": "每个投票都需要问题和所有选项。",
+        "options": "每个投票有 {{min}} 到 {{max}} 个选项。",
+        "duplicate": "同一投票中有两个相同的选项。",
+        "maxChoices": "每人票数为 1 到选项数量。"
+      }
     }
   },
   "markdown": {

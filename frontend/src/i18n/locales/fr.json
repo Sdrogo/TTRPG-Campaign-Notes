@@ -1341,7 +1341,7 @@
     },
     "rounds": {
       "first": "Session 0",
-      "later": "Session 0.5 #{{number}}",
+      "later": "Session {{number}}",
       "pick": "Session à afficher",
       "start": "Nouvelle session",
       "startBody": "La session actuelle se ferme et reste consultable en lecture seule ; les brouillons jamais publiés sont supprimés. La nouvelle commence vide avec les étapes ci-dessous : coche « Reprendre de la session précédente » pour récupérer colonnes, questions ou la DDI. Lignes et Voiles reste tel quel.",
@@ -1383,7 +1383,8 @@
         "lines_veils": "Lignes et Voiles",
         "stars_wishes": "Étoiles et Souhaits",
         "questions": "Questions",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "Sondage"
       },
       "hiddenHint": "Étapes encore cachées : {{count}}",
       "next": "Suivant",
@@ -1399,6 +1400,7 @@
       "removeTitle": "Retirer cette étape ?",
       "removeBody": "Les post-its de « {{name}} » sont supprimés avec elle. Lignes et Voiles n’est jamais touché.",
       "removeQuestionsBody": "Les questions et réponses de « {{name}} » sont supprimées avec elle. Les Documents déjà créés restent.",
+      "removePollBody": "Les sondages et les votes de « {{name}} » sont supprimés avec elle.",
       "chain": "Étapes de la session",
       "chainHint": "Choisis les étapes et leur ordre ; tu pourras les changer plus tard.",
       "max": "Au plus {{max}} étapes.",
@@ -1480,6 +1482,62 @@
       "withdraw": "Retirer",
       "open": "Ouvrir le Document",
       "loadError": "Impossible de lire la DDI."
+    },
+    "polls": {
+      "title": "Sondages",
+      "edit": "Modifier les sondages",
+      "editHint": "Un sondage ou un choix retiré emporte ses votes. Les réglages d'un sondage se verrouillent au premier vote.",
+      "noneMaster": "Pas encore de sondage : ajoutez-en un avec « Modifier les sondages ».",
+      "nonePlayer": "Le MJ n'a pas encore préparé les sondages.",
+      "number": "Sondage {{number}}",
+      "question": "Question",
+      "hint": "Indication (facultative)",
+      "choices": "Choix",
+      "choice": "Choix {{number}}",
+      "removeChoice": "Retirer le choix {{number}}",
+      "addChoice": "Ajouter un choix",
+      "add": "Ajouter un sondage",
+      "maxChoices": "Votes par personne",
+      "masterVotes": "Le MJ vote aussi",
+      "votersVisible": "Qui voit les noms",
+      "resultsLabel": "Résultats",
+      "locked": "Ce sondage a déjà des votes : ses réglages sont verrouillés.",
+      "closed": "Clos",
+      "secret": "Vote secret",
+      "revealed": "Résultats révélés",
+      "anonymous": "Anonyme",
+      "secretHint": "Les résultats restent secrets jusqu'à ce que le MJ les révèle.",
+      "progress": "Ont voté : {{count}} sur {{total}}",
+      "everyoneVoted": "Tout le monde a voté",
+      "everyoneVotedToast": "Tout le monde a voté : « {{poll}} »",
+      "notVoted": "Manquent : {{names}}",
+      "reveal": "Révéler les résultats",
+      "hide": "Masquer les résultats",
+      "close": "Clore le sondage",
+      "reopen": "Rouvrir",
+      "withdraw": "Retirer mon vote",
+      "yourVote": "Votre vote",
+      "winner": "Le plus voté",
+      "noVotes": "Aucun vote",
+      "votes_one": "{{count}} vote",
+      "votes_other": "{{count}} votes",
+      "votesLeft_one": "{{count}} vote restant",
+      "votesLeft_other": "{{count}} votes restants",
+      "visibility": {
+        "master": "Seulement le MJ",
+        "everyone": "Tout le monde",
+        "nobody": "Personne (anonyme)"
+      },
+      "results": {
+        "live": "En direct",
+        "hidden": "Secrets jusqu'à révélation"
+      },
+      "problems": {
+        "empty": "Chaque sondage a besoin de sa question et de tous ses choix.",
+        "options": "Chaque sondage a de {{min}} à {{max}} choix.",
+        "duplicate": "Deux choix du même sondage sont identiques.",
+        "maxChoices": "Les votes par personne vont de 1 au nombre de choix."
+      }
     }
   },
   "markdown": {

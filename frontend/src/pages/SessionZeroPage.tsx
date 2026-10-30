@@ -17,6 +17,7 @@ import { BoardDnd } from '../components/sessionZero/BoardDnd';
 import { BoardsSplit } from '../components/sessionZero/BoardsSplit';
 import { ModuleStepper, StartSessionZero } from '../components/sessionZero/ModuleChain';
 import { DdiBoard } from '../components/sessionZero/DdiModule';
+import { PollBoard } from '../components/sessionZero/PollModule';
 import { QuestionsBoard } from '../components/sessionZero/QuestionsModule';
 import { SessionZeroHeader } from '../components/sessionZero/SessionZeroHeader';
 import { boardWrites, shownModule, viewOf, withView } from '../lib/sessionZero';
@@ -118,6 +119,8 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
           <BoardDnd>
             {shown?.kind === 'ddi' ? (
               <DdiBoard roomId={roomId} />
+            ) : shown?.kind === 'poll' ? (
+              <PollBoard />
             ) : shown?.kind === 'questions' ? (
               <QuestionsBoard roomId={roomId} tags={tags.data ?? []} />
             ) : shown?.kind === 'lines_veils' ? (

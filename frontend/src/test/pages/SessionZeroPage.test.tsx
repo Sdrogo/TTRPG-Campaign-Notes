@@ -365,6 +365,21 @@ describe('SessionZeroPage', () => {
     expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
   });
 
+  // Spec 53: a Poll step shows its polls.
+  it('shows a Poll step', async () => {
+    board = () =>
+      Promise.resolve(
+        rawSessionZero({
+          modules: [{ id: 'module-poll', kind: 'poll', position: 0, columns: [], polls: [] }],
+          current_module_id: 'module-poll',
+        }),
+      );
+    render();
+    const section = await screen.findByRole('region', { name: 'Sondaggio' });
+    expect(within(section).getByText('Il Master non ha ancora preparato i sondaggi.')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
+  });
+
   it('goes back to the current step when another session is picked', async () => {
     const rounds = [
       { id: 'round-1', number: 1, title: null, started_at: '2026-10-01T09:00:00Z', closed_at: '2026-10-20T09:00:00Z' },

@@ -1305,7 +1305,7 @@
     },
     "rounds": {
       "first": "세션 0",
-      "later": "세션 0.5 #{{number}}",
+      "later": "세션 {{number}}",
       "pick": "표시할 세션",
       "start": "새 세션",
       "startBody": "현재 세션은 닫히고 읽기 전용으로 볼 수 있습니다. 게시하지 않은 초안은 삭제됩니다. 새 세션은 아래 단계로 비어 있는 상태에서 시작합니다. 열, 질문 또는 DDI를 가져오려면 \"이전 세션에서 가져오기\"를 선택하세요. Lines & Veils는 그대로 유지됩니다.",
@@ -1346,7 +1346,8 @@
         "lines_veils": "라인과 베일",
         "stars_wishes": "별과 소원",
         "questions": "질문",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "투표"
       },
       "hiddenHint": "아직 숨겨진 단계: {{count}}",
       "next": "다음",
@@ -1362,6 +1363,7 @@
       "removeTitle": "이 단계를 제거할까요?",
       "removeBody": "“{{name}}”의 포스트잇도 함께 삭제됩니다. 라인과 베일은 변경되지 않습니다.",
       "removeQuestionsBody": "\"{{name}}\"의 질문과 답변이 함께 삭제됩니다. 이미 만든 문서는 남습니다.",
+      "removePollBody": "‘{{name}}’의 투표와 표도 함께 삭제됩니다.",
       "chain": "세션 단계",
       "chainHint": "단계와 순서를 고르세요. 나중에 바꿀 수 있습니다.",
       "max": "단계는 최대 {{max}}개입니다.",
@@ -1443,6 +1445,60 @@
       "withdraw": "철회",
       "open": "문서 열기",
       "loadError": "DDI를 읽을 수 없습니다."
+    },
+    "polls": {
+      "title": "투표",
+      "edit": "투표 편집",
+      "editHint": "삭제한 투표나 선택지는 그 표도 함께 사라집니다. 투표 설정은 첫 표가 들어오면 고정됩니다.",
+      "noneMaster": "아직 투표가 없습니다. ‘투표 편집’으로 추가하세요.",
+      "nonePlayer": "마스터가 아직 투표를 준비하지 않았습니다.",
+      "number": "투표 {{number}}",
+      "question": "질문",
+      "hint": "힌트(선택)",
+      "choices": "선택지",
+      "choice": "선택지 {{number}}",
+      "removeChoice": "선택지 {{number}} 삭제",
+      "addChoice": "선택지 추가",
+      "add": "투표 추가",
+      "maxChoices": "1인당 표 수",
+      "masterVotes": "마스터도 투표",
+      "votersVisible": "이름을 볼 수 있는 사람",
+      "resultsLabel": "결과",
+      "locked": "이 투표에는 이미 표가 있어 설정이 고정되었습니다.",
+      "closed": "마감",
+      "secret": "비밀 투표",
+      "revealed": "결과 공개됨",
+      "anonymous": "익명",
+      "secretHint": "마스터가 공개할 때까지 결과는 비밀입니다.",
+      "progress": "투표함: {{total}}명 중 {{count}}명",
+      "everyoneVoted": "모두 투표했습니다",
+      "everyoneVotedToast": "모두 투표했습니다: ‘{{poll}}’",
+      "notVoted": "남은 사람: {{names}}",
+      "reveal": "결과 공개",
+      "hide": "결과 숨기기",
+      "close": "투표 마감",
+      "reopen": "다시 열기",
+      "withdraw": "투표 취소",
+      "yourVote": "내 투표",
+      "winner": "최다 득표",
+      "noVotes": "표 없음",
+      "votes_other": "{{count}}표",
+      "votesLeft_other": "남은 표 {{count}}",
+      "visibility": {
+        "master": "마스터만",
+        "everyone": "모두",
+        "nobody": "아무도(익명)"
+      },
+      "results": {
+        "live": "실시간",
+        "hidden": "공개 전까지 비밀"
+      },
+      "problems": {
+        "empty": "모든 투표에는 질문과 모든 선택지가 필요합니다.",
+        "options": "모든 투표의 선택지는 {{min}}~{{max}}개입니다.",
+        "duplicate": "같은 투표에 같은 선택지가 두 개 있습니다.",
+        "maxChoices": "1인당 표 수는 1부터 선택지 수까지입니다."
+      }
     }
   },
   "markdown": {

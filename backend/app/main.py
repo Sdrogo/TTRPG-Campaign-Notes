@@ -40,6 +40,7 @@ from app.api.rooms import router as rooms_router
 from app.api.search import router as search_router
 from app.api.session_zero import router as session_zero_router
 from app.api.session_zero_ddi import router as session_zero_ddi_router
+from app.api.session_zero_polls import router as session_zero_polls_router
 from app.api.session_zero_questions import router as session_zero_questions_router
 from app.api.tags import router as tags_router
 from app.api.versions import router as versions_router
@@ -113,6 +114,7 @@ app.include_router(linked_maps_router)
 app.include_router(session_zero_router)
 app.include_router(session_zero_questions_router)
 app.include_router(session_zero_ddi_router)
+app.include_router(session_zero_polls_router)
 app.include_router(events_router)
 
 

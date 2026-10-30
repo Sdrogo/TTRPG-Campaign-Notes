@@ -302,7 +302,9 @@ function EditStepsModal({ onClose }: { onClose: () => void }) {
           <Text size="sm">
             {removing.kind === 'questions'
               ? t('sessionZero.modules.removeQuestionsBody', { name: moduleLabel(removing.kind) })
-              : t('sessionZero.modules.removeBody', { name: moduleLabel(removing.kind) })}
+              : removing.kind === 'poll'
+                ? t('sessionZero.modules.removePollBody', { name: moduleLabel(removing.kind) })
+                : t('sessionZero.modules.removeBody', { name: moduleLabel(removing.kind) })}
           </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setRemoving(null)}>
@@ -325,7 +327,9 @@ function EditStepsModal({ onClose }: { onClose: () => void }) {
             onRemove={(index) => {
               const module = board.modules[index];
               const holds =
-                module.columns.some((column) => column.cards.length > 0) || Boolean(module.questions?.questions.length);
+                module.columns.some((column) => column.cards.length > 0) ||
+                Boolean(module.questions?.questions.length) ||
+                Boolean(module.polls?.length);
               if (holds) setRemoving(module);
               else remove(module);
             }}

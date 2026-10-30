@@ -301,7 +301,19 @@
       "notDdiModule": "This step isn't a DDI.",
       "noDdiDocument": "The Master hasn't picked the DDI's Document yet.",
       "masterDoesNotAccept": "The Master writes the DDI; the Players accept it.",
-      "ddiDocumentInvalid": "The DDI's Document must belong to this Room."
+      "ddiDocumentInvalid": "The DDI's Document must belong to this Room.",
+      "notPollModule": "This step isn't a poll.",
+      "tooManyPolls": "A step holds at most 10 polls.",
+      "pollOptions": "A poll needs 2 to 20 choices.",
+      "pollDuplicateOption": "Two choices of a poll can't be the same.",
+      "pollMaxChoices": "Votes per person go from 1 to the number of choices.",
+      "pollText": "A question or choice is empty or too long (200 characters, 300 for a hint).",
+      "pollSettingsLocked": "This poll already has votes: its settings can't change.",
+      "pollClosed": "This poll is closed.",
+      "pollVote": "Too many choices, a repeated one, or one of another poll.",
+      "notAVoter": "The Master doesn't vote on this poll.",
+      "pollNotFound": "Poll not found.",
+      "pollOrder": "A poll or choice isn't one of this step's."
     }
   },
   "pdf": {

@@ -1165,8 +1165,8 @@ class SessionZeroRoundRow(Base):
 
 class SessionZeroModuleRow(Base):
     """A step of a round's chain (spec 47 Decision 1): a Retro board, the
-    Lines & Veils board, Stars and Wishes, Questions, a DDI. Its columns go
-    with it."""
+    Lines & Veils board, Stars and Wishes, Questions, a DDI, polls (spec
+    53). Its columns go with it."""
 
     __tablename__ = "session_zero_modules"
 
@@ -1304,6 +1304,76 @@ class SessionZeroAnswerDocumentRow(Base):
     )
     document_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroPollRow(Base):
+    """A poll of a Poll module (spec 53 Decision 2) with its settings:
+    votes per person, whether the Master votes, who sees who voted what, a
+    live or secret tally (`revealed` once the Master shows a secret one)."""
+
+    __tablename__ = "session_zero_polls"
+    __table_args__ = (
+        CheckConstraint(
+            "voters_visible IN ('master', 'everyone', 'nobody')",
+            name="ck_session_zero_polls_voters_visible",
+        ),
+        CheckConstraint("results IN ('live', 'hidden')", name="ck_session_zero_polls_results"),
+        CheckConstraint("max_choices >= 1", name="ck_session_zero_polls_max_choices"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
+    )
+    module_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_modules.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    body: Mapped[str] = mapped_column(String(200))
+    hint: Mapped[str | None] = mapped_column(String(300))
+    max_choices: Mapped[int] = mapped_column(SmallInteger, default=1, server_default=text("1"))
+    master_votes: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    voters_visible: Mapped[str] = mapped_column(
+        String(10), default="master", server_default=text("'master'")
+    )
+    results: Mapped[str] = mapped_column(String(10), default="live", server_default=text("'live'"))
+    revealed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionZeroPollOptionRow(Base):
+    """A choice of a poll (spec 53 Decision 2); its votes go with it."""
+
+    __tablename__ = "session_zero_poll_options"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    poll_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_polls.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    body: Mapped[str] = mapped_column(String(200))
+
+
+class SessionZeroPollVoteRow(Base):
+    """A member's vote for one choice (spec 53 Decision 4); a poll with
+    more votes per person holds one row per choice."""
+
+    __tablename__ = "session_zero_poll_votes"
+
+    option_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("session_zero_poll_options.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, index=True)
+    poll_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero_polls.id", ondelete="CASCADE"), index=True
+    )
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session_zero.room_id", ondelete="CASCADE")
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

@@ -8,12 +8,55 @@ export type LinesVeilsKind = 'must' | 'veils' | 'lines';
 export type StarsWishesKind = 'stars' | 'wishes';
 
 /** What a step of a session's chain is (spec 47 Decision 1). */
-export type ModuleKind = 'retro' | 'lines_veils' | 'stars_wishes' | 'questions' | 'ddi';
+export type ModuleKind = 'retro' | 'lines_veils' | 'stars_wishes' | 'questions' | 'ddi' | 'poll';
 
 /** A step of a new session's chain; `carry` brings an earlier session's content over (spec 47b). */
 export interface ChainStep {
   kind: ModuleKind;
   carry: boolean;
+}
+
+/** Who sees who voted for each choice (spec 53 Decision 2). */
+export type PollVotersVisible = 'master' | 'everyone' | 'nobody';
+
+/** A live tally, or a secret one the Master reveals (spec 53 Decision 2). */
+export type PollResults = 'live' | 'hidden';
+
+/**
+ * A choice of a poll: `count` is null while the tally is hidden from the
+ * viewer, `voters` while the names are; `winner` once the poll is closed.
+ */
+export interface PollOption {
+  id: string;
+  body: string;
+  count: number | null;
+  voters: string[] | null;
+  winner: boolean;
+}
+
+/**
+ * A poll (spec 53 Decisions 2-6): its settings, its choices, the viewer's
+ * own vote, how many of the `electorate` voted and, for whoever sees names,
+ * who hasn't yet.
+ */
+export interface Poll {
+  id: string;
+  body: string;
+  hint: string | null;
+  maxChoices: number;
+  masterVotes: boolean;
+  votersVisible: PollVotersVisible;
+  results: PollResults;
+  revealed: boolean;
+  closed: boolean;
+  hasVotes: boolean;
+  options: PollOption[];
+  myOptionIds: string[];
+  voterCount: number;
+  electorate: number;
+  notVoted: string[] | null;
+  tallyVisible: boolean;
+  canVote: boolean;
 }
 
 /** A Player's "I have read and accept" (spec 47 Decision 8); `outdated` once the Document changed after it. */
@@ -151,7 +194,7 @@ export interface PostItColumn {
 /**
  * A step of the shown session's chain (spec 47): a Retro or Stars and
  * Wishes step's columns; none for Lines & Veils, whose board is the Room's,
- * or for Questions and DDI, which have `questions` and `ddi`.
+ * or for Questions, DDI and Poll, which have `questions`, `ddi` and `polls`.
  */
 export interface SessionZeroModule {
   id: string;
@@ -162,6 +205,8 @@ export interface SessionZeroModule {
   questions?: QuestionsStep;
   /** A DDI step's content (spec 47_3). */
   ddi?: DdiStep;
+  /** A Poll step's polls (spec 53). */
+  polls?: Poll[];
 }
 
 /** A session (round): 1 is the Session 0, later ones freely named (Decision 16, spec 46d). */

@@ -301,7 +301,19 @@
       "notDdiModule": "此步骤不是 DDI。",
       "noDdiDocument": "主持人还没有选择 DDI 的文档。",
       "masterDoesNotAccept": "DDI 由主持人撰写，玩家接受。",
-      "ddiDocumentInvalid": "DDI 的文档必须属于这个房间。"
+      "ddiDocumentInvalid": "DDI 的文档必须属于这个房间。",
+      "notPollModule": "此步骤不是投票。",
+      "tooManyPolls": "一个步骤最多包含 10 个投票。",
+      "pollOptions": "一个投票需要 2 到 20 个选项。",
+      "pollDuplicateOption": "同一投票的两个选项不能相同。",
+      "pollMaxChoices": "每人票数为 1 到选项数量。",
+      "pollText": "问题或选项为空或过长（200 个字符，提示为 300 个）。",
+      "pollSettingsLocked": "此投票已有投票，设置不能再更改。",
+      "pollClosed": "此投票已关闭。",
+      "pollVote": "选项过多、重复，或属于其他投票。",
+      "notAVoter": "主持人不参与此投票。",
+      "pollNotFound": "未找到投票。",
+      "pollOrder": "投票或选项不属于此步骤。"
     }
   },
   "pdf": {

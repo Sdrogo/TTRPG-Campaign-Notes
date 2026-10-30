@@ -1339,7 +1339,7 @@
     },
     "rounds": {
       "first": "Session 0",
-      "later": "Session 0.5 #{{number}}",
+      "later": "Session {{number}}",
       "pick": "Session to show",
       "start": "New session",
       "startBody": "The current session closes and stays readable, read-only; drafts never published are deleted. The new one starts empty with the steps below: tick “Carry over from the previous session” to bring back columns, questions or the DDI. Lines & Veils stays as it is.",
@@ -1381,7 +1381,8 @@
         "lines_veils": "Lines & Veils",
         "stars_wishes": "Stars and Wishes",
         "questions": "Questions",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "Poll"
       },
       "hiddenHint": "Steps still hidden: {{count}}",
       "next": "Next",
@@ -1397,6 +1398,7 @@
       "removeTitle": "Remove this step?",
       "removeBody": "The post-its of “{{name}}” are deleted with it. Lines & Veils is never touched.",
       "removeQuestionsBody": "The questions and answers of “{{name}}” are deleted with it. Documents already created stay.",
+      "removePollBody": "The polls and votes of \"{{name}}\" are deleted with it.",
       "chain": "Steps of the session",
       "chainHint": "Pick the steps and their order; you can change them later.",
       "max": "At most {{max}} steps.",
@@ -1478,6 +1480,62 @@
       "withdraw": "Withdraw",
       "open": "Open the Document",
       "loadError": "Couldn't read the DDI."
+    },
+    "polls": {
+      "title": "Polls",
+      "edit": "Edit polls",
+      "editHint": "A poll or choice you remove takes its votes with it. A poll's settings lock at its first vote.",
+      "noneMaster": "No polls yet: add one with \"Edit polls\".",
+      "nonePlayer": "The Master hasn't set up the polls yet.",
+      "number": "Poll {{number}}",
+      "question": "Question",
+      "hint": "Hint (optional)",
+      "choices": "Choices",
+      "choice": "Choice {{number}}",
+      "removeChoice": "Remove choice {{number}}",
+      "addChoice": "Add choice",
+      "add": "Add poll",
+      "maxChoices": "Votes per person",
+      "masterVotes": "The Master votes too",
+      "votersVisible": "Who sees the names",
+      "resultsLabel": "Results",
+      "locked": "This poll already has votes: its settings are locked.",
+      "closed": "Closed",
+      "secret": "Secret vote",
+      "revealed": "Results revealed",
+      "anonymous": "Anonymous",
+      "secretHint": "Results stay secret until the Master reveals them.",
+      "progress": "Voted: {{count}} of {{total}}",
+      "everyoneVoted": "Everyone has voted",
+      "everyoneVotedToast": "Everyone has voted: \"{{poll}}\"",
+      "notVoted": "Still to vote: {{names}}",
+      "reveal": "Reveal results",
+      "hide": "Hide results",
+      "close": "Close poll",
+      "reopen": "Reopen",
+      "withdraw": "Withdraw vote",
+      "yourVote": "Your vote",
+      "winner": "Most votes",
+      "noVotes": "No votes",
+      "votes_one": "{{count}} vote",
+      "votes_other": "{{count}} votes",
+      "votesLeft_one": "{{count}} vote left",
+      "votesLeft_other": "{{count}} votes left",
+      "visibility": {
+        "master": "Master only",
+        "everyone": "Everyone",
+        "nobody": "Nobody (anonymous)"
+      },
+      "results": {
+        "live": "Live",
+        "hidden": "Secret until revealed"
+      },
+      "problems": {
+        "empty": "Every poll needs its question and all its choices.",
+        "options": "Every poll has {{min}} to {{max}} choices.",
+        "duplicate": "Two choices of the same poll are the same.",
+        "maxChoices": "Votes per person go from 1 to the number of choices."
+      }
     }
   },
   "markdown": {

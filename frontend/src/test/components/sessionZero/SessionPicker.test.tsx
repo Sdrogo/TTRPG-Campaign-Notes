@@ -59,7 +59,7 @@ describe('NewSession', () => {
 
     await user.click(screen.getByRole('button', { name: 'Nuova sessione' }));
     const name = await screen.findByRole('textbox', { name: 'Nome' });
-    expect(name).toHaveValue('Sessione 0.5 #2');
+    expect(name).toHaveValue('Sessione 2');
     await user.clear(name);
     await user.type(name, 'Retro di metà campagna');
     await user.click(screen.getByRole('button', { name: 'Crea' }));
@@ -75,7 +75,7 @@ describe('NewSession', () => {
   it('stores no name when the default is kept, so it shows in each language', async () => {
     const { act, user } = renderBoard(<NewSession />, { board: { can_manage: true } });
     await user.click(screen.getByRole('button', { name: 'Nuova sessione' }));
-    expect(await screen.findByRole('textbox', { name: 'Nome' })).toHaveValue('Sessione 0.5 #1');
+    expect(await screen.findByRole('textbox', { name: 'Nome' })).toHaveValue('Sessione 1');
     await user.click(screen.getByRole('button', { name: 'Crea' }));
     expect(act).toHaveBeenCalledWith(
       boardWrites.startRound('', [

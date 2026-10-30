@@ -4,7 +4,9 @@ import {
   columnColor,
   formatClock,
   moduleLabel,
+  pollsProblem,
   questionsProblem,
+  type PollDraft,
   roundLabel,
   secondsLeft,
   shownModule,
@@ -293,9 +295,9 @@ describe('roundLabel', () => {
   const round = { id: 'r', startedAt: '', closedAt: null };
 
   // Spec 46d Decision 3: a session's own name replaces the default.
-  it('names the first round Session 0, later ones Session 0.5 with their number, or by their own name', () => {
+  it('names the first round Session 0, later ones Session N, or by their own name', () => {
     expect(roundLabel({ ...round, number: 1, title: null })).toBe('Sessione 0');
-    expect(roundLabel({ ...round, number: 3, title: null })).toBe('Sessione 0.5 #2');
+    expect(roundLabel({ ...round, number: 3, title: null })).toBe('Sessione 2');
     expect(roundLabel({ ...round, number: 3, title: 'Fine arco 1' })).toBe('Fine arco 1');
   });
 });
@@ -324,5 +326,134 @@ describe('formatClock', () => {
   it('writes minutes and two-digit seconds', () => {
     expect(formatClock(605)).toBe('10:05');
     expect(formatClock(59)).toBe('0:59');
+  });
+});
+
+describe('polls (spec 53)', () => {
+  const draft = (overrides: Partial<PollDraft> = {}): PollDraft => ({
+    id: null,
+    body: 'Quale sistema?',
+    hint: '',
+    maxChoices: 1,
+    masterVotes: false,
+    votersVisible: 'master',
+    results: 'live',
+    options: [
+      { id: null, body: 'D&D' },
+      { id: 'o-2', body: 'PbtA' },
+    ],
+    ...overrides,
+  });
+
+  it('reads a Poll step from the backend', () => {
+    const raw = rawSessionZero({
+      modules: [
+        {
+          id: 'm-poll',
+          kind: 'poll',
+          position: 0,
+          columns: [],
+          polls: [
+            {
+              id: 'p-1',
+              position: 0,
+              body: 'Q',
+              hint: null,
+              max_choices: 2,
+              master_votes: true,
+              voters_visible: 'everyone',
+              results: 'hidden',
+              revealed: true,
+              closed: false,
+              has_votes: true,
+              options: [{ id: 'o-1', body: 'A', count: 1, voters: ['user-2'], winner: false }],
+              my_option_ids: ['o-1'],
+              voter_count: 1,
+              electorate: 3,
+              not_voted: ['user-3'],
+              tally_visible: true,
+              can_vote: true,
+            },
+          ],
+        },
+      ],
+      current_module_id: 'm-poll',
+    }) as RawSessionZero;
+    expect(toSessionZero(raw).modules[0].polls).toEqual([
+      {
+        id: 'p-1',
+        body: 'Q',
+        hint: null,
+        maxChoices: 2,
+        masterVotes: true,
+        votersVisible: 'everyone',
+        results: 'hidden',
+        revealed: true,
+        closed: false,
+        hasVotes: true,
+        options: [{ id: 'o-1', body: 'A', count: 1, voters: ['user-2'], winner: false }],
+        myOptionIds: ['o-1'],
+        voterCount: 1,
+        electorate: 3,
+        notVoted: ['user-3'],
+        tallyVisible: true,
+        canVote: true,
+      },
+    ]);
+    expect(moduleLabel('poll')).toBe('Sondaggio');
+  });
+
+  it('writes polls, votes, closing and revealing', () => {
+    expect(boardWrites.setPolls('m-poll', [draft({ hint: '  ' }), draft({ id: 'p-2', hint: ' Sera ' })])).toEqual({
+      path: '/modules/m-poll/polls',
+      method: 'PUT',
+      json: {
+        polls: [
+          {
+            body: 'Quale sistema?',
+            hint: null,
+            max_choices: 1,
+            master_votes: false,
+            voters_visible: 'master',
+            results: 'live',
+            options: [{ body: 'D&D' }, { id: 'o-2', body: 'PbtA' }],
+          },
+          {
+            id: 'p-2',
+            body: 'Quale sistema?',
+            hint: 'Sera',
+            max_choices: 1,
+            master_votes: false,
+            voters_visible: 'master',
+            results: 'live',
+            options: [{ body: 'D&D' }, { id: 'o-2', body: 'PbtA' }],
+          },
+        ],
+      },
+    });
+    expect(boardWrites.vote('p-1', ['o-1'])).toEqual({ path: '/polls/p-1/vote', method: 'PUT', json: { option_ids: ['o-1'] } });
+    expect(boardWrites.closePoll('p-1', true)).toEqual({ path: '/polls/p-1/closed', method: 'PUT', json: { closed: true } });
+    expect(boardWrites.revealPoll('p-1', false)).toEqual({
+      path: '/polls/p-1/reveal',
+      method: 'PUT',
+      json: { revealed: false },
+    });
+  });
+
+  it('says what keeps "Edit polls" from saving', () => {
+    expect(pollsProblem([])).toBeNull();
+    expect(pollsProblem([draft()])).toBeNull();
+    expect(pollsProblem([draft({ body: ' ' })])).toBe('sessionZero.polls.problems.empty');
+    expect(pollsProblem([draft({ options: [{ id: null, body: 'A' }, { id: null, body: '' }] })])).toBe(
+      'sessionZero.polls.problems.empty',
+    );
+    expect(pollsProblem([draft({ options: [{ id: null, body: 'A' }] })])).toBe('sessionZero.polls.problems.options');
+    const many = Array.from({ length: 21 }, (_, index) => ({ id: null, body: `${index}` }));
+    expect(pollsProblem([draft({ options: many })])).toBe('sessionZero.polls.problems.options');
+    expect(pollsProblem([draft({ options: [{ id: null, body: 'Dark  souls' }, { id: null, body: ' dark souls' }] })])).toBe(
+      'sessionZero.polls.problems.duplicate',
+    );
+    expect(pollsProblem([draft({ maxChoices: 0 })])).toBe('sessionZero.polls.problems.maxChoices');
+    expect(pollsProblem([draft({ maxChoices: 3 })])).toBe('sessionZero.polls.problems.maxChoices');
   });
 });

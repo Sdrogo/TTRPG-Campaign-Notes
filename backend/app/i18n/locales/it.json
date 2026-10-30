@@ -301,7 +301,19 @@
       "notDdiModule": "Questa tappa non è una DDI.",
       "noDdiDocument": "Il Master non ha ancora scelto il Documento della DDI.",
       "masterDoesNotAccept": "Il Master scrive la DDI: la accettano i Player.",
-      "ddiDocumentInvalid": "Il Documento della DDI deve essere di questa Stanza."
+      "ddiDocumentInvalid": "Il Documento della DDI deve essere di questa Stanza.",
+      "notPollModule": "Questa tappa non è un sondaggio.",
+      "tooManyPolls": "Una tappa ha al massimo 10 sondaggi.",
+      "pollOptions": "Un sondaggio ha da 2 a 20 scelte.",
+      "pollDuplicateOption": "Due scelte di un sondaggio non possono essere uguali.",
+      "pollMaxChoices": "I voti a testa vanno da 1 al numero di scelte.",
+      "pollText": "Una domanda o una scelta è vuota o troppo lunga (200 caratteri, 300 per il suggerimento).",
+      "pollSettingsLocked": "Questo sondaggio ha già dei voti: le sue impostazioni non possono cambiare.",
+      "pollClosed": "Questo sondaggio è chiuso.",
+      "pollVote": "Troppe scelte, una ripetuta o una di un altro sondaggio.",
+      "notAVoter": "Il Master non vota in questo sondaggio.",
+      "pollNotFound": "Sondaggio non trovato.",
+      "pollOrder": "Un sondaggio o una scelta non è di questa tappa."
     }
   },
   "pdf": {
