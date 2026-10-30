@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -12,6 +12,7 @@ import { renderWithProviders } from '../utils';
 import { RelationshipMapPage } from '../../pages/RelationshipMapPage';
 import { saveBlob } from '../../lib/roomExport';
 import { notifyError } from '../../lib/notify';
+import type { RoomEvent } from '../../lib/roomEvents';
 
 vi.mock('../../lib/apiClient', async (original) => ({
   ...(await original<typeof import('../../lib/apiClient')>()),
@@ -23,6 +24,16 @@ vi.mock('../../lib/roomExport', async (original) => ({
   saveBlob: vi.fn(),
 }));
 vi.mock('../../lib/notify', () => ({ notifyError: vi.fn() }));
+
+// The Room stream (spec 52): open at once, its events sent by the tests.
+const stream: { send?: (event: RoomEvent) => void } = {};
+vi.mock('../../lib/roomEvents', () => ({
+  readRoomEvents: vi.fn((_roomId: string, _signal: AbortSignal, onOpen: () => void, onEvent: (event: RoomEvent) => void) => {
+    stream.send = onEvent;
+    onOpen();
+    return new Promise<void>(() => {});
+  }),
+}));
 
 // The board has its own tests: here it only reports how it was drawn, and
 // makes one change when asked.
@@ -212,6 +223,21 @@ describe('RelationshipMapPage', () => {
   it('says when the map cannot be found', async () => {
     routes.map = () => Promise.reject(new ApiError(404, 'Not found'));
     render();
+    expect(await screen.findByText('Mappa non trovata.')).toBeInTheDocument();
+  });
+
+  it('says the map is gone once it is deleted (spec 52)', async () => {
+    render();
+    expect(await screen.findByRole('heading', { name: 'La Corte' })).toBeInTheDocument();
+    act(() => stream.send!({ topic: 'map', revision: 9, kind: 'deleted', id: 'map-1' }));
+    expect(await screen.findByText('Mappa non trovata.')).toBeInTheDocument();
+  });
+
+  it('says the map is not found once it is hidden from the viewer (spec 52)', async () => {
+    render();
+    expect(await screen.findByRole('heading', { name: 'La Corte' })).toBeInTheDocument();
+    routes.map = () => Promise.reject(new ApiError(404, 'Not found'));
+    act(() => stream.send!({ topic: 'map', revision: 99, kind: 'changed', id: 'map-1' }));
     expect(await screen.findByText('Mappa non trovata.')).toBeInTheDocument();
   });
 

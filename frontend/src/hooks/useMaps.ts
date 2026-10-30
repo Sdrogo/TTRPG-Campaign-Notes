@@ -47,15 +47,17 @@ export function useMaps(roomId: string, enabled: boolean) {
 }
 
 /**
- * How often an open map is read again (spec 43_2), so everyone on it sees the
- * others' changes within a few seconds; never while the tab is hidden.
+ * How often an open map is read again while the Room stream is down (spec
+ * 43_2, spec 52 Decision 6), so everyone on it still sees the others'
+ * changes within a few seconds; never while the tab is hidden.
  */
 export const MAP_REFRESH_MS = 5000;
 
 /**
  * One map with its board as the viewer sees it; 404 when hidden from them.
- * With `refresh` a free map is read again every `MAP_REFRESH_MS` (spec 43_2);
- * a geographic map's content is refreshed from `.../geo` instead.
+ * With `refresh` (the Room stream is down) a free map is read again every
+ * `MAP_REFRESH_MS`; a geographic map's content is refreshed from `.../geo`
+ * instead.
  */
 export function useMap(roomId: string, mapId: string, enabled: boolean, refresh = false) {
   return useQuery<RelationshipMapDetail>({

@@ -16,6 +16,7 @@ from app.api.characters import router as characters_router
 from app.api.comments import router as comments_router
 from app.api.document_files import router as document_files_router
 from app.api.documents import router as documents_router
+from app.api.events import router as events_router
 from app.api.export import router as export_router
 from app.api.export_pdf import router as export_pdf_router
 from app.api.friends import router as friends_router
@@ -112,6 +113,7 @@ app.include_router(linked_maps_router)
 app.include_router(session_zero_router)
 app.include_router(session_zero_questions_router)
 app.include_router(session_zero_ddi_router)
+app.include_router(events_router)
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])

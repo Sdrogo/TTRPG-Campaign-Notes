@@ -15,6 +15,7 @@ import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
 import { useDeleteMap, useMap, useSaveBoard, useUpdateMap } from '../hooks/useMaps';
 import { useExportMap, useGeoMap, useSaveGeo } from '../hooks/useGeoMap';
+import { useMapEvents } from '../hooks/useMapEvents';
 import { useMembers } from '../hooks/useMembers';
 import { useTags } from '../hooks/useTags';
 import { useReadOnly } from '../hooks/useViewAs';
@@ -33,6 +34,7 @@ import type { Board, RelationshipMap, RelationshipMapDetail } from '../types/map
 import { toBoardBody } from '../lib/maps';
 import { placeOfDocument, toGeoBody, type GeoItemRef } from '../lib/geoMaps';
 import { notifyError } from '../lib/notify';
+import { ApiError } from '../lib/apiClient';
 import { useBoardAutosave, type SaveState } from '../hooks/useBoardAutosave';
 
 export { SAVE_DELAY_MS } from '../hooks/useBoardAutosave';
@@ -57,6 +59,11 @@ export function RelationshipMapPage() {
   return <MapContent roomId={roomId} mapId={mapId} currentUserId={session.user.id} />;
 }
 
+/** Whether a read failed because the map is gone or now hidden from the viewer. */
+function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
+}
+
 function MapContent({
   roomId,
   mapId,
@@ -66,14 +73,19 @@ function MapContent({
   mapId: string;
   currentUserId: string;
 }) {
-  // Read again every few seconds (spec 43_2): a free map's board comes with
-  // the map, a geographic map's content from `.../geo`.
-  const map = useMap(roomId, mapId, true, true);
+  // Read again on the Room stream's events (spec 52), every few seconds
+  // while it is down: a free map's board comes with the map, a geographic
+  // map's content from `.../geo`.
+  const live = useMapEvents(roomId, mapId);
+  const map = useMap(roomId, mapId, true, live.fallback);
   const geographic = map.data?.kind === 'geographic';
-  const geo = useGeoMap(roomId, mapId, geographic, true);
+  const geo = useGeoMap(roomId, mapId, geographic, live.fallback);
 
-  // A refresh that fails keeps the map drawn: only a first read that fails shows the error.
-  if (map.isError && !map.data) return <MapNotFound roomId={roomId} />;
+  // A refresh that fails keeps the map drawn: only a first read that fails,
+  // a deleted map or one now hidden from the viewer (404) shows the error.
+  if (live.gone || (map.isError && (!map.data || isNotFound(map.error)))) {
+    return <MapNotFound roomId={roomId} />;
+  }
   if (geographic && geo.isError && !geo.data) return <MapNotFound roomId={roomId} />;
   if (!map.data || (geographic && !geo.data)) return <FullPageLoader />;
   if (geographic) {

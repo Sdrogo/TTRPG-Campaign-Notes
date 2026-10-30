@@ -94,6 +94,24 @@ describe('CommentSection', () => {
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
+  it('makes the Comments another member just changed glow (spec 52_3)', async () => {
+    mockRoutes([rawComment(), rawComment({ id: 'comment-2', body: 'Secondo', author_id: 'user-2' })]);
+    renderWithProviders(
+      <CommentSection
+        roomId="room-1"
+        documentId="doc-1"
+        members={members}
+        currentUserId="user-1"
+        glowing={new Set(['comment-2'])}
+      />,
+    );
+
+    await waitFor(() => expect(screen.getAllByTestId('comment-item')).toHaveLength(2));
+    const bubbles = document.querySelectorAll('.comment-bubble');
+    expect(bubbles[0]).not.toHaveAttribute('data-glow');
+    expect(bubbles[1]).toHaveAttribute('data-glow', 'true');
+  });
+
   // Not through `mockRoutes`: its list route always resolves, and this test
   // needs the load itself to fail.
   it('reports a failed load', async () => {

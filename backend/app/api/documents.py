@@ -88,6 +88,7 @@ from app.domain.reveal import (
 from app.domain.rooms import starting_visibility
 from app.domain.visibility import is_content_visible, is_document_visible, starting_grants
 from app.i18n.dependencies import LocaleDep
+from app.realtime.audience import document_audience, push_document
 
 router = APIRouter(prefix="/rooms/{room_id}/documents", tags=["documents"])
 
@@ -439,6 +440,7 @@ async def update_document(
         session, room_id, document_id, requester_id, locale
     )
     selective_ids = await documents_repo.list_selective_grant_ids(session, document_id)
+    before = await document_audience(session, document)
 
     new_name = document.name if body.name is None else body.name.strip()
     if body.name is not None and not new_name:
@@ -494,6 +496,7 @@ async def update_document(
     if audit_entry is not None:
         await rooms_repo.insert_audit_log(session, audit_entry)
 
+    await push_document(session, room_id, document_id, before=before)
     return await _to_response(session, updated, membership)
 
 
@@ -600,6 +603,7 @@ async def reveal_document(
     if note_plans:
         # The Notes' visibility is kept in the latest revision (spec 24b).
         await record_revision(session, document_id, requester_id)
+    await push_document(session, room_id, document_id)
     return await _to_response(session, revealed, membership)
 
 
@@ -616,6 +620,7 @@ async def delete_document(
     Tag/Owner/Selective-grant links."""
     requester_id = uuid.UUID(current_user.id)
     document, _, _ = await get_owned_document(session, room_id, document_id, requester_id, locale)
+    before = await document_audience(session, document)
 
     # Locked first so a concurrent image or file upload can't insert a row
     # the cascade below would then delete without ever scheduling its Storage
@@ -628,6 +633,7 @@ async def delete_document(
     if files:
         await remove_files(session, files)
     await documents_repo.delete_document(session, document.id)
+    await push_document(session, room_id, document_id, before=before)
 
 
 @router.post("/{document_id}/images", status_code=status.HTTP_201_CREATED)
@@ -648,6 +654,7 @@ async def upload_document_image(
     current_images = await ensure_room_for_another_image(session, document, locale)
     data = await read_upload(file)
     await store_image(session, document, requester_id, data, current_images, locale=locale)
+    await push_document(session, room_id, document_id)
     return await _to_response(session, document, membership)
 
 
@@ -668,6 +675,7 @@ async def import_document_image(
     current_images = await ensure_room_for_another_image(session, document, locale)
     data = await fetch_url(str(body.url), locale)
     await store_image(session, document, requester_id, data, current_images, locale=locale)
+    await push_document(session, room_id, document_id)
     return await _to_response(session, document, membership)
 
 
@@ -690,6 +698,7 @@ async def delete_document_image(
     if image is None:
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.image.notFound", locale)
     await remove_images(session, [image])
+    await push_document(session, room_id, document_id)
 
 
 @router.put("/{document_id}/images/{image_id}/favorite")
@@ -721,6 +730,7 @@ async def set_favorite_image(
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.image.notFound", locale)
 
     await documents_repo.set_favorite_image(session, document_id, image_id)
+    await push_document(session, room_id, document_id)
     return await _to_response(session, document, membership)
 
 
@@ -750,6 +760,7 @@ async def add_owner(
         raise translated_error(status.HTTP_409_CONFLICT, exc, locale) from exc
 
     await documents_repo.insert_owner(session, new_owner.document_id, new_owner.user_id)
+    await push_document(session, room_id, document_id)
     return await _to_response(session, document, membership)
 
 
@@ -766,7 +777,10 @@ async def remove_owner(
     Master stays an implicit Owner, so a Document is never left unowned
     (D-12)."""
     requester_id = uuid.UUID(current_user.id)
-    _, owner_ids, _ = await get_owned_document(session, room_id, document_id, requester_id, locale)
+    document, owner_ids, _ = await get_owned_document(
+        session, room_id, document_id, requester_id, locale
+    )
+    before = await document_audience(session, document)
 
     try:
         ensure_can_remove_owner(user_id, owner_ids)
@@ -774,6 +788,7 @@ async def remove_owner(
         raise translated_error(status.HTTP_404_NOT_FOUND, exc, locale) from exc
 
     await documents_repo.delete_owner(session, document_id, user_id)
+    await push_document(session, room_id, document_id, before=before)
 
 
 @router.put("/{document_id}/player")
@@ -813,4 +828,5 @@ async def set_player(
         await documents_repo.insert_owner(session, document_id, plan.new_owner.user_id)
     for entry in plan.audit_entries:
         await rooms_repo.insert_audit_log(session, entry)
+    await push_document(session, room_id, document_id)
     return await _to_response(session, plan.document, membership)
