@@ -216,3 +216,13 @@ day ("ok", after Decision 1 was explained in the thread).
   maps and Documents, Caddyfile matcher. Session 0 events now also carry
   `topic`. Tests: `tests/test_room_events_api.py`, broker topic test. No
   migration.
+- **52_2** (2026-10-30, PR #274): `lib/roomEvents.ts` (`readRoomEvents`,
+  replacing `lib/sessionZeroEvents.ts`), `hooks/useRoomEvents.ts` (one
+  shared stream per Room per tab, kept in a module-level registry and
+  reference-counted by its listeners instead of a React provider, so no
+  route has to wrap the pages; reconnect, hidden-tab and 403/404 rules
+  moved here from `useSessionZeroEvents`), `useSessionZeroEvents` as a
+  `session_zero` listener, `lib/coalesce.ts` and `hooks/useMapEvents.ts`
+  (Decision 5), `RelationshipMapPage` polling only while the stream is down
+  and showing "map not found" on a `deleted` event or a 404 re-read. The
+  linked map panel never polled and is unchanged.

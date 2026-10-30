@@ -791,7 +791,9 @@ on `main`.
   Comment events, each sent only to members who may see the object; maps
   drop the 5 s polling; a Document page re-reads its Comments live. **52_1
   backend built** (Room stream, Session 0 alias, map and Document pushes,
-  Caddyfile); next 52_2 (frontend shared stream + live maps), then 52_3
+  Caddyfile); **52_2 frontend built** (one shared stream per Room per tab,
+  Session 0 on it, maps re-read on events, at most once a second and never
+  mid-drag, 5 s polling only while the stream is down); next 52_3
   (comments). No migration; the changed Caddyfile is copied and reloaded by the
   prod deploy (`deploy.sh`).
 
