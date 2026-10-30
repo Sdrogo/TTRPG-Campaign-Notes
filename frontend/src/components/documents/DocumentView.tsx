@@ -365,15 +365,6 @@ function DocumentPanel({
           className="document-detail-heading"
         >
           <Stack gap={0} style={{ minWidth: 0, flex: 1 }} className="document-detail-titles">
-            <Text
-              size="xs"
-              c="dimmed"
-              tt="uppercase"
-              fw={600}
-              className="document-detail-kicker"
-            >
-              {t('documents.title')}
-            </Text>
             <Title
               order={1}
               className="document-detail-title"
