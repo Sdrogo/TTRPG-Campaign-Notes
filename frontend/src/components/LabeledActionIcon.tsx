@@ -1,20 +1,6 @@
-import { forwardRef } from 'react';
-import { ActionIcon, createPolymorphicComponent, Tooltip } from '@mantine/core';
-import type { ActionIconProps } from '@mantine/core';
-
-interface LabeledActionIconProps extends ActionIconProps {
-  /** What the button does: its accessible name and the tooltip shown on hover or long-press. */
-  'aria-label'?: string;
-}
-
-const LabeledActionIconBase = forwardRef<HTMLButtonElement, LabeledActionIconProps>(
-  ({ 'aria-label': label, ...others }, ref) => (
-    <Tooltip label={label} disabled={!label} withArrow>
-      <ActionIcon ref={ref} aria-label={label} {...others} />
-    </Tooltip>
-  ),
-);
-LabeledActionIconBase.displayName = 'LabeledActionIcon';
+import { createPolymorphicComponent } from '@mantine/core';
+import { LabeledActionIconBase } from './LabeledActionIconBase';
+import type { LabeledActionIconProps } from './LabeledActionIconBase';
 
 /**
  * An icon-only button that shows its `aria-label` as a tooltip after a moment over it
