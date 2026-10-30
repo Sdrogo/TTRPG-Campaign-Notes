@@ -1339,7 +1339,7 @@
     },
     "rounds": {
       "first": "Sessione 0",
-      "later": "Sessione 0.5 #{{number}}",
+      "later": "Sessione {{number}}",
       "pick": "Sessione da mostrare",
       "start": "Nuova sessione",
       "startBody": "La sessione attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova parte vuota con le tappe qui sotto: spunta «Porta dalla sessione precedente» per riprendere colonne, domande o DDI. Linee e Veli resta com'è.",
@@ -1381,7 +1381,8 @@
         "lines_veils": "Linee e Veli",
         "stars_wishes": "Stelle e Desideri",
         "questions": "Domande",
-        "ddi": "DDI"
+        "ddi": "DDI",
+        "poll": "Sondaggio"
       },
       "hiddenHint": "Tappe ancora nascoste: {{count}}",
       "next": "Avanti",
@@ -1397,6 +1398,7 @@
       "removeTitle": "Rimuovere la tappa?",
       "removeBody": "I post-it di «{{name}}» vengono eliminati con lei. Linee e Veli non viene mai toccato.",
       "removeQuestionsBody": "Le domande e le risposte di «{{name}}» vengono eliminate con lei. I Documenti già creati restano.",
+      "removePollBody": "I sondaggi e i voti di «{{name}}» vengono eliminati con lei.",
       "chain": "Tappe della sessione",
       "chainHint": "Scegli le tappe e il loro ordine; potrai cambiarle in seguito.",
       "max": "Al massimo {{max}} tappe.",
@@ -1478,6 +1480,62 @@
       "withdraw": "Ritira",
       "open": "Apri il Documento",
       "loadError": "Non riesco a leggere la DDI."
+    },
+    "polls": {
+      "title": "Sondaggi",
+      "edit": "Modifica sondaggi",
+      "editHint": "Un sondaggio o una scelta rimossi portano via i loro voti. Le impostazioni di un sondaggio si bloccano al primo voto.",
+      "noneMaster": "Ancora nessun sondaggio: aggiungine uno con «Modifica sondaggi».",
+      "nonePlayer": "Il Master non ha ancora preparato i sondaggi.",
+      "number": "Sondaggio {{number}}",
+      "question": "Domanda",
+      "hint": "Suggerimento (facoltativo)",
+      "choices": "Scelte",
+      "choice": "Scelta {{number}}",
+      "removeChoice": "Rimuovi la scelta {{number}}",
+      "addChoice": "Aggiungi scelta",
+      "add": "Aggiungi sondaggio",
+      "maxChoices": "Voti a testa",
+      "masterVotes": "Vota anche il Master",
+      "votersVisible": "Voti nominativi",
+      "resultsLabel": "Risultati",
+      "locked": "Questo sondaggio ha già dei voti: le impostazioni sono bloccate.",
+      "closed": "Chiuso",
+      "secret": "Voto segreto",
+      "revealed": "Risultati rivelati",
+      "anonymous": "Anonimo",
+      "secretHint": "Risultati segreti finché il Master non li rivela.",
+      "progress": "Hanno votato: {{count}} su {{total}}",
+      "everyoneVoted": "Hanno votato tutti",
+      "everyoneVotedToast": "Hanno votato tutti: «{{poll}}»",
+      "notVoted": "Mancano: {{names}}",
+      "reveal": "Rivela i risultati",
+      "hide": "Nascondi i risultati",
+      "close": "Chiudi sondaggio",
+      "reopen": "Riapri",
+      "withdraw": "Ritira il voto",
+      "yourVote": "Il tuo voto",
+      "winner": "Più votata",
+      "noVotes": "Nessun voto",
+      "votes_one": "{{count}} voto",
+      "votes_other": "{{count}} voti",
+      "votesLeft_one": "{{count}} voto rimasto",
+      "votesLeft_other": "{{count}} voti rimasti",
+      "visibility": {
+        "master": "Solo il Master",
+        "everyone": "Tutti",
+        "nobody": "Nessuno (anonimo)"
+      },
+      "results": {
+        "live": "In diretta",
+        "hidden": "Segreti fino alla rivelazione"
+      },
+      "problems": {
+        "empty": "Ogni sondaggio ha bisogno della domanda e di tutte le scelte.",
+        "options": "Ogni sondaggio ha da {{min}} a {{max}} scelte.",
+        "duplicate": "Due scelte dello stesso sondaggio sono uguali.",
+        "maxChoices": "I voti a testa vanno da 1 al numero di scelte."
+      }
     }
   },
   "markdown": {

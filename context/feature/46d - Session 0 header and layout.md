@@ -50,7 +50,7 @@ Sessione 0.5") suggests there is just one more.
    of the wide text button. The add form that opens is unchanged.
 3. **Sessions with their own name**: the Master's button becomes "Nuova
    sessione". Its dialog asks for the name, prefilled with the next default
-   ("Sessione 0.5 #N"), which the Master can replace with anything ("Sessione
+   ("Sessione 0.5 #N"; "Sessione N" since spec 53), which the Master can replace with anything ("Sessione
    1", "Retro di metà campagna"...). The selector and the header show the
    name alone: the title, when there is one, replaces the default name
    instead of following it. The first session stays "Sessione 0". Same data

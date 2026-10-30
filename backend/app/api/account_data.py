@@ -22,6 +22,7 @@ from app.db import (
     friends_repo,
     rooms_repo,
     session_zero_ddi_repo,
+    session_zero_polls_repo,
     session_zero_questions_repo,
     session_zero_repo,
     storage,
@@ -148,6 +149,16 @@ class ExportedAcceptance(BaseModel):
     accepted_at: datetime
 
 
+class ExportedVote(BaseModel):
+    """A choice the user voted for in a Session 0 poll (spec 53 Decision
+    11)."""
+
+    room_id: uuid.UUID
+    poll: str
+    choice: str
+    created_at: datetime
+
+
 class ExportedFriend(BaseModel):
     """A Friend or a pending request, as the user sees it in the app."""
 
@@ -172,6 +183,7 @@ class PersonalDataExport(BaseModel):
     post_its: list[ExportedPostIt]
     answers: list[ExportedAnswer]
     acceptances: list[ExportedAcceptance]
+    votes: list[ExportedVote]
     friends: list[ExportedFriend]
     friend_code: str | None
 
@@ -214,6 +226,7 @@ async def export_personal_data(
     post_its = await session_zero_repo.list_cards_by_author(session, user_id)
     answers = await session_zero_questions_repo.list_answers_by_user(session, user_id)
     acceptances = await session_zero_ddi_repo.list_acceptances_by_user(session, user_id)
+    votes = await session_zero_polls_repo.list_votes_by_user(session, user_id)
 
     referenced = (
         {row.id for row in created_or_played}
@@ -343,6 +356,10 @@ async def export_personal_data(
         acceptances=[
             ExportedAcceptance(room_id=room_id, accepted_at=acceptance.accepted_at)
             for room_id, acceptance in acceptances
+        ],
+        votes=[
+            ExportedVote(room_id=room_id, poll=poll, choice=choice, created_at=created_at)
+            for room_id, poll, choice, created_at in votes
         ],
         friends=[
             ExportedFriend(

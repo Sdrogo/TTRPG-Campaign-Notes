@@ -6,6 +6,9 @@ import type {
   DdiStep,
   LinesVeilsKind,
   ModuleKind,
+  Poll,
+  PollResults,
+  PollVotersVisible,
   PostIt,
   PostItColumn,
   QuestionTarget,
@@ -48,7 +51,7 @@ export const MAX_GROUP_TITLE_LENGTH = 60;
 export const MAX_MODULES = 10;
 
 /** The steps the Master picks from (spec 47), in the order they are offered. */
-export const MODULE_KINDS: ModuleKind[] = ['retro', 'lines_veils', 'stars_wishes', 'questions', 'ddi'];
+export const MODULE_KINDS: ModuleKind[] = ['retro', 'lines_veils', 'stars_wishes', 'questions', 'ddi', 'poll'];
 
 /** Where an answer can go (spec 47 Decision 9), in the order the Master picks from. */
 export const QUESTION_TARGETS: QuestionTarget[] = ['name', 'subtitle', 'description', 'note', 'document', 'none'];
@@ -63,11 +66,18 @@ export const MAX_ANSWER_LENGTH = 2000;
 export const MAX_NAME_ANSWER_LENGTH = 200;
 export const MAX_SUBTITLE_ANSWER_LENGTH = 120;
 
+/** A Poll step's limits (spec 53 Decision 2); the backend enforces them too. */
+export const MAX_POLLS = 10;
+export const MIN_POLL_OPTIONS = 2;
+export const MAX_POLL_OPTIONS = 20;
+export const MAX_POLL_LENGTH = 200;
+export const MAX_POLL_OPTION_LENGTH = 200;
+
 /** A chain nobody composed: the page as it was before spec 47 (Decision 2). */
 export const DEFAULT_CHAIN: ModuleKind[] = ['retro', 'lines_veils'];
 
 /** The steps that can carry an earlier session's content over (spec 47b Decision 2). */
-export const CARRYABLE_KINDS: ModuleKind[] = ['retro', 'questions', 'ddi'];
+export const CARRYABLE_KINDS: ModuleKind[] = ['retro', 'questions', 'ddi', 'poll'];
 
 interface RawReaction {
   emoji: string;
@@ -128,6 +138,27 @@ interface RawModule {
   columns: RawColumn[];
   questions?: RawQuestions | null;
   ddi?: RawDdi | null;
+  polls?: RawPoll[] | null;
+}
+
+interface RawPoll {
+  id: string;
+  body: string;
+  hint: string | null;
+  max_choices: number;
+  master_votes: boolean;
+  voters_visible: PollVotersVisible;
+  results: PollResults;
+  revealed: boolean;
+  closed: boolean;
+  has_votes: boolean;
+  options: { id: string; body: string; count: number | null; voters: string[] | null; winner: boolean }[];
+  my_option_ids: string[];
+  voter_count: number;
+  electorate: number;
+  not_voted: string[] | null;
+  tally_visible: boolean;
+  can_vote: boolean;
 }
 
 interface RawDdi {
@@ -268,6 +299,28 @@ function toDdi(raw: RawDdi): DdiStep {
   };
 }
 
+function toPoll(raw: RawPoll): Poll {
+  return {
+    id: raw.id,
+    body: raw.body,
+    hint: raw.hint,
+    maxChoices: raw.max_choices,
+    masterVotes: raw.master_votes,
+    votersVisible: raw.voters_visible,
+    results: raw.results,
+    revealed: raw.revealed,
+    closed: raw.closed,
+    hasVotes: raw.has_votes,
+    options: raw.options.map((option) => ({ ...option })),
+    myOptionIds: raw.my_option_ids,
+    voterCount: raw.voter_count,
+    electorate: raw.electorate,
+    notVoted: raw.not_voted,
+    tallyVisible: raw.tally_visible,
+    canVote: raw.can_vote,
+  };
+}
+
 /** The page's model, from the backend's snake_case answer, showing the current step. */
 export function toSessionZero(raw: RawSessionZero): SessionZero {
   const modules: SessionZeroModule[] = raw.modules.map((module) => ({
@@ -277,6 +330,7 @@ export function toSessionZero(raw: RawSessionZero): SessionZero {
     columns: module.columns.map(toColumn),
     ...(module.questions ? { questions: toQuestions(module.questions) } : {}),
     ...(module.ddi ? { ddi: toDdi(module.ddi) } : {}),
+    ...(module.polls ? { polls: module.polls.map(toPoll) } : {}),
   }));
   return {
     started: raw.started,
@@ -346,6 +400,36 @@ export function questionsProblem(
   if (questions.length > 0 && count('name') !== 1) return 'sessionZero.questions.problems.oneName';
   if (count('subtitle') > 1) return 'sessionZero.questions.problems.oneSubtitle';
   if (count('document') > MAX_DOCUMENT_QUESTIONS) return 'sessionZero.questions.problems.documents';
+  return null;
+}
+
+/** A poll as the Master edits it (spec 53 Decision 3); `id` null for a new one. */
+export interface PollDraft {
+  id: string | null;
+  body: string;
+  hint: string;
+  maxChoices: number;
+  masterVotes: boolean;
+  votersVisible: PollVotersVisible;
+  results: PollResults;
+  options: { id: string | null; body: string }[];
+}
+
+/** What keeps "Edit polls" from saving (Decision 2), as a translation key; null when it can save. */
+export function pollsProblem(
+  polls: PollDraft[],
+): `sessionZero.polls.problems.${'empty' | 'options' | 'duplicate' | 'maxChoices'}` | null {
+  for (const poll of polls) {
+    if (!poll.body.trim() || poll.options.some((option) => !option.body.trim())) {
+      return 'sessionZero.polls.problems.empty';
+    }
+    if (poll.options.length < MIN_POLL_OPTIONS || poll.options.length > MAX_POLL_OPTIONS) {
+      return 'sessionZero.polls.problems.options';
+    }
+    const keys = poll.options.map((option) => option.body.split(/\s+/).filter(Boolean).join(' ').toLowerCase());
+    if (new Set(keys).size !== keys.length) return 'sessionZero.polls.problems.duplicate';
+    if (poll.maxChoices < 1 || poll.maxChoices > poll.options.length) return 'sessionZero.polls.problems.maxChoices';
+  }
   return null;
 }
 
@@ -500,6 +584,41 @@ export const boardWrites = {
     path: `/modules/${id}/acceptance`,
     method: accept ? 'POST' : 'DELETE',
   }),
+  /** Spec 53 Decision 3: the whole list, in order; an `id` keeps a poll or a choice with its votes. */
+  setPolls: (id: string, polls: PollDraft[]): BoardWrite => ({
+    path: `/modules/${id}/polls`,
+    method: 'PUT',
+    json: {
+      polls: polls.map((poll) => ({
+        ...(poll.id ? { id: poll.id } : {}),
+        body: poll.body,
+        hint: poll.hint.trim() || null,
+        max_choices: poll.maxChoices,
+        master_votes: poll.masterVotes,
+        voters_visible: poll.votersVisible,
+        results: poll.results,
+        options: poll.options.map((option) => ({ ...(option.id ? { id: option.id } : {}), body: option.body })),
+      })),
+    },
+  }),
+  /** Decision 4: the viewer's whole vote on a poll; none withdraws it. */
+  vote: (pollId: string, optionIds: string[]): BoardWrite => ({
+    path: `/polls/${pollId}/vote`,
+    method: 'PUT',
+    json: { option_ids: optionIds },
+  }),
+  /** Decision 6: the Master closes a poll or reopens it. */
+  closePoll: (pollId: string, closed: boolean): BoardWrite => ({
+    path: `/polls/${pollId}/closed`,
+    method: 'PUT',
+    json: { closed },
+  }),
+  /** Decision 5: the Master shows a secret poll's tally, or hides it again. */
+  revealPoll: (pollId: string, revealed: boolean): BoardWrite => ({
+    path: `/polls/${pollId}/reveal`,
+    method: 'PUT',
+    json: { revealed },
+  }),
   group: (cardIds: string[]): BoardWrite => ({ path: '/groups', method: 'POST', json: { card_ids: cardIds } }),
   renameGroup: (id: string, title: string): BoardWrite => ({
     path: `/groups/${id}`,
@@ -538,7 +657,7 @@ export function roundLabel(round: SessionZeroRound): string {
   return round.title ?? defaultRoundName(round.number);
 }
 
-/** The default name of the `number`th session: "Session 0", then "Session 0.5 #N". */
+/** The default name of the `number`th session: "Session 0", then "Session N". */
 export function defaultRoundName(number: number): string {
   return number === 1
     ? i18n.t('sessionZero.rounds.first')

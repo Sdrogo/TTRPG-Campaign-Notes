@@ -301,7 +301,19 @@
       "notDdiModule": "このステップはDDIではありません。",
       "noDdiDocument": "マスターはまだDDIのドキュメントを選んでいません。",
       "masterDoesNotAccept": "DDIはマスターが書き、プレイヤーが承認します。",
-      "ddiDocumentInvalid": "DDIのドキュメントはこのルームのものである必要があります。"
+      "ddiDocumentInvalid": "DDIのドキュメントはこのルームのものである必要があります。",
+      "notPollModule": "このステップは投票ではありません。",
+      "tooManyPolls": "1つのステップに入れられる投票は10件までです。",
+      "pollOptions": "投票には2〜20個の選択肢が必要です。",
+      "pollDuplicateOption": "同じ投票に同じ選択肢を2つ入れることはできません。",
+      "pollMaxChoices": "1人あたりの票数は1から選択肢の数までです。",
+      "pollText": "質問か選択肢が空か長すぎます（200文字、ヒントは300文字まで）。",
+      "pollSettingsLocked": "この投票にはすでに票があるため、設定を変更できません。",
+      "pollClosed": "この投票は締め切られています。",
+      "pollVote": "選択肢が多すぎるか、重複しているか、別の投票の選択肢です。",
+      "notAVoter": "この投票ではマスターは投票しません。",
+      "pollNotFound": "投票が見つかりません。",
+      "pollOrder": "投票または選択肢がこのステップのものではありません。"
     }
   },
   "pdf": {

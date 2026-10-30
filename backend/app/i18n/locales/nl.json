@@ -301,7 +301,19 @@
       "notDdiModule": "Deze etappe is geen DDI.",
       "noDdiDocument": "De Master heeft het Document van de DDI nog niet gekozen.",
       "masterDoesNotAccept": "De Master schrijft de DDI; de Spelers accepteren hem.",
-      "ddiDocumentInvalid": "Het Document van de DDI moet van deze Kamer zijn."
+      "ddiDocumentInvalid": "Het Document van de DDI moet van deze Kamer zijn.",
+      "notPollModule": "Deze stap is geen peiling.",
+      "tooManyPolls": "Een stap bevat hoogstens 10 peilingen.",
+      "pollOptions": "Een peiling heeft 2 tot 20 keuzes nodig.",
+      "pollDuplicateOption": "Twee keuzes van een peiling mogen niet gelijk zijn.",
+      "pollMaxChoices": "Stemmen per persoon gaan van 1 tot het aantal keuzes.",
+      "pollText": "Een vraag of keuze is leeg of te lang (200 tekens, 300 voor een hint).",
+      "pollSettingsLocked": "Deze peiling heeft al stemmen: de instellingen kunnen niet meer veranderen.",
+      "pollClosed": "Deze peiling is gesloten.",
+      "pollVote": "Te veel keuzes, een herhaalde of een van een andere peiling.",
+      "notAVoter": "De Master stemt niet in deze peiling.",
+      "pollNotFound": "Peiling niet gevonden.",
+      "pollOrder": "Een peiling of keuze hoort niet bij deze stap."
     }
   },
   "pdf": {
