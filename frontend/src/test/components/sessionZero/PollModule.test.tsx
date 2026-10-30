@@ -108,9 +108,16 @@ describe('PollBoard', () => {
     expect(act).toHaveBeenLastCalledWith(boardWrites.vote('p-1', ['o-1', 'o-2']));
     await user.click(screen.getByRole('checkbox', { name: 'Lun' }));
     expect(act).toHaveBeenLastCalledWith(boardWrites.vote('p-1', []));
+    // Spec 54 Decision 3: a click on a card toggles it too.
+    await user.click(screen.getAllByText('Mer')[0]);
+    expect(act).toHaveBeenLastCalledWith(boardWrites.vote('p-1', ['o-1', 'o-3']));
+    await user.click(screen.getAllByText('Lun')[0]);
+    expect(act).toHaveBeenLastCalledWith(boardWrites.vote('p-1', []));
     document.body.innerHTML = '';
 
-    renderPolls([poll({ max_choices: 2, options, my_option_ids: ['o-1', 'o-3'] })]);
+    const full = renderPolls([poll({ max_choices: 2, options, my_option_ids: ['o-1', 'o-3'] })]);
+    await full.user.click(screen.getAllByText('Mar')[0]);
+    expect(full.act).not.toHaveBeenCalled();
     expect(screen.getByText('0 voti rimasti')).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Mar' })).toBeDisabled();
     expect(screen.getByRole('checkbox', { name: 'Lun' })).toBeEnabled();
@@ -197,6 +204,7 @@ describe('PollBoard', () => {
       option('o-2', 'Budōkan', { count: 1 }),
     ];
     const { act, user } = renderPolls([poll({ options, voter_count: 4, has_votes: true })]);
+    const cards = document.querySelectorAll<HTMLElement>('.sz-poll-card');
     expect(screen.getByText('Hotel').tagName).toBe('STRONG');
     await user.click(screen.getByRole('link', { name: 'mappa' }));
     expect(act).not.toHaveBeenCalled();
@@ -205,7 +213,11 @@ describe('PollBoard', () => {
     // The front face's title (the back holds the same title, hidden).
     await user.click(screen.getAllByText('Budōkan')[0]);
     expect(act).toHaveBeenLastCalledWith(boardWrites.vote('p-1', ['o-2']));
-    const cards = document.querySelectorAll<HTMLElement>('.sz-poll-card');
+    document.body.innerHTML = '';
+    // A click on the card already voted changes nothing.
+    const voted = renderPolls([poll({ options, my_option_ids: ['o-1'] })]);
+    await voted.user.click(screen.getAllByText('Stanza 404')[0]);
+    expect(voted.act).not.toHaveBeenCalled();
     expect(cards[0].style.getPropertyValue('--share')).toBe('75%');
     expect(cards[1].style.getPropertyValue('--share')).toBe('25%');
     expect(cards[0]).toHaveAttribute('data-tally');
@@ -236,11 +248,17 @@ describe('PollBoard', () => {
     expect(screen.getByRole('radio', { name: 'Budōkan' })).toBeChecked();
     await user.click(screen.getByRole('button', { name: 'Mostra i risultati' }));
     expect(cards[0]).toHaveAttribute('data-flipped');
+    document.body.innerHTML = '';
+
+    // Checkboxes on turned cards are out of the tab order too.
+    renderPolls([poll({ results: 'hidden', revealed: true, max_choices: 2, options, voter_count: 2, has_votes: true })]);
+    expect(document.querySelector('input[type="checkbox"]')).toHaveAttribute('tabindex', '-1');
   });
 
   it('is read-only in a closed session and while previewing', () => {
-    renderPolls([poll()], { can_manage: true, rounds: closedRound });
+    renderPolls([poll({ my_option_ids: ['o-1'] })], { can_manage: true, rounds: closedRound });
     expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Il tuo voto')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Modifica sondaggi' })).not.toBeInTheDocument();
     document.body.innerHTML = '';
     renderPolls([poll()], {}, false);

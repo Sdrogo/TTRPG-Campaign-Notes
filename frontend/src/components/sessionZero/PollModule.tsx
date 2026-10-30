@@ -318,12 +318,10 @@ function OptionCard({
   const winner = flipped && option.winner;
   const style = { '--share': `${share ?? 0}%`, '--flip-delay': `${index * 80}ms` } as CSSProperties;
   const tick = (event: MouseEvent<HTMLDivElement>) => {
-    if (!voting || disabled || flipped) return;
-    const target = event.target as HTMLElement;
-    if (target.closest('a, input, label, button')) return;
-    if (single) {
-      if (!mine) onToggle(true);
-    } else onToggle(!mine);
+    // The front is hidden once flipped, so a click here is always on choices face up.
+    if (!voting || disabled || (single && mine)) return;
+    if ((event.target as HTMLElement).closest('a, input, label, button')) return;
+    onToggle(!mine);
   };
   const control = voting ? (
     single ? (
@@ -365,7 +363,7 @@ function OptionCard({
                 {option.body}
               </Text>
             </Group>
-            {option.count !== null && !flipped && <VoteCount option={option} />}
+            {option.count !== null && !flipped && <VoteCount option={option} count={option.count} />}
           </Group>
           {option.description && (
             <div className="sz-poll-description">
@@ -394,7 +392,7 @@ function OptionCard({
               >
                 {share ?? 0}%
               </Text>
-              {option.count !== null && flipped && <VoteCount option={option} />}
+              {option.count !== null && flipped && <VoteCount option={option} count={option.count} />}
             </Stack>
           </Group>
         </Box>
@@ -404,7 +402,7 @@ function OptionCard({
 }
 
 /** A choice's vote count with, when the viewer may see them, who gave those votes on hover or tap. */
-function VoteCount({ option }: { option: Poll['options'][number] }) {
+function VoteCount({ option, count }: { option: Poll['options'][number]; count: number }) {
   const { t } = useTranslation();
   const { members } = useBoard();
   return (
@@ -419,7 +417,7 @@ function VoteCount({ option }: { option: Poll['options'][number] }) {
       events={{ hover: true, focus: true, touch: true }}
     >
       <Text size="sm" fw={600} c="dimmed" style={{ whiteSpace: 'nowrap' }} tabIndex={option.voters === null ? undefined : 0}>
-        {t('sessionZero.polls.votes', { count: option.count ?? 0 })}
+        {t('sessionZero.polls.votes', { count })}
       </Text>
     </Tooltip>
   );
