@@ -12,10 +12,13 @@
   question and 2 to 20 choices, and decides per poll whether a Player may
   vote for one choice or several. Players vote; the table sees the tally
   live.
-- Same request, done in the same PR without a ticket: a new session's
-  default name drops "0.5" and "#": "Sessione 0", then "Sessione 1",
-  "Sessione 2"... (was "Sessione 0.5 #1"). Frontend strings only; a
-  session the Master named keeps its name.
+- Same request, a small change outside the poll Decisions: a new
+  session's default name drops "0.5" and "#": "Sessione 0", then
+  "Sessione 1", "Sessione 2"... (was "Sessione 0.5 #1", spec 46d Decision
+  3). The product owner asked for it directly, so it is **built in this
+  PR and does not wait for Q1-Q5**. Frontend strings only; a session the
+  Master named keeps its name. "Session 0.5" stays the name of the
+  concept (a later round) in the code and the glossary.
 - `requirements.md` has no requirement for Session 0; this ticket adds none
   until the product owner asks.
 

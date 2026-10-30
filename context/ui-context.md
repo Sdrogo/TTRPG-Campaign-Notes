@@ -1007,7 +1007,7 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   small) while the viewer has drafts, and, pushed right (`ml="auto"`), the
   Master's "New session" (default, small, "+") and "⋮". On a phone the
   row takes two lines. Sessions are named freely: the name replaces
-  "Session 0.5 #N", which is only the prefilled default.
+  "Session N" (spec 53; was "Session 0.5 #N"), which is only the prefilled default.
 - Timer chip: a pill on `--bg-raised`
   with the default border, a clock icon and the time left in monospace
   (`9:58`; "Paused" beside it, dimmed; "Time's up" in `--state-warning`).
