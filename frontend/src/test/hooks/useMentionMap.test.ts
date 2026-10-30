@@ -31,7 +31,7 @@ describe('the mention map queries', () => {
     fetchMock.mockResolvedValue(rawMentionMap());
     const { queryClient } = renderHookWithProviders(() => useMentionMap('room-1', 'doc-1', true));
     const query = queryClient.getQueryCache().find({ queryKey: KEY });
-    expect((query?.observers[0]?.options as { refetchInterval?: unknown }).refetchInterval).toBe(5000);
+    expect((query?.observers[0]?.options as { refetchInterval?: unknown } | undefined)?.refetchInterval).toBe(5000);
   });
 
   it('reads the map under its Document', async () => {

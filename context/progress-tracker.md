@@ -328,6 +328,13 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-10-30
+
+- **Lint warnings fixed** (Andrea, frontend only, no migration): oxlint
+  is clean again. `LabeledActionIconBase` moved to its own file so
+  `LabeledActionIcon.tsx` exports only the polymorphic wrapper (Fast
+  Refresh), and the `useMentionMap` test no longer casts an optional chain.
+
 ### 2026-10-26
 
 - **Compact Room setup** (Andrea, frontend only, no migration): on the
