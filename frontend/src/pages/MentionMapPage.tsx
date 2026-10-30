@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ActionIcon, Box, Button, Group, Stack, Text, Title, Tooltip } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
@@ -6,9 +6,11 @@ import { GearIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useDocument } from '../hooks/useDocuments';
-import { useMentionMap, useSaveMentionCards } from '../hooks/useMentionMap';
+import { mentionMapQueryKey, useMentionMap, useSaveMentionCards } from '../hooks/useMentionMap';
+import { useMapEvents } from '../hooks/useMapEvents';
+import { useBoardAutosave, type SaveState } from '../hooks/useBoardAutosave';
 import { useReadOnly } from '../hooks/useViewAs';
-import { changedMentionCards } from '../lib/maps';
+import { toMentionBody } from '../lib/maps';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { MapBoard } from '../components/maps/MapBoard';
@@ -16,18 +18,17 @@ import { SplitToggle } from '../components/maps/SplitToggle';
 import { useSideDocument } from '../hooks/useSideDocument';
 import { MentionMapModal } from '../components/maps/MentionMapModal';
 import type { Board, MentionMap } from '../types/map';
-import { SAVE_DELAY_MS } from './RelationshipMapPage';
 
 /** Mantine's `sm` breakpoint: below it a map is read-only (spec 28 Decision 13). */
 const WIDE_ENOUGH = '(min-width: 48em)';
 
-type SaveState = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
-
 /**
  * `/rooms/:roomId/documents/:documentId/mention-map`: a Document's mention map
  * full page (spec 36 Decision 12). Its creator and the Master move and recolor
- * cards on a screen at least `sm` wide, saved shortly after each change, and
- * change its depth, copy or delete it from the settings.
+ * cards on a screen at least `sm` wide, saved shortly after each change the
+ * way a free map is (spec 43: only what changed, laid over whatever arrives
+ * meanwhile), and change its depth, copy or delete it from the settings. It
+ * follows the Room stream like a free map (spec 52).
  */
 export function MentionMapPage() {
   const { t } = useTranslation();
@@ -43,11 +44,12 @@ export function MentionMapPage() {
 function MentionMapContent({ roomId, documentId }: { roomId: string; documentId: string }) {
   const { t } = useTranslation();
   const document = useDocument(roomId, documentId, true);
-  const map = useMentionMap(roomId, documentId);
+  const live = useMapEvents(roomId, undefined, mentionMapQueryKey(roomId, documentId));
+  const map = useMentionMap(roomId, documentId, live.fallback);
   const back = `/rooms/${roomId}/documents/${documentId}`;
 
   if (document.isPending || map.isPending) return <FullPageLoader />;
-  if (document.isError || map.isError || !map.data) {
+  if (live.gone || document.isError || map.isError || !map.data) {
     return (
       <FullPageMessage actionLabel={t('maps.mention.backToDocument')} actionTo={back}>
         {map.isError ? t('maps.mention.loadError') : t('maps.notFound')}
@@ -81,44 +83,22 @@ function MentionMapEditor({
   const splitOpen = split.sideId !== null && wide;
   const manage = map.canManage && !readOnly;
   const editable = manage && wide;
-  const saveCards = useSaveMentionCards(roomId, map.documentId);
   const [settingsOpened, setSettingsOpened] = useState(false);
-
-  const [saveState, setSaveState] = useState<SaveState>('idle');
-  // The page draws its own copy of the board. A new answer from the server (a
-  // mention written elsewhere, a depth change) replaces it, unless a change of
-  // the user's own is still on its way, so a save landing mid-drag doesn't
-  // move anything back.
-  const [drawnFrom, setDrawnFrom] = useState(map);
-  const [board, setBoard] = useState<Board>(map);
-  if (drawnFrom !== map) {
-    setDrawnFrom(map);
-    if (saveState !== 'pending' && saveState !== 'saving') setBoard(map);
-  }
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const save = (next: Board) => {
-    setSaveState('saving');
-    saveCards.mutate(changedMentionCards(map, next), {
-      onSuccess: () => setSaveState('saved'),
-      onError: () => setSaveState('error'),
-    });
-  };
-
-  const handleChange = (next: Board) => {
-    setBoard(next);
-    setSaveState('pending');
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => save(next), SAVE_DELAY_MS);
-  };
+  const autosave = useBoardAutosave<Board, MentionMap>(
+    { groups: map.groups, cards: map.cards, arrows: map.arrows },
+    map.revision,
+    useSaveMentionCards(roomId, map.documentId),
+    toMentionBody,
+    (saved) => ({ groups: saved.groups, cards: saved.cards, arrows: saved.arrows }),
+  );
+  const { saveState } = autosave;
 
   const status: Record<SaveState, string | null> = {
     idle: null,
     pending: t('maps.unsaved'),
     saving: t('maps.saving'),
     saved: t('maps.saved'),
-    error: saveCards.error?.message ?? t('maps.saveError'),
+    error: autosave.error?.message ?? t('maps.saveError'),
   };
 
   return (
@@ -143,7 +123,7 @@ function MentionMapEditor({
             </Text>
           )}
           {saveState === 'error' && (
-            <Button size="xs" variant="light" onClick={() => save(board)}>
+            <Button size="xs" variant="light" onClick={autosave.retry}>
               {t('maps.retry')}
             </Button>
           )}
@@ -176,12 +156,12 @@ function MentionMapEditor({
       <Box data-split-anchor>
         <MapBoard
           roomId={roomId}
-          board={board}
+          board={autosave.value}
           editable={editable}
           isMaster={false}
           documents={[]}
           tags={[]}
-          onChange={handleChange}
+          onChange={autosave.change}
           // On a phone a Document opens under the map.
           onSelectDocument={splitOpen || !wide ? split.open : undefined}
           mode="mention"

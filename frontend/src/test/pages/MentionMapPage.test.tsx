@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,6 +9,7 @@ import type { Board } from '../../types/map';
 import { fakeSession, rawDocument, rawMentionMap } from '../fixtures';
 import { createTestQueryClient, renderWithProviders } from '../utils';
 import { toMentionMap } from '../../lib/maps';
+import type { RoomEvent } from '../../lib/roomEvents';
 import { MentionMapPage } from '../../pages/MentionMapPage';
 
 vi.mock('../../lib/apiClient', async (original) => ({
@@ -16,6 +17,16 @@ vi.mock('../../lib/apiClient', async (original) => ({
   apiFetch: vi.fn(),
 }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
+
+// The Room stream (spec 52): open at once, its events sent by the tests.
+const stream: { send?: (event: RoomEvent) => void } = {};
+vi.mock('../../lib/roomEvents', () => ({
+  readRoomEvents: vi.fn((_roomId: string, _signal: AbortSignal, onOpen: () => void, onEvent: (event: RoomEvent) => void) => {
+    stream.send = onEvent;
+    onOpen();
+    return new Promise<void>(() => {});
+  }),
+}));
 
 // The board has its own tests: here it reports how it was drawn and moves the
 // second card when asked.
@@ -42,6 +53,14 @@ vi.mock('../../components/maps/MapBoard', () => ({
         }
       >
         move
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onChange({ ...board, cards: board.cards.map((card, i) => (i === 0 ? { ...card, x: 555 } : card)) })
+        }
+      >
+        move first
       </button>
       {onSelectDocument && (
         <button type="button" onClick={() => onSelectDocument('doc-9')}>
@@ -198,23 +217,68 @@ describe('MentionMapPage', () => {
     });
   });
 
-  it("keeps the user's own moves while a newer map arrives before they are saved", async () => {
+  it("keeps the user's own moves while someone else's arrive before they are saved", async () => {
     wideScreen();
     const queryClient = createTestQueryClient();
     const key = ['rooms', 'room-1', 'documents', 'doc-1', 'mentionMap'];
-    const newer = toMentionMap(rawMentionMap({ cards: [] }) as Parameters<typeof toMentionMap>[0]);
+    const raw = rawMentionMap();
+    // The other manager moved the first card.
+    const theirs = { ...raw, revision: 2, cards: [{ ...raw.cards[0], x: 77 }, raw.cards[1]] };
     let finishSave: (value: unknown) => void = () => undefined;
     saveCards = () => new Promise((resolve) => (finishSave = resolve));
     const { user } = render(false, `${DOC}/mention-map`, queryClient);
     await user.click(await screen.findByRole('button', { name: 'move' }));
-    queryClient.setQueryData(key, { ...newer });
-    expect(await screen.findByTestId('board')).toHaveTextContent('card-2@999');
+    act(() => queryClient.setQueryData(key, toMentionMap(theirs as Parameters<typeof toMentionMap>[0])));
+    await vi.waitFor(() => expect(screen.getByTestId('board')).toHaveTextContent('card-1@77 card-2@999'));
 
     await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Salvataggio'), { timeout: 2000 });
-    queryClient.setQueryData(key, { ...newer });
-    expect(await screen.findByTestId('board')).toHaveTextContent('card-2@999');
-    finishSave(rawMentionMap());
+    expect(fetchMock).toHaveBeenCalledWith(`${DOC}/mention-map/cards`, {
+      method: 'PUT',
+      json: { cards: [{ document_id: 'doc-2', x: 999, y: 0, color: 'default' }] },
+    });
+    await act(async () => finishSave({ ...theirs, revision: 3, cards: [theirs.cards[0], { ...raw.cards[1], x: 999 }] }));
     await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Salvato'));
+    expect(screen.getByTestId('board')).toHaveTextContent('card-1@77 card-2@999');
+  });
+
+  it('keeps a move made while the previous one is being saved', async () => {
+    wideScreen();
+    const queryClient = createTestQueryClient();
+    const raw = rawMentionMap();
+    const answers: ((value: unknown) => void)[] = [];
+    saveCards = () => new Promise((resolve) => answers.push(resolve));
+    const { user } = render(false, `${DOC}/mention-map`, queryClient);
+    await user.click(await screen.findByRole('button', { name: 'move' }));
+    await vi.waitFor(() => expect(answers).toHaveLength(1), { timeout: 2000 });
+
+    // A second move while the first save is on its way, then its answer
+    // (without the second move) lands, then the Document is read again.
+    await user.click(screen.getByRole('button', { name: 'move first' }));
+    await act(async () => answers[0]({ ...raw, revision: 2, cards: [raw.cards[0], { ...raw.cards[1], x: 999 }] }));
+    expect(screen.getByTestId('board')).toHaveTextContent('card-1@555 card-2@999');
+    act(() => stream.send?.({ topic: 'document', revision: null, kind: 'changed', id: 'doc-9' }));
+    await vi.waitFor(() => expect(answers).toHaveLength(2), { timeout: 2000 });
+    expect(screen.getByTestId('board')).toHaveTextContent('card-1@555 card-2@999');
+    expect(fetchMock).toHaveBeenLastCalledWith(`${DOC}/mention-map/cards`, {
+      method: 'PUT',
+      json: { cards: [{ document_id: 'doc-1', x: 555, y: 0, color: 'gold' }] },
+    });
+  });
+
+  it("redraws the map when another manager saves it, and says when it's gone", async () => {
+    wideScreen();
+    render();
+    expect(await screen.findByTestId('board')).toHaveTextContent('card-2@400');
+    map = () => Promise.resolve(rawMentionMap({ revision: 2, cards: [rawMentionMap().cards[0]] }));
+    act(() => stream.send?.({ topic: 'map', revision: 1, kind: 'changed', id: 'mention-map-1' }));
+    act(() => stream.send?.({ topic: 'map', revision: 2, kind: 'changed', id: 'other-map' }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.getByTestId('board')).toHaveTextContent('card-2@400');
+
+    act(() => stream.send?.({ topic: 'map', revision: 2, kind: 'changed', id: 'mention-map-1' }));
+    await vi.waitFor(() => expect(screen.getByTestId('board')).not.toHaveTextContent('card-2'));
+    act(() => stream.send?.({ topic: 'map', revision: 3, kind: 'deleted', id: 'mention-map-1' }));
+    expect(await screen.findByText(/non trovata|not found/i)).toBeInTheDocument();
   });
 
   it('opens the settings to its manager, and redraws after a depth change', async () => {

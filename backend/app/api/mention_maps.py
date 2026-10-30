@@ -53,6 +53,8 @@ from app.domain.relationship_maps import (
     can_manage_map,
 )
 from app.i18n.dependencies import LocaleDep
+from app.realtime.audience import CHANGED, DELETED, document_audience, push
+from app.realtime.broker import MAP, Event
 
 router = APIRouter(prefix="/rooms/{room_id}/documents/{document_id}/mention-map", tags=["maps"])
 linked_router = APIRouter(
@@ -65,7 +67,8 @@ class MentionMapResponse(BaseModel):
     cards and relations computed from the mentions they see (spec 36
     Decision 7), and how many Documents the 150-card cap left out.
     `can_manage` says whether they may change the depth, move or recolor
-    cards, delete it or copy it."""
+    cards, delete it or copy it. `revision` rises with every save of its
+    depth or cards (spec 42 Decision 7), as a free map's does."""
 
     id: uuid.UUID
     document_id: uuid.UUID
@@ -73,6 +76,7 @@ class MentionMapResponse(BaseModel):
     created_by: uuid.UUID
     updated_at: datetime
     can_manage: bool
+    revision: int
     cards: list[CardResponse]
     arrows: list[ArrowBody]
     documents_left_out: int
@@ -186,6 +190,7 @@ async def _response(
         created_by=mention_map.created_by,
         updated_at=mention_map.updated_at,
         can_manage=can_manage_map(mention_map, viewer.user_id, viewer.role),
+        revision=mention_map.revision,
         cards=await card_responses(session, cards, documents, viewer),
         arrows=[arrow_body(arrow) for arrow in arrows],
         documents_left_out=graph.left_out,
@@ -234,6 +239,20 @@ def _card_end(end: ArrowEndBody) -> uuid.UUID:
     """The card a mention map's relation ends on: always a card there."""
     assert end.card_id is not None
     return end.card_id
+
+
+async def _push(
+    session: AsyncSession, mention_map: RelationshipMap, center: Document, kind: str = CHANGED
+) -> None:
+    """Tells whoever sees the map's Document, and so the map, that the map
+    changed or was deleted, at its current revision (spec 52, as for a free
+    map)."""
+    push(
+        session,
+        center.room_id,
+        Event(mention_map.revision, kind, mention_map.id, MAP),
+        await document_audience(session, center),
+    )
 
 
 def _now() -> datetime:
@@ -351,10 +370,11 @@ async def update_mention_map(
         session, room_id, document_id, uuid.UUID(current_user.id), locale
     )
     mention_map = await _get_managed_map(session, document_id, membership, locale)
-    updated = RelationshipMap(
-        **{**vars(mention_map), "mention_depth": body.depth, "updated_at": _now()}
+    updated = await relationship_maps_repo.update_map(
+        session,
+        RelationshipMap(**{**vars(mention_map), "mention_depth": body.depth, "updated_at": _now()}),
     )
-    await relationship_maps_repo.update_map(session, updated)
+    await _push(session, updated, center)
     return await _response(session, updated, center, membership)
 
 
@@ -368,9 +388,12 @@ async def delete_mention_map(
 ) -> None:
     """Decision 9: the map's creator or the Master deletes it. The Documents
     and their mentions stay."""
-    membership, _ = await _center(session, room_id, document_id, uuid.UUID(current_user.id), locale)
+    membership, center = await _center(
+        session, room_id, document_id, uuid.UUID(current_user.id), locale
+    )
     mention_map = await _get_managed_map(session, document_id, membership, locale)
     await relationship_maps_repo.delete_map(session, mention_map.id)
+    await _push(session, mention_map, center, DELETED)
 
 
 @router.put("/cards")
@@ -413,8 +436,10 @@ async def save_mention_cards(
     await relationship_maps_repo.save_board(
         session, mention_map.id, BoardPlan(groups=[], cards=cards, arrows=[])
     )
-    updated = RelationshipMap(**{**vars(mention_map), "updated_at": _now()})
-    await relationship_maps_repo.update_map(session, updated)
+    updated = await relationship_maps_repo.update_map(
+        session, RelationshipMap(**{**vars(mention_map), "updated_at": _now()})
+    )
+    await _push(session, updated, center)
     return await _response(session, updated, center, membership)
 
 

@@ -60,6 +60,23 @@ function pointer(type: 'pointerdown' | 'pointerup') {
 }
 
 describe('useMapEvents (spec 52_2)', () => {
+  it("follows a mention map under its Document's key, by the loaded map's id", () => {
+    const key = ['rooms', 'room-1', 'documents', 'doc-1', 'mentionMap'];
+    const queryClient = createTestQueryClient();
+    queryClient.setDefaultOptions({ queries: { gcTime: Infinity } });
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue();
+    renderHookWithProviders(() => useMapEvents('room-1', undefined, key), { queryClient });
+    streams[0].open();
+    streams[0].send(mapEvent(1, 'changed', 'mention-1'));
+    expect(invalidate).not.toHaveBeenCalled();
+
+    queryClient.setQueryData(key, { id: 'mention-1', revision: 2 });
+    streams[0].send(mapEvent(2, 'changed', 'mention-1'));
+    expect(invalidate).not.toHaveBeenCalled();
+    streams[0].send(mapEvent(3, 'changed', 'mention-1'));
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: key });
+  });
+
   it("reads the map again on another member's change, not on the viewer's own", () => {
     const { invalidate } = render(4, 6);
     streams[0].send(mapEvent(6));
