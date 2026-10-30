@@ -530,11 +530,6 @@ html body[data-scroll-locked] {
   border-bottom: 1px solid var(--border-default);
 }
 
-.document-detail-kicker {
-  margin-bottom: var(--mantine-spacing-xs);
-  letter-spacing: 0.14em;
-}
-
 /* The sizes the title and subtitle had before the editorial pass (h2/h3 on a
    phone, h1/h2 from sm): the display sizes read as too large (Andrea,
    2026-10-27). */
@@ -561,7 +556,7 @@ html body[data-scroll-locked] {
   }
 }
 
-/* On a phone the actions share the kicker's line, top right, instead of a row
+/* On a phone the actions sit on a line of their own, top right, instead of a row
    of their own under the name; the name and subtitle below keep the full width
    (Andrea, 2026-10-29). */
 @media (max-width: 48em) {
@@ -574,11 +569,6 @@ html body[data-scroll-locked] {
 
   .document-detail-titles {
     display: contents;
-  }
-
-  .document-detail-kicker {
-    grid-area: 1 / 1;
-    margin-bottom: 0;
   }
 
   .document-detail-heading .document-detail-meta {

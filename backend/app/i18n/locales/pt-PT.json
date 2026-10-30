@@ -301,7 +301,19 @@
       "notDdiModule": "Esta etapa não é uma DDI.",
       "noDdiDocument": "O Mestre ainda não escolheu o Documento da DDI.",
       "masterDoesNotAccept": "O Mestre escreve a DDI; os Jogadores aceitam-na.",
-      "ddiDocumentInvalid": "O Documento da DDI tem de ser desta Sala."
+      "ddiDocumentInvalid": "O Documento da DDI tem de ser desta Sala.",
+      "notPollModule": "Esta etapa não é uma sondagem.",
+      "tooManyPolls": "Uma etapa tem no máximo 10 sondagens.",
+      "pollOptions": "Uma sondagem precisa de 2 a 20 opções.",
+      "pollDuplicateOption": "Duas opções de uma sondagem não podem ser iguais.",
+      "pollMaxChoices": "Os votos por pessoa vão de 1 ao número de opções.",
+      "pollText": "Uma pergunta ou opção está vazia ou é demasiado longa (200 caracteres, 300 para uma dica).",
+      "pollSettingsLocked": "Esta sondagem já tem votos: as definições não podem mudar.",
+      "pollClosed": "Esta sondagem está fechada.",
+      "pollVote": "Demasiadas opções, uma repetida ou uma de outra sondagem.",
+      "notAVoter": "O Mestre não vota nesta sondagem.",
+      "pollNotFound": "Sondagem não encontrada.",
+      "pollOrder": "Uma sondagem ou opção não é desta etapa."
     }
   },
   "pdf": {

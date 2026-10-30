@@ -95,6 +95,20 @@ describe('useBoardAutosave (spec 43)', () => {
     });
   });
 
+  it('takes other content at the same revision, but not the same lists again', () => {
+    const initial = { items: [a] };
+    const { result, store } = setup(initial, 1);
+    act(() => result.current.change({ items: [{ ...a, x: 5 }] }));
+    // A mention map following the mentions: same revision, another card.
+    const followed = { items: [a, b] };
+    store(followed, 1);
+    expect(result.current.value).toEqual({ items: [{ ...a, x: 5 }, b] });
+    // Read again unchanged: the query keeps the same list, nothing moves.
+    const drawn = result.current.value;
+    store({ items: followed.items }, 1);
+    expect(result.current.value).toBe(drawn);
+  });
+
   it('waits for a released pointer before redrawing a newer board', () => {
     const { result, store } = setup();
     act(() => {

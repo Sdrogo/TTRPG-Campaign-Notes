@@ -9,10 +9,20 @@ export const SAVE_DELAY_MS = 800;
 /** Where the page's copy of a board stands with the server. */
 export type SaveState = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
-/** A board the server sent, at the revision it was sent at. */
+/**
+ * A board the server sent, at the revision it was sent at. `seen` counts the
+ * boards taken in, so one at the same revision but with other content (a
+ * Document renamed, a mention written elsewhere) is still newer.
+ */
 interface Known<B> {
   board: B;
   revision: number;
+  seen: number;
+}
+
+/** Whether `next` holds other lists than `known`: the query keeps a list that didn't change. */
+function differs<B extends object>(next: B, known: B): boolean {
+  return (Object.keys(next) as (keyof B)[]).some((kind) => next[kind] !== known[kind]);
 }
 
 /** True while a finger or a mouse button is down anywhere on the page. */
@@ -43,8 +53,10 @@ function usePointerHeld() {
  * The page's own copy of a map's board (spec 43), saved `SAVE_DELAY_MS` after
  * the last change. A save sends only what changed since the board the copy is
  * based on (`diffBoard`), so it never touches what someone else did. Whenever
- * a newer board arrives, in a save's answer or from the stored map (refreshed
- * every few seconds, 43_2), the copy is rebased on it: the editor's own
+ * a newer board arrives, in a save's answer or from the stored map (read again
+ * on a live event, spec 52), the copy is rebased on it, also when it comes at
+ * the same revision with other content (a Document renamed or a mention map's
+ * cards following the mentions): the editor's own
  * unsaved changes laid over it (`applyChanges`). Rebasing waits while a
  * pointer is down, so nothing moves under a drag; a save sent meanwhile may
  * repeat changes already saved, which the server takes again harmlessly.
@@ -59,7 +71,7 @@ export function useBoardAutosave<B extends BoardShape<B>, S extends { revision: 
   const [value, setValue] = useState<B>(stored);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const drawn = useRef(stored);
-  const base = useRef<Known<B>>({ board: stored, revision: storedRevision });
+  const base = useRef<Known<B>>({ board: stored, revision: storedRevision, seen: 0 });
   const latest = useRef<Known<B>>(base.current);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const inFlight = useRef(false);
@@ -74,14 +86,17 @@ export function useBoardAutosave<B extends BoardShape<B>, S extends { revision: 
 
   // Rebases the copy on the newest board known, unless a pointer is down.
   const sync = () => {
-    if (pointer.held.current || latest.current.revision <= base.current.revision) return;
+    if (pointer.held.current || latest.current.seen <= base.current.seen) return;
     const own = diffBoard(base.current.board, drawn.current, toBody);
     base.current = latest.current;
     draw(applyChanges(latest.current.board, own));
   };
 
   const learn = (board: B, revision: number) => {
-    if (revision > latest.current.revision) latest.current = { board, revision };
+    const known = latest.current;
+    if (revision > known.revision || (revision === known.revision && differs(board, known.board))) {
+      latest.current = { board, revision, seen: known.seen + 1 };
+    }
     sync();
   };
 

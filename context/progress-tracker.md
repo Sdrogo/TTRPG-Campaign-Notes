@@ -11,11 +11,36 @@ detail:
 - [`archive/progress-tracker-full-2026-09-30.md`](archive/progress-tracker-full-2026-09-30.md):
   the original log up to 2026-09-30 (specs 01 to 11).
 
-## Current Status (2026-10-29)
+## Current Status (2026-10-30)
+
+- **Document heading, no "Documents" kicker** (2026-10-30, no migration,
+  pushed to `staging`): the small uppercase `documents.title` text above the
+  Document's name is gone, with its `.document-detail-kicker` CSS. On a
+  phone the actions (badge, read aloud, ⋮) now sit alone at the top right
+  and the name starts on the row below. The `documents.title` key stays
+  (back-link labels, Room Documents page).
+
+- **Production migration `b9e4c2a7d1f3`** (2026-10-30): Session 0 polls
+  (spec 53) applied to the production database by hand, before the release
+  to `main` that ships the code.
+
+- **Fix, editing the full-page mention map** (2026-10-30, no migration,
+  PR into `staging`): quick moves on `MentionMapPage` were undone when an
+  autosave answered in the middle of them (the page kept its own older
+  save loop: one copy of the board, replaced by the server's whenever no
+  save was pending, and "saved" set even with a newer move waiting). It now
+  uses the free maps' `useBoardAutosave` (spec 43: only changed cards sent,
+  unsaved moves laid over whatever arrives, nothing redrawn mid-drag) and
+  `useMapEvents` (spec 52: re-read on another manager's save and on any
+  Document event, 5 s polling only while the stream is down). The mention
+  map response now carries `revision`; saving cards, changing the depth
+  and deleting it push a `map` event to whoever sees its Document.
+  `useBoardAutosave` also takes a board at the same revision with other
+  content (a mention map following the mentions, a renamed Document).
 
 - **Document page on a phone** (2026-10-29, no migration, PR into
   `staging`): below `sm` the heading's actions (badge, read aloud, ⋮)
-  share the kicker's line instead of a row under the name and subtitle
+  share a line instead of a row under the name and subtitle
   (the column stacking came from the Figma refactor #252). The info
   panel's "+" buttons and a person chip's "x" keep their desktop size
   (24px) on touch screens, with an invisible ring that keeps the 40px tap
@@ -229,13 +254,15 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `a7d3f9b2c6e1` (Session 0 DDI steps, spec
+- **Head in the repository**: `b9e4c2a7d1f3` (Session 0 polls, spec 53,
+  PR #276), after `a7d3f9b2c6e1` (Session 0 DDI steps, spec
   47_3), after `f3a9c1e7b5d4` (Session 0 Questions steps, 47_2, PR #260),
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending on production only**: none. Production is at the head.
-- **Staging database**: `a7d3f9b2c6e1` (= head, Session 0 DDI, 47_3, PR
+- **Staging database**: `b9e4c2a7d1f3` (= head, Session 0 polls, spec 53,
+  PR #276, applied by the product owner 2026-10-30 before the merge);
+  `a7d3f9b2c6e1` before it (Session 0 DDI, 47_3, PR
   #261, applied by the product owner 2026-10-28); `f3a9c1e7b5d4` before it (Session 0 Questions,
   47_2, PR #260, applied by the product owner 2026-10-28 with
   `.env.staging` loaded); `e5c1a8f3b7d2` before it (Session 0 chain,
@@ -250,7 +277,11 @@ here and remind the product owner.
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `a7d3f9b2c6e1` (= head, Session 0 DDI, 47_3, PR
+- **Production database**: `b9e4c2a7d1f3` (= head, Session 0 polls, spec 53,
+  PR #276), applied 2026-10-30 with `backend/.env` loaded (plain `alembic
+  upgrade head`) ahead of the release to `main` that ships it, so until it
+  merges production's code does not carry the migration file. Before it,
+  `a7d3f9b2c6e1` (Session 0 DDI, 47_3, PR
   #261), applied 2026-10-28 with `backend/.env` loaded (plain `alembic
   upgrade head`, no `.env.staging` exported), together with `e5c1a8f3b7d2`
   (Session 0 chain, 47_1) and `f3a9c1e7b5d4` (Session 0 Questions, 47_2),
@@ -269,10 +300,10 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: none (production is at `a7d3f9b2c6e1`, the head).
+- **Pending on production**: none.
 
 Recent chain, newest first (where each came from):
-`a7d3f9b2c6e1` Session 0 DDI (47_3) ← `f3a9c1e7b5d4` Session 0 Questions (47_2) ← `e5c1a8f3b7d2` Session 0 chain (47_1) ← `d4a7e2c9f1b3` post-it order (46d_2) ← `c3f8a1d6e9b4` colours and groups (46c) ← `4797859660e2` Session 0 boards (46_1) ← `b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
+`b9e4c2a7d1f3` Session 0 polls (53) ← `a7d3f9b2c6e1` Session 0 DDI (47_3) ← `f3a9c1e7b5d4` Session 0 Questions (47_2) ← `e5c1a8f3b7d2` Session 0 chain (47_1) ← `d4a7e2c9f1b3` post-it order (46d_2) ← `c3f8a1d6e9b4` colours and groups (46c) ← `4797859660e2` Session 0 boards (46_1) ← `b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
 (28_0) ← `f7a2d8c4e1b9` import jobs (27_2) ← `e9b4c2d7a1f6` `rooms.image_path` (26)
 ← `c7d3e9a1f5b2` whole-Document history (24b, folds `note_versions` into
 `document_versions.notes`) ← `a2e6c9f4b8d1` version history (24_1) ←
@@ -309,6 +340,13 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
+
+### 2026-10-30
+
+- **Lint warnings fixed** (Andrea, frontend only, no migration): oxlint
+  is clean again. `LabeledActionIconBase` moved to its own file so
+  `LabeledActionIcon.tsx` exports only the polymorphic wrapper (Fast
+  Refresh), and the `useMentionMap` test no longer casts an optional chain.
 
 ### 2026-10-26
 
@@ -784,6 +822,22 @@ Nothing is waiting for release: `staging` and `main` match after release
 PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
+
+- **53, Session 0 polls** (ticket confirmed by the product owner
+  2026-10-30 with answers to Q1-Q5, built the same day in PR #276): a Poll
+  step in the Session 0 chain, up to 10 polls per step, 2 to 20 choices,
+  and per poll the Master sets votes per person (1 to n, a "votes left"
+  badge), whether the Master votes, who sees the names (Master, everyone,
+  nobody) and a live or secret tally (with "Reveal results"). "Voted: N
+  of M", an "Everyone has voted" badge and toast, close/reopen, carry
+  over like Questions. **Migration `b9e4c2a7d1f3`** (revises
+  `a7d3f9b2c6e1`): applied to the staging DB by the product owner
+  2026-10-30; pending on production before the next release. Same PR: a new
+  session's default name is "Sessione 1", "Sessione 2"... instead of
+  "Sessione 0.5 #1" (frontend strings only), and a fix for a flaky
+  ungroup answer (`delete_groups` now clears the post-its' `group_id`
+  itself instead of relying on `ON DELETE SET NULL`, which the session's
+  loaded rows didn't see).
 
 - **52, Live updates for maps and comments** (ticket confirmed by the
   product owner 2026-10-29, PR #274): one Server-Sent Events stream per Room

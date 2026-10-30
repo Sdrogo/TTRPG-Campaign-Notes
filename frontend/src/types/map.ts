@@ -172,6 +172,8 @@ export interface MentionMap extends Board {
   createdBy: string;
   updatedAt: string;
   canManage: boolean;
+  /** Raised by every save of its cards or depth (spec 42 Decision 7). */
+  revision: number;
   /** Documents past the 150-card cap, not drawn. */
   documentsLeftOut: number;
 }

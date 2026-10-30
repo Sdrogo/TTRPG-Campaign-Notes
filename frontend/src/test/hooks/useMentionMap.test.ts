@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, apiFetch } from '../../lib/apiClient';
 import { rawMapDetail, rawMentionMap } from '../fixtures';
 import { renderHookWithProviders } from '../utils';
+import { toMentionMap } from '../../lib/maps';
 import {
   useCopyMentionMap,
   useDeleteMentionMap,
@@ -26,6 +27,13 @@ beforeEach(() => {
 });
 
 describe('the mention map queries', () => {
+  it('reads the map every few seconds while the Room stream is down', () => {
+    fetchMock.mockResolvedValue(rawMentionMap());
+    const { queryClient } = renderHookWithProviders(() => useMentionMap('room-1', 'doc-1', true));
+    const query = queryClient.getQueryCache().find({ queryKey: KEY });
+    expect((query?.observers[0]?.options as { refetchInterval?: unknown } | undefined)?.refetchInterval).toBe(5000);
+  });
+
   it('reads the map under its Document', async () => {
     fetchMock.mockResolvedValue(rawMentionMap());
     const { result } = renderHookWithProviders(() => useMentionMap('room-1', 'doc-1'));
@@ -76,9 +84,17 @@ describe('the mention map mutations', () => {
   it('saves moved cards', async () => {
     fetchMock.mockResolvedValue(rawMentionMap());
     const { result, queryClient } = renderHookWithProviders(() => useSaveMentionCards('room-1', 'doc-1'));
-    const cards = [{ document_id: 'doc-2', x: 1, y: 2, color: 'red' }];
-    await result.current.mutateAsync(cards);
-    expect(fetchMock).toHaveBeenCalledWith(`${PATH}/cards`, { method: 'PUT', json: { cards } });
+    const [, card] = toMentionMap(rawMentionMap() as Parameters<typeof toMentionMap>[0]).cards;
+    const moved = { ...card, x: 1, y: 2, color: 'red' as const };
+    const none = { changed: [], createdIds: [], deletedIds: [] };
+    await result.current.mutateAsync({
+      changes: { groups: none, cards: { ...none, changed: [moved] }, arrows: none },
+      baseRevision: 1,
+    });
+    expect(fetchMock).toHaveBeenCalledWith(`${PATH}/cards`, {
+      method: 'PUT',
+      json: { cards: [{ document_id: 'doc-2', x: 1, y: 2, color: 'red' }] },
+    });
     expect(queryClient.getQueryData(KEY)).toBeTruthy();
   });
 

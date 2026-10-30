@@ -301,7 +301,19 @@
       "notDdiModule": "Cette étape n'est pas une DDI.",
       "noDdiDocument": "Le Maître n'a pas encore choisi le Document de la DDI.",
       "masterDoesNotAccept": "Le Maître écrit la DDI ; les Joueurs l'acceptent.",
-      "ddiDocumentInvalid": "Le Document de la DDI doit appartenir à cette Salle."
+      "ddiDocumentInvalid": "Le Document de la DDI doit appartenir à cette Salle.",
+      "notPollModule": "Cette étape n'est pas un sondage.",
+      "tooManyPolls": "Une étape contient au plus 10 sondages.",
+      "pollOptions": "Un sondage demande de 2 à 20 choix.",
+      "pollDuplicateOption": "Deux choix d'un sondage ne peuvent pas être identiques.",
+      "pollMaxChoices": "Les votes par personne vont de 1 au nombre de choix.",
+      "pollText": "Une question ou un choix est vide ou trop long (200 caractères, 300 pour une indication).",
+      "pollSettingsLocked": "Ce sondage a déjà des votes : ses réglages ne peuvent plus changer.",
+      "pollClosed": "Ce sondage est clos.",
+      "pollVote": "Trop de choix, un choix répété ou un choix d'un autre sondage.",
+      "notAVoter": "Le MJ ne vote pas dans ce sondage.",
+      "pollNotFound": "Sondage introuvable.",
+      "pollOrder": "Un sondage ou un choix n'appartient pas à cette étape."
     }
   },
   "pdf": {

@@ -693,7 +693,15 @@ async def rename_group(session: AsyncSession, group_id: uuid.UUID, title: str | 
 
 
 async def delete_groups(session: AsyncSession, group_ids: Collection[uuid.UUID]) -> None:
-    """Deletes these groups; their post-its stay, ungrouped."""
+    """Deletes these groups; their post-its stay, ungrouped. The post-its
+    are ungrouped here rather than left to `ON DELETE SET NULL`, which the
+    session's loaded rows wouldn't see, so the answer drawn after this write
+    could still show them in the deleted group."""
+    await session.execute(
+        update(SessionZeroCardRow)
+        .where(SessionZeroCardRow.group_id.in_(group_ids))
+        .values(group_id=None)
+    )
     await session.execute(delete(SessionZeroGroupRow).where(SessionZeroGroupRow.id.in_(group_ids)))
     await session.flush()
 

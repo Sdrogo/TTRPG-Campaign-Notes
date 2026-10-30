@@ -31,6 +31,7 @@ content.
 | Tour (the Demo's guided tour, spec 45_3) | Tour | Tour | Tour | Tour | Visite | Rondleiding | Przewodnik | Visita | Тур | ツアー | 导览 | 투어 |
 | Session 0 (spec 46) | Sessione 0 | Session 0 | Session 0 | Sesión 0 | Session 0 | Sessie 0 | Sesja 0 | Sessão 0 | Сессия 0 | セッション0 | 第 0 次会话 | 세션 0 |
 | Session 0.5 (a later round, spec 46) | Sessione 0.5 | Session 0.5 | Session 0.5 | Sesión 0.5 | Session 0.5 | Sessie 0.5 | Sesja 0.5 | Sessão 0.5 | Сессия 0.5 | セッション0.5 | 第 0.5 次会话 | 세션 0.5 |
+| Poll (Session 0 step, spec 53) | Sondaggio | Poll | Umfrage | Encuesta | Sondage | Peiling | Ankieta | Sondagem | Опрос | 投票 | 投票 | 투표 |
 | Retro (board, spec 46) | Retro | Retro | Retro | Retro | Rétro | Retro | Retro | Retro | Ретро | レトロ | 回顾 | 레트로 |
 | Lines & Veils (board, spec 46) | Linee e Veli | Lines & Veils | Grenzen & Schleier | Líneas y Velos | Lignes et Voiles | Lijnen en Sluiers | Linie i Zasłony | Linhas e Véus | Линии и Завесы | ライン&ヴェール | 底线与帷幕 | 라인과 베일 |
 | Must (Lines & Veils column) | Must | Must | Must | Must | Must | Must | Must | Must | Must | Must | Must | Must |

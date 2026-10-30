@@ -44,16 +44,28 @@ function usePointerHeld(onRelease: () => void) {
  * none while a pointer is down, each request kept until then. `fallback`
  * says the stream is down, so the map reads itself every `MAP_REFRESH_MS`
  * as before; `gone` says the map was deleted.
+ *
+ * A mention map (spec 36) is read under its Document (`queryKey`), without
+ * `mapId`: its id is the loaded map's, so until it is loaded only Document
+ * events count.
  */
-export function useMapEvents(roomId: string, mapId: string): { fallback: boolean; gone: boolean } {
+export function useMapEvents(
+  roomId: string,
+  mapId: string | undefined,
+  queryKey: readonly unknown[] = ['rooms', roomId, 'maps', mapId],
+): { fallback: boolean; gone: boolean } {
   const queryClient = useQueryClient();
+  const key = useRef(queryKey);
+  useEffect(() => {
+    key.current = queryKey;
+  });
   const [gone, setGone] = useState(false);
   const coalescer = useRef<Coalescer | null>(null);
   const held = usePointerHeld(() => coalescer.current?.release());
 
   useEffect(() => {
     const reread = createCoalescer(
-      () => void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps', mapId] }),
+      () => void queryClient.invalidateQueries({ queryKey: key.current }),
       MAP_REREAD_GAP_MS,
       () => held.current,
     );
@@ -62,15 +74,16 @@ export function useMapEvents(roomId: string, mapId: string): { fallback: boolean
       reread.cancel();
       coalescer.current = null;
     };
-  }, [queryClient, roomId, mapId, held]);
+  }, [queryClient, held]);
 
   const known = () =>
     Math.max(
-      queryClient.getQueryData<RelationshipMap>(['rooms', roomId, 'maps', mapId])?.revision ?? 0,
-      queryClient.getQueryData<RelationshipMap>(['rooms', roomId, 'maps', mapId, 'geo'])?.revision ?? 0,
+      queryClient.getQueryData<RelationshipMap | null>(queryKey)?.revision ?? 0,
+      queryClient.getQueryData<RelationshipMap>([...queryKey, 'geo'])?.revision ?? 0,
     );
   const onEvent = (event: RoomEvent) => {
-    if (event.topic === 'map' && event.id === mapId) {
+    const id = mapId ?? queryClient.getQueryData<RelationshipMap | null>(queryKey)?.id;
+    if (event.topic === 'map' && id !== undefined && event.id === id) {
       if (event.kind === 'deleted') setGone(true);
       else if (event.revision === null || event.revision > known()) coalescer.current?.request();
     } else if (event.topic === 'document') {

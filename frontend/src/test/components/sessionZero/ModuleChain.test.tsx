@@ -190,6 +190,40 @@ describe('Edit steps', () => {
     expect(dialog).toHaveTextContent('Le domande e le risposte di «Domande» vengono eliminate con lei.');
   });
 
+  // Spec 53: a Poll step's polls and votes go with it.
+  it('asks before removing a Poll step with polls, not an empty one', async () => {
+    const step = (id: string, polls: unknown[]) => ({ id, kind: 'poll', position: 0, columns: [], polls });
+    const poll = {
+      id: 'p-1',
+      position: 0,
+      body: 'Quale sistema?',
+      hint: null,
+      max_choices: 1,
+      master_votes: false,
+      voters_visible: 'master',
+      results: 'live',
+      revealed: false,
+      closed: false,
+      has_votes: false,
+      options: [],
+      my_option_ids: [],
+      voter_count: 0,
+      electorate: 1,
+      not_voted: null,
+      tally_visible: true,
+      can_vote: false,
+    };
+    const { act, user, dialog } = await openEditor({
+      ...master,
+      modules: [step('m-poll', [poll]), step('m-empty', [])],
+      current_module_id: 'm-poll',
+    });
+    await user.click(within(dialog).getAllByRole('button', { name: 'Rimuovi' })[1]);
+    expect(act).toHaveBeenLastCalledWith(boardWrites.removeModule('m-empty'), expect.any(Function));
+    await user.click(within(dialog).getAllByRole('button', { name: 'Rimuovi' })[0]);
+    expect(dialog).toHaveTextContent('I sondaggi e i voti di «Sondaggio» vengono eliminati con lei.');
+  });
+
   it('keeps the last step and stops at ten', async () => {
     const one = await openEditor({ ...master, modules: chain.slice(2), current_module_id: 'm-lv' });
     expect(within(one.dialog).getByRole('button', { name: 'Rimuovi' })).toBeDisabled();

@@ -18,6 +18,7 @@ import type {
   RelationshipMapDetail,
 } from '../types/map';
 import { leadImage, toStoredImage } from './images';
+import type { BoardChanges } from '../types/boardChanges';
 
 // --- The wire shape ---------------------------------------------------------
 
@@ -183,6 +184,7 @@ export interface RawMentionMap {
   created_by: string;
   updated_at: string;
   can_manage: boolean;
+  revision: number;
   cards: RawMapCard[];
   arrows: RawMapArrow[];
   documents_left_out: number;
@@ -203,6 +205,7 @@ export function toMentionMap(raw: RawMentionMap): MentionMap {
     createdBy: raw.created_by,
     updatedAt: raw.updated_at,
     canManage: raw.can_manage,
+    revision: raw.revision,
     groups: [],
     cards: raw.cards.map(toCard),
     arrows: raw.arrows.map(toArrow),
@@ -223,18 +226,27 @@ export function toMentionMapPreview(raw: RawMentionMapPreview): MentionMapPrevie
 export function ignoreBoardChange(): void {}
 
 /**
- * The cards of a mention map someone moved or recolored since `saved`, as
- * `PUT .../mention-map/cards` takes them (spec 36 Decision 9): the others keep
- * their place.
+ * A mention map's board as its editor changes it (spec 36 Decision 9), for
+ * the per-item saves of spec 43 (`diffBoard`): a card is its place and color
+ * only, and groups and relations, computed by the server, never count as
+ * changed.
  */
-export function changedMentionCards(saved: Board, board: Board) {
-  const before = new Map(saved.cards.map((card) => [card.id, card]));
-  return board.cards
-    .filter((card) => {
-      const old = before.get(card.id);
-      return !old || old.x !== card.x || old.y !== card.y || old.color !== card.color;
-    })
-    .map((card) => ({ document_id: card.documentId!, x: card.x, y: card.y, color: card.color }));
+export function toMentionBody(board: Board) {
+  return {
+    groups: board.groups,
+    cards: board.cards.map((card) => ({ x: card.x, y: card.y, color: card.color })),
+    arrows: board.arrows.map((arrow) => arrow.id),
+  };
+}
+
+/** The cards in `changes`, as `PUT .../mention-map/cards` takes them: the others keep their place. */
+export function toMentionCardsBody(changes: BoardChanges<Board>) {
+  return changes.cards.changed.map((card) => ({
+    document_id: card.documentId!,
+    x: card.x,
+    y: card.y,
+    color: card.color,
+  }));
 }
 
 function toEndBody(end: ArrowEnd): RawArrowEnd {
