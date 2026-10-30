@@ -823,6 +823,13 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **54, Poll choices as cards** (ticket written 2026-10-30, waiting for
+  the product owner's answers to Q1-Q4): a poll's choices become cards in
+  one column with a title and an optional Markdown description with
+  mentions, a vote bar along one edge, a flip on reveal or close that shows
+  only the title and the share in the accent colour, and a glowing, larger
+  winner card (ties all win). **One migration** (`description` on poll
+  choices, revising `b9e4c2a7d1f3`) when built.
 - **53, Session 0 polls** (ticket confirmed by the product owner
   2026-10-30 with answers to Q1-Q5, built the same day in PR #276): a Poll
   step in the Session 0 chain, up to 10 polls per step, 2 to 20 choices,
