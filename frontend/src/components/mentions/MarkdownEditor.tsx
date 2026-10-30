@@ -126,6 +126,8 @@ export function MarkdownEditor({
     <Input.Wrapper
       label={label}
       labelProps={{ htmlFor: id }}
+      // A div, not Mantine's <p>: the help's popover holds a paragraph and a table.
+      descriptionProps={{ component: 'div' }}
       description={
         <>
           {description} <MarkdownHelp />
