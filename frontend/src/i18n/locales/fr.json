@@ -1341,7 +1341,7 @@
     },
     "rounds": {
       "first": "Session 0",
-      "later": "Session 0.5 #{{number}}",
+      "later": "Session {{number}}",
       "pick": "Session à afficher",
       "start": "Nouvelle session",
       "startBody": "La session actuelle se ferme et reste consultable en lecture seule ; les brouillons jamais publiés sont supprimés. La nouvelle commence vide avec les étapes ci-dessous : coche « Reprendre de la session précédente » pour récupérer colonnes, questions ou la DDI. Lignes et Voiles reste tel quel.",

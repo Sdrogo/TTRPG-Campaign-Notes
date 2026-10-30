@@ -1339,7 +1339,7 @@
     },
     "rounds": {
       "first": "Sesión 0",
-      "later": "Sesión 0.5 #{{number}}",
+      "later": "Sesión {{number}}",
       "pick": "Sesión que mostrar",
       "start": "Nueva sesión",
       "startBody": "La sesión actual se cierra y queda consultable en solo lectura; los borradores nunca publicados se eliminan. La nueva empieza vacía con los pasos de abajo: marca «Traer de la sesión anterior» para recuperar columnas, preguntas o la DDI. Líneas y Velos se queda como está.",

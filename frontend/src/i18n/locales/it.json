@@ -1339,7 +1339,7 @@
     },
     "rounds": {
       "first": "Sessione 0",
-      "later": "Sessione 0.5 #{{number}}",
+      "later": "Sessione {{number}}",
       "pick": "Sessione da mostrare",
       "start": "Nuova sessione",
       "startBody": "La sessione attuale si chiude e resta consultabile in sola lettura; le bozze mai pubblicate vengono eliminate. La nuova parte vuota con le tappe qui sotto: spunta «Porta dalla sessione precedente» per riprendere colonne, domande o DDI. Linee e Veli resta com'è.",

@@ -1339,7 +1339,7 @@
     },
     "rounds": {
       "first": "Session 0",
-      "later": "Session 0.5 #{{number}}",
+      "later": "Session {{number}}",
       "pick": "Session to show",
       "start": "New session",
       "startBody": "The current session closes and stays readable, read-only; drafts never published are deleted. The new one starts empty with the steps below: tick “Carry over from the previous session” to bring back columns, questions or the DDI. Lines & Veils stays as it is.",

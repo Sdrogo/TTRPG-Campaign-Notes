@@ -1407,7 +1407,7 @@
     },
     "rounds": {
       "first": "Sesja 0",
-      "later": "Sesja 0.5 #{{number}}",
+      "later": "Sesja {{number}}",
       "pick": "Pokazywana sesja",
       "start": "Nowa sesja",
       "startBody": "Bieżąca sesja zostaje zamknięta i pozostaje dostępna tylko do odczytu; nieopublikowane szkice są usuwane. Nowa zaczyna się pusta z krokami poniżej: zaznacz „Przenieś z poprzedniej sesji”, aby przywrócić kolumny, pytania lub DDI. Linie i Zasłony zostają bez zmian.",

@@ -1339,7 +1339,7 @@
     },
     "rounds": {
       "first": "Sessie 0",
-      "later": "Sessie 0.5 #{{number}}",
+      "later": "Sessie {{number}}",
       "pick": "Te tonen sessie",
       "start": "Nieuwe sessie",
       "startBody": "De huidige sessie sluit en blijft alleen-lezen te bekijken; nooit gepubliceerde concepten worden verwijderd. De nieuwe begint leeg met de stappen hieronder: vink „Overnemen uit de vorige sessie” aan om kolommen, vragen of de DDI terug te halen. Lines & Veils blijft zoals het is.",

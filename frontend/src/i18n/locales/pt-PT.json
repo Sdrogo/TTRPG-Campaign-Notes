@@ -1341,7 +1341,7 @@
     },
     "rounds": {
       "first": "Sessão 0",
-      "later": "Sessão 0.5 #{{number}}",
+      "later": "Sessão {{number}}",
       "pick": "Sessão a mostrar",
       "start": "Nova sessão",
       "startBody": "A sessão atual fecha e fica disponível só para leitura; os rascunhos nunca publicados são apagados. A nova começa vazia com os passos abaixo: marca «Trazer da sessão anterior» para recuperar colunas, perguntas ou a DDI. Linhas e Véus fica como está.",

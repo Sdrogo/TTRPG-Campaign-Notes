@@ -293,9 +293,9 @@ describe('roundLabel', () => {
   const round = { id: 'r', startedAt: '', closedAt: null };
 
   // Spec 46d Decision 3: a session's own name replaces the default.
-  it('names the first round Session 0, later ones Session 0.5 with their number, or by their own name', () => {
+  it('names the first round Session 0, later ones Session N, or by their own name', () => {
     expect(roundLabel({ ...round, number: 1, title: null })).toBe('Sessione 0');
-    expect(roundLabel({ ...round, number: 3, title: null })).toBe('Sessione 0.5 #2');
+    expect(roundLabel({ ...round, number: 3, title: null })).toBe('Sessione 2');
     expect(roundLabel({ ...round, number: 3, title: 'Fine arco 1' })).toBe('Fine arco 1');
   });
 });

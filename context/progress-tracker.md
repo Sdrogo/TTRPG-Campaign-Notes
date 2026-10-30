@@ -785,6 +785,14 @@ PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **53, Session 0 polls** (ticket written 2026-10-30, waiting for the
+  product owner's answers to Q1-Q5): a Poll step in the Session 0 chain,
+  up to 10 polls per step, each with 2 to 20 choices and a Master switch
+  for more than one choice per Player; live tally, Master closes polls,
+  carried over like Questions. One migration (53_1), then the page (53_2).
+  Same PR: a new session's default name is "Sessione 1", "Sessione 2"...
+  instead of "Sessione 0.5 #1" (frontend strings only, no migration).
+
 - **52, Live updates for maps and comments** (ticket confirmed by the
   product owner 2026-10-29, PR #274): one Server-Sent Events stream per Room
   per tab (`GET /rooms/{id}/events`) carrying Session 0, map, Document and

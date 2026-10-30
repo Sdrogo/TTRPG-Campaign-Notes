@@ -52,7 +52,7 @@ export function SessionPicker({ onPick }: SessionPickerProps) {
  * closes, its unpublished drafts go. Its chain is the Master's, the open
  * session's proposed (spec 47 Decision 2); each step starts empty unless
  * the Master ticks "Carry over from the previous session" (spec 47b). Its name
- * is free, prefilled with the next default ("Session 0.5 #N"); left as it is,
+ * is free, prefilled with the next default ("Session N"); left as it is,
  * nothing is stored and the default shows in each viewer's language.
  */
 export function NewSession() {

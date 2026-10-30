@@ -538,7 +538,7 @@ export function roundLabel(round: SessionZeroRound): string {
   return round.title ?? defaultRoundName(round.number);
 }
 
-/** The default name of the `number`th session: "Session 0", then "Session 0.5 #N". */
+/** The default name of the `number`th session: "Session 0", then "Session N". */
 export function defaultRoundName(number: number): string {
   return number === 1
     ? i18n.t('sessionZero.rounds.first')
