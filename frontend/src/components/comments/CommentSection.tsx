@@ -62,6 +62,8 @@ interface CommentSectionProps {
    * a Comment's Reveal reaches (spec 22). Without it nobody can reveal one.
    */
   revealFrom?: Document;
+  /** The Comments another member just added or edited (spec 52_3): they glow. */
+  glowing?: ReadonlySet<string>;
 }
 
 // The URL fragment that points at one Comment, as `#comment-<id>`.
@@ -94,6 +96,7 @@ export function CommentSection({
   onPromote,
   defaultVisibility = 'room',
   revealFrom,
+  glowing,
 }: CommentSectionProps) {
   const { t, i18n } = useTranslation();
   const comments = useComments(roomId, documentId, true);
@@ -205,6 +208,7 @@ export function CommentSection({
         visibilityLevels={parent && replyLevels(parent, currentUserId)}
         granteeIds={parent && replyGranteeIds(parent)}
         isNew={isNew(comment)}
+        glowing={glowing?.has(comment.id)}
         onSetFlag={readOnly ? undefined : (flag, on) => onSetFlag(comment.id, flag, on)}
         settingFlag={flagging.includes(comment.id)}
         onPromote={onPromote && ((target) => onPromote(comment, target))}

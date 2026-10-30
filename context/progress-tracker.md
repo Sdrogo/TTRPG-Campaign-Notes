@@ -13,6 +13,14 @@ detail:
 
 ## Current Status (2026-10-29)
 
+- **Document page on a phone** (2026-10-29, no migration, PR into
+  `staging`): below `sm` the heading's actions (badge, read aloud, ⋮)
+  share the kicker's line instead of a row under the name and subtitle
+  (the column stacking came from the Figma refactor #252). The info
+  panel's "+" buttons and a person chip's "x" keep their desktop size
+  (24px) on touch screens, with an invisible ring that keeps the 40px tap
+  area of spec 49 (`.compact-touch-target`).
+
 - **Hotfix, mention map buttons on the Document page** (2026-10-29, no
   migration, PR into `staging`): from `lg` the Notes' boxes
   (`.note-item`, positioned since the Figma refactor #252) ran under the
@@ -776,6 +784,20 @@ Nothing is waiting for release: `staging` and `main` match after release
 PR #246 (2026-10-27), and production's database is at head. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
+
+- **52, Live updates for maps and comments** (ticket confirmed by the
+  product owner 2026-10-29, PR #274): one Server-Sent Events stream per Room
+  per tab (`GET /rooms/{id}/events`) carrying Session 0, map, Document and
+  Comment events, each sent only to members who may see the object; maps
+  drop the 5 s polling; a Document page re-reads its Comments live. **52_1
+  backend built** (Room stream, Session 0 alias, map and Document pushes,
+  Caddyfile); **52_2 frontend built** (one shared stream per Room per tab,
+  Session 0 on it, maps re-read on events, at most once a second and never
+  mid-drag, 5 s polling only while the stream is down); **52_3 built**
+  (Comment events to who sees the Comment, Document page re-reads its
+  Comments live and others' new or edited ones glow). Spec 52 complete;
+  to test on staging with two browsers. No migration; the changed Caddyfile is copied and reloaded by the
+  prod deploy (`deploy.sh`).
 
 - **51, Rooms page layout** (ticket PR #268 merged by the product owner
   2026-10-29, built in the PR after it): My Rooms uses the full width (the

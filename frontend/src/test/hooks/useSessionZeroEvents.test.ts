@@ -2,7 +2,7 @@ import { act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../lib/apiClient';
 import { setDemoMode } from '../../lib/demo/demoMode';
-import { readBoardEvents, type BoardEvent } from '../../lib/sessionZeroEvents';
+import { readRoomEvents, type RoomEvent } from '../../lib/roomEvents';
 import { toSessionZero, type RawSessionZero } from '../../lib/sessionZero';
 import { rawSessionZero } from '../fixtures';
 import { createTestQueryClient, renderHookWithProviders } from '../utils';
@@ -14,15 +14,15 @@ import {
   useSessionZeroEvents,
 } from '../../hooks/useSessionZeroEvents';
 
-vi.mock('../../lib/sessionZeroEvents', () => ({ readBoardEvents: vi.fn() }));
+vi.mock('../../lib/roomEvents', () => ({ readRoomEvents: vi.fn() }));
 
-const readMock = vi.mocked(readBoardEvents);
+const readMock = vi.mocked(readRoomEvents);
 
 /** One opening of the stream, driven by the test. */
 interface Stream {
   signal: AbortSignal;
   open: () => void;
-  send: (event: BoardEvent) => void;
+  send: (event: RoomEvent) => void;
   close: () => Promise<void>;
   fail: (error: unknown) => Promise<void>;
 }
@@ -83,35 +83,52 @@ describe('useSessionZeroEvents', () => {
     streams[0].open();
     expect(invalidate).not.toHaveBeenCalled();
 
-    streams[0].send({ revision: 6, kind: 'timer', id: null });
+    streams[0].send({ topic: 'session_zero', revision: 6, kind: 'timer', id: null });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: sessionZeroQueryKey('room-1') });
+  });
+
+  it("ignores the Room stream's other topics", () => {
+    const { invalidate, result } = render();
+    streams[0].open();
+    streams[0].send({ topic: 'map', revision: 9, kind: 'changed', id: 'map-1' });
+    expect(invalidate).not.toHaveBeenCalled();
+    expect(result.current.size).toBe(0);
   });
 
   it("makes another member's change glow for a moment, never the viewer's own", () => {
     const { result } = render(5);
     streams[0].open();
 
-    streams[0].send({ revision: 5, kind: 'card', id: 'mine' });
+    streams[0].send({ topic: 'session_zero', revision: 5, kind: 'card', id: 'mine' });
     expect(result.current.has('mine')).toBe(false);
 
-    streams[0].send({ revision: 6, kind: 'card', id: 'card-1' });
-    streams[0].send({ revision: 7, kind: 'group', id: 'group-1' });
+    streams[0].send({ topic: 'session_zero', revision: 6, kind: 'card', id: 'card-1' });
+    streams[0].send({ topic: 'session_zero', revision: 7, kind: 'group', id: 'group-1' });
     expect([...result.current]).toEqual(['card-1', 'group-1']);
 
     act(() => vi.advanceTimersByTime(GLOW_MS));
     expect(result.current.size).toBe(0);
   });
 
+  it('forgets the glow when the page goes', () => {
+    const { unmount } = render(5);
+    streams[0].open();
+    streams[0].send({ topic: 'session_zero', revision: 6, kind: 'card', id: 'card-1' });
+    unmount();
+    act(() => vi.advanceTimersByTime(GLOW_MS));
+    expect(streams[0].signal.aborted).toBe(true);
+  });
+
   it('glows nothing before the boards are read', () => {
     const queryClient = createTestQueryClient();
     const { result } = renderHookWithProviders(() => useSessionZeroEvents('room-1', vi.fn()), { queryClient });
-    streams[0].send({ revision: 1, kind: 'card', id: 'card-1' });
+    streams[0].send({ topic: 'session_zero', revision: 1, kind: 'card', id: 'card-1' });
     expect(result.current.size).toBe(0);
   });
 
   it('goes back to the open round when the Session 0 is deleted', () => {
     const { onReset, invalidate, result } = render();
-    streams[0].send({ revision: 6, kind: 'reset', id: null });
+    streams[0].send({ topic: 'session_zero', revision: 6, kind: 'reset', id: null });
     expect(onReset).toHaveBeenCalledOnce();
     expect(invalidate).toHaveBeenCalled();
     expect(result.current.size).toBe(0);
@@ -167,7 +184,7 @@ describe('useSessionZeroEvents', () => {
   it('closes the stream while the tab is hidden and reads the boards when it is back', async () => {
     const { invalidate, result } = render();
     streams[0].open();
-    streams[0].send({ revision: 6, kind: 'card', id: 'card-1' });
+    streams[0].send({ topic: 'session_zero', revision: 6, kind: 'card', id: 'card-1' });
     invalidate.mockClear();
     setVisibility('hidden');
     expect(result.current.size).toBe(0);
@@ -185,12 +202,12 @@ describe('useSessionZeroEvents', () => {
 
   it('opens nothing in a hidden tab, in the Demo, and stops on unmount', () => {
     visibility = 'hidden';
-    render();
+    render().unmount();
     expect(readMock).not.toHaveBeenCalled();
 
     visibility = 'visible';
     setDemoMode(true);
-    render();
+    render().unmount();
     expect(readMock).not.toHaveBeenCalled();
 
     setDemoMode(false);

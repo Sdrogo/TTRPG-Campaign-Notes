@@ -76,6 +76,7 @@ from app.domain.relationship_maps import (
     RelationshipMap,
 )
 from app.i18n.dependencies import LocaleDep
+from app.realtime.audience import push_map
 
 router = APIRouter(prefix="/rooms/{room_id}/maps/{map_id}", tags=["maps"])
 
@@ -459,6 +460,7 @@ async def save_geo(
     updated = await relationship_maps_repo.update_map(
         session, replace(relationship_map, updated_at=_now())
     )
+    await push_map(session, updated, grants)
     return await geo_detail(session, updated, grants, membership)
 
 
@@ -485,6 +487,7 @@ async def save_geo_changes(
     updated = await relationship_maps_repo.update_map(
         session, replace(relationship_map, updated_at=_now())
     )
+    await push_map(session, updated, grants)
     return await geo_detail(session, updated, grants, membership)
 
 
@@ -506,6 +509,7 @@ async def _replace_background(
     updated = await relationship_maps_repo.update_map(
         session, replace(relationship_map, background_path=new_path, updated_at=_now())
     )
+    await push_map(session, updated, grants)
     return await geo_detail(session, updated, grants, membership)
 
 

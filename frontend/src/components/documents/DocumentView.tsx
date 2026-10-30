@@ -38,6 +38,7 @@ import {
 import { useTags } from '../../hooks/useTags';
 import { useMembers } from '../../hooks/useMembers';
 import { useComments, usePromoteComment } from '../../hooks/useComments';
+import { useDocumentEvents } from '../../hooks/useDocumentEvents';
 import { useRoom } from '../../hooks/useRooms';
 import { useRevealDocument, useRevealedInVisit } from '../../hooks/useReveals';
 import { useReadOnly } from '../../hooks/useViewAs';
@@ -105,6 +106,8 @@ export function DocumentView({
   // The same query as the Comment section's: the Thread, for the parents of
   // a promoted reply.
   const comments = useComments(roomId, documentId, true);
+  // Live on the Room stream (spec 52_3): others' Comments arrive, and glow.
+  const glowing = useDocumentEvents(roomId, documentId, comments.data, currentUserId);
   // For the level new Notes and Comments start at (VR-05).
   const room = useRoom(roomId, true);
   const defaultVisibility = room.data?.defaultVisibility ?? 'room';
@@ -167,6 +170,7 @@ export function DocumentView({
           currentUserId={currentUserId}
           defaultVisibility={defaultVisibility}
           revealFrom={isMaster ? document.data : undefined}
+          glowing={glowing}
           onPromote={readOnly ? undefined : (comment, target) => setPromoting({ comment, target })}
         />
         {promotion && promoting.target === 'document' && (
@@ -349,8 +353,9 @@ function DocumentPanel({
       <Stack gap="md" className="document-detail-shell">
         {/* One line: the name (which may wrap to two lines and always stays visible), the
             badge, the read-aloud controls and a "⋮" that unfolds the other actions: beside it
-            on a big screen, on a row of their own on a phone so they never squeeze the name
-            (Andrea, 2026-10-15). */}
+            on a big screen, on the kicker's line on a phone so they never squeeze the name
+            (Andrea, 2026-10-15 and 2026-10-29). The unfolded actions get a row of their own
+            on a phone. */}
         <Group
           justify="space-between"
           align="flex-start"
@@ -359,7 +364,7 @@ function DocumentPanel({
           data-tour="document"
           className="document-detail-heading"
         >
-          <Stack gap={0} style={{ minWidth: 0, flex: 1 }}>
+          <Stack gap={0} style={{ minWidth: 0, flex: 1 }} className="document-detail-titles">
             <Text
               size="xs"
               c="dimmed"

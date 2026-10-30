@@ -15,7 +15,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api import session_zero as session_zero_api
+from app.api import events as events_api
 from app.domain import session_zero
 from app.main import app
 from app.realtime.broker import broker
@@ -698,11 +698,14 @@ async def _heard(task: "asyncio.Task[Response]") -> list[Any]:
         response = await task
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
-    return [
+    events = [
         json.loads(line.removeprefix("data: "))
         for line in response.text.splitlines()
         if line.startswith("data: ")
     ]
+    # The Session 0 stream is the Room stream's Session 0 topic (spec 52).
+    assert all(event.pop("topic") == "session_zero" for event in events)
+    return events
 
 
 async def test_members_hear_of_shared_writes_and_only_the_author_of_drafts(
@@ -774,7 +777,7 @@ async def test_an_idle_stream_sends_keep_alives(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(session_zero_api, "KEEPALIVE_S", 0.01)
+    monkeypatch.setattr(events_api, "KEEPALIVE_S", 0.01)
     room, _ = await _started(client, make_token)
     task = await _listen(client, room, room.player)
     await asyncio.sleep(0.05)

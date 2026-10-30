@@ -78,6 +78,7 @@ from app.domain.relationship_maps import (
 from app.domain.rooms import starting_visibility
 from app.domain.visibility import starting_grants
 from app.i18n.dependencies import LocaleDep
+from app.realtime.audience import DELETED, map_audience, push_map
 
 router = APIRouter(prefix="/rooms/{room_id}/maps", tags=["maps"])
 
@@ -679,6 +680,7 @@ async def update_map(
     (Invariant 7); the switch isn't (spec 42 Decision 8)."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     relationship_map, grants = await get_managed_map(session, room_id, map_id, membership, locale)
+    before = await map_audience(session, relationship_map, grants)
     try:
         name, description = clean_map_fields(
             relationship_map.name if body.name is None else body.name,
@@ -728,6 +730,7 @@ async def update_map(
     if audit_entry is not None:
         await rooms_repo.insert_audit_log(session, audit_entry)
     new_grants = grants if body.selective_user_ids is None else body.selective_user_ids
+    await push_map(session, updated, new_grants, before=before)
     return await _detail(session, updated, new_grants, membership)
 
 
@@ -742,7 +745,8 @@ async def delete_map(
     """Decision 2: the map's creator or the Master deletes it, with
     everything on it. The Documents themselves stay."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    relationship_map, _ = await get_managed_map(session, room_id, map_id, membership, locale)
+    relationship_map, grants = await get_managed_map(session, room_id, map_id, membership, locale)
+    await push_map(session, relationship_map, grants, kind=DELETED)
     if relationship_map.background_path is not None:
         await storage_cleanup.schedule_removal(session, [relationship_map.background_path])
     await relationship_maps_repo.delete_map(session, map_id)
@@ -878,6 +882,7 @@ async def save_board(
     updated = await relationship_maps_repo.update_map(
         session, replace(relationship_map, updated_at=_now())
     )
+    await push_map(session, updated, grants)
     return await _detail(session, updated, grants, membership)
 
 
@@ -906,6 +911,7 @@ async def save_board_changes(
     updated = await relationship_maps_repo.update_map(
         session, replace(relationship_map, updated_at=_now())
     )
+    await push_map(session, updated, grants)
     return await _detail(session, updated, grants, membership)
 
 

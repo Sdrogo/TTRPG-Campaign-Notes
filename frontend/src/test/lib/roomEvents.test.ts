@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiOpenStream } from '../../lib/apiClient';
-import { parseEvents, readBoardEvents } from '../../lib/sessionZeroEvents';
+import { parseEvents, readRoomEvents } from '../../lib/roomEvents';
 
 vi.mock('../../lib/apiClient', () => ({ apiOpenStream: vi.fn() }));
 
@@ -24,40 +24,40 @@ beforeEach(() => {
 describe('parseEvents', () => {
   it('reads whole events, skips comments and keeps the part still arriving', () => {
     const { events, rest } = parseEvents(
-      ': open\n\ndata: {"revision": 2, "kind": "card", "id": "card-1"}\n\ndata: {"revis',
+      ': open\n\ndata: {"topic": "session_zero", "revision": 2, "kind": "card", "id": "card-1"}\n\ndata: {"revis',
     );
-    expect(events).toEqual([{ revision: 2, kind: 'card', id: 'card-1' }]);
+    expect(events).toEqual([{ topic: 'session_zero', revision: 2, kind: 'card', id: 'card-1' }]);
     expect(rest).toBe('data: {"revis');
   });
 });
 
-describe('readBoardEvents', () => {
+describe('readRoomEvents', () => {
   it('opens the Room stream and reports each event, even split across chunks', async () => {
     openMock.mockResolvedValue(
       streaming([
         ': open\n\n',
-        'data: {"revision": 3, "kind": "timer", ',
-        '"id": null}\n\n: keep-alive\n\ndata: {"revision": 4, "kind": "reset", "id": null}\n\n',
+        'data: {"topic": "session_zero", "revision": 3, "kind": "timer", ',
+        '"id": null}\n\n: keep-alive\n\ndata: {"topic": "map", "revision": 4, "kind": "deleted", "id": "map-1"}\n\n',
       ]),
     );
     const controller = new AbortController();
     const onOpen = vi.fn();
     const onEvent = vi.fn();
 
-    await readBoardEvents('room-1', controller.signal, onOpen, onEvent);
+    await readRoomEvents('room-1', controller.signal, onOpen, onEvent);
 
-    expect(openMock).toHaveBeenCalledWith('/rooms/room-1/session-zero/events', controller.signal);
+    expect(openMock).toHaveBeenCalledWith('/rooms/room-1/events', controller.signal);
     expect(onOpen).toHaveBeenCalledOnce();
     expect(onEvent.mock.calls).toEqual([
-      [{ revision: 3, kind: 'timer', id: null }],
-      [{ revision: 4, kind: 'reset', id: null }],
+      [{ topic: 'session_zero', revision: 3, kind: 'timer', id: null }],
+      [{ topic: 'map', revision: 4, kind: 'deleted', id: 'map-1' }],
     ]);
   });
 
   it('fails when the stream cannot open', async () => {
     openMock.mockRejectedValue(new Error('offline'));
     const onOpen = vi.fn();
-    await expect(readBoardEvents('room-1', new AbortController().signal, onOpen, vi.fn())).rejects.toThrow(
+    await expect(readRoomEvents('room-1', new AbortController().signal, onOpen, vi.fn())).rejects.toThrow(
       'offline',
     );
     expect(onOpen).not.toHaveBeenCalled();

@@ -1,8 +1,8 @@
-"""The in-process broker behind the Session 0 live updates (spec 46_2)."""
+"""The in-process broker behind the live updates (spec 46_2, spec 52)."""
 
 import uuid
 
-from app.realtime.broker import QUEUE_SIZE, Broker, Event
+from app.realtime.broker import MAP, QUEUE_SIZE, SESSION_ZERO, Broker, Event
 
 ROOM = uuid.uuid4()
 OTHER_ROOM = uuid.uuid4()
@@ -10,7 +10,7 @@ ALICE = uuid.uuid4()
 BOB = uuid.uuid4()
 
 
-async def test_events_reach_the_room_or_one_user_only() -> None:
+async def test_events_reach_the_room_or_some_users_only() -> None:
     broker = Broker()
     alice = broker.subscribe(ROOM, ALICE)
     alice_tab = broker.subscribe(ROOM, ALICE)
@@ -20,7 +20,7 @@ async def test_events_reach_the_room_or_one_user_only() -> None:
     draft = Event(3, "card", uuid.uuid4())
 
     broker.publish(ROOM, shared)
-    broker.publish(ROOM, draft, user_id=ALICE)
+    broker.publish(ROOM, draft, user_ids={ALICE})
 
     assert [alice.queue.get_nowait() for _ in range(2)] == [shared, draft]
     assert [alice_tab.queue.get_nowait() for _ in range(2)] == [shared, draft]
@@ -29,6 +29,22 @@ async def test_events_reach_the_room_or_one_user_only() -> None:
     assert elsewhere.queue.empty()
     # Nobody listening is fine.
     broker.publish(uuid.uuid4(), shared)
+
+
+async def test_a_stream_hears_only_its_topics() -> None:
+    """Spec 52 Decision 2: the Session 0 alias hears Session 0 events only."""
+    broker = Broker()
+    alias = broker.subscribe(ROOM, ALICE, frozenset({SESSION_ZERO}))
+    room = broker.subscribe(ROOM, ALICE)
+    board = Event(4, "card", uuid.uuid4())
+    map_event = Event(7, "changed", uuid.uuid4(), MAP)
+
+    broker.publish(ROOM, board)
+    broker.publish(ROOM, map_event, user_ids={ALICE, BOB})
+
+    assert alias.queue.get_nowait() == board
+    assert alias.queue.empty()
+    assert [room.queue.get_nowait() for _ in range(2)] == [board, map_event]
 
 
 async def test_disconnect_closes_a_users_or_the_whole_rooms_streams() -> None:

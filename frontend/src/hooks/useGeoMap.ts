@@ -20,7 +20,8 @@ function geoQueryKey(roomId: string, mapId: string) {
 
 /**
  * A geographic map with its content as the viewer sees it (spec 38 Decision
- * 6). With `refresh` it is read again every `MAP_REFRESH_MS` (spec 43_2).
+ * 6). With `refresh` (the Room stream is down) it is read again every
+ * `MAP_REFRESH_MS`.
  */
 export function useGeoMap(roomId: string, mapId: string, enabled: boolean, refresh = false) {
   return useQuery<GeoMapDetail>({

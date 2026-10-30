@@ -32,6 +32,7 @@ from app.domain.versions import (
     visible_note_ids,
 )
 from app.i18n.dependencies import LocaleDep
+from app.realtime.audience import push_document
 
 router = APIRouter(tags=["versions"])
 
@@ -307,6 +308,7 @@ async def restore_document_version(
 
     current = await record_revision(session, document_id, requester_id, now=now, force_new=True)
     assert current is not None  # the Document is locked and still here
+    await push_document(session, room_id, document_id)
     return _full(current, current.state.only(readable), None)
 
 
