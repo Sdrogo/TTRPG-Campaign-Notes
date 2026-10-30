@@ -25,8 +25,8 @@
 
 ## Decisions
 
-Proposed by Claude on 2026-10-30, to be confirmed by the product owner
-(open points in Q1-Q4).
+Proposed by Claude on 2026-10-30; the product owner answered Q1-Q4 the
+same day (see "Answers" below) and the Decisions follow those answers.
 
 1. **A choice has a title and an optional description.** The title is the
    current choice text (up to 200 characters, still unique within the
@@ -50,8 +50,8 @@ Proposed by Claude on 2026-10-30, to be confirmed by the product owner
    inside the description opens the Document and doesn't tick the card.
    "Ritira il voto" stays under the column. A card the voter can't tick
    any more (no votes left) is dimmed, as the checkbox was.
-4. **The vote bar is the card's bottom edge** (Q1): a 4 px strip along the
-   bottom border, filled from the left to the choice's share, with the
+4. **The vote bar is the card's left edge** (Q1): a 4 px strip along the
+   left border, filled from the bottom up to the choice's share, with the
    count at the right of the title ("3 voti", names on hover or tap as
    now). It shows whenever the viewer sees the tally (live polls for
    everyone, secret ones for the Master, spec 53 Decision 5); otherwise
@@ -66,7 +66,7 @@ Proposed by Claude on 2026-10-30, to be confirmed by the product owner
    Then every card turns over on its vertical axis (about 0.6 s, the cards
    one after the other, 80 ms apart) and its back shows only the title and
    the share in large type in the accent colour, with the count under it
-   and the bottom edge full to the share. No description on the back.
+   and the left edge filled to the share. No description on the back.
    "Nascondi" (secret polls) and "Riapri" turn them back.
 7. **The winner** is the choice, or every choice tied, with the most votes
    once the poll is in its results view (spec 53 Decision 6, now also for
@@ -101,21 +101,17 @@ Proposed by Claude on 2026-10-30, to be confirmed by the product owner
     ("Descrizione", "Mostra le opzioni", "Mostra i risultati", the share
     label for screen readers).
 
-## Questions for the product owner
+## Answers (product owner, 2026-10-30)
 
-- **Q1 - Which edge holds the bar?** Proposed: the bottom edge, filled left
-  to right, which reads as a progress bar on phone and desktop. The
-  alternative is the left edge, filled bottom to top.
-- **Q2 - What is the percentage?** Proposed: the share of all the votes
-  cast (the cards add up to 100 %). The alternative is the share of the
-  people who voted (with more votes per person the cards can add up to
-  more than 100 %, as the bars do today).
-- **Q3 - When do live polls flip?** A live poll shows its bars from the
-  first vote, so there is no "reveal". Proposed: it flips when the Master
-  closes it; a secret one flips on "Rivela i risultati" or on close.
-- **Q4 - Is the flip for everyone?** Proposed: yes, the Master included,
-  so the Master sees what the table sees; the Master still sees bars on
-  the front of a secret poll before revealing it.
+- **Q1 - Which edge holds the bar?** The left edge ("Bordo sinistro è
+  meglio"), filled bottom to top. Claude had proposed the bottom edge.
+- **Q2 - What is the percentage?** The share of all the votes cast, as
+  proposed (the cards add up to 100 %).
+- **Q3 - When do live polls flip?** On close, as proposed; a secret one on
+  "Rivela i risultati" or on close.
+- **Q4 - Is the flip for everyone?** Yes, the Master included, as
+  proposed; the Master still sees bars on the front of a secret poll
+  before revealing it.
 
 ## Units
 
