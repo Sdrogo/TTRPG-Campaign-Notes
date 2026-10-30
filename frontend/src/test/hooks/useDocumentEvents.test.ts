@@ -88,6 +88,13 @@ describe('useDocumentEvents (spec 52_3)', () => {
     expect(result.current.size).toBe(0);
   });
 
+  it('makes every Comment of another member glow when they arrive before the first read', () => {
+    const { result, rerender } = render(undefined);
+    streams[0].send(commentsEvent);
+    rerender({ comments: [comment('c-1', 'ana')] });
+    expect([...result.current]).toEqual(['c-1']);
+  });
+
   it('glows nothing for an unchanged thread, a Document event or the first read', () => {
     const { result, rerender } = render(undefined);
     rerender({ comments: [comment('c-1', 'ana')] });
