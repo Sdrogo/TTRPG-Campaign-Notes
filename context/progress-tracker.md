@@ -20,6 +20,10 @@ detail:
   and the name starts on the row below. The `documents.title` key stays
   (back-link labels, Room Documents page).
 
+- **Migration `c8f2d6a4e1b7`** (2026-10-30): poll choice description (spec
+  54) applied to the staging and production databases by hand, before the
+  release to `main` that ships the code. No migration is pending.
+
 - **Production migration `b9e4c2a7d1f3`** (2026-10-30): Session 0 polls
   (spec 53) applied to the production database by hand, before the release
   to `main` that ships the code.
@@ -262,9 +266,10 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending**: `c8f2d6a4e1b7` (spec 54, PR #280) on the staging database
-  before PR #280 merges, and on production before the release that ships it.
-- **Staging database**: `b9e4c2a7d1f3` (Session 0 polls, spec 53,
+- **Pending**: none. `c8f2d6a4e1b7` is applied to both databases.
+- **Staging database**: `c8f2d6a4e1b7` (poll choice description, spec 54,
+  PR #280, applied 2026-10-30 with `backend/.env.staging` loaded, before
+  the PR merged); `b9e4c2a7d1f3` before it (Session 0 polls, spec 53,
   PR #276, applied by the product owner 2026-10-30 before the merge);
   `a7d3f9b2c6e1` before it (Session 0 DDI, 47_3, PR
   #261, applied by the product owner 2026-10-28); `f3a9c1e7b5d4` before it (Session 0 Questions,
@@ -281,9 +286,13 @@ here and remind the product owner.
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `b9e4c2a7d1f3` (Session 0 polls, spec 53,
-  PR #276), applied 2026-10-30 with `backend/.env` loaded (plain `alembic
-  upgrade head`) ahead of the release to `main` that ships it, so until it
+- **Production database**: `c8f2d6a4e1b7` (poll choice description, spec
+  54, PR #280), applied 2026-10-30 with `backend/.env` loaded (plain
+  `alembic upgrade head`) ahead of the release to `main` that ships it.
+  The new column is nullable and unused by the code in production, so
+  nothing changes there until the release. Before it,
+  `b9e4c2a7d1f3` (Session 0 polls, spec 53,
+  PR #276), applied 2026-10-30 the same way, also ahead of the release, so until it
   merges production's code does not carry the migration file. Before it,
   `a7d3f9b2c6e1` (Session 0 DDI, 47_3, PR
   #261), applied 2026-10-28 with `backend/.env` loaded (plain `alembic
@@ -838,8 +847,8 @@ on `main`.
   edge (share of all votes cast), a flip on reveal or close that shows only
   the title and the share in the accent colour, and a glowing, larger
   winner card (ties all win); reduced motion turns nothing. **Migration
-  `c8f2d6a4e1b7`** (revises `b9e4c2a7d1f3`): to apply to the staging DB
-  before PR #280 merges, then to production before the next release.
+  `c8f2d6a4e1b7`** (revises `b9e4c2a7d1f3`): applied to the staging and
+  production DBs 2026-10-30, before the release to `main` that ships it.
 - **53, Session 0 polls** (ticket confirmed by the product owner
   2026-10-30 with answers to Q1-Q5, built the same day in PR #276): a Poll
   step in the Session 0 chain, up to 10 polls per step, 2 to 20 choices,
