@@ -76,8 +76,10 @@ same day (see "Answers" below) and the Decisions follow those answers.
    viewers. No votes, no winner.
 8. **Voting after a reveal.** A secret poll revealed while still open
    keeps taking votes (spec 53 is unchanged): its cards show the back, and
-   a "Mostra le opzioni" button turns them face up for the viewer only, to
-   read the descriptions and change a vote; the shares on the back update
+   a "Mostra le opzioni" button (on any poll showing its results, so the
+   descriptions stay readable after a close too) turns them face up for
+   the viewer only, to read the descriptions and change a vote, until the
+   poll's closed or revealed state changes; the shares on the back update
    live.
 9. **Reduced motion.** With `prefers-reduced-motion: reduce`, there is no
    rotation, no stagger and no scaling: the front is replaced by the back
@@ -115,11 +117,13 @@ same day (see "Answers" below) and the Decisions follow those answers.
 
 ## Units
 
-- **54_1 backend**: migration, `description` in the domain, the routes,
-  the `GET` shape, carry over and `winner` on reveal; tests.
-- **54_2 frontend**: the card column, the edge bar, the flip and the
-  winner, the description in "Edit polls" with mentions, reduced motion,
-  translations; tests.
+- **54_1 backend** (built 2026-10-30, PR #280, migration `c8f2d6a4e1b7`):
+  `description` in the domain, the routes, the `GET` shape, carry over and
+  `winner` on reveal (`Poll.showing_results`); tests.
+- **54_2 frontend** (built 2026-10-30, PR #280): `OptionCard` in
+  `PollModule.tsx`, `.sz-poll-*` styles in `index.css`, `pollShares` and
+  `pollShowsResults` in `lib/sessionZero.ts`, the description in "Edit
+  polls" with `MentionTextarea`, reduced motion, translations; tests.
 
 ## Tests
 
@@ -133,5 +137,6 @@ same day (see "Answers" below) and the Decisions follow those answers.
   tick the card; the edge bar width and the share (sum 100 %, 0 % with no
   votes); a revealed or closed poll shows the backs with title and share
   and no description; the winner card(s) marked; "Mostra le opzioni" on a
-  revealed open poll; reduced motion skips the animation class; the
-  description field in "Edit polls".
+  revealed open poll; the description field in "Edit polls". Reduced
+  motion is CSS only (`prefers-reduced-motion` in `index.css`), checked by
+  hand.

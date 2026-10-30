@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
 import {
   Badge,
   Box,
@@ -8,7 +8,6 @@ import {
   Modal,
   NumberInput,
   Paper,
-  Progress,
   Radio,
   Select,
   Stack,
@@ -23,15 +22,20 @@ import { notifications } from '@mantine/notifications';
 import { ArrowDownIcon, ArrowUpIcon, CheckCircleIcon, PlusIcon, TrashIcon, TrophyIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from '../LabeledActionIcon';
+import { MarkdownText } from '../mentions/MarkdownText';
+import { MentionTextarea } from '../mentions/MentionTextarea';
 import { displayNameFor } from '../../lib/members';
 import {
   MAX_HINT_LENGTH,
   MAX_POLL_LENGTH,
+  MAX_POLL_DESCRIPTION_LENGTH,
   MAX_POLL_OPTION_LENGTH,
   MAX_POLL_OPTIONS,
   MAX_POLLS,
   MIN_POLL_OPTIONS,
   boardWrites,
+  pollShares,
+  pollShowsResults,
   pollsProblem,
   type PollDraft,
 } from '../../lib/sessionZero';
@@ -105,7 +109,12 @@ function isComplete(poll: Poll): boolean {
   return poll.electorate > 0 && poll.voterCount >= poll.electorate;
 }
 
-/** One poll: its settings at a glance, the choices (to vote, or with the tally), progress and the Master's actions. */
+/**
+ * One poll: its settings at a glance, the choices as a column of cards (to
+ * vote, with the tally on their left edge, spec 54), progress and the
+ * Master's actions. Once the poll shows its results the cards turn over to
+ * their title and share; "Show the options" turns them back for the viewer.
+ */
 function PollCard({ poll, editable }: { poll: Poll; editable: boolean }) {
   const { t } = useTranslation();
   const { board, act, busy, members } = useBoard();
@@ -115,6 +124,33 @@ function PollCard({ poll, editable }: { poll: Poll; editable: boolean }) {
   const toggle = (optionId: string, checked: boolean) =>
     vote(checked ? [...poll.myOptionIds, optionId] : poll.myOptionIds.filter((id) => id !== optionId));
   const names = (ids: string[]) => ids.map((id) => displayNameFor(members, id)).join(', ');
+  const results = pollShowsResults(poll) && poll.tallyVisible;
+  // "Show the options" lasts until the poll's results state changes.
+  const resultsKey = `${poll.closed}-${poll.revealed}`;
+  const [peekedAt, setPeekedAt] = useState<string | null>(null);
+  const peeking = results && peekedAt === resultsKey;
+  const flipped = results && !peeking;
+  const shares = pollShares(poll);
+  const ready = useMounted();
+  const single = poll.maxChoices === 1;
+  const cards = (
+    <Stack gap="sm" className="sz-poll-cards" data-ready={ready || undefined}>
+      {poll.options.map((option, index) => (
+        <OptionCard
+          key={option.id}
+          poll={poll}
+          option={option}
+          index={index}
+          share={shares.get(option.id) ?? null}
+          flipped={flipped}
+          voting={voting}
+          single={single}
+          disabled={busy || (!single && !poll.myOptionIds.includes(option.id) && left <= 0)}
+          onToggle={(checked) => (single ? vote([option.id]) : toggle(option.id, checked))}
+        />
+      ))}
+    </Stack>
+  );
   return (
     <Paper withBorder radius="md" p="md" className="sz-poll">
       <Stack gap="sm">
@@ -153,53 +189,42 @@ function PollCard({ poll, editable }: { poll: Poll; editable: boolean }) {
           </Group>
         </Group>
 
-        {voting && poll.maxChoices === 1 ? (
-          <Radio.Group
-            value={poll.myOptionIds[0] ?? null}
-            onChange={(value) => vote([value])}
-            aria-label={poll.body}
-          >
-            <Stack gap={6}>
-              {poll.options.map((option) => (
-                <OptionRow key={option.id} poll={poll} option={option} names={names}>
-                  <Radio value={option.id} label={option.body} disabled={busy} />
-                </OptionRow>
-              ))}
-            </Stack>
+        {/* Not keyed on `flipped`: a different wrapper would remount the cards and skip the flip. */}
+        {voting && single ? (
+          <Radio.Group value={poll.myOptionIds[0] ?? null} onChange={(value) => vote([value])} aria-label={poll.body}>
+            {cards}
           </Radio.Group>
         ) : (
-          <Stack gap={6} role={voting ? 'group' : undefined} aria-label={voting ? poll.body : undefined}>
-            {poll.options.map((option) => {
-              const mine = poll.myOptionIds.includes(option.id);
-              return (
-                <OptionRow key={option.id} poll={poll} option={option} names={names}>
-                  {voting ? (
-                    <Checkbox
-                      label={option.body}
-                      checked={mine}
-                      disabled={busy || (!mine && left <= 0)}
-                      onChange={(event) => toggle(option.id, event.currentTarget.checked)}
-                    />
-                  ) : (
-                    <Group gap={6} wrap="nowrap">
-                      {mine && <CheckCircleIcon size={16} weight="fill" aria-label={t('sessionZero.polls.yourVote')} />}
-                      <Text size="sm" fw={option.winner ? 700 : undefined} style={{ overflowWrap: 'anywhere' }}>
-                        {option.body}
-                      </Text>
-                      {option.winner && <TrophyIcon size={16} aria-label={t('sessionZero.polls.winner')} />}
-                    </Group>
-                  )}
-                </OptionRow>
-              );
-            })}
-          </Stack>
+          <Box role={voting ? 'group' : undefined} aria-label={voting ? poll.body : undefined}>
+            {cards}
+          </Box>
         )}
 
-        {voting && poll.myOptionIds.length > 0 && (
-          <Button size="compact-xs" variant="subtle" color="gray" w="fit-content" disabled={busy} onClick={() => vote([])}>
-            {t('sessionZero.polls.withdraw')}
-          </Button>
-        )}
+        <Group gap="xs">
+          {results && (
+            <Button
+              size="compact-xs"
+              variant="subtle"
+              color="gray"
+              w="fit-content"
+              onClick={() => setPeekedAt(peeking ? null : resultsKey)}
+            >
+              {peeking ? t('sessionZero.polls.showResults') : t('sessionZero.polls.showOptions')}
+            </Button>
+          )}
+          {voting && !flipped && poll.myOptionIds.length > 0 && (
+            <Button
+              size="compact-xs"
+              variant="subtle"
+              color="gray"
+              w="fit-content"
+              disabled={busy}
+              onClick={() => vote([])}
+            >
+              {t('sessionZero.polls.withdraw')}
+            </Button>
+          )}
+        </Group>
         {!poll.tallyVisible && (
           <Text size="xs" c="dimmed">
             {t('sessionZero.polls.secretHint')}
@@ -250,47 +275,153 @@ function PollCard({ poll, editable }: { poll: Poll; editable: boolean }) {
   );
 }
 
-/** A choice with, when the viewer sees it, its count, a bar and (on hover) who voted for it. */
-function OptionRow({
+/** Whether the component has mounted, so changes after that animate (spec 54 Decision 10). */
+function useMounted(): boolean {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return mounted;
+}
+
+/**
+ * A choice as a card (spec 54): the front holds the title, the description
+ * and, for a voter, the radio or checkbox (a click anywhere on the card but a
+ * link ticks it); the back only the title and the share. The left edge fills
+ * to the share whenever the viewer sees the tally.
+ */
+function OptionCard({
   poll,
   option,
-  names,
-  children,
+  index,
+  share,
+  flipped,
+  voting,
+  single,
+  disabled,
+  onToggle,
 }: {
   poll: Poll;
   option: Poll['options'][number];
-  names: (ids: string[]) => string;
-  children: React.ReactNode;
+  index: number;
+  share: number | null;
+  flipped: boolean;
+  voting: boolean;
+  single: boolean;
+  disabled: boolean;
+  onToggle: (checked: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const count = option.count;
+  const titleId = useId();
+  const mine = poll.myOptionIds.includes(option.id);
+  const winner = flipped && option.winner;
+  const style = { '--share': `${share ?? 0}%`, '--flip-delay': `${index * 80}ms` } as CSSProperties;
+  const tick = (event: MouseEvent<HTMLDivElement>) => {
+    if (!voting || disabled || flipped) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('a, input, label, button')) return;
+    if (single) {
+      if (!mine) onToggle(true);
+    } else onToggle(!mine);
+  };
+  const control = voting ? (
+    single ? (
+      <Radio value={option.id} aria-labelledby={titleId} disabled={disabled} tabIndex={flipped ? -1 : undefined} />
+    ) : (
+      <Checkbox
+        aria-labelledby={titleId}
+        checked={mine}
+        disabled={disabled}
+        tabIndex={flipped ? -1 : undefined}
+        onChange={(event) => onToggle(event.currentTarget.checked)}
+      />
+    )
+  ) : mine && !flipped ? (
+    <CheckCircleIcon size={18} weight="fill" aria-label={t('sessionZero.polls.yourVote')} />
+  ) : null;
+
   return (
-    <Box className={option.winner ? 'sz-poll-option sz-poll-winner' : 'sz-poll-option'}>
-      <Group justify="space-between" wrap="nowrap" gap="xs">
-        <Box style={{ flex: 1, minWidth: 0 }}>{children}</Box>
-        {count !== null && (
-          <Tooltip
-            label={option.voters && option.voters.length > 0 ? names(option.voters) : t('sessionZero.polls.noVotes')}
-            disabled={option.voters === null}
-            withArrow
-            events={{ hover: true, focus: true, touch: true }}
-          >
-            <Text size="sm" fw={600} tabIndex={option.voters === null ? undefined : 0}>
-              {t('sessionZero.polls.votes', { count })}
-            </Text>
-          </Tooltip>
-        )}
-      </Group>
-      {count !== null && (
-        <Progress
-          mt={4}
-          size="sm"
-          value={poll.voterCount > 0 ? (count / poll.voterCount) * 100 : 0}
-          color={option.winner ? 'green' : 'blue'}
-          aria-hidden="true"
-        />
-      )}
+    <Box
+      className="sz-poll-card"
+      style={style}
+      data-tally={share !== null || undefined}
+      data-flipped={flipped || undefined}
+      data-winner={winner || undefined}
+      data-mine={(voting && mine) || undefined}
+    >
+      <div className="sz-poll-card-inner">
+        <Box
+          className="sz-poll-face sz-poll-front"
+          aria-hidden={flipped || undefined}
+          data-voting={(voting && !flipped) || undefined}
+          data-disabled={(voting && disabled && !mine) || undefined}
+          onClick={tick}
+        >
+          <Group justify="space-between" wrap="nowrap" gap="xs" align="flex-start">
+            <Group gap="sm" wrap="nowrap" align="flex-start" style={{ flex: 1, minWidth: 0 }}>
+              {control && <Box pt={2}>{control}</Box>}
+              <Text id={titleId} fw={600} style={{ overflowWrap: 'anywhere' }}>
+                {option.body}
+              </Text>
+            </Group>
+            {option.count !== null && !flipped && <VoteCount option={option} />}
+          </Group>
+          {option.description && (
+            <div className="sz-poll-description">
+              <div>
+                <MarkdownText text={option.description} mt={6} fz="sm" style={{ overflowWrap: 'anywhere' }} />
+              </div>
+            </div>
+          )}
+        </Box>
+        <Box className="sz-poll-face sz-poll-back" aria-hidden={!flipped || undefined}>
+          <Group justify="space-between" wrap="nowrap" gap="sm" w="100%">
+            <Group gap={6} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+              {mine && flipped && (
+                <CheckCircleIcon size={18} weight="fill" aria-label={t('sessionZero.polls.yourVote')} />
+              )}
+              <Text fw={600} style={{ overflowWrap: 'anywhere' }}>
+                {option.body}
+              </Text>
+              {winner && <TrophyIcon size={18} aria-label={t('sessionZero.polls.winner')} />}
+            </Group>
+            <Stack gap={2} align="flex-end">
+              <Text
+                component="span"
+                className="sz-poll-share"
+                aria-label={t('sessionZero.polls.share', { share: share ?? 0 })}
+              >
+                {share ?? 0}%
+              </Text>
+              {option.count !== null && flipped && <VoteCount option={option} />}
+            </Stack>
+          </Group>
+        </Box>
+      </div>
     </Box>
+  );
+}
+
+/** A choice's vote count with, when the viewer may see them, who gave those votes on hover or tap. */
+function VoteCount({ option }: { option: Poll['options'][number] }) {
+  const { t } = useTranslation();
+  const { members } = useBoard();
+  return (
+    <Tooltip
+      label={
+        option.voters && option.voters.length > 0
+          ? option.voters.map((id) => displayNameFor(members, id)).join(', ')
+          : t('sessionZero.polls.noVotes')
+      }
+      disabled={option.voters === null}
+      withArrow
+      events={{ hover: true, focus: true, touch: true }}
+    >
+      <Text size="sm" fw={600} c="dimmed" style={{ whiteSpace: 'nowrap' }} tabIndex={option.voters === null ? undefined : 0}>
+        {t('sessionZero.polls.votes', { count: option.count ?? 0 })}
+      </Text>
+    </Tooltip>
   );
 }
 
@@ -315,8 +446,8 @@ function blankPoll(key: number): DraftRow {
     votersVisible: 'master',
     results: 'live',
     options: [
-      { id: null, body: '' },
-      { id: null, body: '' },
+      { id: null, body: '', description: '' },
+      { id: null, body: '', description: '' },
     ],
   };
 }
@@ -342,7 +473,11 @@ function PollsEditor({ module, polls, onClose }: { module: SessionZeroModule; po
       masterVotes: poll.masterVotes,
       votersVisible: poll.votersVisible,
       results: poll.results,
-      options: poll.options.map((option) => ({ id: option.id, body: option.body })),
+      options: poll.options.map((option) => ({
+        id: option.id,
+        body: option.body,
+        description: option.description ?? '',
+      })),
     })),
   );
   const [initial] = useState(() => draftSignature(rows));
@@ -436,44 +571,59 @@ function PollsEditor({ module, polls, onClose }: { module: SessionZeroModule; po
               <Text size="xs" fw={500}>
                 {t('sessionZero.polls.choices')}
               </Text>
-              {row.options.map((option, optionIndex) => (
-                <Group key={optionIndex} gap={4} wrap="nowrap">
-                  <TextInput
-                    size="xs"
-                    style={{ flex: 1 }}
-                    aria-label={t('sessionZero.polls.choice', { number: optionIndex + 1 })}
-                    placeholder={t('sessionZero.polls.choice', { number: optionIndex + 1 })}
-                    value={option.body}
-                    maxLength={MAX_POLL_OPTION_LENGTH}
-                    onChange={(event) => {
-                      const body = event.currentTarget.value;
-                      update(row.key, {
-                        options: row.options.map((other, at) => (at === optionIndex ? { ...other, body } : other)),
-                      });
-                    }}
-                  />
-                  <LabeledActionIcon
-                    variant="subtle"
-                    color="red"
-                    size="sm"
-                    aria-label={t('sessionZero.polls.removeChoice', { number: optionIndex + 1 })}
-                    disabled={row.options.length <= MIN_POLL_OPTIONS}
-                    onClick={() => {
-                      const options = row.options.filter((_, at) => at !== optionIndex);
-                      update(row.key, { options, maxChoices: Math.min(row.maxChoices, options.length) });
-                    }}
-                  >
-                    <TrashIcon size={16} />
-                  </LabeledActionIcon>
-                </Group>
-              ))}
+              {row.options.map((option, optionIndex) => {
+                const change = (changes: Partial<PollDraft['options'][number]>) =>
+                  update(row.key, {
+                    options: row.options.map((other, at) => (at === optionIndex ? { ...other, ...changes } : other)),
+                  });
+                return (
+                  <Stack key={optionIndex} gap={4}>
+                    <Group gap={4} wrap="nowrap">
+                      <TextInput
+                        size="xs"
+                        style={{ flex: 1 }}
+                        aria-label={t('sessionZero.polls.choice', { number: optionIndex + 1 })}
+                        placeholder={t('sessionZero.polls.choice', { number: optionIndex + 1 })}
+                        value={option.body}
+                        maxLength={MAX_POLL_OPTION_LENGTH}
+                        onChange={(event) => change({ body: event.currentTarget.value })}
+                      />
+                      <LabeledActionIcon
+                        variant="subtle"
+                        color="red"
+                        size="sm"
+                        aria-label={t('sessionZero.polls.removeChoice', { number: optionIndex + 1 })}
+                        disabled={row.options.length <= MIN_POLL_OPTIONS}
+                        onClick={() => {
+                          const options = row.options.filter((_, at) => at !== optionIndex);
+                          update(row.key, { options, maxChoices: Math.min(row.maxChoices, options.length) });
+                        }}
+                      >
+                        <TrashIcon size={16} />
+                      </LabeledActionIcon>
+                    </Group>
+                    <MentionTextarea
+                      size="xs"
+                      markdown
+                      autosize
+                      minRows={1}
+                      maxRows={8}
+                      aria-label={t('sessionZero.polls.choiceDescription', { number: optionIndex + 1 })}
+                      placeholder={t('sessionZero.polls.choiceDescription', { number: optionIndex + 1 })}
+                      value={option.description}
+                      maxLength={MAX_POLL_DESCRIPTION_LENGTH}
+                      onChange={(description) => change({ description })}
+                    />
+                  </Stack>
+                );
+              })}
               <Button
                 size="compact-xs"
                 variant="subtle"
                 w="fit-content"
                 leftSection={<PlusIcon size={14} />}
                 disabled={row.options.length >= MAX_POLL_OPTIONS}
-                onClick={() => update(row.key, { options: [...row.options, { id: null, body: '' }] })}
+                onClick={() => update(row.key, { options: [...row.options, { id: null, body: '', description: '' }] })}
               >
                 {t('sessionZero.polls.addChoice')}
               </Button>

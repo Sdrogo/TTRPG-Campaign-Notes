@@ -38,7 +38,13 @@ def _poll(row: SessionZeroPollRow) -> Poll:
 
 
 def _option(row: SessionZeroPollOptionRow) -> PollOption:
-    return PollOption(id=row.id, poll_id=row.poll_id, position=row.position, body=row.body)
+    return PollOption(
+        id=row.id,
+        poll_id=row.poll_id,
+        position=row.position,
+        body=row.body,
+        description=row.description,
+    )
 
 
 def _vote(row: SessionZeroPollVoteRow) -> Vote:
@@ -125,7 +131,11 @@ async def _add_poll(
     for index, option in enumerate(spec.options):
         session.add(
             SessionZeroPollOptionRow(
-                id=uuid.uuid4(), poll_id=poll_id, position=index, body=option.body
+                id=uuid.uuid4(),
+                poll_id=poll_id,
+                position=index,
+                body=option.body,
+                description=option.description,
             )
         )
     await session.flush()
@@ -169,14 +179,18 @@ async def replace_polls(
             if option.id is None:
                 session.add(
                     SessionZeroPollOptionRow(
-                        id=uuid.uuid4(), poll_id=spec.id, position=index, body=option.body
+                        id=uuid.uuid4(),
+                        poll_id=spec.id,
+                        position=index,
+                        body=option.body,
+                        description=option.description,
                     )
                 )
             else:
                 await session.execute(
                     update(SessionZeroPollOptionRow)
                     .where(SessionZeroPollOptionRow.id == option.id)
-                    .values(position=index, body=option.body)
+                    .values(position=index, body=option.body, description=option.description)
                 )
     await session.flush()
 
@@ -202,7 +216,9 @@ async def copy_polls(
             voters_visible=poll.voters_visible,
             results=poll.results,
             options=tuple(
-                OptionSpec(None, option.body) for option in options if option.poll_id == poll.id
+                OptionSpec(None, option.body, option.description)
+                for option in options
+                if option.poll_id == poll.id
             ),
         )
         await _add_poll(session, room_id, module_id, spec, poll.position, now)

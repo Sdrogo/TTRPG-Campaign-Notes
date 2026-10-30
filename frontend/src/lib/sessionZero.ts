@@ -72,6 +72,7 @@ export const MIN_POLL_OPTIONS = 2;
 export const MAX_POLL_OPTIONS = 20;
 export const MAX_POLL_LENGTH = 200;
 export const MAX_POLL_OPTION_LENGTH = 200;
+export const MAX_POLL_DESCRIPTION_LENGTH = 2000;
 
 /** A chain nobody composed: the page as it was before spec 47 (Decision 2). */
 export const DEFAULT_CHAIN: ModuleKind[] = ['retro', 'lines_veils'];
@@ -152,7 +153,14 @@ interface RawPoll {
   revealed: boolean;
   closed: boolean;
   has_votes: boolean;
-  options: { id: string; body: string; count: number | null; voters: string[] | null; winner: boolean }[];
+  options: {
+    id: string;
+    body: string;
+    description: string | null;
+    count: number | null;
+    voters: string[] | null;
+    winner: boolean;
+  }[];
   my_option_ids: string[];
   voter_count: number;
   electorate: number;
@@ -412,7 +420,29 @@ export interface PollDraft {
   masterVotes: boolean;
   votersVisible: PollVotersVisible;
   results: PollResults;
-  options: { id: string | null; body: string }[];
+  options: { id: string | null; body: string; description: string }[];
+}
+
+/**
+ * Spec 54 Decision 6: a poll's cards show their results side once it is
+ * closed, or once a secret one is revealed.
+ */
+export function pollShowsResults(poll: Pick<Poll, 'closed' | 'results' | 'revealed'>): boolean {
+  return poll.closed || (poll.results === 'hidden' && poll.revealed);
+}
+
+/**
+ * Spec 54 Decision 5: each choice's share of all the votes cast, in whole
+ * percent (0 with no votes); null for a choice whose count is hidden.
+ */
+export function pollShares(poll: Pick<Poll, 'options'>): Map<string, number | null> {
+  const total = poll.options.reduce((sum, option) => sum + (option.count ?? 0), 0);
+  return new Map(
+    poll.options.map((option) => [
+      option.id,
+      option.count === null ? null : total > 0 ? Math.round((option.count / total) * 100) : 0,
+    ]),
+  );
 }
 
 /** What keeps "Edit polls" from saving (Decision 2), as a translation key; null when it can save. */
@@ -597,7 +627,11 @@ export const boardWrites = {
         master_votes: poll.masterVotes,
         voters_visible: poll.votersVisible,
         results: poll.results,
-        options: poll.options.map((option) => ({ ...(option.id ? { id: option.id } : {}), body: option.body })),
+        options: poll.options.map((option) => ({
+          ...(option.id ? { id: option.id } : {}),
+          body: option.body,
+          description: option.description.trim() || null,
+        })),
       })),
     },
   }),

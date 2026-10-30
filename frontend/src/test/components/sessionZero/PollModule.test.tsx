@@ -21,7 +21,7 @@ const roomMembers: Member[] = [
 ];
 
 function option(id: string, body: string, overrides: Record<string, unknown> = {}) {
-  return { id, body, count: 0, voters: [], winner: false, ...overrides };
+  return { id, body, description: null, count: 0, voters: [], winner: false, ...overrides };
 }
 
 function poll(overrides: Record<string, unknown> = {}) {
@@ -187,6 +187,57 @@ describe('PollBoard', () => {
     expect(screen.queryByRole('button', { name: 'Riapri' })).not.toBeInTheDocument();
   });
 
+  // Spec 54 Decisions 1-4: cards with a title and a Markdown description; a click on the card votes.
+  it('shows choices as cards with descriptions, voted by a click on the card', async () => {
+    const options = [
+      option('o-1', 'Stanza 404', {
+        description: 'Scenario d\'apertura. **Hotel** [mappa](https://example.com/map)',
+        count: 3,
+      }),
+      option('o-2', 'Budōkan', { count: 1 }),
+    ];
+    const { act, user } = renderPolls([poll({ options, voter_count: 4, has_votes: true })]);
+    expect(screen.getByText('Hotel').tagName).toBe('STRONG');
+    await user.click(screen.getByRole('link', { name: 'mappa' }));
+    expect(act).not.toHaveBeenCalled();
+    await user.click(screen.getByText(/Scenario d'apertura/));
+    expect(act).toHaveBeenLastCalledWith(boardWrites.vote('p-1', ['o-1']));
+    // The front face's title (the back holds the same title, hidden).
+    await user.click(screen.getAllByText('Budōkan')[0]);
+    expect(act).toHaveBeenLastCalledWith(boardWrites.vote('p-1', ['o-2']));
+    const cards = document.querySelectorAll<HTMLElement>('.sz-poll-card');
+    expect(cards[0].style.getPropertyValue('--share')).toBe('75%');
+    expect(cards[1].style.getPropertyValue('--share')).toBe('25%');
+    expect(cards[0]).toHaveAttribute('data-tally');
+    expect(cards[0]).not.toHaveAttribute('data-flipped');
+  });
+
+  // Spec 54 Decisions 6-8: a revealed poll's cards turn over to title and share; the winner glows.
+  it('turns the cards over once the results show, and back on request', async () => {
+    const options = [
+      option('o-1', 'Stanza 404', { description: 'Scenario', count: 1, winner: true }),
+      option('o-2', 'Budōkan', { count: 1, winner: true }),
+      option('o-3', 'Kabukichō', { count: 0 }),
+    ];
+    const { user } = renderPolls([
+      poll({ results: 'hidden', revealed: true, options, voter_count: 2, has_votes: true, my_option_ids: ['o-2'] }),
+    ]);
+    const cards = document.querySelectorAll<HTMLElement>('.sz-poll-card');
+    expect([...cards].map((card) => card.hasAttribute('data-flipped'))).toEqual([true, true, true]);
+    expect([...cards].map((card) => card.hasAttribute('data-winner'))).toEqual([true, true, false]);
+    expect(screen.getAllByLabelText('50% dei voti')).toHaveLength(2);
+    expect(screen.getAllByLabelText('Più votata')).toHaveLength(2);
+    expect(screen.getByLabelText('Il tuo voto')).toBeInTheDocument();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mostra le opzioni' }));
+    expect(cards[0]).not.toHaveAttribute('data-flipped');
+    expect(cards[0]).not.toHaveAttribute('data-winner');
+    expect(screen.getByRole('radio', { name: 'Budōkan' })).toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Mostra i risultati' }));
+    expect(cards[0]).toHaveAttribute('data-flipped');
+  });
+
   it('is read-only in a closed session and while previewing', () => {
     renderPolls([poll()], { can_manage: true, rounds: closedRound });
     expect(screen.queryByRole('radio')).not.toBeInTheDocument();
@@ -247,6 +298,10 @@ describe('Edit polls', () => {
     await user.type(within(dialog).getByRole('textbox', { name: 'Domanda' }), 'Quando giochiamo?');
     await user.type(within(dialog).getByRole('textbox', { name: 'Suggerimento (facoltativo)' }), 'Sera');
     await user.type(within(dialog).getByRole('textbox', { name: 'Scelta 1' }), 'Lun');
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Descrizione della scelta 1 (facoltativa)' }),
+      'Dopo cena',
+    );
     await user.type(within(dialog).getByRole('textbox', { name: 'Scelta 2' }), 'lun');
     expect(within(dialog).getByText('Due scelte dello stesso sondaggio sono uguali.')).toBeInTheDocument();
     await user.clear(within(dialog).getByRole('textbox', { name: 'Scelta 2' }));
@@ -277,8 +332,8 @@ describe('Edit polls', () => {
           votersVisible: 'everyone',
           results: 'hidden',
           options: [
-            { id: null, body: 'Lun' },
-            { id: null, body: 'Mar' },
+            { id: null, body: 'Lun', description: 'Dopo cena' },
+            { id: null, body: 'Mar', description: '' },
           ],
         },
       ]),
@@ -317,8 +372,8 @@ describe('Edit polls', () => {
           votersVisible: 'master',
           results: 'live',
           options: [
-            { id: 'o-1', body: 'D&D' },
-            { id: 'o-2', body: 'PbtA' },
+            { id: 'o-1', body: 'D&D', description: '' },
+            { id: 'o-2', body: 'PbtA', description: '' },
           ],
         },
       ]),

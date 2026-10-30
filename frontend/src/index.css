@@ -1414,6 +1414,148 @@ html body[data-scroll-locked] {
   }
 }
 
+/* Spec 54: a poll's choices as cards in one column. The left edge is the
+   vote bar (Decision 4), filled from the bottom to `--share`; the cards turn
+   over to their results side (Decision 6), one after the other by
+   `--flip-delay`, and the winner glows and grows (Decision 7). Transitions
+   run only once the column is mounted (`data-ready`), so a page opened on
+   results shows them at once (Decision 10). */
+.sz-poll-cards {
+  width: 100%;
+  max-width: 44rem;
+  margin-inline: auto;
+  padding-inline: 4px;
+}
+.sz-poll-card {
+  position: relative;
+  perspective: 1200px;
+  border-radius: var(--mantine-radius-md);
+  transition: none;
+}
+.sz-poll-card-inner {
+  display: grid;
+  transform-style: preserve-3d;
+}
+.sz-poll-face {
+  grid-area: 1 / 1;
+  position: relative;
+  min-width: 0;
+  padding: 12px 14px 12px 20px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--mantine-radius-md);
+  background: var(--bg-raised);
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+.sz-poll-face::before,
+.sz-poll-face::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 5px;
+}
+.sz-poll-face::before {
+  top: 0;
+  background: var(--border-default);
+}
+.sz-poll-card[data-tally] .sz-poll-face::after {
+  height: var(--share, 0%);
+  background: var(--accent-primary);
+}
+.sz-poll-front[data-voting] {
+  cursor: pointer;
+}
+.sz-poll-front[data-voting]:hover {
+  border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--border-default));
+}
+.sz-poll-card[data-mine] .sz-poll-front {
+  border-color: var(--accent-primary);
+}
+.sz-poll-front[data-disabled] {
+  opacity: 0.6;
+  cursor: default;
+}
+.sz-poll-back {
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+}
+.sz-poll-share {
+  color: var(--accent-primary);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+/* The description folds away as the card turns, so the back is only as tall as its title. */
+.sz-poll-description {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.sz-poll-description > div {
+  min-height: 0;
+  overflow: hidden;
+}
+.sz-poll-card[data-flipped] .sz-poll-card-inner {
+  transform: rotateY(180deg);
+}
+.sz-poll-card[data-flipped] .sz-poll-description {
+  grid-template-rows: 0fr;
+}
+.sz-poll-card[data-flipped] .sz-poll-front,
+.sz-poll-card:not([data-flipped]) .sz-poll-back {
+  visibility: hidden;
+}
+.sz-poll-card[data-winner] {
+  transform: scale(1.04);
+  z-index: 1;
+}
+.sz-poll-card[data-winner] .sz-poll-back {
+  border-color: var(--accent-primary);
+  box-shadow:
+    0 0 0 1px var(--accent-primary),
+    0 0 24px color-mix(in srgb, var(--accent-primary) 45%, transparent);
+}
+.sz-poll-cards[data-ready] .sz-poll-card {
+  transition: transform 300ms ease var(--flip-delay, 0ms);
+}
+.sz-poll-cards[data-ready] .sz-poll-card-inner {
+  transition: transform 600ms cubic-bezier(0.4, 0.2, 0.2, 1) var(--flip-delay, 0ms);
+}
+.sz-poll-cards[data-ready] .sz-poll-description {
+  transition: grid-template-rows 300ms ease var(--flip-delay, 0ms);
+}
+.sz-poll-cards[data-ready] .sz-poll-face {
+  transition: visibility 0s linear calc(300ms + var(--flip-delay, 0ms));
+}
+.sz-poll-cards[data-ready] .sz-poll-face::after {
+  transition: height 300ms ease;
+}
+@media (max-width: 48em) {
+  .sz-poll-card[data-winner] {
+    transform: scale(1.02);
+  }
+}
+/* Decision 9: no turning, folding or growing; the back simply replaces the front. */
+@media (prefers-reduced-motion: reduce) {
+  .sz-poll-card[data-winner],
+  .sz-poll-card[data-flipped] .sz-poll-card-inner {
+    transform: none;
+  }
+  .sz-poll-card[data-flipped] .sz-poll-back {
+    transform: none;
+  }
+  .sz-poll-cards[data-ready] .sz-poll-card,
+  .sz-poll-cards[data-ready] .sz-poll-card-inner,
+  .sz-poll-cards[data-ready] .sz-poll-description,
+  .sz-poll-cards[data-ready] .sz-poll-face,
+  .sz-poll-cards[data-ready] .sz-poll-face::after {
+    transition: none;
+  }
+}
+
 /* Spec 46d Decision 6: a post-it's reactions, emoji large enough to read at a glance. */
 .reaction-chip-lg {
   font-size: 15px;
