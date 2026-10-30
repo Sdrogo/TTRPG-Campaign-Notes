@@ -6,10 +6,7 @@ with their authors (Decision 1); a Player sees the steps already reached
 the caller sees them, and every write the other members see bumps the
 Session 0's `revision` (Decision 3, for the live updates)."""
 
-import asyncio
-import json
 import uuid
-from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated
@@ -22,7 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import require_membership
 from app.api.errors import http_error, translated_error
-from app.auth.dependencies import VIEW_AS_HEADER, CurrentUserDep, authenticated_user
+from app.api.events import open_room_stream
+from app.auth.dependencies import VIEW_AS_HEADER, CurrentUserDep
 from app.db import (
     documents_repo,
     rooms_repo,
@@ -32,7 +30,6 @@ from app.db import (
     tags_repo,
     versions_repo,
 )
-from app.db import session as session_module
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
 from app.domain.models import Document, Membership, RoomRole
@@ -125,7 +122,8 @@ from app.domain.session_zero_questions import (
 from app.domain.visibility import is_document_visible
 from app.i18n.dependencies import LocaleDep
 from app.i18n.translator import translate
-from app.realtime.broker import Event, broker
+from app.realtime.audience import push
+from app.realtime.broker import SESSION_ZERO, Event
 
 router = APIRouter(prefix="/rooms/{room_id}/session-zero", tags=["session-zero"])
 
@@ -137,10 +135,6 @@ PRESET_COLUMNS = (
     ("sessionZero.presets.care", MapColor.GOLD),
     ("sessionZero.presets.avoid", MapColor.RED),
 )
-
-# A comment line this often keeps proxies (Caddy, Render) from closing an
-# idle stream (spec 46_2).
-KEEPALIVE_S = 25.0
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -916,11 +910,7 @@ def _push(
 ) -> None:
     """Sends `event` once the write has committed (spec 46_2): to the whole
     Room, or to `user_id`'s own streams only."""
-
-    async def send(_: AsyncSession) -> None:
-        broker.publish(room_id, event, user_id=user_id)
-
-    session_module.on_commit(session, send)
+    push(session, room_id, event, None if user_id is None else {user_id})
 
 
 async def _shared(
@@ -1963,51 +1953,13 @@ async def set_timer(
     return await _answer(session, room_id, write, locale)
 
 
-def _sse(event: Event) -> str:
-    payload = {"revision": event.revision, "kind": event.kind, "id": event.id}
-    return f"data: {json.dumps(payload, default=str)}\n\n"
-
-
-async def _stream(room_id: uuid.UUID, user_id: uuid.UUID) -> AsyncIterator[str]:
-    """The stream's lines until it is closed (`None`): the member left, the
-    Room is gone, or they fell too far behind. Subscribes only once the
-    response starts streaming, in the same `try` that forgets the stream
-    however it ends, the client hanging up included."""
-    subscription = broker.subscribe(room_id, user_id)
-    try:
-        yield ": open\n\n"
-        while True:
-            try:
-                event = await asyncio.wait_for(subscription.queue.get(), KEEPALIVE_S)
-            except TimeoutError:
-                yield ": keep-alive\n\n"
-                continue
-            if event is None:
-                return
-            yield _sse(event)
-    finally:
-        broker.unsubscribe(subscription)
-
-
 @router.get("/events")
 async def session_zero_events(
     room_id: uuid.UUID,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
     locale: LocaleDep,
 ) -> StreamingResponse:
-    """Spec 46_2: Server-Sent Events, one line per write the caller may hear
-    of, `{"revision", "kind", "id"}` and never any content; the client then
-    re-reads the board with `GET`. Membership is checked once, on a session
-    closed before the stream starts, so an open stream holds no database
-    connection. A "View as" header is ignored: the stream is the caller's.
-    The token is checked when the stream opens only: an open stream outlives
-    its expiry, which is harmless since it carries no content, and the
-    client's next `GET` needs a fresh token anyway."""
-    user_id = uuid.UUID(authenticated_user(credentials, locale).id)
-    async with session_module.independent_session() as session:
-        await require_membership(session, room_id, user_id, locale)
-    return StreamingResponse(
-        _stream(room_id, user_id),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+    """Spec 46_2, kept by spec 52 Decision 2 for tabs opened before the Room
+    stream: the Room stream (`GET /rooms/{id}/events`) with its Session 0
+    events only."""
+    return await open_room_stream(room_id, credentials, locale, frozenset({SESSION_ZERO}))

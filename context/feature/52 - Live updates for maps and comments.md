@@ -48,7 +48,8 @@
 
 ## Decisions
 
-Proposed by Claude on 2026-10-29, to be confirmed by the product owner.
+Proposed by Claude on 2026-10-29; confirmed by the product owner the same
+day ("ok", after Decision 1 was explained in the thread).
 
 1. **One stream per tab, per Room**: `GET /rooms/{id}/events`. It carries
    every topic (`session_zero`, `map`, `document`, `comments`), so a tab
@@ -205,3 +206,13 @@ Proposed by Claude on 2026-10-29, to be confirmed by the product owner.
 - Manual (staging, two browsers): a Player sees a Master's map edit within
   a second; a Document revealed to a Player appears on the map; a Private
   Comment never reaches the Player; Session 0 still live.
+
+## Built
+
+- **52_1** (2026-10-30, PR #274): `app/api/events.py` (Room stream, the
+  stream code moved from `session_zero.py`), `app/realtime/audience.py`
+  (`push`, `map_audience`, `push_map`, `document_audience`,
+  `push_document`), broker topics and `user_ids`, pushes of Decision 8 for
+  maps and Documents, Caddyfile matcher. Session 0 events now also carry
+  `topic`. Tests: `tests/test_room_events_api.py`, broker topic test. No
+  migration.

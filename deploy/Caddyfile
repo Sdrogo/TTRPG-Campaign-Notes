@@ -3,9 +3,9 @@
 # in API_HOSTS (set in compose.yaml / the server's .env); each must already
 # resolve to this server.
 {$API_HOSTS} {
-	# The Session 0 live stream (spec 46_2): not compressed and flushed at
+	# The live streams (spec 46_2, spec 52): not compressed and flushed at
 	# once, so each event reaches the browser as it is sent.
-	@live_stream path /rooms/*/session-zero/events
+	@live_stream path /rooms/*/events /rooms/*/session-zero/events
 	handle @live_stream {
 		reverse_proxy backend:10000 {
 			flush_interval -1
