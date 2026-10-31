@@ -836,7 +836,7 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 ## Next Up
 
 Nothing is waiting for release: `staging` and `main` match after release
-PR #246 (2026-10-27), and production's database is at head. Before the
+PR #281 (2026-10-30), and production's database is at head (`c8f2d6a4e1b7`). Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
@@ -858,7 +858,7 @@ on `main`.
   of M", an "Everyone has voted" badge and toast, close/reopen, carry
   over like Questions. **Migration `b9e4c2a7d1f3`** (revises
   `a7d3f9b2c6e1`): applied to the staging DB by the product owner
-  2026-10-30; pending on production before the next release. Same PR: a new
+  2026-10-30, and to production the same day. Same PR: a new
   session's default name is "Sessione 1", "Sessione 2"... instead of
   "Sessione 0.5 #1" (frontend strings only), and a fix for a flaky
   ungroup answer (`delete_groups` now clears the post-its' `group_id`

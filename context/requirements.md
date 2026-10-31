@@ -148,7 +148,7 @@ A web application, distributed online, where several Users contribute to the doc
 | D-37 | A Document has an optional **subtitle** (≤120 characters, one line), edited by whoever edits its name and shown under it; a map card shows it as its default caption. *(spec 28_0)* |
 | D-38 | A Room has an optional **image**, set by an Administrator; it is the default cover of the Room PDF. *(spec 26)* |
 | D-39 | The **Master** can **duplicate** a Room: the copy holds its setup, Tags, Documents (with Notes and images) and maps, but no Comments, PDF Attachments, history or members except the person duplicating, who becomes Master and Administrator. Selective visibility becomes Private in the copy. *(specs 33, 40)* |
-| D-40 | Export and import: a Room or a single Document is exported as JSON or Markdown (FR-G1) and as a **PDF laid out like a game manual**, in a chosen style (Gothic, Modern, Print, Parchment); always only what the requester sees. *(The PDF of a single Document, spec 27b, is specified but not built yet.)* One or more Documents, or a whole Room export, can be **imported** by whoever may create Documents, copying or replacing content only: no Comments, Owners, grants or Attachments. *(specs 23, 23b, 27, 27b, 35)* |
+| D-40 | Export and import: a Room or a single Document is exported as JSON or Markdown (FR-G1) and as a **PDF laid out like a game manual**, in a chosen style (Gothic, Modern, Print, Parchment); always only what the requester sees. *(The PDF of a single Document, spec 27b, was built on 28 October 2026, PR #266.)* One or more Documents, or a whole Room export, can be **imported** by whoever may create Documents, copying or replacing content only: no Comments, Owners, grants or Attachments. *(specs 23, 23b, 27, 27b, 35)* |
 | D-41 | **Personal data (GDPR)**: a User can download all their personal data and **delete their account** permanently, at once, without a grace period. Their profile, sign-in account, Friendships, reactions and grants are erased; **content written in shared Rooms stays**, shown as by "Unknown user". A public privacy notice is reachable without signing in. *(spec 31)* |
 | D-42 | The interface is offered in **twelve languages**: English, Italian, German, Spanish, French, Dutch, Polish, European Portuguese, Russian, Japanese, Korean and Simplified Chinese; the ten added after English and Italian are marked beta until a native speaker reviews them. The API's error messages follow the same choice. *(specs 09, 09_1, 34)* |
 | D-43 | Reading aids that stay in the browser: **read aloud** of a Document with the browser's own voices, and **image search** over free image libraries (Openverse) to add an image to a Document. Neither adds stored personal data. *(specs 29, 30, 30b)* |
@@ -503,12 +503,12 @@ erDiagram
 | **Added while building (0.6)** | FR-A3, FR-A4; FR-R9, FR-R10; FR-D10–D15; FR-N7; FR-M1–M9; FR-G3, FR-G4; FR-L1, FR-L2; NFR-10 |
 | **Won't (for now)** | Real-time editing of text (maps: D-36); native mobile app; login providers beyond those of FR-A1 |
 
-**Implementation status** (27 October 2026, released to production with PR #246; tickets in `context/feature/`, details in `progress-tracker.md`):
+**Implementation status** (31 October 2026, last release to production with PR #281; tickets in `context/feature/`, details in `progress-tracker.md`):
 
 | Status | Requirements |
 |---|---|
-| **Built** | Every Must, except the paginated loading of FR-T3 (below). Should: FR-R5, FR-R8, FR-D5 (specs 24, 24b), FR-D8 (16), FR-D9 and FR-T11 (17), FR-N5 (21), FR-T6–T8 (19c), FR-T10 (12), FR-V2 and FR-V5 (22), FR-V3 (22b), FR-G1 (23, 27). Could: several Masters, FR-F1–F5 (18). Added: FR-A3, FR-A4 (31), FR-R9 (26), FR-R10 (33, 40), FR-D10 (28_0), FR-D11 (39), FR-D12 (41), FR-D13 (29), FR-D14 (30, 30b), FR-D15 (32, 37), FR-N7 (44), FR-M1–M9 (28, 36, 38, 38b, 40, 42, 43), FR-G3 for the Room (23b, 35), FR-G4 (27), FR-L1, FR-L2 (45). NFR-09 (09, 09_1, 34). |
-| **Partial** | FR-T3: sorting is built, paginated loading is parked until Threads get long in practice. FR-T9: only the "Revealed" marks and the header badge (22), no general notifications. FR-N6: Document names are linked automatically (D-34), but there are no Glossary terms. FR-G3 for a single Document: specified (27b), not built. NFR-07: version history exists; backups and monitoring of the production server are still to set up. NFR-10: the code part is built; the legal review of the notice and the processing agreements are owed by the product owner. |
+| **Built** | Every Must, except the paginated loading of FR-T3 (below). Should: FR-R5, FR-R8, FR-D5 (specs 24, 24b), FR-D8 (16), FR-D9 and FR-T11 (17), FR-N5 (21), FR-T6–T8 (19c), FR-T10 (12), FR-V2 and FR-V5 (22), FR-V3 (22b), FR-G1 (23, 27). Could: several Masters, FR-F1–F5 (18). Added: FR-A3, FR-A4 (31), FR-R9 (26), FR-R10 (33, 40), FR-D10 (28_0), FR-D11 (39), FR-D12 (41), FR-D13 (29), FR-D14 (30, 30b), FR-D15 (32, 37), FR-N7 (44), FR-M1–M9 (28, 36, 38, 38b, 40, 42, 43), FR-G3 for the Room (23b, 35) and for a single Document (27b), FR-G4 (27), FR-L1, FR-L2 (45). NFR-09 (09, 09_1, 34). |
+| **Partial** | FR-T3: sorting is built, paginated loading is parked until Threads get long in practice. FR-T9: only the "Revealed" marks and the header badge (22), no general notifications. FR-N6: Document names are linked automatically (D-34), but there are no Glossary terms. NFR-07: version history exists; backups and monitoring of the production server are still to set up. NFR-10: the code part is built; the legal review of the notice and the processing agreements are owed by the product owner. |
 | **Not built** | FR-N3, FR-N4 and VR-10 (Glossary entries; the Room Index, FR-N7, is the navigation that exists); FR-D6 (draft/published); VR-09 (sealed content). |
 | **Dropped** | FR-G2 (D-45). |
 
@@ -547,7 +547,6 @@ erDiagram
 
 ## 16. Next steps
 
-1. Build the PDF of a single Document (spec 27b, FR-G3).
-2. Two small tickets still to write: default Tags created in the Room creator's UI language, and a read-only members list for every member.
-3. Decide whether the requirements left **Not built** in section 14 (Glossary entries, draft/published, notifications, sealed content) stay in the product or are dropped.
-4. Further features follow the tickets in `context/feature/` (order in `progress-tracker.md`).
+1. Two small tickets still to write: default Tags created in the Room creator's UI language, and a read-only members list for every member.
+2. Decide whether the requirements left **Not built** in section 14 (Glossary entries, draft/published, notifications, sealed content) stay in the product or are dropped.
+3. Further features follow the tickets in `context/feature/` (order in `progress-tracker.md`).
