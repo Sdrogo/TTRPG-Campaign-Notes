@@ -23,7 +23,7 @@
 - A Room gets a **home page** of its own, `/rooms/:roomId`, made of cards
   the Master arranges. Each card opens a **Section** (the "Dashboard" /
   "sottosezione" of the request): a page the Master composes from a few
-  **sources** (Documents with some Tags, maps, Session 0 sessions, polls),
+  **sources** (Documents with some Tags, maps, Session 0 features),
   whose items show as the same kind of card.
 - Nothing that exists goes away: the Documents page, the Maps page and
   Session 0 stay where they are and are reachable from the landing.
@@ -53,12 +53,18 @@ subdivisions inside Documents blocks. The Decisions follow those answers.
     into **groups** (Decision 15).
   - `maps`: the Room's maps, optionally only one kind (geographic,
     relationship, mention maps), by name.
-  - `sessions`: the Session 0 sessions (spec 47b), newest first.
-  - `polls`: the Session 0 polls (spec 53), newest session first, then in
-    step order.
+  - `session_zero`: what the Master picks of Session 0 (product owner,
+    2026-10-31: adding it must let the Master choose which Session 0
+    features to show), one or more **features**: Sessioni (the sessions,
+    spec 47b, newest first), Retro, Linee e Veli, Stelle e Desideri,
+    Domande, DDI, Sondaggi (spec 53). Each feature lists its items (one
+    card per step of that kind, newest session first; Linee e Veli is one
+    card, being one per Room; Sondaggi one card per poll). With more than
+    one feature the block shows them under foldable headings in Session 0
+    order, like Documents groups.
   A block has an optional heading of its own; without one it is titled
   after its source ("Documenti · Tokyo, PNG", "Mappe geografiche",
-  "Sessioni", "Sondaggi").
+  "Sondaggi" for a single feature, "Sessione 0" for several).
 - **Page card**: a Section card that, instead of a page of blocks, opens
   one of the Room's existing pages: Documents, Maps or Session 0.
 
@@ -113,6 +119,10 @@ subdivisions inside Documents blocks. The Decisions follow those answers.
    - Document: its first image, its name, its description.
    - Map: a geographic map's background image, its name, its description
      (or its kind when it has none).
+   - Session 0 step (Retro, Stelle e Desideri, Domande): no image, "Retro ·
+     Sessione 1", a one-line summary (post-its, answers given). Linee e
+     Veli: the counts. DDI: its Document's image if any, "Accettata da 4 su
+     5".
    - Session: no image, its name ("Sessione 3"), its date and steps
      ("31 ott · Retro, Sondaggi") as description; a "In corso" badge on the
      open one.
@@ -168,8 +178,9 @@ what the Players get), with small chips and popovers, never a long form.
     - the **filter is chips**: a Documents block shows one chip per Tag
       (× removes it, "+ Tag" opens a searchable Tag picker as a popover);
       a maps block a single chip with its kind ("Tutte le mappe" ▾ →
-      Tutte / Geografiche / Relazioni / Mention map); sessions and polls
-      have no filter;
+      Tutte / Geografiche / Relazioni / Mention map); a Session 0 block one
+      chip per feature (× removes it, "+ Funzione" opens the features
+      list, ticks on the ones shown);
     - "Raggruppa" (Documents blocks only) opens the groups popover
       (Decision 15);
     - ⋮ holds Elimina (with confirmation, undoable by a toast "Annulla"
@@ -178,10 +189,11 @@ what the Players get), with small chips and popovers, never a long form.
     soon as a chip changes.
 14. **Adding a block**: a dashed "+ Blocco" bar after the last block (and,
     on hover or focus, a small "+" between two blocks) opens a popover
-    with **four tiles in a 2×2 grid** (icon, name, one line: "Documenti
-    con certi Tag", "Mappe", "Sessioni della Sessione 0", "Sondaggi").
-    Picking one inserts the block there; a Documents block opens its Tag
-    picker straight away (a Documents block needs at least one Tag). On a
+    with **three tiles in a row** (one column on a phone; icon, name, one
+    line: "Documenti", "Mappe", "Sessione 0"). Picking one inserts the
+    block there; a Documents block opens its Tag picker straight away (it
+    needs at least one Tag), a Session 0 block its features list (it needs
+    at least one feature). On a
     phone, the popovers open as bottom sheets.
     Limits: a Section holds 1 to 10 blocks, a Room up to 30 Sections.
 15. **Groups inside a Documents block** (product owner, 2026-10-31: "voglio
@@ -223,7 +235,7 @@ what the Players get), with small chips and popovers, never a long form.
   the landing, per-Player Sections.
 - Sections in the Room JSON export/import and in the PDF manual
   (duplication copies them, Decision 5).
-- Groups inside maps, sessions or polls blocks.
+- Groups inside maps blocks, or Session 0 blocks beyond one heading per feature.
 
 ## Design
 
@@ -238,9 +250,12 @@ what the Players get), with small chips and popovers, never a long form.
     (`room_id`, `kind`) for the three page kinds (partial index). RLS on,
     deny-all policy, like every backend-only table.
   - `room_section_blocks`: `id`, `section_id` (FK cascade), `position`,
-    `kind` (`documents` | `maps` | `sessions` | `polls`), `heading`
-    (varchar 100, null), `map_kind` (null = all, or a map kind). Check:
-    `map_kind` only on `maps` blocks.
+    `kind` (`documents` | `maps` | `session_zero`), `heading`
+    (varchar 100, null), `map_kind` (null = all, or a map kind),
+    `features` (text[] of `sessions`, `retro`, `lines_veils`, `stars`,
+    `questions`, `ddi`, `polls`; not empty on `session_zero` blocks).
+    Checks: `map_kind` only on `maps` blocks, `features` only on
+    `session_zero` blocks.
   - `room_section_block_tags`: (`block_id`, `tag_id`), both FK cascade.
   - `room_section_block_groups`: `id`, `block_id` (FK cascade),
     `position`; `room_section_block_group_tags`: (`group_id`, `tag_id`),
@@ -270,7 +285,7 @@ what the Players get), with small chips and popovers, never a long form.
   - Room creation, duplication (`room_copy`) and import seed or copy the
     Sections (duplication copies images too, like Document images).
   - Tag deletion (`tags_repo`) drops emptied Documents blocks.
-- Sessions and polls lists reuse `session_zero_repo` /
+- Session 0 features reuse `session_zero_repo` /
   `session_zero_polls_repo` reads; no change to Session 0 tables.
 
 ### Frontend
@@ -314,7 +329,9 @@ it.
 
 - Backend: Master-only writes (403 Player, Administrator-not-Master); a Documents
   block shows only Documents with all its Tags that the viewer sees; maps
-  block filtered by kind and visibility; sessions/polls blocks; limits (30
+  block filtered by kind and visibility; a Session 0 block lists only its
+  features' items, a draft or a step the Players haven't reached is never
+  shown to them (spec 46/47 rules), an empty features list is 422; limits (30
   Sections, 10 blocks, 422); reorder; the Documents page Section can't be
   deleted (409); Tag deletion drops an emptied block and keeps one with
   Tags left, drops an emptied group and merges duplicates; a block's
@@ -326,7 +343,8 @@ it.
   links; empty blocks hidden for Players; the Index shows the global part
   first and the page group after it on the landing and in a Section, not
   elsewhere; edit mode only for the Master; "Nuova sezione" asks a title
-  and opens the add-block tiles; a Tag chip added or removed refetches the
+  and opens the add-block tiles; a Session 0 block opens its features
+  list and shows one heading per feature; a Tag chip added or removed refetches the
   block; "Usa i raggruppamenti della Stanza" copies the Main items; drag
   reorder calls the order endpoint; Session 0 opens
   the session from `?session=`.
@@ -347,3 +365,6 @@ it.
 - Q5 (Master-only Sections): not in scope. -> Decision 2.
 - Also asked: subdivisions inside Documents blocks, as on the Documents
   page. -> Decision 15.
+- After the mockup: adding a Session 0 block must let the Master choose
+  which Session 0 features it shows. -> the `session_zero` block kind
+  (Terms), Decisions 13-14.

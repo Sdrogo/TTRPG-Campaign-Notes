@@ -847,7 +847,7 @@ on `main`.
   Sections; plus groups inside Documents blocks like the Documents page;
   no code yet): a Room home page `/rooms/:roomId` of Section cards, each
   Section a page of blocks (Documents with Tags and optional groups, maps
-  by kind, Session 0 sessions, polls) shown as Document-like cards, edited
+  by kind, Session 0 features chosen by the Master) shown as Document-like cards, edited
   in place with chips and popovers. Units 55_1 backend (**migration**),
   55_2 read side, 55_m clickable mockup of edit mode, 55_3 edit side.
 - **54, Poll choices as cards** (ticket confirmed by the product owner
