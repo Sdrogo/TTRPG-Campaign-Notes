@@ -88,9 +88,10 @@ recommended answer of each.
    empty and nothing becomes harder to reach. The migration adds them to
    every existing Room, and creating, duplicating or importing a Room adds
    them too. The Master can retitle them, give them an image and a
-   description, move them and hide them from Players; the Documents card
-   can't be deleted (it's the way to the full list), the other two can,
-   and can be added back from "New section".
+   description and move them. The Documents card can't be deleted nor set
+   to Master only (409 for both: it's the Players' way to the full list,
+   and the Index's Tag links lead there too); the other two can be hidden
+   from Players or deleted, and added back from "New section".
 6. **Layout**: the Room's name and image as the page's heading (as the
    Documents page has it today), the Section cards under it in a grid: 1
    column on a phone, 2 from `sm`, 3 from `lg`, 4 from `xl` (the Documents
@@ -252,7 +253,7 @@ it.
   block shows only Documents with all its Tags that the viewer sees; maps
   block filtered by kind and visibility; sessions/polls blocks; limits (30
   Sections, 10 blocks, 422); reorder; the Documents page Section can't be
-  deleted (409); Tag deletion drops an emptied block and keeps one with
+  deleted nor set to Master only (409 for both); Tag deletion drops an emptied block and keeps one with
   Tags left; seed on create, copy on duplicate; migration seeds existing
   Rooms.
 - Frontend: Room card opens the landing; landing lists Sections in order
