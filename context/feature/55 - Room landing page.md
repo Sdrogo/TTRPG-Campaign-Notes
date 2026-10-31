@@ -60,8 +60,9 @@ subdivisions inside Documents blocks. The Decisions follow those answers.
     Domande, DDI, Sondaggi (spec 53). Each feature lists its items (one
     card per step of that kind, newest session first; Linee e Veli is one
     card, being one per Room; Sondaggi one card per poll). With more than
-    one feature the block shows them under foldable headings in Session 0
-    order, like Documents groups.
+    one feature the block shows them under foldable headings, **in the
+    order the Master gives them** (product owner, 2026-10-31), like
+    Documents groups.
   A block has an optional heading of its own; without one it is titled
   after its source ("Documenti · Tokyo, PNG", "Mappe geografiche",
   "Sondaggi" for a single feature, "Sessione 0" for several).
@@ -179,8 +180,9 @@ what the Players get), with small chips and popovers, never a long form.
       (× removes it, "+ Tag" opens a searchable Tag picker as a popover);
       a maps block a single chip with its kind ("Tutte le mappe" ▾ →
       Tutte / Geografiche / Relazioni / Mention map); a Session 0 block one
-      chip per feature (× removes it, "+ Funzione" opens the features
-      list, ticks on the ones shown);
+      chip per feature, dragged to reorder (the order of the headings
+      below), × removes it, "+ Funzione" opens the features list (ticks on
+      the ones shown; a newly ticked feature goes last);
     - "Raggruppa" (Documents blocks only) opens the groups popover
       (Decision 15);
     - ⋮ holds Elimina (with confirmation, undoable by a toast "Annulla"
@@ -252,7 +254,7 @@ what the Players get), with small chips and popovers, never a long form.
   - `room_section_blocks`: `id`, `section_id` (FK cascade), `position`,
     `kind` (`documents` | `maps` | `session_zero`), `heading`
     (varchar 100, null), `map_kind` (null = all, or a map kind),
-    `features` (text[] of `sessions`, `retro`, `lines_veils`, `stars`,
+    `features` (ordered text[], the Master's order, of `sessions`, `retro`, `lines_veils`, `stars`,
     `questions`, `ddi`, `polls`; not empty on `session_zero` blocks).
     Checks: `map_kind` only on `maps` blocks, `features` only on
     `session_zero` blocks.
