@@ -189,6 +189,11 @@ what the Players get), with small chips and popovers, never a long form.
       for 5 s).
     The block's cards under the bar are the real result and refresh as
     soon as a chip changes.
+    The **sub-sections** of a block (a Documents block's groups, a Session 0
+    block's features) can also be dragged whole by their heading, which
+    shows a ⠿ handle in edit mode (product owner, 2026-10-31); it is the
+    same order as the chips, so either way changes both. "Altri documenti"
+    stays last and can't be moved.
 14. **Adding a block**: a dashed "+ Blocco" bar after the last block (and,
     on hover or focus, a small "+" between two blocks) opens a popover
     with **three tiles in a row** (one column on a phone; icon, name, one
