@@ -32,6 +32,7 @@ from app.db.models import (
     DocumentImageRow,
     RelationshipMapRow,
     RoomRow,
+    RoomSectionRow,
     StorageCleanupRow,
     UserRow,
 )
@@ -87,7 +88,8 @@ async def _remove_scheduled(session: AsyncSession) -> None:
 
 async def _referenced(session: AsyncSession, paths: Collection[str]) -> set[str]:
     """Which of `paths` a row still points at, as a Document image, a PDF
-    Attachment, an avatar, a Room image or a map's background. Those objects
+    Attachment, an avatar, a Room image, a map's background or a landing Section's
+    image (spec 55). Those objects
     must stay."""
     images = await session.execute(
         select(DocumentImageRow.storage_path).where(DocumentImageRow.storage_path.in_(paths))
@@ -100,6 +102,9 @@ async def _referenced(session: AsyncSession, paths: Collection[str]) -> set[str]
     )
     room_images = await session.execute(
         select(RoomRow.image_path).where(RoomRow.image_path.in_(paths))
+    )
+    section_images = await session.execute(
+        select(RoomSectionRow.image_path).where(RoomSectionRow.image_path.in_(paths))
     )
     map_backgrounds = await session.execute(
         select(RelationshipMapRow.background_path).where(
@@ -114,6 +119,7 @@ async def _referenced(session: AsyncSession, paths: Collection[str]) -> set[str]
             *avatars.scalars(),
             *room_images.scalars(),
             *map_backgrounds.scalars(),
+            *section_images.scalars(),
         ]
         if path is not None
     }

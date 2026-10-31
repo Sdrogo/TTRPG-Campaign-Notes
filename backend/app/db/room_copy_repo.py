@@ -10,6 +10,7 @@ from datetime import datetime
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db import room_sections_repo
 from app.db.map_transfer_repo import insert_maps, load_room_maps
 from app.db.models import (
     DocumentImageRow,
@@ -142,13 +143,15 @@ async def load_source(session: AsyncSession, room_id: uuid.UUID) -> RoomSource |
             for row in document_rows
         ),
         maps=await load_room_maps(session, room_id),
+        sections=tuple(await room_sections_repo.list_sections_with_blocks(session, room_id)),
     )
 
 
 async def insert_copy(session: AsyncSession, plan: RoomCopyPlan, now: datetime) -> None:
     """Writes the copy: the Room with its Master, the Tags and combinations,
     then the Documents with their Owner, Tags, Notes, images, first revision
-    (Decision 9) and backlinks, then the maps (spec 40). `now` stamps the
+    (Decision 9) and backlinks, then the maps (spec 40) and the landing page
+    (spec 55). `now` stamps the
     Notes, revisions and links of maps to Documents."""
     owner = plan.membership.user_id
     await insert_new_room_rows(session, plan.room, plan.membership, plan.tags)
@@ -248,3 +251,4 @@ async def insert_copy(session: AsyncSession, plan: RoomCopyPlan, now: datetime) 
             ],
         )
     await insert_maps(session, plan.maps, owner, now)
+    await room_sections_repo.insert_sections(session, plan.sections)

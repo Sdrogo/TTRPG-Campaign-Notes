@@ -7,14 +7,18 @@ import uuid
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.errors import http_error
 from app.auth.dependencies import CurrentUserDep
-from app.db import rooms_repo, tags_repo
+from app.db import room_sections_repo, rooms_repo, tags_repo
 from app.db.session import SessionDep
 from app.domain.models import RoomRole, Tag
+from app.domain.room_sections import prune_after_tag_deletion
 from app.domain.tags import plan_tag_removal
 from app.i18n.dependencies import LocaleDep
+from app.realtime.audience import push
+from app.realtime.broker import LANDING, Event
 
 router = APIRouter(prefix="/rooms/{room_id}/tags", tags=["tags"])
 
@@ -94,6 +98,25 @@ async def create_tag(
     return tag_to_response(tag)
 
 
+async def _prune_landing(session: AsyncSession, room_id: uuid.UUID, tag_id: uuid.UUID) -> None:
+    """Takes the Tag out of the landing's blocks before it goes (spec 55
+    Decision 17): a Documents block left without Tags is deleted, its
+    groups shrink or merge (`prune_after_tag_deletion`)."""
+    changed = False
+    for section in await room_sections_repo.list_sections_with_blocks(session, room_id):
+        for block in section.blocks:
+            if tag_id not in block.tag_ids and not any(tag_id in g for g in block.groups):
+                continue
+            changed = True
+            pruned = prune_after_tag_deletion(block, tag_id)
+            if pruned is None:
+                await room_sections_repo.delete_block(session, block.id)
+            else:
+                await room_sections_repo.replace_block(session, section.id, pruned)
+    if changed:
+        push(session, room_id, Event(None, "changed", None, LANDING))
+
+
 @router.delete("/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_tag(
     room_id: uuid.UUID,
@@ -116,6 +139,7 @@ async def delete_tag(
         raise http_error(status.HTTP_404_NOT_FOUND, "errors.tag.notFound", locale)
 
     combinations = await tags_repo.list_combinations(session, room_id)
+    await _prune_landing(session, room_id, tag_id)
     await tags_repo.delete_tag(session, room_id, tag_id)
     await tags_repo.replace_combinations(session, room_id, plan_tag_removal(tag_id, combinations))
 

@@ -23,6 +23,8 @@ SESSION_ZERO = "session_zero"
 MAP = "map"
 DOCUMENT = "document"
 COMMENTS = "comments"
+# The Room's landing page (spec 55): its Sections and their blocks.
+LANDING = "landing"
 
 
 @dataclass(frozen=True)

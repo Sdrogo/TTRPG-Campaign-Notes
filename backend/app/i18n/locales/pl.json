@@ -314,6 +314,25 @@
       "notAVoter": "Mistrz nie głosuje w tej ankiecie.",
       "pollNotFound": "Nie znaleziono ankiety.",
       "pollOrder": "Ankieta lub opcja nie należy do tego etapu."
+    },
+    "landing": {
+      "onlyMaster": "Tylko Mistrz może edytować stronę startową",
+      "notFound": "Nie znaleziono sekcji",
+      "titleRequired": "Sekcja potrzebuje tytułu",
+      "titleTooLong": "Tytuł może mieć najwyżej {max} znaków",
+      "descriptionTooLong": "Opis może mieć najwyżej {max} znaków",
+      "tooManySections": "Pokój może mieć najwyżej {max} sekcji",
+      "pageSectionExists": "Ta strona jest już na stronie startowej",
+      "documentsRequired": "Karty Dokumenty nie można usunąć",
+      "pageSectionHasNoBlocks": "Ta karta otwiera stronę i nie ma bloków",
+      "orderMismatch": "Podaj każdą sekcję Pokoju dokładnie raz",
+      "tooManyBlocks": "Sekcja może mieć najwyżej {max} bloków",
+      "documentsBlockNeedsTag": "Blok Dokumentów potrzebuje co najmniej jednego tagu",
+      "sessionZeroBlockNeedsFeature": "Blok Sesji 0 potrzebuje co najmniej jednej funkcji",
+      "blockFieldNotAllowed": "To ustawienie nie należy do tego rodzaju bloku",
+      "unknownTag": "Jeden z tagów nie należy do tego Pokoju",
+      "tooManyGroups": "Blok może mieć najwyżej {max} grup",
+      "invalidGroup": "Każda grupa potrzebuje jednego lub więcej różnych tagów i żadne dwie grupy nie mogą być takie same"
     }
   },
   "pdf": {
