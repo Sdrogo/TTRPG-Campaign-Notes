@@ -44,11 +44,12 @@ class BlockKind(StrEnum):
 
 
 class BlockMapKind(StrEnum):
-    """The maps a maps block keeps; a block with none keeps them all."""
+    """The maps a maps block keeps, as the Maps page lists them (relationship
+    or geographic; a Document's mention map lives on its Document, spec 36);
+    a block with none keeps them all."""
 
     FREE = "free"
     GEOGRAPHIC = "geographic"
-    MENTION = "mention"
 
 
 class SessionZeroFeature(StrEnum):
