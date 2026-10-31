@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import { toSessionZero, type BoardWrite, type RawSessionZero } from '../lib/sessionZero';
-import type { SessionZero } from '../types/sessionZero';
+import { toSessionZeroOverview, type RawSessionZeroOverview } from '../lib/sessionZeroOverview';
+import type { SessionZero, SessionZeroOverview } from '../types/sessionZero';
 
 function sessionZeroPath(roomId: string) {
   return `/rooms/${roomId}/session-zero`;
@@ -67,5 +68,19 @@ export function useSessionZeroWrite(roomId: string) {
         predicate: (query) => query.queryKey[3] !== 'open',
       });
     },
+  });
+}
+
+/**
+ * Every session at a glance (spec 55 Decision 8), for the landing's Session
+ * 0 blocks. Under the Session 0 key, so whatever refreshes the boards
+ * refreshes it too.
+ */
+export function useSessionZeroOverview(roomId: string, enabled: boolean) {
+  return useQuery<SessionZeroOverview>({
+    queryKey: [...sessionZeroQueryKey(roomId), 'overview'],
+    queryFn: async () =>
+      toSessionZeroOverview(await apiFetch<RawSessionZeroOverview>(`${sessionZeroPath(roomId)}/overview`)),
+    enabled,
   });
 }

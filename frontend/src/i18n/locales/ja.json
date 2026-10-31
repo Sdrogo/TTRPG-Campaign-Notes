@@ -1529,5 +1529,114 @@
       "code": "コード",
       "table": "表"
     }
+  },
+  "roomLanding": {
+    "home": "ルームのホーム",
+    "kicker": "ホーム",
+    "sections": "セクション",
+    "pages": {
+      "documents": "ドキュメント",
+      "maps": "マップ",
+      "sessionZero": "セッション0"
+    },
+    "pageDescriptions": {
+      "documents": "ルームのすべてのドキュメント",
+      "maps": "ルームのマップ",
+      "sessionZero": "セッション、ライン&ヴェール、投票"
+    },
+    "blockEmpty": "表示するものはありません",
+    "sectionEmpty": "ここにはまだ表示するものがありません。",
+    "notFound": "このセクションはもうありません。",
+    "loadError": "ページを読み込めませんでした。",
+    "otherDocuments": "その他のドキュメント",
+    "blockTitle": {
+      "documents": "ドキュメント · {{tags}}",
+      "maps": "マップ",
+      "mapsFree": "関係マップ",
+      "mapsGeographic": "地理マップ",
+      "sessionZero": "セッション0"
+    },
+    "features": {
+      "sessions": "セッション",
+      "retro": "レトロ",
+      "lines_veils": "ライン&ヴェール",
+      "stars_wishes": "スターとウィッシュ",
+      "questions": "質問",
+      "ddi": "DDI",
+      "polls": "投票"
+    },
+    "mapKinds": {
+      "all": "すべてのマップ",
+      "free": "関係",
+      "geographic": "地理"
+    },
+    "item": {
+      "inProgress": "進行中",
+      "postIts_other": "付箋{{count}}枚",
+      "questions_other": "質問{{count}}件",
+      "ddiAccepted_other": "{{count}}人のプレイヤーが承諾",
+      "ddiAcceptedByYou": "あなたは承諾済み",
+      "ddiToAccept": "未承諾",
+      "pollOpen": "受付中 · {{total}}人中{{voted}}人が投票",
+      "pollClosed": "終了",
+      "pollWinner": "終了 · {{choice}}の勝ち"
+    },
+    "tiles": {
+      "documents": {
+        "title": "ドキュメント",
+        "body": "特定のタグを持つドキュメント"
+      },
+      "maps": {
+        "title": "マップ",
+        "body": "すべてのマップ、または一種類"
+      },
+      "session_zero": {
+        "title": "セッション0",
+        "body": "セッション、ステップ、投票"
+      }
+    },
+    "edit": {
+      "start": "編集",
+      "done": "完了",
+      "dragInstructions": "スペースで持ち上げ、矢印キーで移動、スペースで置きます。Escで取り消し。",
+      "dragSection": "{{name}}を移動",
+      "sectionMenu": "{{name}}の操作",
+      "info": "情報を編集",
+      "deleteTitle": "「{{name}}」を削除しますか?",
+      "deleteBody": "セクションとそのブロックが削除されます。ドキュメント、マップ、セッション0はそのまま残ります。",
+      "newSection": "新しいセクション",
+      "newTitle": "タイトル",
+      "newPlaceholder": "例: 東京、勢力、最初のセッション",
+      "create": "作成",
+      "addPage": "{{name}}を戻す",
+      "titleLabel": "タイトル",
+      "image": "画像",
+      "noBlocks": "まだブロックがありません。追加してください。",
+      "addBlock": "ブロック",
+      "addBlockTitle": "ブロックを追加",
+      "insertBlock": "ここにブロックを挿入",
+      "dragBlock": "ブロックを移動",
+      "heading": "ブロックのタイトル",
+      "renameBlock": "{{name}}の名前を変更",
+      "addTag": "タグ",
+      "searchTag": "タグを検索",
+      "remove": "{{name}}を外す",
+      "group": "グループ化",
+      "groupedBy_other": "{{count}}グループ",
+      "groups": "グループ",
+      "noGroups": "グループなし: すべてのドキュメントがまとめて表示されます。",
+      "addGroup": "グループ",
+      "useRoomGroups": "ルームのグループ分けを使う",
+      "groupHint": "タグを1つ以上選んでください。複数のタグで組み合わせになります。",
+      "dragGroup": "{{name}}を移動",
+      "mapKind": "表示するマップ: {{kind}}",
+      "addFeature": "機能",
+      "dragFeature": "{{name}}を移動",
+      "dragPart": "サブセクションを移動",
+      "blockMenu": "ブロックの操作",
+      "deleteBlock": "ブロックを削除",
+      "blockDeleted": "ブロックを削除しました",
+      "undo": "元に戻す"
+    }
   }
 }

@@ -1568,5 +1568,118 @@
       "code": "Código",
       "table": "Tabela"
     }
+  },
+  "roomLanding": {
+    "home": "Início da Sala",
+    "kicker": "Início",
+    "sections": "Secções",
+    "pages": {
+      "documents": "Documentos",
+      "maps": "Mapas",
+      "sessionZero": "Sessão 0"
+    },
+    "pageDescriptions": {
+      "documents": "Todos os Documentos da Sala",
+      "maps": "Os mapas da Sala",
+      "sessionZero": "Sessões, Linhas e Véus, sondagens"
+    },
+    "blockEmpty": "Nada para mostrar",
+    "sectionEmpty": "Ainda não há nada para mostrar aqui.",
+    "notFound": "Esta secção já não existe.",
+    "loadError": "Não foi possível carregar a página.",
+    "otherDocuments": "Outros documentos",
+    "blockTitle": {
+      "documents": "Documentos · {{tags}}",
+      "maps": "Mapas",
+      "mapsFree": "Mapas de relações",
+      "mapsGeographic": "Mapas geográficos",
+      "sessionZero": "Sessão 0"
+    },
+    "features": {
+      "sessions": "Sessões",
+      "retro": "Retro",
+      "lines_veils": "Linhas e Véus",
+      "stars_wishes": "Estrelas e Desejos",
+      "questions": "Perguntas",
+      "ddi": "DDI",
+      "polls": "Sondagens"
+    },
+    "mapKinds": {
+      "all": "Todos os mapas",
+      "free": "Relações",
+      "geographic": "Geográficos"
+    },
+    "item": {
+      "inProgress": "Em curso",
+      "postIts_one": "{{count}} post-it",
+      "postIts_other": "{{count}} post-its",
+      "questions_one": "{{count}} pergunta",
+      "questions_other": "{{count}} perguntas",
+      "ddiAccepted_one": "Aceite por {{count}} jogador",
+      "ddiAccepted_other": "Aceite por {{count}} jogadores",
+      "ddiAcceptedByYou": "Aceite por ti",
+      "ddiToAccept": "Por aceitar",
+      "pollOpen": "Aberta · {{voted}} de {{total}} votaram",
+      "pollClosed": "Fechada",
+      "pollWinner": "Fechada · ganha {{choice}}"
+    },
+    "tiles": {
+      "documents": {
+        "title": "Documentos",
+        "body": "Os Documentos com alguns Tags"
+      },
+      "maps": {
+        "title": "Mapas",
+        "body": "Todos os mapas, ou de um tipo"
+      },
+      "session_zero": {
+        "title": "Sessão 0",
+        "body": "Sessões, etapas e sondagens"
+      }
+    },
+    "edit": {
+      "start": "Editar",
+      "done": "Concluir",
+      "dragInstructions": "Prime Espaço para pegar, as setas para mover e Espaço para largar. Esc cancela.",
+      "dragSection": "Mover {{name}}",
+      "sectionMenu": "Ações de {{name}}",
+      "info": "Editar informações",
+      "deleteTitle": "Eliminar «{{name}}»?",
+      "deleteBody": "A secção e os seus blocos são eliminados. Documentos, mapas e Sessão 0 ficam como estão.",
+      "newSection": "Nova secção",
+      "newTitle": "Título",
+      "newPlaceholder": "Ex.: Tóquio, Fações, Primeira sessão",
+      "create": "Criar",
+      "addPage": "Voltar a adicionar {{name}}",
+      "titleLabel": "Título",
+      "image": "Imagem",
+      "noBlocks": "Ainda não há blocos: adiciona um.",
+      "addBlock": "Bloco",
+      "addBlockTitle": "Adicionar um bloco",
+      "insertBlock": "Inserir um bloco aqui",
+      "dragBlock": "Mover o bloco",
+      "heading": "Título do bloco",
+      "renameBlock": "Mudar o nome de {{name}}",
+      "addTag": "Tag",
+      "searchTag": "Procurar um Tag",
+      "remove": "Retirar {{name}}",
+      "group": "Agrupar",
+      "groupedBy_one": "{{count}} grupo",
+      "groupedBy_other": "{{count}} grupos",
+      "groups": "Grupos",
+      "noGroups": "Sem grupos: todos os Documentos ficam juntos.",
+      "addGroup": "Grupo",
+      "useRoomGroups": "Usar os agrupamentos da Sala",
+      "groupHint": "Escolhe um ou mais Tags: vários Tags formam uma combinação.",
+      "dragGroup": "Mover {{name}}",
+      "mapKind": "Mapas mostrados: {{kind}}",
+      "addFeature": "Função",
+      "dragFeature": "Mover {{name}}",
+      "dragPart": "Mover a subsecção",
+      "blockMenu": "Ações do bloco",
+      "deleteBlock": "Eliminar bloco",
+      "blockDeleted": "Bloco eliminado",
+      "undo": "Anular"
+    }
   }
 }

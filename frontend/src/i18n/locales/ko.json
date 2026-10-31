@@ -1529,5 +1529,114 @@
       "code": "코드",
       "table": "표"
     }
+  },
+  "roomLanding": {
+    "home": "룸 홈",
+    "kicker": "홈",
+    "sections": "섹션",
+    "pages": {
+      "documents": "문서",
+      "maps": "지도",
+      "sessionZero": "세션 0"
+    },
+    "pageDescriptions": {
+      "documents": "룸의 모든 문서",
+      "maps": "룸의 지도",
+      "sessionZero": "세션, 라인과 베일, 투표"
+    },
+    "blockEmpty": "표시할 내용 없음",
+    "sectionEmpty": "아직 여기에 표시할 내용이 없습니다.",
+    "notFound": "이 섹션은 더 이상 없습니다.",
+    "loadError": "페이지를 불러오지 못했습니다.",
+    "otherDocuments": "기타 문서",
+    "blockTitle": {
+      "documents": "문서 · {{tags}}",
+      "maps": "지도",
+      "mapsFree": "관계 지도",
+      "mapsGeographic": "지리 지도",
+      "sessionZero": "세션 0"
+    },
+    "features": {
+      "sessions": "세션",
+      "retro": "레트로",
+      "lines_veils": "라인과 베일",
+      "stars_wishes": "별과 소원",
+      "questions": "질문",
+      "ddi": "DDI",
+      "polls": "투표"
+    },
+    "mapKinds": {
+      "all": "모든 지도",
+      "free": "관계",
+      "geographic": "지리"
+    },
+    "item": {
+      "inProgress": "진행 중",
+      "postIts_other": "포스트잇 {{count}}개",
+      "questions_other": "질문 {{count}}개",
+      "ddiAccepted_other": "플레이어 {{count}}명이 수락",
+      "ddiAcceptedByYou": "내가 수락함",
+      "ddiToAccept": "수락 필요",
+      "pollOpen": "진행 중 · {{total}}명 중 {{voted}}명 투표",
+      "pollClosed": "마감",
+      "pollWinner": "마감 · {{choice}} 승리"
+    },
+    "tiles": {
+      "documents": {
+        "title": "문서",
+        "body": "특정 태그가 있는 문서"
+      },
+      "maps": {
+        "title": "지도",
+        "body": "모든 지도 또는 한 종류"
+      },
+      "session_zero": {
+        "title": "세션 0",
+        "body": "세션, 단계, 투표"
+      }
+    },
+    "edit": {
+      "start": "편집",
+      "done": "완료",
+      "dragInstructions": "스페이스로 집고, 화살표로 옮기고, 스페이스로 놓습니다. Esc로 취소합니다.",
+      "dragSection": "{{name}} 이동",
+      "sectionMenu": "{{name}} 작업",
+      "info": "정보 편집",
+      "deleteTitle": "“{{name}}”을(를) 삭제할까요?",
+      "deleteBody": "섹션과 블록이 삭제됩니다. 문서, 지도, 세션 0은 그대로 남습니다.",
+      "newSection": "새 섹션",
+      "newTitle": "제목",
+      "newPlaceholder": "예: 도쿄, 세력, 첫 세션",
+      "create": "만들기",
+      "addPage": "{{name}} 다시 추가",
+      "titleLabel": "제목",
+      "image": "이미지",
+      "noBlocks": "아직 블록이 없습니다. 하나 추가하세요.",
+      "addBlock": "블록",
+      "addBlockTitle": "블록 추가",
+      "insertBlock": "여기에 블록 삽입",
+      "dragBlock": "블록 이동",
+      "heading": "블록 제목",
+      "renameBlock": "{{name}} 이름 바꾸기",
+      "addTag": "태그",
+      "searchTag": "태그 검색",
+      "remove": "{{name}} 빼기",
+      "group": "그룹화",
+      "groupedBy_other": "그룹 {{count}}개",
+      "groups": "그룹",
+      "noGroups": "그룹 없음: 모든 문서가 함께 표시됩니다.",
+      "addGroup": "그룹",
+      "useRoomGroups": "룸의 그룹 설정 사용",
+      "groupHint": "태그를 하나 이상 고르세요. 여러 태그는 조합이 됩니다.",
+      "dragGroup": "{{name}} 이동",
+      "mapKind": "표시할 지도: {{kind}}",
+      "addFeature": "기능",
+      "dragFeature": "{{name}} 이동",
+      "dragPart": "하위 섹션 이동",
+      "blockMenu": "블록 작업",
+      "deleteBlock": "블록 삭제",
+      "blockDeleted": "블록이 삭제되었습니다",
+      "undo": "실행 취소"
+    }
   }
 }

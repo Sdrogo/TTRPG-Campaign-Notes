@@ -248,3 +248,30 @@ export interface SessionZero {
   linesVeils: PostItColumn[];
   timer: SessionZeroTimer | null;
 }
+
+/** A step as a landing card sums it up (spec 55 Decision 8). */
+export interface OverviewStep {
+  id: string;
+  kind: ModuleKind;
+  position: number;
+  /** The published post-its of a Retro or Stars and Wishes step. */
+  cards: number;
+  questions?: QuestionsStep;
+  ddi?: DdiStep;
+  polls?: Poll[];
+}
+
+/** A session with the steps the viewer has reached. */
+export interface OverviewRound extends SessionZeroRound {
+  steps: OverviewStep[];
+}
+
+/**
+ * Every session at a glance, newest first, for the landing's Session 0
+ * blocks (spec 55); `linesVeils` counts each Lines & Veils column's published post-its.
+ */
+export interface SessionZeroOverview {
+  started: boolean;
+  rounds: OverviewRound[];
+  linesVeils: Partial<Record<LinesVeilsKind, number>>;
+}

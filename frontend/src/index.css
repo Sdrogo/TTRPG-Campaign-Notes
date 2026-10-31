@@ -1121,10 +1121,119 @@ html body[data-scroll-locked] {
   }
 }
 
+/* Spec 55: the Room's landing page and its Sections. Cards are
+   `.document-card`s (`LandingCard`); edit mode only adds handles. */
+.room-landing-card {
+  min-height: 112px;
+}
+
+/* Edit mode: a thin accent outline around the page content (Decision 11). */
+.room-landing-editing {
+  outline: 1px dashed color-mix(in srgb, var(--accent-primary) 55%, transparent);
+  outline-offset: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-md);
+}
+
+.room-landing-controls {
+  background: color-mix(in srgb, var(--bg-surface) 85%, transparent);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.room-landing-new,
+.room-landing-add {
+  border: 1px dashed var(--border-default);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--mantine-radius-md);
+}
+
+.room-landing-new {
+  min-height: 112px;
+}
+
+.room-landing-add {
+  width: 100%;
+  padding: var(--mantine-spacing-sm);
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.room-landing-add:hover,
+.room-landing-add:focus-visible {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+/* The "+" between two blocks shows on hover or focus (Decision 14). */
+.room-landing-insert {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: calc(var(--mantine-spacing-xs) * -1) 0 var(--mantine-spacing-xs);
+  padding: 2px 0;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.room-landing-insert:hover,
+.room-landing-insert:focus-visible {
+  opacity: 1;
+  color: var(--accent-primary);
+}
+
+@media (hover: none) {
+  .room-landing-insert {
+    opacity: 0.6;
+  }
+}
+
+.room-landing-bar {
+  padding-bottom: var(--mantine-spacing-xs);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.room-landing-chip {
+  font-weight: 500;
+}
+
+.room-landing-heading:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.room-landing-tile,
+.room-landing-option {
+  border-radius: var(--mantine-radius-sm);
+  transition: background-color 120ms ease;
+}
+
+.room-landing-tile {
+  padding: var(--mantine-spacing-sm);
+  border: 1px solid var(--border-default);
+}
+
+.room-landing-option {
+  display: block;
+  width: 100%;
+  padding: 4px var(--mantine-spacing-xs);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.room-landing-tile:hover,
+.room-landing-tile:focus-visible,
+.room-landing-option:hover,
+.room-landing-option:focus-visible {
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .documents-controls-toggle,
   .document-group-toggle,
-  .document-card {
+  .document-card,
+  .room-landing-add,
+  .room-landing-insert,
+  .room-landing-tile,
+  .room-landing-option {
     transition: none;
   }
 

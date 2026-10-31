@@ -139,7 +139,13 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   ];
 
   return (
-    <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId} showIndex>
+    <PageLayout
+      backTo={`/rooms/${roomId}`}
+      backLabel={t('roomLanding.home')}
+      roomId={roomId}
+      showIndex
+      index={{ current: 'page_documents' }}
+    >
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
         {/* The Room's actions sit at the end of the title row, folded in "⋮". */}
         <Group

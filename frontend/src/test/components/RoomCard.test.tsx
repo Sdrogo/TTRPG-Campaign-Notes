@@ -102,7 +102,7 @@ describe('RoomCard', () => {
 
     expect(screen.getByRole('link', { name: 'La Cripta' })).toHaveAttribute(
       'href',
-      '/rooms/room-1/documents',
+      '/rooms/room-1',
     );
     expect(screen.queryByRole('link', { name: /Documenti/ })).not.toBeInTheDocument();
   });

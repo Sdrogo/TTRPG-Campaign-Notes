@@ -428,7 +428,24 @@ function answer(path: string, viewer: Viewer): Answer {
     case 'exports':
     case 'mention-suggestions':
       return ok(section === 'exports' ? [] : { sources: [] });
+    case 'sections':
+      // The sample Room's landing is the three page cards every Room starts with (spec 55).
+      return rest.length === 1
+        ? ok(
+            (['page_documents', 'page_maps', 'page_session_zero'] as const).map((kind, position) => ({
+              id: `demo-${kind}`,
+              kind,
+              position,
+              title: null,
+              description: '',
+              image_url: null,
+              blocks: [],
+              can_edit: false,
+            })),
+          )
+        : NOT_FOUND;
     case 'session-zero':
+      if (id === 'overview' && rest.length === 2) return ok({ started: false, rounds: [], lines_veils: {} });
       // The sample Room's Session 0 was never started (spec 46); starting it is a write.
       return rest.length === 1
         ? ok({
