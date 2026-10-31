@@ -35,7 +35,10 @@
 
 Proposed by Claude on 2026-10-31 from the request; the product owner
 answered Q1-Q5 the same day (see "Answers" below) and asked for
-subdivisions inside Documents blocks. The Decisions follow those answers.
+subdivisions inside Documents blocks. The Decisions follow those answers
+and the feedback on the clickable mockup (55_m, done the same day); the
+product owner confirmed the ticket and the mockup on 2026-10-31 ("ok, mi
+sembra buono").
 
 ### Terms
 

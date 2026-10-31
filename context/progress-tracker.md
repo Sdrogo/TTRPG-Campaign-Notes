@@ -845,11 +845,13 @@ on `main`.
   editing UI; Q2 rules by Tags; Q3 the three page cards stay; Q4 Index
   global navigation first, the page's detail after; Q5 no Master-only
   Sections; plus groups inside Documents blocks like the Documents page;
-  no code yet): a Room home page `/rooms/:roomId` of Section cards, each
+  mockup 55_m done and confirmed with the ticket 2026-10-31; no code
+  yet): a Room home page `/rooms/:roomId` of Section cards, each
   Section a page of blocks (Documents with Tags and optional groups, maps
   by kind, Session 0 features chosen by the Master) shown as Document-like cards, edited
   in place with chips and popovers. Units 55_1 backend (**migration**),
-  55_2 read side, 55_m clickable mockup of edit mode, 55_3 edit side.
+  55_2 read side, 55_3 edit side. Mockup source:
+  project files `landing-mockup/index.html`.
 - **54, Poll choices as cards** (ticket confirmed by the product owner
   2026-10-30, Q1 left-edge bar, Q2-Q4 as proposed; built the same day in
   PR #280): a poll's choices are cards in one column with a title and an
