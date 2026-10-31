@@ -840,15 +840,16 @@ PR #281 (2026-10-30), and production's database is at head (`c8f2d6a4e1b7`). Bef
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
-- **55, Room landing page** (ticket written 2026-10-31, awaiting the
-  product owner's answers to Q1-Q5; no code yet): a Room home page
-  `/rooms/:roomId` the Master composes from Section cards (Documents,
-  Maps, Session 0 page cards plus custom Sections), each Section a page of
-  blocks (Documents with Tags, maps by kind, Session 0 sessions, polls)
-  shown as Document-like cards with optional image, title and description,
-  lifting on hover, no preview; the Room Index gains a group for the page
-  on screen. Units 55_1 backend (**migration**), 55_2 read side, 55_3 edit
-  side.
+- **55, Room landing page** (ticket answered by the product owner
+  2026-10-31: Q1 several blocks per Section with a compact, intuitive
+  editing UI; Q2 rules by Tags; Q3 the three page cards stay; Q4 Index
+  global navigation first, the page's detail after; Q5 no Master-only
+  Sections; plus groups inside Documents blocks like the Documents page;
+  no code yet): a Room home page `/rooms/:roomId` of Section cards, each
+  Section a page of blocks (Documents with Tags and optional groups, maps
+  by kind, Session 0 sessions, polls) shown as Document-like cards, edited
+  in place with chips and popovers. Units 55_1 backend (**migration**),
+  55_2 read side, 55_m clickable mockup of edit mode, 55_3 edit side.
 - **54, Poll choices as cards** (ticket confirmed by the product owner
   2026-10-30, Q1 left-edge bar, Q2-Q4 as proposed; built the same day in
   PR #280): a poll's choices are cards in one column with a title and an
