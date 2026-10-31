@@ -137,15 +137,19 @@ subdivisions inside Documents blocks. The Decisions follow those answers.
 
 ### The Index (spec 44)
 
-10. **The Index: global navigation first, then the page on screen** (Q4).
-    On top, on every Room page, the global part: "Home della Stanza" (the
-    landing), then the current groups (Main Tags, other Tags, Session 0,
-    Maps) as today. After it, only on the landing and in a Section, a
-    group titled after the page ("Home" on the landing, the Section's
-    title inside a Section), set apart by a divider, lists what is on
-    screen: on the landing every Section card; in a Section every block
-    heading (scrolling to it) and, under it, its groups and items (opening
-    them). On every other page this group is absent.
+10. **The Index: the Room's Sections first, then the page on screen** (Q4;
+    product owner, 2026-10-31: the Tag lists can grow very long and would
+    fill the card, so keep only the Room's sections). On top, on every
+    Room page: "Home della Stanza" (the landing), then **Sezioni**, every
+    Section card of the landing in its order (the page cards Documenti,
+    Mappe, Sessione 0 included), the current one marked. The Tag groups
+    (Main Tags, other Tags) and the list of maps of spec 44 leave the
+    Index: Tags stay one click away on the Documents page, maps on the
+    Maps page. After it, inside a custom Section only, a group titled
+    after the Section, set apart by a divider, lists what is on screen:
+    every block heading (scrolling to it) and, under it, its groups or
+    features. On the landing and on every other page this group is
+    absent (on the landing it would repeat the Sezioni list).
 
 ### Editing
 
@@ -306,9 +310,11 @@ what the Players get), with small chips and popovers, never a long form.
   (border, shadow, hover lift, reduced motion) instead of copying them.
 - `RoomCard` links to `/rooms/:id`; `backNav` treats the landing as the
   Room's root.
-- `RoomIndex` takes an optional `pageEntries` prop (through
-  `PageLayout`), rendered after the global groups behind a divider; the
-  landing link on top of the global part.
+- `RoomIndex` drops the Tag groups and the maps list (`useTags`,
+  `useMainItems`, `useMaps` no longer read there), lists the landing link
+  and the Sections (`useRoomSections`), and takes an optional
+  `pageEntries` prop (through `PageLayout`) rendered after a divider;
+  `RoomIndex.test.tsx` is rewritten accordingly.
 - `SessionZeroPage` reads `?session=&step=` once.
 - **Strings**: the three page Sections store `title` null while untouched,
   and the client shows `t('landing.page.documents')` etc., so they read in
@@ -347,9 +353,9 @@ it.
   Rooms.
 - Frontend: Room card opens the landing; landing lists Sections in order;
   a Section renders blocks, groups (folding) and item cards with their
-  links; empty blocks hidden for Players; the Index shows the global part
-  first and the page group after it on the landing and in a Section, not
-  elsewhere; edit mode only for the Master; "Nuova sezione" asks a title
+  links; empty blocks hidden for Players; the Index lists Home and the Sections
+  (no Tags, no maps) and, in a custom Section only, the page group after
+  them; edit mode only for the Master; "Nuova sezione" asks a title
   and opens the add-block tiles; a Session 0 block opens its features
   list and shows one heading per feature; a Tag chip added or removed refetches the
   block; "Usa i raggruppamenti della Stanza" copies the Main items; drag
