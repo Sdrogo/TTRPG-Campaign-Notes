@@ -98,11 +98,15 @@ thread: Decision 4 changed (floating button everywhere), Decisions 13 and
 14. **Room setup sections** (confirmed): unchanged (Members and image in
     cards, Tags and the danger zone as titled sections).
 
-15. **Mentions in landing cards** (product owner, 2026-11-02: custom
-    Section cards showed raw `#[Name](doc:id)` tokens): `LandingCard` renders
-    its description with `MentionText` (`linked={false}`, accent colour, the
-    card's link over it) like a Document card, and the Room home and Section
-    pages provide `DocumentMentionsProvider` so the names resolve.
+15. **Documents in custom Sections use `DocumentCard`** (product owner,
+    2026-11-02: their cards showed raw `#[Name](doc:id)` tokens, and "we
+    should use the Documents cards' component directly"): a Documents block
+    renders the Documents page's `DocumentCard` (visibility, Tags, mention
+    links, reveal mark), no longer a `LandingCard`. The other landing cards
+    (Sections, maps, Session 0 items) render their description with
+    `MentionText` (not linked: the card's link lies over it), and the Room
+    home and Section pages provide `DocumentMentionsProvider` so mentions
+    resolve.
 
 ## Design
 

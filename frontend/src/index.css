@@ -1120,7 +1120,8 @@ html body[data-scroll-locked] {
 }
 
 /* Spec 55: the Room's landing page and its Sections. Cards are
-   `.document-card`s (`LandingCard`); edit mode only adds handles. */
+   `.document-card`s (`LandingCard`, and `DocumentCard` itself in a Documents
+   block, spec 57c); edit mode only adds handles. */
 .room-landing-card {
   min-height: 112px;
 }

@@ -24,8 +24,8 @@ interface LandingCardProps {
 const CARD_WITH_IMAGE_MIN_HEIGHT = { base: 180, sm: 200 };
 
 /**
- * One card of the landing (spec 55 Decision 7): a Section, a Document, a
- * map, a session, a step or a poll. An optional image on the right half
+ * One card of the landing (spec 55 Decision 7): a Section, a map, a session,
+ * a step or a poll. A Documents block shows `DocumentCard`s instead (spec 57c). An optional image on the right half
  * fading into the card, the title in the display font, the description as
  * plain text on three lines, and the lift on hover of `.document-card`. The
  * whole card is one link; no preview, no open menu. Mentions in the

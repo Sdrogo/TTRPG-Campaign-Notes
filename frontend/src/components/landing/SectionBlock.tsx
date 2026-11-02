@@ -3,6 +3,12 @@ import { Badge, Box, Collapse, Group, Loader, Stack, Text, Title, UnstyledButton
 import { CaretDownIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { LandingCard } from './LandingCard';
+import { DocumentCard } from '../DocumentCard';
+import { useTags } from '../../hooks/useTags';
+import { useMembers } from '../../hooks/useMembers';
+import { useMyReveals } from '../../hooks/useReveals';
+import { useReadOnly } from '../../hooks/useViewAs';
+import { hasUnseenReveal } from '../../lib/reveal';
 import { isBlockEmpty, type BlockContent } from './blockItems';
 import { blockAnchor, sessionZeroHref, type SessionZeroItem } from '../../lib/landing';
 import { linesVeilsLine, pollLine, sessionLine, stepLine, stepTitle } from '../../lib/landingText';
@@ -36,6 +42,13 @@ interface SectionBlockProps {
 export function SectionBlock({ roomId, block, heading, content, isMaster, bar, partHandle, wrapParts }: SectionBlockProps) {
   const { t } = useTranslation();
   const backState = useBackState();
+  // A Documents block shows the Documents page's own cards (product owner,
+  // 2026-11-02, spec 57c), with the Tags, members and reveal marks they need.
+  const hasDocuments = content?.kind === 'documents';
+  const tags = useTags(roomId, hasDocuments);
+  const members = useMembers(roomId, hasDocuments);
+  const readOnly = useReadOnly();
+  const reveals = useMyReveals(hasDocuments && !readOnly);
   const empty = isBlockEmpty(content);
   if (empty && !isMaster) return null;
 
@@ -115,13 +128,15 @@ export function SectionBlock({ roomId, block, heading, content, isMaster, bar, p
             label: part.label,
             count: part.documents.length,
             cards: part.documents.map((document) => (
-              <LandingCard
+              <DocumentCard
                 key={document.id}
-                to={`/rooms/${roomId}/documents/${document.id}`}
-                state={backState}
-                title={document.name}
-                description={document.description}
-                imageUrl={document.images[0]?.url}
+                document={document}
+                roomId={roomId}
+                tags={tags.data ?? []}
+                members={members.data ?? []}
+                headingOrder={3}
+                revealed={hasUnseenReveal(reveals.data, document.id)}
+                mentionLinks
               />
             )),
           }))

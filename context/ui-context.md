@@ -941,10 +941,12 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
 - **Cards** (`components/landing/LandingCard`): the Document card's look
   (`document-card room-landing-card`: border, shadow, hover lift, reduced
   motion), title in the display font, an optional single image on the
-  right half fading in (`DocumentCardImages`), the description as plain
-  text on three lines, an optional badge ("In corso"). The whole card is
-  one link: no preview, no open menu, no split view. Map cards carry no
-  image. Grids reuse `.documents-grid`.
+  right half fading in (`DocumentCardImages`), the description on three
+  lines with its mentions accent-coloured but not linked, an optional badge
+  ("In corso"). The whole card is one link: no preview, no open menu, no
+  split view. Map cards carry no image. Grids reuse `.documents-grid`.
+  **A Documents block shows the Documents page's own `DocumentCard`**
+  (spec 57c, product owner 2026-11-02), not a `LandingCard`.
 - **Blocks** (`SectionBlock`): heading (h2 at `h4` size), then the cards;
   a Documents block's groups and a Session 0 block's features are
   foldable sub-sections styled like the Documents page groups
