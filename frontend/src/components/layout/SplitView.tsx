@@ -22,7 +22,7 @@ export function SplitView({ left, right = null }: { left: ReactNode; right?: Rea
   const [ratio, setRatio] = useState(storedRatio);
   const [width, setWidth] = useState(0);
   const shown = clampRatio(ratio, width);
-  const open = right !== null && right !== undefined && right !== false;
+  const open = right !== null;
 
   useLayoutEffect(() => {
     const element = container.current!;

@@ -308,6 +308,45 @@ describe('GeographicBoard: moving around', () => {
     // 1000 × 1400 in 400 × 300: the height decides, centered across.
     expect(viewTransform()).toMatch(/^translate\(98\.21\d* 7\.5\d*\) scale\(0\.2035/);
   });
+
+  it('keeps a zoomed view and its middle point when its box changes size (spec 58)', () => {
+    const observers: { callback: ResizeObserverCallback; targets: Element[] }[] = [];
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        entry: { callback: ResizeObserverCallback; targets: Element[] };
+        constructor(callback: ResizeObserverCallback) {
+          this.entry = { callback, targets: [] };
+          observers.push(this.entry);
+        }
+        observe(target: Element) {
+          this.entry.targets.push(target);
+        }
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    render();
+    const box = board().parentElement!;
+    const report = (width: number, height: number) =>
+      act(() =>
+        observers
+          .filter((observer) => observer.targets.includes(box))
+          .forEach((observer) =>
+            observer.callback([{ contentRect: { width, height } } as ResizeObserverEntry], {} as ResizeObserver),
+          ),
+      );
+    report(800, 600);
+    fireEvent.wheel(board(), { deltaY: -100, clientX: 0, clientY: 0 });
+    const zoomed = viewTransform();
+    // The same size again changes nothing.
+    report(800, 600);
+    expect(viewTransform()).toBe(zoomed);
+    // Half the width (the split pane opening): same zoom, moved 200px left.
+    report(400, 600);
+    const [, x, y, k] = /translate\((\S+) (\S+)\) scale\((\S+)\)/.exec(zoomed)!.map(Number);
+    expect(viewTransform()).toBe(`translate(${x - 200} ${y}) scale(${k})`);
+  });
 });
 
 describe('GeographicBoard: looking at a place', () => {
