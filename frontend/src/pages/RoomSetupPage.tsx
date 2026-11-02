@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { Button, Grid, Group, Loader, Paper, Stack, Tabs, Text, Title } from '@mantine/core';
+import { Button, Grid, Paper, Stack, Tabs, Text, Title } from '@mantine/core';
 import { DownloadSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
@@ -8,7 +8,7 @@ import { useMembers } from '../hooks/useMembers';
 import { useMainItems } from '../hooks/useMainItems';
 import { useTags } from '../hooks/useTags';
 import { useRoom } from '../hooks/useRooms';
-import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
+import { FullPageLoader, FullPageMessage, SignInRequired, SectionLoader } from '../components/PageState';
 import { ExportRoomModal } from '../components/ExportRoomModal';
 import { PageLayout } from '../components/PageLayout';
 import { MemberManagement } from '../components/setup/MemberManagement';
@@ -17,6 +17,7 @@ import { DeleteRoomSection } from '../components/setup/DeleteRoomSection';
 import { DefaultVisibilitySection } from '../components/setup/DefaultVisibilitySection';
 import { RoomImageSection } from '../components/setup/RoomImageSection';
 import { VisibilityHistory } from '../components/setup/VisibilityHistory';
+import { PageHeading } from '../components/PageHeading';
 
 /**
  * `/rooms/:roomId/setup` (spec 11): the Room's setup, reachable only by an
@@ -75,19 +76,20 @@ export function RoomSetupPage() {
   }
 
   return (
-    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('documents.title')} roomId={roomId}>
-      <Group justify="space-between" wrap="nowrap">
-        <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('setup.title')}
-        </Title>
-        <Button
-          variant="light"
-          leftSection={<DownloadSimpleIcon size={18} />}
-          onClick={() => setExportOpened(true)}
-        >
-          {t('export.action')}
-        </Button>
-      </Group>
+    <PageLayout backTo={`/rooms/${roomId}`} backLabel={t('roomLanding.home')} roomId={roomId} showIndex>
+      <PageHeading
+        kicker={room.data?.name}
+        title={t('setup.title')}
+        actions={
+          <Button
+            variant="default"
+            leftSection={<DownloadSimpleIcon size={18} />}
+            onClick={() => setExportOpened(true)}
+          >
+            {t('export.action')}
+          </Button>
+        }
+      />
       <ExportRoomModal
         opened={exportOpened}
         onClose={() => setExportOpened(false)}
@@ -105,7 +107,7 @@ export function RoomSetupPage() {
               {/* Members beside the Room image and default visibility from `lg`, stacked below. */}
               <Grid gap="md" align="stretch">
                 <Grid.Col span={{ base: 12, lg: 6 }}>
-                  <Paper withBorder radius="md" p="md" bg="var(--bg-surface)" h="100%">
+                  <Paper withBorder radius="md" p="md" h="100%">
                     <Stack gap="sm">
                       <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
                         {t('members.title')}
@@ -122,7 +124,7 @@ export function RoomSetupPage() {
 
                 {room.data && (
                   <Grid.Col span={{ base: 12, lg: 6 }}>
-                    <Paper withBorder radius="md" p="md" bg="var(--bg-surface)" h="100%">
+                    <Paper withBorder radius="md" p="md" h="100%">
                       <Stack gap="lg">
                         <RoomImageSection roomId={roomId} imageUrl={room.data.imageUrl} />
                         <DefaultVisibilitySection roomId={roomId} value={room.data.defaultVisibility} />
@@ -132,7 +134,7 @@ export function RoomSetupPage() {
                 )}
               </Grid>
 
-              {(tags.isLoading || mainItems.isLoading || room.isLoading) && <Loader color="accent" />}
+              {(tags.isLoading || mainItems.isLoading || room.isLoading) && <SectionLoader />}
               {(tags.isError || mainItems.isError || room.isError) && (
                 <Text c="red">{t('setup.loadError')}</Text>
               )}

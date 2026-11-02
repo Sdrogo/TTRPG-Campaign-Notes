@@ -115,7 +115,7 @@ export function MapFormModal({
               onChange={(event) => set({ playersCanEdit: event.currentTarget.checked })}
             />
           )}
-          {error && <Alert color="red">{error}</Alert>}
+          {error && <Alert color="danger">{error}</Alert>}
           <Button type="submit" loading={submitting} disabled={!values.name.trim()}>
             {submitLabel}
           </Button>

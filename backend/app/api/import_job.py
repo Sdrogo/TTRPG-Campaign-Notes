@@ -9,6 +9,7 @@ caller."""
 import asyncio
 import logging
 import uuid
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlsplit
@@ -26,13 +27,19 @@ from app.db import (
     mentions_repo,
     relationship_maps_repo,
     remote_images,
+    room_sections_repo,
     rooms_repo,
     storage,
     storage_cleanup,
     tags_repo,
 )
 from app.db import session as session_module
-from app.db.models import DocumentImageRow, RelationshipMapCardRow, RelationshipMapRow
+from app.db.models import (
+    DocumentImageRow,
+    RelationshipMapCardRow,
+    RelationshipMapRow,
+    RoomSectionRow,
+)
 from app.domain.documents import (
     MAX_IMAGES_PER_DOCUMENT,
     can_create_document,
@@ -59,11 +66,20 @@ from app.domain.imports import (
     fold,
     plan_import,
 )
+from app.domain.landing_transfer import PlannedSection, SectionSkipReason, to_section
 from app.domain.map_transfer import MapSkipReason, PlannedMap, to_source_map
 from app.domain.mentions import plan_source_mentions
 from app.domain.models import Membership, MentionSource, MentionSourceKind, Room, RoomRole
 from app.domain.relationship_maps import MAX_MAPS_PER_ROOM, is_map_visible
+from app.domain.room_sections import (
+    Section,
+    TooManySectionsError,
+    plan_new_section,
+    plan_section_image_path,
+)
 from app.domain.visibility import is_document_visible
+from app.realtime.audience import CHANGED, push
+from app.realtime.broker import LANDING, Event
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +99,8 @@ def job_payload(files: list[ImportFile], choices: ImportChoices) -> dict[str, An
         "selected": None if choices.selected is None else sorted(choices.selected),
         "replace": sorted(choices.replace),
         "maps": None if choices.maps is None else sorted(choices.maps),
+        "sections": None if choices.sections is None else sorted(choices.sections),
+        "page_cards": None if choices.page_cards is None else sorted(choices.page_cards),
     }
 
 
@@ -91,12 +109,17 @@ def _from_payload(payload: dict[str, Any]) -> tuple[list[ImportFile], ImportChoi
     selected = payload["selected"]
     # Absent from the payload of a job queued before spec 40: every map.
     maps = payload.get("maps")
+    # Absent before spec 56: every custom Section, no page card.
+    sections = payload.get("sections")
+    page_cards = payload.get("page_cards", [])
     return (
         [file_from_json(data) for data in payload["files"]],
         ImportChoices(
             None if selected is None else frozenset(selected),
             frozenset(payload["replace"]),
             None if maps is None else frozenset(maps),
+            None if sections is None else frozenset(sections),
+            None if page_cards is None else frozenset(page_cards),
         ),
     )
 
@@ -121,6 +144,7 @@ async def load_import_context(
     ]
     images = await get_visible_images_for_documents(session, [d.id for d in visible], importer)
     tags = await tags_repo.list_tags(session, room.id)
+    is_master = importer.role is RoomRole.MASTER
     return ImportContext(
         default_visibility=room.default_visibility,
         existing={
@@ -133,8 +157,12 @@ async def load_import_context(
         },
         room_tags={fold(tag.name): (tag.id, tag.name) for tag in tags},
         can_manage_tags=importer.is_admin or importer.role is RoomRole.MASTER,
-        is_master=importer.role is RoomRole.MASTER,
+        is_master=is_master,
         map_count=await relationship_maps_repo.count_maps_for_room(session, room.id),
+        room_id=room.id,
+        sections=tuple(await room_sections_repo.list_sections(session, room.id))
+        if is_master
+        else (),
     )
 
 
@@ -146,7 +174,7 @@ async def run_import_job(job_id: uuid.UUID) -> None:
         if started is None:
             return
         job, importer, plan = started
-        created, replaced, maps = await _write(job, importer, plan)
+        created, replaced, maps, sections = await _write(job, importer, plan)
         skipped, attached = await _attach_images(job.room_id, importer.user_id, plan)
         created_keys = {m.key for m in maps}
         skipped_maps = [
@@ -156,12 +184,23 @@ async def run_import_job(job_id: uuid.UUID) -> None:
         ]
         skipped_maps += await _attach_backgrounds(job.room_id, importer.user_id, maps)
         await _point_card_images(maps, attached)
+        written = {s.key for s in sections}
+        skipped_sections = [
+            _skipped_section(s, (s.skipped or SectionSkipReason.LIMIT).value)
+            for s in plan.sections
+            if s.key not in written
+        ]
+        skipped_sections += await _attach_section_images(job.room_id, importer.user_id, sections)
         result = {
             "created": created,
             "replaced": replaced,
             "skipped": skipped,
             "maps": [{"id": str(m.id), "name": m.name} for m in maps],
             "skipped_maps": skipped_maps,
+            "sections": [
+                {"id": str(s.id), "kind": s.kind.value, "title": s.title} for s in sections
+            ],
+            "skipped_sections": skipped_sections,
         }
         async with session_module.independent_session() as session:
             await import_jobs_repo.mark_done(session, job.id, result, datetime.now(UTC))
@@ -209,12 +248,13 @@ async def _start(job_id: uuid.UUID) -> tuple[ImportJob, Membership, ImportPlan] 
 
 async def _write(
     job: ImportJob, importer: Membership, plan: ImportPlan
-) -> tuple[list[dict[str, str]], list[dict[str, str]], list[PlannedMap]]:
+) -> tuple[list[dict[str, str]], list[dict[str, str]], list[PlannedMap], list[PlannedSection]]:
     """The one transaction of the import (Decision 9): Tags, copied Documents,
-    replaced information, backlinks, history and the maps (spec 40). Returns
-    the Documents created and replaced as `{id, name}`, and the maps created:
-    the planned ones the Room still has room for, counted under its lock (a
-    map created meanwhile pushes the last ones out, as `limit`)."""
+    replaced information, backlinks, history, the maps (spec 40) and the
+    Sections of the Room home (spec 56). Returns the Documents created and
+    replaced as `{id, name}`, the maps created (the planned ones the Room
+    still has room for, counted under its lock: a map created meanwhile
+    pushes the last ones out, as `limit`) and the Sections written, likewise."""
     now = datetime.now(UTC)
     copies = [d for d in plan.documents if not d.replaces]
     replaced = [d for d in plan.documents if d.replaces]
@@ -242,12 +282,59 @@ async def _write(
                 importer.user_id,
                 now,
             )
+        sections = await _write_sections(
+            session, job.room_id, [s for s in plan.sections if s.skipped is None]
+        )
         await session.commit()
+        await session_module.run_after_commit(session)
     return (
         [{"id": str(d.id), "name": d.name} for d in copies],
         [{"id": str(d.id), "name": d.name} for d in replaced],
         maps,
+        sections,
     )
+
+
+async def _write_sections(
+    session: AsyncSession, room_id: uuid.UUID, planned: list[PlannedSection]
+) -> list[PlannedSection]:
+    """Writes the planned Sections against the Room home as it is now,
+    under the Room's lock (spec 56 Decisions 5, 6, 8): a page card onto the
+    Room's card of its kind, or added back last when the Room has none; a
+    custom Section last. One past the cap is left out (the caller lists it
+    as `limit`). Returns what was written, each under its id in the Room,
+    and tells the Room's streams."""
+    if not planned:
+        return []
+    await rooms_repo.lock_room(session, room_id)
+    landing = await room_sections_repo.list_sections(session, room_id)
+    written: list[PlannedSection] = []
+    new: list[Section] = []
+    for section in planned:
+        own = next((s for s in landing if s.kind is section.kind), None)
+        if section.is_page_card and own is not None:
+            await room_sections_repo.update_section(
+                session, replace(own, title=section.title, description=section.description)
+            )
+            written.append(replace(section, id=own.id))
+            continue
+        try:
+            position = plan_new_section(room_id, landing, section.kind, section.title).position
+        except TooManySectionsError:
+            continue
+        row = to_section(section, room_id, position)
+        landing.append(row)
+        new.append(row)
+        written.append(section)
+    await room_sections_repo.insert_sections(session, new)
+    push(session, room_id, Event(None, CHANGED, None, LANDING))
+    return written
+
+
+def _skipped_section(section: PlannedSection, reason: str) -> dict[str, str | None]:
+    """A Section of the file the result lists as not written, or without
+    its image."""
+    return {"kind": section.kind.value, "title": section.title, "reason": reason}
 
 
 async def _index(session: AsyncSession, document: PlannedDocument) -> None:
@@ -498,4 +585,86 @@ async def _read_own_background(url: str, importer_id: uuid.UUID) -> bytes | None
         return await storage.download(path, MAX_INPUT_BYTES)
     except storage.StorageError:
         logger.warning("An imported map background could not be read from Storage", exc_info=True)
+        return None
+
+
+async def _attach_section_images(
+    room_id: uuid.UUID, importer_id: uuid.UUID, sections: list[PlannedSection]
+) -> list[dict[str, str | None]]:
+    """Fetches and stores the image of each written Section that has one
+    (spec 56 Decision 9), like an uploaded Section image. One that fails is
+    listed as `image` and its Section stays as it was."""
+    skipped: list[dict[str, str | None]] = []
+    for section in sections:
+        if section.image_url is None:
+            continue
+        if not await _store_section_image(room_id, importer_id, section.id, section.image_url):
+            skipped.append(_skipped_section(section, "image"))
+    return skipped
+
+
+async def _store_section_image(
+    room_id: uuid.UUID, importer_id: uuid.UUID, section_id: uuid.UUID, url: str
+) -> bool:
+    """One Section's image, read from this app's Storage when the importer
+    is a member of a Room that has it, else fetched from `url`; validated,
+    re-encoded and swapped in with the usual Storage order. Whether it is
+    stored; a Section deleted meanwhile counts as done."""
+    data = await _read_own_section_image(url, importer_id)
+    try:
+        if data is None:
+            data = await remote_images.fetch_image_bytes(url)
+        normalized = await asyncio.to_thread(normalize_image, data)
+    except (remote_images.RemoteImageError, ImageTooLargeError, InvalidImageError):
+        return False
+    path = plan_section_image_path(room_id)
+    try:
+        async with session_module.independent_session() as session:
+            await rooms_repo.lock_room(session, room_id)
+            section = await room_sections_repo.get_section(session, room_id, section_id)
+            if section is None:  # pragma: no cover - only a deletion while the job runs
+                return True
+            await storage_cleanup.record_pending_upload(path)
+            await storage.upload(path, normalized.data, normalized.content_type)
+            await room_sections_repo.set_section_image(session, section_id, path)
+            await storage_cleanup.confirm_upload(session, path)
+            if section.image_path is not None:
+                await storage_cleanup.schedule_removal(session, [section.image_path])
+            push(session, room_id, Event(None, CHANGED, section_id, LANDING))
+            await session.commit()
+            await session_module.run_after_commit(session)
+    except storage.StorageError:
+        return False
+    except Exception:
+        logger.exception("An imported Section image could not be stored")
+        return False
+    return True
+
+
+async def _read_own_section_image(url: str, importer_id: uuid.UUID) -> bytes | None:
+    """The bytes of a Section image the file links in this app's own bucket,
+    read straight from Storage like `_read_own_image`, only when the importer
+    is a member, right now, of a Room whose Room home shows it (every member
+    sees every Section, spec 55, Invariant 1)."""
+    path = storage.own_object_path(url)
+    if path is None:
+        return None
+    async with session_module.independent_session() as session:
+        room_ids = (
+            await session.scalars(
+                select(RoomSectionRow.room_id).where(RoomSectionRow.image_path == path)
+            )
+        ).all()
+        member = False
+        for owner_room in set(room_ids):
+            member = (
+                member
+                or await rooms_repo.get_membership(session, owner_room, importer_id) is not None
+            )
+        if not member:
+            return None
+    try:
+        return await storage.download(path, MAX_INPUT_BYTES)
+    except storage.StorageError:
+        logger.warning("An imported Section image could not be read from Storage", exc_info=True)
         return None

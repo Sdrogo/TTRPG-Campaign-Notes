@@ -2,6 +2,8 @@ import { Alert, Anchor, Button, Group, Loader, Stack, Text } from '@mantine/core
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isActiveImportJob, type ImportJob } from '../../lib/documentImport';
+import { sectionHref } from '../../lib/landing';
+import { sectionName } from '../../lib/landingText';
 
 interface ImportJobPanelProps {
   roomId: string;
@@ -14,8 +16,9 @@ interface ImportJobPanelProps {
 /**
  * Where the import is (spec 27 Decision 9): running in the background (the
  * dialog can be closed meanwhile), done with the Documents it created or
- * replaced and the maps it created (spec 40) as links, and every image or map
- * it skipped, or failed.
+ * replaced, the maps it created (spec 40) and the Sections of the Room home it
+ * wrote (spec 56) as links, and every image, map or Section it skipped, or
+ * failed.
  */
 export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
   const { t } = useTranslation();
@@ -39,7 +42,7 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
   if (job.status === 'failed' || job.result === null) {
     return (
       <Stack gap="sm">
-        <Alert color="red" role="alert">
+        <Alert color="danger" role="alert">
           {t('documentImport.failed')}
         </Alert>
         <Button variant="light" onClick={onNew}>
@@ -49,7 +52,7 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
     );
   }
 
-  const { created, replaced, skipped, maps, skippedMaps } = job.result;
+  const { created, replaced, skipped, maps, skippedMaps, sections, skippedSections } = job.result;
   const documentLinks = (documents: { id: string; name: string }[]) => (
     <Stack gap={2}>
       {documents.map((document) => (
@@ -135,6 +138,43 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
                 {t('documentImport.skipped', {
                   document: item.name || t('documentImport.maps.unnamed'),
                   reason: t(`documentImport.maps.skipReason.${item.reason}`),
+                })}
+              </Text>
+            ))}
+          </Stack>
+        </>
+      )}
+      {sections.length > 0 && (
+        <>
+          <Text size="xs" c="dimmed">
+            {t('documentImport.sections.written', { count: sections.length })}
+          </Text>
+          <Stack gap={2}>
+            {sections.map((section) => (
+              <Anchor
+                key={section.id}
+                component={Link}
+                to={sectionHref(roomId, section)}
+                size="sm"
+                style={{ overflowWrap: 'anywhere' }}
+              >
+                {sectionName(section)}
+              </Anchor>
+            ))}
+          </Stack>
+        </>
+      )}
+      {skippedSections.length > 0 && (
+        <>
+          <Text size="xs" c="yellow">
+            {t('documentImport.sections.skippedTitle', { count: skippedSections.length })}
+          </Text>
+          <Stack gap={2}>
+            {skippedSections.map((item, index) => (
+              <Text key={`${item.kind}-${index}`} size="xs" c="dimmed">
+                {t('documentImport.skipped', {
+                  document: sectionName(item),
+                  reason: t(`documentImport.sections.skipReason.${item.reason}`),
                 })}
               </Text>
             ))}

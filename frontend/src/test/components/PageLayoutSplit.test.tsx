@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '../utils';
@@ -7,7 +8,7 @@ import { matchMediaQueries } from '../media';
 import { fakeSession, rawDocument } from '../fixtures';
 import { apiFetch } from '../../lib/apiClient';
 import { useSession } from '../../hooks/useSession';
-import { SPLIT_QUERY } from '../../hooks/useSideDocument';
+import { SPLIT_QUERY, useSideDocument } from '../../hooks/useSideDocument';
 import { PageLayout } from '../../components/PageLayout';
 
 vi.mock('../../lib/apiClient', async (original) => ({
@@ -139,6 +140,35 @@ describe('PageLayout with a Document beside the page (spec 37)', () => {
     restore = matchMediaQueries([SPLIT_QUERY]);
     renderPage('/account?side=doc-2', null);
     expect(screen.queryByRole('separator')).not.toBeInTheDocument();
+  });
+
+  it('keeps the page mounted while the pane opens and closes (spec 58)', async () => {
+    restore = matchMediaQueries([SPLIT_QUERY]);
+    function Zoomed() {
+      const [zoom, setZoom] = useState(1);
+      const side = useSideDocument();
+      return (
+        <>
+          <button onClick={() => setZoom(zoom + 1)}>Zoom {zoom}</button>
+          <button onClick={() => side.open('doc-2')}>Apri</button>
+          <button onClick={side.close}>Chiudi</button>
+        </>
+      );
+    }
+    renderWithProviders(
+      <PageLayout backTo="/" backLabel="Indietro" roomId="room-1" allowEmptySide>
+        <Zoomed />
+      </PageLayout>,
+      { route: '/rooms/room-1/maps/map-1' },
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Zoom 1' }));
+    await user.click(screen.getByRole('button', { name: 'Apri' }));
+    expect(await screen.findByText('Vista di doc-2')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Zoom 2' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Chiudi' }));
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Zoom 2' })).toBeInTheDocument();
   });
 });
 

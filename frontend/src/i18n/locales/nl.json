@@ -971,6 +971,29 @@
       "skippedTitle_one": "{{count}} kaart niet volledig geïmporteerd",
       "skippedTitle_other": "{{count}} kaarten niet volledig geïmporteerd"
     },
+    "sections": {
+      "found_one": "{{count}} sectie van de Kamerstart gevonden",
+      "found_other": "{{count}} secties van de Kamerstart gevonden",
+      "pageCardsHint": "Paginakaarten zijn niet aangevinkt: vink er een aan om de kaart van deze Kamer ermee te overschrijven.",
+      "select": "Sectie {{name}} importeren",
+      "applySelect": "{{name}} toepassen op de kaart van deze Kamer",
+      "untitled": "Sectie zonder titel",
+      "blocksCount_one": "{{count}} blok",
+      "blocksCount_other": "{{count}} blokken",
+      "withImage": "met afbeelding",
+      "pageCard": "Overschrijft de kaart van deze Kamer",
+      "skippedBlocks_one": "{{count}} Documentenblok wordt weggelaten: geen van zijn Tags kan hierheen worden gebracht",
+      "skippedBlocks_other": "{{count}} Documentenblokken worden weggelaten: geen van hun Tags kan hierheen worden gebracht",
+      "skipReason": {
+        "invalid": "Kan niet worden geïmporteerd: onleesbaar of in strijd met een regel van de Kamerstart",
+        "limit": "De Kamerstart heeft al het maximale aantal secties",
+        "image": "De afbeelding kon niet worden geïmporteerd"
+      },
+      "written_one": "{{count}} sectie van de Kamerstart gemaakt of bijgewerkt",
+      "written_other": "{{count}} secties van de Kamerstart gemaakt of bijgewerkt",
+      "skippedTitle_one": "{{count}} sectie niet volledig geïmporteerd",
+      "skippedTitle_other": "{{count}} secties niet volledig geïmporteerd"
+    },
     "failed": "Het importeren is mislukt. Controleer de lijst met Documenten voordat je het opnieuw probeert.",
     "another": "Meer bestanden importeren"
   },
@@ -1565,6 +1588,119 @@
       "link": "Link",
       "code": "Code",
       "table": "Tabel"
+    }
+  },
+  "roomLanding": {
+    "home": "Kamerstart",
+    "kicker": "Start",
+    "sections": "Secties",
+    "pages": {
+      "documents": "Documenten",
+      "maps": "Kaarten",
+      "sessionZero": "Sessie 0"
+    },
+    "pageDescriptions": {
+      "documents": "Alle Documenten van de Kamer",
+      "maps": "De kaarten van de Kamer",
+      "sessionZero": "Sessies, Lijnen en Sluiers, peilingen"
+    },
+    "blockEmpty": "Niets te tonen",
+    "sectionEmpty": "Hier is nog niets te zien.",
+    "notFound": "Deze sectie bestaat niet meer.",
+    "loadError": "De pagina kon niet worden geladen.",
+    "otherDocuments": "Overige documenten",
+    "blockTitle": {
+      "documents": "Documenten · {{tags}}",
+      "maps": "Kaarten",
+      "mapsFree": "Relatiekaarten",
+      "mapsGeographic": "Geografische kaarten",
+      "sessionZero": "Sessie 0"
+    },
+    "features": {
+      "sessions": "Sessies",
+      "retro": "Retro",
+      "lines_veils": "Lijnen en Sluiers",
+      "stars_wishes": "Sterren en Wensen",
+      "questions": "Vragen",
+      "ddi": "DDI",
+      "polls": "Peilingen"
+    },
+    "mapKinds": {
+      "all": "Alle kaarten",
+      "free": "Relaties",
+      "geographic": "Geografisch"
+    },
+    "item": {
+      "inProgress": "Bezig",
+      "postIts_one": "{{count}} post-it",
+      "postIts_other": "{{count}} post-its",
+      "questions_one": "{{count}} vraag",
+      "questions_other": "{{count}} vragen",
+      "ddiAccepted_one": "Geaccepteerd door {{count}} speler",
+      "ddiAccepted_other": "Geaccepteerd door {{count}} spelers",
+      "ddiAcceptedByYou": "Door jou geaccepteerd",
+      "ddiToAccept": "Te accepteren",
+      "pollOpen": "Open · {{voted}} van {{total}} hebben gestemd",
+      "pollClosed": "Gesloten",
+      "pollWinner": "Gesloten · {{choice}} wint"
+    },
+    "tiles": {
+      "documents": {
+        "title": "Documenten",
+        "body": "De Documenten met bepaalde Tags"
+      },
+      "maps": {
+        "title": "Kaarten",
+        "body": "Alle kaarten, of één soort"
+      },
+      "session_zero": {
+        "title": "Sessie 0",
+        "body": "Sessies, stappen en peilingen"
+      }
+    },
+    "edit": {
+      "start": "Bewerken",
+      "done": "Klaar",
+      "dragInstructions": "Spatie om op te pakken, pijltjes om te verplaatsen, Spatie om los te laten. Esc annuleert.",
+      "dragSection": "{{name}} verplaatsen",
+      "sectionMenu": "Acties voor {{name}}",
+      "info": "Info bewerken",
+      "deleteTitle": "“{{name}}” verwijderen?",
+      "deleteBody": "De sectie en haar blokken worden verwijderd. Documenten, kaarten en Sessie 0 blijven zoals ze zijn.",
+      "newSection": "Nieuwe sectie",
+      "newTitle": "Titel",
+      "newPlaceholder": "Bijv. Tokio, Facties, Eerste sessie",
+      "create": "Maken",
+      "addPage": "{{name}} weer toevoegen",
+      "titleLabel": "Titel",
+      "image": "Afbeelding",
+      "noBlocks": "Nog geen blokken: voeg er een toe.",
+      "addBlock": "Blok",
+      "addBlockTitle": "Een blok toevoegen",
+      "insertBlock": "Hier een blok invoegen",
+      "dragBlock": "Het blok verplaatsen",
+      "heading": "Bloktitel",
+      "renameBlock": "{{name}} hernoemen",
+      "addTag": "Tag",
+      "searchTag": "Een Tag zoeken",
+      "remove": "{{name}} weghalen",
+      "group": "Groeperen",
+      "groupedBy_one": "{{count}} groep",
+      "groupedBy_other": "{{count}} groepen",
+      "groups": "Groepen",
+      "noGroups": "Geen groepen: alle Documenten staan bij elkaar.",
+      "addGroup": "Groep",
+      "useRoomGroups": "De groepering van de Kamer gebruiken",
+      "groupHint": "Kies een of meer Tags: meerdere Tags vormen een combinatie.",
+      "dragGroup": "{{name}} verplaatsen",
+      "mapKind": "Getoonde kaarten: {{kind}}",
+      "addFeature": "Functie",
+      "dragFeature": "{{name}} verplaatsen",
+      "dragPart": "De subsectie verplaatsen",
+      "blockMenu": "Acties voor het blok",
+      "deleteBlock": "Blok verwijderen",
+      "blockDeleted": "Blok verwijderd",
+      "undo": "Ongedaan maken"
     }
   }
 }

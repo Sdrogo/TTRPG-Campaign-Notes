@@ -148,7 +148,7 @@ export function GroupingEditor({
                     <LabeledActionIcon
                       size="sm"
                       variant="subtle"
-                      color="red"
+                      color="danger"
                       aria-label={t('setup.tags.grouping.remove', { name })}
                       onClick={() => remove(itemIndex)}
                     >

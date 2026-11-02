@@ -37,6 +37,7 @@ from app.db import (
     geographic_maps_repo,
     notes_repo,
     relationship_maps_repo,
+    room_sections_repo,
     rooms_repo,
     storage,
     tags_repo,
@@ -55,6 +56,7 @@ from app.domain.export import (
     restrict_to_document,
 )
 from app.domain.geographic_maps import GeoBoard, placed_document_ids, visible_geo_board
+from app.domain.landing_transfer import section_to_json
 from app.domain.map_transfer import map_to_json
 from app.domain.models import DocumentVisibility, Membership, Room
 from app.domain.relationship_maps import (
@@ -63,6 +65,7 @@ from app.domain.relationship_maps import (
     is_map_visible,
     visible_board,
 )
+from app.domain.room_sections import BlockKind, BlockMapKind, SectionKind, SessionZeroFeature
 from app.domain.tags import ordered_main_items
 from app.domain.visibility import is_document_visible
 from app.i18n.dependencies import LocaleDep
@@ -208,9 +211,34 @@ class MapJson(BaseModel):
     links: list[LinkBody]
 
 
+class SectionBlockJson(BaseModel):
+    """A block of a custom Section (spec 56): what it lists, by rule.
+    `tag_ids` and `groups` refer to the export's `tags`."""
+
+    kind: BlockKind
+    heading: str | None
+    tag_ids: list[uuid.UUID]
+    groups: list[list[uuid.UUID]]
+    map_kind: BlockMapKind | None
+    features: list[SessionZeroFeature]
+
+
+class SectionJson(BaseModel):
+    """A card of the Room's landing page (spec 56), in order: a custom
+    Section with its blocks, or a page card (`title` null until the Master
+    names it). `image_url` expires like the image links."""
+
+    id: uuid.UUID
+    kind: SectionKind
+    title: str | None
+    description: str
+    image_url: str | None
+    blocks: list[SectionBlockJson]
+
+
 class ExportJson(BaseModel):
-    """The JSON export (`schema_version` 3; 1 had no Document `subtitle`, 2 no
-    `maps`).
+    """The JSON export (`schema_version` 4; 1 had no Document `subtitle`, 2 no
+    `maps`, 3 no `sections`).
     Every object carries its UUID and refers to others by id. `main_items` is
     the Room's grouping in order, each a list of Tag ids (one Tag, or a
     combination a Document belongs to when it carries all of them).
@@ -228,6 +256,7 @@ class ExportJson(BaseModel):
     main_items: list[list[uuid.UUID]]
     documents: list[DocumentJson]
     maps: list[MapJson]
+    sections: list[SectionJson]
 
 
 EXPORT_MEDIA_TYPES = {
@@ -393,6 +422,15 @@ async def export_maps(
     return result
 
 
+async def export_sections(session: AsyncSession, room_id: uuid.UUID) -> list[dict[str, Any]]:
+    """The Room's landing page, every Section in order with its blocks (spec
+    56 Decision 2): every member sees all of it, and a block holds rules,
+    never items. Two queries and one signing call."""
+    sections = await room_sections_repo.list_sections_with_blocks(session, room_id)
+    urls = await storage.signed_urls([s.image_path for s in sections if s.image_path])
+    return [section_to_json(s, urls.get(s.image_path or "")) for s in sections]
+
+
 @router.get(
     "/rooms/{room_id}/export",
     response_class=Response,
@@ -418,7 +456,8 @@ async def export_room(
     default): the Room, its Tags and Main items, and the Documents the
     requester sees with their Notes, Comments and replies, mentions by id, and
     images and PDF Attachments as signed links that expire (no binaries). The
-    JSON file also holds the maps they see (spec 40).
+    JSON file also holds the maps they see (spec 40) and the landing page's
+    Sections (spec 56).
     Nothing the requester can't see is in it, and nothing about invitations,
     the AuditLog or member emails (VR-07, NFR-03). Each `tag` keeps only
     Documents carrying all of them (like the list filter). For members only
@@ -434,7 +473,11 @@ async def export_room(
 
     export = await load_export(session, room, viewer, tag_ids)
     if export_format is ExportFormat.JSON:
-        export = replace(export, maps=await export_maps(session, room_id, viewer, export))
+        export = replace(
+            export,
+            maps=await export_maps(session, room_id, viewer, export),
+            sections=await export_sections(session, room_id),
+        )
     return _file_response(
         export, export_filename(room.name, export.generated_at, export_format), export_format
     )

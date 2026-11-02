@@ -178,6 +178,7 @@
       "tooManyDocuments": "一次最多可导入 {max} 个文档",
       "tooManyImages": "一次最多可导入 {max} 张图片",
       "tooManyMaps": "一次最多可导入 {max} 张地图",
+      "tooManySections": "一次最多可导入 {max} 个房间主页版块",
       "nameRequired": "文件中有一个文档没有名称",
       "nameTooLong": "文档名称“{name}...”超过 {max} 个字符",
       "subtitleTooLong": "{name} 的副标题超过 {max} 个字符",
@@ -314,6 +315,25 @@
       "notAVoter": "主持人不参与此投票。",
       "pollNotFound": "未找到投票。",
       "pollOrder": "投票或选项不属于此步骤。"
+    },
+    "landing": {
+      "onlyMaster": "只有主持人可以编辑着陆页",
+      "notFound": "未找到该版块",
+      "titleRequired": "版块需要一个标题",
+      "titleTooLong": "标题最多 {max} 个字符",
+      "descriptionTooLong": "描述最多 {max} 个字符",
+      "tooManySections": "一个房间最多有 {max} 个版块",
+      "pageSectionExists": "这个页面已经在着陆页上了",
+      "documentsRequired": "文档卡片不能删除",
+      "pageSectionHasNoBlocks": "这张卡片打开一个页面，没有区块",
+      "orderMismatch": "请把房间的每个版块恰好列出一次",
+      "tooManyBlocks": "一个版块最多有 {max} 个区块",
+      "documentsBlockNeedsTag": "文档区块至少需要一个标签",
+      "sessionZeroBlockNeedsFeature": "第 0 次会话区块至少需要一个功能",
+      "blockFieldNotAllowed": "这个设置不属于这种区块",
+      "unknownTag": "其中一个标签不在这个房间里",
+      "tooManyGroups": "一个区块最多有 {max} 个分组",
+      "invalidGroup": "每个分组需要一个或多个不同的标签，且不能有两个相同的分组"
     }
   },
   "pdf": {

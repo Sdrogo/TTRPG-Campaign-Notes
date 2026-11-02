@@ -1023,6 +1023,39 @@
       "skippedTitle_many": "{{count}} map nie zostało w pełni zaimportowanych",
       "skippedTitle_other": "{{count}} mapy nie zostały w pełni zaimportowane"
     },
+    "sections": {
+      "found_one": "Znaleziono {{count}} sekcję strony głównej pokoju",
+      "found_few": "Znaleziono {{count}} sekcje strony głównej pokoju",
+      "found_many": "Znaleziono {{count}} sekcji strony głównej pokoju",
+      "found_other": "Znaleziono {{count}} sekcji strony głównej pokoju",
+      "pageCardsHint": "Karty stron nie są zaznaczone: zaznacz jedną, aby zastąpić nią kartę tego pokoju.",
+      "select": "Importuj sekcję {{name}}",
+      "applySelect": "Zastosuj {{name}} do karty tego pokoju",
+      "untitled": "Sekcja bez tytułu",
+      "blocksCount_one": "{{count}} blok",
+      "blocksCount_few": "{{count}} bloki",
+      "blocksCount_many": "{{count}} bloków",
+      "blocksCount_other": "{{count}} bloku",
+      "withImage": "z obrazem",
+      "pageCard": "Zastępuje kartę tego pokoju",
+      "skippedBlocks_one": "Pominięto {{count}} blok Dokumentów: żadnego z jego Tagów nie można tu przenieść",
+      "skippedBlocks_few": "Pominięto {{count}} bloki Dokumentów: żadnego z ich Tagów nie można tu przenieść",
+      "skippedBlocks_many": "Pominięto {{count}} bloków Dokumentów: żadnego z ich Tagów nie można tu przenieść",
+      "skippedBlocks_other": "Pominięto {{count}} bloku Dokumentów: żadnego z ich Tagów nie można tu przenieść",
+      "skipReason": {
+        "invalid": "Nie można zaimportować: nie da się odczytać lub narusza zasadę strony głównej pokoju",
+        "limit": "Strona główna pokoju ma już maksymalną liczbę sekcji",
+        "image": "Nie udało się zaimportować obrazu"
+      },
+      "written_one": "Utworzono lub zaktualizowano {{count}} sekcję strony głównej pokoju",
+      "written_few": "Utworzono lub zaktualizowano {{count}} sekcje strony głównej pokoju",
+      "written_many": "Utworzono lub zaktualizowano {{count}} sekcji strony głównej pokoju",
+      "written_other": "Utworzono lub zaktualizowano {{count}} sekcji strony głównej pokoju",
+      "skippedTitle_one": "{{count}} sekcja nie została w pełni zaimportowana",
+      "skippedTitle_few": "{{count}} sekcje nie zostały w pełni zaimportowane",
+      "skippedTitle_many": "{{count}} sekcji nie zostało w pełni zaimportowanych",
+      "skippedTitle_other": "{{count}} sekcji nie zostało w pełni zaimportowanych"
+    },
     "failed": "Import się nie udał. Sprawdź listę dokumentów, zanim spróbujesz ponownie.",
     "another": "Importuj kolejne pliki"
   },
@@ -1639,6 +1672,127 @@
       "link": "Link",
       "code": "Kod",
       "table": "Tabela"
+    }
+  },
+  "roomLanding": {
+    "home": "Strona główna pokoju",
+    "kicker": "Start",
+    "sections": "Sekcje",
+    "pages": {
+      "documents": "Dokumenty",
+      "maps": "Mapy",
+      "sessionZero": "Sesja 0"
+    },
+    "pageDescriptions": {
+      "documents": "Wszystkie Dokumenty pokoju",
+      "maps": "Mapy pokoju",
+      "sessionZero": "Sesje, Linie i Zasłony, ankiety"
+    },
+    "blockEmpty": "Nic do pokazania",
+    "sectionEmpty": "Nie ma tu jeszcze nic do pokazania.",
+    "notFound": "Ta sekcja już nie istnieje.",
+    "loadError": "Nie udało się wczytać strony.",
+    "otherDocuments": "Inne dokumenty",
+    "blockTitle": {
+      "documents": "Dokumenty · {{tags}}",
+      "maps": "Mapy",
+      "mapsFree": "Mapy relacji",
+      "mapsGeographic": "Mapy geograficzne",
+      "sessionZero": "Sesja 0"
+    },
+    "features": {
+      "sessions": "Sesje",
+      "retro": "Retro",
+      "lines_veils": "Linie i Zasłony",
+      "stars_wishes": "Gwiazdy i Życzenia",
+      "questions": "Pytania",
+      "ddi": "DDI",
+      "polls": "Ankiety"
+    },
+    "mapKinds": {
+      "all": "Wszystkie mapy",
+      "free": "Relacje",
+      "geographic": "Geograficzne"
+    },
+    "item": {
+      "inProgress": "W toku",
+      "postIts_one": "{{count}} karteczka",
+      "postIts_few": "{{count}} karteczki",
+      "postIts_many": "{{count}} karteczek",
+      "postIts_other": "{{count}} karteczki",
+      "questions_one": "{{count}} pytanie",
+      "questions_few": "{{count}} pytania",
+      "questions_many": "{{count}} pytań",
+      "questions_other": "{{count}} pytania",
+      "ddiAccepted_one": "Zaakceptowane przez {{count}} gracza",
+      "ddiAccepted_few": "Zaakceptowane przez {{count}} graczy",
+      "ddiAccepted_many": "Zaakceptowane przez {{count}} graczy",
+      "ddiAccepted_other": "Zaakceptowane przez {{count}} gracza",
+      "ddiAcceptedByYou": "Zaakceptowane przez ciebie",
+      "ddiToAccept": "Do zaakceptowania",
+      "pollOpen": "Otwarta · głosowało {{voted}} z {{total}}",
+      "pollClosed": "Zamknięta",
+      "pollWinner": "Zamknięta · wygrywa {{choice}}"
+    },
+    "tiles": {
+      "documents": {
+        "title": "Dokumenty",
+        "body": "Dokumenty z wybranymi Tagami"
+      },
+      "maps": {
+        "title": "Mapy",
+        "body": "Wszystkie mapy albo jeden rodzaj"
+      },
+      "session_zero": {
+        "title": "Sesja 0",
+        "body": "Sesje, etapy i ankiety"
+      }
+    },
+    "edit": {
+      "start": "Edytuj",
+      "done": "Gotowe",
+      "dragInstructions": "Spacja, aby chwycić, strzałki, aby przesunąć, Spacja, aby upuścić. Esc anuluje.",
+      "dragSection": "Przesuń {{name}}",
+      "sectionMenu": "Działania: {{name}}",
+      "info": "Edytuj informacje",
+      "deleteTitle": "Usunąć „{{name}}”?",
+      "deleteBody": "Sekcja i jej bloki zostaną usunięte. Dokumenty, mapy i Sesja 0 zostaną bez zmian.",
+      "newSection": "Nowa sekcja",
+      "newTitle": "Tytuł",
+      "newPlaceholder": "Np. Tokio, Frakcje, Pierwsza sesja",
+      "create": "Utwórz",
+      "addPage": "Dodaj ponownie: {{name}}",
+      "titleLabel": "Tytuł",
+      "image": "Obraz",
+      "noBlocks": "Nie ma jeszcze bloków: dodaj pierwszy.",
+      "addBlock": "Blok",
+      "addBlockTitle": "Dodaj blok",
+      "insertBlock": "Wstaw tu blok",
+      "dragBlock": "Przesuń blok",
+      "heading": "Tytuł bloku",
+      "renameBlock": "Zmień nazwę: {{name}}",
+      "addTag": "Tag",
+      "searchTag": "Szukaj Tagu",
+      "remove": "Usuń {{name}}",
+      "group": "Grupuj",
+      "groupedBy_one": "{{count}} grupa",
+      "groupedBy_few": "{{count}} grupy",
+      "groupedBy_many": "{{count}} grup",
+      "groupedBy_other": "{{count}} grupy",
+      "groups": "Grupy",
+      "noGroups": "Brak grup: wszystkie Dokumenty są razem.",
+      "addGroup": "Grupa",
+      "useRoomGroups": "Użyj grupowania pokoju",
+      "groupHint": "Wybierz jeden lub kilka Tagów: kilka Tagów tworzy kombinację.",
+      "dragGroup": "Przesuń {{name}}",
+      "mapKind": "Pokazane mapy: {{kind}}",
+      "addFeature": "Funkcja",
+      "dragFeature": "Przesuń {{name}}",
+      "dragPart": "Przesuń podsekcję",
+      "blockMenu": "Działania bloku",
+      "deleteBlock": "Usuń blok",
+      "blockDeleted": "Blok usunięty",
+      "undo": "Cofnij"
     }
   }
 }

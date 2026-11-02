@@ -22,7 +22,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -1495,3 +1495,118 @@ class SessionZeroCardReactionRow(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     emoji: Mapped[str] = mapped_column(String(32), primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RoomSectionRow(Base):
+    """A card of the Room's landing page (spec 55): a custom Section, a page
+    of blocks the Master composes, or one of the page cards that open the
+    Documents, Maps or Session 0 page. Every member sees every Section
+    (spec 55 Decision 2)."""
+
+    __tablename__ = "room_sections"
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('custom', 'page_documents', 'page_maps', 'page_session_zero')",
+            name="ck_room_sections_kind",
+        ),
+        # A page card left untitled shows its name in the viewer's language;
+        # a custom Section always has a title.
+        CheckConstraint("kind <> 'custom' OR title IS NOT NULL", name="ck_room_sections_title"),
+        Index(
+            "uq_room_sections_page_kind",
+            "room_id",
+            "kind",
+            unique=True,
+            postgresql_where=text("kind <> 'custom'"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    kind: Mapped[str] = mapped_column(String(20))
+    title: Mapped[str | None] = mapped_column(String(100))
+    description: Mapped[str] = mapped_column(Text, default="", server_default=text("''"))
+    # A Storage path, like `rooms.image_path`.
+    image_path: Mapped[str | None] = mapped_column(String(300))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class RoomSectionBlockRow(Base):
+    """One source of a custom Section (spec 55): the Documents with some Tags,
+    the Room's maps (of one kind, or all), or some Session 0 features in the
+    Master's order."""
+
+    __tablename__ = "room_section_blocks"
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('documents', 'maps', 'session_zero')", name="ck_room_section_blocks_kind"
+        ),
+        CheckConstraint(
+            "map_kind IS NULL OR kind = 'maps'", name="ck_room_section_blocks_map_kind"
+        ),
+        CheckConstraint(
+            "(kind = 'session_zero') = (cardinality(features) > 0)",
+            name="ck_room_section_blocks_features",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    section_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_sections.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    kind: Mapped[str] = mapped_column(String(20))
+    heading: Mapped[str | None] = mapped_column(String(100))
+    map_kind: Mapped[str | None] = mapped_column(String(12))
+    features: Mapped[list[str]] = mapped_column(
+        ARRAY(String(20)), default=list, server_default=text("'{}'")
+    )
+
+
+class RoomSectionBlockTagRow(Base):
+    """A Tag a Documents block filters by: a Document shows when it carries
+    all of them."""
+
+    __tablename__ = "room_section_block_tags"
+
+    block_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("room_section_blocks.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    tag_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+
+
+class RoomSectionBlockGroupRow(Base):
+    """A sub-section of a Documents block (spec 55 Decision 15): a single Tag
+    or a combination, like a Main item; its Tags are in
+    `room_section_block_group_tags`."""
+
+    __tablename__ = "room_section_block_groups"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    block_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_section_blocks.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+
+
+class RoomSectionBlockGroupTagRow(Base):
+    """Links a block's group to one of its Tags."""
+
+    __tablename__ = "room_section_block_group_tags"
+
+    group_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("room_section_block_groups.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    tag_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True, index=True
+    )

@@ -74,6 +74,15 @@ describe('demoFetch', () => {
     expect(master).toMatchObject({ started: false, can_manage: true, modules: [], timer: null });
     expect((await get('/rooms/demo/session-zero', MARCO_ID)).body.can_manage).toBe(false);
     expect((await get('/rooms/demo/session-zero/events')).status).toBe(404);
+    expect((await get('/rooms/demo/session-zero/overview')).body).toEqual({ started: false, rounds: [], lines_veils: {} });
+  });
+
+  // Spec 55: the sample Room's landing is the three page cards, which the visitor can't edit.
+  it('answers the landing as the three page cards', async () => {
+    const sections = (await get('/rooms/demo/sections')).body as { kind: string; can_edit: boolean }[];
+    expect(sections.map((section) => section.kind)).toEqual(['page_documents', 'page_maps', 'page_session_zero']);
+    expect(sections.every((section) => !section.can_edit)).toBe(true);
+    expect((await get('/rooms/demo/sections/demo-page_maps')).status).toBe(404);
   });
 
   it('lists the characters the viewer plays', async () => {

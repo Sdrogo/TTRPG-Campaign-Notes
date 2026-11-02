@@ -7,6 +7,7 @@ from sqlalchemy import delete, func, select, tuple_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from app.db import room_sections_repo
 from app.db import session as session_module
 from app.db.models import AuditLogRow, MembershipRow, RoomRow, TagRow, UserRow
 from app.db.users_repo import profile_from_row
@@ -21,6 +22,7 @@ from app.domain.models import (
     Tag,
     UserProfile,
 )
+from app.domain.room_sections import default_sections
 from app.domain.rooms import NewRoomPlan
 from app.realtime.broker import broker
 
@@ -53,8 +55,10 @@ def _membership_from_row(row: MembershipRow) -> Membership:
 
 async def insert_new_room(session: AsyncSession, plan: NewRoomPlan) -> None:
     """Inserts everything a `NewRoomPlan` holds - the Room, its creator's
-    Membership and the default Tags - in the caller's transaction."""
+    Membership, the default Tags and the landing page's three page cards
+    (spec 55 Decision 5) - in the caller's transaction."""
     await insert_new_room_rows(session, plan.room, plan.owner_membership, plan.default_tags)
+    await room_sections_repo.insert_sections(session, default_sections(plan.room.id))
 
 
 async def insert_new_room_rows(

@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Container, Stack, Group, Title, Button, SimpleGrid, Text, Loader } from '@mantine/core';
-import { PlusIcon } from '@phosphor-icons/react';
+import { Container, Stack, Button, SimpleGrid, Text } from '@mantine/core';
+import { DoorOpenIcon, PlusIcon } from '@phosphor-icons/react';
 import { useMyRooms } from '../hooks/useRooms';
 import { RoomCard } from '../components/RoomCard';
 import { CreateRoomModal } from '../components/CreateRoomModal';
 import { useTranslation } from 'react-i18next';
+import { PageHeading } from '../components/PageHeading';
+import { EmptyState } from '../components/EmptyState';
+import { SectionLoader } from '../components/PageState';
 
 interface RoomsPageProps {
   /** The signed-in user, passed down so each Room card can offer Leave. */
@@ -26,19 +29,19 @@ export function RoomsPage({ currentUserId }: RoomsPageProps) {
     // would otherwise shrink it to its content in the middle of the page.
     <Container component="main" fluid w="100%" px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="lg">
       <Stack gap="xl">
-      <Group justify="space-between" align="flex-end" className="rooms-heading">
-        <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('common.myRooms')}
-        </Title>
-        <Button leftSection={<PlusIcon size={18} />} onClick={() => setCreateOpened(true)}>
-          {t('rooms.create')}
-        </Button>
-      </Group>
+      <PageHeading
+        title={t('common.myRooms')}
+        actions={
+          <Button leftSection={<PlusIcon size={18} />} onClick={() => setCreateOpened(true)}>
+            {t('rooms.create')}
+          </Button>
+        }
+      />
 
-      {myRooms.isLoading && <Loader color="accent" />}
+      {myRooms.isLoading && <SectionLoader />}
       {myRooms.isError && <Text c="red">{t('rooms.loadError')}</Text>}
       {myRooms.data && myRooms.data.length === 0 && (
-        <Text c="dimmed">{t('rooms.empty')}</Text>
+        <EmptyState icon={<DoorOpenIcon size={28} weight="duotone" />}>{t('rooms.empty')}</EmptyState>
       )}
       {myRooms.data && myRooms.data.length > 0 && (
         <SimpleGrid type="container" cols={ROOM_COLUMNS} spacing="lg">

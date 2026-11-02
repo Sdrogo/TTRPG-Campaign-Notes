@@ -6,7 +6,6 @@ import {
   Button,
   Card,
   Group,
-  Loader,
   SimpleGrid,
   Stack,
   Text,
@@ -26,7 +25,7 @@ import { useCreateMap, useMaps } from '../hooks/useMaps';
 import { useMembers } from '../hooks/useMembers';
 import { useRoom } from '../hooks/useRooms';
 import { useReadOnly } from '../hooks/useViewAs';
-import { FullPageLoader, SignInRequired } from '../components/PageState';
+import { FullPageLoader, SignInRequired, SectionLoader } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { MapFormModal } from '../components/maps/MapFormModal';
@@ -34,6 +33,8 @@ import { MapImportModal } from '../components/maps/MapImportModal';
 import { canCreateDocuments } from '../lib/roomPermissions';
 import { formatRelativeTime } from '../lib/time';
 import { useBackState } from '../lib/backNav';
+import { PageHeading } from '../components/PageHeading';
+import { EmptyState } from '../components/EmptyState';
 
 /**
  * `/rooms/:roomId/maps`: the Room's relationship maps the viewer sees (spec 28
@@ -79,42 +80,33 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
   };
 
   return (
-    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('maps.backToDocuments')} roomId={roomId}>
-      <Group justify="space-between" align="flex-end" wrap="wrap" className="maps-page-heading">
-        <Stack gap={2}>
-          {room.data && (
-            <Text size="xs" c="dimmed" tt="uppercase" fw={600} className="maps-page-kicker">
-              {room.data.name}
-            </Text>
-          )}
-          <Title order={1} className="maps-page-title" style={{ fontFamily: 'var(--font-display)' }}>
-            {t('maps.title')}
-          </Title>
-        </Stack>
-        {canCreate && (
-          <Group gap="xs" wrap="wrap" justify="flex-end" className="maps-page-actions">
-            <Button variant="default" leftSection={<FileArrowUpIcon size={18} />} onClick={() => setImporting(true)}>
-              {t('maps.import.button')}
-            </Button>
-            <Button leftSection={<PlusIcon size={18} />} onClick={() => setCreating(true)}>
-              {t('maps.create')}
-            </Button>
-          </Group>
-        )}
-      </Group>
-      {maps.isPending && <Loader />}
+    <PageLayout
+      backTo={`/rooms/${roomId}`}
+      backLabel={t('roomLanding.home')}
+      roomId={roomId}
+      showIndex
+      index={{ current: 'page_maps' }}
+    >
+      <PageHeading
+        kicker={room.data?.name}
+        title={t('maps.title')}
+        actions={
+          canCreate && (
+            <>
+              <Button variant="default" leftSection={<FileArrowUpIcon size={18} />} onClick={() => setImporting(true)}>
+                {t('maps.import.button')}
+              </Button>
+              <Button leftSection={<PlusIcon size={18} />} onClick={() => setCreating(true)}>
+                {t('maps.create')}
+              </Button>
+            </>
+          )
+        }
+      />
+      {maps.isPending && <SectionLoader />}
       {maps.isError && <Text c="red">{t('maps.loadError')}</Text>}
       {maps.data?.length === 0 && (
-        <Card withBorder radius="md" p="xl" className="maps-empty-state">
-          <Stack align="center" gap="md">
-            <ThemeIcon variant="light" color="gray" size="xl" radius="md" aria-hidden="true">
-              <MapTrifoldIcon size={28} weight="duotone" />
-            </ThemeIcon>
-            <Text c="dimmed" ta="center">
-              {t('maps.empty')}
-            </Text>
-          </Stack>
-        </Card>
+        <EmptyState icon={<MapTrifoldIcon size={28} weight="duotone" />}>{t('maps.empty')}</EmptyState>
       )}
       <SimpleGrid cols={{ base: 1, sm: 2, xl: 3 }} spacing="lg" className="maps-page-grid">
         {maps.data?.map((map, index) => (

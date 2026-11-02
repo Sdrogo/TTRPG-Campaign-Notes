@@ -30,6 +30,19 @@ from app.domain.import_files import (
     MentionRef,
     Text,
 )
+from app.domain.landing_transfer import (
+    MAX_SECTIONS_PER_IMPORT,
+    PlannedSection,
+    SectionSkipReason,
+    UnreadableSectionError,
+    has_content,
+    plan_section,
+    read_section,
+    section_key,
+    section_kind,
+    section_title,
+    skipped_section,
+)
 from app.domain.map_transfer import (
     MAX_MAPS_PER_IMPORT,
     MapSkipReason,
@@ -45,6 +58,7 @@ from app.domain.mentions import MentionKind, mention_token, unlink_mentions
 from app.domain.models import DocumentVisibility
 from app.domain.notes import MAX_NOTE_TITLE_LENGTH, MAX_NOTES_PER_DOCUMENT
 from app.domain.relationship_maps import MAX_MAPS_PER_ROOM
+from app.domain.room_sections import Section, SectionKind
 
 MAX_FILES = 10
 MAX_DOCUMENTS = 200
@@ -117,17 +131,25 @@ class ImportContext:
     # theirs only) and how many maps the Room has (the cap of 100).
     is_master: bool = False
     map_count: int = 0
+    # Spec 56: the Room and its landing page as it is, read for the Master
+    # only (only their import brings Sections).
+    room_id: uuid.UUID | None = None
+    sections: tuple[Section, ...] = ()
 
 
 @dataclass(frozen=True)
 class ImportChoices:
     """What the importer chose: the keys of the Documents to import (None =
     all) and, among them, the ones to replace instead of copy, and the keys of
-    the maps to import (None = all, spec 40)."""
+    the maps to import (None = all, spec 40), of the custom Sections to
+    import (None = all) and of the page cards to apply (spec 56; None = all,
+    as the preview plans them, and none when the importer ticks none)."""
 
     selected: frozenset[str] | None = None
     replace: frozenset[str] = frozenset()
     maps: frozenset[str] | None = None
+    sections: frozenset[str] | None = None
+    page_cards: frozenset[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -199,13 +221,16 @@ class ImportPlan:
     """The whole import: the Documents (selected ones only, in file order),
     the Tags to create, the names of the Room's Tags that were matched and of
     the ones that could not be created, and the maps (selected ones, in file
-    order, the skipped ones included, spec 40)."""
+    order, the skipped ones included, spec 40) and the landing Sections
+    (spec 56: the selected custom ones and page cards, the skipped ones
+    included)."""
 
     documents: tuple[PlannedDocument, ...]
     new_tags: tuple[PlannedTag, ...]
     matched_tags: tuple[str, ...]
     unavailable_tags: tuple[str, ...]
     maps: tuple[PlannedMap, ...] = ()
+    sections: tuple[PlannedSection, ...] = ()
 
 
 def document_key(file_index: int, document_index: int) -> str:
@@ -237,6 +262,8 @@ def validate_files(files: Sequence[ImportFile]) -> None:
         raise ImportRefusedError("errors.import.tooManyImages", max=MAX_IMAGES)
     if sum(len(file.maps) for file in files) > MAX_MAPS_PER_IMPORT:
         raise ImportRefusedError("errors.import.tooManyMaps", max=MAX_MAPS_PER_IMPORT)
+    if sum(len(file.sections) for file in files) > MAX_SECTIONS_PER_IMPORT:
+        raise ImportRefusedError("errors.import.tooManySections", max=MAX_SECTIONS_PER_IMPORT)
     for document in documents:
         if not document.name.strip():
             raise ImportRefusedError("errors.import.nameRequired")
@@ -430,13 +457,70 @@ def plan_import(
         )
         for fi, key, document in chosen
     ]
+    sections = _plan_sections(files, context, choices, book)
     return ImportPlan(
         documents=tuple(planned),
         new_tags=tuple(book.created.values()),
         matched_tags=tuple(book.matched.values()),
         unavailable_tags=tuple(book.unavailable.values()),
         maps=_plan_maps(files, context, choices, targets, replaced, ids, new_id),
+        sections=sections,
     )
+
+
+def _plan_sections(
+    files: Sequence[ImportFile], context: ImportContext, choices: ImportChoices, book: _TagBook
+) -> tuple[PlannedSection, ...]:
+    """The landing Sections of every file (spec 56 Decisions 4 to 8), for
+    the Master only: the selected custom ones, added in file order, and the
+    page cards that carry a title, description or image, the chosen ones
+    (all of them at preview, where the client leaves them unticked).
+    A block's Tags are resolved by name with the Documents' Tag book."""
+    if not context.is_master or context.room_id is None:
+        return ()
+    landing: list[Section] = list(context.sections)
+    planned: list[PlannedSection] = []
+    for fi, file in enumerate(files):
+
+        def resolve(tag_id: str, file: ImportFile = file) -> uuid.UUID | None:
+            tag = file.tags.get(tag_id)
+            return None if tag is None else book.resolve(tag.name)
+
+        for si, raw in enumerate(file.sections):
+            key = section_key(fi, si)
+            kind = section_kind(raw)
+            try:
+                file_section = read_section(raw)
+            except UnreadableSectionError:
+                if kind is SectionKind.CUSTOM and (
+                    choices.sections is None or key in choices.sections
+                ):
+                    planned.append(
+                        skipped_section(
+                            key, file.name, kind, section_title(raw), SectionSkipReason.INVALID
+                        )
+                    )
+                continue
+            if file_section.kind is SectionKind.CUSTOM:
+                if choices.sections is not None and key not in choices.sections:
+                    continue
+            elif not has_content(file_section) or (
+                choices.page_cards is not None and key not in choices.page_cards
+            ):
+                continue
+            plan = plan_section(file_section, key, file.name, context.room_id, landing, resolve)
+            if plan.skipped is None and all(s.id != plan.id for s in landing):
+                landing.append(
+                    Section(
+                        id=plan.id,
+                        room_id=context.room_id,
+                        kind=plan.kind,
+                        position=max((s.position for s in landing), default=-1) + 1,
+                        title=plan.title,
+                    )
+                )
+            planned.append(plan)
+    return tuple(planned)
 
 
 def _plan_maps(

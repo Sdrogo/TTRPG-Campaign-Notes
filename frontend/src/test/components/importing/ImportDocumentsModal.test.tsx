@@ -26,6 +26,8 @@ const doneJob = (result: Record<string, unknown> = {}) =>
       skipped: [],
       maps: [],
       skipped_maps: [],
+      sections: [],
+      skipped_sections: [],
       ...result,
     },
   });
@@ -110,6 +112,8 @@ describe('ImportDocumentsModal (spec 27)', () => {
       selected: ['0:0'],
       replace: [],
       maps: [],
+      sections: [],
+      page_cards: [],
     });
   });
 
@@ -138,6 +142,8 @@ describe('ImportDocumentsModal (spec 27)', () => {
       selected: ['0:1'],
       replace: [],
       maps: [],
+      sections: [],
+      page_cards: [],
     });
   });
 
@@ -230,6 +236,8 @@ describe('ImportDocumentsModal (spec 27)', () => {
       selected: ['0:0', '0:1', '0:2'],
       replace: ['0:0'],
       maps: [],
+      sections: [],
+      page_cards: [],
     });
   });
 
@@ -371,6 +379,79 @@ describe('ImportDocumentsModal (spec 27)', () => {
       selected: ['0:0'],
       replace: [],
       maps: ['0:map:0'],
+      sections: [],
+      page_cards: [],
+    });
+  });
+
+  it('lists the Sections of the Room home, custom ones ticked and page cards not (spec 56)', async () => {
+    const section = (overrides: Record<string, unknown> = {}) => ({
+      key: '0:section:0',
+      file_name: 'stanza.json',
+      kind: 'custom',
+      title: 'Tokyo',
+      has_image: true,
+      blocks_count: 2,
+      skipped_blocks: 1,
+      skipped: null,
+      ...overrides,
+    });
+    api.preview = rawImportPreview({
+      sections: [
+        section({ key: '0:section:0', kind: 'page_documents', title: 'Archivio', blocks_count: 0, skipped_blocks: 0 }),
+        section({ key: '0:section:1' }),
+        section({ key: '0:section:2', title: 'Shibuya', has_image: false, blocks_count: 1, skipped_blocks: 0 }),
+        section({ key: '0:section:3', title: null, skipped: 'invalid', skipped_blocks: 0 }),
+        section({ key: '0:section:4', kind: 'page_maps', title: null, has_image: false, blocks_count: 0, skipped_blocks: 0 }),
+      ],
+    });
+    api.job = doneJob({
+      sections: [
+        { id: 'section-new', kind: 'custom', title: 'Tokyo' },
+        { id: 'section-maps', kind: 'page_maps', title: null },
+      ],
+      skipped_sections: [{ kind: 'custom', title: 'Tokyo', reason: 'image' }],
+    });
+    const { user } = render();
+    await pickAndPreview(user);
+
+    expect(await screen.findByText('5 Sezioni della Home della Stanza trovate')).toBeInTheDocument();
+    expect(screen.getByText(/Le schede delle pagine non sono spuntate/)).toBeInTheDocument();
+    expect(screen.getByText('2 blocchi · con immagine')).toBeInTheDocument();
+    expect(screen.getByText('1 blocco')).toBeInTheDocument();
+    expect(screen.getByText('Sovrascrive la scheda di questa Stanza · con immagine')).toBeInTheDocument();
+    expect(screen.getByText('Sovrascrive la scheda di questa Stanza')).toBeInTheDocument();
+    expect(screen.getByText(/1 blocco di Documenti viene tralasciato/)).toBeInTheDocument();
+    expect(
+      screen.getByText('Non si può importare: non è leggibile o non rispetta le regole della Home della Stanza'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Importa la Sezione Tokyo' })).toBeChecked();
+    const archive = screen.getByRole('checkbox', { name: 'Applica Archivio alla scheda di questa Stanza' });
+    expect(archive).not.toBeChecked();
+    const invalid = screen.getByRole('checkbox', { name: 'Importa la Sezione Sezione senza titolo' });
+    expect(invalid).toBeDisabled();
+
+    await user.click(screen.getByRole('checkbox', { name: 'Importa la Sezione Shibuya' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Applica Mappe alla scheda di questa Stanza' }));
+    await user.click(screen.getByRole('button', { name: 'Importa' }));
+
+    expect(await screen.findByText('2 Sezioni della Home della Stanza create o aggiornate')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Tokyo' })).toHaveAttribute(
+      'href',
+      '/rooms/room-1/sections/section-new',
+    );
+    expect(screen.getByRole('link', { name: 'Mappe' })).toHaveAttribute('href', '/rooms/room-1/maps');
+    expect(screen.getByText('1 Sezione non importata del tutto')).toBeInTheDocument();
+    expect(screen.getByText('Tokyo: Non è stato possibile importare la sua immagine')).toBeInTheDocument();
+    const call = fetchMock.mock.calls.find(
+      ([path, init]) => path === '/rooms/room-1/imports' && (init as { method?: string }).method === 'POST',
+    )!;
+    expect(JSON.parse((call[1] as { formData: FormData }).formData.get('choices') as string)).toEqual({
+      selected: ['0:0'],
+      replace: [],
+      maps: [],
+      sections: ['0:section:1'],
+      page_cards: ['0:section:4'],
     });
   });
 

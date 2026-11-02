@@ -971,6 +971,29 @@
       "skippedTitle_one": "{{count}} mappa non importata del tutto",
       "skippedTitle_other": "{{count}} mappe non importate del tutto"
     },
+    "sections": {
+      "found_one": "{{count}} Sezione della Home della Stanza trovata",
+      "found_other": "{{count}} Sezioni della Home della Stanza trovate",
+      "pageCardsHint": "Le schede delle pagine non sono spuntate: spuntane una per sovrascrivere con essa la scheda di questa Stanza.",
+      "select": "Importa la Sezione {{name}}",
+      "applySelect": "Applica {{name}} alla scheda di questa Stanza",
+      "untitled": "Sezione senza titolo",
+      "blocksCount_one": "{{count}} blocco",
+      "blocksCount_other": "{{count}} blocchi",
+      "withImage": "con immagine",
+      "pageCard": "Sovrascrive la scheda di questa Stanza",
+      "skippedBlocks_one": "{{count}} blocco di Documenti viene tralasciato: nessuno dei suoi Tag può essere portato qui",
+      "skippedBlocks_other": "{{count}} blocchi di Documenti vengono tralasciati: nessuno dei loro Tag può essere portato qui",
+      "skipReason": {
+        "invalid": "Non si può importare: non è leggibile o non rispetta le regole della Home della Stanza",
+        "limit": "La Home della Stanza ha già il numero massimo di Sezioni",
+        "image": "Non è stato possibile importare la sua immagine"
+      },
+      "written_one": "{{count}} Sezione della Home della Stanza creata o aggiornata",
+      "written_other": "{{count}} Sezioni della Home della Stanza create o aggiornate",
+      "skippedTitle_one": "{{count}} Sezione non importata del tutto",
+      "skippedTitle_other": "{{count}} Sezioni non importate del tutto"
+    },
     "failed": "L'importazione non è riuscita. Controlla l'elenco dei Documenti prima di riprovare.",
     "another": "Importa altri file"
   },
@@ -1565,6 +1588,119 @@
       "link": "Link",
       "code": "Codice",
       "table": "Tabella"
+    }
+  },
+  "roomLanding": {
+    "home": "Home della Stanza",
+    "kicker": "Home",
+    "sections": "Sezioni",
+    "pages": {
+      "documents": "Documenti",
+      "maps": "Mappe",
+      "sessionZero": "Sessione 0"
+    },
+    "pageDescriptions": {
+      "documents": "Tutti i Documenti della Stanza",
+      "maps": "Le mappe della Stanza",
+      "sessionZero": "Sessioni, Linee e Veli, sondaggi"
+    },
+    "blockEmpty": "Niente da mostrare",
+    "sectionEmpty": "Ancora niente da mostrare qui.",
+    "notFound": "Questa sezione non esiste più.",
+    "loadError": "Impossibile caricare la pagina.",
+    "otherDocuments": "Altri documenti",
+    "blockTitle": {
+      "documents": "Documenti · {{tags}}",
+      "maps": "Mappe",
+      "mapsFree": "Mappe delle relazioni",
+      "mapsGeographic": "Mappe geografiche",
+      "sessionZero": "Sessione 0"
+    },
+    "features": {
+      "sessions": "Sessioni",
+      "retro": "Retro",
+      "lines_veils": "Linee e Veli",
+      "stars_wishes": "Stelle e Desideri",
+      "questions": "Domande",
+      "ddi": "DDI",
+      "polls": "Sondaggi"
+    },
+    "mapKinds": {
+      "all": "Tutte le mappe",
+      "free": "Relazioni",
+      "geographic": "Geografiche"
+    },
+    "item": {
+      "inProgress": "In corso",
+      "postIts_one": "{{count}} post-it",
+      "postIts_other": "{{count}} post-it",
+      "questions_one": "{{count}} domanda",
+      "questions_other": "{{count}} domande",
+      "ddiAccepted_one": "Accettata da {{count}} giocatore",
+      "ddiAccepted_other": "Accettata da {{count}} giocatori",
+      "ddiAcceptedByYou": "Accettata da te",
+      "ddiToAccept": "Da accettare",
+      "pollOpen": "Aperto · {{voted}} su {{total}} hanno votato",
+      "pollClosed": "Chiuso",
+      "pollWinner": "Chiuso · vince {{choice}}"
+    },
+    "tiles": {
+      "documents": {
+        "title": "Documenti",
+        "body": "I Documenti con alcuni Tag"
+      },
+      "maps": {
+        "title": "Mappe",
+        "body": "Tutte le mappe, o di un tipo"
+      },
+      "session_zero": {
+        "title": "Sessione 0",
+        "body": "Sessioni, tappe e sondaggi"
+      }
+    },
+    "edit": {
+      "start": "Modifica",
+      "done": "Fine",
+      "dragInstructions": "Premi Spazio per prendere, le frecce per spostare, Spazio per lasciare. Esc annulla.",
+      "dragSection": "Sposta {{name}}",
+      "sectionMenu": "Azioni di {{name}}",
+      "info": "Modifica info",
+      "deleteTitle": "Eliminare «{{name}}»?",
+      "deleteBody": "La sezione e i suoi blocchi vengono eliminati. Documenti, mappe e Sessione 0 restano come sono.",
+      "newSection": "Nuova sezione",
+      "newTitle": "Titolo",
+      "newPlaceholder": "Es. Tokyo, Fazioni, Prima sessione",
+      "create": "Crea",
+      "addPage": "Riaggiungi {{name}}",
+      "titleLabel": "Titolo",
+      "image": "Immagine",
+      "noBlocks": "Nessun blocco ancora: aggiungine uno.",
+      "addBlock": "Blocco",
+      "addBlockTitle": "Aggiungi un blocco",
+      "insertBlock": "Inserisci un blocco qui",
+      "dragBlock": "Sposta il blocco",
+      "heading": "Titolo del blocco",
+      "renameBlock": "Rinomina {{name}}",
+      "addTag": "Tag",
+      "searchTag": "Cerca un Tag",
+      "remove": "Togli {{name}}",
+      "group": "Raggruppa",
+      "groupedBy_one": "{{count}} gruppo",
+      "groupedBy_other": "{{count}} gruppi",
+      "groups": "Gruppi",
+      "noGroups": "Nessun gruppo: i Documenti sono tutti insieme.",
+      "addGroup": "Gruppo",
+      "useRoomGroups": "Usa i raggruppamenti della Stanza",
+      "groupHint": "Scegli uno o più Tag: più Tag fanno una combinazione.",
+      "dragGroup": "Sposta {{name}}",
+      "mapKind": "Mappe mostrate: {{kind}}",
+      "addFeature": "Funzione",
+      "dragFeature": "Sposta {{name}}",
+      "dragPart": "Sposta la sottosezione",
+      "blockMenu": "Azioni del blocco",
+      "deleteBlock": "Elimina blocco",
+      "blockDeleted": "Blocco eliminato",
+      "undo": "Annulla"
     }
   }
 }

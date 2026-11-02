@@ -973,6 +973,29 @@
       "skippedTitle_one": "{{count}} carte pas entièrement importée",
       "skippedTitle_other": "{{count}} cartes pas entièrement importées"
     },
+    "sections": {
+      "found_one": "{{count}} section de l'Accueil de la Salle trouvée",
+      "found_other": "{{count}} sections de l'Accueil de la Salle trouvées",
+      "pageCardsHint": "Les cartes de pages ne sont pas cochées : coches-en une pour remplacer la carte de cette Salle.",
+      "select": "Importer la section {{name}}",
+      "applySelect": "Appliquer {{name}} à la carte de cette Salle",
+      "untitled": "Section sans titre",
+      "blocksCount_one": "{{count}} bloc",
+      "blocksCount_other": "{{count}} blocs",
+      "withImage": "avec image",
+      "pageCard": "Remplace la carte de cette Salle",
+      "skippedBlocks_one": "{{count}} bloc de Documents est laissé de côté : aucun de ses Tags ne peut être apporté ici",
+      "skippedBlocks_other": "{{count}} blocs de Documents sont laissés de côté : aucun de leurs Tags ne peut être apporté ici",
+      "skipReason": {
+        "invalid": "Impossible à importer : illisible ou contraire à une règle de l'Accueil de la Salle",
+        "limit": "L'Accueil de la Salle a déjà le nombre maximum de sections",
+        "image": "Son image n'a pas pu être importée"
+      },
+      "written_one": "{{count}} section de l'Accueil de la Salle créée ou mise à jour",
+      "written_other": "{{count}} sections de l'Accueil de la Salle créées ou mises à jour",
+      "skippedTitle_one": "{{count}} section pas entièrement importée",
+      "skippedTitle_other": "{{count}} sections pas entièrement importées"
+    },
     "failed": "L'import a échoué. Vérifie la liste des Documents avant de réessayer.",
     "another": "Importer d'autres fichiers"
   },
@@ -1567,6 +1590,119 @@
       "link": "Lien",
       "code": "Code",
       "table": "Tableau"
+    }
+  },
+  "roomLanding": {
+    "home": "Accueil de la Salle",
+    "kicker": "Accueil",
+    "sections": "Sections",
+    "pages": {
+      "documents": "Documents",
+      "maps": "Cartes",
+      "sessionZero": "Session 0"
+    },
+    "pageDescriptions": {
+      "documents": "Tous les Documents de la Salle",
+      "maps": "Les cartes de la Salle",
+      "sessionZero": "Sessions, Lignes et Voiles, sondages"
+    },
+    "blockEmpty": "Rien à afficher",
+    "sectionEmpty": "Rien à afficher ici pour l'instant.",
+    "notFound": "Cette section n'existe plus.",
+    "loadError": "Impossible de charger la page.",
+    "otherDocuments": "Autres documents",
+    "blockTitle": {
+      "documents": "Documents · {{tags}}",
+      "maps": "Cartes",
+      "mapsFree": "Cartes des relations",
+      "mapsGeographic": "Cartes géographiques",
+      "sessionZero": "Session 0"
+    },
+    "features": {
+      "sessions": "Sessions",
+      "retro": "Rétro",
+      "lines_veils": "Lignes et Voiles",
+      "stars_wishes": "Étoiles et Souhaits",
+      "questions": "Questions",
+      "ddi": "DDI",
+      "polls": "Sondages"
+    },
+    "mapKinds": {
+      "all": "Toutes les cartes",
+      "free": "Relations",
+      "geographic": "Géographiques"
+    },
+    "item": {
+      "inProgress": "En cours",
+      "postIts_one": "{{count}} post-it",
+      "postIts_other": "{{count}} post-it",
+      "questions_one": "{{count}} question",
+      "questions_other": "{{count}} questions",
+      "ddiAccepted_one": "Accepté par {{count}} joueur",
+      "ddiAccepted_other": "Accepté par {{count}} joueurs",
+      "ddiAcceptedByYou": "Accepté par toi",
+      "ddiToAccept": "À accepter",
+      "pollOpen": "Ouvert · {{voted}} sur {{total}} ont voté",
+      "pollClosed": "Fermé",
+      "pollWinner": "Fermé · {{choice}} gagne"
+    },
+    "tiles": {
+      "documents": {
+        "title": "Documents",
+        "body": "Les Documents avec certains Tags"
+      },
+      "maps": {
+        "title": "Cartes",
+        "body": "Toutes les cartes, ou un type"
+      },
+      "session_zero": {
+        "title": "Session 0",
+        "body": "Sessions, étapes et sondages"
+      }
+    },
+    "edit": {
+      "start": "Modifier",
+      "done": "Terminé",
+      "dragInstructions": "Espace pour saisir, les flèches pour déplacer, Espace pour déposer. Échap annule.",
+      "dragSection": "Déplacer {{name}}",
+      "sectionMenu": "Actions de {{name}}",
+      "info": "Modifier les infos",
+      "deleteTitle": "Supprimer « {{name}} » ?",
+      "deleteBody": "La section et ses blocs sont supprimés. Documents, cartes et Session 0 restent tels quels.",
+      "newSection": "Nouvelle section",
+      "newTitle": "Titre",
+      "newPlaceholder": "Ex. Tokyo, Factions, Première session",
+      "create": "Créer",
+      "addPage": "Rajouter {{name}}",
+      "titleLabel": "Titre",
+      "image": "Image",
+      "noBlocks": "Aucun bloc pour l’instant : ajoutes-en un.",
+      "addBlock": "Bloc",
+      "addBlockTitle": "Ajouter un bloc",
+      "insertBlock": "Insérer un bloc ici",
+      "dragBlock": "Déplacer le bloc",
+      "heading": "Titre du bloc",
+      "renameBlock": "Renommer {{name}}",
+      "addTag": "Tag",
+      "searchTag": "Chercher un Tag",
+      "remove": "Retirer {{name}}",
+      "group": "Grouper",
+      "groupedBy_one": "{{count}} groupe",
+      "groupedBy_other": "{{count}} groupes",
+      "groups": "Groupes",
+      "noGroups": "Aucun groupe : tous les Documents sont ensemble.",
+      "addGroup": "Groupe",
+      "useRoomGroups": "Utiliser les regroupements de la Salle",
+      "groupHint": "Choisis un ou plusieurs Tags : plusieurs Tags forment une combinaison.",
+      "dragGroup": "Déplacer {{name}}",
+      "mapKind": "Cartes affichées : {{kind}}",
+      "addFeature": "Fonction",
+      "dragFeature": "Déplacer {{name}}",
+      "dragPart": "Déplacer la sous-section",
+      "blockMenu": "Actions du bloc",
+      "deleteBlock": "Supprimer le bloc",
+      "blockDeleted": "Bloc supprimé",
+      "undo": "Annuler"
     }
   }
 }

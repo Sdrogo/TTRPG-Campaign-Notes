@@ -178,6 +178,7 @@
       "tooManyDocuments": "Tu peux importer {max} Documents au maximum à la fois",
       "tooManyImages": "Tu peux importer {max} images au maximum à la fois",
       "tooManyMaps": "Tu peux importer {max} cartes au maximum à la fois",
+      "tooManySections": "Tu peux importer {max} sections de l'Accueil de la Salle au maximum à la fois",
       "nameRequired": "Un Document du fichier n'a pas de nom",
       "nameTooLong": "Le nom du Document « {name}... » dépasse {max} caractères",
       "subtitleTooLong": "Le sous-titre de {name} dépasse {max} caractères",
@@ -314,6 +315,25 @@
       "notAVoter": "Le MJ ne vote pas dans ce sondage.",
       "pollNotFound": "Sondage introuvable.",
       "pollOrder": "Un sondage ou un choix n'appartient pas à cette étape."
+    },
+    "landing": {
+      "onlyMaster": "Seul le Maître peut modifier la page d'accueil",
+      "notFound": "Section introuvable",
+      "titleRequired": "Une Section a besoin d'un titre",
+      "titleTooLong": "Un titre fait au plus {max} caractères",
+      "descriptionTooLong": "Une description fait au plus {max} caractères",
+      "tooManySections": "Une Salle a au plus {max} Sections",
+      "pageSectionExists": "Cette page est déjà sur la page d'accueil",
+      "documentsRequired": "La carte Documents ne peut pas être supprimée",
+      "pageSectionHasNoBlocks": "Cette carte ouvre une page et n'a pas de blocs",
+      "orderMismatch": "Indiquez chaque Section de la Salle une seule fois",
+      "tooManyBlocks": "Une Section a au plus {max} blocs",
+      "documentsBlockNeedsTag": "Un bloc Documents a besoin d'au moins un Tag",
+      "sessionZeroBlockNeedsFeature": "Un bloc Session 0 a besoin d'au moins une fonction",
+      "blockFieldNotAllowed": "Ce réglage n'appartient pas à ce type de bloc",
+      "unknownTag": "L'un des Tags n'est pas dans cette Salle",
+      "tooManyGroups": "Un bloc a au plus {max} groupes",
+      "invalidGroup": "Chaque groupe a besoin d'un ou plusieurs Tags différents, et deux groupes ne peuvent pas être identiques"
     }
   },
   "pdf": {

@@ -178,6 +178,7 @@
       "tooManyDocuments": "Je kunt maximaal {max} Documenten tegelijk importeren",
       "tooManyImages": "Je kunt maximaal {max} afbeeldingen tegelijk importeren",
       "tooManyMaps": "Je kunt maximaal {max} kaarten tegelijk importeren",
+      "tooManySections": "Je kunt maximaal {max} secties van de Kamerstart tegelijk importeren",
       "nameRequired": "Een Document in het bestand heeft geen naam",
       "nameTooLong": "De naam van het Document \"{name}...\" is langer dan {max} tekens",
       "subtitleTooLong": "De ondertitel van {name} is langer dan {max} tekens",
@@ -314,6 +315,25 @@
       "notAVoter": "De Master stemt niet in deze peiling.",
       "pollNotFound": "Peiling niet gevonden.",
       "pollOrder": "Een peiling of keuze hoort niet bij deze stap."
+    },
+    "landing": {
+      "onlyMaster": "Alleen de Master kan de startpagina bewerken",
+      "notFound": "Sectie niet gevonden",
+      "titleRequired": "Een Sectie heeft een titel nodig",
+      "titleTooLong": "Een titel heeft maximaal {max} tekens",
+      "descriptionTooLong": "Een beschrijving heeft maximaal {max} tekens",
+      "tooManySections": "Een Kamer heeft maximaal {max} Secties",
+      "pageSectionExists": "Deze pagina staat al op de startpagina",
+      "documentsRequired": "De kaart Documenten kan niet worden verwijderd",
+      "pageSectionHasNoBlocks": "Deze kaart opent een pagina en heeft geen blokken",
+      "orderMismatch": "Noem elke Sectie van de Kamer precies één keer",
+      "tooManyBlocks": "Een Sectie heeft maximaal {max} blokken",
+      "documentsBlockNeedsTag": "Een Documenten-blok heeft minstens één Tag nodig",
+      "sessionZeroBlockNeedsFeature": "Een Sessie 0-blok heeft minstens één functie nodig",
+      "blockFieldNotAllowed": "Deze instelling hoort niet bij dit soort blok",
+      "unknownTag": "Een van de Tags staat niet in deze Kamer",
+      "tooManyGroups": "Een blok heeft maximaal {max} groepen",
+      "invalidGroup": "Elke groep heeft een of meer verschillende Tags nodig, en geen twee groepen mogen gelijk zijn"
     }
   },
   "pdf": {

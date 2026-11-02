@@ -351,7 +351,7 @@ function MapChrome({
                         {t('maps.settings')}
                       </Menu.Item>
                       <Menu.Divider />
-                      <Menu.Item color="red" leftSection={<TrashIcon size={18} />} onClick={() => setDeleteOpened(true)}>
+                      <Menu.Item color="danger" leftSection={<TrashIcon size={18} />} onClick={() => setDeleteOpened(true)}>
                         {t('maps.delete')}
                       </Menu.Item>
                     </>
@@ -426,7 +426,7 @@ function MapChrome({
               {t('common.cancel')}
             </Button>
             <Button
-              color="red"
+              color="danger"
               loading={deleteMap.isPending}
               onClick={() =>
                 deleteMap.mutate(undefined, {

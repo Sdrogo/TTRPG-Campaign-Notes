@@ -296,6 +296,7 @@ export function rawImportPreview(overrides: Record<string, unknown> = {}) {
     tags_to_create: [],
     unavailable_tags: [],
     maps: [],
+    sections: [],
     ...overrides,
   };
 }
@@ -614,5 +615,119 @@ export function rawSessionZero(overrides: Record<string, unknown> = {}) {
     ],
     timer: null,
     ...rest,
+  };
+}
+
+/** A landing block (spec 55) on the wire: a Documents block on `tag-1` unless overridden. */
+export function rawBlock(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'block-1',
+    kind: 'documents',
+    position: 0,
+    heading: null,
+    tag_ids: ['tag-1'],
+    groups: [],
+    map_kind: null,
+    features: [],
+    ...overrides,
+  };
+}
+
+/** A landing Section (spec 55) on the wire: a custom Section the Master edits unless overridden. */
+export function rawSection(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'section-1',
+    kind: 'custom',
+    position: 3,
+    title: 'Tokyo',
+    description: '',
+    image_url: null,
+    blocks: [],
+    can_edit: true,
+    ...overrides,
+  };
+}
+
+/** The three page cards a Room starts with, then `extra`. */
+export function rawSections(extra: Record<string, unknown>[] = [], overrides: Record<string, unknown> = {}) {
+  return [
+    rawSection({ id: 'page-documents', kind: 'page_documents', position: 0, title: null, ...overrides }),
+    rawSection({ id: 'page-maps', kind: 'page_maps', position: 1, title: null, ...overrides }),
+    rawSection({ id: 'page-session-zero', kind: 'page_session_zero', position: 2, title: null, ...overrides }),
+    ...extra,
+  ];
+}
+
+/** A poll on the wire (spec 53), open with one choice voted. */
+export function rawPoll(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'poll-1',
+    body: 'Quale sistema?',
+    hint: null,
+    max_choices: 1,
+    master_votes: false,
+    voters_visible: 'master',
+    results: 'live',
+    revealed: true,
+    closed: false,
+    has_votes: true,
+    options: [
+      { id: 'opt-1', body: 'D&D', description: null, count: 1, voters: null, winner: false },
+      { id: 'opt-2', body: 'PbtA', description: null, count: 0, voters: null, winner: false },
+    ],
+    my_option_ids: [],
+    voter_count: 1,
+    electorate: 3,
+    not_voted: null,
+    tally_visible: true,
+    can_vote: true,
+    ...overrides,
+  };
+}
+
+/** A Questions step on the wire (spec 47), with one question. */
+export function rawQuestionsStep(overrides: Record<string, unknown> = {}) {
+  return {
+    tag_id: null,
+    answers_revealed: false,
+    players_bypass_creation_rule: false,
+    questions: [{ id: 'q-1', position: 0, body: 'Nome?', hint: null, target: 'name', tag_id: null }],
+    answers: [],
+    documents: [],
+    can_create: false,
+    creatable: 0,
+    ...overrides,
+  };
+}
+
+/** A DDI step on the wire (spec 47), on `doc-1` with no acceptance. */
+export function rawDdiStep(overrides: Record<string, unknown> = {}) {
+  return { document_id: 'doc-1', document_hidden: false, changed_at: null, acceptances: [], can_accept: true, ...overrides };
+}
+
+/**
+ * `GET .../session-zero/overview` (spec 55): one open session with a Retro
+ * step (two post-its), a Questions, a DDI and a Poll step; Lines & Veils counts.
+ */
+export function rawSessionZeroOverview(overrides: Record<string, unknown> = {}) {
+  return {
+    started: true,
+    rounds: [
+      {
+        id: 'round-1',
+        number: 1,
+        title: null,
+        started_at: '2026-10-27T09:00:00Z',
+        closed_at: null,
+        steps: [
+          { id: 'step-retro', kind: 'retro', position: 0, cards: 2 },
+          { id: 'step-questions', kind: 'questions', position: 1, cards: 0, questions: rawQuestionsStep() },
+          { id: 'step-ddi', kind: 'ddi', position: 2, cards: 0, ddi: rawDdiStep() },
+          { id: 'step-poll', kind: 'poll', position: 3, cards: 0, polls: [rawPoll()] },
+        ],
+      },
+    ],
+    lines_veils: { must: 1, veils: 2 },
+    ...overrides,
   };
 }

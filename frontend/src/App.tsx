@@ -39,6 +39,12 @@ const RelationshipMapPage = lazy(() =>
 const SessionZeroPage = lazy(() =>
   import('./pages/SessionZeroPage').then((m) => ({ default: m.SessionZeroPage })),
 );
+const RoomLandingPage = lazy(() =>
+  import('./pages/RoomLandingPage').then((m) => ({ default: m.RoomLandingPage })),
+);
+const RoomSectionPage = lazy(() =>
+  import('./pages/RoomSectionPage').then((m) => ({ default: m.RoomSectionPage })),
+);
 const DemoPage = lazy(() => import('./pages/DemoPage').then((m) => ({ default: m.DemoPage })));
 const MentionMapPage = lazy(() =>
   import('./pages/MentionMapPage').then((m) => ({ default: m.MentionMapPage })),
@@ -72,6 +78,8 @@ function App() {
         <Route path="/friends/add/:code" element={<AddFriendPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/demo" element={<DemoPage />} />
+        <Route path="/rooms/:roomId" element={<RoomLandingPage />} />
+        <Route path="/rooms/:roomId/sections/:sectionId" element={<RoomSectionPage />} />
         <Route path="/rooms/:roomId/setup" element={<RoomSetupPage />} />
         <Route path="/rooms/:roomId/members" element={<RoomMembersRedirect />} />
         <Route path="/rooms/:roomId/documents" element={<RoomDocumentsPage />} />

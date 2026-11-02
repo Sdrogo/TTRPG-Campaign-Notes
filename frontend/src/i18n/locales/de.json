@@ -971,6 +971,29 @@
       "skippedTitle_one": "{{count}} Karte nicht vollständig importiert",
       "skippedTitle_other": "{{count}} Karten nicht vollständig importiert"
     },
+    "sections": {
+      "found_one": "{{count}} Bereich der Raum-Startseite gefunden",
+      "found_other": "{{count}} Bereiche der Raum-Startseite gefunden",
+      "pageCardsHint": "Seitenkarten sind nicht angehakt: Hake eine an, um damit die Karte dieses Raums zu überschreiben.",
+      "select": "Bereich {{name}} importieren",
+      "applySelect": "{{name}} auf die Karte dieses Raums anwenden",
+      "untitled": "Bereich ohne Titel",
+      "blocksCount_one": "{{count}} Block",
+      "blocksCount_other": "{{count}} Blöcke",
+      "withImage": "mit Bild",
+      "pageCard": "Überschreibt die Karte dieses Raums",
+      "skippedBlocks_one": "{{count}} Dokumentblock wird ausgelassen: keiner seiner Tags kann hierher übernommen werden",
+      "skippedBlocks_other": "{{count}} Dokumentblöcke werden ausgelassen: keiner ihrer Tags kann hierher übernommen werden",
+      "skipReason": {
+        "invalid": "Kann nicht importiert werden: nicht lesbar oder verstößt gegen eine Regel der Raum-Startseite",
+        "limit": "Die Raum-Startseite hat bereits die maximale Anzahl an Bereichen",
+        "image": "Das Bild konnte nicht importiert werden"
+      },
+      "written_one": "{{count}} Bereich der Raum-Startseite erstellt oder aktualisiert",
+      "written_other": "{{count}} Bereiche der Raum-Startseite erstellt oder aktualisiert",
+      "skippedTitle_one": "{{count}} Bereich nicht vollständig importiert",
+      "skippedTitle_other": "{{count}} Bereiche nicht vollständig importiert"
+    },
     "failed": "Der Import ist fehlgeschlagen. Prüfe die Dokumentliste, bevor du es erneut versuchst.",
     "another": "Weitere Dateien importieren"
   },
@@ -1565,6 +1588,119 @@
       "link": "Link",
       "code": "Code",
       "table": "Tabelle"
+    }
+  },
+  "roomLanding": {
+    "home": "Raum-Startseite",
+    "kicker": "Start",
+    "sections": "Bereiche",
+    "pages": {
+      "documents": "Dokumente",
+      "maps": "Karten",
+      "sessionZero": "Session 0"
+    },
+    "pageDescriptions": {
+      "documents": "Alle Dokumente des Raums",
+      "maps": "Die Karten des Raums",
+      "sessionZero": "Sessions, Grenzen & Schleier, Umfragen"
+    },
+    "blockEmpty": "Nichts anzuzeigen",
+    "sectionEmpty": "Hier gibt es noch nichts zu sehen.",
+    "notFound": "Diesen Bereich gibt es nicht mehr.",
+    "loadError": "Die Seite konnte nicht geladen werden.",
+    "otherDocuments": "Weitere Dokumente",
+    "blockTitle": {
+      "documents": "Dokumente · {{tags}}",
+      "maps": "Karten",
+      "mapsFree": "Beziehungskarten",
+      "mapsGeographic": "Geografische Karten",
+      "sessionZero": "Session 0"
+    },
+    "features": {
+      "sessions": "Sessions",
+      "retro": "Retro",
+      "lines_veils": "Grenzen & Schleier",
+      "stars_wishes": "Sterne und Wünsche",
+      "questions": "Fragen",
+      "ddi": "DDI",
+      "polls": "Umfragen"
+    },
+    "mapKinds": {
+      "all": "Alle Karten",
+      "free": "Beziehungen",
+      "geographic": "Geografisch"
+    },
+    "item": {
+      "inProgress": "Läuft",
+      "postIts_one": "{{count}} Post-it",
+      "postIts_other": "{{count}} Post-its",
+      "questions_one": "{{count}} Frage",
+      "questions_other": "{{count}} Fragen",
+      "ddiAccepted_one": "Von {{count}} Spieler akzeptiert",
+      "ddiAccepted_other": "Von {{count}} Spielern akzeptiert",
+      "ddiAcceptedByYou": "Von dir akzeptiert",
+      "ddiToAccept": "Zu akzeptieren",
+      "pollOpen": "Offen · {{voted}} von {{total}} haben abgestimmt",
+      "pollClosed": "Geschlossen",
+      "pollWinner": "Geschlossen · {{choice}} gewinnt"
+    },
+    "tiles": {
+      "documents": {
+        "title": "Dokumente",
+        "body": "Die Dokumente mit bestimmten Tags"
+      },
+      "maps": {
+        "title": "Karten",
+        "body": "Alle Karten oder eine Art"
+      },
+      "session_zero": {
+        "title": "Session 0",
+        "body": "Sessions, Schritte und Umfragen"
+      }
+    },
+    "edit": {
+      "start": "Bearbeiten",
+      "done": "Fertig",
+      "dragInstructions": "Leertaste zum Aufnehmen, Pfeiltasten zum Verschieben, Leertaste zum Ablegen. Esc bricht ab.",
+      "dragSection": "{{name}} verschieben",
+      "sectionMenu": "Aktionen für {{name}}",
+      "info": "Infos bearbeiten",
+      "deleteTitle": "„{{name}}“ löschen?",
+      "deleteBody": "Der Bereich und seine Blöcke werden gelöscht. Dokumente, Karten und Session 0 bleiben, wie sie sind.",
+      "newSection": "Neuer Bereich",
+      "newTitle": "Titel",
+      "newPlaceholder": "z. B. Tokio, Fraktionen, Erste Session",
+      "create": "Erstellen",
+      "addPage": "{{name}} wieder hinzufügen",
+      "titleLabel": "Titel",
+      "image": "Bild",
+      "noBlocks": "Noch keine Blöcke: füge einen hinzu.",
+      "addBlock": "Block",
+      "addBlockTitle": "Block hinzufügen",
+      "insertBlock": "Hier einen Block einfügen",
+      "dragBlock": "Block verschieben",
+      "heading": "Blocktitel",
+      "renameBlock": "{{name}} umbenennen",
+      "addTag": "Tag",
+      "searchTag": "Tag suchen",
+      "remove": "{{name}} entfernen",
+      "group": "Gruppieren",
+      "groupedBy_one": "{{count}} Gruppe",
+      "groupedBy_other": "{{count}} Gruppen",
+      "groups": "Gruppen",
+      "noGroups": "Keine Gruppen: alle Dokumente stehen zusammen.",
+      "addGroup": "Gruppe",
+      "useRoomGroups": "Gruppierung des Raums übernehmen",
+      "groupHint": "Wähle einen oder mehrere Tags: mehrere Tags ergeben eine Kombination.",
+      "dragGroup": "{{name}} verschieben",
+      "mapKind": "Angezeigte Karten: {{kind}}",
+      "addFeature": "Funktion",
+      "dragFeature": "{{name}} verschieben",
+      "dragPart": "Unterbereich verschieben",
+      "blockMenu": "Aktionen für den Block",
+      "deleteBlock": "Block löschen",
+      "blockDeleted": "Block gelöscht",
+      "undo": "Rückgängig"
     }
   }
 }

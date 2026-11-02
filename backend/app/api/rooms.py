@@ -21,6 +21,7 @@ from app.db import (
     reads_repo,
     relationship_maps_repo,
     reveals_repo,
+    room_sections_repo,
     rooms_repo,
     storage,
     storage_cleanup,
@@ -383,6 +384,10 @@ async def purge_room(session: AsyncSession, room_id: uuid.UUID) -> None:
     backgrounds = await relationship_maps_repo.list_background_paths_in_room(session, room_id)
     if backgrounds:
         await storage_cleanup.schedule_removal(session, backgrounds)
+    # And the landing Sections' images (spec 55).
+    section_images = await room_sections_repo.list_image_paths_in_room(session, room_id)
+    if section_images:
+        await storage_cleanup.schedule_removal(session, section_images)
     await rooms_repo.delete_room(session, room_id)
 
 

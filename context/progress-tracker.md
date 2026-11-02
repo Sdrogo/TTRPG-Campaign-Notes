@@ -20,6 +20,29 @@ detail:
   and the name starts on the row below. The `documents.title` key stays
   (back-link labels, Room Documents page).
 
+- **57, UI consistency** (2026-11-02; analysis in the Claude Doc "Ex Libris
+  — Analisi coerenza UI/UX", screenshots in `ui-audit/` of the project
+  files; the product owner asked to build the proposed tickets the same
+  day): 57 phone fixes (Index tab padding, setup members as blocks,
+  heading actions wrap; "Create Document" keeps floating everywhere), 57b
+  one palette (`dark` scale from the tokens, `danger` colour), 57c
+  `PageHeading`, `SectionLoader` (centered in-page loading, product owner
+  2026-11-02), `EmptyState`, section heading sizes, Index on setup and
+  Session 0. Built in one PR into `staging`, no migration. Waiting on: the
+  product owner's review (Decisions 4, 13, 14 answered 2026-11-02).
+- **55, Room landing page** (2026-10-31, PR #283 into `staging`,
+  **migration `d5b8e1f3a9c7`**, applied to staging and to production
+  2026-11-02): 55_1 backend (Sections,
+  blocks, groups, image, `landing` live topic, Session 0 overview, Tag
+  deletion pruning, seeding and Room duplication), 55_2 read side
+  (`/rooms/:roomId` landing, `/rooms/:roomId/sections/:sectionId`, Room
+  cards open the landing, Back to the landing, Index of Sections and
+  blocks, Session 0 deep links) and 55_3 edit side (drag order, block bars,
+  groups, map kind, features, info and image, delete with undo) are built.
+  Frontend at 100% coverage (2571 tests); backend suite green. Maps blocks
+  filter by relationship or geographic maps only (mention maps live on
+  their Document); image search is not offered on a Section card.
+
 - **Migration `c8f2d6a4e1b7`** (2026-10-30): poll choice description (spec
   54) applied to the staging and production databases by hand, before the
   release to `main` that ships the code. No migration is pending.
@@ -258,7 +281,7 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `c8f2d6a4e1b7` (poll choice description,
+- **Head in the repository**: `d5b8e1f3a9c7` (Room landing page, spec 55, PR #283), after `c8f2d6a4e1b7` (poll choice description,
   spec 54, PR #280: one nullable `text` column on
   `session_zero_poll_options`), after `b9e4c2a7d1f3` (Session 0 polls, spec 53,
   PR #276), after `a7d3f9b2c6e1` (Session 0 DDI steps, spec
@@ -266,8 +289,10 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending**: none. `c8f2d6a4e1b7` is applied to both databases.
-- **Staging database**: `c8f2d6a4e1b7` (poll choice description, spec 54,
+- **Pending**: none. Staging and production are both at `d5b8e1f3a9c7`.
+- **Staging database**: `d5b8e1f3a9c7` (Room landing page, spec 55,
+  PR #283, applied 2026-11-02 with `backend/.env.staging` loaded, before
+  the PR merges); `c8f2d6a4e1b7` before it (poll choice description, spec 54,
   PR #280, applied 2026-10-30 with `backend/.env.staging` loaded, before
   the PR merged); `b9e4c2a7d1f3` before it (Session 0 polls, spec 53,
   PR #276, applied by the product owner 2026-10-30 before the merge);
@@ -286,7 +311,12 @@ here and remind the product owner.
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `c8f2d6a4e1b7` (poll choice description, spec
+- **Production database**: `d5b8e1f3a9c7` (Room landing page, spec 55,
+  PR #283: five tables and the three page cards seeded for every Room),
+  applied 2026-11-02 with `backend/.env` loaded (plain `alembic upgrade
+  head`) ahead of the release to `main` that ships it. The tables are new
+  and unused by the code in production, so nothing changes there until the
+  release. Before it, `c8f2d6a4e1b7` (poll choice description, spec
   54, PR #280), applied 2026-10-30 with `backend/.env` loaded (plain
   `alembic upgrade head`) ahead of the release to `main` that ships it.
   The new column is nullable and unused by the code in production, so
@@ -353,6 +383,13 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
+
+### 2026-11-02
+
+- **58 Map zoom kept in the split view** (frontend only, no migration):
+  `PageLayout` always renders `SplitView` on Room pages, so opening or
+  closing the pane no longer remounts the page; a zoomed geographic map
+  keeps its zoom and middle point when the board resizes (`keepMiddle`).
 
 ### 2026-10-30
 
@@ -835,11 +872,29 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-Nothing is waiting for release: `staging` and `main` match after release
-PR #246 (2026-10-27), and production's database is at head. Before the
+`staging` and `main` matched after release PR #281 (2026-10-30); production's
+database is at `d5b8e1f3a9c7` (spec 55, applied 2026-11-02), ready for the
+release that ships it. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **56, Landing Sections in import-export** (asked by the product owner
+  2026-11-02, separate PR; ticket confirmed 2026-11-02; **built** in PR
+  #284 into `staging`, 56_1 backend and 56_2 frontend): the JSON Room
+  export carries the landing's Sections (`schema_version` 4) and the
+  Master's import adds the custom ones last (Tags matched or created by
+  name) and, when ticked, applies a page card's title, description and
+  image to the Room's own. Duplicate Room already copies the landing
+  (spec 55). No migration.
+- **55, Room landing page** (ticket answered by the product owner
+  2026-10-31; mockup 55_m confirmed the same day; **all units built** in
+  PR #283 into `staging`): a Room home page `/rooms/:roomId` of Section
+  cards, each Section a page of blocks (Documents with Tags and optional
+  groups, maps by kind, Session 0 features chosen by the Master) shown as
+  Document-like cards, edited in place with chips and popovers. Waiting
+  on: the product owner's review (**migration `d5b8e1f3a9c7`** is applied
+  to the staging and production databases since 2026-11-02). Mockup source: project files
+  `landing-mockup/index.html`.
 - **54, Poll choices as cards** (ticket confirmed by the product owner
   2026-10-30, Q1 left-edge bar, Q2-Q4 as proposed; built the same day in
   PR #280): a poll's choices are cards in one column with a title and an
@@ -858,7 +913,7 @@ on `main`.
   of M", an "Everyone has voted" badge and toast, close/reopen, carry
   over like Questions. **Migration `b9e4c2a7d1f3`** (revises
   `a7d3f9b2c6e1`): applied to the staging DB by the product owner
-  2026-10-30; pending on production before the next release. Same PR: a new
+  2026-10-30, and to production the same day. Same PR: a new
   session's default name is "Sessione 1", "Sessione 2"... instead of
   "Sessione 0.5 #1" (frontend strings only), and a fix for a flaky
   ungroup answer (`delete_groups` now clears the post-its' `group_id`

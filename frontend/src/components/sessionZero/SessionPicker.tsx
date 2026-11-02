@@ -105,7 +105,7 @@ function NewSessionModal({ suggested, chain: proposed, busy, onClose, onStart }:
         />
         <ChainEditor value={chain} onChange={setChain} carry />
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
+          <Button variant="subtle" color="gray" onClick={onClose}>
             {t('common.cancel')}
           </Button>
           <Button disabled={busy} onClick={() => onStart(name.trim() === suggested ? '' : name, chain)}>

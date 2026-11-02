@@ -178,6 +178,7 @@
       "tooManyDocuments": "一度にインポートできるドキュメントは最大{max}件です",
       "tooManyImages": "一度にインポートできる画像は最大{max}枚です",
       "tooManyMaps": "一度にインポートできるマップは最大{max}個です",
+      "tooManySections": "一度にインポートできるルームのホームのセクションは最大{max}個です",
       "nameRequired": "ファイル内に名前のないドキュメントがあります",
       "nameTooLong": "ドキュメント名「{name}...」が{max}文字を超えています",
       "subtitleTooLong": "{name}のサブタイトルが{max}文字を超えています",
@@ -314,6 +315,25 @@
       "notAVoter": "この投票ではマスターは投票しません。",
       "pollNotFound": "投票が見つかりません。",
       "pollOrder": "投票または選択肢がこのステップのものではありません。"
+    },
+    "landing": {
+      "onlyMaster": "ランディングページを編集できるのはマスターだけです",
+      "notFound": "セクションが見つかりません",
+      "titleRequired": "セクションにはタイトルが必要です",
+      "titleTooLong": "タイトルは{max}文字以内です",
+      "descriptionTooLong": "説明は{max}文字以内です",
+      "tooManySections": "ルームのセクションは{max}個までです",
+      "pageSectionExists": "このページはすでにランディングページにあります",
+      "documentsRequired": "ドキュメントのカードは削除できません",
+      "pageSectionHasNoBlocks": "このカードはページを開くもので、ブロックはありません",
+      "orderMismatch": "ルームのすべてのセクションを一度ずつ指定してください",
+      "tooManyBlocks": "セクションのブロックは{max}個までです",
+      "documentsBlockNeedsTag": "ドキュメントのブロックには少なくとも1つのタグが必要です",
+      "sessionZeroBlockNeedsFeature": "セッション0のブロックには少なくとも1つの機能が必要です",
+      "blockFieldNotAllowed": "この設定はこの種類のブロックには使えません",
+      "unknownTag": "タグの1つがこのルームにありません",
+      "tooManyGroups": "ブロックのグループは{max}個までです",
+      "invalidGroup": "各グループには異なるタグが1つ以上必要で、同じグループは2つ作れません"
     }
   },
   "pdf": {

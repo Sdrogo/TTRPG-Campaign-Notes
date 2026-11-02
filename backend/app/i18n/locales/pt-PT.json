@@ -178,6 +178,7 @@
       "tooManyDocuments": "Só se podem importar no máximo {max} Documentos de cada vez",
       "tooManyImages": "Só se podem importar no máximo {max} imagens de cada vez",
       "tooManyMaps": "Só se podem importar no máximo {max} mapas de cada vez",
+      "tooManySections": "Só se podem importar no máximo {max} secções do Início da Sala de cada vez",
       "nameRequired": "Um Documento do ficheiro não tem nome",
       "nameTooLong": "O nome do Documento \"{name}...\" excede {max} caracteres",
       "subtitleTooLong": "O subtítulo de {name} excede {max} caracteres",
@@ -314,6 +315,25 @@
       "notAVoter": "O Mestre não vota nesta sondagem.",
       "pollNotFound": "Sondagem não encontrada.",
       "pollOrder": "Uma sondagem ou opção não é desta etapa."
+    },
+    "landing": {
+      "onlyMaster": "Só o Mestre pode editar a página inicial",
+      "notFound": "Secção não encontrada",
+      "titleRequired": "Uma Secção precisa de um título",
+      "titleTooLong": "Um título tem no máximo {max} caracteres",
+      "descriptionTooLong": "Uma descrição tem no máximo {max} caracteres",
+      "tooManySections": "Uma Sala tem no máximo {max} Secções",
+      "pageSectionExists": "Esta página já está na página inicial",
+      "documentsRequired": "O cartão Documentos não pode ser eliminado",
+      "pageSectionHasNoBlocks": "Este cartão abre uma página e não tem blocos",
+      "orderMismatch": "Indique cada Secção da Sala exatamente uma vez",
+      "tooManyBlocks": "Uma Secção tem no máximo {max} blocos",
+      "documentsBlockNeedsTag": "Um bloco de Documentos precisa de pelo menos uma Tag",
+      "sessionZeroBlockNeedsFeature": "Um bloco de Sessão 0 precisa de pelo menos uma função",
+      "blockFieldNotAllowed": "Esta definição não pertence a este tipo de bloco",
+      "unknownTag": "Uma das Tags não está nesta Sala",
+      "tooManyGroups": "Um bloco tem no máximo {max} grupos",
+      "invalidGroup": "Cada grupo precisa de uma ou mais Tags diferentes, e não pode haver dois grupos iguais"
     }
   },
   "pdf": {

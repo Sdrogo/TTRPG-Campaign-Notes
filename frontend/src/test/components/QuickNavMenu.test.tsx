@@ -53,7 +53,7 @@ describe('QuickNavMenu', () => {
     const crypt = await screen.findByRole('menuitem', { name: /La Cripta/ });
     const wood = screen.getByRole('menuitem', { name: /Il Bosco/ });
     expect(wood.compareDocumentPosition(crypt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(crypt).toHaveAttribute('href', '/rooms/room-1/documents');
+    expect(crypt).toHaveAttribute('href', '/rooms/room-1');
     expect(screen.queryByRole('menuitem', { name: /Archivio/ })).not.toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/rooms');
   });

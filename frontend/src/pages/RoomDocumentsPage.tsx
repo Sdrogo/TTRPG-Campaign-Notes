@@ -11,11 +11,10 @@ import {
   Select,
   Stack,
   Text,
-  Loader,
   Switch,
   UnstyledButton,
 } from '@mantine/core';
-import { CaretDownIcon, CaretRightIcon, MapTrifoldIcon, PlusIcon } from '@phosphor-icons/react';
+import { BooksIcon, CaretDownIcon, CaretRightIcon, MapTrifoldIcon, PlusIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import { useDocuments } from '../hooks/useDocuments';
 import { useTags } from '../hooks/useTags';
@@ -24,7 +23,7 @@ import { useMembers } from '../hooks/useMembers';
 import { useRoom, useUpdateRoomSettings } from '../hooks/useRooms';
 import { DocumentCard } from '../components/DocumentCard';
 import { CreateDocumentModal } from '../components/CreateDocumentModal';
-import { FullPageLoader, SignInRequired } from '../components/PageState';
+import { FullPageLoader, SignInRequired, SectionLoader } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { RoomPdfExports } from '../components/pdf/RoomPdfExports';
 import { RoomTitleActions } from '../components/RoomTitleActions';
@@ -51,6 +50,8 @@ import type { MainItem, Tag } from '../types/tag';
 import { itemLabel } from '../lib/mainItems';
 import { LabeledActionIcon } from '../components/LabeledActionIcon';
 import { useBackState } from '../lib/backNav';
+import { PageHeading } from '../components/PageHeading';
+import { EmptyState } from '../components/EmptyState';
 
 /**
  * `/rooms/:roomId/documents`: the Documents the viewer can see, filterable by
@@ -139,32 +140,22 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   ];
 
   return (
-    <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId} showIndex>
+    <PageLayout
+      backTo={`/rooms/${roomId}`}
+      backLabel={t('roomLanding.home')}
+      roomId={roomId}
+      showIndex
+      index={{ current: 'page_documents' }}
+    >
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
-        {/* The Room's actions sit at the end of the title row, folded in "⋮". */}
-        <Group
-          justify="space-between"
-          align="flex-end"
-          wrap="nowrap"
+        {/* Spec 57c: the Room's name is the kicker and the page is "Documents", as on
+            every Room page; the Room's actions sit at the end of the row, folded in "⋮". */}
+        <PageHeading
           data-tour="room"
-          className="documents-page-heading"
-        >
-          <Group gap="sm" align="center" wrap="wrap" style={{ minWidth: 0 }}>
-            <Stack gap={2}>
-              {room.data && (
-                <Text size="xs" c="dimmed" tt="uppercase" fw={600} className="documents-kicker">
-                  {t('documents.title')}
-                </Text>
-              )}
-              <Title
-                order={1}
-                className="documents-page-title"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                {room.data ? room.data.name : t('documents.title')}
-              </Title>
-            </Stack>
-            {hasControls && (
+          kicker={room.data?.name}
+          title={t('documents.title')}
+          titleAfter={
+            hasControls && (
               <UnstyledButton
                 onClick={() => setControlsExpanded((current) => !current)}
                 aria-expanded={controlsExpanded}
@@ -178,41 +169,46 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
                   <CaretRightIcon size={18} aria-hidden="true" />
                 )}
               </UnstyledButton>
-            )}
-          </Group>
-          {/* A preview has no Room menu, but the maps are part of what it shows. */}
-          {readOnly && (
-            <LabeledActionIcon
-              component={Link}
-              to={`/rooms/${roomId}/maps`}
-              state={backState}
-              variant="subtle"
-              color="gray"
-              size="lg"
-              aria-label={t('maps.title')}
-              title={t('maps.title')}
-            >
-              <MapTrifoldIcon size={24} />
-            </LabeledActionIcon>
-          )}
-          {room.data && me && !readOnly && (
-            <RoomTitleActions
-              roomId={roomId}
-              roomName={room.data.name}
-              isAdmin={me.isAdmin}
-              isMaster={isMaster}
-              canImport={canCreateDocument}
-              currentUserId={currentUserId}
-              onLeft={() => navigate('/rooms')}
-              viewAsMembers={
-                isMaster ? members.data!.filter((m) => m.userId !== currentUserId) : undefined
-              }
-            />
-          )}
-        </Group>
+            )
+          }
+          actions={
+            <>
+              {/* A preview has no Room menu, but the maps are part of what it shows. */}
+              {readOnly && (
+                <LabeledActionIcon
+                  component={Link}
+                  to={`/rooms/${roomId}/maps`}
+                  state={backState}
+                  variant="subtle"
+                  color="gray"
+                  size="lg"
+                  aria-label={t('maps.title')}
+                  title={t('maps.title')}
+                >
+                  <MapTrifoldIcon size={24} />
+                </LabeledActionIcon>
+              )}
+              {room.data && me && !readOnly && (
+                <RoomTitleActions
+                  roomId={roomId}
+                  roomName={room.data.name}
+                  isAdmin={me.isAdmin}
+                  isMaster={isMaster}
+                  canImport={canCreateDocument}
+                  currentUserId={currentUserId}
+                  onLeft={() => navigate('/rooms')}
+                  viewAsMembers={
+                    isMaster ? members.data!.filter((m) => m.userId !== currentUserId) : undefined
+                  }
+                />
+              )}
+            </>
+          }
+        />
         {/* The user's PDFs still being made or not yet taken (spec 23b); not while previewing as a member. */}
         {!readOnly && <RoomPdfExports roomId={roomId} userId={currentUserId} />}
-        {/* The primary creation action stays within reach while browsing a long archive. */}
+        {/* The primary creation action floats on every screen, within reach while
+            browsing a long archive (product owner, 2026-11-02, spec 57 Decision 4). */}
         {canCreateDocument && (
           <Affix position={{ bottom: 24, right: 24 }} zIndex={150}>
             <Button
@@ -268,10 +264,10 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
           </Collapse>
         )}
         {!mapsAmongGroups && mapsRow}
-        {documents.isLoading && <Loader color="accent" />}
+        {documents.isLoading && <SectionLoader />}
         {documents.isError && <Text c="red">{t('documents.loadError')}</Text>}
         {documents.data && documents.data.length === 0 && (
-          <Text c="dimmed">{t('documents.empty')}</Text>
+          <EmptyState icon={<BooksIcon size={28} weight="duotone" />}>{t('documents.empty')}</EmptyState>
         )}
         {documents.data && documents.data.length > 0 && sorted && sorted.length === 0 && (
           <Group gap="xs">

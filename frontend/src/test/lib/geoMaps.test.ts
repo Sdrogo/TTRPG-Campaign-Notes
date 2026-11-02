@@ -47,6 +47,7 @@ import {
   toPlane,
   updateLink,
   zoomAt,
+  keepMiddle,
   type RawGeoMapDetail,
 } from '../../lib/geoMaps';
 import type { Corner, GeoLink } from '../../types/geoMap';
@@ -378,5 +379,14 @@ describe('area names kept clear of other labels (spec 38b)', () => {
     expect(placeAreaLabels([{ ...label, points: sliver }], []).get('a')).toBeDefined();
     const line: [number, number][] = [[0, 0], [0, 0], [0, 0]];
     expect(placeAreaLabels([{ ...label, points: line }], []).get('a')).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe('keepMiddle (spec 58)', () => {
+  it('keeps the zoom and the plane point at the middle of a resized board', () => {
+    const view = { x: -300, y: -100, k: 2 };
+    const next = keepMiddle(view, { width: 1000, height: 600 }, { width: 500, height: 600 });
+    expect(next.k).toBe(2);
+    expect(toPlane(next, { x: 250, y: 300 })).toEqual(toPlane(view, { x: 500, y: 300 }));
   });
 });

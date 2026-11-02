@@ -60,7 +60,7 @@ export function PollBoard() {
     <Box component="section" aria-label={t('sessionZero.modules.kinds.poll')} className="sz-polls">
       <Stack gap="md">
         <Group gap="md" align="center">
-          <Title order={2} fz="h4">
+          <Title order={2} fz="h3">
             {t('sessionZero.polls.title')}
           </Title>
           {board.canManage && editable && (
@@ -543,7 +543,7 @@ function PollsEditor({ module, polls, onClose }: { module: SessionZeroModule; po
                   </LabeledActionIcon>
                   <LabeledActionIcon
                     variant="subtle"
-                    color="red"
+                    color="danger"
                     size="sm"
                     aria-label={t('sessionZero.modules.remove')}
                     onClick={() => setRows(rows.filter((other) => other.key !== row.key))}
@@ -588,7 +588,7 @@ function PollsEditor({ module, polls, onClose }: { module: SessionZeroModule; po
                       />
                       <LabeledActionIcon
                         variant="subtle"
-                        color="red"
+                        color="danger"
                         size="sm"
                         aria-label={t('sessionZero.polls.removeChoice', { number: optionIndex + 1 })}
                         disabled={row.options.length <= MIN_POLL_OPTIONS}
@@ -695,13 +695,13 @@ function PollsEditor({ module, polls, onClose }: { module: SessionZeroModule; po
             <Button variant="default" onClick={() => setLeaving(false)}>
               {t('sessionZero.questions.keepEditing')}
             </Button>
-            <Button color="red" variant="light" onClick={onClose}>
+            <Button color="danger" variant="light" onClick={onClose}>
               {t('sessionZero.questions.discard')}
             </Button>
           </Group>
         ) : (
           <Group justify="flex-end">
-            <Button variant="default" onClick={close}>
+            <Button variant="subtle" color="gray" onClick={close}>
               {t('common.cancel')}
             </Button>
             <Button disabled={busy || problem !== null} onClick={() => act(boardWrites.setPolls(module.id, rows), onClose)}>

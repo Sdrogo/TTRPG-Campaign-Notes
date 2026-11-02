@@ -945,6 +945,24 @@
       "created_other": "已创建 {{count}} 张地图",
       "skippedTitle_other": "{{count}} 张地图未完整导入"
     },
+    "sections": {
+      "found_other": "找到 {{count}} 个房间主页版块",
+      "pageCardsHint": "页面卡片默认不勾选：勾选后会用它覆盖此房间的卡片。",
+      "select": "导入版块 {{name}}",
+      "applySelect": "将 {{name}} 应用到此房间的卡片",
+      "untitled": "无标题版块",
+      "blocksCount_other": "{{count}} 个区块",
+      "withImage": "含图片",
+      "pageCard": "覆盖此房间的卡片",
+      "skippedBlocks_other": "{{count}} 个文档区块被略过：它们的标签都无法带到这里",
+      "skipReason": {
+        "invalid": "无法导入：无法读取或违反了房间主页的规则",
+        "limit": "房间主页的版块数量已达上限",
+        "image": "无法导入其图片"
+      },
+      "written_other": "已创建或更新 {{count}} 个房间主页版块",
+      "skippedTitle_other": "{{count}} 个版块未完整导入"
+    },
     "failed": "导入失败。重试之前请先检查文档列表。",
     "another": "导入其他文件"
   },
@@ -1528,6 +1546,115 @@
       "link": "链接",
       "code": "代码",
       "table": "表格"
+    }
+  },
+  "roomLanding": {
+    "home": "房间主页",
+    "kicker": "主页",
+    "sections": "版块",
+    "pages": {
+      "documents": "文档",
+      "maps": "地图",
+      "sessionZero": "第 0 次会话"
+    },
+    "pageDescriptions": {
+      "documents": "房间的所有文档",
+      "maps": "房间的地图",
+      "sessionZero": "会话、底线与帷幕、投票"
+    },
+    "blockEmpty": "没有可显示的内容",
+    "sectionEmpty": "这里还没有可显示的内容。",
+    "notFound": "此版块已不存在。",
+    "loadError": "无法加载页面。",
+    "otherDocuments": "其他文档",
+    "blockTitle": {
+      "documents": "文档 · {{tags}}",
+      "maps": "地图",
+      "mapsFree": "关系地图",
+      "mapsGeographic": "地理地图",
+      "sessionZero": "第 0 次会话"
+    },
+    "features": {
+      "sessions": "会话",
+      "retro": "回顾",
+      "lines_veils": "底线与帷幕",
+      "stars_wishes": "星星与愿望",
+      "questions": "问题",
+      "ddi": "DDI",
+      "polls": "投票"
+    },
+    "mapKinds": {
+      "all": "所有地图",
+      "free": "关系",
+      "geographic": "地理"
+    },
+    "item": {
+      "inProgress": "进行中",
+      "postIts_other": "{{count}} 张便签",
+      "questions_other": "{{count}} 个问题",
+      "ddiAccepted_other": "{{count}} 名玩家已接受",
+      "ddiAcceptedByYou": "你已接受",
+      "ddiToAccept": "待接受",
+      "pollOpen": "进行中 · {{total}} 人中 {{voted}} 人已投票",
+      "pollClosed": "已结束",
+      "pollWinner": "已结束 · {{choice}} 胜出"
+    },
+    "tiles": {
+      "documents": {
+        "title": "文档",
+        "body": "带有某些标签的文档"
+      },
+      "maps": {
+        "title": "地图",
+        "body": "所有地图，或某一类"
+      },
+      "session_zero": {
+        "title": "第 0 次会话",
+        "body": "会话、步骤和投票"
+      }
+    },
+    "edit": {
+      "start": "编辑",
+      "done": "完成",
+      "dragInstructions": "按空格拿起，用方向键移动，再按空格放下。Esc 取消。",
+      "dragSection": "移动{{name}}",
+      "sectionMenu": "{{name}}的操作",
+      "info": "编辑信息",
+      "deleteTitle": "删除“{{name}}”？",
+      "deleteBody": "版块及其区块将被删除。文档、地图和第 0 次会话保持不变。",
+      "newSection": "新建版块",
+      "newTitle": "标题",
+      "newPlaceholder": "例如：东京、派系、第一次会话",
+      "create": "创建",
+      "addPage": "重新添加{{name}}",
+      "titleLabel": "标题",
+      "image": "图片",
+      "noBlocks": "还没有区块：添加一个吧。",
+      "addBlock": "区块",
+      "addBlockTitle": "添加区块",
+      "insertBlock": "在此插入区块",
+      "dragBlock": "移动区块",
+      "heading": "区块标题",
+      "renameBlock": "重命名{{name}}",
+      "addTag": "标签",
+      "searchTag": "搜索标签",
+      "remove": "移除{{name}}",
+      "group": "分组",
+      "groupedBy_other": "{{count}} 个分组",
+      "groups": "分组",
+      "noGroups": "没有分组：所有文档放在一起。",
+      "addGroup": "分组",
+      "useRoomGroups": "使用房间的分组",
+      "groupHint": "选择一个或多个标签：多个标签组成一个组合。",
+      "dragGroup": "移动{{name}}",
+      "mapKind": "显示的地图：{{kind}}",
+      "addFeature": "功能",
+      "dragFeature": "移动{{name}}",
+      "dragPart": "移动子版块",
+      "blockMenu": "区块操作",
+      "deleteBlock": "删除区块",
+      "blockDeleted": "区块已删除",
+      "undo": "撤销"
     }
   }
 }

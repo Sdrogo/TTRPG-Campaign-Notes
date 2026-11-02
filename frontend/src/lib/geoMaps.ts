@@ -643,6 +643,18 @@ export function zoomAt(view: View, factor: number, at: Point): View {
   return { x: at.x - (at.x - view.x) * ratio, y: at.y - (at.y - view.y) * ratio, k };
 }
 
+/**
+ * The same view in a board resized from `before` to `after`: same zoom, and
+ * the plane point that was in the middle of the board stays in its middle.
+ */
+export function keepMiddle(
+  view: View,
+  before: { width: number; height: number },
+  after: { width: number; height: number },
+): View {
+  return { x: view.x + (after.width - before.width) / 2, y: view.y + (after.height - before.height) / 2, k: view.k };
+}
+
 /** The plane point under a screen point (relative to the board's corner). */
 export function toPlane(view: View, at: Point): Point {
   return { x: (at.x - view.x) / view.k, y: (at.y - view.y) / view.k };

@@ -62,7 +62,7 @@ export function LeaveRoomModal({
           <Button variant="subtle" color="gray" onClick={onClose}>
             {t('common.cancel')}
           </Button>
-          <Button color="red" loading={leaveRoom.isPending} onClick={handleLeave}>
+          <Button color="danger" loading={leaveRoom.isPending} onClick={handleLeave}>
             {t('common.leave')}
           </Button>
         </Group>

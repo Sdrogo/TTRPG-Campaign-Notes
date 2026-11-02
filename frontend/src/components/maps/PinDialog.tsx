@@ -107,7 +107,7 @@ export function PinDialog({ pin, isNew, documents, takenDocumentIds, isMaster, o
           )}
           <Group justify={isNew ? 'flex-end' : 'space-between'}>
             {!isNew && (
-              <Button variant="subtle" color="red" onClick={onDelete}>
+              <Button variant="subtle" color="danger" onClick={onDelete}>
                 {t('maps.geo.deletePin')}
               </Button>
             )}

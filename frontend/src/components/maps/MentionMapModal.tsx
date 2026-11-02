@@ -118,7 +118,7 @@ export function MentionMapModal({
                 {t('common.cancel')}
               </Button>
               <Button
-                color="red"
+                color="danger"
                 loading={remove.isPending}
                 onClick={() => remove.mutate(undefined, { onSuccess: onClose })}
               >
@@ -131,7 +131,7 @@ export function MentionMapModal({
             <Group gap="xs">
               {map && own && (
                 <>
-                  <Button variant="subtle" color="red" onClick={() => setConfirmingDelete(true)}>
+                  <Button variant="subtle" color="danger" onClick={() => setConfirmingDelete(true)}>
                     {t('maps.delete')}
                   </Button>
                   <Button

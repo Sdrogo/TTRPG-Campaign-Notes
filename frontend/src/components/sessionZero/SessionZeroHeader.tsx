@@ -68,7 +68,7 @@ export function SessionZeroHeader({ readAtMs, onPick }: SessionZeroHeaderProps) 
               </LabeledActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Item color="red" onClick={() => setDeleting(true)}>
+              <Menu.Item color="danger" onClick={() => setDeleting(true)}>
                 {t('sessionZero.delete.action')}
               </Menu.Item>
             </Menu.Dropdown>
@@ -84,7 +84,7 @@ export function SessionZeroHeader({ readAtMs, onPick }: SessionZeroHeaderProps) 
                 {t('common.cancel')}
               </Button>
               <Button
-                color="red"
+                color="danger"
                 disabled={busy}
                 onClick={() => act(boardWrites.deleteSessionZero(), () => setDeleting(false))}
               >
@@ -283,7 +283,7 @@ function CustomTimerModal({ busy, onClose, onStart }: CustomTimerModalProps) {
           data-autofocus
         />
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
+          <Button variant="subtle" color="gray" onClick={onClose}>
             {t('common.cancel')}
           </Button>
           <Button disabled={!valid || busy} onClick={() => onStart(minutes as number)}>

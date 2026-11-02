@@ -114,7 +114,7 @@ export function TagRow({
           <LabeledActionIcon
             size="sm"
             variant="subtle"
-            color="red"
+            color="danger"
             aria-label={t('setup.tags.delete', { name: tag.name })}
             onClick={onDelete}
           >

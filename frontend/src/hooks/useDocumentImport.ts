@@ -12,6 +12,7 @@ import {
   type RawImportJob,
   type RawImportPreview,
 } from '../lib/documentImport';
+import { sectionsQueryKey } from './useLanding';
 
 /**
  * Reads the files and says what importing them would do, without writing or
@@ -31,13 +32,16 @@ export function usePreviewImport(roomId: string) {
 
 /**
  * What to start the import with: the same files, the Documents chosen, which of
- * them replace, and the maps chosen (spec 40).
+ * them replace, the maps chosen (spec 40), and the custom Sections and page
+ * cards chosen (spec 56).
  */
 export interface StartImportRequest {
   files: File[];
   selected: string[];
   replace: string[];
   maps: string[];
+  sections: string[];
+  pageCards: string[];
 }
 
 /**
@@ -47,11 +51,11 @@ export interface StartImportRequest {
  */
 export function useStartImport(roomId: string) {
   return useMutation({
-    mutationFn: async ({ files, selected, replace, maps }: StartImportRequest) =>
+    mutationFn: async ({ files, selected, replace, maps, sections, pageCards }: StartImportRequest) =>
       toImportJob(
         await apiFetch<RawImportJob>(`/rooms/${roomId}/imports`, {
           method: 'POST',
-          formData: importFormData(files, selected, replace, maps),
+          formData: importFormData(files, selected, replace, maps, sections, pageCards),
         }),
       ),
   });
@@ -60,8 +64,8 @@ export function useStartImport(roomId: string) {
 /**
  * The import job, read every couple of seconds while it is queued or running.
  * The request never carries `X-View-As`: the job is the importer's own. When it
- * ends the Room's Documents, Tags and maps are read again, since the import
- * wrote all of them.
+ * ends the Room's Documents, Tags, maps and Room home are read again, since
+ * the import wrote all of them.
  */
 export function useImportJob(roomId: string, jobId: string | null) {
   const queryClient = useQueryClient();
@@ -81,6 +85,7 @@ export function useImportJob(roomId: string, jobId: string | null) {
       void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'documents'] });
       void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'tags'] });
       void queryClient.invalidateQueries({ queryKey: ['rooms', roomId, 'maps'] });
+      void queryClient.invalidateQueries({ queryKey: sectionsQueryKey(roomId) });
     }
   }, [finished, queryClient, roomId]);
 

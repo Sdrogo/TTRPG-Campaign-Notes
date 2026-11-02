@@ -40,7 +40,6 @@ beforeEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
-const oneTag = [{ id: 'tag-npc', name: 'NPC', category: null }];
 
 describe('PageCard', () => {
   it('renders its content', () => {
@@ -155,9 +154,13 @@ describe('PageLayout', () => {
     expect(screen.queryByRole('button', { name: /indice della Stanza/ })).not.toBeInTheDocument();
   });
 
-  it('opens the Room Index from the tab and closes it when a Tag is picked', async () => {
+  it('opens the Room Index from the tab and closes it when a Section is picked', async () => {
     fetchMock.mockImplementation((path: string) =>
-      path.endsWith('/tags') ? Promise.resolve(oneTag) : Promise.resolve(path.endsWith('/maps') ? [] : rawAccount()),
+      path.endsWith('/sections')
+        ? Promise.resolve([
+            { id: 's-1', kind: 'page_documents', position: 0, title: null, description: '', image_url: null, blocks: [], can_edit: false },
+          ])
+        : Promise.resolve(rawAccount()),
     );
     renderWithProviders(
       <PageLayout backTo="/" backLabel="Indietro" roomId="room-1" showIndex>
@@ -167,7 +170,7 @@ describe('PageLayout', () => {
     const user = userEvent.setup();
 
     await user.click(screen.getByRole('button', { name: /Apri l.indice della Stanza/ }));
-    await user.click(await screen.findByText('#NPC'));
+    await user.click(await screen.findByRole('link', { name: 'Documenti' }));
 
     await waitFor(() => expect(screen.queryByText('Indice della Stanza')).not.toBeInTheDocument());
   });

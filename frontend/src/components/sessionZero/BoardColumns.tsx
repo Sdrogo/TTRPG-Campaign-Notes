@@ -177,7 +177,7 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
         {index < count - 1 && (
           <Menu.Item onClick={() => moveTo(index + 1)}>{t('sessionZero.columns.moveRight')}</Menu.Item>
         )}
-        <Menu.Item color="red" onClick={() => setDeleting(true)}>
+        <Menu.Item color="danger" onClick={() => setDeleting(true)}>
           {t('common.delete')}
         </Menu.Item>
       </Menu.Dropdown>
@@ -274,7 +274,7 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
                 {t('common.cancel')}
               </Button>
               <Button
-                color="red"
+                color="danger"
                 disabled={busy}
                 onClick={() => {
                   act(boardWrites.deleteColumn(column.id));

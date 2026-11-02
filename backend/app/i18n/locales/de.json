@@ -178,6 +178,7 @@
       "tooManyDocuments": "Es können höchstens {max} Dokumente auf einmal importiert werden",
       "tooManyImages": "Es können höchstens {max} Bilder auf einmal importiert werden",
       "tooManyMaps": "Es können höchstens {max} Karten auf einmal importiert werden",
+      "tooManySections": "Es können höchstens {max} Bereiche der Raum-Startseite auf einmal importiert werden",
       "nameRequired": "Ein Dokument in der Datei hat keinen Namen",
       "nameTooLong": "Der Name des Dokuments \"{name}...\" überschreitet {max} Zeichen",
       "subtitleTooLong": "Der Untertitel von {name} überschreitet {max} Zeichen",
@@ -314,6 +315,25 @@
       "notAVoter": "Der Master stimmt in dieser Umfrage nicht ab.",
       "pollNotFound": "Umfrage nicht gefunden.",
       "pollOrder": "Eine Umfrage oder Option gehört nicht zu diesem Schritt."
+    },
+    "landing": {
+      "onlyMaster": "Nur der Master kann die Startseite bearbeiten",
+      "notFound": "Bereich nicht gefunden",
+      "titleRequired": "Ein Bereich braucht einen Titel",
+      "titleTooLong": "Ein Titel hat höchstens {max} Zeichen",
+      "descriptionTooLong": "Eine Beschreibung hat höchstens {max} Zeichen",
+      "tooManySections": "Ein Raum hat höchstens {max} Bereiche",
+      "pageSectionExists": "Diese Seite ist bereits auf der Startseite",
+      "documentsRequired": "Die Karte Dokumente kann nicht gelöscht werden",
+      "pageSectionHasNoBlocks": "Diese Karte öffnet eine Seite und hat keine Blöcke",
+      "orderMismatch": "Nenne jeden Bereich des Raums genau einmal",
+      "tooManyBlocks": "Ein Bereich hat höchstens {max} Blöcke",
+      "documentsBlockNeedsTag": "Ein Dokumente-Block braucht mindestens einen Tag",
+      "sessionZeroBlockNeedsFeature": "Ein Session-0-Block braucht mindestens eine Funktion",
+      "blockFieldNotAllowed": "Diese Einstellung gehört nicht zu dieser Art von Block",
+      "unknownTag": "Einer der Tags ist nicht in diesem Raum",
+      "tooManyGroups": "Ein Block hat höchstens {max} Gruppen",
+      "invalidGroup": "Jede Gruppe braucht einen oder mehrere verschiedene Tags, und keine zwei Gruppen dürfen gleich sein"
     }
   },
   "pdf": {

@@ -28,13 +28,13 @@ let board: () => Promise<unknown>;
 let write: () => Promise<unknown>;
 let restoreMedia: (() => void) | null = null;
 
-function render(previewing = false) {
+function render(previewing = false, route = '/rooms/room-1/session-zero') {
   renderWithProviders(
     <Routes>
       <Route path="/rooms/:roomId/session-zero" element={<SessionZeroPage />} />
     </Routes>,
     {
-      route: '/rooms/room-1/session-zero',
+      route,
       wrapper: previewing
         ? ({ children }) => (
             <ViewAsContext.Provider value={{ roomId: 'room-1', userId: 'user-2' }}>{children}</ViewAsContext.Provider>
@@ -316,6 +316,24 @@ describe('SessionZeroPage', () => {
     expect(screen.getByRole('region', { name: 'Retro' })).toBeInTheDocument();
     await user.click(within(nav).getByRole('button', { name: '2. Stelle e Desideri' }));
     expect(screen.getByRole('region', { name: 'Stelle e Desideri' })).toBeInTheDocument();
+  });
+
+  // Spec 55 Decision 9: a landing card opens its session, and its step once the board shows it.
+  it('opens the session and the step a link names', async () => {
+    const modules = [
+      { id: 'module-retro', kind: 'retro', position: 0, columns: [rawPostItColumn({ cards: [rawPostIt()] })] },
+      { id: 'module-lv', kind: 'lines_veils', position: 1, columns: [] },
+    ];
+    board = () => Promise.resolve(rawSessionZero({ modules }));
+    render(false, '/rooms/room-1/session-zero?session=round-1&step=module-lv');
+    expect(await screen.findByRole('region', { name: 'Linee e Veli' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/session-zero?round_id=round-1');
+  });
+
+  it('stays on the current step when the linked one is gone', async () => {
+    render(false, '/rooms/room-1/session-zero?step=module-gone');
+    expect(await screen.findByRole('region', { name: 'Retro' })).toBeInTheDocument();
   });
 
   // Spec 47_2: a Questions step shows its questions, with the Room's Tags.

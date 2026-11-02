@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { MantineProvider } from '@mantine/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, type InitialEntry } from 'react-router-dom';
 import { theme } from '../theme/theme';
 
 // Retries turn a deliberate 500 into a multi-second test, and the cache has
@@ -18,8 +18,9 @@ export function createTestQueryClient(): QueryClient {
 
 interface WrapperOptions {
   queryClient?: QueryClient;
-  // Initial history entries, for components that read route params or links.
-  route?: string;
+  // Initial history entries, for components that read route params or links
+  // (an object to start with a navigation state too).
+  route?: InitialEntry;
   // An extra provider to nest inside the standard ones - for a component or
   // hook that needs app context of its own (e.g. DocumentMentionsProvider).
   wrapper?: (props: { children: ReactNode }) => ReactElement;

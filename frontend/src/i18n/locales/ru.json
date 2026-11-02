@@ -1023,6 +1023,39 @@
       "skippedTitle_many": "{{count}} карт импортированы не полностью",
       "skippedTitle_other": "{{count}} карты импортированы не полностью"
     },
+    "sections": {
+      "found_one": "Найден {{count}} раздел главной комнаты",
+      "found_few": "Найдено {{count}} раздела главной комнаты",
+      "found_many": "Найдено {{count}} разделов главной комнаты",
+      "found_other": "Найдено {{count}} раздела главной комнаты",
+      "pageCardsHint": "Карточки страниц не отмечены: отметьте одну, чтобы заменить ею карточку этой комнаты.",
+      "select": "Импортировать раздел {{name}}",
+      "applySelect": "Применить {{name}} к карточке этой комнаты",
+      "untitled": "Раздел без названия",
+      "blocksCount_one": "{{count}} блок",
+      "blocksCount_few": "{{count}} блока",
+      "blocksCount_many": "{{count}} блоков",
+      "blocksCount_other": "{{count}} блока",
+      "withImage": "с изображением",
+      "pageCard": "Заменяет карточку этой комнаты",
+      "skippedBlocks_one": "{{count}} блок документов пропущен: ни один из его тегов нельзя перенести сюда",
+      "skippedBlocks_few": "{{count}} блока документов пропущены: ни один из их тегов нельзя перенести сюда",
+      "skippedBlocks_many": "{{count}} блоков документов пропущены: ни один из их тегов нельзя перенести сюда",
+      "skippedBlocks_other": "{{count}} блока документов пропущены: ни один из их тегов нельзя перенести сюда",
+      "skipReason": {
+        "invalid": "Нельзя импортировать: не читается или нарушает правило главной комнаты",
+        "limit": "На главной комнаты уже максимальное число разделов",
+        "image": "Не удалось импортировать изображение"
+      },
+      "written_one": "Создан или обновлён {{count}} раздел главной комнаты",
+      "written_few": "Создано или обновлено {{count}} раздела главной комнаты",
+      "written_many": "Создано или обновлено {{count}} разделов главной комнаты",
+      "written_other": "Создано или обновлено {{count}} раздела главной комнаты",
+      "skippedTitle_one": "{{count}} раздел импортирован не полностью",
+      "skippedTitle_few": "{{count}} раздела импортированы не полностью",
+      "skippedTitle_many": "{{count}} разделов импортированы не полностью",
+      "skippedTitle_other": "{{count}} раздела импортированы не полностью"
+    },
     "failed": "Импорт не удался. Проверьте список Документов, прежде чем повторять.",
     "another": "Импортировать другие файлы"
   },
@@ -1639,6 +1672,127 @@
       "link": "Ссылка",
       "code": "Код",
       "table": "Таблица"
+    }
+  },
+  "roomLanding": {
+    "home": "Главная комнаты",
+    "kicker": "Главная",
+    "sections": "Разделы",
+    "pages": {
+      "documents": "Документы",
+      "maps": "Карты",
+      "sessionZero": "Сессия 0"
+    },
+    "pageDescriptions": {
+      "documents": "Все Документы комнаты",
+      "maps": "Карты комнаты",
+      "sessionZero": "Сессии, Линии и Завесы, опросы"
+    },
+    "blockEmpty": "Нечего показать",
+    "sectionEmpty": "Здесь пока нечего показать.",
+    "notFound": "Этого раздела больше нет.",
+    "loadError": "Не удалось загрузить страницу.",
+    "otherDocuments": "Другие документы",
+    "blockTitle": {
+      "documents": "Документы · {{tags}}",
+      "maps": "Карты",
+      "mapsFree": "Карты связей",
+      "mapsGeographic": "Географические карты",
+      "sessionZero": "Сессия 0"
+    },
+    "features": {
+      "sessions": "Сессии",
+      "retro": "Ретро",
+      "lines_veils": "Линии и Завесы",
+      "stars_wishes": "Звёзды и Пожелания",
+      "questions": "Вопросы",
+      "ddi": "DDI",
+      "polls": "Опросы"
+    },
+    "mapKinds": {
+      "all": "Все карты",
+      "free": "Связи",
+      "geographic": "Географические"
+    },
+    "item": {
+      "inProgress": "Идёт",
+      "postIts_one": "{{count}} стикер",
+      "postIts_few": "{{count}} стикера",
+      "postIts_many": "{{count}} стикеров",
+      "postIts_other": "{{count}} стикера",
+      "questions_one": "{{count}} вопрос",
+      "questions_few": "{{count}} вопроса",
+      "questions_many": "{{count}} вопросов",
+      "questions_other": "{{count}} вопроса",
+      "ddiAccepted_one": "Принято {{count}} игроком",
+      "ddiAccepted_few": "Принято {{count}} игроками",
+      "ddiAccepted_many": "Принято {{count}} игроками",
+      "ddiAccepted_other": "Принято {{count}} игрока",
+      "ddiAcceptedByYou": "Принято тобой",
+      "ddiToAccept": "Нужно принять",
+      "pollOpen": "Открыт · проголосовали {{voted}} из {{total}}",
+      "pollClosed": "Закрыт",
+      "pollWinner": "Закрыт · побеждает {{choice}}"
+    },
+    "tiles": {
+      "documents": {
+        "title": "Документы",
+        "body": "Документы с нужными Тегами"
+      },
+      "maps": {
+        "title": "Карты",
+        "body": "Все карты или один вид"
+      },
+      "session_zero": {
+        "title": "Сессия 0",
+        "body": "Сессии, этапы и опросы"
+      }
+    },
+    "edit": {
+      "start": "Изменить",
+      "done": "Готово",
+      "dragInstructions": "Пробел — взять, стрелки — переместить, Пробел — отпустить. Esc отменяет.",
+      "dragSection": "Переместить {{name}}",
+      "sectionMenu": "Действия: {{name}}",
+      "info": "Изменить данные",
+      "deleteTitle": "Удалить «{{name}}»?",
+      "deleteBody": "Раздел и его блоки будут удалены. Документы, карты и Сессия 0 останутся как есть.",
+      "newSection": "Новый раздел",
+      "newTitle": "Название",
+      "newPlaceholder": "Например: Токио, Фракции, Первая сессия",
+      "create": "Создать",
+      "addPage": "Вернуть {{name}}",
+      "titleLabel": "Название",
+      "image": "Изображение",
+      "noBlocks": "Блоков пока нет: добавь первый.",
+      "addBlock": "Блок",
+      "addBlockTitle": "Добавить блок",
+      "insertBlock": "Вставить блок сюда",
+      "dragBlock": "Переместить блок",
+      "heading": "Название блока",
+      "renameBlock": "Переименовать {{name}}",
+      "addTag": "Тег",
+      "searchTag": "Найти Тег",
+      "remove": "Убрать {{name}}",
+      "group": "Группировать",
+      "groupedBy_one": "{{count}} группа",
+      "groupedBy_few": "{{count}} группы",
+      "groupedBy_many": "{{count}} групп",
+      "groupedBy_other": "{{count}} группы",
+      "groups": "Группы",
+      "noGroups": "Групп нет: все Документы вместе.",
+      "addGroup": "Группа",
+      "useRoomGroups": "Взять группировку комнаты",
+      "groupHint": "Выбери один или несколько Тегов: несколько Тегов образуют комбинацию.",
+      "dragGroup": "Переместить {{name}}",
+      "mapKind": "Показаны карты: {{kind}}",
+      "addFeature": "Функция",
+      "dragFeature": "Переместить {{name}}",
+      "dragPart": "Переместить подраздел",
+      "blockMenu": "Действия с блоком",
+      "deleteBlock": "Удалить блок",
+      "blockDeleted": "Блок удалён",
+      "undo": "Отменить"
     }
   }
 }
