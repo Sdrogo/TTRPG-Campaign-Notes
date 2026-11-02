@@ -22,6 +22,7 @@ import { blockHeading, featureLabel, groupLabel, sectionTitle } from '../lib/lan
 import { markdownToPlain } from '../lib/markdownText';
 import type { LandingSection } from '../types/landing';
 import { PageHeading } from '../components/PageHeading';
+import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 
 /**
  * `/rooms/:roomId/sections/:sectionId`: a custom Section of the landing
@@ -72,6 +73,7 @@ function RoomSectionContent({ roomId, sectionId, currentUserId }: { roomId: stri
       showIndex
       index={section ? { current: section.id, detail: indexDetail(section, sources) } : undefined}
     >
+      <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
       {sections.isPending && <SectionLoader />}
       {sections.isError && <Text c="red">{t('roomLanding.loadError')}</Text>}
       {sections.data && !section && <Text c="dimmed">{t('roomLanding.notFound')}</Text>}
@@ -90,6 +92,7 @@ function RoomSectionContent({ roomId, sectionId, currentUserId }: { roomId: stri
           )}
         </>
       )}
+      </DocumentMentionsProvider>
     </PageLayout>
   );
 }

@@ -19,6 +19,7 @@ import { sectionHref } from '../lib/landing';
 import { sectionDescription, sectionTitle } from '../lib/landingText';
 import { useBackState } from '../lib/backNav';
 import { PageHeading } from '../components/PageHeading';
+import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 
 /**
  * `/rooms/:roomId`: the Room's landing page (spec 55), what a Room card
@@ -53,6 +54,7 @@ function RoomLandingContent({ roomId, currentUserId }: { roomId: string; current
 
   return (
     <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId} showIndex>
+      <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
       <PageHeading
         kicker={room.data && t('roomLanding.kicker')}
         title={room.data ? room.data.name : t('roomLanding.home')}
@@ -95,6 +97,7 @@ function RoomLandingContent({ roomId, currentUserId }: { roomId: string; current
             ))}
           </Box>
         ))}
+      </DocumentMentionsProvider>
     </PageLayout>
   );
 }
