@@ -6,6 +6,7 @@ import { usePreviewImport, useImportJob, useStartImport } from '../../hooks/useD
 import {
   IMPORT_ACCEPT,
   isActiveImportJob,
+  isPageCard,
   type ImportPreview,
   type ImportResolution,
 } from '../../lib/documentImport';
@@ -23,7 +24,8 @@ type Step = 'pick' | 'review' | 'existing' | 'job';
 
 /**
  * The import dialog (spec 27 Frontend): pick the files, read the preview and
- * untick the Documents and maps (spec 40) that are not wanted, choose Copy or Replace for the Documents that
+ * untick the Documents and maps (spec 40) that are not wanted, tick the
+ * Sections of the Room home to bring and page cards to apply (spec 56), choose Copy or Replace for the Documents that
  * already exist in the Room, then follow the background job to its result. Only
  * offered to members who may create Documents, and never while previewing as a
  * member; the backend checks both and decides every rule (what is dropped,
@@ -37,6 +39,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectedMaps, setSelectedMaps] = useState<Set<string>>(new Set());
+  const [selectedSections, setSelectedSections] = useState<Set<string>>(new Set());
   const [resolutions, setResolutions] = useState<Record<string, ImportResolution>>({});
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +53,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
     setPreview(null);
     setSelected(new Set());
     setSelectedMaps(new Set());
+    setSelectedSections(new Set());
     setResolutions({});
     setJobId(null);
     setError(null);
@@ -71,6 +75,14 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
         setSelectedMaps(
           new Set(found.maps.filter((map) => map.skipped === null).map((map) => map.key)),
         );
+        // Custom Sections come ticked; a page card overwrites the Room's own, so only when ticked.
+        setSelectedSections(
+          new Set(
+            found.sections
+              .filter((section) => section.skipped === null && !isPageCard(section))
+              .map((section) => section.key),
+          ),
+        );
         setResolutions({});
         setStep('review');
       },
@@ -80,6 +92,8 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
 
   const ticked = preview?.documents.filter((document) => selected.has(document.key)) ?? [];
   const existing = ticked.filter((document) => document.existingDocumentId !== null);
+  const chosenSections =
+    preview?.sections.filter((section) => selectedSections.has(section.key)) ?? [];
 
   const handleStart = () => {
     setError(null);
@@ -92,6 +106,8 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
         selected: ticked.map((document) => document.key),
         replace,
         maps: [...selectedMaps],
+        sections: chosenSections.filter((section) => !isPageCard(section)).map((s) => s.key),
+        pageCards: chosenSections.filter(isPageCard).map((section) => section.key),
       },
       {
         onSuccess: (started) => {
@@ -147,6 +163,8 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
             onToggle={toggleIn(setSelected)}
             selectedMaps={selectedMaps}
             onToggleMap={toggleIn(setSelectedMaps)}
+            selectedSections={selectedSections}
+            onToggleSection={toggleIn(setSelectedSections)}
           />
         )}
         {step === 'existing' && (

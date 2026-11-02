@@ -3,6 +3,7 @@ import type { RawImportJob, RawImportPreview } from '../../lib/documentImport';
 import {
   importFormData,
   isActiveImportJob,
+  isPageCard,
   previewFormData,
   toImportJob,
   toImportPreview,
@@ -33,6 +34,18 @@ describe('toImportPreview', () => {
             warnings: [{ code: 'documents_left_out', count: 1, names: [] }],
           },
         ],
+        sections: [
+          {
+            key: '0:section:0',
+            file_name: 'stanza.json',
+            kind: 'custom',
+            title: 'Tokyo',
+            has_image: true,
+            blocks_count: 2,
+            skipped_blocks: 1,
+            skipped: null,
+          },
+        ],
       }) as RawImportPreview,
     );
 
@@ -61,6 +74,20 @@ describe('toImportPreview', () => {
         warnings: [{ code: 'documents_left_out', count: 1 }],
       },
     ]);
+    expect(preview.sections).toEqual([
+      {
+        key: '0:section:0',
+        fileName: 'stanza.json',
+        kind: 'custom',
+        title: 'Tokyo',
+        hasImage: true,
+        blocksCount: 2,
+        skippedBlocks: 1,
+        skipped: null,
+      },
+    ]);
+    expect(isPageCard(preview.sections[0])).toBe(false);
+    expect(isPageCard({ kind: 'page_maps' })).toBe(true);
   });
 });
 
@@ -94,6 +121,8 @@ describe('toImportJob', () => {
           ],
           maps: [{ id: 'map-1', name: 'Il Regno' }],
           skipped_maps: [{ name: 'La Corte', reason: 'invalid' }],
+          sections: [{ id: 'section-1', kind: 'custom', title: 'Tokyo' }],
+          skipped_sections: [{ kind: 'page_maps', title: null, reason: 'image' }],
         },
       }) as RawImportJob,
     );
@@ -111,6 +140,8 @@ describe('toImportJob', () => {
       ],
       maps: [{ id: 'map-1', name: 'Il Regno' }],
       skippedMaps: [{ name: 'La Corte', reason: 'invalid' }],
+      sections: [{ id: 'section-1', kind: 'custom', title: 'Tokyo' }],
+      skippedSections: [{ kind: 'page_maps', title: null, reason: 'image' }],
     });
   });
 });
@@ -123,13 +154,15 @@ describe('the uploads', () => {
   });
 
   it('sends the same files and the choices as JSON for the import', () => {
-    const body = importFormData(files, ['0:0', '1:0'], ['1:0'], ['0:map:0']);
+    const body = importFormData(files, ['0:0', '1:0'], ['1:0'], ['0:map:0'], ['0:section:3'], []);
 
     expect(body.getAll('files')).toHaveLength(2);
     expect(JSON.parse(body.get('choices') as string)).toEqual({
       selected: ['0:0', '1:0'],
       replace: ['1:0'],
       maps: ['0:map:0'],
+      sections: ['0:section:3'],
+      page_cards: [],
     });
   });
 });

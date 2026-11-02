@@ -973,6 +973,29 @@
       "skippedTitle_one": "{{count}} carte pas entièrement importée",
       "skippedTitle_other": "{{count}} cartes pas entièrement importées"
     },
+    "sections": {
+      "found_one": "{{count}} section de l'Accueil de la Salle trouvée",
+      "found_other": "{{count}} sections de l'Accueil de la Salle trouvées",
+      "pageCardsHint": "Les cartes de pages ne sont pas cochées : coches-en une pour remplacer la carte de cette Salle.",
+      "select": "Importer la section {{name}}",
+      "applySelect": "Appliquer {{name}} à la carte de cette Salle",
+      "untitled": "Section sans titre",
+      "blocksCount_one": "{{count}} bloc",
+      "blocksCount_other": "{{count}} blocs",
+      "withImage": "avec image",
+      "pageCard": "Remplace la carte de cette Salle",
+      "skippedBlocks_one": "{{count}} bloc de Documents est laissé de côté : aucun de ses Tags ne peut être apporté ici",
+      "skippedBlocks_other": "{{count}} blocs de Documents sont laissés de côté : aucun de leurs Tags ne peut être apporté ici",
+      "skipReason": {
+        "invalid": "Impossible à importer : illisible ou contraire à une règle de l'Accueil de la Salle",
+        "limit": "L'Accueil de la Salle a déjà le nombre maximum de sections",
+        "image": "Son image n'a pas pu être importée"
+      },
+      "written_one": "{{count}} section de l'Accueil de la Salle créée ou mise à jour",
+      "written_other": "{{count}} sections de l'Accueil de la Salle créées ou mises à jour",
+      "skippedTitle_one": "{{count}} section pas entièrement importée",
+      "skippedTitle_other": "{{count}} sections pas entièrement importées"
+    },
     "failed": "L'import a échoué. Vérifie la liste des Documents avant de réessayer.",
     "another": "Importer d'autres fichiers"
   },

@@ -178,6 +178,7 @@
       "tooManyDocuments": "Tu peux importer {max} Documents au maximum à la fois",
       "tooManyImages": "Tu peux importer {max} images au maximum à la fois",
       "tooManyMaps": "Tu peux importer {max} cartes au maximum à la fois",
+      "tooManySections": "Tu peux importer {max} sections de l'Accueil de la Salle au maximum à la fois",
       "nameRequired": "Un Document du fichier n'a pas de nom",
       "nameTooLong": "Le nom du Document « {name}... » dépasse {max} caractères",
       "subtitleTooLong": "Le sous-titre de {name} dépasse {max} caractères",

@@ -42,9 +42,11 @@ from app.domain.imports import (
     plan_import,
     validate_files,
 )
+from app.domain.landing_transfer import PlannedSection, SectionSkipReason
 from app.domain.map_transfer import MapSkipReason, PlannedMap
 from app.domain.models import Membership
 from app.domain.relationship_maps import MapKind
+from app.domain.room_sections import SectionKind
 from app.i18n.dependencies import LocaleDep
 
 router = APIRouter(prefix="/rooms/{room_id}/imports", tags=["import"])
@@ -94,6 +96,25 @@ class PreviewMapResponse(BaseModel):
     warnings: list[ImportWarningResponse]
 
 
+class PreviewSectionResponse(BaseModel):
+    """A Section of the Room home found in the files (spec 56), listed for
+    the Master only. `key` names it in the import request: a custom Section
+    (`kind` custom) goes in `sections`, a page card in `page_cards` (it
+    overwrites the Room's card of its kind). `title` is null for a page card
+    without one; `blocks_count` the blocks it brings, `skipped_blocks` the
+    Documents blocks left with no Tag; `skipped` says why it would not be
+    written (`invalid`, `limit`), else null."""
+
+    key: str
+    file_name: str
+    kind: SectionKind
+    title: str | None
+    has_image: bool
+    blocks_count: int
+    skipped_blocks: int
+    skipped: SectionSkipReason | None
+
+
 class PreviewTagResponse(BaseModel):
     """A Tag the import would create."""
 
@@ -112,16 +133,22 @@ class ImportPreviewResponse(BaseModel):
     tags_to_create: list[PreviewTagResponse]
     unavailable_tags: list[str]
     maps: list[PreviewMapResponse]
+    sections: list[PreviewSectionResponse] = []
 
 
 class ImportChoicesRequest(BaseModel):
     """The importer's choices: `selected` are the keys of the Documents to
     import and `replace` the ones among them to replace instead of copy;
-    `maps` the keys of the maps to import, all of them when absent."""
+    `maps` the keys of the maps to import, all of them when absent;
+    `sections` the keys of the custom Sections to import, all of them when
+    absent, and `page_cards` the page cards to apply, none when absent (spec
+    56, the Master only)."""
 
     selected: list[str]
     replace: list[str] = []
     maps: list[str] | None = None
+    sections: list[str] | None = None
+    page_cards: list[str] = []
 
 
 class SkippedResponse(BaseModel):
@@ -151,15 +178,36 @@ class SkippedMapResponse(BaseModel):
     reason: str
 
 
+class ImportedSectionResponse(BaseModel):
+    """A Section of the Room home the import created, or a page card it
+    updated (`title` null for one keeping its default name)."""
+
+    id: uuid.UUID
+    kind: SectionKind
+    title: str | None
+
+
+class SkippedSectionResponse(BaseModel):
+    """A Section the import did not write (`invalid`, `limit`), or whose
+    image it could not store (`image`, the Section exists)."""
+
+    kind: SectionKind
+    title: str | None
+    reason: str
+
+
 class ImportResultResponse(BaseModel):
-    """What a finished import did: the Documents, the maps it created (spec
-    40) and what it skipped."""
+    """What a finished import did: the Documents, the maps (spec 40) and the
+    Sections of the Room home (spec 56) it created or updated, and what it
+    skipped."""
 
     created: list[ImportedDocumentResponse]
     replaced: list[ImportedDocumentResponse]
     skipped: list[SkippedResponse]
     maps: list[ImportedDocumentResponse] = []
     skipped_maps: list[SkippedMapResponse] = []
+    sections: list[ImportedSectionResponse] = []
+    skipped_sections: list[SkippedSectionResponse] = []
 
 
 class ImportJobResponse(BaseModel):
@@ -271,7 +319,8 @@ async def preview_import(
     found, which of them still exist in the Room (they can be copied or
     replaced), the Tags matched and to create, per Document what is dropped or
     changed, and the maps of a JSON export (spec 40) with what each leaves
-    out or why it would be skipped. For whoever may create Documents here (403
+    out or why it would be skipped, and for the Master the Sections of the
+    Room home (spec 56). For whoever may create Documents here (403
     otherwise); 413 for a file over the limit, 422 for an unreadable file or
     one over a limit."""
     importer = await _importer(session, room_id, uuid.UUID(current_user.id), locale)
@@ -285,6 +334,21 @@ async def preview_import(
         ],
         unavailable_tags=list(plan.unavailable_tags),
         maps=[_preview_map(m) for m in plan.maps],
+        sections=[_preview_section(s) for s in plan.sections],
+    )
+
+
+def _preview_section(planned: PlannedSection) -> PreviewSectionResponse:
+    """A planned Section as the preview shows it."""
+    return PreviewSectionResponse(
+        key=planned.key,
+        file_name=planned.file_name,
+        kind=planned.kind,
+        title=planned.title,
+        has_image=planned.image_url is not None,
+        blocks_count=len(planned.blocks),
+        skipped_blocks=planned.skipped_blocks,
+        skipped=planned.skipped,
     )
 
 
@@ -353,6 +417,8 @@ async def start_import(
         frozenset(chosen.selected),
         frozenset(chosen.replace),
         None if chosen.maps is None else frozenset(chosen.maps),
+        None if chosen.sections is None else frozenset(chosen.sections),
+        frozenset(chosen.page_cards),
     )
     await _plan(session, room_id, importer, parsed, import_choices, locale)
 

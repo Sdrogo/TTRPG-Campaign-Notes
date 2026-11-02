@@ -973,6 +973,29 @@
       "skippedTitle_one": "{{count}} mapa não importado por completo",
       "skippedTitle_other": "{{count}} mapas não importados por completo"
     },
+    "sections": {
+      "found_one": "{{count}} secção do Início da Sala encontrada",
+      "found_other": "{{count}} secções do Início da Sala encontradas",
+      "pageCardsHint": "Os cartões de páginas vêm por assinalar: assinala um para substituir com ele o cartão desta Sala.",
+      "select": "Importar a secção {{name}}",
+      "applySelect": "Aplicar {{name}} ao cartão desta Sala",
+      "untitled": "Secção sem título",
+      "blocksCount_one": "{{count}} bloco",
+      "blocksCount_other": "{{count}} blocos",
+      "withImage": "com imagem",
+      "pageCard": "Substitui o cartão desta Sala",
+      "skippedBlocks_one": "{{count}} bloco de Documentos fica de fora: nenhuma das suas Etiquetas pode ser trazida para aqui",
+      "skippedBlocks_other": "{{count}} blocos de Documentos ficam de fora: nenhuma das suas Etiquetas pode ser trazida para aqui",
+      "skipReason": {
+        "invalid": "Não pode ser importada: não se consegue ler ou viola uma regra do Início da Sala",
+        "limit": "O Início da Sala já tem o número máximo de secções",
+        "image": "Não foi possível importar a sua imagem"
+      },
+      "written_one": "{{count}} secção do Início da Sala criada ou atualizada",
+      "written_other": "{{count}} secções do Início da Sala criadas ou atualizadas",
+      "skippedTitle_one": "{{count}} secção não importada por completo",
+      "skippedTitle_other": "{{count}} secções não importadas por completo"
+    },
     "failed": "A importação falhou. Verifica a lista de Documentos antes de tentares novamente.",
     "another": "Importar outros ficheiros"
   },

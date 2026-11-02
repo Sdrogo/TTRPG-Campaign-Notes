@@ -178,6 +178,7 @@
       "tooManyDocuments": "Es können höchstens {max} Dokumente auf einmal importiert werden",
       "tooManyImages": "Es können höchstens {max} Bilder auf einmal importiert werden",
       "tooManyMaps": "Es können höchstens {max} Karten auf einmal importiert werden",
+      "tooManySections": "Es können höchstens {max} Bereiche der Raum-Startseite auf einmal importiert werden",
       "nameRequired": "Ein Dokument in der Datei hat keinen Namen",
       "nameTooLong": "Der Name des Dokuments \"{name}...\" überschreitet {max} Zeichen",
       "subtitleTooLong": "Der Untertitel von {name} überschreitet {max} Zeichen",

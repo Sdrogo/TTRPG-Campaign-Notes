@@ -1,3 +1,5 @@
+import type { SectionKind } from '../types/landing';
+
 /**
  * Importing Documents from files (spec 27): the shapes of the preview and the
  * job as the app uses them, and the request bodies. The backend decides what
@@ -67,6 +69,28 @@ export interface ImportPreviewMap {
   warnings: { code: ImportMapWarningCode; count: number }[];
 }
 
+/** Why a Section is not written (`invalid`, `limit`) or came without its image (`image`). */
+export type ImportSectionSkipReason = 'invalid' | 'limit' | 'image';
+
+/**
+ * A Section of the Room home found in the files (spec 56), listed for the
+ * Master only: a custom Section to add, or a page card to apply to the Room's own.
+ */
+export interface ImportPreviewSection {
+  /** Names it in the import request (`sections` or `pageCards` by its kind). */
+  key: string;
+  fileName: string;
+  kind: SectionKind;
+  /** Null for a page card keeping its default name (or a custom one without a title). */
+  title: string | null;
+  hasImage: boolean;
+  blocksCount: number;
+  /** The Documents blocks left with no Tag the import can resolve. */
+  skippedBlocks: number;
+  /** Why it would not be written, or null. */
+  skipped: Exclude<ImportSectionSkipReason, 'image'> | null;
+}
+
 /** A Tag the import would create. */
 export interface ImportTagToCreate {
   name: string;
@@ -80,6 +104,8 @@ export interface ImportPreview {
   tagsToCreate: ImportTagToCreate[];
   unavailableTags: string[];
   maps: ImportPreviewMap[];
+  /** The Sections of the Room home (spec 56); empty unless the importer is the Master. */
+  sections: ImportPreviewSection[];
 }
 
 /** Why an image was skipped (`SkippedResponse.reason`). */
@@ -112,6 +138,20 @@ export interface ImportSkippedMap {
   reason: ImportMapSkipReason;
 }
 
+/** A Section of the Room home the import created, or a page card it updated. */
+export interface ImportedSection {
+  id: string;
+  kind: SectionKind;
+  title: string | null;
+}
+
+/** A Section the import did not write, or wrote without its image. */
+export interface ImportSkippedSection {
+  kind: SectionKind;
+  title: string | null;
+  reason: ImportSectionSkipReason;
+}
+
 /** What a finished import did. */
 export interface ImportResult {
   created: ImportedDocument[];
@@ -120,6 +160,9 @@ export interface ImportResult {
   /** The maps it created (spec 40). */
   maps: ImportedDocument[];
   skippedMaps: ImportSkippedMap[];
+  /** The Sections of the Room home it wrote (spec 56). */
+  sections: ImportedSection[];
+  skippedSections: ImportSkippedSection[];
 }
 
 /** Where an import job is. */
@@ -168,6 +211,16 @@ export interface RawImportPreview {
     skipped: ImportMapSkipReason | null;
     warnings: { code: ImportMapWarningCode; count: number; names: string[] }[];
   }[];
+  sections: {
+    key: string;
+    file_name: string;
+    kind: SectionKind;
+    title: string | null;
+    has_image: boolean;
+    blocks_count: number;
+    skipped_blocks: number;
+    skipped: Exclude<ImportSectionSkipReason, 'image'> | null;
+  }[];
 }
 
 /** A job as the API sends it (`ImportJobResponse`): converted in `toImportJob` only. */
@@ -187,6 +240,8 @@ export interface RawImportJob {
     }[];
     maps: ImportedDocument[];
     skipped_maps: ImportSkippedMap[];
+    sections: ImportedSection[];
+    skipped_sections: ImportSkippedSection[];
   } | null;
 }
 
@@ -216,6 +271,16 @@ export function toImportPreview(raw: RawImportPreview): ImportPreview {
       skipped: found.skipped,
       warnings: found.warnings.map(({ code, count }) => ({ code, count })),
     })),
+    sections: raw.sections.map((found) => ({
+      key: found.key,
+      fileName: found.file_name,
+      kind: found.kind,
+      title: found.title,
+      hasImage: found.has_image,
+      blocksCount: found.blocks_count,
+      skippedBlocks: found.skipped_blocks,
+      skipped: found.skipped,
+    })),
   };
 }
 
@@ -240,6 +305,8 @@ export function toImportJob(raw: RawImportJob): ImportJob {
             })),
             maps: raw.result.maps,
             skippedMaps: raw.result.skipped_maps,
+            sections: raw.result.sections,
+            skippedSections: raw.result.skipped_sections,
           },
   };
 }
@@ -254,17 +321,28 @@ export function previewFormData(files: File[]): FormData {
 /**
  * The upload of the import: the files again and the choices, as a JSON field —
  * the Documents to import (`selected`), among them the ones to replace
- * (`replace`), and the maps to import (`maps`, spec 40).
+ * (`replace`), the maps to import (`maps`, spec 40), and the custom Sections
+ * to add and page cards to apply (`sections`, `page_cards`, spec 56).
  */
 export function importFormData(
   files: File[],
   selected: string[],
   replace: string[],
   maps: string[],
+  sections: string[],
+  pageCards: string[],
 ): FormData {
   const body = previewFormData(files);
-  body.append('choices', JSON.stringify({ selected, replace, maps }));
+  body.append(
+    'choices',
+    JSON.stringify({ selected, replace, maps, sections, page_cards: pageCards }),
+  );
   return body;
+}
+
+/** Whether a previewed Section is a page card of the file (ticked into `pageCards`). */
+export function isPageCard(section: Pick<ImportPreviewSection, 'kind'>): boolean {
+  return section.kind !== 'custom';
 }
 
 /** Whether the job is still going: queued or running. */

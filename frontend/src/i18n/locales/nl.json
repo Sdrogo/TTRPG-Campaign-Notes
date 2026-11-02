@@ -971,6 +971,29 @@
       "skippedTitle_one": "{{count}} kaart niet volledig geïmporteerd",
       "skippedTitle_other": "{{count}} kaarten niet volledig geïmporteerd"
     },
+    "sections": {
+      "found_one": "{{count}} sectie van de Kamerstart gevonden",
+      "found_other": "{{count}} secties van de Kamerstart gevonden",
+      "pageCardsHint": "Paginakaarten zijn niet aangevinkt: vink er een aan om de kaart van deze Kamer ermee te overschrijven.",
+      "select": "Sectie {{name}} importeren",
+      "applySelect": "{{name}} toepassen op de kaart van deze Kamer",
+      "untitled": "Sectie zonder titel",
+      "blocksCount_one": "{{count}} blok",
+      "blocksCount_other": "{{count}} blokken",
+      "withImage": "met afbeelding",
+      "pageCard": "Overschrijft de kaart van deze Kamer",
+      "skippedBlocks_one": "{{count}} Documentenblok wordt weggelaten: geen van zijn Tags kan hierheen worden gebracht",
+      "skippedBlocks_other": "{{count}} Documentenblokken worden weggelaten: geen van hun Tags kan hierheen worden gebracht",
+      "skipReason": {
+        "invalid": "Kan niet worden geïmporteerd: onleesbaar of in strijd met een regel van de Kamerstart",
+        "limit": "De Kamerstart heeft al het maximale aantal secties",
+        "image": "De afbeelding kon niet worden geïmporteerd"
+      },
+      "written_one": "{{count}} sectie van de Kamerstart gemaakt of bijgewerkt",
+      "written_other": "{{count}} secties van de Kamerstart gemaakt of bijgewerkt",
+      "skippedTitle_one": "{{count}} sectie niet volledig geïmporteerd",
+      "skippedTitle_other": "{{count}} secties niet volledig geïmporteerd"
+    },
     "failed": "Het importeren is mislukt. Controleer de lijst met Documenten voordat je het opnieuw probeert.",
     "another": "Meer bestanden importeren"
   },

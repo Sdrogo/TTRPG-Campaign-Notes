@@ -945,6 +945,24 @@
       "created_other": "지도 {{count}}개를 만들었습니다",
       "skippedTitle_other": "완전히 가져오지 못한 지도 {{count}}개"
     },
+    "sections": {
+      "found_other": "룸 홈 섹션 {{count}}개를 찾았습니다",
+      "pageCardsHint": "페이지 카드는 선택되지 않은 상태입니다. 선택하면 이 룸의 카드를 덮어씁니다.",
+      "select": "섹션 {{name}} 가져오기",
+      "applySelect": "{{name}}을(를) 이 룸의 카드에 적용",
+      "untitled": "제목 없는 섹션",
+      "blocksCount_other": "블록 {{count}}개",
+      "withImage": "이미지 포함",
+      "pageCard": "이 룸의 카드를 덮어씁니다",
+      "skippedBlocks_other": "문서 블록 {{count}}개가 제외됩니다: 해당 태그를 여기로 가져올 수 없습니다",
+      "skipReason": {
+        "invalid": "가져올 수 없습니다: 읽을 수 없거나 룸 홈의 규칙에 맞지 않습니다",
+        "limit": "룸 홈에 이미 최대 개수의 섹션이 있습니다",
+        "image": "이미지를 가져올 수 없었습니다"
+      },
+      "written_other": "룸 홈 섹션 {{count}}개를 만들거나 업데이트했습니다",
+      "skippedTitle_other": "섹션 {{count}}개를 완전히 가져오지 못했습니다"
+    },
     "failed": "가져오기에 실패했습니다. 다시 시도하기 전에 문서 목록을 확인하세요.",
     "another": "다른 파일 가져오기"
   },

@@ -971,6 +971,29 @@
       "skippedTitle_one": "{{count}} mappa non importata del tutto",
       "skippedTitle_other": "{{count}} mappe non importate del tutto"
     },
+    "sections": {
+      "found_one": "{{count}} Sezione della Home della Stanza trovata",
+      "found_other": "{{count}} Sezioni della Home della Stanza trovate",
+      "pageCardsHint": "Le schede delle pagine non sono spuntate: spuntane una per sovrascrivere con essa la scheda di questa Stanza.",
+      "select": "Importa la Sezione {{name}}",
+      "applySelect": "Applica {{name}} alla scheda di questa Stanza",
+      "untitled": "Sezione senza titolo",
+      "blocksCount_one": "{{count}} blocco",
+      "blocksCount_other": "{{count}} blocchi",
+      "withImage": "con immagine",
+      "pageCard": "Sovrascrive la scheda di questa Stanza",
+      "skippedBlocks_one": "{{count}} blocco di Documenti viene tralasciato: nessuno dei suoi Tag può essere portato qui",
+      "skippedBlocks_other": "{{count}} blocchi di Documenti vengono tralasciati: nessuno dei loro Tag può essere portato qui",
+      "skipReason": {
+        "invalid": "Non si può importare: non è leggibile o non rispetta le regole della Home della Stanza",
+        "limit": "La Home della Stanza ha già il numero massimo di Sezioni",
+        "image": "Non è stato possibile importare la sua immagine"
+      },
+      "written_one": "{{count}} Sezione della Home della Stanza creata o aggiornata",
+      "written_other": "{{count}} Sezioni della Home della Stanza create o aggiornate",
+      "skippedTitle_one": "{{count}} Sezione non importata del tutto",
+      "skippedTitle_other": "{{count}} Sezioni non importate del tutto"
+    },
     "failed": "L'importazione non è riuscita. Controlla l'elenco dei Documenti prima di riprovare.",
     "another": "Importa altri file"
   },

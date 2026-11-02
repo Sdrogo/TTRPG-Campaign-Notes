@@ -178,6 +178,7 @@
       "tooManyDocuments": "Je kunt maximaal {max} Documenten tegelijk importeren",
       "tooManyImages": "Je kunt maximaal {max} afbeeldingen tegelijk importeren",
       "tooManyMaps": "Je kunt maximaal {max} kaarten tegelijk importeren",
+      "tooManySections": "Je kunt maximaal {max} secties van de Kamerstart tegelijk importeren",
       "nameRequired": "Een Document in het bestand heeft geen naam",
       "nameTooLong": "De naam van het Document \"{name}...\" is langer dan {max} tekens",
       "subtitleTooLong": "De ondertitel van {name} is langer dan {max} tekens",

@@ -178,6 +178,7 @@
       "tooManyDocuments": "Se pueden importar como máximo {max} Documentos a la vez",
       "tooManyImages": "Se pueden importar como máximo {max} imágenes a la vez",
       "tooManyMaps": "Se pueden importar como máximo {max} mapas a la vez",
+      "tooManySections": "Se pueden importar como máximo {max} secciones del Inicio de la Sala a la vez",
       "nameRequired": "Un Documento del archivo no tiene nombre",
       "nameTooLong": "El nombre del Documento \"{name}...\" supera los {max} caracteres",
       "subtitleTooLong": "El subtítulo de {name} supera los {max} caracteres",
