@@ -879,13 +879,14 @@ next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
 - **60, Sections refinements and standalone tools** (asked by the product
-  owner 2026-11-02; **ticket only**, awaiting confirmation of Q1-Q7): tool
+  owner 2026-11-02; ticket answered Q1-Q7 the same day; building 60_1): tool
   blocks (a poll step, Retro, Stars and Wishes, Questions, DDI living in a
   Section, unlinked from Session 0), every block folds, Section title and
   description edited in place, "Nuova sezione" outside edit mode, the
   Documents page without the maps row and with groups drawn as Section
   blocks. Units 60_1 frontend (no migration), 60_2 backend (**migration**),
-  60_3 frontend tools; about 6.5 h.
+  60_3 frontend tools; about 7 h. Tool blocks are not copied by Duplicate
+  Room or the JSON export.
 - **56, Landing Sections in import-export** (asked by the product owner
   2026-11-02, separate PR; ticket confirmed 2026-11-02; **built** in PR
   #284 into `staging`, 56_1 backend and 56_2 frontend): the JSON Room

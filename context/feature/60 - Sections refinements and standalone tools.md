@@ -33,9 +33,9 @@
 
 ## Decisions
 
-Proposed by Claude on 2026-11-02 from the request; the open questions are
-at the end (Q1-Q7) and every default below holds until the product owner
-answers otherwise.
+Proposed by Claude on 2026-11-02 from the request; the product owner
+answered Q1-Q7 the same day (see "Answers" at the end) and the Decisions
+follow those answers.
 
 ### 1. Tool blocks (standalone Session 0 tools)
 
@@ -59,21 +59,26 @@ answers otherwise.
    width under the block heading. Members vote, add post-its, answer and
    accept right there, with the same rights as in Session 0 (Players act,
    the Master sets up and manages). Folding the block (Decision 9) keeps a
-   long Retro out of the way.
+   long Retro out of the way. (Q1: a standalone tool shows inside its own
+   block.)
 3. **Not part of any Session 0 session**: a tool block's instance is never
    listed on the Session 0 page, in its session picker, in "Carry over from
    the previous session" (spec 47b), nor in a `session_zero` block or the
    overview. The Session 0 timer and the step chain ("Avanti", current
    step) don't apply to it.
-4. **Draft until shown** (Q3): a new tool block starts **hidden from
-   Players**, so the Master can prepare a poll or a Retro's columns
+4. **Draft until shown** (Q3: yes, with an easy way to reveal it): a new
+   tool block starts **hidden from Players**, so the Master can prepare a poll or a Retro's columns
    without Players seeing it half done. The block bar gets an eye toggle
    ("Visibile ai giocatori" / "Nascosto ai giocatori"); a hidden block shows
    a "Bozza" badge to the Master, and for Players it is absent from the
    Section and from the Index, as if it didn't exist. The Master can hide
    it again later (votes, post-its and answers are kept). The toggle exists
    only on tool blocks: the other kinds already follow their items' own
-   visibility (spec 55 Decision 3).
+   visibility (spec 55 Decision 3). **Revealing is one click outside edit
+   mode too**: on a hidden tool block the Master reads, beside the heading,
+   a "Bozza" badge and a "Mostra ai giocatori" button (eye icon); once shown,
+   the button becomes a small eye toggle in the heading, so hiding it again
+   is one click as well.
 5. **Adding one**: the "+ Blocco" popover (spec 55 Decision 14) keeps its
    three tiles and gains a second row, **Strumenti**, with five small tiles
    (Sondaggio, Retro, Stelle e Desideri, Domande, DDI; icon and name, the
@@ -91,12 +96,11 @@ answers otherwise.
 7. **Live updates**: a tool block refreshes for every member as the same
    tool does on the Session 0 page (the Room stream of spec 52), so votes
    and post-its show up without reload.
-8. **Duplicate Room and JSON export** (Q4): a tool block is copied with its
-   **setup only** (the polls with their choices and settings, the Retro's
-   columns, the questions, the DDI's Document when it is copied too), with
-   no votes, post-its, answers or acceptances, and starts hidden from
-   Players. The JSON export carries the same setup (schema 5) and the
-   Master's import adds it with the Section.
+8. **Duplicate Room and JSON export** (Q4: "la clonazione non tocca le
+   sessioni 0 o i blocchi custom"): tool blocks are **not copied**, like
+   Session 0 isn't. Duplicating a Room or exporting it to JSON leaves every
+   tool block out; the other blocks (Documents, maps, Session 0 features)
+   are copied and exported as today (spec 55 Decision 5, spec 56).
 
 ### 2. Folding blocks
 
@@ -104,11 +108,17 @@ answers otherwise.
    member: the heading gets the caret and the count badge of a Documents
    group (`document-group-toggle`), at the block's size (h4, display
    font). It starts open and the state is not remembered, as Documents
-   groups (Q5). The count is the number of cards (polls for Sondaggi;
+   groups, unless the Master set it to start folded (Decision 9b). The count is the number of cards (polls for Sondaggi;
    no count for Retro, Stelle e Desideri, DDI). Its sub-sections (groups,
    features) keep folding on their own. The Index entry still scrolls to
    the block and opens it if folded. In edit mode the block bar replaces
    the heading as today and the caret sits at its start.
+
+9b. **"Chiuso all'apertura"** (Q5: yes): in edit mode the block's ⋮ gets
+    a "Chiuso all'apertura" switch; such a block opens folded for every
+    member each time the Section opens (the viewer can still unfold it).
+    Stored on the block (`collapsed`, this ticket's migration), copied by
+    duplication and export like the rest of the block.
 
 ### 3. Section title and description in place
 
@@ -142,6 +152,16 @@ answers otherwise.
     last. Cards, filters, sort and the "Raggruppa per" switch don't change.
     One component (`BlockHeading`) serves both pages, so they can't drift
     apart again.
+14b. **The groups are edited on the Documents page too** (Q6: "completo"):
+    the Room's Administrator (who sets the Main items today, spec 11) gets
+    beside the heading the same "Raggruppa" chip and groups popover as a
+    Documents block (spec 55 Decision 15): the groups as chips, dragged to
+    reorder, × to remove, "+ Gruppo" for one Tag or a combination. The
+    group headings can also be dragged whole by a ⠿ handle, as a block's
+    sub-sections. It writes the Room's Main items (`PUT main-items`), so
+    the Room setup's Grouping and the Documents page show the same list;
+    the setup keeps its editor. "Senza Tag principale" stays last. Members
+    who aren't Administrators see no handle and no chip.
 
 ### 5. New Section outside edit mode
 
@@ -149,8 +169,7 @@ answers otherwise.
     Master always**, not only in edit mode. It works as today (title only,
     Enter, then the new Section opens in edit mode with the add-block
     picker open). Players and the read-only preview never see it.
-16. The **Index** gets a "+ Nuova sezione" line at the end of its Sezioni
-    list, for the Master only, doing the same from any Room page (Q7).
+16. The **Index** doesn't change (Q7: only the always-visible card).
 
 ### Not in scope
 
@@ -158,8 +177,6 @@ answers otherwise.
 - Moving an existing Session 0 step into a Section, or a tool block into a
   Session 0 session.
 - Tool blocks on the landing itself (they live in Sections).
-- Editing the Documents page's groups in place (the Room setup's Grouping
-  stays the place for them).
 
 ## Design
 
@@ -192,8 +209,8 @@ answers otherwise.
   "step reached" check reads `players_visible` for a tool module.
 - `GET session-zero`, the overview, carry over and rounds ignore modules
   with a `section_id`.
-- Duplication and the JSON export (schema 5) copy a tool's setup
-  (Decision 8).
+- Duplication and the JSON export skip tool blocks (Decision 8); the
+  block's `collapsed` travels with the other kinds (export schema 5).
 
 ### Frontend
 
@@ -205,7 +222,10 @@ answers otherwise.
   popover's Strumenti row; delete without undo for tools.
 - `RoomSectionPage`: in-place title/description in edit mode.
 - `LandingEditor`'s "Nuova sezione" card moved to the reading grid for
-  the Master; `RoomIndex` "+ Nuova sezione" line.
+  the Master.
+- `RoomDocumentsPage`: "Raggruppa" chip and sortable group headings for
+  the Administrator, with `GroupsEditor` moved out of `BlockBar` to be
+  shared.
 - `RoomDocumentsPage`, `RoomSetupPage`/`GroupingEditor`: maps row and its
   place removed; `RoomMapsStrip` deleted if nothing else uses it.
 - Strings in all 12 languages.
@@ -214,11 +234,11 @@ answers otherwise.
 
 | Unit | What | Migration | Claude's build time |
 |---|---|---|---|
-| 60_1 | Frontend, no backend: blocks fold, title/description in place, "Nuova sezione" always and in the Index, Documents page groups as blocks and no maps row (setup's Mappe row hidden) | no | about 1.5 h |
-| 60_2 | Backend: migration, tool modules in Sections, routes, Session 0 filters, visibility, deletion, duplication and export setup, `maps_position` dropped, tests | **yes** | about 2.5 h |
-| 60_3 | Frontend tool blocks: Strumenti tiles, inline tools, eye toggle, delete, live updates, import preview, tests, screenshots | no | about 2.5 h |
+| 60_1 | Frontend, no backend: blocks fold, title/description in place, "Nuova sezione" always visible, Documents page groups as blocks and edited in place, no maps row (setup's Mappe row hidden) | no | about 2 h |
+| 60_2 | Backend: migration, tool modules in Sections, routes, Session 0 filters, visibility, deletion, tools left out of duplication and export, block `collapsed`, `maps_position` dropped, tests | **yes** | about 2.5 h |
+| 60_3 | Frontend tool blocks: Strumenti tiles, inline tools, draft and one-click reveal, delete, live updates, "Chiuso all'apertura", tests, screenshots | no | about 2.5 h |
 
-About 6.5 hours. 60_1 can ship first on its own (no migration). The
+About 7 hours. 60_1 can ship first on its own (no migration). The
 migration goes to the staging DB before 60_2 merges and to production
 before the release that ships it.
 
@@ -230,7 +250,8 @@ before the release that ships it.
   post and answer on a visible one, not on a hidden one; the Session 0
   page, overview and carry over never list a tool module; the first tool
   block of a Room without Session 0 leaves Session 0 not started;
-  duplication and export copy setup only, hidden; limits (10 blocks).
+  duplication and export leave tool blocks out and keep `collapsed`;
+  limits (10 blocks).
 - Frontend: a block folds and unfolds from its heading; the Index opens a
   folded block; the Section title and description save in place; the
   Master sees "Nuova sezione" outside edit mode, Players don't; the
@@ -242,21 +263,18 @@ before the release that ships it.
   Retro tool (one folded), edit mode heading, the add-block popover with
   Strumenti, the Documents page.
 
-## Open questions (product owner)
+## Answers (product owner, 2026-11-02)
 
-- **Q1** Tool inline in the Section (default) or a card opening a page of
-  its own, like a Session 0 step?
-- **Q2** Lines & Veils stays one per Room, reachable from a Session 0
-  block (default), or do you want separate Lines & Veils boards too?
-- **Q3** A new tool starts hidden from Players until the Master shows it
-  (default), or visible at once?
-- **Q4** Duplicate Room and JSON export copy a tool's setup without votes,
-  post-its and answers (default), or leave tools out?
-- **Q5** Blocks start open and the fold is not remembered (default), or
-  should the Master be able to set a block to start folded?
-- **Q6** "Conformare i raggruppamenti": read as *the look* (group headings
-  like block headings, Decision 14). Did you also mean editing the groups
-  in place on the Documents page with the block's chips popover, instead
-  of the Room setup?
-- **Q7** Besides the always-visible dashed card, a "+ Nuova sezione" line in
-  the Index too (default), or only the card?
+- Q1 (inline or a page): a standalone tool shows inside its own block.
+  -> Decision 2.
+- Q2 (Lines & Veils one per Room): yes. -> Decision 1.
+- Q3 (new tool hidden from Players): yes, with an easy way to reveal it.
+  -> Decision 4.
+- Q4 (duplication and export): "la clonazione non tocca le sessioni 0 o i
+  blocchi custom": read as tool blocks not copied, the other blocks as
+  today. -> Decision 8.
+- Q5 (Master sets a block to start folded): yes. -> Decision 9b.
+- Q6 (groups: look only, or edited in place): complete, both. ->
+  Decisions 14, 14b.
+- Q7 (Index line): no, only the always-visible card for the Master. ->
+  Decisions 15, 16.
