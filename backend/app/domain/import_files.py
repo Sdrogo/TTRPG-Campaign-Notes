@@ -104,13 +104,15 @@ class ImportDocument:
 class ImportFile:
     """One parsed file: its name, its Documents in order, its Tags by the id
     the file gives them (what a Tag mention points at) and its maps (spec 40)
-    as the file writes them, each read when the import is planned
-    (`map_transfer.read_map`), so one that can't be read is skipped alone."""
+    and landing Sections (spec 56) as the file writes them, each read when the
+    import is planned (`map_transfer.read_map`, `landing_transfer.read_section`),
+    so one that can't be read is skipped alone."""
 
     name: str
     documents: tuple[ImportDocument, ...]
     tags: Mapping[str, ImportTag] = field(default_factory=dict)
     maps: tuple[dict[str, Any], ...] = ()
+    sections: tuple[dict[str, Any], ...] = ()
 
 
 # --- Entry point -------------------------------------------------------------
@@ -186,6 +188,7 @@ def _parse_json(name: str, text: str) -> ImportFile:
         raw_documents: Any = data
         raw_tags: Any = []
         raw_maps: Any = []
+        raw_sections: Any = []
     elif isinstance(data, dict):
         version = data.get("schema_version", SCHEMA_VERSION)
         if not isinstance(version, int) or isinstance(version, bool):
@@ -197,12 +200,14 @@ def _parse_json(name: str, text: str) -> ImportFile:
         raw_documents = data.get("documents")
         raw_tags = data.get("tags", [])
         raw_maps = data.get("maps") or []
+        raw_sections = data.get("sections") or []
     else:
         raise _unreadable(name)
     if not isinstance(raw_documents, list) or not isinstance(raw_tags, list):
         raise _unreadable(name)
-    if not isinstance(raw_maps, list) or not all(isinstance(m, dict) for m in raw_maps):
-        raise _unreadable(name)
+    for raw_list in (raw_maps, raw_sections):
+        if not isinstance(raw_list, list) or not all(isinstance(m, dict) for m in raw_list):
+            raise _unreadable(name)
 
     tags: dict[str, ImportTag] = {}
     for raw in raw_tags:
@@ -212,7 +217,7 @@ def _parse_json(name: str, text: str) -> ImportFile:
         if tag_name and tag_name.strip() and tag_id:
             tags[tag_id] = ImportTag(tag_name.strip(), _optional_str(item.get("category"), name))
     documents = tuple(_json_document(_object(raw, name), name, tags) for raw in raw_documents)
-    return ImportFile(name, documents, tags, tuple(raw_maps))
+    return ImportFile(name, documents, tags, tuple(raw_maps), tuple(raw_sections))
 
 
 def _object(value: Any, name: str) -> dict[str, Any]:
@@ -575,6 +580,7 @@ def file_to_json(file: ImportFile) -> dict[str, Any]:
             for d in file.documents
         ],
         "maps": list(file.maps),
+        "sections": list(file.sections),
     }
 
 
@@ -602,4 +608,6 @@ def file_from_json(data: dict[str, Any]) -> ImportFile:
         ),
         # Absent from the payload of a job queued before spec 40.
         maps=tuple(data.get("maps", ())),
+        # Absent from the payload of a job queued before spec 56.
+        sections=tuple(data.get("sections", ())),
     )

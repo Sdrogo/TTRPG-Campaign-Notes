@@ -971,6 +971,29 @@
       "skippedTitle_one": "{{count}} map not fully imported",
       "skippedTitle_other": "{{count}} maps not fully imported"
     },
+    "sections": {
+      "found_one": "{{count}} Section of the Room home found",
+      "found_other": "{{count}} Sections of the Room home found",
+      "pageCardsHint": "Page cards come unticked: tick one to overwrite this Room's card with it.",
+      "select": "Import the Section {{name}}",
+      "applySelect": "Apply {{name}} to this Room's card",
+      "untitled": "Section without a title",
+      "blocksCount_one": "{{count}} block",
+      "blocksCount_other": "{{count}} blocks",
+      "withImage": "with image",
+      "pageCard": "Overwrites this Room's card",
+      "skippedBlocks_one": "{{count}} Documents block is left out: none of its Tags can be brought here",
+      "skippedBlocks_other": "{{count}} Documents blocks are left out: none of their Tags can be brought here",
+      "skipReason": {
+        "invalid": "Can't be imported: it can't be read or breaks a rule of the Room home",
+        "limit": "The Room home already has the maximum number of Sections",
+        "image": "Its image could not be imported"
+      },
+      "written_one": "{{count}} Section of the Room home created or updated",
+      "written_other": "{{count}} Sections of the Room home created or updated",
+      "skippedTitle_one": "{{count}} Section not fully imported",
+      "skippedTitle_other": "{{count}} Sections not fully imported"
+    },
     "failed": "The import failed. Check the list of Documents before trying again.",
     "another": "Import more files"
   },

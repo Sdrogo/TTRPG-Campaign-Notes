@@ -10,7 +10,7 @@
   (product owner's choice, 2026-11-02).
 - No migration: every table already exists.
 
-## Decisions (proposed by Claude, to be confirmed by the product owner)
+## Decisions (proposed by Claude, confirmed by the product owner 2026-11-02)
 
 ### Export
 
@@ -43,8 +43,9 @@
 6. **Page cards are not imported as cards** (every Room has its own).
    A page card of the file with a Master's title, description or image
    is offered in the preview as "apply to the Room's card", unchecked by
-   default; ticked, it overwrites that card's title, description and
-   image. A page card the Room has deleted is added back.
+   default; ticked, it overwrites that card's title and description, and
+   its image when the file's card has one (a card with no image in the
+   file keeps the Room's). A page card the Room has deleted is added back.
 7. **Tags** are resolved like the Documents' (spec 27 Decision 11): by
    name to the Room's Tags or to the ones the import creates. A Tag that
    can't be resolved is dropped from the block and its groups; a group
@@ -82,6 +83,18 @@
     page cards to apply; the choices send them; the result lists what was
     created and skipped. New strings in all 12 locales.
 - Docs: `architecture.md` (export, import), `progress-tracker.md`.
+
+## As built (PR #284)
+
+- Keys: a Section of the file is `"<file>:section:<index>"`; the choices
+  take `sections` (custom ones, all when absent) and `page_cards` (none
+  when absent). The preview lists page cards for the client to leave
+  unticked; a page card without a title, description or image is not
+  listed. At most 100 Sections per import (422).
+- The job plans against the Room home as it is when it starts, and counts
+  the cap of 30 again under the Room's lock when it writes.
+- Tags a Section needs are created like a Document's (the Master may
+  always create Tags), so the preview's "Tags to create" includes them.
 
 ## Units
 

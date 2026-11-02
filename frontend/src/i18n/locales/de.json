@@ -971,6 +971,29 @@
       "skippedTitle_one": "{{count}} Karte nicht vollständig importiert",
       "skippedTitle_other": "{{count}} Karten nicht vollständig importiert"
     },
+    "sections": {
+      "found_one": "{{count}} Bereich der Raum-Startseite gefunden",
+      "found_other": "{{count}} Bereiche der Raum-Startseite gefunden",
+      "pageCardsHint": "Seitenkarten sind nicht angehakt: Hake eine an, um damit die Karte dieses Raums zu überschreiben.",
+      "select": "Bereich {{name}} importieren",
+      "applySelect": "{{name}} auf die Karte dieses Raums anwenden",
+      "untitled": "Bereich ohne Titel",
+      "blocksCount_one": "{{count}} Block",
+      "blocksCount_other": "{{count}} Blöcke",
+      "withImage": "mit Bild",
+      "pageCard": "Überschreibt die Karte dieses Raums",
+      "skippedBlocks_one": "{{count}} Dokumentblock wird ausgelassen: keiner seiner Tags kann hierher übernommen werden",
+      "skippedBlocks_other": "{{count}} Dokumentblöcke werden ausgelassen: keiner ihrer Tags kann hierher übernommen werden",
+      "skipReason": {
+        "invalid": "Kann nicht importiert werden: nicht lesbar oder verstößt gegen eine Regel der Raum-Startseite",
+        "limit": "Die Raum-Startseite hat bereits die maximale Anzahl an Bereichen",
+        "image": "Das Bild konnte nicht importiert werden"
+      },
+      "written_one": "{{count}} Bereich der Raum-Startseite erstellt oder aktualisiert",
+      "written_other": "{{count}} Bereiche der Raum-Startseite erstellt oder aktualisiert",
+      "skippedTitle_one": "{{count}} Bereich nicht vollständig importiert",
+      "skippedTitle_other": "{{count}} Bereiche nicht vollständig importiert"
+    },
     "failed": "Der Import ist fehlgeschlagen. Prüfe die Dokumentliste, bevor du es erneut versuchst.",
     "another": "Weitere Dateien importieren"
   },

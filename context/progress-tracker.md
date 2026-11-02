@@ -857,11 +857,13 @@ next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
 - **56, Landing Sections in import-export** (asked by the product owner
-  2026-11-02, separate PR; ticket written, waiting for confirmation, no
-  code yet): the JSON Room export carries the landing's Sections
-  (`schema_version` 4) and the Master's import recreates the custom ones
-  and can apply the page cards' text and image. Duplicate Room already
-  copies the landing (spec 55). No migration.
+  2026-11-02, separate PR; ticket confirmed 2026-11-02; **built** in PR
+  #284 into `staging`, 56_1 backend and 56_2 frontend): the JSON Room
+  export carries the landing's Sections (`schema_version` 4) and the
+  Master's import adds the custom ones last (Tags matched or created by
+  name) and, when ticked, applies a page card's title, description and
+  image to the Room's own. Duplicate Room already copies the landing
+  (spec 55). No migration.
 - **55, Room landing page** (ticket answered by the product owner
   2026-10-31; mockup 55_m confirmed the same day; **all units built** in
   PR #283 into `staging`): a Room home page `/rooms/:roomId` of Section

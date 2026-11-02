@@ -567,7 +567,7 @@ async def test_a_file_that_is_refused_writes_nothing(
         "too big": (("big.json", b"{" + b" " * (5 * 1024 * 1024)), 413),
         "not json": (("bad.json", b"{oops"), 422),
         "not utf-8": (("bad.md", b"\xff\xfe\x00"), 422),
-        "newer schema": (_json_file({"name": "A"}, schema_version=4), 422),
+        "newer schema": (_json_file({"name": "A"}, schema_version=5), 422),
         "no document": (("empty.json", b'{"documents": []}'), 422),
         "too many documents": (_json_file(*many), 422),
         "too many images": (_json_file(images), 422),
@@ -1328,7 +1328,7 @@ async def test_a_room_export_carries_its_maps_into_another_room(
     target = await _second_room(client, room)
     exported = await _export(client, room, room.master, "json")
     data = json.loads(exported)
-    assert data["schema_version"] == 3
+    assert data["schema_version"] == 4
     maps = {m["name"]: m for m in data["maps"]}
     assert set(maps) == {"Court", "Valley"}
     assert maps["Court"]["linked_document_ids"] == [seeded["castle"]["id"]]
@@ -1752,3 +1752,405 @@ async def test_a_background_storage_read_that_fails_falls_back_to_the_link(
 
     assert job["result"]["skipped_maps"] == []
     assert served["calls"] == [own_bucket(path)]
+
+
+# --- the Room home (spec 56) ---------------------------------------------------------
+
+
+async def _landing(client: AsyncClient, room: _Room) -> Any:
+    response = await client.get(f"{room.url}/sections", headers=room.master)
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+async def _section(
+    client: AsyncClient, room: _Room, title: str, *blocks: dict[str, Any]
+) -> dict[str, Any]:
+    section: dict[str, Any] = await _post(client, f"{room.url}/sections", room.master, title=title)
+    if blocks:
+        saved = await client.put(
+            f"{room.url}/sections/{section['id']}/blocks",
+            json={"blocks": list(blocks)},
+            headers=room.master,
+        )
+        assert saved.status_code == 200, saved.text
+    return section
+
+
+async def _section_image(
+    client: AsyncClient, room: _Room, fake_storage: dict[str, bytes], section_id: str
+) -> str:
+    """Uploads an image to the Section; returns its object path."""
+    before = set(fake_storage)
+    uploaded = await client.post(
+        f"{room.url}/sections/{section_id}/image",
+        files={"file": ("a.png", _png(), "image/png")},
+        headers=room.master,
+    )
+    assert uploaded.status_code == 200, uploaded.text
+    (path,) = set(fake_storage) - before
+    return path
+
+
+async def _start_with(
+    client: AsyncClient,
+    room: _Room,
+    headers: dict[str, str],
+    file: tuple[str, bytes],
+    **choices: Any,
+) -> Response:
+    """Starts the import of every Document of `file` with these choices."""
+    preview = await _preview(client, room, headers, file)
+    assert preview.status_code == 200, preview.text
+    selected = [d["key"] for d in preview.json()["documents"]]
+    started = await client.post(
+        f"{room.url}/imports",
+        files=_upload(file),
+        data={"choices": json.dumps({"selected": selected, **choices})},
+        headers=headers,
+    )
+    assert started.status_code == 202, started.text
+    return started
+
+
+async def _job(client: AsyncClient, room: _Room, headers: dict[str, str], started: Response) -> Any:
+    job = await client.get(f"{room.url}/imports/{started.json()['id']}", headers=headers)
+    assert job.status_code == 200, job.text
+    return job.json()
+
+
+async def test_a_room_export_carries_its_home_into_another_room(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+) -> None:
+    """Spec 56 Decisions 1 to 10: the JSON export holds every Section in
+    order; the Master's import adds the custom ones last, their Tags matched
+    or created by name, with their image, and applies a ticked page card."""
+    room = await _room(client, make_token)
+    tags = await _tags(client, room)
+    neon = await _post(client, f"{room.url}/tags", room.master, name="Neon")
+    npc, place = tags["NPC"]["id"], tags["Place"]["id"]
+    city = await _section(
+        client,
+        room,
+        "City",
+        {"kind": "documents", "heading": "People", "tag_ids": [npc], "groups": [[npc, place]]},
+        {"kind": "maps", "map_kind": "geographic"},
+        {"kind": "session_zero", "features": ["polls", "ddi"]},
+    )
+    await _section(client, room, "Night", {"kind": "documents", "tag_ids": [neon["id"]]})
+    await _section_image(client, room, fake_storage, city["id"])
+    documents_card = (await _landing(client, room))[0]
+    renamed = await client.patch(
+        f"{room.url}/sections/{documents_card['id']}",
+        json={"title": "Archive", "description": "Everything"},
+        headers=room.master,
+    )
+    assert renamed.status_code == 200, renamed.text
+    shibuya = await _post(client, f"{room.url}/documents", room.master, name="Shibuya")
+    target = await _second_room(client, room)
+
+    exported = await _export(client, room, room.master, "json")
+    data = json.loads(exported)
+    assert data["schema_version"] == 4
+    assert [(s["kind"], s["title"]) for s in data["sections"]] == [
+        ("page_documents", "Archive"),
+        ("page_maps", None),
+        ("page_session_zero", None),
+        ("custom", "City"),
+        ("custom", "Night"),
+    ]
+    assert data["sections"][3]["image_url"].startswith("https://signed.test/")
+    assert data["sections"][3]["blocks"][2]["features"] == ["polls", "ddi"]
+    assert b"City" not in await _export(client, room, room.master, "md")
+    single = await _export(client, room, room.master, "json", f"/documents/{shibuya['id']}")
+    assert json.loads(single)["sections"] == []
+
+    preview = await _preview(client, target, target.master, ("room.json", exported))
+    assert preview.status_code == 200, preview.text
+    previewed = preview.json()["sections"]
+    assert [
+        (s["kind"], s["title"], s["blocks_count"], s["has_image"], s["skipped"]) for s in previewed
+    ] == [
+        ("page_documents", "Archive", 0, False, None),
+        ("custom", "City", 3, True, None),
+        ("custom", "Night", 1, False, None),
+    ]
+    assert "Neon" in {t["name"] for t in preview.json()["tags_to_create"]}
+
+    started = await _start_with(
+        client, target, target.master, ("room.json", exported), page_cards=[previewed[0]["key"]]
+    )
+    job = await _job(client, target, target.master, started)
+
+    assert job["status"] == "done", job
+    result = job["result"]
+    assert [(s["kind"], s["title"]) for s in result["sections"]] == [
+        ("page_documents", "Archive"),
+        ("custom", "City"),
+        ("custom", "Night"),
+    ]
+    assert result["skipped_sections"] == []
+    landing = await _landing(client, target)
+    assert [s["kind"] for s in landing] == [s["kind"] for s in data["sections"]]
+    assert (landing[0]["title"], landing[0]["description"]) == ("Archive", "Everything")
+    assert landing[3]["id"] == result["sections"][1]["id"] != city["id"]
+    assert landing[3]["image_url"] is not None
+    assert any(p.startswith(f"rooms/{target.id}/sections/") for p in fake_storage)
+    target_tags = await _tags(client, target)
+    people, maps, polls = landing[3]["blocks"]
+    assert people["tag_ids"] == [target_tags["NPC"]["id"]]
+    assert sorted(people["groups"][0]) == sorted(
+        [target_tags["NPC"]["id"], target_tags["Place"]["id"]]
+    )
+    assert maps["map_kind"] == "geographic" and polls["features"] == ["polls", "ddi"]
+    assert landing[4]["blocks"][0]["tag_ids"] == [target_tags["Neon"]["id"]]
+
+
+async def test_a_players_import_brings_no_section(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    await client.patch(room.url, json={"players_can_create_documents": True}, headers=room.master)
+    file = _json_file(
+        {"name": "Inn"},
+        sections=[{"kind": "custom", "title": "A"}, {"kind": "page_maps", "title": "Atlas"}],
+    )
+
+    preview = await _preview(client, room, room.player, file)
+    started = await _start_with(
+        client, room, room.player, file, sections=["0:section:0"], page_cards=["0:section:1"]
+    )
+    job = await _job(client, room, room.player, started)
+
+    assert preview.json()["sections"] == []
+    assert job["result"]["sections"] == [] and job["result"]["skipped_sections"] == []
+    assert [s["title"] for s in await _landing(client, room)] == [None, None, None]
+
+
+async def test_unticked_sections_and_sections_past_the_cap_are_not_written(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    held_jobs: list[Coroutine[Any, Any, None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.domain import room_sections
+
+    room = await _room(client, make_token)
+    monkeypatch.setattr(room_sections, "MAX_SECTIONS", 5)
+    file = _json_file(
+        {"name": "Inn"},
+        sections=[
+            {"kind": "custom", "title": "A"},
+            {"kind": "custom", "title": "B"},
+            {"kind": "page_maps", "title": "Atlas"},
+            {"kind": "custom", "title": "C"},
+            {"kind": "custom", "title": "D", "blocks": "nope"},
+        ],
+    )
+    preview = await _preview(client, room, room.master, file)
+    assert [(s["title"], s["skipped"]) for s in preview.json()["sections"]] == [
+        ("A", None),
+        ("B", None),
+        ("Atlas", None),
+        ("C", "limit"),
+        ("D", "invalid"),
+    ]
+
+    # B fits when the import is started, but another Section takes its place
+    # before the job runs: the job plans again against the Room as it is then.
+    started = await _start_with(
+        client, room, room.master, file, sections=["0:section:0", "0:section:1", "0:section:4"]
+    )
+    await _section(client, room, "Late")
+    await held_jobs.pop()
+    job = await _job(client, room, room.master, started)
+
+    assert job["status"] == "done", job
+    assert job["result"]["sections"][0]["title"] == "A"
+    assert job["result"]["skipped_sections"] == [
+        {"kind": "custom", "title": "B", "reason": "limit"},
+        {"kind": "custom", "title": "D", "reason": "invalid"},
+    ]
+    landing = await _landing(client, room)
+    assert [s["title"] for s in landing] == [None, None, None, "Late", "A"]
+
+
+async def test_a_page_card_the_room_deleted_is_added_back_with_its_image(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    landing = await _landing(client, room)
+    deleted = await client.delete(f"{room.url}/sections/{landing[1]['id']}", headers=room.master)
+    assert deleted.status_code == 204, deleted.text
+    old = await _section_image(client, room, fake_storage, landing[2]["id"])
+    served["https://img.test/maps.png"] = _png()
+    served["https://img.test/zero.png"] = _png((1, 2, 3))
+    file = _json_file(
+        {"name": "Inn"},
+        sections=[
+            {"kind": "page_maps", "title": "Atlas", "image_url": "https://img.test/maps.png"},
+            {"kind": "page_session_zero", "image_url": "https://img.test/zero.png"},
+        ],
+    )
+
+    started = await _start_with(
+        client, room, room.master, file, page_cards=["0:section:0", "0:section:1"]
+    )
+    job = await _job(client, room, room.master, started)
+
+    assert job["result"]["skipped_sections"] == []
+    after = await _landing(client, room)
+    assert [s["kind"] for s in after] == ["page_documents", "page_session_zero", "page_maps"]
+    assert after[2]["title"] == "Atlas" and after[2]["image_url"] is not None
+    assert after[1]["id"] == landing[2]["id"] and after[1]["title"] is None
+    assert old not in fake_storage  # the replaced image is removed
+
+
+async def test_a_section_image_is_read_from_storage_or_listed(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    own_bucket: Callable[[str], str],
+    inline_jobs: None,
+) -> None:
+    """Decision 9: an image of this app's Storage is read straight from it
+    when the importer is a member of a Room that shows it; one of a Room
+    they aren't in, or a link that fails, is listed and the Section stays
+    without it."""
+    room = await _room(client, make_token)
+    seen = await _section_image(
+        client, room, fake_storage, (await _section(client, room, "Seen"))["id"]
+    )
+    stranger = await _room(client, make_token, "Elsewhere")
+    hidden = await _section_image(
+        client, stranger, fake_storage, (await _section(client, stranger, "Hidden"))["id"]
+    )
+    served["https://img.test/not-an-image"] = b"nope"
+    file = _json_file(
+        {"name": "Inn"},
+        sections=[
+            {"kind": "custom", "title": f"{name} copy", "image_url": url}
+            for name, url in (
+                ("Seen", own_bucket(seen)),
+                ("Hidden", own_bucket(hidden)),
+                ("Bad", "https://img.test/not-an-image"),
+            )
+        ],
+    )
+
+    job = await _job(client, room, room.master, await _start_with(client, room, room.master, file))
+
+    assert job["status"] == "done", job
+    assert job["result"]["skipped_sections"] == [
+        {"kind": "custom", "title": "Hidden copy", "reason": "image"},
+        {"kind": "custom", "title": "Bad copy", "reason": "image"},
+    ]
+    assert served["calls"] == [own_bucket(hidden), "https://img.test/not-an-image"]
+    copies = {s["title"]: s for s in await _landing(client, room)}
+    assert copies["Seen copy"]["image_url"] is not None
+    assert copies["Hidden copy"]["image_url"] is None
+
+
+@pytest.mark.parametrize("failure", [storage.StorageError("503"), RuntimeError("bug")])
+async def test_a_section_image_that_cannot_be_stored_is_listed(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: Exception,
+) -> None:
+    room = await _room(client, make_token)
+    served["https://img.test/a.png"] = _png()
+
+    async def down(*args: Any) -> None:
+        raise failure
+
+    monkeypatch.setattr(storage, "upload", down)
+    file = _json_file(
+        {"name": "Inn"},
+        sections=[{"kind": "custom", "title": "City", "image_url": "https://img.test/a.png"}],
+    )
+
+    job = await _job(client, room, room.master, await _start_with(client, room, room.master, file))
+
+    assert job["result"]["skipped_sections"] == [
+        {"kind": "custom", "title": "City", "reason": "image"}
+    ]
+    assert (await _landing(client, room))[-1]["title"] == "City"
+
+
+async def test_a_section_image_storage_read_that_fails_falls_back_to_the_link(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    own_bucket: Callable[[str], str],
+    inline_jobs: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    room = await _room(client, make_token)
+    path = await _section_image(
+        client, room, fake_storage, (await _section(client, room, "City"))["id"]
+    )
+    served[own_bucket(path)] = _png()
+
+    async def down(path: str, max_bytes: int) -> bytes:
+        raise storage.StorageError("Storage answered 503")
+
+    monkeypatch.setattr(storage, "download", down)
+    file = _json_file(
+        {"name": "Inn"},
+        sections=[{"kind": "custom", "title": "Copy", "image_url": own_bucket(path)}],
+    )
+
+    job = await _job(client, room, room.master, await _start_with(client, room, room.master, file))
+
+    assert job["result"]["skipped_sections"] == []
+    assert served["calls"] == [own_bucket(path)]
+
+
+async def test_a_section_added_while_the_job_writes_pushes_the_last_out(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.api import import_job
+    from app.domain.room_sections import TooManySectionsError
+
+    def full(*args: Any) -> None:
+        raise TooManySectionsError("errors.landing.tooManySections", max=30)
+
+    # The plan found room; under the Room's lock the job counts again.
+    monkeypatch.setattr(import_job, "plan_new_section", full)
+    file = _json_file({"name": "Inn"}, sections=[{"kind": "custom", "title": "A"}])
+
+    room = await _room(client, make_token)
+    started = await _start_with(client, room, room.master, file)
+    job = await _job(client, room, room.master, started)
+
+    assert job["result"]["sections"] == []
+    assert job["result"]["skipped_sections"] == [
+        {"kind": "custom", "title": "A", "reason": "limit"}
+    ]

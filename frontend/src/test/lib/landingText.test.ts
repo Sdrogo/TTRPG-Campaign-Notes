@@ -8,6 +8,7 @@ import {
   pageName,
   pollLine,
   sectionDescription,
+  sectionName,
   sectionTitle,
   sessionLine,
   stepLine,
@@ -28,6 +29,8 @@ describe('the landing texts', () => {
     expect(sectionTitle({ kind: 'page_session_zero', title: null })).toBe('Sessione 0');
     expect(sectionTitle({ kind: 'page_documents', title: 'Archivio' })).toBe('Archivio');
     expect(sectionTitle({ kind: 'custom', title: null })).toBe('');
+    expect(sectionName({ kind: 'custom', title: null })).toBe('Sezione senza titolo');
+    expect(sectionName({ kind: 'page_maps', title: null })).toBe('Mappe');
     expect(sectionDescription({ kind: 'page_documents', description: '' })).toBe('Tutti i Documenti della Stanza');
     expect(sectionDescription({ kind: 'page_documents', description: 'Mia' })).toBe('Mia');
     expect(sectionDescription({ kind: 'custom', description: '' })).toBe('');

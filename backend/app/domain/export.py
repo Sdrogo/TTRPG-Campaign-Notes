@@ -42,8 +42,9 @@ from app.domain.visibility import (
 # Bumped when the JSON shape changes: 1 is the first release, with replies
 # (spec 19) and mention ids (spec 20) already part of it.
 # 2 since spec 28_0 added a Document's `subtitle`; 3 since spec 40 added the
-# Room's `maps`. The import reads 1 to 3.
-SCHEMA_VERSION = 3
+# Room's `maps`; 4 since spec 56 added the landing page's `sections`. The
+# import reads 1 to 4.
+SCHEMA_VERSION = 4
 
 # Shown for a member with no display name: emails are never exported
 # (NFR-03).
@@ -230,6 +231,9 @@ class Export:
     # The maps the requester sees, already as JSON (spec 40,
     # `map_transfer.map_to_json`): only the Room's JSON export reads them.
     maps: Sequence[dict[str, Any]] = ()
+    # The landing page's Sections, already as JSON (spec 56,
+    # `landing_transfer.section_to_json`): only the Room's JSON export reads them.
+    sections: Sequence[dict[str, Any]] = ()
 
 
 @dataclass(frozen=True)
@@ -478,6 +482,7 @@ def restrict_to_document(export: Export, document_id: uuid.UUID) -> Export:
         main_items=(),
         tag_filter=(),
         maps=(),
+        sections=(),
         documents=[document],
         visible_documents={
             id_: name for id_, name in export.visible_documents.items() if id_ in character_ids
@@ -542,6 +547,7 @@ def render_json(export: Export) -> dict[str, Any]:
         "main_items": [[str(tag_id) for tag_id in item] for item in export.main_items],
         "documents": [_json_document(document) for document in export.documents],
         "maps": list(export.maps),
+        "sections": list(export.sections),
     }
 
 

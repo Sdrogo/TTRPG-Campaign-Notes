@@ -945,6 +945,24 @@
       "created_other": "已创建 {{count}} 张地图",
       "skippedTitle_other": "{{count}} 张地图未完整导入"
     },
+    "sections": {
+      "found_other": "找到 {{count}} 个房间主页版块",
+      "pageCardsHint": "页面卡片默认不勾选：勾选后会用它覆盖此房间的卡片。",
+      "select": "导入版块 {{name}}",
+      "applySelect": "将 {{name}} 应用到此房间的卡片",
+      "untitled": "无标题版块",
+      "blocksCount_other": "{{count}} 个区块",
+      "withImage": "含图片",
+      "pageCard": "覆盖此房间的卡片",
+      "skippedBlocks_other": "{{count}} 个文档区块被略过：它们的标签都无法带到这里",
+      "skipReason": {
+        "invalid": "无法导入：无法读取或违反了房间主页的规则",
+        "limit": "房间主页的版块数量已达上限",
+        "image": "无法导入其图片"
+      },
+      "written_other": "已创建或更新 {{count}} 个房间主页版块",
+      "skippedTitle_other": "{{count}} 个版块未完整导入"
+    },
     "failed": "导入失败。重试之前请先检查文档列表。",
     "another": "导入其他文件"
   },

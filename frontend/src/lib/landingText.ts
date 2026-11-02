@@ -19,6 +19,11 @@ export function sectionTitle(section: Pick<LandingSection, 'kind' | 'title'>): s
   return section.kind === 'custom' ? '' : pageName(section.kind);
 }
 
+/** A Section's name in a list: its title, or a placeholder for a custom one without one (an import's preview). */
+export function sectionName(section: Pick<LandingSection, 'kind' | 'title'>): string {
+  return sectionTitle(section) || i18n.t('documentImport.sections.untitled');
+}
+
 /** A Section card's description: the Master's, else a page card's default line. */
 export function sectionDescription(section: Pick<LandingSection, 'kind' | 'description'>): string {
   if (section.description || section.kind === 'custom') return section.description;

@@ -296,6 +296,7 @@ export function rawImportPreview(overrides: Record<string, unknown> = {}) {
     tags_to_create: [],
     unavailable_tags: [],
     maps: [],
+    sections: [],
     ...overrides,
   };
 }

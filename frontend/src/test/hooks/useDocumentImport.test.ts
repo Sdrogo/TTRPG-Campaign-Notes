@@ -46,6 +46,8 @@ describe('useStartImport', () => {
         selected: ['0:0'],
         replace: [],
         maps: ['0:map:0'],
+        sections: ['0:section:1'],
+        pageCards: ['0:section:0'],
       });
     });
 
@@ -56,6 +58,8 @@ describe('useStartImport', () => {
       selected: ['0:0'],
       replace: [],
       maps: ['0:map:0'],
+      sections: ['0:section:1'],
+      page_cards: ['0:section:0'],
     });
     expect(job).toMatchObject({ id: 'import-1', status: 'queued' });
   });
@@ -81,7 +85,7 @@ describe('useImportJob', () => {
 
   it('reads the Room again when the job is done (spec 27)', async () => {
     fetchMock.mockResolvedValue(
-      rawImportJob({ status: 'done', result: { created: [], replaced: [], skipped: [], maps: [], skipped_maps: [] } }),
+      rawImportJob({ status: 'done', result: { created: [], replaced: [], skipped: [], maps: [], skipped_maps: [], sections: [], skipped_sections: [] } }),
     );
     const queryClient = createTestQueryClient();
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
@@ -92,6 +96,7 @@ describe('useImportJob', () => {
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1', 'documents'] }),
     );
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1', 'tags'] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['rooms', 'room-1', 'sections'] });
   });
 
   it('does not touch the Room while the job is still going', async () => {
