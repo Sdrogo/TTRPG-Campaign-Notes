@@ -963,9 +963,10 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   Section: each block under a bar (`BlockBar`, `.room-landing-bar`): ⠿,
   kind icon, heading edited in place (empty = named after its source),
   Tag chips (`.room-landing-chip`, the last one can't be removed), "+
-  Tag", "Raggruppa" (groups popover: sortable chips one per line, "+ Gruppo" with Tag
-  checkboxes, stays open across saves until closed, "Usa i raggruppamenti della Stanza"), the map kind menu, or
-  sortable feature chips and "+ Funzione"; a ⋮ with "Elimina blocco"
+  Tag", "Raggruppa" (groups popover: sortable chips one per line, "+
+  Gruppo" with Tag checkboxes, stays open across saves until closed,
+  "Usa i raggruppamenti della Stanza"), the map kind menu, or sortable
+  feature chips and "+ Funzione"; a ⋮ with "Elimina blocco"
   (toast with "Annulla" for 5 s). "+ Blocco" is a dashed bar after the
   last block (`.room-landing-add`) and a small "+" between two
   (`.room-landing-insert`, shown on hover or focus), opening three tiles

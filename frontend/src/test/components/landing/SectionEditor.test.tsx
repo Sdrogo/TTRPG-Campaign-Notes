@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MantineProvider } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -176,6 +176,17 @@ describe('SectionEditor', () => {
     remount(rawBlock({ id: 'block-4d', tag_ids: ['t1'], groups: [['t2'], ['t3']] }));
     expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '2 gruppi' })).toBeInTheDocument();
+  });
+
+  it('closes the groups popover when the blocks move', async () => {
+    const { rerender } = editor([plainBlock, documentsBlock]);
+    await userEvent.click(screen.getByRole('button', { name: 'Raggruppa' }));
+    expect(screen.getByRole('button', { name: 'Gruppo' })).toBeInTheDocument();
+    // A click with no pointer down, so the popover isn't closed by it first.
+    fireEvent.click(screen.getByRole('button', { name: 'Riordina block-4,block-1' }));
+    await waitFor(() => expect(savedBlocks()).toEqual([wire(documentsBlock), wire(plainBlock)]));
+    rerender(<SectionEditor roomId="room-1" section={section({ blocks: [{ ...documentsBlock, id: 'block-1b' }, { ...plainBlock, id: 'block-4b' }] })} sources={sources} />);
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument());
   });
 
   it('adds no block past ten', () => {

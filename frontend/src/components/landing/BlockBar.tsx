@@ -361,9 +361,9 @@ function MapKindChip({ mapKind, onChange }: { mapKind: BlockMapKind | null; onCh
 
 /**
  * The groups popover (spec 55 Decision 15): the groups as chips, one per
- * line since their order is the page's order, dragged to reorder, × to remove; "+ Gruppo" ticks one or
- * more Tags (several make a combination); "Usa i raggruppamenti della
- * Stanza" copies the Room's Main items.
+ * line since their order is the page's order, dragged to reorder, × to
+ * remove; "+ Gruppo" ticks one or more Tags (several make a combination);
+ * "Usa i raggruppamenti della Stanza" copies the Room's Main items.
  */
 function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][]; tags: Tag[]; mainItems: MainItem[]; onChange: (groups: string[][]) => void }) {
   const { t } = useTranslation();

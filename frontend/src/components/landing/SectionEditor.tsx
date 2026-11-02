@@ -42,7 +42,8 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
   const [adding, setAdding] = useState<number | null>(openedNew ? 0 : null);
   const [draft, setDraft] = useState<Draft | null>(null);
   // The block whose groups popover is open, by position: a save gives every
-  // block a new id, so its bar remounts and reopens it (spec 55 Decision 15).
+  // block a new id, so its bar remounts and reopens it (spec 55 Decision
+  // 15). Adding, deleting or moving a block shifts the positions: it closes.
   const [groupsOpen, setGroupsOpen] = useState<number | null>(null);
   const blocks = section.blocks;
 
@@ -52,6 +53,7 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
 
   const insert = (index: number, kind: BlockKind) => {
     setAdding(null);
+    setGroupsOpen(null);
     const block: BlockInput = { kind, heading: null, tagIds: [], groups: [], mapKind: null, features: [] };
     if (kind === 'maps') {
       const next = inputs();
@@ -70,6 +72,7 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
     saveList(next);
   };
   const remove = (index: number) => {
+    setGroupsOpen(null);
     const before = inputs();
     saveList(
       before.filter((_, other) => other !== index),
@@ -93,6 +96,7 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
     saveList(next);
   };
   const move = (ids: string[]) => {
+    setGroupsOpen(null);
     const byId = new Map(blocks.map((block) => [block.id, block]));
     saveList(ids.map((id) => blockInput(byId.get(id)!)));
   };
