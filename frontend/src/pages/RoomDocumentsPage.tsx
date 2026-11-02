@@ -51,7 +51,6 @@ import { itemLabel } from '../lib/mainItems';
 import { LabeledActionIcon } from '../components/LabeledActionIcon';
 import { useBackState } from '../lib/backNav';
 import { PageHeading } from '../components/PageHeading';
-import { useMediaQuery } from '@mantine/hooks';
 import { EmptyState } from '../components/EmptyState';
 
 /**
@@ -99,7 +98,6 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
   // 2026-10-03), unless the page opens already filtered by Tag - then the
   // filter that's narrowing the list is shown. The title always stays.
   const [controlsExpanded, setControlsExpanded] = useState(() => searchParams.has('tag'));
-  const phone = useMediaQuery('(max-width: 48em)', false, { getInitialValueInEffect: false });
   const tagFilter = searchParams.getAll('tag');
   const groupBy = (searchParams.get('groupBy') as DocumentGroupBy | null) ?? DEFAULT_GROUP_BY;
   const sort = (searchParams.get('sort') as DocumentSort | null) ?? DEFAULT_SORT;
@@ -175,13 +173,6 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
           }
           actions={
             <>
-              {/* On a wide screen "Create Document" sits in the heading like every page's
-                  main action; on a phone it floats, within reach while scrolling (spec 57). */}
-              {canCreateDocument && !phone && (
-                <Button leftSection={<PlusIcon size={18} />} onClick={() => setCreateOpened(true)}>
-                  {t('documents.create')}
-                </Button>
-              )}
               {/* A preview has no Room menu, but the maps are part of what it shows. */}
               {readOnly && (
                 <LabeledActionIcon
@@ -216,8 +207,10 @@ function RoomDocumentsContent({ roomId, currentUserId }: { roomId: string; curre
         />
         {/* The user's PDFs still being made or not yet taken (spec 23b); not while previewing as a member. */}
         {!readOnly && <RoomPdfExports roomId={roomId} userId={currentUserId} />}
-        {canCreateDocument && phone && (
-          <Affix position={{ bottom: 24, right: 16 }} zIndex={150}>
+        {/* The primary creation action floats on every screen, within reach while
+            browsing a long archive (product owner, 2026-11-02, spec 57 Decision 4). */}
+        {canCreateDocument && (
+          <Affix position={{ bottom: 24, right: 24 }} zIndex={150}>
             <Button
               size="md"
               radius="md"

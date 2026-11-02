@@ -6,7 +6,6 @@ import { apiFetch } from '../../lib/apiClient';
 import { useSession } from '../../hooks/useSession';
 import { fakeSession, rawAccount, rawDocument, rawMap, rawMember, rawRoom } from '../fixtures';
 import { renderWithProviders } from '../utils';
-import { matchMediaQueries } from '../media';
 import { RoomDocumentsPage } from '../../pages/RoomDocumentsPage';
 import { ViewAsProvider } from '../../components/ViewAsProvider';
 
@@ -251,24 +250,12 @@ describe('who may create a Document', () => {
     expect(await screen.findByRole('button', { name: /Crea Documento/ })).toBeInTheDocument();
   });
 
-  // Spec 57: in the heading on a wide screen, floating on a phone.
-  it('puts it in the heading on a wide screen', async () => {
+  // Spec 57 Decision 4: it floats on every screen, never in the heading.
+  it('floats it outside the heading', async () => {
     render();
 
     const button = await screen.findByRole('button', { name: /Crea Documento/ });
-    expect(button.closest('.page-heading')).not.toBeNull();
-  });
-
-  it('floats it on a phone', async () => {
-    const restore = matchMediaQueries(['(max-width: 48em)']);
-    try {
-      render();
-
-      const button = await screen.findByRole('button', { name: /Crea Documento/ });
-      expect(button.closest('.page-heading')).toBeNull();
-    } finally {
-      restore();
-    }
+    expect(button.closest('.page-heading')).toBeNull();
   });
 
   it('offers it to a Player when the Room allows it', async () => {

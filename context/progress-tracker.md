@@ -24,13 +24,12 @@ detail:
   — Analisi coerenza UI/UX", screenshots in `ui-audit/` of the project
   files; the product owner asked to build the proposed tickets the same
   day): 57 phone fixes (Index tab padding, setup members as blocks,
-  heading actions wrap, "Create Document" in the heading on desktop), 57b
+  heading actions wrap; "Create Document" keeps floating everywhere), 57b
   one palette (`dark` scale from the tokens, `danger` colour), 57c
   `PageHeading`, `SectionLoader` (centered in-page loading, product owner
   2026-11-02), `EmptyState`, section heading sizes, Index on setup and
   Session 0. Built in one PR into `staging`, no migration. Waiting on: the
-  product owner's review and the three defaults in the ticket (Decisions 4,
-  13, 14).
+  product owner's review (Decisions 4, 13, 14 answered 2026-11-02).
 - **55, Room landing page** (2026-10-31, PR #283 into `staging`,
   **migration `d5b8e1f3a9c7`**, applied to staging 2026-11-02, not yet to
   production): 55_1 backend (Sections,

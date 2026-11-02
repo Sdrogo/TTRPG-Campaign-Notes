@@ -162,8 +162,8 @@ other icon set.
   kicker. Data loading inside a drawn page shows `SectionLoader` (centered,
   48px above and below), never a bare `Loader` in the flow; an empty list
   shows `EmptyState` (dashed transparent card, icon, dimmed text). The page's
-  main action sits in the heading; only "Create Document" floats, and only on
-  a phone (< 48em). A page with the Room Index tab keeps a 40px (48px from
+  main action sits in the heading, except "Create Document", which floats at
+  the bottom right on every screen (product owner, 2026-11-02). A page with the Room Index tab keeps a 40px (48px from
   `sm`) left padding so the tab never covers it.
 
 - **App shell**: persistent top navbar (Room name + role badge for

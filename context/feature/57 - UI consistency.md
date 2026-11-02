@@ -25,8 +25,6 @@
 - The Room setup's member table (`Table.ScrollContainer minWidth={560}`)
   hid its Administrator column and Remove buttons off the right edge of a
   phone; the heading's Export button was cut ("Esport").
-- "Create Document" floated over the cards (`Affix`) on every screen size,
-  while every other page has its main action in the heading.
 - `theme.ts` did not define Mantine's `dark` scale, so every component
   without a class of its own was neutral grey: Room cards
   (`--mantine-color-dark-6`, #2e2e2e), the maps row's cards, inputs,
@@ -48,7 +46,9 @@
 
 Proposed by Claude on 2026-11-02 in the analysis; the product owner asked
 to build them the same day. The three open questions of the analysis were
-taken with the defaults below, to confirm in the PR.
+taken with defaults; the product owner answered on 2026-11-02 in the
+thread: Decision 4 changed (floating button everywhere), Decisions 13 and
+14 confirmed.
 
 ### 57 - Phone fixes
 
@@ -59,9 +59,10 @@ taken with the defaults below, to confirm in the PR.
    switch and Leave/Remove on one wrapping row. The table stays from 36em.
 3. **Heading actions wrap** under the title on a narrow screen instead of
    being cut (via `PageHeading`, 57c).
-4. **"Create Document"** (open question 1, default): in the heading on a
-   wide screen, like every other page's main action; floating at the
-   bottom right only on a phone (< 48em), where it stays within reach.
+4. **"Create Document"** keeps floating at the bottom right on every
+   screen size (product owner, 2026-11-02: "vorrei un floating button in
+   entrambi i casi"); the first build's heading button on desktop was
+   dropped.
 
 ### 57b - One palette
 
@@ -92,11 +93,10 @@ taken with the defaults below, to confirm in the PR.
     My Rooms (door icon) and Documents (books icon).
 12. Section headings inside Session 0 modules are `fz="h3"`, like every
     other page's sections; every Cancel button is `subtle` grey.
-13. **The Index tab** (open question 3, default) also shows on the setup
+13. **The Index tab** (confirmed) also shows on the setup
     page and on Session 0 (where its Session 0 entry is current).
-14. **Room setup sections** (open question 2, default): unchanged for now
-    (Members and image in cards, Tags and the danger zone as titled
-    sections); to revisit if the product owner prefers one style.
+14. **Room setup sections** (confirmed): unchanged (Members and image in
+    cards, Tags and the danger zone as titled sections).
 
 ## Design
 
@@ -109,15 +109,15 @@ taken with the defaults below, to confirm in the PR.
 - `components/PageLayout.tsx`: left padding when the Index shows.
 - `components/setup/MemberManagement.tsx`: phone blocks
   (`useMediaQuery('(max-width: 36em)')`).
-- `pages/RoomDocumentsPage.tsx`: `useMediaQuery('(max-width: 48em)')`
-  chooses the heading button or the floating one.
+- `pages/RoomDocumentsPage.tsx`: the floating "Create Document" stays as it
+  was (`Affix`), outside `PageHeading`.
 
 ## Tests
 
 - MemberManagement on a phone: no table, labelled switches and selects,
   the Administrator switch still saves.
-- Documents: "Create Document" is in the heading on a wide screen and not
-  on a phone; the page's `h1` is "Documenti" with the Room as kicker.
+- Documents: "Create Document" floats outside the heading; the page's `h1`
+  is "Documenti" with the Room as kicker.
 - RoomCard: no own fade colour.
 - Visual check: before/after screenshots of the Demo (desktop 1440px,
   phone 390px) in `ui-audit/` and `ui-audit/after/` in the project files.
