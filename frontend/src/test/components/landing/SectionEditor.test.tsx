@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MantineProvider } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -150,6 +150,43 @@ describe('SectionEditor', () => {
     expect(savedBlocks()[0]).toEqual({ ...wire(documentsBlock), groups: [['t3'], ['gone'], ['t2']] });
     await userEvent.click(screen.getByRole('button', { name: 'Riordina retro,polls' }));
     expect(savedBlocks()[1]).toEqual({ ...wire(zeroBlock), features: ['polls', 'stars_wishes', 'retro'] });
+  });
+
+  it('keeps the groups popover open while groups are added, each save remounting the bar', async () => {
+    const { rerender } = editor([plainBlock, mapsBlock]);
+    const remount = (block: Record<string, unknown>) =>
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [block, mapsBlock] })} sources={sources} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Raggruppa' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Gruppo' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: '#PNG' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    expect(savedBlocks()[0]).toEqual({ ...wire(plainBlock), groups: [['t2']] });
+    // The saved list comes back with new block ids: a new bar, still open.
+    remount(rawBlock({ id: 'block-4b', tag_ids: ['t1'], groups: [['t2']] }));
+    expect(await screen.findByRole('button', { name: 'Gruppo' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Gruppo' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: '#Yakuza' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    expect(savedBlocks()[0]).toEqual({ ...wire(plainBlock), groups: [['t2'], ['t3']] });
+    remount(rawBlock({ id: 'block-4c', tag_ids: ['t1'], groups: [['t2'], ['t3']] }));
+    expect(await screen.findByRole('button', { name: 'Togli #Yakuza' })).toBeInTheDocument();
+    // Once closed it stays closed.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument());
+    remount(rawBlock({ id: 'block-4d', tag_ids: ['t1'], groups: [['t2'], ['t3']] }));
+    expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '2 gruppi' })).toBeInTheDocument();
+  });
+
+  it('closes the groups popover when the blocks move', async () => {
+    const { rerender } = editor([plainBlock, documentsBlock]);
+    await userEvent.click(screen.getByRole('button', { name: 'Raggruppa' }));
+    expect(screen.getByRole('button', { name: 'Gruppo' })).toBeInTheDocument();
+    // A click with no pointer down, so the popover isn't closed by it first.
+    fireEvent.click(screen.getByRole('button', { name: 'Riordina block-4,block-1' }));
+    await waitFor(() => expect(savedBlocks()).toEqual([wire(documentsBlock), wire(plainBlock)]));
+    rerender(<SectionEditor roomId="room-1" section={section({ blocks: [{ ...documentsBlock, id: 'block-1b' }, { ...plainBlock, id: 'block-4b' }] })} sources={sources} />);
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument());
   });
 
   it('adds no block past ten', () => {

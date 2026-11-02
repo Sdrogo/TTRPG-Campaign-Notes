@@ -4,6 +4,7 @@ import {
   itemKey,
   itemLabel,
   resolveItem,
+  reorderShownItems,
   resolveMainItems,
   sameTagSet,
 } from '../../lib/mainItems';
@@ -69,5 +70,19 @@ describe('resolveMainItems', () => {
     const items = [{ tagIds: ['npc', 'gone'] }, { tagIds: ['npc'] }];
 
     expect(resolveMainItems(items, [npc, place])).toEqual([[npc]]);
+  });
+});
+
+describe('reorderShownItems', () => {
+  const a = { tagIds: ['a'] };
+  const b = { tagIds: ['b'] };
+  const c = { tagIds: ['c', 'd'] };
+
+  it('puts the dragged groups in their new order', () => {
+    expect(reorderShownItems([a, b, c], ['c+d', 'a', 'b'])).toEqual([c, a, b]);
+  });
+
+  it('keeps a group not on screen (no Document) in its place', () => {
+    expect(reorderShownItems([a, b, c], ['c+d', 'a'])).toEqual([c, b, a]);
   });
 });

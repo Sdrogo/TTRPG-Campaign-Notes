@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { Badge, Grid, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSetMainItems } from '../../hooks/useMainItems';
-import { useSetMapsPosition } from '../../hooks/useRooms';
 import { notifyError } from '../../lib/notify';
 import { resolveMainItems } from '../../lib/mainItems';
 import type { MainItem, Tag } from '../../types/tag';
@@ -15,8 +14,6 @@ interface TagsSectionProps {
   tags: Tag[];
   /** The Main items in their order. */
   items: MainItem[];
-  /** How many Main items the Documents page shows before the maps row. */
-  mapsPosition: number;
 }
 
 /** One part of the Tags section: a bordered panel with its heading, count and description. */
@@ -59,10 +56,9 @@ function Part({
  * (half each) and stacked below. The Grouping saves on every change,
  * optimistically; a failed save is reported and rolled back.
  */
-export function TagsSection({ roomId, tags, items, mapsPosition }: TagsSectionProps) {
+export function TagsSection({ roomId, tags, items }: TagsSectionProps) {
   const { t } = useTranslation();
   const setMainItems = useSetMainItems(roomId);
-  const setMapsPosition = useSetMapsPosition(roomId);
   const resolved = resolveMainItems(items, tags);
   const groupedIds = new Set(resolved.flat().map((tag) => tag.id));
 
@@ -87,10 +83,6 @@ export function TagsSection({ roomId, tags, items, mapsPosition }: TagsSectionPr
               tags={tags}
               items={items}
               onChange={(next) => setMainItems.mutate(next, { onError: notifyError })}
-              mapsPosition={mapsPosition}
-              onMapsPositionChange={(position) =>
-                setMapsPosition.mutate(position, { onError: notifyError })
-              }
             />
           </Part>
         </Grid.Col>

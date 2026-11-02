@@ -150,8 +150,17 @@ interface BlockBarProps {
   /** Saves the block with these changes. */
   onChange: (block: BlockInput) => void;
   onDelete: () => void;
-  /** Opens a picker as soon as the bar shows: a new block's Tags or features. */
-  initialPicker?: 'tags' | 'features' | null;
+  /**
+   * Opens a picker as soon as the bar shows: a new block's Tags or features,
+   * or the groups popover again after a save remounted the bar.
+   */
+  initialPicker?: 'tags' | 'features' | 'groups' | null;
+  /**
+   * Told when the groups popover opens or closes: every save gives the
+   * blocks new ids and so a new bar, which reopens the popover through
+   * `initialPicker` until the user closes it.
+   */
+  onGroupsOpenChange?: (open: boolean) => void;
   /** A block not saved yet (no Tag or feature): closing its picker empty drops it. */
   onCancelDraft?: () => void;
 }
@@ -162,12 +171,16 @@ interface BlockBarProps {
  * place, the filter as chips (Tags, the map kind, the features), "Raggruppa"
  * on a Documents block, and a ⋮ with "Elimina".
  */
-export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPicker = null, onCancelDraft }: BlockBarProps) {
+export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPicker = null, onCancelDraft, onGroupsOpenChange }: BlockBarProps) {
   const { t } = useTranslation();
   const [picker, setPicker] = useState<'tags' | 'features' | 'groups' | null>(initialPicker);
   const closePicker = () => {
     setPicker(null);
     onCancelDraft?.();
+  };
+  const setGroupsOpen = (open: boolean) => {
+    setPicker(open ? 'groups' : null);
+    onGroupsOpenChange?.(open);
   };
   const blockTags = tagsOf(block.tagIds, tags);
 
@@ -216,11 +229,11 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
           </Text>
           <Picker
             opened={picker === 'groups'}
-            onClose={() => setPicker(null)}
+            onClose={() => setGroupsOpen(false)}
             title={t('roomLanding.edit.groups')}
             width={340}
             target={
-              <Button size="compact-sm" variant="light" rightSection={<CaretDownIcon size={12} />} onClick={() => setPicker('groups')}>
+              <Button size="compact-sm" variant="light" rightSection={<CaretDownIcon size={12} />} onClick={() => setGroupsOpen(true)}>
                 {block.groups.length > 0 ? t('roomLanding.edit.groupedBy', { count: block.groups.length }) : t('roomLanding.edit.group')}
               </Button>
             }
@@ -347,12 +360,12 @@ function MapKindChip({ mapKind, onChange }: { mapKind: BlockMapKind | null; onCh
 }
 
 /**
- * The groups popover (spec 55 Decision 15): the groups as chips on one
- * wrapping line, dragged to reorder, × to remove; "+ Gruppo" ticks one or
- * more Tags (several make a combination); "Usa i raggruppamenti della
- * Stanza" copies the Room's Main items.
+ * The groups popover (spec 55 Decision 15): the groups as chips, one per
+ * line since their order is the page's order, dragged to reorder, × to
+ * remove; "+ Gruppo" ticks one or more Tags (several make a combination);
+ * "Usa i raggruppamenti della Stanza" copies the Room's Main items.
  */
-function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][]; tags: Tag[]; mainItems: MainItem[]; onChange: (groups: string[][]) => void }) {
+export function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][]; tags: Tag[]; mainItems: MainItem[]; onChange: (groups: string[][]) => void }) {
   const { t } = useTranslation();
   const [adding, setAdding] = useState<string[] | null>(null);
   const key = (group: string[]) => group.join('+');
@@ -366,10 +379,9 @@ function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][
           {t('roomLanding.edit.noGroups')}
         </Text>
       ) : (
-        <Group gap={4} wrap="wrap">
+        <Stack gap={4} align="flex-start">
           <SortableList
             ids={groups.map(key)}
-            layout="horizontal"
             onMove={(ids) => onChange(ids.map((id) => groups.find((group) => key(group) === id)!))}
           >
             {groups.map((group) => (
@@ -387,7 +399,7 @@ function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][
               </SortableItem>
             ))}
           </SortableList>
-        </Group>
+        </Stack>
       )}
       {adding === null ? (
         <Group gap="xs" wrap="wrap">

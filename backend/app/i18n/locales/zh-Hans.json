@@ -334,7 +334,9 @@
       "blockFieldNotAllowed": "这个设置不属于这种区块",
       "unknownTag": "其中一个标签不在这个房间里",
       "tooManyGroups": "一个区块最多有 {max} 个分组",
-      "invalidGroup": "每个分组需要一个或多个不同的标签，且不能有两个相同的分组"
+      "invalidGroup": "每个分组需要一个或多个不同的标签，且不能有两个相同的分组",
+      "unknownTool": "此区块不是本版块的工具",
+      "notATool": "工具是回顾、星星与愿望、问题、DDI 或投票"
     }
   },
   "pdf": {

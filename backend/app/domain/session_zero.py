@@ -108,6 +108,14 @@ class Round:
     closed_at: datetime | None
     # Spec 47 Decision 4: the step the table is on.
     current_module_id: uuid.UUID | None = None
+    # Spec 60: a Section's tool round, outside every session: one module,
+    # `current_module_id` set while the Players see it. Never closed.
+    section_id: uuid.UUID | None = None
+
+    @property
+    def is_session(self) -> bool:
+        """One of the Session 0's sessions, not a Section's tool round."""
+        return self.section_id is None
 
 
 @dataclass(frozen=True)

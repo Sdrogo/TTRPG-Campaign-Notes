@@ -219,12 +219,15 @@ what the Players get), with small chips and popovers, never a long form.
     group whose Tags it all carries, the others under "Altri documenti"
     (or no heading when the block has no group). Each group heading folds
     with a caret like a Documents page group (starts open, not
-    remembered). The groups popover is compact too: the groups as chips in
-    one wrapping line, dragged to reorder, × to remove, "+ Gruppo" picks
-    one or more Tags (several = a combination), and "Usa i raggruppamenti
-    della Stanza" copies the Room's Main items in one click. A block holds
-    up to 20 groups. The grouping and ordering code is the Documents
-    page's (`groupDocuments` or its equivalent), not a copy.
+    remembered). The groups popover is compact too: the groups as chips,
+    one per line since their order is the page's order (changed
+    2026-11-02, two short groups used to share a line), dragged to
+    reorder, × to remove, "+ Gruppo" picks one or more Tags (several = a
+    combination), and "Usa i raggruppamenti della Stanza" copies the
+    Room's Main items in one click. The popover stays open while groups
+    are added, until the user closes it. A block holds up to 20 groups.
+    The grouping and ordering code is the Documents page's
+    (`groupDocuments` or its equivalent), not a copy.
 16. **Mockup first**: before 55_3 is built, Claude makes a clickable HTML
     mockup of edit mode (landing, block bar, add-block tiles, groups
     popover, phone bottom sheets) for the product owner to try, and the

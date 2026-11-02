@@ -88,8 +88,6 @@ class RoomRow(Base):
     )
     # The Room's image (spec 26), a Storage path like `users.avatar_path`.
     image_path: Mapped[str | None] = mapped_column(String(500))
-    # How many Main items the Documents page shows before the maps row.
-    maps_position: Mapped[int] = mapped_column(Integer, server_default=text("0"), default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -1143,12 +1141,20 @@ class SessionZeroRoundRow(Base):
 
     __tablename__ = "session_zero_rounds"
     __table_args__ = (
-        UniqueConstraint("room_id", "number", name="uq_session_zero_rounds_number"),
+        # Spec 60: a Section's tool round is not a session, so only the
+        # sessions are numbered and only one of them is open.
+        Index(
+            "uq_session_zero_rounds_number",
+            "room_id",
+            "number",
+            unique=True,
+            postgresql_where=text("section_id IS NULL"),
+        ),
         Index(
             "uq_session_zero_rounds_open",
             "room_id",
             unique=True,
-            postgresql_where=text("closed_at IS NULL"),
+            postgresql_where=text("closed_at IS NULL AND section_id IS NULL"),
         ),
     )
 
@@ -1164,6 +1170,12 @@ class SessionZeroRoundRow(Base):
     current_module_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("session_zero_modules.id", ondelete="SET NULL", use_alter=True),
+    )
+    # Spec 60: set on a Section's tool round, which holds the tool block's
+    # one module, outside every session; its `current_module_id` is set
+    # while the Players see the tool.
+    section_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_sections.id", ondelete="CASCADE"), index=True
     )
 
 
@@ -1547,7 +1559,11 @@ class RoomSectionBlockRow(Base):
     __tablename__ = "room_section_blocks"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('documents', 'maps', 'session_zero')", name="ck_room_section_blocks_kind"
+            "kind IN ('documents', 'maps', 'session_zero', 'tool')",
+            name="ck_room_section_blocks_kind",
+        ),
+        CheckConstraint(
+            "(kind = 'tool') = (module_id IS NOT NULL)", name="ck_room_section_blocks_module"
         ),
         CheckConstraint(
             "map_kind IS NULL OR kind = 'maps'", name="ck_room_section_blocks_map_kind"
@@ -1569,6 +1585,15 @@ class RoomSectionBlockRow(Base):
     features: Mapped[list[str]] = mapped_column(
         ARRAY(String(20)), default=list, server_default=text("'{}'")
     )
+    # Spec 60: a tool block's Session 0 step, in its Section's tool round.
+    module_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("session_zero_modules.id", ondelete="CASCADE"),
+        unique=True,
+        index=True,
+    )
+    # Spec 60 Decision 9b: the block opens folded.
+    collapsed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
 
 
 class RoomSectionBlockTagRow(Base):

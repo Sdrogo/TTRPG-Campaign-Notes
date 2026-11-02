@@ -886,6 +886,22 @@ html body[data-scroll-locked] {
   color: var(--text-primary);
 }
 
+/* Spec 60 Decision 9: a block's heading folds it (Section blocks, Documents page groups). */
+.block-heading-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: 2px 0;
+  color: inherit;
+  text-align: left;
+  transition: color 120ms ease;
+}
+
+.block-heading-toggle:hover,
+.block-heading-toggle:focus-visible {
+  color: var(--accent-primary);
+}
+
 .document-card {
   display: flex;
   flex-direction: column;
@@ -946,31 +962,6 @@ html body[data-scroll-locked] {
   .documents-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-}
-
-/* The maps row on the Room's page: small cards that wrap, one per row on a
-   phone, so a name is never cut by the screen's edge. */
-.room-maps-cards {
-  display: grid;
-  gap: var(--mantine-spacing-sm);
-  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
-}
-
-.room-maps-strip {
-  padding: var(--mantine-spacing-md);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--mantine-radius-md);
-}
-
-.room-map-card {
-  color: inherit;
-  text-decoration: none;
-  transition: border-color 150ms ease;
-}
-
-.room-map-card:hover {
-  border-color: var(--mantine-color-accent-filled);
 }
 
 .maps-page-grid {
@@ -1195,6 +1186,15 @@ html body[data-scroll-locked] {
   font-weight: 500;
 }
 
+/* Spec 60 Decision 10: the Section's title typed in place keeps the heading's look. */
+.section-title-input {
+  font-family: var(--font-display);
+  font-size: var(--mantine-h2-font-size);
+  font-weight: 600;
+  height: auto;
+  padding-block: 2px;
+}
+
 .room-landing-heading:focus-visible {
   outline: 2px solid var(--accent-primary);
   border-radius: var(--mantine-radius-sm);
@@ -1228,6 +1228,7 @@ html body[data-scroll-locked] {
 @media (prefers-reduced-motion: reduce) {
   .documents-controls-toggle,
   .document-group-toggle,
+  .block-heading-toggle,
   .document-card,
   .room-landing-add,
   .room-landing-insert,

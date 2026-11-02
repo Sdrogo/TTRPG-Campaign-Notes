@@ -373,8 +373,7 @@
         "addHint": "Jeden tag to tag główny, dwa lub więcej to kombinacja.",
         "add": "Dodaj",
         "alreadyMain": "Ten tag jest już pozycją grupowania.",
-        "alreadyCombination": "Ta kombinacja jest już w grupowaniu.",
-        "mapsRow": "Wiersz map"
+        "alreadyCombination": "Ta kombinacja jest już w grupowaniu."
       },
       "all": {
         "title": "Wszystkie tagi",
@@ -1343,12 +1342,6 @@
       "repeated": "Dokument jest już na mapie, zostaną zwykłymi etykietami:",
       "backgroundLater": "Obraz tła wgrasz później, przyciskiem Mapa nowej mapy.",
       "submit": "Importuj"
-    },
-    "strip": {
-      "all_one": "Wszystkie mapy ({{count}})",
-      "all_few": "Wszystkie mapy ({{count}})",
-      "all_many": "Wszystkie mapy ({{count}})",
-      "all_other": "Wszystkie mapy ({{count}})"
     }
   },
   "sessionZero": {
@@ -1694,6 +1687,8 @@
       "sessionZero": "Sesje, Linie i Zasłony, ankiety"
     },
     "blockEmpty": "Nic do pokazania",
+    "foldBlock": "Zwiń {{name}}",
+    "unfoldBlock": "Rozwiń {{name}}",
     "sectionEmpty": "Nie ma tu jeszcze nic do pokazania.",
     "notFound": "Ta sekcja już nie istnieje.",
     "loadError": "Nie udało się wczytać strony.",
@@ -1797,7 +1792,9 @@
       "blockMenu": "Działania bloku",
       "deleteBlock": "Usuń blok",
       "blockDeleted": "Blok usunięty",
-      "undo": "Cofnij"
+      "undo": "Cofnij",
+      "renameSection": "Zmień nazwę sekcji {{name}}",
+      "addDescription": "Dodaj opis"
     }
   }
 }

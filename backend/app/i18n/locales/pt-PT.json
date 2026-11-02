@@ -334,7 +334,9 @@
       "blockFieldNotAllowed": "Esta definição não pertence a este tipo de bloco",
       "unknownTag": "Uma das Tags não está nesta Sala",
       "tooManyGroups": "Um bloco tem no máximo {max} grupos",
-      "invalidGroup": "Cada grupo precisa de uma ou mais Tags diferentes, e não pode haver dois grupos iguais"
+      "invalidGroup": "Cada grupo precisa de uma ou mais Tags diferentes, e não pode haver dois grupos iguais",
+      "unknownTool": "Este bloco não é uma ferramenta desta secção",
+      "notATool": "Uma ferramenta é uma Retro, Estrelas e Desejos, Perguntas, um DDI ou sondagens"
     }
   },
   "pdf": {

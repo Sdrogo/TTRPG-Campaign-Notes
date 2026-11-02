@@ -373,8 +373,7 @@
         "addHint": "一个标签是主标签，两个或更多标签则是一个组合。",
         "add": "添加",
         "alreadyMain": "此标签已是分组中的一个条目。",
-        "alreadyCombination": "此组合已在分组中。",
-        "mapsRow": "地图行"
+        "alreadyCombination": "此组合已在分组中。"
       },
       "all": {
         "title": "所有标签",
@@ -1244,9 +1243,6 @@
       "repeated": "该文档已在地图上,将保留为普通标签:",
       "backgroundLater": "背景图片之后在新地图的“地图”按钮中上传。",
       "submit": "导入"
-    },
-    "strip": {
-      "all_other": "全部地图（{{count}}）"
     }
   },
   "sessionZero": {
@@ -1568,6 +1564,8 @@
       "sessionZero": "会话、底线与帷幕、投票"
     },
     "blockEmpty": "没有可显示的内容",
+    "foldBlock": "折叠{{name}}",
+    "unfoldBlock": "展开{{name}}",
     "sectionEmpty": "这里还没有可显示的内容。",
     "notFound": "此版块已不存在。",
     "loadError": "无法加载页面。",
@@ -1659,7 +1657,9 @@
       "blockMenu": "区块操作",
       "deleteBlock": "删除区块",
       "blockDeleted": "区块已删除",
-      "undo": "撤销"
+      "undo": "撤销",
+      "renameSection": "重命名版块{{name}}",
+      "addDescription": "添加描述"
     }
   }
 }

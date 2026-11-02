@@ -373,8 +373,7 @@
         "addHint": "태그 하나는 주요 태그, 둘 이상은 조합입니다.",
         "add": "추가",
         "alreadyMain": "이 태그는 이미 묶기 항목입니다.",
-        "alreadyCombination": "이 조합은 이미 묶기에 있습니다.",
-        "mapsRow": "지도 줄"
+        "alreadyCombination": "이 조합은 이미 묶기에 있습니다."
       },
       "all": {
         "title": "모든 태그",
@@ -1244,9 +1243,6 @@
       "repeated": "문서가 이미 지도에 있어 일반 라벨로 남습니다:",
       "backgroundLater": "배경 이미지는 나중에 새 지도의 지도 버튼에서 올립니다.",
       "submit": "가져오기"
-    },
-    "strip": {
-      "all_other": "모든 지도 ({{count}})"
     }
   },
   "sessionZero": {
@@ -1568,6 +1564,8 @@
       "sessionZero": "세션, 라인과 베일, 투표"
     },
     "blockEmpty": "표시할 내용 없음",
+    "foldBlock": "{{name}} 접기",
+    "unfoldBlock": "{{name}} 펼치기",
     "sectionEmpty": "아직 여기에 표시할 내용이 없습니다.",
     "notFound": "이 섹션은 더 이상 없습니다.",
     "loadError": "페이지를 불러오지 못했습니다.",
@@ -1659,7 +1657,9 @@
       "blockMenu": "블록 작업",
       "deleteBlock": "블록 삭제",
       "blockDeleted": "블록이 삭제되었습니다",
-      "undo": "실행 취소"
+      "undo": "실행 취소",
+      "renameSection": "{{name}} 섹션 이름 바꾸기",
+      "addDescription": "설명 추가"
     }
   }
 }

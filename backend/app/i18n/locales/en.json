@@ -334,7 +334,9 @@
       "blockFieldNotAllowed": "This setting doesn't belong to this kind of block",
       "unknownTag": "One of the Tags isn't in this Room",
       "tooManyGroups": "A block holds at most {max} groups",
-      "invalidGroup": "Each group needs one or more different Tags, and no two groups can be the same"
+      "invalidGroup": "Each group needs one or more different Tags, and no two groups can be the same",
+      "unknownTool": "This block is not one of this section's tools",
+      "notATool": "A tool is a Retro, Stars and Wishes, Questions, a DDI or polls"
     }
   },
   "pdf": {

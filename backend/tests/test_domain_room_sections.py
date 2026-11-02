@@ -22,6 +22,7 @@ from app.domain.room_sections import (
     DocumentsBlockNeedsTagError,
     DocumentsSectionRequiredError,
     InvalidGroupError,
+    NotAToolError,
     OnlyMasterEditsLandingError,
     PageSectionExistsError,
     PageSectionHasNoBlocksError,
@@ -37,14 +38,17 @@ from app.domain.room_sections import (
     TooManyGroupsError,
     TooManySectionsError,
     UnknownBlockTagError,
+    UnknownToolError,
     clean_description,
     clean_title,
     copy_sections,
     default_sections,
+    dropped_tools,
     ensure_can_delete,
     ensure_can_edit,
     plan_blocks,
     plan_new_section,
+    plan_new_tool,
     plan_order,
     plan_section_image_path,
     prune_after_tag_deletion,
@@ -238,3 +242,83 @@ def test_each_section_image_gets_a_fresh_name() -> None:
     first, second = plan_section_image_path(ROOM), plan_section_image_path(ROOM)
     assert first.startswith(f"rooms/{ROOM}/sections/") and first.endswith(".webp")
     assert first != second
+
+
+def _tool(position: int = 0) -> Block:
+    return Block(id=uuid.uuid4(), kind=BlockKind.TOOL, position=position, module_id=uuid.uuid4())
+
+
+def test_tool_blocks_name_their_sections_tools_once() -> None:
+    poll, retro = _tool(0), _tool(1)
+    section = Section(
+        id=uuid.uuid4(),
+        room_id=ROOM,
+        kind=SectionKind.CUSTOM,
+        position=0,
+        title="T",
+        blocks=(poll, retro),
+    )
+
+    planned = plan_blocks(
+        section,
+        [
+            BlockInput(BlockKind.MAPS, collapsed=True),
+            BlockInput(BlockKind.TOOL, module_id=retro.module_id),
+        ],
+        set(),
+    )
+
+    assert [(b.kind, b.module_id, b.collapsed) for b in planned] == [
+        (BlockKind.MAPS, None, True),
+        (BlockKind.TOOL, retro.module_id, False),
+    ]
+    assert dropped_tools(section, planned) == {poll.module_id}
+    for blocks, error in (
+        ([BlockInput(BlockKind.TOOL)], UnknownToolError),
+        ([BlockInput(BlockKind.TOOL, module_id=uuid.uuid4())], UnknownToolError),
+        ([BlockInput(BlockKind.TOOL, module_id=poll.module_id)] * 2, UnknownToolError),
+        ([BlockInput(BlockKind.MAPS, module_id=poll.module_id)], BlockFieldNotAllowedError),
+    ):
+        with pytest.raises(error):
+            plan_blocks(section, blocks, set())
+
+
+def test_a_new_tool_goes_last_on_a_custom_section() -> None:
+    section = Section(
+        id=uuid.uuid4(),
+        room_id=ROOM,
+        kind=SectionKind.CUSTOM,
+        position=0,
+        title="T",
+        blocks=(_tool(),),
+    )
+    assert plan_new_tool(section, "poll", {"poll"}) == 1
+    with pytest.raises(NotAToolError):
+        plan_new_tool(section, "lines_veils", {"poll"})
+    with pytest.raises(PageSectionHasNoBlocksError):
+        plan_new_tool(_section(SectionKind.PAGE_MAPS), "poll", {"poll"})
+    full = Section(
+        id=uuid.uuid4(),
+        room_id=ROOM,
+        kind=SectionKind.CUSTOM,
+        position=0,
+        title="T",
+        blocks=tuple(_tool(i) for i in range(MAX_BLOCKS)),
+    )
+    with pytest.raises(TooManyBlocksError):
+        plan_new_tool(full, "poll", {"poll"})
+
+
+def test_a_copied_landing_leaves_the_tools_out() -> None:
+    maps = Block(id=uuid.uuid4(), kind=BlockKind.MAPS, position=1, collapsed=True)
+    original = Section(
+        id=uuid.uuid4(),
+        room_id=ROOM,
+        kind=SectionKind.CUSTOM,
+        position=0,
+        title="T",
+        blocks=(_tool(0), maps),
+    )
+    (copy,) = copy_sections([original], uuid.uuid4(), {})
+    (block,) = copy.blocks
+    assert (block.kind, block.position, block.collapsed) == (BlockKind.MAPS, 0, True)

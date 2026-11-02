@@ -58,6 +58,7 @@ def _round(row: SessionZeroRoundRow) -> Round:
         started_at=row.started_at,
         closed_at=row.closed_at,
         current_module_id=row.current_module_id,
+        section_id=row.section_id,
     )
 
 
@@ -131,14 +132,11 @@ async def start(
     """Creates the Room's Session 0 with round 1, its chain of modules (the
     first one current) and the three Lines & Veils columns. Returns
     `False`, changing nothing, when it already exists (two members starting
-    it at once both succeed)."""
-    created = await session.execute(
-        insert(SessionZeroRow)
-        .values(room_id=room_id, revision=0, created_at=now)
-        .on_conflict_do_nothing()
-        .returning(SessionZeroRow.room_id)
-    )
-    if created.scalar_one_or_none() is None:
+    it at once both succeed). A Room whose Sections hold tools already has
+    the Session 0's row (spec 60) but no session: it starts all the same."""
+    await ensure_state(session, room_id, now)
+    await get_state(session, room_id, lock=True)
+    if any(round_.is_session for round_ in await list_rounds(session, room_id)):
         return False
     await add_round(session, room_id, 1, None, chain, now)
     for position, kind in enumerate(LinesVeilsKind):
@@ -149,6 +147,77 @@ async def start(
         )
     await session.flush()
     return True
+
+
+async def ensure_state(session: AsyncSession, room_id: uuid.UUID, now: datetime) -> None:
+    """The Room's Session 0 row, created when missing (it holds the
+    revision and the lock every board write takes)."""
+    await session.execute(
+        insert(SessionZeroRow)
+        .values(room_id=room_id, revision=0, created_at=now)
+        .on_conflict_do_nothing()
+    )
+
+
+async def add_tool_round(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    section_id: uuid.UUID,
+    spec: ModuleSpec,
+    now: datetime,
+) -> tuple[uuid.UUID, uuid.UUID]:
+    """A Section's tool (spec 60): a round of its own holding one module,
+    hidden from the Players (no current module). Returns the round's id and
+    the module's."""
+    round_id = uuid.uuid4()
+    session.add(
+        SessionZeroRoundRow(
+            id=round_id,
+            room_id=room_id,
+            number=0,
+            title=None,
+            started_at=now,
+            section_id=section_id,
+        )
+    )
+    await session.flush()
+    return round_id, await add_module(session, room_id, round_id, spec, 0, now)
+
+
+async def tool_states(
+    session: AsyncSession, module_ids: Collection[uuid.UUID]
+) -> dict[uuid.UUID, tuple[ModuleKind, uuid.UUID, bool]]:
+    """Each tool's step kind, its round, and whether the Players see it
+    (its round's current module is set, spec 60 Decision 4)."""
+    if not module_ids:
+        return {}
+    result = await session.execute(
+        select(
+            SessionZeroModuleRow.id,
+            SessionZeroModuleRow.kind,
+            SessionZeroRoundRow.id,
+            SessionZeroRoundRow.current_module_id,
+        )
+        .join(SessionZeroRoundRow, SessionZeroRoundRow.id == SessionZeroModuleRow.round_id)
+        .where(SessionZeroModuleRow.id.in_(module_ids))
+    )
+    return {
+        module_id: (ModuleKind(kind), round_id, current is not None)
+        for module_id, kind, round_id, current in result.all()
+    }
+
+
+async def delete_tool_rounds(session: AsyncSession, module_ids: Collection[uuid.UUID]) -> None:
+    """Deletes the tool rounds of these modules, with everything in them."""
+    if not module_ids:
+        return
+    rounds = select(SessionZeroModuleRow.round_id).where(SessionZeroModuleRow.id.in_(module_ids))
+    await session.execute(
+        delete(SessionZeroRoundRow).where(
+            SessionZeroRoundRow.id.in_(rounds), SessionZeroRoundRow.section_id.is_not(None)
+        )
+    )
+    await session.flush()
 
 
 async def add_module(
@@ -248,8 +317,28 @@ async def set_current_module(
 
 async def delete_session_zero(session: AsyncSession, room_id: uuid.UUID) -> None:
     """Deletes the Room's Session 0 and everything in it (spec 46c
-    Decision 3): rounds, columns, groups, post-its, reactions, timer."""
-    await session.execute(delete(SessionZeroRow).where(SessionZeroRow.room_id == room_id))
+    Decision 3): rounds, columns, groups, post-its, reactions, timer. The
+    Sections' tools are not part of it (spec 60): while there are some,
+    only the sessions and the Lines & Veils board go and the timer stops."""
+    tools = select(SessionZeroRoundRow.id).where(
+        SessionZeroRoundRow.room_id == room_id, SessionZeroRoundRow.section_id.is_not(None)
+    )
+    if (await session.execute(tools.limit(1))).first() is None:
+        await session.execute(delete(SessionZeroRow).where(SessionZeroRow.room_id == room_id))
+    else:
+        await session.execute(
+            delete(SessionZeroRoundRow).where(
+                SessionZeroRoundRow.room_id == room_id, SessionZeroRoundRow.section_id.is_(None)
+            )
+        )
+        await session.execute(
+            delete(SessionZeroColumnRow).where(
+                SessionZeroColumnRow.room_id == room_id, SessionZeroColumnRow.module_id.is_(None)
+            )
+        )
+        await set_timer(
+            session, room_id, Timer(duration_s=None, ends_at=None, paused_remaining_s=None)
+        )
     await session.flush()
 
 

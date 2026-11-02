@@ -334,7 +334,9 @@
       "blockFieldNotAllowed": "Ce réglage n'appartient pas à ce type de bloc",
       "unknownTag": "L'un des Tags n'est pas dans cette Salle",
       "tooManyGroups": "Un bloc a au plus {max} groupes",
-      "invalidGroup": "Chaque groupe a besoin d'un ou plusieurs Tags différents, et deux groupes ne peuvent pas être identiques"
+      "invalidGroup": "Chaque groupe a besoin d'un ou plusieurs Tags différents, et deux groupes ne peuvent pas être identiques",
+      "unknownTool": "Ce bloc n'est pas un outil de cette section",
+      "notATool": "Un outil est une Rétro, Étoiles et Souhaits, Questions, un DDI ou des sondages"
     }
   },
   "pdf": {
