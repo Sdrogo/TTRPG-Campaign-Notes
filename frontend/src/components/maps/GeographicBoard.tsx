@@ -28,6 +28,7 @@ import {
   endRef,
   findItem,
   fitView,
+  keepMiddle,
   insertCorner,
   isDimmed,
   linkGeometry,
@@ -233,10 +234,19 @@ export function GeographicBoard({
     setMoved(null);
   }
 
+  // A board that changes size (the split pane opening or closing beside it)
+  // keeps a zoomed view's zoom and the point at its middle (spec 58).
+  const boxRef = useRef<{ width: number; height: number } | null>(null);
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      if (width && height) setBox({ width, height });
+      if (!width || !height) return;
+      const before = boxRef.current;
+      boxRef.current = { width, height };
+      setBox({ width, height });
+      if (before && (before.width !== width || before.height !== height)) {
+        setMoved((current) => current && keepMiddle(current, before, { width, height }));
+      }
     });
     observer.observe(wrapper.current!);
     return () => observer.disconnect();

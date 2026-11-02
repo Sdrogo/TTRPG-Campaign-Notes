@@ -379,6 +379,13 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-11-02
+
+- **58 Map zoom kept in the split view** (frontend only, no migration):
+  `PageLayout` always renders `SplitView` on Room pages, so opening or
+  closing the pane no longer remounts the page; a zoomed geographic map
+  keeps its zoom and middle point when the board resizes (`keepMiddle`).
+
 ### 2026-10-30
 
 - **54 Poll choices as cards** (PR #280, migration `c8f2d6a4e1b7`): 54_1

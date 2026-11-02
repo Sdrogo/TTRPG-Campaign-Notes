@@ -9,8 +9,12 @@ const DIVIDER_WIDTH = 8;
  * Two panes side by side with a divider between them (spec 37 Decision 3):
  * dragged with the pointer, or moved with the arrow keys once focused. The
  * left pane's share of the width is remembered in the browser.
+ *
+ * With no `right`, the left pane takes the whole width alone. It stays the
+ * same element either way, so opening or closing the right pane never
+ * remounts what the left one shows (a map keeps its zoom, spec 58).
  */
-export function SplitView({ left, right }: { left: ReactNode; right: ReactNode }) {
+export function SplitView({ left, right = null }: { left: ReactNode; right?: ReactNode }) {
   const { t } = useTranslation();
   const container = useRef<HTMLDivElement>(null);
   // What the viewer chose, kept as is; what is shown is fitted to the current
@@ -18,6 +22,7 @@ export function SplitView({ left, right }: { left: ReactNode; right: ReactNode }
   const [ratio, setRatio] = useState(storedRatio);
   const [width, setWidth] = useState(0);
   const shown = clampRatio(ratio, width);
+  const open = right !== null;
 
   useLayoutEffect(() => {
     const element = container.current!;
@@ -56,47 +61,51 @@ export function SplitView({ left, right }: { left: ReactNode; right: ReactNode }
   return (
     <Box ref={container} style={{ display: 'flex', alignItems: 'stretch', width: '100%' }}>
       <Box
-        pr={8}
+        pr={open ? 8 : 0}
         style={{
-          width: `calc(${shown * 100}% - ${DIVIDER_WIDTH / 2}px)`,
+          width: open ? `calc(${shown * 100}% - ${DIVIDER_WIDTH / 2}px)` : '100%',
           minWidth: 0,
         }}
       >
         {left}
       </Box>
-      <Box
-        role="separator"
-        tabIndex={0}
-        aria-orientation="vertical"
-        aria-label={t('documents.open.resize')}
-        aria-valuenow={Math.round(shown * 100)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onKeyDown={handleKeyDown}
-        className="split-divider"
-        style={{
-          width: DIVIDER_WIDTH,
-          flexShrink: 0,
-          cursor: 'col-resize',
-          touchAction: 'none',
-          alignSelf: 'stretch',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <Box
-          style={{
-            width: 2,
-            background: 'var(--border-default)',
-            borderRadius: 1,
-          }}
-        />
-      </Box>
-      <Box pl={8} style={{ flex: 1, minWidth: 0 }}>
-        {right}
-      </Box>
+      {open && (
+        <>
+          <Box
+            role="separator"
+            tabIndex={0}
+            aria-orientation="vertical"
+            aria-label={t('documents.open.resize')}
+            aria-valuenow={Math.round(shown * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onKeyDown={handleKeyDown}
+            className="split-divider"
+            style={{
+              width: DIVIDER_WIDTH,
+              flexShrink: 0,
+              cursor: 'col-resize',
+              touchAction: 'none',
+              alignSelf: 'stretch',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <Box
+              style={{
+                width: 2,
+                background: 'var(--border-default)',
+                borderRadius: 1,
+              }}
+            />
+          </Box>
+          <Box pl={8} style={{ flex: 1, minWidth: 0 }}>
+            {right}
+          </Box>
+        </>
+      )}
     </Box>
   );
 }

@@ -86,8 +86,13 @@ export function PageLayout({
         pr={{ base: 'sm', sm: 'lg', lg: 'xl' }}
         py="md"
       >
-        {roomId && (sideId || (allowEmptySide && sideId === '')) && wide ? (
-          <SplitView left={body} right={pane(sideId || null)} />
+        {/* A Room page always sits in the split, open or not, so opening the
+            pane doesn't remount the page (a map keeps its zoom, spec 58). */}
+        {roomId ? (
+          <SplitView
+            left={body}
+            right={(sideId || (allowEmptySide && sideId === '')) && wide ? pane(sideId || null) : null}
+          />
         ) : (
           body
         )}
