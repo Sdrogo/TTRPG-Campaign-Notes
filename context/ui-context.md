@@ -47,6 +47,16 @@ Notes:
   on large surfaces.
 - `--state-error` is reserved for errors and destructive actions
   (delete Document, remove member), separate from the red accent.
+  In Mantine it is the `danger` colour (spec 57b, 2026-11-02): every
+  destructive button, action icon, menu item or badge uses
+  `color="danger"`, never Mantine's `red` (#fa5252), which read as the
+  accent.
+- **Mantine's `dark` scale is built from these tokens** (spec 57b,
+  `theme.ts`): 0 `--text-primary`, 2 `--text-muted` (dimmed), 4 #3a3042
+  (component borders, input edges), 5 #2c2433 (hover), 6 `--bg-raised`
+  (inputs, default buttons), 7 `--bg-surface` (Papers), 9 `--bg-base`; and
+  every `Card` sits on `--bg-surface` (`index.css`). No component paints
+  Mantine's neutral greys any more.
 - All components use these tokens — no hardcoded hex values in
   component code. **One exception: country flags** (the language
   selector, spec 09) keep their official colors. They're content, not
@@ -142,6 +152,19 @@ other icon set.
 **Every icon-only button is a `LabeledActionIcon`** (2026-10-15): its `aria-label` is also shown as a tooltip on hover or long-press. A bare `ActionIcon` is only used when already wrapped in its own `Tooltip`.
 
 ## Layout Patterns
+
+- **Page building blocks** (spec 57c, 2026-11-02): every page starts with
+  `PageHeading` (optional uppercase kicker, the `h1` at the h2 size, an
+  optional dimmed description, the page's actions on the right that wrap
+  under the title on a phone, a fine rule underneath). On a Room's pages the
+  kicker is the Room's name and the title the page (Documents, Maps, setup,
+  a Section); the Room's home is titled with the Room's name over a "Home"
+  kicker. Data loading inside a drawn page shows `SectionLoader` (centered,
+  48px above and below), never a bare `Loader` in the flow; an empty list
+  shows `EmptyState` (dashed transparent card, icon, dimmed text). The page's
+  main action sits in the heading; only "Create Document" floats, and only on
+  a phone (< 48em). A page with the Room Index tab keeps a 40px (48px from
+  `sm`) left padding so the tab never covers it.
 
 - **App shell**: persistent top navbar (Room name + role badge for
   the current user + account menu) over a two/three-column body,
