@@ -394,12 +394,19 @@ async def _replace_image(
 
 
 async def _store_image(
-    session: AsyncSession, room_id: uuid.UUID, section_id: uuid.UUID, data: bytes, locale: str
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    section_id: uuid.UUID,
+    user_id: uuid.UUID,
+    data: bytes,
+    locale: str,
 ) -> SectionResponse:
     """Validates and re-encodes the image (not cropped, like the Room
-    image), uploads it and swaps it in. Call after `_require_master`."""
+    image), uploads it and swaps it in. Call after `_require_master`: the
+    role is checked again once the Room is locked, as reading the file
+    takes a while."""
     normalized = await normalize(data, locale)
-    await rooms_repo.lock_room(session, room_id)
+    await _begin_write(session, room_id, user_id, locale)
     section = await _section_or_404(session, room_id, section_id, locale)
     path = plan_section_image_path(room_id)
     await upload_object(path, normalized, locale)
@@ -437,7 +444,9 @@ async def upload_section_image(
     supported image."""
     await _require_master(session, room_id, section_id, uuid.UUID(current_user.id), locale)
     data = await read_upload(file)
-    return await _store_image(session, room_id, section_id, data, locale)
+    return await _store_image(
+        session, room_id, section_id, uuid.UUID(current_user.id), data, locale
+    )
 
 
 @router.post("/{section_id}/image/from-url")
@@ -453,7 +462,9 @@ async def import_section_image(
     for a URL that can't be fetched safely)."""
     await _require_master(session, room_id, section_id, uuid.UUID(current_user.id), locale)
     data = await fetch_url(str(body.url), locale)
-    return await _store_image(session, room_id, section_id, data, locale)
+    return await _store_image(
+        session, room_id, section_id, uuid.UUID(current_user.id), data, locale
+    )
 
 
 @router.delete("/{section_id}/image")

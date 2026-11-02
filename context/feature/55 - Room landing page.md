@@ -253,88 +253,109 @@ what the Players get), with small chips and popovers, never a long form.
 
 ## Design
 
-### Backend (migration)
+### Backend (migration `d5b8e1f3a9c7`, revises `c8f2d6a4e1b7`)
 
-- **Migration** (revises the head at build time): 
-  - `room_sections`: `id`, `room_id` (FK `rooms`, cascade), `position`
-    (int), `kind` (`custom` | `page_documents` | `page_maps` |
-    `page_session_zero`), `title` (varchar 100, null), `description` (text,
-    default ''), `image_path` (varchar 300, null), `created_at`,
-    `updated_at`. Unique
-    (`room_id`, `kind`) for the three page kinds (partial index). RLS on,
-    deny-all policy, like every backend-only table.
+As built (55_1):
+
+- **Tables**, RLS on with a deny-all policy like every backend-only table:
+  - `room_sections`: `id`, `room_id` (FK `rooms`, cascade), `position`,
+    `kind` (`custom` | `page_documents` | `page_maps` |
+    `page_session_zero`), `title` (varchar 100; null only on a page card,
+    check), `description` (text, default ''), `image_path` (varchar 300,
+    null), `created_at`, `updated_at`. A partial unique index keeps one
+    of each page kind per Room.
   - `room_section_blocks`: `id`, `section_id` (FK cascade), `position`,
-    `kind` (`documents` | `maps` | `session_zero`), `heading`
-    (varchar 100, null), `map_kind` (null = all, or a map kind),
-    `features` (ordered text[], the Master's order, of `sessions`, `retro`, `lines_veils`, `stars`,
-    `questions`, `ddi`, `polls`; not empty on `session_zero` blocks).
-    Checks: `map_kind` only on `maps` blocks, `features` only on
-    `session_zero` blocks.
-  - `room_section_block_tags`: (`block_id`, `tag_id`), both FK cascade.
-  - `room_section_block_groups`: `id`, `block_id` (FK cascade),
-    `position`; `room_section_block_group_tags`: (`group_id`, `tag_id`),
-    both FK cascade (the shape of `tag_combinations`).
-  - Data step: three page Sections for every existing Room, with `title`
-    null so the client shows the default name in the viewer's language
-    (see "Strings" below); `title` is nullable for the page kinds only
-    (check constraint).
-- **Domain** `app/domain/room_sections.py` (pure): limits, ordering
-  (move = rewrite positions 0..n), the page kinds' rules (Documents not
-  deletable), which blocks a Tag deletion drops.
-- **Routes** `app/api/room_sections.py`:
-  - `GET /rooms/{id}/sections`: the landing for the caller (visible
-    Sections, in order, image as signed link).
-  - `GET /rooms/{id}/sections/{sid}`: one Section with its blocks and
-    their **resolved items** for the caller (one query per block through
-    the existing visibility filters of Documents, maps, Session 0;
-    `X-View-As` honoured), a Documents block's groups included.
-  - `POST /rooms/{id}/sections`, `PATCH .../{sid}`, `DELETE .../{sid}`,
-    `PUT /rooms/{id}/sections/order` (`[ids]`), block CRUD and
-    `PUT .../{sid}/blocks/order`; image upload/URL/remove like
-    `room_image.py`, under `rooms/{room_id}/sections/{random}.webp`. All
-    writes Master-only (403), lock the Room's sections with
-    `SELECT ... FOR UPDATE` on the Room row, publish `landing` on commit.
-    Block groups: `PUT .../blocks/{bid}/groups` replaces the whole ordered
-    list in one call (`[[tag ids]]`), which is what the popover sends.
-  - Room creation, duplication (`room_copy`) and import seed or copy the
-    Sections (duplication copies images too, like Document images).
-  - Tag deletion (`tags_repo`) drops emptied Documents blocks.
-- Session 0 features reuse `session_zero_repo` /
-  `session_zero_polls_repo` reads; no change to Session 0 tables.
+    `kind` (`documents` | `maps` | `session_zero`), `heading` (varchar
+    100, null), `map_kind` (null = all, `free` or `geographic`: a mention
+    map lives on its Document, spec 36, and is not in the Maps list),
+    `features` (ordered text[] of `sessions`, `retro`, `lines_veils`,
+    `stars_wishes`, `questions`, `ddi`, `polls`). Checks: `map_kind`
+    only on `maps` blocks, `features` not empty exactly on `session_zero`
+    blocks.
+  - `room_section_block_tags` (`block_id`, `tag_id`) and
+    `room_section_block_groups` (`id`, `block_id`, `position`) with
+    `room_section_block_group_tags` (`group_id`, `tag_id`), all FK
+    cascade.
+  - Data step: the three page cards, title null, for every existing Room.
+- **Domain** `app/domain/room_sections.py` (pure): who edits, the page
+  cards, limits (sections, 10 blocks, 20 groups, title and description
+  lengths), the new Section's position, the order, what a block may hold,
+  Tag deletion (`prune_after_tag_deletion`), duplication
+  (`copy_sections`), the image path.
+- **Routes** `app/api/room_sections.py`, under `/rooms/{id}/sections`:
+  - `GET ""` and `GET /{sid}`: every member, the Sections in order with
+    their blocks (Tags, groups, map kind, features) and the image as a
+    signed link; `can_edit` for the Master.
+  - `POST ""` (`{kind, title}`: a custom Section, or a page card back),
+    `PATCH /{sid}` (`{title?, description?}`), `DELETE /{sid}` (409 on
+    the Documents card), `PUT /order` (`{ids}`), `PUT /{sid}/blocks`
+    (`{blocks: [...]}`: the whole ordered list, groups included, in one
+    call, which is what the editor sends after every change),
+    `POST /{sid}/image`, `POST /{sid}/image/from-url`,
+    `DELETE /{sid}/image` (the Room image pipeline, under
+    `rooms/{room_id}/sections/{random}.webp`; `upload_object` records the
+    pending upload so a failed transaction leaves an orphan the sweep
+    removes).
+  - Every write is Master-only (403), locks the Room row
+    (`SELECT ... FOR UPDATE`) and publishes `landing` on commit.
+  - **Items are resolved on the client**, not by the API: a block lists
+    what the existing `GET documents`, `GET maps` and the new
+    `GET /rooms/{id}/session-zero/overview` answer, so visibility and
+    `X-View-As` come for free. The overview exists because
+    `GET session-zero` answers one session only: it lists every session,
+    newest first, with the steps the caller reached, their published
+    post-its counted, their Questions, DDI and polls as the Session 0
+    page shows them, and the Lines & Veils counts.
+  - Room creation seeds the page cards; duplication copies the Sections
+    and blocks with the copied Tags (the image is shared by path, kept by
+    `storage_cleanup` while any row points at it); Room deletion removes
+    the images; Tag deletion prunes the blocks and publishes `landing`.
+    The Document JSON import adds Documents to an existing Room, so it
+    seeds nothing.
 
 ### Frontend
 
-- `pages/RoomLandingPage.tsx` (`/rooms/:roomId`), `pages/RoomSectionPage.tsx`
-  (`/rooms/:roomId/sections/:sectionId`), `components/landing/`
-  (`LandingCard`, `SectionGrid`, `SectionBlock`, `SectionInfoModal`,
-  `BlockBar`, `AddBlockPicker`, `BlockGroupsPopover`, `TagChipPicker`), hooks `useRoomSections`,
-  `useRoomSection`, mutations in `lib/api`.
-- `index.css`: `.landing-card` sharing the `.document-card` rules
-  (border, shadow, hover lift, reduced motion) instead of copying them.
-- `RoomCard` links to `/rooms/:id`; `backNav` treats the landing as the
-  Room's root.
-- `RoomIndex` drops the Tag groups and the maps list (`useTags`,
-  `useMainItems`, `useMaps` no longer read there), lists the landing link
-  and the Sections (`useRoomSections`), and takes an optional
-  `pageEntries` prop (through `PageLayout`) rendered after a divider;
-  `RoomIndex.test.tsx` is rewritten accordingly.
+As built (55_2, 55_3):
+
+- Pages: `pages/RoomLandingPage.tsx` (`/rooms/:roomId`, what a Room card
+  and the quick menu open) and `pages/RoomSectionPage.tsx`
+  (`/rooms/:roomId/sections/:sectionId`; documents, maps and the overview
+  are read only when a block needs them or in edit mode).
+- `components/landing/`: `LandingCard` (the `.document-card` look with
+  `room-landing-card`, one image through `DocumentCardImages`, plain-text
+  description on three lines), `blockItems` (a block's items from the
+  lists: groups through `groupDocumentsByMainItems`, the rest under
+  "Altri documenti"), `SectionBlock` (foldable sub-sections; an empty
+  block hidden from Players, "Niente da mostrare" for the Master),
+  `EditModeButton`, `Sortable` (`@dnd-kit/sortable` 10.0.0: mouse, long
+  press on touch, keyboard), `LandingEditor`, `SectionInfoModal` (title,
+  description, image by upload or URL; image search is left out, it is
+  tied to a Document), `BlockBar` (heading in place, Tag chips, groups
+  popover with "Usa i raggruppamenti della Stanza", map kind, sortable
+  feature chips; pickers become bottom sheets under 48em) and
+  `SectionEditor` (draft blocks until their first Tag or feature, "+"
+  between blocks, delete with a 5 s undo).
+- Hooks `hooks/useLanding.ts` (`useRoomSections`, `useLandingEvents`, the
+  writes; order and blocks are optimistic) and `useSessionZeroOverview`.
+- Map cards carry no image (the maps list has no background).
+- `RoomIndex` lists the Room home, the Sections (the one on screen
+  marked) and, on a custom Section, its blocks with their groups or
+  features (scroll targets). It shows on the landing, the Sections, the
+  Documents page and the Maps page.
+- Back from Documents, Maps, Session 0 and Room setup goes to the landing.
 - `SessionZeroPage` reads `?session=&step=` once.
-- **Strings**: the three page Sections store `title` null while untouched,
-  and the client shows `t('landing.page.documents')` etc., so they read in
-  the viewer's language; the Master's own title replaces it. All new
-  strings in the 12 languages (`i18n-glossary.md`: "Sezione", "Home",
-  "blocco").
-- Docs: `architecture.md` (tables, routes, landing as Room root),
-  `ui-context.md` (landing, cards, edit mode, Index), `progress-tracker.md`.
+- **Strings** under the `roomLanding` namespace (`landing` is the public
+  landing page's): page cards keep `title` null and show
+  `roomLanding.pages.*` in the viewer's language. All 12 languages.
 
 ## Units
 
 | Unit | What | Migration | Claude's build time |
 |---|---|---|---|
-| 55_1 | Backend: tables, seed, Sections/blocks/groups API with resolved items, image, Tag deletion, duplication/import seed, live event, tests | yes | about 2 h |
-| 55_2 | Frontend read side: landing and Section pages, `LandingCard`, block groups, Room card link, Back, Index group, Session 0 deep links, i18n, tests, screenshots | no | about 1.5 h |
+| 55_1 | Backend: tables, seed, Sections/blocks API, Session 0 overview, image, Tag deletion, duplication seed, live event, tests (built) | yes | about 2 h |
+| 55_2 | Frontend read side: landing and Section pages, `LandingCard`, block groups, Room card link, Back, Index group, Session 0 deep links, i18n, tests (built) | no | about 1.5 h |
 | 55_m | Clickable HTML mockup of edit mode, for feedback (Decision 16) | no | about 45 min |
-| 55_3 | Frontend edit side: edit mode, drag order, block bar with chips, add-block tiles, groups popover, info dialog, bottom sheets on phone, tests, screenshots | no | about 2.5 h |
+| 55_3 | Frontend edit side: edit mode, drag order, block bar with chips, add-block tiles, groups popover, info dialog, bottom sheets on phone, tests (built) | no | about 2.5 h |
 
 About 7 hours in all, in three PRs into `staging` (or one branch with three
 commits, as the product owner prefers). The migration goes to the staging
