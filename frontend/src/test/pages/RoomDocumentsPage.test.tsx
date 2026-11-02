@@ -1,4 +1,6 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import type { ComponentProps } from 'react';
+import { act, screen, waitFor, within } from '@testing-library/react';
+import type { DragEndEvent } from '@dnd-kit/core';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,6 +13,18 @@ import { ViewAsProvider } from '../../components/ViewAsProvider';
 
 vi.mock('../../lib/apiClient', () => ({ apiFetch: vi.fn() }));
 vi.mock('../../hooks/useSession', () => ({ useSession: vi.fn() }));
+
+let dragEnd: ((event: DragEndEvent) => void) | undefined;
+vi.mock('@dnd-kit/core', async (original) => {
+  const actual = await original<typeof import('@dnd-kit/core')>();
+  return {
+    ...actual,
+    DndContext: (props: ComponentProps<typeof actual.DndContext>) => {
+      dragEnd = props.onDragEnd;
+      return <actual.DndContext {...props} />;
+    },
+  };
+});
 
 const fetchMock = vi.mocked(apiFetch);
 const sessionMock = vi.mocked(useSession);
@@ -415,6 +429,56 @@ describe('grouping and sorting', () => {
     await user.click(screen.getByRole('button', { name: /1 gruppo/ }));
     await user.click(screen.getByRole('button', { name: 'Togli #NPC' }));
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', { method: 'PUT', json: { items: [] } });
+  });
+
+  it('lets the Administrator reorder the groups by dragging them, and close the popover', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master', is_admin: true, display_name: 'Io' })];
+    routes.documents = [
+      rawDocument({ id: 'doc-1', name: 'Zanna', tag_ids: ['tag-npc'] }),
+      rawDocument({ id: 'doc-2', name: 'Alba', tag_ids: ['tag-1'] }),
+    ];
+    routes.mainItems = [{ tag_ids: ['tag-npc'] }, { tag_ids: ['tag-1'] }];
+    mockApiWithMainTags();
+    const { user } = render();
+    await screen.findByText('Zanna');
+    expect(screen.getByRole('button', { name: /Sposta.*#NPC/ })).toBeInTheDocument();
+
+    act(() => dragEnd!({ active: { id: 'tag-npc' }, over: { id: 'tag-1' } } as unknown as DragEndEvent));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', {
+        method: 'PUT',
+        json: { items: [{ tag_ids: ['tag-1'] }, { tag_ids: ['tag-npc'] }] },
+      }),
+    );
+
+    await user.click(screen.getByRole('button', { name: /2 gruppi/ }));
+    await user.click(await screen.findByRole('button', { name: 'Togli #NPC' }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', {
+      method: 'PUT',
+      json: { items: [{ tag_ids: ['tag-1'] }] },
+    });
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Togli #NPC' })).not.toBeInTheDocument());
+  });
+
+  it('offers the Administrator to start grouping when the Room has no Main items', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master', is_admin: true, display_name: 'Io' })];
+    routes.mainItems = [];
+    mockApiWithMainTags();
+    render();
+    await screen.findByText('Zanna');
+    expect(screen.getByRole('button', { name: 'Raggruppa' })).toBeInTheDocument();
+  });
+
+  it('offers group editing before the Tags and Main items load', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master', is_admin: true, display_name: 'Io' })];
+    mockApiWithMainTags();
+    const loaded = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation((path: string, init?: { method?: string }) =>
+      path.startsWith('/rooms/room-1/tags') ? new Promise(() => {}) : loaded(path, init),
+    );
+    render();
+    expect(await screen.findByRole('button', { name: 'Raggruppa' })).toBeInTheDocument();
   });
 
   it('offers no group editing to a member who is not an Administrator', async () => {

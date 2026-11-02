@@ -333,7 +333,9 @@
       "blockFieldNotAllowed": "Deze instelling hoort niet bij dit soort blok",
       "unknownTag": "Een van de Tags staat niet in deze Kamer",
       "tooManyGroups": "Een blok heeft maximaal {max} groepen",
-      "invalidGroup": "Elke groep heeft een of meer verschillende Tags nodig, en geen twee groepen mogen gelijk zijn"
+      "invalidGroup": "Elke groep heeft een of meer verschillende Tags nodig, en geen twee groepen mogen gelijk zijn",
+      "unknownTool": "Dit blok is geen hulpmiddel van deze sectie",
+      "notATool": "Een hulpmiddel is een Retro, Sterren en Wensen, Vragen, een DDI of peilingen"
     }
   },
   "pdf": {

@@ -333,7 +333,9 @@
       "blockFieldNotAllowed": "Questa impostazione non appartiene a questo tipo di blocco",
       "unknownTag": "Uno dei Tag non è in questa Room",
       "tooManyGroups": "Un blocco può avere al massimo {max} gruppi",
-      "invalidGroup": "Ogni gruppo ha bisogno di uno o più Tag diversi, e due gruppi non possono essere uguali"
+      "invalidGroup": "Ogni gruppo ha bisogno di uno o più Tag diversi, e due gruppi non possono essere uguali",
+      "unknownTool": "Questo blocco non è uno strumento di questa sezione",
+      "notATool": "Uno strumento è una Retro, Stelle e Desideri, Domande, un DDI o dei sondaggi"
     }
   },
   "pdf": {

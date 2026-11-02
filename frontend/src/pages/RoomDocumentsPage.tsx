@@ -319,7 +319,7 @@ function RoomGroupsChip({ roomId, tags, mainItems }: { roomId: string; tags: Tag
           variant="light"
           leftSection={<UsersThreeIcon size={14} />}
           rightSection={<CaretDownIcon size={12} />}
-          onClick={() => setOpened((current) => !current)}
+          onClick={() => setOpened(true)}
         >
           {mainItems.length > 0 ? t('roomLanding.edit.groupedBy', { count: mainItems.length }) : t('roomLanding.edit.group')}
         </Button>

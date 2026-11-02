@@ -210,7 +210,7 @@ follow those answers.
 - `GET session-zero`, the overview, carry over and rounds ignore modules
   with a `section_id`.
 - Duplication and the JSON export skip tool blocks (Decision 8); the
-  block's `collapsed` travels with the other kinds (export schema 5).
+  block's `collapsed` travels with the other kinds (export schema stays 4: `collapsed` is an optional field).
 
 ### Frontend
 
@@ -254,6 +254,29 @@ follow those answers.
   `maps_position` until 60_2.
 - Strings (12 languages): `roomLanding.foldBlock`, `roomLanding.unfoldBlock`,
   `roomLanding.edit.renameSection`, `roomLanding.edit.addDescription`.
+
+### As built (60_2, 2026-11-02)
+
+- Migration `e8c4a2f6b1d9` (revises `d5b8e1f3a9c7`): `session_zero_rounds.section_id`
+  (FK `room_sections`, cascade) with the number and open-round unique
+  indexes made partial on `section_id IS NULL`; `room_section_blocks.module_id`
+  (FK `session_zero_modules`, cascade, unique) and `collapsed`; block kind
+  `tool` with the check `(kind = 'tool') = (module_id IS NOT NULL)`;
+  `rooms.maps_position` dropped. Andrea applies it by hand.
+- A tool is its own round (number 0, `section_id` set) with one module,
+  rather than a module without a round: every module-scoped route keeps
+  working on it unchanged. Visibility is the round's `current_module_id`
+  (set = shown), so the existing hidden-step checks hide a draft tool.
+- Routes: `POST .../tools`, `PUT .../tools/{module_id}/visible`,
+  `GET .../tools` (the earlier sketch said `.../blocks/{bid}/visible`;
+  the module id is stable across `PUT .../blocks`, the block id is not).
+  "Publish all" takes `module_id` for a tool's board.
+- Session 0 page, overview, rounds, carry over, the chain routes and
+  "started" ignore tool rounds; deleting Session 0 keeps the tools.
+- Duplication and export skip tool blocks; `collapsed` is exported and
+  imported (schema 4, optional field); an imported `tool` block is skipped.
+- Tests: `tests/test_section_tools_api.py`, plus domain tests for
+  `plan_blocks`, `plan_new_tool`, `dropped_tools`, copy and transfer.
 
 ## Units
 

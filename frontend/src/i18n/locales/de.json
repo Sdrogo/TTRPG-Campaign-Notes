@@ -373,8 +373,7 @@
         "addHint": "Ein Tag ergibt einen Haupt-Tag, zwei oder mehr eine Kombination.",
         "add": "Hinzufügen",
         "alreadyMain": "Dieser Tag ist bereits ein Eintrag der Gruppierung.",
-        "alreadyCombination": "Diese Kombination ist bereits in der Gruppierung.",
-        "mapsRow": "Kartenzeile"
+        "alreadyCombination": "Diese Kombination ist bereits in der Gruppierung."
       },
       "all": {
         "title": "Alle Tags",
@@ -1272,10 +1271,6 @@
       "repeated": "Dokument schon auf der Karte, bleiben einfache Beschriftungen:",
       "backgroundLater": "Das Hintergrundbild lädst du danach über die Schaltfläche Karte der neuen Karte hoch.",
       "submit": "Importieren"
-    },
-    "strip": {
-      "all_one": "Alle Karten ({{count}})",
-      "all_other": "Alle Karten ({{count}})"
     }
   },
   "sessionZero": {

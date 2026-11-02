@@ -333,7 +333,9 @@
       "blockFieldNotAllowed": "Este ajuste no corresponde a este tipo de bloque",
       "unknownTag": "Una de las Etiquetas no está en esta Sala",
       "tooManyGroups": "Un bloque tiene como máximo {max} grupos",
-      "invalidGroup": "Cada grupo necesita una o más Etiquetas distintas, y no puede haber dos grupos iguales"
+      "invalidGroup": "Cada grupo necesita una o más Etiquetas distintas, y no puede haber dos grupos iguales",
+      "unknownTool": "Este bloque no es una herramienta de esta sección",
+      "notATool": "Una herramienta es una Retro, Estrellas y Deseos, Preguntas, un DDI o encuestas"
     }
   },
   "pdf": {

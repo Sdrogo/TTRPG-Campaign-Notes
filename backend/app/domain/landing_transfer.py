@@ -53,7 +53,8 @@ class SectionSkipReason(StrEnum):
 
 def section_to_json(section: Section, image_url: str | None) -> dict[str, Any]:
     """A Section of the JSON export (spec 56 Decision 3): its fields, its
-    image as a signed link, and its blocks in order, Tags by id."""
+    image as a signed link, and its blocks in order, Tags by id. Tool
+    blocks stay out, as Session 0 does (spec 60 Decision 8)."""
     return {
         "id": str(section.id),
         "kind": section.kind.value,
@@ -68,8 +69,10 @@ def section_to_json(section: Section, image_url: str | None) -> dict[str, Any]:
                 "groups": [[str(tag_id) for tag_id in group] for group in block.groups],
                 "map_kind": None if block.map_kind is None else block.map_kind.value,
                 "features": [feature.value for feature in block.features],
+                "collapsed": block.collapsed,
             }
             for block in section.blocks
+            if block.kind is not BlockKind.TOOL
         ],
     }
 
@@ -87,6 +90,7 @@ class FileBlock:
     groups: tuple[tuple[str, ...], ...]
     map_kind: BlockMapKind | None
     features: tuple[SessionZeroFeature, ...]
+    collapsed: bool = False
 
 
 @dataclass(frozen=True)
@@ -158,6 +162,7 @@ def read_section(raw: Any) -> FileSection:
             features=tuple(
                 _choice(SessionZeroFeature, feature) for feature in _list(block.get("features"))
             ),
+            collapsed=block.get("collapsed") is True,
         )
         for block in map(_object, _list(data.get("blocks")))
     )
@@ -257,7 +262,8 @@ def _block_inputs(
     """The file's blocks as an edit would send them, with the Room's Tags:
     a Tag that can't be resolved leaves the block and its groups, a group
     left empty or now equal to an earlier one goes, and a Documents block
-    left with no Tag is skipped (counted). Also returns every Tag used."""
+    left with no Tag is skipped (counted), and so is a tool block (spec 60:
+    a tool is never imported). Also returns every Tag used."""
     inputs: list[BlockInput] = []
     used: set[uuid.UUID] = set()
     skipped = 0
@@ -270,7 +276,7 @@ def _block_inputs(
             if resolved and frozenset(resolved) not in seen:
                 seen.add(frozenset(resolved))
                 groups.append(resolved)
-        if block.kind is BlockKind.DOCUMENTS and not tag_ids:
+        if (block.kind is BlockKind.DOCUMENTS and not tag_ids) or block.kind is BlockKind.TOOL:
             skipped += 1
             continue
         used.update(tag_ids, *groups)
@@ -282,6 +288,7 @@ def _block_inputs(
                 groups=groups,
                 map_kind=block.map_kind,
                 features=block.features,
+                collapsed=block.collapsed,
             )
         )
     return inputs, used, skipped

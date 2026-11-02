@@ -35,6 +35,10 @@ describe('SectionBlock', () => {
     await userEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     act(() => {
+      window.dispatchEvent(new CustomEvent('room-landing:reveal-block', { detail: 'another-block' }));
+    });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    act(() => {
       window.dispatchEvent(new CustomEvent('room-landing:reveal-block', { detail: 'block-1' }));
     });
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
@@ -134,5 +138,11 @@ describe('SectionBlock', () => {
     expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
     expect(screen.getByText('maniglia t2')).toBeInTheDocument();
     expect(screen.getByTestId('parts')).toHaveAttribute('data-keys', 't2,ungrouped');
+  });
+
+  it('folds from the caret before the edit bar in edit mode', async () => {
+    show(block({ tag_ids: ['t1'] }), { documents: [doc('a', 'Aiko', ['t1'])] }, true, { bar: <div>La barra</div> });
+    await userEvent.click(screen.getByRole('button', { name: 'Comprimi Il blocco' }));
+    expect(screen.getByRole('button', { name: 'Espandi Il blocco' })).toHaveAttribute('aria-expanded', 'false');
   });
 });
