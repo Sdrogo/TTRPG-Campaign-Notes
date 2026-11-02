@@ -100,72 +100,13 @@ beforeEach(() => {
 });
 
 describe('RoomDocumentsPage', () => {
-  it('shows the maps the viewer sees in a row on the page', async () => {
-    routes.maps = [
-      rawMap({ id: 'map-1', name: 'La Corte' }),
-      rawMap({ id: 'map-2', name: 'Shibuya', kind: 'geographic' }),
-    ];
-    render();
-
-    const strip = await screen.findByRole('navigation', { name: 'Mappe' });
-    expect(within(strip).getByRole('link', { name: 'Tutte le mappe (2)' })).toHaveAttribute(
-      'href',
-      '/rooms/room-1/maps',
-    );
-    expect(within(strip).getByRole('link', { name: /^La Corte/ })).toHaveAttribute(
-      'href',
-      '/rooms/room-1/maps/map-1',
-    );
-    expect(within(strip).getByRole('link', { name: /^Shibuya/ })).toHaveAttribute(
-      'href',
-      '/rooms/room-1/maps/map-2',
-    );
-    // Each card says the map's kind and how many Documents it shows.
-    expect(within(strip).getByRole('link', { name: /^Shibuya/ })).toHaveTextContent(
-      'ShibuyaMappa geografica · 2 Documenti',
-    );
-    expect(within(strip).queryByRole('link', { name: 'Nuova mappa' })).not.toBeInTheDocument();
-  });
-
-  it('folds the maps row from its heading, like a group of Documents', async () => {
+  it('has no maps row (spec 60 Decision 13)', async () => {
     routes.maps = [rawMap({ id: 'map-1', name: 'La Corte' })];
     render();
     await screen.findByText('Il Cancello');
 
-    const strip = await screen.findByRole('navigation', { name: 'Mappe' });
-    const toggle = within(strip).getByRole('button', { name: 'Mappe' });
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
-
-    await userEvent.click(toggle);
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    // The count and the link to the Maps page stay in sight.
-    expect(within(strip).getByRole('link', { name: 'Tutte le mappe (1)' })).toBeVisible();
-
-    await userEvent.click(toggle);
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(await within(strip).findByRole('link', { name: /^La Corte/ })).toBeVisible();
-  });
-
-  it('offers a new map when the Room has none and the viewer may create one', async () => {
-    render();
-
-    const strip = await screen.findByRole('navigation', { name: 'Mappe' });
-    expect(within(strip).getByRole('link', { name: 'Nuova mappa' })).toHaveAttribute(
-      'href',
-      '/rooms/room-1/maps?new=1',
-    );
-  });
-
-  it('shows no maps row to a Player who sees no map and may not create one', async () => {
-    routes.members = [
-      rawMember({ user_id: 'user-1', display_name: 'Io' }),
-      rawMember({ user_id: 'user-2', role: 'master', display_name: 'Master' }),
-    ];
-    routes.room = rawRoom({ players_can_create_documents: false });
-    render();
-    await screen.findByText('Il Cancello');
-
     expect(screen.queryByRole('navigation', { name: 'Mappe' })).not.toBeInTheDocument();
+    expect(screen.queryByText('La Corte')).not.toBeInTheDocument();
   });
 
   it('waits on a loader while the session is resolving', () => {
@@ -440,10 +381,7 @@ describe('grouping and sorting', () => {
   // toggle) and a DocumentCard's title is h3 inside a group, h2 without one.
   const pageHeadings = (...levels: number[]) =>
     Array.from(screen.getByRole('main').querySelectorAll(levels.map((l) => `h${l}`).join(', ')));
-  // The maps row's own folding heading is not a group of Documents.
-  const inMapsRow = (h: Element) => h.closest('nav') !== null;
-  const isGroupHeading = (h: Element) =>
-    h.querySelector('[aria-expanded]') !== null && !inMapsRow(h);
+  const isGroupHeading = (h: Element) => h.querySelector('[aria-expanded]') !== null;
   // A group heading's name, without its item count (a visual badge hidden from
   // assistive tech).
   const groupName = (heading: Element) => {
@@ -454,84 +392,8 @@ describe('grouping and sorting', () => {
   const groupHeadings = () => pageHeadings(2).filter(isGroupHeading).map(groupName);
   const cardTitles = () =>
     pageHeadings(2, 3)
-      .filter((h) => !isGroupHeading(h) && !inMapsRow(h))
+      .filter((h) => !isGroupHeading(h))
       .map((h) => h.textContent);
-
-  // The setup's Grouping places the maps row among the groups.
-  const mapsRowAfter = () => {
-    const strip = screen.getByRole('navigation', { name: 'Mappe' });
-    return pageHeadings(2)
-      .filter(isGroupHeading)
-      .filter((h) => h.compareDocumentPosition(strip) & Node.DOCUMENT_POSITION_FOLLOWING)
-      .map(groupName);
-  };
-
-  it('shows the maps row above the groups by default', async () => {
-    routes.maps = [rawMap()];
-    mockApiWithMainTags();
-    render();
-
-    await screen.findByRole('navigation', { name: 'Mappe' });
-    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
-    expect(mapsRowAfter()).toEqual([]);
-  });
-
-  it('shows the maps row after the Main items the setup places before it', async () => {
-    routes.maps = [rawMap()];
-    routes.room = rawRoom({ maps_position: 1 });
-    mockApiWithMainTags();
-    render();
-
-    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
-    await screen.findByRole('navigation', { name: 'Mappe' });
-    // Past the last Main item, still before the fallback group.
-    expect(mapsRowAfter()).toEqual(['#NPC']);
-  });
-
-  it('keeps the maps row before the fallback group when its place is past every item', async () => {
-    routes.maps = [rawMap()];
-    routes.room = rawRoom({ maps_position: 5 });
-    mockApiWithMainTags();
-    render();
-
-    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
-    await screen.findByRole('navigation', { name: 'Mappe' });
-    expect(mapsRowAfter()).toEqual(['#NPC']);
-  });
-
-  it('shows the maps row after every group when no group follows its place', async () => {
-    routes.maps = [rawMap()];
-    routes.room = rawRoom({ maps_position: 1 });
-    routes.documents = [rawDocument({ id: 'doc-1', name: 'Zanna', tag_ids: ['tag-npc'] })];
-    mockApiWithMainTags();
-    render();
-
-    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC']));
-    await screen.findByRole('navigation', { name: 'Mappe' });
-    expect(mapsRowAfter()).toEqual(['#NPC']);
-  });
-
-  it('shows the maps row above the groups while the Room is still loading', async () => {
-    routes.maps = [rawMap()];
-    routes.room = new Promise(() => {});
-    mockApiWithMainTags();
-    render();
-
-    await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
-    await screen.findByRole('navigation', { name: 'Mappe' });
-    expect(mapsRowAfter()).toEqual([]);
-  });
-
-  it('shows the maps row on top when the Documents are not grouped', async () => {
-    routes.maps = [rawMap()];
-    routes.room = rawRoom({ maps_position: 1 });
-    mockApiWithMainTags();
-    render('/rooms/room-1/documents?groupBy=none');
-
-    await screen.findByRole('navigation', { name: 'Mappe' });
-    expect(screen.getByRole('link', { name: /^La Corte/ })).toBeInTheDocument();
-    expect(groupHeadings()).toEqual([]);
-  });
 
   // The outline never skips a level: h1 page title, h2 group, h3 card - or
   // h2 card when there are no groups.
@@ -542,6 +404,24 @@ describe('grouping and sorting', () => {
     await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Documenti');
     expect(pageHeadings(3).map((h) => h.textContent)).toEqual(['Zanna', 'Alba']);
+  });
+
+  it('lets the Administrator edit the groups on the page, nobody else (spec 60)', async () => {
+    routes.members = [rawMember({ user_id: 'user-1', role: 'master', is_admin: true, display_name: 'Io' })];
+    mockApiWithMainTags();
+    const { user } = render();
+    await screen.findByText('Zanna');
+
+    await user.click(screen.getByRole('button', { name: /1 gruppo/ }));
+    await user.click(screen.getByRole('button', { name: 'Togli #NPC' }));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/tags/main', { method: 'PUT', json: { items: [] } });
+  });
+
+  it('offers no group editing to a member who is not an Administrator', async () => {
+    mockApiWithMainTags();
+    render();
+    await screen.findByText('Zanna');
+    expect(screen.queryByRole('button', { name: /gruppo/ })).not.toBeInTheDocument();
   });
 
   it('groups Documents under their Main Tag by default, ungrouped ones last', async () => {
@@ -688,11 +568,8 @@ describe('viewing the Room as a member', () => {
     expect(
       screen.queryByRole('button', { name: 'Azioni per la Stanza La Cripta' }),
     ).not.toBeInTheDocument();
-    // The preview has no Room menu but still reaches the maps (spec 28).
-    expect(screen.getByRole('link', { name: 'Mappe' })).toHaveAttribute(
-      'href',
-      '/rooms/room-1/maps',
-    );
+    // Maps are reached from the Room's home in the preview too (spec 60 Decision 13).
+    expect(screen.queryByRole('link', { name: 'Mappe' })).not.toBeInTheDocument();
   });
 
   it('is not offered to a Player', async () => {

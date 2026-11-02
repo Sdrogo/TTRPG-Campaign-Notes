@@ -191,7 +191,7 @@ other icon set.
   the page's fixed parent (Document -> Room -> Rooms list, Room setup ->
   Room, map -> maps list), never `navigate(-1)`, replacing the current
   history entry; a link that opens a page on purpose from elsewhere (a map
-  from a Document, the Room page's Maps row, Maps icon or the Room Index; a
+  from a Document, a maps block, the Maps page card or the Room Index; a
   Document from a map card or the open menu; the setup from a Room card; a
   copied map) puts `{ from, backStack }` (`lib/backNav.ts`, a trail of at
   most 20 places, cut when a page already on it comes back) in the
@@ -287,8 +287,9 @@ other icon set.
   16px `UserAvatar`. "Interpretato da" on the detail page is the first row
   of the info panel, above the Owners (see Document detail); the Document card adds a "Played by" line
   with a 20px avatar above the Owners line.
-- **Room view**: the Room page shows the maps row and the Documents
-  grouped by Main Tag; navigation is the Room Index tab on the left edge
+- **Room view**: the Documents page shows the Documents grouped by Main
+  Tag, each group drawn as a Section block (spec 60; the maps row it had
+  since PR #236 is gone, maps are reached from the landing); navigation is the Room Index tab on the left edge
   (spec 44) and the header burger (spec 45). A Document opens on its own
   page, with its Comments under it; a second Document or a map can open
   beside it in the split view (spec 37). *(The original plan of a left
@@ -947,7 +948,17 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   split view. Map cards carry no image. Grids reuse `.documents-grid`.
   **A Documents block shows the Documents page's own `DocumentCard`**
   (spec 57c, product owner 2026-11-02), not a `LandingCard`.
-- **Blocks** (`SectionBlock`): heading (h2 at `h4` size), then the cards;
+- **Blocks** (`SectionBlock`): heading (h2 at `h4` size), then the cards.
+  **Since spec 60** the heading is `BlockHeading` (`.block-heading-toggle`:
+  caret, name in the display font, a count badge of the cards, each
+  Document once), one button that folds the block for every viewer (open
+  at first, not remembered); the Index fires `REVEAL_BLOCK_EVENT` so a
+  folded block opens before it scrolls there. In edit mode a caret
+  `ActionIcon` sits before the block bar. The Documents page draws its
+  Main item groups with the same `BlockHeading` (`gap="xl"` between them,
+  "Senza Tag principale" last), and its Administrator gets the block's
+  "Raggruppa" chip beside the heading (the same `GroupsEditor` popover,
+  writing the Main items) and ⠿ handles on the group headings;
   a Documents block's groups and a Session 0 block's features are
   foldable sub-sections styled like the Documents page groups
   (`.document-group`, count badge). A block the viewer sees nothing of is
@@ -958,7 +969,7 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   250 ms on touch so a swipe still scrolls, keyboard Space/arrows/Space,
   Esc cancels). Landing: each card gets a handle and a ⋮ (Modifica info,
   Elimina; none on the Documents card), and a dashed "Nuova sezione" card
-  ends the grid (title inline, Enter creates and opens the Section with
+  ends the grid (since spec 60 shown to the Master outside edit mode too) (title inline, Enter creates and opens the Section with
   the add-block tiles), with "Riaggiungi …" for a deleted page card. A
   Section: each block under a bar (`BlockBar`, `.room-landing-bar`): ⠿,
   kind icon, heading edited in place (empty = named after its source),
@@ -971,6 +982,12 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   (`.room-landing-insert`, shown on hover or focus), opening three tiles
   (`.room-landing-tile`). Pickers are popovers, bottom sheets (`Drawer`)
   under 48em. Edited areas carry `.room-landing-editing`.
+  **Since spec 60**, on a Section in edit mode the title is edited in
+  place (`SectionTitleEditor`, `.section-title-input` keeps the heading's
+  font; Enter saves, Esc cancels, empty refused), the description under it
+  (`SectionDescriptionEditor`, "Aggiungi una descrizione" when empty, a
+  textarea saved on blur), and an image button beside the title opens
+  "Modifica info".
 - **Strings** live under `roomLanding.*` (`landing.*` is the public
   landing page's).
 

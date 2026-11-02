@@ -1563,6 +1563,8 @@
       "sessionZero": "会话、底线与帷幕、投票"
     },
     "blockEmpty": "没有可显示的内容",
+    "foldBlock": "折叠{{name}}",
+    "unfoldBlock": "展开{{name}}",
     "sectionEmpty": "这里还没有可显示的内容。",
     "notFound": "此版块已不存在。",
     "loadError": "无法加载页面。",
@@ -1654,7 +1656,9 @@
       "blockMenu": "区块操作",
       "deleteBlock": "删除区块",
       "blockDeleted": "区块已删除",
-      "undo": "撤销"
+      "undo": "撤销",
+      "renameSection": "重命名版块{{name}}",
+      "addDescription": "添加描述"
     }
   }
 }

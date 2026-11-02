@@ -41,3 +41,19 @@ export function itemKey(tags: Tag[]): string {
 export function sameTagSet(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((id) => b.includes(id));
 }
+
+/**
+ * The Room's Main items after the groups on screen were dragged into `order`
+ * (their keys, spec 60 Decision 14b). Groups with no Document aren't on
+ * screen, so they keep their places and the shown ones fill theirs in the
+ * new order.
+ */
+export function reorderShownItems(items: MainItem[], order: string[]): MainItem[] {
+  const key = (item: MainItem) => item.tagIds.join('+');
+  const shown = new Set(order);
+  const moved = order
+    .map((itemId) => items.find((item) => key(item) === itemId))
+    .filter((item): item is MainItem => item !== undefined);
+  let next = 0;
+  return items.map((item) => (shown.has(key(item)) && next < moved.length ? moved[next++] : item));
+}

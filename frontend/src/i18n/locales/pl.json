@@ -1689,6 +1689,8 @@
       "sessionZero": "Sesje, Linie i Zasłony, ankiety"
     },
     "blockEmpty": "Nic do pokazania",
+    "foldBlock": "Zwiń {{name}}",
+    "unfoldBlock": "Rozwiń {{name}}",
     "sectionEmpty": "Nie ma tu jeszcze nic do pokazania.",
     "notFound": "Ta sekcja już nie istnieje.",
     "loadError": "Nie udało się wczytać strony.",
@@ -1792,7 +1794,9 @@
       "blockMenu": "Działania bloku",
       "deleteBlock": "Usuń blok",
       "blockDeleted": "Blok usunięty",
-      "undo": "Cofnij"
+      "undo": "Cofnij",
+      "renameSection": "Zmień nazwę sekcji {{name}}",
+      "addDescription": "Dodaj opis"
     }
   }
 }

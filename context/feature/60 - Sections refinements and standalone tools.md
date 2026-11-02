@@ -125,8 +125,8 @@ follow those answers.
 10. **On a custom Section in edit mode**, the heading itself becomes
     editable, like a block heading (spec 55 Decision 13): click the title,
     type, Enter (Esc cancels; empty is refused); under it the
-    description is a mention textarea (spec 48) shown as "Aggiungi una
-    descrizione" when empty, saved on blur. Beside the title a small image
+    description is a textarea (as in "Modifica info") shown as "Aggiungi
+    una descrizione" when empty, saved on blur. Beside the title a small image
     button opens `SectionInfoModal` for the image only. The landing's
     ⋮ "Modifica info" stays as it is.
 11. **Outside edit mode**, the Master's "Modifica" button (spec 55 Decision
@@ -229,6 +229,31 @@ follow those answers.
 - `RoomDocumentsPage`, `RoomSetupPage`/`GroupingEditor`: maps row and its
   place removed; `RoomMapsStrip` deleted if nothing else uses it.
 - Strings in all 12 languages.
+
+### As built (60_1, 2026-11-02)
+
+- `components/landing/BlockHeading.tsx`: the fold heading shared by
+  `SectionBlock` and the Documents page groups; the count is the cards
+  (each Document once). `REVEAL_BLOCK_EVENT` (`lib/landing.ts`) is fired
+  by the Index before it scrolls, and a folded block opens on it. In edit
+  mode a caret button sits before the block bar.
+- `components/landing/SectionHeadingEditor.tsx`: `SectionTitleEditor`,
+  `SectionDescriptionEditor`, `SectionImageButton` (opens
+  `SectionInfoModal`). `PageHeading`'s description is now a `div`, so an
+  editor can sit in it.
+- `NewSectionCard` (exported from `LandingEditor`) ends the reading grid
+  for the Master; `missingPageKinds` moved to `lib/landing.ts`.
+- `RoomDocumentsPage`: no maps row and no preview map icon;
+  `RoomMapsStrip` and its CSS deleted. Groups drawn with `BlockHeading`;
+  for an Administrator (with "Raggruppa per" on Main Tag) a "Raggruppa"
+  chip opens `GroupsEditor` (exported from `BlockBar`) on the Main items,
+  and the groups with Documents are sortable (`reorderShownItems` in
+  `lib/mainItems.ts` keeps the empty ones in place).
+- `GroupingEditor` (setup) lost the "Maps row" entry; `TagsSection` and
+  `RoomSetupPage` stop passing `mapsPosition`. The Room API still carries
+  `maps_position` until 60_2.
+- Strings (12 languages): `roomLanding.foldBlock`, `roomLanding.unfoldBlock`,
+  `roomLanding.edit.renameSection`, `roomLanding.edit.addDescription`.
 
 ## Units
 

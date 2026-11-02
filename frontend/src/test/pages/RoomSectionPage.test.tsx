@@ -125,11 +125,11 @@ describe('RoomSectionPage', () => {
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Apri l.indice della Stanza/ }));
-    expect(await screen.findByRole('button', { name: 'Documenti · #Tokyo' })).toBeInTheDocument();
-    const index = screen.getByRole('dialog');
+    const index = await screen.findByRole('dialog');
+    expect(await within(index).findByRole('button', { name: 'Documenti · #Tokyo' })).toBeInTheDocument();
     expect(within(index).getByText('#PNG')).toBeInTheDocument();
     expect(within(index).getByText('Sondaggi')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Il patto' })).toBeInTheDocument();
+    expect(within(index).getByRole('button', { name: 'Il patto' })).toBeInTheDocument();
   });
 
   it('names the Room after its home while the Room loads', async () => {
@@ -162,6 +162,31 @@ describe('RoomSectionPage', () => {
     expect(screen.getByRole('button', { name: 'Sposta il blocco' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Fine' }));
     expect(screen.queryByRole('button', { name: 'Sposta il blocco' })).not.toBeInTheDocument();
+  });
+
+  it('renames the Section and edits its description in place (spec 60)', async () => {
+    members = [rawMember({ role: 'master' })];
+    const user = render();
+    await user.click(await screen.findByRole('button', { name: 'Modifica' }));
+    await user.click(screen.getByRole('button', { name: /Rinomina la sezione/ }));
+    const input = screen.getByRole('textbox', { name: 'Titolo' });
+    await user.clear(input);
+    await user.type(input, 'Shibuya{Enter}');
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/sections/section-1', { method: 'PATCH', json: { title: 'Shibuya' } });
+    await user.click(screen.getByRole('button', { name: /Neon/ }));
+    const description = screen.getByRole('textbox', { name: 'Descrizione' });
+    await user.clear(description);
+    await user.type(description, 'Di giorno');
+    await user.tab();
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/sections/section-1', { method: 'PATCH', json: { description: 'Di giorno' } });
+  });
+
+  it('folds a block from its heading', async () => {
+    const user = render();
+    const toggle = await screen.findByRole('button', { name: /Il patto/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('says when the Section is gone', async () => {

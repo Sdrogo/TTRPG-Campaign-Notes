@@ -4,7 +4,7 @@ import { CaretRightIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useRoomSections } from '../hooks/useLanding';
-import { blockAnchor, landingHref, sectionHref } from '../lib/landing';
+import { REVEAL_BLOCK_EVENT, blockAnchor, landingHref, sectionHref } from '../lib/landing';
 import { sectionTitle } from '../lib/landingText';
 import { useBackState } from '../lib/backNav';
 
@@ -43,6 +43,7 @@ export function RoomIndex({ roomId, current, detail }: RoomIndexProps) {
   const sections = useRoomSections(roomId, opened);
   const scrollTo = (blockId: string) => {
     close();
+    window.dispatchEvent(new CustomEvent(REVEAL_BLOCK_EVENT, { detail: blockId }));
     document.getElementById(blockAnchor(blockId))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 

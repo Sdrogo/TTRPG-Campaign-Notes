@@ -1605,6 +1605,8 @@
       "sessionZero": "Sessioni, Linee e Veli, sondaggi"
     },
     "blockEmpty": "Niente da mostrare",
+    "foldBlock": "Comprimi {{name}}",
+    "unfoldBlock": "Espandi {{name}}",
     "sectionEmpty": "Ancora niente da mostrare qui.",
     "notFound": "Questa sezione non esiste più.",
     "loadError": "Impossibile caricare la pagina.",
@@ -1700,7 +1702,9 @@
       "blockMenu": "Azioni del blocco",
       "deleteBlock": "Elimina blocco",
       "blockDeleted": "Blocco eliminato",
-      "undo": "Annulla"
+      "undo": "Annulla",
+      "renameSection": "Rinomina la sezione {{name}}",
+      "addDescription": "Aggiungi una descrizione"
     }
   }
 }

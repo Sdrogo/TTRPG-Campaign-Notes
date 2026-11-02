@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { SectionBlock } from '../../../components/landing/SectionBlock';
@@ -18,6 +18,28 @@ function show(shown: LandingBlock, sources: Partial<BlockSources>, isMaster = fa
 }
 
 describe('SectionBlock', () => {
+  it('folds the whole block from its heading, counting each Document once (spec 60)', async () => {
+    show(block({ tag_ids: ['t1'], groups: [['t2'], ['t1']] }), {
+      documents: [doc('a', 'Aiko', ['t1', 't2']), doc('b', 'Bunta', ['t1'])],
+    });
+    const heading = screen.getByRole('heading', { level: 2, name: /Il blocco/ });
+    expect(heading).toHaveTextContent('Il blocco2');
+    const toggle = within(heading).getByRole('button');
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('opens a folded block when the Index scrolls to it', async () => {
+    show(block({ tag_ids: ['t1'] }), { documents: [doc('a', 'Aiko', ['t1'])] });
+    const toggle = within(screen.getByRole('heading', { level: 2 })).getByRole('button');
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    act(() => {
+      window.dispatchEvent(new CustomEvent('room-landing:reveal-block', { detail: 'block-1' }));
+    });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('waits for its items', () => {
     show(block(), {});
     expect(screen.getByRole('region', { name: 'Il blocco' })).toHaveAttribute('id', 'block-block-1');
@@ -62,7 +84,8 @@ describe('SectionBlock', () => {
   it('lists a Documents block without groups in one grid', () => {
     show(block({ tag_ids: ['t1'] }), { documents: [doc('a', 'Aiko', ['t1'])] });
     expect(screen.getByRole('link', { name: 'Aiko' })).toBeInTheDocument();
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    // Only the block's own heading folds: no sub-section.
+    expect(screen.getAllByRole('button', { expanded: true })).toHaveLength(1);
   });
 
   it('lists every Session 0 feature, linked to its session and step', () => {

@@ -1607,6 +1607,8 @@
       "sessionZero": "Sessões, Linhas e Véus, sondagens"
     },
     "blockEmpty": "Nada para mostrar",
+    "foldBlock": "Recolher {{name}}",
+    "unfoldBlock": "Expandir {{name}}",
     "sectionEmpty": "Ainda não há nada para mostrar aqui.",
     "notFound": "Esta secção já não existe.",
     "loadError": "Não foi possível carregar a página.",
@@ -1702,7 +1704,9 @@
       "blockMenu": "Ações do bloco",
       "deleteBlock": "Eliminar bloco",
       "blockDeleted": "Bloco eliminado",
-      "undo": "Anular"
+      "undo": "Anular",
+      "renameSection": "Mudar o nome da secção {{name}}",
+      "addDescription": "Adicionar uma descrição"
     }
   }
 }

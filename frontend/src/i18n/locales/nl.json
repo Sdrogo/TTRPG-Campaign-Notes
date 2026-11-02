@@ -1605,6 +1605,8 @@
       "sessionZero": "Sessies, Lijnen en Sluiers, peilingen"
     },
     "blockEmpty": "Niets te tonen",
+    "foldBlock": "{{name}} inklappen",
+    "unfoldBlock": "{{name}} uitklappen",
     "sectionEmpty": "Hier is nog niets te zien.",
     "notFound": "Deze sectie bestaat niet meer.",
     "loadError": "De pagina kon niet worden geladen.",
@@ -1700,7 +1702,9 @@
       "blockMenu": "Acties voor het blok",
       "deleteBlock": "Blok verwijderen",
       "blockDeleted": "Blok verwijderd",
-      "undo": "Ongedaan maken"
+      "undo": "Ongedaan maken",
+      "renameSection": "Sectie {{name}} hernoemen",
+      "addDescription": "Beschrijving toevoegen"
     }
   }
 }

@@ -352,7 +352,7 @@ function MapKindChip({ mapKind, onChange }: { mapKind: BlockMapKind | null; onCh
  * more Tags (several make a combination); "Usa i raggruppamenti della
  * Stanza" copies the Room's Main items.
  */
-function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][]; tags: Tag[]; mainItems: MainItem[]; onChange: (groups: string[][]) => void }) {
+export function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][]; tags: Tag[]; mainItems: MainItem[]; onChange: (groups: string[][]) => void }) {
   const { t } = useTranslation();
   const [adding, setAdding] = useState<string[] | null>(null);
   const key = (group: string[]) => group.join('+');

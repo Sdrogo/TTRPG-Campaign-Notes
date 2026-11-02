@@ -1563,6 +1563,8 @@
       "sessionZero": "セッション、ライン&ヴェール、投票"
     },
     "blockEmpty": "表示するものはありません",
+    "foldBlock": "{{name}}を折りたたむ",
+    "unfoldBlock": "{{name}}を展開",
     "sectionEmpty": "ここにはまだ表示するものがありません。",
     "notFound": "このセクションはもうありません。",
     "loadError": "ページを読み込めませんでした。",
@@ -1654,7 +1656,9 @@
       "blockMenu": "ブロックの操作",
       "deleteBlock": "ブロックを削除",
       "blockDeleted": "ブロックを削除しました",
-      "undo": "元に戻す"
+      "undo": "元に戻す",
+      "renameSection": "セクション{{name}}の名前を変更",
+      "addDescription": "説明を追加"
     }
   }
 }

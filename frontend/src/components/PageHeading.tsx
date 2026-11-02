@@ -48,7 +48,7 @@ export function PageHeading({
           {titleAfter}
         </Group>
         {description && (
-          <Text c="dimmed" size="sm" maw={720}>
+          <Text component="div" c="dimmed" size="sm" maw={720}>
             {description}
           </Text>
         )}

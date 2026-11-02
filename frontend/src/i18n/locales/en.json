@@ -1605,6 +1605,8 @@
       "sessionZero": "Sessions, Lines & Veils, polls"
     },
     "blockEmpty": "Nothing to show",
+    "foldBlock": "Fold {{name}}",
+    "unfoldBlock": "Unfold {{name}}",
     "sectionEmpty": "Nothing to show here yet.",
     "notFound": "This section no longer exists.",
     "loadError": "Couldn't load the page.",
@@ -1700,7 +1702,9 @@
       "blockMenu": "Block actions",
       "deleteBlock": "Delete block",
       "blockDeleted": "Block deleted",
-      "undo": "Undo"
+      "undo": "Undo",
+      "renameSection": "Rename the section {{name}}",
+      "addDescription": "Add a description"
     }
   }
 }

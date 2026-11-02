@@ -1563,6 +1563,8 @@
       "sessionZero": "세션, 라인과 베일, 투표"
     },
     "blockEmpty": "표시할 내용 없음",
+    "foldBlock": "{{name}} 접기",
+    "unfoldBlock": "{{name}} 펼치기",
     "sectionEmpty": "아직 여기에 표시할 내용이 없습니다.",
     "notFound": "이 섹션은 더 이상 없습니다.",
     "loadError": "페이지를 불러오지 못했습니다.",
@@ -1654,7 +1656,9 @@
       "blockMenu": "블록 작업",
       "deleteBlock": "블록 삭제",
       "blockDeleted": "블록이 삭제되었습니다",
-      "undo": "실행 취소"
+      "undo": "실행 취소",
+      "renameSection": "{{name}} 섹션 이름 바꾸기",
+      "addDescription": "설명 추가"
     }
   }
 }

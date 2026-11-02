@@ -11,6 +11,7 @@ import type {
   SectionKind,
   SessionZeroFeature,
 } from '../types/landing';
+import { PAGE_SECTION_KINDS } from '../types/landing';
 import type { RelationshipMap } from '../types/map';
 import type { ModuleKind, OverviewRound, OverviewStep, Poll, SessionZeroOverview } from '../types/sessionZero';
 
@@ -109,6 +110,9 @@ export function blockAnchor(blockId: string): string {
   return `block-${blockId}`;
 }
 
+/** The window event the Index fires before scrolling to a block, so a folded block opens (spec 60 Decision 9). */
+export const REVEAL_BLOCK_EVENT = 'room-landing:reveal-block';
+
 /** A Documents block's Documents: every Tag of the block (AND), by name. */
 export function blockDocuments(documents: Document[], block: LandingBlock): Document[] {
   return sortDocuments(filterDocumentsByTags(documents, block.tagIds), 'name-asc');
@@ -170,4 +174,9 @@ export function sessionZeroHref(roomId: string, roundId?: string, stepId?: strin
   if (stepId) params.set('step', stepId);
   const query = params.toString();
   return `/rooms/${roomId}/session-zero${query ? `?${query}` : ''}`;
+}
+
+/** The page cards (Documenti, Mappe, Sessione 0) the Master deleted, which "Nuova sezione" offers back. */
+export function missingPageKinds(sections: LandingSection[]): SectionKind[] {
+  return PAGE_SECTION_KINDS.filter((kind) => !sections.some((section) => section.kind === kind));
 }

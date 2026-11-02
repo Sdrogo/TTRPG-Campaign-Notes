@@ -1605,6 +1605,8 @@
       "sessionZero": "Sessions, Grenzen & Schleier, Umfragen"
     },
     "blockEmpty": "Nichts anzuzeigen",
+    "foldBlock": "{{name}} einklappen",
+    "unfoldBlock": "{{name}} ausklappen",
     "sectionEmpty": "Hier gibt es noch nichts zu sehen.",
     "notFound": "Diesen Bereich gibt es nicht mehr.",
     "loadError": "Die Seite konnte nicht geladen werden.",
@@ -1700,7 +1702,9 @@
       "blockMenu": "Aktionen für den Block",
       "deleteBlock": "Block löschen",
       "blockDeleted": "Block gelöscht",
-      "undo": "Rückgängig"
+      "undo": "Rückgängig",
+      "renameSection": "Abschnitt {{name}} umbenennen",
+      "addDescription": "Beschreibung hinzufügen"
     }
   }
 }

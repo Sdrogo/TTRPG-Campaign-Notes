@@ -1607,6 +1607,8 @@
       "sessionZero": "Sessions, Lignes et Voiles, sondages"
     },
     "blockEmpty": "Rien à afficher",
+    "foldBlock": "Replier {{name}}",
+    "unfoldBlock": "Déplier {{name}}",
     "sectionEmpty": "Rien à afficher ici pour l'instant.",
     "notFound": "Cette section n'existe plus.",
     "loadError": "Impossible de charger la page.",
@@ -1702,7 +1704,9 @@
       "blockMenu": "Actions du bloc",
       "deleteBlock": "Supprimer le bloc",
       "blockDeleted": "Bloc supprimé",
-      "undo": "Annuler"
+      "undo": "Annuler",
+      "renameSection": "Renommer la section {{name}}",
+      "addDescription": "Ajouter une description"
     }
   }
 }

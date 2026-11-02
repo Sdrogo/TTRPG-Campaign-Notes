@@ -1605,6 +1605,8 @@
       "sessionZero": "Sesiones, Líneas y Velos, encuestas"
     },
     "blockEmpty": "Nada que mostrar",
+    "foldBlock": "Contraer {{name}}",
+    "unfoldBlock": "Desplegar {{name}}",
     "sectionEmpty": "Todavía no hay nada que mostrar aquí.",
     "notFound": "Esta sección ya no existe.",
     "loadError": "No se pudo cargar la página.",
@@ -1700,7 +1702,9 @@
       "blockMenu": "Acciones del bloque",
       "deleteBlock": "Eliminar bloque",
       "blockDeleted": "Bloque eliminado",
-      "undo": "Deshacer"
+      "undo": "Deshacer",
+      "renameSection": "Renombrar la sección {{name}}",
+      "addDescription": "Añadir una descripción"
     }
   }
 }
