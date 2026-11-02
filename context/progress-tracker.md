@@ -878,6 +878,14 @@ release that ships it. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **59, Large imports in image blocks** (asked by the product owner
+  2026-11-02 after a whole-Room import hit the 200-image cap; ticket
+  written 2026-11-02, **waiting for confirmation**, open questions Q1-Q4):
+  images per import 200 -> 2000, counted on the ticked Documents; the
+  text is still one transaction, the images run in saved blocks of 25 with
+  progress in the job panel, stale means no progress for 30 minutes, and a
+  restart resumes the image phase. **Migration** (two columns on
+  `import_jobs`).
 - **56, Landing Sections in import-export** (asked by the product owner
   2026-11-02, separate PR; ticket confirmed 2026-11-02; **built** in PR
   #284 into `staging`, 56_1 backend and 56_2 frontend): the JSON Room
