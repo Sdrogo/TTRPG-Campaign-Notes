@@ -820,6 +820,15 @@ async def test_the_images_arrive_in_blocks_saved_as_they_go(
         job = await client.get(f"{room.url}/imports/{job_id}", headers=room.master)
         row = await import_jobs_repo.get_job(session, job_id)
         assert row is not None and row.payload is None
+        # The work list is kept apart, so the per-image saves stay small.
+        work, progress = (
+            await session.execute(
+                select(ImportJobRow.image_work, ImportJobRow.progress).where(
+                    ImportJobRow.id == job_id
+                )
+            )
+        ).one()
+        assert len(work) == 4 and "work" not in progress
         seen.append((done, job.json()["progress"]["stored"], job.json()["status"]))
         await original(session, job_id, done, skipped)
 

@@ -741,6 +741,7 @@ class ImportJobRow(Base):
     # Spec 59: the image phase's work list and how far it got, and when the
     # job last saved (a job is taken as lost when it stops progressing).
     progress: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    image_work: Mapped[list[Any] | None] = mapped_column(JSONB)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

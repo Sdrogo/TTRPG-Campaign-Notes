@@ -1,7 +1,8 @@
 """add import job progress
 
 Spec `59 - Large imports in image blocks.md`: an import's image phase
-keeps its work list and how far it got in `progress`, and `updated_at`
+keeps its work list in `image_work` (written once) and how far it got in
+`progress`, and `updated_at`
 says when it last saved, so a job is taken as lost only when it stops
 progressing and a restart can resume its images.
 
@@ -32,6 +33,10 @@ def upgrade() -> None:
     )
     op.add_column(
         "import_jobs",
+        sa.Column("image_work", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+    )
+    op.add_column(
+        "import_jobs",
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
@@ -44,4 +49,5 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_column("import_jobs", "updated_at")
+    op.drop_column("import_jobs", "image_work")
     op.drop_column("import_jobs", "progress")

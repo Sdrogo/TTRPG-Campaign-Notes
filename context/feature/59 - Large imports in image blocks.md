@@ -134,7 +134,10 @@
   `import_jobs_repo.start_images`, `mark_stored` (in the image's own
   transaction), `save_block`, `claim_image_phases`, `fail_active` on
   `updated_at`. Backgrounds and Section images are stored one at a time
-  (as before). `main.py` resumes before starting the sweeps.
+  (as before). `main.py` resumes before starting the sweeps. The work
+  list is in its own column `image_work` (written once), so the per-image
+  saves of `progress` stay small. The resume assumes **one backend
+  instance** (as deployed): with several, a lease would be needed first.
 - Frontend: the review step counts the ticked Documents' images and
   disables Import over 2000 with a hint; `ImportJobPanel` shows "Images:
   120 of 450" with a bar and, when done, "448 of 450 images imported".

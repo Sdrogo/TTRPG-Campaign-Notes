@@ -33,7 +33,9 @@ def _job_from_row(row: ImportJobRow) -> ImportJob:
         error=row.error,
         created_at=row.created_at,
         finished_at=row.finished_at,
-        progress=row.progress,
+        # The work list lives in its own column, written once, so the
+        # per-image saves of `progress` stay small (spec 59).
+        progress=None if row.progress is None else {**row.progress, "work": row.image_work or []},
     )
 
 
@@ -81,16 +83,19 @@ async def mark_running(session: AsyncSession, job_id: uuid.UUID) -> None:
 async def start_images(session: AsyncSession, job_id: uuid.UUID, progress: dict[str, Any]) -> None:
     """The Documents are written: the job keeps the image phase's work list
     and outcome so far in `progress` and drops the parsed files, which it no
-    longer needs (spec 59 Decision 4)."""
+    longer needs (spec 59 Decision 4). The work list goes to `image_work`,
+    never rewritten after this."""
+    rest = {key: value for key, value in progress.items() if key != "work"}
     await session.execute(
         update(ImportJobRow)
         .where(ImportJobRow.id == job_id, ImportJobRow.status == ImportStatus.RUNNING.value)
-        .values(payload=None, progress=progress, updated_at=func.now())
+        .values(payload=None, image_work=progress["work"], progress=rest, updated_at=func.now())
     )
 
 
 async def _locked_progress(session: AsyncSession, job_id: uuid.UUID) -> dict[str, Any] | None:
-    """The job's progress, its row locked until the caller's transaction ends."""
+    """The job's progress without its work list, its row locked until the
+    caller's transaction ends."""
     return await session.scalar(
         select(ImportJobRow.progress).where(ImportJobRow.id == job_id).with_for_update()
     )
@@ -166,6 +171,7 @@ async def mark_done(
             status=ImportStatus.DONE.value,
             payload=None,
             progress=None,
+            image_work=None,
             result=result,
             error=None,
             finished_at=finished_at,
@@ -186,6 +192,7 @@ async def mark_failed(
             status=ImportStatus.FAILED.value,
             payload=None,
             progress=None,
+            image_work=None,
             error=error[:200],
             finished_at=finished_at,
         )
@@ -207,6 +214,7 @@ async def fail_active(
             status=ImportStatus.FAILED.value,
             payload=None,
             progress=None,
+            image_work=None,
             error=error,
             finished_at=now,
         )
