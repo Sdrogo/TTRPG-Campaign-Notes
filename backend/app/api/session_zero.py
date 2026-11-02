@@ -1324,7 +1324,9 @@ async def start_session_zero(
     specs = [(kind, presets) for kind in chain]
     now = datetime.now(UTC)
     if await session_zero_repo.start(session, room_id, specs, now):
-        first = (await session_zero_repo.list_rounds(session, room_id))[0]
+        # Round 1, never a Section tool's round (number 0, spec 60).
+        rounds = await session_zero_repo.list_rounds(session, room_id)
+        first = next(round_ for round_ in rounds if round_.is_session)
         await _set_up_modules(session, room_id, first.id, [None] * len(chain), now)
         await _shared(session, room_id, "start")
     return await _board_response(session, room_id, viewer, None, locale)

@@ -313,17 +313,25 @@ async def test_session_zero_leaves_the_tools_alone(
     await _show(client, room, block)
     headers = room.master.headers
 
-    started = await client.post(f"{room.zero}/start", json={"modules": ["poll"]}, headers=headers)
+    before = (await _tools(client, room, room.master))["tools"]
+
+    started = await client.post(
+        f"{room.zero}/start", json={"modules": ["retro", "poll"]}, headers=headers
+    )
 
     assert started.status_code == 200, started.text
     board = started.json()
     assert board["started"] is True
     assert [r["number"] for r in board["rounds"]] == [1]
-    assert [m["kind"] for m in board["modules"]] == ["poll"]
+    assert [m["kind"] for m in board["modules"]] == ["retro", "poll"]
+    # Round 1's Retro gets its preset columns; the tool is left as it was.
+    assert board["modules"][0]["columns"]
+    assert (await _tools(client, room, room.master))["tools"] == before
     again = await client.post(f"{room.zero}/start", json={"modules": ["poll"]}, headers=headers)
+    assert [m["kind"] for m in again.json()["modules"]] == ["retro", "poll"]
     assert [r["number"] for r in again.json()["rounds"]] == [1]  # idempotent
     overview = (await client.get(f"{room.zero}/overview", headers=headers)).json()
-    assert [[s["kind"] for s in r["steps"]] for r in overview["rounds"]] == [["poll"]]
+    assert [[s["kind"] for s in r["steps"]] for r in overview["rounds"]] == [["retro", "poll"]]
     # A tool's step isn't one of the session's.
     for response in (
         await client.delete(f"{room.zero}/modules/{block['module_id']}", headers=headers),
