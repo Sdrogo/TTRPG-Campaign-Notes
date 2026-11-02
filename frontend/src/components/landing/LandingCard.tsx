@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { Badge, Box, Card, Group, Stack, Text, Title } from '@mantine/core';
+import { Badge, Box, Card, Group, Stack, Title } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { DocumentCardImages } from '../DocumentCardImages';
 import { markdownToPlain } from '../../lib/markdownText';
+import { MentionText } from '../mentions/MentionText';
 
 interface LandingCardProps {
   to: string;
@@ -23,12 +24,13 @@ interface LandingCardProps {
 const CARD_WITH_IMAGE_MIN_HEIGHT = { base: 180, sm: 200 };
 
 /**
- * One card of the landing (spec 55 Decision 7): a Section, a Document, a
- * map, a session, a step or a poll. An optional image on the right half
+ * One card of the landing (spec 55 Decision 7): a Section, a map, a session,
+ * a step or a poll. A Documents block shows `DocumentCard`s instead (spec 57c). An optional image on the right half
  * fading into the card, the title in the display font, the description as
  * plain text on three lines, and the lift on hover of `.document-card`. The
  * whole card is one link; no preview, no open menu. Mentions in the
- * description are plain text.
+ * description show their target's name, accent-coloured but not links (the
+ * card's link lies over them), as on a Document card (spec 57c).
  */
 export function LandingCard({ to, state, title, description, imageUrl, badge, headingOrder = 3, controls }: LandingCardProps) {
   const hasImage = Boolean(imageUrl);
@@ -60,9 +62,7 @@ export function LandingCard({ to, state, title, description, imageUrl, badge, he
           )}
         </Group>
         {text && (
-          <Text size="sm" c="dimmed" lineClamp={3}>
-            {text}
-          </Text>
+          <MentionText text={text} linked={false} size="sm" c="dimmed" lineClamp={3} />
         )}
       </Stack>
       <Link to={to} state={state} aria-label={title} style={{ position: 'absolute', inset: 0, zIndex: 1 }} />

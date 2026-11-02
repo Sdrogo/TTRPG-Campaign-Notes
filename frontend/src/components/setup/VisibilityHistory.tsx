@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Group,
-  Loader,
   Paper,
   SegmentedControl,
   Stack,
@@ -22,6 +21,7 @@ import { displayNameFor } from '../../lib/members';
 import { formatAbsoluteTime } from '../../lib/time';
 import type { Member } from '../../types/member';
 import type { ContentKind, HistoryEntry } from '../../types/reveal';
+import { SectionLoader } from '../PageState';
 
 const FILTERS = ['all', 'document', 'note', 'comment'] as const;
 type Filter = (typeof FILTERS)[number];
@@ -65,7 +65,7 @@ export function VisibilityHistory({ roomId, members }: VisibilityHistoryProps) {
       />
 
       {history.isLoading ? (
-        <Loader color="accent" />
+        <SectionLoader />
       ) : history.isError ? (
         <Text c="red">{t('setup.history.loadError')}</Text>
       ) : entries.length === 0 ? (

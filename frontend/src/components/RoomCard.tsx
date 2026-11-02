@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useState } from 'react';
 import { Box, Card, Group, Menu, Stack, Title, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import {
@@ -22,9 +22,8 @@ import { useBackState } from '../lib/backNav';
 // strip (as a DocumentCard does, though shorter: a Room card has less text).
 const CARD_WITH_IMAGE_MIN_HEIGHT = { base: 160, sm: 180 };
 
-// The image fades into the card's own grey (Mantine's dark Card), not the
-// near-black `--bg-surface` of a DocumentCard, which drew a dark band (spec 51).
-const FADE_INTO_ROOM_CARD = { '--card-image-fade': 'var(--mantine-color-dark-6)' } as CSSProperties;
+// Since spec 57b every Card sits on `--bg-surface`, so the image fades into the
+// same colour as a DocumentCard's (the default of `--card-image-fade`, spec 51).
 
 interface RoomCardProps {
   myRoom: MyRoom;
@@ -61,7 +60,6 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
       radius="md"
       pos="relative"
       mih={imageUrl ? CARD_WITH_IMAGE_MIN_HEIGHT : undefined}
-      style={FADE_INTO_ROOM_CARD}
     >
       {imageUrl && (
         <Box pos="absolute" top={0} right={0} bottom={0} w="50%">
@@ -144,7 +142,7 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
               )}
               {hasOtherActions && <Menu.Divider />}
               <Menu.Item
-                color="red"
+                color="danger"
                 leftSection={<SignOutIcon size={18} />}
                 onClick={() => setLeaveOpened(true)}
               >

@@ -42,7 +42,7 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
   if (job.status === 'failed' || job.result === null) {
     return (
       <Stack gap="sm">
-        <Alert color="red" role="alert">
+        <Alert color="danger" role="alert">
           {t('documentImport.failed')}
         </Alert>
         <Button variant="light" onClick={onNew}>

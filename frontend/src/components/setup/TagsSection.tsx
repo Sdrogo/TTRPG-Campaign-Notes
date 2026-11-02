@@ -32,7 +32,7 @@ function Part({
   children: ReactNode;
 }) {
   return (
-    <Paper withBorder radius="md" p="md" bg="var(--bg-surface)">
+    <Paper withBorder radius="md" p="md">
       <Stack gap="sm">
         <Stack gap={2}>
           <Group gap="xs">

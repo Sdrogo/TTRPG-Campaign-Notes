@@ -18,6 +18,21 @@ describe('LandingCard', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
+  // Spec 57c: a custom Section's cards showed raw `#[Name](doc:id)` tokens.
+  it('shows mentions in the description by name, not as raw tokens', () => {
+    renderWithProviders(
+      <LandingCard
+        to="/x"
+        title="Hirasaka"
+        description="Un negozio ad #[Akihabara](doc:a1e21b7d-0000-4000-8000-000000000001) e #[Tremere](tag:c6b029ae-0000-4000-8000-000000000002)."
+      />,
+    );
+    expect(screen.queryByText(/doc:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/tag:/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Akihabara/)).toBeInTheDocument();
+    expect(screen.getByText(/Tremere/)).toBeInTheDocument();
+  });
+
   it('shows its image on the right half', () => {
     const { container } = renderWithProviders(<LandingCard to="/x" title="Kyoto" imageUrl="http://img/kyoto.webp" headingOrder={2} />);
     expect(screen.getByRole('heading', { level: 2, name: 'Kyoto' })).toBeInTheDocument();

@@ -81,7 +81,7 @@ export function GenerateMentionsModal({ roomId, documentId, onClose }: GenerateM
             <Loader size="sm" aria-label={t('mentionSuggestions.loading')} />
           </Group>
         ) : suggestions.isError ? (
-          <Alert color="red">{suggestions.error.message}</Alert>
+          <Alert color="danger">{suggestions.error.message}</Alert>
         ) : sources.length === 0 ? (
           <Text c="dimmed">{t('mentionSuggestions.empty')}</Text>
         ) : (

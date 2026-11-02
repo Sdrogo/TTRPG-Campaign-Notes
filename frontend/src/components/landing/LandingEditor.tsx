@@ -60,7 +60,7 @@ export function LandingEditor({ roomId, sections }: { roomId: string; sections: 
                           <Menu.Dropdown>
                             <Menu.Item onClick={() => setEditing(section)}>{t('roomLanding.edit.info')}</Menu.Item>
                             {section.kind !== 'page_documents' && (
-                              <Menu.Item color="red" onClick={() => setDeleting(section)}>
+                              <Menu.Item color="danger" onClick={() => setDeleting(section)}>
                                 {t('common.delete')}
                               </Menu.Item>
                             )}
@@ -90,7 +90,7 @@ export function LandingEditor({ roomId, sections }: { roomId: string; sections: 
               {t('common.cancel')}
             </Button>
             <Button
-              color="red"
+              color="danger"
               loading={remove.isPending}
               onClick={() =>
                 deleting && remove.mutate(deleting.id, { onSuccess: () => setDeleting(null), onError: notifyError })

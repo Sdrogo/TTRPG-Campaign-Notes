@@ -36,7 +36,7 @@ export function PostItEditor({ initial = '', submitLabel, busy, onSubmit, onCanc
           {t('sessionZero.postIt.charactersLeft', { count: left })}
         </Text>
         <Group gap={4} wrap="nowrap">
-          <Button size="compact-sm" variant="default" onClick={onCancel}>
+          <Button size="compact-sm" variant="subtle" color="gray" onClick={onCancel}>
             {t('common.cancel')}
           </Button>
           <Button size="compact-sm" disabled={!body.trim() || busy} onClick={() => onSubmit(body.trim())}>

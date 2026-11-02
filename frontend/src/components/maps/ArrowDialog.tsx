@@ -88,7 +88,7 @@ export function ArrowDialog({ arrow, fromName, toName, isMaster, onSave, onDelet
             />
           )}
           <Group justify="space-between">
-            <Button variant="subtle" color="red" onClick={onDelete}>
+            <Button variant="subtle" color="danger" onClick={onDelete}>
               {t('maps.arrow.delete')}
             </Button>
             <Button type="submit">{t('common.save')}</Button>

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Loader, Stack, Text } from '@mantine/core';
+import { Button, Center, Loader, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
 // Full-viewport placeholders shared by every routed page: loading, and a
@@ -12,6 +12,20 @@ export function FullPageLoader() {
     <Stack component="main" align="center" justify="center" style={{ minHeight: '100svh' }}>
       <Loader color="accent" />
     </Stack>
+  );
+}
+
+/**
+ * A spinner for data still loading inside a page that is already drawn (a
+ * Room's Documents, its maps, the setup's Tags...): centered in the page's
+ * width with room above and below, like the full-page one, instead of sitting
+ * in the top-left corner under the heading (spec 57c, product owner 2026-11-02).
+ */
+export function SectionLoader() {
+  return (
+    <Center py={48} w="100%">
+      <Loader color="accent" />
+    </Center>
   );
 }
 

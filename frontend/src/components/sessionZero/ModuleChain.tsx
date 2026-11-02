@@ -81,7 +81,7 @@ function ChainRows({
               </LabeledActionIcon>
               <LabeledActionIcon
                 variant="subtle"
-                color="red"
+                color="danger"
                 size="sm"
                 aria-label={t('sessionZero.modules.remove')}
                 disabled={disabled || kinds.length === 1}
@@ -310,7 +310,7 @@ function EditStepsModal({ onClose }: { onClose: () => void }) {
             <Button variant="default" onClick={() => setRemoving(null)}>
               {t('common.cancel')}
             </Button>
-            <Button color="red" disabled={busy} onClick={() => remove(removing)}>
+            <Button color="danger" disabled={busy} onClick={() => remove(removing)}>
               {t('sessionZero.modules.remove')}
             </Button>
           </Group>

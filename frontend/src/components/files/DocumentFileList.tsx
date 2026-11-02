@@ -145,7 +145,7 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                   <LabeledActionIcon
                     size="sm"
                     variant="subtle"
-                    color="red"
+                    color="danger"
                     onClick={() => setConfirmDelete(file)}
                     loading={deleteFile.isPending && deleteFile.variables === file.id}
                     aria-label={t('files.delete', { name: file.name })}
@@ -168,7 +168,7 @@ export function DocumentFileList({ roomId, documentId, files, canUpload }: Docum
                 {t('common.cancel')}
               </Button>
               <Button
-                color="red"
+                color="danger"
                 onClick={() => {
                   deleteFile.mutate(confirmDelete.id, { onError: notifyError });
                   setConfirmDelete(null);

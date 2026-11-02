@@ -54,7 +54,7 @@ export function PrivacySection() {
         <Group>
           <Button
             variant="outline"
-            color="red"
+            color="danger"
             leftSection={<TrashIcon size={18} aria-hidden="true" />}
             onClick={() => setOpened(true)}
           >
@@ -77,7 +77,7 @@ export function PrivacySection() {
               {t('common.cancel')}
             </Button>
             <Button
-              color="red"
+              color="danger"
               disabled={typed.trim() !== word}
               loading={deleteAccount.isPending}
               onClick={() =>
