@@ -64,7 +64,6 @@ export function PageLayout({
   const wide = useMediaQuery(SPLIT_QUERY, true);
   const below = Boolean(roomId && allowEmptySide && sideId && !wide);
   const page = useRef<HTMLDivElement>(null);
-  const withIndex = Boolean(roomId && showIndex);
   // Opening the lower half brings the map (`data-split-anchor`) to the top of the screen.
   useEffect(() => {
     if (below) page.current!.querySelector('[data-split-anchor]')?.scrollIntoView({ block: 'start' });
@@ -77,13 +76,13 @@ export function PageLayout({
   return (
     <>
       <AppHeader roomId={roomId} backTo={backTo} backLabel={backLabel} />
-      {withIndex && <RoomIndex roomId={roomId!} {...index} />}
+      {roomId && showIndex && <RoomIndex roomId={roomId} {...index} />}
       {/* With the Index tab on the left edge the page keeps clear of it (spec 57):
           the tab used to cover the first letters of the title on a phone. */}
       <Container
         component="main"
         fluid
-        pl={withIndex ? { base: 40, sm: 48 } : { base: 'sm', sm: 'lg', lg: 'xl' }}
+        pl={roomId && showIndex ? { base: 40, sm: 48 } : { base: 'sm', sm: 'lg', lg: 'xl' }}
         pr={{ base: 'sm', sm: 'lg', lg: 'xl' }}
         py="md"
       >
