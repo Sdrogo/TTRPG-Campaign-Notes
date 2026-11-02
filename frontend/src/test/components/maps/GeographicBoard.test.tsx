@@ -344,7 +344,7 @@ describe('GeographicBoard: moving around', () => {
     expect(viewTransform()).toBe(zoomed);
     // Half the width (the split pane opening): same zoom, moved 200px left.
     report(400, 600);
-    const [, x, y, k] = /translate\((\S+) (\S+)\) scale\((\S+)\)/.exec(zoomed)!.map(Number);
+    const [, x, y, k] = /translate\((\S+) (\S+)\) scale\((\S+)\)/.exec(zoomed!)!.map(Number);
     expect(viewTransform()).toBe(`translate(${x - 200} ${y}) scale(${k})`);
   });
 });
