@@ -39,6 +39,7 @@ from app.domain.imports import (
     ImportPlan,
     ImportStatus,
     PlannedDocument,
+    images_done,
     plan_import,
     validate_files,
 )
@@ -196,6 +197,16 @@ class SkippedSectionResponse(BaseModel):
     reason: str
 
 
+class ImageCountResponse(BaseModel):
+    """Images of an import: `total` in its work list, `stored` so far (in
+    `progress`) or in the end (in `result`). `done` counts the stored and
+    the skipped ones, so it reaches `total` when the images are over."""
+
+    total: int
+    stored: int
+    done: int = 0
+
+
 class ImportResultResponse(BaseModel):
     """What a finished import did: the Documents, the maps (spec 40) and the
     Sections of the Room home (spec 56) it created or updated, and what it
@@ -208,17 +219,22 @@ class ImportResultResponse(BaseModel):
     skipped_maps: list[SkippedMapResponse] = []
     sections: list[ImportedSectionResponse] = []
     skipped_sections: list[SkippedSectionResponse] = []
+    # Spec 59: how many images (map backgrounds and Section images included)
+    # the files brought and how many were stored. None for older jobs.
+    images: ImageCountResponse | None = None
 
 
 class ImportJobResponse(BaseModel):
-    """An import job: `queued`, `running`, `done` (with `result`) or
-    `failed`."""
+    """An import job: `queued`, `running` (with `progress` once its
+    Documents are written and its images arrive, spec 59), `done` (with
+    `result`) or `failed`."""
 
     id: uuid.UUID
     status: ImportStatus
     created_at: datetime
     finished_at: datetime | None
     result: ImportResultResponse | None
+    progress: ImageCountResponse | None = None
 
 
 async def _read_files(files: list[UploadFile], locale: str) -> list[ImportFile]:
@@ -382,6 +398,13 @@ def _job_response(job: ImportJob) -> ImportJobResponse:
         created_at=job.created_at,
         finished_at=job.finished_at,
         result=None if job.result is None else ImportResultResponse.model_validate(job.result),
+        progress=None
+        if job.progress is None
+        else ImageCountResponse(
+            total=len(job.progress["work"]),
+            stored=len(job.progress["stored"]),
+            done=images_done(job.progress),
+        ),
     )
 
 

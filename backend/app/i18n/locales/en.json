@@ -177,6 +177,7 @@
       "tooManyFiles": "At most {max} files can be imported at once",
       "tooManyDocuments": "At most {max} Documents can be imported at once",
       "tooManyImages": "At most {max} images can be imported at once",
+      "tooManyImageLinks": "At most {max} image links can be read from the files at once",
       "tooManyMaps": "At most {max} maps can be imported at once",
       "tooManySections": "At most {max} Sections of a Room home can be imported at once",
       "nameRequired": "A Document in the file has no name",

@@ -32,12 +32,13 @@
   `record_pending_upload` → upload → row → `confirm_upload`) and the
   20-images-per-Document cap. One import active per user and Room.
 
-## Decisions (proposed by Claude, to be confirmed by the product owner)
+## Decisions (proposed by Claude, confirmed by the product owner 2026-11-02 with the defaults of Q1-Q4)
 
 ### Limits
 
 1. **Images: 200 → 2000 per import**, counted on the Documents **ticked
-   in the preview** (and their maps and Sections), checked when the job is
+   in the preview** (Document images; map backgrounds and Section images
+   are few and capped by their own limits), checked when the job is
    started. The upload keeps a looser sanity cap of **5000** image links
    across the files (spec 27 Decision 17, no unbounded input), so a big
    file still reaches the preview where the user can untick Documents.
@@ -122,6 +123,23 @@
   locales, both backend and frontend; the panel's progress line too.
 - Docs: spec 27 Decision 8 gets a line pointing here; `architecture.md`
   (import job section) and the tracker.
+
+## As built (PR #288)
+
+- Backend: `MAX_IMAGES = 2000` in `plan_import` (only with choices),
+  `MAX_IMAGE_LINKS = 5000` (`errors.import.tooManyImageLinks`, 12 locales)
+  in `validate_files`; `IMAGE_BLOCK_SIZE = 25`, `next_block` and
+  `images_done` in `app/domain/imports.py`; `import_job._image_progress`,
+  `_run_images`, `_attach_block`, `resume_import_job(s)`;
+  `import_jobs_repo.start_images`, `mark_stored` (in the image's own
+  transaction), `save_block`, `claim_image_phases`, `fail_active` on
+  `updated_at`. Backgrounds and Section images are stored one at a time
+  (as before). `main.py` resumes before starting the sweeps.
+- Frontend: the review step counts the ticked Documents' images and
+  disables Import over 2000 with a hint; `ImportJobPanel` shows "Images:
+  120 of 450" with a bar and, when done, "448 of 450 images imported".
+- Migration **`e9c4a2f7b1d8`**: apply to the staging DB before merging and
+  to production before the release.
 
 ## Units
 

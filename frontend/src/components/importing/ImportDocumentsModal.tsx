@@ -7,6 +7,7 @@ import {
   IMPORT_ACCEPT,
   isActiveImportJob,
   isPageCard,
+  MAX_IMPORT_IMAGES,
   type ImportPreview,
   type ImportResolution,
 } from '../../lib/documentImport';
@@ -92,6 +93,9 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
 
   const ticked = preview?.documents.filter((document) => selected.has(document.key)) ?? [];
   const existing = ticked.filter((document) => document.existingDocumentId !== null);
+  // Spec 59 Decision 1: the cap counts the ticked Documents' images only.
+  const tickedImages = ticked.reduce((sum, document) => sum + document.imagesCount, 0);
+  const overImages = tickedImages > MAX_IMPORT_IMAGES;
   const chosenSections =
     preview?.sections.filter((section) => selectedSections.has(section.key)) ?? [];
 
@@ -204,17 +208,22 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
               {t('documentImport.back')}
             </Button>
             <Group gap="sm">
-              <Text size="xs" c="dimmed">
-                {t('documentImport.selectedCount', { count: ticked.length })}
+              <Text size="xs" c={overImages ? 'danger' : 'dimmed'}>
+                {overImages
+                  ? t('documentImport.tooManyImages', {
+                      count: tickedImages,
+                      max: MAX_IMPORT_IMAGES,
+                    })
+                  : t('documentImport.selectedCount', { count: ticked.length })}
               </Text>
               {existing.length > 0 ? (
-                <Button onClick={() => setStep('existing')} disabled={ticked.length === 0}>
+                <Button onClick={() => setStep('existing')} disabled={ticked.length === 0 || overImages}>
                   {t('documentImport.next')}
                 </Button>
               ) : (
                 <Button
                   onClick={handleStart}
-                  disabled={ticked.length === 0}
+                  disabled={ticked.length === 0 || overImages}
                   loading={startImport.isPending}
                 >
                   {t('documentImport.start')}

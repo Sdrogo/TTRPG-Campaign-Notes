@@ -20,14 +20,18 @@ from app.domain.import_files import (
     parse_file,
 )
 from app.domain.imports import (
+    IMAGE_BLOCK_SIZE,
     MAX_DOCUMENTS,
     MAX_FILES,
+    MAX_IMAGE_LINKS,
     MAX_IMAGES,
     ExistingDocument,
     ImportChoices,
     ImportContext,
     document_key,
     fold,
+    images_done,
+    next_block,
     plan_import,
     validate_files,
 )
@@ -384,8 +388,8 @@ def test_the_limits_refuse_an_import_before_anything_is_written() -> None:
         "errors.import.tooManyFiles"
     )
     assert refused(_files(*[_document()] * (MAX_DOCUMENTS + 1))) == "errors.import.tooManyDocuments"
-    images = tuple(_json_image(i) for i in range(MAX_IMAGES + 1))
-    assert refused(_files(_document(images=images))) == "errors.import.tooManyImages"
+    images = tuple(_json_image(i) for i in range(MAX_IMAGE_LINKS + 1))
+    assert refused(_files(_document(images=images))) == "errors.import.tooManyImageLinks"
     assert refused(_files(_document(name="  "))) == "errors.import.nameRequired"
     assert refused(_files(_document(name="x" * 201))) == "errors.import.nameTooLong"
     notes = tuple(ImportNote(f"n{i}", (), None) for i in range(51))
@@ -402,6 +406,46 @@ def _json_image(index: int) -> Any:
     from app.domain.import_files import ImportImage
 
     return ImportImage(None, f"https://x.test/{index}.png", False)
+
+
+def test_the_image_cap_counts_the_chosen_documents_only() -> None:
+    """Spec 59 Decision 1: the files may link more than `MAX_IMAGES` (up to
+    `MAX_IMAGE_LINKS`); what the importer chose may not."""
+    half = MAX_IMAGES // 2 + 1
+    files = _files(
+        _document("A", images=tuple(_json_image(i) for i in range(half))),
+        _document("B", images=tuple(_json_image(i) for i in range(half))),
+    )
+    validate_files(files)
+
+    # The preview plans everything, over the cap or not.
+    assert len(plan_import(files, _context()).documents) == 2
+    with pytest.raises(ImportRefusedError) as raised:
+        plan_import(files, _context(), ImportChoices(frozenset({"0:0", "0:1"})))
+    assert raised.value.key == "errors.import.tooManyImages"
+    assert raised.value.params == {"max": MAX_IMAGES}
+    (only,) = plan_import(files, _context(), ImportChoices(frozenset({"0:0"}))).documents
+    assert len(only.images) == half
+
+
+def test_the_image_work_list_goes_in_blocks_and_skips_what_is_stored() -> None:
+    """Spec 59 Decisions 3 and 6: blocks of `IMAGE_BLOCK_SIZE` from the
+    first entry not saved, without the ones a resumed job already stored."""
+    work = [{"n": i} for i in range(IMAGE_BLOCK_SIZE + 3)]
+    progress: dict[str, Any] = {"work": work, "done": 0, "stored": {}}
+
+    end, block = next_block(progress)
+    assert end == IMAGE_BLOCK_SIZE
+    assert [index for index, _ in block] == list(range(IMAGE_BLOCK_SIZE))
+    assert images_done(progress) == 0
+
+    # A restart after two entries of the last block were stored.
+    last = IMAGE_BLOCK_SIZE + 1
+    progress = {"work": work, "done": IMAGE_BLOCK_SIZE, "stored": {"3": "a", str(last): "b"}}
+    assert images_done(progress) == IMAGE_BLOCK_SIZE + 1
+    end, block = next_block(progress)
+    assert end == len(work)
+    assert block == [(IMAGE_BLOCK_SIZE, work[IMAGE_BLOCK_SIZE]), (last + 1, work[last + 1])]
 
 
 # --- Planning ---------------------------------------------------------------------

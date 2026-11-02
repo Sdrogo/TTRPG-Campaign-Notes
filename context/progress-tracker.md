@@ -289,7 +289,7 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending**: none. Staging and production are both at `d5b8e1f3a9c7`.
+- **Pending**: `e9c4a2f7b1d8` (import job progress, spec 59, PR #288) on staging (before the PR merges) and production. Both databases are at `d5b8e1f3a9c7`.
 - **Staging database**: `d5b8e1f3a9c7` (Room landing page, spec 55,
   PR #283, applied 2026-11-02 with `backend/.env.staging` loaded, before
   the PR merges); `c8f2d6a4e1b7` before it (poll choice description, spec 54,
@@ -386,6 +386,10 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-11-02
 
+- **59 Large imports in image blocks** (migration `e9c4a2f7b1d8`): image
+  cap 2000 on the ticked Documents (5000 links per upload), images in saved
+  blocks of 25 with progress in the job panel, stale = 30 minutes idle, a
+  restart resumes the image phase.
 - **58 Map zoom kept in the split view** (frontend only, no migration):
   `PageLayout` always renders `SplitView` on Room pages, so opening or
   closing the pane no longer remounts the page; a zoomed geographic map
@@ -880,7 +884,8 @@ on `main`.
 
 - **59, Large imports in image blocks** (asked by the product owner
   2026-11-02 after a whole-Room import hit the 200-image cap; ticket
-  written 2026-11-02, **waiting for confirmation**, open questions Q1-Q4):
+  confirmed 2026-11-02 with the default answers; **built** in PR #288,
+  **migration `e9c4a2f7b1d8`** to apply to staging and production):
   images per import 200 -> 2000, counted on the ticked Documents; the
   text is still one transaction, the images run in saved blocks of 25 with
   progress in the job panel, stale means no progress for 30 minutes, and a

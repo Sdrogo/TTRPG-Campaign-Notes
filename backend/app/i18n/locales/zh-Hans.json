@@ -177,6 +177,7 @@
       "tooManyFiles": "一次最多可导入 {max} 个文件",
       "tooManyDocuments": "一次最多可导入 {max} 个文档",
       "tooManyImages": "一次最多可导入 {max} 张图片",
+      "tooManyImageLinks": "每次最多可从文件中读取 {max} 个图片链接",
       "tooManyMaps": "一次最多可导入 {max} 张地图",
       "tooManySections": "一次最多可导入 {max} 个房间主页版块",
       "nameRequired": "文件中有一个文档没有名称",

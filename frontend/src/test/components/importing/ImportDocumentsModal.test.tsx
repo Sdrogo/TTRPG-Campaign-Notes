@@ -482,6 +482,69 @@ describe('ImportDocumentsModal (spec 27)', () => {
     expect(await screen.findByText('Importazione in corso…')).toBeInTheDocument();
   });
 
+  it('cannot import more than 2000 images of the ticked Documents (spec 59)', async () => {
+    api.preview = rawImportPreview({
+      documents: [
+        rawImportPreviewDocument({ images_count: 1500 }),
+        rawImportPreviewDocument({ key: '0:1', name: 'La Cripta', images_count: 600 }),
+      ],
+    });
+    const { user } = render();
+    await pickAndPreview(user);
+
+    expect(
+      await screen.findByText(
+        'I Documenti spuntati hanno 2100 immagini: al massimo 2000 per importazione. Togline qualcuno e importa il resto dopo.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Importa' })).toBeDisabled();
+    await user.click(screen.getByRole('checkbox', { name: 'Importa La Cripta' }));
+    expect(screen.getByText('1 Documento selezionato')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Importa' })).toBeEnabled();
+  });
+
+  it('shows how far the images got, then how many came across (spec 59)', async () => {
+    api.job = rawImportJob({ status: 'running', progress: { total: 450, stored: 118, done: 120 } });
+    const { user } = render();
+    await pickAndPreview(user);
+    await user.click(await screen.findByRole('button', { name: 'Importa' }));
+
+    expect(await screen.findByText('Immagini: 120 di 450')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: 'Immagini importate finora' })).toBeInTheDocument();
+    expect(
+      screen.getByText('I Documenti sono già nella Room; le loro immagini compaiono man mano che arrivano.'),
+    ).toBeInTheDocument();
+  });
+
+  it('says nothing of images for an import that has none', async () => {
+    api.job = rawImportJob({ status: 'running', progress: { total: 0, stored: 0, done: 0 } });
+    const { user } = render();
+    await pickAndPreview(user);
+    await user.click(await screen.findByRole('button', { name: 'Importa' }));
+
+    expect(await screen.findByText('Importazione in corso…')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+
+  it('says nothing of images once done when there were none', async () => {
+    api.job = doneJob({ images: { total: 0, stored: 0, done: 0 } });
+    const { user } = render();
+    await pickAndPreview(user);
+    await user.click(await screen.findByRole('button', { name: 'Importa' }));
+
+    expect(await screen.findByText('Importazione completata')).toBeInTheDocument();
+    expect(screen.queryByText(/immagini importate/)).not.toBeInTheDocument();
+  });
+
+  it('says how many images came across once done', async () => {
+    api.job = doneJob({ images: { total: 450, stored: 448, done: 0 } });
+    const { user } = render();
+    await pickAndPreview(user);
+    await user.click(await screen.findByRole('button', { name: 'Importa' }));
+
+    expect(await screen.findByText('448 di 450 immagini importate')).toBeInTheDocument();
+  });
+
   it('forgets a finished import when the dialog is closed', async () => {
     const { user } = render();
     await pickAndPreview(user);
