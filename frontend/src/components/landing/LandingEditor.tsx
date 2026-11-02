@@ -7,11 +7,11 @@ import { LandingCard } from './LandingCard';
 import { SectionInfoModal } from './SectionInfoModal';
 import { DragHandle, SortableItem, SortableList } from './Sortable';
 import { useCreateSection, useDeleteSection, useReorderSections } from '../../hooks/useLanding';
-import { sectionHref } from '../../lib/landing';
+import { missingPageKinds, sectionHref } from '../../lib/landing';
 import { pageName, sectionDescription, sectionTitle } from '../../lib/landingText';
 import { notifyError } from '../../lib/notify';
 import { useBackState } from '../../lib/backNav';
-import { PAGE_SECTION_KINDS, type LandingSection, type SectionKind } from '../../types/landing';
+import type { LandingSection, SectionKind } from '../../types/landing';
 
 /** What the Section page reads from the link that opens a Section just created (spec 55 Decision 12). */
 export interface OpenInEditState {
@@ -73,7 +73,7 @@ export function LandingEditor({ roomId, sections }: { roomId: string; sections: 
               )}
             </SortableItem>
           ))}
-          <NewSectionCard roomId={roomId} missingPages={PAGE_SECTION_KINDS.filter((kind) => !sections.some((s) => s.kind === kind))} />
+          <NewSectionCard roomId={roomId} missingPages={missingPageKinds(sections)} />
         </Box>
       </SortableList>
       {editing && <SectionInfoModal roomId={roomId} section={editing} onClose={() => setEditing(null)} />}
@@ -108,9 +108,10 @@ export function LandingEditor({ roomId, sections }: { roomId: string; sections: 
 /**
  * The dashed card at the end of the grid: "Nuova sezione" asks only the
  * title (Enter confirms), creates the Section and opens it in edit mode; a
- * page card the Master deleted can be added back from here.
+ * page card the Master deleted can be added back from here. The Master
+ * sees it in edit mode and out of it (spec 60 Decision 15).
  */
-function NewSectionCard({ roomId, missingPages }: { roomId: string; missingPages: SectionKind[] }) {
+export function NewSectionCard({ roomId, missingPages }: { roomId: string; missingPages: SectionKind[] }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const backState = useBackState();

@@ -12,10 +12,10 @@ import { PageLayout } from '../components/PageLayout';
 import { RoomTitleActions } from '../components/RoomTitleActions';
 import { RoomPdfExports } from '../components/pdf/RoomPdfExports';
 import { LandingCard } from '../components/landing/LandingCard';
-import { LandingEditor } from '../components/landing/LandingEditor';
+import { LandingEditor, NewSectionCard } from '../components/landing/LandingEditor';
 import { EditModeButton } from '../components/landing/EditModeButton';
 import { canCreateDocuments } from '../lib/roomPermissions';
-import { sectionHref } from '../lib/landing';
+import { missingPageKinds, sectionHref } from '../lib/landing';
 import { sectionDescription, sectionTitle } from '../lib/landingText';
 import { useBackState } from '../lib/backNav';
 import { PageHeading } from '../components/PageHeading';
@@ -95,6 +95,8 @@ function RoomLandingContent({ roomId, currentUserId }: { roomId: string; current
                 headingOrder={2}
               />
             ))}
+            {/* Adding a Section needs no edit mode (spec 60 Decision 15). */}
+            {canEdit && <NewSectionCard roomId={roomId} missingPages={missingPageKinds(sections.data)} />}
           </Box>
         ))}
       </DocumentMentionsProvider>

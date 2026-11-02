@@ -333,7 +333,9 @@
       "blockFieldNotAllowed": "Diese Einstellung gehört nicht zu dieser Art von Block",
       "unknownTag": "Einer der Tags ist nicht in diesem Raum",
       "tooManyGroups": "Ein Block hat höchstens {max} Gruppen",
-      "invalidGroup": "Jede Gruppe braucht einen oder mehrere verschiedene Tags, und keine zwei Gruppen dürfen gleich sein"
+      "invalidGroup": "Jede Gruppe braucht einen oder mehrere verschiedene Tags, und keine zwei Gruppen dürfen gleich sein",
+      "unknownTool": "Dieser Block ist kein Werkzeug dieses Abschnitts",
+      "notATool": "Ein Werkzeug ist eine Retro, Sterne und Wünsche, Fragen, ein DDI oder Umfragen"
     }
   },
   "pdf": {

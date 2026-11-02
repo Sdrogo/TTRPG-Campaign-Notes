@@ -373,8 +373,7 @@
         "addHint": "Un Tag est un Tag principal, deux ou plus forment une combinaison.",
         "add": "Ajouter",
         "alreadyMain": "Ce Tag est déjà une entrée du regroupement.",
-        "alreadyCombination": "Cette combinaison est déjà dans le regroupement.",
-        "mapsRow": "Ligne des cartes"
+        "alreadyCombination": "Cette combinaison est déjà dans le regroupement."
       },
       "all": {
         "title": "Tous les Tags",
@@ -1274,10 +1273,6 @@
       "repeated": "Document déjà sur la carte, ils resteront de simples étiquettes :",
       "backgroundLater": "L'image de fond s'ajoute ensuite, depuis le bouton Carte de la nouvelle carte.",
       "submit": "Importer"
-    },
-    "strip": {
-      "all_one": "Toutes les cartes ({{count}})",
-      "all_other": "Toutes les cartes ({{count}})"
     }
   },
   "sessionZero": {
@@ -1607,6 +1602,8 @@
       "sessionZero": "Sessions, Lignes et Voiles, sondages"
     },
     "blockEmpty": "Rien à afficher",
+    "foldBlock": "Replier {{name}}",
+    "unfoldBlock": "Déplier {{name}}",
     "sectionEmpty": "Rien à afficher ici pour l'instant.",
     "notFound": "Cette section n'existe plus.",
     "loadError": "Impossible de charger la page.",
@@ -1702,7 +1699,9 @@
       "blockMenu": "Actions du bloc",
       "deleteBlock": "Supprimer le bloc",
       "blockDeleted": "Bloc supprimé",
-      "undo": "Annuler"
+      "undo": "Annuler",
+      "renameSection": "Renommer la section {{name}}",
+      "addDescription": "Ajouter une description"
     }
   }
 }

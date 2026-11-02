@@ -98,6 +98,8 @@ async def _blocks_for_sections(
                 groups=tuple(groups[row.id]),
                 map_kind=BlockMapKind(row.map_kind) if row.map_kind else None,
                 features=tuple(SessionZeroFeature(f) for f in row.features),
+                module_id=row.module_id,
+                collapsed=row.collapsed,
             )
         )
     return blocks
@@ -143,6 +145,8 @@ async def _add_blocks(
             heading=block.heading,
             map_kind=block.map_kind.value if block.map_kind else None,
             features=[f.value for f in block.features],
+            module_id=block.module_id,
+            collapsed=block.collapsed,
         )
         for block in blocks
     )

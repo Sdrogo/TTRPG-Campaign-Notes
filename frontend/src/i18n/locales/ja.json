@@ -373,8 +373,7 @@
         "addHint": "タグ1つはメインタグ、2つ以上は組み合わせになります。",
         "add": "追加",
         "alreadyMain": "このタグはすでにグループ分けの項目です。",
-        "alreadyCombination": "この組み合わせはすでにグループ分けにあります。",
-        "mapsRow": "マップの行"
+        "alreadyCombination": "この組み合わせはすでにグループ分けにあります。"
       },
       "all": {
         "title": "すべてのタグ",
@@ -1239,9 +1238,6 @@
       "repeated": "ドキュメントがすでにマップ上にあるため、ただのラベルになります:",
       "backgroundLater": "背景画像は、新しいマップの「マップ」ボタンからあとでアップロードします。",
       "submit": "インポート"
-    },
-    "strip": {
-      "all_other": "すべてのマップ（{{count}}）"
     }
   },
   "sessionZero": {
@@ -1563,6 +1559,8 @@
       "sessionZero": "セッション、ライン&ヴェール、投票"
     },
     "blockEmpty": "表示するものはありません",
+    "foldBlock": "{{name}}を折りたたむ",
+    "unfoldBlock": "{{name}}を展開",
     "sectionEmpty": "ここにはまだ表示するものがありません。",
     "notFound": "このセクションはもうありません。",
     "loadError": "ページを読み込めませんでした。",
@@ -1654,7 +1652,9 @@
       "blockMenu": "ブロックの操作",
       "deleteBlock": "ブロックを削除",
       "blockDeleted": "ブロックを削除しました",
-      "undo": "元に戻す"
+      "undo": "元に戻す",
+      "renameSection": "セクション{{name}}の名前を変更",
+      "addDescription": "説明を追加"
     }
   }
 }

@@ -143,7 +143,6 @@ export function RoomSetupPage() {
                   roomId={roomId}
                   tags={tags.data}
                   items={mainItems.data}
-                  mapsPosition={room.data.mapsPosition}
                 />
               )}
 

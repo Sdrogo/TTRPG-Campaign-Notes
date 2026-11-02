@@ -373,8 +373,7 @@
         "addHint": "Uma Tag é uma Tag principal, duas ou mais uma combinação.",
         "add": "Adicionar",
         "alreadyMain": "Esta Tag já é uma entrada do agrupamento.",
-        "alreadyCombination": "Esta combinação já está no agrupamento.",
-        "mapsRow": "Linha dos mapas"
+        "alreadyCombination": "Esta combinação já está no agrupamento."
       },
       "all": {
         "title": "Todas as Tags",
@@ -1274,10 +1273,6 @@
       "repeated": "Documento já no mapa, ficarão como etiquetas simples:",
       "backgroundLater": "A imagem de fundo carrega-se depois, no botão Mapa do novo mapa.",
       "submit": "Importar"
-    },
-    "strip": {
-      "all_one": "Todos os mapas ({{count}})",
-      "all_other": "Todos os mapas ({{count}})"
     }
   },
   "sessionZero": {
@@ -1607,6 +1602,8 @@
       "sessionZero": "Sessões, Linhas e Véus, sondagens"
     },
     "blockEmpty": "Nada para mostrar",
+    "foldBlock": "Recolher {{name}}",
+    "unfoldBlock": "Expandir {{name}}",
     "sectionEmpty": "Ainda não há nada para mostrar aqui.",
     "notFound": "Esta secção já não existe.",
     "loadError": "Não foi possível carregar a página.",
@@ -1702,7 +1699,9 @@
       "blockMenu": "Ações do bloco",
       "deleteBlock": "Eliminar bloco",
       "blockDeleted": "Bloco eliminado",
-      "undo": "Anular"
+      "undo": "Anular",
+      "renameSection": "Mudar o nome da secção {{name}}",
+      "addDescription": "Adicionar uma descrição"
     }
   }
 }

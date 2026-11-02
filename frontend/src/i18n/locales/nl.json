@@ -373,8 +373,7 @@
         "addHint": "Eén Tag is een hoofdtag, twee of meer vormen een combinatie.",
         "add": "Toevoegen",
         "alreadyMain": "Deze Tag is al een item van de groepering.",
-        "alreadyCombination": "Deze combinatie zit al in de groepering.",
-        "mapsRow": "Kaartenrij"
+        "alreadyCombination": "Deze combinatie zit al in de groepering."
       },
       "all": {
         "title": "Alle Tags",
@@ -1272,10 +1271,6 @@
       "repeated": "Document staat al op de kaart, blijven gewone labels:",
       "backgroundLater": "De achtergrondafbeelding upload je daarna via de knop Kaart van de nieuwe kaart.",
       "submit": "Importeren"
-    },
-    "strip": {
-      "all_one": "Alle kaarten ({{count}})",
-      "all_other": "Alle kaarten ({{count}})"
     }
   },
   "sessionZero": {
@@ -1605,6 +1600,8 @@
       "sessionZero": "Sessies, Lijnen en Sluiers, peilingen"
     },
     "blockEmpty": "Niets te tonen",
+    "foldBlock": "{{name}} inklappen",
+    "unfoldBlock": "{{name}} uitklappen",
     "sectionEmpty": "Hier is nog niets te zien.",
     "notFound": "Deze sectie bestaat niet meer.",
     "loadError": "De pagina kon niet worden geladen.",
@@ -1700,7 +1697,9 @@
       "blockMenu": "Acties voor het blok",
       "deleteBlock": "Blok verwijderen",
       "blockDeleted": "Blok verwijderd",
-      "undo": "Ongedaan maken"
+      "undo": "Ongedaan maken",
+      "renameSection": "Sectie {{name}} hernoemen",
+      "addDescription": "Beschrijving toevoegen"
     }
   }
 }

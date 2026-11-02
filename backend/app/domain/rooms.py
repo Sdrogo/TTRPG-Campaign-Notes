@@ -32,11 +32,6 @@ class OnlyAdministratorChangesDefaultVisibilityError(DomainError):
     spec 22 Decision 5)."""
 
 
-class OnlyAdministratorChangesMapsPositionError(DomainError):
-    """Only an Administrator places the maps row among the Documents page's
-    groups, as they choose the Main items it sits between."""
-
-
 class InvalidDefaultVisibilityError(DomainError):
     """Selective can't be a default: it needs a list of members."""
 
@@ -101,12 +96,10 @@ def plan_room_settings(
     requester: Membership,
     players_can_create_documents: bool | None,
     default_visibility: DocumentVisibility | None,
-    maps_position: int | None = None,
 ) -> Room:
     """The Room with the settings the request changes; omitted ones stay.
     Players' Document creation is the Master's (D-13, FR-D7), the default
-    visibility the Administrators' (VR-05, spec 22 Decision 5), and so is the
-    maps row's place, set beside the Main items they order: 403 for a setting
+    visibility the Administrators' (VR-05, spec 22 Decision 5): 403 for a setting
     the requester may not change, 422 for a Selective default. None is
     audited: no content's visibility changes."""
     if players_can_create_documents is not None and requester.role != RoomRole.MASTER:
@@ -118,10 +111,6 @@ def plan_room_settings(
             )
         if default_visibility == DocumentVisibility.SELECTIVE:
             raise InvalidDefaultVisibilityError("errors.room.invalidDefaultVisibility")
-    if maps_position is not None and not requester.is_admin:
-        raise OnlyAdministratorChangesMapsPositionError(
-            "errors.tag.onlyAdministratorCanSetMainTags"
-        )
     return replace(
         room,
         players_can_create_documents=(
@@ -132,7 +121,6 @@ def plan_room_settings(
         default_visibility=(
             room.default_visibility if default_visibility is None else default_visibility
         ),
-        maps_position=room.maps_position if maps_position is None else maps_position,
     )
 
 
