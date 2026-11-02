@@ -1,7 +1,7 @@
 import { apiOpenStream } from './apiClient';
 
 /** What a Room stream event is about (spec 52 Decision 1). */
-export type RoomEventTopic = 'session_zero' | 'map' | 'document' | 'comments';
+export type RoomEventTopic = 'session_zero' | 'map' | 'document' | 'comments' | 'landing';
 
 /**
  * One line of the Room stream (spec 52 Decision 3): something changed, never

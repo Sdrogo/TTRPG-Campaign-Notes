@@ -121,7 +121,7 @@ interface RawColumn {
   cards: RawPostIt[];
 }
 
-interface RawQuestions {
+export interface RawQuestions {
   tag_id: string | null;
   answers_revealed: boolean;
   players_bypass_creation_rule: boolean;
@@ -142,7 +142,7 @@ interface RawModule {
   polls?: RawPoll[] | null;
 }
 
-interface RawPoll {
+export interface RawPoll {
   id: string;
   body: string;
   hint: string | null;
@@ -169,7 +169,7 @@ interface RawPoll {
   can_vote: boolean;
 }
 
-interface RawDdi {
+export interface RawDdi {
   document_id: string | null;
   document_hidden: boolean;
   changed_at: string | null;
@@ -177,7 +177,7 @@ interface RawDdi {
   can_accept: boolean;
 }
 
-interface RawRound {
+export interface RawRound {
   id: string;
   number: number;
   title: string | null;
@@ -250,7 +250,7 @@ function toColumn(raw: RawColumn): PostItColumn {
   };
 }
 
-function toRound(raw: RawRound): SessionZeroRound {
+export function toRound(raw: RawRound): SessionZeroRound {
   return {
     id: raw.id,
     number: raw.number,
@@ -260,7 +260,7 @@ function toRound(raw: RawRound): SessionZeroRound {
   };
 }
 
-function toQuestions(raw: RawQuestions): QuestionsStep {
+export function toQuestions(raw: RawQuestions): QuestionsStep {
   return {
     tagId: raw.tag_id,
     answersRevealed: raw.answers_revealed,
@@ -292,7 +292,7 @@ function toQuestions(raw: RawQuestions): QuestionsStep {
   };
 }
 
-function toDdi(raw: RawDdi): DdiStep {
+export function toDdi(raw: RawDdi): DdiStep {
   return {
     documentId: raw.document_id,
     documentHidden: raw.document_hidden,
@@ -307,7 +307,7 @@ function toDdi(raw: RawDdi): DdiStep {
   };
 }
 
-function toPoll(raw: RawPoll): Poll {
+export function toPoll(raw: RawPoll): Poll {
   return {
     id: raw.id,
     body: raw.body,

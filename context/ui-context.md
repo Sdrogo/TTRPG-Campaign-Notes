@@ -557,8 +557,9 @@ other icon set.
 - **Room Index** (`RoomIndex`, spec 44, 2026-10-25; before it the
   Glossary Index drawer behind a header burger, spec 10, Main items from
   spec 11_3): a tab fixed on the screen's left edge of the Room's
-  Documents page only (`PageLayout`'s `showIndex` prop; every other Room
-  page lost it with spec 46c Decision 1), at 40% of the screen's height so it
+  Documents page (`PageLayout`'s `showIndex` prop; every other Room
+  page lost it with spec 46c Decision 1, until spec 55 brought it back on
+  the landing, the Sections and the Maps page), at 40% of the screen's height so it
   stays above a phone map page's lower half (spec 37). The tab
   (`.room-index-tab` in `index.css`) is a narrow pill on `--bg-raised`,
   rounded on the right only, with a horizontal arrow (`CaretRightIcon`,
@@ -568,19 +569,17 @@ other icon set.
   left-anchored Mantine `Drawer` titled "Room Index"; while open the tab
   rides on the card's right edge (z-index above the drawer's overlay), so a
   second click closes it, as do the ×, a click outside, Escape and picking
-  an entry. The card opens with "Main Tags": the Room's Main items — single
-  Tags and Tag combinations (`#A + #B`) — **in exactly the order the
-  Documents page groups by**; both read the same `useMainItems` list
-  through `resolveMainItems`, so they can't diverge, and saving on the Room
-  setup page updates the index without a reload. Then the other Tags by
-  category (alphabetical), uncategorized under "Other Tags". A Tag that is
-  a single Main item is listed only under "Main Tags". Each entry links to
-  the Documents list filtered by its Tag, or by all the Tags of a
-  combination — the same destination a `#Tag` mention leads to. Last,
-  "Maps": an "All maps" link to the maps page, then every map the viewer
-  sees, alphabetical. Tags, Main items and maps are fetched only once the
-  card first opens. Not the Glossary entity from `requirements.md`
-  (FR-N3/FR-N4) — that remains unbuilt; this is a navigational index.
+  an entry. **Since spec 55 (2026-10-31)** the card lists "Home della
+  Stanza" (the landing), then "Sezioni": every Section of the landing in
+  its order, the one on screen marked (`aria-current`, bold), and, on a
+  custom Section, a divider and that Section's blocks with their groups or
+  features, each a button that scrolls to the block (`block-<id>`). The
+  Tag, Main item and map lists are gone. It shows on the landing, the
+  Sections, the Documents page and the Maps page (`PageLayout`'s `index`
+  prop passes `{current, detail}`); not on Session 0, a map or a
+  Document. The Sections are fetched only once the card first opens. Not
+  the Glossary entity from `requirements.md` (FR-N3/FR-N4) — that remains
+  unbuilt; this is a navigational index.
 - **Room search** (`components/search/`, 2026-10-05, spec 21): on every
   Room page the top bar's right side starts with the search: from `md` a
   `default` Button "Cerca" with a `Kbd` showing `Ctrl K` (`⌘ K` on Apple
@@ -907,6 +906,48 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
 - The hero has two buttons side by side: "Try the demo" (filled, a plain
   `<a href="/demo">`, since entering the Demo is a full page load) and
   "Sign in" / "Open my Rooms" (default variant).
+
+## Room landing page (spec 55)
+
+- **Route**: `/rooms/:roomId` (`RoomLandingPage`) is what a Room card
+  and the quick menu open; `/rooms/:roomId/sections/:sectionId`
+  (`RoomSectionPage`) is a custom Section. The Room's name is the
+  landing's heading under a "Home" kicker; a Section's kicker is the
+  Room's name. Back from Documents, Maps, Session 0 and setup reads
+  "Home della Stanza".
+- **Cards** (`components/landing/LandingCard`): the Document card's look
+  (`document-card room-landing-card`: border, shadow, hover lift, reduced
+  motion), title in the display font, an optional single image on the
+  right half fading in (`DocumentCardImages`), the description as plain
+  text on three lines, an optional badge ("In corso"). The whole card is
+  one link: no preview, no open menu, no split view. Map cards carry no
+  image. Grids reuse `.documents-grid`.
+- **Blocks** (`SectionBlock`): heading (h2 at `h4` size), then the cards;
+  a Documents block's groups and a Session 0 block's features are
+  foldable sub-sections styled like the Documents page groups
+  (`.document-group`, count badge). A block the viewer sees nothing of is
+  left out; the Master reads "Niente da mostrare".
+- **Edit mode** (Master, "Modifica" / "Fine" beside the title,
+  `EditModeButton`): no layout change, only handles. Drag by a ⠿ handle
+  (`components/landing/Sortable`, `@dnd-kit/sortable`: mouse, long press
+  250 ms on touch so a swipe still scrolls, keyboard Space/arrows/Space,
+  Esc cancels). Landing: each card gets a handle and a ⋮ (Modifica info,
+  Elimina; none on the Documents card), and a dashed "Nuova sezione" card
+  ends the grid (title inline, Enter creates and opens the Section with
+  the add-block tiles), with "Riaggiungi …" for a deleted page card. A
+  Section: each block under a bar (`BlockBar`, `.room-landing-bar`): ⠿,
+  kind icon, heading edited in place (empty = named after its source),
+  Tag chips (`.room-landing-chip`, the last one can't be removed), "+
+  Tag", "Raggruppa" (groups popover: sortable chips, "+ Gruppo" with Tag
+  checkboxes, "Usa i raggruppamenti della Stanza"), the map kind menu, or
+  sortable feature chips and "+ Funzione"; a ⋮ with "Elimina blocco"
+  (toast with "Annulla" for 5 s). "+ Blocco" is a dashed bar after the
+  last block (`.room-landing-add`) and a small "+" between two
+  (`.room-landing-insert`, shown on hover or focus), opening three tiles
+  (`.room-landing-tile`). Pickers are popovers, bottom sheets (`Drawer`)
+  under 48em. Edited areas carry `.room-landing-editing`.
+- **Strings** live under `roomLanding.*` (`landing.*` is the public
+  landing page's).
 
 ## Demo (spec 45_2)
 

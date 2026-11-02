@@ -314,6 +314,25 @@
       "notAVoter": "El Máster no vota en esta encuesta.",
       "pollNotFound": "Encuesta no encontrada.",
       "pollOrder": "Una encuesta u opción no es de este paso."
+    },
+    "landing": {
+      "onlyMaster": "Solo el Máster puede editar la página de inicio",
+      "notFound": "Sección no encontrada",
+      "titleRequired": "Una Sección necesita un título",
+      "titleTooLong": "Un título tiene como máximo {max} caracteres",
+      "descriptionTooLong": "Una descripción tiene como máximo {max} caracteres",
+      "tooManySections": "Una Sala tiene como máximo {max} Secciones",
+      "pageSectionExists": "Esta página ya está en la página de inicio",
+      "documentsRequired": "La tarjeta Documentos no se puede eliminar",
+      "pageSectionHasNoBlocks": "Esta tarjeta abre una página y no tiene bloques",
+      "orderMismatch": "Indica cada Sección de la Sala exactamente una vez",
+      "tooManyBlocks": "Una Sección tiene como máximo {max} bloques",
+      "documentsBlockNeedsTag": "Un bloque de Documentos necesita al menos una Etiqueta",
+      "sessionZeroBlockNeedsFeature": "Un bloque de Sesión 0 necesita al menos una función",
+      "blockFieldNotAllowed": "Este ajuste no corresponde a este tipo de bloque",
+      "unknownTag": "Una de las Etiquetas no está en esta Sala",
+      "tooManyGroups": "Un bloque tiene como máximo {max} grupos",
+      "invalidGroup": "Cada grupo necesita una o más Etiquetas distintas, y no puede haber dos grupos iguales"
     }
   },
   "pdf": {

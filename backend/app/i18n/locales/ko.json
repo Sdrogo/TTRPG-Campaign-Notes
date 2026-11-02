@@ -314,6 +314,25 @@
       "notAVoter": "이 투표에서는 마스터가 투표하지 않습니다.",
       "pollNotFound": "투표를 찾을 수 없습니다.",
       "pollOrder": "투표나 선택지가 이 단계의 것이 아닙니다."
+    },
+    "landing": {
+      "onlyMaster": "마스터만 랜딩 페이지를 편집할 수 있습니다",
+      "notFound": "섹션을 찾을 수 없습니다",
+      "titleRequired": "섹션에는 제목이 필요합니다",
+      "titleTooLong": "제목은 최대 {max}자입니다",
+      "descriptionTooLong": "설명은 최대 {max}자입니다",
+      "tooManySections": "룸에는 섹션을 최대 {max}개까지 둘 수 있습니다",
+      "pageSectionExists": "이 페이지는 이미 랜딩 페이지에 있습니다",
+      "documentsRequired": "문서 카드는 삭제할 수 없습니다",
+      "pageSectionHasNoBlocks": "이 카드는 페이지를 열며 블록이 없습니다",
+      "orderMismatch": "룸의 모든 섹션을 정확히 한 번씩 지정하세요",
+      "tooManyBlocks": "섹션에는 블록을 최대 {max}개까지 둘 수 있습니다",
+      "documentsBlockNeedsTag": "문서 블록에는 태그가 하나 이상 필요합니다",
+      "sessionZeroBlockNeedsFeature": "세션 0 블록에는 기능이 하나 이상 필요합니다",
+      "blockFieldNotAllowed": "이 설정은 이 종류의 블록에 속하지 않습니다",
+      "unknownTag": "태그 중 하나가 이 룸에 없습니다",
+      "tooManyGroups": "블록에는 그룹을 최대 {max}개까지 둘 수 있습니다",
+      "invalidGroup": "각 그룹에는 서로 다른 태그가 하나 이상 필요하며, 같은 그룹을 두 번 만들 수 없습니다"
     }
   },
   "pdf": {

@@ -1566,5 +1566,118 @@
       "code": "Code",
       "table": "Table"
     }
+  },
+  "roomLanding": {
+    "home": "Room home",
+    "kicker": "Home",
+    "sections": "Sections",
+    "pages": {
+      "documents": "Documents",
+      "maps": "Maps",
+      "sessionZero": "Session 0"
+    },
+    "pageDescriptions": {
+      "documents": "All the Room's Documents",
+      "maps": "The Room's maps",
+      "sessionZero": "Sessions, Lines & Veils, polls"
+    },
+    "blockEmpty": "Nothing to show",
+    "sectionEmpty": "Nothing to show here yet.",
+    "notFound": "This section no longer exists.",
+    "loadError": "Couldn't load the page.",
+    "otherDocuments": "Other documents",
+    "blockTitle": {
+      "documents": "Documents · {{tags}}",
+      "maps": "Maps",
+      "mapsFree": "Relationship maps",
+      "mapsGeographic": "Geographic maps",
+      "sessionZero": "Session 0"
+    },
+    "features": {
+      "sessions": "Sessions",
+      "retro": "Retro",
+      "lines_veils": "Lines & Veils",
+      "stars_wishes": "Stars and Wishes",
+      "questions": "Questions",
+      "ddi": "DDI",
+      "polls": "Polls"
+    },
+    "mapKinds": {
+      "all": "All maps",
+      "free": "Relationships",
+      "geographic": "Geographic"
+    },
+    "item": {
+      "inProgress": "In progress",
+      "postIts_one": "{{count}} post-it",
+      "postIts_other": "{{count}} post-its",
+      "questions_one": "{{count}} question",
+      "questions_other": "{{count}} questions",
+      "ddiAccepted_one": "Accepted by {{count}} player",
+      "ddiAccepted_other": "Accepted by {{count}} players",
+      "ddiAcceptedByYou": "Accepted by you",
+      "ddiToAccept": "To accept",
+      "pollOpen": "Open · {{voted}} of {{total}} voted",
+      "pollClosed": "Closed",
+      "pollWinner": "Closed · {{choice}} wins"
+    },
+    "tiles": {
+      "documents": {
+        "title": "Documents",
+        "body": "The Documents with some Tags"
+      },
+      "maps": {
+        "title": "Maps",
+        "body": "All maps, or one kind"
+      },
+      "session_zero": {
+        "title": "Session 0",
+        "body": "Sessions, steps and polls"
+      }
+    },
+    "edit": {
+      "start": "Edit",
+      "done": "Done",
+      "dragInstructions": "Press Space to pick up, the arrow keys to move, Space to drop. Esc cancels.",
+      "dragSection": "Move {{name}}",
+      "sectionMenu": "{{name}} actions",
+      "info": "Edit info",
+      "deleteTitle": "Delete “{{name}}”?",
+      "deleteBody": "The section and its blocks are deleted. Documents, maps and Session 0 stay as they are.",
+      "newSection": "New section",
+      "newTitle": "Title",
+      "newPlaceholder": "E.g. Tokyo, Factions, First session",
+      "create": "Create",
+      "addPage": "Add {{name}} back",
+      "titleLabel": "Title",
+      "image": "Image",
+      "noBlocks": "No blocks yet: add one.",
+      "addBlock": "Block",
+      "addBlockTitle": "Add a block",
+      "insertBlock": "Insert a block here",
+      "dragBlock": "Move the block",
+      "heading": "Block title",
+      "renameBlock": "Rename {{name}}",
+      "addTag": "Tag",
+      "searchTag": "Search a Tag",
+      "remove": "Remove {{name}}",
+      "group": "Group",
+      "groupedBy_one": "{{count}} group",
+      "groupedBy_other": "{{count}} groups",
+      "groups": "Groups",
+      "noGroups": "No groups: all the Documents are together.",
+      "addGroup": "Group",
+      "useRoomGroups": "Use the Room's grouping",
+      "groupHint": "Pick one or more Tags: several Tags make a combination.",
+      "dragGroup": "Move {{name}}",
+      "mapKind": "Maps shown: {{kind}}",
+      "addFeature": "Feature",
+      "dragFeature": "Move {{name}}",
+      "dragPart": "Move the sub-section",
+      "blockMenu": "Block actions",
+      "deleteBlock": "Delete block",
+      "blockDeleted": "Block deleted",
+      "undo": "Undo"
+    }
   }
 }

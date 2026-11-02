@@ -54,7 +54,7 @@ export function QuickNavMenu() {
           <Menu.Item
             key={room.id}
             component={Link}
-            to={`/rooms/${room.id}/documents`}
+            to={`/rooms/${room.id}`}
             leftSection={<Avatar src={room.imageUrl} name={room.name} size={22} radius="sm" />}
             rightSection={room.id === currentRoomId ? <CheckIcon size={16} aria-hidden="true" /> : null}
             aria-current={room.id === currentRoomId ? 'page' : undefined}

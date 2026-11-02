@@ -158,7 +158,7 @@ export function RoomCard({ myRoom, currentUserId }: RoomCardProps) {
           buttons above can't live inside an <a>. */}
       <Link
         className="room-card-link"
-        to={`/rooms/${room.id}/documents`}
+        to={`/rooms/${room.id}`}
         aria-label={room.name}
         style={{ position: 'absolute', inset: 0, zIndex: 1 }}
       />

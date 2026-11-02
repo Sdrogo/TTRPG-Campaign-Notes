@@ -314,6 +314,25 @@
       "notAVoter": "Il Master non vota in questo sondaggio.",
       "pollNotFound": "Sondaggio non trovato.",
       "pollOrder": "Un sondaggio o una scelta non è di questa tappa."
+    },
+    "landing": {
+      "onlyMaster": "Solo il Master può modificare la landing page",
+      "notFound": "Sezione non trovata",
+      "titleRequired": "Una Sezione ha bisogno di un titolo",
+      "titleTooLong": "Un titolo può avere al massimo {max} caratteri",
+      "descriptionTooLong": "Una descrizione può avere al massimo {max} caratteri",
+      "tooManySections": "Una Room può avere al massimo {max} Sezioni",
+      "pageSectionExists": "Questa pagina è già nella landing page",
+      "documentsRequired": "La card Documenti non si può eliminare",
+      "pageSectionHasNoBlocks": "Questa card apre una pagina e non ha blocchi",
+      "orderMismatch": "Indica ogni Sezione della Room una sola volta",
+      "tooManyBlocks": "Una Sezione può avere al massimo {max} blocchi",
+      "documentsBlockNeedsTag": "Un blocco Documenti ha bisogno di almeno un Tag",
+      "sessionZeroBlockNeedsFeature": "Un blocco Sessione 0 ha bisogno di almeno una funzione",
+      "blockFieldNotAllowed": "Questa impostazione non appartiene a questo tipo di blocco",
+      "unknownTag": "Uno dei Tag non è in questa Room",
+      "tooManyGroups": "Un blocco può avere al massimo {max} gruppi",
+      "invalidGroup": "Ogni gruppo ha bisogno di uno o più Tag diversi, e due gruppi non possono essere uguali"
     }
   },
   "pdf": {

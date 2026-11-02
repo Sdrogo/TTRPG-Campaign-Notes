@@ -20,6 +20,19 @@ detail:
   and the name starts on the row below. The `documents.title` key stays
   (back-link labels, Room Documents page).
 
+- **55, Room landing page** (2026-10-31, PR #283 into `staging`,
+  **migration `d5b8e1f3a9c7`**, applied to staging 2026-11-02, not yet to
+  production): 55_1 backend (Sections,
+  blocks, groups, image, `landing` live topic, Session 0 overview, Tag
+  deletion pruning, seeding and Room duplication), 55_2 read side
+  (`/rooms/:roomId` landing, `/rooms/:roomId/sections/:sectionId`, Room
+  cards open the landing, Back to the landing, Index of Sections and
+  blocks, Session 0 deep links) and 55_3 edit side (drag order, block bars,
+  groups, map kind, features, info and image, delete with undo) are built.
+  Frontend at 100% coverage (2571 tests); backend suite green. Maps blocks
+  filter by relationship or geographic maps only (mention maps live on
+  their Document); image search is not offered on a Section card.
+
 - **Migration `c8f2d6a4e1b7`** (2026-10-30): poll choice description (spec
   54) applied to the staging and production databases by hand, before the
   release to `main` that ships the code. No migration is pending.
@@ -258,7 +271,7 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `c8f2d6a4e1b7` (poll choice description,
+- **Head in the repository**: `d5b8e1f3a9c7` (Room landing page, spec 55, PR #283), after `c8f2d6a4e1b7` (poll choice description,
   spec 54, PR #280: one nullable `text` column on
   `session_zero_poll_options`), after `b9e4c2a7d1f3` (Session 0 polls, spec 53,
   PR #276), after `a7d3f9b2c6e1` (Session 0 DDI steps, spec
@@ -266,8 +279,10 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending**: none. `c8f2d6a4e1b7` is applied to both databases.
-- **Staging database**: `c8f2d6a4e1b7` (poll choice description, spec 54,
+- **Pending**: `d5b8e1f3a9c7` (Room landing page, spec 55, PR #283, revises `c8f2d6a4e1b7`: five tables and the three page cards seeded for every Room) on the **production** database only; apply it before the release that ships it. Staging already has it.
+- **Staging database**: `d5b8e1f3a9c7` (Room landing page, spec 55,
+  PR #283, applied 2026-11-02 with `backend/.env.staging` loaded, before
+  the PR merges); `c8f2d6a4e1b7` before it (poll choice description, spec 54,
   PR #280, applied 2026-10-30 with `backend/.env.staging` loaded, before
   the PR merged); `b9e4c2a7d1f3` before it (Session 0 polls, spec 53,
   PR #276, applied by the product owner 2026-10-30 before the merge);
@@ -835,11 +850,22 @@ RLS lockdown), Documents list and CI, localization (it/en), UX refinement
 
 ## Next Up
 
-Nothing is waiting for release: `staging` and `main` match after release
-PR #281 (2026-10-30), and production's database is at head (`c8f2d6a4e1b7`). Before the
+`staging` and `main` matched after release PR #281 (2026-10-30); production's
+database is at `c8f2d6a4e1b7`, so spec 55's `d5b8e1f3a9c7` goes there before the
+release that ships it. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **55, Room landing page** (ticket answered by the product owner
+  2026-10-31; mockup 55_m confirmed the same day; **all units built** in
+  PR #283 into `staging`): a Room home page `/rooms/:roomId` of Section
+  cards, each Section a page of blocks (Documents with Tags and optional
+  groups, maps by kind, Session 0 features chosen by the Master) shown as
+  Document-like cards, edited in place with chips and popovers. Waiting
+  on: the product owner's review (**migration `d5b8e1f3a9c7`** is applied
+  to the staging database since 2026-11-02; production still needs it
+  before the release). Mockup source: project files
+  `landing-mockup/index.html`.
 - **54, Poll choices as cards** (ticket confirmed by the product owner
   2026-10-30, Q1 left-edge bar, Q2-Q4 as proposed; built the same day in
   PR #280): a poll's choices are cards in one column with a title and an

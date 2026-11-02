@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Box, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
@@ -45,8 +45,12 @@ export function SessionZeroPage() {
 
 function SessionZeroContent({ roomId }: { roomId: string }) {
   const { t } = useTranslation();
+  // A landing card's link (spec 55 Decision 9): `?session=` opens that
+  // session, `?step=` that step of it. Read once, on open.
+  const [searchParams] = useSearchParams();
+  const linkedStep = useRef(searchParams.get('step'));
   // The round on the Retro board: null is the open one.
-  const [roundId, setRoundId] = useState<string | null>(null);
+  const [roundId, setRoundId] = useState<string | null>(() => searchParams.get('session'));
   // A step this viewer opened (spec 47 Decision 5), while the table stays
   // where it was: once the Master moves it, every page follows.
   const [viewed, setViewed] = useState<{ id: string; current: string | null } | null>(null);
@@ -58,6 +62,16 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
   const wide = useMediaQuery(BOARDS_SIDE_BY_SIDE_QUERY, true);
   // A deleted Session 0 (spec 46c Decision 3) has no closed round left to show.
   const glowing = useSessionZeroEvents(roomId, () => setRoundId(null));
+
+  // The linked step, once its session is on screen, as if the viewer had opened it.
+  useEffect(() => {
+    const step = linkedStep.current;
+    if (!step || !board.data) return;
+    linkedStep.current = null;
+    if (board.data.modules.some((module) => module.id === step)) {
+      setViewed({ id: step, current: board.data.currentModuleId });
+    }
+  }, [board.data]);
 
   const pickRound = (id: string | null) => {
     setViewed(null);
@@ -90,7 +104,7 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
     : null;
 
   return (
-    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('maps.backToDocuments')} roomId={roomId}>
+    <PageLayout backTo={`/rooms/${roomId}`} backLabel={t('roomLanding.home')} roomId={roomId}>
       {!context?.board.started && (
         <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
           {t('sessionZero.title')}

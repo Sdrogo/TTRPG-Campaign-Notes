@@ -37,6 +37,7 @@ from app.domain.relationship_maps import (
     MapCard,
     RelationshipMap,
 )
+from app.domain.room_sections import Section, copy_sections
 
 # The `rooms.name` column's length: a long name is shortened to fit the suffix.
 MAX_ROOM_NAME_LENGTH = 200
@@ -116,6 +117,7 @@ class RoomSource:
     combinations: tuple[SourceCombination, ...]
     documents: tuple[SourceDocument, ...]
     maps: tuple[SourceMap, ...] = ()
+    sections: tuple[Section, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -175,6 +177,7 @@ class RoomCopyPlan:
     documents: tuple[PlannedCopyDocument, ...]
     backlinks: tuple[PlannedBacklink, ...]
     maps: tuple[SourceMap, ...] = ()
+    sections: tuple[Section, ...] = ()
 
 
 def ensure_can_duplicate(requester: Membership) -> None:
@@ -226,8 +229,8 @@ def plan_room_copy(source: RoomSource, requester: Membership, suffix: str) -> Ro
     """The copy of `source` made by `requester` (403 unless the Master): the
     Room and its setup (Decision 3), their Membership as Master and
     Administrator (Decision 6), the Tags and combinations over new ids, the
-    Documents with their Notes and images (Decisions 3, 8, 10), and every map
-    (spec 40, `copy_map`)."""
+    Documents with their Notes and images (Decisions 3, 8, 10), every map
+    (spec 40, `copy_map`) and the landing page (spec 55)."""
     ensure_can_duplicate(requester)
     new_room_id = uuid.uuid4()
     room = replace(
@@ -319,6 +322,8 @@ def plan_room_copy(source: RoomSource, requester: Membership, suffix: str) -> Ro
             if source_map.map.source_document_id is None
             or source_map.map.source_document_id in document_ids
         ),
+        # The landing page (spec 55 Decision 5), its blocks on the copy's Tags.
+        sections=copy_sections(source.sections, new_room_id, tag_ids),
     )
 
 

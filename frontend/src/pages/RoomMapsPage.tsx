@@ -79,7 +79,13 @@ function RoomMapsContent({ roomId, currentUserId }: { roomId: string; currentUse
   };
 
   return (
-    <PageLayout backTo={`/rooms/${roomId}/documents`} backLabel={t('maps.backToDocuments')} roomId={roomId}>
+    <PageLayout
+      backTo={`/rooms/${roomId}`}
+      backLabel={t('roomLanding.home')}
+      roomId={roomId}
+      showIndex
+      index={{ current: 'page_maps' }}
+    >
       <Group justify="space-between" align="flex-end" wrap="wrap" className="maps-page-heading">
         <Stack gap={2}>
           {room.data && (

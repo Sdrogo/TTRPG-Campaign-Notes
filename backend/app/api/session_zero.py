@@ -429,6 +429,36 @@ class SessionZeroResponse(BaseModel):
     timer: TimerResponse | None
 
 
+class OverviewStepResponse(BaseModel):
+    """A step as a landing card sums it up (spec 55 Decision 8): `cards`,
+    the published post-its of a Retro or Stars and Wishes step; the
+    Questions, DDI or polls the step page shows the caller."""
+
+    id: uuid.UUID
+    kind: ModuleKind
+    position: int
+    cards: int
+    questions: QuestionsResponse | None = None
+    ddi: DdiResponse | None = None
+    polls: list[PollResponse] | None = None
+
+
+class OverviewRoundResponse(RoundResponse):
+    """A session with the steps the caller sees (spec 47 Decision 5)."""
+
+    steps: list[OverviewStepResponse]
+
+
+class SessionZeroOverviewResponse(BaseModel):
+    """Every session of the Room, newest first, as the caller sees them,
+    for the landing's Session 0 blocks (spec 55). `lines_veils` counts the
+    published post-its of each Lines & Veils column, by kind."""
+
+    started: bool
+    rounds: list[OverviewRoundResponse]
+    lines_veils: dict[str, int]
+
+
 class NewCardBody(BaseModel):
     """A new post-it: in a Retro column, or the Master's on Lines & Veils."""
 
@@ -1091,6 +1121,79 @@ async def get_session_zero(
     viewer = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     previewed = VIEW_AS_HEADER in request.headers
     return await _board_response(session, room_id, viewer, round_id, locale, previewed=previewed)
+
+
+@router.get("/overview")
+async def get_session_zero_overview(
+    room_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    session: SessionDep,
+    locale: LocaleDep,
+) -> SessionZeroOverviewResponse:
+    """Every session at a glance, for the landing page (spec 55 Decision 8):
+    the sessions newest first, each with the steps the caller has reached,
+    their published post-its counted and their Questions, DDI and polls as
+    the Session 0 page shows them to the caller. Never writes."""
+    viewer = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
+    if await session_zero_repo.get_state(session, room_id) is None:
+        return SessionZeroOverviewResponse(started=False, rounds=[], lines_veils={})
+    board = await _load_board(session, room_id)
+    chains = {round_.id: board.visible_chain(round_, viewer) for round_ in board.rounds}
+    lines_veils = board.lines_veils_columns()
+    columns = [c for chain in chains.values() for m in chain for c in board.module_columns(m.id)]
+    published = [
+        card
+        for card in await session_zero_repo.list_cards(
+            session, [column.id for column in columns + lines_veils]
+        )
+        if not card.is_draft
+    ]
+
+    def counted(column_ids: set[uuid.UUID]) -> int:
+        return sum(1 for card in published if card.column_id in column_ids)
+
+    rounds: list[OverviewRoundResponse] = []
+    for round_ in sorted(board.rounds, key=lambda r: r.number, reverse=True):
+        chain = chains[round_.id]
+
+        def of(kind: ModuleKind, chain: list[Module] = chain) -> list[Module]:
+            return [m for m in chain if m.kind is kind]
+
+        questions = await _questions_responses(
+            session, room_id, viewer, of(ModuleKind.QUESTIONS), round_
+        )
+        ddis = await _ddi_responses(session, room_id, viewer, of(ModuleKind.DDI), round_)
+        polls = await _poll_responses(session, room_id, viewer, of(ModuleKind.POLL), round_)
+        rounds.append(
+            OverviewRoundResponse(
+                id=round_.id,
+                number=round_.number,
+                title=round_.title,
+                started_at=round_.started_at,
+                closed_at=round_.closed_at,
+                steps=[
+                    OverviewStepResponse(
+                        id=module.id,
+                        kind=module.kind,
+                        position=module.position,
+                        cards=counted({c.id for c in board.module_columns(module.id)}),
+                        questions=questions.get(module.id),
+                        ddi=ddis.get(module.id),
+                        polls=polls.get(module.id),
+                    )
+                    for module in chain
+                ],
+            )
+        )
+    return SessionZeroOverviewResponse(
+        started=True,
+        rounds=rounds,
+        lines_veils={
+            column.kind.value: counted({column.id})
+            for column in lines_veils
+            if column.kind is not None
+        },
+    )
 
 
 def _preset_columns(locale: str) -> list[session_zero_repo.RetroColumnSpec]:

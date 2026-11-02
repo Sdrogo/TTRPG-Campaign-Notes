@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { Box, Container, Stack } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { AppHeader } from './AppHeader';
-import { RoomIndex } from './RoomIndex';
+import { RoomIndex, type RoomIndexContext } from './RoomIndex';
 import { SplitView } from './layout/SplitView';
 import { DocumentSidePane } from './documents/DocumentSidePane';
 import { isPlaceSide, SPLIT_QUERY, useSideDocument } from '../hooks/useSideDocument';
@@ -13,9 +13,12 @@ interface PageLayoutProps {
   /** Given on a Room-scoped page, so `AppHeader` offers the Room's search
    *  and a Document can open beside it (spec 37). */
   roomId?: string;
-  /** The Room's Index tab on the left edge (`RoomIndex`, spec 44): only the
-   *  Room's Documents page shows it (spec 46c Decision 1). */
+  /** The Room's Index tab on the left edge (`RoomIndex`, spec 44): the
+   *  landing, its Sections and the Documents and Maps pages show it (spec 55
+   *  Decision 10; not the Session 0 board, spec 46c Decision 1). */
   showIndex?: boolean;
+  /** What the page on screen adds to the Index: the Section it is, and a custom Section's blocks. */
+  index?: RoomIndexContext;
   /**
    * The map pages: an empty `?side=` is the split open with no card picked
    * yet (spec 37), and on a phone a picked Document opens in the lower half
@@ -47,6 +50,7 @@ export function PageLayout({
   backLabel,
   roomId,
   showIndex = false,
+  index,
   allowEmptySide = false,
   renderSide,
   children,
@@ -72,7 +76,7 @@ export function PageLayout({
   return (
     <>
       <AppHeader roomId={roomId} backTo={backTo} backLabel={backLabel} />
-      {roomId && showIndex && <RoomIndex roomId={roomId} />}
+      {roomId && showIndex && <RoomIndex roomId={roomId} {...index} />}
       <Container component="main" fluid px={{ base: 'sm', sm: 'lg', lg: 'xl' }} py="md">
         {roomId && (sideId || (allowEmptySide && sideId === '')) && wide ? (
           <SplitView left={body} right={pane(sideId || null)} />
