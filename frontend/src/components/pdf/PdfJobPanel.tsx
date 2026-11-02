@@ -69,7 +69,7 @@ export function PdfJobPanel({ job, onDownload, onNew }: PdfJobPanelProps) {
         </>
       )}
       {job.status === 'failed' && (
-        <Alert color="red" role="alert">
+        <Alert color="danger" role="alert">
           {t('export.pdf.failed')}
         </Alert>
       )}

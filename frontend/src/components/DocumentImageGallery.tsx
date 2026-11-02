@@ -218,7 +218,7 @@ function DeleteImageButton({ onConfirm, loading }: { onConfirm: () => void; load
       <Popover.Target>
         <LabeledActionIcon
           variant="default"
-          color="red"
+          color="danger"
           loading={loading}
           onClick={() => setOpened((current) => !current)}
           aria-label={t('images.delete')}
@@ -235,7 +235,7 @@ function DeleteImageButton({ onConfirm, loading }: { onConfirm: () => void; load
             </Button>
             <Button
               size="xs"
-              color="red"
+              color="danger"
               onClick={() => {
                 setOpened(false);
                 onConfirm();

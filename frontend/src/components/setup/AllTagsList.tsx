@@ -173,7 +173,7 @@ export function AllTagsList({ roomId, tags, groupedIds }: AllTagsListProps) {
                 {t('common.cancel')}
               </Button>
               <Button
-                color="red"
+                color="danger"
                 loading={deleteTag.isPending}
                 onClick={() => handleDelete(pending)}
               >

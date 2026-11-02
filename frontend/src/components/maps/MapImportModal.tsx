@@ -181,7 +181,7 @@ export function MapImportModal({
               </Text>
             </>
           )}
-          {error && <Alert color="red">{error}</Alert>}
+          {error && <Alert color="danger">{error}</Alert>}
           <Button type="submit" loading={importMap.isPending} disabled={!report || !values.name.trim()}>
             {t('maps.import.submit')}
           </Button>

@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { matchMediaQueries } from '../../media';
 import { apiFetch } from '../../../lib/apiClient';
 import { notifyError, notifySuccess } from '../../../lib/notify';
 import { rawFriend, rawFriends, rawMember } from '../../fixtures';
@@ -277,5 +278,38 @@ describe('MemberManagement', () => {
 
       await waitFor(() => expect(notifyError).toHaveBeenCalled());
     });
+  });
+});
+
+// Spec 57: on a phone the table's last columns were off screen, so each
+// member becomes a block with labelled Role, Administrator and Remove controls.
+describe('MemberManagement on a phone', () => {
+  let restore: () => void;
+  beforeEach(() => {
+    restore = matchMediaQueries(['(max-width: 36em)']);
+  });
+  afterEach(() => restore());
+
+  it('shows one block per member instead of a table', () => {
+    render([me, member()]);
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('switch', { name: 'Amministratore' })).toHaveLength(2);
+    expect(screen.getAllByRole('combobox', { name: 'Ruolo' })).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Esci' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rimuovi' })).toBeInTheDocument();
+  });
+
+  it('still changes the Administrator flag', async () => {
+    const { user } = render([me, member()]);
+
+    await user.click(screen.getAllByRole('switch', { name: 'Amministratore' })[1]);
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/members/user-2', {
+        method: 'PATCH',
+        json: { role: undefined, is_admin: true },
+      }),
+    );
   });
 });

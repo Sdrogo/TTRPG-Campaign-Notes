@@ -771,7 +771,7 @@ function DocumentEditForm({
               {t('common.cancel')}
             </Button>
           </Group>
-          <Button variant="outline" color="red" onClick={() => setConfirmDeleteOpened(true)}>
+          <Button variant="outline" color="danger" onClick={() => setConfirmDeleteOpened(true)}>
             {t('documents.detail.deleteDocument')}
           </Button>
         </Group>
@@ -796,7 +796,7 @@ function DocumentEditForm({
             <Button variant="subtle" color="gray" onClick={() => setConfirmDeleteOpened(false)}>
               {t('common.cancel')}
             </Button>
-            <Button color="red" loading={deleteDocument.isPending} onClick={handleDelete}>
+            <Button color="danger" loading={deleteDocument.isPending} onClick={handleDelete}>
               {t('common.delete')}
             </Button>
           </Group>

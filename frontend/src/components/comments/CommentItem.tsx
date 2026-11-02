@@ -489,7 +489,7 @@ function DeleteCommentAction({ onConfirm, loading, imageCount }: DeleteCommentAc
             </Button>
             <Button
               size="xs"
-              color="red"
+              color="danger"
               loading={loading}
               onClick={() => {
                 setOpened(false);

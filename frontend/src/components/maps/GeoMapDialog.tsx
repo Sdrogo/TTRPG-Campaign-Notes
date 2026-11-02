@@ -64,7 +64,7 @@ export function GeoMapDialog({
                 allowDecimal={false}
               />
             </Group>
-            {resize.error && <Alert color="red">{resize.error.message}</Alert>}
+            {resize.error && <Alert color="danger">{resize.error.message}</Alert>}
             <Group justify="flex-end">
               <Button type="submit" size="xs" disabled={!sizeValid || !sizeChanged} loading={resize.isPending}>
                 {t('maps.geo.planeSave')}
@@ -100,7 +100,7 @@ export function GeoMapDialog({
                 <Button
                   size="xs"
                   variant="subtle"
-                  color="red"
+                  color="danger"
                   leftSection={<TrashIcon size={16} />}
                   onClick={() => background.mutate(null)}
                 >
@@ -108,7 +108,7 @@ export function GeoMapDialog({
                 </Button>
               )}
             </Group>
-            {background.error && <Alert color="red">{background.error.message}</Alert>}
+            {background.error && <Alert color="danger">{background.error.message}</Alert>}
           </Stack>
         </Input.Wrapper>
       </Stack>

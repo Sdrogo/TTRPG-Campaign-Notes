@@ -37,7 +37,7 @@ export function PrivacyPage() {
           <ArrowLeftIcon size={16} aria-hidden="true" /> {t('privacy.back')}
         </Anchor>
         <Stack gap={2}>
-          <Title order={1} fz={{ base: 'h2', sm: 'h1' }} style={{ fontFamily: 'var(--font-display)' }}>
+          <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
             {t('privacy.title')}
           </Title>
           <Text c="dimmed" size="sm">

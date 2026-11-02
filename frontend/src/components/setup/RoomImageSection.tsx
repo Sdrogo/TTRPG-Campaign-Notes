@@ -74,7 +74,7 @@ export function RoomImageSection({ roomId, imageUrl }: RoomImageSectionProps) {
             {imageUrl && (
               <Button
                 variant="subtle"
-                color="red"
+                color="danger"
                 size="xs"
                 disabled={busy}
                 loading={remove.isPending}

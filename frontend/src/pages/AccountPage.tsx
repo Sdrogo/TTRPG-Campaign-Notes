@@ -1,4 +1,4 @@
-import { Button, Divider, Grid, Group, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Button, Divider, Grid, Group, Text, TextInput } from '@mantine/core';
 import { EnvelopeSimpleIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useSession } from '../hooks/useSession';
 import { isDemoMode } from '../lib/demo/demoMode';
@@ -24,6 +24,7 @@ import { SpeechSection } from '../components/account/SpeechSection';
 import { PrivacySection } from '../components/account/PrivacySection';
 import type { AccountProfile } from '../types/profile';
 import { useTranslation } from 'react-i18next';
+import { PageHeading } from '../components/PageHeading';
 
 /**
  * `/account`: the signed-in user's profile (name, pronouns, description,
@@ -92,12 +93,7 @@ function AccountContent({ profile }: { profile: AccountProfile }) {
 
   return (
     <PageLayout backTo="/rooms" backLabel={t('common.myRooms')}>
-      <Stack gap={2}>
-        <Title order={1} fz={{ base: 'h2', sm: 'h1' }} style={{ fontFamily: 'var(--font-display)' }}>
-          {t('account.title')}
-        </Title>
-        <Text c="dimmed">{t('account.subtitle')}</Text>
-      </Stack>
+      <PageHeading title={t('account.title')} description={t('account.subtitle')} />
 
       {/* Invitations waiting for an answer come first; the section is only
           there while some are. */}

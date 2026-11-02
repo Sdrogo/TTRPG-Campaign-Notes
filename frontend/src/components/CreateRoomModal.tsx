@@ -109,7 +109,7 @@ export function CreateRoomModal({ opened, onClose }: CreateRoomModalProps) {
                   {image && (
                     <Button
                       variant="subtle"
-                      color="red"
+                      color="danger"
                       size="xs"
                       onClick={() => pickImage(null)}
                       leftSection={<TrashIcon size={18} />}

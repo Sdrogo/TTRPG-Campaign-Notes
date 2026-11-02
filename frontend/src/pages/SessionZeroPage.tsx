@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Box, Loader, Stack, Tabs, Text, Title } from '@mantine/core';
+import { Box, Stack, Tabs, Text } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
@@ -9,7 +9,7 @@ import { useTags } from '../hooks/useTags';
 import { useSessionZero, useSessionZeroWrite } from '../hooks/useSessionZero';
 import { useSessionZeroEvents } from '../hooks/useSessionZeroEvents';
 import { useReadOnly } from '../hooks/useViewAs';
-import { FullPageLoader, SignInRequired } from '../components/PageState';
+import { FullPageLoader, SignInRequired, SectionLoader } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { LinesVeilsColumn, RetroBoard } from '../components/sessionZero/BoardColumns';
 import { BoardContext, useBoard, type BoardContextValue } from '../components/sessionZero/boardContext';
@@ -22,6 +22,7 @@ import { QuestionsBoard } from '../components/sessionZero/QuestionsModule';
 import { SessionZeroHeader } from '../components/sessionZero/SessionZeroHeader';
 import { boardWrites, shownModule, viewOf, withView } from '../lib/sessionZero';
 import { notifyError } from '../lib/notify';
+import { PageHeading } from '../components/PageHeading';
 
 /** Wide enough for the Retro board beside Lines & Veils; narrower, two tabs (Decision 13). */
 const BOARDS_SIDE_BY_SIDE_QUERY = '(min-width: 62em)';
@@ -104,13 +105,17 @@ function SessionZeroContent({ roomId }: { roomId: string }) {
     : null;
 
   return (
-    <PageLayout backTo={`/rooms/${roomId}`} backLabel={t('roomLanding.home')} roomId={roomId}>
+    <PageLayout
+      backTo={`/rooms/${roomId}`}
+      backLabel={t('roomLanding.home')}
+      roomId={roomId}
+      showIndex
+      index={{ current: 'page_session_zero' }}
+    >
       {!context?.board.started && (
-        <Title order={1} fz="h2" style={{ fontFamily: 'var(--font-display)' }}>
-          {t('sessionZero.title')}
-        </Title>
+        <PageHeading title={t('sessionZero.title')} />
       )}
-      {board.isPending && <Loader />}
+      {board.isPending && <SectionLoader />}
       {board.isError && <Text c="red">{t('sessionZero.loadError')}</Text>}
       {context && !context.board.started && (
         <Stack gap="sm" align="flex-start">

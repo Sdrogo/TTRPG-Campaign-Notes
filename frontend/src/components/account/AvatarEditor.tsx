@@ -66,7 +66,7 @@ export function AvatarEditor({ user, onUpload, onImportUrl, onRemove, pending }:
           {user.avatarUrl && (
             <Button
               variant="subtle"
-              color="red"
+              color="danger"
               size="xs"
               disabled={busy}
               loading={pending === 'remove'}

@@ -14,6 +14,39 @@ const accent: MantineColorsTuple = [
   'rgb(105, 23, 23)',
 ];
 
+// Mantine's dark scheme paints every surface, input, border and dimmed text from
+// the `dark` scale; its default is neutral grey (#2e2e2e cards, #242424 papers),
+// which clashed with the purple tokens (spec 57b). Rebuilt from the tokens:
+// 0 = --text-primary, 2 = --text-muted (dimmed), 6 = --bg-raised (inputs,
+// default buttons, cards), 7 = --bg-surface (papers, body), 9 = --bg-base.
+const dark: MantineColorsTuple = [
+  '#e8e3ea',
+  '#c9bfce',
+  '#9b8ba3',
+  '#7a6c82',
+  '#3a3042',
+  '#2c2433',
+  '#1f1826',
+  '#17121c',
+  '#120e16',
+  '#0d0a0f',
+];
+
+// Destructive actions (delete, remove, leave) use --state-error (#dc2626) as
+// shade 6, not Mantine's `red` (#fa5252), which read as the red accent (spec 57b).
+const danger: MantineColorsTuple = [
+  '#fde8e8',
+  '#fbcaca',
+  '#f6a3a3',
+  '#f07a7a',
+  '#e85252',
+  '#e23a3a',
+  '#dc2626',
+  '#b91f1f',
+  '#931919',
+  '#6e1313',
+];
+
 /**
  * The Mantine theme: the red accent scale, the app's fonts, the text scale and the
  * radius scale from context/ui-context.md. Dark only.
@@ -25,7 +58,7 @@ const accent: MantineColorsTuple = [
 export const theme = createTheme({
   primaryColor: 'accent',
   primaryShade: 6,
-  colors: { accent },
+  colors: { accent, dark, danger },
   fontFamily: 'var(--font-sans)',
   fontFamilyMonospace: 'var(--font-mono)',
   fontSizes: {

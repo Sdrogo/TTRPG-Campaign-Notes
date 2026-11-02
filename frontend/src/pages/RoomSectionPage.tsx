@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useLandingEvents, useRoomSections } from '../hooks/useLanding';
@@ -11,7 +11,7 @@ import { useRoom } from '../hooks/useRooms';
 import { useSessionZeroOverview } from '../hooks/useSessionZero';
 import { useTags } from '../hooks/useTags';
 import { useReadOnly } from '../hooks/useViewAs';
-import { FullPageLoader, SignInRequired } from '../components/PageState';
+import { FullPageLoader, SignInRequired, SectionLoader } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { EditModeButton } from '../components/landing/EditModeButton';
 import { SectionBlock } from '../components/landing/SectionBlock';
@@ -21,6 +21,8 @@ import { landingHref } from '../lib/landing';
 import { blockHeading, featureLabel, groupLabel, sectionTitle } from '../lib/landingText';
 import { markdownToPlain } from '../lib/markdownText';
 import type { LandingSection } from '../types/landing';
+import { PageHeading } from '../components/PageHeading';
+import { DocumentMentionsProvider } from '../components/mentions/DocumentMentionsProvider';
 
 /**
  * `/rooms/:roomId/sections/:sectionId`: a custom Section of the landing
@@ -71,27 +73,18 @@ function RoomSectionContent({ roomId, sectionId, currentUserId }: { roomId: stri
       showIndex
       index={section ? { current: section.id, detail: indexDetail(section, sources) } : undefined}
     >
-      {sections.isPending && <Loader color="accent" />}
+      <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
+      {sections.isPending && <SectionLoader />}
       {sections.isError && <Text c="red">{t('roomLanding.loadError')}</Text>}
       {sections.data && !section && <Text c="dimmed">{t('roomLanding.notFound')}</Text>}
       {section && (
         <>
-          <Stack gap={2} className="documents-page-heading">
-            <Text size="xs" c="dimmed" tt="uppercase" fw={600} className="documents-kicker">
-              {room.data?.name ?? t('roomLanding.home')}
-            </Text>
-            <Group gap="sm" wrap="nowrap">
-              <Title order={1} className="documents-page-title" style={{ fontFamily: 'var(--font-display)' }}>
-                {sectionTitle(section)}
-              </Title>
-              {canEdit && <EditModeButton editing={editing} onChange={setEditing} />}
-            </Group>
-            {section.description && (
-              <Text c="dimmed" size="sm" maw={720}>
-                {markdownToPlain(section.description, { separator: ' ' })}
-              </Text>
-            )}
-          </Stack>
+          <PageHeading
+            kicker={room.data?.name ?? t('roomLanding.home')}
+            title={sectionTitle(section)}
+            titleAfter={canEdit && <EditModeButton editing={editing} onChange={setEditing} />}
+            description={section.description && markdownToPlain(section.description, { separator: ' ' })}
+          />
           {canEdit && editing ? (
             <SectionEditor roomId={roomId} section={section} sources={sources} />
           ) : (
@@ -99,6 +92,7 @@ function RoomSectionContent({ roomId, sectionId, currentUserId }: { roomId: stri
           )}
         </>
       )}
+      </DocumentMentionsProvider>
     </PageLayout>
   );
 }

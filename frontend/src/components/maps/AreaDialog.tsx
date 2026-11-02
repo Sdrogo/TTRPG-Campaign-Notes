@@ -116,7 +116,7 @@ export function AreaDialog({
           )}
           <Group justify={isNew ? 'flex-end' : 'space-between'}>
             {!isNew && (
-              <Button variant="subtle" color="red" onClick={onDelete}>
+              <Button variant="subtle" color="danger" onClick={onDelete}>
                 {t('maps.geo.deleteArea')}
               </Button>
             )}

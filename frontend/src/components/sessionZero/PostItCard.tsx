@@ -167,7 +167,7 @@ export function PostItCard({ postIt, column, onLinesVeils }: PostItCardProps) {
                   </Menu.Item>
                 )}
                 {canDelete && (
-                  <Menu.Item color="red" onClick={() => act(boardWrites.deletePostIt(postIt.id))}>
+                  <Menu.Item color="danger" onClick={() => act(boardWrites.deletePostIt(postIt.id))}>
                     {t('common.delete')}
                   </Menu.Item>
                 )}
@@ -357,7 +357,7 @@ export function PublishModal({ title, body, busy, onClose, onPublish }: PublishM
           onChange={(event) => setAnonymous(event.currentTarget.checked)}
         />
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
+          <Button variant="subtle" color="gray" onClick={onClose}>
             {t('common.cancel')}
           </Button>
           <Button disabled={busy} onClick={() => onPublish(anonymous)}>

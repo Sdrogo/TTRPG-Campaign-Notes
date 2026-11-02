@@ -69,7 +69,7 @@ export function SectionInfoModal({ roomId, section, onClose }: { roomId: string;
             {imageUrl && (
               <Button
                 variant="subtle"
-                color="red"
+                color="danger"
                 size="xs"
                 disabled={busy}
                 loading={image.remove.isPending}

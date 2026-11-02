@@ -216,7 +216,7 @@ function DdiDocument({ roomId, documentId }: { roomId: string; documentId: strin
     <Paper withBorder radius="md" p="md">
       <Stack gap="sm">
         <Group justify="space-between" wrap="nowrap" align="flex-start">
-          <Title order={2} fz="h4">
+          <Title order={2} fz="h3">
             {name}
           </Title>
           <Button

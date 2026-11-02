@@ -19,7 +19,7 @@ export function RemoveFriendButton({ name, loading, onConfirm }: RemoveFriendBut
         <Button
           size="xs"
           variant="subtle"
-          color="red"
+          color="danger"
           loading={loading}
           onClick={() => setOpened((current) => !current)}
         >
@@ -37,7 +37,7 @@ export function RemoveFriendButton({ name, loading, onConfirm }: RemoveFriendBut
             </Button>
             <Button
               size="xs"
-              color="red"
+              color="danger"
               onClick={() => {
                 setOpened(false);
                 onConfirm();
