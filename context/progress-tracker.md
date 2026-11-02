@@ -386,6 +386,12 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-11-02
 
+- **Groups popover fixes (spec 55)** (frontend only, no migration): adding
+  a group no longer closes the "N gruppi" popover. Each save replaces the
+  blocks with new ids, so the bar remounted; `SectionEditor` now remembers
+  which block's groups popover is open (by position) and the new bar
+  reopens it through `initialPicker: 'groups'`. The groups are listed one
+  per line, as their order is the page's order.
 - **58 Map zoom kept in the split view** (frontend only, no migration):
   `PageLayout` always renders `SplitView` on Room pages, so opening or
   closing the pane no longer remounts the page; a zoomed geographic map

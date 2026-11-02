@@ -41,6 +41,9 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
   const openedNew = (location.state as OpenInEditState | null)?.landingEdit === 'add-block' && section.blocks.length === 0;
   const [adding, setAdding] = useState<number | null>(openedNew ? 0 : null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  // The block whose groups popover is open, by position: a save gives every
+  // block a new id, so its bar remounts and reopens it (spec 55 Decision 15).
+  const [groupsOpen, setGroupsOpen] = useState<number | null>(null);
   const blocks = section.blocks;
 
   const saveList = (next: BlockInput[], onDone?: () => void) =>
@@ -144,6 +147,8 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
                         mainItems={roomGroups}
                         onChange={(next) => change(index, next)}
                         onDelete={() => remove(index)}
+                        initialPicker={groupsOpen === index ? 'groups' : null}
+                        onGroupsOpenChange={(open) => setGroupsOpen(open ? index : null)}
                       />
                     }
                     onReorderParts={(next) => change(index, next)}

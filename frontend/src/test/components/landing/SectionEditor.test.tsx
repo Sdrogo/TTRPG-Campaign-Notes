@@ -152,6 +152,32 @@ describe('SectionEditor', () => {
     expect(savedBlocks()[1]).toEqual({ ...wire(zeroBlock), features: ['polls', 'stars_wishes', 'retro'] });
   });
 
+  it('keeps the groups popover open while groups are added, each save remounting the bar', async () => {
+    const { rerender } = editor([plainBlock, mapsBlock]);
+    const remount = (block: Record<string, unknown>) =>
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [block, mapsBlock] })} sources={sources} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Raggruppa' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Gruppo' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: '#PNG' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    expect(savedBlocks()[0]).toEqual({ ...wire(plainBlock), groups: [['t2']] });
+    // The saved list comes back with new block ids: a new bar, still open.
+    remount(rawBlock({ id: 'block-4b', tag_ids: ['t1'], groups: [['t2']] }));
+    expect(await screen.findByRole('button', { name: 'Gruppo' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Gruppo' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: '#Yakuza' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    expect(savedBlocks()[0]).toEqual({ ...wire(plainBlock), groups: [['t2'], ['t3']] });
+    remount(rawBlock({ id: 'block-4c', tag_ids: ['t1'], groups: [['t2'], ['t3']] }));
+    expect(await screen.findByRole('button', { name: 'Togli #Yakuza' })).toBeInTheDocument();
+    // Once closed it stays closed.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument());
+    remount(rawBlock({ id: 'block-4d', tag_ids: ['t1'], groups: [['t2'], ['t3']] }));
+    expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '2 gruppi' })).toBeInTheDocument();
+  });
+
   it('adds no block past ten', () => {
     editor(Array.from({ length: 10 }, (_, index) => rawBlock({ id: `b${index}`, kind: 'maps', tag_ids: [] })));
     expect(screen.queryByRole('button', { name: 'Blocco' })).not.toBeInTheDocument();
