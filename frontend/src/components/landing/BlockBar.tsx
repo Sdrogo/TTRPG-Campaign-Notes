@@ -275,7 +275,7 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Item color="red" onClick={onDelete}>
+          <Menu.Item color="danger" onClick={onDelete}>
             {t('roomLanding.edit.deleteBlock')}
           </Menu.Item>
         </Menu.Dropdown>

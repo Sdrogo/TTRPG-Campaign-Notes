@@ -193,11 +193,6 @@ body {
   border-top: 1px solid var(--border-default);
 }
 
-.rooms-heading {
-  padding-bottom: var(--mantine-spacing-md);
-  border-bottom: 1px solid var(--border-default);
-}
-
 @media (min-width: 48em) {
   .landing-sections {
     gap: 104px;
@@ -508,6 +503,41 @@ html body[data-scroll-locked] {
    full width once it is past them. Floats only wrap block content (a flex
    box beside a float shrinks as a whole), so from `lg` the containers the
    text flows through become blocks, their gaps turned into margins. */
+/* Every page's heading row (spec 57c, `PageHeading`): the kicker, the h1 at
+   the h2 size (h1-h3 stay Mantine's, PR #252), the actions on the right that
+   wrap under the title on a phone, and a fine rule underneath. */
+.page-heading {
+  padding: var(--mantine-spacing-md) 0 var(--mantine-spacing-lg);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.page-heading-kicker {
+  letter-spacing: 0.14em;
+}
+
+.page-heading-title {
+  font-size: var(--mantine-h2-font-size);
+  line-height: var(--mantine-h2-line-height);
+  overflow-wrap: anywhere;
+}
+
+/* Every Mantine Card sits on the surface token, like a Document card; without
+   this the rebuilt `dark` scale (spec 57b) would paint them --bg-raised. */
+[data-mantine-color-scheme='dark'] .mantine-Card-root {
+  background-color: var(--bg-surface);
+}
+
+/* The Room setup's members as blocks on a phone (spec 57), one per member,
+   ruled like the table rows they replace. */
+.member-list-item {
+  padding-block: var(--mantine-spacing-sm);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.member-list-item:last-child {
+  border-bottom: 0;
+}
+
 .document-body {
   display: flex;
   flex-direction: column;
@@ -803,21 +833,6 @@ html body[data-scroll-locked] {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.documents-page-heading {
-  padding: var(--mantine-spacing-md) 0 var(--mantine-spacing-lg);
-  border-bottom: 1px solid var(--border-default);
-}
-
-.documents-kicker {
-  letter-spacing: 0.14em;
-}
-
-.documents-page-title,
-.maps-page-title {
-  font-size: var(--mantine-h2-font-size);
-  line-height: var(--mantine-h2-line-height);
-}
-
 .documents-controls-toggle {
   display: inline-flex;
   align-items: center;
@@ -958,19 +973,6 @@ html body[data-scroll-locked] {
   border-color: var(--mantine-color-accent-filled);
 }
 
-.maps-page-heading {
-  padding: var(--mantine-spacing-md) 0 var(--mantine-spacing-lg);
-  border-bottom: 1px solid var(--border-default);
-}
-
-.maps-page-kicker {
-  letter-spacing: 0.14em;
-}
-
-.maps-page-actions {
-  padding-bottom: var(--mantine-spacing-xs);
-}
-
 .maps-page-grid {
   align-items: stretch;
 }
@@ -1048,17 +1050,13 @@ html body[data-scroll-locked] {
   transform: translate(2px, -2px);
 }
 
-.maps-empty-state {
+/* Above the dark-scheme Card surface rule (spec 57b), which it overrides. */
+[data-mantine-color-scheme] .empty-state {
   background: transparent;
   border-style: dashed;
 }
 
 @media (max-width: 36em) {
-  .maps-page-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
   .maps-page-card {
     grid-template-columns: 88px minmax(0, 1fr);
   }

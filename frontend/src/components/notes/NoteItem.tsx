@@ -147,7 +147,7 @@ export function NoteItem({
       {note.canDelete && (
         <LabeledActionIcon
           variant="subtle"
-          color="red"
+          color="danger"
           size="sm"
           onClick={() => setConfirmDeleteOpened(true)}
           aria-label={t('notes.delete', { title: note.title })}
@@ -225,7 +225,7 @@ export function NoteItem({
               {t('common.cancel')}
             </Button>
             <Button
-              color="red"
+              color="danger"
               loading={deleting}
               onClick={() => {
                 setConfirmDeleteOpened(false);

@@ -161,7 +161,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
         )}
         {step === 'job' && <ImportJobPanel roomId={roomId} job={job.data} onNew={reset} />}
         {error !== null && (
-          <Alert color="red" role="alert">
+          <Alert color="danger" role="alert">
             {error}
           </Alert>
         )}

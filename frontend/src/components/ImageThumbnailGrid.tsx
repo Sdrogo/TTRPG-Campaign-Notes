@@ -53,7 +53,7 @@ export function ImageThumbnailGrid({ images, size = 96, onOpen, onRemove }: Imag
             {onRemove && (
               <LabeledActionIcon
                 size="sm"
-                color="red"
+                color="danger"
                 variant="filled"
                 pos="absolute"
                 top={4}

@@ -47,7 +47,7 @@ export function DeleteRoomSection({ roomId, roomName, onDeleted }: DeleteRoomSec
         {t('setup.dangerZone.description')}
       </Text>
       <Group>
-        <Button variant="outline" color="red" onClick={() => setOpened(true)}>
+        <Button variant="outline" color="danger" onClick={() => setOpened(true)}>
           {t('setup.dangerZone.deleteRoom')}
         </Button>
       </Group>
@@ -71,7 +71,7 @@ export function DeleteRoomSection({ roomId, roomName, onDeleted }: DeleteRoomSec
               {t('common.cancel')}
             </Button>
             <Button
-              color="red"
+              color="danger"
               disabled={typed.trim() !== roomName}
               loading={deleteRoom.isPending}
               onClick={handleDelete}

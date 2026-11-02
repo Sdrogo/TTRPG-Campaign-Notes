@@ -173,7 +173,7 @@ export function CardDialog({ card, images = [], isMaster, onSave, onDelete, onCl
           )}
           <Group justify={onDelete ? 'space-between' : 'flex-end'}>
             {onDelete && (
-              <Button variant="subtle" color="red" onClick={onDelete}>
+              <Button variant="subtle" color="danger" onClick={onDelete}>
                 {t('maps.card.remove')}
               </Button>
             )}

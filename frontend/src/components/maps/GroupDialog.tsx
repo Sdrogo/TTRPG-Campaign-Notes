@@ -46,7 +46,7 @@ export function GroupDialog({ group, onSave, onDelete, onClose }: GroupDialogPro
             onChange={(event) => setStruck(event.currentTarget.checked)}
           />
           <Group justify="space-between">
-            <Button variant="subtle" color="red" onClick={onDelete}>
+            <Button variant="subtle" color="danger" onClick={onDelete}>
               {t('maps.group.remove')}
             </Button>
             <Button type="submit">{t('common.save')}</Button>

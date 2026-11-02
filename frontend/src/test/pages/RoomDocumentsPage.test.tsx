@@ -6,6 +6,7 @@ import { apiFetch } from '../../lib/apiClient';
 import { useSession } from '../../hooks/useSession';
 import { fakeSession, rawAccount, rawDocument, rawMap, rawMember, rawRoom } from '../fixtures';
 import { renderWithProviders } from '../utils';
+import { matchMediaQueries } from '../media';
 import { RoomDocumentsPage } from '../../pages/RoomDocumentsPage';
 import { ViewAsProvider } from '../../components/ViewAsProvider';
 
@@ -217,10 +218,12 @@ describe('RoomDocumentsPage', () => {
     expect(await screen.findByText('Il Cancello')).toBeInTheDocument();
   });
 
+  // Spec 57c: the page is "Documents", with the Room's name as its kicker.
   it('lists the Documents under the Room name', async () => {
     render();
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'La Cripta' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Documenti' })).toBeInTheDocument();
+    expect(await screen.findByText('La Cripta', { selector: '.page-heading-kicker' })).toBeInTheDocument();
     expect(screen.getByText('Il Cancello')).toBeInTheDocument();
   });
 
@@ -246,6 +249,26 @@ describe('who may create a Document', () => {
     render();
 
     expect(await screen.findByRole('button', { name: /Crea Documento/ })).toBeInTheDocument();
+  });
+
+  // Spec 57: in the heading on a wide screen, floating on a phone.
+  it('puts it in the heading on a wide screen', async () => {
+    render();
+
+    const button = await screen.findByRole('button', { name: /Crea Documento/ });
+    expect(button.closest('.page-heading')).not.toBeNull();
+  });
+
+  it('floats it on a phone', async () => {
+    const restore = matchMediaQueries(['(max-width: 48em)']);
+    try {
+      render();
+
+      const button = await screen.findByRole('button', { name: /Crea Documento/ });
+      expect(button.closest('.page-heading')).toBeNull();
+    } finally {
+      restore();
+    }
   });
 
   it('offers it to a Player when the Room allows it', async () => {
@@ -530,7 +553,7 @@ describe('grouping and sorting', () => {
     render();
 
     await waitFor(() => expect(groupHeadings()).toEqual(['#NPC', 'Senza Tag principale']));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('La Cripta');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Documenti');
     expect(pageHeadings(3).map((h) => h.textContent)).toEqual(['Zanna', 'Alba']);
   });
 
@@ -709,7 +732,7 @@ describe('collapsing the filters and settings row', () => {
     render();
 
     await screen.findByText('Il Cancello');
-    expect(screen.getByRole('heading', { level: 1, name: 'La Cripta' })).toBeVisible();
+    expect(screen.getByRole('heading', { level: 1, name: 'Documenti' })).toBeVisible();
     expect(toggleButton('Mostra filtri e impostazioni')).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('switch', { name: 'I Player possono creare Documenti' })).not.toBeInTheDocument();
   });

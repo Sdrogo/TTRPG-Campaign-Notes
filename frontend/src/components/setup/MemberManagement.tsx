@@ -1,4 +1,5 @@
-import { Table, Select, Switch, Button, Badge, Group, Stack, Text } from '@mantine/core';
+import { Table, Select, Switch, Button, Badge, Box, Group, Stack, Text } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { UserPlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useUpdateMember, useRemoveMember } from '../../hooks/useMembers';
@@ -40,6 +41,7 @@ export function MemberManagement({
   const removeMember = useRemoveMember(roomId);
   const friends = useFriends(true);
   const sendRequest = useSendFriendRequest();
+  const phone = useMediaQuery('(max-width: 36em)', false, { getInitialValueInEffect: false });
 
   /** Asks a member to become Friends and confirms it. */
   const handleAddFriend = (member: Member) => {
@@ -98,6 +100,100 @@ export function MemberManagement({
     });
   };
 
+  /** The member's avatar, name, "you" badge, pronouns, bio and Friend control. */
+  const userBlock = (member: Member) => (
+    <Group gap="sm" wrap="nowrap" align="flex-start">
+      <UserAvatar user={member} size="md" />
+      <Stack gap={0} style={{ minWidth: 0 }}>
+        <Text component="div" size="sm" fw={500} style={{ overflowWrap: 'anywhere' }}>
+          {memberDisplayName(member)}
+          {member.userId === currentUserId && (
+            <Badge ml="xs" size="xs" variant="outline" color="gray">
+              {t('common.you')}
+            </Badge>
+          )}
+        </Text>
+        {member.pronouns && (
+          <Text size="xs" c="dimmed">
+            {member.pronouns}
+          </Text>
+        )}
+        {member.bio && (
+          <Text size="xs" c="dimmed" lineClamp={2} title={member.bio} style={{ whiteSpace: 'pre-line' }}>
+            {member.bio}
+          </Text>
+        )}
+        {friendControl(member)}
+      </Stack>
+    </Group>
+  );
+
+  /** The Master / Player picker; on a phone it carries its own label. */
+  const roleSelect = (member: Member, label?: string) => (
+    <Select
+      label={label}
+      data={[
+        { value: 'player', label: t('roles.player') },
+        { value: 'master', label: t('roles.master') },
+      ]}
+      value={member.role}
+      onChange={(value) =>
+        value &&
+        updateMember.mutate({ userId: member.userId, role: value as RoomRole }, { onError: notifyError })
+      }
+      allowDeselect={false}
+      size="xs"
+      w={110}
+    />
+  );
+
+  /** The Administrator switch; on a phone it carries its own label. */
+  const adminSwitch = (member: Member, label?: string) => (
+    <Switch
+      label={label}
+      checked={member.isAdmin}
+      onChange={(event) =>
+        updateMember.mutate(
+          { userId: member.userId, isAdmin: event.currentTarget.checked },
+          { onError: notifyError },
+        )
+      }
+    />
+  );
+
+  /** Leave (oneself) or Remove (anyone else). */
+  const removeButton = (member: Member) => (
+    <Button
+      color="danger"
+      variant="subtle"
+      size="xs"
+      onClick={() => handleRemove(member.userId)}
+      loading={removeMember.isPending && removeMember.variables === member.userId}
+    >
+      {member.userId === currentUserId ? t('common.leave') : t('common.remove')}
+    </Button>
+  );
+
+  // Spec 57: on a phone the four-column table did not fit (its Administrator
+  // column and Remove buttons were off screen), so each member becomes a block:
+  // who they are, then Role, Administrator and Remove on one wrapping row.
+  if (phone) {
+    return (
+      <Stack gap={0} className="member-list">
+        {members.map((member) => (
+          <Stack key={member.userId} gap="sm" className="member-list-item">
+            {userBlock(member)}
+            <Group gap="md" align="flex-end" wrap="wrap">
+              {roleSelect(member, t('members.columnRole'))}
+              <Box pb={6}>{adminSwitch(member, t('members.columnAdmin'))}</Box>
+              <Box ml="auto">{removeButton(member)}</Box>
+            </Group>
+          </Stack>
+        ))}
+      </Stack>
+    );
+  }
+
   return (
     <Table.ScrollContainer minWidth={560}>
       <Table>
@@ -110,89 +206,14 @@ export function MemberManagement({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {members.map((member) => {
-            const isSelf = member.userId === currentUserId;
-            return (
-              <Table.Tr key={member.userId}>
-                <Table.Td>
-                  <Group gap="sm" wrap="nowrap" align="flex-start">
-                    <UserAvatar user={member} size="md" />
-                    <Stack gap={0} style={{ minWidth: 0 }}>
-                      <Text component="div" size="sm" fw={500} style={{ overflowWrap: 'anywhere' }}>
-                        {memberDisplayName(member)}
-                        {isSelf && (
-                          <Badge ml="xs" size="xs" variant="outline" color="gray">
-                            {t('common.you')}
-                          </Badge>
-                        )}
-                      </Text>
-                      {member.pronouns && (
-                        <Text size="xs" c="dimmed">
-                          {member.pronouns}
-                        </Text>
-                      )}
-                      {member.bio && (
-                        <Text
-                          size="xs"
-                          c="dimmed"
-                          lineClamp={2}
-                          title={member.bio}
-                          style={{ whiteSpace: 'pre-line' }}
-                        >
-                          {member.bio}
-                        </Text>
-                      )}
-                      {friendControl(member)}
-                    </Stack>
-                  </Group>
-                </Table.Td>
-                <Table.Td>
-                  <Select
-                    data={[
-                      { value: 'player', label: t('roles.player') },
-                      { value: 'master', label: t('roles.master') },
-                    ]}
-                    value={member.role}
-                    onChange={(value) =>
-                      value &&
-                      updateMember.mutate(
-                        { userId: member.userId, role: value as RoomRole },
-                        { onError: notifyError },
-                      )
-                    }
-                    allowDeselect={false}
-                    size="xs"
-                    w={110}
-                  />
-                </Table.Td>
-                <Table.Td>
-                  <Switch
-                    checked={member.isAdmin}
-                    onChange={(event) =>
-                      updateMember.mutate(
-                        {
-                          userId: member.userId,
-                          isAdmin: event.currentTarget.checked,
-                        },
-                        { onError: notifyError },
-                      )
-                    }
-                  />
-                </Table.Td>
-                <Table.Td>
-                  <Button
-                    color="red"
-                    variant="subtle"
-                    size="xs"
-                    onClick={() => handleRemove(member.userId)}
-                    loading={removeMember.isPending && removeMember.variables === member.userId}
-                  >
-                    {isSelf ? t('common.leave') : t('common.remove')}
-                  </Button>
-                </Table.Td>
-              </Table.Tr>
-            );
-          })}
+          {members.map((member) => (
+            <Table.Tr key={member.userId}>
+              <Table.Td>{userBlock(member)}</Table.Td>
+              <Table.Td>{roleSelect(member)}</Table.Td>
+              <Table.Td>{adminSwitch(member)}</Table.Td>
+              <Table.Td>{removeButton(member)}</Table.Td>
+            </Table.Tr>
+          ))}
         </Table.Tbody>
       </Table>
     </Table.ScrollContainer>

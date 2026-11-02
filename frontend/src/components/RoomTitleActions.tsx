@@ -192,7 +192,7 @@ export function RoomTitleActions({
           <Tooltip label={t('common.leave')} withArrow>
             <ActionIcon
               variant="subtle"
-              color="red"
+              color="danger"
               size="lg"
               aria-label={t('common.leave')}
               onClick={() => setLeaveOpened(true)}

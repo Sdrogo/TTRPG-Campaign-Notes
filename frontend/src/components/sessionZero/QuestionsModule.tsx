@@ -115,7 +115,7 @@ function MasterQuestions({ roomId, tags, module, step, editable }: StepProps & {
       <Stack gap="xs">
         {/* Title, settings and "Edit questions" share one row, wrapping on a narrow screen. */}
         <Group gap="md" align="center">
-          <Title order={2} fz="h4">
+          <Title order={2} fz="h3">
             {t('sessionZero.questions.title')}
           </Title>
           {editable && (
@@ -305,7 +305,7 @@ function PlayerQuestions({ roomId, module, step, editable }: StepProps) {
   }
   return (
     <Stack gap="md">
-      <Title order={2} fz="h4">
+      <Title order={2} fz="h3">
         {t('sessionZero.questions.title')}
       </Title>
       <AnswerForm module={module} step={step} editable={editable} />
@@ -536,7 +536,7 @@ function QuestionsEditor({
                   </LabeledActionIcon>
                   <LabeledActionIcon
                     variant="subtle"
-                    color="red"
+                    color="danger"
                     size="sm"
                     aria-label={t('sessionZero.modules.remove')}
                     onClick={() => setRows(rows.filter((other) => other.key !== row.key))}
@@ -607,13 +607,13 @@ function QuestionsEditor({
             <Button variant="default" onClick={() => setLeaving(false)}>
               {t('sessionZero.questions.keepEditing')}
             </Button>
-            <Button color="red" variant="light" onClick={onClose}>
+            <Button color="danger" variant="light" onClick={onClose}>
               {t('sessionZero.questions.discard')}
             </Button>
           </Group>
         ) : (
           <Group justify="flex-end">
-            <Button variant="default" onClick={close}>
+            <Button variant="subtle" color="gray" onClick={close}>
               {t('common.cancel')}
             </Button>
             <Button

@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { Box, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useLandingEvents, useRoomSections } from '../hooks/useLanding';
 import { useMembers } from '../hooks/useMembers';
 import { useRoom } from '../hooks/useRooms';
 import { useReadOnly } from '../hooks/useViewAs';
-import { FullPageLoader, SignInRequired } from '../components/PageState';
+import { FullPageLoader, SignInRequired, SectionLoader } from '../components/PageState';
 import { PageLayout } from '../components/PageLayout';
 import { RoomTitleActions } from '../components/RoomTitleActions';
 import { RoomPdfExports } from '../components/pdf/RoomPdfExports';
@@ -18,6 +18,7 @@ import { canCreateDocuments } from '../lib/roomPermissions';
 import { sectionHref } from '../lib/landing';
 import { sectionDescription, sectionTitle } from '../lib/landingText';
 import { useBackState } from '../lib/backNav';
+import { PageHeading } from '../components/PageHeading';
 
 /**
  * `/rooms/:roomId`: the Room's landing page (spec 55), what a Room card
@@ -52,21 +53,14 @@ function RoomLandingContent({ roomId, currentUserId }: { roomId: string; current
 
   return (
     <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId} showIndex>
-      <Group justify="space-between" align="flex-end" wrap="nowrap" className="documents-page-heading">
-        <Stack gap={2} style={{ minWidth: 0 }}>
-          {room.data && (
-            <Text size="xs" c="dimmed" tt="uppercase" fw={600} className="documents-kicker">
-              {t('roomLanding.kicker')}
-            </Text>
-          )}
-          <Group gap="sm" wrap="nowrap">
-            <Title order={1} className="documents-page-title" style={{ fontFamily: 'var(--font-display)' }}>
-              {room.data ? room.data.name : t('roomLanding.home')}
-            </Title>
-            {canEdit && <EditModeButton editing={editing} onChange={setEditing} />}
-          </Group>
-        </Stack>
-        {room.data && me && !readOnly && (
+      <PageHeading
+        kicker={room.data && t('roomLanding.kicker')}
+        title={room.data ? room.data.name : t('roomLanding.home')}
+        titleAfter={canEdit && <EditModeButton editing={editing} onChange={setEditing} />}
+        actions={
+          room.data &&
+          me &&
+          !readOnly && (
           <RoomTitleActions
             roomId={roomId}
             roomName={room.data.name}
@@ -77,10 +71,11 @@ function RoomLandingContent({ roomId, currentUserId }: { roomId: string; current
             onLeft={() => navigate('/rooms')}
             viewAsMembers={isMaster ? members.data!.filter((m) => m.userId !== currentUserId) : undefined}
           />
-        )}
-      </Group>
+          )
+        }
+      />
       {!readOnly && <RoomPdfExports roomId={roomId} userId={currentUserId} />}
-      {sections.isPending && <Loader color="accent" />}
+      {sections.isPending && <SectionLoader />}
       {sections.isError && <Text c="red">{t('roomLanding.loadError')}</Text>}
       {sections.data &&
         (canEdit && editing ? (
