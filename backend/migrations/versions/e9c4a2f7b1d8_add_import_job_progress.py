@@ -6,7 +6,7 @@ says when it last saved, so a job is taken as lost only when it stops
 progressing and a restart can resume its images.
 
 Revision ID: e9c4a2f7b1d8
-Revises: d5b8e1f3a9c7
+Revises: e8c4a2f6b1d9
 Create Date: 2026-11-02 15:00:00.000000
 
 """
@@ -20,7 +20,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "e9c4a2f7b1d8"
-down_revision: Union[str, Sequence[str], None] = "d5b8e1f3a9c7"
+down_revision: Union[str, Sequence[str], None] = "e8c4a2f6b1d9"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

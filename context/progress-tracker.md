@@ -281,7 +281,7 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `e8c4a2f6b1d9` (Section tools + block `collapsed`, drops `rooms.maps_position`; spec 60_2, PR #290), after `d5b8e1f3a9c7` (Room landing page, spec 55, PR #283), after `c8f2d6a4e1b7` (poll choice description,
+- **Head in the repository**: `e9c4a2f7b1d8` (import job progress, spec 59, PR #288), after `e8c4a2f6b1d9` (Section tools + block `collapsed`, drops `rooms.maps_position`; spec 60_2, PR #290), after `d5b8e1f3a9c7` (Room landing page, spec 55, PR #283), after `c8f2d6a4e1b7` (poll choice description,
   spec 54, PR #280: one nullable `text` column on
   `session_zero_poll_options`), after `b9e4c2a7d1f3` (Session 0 polls, spec 53,
   PR #276), after `a7d3f9b2c6e1` (Session 0 DDI steps, spec
@@ -289,7 +289,7 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending**: `e8c4a2f6b1d9` (spec 60_2, PR #290) on staging (before PR #290 merges) and on production (before the release that ships it). Both are at `d5b8e1f3a9c7`.
+- **Pending**: `e8c4a2f6b1d9` (spec 60_2, PR #290) and then `e9c4a2f7b1d8` (spec 59, PR #288) on staging (each before its PR merges) and on production (before the release that ships them). Both are at `d5b8e1f3a9c7`.
 - **Staging database**: `d5b8e1f3a9c7` (Room landing page, spec 55,
   PR #283, applied 2026-11-02 with `backend/.env.staging` loaded, before
   the PR merges); `c8f2d6a4e1b7` before it (poll choice description, spec 54,
@@ -343,7 +343,7 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: `e8c4a2f6b1d9` (spec 60_2).
+- **Pending on production**: `e8c4a2f6b1d9` (spec 60_2), then `e9c4a2f7b1d8` (spec 59).
 
 Recent chain, newest first (where each came from):
 `b9e4c2a7d1f3` Session 0 polls (53) ← `a7d3f9b2c6e1` Session 0 DDI (47_3) ← `f3a9c1e7b5d4` Session 0 Questions (47_2) ← `e5c1a8f3b7d2` Session 0 chain (47_1) ← `d4a7e2c9f1b3` post-it order (46d_2) ← `c3f8a1d6e9b4` colours and groups (46c) ← `4797859660e2` Session 0 boards (46_1) ← `b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
