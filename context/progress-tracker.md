@@ -281,7 +281,7 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `c1d7e3a9f5b2` (Clocks, spec 61, PR #293, on its branch until merged), after `e9c4a2f7b1d8` (import job progress, spec 59, PR #288), after `e8c4a2f6b1d9` (Section tools + block `collapsed`, drops `rooms.maps_position`; spec 60_2, PR #290), after `d5b8e1f3a9c7` (Room landing page, spec 55, PR #283), after `c8f2d6a4e1b7` (poll choice description,
+- **Head in the repository**: `c1d7e3a9f5b2` (Clocks, spec 61, PR #293, merged into `staging`), after `e9c4a2f7b1d8` (import job progress, spec 59, PR #288), after `e8c4a2f6b1d9` (Section tools + block `collapsed`, drops `rooms.maps_position`; spec 60_2, PR #290), after `d5b8e1f3a9c7` (Room landing page, spec 55, PR #283), after `c8f2d6a4e1b7` (poll choice description,
   spec 54, PR #280: one nullable `text` column on
   `session_zero_poll_options`), after `b9e4c2a7d1f3` (Session 0 polls, spec 53,
   PR #276), after `a7d3f9b2c6e1` (Session 0 DDI steps, spec
@@ -289,7 +289,7 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending**: `c1d7e3a9f5b2` (spec 61, PR #293) on production (before the release that ships it). Production is at `e9c4a2f7b1d8`; staging is already at `c1d7e3a9f5b2`.
+- **Pending**: none. Production and staging are both at `c1d7e3a9f5b2 (head)` (2026-11-03).
 - **Staging database**: `c1d7e3a9f5b2` (Clocks, spec 61, PR #293, applied
   2026-11-03 with `backend/.env.staging` loaded, `alembic current` =
   `c1d7e3a9f5b2 (head)`); `e9c4a2f7b1d8` before it (import job progress, spec 59,
@@ -317,7 +317,12 @@ here and remind the product owner.
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `e9c4a2f7b1d8` (import job progress, spec 59, PR
+- **Production database**: `c1d7e3a9f5b2` (Clocks, spec 61, PR #293: new
+  clock tables, unused by the code in production until the release),
+  applied 2026-11-03 with `backend/.env` loaded (plain `alembic upgrade
+  head`, from `e9c4a2f7b1d8`; product owner's go-ahead), ahead of the
+  staging to `main` release PR that ships it; `alembic current` =
+  `c1d7e3a9f5b2 (head)`. Before it, `e9c4a2f7b1d8` (import job progress, spec 59, PR
   #288) and `e8c4a2f6b1d9` (Section tools + block `collapsed`, drops
   `rooms.maps_position`, spec 60_2, PR #290), both applied 2026-11-03 in one
   `alembic upgrade e9c4a2f7b1d8` with `backend/.env` loaded (product owner's
@@ -354,7 +359,7 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: `c1d7e3a9f5b2` (spec 61, applied to staging 2026-11-03). `e8c4a2f6b1d9` and `e9c4a2f7b1d8` were applied 2026-11-03.
+- **Pending on production**: none. `e8c4a2f6b1d9` and `e9c4a2f7b1d8` were applied 2026-11-03 (as was `c1d7e3a9f5b2`, later the same day).
 
 Recent chain, newest first (where each came from):
 `b9e4c2a7d1f3` Session 0 polls (53) ← `a7d3f9b2c6e1` Session 0 DDI (47_3) ← `f3a9c1e7b5d4` Session 0 Questions (47_2) ← `e5c1a8f3b7d2` Session 0 chain (47_1) ← `d4a7e2c9f1b3` post-it order (46d_2) ← `c3f8a1d6e9b4` colours and groups (46c) ← `4797859660e2` Session 0 boards (46_1) ← `b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
@@ -903,7 +908,7 @@ on `main`.
   answered 2026-11-03 (Clocks page + Clocks block in Sections, Master
   creates and marks by default, 2-16 segments, no hidden progress,
   duplication copies templates not clocks, "Clock" in Italian); Q8 group
-  modes confirmed: **ticket confirmed; 61_1 and 61_2 built** (backend) in PR #293, migration `c1d7e3a9f5b2` applied to the staging DB 2026-11-03, still to apply to production before the release; **61_3 and 61_4 built** (frontend) 2026-11-03 in one PR, no migration: ticket 61 complete): progress clocks as Room
+  modes confirmed: **ticket confirmed; 61_1 and 61_2 built** (backend) in PR #293, migration `c1d7e3a9f5b2` applied to the staging DB 2026-11-03, applied to production 2026-11-03, ahead of the release; **61_3 and 61_4 built** (frontend) 2026-11-03 in one PR, no migration: ticket 61 complete): progress clocks as Room
   content, universal and customisable: per-Room clock rules (who opens and
   marks, undo or "no going back", free Room labels the Master creates,
   Master-defined mark kinds; nothing hard-coded; map palette colours; any
