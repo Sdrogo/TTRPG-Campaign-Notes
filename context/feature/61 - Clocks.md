@@ -51,7 +51,7 @@ proposed default until answered.
    Clocks page (⚙ "Regole"), applied to every clock of the Room:
    - **Who opens a clock**: "Solo il Master" | "Tutti" | "I giocatori
      propongono, il Master approva" (**default**, Cowboy Bebop's "anyone may
-     ask, the Master defines"; Decision 12). A Player's own opened clock is
+     ask, the Master defines"; Decision 13). A Player's own opened clock is
      theirs (creator rights below). Players never open clocks when the Room
      disables Document creation by Players (D-13).
    - **Who marks**: "Solo il Master" | "Il Master e chi l'ha aperto"
@@ -63,7 +63,7 @@ proposed default until answered.
      set "Solo avanti" on its own.
    - **Labels** ("Etichette", product owner 2026-11-03: no hard-coded
      values): a Room-wide list of free labels, each a name (≤30) and a
-     colour from the app's palette (Decision 4). The Master creates them
+     colour from the app's palette (Decision 4b). The Master creates them
      where they are needed, typing a new name in a clock's label picker
      ("Crea «Jazz»"), or in the rules dialog, and the Room remembers them
      for every later clock; the rules dialog renames, recolours, reorders
@@ -108,7 +108,7 @@ proposed default until answered.
    prova Jazz"; shown, never enforced: the app doesn't roll dice), optional
    **consequence** ("Cosa succede quando si chiude", ≤500, Markdown) seen
    only by the Master, its **labels** (≤6), an optional linked
-   **Document** (Decision 18), the visibility (Decision 14).
+   **Document** (Decision 19), the visibility (Decision 15).
 4b. **Colours are the app's own palette** (product owner, 2026-11-03): the
    same 17 colours as relationship-map cards, arrows and groups (spec 28,
    `MAP_COLORS` / `COLOR_VALUES` in `lib/maps.ts`: default, red, green,
