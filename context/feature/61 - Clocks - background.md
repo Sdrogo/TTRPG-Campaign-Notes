@@ -7,7 +7,8 @@ builds, this file says what the tool has to be faithful to.
 
 Written by Claude on 2026-11-03 at the product owner's request ("documentazione
 sul concetto stesso di Clock nei GDR"). Rules are described in our own words;
-no game text is quoted. Game names are given to place ideas, never to be shown
+apart from a few game terms and the short names of rules (a handful of
+words each), no game text is quoted. Game names are given to place ideas, never to be shown
 in the app.
 
 ## 1. The idea in one paragraph
