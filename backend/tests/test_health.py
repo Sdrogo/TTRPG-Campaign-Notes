@@ -30,7 +30,15 @@ def test_lifespan_starts_and_cancels_the_sweepers(monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(main_module, "run_sweeper", fake_sweeper)
     monkeypatch.setattr(main_module, "run_export_sweeper", fake_sweeper)
+    resumed: list[bool] = []
+
+    async def fake_resume() -> None:
+        resumed.append(True)
+
+    monkeypatch.setattr(main_module, "resume_import_jobs", fake_resume)
 
     with TestClient(main_module.app) as lifespan_client:
         response = lifespan_client.get("/health")
         assert response.status_code == 200
+    # Spec 59: the imports cut off in their image phase, before the sweeps.
+    assert resumed == [True]

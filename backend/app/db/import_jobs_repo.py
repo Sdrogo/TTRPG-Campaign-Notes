@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import delete, text, update
+from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +33,9 @@ def _job_from_row(row: ImportJobRow) -> ImportJob:
         error=row.error,
         created_at=row.created_at,
         finished_at=row.finished_at,
+        # The work list lives in its own column, written once, so the
+        # per-image saves of `progress` stay small (spec 59).
+        progress=None if row.progress is None else {**row.progress, "work": row.image_work or []},
     )
 
 
@@ -52,6 +55,7 @@ async def insert_job(session: AsyncSession, job: ImportJob) -> bool:
             error=None,
             created_at=job.created_at,
             finished_at=None,
+            updated_at=job.created_at,
         )
         .on_conflict_do_nothing(
             index_elements=["room_id", "requested_by"],
@@ -72,8 +76,86 @@ async def mark_running(session: AsyncSession, job_id: uuid.UUID) -> None:
     await session.execute(
         update(ImportJobRow)
         .where(ImportJobRow.id == job_id, ImportJobRow.status == ImportStatus.QUEUED.value)
-        .values(status=ImportStatus.RUNNING.value)
+        .values(status=ImportStatus.RUNNING.value, updated_at=func.now())
     )
+
+
+async def start_images(session: AsyncSession, job_id: uuid.UUID, progress: dict[str, Any]) -> None:
+    """The Documents are written: the job keeps the image phase's work list
+    and outcome so far in `progress` and drops the parsed files, which it no
+    longer needs (spec 59 Decision 4). The work list goes to `image_work`,
+    never rewritten after this."""
+    rest = {key: value for key, value in progress.items() if key != "work"}
+    await session.execute(
+        update(ImportJobRow)
+        .where(ImportJobRow.id == job_id, ImportJobRow.status == ImportStatus.RUNNING.value)
+        .values(payload=None, image_work=progress["work"], progress=rest, updated_at=func.now())
+    )
+
+
+async def _locked_progress(session: AsyncSession, job_id: uuid.UUID) -> dict[str, Any] | None:
+    """The job's progress without its work list, its row locked until the
+    caller's transaction ends."""
+    return await session.scalar(
+        select(ImportJobRow.progress).where(ImportJobRow.id == job_id).with_for_update()
+    )
+
+
+async def _save_progress(
+    session: AsyncSession, job_id: uuid.UUID, progress: dict[str, Any]
+) -> None:
+    """Stores the job's progress, now its latest sign of life."""
+    await session.execute(
+        update(ImportJobRow)
+        .where(ImportJobRow.id == job_id)
+        .values(progress=progress, updated_at=func.now())
+    )
+
+
+async def mark_stored(session: AsyncSession, job_id: uuid.UUID, index: int, value: str) -> None:
+    """Entry `index` of the work list is stored (`value`: the new image's
+    id, or "" for a map background or a Section image). Called in the
+    transaction that stores it, so a resumed job never stores it twice
+    (spec 59 Decision 6). Nothing for a job no longer in its image phase."""
+    progress = await _locked_progress(session, job_id)
+    if progress is not None:
+        await _save_progress(
+            session, job_id, {**progress, "stored": {**progress["stored"], str(index): value}}
+        )
+
+
+async def save_block(
+    session: AsyncSession, job_id: uuid.UUID, done: int, skipped: dict[str, list[Any]]
+) -> None:
+    """A block of the work list is finished: entries before `done` need
+    nothing more, and `skipped` (by result list) adds what was left out."""
+    progress = await _locked_progress(session, job_id)
+    if progress is not None:
+        merged = {**progress, "done": done}
+        for key, items in skipped.items():
+            merged[key] = [*progress[key], *items]
+        await _save_progress(session, job_id, merged)
+
+
+async def claim_image_phases(session: AsyncSession) -> list[uuid.UUID]:
+    """At startup: the jobs a restart cut off in their image phase, marked as
+    progressing now so the sweep leaves them to be resumed (spec 59
+    Decision 6)."""
+    ids = list(
+        (
+            await session.scalars(
+                select(ImportJobRow.id).where(
+                    ImportJobRow.status == ImportStatus.RUNNING.value,
+                    ImportJobRow.progress.is_not(None),
+                )
+            )
+        ).all()
+    )
+    if ids:
+        await session.execute(
+            update(ImportJobRow).where(ImportJobRow.id.in_(ids)).values(updated_at=func.now())
+        )
+    return ids
 
 
 async def mark_done(
@@ -88,6 +170,8 @@ async def mark_done(
         .values(
             status=ImportStatus.DONE.value,
             payload=None,
+            progress=None,
+            image_work=None,
             result=result,
             error=None,
             finished_at=finished_at,
@@ -107,6 +191,8 @@ async def mark_failed(
         .values(
             status=ImportStatus.FAILED.value,
             payload=None,
+            progress=None,
+            image_work=None,
             error=error[:200],
             finished_at=finished_at,
         )
@@ -114,27 +200,37 @@ async def mark_failed(
 
 
 async def fail_active(
-    session: AsyncSession, error: str, now: datetime, created_before: datetime | None = None
+    session: AsyncSession, error: str, now: datetime, idle_before: datetime | None = None
 ) -> int:
-    """Fails queued and running jobs (all of them at startup, when nothing can
-    be running any more; only those created before `created_before` in the
-    sweep), so their owners aren't blocked by a job that will never finish.
+    """Fails queued and running jobs, so their owners aren't blocked by a job
+    that will never finish: at startup, every one that hadn't written its
+    Documents yet (it wrote nothing; one in its image phase is resumed, spec
+    59); in the sweep, those that saved nothing since `idle_before`.
     Returns how many."""
     statement = (
         update(ImportJobRow)
         .where(ImportJobRow.status.in_(_ACTIVE))
-        .values(status=ImportStatus.FAILED.value, payload=None, error=error, finished_at=now)
+        .values(
+            status=ImportStatus.FAILED.value,
+            payload=None,
+            progress=None,
+            image_work=None,
+            error=error,
+            finished_at=now,
+        )
     )
-    if created_before is not None:
-        statement = statement.where(ImportJobRow.created_at < created_before)
+    if idle_before is None:
+        statement = statement.where(ImportJobRow.progress.is_(None))
+    else:
+        statement = statement.where(ImportJobRow.updated_at < idle_before)
     return int((await session.execute(statement)).rowcount)  # type: ignore[attr-defined]
 
 
 async def sweep(session: AsyncSession, now: datetime) -> None:
-    """One housekeeping pass, committed by the caller: fails the jobs active
-    for longer than `IMPORT_STALE_AFTER` and deletes the finished ones older
-    than `IMPORT_RETENTION`."""
-    await fail_active(session, "stale", now, created_before=now - IMPORT_STALE_AFTER)
+    """One housekeeping pass, committed by the caller: fails the active jobs
+    that saved nothing for `IMPORT_STALE_AFTER` and deletes the finished ones
+    older than `IMPORT_RETENTION`."""
+    await fail_active(session, "stale", now, idle_before=now - IMPORT_STALE_AFTER)
     await session.execute(
         delete(ImportJobRow).where(
             ImportJobRow.status.not_in(_ACTIVE), ImportJobRow.finished_at < now - IMPORT_RETENTION

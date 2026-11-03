@@ -177,6 +177,7 @@
       "tooManyFiles": "Só se podem importar no máximo {max} ficheiros de cada vez",
       "tooManyDocuments": "Só se podem importar no máximo {max} Documentos de cada vez",
       "tooManyImages": "Só se podem importar no máximo {max} imagens de cada vez",
+      "tooManyImageLinks": "Podem ler-se no máximo {max} ligações de imagens dos ficheiros de uma vez",
       "tooManyMaps": "Só se podem importar no máximo {max} mapas de cada vez",
       "tooManySections": "Só se podem importar no máximo {max} secções do Início da Sala de cada vez",
       "nameRequired": "Um Documento do ficheiro não tem nome",

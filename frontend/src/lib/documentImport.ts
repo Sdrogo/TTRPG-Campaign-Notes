@@ -163,7 +163,22 @@ export interface ImportResult {
   /** The Sections of the Room home it wrote (spec 56). */
   sections: ImportedSection[];
   skippedSections: ImportSkippedSection[];
+  /** How many images the files brought and how many were stored (spec 59); null for older jobs. */
+  images: ImportImageCount | null;
 }
+
+/**
+ * Images of an import (spec 59): `total` in its work list, `stored` so far or
+ * in the end, `done` (stored or skipped) while it runs.
+ */
+export interface ImportImageCount {
+  total: number;
+  stored: number;
+  done: number;
+}
+
+/** The most images the Documents ticked in one import may bring (spec 59 Decision 1). */
+export const MAX_IMPORT_IMAGES = 2000;
 
 /** Where an import job is. */
 export type ImportJobStatus = 'queued' | 'running' | 'done' | 'failed';
@@ -175,6 +190,8 @@ export interface ImportJob {
   createdAt: string;
   finishedAt: string | null;
   result: ImportResult | null;
+  /** While its images arrive, once its Documents are written (spec 59). */
+  progress: ImportImageCount | null;
 }
 
 interface RawImportWarning {
@@ -242,7 +259,9 @@ export interface RawImportJob {
     skipped_maps: ImportSkippedMap[];
     sections: ImportedSection[];
     skipped_sections: ImportSkippedSection[];
+    images?: ImportImageCount | null;
   } | null;
+  progress?: ImportImageCount | null;
 }
 
 /** Maps the API's preview to the app's. */
@@ -307,7 +326,9 @@ export function toImportJob(raw: RawImportJob): ImportJob {
             skippedMaps: raw.result.skipped_maps,
             sections: raw.result.sections,
             skippedSections: raw.result.skipped_sections,
+            images: raw.result.images ?? null,
           },
+    progress: raw.progress ?? null,
   };
 }
 

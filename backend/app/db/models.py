@@ -738,6 +738,11 @@ class ImportJobRow(Base):
     error: Mapped[str | None] = mapped_column(String(200))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Spec 59: the image phase's work list and how far it got, and when the
+    # job last saved (a job is taken as lost when it stops progressing).
+    progress: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    image_work: Mapped[list[Any] | None] = mapped_column(JSONB)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class RelationshipMapRow(Base):
