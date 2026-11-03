@@ -18,8 +18,9 @@
   the **labels** its clocks can carry, the **kinds of mark**), and clocks
   can be **grouped** with an end rule (a race, a turn, a sequence of
   layers). Presets cover the common games without naming them.
-- Clocks live on their own **Clocks page** in the Room (Q1); a Section block
-  and the Document aside are left to a later ticket.
+- Clocks live on their own **Clocks page** in the Room (Q1) and can be put
+  in a **Section** as a block (product owner, 2026-11-03); the Document
+  aside is left to a later ticket.
 - `requirements.md` is protected and has no requirement for clocks; this
   ticket adds none. When the product owner approves it, a new `FR-` (and a
   `VR-`) can be added at their request only.
@@ -43,8 +44,8 @@
 
 Proposed by Claude on 2026-11-03 from the request, the two manuals and the
 background study. The product owner answered Q1-Q4 and Q10 on 2026-11-03
-(see "Answers"); Q5-Q9 are still open and the Decisions follow the proposed
-default until answered.
+(see "Answers"); Q5-Q9 the same day. Q8 was explained again in the thread
+and its default stands until the product owner confirms it.
 
 ### 1. The Room's clock rules
 
@@ -205,7 +206,9 @@ default until answered.
     `clock_visibility_changed` to the AuditLog. A hidden clock is absent
     and 404; a group shows only the clocks the viewer sees, and a race or
     turn's result names only visible clocks.
-16. **Hidden progress** (Q6): not in this ticket. A Master who wants
+16. **No "hidden progress" option** (Q6, product owner: "possono essere
+    direttamente nascosti i clock"): a clock is shown or hidden whole, by
+    its visibility. A Master who wants
     "something is coming" makes a visible clock with no consequence and
     keeps the real one Master only.
 
@@ -219,14 +222,24 @@ default until answered.
     `page_clocks`** on the Room home is added when the Room's first clock or
     rules are saved, removable like Maps ("Riaggiungi Clock"). The page is
     **the** place of clocks in this ticket (Q1: "Creiamo una pagina").
-18. **Clocks block in a Section**: later ticket (block kind `clocks`, chips
-    of clocks and groups), not built here.
+18. **Clocks block in a Section** (product owner, 2026-11-03: "i clock
+    possono essere inseriti come feature in un blocco in una sezione"): the
+    add-block popover of a Section (spec 55/60) lists **Clock** among the
+    "Strumenti"; it makes a block of kind `clocks` whose bar has ordered
+    chips of clocks and groups of the Room, "+ Clock" (pick existing ones,
+    or "Nuovo clock…", which creates the clock on the Clocks page and adds
+    it) and the switch "Tutti i clock aperti" (the block then follows the
+    Clocks page order, archived ones out). The faces are a wrapping strip
+    under a `BlockHeading` (folds like every block, spec 60), marked in
+    place with the same rights as on the page. Unlike a spec 60 tool block
+    the block owns no clock: deleting it (5 s undo, as Documents and maps
+    blocks) leaves the clocks on the Clocks page. A block the viewer sees
+    nothing of is left out; the Master reads "Niente da mostrare".
 19. **Document link**: a clock can still name a linked Document (shown as a
     link "→ Faro di Punta Grigia" in its detail, for whoever sees both),
     but the Document page shows nothing yet: the aside is a later ticket.
 20. **Room Index**: a "Clock" entry when the page card exists.
-21. **Not in this ticket** (Q9): the Section block and Document aside
-    (above), clocks on maps, in the Session 0 chain or as a spec 60 tool
+21. **Out of scope** (Q9, product owner): the Document aside (above), clocks on maps, in the Session 0 chain or as a spec 60 tool
     block, in the PDF, in search, dice rolling or automatic marks from
     rolls, Ironsworn-style progress tracks.
 
@@ -254,9 +267,13 @@ default until answered.
 
 ### 9. Copy, export, GDPR, languages, Demo
 
-26. **Duplicate Room** (spec 33): rules and templates copied; clocks and
-    groups copied **emptied** (no marks, history dropped, groups not ended),
-    proposed and archived ones left out. (Q5)
+26. **Duplicate Room** (spec 33; Q5, product owner: "Cloniamo i modelli
+    custom dei clock definiti, ma non i clock stessi"): the copy gets the
+    Room's clock rules, labels, mark kinds and **templates** ("Modelli"),
+    and **no clocks and no groups**. A Clocks block of a copied Section
+    keeps its "Tutti i clock aperti" switch and loses its chips (it reads
+    "Niente da mostrare" until clocks are made). The `page_clocks` card is
+    copied like the other page cards.
 27. **JSON export/import** (`schema_version` 5): `clock_rules`,
     `clock_templates`, `clocks` (settings, marks as counts per kind, state,
     group, Document by id/name), `clock_groups`; Master-only fields only in
@@ -308,8 +325,8 @@ default until answered.
   `turn` | `sequence`), `position`, `ended_at`, `result` (jsonb: winner
   ids, tie, outcome label).
 - `room_section_blocks.kind` adds `clocks` (+ `room_section_block_clocks`
-  with a clock or a group per row, and `all_clocks`); `room_sections.kind`
-  adds `page_clocks`. RLS + deny policy on every new table.
+  with a clock or a group per row, both cascade, and `all_clocks`);
+  `room_sections.kind` adds `page_clocks`. RLS + deny policy on every new table.
 - Pure rules in `app/domain/clocks.py`: presets, `apply_mark` (clamp,
   forward-only, kinds' "who", state transitions), `can_*`, group engine
   (`race_result`, `turn_should_end`, `sequence_markable`), proposal
@@ -325,7 +342,8 @@ default until answered.
   stages, consequence for the Master, history, "Segna…"), `ClockRulesDialog`
   (presets, policies, labels and mark kinds editors with sortable
   rows), `MarkKindLegend`.
-- `pages/RoomClocksPage.tsx`; Index entry; hooks `useClocks`,
+- `pages/RoomClocksPage.tsx`; `SectionBlock` kind `clocks` and its
+  `BlockBar` chips; "Clock" in the add-block popover's Strumenti; Index entry; hooks `useClocks`,
   `useClockRules`, `useClockEvents` (on `useRoomEvents`).
 - Strings under `clocks.*` in 12 languages; `ui-context.md` gets "Clocks
   (spec 61)" when built.
@@ -335,11 +353,11 @@ default until answered.
 | Unit | What | Migration | Claude's build time |
 | --- | --- | --- | --- |
 | 61_1 | Backend core: rules, labels, mark kinds, templates, clocks, marks and undo, history, visibility and Reveal, proposals, stream topics, tests | **yes** | about 3 h |
-| 61_2 | Backend: groups (race, turn, sequence), page card, copy, export/import schema 5, GDPR, Demo seed, tests | same migration | about 2 h |
+| 61_2 | Backend: groups (race, turn, sequence), page card, block kind `clocks`, copy, export/import schema 5, GDPR, Demo seed, tests | same migration | about 2 h |
 | 61_3 | Frontend: `ClockFace`, clock dialog, rules dialog, Clocks page, live marks, closing toast, 12 languages, tests | no | about 3.5 h |
-| 61_4 | Frontend: groups and their prompts, proposals, Index, screenshots | no | about 1.5 h |
+| 61_4 | Frontend: groups and their prompts, proposals, Clocks block in Sections, Index, screenshots | no | about 2.5 h |
 
-About 10 hours. One migration for 61_1 and 61_2 (both backend, merged
+About 11 hours. One migration for 61_1 and 61_2 (both backend, merged
 together); it goes to the staging DB before they merge and to production
 before the release that ships them.
 
@@ -353,38 +371,44 @@ before the release that ships them.
   ends on the first close and records a tie; a turn ends only on the
   Master's confirmation and lapses the open clocks; a sequence refuses
   marks on a locked clock; proposals visible to proposer and Master only,
-  accepted or refused; rules changes keep values; duplication empties and
-  skips proposed/archived; export/import round trip; GDPR; limits.
+  accepted or refused; rules changes keep values; duplication copies rules,
+  labels, mark kinds and templates and no clocks; export/import round trip; GDPR; limits.
 - Frontend: wedge click fills/empties; −/+ and keyboard; kind picker and
   wedge colours; undo toast; remote marks re-render; closing toast; the
   turn and sequence prompts; rules presets fill the dialog; templates fill
   the clock dialog; proposals flow; the Player view hides Master-only
-  fields.
-- Screenshots at desktop and phone width: the Clocks page (a race, a turn
+  fields; the Clocks block's chips and "Tutti i clock aperti"; deleting a
+  block keeps its clocks.
+- Screenshots at desktop and phone width: a Section with a Clocks block,
+  the Clocks page (a race, a turn
   group with kinds, a countdown), the clock dialog, the rules dialog, the
   detail with history.
 
 ## Answers (product owner, 2026-11-03)
 
-- Q1 (where): "Creiamo una pagina": a Clocks page. Section block and
-  Document aside left to a later ticket. -> Decisions 17-21.
+- Q1 (where): "Creiamo una pagina": a Clocks page; later the
+  same day also a Section block (below); Document aside out. -> Decisions
+  17-21.
 - Q2 and Q3 (defaults): "I Clock di default vengono creati dal master e
   segnati secondo le impostazioni del clock, ma di default master": who
   opens = Master only, who marks = Master only, each clock can change who
   marks it. -> Decisions 1, 6.
 - Q4 (size): 2-16, odd included. -> Decision 4c.
 - Q10 (Italian name): "Clock". -> Decision 29.
+- Q5 (duplicate): copy the Room's custom clock templates (with rules,
+  labels, mark kinds), not the clocks. -> Decision 26.
+- Q6 (hidden progress): no; a clock is hidden whole by its visibility. ->
+  Decision 16.
+- Q7 (closing toast): yes. -> Decision 23.
+- Q8 (groups): explained again in the thread; default kept until confirmed.
+- Q9 (maps, Session 0, PDF, Document aside): out of scope. -> Decision 21.
+- Also: clocks can go in a Section as a block. -> Decision 18.
 - Earlier the same day: the map palette for every colour, free Room labels
   instead of typed properties, any size not just the shortcuts.
 
 ## Open questions (for the product owner)
 
-- **Q5. Duplicating a Room**: proposed clocks copied emptied, proposed and
-  archived ones left out. Or copied as they are?
-- **Q6. Hidden progress** (name visible, fill hidden): proposed not now.
-- **Q7. Closing toast** for whoever is viewing: proposed yes, quiet, once.
-- **Q8. Groups**: the four modes (free, race, turn, sequence) in this
-  ticket, the turn ended by the Master's confirmation rather than
-  automatically? Proposed yes.
-- **Q9. Later tickets**: clocks on maps, as a Session 0 step or tool block,
-  in the PDF; agreed to leave them out?
+- **Q8. Groups**: the four modes (Libero, Gara, Svolta, Sequenza, Decision
+  11) in this ticket, the turn ended by the Master's confirmation rather
+  than automatically? Proposed yes. (Explained again in the thread on
+  2026-11-03.)
