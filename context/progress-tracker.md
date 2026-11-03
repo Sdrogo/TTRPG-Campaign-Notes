@@ -926,7 +926,9 @@ on `main`.
   map's gentle curves, several relations between the same two cards fanned
   out, plain-line bundles kept as parallel lanes, labels riding the curve.
   Frontend only, no migration; a draggable bend per arrow is left for a
-  later ticket (it needs a migration).
+  later ticket (it needs a migration). **62b** (same PR): a click on a map
+  card's name always opens the split pane instead of leaving for the
+  Document page (Ctrl/Cmd-click still opens a tab).
 - **61, Clocks** (asked by the product owner 2026-11-03; **ticket proposed; Q1-Q7, Q9, Q10
   answered 2026-11-03 (Clocks page + Clocks block in Sections, Master
   creates and marks by default, 2-16 segments, no hidden progress,
