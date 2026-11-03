@@ -1653,7 +1653,9 @@
       "session_zero": {
         "title": "Sesión 0",
         "body": "Sesiones, etapas y encuestas"
-      }
+      },
+      "tools": "Herramientas",
+      "toolsBody": "Una herramienta de la Sesión 0 propia, oculta a los jugadores hasta que la muestres"
     },
     "edit": {
       "start": "Editar",
@@ -1699,7 +1701,17 @@
       "blockDeleted": "Bloque eliminado",
       "undo": "Deshacer",
       "renameSection": "Renombrar la sección {{name}}",
-      "addDescription": "Añadir una descripción"
+      "addDescription": "Añadir una descripción",
+      "collapsed": "Plegado al abrir",
+      "deleteToolTitle": "¿Eliminar {{name}}?",
+      "deleteToolBody": "También se eliminan los votos, las notas y las respuestas. No se puede deshacer."
+    },
+    "tool": {
+      "draft": "Borrador",
+      "draftHint": "Los jugadores aún no la ven",
+      "show": "Mostrar a los jugadores",
+      "hide": "Ocultar a los jugadores",
+      "loadError": "No se pudo cargar la herramienta."
     }
   }
 }

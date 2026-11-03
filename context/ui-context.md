@@ -989,6 +989,15 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   (`SectionDescriptionEditor`, "Aggiungi una descrizione" when empty, a
   textarea saved on blur), and an image button beside the title opens
   "Modifica info".
+  **Tool blocks** (spec 60_3, `ToolBlock`): a Session 0 step drawn inline
+  under a `BlockHeading`, with the Session 0 page's own step components.
+  The add-block popover lists them after the three tiles under a
+  "Strumenti" `Divider` (compact default buttons with the toolbox icon).
+  A tool hidden from the Players shows the Master a gray light "Bozza"
+  badge and, in reading mode, a compact light "Mostra ai giocatori" button
+  (eye icon); in edit mode the bar has an eye `ActionIcon` instead (show or
+  hide). Deleting a tool opens a confirm `Modal` (no undo toast). The block
+  ⋮ menu has "Chiuso all'apertura" with a check when set.
 - **Strings** live under `roomLanding.*` (`landing.*` is the public
   landing page's).
 

@@ -1609,7 +1609,9 @@
       "session_zero": {
         "title": "세션 0",
         "body": "세션, 단계, 투표"
-      }
+      },
+      "tools": "도구",
+      "toolsBody": "독립된 세션 0 도구로, 공개하기 전까지 플레이어에게 보이지 않습니다"
     },
     "edit": {
       "start": "편집",
@@ -1654,7 +1656,17 @@
       "blockDeleted": "블록이 삭제되었습니다",
       "undo": "실행 취소",
       "renameSection": "{{name}} 섹션 이름 바꾸기",
-      "addDescription": "설명 추가"
+      "addDescription": "설명 추가",
+      "collapsed": "열 때 접힘",
+      "deleteToolTitle": "{{name}}을(를) 삭제할까요?",
+      "deleteToolBody": "투표, 메모, 답변도 함께 삭제됩니다. 되돌릴 수 없습니다."
+    },
+    "tool": {
+      "draft": "초안",
+      "draftHint": "플레이어에게 아직 보이지 않습니다",
+      "show": "플레이어에게 표시",
+      "hide": "플레이어에게 숨기기",
+      "loadError": "도구를 불러오지 못했습니다."
     }
   }
 }

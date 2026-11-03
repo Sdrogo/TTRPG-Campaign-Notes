@@ -1653,7 +1653,9 @@
       "session_zero": {
         "title": "Session 0",
         "body": "Sessions, steps and polls"
-      }
+      },
+      "tools": "Tools",
+      "toolsBody": "A Session 0 tool of its own, hidden from the players until you show it"
     },
     "edit": {
       "start": "Edit",
@@ -1699,7 +1701,17 @@
       "blockDeleted": "Block deleted",
       "undo": "Undo",
       "renameSection": "Rename the section {{name}}",
-      "addDescription": "Add a description"
+      "addDescription": "Add a description",
+      "collapsed": "Folded when opened",
+      "deleteToolTitle": "Delete {{name}}?",
+      "deleteToolBody": "Its votes, post-its and answers are deleted too. This can't be undone."
+    },
+    "tool": {
+      "draft": "Draft",
+      "draftHint": "The players don't see it yet",
+      "show": "Show to players",
+      "hide": "Hide from players",
+      "loadError": "Couldn't load the tool."
     }
   }
 }

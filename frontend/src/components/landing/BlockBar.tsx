@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import {
   ActionIcon,
   Badge,
+  Box,
   Button,
   Checkbox,
   CloseButton,
@@ -18,24 +19,36 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import {
   CaretDownIcon,
+  CheckIcon,
   DotsThreeVerticalIcon,
+  EyeIcon,
+  EyeSlashIcon,
   FilesIcon,
   MapTrifoldIcon,
   PencilSimpleIcon,
   PlusIcon,
+  ToolboxIcon,
   UsersThreeIcon,
 } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { DragHandle, SortableItem, SortableList } from './Sortable';
 import { defaultBlockHeading, featureLabel, groupLabel, tagsOf } from '../../lib/landingText';
 import { sameTagSet } from '../../lib/mainItems';
-import { SESSION_ZERO_FEATURES, type BlockInput, type BlockKind, type BlockMapKind, type SessionZeroFeature } from '../../types/landing';
+import {
+  SESSION_ZERO_FEATURES,
+  type BlockInput,
+  type BlockKind,
+  type BlockMapKind,
+  type SessionZeroFeature,
+  type ToolKind,
+} from '../../types/landing';
 import type { MainItem, Tag } from '../../types/tag';
 
 /** A block's kind icon, on its bar and on the add-block tiles. */
 export function BlockKindIcon({ kind, size = 18 }: { kind: BlockKind; size?: number }) {
   if (kind === 'documents') return <FilesIcon size={size} aria-hidden="true" />;
   if (kind === 'maps') return <MapTrifoldIcon size={size} aria-hidden="true" />;
+  if (kind === 'tool') return <ToolboxIcon size={size} aria-hidden="true" />;
   return <UsersThreeIcon size={size} aria-hidden="true" />;
 }
 
@@ -163,6 +176,8 @@ interface BlockBarProps {
   onGroupsOpenChange?: (open: boolean) => void;
   /** A block not saved yet (no Tag or feature): closing its picker empty drops it. */
   onCancelDraft?: () => void;
+  /** A tool block's step kind and whether the Players see it, with the eye toggle (spec 60 Decision 4). */
+  tool?: { kind: ToolKind; visible: boolean; onToggleVisible: () => void };
 }
 
 /**
@@ -171,7 +186,7 @@ interface BlockBarProps {
  * place, the filter as chips (Tags, the map kind, the features), "Raggruppa"
  * on a Documents block, and a ⋮ with "Elimina".
  */
-export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPicker = null, onCancelDraft, onGroupsOpenChange }: BlockBarProps) {
+export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPicker = null, onCancelDraft, onGroupsOpenChange, tool }: BlockBarProps) {
   const { t } = useTranslation();
   const [picker, setPicker] = useState<'tags' | 'features' | 'groups' | null>(initialPicker);
   const closePicker = () => {
@@ -190,7 +205,7 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
       <BlockKindIcon kind={block.kind} />
       <HeadingEditor
         heading={block.heading}
-        placeholder={defaultBlockHeading({ ...block, id: '', position: 0 }, tags)}
+        placeholder={defaultBlockHeading({ ...block, toolKind: tool?.kind ?? null }, tags)}
         onSave={(heading) => onChange({ ...block, heading })}
       />
       <Text c="dimmed" aria-hidden="true">
@@ -281,6 +296,25 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
           </Picker>
         </>
       )}
+      {tool && (
+        <>
+          {!tool.visible && (
+            <Badge variant="light" color="gray" title={t('roomLanding.tool.draftHint')}>
+              {t('roomLanding.tool.draft')}
+            </Badge>
+          )}
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="sm"
+            onClick={tool.onToggleVisible}
+            aria-label={tool.visible ? t('roomLanding.tool.hide') : t('roomLanding.tool.show')}
+            title={tool.visible ? t('roomLanding.tool.hide') : t('roomLanding.tool.show')}
+          >
+            {tool.visible ? <EyeIcon size={16} /> : <EyeSlashIcon size={16} />}
+          </ActionIcon>
+        </>
+      )}
       <Menu position="bottom-end" withinPortal>
         <Menu.Target>
           <ActionIcon variant="subtle" color="gray" size="sm" aria-label={t('roomLanding.edit.blockMenu')} ml="auto">
@@ -288,6 +322,12 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
+          <Menu.Item
+            onClick={() => onChange({ ...block, collapsed: !block.collapsed })}
+            leftSection={block.collapsed ? <CheckIcon size={14} aria-hidden="true" /> : <Box w={14} />}
+          >
+            {t('roomLanding.edit.collapsed')}
+          </Menu.Item>
           <Menu.Item color="danger" onClick={onDelete}>
             {t('roomLanding.edit.deleteBlock')}
           </Menu.Item>

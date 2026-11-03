@@ -278,6 +278,36 @@ follow those answers.
 - Tests: `tests/test_section_tools_api.py`, plus domain tests for
   `plan_blocks`, `plan_new_tool`, `dropped_tools`, copy and transfer.
 
+### As built (60_3, 2026-11-03)
+
+- No migration. `BlockKind` gains `tool`; a block carries `collapsed`,
+  `moduleId`, `toolKind`, `playersVisible` (the last two read-only, kept by
+  the optimistic `PUT .../blocks` from the block with the same module).
+- `ToolBlock` draws a tool inline: `toolBoard()` (`lib/sessionZero.ts`)
+  wraps the step in a one-round board, so the Session 0 page's own
+  `PollBoard`, `RetroBoard` (Retro, Stars and Wishes), `QuestionsBoard` and
+  `DdiBoard` render it through `BoardContext`, writing through the Session 0
+  routes (`useToolWrite`). `useSectionTools` reads `GET .../tools` only when
+  the Section has a tool block; its query key sits under the Session 0 key,
+  so the `session_zero` live events refresh it.
+- The add-block popover lists the tools under a "Strumenti" divider (one
+  button per kind, Lines & Veils excluded). A tool is created last
+  (`POST .../tools`) and, when picked between two blocks, moved there with
+  one `PUT .../blocks`.
+- For the Master a hidden tool shows a "Bozza" badge; in reading mode a
+  "Mostra ai giocatori" button beside it, in edit mode an eye toggle on the
+  bar (show and hide). Deleting a tool asks first (its votes, post-its and
+  answers go too) and has no undo.
+- The block ⋮ menu gains "Chiuso all'apertura" (a check when set), for
+  every kind: the block opens folded for everyone.
+- Front-end `rooms.maps_position` / `useSetMapsPosition` removed.
+- Strings (12 languages): `roomLanding.tiles.tools`, `tiles.toolsBody`,
+  `roomLanding.tool.{draft,draftHint,show,hide,loadError}`,
+  `roomLanding.edit.{collapsed,deleteToolTitle,deleteToolBody}`.
+- Tests: `ToolBlock.test.tsx`, the tools describe in
+  `SectionEditor.test.tsx`, plus hooks, lib and page tests (coverage 100%).
+  Screenshots were not taken.
+
 ## Units
 
 | Unit | What | Migration | Claude's build time |

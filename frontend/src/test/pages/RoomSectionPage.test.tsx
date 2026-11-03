@@ -11,6 +11,7 @@ import {
   rawDocument,
   rawMap,
   rawMember,
+  rawPoll,
   rawRoom,
   rawSection,
   rawSections,
@@ -179,6 +180,34 @@ describe('RoomSectionPage', () => {
     await user.type(description, 'Di giorno');
     await user.tab();
     expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/sections/section-1', { method: 'PATCH', json: { description: 'Di giorno' } });
+  });
+
+  it('shows a Player the shown tools inline, leaving out the hidden ones (spec 60)', async () => {
+    sections = () =>
+      Promise.resolve(
+        rawSections([
+          rawSection({
+            can_edit: false,
+            blocks: [
+              rawBlock({ id: 'b-poll', kind: 'tool', tag_ids: [], module_id: 'm-1', tool_kind: 'poll', heading: 'Il sistema' }),
+              rawBlock({ id: 'b-retro', kind: 'tool', tag_ids: [], module_id: 'm-2', tool_kind: 'retro' }),
+            ],
+          }),
+        ]),
+      );
+    const base = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation((path: string, init?: unknown) =>
+      path === '/rooms/room-1/sections/section-1/tools'
+        ? Promise.resolve({
+            revision: 2,
+            tools: [{ module_id: 'm-1', players_visible: true, module: { id: 'm-1', kind: 'poll', position: 0, columns: [], polls: [rawPoll()] } }],
+          })
+        : base(path, init as never),
+    );
+    render();
+    expect(await screen.findByText('Quale sistema?')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Il sistema' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Retro' })).not.toBeInTheDocument();
   });
 
   it('folds a block from its heading', async () => {

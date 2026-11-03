@@ -1609,7 +1609,9 @@
       "session_zero": {
         "title": "セッション0",
         "body": "セッション、ステップ、投票"
-      }
+      },
+      "tools": "ツール",
+      "toolsBody": "独立したセッション0のツール。表示するまでプレイヤーには見えません"
     },
     "edit": {
       "start": "編集",
@@ -1654,7 +1656,17 @@
       "blockDeleted": "ブロックを削除しました",
       "undo": "元に戻す",
       "renameSection": "セクション{{name}}の名前を変更",
-      "addDescription": "説明を追加"
+      "addDescription": "説明を追加",
+      "collapsed": "開いたときに折りたたむ",
+      "deleteToolTitle": "{{name}}を削除しますか？",
+      "deleteToolBody": "投票、付箋、回答も削除されます。元に戻せません。"
+    },
+    "tool": {
+      "draft": "下書き",
+      "draftHint": "プレイヤーにはまだ見えません",
+      "show": "プレイヤーに表示",
+      "hide": "プレイヤーから隠す",
+      "loadError": "ツールを読み込めませんでした。"
     }
   }
 }
