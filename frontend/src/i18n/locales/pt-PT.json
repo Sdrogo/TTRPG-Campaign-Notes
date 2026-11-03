@@ -1660,7 +1660,9 @@
       "session_zero": {
         "title": "Sessão 0",
         "body": "Sessões, etapas e sondagens"
-      }
+      },
+      "tools": "Ferramentas",
+      "toolsBody": "Uma ferramenta da Sessão 0 própria, escondida dos jogadores até a mostrares"
     },
     "edit": {
       "start": "Editar",
@@ -1706,7 +1708,17 @@
       "blockDeleted": "Bloco eliminado",
       "undo": "Anular",
       "renameSection": "Mudar o nome da secção {{name}}",
-      "addDescription": "Adicionar uma descrição"
+      "addDescription": "Adicionar uma descrição",
+      "collapsed": "Fechado ao abrir",
+      "deleteToolTitle": "Eliminar {{name}}?",
+      "deleteToolBody": "Os votos, post-its e respostas também são eliminados. Não é possível anular."
+    },
+    "tool": {
+      "draft": "Rascunho",
+      "draftHint": "Os jogadores ainda não a veem",
+      "show": "Mostrar aos jogadores",
+      "hide": "Esconder dos jogadores",
+      "loadError": "Não foi possível carregar a ferramenta."
     }
   }
 }

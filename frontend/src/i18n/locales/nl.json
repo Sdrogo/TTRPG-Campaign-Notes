@@ -1658,7 +1658,9 @@
       "session_zero": {
         "title": "Sessie 0",
         "body": "Sessies, stappen en peilingen"
-      }
+      },
+      "tools": "Hulpmiddelen",
+      "toolsBody": "Een eigen Sessie 0-hulpmiddel, verborgen voor de spelers tot je het laat zien"
     },
     "edit": {
       "start": "Bewerken",
@@ -1704,7 +1706,17 @@
       "blockDeleted": "Blok verwijderd",
       "undo": "Ongedaan maken",
       "renameSection": "Sectie {{name}} hernoemen",
-      "addDescription": "Beschrijving toevoegen"
+      "addDescription": "Beschrijving toevoegen",
+      "collapsed": "Ingeklapt bij openen",
+      "deleteToolTitle": "{{name}} verwijderen?",
+      "deleteToolBody": "De stemmen, briefjes en antwoorden worden ook verwijderd. Dit kan niet ongedaan worden."
+    },
+    "tool": {
+      "draft": "Concept",
+      "draftHint": "De spelers zien het nog niet",
+      "show": "Tonen aan spelers",
+      "hide": "Verbergen voor spelers",
+      "loadError": "Het hulpmiddel kon niet worden geladen."
     }
   }
 }

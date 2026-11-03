@@ -1614,7 +1614,9 @@
       "session_zero": {
         "title": "第 0 次会话",
         "body": "会话、步骤和投票"
-      }
+      },
+      "tools": "工具",
+      "toolsBody": "独立的第0次会话工具，在你展示之前对玩家隐藏"
     },
     "edit": {
       "start": "编辑",
@@ -1659,7 +1661,17 @@
       "blockDeleted": "区块已删除",
       "undo": "撤销",
       "renameSection": "重命名版块{{name}}",
-      "addDescription": "添加描述"
+      "addDescription": "添加描述",
+      "collapsed": "打开时折叠",
+      "deleteToolTitle": "删除{{name}}？",
+      "deleteToolBody": "投票、便签和回答也会一并删除。此操作无法撤销。"
+    },
+    "tool": {
+      "draft": "草稿",
+      "draftHint": "玩家还看不到它",
+      "show": "向玩家展示",
+      "hide": "对玩家隐藏",
+      "loadError": "无法加载该工具。"
     }
   }
 }

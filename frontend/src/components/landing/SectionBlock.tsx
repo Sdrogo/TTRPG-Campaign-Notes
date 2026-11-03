@@ -51,9 +51,10 @@ export function SectionBlock({ roomId, block, heading, content, isMaster, bar, p
   const readOnly = useReadOnly();
   const reveals = useMyReveals(hasDocuments && !readOnly);
   const empty = isBlockEmpty(content);
-  // Every block folds from its heading (spec 60 Decision 9): open at first,
-  // not remembered; the Index opens it before scrolling to it.
-  const [expanded, setExpanded] = useState(true);
+  // Every block folds from its heading (spec 60 Decision 9): open at first
+  // unless the Master set it to start folded (Decision 9b), not remembered;
+  // the Index opens it before scrolling to it.
+  const [expanded, setExpanded] = useState(!block.collapsed);
   useEffect(() => {
     const reveal = (event: Event) => {
       if ((event as CustomEvent<string>).detail === block.id) setExpanded(true);
@@ -61,7 +62,8 @@ export function SectionBlock({ roomId, block, heading, content, isMaster, bar, p
     window.addEventListener(REVEAL_BLOCK_EVENT, reveal);
     return () => window.removeEventListener(REVEAL_BLOCK_EVENT, reveal);
   }, [block.id]);
-  if (empty && !isMaster) return null;
+  // A tool block is a `ToolBlock` (spec 60).
+  if ((empty && !isMaster) || content?.kind === 'tool') return null;
 
   const grid = (cards: ReactNode[]) => <Box className="documents-grid">{cards}</Box>;
   const sessionCard = (item: SessionZeroItem) => {
@@ -197,7 +199,7 @@ export function SectionBlock({ roomId, block, heading, content, isMaster, bar, p
 
 /** The cards a block shows, for its heading's badge: each Document once, however many groups it is under. */
 function blockCount(content: BlockContent | undefined): number | undefined {
-  if (!content) return undefined;
+  if (!content || content.kind === 'tool') return undefined;
   if (content.kind === 'maps') return content.maps.length;
   if (content.kind === 'documents') return new Set(content.parts.flatMap((part) => part.documents.map((document) => document.id))).size;
   return content.parts.reduce((total, part) => total + part.items.length, 0);

@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
 import { toBlockBody, toSection, type RawSection } from '../lib/landing';
+import type { BoardWrite, RawModule } from '../lib/sessionZero';
 import type { RoomEvent } from '../lib/roomEvents';
-import type { BlockInput, LandingSection, SectionKind } from '../types/landing';
+import type { BlockInput, LandingSection, SectionKind, ToolKind } from '../types/landing';
 import { documentsQueryKey } from './useDocuments';
 import { useRoomEvents } from './useRoomEvents';
 import { sessionZeroQueryKey } from './useSessionZero';
@@ -154,14 +155,21 @@ export function useSaveBlocks(roomId: string, sectionId: string) {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<LandingSection[]>(key);
       queryClient.setQueryData<LandingSection[]>(key, (sections) =>
-        sections?.map((section) =>
-          section.id === sectionId
-            ? {
-                ...section,
-                blocks: blocks.map((block, position) => ({ ...block, id: block.id ?? `new-${position}`, position })),
-              }
-            : section,
-        ),
+        sections?.map((section) => {
+          if (section.id !== sectionId) return section;
+          // A tool block keeps its kind and visibility (spec 60), which the list doesn't carry.
+          const tool = (moduleId: string | null) => section.blocks.find((block) => moduleId && block.moduleId === moduleId);
+          return {
+            ...section,
+            blocks: blocks.map((block, position) => ({
+              ...block,
+              id: block.id ?? `new-${position}`,
+              position,
+              toolKind: tool(block.moduleId)?.toolKind ?? null,
+              playersVisible: tool(block.moduleId)?.playersVisible ?? null,
+            })),
+          };
+        }),
       );
       return { previous };
     },
@@ -194,4 +202,90 @@ export function useSectionImage(roomId: string, sectionId: string) {
     onSuccess: apply,
   });
   return { upload, fromUrl, remove };
+}
+
+/** A Section's tool as `GET .../tools` sends it (spec 60): its step, drawn as the Session 0 page draws one. */
+export interface SectionTool {
+  moduleId: string;
+  playersVisible: boolean;
+  module: RawModule;
+}
+
+/** The Section's tools the viewer sees, with the Session 0's revision. */
+export interface SectionTools {
+  revision: number;
+  tools: SectionTool[];
+}
+
+interface RawSectionTools {
+  revision: number;
+  tools: { module_id: string; players_visible: boolean; module: RawModule }[];
+}
+
+/** Under the Session 0 key, so every Session 0 event and write reads the tools again. */
+export function sectionToolsQueryKey(roomId: string, sectionId: string) {
+  return [...sessionZeroQueryKey(roomId), 'tools', sectionId] as const;
+}
+
+/** A Section's tools as the viewer sees them (spec 60 Decision 2): a Player only the shown ones. */
+export function useSectionTools(roomId: string, sectionId: string, enabled: boolean) {
+  return useQuery<SectionTools>({
+    queryKey: sectionToolsQueryKey(roomId, sectionId),
+    queryFn: async () => {
+      const raw = await apiFetch<RawSectionTools>(`${sectionsPath(roomId)}/${sectionId}/tools`);
+      return {
+        revision: raw.revision,
+        tools: raw.tools.map((tool) => ({ moduleId: tool.module_id, playersVisible: tool.players_visible, module: tool.module })),
+      };
+    },
+    enabled,
+  });
+}
+
+/** Adds a tool block last (Master, spec 60 Decision 5), hidden from the Players. */
+export function useAddTool(roomId: string, sectionId: string) {
+  const apply = useApplySection(roomId);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (kind: ToolKind) =>
+      toSection(await apiFetch<RawSection>(`${sectionsPath(roomId)}/${sectionId}/tools`, { method: 'POST', json: { kind } })),
+    onSuccess: (section) => {
+      apply(section);
+      return queryClient.invalidateQueries({ queryKey: sectionToolsQueryKey(roomId, sectionId) });
+    },
+  });
+}
+
+/** Shows a tool to the Players or hides it again (Master, spec 60 Decision 4). */
+export function useSetToolVisible(roomId: string, sectionId: string) {
+  const apply = useApplySection(roomId);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ moduleId, visible }: { moduleId: string; visible: boolean }) =>
+      toSection(
+        await apiFetch<RawSection>(`${sectionsPath(roomId)}/${sectionId}/tools/${moduleId}/visible`, {
+          method: 'PUT',
+          json: { visible },
+        }),
+      ),
+    onSuccess: (section) => {
+      apply(section);
+      return queryClient.invalidateQueries({ queryKey: sectionToolsQueryKey(roomId, sectionId) });
+    },
+  });
+}
+
+/**
+ * A write on a tool's board (votes, post-its, answers...), through the
+ * Session 0 routes, which work on a tool unchanged; the tools are read again
+ * after it, since its answer is the Session 0 page's.
+ */
+export function useToolWrite(roomId: string, sectionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ path, method, json }: BoardWrite) => {
+      await apiFetch(`/rooms/${roomId}/session-zero${path}`, { method, json });
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: sectionToolsQueryKey(roomId, sectionId) }),
+  });
 }

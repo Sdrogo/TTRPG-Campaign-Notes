@@ -289,8 +289,11 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending**: `e8c4a2f6b1d9` (spec 60_2, PR #290) and then `e9c4a2f7b1d8` (spec 59, PR #288) on staging (each before its PR merges) and on production (before the release that ships them). Both are at `d5b8e1f3a9c7`.
-- **Staging database**: `d5b8e1f3a9c7` (Room landing page, spec 55,
+- **Pending**: `e8c4a2f6b1d9` (spec 60_2, PR #290) on production (before the release that ships it). Production is at `d5b8e1f3a9c7`; staging is already at `e8c4a2f6b1d9`.
+- **Staging database**: `e8c4a2f6b1d9` (Section tools + block `collapsed`,
+  drops `rooms.maps_position`, spec 60_2, PR #290, applied 2026-11-03 with
+  `backend/.env.staging` loaded, before the PR merges); `d5b8e1f3a9c7`
+  before it (Room landing page, spec 55,
   PR #283, applied 2026-11-02 with `backend/.env.staging` loaded, before
   the PR merges); `c8f2d6a4e1b7` before it (poll choice description, spec 54,
   PR #280, applied 2026-10-30 with `backend/.env.staging` loaded, before
@@ -889,7 +892,7 @@ next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
 - **60, Sections refinements and standalone tools** (asked by the product
-  owner 2026-11-02; ticket answered Q1-Q7 the same day; **60_1 built** in PR #290, no migration; **60_2 built** in PR #290, migration `e8c4a2f6b1d9` pending on staging and production; 60_3 next): tool
+  owner 2026-11-02; ticket answered Q1-Q7 the same day; **60_1 built** in PR #290, no migration; **60_2 built** in PR #290, migration `e8c4a2f6b1d9` applied to staging 2026-11-03, pending on production; **60_3 built** 2026-11-03 in its own PR, no migration: ticket 60 complete): tool
   blocks (a poll step, Retro, Stars and Wishes, Questions, DDI living in a
   Section, unlinked from Session 0), every block folds, Section title and
   description edited in place, "Nuova sezione" outside edit mode, the

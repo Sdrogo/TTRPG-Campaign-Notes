@@ -1658,7 +1658,9 @@
       "session_zero": {
         "title": "Session 0",
         "body": "Sessions, Schritte und Umfragen"
-      }
+      },
+      "tools": "Werkzeuge",
+      "toolsBody": "Ein eigenes Werkzeug der Session 0, für die Spieler verborgen, bis du es zeigst"
     },
     "edit": {
       "start": "Bearbeiten",
@@ -1704,7 +1706,17 @@
       "blockDeleted": "Block gelöscht",
       "undo": "Rückgängig",
       "renameSection": "Abschnitt {{name}} umbenennen",
-      "addDescription": "Beschreibung hinzufügen"
+      "addDescription": "Beschreibung hinzufügen",
+      "collapsed": "Beim Öffnen eingeklappt",
+      "deleteToolTitle": "{{name}} löschen?",
+      "deleteToolBody": "Stimmen, Haftnotizen und Antworten werden mitgelöscht. Das lässt sich nicht rückgängig machen."
+    },
+    "tool": {
+      "draft": "Entwurf",
+      "draftHint": "Die Spieler sehen es noch nicht",
+      "show": "Den Spielern zeigen",
+      "hide": "Vor den Spielern verbergen",
+      "loadError": "Das Werkzeug konnte nicht geladen werden."
     }
   }
 }

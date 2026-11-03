@@ -31,6 +31,17 @@ describe('a block content', () => {
     ]);
   });
 
+  it('shows a tool block only when the viewer gets its tool (spec 60)', () => {
+    const tool = block({ kind: 'tool', tag_ids: [], module_id: 'm-1', tool_kind: 'poll' });
+    expect(blockContent(tool, { tags })).toBeUndefined();
+    const module = { id: 'm-1', kind: 'poll' as const, position: 0, columns: [] };
+    const shown = blockContent(tool, { tags, tools: { revision: 1, tools: [{ moduleId: 'm-1', playersVisible: true, module }] } });
+    expect(shown).toEqual({ kind: 'tool', shown: true });
+    expect(isBlockEmpty(shown)).toBe(false);
+    const hidden = blockContent(tool, { tags, tools: { revision: 1, tools: [] } });
+    expect(isBlockEmpty(hidden)).toBe(true);
+  });
+
   it('lists a maps block', () => {
     const content = blockContent(block({ kind: 'maps', tag_ids: [], map_kind: 'geographic' }), { maps: [map()], tags });
     expect(content).toEqual({ kind: 'maps', maps: [] });

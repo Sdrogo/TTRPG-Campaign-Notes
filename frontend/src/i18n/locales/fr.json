@@ -1660,7 +1660,9 @@
       "session_zero": {
         "title": "Session 0",
         "body": "Sessions, étapes et sondages"
-      }
+      },
+      "tools": "Outils",
+      "toolsBody": "Un outil de la Session 0 à part entière, caché aux joueurs jusqu'à ce que tu le montres"
     },
     "edit": {
       "start": "Modifier",
@@ -1706,7 +1708,17 @@
       "blockDeleted": "Bloc supprimé",
       "undo": "Annuler",
       "renameSection": "Renommer la section {{name}}",
-      "addDescription": "Ajouter une description"
+      "addDescription": "Ajouter une description",
+      "collapsed": "Replié à l'ouverture",
+      "deleteToolTitle": "Supprimer {{name}} ?",
+      "deleteToolBody": "Ses votes, post-it et réponses sont supprimés aussi. Impossible d'annuler."
+    },
+    "tool": {
+      "draft": "Brouillon",
+      "draftHint": "Les joueurs ne le voient pas encore",
+      "show": "Montrer aux joueurs",
+      "hide": "Cacher aux joueurs",
+      "loadError": "Impossible de charger l'outil."
     }
   }
 }

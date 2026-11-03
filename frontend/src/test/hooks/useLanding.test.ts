@@ -14,6 +14,7 @@ import {
   useRoomSections,
   useSaveBlocks,
   useSectionImage,
+  useSectionTools,
   useUpdateSection,
 } from '../../hooks/useLanding';
 import { useRoomEvents } from '../../hooks/useRoomEvents';
@@ -40,7 +41,7 @@ function cached(queryClient: ReturnType<typeof createTestQueryClient>) {
   return queryClient.getQueryData<LandingSection[]>(KEY)!;
 }
 
-const mapsBlock: BlockInput = { kind: 'maps', heading: null, tagIds: [], groups: [], mapKind: 'free', features: [] };
+const mapsBlock: BlockInput = { kind: 'maps', heading: null, tagIds: [], groups: [], mapKind: 'free', features: [], collapsed: false, moduleId: null };
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -72,6 +73,10 @@ describe('the landing queries', () => {
             groups: [['tag-1']],
             mapKind: null,
             features: [],
+            collapsed: false,
+            moduleId: null,
+            toolKind: null,
+            playersVisible: null,
           },
         ],
       },
@@ -80,6 +85,18 @@ describe('the landing queries', () => {
 
   it('waits when disabled', () => {
     renderHookWithProviders(() => useRoomSections('room-1', false));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("reads a Section's tools, and waits when there are none (spec 60)", async () => {
+    const module = { id: 'm-1', kind: 'poll', position: 0, columns: [] };
+    fetchMock.mockResolvedValue({ revision: 4, tools: [{ module_id: 'm-1', players_visible: false, module }] });
+    const { result } = renderHookWithProviders(() => useSectionTools('room-1', 'section-1', true));
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/sections/section-1/tools');
+    expect(result.current.data).toEqual({ revision: 4, tools: [{ moduleId: 'm-1', playersVisible: false, module }] });
+    fetchMock.mockClear();
+    renderHookWithProviders(() => useSectionTools('room-1', 'section-2', false));
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -213,8 +230,8 @@ describe('the landing writes', () => {
       method: 'PUT',
       json: {
         blocks: [
-          { kind: 'maps', heading: null, tag_ids: [], groups: [], map_kind: 'free', features: [] },
-          { kind: 'maps', heading: null, tag_ids: [], groups: [], map_kind: 'free', features: [] },
+          { kind: 'maps', heading: null, tag_ids: [], groups: [], map_kind: 'free', features: [], module_id: null, collapsed: false },
+          { kind: 'maps', heading: null, tag_ids: [], groups: [], map_kind: 'free', features: [], module_id: null, collapsed: false },
         ],
       },
     });
@@ -228,6 +245,25 @@ describe('the landing writes', () => {
     fetchMock.mockRejectedValueOnce(new Error('no'));
     await act(() => result.current.mutateAsync([]).catch(() => undefined));
     expect(cached(queryClient).find((section) => section.id === 'section-1')?.blocks).toHaveLength(1);
+  });
+
+  it('keeps a tool block its kind and visibility while saving (spec 60)', async () => {
+    const tool = rawBlock({ id: 'block-7', kind: 'tool', tag_ids: [], module_id: 'm-1', tool_kind: 'retro', players_visible: true });
+    const queryClient = seeded(rawSections([rawSection({ blocks: [tool] })]));
+    fetchMock.mockReturnValueOnce(new Promise(() => {}) as never);
+    const { result } = renderHookWithProviders(() => useSaveBlocks('room-1', 'section-1'), { queryClient });
+    const [saved] = cached(queryClient).find((section) => section.id === 'section-1')!.blocks;
+    act(() => result.current.mutate([{ ...saved, collapsed: true }, mapsBlock]));
+    await waitFor(() =>
+      expect(
+        cached(queryClient)
+          .find((section) => section.id === 'section-1')
+          ?.blocks.map((block) => [block.toolKind, block.playersVisible, block.collapsed]),
+      ).toEqual([
+        ['retro', true, true],
+        [null, null, false],
+      ]),
+    );
   });
 
   it('saves the blocks without a cache', async () => {

@@ -10,7 +10,7 @@ import { renderWithProviders } from '../../utils';
 vi.mock('../../../components/landing/Sortable', () => import('./sortableMock'));
 
 const tags = [tag('t1', 'Tokyo'), tag('t2', 'PNG'), tag('t3', 'Yakuza')];
-const documents: BlockInput = { kind: 'documents', heading: null, tagIds: ['t1'], groups: [], mapKind: null, features: [] };
+const documents: BlockInput = { kind: 'documents', heading: null, tagIds: ['t1'], groups: [], mapKind: null, features: [], collapsed: false, moduleId: null };
 
 function bar(block: BlockInput, extra: Partial<Parameters<typeof BlockBar>[0]> = {}) {
   const onChange = vi.fn();

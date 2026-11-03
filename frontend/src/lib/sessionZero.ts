@@ -132,7 +132,7 @@ export interface RawQuestions {
   creatable: number;
 }
 
-interface RawModule {
+export interface RawModule {
   id: string;
   kind: ModuleKind;
   position: number;
@@ -359,6 +359,27 @@ export function toSessionZero(raw: RawSessionZero): SessionZero {
       now: raw.timer.now,
     },
   };
+}
+
+/**
+ * A Section tool's step (spec 60) as a board of its own, so the Session 0
+ * page's step components draw and write it unchanged: one open "round"
+ * holding only this step, on it, with no Lines & Veils.
+ */
+export function toolBoard(module: RawModule, revision: number, canManage: boolean): SessionZero {
+  const roundId = `tool-${module.id}`;
+  return toSessionZero({
+    started: true,
+    revision,
+    can_manage: canManage,
+    rounds: [{ id: roundId, number: 0, title: null, started_at: new Date(0).toISOString(), closed_at: null }],
+    round_id: roundId,
+    modules: [module],
+    current_module_id: module.id,
+    hidden_modules: 0,
+    lines_veils: [],
+    timer: null,
+  });
 }
 
 /** The step on screen: `moduleId` when the viewer still sees it, else the current one. */

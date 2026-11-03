@@ -45,6 +45,8 @@ describe('the landing texts', () => {
     expect(defaultBlockHeading(block({ kind: 'maps', tag_ids: [], map_kind: 'geographic' }), tags)).toBe('Mappe geografiche');
     expect(defaultBlockHeading(block({ kind: 'session_zero', tag_ids: [], features: ['polls'] }), tags)).toBe('Sondaggi');
     expect(defaultBlockHeading(block({ kind: 'session_zero', tag_ids: [], features: ['polls', 'ddi'] }), tags)).toBe('Sessione 0');
+    expect(defaultBlockHeading(block({ kind: 'tool', tag_ids: [], tool_kind: 'stars_wishes' }), tags)).toBe('Stelle e Desideri');
+    expect(defaultBlockHeading(block({ kind: 'tool', tag_ids: [] }), tags)).toBe('Strumenti');
     expect(blockHeading(block({ heading: 'Mio' }), tags)).toBe('Mio');
     expect(blockHeading(block({ tag_ids: ['t1'] }), tags)).toBe('Documenti · #Tokyo');
     expect(groupLabel(['t1', 't2'], tags)).toBe('#Tokyo + #PNG');
