@@ -8,6 +8,7 @@ import { BlockBar, BlockKindIcon, Picker } from './BlockBar';
 import { DragHandle, SortableItem, SortableList } from './Sortable';
 import { SectionBlock } from './SectionBlock';
 import { ToolBlock } from './ToolBlock';
+import { useBlockKeys, type BlockOrigins } from './useBlockKeys';
 import { ClockBlock } from '../clocks/ClockBlock';
 import { ClockChipsEditor } from '../clocks/ClockChipsEditor';
 import { blockContent, type BlockSources } from './blockItems';
@@ -68,14 +69,27 @@ export function SectionEditor({
   const openedNew = (location.state as OpenInEditState | null)?.landingEdit === 'add-block' && section.blocks.length === 0;
   const [adding, setAdding] = useState<number | null>(openedNew ? 0 : null);
   const [draft, setDraft] = useState<Draft | null>(null);
-  // The block whose groups popover is open, by position: a save gives every
-  // block a new id, so its bar remounts and reopens it (spec 55 Decision
-  // 15). Adding, deleting or moving a block shifts the positions: it closes.
+  // The block whose groups popover is open, by position: should a save
+  // remount its bar (a list the block keys can't follow), the new bar
+  // reopens it (spec 55 Decision 15). Adding, deleting or moving a block
+  // shifts the positions: it isn't reopened then.
   const [groupsOpen, setGroupsOpen] = useState<number | null>(null);
   const blocks = section.blocks;
+  // Render keys that outlive a save, which gives every block a new id: the
+  // blocks stay mounted, so a folded one stays folded and the page keeps its place.
+  const { keys, expect } = useBlockKeys(blocks.map((block) => block.id));
+  const same = (): number[] => blocks.map((_, index) => index);
+  const inserted = (at: number): BlockOrigins => {
+    const origins: BlockOrigins = same();
+    origins.splice(at, 0, null);
+    return origins;
+  };
 
-  const saveList = (next: BlockInput[], onDone?: () => void) =>
+  /** Saves `next`; `origins` says where each of its blocks is in the list on screen (null: a new one). */
+  const saveList = (next: BlockInput[], origins: BlockOrigins, onDone?: () => void) => {
+    expect(origins);
     save.mutate(next, { onError: notifyError, onSuccess: () => onDone?.() });
+  };
   const inputs = () => blocks.map(blockInput);
 
   const insert = (index: number, kind: BlockKind) => {
@@ -96,7 +110,7 @@ export function SectionEditor({
     if (kind === 'maps') {
       const next = inputs();
       next.splice(index, 0, block);
-      saveList(next);
+      saveList(next, inserted(index));
     } else {
       setDraft({ index, block });
     }
@@ -105,6 +119,7 @@ export function SectionEditor({
   const insertTool = (index: number, kind: ToolKind) => {
     setAdding(null);
     setGroupsOpen(null);
+    expect([...same(), null]);
     addTool.mutate(kind, {
       onError: notifyError,
       onSuccess: (saved) => {
@@ -112,7 +127,10 @@ export function SectionEditor({
         if (index >= next.length - 1) return;
         const [added] = next.splice(next.length - 1, 1);
         next.splice(index, 0, added);
-        saveList(next);
+        saveList(
+          next,
+          next.map((_, at) => (at < index ? at : at === index ? next.length - 1 : at - 1)),
+        );
       },
     });
   };
@@ -122,12 +140,16 @@ export function SectionEditor({
     const next = inputs();
     next.splice(at.index, 0, block);
     setDraft(null);
-    saveList(next);
+    saveList(next, inserted(at.index));
   };
   const removingBlock = blocks.find((block) => block.id === removingTool);
   const removeTool = (id: string) => {
     setRemovingTool(null);
-    saveList(blocks.filter((block) => block.id !== id).map(blockInput));
+    const kept = same().filter((index) => blocks[index].id !== id);
+    saveList(
+      kept.map((index) => blockInput(blocks[index])),
+      kept,
+    );
   };
   const remove = (index: number) => {
     setGroupsOpen(null);
@@ -136,15 +158,17 @@ export function SectionEditor({
       return;
     }
     const before = inputs();
+    const kept = same().filter((other) => other !== index);
     saveList(
-      before.filter((_, other) => other !== index),
+      kept.map((other) => before[other]),
+      kept,
       () =>
         notifications.show({
           autoClose: UNDO_MS,
           message: (
             <Group justify="space-between" wrap="nowrap" gap="sm">
               <Text size="sm">{t('roomLanding.edit.blockDeleted')}</Text>
-              <Button size="compact-xs" variant="light" onClick={() => saveList(before)}>
+              <Button size="compact-xs" variant="light" onClick={() => saveList(before, before.map((_, at) => (at < index ? at : at === index ? null : at - 1)))}>
                 {t('roomLanding.edit.undo')}
               </Button>
             </Group>
@@ -155,12 +179,15 @@ export function SectionEditor({
   const change = (index: number, block: BlockInput) => {
     const next = inputs();
     next[index] = block;
-    saveList(next);
+    saveList(next, same());
   };
-  const move = (ids: string[]) => {
+  const move = (moved: string[]) => {
     setGroupsOpen(null);
-    const byId = new Map(blocks.map((block) => [block.id, block]));
-    saveList(ids.map((id) => blockInput(byId.get(id)!)));
+    const origins = moved.map((key) => keys.indexOf(key));
+    saveList(
+      origins.map((index) => blockInput(blocks[index])),
+      origins,
+    );
   };
 
   const dropDraft = () => setDraft(null);
@@ -197,9 +224,9 @@ export function SectionEditor({
           {t('roomLanding.edit.noBlocks')}
         </Text>
       )}
-      <SortableList ids={blocks.map((block) => block.id)} onMove={move}>
+      <SortableList ids={keys} onMove={move}>
         {blocks.map((block, index) => (
-          <Box key={block.id}>
+          <Box key={keys[index]}>
             {index > 0 && !full && (
               <AddBlock
                 compact
@@ -211,7 +238,7 @@ export function SectionEditor({
               />
             )}
             {draft?.index === index && draftView}
-            <SortableItem id={block.id}>
+            <SortableItem id={keys[index]}>
               {({ ref, style }) => (
                 <div ref={ref} style={style}>
                   <EditableBlock
