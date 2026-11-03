@@ -402,6 +402,14 @@ One line per unit; dates 2026, newest first. Spec files live in
 
 ### 2026-11-03
 
+- **Section edit mode: blocks stay mounted across saves** (no migration):
+  every save of a Section's blocks gives them new ids (optimistic `new-N`,
+  then the server's), and the editor keyed blocks by id, so each save
+  remounted them all: a block the Master had folded opened again and the
+  page jumped, which hid a group reorder in the block below it. The editor
+  now keys blocks by `useBlockKeys` (the save's origins, then the place in
+  the server's answer). The groups popover keeps focus on "+ Gruppo" after
+  adding a group.
 - **pypdf security upgrade** (no migration): `pypdf[crypto]` floor raised
   to `>=6.21.4` and `uv.lock` moved 6.21.2 → 6.21.4, closing the 7 High
   Dependabot alerts #32-#38 (infinite loops, memory and runtime blow-ups on
