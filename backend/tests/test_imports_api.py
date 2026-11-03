@@ -567,7 +567,7 @@ async def test_a_file_that_is_refused_writes_nothing(
         "too big": (("big.json", b"{" + b" " * (5 * 1024 * 1024)), 413),
         "not json": (("bad.json", b"{oops"), 422),
         "not utf-8": (("bad.md", b"\xff\xfe\x00"), 422),
-        "newer schema": (_json_file({"name": "A"}, schema_version=5), 422),
+        "newer schema": (_json_file({"name": "A"}, schema_version=6), 422),
         "no document": (("empty.json", b'{"documents": []}'), 422),
         "too many documents": (_json_file(*many), 422),
         "too many images": (_json_file(images), 422),
@@ -1545,7 +1545,7 @@ async def test_a_room_export_carries_its_maps_into_another_room(
     target = await _second_room(client, room)
     exported = await _export(client, room, room.master, "json")
     data = json.loads(exported)
-    assert data["schema_version"] == 4
+    assert data["schema_version"] == 5
     maps = {m["name"]: m for m in data["maps"]}
     assert set(maps) == {"Court", "Valley"}
     assert maps["Court"]["linked_document_ids"] == [seeded["castle"]["id"]]
@@ -2073,7 +2073,7 @@ async def test_a_room_export_carries_its_home_into_another_room(
 
     exported = await _export(client, room, room.master, "json")
     data = json.loads(exported)
-    assert data["schema_version"] == 4
+    assert data["schema_version"] == 5
     assert [(s["kind"], s["title"]) for s in data["sections"]] == [
         ("page_documents", "Archive"),
         ("page_maps", None),
@@ -2371,3 +2371,100 @@ async def test_a_section_added_while_the_job_writes_pushes_the_last_out(
     assert job["result"]["skipped_sections"] == [
         {"kind": "custom", "title": "A", "reason": "limit"}
     ]
+
+
+async def _clocks(client: AsyncClient, room: _Room, headers: dict[str, str]) -> Any:
+    response = await client.get(f"{room.url}/clocks", headers=headers)
+    assert response.status_code == 200, response.text
+    return {c["name"]: c for c in response.json()}
+
+
+async def test_a_room_export_carries_its_clocks_into_another_room(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+) -> None:
+    """Spec 61 Decision 27: the JSON export holds the clock rules, labels,
+    mark kinds, the clocks the requester sees (marks as counts, the
+    consequence only for the Master) and their groups; the Master's import
+    adds them, merging labels and kinds by name; a Player's brings none."""
+    room = await _room(client, make_token)
+    hideout = await _post(client, f"{room.url}/documents", room.master, name="Covo")
+    label = await _post(client, f"{room.url}/clock-rules/labels", room.master, name="Jazz")
+    await _post(client, f"{room.url}/clock-rules/labels", room.master, name="Notte")
+    kind = await _post(
+        client, f"{room.url}/clock-rules/mark-kinds", room.master, name="Shock", color="red"
+    )
+    alarm = await _post(
+        client,
+        f"{room.url}/clocks",
+        room.master,
+        name="Allarme",
+        segments=4,
+        visibility="room",
+        consequence="Arrivano",
+        label_ids=[label["id"]],
+        document_id=hideout["id"],
+    )
+    await _post(client, f"{room.url}/clocks", room.master, name="Segreto", visibility="master")
+    marked = await client.post(
+        f"{room.url}/clocks/{alarm['id']}/marks",
+        json={"delta": 2, "kind_id": kind["id"]},
+        headers=room.master,
+    )
+    assert marked.status_code == 201, marked.text
+    group = await _post(client, f"{room.url}/clock-groups", room.master, name="Fuga", mode="race")
+    grouped = await client.put(
+        f"{room.url}/clock-groups/{group['id']}/clocks",
+        json={"items": [{"clock_id": alarm["id"]}]},
+        headers=room.master,
+    )
+    assert grouped.status_code == 200, grouped.text
+
+    as_player = json.loads(await _export(client, room, room.player, "json"))
+    assert [c["name"] for c in as_player["clocks"]] == ["Allarme"]
+    assert as_player["clocks"][0]["consequence"] is None
+    exported = await _export(client, room, room.master, "json")
+    data = json.loads(exported)
+    assert [c["name"] for c in data["clocks"]] == ["Allarme", "Segreto"]
+    assert data["clocks"][0]["marks"] == [{"kind_id": kind["id"], "count": 2}]
+    assert data["clock_groups"][0]["name"] == "Fuga"
+    single = await _export(client, room, room.master, "json", f"/documents/{hideout['id']}")
+    assert json.loads(single)["clocks"] == []
+
+    target = await _second_room(client, room)
+    await _post(client, f"{target.url}/clocks", target.master, name="Locale", visibility="room")
+    local = json.loads(await _export(client, target, target.master, "json"))
+    assert local["clock_rules"]["labels"] == [] and len(local["clocks"]) == 1
+    await _post(client, f"{target.url}/clock-rules/labels", target.master, name="JAZZ")
+
+    job = await _import(client, target, target.master, ("room.json", exported))
+
+    assert job["status"] == "done", job
+    clocks = await _clocks(client, target, target.master)
+    assert set(clocks) == {"Locale", "Allarme", "Segreto"}
+    copied = clocks["Allarme"]
+    rules = (await client.get(f"{target.url}/clock-rules", headers=target.master)).json()
+    assert [x["name"] for x in rules["labels"]] == ["JAZZ", "Notte"]
+    assert [x["name"] for x in rules["mark_kinds"]] == ["Shock"]
+    assert copied["label_ids"] == [rules["labels"][0]["id"]]
+    assert copied["segment_kinds"] == [rules["mark_kinds"][0]["id"]] * 2
+    assert copied["filled"] == 2 and copied["consequence"] == "Arrivano"
+    imported_hideout = (await _documents(client, target))["Covo"]
+    assert copied["document"]["id"] == imported_hideout["id"] != hideout["id"]
+    groups = (await client.get(f"{target.url}/clock-groups", headers=target.master)).json()
+    assert [g["name"] for g in groups] == ["Fuga"] and copied["group_id"] == groups[0]["id"]
+
+    await client.patch(room.url, json={"players_can_create_documents": True}, headers=room.master)
+    before = await _clocks(client, room, room.master)
+    job = await _import(client, room, room.player, ("room.json", exported))
+    assert job["status"] == "done", job
+    assert set(await _clocks(client, room, room.master)) == set(before)
+
+    empty = await _second_room(client, room, "Vuota")
+    job = await _import(
+        client, empty, empty.master, _json_file({"name": "Solo"}, clocks=[{"name": ""}])
+    )
+    assert job["status"] == "done", job
+    assert await _clocks(client, empty, empty.master) == {}

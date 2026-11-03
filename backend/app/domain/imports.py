@@ -240,6 +240,10 @@ class ImportPlan:
     unavailable_tags: tuple[str, ...]
     maps: tuple[PlannedMap, ...] = ()
     sections: tuple[PlannedSection, ...] = ()
+    # Spec 61: each file with clocks, its clock keys and its imported
+    # Documents by the file's id, so its clocks point at them (the Master's
+    # import only).
+    clock_files: tuple[tuple[Mapping[str, Any], dict[str, uuid.UUID]], ...] = ()
 
 
 def document_key(file_index: int, document_index: int) -> str:
@@ -480,6 +484,20 @@ def plan_import(
         unavailable_tags=tuple(book.unavailable.values()),
         maps=_plan_maps(files, context, choices, targets, replaced, ids, new_id),
         sections=sections,
+        clock_files=tuple(
+            (
+                file.clocks,
+                {
+                    source_id: target[0]
+                    for (file_index, source_id), target in targets.items()
+                    if file_index == fi
+                },
+            )
+            for fi, file in enumerate(files)
+            if file.clocks
+        )
+        if context.is_master
+        else (),
     )
 
 

@@ -1523,7 +1523,7 @@ class RoomSectionRow(Base):
     __tablename__ = "room_sections"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('custom', 'page_documents', 'page_maps', 'page_session_zero')",
+            "kind IN ('custom', 'page_documents', 'page_maps', 'page_session_zero', 'page_clocks')",
             name="ck_room_sections_kind",
         ),
         # A page card left untitled shows its name in the viewer's language;
@@ -1560,8 +1560,11 @@ class RoomSectionBlockRow(Base):
     __tablename__ = "room_section_blocks"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('documents', 'maps', 'session_zero', 'tool')",
+            "kind IN ('documents', 'maps', 'session_zero', 'tool', 'clocks')",
             name="ck_room_section_blocks_kind",
+        ),
+        CheckConstraint(
+            "NOT all_clocks OR kind = 'clocks'", name="ck_room_section_blocks_all_clocks"
         ),
         CheckConstraint(
             "(kind = 'tool') = (module_id IS NOT NULL)", name="ck_room_section_blocks_module"
@@ -1595,6 +1598,9 @@ class RoomSectionBlockRow(Base):
     )
     # Spec 60 Decision 9b: the block opens folded.
     collapsed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    # Spec 61 Decision 18: a Clocks block follows every open clock of the
+    # Room, in the Clocks page's order, instead of its chips.
+    all_clocks: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
 
 
 class RoomSectionBlockTagRow(Base):
@@ -1639,4 +1645,259 @@ class RoomSectionBlockGroupTagRow(Base):
     )
     tag_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+
+
+# --- Clocks (spec 61) ---------------------------------------------------------
+
+
+class RoomClockRulesRow(Base):
+    """A Room's clock rules (spec 61 Decision 1): who opens a clock, who marks
+    it, whether marks can be undone. No row means the defaults ("Semplice")."""
+
+    __tablename__ = "room_clock_rules"
+    __table_args__ = (
+        CheckConstraint(
+            "open_policy IN ('master', 'everyone', 'propose')",
+            name="ck_room_clock_rules_open_policy",
+        ),
+        CheckConstraint(
+            "mark_policy IN ('master', 'master_and_creator', 'everyone')",
+            name="ck_room_clock_rules_mark_policy",
+        ),
+    )
+
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), primary_key=True
+    )
+    open_policy: Mapped[str] = mapped_column(String(10))
+    mark_policy: Mapped[str] = mapped_column(String(20))
+    allow_unmark: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RoomClockLabelRow(Base):
+    """A free label of the Room's clocks (Decision 1), its name unique in the
+    Room whatever the case."""
+
+    __tablename__ = "room_clock_labels"
+    __table_args__ = (
+        Index("uq_room_clock_labels_name", "room_id", text("lower(name)"), unique=True),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE")
+    )
+    name: Mapped[str] = mapped_column(String(30))
+    color: Mapped[str] = mapped_column(String(10))
+    position: Mapped[int] = mapped_column(Integer)
+
+
+class RoomClockMarkKindRow(Base):
+    """A kind of mark the Master defined (Decision 1): its name, colour and
+    who may use it."""
+
+    __tablename__ = "room_clock_mark_kinds"
+    __table_args__ = (
+        CheckConstraint(
+            "who IN ('master', 'players', 'everyone')", name="ck_room_clock_mark_kinds_who"
+        ),
+        Index("uq_room_clock_mark_kinds_name", "room_id", text("lower(name)"), unique=True),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE")
+    )
+    name: Mapped[str] = mapped_column(String(30))
+    color: Mapped[str] = mapped_column(String(10))
+    who: Mapped[str] = mapped_column(String(10))
+    position: Mapped[int] = mapped_column(Integer)
+
+
+class RoomClockTemplateRow(Base):
+    """A clock's settings the Master saved as a template (Decision 3)."""
+
+    __tablename__ = "room_clock_templates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(80))
+    settings: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    position: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RoomClockGroupRow(Base):
+    """A group of clocks (Decision 11): free, race, turn or sequence. An
+    ended race or turn keeps its `result`."""
+
+    __tablename__ = "room_clock_groups"
+    __table_args__ = (
+        CheckConstraint(
+            "mode IN ('free', 'race', 'turn', 'sequence')", name="ck_room_clock_groups_mode"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(80))
+    mode: Mapped[str] = mapped_column(String(10))
+    position: Mapped[int] = mapped_column(Integer)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revision: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+
+
+class RoomClockRow(Base):
+    """A clock of a Room (Decisions 4-6): its settings, how many segments are
+    filled (the sum of its live marks, clamped), its state and visibility
+    (the Comment levels with `created_by` as the Owner, Decision 15).
+    `consequence` is the Master's only. Its group and Document may go; it
+    stays."""
+
+    __tablename__ = "room_clocks"
+    __table_args__ = (
+        CheckConstraint("segments >= 2 AND segments <= 16", name="ck_room_clocks_segments"),
+        CheckConstraint("filled >= 0 AND filled <= segments", name="ck_room_clocks_filled"),
+        CheckConstraint(
+            "state IN ('proposed', 'open', 'closed', 'lapsed')", name="ck_room_clocks_state"
+        ),
+        CheckConstraint(
+            "mark_policy IS NULL OR mark_policy IN ('master', 'master_and_creator', 'everyone')",
+            name="ck_room_clocks_mark_policy",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(80))
+    description: Mapped[str] = mapped_column(Text, default="", server_default=text("''"))
+    segments: Mapped[int] = mapped_column(SmallInteger)
+    filled: Mapped[int] = mapped_column(SmallInteger, default=0, server_default=text("0"))
+    color: Mapped[str] = mapped_column(String(10))
+    stage_labels: Mapped[list[str]] = mapped_column(
+        ARRAY(String(60)), default=list, server_default=text("'{}'")
+    )
+    closing_condition: Mapped[str | None] = mapped_column(String(140))
+    consequence: Mapped[str | None] = mapped_column(Text)
+    forward_only: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    # None follows the Room's rule (Decision 6).
+    mark_policy: Mapped[str | None] = mapped_column(String(20))
+    state: Mapped[str] = mapped_column(String(10))
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    group_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_clock_groups.id", ondelete="SET NULL"), index=True
+    )
+    group_position: Mapped[int | None] = mapped_column(Integer)
+    # A turn group's decisive clock carries its outcome (Decision 11).
+    decisive_label: Mapped[str | None] = mapped_column(String(30))
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    visibility: Mapped[str] = mapped_column(String(20))
+    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revision: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+
+
+class RoomClockGrantRow(Base):
+    """A member who may see a Selective clock besides its creator and the
+    Master."""
+
+    __tablename__ = "room_clock_grants"
+
+    clock_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_clocks.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+
+
+class RoomClockLabelLinkRow(Base):
+    """A label a clock carries, in the clock's order."""
+
+    __tablename__ = "room_clock_label_links"
+
+    clock_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_clocks.id", ondelete="CASCADE"), primary_key=True
+    )
+    label_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("room_clock_labels.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
+    position: Mapped[int] = mapped_column(Integer)
+
+
+class RoomClockMarkRow(Base):
+    """One mark (Decision 9): the segments it actually moved (`delta`, after
+    the clamp), by whom, of which kind; `undone_at` once it was taken back."""
+
+    __tablename__ = "room_clock_marks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    clock_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_clocks.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True)
+    kind_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_clock_mark_kinds.id", ondelete="SET NULL")
+    )
+    delta: Mapped[int] = mapped_column(SmallInteger)
+    note: Mapped[str | None] = mapped_column(String(200))
+    undone_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RoomClockEventRow(Base):
+    """A line of a clock's history (Decision 10): a mark, an undo, a state or
+    settings change, with who did it."""
+
+    __tablename__ = "room_clock_events"
+    __table_args__ = (Index("ix_room_clock_events_clock_created", "clock_id", "created_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    clock_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_clocks.id", ondelete="CASCADE")
+    )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True)
+    action: Mapped[str] = mapped_column(String(20))
+    details: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RoomSectionBlockClockRow(Base):
+    """A chip of a Clocks block (Decision 18): one clock or one group, in the
+    block's order. Gone with the block, the clock or the group."""
+
+    __tablename__ = "room_section_block_clocks"
+    __table_args__ = (
+        CheckConstraint(
+            "(clock_id IS NULL) <> (group_id IS NULL)", name="ck_room_section_block_clocks_one"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    block_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_section_blocks.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    clock_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_clocks.id", ondelete="CASCADE"), index=True
+    )
+    group_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("room_clock_groups.id", ondelete="CASCADE"), index=True
     )

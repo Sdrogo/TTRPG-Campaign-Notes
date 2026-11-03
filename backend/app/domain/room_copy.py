@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from datetime import datetime
 
+from app.domain.clocks import ClockSetup, copy_setup
 from app.domain.errors import DomainError
 from app.domain.geographic_maps import Area, GeoBoard, Link, LinkEnd, Pin
 from app.domain.mention_maps import mention_card_id
@@ -118,6 +119,7 @@ class RoomSource:
     documents: tuple[SourceDocument, ...]
     maps: tuple[SourceMap, ...] = ()
     sections: tuple[Section, ...] = ()
+    clock_setup: ClockSetup | None = None
 
 
 @dataclass(frozen=True)
@@ -178,6 +180,7 @@ class RoomCopyPlan:
     backlinks: tuple[PlannedBacklink, ...]
     maps: tuple[SourceMap, ...] = ()
     sections: tuple[Section, ...] = ()
+    clock_setup: ClockSetup | None = None
 
 
 def ensure_can_duplicate(requester: Membership) -> None:
@@ -324,6 +327,10 @@ def plan_room_copy(source: RoomSource, requester: Membership, suffix: str) -> Ro
         ),
         # The landing page (spec 55 Decision 5), its blocks on the copy's Tags.
         sections=copy_sections(source.sections, new_room_id, tag_ids),
+        # Spec 61 Decision 26: the clock rules, labels, kinds and templates.
+        clock_setup=None
+        if source.clock_setup is None
+        else copy_setup(source.clock_setup, new_room_id),
     )
 
 

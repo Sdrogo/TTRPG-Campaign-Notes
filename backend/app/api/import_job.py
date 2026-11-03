@@ -22,6 +22,7 @@ from app.api.access import get_visible_images, get_visible_images_for_documents
 from app.api.export_pdf_job import spawn
 from app.api.versions import record_revision
 from app.db import (
+    clocks_repo,
     documents_repo,
     import_jobs_repo,
     imports_repo,
@@ -42,6 +43,8 @@ from app.db.models import (
     RelationshipMapRow,
     RoomSectionRow,
 )
+from app.domain.clock_transfer import plan_clock_import
+from app.domain.clocks import MAX_CLOCKS_PER_ROOM, MAX_GROUPS_PER_ROOM
 from app.domain.documents import (
     MAX_IMAGES_PER_DOCUMENT,
     can_create_document,
@@ -82,7 +85,7 @@ from app.domain.room_sections import (
 )
 from app.domain.visibility import is_document_visible
 from app.realtime.audience import CHANGED, push
-from app.realtime.broker import LANDING, Event
+from app.realtime.broker import CLOCK_RULES, LANDING, Event
 
 logger = logging.getLogger(__name__)
 
@@ -416,6 +419,7 @@ async def _write(
         sections = await _write_sections(
             session, job.room_id, [s for s in plan.sections if s.skipped is None]
         )
+        await _write_clocks(session, job.room_id, importer.user_id, plan, now)
         await session.commit()
         await session_module.run_after_commit(session)
     return (
@@ -424,6 +428,37 @@ async def _write(
         maps,
         sections,
     )
+
+
+async def _write_clocks(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    importer_id: uuid.UUID,
+    plan: ImportPlan,
+    now: datetime,
+) -> None:
+    """Spec 61 Decision 27: the Master's import adds the files' clocks and
+    groups, under the Room's lock and within its caps, merging labels and
+    mark kinds by name; it tells the Room's streams."""
+    if not plan.clock_files:
+        return
+    await rooms_repo.lock_room(session, room_id)
+    planned = plan_clock_import(
+        [data for data, _ in plan.clock_files],
+        [documents for _, documents in plan.clock_files],
+        room_id,
+        importer_id,
+        now,
+        await clocks_repo.list_labels(session, room_id),
+        await clocks_repo.list_kinds(session, room_id),
+        MAX_CLOCKS_PER_ROOM - await clocks_repo.count_clocks(session, room_id),
+        MAX_GROUPS_PER_ROOM - await clocks_repo.count_groups(session, room_id),
+        await clocks_repo.next_position(session, room_id),
+    )
+    if not planned.clocks and not planned.groups and not planned.labels and not planned.kinds:
+        return
+    await clocks_repo.insert_import(session, planned)
+    push(session, room_id, Event(None, CHANGED, None, CLOCK_RULES))
 
 
 async def _write_sections(

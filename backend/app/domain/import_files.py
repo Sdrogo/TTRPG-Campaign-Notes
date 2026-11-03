@@ -14,6 +14,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.domain.clock_transfer import CLOCK_KEYS
 from app.domain.errors import DomainError
 from app.domain.export import SCHEMA_VERSION
 from app.domain.mentions import MentionKind
@@ -113,6 +114,9 @@ class ImportFile:
     tags: Mapping[str, ImportTag] = field(default_factory=dict)
     maps: tuple[dict[str, Any], ...] = ()
     sections: tuple[dict[str, Any], ...] = ()
+    # Spec 61: the file's clock keys (`clock_transfer.CLOCK_KEYS`) as written,
+    # read when the import is written (`clock_transfer.plan_clock_import`).
+    clocks: Mapping[str, Any] = field(default_factory=dict)
 
 
 # --- Entry point -------------------------------------------------------------
@@ -189,6 +193,7 @@ def _parse_json(name: str, text: str) -> ImportFile:
         raw_tags: Any = []
         raw_maps: Any = []
         raw_sections: Any = []
+        raw_clocks: dict[str, Any] = {}
     elif isinstance(data, dict):
         version = data.get("schema_version", SCHEMA_VERSION)
         if not isinstance(version, int) or isinstance(version, bool):
@@ -201,6 +206,7 @@ def _parse_json(name: str, text: str) -> ImportFile:
         raw_tags = data.get("tags", [])
         raw_maps = data.get("maps") or []
         raw_sections = data.get("sections") or []
+        raw_clocks = {key: data[key] for key in CLOCK_KEYS if data.get(key) is not None}
     else:
         raise _unreadable(name)
     if not isinstance(raw_documents, list) or not isinstance(raw_tags, list):
@@ -217,7 +223,7 @@ def _parse_json(name: str, text: str) -> ImportFile:
         if tag_name and tag_name.strip() and tag_id:
             tags[tag_id] = ImportTag(tag_name.strip(), _optional_str(item.get("category"), name))
     documents = tuple(_json_document(_object(raw, name), name, tags) for raw in raw_documents)
-    return ImportFile(name, documents, tags, tuple(raw_maps), tuple(raw_sections))
+    return ImportFile(name, documents, tags, tuple(raw_maps), tuple(raw_sections), raw_clocks)
 
 
 def _object(value: Any, name: str) -> dict[str, Any]:
@@ -581,6 +587,7 @@ def file_to_json(file: ImportFile) -> dict[str, Any]:
         ],
         "maps": list(file.maps),
         "sections": list(file.sections),
+        "clocks": dict(file.clocks),
     }
 
 
@@ -610,4 +617,6 @@ def file_from_json(data: dict[str, Any]) -> ImportFile:
         maps=tuple(data.get("maps", ())),
         # Absent from the payload of a job queued before spec 56.
         sections=tuple(data.get("sections", ())),
+        # Absent from the payload of a job queued before spec 61.
+        clocks=dict(data.get("clocks", {})),
     )

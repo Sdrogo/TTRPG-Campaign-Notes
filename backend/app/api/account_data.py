@@ -18,6 +18,7 @@ from app.auth.dependencies import CurrentUserDep
 from app.db import (
     account_repo,
     auth_admin,
+    clocks_repo,
     documents_repo,
     friends_repo,
     rooms_repo,
@@ -159,6 +160,26 @@ class ExportedVote(BaseModel):
     created_at: datetime
 
 
+class ExportedClock(BaseModel):
+    """A clock the user opened or proposed (spec 61 Decision 28)."""
+
+    room_id: uuid.UUID
+    name: str
+    state: str
+    created_at: datetime
+
+
+class ExportedClockMark(BaseModel):
+    """A mark the user made on a clock (spec 61 Decision 28)."""
+
+    room_id: uuid.UUID
+    clock: str
+    delta: int
+    note: str | None
+    undone: bool
+    created_at: datetime
+
+
 class ExportedFriend(BaseModel):
     """A Friend or a pending request, as the user sees it in the app."""
 
@@ -184,6 +205,8 @@ class PersonalDataExport(BaseModel):
     answers: list[ExportedAnswer]
     acceptances: list[ExportedAcceptance]
     votes: list[ExportedVote]
+    clocks: list[ExportedClock]
+    clock_marks: list[ExportedClockMark]
     friends: list[ExportedFriend]
     friend_code: str | None
 
@@ -227,6 +250,8 @@ async def export_personal_data(
     answers = await session_zero_questions_repo.list_answers_by_user(session, user_id)
     acceptances = await session_zero_ddi_repo.list_acceptances_by_user(session, user_id)
     votes = await session_zero_polls_repo.list_votes_by_user(session, user_id)
+    clocks = await clocks_repo.list_clocks_by_creator(session, user_id)
+    marks = await clocks_repo.list_marks_by_user(session, user_id)
 
     referenced = (
         {row.id for row in created_or_played}
@@ -360,6 +385,26 @@ async def export_personal_data(
         votes=[
             ExportedVote(room_id=room_id, poll=poll, choice=choice, created_at=created_at)
             for room_id, poll, choice, created_at in votes
+        ],
+        clocks=[
+            ExportedClock(
+                room_id=clock.room_id,
+                name=clock.name,
+                state=clock.state.value,
+                created_at=clock.created_at,
+            )
+            for clock in clocks
+        ],
+        clock_marks=[
+            ExportedClockMark(
+                room_id=room_id,
+                clock=name,
+                delta=mark.delta,
+                note=mark.note,
+                undone=mark.undone_at is not None,
+                created_at=mark.created_at,
+            )
+            for room_id, name, mark in marks
         ],
         friends=[
             ExportedFriend(
