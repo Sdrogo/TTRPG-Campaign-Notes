@@ -373,8 +373,7 @@
         "addHint": "Una Etiqueta es una Etiqueta principal; dos o más, una combinación.",
         "add": "Añadir",
         "alreadyMain": "Esta Etiqueta ya es una entrada de la agrupación.",
-        "alreadyCombination": "Esta combinación ya está en la agrupación.",
-        "mapsRow": "Fila de mapas"
+        "alreadyCombination": "Esta combinación ya está en la agrupación."
       },
       "all": {
         "title": "Todas las Etiquetas",
@@ -927,6 +926,11 @@
     },
     "running": "Importando…",
     "runningHint": "Puedes cerrar esta ventana: la importación continúa en segundo plano y los Documentos aparecerán en la lista en cuanto termine.",
+    "imagesProgress": "Imágenes: {{done}} de {{total}}",
+    "imagesProgressLabel": "Imágenes importadas hasta ahora",
+    "imagesProgressHint": "Los Documentos ya están en la Room; sus imágenes aparecen a medida que llegan.",
+    "imagesImported": "{{stored}} de {{total}} imágenes importadas",
+    "tooManyImages": "Los Documentos marcados tienen {{count}} imágenes: como máximo {{max}} por importación. Desmarca algunos e importa el resto después.",
     "done": "Importación completada",
     "created_one": "{{count}} Documento creado",
     "created_other": "{{count}} Documentos creados",
@@ -1272,10 +1276,6 @@
       "repeated": "Documento ya en el mapa, quedarán como etiquetas simples:",
       "backgroundLater": "La imagen de fondo se sube después, desde el botón Mapa del nuevo mapa.",
       "submit": "Importar"
-    },
-    "strip": {
-      "all_one": "Todos los mapas ({{count}})",
-      "all_other": "Todos los mapas ({{count}})"
     }
   },
   "sessionZero": {
@@ -1605,6 +1605,8 @@
       "sessionZero": "Sesiones, Líneas y Velos, encuestas"
     },
     "blockEmpty": "Nada que mostrar",
+    "foldBlock": "Contraer {{name}}",
+    "unfoldBlock": "Desplegar {{name}}",
     "sectionEmpty": "Todavía no hay nada que mostrar aquí.",
     "notFound": "Esta sección ya no existe.",
     "loadError": "No se pudo cargar la página.",
@@ -1656,7 +1658,9 @@
       "session_zero": {
         "title": "Sesión 0",
         "body": "Sesiones, etapas y encuestas"
-      }
+      },
+      "tools": "Herramientas",
+      "toolsBody": "Una herramienta de la Sesión 0 propia, oculta a los jugadores hasta que la muestres"
     },
     "edit": {
       "start": "Editar",
@@ -1700,7 +1704,19 @@
       "blockMenu": "Acciones del bloque",
       "deleteBlock": "Eliminar bloque",
       "blockDeleted": "Bloque eliminado",
-      "undo": "Deshacer"
+      "undo": "Deshacer",
+      "renameSection": "Renombrar la sección {{name}}",
+      "addDescription": "Añadir una descripción",
+      "collapsed": "Plegado al abrir",
+      "deleteToolTitle": "¿Eliminar {{name}}?",
+      "deleteToolBody": "También se eliminan los votos, las notas y las respuestas. No se puede deshacer."
+    },
+    "tool": {
+      "draft": "Borrador",
+      "draftHint": "Los jugadores aún no la ven",
+      "show": "Mostrar a los jugadores",
+      "hide": "Ocultar a los jugadores",
+      "loadError": "No se pudo cargar la herramienta."
     }
   }
 }

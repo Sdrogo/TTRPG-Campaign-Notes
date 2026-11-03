@@ -62,10 +62,17 @@ from app.domain.room_sections import Section, SectionKind
 
 MAX_FILES = 10
 MAX_DOCUMENTS = 200
-MAX_IMAGES = 200
+# Spec 59: the images of the Documents chosen in the preview, checked when the
+# job starts; the files themselves may link more, up to `MAX_IMAGE_LINKS`, so
+# a big export still reaches the preview where Documents can be unticked.
+MAX_IMAGES = 2000
+MAX_IMAGE_LINKS = 5000
+# The job fetches the images in blocks of this many and saves its progress
+# after each (spec 59 Decision 3).
+IMAGE_BLOCK_SIZE = 25
 MAX_DOCUMENT_NAME_LENGTH = 200
 MAX_TAG_NAME_LENGTH = 100
-# A job that has been active this long is taken as lost (the process was
+# A job that saved no progress for this long is taken as lost (the process was
 # restarted, or it hung) so its owner can start another.
 IMPORT_STALE_AFTER = timedelta(minutes=30)
 # A finished job's row, with the list of what it did, is kept this long.
@@ -105,6 +112,8 @@ class ImportJob:
     error: str | None
     created_at: datetime
     finished_at: datetime | None
+    # Spec 59: set once the Documents are written, while the images arrive.
+    progress: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -248,7 +257,8 @@ def fold(name: str) -> str:
 
 def validate_files(files: Sequence[ImportFile]) -> None:
     """422 unless the files are within the limits (Decision 8): at most
-    `MAX_FILES` files, `MAX_DOCUMENTS` Documents and `MAX_IMAGES` images, and
+    `MAX_FILES` files, `MAX_DOCUMENTS` Documents and `MAX_IMAGE_LINKS` image
+    links (the chosen ones are held to `MAX_IMAGES` by `plan_import`), and
     every Document named, its subtitle within `MAX_SUBTITLE_LENGTH` once
     cleaned (spec 28_0), with at most `MAX_NOTES_PER_DOCUMENT` Notes titled
     within `MAX_NOTE_TITLE_LENGTH` and Tag names within
@@ -258,8 +268,8 @@ def validate_files(files: Sequence[ImportFile]) -> None:
     documents = [document for file in files for document in file.documents]
     if len(documents) > MAX_DOCUMENTS:
         raise ImportRefusedError("errors.import.tooManyDocuments", max=MAX_DOCUMENTS)
-    if sum(len(document.images) for document in documents) > MAX_IMAGES:
-        raise ImportRefusedError("errors.import.tooManyImages", max=MAX_IMAGES)
+    if sum(len(document.images) for document in documents) > MAX_IMAGE_LINKS:
+        raise ImportRefusedError("errors.import.tooManyImageLinks", max=MAX_IMAGE_LINKS)
     if sum(len(file.maps) for file in files) > MAX_MAPS_PER_IMPORT:
         raise ImportRefusedError("errors.import.tooManyMaps", max=MAX_MAPS_PER_IMPORT)
     if sum(len(file.sections) for file in files) > MAX_SECTIONS_PER_IMPORT:
@@ -392,8 +402,11 @@ def plan_import(
     """The plan for `files` (already `validate_files`d) as `choices` select
     and resolve them; no choices means every Document, copied. 422 when none
     is selected, 403 (`ImportCannotReplaceError`) for a Replace of a Document
-    the importer doesn't manage. A Document that is replaced keeps its id,
-    owners, visibility and everything but its information (Decision 6)."""
+    the importer doesn't manage, 422 when the chosen Documents bring more
+    than `MAX_IMAGES` images (spec 59; only with `choices`: the preview plans
+    everything). A Document that is replaced keeps its id, owners,
+    visibility and everything but its information (Decision 6)."""
+    chose = choices is not None
     choices = choices or ImportChoices()
     chosen = [
         (fi, document_key(fi, di), document)
@@ -457,6 +470,8 @@ def plan_import(
         )
         for fi, key, document in chosen
     ]
+    if chose and sum(len(document.images) for document in planned) > MAX_IMAGES:
+        raise ImportRefusedError("errors.import.tooManyImages", max=MAX_IMAGES)
     sections = _plan_sections(files, context, choices, book)
     return ImportPlan(
         documents=tuple(planned),
@@ -650,3 +665,23 @@ def _plan_document(
         can_replace=bool(existing and existing.can_manage),
         replaces=replacing is not None,
     )
+
+
+def images_done(progress: Mapping[str, Any]) -> int:
+    """How many entries of an import's image work list are finished (spec
+    59): every one before the saved block, plus the ones of the current
+    block already stored."""
+    done: int = progress["done"]
+    return done + sum(1 for index in progress["stored"] if int(index) >= done)
+
+
+def next_block(progress: Mapping[str, Any]) -> tuple[int, list[tuple[int, dict[str, Any]]]]:
+    """The next `IMAGE_BLOCK_SIZE` entries of the work list after the saved
+    ones: where the block ends (the `done` to save after it) and its entries
+    with their index, leaving out any a resumed job already stored."""
+    work: list[dict[str, Any]] = progress["work"]
+    start: int = progress["done"]
+    end = min(start + IMAGE_BLOCK_SIZE, len(work))
+    return end, [
+        (index, work[index]) for index in range(start, end) if str(index) not in progress["stored"]
+    ]

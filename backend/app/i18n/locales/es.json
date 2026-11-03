@@ -177,6 +177,7 @@
       "tooManyFiles": "Se pueden importar como máximo {max} archivos a la vez",
       "tooManyDocuments": "Se pueden importar como máximo {max} Documentos a la vez",
       "tooManyImages": "Se pueden importar como máximo {max} imágenes a la vez",
+      "tooManyImageLinks": "Se pueden leer como máximo {max} enlaces de imágenes de los archivos a la vez",
       "tooManyMaps": "Se pueden importar como máximo {max} mapas a la vez",
       "tooManySections": "Se pueden importar como máximo {max} secciones del Inicio de la Sala a la vez",
       "nameRequired": "Un Documento del archivo no tiene nombre",
@@ -333,7 +334,9 @@
       "blockFieldNotAllowed": "Este ajuste no corresponde a este tipo de bloque",
       "unknownTag": "Una de las Etiquetas no está en esta Sala",
       "tooManyGroups": "Un bloque tiene como máximo {max} grupos",
-      "invalidGroup": "Cada grupo necesita una o más Etiquetas distintas, y no puede haber dos grupos iguales"
+      "invalidGroup": "Cada grupo necesita una o más Etiquetas distintas, y no puede haber dos grupos iguales",
+      "unknownTool": "Este bloque no es una herramienta de esta sección",
+      "notATool": "Una herramienta es una Retro, Estrellas y Deseos, Preguntas, un DDI o encuestas"
     }
   },
   "pdf": {

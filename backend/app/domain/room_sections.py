@@ -41,6 +41,8 @@ class BlockKind(StrEnum):
     DOCUMENTS = "documents"
     MAPS = "maps"
     SESSION_ZERO = "session_zero"
+    # Spec 60: one Session 0 step of its own, outside every session.
+    TOOL = "tool"
 
 
 class BlockMapKind(StrEnum):
@@ -115,6 +117,17 @@ class SessionZeroBlockNeedsFeatureError(DomainError):
     """A Session 0 block shows at least one feature."""
 
 
+class UnknownToolError(DomainError):
+    """A tool block names a step that isn't one of its Section's tools, or
+    one already named (spec 60): a tool is created with
+    `POST .../tools`, never by the blocks list."""
+
+
+class NotAToolError(DomainError):
+    """A Section's tool is a Retro, Stars and Wishes, Questions, DDI or
+    polls step: Lines & Veils is the Room's one board (spec 60 Decision 1)."""
+
+
 class BlockFieldNotAllowedError(DomainError):
     """A block carries only its own kind's settings: Tags and groups on a
     Documents block, a map kind on a maps block, features on a Session 0
@@ -139,7 +152,8 @@ class Block:
     """A block of a custom Section, in its place. `tag_ids` and `groups`
     (each a set of Tag ids, in order) belong to a Documents block,
     `map_kind` to a maps block, `features` (in the Master's order) to a
-    Session 0 block."""
+    Session 0 block, `module_id` (its Session 0 step) to a tool block (spec
+    60). `collapsed` blocks open folded (spec 60 Decision 9b)."""
 
     id: uuid.UUID
     kind: BlockKind
@@ -149,6 +163,8 @@ class Block:
     groups: tuple[tuple[uuid.UUID, ...], ...] = ()
     map_kind: BlockMapKind | None = None
     features: tuple[SessionZeroFeature, ...] = ()
+    module_id: uuid.UUID | None = None
+    collapsed: bool = False
 
 
 @dataclass(frozen=True)
@@ -177,6 +193,8 @@ class BlockInput:
     groups: Sequence[Sequence[uuid.UUID]] = ()
     map_kind: BlockMapKind | None = None
     features: Sequence[SessionZeroFeature] = ()
+    module_id: uuid.UUID | None = None
+    collapsed: bool = False
 
 
 def ensure_can_edit(role: RoomRole) -> None:
@@ -294,21 +312,31 @@ def plan_blocks(
     """The Section's new blocks, replacing the old ones, in order (spec 55
     Decisions 13-15). 409 on a page card; 422 past `MAX_BLOCKS`, for a
     Documents block without Tags, a Session 0 block without features, a
-    setting another kind's block carries, or a Tag that isn't the Room's.
+    setting another kind's block carries, a Tag that isn't the Room's, or a
+    tool block naming a step that isn't one of the Section's tools (spec 60;
+    a tool left out of the list is deleted by the caller, `dropped_tools`).
     Repeated Tags and features are dropped."""
     if section.kind is not SectionKind.CUSTOM:
         raise PageSectionHasNoBlocksError("errors.landing.pageSectionHasNoBlocks")
     if len(blocks) > MAX_BLOCKS:
         raise TooManyBlocksError("errors.landing.tooManyBlocks", max=MAX_BLOCKS)
+    tools = {block.module_id for block in section.blocks if block.kind is BlockKind.TOOL}
+    named: set[uuid.UUID] = set()
     planned: list[Block] = []
     for position, block in enumerate(blocks):
         documents = block.kind is BlockKind.DOCUMENTS
+        tool = block.kind is BlockKind.TOOL
         if (
             (not documents and (block.tag_ids or block.groups))
             or (block.kind is not BlockKind.MAPS and block.map_kind is not None)
             or (block.kind is not BlockKind.SESSION_ZERO and block.features)
+            or (not tool and block.module_id is not None)
         ):
             raise BlockFieldNotAllowedError("errors.landing.blockFieldNotAllowed")
+        if tool and (block.module_id not in tools or block.module_id in named):
+            raise UnknownToolError("errors.landing.unknownTool")
+        if block.module_id is not None:
+            named.add(block.module_id)
         tag_ids = _unique(block.tag_ids)
         if documents and not tag_ids:
             raise DocumentsBlockNeedsTagError("errors.landing.documentsBlockNeedsTag")
@@ -327,9 +355,34 @@ def plan_blocks(
                 groups=_plan_groups(block.groups, room_tags),
                 map_kind=block.map_kind,
                 features=features,
+                module_id=block.module_id,
+                collapsed=block.collapsed,
             )
         )
     return tuple(planned)
+
+
+def dropped_tools(section: Section, planned: Sequence[Block]) -> set[uuid.UUID]:
+    """The Section's tools (their steps) the new blocks leave out: they are
+    deleted with everything in them (spec 60 Decision 6)."""
+    kept = {block.module_id for block in planned}
+    return {
+        block.module_id
+        for block in section.blocks
+        if block.module_id is not None and block.module_id not in kept
+    }
+
+
+def plan_new_tool(section: Section, kind: str, tool_kinds: Collection[str]) -> int:
+    """Where a new tool block goes in `section` (last): 409 on a page card,
+    422 past `MAX_BLOCKS` or for a `kind` that isn't one of `tool_kinds`."""
+    if section.kind is not SectionKind.CUSTOM:
+        raise PageSectionHasNoBlocksError("errors.landing.pageSectionHasNoBlocks")
+    if kind not in tool_kinds:
+        raise NotAToolError("errors.landing.notATool")
+    if len(section.blocks) >= MAX_BLOCKS:
+        raise TooManyBlocksError("errors.landing.tooManyBlocks", max=MAX_BLOCKS)
+    return len(section.blocks)
 
 
 def prune_after_tag_deletion(block: Block, tag_id: uuid.UUID) -> Block | None:
@@ -358,7 +411,8 @@ def copy_sections(
     """The landing page of a duplicated Room (spec 55 Decision 5, spec 33):
     every Section and block with fresh ids, Tags re-pointed to their copies.
     An image keeps naming the same Storage object, like a Document image's
-    copy (spec 33 Decision 10)."""
+    copy (spec 33 Decision 10). Tool blocks are left out, as Session 0 is
+    (spec 60 Decision 8)."""
     return tuple(
         replace(
             section,
@@ -368,10 +422,13 @@ def copy_sections(
                 replace(
                     block,
                     id=uuid.uuid4(),
+                    position=position,
                     tag_ids=tuple(tags[t] for t in block.tag_ids),
                     groups=tuple(tuple(tags[t] for t in group) for group in block.groups),
                 )
-                for block in section.blocks
+                for position, block in enumerate(
+                    b for b in section.blocks if b.kind is not BlockKind.TOOL
+                )
             ),
         )
         for section in sections

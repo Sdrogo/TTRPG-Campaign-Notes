@@ -16,7 +16,7 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient, Response
 from PIL import Image
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import imports
@@ -562,7 +562,7 @@ async def test_a_file_that_is_refused_writes_nothing(
 ) -> None:
     room = await _room(client, make_token)
     many = [{"name": f"D{i}"} for i in range(201)]
-    images = {"name": "I", "images": [{"url": f"https://x.test/{i}.png"} for i in range(201)]}
+    images = {"name": "I", "images": [{"url": f"https://x.test/{i}.png"} for i in range(5001)]}
     cases = {
         "too big": (("big.json", b"{" + b" " * (5 * 1024 * 1024)), 413),
         "not json": (("bad.json", b"{oops"), 422),
@@ -586,6 +586,27 @@ async def test_a_file_that_is_refused_writes_nothing(
     assert await _documents(client, room) == {}
     assert held_jobs == []
     assert (await db_session.scalars(select(ImportJobRow))).all() == []
+
+
+async def test_the_image_cap_counts_the_documents_ticked_in_the_preview(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    held_jobs: list[Coroutine[Any, Any, None]],
+) -> None:
+    """Spec 59 Decision 1: a file over `MAX_IMAGES` reaches the preview, and
+    the import starts once the ticked Documents are under it."""
+    room = await _room(client, make_token)
+    links = [{"url": f"https://x.test/{i}.png"} for i in range(1001)]
+    file = _json_file({"name": "A", "images": links}, {"name": "B", "images": links})
+
+    assert (await _preview(client, room, room.master, file)).status_code == 200
+    both = await _start(client, room, room.master, (file,), ["0:0", "0:1"])
+    assert both.status_code == 422
+    assert "2000" in both.json()["detail"]
+    one = await _start(client, room, room.master, (file,), ["0:1"])
+    assert one.status_code == 202
+    assert len(held_jobs) == 1
 
 
 async def test_the_choices_must_be_valid_and_select_something(
@@ -772,6 +793,178 @@ async def test_an_image_that_fails_is_skipped_and_listed_and_the_rest_is_importe
     assert len(gallery["images"]) == 2
     # The file's favorite was stored first, so it is the Document's.
     assert [i["is_favorite"] for i in gallery["images"]] == [True, False]
+
+
+async def test_the_images_arrive_in_blocks_saved_as_they_go(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+    inline_jobs: None,
+) -> None:
+    """Spec 59 Decisions 3, 9 and 10: after the Documents' transaction the
+    files are dropped and the images go a block at a time; the job shows how
+    far it got and the result how many came across."""
+    from app.domain import imports as imports_domain
+
+    monkeypatch.setattr(imports_domain, "IMAGE_BLOCK_SIZE", 2)
+    room = await _room(client, make_token)
+    for i in range(4):
+        served[f"https://img.test/{i}.png"] = _png((i * 40, 0, 0))
+    seen: list[tuple[int, int, Any]] = []
+    original = import_jobs_repo.save_block
+
+    async def spy(session: AsyncSession, job_id: uuid.UUID, done: int, skipped: Any) -> None:
+        job = await client.get(f"{room.url}/imports/{job_id}", headers=room.master)
+        row = await import_jobs_repo.get_job(session, job_id)
+        assert row is not None and row.payload is None
+        # The work list is kept apart, so the per-image saves stay small.
+        work, progress = (
+            await session.execute(
+                select(ImportJobRow.image_work, ImportJobRow.progress).where(
+                    ImportJobRow.id == job_id
+                )
+            )
+        ).one()
+        assert len(work) == 4 and "work" not in progress
+        seen.append((done, job.json()["progress"]["stored"], job.json()["status"]))
+        await original(session, job_id, done, skipped)
+
+    monkeypatch.setattr(import_jobs_repo, "save_block", spy)
+    links = [{"url": f"https://img.test/{i}.png"} for i in range(3)]
+    file = _json_file(
+        {"name": "A", "images": links}, {"name": "B", "images": [{"url": "https://img.test/x.png"}]}
+    )
+
+    job = await _import(client, room, room.master, file)
+
+    assert job["status"] == "done" and job["progress"] is None
+    assert seen == [(2, 2, "running"), (4, 3, "running")]
+    assert job["result"]["images"] == {"total": 4, "stored": 3, "done": 0}
+    assert [s["reason"] for s in job["result"]["skipped"]] == ["unreachable"]
+    a = await _detail(client, room, job["result"]["created"][0]["id"])
+    assert len(a["images"]) == 3
+
+
+async def test_a_restart_resumes_the_images_without_adding_any_twice(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+    inline_jobs: None,
+) -> None:
+    """Spec 59 Decision 6: a job cut off in its image phase is claimed at
+    startup and goes on from the first entry not stored."""
+    from app.api import import_job
+
+    room = await _room(client, make_token)
+    for i in range(3):
+        served[f"https://img.test/{i}.png"] = _png((0, i * 40, 0))
+
+    async def cut_off(*_: Any) -> None:
+        return None  # the process died right after the Documents' transaction
+
+    run_images = import_job._run_images
+    monkeypatch.setattr(import_job, "_run_images", cut_off)
+    links = [{"url": f"https://img.test/{i}.png"} for i in range(3)]
+    job = await _import(client, room, room.master, _json_file({"name": "A", "images": links}))
+    assert job["status"] == "running"
+    assert job["progress"] == {"total": 3, "stored": 0, "done": 0}
+    monkeypatch.setattr(import_job, "_run_images", run_images)
+    job_id = uuid.UUID(job["id"])
+    # The first image was stored just before the restart.
+    await import_jobs_repo.mark_stored(db_session, job_id, 0, str(uuid.uuid4()))
+    # Old enough for the sweep, until the startup claims it.
+    await db_session.execute(
+        update(ImportJobRow)
+        .where(ImportJobRow.id == job_id)
+        .values(updated_at=datetime.now(UTC) - timedelta(hours=2))
+    )
+    resumed: list[Coroutine[Any, Any, None]] = []
+
+    async def hold(coroutine: Coroutine[Any, Any, None]) -> None:
+        resumed.append(coroutine)
+
+    monkeypatch.setattr(import_job, "spawn", hold)
+
+    await import_job.resume_import_jobs()
+    await sweep_export_jobs(db_session)
+    assert len(resumed) == 1
+    await resumed[0]
+
+    finished = await client.get(f"{room.url}/imports/{job_id}", headers=room.master)
+    assert finished.json()["status"] == "done"
+    assert finished.json()["result"]["images"] == {"total": 3, "stored": 3, "done": 0}
+    assert "https://img.test/0.png" not in served["calls"]
+    a = await _detail(client, room, finished.json()["result"]["created"][0]["id"])
+    assert len(a["images"]) == 2  # the one stored before the restart was a stand-in
+
+
+async def test_a_resume_fails_when_the_importer_left_and_skips_a_finished_job(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+    inline_jobs: None,
+) -> None:
+    from app.api import import_job
+
+    room = await _room(client, make_token)
+    monkeypatch.setattr(import_job, "_run_images", lambda *_: _nothing())
+    links = [{"url": "https://img.test/0.png"}]
+    job = await _import(client, room, room.player, _json_file({"name": "A", "images": links}))
+    job_id = uuid.UUID(job["id"])
+    left = await client.delete(f"{room.url}/members/{room.player_id}", headers=room.master)
+    assert left.status_code == 204, left.text
+
+    await import_job.resume_import_job(job_id)
+    row = await import_jobs_repo.get_job(db_session, job_id)
+    assert row is not None and (row.status, row.error) == (ImportStatus.FAILED, "refused")
+    # Not running any more: left alone.
+    await import_job.resume_import_job(job_id)
+    await import_job.resume_import_job(uuid.uuid4())
+
+
+async def _nothing() -> None:
+    return None
+
+
+async def test_a_failure_while_resuming_fails_the_job_or_is_only_logged(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    served: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+    inline_jobs: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    from app.api import import_job
+
+    room = await _room(client, make_token)
+    run_images = import_job._run_images
+    monkeypatch.setattr(import_job, "_run_images", lambda *_: _nothing())
+    job = await _import(client, room, room.master, _json_file({"name": "A"}))
+    job_id = uuid.UUID(job["id"])
+
+    async def broken(*_: Any) -> None:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(import_job, "_run_images", broken)
+    await import_job.resume_import_job(job_id)
+    row = await import_jobs_repo.get_job(db_session, job_id)
+    assert row is not None and (row.status, row.error) == (ImportStatus.FAILED, "failed")
+
+    monkeypatch.setattr(import_jobs_repo, "claim_image_phases", broken)
+    await import_job.resume_import_jobs()
+    assert "Could not resume the imports" in caplog.text
+    # A job the sweep failed meanwhile: the images stop.
+    await run_images(job_id, uuid.UUID(room.id), uuid.uuid4())
 
 
 _OWN_STORAGE = "https://own.supabase.test"
@@ -992,7 +1185,7 @@ async def test_an_image_whose_document_is_gone_is_dropped(
     original = import_job._store_image
 
     async def delete_first(*args: Any) -> uuid.UUID | str | None:
-        await documents_repo.delete_document(db_session, args[2].id)
+        await documents_repo.delete_document(db_session, args[2])
         return await original(*args)
 
     monkeypatch.setattr(import_job, "_store_image", delete_first)
@@ -1120,10 +1313,27 @@ async def test_the_sweep_fails_old_active_imports_and_deletes_finished_ones(
 
     stale = job(ImportStatus.RUNNING, now - timedelta(hours=1), None)
     fresh = job(ImportStatus.QUEUED, now - timedelta(minutes=1), None)
+    # Spec 59: started long ago, but its images are still progressing.
+    busy = job(ImportStatus.RUNNING, now - timedelta(hours=2), None)
     old = job(ImportStatus.DONE, now - timedelta(days=9), now - timedelta(days=8))
     recent = job(ImportStatus.DONE, now - timedelta(days=2), now - timedelta(days=1))
     for item in (stale, fresh):
         assert await import_jobs_repo.insert_job(db_session, item)
+    db_session.add(
+        ImportJobRow(
+            id=busy.id,
+            room_id=busy.room_id,
+            requested_by=busy.requested_by,
+            status=busy.status.value,
+            payload=None,
+            progress={"work": [], "done": 0, "stored": {}},
+            result=None,
+            error=None,
+            created_at=busy.created_at,
+            finished_at=None,
+            updated_at=now - timedelta(minutes=5),
+        )
+    )
     for item in (old, recent):
         db_session.add(
             ImportJobRow(
@@ -1149,8 +1359,15 @@ async def test_the_sweep_fails_old_active_imports_and_deletes_finished_ones(
     assert failed is not None
     assert (failed.status, failed.error, failed.payload) == (ImportStatus.FAILED, "stale", None)
     assert (await import_jobs_repo.get_job(db_session, fresh.id)).status is ImportStatus.QUEUED  # type: ignore[union-attr]
-    # Starting up fails everything still active.
+    assert (await import_jobs_repo.get_job(db_session, busy.id)).status is ImportStatus.RUNNING  # type: ignore[union-attr]
+    # Starting up fails everything still active but a job in its image
+    # phase, which is resumed.
     assert await import_jobs_repo.fail_active(db_session, "interrupted", now) == 1
+    assert await import_jobs_repo.claim_image_phases(db_session) == [busy.id]
+    # A job no longer in its image phase takes no progress.
+    await import_jobs_repo.mark_stored(db_session, stale.id, 0, "x")
+    await import_jobs_repo.save_block(db_session, stale.id, 1, {"skipped": [1]})
+    assert (await import_jobs_repo.get_job(db_session, stale.id)).progress is None  # type: ignore[union-attr]
     # A finished job keeps its outcome.
     await import_jobs_repo.mark_failed(db_session, recent.id, "late", now)
     assert (await import_jobs_repo.get_job(db_session, recent.id)).status is ImportStatus.DONE  # type: ignore[union-attr]

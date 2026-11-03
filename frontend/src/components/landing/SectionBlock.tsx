@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from 'react';
-import { Badge, Box, Collapse, Group, Loader, Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { useEffect, useState, type ReactNode } from 'react';
+import { ActionIcon, Badge, Box, Collapse, Group, Loader, Stack, Text, Title, UnstyledButton } from '@mantine/core';
 import { CaretDownIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { LandingCard } from './LandingCard';
+import { BlockHeading } from './BlockHeading';
 import { DocumentCard } from '../DocumentCard';
 import { useTags } from '../../hooks/useTags';
 import { useMembers } from '../../hooks/useMembers';
@@ -10,7 +11,7 @@ import { useMyReveals } from '../../hooks/useReveals';
 import { useReadOnly } from '../../hooks/useViewAs';
 import { hasUnseenReveal } from '../../lib/reveal';
 import { isBlockEmpty, type BlockContent } from './blockItems';
-import { blockAnchor, sessionZeroHref, type SessionZeroItem } from '../../lib/landing';
+import { REVEAL_BLOCK_EVENT, blockAnchor, sessionZeroHref, type SessionZeroItem } from '../../lib/landing';
 import { linesVeilsLine, pollLine, sessionLine, stepLine, stepTitle } from '../../lib/landingText';
 import { moduleLabel, roundLabel } from '../../lib/sessionZero';
 import { useBackState } from '../../lib/backNav';
@@ -50,7 +51,19 @@ export function SectionBlock({ roomId, block, heading, content, isMaster, bar, p
   const readOnly = useReadOnly();
   const reveals = useMyReveals(hasDocuments && !readOnly);
   const empty = isBlockEmpty(content);
-  if (empty && !isMaster) return null;
+  // Every block folds from its heading (spec 60 Decision 9): open at first
+  // unless the Master set it to start folded (Decision 9b), not remembered;
+  // the Index opens it before scrolling to it.
+  const [expanded, setExpanded] = useState(!block.collapsed);
+  useEffect(() => {
+    const reveal = (event: Event) => {
+      if ((event as CustomEvent<string>).detail === block.id) setExpanded(true);
+    };
+    window.addEventListener(REVEAL_BLOCK_EVENT, reveal);
+    return () => window.removeEventListener(REVEAL_BLOCK_EVENT, reveal);
+  }, [block.id]);
+  // A tool block is a `ToolBlock` (spec 60).
+  if ((empty && !isMaster) || content?.kind === 'tool') return null;
 
   const grid = (cards: ReactNode[]) => <Box className="documents-grid">{cards}</Box>;
   const sessionCard = (item: SessionZeroItem) => {
@@ -158,16 +171,38 @@ export function SectionBlock({ roomId, block, heading, content, isMaster, bar, p
     body = <Stack gap="md">{wrapParts ? wrapParts(rendered, parts.map((part) => part.key)) : rendered}</Stack>;
   }
 
+  const toggle = () => setExpanded((current) => !current);
   return (
     <Stack component="section" gap="sm" id={blockAnchor(block.id)} className="room-landing-block" aria-label={heading}>
-      {bar ?? (
-        <Title order={2} fz="h4" style={{ fontFamily: 'var(--font-display)' }}>
-          {heading}
-        </Title>
+      {bar ? (
+        <Group gap={4} wrap="nowrap" align="flex-start">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="md"
+            mt={2}
+            onClick={toggle}
+            aria-expanded={expanded}
+            aria-label={expanded ? t('roomLanding.foldBlock', { name: heading }) : t('roomLanding.unfoldBlock', { name: heading })}
+          >
+            {expanded ? <CaretDownIcon size={18} /> : <CaretRightIcon size={18} />}
+          </ActionIcon>
+          <Box style={{ flex: 1, minWidth: 0 }}>{bar}</Box>
+        </Group>
+      ) : (
+        <BlockHeading label={heading} count={blockCount(content)} expanded={expanded} onToggle={toggle} />
       )}
-      {body}
+      <Collapse expanded={expanded}>{body}</Collapse>
     </Stack>
   );
+}
+
+/** The cards a block shows, for its heading's badge: each Document once, however many groups it is under. */
+function blockCount(content: BlockContent | undefined): number | undefined {
+  if (!content || content.kind === 'tool') return undefined;
+  if (content.kind === 'maps') return content.maps.length;
+  if (content.kind === 'documents') return new Set(content.parts.flatMap((part) => part.documents.map((document) => document.id))).size;
+  return content.parts.reduce((total, part) => total + part.items.length, 0);
 }
 
 /** A sub-section of a block: a heading that folds its cards, like a Documents page group (starts open, not remembered). */

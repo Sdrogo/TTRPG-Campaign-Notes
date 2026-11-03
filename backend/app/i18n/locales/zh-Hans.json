@@ -177,6 +177,7 @@
       "tooManyFiles": "一次最多可导入 {max} 个文件",
       "tooManyDocuments": "一次最多可导入 {max} 个文档",
       "tooManyImages": "一次最多可导入 {max} 张图片",
+      "tooManyImageLinks": "每次最多可从文件中读取 {max} 个图片链接",
       "tooManyMaps": "一次最多可导入 {max} 张地图",
       "tooManySections": "一次最多可导入 {max} 个房间主页版块",
       "nameRequired": "文件中有一个文档没有名称",
@@ -333,7 +334,9 @@
       "blockFieldNotAllowed": "这个设置不属于这种区块",
       "unknownTag": "其中一个标签不在这个房间里",
       "tooManyGroups": "一个区块最多有 {max} 个分组",
-      "invalidGroup": "每个分组需要一个或多个不同的标签，且不能有两个相同的分组"
+      "invalidGroup": "每个分组需要一个或多个不同的标签，且不能有两个相同的分组",
+      "unknownTool": "此区块不是本版块的工具",
+      "notATool": "工具是回顾、星星与愿望、问题、DDI 或投票"
     }
   },
   "pdf": {

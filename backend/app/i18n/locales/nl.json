@@ -177,6 +177,7 @@
       "tooManyFiles": "Je kunt maximaal {max} bestanden tegelijk importeren",
       "tooManyDocuments": "Je kunt maximaal {max} Documenten tegelijk importeren",
       "tooManyImages": "Je kunt maximaal {max} afbeeldingen tegelijk importeren",
+      "tooManyImageLinks": "Er kunnen maximaal {max} afbeeldingslinks tegelijk uit de bestanden worden gelezen",
       "tooManyMaps": "Je kunt maximaal {max} kaarten tegelijk importeren",
       "tooManySections": "Je kunt maximaal {max} secties van de Kamerstart tegelijk importeren",
       "nameRequired": "Een Document in het bestand heeft geen naam",
@@ -333,7 +334,9 @@
       "blockFieldNotAllowed": "Deze instelling hoort niet bij dit soort blok",
       "unknownTag": "Een van de Tags staat niet in deze Kamer",
       "tooManyGroups": "Een blok heeft maximaal {max} groepen",
-      "invalidGroup": "Elke groep heeft een of meer verschillende Tags nodig, en geen twee groepen mogen gelijk zijn"
+      "invalidGroup": "Elke groep heeft een of meer verschillende Tags nodig, en geen twee groepen mogen gelijk zijn",
+      "unknownTool": "Dit blok is geen hulpmiddel van deze sectie",
+      "notATool": "Een hulpmiddel is een Retro, Sterren en Wensen, Vragen, een DDI of peilingen"
     }
   },
   "pdf": {

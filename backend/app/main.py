@@ -23,6 +23,7 @@ from app.api.friends import router as friends_router
 from app.api.geographic_maps import router as geographic_maps_router
 from app.api.history import router as history_router
 from app.api.image_search import router as image_search_router
+from app.api.import_job import resume_import_jobs
 from app.api.imports import router as imports_router
 from app.api.invitations import router as invitations_router
 from app.api.main_items import router as main_items_router
@@ -54,7 +55,9 @@ from app.db.storage_cleanup import run_sweeper
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Starts the Storage cleanup sweep (app/db/storage_cleanup.py) and the
     Room PDF sweep (app/db/export_jobs_repo.py) with the app and cancels them
-    on shutdown."""
+    on shutdown. First it resumes the imports a restart cut off in their
+    image phase (spec 59), so the startup sweep doesn't fail them."""
+    await resume_import_jobs()
     sweepers = [asyncio.create_task(run_sweeper()), asyncio.create_task(run_export_sweeper())]
     yield
     for sweeper in sweepers:

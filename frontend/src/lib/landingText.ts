@@ -45,7 +45,10 @@ export function tagsOf(ids: string[], tags: Tag[]): Tag[] {
  * after its source, "Documenti · #Tokyo, #PNG", "Mappe geografiche", the
  * feature's name for a single one, "Sessione 0" for several.
  */
-export function defaultBlockHeading(block: LandingBlock, tags: Tag[]): string {
+export function defaultBlockHeading(
+  block: Pick<LandingBlock, 'kind' | 'tagIds' | 'mapKind' | 'features' | 'toolKind'>,
+  tags: Tag[],
+): string {
   if (block.kind === 'documents') {
     const names = tagsOf(block.tagIds, tags).map((tag) => `#${tag.name}`).join(', ');
     return i18n.t('roomLanding.blockTitle.documents', { tags: names });
@@ -55,6 +58,7 @@ export function defaultBlockHeading(block: LandingBlock, tags: Tag[]): string {
     if (block.mapKind === 'geographic') return i18n.t('roomLanding.blockTitle.mapsGeographic');
     return i18n.t('roomLanding.blockTitle.maps');
   }
+  if (block.kind === 'tool') return block.toolKind ? moduleLabel(block.toolKind) : i18n.t('roomLanding.tiles.tools');
   return block.features.length === 1 ? featureLabel(block.features[0]) : i18n.t('roomLanding.blockTitle.sessionZero');
 }
 

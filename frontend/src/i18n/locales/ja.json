@@ -373,8 +373,7 @@
         "addHint": "タグ1つはメインタグ、2つ以上は組み合わせになります。",
         "add": "追加",
         "alreadyMain": "このタグはすでにグループ分けの項目です。",
-        "alreadyCombination": "この組み合わせはすでにグループ分けにあります。",
-        "mapsRow": "マップの行"
+        "alreadyCombination": "この組み合わせはすでにグループ分けにあります。"
       },
       "all": {
         "title": "すべてのタグ",
@@ -910,6 +909,11 @@
     },
     "running": "インポート中…",
     "runningHint": "このウィンドウは閉じても構いません。インポートはバックグラウンドで続き、完了するとドキュメントが一覧に表示されます。",
+    "imagesProgress": "画像: {{total}} 件中 {{done}} 件",
+    "imagesProgressLabel": "これまでにインポートされた画像",
+    "imagesProgressHint": "ドキュメントはすでに Room にあります。画像は届きしだい表示されます。",
+    "imagesImported": "{{total}} 件中 {{stored}} 件の画像をインポートしました",
+    "tooManyImages": "選択したドキュメントには画像が {{count}} 件あります。1 回のインポートは最大 {{max}} 件です。いくつか選択を外し、残りは後でインポートしてください。",
     "done": "インポートが完了しました",
     "created_other": "ドキュメント{{count}}件を作成しました",
     "replaced_other": "ドキュメント{{count}}件を置き換えました",
@@ -1239,9 +1243,6 @@
       "repeated": "ドキュメントがすでにマップ上にあるため、ただのラベルになります:",
       "backgroundLater": "背景画像は、新しいマップの「マップ」ボタンからあとでアップロードします。",
       "submit": "インポート"
-    },
-    "strip": {
-      "all_other": "すべてのマップ（{{count}}）"
     }
   },
   "sessionZero": {
@@ -1563,6 +1564,8 @@
       "sessionZero": "セッション、ライン&ヴェール、投票"
     },
     "blockEmpty": "表示するものはありません",
+    "foldBlock": "{{name}}を折りたたむ",
+    "unfoldBlock": "{{name}}を展開",
     "sectionEmpty": "ここにはまだ表示するものがありません。",
     "notFound": "このセクションはもうありません。",
     "loadError": "ページを読み込めませんでした。",
@@ -1611,7 +1614,9 @@
       "session_zero": {
         "title": "セッション0",
         "body": "セッション、ステップ、投票"
-      }
+      },
+      "tools": "ツール",
+      "toolsBody": "独立したセッション0のツール。表示するまでプレイヤーには見えません"
     },
     "edit": {
       "start": "編集",
@@ -1654,7 +1659,19 @@
       "blockMenu": "ブロックの操作",
       "deleteBlock": "ブロックを削除",
       "blockDeleted": "ブロックを削除しました",
-      "undo": "元に戻す"
+      "undo": "元に戻す",
+      "renameSection": "セクション{{name}}の名前を変更",
+      "addDescription": "説明を追加",
+      "collapsed": "開いたときに折りたたむ",
+      "deleteToolTitle": "{{name}}を削除しますか？",
+      "deleteToolBody": "投票、付箋、回答も削除されます。元に戻せません。"
+    },
+    "tool": {
+      "draft": "下書き",
+      "draftHint": "プレイヤーにはまだ見えません",
+      "show": "プレイヤーに表示",
+      "hide": "プレイヤーから隠す",
+      "loadError": "ツールを読み込めませんでした。"
     }
   }
 }

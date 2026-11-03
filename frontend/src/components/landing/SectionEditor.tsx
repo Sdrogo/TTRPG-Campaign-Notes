@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Box, Button, Group, SimpleGrid, Stack, Text, UnstyledButton } from '@mantine/core';
+import { Box, Button, Divider, Group, Modal, SimpleGrid, Stack, Text, UnstyledButton } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { PlusIcon } from '@phosphor-icons/react';
 import { useLocation } from 'react-router-dom';
@@ -7,14 +7,24 @@ import { useTranslation } from 'react-i18next';
 import { BlockBar, BlockKindIcon, Picker } from './BlockBar';
 import { DragHandle, SortableItem, SortableList } from './Sortable';
 import { SectionBlock } from './SectionBlock';
+import { ToolBlock } from './ToolBlock';
 import { blockContent, type BlockSources } from './blockItems';
 import type { OpenInEditState } from './LandingEditor';
-import { useSaveBlocks } from '../../hooks/useLanding';
+import { useAddTool, useSaveBlocks, useSetToolVisible } from '../../hooks/useLanding';
 import { useMainItems } from '../../hooks/useMainItems';
 import { blockInput } from '../../lib/landing';
 import { blockHeading } from '../../lib/landingText';
+import { moduleLabel } from '../../lib/sessionZero';
 import { notifyError } from '../../lib/notify';
-import type { BlockInput, BlockKind, LandingBlock, LandingSection, SessionZeroFeature } from '../../types/landing';
+import {
+  TOOL_KINDS,
+  type BlockInput,
+  type BlockKind,
+  type LandingBlock,
+  type LandingSection,
+  type SessionZeroFeature,
+  type ToolKind,
+} from '../../types/landing';
 
 /** A Section holds at most this many blocks (spec 55 Decision 14). */
 const MAX_BLOCKS = 10;
@@ -37,10 +47,19 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
   const { t } = useTranslation();
   const location = useLocation();
   const save = useSaveBlocks(roomId, section.id);
+  const addTool = useAddTool(roomId, section.id);
+  const setToolVisible = useSetToolVisible(roomId, section.id);
+  // A tool's deletion takes its votes, post-its and answers: asked first, no undo (spec 60 Decision 6).
+  // By id: the list can change (live events, another save) while the confirm is open.
+  const [removingTool, setRemovingTool] = useState<string | null>(null);
   const roomGroups = useMainItems(roomId, true).data ?? [];
   const openedNew = (location.state as OpenInEditState | null)?.landingEdit === 'add-block' && section.blocks.length === 0;
   const [adding, setAdding] = useState<number | null>(openedNew ? 0 : null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  // The block whose groups popover is open, by position: a save gives every
+  // block a new id, so its bar remounts and reopens it (spec 55 Decision
+  // 15). Adding, deleting or moving a block shifts the positions: it closes.
+  const [groupsOpen, setGroupsOpen] = useState<number | null>(null);
   const blocks = section.blocks;
 
   const saveList = (next: BlockInput[], onDone?: () => void) =>
@@ -49,7 +68,8 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
 
   const insert = (index: number, kind: BlockKind) => {
     setAdding(null);
-    const block: BlockInput = { kind, heading: null, tagIds: [], groups: [], mapKind: null, features: [] };
+    setGroupsOpen(null);
+    const block: BlockInput = { kind, heading: null, tagIds: [], groups: [], mapKind: null, features: [], collapsed: false, moduleId: null };
     if (kind === 'maps') {
       const next = inputs();
       next.splice(index, 0, block);
@@ -57,6 +77,21 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
     } else {
       setDraft({ index, block });
     }
+  };
+  // A tool is created last (spec 60 Decision 5), then moved where it was picked.
+  const insertTool = (index: number, kind: ToolKind) => {
+    setAdding(null);
+    setGroupsOpen(null);
+    addTool.mutate(kind, {
+      onError: notifyError,
+      onSuccess: (saved) => {
+        const next = saved.blocks.map(blockInput);
+        if (index >= next.length - 1) return;
+        const [added] = next.splice(next.length - 1, 1);
+        next.splice(index, 0, added);
+        saveList(next);
+      },
+    });
   };
   // A draft's bar changes only through its open picker (closing it drops
   // the draft), so its first change is its first Tag or feature.
@@ -66,7 +101,17 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
     setDraft(null);
     saveList(next);
   };
+  const removingBlock = blocks.find((block) => block.id === removingTool);
+  const removeTool = (id: string) => {
+    setRemovingTool(null);
+    saveList(blocks.filter((block) => block.id !== id).map(blockInput));
+  };
   const remove = (index: number) => {
+    setGroupsOpen(null);
+    if (blocks[index].kind === 'tool') {
+      setRemovingTool(blocks[index].id);
+      return;
+    }
     const before = inputs();
     saveList(
       before.filter((_, other) => other !== index),
@@ -90,6 +135,7 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
     saveList(next);
   };
   const move = (ids: string[]) => {
+    setGroupsOpen(null);
     const byId = new Map(blocks.map((block) => [block.id, block]));
     saveList(ids.map((id) => blockInput(byId.get(id)!)));
   };
@@ -127,6 +173,7 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
                 onOpen={() => setAdding(index)}
                 onClose={() => setAdding(null)}
                 onPick={(kind) => insert(index, kind)}
+                onPickTool={(kind) => insertTool(index, kind)}
               />
             )}
             {draft?.index === index && draftView}
@@ -135,6 +182,7 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
                 <div ref={ref} style={style}>
                   <EditableBlock
                     roomId={roomId}
+                    sectionId={section.id}
                     block={block}
                     sources={sources}
                     bar={
@@ -144,6 +192,21 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
                         mainItems={roomGroups}
                         onChange={(next) => change(index, next)}
                         onDelete={() => remove(index)}
+                        initialPicker={groupsOpen === index ? 'groups' : null}
+                        onGroupsOpenChange={(open) => setGroupsOpen(open ? index : null)}
+                        tool={
+                          block.kind === 'tool' && block.toolKind && block.moduleId
+                            ? {
+                                kind: block.toolKind,
+                                visible: block.playersVisible === true,
+                                onToggleVisible: () =>
+                                  setToolVisible.mutate(
+                                    { moduleId: block.moduleId!, visible: block.playersVisible !== true },
+                                    { onError: notifyError },
+                                  ),
+                              }
+                            : undefined
+                        }
                       />
                     }
                     onReorderParts={(next) => change(index, next)}
@@ -161,8 +224,29 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
           onOpen={() => setAdding(blocks.length)}
           onClose={() => setAdding(null)}
           onPick={(kind) => insert(blocks.length, kind)}
+          onPickTool={(kind) => insertTool(blocks.length, kind)}
         />
       )}
+      <Modal
+        opened={removingBlock !== undefined}
+        onClose={() => setRemovingTool(null)}
+        title={t('roomLanding.edit.deleteToolTitle', {
+          name: removingBlock ? blockHeading(removingBlock, sources.tags) : '',
+        })}
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">{t('roomLanding.edit.deleteToolBody')}</Text>
+          <Group justify="flex-end">
+            <Button variant="subtle" color="gray" onClick={() => setRemovingTool(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button color="danger" onClick={() => removingBlock && removeTool(removingBlock.id)}>
+              {t('roomLanding.edit.deleteBlock')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }
@@ -173,6 +257,40 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
  * documenti" stays last).
  */
 function EditableBlock({
+  roomId,
+  sectionId,
+  block,
+  sources,
+  bar,
+  onReorderParts,
+}: {
+  roomId: string;
+  sectionId: string;
+  block: LandingBlock;
+  sources: BlockSources;
+  bar: ReactNode;
+  onReorderParts: (block: BlockInput) => void;
+}) {
+  if (block.kind === 'tool') {
+    return (
+      <ToolBlock
+        roomId={roomId}
+        sectionId={sectionId}
+        block={block}
+        heading={blockHeading(block, sources.tags)}
+        tool={sources.tools?.tools.find((tool) => tool.moduleId === block.moduleId)}
+        revision={sources.tools?.revision ?? 0}
+        loading={!sources.tools}
+        isMaster
+        bar={bar}
+      />
+    );
+  }
+  return <ListingBlock roomId={roomId} block={block} sources={sources} bar={bar} onReorderParts={onReorderParts} />;
+}
+
+/** A Documents, maps or Session 0 block in edit mode, its sub-sections sortable. */
+function ListingBlock({
   roomId,
   block,
   sources,
@@ -253,12 +371,15 @@ function AddBlock({
   onOpen,
   onClose,
   onPick,
+  onPickTool,
 }: {
   compact?: boolean;
   opened: boolean;
   onOpen: () => void;
   onClose: () => void;
   onPick: (kind: BlockKind) => void;
+  /** A Session 0 tool of the Section's own (spec 60 Decision 5). */
+  onPickTool: (kind: ToolKind) => void;
 }) {
   const { t } = useTranslation();
   const target = compact ? (
@@ -290,6 +411,17 @@ function AddBlock({
           </UnstyledButton>
         ))}
       </SimpleGrid>
+      <Divider my="sm" label={t('roomLanding.tiles.tools')} labelPosition="left" />
+      <Text size="xs" c="dimmed" mb="xs">
+        {t('roomLanding.tiles.toolsBody')}
+      </Text>
+      <Group gap="xs">
+        {TOOL_KINDS.map((kind) => (
+          <Button key={kind} size="compact-sm" variant="default" leftSection={<BlockKindIcon kind="tool" size={14} />} onClick={() => onPickTool(kind)}>
+            {moduleLabel(kind)}
+          </Button>
+        ))}
+      </Group>
     </Picker>
   );
 }

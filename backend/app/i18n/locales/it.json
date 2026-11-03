@@ -177,6 +177,7 @@
       "tooManyFiles": "Si possono importare al massimo {max} file alla volta",
       "tooManyDocuments": "Si possono importare al massimo {max} Documenti alla volta",
       "tooManyImages": "Si possono importare al massimo {max} immagini alla volta",
+      "tooManyImageLinks": "Dai file si possono leggere al massimo {max} link di immagini alla volta",
       "tooManyMaps": "Si possono importare al massimo {max} mappe alla volta",
       "tooManySections": "Si possono importare al massimo {max} Sezioni della Home della Stanza alla volta",
       "nameRequired": "Un Documento del file non ha nome",
@@ -333,7 +334,9 @@
       "blockFieldNotAllowed": "Questa impostazione non appartiene a questo tipo di blocco",
       "unknownTag": "Uno dei Tag non è in questa Room",
       "tooManyGroups": "Un blocco può avere al massimo {max} gruppi",
-      "invalidGroup": "Ogni gruppo ha bisogno di uno o più Tag diversi, e due gruppi non possono essere uguali"
+      "invalidGroup": "Ogni gruppo ha bisogno di uno o più Tag diversi, e due gruppi non possono essere uguali",
+      "unknownTool": "Questo blocco non è uno strumento di questa sezione",
+      "notATool": "Uno strumento è una Retro, Stelle e Desideri, Domande, un DDI o dei sondaggi"
     }
   },
   "pdf": {

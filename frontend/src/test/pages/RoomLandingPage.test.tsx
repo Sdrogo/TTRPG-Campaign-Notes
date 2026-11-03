@@ -98,6 +98,7 @@ describe('RoomLandingPage', () => {
     expect(screen.getByText('Sessioni, Linee e Veli, sondaggi')).toBeInTheDocument();
     expect(screen.getByText('Neon')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Nuova sezione' })).not.toBeInTheDocument();
   });
 
   it('says when the landing fails to load', async () => {
@@ -113,7 +114,15 @@ describe('RoomLandingPage', () => {
     expect(screen.getByRole('button', { name: 'Nuova sezione' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sposta Tokyo' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Fine' }));
-    expect(screen.queryByRole('button', { name: 'Nuova sezione' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sposta Tokyo' })).not.toBeInTheDocument();
+  });
+
+  it('offers the Master "Nuova sezione" outside edit mode too, never a Player', async () => {
+    routes.members = master();
+    const user = render();
+    await user.click(await screen.findByRole('button', { name: 'Nuova sezione' }));
+    expect(screen.getByRole('textbox', { name: 'Titolo' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sposta Tokyo' })).not.toBeInTheDocument();
   });
 
   it('offers no editing on an empty landing', async () => {

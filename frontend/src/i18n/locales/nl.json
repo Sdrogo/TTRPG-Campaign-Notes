@@ -373,8 +373,7 @@
         "addHint": "Eén Tag is een hoofdtag, twee of meer vormen een combinatie.",
         "add": "Toevoegen",
         "alreadyMain": "Deze Tag is al een item van de groepering.",
-        "alreadyCombination": "Deze combinatie zit al in de groepering.",
-        "mapsRow": "Kaartenrij"
+        "alreadyCombination": "Deze combinatie zit al in de groepering."
       },
       "all": {
         "title": "Alle Tags",
@@ -927,6 +926,11 @@
     },
     "running": "Bezig met importeren…",
     "runningHint": "Je kunt dit venster sluiten: het importeren gaat op de achtergrond door en de Documenten verschijnen in de lijst zodra het klaar is.",
+    "imagesProgress": "Afbeeldingen: {{done}} van {{total}}",
+    "imagesProgressLabel": "Tot nu toe geïmporteerde afbeeldingen",
+    "imagesProgressHint": "De Documenten staan al in de Room; hun afbeeldingen verschijnen zodra ze binnenkomen.",
+    "imagesImported": "{{stored}} van {{total}} afbeeldingen geïmporteerd",
+    "tooManyImages": "De aangevinkte Documenten hebben {{count}} afbeeldingen: maximaal {{max}} per import. Vink er een paar uit en importeer de rest daarna.",
     "done": "Importeren voltooid",
     "created_one": "{{count}} Document gemaakt",
     "created_other": "{{count}} Documenten gemaakt",
@@ -1272,10 +1276,6 @@
       "repeated": "Document staat al op de kaart, blijven gewone labels:",
       "backgroundLater": "De achtergrondafbeelding upload je daarna via de knop Kaart van de nieuwe kaart.",
       "submit": "Importeren"
-    },
-    "strip": {
-      "all_one": "Alle kaarten ({{count}})",
-      "all_other": "Alle kaarten ({{count}})"
     }
   },
   "sessionZero": {
@@ -1605,6 +1605,8 @@
       "sessionZero": "Sessies, Lijnen en Sluiers, peilingen"
     },
     "blockEmpty": "Niets te tonen",
+    "foldBlock": "{{name}} inklappen",
+    "unfoldBlock": "{{name}} uitklappen",
     "sectionEmpty": "Hier is nog niets te zien.",
     "notFound": "Deze sectie bestaat niet meer.",
     "loadError": "De pagina kon niet worden geladen.",
@@ -1656,7 +1658,9 @@
       "session_zero": {
         "title": "Sessie 0",
         "body": "Sessies, stappen en peilingen"
-      }
+      },
+      "tools": "Hulpmiddelen",
+      "toolsBody": "Een eigen Sessie 0-hulpmiddel, verborgen voor de spelers tot je het laat zien"
     },
     "edit": {
       "start": "Bewerken",
@@ -1700,7 +1704,19 @@
       "blockMenu": "Acties voor het blok",
       "deleteBlock": "Blok verwijderen",
       "blockDeleted": "Blok verwijderd",
-      "undo": "Ongedaan maken"
+      "undo": "Ongedaan maken",
+      "renameSection": "Sectie {{name}} hernoemen",
+      "addDescription": "Beschrijving toevoegen",
+      "collapsed": "Ingeklapt bij openen",
+      "deleteToolTitle": "{{name}} verwijderen?",
+      "deleteToolBody": "De stemmen, briefjes en antwoorden worden ook verwijderd. Dit kan niet ongedaan worden."
+    },
+    "tool": {
+      "draft": "Concept",
+      "draftHint": "De spelers zien het nog niet",
+      "show": "Tonen aan spelers",
+      "hide": "Verbergen voor spelers",
+      "loadError": "Het hulpmiddel kon niet worden geladen."
     }
   }
 }

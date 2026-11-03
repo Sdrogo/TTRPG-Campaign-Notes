@@ -473,9 +473,11 @@ class CardBody(BaseModel):
 
 
 class PublishBody(BaseModel):
-    """Decision 7: signed (the default) or anonymous."""
+    """Decision 7: signed (the default) or anonymous. "Publish all" takes a
+    Section tool's `module_id` (spec 60) to publish that board's drafts."""
 
     anonymous: bool = False
+    module_id: uuid.UUID | None = None
 
 
 class TargetColumnBody(BaseModel):
@@ -583,9 +585,20 @@ class _Board:
     modules: list[Module]
 
     @property
+    def sessions(self) -> list[Round]:
+        """The Session 0's sessions, first to last: every round but the
+        Sections' tool rounds (spec 60)."""
+        return sorted((r for r in self.rounds if r.is_session), key=lambda r: r.number)
+
+    @property
     def open_round(self) -> Round:
-        """The round that takes writes; there is always exactly one."""
-        return next(round_ for round_ in self.rounds if round_.closed_at is None)
+        """The session that takes writes; there is exactly one once Session 0
+        is started (`_begin_write(..., need_session=True)` checks it)."""
+        return next(round_ for round_ in self.sessions if round_.closed_at is None)
+
+    def round_by_id(self, round_id: uuid.UUID) -> Round:
+        """A round of the board, a session or a tool's."""
+        return next(round_ for round_ in self.rounds if round_.id == round_id)
 
     def round_of(self, column: Column) -> Round | None:
         """The column's round, or `None` on the Lines & Veils board."""
@@ -639,46 +652,20 @@ def _timer_response(timer: Timer, now: datetime) -> TimerResponse:
     )
 
 
-async def _board_response(
+async def _render_modules(
     session: AsyncSession,
     room_id: uuid.UUID,
     viewer: Membership,
-    round_id: uuid.UUID | None,
-    locale: str,
-    *,
-    previewed: bool = False,
-) -> SessionZeroResponse:
-    """The boards as `viewer` sees them, with the Retro board of `round_id`
-    (the open round when `None`; 404 for a round of another Room). A
-    `previewed` viewer is the Master's "View as": their drafts stay hidden,
-    since a draft is its author's alone (Decision 1)."""
-    now = datetime.now(UTC)
-    state = await session_zero_repo.get_state(session, room_id)
-    if state is None:
-        return SessionZeroResponse(
-            started=False,
-            revision=0,
-            can_manage=is_master(viewer.role),
-            rounds=[],
-            round_id=None,
-            modules=[],
-            current_module_id=None,
-            hidden_modules=0,
-            lines_veils=[],
-            timer=None,
-        )
-    revision, timer = state
-    board = await _load_board(session, room_id)
-    if round_id is None:
-        shown = board.open_round
-    else:
-        found = next((r for r in board.rounds if r.id == round_id), None)
-        if found is None:
-            raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.roundNotFound", locale)
-        shown = found
-    chain = board.visible_chain(shown, viewer)
+    board: _Board,
+    parts: list[tuple[Round, list[Module]]],
+    lines_veils: list[Column],
+    previewed: bool,
+) -> tuple[list[ModuleResponse], list[ColumnResponse]]:
+    """The modules of `parts` (each with its round) and the `lines_veils`
+    columns as `viewer` sees them: the Session 0 page's chain, or a
+    Section's tools (spec 60)."""
+    chain = [module for _, modules in parts for module in modules]
     retro = [column for module in chain for column in board.module_columns(module.id)]
-    lines_veils = board.lines_veils_columns()
     cards = [
         card
         for card in await session_zero_repo.list_cards(
@@ -690,15 +677,19 @@ async def _board_response(
         session, [card.id for card in cards if not card.is_draft]
     )
     groups = await session_zero_repo.list_groups(session, [column.id for column in retro])
-    questions = await _questions_responses(
-        session, room_id, viewer, [m for m in chain if m.kind is ModuleKind.QUESTIONS], shown
-    )
-    ddis = await _ddi_responses(
-        session, room_id, viewer, [m for m in chain if m.kind is ModuleKind.DDI], shown
-    )
-    polls = await _poll_responses(
-        session, room_id, viewer, [m for m in chain if m.kind is ModuleKind.POLL], shown
-    )
+    questions: dict[uuid.UUID, QuestionsResponse] = {}
+    ddis: dict[uuid.UUID, DdiResponse] = {}
+    polls: dict[uuid.UUID, list[PollResponse]] = {}
+    for round_, modules in parts:
+        questions |= await _questions_responses(
+            session, room_id, viewer, [m for m in modules if m.kind is ModuleKind.QUESTIONS], round_
+        )
+        ddis |= await _ddi_responses(
+            session, room_id, viewer, [m for m in modules if m.kind is ModuleKind.DDI], round_
+        )
+        polls |= await _poll_responses(
+            session, room_id, viewer, [m for m in modules if m.kind is ModuleKind.POLL], round_
+        )
 
     def card_response(card: Card) -> CardResponse:
         column = board.columns[card.column_id]
@@ -752,6 +743,64 @@ async def _board_response(
             cards=[card_response(card) for card in cards if card.column_id == column.id],
         )
 
+    rendered = [
+        ModuleResponse(
+            id=module.id,
+            kind=module.kind,
+            position=module.position,
+            columns=[column_response(c) for c in board.module_columns(module.id)],
+            questions=questions.get(module.id),
+            ddi=ddis.get(module.id),
+            polls=polls.get(module.id),
+        )
+        for module in chain
+    ]
+    return rendered, [column_response(column) for column in lines_veils]
+
+
+async def _board_response(
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    viewer: Membership,
+    round_id: uuid.UUID | None,
+    locale: str,
+    *,
+    previewed: bool = False,
+) -> SessionZeroResponse:
+    """The boards as `viewer` sees them, with the Retro board of `round_id`
+    (the open round when `None`; 404 for a round of another Room). A
+    `previewed` viewer is the Master's "View as": their drafts stay hidden,
+    since a draft is its author's alone (Decision 1)."""
+    now = datetime.now(UTC)
+    state = await session_zero_repo.get_state(session, room_id)
+    board = await _load_board(session, room_id) if state is not None else None
+    # A Room whose Sections hold tools has the row but no session (spec 60).
+    if state is None or board is None or not board.sessions:
+        return SessionZeroResponse(
+            started=False,
+            revision=0,
+            can_manage=is_master(viewer.role),
+            rounds=[],
+            round_id=None,
+            modules=[],
+            current_module_id=None,
+            hidden_modules=0,
+            lines_veils=[],
+            timer=None,
+        )
+    revision, timer = state
+    if round_id is None:
+        shown = board.open_round
+    else:
+        found = next((r for r in board.sessions if r.id == round_id), None)
+        if found is None:
+            raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.roundNotFound", locale)
+        shown = found
+    chain = board.visible_chain(shown, viewer)
+    lines_veils = board.lines_veils_columns()
+    modules, lines_veils_columns = await _render_modules(
+        session, room_id, viewer, board, [(shown, chain)], lines_veils, previewed
+    )
     return SessionZeroResponse(
         started=True,
         revision=revision,
@@ -764,24 +813,13 @@ async def _board_response(
                 started_at=r.started_at,
                 closed_at=r.closed_at,
             )
-            for r in board.rounds
+            for r in board.sessions
         ],
         round_id=shown.id,
-        modules=[
-            ModuleResponse(
-                id=module.id,
-                kind=module.kind,
-                position=module.position,
-                columns=[column_response(c) for c in board.module_columns(module.id)],
-                questions=questions.get(module.id),
-                ddi=ddis.get(module.id),
-                polls=polls.get(module.id),
-            )
-            for module in chain
-        ],
+        modules=modules,
         current_module_id=shown.current_module_id,
         hidden_modules=len(board.chain(shown.id)) - len(chain),
-        lines_veils=[column_response(column) for column in lines_veils],
+        lines_veils=lines_veils_columns,
         timer=_timer_response(timer, now),
     )
 
@@ -1015,15 +1053,23 @@ class _Write:
 
 
 async def _begin_write(
-    session: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID, locale: str
+    session: AsyncSession,
+    room_id: uuid.UUID,
+    user_id: uuid.UUID,
+    locale: str,
+    *,
+    need_session: bool = False,
 ) -> _Write:
     """Checks membership, then takes the Session 0's row lock (409 before it
-    is started), so the Room's board writes happen one at a time."""
+    is started), so the Room's board writes happen one at a time. A write
+    that works on the sessions (`need_session`) is 409 too while the Room
+    has only its Sections' tools (spec 60)."""
     viewer = await require_membership(session, room_id, user_id, locale)
     state = await session_zero_repo.get_state(session, room_id, lock=True)
-    if state is None:
+    board = await _load_board(session, room_id) if state is not None else None
+    if state is None or board is None or (need_session and not board.sessions):
         raise http_error(status.HTTP_409_CONFLICT, "errors.sessionZero.notStarted", locale)
-    return _Write(viewer=viewer, board=await _load_board(session, room_id), revision=state[0])
+    return _Write(viewer=viewer, board=board, revision=state[0])
 
 
 def _column_or_404(write: _Write, column_id: uuid.UUID, locale: str) -> Column:
@@ -1135,10 +1181,10 @@ async def get_session_zero_overview(
     their published post-its counted and their Questions, DDI and polls as
     the Session 0 page shows them to the caller. Never writes."""
     viewer = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
-    if await session_zero_repo.get_state(session, room_id) is None:
-        return SessionZeroOverviewResponse(started=False, rounds=[], lines_veils={})
     board = await _load_board(session, room_id)
-    chains = {round_.id: board.visible_chain(round_, viewer) for round_ in board.rounds}
+    if not board.sessions:
+        return SessionZeroOverviewResponse(started=False, rounds=[], lines_veils={})
+    chains = {round_.id: board.visible_chain(round_, viewer) for round_ in board.sessions}
     lines_veils = board.lines_veils_columns()
     columns = [c for chain in chains.values() for m in chain for c in board.module_columns(m.id)]
     published = [
@@ -1153,7 +1199,7 @@ async def get_session_zero_overview(
         return sum(1 for card in published if card.column_id in column_ids)
 
     rounds: list[OverviewRoundResponse] = []
-    for round_ in sorted(board.rounds, key=lambda r: r.number, reverse=True):
+    for round_ in reversed(board.sessions):
         chain = chains[round_.id]
 
         def of(kind: ModuleKind, chain: list[Module] = chain) -> list[Module]:
@@ -1278,7 +1324,9 @@ async def start_session_zero(
     specs = [(kind, presets) for kind in chain]
     now = datetime.now(UTC)
     if await session_zero_repo.start(session, room_id, specs, now):
-        first = (await session_zero_repo.list_rounds(session, room_id))[0]
+        # Round 1, never a Section tool's round (number 0, spec 60).
+        rounds = await session_zero_repo.list_rounds(session, room_id)
+        first = next(round_ for round_ in rounds if round_.is_session)
         await _set_up_modules(session, room_id, first.id, [None] * len(chain), now)
         await _shared(session, room_id, "start")
     return await _board_response(session, room_id, viewer, None, locale)
@@ -1425,10 +1473,20 @@ async def publish_all_cards(
     round at once, all signed or all anonymous, oldest first while each
     module's board has room (spec 47); the rest stay drafts. Nothing to
     publish changes nothing; drafts waiting only on full boards is 409."""
-    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    write = await _begin_write(
+        session, room_id, uuid.UUID(current_user.id), locale, need_session=body.module_id is None
+    )
+    try:
+        modules = (
+            write.board.chain(write.board.open_round.id)
+            if body.module_id is None
+            else [_open_module(write, body.module_id, locale)]
+        )
+    except DomainError as exc:
+        raise _domain_error(exc, locale) from exc
     to_publish: list[uuid.UUID] = []
     full: DomainError | None = None
-    for module in write.board.chain(write.board.open_round.id):
+    for module in modules:
         module_columns = [c.id for c in write.board.module_columns(module.id)]
         drafts = await session_zero_repo.list_drafts(session, module_columns, write.viewer.user_id)
         if not drafts:
@@ -1586,13 +1644,12 @@ async def add_column(
     open round (`module_id`, its first Retro module when none), in the
     colour they pick (spec 46c Decision 5; `default` when none)."""
     write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
-    open_round = write.board.open_round
     try:
         ensure_master(write.viewer.role)
         module = _retro_module(write, body.module_id, locale)
         columns = write.board.module_columns(module.id)
         title = clean_column_title(body.title or "")
-        ensure_can_add_column(open_round, len(columns))
+        ensure_can_add_column(write.board.round_by_id(module.round_id), len(columns))
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     position = max((c.position for c in columns), default=-1) + 1
@@ -1689,7 +1746,7 @@ def _earlier_chains(write: _Write, *, include_open: bool) -> list[list[Module]]:
     """The sessions' chains, newest first, a step can carry content over
     from (spec 47b Decision 4): the open one too when a new session
     replaces it."""
-    rounds = sorted(write.board.rounds, key=lambda round_: round_.number, reverse=True)
+    rounds = list(reversed(write.board.sessions))
     return [
         write.board.chain(round_.id)
         for round_ in rounds
@@ -1723,7 +1780,9 @@ async def start_round(
     colours, without groups (the presets otherwise), a Questions step its
     questions and settings, without answers, a DDI step its Document,
     without acceptances. Lines & Veils carries over."""
-    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    write = await _begin_write(
+        session, room_id, uuid.UUID(current_user.id), locale, need_session=True
+    )
     current = write.board.open_round
     previous = write.board.chain(current.id)
     steps = [
@@ -1756,17 +1815,22 @@ async def start_round(
 
 
 def _retro_module(write: _Write, module_id: uuid.UUID | None, locale: str) -> Module:
-    """A Retro module of the open round: `module_id`, or its first one when
-    `None`. 404 for no such module; 422 for another kind's or a closed
-    round's (a closed round's columns are read-only, Decision 16)."""
-    chain = write.board.chain(write.board.open_round.id)
-    retro = [module for module in chain if module.kind is ModuleKind.RETRO]
+    """A Retro module of the open round or of a Section's tool (spec 60):
+    `module_id`, or the open round's first one when `None`. 404 for no such
+    module; 422 for another kind's or a closed round's (a closed round's
+    columns are read-only, Decision 16)."""
     if module_id is None:
+        sessions = write.board.sessions
+        chain = write.board.chain(write.board.open_round.id) if sessions else []
+        retro = [module for module in chain if module.kind is ModuleKind.RETRO]
         if not retro:
             raise WrongBoardError("errors.sessionZero.notRetroColumn")
         return retro[0]
     module = _module_or_404(write, module_id, locale)
-    if module not in retro:
+    if (
+        module.kind is not ModuleKind.RETRO
+        or write.board.round_by_id(module.round_id).closed_at is not None
+    ):
         raise WrongBoardError("errors.sessionZero.notRetroColumn")
     return module
 
@@ -1779,10 +1843,18 @@ def _module_or_404(write: _Write, module_id: uuid.UUID, locale: str) -> Module:
 
 
 def _open_module(write: _Write, module_id: uuid.UUID, locale: str) -> Module:
-    """A module of the open round, the Master's to change (409 for a closed
-    round's)."""
+    """A module of the open round or of a Section's tool (spec 60), the
+    Master's to change (409 for a closed round's)."""
     module = _module_or_404(write, module_id, locale)
-    ensure_round_open(next(r for r in write.board.rounds if r.id == module.round_id))
+    ensure_round_open(write.board.round_by_id(module.round_id))
+    return module
+
+
+def _chain_module(write: _Write, module_id: uuid.UUID, locale: str) -> Module:
+    """A step of the open session's chain: a tool's module is not one (404)."""
+    module = _open_module(write, module_id, locale)
+    if module.round_id != write.board.open_round.id:
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.sessionZero.moduleNotFound", locale)
     return module
 
 
@@ -1797,7 +1869,9 @@ async def add_module(
     """Spec 47 Decision 3: the Master adds a module at the end of the open
     session's chain, empty (a Retro one with the preset columns) unless it
     carries an earlier session's content over (spec 47b)."""
-    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    write = await _begin_write(
+        session, room_id, uuid.UUID(current_user.id), locale, need_session=True
+    )
     open_round = write.board.open_round
     chain = write.board.chain(open_round.id)
     try:
@@ -1837,12 +1911,14 @@ async def remove_module(
     with its columns and post-its (the client asks first; Lines & Veils'
     board is the Room's and stays). The chain keeps one at least. When it
     was the current step, the table moves to the one before it."""
-    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    write = await _begin_write(
+        session, room_id, uuid.UUID(current_user.id), locale, need_session=True
+    )
     open_round = write.board.open_round
     chain = write.board.chain(open_round.id)
     try:
         ensure_master(write.viewer.role)
-        module = _open_module(write, module_id, locale)
+        module = _chain_module(write, module_id, locale)
         ensure_can_remove_module(open_round, len(chain))
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
@@ -1867,7 +1943,9 @@ async def reorder_modules(
     """Spec 47 Decision 3: the Master reorders the open session's chain. The
     list must name each module exactly once (422 otherwise). The table stays
     on the same step, wherever it now stands."""
-    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    write = await _begin_write(
+        session, room_id, uuid.UUID(current_user.id), locale, need_session=True
+    )
     try:
         ensure_master(write.viewer.role)
     except DomainError as exc:
@@ -1892,11 +1970,13 @@ async def set_current_module(
 ) -> SessionZeroResponse:
     """Spec 47 Decision 4: the Master moves the table to a step of the open
     session ("Avanti" is the next one); every open page follows."""
-    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    write = await _begin_write(
+        session, room_id, uuid.UUID(current_user.id), locale, need_session=True
+    )
     open_round = write.board.open_round
     try:
         ensure_master(write.viewer.role)
-        module = _open_module(write, body.module_id, locale)
+        module = _chain_module(write, body.module_id, locale)
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc
     if module.id != open_round.current_module_id:
@@ -2154,7 +2234,9 @@ async def delete_session_zero(
     """Spec 46c Decision 3: the Master deletes the Room's Session 0 and
     everything in it, drafts included; any member can then start a new one.
     Every open page is told (`reset`)."""
-    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    write = await _begin_write(
+        session, room_id, uuid.UUID(current_user.id), locale, need_session=True
+    )
     try:
         ensure_master(write.viewer.role)
     except DomainError as exc:
@@ -2174,7 +2256,9 @@ async def set_timer(
 ) -> SessionZeroResponse:
     """Decision 4: the Master starts (60 s to 1 h), pauses, resumes or stops
     the shared timer. It never blocks writing."""
-    write = await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
+    write = await _begin_write(
+        session, room_id, uuid.UUID(current_user.id), locale, need_session=True
+    )
     state = await session_zero_repo.get_state(session, room_id)
     assert state is not None
     try:

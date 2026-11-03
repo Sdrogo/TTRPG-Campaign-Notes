@@ -177,6 +177,7 @@
       "tooManyFiles": "Só se podem importar no máximo {max} ficheiros de cada vez",
       "tooManyDocuments": "Só se podem importar no máximo {max} Documentos de cada vez",
       "tooManyImages": "Só se podem importar no máximo {max} imagens de cada vez",
+      "tooManyImageLinks": "Podem ler-se no máximo {max} ligações de imagens dos ficheiros de uma vez",
       "tooManyMaps": "Só se podem importar no máximo {max} mapas de cada vez",
       "tooManySections": "Só se podem importar no máximo {max} secções do Início da Sala de cada vez",
       "nameRequired": "Um Documento do ficheiro não tem nome",
@@ -333,7 +334,9 @@
       "blockFieldNotAllowed": "Esta definição não pertence a este tipo de bloco",
       "unknownTag": "Uma das Tags não está nesta Sala",
       "tooManyGroups": "Um bloco tem no máximo {max} grupos",
-      "invalidGroup": "Cada grupo precisa de uma ou mais Tags diferentes, e não pode haver dois grupos iguais"
+      "invalidGroup": "Cada grupo precisa de uma ou mais Tags diferentes, e não pode haver dois grupos iguais",
+      "unknownTool": "Este bloco não é uma ferramenta desta secção",
+      "notATool": "Uma ferramenta é uma Retro, Estrelas e Desejos, Perguntas, um DDI ou sondagens"
     }
   },
   "pdf": {

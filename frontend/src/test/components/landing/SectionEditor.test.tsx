@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MantineProvider } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SectionEditor } from '../../../components/landing/SectionEditor';
 import type { BlockSources } from '../../../components/landing/blockItems';
 import { apiFetch } from '../../../lib/apiClient';
-import { rawBlock, rawSection } from '../../fixtures';
+import { rawBlock, rawPoll, rawSection } from '../../fixtures';
 import { doc, overview, section, tag } from '../../landingFixtures';
 import { renderWithProviders } from '../../utils';
 import { theme } from '../../../theme/theme';
@@ -35,7 +35,7 @@ const plainBlock = rawBlock({ id: 'block-4', tag_ids: ['t1'] });
 
 const wire = (raw: Record<string, unknown>) => {
   const { id: _id, position: _position, ...rest } = raw;
-  return rest;
+  return { collapsed: false, module_id: null, ...rest };
 };
 
 function editor(blocks: Record<string, unknown>[] = [], route: InitialEntry = '/rooms/room-1/sections/section-1') {
@@ -59,7 +59,7 @@ describe('SectionEditor', () => {
     editor([], { pathname: '/rooms/room-1/sections/section-1', state: { landingEdit: 'add-block' } });
     expect(screen.getByText('Nessun blocco ancora: aggiungine uno.')).toBeInTheDocument();
     await userEvent.click(await screen.findByRole('button', { name: /Mappe/ }));
-    expect(savedBlocks()).toEqual([{ kind: 'maps', heading: null, tag_ids: [], groups: [], map_kind: null, features: [] }]);
+    expect(savedBlocks()).toEqual([{ kind: 'maps', heading: null, tag_ids: [], groups: [], map_kind: null, features: [], module_id: null, collapsed: false }]);
   });
 
   it('keeps a new Documents block as a draft until its first Tag', async () => {
@@ -78,7 +78,7 @@ describe('SectionEditor', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
     await userEvent.click(screen.getByRole('button', { name: /Documenti/ }));
     await userEvent.click(screen.getByRole('button', { name: '#PNG' }));
-    expect(savedBlocks()).toEqual([{ kind: 'documents', heading: null, tag_ids: ['t2'], groups: [], map_kind: null, features: [] }]);
+    expect(savedBlocks()).toEqual([{ kind: 'documents', heading: null, tag_ids: ['t2'], groups: [], map_kind: null, features: [], module_id: null, collapsed: false }]);
   });
 
   it('keeps a Session 0 draft until its first feature', async () => {
@@ -88,7 +88,7 @@ describe('SectionEditor', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'Retro' }));
     expect(savedBlocks()).toEqual([
       wire(mapsBlock),
-      { kind: 'session_zero', heading: null, tag_ids: [], groups: [], map_kind: null, features: ['retro'] },
+      { kind: 'session_zero', heading: null, tag_ids: [], groups: [], map_kind: null, features: ['retro'], module_id: null, collapsed: false },
     ]);
     fetchMock.mockClear();
 
@@ -152,9 +152,153 @@ describe('SectionEditor', () => {
     expect(savedBlocks()[1]).toEqual({ ...wire(zeroBlock), features: ['polls', 'stars_wishes', 'retro'] });
   });
 
+  it('keeps the groups popover open while groups are added, each save remounting the bar', async () => {
+    const { rerender } = editor([plainBlock, mapsBlock]);
+    const remount = (block: Record<string, unknown>) =>
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [block, mapsBlock] })} sources={sources} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Raggruppa' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Gruppo' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: '#PNG' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    expect(savedBlocks()[0]).toEqual({ ...wire(plainBlock), groups: [['t2']] });
+    // The saved list comes back with new block ids: a new bar, still open.
+    remount(rawBlock({ id: 'block-4b', tag_ids: ['t1'], groups: [['t2']] }));
+    expect(await screen.findByRole('button', { name: 'Gruppo' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Gruppo' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: '#Yakuza' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Aggiungi' }));
+    expect(savedBlocks()[0]).toEqual({ ...wire(plainBlock), groups: [['t2'], ['t3']] });
+    remount(rawBlock({ id: 'block-4c', tag_ids: ['t1'], groups: [['t2'], ['t3']] }));
+    expect(await screen.findByRole('button', { name: 'Togli #Yakuza' })).toBeInTheDocument();
+    // Once closed it stays closed.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument());
+    remount(rawBlock({ id: 'block-4d', tag_ids: ['t1'], groups: [['t2'], ['t3']] }));
+    expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '2 gruppi' })).toBeInTheDocument();
+  });
+
+  it('closes the groups popover when the blocks move', async () => {
+    const { rerender } = editor([plainBlock, documentsBlock]);
+    await userEvent.click(screen.getByRole('button', { name: 'Raggruppa' }));
+    expect(screen.getByRole('button', { name: 'Gruppo' })).toBeInTheDocument();
+    // A click with no pointer down, so the popover isn't closed by it first.
+    fireEvent.click(screen.getByRole('button', { name: 'Riordina block-4,block-1' }));
+    await waitFor(() => expect(savedBlocks()).toEqual([wire(documentsBlock), wire(plainBlock)]));
+    rerender(<SectionEditor roomId="room-1" section={section({ blocks: [{ ...documentsBlock, id: 'block-1b' }, { ...plainBlock, id: 'block-4b' }] })} sources={sources} />);
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument());
+  });
+
   it('adds no block past ten', () => {
     editor(Array.from({ length: 10 }, (_, index) => rawBlock({ id: `b${index}`, kind: 'maps', tag_ids: [] })));
     expect(screen.queryByRole('button', { name: 'Blocco' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Inserisci un blocco qui' })).not.toBeInTheDocument();
+  });
+
+  describe('tools (spec 60)', () => {
+    const toolBlock = rawBlock({ id: 'block-5', kind: 'tool', tag_ids: [], module_id: 'm-1', tool_kind: 'poll', players_visible: false });
+    const toolSaved = { kind: 'tool', heading: null, tag_ids: [], groups: [], map_kind: null, features: [], module_id: 'm-1', collapsed: false };
+
+    function answerTools(blocks: Record<string, unknown>[]) {
+      fetchMock.mockImplementation(async (path: string) => (path.endsWith('/tools') ? rawSection({ blocks }) : rawSection()) as never);
+    }
+
+    it('adds a tool last, then moves it where it was picked', async () => {
+      answerTools([plainBlock, mapsBlock, toolBlock]);
+      editor([plainBlock, mapsBlock]);
+      await userEvent.click(screen.getByRole('button', { name: 'Inserisci un blocco qui' }));
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Sondaggio' }));
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/sections/section-1/tools', { method: 'POST', json: { kind: 'poll' } });
+      await waitFor(() => expect(savedBlocks()).toEqual([wire(plainBlock), toolSaved, wire(mapsBlock)]));
+    });
+
+    it('adds a tool at the end with no move, and tells when it is refused', async () => {
+      answerTools([plainBlock, toolBlock]);
+      editor([plainBlock]);
+      await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Retro' }));
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/sections/section-1/tools', { method: 'POST', json: { kind: 'retro' } }));
+      expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith('/blocks'))).toBe(false);
+
+      fetchMock.mockRejectedValue(new Error('no'));
+      await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'DDI' }));
+      await waitFor(() => expect(notifications.show).toHaveBeenCalled());
+    });
+
+    it('shows and hides a tool from its bar', async () => {
+      editor([toolBlock]);
+      expect(screen.getByText('Bozza')).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Mostra ai giocatori' }));
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/sections/section-1/tools/m-1/visible', { method: 'PUT', json: { visible: true } });
+
+    });
+
+    it('hides a shown tool from its bar', async () => {
+      editor([{ ...toolBlock, players_visible: true }]);
+      expect(screen.queryByText('Bozza')).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Nascondi ai giocatori' }));
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/sections/section-1/tools/m-1/visible', { method: 'PUT', json: { visible: false } });
+    });
+
+    it('asks before deleting a tool, with no undo', async () => {
+      editor([plainBlock, toolBlock]);
+      const menus = screen.getAllByRole('button', { name: 'Azioni del blocco' });
+      await userEvent.click(menus[1]);
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
+      expect(screen.getByText('Eliminare Sondaggio?')).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Annulla' }));
+      expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith('/blocks'))).toBe(false);
+      await userEvent.click(menus[1]);
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(screen.queryByText('Eliminare Sondaggio?')).not.toBeInTheDocument());
+
+      await userEvent.click(menus[1]);
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
+      await userEvent.click(within(screen.getByRole('dialog', { name: 'Eliminare Sondaggio?' })).getByRole('button', { name: 'Elimina blocco' }));
+      expect(savedBlocks()).toEqual([wire(plainBlock)]);
+    });
+
+    it('deletes the tool it asked about even when the list changed meanwhile, and closes once it is gone', async () => {
+      const { rerender } = editor([plainBlock, toolBlock]);
+      await userEvent.click(screen.getAllByRole('button', { name: 'Azioni del blocco' })[1]);
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [toolBlock, plainBlock, mapsBlock] })} sources={sources} />);
+      await userEvent.click(within(screen.getByRole('dialog', { name: 'Eliminare Sondaggio?' })).getByRole('button', { name: 'Elimina blocco' }));
+      expect(savedBlocks()).toEqual([wire(plainBlock), wire(mapsBlock)]);
+
+      await userEvent.click(screen.getAllByRole('button', { name: 'Azioni del blocco' })[0]);
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
+      expect(screen.getByText('Eliminare Sondaggio?')).toBeInTheDocument();
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [plainBlock] })} sources={sources} />);
+      await waitFor(() => expect(screen.queryByText('Eliminare Sondaggio?')).not.toBeInTheDocument());
+    });
+
+    it('draws its tool in edit mode once the tools are read', () => {
+      const module = { id: 'm-1', kind: 'poll' as const, position: 0, columns: [], polls: [rawPoll()] as never };
+      renderWithProviders(
+        <SectionEditor
+          roomId="room-1"
+          section={section({ blocks: [toolBlock] })}
+          sources={{ ...sources, tools: { revision: 1, tools: [{ moduleId: 'm-1', playersVisible: false, module }] } }}
+        />,
+      );
+      expect(screen.getByText('Quale sistema?')).toBeInTheDocument();
+    });
+
+    it('sets a block to start folded', async () => {
+      editor([plainBlock]);
+      await userEvent.click(screen.getByRole('button', { name: 'Azioni del blocco' }));
+      await userEvent.click(screen.getByRole('menuitem', { name: "Chiuso all'apertura" }));
+      expect(savedBlocks()).toEqual([{ ...wire(plainBlock), collapsed: true }]);
+    });
+
+    it('sets a folded block to start open', async () => {
+      editor([{ ...plainBlock, collapsed: true }]);
+      await userEvent.click(screen.getByRole('button', { name: 'Azioni del blocco' }));
+      await userEvent.click(screen.getByRole('menuitem', { name: /Chiuso all'apertura/ }));
+      expect(savedBlocks()).toEqual([wire(plainBlock)]);
+    });
   });
 });

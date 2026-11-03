@@ -37,6 +37,8 @@ describe('the landing helpers', () => {
       groups: [['tag-1']],
       mapKind: null,
       features: [],
+      moduleId: null,
+      collapsed: false,
     });
     expect(toBlockBody(blockInput(saved))).toEqual({
       kind: 'documents',
@@ -44,6 +46,8 @@ describe('the landing helpers', () => {
       tag_ids: ['tag-1'],
       groups: [['tag-1']],
       map_kind: null,
+      module_id: null,
+      collapsed: false,
       features: [],
     });
   });

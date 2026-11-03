@@ -235,3 +235,25 @@ def test_a_job_payload_without_sections_still_reads() -> None:
     del payload["sections"]
 
     assert file_from_json(payload).sections == ()
+
+
+def test_a_tool_block_is_never_written_nor_imported_and_folding_travels() -> None:
+    section = Section(
+        id=uuid.uuid4(),
+        room_id=ROOM,
+        kind=SectionKind.CUSTOM,
+        position=3,
+        title="City",
+        blocks=(
+            Block(uuid.uuid4(), BlockKind.TOOL, 0, module_id=uuid.uuid4()),
+            Block(uuid.uuid4(), BlockKind.MAPS, 1, collapsed=True),
+        ),
+    )
+
+    data = section_to_json(section, None)
+
+    assert [(b["kind"], b["collapsed"]) for b in data["blocks"]] == [("maps", True)]
+    file = _file(_custom(blocks=[{"kind": "tool"}, {"kind": "maps", "collapsed": True}]))
+    (planned,) = plan_import([file], _context()).sections
+    assert planned.skipped_blocks == 1
+    assert [(b.kind, b.collapsed) for b in planned.blocks] == [(BlockKind.MAPS, True)]

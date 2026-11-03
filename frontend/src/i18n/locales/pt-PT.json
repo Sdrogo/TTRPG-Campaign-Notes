@@ -373,8 +373,7 @@
         "addHint": "Uma Tag é uma Tag principal, duas ou mais uma combinação.",
         "add": "Adicionar",
         "alreadyMain": "Esta Tag já é uma entrada do agrupamento.",
-        "alreadyCombination": "Esta combinação já está no agrupamento.",
-        "mapsRow": "Linha dos mapas"
+        "alreadyCombination": "Esta combinação já está no agrupamento."
       },
       "all": {
         "title": "Todas as Tags",
@@ -929,6 +928,11 @@
     },
     "running": "A importar…",
     "runningHint": "Podes fechar esta janela: a importação continua em segundo plano e os Documentos aparecem na lista assim que terminar.",
+    "imagesProgress": "Imagens: {{done}} de {{total}}",
+    "imagesProgressLabel": "Imagens importadas até agora",
+    "imagesProgressHint": "Os Documentos já estão na Room; as imagens aparecem à medida que chegam.",
+    "imagesImported": "{{stored}} de {{total}} imagens importadas",
+    "tooManyImages": "Os Documentos marcados têm {{count}} imagens: no máximo {{max}} por importação. Desmarque alguns e importe o resto depois.",
     "done": "Importação concluída",
     "created_one": "{{count}} Documento criado",
     "created_other": "{{count}} Documentos criados",
@@ -1274,10 +1278,6 @@
       "repeated": "Documento já no mapa, ficarão como etiquetas simples:",
       "backgroundLater": "A imagem de fundo carrega-se depois, no botão Mapa do novo mapa.",
       "submit": "Importar"
-    },
-    "strip": {
-      "all_one": "Todos os mapas ({{count}})",
-      "all_other": "Todos os mapas ({{count}})"
     }
   },
   "sessionZero": {
@@ -1607,6 +1607,8 @@
       "sessionZero": "Sessões, Linhas e Véus, sondagens"
     },
     "blockEmpty": "Nada para mostrar",
+    "foldBlock": "Recolher {{name}}",
+    "unfoldBlock": "Expandir {{name}}",
     "sectionEmpty": "Ainda não há nada para mostrar aqui.",
     "notFound": "Esta secção já não existe.",
     "loadError": "Não foi possível carregar a página.",
@@ -1658,7 +1660,9 @@
       "session_zero": {
         "title": "Sessão 0",
         "body": "Sessões, etapas e sondagens"
-      }
+      },
+      "tools": "Ferramentas",
+      "toolsBody": "Uma ferramenta da Sessão 0 própria, escondida dos jogadores até a mostrares"
     },
     "edit": {
       "start": "Editar",
@@ -1702,7 +1706,19 @@
       "blockMenu": "Ações do bloco",
       "deleteBlock": "Eliminar bloco",
       "blockDeleted": "Bloco eliminado",
-      "undo": "Anular"
+      "undo": "Anular",
+      "renameSection": "Mudar o nome da secção {{name}}",
+      "addDescription": "Adicionar uma descrição",
+      "collapsed": "Fechado ao abrir",
+      "deleteToolTitle": "Eliminar {{name}}?",
+      "deleteToolBody": "Os votos, post-its e respostas também são eliminados. Não é possível anular."
+    },
+    "tool": {
+      "draft": "Rascunho",
+      "draftHint": "Os jogadores ainda não a veem",
+      "show": "Mostrar aos jogadores",
+      "hide": "Esconder dos jogadores",
+      "loadError": "Não foi possível carregar a ferramenta."
     }
   }
 }

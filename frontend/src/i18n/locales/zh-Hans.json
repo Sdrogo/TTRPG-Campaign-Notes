@@ -373,8 +373,7 @@
         "addHint": "一个标签是主标签，两个或更多标签则是一个组合。",
         "add": "添加",
         "alreadyMain": "此标签已是分组中的一个条目。",
-        "alreadyCombination": "此组合已在分组中。",
-        "mapsRow": "地图行"
+        "alreadyCombination": "此组合已在分组中。"
       },
       "all": {
         "title": "所有标签",
@@ -910,6 +909,11 @@
     },
     "running": "正在导入…",
     "runningHint": "你可以关闭此窗口：导入会在后台继续，完成后文档会出现在列表中。",
+    "imagesProgress": "图片：{{done}} / {{total}}",
+    "imagesProgressLabel": "目前已导入的图片",
+    "imagesProgressHint": "文档已在 Room 中；图片会陆续出现。",
+    "imagesImported": "已导入 {{stored}} / {{total}} 张图片",
+    "tooManyImages": "所选文档共有 {{count}} 张图片：每次导入最多 {{max}} 张。请取消勾选部分文档，其余稍后再导入。",
     "done": "导入完成",
     "created_other": "已创建 {{count}} 个文档",
     "replaced_other": "已替换 {{count}} 个文档",
@@ -1239,9 +1243,6 @@
       "repeated": "该文档已在地图上,将保留为普通标签:",
       "backgroundLater": "背景图片之后在新地图的“地图”按钮中上传。",
       "submit": "导入"
-    },
-    "strip": {
-      "all_other": "全部地图（{{count}}）"
     }
   },
   "sessionZero": {
@@ -1563,6 +1564,8 @@
       "sessionZero": "会话、底线与帷幕、投票"
     },
     "blockEmpty": "没有可显示的内容",
+    "foldBlock": "折叠{{name}}",
+    "unfoldBlock": "展开{{name}}",
     "sectionEmpty": "这里还没有可显示的内容。",
     "notFound": "此版块已不存在。",
     "loadError": "无法加载页面。",
@@ -1611,7 +1614,9 @@
       "session_zero": {
         "title": "第 0 次会话",
         "body": "会话、步骤和投票"
-      }
+      },
+      "tools": "工具",
+      "toolsBody": "独立的第0次会话工具，在你展示之前对玩家隐藏"
     },
     "edit": {
       "start": "编辑",
@@ -1654,7 +1659,19 @@
       "blockMenu": "区块操作",
       "deleteBlock": "删除区块",
       "blockDeleted": "区块已删除",
-      "undo": "撤销"
+      "undo": "撤销",
+      "renameSection": "重命名版块{{name}}",
+      "addDescription": "添加描述",
+      "collapsed": "打开时折叠",
+      "deleteToolTitle": "删除{{name}}？",
+      "deleteToolBody": "投票、便签和回答也会一并删除。此操作无法撤销。"
+    },
+    "tool": {
+      "draft": "草稿",
+      "draftHint": "玩家还看不到它",
+      "show": "向玩家展示",
+      "hide": "对玩家隐藏",
+      "loadError": "无法加载该工具。"
     }
   }
 }

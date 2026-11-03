@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import {
   ActionIcon,
   Badge,
+  Box,
   Button,
   Checkbox,
   CloseButton,
@@ -18,24 +19,36 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import {
   CaretDownIcon,
+  CheckIcon,
   DotsThreeVerticalIcon,
+  EyeIcon,
+  EyeSlashIcon,
   FilesIcon,
   MapTrifoldIcon,
   PencilSimpleIcon,
   PlusIcon,
+  ToolboxIcon,
   UsersThreeIcon,
 } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { DragHandle, SortableItem, SortableList } from './Sortable';
 import { defaultBlockHeading, featureLabel, groupLabel, tagsOf } from '../../lib/landingText';
 import { sameTagSet } from '../../lib/mainItems';
-import { SESSION_ZERO_FEATURES, type BlockInput, type BlockKind, type BlockMapKind, type SessionZeroFeature } from '../../types/landing';
+import {
+  SESSION_ZERO_FEATURES,
+  type BlockInput,
+  type BlockKind,
+  type BlockMapKind,
+  type SessionZeroFeature,
+  type ToolKind,
+} from '../../types/landing';
 import type { MainItem, Tag } from '../../types/tag';
 
 /** A block's kind icon, on its bar and on the add-block tiles. */
 export function BlockKindIcon({ kind, size = 18 }: { kind: BlockKind; size?: number }) {
   if (kind === 'documents') return <FilesIcon size={size} aria-hidden="true" />;
   if (kind === 'maps') return <MapTrifoldIcon size={size} aria-hidden="true" />;
+  if (kind === 'tool') return <ToolboxIcon size={size} aria-hidden="true" />;
   return <UsersThreeIcon size={size} aria-hidden="true" />;
 }
 
@@ -150,10 +163,21 @@ interface BlockBarProps {
   /** Saves the block with these changes. */
   onChange: (block: BlockInput) => void;
   onDelete: () => void;
-  /** Opens a picker as soon as the bar shows: a new block's Tags or features. */
-  initialPicker?: 'tags' | 'features' | null;
+  /**
+   * Opens a picker as soon as the bar shows: a new block's Tags or features,
+   * or the groups popover again after a save remounted the bar.
+   */
+  initialPicker?: 'tags' | 'features' | 'groups' | null;
+  /**
+   * Told when the groups popover opens or closes: every save gives the
+   * blocks new ids and so a new bar, which reopens the popover through
+   * `initialPicker` until the user closes it.
+   */
+  onGroupsOpenChange?: (open: boolean) => void;
   /** A block not saved yet (no Tag or feature): closing its picker empty drops it. */
   onCancelDraft?: () => void;
+  /** A tool block's step kind and whether the Players see it, with the eye toggle (spec 60 Decision 4). */
+  tool?: { kind: ToolKind; visible: boolean; onToggleVisible: () => void };
 }
 
 /**
@@ -162,12 +186,16 @@ interface BlockBarProps {
  * place, the filter as chips (Tags, the map kind, the features), "Raggruppa"
  * on a Documents block, and a ⋮ with "Elimina".
  */
-export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPicker = null, onCancelDraft }: BlockBarProps) {
+export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPicker = null, onCancelDraft, onGroupsOpenChange, tool }: BlockBarProps) {
   const { t } = useTranslation();
   const [picker, setPicker] = useState<'tags' | 'features' | 'groups' | null>(initialPicker);
   const closePicker = () => {
     setPicker(null);
     onCancelDraft?.();
+  };
+  const setGroupsOpen = (open: boolean) => {
+    setPicker(open ? 'groups' : null);
+    onGroupsOpenChange?.(open);
   };
   const blockTags = tagsOf(block.tagIds, tags);
 
@@ -177,7 +205,7 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
       <BlockKindIcon kind={block.kind} />
       <HeadingEditor
         heading={block.heading}
-        placeholder={defaultBlockHeading({ ...block, id: '', position: 0 }, tags)}
+        placeholder={defaultBlockHeading({ ...block, toolKind: tool?.kind ?? null }, tags)}
         onSave={(heading) => onChange({ ...block, heading })}
       />
       <Text c="dimmed" aria-hidden="true">
@@ -216,11 +244,11 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
           </Text>
           <Picker
             opened={picker === 'groups'}
-            onClose={() => setPicker(null)}
+            onClose={() => setGroupsOpen(false)}
             title={t('roomLanding.edit.groups')}
             width={340}
             target={
-              <Button size="compact-sm" variant="light" rightSection={<CaretDownIcon size={12} />} onClick={() => setPicker('groups')}>
+              <Button size="compact-sm" variant="light" rightSection={<CaretDownIcon size={12} />} onClick={() => setGroupsOpen(true)}>
                 {block.groups.length > 0 ? t('roomLanding.edit.groupedBy', { count: block.groups.length }) : t('roomLanding.edit.group')}
               </Button>
             }
@@ -268,6 +296,25 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
           </Picker>
         </>
       )}
+      {tool && (
+        <>
+          {!tool.visible && (
+            <Badge variant="light" color="gray" title={t('roomLanding.tool.draftHint')}>
+              {t('roomLanding.tool.draft')}
+            </Badge>
+          )}
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="sm"
+            onClick={tool.onToggleVisible}
+            aria-label={tool.visible ? t('roomLanding.tool.hide') : t('roomLanding.tool.show')}
+            title={tool.visible ? t('roomLanding.tool.hide') : t('roomLanding.tool.show')}
+          >
+            {tool.visible ? <EyeIcon size={16} /> : <EyeSlashIcon size={16} />}
+          </ActionIcon>
+        </>
+      )}
       <Menu position="bottom-end" withinPortal>
         <Menu.Target>
           <ActionIcon variant="subtle" color="gray" size="sm" aria-label={t('roomLanding.edit.blockMenu')} ml="auto">
@@ -275,6 +322,12 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
+          <Menu.Item
+            onClick={() => onChange({ ...block, collapsed: !block.collapsed })}
+            leftSection={block.collapsed ? <CheckIcon size={14} aria-hidden="true" /> : <Box w={14} />}
+          >
+            {t('roomLanding.edit.collapsed')}
+          </Menu.Item>
           <Menu.Item color="danger" onClick={onDelete}>
             {t('roomLanding.edit.deleteBlock')}
           </Menu.Item>
@@ -347,12 +400,12 @@ function MapKindChip({ mapKind, onChange }: { mapKind: BlockMapKind | null; onCh
 }
 
 /**
- * The groups popover (spec 55 Decision 15): the groups as chips on one
- * wrapping line, dragged to reorder, × to remove; "+ Gruppo" ticks one or
- * more Tags (several make a combination); "Usa i raggruppamenti della
- * Stanza" copies the Room's Main items.
+ * The groups popover (spec 55 Decision 15): the groups as chips, one per
+ * line since their order is the page's order, dragged to reorder, × to
+ * remove; "+ Gruppo" ticks one or more Tags (several make a combination);
+ * "Usa i raggruppamenti della Stanza" copies the Room's Main items.
  */
-function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][]; tags: Tag[]; mainItems: MainItem[]; onChange: (groups: string[][]) => void }) {
+export function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][]; tags: Tag[]; mainItems: MainItem[]; onChange: (groups: string[][]) => void }) {
   const { t } = useTranslation();
   const [adding, setAdding] = useState<string[] | null>(null);
   const key = (group: string[]) => group.join('+');
@@ -366,10 +419,9 @@ function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][
           {t('roomLanding.edit.noGroups')}
         </Text>
       ) : (
-        <Group gap={4} wrap="wrap">
+        <Stack gap={4} align="flex-start">
           <SortableList
             ids={groups.map(key)}
-            layout="horizontal"
             onMove={(ids) => onChange(ids.map((id) => groups.find((group) => key(group) === id)!))}
           >
             {groups.map((group) => (
@@ -387,7 +439,7 @@ function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][
               </SortableItem>
             ))}
           </SortableList>
-        </Group>
+        </Stack>
       )}
       {adding === null ? (
         <Group gap="xs" wrap="wrap">

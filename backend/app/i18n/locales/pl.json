@@ -177,6 +177,7 @@
       "tooManyFiles": "Jednorazowo można zaimportować najwyżej {max} plików",
       "tooManyDocuments": "Jednorazowo można zaimportować najwyżej {max} dokumentów",
       "tooManyImages": "Jednorazowo można zaimportować najwyżej {max} obrazów",
+      "tooManyImageLinks": "Z plików można naraz odczytać najwyżej {max} linków do obrazów",
       "tooManyMaps": "Jednorazowo można zaimportować najwyżej {max} map",
       "tooManySections": "Jednorazowo można zaimportować najwyżej {max} sekcji strony głównej pokoju",
       "nameRequired": "Dokument z pliku nie ma nazwy",
@@ -333,7 +334,9 @@
       "blockFieldNotAllowed": "To ustawienie nie należy do tego rodzaju bloku",
       "unknownTag": "Jeden z tagów nie należy do tego Pokoju",
       "tooManyGroups": "Blok może mieć najwyżej {max} grup",
-      "invalidGroup": "Każda grupa potrzebuje jednego lub więcej różnych tagów i żadne dwie grupy nie mogą być takie same"
+      "invalidGroup": "Każda grupa potrzebuje jednego lub więcej różnych tagów i żadne dwie grupy nie mogą być takie same",
+      "unknownTool": "Ten blok nie jest narzędziem tej sekcji",
+      "notATool": "Narzędzie to Retro, Gwiazdy i Życzenia, Pytania, DDI lub ankiety"
     }
   },
   "pdf": {

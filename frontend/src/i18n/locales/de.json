@@ -373,8 +373,7 @@
         "addHint": "Ein Tag ergibt einen Haupt-Tag, zwei oder mehr eine Kombination.",
         "add": "Hinzufügen",
         "alreadyMain": "Dieser Tag ist bereits ein Eintrag der Gruppierung.",
-        "alreadyCombination": "Diese Kombination ist bereits in der Gruppierung.",
-        "mapsRow": "Kartenzeile"
+        "alreadyCombination": "Diese Kombination ist bereits in der Gruppierung."
       },
       "all": {
         "title": "Alle Tags",
@@ -927,6 +926,11 @@
     },
     "running": "Import läuft…",
     "runningHint": "Du kannst dieses Fenster schließen: Der Import läuft im Hintergrund weiter, und die Dokumente erscheinen in der Liste, sobald er fertig ist.",
+    "imagesProgress": "Bilder: {{done}} von {{total}}",
+    "imagesProgressLabel": "Bisher importierte Bilder",
+    "imagesProgressHint": "Die Dokumente sind schon im Room; ihre Bilder erscheinen, sobald sie ankommen.",
+    "imagesImported": "{{stored}} von {{total}} Bildern importiert",
+    "tooManyImages": "Die ausgewählten Dokumente haben {{count}} Bilder: höchstens {{max}} pro Import. Wähle einige ab und importiere den Rest danach.",
     "done": "Import abgeschlossen",
     "created_one": "{{count}} Dokument erstellt",
     "created_other": "{{count}} Dokumente erstellt",
@@ -1272,10 +1276,6 @@
       "repeated": "Dokument schon auf der Karte, bleiben einfache Beschriftungen:",
       "backgroundLater": "Das Hintergrundbild lädst du danach über die Schaltfläche Karte der neuen Karte hoch.",
       "submit": "Importieren"
-    },
-    "strip": {
-      "all_one": "Alle Karten ({{count}})",
-      "all_other": "Alle Karten ({{count}})"
     }
   },
   "sessionZero": {
@@ -1605,6 +1605,8 @@
       "sessionZero": "Sessions, Grenzen & Schleier, Umfragen"
     },
     "blockEmpty": "Nichts anzuzeigen",
+    "foldBlock": "{{name}} einklappen",
+    "unfoldBlock": "{{name}} ausklappen",
     "sectionEmpty": "Hier gibt es noch nichts zu sehen.",
     "notFound": "Diesen Bereich gibt es nicht mehr.",
     "loadError": "Die Seite konnte nicht geladen werden.",
@@ -1656,7 +1658,9 @@
       "session_zero": {
         "title": "Session 0",
         "body": "Sessions, Schritte und Umfragen"
-      }
+      },
+      "tools": "Werkzeuge",
+      "toolsBody": "Ein eigenes Werkzeug der Session 0, für die Spieler verborgen, bis du es zeigst"
     },
     "edit": {
       "start": "Bearbeiten",
@@ -1700,7 +1704,19 @@
       "blockMenu": "Aktionen für den Block",
       "deleteBlock": "Block löschen",
       "blockDeleted": "Block gelöscht",
-      "undo": "Rückgängig"
+      "undo": "Rückgängig",
+      "renameSection": "Abschnitt {{name}} umbenennen",
+      "addDescription": "Beschreibung hinzufügen",
+      "collapsed": "Beim Öffnen eingeklappt",
+      "deleteToolTitle": "{{name}} löschen?",
+      "deleteToolBody": "Stimmen, Haftnotizen und Antworten werden mitgelöscht. Das lässt sich nicht rückgängig machen."
+    },
+    "tool": {
+      "draft": "Entwurf",
+      "draftHint": "Die Spieler sehen es noch nicht",
+      "show": "Den Spielern zeigen",
+      "hide": "Vor den Spielern verbergen",
+      "loadError": "Das Werkzeug konnte nicht geladen werden."
     }
   }
 }

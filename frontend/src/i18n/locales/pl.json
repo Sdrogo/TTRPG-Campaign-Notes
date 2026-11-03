@@ -373,8 +373,7 @@
         "addHint": "Jeden tag to tag główny, dwa lub więcej to kombinacja.",
         "add": "Dodaj",
         "alreadyMain": "Ten tag jest już pozycją grupowania.",
-        "alreadyCombination": "Ta kombinacja jest już w grupowaniu.",
-        "mapsRow": "Wiersz map"
+        "alreadyCombination": "Ta kombinacja jest już w grupowaniu."
       },
       "all": {
         "title": "Wszystkie tagi",
@@ -961,6 +960,11 @@
     },
     "running": "Trwa import…",
     "runningHint": "Możesz zamknąć to okno: import trwa w tle, a dokumenty pojawią się na liście, gdy tylko się skończy.",
+    "imagesProgress": "Obrazy: {{done}} z {{total}}",
+    "imagesProgressLabel": "Dotąd zaimportowane obrazy",
+    "imagesProgressHint": "Dokumenty są już w Room; ich obrazy pojawiają się w miarę napływania.",
+    "imagesImported": "Zaimportowano {{stored}} z {{total}} obrazów",
+    "tooManyImages": "Zaznaczone Dokumenty mają {{count}} obrazów: najwyżej {{max}} na import. Odznacz część i zaimportuj resztę później.",
     "done": "Import zakończony",
     "created_one": "Utworzono {{count}} dokument",
     "created_few": "Utworzono {{count}} dokumenty",
@@ -1338,12 +1342,6 @@
       "repeated": "Dokument jest już na mapie, zostaną zwykłymi etykietami:",
       "backgroundLater": "Obraz tła wgrasz później, przyciskiem Mapa nowej mapy.",
       "submit": "Importuj"
-    },
-    "strip": {
-      "all_one": "Wszystkie mapy ({{count}})",
-      "all_few": "Wszystkie mapy ({{count}})",
-      "all_many": "Wszystkie mapy ({{count}})",
-      "all_other": "Wszystkie mapy ({{count}})"
     }
   },
   "sessionZero": {
@@ -1689,6 +1687,8 @@
       "sessionZero": "Sesje, Linie i Zasłony, ankiety"
     },
     "blockEmpty": "Nic do pokazania",
+    "foldBlock": "Zwiń {{name}}",
+    "unfoldBlock": "Rozwiń {{name}}",
     "sectionEmpty": "Nie ma tu jeszcze nic do pokazania.",
     "notFound": "Ta sekcja już nie istnieje.",
     "loadError": "Nie udało się wczytać strony.",
@@ -1746,7 +1746,9 @@
       "session_zero": {
         "title": "Sesja 0",
         "body": "Sesje, etapy i ankiety"
-      }
+      },
+      "tools": "Narzędzia",
+      "toolsBody": "Własne narzędzie Sesji 0, ukryte przed graczami, dopóki go nie pokażesz"
     },
     "edit": {
       "start": "Edytuj",
@@ -1792,7 +1794,19 @@
       "blockMenu": "Działania bloku",
       "deleteBlock": "Usuń blok",
       "blockDeleted": "Blok usunięty",
-      "undo": "Cofnij"
+      "undo": "Cofnij",
+      "renameSection": "Zmień nazwę sekcji {{name}}",
+      "addDescription": "Dodaj opis",
+      "collapsed": "Zwinięty po otwarciu",
+      "deleteToolTitle": "Usunąć {{name}}?",
+      "deleteToolBody": "Głosy, karteczki i odpowiedzi też zostaną usunięte. Nie można tego cofnąć."
+    },
+    "tool": {
+      "draft": "Szkic",
+      "draftHint": "Gracze jeszcze go nie widzą",
+      "show": "Pokaż graczom",
+      "hide": "Ukryj przed graczami",
+      "loadError": "Nie udało się wczytać narzędzia."
     }
   }
 }

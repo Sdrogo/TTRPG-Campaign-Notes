@@ -99,7 +99,16 @@ describe('toImportJob', () => {
       createdAt: '2026-10-08T12:00:00Z',
       finishedAt: null,
       result: null,
+      progress: null,
     });
+  });
+
+  it('keeps how far the images of a running job got (spec 59)', () => {
+    const job = toImportJob(
+      rawImportJob({ status: 'running', progress: { total: 450, stored: 118, done: 120 } }) as RawImportJob,
+    );
+
+    expect(job.progress).toEqual({ total: 450, stored: 118, done: 120 });
   });
 
   it('maps what a finished job did, the skipped images included', () => {
@@ -123,6 +132,7 @@ describe('toImportJob', () => {
           skipped_maps: [{ name: 'La Corte', reason: 'invalid' }],
           sections: [{ id: 'section-1', kind: 'custom', title: 'Tokyo' }],
           skipped_sections: [{ kind: 'page_maps', title: null, reason: 'image' }],
+          images: { total: 2, stored: 1, done: 0 },
         },
       }) as RawImportJob,
     );
@@ -142,6 +152,7 @@ describe('toImportJob', () => {
       skippedMaps: [{ name: 'La Corte', reason: 'invalid' }],
       sections: [{ id: 'section-1', kind: 'custom', title: 'Tokyo' }],
       skippedSections: [{ kind: 'page_maps', title: null, reason: 'image' }],
+      images: { total: 2, stored: 1, done: 0 },
     });
   });
 });

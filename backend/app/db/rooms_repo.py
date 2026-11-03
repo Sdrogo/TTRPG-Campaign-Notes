@@ -38,7 +38,6 @@ def room_from_row(row: RoomRow) -> Room:
         players_can_create_documents=row.players_can_create_documents,
         default_visibility=DocumentVisibility(row.default_visibility),
         image_path=row.image_path,
-        maps_position=row.maps_position,
     )
 
 
@@ -77,7 +76,6 @@ async def insert_new_room_rows(
             players_can_create_documents=room.players_can_create_documents,
             default_visibility=room.default_visibility.value,
             image_path=room.image_path,
-            maps_position=room.maps_position,
         )
     )
     # Flushed separately so the Room row exists before its dependents are
@@ -209,7 +207,6 @@ async def update_room_settings(session: AsyncSession, room: Room) -> None:
         raise LookupError(f"Room {room.id} not found")
     row.players_can_create_documents = room.players_can_create_documents
     row.default_visibility = room.default_visibility.value
-    row.maps_position = room.maps_position
     await session.flush()
 
 

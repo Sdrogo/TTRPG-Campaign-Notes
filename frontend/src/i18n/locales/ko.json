@@ -373,8 +373,7 @@
         "addHint": "태그 하나는 주요 태그, 둘 이상은 조합입니다.",
         "add": "추가",
         "alreadyMain": "이 태그는 이미 묶기 항목입니다.",
-        "alreadyCombination": "이 조합은 이미 묶기에 있습니다.",
-        "mapsRow": "지도 줄"
+        "alreadyCombination": "이 조합은 이미 묶기에 있습니다."
       },
       "all": {
         "title": "모든 태그",
@@ -910,6 +909,11 @@
     },
     "running": "가져오는 중…",
     "runningHint": "이 창을 닫아도 됩니다. 가져오기는 백그라운드에서 계속되며, 끝나면 문서가 목록에 나타납니다.",
+    "imagesProgress": "이미지: {{total}}개 중 {{done}}개",
+    "imagesProgressLabel": "지금까지 가져온 이미지",
+    "imagesProgressHint": "문서는 이미 Room에 있습니다. 이미지는 도착하는 대로 표시됩니다.",
+    "imagesImported": "이미지 {{total}}개 중 {{stored}}개를 가져왔습니다",
+    "tooManyImages": "선택한 문서에 이미지가 {{count}}개 있습니다. 한 번에 최대 {{max}}개까지 가져올 수 있습니다. 일부 선택을 해제하고 나머지는 나중에 가져오세요.",
     "done": "가져오기를 완료했습니다",
     "created_other": "문서 {{count}}개를 만들었습니다",
     "replaced_other": "문서 {{count}}개를 대체했습니다",
@@ -1239,9 +1243,6 @@
       "repeated": "문서가 이미 지도에 있어 일반 라벨로 남습니다:",
       "backgroundLater": "배경 이미지는 나중에 새 지도의 지도 버튼에서 올립니다.",
       "submit": "가져오기"
-    },
-    "strip": {
-      "all_other": "모든 지도 ({{count}})"
     }
   },
   "sessionZero": {
@@ -1563,6 +1564,8 @@
       "sessionZero": "세션, 라인과 베일, 투표"
     },
     "blockEmpty": "표시할 내용 없음",
+    "foldBlock": "{{name}} 접기",
+    "unfoldBlock": "{{name}} 펼치기",
     "sectionEmpty": "아직 여기에 표시할 내용이 없습니다.",
     "notFound": "이 섹션은 더 이상 없습니다.",
     "loadError": "페이지를 불러오지 못했습니다.",
@@ -1611,7 +1614,9 @@
       "session_zero": {
         "title": "세션 0",
         "body": "세션, 단계, 투표"
-      }
+      },
+      "tools": "도구",
+      "toolsBody": "독립된 세션 0 도구로, 공개하기 전까지 플레이어에게 보이지 않습니다"
     },
     "edit": {
       "start": "편집",
@@ -1654,7 +1659,19 @@
       "blockMenu": "블록 작업",
       "deleteBlock": "블록 삭제",
       "blockDeleted": "블록이 삭제되었습니다",
-      "undo": "실행 취소"
+      "undo": "실행 취소",
+      "renameSection": "{{name}} 섹션 이름 바꾸기",
+      "addDescription": "설명 추가",
+      "collapsed": "열 때 접힘",
+      "deleteToolTitle": "{{name}}을(를) 삭제할까요?",
+      "deleteToolBody": "투표, 메모, 답변도 함께 삭제됩니다. 되돌릴 수 없습니다."
+    },
+    "tool": {
+      "draft": "초안",
+      "draftHint": "플레이어에게 아직 보이지 않습니다",
+      "show": "플레이어에게 표시",
+      "hide": "플레이어에게 숨기기",
+      "loadError": "도구를 불러오지 못했습니다."
     }
   }
 }

@@ -177,6 +177,7 @@
       "tooManyFiles": "한 번에 최대 {max}개의 파일을 가져올 수 있습니다",
       "tooManyDocuments": "한 번에 최대 {max}개의 문서를 가져올 수 있습니다",
       "tooManyImages": "한 번에 최대 {max}개의 이미지를 가져올 수 있습니다",
+      "tooManyImageLinks": "파일에서 한 번에 읽을 수 있는 이미지 링크는 최대 {max}개입니다",
       "tooManyMaps": "한 번에 최대 {max}개의 지도를 가져올 수 있습니다",
       "tooManySections": "한 번에 최대 {max}개의 룸 홈 섹션을 가져올 수 있습니다",
       "nameRequired": "파일 안의 문서에 이름이 없습니다",
@@ -333,7 +334,9 @@
       "blockFieldNotAllowed": "이 설정은 이 종류의 블록에 속하지 않습니다",
       "unknownTag": "태그 중 하나가 이 룸에 없습니다",
       "tooManyGroups": "블록에는 그룹을 최대 {max}개까지 둘 수 있습니다",
-      "invalidGroup": "각 그룹에는 서로 다른 태그가 하나 이상 필요하며, 같은 그룹을 두 번 만들 수 없습니다"
+      "invalidGroup": "각 그룹에는 서로 다른 태그가 하나 이상 필요하며, 같은 그룹을 두 번 만들 수 없습니다",
+      "unknownTool": "이 블록은 이 섹션의 도구가 아닙니다",
+      "notATool": "도구는 회고, 별과 소원, 질문, DDI 또는 투표입니다"
     }
   },
   "pdf": {

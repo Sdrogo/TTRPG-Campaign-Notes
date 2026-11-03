@@ -2,9 +2,10 @@
 starts from a queued `import_jobs` row, checks again that the importer may do
 it, plans against the Room as it is then, writes Tags, Documents, Notes and
 maps (spec 40) in one transaction (all or nothing), then fetches and attaches
-the images and map backgrounds best effort and points map cards at the images
-they chose. Any failure marks the job failed; nothing here raises to the
-caller."""
+the images, map backgrounds and Section images best effort, in blocks it
+saves as it goes so a restart resumes them (spec 59), and points map cards
+at the images they chose. Any failure marks the job failed; nothing here
+raises to the caller."""
 
 import asyncio
 import logging
@@ -18,6 +19,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import get_visible_images, get_visible_images_for_documents
+from app.api.export_pdf_job import spawn
 from app.api.versions import record_revision
 from app.db import (
     documents_repo,
@@ -64,10 +66,11 @@ from app.domain.imports import (
     ImportStatus,
     PlannedDocument,
     fold,
+    next_block,
     plan_import,
 )
 from app.domain.landing_transfer import PlannedSection, SectionSkipReason, to_section
-from app.domain.map_transfer import MapSkipReason, PlannedMap, to_source_map
+from app.domain.map_transfer import CardImage, MapSkipReason, PlannedMap, to_source_map
 from app.domain.mentions import plan_source_mentions
 from app.domain.models import Membership, MentionSource, MentionSourceKind, Room, RoomRole
 from app.domain.relationship_maps import MAX_MAPS_PER_ROOM, is_map_visible
@@ -168,49 +171,177 @@ async def load_import_context(
 
 async def run_import_job(job_id: uuid.UUID) -> None:
     """Runs the job to the end: `done` with what it did, or `failed`. Never
-    raises (it runs as a background task, where nobody would see it)."""
+    raises (it runs as a background task, where nobody would see it). Once
+    the Documents are written, the images go in blocks (spec 59)."""
     try:
         started = await _start(job_id)
         if started is None:
             return
         job, importer, plan = started
         created, replaced, maps, sections = await _write(job, importer, plan)
-        skipped, attached = await _attach_images(job.room_id, importer.user_id, plan)
-        created_keys = {m.key for m in maps}
-        skipped_maps = [
-            {"name": m.name, "reason": (m.skipped or MapSkipReason.LIMIT).value}
-            for m in plan.maps
-            if m.key not in created_keys
-        ]
-        skipped_maps += await _attach_backgrounds(job.room_id, importer.user_id, maps)
-        await _point_card_images(maps, attached)
-        written = {s.key for s in sections}
-        skipped_sections = [
-            _skipped_section(s, (s.skipped or SectionSkipReason.LIMIT).value)
-            for s in plan.sections
-            if s.key not in written
-        ]
-        skipped_sections += await _attach_section_images(job.room_id, importer.user_id, sections)
-        result = {
-            "created": created,
-            "replaced": replaced,
-            "skipped": skipped,
-            "maps": [{"id": str(m.id), "name": m.name} for m in maps],
-            "skipped_maps": skipped_maps,
-            "sections": [
-                {"id": str(s.id), "kind": s.kind.value, "title": s.title} for s in sections
-            ],
-            "skipped_sections": skipped_sections,
-        }
+        progress = _image_progress(plan, created, replaced, maps, sections)
         async with session_module.independent_session() as session:
-            await import_jobs_repo.mark_done(session, job.id, result, datetime.now(UTC))
+            await import_jobs_repo.start_images(session, job.id, progress)
             await session.commit()
+        await _run_images(job.id, job.room_id, importer.user_id)
     except (ImportRefusedByRoomError, DomainError):
         logger.warning("Import %s refused: the importer can no longer do it", job_id)
         await _fail(job_id, "refused")
     except Exception:
         logger.exception("Import %s failed", job_id)
         await _fail(job_id, "failed")
+
+
+async def resume_import_job(job_id: uuid.UUID) -> None:
+    """Goes on with the images of a job a restart cut off in its image
+    phase (spec 59 Decision 6), from the first entry not done, as long as
+    the importer is still a member of the Room. Never raises."""
+    try:
+        async with session_module.independent_session() as session:
+            job = await import_jobs_repo.get_job(session, job_id)
+            if job is None or job.status is not ImportStatus.RUNNING or job.progress is None:
+                return
+            if await rooms_repo.get_membership(session, job.room_id, job.requested_by) is None:
+                raise ImportRefusedByRoomError
+        await _run_images(job.id, job.room_id, job.requested_by)
+    except ImportRefusedByRoomError:
+        logger.warning("Import %s refused: the importer can no longer do it", job_id)
+        await _fail(job_id, "refused")
+    except Exception:
+        logger.exception("Import %s failed", job_id)
+        await _fail(job_id, "failed")
+
+
+async def resume_import_jobs() -> None:
+    """At startup, before the sweeps: claims the imports a restart cut off
+    in their image phase and resumes each in the background. A failure is
+    only logged, so the app still starts."""
+    try:
+        async with session_module.independent_session() as session:
+            ids = await import_jobs_repo.claim_image_phases(session)
+            await session.commit()
+    except Exception:
+        logger.exception("Could not resume the imports interrupted by a restart")
+        return
+    for job_id in ids:
+        await spawn(resume_import_job(job_id))
+
+
+def _image_progress(
+    plan: ImportPlan,
+    created: list[dict[str, str]],
+    replaced: list[dict[str, str]],
+    maps: list[PlannedMap],
+    sections: list[PlannedSection],
+) -> dict[str, Any]:
+    """The image phase's starting point (spec 59 Decisions 3, 4): the work
+    list (each Document's images in order, so its favorite is stored first,
+    then the maps' backgrounds and the Sections' images, each naming what it
+    goes to and how a skip is listed), nothing done yet, what the Documents'
+    transaction made and what it already left out."""
+    work: list[dict[str, Any]] = [
+        {
+            "kind": "image",
+            "target": str(document.id),
+            "url": image.url,
+            "source_id": image.source_id,
+            "skip": _skip(document, image.url, ""),
+        }
+        for document in plan.documents
+        for image in document.images
+    ]
+    work += [
+        {
+            "kind": "background",
+            "target": str(m.id),
+            "url": m.background_url,
+            "skip": {"name": m.name, "reason": "background"},
+        }
+        for m in maps
+        if m.background_url is not None
+    ]
+    work += [
+        {
+            "kind": "section",
+            "target": str(s.id),
+            "url": s.image_url,
+            "skip": _skipped_section(s, "image"),
+        }
+        for s in sections
+        if s.image_url is not None
+    ]
+    created_maps = {m.key for m in maps}
+    written = {s.key for s in sections}
+    return {
+        "work": work,
+        "done": 0,
+        "stored": {},
+        "result": {
+            "created": created,
+            "replaced": replaced,
+            "maps": [{"id": str(m.id), "name": m.name} for m in maps],
+            "sections": [
+                {"id": str(s.id), "kind": s.kind.value, "title": s.title} for s in sections
+            ],
+        },
+        "card_images": [
+            [str(image.card_id), str(image.document_id), image.source_id]
+            for m in maps
+            for image in m.card_images
+        ],
+        "skipped": [],
+        "skipped_maps": [
+            {"name": m.name, "reason": (m.skipped or MapSkipReason.LIMIT).value}
+            for m in plan.maps
+            if m.key not in created_maps
+        ],
+        "skipped_sections": [
+            _skipped_section(s, (s.skipped or SectionSkipReason.LIMIT).value)
+            for s in plan.sections
+            if s.key not in written
+        ],
+    }
+
+
+async def _run_images(job_id: uuid.UUID, room_id: uuid.UUID, importer_id: uuid.UUID) -> None:
+    """Works through the job's image list a block at a time, saving after
+    each, then points the map cards at their images and marks the job done
+    with what it did."""
+    while True:
+        async with session_module.independent_session() as session:
+            job = await import_jobs_repo.get_job(session, job_id)
+        if job is None or job.progress is None:
+            return  # failed by the sweep meanwhile, or its Room deleted
+        progress = job.progress
+        if progress["done"] >= len(progress["work"]):
+            break
+        done, block = next_block(progress)
+        skipped = await _attach_block(job_id, room_id, importer_id, block)
+        async with session_module.independent_session() as session:
+            await import_jobs_repo.save_block(session, job_id, done, skipped)
+            await session.commit()
+
+    work = progress["work"]
+    attached = {
+        (uuid.UUID(work[int(index)]["target"]), work[int(index)]["source_id"]): uuid.UUID(value)
+        for index, value in progress["stored"].items()
+        if work[int(index)]["kind"] == "image" and work[int(index)]["source_id"] is not None
+    }
+    cards = [
+        CardImage(uuid.UUID(card), uuid.UUID(document), source)
+        for card, document, source in progress["card_images"]
+    ]
+    await _point_card_images(cards, attached)
+    result = {
+        **progress["result"],
+        "skipped": progress["skipped"],
+        "skipped_maps": progress["skipped_maps"],
+        "skipped_sections": progress["skipped_sections"],
+        "images": {"total": len(work), "stored": len(progress["stored"])},
+    }
+    async with session_module.independent_session() as session:
+        await import_jobs_repo.mark_done(session, job_id, result, datetime.now(UTC))
+        await session.commit()
 
 
 async def _fail(job_id: uuid.UUID, error: str) -> None:
@@ -369,39 +500,56 @@ def _skip(plan_document: PlannedDocument, url: str, reason: str) -> dict[str, st
     }
 
 
-async def _attach_images(
-    room_id: uuid.UUID, importer_id: uuid.UUID, plan: ImportPlan
-) -> tuple[list[dict[str, str]], dict[tuple[uuid.UUID, str], uuid.UUID]]:
-    """Fetches and attaches every planned image, a few at a time, each
-    Document's in order so its favorite is stored first. One that fails is
-    skipped and listed, never failing the import (Decision 15). Also returns
-    the new image of each Document by the image's id in the file, for the map
-    cards that chose it (spec 40 Decision 13)."""
-    skipped: list[dict[str, str]] = []
-    attached: dict[tuple[uuid.UUID, str], uuid.UUID] = {}
+async def _attach_block(
+    job_id: uuid.UUID,
+    room_id: uuid.UUID,
+    importer_id: uuid.UUID,
+    block: list[tuple[int, dict[str, Any]]],
+) -> dict[str, list[Any]]:
+    """Fetches and stores one block of the work list, a few at a time, the
+    entries of one target in order (a Document's favorite first). One that
+    fails is skipped and listed, never failing the import (spec 27 Decision
+    15); what it was skipped from, by result list, is returned."""
+    skipped: dict[str, list[Any]] = {"skipped": [], "skipped_maps": [], "skipped_sections": []}
     gate = asyncio.Semaphore(_IMAGES_AT_ONCE)
     database = asyncio.Lock()
+    by_target: dict[str, list[tuple[int, dict[str, Any]]]] = {}
+    for index, entry in block:
+        by_target.setdefault(entry["target"], []).append((index, entry))
 
-    async def one_document(document: PlannedDocument) -> None:
-        for image in document.images:
-            async with gate:
-                data = await _read_own_image(image.url, importer_id)
-                if data is None:
-                    try:
-                        data = await remote_images.fetch_image_bytes(image.url)
-                    except remote_images.RemoteImageError:
-                        skipped.append(_skip(document, image.url, "unreachable"))
-                        continue
-            async with database:
-                reason = await _store_image(room_id, importer_id, document, data)
-            if isinstance(reason, uuid.UUID):
-                if image.source_id is not None:
-                    attached[(document.id, image.source_id)] = reason
-            elif reason is not None:
-                skipped.append(_skip(document, image.url, reason))
+    async def one_target(entries: list[tuple[int, dict[str, Any]]]) -> None:
+        for index, entry in entries:
+            target = uuid.UUID(entry["target"])
+            if entry["kind"] == "image":
+                async with gate:
+                    data = await _read_own_image(entry["url"], importer_id)
+                    if data is None:
+                        try:
+                            data = await remote_images.fetch_image_bytes(entry["url"])
+                        except remote_images.RemoteImageError:
+                            skipped["skipped"].append({**entry["skip"], "reason": "unreachable"})
+                            continue
+                async with database:
+                    reason = await _store_image(room_id, importer_id, target, data, job_id, index)
+                if isinstance(reason, str):
+                    skipped["skipped"].append({**entry["skip"], "reason": reason})
+            elif entry["kind"] == "background":
+                async with database:  # few, one at a time as before spec 59
+                    stored = await _store_background(
+                        room_id, importer_id, target, entry["url"], job_id, index
+                    )
+                if not stored:
+                    skipped["skipped_maps"].append(entry["skip"])
+            else:
+                async with database:  # few, one at a time as before spec 59
+                    stored = await _store_section_image(
+                        room_id, importer_id, target, entry["url"], job_id, index
+                    )
+                if not stored:
+                    skipped["skipped_sections"].append(entry["skip"])
 
-    await asyncio.gather(*(one_document(d) for d in plan.documents if d.images))
-    return skipped, attached
+    await asyncio.gather(*(one_target(entries) for entries in by_target.values()))
+    return skipped
 
 
 async def _read_own_image(url: str, importer_id: uuid.UUID) -> bytes | None:
@@ -438,13 +586,19 @@ async def _read_own_image(url: str, importer_id: uuid.UUID) -> bytes | None:
 
 
 async def _store_image(
-    room_id: uuid.UUID, importer_id: uuid.UUID, document: PlannedDocument, data: bytes
+    room_id: uuid.UUID,
+    importer_id: uuid.UUID,
+    document_id: uuid.UUID,
+    data: bytes,
+    job_id: uuid.UUID,
+    index: int,
 ) -> uuid.UUID | str | None:
     """Attaches one fetched image to its Document in the usual order
     (`record_pending_upload`, upload, row and `confirm_upload` in one
-    transaction), so a crash leaks nothing. The new image's id when it is
-    stored, else why it was skipped; None for a Document deleted meanwhile,
-    which just drops its images."""
+    transaction, which also marks entry `index` of the job's work list
+    stored), so a crash leaks nothing and a resume adds nothing twice. The
+    new image's id when it is stored, else why it was skipped; None for a
+    Document deleted meanwhile, which just drops its images."""
     try:
         normalized = await asyncio.to_thread(normalize_image, data)
     except ImageTooLargeError:
@@ -453,18 +607,19 @@ async def _store_image(
         return "not_an_image"
     try:
         async with session_module.independent_session() as session:
-            row = await documents_repo.get_document(session, document.id)
+            row = await documents_repo.get_document(session, document_id)
             if row is None or row.room_id != room_id:
                 return None
-            await documents_repo.lock_document(session, document.id)
-            current = await documents_repo.list_images(session, document.id)
+            await documents_repo.lock_document(session, document_id)
+            current = await documents_repo.list_images(session, document_id)
             if len(current) >= MAX_IMAGES_PER_DOCUMENT:
                 return "limit"
-            image = plan_new_image(room_id, document.id, normalized.extension, importer_id, current)
+            image = plan_new_image(room_id, document_id, normalized.extension, importer_id, current)
             await storage_cleanup.record_pending_upload(image.storage_path)
             await storage.upload(image.storage_path, normalized.data, normalized.content_type)
             await documents_repo.insert_image(session, image)
             await storage_cleanup.confirm_upload(session, image.storage_path)
+            await import_jobs_repo.mark_stored(session, job_id, index, str(image.id))
             await session.commit()
     except storage.StorageError:
         return "storage"
@@ -475,13 +630,12 @@ async def _store_image(
 
 
 async def _point_card_images(
-    maps: list[PlannedMap], attached: dict[tuple[uuid.UUID, str], uuid.UUID]
+    wanted: list[CardImage], attached: dict[tuple[uuid.UUID, str], uuid.UUID]
 ) -> None:
     """Points each created card at the image it chose in the file (spec 40
     Decision 13): the image the job just attached, or for a replaced
     Document one it still has under the file's id. A card whose image never
     came keeps showing its Document's favorite. One query and one statement."""
-    wanted = [image for planned in maps for image in planned.card_images]
     if not wanted:
         return
     async with session_module.independent_session() as session:
@@ -510,28 +664,20 @@ async def _point_card_images(
         await session.commit()
 
 
-async def _attach_backgrounds(
-    room_id: uuid.UUID, importer_id: uuid.UUID, maps: list[PlannedMap]
-) -> list[dict[str, str]]:
-    """Fetches and stores the background of each created geographic map that
-    has one (spec 40 Decision 13), like an uploaded background: validated, at
-    most `MAX_BACKGROUND_DIMENSION` px, the usual Storage order. One that
-    fails is listed as `background` and its map stays without it."""
-    skipped: list[dict[str, str]] = []
-    for planned in maps:
-        if planned.background_url is None:
-            continue
-        if not await _store_background(room_id, importer_id, planned, planned.background_url):
-            skipped.append({"name": planned.name, "reason": "background"})
-    return skipped
-
-
 async def _store_background(
-    room_id: uuid.UUID, importer_id: uuid.UUID, planned: PlannedMap, url: str
+    room_id: uuid.UUID,
+    importer_id: uuid.UUID,
+    map_id: uuid.UUID,
+    url: str,
+    job_id: uuid.UUID,
+    index: int,
 ) -> bool:
-    """One map's background, read from this app's Storage when the importer
-    sees a map that has it, else fetched from `url`. Whether it is stored; a
-    map deleted meanwhile counts as done."""
+    """One created geographic map's background (spec 40 Decision 13), like
+    an uploaded one: read from this app's Storage when the importer sees a
+    map that has it, else fetched from `url`; validated, at most
+    `MAX_BACKGROUND_DIMENSION` px, the usual Storage order, entry `index`
+    marked stored with it. Whether it is stored; a map deleted meanwhile
+    counts as done."""
     data = await _read_own_background(url, importer_id)
     try:
         if data is None:
@@ -539,15 +685,16 @@ async def _store_background(
         normalized = await asyncio.to_thread(normalize_image, data, MAX_BACKGROUND_DIMENSION)
     except (remote_images.RemoteImageError, ImageTooLargeError, InvalidImageError):
         return False
-    path = plan_background_path(room_id, planned.id, normalized.extension)
+    path = plan_background_path(room_id, map_id, normalized.extension)
     try:
         async with session_module.independent_session() as session:
-            if await relationship_maps_repo.lock_map(session, planned.id) is None:
+            if await relationship_maps_repo.lock_map(session, map_id) is None:
                 return True  # pragma: no cover - only a deletion while the job runs
             await storage_cleanup.record_pending_upload(path)
             await storage.upload(path, normalized.data, normalized.content_type)
-            await relationship_maps_repo.set_background(session, planned.id, path)
+            await relationship_maps_repo.set_background(session, map_id, path)
             await storage_cleanup.confirm_upload(session, path)
+            await import_jobs_repo.mark_stored(session, job_id, index, "")
             await session.commit()
     except storage.StorageError:
         return False
@@ -588,27 +735,18 @@ async def _read_own_background(url: str, importer_id: uuid.UUID) -> bytes | None
         return None
 
 
-async def _attach_section_images(
-    room_id: uuid.UUID, importer_id: uuid.UUID, sections: list[PlannedSection]
-) -> list[dict[str, str | None]]:
-    """Fetches and stores the image of each written Section that has one
-    (spec 56 Decision 9), like an uploaded Section image. One that fails is
-    listed as `image` and its Section stays as it was."""
-    skipped: list[dict[str, str | None]] = []
-    for section in sections:
-        if section.image_url is None:
-            continue
-        if not await _store_section_image(room_id, importer_id, section.id, section.image_url):
-            skipped.append(_skipped_section(section, "image"))
-    return skipped
-
-
 async def _store_section_image(
-    room_id: uuid.UUID, importer_id: uuid.UUID, section_id: uuid.UUID, url: str
+    room_id: uuid.UUID,
+    importer_id: uuid.UUID,
+    section_id: uuid.UUID,
+    url: str,
+    job_id: uuid.UUID,
+    index: int,
 ) -> bool:
-    """One Section's image, read from this app's Storage when the importer
-    is a member of a Room that has it, else fetched from `url`; validated,
-    re-encoded and swapped in with the usual Storage order. Whether it is
+    """One written Section's image (spec 56 Decision 9), read from this
+    app's Storage when the importer is a member of a Room that has it, else
+    fetched from `url`; validated, re-encoded and swapped in with the usual
+    Storage order, entry `index` marked stored with it. Whether it is
     stored; a Section deleted meanwhile counts as done."""
     data = await _read_own_section_image(url, importer_id)
     try:
@@ -631,6 +769,7 @@ async def _store_section_image(
             if section.image_path is not None:
                 await storage_cleanup.schedule_removal(session, [section.image_path])
             push(session, room_id, Event(None, CHANGED, section_id, LANDING))
+            await import_jobs_repo.mark_stored(session, job_id, index, "")
             await session.commit()
             await session_module.run_after_commit(session)
     except storage.StorageError:

@@ -373,8 +373,7 @@
         "addHint": "Un Tag è un Tag principale, due o più una combinazione.",
         "add": "Aggiungi",
         "alreadyMain": "Questo Tag è già una voce del raggruppamento.",
-        "alreadyCombination": "Questa combinazione è già nel raggruppamento.",
-        "mapsRow": "Riga delle Mappe"
+        "alreadyCombination": "Questa combinazione è già nel raggruppamento."
       },
       "all": {
         "title": "Tutti i Tag",
@@ -927,6 +926,11 @@
     },
     "running": "Importazione in corso…",
     "runningHint": "Puoi chiudere questa finestra: l'importazione prosegue in background e i Documenti compaiono nell'elenco appena è finita.",
+    "imagesProgress": "Immagini: {{done}} di {{total}}",
+    "imagesProgressLabel": "Immagini importate finora",
+    "imagesProgressHint": "I Documenti sono già nella Room; le loro immagini compaiono man mano che arrivano.",
+    "imagesImported": "{{stored}} di {{total}} immagini importate",
+    "tooManyImages": "I Documenti spuntati hanno {{count}} immagini: al massimo {{max}} per importazione. Togline qualcuno e importa il resto dopo.",
     "done": "Importazione completata",
     "created_one": "{{count}} Documento creato",
     "created_other": "{{count}} Documenti creati",
@@ -1272,10 +1276,6 @@
       "repeated": "Documento già sulla mappa, resteranno etichette semplici:",
       "backgroundLater": "L'immagine di sfondo si carica dopo, dal pulsante Mappa della nuova mappa.",
       "submit": "Importa"
-    },
-    "strip": {
-      "all_one": "Tutte le mappe ({{count}})",
-      "all_other": "Tutte le mappe ({{count}})"
     }
   },
   "sessionZero": {
@@ -1605,6 +1605,8 @@
       "sessionZero": "Sessioni, Linee e Veli, sondaggi"
     },
     "blockEmpty": "Niente da mostrare",
+    "foldBlock": "Comprimi {{name}}",
+    "unfoldBlock": "Espandi {{name}}",
     "sectionEmpty": "Ancora niente da mostrare qui.",
     "notFound": "Questa sezione non esiste più.",
     "loadError": "Impossibile caricare la pagina.",
@@ -1656,7 +1658,9 @@
       "session_zero": {
         "title": "Sessione 0",
         "body": "Sessioni, tappe e sondaggi"
-      }
+      },
+      "tools": "Strumenti",
+      "toolsBody": "Uno strumento della Sessione 0 tutto suo, nascosto ai giocatori finché non lo mostri"
     },
     "edit": {
       "start": "Modifica",
@@ -1700,7 +1704,19 @@
       "blockMenu": "Azioni del blocco",
       "deleteBlock": "Elimina blocco",
       "blockDeleted": "Blocco eliminato",
-      "undo": "Annulla"
+      "undo": "Annulla",
+      "renameSection": "Rinomina la sezione {{name}}",
+      "addDescription": "Aggiungi una descrizione",
+      "collapsed": "Chiuso all'apertura",
+      "deleteToolTitle": "Eliminare {{name}}?",
+      "deleteToolBody": "Si eliminano anche voti, post-it e risposte. Non si può annullare."
+    },
+    "tool": {
+      "draft": "Bozza",
+      "draftHint": "I giocatori non lo vedono ancora",
+      "show": "Mostra ai giocatori",
+      "hide": "Nascondi ai giocatori",
+      "loadError": "Impossibile caricare lo strumento."
     }
   }
 }

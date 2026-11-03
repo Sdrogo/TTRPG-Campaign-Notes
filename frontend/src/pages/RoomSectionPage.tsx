@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Stack, Text } from '@mantine/core';
+import { Group, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
-import { useLandingEvents, useRoomSections } from '../hooks/useLanding';
+import { useLandingEvents, useRoomSections, useSectionTools } from '../hooks/useLanding';
 import { useDocuments } from '../hooks/useDocuments';
 import { useMaps } from '../hooks/useMaps';
 import { useMembers } from '../hooks/useMembers';
@@ -16,6 +16,8 @@ import { PageLayout } from '../components/PageLayout';
 import { EditModeButton } from '../components/landing/EditModeButton';
 import { SectionBlock } from '../components/landing/SectionBlock';
 import { SectionEditor } from '../components/landing/SectionEditor';
+import { ToolBlock } from '../components/landing/ToolBlock';
+import { SectionDescriptionEditor, SectionImageButton, SectionTitleEditor } from '../components/landing/SectionHeadingEditor';
 import { blockContent, isBlockEmpty, type BlockSources } from '../components/landing/blockItems';
 import { landingHref } from '../lib/landing';
 import { blockHeading, featureLabel, groupLabel, sectionTitle } from '../lib/landingText';
@@ -58,10 +60,12 @@ function RoomSectionContent({ roomId, sectionId, currentUserId }: { roomId: stri
   const documents = useDocuments(roomId, editing || blocks.some((block) => block.kind === 'documents'));
   const maps = useMaps(roomId, editing || blocks.some((block) => block.kind === 'maps'));
   const overview = useSessionZeroOverview(roomId, editing || blocks.some((block) => block.kind === 'session_zero'));
+  const tools = useSectionTools(roomId, sectionId, blocks.some((block) => block.kind === 'tool'));
   const sources: BlockSources = {
     documents: documents.data,
     maps: maps.data,
     overview: overview.data,
+    tools: tools.data,
     tags: tags.data ?? [],
   };
 
@@ -81,9 +85,22 @@ function RoomSectionContent({ roomId, sectionId, currentUserId }: { roomId: stri
         <>
           <PageHeading
             kicker={room.data?.name ?? t('roomLanding.home')}
-            title={sectionTitle(section)}
-            titleAfter={canEdit && <EditModeButton editing={editing} onChange={setEditing} />}
-            description={section.description && markdownToPlain(section.description, { separator: ' ' })}
+            title={canEdit && editing ? <SectionTitleEditor roomId={roomId} section={section} /> : sectionTitle(section)}
+            titleAfter={
+              canEdit && (
+                <Group gap={4} wrap="nowrap">
+                  {editing && <SectionImageButton roomId={roomId} section={section} />}
+                  <EditModeButton editing={editing} onChange={setEditing} />
+                </Group>
+              )
+            }
+            description={
+              canEdit && editing ? (
+                <SectionDescriptionEditor roomId={roomId} section={section} />
+              ) : (
+                section.description && markdownToPlain(section.description, { separator: ' ' })
+              )
+            }
           />
           {canEdit && editing ? (
             <SectionEditor roomId={roomId} section={section} sources={sources} />
@@ -107,7 +124,20 @@ function SectionBlocks({ roomId, section, sources, isMaster }: { roomId: string;
   }
   return (
     <Stack gap="xl">
-      {section.blocks.map((block, index) => (
+      {section.blocks.map((block, index) =>
+        block.kind === 'tool' ? (
+          <ToolBlock
+            key={block.id}
+            roomId={roomId}
+            sectionId={section.id}
+            block={block}
+            heading={blockHeading(block, sources.tags)}
+            tool={sources.tools?.tools.find((tool) => tool.moduleId === block.moduleId)}
+            revision={sources.tools?.revision ?? 0}
+            loading={!sources.tools}
+            isMaster={isMaster}
+          />
+        ) : (
         <SectionBlock
           key={block.id}
           roomId={roomId}
@@ -116,7 +146,8 @@ function SectionBlocks({ roomId, section, sources, isMaster }: { roomId: string;
           content={contents[index]}
           isMaster={isMaster}
         />
-      ))}
+        ),
+      )}
     </Stack>
   );
 }

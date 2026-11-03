@@ -1,4 +1,4 @@
-import { Alert, Anchor, Button, Group, Loader, Stack, Text } from '@mantine/core';
+import { Alert, Anchor, Button, Group, Loader, Progress, Stack, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { isActiveImportJob, type ImportJob } from '../../lib/documentImport';
@@ -18,7 +18,8 @@ interface ImportJobPanelProps {
  * dialog can be closed meanwhile), done with the Documents it created or
  * replaced, the maps it created (spec 40) and the Sections of the Room home it
  * wrote (spec 56) as links, and every image, map or Section it skipped, or
- * failed.
+ * failed. While its images arrive in blocks it shows how far they got, and at
+ * the end how many came across (spec 59).
  */
 export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
   const { t } = useTranslation();
@@ -32,9 +33,28 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
             {t('documentImport.running')}
           </Text>
         </Group>
-        <Text size="xs" c="dimmed">
-          {t('documentImport.runningHint')}
-        </Text>
+        {job?.progress?.total ? (
+          <>
+            <Text size="xs" c="dimmed">
+              {t('documentImport.imagesProgress', {
+                done: job.progress.done,
+                total: job.progress.total,
+              })}
+            </Text>
+            <Progress
+              value={(100 * job.progress.done) / job.progress.total}
+              size="sm"
+              aria-label={t('documentImport.imagesProgressLabel')}
+            />
+            <Text size="xs" c="dimmed">
+              {t('documentImport.imagesProgressHint')}
+            </Text>
+          </>
+        ) : (
+          <Text size="xs" c="dimmed">
+            {t('documentImport.runningHint')}
+          </Text>
+        )}
       </Stack>
     );
   }
@@ -52,7 +72,8 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
     );
   }
 
-  const { created, replaced, skipped, maps, skippedMaps, sections, skippedSections } = job.result;
+  const { created, replaced, skipped, maps, skippedMaps, sections, skippedSections, images } =
+    job.result;
   const documentLinks = (documents: { id: string; name: string }[]) => (
     <Stack gap={2}>
       {documents.map((document) => (
@@ -74,6 +95,11 @@ export function ImportJobPanel({ roomId, job, onNew }: ImportJobPanelProps) {
       <Text size="sm" fw={500}>
         {t('documentImport.done')}
       </Text>
+      {images !== null && images.total > 0 && (
+        <Text size="xs" c="dimmed">
+          {t('documentImport.imagesImported', { stored: images.stored, total: images.total })}
+        </Text>
+      )}
       {created.length > 0 && (
         <>
           <Text size="xs" c="dimmed">

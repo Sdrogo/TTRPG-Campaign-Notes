@@ -10,7 +10,9 @@ import type {
   LandingSection,
   SectionKind,
   SessionZeroFeature,
+  ToolKind,
 } from '../types/landing';
+import { PAGE_SECTION_KINDS } from '../types/landing';
 import type { RelationshipMap } from '../types/map';
 import type { ModuleKind, OverviewRound, OverviewStep, Poll, SessionZeroOverview } from '../types/sessionZero';
 
@@ -24,6 +26,10 @@ export interface RawBlock {
   groups: string[][];
   map_kind: BlockMapKind | null;
   features: SessionZeroFeature[];
+  collapsed?: boolean;
+  module_id?: string | null;
+  tool_kind?: ToolKind | null;
+  players_visible?: boolean | null;
 }
 
 /** A Section on the wire (`GET /rooms/{id}/sections`). */
@@ -57,6 +63,10 @@ export function toSection(raw: RawSection): LandingSection {
       groups: block.groups,
       mapKind: block.map_kind,
       features: block.features,
+      collapsed: block.collapsed ?? false,
+      moduleId: block.module_id ?? null,
+      toolKind: block.tool_kind ?? null,
+      playersVisible: block.players_visible ?? null,
     })),
   };
 }
@@ -70,6 +80,8 @@ export function toBlockBody(block: BlockInput) {
     groups: block.groups,
     map_kind: block.mapKind,
     features: block.features,
+    module_id: block.moduleId,
+    collapsed: block.collapsed,
   };
 }
 
@@ -82,6 +94,8 @@ export function blockInput(block: LandingBlock): BlockInput {
     groups: block.groups,
     mapKind: block.mapKind,
     features: block.features,
+    moduleId: block.moduleId,
+    collapsed: block.collapsed,
   };
 }
 
@@ -108,6 +122,9 @@ export function landingHref(roomId: string): string {
 export function blockAnchor(blockId: string): string {
   return `block-${blockId}`;
 }
+
+/** The window event the Index fires before scrolling to a block, so a folded block opens (spec 60 Decision 9). */
+export const REVEAL_BLOCK_EVENT = 'room-landing:reveal-block';
 
 /** A Documents block's Documents: every Tag of the block (AND), by name. */
 export function blockDocuments(documents: Document[], block: LandingBlock): Document[] {
@@ -170,4 +187,9 @@ export function sessionZeroHref(roomId: string, roundId?: string, stepId?: strin
   if (stepId) params.set('step', stepId);
   const query = params.toString();
   return `/rooms/${roomId}/session-zero${query ? `?${query}` : ''}`;
+}
+
+/** The page cards (Documenti, Mappe, Sessione 0) the Master deleted, which "Nuova sezione" offers back. */
+export function missingPageKinds(sections: LandingSection[]): SectionKind[] {
+  return PAGE_SECTION_KINDS.filter((kind) => !sections.some((section) => section.kind === kind));
 }

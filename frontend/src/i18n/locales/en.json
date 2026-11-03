@@ -373,8 +373,7 @@
         "addHint": "One Tag makes a Main Tag, two or more a combination.",
         "add": "Add",
         "alreadyMain": "This Tag is already an item of the grouping.",
-        "alreadyCombination": "This combination is already in the grouping.",
-        "mapsRow": "Maps row"
+        "alreadyCombination": "This combination is already in the grouping."
       },
       "all": {
         "title": "All Tags",
@@ -927,6 +926,11 @@
     },
     "running": "Importing…",
     "runningHint": "You can close this window: the import goes on in the background and the Documents appear in the list when it is over.",
+    "imagesProgress": "Images: {{done}} of {{total}}",
+    "imagesProgressLabel": "Images imported so far",
+    "imagesProgressHint": "The Documents are already in the Room; their images appear as they arrive.",
+    "imagesImported": "{{stored}} of {{total}} images imported",
+    "tooManyImages": "The ticked Documents have {{count}} images: at most {{max}} per import. Untick some and import the rest afterwards.",
     "done": "Import finished",
     "created_one": "{{count}} Document created",
     "created_other": "{{count}} Documents created",
@@ -1272,10 +1276,6 @@
       "repeated": "Document already on the map, kept as plain labels:",
       "backgroundLater": "Upload the background image afterwards, from the new map's Map button.",
       "submit": "Import"
-    },
-    "strip": {
-      "all_one": "All maps ({{count}})",
-      "all_other": "All maps ({{count}})"
     }
   },
   "sessionZero": {
@@ -1605,6 +1605,8 @@
       "sessionZero": "Sessions, Lines & Veils, polls"
     },
     "blockEmpty": "Nothing to show",
+    "foldBlock": "Fold {{name}}",
+    "unfoldBlock": "Unfold {{name}}",
     "sectionEmpty": "Nothing to show here yet.",
     "notFound": "This section no longer exists.",
     "loadError": "Couldn't load the page.",
@@ -1656,7 +1658,9 @@
       "session_zero": {
         "title": "Session 0",
         "body": "Sessions, steps and polls"
-      }
+      },
+      "tools": "Tools",
+      "toolsBody": "A Session 0 tool of its own, hidden from the players until you show it"
     },
     "edit": {
       "start": "Edit",
@@ -1700,7 +1704,19 @@
       "blockMenu": "Block actions",
       "deleteBlock": "Delete block",
       "blockDeleted": "Block deleted",
-      "undo": "Undo"
+      "undo": "Undo",
+      "renameSection": "Rename the section {{name}}",
+      "addDescription": "Add a description",
+      "collapsed": "Folded when opened",
+      "deleteToolTitle": "Delete {{name}}?",
+      "deleteToolBody": "Its votes, post-its and answers are deleted too. This can't be undone."
+    },
+    "tool": {
+      "draft": "Draft",
+      "draftHint": "The players don't see it yet",
+      "show": "Show to players",
+      "hide": "Hide from players",
+      "loadError": "Couldn't load the tool."
     }
   }
 }

@@ -373,8 +373,7 @@
         "addHint": "Un Tag est un Tag principal, deux ou plus forment une combinaison.",
         "add": "Ajouter",
         "alreadyMain": "Ce Tag est déjà une entrée du regroupement.",
-        "alreadyCombination": "Cette combinaison est déjà dans le regroupement.",
-        "mapsRow": "Ligne des cartes"
+        "alreadyCombination": "Cette combinaison est déjà dans le regroupement."
       },
       "all": {
         "title": "Tous les Tags",
@@ -929,6 +928,11 @@
     },
     "running": "Import en cours…",
     "runningHint": "Tu peux fermer cette fenêtre : l'import continue en arrière-plan et les Documents apparaissent dans la liste dès qu'il est terminé.",
+    "imagesProgress": "Images : {{done}} sur {{total}}",
+    "imagesProgressLabel": "Images importées jusqu'ici",
+    "imagesProgressHint": "Les Documents sont déjà dans la Room ; leurs images apparaissent au fur et à mesure.",
+    "imagesImported": "{{stored}} images importées sur {{total}}",
+    "tooManyImages": "Les Documents cochés ont {{count}} images : {{max}} au plus par import. Décochez-en quelques-uns et importez le reste ensuite.",
     "done": "Import terminé",
     "created_one": "{{count}} Document créé",
     "created_other": "{{count}} Documents créés",
@@ -1274,10 +1278,6 @@
       "repeated": "Document déjà sur la carte, ils resteront de simples étiquettes :",
       "backgroundLater": "L'image de fond s'ajoute ensuite, depuis le bouton Carte de la nouvelle carte.",
       "submit": "Importer"
-    },
-    "strip": {
-      "all_one": "Toutes les cartes ({{count}})",
-      "all_other": "Toutes les cartes ({{count}})"
     }
   },
   "sessionZero": {
@@ -1607,6 +1607,8 @@
       "sessionZero": "Sessions, Lignes et Voiles, sondages"
     },
     "blockEmpty": "Rien à afficher",
+    "foldBlock": "Replier {{name}}",
+    "unfoldBlock": "Déplier {{name}}",
     "sectionEmpty": "Rien à afficher ici pour l'instant.",
     "notFound": "Cette section n'existe plus.",
     "loadError": "Impossible de charger la page.",
@@ -1658,7 +1660,9 @@
       "session_zero": {
         "title": "Session 0",
         "body": "Sessions, étapes et sondages"
-      }
+      },
+      "tools": "Outils",
+      "toolsBody": "Un outil de la Session 0 à part entière, caché aux joueurs jusqu'à ce que tu le montres"
     },
     "edit": {
       "start": "Modifier",
@@ -1702,7 +1706,19 @@
       "blockMenu": "Actions du bloc",
       "deleteBlock": "Supprimer le bloc",
       "blockDeleted": "Bloc supprimé",
-      "undo": "Annuler"
+      "undo": "Annuler",
+      "renameSection": "Renommer la section {{name}}",
+      "addDescription": "Ajouter une description",
+      "collapsed": "Replié à l'ouverture",
+      "deleteToolTitle": "Supprimer {{name}} ?",
+      "deleteToolBody": "Ses votes, post-it et réponses sont supprimés aussi. Impossible d'annuler."
+    },
+    "tool": {
+      "draft": "Brouillon",
+      "draftHint": "Les joueurs ne le voient pas encore",
+      "show": "Montrer aux joueurs",
+      "hide": "Cacher aux joueurs",
+      "loadError": "Impossible de charger l'outil."
     }
   }
 }

@@ -177,6 +177,7 @@
       "tooManyFiles": "At most {max} files can be imported at once",
       "tooManyDocuments": "At most {max} Documents can be imported at once",
       "tooManyImages": "At most {max} images can be imported at once",
+      "tooManyImageLinks": "At most {max} image links can be read from the files at once",
       "tooManyMaps": "At most {max} maps can be imported at once",
       "tooManySections": "At most {max} Sections of a Room home can be imported at once",
       "nameRequired": "A Document in the file has no name",
@@ -333,7 +334,9 @@
       "blockFieldNotAllowed": "This setting doesn't belong to this kind of block",
       "unknownTag": "One of the Tags isn't in this Room",
       "tooManyGroups": "A block holds at most {max} groups",
-      "invalidGroup": "Each group needs one or more different Tags, and no two groups can be the same"
+      "invalidGroup": "Each group needs one or more different Tags, and no two groups can be the same",
+      "unknownTool": "This block is not one of this section's tools",
+      "notATool": "A tool is a Retro, Stars and Wishes, Questions, a DDI or polls"
     }
   },
   "pdf": {
