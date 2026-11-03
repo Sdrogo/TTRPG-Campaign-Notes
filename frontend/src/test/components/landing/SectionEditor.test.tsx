@@ -135,6 +135,17 @@ describe('SectionEditor', () => {
     expect(savedBlocks()).toEqual([wire(plainBlock), wire(mapsBlock)]);
   });
 
+  it('puts a deleted block back in its place, after the ones before it', async () => {
+    editor([plainBlock, mapsBlock]);
+    await userEvent.click(screen.getAllByRole('button', { name: 'Azioni del blocco' })[1]);
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
+    expect(savedBlocks()).toEqual([wire(plainBlock)]);
+    await waitFor(() => expect(notifications.show).toHaveBeenCalled());
+    render(<MantineProvider theme={theme} env="test">{vi.mocked(notifications.show).mock.calls[0][0].message as ReactElement}</MantineProvider>);
+    await userEvent.click(screen.getByRole('button', { name: 'Annulla' }));
+    expect(savedBlocks()).toEqual([wire(plainBlock), wire(mapsBlock)]);
+  });
+
   it('tells when a save is refused', async () => {
     fetchMock.mockImplementation(async (path: string) => {
       if (path.endsWith('/tags/main')) return [] as never;
