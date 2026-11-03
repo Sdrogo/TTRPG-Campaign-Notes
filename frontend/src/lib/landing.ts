@@ -10,6 +10,7 @@ import type {
   LandingSection,
   SectionKind,
   SessionZeroFeature,
+  ToolKind,
 } from '../types/landing';
 import { PAGE_SECTION_KINDS } from '../types/landing';
 import type { RelationshipMap } from '../types/map';
@@ -25,6 +26,10 @@ export interface RawBlock {
   groups: string[][];
   map_kind: BlockMapKind | null;
   features: SessionZeroFeature[];
+  collapsed?: boolean;
+  module_id?: string | null;
+  tool_kind?: ToolKind | null;
+  players_visible?: boolean | null;
 }
 
 /** A Section on the wire (`GET /rooms/{id}/sections`). */
@@ -58,6 +63,10 @@ export function toSection(raw: RawSection): LandingSection {
       groups: block.groups,
       mapKind: block.map_kind,
       features: block.features,
+      collapsed: block.collapsed ?? false,
+      moduleId: block.module_id ?? null,
+      toolKind: block.tool_kind ?? null,
+      playersVisible: block.players_visible ?? null,
     })),
   };
 }
@@ -71,6 +80,8 @@ export function toBlockBody(block: BlockInput) {
     groups: block.groups,
     map_kind: block.mapKind,
     features: block.features,
+    module_id: block.moduleId,
+    collapsed: block.collapsed,
   };
 }
 
@@ -83,6 +94,8 @@ export function blockInput(block: LandingBlock): BlockInput {
     groups: block.groups,
     mapKind: block.mapKind,
     features: block.features,
+    moduleId: block.moduleId,
+    collapsed: block.collapsed,
   };
 }
 

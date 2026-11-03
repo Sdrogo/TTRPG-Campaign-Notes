@@ -1741,7 +1741,9 @@
       "session_zero": {
         "title": "Sesja 0",
         "body": "Sesje, etapy i ankiety"
-      }
+      },
+      "tools": "Narzędzia",
+      "toolsBody": "Własne narzędzie Sesji 0, ukryte przed graczami, dopóki go nie pokażesz"
     },
     "edit": {
       "start": "Edytuj",
@@ -1789,7 +1791,17 @@
       "blockDeleted": "Blok usunięty",
       "undo": "Cofnij",
       "renameSection": "Zmień nazwę sekcji {{name}}",
-      "addDescription": "Dodaj opis"
+      "addDescription": "Dodaj opis",
+      "collapsed": "Zwinięty po otwarciu",
+      "deleteToolTitle": "Usunąć {{name}}?",
+      "deleteToolBody": "Głosy, karteczki i odpowiedzi też zostaną usunięte. Nie można tego cofnąć."
+    },
+    "tool": {
+      "draft": "Szkic",
+      "draftHint": "Gracze jeszcze go nie widzą",
+      "show": "Pokaż graczom",
+      "hide": "Ukryj przed graczami",
+      "loadError": "Nie udało się wczytać narzędzia."
     }
   }
 }

@@ -6,6 +6,7 @@ import type { Document } from '../../types/document';
 import type { LandingBlock, SessionZeroFeature } from '../../types/landing';
 import type { RelationshipMap } from '../../types/map';
 import type { SessionZeroOverview } from '../../types/sessionZero';
+import type { SectionTools } from '../../hooks/useLanding';
 import type { Tag } from '../../types/tag';
 
 /** What a Section's blocks are read from; undefined while still loading. */
@@ -13,6 +14,8 @@ export interface BlockSources {
   documents?: Document[];
   maps?: RelationshipMap[];
   overview?: SessionZeroOverview;
+  /** The Section's tools (spec 60), for its tool blocks. */
+  tools?: SectionTools;
   tags: Tag[];
 }
 
@@ -20,7 +23,8 @@ export interface BlockSources {
 export type BlockContent =
   | { kind: 'documents'; parts: { key: string; label: string | null; documents: Document[] }[] }
   | { kind: 'maps'; maps: RelationshipMap[] }
-  | { kind: 'session_zero'; parts: { key: string; label: string | null; feature: SessionZeroFeature; items: SessionZeroItem[] }[] };
+  | { kind: 'session_zero'; parts: { key: string; label: string | null; feature: SessionZeroFeature; items: SessionZeroItem[] }[] }
+  | { kind: 'tool'; shown: boolean };
 
 /**
  * What `block` shows from `sources`, by the same rules as the pages behind
@@ -53,6 +57,10 @@ export function blockContent(block: LandingBlock, sources: BlockSources): BlockC
       })),
     };
   }
+  if (block.kind === 'tool') {
+    // A tool the viewer may not see isn't among the tools they get (spec 60 Decision 2).
+    return sources.tools ? { kind: 'tool', shown: sources.tools.tools.some((tool) => tool.moduleId === block.moduleId) } : undefined;
+  }
   if (block.kind === 'maps') {
     return sources.maps ? { kind: 'maps', maps: blockMaps(sources.maps, block) } : undefined;
   }
@@ -75,5 +83,6 @@ export function blockContent(block: LandingBlock, sources: BlockSources): BlockC
 /** Whether the block has nothing to show (spec 55 Decision 3); false while loading. */
 export function isBlockEmpty(content: BlockContent | undefined): boolean {
   if (!content) return false;
+  if (content.kind === 'tool') return !content.shown;
   return content.kind === 'maps' ? content.maps.length === 0 : content.parts.length === 0;
 }

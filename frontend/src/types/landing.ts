@@ -5,8 +5,16 @@
  */
 export type SectionKind = 'custom' | 'page_documents' | 'page_maps' | 'page_session_zero';
 
-/** What a block of a custom Section lists. */
-export type BlockKind = 'documents' | 'maps' | 'session_zero';
+import type { ModuleKind } from './sessionZero';
+
+/** What a block of a custom Section lists; a `tool` block holds a Session 0 step of its own (spec 60). */
+export type BlockKind = 'documents' | 'maps' | 'session_zero' | 'tool';
+
+/** The Session 0 steps a Section can hold as a tool (spec 60 Decision 1): Lines & Veils is the Room's one board. */
+export type ToolKind = Exclude<ModuleKind, 'lines_veils'>;
+
+/** Every tool, in the order the add-block popover offers them. */
+export const TOOL_KINDS: ToolKind[] = ['poll', 'retro', 'stars_wishes', 'questions', 'ddi'];
 
 /** The maps a maps block keeps; null keeps them all. */
 export type BlockMapKind = 'free' | 'geographic';
@@ -46,10 +54,17 @@ export interface LandingBlock {
   groups: string[][];
   mapKind: BlockMapKind | null;
   features: SessionZeroFeature[];
+  /** The block opens folded (spec 60 Decision 9b). */
+  collapsed: boolean;
+  /** A tool block's step (spec 60); null on the other kinds. */
+  moduleId: string | null;
+  toolKind: ToolKind | null;
+  /** Whether the Players see a tool block (only the Master sees it otherwise); null on the other kinds. */
+  playersVisible: boolean | null;
 }
 
-/** A block as the editor saves it (the whole list at once). */
-export type BlockInput = Omit<LandingBlock, 'id' | 'position'>;
+/** A block as the editor saves it (the whole list at once); a tool block names its step. */
+export type BlockInput = Omit<LandingBlock, 'id' | 'position' | 'toolKind' | 'playersVisible'>;
 
 /**
  * A card of the landing. `title` is null on a page card the Master hasn't
