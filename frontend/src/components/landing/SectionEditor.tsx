@@ -50,7 +50,8 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
   const addTool = useAddTool(roomId, section.id);
   const setToolVisible = useSetToolVisible(roomId, section.id);
   // A tool's deletion takes its votes, post-its and answers: asked first, no undo (spec 60 Decision 6).
-  const [removingTool, setRemovingTool] = useState<number | null>(null);
+  // By id: the list can change (live events, another save) while the confirm is open.
+  const [removingTool, setRemovingTool] = useState<string | null>(null);
   const roomGroups = useMainItems(roomId, true).data ?? [];
   const openedNew = (location.state as OpenInEditState | null)?.landingEdit === 'add-block' && section.blocks.length === 0;
   const [adding, setAdding] = useState<number | null>(openedNew ? 0 : null);
@@ -100,14 +101,15 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
     setDraft(null);
     saveList(next);
   };
-  const removeTool = (index: number) => {
+  const removingBlock = blocks.find((block) => block.id === removingTool);
+  const removeTool = (id: string) => {
     setRemovingTool(null);
-    saveList(inputs().filter((_, other) => other !== index));
+    saveList(blocks.filter((block) => block.id !== id).map(blockInput));
   };
   const remove = (index: number) => {
     setGroupsOpen(null);
     if (blocks[index].kind === 'tool') {
-      setRemovingTool(index);
+      setRemovingTool(blocks[index].id);
       return;
     }
     const before = inputs();
@@ -226,10 +228,10 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
         />
       )}
       <Modal
-        opened={removingTool !== null}
+        opened={removingBlock !== undefined}
         onClose={() => setRemovingTool(null)}
         title={t('roomLanding.edit.deleteToolTitle', {
-          name: removingTool === null ? '' : blockHeading(blocks[removingTool], sources.tags),
+          name: removingBlock ? blockHeading(removingBlock, sources.tags) : '',
         })}
         centered
       >
@@ -239,7 +241,7 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
             <Button variant="subtle" color="gray" onClick={() => setRemovingTool(null)}>
               {t('common.cancel')}
             </Button>
-            <Button color="danger" onClick={() => removingTool !== null && removeTool(removingTool)}>
+            <Button color="danger" onClick={() => removingBlock && removeTool(removingBlock.id)}>
               {t('roomLanding.edit.deleteBlock')}
             </Button>
           </Group>

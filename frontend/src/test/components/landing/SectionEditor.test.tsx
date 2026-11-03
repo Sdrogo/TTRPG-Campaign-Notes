@@ -260,6 +260,21 @@ describe('SectionEditor', () => {
       expect(savedBlocks()).toEqual([wire(plainBlock)]);
     });
 
+    it('deletes the tool it asked about even when the list changed meanwhile, and closes once it is gone', async () => {
+      const { rerender } = editor([plainBlock, toolBlock]);
+      await userEvent.click(screen.getAllByRole('button', { name: 'Azioni del blocco' })[1]);
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [toolBlock, plainBlock, mapsBlock] })} sources={sources} />);
+      await userEvent.click(within(screen.getByRole('dialog', { name: 'Eliminare Sondaggio?' })).getByRole('button', { name: 'Elimina blocco' }));
+      expect(savedBlocks()).toEqual([wire(plainBlock), wire(mapsBlock)]);
+
+      await userEvent.click(screen.getAllByRole('button', { name: 'Azioni del blocco' })[0]);
+      await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
+      expect(screen.getByText('Eliminare Sondaggio?')).toBeInTheDocument();
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [plainBlock] })} sources={sources} />);
+      await waitFor(() => expect(screen.queryByText('Eliminare Sondaggio?')).not.toBeInTheDocument());
+    });
+
     it('draws its tool in edit mode once the tools are read', () => {
       const module = { id: 'm-1', kind: 'poll' as const, position: 0, columns: [], polls: [rawPoll()] as never };
       renderWithProviders(
