@@ -108,6 +108,8 @@ export function sectionHref(roomId: string, section: Pick<LandingSection, 'id' |
       return `/rooms/${roomId}/maps`;
     case 'page_session_zero':
       return `/rooms/${roomId}/session-zero`;
+    case 'page_clocks':
+      return `/rooms/${roomId}/clocks`;
     default:
       return `/rooms/${roomId}/sections/${section.id}`;
   }
@@ -189,7 +191,7 @@ export function sessionZeroHref(roomId: string, roundId?: string, stepId?: strin
   return `/rooms/${roomId}/session-zero${query ? `?${query}` : ''}`;
 }
 
-/** The page cards (Documenti, Mappe, Sessione 0) the Master deleted, which "Nuova sezione" offers back. */
+/** The page cards (Documenti, Mappe, Sessione 0, Clock) the Room lacks, which "Nuova sezione" offers back. */
 export function missingPageKinds(sections: LandingSection[]): SectionKind[] {
   return PAGE_SECTION_KINDS.filter((kind) => !sections.some((section) => section.kind === kind));
 }

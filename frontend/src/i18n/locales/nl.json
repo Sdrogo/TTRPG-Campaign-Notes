@@ -1597,12 +1597,14 @@
     "pages": {
       "documents": "Documenten",
       "maps": "Kaarten",
-      "sessionZero": "Sessie 0"
+      "sessionZero": "Sessie 0",
+      "clocks": "Klokken"
     },
     "pageDescriptions": {
       "documents": "Alle Documenten van de Kamer",
       "maps": "De kaarten van de Kamer",
-      "sessionZero": "Sessies, Lijnen en Sluiers, peilingen"
+      "sessionZero": "Sessies, Lijnen en Sluiers, peilingen",
+      "clocks": "De klokken van de Kamer"
     },
     "blockEmpty": "Niets te tonen",
     "foldBlock": "{{name}} inklappen",
@@ -1717,6 +1719,234 @@
       "show": "Tonen aan spelers",
       "hide": "Verbergen voor spelers",
       "loadError": "Het hulpmiddel kon niet worden geladen."
+    }
+  },
+  "clocks": {
+    "title": "Klokken",
+    "description": "De klokken van de Kamer: die in het spel, die op de achtergrond en die al gesloten.",
+    "signInRequired": "Log in om de klokken van deze Kamer te zien.",
+    "loadError": "De klokken konden niet worden geladen.",
+    "empty": "Nog geen klokken.",
+    "create": "Nieuwe klok",
+    "propose": "Klok voorstellen",
+    "outsideGroups": "Buiten groepen",
+    "groupEnded": "Afgelopen",
+    "legend": "Soorten markering",
+    "legendItem": "{{name}} ({{who}})",
+    "deleteTitle": "Klok verwijderen?",
+    "deleteBody": "‘{{name}}’ en de geschiedenis ervan worden verwijderd. Dit kan niet ongedaan worden gemaakt.",
+    "proposalDetail_one": "door {{name}} · {{count}} segment",
+    "proposalDetail_other": "door {{name}} · {{count}} segmenten",
+    "reject": "Weigeren",
+    "editProposal": "Openen en bewerken",
+    "openProposal": "Klok openen",
+    "lists": {
+      "proposed": "Voorgesteld",
+      "finished": "Gesloten en vervallen",
+      "archived": "Gearchiveerd"
+    },
+    "state": {
+      "proposed": "Voorgesteld",
+      "open": "Open",
+      "closed": "Gesloten",
+      "lapsed": "Vervallen",
+      "archived": "Gearchiveerd",
+      "locked": "Vergrendeld"
+    },
+    "groupMode": {
+      "free": "Vrij",
+      "race": "Race",
+      "turn": "Keerpunt",
+      "sequence": "Volgorde"
+    },
+    "openPolicy": {
+      "master": "Alleen de Master",
+      "everyone": "Iedereen",
+      "propose": "Spelers stellen voor, de Master keurt goed"
+    },
+    "markPolicy": {
+      "master": "Alleen de Master",
+      "master_and_creator": "De Master en wie hem opende",
+      "everyone": "Iedereen die hem ziet"
+    },
+    "who": {
+      "master": "Master",
+      "players": "Spelers",
+      "everyone": "Iedereen"
+    },
+    "face": {
+      "summary": "{{name}}: {{filled}} van {{segments}}, {{state}}",
+      "withKinds": "{{base}}, {{kinds}}",
+      "kindCount": "{{number}} {{name}}",
+      "markUpTo_one": "{{count}} markeren",
+      "markUpTo_other": "Tot {{count}} markeren",
+      "emptyDown_one": "{{count}} legen",
+      "emptyDown_other": "Tot {{count}} legen"
+    },
+    "card": {
+      "menu": "Acties voor ‘{{name}}’",
+      "markMany": "Markeren…",
+      "history": "Geschiedenis",
+      "archive": "Archiveren",
+      "restore": "Herstellen",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "Eén segment van ‘{{name}}’ legen",
+      "plus": "Eén segment van ‘{{name}}’ markeren",
+      "pickKind": "‘{{name}}’ markeren met een soort markering",
+      "markWith": "Markeren met"
+    },
+    "toast": {
+      "marked": "{{delta}} op ‘{{name}}’",
+      "undo": "Ongedaan maken",
+      "closed": "‘{{name}}’ is gesloten"
+    },
+    "markDialog": {
+      "title": "‘{{name}}’ markeren",
+      "count": "Segmenten",
+      "countHint_one": "Nog {{count}} segment vrij.",
+      "countHint_other": "Nog {{count}} segmenten vrij.",
+      "kind": "Soort markering",
+      "note": "Notitie",
+      "notePlaceholder": "Bijv. slot opengebroken",
+      "submit_one": "{{count}} markeren",
+      "submit_other": "{{count}} markeren"
+    },
+    "history": {
+      "title": "Geschiedenis van ‘{{name}}’",
+      "loadError": "De geschiedenis kon niet worden geladen.",
+      "more": "Meer tonen",
+      "formerMember": "Voormalig lid",
+      "undone": "{{delta}} ongedaan gemaakt",
+      "edited": "gewijzigd: {{fields}}",
+      "actions": {
+        "created": "opende de klok",
+        "proposed": "stelde de klok voor",
+        "opened": "keurde het voorstel goed",
+        "closed": "gesloten",
+        "reopened": "heropend",
+        "lapsed": "vervallen",
+        "archived": "gearchiveerd",
+        "restored": "hersteld"
+      },
+      "fields": {
+        "name": "naam",
+        "description": "beschrijving",
+        "segments": "grootte",
+        "color": "kleur",
+        "stage_labels": "etappes",
+        "closing_condition": "sluitvoorwaarde",
+        "consequence": "gevolg",
+        "forward_only": "alleen vooruit",
+        "mark_policy": "wie markeert",
+        "label_ids": "labels",
+        "document_id": "gekoppeld document",
+        "visibility": "zichtbaarheid"
+      }
+    },
+    "dialog": {
+      "editTitle": "Klok bewerken",
+      "submitCreate": "Klok maken",
+      "submitPropose": "Voorstellen",
+      "templates": "Begin met een sjabloon",
+      "roomTemplate": "{{segments}} · sjabloon van de Kamer",
+      "nameHint": "Noem hem naar het obstakel of de gebeurtenis, niet naar de methode.",
+      "size": "Grootte (segmenten)",
+      "sizeHint": "Van 2 tot 16, ook oneven: 4, 6, 8 en 12 zijn alleen snelkoppelingen.",
+      "labels": "Labels",
+      "labelsHint": "Kies uit de labels van de Kamer.",
+      "labelsHintMaster": "Typ een nieuwe naam om er een te maken: de Kamer onthoudt hem voor volgende klokken.",
+      "noLabels": "Geen labels",
+      "createLabel": "‘{{name}}’ maken",
+      "closingCondition": "Sluitvoorwaarde",
+      "closingConditionHint": "Zichtbaar voor iedereen; de app controleert hem niet.",
+      "stagesShow": "Etappes toevoegen (één per segment)",
+      "stagesHide": "Etappes verbergen",
+      "stagesHint": "Optioneel, zoals de etappes van een aftelling.",
+      "stage": "Etappe {{number}}",
+      "stageDefault": "Etappe {{number}}",
+      "consequence": "Wat er gebeurt als hij sluit",
+      "masterOnly": "Alleen Master",
+      "document": "Gekoppeld document",
+      "noDocument": "Geen",
+      "markPolicy": "Wie markeert",
+      "markPolicyRoom": "Regel van de Kamer ({{rule}})",
+      "forwardOnly": "Alleen vooruit",
+      "forwardOnlyHint": "De markeringen van deze klok worden nooit geleegd.",
+      "selectiveLabel": "Wie hem nog meer ziet",
+      "saveTemplate": "Opslaan als sjabloon",
+      "templateName": "Naam van het sjabloon"
+    },
+    "templates": {
+      "progress": {
+        "name": "Voortgang",
+        "detail": "6 · groen"
+      },
+      "danger": {
+        "name": "Gevaar",
+        "detail": "4 · rood"
+      },
+      "countdown": {
+        "name": "Aftelling",
+        "detail": "6 · etappes"
+      },
+      "project": {
+        "name": "Project",
+        "detail": "8 · blauw"
+      },
+      "faction": {
+        "name": "Factie",
+        "detail": "6 · alleen Master"
+      },
+      "tugOfWar": {
+        "name": "Touwtrekken",
+        "detail": "6 · heen en weer"
+      },
+      "empty": {
+        "name": "Leeg",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "Eenvoudig",
+        "detail": "De Master opent en markeert"
+      },
+      "wholeTable": {
+        "name": "De hele tafel",
+        "detail": "Iedereen opent en markeert"
+      },
+      "noReturn": {
+        "name": "Geen weg terug",
+        "detail": "Spelers stellen voor, geen markering wordt geleegd"
+      }
+    },
+    "rules": {
+      "button": "Regels",
+      "title": "Regels voor klokken",
+      "presets": "Voorinstellingen",
+      "presetsHint": "Ze vullen de drie regels hieronder in; labels en soorten markering blijven zoals ze zijn.",
+      "openPolicy": "Wie een klok opent",
+      "markPolicy": "Wie markeert",
+      "undo": "Markeringen legen",
+      "undoYes": "Kan geleegd worden",
+      "undoNo": "Geen weg terug",
+      "undoNoHint": "Markeringen worden nooit gewist, ook niet door de Master; alleen het ongedaan maken van een verkeerde klik blijft.",
+      "save": "Regels opslaan",
+      "labels": "Labels",
+      "labelsHint": "Vrije labels van de Kamer, elk met een kleur; een klok draagt er maximaal 6.",
+      "markKinds": "Soorten markering",
+      "markKindsHint": "Maximaal 6, optioneel: waaruit een markering in dit spel bestaat en wie hem mag gebruiken.",
+      "addLabel": "Nieuw label",
+      "addMarkKind": "Nieuwe soort markering",
+      "who": "Wie mag hem gebruiken",
+      "deleteItem": "‘{{name}}’ verwijderen",
+      "deleteLabelTitle": "Label verwijderen?",
+      "deleteLabelBody_one": "‘{{name}}’ wordt van {{count}} klok verwijderd.",
+      "deleteLabelBody_other": "‘{{name}}’ wordt van {{count}} klokken verwijderd.",
+      "templates": "Sjablonen van de Kamer",
+      "noTemplates": "Geen sjablonen: sla er een op vanuit het venster van een klok.",
+      "deleteTemplate": "Sjabloon ‘{{name}}’ verwijderen"
     }
   }
 }

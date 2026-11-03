@@ -1743,3 +1743,110 @@ html body[data-scroll-locked] {
     overflow: visible;
   }
 }
+
+/* Clocks (spec 61 Decision 24). */
+.clock-face {
+  position: relative;
+  flex: none;
+}
+
+.clock-face svg {
+  display: block;
+  overflow: visible;
+}
+
+.clock-face-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  pointer-events: none;
+}
+
+.clock-wedge {
+  cursor: pointer;
+  outline: none;
+}
+
+.clock-wedge:hover path {
+  filter: brightness(1.25);
+}
+
+.clock-wedge:focus-visible path {
+  stroke: var(--accent-primary);
+}
+
+.clock-wedge-glow {
+  animation: clock-wedge-glow 300ms ease-out;
+}
+
+@keyframes clock-wedge-glow {
+  from {
+    filter: brightness(1.8);
+  }
+  to {
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clock-wedge-glow {
+    animation: none;
+  }
+}
+
+.clock-card {
+  position: relative;
+}
+
+.clock-card-menu {
+  position: absolute;
+  top: 0;
+  right: -32px;
+}
+
+.clock-template-tile {
+  display: block;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--bg-surface);
+}
+
+.clock-template-tile:hover {
+  background: var(--bg-raised);
+}
+
+.clock-template-tile[data-selected] {
+  border-color: var(--accent-primary);
+}
+
+.clock-template-tile[data-dashed] {
+  border-style: dashed;
+}
+
+.clock-template-dot {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.clock-dialog-master-only {
+  padding-left: 10px;
+  border-left: 2px solid var(--state-warning);
+}
+
+.clock-proposal {
+  border-style: dashed;
+}
+
+.clock-history {
+  list-style: none;
+}

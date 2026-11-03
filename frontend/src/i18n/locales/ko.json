@@ -1556,12 +1556,14 @@
     "pages": {
       "documents": "문서",
       "maps": "지도",
-      "sessionZero": "세션 0"
+      "sessionZero": "세션 0",
+      "clocks": "클락"
     },
     "pageDescriptions": {
       "documents": "룸의 모든 문서",
       "maps": "룸의 지도",
-      "sessionZero": "세션, 라인과 베일, 투표"
+      "sessionZero": "세션, 라인과 베일, 투표",
+      "clocks": "룸의 클락"
     },
     "blockEmpty": "표시할 내용 없음",
     "foldBlock": "{{name}} 접기",
@@ -1672,6 +1674,228 @@
       "show": "플레이어에게 표시",
       "hide": "플레이어에게 숨기기",
       "loadError": "도구를 불러오지 못했습니다."
+    }
+  },
+  "clocks": {
+    "title": "클락",
+    "description": "룸의 클락: 진행 중인 것, 배경에 있는 것, 이미 닫힌 것.",
+    "signInRequired": "이 룸의 클락을 보려면 로그인하세요.",
+    "loadError": "클락을 불러올 수 없습니다.",
+    "empty": "아직 클락이 없습니다.",
+    "create": "새 클락",
+    "propose": "클락 제안",
+    "outsideGroups": "그룹 밖",
+    "groupEnded": "종료됨",
+    "legend": "표시 종류",
+    "legendItem": "{{name}} ({{who}})",
+    "deleteTitle": "클락을 삭제할까요?",
+    "deleteBody": "「{{name}}」과 그 기록이 삭제됩니다. 되돌릴 수 없습니다.",
+    "proposalDetail_other": "{{name}} 제안 · {{count}}칸",
+    "reject": "거절",
+    "editProposal": "열고 편집",
+    "openProposal": "클락 열기",
+    "lists": {
+      "proposed": "제안됨",
+      "finished": "닫힘 및 무산",
+      "archived": "보관됨"
+    },
+    "state": {
+      "proposed": "제안됨",
+      "open": "진행 중",
+      "closed": "닫힘",
+      "lapsed": "무산됨",
+      "archived": "보관됨",
+      "locked": "잠김"
+    },
+    "groupMode": {
+      "free": "자유",
+      "race": "경주",
+      "turn": "전환점",
+      "sequence": "순서"
+    },
+    "openPolicy": {
+      "master": "Master만",
+      "everyone": "모두",
+      "propose": "플레이어가 제안하고 Master가 승인"
+    },
+    "markPolicy": {
+      "master": "Master만",
+      "master_and_creator": "Master와 연 사람",
+      "everyone": "볼 수 있는 모두"
+    },
+    "who": {
+      "master": "Master",
+      "players": "플레이어",
+      "everyone": "모두"
+    },
+    "face": {
+      "summary": "{{name}}: {{segments}}칸 중 {{filled}}칸, {{state}}",
+      "withKinds": "{{base}}, {{kinds}}",
+      "kindCount": "{{name}} {{number}}",
+      "markUpTo_other": "{{count}}칸까지 표시",
+      "emptyDown_other": "{{count}}칸까지 비우기"
+    },
+    "card": {
+      "menu": "「{{name}}」 작업",
+      "markMany": "표시…",
+      "history": "기록",
+      "archive": "보관",
+      "restore": "복원",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "「{{name}}」 한 칸 비우기",
+      "plus": "「{{name}}」 한 칸 표시",
+      "pickKind": "표시 종류를 골라 「{{name}}」 표시",
+      "markWith": "종류를 골라 표시"
+    },
+    "toast": {
+      "marked": "「{{name}}」에 {{delta}}",
+      "undo": "실행 취소",
+      "closed": "「{{name}}」이 닫혔습니다"
+    },
+    "markDialog": {
+      "title": "「{{name}}」 표시",
+      "count": "칸",
+      "countHint_other": "{{count}}칸 남았습니다.",
+      "kind": "표시 종류",
+      "note": "메모",
+      "notePlaceholder": "예: 자물쇠를 땄다",
+      "submit_other": "{{count}}칸 표시"
+    },
+    "history": {
+      "title": "「{{name}}」 기록",
+      "loadError": "기록을 불러올 수 없습니다.",
+      "more": "더 보기",
+      "formerMember": "이전 멤버",
+      "undone": "{{delta}} 취소",
+      "edited": "변경: {{fields}}",
+      "actions": {
+        "created": "클락을 열었습니다",
+        "proposed": "클락을 제안했습니다",
+        "opened": "제안을 승인했습니다",
+        "closed": "닫힘",
+        "reopened": "다시 열림",
+        "lapsed": "무산됨",
+        "archived": "보관됨",
+        "restored": "복원됨"
+      },
+      "fields": {
+        "name": "이름",
+        "description": "설명",
+        "segments": "크기",
+        "color": "색",
+        "stage_labels": "단계",
+        "closing_condition": "닫힘 조건",
+        "consequence": "결과",
+        "forward_only": "앞으로만",
+        "mark_policy": "표시하는 사람",
+        "label_ids": "라벨",
+        "document_id": "연결된 문서",
+        "visibility": "공개 범위"
+      }
+    },
+    "dialog": {
+      "editTitle": "클락 편집",
+      "submitCreate": "클락 만들기",
+      "submitPropose": "제안",
+      "templates": "템플릿으로 시작",
+      "roomTemplate": "{{segments}} · 룸 템플릿",
+      "nameHint": "방법이 아니라 장애물이나 사건의 이름을 붙이세요.",
+      "size": "크기(칸)",
+      "sizeHint": "2~16, 홀수도 가능: 4, 6, 8, 12는 바로가기일 뿐입니다.",
+      "labels": "라벨",
+      "labelsHint": "룸의 라벨 중에서 고르세요.",
+      "labelsHintMaster": "새 이름을 입력하면 만들어집니다. 룸이 다음 클락을 위해 기억합니다.",
+      "noLabels": "라벨 없음",
+      "createLabel": "「{{name}}」 만들기",
+      "closingCondition": "닫힘 조건",
+      "closingConditionHint": "모두에게 보입니다. 앱은 확인하지 않습니다.",
+      "stagesShow": "단계 추가(칸마다 하나)",
+      "stagesHide": "단계 숨기기",
+      "stagesHint": "선택 사항, 카운트다운의 단계처럼.",
+      "stage": "단계 {{number}}",
+      "stageDefault": "단계 {{number}}",
+      "consequence": "닫히면 일어나는 일",
+      "masterOnly": "Master만",
+      "document": "연결된 문서",
+      "noDocument": "없음",
+      "markPolicy": "표시하는 사람",
+      "markPolicyRoom": "룸 규칙({{rule}})",
+      "forwardOnly": "앞으로만",
+      "forwardOnlyHint": "이 클락의 표시는 비워지지 않습니다.",
+      "selectiveLabel": "그 밖에 볼 수 있는 사람",
+      "saveTemplate": "템플릿으로 저장",
+      "templateName": "템플릿 이름"
+    },
+    "templates": {
+      "progress": {
+        "name": "진행",
+        "detail": "6 · 초록"
+      },
+      "danger": {
+        "name": "위험",
+        "detail": "4 · 빨강"
+      },
+      "countdown": {
+        "name": "카운트다운",
+        "detail": "6 · 단계"
+      },
+      "project": {
+        "name": "프로젝트",
+        "detail": "8 · 파랑"
+      },
+      "faction": {
+        "name": "세력",
+        "detail": "6 · Master만"
+      },
+      "tugOfWar": {
+        "name": "줄다리기",
+        "detail": "6 · 앞뒤로"
+      },
+      "empty": {
+        "name": "빈 클락",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "간단",
+        "detail": "Master가 열고 표시"
+      },
+      "wholeTable": {
+        "name": "테이블 전원",
+        "detail": "모두가 열고 표시"
+      },
+      "noReturn": {
+        "name": "되돌릴 수 없음",
+        "detail": "플레이어가 제안, 표시는 비우지 않음"
+      }
+    },
+    "rules": {
+      "button": "규칙",
+      "title": "클락 규칙",
+      "presets": "프리셋",
+      "presetsHint": "아래 세 규칙을 채웁니다. 라벨과 표시 종류는 그대로입니다.",
+      "openPolicy": "클락을 여는 사람",
+      "markPolicy": "표시하는 사람",
+      "undo": "표시 비우기",
+      "undoYes": "비울 수 있음",
+      "undoNo": "되돌릴 수 없음",
+      "undoNoHint": "표시는 Master도 지울 수 없습니다. 잘못 누른 것의 실행 취소만 남습니다.",
+      "save": "규칙 저장",
+      "labels": "라벨",
+      "labelsHint": "룸의 자유 라벨, 각각 색이 있습니다. 클락 하나에 최대 6개.",
+      "markKinds": "표시 종류",
+      "markKindsHint": "최대 6개, 선택 사항: 이 게임에서 표시가 무엇인지, 누가 쓸 수 있는지.",
+      "addLabel": "새 라벨",
+      "addMarkKind": "새 표시 종류",
+      "who": "쓸 수 있는 사람",
+      "deleteItem": "「{{name}}」 삭제",
+      "deleteLabelTitle": "라벨을 삭제할까요?",
+      "deleteLabelBody_other": "「{{name}}」이 클락 {{count}}개에서 빠집니다.",
+      "templates": "룸 템플릿",
+      "noTemplates": "템플릿이 없습니다. 클락 대화 상자에서 저장하세요.",
+      "deleteTemplate": "템플릿 「{{name}}」 삭제"
     }
   }
 }

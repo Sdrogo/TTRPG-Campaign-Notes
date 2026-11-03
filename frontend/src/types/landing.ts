@@ -1,9 +1,9 @@
 /**
  * The Room's landing page (spec 55): Section cards in the Master's order. A
  * custom Section is a page of blocks; a page card opens one of the Room's
- * existing pages (Documents, Maps, Session 0).
+ * existing pages (Documents, Maps, Session 0, Clocks: spec 61, added on first use).
  */
-export type SectionKind = 'custom' | 'page_documents' | 'page_maps' | 'page_session_zero';
+export type SectionKind = 'custom' | 'page_documents' | 'page_maps' | 'page_session_zero' | 'page_clocks';
 
 import type { ModuleKind } from './sessionZero';
 
@@ -81,5 +81,9 @@ export interface LandingSection {
   canEdit: boolean;
 }
 
-/** The page cards a Room starts with, in their default order (spec 55 Decision 5). */
-export const PAGE_SECTION_KINDS: SectionKind[] = ['page_documents', 'page_maps', 'page_session_zero'];
+/**
+ * The page cards, in their default order: a Room starts with the first three
+ * (spec 55 Decision 5); the Clocks card joins on the first clock or rules
+ * save (spec 61 Decision 17). A missing one is offered back.
+ */
+export const PAGE_SECTION_KINDS: SectionKind[] = ['page_documents', 'page_maps', 'page_session_zero', 'page_clocks'];

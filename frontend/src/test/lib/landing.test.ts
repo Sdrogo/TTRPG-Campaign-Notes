@@ -17,6 +17,7 @@ describe('the landing helpers', () => {
     expect(sectionHref('r', { id: 's', kind: 'page_documents' })).toBe('/rooms/r/documents');
     expect(sectionHref('r', { id: 's', kind: 'page_maps' })).toBe('/rooms/r/maps');
     expect(sectionHref('r', { id: 's', kind: 'page_session_zero' })).toBe('/rooms/r/session-zero');
+    expect(sectionHref('r', { id: 's', kind: 'page_clocks' })).toBe('/rooms/r/clocks');
     expect(sectionHref('r', { id: 's', kind: 'custom' })).toBe('/rooms/r/sections/s');
     expect(landingHref('r')).toBe('/rooms/r');
     expect(blockAnchor('b')).toBe('block-b');

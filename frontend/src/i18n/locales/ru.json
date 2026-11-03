@@ -1679,12 +1679,14 @@
     "pages": {
       "documents": "Документы",
       "maps": "Карты",
-      "sessionZero": "Сессия 0"
+      "sessionZero": "Сессия 0",
+      "clocks": "Часы"
     },
     "pageDescriptions": {
       "documents": "Все Документы комнаты",
       "maps": "Карты комнаты",
-      "sessionZero": "Сессии, Линии и Завесы, опросы"
+      "sessionZero": "Сессии, Линии и Завесы, опросы",
+      "clocks": "Часы комнаты"
     },
     "blockEmpty": "Нечего показать",
     "foldBlock": "Свернуть {{name}}",
@@ -1807,6 +1809,246 @@
       "show": "Показать игрокам",
       "hide": "Скрыть от игроков",
       "loadError": "Не удалось загрузить инструмент."
+    }
+  },
+  "clocks": {
+    "title": "Часы",
+    "description": "Часы комнаты: те, что в игре, те, что на фоне, и уже закрытые.",
+    "signInRequired": "Войдите, чтобы увидеть часы этой комнаты.",
+    "loadError": "Не удалось загрузить часы.",
+    "empty": "Пока нет часов.",
+    "create": "Новые часы",
+    "propose": "Предложить часы",
+    "outsideGroups": "Вне групп",
+    "groupEnded": "Завершена",
+    "legend": "Виды отметок",
+    "legendItem": "{{name}} ({{who}})",
+    "deleteTitle": "Удалить часы?",
+    "deleteBody": "«{{name}}» и их история будут удалены. Это нельзя отменить.",
+    "proposalDetail_one": "от {{name}} · {{count}} сегмент",
+    "proposalDetail_few": "от {{name}} · {{count}} сегмента",
+    "proposalDetail_many": "от {{name}} · {{count}} сегментов",
+    "proposalDetail_other": "от {{name}} · {{count}} сегмента",
+    "reject": "Отклонить",
+    "editProposal": "Открыть и изменить",
+    "openProposal": "Открыть часы",
+    "lists": {
+      "proposed": "Предложенные",
+      "finished": "Закрытые и несостоявшиеся",
+      "archived": "В архиве"
+    },
+    "state": {
+      "proposed": "Предложены",
+      "open": "Открыты",
+      "closed": "Закрыты",
+      "lapsed": "Не состоялись",
+      "archived": "В архиве",
+      "locked": "Заблокированы"
+    },
+    "groupMode": {
+      "free": "Свободная",
+      "race": "Гонка",
+      "turn": "Поворот",
+      "sequence": "Последовательность"
+    },
+    "openPolicy": {
+      "master": "Только Master",
+      "everyone": "Все",
+      "propose": "Игроки предлагают, Master утверждает"
+    },
+    "markPolicy": {
+      "master": "Только Master",
+      "master_and_creator": "Master и тот, кто их открыл",
+      "everyone": "Все, кто их видит"
+    },
+    "who": {
+      "master": "Master",
+      "players": "Игроки",
+      "everyone": "Все"
+    },
+    "face": {
+      "summary": "{{name}}: {{filled}} из {{segments}}, {{state}}",
+      "withKinds": "{{base}}, {{kinds}}",
+      "kindCount": "{{number}} {{name}}",
+      "markUpTo_one": "Отметить {{count}}",
+      "markUpTo_few": "Отметить до {{count}}",
+      "markUpTo_many": "Отметить до {{count}}",
+      "markUpTo_other": "Отметить до {{count}}",
+      "emptyDown_one": "Очистить {{count}}",
+      "emptyDown_few": "Очистить до {{count}}",
+      "emptyDown_many": "Очистить до {{count}}",
+      "emptyDown_other": "Очистить до {{count}}"
+    },
+    "card": {
+      "menu": "Действия для «{{name}}»",
+      "markMany": "Отметить…",
+      "history": "История",
+      "archive": "В архив",
+      "restore": "Восстановить",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "Очистить один сегмент «{{name}}»",
+      "plus": "Отметить один сегмент «{{name}}»",
+      "pickKind": "Отметить «{{name}}» видом отметки",
+      "markWith": "Отметить как"
+    },
+    "toast": {
+      "marked": "{{delta}} на «{{name}}»",
+      "undo": "Отменить",
+      "closed": "«{{name}}» закрылись"
+    },
+    "markDialog": {
+      "title": "Отметить «{{name}}»",
+      "count": "Сегменты",
+      "countHint_one": "Остался {{count}} свободный сегмент.",
+      "countHint_few": "Осталось {{count}} свободных сегмента.",
+      "countHint_many": "Осталось {{count}} свободных сегментов.",
+      "countHint_other": "Осталось {{count}} свободного сегмента.",
+      "kind": "Вид отметки",
+      "note": "Заметка",
+      "notePlaceholder": "Например, взломан замок",
+      "submit_one": "Отметить {{count}}",
+      "submit_few": "Отметить {{count}}",
+      "submit_many": "Отметить {{count}}",
+      "submit_other": "Отметить {{count}}"
+    },
+    "history": {
+      "title": "История «{{name}}»",
+      "loadError": "Не удалось загрузить историю.",
+      "more": "Показать ещё",
+      "formerMember": "Бывший участник",
+      "undone": "отменено {{delta}}",
+      "edited": "изменено: {{fields}}",
+      "actions": {
+        "created": "открыл(а) часы",
+        "proposed": "предложил(а) часы",
+        "opened": "утвердил(а) предложение",
+        "closed": "закрыты",
+        "reopened": "снова открыты",
+        "lapsed": "не состоялись",
+        "archived": "в архиве",
+        "restored": "восстановлены"
+      },
+      "fields": {
+        "name": "название",
+        "description": "описание",
+        "segments": "размер",
+        "color": "цвет",
+        "stage_labels": "этапы",
+        "closing_condition": "условие закрытия",
+        "consequence": "последствие",
+        "forward_only": "только вперёд",
+        "mark_policy": "кто отмечает",
+        "label_ids": "метки",
+        "document_id": "связанный документ",
+        "visibility": "видимость"
+      }
+    },
+    "dialog": {
+      "editTitle": "Изменить часы",
+      "submitCreate": "Создать часы",
+      "submitPropose": "Предложить",
+      "templates": "Начать с шаблона",
+      "roomTemplate": "{{segments}} · шаблон комнаты",
+      "nameHint": "Назовите их по препятствию или событию, а не по способу.",
+      "size": "Размер (сегменты)",
+      "sizeHint": "От 2 до 16, нечётные тоже: 4, 6, 8 и 12 — лишь быстрые варианты.",
+      "labels": "Метки",
+      "labelsHint": "Выберите из меток комнаты.",
+      "labelsHintMaster": "Введите новое имя, чтобы создать метку: комната запомнит её для следующих часов.",
+      "noLabels": "Нет меток",
+      "createLabel": "Создать «{{name}}»",
+      "closingCondition": "Условие закрытия",
+      "closingConditionHint": "Видно всем; приложение его не проверяет.",
+      "stagesShow": "Добавить этапы (по одному на сегмент)",
+      "stagesHide": "Скрыть этапы",
+      "stagesHint": "Необязательно, как этапы обратного отсчёта.",
+      "stage": "Этап {{number}}",
+      "stageDefault": "Этап {{number}}",
+      "consequence": "Что происходит, когда они закрываются",
+      "masterOnly": "Только Master",
+      "document": "Связанный документ",
+      "noDocument": "Нет",
+      "markPolicy": "Кто отмечает",
+      "markPolicyRoom": "Правило комнаты ({{rule}})",
+      "forwardOnly": "Только вперёд",
+      "forwardOnlyHint": "Отметки этих часов никогда не очищаются.",
+      "selectiveLabel": "Кто ещё их видит",
+      "saveTemplate": "Сохранить как шаблон",
+      "templateName": "Название шаблона"
+    },
+    "templates": {
+      "progress": {
+        "name": "Прогресс",
+        "detail": "6 · зелёный"
+      },
+      "danger": {
+        "name": "Опасность",
+        "detail": "4 · красный"
+      },
+      "countdown": {
+        "name": "Обратный отсчёт",
+        "detail": "6 · этапы"
+      },
+      "project": {
+        "name": "Проект",
+        "detail": "8 · синий"
+      },
+      "faction": {
+        "name": "Фракция",
+        "detail": "6 · только Master"
+      },
+      "tugOfWar": {
+        "name": "Перетягивание каната",
+        "detail": "6 · вперёд и назад"
+      },
+      "empty": {
+        "name": "Пустые",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "Простые",
+        "detail": "Master открывает и отмечает"
+      },
+      "wholeTable": {
+        "name": "Весь стол",
+        "detail": "Все открывают и отмечают"
+      },
+      "noReturn": {
+        "name": "Без возврата",
+        "detail": "Игроки предлагают, отметки не очищаются"
+      }
+    },
+    "rules": {
+      "button": "Правила",
+      "title": "Правила часов",
+      "presets": "Наборы",
+      "presetsHint": "Заполняют три правила ниже; метки и виды отметок остаются как есть.",
+      "openPolicy": "Кто открывает часы",
+      "markPolicy": "Кто отмечает",
+      "undo": "Очистка отметок",
+      "undoYes": "Можно очищать",
+      "undoNo": "Без возврата",
+      "undoNoHint": "Отметки никогда не стираются, даже Master'ом; остаётся только отмена ошибочного клика.",
+      "save": "Сохранить правила",
+      "labels": "Метки",
+      "labelsHint": "Свободные метки комнаты, у каждой свой цвет; у часов их может быть до 6.",
+      "markKinds": "Виды отметок",
+      "markKindsHint": "До 6, необязательно: из чего состоит отметка в этой игре и кто может её ставить.",
+      "addLabel": "Новая метка",
+      "addMarkKind": "Новый вид отметки",
+      "who": "Кто может использовать",
+      "deleteItem": "Удалить «{{name}}»",
+      "deleteLabelTitle": "Удалить метку?",
+      "deleteLabelBody_one": "«{{name}}» будет снята с {{count}} часов.",
+      "deleteLabelBody_few": "«{{name}}» будет снята с {{count}} часов.",
+      "deleteLabelBody_many": "«{{name}}» будет снята с {{count}} часов.",
+      "deleteLabelBody_other": "«{{name}}» будет снята с {{count}} часов.",
+      "templates": "Шаблоны комнаты",
+      "noTemplates": "Нет шаблонов: сохраните один из окна часов.",
+      "deleteTemplate": "Удалить шаблон «{{name}}»"
     }
   }
 }

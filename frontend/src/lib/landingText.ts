@@ -6,7 +6,12 @@ import type { Tag } from '../types/tag';
 import type { DdiStep, OverviewStep, Poll } from '../types/sessionZero';
 
 /** The strings' key of each page card (a `page_session_zero` key would read as a plural form). */
-const PAGE_KEYS = { page_documents: 'documents', page_maps: 'maps', page_session_zero: 'sessionZero' } as const;
+const PAGE_KEYS = {
+  page_documents: 'documents',
+  page_maps: 'maps',
+  page_session_zero: 'sessionZero',
+  page_clocks: 'clocks',
+} as const;
 
 /** A page card's default name, in the viewer's language. */
 export function pageName(kind: Exclude<SectionKind, 'custom'>): string {

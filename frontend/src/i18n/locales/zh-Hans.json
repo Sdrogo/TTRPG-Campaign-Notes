@@ -1556,12 +1556,14 @@
     "pages": {
       "documents": "文档",
       "maps": "地图",
-      "sessionZero": "第 0 次会话"
+      "sessionZero": "第 0 次会话",
+      "clocks": "进度钟"
     },
     "pageDescriptions": {
       "documents": "房间的所有文档",
       "maps": "房间的地图",
-      "sessionZero": "会话、底线与帷幕、投票"
+      "sessionZero": "会话、底线与帷幕、投票",
+      "clocks": "房间的进度钟"
     },
     "blockEmpty": "没有可显示的内容",
     "foldBlock": "折叠{{name}}",
@@ -1672,6 +1674,228 @@
       "show": "向玩家展示",
       "hide": "对玩家隐藏",
       "loadError": "无法加载该工具。"
+    }
+  },
+  "clocks": {
+    "title": "进度钟",
+    "description": "房间的进度钟：正在进行的、在背景中的和已经闭合的。",
+    "signInRequired": "登录后查看此房间的进度钟。",
+    "loadError": "无法加载进度钟。",
+    "empty": "还没有进度钟。",
+    "create": "新建进度钟",
+    "propose": "提议进度钟",
+    "outsideGroups": "未分组",
+    "groupEnded": "已结束",
+    "legend": "标记类型",
+    "legendItem": "{{name}}（{{who}}）",
+    "deleteTitle": "删除进度钟？",
+    "deleteBody": "“{{name}}”及其记录将被删除。此操作无法撤销。",
+    "proposalDetail_other": "{{name}} 提议 · {{count}} 格",
+    "reject": "拒绝",
+    "editProposal": "打开并编辑",
+    "openProposal": "开启进度钟",
+    "lists": {
+      "proposed": "已提议",
+      "finished": "已闭合与未发生",
+      "archived": "已归档"
+    },
+    "state": {
+      "proposed": "已提议",
+      "open": "进行中",
+      "closed": "已闭合",
+      "lapsed": "未发生",
+      "archived": "已归档",
+      "locked": "已锁定"
+    },
+    "groupMode": {
+      "free": "自由",
+      "race": "竞赛",
+      "turn": "转折",
+      "sequence": "顺序"
+    },
+    "openPolicy": {
+      "master": "仅 Master",
+      "everyone": "所有人",
+      "propose": "玩家提议，Master 批准"
+    },
+    "markPolicy": {
+      "master": "仅 Master",
+      "master_and_creator": "Master 和开启者",
+      "everyone": "所有能看到的人"
+    },
+    "who": {
+      "master": "Master",
+      "players": "玩家",
+      "everyone": "所有人"
+    },
+    "face": {
+      "summary": "{{name}}：{{filled}}/{{segments}}，{{state}}",
+      "withKinds": "{{base}}，{{kinds}}",
+      "kindCount": "{{name}} {{number}}",
+      "markUpTo_other": "标记至 {{count}}",
+      "emptyDown_other": "清空至 {{count}}"
+    },
+    "card": {
+      "menu": "“{{name}}”的操作",
+      "markMany": "标记…",
+      "history": "记录",
+      "archive": "归档",
+      "restore": "恢复",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "清空“{{name}}”的一格",
+      "plus": "标记“{{name}}”的一格",
+      "pickKind": "用某种标记类型标记“{{name}}”",
+      "markWith": "标记为"
+    },
+    "toast": {
+      "marked": "“{{name}}” {{delta}}",
+      "undo": "撤销",
+      "closed": "“{{name}}”已闭合"
+    },
+    "markDialog": {
+      "title": "标记“{{name}}”",
+      "count": "格数",
+      "countHint_other": "还剩 {{count}} 格。",
+      "kind": "标记类型",
+      "note": "备注",
+      "notePlaceholder": "例如：撬开了锁",
+      "submit_other": "标记 {{count}} 格"
+    },
+    "history": {
+      "title": "“{{name}}”的记录",
+      "loadError": "无法加载记录。",
+      "more": "显示更多",
+      "formerMember": "前成员",
+      "undone": "撤销 {{delta}}",
+      "edited": "修改了：{{fields}}",
+      "actions": {
+        "created": "开启了进度钟",
+        "proposed": "提议了进度钟",
+        "opened": "批准了提议",
+        "closed": "已闭合",
+        "reopened": "重新开启",
+        "lapsed": "未发生",
+        "archived": "已归档",
+        "restored": "已恢复"
+      },
+      "fields": {
+        "name": "名称",
+        "description": "描述",
+        "segments": "格数",
+        "color": "颜色",
+        "stage_labels": "阶段",
+        "closing_condition": "闭合条件",
+        "consequence": "后果",
+        "forward_only": "只能前进",
+        "mark_policy": "谁来标记",
+        "label_ids": "标签",
+        "document_id": "关联文档",
+        "visibility": "可见性"
+      }
+    },
+    "dialog": {
+      "editTitle": "编辑进度钟",
+      "submitCreate": "创建进度钟",
+      "submitPropose": "提议",
+      "templates": "从模板开始",
+      "roomTemplate": "{{segments}} · 房间模板",
+      "nameHint": "以障碍或事件命名，而不是方法。",
+      "size": "格数",
+      "sizeHint": "2 到 16，奇数也可以：4、6、8 和 12 只是快捷方式。",
+      "labels": "标签",
+      "labelsHint": "从房间的标签中选择。",
+      "labelsHintMaster": "输入新名称即可创建：房间会为以后的进度钟记住它。",
+      "noLabels": "无标签",
+      "createLabel": "创建“{{name}}”",
+      "closingCondition": "闭合条件",
+      "closingConditionHint": "所有人可见；应用不会检查。",
+      "stagesShow": "添加阶段（每格一个）",
+      "stagesHide": "隐藏阶段",
+      "stagesHint": "可选，像倒计时的各个阶段。",
+      "stage": "阶段 {{number}}",
+      "stageDefault": "阶段 {{number}}",
+      "consequence": "闭合时会发生什么",
+      "masterOnly": "仅 Master",
+      "document": "关联文档",
+      "noDocument": "无",
+      "markPolicy": "谁来标记",
+      "markPolicyRoom": "房间规则（{{rule}}）",
+      "forwardOnly": "只能前进",
+      "forwardOnlyHint": "此进度钟的标记永不清空。",
+      "selectiveLabel": "还有谁能看到",
+      "saveTemplate": "保存为模板",
+      "templateName": "模板名称"
+    },
+    "templates": {
+      "progress": {
+        "name": "进展",
+        "detail": "6 · 绿色"
+      },
+      "danger": {
+        "name": "危险",
+        "detail": "4 · 红色"
+      },
+      "countdown": {
+        "name": "倒计时",
+        "detail": "6 · 阶段"
+      },
+      "project": {
+        "name": "项目",
+        "detail": "8 · 蓝色"
+      },
+      "faction": {
+        "name": "势力",
+        "detail": "6 · 仅 Master"
+      },
+      "tugOfWar": {
+        "name": "拔河",
+        "detail": "6 · 进进退退"
+      },
+      "empty": {
+        "name": "空白",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "简单",
+        "detail": "Master 开启并标记"
+      },
+      "wholeTable": {
+        "name": "全桌",
+        "detail": "所有人开启并标记"
+      },
+      "noReturn": {
+        "name": "没有回头路",
+        "detail": "玩家提议，标记不可清空"
+      }
+    },
+    "rules": {
+      "button": "规则",
+      "title": "进度钟规则",
+      "presets": "预设",
+      "presetsHint": "填写下面三条规则；标签和标记类型保持不变。",
+      "openPolicy": "谁可以开启进度钟",
+      "markPolicy": "谁来标记",
+      "undo": "清空标记",
+      "undoYes": "可以清空",
+      "undoNo": "没有回头路",
+      "undoNoHint": "标记永不擦除，Master 也不行；只保留误点的撤销。",
+      "save": "保存规则",
+      "labels": "标签",
+      "labelsHint": "房间的自由标签，各有颜色；一个进度钟最多 6 个。",
+      "markKinds": "标记类型",
+      "markKindsHint": "最多 6 个，可选：在这个游戏中标记代表什么、谁可以使用。",
+      "addLabel": "新标签",
+      "addMarkKind": "新标记类型",
+      "who": "谁可以使用",
+      "deleteItem": "删除“{{name}}”",
+      "deleteLabelTitle": "删除标签？",
+      "deleteLabelBody_other": "“{{name}}”将从 {{count}} 个进度钟上移除。",
+      "templates": "房间模板",
+      "noTemplates": "没有模板：在进度钟的对话框中保存一个。",
+      "deleteTemplate": "删除模板“{{name}}”"
     }
   }
 }
