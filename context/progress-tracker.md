@@ -901,8 +901,8 @@ on `main`.
 - **61, Clocks** (asked by the product owner 2026-11-03; **ticket proposed; Q1-Q7, Q9, Q10
   answered 2026-11-03 (Clocks page + Clocks block in Sections, Master
   creates and marks by default, 2-16 segments, no hidden progress,
-  duplication copies templates not clocks, "Clock" in Italian); Q8 (group
-  modes) to confirm**, no code yet): progress clocks as Room
+  duplication copies templates not clocks, "Clock" in Italian); Q8 group
+  modes confirmed: **ticket confirmed; 61_1 building in progress**, no code yet): progress clocks as Room
   content, universal and customisable: per-Room clock rules (who opens and
   marks, undo or "no going back", free Room labels the Master creates,
   Master-defined mark kinds; nothing hard-coded; map palette colours; any

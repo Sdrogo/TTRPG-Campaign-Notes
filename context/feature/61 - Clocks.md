@@ -44,8 +44,7 @@
 
 Proposed by Claude on 2026-11-03 from the request, the two manuals and the
 background study. The product owner answered Q1-Q4 and Q10 on 2026-11-03
-(see "Answers"); Q5-Q9 the same day. Q8 was explained again in the thread
-and its default stands until the product owner confirms it.
+(see "Answers"); Q5-Q9 the same day, so the ticket is confirmed.
 
 ### 1. The Room's clock rules
 
@@ -400,7 +399,8 @@ before the release that ships them.
 - Q6 (hidden progress): no; a clock is hidden whole by its visibility. ->
   Decision 16.
 - Q7 (closing toast): yes. -> Decision 23.
-- Q8 (groups): explained again in the thread; default kept until confirmed.
+- Q8 (groups): "vanno bene": the four modes (Libero, Gara, Svolta,
+  Sequenza), races and turns ended by the Master's confirmation. -> Decision 11.
 - Q9 (maps, Session 0, PDF, Document aside): out of scope. -> Decision 21.
 - Also: clocks can go in a Section as a block. -> Decision 18.
 - Earlier the same day: the map palette for every colour, free Room labels
@@ -408,7 +408,4 @@ before the release that ships them.
 
 ## Open questions (for the product owner)
 
-- **Q8. Groups**: the four modes (Libero, Gara, Svolta, Sequenza, Decision
-  11) in this ticket, the turn ended by the Master's confirmation rather
-  than automatically? Proposed yes. (Explained again in the thread on
-  2026-11-03.)
+None: the ticket is confirmed (2026-11-03).
