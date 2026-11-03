@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ActionIcon,
   Badge,
@@ -171,9 +171,9 @@ interface BlockBarProps {
    */
   initialPicker?: 'tags' | 'features' | 'groups' | null;
   /**
-   * Told when the groups popover opens or closes: every save gives the
-   * blocks new ids and so a new bar, which reopens the popover through
-   * `initialPicker` until the user closes it.
+   * Told when the groups popover opens or closes: should a save remount
+   * the bar, the new one reopens the popover through `initialPicker` until
+   * the user closes it.
    */
   onGroupsOpenChange?: (open: boolean) => void;
   /** A block not saved yet (no Tag or feature): closing its picker empty drops it. */
@@ -413,6 +413,18 @@ function MapKindChip({ mapKind, onChange }: { mapKind: BlockMapKind | null; onCh
 export function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: string[][]; tags: Tag[]; mainItems: MainItem[]; onChange: (groups: string[][]) => void }) {
   const { t } = useTranslation();
   const [adding, setAdding] = useState<string[] | null>(null);
+  // Back on "+ Gruppo" once the Tags close, so the keyboard stays in the popover.
+  const addButton = useRef<HTMLButtonElement>(null);
+  const refocus = useRef(false);
+  useEffect(() => {
+    if (adding !== null || !refocus.current) return;
+    refocus.current = false;
+    addButton.current?.focus();
+  }, [adding]);
+  const closeAdding = () => {
+    refocus.current = true;
+    setAdding(null);
+  };
   const key = (group: string[]) => group.join('+');
   const exists = (group: string[]) => groups.some((other) => sameTagSet(other, group));
   const roomGroups = mainItems.map((item) => item.tagIds).filter((group) => tagsOf(group, tags).length === group.length);
@@ -448,7 +460,7 @@ export function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: st
       )}
       {adding === null ? (
         <Group gap="xs" wrap="wrap">
-          <Button size="compact-sm" variant="subtle" leftSection={<PlusIcon size={14} />} onClick={() => setAdding([])} disabled={groups.length >= 20}>
+          <Button ref={addButton} size="compact-sm" variant="subtle" leftSection={<PlusIcon size={14} />} onClick={() => setAdding([])} disabled={groups.length >= 20}>
             {t('roomLanding.edit.addGroup')}
           </Button>
           {roomGroups.length > 0 && (
@@ -476,7 +488,7 @@ export function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: st
             </Stack>
           </ScrollArea.Autosize>
           <Group gap="xs" justify="flex-end">
-            <Button size="compact-sm" variant="subtle" color="gray" onClick={() => setAdding(null)}>
+            <Button size="compact-sm" variant="subtle" color="gray" onClick={closeAdding}>
               {t('common.cancel')}
             </Button>
             <Button
@@ -484,7 +496,7 @@ export function GroupsEditor({ groups, tags, mainItems, onChange }: { groups: st
               disabled={adding.length === 0 || exists(adding)}
               onClick={() => {
                 onChange([...groups, adding]);
-                setAdding(null);
+                closeAdding();
               }}
             >
               {t('common.add')}
