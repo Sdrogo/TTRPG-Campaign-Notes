@@ -1577,7 +1577,8 @@
       "maps": "マップ",
       "mapsFree": "関係マップ",
       "mapsGeographic": "地理マップ",
-      "sessionZero": "セッション0"
+      "sessionZero": "セッション0",
+      "clocks": "クロック"
     },
     "features": {
       "sessions": "セッション",
@@ -1618,7 +1619,8 @@
         "body": "セッション、ステップ、投票"
       },
       "tools": "ツール",
-      "toolsBody": "独立したセッション0のツール。表示するまでプレイヤーには見えません"
+      "toolsBody": "独立したセッション0のツール。表示するまでプレイヤーには見えません",
+      "clocks": "クロック"
     },
     "edit": {
       "start": "編集",
@@ -1751,7 +1753,8 @@
     "toast": {
       "marked": "「{{name}}」に {{delta}}",
       "undo": "元に戻す",
-      "closed": "「{{name}}」が閉じました"
+      "closed": "「{{name}}」が閉じました",
+      "refused": "あなたの提案「{{name}}」は却下されました。"
     },
     "markDialog": {
       "title": "「{{name}}」をマーク",
@@ -1896,6 +1899,53 @@
       "templates": "ルームのテンプレート",
       "noTemplates": "テンプレートはありません。クロックのダイアログから保存できます。",
       "deleteTemplate": "テンプレート「{{name}}」を削除"
+    },
+    "groups": {
+      "create": "新しいグループ",
+      "editTitle": "グループを編集",
+      "name": "グループ名",
+      "mode": "モード",
+      "modeHint": {
+        "free": "クロックを並べるだけ：ある場所の階層、勢力など。",
+        "race": "最初に閉じたものが勝ち。確定する前に別のものも閉じたら引き分け。",
+        "turn": "一部のクロックは決定的：ひとつが閉じると転機が終わり、ほかは起きない。",
+        "sequence": "順番に閉じる：印を受けるのは最初の開いたクロックだけで、ほかは待つ。"
+      },
+      "clocks": "グループのクロック",
+      "clocksHint": "選んだ順に最大{{max}}個。ほかのグループのクロックはこちらに移る。",
+      "decisiveHint": "決定的なクロックの結果を書き、ほかは空のままにする。",
+      "decisive": "「{{name}}」の結果",
+      "notDecisive": "決定的ではない",
+      "menu": "グループ「{{name}}」の操作",
+      "newTurn": "新しい転機",
+      "archive": "グループをアーカイブ",
+      "restore": "グループを復元",
+      "delete": "グループを削除",
+      "deleteTitle": "グループを削除しますか？",
+      "deleteBody": "「{{name}}」は消えますが、クロックはグループの外に残ります。",
+      "empty": "クロックがありません：グループを編集して追加してください。",
+      "quoted": "「{{name}}」",
+      "outcome": "「{{name}}」（{{label}}）",
+      "resultWon": "勝ち：{{names}}",
+      "resultTie": "引き分け：{{names}}",
+      "resultTurn": "転機：{{labels}}",
+      "raceOne": "{{names}}が最初に閉じました。",
+      "raceTie": "{{names}}が閉じました：引き分けで、両方が起きます。",
+      "confirm": "確定",
+      "turnEnds": "転機が終わります：{{labels}}。ほかの開いたクロックは起きません。",
+      "endTurn": "転機を終える",
+      "notYet": "まだ",
+      "reveal": "次は「{{name}}」ですが、プレイヤーには見えません。公開しますか？",
+      "revealButton": "ルームに公開",
+      "notNow": "今はしない"
+    },
+    "block": {
+      "allOpen": "開いているクロックすべて",
+      "add": "クロック",
+      "newClock": "新しいクロック…",
+      "groupChip": "グループ「{{name}}」",
+      "missing": "利用できなくなりました",
+      "noneLeft": "ほかのクロックやグループはありません。"
     }
   }
 }

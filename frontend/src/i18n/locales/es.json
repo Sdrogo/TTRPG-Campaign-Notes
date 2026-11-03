@@ -1618,7 +1618,8 @@
       "maps": "Mapas",
       "mapsFree": "Mapas de relaciones",
       "mapsGeographic": "Mapas geográficos",
-      "sessionZero": "Sesión 0"
+      "sessionZero": "Sesión 0",
+      "clocks": "Relojes"
     },
     "features": {
       "sessions": "Sesiones",
@@ -1662,7 +1663,8 @@
         "body": "Sesiones, etapas y encuestas"
       },
       "tools": "Herramientas",
-      "toolsBody": "Una herramienta de la Sesión 0 propia, oculta a los jugadores hasta que la muestres"
+      "toolsBody": "Una herramienta de la Sesión 0 propia, oculta a los jugadores hasta que la muestres",
+      "clocks": "Reloj"
     },
     "edit": {
       "start": "Editar",
@@ -1799,7 +1801,8 @@
     "toast": {
       "marked": "{{delta}} en «{{name}}»",
       "undo": "Deshacer",
-      "closed": "«{{name}}» se ha cerrado"
+      "closed": "«{{name}}» se ha cerrado",
+      "refused": "Tu propuesta «{{name}}» ha sido rechazada."
     },
     "markDialog": {
       "title": "Marcar «{{name}}»",
@@ -1947,6 +1950,53 @@
       "templates": "Plantillas de la Sala",
       "noTemplates": "Sin plantillas: guarda una desde el diálogo de un reloj.",
       "deleteTemplate": "Eliminar la plantilla «{{name}}»"
+    },
+    "groups": {
+      "create": "Nuevo grupo",
+      "editTitle": "Editar grupo",
+      "name": "Nombre del grupo",
+      "mode": "Modo",
+      "modeHint": {
+        "free": "Los relojes solo están juntos: los niveles de un lugar, las facciones.",
+        "race": "Gana el primero que se cierra; si se cierra otro antes de que confirmes, es un empate.",
+        "turn": "Algunos relojes son decisivos: cuando uno se cierra el giro termina y los demás no ocurren.",
+        "sequence": "Se cierran en orden: solo el primero abierto recibe marcas, los demás esperan."
+      },
+      "clocks": "Relojes del grupo",
+      "clocksHint": "En el orden en que los eliges, hasta {{max}}; un reloj de otro grupo pasa a este.",
+      "decisiveHint": "Escribe el resultado de los relojes decisivos; deja vacíos los demás.",
+      "decisive": "Resultado de «{{name}}»",
+      "notDecisive": "No decisivo",
+      "menu": "Acciones del grupo «{{name}}»",
+      "newTurn": "Nuevo giro",
+      "archive": "Archivar el grupo",
+      "restore": "Restaurar el grupo",
+      "delete": "Eliminar el grupo",
+      "deleteTitle": "¿Eliminar el grupo?",
+      "deleteBody": "«{{name}}» desaparece; sus relojes se quedan, fuera de los grupos.",
+      "empty": "Sin relojes: edita el grupo para añadir alguno.",
+      "quoted": "«{{name}}»",
+      "outcome": "«{{name}}» ({{label}})",
+      "resultWon": "Ganado: {{names}}",
+      "resultTie": "Empate: {{names}}",
+      "resultTurn": "Giro: {{labels}}",
+      "raceOne": "{{names}} se ha cerrado primero.",
+      "raceTie": "{{names}} se han cerrado: es un empate, ocurren ambos.",
+      "confirm": "Confirmar",
+      "turnEnds": "El giro termina: {{labels}}. Los demás relojes abiertos no ocurren.",
+      "endTurn": "Terminar el giro",
+      "notYet": "Todavía no",
+      "reveal": "«{{name}}» es el siguiente, pero los jugadores no lo ven. ¿Revelarlo?",
+      "revealButton": "Revelar a la Sala",
+      "notNow": "Ahora no"
+    },
+    "block": {
+      "allOpen": "Todos los relojes abiertos",
+      "add": "Reloj",
+      "newClock": "Nuevo reloj…",
+      "groupChip": "Grupo «{{name}}»",
+      "missing": "Ya no disponible",
+      "noneLeft": "Ningún otro reloj o grupo."
     }
   }
 }

@@ -25,10 +25,13 @@ import type {
   ClockGroup,
   ClockRules,
   ClockSettings,
+  GroupItem,
+  GroupMode,
   KindWho,
   MarkPolicy,
   OpenPolicy,
 } from '../types/clock';
+import type { DocumentVisibility } from '../types/document';
 import type { MapColor } from '../types/map';
 
 function roomPath(roomId: string) {
@@ -397,6 +400,99 @@ export function useDeleteTemplate(roomId: string) {
   return useMutation({
     mutationFn: (id: string) =>
       apiFetch<void>(`${roomPath(roomId)}/clock-rules/templates/${id}`, { method: 'DELETE' }),
+    onSuccess: () => refresh(),
+  });
+}
+
+// --- Groups (Master) ------------------------------------------------------------
+
+/** The group dialog's answer: a new group (no id) or an existing one, and its clocks in order. */
+export interface GroupInput {
+  groupId: string | null;
+  name: string;
+  mode: GroupMode;
+  items: GroupItem[];
+}
+
+/**
+ * Saves a group (spec 61 Decision 11): creates it or renames it and sets its
+ * mode, then puts its clocks in order (a clock in another group moves here).
+ */
+export function useSaveGroup(roomId: string) {
+  const refresh = useRefreshClocks(roomId);
+  return useMutation({
+    mutationFn: async ({ groupId, name, mode, items }: GroupInput) => {
+      const id = groupId
+        ? (
+            await apiFetch<RawGroup>(`${roomPath(roomId)}/clock-groups/${groupId}`, {
+              method: 'PATCH',
+              json: { name: name.trim(), mode },
+            })
+          ).id
+        : (
+            await apiFetch<RawGroup>(`${roomPath(roomId)}/clock-groups`, {
+              method: 'POST',
+              json: { name: name.trim(), mode },
+            })
+          ).id;
+      return toGroup(
+        await apiFetch<RawGroup>(`${roomPath(roomId)}/clock-groups/${id}/clocks`, {
+          method: 'PUT',
+          json: {
+            items: items.map((item) => ({
+              clock_id: item.clockId,
+              decisive_label: mode === 'turn' ? item.decisiveLabel?.trim() || null : null,
+            })),
+          },
+        }),
+      );
+    },
+    onSuccess: () => refresh(),
+  });
+}
+
+/** Archives or restores every clock of a group (Decision 12). */
+export function useArchiveGroup(roomId: string) {
+  const refresh = useRefreshClocks(roomId);
+  return useMutation({
+    mutationFn: ({ groupId, archived }: { groupId: string; archived: boolean }) =>
+      apiFetch<RawGroup>(`${roomPath(roomId)}/clock-groups/${groupId}`, {
+        method: 'PATCH',
+        json: { archived },
+      }),
+    onSuccess: () => refresh(),
+  });
+}
+
+/** Deletes a group; its clocks stay, outside any group. */
+export function useDeleteGroup(roomId: string) {
+  const refresh = useRefreshClocks(roomId);
+  return useMutation({
+    mutationFn: (groupId: string) =>
+      apiFetch<void>(`${roomPath(roomId)}/clock-groups/${groupId}`, { method: 'DELETE' }),
+    onSuccess: () => refresh(),
+  });
+}
+
+/** Confirms a race ("Conferma") or ends a turn ("Termina la svolta"), Decision 11. */
+export function useEndGroup(roomId: string) {
+  const refresh = useRefreshClocks(roomId);
+  return useMutation({
+    mutationFn: (groupId: string) =>
+      apiFetch<unknown>(`${roomPath(roomId)}/clock-groups/${groupId}/end`, { method: 'POST' }),
+    onSuccess: () => refresh(),
+  });
+}
+
+/** Shows a clock to more members: a sequence's next clock, revealed by the Master (audited). */
+export function useRevealClock(roomId: string) {
+  const refresh = useRefreshClocks(roomId);
+  return useMutation({
+    mutationFn: ({ clockId, visibility }: { clockId: string; visibility: DocumentVisibility }) =>
+      apiFetch<RawClock>(`${roomPath(roomId)}/clocks/${clockId}`, {
+        method: 'PATCH',
+        json: { visibility },
+      }),
     onSuccess: () => refresh(),
   });
 }

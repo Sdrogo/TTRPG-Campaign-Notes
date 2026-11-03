@@ -9,6 +9,7 @@ import {
   clockRulesQueryKey,
   clocksQueryKey,
   useArchiveClock,
+  useArchiveGroup,
   useClockGroups,
   useClockHistory,
   useClockRules,
@@ -18,12 +19,16 @@ import {
   useCreateMarkKind,
   useCreateTemplate,
   useDeleteClock,
+  useDeleteGroup,
   useDeleteLabel,
   useDeleteMarkKind,
   useDeleteTemplate,
+  useEndGroup,
   useMarkClock,
   useOpenClock,
   useReorderClocks,
+  useRevealClock,
+  useSaveGroup,
   useSaveClockPolicies,
   useUndoMark,
   useUpdateClock,
@@ -253,5 +258,64 @@ describe('the rules writes', () => {
       '/rooms/room-1/clock-rules/templates',
       expect.objectContaining({ method: 'POST', json: expect.objectContaining({ name: 'Bomba' }) }),
     );
+  });
+});
+
+describe('the group writes', () => {
+  it('creates a group, then puts its clocks in, decisive labels only in a turn', async () => {
+    fetchMock.mockImplementation(async (path: string) => (path.endsWith('/clocks') ? rawGroup({ id: 'g-new' }) : rawGroup({ id: 'g-new' })));
+    const { result } = renderHookWithProviders(() => useSaveGroup('room-1'));
+    await act(() =>
+      result.current.mutateAsync({
+        groupId: null,
+        name: ' Fuga ',
+        mode: 'turn',
+        items: [
+          { clockId: 'a', decisiveLabel: ' Vinta ' },
+          { clockId: 'b', decisiveLabel: '  ' },
+          { clockId: 'c', decisiveLabel: null },
+        ],
+      }),
+    );
+    expect(fetchMock.mock.calls).toEqual([
+      ['/rooms/room-1/clock-groups', { method: 'POST', json: { name: 'Fuga', mode: 'turn' } }],
+      [
+        '/rooms/room-1/clock-groups/g-new/clocks',
+        {
+          method: 'PUT',
+          json: {
+            items: [
+              { clock_id: 'a', decisive_label: 'Vinta' },
+              { clock_id: 'b', decisive_label: null },
+              { clock_id: 'c', decisive_label: null },
+            ],
+          },
+        },
+      ],
+    ]);
+  });
+
+  it('renames an existing group and drops decisive labels outside a turn', async () => {
+    fetchMock.mockResolvedValue(rawGroup());
+    const { result } = renderHookWithProviders(() => useSaveGroup('room-1'));
+    await act(() =>
+      result.current.mutateAsync({ groupId: 'group-1', name: 'Fuga', mode: 'race', items: [{ clockId: 'a', decisiveLabel: 'x' }] }),
+    );
+    expect(fetchMock.mock.calls).toEqual([
+      ['/rooms/room-1/clock-groups/group-1', { method: 'PATCH', json: { name: 'Fuga', mode: 'race' } }],
+      ['/rooms/room-1/clock-groups/group-1/clocks', { method: 'PUT', json: { items: [{ clock_id: 'a', decisive_label: null }] } }],
+    ]);
+  });
+
+  it.each([
+    ['archives a group', () => useArchiveGroup('room-1'), { groupId: 'g', archived: true }, '/rooms/room-1/clock-groups/g', { method: 'PATCH', json: { archived: true } }],
+    ['deletes a group', () => useDeleteGroup('room-1'), 'g', '/rooms/room-1/clock-groups/g', { method: 'DELETE' }],
+    ['ends a group', () => useEndGroup('room-1'), 'g', '/rooms/room-1/clock-groups/g/end', { method: 'POST' }],
+    ['reveals a clock', () => useRevealClock('room-1'), { clockId: 'c', visibility: 'room' }, '/rooms/room-1/clocks/c', { method: 'PATCH', json: { visibility: 'room' } }],
+  ] as const)('%s', async (_name, hook, input, path, init) => {
+    fetchMock.mockResolvedValue(undefined);
+    const { result } = renderHookWithProviders(hook as () => { mutateAsync: (i: unknown) => Promise<unknown> });
+    await act(() => result.current.mutateAsync(input));
+    expect(fetchMock).toHaveBeenCalledWith(path, init);
   });
 });

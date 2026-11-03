@@ -1618,7 +1618,8 @@
       "maps": "Karten",
       "mapsFree": "Beziehungskarten",
       "mapsGeographic": "Geografische Karten",
-      "sessionZero": "Session 0"
+      "sessionZero": "Session 0",
+      "clocks": "Uhren"
     },
     "features": {
       "sessions": "Sessions",
@@ -1662,7 +1663,8 @@
         "body": "Sessions, Schritte und Umfragen"
       },
       "tools": "Werkzeuge",
-      "toolsBody": "Ein eigenes Werkzeug der Session 0, für die Spieler verborgen, bis du es zeigst"
+      "toolsBody": "Ein eigenes Werkzeug der Session 0, für die Spieler verborgen, bis du es zeigst",
+      "clocks": "Uhr"
     },
     "edit": {
       "start": "Bearbeiten",
@@ -1799,7 +1801,8 @@
     "toast": {
       "marked": "{{delta}} auf „{{name}}“",
       "undo": "Rückgängig",
-      "closed": "„{{name}}“ hat sich geschlossen"
+      "closed": "„{{name}}“ hat sich geschlossen",
+      "refused": "Dein Vorschlag „{{name}}“ wurde abgelehnt."
     },
     "markDialog": {
       "title": "„{{name}}“ markieren",
@@ -1947,6 +1950,53 @@
       "templates": "Vorlagen des Raums",
       "noTemplates": "Keine Vorlagen: Speichere eine aus dem Dialog einer Uhr.",
       "deleteTemplate": "Vorlage „{{name}}“ löschen"
+    },
+    "groups": {
+      "create": "Neue Gruppe",
+      "editTitle": "Gruppe bearbeiten",
+      "name": "Name der Gruppe",
+      "mode": "Modus",
+      "modeHint": {
+        "free": "Die Uhren stehen nur zusammen: die Ebenen eines Ortes, die Fraktionen.",
+        "race": "Die erste, die sich schließt, gewinnt; schließt sich eine weitere, bevor du bestätigst, ist es ein Unentschieden.",
+        "turn": "Manche Uhren sind entscheidend: schließt sich eine, endet der Wendepunkt und die anderen verfallen.",
+        "sequence": "Sie schließen sich der Reihe nach: nur die erste offene nimmt Markierungen an, die anderen warten."
+      },
+      "clocks": "Uhren der Gruppe",
+      "clocksHint": "In der Reihenfolge deiner Wahl, bis zu {{max}}; eine Uhr aus einer anderen Gruppe wechselt hierher.",
+      "decisiveHint": "Schreib den Ausgang der entscheidenden Uhren; lass die anderen leer.",
+      "decisive": "Ausgang von „{{name}}“",
+      "notDecisive": "Nicht entscheidend",
+      "menu": "Aktionen der Gruppe „{{name}}“",
+      "newTurn": "Neuer Wendepunkt",
+      "archive": "Gruppe archivieren",
+      "restore": "Gruppe wiederherstellen",
+      "delete": "Gruppe löschen",
+      "deleteTitle": "Gruppe löschen?",
+      "deleteBody": "„{{name}}“ verschwindet; ihre Uhren bleiben, außerhalb jeder Gruppe.",
+      "empty": "Keine Uhren: bearbeite die Gruppe, um welche hinzuzufügen.",
+      "quoted": "„{{name}}“",
+      "outcome": "„{{name}}“ ({{label}})",
+      "resultWon": "Gewonnen: {{names}}",
+      "resultTie": "Unentschieden: {{names}}",
+      "resultTurn": "Wendepunkt: {{labels}}",
+      "raceOne": "{{names}} hat sich als erste geschlossen.",
+      "raceTie": "{{names}} haben sich geschlossen: Unentschieden, beides geschieht.",
+      "confirm": "Bestätigen",
+      "turnEnds": "Der Wendepunkt endet: {{labels}}. Die anderen offenen Uhren verfallen.",
+      "endTurn": "Wendepunkt beenden",
+      "notYet": "Noch nicht",
+      "reveal": "„{{name}}“ ist die nächste, aber die Spieler sehen sie nicht. Aufdecken?",
+      "revealButton": "Dem Raum zeigen",
+      "notNow": "Nicht jetzt"
+    },
+    "block": {
+      "allOpen": "Alle offenen Uhren",
+      "add": "Uhr",
+      "newClock": "Neue Uhr…",
+      "groupChip": "Gruppe „{{name}}“",
+      "missing": "Nicht mehr verfügbar",
+      "noneLeft": "Keine weitere Uhr oder Gruppe."
     }
   }
 }

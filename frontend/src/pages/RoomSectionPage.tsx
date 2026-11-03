@@ -17,6 +17,7 @@ import { EditModeButton } from '../components/landing/EditModeButton';
 import { SectionBlock } from '../components/landing/SectionBlock';
 import { SectionEditor } from '../components/landing/SectionEditor';
 import { ToolBlock } from '../components/landing/ToolBlock';
+import { ClockBlock } from '../components/clocks/ClockBlock';
 import { SectionDescriptionEditor, SectionImageButton, SectionTitleEditor } from '../components/landing/SectionHeadingEditor';
 import { blockContent, isBlockEmpty, type BlockSources } from '../components/landing/blockItems';
 import { landingHref } from '../lib/landing';
@@ -103,9 +104,9 @@ function RoomSectionContent({ roomId, sectionId, currentUserId }: { roomId: stri
             }
           />
           {canEdit && editing ? (
-            <SectionEditor roomId={roomId} section={section} sources={sources} />
+            <SectionEditor roomId={roomId} section={section} sources={sources} currentUserId={currentUserId} />
           ) : (
-            <SectionBlocks roomId={roomId} section={section} sources={sources} isMaster={isMaster} />
+            <SectionBlocks roomId={roomId} section={section} sources={sources} isMaster={isMaster} currentUserId={currentUserId} />
           )}
         </>
       )}
@@ -115,7 +116,19 @@ function RoomSectionContent({ roomId, sectionId, currentUserId }: { roomId: stri
 }
 
 /** The Section's blocks for reading; a short empty state when none has anything to show. */
-function SectionBlocks({ roomId, section, sources, isMaster }: { roomId: string; section: LandingSection; sources: BlockSources; isMaster: boolean }) {
+function SectionBlocks({
+  roomId,
+  section,
+  sources,
+  isMaster,
+  currentUserId,
+}: {
+  roomId: string;
+  section: LandingSection;
+  sources: BlockSources;
+  isMaster: boolean;
+  currentUserId: string;
+}) {
   const { t } = useTranslation();
   const contents = section.blocks.map((block) => blockContent(block, sources));
   const allEmpty = contents.every(isBlockEmpty);
@@ -125,7 +138,16 @@ function SectionBlocks({ roomId, section, sources, isMaster }: { roomId: string;
   return (
     <Stack gap="xl">
       {section.blocks.map((block, index) =>
-        block.kind === 'tool' ? (
+        block.kind === 'clocks' ? (
+          <ClockBlock
+            key={block.id}
+            roomId={roomId}
+            block={block}
+            heading={blockHeading(block, sources.tags)}
+            isMaster={isMaster}
+            currentUserId={currentUserId}
+          />
+        ) : block.kind === 'tool' ? (
           <ToolBlock
             key={block.id}
             roomId={roomId}

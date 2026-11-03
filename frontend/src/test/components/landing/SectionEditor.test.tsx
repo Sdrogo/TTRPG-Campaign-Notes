@@ -8,7 +8,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SectionEditor } from '../../../components/landing/SectionEditor';
 import type { BlockSources } from '../../../components/landing/blockItems';
 import { apiFetch } from '../../../lib/apiClient';
-import { rawBlock, rawPoll, rawSection } from '../../fixtures';
+import { rawBlock, rawMember, rawPoll, rawRoom, rawSection } from '../../fixtures';
+import { rawClock, rawGroup, rawRules } from '../../clockFixtures';
 import { doc, overview, section, tag } from '../../landingFixtures';
 import { renderWithProviders } from '../../utils';
 import { theme } from '../../../theme/theme';
@@ -18,6 +19,7 @@ vi.mock('../../../lib/apiClient', async (original) => ({
   apiFetch: vi.fn(),
 }));
 vi.mock('../../../components/landing/Sortable', () => import('./sortableMock'));
+vi.mock('../../../hooks/useRoomEvents', () => ({ useRoomEvents: vi.fn(() => 'open') }));
 
 const fetchMock = vi.mocked(apiFetch);
 const tags = [tag('t1', 'Tokyo'), tag('t2', 'PNG'), tag('t3', 'Yakuza')];
@@ -39,7 +41,7 @@ const wire = (raw: Record<string, unknown>) => {
 };
 
 function editor(blocks: Record<string, unknown>[] = [], route: InitialEntry = '/rooms/room-1/sections/section-1') {
-  return renderWithProviders(<SectionEditor roomId="room-1" section={section({ blocks })} sources={sources} />, { route });
+  return renderWithProviders(<SectionEditor roomId="room-1" section={section({ blocks })} sources={sources} currentUserId="user-1" />, { route });
 }
 
 function savedBlocks() {
@@ -155,7 +157,7 @@ describe('SectionEditor', () => {
   it('keeps the groups popover open while groups are added, each save remounting the bar', async () => {
     const { rerender } = editor([plainBlock, mapsBlock]);
     const remount = (block: Record<string, unknown>) =>
-      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [block, mapsBlock] })} sources={sources} />);
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [block, mapsBlock] })} sources={sources} currentUserId="user-1" />);
     await userEvent.click(screen.getByRole('button', { name: 'Raggruppa' }));
     await userEvent.click(screen.getByRole('button', { name: 'Gruppo' }));
     await userEvent.click(screen.getByRole('checkbox', { name: '#PNG' }));
@@ -185,7 +187,7 @@ describe('SectionEditor', () => {
     // A click with no pointer down, so the popover isn't closed by it first.
     fireEvent.click(screen.getByRole('button', { name: 'Riordina block-4,block-1' }));
     await waitFor(() => expect(savedBlocks()).toEqual([wire(documentsBlock), wire(plainBlock)]));
-    rerender(<SectionEditor roomId="room-1" section={section({ blocks: [{ ...documentsBlock, id: 'block-1b' }, { ...plainBlock, id: 'block-4b' }] })} sources={sources} />);
+    rerender(<SectionEditor roomId="room-1" section={section({ blocks: [{ ...documentsBlock, id: 'block-1b' }, { ...plainBlock, id: 'block-4b' }] })} sources={sources} currentUserId="user-1" />);
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Gruppo' })).not.toBeInTheDocument());
   });
 
@@ -264,14 +266,14 @@ describe('SectionEditor', () => {
       const { rerender } = editor([plainBlock, toolBlock]);
       await userEvent.click(screen.getAllByRole('button', { name: 'Azioni del blocco' })[1]);
       await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
-      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [toolBlock, plainBlock, mapsBlock] })} sources={sources} />);
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [toolBlock, plainBlock, mapsBlock] })} sources={sources} currentUserId="user-1" />);
       await userEvent.click(within(screen.getByRole('dialog', { name: 'Eliminare Sondaggio?' })).getByRole('button', { name: 'Elimina blocco' }));
       expect(savedBlocks()).toEqual([wire(plainBlock), wire(mapsBlock)]);
 
       await userEvent.click(screen.getAllByRole('button', { name: 'Azioni del blocco' })[0]);
       await userEvent.click(screen.getByRole('menuitem', { name: 'Elimina blocco' }));
       expect(screen.getByText('Eliminare Sondaggio?')).toBeInTheDocument();
-      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [plainBlock] })} sources={sources} />);
+      rerender(<SectionEditor roomId="room-1" section={section({ blocks: [plainBlock] })} sources={sources} currentUserId="user-1" />);
       await waitFor(() => expect(screen.queryByText('Eliminare Sondaggio?')).not.toBeInTheDocument());
     });
 
@@ -282,6 +284,7 @@ describe('SectionEditor', () => {
           roomId="room-1"
           section={section({ blocks: [toolBlock] })}
           sources={{ ...sources, tools: { revision: 1, tools: [{ moduleId: 'm-1', playersVisible: false, module }] } }}
+          currentUserId="user-1"
         />,
       );
       expect(screen.getByText('Quale sistema?')).toBeInTheDocument();
@@ -299,6 +302,48 @@ describe('SectionEditor', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Azioni del blocco' }));
       await userEvent.click(screen.getByRole('menuitem', { name: /Chiuso all'apertura/ }));
       expect(savedBlocks()).toEqual([wire(plainBlock)]);
+    });
+  });
+
+  describe('clocks (spec 61)', { timeout: 20_000 }, () => {
+    const clocksSaved = { kind: 'clocks', heading: null, tag_ids: [], groups: [], map_kind: null, features: [], module_id: null, collapsed: false };
+
+    beforeEach(() => {
+      fetchMock.mockImplementation(async (path: string) => {
+        if (path === '/rooms/room-1/clocks') return [rawClock(), rawClock({ id: 'clock-2', name: 'Fuga' })] as never;
+        if (path === '/rooms/room-1/clock-groups') return [rawGroup({ name: 'Notte', clock_ids: ['clock-2'] })] as never;
+        if (path === '/rooms/room-1/clock-rules') return rawRules() as never;
+        if (path === '/rooms/room-1/members') return [rawMember({ user_id: 'user-1', role: 'master' })] as never;
+        if (path === '/rooms/room-1') return rawRoom() as never;
+        return rawSection() as never;
+      });
+    });
+
+    it('keeps a Clocks draft until its first chip, and drops it when closed empty', async () => {
+      editor([mapsBlock]);
+      await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Clock' }));
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(screen.getAllByRole('button', { name: 'Azioni del blocco' })).toHaveLength(1));
+      expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith('/blocks'))).toBe(false);
+
+      await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Clock' }));
+      const picker = await screen.findByRole('dialog', { name: 'Clock' });
+      await userEvent.click(await within(picker).findByRole('button', { name: 'Allarme' }));
+      expect(savedBlocks()).toEqual([
+        wire(mapsBlock),
+        { ...clocksSaved, clock_chips: [{ clock_id: 'clock-1', group_id: null }], all_clocks: false },
+      ]);
+    });
+
+    it('shows a saved Clocks block with its clocks, and edits its chips from the bar', async () => {
+      const clocksBlock = rawBlock({ id: 'block-6', kind: 'clocks', tag_ids: [], clock_chips: [{ clock_id: null, group_id: 'group-1' }], all_clocks: false });
+      editor([clocksBlock]);
+      expect(await screen.findByRole('img', { name: 'Fuga: 4 su 8, Aperto' })).toBeInTheDocument();
+      expect(await screen.findByText('Gruppo «Notte»')).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('switch', { name: 'Tutti i clock aperti' }));
+      expect(savedBlocks()).toEqual([{ ...clocksSaved, clock_chips: [{ clock_id: null, group_id: 'group-1' }], all_clocks: true }]);
     });
   });
 });

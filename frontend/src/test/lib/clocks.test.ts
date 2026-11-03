@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   BUILT_IN_TEMPLATES,
+  blockClocks,
   builtInSettings,
   canCreateClocks,
   clockSummary,
   emptySettings,
+  groupClocks,
+  groupPrompt,
+  groupResultLine,
   historyLine,
   isMarkable,
   isUnmarkable,
@@ -248,5 +252,80 @@ describe('history lines (Decision 10)', () => {
     );
     expect(historyLine(entry({ action: 'edited', details: {} }), kinds, members)).toBe('Marco · ha modificato: ');
     expect(historyLine(entry({ action: 'closed' }), kinds, members)).toBe('Marco · chiuso');
+  });
+});
+
+describe('groups (Decisions 11-12)', () => {
+  const group = (overrides: Parameters<typeof rawGroup>[0] = {}) => toGroup(rawGroup(overrides));
+  const fuga = clock({ id: 'a', name: 'Fuga' });
+  const accerchiati = clock({ id: 'b', name: 'Accerchiati' });
+
+  it('reads a race or a turn result, and none', () => {
+    expect(group({ result: { winner_ids: ['a'], tie: false } }).result).toEqual({ kind: 'race', winnerIds: ['a'], tie: false });
+    expect(group({ result: { outcomes: [{ clock_id: 'a', label: 'Vinta' }] } }).result).toEqual({
+      kind: 'turn',
+      outcomes: [{ clockId: 'a', label: 'Vinta' }],
+    });
+    expect(group({ result: {} }).result).toEqual({ kind: 'turn', outcomes: [] });
+    expect(group().result).toBeNull();
+  });
+
+  it("lists a group's clocks the viewer sees, in order, archived ones out", () => {
+    const archived = clock({ id: 'c', archived: true });
+    expect(groupClocks(group({ clock_ids: ['b', 'gone', 'c', 'a'] }), [fuga, accerchiati, archived]).map((c) => c.id)).toEqual(['b', 'a']);
+  });
+
+  it('says how an ended group came out', () => {
+    const clocks = [fuga, accerchiati];
+    expect(groupResultLine(null, clocks)).toBeNull();
+    expect(groupResultLine({ kind: 'race', winnerIds: ['a'], tie: false }, clocks)).toBe('Vinto: «Fuga»');
+    expect(groupResultLine({ kind: 'race', winnerIds: ['a', 'b'], tie: true }, clocks)).toBe('Pari: «Fuga», «Accerchiati»');
+    expect(
+      groupResultLine({ kind: 'turn', outcomes: [{ clockId: 'a', label: 'Fuori!' }, { clockId: 'b', label: null }] }, clocks),
+    ).toBe('Svolta: Fuori!, «Accerchiati»');
+  });
+
+  it("asks the Master to confirm a race or end a turn, not once it ended nor for a free group", () => {
+    const clocks = [clock({ id: 'a', state: 'closed' }), accerchiati];
+    expect(groupPrompt(group({ pending_ids: ['a'] }), clocks)).toEqual({ kind: 'race', clocks: [clocks[0]] });
+    expect(groupPrompt(group({ mode: 'turn', pending_ids: ['a'] }), clocks)?.kind).toBe('turn');
+    expect(groupPrompt(group({ pending_ids: [] }), clocks)).toBeNull();
+    expect(groupPrompt(group({ pending_ids: ['a'], ended: true }), clocks)).toBeNull();
+    expect(groupPrompt(group({ mode: 'free', pending_ids: ['a'] }), clocks)).toBeNull();
+  });
+
+  it("offers to reveal a sequence's next clock once the one before it closed, if it is hidden", () => {
+    const sequence = group({ mode: 'sequence', clock_ids: ['a', 'b'] });
+    const hidden = clock({ id: 'b', visibility: 'master' });
+    expect(groupPrompt(sequence, [clock({ id: 'a', state: 'closed' }), hidden])).toEqual({ kind: 'reveal', clock: hidden });
+    expect(groupPrompt(sequence, [clock({ id: 'a', state: 'lapsed' }), hidden])).toBeNull();
+    expect(groupPrompt(sequence, [clock({ id: 'a', state: 'closed' }), clock({ id: 'b' })])).toBeNull();
+    expect(groupPrompt(sequence, [clock({ id: 'a' }), hidden])).toBeNull();
+    expect(groupPrompt(sequence, [clock({ id: 'a', state: 'closed' }), clock({ id: 'b', state: 'closed' })])).toBeNull();
+  });
+});
+
+describe('Clocks blocks (Decision 18)', () => {
+  const clocks = [
+    clock({ id: 'a' }),
+    clock({ id: 'b', state: 'closed' }),
+    clock({ id: 'c', archived: true }),
+    clock({ id: 'd', state: 'proposed' }),
+  ];
+  const groups = [toGroup(rawGroup({ id: 'g', clock_ids: ['b', 'a'] }))];
+
+  it('shows every open clock with "Tutti i clock aperti"', () => {
+    expect(blockClocks({ allClocks: true, clockChips: [] }, clocks, groups).map((c) => c.id)).toEqual(['a']);
+  });
+
+  it('shows its chips in order, a group for its clocks, each clock once', () => {
+    const chips = [
+      { clockId: 'c', groupId: null },
+      { clockId: null, groupId: 'g' },
+      { clockId: 'a', groupId: null },
+      { clockId: 'd', groupId: null },
+      { clockId: null, groupId: 'gone' },
+    ] as const;
+    expect(blockClocks({ allClocks: false, clockChips: [...chips] }, clocks, groups).map((c) => c.id)).toEqual(['b', 'a']);
   });
 });

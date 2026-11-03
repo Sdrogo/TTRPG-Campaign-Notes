@@ -27,6 +27,7 @@ import {
   MapTrifoldIcon,
   PencilSimpleIcon,
   PlusIcon,
+  TimerIcon,
   ToolboxIcon,
   UsersThreeIcon,
 } from '@phosphor-icons/react';
@@ -49,6 +50,7 @@ export function BlockKindIcon({ kind, size = 18 }: { kind: BlockKind; size?: num
   if (kind === 'documents') return <FilesIcon size={size} aria-hidden="true" />;
   if (kind === 'maps') return <MapTrifoldIcon size={size} aria-hidden="true" />;
   if (kind === 'tool') return <ToolboxIcon size={size} aria-hidden="true" />;
+  if (kind === 'clocks') return <TimerIcon size={size} aria-hidden="true" />;
   return <UsersThreeIcon size={size} aria-hidden="true" />;
 }
 
@@ -86,7 +88,7 @@ export function Picker({ opened, onClose, title, target, children, width = 300 }
 }
 
 /** A small removable chip of the block bar. */
-function Chip({ label, onRemove, removeLabel }: { label: string; onRemove?: () => void; removeLabel: string }) {
+export function Chip({ label, onRemove, removeLabel }: { label: string; onRemove?: () => void; removeLabel: string }) {
   return (
     <Badge
       variant="light"
@@ -178,6 +180,8 @@ interface BlockBarProps {
   onCancelDraft?: () => void;
   /** A tool block's step kind and whether the Players see it, with the eye toggle (spec 60 Decision 4). */
   tool?: { kind: ToolKind; visible: boolean; onToggleVisible: () => void };
+  /** A Clocks block's own filter (spec 61): its chips and "Tutti i clock aperti". */
+  children?: ReactNode;
 }
 
 /**
@@ -186,7 +190,7 @@ interface BlockBarProps {
  * place, the filter as chips (Tags, the map kind, the features), "Raggruppa"
  * on a Documents block, and a ⋮ with "Elimina".
  */
-export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPicker = null, onCancelDraft, onGroupsOpenChange, tool }: BlockBarProps) {
+export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPicker = null, onCancelDraft, onGroupsOpenChange, tool, children }: BlockBarProps) {
   const { t } = useTranslation();
   const [picker, setPicker] = useState<'tags' | 'features' | 'groups' | null>(initialPicker);
   const closePicker = () => {
@@ -296,6 +300,7 @@ export function BlockBar({ block, tags, mainItems, onChange, onDelete, initialPi
           </Picker>
         </>
       )}
+      {children}
       {tool && (
         <>
           {!tool.visible && (

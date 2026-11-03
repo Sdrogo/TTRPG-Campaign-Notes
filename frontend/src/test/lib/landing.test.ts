@@ -40,6 +40,8 @@ describe('the landing helpers', () => {
       features: [],
       moduleId: null,
       collapsed: false,
+      clockChips: [],
+      allClocks: false,
     });
     expect(toBlockBody(blockInput(saved))).toEqual({
       kind: 'documents',
@@ -50,6 +52,30 @@ describe('the landing helpers', () => {
       module_id: null,
       collapsed: false,
       features: [],
+    });
+  });
+
+  it('sends a Clocks block back with its chips', () => {
+    const saved = block({
+      kind: 'clocks',
+      tag_ids: [],
+      clock_chips: [
+        { clock_id: 'clock-1', group_id: null },
+        { clock_id: null, group_id: 'group-1' },
+      ],
+      all_clocks: true,
+    });
+    expect(saved.clockChips).toEqual([
+      { clockId: 'clock-1', groupId: null },
+      { clockId: null, groupId: 'group-1' },
+    ]);
+    expect(toBlockBody(blockInput(saved))).toMatchObject({
+      kind: 'clocks',
+      clock_chips: [
+        { clock_id: 'clock-1', group_id: null },
+        { clock_id: null, group_id: 'group-1' },
+      ],
+      all_clocks: true,
     });
   });
 

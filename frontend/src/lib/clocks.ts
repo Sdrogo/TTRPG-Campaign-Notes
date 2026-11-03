@@ -1,5 +1,6 @@
 import i18n from '../i18n';
 import { userDisplayName } from './members';
+import type { LandingBlock } from '../types/landing';
 import type { Member } from '../types/member';
 import type { DocumentVisibility } from '../types/document';
 import type { MapColor } from '../types/map';
@@ -15,6 +16,7 @@ import type {
   ClockState,
   ClockTemplate,
   GroupMode,
+  GroupResult,
   HistoryAction,
   KindWho,
   MarkKind,
@@ -234,10 +236,20 @@ export function toGroup(raw: RawGroup): ClockGroup {
     position: raw.position,
     clockIds: raw.clock_ids,
     ended: raw.ended,
-    result: raw.result,
+    result: toGroupResult(raw.result),
     pendingIds: raw.pending_ids,
     revision: raw.revision,
   };
+}
+
+/** A group's result from the wire: `winner_ids` for a race, `outcomes` for a turn. */
+function toGroupResult(raw: Record<string, unknown> | null): GroupResult | null {
+  if (!raw) return null;
+  if ('winner_ids' in raw) {
+    return { kind: 'race', winnerIds: raw.winner_ids as string[], tie: raw.tie === true };
+  }
+  const outcomes = (raw.outcomes ?? []) as { clock_id: string; label: string | null }[];
+  return { kind: 'turn', outcomes: outcomes.map((outcome) => ({ clockId: outcome.clock_id, label: outcome.label })) };
 }
 
 /** A page of history from the wire. */
@@ -518,11 +530,14 @@ export function wedgeColors(clock: Clock, kinds: MarkKind[]): MapColor[] {
 
 // --- History -----------------------------------------------------------------
 
+/** Reads a string through the shared instance; some keys are built at run time. */
+function translate(key: string, options?: Record<string, unknown>): string {
+  return (i18n.t as (key: string, options?: Record<string, unknown>) => string)(key, options);
+}
+
 /** One line in words: who, what, how much, where the clock stood, the note. */
 export function historyLine(entry: ClockHistoryEntry, kinds: MarkKind[], members: Member[]): string {
-  // A plain helper reads strings through the shared instance; some keys are built from the line.
-  const translate = i18n.t as (key: string, options?: Record<string, unknown>) => string;
-  const i18nT = (key: string, options?: Record<string, unknown>) => translate(key, options);
+  const i18nT = translate;
   const member = members.find((other) => other.userId === entry.userId);
   const who = member ? userDisplayName(member) : i18nT('clocks.history.formerMember');
   const details = entry.details;
@@ -553,4 +568,85 @@ export function historyLine(entry: ClockHistoryEntry, kinds: MarkKind[], members
     parts.push(i18nT(`clocks.history.actions.${entry.action}`));
   }
   return parts.join(' · ');
+}
+
+// --- Groups ----------------------------------------------------------------------
+
+/** A group holds at most this many clocks (spec 61 Decision 31). */
+export const MAX_CLOCKS_PER_GROUP = 12;
+/** A turn group's decisive label (Decision 11). */
+export const MAX_DECISIVE_LABEL_LENGTH = 30;
+/** The modes in the order the group dialog offers them. */
+export const GROUP_MODES: GroupMode[] = ['free', 'race', 'turn', 'sequence'];
+
+/** The clocks of `group` the viewer sees, in the group's order, archived ones out. */
+export function groupClocks(group: ClockGroup, clocks: Clock[]): Clock[] {
+  return group.clockIds.flatMap((id) => clocks.filter((clock) => clock.id === id && !clock.archived));
+}
+
+function names(ids: string[], clocks: Clock[]): string {
+  return ids
+    .flatMap((id) => clocks.filter((clock) => clock.id === id))
+    .map((clock) => translate('clocks.groups.quoted', { name: clock.name }))
+    .join(', ');
+}
+
+/** An ended group's result (Decision 12): "Vinto: «Fuga»", "Pari: «Fuga», «Accerchiati»", "Svolta: Bomba disinnescata!". */
+export function groupResultLine(result: GroupResult | null, clocks: Clock[]): string | null {
+  if (!result) return null;
+  if (result.kind === 'race') {
+    return translate(result.tie ? 'clocks.groups.resultTie' : 'clocks.groups.resultWon', {
+      names: names(result.winnerIds, clocks),
+    });
+  }
+  const labels = result.outcomes.map((outcome) => outcome.label ?? names([outcome.clockId], clocks));
+  return translate('clocks.groups.resultTurn', { labels: labels.join(', ') });
+}
+
+/** What a group asks of the Master now (Decision 11); none once it ended or for a Player. */
+export type GroupPrompt =
+  | { kind: 'race'; clocks: Clock[] }
+  | { kind: 'turn'; clocks: Clock[] }
+  | { kind: 'reveal'; clock: Clock };
+
+/**
+ * A race whose clock closed ("Conferma"), a turn whose decisive clock closed
+ * ("Termina la svolta"), or a sequence whose next clock, now open to marks,
+ * is still hidden from the Players ("Rivelare «…»?"). Nothing changes on
+ * its own: the Master answers.
+ */
+export function groupPrompt(group: ClockGroup, clocks: Clock[]): GroupPrompt | null {
+  if (group.ended) return null;
+  const pending = group.pendingIds.flatMap((id) => clocks.filter((clock) => clock.id === id));
+  if (group.mode === 'race' || group.mode === 'turn') {
+    return pending.length > 0 ? { kind: group.mode, clocks: pending } : null;
+  }
+  if (group.mode !== 'sequence') return null;
+  const ordered = groupClocks(group, clocks);
+  const next = ordered.findIndex((clock) => clock.state === 'open');
+  if (next < 1 || ordered[next].visibility === 'room') return null;
+  return ordered[next - 1].state === 'closed' ? { kind: 'reveal', clock: ordered[next] } : null;
+}
+
+// --- Clocks blocks -----------------------------------------------------------------
+
+/**
+ * What a Clocks block shows (spec 61 Decision 18): with "Tutti i clock
+ * aperti", every open clock in the page's order; else its chips in order, a
+ * group's chip standing for its clocks. Archived and proposed clocks are
+ * left out, and a clock named twice shows once.
+ */
+export function blockClocks(
+  block: Pick<LandingBlock, 'clockChips' | 'allClocks'>,
+  clocks: Clock[],
+  groups: ClockGroup[],
+): Clock[] {
+  const live = clocks.filter((clock) => !clock.archived && clock.state !== 'proposed');
+  if (block.allClocks) return live.filter((clock) => clock.state === 'open');
+  const ids = block.clockChips.flatMap((chip) =>
+    chip.clockId !== null
+      ? [chip.clockId]
+      : groups.filter((group) => group.id === chip.groupId).flatMap((group) => group.clockIds),
+  );
+  return [...new Set(ids)].flatMap((id) => live.filter((clock) => clock.id === id));
 }

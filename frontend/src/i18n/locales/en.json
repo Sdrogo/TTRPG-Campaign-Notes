@@ -1618,7 +1618,8 @@
       "maps": "Maps",
       "mapsFree": "Relationship maps",
       "mapsGeographic": "Geographic maps",
-      "sessionZero": "Session 0"
+      "sessionZero": "Session 0",
+      "clocks": "Clocks"
     },
     "features": {
       "sessions": "Sessions",
@@ -1662,7 +1663,8 @@
         "body": "Sessions, steps and polls"
       },
       "tools": "Tools",
-      "toolsBody": "A Session 0 tool of its own, hidden from the players until you show it"
+      "toolsBody": "A Session 0 tool of its own, hidden from the players until you show it",
+      "clocks": "Clock"
     },
     "edit": {
       "start": "Edit",
@@ -1799,7 +1801,8 @@
     "toast": {
       "marked": "{{delta}} on “{{name}}”",
       "undo": "Undo",
-      "closed": "“{{name}}” has closed"
+      "closed": "“{{name}}” has closed",
+      "refused": "Your proposal “{{name}}” was turned down."
     },
     "markDialog": {
       "title": "Mark “{{name}}”",
@@ -1947,6 +1950,53 @@
       "templates": "Room templates",
       "noTemplates": "No templates: save one from a clock's dialog.",
       "deleteTemplate": "Delete the template “{{name}}”"
+    },
+    "groups": {
+      "create": "New group",
+      "editTitle": "Edit group",
+      "name": "Group name",
+      "mode": "Mode",
+      "modeHint": {
+        "free": "The clocks just sit together: the layers of a place, the factions.",
+        "race": "The first to close wins; if another closes before you confirm, it is a tie.",
+        "turn": "Some clocks are decisive: when one closes the turning point ends and the others lapse.",
+        "sequence": "They close in order: only the first open one takes marks, the others wait."
+      },
+      "clocks": "Group's clocks",
+      "clocksHint": "In the order you pick them, up to {{max}}; a clock of another group moves here.",
+      "decisiveHint": "Write the outcome of the decisive clocks; leave the others empty.",
+      "decisive": "Outcome of “{{name}}”",
+      "notDecisive": "Not decisive",
+      "menu": "Actions for the group “{{name}}”",
+      "newTurn": "New turning point",
+      "archive": "Archive the group",
+      "restore": "Restore the group",
+      "delete": "Delete the group",
+      "deleteTitle": "Delete the group?",
+      "deleteBody": "“{{name}}” goes away; its clocks stay, outside any group.",
+      "empty": "No clocks: edit the group to add some.",
+      "quoted": "“{{name}}”",
+      "outcome": "“{{name}}” ({{label}})",
+      "resultWon": "Won: {{names}}",
+      "resultTie": "Tie: {{names}}",
+      "resultTurn": "Turning point: {{labels}}",
+      "raceOne": "{{names}} closed first.",
+      "raceTie": "{{names}} closed: it is a tie, both happen.",
+      "confirm": "Confirm",
+      "turnEnds": "The turning point ends: {{labels}}. The other open clocks lapse.",
+      "endTurn": "End the turning point",
+      "notYet": "Not yet",
+      "reveal": "“{{name}}” is next, but the Players can’t see it. Reveal it?",
+      "revealButton": "Reveal to the Room",
+      "notNow": "Not now"
+    },
+    "block": {
+      "allOpen": "All open clocks",
+      "add": "Clock",
+      "newClock": "New clock…",
+      "groupChip": "Group “{{name}}”",
+      "missing": "No longer available",
+      "noneLeft": "No other clock or group."
     }
   }
 }

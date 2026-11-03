@@ -6,6 +6,7 @@ import type {
   BlockInput,
   BlockKind,
   BlockMapKind,
+  ClockChip,
   LandingBlock,
   LandingSection,
   SectionKind,
@@ -30,6 +31,18 @@ export interface RawBlock {
   module_id?: string | null;
   tool_kind?: ToolKind | null;
   players_visible?: boolean | null;
+  clock_chips?: RawClockChip[];
+  all_clocks?: boolean;
+}
+
+/** A Clocks block's chip on the wire. */
+export interface RawClockChip {
+  clock_id: string | null;
+  group_id: string | null;
+}
+
+function toClockChip(raw: RawClockChip): ClockChip {
+  return raw.clock_id ? { clockId: raw.clock_id, groupId: null } : { clockId: null, groupId: raw.group_id! };
 }
 
 /** A Section on the wire (`GET /rooms/{id}/sections`). */
@@ -65,6 +78,8 @@ export function toSection(raw: RawSection): LandingSection {
       features: block.features,
       collapsed: block.collapsed ?? false,
       moduleId: block.module_id ?? null,
+      clockChips: (block.clock_chips ?? []).map(toClockChip),
+      allClocks: block.all_clocks ?? false,
       toolKind: block.tool_kind ?? null,
       playersVisible: block.players_visible ?? null,
     })),
@@ -82,6 +97,13 @@ export function toBlockBody(block: BlockInput) {
     features: block.features,
     module_id: block.moduleId,
     collapsed: block.collapsed,
+    // Only a Clocks block has chips (spec 61); the others leave them to the server's defaults.
+    ...(block.kind === 'clocks'
+      ? {
+          clock_chips: block.clockChips.map((chip) => ({ clock_id: chip.clockId, group_id: chip.groupId })),
+          all_clocks: block.allClocks,
+        }
+      : {}),
   };
 }
 
@@ -96,6 +118,8 @@ export function blockInput(block: LandingBlock): BlockInput {
     features: block.features,
     moduleId: block.moduleId,
     collapsed: block.collapsed,
+    clockChips: block.clockChips,
+    allClocks: block.allClocks,
   };
 }
 

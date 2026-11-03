@@ -903,7 +903,7 @@ on `main`.
   answered 2026-11-03 (Clocks page + Clocks block in Sections, Master
   creates and marks by default, 2-16 segments, no hidden progress,
   duplication copies templates not clocks, "Clock" in Italian); Q8 group
-  modes confirmed: **ticket confirmed; 61_1 and 61_2 built** (backend) in PR #293, migration `c1d7e3a9f5b2` applied to the staging DB 2026-11-03, still to apply to production before the release; 61_3-61_4 frontend next): progress clocks as Room
+  modes confirmed: **ticket confirmed; 61_1 and 61_2 built** (backend) in PR #293, migration `c1d7e3a9f5b2` applied to the staging DB 2026-11-03, still to apply to production before the release; **61_3 and 61_4 built** (frontend) 2026-11-03 in one PR, no migration: ticket 61 complete): progress clocks as Room
   content, universal and customisable: per-Room clock rules (who opens and
   marks, undo or "no going back", free Room labels the Master creates,
   Master-defined mark kinds; nothing hard-coded; map palette colours; any

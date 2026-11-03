@@ -7,8 +7,15 @@ export type SectionKind = 'custom' | 'page_documents' | 'page_maps' | 'page_sess
 
 import type { ModuleKind } from './sessionZero';
 
-/** What a block of a custom Section lists; a `tool` block holds a Session 0 step of its own (spec 60). */
-export type BlockKind = 'documents' | 'maps' | 'session_zero' | 'tool';
+/**
+ * What a block of a custom Section lists; a `tool` block holds a Session 0
+ * step of its own (spec 60); a `clocks` block shows some of the Room's
+ * clocks and groups, or all the open ones (spec 61 Decision 18).
+ */
+export type BlockKind = 'documents' | 'maps' | 'session_zero' | 'tool' | 'clocks';
+
+/** A Clocks block's chip: one clock or one group of the Room. */
+export type ClockChip = { clockId: string; groupId: null } | { clockId: null; groupId: string };
 
 /** The Session 0 steps a Section can hold as a tool (spec 60 Decision 1): Lines & Veils is the Room's one board. */
 export type ToolKind = Exclude<ModuleKind, 'lines_veils'>;
@@ -58,6 +65,10 @@ export interface LandingBlock {
   collapsed: boolean;
   /** A tool block's step (spec 60); null on the other kinds. */
   moduleId: string | null;
+  /** A Clocks block's chips, in order (only those the viewer sees); empty on the other kinds. */
+  clockChips: ClockChip[];
+  /** A Clocks block follows every open clock instead of its chips. */
+  allClocks: boolean;
   toolKind: ToolKind | null;
   /** Whether the Players see a tool block (only the Master sees it otherwise); null on the other kinds. */
   playersVisible: boolean | null;

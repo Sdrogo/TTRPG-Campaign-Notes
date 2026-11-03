@@ -1577,7 +1577,8 @@
       "maps": "地图",
       "mapsFree": "关系地图",
       "mapsGeographic": "地理地图",
-      "sessionZero": "第 0 次会话"
+      "sessionZero": "第 0 次会话",
+      "clocks": "进度钟"
     },
     "features": {
       "sessions": "会话",
@@ -1618,7 +1619,8 @@
         "body": "会话、步骤和投票"
       },
       "tools": "工具",
-      "toolsBody": "独立的第0次会话工具，在你展示之前对玩家隐藏"
+      "toolsBody": "独立的第0次会话工具，在你展示之前对玩家隐藏",
+      "clocks": "进度钟"
     },
     "edit": {
       "start": "编辑",
@@ -1751,7 +1753,8 @@
     "toast": {
       "marked": "“{{name}}” {{delta}}",
       "undo": "撤销",
-      "closed": "“{{name}}”已闭合"
+      "closed": "“{{name}}”已闭合",
+      "refused": "你的提议“{{name}}”被拒绝了。"
     },
     "markDialog": {
       "title": "标记“{{name}}”",
@@ -1896,6 +1899,53 @@
       "templates": "房间模板",
       "noTemplates": "没有模板：在进度钟的对话框中保存一个。",
       "deleteTemplate": "删除模板“{{name}}”"
+    },
+    "groups": {
+      "create": "新建分组",
+      "editTitle": "编辑分组",
+      "name": "分组名称",
+      "mode": "模式",
+      "modeHint": {
+        "free": "进度钟只是放在一起：一个地点的层级、各个势力。",
+        "race": "最先闭合的获胜；若在你确认前另一个也闭合，则为平局。",
+        "turn": "部分进度钟是决定性的：其中一个闭合时转折结束，其余的不会发生。",
+        "sequence": "按顺序闭合：只有第一个未闭合的接受标记，其余的等待。"
+      },
+      "clocks": "分组中的进度钟",
+      "clocksHint": "按你选择的顺序，最多 {{max}} 个；其他分组的进度钟会移到此组。",
+      "decisiveHint": "写下决定性进度钟的结果；其余留空。",
+      "decisive": "“{{name}}”的结果",
+      "notDecisive": "非决定性",
+      "menu": "分组“{{name}}”的操作",
+      "newTurn": "新的转折",
+      "archive": "归档分组",
+      "restore": "恢复分组",
+      "delete": "删除分组",
+      "deleteTitle": "删除分组？",
+      "deleteBody": "“{{name}}”将消失；其中的进度钟保留在分组之外。",
+      "empty": "没有进度钟：编辑分组来添加。",
+      "quoted": "“{{name}}”",
+      "outcome": "“{{name}}”（{{label}}）",
+      "resultWon": "获胜：{{names}}",
+      "resultTie": "平局：{{names}}",
+      "resultTurn": "转折：{{labels}}",
+      "raceOne": "{{names}}最先闭合。",
+      "raceTie": "{{names}}已闭合：平局，两者都会发生。",
+      "confirm": "确认",
+      "turnEnds": "转折结束：{{labels}}。其余未闭合的进度钟不会发生。",
+      "endTurn": "结束转折",
+      "notYet": "暂不",
+      "reveal": "下一个是“{{name}}”，但玩家看不到它。要公开吗？",
+      "revealButton": "向房间公开",
+      "notNow": "以后再说"
+    },
+    "block": {
+      "allOpen": "所有未闭合的进度钟",
+      "add": "进度钟",
+      "newClock": "新建进度钟…",
+      "groupChip": "分组“{{name}}”",
+      "missing": "已不可用",
+      "noneLeft": "没有其他进度钟或分组。"
     }
   }
 }

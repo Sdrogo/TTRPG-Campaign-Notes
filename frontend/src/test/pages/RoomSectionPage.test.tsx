@@ -17,6 +17,7 @@ import {
   rawSections,
   rawSessionZeroOverview,
 } from '../fixtures';
+import { rawClock, rawRules } from '../clockFixtures';
 import { renderWithProviders } from '../utils';
 import { RoomSectionPage } from '../../pages/RoomSectionPage';
 
@@ -131,6 +132,20 @@ describe('RoomSectionPage', () => {
     expect(within(index).getByText('#PNG')).toBeInTheDocument();
     expect(within(index).getByText('Sondaggi')).toBeInTheDocument();
     expect(within(index).getByRole('button', { name: 'Il patto' })).toBeInTheDocument();
+  });
+
+  it("shows a Player a Clocks block's clocks (spec 61)", async () => {
+    sections = () =>
+      Promise.resolve(rawSections([rawSection({ blocks: [rawBlock({ id: 'b-clocks', kind: 'clocks', tag_ids: [], all_clocks: true })] })]));
+    const answer = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation((path: string, init?: unknown) => {
+      if (path === '/rooms/room-1/clocks') return Promise.resolve([rawClock()]);
+      if (path === '/rooms/room-1/clock-rules') return Promise.resolve(rawRules());
+      return answer(path, init as never);
+    });
+    render();
+    expect(await screen.findByRole('img', { name: 'Allarme: 4 su 8, Aperto' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Clock' })).toBeInTheDocument();
   });
 
   it('names the Room after its home while the Room loads', async () => {

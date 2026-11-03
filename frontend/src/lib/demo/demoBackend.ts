@@ -429,10 +429,11 @@ function answer(path: string, viewer: Viewer): Answer {
     case 'mention-suggestions':
       return ok(section === 'exports' ? [] : { sources: [] });
     case 'sections':
-      // The sample Room's landing is the three page cards every Room starts with (spec 55).
+      // The sample Room's landing: the three page cards every Room starts
+      // with (spec 55), the Clocks card and a "Clocks" Section (spec 61).
       return rest.length === 1
-        ? ok(
-            (['page_documents', 'page_maps', 'page_session_zero'] as const).map((kind, position) => ({
+        ? ok([
+            ...(['page_documents', 'page_maps', 'page_session_zero'] as const).map((kind, position) => ({
               id: `demo-${kind}`,
               kind,
               position,
@@ -442,8 +443,37 @@ function answer(path: string, viewer: Viewer): Answer {
               blocks: [],
               can_edit: false,
             })),
-          )
+            { ...data.clockSection, can_edit: false },
+            {
+              id: 'demo-page_clocks',
+              kind: 'page_clocks',
+              position: 4,
+              title: null,
+              description: '',
+              image_url: null,
+              blocks: [],
+              can_edit: false,
+            },
+          ])
         : NOT_FOUND;
+    case 'clocks': {
+      // Every sample clock is seen by the whole Room; under "Solo il Master" only the Master marks them.
+      const rights = { can_manage: viewer.isMaster, can_mark: viewer.isMaster, can_unmark: viewer.isMaster };
+      const shown = data.clocks.map((clock) => ({
+        ...clock,
+        consequence: viewer.isMaster ? clock.consequence : null,
+        ...rights,
+      }));
+      if (rest.length === 1) return ok(shown);
+      const one = shown.find((clock) => clock.id === id);
+      if (!one) return NOT_FOUND;
+      if (rest.length === 2) return ok(one);
+      return sub === 'history' && rest.length === 3 ? ok({ entries: [], next_before: null }) : NOT_FOUND;
+    }
+    case 'clock-rules':
+      return rest.length === 1 ? ok(data.clockRules) : NOT_FOUND;
+    case 'clock-groups':
+      return rest.length === 1 ? ok(data.clockGroups) : NOT_FOUND;
     case 'session-zero':
       if (id === 'overview' && rest.length === 2) return ok({ started: false, rounds: [], lines_veils: {} });
       // The sample Room's Session 0 was never started (spec 46); starting it is a write.

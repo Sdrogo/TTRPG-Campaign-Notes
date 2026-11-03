@@ -1620,7 +1620,8 @@
       "maps": "Cartes",
       "mapsFree": "Cartes des relations",
       "mapsGeographic": "Cartes géographiques",
-      "sessionZero": "Session 0"
+      "sessionZero": "Session 0",
+      "clocks": "Horloges"
     },
     "features": {
       "sessions": "Sessions",
@@ -1664,7 +1665,8 @@
         "body": "Sessions, étapes et sondages"
       },
       "tools": "Outils",
-      "toolsBody": "Un outil de la Session 0 à part entière, caché aux joueurs jusqu'à ce que tu le montres"
+      "toolsBody": "Un outil de la Session 0 à part entière, caché aux joueurs jusqu'à ce que tu le montres",
+      "clocks": "Horloge"
     },
     "edit": {
       "start": "Modifier",
@@ -1801,7 +1803,8 @@
     "toast": {
       "marked": "{{delta}} sur « {{name}} »",
       "undo": "Annuler",
-      "closed": "« {{name}} » s'est fermée"
+      "closed": "« {{name}} » s'est fermée",
+      "refused": "Ta proposition « {{name}} » a été refusée."
     },
     "markDialog": {
       "title": "Marquer « {{name}} »",
@@ -1949,6 +1952,53 @@
       "templates": "Modèles de la Salle",
       "noTemplates": "Aucun modèle : enregistres-en un depuis le dialogue d'une horloge.",
       "deleteTemplate": "Supprimer le modèle « {{name}} »"
+    },
+    "groups": {
+      "create": "Nouveau groupe",
+      "editTitle": "Modifier le groupe",
+      "name": "Nom du groupe",
+      "mode": "Mode",
+      "modeHint": {
+        "free": "Les horloges sont juste ensemble : les niveaux d’un lieu, les factions.",
+        "race": "La première qui se ferme gagne ; si une autre se ferme avant que tu confirmes, c’est une égalité.",
+        "turn": "Certaines horloges sont décisives : quand l’une se ferme, le tournant se termine et les autres n’adviennent pas.",
+        "sequence": "Elles se ferment dans l’ordre : seule la première ouverte reçoit des marques, les autres attendent."
+      },
+      "clocks": "Horloges du groupe",
+      "clocksHint": "Dans l’ordre où tu les choisis, jusqu’à {{max}} ; une horloge d’un autre groupe passe dans celui-ci.",
+      "decisiveHint": "Écris l’issue des horloges décisives ; laisse les autres vides.",
+      "decisive": "Issue de « {{name}} »",
+      "notDecisive": "Non décisive",
+      "menu": "Actions du groupe « {{name}} »",
+      "newTurn": "Nouveau tournant",
+      "archive": "Archiver le groupe",
+      "restore": "Restaurer le groupe",
+      "delete": "Supprimer le groupe",
+      "deleteTitle": "Supprimer le groupe ?",
+      "deleteBody": "« {{name}} » disparaît ; ses horloges restent, hors des groupes.",
+      "empty": "Aucune horloge : modifie le groupe pour en ajouter.",
+      "quoted": "« {{name}} »",
+      "outcome": "« {{name}} » ({{label}})",
+      "resultWon": "Gagné : {{names}}",
+      "resultTie": "Égalité : {{names}}",
+      "resultTurn": "Tournant : {{labels}}",
+      "raceOne": "{{names}} s’est fermée la première.",
+      "raceTie": "{{names}} se sont fermées : égalité, les deux arrivent.",
+      "confirm": "Confirmer",
+      "turnEnds": "Le tournant se termine : {{labels}}. Les autres horloges ouvertes n’adviennent pas.",
+      "endTurn": "Terminer le tournant",
+      "notYet": "Pas encore",
+      "reveal": "« {{name}} » est la suivante, mais les joueurs ne la voient pas. La révéler ?",
+      "revealButton": "Révéler à la Salle",
+      "notNow": "Pas maintenant"
+    },
+    "block": {
+      "allOpen": "Toutes les horloges ouvertes",
+      "add": "Horloge",
+      "newClock": "Nouvelle horloge…",
+      "groupChip": "Groupe « {{name}} »",
+      "missing": "Plus disponible",
+      "noneLeft": "Aucune autre horloge ni groupe."
     }
   }
 }

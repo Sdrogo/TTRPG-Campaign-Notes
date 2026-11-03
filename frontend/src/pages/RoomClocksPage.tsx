@@ -13,7 +13,7 @@ import {
   Title,
   UnstyledButton,
 } from '@mantine/core';
-import { CaretDownIcon, CaretRightIcon, GearSixIcon, PlusIcon, TimerIcon } from '@phosphor-icons/react';
+import { CaretDownIcon, CaretRightIcon, GearSixIcon, PlusIcon, SquaresFourIcon, TimerIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { useRoom } from '../hooks/useRooms';
@@ -22,17 +22,22 @@ import { useDocuments } from '../hooks/useDocuments';
 import { useReadOnly } from '../hooks/useViewAs';
 import {
   useArchiveClock,
+  useArchiveGroup,
   useClockGroups,
   useClockRules,
   useClocks,
   useCreateClock,
   useDeleteClock,
+  useDeleteGroup,
+  useEndGroup,
   useOpenClock,
+  useRevealClock,
+  useSaveGroup,
   useUpdateClock,
 } from '../hooks/useClocks';
 import { useClockEvents } from '../hooks/useClockEvents';
 import { useClockMarker } from '../hooks/useClockMarker';
-import { canCreateClocks, emptySettings, splitClocks } from '../lib/clocks';
+import { canCreateClocks, emptySettings, groupClocks, groupPrompt, splitClocks } from '../lib/clocks';
 import { notifyError } from '../lib/notify';
 import { userDisplayName } from '../lib/members';
 import { FullPageLoader, SectionLoader, SignInRequired } from '../components/PageState';
@@ -44,6 +49,8 @@ import { ClockDialog } from '../components/clocks/ClockDialog';
 import { ClockRulesDialog } from '../components/clocks/ClockRulesDialog';
 import { ClockHistoryModal } from '../components/clocks/ClockHistoryModal';
 import { MarkDialog } from '../components/clocks/MarkDialog';
+import { ClockGroupBand, type GroupBandActions } from '../components/clocks/ClockGroupBand';
+import { ClockGroupDialog, type GroupDraft } from '../components/clocks/ClockGroupDialog';
 import type { Clock, ClockFormValues, ClockGroup } from '../types/clock';
 
 /**
@@ -72,6 +79,8 @@ type Dialog =
   | { kind: 'mark'; clock: Clock }
   | { kind: 'history'; clock: Clock }
   | { kind: 'delete'; clock: Clock }
+  | { kind: 'group'; draft: GroupDraft }
+  | { kind: 'deleteGroup'; group: ClockGroup }
   | null;
 
 function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentUserId: string }) {
@@ -83,14 +92,21 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
   const groups = useClockGroups(roomId);
   const documents = useDocuments(roomId, true);
   const readOnly = useReadOnly();
-  const glowing = useClockEvents(roomId, clocks.data);
+  const glowing = useClockEvents(roomId, clocks.data, currentUserId);
   const marker = useClockMarker(roomId);
   const createClock = useCreateClock(roomId);
   const updateClock = useUpdateClock(roomId);
   const archiveClock = useArchiveClock(roomId);
   const deleteClock = useDeleteClock(roomId);
   const openClock = useOpenClock(roomId);
+  const saveGroup = useSaveGroup(roomId);
+  const archiveGroup = useArchiveGroup(roomId);
+  const deleteGroup = useDeleteGroup(roomId);
+  const endGroup = useEndGroup(roomId);
+  const revealClock = useRevealClock(roomId);
   const [dialog, setDialog] = useState<Dialog>(null);
+  // Prompts the Master put off ("Non ancora"), until the group's state changes.
+  const [dismissed, setDismissed] = useState<ReadonlySet<string>>(() => new Set());
 
   const me = members.data?.find((member) => member.userId === currentUserId);
   const isMaster = me?.role === 'master' && !readOnly;
@@ -116,10 +132,68 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
         onDelete: (clock) => setDialog({ kind: 'delete', clock }),
       };
 
-  const lists = splitClocks(clocks.data ?? []);
+  const all = clocks.data ?? [];
+  const lists = splitClocks(all);
   const grouped = new Set((groups.data ?? []).flatMap((group) => group.clockIds));
   const loose = lists.open.filter((clock) => !grouped.has(clock.id));
-  const byId = new Map((clocks.data ?? []).map((clock) => [clock.id, clock]));
+  // A group shows its clocks in play; one whose clocks are all archived goes
+  // under "Archiviati", whole; an empty one only to the Master, to fill it.
+  const bands = (groups.data ?? []).map((group) => {
+    const members = group.clockIds.flatMap((id) => all.filter((clock) => clock.id === id));
+    const live = groupClocks(group, all);
+    return { group, live, members, archived: live.length === 0 && members.length > 0 };
+  });
+  const archivedGroups = bands.filter((band) => band.archived);
+  const inArchivedGroup = new Set(archivedGroups.flatMap((band) => band.members.map((clock) => clock.id)));
+  const archivedLoose = lists.archived.filter((clock) => !inArchivedGroup.has(clock.id));
+  const promptKey = (group: ClockGroup) => `${group.id}:${group.pendingIds.join(',')}:${group.revision}`;
+  const groupActions: GroupBandActions | undefined = isMaster
+    ? {
+        onEdit: (group) =>
+          setDialog({
+            kind: 'group',
+            draft: {
+              groupId: group.id,
+              name: group.name,
+              mode: group.mode,
+              items: groupClocks(group, all).map((clock) => ({
+                clockId: clock.id,
+                decisiveLabel: clock.decisiveLabel,
+              })),
+            },
+          }),
+        onNewTurn: (group) =>
+          setDialog({ kind: 'group', draft: { groupId: null, name: group.name, mode: 'turn', items: [] } }),
+        onArchive: (group, archived) =>
+          archiveGroup.mutate({ groupId: group.id, archived }, { onError: notifyError }),
+        onDelete: (group) => setDialog({ kind: 'deleteGroup', group }),
+        onEnd: (group) => endGroup.mutate(group.id, { onError: notifyError }),
+        onReveal: (clock) =>
+          revealClock.mutate({ clockId: clock.id, visibility: 'room' }, { onError: notifyError }),
+        onDismiss: (group) => setDismissed((keys) => new Set(keys).add(promptKey(group))),
+        pending: endGroup.isPending || revealClock.isPending,
+      }
+    : undefined;
+  const band = ({ group, live, members, archived }: (typeof bands)[number]) => (
+    <ClockGroupBand
+      key={group.id}
+      group={group}
+      clocks={all}
+      archived={archived}
+      prompt={dismissed.has(promptKey(group)) ? null : groupPrompt(group, all)}
+      actions={groupActions}
+    >
+      {archived
+        ? members.map(card)
+        : live.length > 0
+          ? live.map(card)
+          : (
+              <Text size="sm" c="dimmed">
+                {t('clocks.groups.empty')}
+              </Text>
+            )}
+    </ClockGroupBand>
+  );
   const card = (clock: Clock) => (
     <ClockCard
       key={clock.id}
@@ -156,6 +230,17 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
                 {t('clocks.rules.button')}
               </Button>
             )}
+            {isMaster && (
+              <Button
+                variant="default"
+                leftSection={<SquaresFourIcon size={18} />}
+                onClick={() =>
+                  setDialog({ kind: 'group', draft: { groupId: null, name: '', mode: 'free', items: [] } })
+                }
+              >
+                {t('clocks.groups.create')}
+              </Button>
+            )}
             {canCreate && (
               <Button leftSection={<PlusIcon size={18} />} onClick={() => setDialog({ kind: 'create' })}>
                 {proposing ? t('clocks.propose') : t('clocks.create')}
@@ -170,17 +255,9 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
         <EmptyState icon={<TimerIcon size={28} weight="duotone" />}>{t('clocks.empty')}</EmptyState>
       )}
       <Stack gap="lg">
-        {(groups.data ?? []).map((group) => {
-          const shown = group.clockIds.flatMap((id) => {
-            const clock = byId.get(id);
-            return clock && !clock.archived ? [clock] : [];
-          });
-          return shown.length > 0 ? (
-            <GroupBand key={group.id} group={group}>
-              {shown.map(card)}
-            </GroupBand>
-          ) : null;
-        })}
+        {bands
+          .filter(({ live, members }) => live.length > 0 || (members.length === 0 && isMaster))
+          .map(band)}
         {loose.length > 0 && (
           <Card withBorder radius="md" p="lg">
             {grouped.size > 0 && (
@@ -221,9 +298,14 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
         )}
         {lists.archived.length > 0 && (
           <Folded title={t('clocks.lists.archived')} count={lists.archived.length}>
-            <Group gap="xl" align="flex-start">
-              {lists.archived.map(card)}
-            </Group>
+            <Stack gap="lg">
+              {archivedGroups.map(band)}
+              {archivedLoose.length > 0 && (
+                <Group gap="xl" align="flex-start">
+                  {archivedLoose.map(card)}
+                </Group>
+              )}
+            </Stack>
           </Folded>
         )}
       </Stack>
@@ -290,6 +372,45 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
           onClose={close}
         />
       )}
+      {dialog?.kind === 'group' && (
+        <ClockGroupDialog
+          draft={dialog.draft}
+          clocks={all.filter((clock) => clock.state !== 'proposed' && !clock.archived)}
+          submitting={saveGroup.isPending}
+          error={saveGroup.error?.message ?? null}
+          onClose={() => {
+            saveGroup.reset();
+            close();
+          }}
+          onSubmit={(input) => saveGroup.mutate(input, { onSuccess: close })}
+        />
+      )}
+      <Modal
+        opened={dialog?.kind === 'deleteGroup'}
+        onClose={close}
+        title={t('clocks.groups.deleteTitle')}
+        centered
+      >
+        {dialog?.kind === 'deleteGroup' && (
+          <Stack gap="sm">
+            <Text>{t('clocks.groups.deleteBody', { name: dialog.group.name })}</Text>
+            <Group justify="flex-end">
+              <Button variant="default" onClick={close}>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                color="danger"
+                loading={deleteGroup.isPending}
+                onClick={() =>
+                  deleteGroup.mutate(dialog.group.id, { onError: notifyError, onSuccess: close })
+                }
+              >
+                {t('common.delete')}
+              </Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
       <Modal
         opened={dialog?.kind === 'delete'}
         onClose={close}
@@ -348,31 +469,6 @@ function formOf(clock: Clock): ClockFormValues {
     visibility: clock.visibility,
     selectiveUserIds: clock.selectiveUserIds ?? [],
   };
-}
-
-/** A group's band (Decision 17): its name, its mode, its result once ended. */
-function GroupBand({ group, children }: { group: ClockGroup; children: ReactNode }) {
-  const { t } = useTranslation();
-  return (
-    <Card withBorder radius="md" p="lg">
-      <Group gap="sm" mb="sm">
-        <Title order={2} fz="h4" style={{ fontFamily: 'var(--font-display)' }}>
-          {group.name}
-        </Title>
-        <Badge variant="outline" color="gray" size="sm">
-          {t(`clocks.groupMode.${group.mode}`)}
-        </Badge>
-        {group.ended && (
-          <Badge variant="light" color="gray" size="sm">
-            {t('clocks.groupEnded')}
-          </Badge>
-        )}
-      </Group>
-      <Group gap="xl" align="flex-start">
-        {children}
-      </Group>
-    </Card>
-  );
 }
 
 /** A folded list under the clocks (Decision 17), with its count. */

@@ -41,6 +41,7 @@ describe('the landing texts', () => {
     expect(tagsOf(['t2', 'gone', 't1'], tags).map((t) => t.name)).toEqual(['PNG', 'Tokyo']);
     expect(defaultBlockHeading(block({ tag_ids: ['t1', 't2'] }), tags)).toBe('Documenti · #Tokyo, #PNG');
     expect(defaultBlockHeading(block({ kind: 'maps', tag_ids: [] }), tags)).toBe('Mappe');
+    expect(defaultBlockHeading(block({ kind: 'clocks', tag_ids: [] }), tags)).toBe('Clock');
     expect(defaultBlockHeading(block({ kind: 'maps', tag_ids: [], map_kind: 'free' }), tags)).toBe('Mappe delle relazioni');
     expect(defaultBlockHeading(block({ kind: 'maps', tag_ids: [], map_kind: 'geographic' }), tags)).toBe('Mappe geografiche');
     expect(defaultBlockHeading(block({ kind: 'session_zero', tag_ids: [], features: ['polls'] }), tags)).toBe('Sondaggi');

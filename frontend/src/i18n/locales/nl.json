@@ -1618,7 +1618,8 @@
       "maps": "Kaarten",
       "mapsFree": "Relatiekaarten",
       "mapsGeographic": "Geografische kaarten",
-      "sessionZero": "Sessie 0"
+      "sessionZero": "Sessie 0",
+      "clocks": "Klokken"
     },
     "features": {
       "sessions": "Sessies",
@@ -1662,7 +1663,8 @@
         "body": "Sessies, stappen en peilingen"
       },
       "tools": "Hulpmiddelen",
-      "toolsBody": "Een eigen Sessie 0-hulpmiddel, verborgen voor de spelers tot je het laat zien"
+      "toolsBody": "Een eigen Sessie 0-hulpmiddel, verborgen voor de spelers tot je het laat zien",
+      "clocks": "Klok"
     },
     "edit": {
       "start": "Bewerken",
@@ -1799,7 +1801,8 @@
     "toast": {
       "marked": "{{delta}} op ‘{{name}}’",
       "undo": "Ongedaan maken",
-      "closed": "‘{{name}}’ is gesloten"
+      "closed": "‘{{name}}’ is gesloten",
+      "refused": "Je voorstel ‘{{name}}’ is afgewezen."
     },
     "markDialog": {
       "title": "‘{{name}}’ markeren",
@@ -1947,6 +1950,53 @@
       "templates": "Sjablonen van de Kamer",
       "noTemplates": "Geen sjablonen: sla er een op vanuit het venster van een klok.",
       "deleteTemplate": "Sjabloon ‘{{name}}’ verwijderen"
+    },
+    "groups": {
+      "create": "Nieuwe groep",
+      "editTitle": "Groep bewerken",
+      "name": "Naam van de groep",
+      "mode": "Modus",
+      "modeHint": {
+        "free": "De klokken staan alleen bij elkaar: de lagen van een plek, de facties.",
+        "race": "De eerste die sluit wint; sluit er nog een voordat je bevestigt, dan is het gelijkspel.",
+        "turn": "Sommige klokken zijn beslissend: sluit er een, dan eindigt het keerpunt en vervallen de andere.",
+        "sequence": "Ze sluiten op volgorde: alleen de eerste open klok krijgt markeringen, de andere wachten."
+      },
+      "clocks": "Klokken van de groep",
+      "clocksHint": "In de volgorde waarin je ze kiest, tot {{max}}; een klok uit een andere groep gaat hierheen.",
+      "decisiveHint": "Schrijf de uitkomst van de beslissende klokken; laat de andere leeg.",
+      "decisive": "Uitkomst van ‘{{name}}’",
+      "notDecisive": "Niet beslissend",
+      "menu": "Acties voor de groep ‘{{name}}’",
+      "newTurn": "Nieuw keerpunt",
+      "archive": "Groep archiveren",
+      "restore": "Groep herstellen",
+      "delete": "Groep verwijderen",
+      "deleteTitle": "Groep verwijderen?",
+      "deleteBody": "‘{{name}}’ verdwijnt; de klokken blijven, buiten elke groep.",
+      "empty": "Geen klokken: bewerk de groep om er toe te voegen.",
+      "quoted": "‘{{name}}’",
+      "outcome": "‘{{name}}’ ({{label}})",
+      "resultWon": "Gewonnen: {{names}}",
+      "resultTie": "Gelijkspel: {{names}}",
+      "resultTurn": "Keerpunt: {{labels}}",
+      "raceOne": "{{names}} sloot als eerste.",
+      "raceTie": "{{names}} sloten: gelijkspel, beide gebeuren.",
+      "confirm": "Bevestigen",
+      "turnEnds": "Het keerpunt eindigt: {{labels}}. De andere open klokken vervallen.",
+      "endTurn": "Keerpunt beëindigen",
+      "notYet": "Nog niet",
+      "reveal": "‘{{name}}’ is de volgende, maar de spelers zien hem niet. Onthullen?",
+      "revealButton": "Aan de Kamer tonen",
+      "notNow": "Niet nu"
+    },
+    "block": {
+      "allOpen": "Alle open klokken",
+      "add": "Klok",
+      "newClock": "Nieuwe klok…",
+      "groupChip": "Groep ‘{{name}}’",
+      "missing": "Niet meer beschikbaar",
+      "noneLeft": "Geen andere klok of groep."
     }
   }
 }

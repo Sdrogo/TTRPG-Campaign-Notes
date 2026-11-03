@@ -63,6 +63,7 @@ export function defaultBlockHeading(
     if (block.mapKind === 'geographic') return i18n.t('roomLanding.blockTitle.mapsGeographic');
     return i18n.t('roomLanding.blockTitle.maps');
   }
+  if (block.kind === 'clocks') return i18n.t('roomLanding.blockTitle.clocks');
   if (block.kind === 'tool') return block.toolKind ? moduleLabel(block.toolKind) : i18n.t('roomLanding.tiles.tools');
   return block.features.length === 1 ? featureLabel(block.features[0]) : i18n.t('roomLanding.blockTitle.sessionZero');
 }

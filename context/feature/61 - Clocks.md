@@ -385,6 +385,38 @@ before the release that ships them.
 - **Demo seed moves to 61_4**: the Demo is a frontend mock
   (`lib/demoBackend`), so it is seeded with the frontend.
 
+## As built (61_3 and 61_4, frontend, 2026-11-03)
+
+- `components/clocks/`: `ClockFace`, `ClockCard`, `ClockDialog`,
+  `ClockRulesDialog`, `ClockHistoryModal`, `MarkDialog` (61_3);
+  `ClockGroupBand`, `ClockGroupDialog`, `ClockBlock`, `ClockChipsEditor`
+  (61_4). There is no separate `ClockStrip` or `ClockDetail`: a Section's
+  Clocks block lays out small `ClockCard`s, and the card's ⋮ menu opens
+  the history (a modal) and "Segna…".
+- Groups: "Nuovo gruppo" on the Clocks page (Master); the dialog picks the
+  mode and the clocks in order, and, for a turn, the outcome of each
+  decisive clock. A band's ⋮ menu edits, archives or restores, deletes,
+  and offers "Nuova svolta" once a turn ended (a new group, same name, no
+  clocks). A group whose clocks are all archived moves, whole, under
+  "Archiviati"; an empty group shows to the Master only.
+- Prompts (Master): a race's first close ("Conferma"), a turn's decisive
+  close ("Termina la svolta"), a sequence's next clock hidden from the
+  Players ("Rivela alla Stanza", a PATCH of its visibility to Room).
+  "Non ancora" / "Non ora" hides a prompt until the group changes.
+- A Player whose proposal is refused gets a toast; closing toasts show
+  once per clock state, however many views follow it.
+- Clocks block: "Clock" under Strumenti in "+ Blocco" starts a draft that
+  saves on its first chip (a clock or a group) or the "Tutti i clock
+  aperti" switch, and drops when closed empty; "Nuovo clock…" in the
+  picker creates a clock and adds it. Up to 20 chips; a chip whose clock
+  or group is gone reads "Non più disponibile".
+- The Index lists the Clocks page card like the other page cards.
+- Demo: a race ("Fuori dal faro"), a turn ("La notte della lente", with a
+  decisive clock linked to the lens Document and a Shock-marked
+  consequence clock), a countdown with stage labels, two mark kinds, and a
+  custom "Clock" Section with a Clocks block. Screenshots in project files
+  `clocks/`.
+
 ## Tests
 
 - Backend: marks clamp and set states; concurrent marks both count;

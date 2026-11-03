@@ -28,11 +28,11 @@ let onReopen: () => void;
 let status: RoomStreamStatus;
 let list: Clock[] | undefined;
 
-function render(clocks: Clock[] | undefined = [toClock(rawClock())]) {
+function render(clocks: Clock[] | undefined = [toClock(rawClock())], userId = 'user-1') {
   const queryClient = createTestQueryClient();
   const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue();
   list = clocks;
-  const hook = renderHookWithProviders(() => useClockEvents('room-1', list), { queryClient });
+  const hook = renderHookWithProviders(() => useClockEvents('room-1', list, userId), { queryClient });
   const rerender = (next: Clock[] | undefined) => {
     list = next;
     hook.rerender();
@@ -113,13 +113,33 @@ describe('useClockEvents', () => {
   });
 
   it('toasts a clock that closes while the page is open, not one already closed', () => {
-    const open = toClock(rawClock());
+    const open = toClock(rawClock({ id: 'clock-toast', revision: 7 }));
     const { rerender } = render([open, toClock(rawClock({ id: 'clock-2', state: 'closed' }))]);
+    const other = render([open]);
     expect(notifications.show).not.toHaveBeenCalled();
     rerender([{ ...open, state: 'closed' }, toClock(rawClock({ id: 'clock-2', state: 'closed' }))]);
+    // A second view of the same clock (another block) doesn't toast it again.
+    other.rerender([{ ...open, state: 'closed' }]);
     expect(notifications.show).toHaveBeenCalledTimes(1);
     expect(vi.mocked(notifications.show).mock.calls[0][0].message).toBe('«Allarme» si è chiuso');
     rerender(undefined);
     expect(notifications.show).toHaveBeenCalledTimes(1);
+  });
+
+  it("tells a proposer their proposal was refused, not anyone else nor another event", () => {
+    const proposal = toClock(rawClock({ state: 'proposed', created_by: 'user-1' }));
+    render([proposal]);
+    send({ kind: 'deleted', id: 'other' });
+    send({ kind: 'changed' });
+    expect(notifications.show).not.toHaveBeenCalled();
+    send({ kind: 'deleted' });
+    expect(vi.mocked(notifications.show).mock.calls[0][0].message).toBe('La tua proposta «Allarme» è stata rifiutata.');
+  });
+
+  it("stays quiet for the Master refusing someone else's proposal, or an open clock deleted", () => {
+    render([toClock(rawClock({ state: 'proposed', created_by: 'user-2' })), toClock(rawClock({ id: 'clock-2' }))]);
+    send({ kind: 'deleted' });
+    send({ kind: 'deleted', id: 'clock-2' });
+    expect(notifications.show).not.toHaveBeenCalled();
   });
 });

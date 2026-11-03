@@ -254,9 +254,9 @@ describe('RoomClocksPage', { timeout: 20_000 }, () => {
     writes['POST /rooms/room-1/clocks/clock-3/open'] = () => Promise.reject(new ApiError(409, 'Già aperto'));
     const { user } = render();
     expect(await screen.findByRole('heading', { name: 'Fuga' })).toBeInTheDocument();
-    expect(screen.getByText('Gara')).toBeInTheDocument();
+    expect(screen.getAllByText('Gara')).toHaveLength(2);
     expect(screen.getByText('Terminato')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Vuoto' })).not.toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Vuoto' })).getByText('Nessun clock: modifica il gruppo per aggiungerne.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Fuori dai gruppi' })).toBeInTheDocument();
     expect(screen.getByText('da Giulia · 8 segmenti')).toBeInTheDocument();
 
@@ -271,6 +271,130 @@ describe('RoomClocksPage', { timeout: 20_000 }, () => {
     expect(finished).toHaveAttribute('aria-expanded', 'false');
     await user.click(finished);
     expect(finished).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('lets the Master make a group, edit it, archive and restore it, and delete it', async () => {
+    asMaster();
+    data.clocks = [rawClock(), rawClock({ id: 'clock-2', name: 'Fuori' })];
+    data.groups = [rawGroup({ name: 'Notte', mode: 'free' })];
+    writes['POST /rooms/room-1/clock-groups'] = () => Promise.resolve(rawGroup({ id: 'group-9' }));
+    writes['PUT /rooms/room-1/clock-groups/group-9/clocks'] = () => Promise.resolve(rawGroup({ id: 'group-9' }));
+    writes['PATCH /rooms/room-1/clock-groups/group-1'] = (init) =>
+      (init as { json: { name?: string } }).json.name ? Promise.reject(new ApiError(400, 'Nome doppio')) : Promise.resolve(rawGroup());
+    const { user } = render();
+    const band = await screen.findByRole('region', { name: 'Notte' });
+    expect(within(band).getByRole('img', { name: 'Allarme: 4 su 8, Aperto' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Nuovo gruppo' }));
+    const create = await screen.findByRole('dialog', { name: 'Nuovo gruppo' });
+    await user.type(within(create).getByRole('textbox', { name: 'Nome del gruppo' }), 'Fuga');
+    await user.click(within(create).getByRole('combobox', { name: 'Clock del gruppo' }));
+    await user.click(screen.getByRole('option', { name: 'Fuori' }));
+    await user.click(within(create).getByRole('button', { name: 'Salva' }));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/clock-groups/group-9/clocks', {
+        method: 'PUT',
+        json: { items: [{ clock_id: 'clock-2', decisive_label: null }] },
+      }),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Nuovo gruppo' })).not.toBeInTheDocument());
+
+    await user.click(within(band).getByRole('button', { name: 'Azioni del gruppo «Notte»' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Modifica' }));
+    const edit = await screen.findByRole('dialog', { name: 'Modifica gruppo' });
+    expect(within(edit).getByRole('textbox', { name: 'Nome del gruppo' })).toHaveValue('Notte');
+    await user.click(within(edit).getByRole('button', { name: 'Salva' }));
+    expect(await within(edit).findByRole('alert')).toHaveTextContent('Nome doppio');
+    await user.click(within(edit).getByRole('button', { name: 'Annulla' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Modifica gruppo' })).not.toBeInTheDocument());
+
+    await user.click(within(band).getByRole('button', { name: 'Azioni del gruppo «Notte»' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Archivia il gruppo' }));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/clock-groups/group-1', { method: 'PATCH', json: { archived: true } }),
+    );
+
+    await user.click(within(band).getByRole('button', { name: 'Azioni del gruppo «Notte»' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Elimina il gruppo' }));
+    const confirm = await screen.findByRole('dialog', { name: 'Eliminare il gruppo?' });
+    expect(within(confirm).getByText('«Notte» sparisce; i suoi clock restano, fuori dai gruppi.')).toBeInTheDocument();
+    await user.click(within(confirm).getByRole('button', { name: 'Annulla' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Eliminare il gruppo?' })).not.toBeInTheDocument());
+    await user.click(within(band).getByRole('button', { name: 'Azioni del gruppo «Notte»' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Elimina il gruppo' }));
+    await user.click(within(await screen.findByRole('dialog', { name: 'Eliminare il gruppo?' })).getByRole('button', { name: 'Elimina' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/clock-groups/group-1', { method: 'DELETE' }));
+  });
+
+  it('keeps a group whose clocks are all archived under "Archiviati", where the Master restores it', async () => {
+    asMaster();
+    data.clocks = [rawClock({ archived: true }), rawClock({ id: 'clock-2', name: 'Sciolto', archived: true })];
+    data.groups = [rawGroup({ name: 'Notte' })];
+    const { user } = render();
+    const folded = await screen.findByRole('button', { name: /Archiviati/ });
+    expect(within(folded).getByText('2')).toBeInTheDocument();
+    await user.click(folded);
+    const band = screen.getByRole('region', { name: 'Notte' });
+    expect(within(band).getByRole('img', { name: /Allarme/ })).toBeInTheDocument();
+    expect(within(band).queryByRole('img', { name: /Sciolto/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Sciolto/ })).toBeInTheDocument();
+    await user.click(within(band).getByRole('button', { name: 'Azioni del gruppo «Notte»' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Ripristina il gruppo' }));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/clock-groups/group-1', { method: 'PATCH', json: { archived: false } }),
+    );
+  });
+
+  it("asks the Master to confirm a race, end a turn, start a new one, and reveal a sequence's next clock", async () => {
+    asMaster();
+    data.clocks = [
+      rawClock({ id: 'clock-1', name: 'Fuga', state: 'closed', filled: 8 }),
+      rawClock({ id: 'clock-2', name: 'Lente', state: 'closed', filled: 8, decisive_label: 'Salva' }),
+      rawClock({ id: 'clock-3', name: 'Rito' }),
+      rawClock({ id: 'clock-4', name: 'Primo', state: 'closed', filled: 8 }),
+      rawClock({ id: 'clock-5', name: 'Secondo', visibility: 'master' }),
+      rawClock({ id: 'clock-6', name: 'Altro' }),
+    ];
+    data.groups = [
+      rawGroup({ name: 'Gara', clock_ids: ['clock-1', 'clock-6'], pending_ids: ['clock-1'] }),
+      rawGroup({ id: 'group-2', name: 'Notte', mode: 'turn', clock_ids: ['clock-2', 'clock-3'], pending_ids: ['clock-2'] }),
+      rawGroup({ id: 'group-3', name: 'Scale', mode: 'sequence', clock_ids: ['clock-4', 'clock-5'] }),
+      rawGroup({
+        id: 'group-4',
+        name: 'Ieri',
+        mode: 'turn',
+        clock_ids: ['clock-6'],
+        ended: true,
+        result: { outcomes: [{ clock_id: 'clock-6', label: 'Fatto' }] },
+      }),
+    ];
+    writes['POST /rooms/room-1/clock-groups/group-1/end'] = () => Promise.reject(new ApiError(409, 'Già terminato'));
+    const { user } = render();
+    const race = await screen.findByRole('region', { name: 'Gara' });
+    expect(within(race).getByRole('status')).toHaveTextContent('«Fuga» si è chiuso per primo.');
+    await user.click(within(race).getByRole('button', { name: 'Conferma' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/clock-groups/group-1/end', { method: 'POST' }));
+    await user.click(within(race).getByRole('button', { name: 'Non ancora' }));
+    expect(within(race).queryByRole('status')).not.toBeInTheDocument();
+
+    const turn = screen.getByRole('region', { name: 'Notte' });
+    expect(within(turn).getByRole('status')).toHaveTextContent('La svolta termina: «Lente» (Salva).');
+    await user.click(within(turn).getByRole('button', { name: 'Termina la svolta' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/clock-groups/group-2/end', { method: 'POST' }));
+
+    const sequence = screen.getByRole('region', { name: 'Scale' });
+    expect(within(sequence).getByRole('status')).toHaveTextContent('«Secondo» è il prossimo');
+    await user.click(within(sequence).getByRole('button', { name: 'Rivela alla Stanza' }));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1/clocks/clock-5', { method: 'PATCH', json: { visibility: 'room' } }),
+    );
+
+    const past = screen.getByRole('region', { name: 'Ieri' });
+    expect(within(past).getByText('Svolta: Fatto')).toBeInTheDocument();
+    await user.click(within(past).getByRole('button', { name: 'Azioni del gruppo «Ieri»' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Nuova svolta' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Nuovo gruppo' });
+    expect(within(dialog).getByRole('textbox', { name: 'Nome del gruppo' })).toHaveValue('Ieri');
   });
 
   it("shows a Player the proposals without the Master's buttons", async () => {

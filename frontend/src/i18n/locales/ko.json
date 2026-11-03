@@ -1577,7 +1577,8 @@
       "maps": "지도",
       "mapsFree": "관계 지도",
       "mapsGeographic": "지리 지도",
-      "sessionZero": "세션 0"
+      "sessionZero": "세션 0",
+      "clocks": "클락"
     },
     "features": {
       "sessions": "세션",
@@ -1618,7 +1619,8 @@
         "body": "세션, 단계, 투표"
       },
       "tools": "도구",
-      "toolsBody": "독립된 세션 0 도구로, 공개하기 전까지 플레이어에게 보이지 않습니다"
+      "toolsBody": "독립된 세션 0 도구로, 공개하기 전까지 플레이어에게 보이지 않습니다",
+      "clocks": "클락"
     },
     "edit": {
       "start": "편집",
@@ -1751,7 +1753,8 @@
     "toast": {
       "marked": "「{{name}}」에 {{delta}}",
       "undo": "실행 취소",
-      "closed": "「{{name}}」이 닫혔습니다"
+      "closed": "「{{name}}」이 닫혔습니다",
+      "refused": "제안한 「{{name}}」이 거절되었습니다."
     },
     "markDialog": {
       "title": "「{{name}}」 표시",
@@ -1896,6 +1899,53 @@
       "templates": "룸 템플릿",
       "noTemplates": "템플릿이 없습니다. 클락 대화 상자에서 저장하세요.",
       "deleteTemplate": "템플릿 「{{name}}」 삭제"
+    },
+    "groups": {
+      "create": "새 그룹",
+      "editTitle": "그룹 편집",
+      "name": "그룹 이름",
+      "mode": "모드",
+      "modeHint": {
+        "free": "클락을 함께 둘 뿐입니다: 한 장소의 층, 세력 등.",
+        "race": "먼저 닫힌 클락이 이깁니다. 확인하기 전에 다른 클락도 닫히면 무승부입니다.",
+        "turn": "일부 클락은 결정적입니다: 하나가 닫히면 전환점이 끝나고 나머지는 무산됩니다.",
+        "sequence": "순서대로 닫힙니다: 처음 열린 클락만 표시를 받고 나머지는 기다립니다."
+      },
+      "clocks": "그룹의 클락",
+      "clocksHint": "고른 순서대로 최대 {{max}}개. 다른 그룹의 클락은 이 그룹으로 옮겨집니다.",
+      "decisiveHint": "결정적인 클락의 결과를 쓰고 나머지는 비워 두세요.",
+      "decisive": "「{{name}}」의 결과",
+      "notDecisive": "결정적이지 않음",
+      "menu": "그룹 「{{name}}」 작업",
+      "newTurn": "새 전환점",
+      "archive": "그룹 보관",
+      "restore": "그룹 복원",
+      "delete": "그룹 삭제",
+      "deleteTitle": "그룹을 삭제할까요?",
+      "deleteBody": "「{{name}}」은 사라지지만 클락은 그룹 밖에 남습니다.",
+      "empty": "클락이 없습니다: 그룹을 편집해 추가하세요.",
+      "quoted": "「{{name}}」",
+      "outcome": "「{{name}}」({{label}})",
+      "resultWon": "승리: {{names}}",
+      "resultTie": "무승부: {{names}}",
+      "resultTurn": "전환점: {{labels}}",
+      "raceOne": "{{names}}이 가장 먼저 닫혔습니다.",
+      "raceTie": "{{names}}이 닫혔습니다: 무승부이며 둘 다 일어납니다.",
+      "confirm": "확인",
+      "turnEnds": "전환점이 끝납니다: {{labels}}. 나머지 열린 클락은 무산됩니다.",
+      "endTurn": "전환점 끝내기",
+      "notYet": "아직",
+      "reveal": "다음은 「{{name}}」이지만 플레이어에게 보이지 않습니다. 공개할까요?",
+      "revealButton": "룸에 공개",
+      "notNow": "나중에"
+    },
+    "block": {
+      "allOpen": "열린 클락 모두",
+      "add": "클락",
+      "newClock": "새 클락…",
+      "groupChip": "그룹 「{{name}}」",
+      "missing": "더 이상 사용할 수 없음",
+      "noneLeft": "다른 클락이나 그룹이 없습니다."
     }
   }
 }

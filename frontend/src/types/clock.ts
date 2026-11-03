@@ -105,10 +105,22 @@ export interface ClockGroup {
   position: number;
   clockIds: string[];
   ended: boolean;
-  result: Record<string, unknown> | null;
-  /** Clocks whose close waits for the Master's word (race, turn, sequence). */
+  /** How an ended race or turn came out, naming only the clocks the viewer sees. */
+  result: GroupResult | null;
+  /** Clocks whose close waits for the Master's word: a race's closed ones, a turn's closed decisive ones. */
   pendingIds: string[];
   revision: number;
+}
+
+/** An ended race (won, or a tie when several closed) or turn (its decisive clocks' outcomes). */
+export type GroupResult =
+  | { kind: 'race'; winnerIds: string[]; tie: boolean }
+  | { kind: 'turn'; outcomes: { clockId: string; label: string | null }[] };
+
+/** A clock put in a group, in order; a decisive label only in a turn group. */
+export interface GroupItem {
+  clockId: string;
+  decisiveLabel: string | null;
 }
 
 /** What a history line records (Decision 10). */

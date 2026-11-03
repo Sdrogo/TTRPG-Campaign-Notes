@@ -1618,7 +1618,8 @@
       "maps": "Mappe",
       "mapsFree": "Mappe delle relazioni",
       "mapsGeographic": "Mappe geografiche",
-      "sessionZero": "Sessione 0"
+      "sessionZero": "Sessione 0",
+      "clocks": "Clock"
     },
     "features": {
       "sessions": "Sessioni",
@@ -1662,7 +1663,8 @@
         "body": "Sessioni, tappe e sondaggi"
       },
       "tools": "Strumenti",
-      "toolsBody": "Uno strumento della Sessione 0 tutto suo, nascosto ai giocatori finché non lo mostri"
+      "toolsBody": "Uno strumento della Sessione 0 tutto suo, nascosto ai giocatori finché non lo mostri",
+      "clocks": "Clock"
     },
     "edit": {
       "start": "Modifica",
@@ -1799,7 +1801,8 @@
     "toast": {
       "marked": "{{delta}} su «{{name}}»",
       "undo": "Annulla",
-      "closed": "«{{name}}» si è chiuso"
+      "closed": "«{{name}}» si è chiuso",
+      "refused": "La tua proposta «{{name}}» è stata rifiutata."
     },
     "markDialog": {
       "title": "Segna «{{name}}»",
@@ -1947,6 +1950,53 @@
       "templates": "Modelli della Stanza",
       "noTemplates": "Nessun modello: salvane uno dal dialogo di un clock.",
       "deleteTemplate": "Elimina il modello «{{name}}»"
+    },
+    "groups": {
+      "create": "Nuovo gruppo",
+      "editTitle": "Modifica gruppo",
+      "name": "Nome del gruppo",
+      "mode": "Modo",
+      "modeHint": {
+        "free": "I clock stanno solo insieme: i livelli di un luogo, le fazioni.",
+        "race": "Vince il primo che si chiude; se ne chiude un altro prima che confermi, è un pari.",
+        "turn": "Alcuni clock sono decisivi: quando uno si chiude la svolta termina e gli altri non avvengono.",
+        "sequence": "Si chiudono in ordine: solo il primo aperto prende segni, gli altri aspettano."
+      },
+      "clocks": "Clock del gruppo",
+      "clocksHint": "Nell'ordine in cui li scegli, fino a {{max}}; un clock di un altro gruppo passa a questo.",
+      "decisiveHint": "Scrivi l'esito dei clock decisivi; lascia vuoti gli altri.",
+      "decisive": "Esito di «{{name}}»",
+      "notDecisive": "Non decisivo",
+      "menu": "Azioni del gruppo «{{name}}»",
+      "newTurn": "Nuova svolta",
+      "archive": "Archivia il gruppo",
+      "restore": "Ripristina il gruppo",
+      "delete": "Elimina il gruppo",
+      "deleteTitle": "Eliminare il gruppo?",
+      "deleteBody": "«{{name}}» sparisce; i suoi clock restano, fuori dai gruppi.",
+      "empty": "Nessun clock: modifica il gruppo per aggiungerne.",
+      "quoted": "«{{name}}»",
+      "outcome": "«{{name}}» ({{label}})",
+      "resultWon": "Vinto: {{names}}",
+      "resultTie": "Pari: {{names}}",
+      "resultTurn": "Svolta: {{labels}}",
+      "raceOne": "{{names}} si è chiuso per primo.",
+      "raceTie": "{{names}} si sono chiusi: è un pari, succedono entrambi.",
+      "confirm": "Conferma",
+      "turnEnds": "La svolta termina: {{labels}}. Gli altri clock aperti non avvengono.",
+      "endTurn": "Termina la svolta",
+      "notYet": "Non ancora",
+      "reveal": "«{{name}}» è il prossimo, ma i giocatori non lo vedono. Rivelarlo?",
+      "revealButton": "Rivela alla Stanza",
+      "notNow": "Non ora"
+    },
+    "block": {
+      "allOpen": "Tutti i clock aperti",
+      "add": "Clock",
+      "newClock": "Nuovo clock…",
+      "groupChip": "Gruppo «{{name}}»",
+      "missing": "Non più disponibile",
+      "noneLeft": "Nessun altro clock o gruppo."
     }
   }
 }

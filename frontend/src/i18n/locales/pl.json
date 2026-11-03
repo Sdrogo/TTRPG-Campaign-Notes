@@ -1700,7 +1700,8 @@
       "maps": "Mapy",
       "mapsFree": "Mapy relacji",
       "mapsGeographic": "Mapy geograficzne",
-      "sessionZero": "Sesja 0"
+      "sessionZero": "Sesja 0",
+      "clocks": "Zegary"
     },
     "features": {
       "sessions": "Sesje",
@@ -1750,7 +1751,8 @@
         "body": "Sesje, etapy i ankiety"
       },
       "tools": "Narzędzia",
-      "toolsBody": "Własne narzędzie Sesji 0, ukryte przed graczami, dopóki go nie pokażesz"
+      "toolsBody": "Własne narzędzie Sesji 0, ukryte przed graczami, dopóki go nie pokażesz",
+      "clocks": "Zegar"
     },
     "edit": {
       "start": "Edytuj",
@@ -1895,7 +1897,8 @@
     "toast": {
       "marked": "{{delta}} na „{{name}}”",
       "undo": "Cofnij",
-      "closed": "„{{name}}” się zamknął"
+      "closed": "„{{name}}” się zamknął",
+      "refused": "Twoja propozycja „{{name}}” została odrzucona."
     },
     "markDialog": {
       "title": "Zaznacz „{{name}}”",
@@ -2049,6 +2052,53 @@
       "templates": "Szablony pokoju",
       "noTemplates": "Brak szablonów: zapisz jeden z okna zegara.",
       "deleteTemplate": "Usuń szablon „{{name}}”"
+    },
+    "groups": {
+      "create": "Nowa grupa",
+      "editTitle": "Edytuj grupę",
+      "name": "Nazwa grupy",
+      "mode": "Tryb",
+      "modeHint": {
+        "free": "Zegary są tylko razem: poziomy jednego miejsca, frakcje.",
+        "race": "Wygrywa pierwszy, który się zamknie; jeśli inny zamknie się, zanim potwierdzisz, jest remis.",
+        "turn": "Niektóre zegary są decydujące: gdy jeden się zamknie, zwrot się kończy, a pozostałe nie zachodzą.",
+        "sequence": "Zamykają się po kolei: znaczniki przyjmuje tylko pierwszy otwarty, reszta czeka."
+      },
+      "clocks": "Zegary grupy",
+      "clocksHint": "W kolejności wyboru, do {{max}}; zegar z innej grupy przechodzi do tej.",
+      "decisiveHint": "Wpisz wynik decydujących zegarów; pozostałe zostaw puste.",
+      "decisive": "Wynik „{{name}}”",
+      "notDecisive": "Niedecydujący",
+      "menu": "Działania grupy „{{name}}”",
+      "newTurn": "Nowy zwrot",
+      "archive": "Archiwizuj grupę",
+      "restore": "Przywróć grupę",
+      "delete": "Usuń grupę",
+      "deleteTitle": "Usunąć grupę?",
+      "deleteBody": "„{{name}}” znika; jej zegary zostają, poza grupami.",
+      "empty": "Brak zegarów: edytuj grupę, aby je dodać.",
+      "quoted": "„{{name}}”",
+      "outcome": "„{{name}}” ({{label}})",
+      "resultWon": "Wygrana: {{names}}",
+      "resultTie": "Remis: {{names}}",
+      "resultTurn": "Zwrot: {{labels}}",
+      "raceOne": "{{names}} zamknął się pierwszy.",
+      "raceTie": "{{names}} się zamknęły: remis, dzieje się jedno i drugie.",
+      "confirm": "Potwierdź",
+      "turnEnds": "Zwrot się kończy: {{labels}}. Pozostałe otwarte zegary nie zachodzą.",
+      "endTurn": "Zakończ zwrot",
+      "notYet": "Jeszcze nie",
+      "reveal": "„{{name}}” jest następny, ale gracze go nie widzą. Odsłonić?",
+      "revealButton": "Odsłoń Pokojowi",
+      "notNow": "Nie teraz"
+    },
+    "block": {
+      "allOpen": "Wszystkie otwarte zegary",
+      "add": "Zegar",
+      "newClock": "Nowy zegar…",
+      "groupChip": "Grupa „{{name}}”",
+      "missing": "Już niedostępny",
+      "noneLeft": "Brak innych zegarów i grup."
     }
   }
 }
