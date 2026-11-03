@@ -62,8 +62,8 @@ export function SectionBlock({ roomId, block, heading, content, isMaster, bar, p
     window.addEventListener(REVEAL_BLOCK_EVENT, reveal);
     return () => window.removeEventListener(REVEAL_BLOCK_EVENT, reveal);
   }, [block.id]);
-  // A tool block is a `ToolBlock` (spec 60).
-  if ((empty && !isMaster) || content?.kind === 'tool') return null;
+  // A tool block is a `ToolBlock` (spec 60), a Clocks block a `ClockBlock` (spec 61).
+  if ((empty && !isMaster) || content?.kind === 'tool' || content?.kind === 'clocks') return null;
 
   const grid = (cards: ReactNode[]) => <Box className="documents-grid">{cards}</Box>;
   const sessionCard = (item: SessionZeroItem) => {
@@ -198,8 +198,8 @@ export function SectionBlock({ roomId, block, heading, content, isMaster, bar, p
 }
 
 /** The cards a block shows, for its heading's badge: each Document once, however many groups it is under. */
-function blockCount(content: BlockContent | undefined): number | undefined {
-  if (!content || content.kind === 'tool') return undefined;
+function blockCount(content: Exclude<BlockContent, { kind: 'tool' | 'clocks' }> | undefined): number | undefined {
+  if (!content) return undefined;
   if (content.kind === 'maps') return content.maps.length;
   if (content.kind === 'documents') return new Set(content.parts.flatMap((part) => part.documents.map((document) => document.id))).size;
   return content.parts.reduce((total, part) => total + part.items.length, 0);

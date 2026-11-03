@@ -8,6 +8,8 @@ import { BlockBar, BlockKindIcon, Picker } from './BlockBar';
 import { DragHandle, SortableItem, SortableList } from './Sortable';
 import { SectionBlock } from './SectionBlock';
 import { ToolBlock } from './ToolBlock';
+import { ClockBlock } from '../clocks/ClockBlock';
+import { ClockChipsEditor } from '../clocks/ClockChipsEditor';
 import { blockContent, type BlockSources } from './blockItems';
 import type { OpenInEditState } from './LandingEditor';
 import { useAddTool, useSaveBlocks, useSetToolVisible } from '../../hooks/useLanding';
@@ -30,7 +32,7 @@ import {
 const MAX_BLOCKS = 10;
 const UNDO_MS = 5_000;
 
-/** A block added but not saved yet: a Documents block until its first Tag, a Session 0 one until its first feature. */
+/** A block added but not saved yet: a Documents block until its first Tag, a Session 0 one until its first feature, a Clocks one until its first chip. */
 interface Draft {
   index: number;
   block: BlockInput;
@@ -43,7 +45,17 @@ interface Draft {
  * Blocco" after the last block, and a small "+" between two, opening the
  * three tiles. Every change saves the whole list at once.
  */
-export function SectionEditor({ roomId, section, sources }: { roomId: string; section: LandingSection; sources: BlockSources }) {
+export function SectionEditor({
+  roomId,
+  section,
+  sources,
+  currentUserId,
+}: {
+  roomId: string;
+  section: LandingSection;
+  sources: BlockSources;
+  currentUserId: string;
+}) {
   const { t } = useTranslation();
   const location = useLocation();
   const save = useSaveBlocks(roomId, section.id);
@@ -69,7 +81,18 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
   const insert = (index: number, kind: BlockKind) => {
     setAdding(null);
     setGroupsOpen(null);
-    const block: BlockInput = { kind, heading: null, tagIds: [], groups: [], mapKind: null, features: [], collapsed: false, moduleId: null };
+    const block: BlockInput = {
+      kind,
+      heading: null,
+      tagIds: [],
+      groups: [],
+      mapKind: null,
+      features: [],
+      collapsed: false,
+      moduleId: null,
+      clockChips: [],
+      allClocks: false,
+    };
     if (kind === 'maps') {
       const next = inputs();
       next.splice(index, 0, block);
@@ -148,11 +171,22 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
         block={draft.block}
         tags={sources.tags}
         mainItems={roomGroups}
-        initialPicker={draft.block.kind === 'documents' ? 'tags' : 'features'}
+        initialPicker={draft.block.kind === 'documents' ? 'tags' : draft.block.kind === 'session_zero' ? 'features' : null}
         onChange={(block) => saveDraft(draft, block)}
         onDelete={dropDraft}
         onCancelDraft={dropDraft}
-      />
+      >
+        {draft.block.kind === 'clocks' && (
+          <ClockChipsEditor
+            roomId={roomId}
+            currentUserId={currentUserId}
+            block={draft.block}
+            initialOpen
+            onChange={(block) => saveDraft(draft, block)}
+            onCancelDraft={dropDraft}
+          />
+        )}
+      </BlockBar>
     </Stack>
   );
 
@@ -185,6 +219,7 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
                     sectionId={section.id}
                     block={block}
                     sources={sources}
+                    currentUserId={currentUserId}
                     bar={
                       <BlockBar
                         block={blockInput(block)}
@@ -207,7 +242,16 @@ export function SectionEditor({ roomId, section, sources }: { roomId: string; se
                               }
                             : undefined
                         }
-                      />
+                      >
+                        {block.kind === 'clocks' && (
+                          <ClockChipsEditor
+                            roomId={roomId}
+                            currentUserId={currentUserId}
+                            block={blockInput(block)}
+                            onChange={(next) => change(index, next)}
+                          />
+                        )}
+                      </BlockBar>
                     }
                     onReorderParts={(next) => change(index, next)}
                   />
@@ -261,6 +305,7 @@ function EditableBlock({
   sectionId,
   block,
   sources,
+  currentUserId,
   bar,
   onReorderParts,
 }: {
@@ -268,9 +313,22 @@ function EditableBlock({
   sectionId: string;
   block: LandingBlock;
   sources: BlockSources;
+  currentUserId: string;
   bar: ReactNode;
   onReorderParts: (block: BlockInput) => void;
 }) {
+  if (block.kind === 'clocks') {
+    return (
+      <ClockBlock
+        roomId={roomId}
+        block={block}
+        heading={blockHeading(block, sources.tags)}
+        isMaster
+        currentUserId={currentUserId}
+        bar={bar}
+      />
+    );
+  }
   if (block.kind === 'tool') {
     return (
       <ToolBlock
@@ -381,6 +439,7 @@ function AddBlock({
   /** A Session 0 tool of the Section's own (spec 60 Decision 5). */
   onPickTool: (kind: ToolKind) => void;
 }) {
+  // Clocks sit among the tools (spec 61 Decision 18), though the block owns none.
   const { t } = useTranslation();
   const target = compact ? (
     <UnstyledButton className="room-landing-insert" onClick={onOpen} aria-label={t('roomLanding.edit.insertBlock')}>
@@ -421,6 +480,9 @@ function AddBlock({
             {moduleLabel(kind)}
           </Button>
         ))}
+        <Button size="compact-sm" variant="default" leftSection={<BlockKindIcon kind="clocks" size={14} />} onClick={() => onPick('clocks')}>
+          {t('roomLanding.tiles.clocks')}
+        </Button>
       </Group>
     </Picker>
   );

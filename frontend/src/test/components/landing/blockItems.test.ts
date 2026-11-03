@@ -13,6 +13,12 @@ describe('a block content', () => {
     expect(isBlockEmpty(undefined)).toBe(false);
   });
 
+  it('leaves a Clocks block to its own component, never empty', () => {
+    const content = blockContent(block({ kind: 'clocks', tag_ids: [] }), { tags });
+    expect(content).toEqual({ kind: 'clocks' });
+    expect(isBlockEmpty(content)).toBe(false);
+  });
+
   it('lists a Documents block without groups under no heading', () => {
     const content = blockContent(block({ tag_ids: ['t1'] }), { documents, tags });
     expect(content).toEqual({ kind: 'documents', parts: [{ key: 'all', label: null, documents: [documents[0], documents[1], documents[2]] }] });

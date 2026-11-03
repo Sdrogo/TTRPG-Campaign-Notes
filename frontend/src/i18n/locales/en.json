@@ -1597,12 +1597,14 @@
     "pages": {
       "documents": "Documents",
       "maps": "Maps",
-      "sessionZero": "Session 0"
+      "sessionZero": "Session 0",
+      "clocks": "Clocks"
     },
     "pageDescriptions": {
       "documents": "All the Room's Documents",
       "maps": "The Room's maps",
-      "sessionZero": "Sessions, Lines & Veils, polls"
+      "sessionZero": "Sessions, Lines & Veils, polls",
+      "clocks": "The Room's clocks"
     },
     "blockEmpty": "Nothing to show",
     "foldBlock": "Fold {{name}}",
@@ -1616,7 +1618,8 @@
       "maps": "Maps",
       "mapsFree": "Relationship maps",
       "mapsGeographic": "Geographic maps",
-      "sessionZero": "Session 0"
+      "sessionZero": "Session 0",
+      "clocks": "Clocks"
     },
     "features": {
       "sessions": "Sessions",
@@ -1660,7 +1663,8 @@
         "body": "Sessions, steps and polls"
       },
       "tools": "Tools",
-      "toolsBody": "A Session 0 tool of its own, hidden from the players until you show it"
+      "toolsBody": "A Session 0 tool of its own, hidden from the players until you show it",
+      "clocks": "Clock"
     },
     "edit": {
       "start": "Edit",
@@ -1717,6 +1721,282 @@
       "show": "Show to players",
       "hide": "Hide from players",
       "loadError": "Couldn't load the tool."
+    }
+  },
+  "clocks": {
+    "title": "Clocks",
+    "description": "The Room's clocks: those in play, those in the background and those already closed.",
+    "signInRequired": "Sign in to see this Room's clocks.",
+    "loadError": "Couldn't load the clocks.",
+    "empty": "No clocks yet.",
+    "create": "New clock",
+    "propose": "Propose a clock",
+    "outsideGroups": "Outside groups",
+    "groupEnded": "Ended",
+    "legend": "Mark kinds",
+    "legendItem": "{{name}} ({{who}})",
+    "deleteTitle": "Delete the clock?",
+    "deleteBody": "“{{name}}” and its history will be deleted. This can't be undone.",
+    "proposalDetail_one": "by {{name}} · {{count}} segment",
+    "proposalDetail_other": "by {{name}} · {{count}} segments",
+    "reject": "Reject",
+    "editProposal": "Open and edit",
+    "openProposal": "Open the clock",
+    "lists": {
+      "proposed": "Proposed",
+      "finished": "Closed and lapsed",
+      "archived": "Archived"
+    },
+    "state": {
+      "proposed": "Proposed",
+      "open": "Open",
+      "closed": "Closed",
+      "lapsed": "Lapsed",
+      "archived": "Archived",
+      "locked": "Locked"
+    },
+    "groupMode": {
+      "free": "Free",
+      "race": "Race",
+      "turn": "Turning point",
+      "sequence": "Sequence"
+    },
+    "openPolicy": {
+      "master": "The Master only",
+      "everyone": "Everyone",
+      "propose": "Players propose, the Master approves"
+    },
+    "markPolicy": {
+      "master": "The Master only",
+      "master_and_creator": "The Master and whoever opened it",
+      "everyone": "Everyone who sees it"
+    },
+    "who": {
+      "master": "Master",
+      "players": "Players",
+      "everyone": "Everyone"
+    },
+    "face": {
+      "summary": "{{name}}: {{filled}} of {{segments}}, {{state}}",
+      "withKinds": "{{base}}, {{kinds}}",
+      "kindCount": "{{number}} {{name}}",
+      "markUpTo_one": "Mark {{count}}",
+      "markUpTo_other": "Mark up to {{count}}",
+      "emptyDown_one": "Empty {{count}}",
+      "emptyDown_other": "Empty up to {{count}}"
+    },
+    "card": {
+      "menu": "Actions for “{{name}}”",
+      "markMany": "Mark…",
+      "history": "History",
+      "archive": "Archive",
+      "restore": "Restore",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "Empty one segment of “{{name}}”",
+      "plus": "Mark one segment of “{{name}}”",
+      "pickKind": "Mark “{{name}}” with a mark kind",
+      "markWith": "Mark with"
+    },
+    "toast": {
+      "marked": "{{delta}} on “{{name}}”",
+      "undo": "Undo",
+      "closed": "“{{name}}” has closed",
+      "refused": "Your proposal “{{name}}” was turned down."
+    },
+    "markDialog": {
+      "title": "Mark “{{name}}”",
+      "count": "Segments",
+      "countHint_one": "{{count}} segment left.",
+      "countHint_other": "{{count}} segments left.",
+      "kind": "Mark kind",
+      "note": "Note",
+      "notePlaceholder": "E.g. picked the lock",
+      "submit_one": "Mark {{count}}",
+      "submit_other": "Mark {{count}}"
+    },
+    "history": {
+      "title": "History of “{{name}}”",
+      "loadError": "Couldn't load the history.",
+      "more": "Show more",
+      "formerMember": "Former member",
+      "undone": "undid {{delta}}",
+      "edited": "changed: {{fields}}",
+      "actions": {
+        "created": "opened the clock",
+        "proposed": "proposed the clock",
+        "opened": "approved the proposal",
+        "closed": "closed",
+        "reopened": "reopened",
+        "lapsed": "lapsed",
+        "archived": "archived",
+        "restored": "restored"
+      },
+      "fields": {
+        "name": "name",
+        "description": "description",
+        "segments": "size",
+        "color": "colour",
+        "stage_labels": "stages",
+        "closing_condition": "closing condition",
+        "consequence": "consequence",
+        "forward_only": "forward only",
+        "mark_policy": "who marks it",
+        "label_ids": "labels",
+        "document_id": "linked Document",
+        "visibility": "visibility"
+      }
+    },
+    "dialog": {
+      "editTitle": "Edit clock",
+      "submitCreate": "Create the clock",
+      "submitPropose": "Propose",
+      "templates": "Start from a template",
+      "roomTemplate": "{{segments}} · Room template",
+      "nameHint": "Name it after the obstacle or the event, not the method.",
+      "size": "Size (segments)",
+      "sizeHint": "From 2 to 16, odd ones too: 4, 6, 8 and 12 are just shortcuts.",
+      "labels": "Labels",
+      "labelsHint": "Pick from the Room's labels.",
+      "labelsHintMaster": "Type a new name to create one: the Room keeps it for later clocks.",
+      "noLabels": "No labels",
+      "createLabel": "Create “{{name}}”",
+      "closingCondition": "Closing condition",
+      "closingConditionHint": "Seen by everyone; the app doesn't check it.",
+      "stagesShow": "Add stages (one per segment)",
+      "stagesHide": "Hide the stages",
+      "stagesHint": "Optional, like the stages of a countdown.",
+      "stage": "Stage {{number}}",
+      "stageDefault": "Stage {{number}}",
+      "consequence": "What happens when it closes",
+      "masterOnly": "Master only",
+      "document": "Linked Document",
+      "noDocument": "None",
+      "markPolicy": "Who marks it",
+      "markPolicyRoom": "The Room's rule ({{rule}})",
+      "forwardOnly": "Forward only",
+      "forwardOnlyHint": "This clock's marks are never emptied.",
+      "selectiveLabel": "Who else sees it",
+      "saveTemplate": "Save as template",
+      "templateName": "Template name"
+    },
+    "templates": {
+      "progress": {
+        "name": "Progress",
+        "detail": "6 · green"
+      },
+      "danger": {
+        "name": "Danger",
+        "detail": "4 · red"
+      },
+      "countdown": {
+        "name": "Countdown",
+        "detail": "6 · stages"
+      },
+      "project": {
+        "name": "Project",
+        "detail": "8 · blue"
+      },
+      "faction": {
+        "name": "Faction",
+        "detail": "6 · Master only"
+      },
+      "tugOfWar": {
+        "name": "Tug of war",
+        "detail": "6 · back and forth"
+      },
+      "empty": {
+        "name": "Blank",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "Simple",
+        "detail": "The Master opens and marks"
+      },
+      "wholeTable": {
+        "name": "Whole table",
+        "detail": "Everyone opens and marks"
+      },
+      "noReturn": {
+        "name": "No going back",
+        "detail": "Players propose, no mark is emptied"
+      }
+    },
+    "rules": {
+      "button": "Rules",
+      "title": "Clock rules",
+      "presets": "Presets",
+      "presetsHint": "They fill the three rules below; labels and mark kinds stay as they are.",
+      "openPolicy": "Who opens a clock",
+      "markPolicy": "Who marks",
+      "undo": "Emptying marks",
+      "undoYes": "Marks can be emptied",
+      "undoNo": "No going back",
+      "undoNoHint": "Marks are never erased, not even by the Master; only the undo of a mistaken click stays.",
+      "save": "Save the rules",
+      "labels": "Labels",
+      "labelsHint": "The Room's free labels, each with a colour; a clock carries up to 6.",
+      "markKinds": "Mark kinds",
+      "markKindsHint": "Up to 6, optional: what a mark is made of in this game and who may use it.",
+      "addLabel": "New label",
+      "addMarkKind": "New mark kind",
+      "who": "Who may use it",
+      "deleteItem": "Delete “{{name}}”",
+      "deleteLabelTitle": "Delete the label?",
+      "deleteLabelBody_one": "“{{name}}” will be removed from {{count}} clock.",
+      "deleteLabelBody_other": "“{{name}}” will be removed from {{count}} clocks.",
+      "templates": "Room templates",
+      "noTemplates": "No templates: save one from a clock's dialog.",
+      "deleteTemplate": "Delete the template “{{name}}”"
+    },
+    "groups": {
+      "create": "New group",
+      "editTitle": "Edit group",
+      "name": "Group name",
+      "mode": "Mode",
+      "modeHint": {
+        "free": "The clocks just sit together: the layers of a place, the factions.",
+        "race": "The first to close wins; if another closes before you confirm, it is a tie.",
+        "turn": "Some clocks are decisive: when one closes the turning point ends and the others lapse.",
+        "sequence": "They close in order: only the first open one takes marks, the others wait."
+      },
+      "clocks": "Group's clocks",
+      "clocksHint": "In the order you pick them, up to {{max}}; a clock of another group moves here.",
+      "decisiveHint": "Write the outcome of the decisive clocks; leave the others empty.",
+      "decisive": "Outcome of “{{name}}”",
+      "notDecisive": "Not decisive",
+      "menu": "Actions for the group “{{name}}”",
+      "newTurn": "New turning point",
+      "archive": "Archive the group",
+      "restore": "Restore the group",
+      "delete": "Delete the group",
+      "deleteTitle": "Delete the group?",
+      "deleteBody": "“{{name}}” goes away; its clocks stay, outside any group.",
+      "empty": "No clocks: edit the group to add some.",
+      "quoted": "“{{name}}”",
+      "outcome": "“{{name}}” ({{label}})",
+      "resultWon": "Won: {{names}}",
+      "resultTie": "Tie: {{names}}",
+      "resultTurn": "Turning point: {{labels}}",
+      "raceOne": "{{names}} closed first.",
+      "raceTie": "{{names}} closed: it is a tie, both happen.",
+      "confirm": "Confirm",
+      "turnEnds": "The turning point ends: {{labels}}. The other open clocks lapse.",
+      "endTurn": "End the turning point",
+      "notYet": "Not yet",
+      "reveal": "“{{name}}” is next, but the Players can’t see it. Reveal it?",
+      "revealButton": "Reveal to the Room",
+      "notNow": "Not now"
+    },
+    "block": {
+      "allOpen": "All open clocks",
+      "add": "Clock",
+      "newClock": "New clock…",
+      "groupChip": "Group “{{name}}”",
+      "missing": "No longer available",
+      "noneLeft": "No other clock or group."
     }
   }
 }

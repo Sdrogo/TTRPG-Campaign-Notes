@@ -1679,12 +1679,14 @@
     "pages": {
       "documents": "Dokumenty",
       "maps": "Mapy",
-      "sessionZero": "Sesja 0"
+      "sessionZero": "Sesja 0",
+      "clocks": "Zegary"
     },
     "pageDescriptions": {
       "documents": "Wszystkie Dokumenty pokoju",
       "maps": "Mapy pokoju",
-      "sessionZero": "Sesje, Linie i Zasłony, ankiety"
+      "sessionZero": "Sesje, Linie i Zasłony, ankiety",
+      "clocks": "Zegary pokoju"
     },
     "blockEmpty": "Nic do pokazania",
     "foldBlock": "Zwiń {{name}}",
@@ -1698,7 +1700,8 @@
       "maps": "Mapy",
       "mapsFree": "Mapy relacji",
       "mapsGeographic": "Mapy geograficzne",
-      "sessionZero": "Sesja 0"
+      "sessionZero": "Sesja 0",
+      "clocks": "Zegary"
     },
     "features": {
       "sessions": "Sesje",
@@ -1748,7 +1751,8 @@
         "body": "Sesje, etapy i ankiety"
       },
       "tools": "Narzędzia",
-      "toolsBody": "Własne narzędzie Sesji 0, ukryte przed graczami, dopóki go nie pokażesz"
+      "toolsBody": "Własne narzędzie Sesji 0, ukryte przed graczami, dopóki go nie pokażesz",
+      "clocks": "Zegar"
     },
     "edit": {
       "start": "Edytuj",
@@ -1807,6 +1811,294 @@
       "show": "Pokaż graczom",
       "hide": "Ukryj przed graczami",
       "loadError": "Nie udało się wczytać narzędzia."
+    }
+  },
+  "clocks": {
+    "title": "Zegary",
+    "description": "Zegary pokoju: te w grze, te w tle i te już zamknięte.",
+    "signInRequired": "Zaloguj się, aby zobaczyć zegary tego pokoju.",
+    "loadError": "Nie udało się wczytać zegarów.",
+    "empty": "Na razie brak zegarów.",
+    "create": "Nowy zegar",
+    "propose": "Zaproponuj zegar",
+    "outsideGroups": "Poza grupami",
+    "groupEnded": "Zakończona",
+    "legend": "Rodzaje znaczników",
+    "legendItem": "{{name}} ({{who}})",
+    "deleteTitle": "Usunąć zegar?",
+    "deleteBody": "„{{name}}” i jego historia zostaną usunięte. Tego nie można cofnąć.",
+    "proposalDetail_one": "od {{name}} · {{count}} segment",
+    "proposalDetail_few": "od {{name}} · {{count}} segmenty",
+    "proposalDetail_many": "od {{name}} · {{count}} segmentów",
+    "proposalDetail_other": "od {{name}} · {{count}} segmentu",
+    "reject": "Odrzuć",
+    "editProposal": "Otwórz i edytuj",
+    "openProposal": "Otwórz zegar",
+    "lists": {
+      "proposed": "Zaproponowane",
+      "finished": "Zamknięte i niezaszłe",
+      "archived": "Zarchiwizowane"
+    },
+    "state": {
+      "proposed": "Zaproponowany",
+      "open": "Otwarty",
+      "closed": "Zamknięty",
+      "lapsed": "Niezaszły",
+      "archived": "Zarchiwizowany",
+      "locked": "Zablokowany"
+    },
+    "groupMode": {
+      "free": "Wolna",
+      "race": "Wyścig",
+      "turn": "Zwrot",
+      "sequence": "Sekwencja"
+    },
+    "openPolicy": {
+      "master": "Tylko Master",
+      "everyone": "Wszyscy",
+      "propose": "Gracze proponują, Master zatwierdza"
+    },
+    "markPolicy": {
+      "master": "Tylko Master",
+      "master_and_creator": "Master i ten, kto go otworzył",
+      "everyone": "Wszyscy, którzy go widzą"
+    },
+    "who": {
+      "master": "Master",
+      "players": "Gracze",
+      "everyone": "Wszyscy"
+    },
+    "face": {
+      "summary": "{{name}}: {{filled}} z {{segments}}, {{state}}",
+      "withKinds": "{{base}}, {{kinds}}",
+      "kindCount": "{{number}} {{name}}",
+      "markUpTo_one": "Zaznacz {{count}}",
+      "markUpTo_few": "Zaznacz do {{count}}",
+      "markUpTo_many": "Zaznacz do {{count}}",
+      "markUpTo_other": "Zaznacz do {{count}}",
+      "emptyDown_one": "Opróżnij {{count}}",
+      "emptyDown_few": "Opróżnij do {{count}}",
+      "emptyDown_many": "Opróżnij do {{count}}",
+      "emptyDown_other": "Opróżnij do {{count}}"
+    },
+    "card": {
+      "menu": "Działania dla „{{name}}”",
+      "markMany": "Zaznacz…",
+      "history": "Historia",
+      "archive": "Archiwizuj",
+      "restore": "Przywróć",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "Opróżnij jeden segment „{{name}}”",
+      "plus": "Zaznacz jeden segment „{{name}}”",
+      "pickKind": "Zaznacz „{{name}}” rodzajem znacznika",
+      "markWith": "Zaznacz jako"
+    },
+    "toast": {
+      "marked": "{{delta}} na „{{name}}”",
+      "undo": "Cofnij",
+      "closed": "„{{name}}” się zamknął",
+      "refused": "Twoja propozycja „{{name}}” została odrzucona."
+    },
+    "markDialog": {
+      "title": "Zaznacz „{{name}}”",
+      "count": "Segmenty",
+      "countHint_one": "Został {{count}} wolny segment.",
+      "countHint_few": "Zostały {{count}} wolne segmenty.",
+      "countHint_many": "Zostało {{count}} wolnych segmentów.",
+      "countHint_other": "Zostało {{count}} wolnego segmentu.",
+      "kind": "Rodzaj znacznika",
+      "note": "Notatka",
+      "notePlaceholder": "Np. wyważony zamek",
+      "submit_one": "Zaznacz {{count}}",
+      "submit_few": "Zaznacz {{count}}",
+      "submit_many": "Zaznacz {{count}}",
+      "submit_other": "Zaznacz {{count}}"
+    },
+    "history": {
+      "title": "Historia „{{name}}”",
+      "loadError": "Nie udało się wczytać historii.",
+      "more": "Pokaż więcej",
+      "formerMember": "Były członek",
+      "undone": "cofnięto {{delta}}",
+      "edited": "zmieniono: {{fields}}",
+      "actions": {
+        "created": "otworzył zegar",
+        "proposed": "zaproponował zegar",
+        "opened": "zatwierdził propozycję",
+        "closed": "zamknięty",
+        "reopened": "ponownie otwarty",
+        "lapsed": "niezaszły",
+        "archived": "zarchiwizowany",
+        "restored": "przywrócony"
+      },
+      "fields": {
+        "name": "nazwa",
+        "description": "opis",
+        "segments": "rozmiar",
+        "color": "kolor",
+        "stage_labels": "etapy",
+        "closing_condition": "warunek zamknięcia",
+        "consequence": "skutek",
+        "forward_only": "tylko do przodu",
+        "mark_policy": "kto zaznacza",
+        "label_ids": "etykiety",
+        "document_id": "powiązany dokument",
+        "visibility": "widoczność"
+      }
+    },
+    "dialog": {
+      "editTitle": "Edytuj zegar",
+      "submitCreate": "Utwórz zegar",
+      "submitPropose": "Zaproponuj",
+      "templates": "Zacznij od szablonu",
+      "roomTemplate": "{{segments}} · szablon pokoju",
+      "nameHint": "Nazwij go od przeszkody lub wydarzenia, nie od metody.",
+      "size": "Rozmiar (segmenty)",
+      "sizeHint": "Od 2 do 16, także nieparzyste: 4, 6, 8 i 12 to tylko skróty.",
+      "labels": "Etykiety",
+      "labelsHint": "Wybierz spośród etykiet pokoju.",
+      "labelsHintMaster": "Wpisz nową nazwę, aby ją utworzyć: pokój zapamięta ją dla kolejnych zegarów.",
+      "noLabels": "Brak etykiet",
+      "createLabel": "Utwórz „{{name}}”",
+      "closingCondition": "Warunek zamknięcia",
+      "closingConditionHint": "Widoczny dla wszystkich; aplikacja go nie sprawdza.",
+      "stagesShow": "Dodaj etapy (jeden na segment)",
+      "stagesHide": "Ukryj etapy",
+      "stagesHint": "Opcjonalne, jak etapy odliczania.",
+      "stage": "Etap {{number}}",
+      "stageDefault": "Etap {{number}}",
+      "consequence": "Co się dzieje, gdy się zamknie",
+      "masterOnly": "Tylko Master",
+      "document": "Powiązany dokument",
+      "noDocument": "Brak",
+      "markPolicy": "Kto zaznacza",
+      "markPolicyRoom": "Zasada pokoju ({{rule}})",
+      "forwardOnly": "Tylko do przodu",
+      "forwardOnlyHint": "Znaczniki tego zegara nigdy nie są opróżniane.",
+      "selectiveLabel": "Kto jeszcze go widzi",
+      "saveTemplate": "Zapisz jako szablon",
+      "templateName": "Nazwa szablonu"
+    },
+    "templates": {
+      "progress": {
+        "name": "Postęp",
+        "detail": "6 · zielony"
+      },
+      "danger": {
+        "name": "Zagrożenie",
+        "detail": "4 · czerwony"
+      },
+      "countdown": {
+        "name": "Odliczanie",
+        "detail": "6 · etapy"
+      },
+      "project": {
+        "name": "Projekt",
+        "detail": "8 · niebieski"
+      },
+      "faction": {
+        "name": "Frakcja",
+        "detail": "6 · tylko Master"
+      },
+      "tugOfWar": {
+        "name": "Przeciąganie liny",
+        "detail": "6 · w przód i w tył"
+      },
+      "empty": {
+        "name": "Pusty",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "Prosty",
+        "detail": "Master otwiera i zaznacza"
+      },
+      "wholeTable": {
+        "name": "Cały stół",
+        "detail": "Wszyscy otwierają i zaznaczają"
+      },
+      "noReturn": {
+        "name": "Bez odwrotu",
+        "detail": "Gracze proponują, żaden znacznik nie jest opróżniany"
+      }
+    },
+    "rules": {
+      "button": "Zasady",
+      "title": "Zasady zegarów",
+      "presets": "Ustawienia wstępne",
+      "presetsHint": "Wypełniają trzy zasady poniżej; etykiety i rodzaje znaczników się nie zmieniają.",
+      "openPolicy": "Kto otwiera zegar",
+      "markPolicy": "Kto zaznacza",
+      "undo": "Opróżnianie znaczników",
+      "undoYes": "Można opróżniać",
+      "undoNo": "Bez odwrotu",
+      "undoNoHint": "Znaczniki nigdy nie są kasowane, nawet przez Mastera; zostaje tylko cofnięcie błędnego kliknięcia.",
+      "save": "Zapisz zasady",
+      "labels": "Etykiety",
+      "labelsHint": "Wolne etykiety pokoju, każda z kolorem; zegar może mieć do 6.",
+      "markKinds": "Rodzaje znaczników",
+      "markKindsHint": "Do 6, opcjonalne: z czego w tej grze składa się znacznik i kto może go używać.",
+      "addLabel": "Nowa etykieta",
+      "addMarkKind": "Nowy rodzaj znacznika",
+      "who": "Kto może go używać",
+      "deleteItem": "Usuń „{{name}}”",
+      "deleteLabelTitle": "Usunąć etykietę?",
+      "deleteLabelBody_one": "„{{name}}” zostanie usunięta z {{count}} zegara.",
+      "deleteLabelBody_few": "„{{name}}” zostanie usunięta z {{count}} zegarów.",
+      "deleteLabelBody_many": "„{{name}}” zostanie usunięta z {{count}} zegarów.",
+      "deleteLabelBody_other": "„{{name}}” zostanie usunięta z {{count}} zegara.",
+      "templates": "Szablony pokoju",
+      "noTemplates": "Brak szablonów: zapisz jeden z okna zegara.",
+      "deleteTemplate": "Usuń szablon „{{name}}”"
+    },
+    "groups": {
+      "create": "Nowa grupa",
+      "editTitle": "Edytuj grupę",
+      "name": "Nazwa grupy",
+      "mode": "Tryb",
+      "modeHint": {
+        "free": "Zegary są tylko razem: poziomy jednego miejsca, frakcje.",
+        "race": "Wygrywa pierwszy, który się zamknie; jeśli inny zamknie się, zanim potwierdzisz, jest remis.",
+        "turn": "Niektóre zegary są decydujące: gdy jeden się zamknie, zwrot się kończy, a pozostałe nie zachodzą.",
+        "sequence": "Zamykają się po kolei: znaczniki przyjmuje tylko pierwszy otwarty, reszta czeka."
+      },
+      "clocks": "Zegary grupy",
+      "clocksHint": "W kolejności wyboru, do {{max}}; zegar z innej grupy przechodzi do tej.",
+      "decisiveHint": "Wpisz wynik decydujących zegarów; pozostałe zostaw puste.",
+      "decisive": "Wynik „{{name}}”",
+      "notDecisive": "Niedecydujący",
+      "menu": "Działania grupy „{{name}}”",
+      "newTurn": "Nowy zwrot",
+      "archive": "Archiwizuj grupę",
+      "restore": "Przywróć grupę",
+      "delete": "Usuń grupę",
+      "deleteTitle": "Usunąć grupę?",
+      "deleteBody": "„{{name}}” znika; jej zegary zostają, poza grupami.",
+      "empty": "Brak zegarów: edytuj grupę, aby je dodać.",
+      "quoted": "„{{name}}”",
+      "outcome": "„{{name}}” ({{label}})",
+      "resultWon": "Wygrana: {{names}}",
+      "resultTie": "Remis: {{names}}",
+      "resultTurn": "Zwrot: {{labels}}",
+      "raceOne": "{{names}} zamknął się pierwszy.",
+      "raceTie": "{{names}} się zamknęły: remis, dzieje się jedno i drugie.",
+      "confirm": "Potwierdź",
+      "turnEnds": "Zwrot się kończy: {{labels}}. Pozostałe otwarte zegary nie zachodzą.",
+      "endTurn": "Zakończ zwrot",
+      "notYet": "Jeszcze nie",
+      "reveal": "„{{name}}” jest następny, ale gracze go nie widzą. Odsłonić?",
+      "revealButton": "Odsłoń Pokojowi",
+      "notNow": "Nie teraz"
+    },
+    "block": {
+      "allOpen": "Wszystkie otwarte zegary",
+      "add": "Zegar",
+      "newClock": "Nowy zegar…",
+      "groupChip": "Grupa „{{name}}”",
+      "missing": "Już niedostępny",
+      "noneLeft": "Brak innych zegarów i grup."
     }
   }
 }

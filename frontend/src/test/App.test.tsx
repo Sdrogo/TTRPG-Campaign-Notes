@@ -22,6 +22,7 @@ vi.mock('../pages/DemoPage', () => ({ DemoPage: () => <div>demo</div> }));
 vi.mock('../pages/RoomMapsPage', () => ({ RoomMapsPage: () => <div>maps</div> }));
 vi.mock('../pages/RelationshipMapPage', () => ({ RelationshipMapPage: () => <div>map</div> }));
 vi.mock('../pages/SessionZeroPage', () => ({ SessionZeroPage: () => <div>session zero</div> }));
+vi.mock('../pages/RoomClocksPage', () => ({ RoomClocksPage: () => <div>clocks</div> }));
 vi.mock('../pages/MentionMapPage', () => ({ MentionMapPage: () => <div>mention map</div> }));
 vi.mock('../pages/RoomLandingPage', () => ({ RoomLandingPage: () => <div>room landing</div> }));
 vi.mock('../pages/RoomSectionPage', () => ({ RoomSectionPage: () => <div>room section</div> }));
@@ -48,6 +49,7 @@ describe('App routes', () => {
     ['/demo', 'demo'],
     ['/rooms/room-1/documents/doc-1/mention-map', 'mention map'],
     ['/rooms/room-1/maps', 'maps'],
+    ['/rooms/room-1/clocks', 'clocks'],
     ['/rooms/room-1/maps/map-1', 'map'],
     ['/rooms/room-1/session-zero', 'session zero'],
     ['/rooms/room-1', 'room landing'],

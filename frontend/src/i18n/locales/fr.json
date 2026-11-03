@@ -1599,12 +1599,14 @@
     "pages": {
       "documents": "Documents",
       "maps": "Cartes",
-      "sessionZero": "Session 0"
+      "sessionZero": "Session 0",
+      "clocks": "Horloges"
     },
     "pageDescriptions": {
       "documents": "Tous les Documents de la Salle",
       "maps": "Les cartes de la Salle",
-      "sessionZero": "Sessions, Lignes et Voiles, sondages"
+      "sessionZero": "Sessions, Lignes et Voiles, sondages",
+      "clocks": "Les horloges de la Salle"
     },
     "blockEmpty": "Rien à afficher",
     "foldBlock": "Replier {{name}}",
@@ -1618,7 +1620,8 @@
       "maps": "Cartes",
       "mapsFree": "Cartes des relations",
       "mapsGeographic": "Cartes géographiques",
-      "sessionZero": "Session 0"
+      "sessionZero": "Session 0",
+      "clocks": "Horloges"
     },
     "features": {
       "sessions": "Sessions",
@@ -1662,7 +1665,8 @@
         "body": "Sessions, étapes et sondages"
       },
       "tools": "Outils",
-      "toolsBody": "Un outil de la Session 0 à part entière, caché aux joueurs jusqu'à ce que tu le montres"
+      "toolsBody": "Un outil de la Session 0 à part entière, caché aux joueurs jusqu'à ce que tu le montres",
+      "clocks": "Horloge"
     },
     "edit": {
       "start": "Modifier",
@@ -1719,6 +1723,282 @@
       "show": "Montrer aux joueurs",
       "hide": "Cacher aux joueurs",
       "loadError": "Impossible de charger l'outil."
+    }
+  },
+  "clocks": {
+    "title": "Horloges",
+    "description": "Les horloges de la Salle : celles en jeu, celles en arrière-plan et celles déjà fermées.",
+    "signInRequired": "Connecte-toi pour voir les horloges de cette Salle.",
+    "loadError": "Impossible de charger les horloges.",
+    "empty": "Aucune horloge pour l'instant.",
+    "create": "Nouvelle horloge",
+    "propose": "Proposer une horloge",
+    "outsideGroups": "Hors des groupes",
+    "groupEnded": "Terminé",
+    "legend": "Types de marque",
+    "legendItem": "{{name}} ({{who}})",
+    "deleteTitle": "Supprimer l'horloge ?",
+    "deleteBody": "« {{name}} » et son historique seront supprimés. C'est irréversible.",
+    "proposalDetail_one": "par {{name}} · {{count}} segment",
+    "proposalDetail_other": "par {{name}} · {{count}} segments",
+    "reject": "Refuser",
+    "editProposal": "Ouvrir et modifier",
+    "openProposal": "Ouvrir l'horloge",
+    "lists": {
+      "proposed": "Proposées",
+      "finished": "Fermées et non advenues",
+      "archived": "Archivées"
+    },
+    "state": {
+      "proposed": "Proposée",
+      "open": "Ouverte",
+      "closed": "Fermée",
+      "lapsed": "Non advenue",
+      "archived": "Archivée",
+      "locked": "Verrouillée"
+    },
+    "groupMode": {
+      "free": "Libre",
+      "race": "Course",
+      "turn": "Tournant",
+      "sequence": "Séquence"
+    },
+    "openPolicy": {
+      "master": "Le Master seulement",
+      "everyone": "Tout le monde",
+      "propose": "Les joueurs proposent, le Master approuve"
+    },
+    "markPolicy": {
+      "master": "Le Master seulement",
+      "master_and_creator": "Le Master et qui l'a ouverte",
+      "everyone": "Tous ceux qui la voient"
+    },
+    "who": {
+      "master": "Master",
+      "players": "Joueurs",
+      "everyone": "Tout le monde"
+    },
+    "face": {
+      "summary": "{{name}} : {{filled}} sur {{segments}}, {{state}}",
+      "withKinds": "{{base}}, {{kinds}}",
+      "kindCount": "{{number}} {{name}}",
+      "markUpTo_one": "Marquer {{count}}",
+      "markUpTo_other": "Marquer jusqu'à {{count}}",
+      "emptyDown_one": "Vider {{count}}",
+      "emptyDown_other": "Vider jusqu'à {{count}}"
+    },
+    "card": {
+      "menu": "Actions pour « {{name}} »",
+      "markMany": "Marquer…",
+      "history": "Historique",
+      "archive": "Archiver",
+      "restore": "Restaurer",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "Vider un segment de « {{name}} »",
+      "plus": "Marquer un segment de « {{name}} »",
+      "pickKind": "Marquer « {{name}} » avec un type de marque",
+      "markWith": "Marquer avec"
+    },
+    "toast": {
+      "marked": "{{delta}} sur « {{name}} »",
+      "undo": "Annuler",
+      "closed": "« {{name}} » s'est fermée",
+      "refused": "Ta proposition « {{name}} » a été refusée."
+    },
+    "markDialog": {
+      "title": "Marquer « {{name}} »",
+      "count": "Segments",
+      "countHint_one": "Il reste {{count}} segment libre.",
+      "countHint_other": "Il reste {{count}} segments libres.",
+      "kind": "Type de marque",
+      "note": "Note",
+      "notePlaceholder": "Ex. serrure crochetée",
+      "submit_one": "Marquer {{count}}",
+      "submit_other": "Marquer {{count}}"
+    },
+    "history": {
+      "title": "Historique de « {{name}} »",
+      "loadError": "Impossible de charger l'historique.",
+      "more": "Afficher plus",
+      "formerMember": "Ancien membre",
+      "undone": "a annulé {{delta}}",
+      "edited": "a modifié : {{fields}}",
+      "actions": {
+        "created": "a ouvert l'horloge",
+        "proposed": "a proposé l'horloge",
+        "opened": "a approuvé la proposition",
+        "closed": "fermée",
+        "reopened": "rouverte",
+        "lapsed": "non advenue",
+        "archived": "archivée",
+        "restored": "restaurée"
+      },
+      "fields": {
+        "name": "nom",
+        "description": "description",
+        "segments": "taille",
+        "color": "couleur",
+        "stage_labels": "étapes",
+        "closing_condition": "condition de fermeture",
+        "consequence": "conséquence",
+        "forward_only": "seulement en avant",
+        "mark_policy": "qui la marque",
+        "label_ids": "étiquettes",
+        "document_id": "document lié",
+        "visibility": "visibilité"
+      }
+    },
+    "dialog": {
+      "editTitle": "Modifier l'horloge",
+      "submitCreate": "Créer l'horloge",
+      "submitPropose": "Proposer",
+      "templates": "Partir d'un modèle",
+      "roomTemplate": "{{segments}} · modèle de la Salle",
+      "nameHint": "Nomme-la d'après l'obstacle ou l'événement, pas la méthode.",
+      "size": "Taille (segments)",
+      "sizeHint": "De 2 à 16, impaires comprises : 4, 6, 8 et 12 ne sont que des raccourcis.",
+      "labels": "Étiquettes",
+      "labelsHint": "Choisis parmi les étiquettes de la Salle.",
+      "labelsHintMaster": "Tape un nouveau nom pour la créer : la Salle la garde pour les prochaines horloges.",
+      "noLabels": "Aucune étiquette",
+      "createLabel": "Créer « {{name}} »",
+      "closingCondition": "Condition de fermeture",
+      "closingConditionHint": "Visible par tous ; l'appli ne la vérifie pas.",
+      "stagesShow": "Ajouter des étapes (une par segment)",
+      "stagesHide": "Masquer les étapes",
+      "stagesHint": "Facultatives, comme les étapes d'un compte à rebours.",
+      "stage": "Étape {{number}}",
+      "stageDefault": "Étape {{number}}",
+      "consequence": "Ce qui arrive quand elle se ferme",
+      "masterOnly": "Master seulement",
+      "document": "Document lié",
+      "noDocument": "Aucun",
+      "markPolicy": "Qui la marque",
+      "markPolicyRoom": "Règle de la Salle ({{rule}})",
+      "forwardOnly": "Seulement en avant",
+      "forwardOnlyHint": "Les marques de cette horloge ne se vident jamais.",
+      "selectiveLabel": "Qui d'autre la voit",
+      "saveTemplate": "Enregistrer comme modèle",
+      "templateName": "Nom du modèle"
+    },
+    "templates": {
+      "progress": {
+        "name": "Progrès",
+        "detail": "6 · vert"
+      },
+      "danger": {
+        "name": "Danger",
+        "detail": "4 · rouge"
+      },
+      "countdown": {
+        "name": "Compte à rebours",
+        "detail": "6 · étapes"
+      },
+      "project": {
+        "name": "Projet",
+        "detail": "8 · bleu"
+      },
+      "faction": {
+        "name": "Faction",
+        "detail": "6 · Master seulement"
+      },
+      "tugOfWar": {
+        "name": "Tir à la corde",
+        "detail": "6 · avant et arrière"
+      },
+      "empty": {
+        "name": "Vide",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "Simple",
+        "detail": "Le Master ouvre et marque"
+      },
+      "wholeTable": {
+        "name": "Toute la table",
+        "detail": "Tout le monde ouvre et marque"
+      },
+      "noReturn": {
+        "name": "Sans retour",
+        "detail": "Les joueurs proposent, aucune marque ne se vide"
+      }
+    },
+    "rules": {
+      "button": "Règles",
+      "title": "Règles des horloges",
+      "presets": "Préréglages",
+      "presetsHint": "Ils remplissent les trois règles ci-dessous ; les étiquettes et les types de marque ne changent pas.",
+      "openPolicy": "Qui ouvre une horloge",
+      "markPolicy": "Qui marque",
+      "undo": "Vider les marques",
+      "undoYes": "On peut vider",
+      "undoNo": "Sans retour",
+      "undoNoHint": "Les marques ne s'effacent jamais, même pas par le Master ; seule reste l'annulation d'un clic raté.",
+      "save": "Enregistrer les règles",
+      "labels": "Étiquettes",
+      "labelsHint": "Étiquettes libres de la Salle, chacune avec une couleur ; une horloge en porte jusqu'à 6.",
+      "markKinds": "Types de marque",
+      "markKindsHint": "Jusqu'à 6, facultatifs : de quoi est faite une marque dans ce jeu et qui peut l'utiliser.",
+      "addLabel": "Nouvelle étiquette",
+      "addMarkKind": "Nouveau type de marque",
+      "who": "Qui peut l'utiliser",
+      "deleteItem": "Supprimer « {{name}} »",
+      "deleteLabelTitle": "Supprimer l'étiquette ?",
+      "deleteLabelBody_one": "« {{name}} » sera retirée de {{count}} horloge.",
+      "deleteLabelBody_other": "« {{name}} » sera retirée de {{count}} horloges.",
+      "templates": "Modèles de la Salle",
+      "noTemplates": "Aucun modèle : enregistres-en un depuis le dialogue d'une horloge.",
+      "deleteTemplate": "Supprimer le modèle « {{name}} »"
+    },
+    "groups": {
+      "create": "Nouveau groupe",
+      "editTitle": "Modifier le groupe",
+      "name": "Nom du groupe",
+      "mode": "Mode",
+      "modeHint": {
+        "free": "Les horloges sont juste ensemble : les niveaux d’un lieu, les factions.",
+        "race": "La première qui se ferme gagne ; si une autre se ferme avant que tu confirmes, c’est une égalité.",
+        "turn": "Certaines horloges sont décisives : quand l’une se ferme, le tournant se termine et les autres n’adviennent pas.",
+        "sequence": "Elles se ferment dans l’ordre : seule la première ouverte reçoit des marques, les autres attendent."
+      },
+      "clocks": "Horloges du groupe",
+      "clocksHint": "Dans l’ordre où tu les choisis, jusqu’à {{max}} ; une horloge d’un autre groupe passe dans celui-ci.",
+      "decisiveHint": "Écris l’issue des horloges décisives ; laisse les autres vides.",
+      "decisive": "Issue de « {{name}} »",
+      "notDecisive": "Non décisive",
+      "menu": "Actions du groupe « {{name}} »",
+      "newTurn": "Nouveau tournant",
+      "archive": "Archiver le groupe",
+      "restore": "Restaurer le groupe",
+      "delete": "Supprimer le groupe",
+      "deleteTitle": "Supprimer le groupe ?",
+      "deleteBody": "« {{name}} » disparaît ; ses horloges restent, hors des groupes.",
+      "empty": "Aucune horloge : modifie le groupe pour en ajouter.",
+      "quoted": "« {{name}} »",
+      "outcome": "« {{name}} » ({{label}})",
+      "resultWon": "Gagné : {{names}}",
+      "resultTie": "Égalité : {{names}}",
+      "resultTurn": "Tournant : {{labels}}",
+      "raceOne": "{{names}} s’est fermée la première.",
+      "raceTie": "{{names}} se sont fermées : égalité, les deux arrivent.",
+      "confirm": "Confirmer",
+      "turnEnds": "Le tournant se termine : {{labels}}. Les autres horloges ouvertes n’adviennent pas.",
+      "endTurn": "Terminer le tournant",
+      "notYet": "Pas encore",
+      "reveal": "« {{name}} » est la suivante, mais les joueurs ne la voient pas. La révéler ?",
+      "revealButton": "Révéler à la Salle",
+      "notNow": "Pas maintenant"
+    },
+    "block": {
+      "allOpen": "Toutes les horloges ouvertes",
+      "add": "Horloge",
+      "newClock": "Nouvelle horloge…",
+      "groupChip": "Groupe « {{name}} »",
+      "missing": "Plus disponible",
+      "noneLeft": "Aucune autre horloge ni groupe."
     }
   }
 }
