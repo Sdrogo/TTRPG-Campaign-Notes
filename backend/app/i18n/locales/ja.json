@@ -336,7 +336,9 @@
       "tooManyGroups": "ブロックのグループは{max}個までです",
       "invalidGroup": "各グループには異なるタグが1つ以上必要で、同じグループは2つ作れません",
       "unknownTool": "このブロックはこのセクションのツールではありません",
-      "notATool": "ツールはレトロ、スターとウィッシュ、質問、DDI、または投票です"
+      "notATool": "ツールはレトロ、スターとウィッシュ、質問、DDI、または投票です",
+      "tooManyClockChips": "クロックブロックに入れられるクロックとグループは{max}個までです",
+      "invalidClockChip": "各項目はこのルームのクロックかグループを1つだけ、1回指定します"
     },
     "clock": {
       "notFound": "クロックが見つかりません",
@@ -383,6 +385,7 @@
       "orderMismatch": "各項目を1回ずつ指定してください",
       "invalidClear": "空にできるのは任意の項目だけです",
       "groupNotEndable": "このグループには確定する結果がありません",
+      "groupEnded": "このグループは終了しています：モードは変更できません",
       "fields": {
         "name": "名前",
         "description": "説明",

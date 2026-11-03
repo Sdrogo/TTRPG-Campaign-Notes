@@ -336,7 +336,9 @@
       "tooManyGroups": "Ein Block hat höchstens {max} Gruppen",
       "invalidGroup": "Jede Gruppe braucht einen oder mehrere verschiedene Tags, und keine zwei Gruppen dürfen gleich sein",
       "unknownTool": "Dieser Block ist kein Werkzeug dieses Abschnitts",
-      "notATool": "Ein Werkzeug ist eine Retro, Sterne und Wünsche, Fragen, ein DDI oder Umfragen"
+      "notATool": "Ein Werkzeug ist eine Retro, Sterne und Wünsche, Fragen, ein DDI oder Umfragen",
+      "tooManyClockChips": "Ein Uhren-Block nennt höchstens {max} Uhren und Gruppen",
+      "invalidClockChip": "Jeder Eintrag nennt genau eine Uhr oder Gruppe dieses Raums, einmal"
     },
     "clock": {
       "notFound": "Uhr nicht gefunden",
@@ -383,6 +385,7 @@
       "orderMismatch": "Gib jedes Element genau einmal an",
       "invalidClear": "Nur ein optionales Feld kann geleert werden",
       "groupNotEndable": "Für diese Gruppe gibt es kein Ergebnis zu bestätigen",
+      "groupEnded": "Diese Gruppe ist beendet: Ihr Modus kann nicht mehr geändert werden",
       "fields": {
         "name": "Name",
         "description": "Beschreibung",

@@ -352,13 +352,38 @@ background study. The product owner answered Q1-Q4 and Q10 on 2026-11-03
 | Unit | What | Migration | Claude's build time |
 | --- | --- | --- | --- |
 | 61_1 | Backend core: rules, labels, mark kinds, templates, clocks, marks and undo, history, visibility and Reveal, proposals, stream topics, tests | **yes** | about 3 h |
-| 61_2 | Backend: groups (race, turn, sequence), page card, block kind `clocks`, copy, export/import schema 5, GDPR, Demo seed, tests | same migration | about 2 h |
+| 61_2 | Backend: groups (race, turn, sequence), page card, block kind `clocks`, copy, export/import schema 5, GDPR, tests (Demo seed moved to 61_4) | same migration | about 2 h |
 | 61_3 | Frontend: `ClockFace`, clock dialog, rules dialog, Clocks page, live marks, closing toast, 12 languages, tests | no | about 3.5 h |
-| 61_4 | Frontend: groups and their prompts, proposals, Clocks block in Sections, Index, screenshots | no | about 2.5 h |
+| 61_4 | Frontend: groups and their prompts, proposals, Clocks block in Sections, Index, Demo seed, screenshots | no | about 2.5 h |
 
 About 11 hours. One migration for 61_1 and 61_2 (both backend, merged
 together); it goes to the staging DB before they merge and to production
 before the release that ships them.
+
+## As built (61_1 and 61_2, backend, 2026-11-03)
+
+- One migration, `c1d7e3a9f5b2` (revises `e9c4a2f7b1d8`), for both units.
+- Routes: `app/api/clocks.py` (`/clock-rules` with `labels`, `mark-kinds`,
+  `templates` and their `-order` routes; `/clocks`, `/clocks-order`,
+  `/clocks/{id}`, `/open`, `/marks`, `/marks/{mid}/undo`, `/history`) and
+  `app/api/clock_groups.py` (`/clock-groups`, `/clock-groups-order`,
+  `/clock-groups/{gid}`, `/clocks`, `/end`). Templates live under
+  `/clock-rules/templates`, not `/clock-templates`.
+- Stream topics `clock`, `clock_group`, `clock_rules` (kinds `changed`,
+  `deleted`, `marked`); a clock event goes to who sees it before or after
+  the write, a group event to the Masters and whoever sees one of its clocks.
+- The `page_clocks` card joins the Room home on first use (the first
+  clock, or the first save of the rules), so a card the Master removed
+  stays removed.
+- **Rule presets are frontend-only**: they only fill the rules dialog,
+  so the backend has no preset list.
+- **Import**: the clocks and groups of a Master's file are added; labels
+  and mark kinds are merged by name; **rules and templates are not
+  imported** (the Room keeps its own). A Selective clock comes in Private,
+  a proposal is skipped, a group past 12 clocks keeps the first 12.
+  A Player's import writes no clocks.
+- **Demo seed moves to 61_4**: the Demo is a frontend mock
+  (`lib/demoBackend`), so it is seeded with the frontend.
 
 ## Tests
 

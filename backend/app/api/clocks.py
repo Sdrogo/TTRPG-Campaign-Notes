@@ -17,7 +17,7 @@ from app.api.access import ensure_room_members, require_membership, visible_docu
 from app.api.errors import http_error, translated_error
 from app.api.validation import UniqueIds
 from app.auth.dependencies import CurrentUserDep
-from app.db import clocks_repo, documents_repo, rooms_repo
+from app.db import clocks_repo, documents_repo, room_sections_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.clocks import (
     HISTORY_PAGE_SIZE,
@@ -82,11 +82,12 @@ from app.domain.clocks import (
 from app.domain.errors import DomainError
 from app.domain.models import DocumentVisibility, Membership, RoomRole
 from app.domain.relationship_maps import MapColor
+from app.domain.room_sections import SectionKind, TooManySectionsError, plan_new_section
 from app.domain.rooms import starting_visibility
 from app.domain.visibility import starting_grants
 from app.i18n.dependencies import LocaleDep
 from app.realtime.audience import CHANGED, DELETED, MARKED, clock_audience, push, push_clock
-from app.realtime.broker import CLOCK_RULES, Event
+from app.realtime.broker import CLOCK_RULES, LANDING, Event
 
 router = APIRouter(prefix="/rooms/{room_id}", tags=["clocks"])
 
@@ -579,6 +580,36 @@ async def visible_clocks(
     ]
 
 
+async def visible_chip_targets(
+    session: AsyncSession, room_id: uuid.UUID, viewer: Membership
+) -> tuple[set[uuid.UUID], set[uuid.UUID]]:
+    """The clocks and groups a Clocks block may name to `viewer` (Decision
+    18): the clocks they see, and the groups holding one of them (the
+    Master: every group)."""
+    clocks = await visible_clocks(session, room_id, viewer)
+    if viewer.role == RoomRole.MASTER:
+        groups = {group.id for group in await clocks_repo.list_groups(session, room_id)}
+    else:
+        groups = {clock.group_id for clock in clocks if clock.group_id is not None}
+    return {clock.id for clock in clocks}, groups
+
+
+async def ensure_page_card(session: AsyncSession, room_id: uuid.UUID) -> None:
+    """Decision 17: the Clocks page card joins the Room home the first time
+    the Room's clocks are used, unless it is there already or the home is
+    full. The caller calls it only on a first use, so a card the Master
+    removed stays removed."""
+    sections = await room_sections_repo.list_sections(session, room_id)
+    if any(section.kind is SectionKind.PAGE_CLOCKS for section in sections):
+        return
+    try:
+        card = plan_new_section(room_id, sections, SectionKind.PAGE_CLOCKS, None)
+    except TooManySectionsError:
+        return
+    await room_sections_repo.insert_sections(session, [card])
+    push(session, room_id, Event(None, CHANGED, None, LANDING))
+
+
 async def get_visible_clock(
     session: AsyncSession,
     room_id: uuid.UUID,
@@ -697,6 +728,8 @@ async def save_clock_rules(
     can be undone. Existing clocks keep their values (Decision 2)."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     _ensure_master(membership, locale)
+    if not await clocks_repo.has_rules(session, room_id):
+        await ensure_page_card(session, room_id)
     await clocks_repo.save_rules(
         session,
         ClockRules(
@@ -1087,14 +1120,13 @@ async def insert_clock(
     )
 
     await rooms_repo.lock_room(session, room_id)
+    count = await clocks_repo.count_clocks(session, room_id)
     try:
-        ensure_below(
-            await clocks_repo.count_clocks(session, room_id),
-            MAX_CLOCKS_PER_ROOM,
-            "errors.clock.tooManyClocks",
-        )
+        ensure_below(count, MAX_CLOCKS_PER_ROOM, "errors.clock.tooManyClocks")
     except ClockLimitError as exc:
         raise _fail(exc, locale) from exc
+    if count == 0 and not await clocks_repo.has_rules(session, room_id):
+        await ensure_page_card(session, room_id)
     now = _now()
     clock = Clock(
         id=uuid.uuid4(),

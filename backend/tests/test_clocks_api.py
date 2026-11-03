@@ -823,6 +823,7 @@ async def test_events_reach_who_sees_the_clock(client: AsyncClient, room: _Room)
         heard = [(e.topic, e.kind, e.id) for e in _drain(player)]
         shared_id, secret_id = uuid.UUID(shared["id"]), uuid.UUID(secret["id"])
         assert heard == [
+            ("landing", "changed", None),
             ("clock", "changed", shared_id),
             ("clock", "marked", shared_id),
             ("clock", "changed", shared_id),

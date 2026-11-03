@@ -336,7 +336,9 @@
       "tooManyGroups": "Un bloque tiene como máximo {max} grupos",
       "invalidGroup": "Cada grupo necesita una o más Etiquetas distintas, y no puede haber dos grupos iguales",
       "unknownTool": "Este bloque no es una herramienta de esta sección",
-      "notATool": "Una herramienta es una Retro, Estrellas y Deseos, Preguntas, un DDI o encuestas"
+      "notATool": "Una herramienta es una Retro, Estrellas y Deseos, Preguntas, un DDI o encuestas",
+      "tooManyClockChips": "Un bloque de relojes incluye como máximo {max} relojes y grupos",
+      "invalidClockChip": "Cada elemento indica un solo reloj o grupo de esta Sala, una vez"
     },
     "clock": {
       "notFound": "Reloj no encontrado",
@@ -383,6 +385,7 @@
       "orderMismatch": "Indica cada elemento exactamente una vez",
       "invalidClear": "Solo se puede vaciar un campo opcional",
       "groupNotEndable": "No hay ningún resultado que confirmar para este grupo",
+      "groupEnded": "Este grupo ha terminado: su modo ya no se puede cambiar",
       "fields": {
         "name": "nombre",
         "description": "descripción",

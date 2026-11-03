@@ -163,10 +163,10 @@ def test_a_file_that_is_not_one_of_the_formats_is_refused(content: bytes) -> Non
 
 def test_a_newer_schema_version_is_refused() -> None:
     with pytest.raises(ImportRefusedError) as raised:
-        _json({"schema_version": 5, "documents": [{"name": "A"}]})
+        _json({"schema_version": 6, "documents": [{"name": "A"}]})
 
     assert raised.value.key == "errors.import.unsupportedSchema"
-    assert raised.value.params["version"] == 5
+    assert raised.value.params["version"] == 6
 
 
 def test_a_file_with_no_document_is_refused() -> None:

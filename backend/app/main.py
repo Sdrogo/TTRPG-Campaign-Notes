@@ -13,6 +13,7 @@ from app.api.account import router as account_router
 from app.api.account_data import router as account_data_router
 from app.api.auth import router as auth_router
 from app.api.characters import router as characters_router
+from app.api.clock_groups import router as clock_groups_router
 from app.api.clocks import router as clocks_router
 from app.api.comments import router as comments_router
 from app.api.document_files import router as document_files_router
@@ -104,6 +105,7 @@ app.include_router(history_router)
 app.include_router(document_files_router)
 app.include_router(characters_router)
 app.include_router(clocks_router)
+app.include_router(clock_groups_router)
 app.include_router(mentions_router)
 app.include_router(mention_suggestions_router)
 app.include_router(friends_router)

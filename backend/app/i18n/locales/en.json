@@ -336,7 +336,9 @@
       "tooManyGroups": "A block holds at most {max} groups",
       "invalidGroup": "Each group needs one or more different Tags, and no two groups can be the same",
       "unknownTool": "This block is not one of this section's tools",
-      "notATool": "A tool is a Retro, Stars and Wishes, Questions, a DDI or polls"
+      "notATool": "A tool is a Retro, Stars and Wishes, Questions, a DDI or polls",
+      "tooManyClockChips": "A Clocks block names at most {max} clocks and groups",
+      "invalidClockChip": "Each chip names one clock or group of this room, once"
     },
     "clock": {
       "notFound": "Clock not found",
@@ -383,6 +385,7 @@
       "orderMismatch": "List every item exactly once",
       "invalidClear": "Only an optional field can be cleared",
       "groupNotEndable": "There is no result to confirm for this group",
+      "groupEnded": "This group has ended: its mode can't change",
       "fields": {
         "name": "name",
         "description": "description",

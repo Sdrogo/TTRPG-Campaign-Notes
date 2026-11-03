@@ -23,6 +23,7 @@ from app.db.models import (
     RoomClockRulesRow,
     RoomClockTemplateRow,
 )
+from app.domain.clock_transfer import ClockImport
 from app.domain.clocks import (
     Clock,
     ClockEvent,
@@ -30,6 +31,7 @@ from app.domain.clocks import (
     ClockLabel,
     ClockMark,
     ClockRules,
+    ClockSetup,
     ClockState,
     ClockTemplate,
     GroupMode,
@@ -58,6 +60,11 @@ async def get_rules(session: AsyncSession, room_id: uuid.UUID) -> ClockRules:
         mark_policy=MarkPolicy(row.mark_policy),
         allow_unmark=row.allow_unmark,
     )
+
+
+async def has_rules(session: AsyncSession, room_id: uuid.UUID) -> bool:
+    """Whether the Room's clock rules were ever saved."""
+    return await session.get(RoomClockRulesRow, room_id) is not None
 
 
 async def save_rules(session: AsyncSession, rules: ClockRules, now: datetime) -> None:
@@ -214,6 +221,34 @@ async def delete_template(session: AsyncSession, template_id: uuid.UUID) -> None
     )
 
 
+# --- Setup ---------------------------------------------------------------------
+
+
+async def load_setup(session: AsyncSession, room_id: uuid.UUID) -> ClockSetup | None:
+    """The Room's clock setup, or None when its clocks were never set up
+    (no rules, labels, kinds or templates)."""
+    setup = ClockSetup(
+        rules=await get_rules(session, room_id),
+        labels=tuple(await list_labels(session, room_id)),
+        kinds=tuple(await list_kinds(session, room_id)),
+        templates=tuple(await list_templates(session, room_id)),
+    )
+    if not (await has_rules(session, room_id) or setup.labels or setup.kinds or setup.templates):
+        return None
+    return setup
+
+
+async def insert_setup(session: AsyncSession, setup: ClockSetup, now: datetime) -> None:
+    """Writes a whole clock setup into its (new) Room."""
+    await save_rules(session, setup.rules, now)
+    for label in setup.labels:
+        await save_label(session, label)
+    for kind in setup.kinds:
+        await save_kind(session, kind)
+    for template in setup.templates:
+        await save_template(session, template)
+
+
 # --- Clocks -------------------------------------------------------------------
 
 
@@ -345,20 +380,6 @@ async def list_clocks(session: AsyncSession, room_id: uuid.UUID) -> list[Clock]:
     result = await session.execute(
         select(RoomClockRow)
         .where(RoomClockRow.room_id == room_id)
-        .order_by(RoomClockRow.position, RoomClockRow.created_at)
-    )
-    return await _clocks_from_rows(session, list(result.scalars()))
-
-
-async def list_clocks_by_ids(
-    session: AsyncSession, clock_ids: Collection[uuid.UUID]
-) -> list[Clock]:
-    """These clocks, in the Clocks page's order."""
-    if not clock_ids:
-        return []
-    result = await session.execute(
-        select(RoomClockRow)
-        .where(RoomClockRow.id.in_(clock_ids))
         .order_by(RoomClockRow.position, RoomClockRow.created_at)
     )
     return await _clocks_from_rows(session, list(result.scalars()))
@@ -626,3 +647,57 @@ async def delete_group(session: AsyncSession, group_id: uuid.UUID) -> None:
         .values(group_id=None, group_position=None, decisive_label=None)
     )
     await session.execute(delete(RoomClockGroupRow).where(RoomClockGroupRow.id == group_id))
+
+
+async def insert_import(session: AsyncSession, plan: ClockImport) -> None:
+    """Writes an import's labels, mark kinds, groups, clocks and marks
+    (spec 61 Decision 27), each clock with one "created" history line."""
+    for label in plan.labels:
+        await save_label(session, label)
+    for kind in plan.kinds:
+        await save_kind(session, kind)
+    for group in plan.groups:
+        await save_group(session, group)
+    for clock in plan.clocks:
+        await insert_clock(session, clock, ())
+        await insert_event(
+            session,
+            ClockEvent(
+                id=uuid.uuid4(),
+                clock_id=clock.id,
+                user_id=clock.created_by,
+                action=HistoryAction.CREATED,
+                details={"imported": True},
+                created_at=clock.created_at,
+            ),
+        )
+    for mark in plan.marks:
+        await insert_mark(session, mark)
+
+
+# --- Personal data (spec 31) ---------------------------------------------------
+
+
+async def list_clocks_by_creator(session: AsyncSession, user_id: uuid.UUID) -> list[Clock]:
+    """Every clock the user opened or proposed, in every Room, oldest first
+    (spec 61 Decision 28)."""
+    result = await session.execute(
+        select(RoomClockRow)
+        .where(RoomClockRow.created_by == user_id)
+        .order_by(RoomClockRow.created_at, RoomClockRow.id)
+    )
+    return await _clocks_from_rows(session, list(result.scalars()))
+
+
+async def list_marks_by_user(
+    session: AsyncSession, user_id: uuid.UUID
+) -> list[tuple[uuid.UUID, str, ClockMark]]:
+    """Every mark the user made, in every Room, with its clock's Room and
+    name, oldest first (spec 61 Decision 28)."""
+    result = await session.execute(
+        select(RoomClockRow.room_id, RoomClockRow.name, RoomClockMarkRow)
+        .join(RoomClockRow, RoomClockRow.id == RoomClockMarkRow.clock_id)
+        .where(RoomClockMarkRow.user_id == user_id)
+        .order_by(RoomClockMarkRow.created_at, RoomClockMarkRow.id)
+    )
+    return [(room_id, name, _mark_from_row(row)) for room_id, name, row in result]

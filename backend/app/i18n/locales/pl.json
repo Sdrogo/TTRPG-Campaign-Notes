@@ -336,7 +336,9 @@
       "tooManyGroups": "Blok może mieć najwyżej {max} grup",
       "invalidGroup": "Każda grupa potrzebuje jednego lub więcej różnych tagów i żadne dwie grupy nie mogą być takie same",
       "unknownTool": "Ten blok nie jest narzędziem tej sekcji",
-      "notATool": "Narzędzie to Retro, Gwiazdy i Życzenia, Pytania, DDI lub ankiety"
+      "notATool": "Narzędzie to Retro, Gwiazdy i Życzenia, Pytania, DDI lub ankiety",
+      "tooManyClockChips": "Blok zegarów zawiera najwyżej {max} zegarów i grup",
+      "invalidClockChip": "Każdy element wskazuje jeden zegar lub grupę z tego pokoju, raz"
     },
     "clock": {
       "notFound": "Nie znaleziono zegara",
@@ -383,6 +385,7 @@
       "orderMismatch": "Podaj każdy element dokładnie raz",
       "invalidClear": "Wyczyścić można tylko pole opcjonalne",
       "groupNotEndable": "Dla tej grupy nie ma wyniku do potwierdzenia",
+      "groupEnded": "Ta grupa się zakończyła: nie można zmienić jej trybu",
       "fields": {
         "name": "nazwa",
         "description": "opis",

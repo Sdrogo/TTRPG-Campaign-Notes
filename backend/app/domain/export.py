@@ -12,7 +12,7 @@ import re
 import unicodedata
 import uuid
 from collections.abc import Collection, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -42,9 +42,10 @@ from app.domain.visibility import (
 # Bumped when the JSON shape changes: 1 is the first release, with replies
 # (spec 19) and mention ids (spec 20) already part of it.
 # 2 since spec 28_0 added a Document's `subtitle`; 3 since spec 40 added the
-# Room's `maps`; 4 since spec 56 added the landing page's `sections`. The
-# import reads 1 to 4.
-SCHEMA_VERSION = 4
+# Room's `maps`; 4 since spec 56 added the landing page's `sections`; 5 since
+# spec 61 added the clocks (`clock_rules`, `clock_templates`, `clocks`,
+# `clock_groups`). The import reads 1 to 5.
+SCHEMA_VERSION = 5
 
 # Shown for a member with no display name: emails are never exported
 # (NFR-03).
@@ -234,6 +235,9 @@ class Export:
     # The landing page's Sections, already as JSON (spec 56,
     # `landing_transfer.section_to_json`): only the Room's JSON export reads them.
     sections: Sequence[dict[str, Any]] = ()
+    # The four clock keys (spec 61, `clock_transfer.clocks_to_json`): only the
+    # Room's JSON export holds them; empty otherwise.
+    clocks: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -548,6 +552,10 @@ def render_json(export: Export) -> dict[str, Any]:
         "documents": [_json_document(document) for document in export.documents],
         "maps": list(export.maps),
         "sections": list(export.sections),
+        "clock_rules": export.clocks.get("clock_rules"),
+        "clock_templates": list(export.clocks.get("clock_templates", ())),
+        "clocks": list(export.clocks.get("clocks", ())),
+        "clock_groups": list(export.clocks.get("clock_groups", ())),
     }
 
 

@@ -336,7 +336,9 @@
       "tooManyGroups": "블록에는 그룹을 최대 {max}개까지 둘 수 있습니다",
       "invalidGroup": "각 그룹에는 서로 다른 태그가 하나 이상 필요하며, 같은 그룹을 두 번 만들 수 없습니다",
       "unknownTool": "이 블록은 이 섹션의 도구가 아닙니다",
-      "notATool": "도구는 회고, 별과 소원, 질문, DDI 또는 투표입니다"
+      "notATool": "도구는 회고, 별과 소원, 질문, DDI 또는 투표입니다",
+      "tooManyClockChips": "클락 블록에는 클락과 그룹을 최대 {max}개까지 넣을 수 있습니다",
+      "invalidClockChip": "각 항목은 이 룸의 클락 또는 그룹 하나를 한 번만 가리킵니다"
     },
     "clock": {
       "notFound": "클락을 찾을 수 없습니다",
@@ -383,6 +385,7 @@
       "orderMismatch": "각 항목을 정확히 한 번씩 지정하세요",
       "invalidClear": "선택 항목만 비울 수 있습니다",
       "groupNotEndable": "이 그룹에는 확정할 결과가 없습니다",
+      "groupEnded": "이 그룹은 끝났습니다: 모드를 바꿀 수 없습니다",
       "fields": {
         "name": "이름",
         "description": "설명",

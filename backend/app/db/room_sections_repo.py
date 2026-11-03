@@ -10,6 +10,7 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import (
+    RoomSectionBlockClockRow,
     RoomSectionBlockGroupRow,
     RoomSectionBlockGroupTagRow,
     RoomSectionBlockRow,
@@ -20,6 +21,7 @@ from app.domain.room_sections import (
     Block,
     BlockKind,
     BlockMapKind,
+    ClockChip,
     Section,
     SectionKind,
     SessionZeroFeature,
@@ -52,8 +54,8 @@ async def list_sections(session: AsyncSession, room_id: uuid.UUID) -> list[Secti
 async def _blocks_for_sections(
     session: AsyncSession, section_ids: list[uuid.UUID]
 ) -> dict[uuid.UUID, list[Block]]:
-    """Each Section's blocks in order, with their Tags and groups, in four
-    queries whatever their number."""
+    """Each Section's blocks in order, with their Tags, groups and clock
+    chips, in five queries whatever their number."""
     blocks: dict[uuid.UUID, list[Block]] = defaultdict(list)
     rows = list(
         await session.scalars(
@@ -87,6 +89,13 @@ async def _blocks_for_sections(
         # A group's Tags have no order of their own: sorted, so a block reads
         # the same every time.
         groups[group.block_id].append(tuple(sorted(group_tags[group.id])))
+    chips: dict[uuid.UUID, list[ClockChip]] = defaultdict(list)
+    for chip in await session.scalars(
+        select(RoomSectionBlockClockRow)
+        .where(RoomSectionBlockClockRow.block_id.in_(block_ids))
+        .order_by(RoomSectionBlockClockRow.position)
+    ):
+        chips[chip.block_id].append(ClockChip(clock_id=chip.clock_id, group_id=chip.group_id))
     for row in rows:
         blocks[row.section_id].append(
             Block(
@@ -100,6 +109,8 @@ async def _blocks_for_sections(
                 features=tuple(SessionZeroFeature(f) for f in row.features),
                 module_id=row.module_id,
                 collapsed=row.collapsed,
+                clock_chips=tuple(chips[row.id]),
+                all_clocks=row.all_clocks,
             )
         )
     return blocks
@@ -147,10 +158,22 @@ async def _add_blocks(
             features=[f.value for f in block.features],
             module_id=block.module_id,
             collapsed=block.collapsed,
+            all_clocks=block.all_clocks,
         )
         for block in blocks
     )
     await session.flush()
+    session.add_all(
+        RoomSectionBlockClockRow(
+            id=uuid.uuid4(),
+            block_id=block.id,
+            position=position,
+            clock_id=chip.clock_id,
+            group_id=chip.group_id,
+        )
+        for block in blocks
+        for position, chip in enumerate(block.clock_chips)
+    )
     groups: list[tuple[uuid.UUID, tuple[uuid.UUID, ...]]] = []
     for block in blocks:
         session.add_all(RoomSectionBlockTagRow(block_id=block.id, tag_id=t) for t in block.tag_ids)

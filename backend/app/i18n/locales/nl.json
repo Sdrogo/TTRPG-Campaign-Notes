@@ -336,7 +336,9 @@
       "tooManyGroups": "Een blok heeft maximaal {max} groepen",
       "invalidGroup": "Elke groep heeft een of meer verschillende Tags nodig, en geen twee groepen mogen gelijk zijn",
       "unknownTool": "Dit blok is geen hulpmiddel van deze sectie",
-      "notATool": "Een hulpmiddel is een Retro, Sterren en Wensen, Vragen, een DDI of peilingen"
+      "notATool": "Een hulpmiddel is een Retro, Sterren en Wensen, Vragen, een DDI of peilingen",
+      "tooManyClockChips": "Een klokkenblok noemt hoogstens {max} klokken en groepen",
+      "invalidClockChip": "Elk item noemt één klok of groep van deze Kamer, één keer"
     },
     "clock": {
       "notFound": "Klok niet gevonden",
@@ -383,6 +385,7 @@
       "orderMismatch": "Noem elk item precies één keer",
       "invalidClear": "Alleen een optioneel veld kan worden leeggemaakt",
       "groupNotEndable": "Er is geen resultaat om te bevestigen voor deze groep",
+      "groupEnded": "Deze groep is afgelopen: de modus kan niet meer veranderen",
       "fields": {
         "name": "naam",
         "description": "beschrijving",

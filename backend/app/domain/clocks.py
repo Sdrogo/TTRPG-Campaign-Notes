@@ -314,6 +314,45 @@ class GroupEnd:
     lapsed_ids: list[uuid.UUID] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class ClockSetup:
+    """A Room's clock rules, labels, mark kinds and templates: what a
+    duplicated Room copies (Decision 26) and an export carries."""
+
+    rules: ClockRules
+    labels: tuple[ClockLabel, ...] = ()
+    kinds: tuple[MarkKind, ...] = ()
+    templates: tuple[ClockTemplate, ...] = ()
+
+
+def copy_setup(setup: ClockSetup, room_id: uuid.UUID) -> ClockSetup:
+    """Decision 26: the setup of a duplicated Room, with fresh ids, its
+    templates' labels re-pointed at the copied ones. No clock or group is
+    copied."""
+    labels = {label.id: replace(label, id=uuid.uuid4(), room_id=room_id) for label in setup.labels}
+    return ClockSetup(
+        rules=replace(setup.rules, room_id=room_id),
+        labels=tuple(labels.values()),
+        kinds=tuple(replace(kind, id=uuid.uuid4(), room_id=room_id) for kind in setup.kinds),
+        templates=tuple(
+            replace(
+                template,
+                id=uuid.uuid4(),
+                room_id=room_id,
+                settings=replace(
+                    template.settings,
+                    label_ids=tuple(
+                        labels[label_id].id
+                        for label_id in template.settings.label_ids
+                        if label_id in labels
+                    ),
+                ),
+            )
+            for template in setup.templates
+        ),
+    )
+
+
 # --- Cleaning -----------------------------------------------------------------
 
 

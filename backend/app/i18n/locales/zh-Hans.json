@@ -336,7 +336,9 @@
       "tooManyGroups": "一个区块最多有 {max} 个分组",
       "invalidGroup": "每个分组需要一个或多个不同的标签，且不能有两个相同的分组",
       "unknownTool": "此区块不是本版块的工具",
-      "notATool": "工具是回顾、星星与愿望、问题、DDI 或投票"
+      "notATool": "工具是回顾、星星与愿望、问题、DDI 或投票",
+      "tooManyClockChips": "一个进度钟区块最多包含 {max} 个进度钟和分组",
+      "invalidClockChip": "每一项只能指向此房间的一个进度钟或分组，且只出现一次"
     },
     "clock": {
       "notFound": "未找到进度钟",
@@ -383,6 +385,7 @@
       "orderMismatch": "每一项请恰好列出一次",
       "invalidClear": "只能清空可选项",
       "groupNotEndable": "这个分组没有需要确认的结果",
+      "groupEnded": "这个分组已结束：不能再更改模式",
       "fields": {
         "name": "名称",
         "description": "描述",
