@@ -334,7 +334,8 @@ describe('RoomClocksPage', { timeout: 20_000 }, () => {
     const folded = await screen.findByRole('button', { name: /Archiviati/ });
     expect(within(folded).getByText('2')).toBeInTheDocument();
     await user.click(folded);
-    const band = screen.getByRole('region', { name: 'Notte' });
+    // The groups load on their own query: wait for the band, not just the fold.
+    const band = await screen.findByRole('region', { name: 'Notte' });
     expect(within(band).getByRole('img', { name: /Allarme/ })).toBeInTheDocument();
     expect(within(band).queryByRole('img', { name: /Sciolto/ })).not.toBeInTheDocument();
     expect(screen.getByRole('img', { name: /Sciolto/ })).toBeInTheDocument();
