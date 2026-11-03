@@ -400,6 +400,14 @@ Details in `architecture.md` → Environments and `vps-migration-plan.md` §12.
 One line per unit; dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives above and in `architecture.md`.
 
+### 2026-11-03
+
+- **pypdf security upgrade** (no migration): `pypdf[crypto]` floor raised
+  to `>=6.21.4` and `uv.lock` moved 6.21.2 → 6.21.4, closing the 7 High
+  Dependabot alerts #32-#38 (infinite loops, memory and runtime blow-ups on
+  malformed PDFs, fixed in pypdf 6.21.3 and 6.21.4). No API change for
+  `pdf/media.py` (`PdfReader`/`PdfWriter`).
+
 ### 2026-11-02
 
 - **59 Large imports in image blocks** (migration `e9c4a2f7b1d8`): image
