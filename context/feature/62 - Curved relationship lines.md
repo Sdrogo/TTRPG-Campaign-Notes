@@ -55,7 +55,7 @@ Defaults picked on 2026-11-03, to confirm in the PR.
    arrow is clicked on its curve; nothing else about editing changes. While
    connecting, the line being dragged stays straight.
 7. **Every board that draws `MapArrow`**: the free map page, the read-only
-   map linked on a Document page, the Demo's maps) and the mention maps,
+   map linked on a Document page, the Demo's maps and the mention maps,
    full screen and on the Document page. Geographic maps are unchanged.
 8. **Not in scope (*proposed* for a later ticket)**: a bend per arrow
    dragged by a handle, as geographic links have. It needs a `bend` column
@@ -75,7 +75,8 @@ Defaults picked on 2026-11-03, to confirm in the PR.
 - `MapBoard.tsx`: each edge's data carries the arrow's bend (with the
   existing `shift` for plain lanes), computed from the whole map.
 - `MapArrow.tsx`: draws `curvePath` of the (shifted) curve, places labels
-  with the geographic map's `labelAt` rule (moved to `lib/maps.ts`), and
+  with the geographic map's `labelAt` rule (today a local function in
+  `GeographicBoard.tsx`, moved to `lib/maps.ts` and used by both), and
   drags them with `projectOnCurve`.
 - `GeographicBoard.tsx`, `lib/geoMaps.ts`: import the moved helpers; links
   keep their own `linkBend`.
