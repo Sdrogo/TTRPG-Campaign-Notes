@@ -25,6 +25,12 @@ DOCUMENT = "document"
 COMMENTS = "comments"
 # The Room's landing page (spec 55): its Sections and their blocks.
 LANDING = "landing"
+# Clocks (spec 61 Decision 22): one clock (`changed`, `marked`, `deleted`),
+# one group of clocks, and the Room's clock rules, labels, mark kinds and
+# templates (whole Room).
+CLOCK = "clock"
+CLOCK_GROUP = "clock_group"
+CLOCK_RULES = "clock_rules"
 
 
 @dataclass(frozen=True)

@@ -12,13 +12,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import comments_repo, documents_repo, rooms_repo
 from app.db import session as session_module
+from app.domain.clocks import Clock, is_clock_visible
 from app.domain.models import Document
 from app.domain.relationship_maps import RelationshipMap, is_map_visible
 from app.domain.visibility import is_comment_visible_in_thread, is_document_visible
-from app.realtime.broker import COMMENTS, DOCUMENT, MAP, Event, broker
+from app.realtime.broker import CLOCK, COMMENTS, DOCUMENT, MAP, Event, broker
 
 CHANGED = "changed"
 DELETED = "deleted"
+MARKED = "marked"
 
 
 def push(
@@ -66,6 +68,39 @@ async def push_map(
         session,
         relationship_map.room_id,
         Event(relationship_map.revision, kind, relationship_map.id, MAP),
+        after | set(before),
+    )
+
+
+async def clock_audience(
+    session: AsyncSession, clock: Clock, grants: Collection[uuid.UUID]
+) -> set[uuid.UUID]:
+    """The members who see `clock` with these Selective grants (spec 61
+    Decision 15; a proposal: its proposer and the Master)."""
+    members = await rooms_repo.list_memberships(session, clock.room_id)
+    return {
+        member.user_id
+        for member in members
+        if is_clock_visible(clock, member.user_id, member.role, grants)
+    }
+
+
+async def push_clock(
+    session: AsyncSession,
+    clock: Clock,
+    grants: Collection[uuid.UUID],
+    *,
+    before: Collection[uuid.UUID] = (),
+    kind: str = CHANGED,
+) -> None:
+    """Tells who sees `clock` (as it now is), and `before`, that it changed,
+    was marked or was deleted, at its current revision (spec 61 Decision
+    22)."""
+    after = await clock_audience(session, clock, grants)
+    push(
+        session,
+        clock.room_id,
+        Event(clock.revision, kind, clock.id, CLOCK),
         after | set(before),
     )
 
