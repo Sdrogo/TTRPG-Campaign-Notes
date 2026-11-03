@@ -898,6 +898,17 @@ release that ships it. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **61, Clocks** (asked by the product owner 2026-11-03; **ticket proposed,
+  awaiting answers to Q1-Q10**, no code yet): progress clocks as Room
+  content, universal and customisable: per-Room clock rules (who opens and
+  marks, undo or "no going back", Room-defined properties such as Approach
+  and Relevance, mark kinds such as Success and Shock), groups (free, race,
+  turn, sequence), Player proposals, Clocks page, Clocks block in Sections,
+  Document aside, live marks. Background study in
+  `61 - Clocks - background.md`; prototype in project files
+  `clock-prototype/`. Units 61_1-61_2 backend (**migration**), 61_3-61_4
+  frontend; about 11 h.
+
 - **60, Sections refinements and standalone tools** (asked by the product
   owner 2026-11-02; ticket answered Q1-Q7 the same day; **60_1 built** in PR #290, no migration; **60_2 built** in PR #290, migration `e8c4a2f6b1d9` applied to staging and production 2026-11-03; **60_3 built** 2026-11-03 in its own PR, no migration: ticket 60 complete): tool
   blocks (a poll step, Retro, Stars and Wishes, Questions, DDI living in a
