@@ -18,8 +18,8 @@
   the **labels** its clocks can carry, the **kinds of mark**), and clocks
   can be **grouped** with an end rule (a race, a turn, a sequence of
   layers). Presets cover the common games without naming them.
-- Clocks show on a **Clocks page**, in a **Clocks block** of a Section (spec
-  55/60) and in the aside of the **Document** they are about.
+- Clocks live on their own **Clocks page** in the Room (Q1); a Section block
+  and the Document aside are left to a later ticket.
 - `requirements.md` is protected and has no requirement for clocks; this
   ticket adds none. When the product owner approves it, a new `FR-` (and a
   `VR-`) can be added at their request only.
@@ -42,21 +42,22 @@
 ## Decisions
 
 Proposed by Claude on 2026-11-03 from the request, the two manuals and the
-background study. Q1-Q10 at the end are open; each Decision follows the
-proposed default until answered.
+background study. The product owner answered Q1-Q4 and Q10 on 2026-11-03
+(see "Answers"); Q5-Q9 are still open and the Decisions follow the proposed
+default until answered.
 
 ### 1. The Room's clock rules
 
 1. **"Regole dei clock"**, one set per Room, edited by the Master from the
    Clocks page (⚙ "Regole"), applied to every clock of the Room:
-   - **Who opens a clock**: "Solo il Master" | "Tutti" | "I giocatori
-     propongono, il Master approva" (**default**, Cowboy Bebop's "anyone may
+   - **Who opens a clock**: "Solo il Master" (**default**, Q2) | "Tutti" |
+     "I giocatori propongono, il Master approva" (Cowboy Bebop's "anyone may
      ask, the Master defines"; Decision 13). A Player's own opened clock is
      theirs (creator rights below). Players never open clocks when the Room
      disables Document creation by Players (D-13).
-   - **Who marks**: "Solo il Master" | "Il Master e chi l'ha aperto"
-     (**default**) | "Tutti quelli che lo vedono" ("il contesto prevale").
-     A clock can override it (Decision 6).
+   - **Who marks**: "Solo il Master" (**default**, Q3) | "Il Master e chi
+     l'ha aperto" | "Tutti quelli che lo vedono" ("il contesto prevale").
+     Each clock can override it in its own settings (Decision 6).
    - **Undoing marks**: "Si può svuotare" (**default**) | "Non si torna
      indietro" (marks are never erased, not even by the Master; the 5 s undo
      of a mistaken click stays, Decision 9). With the first, a clock can be
@@ -84,7 +85,7 @@ proposed default until answered.
    editable; game names never appear:
    | Preset (it) | Who opens | Who marks | Undo |
    | --- | --- | --- | --- |
-   | Semplice (default for every Room) | Players propose | Master + creator | yes |
+   | Semplice (default for every Room) | Master only | Master only | yes |
    | Tutto il tavolo | everyone | everyone who sees it | yes |
    | Senza ritorno | Players propose | everyone who sees it | no |
    Presets set only these three policies: they never create labels or mark
@@ -216,17 +217,18 @@ proposed default until answered.
     proposers), "Chiusi e non avvenuti", "Archiviati". Buttons "Nuovo clock"
     / "Proponi un clock", "Nuovo gruppo", ⚙ "Regole" (Master). A **page card
     `page_clocks`** on the Room home is added when the Room's first clock or
-    rules are saved, removable like Maps ("Riaggiungi Clock"). (Q1)
-18. **Clocks block** in a Section: block kind `clocks` with ordered chips of
-    clocks and groups, "+ Clock" (existing, or "Nuovo clock…" which creates
-    and adds it), or "Tutti i clock aperti". Faces in a wrapping strip,
-    marked in place. A block the viewer sees nothing of is left out.
-19. **Document aside**: a clock linked to a Document shows under its images
-    for whoever sees both (≤6 per Document), small and markable in place.
+    rules are saved, removable like Maps ("Riaggiungi Clock"). The page is
+    **the** place of clocks in this ticket (Q1: "Creiamo una pagina").
+18. **Clocks block in a Section**: later ticket (block kind `clocks`, chips
+    of clocks and groups), not built here.
+19. **Document link**: a clock can still name a linked Document (shown as a
+    link "→ Faro di Punta Grigia" in its detail, for whoever sees both),
+    but the Document page shows nothing yet: the aside is a later ticket.
 20. **Room Index**: a "Clock" entry when the page card exists.
-21. **Not in this ticket** (Q9): clocks on maps, in the Session 0 chain or
-    as a spec 60 tool block, in the PDF, in search, dice rolling or
-    automatic marks from rolls, Ironsworn-style progress tracks.
+21. **Not in this ticket** (Q9): the Section block and Document aside
+    (above), clocks on maps, in the Session 0 chain or as a spec 60 tool
+    block, in the PDF, in search, dice rolling or automatic marks from
+    rolls, Ironsworn-style progress tracks.
 
 ### 8. Live, display, accessibility
 
@@ -254,7 +256,7 @@ proposed default until answered.
 
 26. **Duplicate Room** (spec 33): rules and templates copied; clocks and
     groups copied **emptied** (no marks, history dropped, groups not ended),
-    proposed and archived ones left out; Clocks blocks remapped. (Q5)
+    proposed and archived ones left out. (Q5)
 27. **JSON export/import** (`schema_version` 5): `clock_rules`,
     `clock_templates`, `clocks` (settings, marks as counts per kind, state,
     group, Document by id/name), `clock_groups`; Master-only fields only in
@@ -265,7 +267,7 @@ proposed default until answered.
     lists the caller's clocks, proposals and marks; account deletion keeps
     clocks with the Room (D-15) and shows "Ex membro" in their history.
 29. **Languages**: all strings in 12 languages; glossary rows for Clock,
-    Mark, Close, Lapsed when built. Proposed (Q10): it "Clock" (as asked),
+    Mark, Close, Lapsed when built. Italian keeps **"Clock"** (Q10, product owner),
     en "Clock", de "Uhr", es "Reloj", fr "Horloge", nl "Klok", pl "Zegar",
     pt-PT "Relógio", ru "Часы", ja "クロック", zh-Hans "进度钟", ko "클락";
     "segnare / chiudere" kept from the Italian manuals. Label and mark
@@ -323,8 +325,7 @@ proposed default until answered.
   stages, consequence for the Master, history, "Segna…"), `ClockRulesDialog`
   (presets, policies, labels and mark kinds editors with sortable
   rows), `MarkKindLegend`.
-- `pages/RoomClocksPage.tsx`; `SectionBlock` kind `clocks`;
-  `DocumentDetailPage` aside; Index entry; hooks `useClocks`,
+- `pages/RoomClocksPage.tsx`; Index entry; hooks `useClocks`,
   `useClockRules`, `useClockEvents` (on `useRoomEvents`).
 - Strings under `clocks.*` in 12 languages; `ui-context.md` gets "Clocks
   (spec 61)" when built.
@@ -334,11 +335,11 @@ proposed default until answered.
 | Unit | What | Migration | Claude's build time |
 | --- | --- | --- | --- |
 | 61_1 | Backend core: rules, labels, mark kinds, templates, clocks, marks and undo, history, visibility and Reveal, proposals, stream topics, tests | **yes** | about 3 h |
-| 61_2 | Backend: groups (race, turn, sequence), page card and block kind, copy, export/import schema 5, GDPR, Demo seed, tests | same migration | about 2 h |
+| 61_2 | Backend: groups (race, turn, sequence), page card, copy, export/import schema 5, GDPR, Demo seed, tests | same migration | about 2 h |
 | 61_3 | Frontend: `ClockFace`, clock dialog, rules dialog, Clocks page, live marks, closing toast, 12 languages, tests | no | about 3.5 h |
-| 61_4 | Frontend: groups and their prompts, proposals, Clocks block, Document aside, Index, screenshots | no | about 2.5 h |
+| 61_4 | Frontend: groups and their prompts, proposals, Index, screenshots | no | about 1.5 h |
 
-About 11 hours. One migration for 61_1 and 61_2 (both backend, merged
+About 10 hours. One migration for 61_1 and 61_2 (both backend, merged
 together); it goes to the staging DB before they merge and to production
 before the release that ships them.
 
@@ -357,23 +358,27 @@ before the release that ships them.
 - Frontend: wedge click fills/empties; −/+ and keyboard; kind picker and
   wedge colours; undo toast; remote marks re-render; closing toast; the
   turn and sequence prompts; rules presets fill the dialog; templates fill
-  the clock dialog; proposals flow; block chips and "Tutti i clock aperti";
-  the aside; the Player view hides Master-only fields.
-- Screenshots at desktop and phone width: a Section with a Clocks block (a
-  race, a turn group with kinds, a countdown), the clock dialog, the rules
-  dialog, the detail with history, the Clocks page, a Document aside.
+  the clock dialog; proposals flow; the Player view hides Master-only
+  fields.
+- Screenshots at desktop and phone width: the Clocks page (a race, a turn
+  group with kinds, a countdown), the clock dialog, the rules dialog, the
+  detail with history.
+
+## Answers (product owner, 2026-11-03)
+
+- Q1 (where): "Creiamo una pagina": a Clocks page. Section block and
+  Document aside left to a later ticket. -> Decisions 17-21.
+- Q2 and Q3 (defaults): "I Clock di default vengono creati dal master e
+  segnati secondo le impostazioni del clock, ma di default master": who
+  opens = Master only, who marks = Master only, each clock can change who
+  marks it. -> Decisions 1, 6.
+- Q4 (size): 2-16, odd included. -> Decision 4c.
+- Q10 (Italian name): "Clock". -> Decision 29.
+- Earlier the same day: the map palette for every colour, free Room labels
+  instead of typed properties, any size not just the shortcuts.
 
 ## Open questions (for the product owner)
 
-- **Q1. Where do clocks show?** Proposed: Clocks page (card added on first
-  use), Clocks block in Sections, Document aside. Fewer?
-- **Q2. Default "who opens"** for a new Room: proposed "I giocatori
-  propongono, il Master approva". Or "Solo il Master"?
-- **Q3. Default "who marks"**: proposed "Il Master e chi l'ha aperto".
-  Or "Tutti quelli che lo vedono" (Cowboy Bebop's "il contesto prevale")?
-- **Q4. Size**: any number from 2 to 16, odd included (answered in part
-  2026-11-03: the 4/6/8/12 buttons are only shortcuts). Is 16 enough as the
-  top (Cowboy Bebop: "quante sezioni desiderate")?
 - **Q5. Duplicating a Room**: proposed clocks copied emptied, proposed and
   archived ones left out. Or copied as they are?
 - **Q6. Hidden progress** (name visible, fill hidden): proposed not now.
@@ -383,5 +388,3 @@ before the release that ships them.
   automatically? Proposed yes.
 - **Q9. Later tickets**: clocks on maps, as a Session 0 step or tool block,
   in the PDF; agreed to leave them out?
-- **Q10. Italian name**: "Clock" (as you wrote it) or "Orologio" (the
-  Italian manuals' word, with "segnare" and "chiudere")?
