@@ -289,7 +289,7 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending**: `e8c4a2f6b1d9` (spec 60_2, PR #290), then `e9c4a2f7b1d8` (spec 59, PR #288) on production (before the release that ships them). Production is at `d5b8e1f3a9c7`; staging is already at `e9c4a2f7b1d8`.
+- **Pending**: none. Production and staging are both at `e9c4a2f7b1d8` (head).
 - **Staging database**: `e9c4a2f7b1d8` (import job progress, spec 59, PR #288,
   applied 2026-11-03 with `backend/.env.staging` loaded, `alembic current` =
   `e9c4a2f7b1d8 (head)`); `e8c4a2f6b1d9` before it (Section tools + block `collapsed`,
@@ -316,7 +316,12 @@ here and remind the product owner.
   `e8b4d2f6a9c1` before that, document linked maps, applied 2026-10-15; `c6e2a9f4d8b3` before it,
   mention maps, applied 2026-10-14; `b4d8f2a6c1e7` before it, applied
   2026-10-13, `a9e3c5d7b1f4` the same day, and `d5a1c8e3f2b7` on 2026-10-12).
-- **Production database**: `d5b8e1f3a9c7` (Room landing page, spec 55,
+- **Production database**: `e9c4a2f7b1d8` (import job progress, spec 59, PR
+  #288) and `e8c4a2f6b1d9` (Section tools + block `collapsed`, drops
+  `rooms.maps_position`, spec 60_2, PR #290), both applied 2026-11-03 in one
+  `alembic upgrade e9c4a2f7b1d8` with `backend/.env` loaded (product owner's
+  go-ahead), ahead of the release to `main` that ships them; `alembic current`
+  = `e9c4a2f7b1d8 (head)`. Before them: `d5b8e1f3a9c7` (Room landing page, spec 55,
   PR #283: five tables and the three page cards seeded for every Room),
   applied 2026-11-02 with `backend/.env` loaded (plain `alembic upgrade
   head`) ahead of the release to `main` that ships it. The tables are new
@@ -348,7 +353,7 @@ here and remind the product owner.
   `c6e2a9f4d8b3`, mention maps, applied the same day). Before it, on
   2026-10-13: `a9e3c5d7b1f4` (map label positions) and `b4d8f2a6c1e7` (map
   label offsets), from `d5a1c8e3f2b7` (map card image, applied earlier).
-- **Pending on production**: `e8c4a2f6b1d9` (spec 60_2), then `e9c4a2f7b1d8` (spec 59).
+- **Pending on production**: none (`e8c4a2f6b1d9` and `e9c4a2f7b1d8` applied 2026-11-03).
 
 Recent chain, newest first (where each came from):
 `b9e4c2a7d1f3` Session 0 polls (53) ← `a7d3f9b2c6e1` Session 0 DDI (47_3) ← `f3a9c1e7b5d4` Session 0 Questions (47_2) ← `e5c1a8f3b7d2` Session 0 chain (47_1) ← `d4a7e2c9f1b3` post-it order (46d_2) ← `c3f8a1d6e9b4` colours and groups (46c) ← `4797859660e2` Session 0 boards (46_1) ← `b5f1d8e3a7c2` room maps_position (maps row, PR #236) ← `e2b7c4f9a1d6` map players_can_edit and revision (42_1) ← `a4d9e2c7f1b6` note relational link (41_1) ← `d7c1f5a9e3b8` geographic maps (38_1) ← `e8b4d2f6a9c1` document linked maps (36 Decision 15) ← `c6e2a9f4d8b3` mention maps (36_1) ← `b4d8f2a6c1e7` map label offsets (28_3) ← `a9e3c5d7b1f4` map label positions (28_3) ← `d5a1c8e3f2b7` map card image ← `b3f7d1e9c5a2` relationship maps (28_1) ← `a8c4e2f6b1d3` Document subtitle
@@ -894,7 +899,7 @@ next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
 - **60, Sections refinements and standalone tools** (asked by the product
-  owner 2026-11-02; ticket answered Q1-Q7 the same day; **60_1 built** in PR #290, no migration; **60_2 built** in PR #290, migration `e8c4a2f6b1d9` applied to staging 2026-11-03, pending on production; **60_3 built** 2026-11-03 in its own PR, no migration: ticket 60 complete): tool
+  owner 2026-11-02; ticket answered Q1-Q7 the same day; **60_1 built** in PR #290, no migration; **60_2 built** in PR #290, migration `e8c4a2f6b1d9` applied to staging and production 2026-11-03; **60_3 built** 2026-11-03 in its own PR, no migration: ticket 60 complete): tool
   blocks (a poll step, Retro, Stars and Wishes, Questions, DDI living in a
   Section, unlinked from Session 0), every block folds, Section title and
   description edited in place, "Nuova sezione" outside edit mode, the
@@ -906,8 +911,8 @@ on `main`.
 - **59, Large imports in image blocks** (asked by the product owner
   2026-11-02 after a whole-Room import hit the 200-image cap; ticket
   confirmed 2026-11-02 with the default answers; **built** in PR #288,
-  **migration `e9c4a2f7b1d8`**, applied to staging 2026-11-03, pending on
-  production):
+  **migration `e9c4a2f7b1d8`**, applied to staging and production
+  2026-11-03):
   images per import 200 -> 2000, counted on the ticked Documents; the
   text is still one transaction, the images run in saved blocks of 25 with
   progress in the job panel, stale means no progress for 30 minutes, and a
