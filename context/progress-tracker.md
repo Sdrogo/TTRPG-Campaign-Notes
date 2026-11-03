@@ -289,8 +289,10 @@ here and remind the product owner.
   after `e5c1a8f3b7d2` (Session 0 chain of steps, 47_1, PR
   #259), `d4a7e2c9f1b3` (46d order), `c3f8a1d6e9b4` (46c), `4797859660e2`
   (46_1) and `b5f1d8e3a7c2` (`rooms.maps_position`, PR #236).
-- **Pending**: `e8c4a2f6b1d9` (spec 60_2, PR #290) on production (before the release that ships it). Production is at `d5b8e1f3a9c7`; staging is already at `e8c4a2f6b1d9`.
-- **Staging database**: `e8c4a2f6b1d9` (Section tools + block `collapsed`,
+- **Pending**: `e8c4a2f6b1d9` (spec 60_2, PR #290), then `e9c4a2f7b1d8` (spec 59, PR #288) on production (before the release that ships them). Production is at `d5b8e1f3a9c7`; staging is already at `e9c4a2f7b1d8`.
+- **Staging database**: `e9c4a2f7b1d8` (import job progress, spec 59, PR #288,
+  applied 2026-11-03 with `backend/.env.staging` loaded, `alembic current` =
+  `e9c4a2f7b1d8 (head)`); `e8c4a2f6b1d9` before it (Section tools + block `collapsed`,
   drops `rooms.maps_position`, spec 60_2, PR #290, applied 2026-11-03 with
   `backend/.env.staging` loaded, before the PR merges); `d5b8e1f3a9c7`
   before it (Room landing page, spec 55,
@@ -904,7 +906,8 @@ on `main`.
 - **59, Large imports in image blocks** (asked by the product owner
   2026-11-02 after a whole-Room import hit the 200-image cap; ticket
   confirmed 2026-11-02 with the default answers; **built** in PR #288,
-  **migration `e9c4a2f7b1d8`** to apply to staging and production):
+  **migration `e9c4a2f7b1d8`**, applied to staging 2026-11-03, pending on
+  production):
   images per import 200 -> 2000, counted on the ticked Documents; the
   text is still one transaction, the images run in saved blocks of 25 with
   progress in the job panel, stale means no progress for 30 minutes, and a
