@@ -8,10 +8,12 @@ export interface BlockKeysState {
   keys: string[];
   /** The origins of the list last sent, until the list on screen changes to it. */
   pending: BlockOrigins | null;
+  /** The list on screen when the last save was sent, so a rolled back save finds its keys again. */
+  before: { ids: string[]; keys: string[] } | null;
   next: number;
 }
 
-export const INITIAL_BLOCK_KEYS: BlockKeysState = { ids: [], keys: [], pending: null, next: 0 };
+export const INITIAL_BLOCK_KEYS: BlockKeysState = { ids: [], keys: [], pending: null, before: null, next: 0 };
 
 function sameIds(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((id, index) => id === b[index]);
@@ -22,13 +24,15 @@ function sameIds(a: string[], b: string[]): boolean {
  * every block a new id (the optimistic `new-N`, then the server's), so
  * keying the blocks by id would remount them all on every save: a folded
  * block would open again and the page would jump. The origins of the list
- * last sent say where each block came from; without them a block keeps its
+ * last sent say where each block came from; the list on screen before it
+ * comes back whole when the save fails and is rolled back; else a block keeps its
  * key when its id is still there; otherwise, in a list as long as the last
  * one (the server's answer to the optimistic list), it keeps its place's
  * key. A block nothing matches gets a new key, and no key is given twice.
  */
 export function nextBlockKeys(state: BlockKeysState, ids: string[]): BlockKeysState {
   if (sameIds(ids, state.ids)) return state;
+  if (state.before && sameIds(ids, state.before.ids)) return { ...state, ids, keys: state.before.keys, pending: null };
   let next = state.next;
   const used = new Set<string>();
   const take = (key: string | undefined) => {
@@ -46,19 +50,21 @@ export function nextBlockKeys(state: BlockKeysState, ids: string[]): BlockKeysSt
     if (kept >= 0) return take(state.keys[kept]);
     return take(ids.length === state.ids.length ? state.keys[index] : undefined);
   });
-  return { ids, keys, pending: pending ? null : state.pending, next };
+  return { ...state, ids, keys, pending: pending ? null : state.pending, next };
 }
 
 /**
  * Render keys for a Section's blocks that outlive a save (see
- * `nextBlockKeys`), and `expect`, to call with a list's origins just before
- * saving it.
+ * `nextBlockKeys`); `expect`, to call with a list's origins just before
+ * saving it, and `cancel`, when that save fails.
  */
 export function useBlockKeys(ids: string[]) {
   const [state, setState] = useState(INITIAL_BLOCK_KEYS);
   const current = nextBlockKeys(state, ids);
   // Adjusted while rendering, as React allows for state derived from props.
   if (current !== state) setState(current);
-  const expect = (origins: BlockOrigins) => setState((previous) => ({ ...previous, pending: origins }));
-  return { keys: current.keys, expect };
+  const expect = (origins: BlockOrigins) =>
+    setState((previous) => ({ ...previous, pending: origins, before: { ids: previous.ids, keys: previous.keys } }));
+  const cancel = () => setState((previous) => ({ ...previous, pending: null }));
+  return { keys: current.keys, expect, cancel };
 }

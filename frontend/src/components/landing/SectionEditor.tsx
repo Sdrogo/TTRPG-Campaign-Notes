@@ -77,7 +77,7 @@ export function SectionEditor({
   const blocks = section.blocks;
   // Render keys that outlive a save, which gives every block a new id: the
   // blocks stay mounted, so a folded one stays folded and the page keeps its place.
-  const { keys, expect } = useBlockKeys(blocks.map((block) => block.id));
+  const { keys, expect, cancel } = useBlockKeys(blocks.map((block) => block.id));
   const same = (): number[] => blocks.map((_, index) => index);
   const inserted = (at: number): BlockOrigins => {
     const origins: BlockOrigins = same();
@@ -88,7 +88,13 @@ export function SectionEditor({
   /** Saves `next`; `origins` says where each of its blocks is in the list on screen (null: a new one). */
   const saveList = (next: BlockInput[], origins: BlockOrigins, onDone?: () => void) => {
     expect(origins);
-    save.mutate(next, { onError: notifyError, onSuccess: () => onDone?.() });
+    save.mutate(next, {
+      onError: (error) => {
+        cancel();
+        notifyError(error);
+      },
+      onSuccess: () => onDone?.(),
+    });
   };
   const inputs = () => blocks.map(blockInput);
 
@@ -121,7 +127,10 @@ export function SectionEditor({
     setGroupsOpen(null);
     expect([...same(), null]);
     addTool.mutate(kind, {
-      onError: notifyError,
+      onError: (error) => {
+        cancel();
+        notifyError(error);
+      },
       onSuccess: (saved) => {
         const next = saved.blocks.map(blockInput);
         if (index >= next.length - 1) return;

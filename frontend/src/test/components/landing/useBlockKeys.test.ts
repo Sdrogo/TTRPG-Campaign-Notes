@@ -25,4 +25,12 @@ describe('nextBlockKeys', () => {
     expect(keys[1]).toBe(state.keys[0]);
     expect(new Set(keys).size).toBe(3);
   });
+
+  it('finds the keys again when a failed save is rolled back', () => {
+    const state = nextBlockKeys(INITIAL_BLOCK_KEYS, ['a', 'b']);
+    const sent = { ...state, pending: [1, 0], before: { ids: state.ids, keys: state.keys } };
+    const optimistic = nextBlockKeys(sent, ['new-0', 'new-1']);
+    expect(optimistic.keys).toEqual([state.keys[1], state.keys[0]]);
+    expect(nextBlockKeys(optimistic, ['a', 'b']).keys).toEqual(state.keys);
+  });
 });

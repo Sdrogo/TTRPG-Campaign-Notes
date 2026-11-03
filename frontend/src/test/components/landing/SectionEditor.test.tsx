@@ -180,6 +180,21 @@ describe('SectionEditor', () => {
     expect(folds()).toEqual(['true', 'false']);
   });
 
+  it('drops the order of a failed save: the next list keeps its blocks folded or open', async () => {
+    fetchMock.mockImplementation(async (path: string) => {
+      if (path.endsWith('/tags/main')) return [] as never;
+      throw new Error('Troppi');
+    });
+    const { rerender } = editor([plainBlock, mapsBlock]);
+    const folds = () => screen.getAllByRole('button', { name: /^(Comprimi|Espandi) / }).map((button) => button.getAttribute('aria-expanded'));
+    await userEvent.click(screen.getAllByRole('button', { name: /^Comprimi / })[0]);
+    await userEvent.click(screen.getByRole('button', { name: 'Riordina block-key-0,block-key-1' }));
+    await waitFor(() => expect(notifications.show).toHaveBeenCalledWith(expect.objectContaining({ message: 'Troppi' })));
+    // A refetch of the same blocks with new ids, in their old order.
+    rerender(<SectionEditor roomId="room-1" section={section({ blocks: [{ ...plainBlock, id: 'block-4b' }, { ...mapsBlock, id: 'block-3b' }] })} sources={sources} currentUserId="user-1" />);
+    expect(folds()).toEqual(['false', 'true']);
+  });
+
   it('keeps the groups popover open while groups are added, across the saves', async () => {
     const { rerender } = editor([plainBlock, mapsBlock]);
     const resave = (block: Record<string, unknown>) =>
