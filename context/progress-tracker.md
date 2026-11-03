@@ -901,8 +901,9 @@ on `main`.
 - **61, Clocks** (asked by the product owner 2026-11-03; **ticket proposed,
   awaiting answers to Q1-Q10**, no code yet): progress clocks as Room
   content, universal and customisable: per-Room clock rules (who opens and
-  marks, undo or "no going back", Room-defined properties such as Approach
-  and Relevance, mark kinds such as Success and Shock), groups (free, race,
+  marks, undo or "no going back", free Room labels the Master creates,
+  Master-defined mark kinds; nothing hard-coded; map palette colours; any
+  size 2-16), groups (free, race,
   turn, sequence), Player proposals, Clocks page, Clocks block in Sections,
   Document aside, live marks. Background study in
   `61 - Clocks - background.md`; prototype in project files
