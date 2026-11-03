@@ -19,6 +19,8 @@ MAX_BLOCKS = 10
 MAX_GROUPS = 20
 MAX_TITLE_LENGTH = 100
 MAX_DESCRIPTION_LENGTH = 2000
+# Spec 61 Decision 31: the clocks and groups a Clocks block names.
+MAX_CLOCK_CHIPS = 20
 
 
 class SectionKind(StrEnum):
@@ -29,6 +31,8 @@ class SectionKind(StrEnum):
     PAGE_DOCUMENTS = "page_documents"
     PAGE_MAPS = "page_maps"
     PAGE_SESSION_ZERO = "page_session_zero"
+    # Spec 61 Decision 17: added with the Room's first clock, never by default.
+    PAGE_CLOCKS = "page_clocks"
 
 
 # The page cards every Room starts with, in their default order.
@@ -43,6 +47,8 @@ class BlockKind(StrEnum):
     SESSION_ZERO = "session_zero"
     # Spec 60: one Session 0 step of its own, outside every session.
     TOOL = "tool"
+    # Spec 61 Decision 18: some clocks and groups of the Room, or all open ones.
+    CLOCKS = "clocks"
 
 
 class BlockMapKind(StrEnum):
@@ -138,6 +144,15 @@ class UnknownBlockTagError(DomainError):
     """A block or group names a Tag that isn't in this Room."""
 
 
+class TooManyClockChipsError(DomainError):
+    """A Clocks block names at most `MAX_CLOCK_CHIPS` clocks and groups."""
+
+
+class InvalidClockChipError(DomainError):
+    """A Clocks block's chip names exactly one clock or group of the Room,
+    once."""
+
+
 class TooManyGroupsError(DomainError):
     """A Documents block holds at most `MAX_GROUPS` groups."""
 
@@ -145,6 +160,15 @@ class TooManyGroupsError(DomainError):
 class InvalidGroupError(DomainError):
     """A group is one Tag or a combination of distinct Tags, never empty and
     never the same as another group of its block."""
+
+
+@dataclass(frozen=True)
+class ClockChip:
+    """One chip of a Clocks block (spec 61 Decision 18): a clock or a group,
+    exactly one of the two."""
+
+    clock_id: uuid.UUID | None = None
+    group_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)
@@ -165,6 +189,9 @@ class Block:
     features: tuple[SessionZeroFeature, ...] = ()
     module_id: uuid.UUID | None = None
     collapsed: bool = False
+    # Spec 61: a Clocks block's chips in order, or all the open clocks.
+    clock_chips: tuple[ClockChip, ...] = ()
+    all_clocks: bool = False
 
 
 @dataclass(frozen=True)
@@ -195,6 +222,8 @@ class BlockInput:
     features: Sequence[SessionZeroFeature] = ()
     module_id: uuid.UUID | None = None
     collapsed: bool = False
+    clock_chips: Sequence[ClockChip] = ()
+    all_clocks: bool = False
 
 
 def ensure_can_edit(role: RoomRole) -> None:
@@ -306,16 +335,43 @@ def _plan_groups(
     return tuple(planned)
 
 
+def _plan_chips(
+    chips: Sequence[ClockChip],
+    room_clocks: Collection[uuid.UUID],
+    room_groups: Collection[uuid.UUID],
+) -> tuple[ClockChip, ...]:
+    """A Clocks block's chips (spec 61 Decision 18): each one clock or group
+    of the Room, none repeated, at most `MAX_CLOCK_CHIPS` (422)."""
+    if len(chips) > MAX_CLOCK_CHIPS:
+        raise TooManyClockChipsError("errors.landing.tooManyClockChips", max=MAX_CLOCK_CHIPS)
+    if len(set(chips)) != len(chips):
+        raise InvalidClockChipError("errors.landing.invalidClockChip")
+    for chip in chips:
+        valid = (
+            chip.clock_id in room_clocks and chip.group_id is None
+            if chip.clock_id is not None
+            else chip.group_id in room_groups
+        )
+        if not valid:
+            raise InvalidClockChipError("errors.landing.invalidClockChip")
+    return tuple(chips)
+
+
 def plan_blocks(
-    section: Section, blocks: Sequence[BlockInput], room_tags: Collection[uuid.UUID]
+    section: Section,
+    blocks: Sequence[BlockInput],
+    room_tags: Collection[uuid.UUID],
+    room_clocks: Collection[uuid.UUID] = (),
+    room_groups: Collection[uuid.UUID] = (),
 ) -> tuple[Block, ...]:
     """The Section's new blocks, replacing the old ones, in order (spec 55
     Decisions 13-15). 409 on a page card; 422 past `MAX_BLOCKS`, for a
     Documents block without Tags, a Session 0 block without features, a
     setting another kind's block carries, a Tag that isn't the Room's, or a
     tool block naming a step that isn't one of the Section's tools (spec 60;
-    a tool left out of the list is deleted by the caller, `dropped_tools`).
-    Repeated Tags and features are dropped."""
+    a tool left out of the list is deleted by the caller, `dropped_tools`),
+    or a Clocks block's chip that isn't one of `room_clocks` or
+    `room_groups` (spec 61). Repeated Tags and features are dropped."""
     if section.kind is not SectionKind.CUSTOM:
         raise PageSectionHasNoBlocksError("errors.landing.pageSectionHasNoBlocks")
     if len(blocks) > MAX_BLOCKS:
@@ -331,6 +387,7 @@ def plan_blocks(
             or (block.kind is not BlockKind.MAPS and block.map_kind is not None)
             or (block.kind is not BlockKind.SESSION_ZERO and block.features)
             or (not tool and block.module_id is not None)
+            or (block.kind is not BlockKind.CLOCKS and (block.clock_chips or block.all_clocks))
         ):
             raise BlockFieldNotAllowedError("errors.landing.blockFieldNotAllowed")
         if tool and (block.module_id not in tools or block.module_id in named):
@@ -357,6 +414,8 @@ def plan_blocks(
                 features=features,
                 module_id=block.module_id,
                 collapsed=block.collapsed,
+                clock_chips=_plan_chips(block.clock_chips, room_clocks, room_groups),
+                all_clocks=block.all_clocks,
             )
         )
     return tuple(planned)
@@ -412,7 +471,8 @@ def copy_sections(
     every Section and block with fresh ids, Tags re-pointed to their copies.
     An image keeps naming the same Storage object, like a Document image's
     copy (spec 33 Decision 10). Tool blocks are left out, as Session 0 is
-    (spec 60 Decision 8)."""
+    (spec 60 Decision 8); a Clocks block loses its chips, since clocks are
+    not copied (spec 61 Decision 26)."""
     return tuple(
         replace(
             section,
@@ -425,6 +485,7 @@ def copy_sections(
                     position=position,
                     tag_ids=tuple(tags[t] for t in block.tag_ids),
                     groups=tuple(tuple(tags[t] for t in group) for group in block.groups),
+                    clock_chips=(),
                 )
                 for position, block in enumerate(
                     b for b in section.blocks if b.kind is not BlockKind.TOOL

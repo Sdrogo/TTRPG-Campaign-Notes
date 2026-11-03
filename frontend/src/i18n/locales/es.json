@@ -1597,12 +1597,14 @@
     "pages": {
       "documents": "Documentos",
       "maps": "Mapas",
-      "sessionZero": "Sesión 0"
+      "sessionZero": "Sesión 0",
+      "clocks": "Relojes"
     },
     "pageDescriptions": {
       "documents": "Todos los Documentos de la Sala",
       "maps": "Los mapas de la Sala",
-      "sessionZero": "Sesiones, Líneas y Velos, encuestas"
+      "sessionZero": "Sesiones, Líneas y Velos, encuestas",
+      "clocks": "Los relojes de la Sala"
     },
     "blockEmpty": "Nada que mostrar",
     "foldBlock": "Contraer {{name}}",
@@ -1616,7 +1618,8 @@
       "maps": "Mapas",
       "mapsFree": "Mapas de relaciones",
       "mapsGeographic": "Mapas geográficos",
-      "sessionZero": "Sesión 0"
+      "sessionZero": "Sesión 0",
+      "clocks": "Relojes"
     },
     "features": {
       "sessions": "Sesiones",
@@ -1660,7 +1663,8 @@
         "body": "Sesiones, etapas y encuestas"
       },
       "tools": "Herramientas",
-      "toolsBody": "Una herramienta de la Sesión 0 propia, oculta a los jugadores hasta que la muestres"
+      "toolsBody": "Una herramienta de la Sesión 0 propia, oculta a los jugadores hasta que la muestres",
+      "clocks": "Reloj"
     },
     "edit": {
       "start": "Editar",
@@ -1717,6 +1721,282 @@
       "show": "Mostrar a los jugadores",
       "hide": "Ocultar a los jugadores",
       "loadError": "No se pudo cargar la herramienta."
+    }
+  },
+  "clocks": {
+    "title": "Relojes",
+    "description": "Los relojes de la Sala: los que están en juego, los de fondo y los ya cerrados.",
+    "signInRequired": "Inicia sesión para ver los relojes de esta Sala.",
+    "loadError": "No se pudieron cargar los relojes.",
+    "empty": "Todavía no hay relojes.",
+    "create": "Nuevo reloj",
+    "propose": "Proponer un reloj",
+    "outsideGroups": "Fuera de grupos",
+    "groupEnded": "Terminado",
+    "legend": "Tipos de marca",
+    "legendItem": "{{name}} ({{who}})",
+    "deleteTitle": "¿Eliminar el reloj?",
+    "deleteBody": "«{{name}}» y su historial se eliminarán. No se puede deshacer.",
+    "proposalDetail_one": "de {{name}} · {{count}} segmento",
+    "proposalDetail_other": "de {{name}} · {{count}} segmentos",
+    "reject": "Rechazar",
+    "editProposal": "Abrir y editar",
+    "openProposal": "Abrir el reloj",
+    "lists": {
+      "proposed": "Propuestos",
+      "finished": "Cerrados y no ocurridos",
+      "archived": "Archivados"
+    },
+    "state": {
+      "proposed": "Propuesto",
+      "open": "Abierto",
+      "closed": "Cerrado",
+      "lapsed": "No ocurrido",
+      "archived": "Archivado",
+      "locked": "Bloqueado"
+    },
+    "groupMode": {
+      "free": "Libre",
+      "race": "Carrera",
+      "turn": "Giro",
+      "sequence": "Secuencia"
+    },
+    "openPolicy": {
+      "master": "Solo el Master",
+      "everyone": "Todos",
+      "propose": "Los jugadores proponen, el Master aprueba"
+    },
+    "markPolicy": {
+      "master": "Solo el Master",
+      "master_and_creator": "El Master y quien lo abrió",
+      "everyone": "Todos los que lo ven"
+    },
+    "who": {
+      "master": "Master",
+      "players": "Jugadores",
+      "everyone": "Todos"
+    },
+    "face": {
+      "summary": "{{name}}: {{filled}} de {{segments}}, {{state}}",
+      "withKinds": "{{base}}, {{kinds}}",
+      "kindCount": "{{number}} {{name}}",
+      "markUpTo_one": "Marcar {{count}}",
+      "markUpTo_other": "Marcar hasta {{count}}",
+      "emptyDown_one": "Vaciar {{count}}",
+      "emptyDown_other": "Vaciar hasta {{count}}"
+    },
+    "card": {
+      "menu": "Acciones de «{{name}}»",
+      "markMany": "Marcar…",
+      "history": "Historial",
+      "archive": "Archivar",
+      "restore": "Restaurar",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "Vaciar un segmento de «{{name}}»",
+      "plus": "Marcar un segmento de «{{name}}»",
+      "pickKind": "Marcar «{{name}}» con un tipo de marca",
+      "markWith": "Marcar con"
+    },
+    "toast": {
+      "marked": "{{delta}} en «{{name}}»",
+      "undo": "Deshacer",
+      "closed": "«{{name}}» se ha cerrado",
+      "refused": "Tu propuesta «{{name}}» ha sido rechazada."
+    },
+    "markDialog": {
+      "title": "Marcar «{{name}}»",
+      "count": "Segmentos",
+      "countHint_one": "Queda {{count}} libre.",
+      "countHint_other": "Quedan {{count}} libres.",
+      "kind": "Tipo de marca",
+      "note": "Nota",
+      "notePlaceholder": "P. ej., forzó la cerradura",
+      "submit_one": "Marcar {{count}}",
+      "submit_other": "Marcar {{count}}"
+    },
+    "history": {
+      "title": "Historial de «{{name}}»",
+      "loadError": "No se pudo cargar el historial.",
+      "more": "Mostrar más",
+      "formerMember": "Antiguo miembro",
+      "undone": "deshizo {{delta}}",
+      "edited": "cambió: {{fields}}",
+      "actions": {
+        "created": "abrió el reloj",
+        "proposed": "propuso el reloj",
+        "opened": "aprobó la propuesta",
+        "closed": "cerrado",
+        "reopened": "reabierto",
+        "lapsed": "no ocurrido",
+        "archived": "archivado",
+        "restored": "restaurado"
+      },
+      "fields": {
+        "name": "nombre",
+        "description": "descripción",
+        "segments": "tamaño",
+        "color": "color",
+        "stage_labels": "etapas",
+        "closing_condition": "condición de cierre",
+        "consequence": "consecuencia",
+        "forward_only": "solo hacia delante",
+        "mark_policy": "quién lo marca",
+        "label_ids": "etiquetas",
+        "document_id": "documento vinculado",
+        "visibility": "visibilidad"
+      }
+    },
+    "dialog": {
+      "editTitle": "Editar reloj",
+      "submitCreate": "Crear el reloj",
+      "submitPropose": "Proponer",
+      "templates": "Empezar desde una plantilla",
+      "roomTemplate": "{{segments}} · plantilla de la Sala",
+      "nameHint": "Ponle el nombre del obstáculo o del suceso, no del método.",
+      "size": "Tamaño (segmentos)",
+      "sizeHint": "De 2 a 16, también impares: 4, 6, 8 y 12 son solo atajos.",
+      "labels": "Etiquetas",
+      "labelsHint": "Elige entre las etiquetas de la Sala.",
+      "labelsHintMaster": "Escribe un nombre nuevo para crearla: la Sala la recuerda para los próximos relojes.",
+      "noLabels": "Sin etiquetas",
+      "createLabel": "Crear «{{name}}»",
+      "closingCondition": "Condición de cierre",
+      "closingConditionHint": "Visible para todos; la app no la comprueba.",
+      "stagesShow": "Añadir etapas (una por segmento)",
+      "stagesHide": "Ocultar las etapas",
+      "stagesHint": "Opcionales, como las etapas de una cuenta atrás.",
+      "stage": "Etapa {{number}}",
+      "stageDefault": "Etapa {{number}}",
+      "consequence": "Qué pasa cuando se cierra",
+      "masterOnly": "Solo Master",
+      "document": "Documento vinculado",
+      "noDocument": "Ninguno",
+      "markPolicy": "Quién lo marca",
+      "markPolicyRoom": "Regla de la Sala ({{rule}})",
+      "forwardOnly": "Solo hacia delante",
+      "forwardOnlyHint": "Las marcas de este reloj nunca se vacían.",
+      "selectiveLabel": "Quién más lo ve",
+      "saveTemplate": "Guardar como plantilla",
+      "templateName": "Nombre de la plantilla"
+    },
+    "templates": {
+      "progress": {
+        "name": "Progreso",
+        "detail": "6 · verde"
+      },
+      "danger": {
+        "name": "Peligro",
+        "detail": "4 · rojo"
+      },
+      "countdown": {
+        "name": "Cuenta atrás",
+        "detail": "6 · etapas"
+      },
+      "project": {
+        "name": "Proyecto",
+        "detail": "8 · azul"
+      },
+      "faction": {
+        "name": "Facción",
+        "detail": "6 · solo Master"
+      },
+      "tugOfWar": {
+        "name": "Tira y afloja",
+        "detail": "6 · adelante y atrás"
+      },
+      "empty": {
+        "name": "Vacío",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "Sencillo",
+        "detail": "El Master abre y marca"
+      },
+      "wholeTable": {
+        "name": "Toda la mesa",
+        "detail": "Todos abren y marcan"
+      },
+      "noReturn": {
+        "name": "Sin vuelta atrás",
+        "detail": "Los jugadores proponen, ninguna marca se vacía"
+      }
+    },
+    "rules": {
+      "button": "Reglas",
+      "title": "Reglas de los relojes",
+      "presets": "Preajustes",
+      "presetsHint": "Rellenan las tres reglas de abajo; las etiquetas y los tipos de marca no cambian.",
+      "openPolicy": "Quién abre un reloj",
+      "markPolicy": "Quién marca",
+      "undo": "Vaciar marcas",
+      "undoYes": "Se puede vaciar",
+      "undoNo": "Sin vuelta atrás",
+      "undoNoHint": "Las marcas nunca se borran, ni siquiera el Master; solo queda deshacer un clic equivocado.",
+      "save": "Guardar las reglas",
+      "labels": "Etiquetas",
+      "labelsHint": "Etiquetas libres de la Sala, cada una con un color; un reloj lleva hasta 6.",
+      "markKinds": "Tipos de marca",
+      "markKindsHint": "Hasta 6, opcionales: de qué está hecha una marca en este juego y quién puede usarla.",
+      "addLabel": "Nueva etiqueta",
+      "addMarkKind": "Nuevo tipo de marca",
+      "who": "Quién puede usarlo",
+      "deleteItem": "Eliminar «{{name}}»",
+      "deleteLabelTitle": "¿Eliminar la etiqueta?",
+      "deleteLabelBody_one": "«{{name}}» se quitará de {{count}} reloj.",
+      "deleteLabelBody_other": "«{{name}}» se quitará de {{count}} relojes.",
+      "templates": "Plantillas de la Sala",
+      "noTemplates": "Sin plantillas: guarda una desde el diálogo de un reloj.",
+      "deleteTemplate": "Eliminar la plantilla «{{name}}»"
+    },
+    "groups": {
+      "create": "Nuevo grupo",
+      "editTitle": "Editar grupo",
+      "name": "Nombre del grupo",
+      "mode": "Modo",
+      "modeHint": {
+        "free": "Los relojes solo están juntos: los niveles de un lugar, las facciones.",
+        "race": "Gana el primero que se cierra; si se cierra otro antes de que confirmes, es un empate.",
+        "turn": "Algunos relojes son decisivos: cuando uno se cierra el giro termina y los demás no ocurren.",
+        "sequence": "Se cierran en orden: solo el primero abierto recibe marcas, los demás esperan."
+      },
+      "clocks": "Relojes del grupo",
+      "clocksHint": "En el orden en que los eliges, hasta {{max}}; un reloj de otro grupo pasa a este.",
+      "decisiveHint": "Escribe el resultado de los relojes decisivos; deja vacíos los demás.",
+      "decisive": "Resultado de «{{name}}»",
+      "notDecisive": "No decisivo",
+      "menu": "Acciones del grupo «{{name}}»",
+      "newTurn": "Nuevo giro",
+      "archive": "Archivar el grupo",
+      "restore": "Restaurar el grupo",
+      "delete": "Eliminar el grupo",
+      "deleteTitle": "¿Eliminar el grupo?",
+      "deleteBody": "«{{name}}» desaparece; sus relojes se quedan, fuera de los grupos.",
+      "empty": "Sin relojes: edita el grupo para añadir alguno.",
+      "quoted": "«{{name}}»",
+      "outcome": "«{{name}}» ({{label}})",
+      "resultWon": "Ganado: {{names}}",
+      "resultTie": "Empate: {{names}}",
+      "resultTurn": "Giro: {{labels}}",
+      "raceOne": "{{names}} se ha cerrado primero.",
+      "raceTie": "{{names}} se han cerrado: es un empate, ocurren ambos.",
+      "confirm": "Confirmar",
+      "turnEnds": "El giro termina: {{labels}}. Los demás relojes abiertos no ocurren.",
+      "endTurn": "Terminar el giro",
+      "notYet": "Todavía no",
+      "reveal": "«{{name}}» es el siguiente, pero los jugadores no lo ven. ¿Revelarlo?",
+      "revealButton": "Revelar a la Sala",
+      "notNow": "Ahora no"
+    },
+    "block": {
+      "allOpen": "Todos los relojes abiertos",
+      "add": "Reloj",
+      "newClock": "Nuevo reloj…",
+      "groupChip": "Grupo «{{name}}»",
+      "missing": "Ya no disponible",
+      "noneLeft": "Ningún otro reloj o grupo."
     }
   }
 }

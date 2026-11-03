@@ -41,7 +41,7 @@ function cached(queryClient: ReturnType<typeof createTestQueryClient>) {
   return queryClient.getQueryData<LandingSection[]>(KEY)!;
 }
 
-const mapsBlock: BlockInput = { kind: 'maps', heading: null, tagIds: [], groups: [], mapKind: 'free', features: [], collapsed: false, moduleId: null };
+const mapsBlock: BlockInput = { kind: 'maps', heading: null, tagIds: [], groups: [], mapKind: 'free', features: [], collapsed: false, moduleId: null, clockChips: [], allClocks: false };
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -75,6 +75,8 @@ describe('the landing queries', () => {
             features: [],
             collapsed: false,
             moduleId: null,
+            clockChips: [],
+            allClocks: false,
             toolKind: null,
             playersVisible: null,
           },

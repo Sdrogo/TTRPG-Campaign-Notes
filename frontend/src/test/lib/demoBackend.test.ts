@@ -78,11 +78,48 @@ describe('demoFetch', () => {
   });
 
   // Spec 55: the sample Room's landing is the three page cards, which the visitor can't edit.
-  it('answers the landing as the three page cards', async () => {
+  it('answers the landing as the page cards and a Clocks Section', async () => {
     const sections = (await get('/rooms/demo/sections')).body as { kind: string; can_edit: boolean }[];
-    expect(sections.map((section) => section.kind)).toEqual(['page_documents', 'page_maps', 'page_session_zero']);
+    expect(sections.map((section) => section.kind)).toEqual([
+      'page_documents',
+      'page_maps',
+      'page_session_zero',
+      'custom',
+      'page_clocks',
+    ]);
     expect(sections.every((section) => !section.can_edit)).toBe(true);
     expect((await get('/rooms/demo/sections/demo-page_maps')).status).toBe(404);
+  });
+
+  describe('Clocks (spec 61 Decision 30)', () => {
+    type RawClock = { id: string; name: string; consequence: string | null; can_mark: boolean };
+
+    it('lets the Master mark them and see the consequence; a Player neither', async () => {
+      const master = (await get('/rooms/demo/clocks')).body as RawClock[];
+      const marco = (await get('/rooms/demo/clocks', MARCO_ID)).body as RawClock[];
+      expect(master).toHaveLength(5);
+      expect(master.every((clock) => clock.can_mark)).toBe(true);
+      expect(master.some((clock) => clock.consequence)).toBe(true);
+      expect(marco.every((clock) => !clock.can_mark && clock.consequence === null)).toBe(true);
+    });
+
+    it('answers one clock and its empty history, else 404', async () => {
+      const [first] = (await get('/rooms/demo/clocks')).body as RawClock[];
+      expect(((await get(`/rooms/demo/clocks/${first.id}`)).body as RawClock).name).toBe(first.name);
+      expect((await get(`/rooms/demo/clocks/${first.id}/history`)).body).toEqual({ entries: [], next_before: null });
+      expect((await get(`/rooms/demo/clocks/${first.id}/marks`)).status).toBe(404);
+      expect((await get('/rooms/demo/clocks/nope')).status).toBe(404);
+    });
+
+    it('answers the rules and the groups', async () => {
+      expect(((await get('/rooms/demo/clock-rules')).body as { mark_kinds: unknown[] }).mark_kinds).toHaveLength(2);
+      expect(((await get('/rooms/demo/clock-groups')).body as { mode: string }[]).map((group) => group.mode)).toEqual([
+        'race',
+        'turn',
+      ]);
+      expect((await get('/rooms/demo/clock-rules/labels')).status).toBe(404);
+      expect((await get('/rooms/demo/clock-groups/x')).status).toBe(404);
+    });
   });
 
   it('lists the characters the viewer plays', async () => {

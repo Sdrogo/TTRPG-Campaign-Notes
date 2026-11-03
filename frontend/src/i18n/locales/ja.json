@@ -1556,12 +1556,14 @@
     "pages": {
       "documents": "ドキュメント",
       "maps": "マップ",
-      "sessionZero": "セッション0"
+      "sessionZero": "セッション0",
+      "clocks": "クロック"
     },
     "pageDescriptions": {
       "documents": "ルームのすべてのドキュメント",
       "maps": "ルームのマップ",
-      "sessionZero": "セッション、ライン&ヴェール、投票"
+      "sessionZero": "セッション、ライン&ヴェール、投票",
+      "clocks": "ルームのクロック"
     },
     "blockEmpty": "表示するものはありません",
     "foldBlock": "{{name}}を折りたたむ",
@@ -1575,7 +1577,8 @@
       "maps": "マップ",
       "mapsFree": "関係マップ",
       "mapsGeographic": "地理マップ",
-      "sessionZero": "セッション0"
+      "sessionZero": "セッション0",
+      "clocks": "クロック"
     },
     "features": {
       "sessions": "セッション",
@@ -1616,7 +1619,8 @@
         "body": "セッション、ステップ、投票"
       },
       "tools": "ツール",
-      "toolsBody": "独立したセッション0のツール。表示するまでプレイヤーには見えません"
+      "toolsBody": "独立したセッション0のツール。表示するまでプレイヤーには見えません",
+      "clocks": "クロック"
     },
     "edit": {
       "start": "編集",
@@ -1672,6 +1676,276 @@
       "show": "プレイヤーに表示",
       "hide": "プレイヤーから隠す",
       "loadError": "ツールを読み込めませんでした。"
+    }
+  },
+  "clocks": {
+    "title": "クロック",
+    "description": "ルームのクロック：進行中のもの、背景のもの、すでに閉じたもの。",
+    "signInRequired": "このルームのクロックを見るにはサインインしてください。",
+    "loadError": "クロックを読み込めませんでした。",
+    "empty": "まだクロックはありません。",
+    "create": "新しいクロック",
+    "propose": "クロックを提案",
+    "outsideGroups": "グループ外",
+    "groupEnded": "終了",
+    "legend": "マークの種類",
+    "legendItem": "{{name}}（{{who}}）",
+    "deleteTitle": "クロックを削除しますか？",
+    "deleteBody": "「{{name}}」とその履歴が削除されます。元に戻せません。",
+    "proposalDetail_other": "{{name}} より · {{count}} 区画",
+    "reject": "却下",
+    "editProposal": "開いて編集",
+    "openProposal": "クロックを開く",
+    "lists": {
+      "proposed": "提案中",
+      "finished": "閉じた・起きなかった",
+      "archived": "アーカイブ"
+    },
+    "state": {
+      "proposed": "提案中",
+      "open": "進行中",
+      "closed": "閉じた",
+      "lapsed": "起きなかった",
+      "archived": "アーカイブ済み",
+      "locked": "ロック中"
+    },
+    "groupMode": {
+      "free": "自由",
+      "race": "競争",
+      "turn": "転機",
+      "sequence": "順番"
+    },
+    "openPolicy": {
+      "master": "Master のみ",
+      "everyone": "全員",
+      "propose": "プレイヤーが提案し、Master が承認"
+    },
+    "markPolicy": {
+      "master": "Master のみ",
+      "master_and_creator": "Master と作成者",
+      "everyone": "見えている全員"
+    },
+    "who": {
+      "master": "Master",
+      "players": "プレイヤー",
+      "everyone": "全員"
+    },
+    "face": {
+      "summary": "{{name}}：{{segments}} 中 {{filled}}、{{state}}",
+      "withKinds": "{{base}}、{{kinds}}",
+      "kindCount": "{{name}} {{number}}",
+      "markUpTo_other": "{{count}} までマーク",
+      "emptyDown_other": "{{count}} まで消す"
+    },
+    "card": {
+      "menu": "「{{name}}」の操作",
+      "markMany": "マーク…",
+      "history": "履歴",
+      "archive": "アーカイブ",
+      "restore": "復元",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "「{{name}}」を1区画消す",
+      "plus": "「{{name}}」を1区画マーク",
+      "pickKind": "「{{name}}」をマークの種類を選んでマーク",
+      "markWith": "種類を選んでマーク"
+    },
+    "toast": {
+      "marked": "「{{name}}」に {{delta}}",
+      "undo": "元に戻す",
+      "closed": "「{{name}}」が閉じました",
+      "refused": "あなたの提案「{{name}}」は却下されました。"
+    },
+    "markDialog": {
+      "title": "「{{name}}」をマーク",
+      "count": "区画",
+      "countHint_other": "残り {{count}} 区画。",
+      "kind": "マークの種類",
+      "note": "メモ",
+      "notePlaceholder": "例：錠をこじ開けた",
+      "submit_other": "{{count}} マーク"
+    },
+    "history": {
+      "title": "「{{name}}」の履歴",
+      "loadError": "履歴を読み込めませんでした。",
+      "more": "さらに表示",
+      "formerMember": "元メンバー",
+      "undone": "{{delta}} を取り消し",
+      "edited": "変更：{{fields}}",
+      "actions": {
+        "created": "クロックを開いた",
+        "proposed": "クロックを提案した",
+        "opened": "提案を承認した",
+        "closed": "閉じた",
+        "reopened": "再び開いた",
+        "lapsed": "起きなかった",
+        "archived": "アーカイブした",
+        "restored": "復元した"
+      },
+      "fields": {
+        "name": "名前",
+        "description": "説明",
+        "segments": "大きさ",
+        "color": "色",
+        "stage_labels": "段階",
+        "closing_condition": "閉じる条件",
+        "consequence": "結果",
+        "forward_only": "前進のみ",
+        "mark_policy": "マークする人",
+        "label_ids": "ラベル",
+        "document_id": "リンクしたドキュメント",
+        "visibility": "公開範囲"
+      }
+    },
+    "dialog": {
+      "editTitle": "クロックを編集",
+      "submitCreate": "クロックを作成",
+      "submitPropose": "提案する",
+      "templates": "テンプレートから始める",
+      "roomTemplate": "{{segments}} · ルームのテンプレート",
+      "nameHint": "方法ではなく、障害や出来事の名前にしましょう。",
+      "size": "大きさ（区画）",
+      "sizeHint": "2〜16、奇数も可：4、6、8、12 は近道にすぎません。",
+      "labels": "ラベル",
+      "labelsHint": "ルームのラベルから選びます。",
+      "labelsHintMaster": "新しい名前を入力すると作成されます。ルームは次のクロックのために覚えます。",
+      "noLabels": "ラベルなし",
+      "createLabel": "「{{name}}」を作成",
+      "closingCondition": "閉じる条件",
+      "closingConditionHint": "全員に表示されます。アプリは確認しません。",
+      "stagesShow": "段階を追加（区画ごとに1つ）",
+      "stagesHide": "段階を隠す",
+      "stagesHint": "任意。カウントダウンの段階のように。",
+      "stage": "段階 {{number}}",
+      "stageDefault": "段階 {{number}}",
+      "consequence": "閉じたときに起きること",
+      "masterOnly": "Master のみ",
+      "document": "リンクするドキュメント",
+      "noDocument": "なし",
+      "markPolicy": "マークする人",
+      "markPolicyRoom": "ルームのルール（{{rule}}）",
+      "forwardOnly": "前進のみ",
+      "forwardOnlyHint": "このクロックのマークは消せません。",
+      "selectiveLabel": "ほかに見える人",
+      "saveTemplate": "テンプレートとして保存",
+      "templateName": "テンプレート名"
+    },
+    "templates": {
+      "progress": {
+        "name": "進捗",
+        "detail": "6 · 緑"
+      },
+      "danger": {
+        "name": "危険",
+        "detail": "4 · 赤"
+      },
+      "countdown": {
+        "name": "カウントダウン",
+        "detail": "6 · 段階"
+      },
+      "project": {
+        "name": "計画",
+        "detail": "8 · 青"
+      },
+      "faction": {
+        "name": "勢力",
+        "detail": "6 · Master のみ"
+      },
+      "tugOfWar": {
+        "name": "綱引き",
+        "detail": "6 · 行ったり来たり"
+      },
+      "empty": {
+        "name": "空",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "シンプル",
+        "detail": "Master が開いてマーク"
+      },
+      "wholeTable": {
+        "name": "テーブル全員",
+        "detail": "全員が開いてマーク"
+      },
+      "noReturn": {
+        "name": "後戻りなし",
+        "detail": "プレイヤーが提案、マークは消せない"
+      }
+    },
+    "rules": {
+      "button": "ルール",
+      "title": "クロックのルール",
+      "presets": "プリセット",
+      "presetsHint": "下の3つのルールを埋めます。ラベルとマークの種類はそのままです。",
+      "openPolicy": "クロックを開く人",
+      "markPolicy": "マークする人",
+      "undo": "マークを消す",
+      "undoYes": "消せる",
+      "undoNo": "後戻りなし",
+      "undoNoHint": "マークは Master でも消せません。押し間違いの取り消しだけ残ります。",
+      "save": "ルールを保存",
+      "labels": "ラベル",
+      "labelsHint": "ルームの自由なラベル、それぞれ色つき。1つのクロックに最大6つ。",
+      "markKinds": "マークの種類",
+      "markKindsHint": "最大6、任意：このゲームでマークが何を表すか、誰が使えるか。",
+      "addLabel": "新しいラベル",
+      "addMarkKind": "新しいマークの種類",
+      "who": "使える人",
+      "deleteItem": "「{{name}}」を削除",
+      "deleteLabelTitle": "ラベルを削除しますか？",
+      "deleteLabelBody_other": "「{{name}}」が {{count}} 個のクロックから外れます。",
+      "templates": "ルームのテンプレート",
+      "noTemplates": "テンプレートはありません。クロックのダイアログから保存できます。",
+      "deleteTemplate": "テンプレート「{{name}}」を削除"
+    },
+    "groups": {
+      "create": "新しいグループ",
+      "editTitle": "グループを編集",
+      "name": "グループ名",
+      "mode": "モード",
+      "modeHint": {
+        "free": "クロックを並べるだけ：ある場所の階層、勢力など。",
+        "race": "最初に閉じたものが勝ち。確定する前に別のものも閉じたら引き分け。",
+        "turn": "一部のクロックは決定的：ひとつが閉じると転機が終わり、ほかは起きない。",
+        "sequence": "順番に閉じる：印を受けるのは最初の開いたクロックだけで、ほかは待つ。"
+      },
+      "clocks": "グループのクロック",
+      "clocksHint": "選んだ順に最大{{max}}個。ほかのグループのクロックはこちらに移る。",
+      "decisiveHint": "決定的なクロックの結果を書き、ほかは空のままにする。",
+      "decisive": "「{{name}}」の結果",
+      "notDecisive": "決定的ではない",
+      "menu": "グループ「{{name}}」の操作",
+      "newTurn": "新しい転機",
+      "archive": "グループをアーカイブ",
+      "restore": "グループを復元",
+      "delete": "グループを削除",
+      "deleteTitle": "グループを削除しますか？",
+      "deleteBody": "「{{name}}」は消えますが、クロックはグループの外に残ります。",
+      "empty": "クロックがありません：グループを編集して追加してください。",
+      "quoted": "「{{name}}」",
+      "outcome": "「{{name}}」（{{label}}）",
+      "resultWon": "勝ち：{{names}}",
+      "resultTie": "引き分け：{{names}}",
+      "resultTurn": "転機：{{labels}}",
+      "raceOne": "{{names}}が最初に閉じました。",
+      "raceTie": "{{names}}が閉じました：引き分けで、両方が起きます。",
+      "confirm": "確定",
+      "turnEnds": "転機が終わります：{{labels}}。ほかの開いたクロックは起きません。",
+      "endTurn": "転機を終える",
+      "notYet": "まだ",
+      "reveal": "次は「{{name}}」ですが、プレイヤーには見えません。公開しますか？",
+      "revealButton": "ルームに公開",
+      "notNow": "今はしない"
+    },
+    "block": {
+      "allOpen": "開いているクロックすべて",
+      "add": "クロック",
+      "newClock": "新しいクロック…",
+      "groupChip": "グループ「{{name}}」",
+      "missing": "利用できなくなりました",
+      "noneLeft": "ほかのクロックやグループはありません。"
     }
   }
 }

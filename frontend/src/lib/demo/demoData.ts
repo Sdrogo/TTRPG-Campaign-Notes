@@ -86,7 +86,18 @@ export interface DemoData {
   notes: DemoNote[];
   comments: DemoComment[];
   maps: Record<string, unknown>[];
+  /** Spec 61 Decision 30: the clocks, without the viewer's rights (`demoBackend` adds them). */
+  clocks: (Record<string, unknown> & { id: string })[];
+  clockRules: Record<string, unknown>;
+  clockGroups: Record<string, unknown>[];
+  /** The "Clocks" Section of the landing, with its Clocks block. */
+  clockSection: Record<string, unknown>;
 }
+
+/** The sample Room's clock ids. */
+const DEMO_CLOCK = { escape: uid(601), surrounded: uid(602), lens: uid(603), ritual: uid(604), tide: uid(605) };
+const CLOCK_GROUP = { race: uid(611), turn: uid(612) };
+const MARK_KIND = { success: uid(621), shock: uid(622) };
 
 /** A Document mention as stored in text (`lib/mentionTokens.ts`). */
 function mention(name: string, id: string): string {
@@ -447,6 +458,133 @@ function build(lang: Lang): DemoData {
     ],
   };
 
+  // Spec 61 Decision 30: a race, a turn with Successo / Shock marks, a countdown with stages.
+  const clock = (id: string, name: string, segments: number, color: string, kinds: (string | null)[], extra: Record<string, unknown> = {}) => ({
+    id,
+    room_id: DEMO_ROOM_ID,
+    name,
+    description: '',
+    segments,
+    filled: kinds.length,
+    color,
+    stage_labels: [],
+    closing_condition: null,
+    consequence: null,
+    forward_only: false,
+    mark_policy: null,
+    label_ids: [],
+    state: 'open',
+    archived: false,
+    group_id: null,
+    group_position: null,
+    decisive_label: null,
+    document: null,
+    segment_kinds: kinds,
+    visibility: 'room',
+    selective_user_ids: null,
+    created_by: MASTER_ID,
+    created_at: '2026-11-01T20:00:00Z',
+    updated_at: '2026-11-01T21:30:00Z',
+    revision: kinds.length,
+    locked: false,
+    ...extra,
+  });
+  const s = MARK_KIND.success;
+  const k = MARK_KIND.shock;
+  const clocks = [
+    clock(DEMO_CLOCK.escape, t('Escape', 'Fuga'), 6, 'green', [s, s, null], {
+      group_id: CLOCK_GROUP.race,
+      group_position: 0,
+      closing_condition: t('Reach the boat in the cove', 'Raggiungere la barca nella cala'),
+    }),
+    clock(DEMO_CLOCK.surrounded, t('Surrounded', 'Accerchiati'), 6, 'red', [null, null, null, null], {
+      group_id: CLOCK_GROUP.race,
+      group_position: 1,
+      closing_condition: t('The cultists block the stairs', 'I cultisti bloccano le scale'),
+    }),
+    clock(DEMO_CLOCK.lens, t('Save the lens', 'Salvare la lente'), 8, 'blue', [s, s, s], {
+      group_id: CLOCK_GROUP.turn,
+      group_position: 0,
+      decisive_label: t('The light returns', 'La luce torna'),
+      document: { id: DOC.lens, name: names.lens },
+    }),
+    clock(DEMO_CLOCK.ritual, t("The Prophet's rite", 'Il rito del Profeta'), 6, 'violet', [k, k, s, k], {
+      group_id: CLOCK_GROUP.turn,
+      group_position: 1,
+      decisive_label: t('The Prophet rises', 'Il Profeta risorge'),
+      consequence: t('The drowned walk the harbour', 'Gli annegati camminano nel porto'),
+    }),
+    clock(DEMO_CLOCK.tide, t('The tide rises', 'La marea sale'), 6, 'gold', [null, null], {
+      stage_labels: [
+        t('The rocks go under', 'Gli scogli spariscono'),
+        t('The causeway floods', "L'argine si allaga"),
+        t('The cove is cut off', 'La cala resta isolata'),
+        t('Water in the chapel', 'Acqua nella cappella'),
+        t('The lamp room shakes', 'Trema la stanza della lanterna'),
+        t('High tide', 'Alta marea'),
+      ],
+    }),
+  ];
+  const group = (id: string, name: string, mode: string, ids: string[], position: number) => ({
+    id,
+    name,
+    mode,
+    position,
+    clock_ids: ids,
+    ended: false,
+    result: null,
+    pending_ids: [],
+    revision: 1,
+  });
+  const clockGroups = [
+    group(CLOCK_GROUP.race, t('Out of the lighthouse', 'Fuori dal faro'), 'race', [DEMO_CLOCK.escape, DEMO_CLOCK.surrounded], 0),
+    group(CLOCK_GROUP.turn, t('The night of the lens', 'La notte della lente'), 'turn', [DEMO_CLOCK.lens, DEMO_CLOCK.ritual], 1),
+  ];
+  const clockRules = {
+    open_policy: 'master',
+    mark_policy: 'master',
+    allow_unmark: true,
+    labels: [],
+    mark_kinds: [
+      { id: MARK_KIND.success, name: t('Success', 'Successo'), color: 'green', who: 'everyone', position: 0 },
+      { id: MARK_KIND.shock, name: 'Shock', color: 'red', who: 'master', position: 1 },
+    ],
+    templates: [],
+  };
+  const clockSection = {
+    id: uid(631),
+    kind: 'custom',
+    position: 3,
+    title: t('Clocks', 'Clock'),
+    description: t(
+      'What is coming tonight: the escape, the rite, the tide. Mark them as the story goes.',
+      'Cosa arriva stanotte: la fuga, il rito, la marea. Segnali man mano che la storia va avanti.',
+    ),
+    image_url: null,
+    blocks: [
+      {
+        id: uid(632),
+        kind: 'clocks',
+        position: 0,
+        heading: null,
+        tag_ids: [],
+        groups: [],
+        map_kind: null,
+        features: [],
+        collapsed: false,
+        module_id: null,
+        tool_kind: null,
+        players_visible: null,
+        clock_chips: [
+          { clock_id: null, group_id: CLOCK_GROUP.race },
+          { clock_id: null, group_id: CLOCK_GROUP.turn },
+          { clock_id: DEMO_CLOCK.tide, group_id: null },
+        ],
+        all_clocks: false,
+      },
+    ],
+  };
+
   return {
     room: {
       id: DEMO_ROOM_ID,
@@ -463,6 +601,10 @@ function build(lang: Lang): DemoData {
     notes,
     comments,
     maps: [freeMap, geoMap],
+    clocks,
+    clockRules,
+    clockGroups,
+    clockSection,
   };
 }
 

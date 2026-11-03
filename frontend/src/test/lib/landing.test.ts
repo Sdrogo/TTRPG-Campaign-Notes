@@ -17,6 +17,7 @@ describe('the landing helpers', () => {
     expect(sectionHref('r', { id: 's', kind: 'page_documents' })).toBe('/rooms/r/documents');
     expect(sectionHref('r', { id: 's', kind: 'page_maps' })).toBe('/rooms/r/maps');
     expect(sectionHref('r', { id: 's', kind: 'page_session_zero' })).toBe('/rooms/r/session-zero');
+    expect(sectionHref('r', { id: 's', kind: 'page_clocks' })).toBe('/rooms/r/clocks');
     expect(sectionHref('r', { id: 's', kind: 'custom' })).toBe('/rooms/r/sections/s');
     expect(landingHref('r')).toBe('/rooms/r');
     expect(blockAnchor('b')).toBe('block-b');
@@ -39,6 +40,8 @@ describe('the landing helpers', () => {
       features: [],
       moduleId: null,
       collapsed: false,
+      clockChips: [],
+      allClocks: false,
     });
     expect(toBlockBody(blockInput(saved))).toEqual({
       kind: 'documents',
@@ -49,6 +52,30 @@ describe('the landing helpers', () => {
       module_id: null,
       collapsed: false,
       features: [],
+    });
+  });
+
+  it('sends a Clocks block back with its chips', () => {
+    const saved = block({
+      kind: 'clocks',
+      tag_ids: [],
+      clock_chips: [
+        { clock_id: 'clock-1', group_id: null },
+        { clock_id: null, group_id: 'group-1' },
+      ],
+      all_clocks: true,
+    });
+    expect(saved.clockChips).toEqual([
+      { clockId: 'clock-1', groupId: null },
+      { clockId: null, groupId: 'group-1' },
+    ]);
+    expect(toBlockBody(blockInput(saved))).toMatchObject({
+      kind: 'clocks',
+      clock_chips: [
+        { clock_id: 'clock-1', group_id: null },
+        { clock_id: null, group_id: 'group-1' },
+      ],
+      all_clocks: true,
     });
   });
 

@@ -19,6 +19,7 @@ from app.api.access import (
     get_visible_images_for_documents,
     require_membership,
 )
+from app.api.clocks import visible_clocks
 from app.api.document_files import sign_files
 from app.api.errors import http_error
 from app.api.geographic_maps import AreaBody, LinkBody, PinBody
@@ -31,6 +32,7 @@ from app.api.relationship_maps import (
 )
 from app.auth.dependencies import CurrentUserDep
 from app.db import (
+    clocks_repo,
     comments_repo,
     documents_repo,
     files_repo,
@@ -43,6 +45,8 @@ from app.db import (
     tags_repo,
 )
 from app.db.session import SessionDep
+from app.domain.clock_transfer import clocks_to_json
+from app.domain.clocks import ClockSetup
 from app.domain.export import (
     DocumentSource,
     Export,
@@ -237,8 +241,8 @@ class SectionJson(BaseModel):
 
 
 class ExportJson(BaseModel):
-    """The JSON export (`schema_version` 4; 1 had no Document `subtitle`, 2 no
-    `maps`, 3 no `sections`).
+    """The JSON export (`schema_version` 5; 1 had no Document `subtitle`, 2 no
+    `maps`, 3 no `sections`, 4 no clocks).
     Every object carries its UUID and refers to others by id. `main_items` is
     the Room's grouping in order, each a list of Tag ids (one Tag, or a
     combination a Document belongs to when it carries all of them).
@@ -257,6 +261,13 @@ class ExportJson(BaseModel):
     documents: list[DocumentJson]
     maps: list[MapJson]
     sections: list[SectionJson]
+    # Spec 61 (schema 5): the clock rules with the Room's labels and mark
+    # kinds, the templates, the clocks the requester sees (marks as counts per
+    # kind) and their groups; null and empty in a single Document's file.
+    clock_rules: dict[str, Any] | None
+    clock_templates: list[dict[str, Any]]
+    clocks: list[dict[str, Any]]
+    clock_groups: list[dict[str, Any]]
 
 
 EXPORT_MEDIA_TYPES = {
@@ -422,6 +433,25 @@ async def export_maps(
     return result
 
 
+async def export_clocks(
+    session: AsyncSession, room_id: uuid.UUID, viewer: Membership, export: Export
+) -> dict[str, Any]:
+    """The Room's clocks as `viewer` sees them (spec 61 Decision 27), a
+    clock's Document named only when the file holds it."""
+    setup = await clocks_repo.load_setup(session, room_id)
+    clocks = await visible_clocks(session, room_id, viewer)
+    if setup is None and not clocks:
+        return {}
+    return clocks_to_json(
+        setup or ClockSetup(rules=await clocks_repo.get_rules(session, room_id)),
+        clocks,
+        await clocks_repo.list_groups(session, room_id),
+        await clocks_repo.list_live_marks(session, [clock.id for clock in clocks]),
+        {document.id: document.name for document in export.documents},
+        viewer.role,
+    )
+
+
 async def export_sections(session: AsyncSession, room_id: uuid.UUID) -> list[dict[str, Any]]:
     """The Room's landing page, every Section in order with its blocks (spec
     56 Decision 2): every member sees all of it, and a block holds rules,
@@ -456,8 +486,8 @@ async def export_room(
     default): the Room, its Tags and Main items, and the Documents the
     requester sees with their Notes, Comments and replies, mentions by id, and
     images and PDF Attachments as signed links that expire (no binaries). The
-    JSON file also holds the maps they see (spec 40) and the landing page's
-    Sections (spec 56).
+    JSON file also holds the maps they see (spec 40), the landing page's
+    Sections (spec 56) and the clocks they see (spec 61).
     Nothing the requester can't see is in it, and nothing about invitations,
     the AuditLog or member emails (VR-07, NFR-03). Each `tag` keeps only
     Documents carrying all of them (like the list filter). For members only
@@ -477,6 +507,7 @@ async def export_room(
             export,
             maps=await export_maps(session, room_id, viewer, export),
             sections=await export_sections(session, room_id),
+            clocks=await export_clocks(session, room_id, viewer, export),
         )
     return _file_response(
         export, export_filename(room.name, export.generated_at, export_format), export_format

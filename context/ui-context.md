@@ -1001,6 +1001,41 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
 - **Strings** live under `roomLanding.*` (`landing.*` is the public
   landing page's).
 
+## Clocks (spec 61)
+
+- **Face** (`ClockFace`, `.clock-face`): an SVG circle of wedges, one per
+  segment, 64 / 96 / 140 px (`sm` / `md` / `lg`). A filled wedge takes its
+  mark kind's colour, else the clock's colour from the map palette; empty
+  wedges are `--bg-base` with a dark stroke. Each wedge is a `button` (fill
+  to it, or empty from it), focus ring on `:focus-visible`; a wedge marked
+  by someone else glows for 300 ms (`.clock-wedge-glow`, off under reduced
+  motion). A corner badge shows closed (check), lapsed (minus) or locked
+  (padlock). The face's `aria-label` reads "Name: 4 of 8, Open".
+- **Card** (`ClockCard`, `.clock-card`, 180 px, 220 px at `lg`): face, name
+  in the display font, `n/m`, the current stage label, Room labels as
+  outline badges, the linked Document as a red "→" link, then − / + and a
+  kind picker chevron; a ⋮ menu (`.clock-card-menu`) for "Segna…", history,
+  edit, archive, delete. The legend under a list (`MarkKindLegend`) shows
+  each mark kind's swatch and who may use it.
+- **Clocks page**: groups first, each a bordered `Card` band with its name
+  (display font, `h4` size), its mode as an outline gray badge, "Ended"
+  and its result line, and the Master's ⋮ menu; a Master prompt is a
+  light yellow `Alert` (`role="status"`) with a filled `xs` button and a
+  subtle "Not yet". Then "Outside groups", then folded "Proposed"
+  (violet badge rows, `.clock-proposal`), "Closed and lapsed",
+  "Archived" (uppercase dimmed `sm` header with a count badge).
+  Header actions: Rules (default), New group (default, Master), New clock
+  (filled).
+- **Clocks block** in Sections: a row of `sm` cards and the legend; one
+  card per row on a phone. In edit mode its `BlockBar` shows the "All
+  open clocks" switch and sortable chips (a group reads "Group «Name»"),
+  then "+ Clock" opening a picker with the free groups and clocks and
+  "New clock…".
+- Dialogs: `ClockDialog` (template tiles `.clock-template-tile`, fields,
+  Master-only fields in a tinted box `.clock-dialog-master-only`),
+  `ClockRulesDialog`, `ClockGroupDialog`, `MarkDialog`, `ClockHistoryModal`
+  (`.clock-history`). Screenshots: `clocks/` in the project files.
+
 ## Demo (spec 45_2)
 
 - While the Demo is on, `AppHeader` shows `DemoBanner` as a full-width row

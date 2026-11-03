@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import require_membership
+from app.api.clocks import visible_chip_targets
 from app.api.errors import http_error, translated_error
 from app.api.image_uploads import fetch_url, normalize, read_upload, upload_object
 from app.api.session_zero import (
@@ -27,6 +28,7 @@ from app.api.session_zero import (
 )
 from app.auth.dependencies import VIEW_AS_HEADER, CurrentUserDep
 from app.db import (
+    clocks_repo,
     room_sections_repo,
     rooms_repo,
     session_zero_repo,
@@ -36,15 +38,17 @@ from app.db import (
 )
 from app.db.session import SessionDep
 from app.domain.errors import DomainError
-from app.domain.models import RoomRole
+from app.domain.models import Membership, RoomRole
 from app.domain.room_sections import (
     Block,
     BlockFieldNotAllowedError,
     BlockInput,
     BlockKind,
     BlockMapKind,
+    ClockChip,
     DocumentsBlockNeedsTagError,
     DocumentsSectionRequiredError,
+    InvalidClockChipError,
     InvalidGroupError,
     NotAToolError,
     OnlyMasterEditsLandingError,
@@ -59,6 +63,7 @@ from app.domain.room_sections import (
     SessionZeroBlockNeedsFeatureError,
     SessionZeroFeature,
     TooManyBlocksError,
+    TooManyClockChipsError,
     TooManyGroupsError,
     TooManySectionsError,
     UnknownBlockTagError,
@@ -100,6 +105,8 @@ _STATUS: dict[type[DomainError], int] = {
     InvalidGroupError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     UnknownToolError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     NotAToolError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    TooManyClockChipsError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    InvalidClockChipError: status.HTTP_422_UNPROCESSABLE_CONTENT,
 }
 
 # The Session 0 steps a Section can hold as a tool (spec 60 Decision 1):
@@ -110,6 +117,13 @@ TOOL_KINDS = frozenset(kind for kind in ModuleKind if kind is not ModuleKind.LIN
 def _domain_error(exc: DomainError, locale: str) -> HTTPException:
     """The HTTP error for a landing rule broken."""
     return translated_error(_STATUS[type(exc)], exc, locale)
+
+
+class ClockChipBody(BaseModel):
+    """A chip of a Clocks block (spec 61): a clock or a group of the Room."""
+
+    clock_id: uuid.UUID | None = None
+    group_id: uuid.UUID | None = None
 
 
 class BlockResponse(BaseModel):
@@ -130,6 +144,10 @@ class BlockResponse(BaseModel):
     module_id: uuid.UUID | None
     tool_kind: ModuleKind | None
     players_visible: bool | None
+    # Spec 61: a Clocks block's chips (only those the viewer sees), or all
+    # the open clocks.
+    clock_chips: list[ClockChipBody] = []
+    all_clocks: bool = False
 
 
 class SectionResponse(BaseModel):
@@ -179,6 +197,8 @@ class BlockBody(BaseModel):
     features: list[SessionZeroFeature] = []
     module_id: uuid.UUID | None = None
     collapsed: bool = False
+    clock_chips: list[ClockChipBody] = Field(default=[], max_length=100)
+    all_clocks: bool = False
 
 
 class NewToolBody(BaseModel):
@@ -223,10 +243,15 @@ class SectionImageFromUrlRequest(BaseModel):
 
 
 async def _responses(
-    session: AsyncSession, sections: list[Section], can_edit: bool
+    session: AsyncSession,
+    sections: list[Section],
+    can_edit: bool,
+    viewer: Membership | None = None,
 ) -> list[SectionResponse]:
     """The Sections with their images signed in one call. A tool the
-    Players don't see yet is left out for everyone but the Master."""
+    Players don't see yet is left out for everyone but the Master; a Clocks
+    block names only the clocks and groups `viewer` sees (spec 61 Decision
+    15; none given: the Master's write, all of them)."""
     urls = await storage.signed_urls([s.image_path for s in sections if s.image_path])
     tools = await session_zero_repo.tool_states(
         session, [b.module_id for s in sections for b in s.blocks if b.module_id is not None]
@@ -234,6 +259,18 @@ async def _responses(
 
     def shown(block: Block) -> bool:
         return block.module_id is None or can_edit or tools[block.module_id][2]
+
+    seen: tuple[set[uuid.UUID], set[uuid.UUID]] | None = None
+    if viewer is not None and any(b.clock_chips for s in sections for b in s.blocks):
+        seen = await visible_chip_targets(session, viewer.room_id, viewer)
+
+    def chips(block: Block) -> list[ClockChipBody]:
+        return [
+            ClockChipBody(clock_id=chip.clock_id, group_id=chip.group_id)
+            for chip in block.clock_chips
+            if seen is None
+            or (chip.clock_id in seen[0] if chip.clock_id is not None else chip.group_id in seen[1])
+        ]
 
     return [
         SectionResponse(
@@ -258,6 +295,8 @@ async def _responses(
                     module_id=block.module_id,
                     tool_kind=tools[block.module_id][0] if block.module_id else None,
                     players_visible=tools[block.module_id][2] if block.module_id else None,
+                    clock_chips=chips(block),
+                    all_clocks=block.all_clocks,
                 )
                 for block in section.blocks
                 if shown(block)
@@ -309,7 +348,9 @@ async def list_sections(
     non-member). Every member sees every Section (spec 55 Q5)."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     sections = await room_sections_repo.list_sections_with_blocks(session, room_id)
-    return await _responses(session, sections, can_edit=membership.role is RoomRole.MASTER)
+    return await _responses(
+        session, sections, can_edit=membership.role is RoomRole.MASTER, viewer=membership
+    )
 
 
 @router.get("/{section_id}")
@@ -323,7 +364,11 @@ async def get_section(
     """One Section with its blocks; 404 for one that isn't this Room's."""
     membership = await require_membership(session, room_id, uuid.UUID(current_user.id), locale)
     section = await _section_or_404(session, room_id, section_id, locale)
-    return (await _responses(session, [section], can_edit=membership.role is RoomRole.MASTER))[0]
+    return (
+        await _responses(
+            session, [section], can_edit=membership.role is RoomRole.MASTER, viewer=membership
+        )
+    )[0]
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -440,6 +485,11 @@ async def replace_blocks(
     await _begin_write(session, room_id, uuid.UUID(current_user.id), locale)
     section = await _section_or_404(session, room_id, section_id, locale)
     room_tags = {tag.id for tag in await tags_repo.list_tags(session, room_id)}
+    room_clocks: set[uuid.UUID] = set()
+    room_groups: set[uuid.UUID] = set()
+    if any(block.clock_chips for block in body.blocks):
+        room_clocks = {c.id for c in await clocks_repo.list_clocks(session, room_id)}
+        room_groups = {g.id for g in await clocks_repo.list_groups(session, room_id)}
     try:
         blocks = plan_blocks(
             section,
@@ -453,10 +503,17 @@ async def replace_blocks(
                     features=block.features,
                     module_id=block.module_id,
                     collapsed=block.collapsed,
+                    clock_chips=[
+                        ClockChip(clock_id=chip.clock_id, group_id=chip.group_id)
+                        for chip in block.clock_chips
+                    ],
+                    all_clocks=block.all_clocks,
                 )
                 for block in body.blocks
             ],
             room_tags,
+            room_clocks,
+            room_groups,
         )
     except DomainError as exc:
         raise _domain_error(exc, locale) from exc

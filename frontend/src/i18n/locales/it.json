@@ -1597,12 +1597,14 @@
     "pages": {
       "documents": "Documenti",
       "maps": "Mappe",
-      "sessionZero": "Sessione 0"
+      "sessionZero": "Sessione 0",
+      "clocks": "Clock"
     },
     "pageDescriptions": {
       "documents": "Tutti i Documenti della Stanza",
       "maps": "Le mappe della Stanza",
-      "sessionZero": "Sessioni, Linee e Veli, sondaggi"
+      "sessionZero": "Sessioni, Linee e Veli, sondaggi",
+      "clocks": "I clock della Stanza"
     },
     "blockEmpty": "Niente da mostrare",
     "foldBlock": "Comprimi {{name}}",
@@ -1616,7 +1618,8 @@
       "maps": "Mappe",
       "mapsFree": "Mappe delle relazioni",
       "mapsGeographic": "Mappe geografiche",
-      "sessionZero": "Sessione 0"
+      "sessionZero": "Sessione 0",
+      "clocks": "Clock"
     },
     "features": {
       "sessions": "Sessioni",
@@ -1660,7 +1663,8 @@
         "body": "Sessioni, tappe e sondaggi"
       },
       "tools": "Strumenti",
-      "toolsBody": "Uno strumento della Sessione 0 tutto suo, nascosto ai giocatori finché non lo mostri"
+      "toolsBody": "Uno strumento della Sessione 0 tutto suo, nascosto ai giocatori finché non lo mostri",
+      "clocks": "Clock"
     },
     "edit": {
       "start": "Modifica",
@@ -1717,6 +1721,282 @@
       "show": "Mostra ai giocatori",
       "hide": "Nascondi ai giocatori",
       "loadError": "Impossibile caricare lo strumento."
+    }
+  },
+  "clocks": {
+    "title": "Clock",
+    "description": "I clock della Stanza: quelli in scena, quelli sullo sfondo e quelli già chiusi.",
+    "signInRequired": "Accedi per vedere i clock di questa Stanza.",
+    "loadError": "Impossibile caricare i clock.",
+    "empty": "Nessun clock, per ora.",
+    "create": "Nuovo clock",
+    "propose": "Proponi un clock",
+    "outsideGroups": "Fuori dai gruppi",
+    "groupEnded": "Terminato",
+    "legend": "Tipi di segno",
+    "legendItem": "{{name}} ({{who}})",
+    "deleteTitle": "Eliminare il clock?",
+    "deleteBody": "«{{name}}» e la sua cronologia verranno eliminati. Non si può annullare.",
+    "proposalDetail_one": "da {{name}} · {{count}} segmento",
+    "proposalDetail_other": "da {{name}} · {{count}} segmenti",
+    "reject": "Rifiuta",
+    "editProposal": "Apri e modifica",
+    "openProposal": "Apri il clock",
+    "lists": {
+      "proposed": "Proposti",
+      "finished": "Chiusi e non avvenuti",
+      "archived": "Archiviati"
+    },
+    "state": {
+      "proposed": "Proposto",
+      "open": "Aperto",
+      "closed": "Chiuso",
+      "lapsed": "Non avvenuto",
+      "archived": "Archiviato",
+      "locked": "Bloccato"
+    },
+    "groupMode": {
+      "free": "Libero",
+      "race": "Gara",
+      "turn": "Svolta",
+      "sequence": "Sequenza"
+    },
+    "openPolicy": {
+      "master": "Solo il Master",
+      "everyone": "Tutti",
+      "propose": "I giocatori propongono, il Master approva"
+    },
+    "markPolicy": {
+      "master": "Solo il Master",
+      "master_and_creator": "Il Master e chi l'ha aperto",
+      "everyone": "Tutti quelli che lo vedono"
+    },
+    "who": {
+      "master": "Master",
+      "players": "Giocatori",
+      "everyone": "Tutti"
+    },
+    "face": {
+      "summary": "{{name}}: {{filled}} su {{segments}}, {{state}}",
+      "withKinds": "{{base}}, {{kinds}}",
+      "kindCount": "{{number}} {{name}}",
+      "markUpTo_one": "Segna {{count}}",
+      "markUpTo_other": "Segna fino a {{count}}",
+      "emptyDown_one": "Svuota {{count}}",
+      "emptyDown_other": "Svuota fino a {{count}}"
+    },
+    "card": {
+      "menu": "Azioni di «{{name}}»",
+      "markMany": "Segna…",
+      "history": "Cronologia",
+      "archive": "Archivia",
+      "restore": "Ripristina",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "Svuota un segmento di «{{name}}»",
+      "plus": "Segna un segmento di «{{name}}»",
+      "pickKind": "Segna «{{name}}» con un tipo di segno",
+      "markWith": "Segna con"
+    },
+    "toast": {
+      "marked": "{{delta}} su «{{name}}»",
+      "undo": "Annulla",
+      "closed": "«{{name}}» si è chiuso",
+      "refused": "La tua proposta «{{name}}» è stata rifiutata."
+    },
+    "markDialog": {
+      "title": "Segna «{{name}}»",
+      "count": "Segmenti",
+      "countHint_one": "Ne resta {{count}} libero.",
+      "countHint_other": "Ne restano {{count}} liberi.",
+      "kind": "Tipo di segno",
+      "note": "Nota",
+      "notePlaceholder": "Es. forzata la serratura",
+      "submit_one": "Segna {{count}}",
+      "submit_other": "Segna {{count}}"
+    },
+    "history": {
+      "title": "Cronologia di «{{name}}»",
+      "loadError": "Impossibile caricare la cronologia.",
+      "more": "Mostra altri",
+      "formerMember": "Ex membro",
+      "undone": "annullato {{delta}}",
+      "edited": "ha modificato: {{fields}}",
+      "actions": {
+        "created": "ha aperto il clock",
+        "proposed": "ha proposto il clock",
+        "opened": "ha approvato la proposta",
+        "closed": "chiuso",
+        "reopened": "riaperto",
+        "lapsed": "non avvenuto",
+        "archived": "archiviato",
+        "restored": "ripristinato"
+      },
+      "fields": {
+        "name": "nome",
+        "description": "descrizione",
+        "segments": "calibro",
+        "color": "colore",
+        "stage_labels": "tappe",
+        "closing_condition": "condizione di chiusura",
+        "consequence": "conseguenza",
+        "forward_only": "solo avanti",
+        "mark_policy": "chi lo segna",
+        "label_ids": "etichette",
+        "document_id": "documento collegato",
+        "visibility": "visibilità"
+      }
+    },
+    "dialog": {
+      "editTitle": "Modifica clock",
+      "submitCreate": "Crea il clock",
+      "submitPropose": "Proponi",
+      "templates": "Parti da un modello",
+      "roomTemplate": "{{segments}} · modello della Stanza",
+      "nameHint": "Intitolalo all'ostacolo o all'evento, non al metodo.",
+      "size": "Calibro (segmenti)",
+      "sizeHint": "Da 2 a 16, anche dispari: 4, 6, 8 e 12 sono solo scorciatoie.",
+      "labels": "Etichette",
+      "labelsHint": "Scegli tra le etichette della Stanza.",
+      "labelsHintMaster": "Scrivi un nome nuovo per crearla: la Stanza la ricorda per i prossimi clock.",
+      "noLabels": "Nessuna etichetta",
+      "createLabel": "Crea «{{name}}»",
+      "closingCondition": "Condizione di chiusura",
+      "closingConditionHint": "Visibile a tutti; l'app non la verifica.",
+      "stagesShow": "Aggiungi le tappe (una per segmento)",
+      "stagesHide": "Nascondi le tappe",
+      "stagesHint": "Facoltative, come le tappe di un conto alla rovescia.",
+      "stage": "Tappa {{number}}",
+      "stageDefault": "Tappa {{number}}",
+      "consequence": "Cosa succede quando si chiude",
+      "masterOnly": "Solo Master",
+      "document": "Documento collegato",
+      "noDocument": "Nessuno",
+      "markPolicy": "Chi lo segna",
+      "markPolicyRoom": "Regola della Stanza ({{rule}})",
+      "forwardOnly": "Solo avanti",
+      "forwardOnlyHint": "I segni di questo clock non si svuotano.",
+      "selectiveLabel": "Chi altro lo vede",
+      "saveTemplate": "Salva come modello",
+      "templateName": "Nome del modello"
+    },
+    "templates": {
+      "progress": {
+        "name": "Progresso",
+        "detail": "6 · verde"
+      },
+      "danger": {
+        "name": "Pericolo",
+        "detail": "4 · rosso"
+      },
+      "countdown": {
+        "name": "Conto alla rovescia",
+        "detail": "6 · tappe"
+      },
+      "project": {
+        "name": "Progetto",
+        "detail": "8 · blu"
+      },
+      "faction": {
+        "name": "Fazione",
+        "detail": "6 · solo Master"
+      },
+      "tugOfWar": {
+        "name": "Tiro alla fune",
+        "detail": "6 · avanti e indietro"
+      },
+      "empty": {
+        "name": "Vuoto",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "Semplice",
+        "detail": "Il Master apre e segna"
+      },
+      "wholeTable": {
+        "name": "Tutto il tavolo",
+        "detail": "Tutti aprono e segnano"
+      },
+      "noReturn": {
+        "name": "Senza ritorno",
+        "detail": "I giocatori propongono, nessun segno si svuota"
+      }
+    },
+    "rules": {
+      "button": "Regole",
+      "title": "Regole dei clock",
+      "presets": "Preimpostazioni",
+      "presetsHint": "Riempiono le tre regole qui sotto; etichette e tipi di segno restano come sono.",
+      "openPolicy": "Chi apre un clock",
+      "markPolicy": "Chi segna",
+      "undo": "Svuotare i segni",
+      "undoYes": "Si può svuotare",
+      "undoNo": "Non si torna indietro",
+      "undoNoHint": "I segni non si cancellano mai, nemmeno dal Master; resta solo l'annulla di un clic sbagliato.",
+      "save": "Salva le regole",
+      "labels": "Etichette",
+      "labelsHint": "Etichette libere della Stanza, con un colore; un clock ne porta fino a 6.",
+      "markKinds": "Tipi di segno",
+      "markKindsHint": "Fino a 6, facoltativi: di cosa è fatto un segno in questo gioco e chi può usarlo.",
+      "addLabel": "Nuova etichetta",
+      "addMarkKind": "Nuovo tipo di segno",
+      "who": "Chi può usarlo",
+      "deleteItem": "Elimina «{{name}}»",
+      "deleteLabelTitle": "Eliminare l'etichetta?",
+      "deleteLabelBody_one": "«{{name}}» verrà tolta da {{count}} clock.",
+      "deleteLabelBody_other": "«{{name}}» verrà tolta da {{count}} clock.",
+      "templates": "Modelli della Stanza",
+      "noTemplates": "Nessun modello: salvane uno dal dialogo di un clock.",
+      "deleteTemplate": "Elimina il modello «{{name}}»"
+    },
+    "groups": {
+      "create": "Nuovo gruppo",
+      "editTitle": "Modifica gruppo",
+      "name": "Nome del gruppo",
+      "mode": "Modo",
+      "modeHint": {
+        "free": "I clock stanno solo insieme: i livelli di un luogo, le fazioni.",
+        "race": "Vince il primo che si chiude; se ne chiude un altro prima che confermi, è un pari.",
+        "turn": "Alcuni clock sono decisivi: quando uno si chiude la svolta termina e gli altri non avvengono.",
+        "sequence": "Si chiudono in ordine: solo il primo aperto prende segni, gli altri aspettano."
+      },
+      "clocks": "Clock del gruppo",
+      "clocksHint": "Nell'ordine in cui li scegli, fino a {{max}}; un clock di un altro gruppo passa a questo.",
+      "decisiveHint": "Scrivi l'esito dei clock decisivi; lascia vuoti gli altri.",
+      "decisive": "Esito di «{{name}}»",
+      "notDecisive": "Non decisivo",
+      "menu": "Azioni del gruppo «{{name}}»",
+      "newTurn": "Nuova svolta",
+      "archive": "Archivia il gruppo",
+      "restore": "Ripristina il gruppo",
+      "delete": "Elimina il gruppo",
+      "deleteTitle": "Eliminare il gruppo?",
+      "deleteBody": "«{{name}}» sparisce; i suoi clock restano, fuori dai gruppi.",
+      "empty": "Nessun clock: modifica il gruppo per aggiungerne.",
+      "quoted": "«{{name}}»",
+      "outcome": "«{{name}}» ({{label}})",
+      "resultWon": "Vinto: {{names}}",
+      "resultTie": "Pari: {{names}}",
+      "resultTurn": "Svolta: {{labels}}",
+      "raceOne": "{{names}} si è chiuso per primo.",
+      "raceTie": "{{names}} si sono chiusi: è un pari, succedono entrambi.",
+      "confirm": "Conferma",
+      "turnEnds": "La svolta termina: {{labels}}. Gli altri clock aperti non avvengono.",
+      "endTurn": "Termina la svolta",
+      "notYet": "Non ancora",
+      "reveal": "«{{name}}» è il prossimo, ma i giocatori non lo vedono. Rivelarlo?",
+      "revealButton": "Rivela alla Stanza",
+      "notNow": "Non ora"
+    },
+    "block": {
+      "allOpen": "Tutti i clock aperti",
+      "add": "Clock",
+      "newClock": "Nuovo clock…",
+      "groupChip": "Gruppo «{{name}}»",
+      "missing": "Non più disponibile",
+      "noneLeft": "Nessun altro clock o gruppo."
     }
   }
 }

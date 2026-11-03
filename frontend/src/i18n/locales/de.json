@@ -1597,12 +1597,14 @@
     "pages": {
       "documents": "Dokumente",
       "maps": "Karten",
-      "sessionZero": "Session 0"
+      "sessionZero": "Session 0",
+      "clocks": "Uhren"
     },
     "pageDescriptions": {
       "documents": "Alle Dokumente des Raums",
       "maps": "Die Karten des Raums",
-      "sessionZero": "Sessions, Grenzen & Schleier, Umfragen"
+      "sessionZero": "Sessions, Grenzen & Schleier, Umfragen",
+      "clocks": "Die Uhren des Raums"
     },
     "blockEmpty": "Nichts anzuzeigen",
     "foldBlock": "{{name}} einklappen",
@@ -1616,7 +1618,8 @@
       "maps": "Karten",
       "mapsFree": "Beziehungskarten",
       "mapsGeographic": "Geografische Karten",
-      "sessionZero": "Session 0"
+      "sessionZero": "Session 0",
+      "clocks": "Uhren"
     },
     "features": {
       "sessions": "Sessions",
@@ -1660,7 +1663,8 @@
         "body": "Sessions, Schritte und Umfragen"
       },
       "tools": "Werkzeuge",
-      "toolsBody": "Ein eigenes Werkzeug der Session 0, für die Spieler verborgen, bis du es zeigst"
+      "toolsBody": "Ein eigenes Werkzeug der Session 0, für die Spieler verborgen, bis du es zeigst",
+      "clocks": "Uhr"
     },
     "edit": {
       "start": "Bearbeiten",
@@ -1717,6 +1721,282 @@
       "show": "Den Spielern zeigen",
       "hide": "Vor den Spielern verbergen",
       "loadError": "Das Werkzeug konnte nicht geladen werden."
+    }
+  },
+  "clocks": {
+    "title": "Uhren",
+    "description": "Die Uhren des Raums: die im Spiel, die im Hintergrund und die bereits geschlossenen.",
+    "signInRequired": "Melde dich an, um die Uhren dieses Raums zu sehen.",
+    "loadError": "Die Uhren konnten nicht geladen werden.",
+    "empty": "Noch keine Uhren.",
+    "create": "Neue Uhr",
+    "propose": "Uhr vorschlagen",
+    "outsideGroups": "Außerhalb von Gruppen",
+    "groupEnded": "Beendet",
+    "legend": "Markierungsarten",
+    "legendItem": "{{name}} ({{who}})",
+    "deleteTitle": "Uhr löschen?",
+    "deleteBody": "„{{name}}“ und ihr Verlauf werden gelöscht. Das lässt sich nicht rückgängig machen.",
+    "proposalDetail_one": "von {{name}} · {{count}} Segment",
+    "proposalDetail_other": "von {{name}} · {{count}} Segmente",
+    "reject": "Ablehnen",
+    "editProposal": "Öffnen und bearbeiten",
+    "openProposal": "Uhr öffnen",
+    "lists": {
+      "proposed": "Vorgeschlagen",
+      "finished": "Geschlossen und verfallen",
+      "archived": "Archiviert"
+    },
+    "state": {
+      "proposed": "Vorgeschlagen",
+      "open": "Offen",
+      "closed": "Geschlossen",
+      "lapsed": "Verfallen",
+      "archived": "Archiviert",
+      "locked": "Gesperrt"
+    },
+    "groupMode": {
+      "free": "Frei",
+      "race": "Wettlauf",
+      "turn": "Wendepunkt",
+      "sequence": "Abfolge"
+    },
+    "openPolicy": {
+      "master": "Nur der Master",
+      "everyone": "Alle",
+      "propose": "Spieler schlagen vor, der Master bestätigt"
+    },
+    "markPolicy": {
+      "master": "Nur der Master",
+      "master_and_creator": "Der Master und wer sie geöffnet hat",
+      "everyone": "Alle, die sie sehen"
+    },
+    "who": {
+      "master": "Master",
+      "players": "Spieler",
+      "everyone": "Alle"
+    },
+    "face": {
+      "summary": "{{name}}: {{filled}} von {{segments}}, {{state}}",
+      "withKinds": "{{base}}, {{kinds}}",
+      "kindCount": "{{number}} {{name}}",
+      "markUpTo_one": "{{count}} markieren",
+      "markUpTo_other": "Bis {{count}} markieren",
+      "emptyDown_one": "{{count}} leeren",
+      "emptyDown_other": "Bis {{count}} leeren"
+    },
+    "card": {
+      "menu": "Aktionen für „{{name}}“",
+      "markMany": "Markieren…",
+      "history": "Verlauf",
+      "archive": "Archivieren",
+      "restore": "Wiederherstellen",
+      "progress": "{{filled}}/{{segments}}",
+      "document": "→ {{name}}",
+      "minus": "Ein Segment von „{{name}}“ leeren",
+      "plus": "Ein Segment von „{{name}}“ markieren",
+      "pickKind": "„{{name}}“ mit einer Markierungsart markieren",
+      "markWith": "Markieren mit"
+    },
+    "toast": {
+      "marked": "{{delta}} auf „{{name}}“",
+      "undo": "Rückgängig",
+      "closed": "„{{name}}“ hat sich geschlossen",
+      "refused": "Dein Vorschlag „{{name}}“ wurde abgelehnt."
+    },
+    "markDialog": {
+      "title": "„{{name}}“ markieren",
+      "count": "Segmente",
+      "countHint_one": "Noch {{count}} Segment frei.",
+      "countHint_other": "Noch {{count}} Segmente frei.",
+      "kind": "Markierungsart",
+      "note": "Notiz",
+      "notePlaceholder": "Z. B. Schloss geknackt",
+      "submit_one": "{{count}} markieren",
+      "submit_other": "{{count}} markieren"
+    },
+    "history": {
+      "title": "Verlauf von „{{name}}“",
+      "loadError": "Der Verlauf konnte nicht geladen werden.",
+      "more": "Mehr anzeigen",
+      "formerMember": "Ehemaliges Mitglied",
+      "undone": "{{delta}} rückgängig gemacht",
+      "edited": "geändert: {{fields}}",
+      "actions": {
+        "created": "hat die Uhr geöffnet",
+        "proposed": "hat die Uhr vorgeschlagen",
+        "opened": "hat den Vorschlag bestätigt",
+        "closed": "geschlossen",
+        "reopened": "wieder geöffnet",
+        "lapsed": "verfallen",
+        "archived": "archiviert",
+        "restored": "wiederhergestellt"
+      },
+      "fields": {
+        "name": "Name",
+        "description": "Beschreibung",
+        "segments": "Größe",
+        "color": "Farbe",
+        "stage_labels": "Etappen",
+        "closing_condition": "Schließbedingung",
+        "consequence": "Folge",
+        "forward_only": "nur vorwärts",
+        "mark_policy": "wer markiert",
+        "label_ids": "Etiketten",
+        "document_id": "verknüpftes Dokument",
+        "visibility": "Sichtbarkeit"
+      }
+    },
+    "dialog": {
+      "editTitle": "Uhr bearbeiten",
+      "submitCreate": "Uhr erstellen",
+      "submitPropose": "Vorschlagen",
+      "templates": "Mit einer Vorlage beginnen",
+      "roomTemplate": "{{segments}} · Vorlage des Raums",
+      "nameHint": "Benenne sie nach dem Hindernis oder Ereignis, nicht nach der Methode.",
+      "size": "Größe (Segmente)",
+      "sizeHint": "Von 2 bis 16, auch ungerade: 4, 6, 8 und 12 sind nur Abkürzungen.",
+      "labels": "Etiketten",
+      "labelsHint": "Wähle aus den Etiketten des Raums.",
+      "labelsHintMaster": "Gib einen neuen Namen ein, um eines zu erstellen: Der Raum merkt es sich für spätere Uhren.",
+      "noLabels": "Keine Etiketten",
+      "createLabel": "„{{name}}“ erstellen",
+      "closingCondition": "Schließbedingung",
+      "closingConditionHint": "Für alle sichtbar; die App prüft sie nicht.",
+      "stagesShow": "Etappen hinzufügen (eine pro Segment)",
+      "stagesHide": "Etappen ausblenden",
+      "stagesHint": "Optional, wie die Etappen eines Countdowns.",
+      "stage": "Etappe {{number}}",
+      "stageDefault": "Etappe {{number}}",
+      "consequence": "Was passiert, wenn sie sich schließt",
+      "masterOnly": "Nur Master",
+      "document": "Verknüpftes Dokument",
+      "noDocument": "Keines",
+      "markPolicy": "Wer markiert",
+      "markPolicyRoom": "Regel des Raums ({{rule}})",
+      "forwardOnly": "Nur vorwärts",
+      "forwardOnlyHint": "Die Markierungen dieser Uhr werden nie geleert.",
+      "selectiveLabel": "Wer sie noch sieht",
+      "saveTemplate": "Als Vorlage speichern",
+      "templateName": "Name der Vorlage"
+    },
+    "templates": {
+      "progress": {
+        "name": "Fortschritt",
+        "detail": "6 · grün"
+      },
+      "danger": {
+        "name": "Gefahr",
+        "detail": "4 · rot"
+      },
+      "countdown": {
+        "name": "Countdown",
+        "detail": "6 · Etappen"
+      },
+      "project": {
+        "name": "Projekt",
+        "detail": "8 · blau"
+      },
+      "faction": {
+        "name": "Fraktion",
+        "detail": "6 · nur Master"
+      },
+      "tugOfWar": {
+        "name": "Tauziehen",
+        "detail": "6 · vor und zurück"
+      },
+      "empty": {
+        "name": "Leer",
+        "detail": "4"
+      }
+    },
+    "presets": {
+      "simple": {
+        "name": "Einfach",
+        "detail": "Der Master öffnet und markiert"
+      },
+      "wholeTable": {
+        "name": "Der ganze Tisch",
+        "detail": "Alle öffnen und markieren"
+      },
+      "noReturn": {
+        "name": "Kein Zurück",
+        "detail": "Spieler schlagen vor, keine Markierung wird geleert"
+      }
+    },
+    "rules": {
+      "button": "Regeln",
+      "title": "Regeln für Uhren",
+      "presets": "Voreinstellungen",
+      "presetsHint": "Sie füllen die drei Regeln unten; Etiketten und Markierungsarten bleiben, wie sie sind.",
+      "openPolicy": "Wer eine Uhr öffnet",
+      "markPolicy": "Wer markiert",
+      "undo": "Markierungen leeren",
+      "undoYes": "Markierungen können geleert werden",
+      "undoNo": "Kein Zurück",
+      "undoNoHint": "Markierungen werden nie gelöscht, auch nicht vom Master; nur das Rückgängigmachen eines Fehlklicks bleibt.",
+      "save": "Regeln speichern",
+      "labels": "Etiketten",
+      "labelsHint": "Freie Etiketten des Raums, jedes mit einer Farbe; eine Uhr trägt bis zu 6.",
+      "markKinds": "Markierungsarten",
+      "markKindsHint": "Bis zu 6, optional: woraus eine Markierung in diesem Spiel besteht und wer sie nutzen darf.",
+      "addLabel": "Neues Etikett",
+      "addMarkKind": "Neue Markierungsart",
+      "who": "Wer sie nutzen darf",
+      "deleteItem": "„{{name}}“ löschen",
+      "deleteLabelTitle": "Etikett löschen?",
+      "deleteLabelBody_one": "„{{name}}“ wird von {{count}} Uhr entfernt.",
+      "deleteLabelBody_other": "„{{name}}“ wird von {{count}} Uhren entfernt.",
+      "templates": "Vorlagen des Raums",
+      "noTemplates": "Keine Vorlagen: Speichere eine aus dem Dialog einer Uhr.",
+      "deleteTemplate": "Vorlage „{{name}}“ löschen"
+    },
+    "groups": {
+      "create": "Neue Gruppe",
+      "editTitle": "Gruppe bearbeiten",
+      "name": "Name der Gruppe",
+      "mode": "Modus",
+      "modeHint": {
+        "free": "Die Uhren stehen nur zusammen: die Ebenen eines Ortes, die Fraktionen.",
+        "race": "Die erste, die sich schließt, gewinnt; schließt sich eine weitere, bevor du bestätigst, ist es ein Unentschieden.",
+        "turn": "Manche Uhren sind entscheidend: schließt sich eine, endet der Wendepunkt und die anderen verfallen.",
+        "sequence": "Sie schließen sich der Reihe nach: nur die erste offene nimmt Markierungen an, die anderen warten."
+      },
+      "clocks": "Uhren der Gruppe",
+      "clocksHint": "In der Reihenfolge deiner Wahl, bis zu {{max}}; eine Uhr aus einer anderen Gruppe wechselt hierher.",
+      "decisiveHint": "Schreib den Ausgang der entscheidenden Uhren; lass die anderen leer.",
+      "decisive": "Ausgang von „{{name}}“",
+      "notDecisive": "Nicht entscheidend",
+      "menu": "Aktionen der Gruppe „{{name}}“",
+      "newTurn": "Neuer Wendepunkt",
+      "archive": "Gruppe archivieren",
+      "restore": "Gruppe wiederherstellen",
+      "delete": "Gruppe löschen",
+      "deleteTitle": "Gruppe löschen?",
+      "deleteBody": "„{{name}}“ verschwindet; ihre Uhren bleiben, außerhalb jeder Gruppe.",
+      "empty": "Keine Uhren: bearbeite die Gruppe, um welche hinzuzufügen.",
+      "quoted": "„{{name}}“",
+      "outcome": "„{{name}}“ ({{label}})",
+      "resultWon": "Gewonnen: {{names}}",
+      "resultTie": "Unentschieden: {{names}}",
+      "resultTurn": "Wendepunkt: {{labels}}",
+      "raceOne": "{{names}} hat sich als erste geschlossen.",
+      "raceTie": "{{names}} haben sich geschlossen: Unentschieden, beides geschieht.",
+      "confirm": "Bestätigen",
+      "turnEnds": "Der Wendepunkt endet: {{labels}}. Die anderen offenen Uhren verfallen.",
+      "endTurn": "Wendepunkt beenden",
+      "notYet": "Noch nicht",
+      "reveal": "„{{name}}“ ist die nächste, aber die Spieler sehen sie nicht. Aufdecken?",
+      "revealButton": "Dem Raum zeigen",
+      "notNow": "Nicht jetzt"
+    },
+    "block": {
+      "allOpen": "Alle offenen Uhren",
+      "add": "Uhr",
+      "newClock": "Neue Uhr…",
+      "groupChip": "Gruppe „{{name}}“",
+      "missing": "Nicht mehr verfügbar",
+      "noneLeft": "Keine weitere Uhr oder Gruppe."
     }
   }
 }

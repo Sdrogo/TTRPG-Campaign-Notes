@@ -24,7 +24,9 @@ export type BlockContent =
   | { kind: 'documents'; parts: { key: string; label: string | null; documents: Document[] }[] }
   | { kind: 'maps'; maps: RelationshipMap[] }
   | { kind: 'session_zero'; parts: { key: string; label: string | null; feature: SessionZeroFeature; items: SessionZeroItem[] }[] }
-  | { kind: 'tool'; shown: boolean };
+  | { kind: 'tool'; shown: boolean }
+  /** A Clocks block reads its clocks itself (`ClockBlock`). */
+  | { kind: 'clocks' };
 
 /**
  * What `block` shows from `sources`, by the same rules as the pages behind
@@ -57,6 +59,7 @@ export function blockContent(block: LandingBlock, sources: BlockSources): BlockC
       })),
     };
   }
+  if (block.kind === 'clocks') return { kind: 'clocks' };
   if (block.kind === 'tool') {
     // A tool the viewer may not see isn't among the tools they get (spec 60 Decision 2).
     return sources.tools ? { kind: 'tool', shown: sources.tools.tools.some((tool) => tool.moduleId === block.moduleId) } : undefined;
@@ -84,5 +87,6 @@ export function blockContent(block: LandingBlock, sources: BlockSources): BlockC
 export function isBlockEmpty(content: BlockContent | undefined): boolean {
   if (!content) return false;
   if (content.kind === 'tool') return !content.shown;
+  if (content.kind === 'clocks') return false;
   return content.kind === 'maps' ? content.maps.length === 0 : content.parts.length === 0;
 }
