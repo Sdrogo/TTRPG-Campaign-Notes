@@ -153,9 +153,10 @@ the event happens. New ideas:
 **What the comparison asks of the tool**
 - Decreasing is a **rule of the table**, not a fact about clocks: allowed in
   one game (tug-of-war), forbidden in the other.
-- Clocks carry **game-defined properties** (Approach, Relevance) that the
-  app cannot know in advance: they must be defined by the Room, with their
-  own option lists, and shown to the whole table.
+- Clocks carry **game-defined information** (Approach, Relevance) that the
+  app cannot know in advance. The product owner chose free **labels** for
+  it (2026-11-03): the Master creates them, the Room remembers them, nothing
+  is hard-coded, and the whole table sees them.
 - A tick may have a **source** that matters (a success or a shock), which
   the table wants to see on the face.
 - Clocks come in **groups with an end rule**: a race (first to close wins,
@@ -227,7 +228,7 @@ a checklist rather than a model to copy:
 
 - **Universal and customisable** (product owner, 2026-11-03): the Room
   sets the rules of its game (can clocks go back, who opens and marks them,
-  the properties every clock carries, the kinds of mark), and clocks live
+  the labels and the kinds of mark it uses), and clocks live
   in **groups** with an end rule (race, turn, sequence). §4b.
 - One object, **the clock**, with presets for the variants in §4, and
   presets the Room can save of its own.

@@ -15,7 +15,7 @@
   sees it close live, and keeps it across sessions.
 - **Universal**: the app doesn't encode one game. Each Room sets its own
   **clock rules** (who opens and marks clocks, whether marks can be undone,
-  the **properties** every clock carries, the **kinds of mark**), and clocks
+  the **labels** its clocks can carry, the **kinds of mark**), and clocks
   can be **grouped** with an end rule (a race, a turn, a sequence of
   layers). Presets cover the common games without naming them.
 - Clocks show on a **Clocks page**, in a **Clocks block** of a Section (spec
@@ -35,7 +35,7 @@
 | Segnare / Mark | Fill one or more segments |
 | Chiudere / Close | Fill the last segment: the event happens |
 | Tipo di segno / Mark kind | What a mark is made of in this game (a success, a shock), with a colour |
-| Proprietà / Property | A field the Room adds to every clock (Approach, Relevance) |
+| Etichetta / Label | A free label with a colour, created by the Master and remembered by the Room (e.g. what a game calls approach or relevance) |
 | Gruppo / Group | Clocks played together, with an end rule (race, turn, sequence) |
 | Non avvenuto / Lapsed | A clock left open when its group ended: its event doesn't happen |
 
@@ -61,26 +61,35 @@ proposed default until answered.
      indietro" (marks are never erased, not even by the Master; the 5 s undo
      of a mistaken click stays, Decision 9). With the first, a clock can be
      set "Solo avanti" on its own.
-   - **Properties** (up to 6, ordered): each has a name (≤40), a type
-     (**choice**: up to 12 options, each with a name ≤30 and an optional
-     palette colour; **text** ≤60; **number**), "obbligatoria", "sul
-     quadrante" (shown as a badge under the face) and who sees it ("Tutti"
-     by default, or "Solo il Master"). Example: *Approccio* (Rock, Dance,
-     Blues, Tango, Jazz), *Rilevanza* (Positiva, Negativa).
+   - **Labels** ("Etichette", product owner 2026-11-03: no hard-coded
+     values): a Room-wide list of free labels, each a name (≤30) and a
+     colour from the app's palette (Decision 4). The Master creates them
+     where they are needed, typing a new name in a clock's label picker
+     ("Crea «Jazz»"), or in the rules dialog, and the Room remembers them
+     for every later clock; the rules dialog renames, recolours, reorders
+     and deletes them (deleting removes the label from its clocks, after a
+     confirmation that says on how many). A clock carries up to 6, shown as
+     coloured badges under its face and seen by everyone who sees the
+     clock. Players choose among the existing labels when they propose or
+     open a clock; they don't create new ones. The app ships no labels: a
+     table playing a game with approaches makes "Rock", "Jazz" and so on,
+     another makes "Fazione", "Viaggio" or nothing. (Replaces the typed
+     "properties" of the first draft.)
    - **Mark kinds** (up to 6, optional): each has a name (≤30), a palette
-     colour and who may use it ("Master", "Giocatori", "Tutti"). Example:
-     *Successo* (Players, green), *Shock* (Master, red). With none defined,
-     a mark is just a mark in the clock's colour.
+     colour and who may use it ("Master", "Giocatori", "Tutti"), all defined
+     by the Master, none shipped. A table could make *Successo* (Players)
+     and *Shock* (Master). With none defined, a mark is just a mark in the
+     clock's colour.
 2. **Rule presets** fill the rules dialog in one click, then everything is
    editable; game names never appear:
-   | Preset (it) | Undo | Who marks | Properties | Mark kinds | Groups suggested |
-   | --- | --- | --- | --- | --- | --- |
-   | Semplice (default for every Room) | yes | Master + creator | none | none | free |
-   | Progresso e pericolo | yes | Master + creator | none | none | race, sequence |
-   | Svolte | no | everyone | Approccio (5 choices), Rilevanza (Positiva / Negativa) | Successo (Players), Shock (Master) | turn |
-   Changing rules later keeps existing clocks: a removed property hides its
-   values (kept, restored if the property comes back with the same name),
-   a removed mark kind leaves past marks in a neutral grey.
+   | Preset (it) | Who opens | Who marks | Undo |
+   | --- | --- | --- | --- |
+   | Semplice (default for every Room) | Players propose | Master + creator | yes |
+   | Tutto il tavolo | everyone | everyone who sees it | yes |
+   | Senza ritorno | Players propose | everyone who sees it | no |
+   Presets set only these three policies: they never create labels or mark
+   kinds. Changing rules later keeps existing clocks; a deleted mark kind
+   leaves past marks in a neutral grey.
 3. **Clock templates** ("Modelli"): the create dialog offers built-in
    templates (Progresso 6 green, Pericolo 4 red, Conto alla rovescia 6
    orange with six stage labels, Progetto 8 blue, Fazione 6 purple Master
@@ -93,13 +102,23 @@ proposed default until answered.
 4. **Fields**: **name** (≤80; the dialog's hint: "Intitolalo all'ostacolo o
    all'evento, non al metodo"), optional **description** (Markdown, spec
    48, ≤2000), **size** 2-16 segments (Q4; shortcuts 4, 6, 8, 12), **colour**
-   (one of the map palette colours of spec 28, `COLOR_VALUES`), optional
+   (Decision 4b), optional
    **stage labels**, one per segment (≤60, a countdown's stages), optional
    **closing condition** shown to everyone (≤140: "L'ultimo segno da una
-   prova Rock"; shown, never enforced: the app doesn't roll dice), optional
+   prova Jazz"; shown, never enforced: the app doesn't roll dice), optional
    **consequence** ("Cosa succede quando si chiude", ≤500, Markdown) seen
-   only by the Master, the Room's **property values**, an optional linked
+   only by the Master, its **labels** (≤6), an optional linked
    **Document** (Decision 18), the visibility (Decision 14).
+4b. **Colours are the app's own palette** (product owner, 2026-11-03): the
+   same 17 colours as relationship-map cards, arrows and groups (spec 28,
+   `MAP_COLORS` / `COLOR_VALUES` in `lib/maps.ts`: default, red, green,
+   purple, blue, gold, orange, midnight, silver, champagne, rose, pink,
+   cobalt, violet, emerald, brown, lime), with the same picker (the first
+   six in a row, "more colours" for the rest) and names. Clocks, labels and
+   mark kinds all use it; no new colour tokens.
+4c. **Any size from 2 to 16** (Q4), odd ones included: 3, 5, 7 are as valid
+   as 4 or 6. The stepper moves by one; 4, 6, 8, 12 beside it are only
+   shortcuts for the common sizes.
 5. **States**: *open*, *closed* (every segment filled; face filled with a
    check, "Chiuso" badge), *lapsed* (left open when its group ended:
    "Non avvenuto", face greyed, no more marks), *archived* (out of blocks
@@ -167,13 +186,13 @@ proposed default until answered.
     clock" opens the same dialog without the Master-only fields; the clock
     is *proposed*, seen by its proposer and the Master only, with a
     "Proposto" badge. The Master opens it from the proposal, can change
-    size, properties and visibility (Cowboy Bebop: the Master defines
-    Calibro, Approccio, Rilevanza), and "Apri il clock" or "Rifiuta"
+    size, labels and visibility (Cowboy Bebop: the Master defines the
+    clock's size and what it is about), and "Apri il clock" or "Rifiuta"
     (deleted, the proposer sees a toast). A proposed clock can't be marked.
 14. **Rights**: creating per Decision 1; editing settings, archiving and
     deleting: the creator and the Master; grouping and Room rules: the
     Master; marking per Decisions 1 and 6 and mark kinds' "who may use".
-    The consequence and Master-only properties are never sent to a Player
+    The consequence is never sent to a Player
     nor under View as.
 
 ### 6. Visibility
@@ -222,8 +241,7 @@ proposed default until answered.
     the mark kind's or clock's colour, empty ones `--bg-raised` outlined
     `--border-default`; closed: check in the middle and a thin ring; lapsed:
     50% opacity and a dash; locked (sequence): a padlock. Name under it
-    (display font, ≤2 lines), "4/8" (mono, muted), property badges
-    ("sul quadrante"), closing condition in muted `xs`. Sizes 64 / 96 /
+    (display font, ≤2 lines), "4/8" (mono, muted), label badges, closing condition in muted `xs`. Sizes 64 / 96 /
     140 px. Stage labels: tooltip of each wedge and a numbered list in the
     detail, the next stage highlighted.
 25. **Accessibility**: the face is `role="img"` ("Allarme: 4 su 8, aperto,
@@ -241,7 +259,7 @@ proposed default until answered.
     `clock_templates`, `clocks` (settings, marks as counts per kind, state,
     group, Document by id/name), `clock_groups`; Master-only fields only in
     a Master's export; no history. The Master's import adds the clocks and
-    groups, merges properties and mark kinds by name, and maps Documents by
+    groups, merges labels and mark kinds by name, and maps Documents by
     name as maps do (spec 38). A single Document export leaves clocks out.
 28. **GDPR** (spec 31): history rows name a user; the personal data export
     lists the caller's clocks, proposals and marks; account deletion keeps
@@ -250,7 +268,7 @@ proposed default until answered.
     Mark, Close, Lapsed when built. Proposed (Q10): it "Clock" (as asked),
     en "Clock", de "Uhr", es "Reloj", fr "Horloge", nl "Klok", pl "Zegar",
     pt-PT "Relógio", ru "Часы", ja "クロック", zh-Hans "进度钟", ko "클락";
-    "segnare / chiudere" kept from the Italian manuals. Property and mark
+    "segnare / chiudere" kept from the Italian manuals. Label and mark
     kind names are user content, never translated; preset names are
     translated when applied (they become the Room's text in the Master's
     language).
@@ -260,7 +278,7 @@ proposed default until answered.
 
 ### 10. Limits
 
-31. 200 clocks, 30 groups, 20 templates per Room; 6 properties, 6 mark
+31. 200 clocks, 30 groups, 20 templates per Room; 6 labels per clock, 100 labels per Room, 6 mark
     kinds; 20 chips per block; 6 clocks per Document; 12 clocks per group.
 
 ## Design
@@ -268,20 +286,18 @@ proposed default until answered.
 ### Backend (migration, revises the head at build time)
 
 - `room_clock_rules` (one row per Room: `open_policy`, `mark_policy`,
-  `allow_unmark`), `room_clock_properties` (`room_id`, `name`, `type`,
-  `required`, `on_face`, `master_only`, `position`),
-  `room_clock_property_options` (`property_id`, `name`, `color`,
-  `position`), `room_clock_mark_kinds` (`room_id`, `name`, `color`,
+  `allow_unmark`), `room_clock_labels` (`room_id`, `name` unique per Room
+  case-insensitively, `color`, `position`), `room_clock_label_links`
+  (`clock_id`, `label_id`, both cascade), `room_clock_mark_kinds` (`room_id`, `name`, `color`,
   `who`, `position`), `room_clock_templates` (`room_id`, `name`, `settings`
   jsonb).
 - `room_clocks`: `id`, `room_id`, `name`, `description`, `segments`
-  (2-16), `color`, `stage_labels` text[], `closing_condition`,
+  (2-16, odd included), `color`, `stage_labels` text[], `closing_condition`,
   `consequence`, `forward_only`, `mark_policy` (null = Room's), `state`
   (`proposed` | `open` | `closed` | `lapsed`), `archived_at`, `group_id`
   (set null), `group_position`, `decisive_label`, `document_id` (set
   null), `position`, `visibility`, `created_by`, `revision`, timestamps.
-  `room_clock_grants` (Selective). `room_clock_values` (`clock_id`,
-  `property_id`, `option_id` | `text` | `number`). `room_clock_marks`
+  `room_clock_grants` (Selective). `room_clock_marks`
   (`id`, `clock_id`, `user_id` set null, `kind_id` set null, `delta`,
   `note`, `undone_at`, `created_at`): the clock's filled count is the
   sum of live marks (kept denormalised as `filled`). `room_clock_events`
@@ -302,10 +318,10 @@ proposed default until answered.
 ### Frontend
 
 - `components/clocks/`: `ClockFace`, `ClockCard`, `ClockStrip`,
-  `ClockGroupBand`, `ClockDialog` (template tiles, fields, properties,
+  `ClockGroupBand`, `ClockDialog` (template tiles, fields, label picker with "Crea «…»",
   visibility), `ClockDetail` (popover / bottom sheet under 48em: big face,
   stages, consequence for the Master, history, "Segna…"), `ClockRulesDialog`
-  (presets, policies, properties and mark kinds editors with sortable
+  (presets, policies, labels and mark kinds editors with sortable
   rows), `MarkKindLegend`.
 - `pages/RoomClocksPage.tsx`; `SectionBlock` kind `clocks`;
   `DocumentDetailPage` aside; Index entry; hooks `useClocks`,
@@ -317,7 +333,7 @@ proposed default until answered.
 
 | Unit | What | Migration | Claude's build time |
 | --- | --- | --- | --- |
-| 61_1 | Backend core: rules, properties, mark kinds, templates, clocks, marks and undo, history, visibility and Reveal, proposals, stream topics, tests | **yes** | about 3 h |
+| 61_1 | Backend core: rules, labels, mark kinds, templates, clocks, marks and undo, history, visibility and Reveal, proposals, stream topics, tests | **yes** | about 3 h |
 | 61_2 | Backend: groups (race, turn, sequence), page card and block kind, copy, export/import schema 5, GDPR, Demo seed, tests | same migration | about 2 h |
 | 61_3 | Frontend: `ClockFace`, clock dialog, rules dialog, Clocks page, live marks, closing toast, 12 languages, tests | no | about 3.5 h |
 | 61_4 | Frontend: groups and their prompts, proposals, Clocks block, Document aside, Index, screenshots | no | about 2.5 h |
@@ -331,7 +347,7 @@ before the release that ships them.
 - Backend: marks clamp and set states; concurrent marks both count;
   "Non si torna indietro" refuses unmarking but allows the 5 s undo; mark
   kinds' "who"; per-clock policy overrides the Room's; Master-only fields
-  and properties never reach a Player or View as; hidden clocks absent
+  never reaches a Player or View as; a Player can't create labels; hidden clocks absent
   everywhere (lists, groups, results, history, stream audience); a race
   ends on the first close and records a tie; a turn ends only on the
   Master's confirmation and lapses the open clocks; a sequence refuses
@@ -355,8 +371,9 @@ before the release that ships them.
   propongono, il Master approva". Or "Solo il Master"?
 - **Q3. Default "who marks"**: proposed "Il Master e chi l'ha aperto".
   Or "Tutti quelli che lo vedono" (Cowboy Bebop's "il contesto prevale")?
-- **Q4. Size**: proposed 2-16 segments. Higher (Cowboy Bebop: "quante
-  sezioni desiderate")?
+- **Q4. Size**: any number from 2 to 16, odd included (answered in part
+  2026-11-03: the 4/6/8/12 buttons are only shortcuts). Is 16 enough as the
+  top (Cowboy Bebop: "quante sezioni desiderate")?
 - **Q5. Duplicating a Room**: proposed clocks copied emptied, proposed and
   archived ones left out. Or copied as they are?
 - **Q6. Hidden progress** (name visible, fill hidden): proposed not now.
