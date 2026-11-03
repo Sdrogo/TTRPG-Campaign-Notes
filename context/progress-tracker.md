@@ -928,7 +928,9 @@ on `main`.
   Frontend only, no migration; a draggable bend per arrow is left for a
   later ticket (it needs a migration). **62b** (same PR): a click on a map
   card's name always opens the split pane instead of leaving for the
-  Document page (Ctrl/Cmd-click still opens a tab).
+  Document page (Ctrl/Cmd-click still opens a tab). **62c** (same PR): the
+  split pane button leaves the ⋮ menu for a labeled "Anteprima" button in
+  every map header, and card names get an "Apri in anteprima" tooltip.
 - **61, Clocks** (asked by the product owner 2026-11-03; **ticket proposed; Q1-Q7, Q9, Q10
   answered 2026-11-03 (Clocks page + Clocks block in Sections, Master
   creates and marks by default, 2-16 segments, no hidden progress,
