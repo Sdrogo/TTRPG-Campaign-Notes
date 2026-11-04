@@ -50,6 +50,7 @@ export function ClockGroupDialog({
     <Modal
       opened
       onClose={onClose}
+      closeOnClickOutside={false}
       title={draft.groupId ? t('clocks.groups.editTitle') : t('clocks.groups.create')}
       centered
     >

@@ -30,7 +30,7 @@ export function MarkDialog({
   const [note, setNote] = useState('');
 
   return (
-    <Modal opened onClose={onClose} title={t('clocks.markDialog.title', { name: clock.name })} centered>
+    <Modal opened onClose={onClose} closeOnClickOutside={false} title={t('clocks.markDialog.title', { name: clock.name })} centered>
       <form
         onSubmit={(event) => {
           event.preventDefault();

@@ -224,7 +224,7 @@ background study. The product owner answered Q1-Q4 and Q10 on 2026-11-03
 18. **Clocks block in a Section** (product owner, 2026-11-03: "i clock
     possono essere inseriti come feature in un blocco in una sezione"): the
     add-block popover of a Section (spec 55/60) lists **Clock** among the
-    "Strumenti"; it makes a block of kind `clocks` whose bar has ordered
+    "Strumenti" (popover layout superseded by spec 63); it makes a block of kind `clocks` whose bar has ordered
     chips of clocks and groups of the Room, "+ Clock" (pick existing ones,
     or "Nuovo clock…", which creates the clock on the Clocks page and adds
     it) and the switch "Tutti i clock aperti" (the block then follows the
