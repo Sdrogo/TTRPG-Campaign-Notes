@@ -511,7 +511,8 @@
       "pane": "Dokument daneben",
       "showSplit": "Seitenfenster anzeigen",
       "hideSplit": "Seitenfenster ausblenden",
-      "pick": "Wähle eine Karte, um ihre Infos zu sehen"
+      "pick": "Wähle eine Karte, um ihre Infos zu sehen",
+      "preview": "Vorschau"
     }
   },
   "images": {
@@ -1276,7 +1277,8 @@
       "repeated": "Dokument schon auf der Karte, bleiben einfache Beschriftungen:",
       "backgroundLater": "Das Hintergrundbild lädst du danach über die Schaltfläche Karte der neuen Karte hoch.",
       "submit": "Importieren"
-    }
+    },
+    "openPreview": "In der Vorschau öffnen"
   },
   "sessionZero": {
     "title": "Session 0",

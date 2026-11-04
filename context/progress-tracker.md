@@ -920,6 +920,18 @@ release that ships it. Before the
 next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
+- **62, Curved relationship lines** (asked by the product owner
+  2026-11-03; **ticket confirmed 2026-11-03, 62, 62b and 62c built** in PR
+  #301, frontend only, no migration; `context/feature/62 - Curved relationship
+  lines.md`): the arrows of free and mention maps drawn as the geographic
+  map's gentle curves, several relations between the same two cards fanned
+  out, plain-line bundles kept as parallel lanes, labels riding the curve.
+  Frontend only, no migration; a draggable bend per arrow is left for a
+  later ticket (it needs a migration). **62b** (same PR): a click on a map
+  card's name always opens the split pane instead of leaving for the
+  Document page (Ctrl/Cmd-click still opens a tab). **62c** (same PR): the
+  split pane button leaves the ⋮ menu for a labeled "Anteprima" button in
+  every map header, and card names get an "Apri in anteprima" tooltip.
 - **61, Clocks** (asked by the product owner 2026-11-03; **ticket proposed; Q1-Q7, Q9, Q10
   answered 2026-11-03 (Clocks page + Clocks block in Sections, Master
   creates and marks by default, 2-16 segments, no hidden progress,

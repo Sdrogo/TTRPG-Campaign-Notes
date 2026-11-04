@@ -6,7 +6,17 @@ import {
   addArrow,
   addDocumentCards,
   addTextCard,
-  arrowEnds,
+  arrowCurve,
+  arrowFan,
+  fanBend,
+  shiftCurve,
+  linkCurve,
+  pointOnCurve,
+  projectOnCurve,
+  offsetFromCurve,
+  labelOnCurve,
+  DEFAULT_BEND_RATIO,
+  PARALLEL_BEND,
   cardImage,
   colorValue,
   MAP_COLORS,
@@ -429,18 +439,20 @@ describe('editing a board', () => {
 
 describe('drawing arrows', () => {
   it('joins two boxes edge to edge', () => {
-    const { from, to } = arrowEnds(
+    const { from, to } = arrowCurve(
       { x: 0, y: 0, width: 100, height: 50 },
       { x: 300, y: 0, width: 100, height: 50 },
+      0,
     );
     expect(from).toEqual({ x: 100, y: 25 });
     expect(to).toEqual({ x: 300, y: 25 });
   });
 
   it('leaves through the top or bottom when the other box is straight above or below', () => {
-    const { from, to } = arrowEnds(
+    const { from, to } = arrowCurve(
       { x: 0, y: 0, width: 100, height: 50 },
       { x: 0, y: 200, width: 100, height: 50 },
+      0,
     );
     expect(from).toEqual({ x: 50, y: 50 });
     expect(to).toEqual({ x: 50, y: 200 });
@@ -448,8 +460,9 @@ describe('drawing arrows', () => {
 
   it('stays at the center of two boxes on top of each other', () => {
     const box = { x: 0, y: 0, width: 10, height: 10 };
-    expect(arrowEnds(box, box)).toEqual({
+    expect(arrowCurve(box, box, 0)).toEqual({
       from: { x: 5, y: 5 },
+      control: { x: 5, y: 5 },
       to: { x: 5, y: 5 },
     });
   });
@@ -509,6 +522,18 @@ describe('drawing arrows', () => {
       expect(at).toEqual({ x: 105, y: 0 });
     });
 
+    it('slides along the curve when given its control point', () => {
+      const card = { x: 330, y: -50, width: 100, height: 100 };
+      const control = { x: 165, y: 80 };
+      const at = placeLabel({ x: 0, y: 0 }, { x: 330, y: 0 }, 0.9, size, [card], everywhere, control);
+      expect(clear(at, [card])).toBe(true);
+      expect(at.y).toBeGreaterThan(0);
+      expect(placeLabel({ x: 0, y: 0 }, { x: 400, y: 0 }, 0.5, size, [], everywhere, { x: 200, y: 100 })).toEqual({
+        x: 200,
+        y: 50,
+      });
+    });
+
     it('stays at the wanted spot when there is no room at all', () => {
       const wall = { x: -5000, y: -5000, width: 10000, height: 10000 };
       expect(placeLabel({ x: 0, y: 0 }, { x: 10, y: 0 }, 0.5, size, [wall], everywhere)).toEqual({ x: 5, y: 0 });
@@ -549,6 +574,96 @@ describe('parallel lines between the same two ends', () => {
       from: { x: 5, y: 5 },
       to: { x: 5, y: 5 },
     });
+  });
+});
+
+describe('curved arrows (spec 62)', () => {
+  const arrow = (id: string, from: string, to: string, direction: MapArrow['direction'] = 'forward'): MapArrow => ({
+    ...addArrow({ groups: [], cards: [], arrows: [] }, { cardId: from, groupId: null }, { cardId: to, groupId: null })[0].arrows[0],
+    id,
+    direction,
+  });
+
+  it('bends a lone arrow by the default share of its length, to its right', () => {
+    const fan = arrowFan([arrow('1', 'a', 'b')], arrow('1', 'a', 'b'));
+    expect(fan).toEqual({ slot: 0, side: 1 });
+    expect(fanBend(fan, 100)).toBeCloseTo(100 * DEFAULT_BEND_RATIO);
+    const curve = linkCurve({ x: 0, y: 0 }, { x: 100, y: 0 }, fanBend(fan, 100));
+    expect(pointOnCurve(curve, 0.5).y).toBeCloseTo(12);
+  });
+
+  it('gives each arrow between the same two cards its own curve', () => {
+    const arrows = [arrow('1', 'a', 'b'), arrow('2', 'a', 'b', 'both'), arrow('3', 'b', 'a'), arrow('4', 'a', 'c')];
+    const fans = arrows.map((one) => arrowFan(arrows, one));
+    expect(fans.map((fan) => fan.slot)).toEqual([0, 1, 2, 0]);
+    expect(fanBend(fans[1], 100) - fanBend(fans[0], 100)).toBeCloseTo(PARALLEL_BEND);
+  });
+
+  it('bends A to B and B to A to opposite sides on screen', () => {
+    const arrows = [arrow('1', 'a', 'b'), arrow('2', 'b', 'a')];
+    const there = linkCurve({ x: 0, y: 0 }, { x: 100, y: 0 }, fanBend(arrowFan(arrows, arrows[0]), 100));
+    const back = linkCurve({ x: 100, y: 0 }, { x: 0, y: 0 }, fanBend(arrowFan(arrows, arrows[1]), 100));
+    expect(Math.sign(pointOnCurve(there, 0.5).y)).toBe(-Math.sign(pointOnCurve(back, 0.5).y));
+  });
+
+  it('keeps the plain lines of a bundle on one slot, bent the same way on screen', () => {
+    const arrows = [arrow('1', 'a', 'b', 'none'), arrow('2', 'a', 'b'), arrow('3', 'b', 'a', 'none')];
+    const fans = arrows.map((one) => arrowFan(arrows, one));
+    expect(fans).toEqual([
+      { slot: 0, side: 1 },
+      { slot: 1, side: 1 },
+      { slot: 0, side: -1 },
+    ]);
+    const one = linkCurve({ x: 0, y: 0 }, { x: 100, y: 0 }, fanBend(fans[0], 100));
+    const other = linkCurve({ x: 100, y: 0 }, { x: 0, y: 0 }, fanBend(fans[2], 100));
+    expect(pointOnCurve(one, 0.5).y).toBeCloseTo(pointOnCurve(other, 0.5).y);
+  });
+
+  it('leaves each box toward the control point', () => {
+    const curve = arrowCurve(
+      { x: 0, y: 0, width: 100, height: 50 },
+      { x: 300, y: 0, width: 100, height: 50 },
+      60,
+    );
+    expect(curve.control).toEqual({ x: 200, y: 145 });
+    // Both ends leave through the bottom edge, toward the control point below.
+    expect(curve.from.y).toBeCloseTo(50);
+    expect(curve.to.y).toBeCloseTo(50);
+  });
+
+  it('moves a whole curve to the side for a plain line lane', () => {
+    const curve = { from: { x: 0, y: 0 }, control: { x: 50, y: 20 }, to: { x: 100, y: 0 } };
+    expect(shiftCurve(curve, 0)).toBe(curve);
+    const moved = shiftCurve(curve, 7);
+    expect(moved.from.y).toBeCloseTo(7);
+    expect(moved.control.y).toBeCloseTo(27);
+    expect(moved.to.y).toBeCloseTo(7);
+  });
+
+  it('finds the nearest point of a curve, and its ends past them', () => {
+    const curve = { from: { x: 0, y: 0 }, control: { x: 50, y: 40 }, to: { x: 100, y: 0 } };
+    expect(projectOnCurve(curve, { x: 50, y: 60 })).toBeCloseTo(0.5, 2);
+    expect(projectOnCurve(curve, { x: -50, y: 0 })).toBeCloseTo(0, 2);
+    expect(projectOnCurve(curve, { x: 150, y: 0 })).toBeCloseTo(1, 2);
+  });
+
+  it('puts a label back where it was dropped beside the curve', () => {
+    const curve = { from: { x: 0, y: 0 }, control: { x: 50, y: 40 }, to: { x: 100, y: 0 } };
+    const dropped = { x: 50, y: 50 };
+    const t = projectOnCurve(curve, dropped);
+    const offset = offsetFromCurve(curve, t, dropped);
+    const back = labelOnCurve(curve.from, curve.to, curve, t, offset);
+    expect(back.x).toBeCloseTo(50, 1);
+    expect(back.y).toBeCloseTo(50, 1);
+    expect(labelOnCurve(curve.from, curve.to, curve, 0.5, null)).toEqual({ x: 50, y: 20 });
+  });
+
+  it('measures no offset on a curve whose ends meet, and caps a far one', () => {
+    const point = { x: 5, y: 5 };
+    expect(offsetFromCurve({ from: point, control: point, to: point }, 0.5, { x: 9, y: 9 })).toBe(0);
+    const curve = { from: { x: 0, y: 0 }, control: { x: 50, y: 0 }, to: { x: 100, y: 0 } };
+    expect(offsetFromCurve(curve, 0.5, { x: 50, y: 1e6 })).toBe(2000);
+    expect(offsetFromCurve(curve, 0.5, { x: 50, y: -1e6 })).toBe(-2000);
   });
 });
 

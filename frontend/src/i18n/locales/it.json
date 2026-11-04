@@ -511,7 +511,8 @@
       "pane": "Documento affiancato",
       "showSplit": "Mostra il pannello affiancato",
       "hideSplit": "Nascondi il pannello affiancato",
-      "pick": "Seleziona una card per vederne le info"
+      "pick": "Seleziona una card per vederne le info",
+      "preview": "Anteprima"
     }
   },
   "images": {
@@ -1276,7 +1277,8 @@
       "repeated": "Documento già sulla mappa, resteranno etichette semplici:",
       "backgroundLater": "L'immagine di sfondo si carica dopo, dal pulsante Mappa della nuova mappa.",
       "submit": "Importa"
-    }
+    },
+    "openPreview": "Apri in anteprima"
   },
   "sessionZero": {
     "title": "Sessione 0",

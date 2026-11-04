@@ -515,7 +515,8 @@
       "pane": "Dokument obok",
       "showSplit": "Pokaż panel boczny",
       "hideSplit": "Ukryj panel boczny",
-      "pick": "Wybierz kartę, aby zobaczyć jej informacje"
+      "pick": "Wybierz kartę, aby zobaczyć jej informacje",
+      "preview": "Podgląd"
     }
   },
   "images": {
@@ -1342,7 +1343,8 @@
       "repeated": "Dokument jest już na mapie, zostaną zwykłymi etykietami:",
       "backgroundLater": "Obraz tła wgrasz później, przyciskiem Mapa nowej mapy.",
       "submit": "Importuj"
-    }
+    },
+    "openPreview": "Otwórz w podglądzie"
   },
   "sessionZero": {
     "title": "Sesja 0",

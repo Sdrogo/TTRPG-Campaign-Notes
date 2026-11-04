@@ -351,12 +351,13 @@ describe('RelationshipMapPage', () => {
 
   it('offers no editing in a preview, nor to whoever cannot edit', async () => {
     wideScreen();
-    const { user } = render(true);
+    render(true);
     const board = await screen.findByTestId('board');
     expect(board).toHaveAttribute('data-editable', 'false');
     expect(board).toHaveAttribute('data-master', 'false');
-    await openActions(user);
-    expect(screen.queryByRole('menuitem', { name: 'Impostazioni della mappa' })).not.toBeInTheDocument();
+    // Nothing left for the ⋮ menu: the split has its own button (spec 62c).
+    expect(screen.queryByRole('button', { name: /^Azioni per la mappa/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Anteprima', pressed: false })).toBeInTheDocument();
     expect(screen.queryByText(/sola lettura/)).not.toBeInTheDocument();
   });
 
@@ -393,22 +394,28 @@ describe('RelationshipMapPage', () => {
     await vi.waitFor(() => expect(screen.queryByText('Eliminare questa mappa?')).not.toBeInTheDocument());
   });
 
-  it('splits the screen with a button, and a click on a card shows its Document (spec 37)', async () => {
+  it('opens the Document of a card beside the map with a click, and splits with the Anteprima button (spec 37, 62b, 62c)', async () => {
     wideScreen();
     const { user } = render(false, '/rooms/room-1/maps/map-1');
     expect(await screen.findByTestId('board')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'select' })).not.toBeInTheDocument();
 
-    await user.click(await menuItem(user, 'Mostra il pannello affiancato'));
-    expect(await screen.findByText('Seleziona una card per vederne le info')).toBeInTheDocument();
+    // A click on a card opens the pane straight away, even while it is closed.
     await user.click(screen.getByRole('button', { name: 'select' }));
     expect(await screen.findByRole('link', { name: 'Apri il Documento' })).toHaveAttribute(
       'href',
       '/rooms/room-1/documents/doc-9',
     );
 
-    await user.click(await menuItem(user, 'Nascondi il pannello affiancato'));
+    const toggle = screen.getByRole('button', { name: 'Anteprima', pressed: true });
+    expect(toggle).toHaveTextContent('Anteprima');
+    await user.click(toggle);
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Anteprima', pressed: false }));
+    expect(await screen.findByText('Seleziona una card per vederne le info')).toBeInTheDocument();
+
+    // The split no longer hides in the ⋮ menu.
+    await openActions(user);
+    expect(screen.queryByRole('menuitem', { name: /pannello affiancato|Anteprima/ })).not.toBeInTheDocument();
   });
 
   describe('a geographic map (spec 38)', () => {
@@ -451,7 +458,6 @@ describe('RelationshipMapPage', () => {
       await openActions(user);
       expect(screen.queryByRole('menuitem', { name: 'Mappa' })).not.toBeInTheDocument();
       await user.keyboard('{Escape}');
-      await user.click(await menuItem(user, 'Mostra il pannello affiancato'));
       await user.click(await screen.findByRole('button', { name: 'select' }));
       expect(await screen.findByRole('link', { name: 'Apri il Documento' })).toHaveAttribute('href', '/rooms/room-1/documents/doc-9');
     });
@@ -542,12 +548,11 @@ describe('RelationshipMapPage', () => {
       routes.members = [rawMember({ user_id: 'user-1', role: 'player' })];
       routes.map = () =>
         Promise.resolve(rawMapDetail({ players_can_edit: true, can_edit: true, can_manage: false, selective_user_ids: null }));
-      const { user } = render();
+      render();
       expect(await screen.findByTestId('board')).toHaveAttribute('data-editable', 'true');
       expect(screen.getByText('Modificabile dai Player')).toBeInTheDocument();
-      await openActions(user);
-      expect(screen.queryByRole('menuitem', { name: 'Impostazioni della mappa' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('menuitem', { name: 'Elimina mappa' })).not.toBeInTheDocument();
+      // No settings nor deletion, so no ⋮ menu at all.
+      expect(screen.queryByRole('button', { name: /^Azioni per la mappa/ })).not.toBeInTheDocument();
     });
 
     it('unlocks the map from its settings', async () => {
