@@ -357,7 +357,7 @@ describe('RelationshipMapPage', () => {
     expect(board).toHaveAttribute('data-master', 'false');
     // Nothing left for the ⋮ menu: the split has its own button (spec 62c).
     expect(screen.queryByRole('button', { name: /^Azioni per la mappa/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Mostra il pannello affiancato' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Anteprima', pressed: false })).toBeInTheDocument();
     expect(screen.queryByText(/sola lettura/)).not.toBeInTheDocument();
   });
 
@@ -406,16 +406,16 @@ describe('RelationshipMapPage', () => {
       '/rooms/room-1/documents/doc-9',
     );
 
-    const toggle = screen.getByRole('button', { name: 'Nascondi il pannello affiancato' });
+    const toggle = screen.getByRole('button', { name: 'Anteprima', pressed: true });
     expect(toggle).toHaveTextContent('Anteprima');
     await user.click(toggle);
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Mostra il pannello affiancato' }));
+    await user.click(screen.getByRole('button', { name: 'Anteprima', pressed: false }));
     expect(await screen.findByText('Seleziona una card per vederne le info')).toBeInTheDocument();
 
     // The split no longer hides in the ⋮ menu.
     await openActions(user);
-    expect(screen.queryByRole('menuitem', { name: /pannello affiancato/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /pannello affiancato|Anteprima/ })).not.toBeInTheDocument();
   });
 
   describe('a geographic map (spec 38)', () => {

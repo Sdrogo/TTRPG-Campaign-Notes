@@ -56,6 +56,7 @@ Defaults picked on 2026-11-03, confirmed by the product owner the same day ("pas
 
 ## Built (2026-11-03, PR #301)
 
-- The button keeps the long label as its accessible name; the visible word
-  is `documents.open.preview`. The card tooltip (`maps.openPreview`, 400 ms
+- The visible word (`documents.open.preview`) is also the button's
+  accessible name (WCAG 2.5.3), with `aria-pressed` for its state; the
+  long label is its tooltip. The card tooltip (`maps.openPreview`, 400 ms
   delay) shows wherever the name opens the pane, i.e. on the map pages.

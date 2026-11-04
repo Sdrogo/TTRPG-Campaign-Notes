@@ -24,9 +24,9 @@ describe('SplitToggle (spec 37)', () => {
         <Where />
       </>,
     );
-    await user.click(screen.getByRole('button', { name: 'Mostra il pannello affiancato' }));
+    await user.click(screen.getByRole('button', { name: 'Anteprima', pressed: false }));
     expect(screen.getByTestId('where')).toHaveTextContent('?side=');
-    await user.click(screen.getByRole('button', { name: 'Nascondi il pannello affiancato' }));
+    await user.click(screen.getByRole('button', { name: 'Anteprima', pressed: true }));
     expect(screen.getByTestId('where')).toHaveTextContent('');
   });
 

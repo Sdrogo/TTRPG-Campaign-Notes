@@ -995,7 +995,6 @@ export function GeographicBoard({
   );
 }
 
-
 /** A link's labels and where they are written. */
 function linkLabels(link: GeoLink, from: Point, to: Point, curve: Curve) {
   const labels: { key: string; text: string; at: Point }[] = [];

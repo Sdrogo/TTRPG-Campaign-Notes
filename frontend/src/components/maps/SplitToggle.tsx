@@ -23,7 +23,6 @@ export function SplitToggle() {
         color={on ? undefined : 'gray'}
         size="sm"
         leftSection={<SquareSplitHorizontalIcon size={20} />}
-        aria-label={label}
         aria-pressed={on}
         onClick={() => (on ? close() : open(''))}
         style={{ flexShrink: 0 }}
