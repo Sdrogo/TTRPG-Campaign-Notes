@@ -115,6 +115,10 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-10-12 → 11-04
 
+- **Clock dialogs** (11-04, no mig.): clock, group, rules, mark and history
+  dialogs (and the rules delete-label confirm) no longer close on an outside
+  click (`closeOnClickOutside={false}`, as in the Questions/Poll dialogs).
+
 - **62, 62b, 62c** (11-04, PR #301, no mig.): free and mention map arrows
   drawn as curves (fanned when several, plain-line bundles as lanes); a map
   card's name opens the split pane; labeled "Anteprima" button in map

@@ -30,7 +30,7 @@ export function ClockHistoryModal({
   const entries = history.data?.pages.flatMap((page) => page.entries) ?? [];
 
   return (
-    <Modal opened onClose={onClose} title={t('clocks.history.title', { name: clock.name })} centered>
+    <Modal opened onClose={onClose} closeOnClickOutside={false} title={t('clocks.history.title', { name: clock.name })} centered>
       {history.isPending && <SectionLoader />}
       {history.isError && <Text c="red">{t('clocks.history.loadError')}</Text>}
       <Stack gap={6} component="ol" className="clock-history" p={0} m={0}>
