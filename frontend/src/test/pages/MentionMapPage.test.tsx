@@ -306,11 +306,12 @@ describe('MentionMapPage', () => {
     expect(screen.queryByText(/sola lettura/)).not.toBeInTheDocument();
   });
 
-  it('splits the screen with a button, and a click on a card shows its Document (spec 37)', async () => {
+  it('splits the screen with the Anteprima button, and a click on a card shows its Document (spec 37, 62b)', async () => {
     wideScreen();
     const { user } = render(false, `${DOC}/mention-map`);
     expect(await screen.findByTestId('board')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'select' })).not.toBeInTheDocument();
+    // The name opens the pane even while it is closed.
+    expect(screen.getByRole('button', { name: 'select' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Mostra il pannello affiancato' }));
     expect(await screen.findByText('Seleziona una card per vederne le info')).toBeInTheDocument();

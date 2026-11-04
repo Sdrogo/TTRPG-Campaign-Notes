@@ -921,7 +921,8 @@ next release, merge `main` into `staging` first, since Dependabot PRs land
 on `main`.
 
 - **62, Curved relationship lines** (asked by the product owner
-  2026-11-03; **ticket proposed**, `context/feature/62 - Curved relationship
+  2026-11-03; **ticket confirmed 2026-11-03, 62, 62b and 62c built** in PR
+  #301, frontend only, no migration; `context/feature/62 - Curved relationship
   lines.md`): the arrows of free and mention maps drawn as the geographic
   map's gentle curves, several relations between the same two cards fanned
   out, plain-line bundles kept as parallel lanes, labels riding the curve.

@@ -16,7 +16,7 @@
 
 ## Decisions
 
-Defaults picked on 2026-11-03, to confirm in the PR.
+Defaults picked on 2026-11-03, confirmed by the product owner the same day ("passa alla implementazione").
 
 1. **A click on the name always opens the split pane**: on the free map
    page and the mention map page, a plain click on a card's name shows its

@@ -80,7 +80,6 @@ function MentionMapEditor({
   const wide = useMediaQuery(WIDE_ENOUGH, true);
   const split = useSideDocument();
   // While the split is open, a click on a card shows its Document there (spec 37).
-  const splitOpen = split.sideId !== null && wide;
   const manage = map.canManage && !readOnly;
   const editable = manage && wide;
   const [settingsOpened, setSettingsOpened] = useState(false);
@@ -163,7 +162,7 @@ function MentionMapEditor({
           tags={[]}
           onChange={autosave.change}
           // On a phone a Document opens under the map.
-          onSelectDocument={splitOpen || !wide ? split.open : undefined}
+          onSelectDocument={split.open}
           mode="mention"
         />
       </Box>

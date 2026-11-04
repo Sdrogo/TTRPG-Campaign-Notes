@@ -511,7 +511,8 @@
       "pane": "Documento ao lado",
       "showSplit": "Mostrar o painel lateral",
       "hideSplit": "Ocultar o painel lateral",
-      "pick": "Selecione um cartão para ver a sua informação"
+      "pick": "Selecione um cartão para ver a sua informação",
+      "preview": "Pré-visualização"
     }
   },
   "images": {
@@ -1278,7 +1279,8 @@
       "repeated": "Documento já no mapa, ficarão como etiquetas simples:",
       "backgroundLater": "A imagem de fundo carrega-se depois, no botão Mapa do novo mapa.",
       "submit": "Importar"
-    }
+    },
+    "openPreview": "Abrir na pré-visualização"
   },
   "sessionZero": {
     "title": "Sessão 0",

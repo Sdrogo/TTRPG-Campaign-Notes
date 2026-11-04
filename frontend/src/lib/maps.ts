@@ -627,24 +627,128 @@ function boxExit(box: Rect, toward: Point): Point {
   return { x: cx + dx * scale, y: cy + dy * scale };
 }
 
+// --- Curves (spec 38, shared with the free maps since spec 62) -------------
+
+/** How much a relation with no bend of its own curves, as a share of its length. */
+export const DEFAULT_BEND_RATIO = 0.12;
+/** How far apart relations sharing both ends curve. */
+export const PARALLEL_BEND = 40;
+
+/** A relation's curve: a quadratic one from `from` to `to` pulled toward `control`. */
+export interface Curve {
+  from: Point;
+  control: Point;
+  to: Point;
+}
+
+/** The curve from `from` to `to` whose middle sits `bend` to the side of the line (see `offsetFromLine`). */
+export function linkCurve(from: Point, to: Point, bend: number): Curve {
+  // A quadratic curve's middle is halfway between the line's and the control point.
+  return { from, control: pointBeside(from, to, 0.5, bend * 2), to };
+}
+
+/** The point a fraction `t` along the curve. */
+export function pointOnCurve(curve: Curve, t: number): Point {
+  const a = pointAlong(curve.from, curve.control, t);
+  const b = pointAlong(curve.control, curve.to, t);
+  return pointAlong(a, b, t);
+}
+
+/** The SVG path of a curve. */
+export function curvePath(curve: Curve): string {
+  const { from, control, to } = curve;
+  return `M ${from.x},${from.y} Q ${control.x},${control.y} ${to.x},${to.y}`;
+}
+
 /**
- * An arrow's two ends: the points where the line between the two boxes'
- * centers leaves each box, so the arrow heads touch the cards' edges
- * whatever side they face.
+ * Where a label sits: `position` along the curve, then `offset` to the side
+ * of the straight line from `from` to `to` (spec 28 Decision 5 measured on
+ * the curve, spec 62 Decision 5).
  */
-export function arrowEnds(source: Rect, target: Rect): { from: Point; to: Point } {
-  const sourceCenter = {
-    x: source.x + source.width / 2,
-    y: source.y + source.height / 2,
+export function labelOnCurve(from: Point, to: Point, curve: Curve, position: number, offset: number | null): Point {
+  const base = pointOnCurve(curve, position);
+  const side = pointBeside(from, to, position, offset ?? 0);
+  const straight = pointBeside(from, to, position, 0);
+  return { x: base.x + side.x - straight.x, y: base.y + side.y - straight.y };
+}
+
+/**
+ * How far along the curve (0 to 1) its point nearest to `p` is: sampled,
+ * then refined around the best sample.
+ */
+export function projectOnCurve(curve: Curve, p: Point): number {
+  const STEPS = 40;
+  const distance = (t: number) => {
+    const at = pointOnCurve(curve, t);
+    return Math.hypot(at.x - p.x, at.y - p.y);
   };
-  const targetCenter = {
-    x: target.x + target.width / 2,
-    y: target.y + target.height / 2,
-  };
+  let best = 0;
+  for (let i = 1; i <= STEPS; i += 1) {
+    if (distance(i / STEPS) < distance(best)) best = i / STEPS;
+  }
+  let low = Math.max(0, best - 1 / STEPS);
+  let high = Math.min(1, best + 1 / STEPS);
+  for (let i = 0; i < 30; i += 1) {
+    const a = low + (high - low) / 3;
+    const b = high - (high - low) / 3;
+    if (distance(a) < distance(b)) high = b;
+    else low = a;
+  }
+  return (low + high) / 2;
+}
+
+/**
+ * Where an arrow between two cards or groups is drawn (spec 62 Decision 4):
+ * the curve between their centers bent by `bend`, each end where the way
+ * from its box's center toward the control point leaves the box, so the
+ * arrowheads point the way the curve arrives.
+ */
+export function arrowCurve(source: Rect, target: Rect, bend: number): Curve {
+  const sourceCenter = { x: source.x + source.width / 2, y: source.y + source.height / 2 };
+  const targetCenter = { x: target.x + target.width / 2, y: target.y + target.height / 2 };
+  const { control } = linkCurve(sourceCenter, targetCenter, bend);
+  return { from: boxExit(source, control), control, to: boxExit(target, control) };
+}
+
+/** The curve moved `shift` pixels to the side of the line between its ends (see `parallelShift`). */
+export function shiftCurve(curve: Curve, shift: number): Curve {
+  if (shift === 0) return curve;
+  const { from, to } = shiftParallel(curve.from, curve.to, shift);
+  const dx = from.x - curve.from.x;
+  const dy = from.y - curve.from.y;
+  return { from, control: { x: curve.control.x + dx, y: curve.control.y + dy }, to };
+}
+
+/**
+ * Which curve of the fan between two cards an arrow takes (spec 62
+ * Decisions 2 and 3): every arrow joining the same two ends, in either
+ * direction, takes its own slot in the order they were added, except the
+ * plain lines, which share one slot as the lanes of one bundle. `side` is
+ * 1 to bend to the right of the arrow's own way (see `offsetFromLine`), -1
+ * to the left; a bundle's lines all bend the same way on screen, whichever
+ * end each was drawn from.
+ */
+export function arrowFan(arrows: MapArrow[], arrow: MapArrow): { slot: number; side: 1 | -1 } {
+  const a = endId(arrow.from);
+  const b = endId(arrow.to);
+  const units: string[] = [];
+  for (const other of arrows) {
+    const x = endId(other.from);
+    const y = endId(other.to);
+    if (!((x === a && y === b) || (x === b && y === a))) continue;
+    const unit = other.direction === 'none' ? 'lines' : other.id;
+    if (!units.includes(unit)) units.push(unit);
+  }
+  const plain = arrow.direction === 'none';
   return {
-    from: boxExit(source, targetCenter),
-    to: boxExit(target, sourceCenter),
+    slot: units.indexOf(plain ? 'lines' : arrow.id),
+    side: plain && a > b ? -1 : 1,
   };
+}
+
+/** How far an arrow of `length` in `fan` bends (see `linkCurve`). */
+export function fanBend(fan: { slot: number; side: 1 | -1 }, length: number): number {
+  return fan.side * (length * DEFAULT_BEND_RATIO + fan.slot * PARALLEL_BEND);
 }
 
 /** Pixels between two parallel lines drawn side by side. */
@@ -676,7 +780,6 @@ export function parallelShift(arrows: MapArrow[], arrow: MapArrow): number {
 
 /** `from` and `to` both moved `shift` pixels to the side of the line between them. */
 export function shiftParallel(from: Point, to: Point, shift: number): { from: Point; to: Point } {
-  if (shift === 0) return { from, to };
   const length = Math.hypot(to.x - from.x, to.y - from.y) || 1;
   const dx = (-(to.y - from.y) / length) * shift;
   const dy = ((to.x - from.x) / length) * shift;
@@ -734,6 +837,20 @@ export function offsetFromLine(from: Point, to: Point, p: Point): number {
   return Math.max(-MAX_LABEL_OFFSET, Math.min(MAX_LABEL_OFFSET, offset));
 }
 
+/**
+ * How far `p` is to the side of the point `t` along the curve, across the
+ * straight line between the curve's ends: the offset `labelOnCurve` takes
+ * to put a label back at `p`, within `MAX_LABEL_OFFSET` either way.
+ */
+export function offsetFromCurve(curve: Curve, t: number, p: Point): number {
+  const { from, to } = curve;
+  const length = Math.hypot(to.x - from.x, to.y - from.y);
+  if (length === 0) return 0;
+  const base = pointOnCurve(curve, t);
+  const offset = ((p.x - base.x) * -(to.y - from.y) + (p.y - base.y) * (to.x - from.x)) / length;
+  return Math.max(-MAX_LABEL_OFFSET, Math.min(MAX_LABEL_OFFSET, offset));
+}
+
 /** The point `offset` to the side of the way `t` along the line (see `offsetFromLine`). */
 export function pointBeside(from: Point, to: Point, t: number, offset: number): Point {
   const along = pointAlong(from, to, t);
@@ -751,7 +868,8 @@ export function pointBeside(from: Point, to: Point, t: number, offset: number): 
  * the right or the left, the least it takes to clear them, still beside the
  * arrow. The label's center never leaves `within` (the area the two cards
  * span), so it is never thrown past a card to the far side. When even that
- * finds no room, it stays at `preferred`.
+ * finds no room, it stays at `preferred`. With `control`, "the line" is
+ * the curve from `from` to `to` through it (spec 62 Decision 5).
  */
 export function placeLabel(
   from: Point,
@@ -760,7 +878,10 @@ export function placeLabel(
   size: { width: number; height: number },
   avoid: Rect[],
   within: Rect,
+  control?: Point,
 ): Point {
+  // Along the curve through `control` when there is one (spec 62), else the line.
+  const along = (t: number) => (control ? pointOnCurve({ from, control, to }, t) : pointAlong(from, to, t));
   const STEPS = 50;
   const GAP = 6;
   const SHIFT_STEP = 8;
@@ -783,16 +904,16 @@ export function placeLabel(
       for (let i = 0; i <= STEPS; i += 1) {
         const t = i / STEPS;
         if (best !== null && Math.abs(t - preferred) >= Math.abs(best - preferred)) continue;
-        const at = pointAlong(from, to, t);
+        const at = along(t);
         if (clearAt({ x: at.x + dx, y: at.y })) best = t;
       }
       if (best !== null) {
-        const at = pointAlong(from, to, best);
+        const at = along(best);
         return { x: at.x + dx, y: at.y };
       }
     }
   }
-  return pointAlong(from, to, preferred);
+  return along(preferred);
 }
 
 /**

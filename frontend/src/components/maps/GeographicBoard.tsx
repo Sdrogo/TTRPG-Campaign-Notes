@@ -40,6 +40,7 @@ import {
   placeName,
   placeSubtitle,
   placedDocumentIds,
+  labelOnCurve,
   pointOnCurve,
   putArea,
   putPin,
@@ -55,7 +56,7 @@ import {
   type GeoItemRef,
   type View,
 } from '../../lib/geoMaps';
-import { colorValue, pointBeside, type Point } from '../../lib/maps';
+import { colorValue, type Point } from '../../lib/maps';
 import type { Document } from '../../types/document';
 import type { GeoArea, GeoBoard, GeoLink, GeoPin, LabelSide } from '../../types/geoMap';
 import type { Tag } from '../../types/tag';
@@ -994,27 +995,21 @@ export function GeographicBoard({
   );
 }
 
-function labelAt(from: Point, to: Point, curve: Curve, position: number, offset: number | null): Point {
-  const base = pointOnCurve(curve, position);
-  const side = pointBeside(from, to, position, offset ?? 0);
-  const straight = pointBeside(from, to, position, 0);
-  return { x: base.x + side.x - straight.x, y: base.y + side.y - straight.y };
-}
 
 /** A link's labels and where they are written. */
 function linkLabels(link: GeoLink, from: Point, to: Point, curve: Curve) {
   const labels: { key: string; text: string; at: Point }[] = [];
   if (link.direction === 'both') {
-    if (link.label) labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.75, link.labelOffset) });
+    if (link.label) labels.push({ key: 'label', text: link.label, at: labelOnCurve(from, to, curve, link.labelPosition ?? 0.75, link.labelOffset) });
     if (link.reverseLabel) {
       labels.push({
         key: 'reverse',
         text: link.reverseLabel,
-        at: labelAt(from, to, curve, link.reverseLabelPosition ?? 0.25, link.reverseLabelOffset),
+        at: labelOnCurve(from, to, curve, link.reverseLabelPosition ?? 0.25, link.reverseLabelOffset),
       });
     }
   } else if (link.label) {
-    labels.push({ key: 'label', text: link.label, at: labelAt(from, to, curve, link.labelPosition ?? 0.5, link.labelOffset) });
+    labels.push({ key: 'label', text: link.label, at: labelOnCurve(from, to, curve, link.labelPosition ?? 0.5, link.labelOffset) });
   }
   return labels;
 }

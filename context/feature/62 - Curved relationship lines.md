@@ -17,7 +17,7 @@
 
 ## Decisions
 
-Defaults picked on 2026-11-03, to confirm in the PR.
+Defaults picked on 2026-11-03, confirmed by the product owner the same day ("passa alla implementazione").
 
 1. **Same curve as the geographic map**: a quadratic curve whose middle sits
    12% of the arrow's length to the side of the straight line
@@ -96,3 +96,16 @@ Defaults picked on 2026-11-03, to confirm in the PR.
   curve's position.
 - Geographic map tests stay green unchanged.
 - Frontend CI's 100% branch coverage and `tsc -b` hold.
+
+## Built (2026-11-03, PR #301)
+
+- Names in code: `arrowFan` (slot and side, Decisions 2-3) and `fanBend`
+  stand for the `arrowBend` above; `arrowCurve` for `curveEnds`;
+  `shiftCurve` moves a whole curve onto a plain line's lane;
+  `labelOnCurve` is the geographic map's `labelAt`; `offsetFromCurve` and
+  `projectOnCurve` serve dragging. `placeLabel` takes the curve's control
+  point as an optional last argument.
+- The area a label may be placed in (`within`) also reaches the curve's
+  middle, so a curve bulging past the two cards still finds room.
+- `lib/geoMaps.ts` re-exports the moved helpers; geographic maps draw
+  exactly as before.

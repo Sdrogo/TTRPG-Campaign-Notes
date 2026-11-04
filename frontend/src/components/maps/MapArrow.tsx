@@ -9,14 +9,17 @@ import {
 import { Text, UnstyledButton } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import {
-  arrowEnds,
+  arrowCurve,
   colorValue,
+  curvePath,
+  fanBend,
+  labelOnCurve,
   labelSize,
+  offsetFromCurve,
   placeLabel,
-  offsetFromLine,
-  pointBeside,
-  shiftParallel,
-  projectOnLine,
+  pointOnCurve,
+  projectOnCurve,
+  shiftCurve,
   type Point,
   type Rect,
 } from '../../lib/maps';
@@ -32,8 +35,9 @@ function rectOf(node: ReturnType<typeof useInternalNode>): Rect | null {
 type Which = 'label' | 'reverse';
 
 /**
- * An arrow of a map (spec 28 Decision 5), drawn straight from edge to edge of
- * the two cards or groups. A one-way arrow and a line carry their label in the
+ * An arrow of a map (spec 28 Decision 5), drawn as a gentle curve from edge to
+ * edge of the two cards or groups (spec 62), fanned out from the other
+ * arrows joining the same two. A one-way arrow and a line carry their label in the
  * middle; a two-way arrow carries one label near each end, each naming how
  * the card it points at is seen from the other. Clicking it, or a label,
  * opens it for editing; dragging a label moves it freely, along the arrow
@@ -51,9 +55,13 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
   const sourceRect = rectOf(useInternalNode(source));
   const targetRect = rectOf(useInternalNode(target));
   if (!sourceRect || !targetRect || !data) return null;
-  const { arrow, shift, editable, onEdit, onMoveLabel } = data;
-  const ends = arrowEnds(sourceRect, targetRect);
-  const { from, to } = shiftParallel(ends.from, ends.to, shift);
+  const { arrow, shift, fan, editable, onEdit, onMoveLabel } = data;
+  const length = Math.hypot(
+    targetRect.x + targetRect.width / 2 - (sourceRect.x + sourceRect.width / 2),
+    targetRect.y + targetRect.height / 2 - (sourceRect.y + sourceRect.height / 2),
+  );
+  const curve = shiftCurve(arrowCurve(sourceRect, targetRect, fanBend(fan, length)), shift);
+  const { from, to } = curve;
   const color = colorValue(arrow.color);
 
   // A dragged label sits where it was dropped; the others slide along the
@@ -88,13 +96,15 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
     });
   }
   const avoid: Rect[] = [sourceRect, targetRect];
-  const left = Math.min(sourceRect.x, targetRect.x);
-  const top = Math.min(sourceRect.y, targetRect.y);
+  // The area the two cards span, stretched to the curve's middle.
+  const middle = pointOnCurve(curve, 0.5);
+  const left = Math.min(sourceRect.x, targetRect.x, middle.x);
+  const top = Math.min(sourceRect.y, targetRect.y, middle.y);
   const within: Rect = {
     x: left,
     y: top,
-    width: Math.max(sourceRect.x + sourceRect.width, targetRect.x + targetRect.width) - left,
-    height: Math.max(sourceRect.y + sourceRect.height, targetRect.y + targetRect.height) - top,
+    width: Math.max(sourceRect.x + sourceRect.width, targetRect.x + targetRect.width, middle.x) - left,
+    height: Math.max(sourceRect.y + sourceRect.height, targetRect.y + targetRect.height, middle.y) - top,
   };
   const spotOf = (which: Which, saved: Spot | null): Spot | null =>
     dragging?.which === which ? dragging : saved;
@@ -106,13 +116,13 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
   for (const { which, text, saved } of wanted) {
     const spot = spotOf(which, saved);
     if (spot === null) continue;
-    const at = pointBeside(from, to, spot.position, spot.offset);
+    const at = labelOnCurve(from, to, curve, spot.position, spot.offset);
     placed.set(which, at);
     reserve(text, at);
   }
   for (const { which, text, preferred, saved } of wanted) {
     if (spotOf(which, saved) !== null) continue;
-    const at = placeLabel(from, to, preferred, labelSize(text), avoid, within);
+    const at = placeLabel(from, to, preferred, labelSize(text), avoid, within, curve.control);
     placed.set(which, at);
     reserve(text, at);
   }
@@ -123,10 +133,8 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
     if (!start || start.which !== which) return;
     if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 4 && start.moved === null) return;
     const at = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
-    const spot = {
-      position: Math.round(projectOnLine(from, to, at) * 1000) / 1000,
-      offset: Math.round(offsetFromLine(from, to, at)),
-    };
+    const position = Math.round(projectOnCurve(curve, at) * 1000) / 1000;
+    const spot = { position, offset: Math.round(offsetFromCurve(curve, position, at)) };
     start.moved = spot;
     // From the first real move on, the click that ends the press is not a request to edit.
     justDragged.current = true;
@@ -144,7 +152,7 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
     <>
       <BaseEdge
         id={id}
-        path={`M ${from.x},${from.y} L ${to.x},${to.y}`}
+        path={curvePath(curve)}
         markerEnd={markerEnd}
         markerStart={markerStart}
         interactionWidth={16}

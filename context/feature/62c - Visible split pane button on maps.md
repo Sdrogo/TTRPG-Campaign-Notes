@@ -14,7 +14,7 @@
 
 ## Decisions
 
-Defaults picked on 2026-11-03, to confirm in the PR.
+Defaults picked on 2026-11-03, confirmed by the product owner the same day ("passa alla implementazione").
 
 1. **A labeled button in the map header**: on the free, geographic and
    mention map pages, `SplitToggle` becomes a small button with its icon
@@ -53,3 +53,9 @@ Defaults picked on 2026-11-03, to confirm in the PR.
   item in the ⋮ menu; clicking it opens and closes the pane.
 - The mention map page shows the same button.
 - No button on a phone.
+
+## Built (2026-11-03, PR #301)
+
+- The button keeps the long label as its accessible name; the visible word
+  is `documents.open.preview`. The card tooltip (`maps.openPreview`, 400 ms
+  delay) shows wherever the name opens the pane, i.e. on the map pages.

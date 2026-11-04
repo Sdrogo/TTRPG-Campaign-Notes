@@ -793,8 +793,14 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   read-only board a plain drag pans, and there is no selection box nor hint.
 - **Groups**: a tinted frame with an optional title, resizable while
   editing; dragging a card into a group puts it in that group.
-- **Arrows**: straight lines edge to edge between cards or groups, drawn by
-  dragging from a card's handle and dropping anywhere on the other card.
+- **Arrows**: gentle curves edge to edge between cards or groups (spec 62,
+  the geographic map's curve: the middle 12% of the length to the right of
+  the arrow's way), drawn by dragging from a card's handle and dropping
+  anywhere on the other card. Arrows joining the same two cards fan out,
+  40 px apart (A → B and B → A bend to opposite sides); the plain lines of
+  a bundle share one curve as 7 px lanes. Ends leave the cards toward the
+  curve, arrowheads follow it, labels ride it (dragging one finds the
+  nearest point of the curve), and the click area follows the curve.
   One-way, two-way (a label near each end) or a plain line; Master-only
   arrows are dashed. A new arrow opens its dialog straight away; its label
   fields are plain text inputs, with no suggestions of earlier labels.
@@ -892,13 +898,18 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   (`ArrowSquareOutIcon`). Ctrl/Cmd/Shift-click keeps the browser's default.
   Below `sm` there is no menu: a click just follows the link.
 - **Maps (2026-10-16 rework)**: no hover preview and no open menu on map
-  cards. The map pages (relationship map, mention map full page) have a
-  `SplitToggle` button (`SquareSplitHorizontalIcon`, header, `sm` and up)
-  that opens/closes the split (`?side=` with no value = open, nothing
-  picked: the pane says "Seleziona una card per vederne le info"). While it
-  is open, clicking a Document card (or its name, which then does not
-  navigate; Ctrl/Cmd-click still opens a tab) selects it and the pane shows
-  that Document (`MapBoard`'s `onSelectDocument`, read-only boards too).
+  cards. The map pages (free and geographic map, mention map full page)
+  have a labeled `SplitToggle` button "Anteprima"
+  (`SquareSplitHorizontalIcon`, header before the ⋮ menu, `sm` and up,
+  tooltip "Mostra/Nascondi il pannello affiancato"; spec 62c moved it out
+  of the ⋮ menu) that opens/closes the split (`?side=` with no value =
+  open, nothing picked: the pane says "Seleziona una card per vederne le
+  info"). Clicking a Document card's name never leaves the map (spec 62b):
+  it shows that Document in the pane, opening the pane if closed (tooltip
+  "Apri in anteprima"; Ctrl/Cmd-click still opens a tab); clicking the
+  card selects it and, while the pane is open, shows it there
+  (`MapBoard`'s `onSelectDocument`, read-only boards too). The small boards
+  on a Document's page have no pane: their names still go to the Document.
 - **Split view**: `?side=<documentId>` on any Room page (`PageLayout`; an empty
   `?side=` counts as open only where `PageLayout` gets `allowEmptySide`, i.e. the two map pages, and is ignored elsewhere); a `place:` value shows what `PageLayout`'s `renderSide` gives (a geographic map's place, spec 50) and is ignored on a page without it
   splits it in `SplitView`: the page left, `DocumentSidePane` right (sticky
