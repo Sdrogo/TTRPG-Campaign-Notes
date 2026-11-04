@@ -24,14 +24,13 @@ Full history is archived; read it only when you need that detail:
   curved map arrows and split pane from map cards (PR #301), Section blocks
   kept mounted across saves (PR #299), pypdf security upgrade (PR #297),
   61 Clocks (PRs #293, #294).
-- **Release state**: last release `staging` → `main` was PR #287
-  (2026-11-02). On `staging`, not yet on `main`: PRs #288 to #301 (specs 59,
-  60, 61, 62, groups popover and Section blocks fixes, pypdf). Their
-  migrations are already on production (see below), so the next release
-  needs no migration step. Dependabot PRs land on `main`: merge `main` into
-  `staging` before opening a release PR.
+- **Release state** (2026-11-04): `staging` and `main` match. PRs #288 to
+  #301 (specs 59, 60, 61, 62, groups popover and Section blocks fixes,
+  pypdf) reached `main` through release PRs #292, #298, #300 and #302; their
+  migrations were applied to production beforehand. Dependabot PRs land on
+  `main`: merge `main` into `staging` before opening a release PR.
 - **Waiting on the product owner**: review of 55 (Room landing) and 57
-  (UI consistency) on staging; 52 live updates to test with two browsers;
+  (UI consistency), now in production; 52 live updates to test with two browsers;
   legal review of `/privacy` and the DPAs with Supabase, OVHcloud and
   Vercel (spec 31; shipped before those were done). Keeping shared content
   anonymised after an account deletion is the default in place, not
@@ -54,8 +53,8 @@ here and remind the product owner.
 - **Staging database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
   `backend/.env.staging` loaded.
 - **Production database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
-  `backend/.env` loaded (product owner's go-ahead), ahead of the release that
-  ships it. `e8c4a2f6b1d9` and `e9c4a2f7b1d8` were applied the same day.
+  `backend/.env` loaded (product owner's go-ahead), before the release that
+  shipped it (PR #302). `e8c4a2f6b1d9` and `e9c4a2f7b1d8` were applied the same day.
 - **Pending**: none on staging, none on production.
 
 When a new migration lands, update the three lines above and add it to the
