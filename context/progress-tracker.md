@@ -208,6 +208,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **63, Clock out of the Session 0 tools** (ticket, 2026-11-04): the
+  add-block popover groups Documenti / Mappe / Clock as Room content and
+  puts the Session 0 tile and its tools under one "Sessione 0" heading.
+  Frontend only, no migration. Awaiting the product owner's Q1-Q3.
 - **46b, Dichiarazione d'Intenti invitation**: if a Room has a DDI, its
   invitation opens it read-only with "accept and join" (product owner,
   2026-10-27). Ticket not written yet (the DDI template itself is in 47_3).
