@@ -113,7 +113,7 @@ export function ClockDialog({
   const stages = Array.from({ length: stageCount }, (_, index) => values.stageLabels[index] ?? '');
 
   return (
-    <Modal opened onClose={onClose} title={title} size="xl" centered>
+    <Modal opened onClose={onClose} closeOnClickOutside={false} title={title} size="xl" centered>
       <form
         onSubmit={(event) => {
           event.preventDefault();

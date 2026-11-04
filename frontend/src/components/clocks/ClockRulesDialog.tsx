@@ -70,7 +70,7 @@ export function ClockRulesDialog({
     policies.allowUnmark !== rules.allowUnmark;
 
   return (
-    <Modal opened onClose={onClose} title={t('clocks.rules.title')} size="lg" centered>
+    <Modal opened onClose={onClose} closeOnClickOutside={false} title={t('clocks.rules.title')} size="lg" centered>
       <Stack gap="lg">
         <Stack gap="sm">
           <Input.Wrapper label={t('clocks.rules.presets')} description={t('clocks.rules.presetsHint')}>
@@ -283,6 +283,7 @@ function RuleItemRow({
       <Modal
         opened={confirming}
         onClose={() => setConfirming(false)}
+        closeOnClickOutside={false}
         title={t('clocks.rules.deleteLabelTitle')}
         centered
       >
