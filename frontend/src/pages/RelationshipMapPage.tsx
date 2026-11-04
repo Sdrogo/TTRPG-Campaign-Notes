@@ -7,7 +7,6 @@ import {
   DownloadSimpleIcon,
   GearIcon,
   MapTrifoldIcon,
-  SquareSplitHorizontalIcon,
   TrashIcon,
 } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +19,7 @@ import { useMembers } from '../hooks/useMembers';
 import { useTags } from '../hooks/useTags';
 import { useReadOnly } from '../hooks/useViewAs';
 import { FullPageLoader, FullPageMessage, SignInRequired } from '../components/PageState';
+import { SplitToggle } from '../components/maps/SplitToggle';
 import { PageLayout } from '../components/PageLayout';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { LabeledActionIcon } from '../components/LabeledActionIcon';
@@ -115,8 +115,6 @@ function useMapAccess(roomId: string, map: RelationshipMap, currentUserId: strin
     wide,
     split,
     members,
-    // While the split is open, a click on a Document shows it there (spec 37).
-    splitOpen: split.sideId !== null && wide,
     isMaster: me?.role === 'master' && !readOnly,
     editable: map.canEdit && !readOnly && wide,
     // Settings, deletion and a geographic map's plane stay with its creator and the Master (spec 42 Decision 5).
@@ -154,8 +152,8 @@ function MapEditor({
         documents={documents.data ?? []}
         tags={tags.data ?? []}
         onChange={autosave.change}
-        // On a phone a Document opens under the map.
-        onSelectDocument={access.splitOpen || !access.wide ? access.split.open : undefined}
+        // A click on a Document's name shows it beside the map, opening the pane (spec 62b), or under it on a phone.
+        onSelectDocument={access.split.open}
       />
     </MapChrome>
   );
@@ -282,10 +280,8 @@ function MapChrome({
   const [deleteOpened, setDeleteOpened] = useState(false);
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const { saveState } = autosave;
-  const { split } = access;
-  const splitShown = split.sideId !== null;
   const { manages } = access;
-  const hasActions = wide || actions !== undefined || manages;
+  const hasActions = actions !== undefined || manages;
 
   const status: Record<SaveState, string | null> = {
     idle: null,
@@ -328,6 +324,7 @@ function MapChrome({
                 {t('maps.retry')}
               </Button>
             )}
+            <SplitToggle />
             {hasActions && (
               <Menu position="bottom-end" shadow="md">
                 <Menu.Target>
@@ -336,14 +333,6 @@ function MapChrome({
                   </LabeledActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {wide && (
-                    <Menu.Item
-                      leftSection={<SquareSplitHorizontalIcon size={18} />}
-                      onClick={() => (splitShown ? split.close() : split.open(''))}
-                    >
-                      {splitShown ? t('documents.open.hideSplit') : t('documents.open.showSplit')}
-                    </Menu.Item>
-                  )}
                   {actions}
                   {manages && (
                     <>

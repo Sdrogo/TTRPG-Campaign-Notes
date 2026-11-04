@@ -14,7 +14,7 @@ export type DocumentCardNodeData = NodeActions & {
   roomId: string;
   /** False on a mention map (spec 36), whose relations come from mentions only. */
   connectable?: boolean;
-  /** Set while the split pane follows the selected card (spec 37): a click on the card shows its Document there. */
+  /** Set on the map pages: a click on the card shows its Document in the split pane, opening it (spec 37, 62b). */
   onSelect?: (documentId: string) => void;
 };
 export type TextCardNodeData = NodeActions & { card: MapCard };
@@ -26,6 +26,8 @@ export type MapArrowData = {
   arrow: MapArrow;
   /** Pixels to the side of the straight line, for plain lines sharing both ends (see `parallelShift`). */
   shift: number;
+  /** Which curve of the fan between its two ends the arrow takes (see `arrowFan`, spec 62). */
+  fan: { slot: number; side: 1 | -1 };
   onEdit: (id: string) => void;
   /**
    * A label was dragged to a place along the arrow (0 at `from`, 1 at `to`)

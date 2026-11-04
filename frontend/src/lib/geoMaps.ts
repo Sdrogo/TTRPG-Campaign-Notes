@@ -11,7 +11,20 @@ import type {
 } from '../types/geoMap';
 import type { ArrowDirection, MapColor, MapDocument } from '../types/map';
 import { toStoredImage } from './images';
-import { newId, pointAlong, pointBeside, toMap, type Point, type RawMap } from './maps';
+import {
+  DEFAULT_BEND_RATIO,
+  PARALLEL_BEND,
+  linkCurve,
+  newId,
+  pointAlong,
+  toMap,
+  type Point,
+  type RawMap,
+  type Curve,
+} from './maps';
+
+// The curve helpers live in `maps.ts` since spec 62 (free maps curve too).
+export { DEFAULT_BEND_RATIO, PARALLEL_BEND, curvePath, labelOnCurve, linkCurve, pointOnCurve, type Curve } from './maps';
 
 // --- Limits (the backend's, spec 38) ----------------------------------------
 
@@ -484,11 +497,6 @@ export function endPoint(board: GeoBoard, end: GeoLinkEnd): Point | undefined {
   return area && areaCenter(area.points);
 }
 
-/** How much a link with no bend of its own curves, as a share of its length. */
-export const DEFAULT_BEND_RATIO = 0.12;
-/** How far apart links sharing both ends (and no bend of their own) curve. */
-export const PARALLEL_BEND = 40;
-
 function sameEnds(a: GeoLink, b: GeoLink): boolean {
   const key = (end: GeoLinkEnd) => end.areaId ?? end.pinId;
   return (
@@ -506,32 +514,6 @@ export function linkBend(links: GeoLink[], link: GeoLink, length: number): numbe
   if (link.bend !== null) return link.bend;
   const siblings = links.filter((other) => other.bend === null && sameEnds(other, link));
   return length * DEFAULT_BEND_RATIO + siblings.indexOf(link) * PARALLEL_BEND;
-}
-
-/** A link's curve: a quadratic one whose middle is `bend` off the straight line. */
-export interface Curve {
-  from: Point;
-  control: Point;
-  to: Point;
-}
-
-/** The curve from `from` to `to` whose middle sits `bend` to the side of the line. */
-export function linkCurve(from: Point, to: Point, bend: number): Curve {
-  // A quadratic curve's middle is halfway between the line's and the control point.
-  return { from, control: pointBeside(from, to, 0.5, bend * 2), to };
-}
-
-/** The point a fraction `t` along the curve. */
-export function pointOnCurve(curve: Curve, t: number): Point {
-  const a = pointAlong(curve.from, curve.control, t);
-  const b = pointAlong(curve.control, curve.to, t);
-  return pointAlong(a, b, t);
-}
-
-/** The SVG path of a curve. */
-export function curvePath(curve: Curve): string {
-  const { from, control, to } = curve;
-  return `M ${from.x},${from.y} Q ${control.x},${control.y} ${to.x},${to.y}`;
 }
 
 /**

@@ -509,7 +509,8 @@
       "pane": "并排的文档",
       "showSplit": "显示侧边面板",
       "hideSplit": "隐藏侧边面板",
-      "pick": "选择一张卡片以查看其信息"
+      "pick": "选择一张卡片以查看其信息",
+      "preview": "预览"
     }
   },
   "images": {
@@ -1243,7 +1244,8 @@
       "repeated": "该文档已在地图上,将保留为普通标签:",
       "backgroundLater": "背景图片之后在新地图的“地图”按钮中上传。",
       "submit": "导入"
-    }
+    },
+    "openPreview": "在预览中打开"
   },
   "sessionZero": {
     "title": "第 0 次会话",

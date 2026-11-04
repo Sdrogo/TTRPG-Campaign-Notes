@@ -306,13 +306,14 @@ describe('MentionMapPage', () => {
     expect(screen.queryByText(/sola lettura/)).not.toBeInTheDocument();
   });
 
-  it('splits the screen with a button, and a click on a card shows its Document (spec 37)', async () => {
+  it('splits the screen with the Anteprima button, and a click on a card shows its Document (spec 37, 62b)', async () => {
     wideScreen();
     const { user } = render(false, `${DOC}/mention-map`);
     expect(await screen.findByTestId('board')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'select' })).not.toBeInTheDocument();
+    // The name opens the pane even while it is closed.
+    expect(screen.getByRole('button', { name: 'select' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Mostra il pannello affiancato' }));
+    await user.click(screen.getByRole('button', { name: 'Anteprima', pressed: false }));
     expect(await screen.findByText('Seleziona una card per vederne le info')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'select' }));
     expect(await screen.findByRole('link', { name: 'Apri il Documento' })).toHaveAttribute(
@@ -320,7 +321,7 @@ describe('MentionMapPage', () => {
       '/rooms/room-1/documents/doc-9',
     );
 
-    await user.click(screen.getByRole('button', { name: 'Nascondi il pannello affiancato' }));
+    await user.click(screen.getByRole('button', { name: 'Anteprima', pressed: true }));
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 });

@@ -296,7 +296,7 @@ describe('MapArrow', () => {
       id: 'arrow-1',
       source: 'a',
       target: 'b',
-      data: value && { arrow: value, shift: 0, editable, onEdit, onMoveLabel },
+      data: value && { arrow: value, shift: 0, fan: { slot: 0, side: 1 }, editable, onEdit, onMoveLabel },
     };
     // React Flow listens for clicks on the whole edge, and a label's click bubbles to it.
     renderWithProviders(
@@ -309,9 +309,9 @@ describe('MapArrow', () => {
 
   const labelButton = (name: string) => screen.getByRole('button', { name: `Modifica la relazione: ${name}` });
 
-  it('draws a two-way arrow edge to edge with a label near each end', async () => {
+  it('draws a two-way arrow as a curve edge to edge with a label near each end', async () => {
     const onEdit = renderArrow(arrow);
-    expect(screen.getByTestId('path-arrow-1')).toHaveAttribute('d', 'M 100,25 L 300,25');
+    expect(screen.getByTestId('path-arrow-1')).toHaveAttribute('d', 'M 100,49 Q 200,97 300,49');
     expect(screen.getByTestId('path-arrow-1')).toHaveAttribute('stroke-dasharray', '6 4');
     await userEvent.click(screen.getByRole('button', { name: 'Modifica la relazione: alleato' }));
     expect(onEdit).toHaveBeenCalledWith('arrow-1');
@@ -323,12 +323,13 @@ describe('MapArrow', () => {
     const onMoveLabel = vi.fn();
     renderArrow({ ...arrow, direction: 'forward', reverseLabel: null }, true, onEdit, onMoveLabel);
     const button = labelButton('alleata');
-    // The arrow runs from x=100 to x=300 on y=25: a drop at x=250 is 75% along it.
+    // The arrow curves from (100,49) through its control (200,97) to (300,49): a drop
+    // at (250,60) is nearest the point 75.8% along it, 7px above the curve.
     fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
     fireEvent.pointerMove(button, { pointerId: 1, clientX: 250, clientY: 60 });
     fireEvent.pointerUp(button, { pointerId: 1, clientX: 250, clientY: 60 });
     fireEvent.click(button);
-    expect(onMoveLabel).toHaveBeenCalledWith('arrow-1', 'label', 0.75, 35);
+    expect(onMoveLabel).toHaveBeenCalledWith('arrow-1', 'label', 0.758, -7);
     expect(onEdit).not.toHaveBeenCalled();
     expect(edgeClick).not.toHaveBeenCalled();
   });
@@ -376,8 +377,8 @@ describe('MapArrow', () => {
     const onMoveLabel = vi.fn();
     renderArrow({ ...arrow, labelPosition: 0.9, labelOffset: -20 }, true, onEdit, onMoveLabel);
     const button = labelButton('alleata');
-    // 90% along the arrow (x=280) and 20px to its left, which is up here.
-    expect(button.style.transform).toContain('translate(280px, 5px)');
+    // 90% along the curve (280, 57.64) and 20px to its left, which is up here.
+    expect(button.style.transform).toMatch(/translate\(280px, 37\.6\d*px\)/);
     await userEvent.click(button);
     expect(onEdit).toHaveBeenCalledWith('arrow-1');
     expect(onMoveLabel).not.toHaveBeenCalled();
@@ -385,7 +386,7 @@ describe('MapArrow', () => {
 
   it('keeps a label saved with a place but no distance on the arrow', () => {
     renderArrow({ ...arrow, labelPosition: 0.9, labelOffset: null });
-    expect(labelButton('alleata').style.transform).toContain('translate(280px, 25px)');
+    expect(labelButton('alleata').style.transform).toMatch(/translate\(280px, 57\.6\d*px\)/);
   });
 
   it('puts a one-way label in the middle and none when there is none', () => {

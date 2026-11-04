@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react';
-import { Box, Image, Paper, Stack, Text } from '@mantine/core';
+import { Box, Image, Paper, Stack, Text, Tooltip } from '@mantine/core';
 import { type NodeProps } from '@xyflow/react';
 import { DotsSixIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
@@ -44,8 +44,10 @@ function DragGrip() {
  * card, else the Document's favorite) as the card's background fading into
  * the card towards the bottom, where its name and caption (the map's own, or
  * else the Document's subtitle) are, in the card's color and struck through
- * when it is. A click on its name goes to the Document, unless the split pane
- * follows the selected card (spec 37), where it selects the card instead.
+ * when it is. On the map pages a click on its name shows the Document in the
+ * split pane (spec 62b), and a tooltip says so (spec 62c); Ctrl/Cmd-click
+ * still opens it in a new tab. Elsewhere (the small boards on a Document's
+ * page) the name goes to the Document.
  */
 export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeType>) {
   const { t } = useTranslation();
@@ -77,6 +79,13 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
     >
       {document.name}
     </Text>
+  );
+  const named = onSelect ? (
+    <Tooltip label={t('maps.openPreview')} withArrow openDelay={400}>
+      {name}
+    </Tooltip>
+  ) : (
+    name
   );
 
   return (
@@ -114,7 +123,7 @@ export function DocumentCardNode({ data, selected }: NodeProps<DocumentCardNodeT
         </Box>
       )}
       <Stack gap={4} p={8} pos="relative">
-        {name}
+        {named}
         {caption && (
           <Text size="xs" c="dimmed" ta="center" td={decoration} style={{ whiteSpace: 'pre-line' }}>
             {caption}

@@ -511,7 +511,8 @@
       "pane": "Document ernaast",
       "showSplit": "Zijpaneel tonen",
       "hideSplit": "Zijpaneel verbergen",
-      "pick": "Selecteer een kaart om de info te zien"
+      "pick": "Selecteer een kaart om de info te zien",
+      "preview": "Voorbeeld"
     }
   },
   "images": {
@@ -1276,7 +1277,8 @@
       "repeated": "Document staat al op de kaart, blijven gewone labels:",
       "backgroundLater": "De achtergrondafbeelding upload je daarna via de knop Kaart van de nieuwe kaart.",
       "submit": "Importeren"
-    }
+    },
+    "openPreview": "Openen in voorbeeld"
   },
   "sessionZero": {
     "title": "Sessie 0",

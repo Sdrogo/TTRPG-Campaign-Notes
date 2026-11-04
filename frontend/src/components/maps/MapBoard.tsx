@@ -25,6 +25,7 @@ import {
   absolutePosition,
   addArrow,
   parallelShift,
+  arrowFan,
   addDocumentCards,
   addTextCard,
   cardImage,
@@ -215,6 +216,7 @@ function BoardCanvas({
     data: {
       arrow,
       shift: parallelShift(board.arrows, arrow),
+      fan: arrowFan(board.arrows, arrow),
       editable: shaping,
       onEdit: (id) => setEditing({ kind: 'arrow', id }),
       onMoveLabel: (id, which, position, offset) =>
