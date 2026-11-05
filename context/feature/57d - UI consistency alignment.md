@@ -26,18 +26,32 @@ Still valid and holding:
 
 Drifted, to fix here:
 
-1. **Cancel buttons (Decision 12)**: about 14 Cancel / "keep editing" buttons
-   are still `variant="default"` (Session 0: `ModuleChain`, `BoardColumns`,
-   `SessionZeroHeader`, `PollModule`, `QuestionsModule`; and the new Clock
-   dialogs: `ClockDialog`, `ClockGroupDialog`, `MarkDialog`,
-   `ClockRulesDialog`), while 34 elsewhere are `subtle` grey.
-2. **Section headings (Decision 12)**: the Clocks page's sections are
-   `order={2} fz="h4"` (`pages/RoomClocksPage.tsx`) and the Clock group
-   band `fz="h4"`; every other page's sections are `fz="h3"`.
-3. **In-page loaders (Decision 10)**: `AcceptInvitePage` and `AddFriendPage`
-   still render a bare `<Loader />` in the flow; `DdiModule`,
-   `FriendsSection` too. Block-level loaders inside Sections (small, in
-   a card) stay as they are.
+1. **Cancel buttons (Decision 12)**: 16 Cancel / "keep editing" buttons are
+   still `variant="default"`, while the rest are `subtle` grey. Files (under
+   `frontend/src/`):
+   `components/sessionZero/BoardColumns.tsx` (2),
+   `components/sessionZero/ModuleChain.tsx` (2),
+   `components/sessionZero/PollModule.tsx`,
+   `components/sessionZero/QuestionsModule.tsx`,
+   `components/sessionZero/SessionZeroHeader.tsx`,
+   `components/clocks/ClockDialog.tsx`,
+   `components/clocks/ClockGroupDialog.tsx`,
+   `components/clocks/ClockRulesDialog.tsx`,
+   `components/clocks/MarkDialog.tsx`,
+   `pages/RoomClocksPage.tsx` (2),
+   `components/maps/CardColorDialog.tsx`,
+   `components/maps/MentionMapModal.tsx`,
+   `pages/RelationshipMapPage.tsx` (map toolbar: left as is if it is part of
+   the toolbar, changed only if it is a modal footer).
+2. **Section headings (Decision 12)**: `fz="h4"` on a section title in
+   `pages/RoomClocksPage.tsx:264` and in the Clock group band,
+   `components/clocks/ClockGroupBand.tsx:60`; every other page's sections are
+   `fz="h3"`.
+3. **In-page loaders (Decision 10)**: a bare `<Loader />` in the page flow in
+   `pages/AcceptInvitePage.tsx:40,58`, `pages/AddFriendPage.tsx:53`,
+   `components/sessionZero/DdiModule.tsx:206` and
+   `components/account/FriendsSection.tsx:51`. Small loaders inside cards,
+   Section blocks, drawers and modals stay as they are.
 
 Obsolete / dropped:
 
@@ -47,11 +61,11 @@ Obsolete / dropped:
 
 ## Decisions
 
-1. All Cancel and "keep editing" buttons are `subtle` grey (`color="gray"`),
-   in Session 0 and in the Clock dialogs.
-2. The Clocks page and the Clock group band use `fz="h3"` like the other
+1. All Cancel and "keep editing" buttons listed in item 1 are `subtle` grey
+   (`color="gray"`).
+2. The two Clock headings above use `fz="h3"` like the other
    pages' sections.
-3. `AcceptInvitePage`, `AddFriendPage`, `DdiModule` and `FriendsSection` use
+3. The four files in item 3 use
    `SectionLoader` (centered) instead of a bare `Loader`.
 4. Clocks page: before/after screenshots (desktop 1440px, phone 390px) in
    `ui-audit/after/`.
