@@ -227,7 +227,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   background, dragging link labels, dragging area names by hand (needs a
   migration), a Tag picking an area's color.
 - **43, Real-time maps, not built**: presence, editing from a phone.
-- **45, Demo**: the sample Room has no images yet.
+- **64, Demo refresh** (ticket written 2026-11-05, waiting on the product
+  owner's answers to Q1 to Q7): sample Room landing and Session 0, a
+  longer tour in two chapters, 9 landing cards, images (closes the old
+  "sample Room has no images" item). Frontend only, no migration.
 - **34, More UI languages, round two**: tr and zh-Hant, later.
 - **Requirements not built** (`requirements.md` §14): Glossary entries
   (FR-N3/N4, VR-10), draft/published (FR-D6), notifications (FR-T9),
