@@ -1749,12 +1749,16 @@
         "body": "Wszystkie mapy albo jeden rodzaj"
       },
       "session_zero": {
-        "title": "Sesja 0",
-        "body": "Sesje, etapy i ankiety"
+        "title": "Przegląd",
+        "body": "Sesje, etapy i ankiety Sesji 0 Pokoju"
       },
       "tools": "Narzędzia",
-      "toolsBody": "Własne narzędzie Sesji 0, ukryte przed graczami, dopóki go nie pokażesz",
-      "clocks": "Zegar"
+      "toolsBody": "Albo własne narzędzie, ukryte przed graczami, dopóki go nie pokażesz:",
+      "clocks": {
+        "title": "Zegar",
+        "body": "Zegary Pokoju, wybrane lub wszystkie otwarte"
+      },
+      "content": "Zawartość Pokoju"
     },
     "edit": {
       "start": "Edytuj",

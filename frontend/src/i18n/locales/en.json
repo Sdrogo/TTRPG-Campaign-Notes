@@ -1661,12 +1661,16 @@
         "body": "All maps, or one kind"
       },
       "session_zero": {
-        "title": "Session 0",
-        "body": "Sessions, steps and polls"
+        "title": "Overview",
+        "body": "Sessions, steps and polls of the Room's Session 0"
       },
       "tools": "Tools",
-      "toolsBody": "A Session 0 tool of its own, hidden from the players until you show it",
-      "clocks": "Clock"
+      "toolsBody": "Or a tool of its own, hidden from the players until you show it:",
+      "clocks": {
+        "title": "Clock",
+        "body": "The Room's clocks, some or all open ones"
+      },
+      "content": "Room content"
     },
     "edit": {
       "start": "Edit",

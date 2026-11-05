@@ -457,7 +457,9 @@ function ListingBlock({
 /**
  * "+ Blocco" (spec 55 Decision 14): a dashed bar after the last block, or
  * a small "+" between two that shows on hover or focus, opening the three
- * tiles (one column on a phone, where it is a bottom sheet).
+ * tiles (one column on a phone, where it is a bottom sheet). Since spec 63
+ * the Room content (Documents, maps, Clock) and Session 0 (its overview and
+ * tools) are two groups.
  */
 function AddBlock({
   compact = false,
@@ -475,7 +477,6 @@ function AddBlock({
   /** A Session 0 tool of the Section's own (spec 60 Decision 5). */
   onPickTool: (kind: ToolKind) => void;
 }) {
-  // Clocks sit among the tools (spec 61 Decision 18), though the block owns none.
   const { t } = useTranslation();
   const target = compact ? (
     <UnstyledButton className="room-landing-insert" onClick={onOpen} aria-label={t('roomLanding.edit.insertBlock')}>
@@ -491,23 +492,15 @@ function AddBlock({
   );
   return (
     <Picker opened={opened} onClose={onClose} title={t('roomLanding.edit.addBlockTitle')} target={target} width={480}>
+      <Divider mb="xs" label={t('roomLanding.tiles.content')} labelPosition="left" />
       <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs">
-        {(['documents', 'maps', 'session_zero'] as const).map((kind) => (
-          <UnstyledButton key={kind} className="room-landing-tile" onClick={() => onPick(kind)}>
-            <Stack gap={4} align="flex-start">
-              <BlockKindIcon kind={kind} size={22} />
-              <Text fw={600} size="sm">
-                {t(`roomLanding.tiles.${kind}.title`)}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {t(`roomLanding.tiles.${kind}.body`)}
-              </Text>
-            </Stack>
-          </UnstyledButton>
+        {(['documents', 'maps', 'clocks'] as const).map((kind) => (
+          <AddBlockTile key={kind} kind={kind} onPick={onPick} />
         ))}
       </SimpleGrid>
-      <Divider my="sm" label={t('roomLanding.tiles.tools')} labelPosition="left" />
-      <Text size="xs" c="dimmed" mb="xs">
+      <Divider my="sm" label={t('roomLanding.blockTitle.sessionZero')} labelPosition="left" />
+      <AddBlockTile kind="session_zero" onPick={onPick} wide />
+      <Text size="xs" c="dimmed" my="xs">
         {t('roomLanding.tiles.toolsBody')}
       </Text>
       <Group gap="xs">
@@ -516,11 +509,37 @@ function AddBlock({
             {moduleLabel(kind)}
           </Button>
         ))}
-        <Button size="compact-sm" variant="default" leftSection={<BlockKindIcon kind="clocks" size={14} />} onClick={() => onPick('clocks')}>
-          {t('roomLanding.tiles.clocks')}
-        </Button>
       </Group>
     </Picker>
   );
 }
 
+/** One kind tile of the add-block popover; `wide` lays the icon beside the text (spec 63). */
+function AddBlockTile({ kind, onPick, wide = false }: { kind: 'documents' | 'maps' | 'clocks' | 'session_zero'; onPick: (kind: BlockKind) => void; wide?: boolean }) {
+  const { t } = useTranslation();
+  const text = (
+    <Stack gap={4} align="flex-start">
+      <Text fw={600} size="sm">
+        {t(`roomLanding.tiles.${kind}.title`)}
+      </Text>
+      <Text size="xs" c="dimmed">
+        {t(`roomLanding.tiles.${kind}.body`)}
+      </Text>
+    </Stack>
+  );
+  return (
+    <UnstyledButton className="room-landing-tile" onClick={() => onPick(kind)}>
+      {wide ? (
+        <Group gap="sm" wrap="nowrap">
+          <BlockKindIcon kind={kind} size={22} />
+          {text}
+        </Group>
+      ) : (
+        <Stack gap={4} align="flex-start">
+          <BlockKindIcon kind={kind} size={22} />
+          {text}
+        </Stack>
+      )}
+    </UnstyledButton>
+  );
+}

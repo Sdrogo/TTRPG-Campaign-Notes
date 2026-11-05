@@ -121,10 +121,26 @@ like a lesser kind of block and the popover gets a third heading.
 About 30–45 minutes of Claude's build time (one component, 12 locale
 files, tests, docs). One PR into `staging`, no migration.
 
+## Confirmed
+
+The product owner chose **option A** (2026-11-05: "Avevo risposto con la
+Proposta A"). She named no other words, so the defaults of Decisions 1 and
+4 stand: the heading "Contenuti della Stanza" over the three tiles and
+"Panoramica" for the Session 0 tile (Q2 and Q3 are open to change later).
+
+## Built (2026-11-05)
+
+- `AddBlock` in `SectionEditor.tsx` draws the two groups; a small
+  `AddBlockTile` makes each tile (`wide` for "Panoramica"). The Session 0
+  divider reuses `roomLanding.blockTitle.sessionZero`.
+- Locales (all 12): `tiles.content` new, `tiles.clocks` is now
+  `{ title, body }`, `tiles.session_zero` is "Panoramica" (the overview),
+  `tiles.toolsBody` reworded. `tiles.tools` stays: it is the fallback
+  heading of a tool block without a kind.
+- Test: `SectionEditor.test.tsx` checks the order and that Clock is a tile.
+  No migration.
+
 ## Open questions (for the product owner)
 
-- **Q1**: option A (two groups, recommended) or B (four tiles)?
-- **Q2**: "Contenuti della Stanza" as the first heading, or no heading at
-  all over the three tiles (only the "Sessione 0" divider)?
-- **Q3**: "Panoramica" for the Session 0 tile, or another word
-  ("Riepilogo", "Sessioni")?
+- **Q2/Q3**: only if she wants other wording than "Contenuti della
+  Stanza" and "Panoramica" (a locale-key change).

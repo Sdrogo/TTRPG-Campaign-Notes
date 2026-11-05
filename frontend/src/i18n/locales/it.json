@@ -1661,12 +1661,16 @@
         "body": "Tutte le mappe, o di un tipo"
       },
       "session_zero": {
-        "title": "Sessione 0",
-        "body": "Sessioni, tappe e sondaggi"
+        "title": "Panoramica",
+        "body": "Sessioni, tappe e sondaggi della Sessione 0 della Stanza"
       },
       "tools": "Strumenti",
-      "toolsBody": "Uno strumento della Sessione 0 tutto suo, nascosto ai giocatori finché non lo mostri",
-      "clocks": "Clock"
+      "toolsBody": "Oppure uno strumento tutto suo, nascosto ai giocatori finché non lo mostri:",
+      "clocks": {
+        "title": "Clock",
+        "body": "I clock della Stanza, alcuni o tutti quelli aperti"
+      },
+      "content": "Contenuti della Stanza"
     },
     "edit": {
       "start": "Modifica",

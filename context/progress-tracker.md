@@ -113,7 +113,11 @@ One line per unit, dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives and in `architecture.md`.
 "no mig." = no migration.
 
-### 2026-10-12 → 11-04
+### 2026-10-12 → 11-05
+
+- **63** (11-05, no mig.): the add-block popover of a Section has two
+  groups, Room content (Documenti, Mappe, Clock tiles) and Session 0 (wide
+  "Panoramica" tile + the five tools); Clock is no longer among the tools.
 
 - **Clock dialogs** (11-04, no mig.): clock, group, rules, mark and history
   dialogs (and the rules delete-label confirm) no longer close on an outside
@@ -212,10 +216,6 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
-- **63, Clock out of the Session 0 tools** (ticket, 2026-11-04): the
-  add-block popover groups Documenti / Mappe / Clock as Room content and
-  puts the Session 0 tile and its tools under one "Sessione 0" heading.
-  Frontend only, no migration. Awaiting the product owner's Q1-Q3.
 - **46b, Dichiarazione d'Intenti invitation**: if a Room has a DDI, its
   invitation opens it read-only with "accept and join" (product owner,
   2026-10-27). Ticket not written yet (the DDI template itself is in 47_3).

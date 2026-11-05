@@ -1661,12 +1661,16 @@
         "body": "Todos los mapas, o de un tipo"
       },
       "session_zero": {
-        "title": "Sesión 0",
-        "body": "Sesiones, etapas y encuestas"
+        "title": "Resumen",
+        "body": "Sesiones, etapas y encuestas de la Sesión 0 de la Sala"
       },
       "tools": "Herramientas",
-      "toolsBody": "Una herramienta de la Sesión 0 propia, oculta a los jugadores hasta que la muestres",
-      "clocks": "Reloj"
+      "toolsBody": "O una herramienta propia, oculta a los jugadores hasta que la muestres:",
+      "clocks": {
+        "title": "Reloj",
+        "body": "Los relojes de la Sala, algunos o todos los abiertos"
+      },
+      "content": "Contenido de la Sala"
     },
     "edit": {
       "start": "Editar",
