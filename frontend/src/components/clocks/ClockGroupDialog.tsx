@@ -120,7 +120,7 @@ export function ClockGroupDialog({
           )}
           {error && <Alert color="danger">{error}</Alert>}
           <Group justify="flex-end">
-            <Button variant="default" onClick={onClose}>
+            <Button variant="subtle" color="gray" onClick={onClose}>
               {t('common.cancel')}
             </Button>
             <Button type="submit" loading={submitting} disabled={!name.trim()}>

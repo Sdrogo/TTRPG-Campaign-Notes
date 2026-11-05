@@ -411,7 +411,7 @@ function MapChrome({
           <Text>{t('maps.deleteConfirmBody', { name: map.name })}</Text>
           {deleteMap.error && <Text c="red">{deleteMap.error.message}</Text>}
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setDeleteOpened(false)}>
+            <Button variant="subtle" color="gray" onClick={() => setDeleteOpened(false)}>
               {t('common.cancel')}
             </Button>
             <Button

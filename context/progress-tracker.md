@@ -30,7 +30,7 @@ Full history is archived; read it only when you need that detail:
   migrations were applied to production beforehand. Dependabot PRs land on
   `main`: merge `main` into `staging` before opening a release PR.
 - **Waiting on the product owner**: review of 55 (Room landing) and 57
-  (UI consistency), now in production; 52 live updates to test with two browsers;
+  (UI consistency, now in production; 57d alignment built 2026-11-05, on PR #308); 52 live updates to test with two browsers;
   legal review of `/privacy` and the DPAs with Supabase, OVHcloud and
   Vercel (spec 31; shipped before those were done). Keeping shared content
   anonymised after an account deletion is the default in place, not

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button, Divider, Loader, Stack, Text, Title } from '@mantine/core';
+import { Button, Divider, Stack, Text, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import {
   useAcceptFriendRequest,
@@ -11,6 +11,7 @@ import { userDisplayName } from '../../lib/members';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { AccountSection } from './AccountSection';
 import { FriendLinkField } from './FriendLinkField';
+import { SectionLoader } from '../PageState';
 import { FriendRow } from '../friends/FriendRow';
 import { RemoveFriendButton } from '../friends/RemoveFriendButton';
 
@@ -48,7 +49,7 @@ export function FriendsSection() {
       <FriendLinkField />
       <Divider />
 
-      {friends.isLoading && <Loader color="accent" size="sm" />}
+      {friends.isLoading && <SectionLoader />}
       {friends.isError && <Text c="red">{t('account.friends.loadError')}</Text>}
       {friends.data && (
         <Stack gap="lg">
