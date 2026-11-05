@@ -224,7 +224,8 @@ background study. The product owner answered Q1-Q4 and Q10 on 2026-11-03
 18. **Clocks block in a Section** (product owner, 2026-11-03: "i clock
     possono essere inseriti come feature in un blocco in una sezione"): the
     add-block popover of a Section (spec 55/60) lists **Clock** among the
-    "Strumenti" (popover layout superseded by spec 63); it makes a block of kind `clocks` whose bar has ordered
+    "Strumenti" (superseded by spec 63: it is now a tile of its own); it
+    makes a block of kind `clocks` whose bar has ordered
     chips of clocks and groups of the Room, "+ Clock" (pick existing ones,
     or "Nuovo clock…", which creates the clock on the Clocks page and adds
     it) and the switch "Tutti i clock aperti" (the block then follows the
@@ -342,7 +343,7 @@ background study. The product owner answered Q1-Q4 and Q10 on 2026-11-03
   (presets, policies, labels and mark kinds editors with sortable
   rows), `MarkKindLegend`.
 - `pages/RoomClocksPage.tsx`; `SectionBlock` kind `clocks` and its
-  `BlockBar` chips; "Clock" in the add-block popover's Strumenti; Index entry; hooks `useClocks`,
+  `BlockBar` chips; "Clock" in the add-block popover's Strumenti (now a tile, spec 63); Index entry; hooks `useClocks`,
   `useClockRules`, `useClockEvents` (on `useRoomEvents`).
 - Strings under `clocks.*` in 12 languages; `ui-context.md` gets "Clocks
   (spec 61)" when built.
@@ -405,7 +406,7 @@ before the release that ships them.
   "Non ancora" / "Non ora" hides a prompt until the group changes.
 - A Player whose proposal is refused gets a toast; closing toasts show
   once per clock state, however many views follow it.
-- Clocks block: "Clock" under Strumenti in "+ Blocco" starts a draft that
+- Clocks block: "Clock" in "+ Blocco" (under Strumenti until spec 63) starts a draft that
   saves on its first chip (a clock or a group) or the "Tutti i clock
   aperti" switch, and drops when closed empty; "Nuovo clock…" in the
   picker creates a clock and adds it. Up to 20 chips; a chip whose clock

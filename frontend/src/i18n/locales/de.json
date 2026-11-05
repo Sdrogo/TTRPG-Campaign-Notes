@@ -1661,12 +1661,16 @@
         "body": "Alle Karten oder eine Art"
       },
       "session_zero": {
-        "title": "Session 0",
-        "body": "Sessions, Schritte und Umfragen"
+        "title": "Überblick",
+        "body": "Sessions, Schritte und Umfragen der Session 0 des Raums"
       },
       "tools": "Werkzeuge",
-      "toolsBody": "Ein eigenes Werkzeug der Session 0, für die Spieler verborgen, bis du es zeigst",
-      "clocks": "Uhr"
+      "toolsBody": "Oder ein eigenes Werkzeug, für die Spieler verborgen, bis du es zeigst:",
+      "clocks": {
+        "title": "Uhr",
+        "body": "Die Uhren des Raums, einige oder alle offenen"
+      },
+      "content": "Inhalte des Raums"
     },
     "edit": {
       "start": "Bearbeiten",

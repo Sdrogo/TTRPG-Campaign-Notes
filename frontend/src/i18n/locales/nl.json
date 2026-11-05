@@ -1661,12 +1661,16 @@
         "body": "Alle kaarten, of één soort"
       },
       "session_zero": {
-        "title": "Sessie 0",
-        "body": "Sessies, stappen en peilingen"
+        "title": "Overzicht",
+        "body": "Sessies, stappen en peilingen van Sessie 0 van de Ruimte"
       },
       "tools": "Hulpmiddelen",
-      "toolsBody": "Een eigen Sessie 0-hulpmiddel, verborgen voor de spelers tot je het laat zien",
-      "clocks": "Klok"
+      "toolsBody": "Of een eigen hulpmiddel, verborgen voor de spelers tot je het laat zien:",
+      "clocks": {
+        "title": "Klok",
+        "body": "De klokken van de Ruimte, enkele of alle open"
+      },
+      "content": "Inhoud van de Ruimte"
     },
     "edit": {
       "start": "Bewerken",

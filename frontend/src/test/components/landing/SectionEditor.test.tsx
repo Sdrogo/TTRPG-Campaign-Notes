@@ -64,6 +64,21 @@ describe('SectionEditor', () => {
     expect(savedBlocks()).toEqual([{ kind: 'maps', heading: null, tag_ids: [], groups: [], map_kind: null, features: [], module_id: null, collapsed: false }]);
   });
 
+  it('groups the add-block popover: Room content, then Session 0 with its tools (spec 63)', async () => {
+    editor([mapsBlock]);
+    await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
+    const dialog = screen.getByRole('dialog');
+    const names = within(dialog).getAllByRole('button').map((button) => button.textContent ?? '');
+    const at = (word: string) => names.findIndex((name) => name.startsWith(word));
+    expect(within(dialog).getByText('Contenuti della Stanza')).toBeInTheDocument();
+    // Documents, maps and Clock come before the Session 0 overview and its tools.
+    expect([at('Documenti'), at('Mappe'), at('Clock')].every((i) => i >= 0 && i < at('Panoramica'))).toBe(true);
+    expect(at('Panoramica')).toBeLessThan(at('Sondaggio'));
+    // Clock is a tile, not one of the tool buttons.
+    expect(within(dialog).queryByRole('button', { name: 'Clock' })).not.toBeInTheDocument();
+    expect(within(dialog).getAllByText('Clock')).toHaveLength(1);
+  });
+
   it('keeps a new Documents block as a draft until its first Tag', async () => {
     editor();
     await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
@@ -86,7 +101,7 @@ describe('SectionEditor', () => {
   it('keeps a Session 0 draft until its first feature', async () => {
     editor([mapsBlock]);
     await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
-    await userEvent.click(screen.getByRole('button', { name: /Sessione 0/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Panoramica/ }));
     await userEvent.click(screen.getByRole('checkbox', { name: 'Retro' }));
     expect(savedBlocks()).toEqual([
       wire(mapsBlock),
@@ -95,7 +110,7 @@ describe('SectionEditor', () => {
     fetchMock.mockClear();
 
     await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
-    await userEvent.click(screen.getByRole('button', { name: /Sessione 0/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Panoramica/ }));
     await userEvent.keyboard('{Escape}');
     expect(screen.getAllByRole('button', { name: 'Azioni del blocco' })).toHaveLength(1);
   });
@@ -375,13 +390,13 @@ describe('SectionEditor', () => {
     it('keeps a Clocks draft until its first chip, and drops it when closed empty', async () => {
       editor([mapsBlock]);
       await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
-      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Clock' }));
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Clock/ }));
       await userEvent.keyboard('{Escape}');
       await waitFor(() => expect(screen.getAllByRole('button', { name: 'Azioni del blocco' })).toHaveLength(1));
       expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith('/blocks'))).toBe(false);
 
       await userEvent.click(screen.getByRole('button', { name: 'Blocco' }));
-      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Clock' }));
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Clock/ }));
       const picker = await screen.findByRole('dialog', { name: 'Clock' });
       await userEvent.click(await within(picker).findByRole('button', { name: 'Allarme' }));
       expect(savedBlocks()).toEqual([

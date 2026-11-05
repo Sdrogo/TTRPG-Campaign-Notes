@@ -1663,12 +1663,16 @@
         "body": "Toutes les cartes, ou un type"
       },
       "session_zero": {
-        "title": "Session 0",
-        "body": "Sessions, étapes et sondages"
+        "title": "Aperçu",
+        "body": "Sessions, étapes et sondages de la Session 0 de la Salle"
       },
       "tools": "Outils",
-      "toolsBody": "Un outil de la Session 0 à part entière, caché aux joueurs jusqu'à ce que tu le montres",
-      "clocks": "Horloge"
+      "toolsBody": "Ou un outil à part entière, caché aux joueurs jusqu'à ce que tu le montres :",
+      "clocks": {
+        "title": "Horloge",
+        "body": "Les horloges de la Salle, certaines ou toutes les ouvertes"
+      },
+      "content": "Contenu de la Salle"
     },
     "edit": {
       "start": "Modifier",
