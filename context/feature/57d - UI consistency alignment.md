@@ -2,9 +2,9 @@
 
 ## Goals
 
-- Product owner's request (2026-11-05): "Ticket 57/57b/57c - potremmo
-  lavorarci in futuro, ma non ricordo a che punto eravamo rimasti [...]
-  Potremmo dover allineare alle ultime modifiche".
+- Product owner's request (2026-11-05): tickets 57/57b/57c could be worked
+  on later, but she did not remember where they stood and they might need
+  aligning to the latest changes.
 - Status check: **57, 57b and 57c were all built and merged** (PR #285,
   2026-11-02) and are in production; the only open item was the product
   owner's review. Nothing in them needs to be redone. This ticket only
