@@ -261,7 +261,7 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
         {loose.length > 0 && (
           <Card withBorder radius="md" p="lg">
             {grouped.size > 0 && (
-              <Title order={2} fz="h4" mb="sm" style={{ fontFamily: 'var(--font-display)' }}>
+              <Title order={2} fz="h3" mb="sm" style={{ fontFamily: 'var(--font-display)' }}>
                 {t('clocks.outsideGroups')}
               </Title>
             )}
@@ -395,7 +395,7 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
           <Stack gap="sm">
             <Text>{t('clocks.groups.deleteBody', { name: dialog.group.name })}</Text>
             <Group justify="flex-end">
-              <Button variant="default" onClick={close}>
+              <Button variant="subtle" color="gray" onClick={close}>
                 {t('common.cancel')}
               </Button>
               <Button
@@ -421,7 +421,7 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
           <Stack gap="sm">
             <Text>{t('clocks.deleteBody', { name: dialog.clock.name })}</Text>
             <Group justify="flex-end">
-              <Button variant="default" onClick={close}>
+              <Button variant="subtle" color="gray" onClick={close}>
                 {t('common.cancel')}
               </Button>
               <Button

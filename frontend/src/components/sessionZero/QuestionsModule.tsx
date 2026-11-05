@@ -604,7 +604,7 @@ function QuestionsEditor({
             <Text size="sm" c="dimmed" mr="auto">
               {t('sessionZero.questions.unsaved')}
             </Text>
-            <Button variant="default" onClick={() => setLeaving(false)}>
+            <Button variant="subtle" color="gray" onClick={() => setLeaving(false)}>
               {t('sessionZero.questions.keepEditing')}
             </Button>
             <Button color="danger" variant="light" onClick={onClose}>

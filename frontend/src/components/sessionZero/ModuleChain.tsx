@@ -194,7 +194,7 @@ export function StartSessionZero({ canManage, busy, onStart }: StartSessionZeroP
           <Stack>
             <ChainEditor value={chain} onChange={setChain} />
             <Group justify="flex-end">
-              <Button variant="default" onClick={() => setComposing(false)}>
+              <Button variant="subtle" color="gray" onClick={() => setComposing(false)}>
                 {t('common.cancel')}
               </Button>
               <Button disabled={busy} onClick={() => onStart(chain.map((step) => step.kind))}>
@@ -307,7 +307,7 @@ function EditStepsModal({ onClose }: { onClose: () => void }) {
                 : t('sessionZero.modules.removeBody', { name: moduleLabel(removing.kind) })}
           </Text>
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setRemoving(null)}>
+            <Button variant="subtle" color="gray" onClick={() => setRemoving(null)}>
               {t('common.cancel')}
             </Button>
             <Button color="danger" disabled={busy} onClick={() => remove(removing)}>

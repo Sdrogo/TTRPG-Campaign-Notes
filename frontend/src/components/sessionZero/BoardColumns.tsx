@@ -270,7 +270,7 @@ export function RetroColumn({ column, index, count, open }: RetroColumnProps) {
           <Stack>
             <Text size="sm">{t('sessionZero.columns.deleteBody', { title: column.title })}</Text>
             <Group justify="flex-end">
-              <Button variant="default" onClick={() => setDeleting(false)}>
+              <Button variant="subtle" color="gray" onClick={() => setDeleting(false)}>
                 {t('common.cancel')}
               </Button>
               <Button
@@ -438,7 +438,7 @@ export function AddColumn() {
         />
         <MapColorPicker value={color} onChange={setColor} />
         <Group gap={4} justify="flex-end">
-          <Button size="compact-sm" variant="default" onClick={() => setAdding(false)}>
+          <Button size="compact-sm" variant="subtle" color="gray" onClick={() => setAdding(false)}>
             {t('common.cancel')}
           </Button>
           <Button size="compact-sm" disabled={!title.trim() || busy} onClick={add}>

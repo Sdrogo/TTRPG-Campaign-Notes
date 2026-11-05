@@ -57,7 +57,7 @@ export function ClockGroupBand({
   return (
     <Card withBorder radius="md" p="lg" component="section" aria-label={group.name}>
       <Group gap="sm" mb="sm" wrap="wrap">
-        <Title order={2} fz="h4" style={{ fontFamily: 'var(--font-display)' }}>
+        <Title order={2} fz="h3" style={{ fontFamily: 'var(--font-display)' }}>
           {group.name}
         </Title>
         <Badge variant="outline" color="gray" size="sm">

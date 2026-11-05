@@ -398,7 +398,7 @@ export function ClockDialog({
                 {t('clocks.dialog.saveTemplate')}
               </Button>
             )}
-            <Button variant="default" onClick={onClose}>
+            <Button variant="subtle" color="gray" onClick={onClose}>
               {t('common.cancel')}
             </Button>
             <Button type="submit" loading={submitting} disabled={!values.name.trim()}>

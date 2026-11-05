@@ -47,11 +47,10 @@ Drifted, to fix here:
    `pages/RoomClocksPage.tsx:264` and in the Clock group band,
    `components/clocks/ClockGroupBand.tsx:60`; every other page's sections are
    `fz="h3"`.
-3. **In-page loaders (Decision 10)**: a bare `<Loader />` in the page flow in
-   `pages/AcceptInvitePage.tsx:40,58`, `pages/AddFriendPage.tsx:53`,
-   `components/sessionZero/DdiModule.tsx:206` and
-   `components/account/FriendsSection.tsx:51`. Small loaders inside cards,
-   Section blocks, drawers and modals stay as they are.
+3. **In-page loader (Decision 10)**: a bare `<Loader size="sm" />` in the
+   page flow in `components/account/FriendsSection.tsx`. The accept-invite and
+   add-friend pages already sit in a centered full-height stack, and the
+   Session 0 DDI document loader is inside a module card: both stay.
 
 Obsolete / dropped:
 
@@ -65,8 +64,7 @@ Obsolete / dropped:
    (`color="gray"`).
 2. The two Clock headings above use `fz="h3"` like the other
    pages' sections.
-3. The four files in item 3 use
-   `SectionLoader` (centered) instead of a bare `Loader`.
+3. `FriendsSection` uses `SectionLoader`.
 4. Clocks page: before/after screenshots (desktop 1440px, phone 390px) in
    `ui-audit/after/`.
 
