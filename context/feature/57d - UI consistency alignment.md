@@ -55,7 +55,8 @@ Obsolete / dropped:
 
 - Nothing in 57/57b/57c is obsolete. The "Documents page title" test and the
   Demo screenshots of `ui-audit/after/` predate the Clocks page, so the
-  Clocks page has no before/after shots yet (added by this ticket).
+  Clocks page has no before/after shots (not taken by this ticket, see
+  Decision 4).
 
 ## Decisions
 
@@ -80,4 +81,4 @@ stays green; `tsc` and `oxlint` are clean.
 
 ## Estimate
 
-About 30-40 minutes of Claude build time, including tests and screenshots.
+About 30 minutes of Claude build time.
