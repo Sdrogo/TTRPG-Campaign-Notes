@@ -58,10 +58,9 @@ changes them before any code is written.
    change in `demoData.ts`.
 5. **Images** (closes the 45 Next Up item): a Room image, an image on about 6
    Documents and a background for the geographic map, bundled in
-   `public/demo/`. **Rec: yes.** I generate stylised illustrations
-   (consistent palette, small files, no stock or third-party art, so no
-   licence question). You can replace any of them later by dropping a file
-   with the same name.
+   `public/demo/` as small WebP files. **Rec: yes**, using the product
+   owner's Midjourney art (see 12a, 12b). A file can be replaced later by
+   dropping one with the same name.
 6. **Content for the hidden features**: one character Document played by the
    Master so "Characters" is not empty (17); a short **version history** on
    one Document (2 versions) and a **reveal history** entry on the Master-only
@@ -100,6 +99,29 @@ changes them before any code is written.
     that adds a user-visible feature says whether the Demo needs sample data
     or a tour step, and the progress tracker has a "Demo" tick per feature.
     **Rec: yes to both.** (b) edits a context file but not `requirements.md`.
+12a. **A new sample campaign: Tokyo by night** (product owner, 2026-11-05,
+    after sending Midjourney art: "Sì, campagna a Tokyo"). The sample Room
+    changes from the fantasy "The Lost Lighthouse" to a modern vampire
+    campaign set in Tokyo, so her images fit. The old content is replaced,
+    not kept beside it. Proposed cast, matched to the images she sent
+    (names taken from the file names where they exist, the rest proposed
+    and open to change): Hoshino Mirai (the "perfect face", a Tzimisce),
+    Lobn (owner of the shop behind the red door), the punk, the laughing
+    woman in the trench coat, the white-haired man with pink glasses, the
+    silver-haired woman with glasses, the red-eyed woman. Places: the red
+    door in the alley, plus Shibuya and Ginza on the geographic map. The
+    existing structure (Main Tags, mentions, Master-only Document, Selective
+    Note, link Note, free map "who wants X", clocks) is kept and re-themed,
+    so only text, names, images and ids' meaning change. Room name proposed:
+    "Tokyo After Dark" / "Tokyo dopo il tramonto". Written in English and
+    Italian. A shared campaign with real players is not exposed: the Demo
+    uses invented plot only.
+12b. **Photos**: four of the images sent are real photographs (Ginza Wako,
+    Shibuya Scramble Square, the Tokyo Metropolitan Government Building, an
+    alley with a Don Quijote sign). They go into the repository only if the
+    product owner confirms their licence; otherwise the geographic map
+    background is a Midjourney or generated image. Midjourney art is used
+    under the product owner's own plan terms.
 12. **Languages**: sample content stays English + Italian (as 45 Decision 11);
     tour and landing strings in all 12 UI languages (the 10 beta ones drafted
     by Claude, as in spec 34). Nothing else changes.
@@ -160,7 +182,9 @@ changes them before any code is written.
 
 ## Estimate
 
-About 1.5 to 2 hours of Claude's build time in total: 64_1 about 50 minutes
+About 2.5 to 3 hours of Claude's build time in total (the Tokyo rewrite of
+the sample Room adds about 1 hour to the first estimate of 1.5 to 2):
+64_1 about 50 minutes plus 1 hour for the rewrite
 (the Session 0 snapshot and Sections shapes are the careful part), 64_2
 about 40 minutes, 64_3 about 30 minutes, plus about 15 minutes to generate
 and optimise the images. One PR, or three small ones if you prefer to review
@@ -172,8 +196,9 @@ per unit. No migration, nothing to apply by hand.
 - **Q2** Tour as two chapters (basics / more), about 20 steps? **Rec: yes.**
   Alternative: one flat list of 20, or cut the "More" chapter to 4 steps.
 - **Q3** Sample Session 0 already played, with a poll? **Rec: yes.**
-- **Q4** Generated illustrations for the sample images? **Rec: yes.**
-  Alternative: you provide art, or the Demo stays image-free.
+- **Q4** (answered 2026-11-05) Use the product owner's Midjourney art and
+  move the sample Room to Tokyo. Still open: the licence of the 4 photos
+  (12b) and the names of the cast (12a).
 - **Q5** Skip reveal history, Friends, read-aloud, image search and the other
   items in Decision 10? **Rec: yes.**
 - **Q6** Add the "Demo needs an update?" line to `ai-workflow-rules.md` and
