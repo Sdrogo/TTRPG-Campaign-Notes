@@ -103,6 +103,18 @@
       "export": {
         "title": "Export",
         "text": "Nimm die Kampagne mit: ein PDF-Handbuch in drei Stilen oder JSON und Markdown für deine eigenen Werkzeuge."
+      },
+      "sections": {
+        "title": "Abschnitte und Startseite des Raums",
+        "text": "Baue die Startseite deines Raums aus Abschnitten: Dokumente nach Tag, Karten, Session 0 und Uhren."
+      },
+      "session": {
+        "title": "Session 0",
+        "text": "Einigt euch, wie ihr spielt: Linien und Schleier, Sterne und Wünsche, Fragen und Umfragen."
+      },
+      "clocks": {
+        "title": "Uhren",
+        "text": "Verfolge, was kommt, mit segmentierten Uhren, als Rennen oder reihum."
       }
     },
     "stepsTitle": "So funktioniert es",
@@ -137,9 +149,17 @@
     "keepExploring": "Weiter erkunden",
     "label": "Demo-Tour",
     "steps": {
-      "room": {
-        "title": "Ein Raum ist eine Kampagne",
-        "body": "Die ganze Kampagne lebt hier, gruppiert unter den Haupt-Tags: Charaktere, Orte, Ereignisse. Der Master leitet den Raum; Player treten über einen Link bei."
+      "roomLanding": {
+        "title": "Die Startseite des Raums",
+        "body": "Jeder Raum öffnet auf seiner eigenen Startseite: Karten für die Dokumente, die Karten, Session 0 und Uhren sowie die Abschnitte, die der Master gebaut hat."
+      },
+      "sections": {
+        "title": "Abschnitte",
+        "body": "Jede Karte ist ein Abschnitt, den der Master zusammengestellt hat. Klicke eine an, um ihre Seite zu öffnen."
+      },
+      "sectionPage": {
+        "title": "In einem Abschnitt",
+        "body": "Ein Abschnitt enthält Blöcke: Dokumente nach Tag, Karten, Schritte der Session 0, Uhren. Der Master ordnet sie im Bearbeitungsmodus an."
       },
       "roomIndex": {
         "title": "Der Index des Raums",
@@ -155,7 +175,7 @@
       },
       "documentText": {
         "title": "Notizen und Erwähnungen",
-        "body": "Notizen fügen Absätze unter der Beschreibung hinzu. Eine #Erwähnung verlinkt ein anderes Dokument, und der Link gilt in beide Richtungen."
+        "body": "Notizen fügen Absätze unter der Beschreibung hinzu. Der Text unterstützt Markdown, und eine #Erwähnung verlinkt ein anderes Dokument: Der Link gilt in beide Richtungen."
       },
       "mentionMap": {
         "title": "Die Erwähnungskarte",
@@ -179,16 +199,62 @@
       },
       "freeMap": {
         "title": "Freie Tafeln",
-        "body": "Dokumentkarten und Pfeile auf einer freien Tafel, um zu verfolgen, wer was will. Der Master kann auch Player darauf zeichnen lassen."
+        "body": "Dokumentkarten und Pfeile auf einer freien Tafel, um zu verfolgen, wer was will. Pfeile zwischen denselben zwei Karten biegen auseinander. Der Master kann auch Player darauf zeichnen lassen."
+      },
+      "splitView": {
+        "title": "Vorschau nebeneinander",
+        "body": "Die Schaltfläche Vorschau teilt den Bildschirm: Klicke eine Karte, und ihr Dokument öffnet sich rechts, damit du beim Planen lesen kannst."
+      },
+      "linkNote": {
+        "title": "Beziehungsnotizen",
+        "body": "Eine als Beziehung markierte Notiz macht aus ihren Erwähnungen Verbindungen: Sie speisen die Erwähnungskarte und die Rückverweise der Dokumente."
       },
       "geoMap": {
         "title": "Geografische Karten",
-        "body": "Setze Orte auf ein Kartenbild und umreiße Gebiete; jeder Ort führt zu seinem Dokument."
+        "body": "Setze Orte auf ein Kartenbild und umrande Regionen; jeder Ort führt zu seinem Dokument. Verbindungen zwischen Orten können sich krümmen."
+      },
+      "sessionZero": {
+        "title": "Session 0",
+        "body": "Vor der ersten Sitzung einigt sich die Runde, wie gespielt wird: Linien und Schleier, Sterne und Wünsche, Fragen, Umfragen. Hier wurde sie schon gespielt."
+      },
+      "poll": {
+        "title": "Umfragen",
+        "body": "Der Master fragt, alle stimmen ab. Einstellungen bestimmen, wer die Namen sieht und wann die Zählung erscheint. Diese hat entschieden, wo die Geschichte beginnt."
+      },
+      "clocks": {
+        "title": "Uhren",
+        "body": "Segmentierte Uhren verfolgen, was kommt: eine Flucht, ein Plan, die Morgendämmerung. Gruppen lassen sie als Rennen oder reihum laufen."
+      },
+      "versions": {
+        "title": "Versionsverlauf",
+        "body": "Eigentümer und der Master können jede frühere Version eines Dokuments lesen, Notizen eingeschlossen, und eine wiederherstellen."
+      },
+      "alsoThere": {
+        "title": "Und es gibt mehr",
+        "body": "Mit einem Konto kannst du außerdem ein PDF-Handbuch in drei Stilen exportieren, JSON und Markdown importieren und exportieren, Erwähnungen erzeugen, vorlesen lassen, Bilder für Karten suchen und Freunde hinzufügen. Das schreibt Daten, deshalb erwähnt die Demo es nur."
+      },
+      "playerDocuments": {
+        "title": "Jetzt als Player",
+        "body": "Du bist Marco und spielst Jun. Die Dokumente nur für den Master sind verschwunden, und sein privates, das Manga-Kissa, erscheint nur für ihn."
+      },
+      "playerDocument": {
+        "title": "Das Dokument eines Players",
+        "body": "Dieses Dokument ist privat: Nur Marco und der Master sehen es. In Giulias Ansicht des Raums steht es nicht einmal in der Liste."
+      },
+      "playerMap": {
+        "title": "Die Karte eines Players",
+        "body": "Die versteckte Karte des Masters und ihre Pfeile fehlen. Wechsle im Banner zurück zum Master, wenn du fertig bist."
       },
       "end": {
         "title": "Das ist Ex Libris",
         "body": "Melde dich an, um deinen eigenen Raum zu erstellen, oder erkunde die Demo weiter."
       }
+    },
+    "chapterLabel": "Kapitel der Tour",
+    "chapters": {
+      "basics": "Grundlagen",
+      "more": "Mehr",
+      "player": "Als Player"
     }
   },
   "header": {

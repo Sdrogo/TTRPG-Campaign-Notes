@@ -14,8 +14,11 @@ export const DEMO_ROOM_ID = 'demo';
 /** The visitor, the sample Room's Master. */
 export const DEMO_USER_ID = 'd3e0c0de-0000-4000-8000-000000000001';
 
-/** The page the Demo opens on. */
-export const DEMO_START_PATH = `/rooms/${DEMO_ROOM_ID}/documents`;
+/** The page the Demo opens on: the Room's landing (spec 55, spec 64 Decision 1). */
+export const DEMO_START_PATH = `/rooms/${DEMO_ROOM_ID}`;
+
+/** The Documents page of the sample Room: a Player's preview starts here (spec 22b works on Documents and maps only). */
+export const DEMO_DOCUMENTS_PATH = `${DEMO_START_PATH}/documents`;
 
 /** Whether the Demo is on in this tab. Storage errors read as off. */
 export function isDemoMode(): boolean {

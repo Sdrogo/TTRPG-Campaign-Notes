@@ -76,6 +76,11 @@ class Viewer {
   }
 }
 
+/** The Document's one image in the API's wire shape (`RawImage`), the favorite. */
+function docImage(doc: DemoDocument) {
+  return { id: `${doc.id.slice(0, -4)}7${doc.id.slice(-3)}`, url: doc.image!, is_favorite: true };
+}
+
 /**
  * A Document in the API's wire shape (`RawDocument`): with `unread_count`
  * for the list (`GET .../documents`), with its Notes and Files for
@@ -89,7 +94,7 @@ function rawDocument(viewer: Viewer, doc: DemoDocument, detail: boolean) {
     subtitle: doc.subtitle,
     description: doc.description,
     visibility: doc.visibility,
-    images: [],
+    images: doc.image ? [docImage(doc)] : [],
     tag_ids: doc.tag_ids,
     owner_ids: doc.owner_ids,
     selective_user_ids: doc.selective_user_ids,
@@ -253,7 +258,7 @@ function search(viewer: Viewer, params: URLSearchParams) {
 
 /** The Document as a map card or place carries it (`RawMapDocument`). */
 function placeDocument(doc: DemoDocument) {
-  return { id: doc.id, name: doc.name, subtitle: doc.subtitle, image: null, tag_ids: doc.tag_ids };
+  return { id: doc.id, name: doc.name, subtitle: doc.subtitle, image: doc.image ? docImage(doc) : null, tag_ids: doc.tag_ids };
 }
 
 /**
@@ -369,6 +374,59 @@ function mentionMap(viewer: Viewer, doc: DemoDocument) {
   };
 }
 
+
+/** A page card of the Room's landing (spec 55): the Master has not named it, it has no blocks. */
+function pageCard(kind: 'page_documents' | 'page_maps' | 'page_session_zero' | 'page_clocks', position: number) {
+  return { id: `demo-${kind}`, kind, position, title: null, description: '', image_url: null, blocks: [], can_edit: false };
+}
+
+/** The sample poll as the viewer sees it: their own choices marked (spec 53). */
+function viewerPoll(viewer: Viewer, poll: Record<string, unknown>, options: DemoData['sessionZero']['poll']['options']) {
+  return { ...poll, my_option_ids: options.filter((option) => option.voters.includes(viewer.id)).map((option) => option.id) };
+}
+
+/** `GET .../session-zero`: the sample Session 0, already played; every write is refused. */
+function sessionZero(viewer: Viewer) {
+  const sample = viewer.data.sessionZero;
+  const modules = sample.modules.map((module) =>
+    module.polls
+      ? { ...module, polls: (module.polls as Record<string, unknown>[]).map((poll) => viewerPoll(viewer, poll, sample.poll.options)) }
+      : module,
+  );
+  return {
+    started: true,
+    revision: 1,
+    can_manage: viewer.isMaster,
+    rounds: sample.rounds,
+    round_id: sample.roundId,
+    modules,
+    current_module_id: sample.currentModuleId,
+    hidden_modules: 0,
+    lines_veils: sample.linesVeils,
+    timer: null,
+  };
+}
+
+/** `GET .../session-zero/overview`: the landing's Session 0 blocks. */
+function sessionZeroOverview(viewer: Viewer) {
+  const sample = viewer.data.sessionZero;
+  const page = sessionZero(viewer);
+  return {
+    started: true,
+    rounds: sample.rounds.map((round) => ({
+      ...round,
+      steps: page.modules.map((module) => ({
+        id: module.id,
+        kind: module.kind,
+        position: module.position,
+        cards: (module.columns as { cards: unknown[] }[]).reduce((total, col) => total + col.cards.length, 0),
+        ...(module.polls ? { polls: module.polls } : {}),
+      })),
+    })),
+    lines_veils: sample.overviewLinesVeils,
+  };
+}
+
 type Answer = { status: number; body: unknown };
 
 const NOT_FOUND: Answer = { status: 404, body: { detail: 'Not found' } };
@@ -419,7 +477,7 @@ function answer(path: string, viewer: Viewer): Answer {
         viewer
           .documents()
           .filter((doc) => doc.played_by === viewer.id)
-          .map((doc) => ({ document_id: doc.id, name: doc.name, image_url: null })),
+          .map((doc) => ({ document_id: doc.id, name: doc.name, image_url: doc.image })),
       );
     case 'search':
       return ok(search(viewer, url.searchParams));
@@ -429,31 +487,13 @@ function answer(path: string, viewer: Viewer): Answer {
     case 'mention-suggestions':
       return ok(section === 'exports' ? [] : { sources: [] });
     case 'sections':
-      // The sample Room's landing: the three page cards every Room starts
-      // with (spec 55), the Clocks card and a "Clocks" Section (spec 61).
+      // The sample Room's landing (specs 55, 60, 61, 64): the three page cards every
+      // Room starts with, the custom Sections, the Clocks Section and the Clocks card.
       return rest.length === 1
         ? ok([
-            ...(['page_documents', 'page_maps', 'page_session_zero'] as const).map((kind, position) => ({
-              id: `demo-${kind}`,
-              kind,
-              position,
-              title: null,
-              description: '',
-              image_url: null,
-              blocks: [],
-              can_edit: false,
-            })),
-            { ...data.clockSection, can_edit: false },
-            {
-              id: 'demo-page_clocks',
-              kind: 'page_clocks',
-              position: 4,
-              title: null,
-              description: '',
-              image_url: null,
-              blocks: [],
-              can_edit: false,
-            },
+            ...(['page_documents', 'page_maps', 'page_session_zero'] as const).map((kind, position) => pageCard(kind, position)),
+            ...[...data.sections, data.clockSection].map((section) => ({ ...section, can_edit: false })),
+            pageCard('page_clocks', 7),
           ])
         : NOT_FOUND;
     case 'clocks': {
@@ -475,22 +515,8 @@ function answer(path: string, viewer: Viewer): Answer {
     case 'clock-groups':
       return rest.length === 1 ? ok(data.clockGroups) : NOT_FOUND;
     case 'session-zero':
-      if (id === 'overview' && rest.length === 2) return ok({ started: false, rounds: [], lines_veils: {} });
-      // The sample Room's Session 0 was never started (spec 46); starting it is a write.
-      return rest.length === 1
-        ? ok({
-            started: false,
-            revision: 0,
-            can_manage: viewer.isMaster,
-            rounds: [],
-            round_id: null,
-            modules: [],
-            current_module_id: null,
-            hidden_modules: 0,
-            lines_veils: [],
-            timer: null,
-          })
-        : NOT_FOUND;
+      if (id === 'overview' && rest.length === 2) return ok(sessionZeroOverview(viewer));
+      return rest.length === 1 ? ok(sessionZero(viewer)) : NOT_FOUND;
     case 'maps': {
       if (rest.length === 1) return ok(data.maps.map((map) => mapSummary(map, viewer)));
       const map = data.maps.find((candidate) => candidate.id === id);
@@ -512,8 +538,12 @@ function answer(path: string, viewer: Viewer): Answer {
           return rest.length === 3 ? ok(rawComments(viewer, doc.id)) : NOT_FOUND;
         case 'backlinks':
           return ok(backlinks(viewer, doc.id));
-        case 'versions':
-          return subId ? NOT_FOUND : ok([]);
+        case 'versions': {
+          const versions = viewer.isMaster ? (data.versions[doc.id] ?? []) : [];
+          if (!subId) return ok(versions.map(({ subtitle: _s, description: _d, notes: _n, ...summary }) => summary));
+          const one = versions.find((version) => version.id === subId);
+          return one ? ok(one) : NOT_FOUND;
+        }
         case 'mention-suggestions':
           return ok({ sources: [] });
         case 'mention-map': {

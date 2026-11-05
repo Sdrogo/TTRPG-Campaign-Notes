@@ -103,6 +103,18 @@
       "export": {
         "title": "Export",
         "text": "Emporte ta campagne : un manuel PDF en trois styles, ou du JSON et du Markdown pour tes propres outils."
+      },
+      "sections": {
+        "title": "Sections et accueil de la Salle",
+        "text": "Construisez la page d'accueil de votre Salle avec des Sections : Documents par Tag, cartes, Session 0 et Horloges."
+      },
+      "session": {
+        "title": "Session 0",
+        "text": "Mettez-vous d'accord sur la façon de jouer : Lignes et Voiles, Étoiles et Souhaits, questions et sondages."
+      },
+      "clocks": {
+        "title": "Horloges",
+        "text": "Suivez ce qui approche avec des horloges à segments, en course ou à tour de rôle."
       }
     },
     "stepsTitle": "Comment ça marche",
@@ -137,9 +149,17 @@
     "keepExploring": "Continuer à explorer",
     "label": "Visite de la démo",
     "steps": {
-      "room": {
-        "title": "Une Salle est une campagne",
-        "body": "Toute la campagne vit ici, rangée sous les Tags principaux : personnages, lieux, événements. Le Master dirige la Salle ; les Players la rejoignent par un lien."
+      "roomLanding": {
+        "title": "L'accueil de la Salle",
+        "body": "Chaque Salle s'ouvre sur sa propre page : des cartes pour les Documents, les cartes, la Session 0 et les Horloges, et les Sections montées par le Master."
+      },
+      "sections": {
+        "title": "Sections",
+        "body": "Chaque carte est une Section assemblée par le Master. Cliquez sur l'une d'elles pour ouvrir sa page."
+      },
+      "sectionPage": {
+        "title": "Dans une Section",
+        "body": "Une Section contient des blocs : des Documents choisis par Tag, des cartes, des étapes de la Session 0, des Horloges. Le Master les organise en mode édition."
       },
       "roomIndex": {
         "title": "L'Index de la Salle",
@@ -155,7 +175,7 @@
       },
       "documentText": {
         "title": "Notes et mentions",
-        "body": "Les Notes ajoutent des paragraphes sous la description. Une #mention relie un autre Document, et le lien vaut dans les deux sens."
+        "body": "Les Notes ajoutent des paragraphes sous la description. Le texte accepte le Markdown, et une #mention relie un autre Document : le lien fonctionne dans les deux sens."
       },
       "mentionMap": {
         "title": "La carte des mentions",
@@ -179,16 +199,62 @@
       },
       "freeMap": {
         "title": "Tableaux libres",
-        "body": "Des cartes de Documents et des flèches sur un tableau libre, pour suivre qui veut quoi. Le Master peut aussi laisser les Players y dessiner."
+        "body": "Cartes de Documents et flèches sur un tableau libre, pour suivre qui veut quoi. Les flèches entre les deux mêmes cartes s'écartent en se courbant. Le Master peut laisser les Players dessiner aussi."
+      },
+      "splitView": {
+        "title": "Aperçu côte à côte",
+        "body": "Le bouton Aperçu partage l'écran : cliquez sur une carte et son Document s'ouvre à droite, pour lire tout en préparant."
+      },
+      "linkNote": {
+        "title": "Liens relationnels",
+        "body": "Une Note marquée comme Lien relationnel transforme ses mentions en liens : ils alimentent la carte des mentions et les renvois des Documents."
       },
       "geoMap": {
         "title": "Cartes géographiques",
-        "body": "Placez des lieux sur une image et tracez des régions ; chaque lieu mène à son Document."
+        "body": "Placez des lieux sur l'image d'une carte et tracez des régions ; chaque lieu mène à son Document. Les liens entre lieux peuvent se courber."
+      },
+      "sessionZero": {
+        "title": "Session 0",
+        "body": "Avant la première séance, la table s'accorde sur la façon de jouer : Lignes et Voiles, Étoiles et Souhaits, questions, sondages. Ici, elle a déjà eu lieu."
+      },
+      "poll": {
+        "title": "Sondages",
+        "body": "Le Master pose la question, tout le monde vote. Les réglages décident qui voit les noms et quand le décompte apparaît. Celui-ci a choisi où l'histoire commence."
+      },
+      "clocks": {
+        "title": "Horloges",
+        "body": "Les horloges à segments suivent ce qui approche : une fuite, un plan, l'aube. Les groupes les font courir en course ou à tour de rôle."
+      },
+      "versions": {
+        "title": "Historique des versions",
+        "body": "Les propriétaires et le Master peuvent lire chaque version antérieure d'un Document, Notes comprises, et en restaurer une."
+      },
+      "alsoThere": {
+        "title": "Et ce n'est pas tout",
+        "body": "Avec un compte, vous pouvez aussi exporter un manuel PDF en trois styles, importer et exporter du JSON et du Markdown, générer des mentions, écouter les textes, chercher des images pour les cartes et ajouter des amis. Ces actions écrivent des données : la démo se contente de les évoquer."
+      },
+      "playerDocuments": {
+        "title": "Maintenant en Player",
+        "body": "Vous êtes Marco, qui joue Jun. Les Documents réservés au Master ont disparu, et celui de Jun, le manga kissa, n'apparaît que pour lui."
+      },
+      "playerDocument": {
+        "title": "Le Document d'un Player",
+        "body": "Ce Document est privé : seuls Marco et le Master le voient. Dans la vue de Giulia, il n'apparaît même pas dans la liste."
+      },
+      "playerMap": {
+        "title": "La carte d'un Player",
+        "body": "La carte cachée du Master et ses flèches manquent. Quand vous avez fini, revenez à Master depuis la bannière."
       },
       "end": {
         "title": "Voilà Ex Libris",
         "body": "Connectez-vous pour créer votre propre Salle, ou continuez à explorer la démo."
       }
+    },
+    "chapterLabel": "Chapitres de la visite",
+    "chapters": {
+      "basics": "Les bases",
+      "more": "Plus",
+      "player": "En Player"
     }
   },
   "header": {

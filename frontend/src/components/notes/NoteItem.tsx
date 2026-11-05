@@ -160,7 +160,13 @@ export function NoteItem({
   const hasActions = Boolean(onReveal) || note.canEdit || note.canDelete;
 
   return (
-    <Stack gap={4} id={`note-${note.id}`} className="note-item" data-testid="note-item">
+    <Stack
+      gap={4}
+      id={`note-${note.id}`}
+      className="note-item"
+      data-testid="note-item"
+      data-tour={note.relationalLink ? 'link-note' : undefined}
+    >
       <Group justify="space-between" align="flex-start" wrap="nowrap" preventGrowOverflow={false}>
         <Group gap="xs" wrap="wrap" style={{ minWidth: 0 }}>
           <Title

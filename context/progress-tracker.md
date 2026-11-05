@@ -115,6 +115,14 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-10-12 → 11-05
 
+- **64, Demo refresh** (11-05, no mig.): the sample Room is now "Tokyo
+  by Night" (the product owner's Midjourney art), opens on the Room
+  landing with Sections, a played Session 0 with a poll, version history,
+  images and Markdown; the tour has 25 steps in three chapters (Basics,
+  More, As a Player); the landing has 9 cards; `tourGuard.test.ts` keeps
+  steps, targets and the 12 locales in line. Demo tick: every later
+  user-visible feature says whether the Demo needs it
+  (`ai-workflow-rules.md`).
 - **63** (11-05, no mig.): the add-block popover of a Section has two
   groups, Room content (Documenti, Mappe, Clock tiles) and Session 0 (wide
   "Panoramica" tile + the five tools); Clock is no longer among the tools.
@@ -227,7 +235,6 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   background, dragging link labels, dragging area names by hand (needs a
   migration), a Tag picking an area's color.
 - **43, Real-time maps, not built**: presence, editing from a phone.
-- **45, Demo**: the sample Room has no images yet.
 - **34, More UI languages, round two**: tr and zh-Hant, later.
 - **Requirements not built** (`requirements.md` §14): Glossary entries
   (FR-N3/N4, VR-10), draft/published (FR-D6), notifications (FR-T9),

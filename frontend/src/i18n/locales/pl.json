@@ -103,6 +103,18 @@
       "export": {
         "title": "Eksport",
         "text": "Zabierz kampanię ze sobą: podręcznik PDF w trzech stylach albo JSON i Markdown do własnych narzędzi."
+      },
+      "sections": {
+        "title": "Sekcje i strona główna Pokoju",
+        "text": "Zbuduj stronę główną Pokoju z Sekcji: Dokumenty według Tagu, mapy, Sesja 0 i Zegary."
+      },
+      "session": {
+        "title": "Sesja 0",
+        "text": "Ustalcie, jak gracie: Linie i Zasłony, Gwiazdy i Życzenia, pytania i ankiety."
+      },
+      "clocks": {
+        "title": "Zegary",
+        "text": "Śledź to, co nadchodzi, za pomocą zegarów z segmentami, jako wyścig lub na zmianę."
       }
     },
     "stepsTitle": "Jak to działa",
@@ -137,9 +149,17 @@
     "keepExploring": "Zwiedzaj dalej",
     "label": "Przewodnik po demo",
     "steps": {
-      "room": {
-        "title": "Pokój to jedna kampania",
-        "body": "Cała kampania żyje tutaj, pogrupowana pod głównymi Tagami: postacie, miejsca, wydarzenia. Master prowadzi Pokój; Playerzy dołączają przez link."
+      "roomLanding": {
+        "title": "Strona główna Pokoju",
+        "body": "Każdy Pokój otwiera się na własnej stronie głównej: karty Dokumentów, map, Sesji 0 i Zegarów oraz Sekcje zbudowane przez Mastera."
+      },
+      "sections": {
+        "title": "Sekcje",
+        "body": "Każda karta to Sekcja ułożona przez Mastera. Kliknij ją, aby otworzyć jej stronę."
+      },
+      "sectionPage": {
+        "title": "Wewnątrz Sekcji",
+        "body": "Sekcja składa się z bloków: Dokumenty wybrane według Tagu, mapy, kroki Sesji 0, Zegary. Master układa je w trybie edycji."
       },
       "roomIndex": {
         "title": "Indeks Pokoju",
@@ -155,7 +175,7 @@
       },
       "documentText": {
         "title": "Notatki i wzmianki",
-        "body": "Notatki dodają akapity pod opisem. #Wzmianka łączy inny Dokument, a link działa w obie strony."
+        "body": "Notatki dodają akapity pod opisem. Tekst obsługuje Markdown, a #wzmianka łączy z innym Dokumentem: link działa w obie strony."
       },
       "mentionMap": {
         "title": "Mapa wzmianek",
@@ -179,16 +199,62 @@
       },
       "freeMap": {
         "title": "Wolne tablice",
-        "body": "Karty Dokumentów i strzałki na wolnej tablicy, by śledzić, kto czego chce. Master może pozwolić rysować także Playerom."
+        "body": "Karty Dokumentów i strzałki na wolnej tablicy, by śledzić, kto czego chce. Strzałki między tymi samymi dwiema kartami rozchodzą się łukiem. Master może pozwolić rysować także Playerom."
+      },
+      "splitView": {
+        "title": "Podgląd obok",
+        "body": "Przycisk Podgląd dzieli ekran: kliknij kartę, a jej Dokument otworzy się po prawej, byś mógł czytać podczas planowania."
+      },
+      "linkNote": {
+        "title": "Powiązania relacyjne",
+        "body": "Notatka oznaczona jako Powiązanie relacyjne zamienia swoje wzmianki w więzi: zasilają mapę wzmianek i odnośniki zwrotne Dokumentów."
       },
       "geoMap": {
         "title": "Mapy geograficzne",
-        "body": "Umieszczaj miejsca na obrazie mapy i zaznaczaj obszary; każde miejsce prowadzi do swojego Dokumentu."
+        "body": "Zaznaczaj miejsca na obrazie mapy i obrysowuj regiony; każde miejsce prowadzi do swojego Dokumentu. Połączenia między miejscami mogą się wyginać."
+      },
+      "sessionZero": {
+        "title": "Sesja 0",
+        "body": "Przed pierwszą sesją stół ustala, jak będzie grać: Linie i Zasłony, Gwiazdy i Życzenia, pytania, ankiety. Tutaj już się odbyła."
+      },
+      "poll": {
+        "title": "Ankiety",
+        "body": "Master pyta, wszyscy głosują. Ustawienia decydują, kto widzi imiona i kiedy pojawia się wynik. Ta wybrała, gdzie zaczyna się historia."
+      },
+      "clocks": {
+        "title": "Zegary",
+        "body": "Zegary z segmentami śledzą to, co nadchodzi: ucieczkę, plan, świt. Grupy uruchamiają je jako wyścig lub na zmianę."
+      },
+      "versions": {
+        "title": "Historia wersji",
+        "body": "Właściciele i Master mogą czytać każdą wcześniejszą wersję Dokumentu, razem z Notatkami, i przywrócić jedną z nich."
+      },
+      "alsoThere": {
+        "title": "To nie wszystko",
+        "body": "Z kontem możesz też eksportować podręcznik PDF w trzech stylach, importować i eksportować JSON i Markdown, generować wzmianki, czytać na głos, szukać obrazów do map i dodawać znajomych. Zapisują one dane, więc demo je tylko wspomina."
+      },
+      "playerDocuments": {
+        "title": "Teraz jako Player",
+        "body": "Jesteś Marco i grasz Juna. Dokumenty tylko dla Mastera zniknęły, a prywatny dokument Juna, manga kissa, pojawia się tylko dla niego."
+      },
+      "playerDocument": {
+        "title": "Dokument Playera",
+        "body": "Ten Dokument jest prywatny: widzą go tylko Marco i Master. W widoku Giulii nie ma go nawet na liście."
+      },
+      "playerMap": {
+        "title": "Mapa Playera",
+        "body": "Brakuje ukrytej karty Mastera i jej strzałek. Gdy skończysz, wróć do Mastera w banerze."
       },
       "end": {
         "title": "To jest Ex Libris",
         "body": "Zaloguj się, aby utworzyć własny Pokój, albo zwiedzaj demo dalej."
       }
+    },
+    "chapterLabel": "Rozdziały przewodnika",
+    "chapters": {
+      "basics": "Podstawy",
+      "more": "Więcej",
+      "player": "Jako Player"
     }
   },
   "header": {

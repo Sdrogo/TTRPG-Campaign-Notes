@@ -24,6 +24,7 @@ export function SplitToggle() {
         size="sm"
         leftSection={<SquareSplitHorizontalIcon size={20} />}
         aria-pressed={on}
+        data-tour="split-view"
         onClick={() => (on ? close() : open(''))}
         style={{ flexShrink: 0 }}
       >

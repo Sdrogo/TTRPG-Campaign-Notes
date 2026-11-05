@@ -57,7 +57,7 @@ export function PollBoard() {
   const open = board.rounds.find((round) => round.id === board.roundId)?.closedAt === null;
   const editable = open && writable;
   return (
-    <Box component="section" aria-label={t('sessionZero.modules.kinds.poll')} className="sz-polls">
+    <Box component="section" aria-label={t('sessionZero.modules.kinds.poll')} className="sz-polls" data-tour="poll">
       <Stack gap="md">
         <Group gap="md" align="center">
           <Title order={2} fz="h3">

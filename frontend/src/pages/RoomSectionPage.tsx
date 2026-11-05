@@ -136,7 +136,7 @@ function SectionBlocks({
     return <Text c="dimmed">{t('roomLanding.sectionEmpty')}</Text>;
   }
   return (
-    <Stack gap="xl">
+    <Stack gap="xl" data-tour="section-blocks">
       {section.blocks.map((block, index) =>
         block.kind === 'clocks' ? (
           <ClockBlock

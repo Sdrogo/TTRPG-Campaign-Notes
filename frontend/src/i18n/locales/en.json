@@ -103,6 +103,18 @@
       "export": {
         "title": "Export",
         "text": "Take the campaign with you: a PDF manual in three styles, or JSON and Markdown for your own tools."
+      },
+      "sections": {
+        "title": "Sections and the Room home",
+        "text": "Build your Room's landing page with Sections: Documents by Tag, maps, Session 0 and Clocks."
+      },
+      "session": {
+        "title": "Session 0",
+        "text": "Agree how to play: Lines and Veils, Stars and Wishes, questions and polls."
+      },
+      "clocks": {
+        "title": "Clocks",
+        "text": "Track what is coming with segmented clocks, as a race or in turns."
       }
     },
     "stepsTitle": "How it works",
@@ -137,9 +149,17 @@
     "keepExploring": "Keep exploring",
     "label": "Demo tour",
     "steps": {
-      "room": {
-        "title": "A Room is one campaign",
-        "body": "Everything in the campaign lives here, grouped under the Main Tags: characters, places, events. The Master runs the Room; Players join with a link."
+      "roomLanding": {
+        "title": "The Room's home",
+        "body": "Every Room opens on its own landing page: cards for the Documents, the maps, Session 0 and Clocks, and the Sections the Master has built."
+      },
+      "sections": {
+        "title": "Sections",
+        "body": "Each card is a Section the Master put together. Click one to open its page."
+      },
+      "sectionPage": {
+        "title": "Inside a Section",
+        "body": "A Section holds blocks: Documents picked by Tag, maps, Session 0 steps, Clocks. The Master arranges them in edit mode."
       },
       "roomIndex": {
         "title": "The Room Index",
@@ -155,7 +175,7 @@
       },
       "documentText": {
         "title": "Notes and mentions",
-        "body": "Notes add paragraphs under the description. A #mention links another Document, and the link works both ways."
+        "body": "Notes add paragraphs under the description. The text supports Markdown, and a #mention links another Document: the link works both ways."
       },
       "mentionMap": {
         "title": "The mention map",
@@ -179,16 +199,62 @@
       },
       "freeMap": {
         "title": "Free boards",
-        "body": "Document cards and arrows on a free board, to follow who wants what. The Master can let Players draw on it too."
+        "body": "Document cards and arrows on a free board, to follow who wants what. Arrows between the same two cards bend apart. The Master can let Players draw on it too."
+      },
+      "splitView": {
+        "title": "Side-by-side preview",
+        "body": "The Preview button splits the screen: click any card and its Document opens on the right, so you can read while you plan."
+      },
+      "linkNote": {
+        "title": "Relational links",
+        "body": "A Note flagged as a Relational link turns its mentions into ties: they feed the mention map and the Documents' backlinks."
       },
       "geoMap": {
         "title": "Geographic maps",
-        "body": "Pin places on a map image and outline regions; each place leads to its Document."
+        "body": "Pin places on a map image and outline regions; each place leads to its Document. Links between places can curve."
+      },
+      "sessionZero": {
+        "title": "Session 0",
+        "body": "Before the first session the table agrees how to play: Lines and Veils, Stars and Wishes, questions, polls. Here it has already been played."
+      },
+      "poll": {
+        "title": "Polls",
+        "body": "The Master asks, everyone votes. Settings decide who sees the names and when the tally shows. This one chose where the story begins."
+      },
+      "clocks": {
+        "title": "Clocks",
+        "body": "Segmented clocks track what is coming: an escape, a plan, the dawn. Groups run them as a race or in turns."
+      },
+      "versions": {
+        "title": "Version history",
+        "body": "Owners and the Master can read every earlier version of a Document, Notes included, and restore one."
+      },
+      "alsoThere": {
+        "title": "And there is more",
+        "body": "With an account you can also export a PDF manual in three styles, import and export JSON and Markdown, generate mentions, read aloud, search images for maps and add friends. They write data, so the demo only mentions them."
+      },
+      "playerDocuments": {
+        "title": "Now as a Player",
+        "body": "You are Marco, who plays Jun. The Master-only Documents are gone, and his private one, the Net Café, appears for him alone."
+      },
+      "playerDocument": {
+        "title": "A Player's own Document",
+        "body": "This Document is private: only Marco and the Master can see it. Giulia's view of the Room does not even list it."
+      },
+      "playerMap": {
+        "title": "A Player's map",
+        "body": "The Master's hidden card and its arrows are missing. Switch back to Master in the banner when you are done."
       },
       "end": {
         "title": "That's Ex Libris",
         "body": "Sign in to create your own Room, or keep exploring the demo."
       }
+    },
+    "chapterLabel": "Tour chapters",
+    "chapters": {
+      "basics": "Basics",
+      "more": "More",
+      "player": "As a Player"
     }
   },
   "header": {

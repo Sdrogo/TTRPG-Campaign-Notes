@@ -51,7 +51,7 @@ export function SessionZeroHeader({ readAtMs, onPick }: SessionZeroHeaderProps) 
   const manage = writable && board.canManage;
   const open = board.rounds.find((round) => round.id === board.roundId)?.closedAt === null;
   return (
-    <Group gap="xs" className="sz-header">
+    <Group gap="xs" className="sz-header" data-tour="session-zero">
       <VisuallyHidden>
         <Title order={1}>{t('sessionZero.title')}</Title>
       </VisuallyHidden>
