@@ -41,8 +41,7 @@ Drifted, to fix here:
    `pages/RoomClocksPage.tsx` (2),
    `components/maps/CardColorDialog.tsx`,
    `components/maps/MentionMapModal.tsx`,
-   `pages/RelationshipMapPage.tsx` (map toolbar: left as is if it is part of
-   the toolbar, changed only if it is a modal footer).
+   `pages/RelationshipMapPage.tsx` (a delete-confirmation modal footer).
 2. **Section headings (Decision 12)**: `fz="h4"` on a section title in
    `pages/RoomClocksPage.tsx:264` and in the Clock group band,
    `components/clocks/ClockGroupBand.tsx:60`; every other page's sections are
@@ -65,8 +64,9 @@ Obsolete / dropped:
 2. The two Clock headings above use `fz="h3"` like the other
    pages' sections.
 3. `FriendsSection` uses `SectionLoader`.
-4. Clocks page: before/after screenshots (desktop 1440px, phone 390px) in
-   `ui-audit/after/`.
+4. Before/after screenshots of the Clocks page are not part of this build (a
+   button variant and a heading size); take them only if the product owner
+   asks.
 
 ## Design
 
@@ -75,9 +75,8 @@ the variant or the loader. No new component.
 
 ## Tests
 
-- Existing tests stay green at 100% coverage; add one that a Clock dialog's
-  Cancel is subtle grey if none pins it.
-- Visual check on the Demo, desktop and phone.
+No new test: the existing suite (2782 tests) pins none of these variants and
+stays green; `tsc` and `oxlint` are clean.
 
 ## Estimate
 
