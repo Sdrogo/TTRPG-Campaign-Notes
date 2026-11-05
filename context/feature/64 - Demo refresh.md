@@ -204,3 +204,43 @@ per unit. No migration, nothing to apply by hand.
 - **Q6** Add the "Demo needs an update?" line to `ai-workflow-rules.md` and
   the guard test? **Rec: yes.**
 - **Q7** One PR or three (64_1 to 64_3)? **Rec: one PR, three commits.**
+
+## Confirmed (product owner, 2026-11-05)
+
+Landing start, Sections, a played Session 0 with a poll, the two-chapter
+tour (plus a Player chapter: "farei anche da Master o da Player"), the
+guard test and the `ai-workflow-rules.md` line were all confirmed. Out-of-
+scope features (Friends, read-aloud, image search, PDF import, export) are
+**mentioned** in a text-only tour card, not performed. The sample Room
+is "Tokyo by Night" and uses her Midjourney art; the four photographs she
+first sent were left out.
+
+## Built (2026-11-05)
+
+- **Sample Room** (`lib/demo/demoData.ts`, `demoBackend.ts`): 12 Documents
+  with images (`public/demo/*.webp`, converted from her art), Markdown in
+  two Documents, a free map with arrows in both directions between the same
+  cards (they bend apart, spec 62) and a geographic map on an aerial image
+  with a curved and a two-way link; Clocks re-themed (the dawn countdown);
+  Room image; four custom Sections after the three page cards; a Session 0
+  snapshot (Lines & Veils, Stars and Wishes, one closed poll, each viewer's
+  own vote); two versions of Hoshino Mirai's Document (Master only).
+  Decision 7 changed in the build: the free map's bends are automatic (no
+  per-arrow field), so two opposite arrows show them.
+- **Tour** (`lib/demo/tour.ts`, `DemoTour.tsx`): 25 steps, chapters
+  Basics / More / As a Player with a jump control in the card; Player steps
+  open on Marco's preview (spec 22b works on Documents and maps only, so
+  the Player chapter stays there); `reload` steps for a page that reads its
+  query on mount. New `data-tour` targets: `room-landing`, `sections`,
+  `section-blocks`, `split-view`, `link-note`, `session-zero`, `poll`,
+  `clocks`, `versions`.
+- **Landing**: 9 cards (Sections, Session 0 and Clocks added; Export opens
+  the "And there is more" step). All strings in the 12 locales.
+- **Tests**: `tourGuard.test.ts` (targets and locales), backend, tour and
+  landing tests; coverage stays at 100%.
+- No migration, no backend change.
+
+## Open questions
+
+- None left from the first round. Photos of Ginza, Shibuya and the like
+  stay out of the repository.

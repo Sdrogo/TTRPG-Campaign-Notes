@@ -330,6 +330,7 @@ function DocumentPanel({
           variant="subtle"
           color="gray"
           onClick={() => setHistoryOpened(true)}
+          data-tour="versions"
           aria-label={t('versions.actionFor', { name: document.name })}
         >
           <ClockCounterClockwiseIcon size={20} />

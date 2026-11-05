@@ -111,6 +111,6 @@ describe('DemoBanner', () => {
     await user.click(screen.getByRole('button', { name: 'Rivedi il tour' }));
 
     expect(tourStep()).toBe(0);
-    expect(screen.getByRole('dialog', { name: 'Una Stanza è una campagna' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'La home della Stanza' })).toBeInTheDocument();
   });
 });

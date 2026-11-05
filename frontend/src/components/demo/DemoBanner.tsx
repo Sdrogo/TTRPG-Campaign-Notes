@@ -4,7 +4,7 @@ import { FlaskIcon } from '@phosphor-icons/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { matchPath, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { DEMO_START_PATH, exitDemo } from '../../lib/demo/demoMode';
+import { DEMO_DOCUMENTS_PATH, exitDemo } from '../../lib/demo/demoMode';
 import { VIEW_AS_PARAM } from '../../lib/viewAs';
 import { useViewAs } from '../../hooks/useViewAs';
 import { useGoToTourStep } from '../../lib/demo/tour';
@@ -45,7 +45,7 @@ export function DemoBanner() {
   // showing what the previous viewer saw.
   const switchTo = (userId: string) => {
     const onRoomPage = PREVIEW_PAGES.some((pattern) => matchPath(pattern, location.pathname));
-    const pathname = onRoomPage ? location.pathname : DEMO_START_PATH;
+    const pathname = onRoomPage ? location.pathname : DEMO_DOCUMENTS_PATH;
     window.location.assign(userId === 'master' ? pathname : `${pathname}?${VIEW_AS_PARAM}=${userId}`);
   };
 

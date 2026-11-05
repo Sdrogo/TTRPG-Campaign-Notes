@@ -56,6 +56,7 @@ function RoomLandingContent({ roomId, currentUserId }: { roomId: string; current
     <PageLayout backTo="/rooms" backLabel={t('common.myRooms')} roomId={roomId} showIndex>
       <DocumentMentionsProvider roomId={roomId} currentUserId={currentUserId}>
       <PageHeading
+        data-tour="room-landing"
         kicker={room.data && t('roomLanding.kicker')}
         title={room.data ? room.data.name : t('roomLanding.home')}
         titleAfter={canEdit && <EditModeButton editing={editing} onChange={setEditing} />}
@@ -83,7 +84,7 @@ function RoomLandingContent({ roomId, currentUserId }: { roomId: string; current
         (canEdit && editing ? (
           <LandingEditor roomId={roomId} sections={sections.data} />
         ) : (
-          <Box className="documents-grid">
+          <Box className="documents-grid" data-tour="sections">
             {sections.data.map((section) => (
               <LandingCard
                 key={section.id}

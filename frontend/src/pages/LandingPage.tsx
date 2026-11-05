@@ -16,8 +16,11 @@ import {
   ChatsCircleIcon,
   ExportIcon,
   EyeSlashIcon,
+  ListChecksIcon,
   MapTrifoldIcon,
   ScrollIcon,
+  SquaresFourIcon,
+  TimerIcon,
   UsersThreeIcon,
   type Icon,
 } from '@phosphor-icons/react';
@@ -32,16 +35,19 @@ const SIGN_IN_ANCHOR = 'sign-in';
 
 // `tour`: the step of the Demo's tour that shows the feature (spec 45_3).
 const FEATURES: readonly {
-  key: 'rooms' | 'documents' | 'visibility' | 'comments' | 'maps' | 'export';
+  key: 'rooms' | 'sections' | 'documents' | 'visibility' | 'comments' | 'maps' | 'session' | 'clocks' | 'export';
   icon: Icon;
   tour: TourStepId | null;
 }[] = [
-  { key: 'rooms', icon: UsersThreeIcon, tour: 'room' },
+  { key: 'rooms', icon: UsersThreeIcon, tour: 'roomLanding' },
+  { key: 'sections', icon: SquaresFourIcon, tour: 'sections' },
   { key: 'documents', icon: ScrollIcon, tour: 'document' },
   { key: 'visibility', icon: EyeSlashIcon, tour: 'visibility' },
   { key: 'comments', icon: ChatsCircleIcon, tour: 'comments' },
   { key: 'maps', icon: MapTrifoldIcon, tour: 'freeMap' },
-  { key: 'export', icon: ExportIcon, tour: null },
+  { key: 'session', icon: ListChecksIcon, tour: 'sessionZero' },
+  { key: 'clocks', icon: TimerIcon, tour: 'clocks' },
+  { key: 'export', icon: ExportIcon, tour: 'alsoThere' },
 ];
 
 const STEPS = ['create', 'invite', 'write'] as const;

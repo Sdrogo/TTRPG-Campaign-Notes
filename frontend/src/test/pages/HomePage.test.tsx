@@ -62,11 +62,15 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: 'Prova la demo' })).toHaveAttribute('href', '/demo');
     // Spec 45_3: a feature card opens the tour at the step that shows it.
     expect(screen.getAllByRole('link', { name: 'Guardalo nella demo' }).map((link) => link.getAttribute('href'))).toEqual([
-      '/demo?step=room',
+      '/demo?step=roomLanding',
+      '/demo?step=sections',
       '/demo?step=document',
       '/demo?step=visibility',
       '/demo?step=comments',
       '/demo?step=freeMap',
+      '/demo?step=sessionZero',
+      '/demo?step=clocks',
+      '/demo?step=alsoThere',
     ]);
     // Spec 31_3: the privacy notice can be read before signing in.
     expect(screen.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');

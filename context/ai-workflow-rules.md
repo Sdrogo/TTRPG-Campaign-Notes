@@ -90,6 +90,10 @@ Update the relevant context file whenever implementation changes:
 - Visual/theming decisions → `ui-context.md`
 - Feature scope → `project-overview.md` and, if it resolves or
   raises a `D-`/`OQ-`, `requirements.md`
+- A user-visible feature → the Demo (spec 64): the ticket says whether the
+  sample Room (`frontend/src/lib/demo/`) needs sample data and whether the
+  guided tour or the landing cards need a step; the tracker entry carries
+  a "Demo" tick (done, or not needed and why)
 
 ## Before Moving to the Next Unit
 

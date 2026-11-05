@@ -216,6 +216,7 @@ function RoomClocksContent({ roomId, currentUserId }: { roomId: string; currentU
       index={{ current: 'page_clocks' }}
     >
       <PageHeading
+        data-tour="clocks"
         kicker={room.data?.name}
         title={t('clocks.title')}
         description={t('clocks.description')}
