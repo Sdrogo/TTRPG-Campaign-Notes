@@ -10,7 +10,9 @@ interface RoomNameSectionProps {
 }
 
 /**
- * Renames the Room (Administrators only). The name is trimmed and can't be
+ * Renames the Room (Administrators only). Saving is only possible while the
+ * button is enabled: a browser doesn't submit a form whose submit button is
+ * disabled, Enter included. The name is trimmed and can't be
  * empty, as when the Room is created; the backend enforces both.
  */
 export function RoomNameSection({ roomId, name }: RoomNameSectionProps) {
@@ -40,7 +42,7 @@ export function RoomNameSection({ roomId, name }: RoomNameSectionProps) {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          if (canSave) save();
+          save();
         }}
       >
         <Group align="flex-end" gap="sm" wrap="nowrap">
