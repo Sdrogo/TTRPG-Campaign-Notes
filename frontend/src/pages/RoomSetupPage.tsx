@@ -127,7 +127,7 @@ export function RoomSetupPage() {
                   <Grid.Col span={{ base: 12, lg: 6 }}>
                     <Paper withBorder radius="md" p="md" h="100%">
                       <Stack gap="lg">
-                        <RoomNameSection roomId={roomId} name={room.data.name} />
+                        <RoomNameSection key={room.data.name} roomId={roomId} name={room.data.name} />
                         <RoomImageSection roomId={roomId} imageUrl={room.data.imageUrl} />
                         <DefaultVisibilitySection roomId={roomId} value={room.data.defaultVisibility} />
                       </Stack>
