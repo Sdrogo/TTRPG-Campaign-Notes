@@ -15,6 +15,7 @@ import { MemberManagement } from '../components/setup/MemberManagement';
 import { TagsSection } from '../components/setup/TagsSection';
 import { DeleteRoomSection } from '../components/setup/DeleteRoomSection';
 import { DefaultVisibilitySection } from '../components/setup/DefaultVisibilitySection';
+import { RoomNameSection } from '../components/setup/RoomNameSection';
 import { RoomImageSection } from '../components/setup/RoomImageSection';
 import { VisibilityHistory } from '../components/setup/VisibilityHistory';
 import { PageHeading } from '../components/PageHeading';
@@ -126,6 +127,7 @@ export function RoomSetupPage() {
                   <Grid.Col span={{ base: 12, lg: 6 }}>
                     <Paper withBorder radius="md" p="md" h="100%">
                       <Stack gap="lg">
+                        <RoomNameSection key={room.data.name} roomId={roomId} name={room.data.name} />
                         <RoomImageSection roomId={roomId} imageUrl={room.data.imageUrl} />
                         <DefaultVisibilitySection roomId={roomId} value={room.data.defaultVisibility} />
                       </Stack>

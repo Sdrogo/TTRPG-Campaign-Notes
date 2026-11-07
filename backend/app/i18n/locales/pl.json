@@ -11,6 +11,7 @@
       "onlyAdministratorCanChangeRoles": "Tylko Administrator pokoju może zmieniać role",
       "onlyAdministratorCanRemoveMembers": "Tylko Administrator pokoju może usuwać członków",
       "onlyAdministratorChangesImage": "Tylko Administrator pokoju może zmienić jego obraz",
+      "onlyAdministratorCanRename": "Tylko administrator Pokoju może zmienić jego nazwę",
       "onlyAdministratorCanDelete": "Tylko Administrator pokoju może go usunąć",
       "nameRequired": "Nazwa pokoju jest wymagana",
       "onlyAdministratorCanChangeDefaultVisibility": "Tylko Administrator pokoju może zmienić domyślną widoczność",

@@ -11,6 +11,7 @@
       "onlyAdministratorCanChangeRoles": "只有房间管理员可以更改角色",
       "onlyAdministratorCanRemoveMembers": "只有房间管理员可以移除成员",
       "onlyAdministratorChangesImage": "只有房间管理员可以更改房间图片",
+      "onlyAdministratorCanRename": "只有房间管理员可以重命名房间",
       "onlyAdministratorCanDelete": "只有房间管理员可以删除房间",
       "nameRequired": "房间名称为必填项",
       "onlyAdministratorCanChangeDefaultVisibility": "只有房间管理员可以更改默认可见性",

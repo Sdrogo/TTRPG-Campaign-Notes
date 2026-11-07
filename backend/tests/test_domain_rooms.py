@@ -78,3 +78,19 @@ def test_room_images_get_a_fresh_path_under_their_own_prefix() -> None:
     first, second = plan_room_image_path(room_id), plan_room_image_path(room_id)
     assert first.startswith(f"rooms/{room_id}/") and first.endswith(".webp")
     assert first != second
+
+
+def test_only_administrators_rename_a_room_with_a_non_blank_name() -> None:
+    from dataclasses import replace
+
+    from app.domain.rooms import OnlyAdministratorRenamesRoomError, plan_room_settings
+
+    room = plan_new_room("Barovia", None, uuid.uuid4()).room
+    admin = Membership(
+        id=uuid.uuid4(), room_id=room.id, user_id=uuid.uuid4(), role=RoomRole.PLAYER, is_admin=True
+    )
+    assert plan_room_settings(room, admin, None, None, name="  Ravenloft ").name == "Ravenloft"
+    with pytest.raises(RoomNameRequiredError):
+        plan_room_settings(room, admin, None, None, name="  ")
+    with pytest.raises(OnlyAdministratorRenamesRoomError):
+        plan_room_settings(room, replace(admin, is_admin=False), None, None, name="X")

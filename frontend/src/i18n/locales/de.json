@@ -477,6 +477,11 @@
       "settings": "Einstellungen",
       "history": "Verlauf"
     },
+    "roomName": {
+      "title": "Raumname",
+      "label": "Name",
+      "saved": "Raumname gespeichert."
+    },
     "defaultVisibility": {
       "title": "Standard-Sichtbarkeit",
       "description": "Die Stufe, mit der jedes neue Dokument, jede neue Notiz und jeder neue Kommentar startet. Eine Antwort startet trotzdem mit der Sichtbarkeit des Kommentars, auf den sie antwortet. Bestehende Inhalte ändern sich nicht.",

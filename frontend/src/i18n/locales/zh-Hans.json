@@ -477,6 +477,11 @@
       "settings": "设置",
       "history": "历史"
     },
+    "roomName": {
+      "title": "房间名称",
+      "label": "名称",
+      "saved": "房间名称已保存。"
+    },
     "defaultVisibility": {
       "title": "默认可见性",
       "description": "每个新文档、笔记和评论的初始级别。回复仍以其所回复评论的可见性为起点。现有内容不会改变。",

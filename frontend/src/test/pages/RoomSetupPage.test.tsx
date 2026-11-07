@@ -247,6 +247,27 @@ describe('RoomSetupPage', () => {
     );
   });
 
+  it('renames the Room with a trimmed name', async () => {
+    routes.patch = () => Promise.resolve(rawRoom({ name: 'Ravenloft' }));
+    const { user } = render();
+
+    const input = await screen.findByRole('textbox', { name: 'Nome' });
+    const save = screen.getAllByRole('button', { name: 'Salva' })[0];
+    expect(save).toBeDisabled();
+    await user.clear(input);
+    expect(save).toBeDisabled();
+    await user.type(input, '  Ravenloft  ');
+    await user.click(save);
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith('/rooms/room-1', {
+        method: 'PATCH',
+        json: expect.objectContaining({ name: 'Ravenloft' }),
+      }),
+    );
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Nome della Room salvato.'));
+  });
+
   it('reports a default visibility that could not be saved', async () => {
     routes.patch = () => Promise.reject(new Error('no'));
     const { user } = render();

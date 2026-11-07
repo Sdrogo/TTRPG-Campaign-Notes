@@ -11,6 +11,7 @@
       "onlyAdministratorCanChangeRoles": "Alleen een Admin van de Kamer kan rollen wijzigen",
       "onlyAdministratorCanRemoveMembers": "Alleen een Admin van de Kamer kan leden verwijderen",
       "onlyAdministratorChangesImage": "Alleen een Admin van de Kamer kan de afbeelding wijzigen",
+      "onlyAdministratorCanRename": "Alleen een Room-beheerder kan de Room hernoemen",
       "onlyAdministratorCanDelete": "Alleen een Admin van de Kamer kan hem verwijderen",
       "nameRequired": "De naam van de Kamer is verplicht",
       "onlyAdministratorCanChangeDefaultVisibility": "Alleen een Admin van de Kamer kan de standaardzichtbaarheid wijzigen",

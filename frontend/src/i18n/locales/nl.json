@@ -477,6 +477,11 @@
       "settings": "Instellingen",
       "history": "Geschiedenis"
     },
+    "roomName": {
+      "title": "Naam van de Room",
+      "label": "Naam",
+      "saved": "Naam van de Room opgeslagen."
+    },
     "defaultVisibility": {
       "title": "Standaardzichtbaarheid",
       "description": "Het niveau waarmee elk nieuw Document, elke nieuwe Notitie en Opmerking begint. Een antwoord begint altijd met de zichtbaarheid van de opmerking waarop het reageert. Bestaande inhoud verandert niet.",

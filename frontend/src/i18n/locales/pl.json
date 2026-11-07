@@ -477,6 +477,11 @@
       "settings": "Ustawienia",
       "history": "Historia"
     },
+    "roomName": {
+      "title": "Nazwa Pokoju",
+      "label": "Nazwa",
+      "saved": "Nazwa Pokoju zapisana."
+    },
     "defaultVisibility": {
       "title": "Domyślna widoczność",
       "description": "Poziom, od którego zaczyna każdy nowy dokument, notatka i komentarz. Odpowiedź i tak zaczyna od widoczności komentarza, na który odpowiada. Istniejąca treść się nie zmienia.",
