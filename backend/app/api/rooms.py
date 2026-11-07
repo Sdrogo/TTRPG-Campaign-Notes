@@ -6,7 +6,7 @@ import uuid
 from collections.abc import Iterable, Mapping
 
 from fastapi import APIRouter, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.document_files import remove_files
@@ -61,7 +61,7 @@ router = APIRouter(prefix="/rooms", tags=["rooms"])
 class CreateRoomRequest(BaseModel):
     """A new Room's name and optional game system."""
 
-    name: str
+    name: str = Field(max_length=200)
     game_system: str | None = None
 
 
@@ -110,7 +110,7 @@ class UpdateRoomSettingsRequest(BaseModel):
     the Master's (D-13, FR-D7), the default visibility and the name the
     Administrators' (VR-05, spec 22)."""
 
-    name: str | None = None
+    name: str | None = Field(default=None, max_length=200)
     players_can_create_documents: bool | None = None
     default_visibility: DocumentVisibility | None = None
 

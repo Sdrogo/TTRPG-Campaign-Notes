@@ -298,3 +298,19 @@ async def test_a_non_administrator_cannot_rename_the_room(
         f"/rooms/{room['id']}", json={"name": "Hijacked"}, headers=_auth_headers(player_token)
     )
     assert response.status_code == 403
+
+
+async def test_a_room_name_over_200_characters_is_rejected(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(token))
+    ).json()
+
+    response = await client.patch(
+        f"/rooms/{room['id']}", json={"name": "x" * 201}, headers=_auth_headers(token)
+    )
+    assert response.status_code == 422
+    created = await client.post("/rooms", json={"name": "x" * 201}, headers=_auth_headers(token))
+    assert created.status_code == 422

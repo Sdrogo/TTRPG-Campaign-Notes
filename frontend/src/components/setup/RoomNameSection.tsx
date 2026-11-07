@@ -47,6 +47,7 @@ export function RoomNameSection({ roomId, name }: RoomNameSectionProps) {
           <TextInput
             label={t('setup.roomName.label')}
             value={draft}
+            maxLength={200}
             onChange={(event) => setDraft(event.currentTarget.value)}
             style={{ flex: 1 }}
             maw={360}
