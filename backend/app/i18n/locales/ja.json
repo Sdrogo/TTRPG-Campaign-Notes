@@ -11,6 +11,7 @@
       "onlyAdministratorCanChangeRoles": "役割を変更できるのはルームの管理者だけです",
       "onlyAdministratorCanRemoveMembers": "メンバーを削除できるのはルームの管理者だけです",
       "onlyAdministratorChangesImage": "ルームの画像を変更できるのはルームの管理者だけです",
+      "onlyAdministratorCanRename": "ルームの名前を変更できるのはルーム管理者のみです",
       "onlyAdministratorCanDelete": "ルームを削除できるのはルームの管理者だけです",
       "nameRequired": "ルーム名は必須です",
       "onlyAdministratorCanChangeDefaultVisibility": "既定の公開範囲を変更できるのはルームの管理者だけです",

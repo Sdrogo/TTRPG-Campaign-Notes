@@ -36,6 +36,11 @@ class InvalidDefaultVisibilityError(DomainError):
     """Selective can't be a default: it needs a list of members."""
 
 
+class OnlyAdministratorRenamesRoomError(DomainError):
+    """Only an Administrator renames the Room, like the rest of the setup
+    page's Settings tab."""
+
+
 class OnlyAdministratorChangesImageError(DomainError):
     """Only an Administrator sets or removes the Room's image (spec 26
     Decision 2)."""
@@ -96,12 +101,23 @@ def plan_room_settings(
     requester: Membership,
     players_can_create_documents: bool | None,
     default_visibility: DocumentVisibility | None,
+    *,
+    name: str | None = None,
 ) -> Room:
     """The Room with the settings the request changes; omitted ones stay.
+    The name is the Administrators' and follows the creation rule: trimmed,
+    never empty (422).
     Players' Document creation is the Master's (D-13, FR-D7), the default
     visibility the Administrators' (VR-05, spec 22 Decision 5): 403 for a setting
     the requester may not change, 422 for a Selective default. None is
     audited: no content's visibility changes."""
+    clean_name = None
+    if name is not None:
+        if not requester.is_admin:
+            raise OnlyAdministratorRenamesRoomError("errors.room.onlyAdministratorCanRename")
+        clean_name = name.strip()
+        if not clean_name:
+            raise RoomNameRequiredError("errors.room.nameRequired")
     if players_can_create_documents is not None and requester.role != RoomRole.MASTER:
         raise OnlyMasterChangesSettingsError("errors.room.onlyMasterCanChangeSettings")
     if default_visibility is not None:
@@ -113,6 +129,7 @@ def plan_room_settings(
             raise InvalidDefaultVisibilityError("errors.room.invalidDefaultVisibility")
     return replace(
         room,
+        name=room.name if clean_name is None else clean_name,
         players_can_create_documents=(
             room.players_can_create_documents
             if players_can_create_documents is None

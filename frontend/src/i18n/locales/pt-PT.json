@@ -477,6 +477,11 @@
       "settings": "Definições",
       "history": "Histórico"
     },
+    "roomName": {
+      "title": "Nome da Sala",
+      "label": "Nome",
+      "saved": "Nome da Sala guardado."
+    },
     "defaultVisibility": {
       "title": "Visibilidade predefinida",
       "description": "O nível com que começa cada novo Documento, Nota e Comentário. Uma resposta começa sempre com a visibilidade do comentário a que responde. O conteúdo existente não muda.",

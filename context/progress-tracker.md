@@ -115,6 +115,7 @@ One line per unit, dates 2026, newest first. Spec files live in
 
 ### 2026-10-12 → 11-05
 
+- **Rename a Room** (11-07, no mig.): `PATCH /rooms/{id}` takes an optional `name`, the Administrators' (403 otherwise; trimmed, blank is 422 like creation). Settings tab has a Room name card. All 12 UI/backend locales.
 - **64, Demo refresh** (11-05, no mig.): the sample Room is now "Tokyo
   by Night" (the product owner's Midjourney art), opens on the Room
   landing with Sections, a played Session 0 with a poll, version history,

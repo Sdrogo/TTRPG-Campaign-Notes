@@ -11,6 +11,7 @@
       "onlyAdministratorCanChangeRoles": "Только Admin Комнаты может менять роли",
       "onlyAdministratorCanRemoveMembers": "Только Admin Комнаты может удалять участников",
       "onlyAdministratorChangesImage": "Только Admin Комнаты может менять изображение Комнаты",
+      "onlyAdministratorCanRename": "Только администратор Комнаты может переименовать Комнату",
       "onlyAdministratorCanDelete": "Только Admin Комнаты может удалить Комнату",
       "nameRequired": "Нужно название Комнаты",
       "onlyAdministratorCanChangeDefaultVisibility": "Только Admin Комнаты может менять видимость по умолчанию",

@@ -47,6 +47,7 @@ from app.domain.models import (
 from app.domain.rooms import (
     InvalidDefaultVisibilityError,
     OnlyAdministratorChangesDefaultVisibilityError,
+    OnlyAdministratorRenamesRoomError,
     OnlyMasterChangesSettingsError,
     RoomNameRequiredError,
     plan_new_room,
@@ -106,9 +107,10 @@ class UpdateMemberRequest(BaseModel):
 
 class UpdateRoomSettingsRequest(BaseModel):
     """The Room's settings; omitted ones stay. Players' Document creation is
-    the Master's (D-13, FR-D7), the default visibility the Administrators'
-    (VR-05, spec 22)."""
+    the Master's (D-13, FR-D7), the default visibility and the name the
+    Administrators' (VR-05, spec 22)."""
 
+    name: str | None = None
     players_can_create_documents: bool | None = None
     default_visibility: DocumentVisibility | None = None
 
@@ -214,7 +216,7 @@ async def update_room_settings(
     locale: LocaleDep,
 ) -> RoomResponse:
     """Changes the Room's settings: the Master switches Players' Document
-    creation on or off (D-13, FR-D7), an Administrator picks the level new
+    creation on or off (D-13, FR-D7), an Administrator renames the Room and picks the level new
     content starts at (VR-05, spec 22: Room, Master or Private; 422 for
     Selective) and where the maps row sits among the Documents page's
     groups. 403 for a non-member or a setting the requester may not
@@ -233,13 +235,15 @@ async def update_room_settings(
             membership,
             body.players_can_create_documents,
             body.default_visibility,
+            name=body.name,
         )
     except (
+        OnlyAdministratorRenamesRoomError,
         OnlyMasterChangesSettingsError,
         OnlyAdministratorChangesDefaultVisibilityError,
     ) as exc:
         raise translated_error(status.HTTP_403_FORBIDDEN, exc, locale) from exc
-    except InvalidDefaultVisibilityError as exc:
+    except (InvalidDefaultVisibilityError, RoomNameRequiredError) as exc:
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
 
     await rooms_repo.update_room_settings(session, updated)

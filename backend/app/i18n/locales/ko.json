@@ -11,6 +11,7 @@
       "onlyAdministratorCanChangeRoles": "룸 Admin만 역할을 변경할 수 있습니다",
       "onlyAdministratorCanRemoveMembers": "룸 Admin만 멤버를 내보낼 수 있습니다",
       "onlyAdministratorChangesImage": "룸 Admin만 룸 이미지를 변경할 수 있습니다",
+      "onlyAdministratorCanRename": "룸 이름은 룸 관리자만 변경할 수 있습니다",
       "onlyAdministratorCanDelete": "룸 Admin만 룸을 삭제할 수 있습니다",
       "nameRequired": "룸 이름이 필요합니다",
       "onlyAdministratorCanChangeDefaultVisibility": "룸 Admin만 기본 공개 범위를 변경할 수 있습니다",

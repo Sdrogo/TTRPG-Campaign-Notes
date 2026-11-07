@@ -253,3 +253,48 @@ async def test_listing_members_is_withheld_from_a_non_member(
     )
 
     assert response.status_code == 403
+
+
+async def test_administrator_renames_the_room(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(token))
+    ).json()
+
+    response = await client.patch(
+        f"/rooms/{room['id']}", json={"name": "  Ravenloft  "}, headers=_auth_headers(token)
+    )
+    assert response.status_code == 200
+    assert response.json()["name"] == "Ravenloft"
+
+    blank = await client.patch(
+        f"/rooms/{room['id']}", json={"name": "   "}, headers=_auth_headers(token)
+    )
+    assert blank.status_code == 422
+    fetched = await client.get(f"/rooms/{room['id']}", headers=_auth_headers(token))
+    assert fetched.json()["name"] == "Ravenloft"
+
+
+async def test_a_non_administrator_cannot_rename_the_room(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    admin_token = make_token(str(uuid.uuid4()))
+    room = (
+        await client.post("/rooms", json={"name": "Barovia"}, headers=_auth_headers(admin_token))
+    ).json()
+    invite = (
+        await client.post(
+            f"/rooms/{room['id']}/invitations",
+            json={"role": "player"},
+            headers=_auth_headers(admin_token),
+        )
+    ).json()
+    player_token = make_token(str(uuid.uuid4()))
+    await client.post(f"/invitations/{invite['code']}/accept", headers=_auth_headers(player_token))
+
+    response = await client.patch(
+        f"/rooms/{room['id']}", json={"name": "Hijacked"}, headers=_auth_headers(player_token)
+    )
+    assert response.status_code == 403

@@ -477,6 +477,11 @@
       "settings": "설정",
       "history": "기록"
     },
+    "roomName": {
+      "title": "룸 이름",
+      "label": "이름",
+      "saved": "룸 이름을 저장했습니다."
+    },
     "defaultVisibility": {
       "title": "기본 공개 범위",
       "description": "새 문서, 노트, 댓글이 시작하는 공개 범위입니다. 답글은 항상 답하는 댓글의 공개 범위에서 시작합니다. 기존 콘텐츠는 바뀌지 않습니다.",

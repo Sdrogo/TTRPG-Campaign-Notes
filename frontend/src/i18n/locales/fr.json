@@ -477,6 +477,11 @@
       "settings": "Paramètres",
       "history": "Historique"
     },
+    "roomName": {
+      "title": "Nom de la Salle",
+      "label": "Nom",
+      "saved": "Nom de la Salle enregistré."
+    },
     "defaultVisibility": {
       "title": "Visibilité par défaut",
       "description": "Le niveau dont part chaque nouveau Document, Note et Commentaire. Une réponse part quand même de la visibilité du commentaire auquel elle répond. Le contenu existant ne change pas.",

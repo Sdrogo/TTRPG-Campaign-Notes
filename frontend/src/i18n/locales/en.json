@@ -477,6 +477,11 @@
       "settings": "Settings",
       "history": "History"
     },
+    "roomName": {
+      "title": "Room name",
+      "label": "Name",
+      "saved": "Room name saved."
+    },
     "defaultVisibility": {
       "title": "Default visibility",
       "description": "The level every new Document, Note and Comment starts at. A reply still starts from the visibility of the comment it answers. Existing content doesn't change.",

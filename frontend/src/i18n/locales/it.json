@@ -477,6 +477,11 @@
       "settings": "Impostazioni",
       "history": "Cronologia"
     },
+    "roomName": {
+      "title": "Nome della Room",
+      "label": "Nome",
+      "saved": "Nome della Room salvato."
+    },
     "defaultVisibility": {
       "title": "Visibilità predefinita",
       "description": "Il livello da cui parte ogni nuovo Documento, Nota e Commento. Una risposta parte comunque dalla visibilità del commento a cui risponde. Il contenuto esistente non cambia.",
