@@ -199,12 +199,13 @@ async def delete_membership(session: AsyncSession, room_id: uuid.UUID, user_id: 
 
 
 async def update_room_settings(session: AsyncSession, room: Room) -> None:
-    """Writes the Room's settings: Players' Document creation (D-13), the
+    """Writes the Room's settings: its name, Players' Document creation (D-13), the
     default visibility (VR-05) and the maps row's place among the groups.
     Raises `LookupError` for an unknown Room."""
     row = await session.get(RoomRow, room.id)
     if row is None:
         raise LookupError(f"Room {room.id} not found")
+    row.name = room.name
     row.players_can_create_documents = room.players_can_create_documents
     row.default_visibility = room.default_visibility.value
     await session.flush()

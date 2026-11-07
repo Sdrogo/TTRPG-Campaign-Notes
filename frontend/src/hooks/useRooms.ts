@@ -102,6 +102,8 @@ export function useRoom(roomId: string, enabled: boolean) {
 
 /** The Room settings `useUpdateRoomSettings` changes; only those given are sent. */
 export interface RoomSettingsInput {
+  /** The Administrators' new name for the Room. */
+  name?: string;
   /** The Master's switch for Players' Document creation (D-13). */
   playersCanCreateDocuments?: boolean;
   /** The Administrators' starting level for new content (VR-05, spec 22). */
@@ -117,6 +119,7 @@ export function useUpdateRoomSettings(roomId: string) {
         await apiFetch<RawRoom>(`/rooms/${roomId}`, {
           method: 'PATCH',
           json: {
+            name: input.name,
             players_can_create_documents: input.playersCanCreateDocuments,
             default_visibility: input.defaultVisibility,
           },

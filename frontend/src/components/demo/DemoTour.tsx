@@ -4,7 +4,7 @@ import { useHotkeys, useMediaQuery } from '@mantine/hooks';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { exitDemo } from '../../lib/demo/demoMode';
-import { TOUR_STEPS, setTourStep, useGoToTourStep, useTourStep } from '../../lib/demo/tour';
+import { TOUR_CHAPTERS, TOUR_STEPS, chapterStart, setTourStep, stepPathname, useGoToTourStep, useTourStep } from '../../lib/demo/tour';
 
 // Room around the highlighted element, the gap to the card, the card's width
 // and the screen margin it keeps.
@@ -72,7 +72,7 @@ export function DemoTour() {
   const scrolledTo = useRef<string | null>(null);
 
   const step = index === null ? null : TOUR_STEPS[index];
-  const onPage = step !== null && location.pathname === step.path;
+  const onPage = step !== null && location.pathname === stepPathname(step);
   const target = onPage ? step.target : null;
 
   // The element can appear late (the page loads its data) and move (scroll,
@@ -129,6 +129,19 @@ export function DemoTour() {
           <Text size="xs" c="dimmed">
             {t('tour.label')} · {t('tour.counter', { current: index + 1, total: TOUR_STEPS.length })}
           </Text>
+          <Group gap={4} role="group" aria-label={t('tour.chapterLabel')}>
+            {TOUR_CHAPTERS.map((chapter) => (
+              <Button
+                key={chapter}
+                size="compact-xs"
+                variant={step.chapter === chapter ? 'filled' : 'light'}
+                aria-pressed={step.chapter === chapter}
+                onClick={() => goTo(chapterStart(chapter))}
+              >
+                {t(`tour.chapters.${chapter}`)}
+              </Button>
+            ))}
+          </Group>
           <Title order={2} fz="h4" id="demo-tour-title">
             {t(`tour.steps.${step.id}.title`)}
           </Title>

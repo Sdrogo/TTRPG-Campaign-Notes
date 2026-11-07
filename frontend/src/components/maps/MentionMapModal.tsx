@@ -114,7 +114,7 @@ export function MentionMapModal({
             <Text fw={600}>{t('maps.deleteConfirmTitle')}</Text>
             <Text size="sm">{t('maps.mention.deleteConfirmBody')}</Text>
             <Group justify="flex-end">
-              <Button variant="default" onClick={() => setConfirmingDelete(false)}>
+              <Button variant="subtle" color="gray" onClick={() => setConfirmingDelete(false)}>
                 {t('common.cancel')}
               </Button>
               <Button

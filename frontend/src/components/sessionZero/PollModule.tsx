@@ -57,7 +57,7 @@ export function PollBoard() {
   const open = board.rounds.find((round) => round.id === board.roundId)?.closedAt === null;
   const editable = open && writable;
   return (
-    <Box component="section" aria-label={t('sessionZero.modules.kinds.poll')} className="sz-polls">
+    <Box component="section" aria-label={t('sessionZero.modules.kinds.poll')} className="sz-polls" data-tour="poll">
       <Stack gap="md">
         <Group gap="md" align="center">
           <Title order={2} fz="h3">
@@ -692,7 +692,7 @@ function PollsEditor({ module, polls, onClose }: { module: SessionZeroModule; po
             <Text size="sm" c="dimmed" mr="auto">
               {t('sessionZero.questions.unsaved')}
             </Text>
-            <Button variant="default" onClick={() => setLeaving(false)}>
+            <Button variant="subtle" color="gray" onClick={() => setLeaving(false)}>
               {t('sessionZero.questions.keepEditing')}
             </Button>
             <Button color="danger" variant="light" onClick={onClose}>

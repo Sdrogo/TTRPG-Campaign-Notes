@@ -103,6 +103,18 @@
       "export": {
         "title": "Exporteren",
         "text": "Neem je campagne mee: een PDF-handboek in drie stijlen, of JSON en Markdown voor je eigen tools."
+      },
+      "sections": {
+        "title": "Secties en de startpagina van de Kamer",
+        "text": "Bouw de startpagina van je Kamer met Secties: Documenten op Tag, kaarten, Sessie 0 en Klokken."
+      },
+      "session": {
+        "title": "Sessie 0",
+        "text": "Spreek af hoe jullie spelen: Lijnen en Sluiers, Sterren en Wensen, vragen en peilingen."
+      },
+      "clocks": {
+        "title": "Klokken",
+        "text": "Volg wat eraan komt met klokken met segmenten, als race of om de beurt."
       }
     },
     "stepsTitle": "Hoe het werkt",
@@ -137,9 +149,17 @@
     "keepExploring": "Verder verkennen",
     "label": "Rondleiding door de demo",
     "steps": {
-      "room": {
-        "title": "Een Kamer is een campagne",
-        "body": "De hele campagne leeft hier, gegroepeerd onder de hoofdtags: personages, plaatsen, gebeurtenissen. De Master leidt de Kamer; Players doen mee via een link."
+      "roomLanding": {
+        "title": "De startpagina van de Kamer",
+        "body": "Elke Kamer opent op een eigen startpagina: kaarten voor de Documenten, de kaarten, Sessie 0 en Klokken, en de Secties die de Master heeft gebouwd."
+      },
+      "sections": {
+        "title": "Secties",
+        "body": "Elke kaart is een Sectie die de Master heeft samengesteld. Klik op een kaart om de pagina te openen."
+      },
+      "sectionPage": {
+        "title": "In een Sectie",
+        "body": "Een Sectie bevat blokken: Documenten gekozen op Tag, kaarten, stappen van Sessie 0, Klokken. De Master rangschikt ze in de bewerkmodus."
       },
       "roomIndex": {
         "title": "De Index van de Kamer",
@@ -155,7 +175,7 @@
       },
       "documentText": {
         "title": "Notities en vermeldingen",
-        "body": "Notities voegen alinea's toe onder de beschrijving. Een #vermelding linkt naar een ander Document, en de link werkt in beide richtingen."
+        "body": "Notities voegen alinea's toe onder de beschrijving. De tekst ondersteunt Markdown, en een #vermelding verwijst naar een ander Document: de link werkt in beide richtingen."
       },
       "mentionMap": {
         "title": "De vermeldingskaart",
@@ -179,16 +199,62 @@
       },
       "freeMap": {
         "title": "Vrije borden",
-        "body": "Documentkaarten en pijlen op een vrij bord, om bij te houden wie wat wil. De Master kan Players er ook op laten tekenen."
+        "body": "Documentkaarten en pijlen op een vrij bord, om te volgen wie wat wil. Pijlen tussen dezelfde twee kaarten buigen uit elkaar. De Master kan ook Players laten tekenen."
+      },
+      "splitView": {
+        "title": "Voorbeeld naast elkaar",
+        "body": "De knop Voorbeeld splitst het scherm: klik op een kaart en het Document opent rechts, zodat je kunt lezen terwijl je plant."
+      },
+      "linkNote": {
+        "title": "Relationele links",
+        "body": "Een Notitie die als Relationele link is gemarkeerd, maakt van haar vermeldingen verbanden: ze voeden de vermeldingskaart en de terugverwijzingen van Documenten."
       },
       "geoMap": {
         "title": "Geografische kaarten",
-        "body": "Zet plaatsen op een kaartafbeelding en omlijn gebieden; elke plaats leidt naar zijn Document."
+        "body": "Zet plaatsen op een kaartafbeelding en omlijn regio's; elke plaats leidt naar zijn Document. Verbindingen tussen plaatsen kunnen buigen."
+      },
+      "sessionZero": {
+        "title": "Sessie 0",
+        "body": "Voor de eerste sessie spreekt de tafel af hoe er gespeeld wordt: Lijnen en Sluiers, Sterren en Wensen, vragen, peilingen. Hier is ze al gespeeld."
+      },
+      "poll": {
+        "title": "Peilingen",
+        "body": "De Master vraagt, iedereen stemt. Instellingen bepalen wie de namen ziet en wanneer de telling verschijnt. Deze koos waar het verhaal begint."
+      },
+      "clocks": {
+        "title": "Klokken",
+        "body": "Klokken met segmenten volgen wat eraan komt: een vlucht, een plan, de dageraad. Groepen laten ze als race of om de beurt lopen."
+      },
+      "versions": {
+        "title": "Versiegeschiedenis",
+        "body": "Eigenaren en de Master kunnen elke eerdere versie van een Document lezen, Notities inbegrepen, en er een terugzetten."
+      },
+      "alsoThere": {
+        "title": "En er is meer",
+        "body": "Met een account kun je ook een pdf-handboek in drie stijlen exporteren, JSON en Markdown importeren en exporteren, vermeldingen genereren, laten voorlezen, afbeeldingen voor kaarten zoeken en vrienden toevoegen. Die schrijven gegevens, dus de demo noemt ze alleen."
+      },
+      "playerDocuments": {
+        "title": "Nu als Player",
+        "body": "Je bent Marco, die Jun speelt. De Documenten alleen voor de Master zijn weg, en Juns privédocument, het manga kissa, verschijnt alleen voor hem."
+      },
+      "playerDocument": {
+        "title": "Het Document van een Player",
+        "body": "Dit Document is privé: alleen Marco en de Master zien het. In Giulia's weergave staat het niet eens in de lijst."
+      },
+      "playerMap": {
+        "title": "De kaart van een Player",
+        "body": "De verborgen kaart van de Master en zijn pijlen ontbreken. Schakel in de banner terug naar Master als je klaar bent."
       },
       "end": {
         "title": "Dit is Ex Libris",
         "body": "Log in om je eigen Kamer te maken, of verken de demo verder."
       }
+    },
+    "chapterLabel": "Hoofdstukken van de rondleiding",
+    "chapters": {
+      "basics": "Basis",
+      "more": "Meer",
+      "player": "Als Player"
     }
   },
   "header": {
@@ -410,6 +476,11 @@
     "tabs": {
       "settings": "Instellingen",
       "history": "Geschiedenis"
+    },
+    "roomName": {
+      "title": "Naam van de Room",
+      "label": "Naam",
+      "saved": "Naam van de Room opgeslagen."
     },
     "defaultVisibility": {
       "title": "Standaardzichtbaarheid",
@@ -1661,12 +1732,16 @@
         "body": "Alle kaarten, of één soort"
       },
       "session_zero": {
-        "title": "Sessie 0",
-        "body": "Sessies, stappen en peilingen"
+        "title": "Overzicht",
+        "body": "Sessies, stappen en peilingen van Sessie 0 van de Ruimte"
       },
       "tools": "Hulpmiddelen",
-      "toolsBody": "Een eigen Sessie 0-hulpmiddel, verborgen voor de spelers tot je het laat zien",
-      "clocks": "Klok"
+      "toolsBody": "Of een eigen hulpmiddel, verborgen voor de spelers tot je het laat zien:",
+      "clocks": {
+        "title": "Klok",
+        "body": "De klokken van de Ruimte, enkele of alle open"
+      },
+      "content": "Inhoud van de Ruimte"
     },
     "edit": {
       "start": "Bewerken",

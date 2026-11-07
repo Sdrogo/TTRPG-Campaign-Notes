@@ -103,6 +103,18 @@
       "export": {
         "title": "Esportazione",
         "text": "Porta la campagna con te: un manuale PDF in tre stili, oppure JSON e Markdown per i tuoi strumenti."
+      },
+      "sections": {
+        "title": "Sezioni e home della Stanza",
+        "text": "Costruisci la pagina della tua Stanza con le Sezioni: Documenti per Tag, mappe, Sessione 0 e Clock."
+      },
+      "session": {
+        "title": "Sessione 0",
+        "text": "Mettetevi d'accordo su come giocare: Linee e Veli, Stelle e Desideri, domande e sondaggi."
+      },
+      "clocks": {
+        "title": "Clock",
+        "text": "Segui ciò che sta per accadere con Clock a segmenti, in gara o a turni."
       }
     },
     "stepsTitle": "Come funziona",
@@ -137,9 +149,17 @@
     "keepExploring": "Continua a esplorare",
     "label": "Tour della demo",
     "steps": {
-      "room": {
-        "title": "Una Stanza è una campagna",
-        "body": "Tutta la campagna vive qui, raggruppata sotto i Tag principali: personaggi, luoghi, eventi. Il Master guida la Stanza; i Player entrano con un link."
+      "roomLanding": {
+        "title": "La home della Stanza",
+        "body": "Ogni Stanza si apre sulla sua pagina: card per i Documenti, le mappe, la Sessione 0 e i Clock, e le Sezioni costruite dal Master."
+      },
+      "sections": {
+        "title": "Sezioni",
+        "body": "Ogni card è una Sezione composta dal Master. Cliccane una per aprirne la pagina."
+      },
+      "sectionPage": {
+        "title": "Dentro una Sezione",
+        "body": "Una Sezione contiene blocchi: Documenti scelti per Tag, mappe, passi della Sessione 0, Clock. Il Master li dispone in modalità modifica."
       },
       "roomIndex": {
         "title": "L'Indice della Stanza",
@@ -155,7 +175,7 @@
       },
       "documentText": {
         "title": "Note e menzioni",
-        "body": "Le Note aggiungono paragrafi sotto la descrizione. Una #menzione collega un altro Documento, e il collegamento vale nei due sensi."
+        "body": "Le Note aggiungono paragrafi sotto la descrizione. Il testo supporta il Markdown, e una #menzione collega un altro Documento: il collegamento vale nei due sensi."
       },
       "mentionMap": {
         "title": "La mappa delle menzioni",
@@ -179,16 +199,62 @@
       },
       "freeMap": {
         "title": "Lavagne libere",
-        "body": "Card di Documenti e frecce su una lavagna libera, per seguire chi vuole cosa. Il Master può lasciar disegnare anche i Player."
+        "body": "Card di Documenti e frecce su una lavagna libera, per seguire chi vuole cosa. Le frecce tra le stesse due card si curvano per non sovrapporsi. Il Master può lasciar disegnare anche i Player."
+      },
+      "splitView": {
+        "title": "Anteprima affiancata",
+        "body": "Il pulsante Anteprima divide lo schermo: clicca una card e il suo Documento si apre a destra, così leggi mentre pianifichi."
+      },
+      "linkNote": {
+        "title": "Legami relazionali",
+        "body": "Una Nota segnata come Legame relazionale trasforma le sue menzioni in legami: alimentano la mappa delle menzioni e i collegamenti dei Documenti."
       },
       "geoMap": {
         "title": "Mappe geografiche",
-        "body": "Fissa luoghi su un'immagine e traccia regioni; ogni luogo porta al suo Documento."
+        "body": "Segna luoghi su un'immagine di mappa e traccia regioni; ogni luogo porta al suo Documento. I collegamenti tra luoghi possono curvarsi."
+      },
+      "sessionZero": {
+        "title": "Sessione 0",
+        "body": "Prima della prima sessione il tavolo decide come giocare: Linee e Veli, Stelle e Desideri, domande, sondaggi. Qui è già stata giocata."
+      },
+      "poll": {
+        "title": "Sondaggi",
+        "body": "Il Master chiede, tutti votano. Le impostazioni decidono chi vede i nomi e quando compare il conteggio. Questo ha scelto dove comincia la storia."
+      },
+      "clocks": {
+        "title": "Clock",
+        "body": "I Clock a segmenti seguono ciò che sta per accadere: una fuga, un piano, l'alba. I gruppi li fanno correre in gara o a turni."
+      },
+      "versions": {
+        "title": "Storico delle versioni",
+        "body": "I proprietari e il Master possono leggere ogni versione precedente di un Documento, Note comprese, e ripristinarne una."
+      },
+      "alsoThere": {
+        "title": "E c'è altro",
+        "body": "Con un account puoi anche esportare un manuale PDF in tre stili, importare ed esportare JSON e Markdown, generare menzioni, ascoltare i testi, cercare immagini per le mappe e aggiungere amici. Scrivono dati, quindi la demo si limita a citarli."
+      },
+      "playerDocuments": {
+        "title": "Ora da Player",
+        "body": "Sei Marco, che gioca Jun. I Documenti solo per il Master sono spariti, e il suo, il manga kissa, compare solo per lui."
+      },
+      "playerDocument": {
+        "title": "Il Documento di un Player",
+        "body": "Questo Documento è privato: lo vedono solo Marco e il Master. Nella vista di Giulia non compare nemmeno nell'elenco."
+      },
+      "playerMap": {
+        "title": "La mappa di un Player",
+        "body": "La card nascosta del Master e le sue frecce non ci sono. Quando hai finito, torna a Master dal banner."
       },
       "end": {
         "title": "Questo è Ex Libris",
         "body": "Accedi per creare la tua Stanza, o continua a esplorare la demo."
       }
+    },
+    "chapterLabel": "Capitoli del tour",
+    "chapters": {
+      "basics": "Le basi",
+      "more": "Di più",
+      "player": "Da Player"
     }
   },
   "header": {
@@ -410,6 +476,11 @@
     "tabs": {
       "settings": "Impostazioni",
       "history": "Cronologia"
+    },
+    "roomName": {
+      "title": "Nome della Room",
+      "label": "Nome",
+      "saved": "Nome della Room salvato."
     },
     "defaultVisibility": {
       "title": "Visibilità predefinita",
@@ -1661,12 +1732,16 @@
         "body": "Tutte le mappe, o di un tipo"
       },
       "session_zero": {
-        "title": "Sessione 0",
-        "body": "Sessioni, tappe e sondaggi"
+        "title": "Panoramica",
+        "body": "Sessioni, tappe e sondaggi della Sessione 0 della Stanza"
       },
       "tools": "Strumenti",
-      "toolsBody": "Uno strumento della Sessione 0 tutto suo, nascosto ai giocatori finché non lo mostri",
-      "clocks": "Clock"
+      "toolsBody": "Oppure uno strumento tutto suo, nascosto ai giocatori finché non lo mostri:",
+      "clocks": {
+        "title": "Clock",
+        "body": "I clock della Stanza, alcuni o tutti quelli aperti"
+      },
+      "content": "Contenuti della Stanza"
     },
     "edit": {
       "start": "Modifica",

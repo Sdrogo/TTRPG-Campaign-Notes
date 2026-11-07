@@ -30,7 +30,7 @@ Full history is archived; read it only when you need that detail:
   migrations were applied to production beforehand. Dependabot PRs land on
   `main`: merge `main` into `staging` before opening a release PR.
 - **Waiting on the product owner**: review of 55 (Room landing) and 57
-  (UI consistency), now in production; 52 live updates to test with two browsers;
+  (UI consistency, now in production; 57d alignment built 2026-11-05, on PR #308); 52 live updates to test with two browsers;
   legal review of `/privacy` and the DPAs with Supabase, OVHcloud and
   Vercel (spec 31; shipped before those were done). Keeping shared content
   anonymised after an account deletion is the default in place, not
@@ -113,7 +113,20 @@ One line per unit, dates 2026, newest first. Spec files live in
 `context/feature/`; details in the archives and in `architecture.md`.
 "no mig." = no migration.
 
-### 2026-10-12 → 11-04
+### 2026-10-12 → 11-05
+
+- **Rename a Room** (11-07, no mig.): `PATCH /rooms/{id}` takes an optional `name`, the Administrators' (403 otherwise; trimmed, blank is 422 like creation). Settings tab has a Room name card. All 12 UI/backend locales.
+- **64, Demo refresh** (11-05, no mig.): the sample Room is now "Tokyo
+  by Night" (the product owner's Midjourney art), opens on the Room
+  landing with Sections, a played Session 0 with a poll, version history,
+  images and Markdown; the tour has 25 steps in three chapters (Basics,
+  More, As a Player); the landing has 9 cards; `tourGuard.test.ts` keeps
+  steps, targets and the 12 locales in line. Demo tick: every later
+  user-visible feature says whether the Demo needs it
+  (`ai-workflow-rules.md`).
+- **63** (11-05, no mig.): the add-block popover of a Section has two
+  groups, Room content (Documenti, Mappe, Clock tiles) and Session 0 (wide
+  "Panoramica" tile + the five tools); Clock is no longer among the tools.
 
 - **Clock dialogs** (11-04, no mig.): clock, group, rules, mark and history
   dialogs (and the rules delete-label confirm) no longer close on an outside
@@ -212,10 +225,6 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
-- **63, Clock out of the Session 0 tools** (ticket, 2026-11-04): the
-  add-block popover groups Documenti / Mappe / Clock as Room content and
-  puts the Session 0 tile and its tools under one "Sessione 0" heading.
-  Frontend only, no migration. Awaiting the product owner's Q1-Q3.
 - **46b, Dichiarazione d'Intenti invitation**: if a Room has a DDI, its
   invitation opens it read-only with "accept and join" (product owner,
   2026-10-27). Ticket not written yet (the DDI template itself is in 47_3).
@@ -227,7 +236,6 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   background, dragging link labels, dragging area names by hand (needs a
   migration), a Tag picking an area's color.
 - **43, Real-time maps, not built**: presence, editing from a phone.
-- **45, Demo**: the sample Room has no images yet.
 - **34, More UI languages, round two**: tr and zh-Hant, later.
 - **Requirements not built** (`requirements.md` §14): Glossary entries
   (FR-N3/N4, VR-10), draft/published (FR-D6), notifications (FR-T9),

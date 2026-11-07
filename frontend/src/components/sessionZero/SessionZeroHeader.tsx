@@ -51,7 +51,7 @@ export function SessionZeroHeader({ readAtMs, onPick }: SessionZeroHeaderProps) 
   const manage = writable && board.canManage;
   const open = board.rounds.find((round) => round.id === board.roundId)?.closedAt === null;
   return (
-    <Group gap="xs" className="sz-header">
+    <Group gap="xs" className="sz-header" data-tour="session-zero">
       <VisuallyHidden>
         <Title order={1}>{t('sessionZero.title')}</Title>
       </VisuallyHidden>
@@ -80,7 +80,7 @@ export function SessionZeroHeader({ readAtMs, onPick }: SessionZeroHeaderProps) 
           <Stack>
             <Text size="sm">{t('sessionZero.delete.body')}</Text>
             <Group justify="flex-end">
-              <Button variant="default" onClick={() => setDeleting(false)}>
+              <Button variant="subtle" color="gray" onClick={() => setDeleting(false)}>
                 {t('common.cancel')}
               </Button>
               <Button

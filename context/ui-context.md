@@ -991,7 +991,7 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   feature chips and "+ Funzione"; a ⋮ with "Elimina blocco"
   (toast with "Annulla" for 5 s). "+ Blocco" is a dashed bar after the
   last block (`.room-landing-add`) and a small "+" between two
-  (`.room-landing-insert`, shown on hover or focus), opening three tiles
+  (`.room-landing-insert`, shown on hover or focus), opening the tiles
   (`.room-landing-tile`). Pickers are popovers, bottom sheets (`Drawer`)
   under 48em. Edited areas carry `.room-landing-editing`.
   **Since spec 60**, on a Section in edit mode the title is edited in
@@ -1002,8 +1002,10 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   "Modifica info".
   **Tool blocks** (spec 60_3, `ToolBlock`): a Session 0 step drawn inline
   under a `BlockHeading`, with the Session 0 page's own step components.
-  The add-block popover lists them after the three tiles under a
-  "Strumenti" `Divider` (compact default buttons with the toolbox icon).
+  The add-block popover (spec 63) has two groups: a "Contenuti della
+  Stanza" `Divider` over three tiles (Documenti, Mappe, Clock), then a
+  "Sessione 0" `Divider` with a wide "Panoramica" tile and, under a hint,
+  the tools as compact default buttons with the toolbox icon.
   A tool hidden from the Players shows the Master a gray light "Bozza"
   badge and, in reading mode, a compact light "Mostra ai giocatori" button
   (eye icon); in edit mode the bar has an eye `ActionIcon` instead (show or

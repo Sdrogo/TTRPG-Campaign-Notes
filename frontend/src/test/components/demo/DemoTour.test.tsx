@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { isDemoMode, setDemoMode } from '../../../lib/demo/demoMode';
-import { TOUR_STEPS, setTourStep, tourStep } from '../../../lib/demo/tour';
+import { TOUR_STEPS, chapterStart, setTourStep, tourStep } from '../../../lib/demo/tour';
 import { renderWithProviders } from '../../utils';
 import { DemoTour } from '../../../components/demo/DemoTour';
 
@@ -18,14 +18,14 @@ function Where() {
 function render(route: string, rect: Partial<DOMRect> | null = { top: 100, left: 40, width: 200, height: 50, bottom: 150 }) {
   const result = renderWithProviders(
     <>
-      <div data-tour="room">the Room</div>
+      <div data-tour="room-landing">the Room</div>
       <div data-tour="document-card">hidden twin</div>
       <DemoTour />
       <Where />
     </>,
     { route },
   );
-  const room = document.querySelector('[data-tour="room"]')!;
+  const room = document.querySelector('[data-tour="room-landing"]')!;
   room.scrollIntoView = scrollIntoView;
   if (rect) {
     vi.spyOn(room, 'getBoundingClientRect').mockReturnValue({ ...rect, right: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect);
@@ -57,7 +57,7 @@ describe('DemoTour', () => {
     setTourStep(0);
     render(START);
 
-    expect(screen.getByRole('dialog', { name: 'Una Stanza è una campagna' })).toHaveTextContent('Tour della demo · 1 di 13');
+    expect(screen.getByRole('dialog', { name: 'La home della Stanza' })).toHaveTextContent(`Tour della demo · 1 di ${TOUR_STEPS.length}`);
     await waitFor(() => expect(spot()).toHaveAttribute('data-lit'));
     expect(spot().style.top).toBe('94px');
     expect(card()!.style.top).toBe(`${94 + 62 + 12}px`);
@@ -96,8 +96,8 @@ describe('DemoTour', () => {
   });
 
   it('dims the page and centers the card while the element is not there', () => {
-    setTourStep(2);
-    render(START);
+    setTourStep(TOUR_STEPS.findIndex((step) => step.id === 'documentCard'));
+    render(TOUR_STEPS.find((step) => step.id === 'documentCard')!.path);
 
     expect(screen.getByRole('dialog', { name: 'I Documenti' })).toBeInTheDocument();
     expect(spot()).not.toHaveAttribute('data-lit');
@@ -109,7 +109,7 @@ describe('DemoTour', () => {
     render(START);
     await waitFor(() => expect(spot().style.top).toBe('94px'));
 
-    vi.spyOn(document.querySelector('[data-tour="room"]')!, 'getBoundingClientRect').mockReturnValue({
+    vi.spyOn(document.querySelector('[data-tour="room-landing"]')!, 'getBoundingClientRect').mockReturnValue({
       top: 300, left: 40, width: 200, height: 50, bottom: 350, right: 0, x: 0, y: 0, toJSON: () => ({}),
     } as DOMRect);
     act(() => {
@@ -129,17 +129,29 @@ describe('DemoTour', () => {
   });
 
   it('moves on and back, opening each step page', async () => {
-    setTourStep(2);
-    const { user } = render(START);
+    const card = TOUR_STEPS.findIndex((step) => step.id === 'documentCard');
+    setTourStep(card);
+    const { user } = render(TOUR_STEPS[card].path);
 
     await user.click(screen.getByRole('button', { name: 'Avanti' }));
-    expect(tourStep()).toBe(3);
-    expect(screen.getByTestId('where')).toHaveTextContent(TOUR_STEPS[3].path);
+    expect(tourStep()).toBe(card + 1);
+    expect(screen.getByTestId('where')).toHaveTextContent(TOUR_STEPS[card + 1].path);
     expect(screen.getByRole('dialog', { name: 'La pagina di un Documento' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Indietro' }));
-    expect(tourStep()).toBe(2);
-    expect(screen.getByTestId('where')).toHaveTextContent(START);
+    expect(tourStep()).toBe(card);
+    expect(screen.getByTestId('where')).toHaveTextContent(TOUR_STEPS[card].path);
+  });
+
+  it('jumps to a chapter and marks the one it is in', async () => {
+    setTourStep(0);
+    const { user } = render(START);
+    expect(screen.getByRole('button', { name: 'Le basi' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Di più' })).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(screen.getByRole('button', { name: 'Di più' }));
+    expect(tourStep()).toBe(chapterStart('more'));
+    expect(screen.getByRole('button', { name: 'Di più' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('closes on Skip and on Escape', async () => {

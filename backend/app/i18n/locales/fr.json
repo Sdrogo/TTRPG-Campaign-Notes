@@ -11,6 +11,7 @@
       "onlyAdministratorCanChangeRoles": "Seul un administrateur de la Salle peut modifier les rôles",
       "onlyAdministratorCanRemoveMembers": "Seul un administrateur de la Salle peut retirer des membres",
       "onlyAdministratorChangesImage": "Seul un administrateur de la Salle peut changer son image",
+      "onlyAdministratorCanRename": "Seul un administrateur de la Salle peut la renommer",
       "onlyAdministratorCanDelete": "Seul un administrateur de la Salle peut la supprimer",
       "nameRequired": "Le nom de la Salle est obligatoire",
       "onlyAdministratorCanChangeDefaultVisibility": "Seul un administrateur de la Salle peut changer la visibilité par défaut",

@@ -11,6 +11,7 @@
       "onlyAdministratorCanChangeRoles": "Solo un Amministratore della Room può modificare i ruoli",
       "onlyAdministratorCanRemoveMembers": "Solo un Amministratore della Room può rimuovere membri",
       "onlyAdministratorChangesImage": "Solo un Amministratore della Room può cambiarne l'immagine",
+      "onlyAdministratorCanRename": "Solo un Amministratore della Room può rinominarla",
       "onlyAdministratorCanDelete": "Solo un amministratore della Room può eliminarla",
       "nameRequired": "Il nome della Room è obbligatorio",
       "onlyAdministratorCanChangeDefaultVisibility": "Solo un Amministratore della Room può cambiare la visibilità predefinita",

@@ -25,7 +25,7 @@ export function CardColorDialog({
       <Stack gap="sm">
         <MapColorPicker value={color} onChange={setColor} />
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
+          <Button variant="subtle" color="gray" onClick={onClose}>
             {t('common.cancel')}
           </Button>
           <Button onClick={() => onSave(color)}>{t('common.save')}</Button>

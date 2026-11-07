@@ -11,6 +11,7 @@
       "onlyAdministratorCanChangeRoles": "Solo un Admin de la Sala puede modificar los roles",
       "onlyAdministratorCanRemoveMembers": "Solo un Admin de la Sala puede quitar miembros",
       "onlyAdministratorChangesImage": "Solo un Admin de la Sala puede cambiar su imagen",
+      "onlyAdministratorCanRename": "Solo un administrador de la Sala puede cambiar su nombre",
       "onlyAdministratorCanDelete": "Solo un Admin de la Sala puede eliminarla",
       "nameRequired": "El nombre de la Sala es obligatorio",
       "onlyAdministratorCanChangeDefaultVisibility": "Solo un Admin de la Sala puede cambiar la visibilidad predeterminada",

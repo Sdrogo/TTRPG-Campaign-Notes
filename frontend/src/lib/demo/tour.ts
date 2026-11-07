@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { VIEW_AS_PARAM } from '../viewAs';
-import { DEMO_START_PATH } from './demoMode';
+import { DEMO_DOCUMENTS_PATH, DEMO_START_PATH } from './demoMode';
+
 
 // The Demo's guided tour (spec 45_3): which step is open, kept in
 // `sessionStorage` beside the Demo flag, so it survives the full page loads
@@ -11,7 +12,9 @@ const TOUR_KEY = 'exlibris.demo.tour';
 
 /** The tour's steps by name: their texts are `tour.steps.<id>.title` / `.body`. */
 export type TourStepId =
-  | 'room'
+  | 'roomLanding'
+  | 'sections'
+  | 'sectionPage'
   | 'roomIndex'
   | 'documentCard'
   | 'document'
@@ -22,38 +25,92 @@ export type TourStepId =
   | 'viewAs'
   | 'search'
   | 'freeMap'
+  | 'splitView'
+  | 'linkNote'
   | 'geoMap'
+  | 'sessionZero'
+  | 'poll'
+  | 'clocks'
+  | 'versions'
+  | 'alsoThere'
+  | 'playerDocuments'
+  | 'playerDocument'
+  | 'playerMap'
   | 'end';
+
+/** The tour's chapters (spec 64 Decision 8): the basics, more as the Master, and the Player's side. */
+export type TourChapter = 'basics' | 'more' | 'player';
+
+/** The chapters in order; their texts are `tour.chapters.<chapter>`. */
+export const TOUR_CHAPTERS: readonly TourChapter[] = ['basics', 'more', 'player'];
 
 /** One stop of the tour: the page it opens and the element it points at. */
 export interface TourStep {
   /** Names its texts and its landing page link (`/demo?step=<id>`). */
   id: TourStepId;
-  /** The page the step is shown on. */
+  /** The chapter it belongs to; the last step has none. */
+  chapter: TourChapter | null;
+  /** The page the step is shown on, with its query when the page reads one. */
   path: string;
   /** The `data-tour` value of the element it points at; null for a card alone. */
   target: string | null;
+  /** Seen as the Player Marco (spec 22b's preview), else as the Master. A Player step has no query of its own. */
+  viewer?: 'player';
+  /** Opens with a full page load: the page reads its query only when it mounts. */
+  reload?: boolean;
 }
 
-const doc = (n: number) => `${DEMO_START_PATH}/d3e0c0de-0000-4000-8000-${String(n).padStart(12, '0')}`;
-const map = (n: number) => `/rooms/demo/maps/d3e0c0de-0000-4000-8000-${String(n).padStart(12, '0')}`;
+const uidN = (n: number) => `d3e0c0de-0000-4000-8000-${String(n).padStart(12, '0')}`;
+/** The Player the tour previews: Marco, who plays Jun (`demoData.ts`). */
+const MARCO_ID = uidN(2);
+const doc = (n: number) => `${DEMO_DOCUMENTS_PATH}/${uidN(n)}`;
+const map = (n: number) => `/rooms/demo/maps/${uidN(n)}`;
+const SESSION_ZERO = '/rooms/demo/session-zero';
 
-/** The steps, in order (spec 45 Decision 16, as built). */
+/** The steps, in order (spec 45 Decision 16, extended by spec 64 Decision 8). */
 export const TOUR_STEPS: readonly TourStep[] = [
-  { id: 'room', path: DEMO_START_PATH, target: 'room' },
-  { id: 'roomIndex', path: DEMO_START_PATH, target: 'room-index' },
-  { id: 'documentCard', path: DEMO_START_PATH, target: 'document-card' },
-  { id: 'document', path: doc(201), target: 'document' },
-  { id: 'documentText', path: doc(201), target: 'document-text' },
-  { id: 'mentionMap', path: doc(201), target: 'mention-map' },
-  { id: 'comments', path: doc(209), target: 'comments' },
-  { id: 'visibility', path: doc(203), target: 'document-visibility' },
-  { id: 'viewAs', path: DEMO_START_PATH, target: 'view-as' },
-  { id: 'search', path: DEMO_START_PATH, target: 'search' },
-  { id: 'freeMap', path: map(501), target: 'map' },
-  { id: 'geoMap', path: map(502), target: 'map' },
-  { id: 'end', path: DEMO_START_PATH, target: null },
+  { id: 'roomLanding', chapter: 'basics', path: DEMO_START_PATH, target: 'room-landing' },
+  { id: 'sections', chapter: 'basics', path: DEMO_START_PATH, target: 'sections' },
+  { id: 'sectionPage', chapter: 'basics', path: `/rooms/demo/sections/${uidN(641)}`, target: 'section-blocks' },
+  { id: 'roomIndex', chapter: 'basics', path: DEMO_DOCUMENTS_PATH, target: 'room-index' },
+  { id: 'documentCard', chapter: 'basics', path: DEMO_DOCUMENTS_PATH, target: 'document-card' },
+  { id: 'document', chapter: 'basics', path: doc(201), target: 'document' },
+  { id: 'documentText', chapter: 'basics', path: doc(201), target: 'document-text' },
+  { id: 'mentionMap', chapter: 'basics', path: doc(201), target: 'mention-map' },
+  { id: 'comments', chapter: 'basics', path: doc(209), target: 'comments' },
+  { id: 'visibility', chapter: 'basics', path: doc(203), target: 'document-visibility' },
+  { id: 'viewAs', chapter: 'basics', path: DEMO_DOCUMENTS_PATH, target: 'view-as' },
+  { id: 'search', chapter: 'basics', path: DEMO_DOCUMENTS_PATH, target: 'search' },
+  { id: 'freeMap', chapter: 'more', path: map(501), target: 'map' },
+  { id: 'splitView', chapter: 'more', path: map(501), target: 'split-view' },
+  { id: 'linkNote', chapter: 'more', path: doc(201), target: 'link-note' },
+  { id: 'geoMap', chapter: 'more', path: map(502), target: 'map' },
+  { id: 'sessionZero', chapter: 'more', path: `${SESSION_ZERO}?step=${uidN(712)}`, target: 'session-zero' },
+  { id: 'poll', chapter: 'more', path: `${SESSION_ZERO}?step=${uidN(713)}`, target: 'poll', reload: true },
+  { id: 'clocks', chapter: 'more', path: '/rooms/demo/clocks', target: 'clocks' },
+  { id: 'versions', chapter: 'more', path: doc(201), target: 'versions' },
+  { id: 'alsoThere', chapter: 'more', path: DEMO_START_PATH, target: null },
+  { id: 'playerDocuments', chapter: 'player', path: DEMO_DOCUMENTS_PATH, target: 'document-card', viewer: 'player' },
+  { id: 'playerDocument', chapter: 'player', path: doc(211), target: 'document', viewer: 'player' },
+  { id: 'playerMap', chapter: 'player', path: map(501), target: 'map', viewer: 'player' },
+  { id: 'end', chapter: null, path: DEMO_START_PATH, target: null },
 ];
+
+/** The index of a chapter's first step. */
+export function chapterStart(chapter: TourChapter): number {
+  return TOUR_STEPS.findIndex((step) => step.chapter === chapter);
+}
+
+/** The address a step opens: its page, with the Player preview's parameter on a Player's step. */
+export function stepUrl(step: TourStep): string {
+  if (step.viewer !== 'player') return step.path;
+  return `${step.path}?${VIEW_AS_PARAM}=${MARCO_ID}`;
+}
+
+/** A step's page without its query: what the router's pathname is compared with. */
+export function stepPathname(step: TourStep): string {
+  return step.path.split('?')[0];
+}
 
 const listeners = new Set<() => void>();
 
@@ -97,17 +154,23 @@ export function useTourStep(): number | null {
 }
 
 /**
- * Opens a step: its page in place, or with a full page load when leaving a
- * Player's preview, since an open page's queries stay bound to the preview's
- * cache (the same reason the banner's switch reloads).
+ * Opens a step: its page in place, or with a full page load when the viewer
+ * changes (an open page's queries stay bound to the preview's cache, the same
+ * reason the banner's switch reloads) or the page reads its query only on
+ * mount.
  */
 export function useGoToTourStep(): (index: number) => void {
   const location = useLocation();
   const navigate = useNavigate();
   return (index: number) => {
     setTourStep(index);
-    const { path } = TOUR_STEPS[index];
-    if (new URLSearchParams(location.search).has(VIEW_AS_PARAM)) window.location.assign(path);
-    else if (location.pathname !== path) void navigate(path);
+    const step = TOUR_STEPS[index];
+    const asPlayer = step.viewer === 'player';
+    const url = stepUrl(step);
+    const previewing = new URLSearchParams(location.search).has(VIEW_AS_PARAM);
+    const query = step.path.split('?')[1];
+    const here = location.pathname === stepPathname(step) && (!query || location.search.includes(query));
+    if (previewing !== asPlayer || step.reload) window.location.assign(url);
+    else if (!here) void navigate(url);
   };
 }

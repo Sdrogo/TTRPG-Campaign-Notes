@@ -18,7 +18,7 @@ describe('DemoPage', () => {
     renderWithProviders(<DemoPage />, { route: '/demo' });
 
     expect(isDemoMode()).toBe(true);
-    expect(replace).toHaveBeenCalledWith('/rooms/demo/documents');
+    expect(replace).toHaveBeenCalledWith('/rooms/demo');
     expect(tourStep()).toBe(0);
     expect(document.querySelector('.mantine-Loader-root')).toBeInTheDocument();
   });
@@ -32,6 +32,15 @@ describe('DemoPage', () => {
     const index = TOUR_STEPS.findIndex((step) => step.id === 'comments');
     expect(tourStep()).toBe(index);
     expect(replace).toHaveBeenCalledWith(TOUR_STEPS[index].path);
+  });
+
+  it('opens a Player step with the Player preview on', () => {
+    const replace = vi.fn();
+    vi.stubGlobal('location', { replace });
+
+    renderWithProviders(<DemoPage />, { route: '/demo?step=playerDocuments' });
+
+    expect(replace).toHaveBeenCalledWith('/rooms/demo/documents?as=d3e0c0de-0000-4000-8000-000000000002');
   });
 
   it('says so when the browser blocks site storage', () => {

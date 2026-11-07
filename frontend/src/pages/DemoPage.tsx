@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { FullPageLoader, FullPageMessage } from '../components/PageState';
 import { useLocation } from 'react-router-dom';
 import { setDemoMode } from '../lib/demo/demoMode';
-import { TOUR_STEPS, setTourStep, stepIndex } from '../lib/demo/tour';
+import { TOUR_STEPS, setTourStep, stepIndex, stepUrl } from '../lib/demo/tour';
 
 /**
  * `/demo` (spec 45_2): turns the Demo on for this tab and opens the sample
@@ -25,7 +25,7 @@ export function DemoPage() {
     if (!started) return;
     const index = stepIndex(step);
     setTourStep(index);
-    window.location.replace(TOUR_STEPS[index].path);
+    window.location.replace(stepUrl(TOUR_STEPS[index]));
   }, [started, step]);
 
   if (!started) {

@@ -103,6 +103,18 @@
       "export": {
         "title": "Exportação",
         "text": "Leva a campanha contigo: um manual em PDF com três estilos, ou JSON e Markdown para as tuas ferramentas."
+      },
+      "sections": {
+        "title": "Secções e página inicial da Sala",
+        "text": "Construa a página inicial da sua Sala com Secções: Documentos por Tag, mapas, Sessão 0 e Relógios."
+      },
+      "session": {
+        "title": "Sessão 0",
+        "text": "Combinem como jogar: Linhas e Véus, Estrelas e Desejos, perguntas e sondagens."
+      },
+      "clocks": {
+        "title": "Relógios",
+        "text": "Acompanhe o que se aproxima com relógios de segmentos, em corrida ou por turnos."
       }
     },
     "stepsTitle": "Como funciona",
@@ -137,9 +149,17 @@
     "keepExploring": "Continuar a explorar",
     "label": "Visita da demo",
     "steps": {
-      "room": {
-        "title": "Uma Sala é uma campanha",
-        "body": "Toda a campanha vive aqui, agrupada nas Tags principais: personagens, locais, eventos. O Master gere a Sala; os Players entram com uma ligação."
+      "roomLanding": {
+        "title": "A página inicial da Sala",
+        "body": "Cada Sala abre na sua própria página: cartões para os Documentos, os mapas, a Sessão 0 e os Relógios, e as Secções montadas pelo Master."
+      },
+      "sections": {
+        "title": "Secções",
+        "body": "Cada cartão é uma Secção composta pelo Master. Clique numa para abrir a sua página."
+      },
+      "sectionPage": {
+        "title": "Dentro de uma Secção",
+        "body": "Uma Secção contém blocos: Documentos escolhidos por Tag, mapas, passos da Sessão 0, Relógios. O Master organiza-os no modo de edição."
       },
       "roomIndex": {
         "title": "O Índice da Sala",
@@ -155,7 +175,7 @@
       },
       "documentText": {
         "title": "Notas e menções",
-        "body": "As Notas acrescentam parágrafos sob a descrição. Uma #menção liga outro Documento, e a ligação vale nos dois sentidos."
+        "body": "As Notas acrescentam parágrafos sob a descrição. O texto aceita Markdown, e uma #menção liga a outro Documento: a ligação funciona nos dois sentidos."
       },
       "mentionMap": {
         "title": "O mapa de menções",
@@ -179,16 +199,62 @@
       },
       "freeMap": {
         "title": "Quadros livres",
-        "body": "Cartões de Documentos e setas num quadro livre, para acompanhar quem quer o quê. O Master pode deixar os Players desenhar também."
+        "body": "Cartões de Documentos e setas num quadro livre, para acompanhar quem quer o quê. As setas entre os mesmos dois cartões curvam-se para não se sobreporem. O Master pode deixar os Players desenhar também."
+      },
+      "splitView": {
+        "title": "Pré-visualização lado a lado",
+        "body": "O botão Pré-visualização divide o ecrã: clique num cartão e o seu Documento abre à direita, para ler enquanto planeia."
+      },
+      "linkNote": {
+        "title": "Ligações relacionais",
+        "body": "Uma Nota marcada como Ligação relacional transforma as suas menções em laços: alimentam o mapa de menções e as ligações de retorno dos Documentos."
       },
       "geoMap": {
         "title": "Mapas geográficos",
-        "body": "Coloca locais numa imagem e traça regiões; cada local leva ao seu Documento."
+        "body": "Marque lugares na imagem de um mapa e contorne regiões; cada lugar leva ao seu Documento. As ligações entre lugares podem curvar-se."
+      },
+      "sessionZero": {
+        "title": "Sessão 0",
+        "body": "Antes da primeira sessão, a mesa combina como jogar: Linhas e Véus, Estrelas e Desejos, perguntas, sondagens. Aqui já foi jogada."
+      },
+      "poll": {
+        "title": "Sondagens",
+        "body": "O Master pergunta, todos votam. As definições decidem quem vê os nomes e quando aparece a contagem. Esta escolheu onde a história começa."
+      },
+      "clocks": {
+        "title": "Relógios",
+        "body": "Os relógios com segmentos acompanham o que se aproxima: uma fuga, um plano, o amanhecer. Os grupos fazem-nos correr em corrida ou por turnos."
+      },
+      "versions": {
+        "title": "Histórico de versões",
+        "body": "Os proprietários e o Master podem ler todas as versões anteriores de um Documento, Notas incluídas, e restaurar uma."
+      },
+      "alsoThere": {
+        "title": "E há mais",
+        "body": "Com uma conta também pode exportar um manual em PDF em três estilos, importar e exportar JSON e Markdown, gerar menções, ouvir os textos, procurar imagens para os mapas e adicionar amigos. Escrevem dados, por isso a demo limita-se a mencioná-los."
+      },
+      "playerDocuments": {
+        "title": "Agora como Player",
+        "body": "É o Marco, que joga o Jun. Os Documentos só para o Master desapareceram, e o do Jun, o manga kissa, aparece só para ele."
+      },
+      "playerDocument": {
+        "title": "O Documento de um Player",
+        "body": "Este Documento é privado: só o Marco e o Master o veem. Na vista da Giulia nem sequer aparece na lista."
+      },
+      "playerMap": {
+        "title": "O mapa de um Player",
+        "body": "Faltam o cartão escondido do Master e as suas setas. Quando terminar, volte a Master no banner."
       },
       "end": {
         "title": "Isto é o Ex Libris",
         "body": "Inicia sessão para criares a tua Sala, ou continua a explorar a demo."
       }
+    },
+    "chapterLabel": "Capítulos da visita",
+    "chapters": {
+      "basics": "O essencial",
+      "more": "Mais",
+      "player": "Como Player"
     }
   },
   "header": {
@@ -410,6 +476,11 @@
     "tabs": {
       "settings": "Definições",
       "history": "Histórico"
+    },
+    "roomName": {
+      "title": "Nome da Sala",
+      "label": "Nome",
+      "saved": "Nome da Sala guardado."
     },
     "defaultVisibility": {
       "title": "Visibilidade predefinida",
@@ -1663,12 +1734,16 @@
         "body": "Todos os mapas, ou de um tipo"
       },
       "session_zero": {
-        "title": "Sessão 0",
-        "body": "Sessões, etapas e sondagens"
+        "title": "Resumo",
+        "body": "Sessões, etapas e sondagens da Sessão 0 da Sala"
       },
       "tools": "Ferramentas",
-      "toolsBody": "Uma ferramenta da Sessão 0 própria, escondida dos jogadores até a mostrares",
-      "clocks": "Relógio"
+      "toolsBody": "Ou uma ferramenta própria, escondida dos jogadores até a mostrares:",
+      "clocks": {
+        "title": "Relógio",
+        "body": "Os relógios da Sala, alguns ou todos os abertos"
+      },
+      "content": "Conteúdo da Sala"
     },
     "edit": {
       "start": "Editar",
