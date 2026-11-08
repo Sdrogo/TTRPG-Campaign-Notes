@@ -20,6 +20,8 @@ from app.domain.export import SCHEMA_VERSION
 from app.domain.mentions import MentionKind
 
 MAX_FILE_BYTES = 5 * 1024 * 1024
+# The mention key of an Obsidian note (spec 65): this and the folded name.
+OBSIDIAN_KEY_PREFIX = "obs:"
 
 _MARKDOWN_SPECIAL_ESCAPED = re.compile(r"\\([\\`*_\[\]<>])")
 
@@ -99,6 +101,11 @@ class ImportDocument:
     file_count: int = 0
     has_player: bool = False
     subtitle: str | None = None
+    # Spec 65: an Obsidian note. `dropped_embeds` counts the pictures and files
+    # it embeds that could not be kept; `match_by_name` means the Document of the
+    # Room it would replace is found by name, not by id.
+    dropped_embeds: int = 0
+    match_by_name: bool = False
 
 
 @dataclass(frozen=True)
@@ -582,6 +589,8 @@ def file_to_json(file: ImportFile) -> dict[str, Any]:
                 "file_count": d.file_count,
                 "has_player": d.has_player,
                 "subtitle": d.subtitle,
+                "dropped_embeds": d.dropped_embeds,
+                "match_by_name": d.match_by_name,
             }
             for d in file.documents
         ],
@@ -610,6 +619,9 @@ def file_from_json(data: dict[str, Any]) -> ImportFile:
                 has_player=d["has_player"],
                 # Absent from the payload of a job queued before spec 28_0.
                 subtitle=d.get("subtitle"),
+                # Absent from the payload of a job queued before spec 65.
+                dropped_embeds=d.get("dropped_embeds", 0),
+                match_by_name=d.get("match_by_name", False),
             )
             for d in data["documents"]
         ),

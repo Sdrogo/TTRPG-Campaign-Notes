@@ -40,7 +40,7 @@
      import, or (Q7 default) a Document of that name already in this Room that
      the importer can see**; matched case-insensitively on file name or front matter
      `aliases`. The heading/block part is dropped. If there is no such target, it
-     becomes plain `Note` (the alias if one is given), the same rule
+     becomes `#Note` text (the alias if one is given), the same rule
      spec 27 Decision 14 uses for any Document outside the file. The Room
      lookup stays inside the importing Room and uses the same visibility check
      as the Document list (`is_document_visible`), so a mention never reveals
@@ -167,3 +167,19 @@
 7. A wikilink to a note **not in the import but already in the Room**: **link it
    by name, only if the importer can see it** (convenient for re-importing a
    vault in parts), or plain text?
+
+## Built (65_1, 2026-11-08)
+
+- `app/domain/import_obsidian.py`: `parse_notes` (a set of `.md` notes as one
+  `ImportFile`, one Document per note), `parse_uploads` (routes uploads:
+  Markdown that reads as Obsidian is read together, the rest as before),
+  `is_obsidian` detection. `POST /rooms/{id}/imports[/preview]` take an optional
+  `obsidian` form field (true forces, false disables, absent detects).
+- The planner matches Replace and Room wikilinks **by name among the Documents
+  the importer sees only** (`ExistingDocument.name`, `ImportDocument.match_by_name`);
+  a link to a name nobody has becomes `#Name` text, as spec 27 Decision 14.
+- New preview warning `embeds_dropped` (pictures/files not kept; 65_2 attaches
+  pictures from the vault). Job payload gains `dropped_embeds`, `match_by_name`
+  (absent in older payloads). **No migration.**
+- Not yet: folder/zip upload and vault images (65_2), the picker and the
+  Obsidian switch in the dialog (65_3).

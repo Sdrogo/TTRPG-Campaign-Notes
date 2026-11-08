@@ -964,6 +964,7 @@
     "warning": {
       "comments_dropped_other": "コメント{{count}}件はインポートされません",
       "files_dropped_other": "PDF添付{{count}}件はインポートされません",
+      "embeds_dropped_other": "埋め込まれた画像・ファイル{{count}}件はインポートされません",
       "player_dropped": "プレイヤーとの関連付けはインポートされません",
       "selective_to_private_other": "公開範囲が選択式の項目{{count}}件は非公開になります",
       "tags_not_created": "作成されなかったタグ: {{names}}"

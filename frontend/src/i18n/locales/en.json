@@ -980,6 +980,8 @@
       "comments_dropped_other": "{{count}} Comments are not imported",
       "files_dropped_one": "{{count}} PDF attachment is not imported",
       "files_dropped_other": "{{count}} PDF attachments are not imported",
+      "embeds_dropped_one": "{{count}} embedded picture or file is not imported",
+      "embeds_dropped_other": "{{count}} embedded pictures or files are not imported",
       "player_dropped": "The link to the player is not imported",
       "selective_to_private_one": "{{count}} item with Selective visibility becomes Private",
       "selective_to_private_other": "{{count}} items with Selective visibility become Private",

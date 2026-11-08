@@ -964,6 +964,7 @@
     "warning": {
       "comments_dropped_other": "댓글 {{count}}개는 가져오지 않습니다",
       "files_dropped_other": "PDF 첨부 파일 {{count}}개는 가져오지 않습니다",
+      "embeds_dropped_other": "삽입된 이미지·파일 {{count}}개는 가져오지 않습니다",
       "player_dropped": "플레이어 연결은 가져오지 않습니다",
       "selective_to_private_other": "선택 공개 항목 {{count}}개가 비공개로 바뀝니다",
       "tags_not_created": "만들지 못한 태그: {{names}}"

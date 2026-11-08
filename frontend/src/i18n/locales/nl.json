@@ -980,6 +980,8 @@
       "comments_dropped_other": "{{count}} Opmerkingen worden niet geïmporteerd",
       "files_dropped_one": "{{count}} pdf-bijlage wordt niet geïmporteerd",
       "files_dropped_other": "{{count}} pdf-bijlagen worden niet geïmporteerd",
+      "embeds_dropped_one": "{{count}} ingesloten afbeelding of bestand wordt niet geïmporteerd",
+      "embeds_dropped_other": "{{count}} ingesloten afbeeldingen of bestanden worden niet geïmporteerd",
       "player_dropped": "De koppeling aan de speler wordt niet geïmporteerd",
       "selective_to_private_one": "{{count}} item met Selectieve zichtbaarheid wordt Privé",
       "selective_to_private_other": "{{count}} items met Selectieve zichtbaarheid worden Privé",

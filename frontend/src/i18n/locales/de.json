@@ -980,6 +980,8 @@
       "comments_dropped_other": "{{count}} Kommentare werden nicht importiert",
       "files_dropped_one": "{{count}} PDF-Anhang wird nicht importiert",
       "files_dropped_other": "{{count}} PDF-Anhänge werden nicht importiert",
+      "embeds_dropped_one": "{{count}} eingebettetes Bild oder eingebettete Datei wird nicht importiert",
+      "embeds_dropped_other": "{{count}} eingebettete Bilder oder Dateien werden nicht importiert",
       "player_dropped": "Die Verknüpfung zum Spieler wird nicht importiert",
       "selective_to_private_one": "{{count}} Element mit ausgewählter Sichtbarkeit wird privat",
       "selective_to_private_other": "{{count}} Elemente mit ausgewählter Sichtbarkeit werden privat",

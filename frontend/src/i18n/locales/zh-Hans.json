@@ -964,6 +964,7 @@
     "warning": {
       "comments_dropped_other": "{{count}} 条评论不会被导入",
       "files_dropped_other": "{{count}} 个 PDF 附件不会被导入",
+      "embeds_dropped_other": "{{count}} 个嵌入的图片或文件不会被导入",
       "player_dropped": "与玩家的关联不会被导入",
       "selective_to_private_other": "{{count}} 个指定成员可见的项目将变为私密",
       "tags_not_created": "未创建的标签：{{names}}"

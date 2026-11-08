@@ -158,6 +158,7 @@ async def load_import_context(
                 document.id,
                 is_owner(importer.role, importer.user_id, owners[document.id]),
                 frozenset(str(image.id) for image in images.get(document.id, ())),
+                document.name,
             )
             for document in visible
         },

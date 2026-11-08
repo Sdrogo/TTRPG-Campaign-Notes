@@ -19,6 +19,7 @@ export type ImportResolution = 'copy' | 'replace';
 export type ImportWarningCode =
   | 'comments_dropped'
   | 'files_dropped'
+  | 'embeds_dropped'
   | 'player_dropped'
   | 'selective_to_private'
   | 'tags_not_created';

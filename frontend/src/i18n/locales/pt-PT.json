@@ -982,6 +982,8 @@
       "comments_dropped_other": "{{count}} Comentários não são importados",
       "files_dropped_one": "{{count}} anexo PDF não é importado",
       "files_dropped_other": "{{count}} anexos PDF não são importados",
+      "embeds_dropped_one": "{{count}} imagem ou ficheiro incorporado não é importado",
+      "embeds_dropped_other": "{{count}} imagens ou ficheiros incorporados não são importados",
       "player_dropped": "A ligação ao jogador não é importada",
       "selective_to_private_one": "{{count}} elemento com visibilidade Seletiva passa a Privado",
       "selective_to_private_other": "{{count}} elementos com visibilidade Seletiva passam a Privados",

@@ -29,8 +29,8 @@ from app.domain.import_files import (
     ImportFile,
     ImportFileTooLargeError,
     ImportRefusedError,
-    parse_file,
 )
+from app.domain.import_obsidian import parse_uploads
 from app.domain.imports import (
     MAX_FILES,
     ImportAlreadyRunningError,
@@ -237,14 +237,16 @@ class ImportJobResponse(BaseModel):
     progress: ImageCountResponse | None = None
 
 
-async def _read_files(files: list[UploadFile], locale: str) -> list[ImportFile]:
+async def _read_files(
+    files: list[UploadFile], locale: str, obsidian: bool | None = None
+) -> list[ImportFile]:
     """The uploaded files parsed and within the limits (Decision 8): at most
     `MAX_FILES` files of `MAX_FILE_BYTES` (413), readable as one of the formats
     (422). Nothing is fetched or written."""
     try:
         if len(files) > MAX_FILES:
             raise ImportRefusedError("errors.import.tooManyFiles", max=MAX_FILES)
-        parsed: list[ImportFile] = []
+        uploads: list[tuple[str, bytes]] = []
         for upload in files:
             name = (upload.filename or "file")[:200]
             data = await upload.read(MAX_FILE_BYTES + 1)
@@ -252,7 +254,8 @@ async def _read_files(files: list[UploadFile], locale: str) -> list[ImportFile]:
                 raise ImportFileTooLargeError(
                     "errors.import.fileTooLarge", name=name, max=MAX_FILE_BYTES // (1024 * 1024)
                 )
-            parsed.append(await asyncio.to_thread(parse_file, name, data))
+            uploads.append((name, data))
+        parsed = await asyncio.to_thread(lambda: parse_uploads(uploads, obsidian=obsidian))
         validate_files(parsed)
     except ImportFileTooLargeError as exc:
         raise translated_error(status.HTTP_413_CONTENT_TOO_LARGE, exc, locale) from exc
@@ -329,6 +332,7 @@ async def preview_import(
     session: SessionDep,
     locale: LocaleDep,
     files: Annotated[list[UploadFile], File()],
+    obsidian: Annotated[bool | None, Form()] = None,
 ) -> ImportPreviewResponse:
     """What importing the uploaded files (up to 10, JSON or Markdown, each at
     most 5 MB) would do, without writing or fetching anything: the Documents
@@ -340,7 +344,7 @@ async def preview_import(
     otherwise); 413 for a file over the limit, 422 for an unreadable file or
     one over a limit."""
     importer = await _importer(session, room_id, uuid.UUID(current_user.id), locale)
-    parsed = await _read_files(files, locale)
+    parsed = await _read_files(files, locale, obsidian)
     plan, tag_names = await _plan(session, room_id, importer, parsed, None, locale)
     return ImportPreviewResponse(
         documents=[_preview_document(d, tag_names) for d in plan.documents],
@@ -416,6 +420,7 @@ async def start_import(
     locale: LocaleDep,
     files: Annotated[list[UploadFile], File()],
     choices: Annotated[str, Form()],
+    obsidian: Annotated[bool | None, Form()] = None,
 ) -> ImportJobResponse:
     """Starts the import of the same files the preview read, with `choices`
     (a JSON object `{selected, replace}` of Document keys) and answers 202
@@ -435,7 +440,7 @@ async def start_import(
         raise http_error(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.import.badChoices", locale
         ) from exc
-    parsed = await _read_files(files, locale)
+    parsed = await _read_files(files, locale, obsidian)
     import_choices = ImportChoices(
         frozenset(chosen.selected),
         frozenset(chosen.replace),

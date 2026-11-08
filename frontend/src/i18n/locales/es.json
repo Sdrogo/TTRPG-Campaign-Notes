@@ -980,6 +980,8 @@
       "comments_dropped_other": "{{count}} Comentarios no se importan",
       "files_dropped_one": "{{count}} adjunto PDF no se importa",
       "files_dropped_other": "{{count}} adjuntos PDF no se importan",
+      "embeds_dropped_one": "{{count}} imagen o archivo incrustado no se importa",
+      "embeds_dropped_other": "{{count}} imágenes o archivos incrustados no se importan",
       "player_dropped": "El vínculo con el jugador no se importa",
       "selective_to_private_one": "{{count}} elemento con visibilidad Selectiva pasa a Privado",
       "selective_to_private_other": "{{count}} elementos con visibilidad Selectiva pasan a Privado",
