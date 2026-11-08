@@ -52,9 +52,11 @@ rework, and the pictures step (Decision 5) waits for an explicit go-ahead.
      the name of a Document the importer can't see: that link is plain text.
      With Q7 answered "plain text", only the import's own files count.
    - **Same name twice** (`A/Bob.md` and `B/Bob.md`): both are imported as
-     Documents. A link names a note, not a folder: `[[Bob]]` and `[[A/Bob]]`
-     both go to the **first note in path order**. Several Room Documents with the
-     same name (Replace and Room links): the one with the lowest id, the same at
+     Documents. A bare `[[Bob]]` (or an alias) goes to the **first note in path
+     order**; a path-qualified `[[B/Bob]]` goes to its own note. Only the first
+     note of a name can Replace the Room's Document of that name; the later ones
+     are copies, so two notes never overwrite one Document. Several Room
+     Documents with the same name: the one with the lowest id, the same at
      preview and at import.
    - `![[image.jpg]]`: an image of the Document, if the image file is in the
      import (Decision 5); otherwise dropped and listed as a warning. Embeds of

@@ -96,3 +96,13 @@ def test_only_the_notes_that_are_read_are_checked_for_size_and_ratio() -> None:
     # A flat picture (high ratio) and a hidden note over the size limit are never opened.
     data = _zip({"flat.png": b"0" * 4_000_000, ".obsidian/big.md": b"0" * 6_000_000, "n.md": b"x"})
     assert expand_zip("v.zip", data) == [("n.md", b"x")]
+
+
+def test_many_archives_share_one_expanded_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(import_vault, "MAX_VAULT_BYTES", 100)
+    one = _zip({"a.md": b"x" * 60})
+    assert expand_uploads([("1.zip", one)]) == [("a.md", b"x" * 60)]
+    with pytest.raises(ImportRefusedError):  # each fits alone, together they do not
+        expand_uploads([("1.zip", one), ("2.zip", one)])
+    with pytest.raises(ImportRefusedError):  # plain files count too
+        expand_uploads([("1.zip", one), ("n.md", b"y" * 50)])

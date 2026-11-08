@@ -214,7 +214,8 @@ def _wikilinks(chunk: str, index: dict[str, str], pieces: list[Piece]) -> None:
         last = match.end()
         embed = match.group(1) == "!"
         target, _, alias = match.group(2).partition("|")
-        page = re.split(r"[#^]", target, maxsplit=1)[0].strip().rsplit("/", 1)[-1].strip()
+        full = re.split(r"[#^]", target, maxsplit=1)[0].strip().replace("\\", "/")
+        page = full.rsplit("/", 1)[-1].strip()
         if embed and page.lower().endswith(IMAGE_EXTENSIONS + (".pdf", ".mp3", ".mp4")):
             pieces.append("\x00embed")  # counted by the caller
             continue
@@ -222,7 +223,7 @@ def _wikilinks(chunk: str, index: dict[str, str], pieces: list[Piece]) -> None:
         if not page:  # [[#Heading]]: a link inside the note
             pieces.append(label)
             continue
-        key = index.get(page.casefold(), folded_key(page))
+        key = index.get(full.casefold()) or index.get(page.casefold()) or folded_key(page)
         pieces.append(MentionRef(MentionKind.DOCUMENT, key, label))
     pieces.append(chunk[last:])
 
@@ -270,9 +271,12 @@ def parse_notes(
         seen[base] = seen.get(base, 0) + 1
         key = base if seen[base] == 1 else f"{base}#{seen[base]}"
         keys.append(key)
-        index.setdefault(stem.strip().casefold(), base)
+        # A path-qualified link `[[A/Bob]]` finds its own note; a bare name or an
+        # alias goes to the first note (in path order) that has it.
+        index.setdefault(path.replace("\\", "/").rsplit(".", 1)[0].casefold(), key)
+        index.setdefault(stem.strip().casefold(), key)
         for alias in meta.get("aliases", []):
-            index.setdefault(alias.strip().casefold(), base)
+            index.setdefault(alias.strip().casefold(), key)
 
     documents: list[ImportDocument] = []
     for (path, meta, body), key in zip(parsed, keys, strict=True):
@@ -292,7 +296,9 @@ def parse_notes(
                 notes=(),
                 images=(),
                 dropped_embeds=images + embeds,
-                match_by_name=True,
+                # Only the first note of a name can replace the Room's Document of
+                # that name; a later one is a copy, so two never overwrite each other.
+                match_by_name=key == folded_key(_stem(path)),
             )
         )
     return ImportFile(name, tuple(documents))

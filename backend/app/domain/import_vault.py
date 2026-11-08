@@ -27,7 +27,7 @@ def is_zip(name: str) -> bool:
     return name.lower().endswith(".zip")
 
 
-def expand_zip(name: str, data: bytes) -> list[tuple[str, bytes]]:
+def expand_zip(name: str, data: bytes, limit: int | None = None) -> list[tuple[str, bytes]]:
     """The notes of the archive `data` (Markdown files only; pictures come with
     the image step) as `(path, bytes)`. 422 for a file that isn't a zip, one with
     an unsafe path, too many entries or a bomb; 413 for a note over
@@ -50,7 +50,7 @@ def expand_zip(name: str, data: bytes) -> list[tuple[str, bytes]]:
             if path.startswith("/") or ".." in path.split("/") or "\x00" in path:
                 raise ImportRefusedError("errors.import.unsafeArchive", name=name[:200])
             total += info.file_size  # every entry counts toward the memory bound
-            if total > MAX_VAULT_BYTES:
+            if total > (MAX_VAULT_BYTES if limit is None else limit):
                 raise ImportRefusedError("errors.import.vaultTooBig", max=MAX_VAULT_BYTES // 2**20)
             if not path.lower().endswith((".md", ".markdown")) or is_hidden(path):
                 continue  # never read: neither its size nor its ratio matters
@@ -75,11 +75,15 @@ def expand_zip(name: str, data: bytes) -> list[tuple[str, bytes]]:
 
 
 def expand_uploads(uploads: Sequence[tuple[str, bytes]]) -> list[tuple[str, bytes]]:
-    """The uploads with every archive replaced by its notes."""
+    """The uploads with every archive replaced by its notes. What is expanded
+    and kept in memory, across all the archives and files, stays within
+    `MAX_VAULT_BYTES` (422 `vaultTooBig` above it)."""
     out: list[tuple[str, bytes]] = []
+    left = MAX_VAULT_BYTES
     for name, data in uploads:
-        if is_zip(name):
-            out.extend(expand_zip(name, data))
-        else:
-            out.append((name, data))
+        items = expand_zip(name, data, left) if is_zip(name) else [(name, data)]
+        left -= sum(len(content) for _, content in items)
+        if left < 0:
+            raise ImportRefusedError("errors.import.vaultTooBig", max=MAX_VAULT_BYTES // 2**20)
+        out.extend(items)
     return out
