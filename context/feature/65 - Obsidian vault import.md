@@ -37,10 +37,15 @@
 3. **Syntax translated** (everything else stays Markdown text):
    - `[[Note]]`, `[[Note|alias]]`, `[[Note#Heading]]`, `[[Note#^block]]`: a
      mention of the Document named `Note` **when that file is in the same
-     import**; matched case-insensitively on file name or front matter
-     `aliases`. The heading/block part is dropped. If the target is not in the
-     import, it becomes plain `Note` (the alias if one is given), the same rule
-     spec 27 Decision 14 uses for any Document outside the file.
+     import, or (Q7 default) a Document of that name already in this Room that
+     the importer can see**; matched case-insensitively on file name or front matter
+     `aliases`. The heading/block part is dropped. If there is no such target, it
+     becomes plain `Note` (the alias if one is given), the same rule
+     spec 27 Decision 14 uses for any Document outside the file. The Room
+     lookup stays inside the importing Room and uses the same visibility check
+     as the Document list (`is_document_visible`), so a mention never reveals
+     the name of a Document the importer can't see: that link is plain text.
+     With Q7 answered "plain text", only the import's own files count.
    - `![[image.jpg]]`: an image of the Document, if the image file is in the
      import (Decision 5); otherwise dropped and listed as a warning. Embeds of
      other notes `![[Note]]` become a mention. `![alt](relative/path.png)` too.
@@ -48,9 +53,10 @@
      other keys are ignored. Inline `#tag` and `#nested/tag` become Tags
      (nested keeps its last segment, Q4). A `#` followed by a space is a heading,
      not a Tag; headings, code blocks and URLs are not scanned.
-   - Dropped as text with a count in the preview: `%%comments%%`, Dataview and
-     other plugin code blocks stay as code. Callouts (`> [!note]`) become plain
-     block quotes. `==highlight==` and `^block-ids` are removed.
+   - Removed, with a count in the preview: `%%comments%%`, `==highlight==`
+     signs and `^block-ids`.
+   - Kept as written: Dataview and other plugin code blocks stay as code. Callouts
+     (`> [!note]`) become plain block quotes.
    - Hidden `.obsidian/` and `.trash/` folders are never read.
 4. **Many files at once.** Today: 10 files, 200 Documents per import. For a
    vault this is too low, so: the picker accepts **a folder** (browser
@@ -154,4 +160,5 @@
    job end** (no migration), or a table column (migration)?
 6. Folders as Tags: **on**, or off?
 7. A wikilink to a note **not in the import but already in the Room**: **link it
-   by name** (convenient for re-importing a vault in parts), or plain text?
+   by name, only if the importer can see it** (convenient for re-importing a
+   vault in parts), or plain text?
