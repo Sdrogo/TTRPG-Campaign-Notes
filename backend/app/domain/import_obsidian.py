@@ -39,7 +39,6 @@ _MD_IMAGE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 _INLINE_TAG = re.compile(r"(?<![\w#&/\\\[(])#([\w][\w/\-]*)")
 _FENCE = re.compile(r"^\s*(```|~~~)")
 _INLINE_CODE = re.compile(r"(`+)(?:(?!\1).)+?\1")
-_COMMENT = re.compile(r"%%.*?%%", re.DOTALL)
 _HIGHLIGHT = re.compile(r"==(?=\S)(.+?)(?<=\S)==")
 _BLOCK_ID = re.compile(r"[ \t]+\^[\w-]+[ \t]*$", re.MULTILINE)
 _CALLOUT = re.compile(r"^(\s*>\s*)\[!([\w-]+)\][+-]?[ \t]*(.*)$")
@@ -96,24 +95,26 @@ def _front_matter(text: str) -> tuple[dict[str, list[str]], str]:
             name = "tags" if key.group(1).lower().startswith("tag") else "aliases"
             current = name
             values.setdefault(name, [])
-            values[name].extend(_scalar_list(key.group(2)))
+            values[name].extend(_scalar_list(key.group(2), name == "tags"))
         elif item and current:
-            values[current].extend(_scalar_list(item.group(1), split=False))
+            values[current].extend(_scalar_list(item.group(1), False))
         elif not item:
             current = None
     return values, text[match.end() :]
 
 
-def _scalar_list(raw: str, split: bool = True) -> list[str]:
-    """A YAML value as a list of strings: `[a, b]`, `a, b`, `a b` (tags) or one."""
+def _scalar_list(raw: str, tags: bool) -> list[str]:
+    """A YAML value as a list of strings: an inline list `[a, b]`, or one value.
+    Tags in a plain string are separated by commas or spaces (Obsidian allows
+    `tags: a b`); an alias is never split on spaces or on a comma outside a
+    list."""
     raw = raw.strip()
     if not raw:
         return []
     if raw.startswith("[") and raw.endswith("]"):
-        raw = raw[1:-1]
-        parts = raw.split(",")
-    elif split and "," in raw:
-        parts = raw.split(",")
+        parts = raw[1:-1].split(",")
+    elif tags:
+        parts = re.split(r"[,\s]+", raw)
     else:
         parts = [raw]
     return [p.strip().strip("'\"").lstrip("#") for p in parts if p.strip().strip("'\"")]
@@ -140,13 +141,15 @@ def _translate(body: str, index: dict[str, str]) -> tuple[Text, list[str], int]:
     """A note's body in the app's form: the text with its wikilinks as
     mentions, the inline Tags it uses and how many embeds (images, files) could
     not be kept. `index` holds the notes of the set by folded name or alias."""
-    body = _COMMENT.sub("", body)
     pieces: list[Piece] = []
     tags: list[str] = []
     dropped = 0
     in_fence = False
+    in_comment = False
     lines = body.split("\n")
     for position, line in enumerate(lines):
+        if not in_fence:
+            line, in_comment = _strip_comments(line, in_comment)
         if _FENCE.match(line):
             in_fence = not in_fence
             pieces.append(line)
@@ -172,6 +175,18 @@ def _translate(body: str, index: dict[str, str]) -> tuple[Text, list[str], int]:
         if position < len(lines) - 1:
             pieces.append("\n")
     return _joined(pieces), tags, dropped
+
+
+def _strip_comments(line: str, inside: bool) -> tuple[str, bool]:
+    """`line` without its `%%comments%%`, and whether a comment is still open at
+    its end (they may span lines). Never called inside a code fence."""
+    kept: list[str] = []
+    for index, part in enumerate(line.split("%%")):
+        if index:
+            inside = not inside
+        if not inside:
+            kept.append(part)
+    return "".join(kept), inside
 
 
 def _drop_images(chunk: str) -> tuple[str, int]:

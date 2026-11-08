@@ -225,14 +225,12 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
-- **65, Obsidian vault import** (the bulk import wanted in 2026-11-05; the
-  27b PDF ticket is separate and built): ticket written
-  2026-11-08, waiting for the product owner to confirm its defaults before
-  any code. Reads Obsidian Markdown (`[[wikilinks]]`, `![[images]]`, front
-  matter, inline Tags) from files, a folder or a zip. No migration planned.
-  **65_1, the zip/folder upload and the dialog (folder button,
-  Obsidian switch) built 2026-11-08** (PR #312); vault pictures (staged
-  bytes, amends spec 27 Decision 17) still to do.
+- **65, Obsidian vault import** (the bulk import wanted on 2026-11-05; the
+  27b PDF ticket is separate and built): ticket written 2026-11-08; Andrea said
+  to go ahead with building ("passiamo a sviluppare"), so 65_1 reader, 65_2
+  zip/folder upload and 65_3 dialog are **built on the ticket's defaults** (PR
+  #312; Q1 to Q7 not answered one by one). **Not built:** vault pictures (staged
+  bytes, amends spec 27 Decision 17), waiting for Andrea's go-ahead. No migration.
 - **46b, Dichiarazione d'Intenti invitation**: if a Room has a DDI, its
   invitation opens it read-only with "accept and join" (product owner,
   2026-10-27). Ticket not written yet (the DDI template itself is in 47_3).

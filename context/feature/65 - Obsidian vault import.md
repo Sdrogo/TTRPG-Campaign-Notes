@@ -22,7 +22,12 @@
 - **Backend reader and a small frontend change. No migration** (the job payload
   is JSONB; unless Q5 chooses a column). `requirements.md` unchanged.
 
-## Decisions (proposed 2026-11-08, awaiting the product owner)
+## Decisions (proposed 2026-11-08; built on these defaults)
+
+The product owner said "passiamo a sviluppare questo import massivo" on
+2026-11-08, after the ticket was posted, so the build started on the defaults
+below. Q1 to Q7 were **not answered one by one**: a different answer may mean
+rework, and the pictures step (Decision 5) waits for an explicit go-ahead.
 
 1. **One file = one Document.** The Document's name is the file name without
    `.md` (as Obsidian shows it). The first `# Title` line is not a name; all
@@ -173,18 +178,23 @@
    by name, only if the importer can see it** (convenient for re-importing a
    vault in parts), or plain text?
 
-## Built (65_1, 2026-11-08)
+## Built (2026-11-08)
 
-- `app/domain/import_obsidian.py`: `parse_notes` (a set of `.md` notes as one
-  `ImportFile`, one Document per note), `parse_uploads` (routes uploads:
-  Markdown that reads as Obsidian is read together, the rest as before),
+- **65_1, the reader.** `app/domain/import_obsidian.py`: `parse_notes` (a set of
+  `.md` notes as one `ImportFile`, one Document per note), `parse_uploads` (routes
+  uploads: Markdown that reads as Obsidian is read together, the rest as before),
   `is_obsidian` detection. `POST /rooms/{id}/imports[/preview]` take an optional
   `obsidian` form field (true forces, false disables, absent detects).
 - The planner matches Replace and Room wikilinks **by name among the Documents
   the importer sees only** (`ExistingDocument.name`, `ImportDocument.match_by_name`);
   a link to a name nobody has becomes `#Name` text, as spec 27 Decision 14.
-- New preview warning `embeds_dropped` (pictures/files not kept; 65_2 attaches
-  pictures from the vault). Job payload gains `dropped_embeds`, `match_by_name`
-  (absent in older payloads). **No migration.**
-- Not yet: folder/zip upload and vault images (65_2), the picker and the
-  Obsidian switch in the dialog (65_3).
+- New preview warning `embeds_dropped` (pictures/files not kept). Job payload
+  gains `dropped_embeds`, `match_by_name` (absent in older payloads).
+- **65_2, upload, without pictures.** `app/domain/import_vault.py` expands a
+  `.zip` (limits of Decision 4; backend locales have `vaultTooBig` and
+  `unsafeArchive`); a folder is sent as files under their relative paths with
+  `obsidian` on. Up to 3000 uploads, 100 MB and 500 notes for a vault.
+- **65_3, dialog.** Folder button (`webkitdirectory`, only `.md` kept), an
+  "Obsidian vault" switch, `.zip` accepted, strings in 12 languages.
+- **Not built:** pictures from the vault (Decision 5: staged bytes, amends spec 27
+  Decision 17); `![[picture]]` is dropped and counted. **No migration** so far.

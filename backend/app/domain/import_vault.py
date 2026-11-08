@@ -13,6 +13,7 @@ import zipfile
 from collections.abc import Sequence
 
 from app.domain.import_files import MAX_FILE_BYTES, ImportFileTooLargeError, ImportRefusedError
+from app.domain.import_obsidian import is_hidden
 
 MAX_VAULT_BYTES = 100 * 1024 * 1024
 MAX_VAULT_UPLOADS = 3000
@@ -48,13 +49,13 @@ def expand_zip(name: str, data: bytes) -> list[tuple[str, bytes]]:
                 continue
             if path.startswith("/") or ".." in path.split("/") or "\x00" in path:
                 raise ImportRefusedError("errors.import.unsafeArchive", name=name[:200])
-            total += info.file_size
-            if total > MAX_VAULT_BYTES or (
-                info.compress_size and info.file_size / info.compress_size > MAX_COMPRESSION_RATIO
-            ):
+            total += info.file_size  # every entry counts toward the memory bound
+            if total > MAX_VAULT_BYTES:
                 raise ImportRefusedError("errors.import.vaultTooBig", max=MAX_VAULT_BYTES // 2**20)
-            if not path.lower().endswith((".md", ".markdown")):
-                continue
+            if not path.lower().endswith((".md", ".markdown")) or is_hidden(path):
+                continue  # never read: neither its size nor its ratio matters
+            if info.compress_size and info.file_size / info.compress_size > MAX_COMPRESSION_RATIO:
+                raise ImportRefusedError("errors.import.vaultTooBig", max=MAX_VAULT_BYTES // 2**20)
             if info.file_size > MAX_FILE_BYTES:
                 raise ImportFileTooLargeError(
                     "errors.import.fileTooLarge",

@@ -214,3 +214,22 @@ def test_a_note_survives_the_job_payload() -> None:
     back = file_from_json(file_to_json(file))
     assert back.documents == file.documents
     assert back.documents[0].dropped_embeds == 1 and back.documents[0].match_by_name
+
+
+def test_comment_markers_inside_code_are_kept_and_comments_may_span_lines() -> None:
+    file = _notes(("N.md", 'a %%one%% b\n```\nprintf "%%d" %%x\n```\n%%\nmulti\n%%\nend'))
+    text = "".join(p for p in file.documents[0].text if isinstance(p, str))
+    assert 'printf "%%d" %%x' in text
+    assert "one" not in text and "multi" not in text
+    assert text.startswith("a  b") and text.endswith("end")
+
+
+def test_space_separated_tags_are_split_but_aliases_are_not() -> None:
+    file = _notes(
+        ("A.md", "---\ntags: pc npc, #elder\naliases: Smith, John\n---\n"),
+        ("B.md", "[[Smith, John]] and [[Smith]]"),
+    )
+    assert file.documents[0].tag_names == ("pc", "npc", "elder")
+    refs = [p for p in file.documents[1].text if isinstance(p, MentionRef)]
+    assert refs[0].key == file.documents[0].source_id  # the whole alias matched
+    assert refs[1].key != file.documents[0].source_id

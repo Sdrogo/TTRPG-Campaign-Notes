@@ -90,3 +90,9 @@ def test_every_import_error_key_the_code_raises_is_translated() -> None:
     for locale in (root / "i18n" / "locales").glob("*.json"):
         known = json.loads(locale.read_text(encoding="utf-8"))["errors"]["import"]
         assert raised <= set(known), (locale.name, sorted(raised - set(known)))
+
+
+def test_only_the_notes_that_are_read_are_checked_for_size_and_ratio() -> None:
+    # A flat picture (high ratio) and a hidden note over the size limit are never opened.
+    data = _zip({"flat.png": b"0" * 4_000_000, ".obsidian/big.md": b"0" * 6_000_000, "n.md": b"x"})
+    assert expand_zip("v.zip", data) == [("n.md", b"x")]
