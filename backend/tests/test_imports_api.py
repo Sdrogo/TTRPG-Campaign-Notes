@@ -2506,7 +2506,8 @@ async def test_an_obsidian_vault_zip_is_imported_with_links_and_folder_tags(
     preview = (await _preview(client, room, room.master, ("vault.zip", vault))).json()
     assert sorted(d["name"] for d in preview["documents"]) == ["Jason", "Praga"]
     jason = next(d for d in preview["documents"] if d["name"] == "Jason")
-    assert jason["tag_names"] == ["npc", "Characters"]
+    # The Room already has an "NPC" Tag, so the front matter tag reuses it.
+    assert [n.lower() for n in jason["tag_names"]] == ["npc", "characters"]
     assert [w["code"] for w in jason["warnings"]] == ["embeds_dropped"]
 
     job = await _import(client, room, room.master, ("vault.zip", vault))

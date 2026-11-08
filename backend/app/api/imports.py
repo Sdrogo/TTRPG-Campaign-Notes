@@ -360,7 +360,10 @@ async def preview_import(
     obsidian: Annotated[bool | None, Form()] = None,
 ) -> ImportPreviewResponse:
     """What importing the uploaded files (up to 10, JSON or Markdown, each at
-    most 5 MB) would do, without writing or fetching anything: the Documents
+    most 5 MB; for a vault, meaning a `.zip` or `obsidian` on, up to
+    MAX_VAULT_UPLOADS files, MAX_VAULT_BYTES in all and MAX_VAULT_DOCUMENTS
+    notes, each note still at most 5 MB, read as Obsidian notes, spec 65;
+    `obsidian` false reads Markdown as before) would do, without writing or fetching anything: the Documents
     found, which of them still exist in the Room (they can be copied or
     replaced), the Tags matched and to create, per Document what is dropped or
     changed, and the maps of a JSON export (spec 40) with what each leaves
@@ -450,7 +453,8 @@ async def start_import(
     """Starts the import of the same files the preview read, with `choices`
     (a JSON object `{selected, replace}` of Document keys) and answers 202
     with the job, `queued`: poll `GET .../imports/{job}` until it is `done`.
-    The files are read and planned again here, so a file or a choice that
+    The files, with the same `obsidian` field and vault limits as the
+    preview, are read and planned again here, so a file or a choice that
     would be refused is refused now with nothing stored. 403 for someone who
     may not create Documents, or may not replace a chosen Document (an Owner
     or the Master only, D-12); 409 when they already have an import running in
