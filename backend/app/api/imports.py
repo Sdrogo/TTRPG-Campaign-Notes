@@ -274,12 +274,13 @@ async def _read_files(
             uploads.append((name, data))
 
         def read() -> list[ImportFile]:
-            expanded = expand_uploads(uploads)
-            if vault:  # a folder holds pictures too; they come with the image step
-                expanded = [u for u in expanded if u[0].lower().endswith((".md", ".markdown"))]
-            return parse_uploads(expanded, obsidian=True if vault else obsidian)
+            # Archives yield their notes only (pictures are left behind); any other
+            # upload, a JSON export for one, goes through as it is.
+            return parse_uploads(expand_uploads(uploads), obsidian=True if vault else obsidian)
 
         parsed = await asyncio.to_thread(read)
+        if not parsed:  # e.g. an archive with no note in it
+            raise ImportRefusedError("errors.import.noDocuments", name=files[0].filename or "")
         validate_files(parsed, MAX_VAULT_DOCUMENTS if vault else MAX_DOCUMENTS)
     except ImportFileTooLargeError as exc:
         raise translated_error(status.HTTP_413_CONTENT_TOO_LARGE, exc, locale) from exc

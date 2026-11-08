@@ -2524,7 +2524,7 @@ async def test_a_folder_upload_is_read_as_a_vault_and_hidden_files_are_left_out(
     db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
 ) -> None:
     room = await _room(client, make_token)
-    files = _upload(("Notes/A.md", b"# plain heading\ntext"), ("Notes/pic.png", _png()))
+    files = _upload(("Notes/A.md", b"# plain heading\ntext"))
     preview = await client.post(
         f"{room.url}/imports/preview",
         files=files,
@@ -2597,3 +2597,20 @@ async def test_a_folder_over_the_vault_size_is_refused(
         headers=room.master,
     )
     assert response.status_code == 422
+
+
+async def test_a_vault_zip_and_a_json_export_can_be_imported_together(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    vault = _zip({"Vault/Note.md": b"see [[Other]]", "Vault/pic.png": _png()})
+    export = json.dumps({"documents": [{"name": "From JSON"}]}).encode()
+
+    response = await _preview(client, room, room.master, ("vault.zip", vault), ("x.json", export))
+
+    assert response.status_code == 200, response.text
+    assert sorted(d["name"] for d in response.json()["documents"]) == ["From JSON", "Note"]
+    pictures_only = await _preview(
+        client, room, room.master, ("pics.zip", _zip({"pic.png": _png()}))
+    )
+    assert pictures_only.status_code == 422
