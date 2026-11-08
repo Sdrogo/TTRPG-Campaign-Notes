@@ -363,7 +363,8 @@ async def preview_import(
     most 5 MB; for a vault, meaning a `.zip` or `obsidian` on, up to
     MAX_VAULT_UPLOADS files, MAX_VAULT_BYTES in all and MAX_VAULT_DOCUMENTS
     notes, each note still at most 5 MB, read as Obsidian notes, spec 65;
-    `obsidian` false reads Markdown as before) would do, without writing or fetching anything: the Documents
+    `obsidian` false reads Markdown as before) would do, without writing or
+    fetching anything: the Documents
     found, which of them still exist in the Room (they can be copied or
     replaced), the Tags matched and to create, per Document what is dropped or
     changed, and the maps of a JSON export (spec 40) with what each leaves
