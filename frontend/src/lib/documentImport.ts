@@ -7,7 +7,7 @@ import type { SectionKind } from '../types/landing';
  */
 
 /** The file types the picker offers: JSON of spec 23, or Markdown. */
-export const IMPORT_ACCEPT = '.json,.md,.markdown,.txt';
+export const IMPORT_ACCEPT = '.json,.md,.markdown,.txt,.zip';
 
 /** How often the job is read while it is queued or running. */
 export const IMPORT_POLL_INTERVAL_MS = 2000;
@@ -333,11 +333,22 @@ export function toImportJob(raw: RawImportJob): ImportJob {
   };
 }
 
-/** The upload of the preview: the same files the import will send again. */
-export function previewFormData(files: File[]): FormData {
+/**
+ * The upload of the preview: the same files the import will send again. A file of
+ * a picked folder goes under its path in the folder, which the backend needs to
+ * read the folders as Tags (spec 65); `obsidian` forces (true) or switches off
+ * (false) reading the Markdown as Obsidian notes, absent lets the backend detect.
+ */
+export function previewFormData(files: File[], obsidian?: boolean): FormData {
   const body = new FormData();
-  files.forEach((file) => body.append('files', file));
+  files.forEach((file) => body.append('files', file, file.webkitRelativePath || file.name));
+  if (obsidian !== undefined) body.append('obsidian', String(obsidian));
   return body;
+}
+
+/** The Markdown notes of a picked folder: its pictures wait for a later step. */
+export function vaultNotes(files: File[]): File[] {
+  return files.filter((file) => /\.(md|markdown)$/i.test(file.name));
 }
 
 /**
@@ -353,8 +364,9 @@ export function importFormData(
   maps: string[],
   sections: string[],
   pageCards: string[],
+  obsidian?: boolean,
 ): FormData {
-  const body = previewFormData(files);
+  const body = previewFormData(files, obsidian);
   body.append(
     'choices',
     JSON.stringify({ selected, replace, maps, sections, page_cards: pageCards }),

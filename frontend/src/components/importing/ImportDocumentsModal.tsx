@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Alert, Button, FileInput, Group, Modal, Stack, Text } from '@mantine/core';
-import { UploadSimpleIcon } from '@phosphor-icons/react';
+import { useRef, useState } from 'react';
+import { Alert, Button, FileInput, Group, Modal, Stack, Switch, Text } from '@mantine/core';
+import { FolderOpenIcon, UploadSimpleIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { usePreviewImport, useImportJob, useStartImport } from '../../hooks/useDocumentImport';
 import {
@@ -8,6 +8,7 @@ import {
   isActiveImportJob,
   isPageCard,
   MAX_IMPORT_IMAGES,
+  vaultNotes,
   type ImportPreview,
   type ImportResolution,
 } from '../../lib/documentImport';
@@ -37,6 +38,9 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>('pick');
   const [files, setFiles] = useState<File[]>([]);
+  // Spec 65: read the Markdown as Obsidian notes (the backend detects them otherwise).
+  const [vault, setVault] = useState(false);
+  const folderInput = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectedMaps, setSelectedMaps] = useState<Set<string>>(new Set());
@@ -51,6 +55,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
   const reset = () => {
     setStep('pick');
     setFiles([]);
+    setVault(false);
     setPreview(null);
     setSelected(new Set());
     setSelectedMaps(new Set());
@@ -69,7 +74,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
 
   const handlePreview = () => {
     setError(null);
-    previewImport.mutate(files, {
+    previewImport.mutate(vault ? { files, obsidian: true } : files, {
       onSuccess: (found) => {
         setPreview(found);
         setSelected(new Set(found.documents.map((document) => document.key)));
@@ -107,6 +112,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
     startImport.mutate(
       {
         files,
+        obsidian: vault ? true : undefined,
         selected: ticked.map((document) => document.key),
         replace,
         maps: [...selectedMaps],
@@ -141,7 +147,13 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
     );
 
   return (
-    <Modal opened={opened} onClose={handleClose} title={t('documentImport.title')} centered size="lg">
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      title={t('documentImport.title')}
+      centered
+      size="lg"
+    >
       <Stack gap="md">
         {step === 'pick' && (
           <>
@@ -155,6 +167,40 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
               value={files}
               onChange={setFiles}
             />
+            <Group gap="sm" align="center">
+              <Button
+                variant="light"
+                leftSection={<FolderOpenIcon size={18} />}
+                onClick={() => folderInput.current?.click()}
+              >
+                {t('documentImport.folderButton')}
+              </Button>
+              <Switch
+                checked={vault}
+                onChange={(event) => setVault(event.currentTarget.checked)}
+                label={t('documentImport.vaultLabel')}
+              />
+            </Group>
+            <input
+              ref={folderInput}
+              type="file"
+              hidden
+              multiple
+              // @ts-expect-error webkitdirectory is a non-standard attribute React passes through
+              webkitdirectory=""
+              data-testid="import-folder-input"
+              onChange={(event) => {
+                const picked = vaultNotes(Array.from(event.currentTarget.files ?? []));
+                event.currentTarget.value = '';
+                if (picked.length > 0) {
+                  setFiles(picked);
+                  setVault(true);
+                }
+              }}
+            />
+            <Text size="xs" c="dimmed">
+              {t('documentImport.vaultHint')}
+            </Text>
             <Text size="xs" c="dimmed">
               {t('documentImport.jsonHint')}
             </Text>
@@ -217,7 +263,10 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
                   : t('documentImport.selectedCount', { count: ticked.length })}
               </Text>
               {existing.length > 0 ? (
-                <Button onClick={() => setStep('existing')} disabled={ticked.length === 0 || overImages}>
+                <Button
+                  onClick={() => setStep('existing')}
+                  disabled={ticked.length === 0 || overImages}
+                >
                   {t('documentImport.next')}
                 </Button>
               ) : (
