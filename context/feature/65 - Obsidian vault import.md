@@ -20,7 +20,7 @@
   `ImportBundle` the rest of spec 27 uses, so preview, Copy/Replace, Tags,
   limits, the background job and image blocks (spec 59) are reused unchanged.
 - **Backend reader and a small frontend change. No migration** (the job payload
-  is JSONB; unless Q3 asks for a new column). `requirements.md` unchanged.
+  is JSONB; unless Q5 chooses a column). `requirements.md` unchanged.
 
 ## Decisions (proposed 2026-11-08, awaiting the product owner)
 
@@ -64,7 +64,16 @@
    from the zip/folder. They go through the same image pipeline (content check,
    EXIF stripped, 1920 px, WebP) and the saved blocks of spec 59. The job needs
    the bytes after the request ends, so the upload is **staged temporarily** (Q5)
-   and deleted when the job ends. An image shared by several notes is stored once
+   and deleted when the job ends. **This amends spec 27 Decision 17** ("the
+   uploaded files are not kept"): for a vault the bytes of the pictures (not the
+   notes, which are parsed into the job as before) are kept until the job ends.
+   Access: a private bucket (never a public URL), objects under a
+   `imports/<room_id>/<job_id>/` prefix, written and read only by the backend
+   with the service role, never signed for the client. Cleanup: removed when the
+   job finishes or fails, through the existing `storage_cleanup` outbox and
+   sweeper, so a crash before cleanup is caught at startup (`interrupted`) and by
+   the 7-day housekeeping of finished jobs. `architecture.md` (storage model and
+   invariants) is updated in 65_2, before the staging code is merged. An image shared by several notes is stored once
    per Document. Missing files are skipped and listed.
 6. **Folders become Tags** (default): a note in `Characters/Vampires/` gets the
    Tags the Room already has by that name or creates `Vampires` (only when the
