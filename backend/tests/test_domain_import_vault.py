@@ -74,3 +74,19 @@ def test_uploads_expand_only_archives() -> None:
     archive = _zip({"n.md": b"x"})
     assert is_zip("V.ZIP") and not is_zip("a.md")
     assert expand_uploads([("a.md", b"1"), ("v.zip", archive)]) == [("a.md", b"1"), ("n.md", b"x")]
+
+
+def test_every_import_error_key_the_code_raises_is_translated() -> None:
+    import json
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent / "app"
+    raised = {
+        key
+        for path in root.rglob("*.py")
+        for key in re.findall(r'"errors\.import\.(\w+)"', path.read_text(encoding="utf-8"))
+    }
+    for locale in (root / "i18n" / "locales").glob("*.json"):
+        known = json.loads(locale.read_text(encoding="utf-8"))["errors"]["import"]
+        assert raised <= set(known), (locale.name, sorted(raised - set(known)))

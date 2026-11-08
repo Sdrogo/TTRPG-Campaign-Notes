@@ -191,6 +191,8 @@
       "badChoices": "Le scelte di importazione non sono valide",
       "cannotReplace": "Solo un Owner (o il Master) può sostituire {name}",
       "fileTooLarge": "{name} supera {max} MB",
+      "vaultTooBig": "Il vault supera {max} MB o contiene troppi file",
+      "unsafeArchive": "{name} contiene file con percorsi non sicuri",
       "alreadyRunning": "Hai già un'importazione in corso in questa Room",
       "notFound": "Importazione non trovata"
     },

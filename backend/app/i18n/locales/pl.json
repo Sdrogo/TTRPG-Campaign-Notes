@@ -191,6 +191,8 @@
       "badChoices": "Wybory importu są nieprawidłowe",
       "cannotReplace": "Tylko Owner (lub Master) może zastąpić {name}",
       "fileTooLarge": "{name} przekracza {max} MB",
+      "vaultTooBig": "Vault przekracza {max} MB lub zawiera zbyt wiele plików",
+      "unsafeArchive": "{name} zawiera pliki z niebezpiecznymi ścieżkami",
       "alreadyRunning": "Import w tym pokoju już trwa",
       "notFound": "Nie znaleziono importu"
     },

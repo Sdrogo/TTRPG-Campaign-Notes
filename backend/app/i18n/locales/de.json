@@ -191,6 +191,8 @@
       "badChoices": "Die Importauswahl ist ungültig",
       "cannotReplace": "Nur ein Owner (oder der Master) kann {name} ersetzen",
       "fileTooLarge": "{name} überschreitet {max} MB",
+      "vaultTooBig": "Der Vault ist größer als {max} MB oder enthält zu viele Dateien",
+      "unsafeArchive": "{name} enthält Dateien mit unsicheren Pfaden",
       "alreadyRunning": "In diesem Raum läuft bereits ein Import von dir",
       "notFound": "Import nicht gefunden"
     },

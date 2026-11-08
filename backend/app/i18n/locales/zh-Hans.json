@@ -191,6 +191,8 @@
       "badChoices": "导入选项无效",
       "cannotReplace": "只有 Owner（或 Master）可以替换 {name}",
       "fileTooLarge": "{name} 超过 {max} MB",
+      "vaultTooBig": "库超过 {max} MB 或包含的文件过多",
+      "unsafeArchive": "{name} 包含路径不安全的文件",
       "alreadyRunning": "你在此房间中已有一个导入正在运行",
       "notFound": "未找到导入"
     },
