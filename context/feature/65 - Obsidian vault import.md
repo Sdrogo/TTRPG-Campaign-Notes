@@ -4,10 +4,10 @@
 
 - Product owner's request (2026-11-08): "we should be also able to import
   massive quantity of md file, making a translation layer for Obsidian
-  format." This is the redefined **27b** (bulk import in an Obsidian-compatible
-  format, product owner 2026-11-05). The old 27b "Document PDF" ticket keeps
-  its file and is unrelated.
-- Example file (`Jason Bright 1.md`, a Vampire NPC sheet) shows what an Obsidian
+  format." It carries out the bulk import in an Obsidian-compatible format
+  asked for on 2026-11-05 (it is not the Document PDF of 27b, which is built).
+- Example file (`Jason Bright 1.md`, a Vampire NPC sheet; not kept in the repo,
+  so its shape is described here and in the tests' fixtures) shows what an Obsidian
   note looks like: an image embed `![[jasonbright_new 1.jpg]]`, `#` headings used
   as sections of one note (Status, Dominio, Alleati, Descrizione, Background),
   and wikilinks `[[Società dei Mostri]]`, `[[Nadezda Jakovlevna]]` that point at

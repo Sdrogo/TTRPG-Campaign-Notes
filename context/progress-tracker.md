@@ -225,7 +225,8 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
-- **65, Obsidian vault import** (the redefined 27b): ticket written
+- **65, Obsidian vault import** (the bulk import wanted in 2026-11-05; the
+  27b PDF ticket is separate and built): ticket written
   2026-11-08, waiting for the product owner to confirm its defaults before
   any code. Reads Obsidian Markdown (`[[wikilinks]]`, `![[images]]`, front
   matter, inline Tags) from files, a folder or a zip. No migration planned.
