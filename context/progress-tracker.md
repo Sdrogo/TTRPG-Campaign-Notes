@@ -225,6 +225,10 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **65, Obsidian vault import** (the redefined 27b): ticket written
+  2026-11-08, waiting for the product owner to confirm its defaults before
+  any code. Reads Obsidian Markdown (`[[wikilinks]]`, `![[images]]`, front
+  matter, inline Tags) from files, a folder or a zip. No migration planned.
 - **46b, Dichiarazione d'Intenti invitation**: if a Room has a DDI, its
   invitation opens it read-only with "accept and join" (product owner,
   2026-10-27). Ticket not written yet (the DDI template itself is in 47_3).
