@@ -86,7 +86,11 @@
    importer may manage Tags, spec 27 Decision 11). Q6 can turn this off.
 7. **Everything else as spec 27**: Copy by default and Replace when a Document
    with the same name exists in the Room (Obsidian files have no id, so
-   "existing" is matched by **name**, case-insensitive), visibility = the Room's
+   "existing" is matched by **name**, case-insensitive, only among the Documents
+   the importer can see (`is_document_visible`); Replace is offered only where
+   they may also manage the Document, as spec 27 Decision 6. A name that only a
+   hidden Document has counts as no match: the file is a new Document (Copy) and
+   the preview gives no hint that a hidden Document exists), visibility = the Room's
    default, importer = Owner, comments and attachments don't exist in a vault,
    one transaction for texts then image blocks, preview with per-Document
    warnings, no write when refused.
@@ -116,7 +120,8 @@
 - Tests at 100%: the example file (front matter absent, five `#` headings stay
   in one Document, `![[...]]`, nested `[[links]]`); alias, heading and block
   links; link to a missing note becomes text; inline Tags vs headings; code
-  blocks and URLs untouched; folder Tags; zip traversal, bomb and symlink
+  blocks and URLs untouched; folder Tags; a hidden Document with the same name is never matched, replaced or
+  hinted at in the preview (Copy instead); zip traversal, bomb and symlink
   refused; image from the vault stored, missing one listed; hand-written
   Markdown unchanged; Replace by name.
 
