@@ -199,7 +199,7 @@ def _wikilinks(chunk: str, index: dict[str, str], pieces: list[Piece]) -> None:
         last = match.end()
         embed = match.group(1) == "!"
         target, _, alias = match.group(2).partition("|")
-        page = re.split(r"[#^]", target, maxsplit=1)[0].strip()
+        page = re.split(r"[#^]", target, maxsplit=1)[0].strip().rsplit("/", 1)[-1].strip()
         if embed and page.lower().endswith(IMAGE_EXTENSIONS + (".pdf", ".mp3", ".mp4")):
             pieces.append("\x00embed")  # counted by the caller
             continue

@@ -12,9 +12,20 @@ from app.domain.import_obsidian import (
     parse_notes,
     parse_uploads,
 )
-from app.domain.imports import ExistingDocument, ImportChoices, plan_import
+from app.domain.imports import ExistingDocument, ImportChoices, ImportContext, plan_import
 from app.domain.mentions import MentionKind
-from tests.test_domain_imports import _context
+from app.domain.models import DocumentVisibility
+
+
+def _context(**fields: Any) -> ImportContext:
+    base: dict[str, Any] = {
+        "default_visibility": DocumentVisibility.ROOM,
+        "existing": {},
+        "room_tags": {},
+        "can_manage_tags": True,
+    }
+    return ImportContext(**{**base, **fields})
+
 
 JASON = """![[jasonbright_new 1.jpg]]
 # Status e Affiliazione
@@ -109,9 +120,13 @@ def test_hidden_folders_and_other_files_are_skipped_and_bad_utf8_refused() -> No
     assert is_hidden("a/.hidden/b.md") and not is_hidden("a/b.md")
 
 
-def test_same_name_twice_gets_two_keys() -> None:
-    file = _notes(("a/N.md", "1"), ("b/N.md", "2"))
-    assert file.documents[0].source_id != file.documents[1].source_id
+def test_same_name_twice_gets_two_keys_and_links_go_to_the_first_path() -> None:
+    file = _notes(("a/N.md", "1"), ("b/N.md", "2"), ("c/L.md", "see [[N]] and [[b/N]]"))
+    first, second, link = file.documents
+    assert first.source_id != second.source_id
+    refs = [p for p in link.text if isinstance(p, MentionRef)]
+    # A path in a link is reduced to the note name; the first path in order wins.
+    assert [r.key for r in refs] == [first.source_id, first.source_id]
 
 
 def test_detection() -> None:
@@ -173,7 +188,9 @@ def test_replace_by_name_only_among_visible_documents() -> None:
     assert preview.documents[0].existing_id == doc_id and preview.documents[0].can_replace
     key = preview.documents[0].key
     replaced = plan_import(
-        [file], _context(existing={doc_id: existing}), ImportChoices(frozenset({key}), {key})
+        [file],
+        _context(existing={doc_id: existing}),
+        ImportChoices(frozenset({key}), frozenset({key})),
     )
     assert replaced.documents[0].id == doc_id and replaced.documents[0].replaces
     # A Document the importer can't see is not in the context: a plain copy.

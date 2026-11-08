@@ -46,6 +46,11 @@
      as the Document list (`is_document_visible`), so a mention never reveals
      the name of a Document the importer can't see: that link is plain text.
      With Q7 answered "plain text", only the import's own files count.
+   - **Same name twice** (`A/Bob.md` and `B/Bob.md`): both are imported as
+     Documents. A link names a note, not a folder: `[[Bob]]` and `[[A/Bob]]`
+     both go to the **first note in path order**. Several Room Documents with the
+     same name (Replace and Room links): the one with the lowest id, the same at
+     preview and at import.
    - `![[image.jpg]]`: an image of the Document, if the image file is in the
      import (Decision 5); otherwise dropped and listed as a warning. Embeds of
      other notes `![[Note]]` become a mention. `![alt](relative/path.png)` too.
