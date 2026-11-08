@@ -122,6 +122,16 @@ describe('ImportDocumentsModal (spec 27)', () => {
     expect(upload.formData.get('obsidian')).toBe('true');
   });
 
+  it('opens the folder picker from the folder button', async () => {
+    const { user } = render();
+    const folder = (await screen.findByTestId('import-folder-input')) as HTMLInputElement;
+    const click = vi.spyOn(folder, 'click').mockImplementation(() => undefined);
+
+    await user.click(screen.getByRole('button', { name: 'Scegli una cartella' }));
+
+    expect(click).toHaveBeenCalled();
+  });
+
   it('does nothing when a picked folder holds no Markdown note', async () => {
     const { user } = render();
     const folder = (await screen.findByTestId('import-folder-input')) as HTMLInputElement;
