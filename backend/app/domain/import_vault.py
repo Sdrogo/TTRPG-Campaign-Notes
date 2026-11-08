@@ -12,8 +12,9 @@ import stat
 import zipfile
 from collections.abc import Sequence
 
+from app.domain.images import MAX_INPUT_BYTES
 from app.domain.import_files import MAX_FILE_BYTES, ImportFileTooLargeError, ImportRefusedError
-from app.domain.import_obsidian import is_hidden
+from app.domain.import_obsidian import IMAGE_EXTENSIONS, is_hidden
 
 MAX_VAULT_BYTES = 100 * 1024 * 1024
 MAX_VAULT_UPLOADS = 3000
@@ -28,11 +29,11 @@ def is_zip(name: str) -> bool:
 
 
 def expand_zip(name: str, data: bytes, limit: int | None = None) -> list[tuple[str, bytes]]:
-    """The notes of the archive `data` (Markdown files only; pictures come with
-    the image step) as `(path, bytes)`. 422 for a file that isn't a zip, one with
-    an unsafe path, too many entries or a bomb; 413 for a note over
-    `MAX_FILE_BYTES`. Directories, symbolic links and hidden folders are
-    skipped."""
+    """The notes and pictures of the archive `data` as `(path, bytes)`. 422 for a
+    file that isn't a zip, one with an unsafe path, too many entries or a bomb;
+    413 for a note over `MAX_FILE_BYTES`. A picture over the image limit is left
+    out (its embed is counted as dropped). Directories, symbolic links, hidden
+    folders and every other kind of file are skipped."""
     try:
         archive = zipfile.ZipFile(io.BytesIO(data))
     except zipfile.BadZipFile as exc:
@@ -52,11 +53,15 @@ def expand_zip(name: str, data: bytes, limit: int | None = None) -> list[tuple[s
             total += info.file_size  # every entry counts toward the memory bound
             if total > (MAX_VAULT_BYTES if limit is None else limit):
                 raise ImportRefusedError("errors.import.vaultTooBig", max=MAX_VAULT_BYTES // 2**20)
-            if not path.lower().endswith((".md", ".markdown")) or is_hidden(path):
+            lowered = path.lower()
+            is_note = lowered.endswith((".md", ".markdown"))
+            if not (is_note or lowered.endswith(IMAGE_EXTENSIONS)) or is_hidden(path):
                 continue  # never read: neither its size nor its ratio matters
             if info.compress_size and info.file_size / info.compress_size > MAX_COMPRESSION_RATIO:
                 raise ImportRefusedError("errors.import.vaultTooBig", max=MAX_VAULT_BYTES // 2**20)
-            if info.file_size > MAX_FILE_BYTES:
+            if not is_note and info.file_size > MAX_INPUT_BYTES:
+                continue
+            if is_note and info.file_size > MAX_FILE_BYTES:
                 raise ImportFileTooLargeError(
                     "errors.import.fileTooLarge",
                     name=posixpath.basename(path)[:200],

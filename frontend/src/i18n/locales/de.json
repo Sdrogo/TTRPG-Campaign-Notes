@@ -960,7 +960,7 @@
     "filesPlaceholder": "Wähle eine oder mehrere .json- oder .md-Dateien",
     "vaultLabel": "Obsidian-Vault",
     "folderButton": "Ordner auswählen",
-    "vaultHint": "Liest Markdown-Dateien als Obsidian-Notizen: ein Dokument pro Notiz, [[Links]] zwischen Notizen werden zu Erwähnungen, Ordner und #Tags zu Tags. Wähle einen Ordner oder eine .zip-Datei des Vaults. Bilder werden noch nicht importiert.",
+    "vaultHint": "Liest Markdown-Dateien als Obsidian-Notizen: ein Dokument pro Notiz, [[Links]] zwischen Notizen werden zu Erwähnungen, Ordner und #Tags zu Tags. Wähle einen Ordner oder eine .zip-Datei des Vaults. Bilder aus dem Vault werden mit der Notiz importiert.",
     "preview": "Vorschau",
     "found_one": "{{count}} Dokument gefunden",
     "found_other": "{{count}} Dokumente gefunden",

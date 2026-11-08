@@ -962,7 +962,7 @@
     "filesPlaceholder": "Escolhe um ou mais ficheiros .json ou .md",
     "vaultLabel": "Cofre do Obsidian",
     "folderButton": "Escolher uma pasta",
-    "vaultHint": "Lê os ficheiros Markdown como notas do Obsidian: um Documento por nota, as [[ligações]] entre notas tornam-se menções, e as pastas e #etiquetas tornam-se Etiquetas. Escolha uma pasta ou um .zip do cofre. As imagens ainda não são importadas.",
+    "vaultHint": "Lê os ficheiros Markdown como notas do Obsidian: um Documento por nota, as [[ligações]] entre notas tornam-se menções, e as pastas e #etiquetas tornam-se Etiquetas. Escolha uma pasta ou um .zip do cofre. As imagens do vault são importadas com a sua nota.",
     "preview": "Pré-visualização",
     "found_one": "{{count}} Documento encontrado",
     "found_other": "{{count}} Documentos encontrados",

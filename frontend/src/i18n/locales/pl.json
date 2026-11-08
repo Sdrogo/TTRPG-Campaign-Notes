@@ -980,7 +980,7 @@
     "filesPlaceholder": "Wybierz jeden lub więcej plików .json lub .md",
     "vaultLabel": "Vault Obsidiana",
     "folderButton": "Wybierz folder",
-    "vaultHint": "Odczytuje pliki Markdown jako notatki Obsidiana: jeden Dokument na notatkę, [[linki]] między notatkami stają się wzmiankami, a foldery i #tagi — Tagami. Wybierz folder lub plik .zip z vaultem. Obrazy nie są jeszcze importowane.",
+    "vaultHint": "Odczytuje pliki Markdown jako notatki Obsidiana: jeden Dokument na notatkę, [[linki]] między notatkami stają się wzmiankami, a foldery i #tagi — Tagami. Wybierz folder lub plik .zip z vaultem. Obrazy z vaulta są importowane razem z notatką.",
     "preview": "Podgląd",
     "found_one": "Znaleziono {{count}} dokument",
     "found_few": "Znaleziono {{count}} dokumenty",

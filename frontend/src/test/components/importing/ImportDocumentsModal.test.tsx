@@ -103,7 +103,7 @@ describe('ImportDocumentsModal (spec 27)', () => {
     )![1] as {
       formData: FormData;
     };
-    expect(sent.formData.getAll('files')).toHaveLength(1); // the picture is left out
+    expect(sent.formData.getAll('files')).toHaveLength(2); // the note and its picture
     expect(sent.formData.get('obsidian')).toBe('true');
   });
 

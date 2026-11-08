@@ -950,7 +950,7 @@
     "filesPlaceholder": "1つ以上の.jsonまたは.mdファイルを選ぶ",
     "vaultLabel": "Obsidian Vault",
     "folderButton": "フォルダーを選択",
-    "vaultHint": "Markdownファイルを Obsidian のノートとして読み込みます。ノート1つにつきドキュメント1つ、ノート間の [[リンク]] はメンションに、フォルダーと #タグ はタグになります。フォルダーまたは Vault の .zip を選んでください。画像はまだインポートされません。",
+    "vaultHint": "Markdownファイルを Obsidian のノートとして読み込みます。ノート1つにつきドキュメント1つ、ノート間の [[リンク]] はメンションに、フォルダーと #タグ はタグになります。フォルダーまたは Vault の .zip を選んでください。Vault の画像はノートと一緒にインポートされます。",
     "preview": "プレビュー",
     "found_other": "ドキュメント{{count}}件が見つかりました",
     "documentSelect": "{{name}}をインポート",

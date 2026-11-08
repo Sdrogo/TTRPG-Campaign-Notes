@@ -27,7 +27,7 @@
 The product owner said "passiamo a sviluppare questo import massivo" on
 2026-11-08, after the ticket was posted, so the build started on the defaults
 below. Q1 to Q7 were **not answered one by one**: a different answer may mean
-rework, and the pictures step (Decision 5) waits for an explicit go-ahead.
+rework. The pictures step (Decision 5) was approved on 2026-11-08 (65_4).
 
 1. **One file = one Document.** The Document's name is the file name without
    `.md` (as Obsidian shows it). The first `# Title` line is not a name; all
@@ -198,5 +198,17 @@ rework, and the pictures step (Decision 5) waits for an explicit go-ahead.
   `obsidian` on. Up to 3000 uploads, 100 MB and 500 notes for a vault.
 - **65_3, dialog.** Folder button (`webkitdirectory`, only `.md` kept), an
   "Obsidian vault" switch, `.zip` accepted, strings in 12 languages.
-- **Not built:** pictures from the vault (Decision 5: staged bytes, amends spec 27
-  Decision 17); `![[picture]]` is dropped and counted. **No migration** so far.
+- **65_4, pictures (2026-11-08, approved by the product owner: spec 27
+  Decision 17 does not apply to this feature).** `![[pic.png]]` and
+  `![](rel/pic.png)` of a picture in the vault become the note's images
+  (`vault:<path>`; found by path, relative to the note or by file name; each once;
+  the first is the favorite; `.svg` and the like are tried and listed if not an
+  image). Zip and folder uploads carry the pictures (20 MB each, inside the 100 MB
+  total). `start_import` stages those the chosen notes link under
+  `imports/<room>/<job>/` in the private bucket (`import_staging.py`); the job
+  reads them through the usual pipeline; a missing one is skipped and listed. The
+  staged bytes are removed in a `finally` when the job is `done` or `failed`
+  (`_discard_staged`); a job cut off by a shutdown keeps them for its resume. The
+  `storage_cleanup` sweep is the backstop and spares objects of an active job.
+  Pictures the vault lacks and non-picture files stay counted as `embeds_dropped`.
+  **No migration.**

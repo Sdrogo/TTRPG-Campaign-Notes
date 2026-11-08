@@ -960,7 +960,7 @@
     "filesPlaceholder": "Kies een of meer .json- of .md-bestanden",
     "vaultLabel": "Obsidian-vault",
     "folderButton": "Kies een map",
-    "vaultHint": "Leest Markdown-bestanden als Obsidian-notities: één Document per notitie, [[links]] tussen notities worden vermeldingen, mappen en #tags worden Tags. Kies een map of een .zip van de vault. Afbeeldingen worden nog niet geïmporteerd.",
+    "vaultHint": "Leest Markdown-bestanden als Obsidian-notities: één Document per notitie, [[links]] tussen notities worden vermeldingen, mappen en #tags worden Tags. Kies een map of een .zip van de vault. Afbeeldingen uit de vault worden met hun notitie geïmporteerd.",
     "preview": "Voorbeeld",
     "found_one": "{{count}} Document gevonden",
     "found_other": "{{count}} Documenten gevonden",

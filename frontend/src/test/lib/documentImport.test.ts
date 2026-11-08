@@ -7,7 +7,7 @@ import {
   previewFormData,
   toImportJob,
   toImportPreview,
-  vaultNotes,
+  vaultFiles,
 } from '../../lib/documentImport';
 import { rawImportJob, rawImportPreview, rawImportPreviewDocument } from '../fixtures';
 
@@ -181,14 +181,25 @@ describe('the uploads', () => {
     expect(importFormData(files, [], [], [], [], [], false).get('obsidian')).toBe('false');
   });
 
-  it('keeps only the Markdown notes of a folder', () => {
+  it('keeps the notes and pictures of a folder, not Obsidian folders or other files', () => {
+    const inside = (name: string, path: string) =>
+      Object.defineProperty(new File([''], name), 'webkitRelativePath', { value: path });
     const picked = [
       new File([''], 'A.md'),
       new File([''], 'pic.PNG'),
       new File([''], 'b.markdown'),
+      new File([''], 'notes.txt'),
+      inside('app.png', 'Vault/.obsidian/app.png'),
+      inside('keep.png', 'Vault/Maps/keep.png'),
     ];
 
-    expect(vaultNotes(picked).map((f) => f.name)).toEqual(['A.md', 'b.markdown']);
+    expect(vaultFiles(picked).map((f) => f.name)).toEqual([
+      'A.md',
+      'pic.PNG',
+      'b.markdown',
+      'keep.png',
+    ]);
+    expect(vaultFiles([new File([''], 'pic.png')])).toEqual([]); // no note, nothing
   });
 
   it('sends the same files and the choices as JSON for the import', () => {

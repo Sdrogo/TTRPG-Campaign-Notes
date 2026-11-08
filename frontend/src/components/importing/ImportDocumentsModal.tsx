@@ -8,7 +8,7 @@ import {
   isActiveImportJob,
   isPageCard,
   MAX_IMPORT_IMAGES,
-  vaultNotes,
+  vaultFiles,
   type ImportPreview,
   type ImportResolution,
 } from '../../lib/documentImport';
@@ -190,7 +190,7 @@ export function ImportDocumentsModal({ opened, onClose, roomId }: ImportDocument
               webkitdirectory=""
               data-testid="import-folder-input"
               onChange={(event) => {
-                const picked = vaultNotes(Array.from(event.currentTarget.files as FileList));
+                const picked = vaultFiles(Array.from(event.currentTarget.files as FileList));
                 event.currentTarget.value = '';
                 if (picked.length > 0) {
                   setFiles(picked);

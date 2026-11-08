@@ -18,7 +18,7 @@ def _zip(entries: dict[str, bytes], compression: int = zipfile.ZIP_DEFLATED) -> 
     return buffer.getvalue()
 
 
-def test_notes_are_kept_and_everything_else_skipped() -> None:
+def test_notes_and_pictures_are_kept_and_everything_else_skipped() -> None:
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
         archive.writestr("folder/", b"")
@@ -28,7 +28,19 @@ def test_notes_are_kept_and_everything_else_skipped() -> None:
         link.external_attr = 0o120777 << 16  # a symbolic link
         archive.writestr(link, b"a.md")
         archive.writestr("win\\b.md", b"b")
-    assert expand_zip("v.zip", buffer.getvalue()) == [("folder/a.md", b"a"), ("win/b.md", b"b")]
+        archive.writestr("notes.txt", b"text")
+        archive.writestr(".obsidian/hidden.png", b"png")
+    assert expand_zip("v.zip", buffer.getvalue()) == [
+        ("folder/a.md", b"a"),
+        ("pic.png", b"png"),
+        ("win/b.md", b"b"),
+    ]
+
+
+def test_a_picture_over_the_image_limit_is_left_out(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(import_vault, "MAX_INPUT_BYTES", 4)
+    data = _zip({"big.png": b"0123456789", "small.png": b"012"}, zipfile.ZIP_STORED)
+    assert expand_zip("v.zip", data) == [("small.png", b"012")]
 
 
 def test_unsafe_archives_are_refused() -> None:
@@ -92,10 +104,12 @@ def test_every_import_error_key_the_code_raises_is_translated() -> None:
         assert raised <= set(known), (locale.name, sorted(raised - set(known)))
 
 
-def test_only_the_notes_that_are_read_are_checked_for_size_and_ratio() -> None:
-    # A flat picture (high ratio) and a hidden note over the size limit are never opened.
-    data = _zip({"flat.png": b"0" * 4_000_000, ".obsidian/big.md": b"0" * 6_000_000, "n.md": b"x"})
+def test_only_what_is_read_is_checked_for_size_and_ratio() -> None:
+    # A flat file of another kind and a hidden note over the size limit are never opened.
+    data = _zip({"flat.txt": b"0" * 4_000_000, ".obsidian/big.md": b"0" * 6_000_000, "n.md": b"x"})
     assert expand_zip("v.zip", data) == [("n.md", b"x")]
+    with pytest.raises(ImportRefusedError):  # a picture that is a bomb is refused like a note
+        expand_zip("v.zip", _zip({"flat.png": b"0" * 4_000_000}))
 
 
 def test_many_archives_share_one_expanded_budget(monkeypatch: pytest.MonkeyPatch) -> None:

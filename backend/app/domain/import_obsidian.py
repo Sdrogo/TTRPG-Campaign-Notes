@@ -8,15 +8,19 @@ syntax (`%%comments%%`, `==highlights==`, `^block-ids`, callout markers) is
 cleaned. Everything is pure: the bytes of the notes in, a parsed file out. No
 file is fetched and nothing is written."""
 
+import posixpath
 import re
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
+from urllib.parse import unquote
 
 from app.domain.import_files import (
     OBSIDIAN_KEY_PREFIX as KEY_PREFIX,
 )
 from app.domain.import_files import (
+    VAULT_URL_PREFIX,
     ImportDocument,
     ImportFile,
+    ImportImage,
     ImportRefusedError,
     MentionRef,
     Piece,
@@ -137,10 +141,44 @@ def _split_code(line: str) -> list[tuple[str, bool]]:
     return runs or [("", False)]
 
 
-def _translate(body: str, index: dict[str, str]) -> tuple[Text, list[str], int]:
+class Pictures:
+    """The picture files of a vault, found the way Obsidian finds them: by
+    path, or by file name alone (the first in path order). A note collects the
+    ones it embeds, in order, each once."""
+
+    def __init__(self, paths: Collection[str] = ()) -> None:
+        self._by_path: dict[str, str] = {}
+        self._by_name: dict[str, str] = {}
+        for path in sorted(p.replace("\\", "/").strip("/") for p in paths):
+            if path.lower().endswith(IMAGE_EXTENSIONS) and not is_hidden(path):
+                self._by_path.setdefault(path.casefold(), path)
+                self._by_name.setdefault(path.rsplit("/", 1)[-1].casefold(), path)
+        self.found: list[str] = []
+
+    def take(self, target: str, note_folder: str = "") -> bool:
+        """Whether `target` (a path or file name from an embed) is a picture of
+        the vault; if so it is added to this note's, unless already there."""
+        wanted = target.replace("\\", "/").strip().strip("/")
+        path = (
+            self._by_path.get(wanted.casefold())
+            or self._by_path.get(posixpath.normpath(posixpath.join(note_folder, wanted)).casefold())
+            or self._by_name.get(wanted.rsplit("/", 1)[-1].casefold())
+        )
+        if path is None:
+            return False
+        if path not in self.found:
+            self.found.append(path)
+        return True
+
+
+def _translate(
+    body: str, index: dict[str, str], pictures: Pictures, folder: str = ""
+) -> tuple[Text, list[str], int]:
     """A note's body in the app's form: the text with its wikilinks as
     mentions, the inline Tags it uses and how many embeds (images, files) could
-    not be kept. `index` holds the notes of the set by folded name or alias."""
+    not be kept. `index` holds the notes of the set by folded name or alias;
+    the pictures of the vault that the note embeds are collected in `pictures`
+    and leave the text."""
     pieces: list[Piece] = []
     tags: list[str] = []
     dropped = 0
@@ -169,9 +207,9 @@ def _translate(body: str, index: dict[str, str]) -> tuple[Text, list[str], int]:
                     name = found.group(1).split("/")[-1]
                     if name and not name.isdigit():
                         tags.append(name)
-                chunk, removed = _drop_images(chunk)
+                chunk, removed = _drop_images(chunk, pictures, folder)
                 dropped += removed
-                _wikilinks(chunk, index, pieces)
+                _wikilinks(chunk, index, pieces, pictures, folder)
         if position < len(lines) - 1:
             pieces.append("\n")
     return _joined(pieces), tags, dropped
@@ -189,25 +227,31 @@ def _strip_comments(line: str, inside: bool) -> tuple[str, bool]:
     return "".join(kept), inside
 
 
-def _drop_images(chunk: str) -> tuple[str, int]:
-    """`chunk` without its `![alt](relative/path)` images (counted); a link to
-    an `http(s)` address stays as written."""
+def _drop_images(chunk: str, pictures: Pictures, folder: str) -> tuple[str, int]:
+    """`chunk` without its `![alt](relative/path)` images: the ones of the
+    vault go to `pictures`, the others are counted as dropped; a link to an
+    `http(s)` address stays as written."""
     count = 0
 
     def keep(match: re.Match[str]) -> str:
         nonlocal count
-        if match.group(1).lower().startswith(("http://", "https://")):
+        target = match.group(1)
+        if target.lower().startswith(("http://", "https://")):
             return match.group(0)
-        count += 1
+        if not pictures.take(unquote(target), folder):
+            count += 1
         return ""
 
     return _MD_IMAGE.sub(keep, chunk), count
 
 
-def _wikilinks(chunk: str, index: dict[str, str], pieces: list[Piece]) -> None:
+def _wikilinks(
+    chunk: str, index: dict[str, str], pieces: list[Piece], pictures: Pictures, folder: str
+) -> None:
     """Appends `chunk` to `pieces`, each `[[Note|alias]]` a mention of the note
     (or of the Room's Document of that name, decided when the import is
-    planned), and each `![[...]]` of a picture or file dropped."""
+    planned), each `![[picture]]` of the vault taken out for `pictures`, and
+    each other `![[file]]` dropped."""
     last = 0
     for match in _WIKILINK.finditer(chunk):
         pieces.append(chunk[last : match.start()])
@@ -217,7 +261,8 @@ def _wikilinks(chunk: str, index: dict[str, str], pieces: list[Piece]) -> None:
         full = re.split(r"[#^]", target, maxsplit=1)[0].strip().replace("\\", "/")
         page = full.rsplit("/", 1)[-1].strip()
         if embed and page.lower().endswith(IMAGE_EXTENSIONS + (".pdf", ".mp3", ".mp4")):
-            pieces.append("\x00embed")  # counted by the caller
+            if not pictures.take(full, folder):
+                pieces.append("\x00embed")  # counted by the caller
             continue
         label = alias.strip() or page or target.strip()
         if not page:  # [[#Heading]]: a link inside the note
@@ -244,14 +289,21 @@ def _count_embeds(text: Text) -> tuple[Text, int]:
 
 
 def parse_notes(
-    notes: Sequence[tuple[str, bytes]], *, folders_as_tags: bool = True, name: str = "vault"
+    notes: Sequence[tuple[str, bytes]],
+    *,
+    folders_as_tags: bool = True,
+    name: str = "vault",
+    attachments: Collection[str] = (),
 ) -> ImportFile:
     """The notes `(path, bytes)` of an Obsidian vault (or just some files of
     one) as one `ImportFile`: a Document each, in path order, named after its
     file. A file that is not UTF-8 is refused (422), as for any import; hidden
     folders (`.obsidian`, `.trash`) are never read. The links between the notes
     are resolved here by name (and by front matter alias); the ones to a name
-    the set lacks are left for the planner, which looks in the Room."""
+    the set lacks are left for the planner, which looks in the Room. The
+    pictures a note embeds that are among the vault's `attachments` (paths) become
+    its images, as `vault:<path>` links the import job reads from staging (spec 65
+    Decision 5); the rest are counted as dropped."""
     texts: list[tuple[str, str]] = []
     for path, data in sorted(notes):
         if is_hidden(path) or not path.lower().endswith((".md", ".markdown")):
@@ -280,7 +332,10 @@ def parse_notes(
 
     documents: list[ImportDocument] = []
     for (path, meta, body), key in zip(parsed, keys, strict=True):
-        text, inline_tags, images = _translate(body.strip("\n"), index)
+        pictures = Pictures(attachments)
+        text, inline_tags, images = _translate(
+            body.strip("\n"), index, pictures, posixpath.dirname(path.replace("\\", "/"))
+        )
         text, embeds = _count_embeds(text)
         tag_names = [t.split("/")[-1] for t in meta.get("tags", [])] + inline_tags
         folder = _folder(path) if folders_as_tags else None
@@ -294,7 +349,10 @@ def parse_notes(
                 visibility=None,
                 tag_names=_dedupe(tag_names),
                 notes=(),
-                images=(),
+                images=tuple(
+                    ImportImage(None, VAULT_URL_PREFIX + found, position == 0)
+                    for position, found in enumerate(pictures.found)
+                ),
                 dropped_embeds=images + embeds,
                 # Only the first note of a name can replace the Room's Document of
                 # that name; a later one is a copy, so two never overwrite each other.
@@ -317,14 +375,35 @@ def _dedupe(names: Sequence[str]) -> tuple[str, ...]:
     return tuple(out)
 
 
+def split_pictures(
+    uploads: Sequence[tuple[str, bytes]],
+) -> tuple[list[tuple[str, bytes]], dict[str, bytes]]:
+    """The uploads without the picture files of a vault, and those pictures as
+    `path -> bytes` (hidden folders never). A vault's files come in as they are
+    named: the path inside the archive, or the relative path of a picked folder."""
+    rest: list[tuple[str, bytes]] = []
+    pictures: dict[str, bytes] = {}
+    for name, data in uploads:
+        if name.lower().endswith(IMAGE_EXTENSIONS):
+            if not is_hidden(name):
+                pictures[name.replace("\\", "/").strip("/")] = data
+        else:
+            rest.append((name, data))
+    return rest, pictures
+
+
 def parse_uploads(
-    uploads: Sequence[tuple[str, bytes]], *, obsidian: bool | None = None
+    uploads: Sequence[tuple[str, bytes]],
+    *,
+    obsidian: bool | None = None,
+    attachments: Collection[str] = (),
 ) -> list[ImportFile]:
     """The uploaded files `(name, bytes)` as parsed files (spec 65 Decision 2).
     Markdown files that read as Obsidian notes (or all of them when `obsidian`
     is true, none when false) are read together as one set, so their wikilinks
-    find each other; the set takes the place of its first file. Everything else
-    goes through `parse_file` as before."""
+    find each other (and the `attachments` they embed become their images); the
+    set takes the place of its first file. Everything else goes through
+    `parse_file` as before."""
     from app.domain.import_files import parse_file
 
     notes: list[tuple[str, bytes]] = []
@@ -344,7 +423,7 @@ def parse_uploads(
         slots.append(parse_file(name, data))
     if not notes:
         return [slot for slot in slots if slot is not None]
-    vault = parse_notes(notes)
+    vault = parse_notes(notes, attachments=attachments)
     if not vault.documents:
         raise ImportRefusedError("errors.import.noDocuments", name=notes[0][0])
     return [vault if slot is None else slot for slot in slots]

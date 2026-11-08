@@ -960,7 +960,7 @@
     "filesPlaceholder": "Choose one or more .json or .md files",
     "vaultLabel": "Obsidian vault",
     "folderButton": "Choose a folder",
-    "vaultHint": "Reads Markdown files as Obsidian notes: one Document per note, [[links]] between notes become mentions, folders and #tags become Tags. Choose a folder or a .zip of the vault. Pictures are not imported yet.",
+    "vaultHint": "Reads Markdown files as Obsidian notes: one Document per note, [[links]] between notes become mentions, folders and #tags become Tags. Choose a folder or a .zip of the vault. Pictures of the vault are imported with their note.",
     "preview": "Preview",
     "found_one": "{{count}} Document found",
     "found_other": "{{count}} Documents found",

@@ -11,6 +11,7 @@ from app.domain.import_obsidian import (
     is_obsidian,
     parse_notes,
     parse_uploads,
+    split_pictures,
 )
 from app.domain.imports import ExistingDocument, ImportChoices, ImportContext, plan_import
 from app.domain.mentions import MentionKind
@@ -241,3 +242,37 @@ def test_space_separated_tags_are_split_but_aliases_are_not() -> None:
     refs = [p for p in file.documents[1].text if isinstance(p, MentionRef)]
     assert refs[0].key == file.documents[0].source_id  # the whole alias matched
     assert refs[1].key != file.documents[0].source_id
+
+
+def _urls(document: Any) -> list[str]:
+    return [image.url for image in document.images]
+
+
+def test_embedded_pictures_of_the_vault_become_the_notes_images() -> None:
+    notes = [
+        ("Chars/Jason.md", b"![[jason.jpg]]\nText ![[Maps/city.png|300]]\n![x](../Maps/city.png)"),
+        ("Chars/Other.md", b"![[missing.png]] ![[doc.pdf]] ![y](a/gone.png) [[Jason]]"),
+    ]
+    pictures = ["Chars/jason.jpg", "Maps/city.png", "Maps/.obsidian/x.png", "notes.txt"]
+    file = parse_notes(notes, attachments=pictures)
+    jason, other = file.documents
+    # By file name, by path, and relative to the note; each once, favorite first.
+    assert _urls(jason) == ["vault:Chars/jason.jpg", "vault:Maps/city.png"]
+    assert [image.is_favorite for image in jason.images] == [True, False]
+    assert "jpg" not in str(jason.text) and "png" not in str(jason.text)
+    assert jason.dropped_embeds == 0
+    # A picture the vault lacks and a file that is no picture are only counted.
+    assert _urls(other) == [] and other.dropped_embeds == 3
+
+
+def test_pictures_are_split_from_the_uploads_and_survive_the_job_payload() -> None:
+    from app.domain.import_files import file_from_json, file_to_json
+
+    rest, pictures = split_pictures(
+        [("a.md", b"x"), ("Pics\\p.PNG", b"1"), (".obsidian/h.png", b"2"), ("data.json", b"{}")]
+    )
+    assert [name for name, _ in rest] == ["a.md", "data.json"]
+    assert pictures == {"Pics/p.PNG": b"1"}
+    file = parse_uploads([("A.md", b"![[p.png]]")], obsidian=True, attachments=pictures)[0]
+    assert _urls(file.documents[0]) == ["vault:Pics/p.PNG"]
+    assert file_from_json(file_to_json(file)).documents == file.documents

@@ -962,7 +962,7 @@
     "filesPlaceholder": "Choisis un ou plusieurs fichiers .json ou .md",
     "vaultLabel": "Coffre Obsidian",
     "folderButton": "Choisir un dossier",
-    "vaultHint": "Lit les fichiers Markdown comme des notes Obsidian : un Document par note, les [[liens]] entre notes deviennent des mentions, les dossiers et #tags deviennent des Tags. Choisissez un dossier ou un .zip du coffre. Les images ne sont pas encore importées.",
+    "vaultHint": "Lit les fichiers Markdown comme des notes Obsidian : un Document par note, les [[liens]] entre notes deviennent des mentions, les dossiers et #tags deviennent des Tags. Choisissez un dossier ou un .zip du coffre. Les images du vault sont importées avec leur note.",
     "preview": "Aperçu",
     "found_one": "{{count}} Document trouvé",
     "found_other": "{{count}} Documents trouvés",

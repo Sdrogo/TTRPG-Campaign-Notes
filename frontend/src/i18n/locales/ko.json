@@ -950,7 +950,7 @@
     "filesPlaceholder": ".json 또는 .md 파일을 하나 이상 선택",
     "vaultLabel": "Obsidian 볼트",
     "folderButton": "폴더 선택",
-    "vaultHint": "Markdown 파일을 Obsidian 노트로 읽습니다. 노트 하나당 문서 하나, 노트 사이의 [[링크]]는 멘션이 되고 폴더와 #태그는 태그가 됩니다. 폴더 또는 볼트의 .zip을 선택하세요. 이미지는 아직 가져오지 않습니다.",
+    "vaultHint": "Markdown 파일을 Obsidian 노트로 읽습니다. 노트 하나당 문서 하나, 노트 사이의 [[링크]]는 멘션이 되고 폴더와 #태그는 태그가 됩니다. 폴더 또는 볼트의 .zip을 선택하세요. 볼트의 이미지는 해당 노트와 함께 가져옵니다.",
     "preview": "미리보기",
     "found_other": "문서 {{count}}개 발견",
     "documentSelect": "{{name}} 가져오기",

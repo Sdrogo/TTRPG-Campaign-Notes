@@ -18,6 +18,7 @@ is never removed while any row still references its path."""
 
 import asyncio
 import logging
+import uuid
 from collections.abc import Collection
 from datetime import UTC, datetime, timedelta
 
@@ -30,12 +31,14 @@ from app.db import storage
 from app.db.models import (
     DocumentFileRow,
     DocumentImageRow,
+    ImportJobRow,
     RelationshipMapRow,
     RoomRow,
     RoomSectionRow,
     StorageCleanupRow,
     UserRow,
 )
+from app.domain.imports import ACTIVE_IMPORT_STATUSES
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +65,13 @@ async def record_pending_upload(path: str) -> None:
     of the request that's about to upload the object."""
     async with session_module.independent_session() as session:
         await _insert(session, [path])
+        await session.commit()
+
+
+async def record_pending_uploads(paths: Collection[str]) -> None:
+    """`record_pending_upload` for several objects, in one transaction."""
+    async with session_module.independent_session() as session:
+        await _insert(session, paths)
         await session.commit()
 
 
@@ -148,14 +158,51 @@ async def _remove(session: AsyncSession, paths: Collection[str]) -> None:
     await session.commit()
 
 
+STAGING_PREFIX = "imports/"
+
+
+def _staged_job(path: str) -> str | None:
+    """The job id in a staged picture's path (`imports/<room>/<job>/<name>`,
+    spec 65), None for any other object."""
+    parts = path.split("/")
+    return parts[2] if path.startswith(STAGING_PREFIX) and len(parts) == 4 else None
+
+
+async def remove_staged(job_id: uuid.UUID) -> None:
+    """Removes every picture staged for an import job (spec 65 Decision 5),
+    whatever the job's outcome. A removal that fails keeps its cleanup row, so
+    the sweep retries it once the job is no longer active."""
+    pattern = f"{STAGING_PREFIX}%/{job_id}/%"
+    async with session_module.independent_session() as session:
+        result = await session.execute(
+            select(StorageCleanupRow.storage_path).where(
+                StorageCleanupRow.storage_path.like(pattern)
+            )
+        )
+        await _remove(session, list(result.scalars()))
+
+
 async def sweep(session: AsyncSession, now: datetime | None = None) -> None:
     """Retries every cleanup row older than SWEEP_GRACE: objects left by a
-    failed upload transaction, and removals that failed after commit."""
+    failed upload transaction, and removals that failed after commit. The
+    pictures staged for an import that is still queued or running stay: the
+    job is reading them (spec 65)."""
     cutoff = (now or datetime.now(UTC)) - SWEEP_GRACE
     result = await session.execute(
         select(StorageCleanupRow.storage_path).where(StorageCleanupRow.created_at < cutoff)
     )
-    await _remove(session, list(result.scalars()))
+    paths = list(result.scalars())
+    staged = {job for path in paths if (job := _staged_job(path)) is not None}
+    if staged:
+        active = await session.execute(
+            select(ImportJobRow.id).where(
+                ImportJobRow.id.in_([uuid.UUID(job) for job in staged]),
+                ImportJobRow.status.in_([s.value for s in ACTIVE_IMPORT_STATUSES]),
+            )
+        )
+        running = {str(job) for job in active.scalars()}
+        paths = [path for path in paths if _staged_job(path) not in running]
+    await _remove(session, paths)
 
 
 async def run_sweeper() -> None:

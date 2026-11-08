@@ -22,6 +22,9 @@ from app.domain.mentions import MentionKind
 MAX_FILE_BYTES = 5 * 1024 * 1024
 # The mention key of an Obsidian note (spec 65): this and the folded name.
 OBSIDIAN_KEY_PREFIX = "obs:"
+# An image link `vault:<path>` is a picture inside the uploaded vault, staged
+# for the job (spec 65 Decision 5), not an address to fetch.
+VAULT_URL_PREFIX = "vault:"
 
 _MARKDOWN_SPECIAL_ESCAPED = re.compile(r"\\([\\`*_\[\]<>])")
 
