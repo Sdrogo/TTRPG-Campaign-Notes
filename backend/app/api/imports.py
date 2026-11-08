@@ -31,8 +31,16 @@ from app.domain.import_files import (
     ImportRefusedError,
 )
 from app.domain.import_obsidian import parse_uploads
+from app.domain.import_vault import (
+    MAX_VAULT_BYTES,
+    MAX_VAULT_UPLOADS,
+    expand_uploads,
+    is_zip,
+)
 from app.domain.imports import (
+    MAX_DOCUMENTS,
     MAX_FILES,
+    MAX_VAULT_DOCUMENTS,
     ImportAlreadyRunningError,
     ImportChoices,
     ImportJob,
@@ -242,21 +250,37 @@ async def _read_files(
 ) -> list[ImportFile]:
     """The uploaded files parsed and within the limits (Decision 8): at most
     `MAX_FILES` files of `MAX_FILE_BYTES` (413), readable as one of the formats
-    (422). Nothing is fetched or written."""
+    (422). A vault (spec 65 Decision 4: a `.zip`, or the files of a folder sent
+    with `obsidian` on) may hold up to `MAX_VAULT_UPLOADS` files, `MAX_VAULT_BYTES`
+    in all and `MAX_VAULT_DOCUMENTS` notes. Nothing is fetched or written."""
+    vault = obsidian is True or any(is_zip(upload.filename or "") for upload in files)
     try:
-        if len(files) > MAX_FILES:
-            raise ImportRefusedError("errors.import.tooManyFiles", max=MAX_FILES)
+        max_uploads = MAX_VAULT_UPLOADS if vault else MAX_FILES
+        if len(files) > max_uploads:
+            raise ImportRefusedError("errors.import.tooManyFiles", max=max_uploads)
         uploads: list[tuple[str, bytes]] = []
+        budget = MAX_VAULT_BYTES
         for upload in files:
-            name = (upload.filename or "file")[:200]
-            data = await upload.read(MAX_FILE_BYTES + 1)
-            if len(data) > MAX_FILE_BYTES:
+            name = (upload.filename or "file")[:500]
+            limit = MAX_VAULT_BYTES if is_zip(name) else MAX_FILE_BYTES
+            data = await upload.read(limit + 1)
+            if len(data) > limit:
                 raise ImportFileTooLargeError(
-                    "errors.import.fileTooLarge", name=name, max=MAX_FILE_BYTES // (1024 * 1024)
+                    "errors.import.fileTooLarge", name=name, max=limit // (1024 * 1024)
                 )
+            budget -= len(data)
+            if vault and budget < 0:
+                raise ImportRefusedError("errors.import.vaultTooBig", max=MAX_VAULT_BYTES // 2**20)
             uploads.append((name, data))
-        parsed = await asyncio.to_thread(lambda: parse_uploads(uploads, obsidian=obsidian))
-        validate_files(parsed)
+
+        def read() -> list[ImportFile]:
+            expanded = expand_uploads(uploads)
+            if vault:  # a folder holds pictures too; they come with the image step
+                expanded = [u for u in expanded if u[0].lower().endswith((".md", ".markdown"))]
+            return parse_uploads(expanded, obsidian=True if vault else obsidian)
+
+        parsed = await asyncio.to_thread(read)
+        validate_files(parsed, MAX_VAULT_DOCUMENTS if vault else MAX_DOCUMENTS)
     except ImportFileTooLargeError as exc:
         raise translated_error(status.HTTP_413_CONTENT_TOO_LARGE, exc, locale) from exc
     except ImportRefusedError as exc:

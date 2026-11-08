@@ -63,6 +63,8 @@ from app.domain.room_sections import Section, SectionKind
 
 MAX_FILES = 10
 MAX_DOCUMENTS = 200
+# Spec 65: an Obsidian vault (a zip or a folder) may hold more notes.
+MAX_VAULT_DOCUMENTS = 500
 # Spec 59: the images of the Documents chosen in the preview, checked when the
 # job starts; the files themselves may link more, up to `MAX_IMAGE_LINKS`, so
 # a big export still reaches the preview where Documents can be unticked.
@@ -261,7 +263,7 @@ def fold(name: str) -> str:
     return name.strip().casefold()
 
 
-def validate_files(files: Sequence[ImportFile]) -> None:
+def validate_files(files: Sequence[ImportFile], max_documents: int = MAX_DOCUMENTS) -> None:
     """422 unless the files are within the limits (Decision 8): at most
     `MAX_FILES` files, `MAX_DOCUMENTS` Documents and `MAX_IMAGE_LINKS` image
     links (the chosen ones are held to `MAX_IMAGES` by `plan_import`), and
@@ -272,8 +274,8 @@ def validate_files(files: Sequence[ImportFile]) -> None:
     if len(files) > MAX_FILES:
         raise ImportRefusedError("errors.import.tooManyFiles", max=MAX_FILES)
     documents = [document for file in files for document in file.documents]
-    if len(documents) > MAX_DOCUMENTS:
-        raise ImportRefusedError("errors.import.tooManyDocuments", max=MAX_DOCUMENTS)
+    if len(documents) > max_documents:
+        raise ImportRefusedError("errors.import.tooManyDocuments", max=max_documents)
     if sum(len(document.images) for document in documents) > MAX_IMAGE_LINKS:
         raise ImportRefusedError("errors.import.tooManyImageLinks", max=MAX_IMAGE_LINKS)
     if sum(len(file.maps) for file in files) > MAX_MAPS_PER_IMPORT:

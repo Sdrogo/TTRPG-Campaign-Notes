@@ -6,7 +6,9 @@ its own tests (`test_remote_images.py`)."""
 
 import io
 import json
+import os
 import uuid
+import zipfile
 from collections.abc import AsyncIterator, Callable, Coroutine, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -2468,3 +2470,130 @@ async def test_a_room_export_carries_its_clocks_into_another_room(
     )
     assert job["status"] == "done", job
     assert await _clocks(client, empty, empty.master) == {}
+
+
+# --- Obsidian notes (spec 65) -------------------------------------------------------
+
+
+def _zip(entries: dict[str, bytes], compression: int = zipfile.ZIP_DEFLATED) -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression) as archive:
+        for path, data in entries.items():
+            archive.writestr(path, data)
+    return buffer.getvalue()
+
+
+async def test_an_obsidian_vault_zip_is_imported_with_links_and_folder_tags(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    vault = _zip(
+        {
+            "Vault/Characters/Jason.md": (
+                b"---\ntags: [npc]\n---\n# Bio\nAlly of [[Praga|the city]]\n![[jason.jpg]]\n"
+            ),
+            "Vault/Praga.md": b"The city. See [[Missing]].",
+            "Vault/.obsidian/app.json": b"{}",
+            "Vault/jason.jpg": _png(),
+        }
+    )
+
+    preview = (await _preview(client, room, room.master, ("vault.zip", vault))).json()
+    assert sorted(d["name"] for d in preview["documents"]) == ["Jason", "Praga"]
+    jason = next(d for d in preview["documents"] if d["name"] == "Jason")
+    assert jason["tag_names"] == ["npc", "Characters"]
+    assert [w["code"] for w in jason["warnings"]] == ["embeds_dropped"]
+
+    job = await _import(client, room, room.master, ("vault.zip", vault))
+
+    assert job["status"] == "done"
+    documents = await _documents(client, room)
+    assert set(documents) == {"Jason", "Praga"}
+    jason_detail = await _detail(client, room, documents["Jason"]["id"])
+    praga = await _detail(client, room, documents["Praga"]["id"])
+    assert "#Missing" in json.dumps(praga["description"])
+    assert documents["Praga"]["id"] in json.dumps(jason_detail["description"])
+
+
+async def test_a_folder_upload_is_read_as_a_vault_and_hidden_files_are_left_out(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    files = _upload(("Notes/A.md", b"# plain heading\ntext"), ("Notes/pic.png", _png()))
+    preview = await client.post(
+        f"{room.url}/imports/preview",
+        files=files,
+        data={"obsidian": "true"},
+        headers=room.master,
+    )
+    assert preview.status_code == 200, preview.text
+    # A vault: the file is one Document named after it, not one per heading.
+    assert [d["name"] for d in preview.json()["documents"]] == ["A"]
+
+
+async def test_a_vault_that_is_unsafe_or_too_big_is_refused(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+
+    async def preview(*files: tuple[str, bytes]) -> Response:
+        return await _preview(client, room, room.master, *files)
+
+    assert (await preview(("v.zip", b"not a zip"))).status_code == 422
+    assert (await preview(("v.zip", _zip({"../evil.md": b"x"})))).status_code == 422
+    assert (await preview(("v.zip", _zip({"/abs.md": b"x"})))).status_code == 422
+    bomb = _zip({"big.md": b"0" * (8 * 1024 * 1024)})
+    assert (await preview(("v.zip", bomb))).status_code == 422
+    large = _zip({"big.md": os.urandom(5 * 1024 * 1024 + 1)}, zipfile.ZIP_STORED)
+    assert (await preview(("v.zip", large))).status_code == 413
+    many = _zip({f"n{i}.md": b"x" for i in range(501)})
+    assert (await preview(("v.zip", many))).status_code == 422
+    nothing = _zip({"pic.png": _png()})
+    assert (await preview(("v.zip", nothing))).status_code == 422
+    too_many_uploads = tuple((f"n{i}.md", b"x") for i in range(11))
+    assert (await preview(*too_many_uploads)).status_code == 422
+
+
+async def test_an_obsidian_note_never_matches_a_document_the_importer_cannot_see(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    await _post(client, f"{room.url}/documents", room.master, name="Secret", visibility="master")
+    await _post(client, f"{room.url}/documents", room.master, name="Seen", visibility="room")
+    notes = (("Secret.md", b"[[Seen]] and ==x=="), ("Seen.md", b"%%c%% hi [[Secret]]"))
+
+    preview = (await _preview(client, room, room.player, *notes)).json()
+    by_name = {d["name"]: d for d in preview["documents"]}
+    assert by_name["Secret"]["existing_document_id"] is None  # no hint of the hidden one
+    assert by_name["Seen"]["existing_document_id"] is not None
+    assert by_name["Seen"]["can_replace"] is False  # the Player doesn't own it
+
+    job = await _import(client, room, room.player, *notes)
+    assert job["status"] == "done"
+    listing = (await client.get(f"{room.url}/documents", headers=room.master)).json()
+    assert sorted(d["name"] for d in listing).count("Secret") == 2
+
+
+async def test_a_folder_over_the_vault_size_is_refused(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(imports, "MAX_VAULT_BYTES", 5)
+    room = await _room(client, make_token)
+    response = await client.post(
+        f"{room.url}/imports/preview",
+        files=_upload(("a.md", b"abcd"), ("b.md", b"efgh")),
+        data={"obsidian": "true"},
+        headers=room.master,
+    )
+    assert response.status_code == 422
