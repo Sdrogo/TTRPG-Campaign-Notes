@@ -87,7 +87,6 @@ export function RoomIndex({ roomId, current, detail }: RoomIndexProps) {
                     key={section.id}
                     component={Link}
                     to={sectionHref(roomId, section)}
-                   
                     onClick={close}
                     size="sm"
                     fw={here ? 700 : undefined}
