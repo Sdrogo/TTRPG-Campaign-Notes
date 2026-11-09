@@ -53,10 +53,12 @@ here and remind the product owner.
 - **Staging database**: `e7b3d9a1c5f2 (head)`, applied 2026-11-09 with
   `backend/.env.staging` loaded (`d4a8f2c6b9e1` applied the same day,
   `c1d7e3a9f5b2` on 2026-11-03).
-- **Production database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
-  `backend/.env` loaded (product owner's go-ahead), before the release that
-  shipped it (PR #302). `e8c4a2f6b1d9` and `e9c4a2f7b1d8` were applied the same day.
-- **Pending on production**: `d4a8f2c6b9e1` (arrow bend, spec 67, additive nullable column) and `e7b3d9a1c5f2` (color legend, spec 68: presets table, two nullable map columns, a check), both already applied on staging 2026-11-09.
+- **Production database**: `e7b3d9a1c5f2 (head)`, applied 2026-11-09 with
+  `backend/.env` loaded (product owner's go-ahead), before the release PR
+  #316: `d4a8f2c6b9e1` (arrow bend, spec 67) then `e7b3d9a1c5f2` (color
+  legend, spec 68). Earlier: `c1d7e3a9f5b2` on 2026-11-03 before the release
+  that shipped it (PR #302), with `e8c4a2f6b1d9` and `e9c4a2f7b1d8` the same day.
+- **Pending**: none. Staging and production are both at the repository head.
 
 When a new migration lands, update the three lines above and add it to the
 top of the chain below. Per-migration apply history (who, when, which env
@@ -255,8 +257,8 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   editing with the same rights as moving a card, highlight by meaning, and
   Room presets that maps stay linked to (Master manages them). Ticket and
   mock-up approved 2026-11-09; **built on PR #315**, migration
-  `e7b3d9a1c5f2` applied on staging 2026-11-09, to apply on production
-  before the release.
+  `e7b3d9a1c5f2` applied on staging and on production 2026-11-09, ahead of
+  the release (PR #316).
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).
