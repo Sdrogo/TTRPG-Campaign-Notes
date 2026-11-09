@@ -6,6 +6,10 @@ const positions = new Map<string, number>();
 /** How long a restored page waits for its content to be tall enough to reach the position. */
 const RESTORE_WINDOW_MS = 2000;
 const RESTORE_STEP_MS = 50;
+/** The scroll events right after a page appears are the browser settling the old position, not the reader. */
+const SETTLE_MS = 200;
+/** What means the reader took over the scroll: wheel and touch, but also the scrollbar and the keys. */
+const TAKE_OVER = ['wheel', 'touchmove', 'pointerdown', 'keydown'] as const;
 
 /**
  * Remembers where each page was scrolled to and, when the page was reached
@@ -13,7 +17,8 @@ const RESTORE_STEP_MS = 50;
  * `useHierarchicalBack`), scrolls back there, so coming back from a Document
  * to a Section does not start from the top (spec 66). The content loads
  * after the page mounts, so it retries for a moment, and gives up as soon as
- * the reader scrolls on their own.
+ * the reader takes over. Scroll events in the first moments of a page are
+ * ignored, so the old page's position settling never overwrites the new one.
  */
 export function usePageScroll() {
   const { pathname, search, state } = useLocation();
@@ -21,7 +26,10 @@ export function usePageScroll() {
   const restore = (state as { restoreScroll?: boolean } | null)?.restoreScroll === true;
 
   useEffect(() => {
-    const remember = () => positions.set(key, window.scrollY);
+    const shown = Date.now();
+    const remember = () => {
+      if (Date.now() - shown >= SETTLE_MS) positions.set(key, window.scrollY);
+    };
     window.addEventListener('scroll', remember, { passive: true });
     return () => window.removeEventListener('scroll', remember);
   }, [key]);
@@ -39,12 +47,10 @@ export function usePageScroll() {
       }
     };
     attempt();
-    window.addEventListener('wheel', stop, { passive: true, once: true });
-    window.addEventListener('touchmove', stop, { passive: true, once: true });
+    for (const type of TAKE_OVER) window.addEventListener(type, stop, { passive: true, once: true });
     return () => {
       stop();
-      window.removeEventListener('wheel', stop);
-      window.removeEventListener('touchmove', stop);
+      for (const type of TAKE_OVER) window.removeEventListener(type, stop);
     };
   }, [key, restore]);
 }

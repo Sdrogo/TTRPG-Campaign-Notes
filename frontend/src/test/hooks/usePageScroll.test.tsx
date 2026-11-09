@@ -12,6 +12,7 @@ function wrapperAt(path: string, state?: unknown) {
 
 /** A page scrolled to `y`, as the browser reports it. */
 function scrollTo(y: number) {
+  vi.advanceTimersByTime(250);
   Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
   window.dispatchEvent(new Event('scroll'));
 }
@@ -62,6 +63,31 @@ describe('usePageScroll (spec 66)', () => {
 
     renderHook(() => usePageScroll(), { wrapper: wrapperAt('/rooms/r1/clocks', { restoreScroll: true }) });
     window.dispatchEvent(new Event('wheel'));
+    const attempts = scrollSpy.mock.calls.length;
+    vi.advanceTimersByTime(1000);
+
+    expect(scrollSpy.mock.calls.length).toBe(attempts);
+  });
+
+  it('ignores the scroll events of the first moments, which are the old position settling', () => {
+    const first = renderHook(() => usePageScroll(), { wrapper: wrapperAt('/rooms/r1/members') });
+    Object.defineProperty(window, 'scrollY', { value: 500, configurable: true });
+    window.dispatchEvent(new Event('scroll'));
+    first.unmount();
+
+    renderHook(() => usePageScroll(), { wrapper: wrapperAt('/rooms/r1/members', { restoreScroll: true }) });
+
+    expect(scrollSpy).not.toHaveBeenCalled();
+  });
+
+  it('stops for the keys and the scrollbar too', () => {
+    const first = renderHook(() => usePageScroll(), { wrapper: wrapperAt('/rooms/r1/friends') });
+    scrollTo(900);
+    first.unmount();
+    scrollSpy.mockImplementation(() => Object.defineProperty(window, 'scrollY', { value: 100, configurable: true }));
+
+    renderHook(() => usePageScroll(), { wrapper: wrapperAt('/rooms/r1/friends', { restoreScroll: true }) });
+    window.dispatchEvent(new Event('keydown'));
     const attempts = scrollSpy.mock.calls.length;
     vi.advanceTimersByTime(1000);
 
