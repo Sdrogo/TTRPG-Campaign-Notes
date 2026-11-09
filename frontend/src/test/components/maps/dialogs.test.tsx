@@ -24,6 +24,7 @@ const arrow: MapArrow = {
   reverseLabelPosition: null,
   labelOffset: null,
   reverseLabelOffset: null,
+  bend: null,
   color: 'default',
   masterOnly: false,
 };
@@ -43,6 +44,21 @@ const textCard: MapCard = {
   y: 0,
   document: null,
 };
+
+describe('ArrowDialog adjusting the arc (spec 67)', () => {
+  it('offers to adjust the arc only where the board can', async () => {
+    const user = userEvent.setup();
+    const onAdjust = vi.fn();
+    const props = { arrow, fromName: 'A', toName: 'B', isMaster: true, onSave: vi.fn(), onDelete: vi.fn(), onClose: vi.fn() };
+    const { unmount } = renderWithProviders(<ArrowDialog {...props} onAdjust={onAdjust} />);
+    await user.click(screen.getByRole('button', { name: "Regola l'arco" }));
+    expect(onAdjust).toHaveBeenCalledTimes(1);
+    unmount();
+
+    renderWithProviders(<ArrowDialog {...props} />);
+    expect(screen.queryByRole('button', { name: "Regola l'arco" })).not.toBeInTheDocument();
+  });
+});
 
 describe('ArrowDialog', () => {
   it('edits a two-way arrow with a label towards each end', async () => {

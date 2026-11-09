@@ -10,7 +10,7 @@ part. Its ids only link objects inside the file."""
 import math
 import uuid
 from collections.abc import Callable, Collection, Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -26,6 +26,7 @@ from app.domain.geographic_maps import (
     clean_plane,
     plan_geo_board_edit,
 )
+from app.domain.map_legends import clean_meanings
 from app.domain.models import DocumentVisibility, RoomRole
 from app.domain.relationship_maps import (
     MAX_MAPS_PER_ROOM,
@@ -79,13 +80,18 @@ def map_to_json(
     geo: GeoBoard,
     background_url: str | None,
     linked_document_ids: Collection[uuid.UUID],
+    color_legend: Mapping[MapColor, str] | None = None,
 ) -> dict[str, Any]:
     """A map of the JSON export (spec 40 Decision 8): its fields, the
     Documents of the file that show it on their page, and its content as the
     requester sees it, already filtered by the caller. A free map has
     `groups`, `cards` and `arrows`, a geographic one `areas`, `pins` and
-    `links`; both lists are always present."""
+    `links`; both lists are always present. A free map with relation color
+    meanings (spec 68, the linked preset's when it has one) writes them as
+    `color_legend`, unused colors included."""
+    legend = {color.value: meaning for color, meaning in (color_legend or {}).items()}
     return {
+        **({"color_legend": legend} if legend else {}),
         "id": str(relationship_map.id),
         "name": relationship_map.name,
         "description": relationship_map.description,
@@ -140,6 +146,7 @@ def map_to_json(
                 "reverse_label_position": a.reverse_label_position,
                 "label_offset": a.label_offset,
                 "reverse_label_offset": a.reverse_label_offset,
+                "bend": a.bend,
                 "color": a.color.value,
                 "master_only": a.master_only,
             }
@@ -220,6 +227,7 @@ class FileMap:
     linked_document_ids: tuple[uuid.UUID, ...]
     board: Board
     geo: GeoBoard
+    color_legend: Mapping[MapColor, str] = field(default_factory=dict)
 
 
 def _unreadable() -> UnreadableMapError:
@@ -363,6 +371,7 @@ def read_map(raw: Any) -> FileMap:
             reverse_label_position=_opt_number(a.get("reverse_label_position")),
             label_offset=_opt_number(a.get("label_offset")),
             reverse_label_offset=_opt_number(a.get("reverse_label_offset")),
+            bend=_opt_number(a.get("bend")),
             color=_choice(MapColor, a.get("color"), MapColor.DEFAULT),
             master_only=_flag(a.get("master_only")),
         )
@@ -426,7 +435,22 @@ def read_map(raw: Any) -> FileMap:
         linked_document_ids=tuple(_uuid(i) for i in _list(data.get("linked_document_ids"))),
         board=Board(groups=groups, cards=cards, arrows=arrows),
         geo=GeoBoard(areas=areas, pins=pins, links=links),
+        color_legend=_legend(data.get("color_legend")),
     )
+
+
+def _legend(value: Any) -> dict[MapColor, str]:
+    """A file map's relation color meanings (spec 68), optional: a color the
+    palette doesn't have and a meaning that isn't text are skipped; the
+    lengths are checked when the map is planned."""
+    if value is None:
+        return {}
+    colors = {color.value for color in MapColor}
+    return {
+        MapColor(key): meaning
+        for key, meaning in _object(value).items()
+        if key in colors and isinstance(meaning, str)
+    }
 
 
 def map_name(raw: Any) -> str:
@@ -474,6 +498,7 @@ class PlannedMap:
     left_out: int
     master_only_dropped: int
     skipped: MapSkipReason | None = None
+    color_legend: Mapping[MapColor, str] = field(default_factory=dict)
 
     @property
     def document_count(self) -> int:
@@ -681,6 +706,7 @@ def plan_map(
             RoomRole.MASTER,
             placed,
         )
+        color_legend = clean_meanings(file_map.color_legend)
     except DomainError:
         return replace(planned, skipped=MapSkipReason.INVALID, card_images=())
     return replace(
@@ -688,6 +714,7 @@ def plan_map(
         name=name,
         description=description,
         board=Board(groups=board_plan.groups, cards=board_plan.cards, arrows=board_plan.arrows),
+        color_legend=color_legend,
     )
 
 
@@ -709,6 +736,7 @@ def to_source_map(
             kind=planned.kind,
             plane_width=planned.plane_width,
             plane_height=planned.plane_height,
+            color_legend=planned.color_legend,
         ),
         board=planned.board,
         geo=planned.geo,

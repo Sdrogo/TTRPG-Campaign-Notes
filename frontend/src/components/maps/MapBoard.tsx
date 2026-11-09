@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Background,
   ConnectionMode,
@@ -34,16 +34,18 @@ import {
   endId,
   endOf,
   groupCards,
+  ownBend,
   removeArrow,
   removeCards,
   removeGroup,
+  setArrowBend,
   updateArrow,
   updateCard,
   updateGroup,
   type Point,
 } from '../../lib/maps';
 import type { Document } from '../../types/document';
-import type { Board, MapArrow as Arrow } from '../../types/map';
+import type { Board, MapArrow as Arrow, MapColor } from '../../types/map';
 import type { MapEdge, MapNode } from '../../types/mapNodes';
 import type { Tag } from '../../types/tag';
 import { AddDocumentsPanel } from './AddDocumentsPanel';
@@ -54,6 +56,7 @@ import { DocumentCardNode } from './DocumentCardNode';
 import { GroupDialog } from './GroupDialog';
 import { GroupNode } from './GroupNode';
 import { MapArrow } from './MapArrow';
+import { MapLegend, type LegendSetup } from './MapLegend';
 import { TextCardNode } from './TextCardNode';
 
 // Defined once, outside any render: React Flow warns about new objects.
@@ -87,6 +90,8 @@ export interface MapBoardProps {
   onSelectDocument?: (documentId: string) => void;
   /** The board's height; the full page's by default. */
   height?: string | number;
+  /** A free map's color legend (spec 68), shown in a corner of the board. */
+  legend?: LegendSetup;
 }
 
 type Editing =
@@ -129,12 +134,25 @@ function BoardCanvas({
   mode = 'free',
   onSelectDocument,
   height = 'calc(100dvh - 190px)',
+  legend,
 }: MapBoardProps) {
   const { t } = useTranslation();
   const flow = useReactFlow<MapNode, MapEdge>();
   const wrapper = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<Editing>(null);
   const [addOpened, setAddOpened] = useState(false);
+  // The arrow whose bend handle is showing (spec 67).
+  const [bendingId, setBendingId] = useState<string | null>(null);
+  // The color a legend row highlights: the other relations step back (spec 68 Decision 9).
+  const [highlight, setHighlight] = useState<MapColor | null>(null);
+  useEffect(() => {
+    if (!highlight) return;
+    const clear = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setHighlight(null);
+    };
+    window.addEventListener('keydown', clear);
+    return () => window.removeEventListener('keydown', clear);
+  }, [highlight]);
   // A finger has no middle button or Space to pan with, so on touch a drag on
   // empty canvas keeps panning and there is no selection box.
   const touch = useMediaQuery('(pointer: coarse)');
@@ -206,6 +224,8 @@ function BoardCanvas({
     setNodes(toNodes(nodes));
   }
 
+  // A highlighted color no relation has any more highlights nothing.
+  const shownHighlight = board.arrows.some((arrow) => arrow.color === highlight) ? highlight : null;
   const edges: MapEdge[] = board.arrows.map((arrow) => ({
     id: arrow.id,
     source: endId(arrow.from),
@@ -217,8 +237,12 @@ function BoardCanvas({
       arrow,
       shift: parallelShift(board.arrows, arrow),
       fan: arrowFan(board.arrows, arrow),
+      bend: ownBend(board.arrows, arrow),
+      bending: shaping && bendingId === arrow.id,
+      faded: shownHighlight !== null && arrow.color !== shownHighlight,
       editable: shaping,
       onEdit: (id) => setEditing({ kind: 'arrow', id }),
+      onBend: (id, bend) => onChange(setArrowBend(board, id, bend)),
       onMoveLabel: (id, which, position, offset) =>
         onChange(
           updateArrow(
@@ -316,6 +340,7 @@ function BoardCanvas({
   const editedGroup = editing?.kind === 'group' ? board.groups.find((g) => g.id === editing.id) : undefined;
   const editedArrow = editing?.kind === 'arrow' ? board.arrows.find((a) => a.id === editing.id) : undefined;
   const close = () => setEditing(null);
+  const bendingArrow = shaping ? board.arrows.find((a) => a.id === bendingId) : undefined;
 
   return (
     <Box
@@ -338,7 +363,15 @@ function BoardCanvas({
         onNodeDragStop={(_, __, dragged) => handleDragStop(dragged)}
         onSelectionDragStop={(_, dragged) => handleDragStop(dragged)}
         onConnect={handleConnect}
-        onEdgeClick={(_, edge) => shaping && setEditing({ kind: 'arrow', id: edge.id })}
+        onEdgeClick={(_, edge) => {
+          if (!shaping) return;
+          setBendingId(null);
+          setEditing({ kind: 'arrow', id: edge.id });
+        }}
+        onPaneClick={() => {
+          setBendingId(null);
+          setHighlight(null);
+        }}
         onBeforeDelete={handleBeforeDelete}
         onDelete={handleDelete}
         nodesDraggable={editable}
@@ -388,7 +421,32 @@ function BoardCanvas({
             </Group>
           </Panel>
         )}
-        {boxSelect && (
+        {bendingArrow && (
+          <Panel position="bottom-center">
+            <Group gap="xs" wrap="nowrap" align="center">
+              <Text size="xs" c="dimmed">
+                {t('maps.arrow.bendHint')}
+              </Text>
+              <Button
+                size="xs"
+                variant="default"
+                disabled={ownBend(board.arrows, bendingArrow) === null}
+                onClick={() => onChange(setArrowBend(board, bendingArrow.id, null))}
+              >
+                {t('maps.arrow.resetBend')}
+              </Button>
+              <Button size="xs" onClick={() => setBendingId(null)}>
+                {t('maps.arrow.bendDone')}
+              </Button>
+            </Group>
+          </Panel>
+        )}
+        {legend && (
+          <Panel position="bottom-right">
+            <MapLegend {...legend} arrows={board.arrows} highlight={shownHighlight} onHighlight={setHighlight} />
+          </Panel>
+        )}
+        {boxSelect && !bendingArrow && (
           <Panel position="bottom-center">
             <Text size="xs" c="dimmed">
               {t('maps.selectHint')}
@@ -484,7 +542,12 @@ function BoardCanvas({
           fromName={nameOf(editedArrow.from)}
           toName={nameOf(editedArrow.to)}
           isMaster={isMaster}
+          meanings={legend?.meanings}
           onClose={close}
+          onAdjust={() => {
+            setBendingId(editedArrow.id);
+            close();
+          }}
           onSave={(patch) => {
             onChange(updateArrow(board, editedArrow.id, patch));
             close();

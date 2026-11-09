@@ -191,6 +191,8 @@
       "badChoices": "Les choix d'import ne sont pas valides",
       "cannotReplace": "Seul un Owner (ou le Master) peut remplacer {name}",
       "fileTooLarge": "{name} dépasse {max} Mo",
+      "vaultTooBig": "Le coffre dépasse {max} Mo ou contient trop de fichiers",
+      "unsafeArchive": "{name} contient des fichiers aux chemins non sûrs",
       "alreadyRunning": "Tu as déjà un import en cours dans cette Salle",
       "notFound": "Import introuvable"
     },
@@ -224,7 +226,9 @@
         "groupTitle": "titre du groupe",
         "placeName": "nom",
         "subtitle": "sous-titre",
-        "note": "note"
+        "note": "note",
+        "legendMeaning": "signification",
+        "presetName": "nom du préréglage"
       },
       "invalidPlane": "Le plan doit faire de 100 à 20 000 unités de large et de haut, et seule une carte géographique en a un",
       "planeTooSmall": "Avec ce plan, une partie de la carte serait en dehors",
@@ -233,7 +237,13 @@
       "placeNameRequired": "Une zone ou un lieu sans Document a besoin d'un nom",
       "tooManyAreas": "Une carte peut avoir {max} zones au maximum",
       "tooManyPins": "Une carte peut avoir {max} lieux au maximum",
-      "tooManyLinks": "Une carte peut avoir {max} liens au maximum"
+      "tooManyLinks": "Une carte peut avoir {max} liens au maximum",
+      "presetNameRequired": "Un préréglage doit avoir un nom",
+      "presetEmpty": "Un préréglage doit avoir au moins une signification",
+      "presetNameTaken": "Un autre préréglage de cette salle porte déjà ce nom",
+      "tooManyPresets": "Une salle peut avoir au plus {max} préréglages",
+      "presetNotFound": "Préréglage introuvable",
+      "notPresetManager": "Seul le MJ peut modifier les préréglages de la salle"
     },
     "mapImport": {
       "invalidFile": "Le fichier n'est pas une carte que l'App sait lire (vérifie le champ \"{field}\")",

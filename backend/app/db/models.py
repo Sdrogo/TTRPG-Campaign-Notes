@@ -768,6 +768,10 @@ class RelationshipMapRow(Base):
             " AND source_document_id IS NULL)",
             name="ck_relationship_maps_kind",
         ),
+        CheckConstraint(
+            "legend_preset_id IS NULL OR color_legend IS NULL",
+            name="ck_relationship_maps_legend",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -800,6 +804,38 @@ class RelationshipMapRow(Base):
         Boolean, default=False, server_default=text("false")
     )
     revision: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    # Spec 68: the map's own relation color meanings (`{"red": "Rival"}`), or
+    # the Room preset it is linked to, never both (Decision 20).
+    color_legend: Mapped[dict[str, str] | None] = mapped_column(JSONB(none_as_null=True))
+    legend_preset_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "relationship_map_legend_presets.id",
+            ondelete="SET NULL",
+            name="fk_relationship_maps_legend_preset",
+        ),
+        index=True,
+    )
+
+
+class RelationshipMapLegendPresetRow(Base):
+    """A Room's ready-made relation color legend (spec 68 Decision 19): free
+    maps link to it and show its meanings live. Gone with the Room; a map
+    linked to a deleted preset keeps a copy of its meanings (Decision 23)."""
+
+    __tablename__ = "relationship_map_legend_presets"
+    __table_args__ = (
+        UniqueConstraint("room_id", "name", name="uq_relationship_map_legend_presets_name"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(60))
+    entries: Mapped[dict[str, str]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class DocumentLinkedMapRow(Base):
@@ -941,6 +977,10 @@ class RelationshipMapArrowRow(Base):
             " AND reverse_label_offset <= 2000)",
             name="ck_relationship_map_arrows_reverse_label_offset",
         ),
+        CheckConstraint(
+            "bend IS NULL OR (bend >= -5000 AND bend <= 5000)",
+            name="ck_relationship_map_arrows_bend",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -970,6 +1010,9 @@ class RelationshipMapArrowRow(Base):
     # (negative to the other side); only with a position.
     label_offset: Mapped[float | None] = mapped_column(Float)
     reverse_label_offset: Mapped[float | None] = mapped_column(Float)
+    # How far the curve's middle leaves the straight line, in board pixels
+    # (positive to the right of the arrow's way); null = the automatic curve.
+    bend: Mapped[float | None] = mapped_column(Float)
     color: Mapped[str] = mapped_column(String(10))
     master_only: Mapped[bool] = mapped_column(Boolean, default=False)
 

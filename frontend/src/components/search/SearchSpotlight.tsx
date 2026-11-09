@@ -30,6 +30,7 @@ import {
   searchHitHref,
 } from '../../lib/search';
 import { HighlightedText } from './HighlightedText';
+import { useBackState } from '../../lib/backNav';
 import type { SearchHit, SearchKind } from '../../types/search';
 
 /** How long typing pauses before the query is sent. */
@@ -60,6 +61,7 @@ interface SearchSpotlightProps {
 export function SearchSpotlight({ roomId, opened, onClose }: SearchSpotlightProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const backState = useBackState();
   const listId = useId();
   const phone = useMediaQuery('(max-width: 48em)');
   const [query, setQuery] = useState('');
@@ -87,7 +89,7 @@ export function SearchSpotlight({ roomId, opened, onClose }: SearchSpotlightProp
   };
   const open = (hit: SearchHit) => {
     onClose();
-    void navigate(searchHitHref(roomId, hit));
+    void navigate(searchHitHref(roomId, hit), { state: backState });
   };
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (hits.length === 0) return;

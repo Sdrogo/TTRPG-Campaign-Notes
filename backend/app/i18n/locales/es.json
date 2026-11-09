@@ -191,6 +191,8 @@
       "badChoices": "Las opciones de importación no son válidas",
       "cannotReplace": "Solo un Owner (o el Master) puede reemplazar {name}",
       "fileTooLarge": "{name} supera los {max} MB",
+      "vaultTooBig": "El vault supera {max} MB o contiene demasiados archivos",
+      "unsafeArchive": "{name} contiene archivos con rutas no seguras",
       "alreadyRunning": "Ya tienes una importación en curso en esta Sala",
       "notFound": "Importación no encontrada"
     },
@@ -224,7 +226,9 @@
         "groupTitle": "título del grupo",
         "placeName": "nombre",
         "subtitle": "subtítulo",
-        "note": "nota"
+        "note": "nota",
+        "legendMeaning": "significado",
+        "presetName": "nombre del preset"
       },
       "invalidPlane": "El plano debe medir de 100 a 20.000 unidades de ancho y de alto, y solo un mapa geográfico lo tiene",
       "planeTooSmall": "Con ese plano parte del mapa quedaría fuera",
@@ -233,7 +237,13 @@
       "placeNameRequired": "Una zona o un lugar sin Documento necesita un nombre",
       "tooManyAreas": "Un mapa puede tener como máximo {max} zonas",
       "tooManyPins": "Un mapa puede tener como máximo {max} lugares",
-      "tooManyLinks": "Un mapa puede tener como máximo {max} vínculos"
+      "tooManyLinks": "Un mapa puede tener como máximo {max} vínculos",
+      "presetNameRequired": "El preset necesita un nombre",
+      "presetEmpty": "El preset necesita al menos un significado",
+      "presetNameTaken": "Otro preset de esta sala ya tiene ese nombre",
+      "tooManyPresets": "Una sala puede tener como máximo {max} presets",
+      "presetNotFound": "Preset no encontrado",
+      "notPresetManager": "Solo el Máster puede cambiar los presets de la sala"
     },
     "mapImport": {
       "invalidFile": "El archivo no es un mapa que la App pueda leer (revisa el campo \"{field}\")",

@@ -1,4 +1,6 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders } from '../utils';
 import { DocumentCard } from '../../components/DocumentCard';
@@ -236,5 +238,29 @@ describe('unread mark', () => {
     render({ unreadCount: 0 });
     expect(screen.queryByLabelText(/nuov/)).not.toBeInTheDocument();
     expect(screen.queryByRole('img', { name: 'Non ancora letto' })).not.toBeInTheDocument();
+  });
+});
+
+// Spec 66: a Document opened from a Section goes back to that Section, not to the Documents list.
+describe('DocumentCard back trail', () => {
+  function Opened() {
+    return <p>{JSON.stringify(useLocation().state)}</p>;
+  }
+
+  it('opens the Document carrying the page it was opened from', async () => {
+    renderWithProviders(
+      <Routes>
+        <Route
+          path="/rooms/:roomId/sections/:sectionId"
+          element={<DocumentCard document={document()} roomId="room-1" tags={tags} members={members} />}
+        />
+        <Route path="/rooms/:roomId/documents/:documentId" element={<Opened />} />
+      </Routes>,
+      { route: '/rooms/room-1/sections/s-1' },
+    );
+
+    await userEvent.setup().click(screen.getByRole('link', { name: 'Il Cancello' }));
+
+    expect(screen.getByText('{"from":"/rooms/room-1/sections/s-1"}')).toBeInTheDocument();
   });
 });

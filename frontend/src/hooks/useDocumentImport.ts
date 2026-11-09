@@ -20,14 +20,24 @@ import { sectionsQueryKey } from './useLanding';
  */
 export function usePreviewImport(roomId: string) {
   return useMutation({
-    mutationFn: async (files: File[]) =>
-      toImportPreview(
+    mutationFn: async (input: File[] | PreviewImportRequest) => {
+      const { files, obsidian } = Array.isArray(input)
+        ? { files: input, obsidian: undefined }
+        : input;
+      return toImportPreview(
         await apiFetch<RawImportPreview>(`/rooms/${roomId}/imports/preview`, {
           method: 'POST',
-          formData: previewFormData(files),
+          formData: previewFormData(files, obsidian),
         }),
-      ),
+      );
+    },
   });
+}
+
+/** The files of a preview and whether to read them as Obsidian notes (spec 65). */
+export interface PreviewImportRequest {
+  files: File[];
+  obsidian?: boolean;
 }
 
 /**
@@ -37,6 +47,8 @@ export function usePreviewImport(roomId: string) {
  */
 export interface StartImportRequest {
   files: File[];
+  /** Spec 65: read the Markdown as Obsidian notes (true), as plain Markdown (false), or detect. */
+  obsidian?: boolean;
   selected: string[];
   replace: string[];
   maps: string[];
@@ -51,11 +63,19 @@ export interface StartImportRequest {
  */
 export function useStartImport(roomId: string) {
   return useMutation({
-    mutationFn: async ({ files, selected, replace, maps, sections, pageCards }: StartImportRequest) =>
+    mutationFn: async ({
+      files,
+      selected,
+      replace,
+      maps,
+      sections,
+      pageCards,
+      obsidian,
+    }: StartImportRequest) =>
       toImportJob(
         await apiFetch<RawImportJob>(`/rooms/${roomId}/imports`, {
           method: 'POST',
-          formData: importFormData(files, selected, replace, maps, sections, pageCards),
+          formData: importFormData(files, selected, replace, maps, sections, pageCards, obsidian),
         }),
       ),
   });
@@ -76,7 +96,8 @@ export function useImportJob(roomId: string, jobId: string | null) {
         await apiFetch<RawImportJob>(`/rooms/${roomId}/imports/${jobId}`, { ignoreViewAs: true }),
       ),
     enabled: jobId !== null,
-    refetchInterval: (current) => (isActiveImportJob(current.state.data) ? IMPORT_POLL_INTERVAL_MS : false),
+    refetchInterval: (current) =>
+      isActiveImportJob(current.state.data) ? IMPORT_POLL_INTERVAL_MS : false,
   });
 
   const finished = query.data?.status === 'done';

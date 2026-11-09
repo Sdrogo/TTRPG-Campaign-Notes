@@ -132,6 +132,11 @@ export interface MapArrow {
   /** How far a dragged label sits to the side of the arrow, in board pixels. */
   labelOffset: number | null;
   reverseLabelOffset: number | null;
+  /**
+   * How far the curve's middle leaves the straight line, in board pixels, to
+   * the right of the arrow's way (spec 67); null for the automatic curve.
+   */
+  bend: number | null;
   color: MapColor;
   masterOnly: boolean;
 }
@@ -143,8 +148,32 @@ export interface Board {
   arrows: MapArrow[];
 }
 
+/** What each relation color means on a map (spec 68); a color with no meaning is absent. */
+export type ColorMeanings = Partial<Record<MapColor, string>>;
+
+/** The Room preset a map is linked to (spec 68 Decision 20). */
+export interface LegendPresetRef {
+  id: string;
+  name: string;
+}
+
+/** A Room's named set of relation color meanings (spec 68 Decision 19). */
+export interface LegendPreset extends LegendPresetRef {
+  entries: ColorMeanings;
+  /** How many maps link to it. */
+  mapCount: number;
+}
+
 /** A map with its board as the viewer sees it. */
-export interface RelationshipMapDetail extends RelationshipMap, Board {}
+export interface RelationshipMapDetail extends RelationshipMap, Board {
+  /**
+   * What its relation colors mean now: the linked preset's meanings, else its
+   * own; unused colors included (spec 68 Decision 4: only colors in use show).
+   */
+  colorLegend: ColorMeanings;
+  /** The preset it is linked to, if any. */
+  legendPreset: LegendPresetRef | null;
+}
 
 /** The fields of the create and settings forms. */
 export interface MapFormValues {

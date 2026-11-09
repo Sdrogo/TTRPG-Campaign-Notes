@@ -25,6 +25,7 @@ from app.db import (
     clocks_repo,
     documents_repo,
     import_jobs_repo,
+    import_staging,
     imports_repo,
     map_transfer_repo,
     mentions_repo,
@@ -59,8 +60,9 @@ from app.domain.images import (
     InvalidImageError,
     normalize_image,
 )
-from app.domain.import_files import ImportFile, file_from_json, file_to_json
+from app.domain.import_files import VAULT_URL_PREFIX, ImportFile, file_from_json, file_to_json
 from app.domain.imports import (
+    ACTIVE_IMPORT_STATUSES,
     ExistingDocument,
     ImportChoices,
     ImportContext,
@@ -158,6 +160,7 @@ async def load_import_context(
                 document.id,
                 is_owner(importer.role, importer.user_id, owners[document.id]),
                 frozenset(str(image.id) for image in images.get(document.id, ())),
+                document.name,
             )
             for document in visible
         },
@@ -175,7 +178,31 @@ async def load_import_context(
 async def run_import_job(job_id: uuid.UUID) -> None:
     """Runs the job to the end: `done` with what it did, or `failed`. Never
     raises (it runs as a background task, where nobody would see it). Once
-    the Documents are written, the images go in blocks (spec 59)."""
+    the Documents are written, the images go in blocks (spec 59). The pictures
+    staged for it (spec 65) are removed as it ends, whatever the outcome."""
+    try:
+        await _run(job_id)
+    finally:
+        await _discard_staged(job_id)
+
+
+async def _discard_staged(job_id: uuid.UUID) -> None:
+    """Removes the pictures staged for the job once it is over (`done` or
+    `failed`). A job a shutdown cut off is still active and keeps them: the
+    restart resumes it, and the sweep spares them while it is."""
+    try:
+        async with session_module.independent_session() as session:
+            job = await import_jobs_repo.get_job(session, job_id)
+        over = job is None or job.status not in ACTIVE_IMPORT_STATUSES
+    except Exception:
+        logger.exception("Could not check whether import %s is over", job_id)
+        return  # the sweep removes the pictures once the job is over
+    if over:
+        await import_staging.discard(job_id)
+
+
+async def _run(job_id: uuid.UUID) -> None:
+    """The body of `run_import_job`."""
     try:
         started = await _start(job_id)
         if started is None:
@@ -198,7 +225,16 @@ async def run_import_job(job_id: uuid.UUID) -> None:
 async def resume_import_job(job_id: uuid.UUID) -> None:
     """Goes on with the images of a job a restart cut off in its image
     phase (spec 59 Decision 6), from the first entry not done, as long as
-    the importer is still a member of the Room. Never raises."""
+    the importer is still a member of the Room. Never raises. Like
+    `run_import_job`, it removes the staged pictures when the job is over."""
+    try:
+        await _resume(job_id)
+    finally:
+        await _discard_staged(job_id)
+
+
+async def _resume(job_id: uuid.UUID) -> None:
+    """The body of `resume_import_job`."""
     try:
         async with session_module.independent_session() as session:
             job = await import_jobs_repo.get_job(session, job_id)
@@ -526,6 +562,14 @@ def _skip(plan_document: PlannedDocument, url: str, reason: str) -> dict[str, st
     """A skipped image, named without its query string (a signed link's token
     is the file's own business)."""
     parts = urlsplit(url)
+    if url.startswith(VAULT_URL_PREFIX):  # the picture's place in the vault
+        return {
+            "kind": "image",
+            "document_id": str(plan_document.id),
+            "document_name": plan_document.name,
+            "url": url.removeprefix(VAULT_URL_PREFIX)[:200],
+            "reason": reason,
+        }
     return {
         "kind": "image",
         "document_id": str(plan_document.id),
@@ -557,13 +601,10 @@ async def _attach_block(
             target = uuid.UUID(entry["target"])
             if entry["kind"] == "image":
                 async with gate:
-                    data = await _read_own_image(entry["url"], importer_id)
-                    if data is None:
-                        try:
-                            data = await remote_images.fetch_image_bytes(entry["url"])
-                        except remote_images.RemoteImageError:
-                            skipped["skipped"].append({**entry["skip"], "reason": "unreachable"})
-                            continue
+                    data = await _image_bytes(entry["url"], room_id, job_id, importer_id)
+                if data is None:
+                    skipped["skipped"].append({**entry["skip"], "reason": "unreachable"})
+                    continue
                 async with database:
                     reason = await _store_image(room_id, importer_id, target, data, job_id, index)
                 if isinstance(reason, str):
@@ -585,6 +626,26 @@ async def _attach_block(
 
     await asyncio.gather(*(one_target(entries) for entries in by_target.values()))
     return skipped
+
+
+async def _image_bytes(
+    url: str, room_id: uuid.UUID, job_id: uuid.UUID, importer_id: uuid.UUID
+) -> bytes | None:
+    """The bytes of one image to attach, or None when they can't be had: a
+    picture of the uploaded vault is read from its staging (spec 65), any other
+    link from this app's own bucket or else fetched from its address."""
+    if url.startswith(VAULT_URL_PREFIX):
+        try:
+            return await import_staging.read(room_id, job_id, url.removeprefix(VAULT_URL_PREFIX))
+        except storage.StorageError:
+            return None
+    data = await _read_own_image(url, importer_id)
+    if data is None:
+        try:
+            data = await remote_images.fetch_image_bytes(url)
+        except remote_images.RemoteImageError:
+            return None
+    return data
 
 
 async def _read_own_image(url: str, importer_id: uuid.UUID) -> bytes | None:

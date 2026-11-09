@@ -24,7 +24,17 @@ import {
 } from './maps';
 
 // The curve helpers live in `maps.ts` since spec 62 (free maps curve too).
-export { DEFAULT_BEND_RATIO, PARALLEL_BEND, curvePath, labelOnCurve, linkCurve, pointOnCurve, type Curve } from './maps';
+export {
+  DEFAULT_BEND_RATIO,
+  MAX_BEND,
+  PARALLEL_BEND,
+  bendThrough,
+  curvePath,
+  labelOnCurve,
+  linkCurve,
+  pointOnCurve,
+  type Curve,
+} from './maps';
 
 // --- Limits (the backend's, spec 38) ----------------------------------------
 
@@ -38,7 +48,6 @@ export const MAX_NOTE_LENGTH = 500;
 export const MIN_PLANE_SIZE = 100;
 export const MAX_PLANE_SIZE = 20_000;
 /** The farthest a link's curve may leave its straight line. */
-export const MAX_BEND = 5000;
 
 // --- The wire shape ---------------------------------------------------------
 
@@ -514,20 +523,6 @@ export function linkBend(links: GeoLink[], link: GeoLink, length: number): numbe
   if (link.bend !== null) return link.bend;
   const siblings = links.filter((other) => other.bend === null && sameEnds(other, link));
   return length * DEFAULT_BEND_RATIO + siblings.indexOf(link) * PARALLEL_BEND;
-}
-
-/**
- * The bend that puts a curve's middle at `p`, dragged by its handle: how far
- * `p` is to the side of the straight line, rounded and within the limit.
- */
-export function bendThrough(from: Point, to: Point, p: Point): number {
-  // `offsetFromLine`, without the labels' smaller limit.
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const length = Math.hypot(dx, dy);
-  if (length === 0) return 0;
-  const offset = ((p.x - from.x) * -dy + (p.y - from.y) * dx) / length;
-  return clamp(Math.round(offset), -MAX_BEND, MAX_BEND);
 }
 
 /**

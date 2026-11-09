@@ -28,7 +28,18 @@ export type MapArrowData = {
   shift: number;
   /** Which curve of the fan between its two ends the arrow takes (see `arrowFan`, spec 62). */
   fan: { slot: number; side: 1 | -1 };
+  /** The bend given to the arrow by hand, or null for the automatic curve (see `ownBend`, spec 67). */
+  bend: number | null;
+  /** Whether the arrow's bend handle is showing (spec 67). */
+  bending: boolean;
+  /** Whether a legend row highlights another color, so the arrow steps back (spec 68 Decision 9). */
+  faded?: boolean;
   onEdit: (id: string) => void;
+  /**
+   * The bend handle was dropped: the arrow now bends this far to the right
+   * of its own way, or null for the automatic curve again.
+   */
+  onBend: (id: string, bend: number | null) => void;
   /**
    * A label was dragged to a place along the arrow (0 at `from`, 1 at `to`)
    * and a distance to the side of it, in board pixels.

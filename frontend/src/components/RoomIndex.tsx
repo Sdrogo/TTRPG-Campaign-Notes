@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom';
 import { useRoomSections } from '../hooks/useLanding';
 import { REVEAL_BLOCK_EVENT, blockAnchor, landingHref, sectionHref } from '../lib/landing';
 import { sectionTitle } from '../lib/landingText';
-import { useBackState } from '../lib/backNav';
 
 /** What the page on screen adds to the Index (spec 55 Decision 10). */
 export interface RoomIndexContext {
@@ -37,7 +36,6 @@ const CARD_WIDTH = 'min(260px, 85vw)';
  */
 export function RoomIndex({ roomId, current, detail }: RoomIndexProps) {
   const { t } = useTranslation();
-  const backState = useBackState();
   const [opened, setOpened] = useState(false);
   const close = () => setOpened(false);
   const sections = useRoomSections(roomId, opened);
@@ -72,7 +70,7 @@ export function RoomIndex({ roomId, current, detail }: RoomIndexProps) {
         styles={{ title: { fontFamily: 'var(--font-display)', fontSize: 'var(--mantine-font-size-lg)' } }}
       >
         <Stack gap="md">
-          <Anchor component={Link} to={landingHref(roomId)} state={backState} onClick={close} size="sm" fw={600}>
+          <Anchor component={Link} to={landingHref(roomId)} onClick={close} size="sm" fw={600}>
             {t('roomLanding.home')}
           </Anchor>
           <Stack gap={4}>
@@ -89,7 +87,6 @@ export function RoomIndex({ roomId, current, detail }: RoomIndexProps) {
                     key={section.id}
                     component={Link}
                     to={sectionHref(roomId, section)}
-                    state={backState}
                     onClick={close}
                     size="sm"
                     fw={here ? 700 : undefined}

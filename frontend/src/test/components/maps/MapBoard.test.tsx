@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MapBoard } from '../../../components/maps/MapBoard';
+import type { LegendSetup } from '../../../components/maps/MapLegend';
 import type { Document } from '../../../types/document';
 import type { Board, MapCard } from '../../../types/map';
 import { flow } from '../../xyflowMock';
@@ -97,6 +98,7 @@ const initial: Board = {
       reverseLabelPosition: null,
       labelOffset: null,
       reverseLabelOffset: null,
+      bend: null,
       color: 'green',
       masterOnly: false,
     },
@@ -111,6 +113,7 @@ const initial: Board = {
       reverseLabelPosition: null,
       labelOffset: null,
       reverseLabelOffset: null,
+      bend: null,
       color: 'default',
       masterOnly: false,
     },
@@ -125,6 +128,7 @@ const initial: Board = {
       reverseLabelPosition: null,
       labelOffset: null,
       reverseLabelOffset: null,
+      bend: null,
       color: 'default',
       masterOnly: false,
     },
@@ -142,6 +146,7 @@ function renderBoard({
   docs = documents,
   mode = undefined as 'free' | 'mention' | undefined,
   onSelectDocument = undefined as ((documentId: string) => void) | undefined,
+  legend = undefined as LegendSetup | undefined,
 } = {}) {
   const changes: Board[] = [];
   function Harness() {
@@ -161,6 +166,7 @@ function renderBoard({
         mode={mode}
         onSelectDocument={onSelectDocument}
         height={mode ? 360 : undefined}
+        legend={legend}
       />
     );
   }
@@ -353,6 +359,56 @@ describe('MapBoard', () => {
     expect(screen.getByRole('dialog', { name: 'Relazione' })).toBeInTheDocument();
   });
 
+  describe('bending an arrow (spec 67)', () => {
+    const edgeData = (id: string) =>
+      flow.props.edges.find((edge) => edge.id === id)!.data as {
+        bending: boolean;
+        bend: number | null;
+        onBend: (id: string, bend: number | null) => void;
+      };
+
+    it('opens the bend handle from the arrow\'s dialog, with a hint to reset or finish', async () => {
+      const { last, user } = renderBoard();
+      call('onEdgeClick', null, { id: 'both' });
+      expect(edgeData('both').bending).toBe(false);
+      await user.click(screen.getByRole('button', { name: 'Regola l\'arco' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(edgeData('both').bending).toBe(true);
+      expect(edgeData('forward').bending).toBe(false);
+      expect(screen.getByRole('button', { name: 'Reimposta arco' })).toBeDisabled();
+
+      // Dropping the handle saves the bend with the board.
+      act(() => edgeData('both').onBend('both', 42));
+      expect(last().arrows.find((arrow) => arrow.id === 'both')!.bend).toBe(42);
+      await user.click(screen.getByRole('button', { name: 'Reimposta arco' }));
+      expect(last().arrows.find((arrow) => arrow.id === 'both')!.bend).toBeNull();
+
+      await user.click(screen.getByRole('button', { name: 'Fatto' }));
+      expect(edgeData('both').bending).toBe(false);
+      expect(screen.queryByRole('button', { name: 'Reimposta arco' })).not.toBeInTheDocument();
+    });
+
+    it('stops on a click on the empty board or on another arrow', async () => {
+      const { user } = renderBoard();
+      call('onEdgeClick', null, { id: 'both' });
+      await user.click(screen.getByRole('button', { name: 'Regola l\'arco' }));
+      call('onPaneClick');
+      expect(edgeData('both').bending).toBe(false);
+
+      call('onEdgeClick', null, { id: 'both' });
+      await user.click(screen.getByRole('button', { name: 'Regola l\'arco' }));
+      call('onEdgeClick', null, { id: 'forward' });
+      expect(edgeData('both').bending).toBe(false);
+    });
+
+    it('offers no bend handle to someone who cannot edit', () => {
+      renderBoard({ editable: false });
+      call('onEdgeClick', null, { id: 'both' });
+      expect(screen.queryByRole('button', { name: 'Regola l\'arco' })).not.toBeInTheDocument();
+      expect(edgeData('both').bending).toBe(false);
+    });
+  });
+
   it('saves where each label of an arrow was dropped', () => {
     const { last } = renderBoard();
     const data = () => flow.props.edges.find((edge) => edge.id === 'both')!.data as {
@@ -510,5 +566,45 @@ describe('MapBoard', () => {
     await user.click(screen.getByRole('button', { name: 'Aggiungi testo' }));
     await user.keyboard('{Escape}');
     expect(changes).toEqual([]);
+  });
+
+  describe('the color legend (spec 68)', () => {
+    const legend: LegendSetup = { mapId: 'map-1', meanings: { green: 'Alleato', red: 'Nemico' }, presetName: null };
+    const faded = (id: string) => (flow.props.edges.find((edge) => edge.id === id)!.data as { faded: boolean }).faded;
+
+    it('highlights the relations of a row, until the board is clicked or Esc pressed', async () => {
+      const { user } = renderBoard({ legend });
+      const row = screen.getByRole('listitem', { name: 'Verde: Alleato' });
+      // Red has a meaning but no relation.
+      expect(screen.getAllByRole('listitem')).toHaveLength(1);
+      expect(faded('both')).toBe(false);
+      await user.click(row);
+      expect(faded('both')).toBe(false);
+      expect(faded('line')).toBe(true);
+      expect(screen.getByTestId('path-line')).toHaveAttribute('opacity', '0.2');
+      expect(screen.getByTestId('path-both')).not.toHaveAttribute('opacity');
+      await user.keyboard('a');
+      expect(faded('line')).toBe(true);
+      await user.keyboard('{Escape}');
+      expect(faded('line')).toBe(false);
+      await user.click(row);
+      call('onPaneClick');
+      expect(faded('line')).toBe(false);
+    });
+
+    it('highlights nothing once no relation has the color, and tells the relation dialog what colors mean', async () => {
+      const { user } = renderBoard({ legend });
+      await user.click(screen.getByRole('listitem', { name: 'Verde: Alleato' }));
+      call('onEdgeClick', null, { id: 'both' });
+      expect(screen.getByText('In questa mappa: Alleato')).toBeInTheDocument();
+      await user.click(screen.getByRole('radio', { name: 'Rosso' }));
+      expect(screen.getByRole('radio', { name: 'Rosso' })).toHaveAttribute('title', 'Rosso: Nemico');
+      expect(screen.getByRole('radio', { name: 'Azzurro' })).not.toHaveAttribute('title');
+      expect(screen.getByText('In questa mappa: Nemico')).toBeInTheDocument();
+      await user.click(screen.getByRole('radio', { name: 'Azzurro' }));
+      expect(screen.getByText('Questo colore non ha ancora un significato nella legenda.')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Salva' }));
+      expect(faded('line')).toBe(false);
+    });
   });
 });

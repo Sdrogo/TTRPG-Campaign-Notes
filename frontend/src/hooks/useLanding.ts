@@ -19,11 +19,15 @@ export function sectionsQueryKey(roomId: string) {
 
 /** The Room's landing page: every Section in order, with its blocks (spec 55). */
 export function useRoomSections(roomId: string, enabled = true) {
-  return useQuery<LandingSection[]>({
+  return useQuery({ ...sectionsQuery(roomId), enabled });
+}
+
+/** The Sections' query, for a read outside a component (the back arrow checking a Section is still there). */
+export function sectionsQuery(roomId: string) {
+  return {
     queryKey: sectionsQueryKey(roomId),
-    queryFn: async () => (await apiFetch<RawSection[]>(sectionsPath(roomId))).map(toSection),
-    enabled,
-  });
+    queryFn: async (): Promise<LandingSection[]> => (await apiFetch<RawSection[]>(sectionsPath(roomId))).map(toSection),
+  };
 }
 
 /**

@@ -7,6 +7,7 @@ import {
   previewFormData,
   toImportJob,
   toImportPreview,
+  vaultFiles,
 } from '../../lib/documentImport';
 import { rawImportJob, rawImportPreview, rawImportPreviewDocument } from '../fixtures';
 
@@ -105,7 +106,10 @@ describe('toImportJob', () => {
 
   it('keeps how far the images of a running job got (spec 59)', () => {
     const job = toImportJob(
-      rawImportJob({ status: 'running', progress: { total: 450, stored: 118, done: 120 } }) as RawImportJob,
+      rawImportJob({
+        status: 'running',
+        progress: { total: 450, stored: 118, done: 120 },
+      }) as RawImportJob,
     );
 
     expect(job.progress).toEqual({ total: 450, stored: 118, done: 120 });
@@ -164,6 +168,40 @@ describe('the uploads', () => {
     expect(previewFormData(files).getAll('files')).toHaveLength(2);
   });
 
+  it('sends a picked folder file under its path and the Obsidian choice (spec 65)', () => {
+    const note = new File(['x'], 'Jason.md');
+    Object.defineProperty(note, 'webkitRelativePath', { value: 'Vault/Characters/Jason.md' });
+
+    const body = previewFormData([note, files[0]], true);
+
+    expect((body.getAll('files')[0] as File).name).toBe('Vault/Characters/Jason.md');
+    expect((body.getAll('files')[1] as File).name).toBe('a.json');
+    expect(body.get('obsidian')).toBe('true');
+    expect(previewFormData(files).has('obsidian')).toBe(false);
+    expect(importFormData(files, [], [], [], [], [], false).get('obsidian')).toBe('false');
+  });
+
+  it('keeps the notes and pictures of a folder, not Obsidian folders or other files', () => {
+    const inside = (name: string, path: string) =>
+      Object.defineProperty(new File([''], name), 'webkitRelativePath', { value: path });
+    const picked = [
+      new File([''], 'A.md'),
+      new File([''], 'pic.PNG'),
+      new File([''], 'b.markdown'),
+      new File([''], 'notes.txt'),
+      inside('app.png', 'Vault/.obsidian/app.png'),
+      inside('keep.png', 'Vault/Maps/keep.png'),
+    ];
+
+    expect(vaultFiles(picked).map((f) => f.name)).toEqual([
+      'A.md',
+      'pic.PNG',
+      'b.markdown',
+      'keep.png',
+    ]);
+    expect(vaultFiles([new File([''], 'pic.png')])).toEqual([]); // no note, nothing
+  });
+
   it('sends the same files and the choices as JSON for the import', () => {
     const body = importFormData(files, ['0:0', '1:0'], ['1:0'], ['0:map:0'], ['0:section:3'], []);
 
@@ -180,10 +218,18 @@ describe('the uploads', () => {
 
 describe('isActiveImportJob', () => {
   it('is true while the job is queued or running, false otherwise', () => {
-    expect(isActiveImportJob(toImportJob(rawImportJob({ status: 'queued' }) as RawImportJob))).toBe(true);
-    expect(isActiveImportJob(toImportJob(rawImportJob({ status: 'running' }) as RawImportJob))).toBe(true);
-    expect(isActiveImportJob(toImportJob(rawImportJob({ status: 'done' }) as RawImportJob))).toBe(false);
-    expect(isActiveImportJob(toImportJob(rawImportJob({ status: 'failed' }) as RawImportJob))).toBe(false);
+    expect(isActiveImportJob(toImportJob(rawImportJob({ status: 'queued' }) as RawImportJob))).toBe(
+      true,
+    );
+    expect(
+      isActiveImportJob(toImportJob(rawImportJob({ status: 'running' }) as RawImportJob)),
+    ).toBe(true);
+    expect(isActiveImportJob(toImportJob(rawImportJob({ status: 'done' }) as RawImportJob))).toBe(
+      false,
+    );
+    expect(isActiveImportJob(toImportJob(rawImportJob({ status: 'failed' }) as RawImportJob))).toBe(
+      false,
+    );
     expect(isActiveImportJob(undefined)).toBe(false);
   });
 });

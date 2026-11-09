@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_CARD_SIZE,
+  cleanMeanings,
+  replacedMeanings,
+  storeLegendFolded,
+  storedLegendFolded,
   GROUP_PADDING,
   absolutePosition,
   addArrow,
@@ -8,6 +12,9 @@ import {
   addTextCard,
   arrowCurve,
   arrowFan,
+  bendThrough,
+  ownBend,
+  setArrowBend,
   fanBend,
   shiftCurve,
   linkCurve,
@@ -16,6 +23,7 @@ import {
   offsetFromCurve,
   labelOnCurve,
   DEFAULT_BEND_RATIO,
+  MAX_BEND,
   PARALLEL_BEND,
   cardImage,
   colorValue,
@@ -96,6 +104,7 @@ function arrow(id: string, from: string, to: string, overrides: Partial<MapArrow
     reverseLabelPosition: null,
     labelOffset: null,
     reverseLabelOffset: null,
+    bend: null,
     color: 'default',
     masterOnly: false,
     ...overrides,
@@ -163,6 +172,7 @@ describe('the wire shape', () => {
       reverseLabelPosition: null,
       labelOffset: null,
       reverseLabelOffset: null,
+      bend: null,
       color: 'green',
       masterOnly: false,
     });
@@ -667,8 +677,107 @@ describe('curved arrows (spec 62)', () => {
   });
 });
 
+describe('an arrow bent by hand (spec 67)', () => {
+  const arrow = (id: string, from: string, to: string, direction: MapArrow['direction'] = 'forward', bend: number | null = null): MapArrow => ({
+    ...addArrow({ groups: [], cards: [], arrows: [] }, { cardId: from, groupId: null }, { cardId: to, groupId: null })[0].arrows[0],
+    id,
+    direction,
+    bend,
+  });
+  const boardOf = (arrows: MapArrow[]): Board => ({ groups: [], cards: [], arrows });
+
+  it('leaves the fan, so the others close up', () => {
+    const arrows = [arrow('1', 'a', 'b'), arrow('2', 'a', 'b', 'both', 30), arrow('3', 'b', 'a')];
+    expect(arrows.map((one) => arrowFan(arrows, one).slot)).toEqual([0, -1, 1]);
+    expect(ownBend(arrows, arrows[1])).toBe(30);
+    expect(ownBend(arrows, arrows[0])).toBeNull();
+  });
+
+  it('is shared by the plain lines of a bundle, whichever way they were drawn', () => {
+    const arrows = [arrow('1', 'a', 'b', 'none'), arrow('2', 'b', 'a', 'none', 25), arrow('3', 'a', 'b')];
+    expect(ownBend(arrows, arrows[0])).toBe(25);
+    expect(ownBend(arrows, arrows[1])).toBe(25);
+    // The bundle leaves the fan as a whole; the arrow with a head takes the first slot.
+    expect(arrows.map((one) => arrowFan(arrows, one).slot)).toEqual([-1, -1, 0]);
+  });
+
+  it('has no bend for a plain line whose bundle has none, nor for another pair', () => {
+    const arrows = [arrow('1', 'a', 'b', 'none'), arrow('2', 'a', 'b', 'none'), arrow('3', 'a', 'c', 'none', 9)];
+    expect(ownBend(arrows, arrows[0])).toBeNull();
+  });
+
+  it('is set on one arrow, in its own way, and cleared again', () => {
+    const board = boardOf([arrow('1', 'a', 'b'), arrow('2', 'a', 'b')]);
+    const bent = setArrowBend(board, '1', 45);
+    expect(bent.arrows.map((one) => one.bend)).toEqual([45, null]);
+    expect(setArrowBend(bent, '1', null).arrows.map((one) => one.bend)).toEqual([null, null]);
+  });
+
+  it('is set on every line of a bundle, on its canonical side', () => {
+    const board = boardOf([
+      arrow('1', 'a', 'b', 'none'),
+      arrow('2', 'b', 'a', 'none'),
+      arrow('3', 'a', 'b'),
+      arrow('4', 'a', 'c', 'none'),
+    ]);
+    const bent = setArrowBend(board, '2', 45);
+    // Drawn from b to a, the line bends 45 to its right: 45 to the left on the canonical way.
+    expect(bent.arrows.map((one) => one.bend)).toEqual([-45, -45, null, null]);
+    expect(setArrowBend(bent, '1', null).arrows.map((one) => one.bend)).toEqual([null, null, null, null]);
+  });
+
+  it('is kept within the limit, and an unknown arrow changes nothing', () => {
+    const board = boardOf([arrow('1', 'a', 'b')]);
+    expect(setArrowBend(board, '1', 99999).arrows[0].bend).toBe(MAX_BEND);
+    expect(setArrowBend(board, '1', -99999).arrows[0].bend).toBe(-MAX_BEND);
+    expect(setArrowBend(board, 'x', 5)).toBe(board);
+  });
+
+  it('is what the handle gives: how far the pointer is to the right of the way', () => {
+    const from = { x: 0, y: 0 };
+    const to = { x: 100, y: 0 };
+    expect(bendThrough(from, to, { x: 50, y: 30.4 })).toBe(30);
+    expect(bendThrough(from, to, { x: 50, y: -30 })).toBe(-30);
+    expect(bendThrough(from, to, { x: 50, y: 0 })).toBe(0);
+    expect(bendThrough(from, to, { x: 50, y: 99999 })).toBe(MAX_BEND);
+    expect(bendThrough(from, from, { x: 5, y: 5 })).toBe(0);
+  });
+
+  it('travels with the wire shape, and a new arrow has none', () => {
+    const [board] = addArrow(boardOf([]), { cardId: 'a', groupId: null }, { cardId: 'b', groupId: null });
+    expect(board.arrows[0].bend).toBeNull();
+    const body = toBoardBody(boardOf([{ ...board.arrows[0], bend: -12.5 }]));
+    expect(body.arrows[0].bend).toBe(-12.5);
+  });
+});
+
 describe('ignoreBoardChange', () => {
   it('does nothing with a read-only board', () => {
     expect(ignoreBoardChange()).toBeUndefined();
+  });
+});
+
+describe('the color legend (spec 68)', () => {
+  it('remembers the folded legend per map, and forgets nothing when storage is blocked', () => {
+    storeLegendFolded('map-1', true);
+    expect(storedLegendFolded('map-1')).toBe(true);
+    expect(storedLegendFolded('map-2')).toBe(false);
+    storeLegendFolded('map-1', false);
+    expect(storedLegendFolded('map-1')).toBe(false);
+
+    const blocked = () => {
+      throw new Error('blocked');
+    };
+    const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
+    expect(storedLegendFolded('map-1')).toBe(false);
+    expect(() => storeLegendFolded('map-1', true)).not.toThrow();
+    get.mockRestore();
+    set.mockRestore();
+  });
+
+  it('counts the meanings a preset would change', () => {
+    expect(replacedMeanings({ red: 'A', green: 'B' }, { red: 'A', blue: 'C' })).toBe(1);
+    expect(cleanMeanings({ red: ' A ', green: '  ' })).toEqual({ red: 'A' });
   });
 });

@@ -5,6 +5,7 @@ import { AppHeader } from './AppHeader';
 import { RoomIndex, type RoomIndexContext } from './RoomIndex';
 import { SplitView } from './layout/SplitView';
 import { DocumentSidePane } from './documents/DocumentSidePane';
+import { usePageScroll } from '../hooks/usePageScroll';
 import { isPlaceSide, SPLIT_QUERY, useSideDocument } from '../hooks/useSideDocument';
 
 interface PageLayoutProps {
@@ -55,6 +56,7 @@ export function PageLayout({
   renderSide,
   children,
 }: PageLayoutProps) {
+  usePageScroll();
   const side = useSideDocument();
   const { close } = side;
   const custom = side.sideId && renderSide ? renderSide(side.sideId) : null;

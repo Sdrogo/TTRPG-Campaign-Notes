@@ -191,6 +191,8 @@
       "badChoices": "Die Importauswahl ist ungültig",
       "cannotReplace": "Nur ein Owner (oder der Master) kann {name} ersetzen",
       "fileTooLarge": "{name} überschreitet {max} MB",
+      "vaultTooBig": "Der Vault ist größer als {max} MB oder enthält zu viele Dateien",
+      "unsafeArchive": "{name} enthält Dateien mit unsicheren Pfaden",
       "alreadyRunning": "In diesem Raum läuft bereits ein Import von dir",
       "notFound": "Import nicht gefunden"
     },
@@ -224,7 +226,9 @@
         "groupTitle": "Gruppentitel",
         "placeName": "Name",
         "subtitle": "Untertitel",
-        "note": "Notiz"
+        "note": "Notiz",
+        "legendMeaning": "Bedeutung",
+        "presetName": "Name der Vorlage"
       },
       "invalidPlane": "Die Fläche muss 100 bis 20.000 Einheiten breit und hoch sein, und nur eine geografische Karte hat eine",
       "planeTooSmall": "Mit dieser Fläche läge ein Teil der Karte außerhalb",
@@ -233,7 +237,13 @@
       "placeNameRequired": "Ein Gebiet oder eine Markierung ohne Dokument braucht einen Namen",
       "tooManyAreas": "Eine Karte darf höchstens {max} Gebiete haben",
       "tooManyPins": "Eine Karte darf höchstens {max} Markierungen haben",
-      "tooManyLinks": "Eine Karte darf höchstens {max} Verbindungen haben"
+      "tooManyLinks": "Eine Karte darf höchstens {max} Verbindungen haben",
+      "presetNameRequired": "Eine Vorlage braucht einen Namen",
+      "presetEmpty": "Eine Vorlage braucht mindestens eine Bedeutung",
+      "presetNameTaken": "Eine andere Vorlage dieses Raums hat bereits diesen Namen",
+      "tooManyPresets": "Ein Raum kann höchstens {max} Vorlagen haben",
+      "presetNotFound": "Vorlage nicht gefunden",
+      "notPresetManager": "Nur der Master kann die Vorlagen des Raums ändern"
     },
     "mapImport": {
       "invalidFile": "Die Datei ist keine Karte, die die App lesen kann (prüfe das Feld \"{field}\")",

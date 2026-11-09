@@ -191,6 +191,8 @@
       "badChoices": "De importkeuzes zijn niet geldig",
       "cannotReplace": "Alleen een Owner (of de Master) kan {name} vervangen",
       "fileTooLarge": "{name} is groter dan {max} MB",
+      "vaultTooBig": "De vault is groter dan {max} MB of bevat te veel bestanden",
+      "unsafeArchive": "{name} bevat bestanden met onveilige paden",
       "alreadyRunning": "Je hebt al een import bezig in deze Kamer",
       "notFound": "Import niet gevonden"
     },
@@ -224,7 +226,9 @@
         "groupTitle": "titel van de groep",
         "placeName": "naam",
         "subtitle": "ondertitel",
-        "note": "notitie"
+        "note": "notitie",
+        "legendMeaning": "betekenis",
+        "presetName": "naam van de preset"
       },
       "invalidPlane": "Het vlak moet 100 tot 20.000 eenheden breed en hoog zijn, en alleen een geografische kaart heeft er een",
       "planeTooSmall": "Met dat vlak zou een deel van de kaart erbuiten vallen",
@@ -233,7 +237,13 @@
       "placeNameRequired": "Een gebied of speld zonder Document heeft een naam nodig",
       "tooManyAreas": "Een kaart mag maximaal {max} gebieden hebben",
       "tooManyPins": "Een kaart mag maximaal {max} spelden hebben",
-      "tooManyLinks": "Een kaart mag maximaal {max} verbindingen hebben"
+      "tooManyLinks": "Een kaart mag maximaal {max} verbindingen hebben",
+      "presetNameRequired": "Een preset heeft een naam nodig",
+      "presetEmpty": "Een preset heeft minstens één betekenis nodig",
+      "presetNameTaken": "Een andere preset van deze room heeft die naam al",
+      "tooManyPresets": "Een room kan hoogstens {max} presets hebben",
+      "presetNotFound": "Preset niet gevonden",
+      "notPresetManager": "Alleen de Master kan de presets van de room wijzigen"
     },
     "mapImport": {
       "invalidFile": "Het bestand is geen kaart die de App kan lezen (controleer het veld \"{field}\")",

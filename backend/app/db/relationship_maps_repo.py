@@ -4,7 +4,7 @@ routes do, through `app.domain.relationship_maps`."""
 
 import uuid
 from collections import defaultdict
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import replace
 from datetime import datetime
 
@@ -36,7 +36,7 @@ from app.domain.relationship_maps import (
 )
 
 
-def _map_from_row(row: RelationshipMapRow) -> RelationshipMap:
+def map_from_row(row: RelationshipMapRow) -> RelationshipMap:
     """Maps a `relationship_maps` row to the domain map."""
     return RelationshipMap(
         id=row.id,
@@ -55,7 +55,22 @@ def _map_from_row(row: RelationshipMapRow) -> RelationshipMap:
         background_path=row.background_path,
         players_can_edit=row.players_can_edit,
         revision=row.revision,
+        color_legend=legend_from_json(row.color_legend),
+        legend_preset_id=row.legend_preset_id,
     )
+
+
+def legend_from_json(data: dict[str, str] | None) -> dict[MapColor, str]:
+    """Stored relation color meanings (spec 68) as the domain has them; a
+    color the palette no longer has is skipped."""
+    colors = {color.value for color in MapColor}
+    return {MapColor(key): value for key, value in (data or {}).items() if key in colors}
+
+
+def legend_to_json(meanings: Mapping[MapColor, str]) -> dict[str, str] | None:
+    """Relation color meanings as stored: None when there are none (a linked
+    map stores none, `ck_relationship_maps_legend`)."""
+    return {color.value: meaning for color, meaning in meanings.items()} or None
 
 
 def _group_from_row(row: RelationshipMapGroupRow) -> MapGroup:
@@ -103,6 +118,7 @@ def _arrow_from_row(row: RelationshipMapArrowRow) -> MapArrow:
         reverse_label_position=row.reverse_label_position,
         label_offset=row.label_offset,
         reverse_label_offset=row.reverse_label_offset,
+        bend=row.bend,
         color=MapColor(row.color),
         master_only=row.master_only,
     )
@@ -130,6 +146,8 @@ async def insert_map(
             plane_width=relationship_map.plane_width,
             plane_height=relationship_map.plane_height,
             background_path=relationship_map.background_path,
+            color_legend=legend_to_json(relationship_map.color_legend),
+            legend_preset_id=relationship_map.legend_preset_id,
         )
     )
     await session.flush()
@@ -139,7 +157,7 @@ async def insert_map(
 async def get_map(session: AsyncSession, map_id: uuid.UUID) -> RelationshipMap | None:
     """The map, or None. Not yet checked against any viewer."""
     row = await session.get(RelationshipMapRow, map_id)
-    return _map_from_row(row) if row else None
+    return map_from_row(row) if row else None
 
 
 async def get_mention_map(session: AsyncSession, document_id: uuid.UUID) -> RelationshipMap | None:
@@ -149,7 +167,7 @@ async def get_mention_map(session: AsyncSession, document_id: uuid.UUID) -> Rela
         select(RelationshipMapRow).where(RelationshipMapRow.source_document_id == document_id)
     )
     row = result.scalar_one_or_none()
-    return _map_from_row(row) if row else None
+    return map_from_row(row) if row else None
 
 
 async def get_linked_map_id(session: AsyncSession, document_id: uuid.UUID) -> uuid.UUID | None:
@@ -212,7 +230,7 @@ async def lock_map(session: AsyncSession, map_id: uuid.UUID) -> RelationshipMap 
         .execution_options(populate_existing=True)
     )
     row = result.scalar_one_or_none()
-    return _map_from_row(row) if row else None
+    return map_from_row(row) if row else None
 
 
 async def list_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> list[RelationshipMap]:
@@ -227,7 +245,7 @@ async def list_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> list[
         )
         .order_by(RelationshipMapRow.updated_at.desc(), RelationshipMapRow.id)
     )
-    return [_map_from_row(row) for row in result.scalars()]
+    return [map_from_row(row) for row in result.scalars()]
 
 
 async def list_every_map_for_room(
@@ -240,7 +258,7 @@ async def list_every_map_for_room(
         .where(RelationshipMapRow.room_id == room_id)
         .order_by(RelationshipMapRow.created_at, RelationshipMapRow.id)
     )
-    return [_map_from_row(row) for row in result.scalars()]
+    return [map_from_row(row) for row in result.scalars()]
 
 
 async def count_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> int:
@@ -259,7 +277,8 @@ async def count_maps_for_room(session: AsyncSession, room_id: uuid.UUID) -> int:
 
 async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -> RelationshipMap:
     """Writes a map's name, description, visibility, mention depth, plane
-    size (spec 38), Players' switch (spec 42) and `updated_at`, and raises
+    size (spec 38), Players' switch (spec 42), relation color meanings or
+    preset link (spec 68) and `updated_at`, and raises
     its revision by one (spec 42 Decision 7: every write counts). Returns
     `relationship_map` with that revision. Raises `LookupError` if it no longer exists."""
     row = await session.get(RelationshipMapRow, relationship_map.id)
@@ -272,6 +291,8 @@ async def update_map(session: AsyncSession, relationship_map: RelationshipMap) -
     row.plane_width = relationship_map.plane_width
     row.plane_height = relationship_map.plane_height
     row.players_can_edit = relationship_map.players_can_edit
+    row.color_legend = legend_to_json(relationship_map.color_legend)
+    row.legend_preset_id = relationship_map.legend_preset_id
     row.updated_at = relationship_map.updated_at
     row.revision = row.revision + 1
     await session.flush()
@@ -506,6 +527,7 @@ async def save_board(session: AsyncSession, map_id: uuid.UUID, plan: BoardPlan) 
                     "reverse_label_position": arrow.reverse_label_position,
                     "label_offset": arrow.label_offset,
                     "reverse_label_offset": arrow.reverse_label_offset,
+                    "bend": arrow.bend,
                     "color": arrow.color.value,
                     "master_only": arrow.master_only,
                 }
@@ -529,6 +551,7 @@ async def save_board(session: AsyncSession, map_id: uuid.UUID, plan: BoardPlan) 
                         "reverse_label_position",
                         "label_offset",
                         "reverse_label_offset",
+                        "bend",
                         "color",
                         "master_only",
                     )

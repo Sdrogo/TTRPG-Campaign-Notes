@@ -7,6 +7,7 @@ import { DocumentCardNode } from '../../../components/maps/DocumentCardNode';
 import { GroupNode } from '../../../components/maps/GroupNode';
 import { MapArrow } from '../../../components/maps/MapArrow';
 import { MapHandle } from '../../../components/maps/MapHandle';
+import { arrowCurve, pointOnCurve } from '../../../lib/maps';
 import { TextCardNode } from '../../../components/maps/TextCardNode';
 import type { MapArrow as Arrow, MapCard, MapGroup } from '../../../types/map';
 import { flow } from '../../xyflowMock';
@@ -274,6 +275,7 @@ describe('MapArrow', () => {
     reverseLabelPosition: null,
     labelOffset: null,
     reverseLabelOffset: null,
+    bend: null,
     color: 'green',
     masterOnly: true,
   };
@@ -287,6 +289,7 @@ describe('MapArrow', () => {
     editable = true,
     onEdit = vi.fn(),
     onMoveLabel = vi.fn(),
+    extra: Record<string, unknown> = {},
   ) {
     flow.internal.b = {
       internals: { positionAbsolute: { x: 300, y: 0 } },
@@ -296,7 +299,18 @@ describe('MapArrow', () => {
       id: 'arrow-1',
       source: 'a',
       target: 'b',
-      data: value && { arrow: value, shift: 0, fan: { slot: 0, side: 1 }, editable, onEdit, onMoveLabel },
+      data: value && {
+        arrow: value,
+        shift: 0,
+        fan: { slot: 0, side: 1 },
+        bend: null,
+        bending: false,
+        editable,
+        onEdit,
+        onBend: vi.fn(),
+        onMoveLabel,
+        ...extra,
+      },
     };
     // React Flow listens for clicks on the whole edge, and a label's click bubbles to it.
     renderWithProviders(
@@ -408,6 +422,73 @@ describe('MapArrow', () => {
   it('has a read-only label without a name', () => {
     renderArrow({ ...arrow, direction: 'none', reverseLabel: null }, false);
     expect(screen.getByRole('button')).toBeDisabled();
+  });
+
+  describe('bend handle (spec 67)', () => {
+    const handle = () => screen.getByRole('button', { name: 'Piega la relazione' });
+    const noLabel = { ...arrow, label: null, reverseLabel: null };
+
+    it('draws an arrow with its own bend instead of the automatic curve, and the handle sits on its middle', () => {
+      renderArrow(noLabel, true, vi.fn(), vi.fn(), { bend: 60, bending: true });
+      // The control point is 120 to the right of the line between the centers (y 25).
+      expect(screen.getByTestId('path-arrow-1').getAttribute('d')).toMatch(/Q 200,145 /);
+      expect(handle().style.transform).toMatch(/translate\(200px, \d+(\.\d+)?px\)$/);
+    });
+
+    it('flips the bend on the fan side of a line drawn the other way round', () => {
+      renderArrow(noLabel, true, vi.fn(), vi.fn(), { bend: 60, fan: { slot: 0, side: -1 } });
+      expect(screen.getByTestId('path-arrow-1').getAttribute('d')).toMatch(/Q 200,-95 /);
+    });
+
+    it('shows the handle only while bending an arrow that can be edited', () => {
+      renderArrow(noLabel, true);
+      expect(screen.queryByRole('button', { name: 'Piega la relazione' })).not.toBeInTheDocument();
+    });
+
+    it('does not show it on a board that cannot be edited', () => {
+      renderArrow(noLabel, false, vi.fn(), vi.fn(), { bending: true });
+      expect(screen.queryByRole('button', { name: 'Piega la relazione' })).not.toBeInTheDocument();
+    });
+
+    it('follows the pointer while dragged and saves the bend on drop, away from a plain lane', () => {
+      const onBend = vi.fn();
+      renderArrow(noLabel, true, vi.fn(), vi.fn(), { bending: true, onBend, shift: 7 });
+      fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+      fireEvent.pointerMove(handle(), { pointerId: 1, buttons: 1, clientX: 200, clientY: 85 });
+      fireEvent.pointerUp(handle(), { pointerId: 1 });
+      // The curve's middle lands under the pointer: 60 to the right of the
+      // line, less the lane's 7 (the ends are clipped to the cards, so the
+      // bend itself is a little more).
+      const [[, bend]] = onBend.mock.calls.map((call) => call as [string, number]);
+      const a = { x: 0, y: 0, width: 100, height: 50 };
+      const b = { x: 300, y: 0, width: 100, height: 50 };
+      const middle = pointOnCurve(arrowCurve(a, b, bend), 0.5);
+      expect(Math.abs(middle.y - 25 - 53)).toBeLessThanOrEqual(1);
+    });
+
+    it('ignores moves without a press, other buttons and a cancelled drag', () => {
+      const onBend = vi.fn();
+      renderArrow(noLabel, true, vi.fn(), vi.fn(), { bending: true, onBend });
+      fireEvent.pointerMove(handle(), { pointerId: 1, buttons: 0, clientX: 200, clientY: 85 });
+      fireEvent.pointerUp(handle(), { pointerId: 1 });
+      fireEvent.pointerDown(handle(), { button: 2, pointerId: 1 });
+      fireEvent.pointerUp(handle(), { pointerId: 1 });
+      fireEvent.pointerDown(handle(), { button: 0, pointerId: 1, clientX: 200, clientY: 25 });
+      fireEvent.pointerCancel(handle(), { pointerId: 1 });
+      fireEvent.pointerUp(handle(), { pointerId: 1 });
+      expect(onBend).not.toHaveBeenCalled();
+    });
+
+    it('gives the automatic curve back on a double click, and a click on it does not edit the arrow', () => {
+      const onBend = vi.fn();
+      const onEdit = vi.fn();
+      renderArrow(noLabel, true, onEdit, vi.fn(), { bending: true, bend: 40, onBend });
+      fireEvent.click(handle());
+      fireEvent.doubleClick(handle());
+      expect(onBend).toHaveBeenCalledWith('arrow-1', null);
+      expect(onEdit).not.toHaveBeenCalled();
+      expect(edgeClick).not.toHaveBeenCalled();
+    });
   });
 
   it('draws nothing until both ends are measured, or without data', () => {

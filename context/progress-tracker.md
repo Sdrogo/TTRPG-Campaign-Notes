@@ -49,20 +49,24 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `c1d7e3a9f5b2` (Clocks, spec 61, PR #293).
-- **Staging database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
-  `backend/.env.staging` loaded.
-- **Production database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
-  `backend/.env` loaded (product owner's go-ahead), before the release that
-  shipped it (PR #302). `e8c4a2f6b1d9` and `e9c4a2f7b1d8` were applied the same day.
-- **Pending**: none on staging, none on production.
+- **Head in the repository**: `e7b3d9a1c5f2` (relation color legend, spec 68).
+- **Staging database**: `e7b3d9a1c5f2 (head)`, applied 2026-11-09 with
+  `backend/.env.staging` loaded (`d4a8f2c6b9e1` applied the same day,
+  `c1d7e3a9f5b2` on 2026-11-03).
+- **Production database**: `e7b3d9a1c5f2 (head)`, applied 2026-11-09 with
+  `backend/.env` loaded (product owner's go-ahead), before the release PR
+  #316: `d4a8f2c6b9e1` (arrow bend, spec 67) then `e7b3d9a1c5f2` (color
+  legend, spec 68). Earlier: `c1d7e3a9f5b2` on 2026-11-03 before the release
+  that shipped it (PR #302), with `e8c4a2f6b1d9` and `e9c4a2f7b1d8` the same day.
+- **Pending**: none. Staging and production are both at the repository head.
 
 When a new migration lands, update the three lines above and add it to the
 top of the chain below. Per-migration apply history (who, when, which env
 file) up to 2026-11-04 is in the 2026-11-04 archive.
 
 Chain, newest first (where each came from):
-`c1d7e3a9f5b2` Clocks (61) ← `e9c4a2f7b1d8` import job progress (59) ←
+`e7b3d9a1c5f2` color legend and presets (68) ← `d4a8f2c6b9e1` arrow bend (67)
+← `c1d7e3a9f5b2` Clocks (61) ← `e9c4a2f7b1d8` import job progress (59) ←
 `e8c4a2f6b1d9` Section tools + block `collapsed`, drops
 `rooms.maps_position` (60_2) ← `d5b8e1f3a9c7` Room landing page (55) ←
 `c8f2d6a4e1b7` poll choice description (54) ← `b9e4c2a7d1f3` Session 0
@@ -225,10 +229,36 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **66, Back arrow navigation** (product owner, 2026-11-09): ticket
+  confirmed (Q1 yes, Q2 scroll yes / edit mode no, Q3 label stays
+  "Indietro") and built on PR #313: every Room link carries the trail, the
+  Index is a sideways jump, back skips deleted Sections, scroll restored
+  (`usePageScroll`). Frontend only, no migration; waiting for Andrea's review.
+- **65, Obsidian vault import** (the bulk import wanted on 2026-11-05; the
+  27b PDF ticket is separate and built): ticket written 2026-11-08; Andrea said
+  to go ahead with building ("passiamo a sviluppare"), so 65_1 reader, 65_2
+  zip/folder upload and 65_3 dialog are **built on the ticket's defaults** (PR
+  #312; Q1 to Q7 not answered one by one). Andrea approved the pictures on
+  2026-11-08 ("27's specs should not apply here"): 65_4 stages the vault
+  pictures in the private bucket for the job and always removes them when it
+  ends. No migration.
 - **46b, Dichiarazione d'Intenti invitation**: if a Room has a DDI, its
   invitation opens it read-only with "accept and join" (product owner,
   2026-10-27). Ticket not written yet (the DDI template itself is in 47_3).
-- **62 follow-up**: a draggable bend per arrow (needs a migration).
+- **67, Adjustable relationship arc** (product owner, 2026-11-09): a
+  draggable bend per arrow on the free maps, as geographic links have (the
+  62 follow-up). Ticket confirmed by Andrea 2026-11-09 (players: same
+  rights as moving a card; plain-line bundle bends together; no automatic
+  reset); **built on PR #314**, migration `d4a8f2c6b9e1` to apply on staging
+  before merge and on production before the release.
+- **68, Relationship color legend** (product owner, 2026-11-09): a meaning
+  per relation color on each free map, with an on-screen legend of the
+  colors in use (desktop panel bottom-right, phone chip and drawer),
+  editing with the same rights as moving a card, highlight by meaning, and
+  Room presets that maps stay linked to (Master manages them). Ticket and
+  mock-up approved 2026-11-09; **built on PR #315**, migration
+  `e7b3d9a1c5f2` applied on staging and on production 2026-11-09, ahead of
+  the release (PR #316).
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).

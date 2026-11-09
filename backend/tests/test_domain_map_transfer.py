@@ -1,4 +1,5 @@
 import uuid
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Any
 
@@ -10,8 +11,10 @@ from app.domain.imports import validate_files
 from app.domain.map_transfer import (
     UnreadableMapError,
     map_name,
+    map_to_json,
     plan_map,
     read_map,
+    to_source_map,
 )
 from app.domain.models import DocumentVisibility
 from app.domain.relationship_maps import (
@@ -204,3 +207,77 @@ def test_maps_must_be_a_list_of_objects_and_within_the_cap() -> None:
         validate_files([many])
 
     assert raised.value.key == "errors.import.tooManyMaps"
+
+
+def test_an_arrows_bend_survives_export_and_import_and_is_optional_in_files() -> None:
+    a, b = _card(text="A"), _card(text="B")
+    bent = replace(_arrow(ArrowEnd(card_id=a.id), ArrowEnd(card_id=b.id)), bend=-75.5)
+    automatic = _arrow(ArrowEnd(card_id=b.id), ArrowEnd(card_id=a.id))
+    exported = map_to_json(
+        _map(), Board(cards=[a, b], arrows=[bent, automatic]), GeoBoard(), None, []
+    )
+
+    read = read_map(exported)
+    assert [arrow.bend for arrow in read.board.arrows] == [-75.5, None]
+
+    # A file from before spec 67 has no `bend` at all.
+    for arrow in exported["arrows"]:
+        del arrow["bend"]
+    assert [arrow.bend for arrow in read_map(exported).board.arrows] == [None, None]
+
+
+def test_a_maps_meanings_survive_export_and_import_and_are_optional() -> None:
+    """Spec 68 Decision 14: `color_legend` goes out only when set; reading it
+    skips colors the palette lacks and non-text meanings, planning it cleans
+    it, and a meaning too long makes the map invalid."""
+    plain = map_to_json(_map(), Board(), GeoBoard(), None, [])
+    assert "color_legend" not in plain
+    assert read_map(plain).color_legend == {}
+
+    exported = map_to_json(
+        _map(),
+        Board(),
+        GeoBoard(),
+        None,
+        [],
+        {MapColor.RED: "Rival", MapColor.PINK: "Love interest"},
+    )
+    assert exported["color_legend"] == {"red": "Rival", "pink": "Love interest"}
+    exported["color_legend"].update({"teal": "Unknown", "green": 3, "gold": " Sire "})
+    read = read_map(exported)
+    assert read.color_legend == {
+        MapColor.RED: "Rival",
+        MapColor.PINK: "Love interest",
+        MapColor.GOLD: " Sire ",
+    }
+
+    planned = plan_map(read, "0:map:0", "f.json", (DocumentVisibility.ROOM, False), {}, set(), True)
+    assert planned.color_legend == {
+        MapColor.RED: "Rival",
+        MapColor.GOLD: "Sire",
+        MapColor.PINK: "Love interest",
+    }
+    assert to_source_map(planned, uuid.uuid4(), uuid.uuid4(), NOW).map.color_legend == (
+        planned.color_legend
+    )
+
+    too_long = read_map({**exported, "color_legend": {"red": "x" * 41}})
+    skipped = plan_map(
+        too_long, "0:map:0", "f.json", (DocumentVisibility.ROOM, False), {}, set(), True
+    )
+    assert skipped.skipped is not None
+
+    with pytest.raises(UnreadableMapError):
+        read_map({**exported, "color_legend": ["red"]})
+
+
+def test_a_copied_maps_preset_link_follows_the_copied_preset() -> None:
+    old_preset, new_preset = uuid.uuid4(), uuid.uuid4()
+    linked = SourceMap(map=_map(legend_preset_id=old_preset))
+    own = SourceMap(map=_map(color_legend={MapColor.RED: "Rival"}))
+
+    copied = copy_map(linked, uuid.uuid4(), uuid.uuid4(), {}, {}, {old_preset: new_preset})
+    assert copied.map.legend_preset_id == new_preset
+    copied_own = copy_map(own, uuid.uuid4(), uuid.uuid4(), {}, {})
+    assert copied_own.map.legend_preset_id is None
+    assert copied_own.map.color_legend == {MapColor.RED: "Rival"}

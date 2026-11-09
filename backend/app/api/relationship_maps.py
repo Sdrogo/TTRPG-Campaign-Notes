@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import (
@@ -26,6 +27,7 @@ from app.auth.dependencies import CurrentUserDep
 from app.db import (
     documents_repo,
     geographic_maps_repo,
+    map_legends_repo,
     relationship_maps_repo,
     rooms_repo,
     storage_cleanup,
@@ -40,8 +42,10 @@ from app.domain.geographic_maps import (
     geo_document_counts,
     placed_document_ids,
 )
+from app.domain.map_legends import clean_meanings, effective_meanings
 from app.domain.models import Document, DocumentImage, DocumentVisibility, Membership
 from app.domain.relationship_maps import (
+    MAX_BEND,
     MAX_LABEL_OFFSET,
     ArrowDirection,
     ArrowEnd,
@@ -189,16 +193,41 @@ class ArrowBody(BaseModel):
     reverse_label_offset: float | None = Field(
         default=None, ge=-MAX_LABEL_OFFSET, le=MAX_LABEL_OFFSET
     )
+    bend: float | None = Field(default=None, ge=-MAX_BEND, le=MAX_BEND)
     color: MapColor = MapColor.DEFAULT
     master_only: bool = False
 
 
+class LegendPresetRef(BaseModel):
+    """The Room preset a map is linked to (spec 68 Decision 20)."""
+
+    id: uuid.UUID
+    name: str
+
+
+class LegendBody(BaseModel):
+    """A map's relation color legend as an editor sets it (spec 68): linked
+    to the Room preset `preset_id` (its meanings then come from the preset,
+    live, and `meanings` is ignored), or, without it, the map's own
+    `meanings` (an empty one clears them). Either way it replaces what the
+    map had (Decisions 10, 21, 22)."""
+
+    preset_id: uuid.UUID | None = None
+    meanings: dict[MapColor, str] = {}
+
+
 class MapDetailResponse(MapResponse):
-    """A map with its board as the requester sees it (Invariant 1)."""
+    """A map with its board as the requester sees it (Invariant 1).
+    `color_legend` is what its relation colors mean right now (spec 68: the
+    linked preset's meanings, else its own; unused colors included, the
+    client shows only the colors in use), `legend_preset` the preset it is
+    linked to, if any."""
 
     groups: list[GroupBody]
     cards: list[CardResponse]
     arrows: list[ArrowBody]
+    color_legend: dict[MapColor, str] = {}
+    legend_preset: LegendPresetRef | None = None
 
 
 class CreateMapRequest(BaseModel):
@@ -233,13 +262,15 @@ class BoardRequest(BaseModel):
     ids the client made up, the others with their own ids. What the editor
     sees and leaves out is deleted; what they can't see stays as it is.
     `base_revision` is the map's revision the board was loaded at (spec 42
-    Decision 7): 412 if the map has moved on since."""
+    Decision 7): 412 if the map has moved on since. `legend`, when sent,
+    replaces the map's relation color legend (spec 68)."""
 
     base_revision: int | None = None
 
     groups: list[GroupBody] = []
     cards: list[CardBody] = []
     arrows: list[ArrowBody] = []
+    legend: LegendBody | None = None
 
 
 class BoardChangesRequest(BaseModel):
@@ -249,7 +280,8 @@ class BoardChangesRequest(BaseModel):
     `deleted_ids` what they removed. The rest of the board stays as stored,
     so another editor's work in the meantime is kept. `base_revision`, the
     revision the client last saw, is informative only: a change is never
-    refused for being late (Decision 2)."""
+    refused for being late (Decision 2). `legend`, when sent, replaces the
+    map's relation color legend (spec 68); omitted, it stays as it is."""
 
     base_revision: int | None = None
 
@@ -258,6 +290,7 @@ class BoardChangesRequest(BaseModel):
     arrows: list[ArrowBody] = []
     created_ids: UniqueIds = []
     deleted_ids: UniqueIds = []
+    legend: LegendBody | None = None
 
 
 def _now() -> datetime:
@@ -376,6 +409,7 @@ def arrow_body(arrow: MapArrow) -> ArrowBody:
         reverse_label_position=arrow.reverse_label_position,
         label_offset=arrow.label_offset,
         reverse_label_offset=arrow.reverse_label_offset,
+        bend=arrow.bend,
         color=arrow.color,
         master_only=arrow.master_only,
     )
@@ -463,11 +497,20 @@ async def _detail(
     shown = visible_board(board, visible.keys(), viewer.role)
     shown_count = sum(1 for card in shown.cards if card.document_id is not None)
     summary = map_summary(relationship_map, grants, viewer, shown_count)
+    preset = (
+        await map_legends_repo.get_preset(session, relationship_map.legend_preset_id)
+        if relationship_map.legend_preset_id is not None
+        else None
+    )
     return MapDetailResponse(
         **summary.model_dump(),
         groups=[GroupBody(**vars(group)) for group in shown.groups],
         cards=await card_responses(session, shown.cards, visible, viewer),
         arrows=[arrow_body(arrow) for arrow in shown.arrows],
+        color_legend=effective_meanings(
+            relationship_map, {preset.id: preset} if preset is not None else {}
+        ),
+        legend_preset=LegendPresetRef(id=preset.id, name=preset.name) if preset else None,
     )
 
 
@@ -776,6 +819,7 @@ def _submitted_board(body: BoardRequest | BoardChangesRequest) -> Board:
                 reverse_label_position=arrow.reverse_label_position,
                 label_offset=arrow.label_offset,
                 reverse_label_offset=arrow.reverse_label_offset,
+                bend=arrow.bend,
                 color=arrow.color,
                 master_only=arrow.master_only,
             )
@@ -856,6 +900,47 @@ async def _apply_board(
     await relationship_maps_repo.save_board(session, map_id, plan)
 
 
+async def _with_legend(
+    session: AsyncSession,
+    relationship_map: RelationshipMap,
+    legend: LegendBody | None,
+    locale: str,
+) -> RelationshipMap:
+    """The map as a board save leaves it: `updated_at` now and, when the
+    save sends `legend`, its new relation color legend (spec 68): linked to
+    a preset of the same Room (else 404), or its own meanings cleaned (422
+    past 40 characters)."""
+    updated = replace(relationship_map, updated_at=_now())
+    if legend is None:
+        return updated
+    if legend.preset_id is not None:
+        preset = await map_legends_repo.get_preset(session, legend.preset_id)
+        if preset is None or preset.room_id != relationship_map.room_id:
+            raise http_error(status.HTTP_404_NOT_FOUND, "errors.map.presetNotFound", locale)
+        return replace(updated, legend_preset_id=preset.id, color_legend={})
+    try:
+        meanings = clean_meanings(legend.meanings)
+    except MapTextTooLongError as exc:
+        raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
+    return replace(updated, legend_preset_id=None, color_legend=meanings)
+
+
+async def _store_with_legend(
+    session: AsyncSession,
+    relationship_map: RelationshipMap,
+    legend: LegendBody | None,
+    locale: str,
+) -> RelationshipMap:
+    """`_with_legend`, stored. A preset deleted between the check and the
+    write breaks the link's foreign key: that is the preset not found (404),
+    the request rolled back."""
+    changed = await _with_legend(session, relationship_map, legend, locale)
+    try:
+        return await relationship_maps_repo.update_map(session, changed)
+    except IntegrityError as exc:
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.map.presetNotFound", locale) from exc
+
+
 @router.put("/{map_id}/board")
 async def save_board(
     room_id: uuid.UUID,
@@ -879,9 +964,7 @@ async def save_board(
     if relationship_map.kind != MapKind.FREE:
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
     await _apply_board(session, map_id, membership, body, locale)
-    updated = await relationship_maps_repo.update_map(
-        session, replace(relationship_map, updated_at=_now())
-    )
+    updated = await _store_with_legend(session, relationship_map, body.legend, locale)
     await push_map(session, updated, grants)
     return await _detail(session, updated, grants, membership)
 
@@ -908,9 +991,7 @@ async def save_board_changes(
     if relationship_map.kind != MapKind.FREE:
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
     await _apply_board(session, map_id, membership, body, locale)
-    updated = await relationship_maps_repo.update_map(
-        session, replace(relationship_map, updated_at=_now())
-    )
+    updated = await _store_with_legend(session, relationship_map, body.legend, locale)
     await push_map(session, updated, grants)
     return await _detail(session, updated, grants, membership)
 

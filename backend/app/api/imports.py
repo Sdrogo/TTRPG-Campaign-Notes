@@ -19,26 +19,37 @@ from app.api.errors import http_error, translated_error
 from app.api.export_pdf_job import spawn
 from app.api.import_job import job_payload, load_import_context, run_import_job
 from app.auth.dependencies import CurrentUserDep
-from app.db import import_jobs_repo, rooms_repo
+from app.db import import_jobs_repo, import_staging, rooms_repo, storage
 from app.db import session as session_module
 from app.db.session import SessionDep
 from app.domain.documents import can_create_document
+from app.domain.images import MAX_INPUT_BYTES
 from app.domain.import_files import (
     MAX_FILE_BYTES,
+    VAULT_URL_PREFIX,
     ImportCannotReplaceError,
     ImportFile,
     ImportFileTooLargeError,
     ImportRefusedError,
-    parse_file,
+)
+from app.domain.import_obsidian import IMAGE_EXTENSIONS, parse_uploads, split_pictures
+from app.domain.import_vault import (
+    MAX_VAULT_BYTES,
+    MAX_VAULT_UPLOADS,
+    expand_uploads,
+    is_zip,
 )
 from app.domain.imports import (
+    MAX_DOCUMENTS,
     MAX_FILES,
+    MAX_VAULT_DOCUMENTS,
     ImportAlreadyRunningError,
     ImportChoices,
     ImportJob,
     ImportPlan,
     ImportStatus,
     PlannedDocument,
+    document_key,
     images_done,
     plan_import,
     validate_files,
@@ -237,28 +248,59 @@ class ImportJobResponse(BaseModel):
     progress: ImageCountResponse | None = None
 
 
-async def _read_files(files: list[UploadFile], locale: str) -> list[ImportFile]:
-    """The uploaded files parsed and within the limits (Decision 8): at most
+async def _read_files(
+    files: list[UploadFile], locale: str, obsidian: bool | None = None
+) -> tuple[list[ImportFile], dict[str, bytes]]:
+    """The uploaded files parsed, with the vault's pictures by path (kept only
+    for a vault), and within the limits (Decision 8): at most
     `MAX_FILES` files of `MAX_FILE_BYTES` (413), readable as one of the formats
-    (422). Nothing is fetched or written."""
+    (422). A vault (spec 65 Decision 4: a `.zip`, or the files of a folder sent
+    with `obsidian` on) may hold up to `MAX_VAULT_UPLOADS` files, `MAX_VAULT_BYTES`
+    in all and `MAX_VAULT_DOCUMENTS` notes. Nothing is fetched or written."""
+    vault = obsidian is True or any(is_zip(upload.filename or "") for upload in files)
     try:
-        if len(files) > MAX_FILES:
-            raise ImportRefusedError("errors.import.tooManyFiles", max=MAX_FILES)
-        parsed: list[ImportFile] = []
+        max_uploads = MAX_VAULT_UPLOADS if vault else MAX_FILES
+        if len(files) > max_uploads:
+            raise ImportRefusedError("errors.import.tooManyFiles", max=max_uploads)
+        uploads: list[tuple[str, bytes]] = []
+        budget = MAX_VAULT_BYTES
         for upload in files:
-            name = (upload.filename or "file")[:200]
-            data = await upload.read(MAX_FILE_BYTES + 1)
-            if len(data) > MAX_FILE_BYTES:
+            name = (upload.filename or "file")[:500]
+            limit = (
+                MAX_VAULT_BYTES
+                if is_zip(name)
+                else MAX_INPUT_BYTES
+                if vault and name.lower().endswith(IMAGE_EXTENSIONS)
+                else MAX_FILE_BYTES
+            )
+            data = await upload.read(limit + 1)
+            if len(data) > limit:
                 raise ImportFileTooLargeError(
-                    "errors.import.fileTooLarge", name=name, max=MAX_FILE_BYTES // (1024 * 1024)
+                    "errors.import.fileTooLarge", name=name, max=limit // (1024 * 1024)
                 )
-            parsed.append(await asyncio.to_thread(parse_file, name, data))
-        validate_files(parsed)
+            budget -= len(data)
+            if vault and budget < 0:
+                raise ImportRefusedError("errors.import.vaultTooBig", max=MAX_VAULT_BYTES // 2**20)
+            uploads.append((name, data))
+
+        def read() -> tuple[list[ImportFile], dict[str, bytes]]:
+            # Archives yield their notes and pictures; any other upload, a JSON
+            # export for one, goes through as it is. Outside a vault there are
+            # no pictures: an image file is then just an unreadable upload.
+            items = expand_uploads(uploads)
+            rest, pictures = split_pictures(items) if vault else (items, {})
+            files = parse_uploads(rest, obsidian=True if vault else obsidian, attachments=pictures)
+            return files, pictures
+
+        parsed, pictures = await asyncio.to_thread(read)
+        if not parsed:  # e.g. an archive with no note in it
+            raise ImportRefusedError("errors.import.noDocuments", name=files[0].filename or "")
+        validate_files(parsed, MAX_VAULT_DOCUMENTS if vault else MAX_DOCUMENTS)
     except ImportFileTooLargeError as exc:
         raise translated_error(status.HTTP_413_CONTENT_TOO_LARGE, exc, locale) from exc
     except ImportRefusedError as exc:
         raise translated_error(status.HTTP_422_UNPROCESSABLE_CONTENT, exc, locale) from exc
-    return parsed
+    return parsed, pictures
 
 
 async def _importer(
@@ -329,9 +371,14 @@ async def preview_import(
     session: SessionDep,
     locale: LocaleDep,
     files: Annotated[list[UploadFile], File()],
+    obsidian: Annotated[bool | None, Form()] = None,
 ) -> ImportPreviewResponse:
     """What importing the uploaded files (up to 10, JSON or Markdown, each at
-    most 5 MB) would do, without writing or fetching anything: the Documents
+    most 5 MB; for a vault, meaning a `.zip` or `obsidian` on, up to
+    MAX_VAULT_UPLOADS files, MAX_VAULT_BYTES in all and MAX_VAULT_DOCUMENTS
+    notes, each note still at most 5 MB, read as Obsidian notes, spec 65;
+    `obsidian` false reads Markdown as before) would do, without writing or
+    fetching anything: the Documents
     found, which of them still exist in the Room (they can be copied or
     replaced), the Tags matched and to create, per Document what is dropped or
     changed, and the maps of a JSON export (spec 40) with what each leaves
@@ -340,7 +387,7 @@ async def preview_import(
     otherwise); 413 for a file over the limit, 422 for an unreadable file or
     one over a limit."""
     importer = await _importer(session, room_id, uuid.UUID(current_user.id), locale)
-    parsed = await _read_files(files, locale)
+    parsed, _ = await _read_files(files, locale, obsidian)
     plan, tag_names = await _plan(session, room_id, importer, parsed, None, locale)
     return ImportPreviewResponse(
         documents=[_preview_document(d, tag_names) for d in plan.documents],
@@ -416,11 +463,13 @@ async def start_import(
     locale: LocaleDep,
     files: Annotated[list[UploadFile], File()],
     choices: Annotated[str, Form()],
+    obsidian: Annotated[bool | None, Form()] = None,
 ) -> ImportJobResponse:
     """Starts the import of the same files the preview read, with `choices`
     (a JSON object `{selected, replace}` of Document keys) and answers 202
     with the job, `queued`: poll `GET .../imports/{job}` until it is `done`.
-    The files are read and planned again here, so a file or a choice that
+    The files, with the same `obsidian` field and vault limits as the
+    preview, are read and planned again here, so a file or a choice that
     would be refused is refused now with nothing stored. 403 for someone who
     may not create Documents, or may not replace a chosen Document (an Owner
     or the Master only, D-12); 409 when they already have an import running in
@@ -435,7 +484,7 @@ async def start_import(
         raise http_error(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "errors.import.badChoices", locale
         ) from exc
-    parsed = await _read_files(files, locale)
+    parsed, pictures = await _read_files(files, locale, obsidian)
     import_choices = ImportChoices(
         frozenset(chosen.selected),
         frozenset(chosen.replace),
@@ -462,6 +511,7 @@ async def start_import(
             ImportAlreadyRunningError("errors.import.alreadyRunning"),
             locale,
         )
+    await _stage_pictures(room_id, job.id, parsed, import_choices, pictures, locale)
 
     async def start(_: AsyncSession) -> None:
         """After the commit, so the task finds the row."""
@@ -469,6 +519,36 @@ async def start_import(
 
     session_module.on_commit(session, start)
     return _job_response(job)
+
+
+async def _stage_pictures(
+    room_id: uuid.UUID,
+    job_id: uuid.UUID,
+    parsed: list[ImportFile],
+    choices: ImportChoices,
+    pictures: dict[str, bytes],
+    locale: str,
+) -> None:
+    """Keeps the vault pictures that the chosen Documents link until the job
+    has stored them (spec 65 Decision 5). The job removes them as it ends; if
+    this request fails the sweep does."""
+    wanted = {
+        image.url.removeprefix(VAULT_URL_PREFIX)
+        for file_index, file in enumerate(parsed)
+        for document_index, document in enumerate(file.documents)
+        if choices.selected is None or document_key(file_index, document_index) in choices.selected
+        for image in document.images
+        if image.url.startswith(VAULT_URL_PREFIX)
+    }
+    staged = {path: pictures[path] for path in wanted if path in pictures}
+    if not staged:
+        return
+    try:
+        await import_staging.stage(room_id, job_id, staged)
+    except storage.StorageError as exc:
+        raise http_error(
+            status.HTTP_502_BAD_GATEWAY, "errors.image.storageUnavailable", locale
+        ) from exc
 
 
 @router.get("/{job_id}")

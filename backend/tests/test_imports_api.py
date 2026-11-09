@@ -6,7 +6,9 @@ its own tests (`test_remote_images.py`)."""
 
 import io
 import json
+import os
 import uuid
+import zipfile
 from collections.abc import AsyncIterator, Callable, Coroutine, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -19,11 +21,12 @@ from PIL import Image
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api import imports
+from app.api import import_job, imports
 from app.config import settings
-from app.db import import_jobs_repo, remote_images, storage
+from app.db import import_jobs_repo, import_staging, remote_images, storage, storage_cleanup
+from app.db import session as session_module
 from app.db.export_jobs_repo import sweep as sweep_export_jobs
-from app.db.models import ImportJobRow
+from app.db.models import ImportJobRow, StorageCleanupRow
 from app.domain.imports import ImportJob, ImportStatus
 from app.domain.mentions import MentionKind, find_mentions
 from app.main import app
@@ -2468,3 +2471,326 @@ async def test_a_room_export_carries_its_clocks_into_another_room(
     )
     assert job["status"] == "done", job
     assert await _clocks(client, empty, empty.master) == {}
+
+
+# --- Obsidian notes (spec 65) -------------------------------------------------------
+
+
+def _zip(entries: dict[str, bytes], compression: int = zipfile.ZIP_DEFLATED) -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression) as archive:
+        for path, data in entries.items():
+            archive.writestr(path, data)
+    return buffer.getvalue()
+
+
+async def test_an_obsidian_vault_zip_is_imported_with_links_and_folder_tags(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    served: dict[str, Any],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    vault = _zip(
+        {
+            "Vault/Characters/Jason.md": (
+                b"---\ntags: [npc]\n---\n# Bio\nAlly of [[Praga|the city]]\n![[jason.jpg]]\n"
+            ),
+            "Vault/Praga.md": b"The city. See [[Missing]].",
+            "Vault/.obsidian/app.json": b"{}",
+            "Vault/jason.jpg": _png(),
+        }
+    )
+
+    preview = (await _preview(client, room, room.master, ("vault.zip", vault))).json()
+    assert sorted(d["name"] for d in preview["documents"]) == ["Jason", "Praga"]
+    jason = next(d for d in preview["documents"] if d["name"] == "Jason")
+    # The Room already has an "NPC" Tag, so the front matter tag reuses it.
+    assert [n.lower() for n in jason["tag_names"]] == ["npc", "characters"]
+    # The picture is in the vault, so it is an image of the Document, not a drop.
+    assert jason["images_count"] == 1 and jason["warnings"] == []
+
+    job = await _import(client, room, room.master, ("vault.zip", vault))
+
+    assert job["status"] == "done"
+    documents = await _documents(client, room)
+    assert set(documents) == {"Jason", "Praga"}
+    jason_detail = await _detail(client, room, documents["Jason"]["id"])
+    praga = await _detail(client, room, documents["Praga"]["id"])
+    assert "#Missing" in json.dumps(praga["description"])
+    assert documents["Praga"]["id"] in json.dumps(jason_detail["description"])
+    assert len(jason_detail["images"]) == 1 and jason_detail["images"][0]["is_favorite"]
+    assert job["result"]["images"] == {"total": 1, "stored": 1, "done": 0}
+    assert _staged(fake_storage) == []  # the staged picture is gone with the job
+
+
+async def test_a_folder_upload_is_read_as_a_vault_and_hidden_files_are_left_out(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    files = _upload(("Notes/A.md", b"# plain heading\ntext"))
+    preview = await client.post(
+        f"{room.url}/imports/preview",
+        files=files,
+        data={"obsidian": "true"},
+        headers=room.master,
+    )
+    assert preview.status_code == 200, preview.text
+    # A vault: the file is one Document named after it, not one per heading.
+    assert [d["name"] for d in preview.json()["documents"]] == ["A"]
+
+
+async def test_a_vault_that_is_unsafe_or_too_big_is_refused(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+
+    async def preview(*files: tuple[str, bytes]) -> Response:
+        return await _preview(client, room, room.master, *files)
+
+    assert (await preview(("v.zip", b"not a zip"))).status_code == 422
+    assert (await preview(("v.zip", _zip({"../evil.md": b"x"})))).status_code == 422
+    assert (await preview(("v.zip", _zip({"/abs.md": b"x"})))).status_code == 422
+    bomb = _zip({"big.md": b"0" * (8 * 1024 * 1024)})
+    assert (await preview(("v.zip", bomb))).status_code == 422
+    large = _zip({"big.md": os.urandom(5 * 1024 * 1024 + 1)}, zipfile.ZIP_STORED)
+    assert (await preview(("v.zip", large))).status_code == 413
+    many = _zip({f"n{i}.md": b"x" for i in range(501)})
+    assert (await preview(("v.zip", many))).status_code == 422
+    nothing = _zip({"pic.png": _png()})
+    assert (await preview(("v.zip", nothing))).status_code == 422
+    too_many_uploads = tuple((f"n{i}.md", b"x") for i in range(11))
+    assert (await preview(*too_many_uploads)).status_code == 422
+
+
+async def test_an_obsidian_note_never_matches_a_document_the_importer_cannot_see(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    await _post(client, f"{room.url}/documents", room.master, name="Secret", visibility="master")
+    await _post(client, f"{room.url}/documents", room.master, name="Seen", visibility="room")
+    notes = (("Secret.md", b"[[Seen]] and ==x=="), ("Seen.md", b"%%c%% hi [[Secret]]"))
+
+    preview = (await _preview(client, room, room.player, *notes)).json()
+    by_name = {d["name"]: d for d in preview["documents"]}
+    assert by_name["Secret"]["existing_document_id"] is None  # no hint of the hidden one
+    assert by_name["Seen"]["existing_document_id"] is not None
+    assert by_name["Seen"]["can_replace"] is False  # the Player doesn't own it
+
+    job = await _import(client, room, room.player, *notes)
+    assert job["status"] == "done"
+    listing = (await client.get(f"{room.url}/documents", headers=room.master)).json()
+    assert sorted(d["name"] for d in listing).count("Secret") == 2
+
+
+async def test_a_folder_over_the_vault_size_is_refused(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(imports, "MAX_VAULT_BYTES", 5)
+    room = await _room(client, make_token)
+    response = await client.post(
+        f"{room.url}/imports/preview",
+        files=_upload(("a.md", b"abcd"), ("b.md", b"efgh")),
+        data={"obsidian": "true"},
+        headers=room.master,
+    )
+    assert response.status_code == 422
+
+
+async def test_a_vault_zip_and_a_json_export_can_be_imported_together(
+    db_session: AsyncSession, make_token: Callable[..., str], client: AsyncClient
+) -> None:
+    room = await _room(client, make_token)
+    vault = _zip({"Vault/Note.md": b"see [[Other]]", "Vault/pic.png": _png()})
+    export = json.dumps({"documents": [{"name": "From JSON"}]}).encode()
+
+    response = await _preview(client, room, room.master, ("vault.zip", vault), ("x.json", export))
+
+    assert response.status_code == 200, response.text
+    assert sorted(d["name"] for d in response.json()["documents"]) == ["From JSON", "Note"]
+    pictures_only = await _preview(
+        client, room, room.master, ("pics.zip", _zip({"pic.png": _png()}))
+    )
+    assert pictures_only.status_code == 422
+
+
+def _staged(objects: dict[str, bytes]) -> list[str]:
+    return sorted(path for path in objects if path.startswith("imports/"))
+
+
+def _later() -> datetime:
+    return datetime.now(UTC) + timedelta(hours=1)
+
+
+async def _cleanup_rows(session: AsyncSession) -> list[str]:
+    result = await session.execute(select(StorageCleanupRow.storage_path))
+    return sorted(path for path in result.scalars() if path.startswith("imports/"))
+
+
+_PICTURE_VAULT = {
+    "V/A.md": b"![[shared.png]] one",
+    "V/B.md": b"![[shared.png]] two ![[gone.png]]",
+    "V/shared.png": _png(),
+}
+
+
+async def test_a_picture_shared_by_two_notes_is_staged_once_and_attached_to_both(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    vault = _zip(_PICTURE_VAULT)
+    preview = (await _preview(client, room, room.master, ("v.zip", vault))).json()
+    by_name = {d["name"]: d for d in preview["documents"]}
+    assert by_name["A"]["images_count"] == 1 and by_name["A"]["warnings"] == []
+    # A picture the vault lacks is dropped and listed.
+    assert [w["code"] for w in by_name["B"]["warnings"]] == ["embeds_dropped"]
+
+    job = await _import(client, room, room.master, ("v.zip", vault))
+
+    assert job["status"] == "done" and job["result"]["skipped"] == []
+    assert job["result"]["images"] == {"total": 2, "stored": 2, "done": 0}
+    for created in job["result"]["created"]:
+        assert len((await _detail(client, room, created["id"]))["images"]) == 1
+    assert _staged(fake_storage) == [] and await _cleanup_rows(db_session) == []
+
+
+async def test_pictures_of_a_picked_folder_are_read_as_a_vault(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    inline_jobs: None,
+) -> None:
+    room = await _room(client, make_token)
+    files = _upload(("Vault/N.md", b"![[p.png]]"), ("Vault/p.png", _png()))
+    started = await client.post(
+        f"{room.url}/imports",
+        files=files,
+        data={"obsidian": "true", "choices": json.dumps({"selected": ["0:0"], "replace": []})},
+        headers=room.master,
+    )
+    assert started.status_code == 202, started.text
+    job = (
+        await client.get(f"{room.url}/imports/{started.json()['id']}", headers=room.master)
+    ).json()
+    assert job["result"]["images"] == {"total": 1, "stored": 1, "done": 0}
+    assert _staged(fake_storage) == []
+
+
+async def test_a_picture_staging_cannot_store_refuses_the_import(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    monkeypatch: pytest.MonkeyPatch,
+    inline_jobs: None,
+) -> None:
+    async def broken(path: str, data: bytes, content_type: str) -> None:
+        raise storage.StorageError("down")
+
+    monkeypatch.setattr(storage, "upload", broken)
+    room = await _room(client, make_token)
+
+    started = await _start(client, room, room.master, (("v.zip", _zip(_PICTURE_VAULT)),))
+
+    assert started.status_code == 502  # refused, and the job never starts
+    assert _staged(fake_storage) == []
+
+
+async def test_a_staged_picture_that_went_missing_is_skipped_and_listed(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    held_jobs: list[Coroutine[Any, Any, None]],
+) -> None:
+    room = await _room(client, make_token)
+    started = await _start(client, room, room.master, (("v.zip", _zip(_PICTURE_VAULT)),))
+    assert started.status_code == 202, started.text
+    assert len(_staged(fake_storage)) == 1  # shared by both notes: one object
+    for path in _staged(fake_storage):
+        del fake_storage[path]
+
+    await held_jobs.pop()
+
+    job = (
+        await client.get(f"{room.url}/imports/{started.json()['id']}", headers=room.master)
+    ).json()
+    assert job["status"] == "done"
+    assert {s["reason"] for s in job["result"]["skipped"]} == {"unreachable"}
+    assert {s["url"] for s in job["result"]["skipped"]} == {"V/shared.png"}
+
+
+async def test_staged_pictures_are_kept_while_the_job_is_active_and_removed_when_it_is_over(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    held_jobs: list[Coroutine[Any, Any, None]],
+) -> None:
+    room = await _room(client, make_token)
+    started = await _start(client, room, room.master, (("v.zip", _zip(_PICTURE_VAULT)),))
+    job_id = uuid.UUID(started.json()["id"])
+    staged = _staged(fake_storage)
+    assert len(staged) == 1 and await _cleanup_rows(db_session) == staged
+
+    # A shutdown cut the job off: it is still active, so nothing is removed,
+    # not by the job's own cleanup and not by the sweep, however old the row.
+    await import_job._discard_staged(job_id)
+    await storage_cleanup.sweep(db_session, now=_later())
+    assert _staged(fake_storage) == staged
+
+    # Once the job has failed, the sweep removes what its own cleanup missed.
+    async with session_module.independent_session() as session:
+        await import_jobs_repo.mark_failed(session, job_id, "failed", datetime.now(UTC))
+        await session.commit()
+    await storage_cleanup.sweep(db_session, now=_later())
+    assert _staged(fake_storage) == [] and await _cleanup_rows(db_session) == []
+
+
+async def test_the_cleanup_runs_when_the_job_fails_and_survives_its_own_errors(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    fake_storage: dict[str, bytes],
+    monkeypatch: pytest.MonkeyPatch,
+    held_jobs: list[Coroutine[Any, Any, None]],
+) -> None:
+    room = await _room(client, make_token)
+    started = await _start(client, room, room.master, (("v.zip", _zip(_PICTURE_VAULT)),))
+    job_id = uuid.UUID(started.json()["id"])
+    assert len(_staged(fake_storage)) == 1
+
+    async def explode(*_: Any) -> Any:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(import_job, "_write", explode)
+    await held_jobs.pop()  # the job fails: its cleanup still runs
+
+    job = (
+        await client.get(f"{room.url}/imports/{started.json()['id']}", headers=room.master)
+    ).json()
+    assert job["status"] == "failed" and _staged(fake_storage) == []
+
+    # The cleanup itself never raises: a check or a removal that fails is left to the sweep.
+    async def broken(*_: Any, **__: Any) -> Any:
+        raise RuntimeError("down")
+
+    real_get_job = import_jobs_repo.get_job
+    monkeypatch.setattr(import_jobs_repo, "get_job", broken)
+    await import_job._discard_staged(job_id)
+    monkeypatch.setattr(import_jobs_repo, "get_job", real_get_job)
+    monkeypatch.setattr(storage_cleanup, "remove_staged", broken)
+    await import_staging.discard(job_id)

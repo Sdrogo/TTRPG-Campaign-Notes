@@ -196,9 +196,14 @@ other icon set.
   copied map) puts `{ from, backStack }` (`lib/backNav.ts`, a trail of at
   most 20 places, cut when a page already on it comes back) in the
   navigation state and back walks that trail, labelled with the generic
-  `common.back`. Before going to a Document or map on the trail it reads it
-  afresh and skips it on a 404 (deleted or hidden), falling back to the
-  page's parent (Andrea, 2026-10-25); the current user's circular avatar on the right
+  `common.back`. Before going to a Document, map or Section on the trail it reads it
+  afresh and skips it on a 404 or when the Section is gone from the list,
+  falling back to the
+  page's parent (Andrea, 2026-10-25, spec 66). Every link that opens a
+  Document, map or Session 0 from another page carries the trail, search
+  results and the split pane's "open as page" included; the Room Index is a
+  sideways jump and carries none. A page reached by the arrow scrolls back
+  to where it was left (`usePageScroll`); the current user's circular avatar on the right
   (`AccountButton`, 36px, thin `--border-default` ring that turns
   `--accent-primary` on hover/focus and while on `/account`). It is
   rendered by `HomePage` and by `PageLayout`, so every signed-in page
@@ -801,6 +806,14 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   a bundle share one curve as 7 px lanes. Ends leave the cards toward the
   curve, arrowheads follow it, labels ride it (dragging one finds the
   nearest point of the curve), and the click area follows the curve.
+  **Adjustable arc** (spec 67): the arrow's dialog has "Regola l'arco",
+  which closes it and shows a round handle (44 px to touch on a phone) on
+  the middle of the curve; dragging it bends the curve through the pointer
+  (either side, 0 is straight), double-click or the "Reimposta arco" button
+  of the hint bar at the bottom of the board gives the automatic curve back,
+  "Fatto" or a click on the empty board ends. An arrow with its own bend
+  leaves the fan; a bundle of plain lines bends as one. Anyone who may move
+  a card may bend an arrow; mention maps keep the automatic curve.
   One-way, two-way (a label near each end) or a plain line; Master-only
   arrows are dashed. A new arrow opens its dialog straight away; its label
   fields are plain text inputs, with no suggestions of earlier labels.
@@ -808,6 +821,22 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   (card, text, group, arrow). Saving is automatic; the header shows
   "Modifiche non salvate", "Salvataggio…", "Salvato", or the error with
   "Riprova". Below the `sm` breakpoint the board is read-only with a note.
+- **Color legend** (spec 68): a free map's relation colors can each carry a
+  meaning ("Rosso: Avversario"). The board shows a "Legenda" panel
+  bottom-right (250 px, one row per color in use with a meaning: a short
+  curved sample in the color and the meaning), foldable to a pill chip with
+  colored dots, remembered per map in `localStorage`. Clicking a row
+  highlights its relations (the others fade to 20%); clicking it again, the
+  empty board or `Esc` clears it. On a phone and on the small linked-map
+  board of a Document page the legend is only the chip, opening a bottom
+  drawer. Nothing shows to a viewer when no used color has a meaning; an
+  editor then gets a "+ Legenda" chip. The pencil opens "Legenda dei
+  colori" (`MapLegendDialog`): used colors first, meanings of unused colors
+  folded below, and views to apply a Room preset (radio cards with a
+  replace warning), save the map as a preset and manage presets (Master
+  only). A linked map names its preset; only the Master edits it there,
+  others can "Scollega". The relation dialog shows the chosen color's
+  meaning, and the color swatches name it on hover.
 
 ## Mention map (spec 36)
 

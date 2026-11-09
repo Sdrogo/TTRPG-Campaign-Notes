@@ -357,6 +357,7 @@ function mentionMap(viewer: Viewer, doc: DemoDocument) {
         reverse_label_position: null,
         label_offset: null,
         reverse_label_offset: null,
+        bend: null,
         color: 'default',
         master_only: false,
       })),
@@ -514,6 +515,9 @@ function answer(path: string, viewer: Viewer): Answer {
       return rest.length === 1 ? ok(data.clockRules) : NOT_FOUND;
     case 'clock-groups':
       return rest.length === 1 ? ok(data.clockGroups) : NOT_FOUND;
+    case 'map-legend-presets':
+      // The sample Room has no presets (spec 68).
+      return rest.length === 1 ? ok([]) : NOT_FOUND;
     case 'session-zero':
       if (id === 'overview' && rest.length === 2) return ok(sessionZeroOverview(viewer));
       return rest.length === 1 ? ok(sessionZero(viewer)) : NOT_FOUND;

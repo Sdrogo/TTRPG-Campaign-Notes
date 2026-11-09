@@ -191,6 +191,8 @@
       "badChoices": "As escolhas de importação não são válidas",
       "cannotReplace": "Só um Owner (ou o Master) pode substituir {name}",
       "fileTooLarge": "{name} excede {max} MB",
+      "vaultTooBig": "O cofre excede {max} MB ou contém demasiados ficheiros",
+      "unsafeArchive": "{name} contém ficheiros com caminhos não seguros",
       "alreadyRunning": "Já tens uma importação em curso nesta Sala",
       "notFound": "Importação não encontrada"
     },
@@ -224,7 +226,9 @@
         "groupTitle": "título do grupo",
         "placeName": "nome",
         "subtitle": "subtítulo",
-        "note": "nota"
+        "note": "nota",
+        "legendMeaning": "significado",
+        "presetName": "nome do predefinido"
       },
       "invalidPlane": "O plano deve ter de 100 a 20.000 unidades de largura e de altura, e só um mapa geográfico o tem",
       "planeTooSmall": "Com esse plano, parte do mapa ficaria fora dele",
@@ -233,7 +237,13 @@
       "placeNameRequired": "Uma zona ou um local sem Documento precisa de um nome",
       "tooManyAreas": "Um mapa pode ter no máximo {max} zonas",
       "tooManyPins": "Um mapa pode ter no máximo {max} locais",
-      "tooManyLinks": "Um mapa pode ter no máximo {max} ligações"
+      "tooManyLinks": "Um mapa pode ter no máximo {max} ligações",
+      "presetNameRequired": "O predefinido precisa de um nome",
+      "presetEmpty": "O predefinido precisa de pelo menos um significado",
+      "presetNameTaken": "Outro predefinido desta sala já tem esse nome",
+      "tooManyPresets": "Uma sala pode ter no máximo {max} predefinidos",
+      "presetNotFound": "Predefinido não encontrado",
+      "notPresetManager": "Só o Mestre pode alterar os predefinidos da sala"
     },
     "mapImport": {
       "invalidFile": "O ficheiro não é um mapa que a App consiga ler (verifica o campo \"{field}\")",

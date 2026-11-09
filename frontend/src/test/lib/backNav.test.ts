@@ -66,6 +66,7 @@ describe('backTarget', () => {
       documentId: 'd1',
     });
     expect(backTarget('/rooms/r1/maps/m1')).toEqual({ kind: 'map', roomId: 'r1', mapId: 'm1' });
+    expect(backTarget('/rooms/r1/sections/s1')).toEqual({ kind: 'section', roomId: 'r1', sectionId: 's1' });
   });
 
   it('is null for list pages', () => {
