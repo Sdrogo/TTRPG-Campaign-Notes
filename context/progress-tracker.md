@@ -50,12 +50,12 @@ release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
 - **Head in the repository**: `d4a8f2c6b9e1` (arrow bend, spec 67, PR #314).
-- **Staging database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
-  `backend/.env.staging` loaded.
+- **Staging database**: `d4a8f2c6b9e1 (head)`, applied 2026-11-09 with
+  `backend/.env.staging` loaded (`c1d7e3a9f5b2` applied 2026-11-03).
 - **Production database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
   `backend/.env` loaded (product owner's go-ahead), before the release that
   shipped it (PR #302). `e8c4a2f6b1d9` and `e9c4a2f7b1d8` were applied the same day.
-- **Pending**: `d4a8f2c6b9e1` (arrow bend, spec 67, additive nullable column) on staging and on production.
+- **Pending**: `d4a8f2c6b9e1` (arrow bend, spec 67, additive nullable column) on production (applied on staging 2026-11-09).
 
 When a new migration lands, update the three lines above and add it to the
 top of the chain below. Per-migration apply history (who, when, which env
