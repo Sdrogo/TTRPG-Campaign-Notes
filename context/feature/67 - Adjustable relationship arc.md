@@ -16,7 +16,7 @@
 
 ## Decisions
 
-*Proposed defaults, to confirm before any code.*
+*Defaults proposed on 2026-11-09 and confirmed by the product owner the same day (open questions answered below); built on PR #314.*
 
 1. **Same meaning as the geographic `bend`**: how far the curve's middle
    leaves the straight line between the two ends' centers, in board pixels,
