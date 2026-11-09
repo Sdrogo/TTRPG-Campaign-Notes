@@ -209,7 +209,7 @@ describe('AppHeader', () => {
 
       await user.click(screen.getByRole('button', { name: 'Documenti' }));
 
-      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true });
+      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true, state: { restoreScroll: true } });
     });
 
     it('returns to the page it was opened from, under a generic name', async () => {
@@ -227,7 +227,7 @@ describe('AppHeader', () => {
       expect(screen.queryByRole('button', { name: 'Documenti' })).not.toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
 
-      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps/m1', { replace: true }));
+      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps/m1', { replace: true, state: { restoreScroll: true } }));
     });
 
     function renderOpenedFrom(state: unknown) {
@@ -257,10 +257,47 @@ describe('AppHeader', () => {
       await waitFor(() =>
         expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps/m1', {
           replace: true,
-          state: { from: '/rooms/r1/documents' },
+          state: { from: '/rooms/r1/documents', restoreScroll: true },
         }),
       );
       expect(navigate).toHaveBeenCalledTimes(1);
+    });
+
+    // Spec 66: the Sections come as one list, so a deleted one is missing from it.
+    const rawSection = (id: string) => ({
+      id, kind: 'custom', position: 0, title: id, description: '', image_url: null, blocks: [], can_edit: false,
+    });
+
+    it('skips a Section deleted since and goes on along the trail', async () => {
+      fetchMock.mockImplementation((path: string) =>
+        path === '/rooms/r1/sections' ? Promise.resolve([rawSection('s-here')]) : Promise.resolve(rawAccount()),
+      );
+      renderOpenedFrom({ from: '/rooms/r1/sections/s-gone', backStack: ['/rooms/r1/maps'] });
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
+
+      await waitFor(() =>
+        expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps', { replace: true, state: { restoreScroll: true } }),
+      );
+      expect(navigate).toHaveBeenCalledTimes(1);
+    });
+
+    it('goes back to a Section that is still there', async () => {
+      fetchMock.mockImplementation((path: string) =>
+        path === '/rooms/r1/sections' ? Promise.resolve([rawSection('s-here')]) : Promise.resolve(rawAccount()),
+      );
+      renderOpenedFrom({ from: '/rooms/r1/sections/s-here' });
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
+
+      await waitFor(() =>
+        expect(navigate).toHaveBeenCalledWith('/rooms/r1/sections/s-here', {
+          replace: true,
+          state: { restoreScroll: true },
+        }),
+      );
     });
 
     it('goes to a Document still there, reading it afresh', async () => {
@@ -273,7 +310,7 @@ describe('AppHeader', () => {
       await waitFor(() =>
         expect(navigate).toHaveBeenCalledWith('/rooms/r1/documents/d1', {
           replace: true,
-          state: { from: '/rooms/r1/maps' },
+          state: { from: '/rooms/r1/maps', restoreScroll: true },
         }),
       );
       expect(fetchMock).toHaveBeenCalledWith('/rooms/r1/documents/d1');
@@ -293,7 +330,7 @@ describe('AppHeader', () => {
       await user.dblClick(screen.getByRole('button', { name: /Back|Indietro/ }));
       answer(rawDocument({ id: 'd1' }));
 
-      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/documents/d1', { replace: true }));
+      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/documents/d1', { replace: true, state: { restoreScroll: true } }));
       expect(navigate).toHaveBeenCalledTimes(1);
       expect(checks()).toBe(1);
 
@@ -308,7 +345,7 @@ describe('AppHeader', () => {
 
       await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
 
-      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps', { replace: true }));
+      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/maps', { replace: true, state: { restoreScroll: true } }));
       expect(fetchMock).not.toHaveBeenCalledWith('/rooms/r1/maps');
     });
 
@@ -319,7 +356,7 @@ describe('AppHeader', () => {
 
       await user.click(screen.getByRole('button', { name: /Back|Indietro/ }));
 
-      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/documents', { replace: true }));
+      await waitFor(() => expect(navigate).toHaveBeenCalledWith('/rooms/r1/documents', { replace: true, state: { restoreScroll: true } }));
       expect(fetchMock).toHaveBeenCalledWith('/rooms/r1/maps/m1');
       expect(fetchMock).toHaveBeenCalledWith('/rooms/r1/documents/d1');
     });
@@ -332,7 +369,7 @@ describe('AppHeader', () => {
       await user.click(screen.getByRole('button', { name: 'Documenti' }));
 
       expect(navigate).not.toHaveBeenCalledWith(-1);
-      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true });
+      expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true, state: { restoreScroll: true } });
     });
 
   });

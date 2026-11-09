@@ -12,7 +12,10 @@ import { matchPath, useLocation } from 'react-router-dom';
  * `backStack` the pages that one was opened from in turn, oldest first, so
  * back keeps walking it (Document -> map -> Document -> back -> map -> back
  * -> first Document). Back skips the Documents and maps on the trail that no
- * longer exist (Andrea, 2026-10-25).
+ * longer exist (Andrea, 2026-10-25), and the Sections too (spec 66).
+ *
+ * The Room Index is a sideways jump, not a step down: its entries carry no
+ * trail, so back from a Section opened through it goes to the landing.
  */
 interface BackState {
   from?: unknown;
@@ -74,10 +77,14 @@ export function backCandidates(state: unknown, fallback: string): { path: string
   return [...candidates, { path: fallback }];
 }
 
-/** The Document or map a path shows, whose deletion makes back skip it; null for any other page. */
+/** The Document, map or Section a path shows, whose deletion makes back skip it; null for any other page. */
 export function backTarget(
   path: string,
-): { kind: 'document'; roomId: string; documentId: string } | { kind: 'map'; roomId: string; mapId: string } | null {
+):
+  | { kind: 'document'; roomId: string; documentId: string }
+  | { kind: 'map'; roomId: string; mapId: string }
+  | { kind: 'section'; roomId: string; sectionId: string }
+  | null {
   const pathname = path.split(/[?#]/)[0];
   const document =
     matchPath('/rooms/:roomId/documents/:documentId', pathname) ??
@@ -85,5 +92,7 @@ export function backTarget(
   if (document) return { kind: 'document', roomId: document.params.roomId!, documentId: document.params.documentId! };
   const map = matchPath('/rooms/:roomId/maps/:mapId', pathname);
   if (map) return { kind: 'map', roomId: map.params.roomId!, mapId: map.params.mapId! };
+  const section = matchPath('/rooms/:roomId/sections/:sectionId', pathname);
+  if (section) return { kind: 'section', roomId: section.params.roomId!, sectionId: section.params.sectionId! };
   return null;
 }

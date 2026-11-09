@@ -6,6 +6,7 @@ import { TagList } from './TagList';
 import { DocumentCardImages } from './DocumentCardImages';
 import { MentionText } from './mentions/MentionText';
 import { markdownToPlain } from '../lib/markdownText';
+import { useBackState } from '../lib/backNav';
 import { UserAvatar } from './UserAvatar';
 import { displayNameFor, findMember, memberDisplayName } from '../lib/members';
 import type { Document } from '../types/document';
@@ -58,6 +59,7 @@ export function DocumentCard({
   mentionLinks = false,
 }: DocumentCardProps) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const ownerNames = document.ownerIds.map((id) => displayNameFor(members, id)).join(', ');
   const hasImages = document.images.length > 0;
   const player = document.playedBy ? findMember(members, document.playedBy) : undefined;
@@ -191,6 +193,7 @@ export function DocumentCard({
           DocumentCardImages). Last child, so it overlays the content. */}
       <Link
         to={`/rooms/${roomId}/documents/${document.id}`}
+        state={backState}
         aria-label={document.name}
         style={{ position: 'absolute', inset: 0, zIndex: 1 }}
       />

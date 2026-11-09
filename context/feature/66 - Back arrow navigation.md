@@ -85,7 +85,23 @@ opens the member's Document), new map / imported map on the Maps page.
    replaced from), so it can differ from the arrow by design. The icon-only
    arrow makes inconsistencies 1, 2 and 5 more visible there.
 
-## Decisions (proposed, to confirm)
+## Andrea's answers (2026-11-09) and what was built
+
+- **Q1** yes: search results carry the trail too.
+- **Q2** as proposed: scroll position is restored, the edit mode is not.
+- **Q3** the label stays the generic "Indietro": decision 4 is dropped.
+- Built on PR #313 in three units, frontend only, no migration:
+  66_1 (`DocumentCard`, `SearchSpotlight`, `Backlinks`, `DocumentSidePane`,
+  `QuestionsModule` pass `useBackState()`), 66_2 (Index entries carry **no**
+  trail at all, simpler than "the current trail unchanged": a Section
+  reached through the Index goes back to the landing, its parent; Sections
+  in `backTarget`, read from the Sections list through `sectionsQuery`),
+  66_3 (`usePageScroll` in `PageLayout`: remembers each page's scroll per
+  address, and a page reached by the arrow, which sets `restoreScroll` in
+  the state, scrolls back for up to 2 s while its content loads, giving up
+  when the reader scrolls).
+
+## Decisions (as proposed; 4 dropped, 2 simplified as above)
 
 1. **One rule**: any link that opens a Document, map, Session 0, Clocks or
    Section page from another page of the Room carries the trail. Only the
