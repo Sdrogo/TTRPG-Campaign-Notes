@@ -11,12 +11,13 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import require_membership
 from app.api.errors import http_error, translated_error
 from app.auth.dependencies import CurrentUserDep
-from app.db import map_legends_repo, relationship_maps_repo
+from app.db import map_legends_repo, relationship_maps_repo, rooms_repo
 from app.db.session import SessionDep
 from app.domain.map_legends import (
     EmptyPresetError,
@@ -143,6 +144,8 @@ async def create_preset(
     past 30 presets or when another one has the name."""
     await _require_master(session, room_id, uuid.UUID(current_user.id), locale)
     name, entries = _cleaned(body.name, body.entries, locale)
+    # One preset write at a time per Room, so the cap and the name check hold.
+    await rooms_repo.lock_room(session, room_id)
     try:
         ensure_room_for_another_preset(await map_legends_repo.count_presets(session, room_id))
     except TooManyPresetsError as exc:
@@ -151,7 +154,12 @@ async def create_preset(
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.presetNameTaken", locale)
     now = _now()
     preset = LegendPreset(uuid.uuid4(), room_id, name, entries, now, now)
-    await map_legends_repo.insert_presets(session, [preset])
+    try:
+        # A SAVEPOINT absorbs a duplicate name that slipped past the check.
+        async with session.begin_nested():
+            await map_legends_repo.insert_presets(session, [preset])
+    except IntegrityError as exc:
+        raise http_error(status.HTTP_409_CONFLICT, "errors.map.presetNameTaken", locale) from exc
     return _response(preset, 0)
 
 
@@ -168,6 +176,7 @@ async def update_preset(
     to it shows the new meanings at once and is pushed live (Decision 20).
     409 when another preset has the new name."""
     await _require_master(session, room_id, uuid.UUID(current_user.id), locale)
+    await rooms_repo.lock_room(session, room_id)
     preset = await _get_preset(session, room_id, preset_id, locale)
     name, entries = _cleaned(
         preset.name if body.name is None else body.name,
@@ -179,7 +188,11 @@ async def update_preset(
     now = _now()
     updated = replace(preset, name=name, entries=entries, updated_at=now)
     linked = await map_legends_repo.lock_linked_maps(session, preset_id)
-    await map_legends_repo.update_preset(session, updated)
+    try:
+        async with session.begin_nested():
+            await map_legends_repo.update_preset(session, updated)
+    except IntegrityError as exc:
+        raise http_error(status.HTTP_409_CONFLICT, "errors.map.presetNameTaken", locale) from exc
     touched = [
         await relationship_maps_repo.update_map(session, replace(m, updated_at=now)) for m in linked
     ]

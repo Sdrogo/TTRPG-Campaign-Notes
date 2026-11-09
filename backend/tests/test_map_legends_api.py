@@ -4,13 +4,16 @@ preset it stays linked to, and the presets themselves."""
 import uuid
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.map_legends import MAX_PRESETS_PER_ROOM
+from app.db import map_legends_repo
+from app.domain.map_legends import MAX_PRESETS_PER_ROOM, LegendPreset
 from app.main import app
 
 
@@ -315,3 +318,43 @@ async def test_the_json_export_writes_what_each_map_means(
     maps = {m["name"]: m for m in response.json()["maps"]}
     assert maps["Linked"]["color_legend"] == {"red": "Adversary"}
     assert "color_legend" not in maps["Plain"]
+
+
+async def test_a_race_on_a_name_or_a_preset_answers_like_the_plain_check(
+    db_session: AsyncSession,
+    make_token: Callable[..., str],
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The checks run before the writes, so two requests can pass them
+    together: the database's unique name and foreign key answer 409 and 404,
+    not 500."""
+    room = await _room(client, make_token)
+    court = await _preset(client, room, "Court", red="Adversary")
+    other = await _preset(client, room, "Harbor", red="Rival")
+
+    async def no_names(*_: object) -> set[str]:
+        return set()
+
+    monkeypatch.setattr(map_legends_repo, "preset_names", no_names)
+    dup = await client.post(
+        room.presets, json={"name": "Court", "entries": {"red": "x"}}, headers=room.master
+    )
+    assert dup.status_code == 409
+    rename = await client.patch(
+        f"{room.presets}/{other['id']}", json={"name": "Court"}, headers=room.master
+    )
+    assert rename.status_code == 409
+
+    ghost = LegendPreset(
+        uuid.uuid4(), uuid.UUID(room.id), "Ghost", {}, datetime.now(UTC), datetime.now(UTC)
+    )
+
+    async def fake_preset(*_: object) -> LegendPreset:
+        return ghost
+
+    monkeypatch.setattr(map_legends_repo, "get_preset", fake_preset)
+    map_id = await _map(client, room)
+    gone = await _legend(client, room, map_id, room.master, preset_id=str(ghost.id))
+    assert gone.status_code == 404
+    assert court["name"] == "Court"

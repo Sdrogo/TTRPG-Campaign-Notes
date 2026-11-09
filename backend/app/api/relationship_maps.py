@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.access import (
@@ -924,6 +925,22 @@ async def _with_legend(
     return replace(updated, legend_preset_id=None, color_legend=meanings)
 
 
+async def _store_with_legend(
+    session: AsyncSession,
+    relationship_map: RelationshipMap,
+    legend: LegendBody | None,
+    locale: str,
+) -> RelationshipMap:
+    """`_with_legend`, stored. A preset deleted between the check and the
+    write breaks the link's foreign key: that is the preset not found (404),
+    the request rolled back."""
+    changed = await _with_legend(session, relationship_map, legend, locale)
+    try:
+        return await relationship_maps_repo.update_map(session, changed)
+    except IntegrityError as exc:
+        raise http_error(status.HTTP_404_NOT_FOUND, "errors.map.presetNotFound", locale) from exc
+
+
 @router.put("/{map_id}/board")
 async def save_board(
     room_id: uuid.UUID,
@@ -947,10 +964,7 @@ async def save_board(
     if relationship_map.kind != MapKind.FREE:
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
     await _apply_board(session, map_id, membership, body, locale)
-    updated = await relationship_maps_repo.update_map(
-        session,
-        await _with_legend(session, relationship_map, body.legend, locale),
-    )
+    updated = await _store_with_legend(session, relationship_map, body.legend, locale)
     await push_map(session, updated, grants)
     return await _detail(session, updated, grants, membership)
 
@@ -977,10 +991,7 @@ async def save_board_changes(
     if relationship_map.kind != MapKind.FREE:
         raise http_error(status.HTTP_409_CONFLICT, "errors.map.notFree", locale)
     await _apply_board(session, map_id, membership, body, locale)
-    updated = await relationship_maps_repo.update_map(
-        session,
-        await _with_legend(session, relationship_map, body.legend, locale),
-    )
+    updated = await _store_with_legend(session, relationship_map, body.legend, locale)
     await push_map(session, updated, grants)
     return await _detail(session, updated, grants, membership)
 
