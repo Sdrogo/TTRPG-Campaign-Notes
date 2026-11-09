@@ -4,6 +4,7 @@ import { CaretDownIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useBacklinks } from '../../hooks/useBacklinks';
+import { useBackState } from '../../lib/backNav';
 import { backlinkHref } from '../../lib/backlinks';
 import { displayNameFor } from '../../lib/members';
 import { PageCard } from '../PageCard';
@@ -27,6 +28,7 @@ interface BacklinksProps {
  */
 export function Backlinks({ roomId, target, members }: BacklinksProps) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const backlinks = useBacklinks(roomId, target);
   const [expanded, setExpanded] = useState(false);
   const groups = backlinks.data ?? [];
@@ -75,6 +77,7 @@ export function Backlinks({ roomId, target, members }: BacklinksProps) {
                 <Anchor
                   component={Link}
                   to={`/rooms/${roomId}/documents/${group.documentId}`}
+                  state={backState}
                   fw={600}
                   c="var(--accent-primary)"
                 >

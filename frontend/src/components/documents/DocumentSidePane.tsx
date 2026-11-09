@@ -3,6 +3,7 @@ import { ArrowSquareOutIcon, XIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDocument } from '../../hooks/useDocuments';
+import { useBackState } from '../../lib/backNav';
 import { useSession } from '../../hooks/useSession';
 import { DocumentView } from './DocumentView';
 
@@ -41,6 +42,7 @@ export function DocumentSidePane({
 
 function PickedPane({ roomId, documentId, onClose }: { roomId: string; documentId: string; onClose: () => void }) {
   const { t } = useTranslation();
+  const backState = useBackState();
   const { session } = useSession();
   // The same cached query the view below uses.
   const document = useDocument(roomId, documentId, true);
@@ -78,6 +80,7 @@ function PickedPane({ roomId, documentId, onClose }: { roomId: string; documentI
             <ActionIcon
               component={Link}
               to={`/rooms/${roomId}/documents/${documentId}`}
+              state={backState}
               variant="subtle"
               aria-label={t('documents.open.page')}
             >

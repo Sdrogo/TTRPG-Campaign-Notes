@@ -196,9 +196,14 @@ other icon set.
   copied map) puts `{ from, backStack }` (`lib/backNav.ts`, a trail of at
   most 20 places, cut when a page already on it comes back) in the
   navigation state and back walks that trail, labelled with the generic
-  `common.back`. Before going to a Document or map on the trail it reads it
-  afresh and skips it on a 404 (deleted or hidden), falling back to the
-  page's parent (Andrea, 2026-10-25); the current user's circular avatar on the right
+  `common.back`. Before going to a Document, map or Section on the trail it reads it
+  afresh and skips it on a 404 or when the Section is gone from the list,
+  falling back to the
+  page's parent (Andrea, 2026-10-25, spec 66). Every link that opens a
+  Document, map or Session 0 from another page carries the trail, search
+  results and the split pane's "open as page" included; the Room Index is a
+  sideways jump and carries none. A page reached by the arrow scrolls back
+  to where it was left (`usePageScroll`); the current user's circular avatar on the right
   (`AccountButton`, 36px, thin `--border-default` ring that turns
   `--accent-primary` on hover/focus and while on `/account`). It is
   rendered by `HomePage` and by `PageLayout`, so every signed-in page

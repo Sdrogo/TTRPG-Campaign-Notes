@@ -22,6 +22,7 @@ import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from '@phosphor-icons
 import { useTranslation } from 'react-i18next';
 import { LabeledActionIcon } from '../LabeledActionIcon';
 import { displayNameFor } from '../../lib/members';
+import { useBackState } from '../../lib/backNav';
 import {
   MAX_ANSWER_LENGTH,
   MAX_DOCUMENT_QUESTIONS,
@@ -279,6 +280,7 @@ interface LocalAnswer {
 function PlayerQuestions({ roomId, module, step, editable }: StepProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const backState = useBackState();
   const { act, busy, members } = useBoard();
   const mine = step.documents.find((link) => link.mine && link.questionId === null);
   const nameQuestion = step.questions.find((question) => question.target === 'name');
@@ -293,7 +295,7 @@ function PlayerQuestions({ roomId, module, step, editable }: StepProps) {
       const made = next.modules
         .find((candidate) => candidate.id === module.id)
         ?.questions?.documents.find((link) => link.mine && link.questionId === null);
-      if (made) navigate(`/rooms/${roomId}/documents/${made.documentId}`);
+      if (made) navigate(`/rooms/${roomId}/documents/${made.documentId}`, { state: backState });
     });
 
   if (step.questions.length === 0) {
@@ -311,7 +313,7 @@ function PlayerQuestions({ roomId, module, step, editable }: StepProps) {
       <AnswerForm module={module} step={step} editable={editable} />
       <Group gap="sm">
         {mine ? (
-          <Button component={Link} to={`/rooms/${roomId}/documents/${mine.documentId}`} variant="light">
+          <Button component={Link} to={`/rooms/${roomId}/documents/${mine.documentId}`} state={backState} variant="light">
             {t('sessionZero.questions.openMine')}
           </Button>
         ) : step.canCreate && editable ? (

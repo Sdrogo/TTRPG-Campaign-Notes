@@ -213,7 +213,7 @@ describe('DocumentDetailPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Documenti' }));
 
-    expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true });
+    expect(navigate).toHaveBeenCalledWith('/rooms/room-1/documents', { replace: true, state: { restoreScroll: true } });
   });
 
   // Guards against a route reached with no Room/Document id at all, which
