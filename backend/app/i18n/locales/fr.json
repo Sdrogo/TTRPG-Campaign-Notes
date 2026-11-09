@@ -191,6 +191,8 @@
       "badChoices": "Les choix d'import ne sont pas valides",
       "cannotReplace": "Seul un Owner (ou le Master) peut remplacer {name}",
       "fileTooLarge": "{name} dépasse {max} Mo",
+      "vaultTooBig": "Le coffre dépasse {max} Mo ou contient trop de fichiers",
+      "unsafeArchive": "{name} contient des fichiers aux chemins non sûrs",
       "alreadyRunning": "Tu as déjà un import en cours dans cette Salle",
       "notFound": "Import introuvable"
     },

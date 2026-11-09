@@ -191,6 +191,8 @@
       "badChoices": "The import choices are not valid",
       "cannotReplace": "Only an Owner (or the Master) can replace {name}",
       "fileTooLarge": "{name} is over {max} MB",
+      "vaultTooBig": "The vault is over {max} MB or holds too many files",
+      "unsafeArchive": "{name} holds files with unsafe paths",
       "alreadyRunning": "An import is already running for you in this Room",
       "notFound": "Import not found"
     },

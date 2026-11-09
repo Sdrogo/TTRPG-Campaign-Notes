@@ -191,6 +191,8 @@
       "badChoices": "インポートの選択内容が無効です",
       "cannotReplace": "{name}を置き換えられるのはOwner(またはMaster)だけです",
       "fileTooLarge": "{name}が{max} MBを超えています",
+      "vaultTooBig": "Vaultが{max} MBを超えているか、ファイルが多すぎます",
+      "unsafeArchive": "{name}に安全でないパスのファイルが含まれています",
       "alreadyRunning": "このルームでは、すでにあなたのインポートを実行中です",
       "notFound": "インポートが見つかりません"
     },

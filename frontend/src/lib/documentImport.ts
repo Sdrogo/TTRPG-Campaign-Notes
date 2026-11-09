@@ -1,4 +1,4 @@
-import type { SectionKind } from '../types/landing';
+import type { SectionKind } from "../types/landing";
 
 /**
  * Importing Documents from files (spec 27): the shapes of the preview and the
@@ -7,21 +7,22 @@ import type { SectionKind } from '../types/landing';
  */
 
 /** The file types the picker offers: JSON of spec 23, or Markdown. */
-export const IMPORT_ACCEPT = '.json,.md,.markdown,.txt';
+export const IMPORT_ACCEPT = ".json,.md,.markdown,.txt,.zip";
 
 /** How often the job is read while it is queued or running. */
 export const IMPORT_POLL_INTERVAL_MS = 2000;
 
 /** What the importer chose for a Document that already exists in the Room (spec 27 Decision 5). */
-export type ImportResolution = 'copy' | 'replace';
+export type ImportResolution = "copy" | "replace";
 
 /** Something the import leaves out or changes in a Document, worded by the client. */
 export type ImportWarningCode =
-  | 'comments_dropped'
-  | 'files_dropped'
-  | 'player_dropped'
-  | 'selective_to_private'
-  | 'tags_not_created';
+  | "comments_dropped"
+  | "files_dropped"
+  | "embeds_dropped"
+  | "player_dropped"
+  | "selective_to_private"
+  | "tags_not_created";
 
 /** A warning of a Document: `count` or `names` as its code uses them. */
 export interface ImportWarning {
@@ -48,12 +49,12 @@ export interface ImportPreviewDocument {
 
 /** Something the import leaves out of a map (spec 40), worded by the client. */
 export type ImportMapWarningCode =
-  | 'documents_left_out'
-  | 'master_only_dropped'
-  | 'selective_to_private';
+  | "documents_left_out"
+  | "master_only_dropped"
+  | "selective_to_private";
 
 /** Why a map is not created (`invalid`, `limit`) or came without its background (`background`). */
-export type ImportMapSkipReason = 'invalid' | 'limit' | 'background';
+export type ImportMapSkipReason = "invalid" | "limit" | "background";
 
 /** A map found in the uploaded files (spec 40). */
 export interface ImportPreviewMap {
@@ -61,7 +62,7 @@ export interface ImportPreviewMap {
   key: string;
   fileName: string;
   name: string;
-  kind: 'free' | 'geographic';
+  kind: "free" | "geographic";
   /** How many Documents it places once imported. */
   documentsCount: number;
   /** Why it would not be created, or null. */
@@ -70,7 +71,7 @@ export interface ImportPreviewMap {
 }
 
 /** Why a Section is not written (`invalid`, `limit`) or came without its image (`image`). */
-export type ImportSectionSkipReason = 'invalid' | 'limit' | 'image';
+export type ImportSectionSkipReason = "invalid" | "limit" | "image";
 
 /**
  * A Section of the Room home found in the files (spec 56), listed for the
@@ -88,7 +89,7 @@ export interface ImportPreviewSection {
   /** The Documents blocks left with no Tag the import can resolve. */
   skippedBlocks: number;
   /** Why it would not be written, or null. */
-  skipped: Exclude<ImportSectionSkipReason, 'image'> | null;
+  skipped: Exclude<ImportSectionSkipReason, "image"> | null;
 }
 
 /** A Tag the import would create. */
@@ -110,12 +111,12 @@ export interface ImportPreview {
 
 /** Why an image was skipped (`SkippedResponse.reason`). */
 export type ImportSkipReason =
-  | 'unreachable'
-  | 'not_an_image'
-  | 'too_large'
-  | 'limit'
-  | 'storage'
-  | 'failed';
+  | "unreachable"
+  | "not_an_image"
+  | "too_large"
+  | "limit"
+  | "storage"
+  | "failed";
 
 /** An image the import skipped. */
 export interface ImportSkipped {
@@ -181,7 +182,7 @@ export interface ImportImageCount {
 export const MAX_IMPORT_IMAGES = 2000;
 
 /** Where an import job is. */
-export type ImportJobStatus = 'queued' | 'running' | 'done' | 'failed';
+export type ImportJobStatus = "queued" | "running" | "done" | "failed";
 
 /** An import job as the app uses it. */
 export interface ImportJob {
@@ -223,7 +224,7 @@ export interface RawImportPreview {
     key: string;
     file_name: string;
     name: string;
-    kind: 'free' | 'geographic';
+    kind: "free" | "geographic";
     documents_count: number;
     skipped: ImportMapSkipReason | null;
     warnings: { code: ImportMapWarningCode; count: number; names: string[] }[];
@@ -236,7 +237,7 @@ export interface RawImportPreview {
     has_image: boolean;
     blocks_count: number;
     skipped_blocks: number;
-    skipped: Exclude<ImportSectionSkipReason, 'image'> | null;
+    skipped: Exclude<ImportSectionSkipReason, "image"> | null;
   }[];
 }
 
@@ -332,11 +333,33 @@ export function toImportJob(raw: RawImportJob): ImportJob {
   };
 }
 
-/** The upload of the preview: the same files the import will send again. */
-export function previewFormData(files: File[]): FormData {
+/**
+ * The upload of the preview: the same files the import will send again. A file of
+ * a picked folder goes under its path in the folder, which the backend needs to
+ * read the folders as Tags (spec 65); `obsidian` forces (true) or switches off
+ * (false) reading the Markdown as Obsidian notes, absent lets the backend detect.
+ */
+export function previewFormData(files: File[], obsidian?: boolean): FormData {
   const body = new FormData();
-  files.forEach((file) => body.append('files', file));
+  files.forEach((file) =>
+    body.append("files", file, file.webkitRelativePath || file.name),
+  );
+  if (obsidian !== undefined) body.append("obsidian", String(obsidian));
   return body;
+}
+
+/**
+ * What a picked folder sends as a vault (spec 65): its Markdown notes and the
+ * pictures they may embed, leaving out Obsidian's own folders and every other
+ * file. Nothing at all when the folder holds no note.
+ */
+export function vaultFiles(files: File[]): File[] {
+  const kept = files.filter((file) => {
+    const path = file.webkitRelativePath || file.name;
+    if (/(^|\/)\.(obsidian|trash)\//i.test(path)) return false;
+    return /\.(md|markdown|png|jpe?g|gif|webp|bmp|svg|avif)$/i.test(file.name);
+  });
+  return kept.some((file) => /\.(md|markdown)$/i.test(file.name)) ? kept : [];
 }
 
 /**
@@ -352,21 +375,30 @@ export function importFormData(
   maps: string[],
   sections: string[],
   pageCards: string[],
+  obsidian?: boolean,
 ): FormData {
-  const body = previewFormData(files);
+  const body = previewFormData(files, obsidian);
   body.append(
-    'choices',
-    JSON.stringify({ selected, replace, maps, sections, page_cards: pageCards }),
+    "choices",
+    JSON.stringify({
+      selected,
+      replace,
+      maps,
+      sections,
+      page_cards: pageCards,
+    }),
   );
   return body;
 }
 
 /** Whether a previewed Section is a page card of the file (ticked into `pageCards`). */
-export function isPageCard(section: Pick<ImportPreviewSection, 'kind'>): boolean {
-  return section.kind !== 'custom';
+export function isPageCard(
+  section: Pick<ImportPreviewSection, "kind">,
+): boolean {
+  return section.kind !== "custom";
 }
 
 /** Whether the job is still going: queued or running. */
 export function isActiveImportJob(job: ImportJob | undefined): boolean {
-  return job?.status === 'queued' || job?.status === 'running';
+  return job?.status === "queued" || job?.status === "running";
 }

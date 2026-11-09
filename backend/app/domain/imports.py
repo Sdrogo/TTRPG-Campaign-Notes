@@ -23,6 +23,7 @@ from app.domain.documents import (
 )
 from app.domain.errors import DomainError
 from app.domain.import_files import (
+    OBSIDIAN_KEY_PREFIX,
     ImportCannotReplaceError,
     ImportDocument,
     ImportFile,
@@ -62,6 +63,8 @@ from app.domain.room_sections import Section, SectionKind
 
 MAX_FILES = 10
 MAX_DOCUMENTS = 200
+# Spec 65: an Obsidian vault (a zip or a folder) may hold more notes.
+MAX_VAULT_DOCUMENTS = 500
 # Spec 59: the images of the Documents chosen in the preview, checked when the
 # job starts; the files themselves may link more, up to `MAX_IMAGE_LINKS`, so
 # a big export still reaches the preview where Documents can be unticked.
@@ -124,6 +127,7 @@ class ExistingDocument:
     id: uuid.UUID
     can_manage: bool
     image_ids: frozenset[str]
+    name: str = ""
 
 
 @dataclass(frozen=True)
@@ -259,7 +263,7 @@ def fold(name: str) -> str:
     return name.strip().casefold()
 
 
-def validate_files(files: Sequence[ImportFile]) -> None:
+def validate_files(files: Sequence[ImportFile], max_documents: int = MAX_DOCUMENTS) -> None:
     """422 unless the files are within the limits (Decision 8): at most
     `MAX_FILES` files, `MAX_DOCUMENTS` Documents and `MAX_IMAGE_LINKS` image
     links (the chosen ones are held to `MAX_IMAGES` by `plan_import`), and
@@ -270,8 +274,8 @@ def validate_files(files: Sequence[ImportFile]) -> None:
     if len(files) > MAX_FILES:
         raise ImportRefusedError("errors.import.tooManyFiles", max=MAX_FILES)
     documents = [document for file in files for document in file.documents]
-    if len(documents) > MAX_DOCUMENTS:
-        raise ImportRefusedError("errors.import.tooManyDocuments", max=MAX_DOCUMENTS)
+    if len(documents) > max_documents:
+        raise ImportRefusedError("errors.import.tooManyDocuments", max=max_documents)
     if sum(len(document.images) for document in documents) > MAX_IMAGE_LINKS:
         raise ImportRefusedError("errors.import.tooManyImageLinks", max=MAX_IMAGE_LINKS)
     if sum(len(file.maps) for file in files) > MAX_MAPS_PER_IMPORT:
@@ -309,13 +313,26 @@ def validate_files(files: Sequence[ImportFile]) -> None:
 
 def _existing_for(document: ImportDocument, context: ImportContext) -> ExistingDocument | None:
     """The Document of the Room the file's id points at, when the importer
-    sees it (Decision 5)."""
+    sees it (Decision 5); for an Obsidian note (spec 65), the one the importer
+    sees that has the same name."""
+    if document.match_by_name:
+        return _by_name(context, document.name)
     if document.source_id is None:
         return None
     try:
         return context.existing.get(uuid.UUID(document.source_id))
     except ValueError:
         return None
+
+
+def _by_name(context: ImportContext, name: str) -> ExistingDocument | None:
+    """The Document of the Room, among those the importer sees, named `name`
+    (case and edge spaces ignored); the first by id if several, so the same
+    plan is made at preview and at import. A Document the importer can't see is
+    never in `context.existing`, so it is never matched or hinted at."""
+    wanted = fold(name)
+    found = [d for d in context.existing.values() if d.name and fold(d.name) == wanted]
+    return min(found, key=lambda d: str(d.id)) if found else None
 
 
 class _TagBook:
@@ -627,6 +644,13 @@ def _plan_document(
         """Where a mention of the file points now, if it still can."""
         if ref.kind is MentionKind.DOCUMENT:
             target = targets.get((file_index, ref.key))
+            if target is None and ref.key.startswith(OBSIDIAN_KEY_PREFIX):
+                # A wikilink to a note the import lacks: a Document of this Room
+                # the importer sees (spec 65 Decision 3), else plain text.
+                room_doc = _by_name(context, ref.key.removeprefix(OBSIDIAN_KEY_PREFIX))
+                if room_doc is None:
+                    return None
+                return (MentionKind.DOCUMENT, room_doc.id, room_doc.name)
             return None if target is None else (MentionKind.DOCUMENT, target[0], target[1])
         if ref.kind is MentionKind.TAG:
             tag = file.tags.get(ref.key)
@@ -653,6 +677,8 @@ def _plan_document(
         warnings.append(ImportWarning("files_dropped", document.file_count))
     if document.has_player:
         warnings.append(ImportWarning("player_dropped"))
+    if document.dropped_embeds:
+        warnings.append(ImportWarning("embeds_dropped", document.dropped_embeds))
     if selective_count:
         warnings.append(ImportWarning("selective_to_private", selective_count))
     if missing:

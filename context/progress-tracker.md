@@ -225,6 +225,14 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **65, Obsidian vault import** (the bulk import wanted on 2026-11-05; the
+  27b PDF ticket is separate and built): ticket written 2026-11-08; Andrea said
+  to go ahead with building ("passiamo a sviluppare"), so 65_1 reader, 65_2
+  zip/folder upload and 65_3 dialog are **built on the ticket's defaults** (PR
+  #312; Q1 to Q7 not answered one by one). Andrea approved the pictures on
+  2026-11-08 ("27's specs should not apply here"): 65_4 stages the vault
+  pictures in the private bucket for the job and always removes them when it
+  ends. No migration.
 - **46b, Dichiarazione d'Intenti invitation**: if a Room has a DDI, its
   invitation opens it read-only with "accept and join" (product owner,
   2026-10-27). Ticket not written yet (the DDI template itself is in 47_3).

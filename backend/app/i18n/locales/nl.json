@@ -191,6 +191,8 @@
       "badChoices": "De importkeuzes zijn niet geldig",
       "cannotReplace": "Alleen een Owner (of de Master) kan {name} vervangen",
       "fileTooLarge": "{name} is groter dan {max} MB",
+      "vaultTooBig": "De vault is groter dan {max} MB of bevat te veel bestanden",
+      "unsafeArchive": "{name} bevat bestanden met onveilige paden",
       "alreadyRunning": "Je hebt al een import bezig in deze Kamer",
       "notFound": "Import niet gevonden"
     },

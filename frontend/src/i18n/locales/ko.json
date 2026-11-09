@@ -948,6 +948,9 @@
     "jsonHint": "JSON은 원본에 충실한 형식이며 지도를 옮길 수 있는 유일한 형식입니다. Markdown은 최대한 읽어 들입니다. 댓글, PDF 첨부 파일, Owner, 플레이어 연결은 가져오지 않습니다.",
     "files": "가져올 파일",
     "filesPlaceholder": ".json 또는 .md 파일을 하나 이상 선택",
+    "vaultLabel": "Obsidian 볼트",
+    "folderButton": "폴더 선택",
+    "vaultHint": "Markdown 파일을 Obsidian 노트로 읽습니다. 노트 하나당 문서 하나, 노트 사이의 [[링크]]는 멘션이 되고 폴더와 #태그는 태그가 됩니다. 폴더 또는 볼트의 .zip을 선택하세요. 볼트의 이미지는 해당 노트와 함께 가져옵니다.",
     "preview": "미리보기",
     "found_other": "문서 {{count}}개 발견",
     "documentSelect": "{{name}} 가져오기",
@@ -964,6 +967,7 @@
     "warning": {
       "comments_dropped_other": "댓글 {{count}}개는 가져오지 않습니다",
       "files_dropped_other": "PDF 첨부 파일 {{count}}개는 가져오지 않습니다",
+      "embeds_dropped_other": "삽입된 이미지·파일 {{count}}개는 가져오지 않습니다",
       "player_dropped": "플레이어 연결은 가져오지 않습니다",
       "selective_to_private_other": "선택 공개 항목 {{count}}개가 비공개로 바뀝니다",
       "tags_not_created": "만들지 못한 태그: {{names}}"

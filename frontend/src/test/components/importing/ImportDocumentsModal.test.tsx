@@ -87,6 +87,61 @@ beforeEach(() => {
 });
 
 describe('ImportDocumentsModal (spec 27)', () => {
+  it('reads a picked folder as an Obsidian vault (spec 65)', async () => {
+    const { user } = render();
+    const note = new File(['x'], 'Jason.md');
+    const picture = new File(['x'], 'pic.png');
+    const folder = (await screen.findByTestId('import-folder-input')) as HTMLInputElement;
+
+    await user.upload(folder, [note, picture]);
+
+    expect(screen.getByRole('switch', { name: 'Vault di Obsidian' })).toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Anteprima' }));
+    await screen.findByText('1 Documento trovato');
+    const sent = fetchMock.mock.calls.find(
+      ([path]) => path === '/rooms/room-1/imports/preview',
+    )![1] as {
+      formData: FormData;
+    };
+    expect(sent.formData.getAll('files')).toHaveLength(2); // the note and its picture
+    expect(sent.formData.get('obsidian')).toBe('true');
+  });
+
+  it('forces the Obsidian reader with the switch and passes it on to the import', async () => {
+    const { user } = render();
+    await user.click(await screen.findByRole('switch', { name: 'Vault di Obsidian' }));
+    await pickAndPreview(user);
+    await screen.findByText('1 Documento trovato');
+    await user.click(screen.getByRole('button', { name: 'Importa' }));
+    await screen.findByText('Importazione completata');
+
+    const upload = fetchMock.mock.calls.find(
+      ([path, init]) =>
+        path === '/rooms/room-1/imports' && (init as { method?: string }).method === 'POST',
+    )![1] as { formData: FormData };
+    expect(upload.formData.get('obsidian')).toBe('true');
+  });
+
+  it('opens the folder picker from the folder button', async () => {
+    const { user } = render();
+    const folder = (await screen.findByTestId('import-folder-input')) as HTMLInputElement;
+    const click = vi.spyOn(folder, 'click').mockImplementation(() => undefined);
+
+    await user.click(screen.getByRole('button', { name: 'Scegli una cartella' }));
+
+    expect(click).toHaveBeenCalled();
+  });
+
+  it('does nothing when a picked folder holds no Markdown note', async () => {
+    const { user } = render();
+    const folder = (await screen.findByTestId('import-folder-input')) as HTMLInputElement;
+
+    await user.upload(folder, new File(['x'], 'pic.png'));
+
+    expect(screen.getByRole('button', { name: 'Anteprima' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Vault di Obsidian' })).not.toBeChecked();
+  });
+
   it('previews, imports and shows the Documents it created as links', async () => {
     const { user } = render();
 
