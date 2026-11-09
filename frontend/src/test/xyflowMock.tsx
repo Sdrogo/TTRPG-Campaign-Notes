@@ -96,9 +96,9 @@ export const xyflowMock = {
       resize
     </button>
   ),
-  BaseEdge: ({ id, path, style }: { id: string; path: string; style: { strokeDasharray?: string } }) => (
+  BaseEdge: ({ id, path, style }: { id: string; path: string; style: { strokeDasharray?: string; opacity?: number } }) => (
     <svg>
-      <path data-testid={`path-${id}`} d={path} strokeDasharray={style.strokeDasharray} />
+      <path data-testid={`path-${id}`} d={path} strokeDasharray={style.strokeDasharray} opacity={style.opacity} />
     </svg>
   ),
   EdgeLabelRenderer: ({ children }: { children: ReactNode }) => <>{children}</>,

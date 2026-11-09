@@ -44,15 +44,27 @@ vi.mock('../../components/maps/MapBoard', () => ({
     isMaster,
     onChange,
     onSelectDocument,
+    legend,
   }: {
     board: Board;
     editable: boolean;
     isMaster: boolean;
     onChange: (board: Board) => void;
     onSelectDocument?: (documentId: string) => void;
+    legend?: { presetName: string | null; compact?: boolean; onEdit?: () => void };
   }) => (
-    <div data-testid="board" data-editable={String(editable)} data-master={String(isMaster)}>
+    <div
+      data-testid="board"
+      data-editable={String(editable)}
+      data-master={String(isMaster)}
+      data-legend={`${legend?.presetName ?? 'own'}:${String(legend?.compact)}`}
+    >
       {board.cards.length} cards
+      {legend?.onEdit && (
+        <button type="button" onClick={legend.onEdit}>
+          legend
+        </button>
+      )}
       <button type="button" onClick={() => onChange({ ...board, cards: board.cards.slice(1) })}>
         change
       </button>
@@ -247,6 +259,27 @@ describe('RelationshipMapPage', () => {
     expect(screen.getByText('Chi serve chi')).toBeInTheDocument();
     expect(await screen.findByText(/sola lettura/)).toBeInTheDocument();
     expect(screen.getByTestId('board')).toHaveAttribute('data-editable', 'false');
+  });
+
+  it('gives the board a read-only legend chip on a phone (spec 68)', async () => {
+    render();
+    const board = await screen.findByTestId('board');
+    expect(board).toHaveAttribute('data-legend', 'own:true');
+    expect(screen.queryByRole('button', { name: 'legend' })).not.toBeInTheDocument();
+  });
+
+  it("opens the legend dialog from the board's legend for who edits it (spec 68)", async () => {
+    wideScreen();
+    routes.map = () =>
+      Promise.resolve(rawMapDetail({ color_legend: { green: 'Alleato' }, legend_preset: { id: 'preset-1', name: 'Corte' } }));
+    const { user } = render();
+    const board = await screen.findByTestId('board');
+    expect(board).toHaveAttribute('data-legend', 'Corte:false');
+    await user.click(screen.getByRole('button', { name: 'legend' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Legenda dei colori' });
+    expect(dialog).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Annulla' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog', { name: 'Legenda dei colori' })).not.toBeInTheDocument());
   });
 
   it('cuts the description short until a tap or a key opens it, and closes it again', async () => {

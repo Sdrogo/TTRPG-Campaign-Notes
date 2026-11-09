@@ -9,6 +9,7 @@ import { ignoreBoardChange } from '../../lib/maps';
 import type { RelationshipMapDetail } from '../../types/map';
 import { GeographicBoard } from './GeographicBoard';
 import { MapBoard } from './MapBoard';
+import { legendOf } from './MapLegend';
 
 /** The board's height on the Document page, like the mention map's. */
 const PANEL_HEIGHT = 360;
@@ -80,12 +81,7 @@ export function LinkedMapPanel({
           onChange={ignoreBoardChange}
           height={PANEL_HEIGHT}
           // A small board: the legend is a chip (spec 68 Decision 16).
-          legend={{
-            mapId: map.id,
-            meanings: map.colorLegend,
-            presetName: map.legendPreset?.name ?? null,
-            compact: true,
-          }}
+          legend={{ ...legendOf(map), compact: true }}
         />
       )}
       {unlink.error && (

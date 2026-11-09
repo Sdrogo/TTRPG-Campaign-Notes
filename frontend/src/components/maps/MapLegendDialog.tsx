@@ -75,6 +75,7 @@ export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMas
   const [view, setView] = useState<View>({ kind: 'edit' });
   const saveLegend = useSaveLegend(roomId, mapId);
   const presets = useLegendPresets(roomId, true);
+  const roomPresets = presets.data ?? [];
   const createPreset = useCreatePreset(roomId);
   const updatePreset = useUpdatePreset(roomId);
   const deletePreset = useDeletePreset(roomId);
@@ -126,9 +127,8 @@ export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMas
   } else if (view.kind === 'apply') {
     body = (
       <ApplyView
-        presets={presets.data ?? []}
-        current={preset ? {} : meanings}
-        linkedId={preset?.id ?? null}
+        presets={roomPresets}
+        current={meanings}
         busy={busy}
         onBack={() => go({ kind: 'edit' })}
         onApply={(id) => saveLegend.mutate({ presetId: id }, { onSuccess: onClose })}
@@ -151,7 +151,7 @@ export function MapLegendDialog({ roomId, mapId, meanings, preset, arrows, isMas
   } else if (view.kind === 'manage') {
     body = (
       <ManageView
-        presets={presets.data ?? []}
+        presets={roomPresets}
         busy={busy}
         onBack={() => go({ kind: 'edit' })}
         onNew={() => go({ kind: 'preset', preset: null })}
@@ -408,7 +408,6 @@ function PresetSummary({ preset }: { preset: LegendPreset }) {
 function ApplyView({
   presets,
   current,
-  linkedId,
   busy,
   onBack,
   onApply,
@@ -416,14 +415,14 @@ function ApplyView({
   presets: LegendPreset[];
   /** The map's own meanings, which applying drops (Decision 21). */
   current: ColorMeanings;
-  linkedId: string | null;
   busy: boolean;
   onBack: () => void;
   onApply: (presetId: string) => void;
 }) {
   const { t } = useTranslation();
-  const [chosen, setChosen] = useState<string | null>(linkedId ?? presets[0]?.id ?? null);
-  const picked = presets.find((preset) => preset.id === chosen);
+  // The first preset until one is picked (the list may arrive after the view opens).
+  const [chosen, setChosen] = useState<string | null>(null);
+  const picked = presets.find((preset) => preset.id === chosen) ?? presets[0];
   const replaced = picked ? replacedMeanings(current, picked.entries) : 0;
   return (
     <>
@@ -433,7 +432,7 @@ function ApplyView({
       {presets.length === 0 ? (
         <Text size="sm">{t('maps.legend.noPresets')}</Text>
       ) : (
-        <Radio.Group value={chosen} onChange={setChosen} aria-label={t('maps.legend.applyTitle')}>
+        <Radio.Group value={picked!.id} onChange={setChosen} aria-label={t('maps.legend.applyTitle')}>
           <Stack gap="xs">
             {presets.map((preset) => (
               <Radio.Card key={preset.id} value={preset.id} p="sm" radius="md">
@@ -613,9 +612,7 @@ function PresetView({
           placeholder={t('maps.legend.addColor')}
           value={null}
           data={others.map((color) => ({ value: color, label: t(`maps.colors.${color}`) }))}
-          onChange={(value) =>
-            value && setColors((current) => MAP_COLORS.filter((c) => c === value || current.includes(c)))
-          }
+          onChange={(value) => setColors((current) => MAP_COLORS.filter((c) => c === value || current.includes(c)))}
         />
       )}
       <Group justify="space-between" gap="xs">

@@ -105,8 +105,8 @@ open questions the same day (see Answered).*
     unused meanings included; import reads it as optional, so older files
     and the Obsidian import (spec 65) still work. An unknown color or a
     meaning over 40 characters is a validation error, as for other map
-    fields. Duplicating a Room (spec 33) or a map copies the meanings with
-    the map (same transfer code).
+    fields. Duplicating a Room (spec 33) copies the meanings with the map
+    (same transfer code). (There is no duplication of a single map.)
 15. **Other map kinds**: mention maps (spec 36) draw every relation in one
     color and are not edited, so they get no legend. Geographic maps
     (spec 38) are left out for now (product owner); the column lives on
@@ -116,10 +116,10 @@ open questions the same day (see Answered).*
 17. **Languages**: every new string in the 12 UI languages (`en`, `it`,
     `de`, `es`, `fr`, `ja`, `ko`, `nl`, `pl`, `pt-PT`, `ru`, `zh-Hans`); the
     color names reuse the existing `maps.colors.*` keys.
-18. **Demo** (spec 45): one demo map gets meanings for three colors its
-    relations use (e.g. red "Rivale", green "Alleato", pink "Interesse
-    amoroso", in each demo language) and the demo Room one preset, so the
-    feature is visible there.
+18. **Demo** (spec 45): the demo free map gets meanings for three colors its
+    relations use (red "Avversario", green "Alleato", blue "Debito", in each
+    demo language), so the feature is visible there. The demo Room has no
+    presets (the demo is read-only, so they could not be tried).
 
 ### Presets (product owner, 2026-11-09: "per mappa, con possibilità di impostare preset")
 
@@ -157,15 +157,14 @@ open questions the same day (see Answered).*
     first gets a copy of the preset's meanings as its own, then the link
     goes (one transaction).
 24. **Presets in duplication and export**: duplicating a Room copies its
-    presets and keeps each map's link pointing to the copy; the Room JSON
-    export (spec 40) writes them in an optional `map_legend_presets` list
-    and a linked map carries `legend_preset` (the preset's name); import
-    adds the presets to the Room (a name already there gets " (2)") and
-    restores the links. Duplicating a single map keeps its link (same
-    Room).
-25. **Visibility**: presets are not secret; every member who edits a map of
-    the Room sees the list. Players who can't edit any map never see it,
-    they only read the meanings on the maps they see.
+    presets and keeps each map's link pointing to the copy. The Room JSON
+    export (spec 40) writes each free map's `color_legend` as the meanings
+    it shows (a linked map's are its preset's); presets themselves are not
+    exported, so an imported map has its own meanings and no link.
+25. **Visibility**: presets are not secret; every member of the Room may
+    read the list through the API. The UI offers it only in the legend
+    dialog, so a player who can't edit any map never sees it and only reads
+    the meanings on the maps they see.
 
 ## Design
 
@@ -202,18 +201,19 @@ open questions the same day (see Answered).*
   values, reject unknown colors and over-long meanings with a translated
   422). Presets: `GET/POST /rooms/{room_id}/map-legend-presets`,
   `PATCH/DELETE .../{preset_id}` (list for anyone who may edit a map of the
-  Room, writes for the Master; 409 past 30 or on a duplicate name); a
+  Room's members, writes for the Master; 409 past 30 or on a duplicate name); a
   `PATCH` of the entries calls `push_map` for every linked map so open
   boards update live; `DELETE` copies the entries into the linked maps
-  first. `map_transfer`, `room_copy` and the Room export/import carry
-  meanings, presets and links (optional keys; `SCHEMA_VERSION` unchanged).
+  first. `map_transfer` and the Room export/import carry each map's
+  meanings (optional key; `SCHEMA_VERSION` unchanged); `room_copy` copies
+  meanings, presets and links.
 - **Frontend**: `RelationshipMap.colorLegend` in `types/map.ts` and the API
   mapping in `lib/maps.ts`, plus `legendRows(map, visibleArrows)` (palette
   order, colors in use only); a `MapLegend` component (panel, chip, phone
   drawer) in a React Flow `Panel position="bottom-right"` inside
   `MapBoard`; `MapLegendDialog` (used colors, folded unused meanings,
-  preset name, link and "Scollega"); `LegendPresetsDialog` (pick, save, manage) with a
-  `useLegendPresets` query; `MapColorPicker` takes an optional `meanings`
+  preset name, link and "Scollega", and views to apply, save and manage
+  presets) with the `useMapLegend` hooks; `MapColorPicker` takes an optional `meanings`
   prop for the tooltips; `ArrowDialog` shows the meaning line; `MapArrow`
   takes a `faded` flag for the highlight. Strings under `maps.legend.*` in
   all locales.
@@ -232,15 +232,14 @@ open questions the same day (see Answered).*
   empty after trim (dropped), 41 characters (422); a player without edit
   rights gets 403, with "players can edit" on succeeds; a geographic or
   mention map refuses them (409). Presets: CRUD for the Master, 403 for a
-  player writing, list hidden from members who can't edit any map, 409 at
+  player writing, list readable by every member, 409 at
   31 or on a duplicate name, gone with the Room. Links: linking returns the
-  preset's meanings and drops the map's own; own meanings are refused while
-  linked; "Scollega" copies them; a preset edit changes every linked map's
+  preset's meanings and drops the map's own; sending own meanings unlinks
+  the map ("Scollega" sends the preset's as a copy); a preset edit changes every linked map's
   detail and pushes it; deleting a preset leaves each linked map its own
-  copy; a preset of another Room is 404. Export writes meanings, presets
-  and links only when present; import accepts files with and without them,
-  renames a clashing preset, restores links and rejects bad values; Room
-  duplication points links at the copied presets.
+  copy; a preset of another Room is 404. Export writes the meanings a map
+  shows only when present; import accepts files with and without them and
+  rejects bad values; Room duplication points links at the copied presets.
 - Frontend: `legendRows` keeps palette order and only colors used by the
   relations the viewer sees; a new relation in a preset color adds its row;
   `MapLegend` hides itself for viewers when empty and shows the `+` chip
@@ -250,8 +249,8 @@ open questions the same day (see Answered).*
   and warns before dropping the map's own meanings; on a linked map the
   Master's save edits the preset (with the "N maps" notice) and other
   editors see read-only meanings and "Scollega"; saving and managing
-  presets; `ArrowDialog` shows the meaning and the "Modifica
-  legenda" link only to editors; a click on a row fades the other colors
+  presets; `ArrowDialog` shows the chosen color's meaning and the color
+  picker names each meaning on hover; a click on a row fades the other colors
   and a second click, the empty board or `Esc` clears it.
 - Frontend CI's 100% branch coverage and `tsc -b` hold; backend 100%.
 
@@ -274,3 +273,24 @@ open questions the same day (see Answered).*
 10. Applying a preset **replaces** the map's meanings, with a warning.
 11. A map **stays linked** to its preset: editing the preset updates every
     map of the Room that uses it (Decisions 20-23).
+
+## Built (2026-11-09)
+
+All five build units in one branch (PR #315 into `staging`).
+
+- Migration `e7b3d9a1c5f2` (revises `d4a8f2c6b9e1`): table
+  `relationship_map_legend_presets`; `relationship_maps.color_legend`
+  (JSONB, NULL when empty) and `legend_preset_id` (FK, `ON DELETE SET
+  NULL`), with a check that a map has one or the other, never both.
+- Backend: `app/domain/map_legends.py`, `app/db/map_legends_repo.py`,
+  `app/api/map_legend_presets.py`; the board `PUT`/`PATCH` take `legend`
+  (`{preset_id}` or `{meanings}`); the map detail returns `color_legend`
+  (what the map shows) and `legend_preset` (`{id, name}` or null).
+- Frontend: `MapLegend` (panel, folded chip, phone drawer, highlight),
+  `MapLegendDialog` (edit, apply, save as, manage, edit a preset),
+  `useMapLegend` hooks; `MapBoard` fades the other colors while a row is
+  highlighted; `ArrowDialog` and `MapColorPicker` show meanings. The
+  linked-map panel on a Document page shows the chip only.
+- Differences from the first draft: no preset export/import (Decision 24),
+  no single-map duplication (it doesn't exist), no "Modifica legenda" link
+  in the relation dialog, and no demo preset (Decision 18).

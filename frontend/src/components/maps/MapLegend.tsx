@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { ActionIcon, Badge, Box, Drawer, Group, Paper, Stack, Text, UnstyledButton } from '@mantine/core';
-import { CaretDownIcon, CaretUpIcon, PencilSimpleIcon, PlusIcon, StackIcon } from '@phosphor-icons/react';
+import { ActionIcon, Box, Drawer, Group, Paper, Stack, Text, UnstyledButton } from '@mantine/core';
+import { CaretDownIcon, CaretUpIcon, PencilSimpleIcon, PlusIcon } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { colorValue, legendRows, storeLegendFolded, storedLegendFolded } from '../../lib/maps';
-import type { ColorMeanings, MapArrow, MapColor } from '../../types/map';
+import type { ColorMeanings, MapArrow, MapColor, RelationshipMapDetail } from '../../types/map';
 
 /** What a board needs to show a map's color legend (spec 68). */
 export interface LegendSetup {
@@ -239,11 +239,8 @@ function Chip({
   );
 }
 
-/** The linked preset's name, as a small badge (the relation dialog's meaning line). */
-export function PresetBadge({ name }: { name: string }) {
-  return (
-    <Badge variant="light" color="gray" size="sm" leftSection={<StackIcon size={12} />}>
-      {name}
-    </Badge>
-  );
+/** What a map's detail gives its legend: its meanings and its preset's name. */
+// oxlint-disable-next-line react/only-export-components
+export function legendOf(map: RelationshipMapDetail): Pick<LegendSetup, 'mapId' | 'meanings' | 'presetName'> {
+  return { mapId: map.id, meanings: map.colorLegend, presetName: map.legendPreset?.name ?? null };
 }

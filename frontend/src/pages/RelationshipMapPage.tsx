@@ -25,6 +25,7 @@ import { VisibilityBadge } from '../components/VisibilityBadge';
 import { LabeledActionIcon } from '../components/LabeledActionIcon';
 import { MapBoard } from '../components/maps/MapBoard';
 import { MapLegendDialog } from '../components/maps/MapLegendDialog';
+import { legendOf } from '../components/maps/MapLegend';
 import { parsePlaceSide, placeSide, useSideDocument } from '../hooks/useSideDocument';
 import { MapFormModal } from '../components/maps/MapFormModal';
 import { GeographicBoard } from '../components/maps/GeographicBoard';
@@ -157,9 +158,7 @@ function MapEditor({
         // A click on a Document's name shows it beside the map, opening the pane (spec 62b), or under it on a phone.
         onSelectDocument={access.split.open}
         legend={{
-          mapId: map.id,
-          meanings: map.colorLegend,
-          presetName: map.legendPreset?.name ?? null,
+          ...legendOf(map),
           // The legend is edited where the board is (spec 68 Decision 16: not on a phone).
           onEdit: access.editable ? () => setLegendOpened(true) : undefined,
           compact: !access.wide,

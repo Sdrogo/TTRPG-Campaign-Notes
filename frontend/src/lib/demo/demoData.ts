@@ -479,6 +479,13 @@ function build(lang: Lang): DemoData {
       arrow(523, uid(514), uid(511), t('holds it', 'lo tiene'), { color: 'red', master_only: true }),
       arrow(524, uid(515), uid(511), t('sold the secret', 'ha venduto il segreto')),
     ],
+    // What the relation colors mean (spec 68): the legend shows the ones in use.
+    color_legend: {
+      red: t('Adversary', 'Avversario'),
+      green: t('Ally', 'Alleato'),
+      blue: t('Debt', 'Debito'),
+    },
+    legend_preset: null,
   };
   const place = (key: keyof typeof DOC) => DOC[key];
   const geoMap = {

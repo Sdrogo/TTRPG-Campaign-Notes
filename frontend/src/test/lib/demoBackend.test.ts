@@ -291,6 +291,14 @@ describe('demoFetch', () => {
       expect(marco[0]).toMatchObject({ document_count: 4, can_edit: false });
     });
 
+    it('gives the free map a color legend and the Room no presets (spec 68)', async () => {
+      const map = (await get(`/rooms/demo/maps/${FREE_MAP}`)).body;
+      expect(Object.keys(map.color_legend)).toEqual(['red', 'green', 'blue']);
+      expect(map.legend_preset).toBeNull();
+      expect((await get('/rooms/demo/map-legend-presets')).body).toEqual([]);
+      expect((await get('/rooms/demo/map-legend-presets/some')).status).toBe(404);
+    });
+
     it('leaves the hidden cards and their arrows off a free map', async () => {
       const master = (await get(`/rooms/demo/maps/${FREE_MAP}`)).body;
       const marco = (await get(`/rooms/demo/maps/${FREE_MAP}`, MARCO_ID)).body;
