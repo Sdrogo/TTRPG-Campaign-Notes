@@ -1236,7 +1236,12 @@
       "none": "Nur Linie",
       "label": "Beschriftung",
       "labelTowards": "Beschriftung Richtung {{name}}",
-      "delete": "Beziehung löschen"
+      "delete": "Beziehung löschen",
+      "adjust": "Bogen anpassen",
+      "bendHint": "Ziehe den Punkt auf dem Pfeil, um ihn zu biegen. Doppelklick stellt den automatischen Bogen wieder her.",
+      "resetBend": "Bogen zurücksetzen",
+      "bendDone": "Fertig",
+      "bendHandle": "Pfeil biegen"
     },
     "mention": {
       "button": "Erwähnungskarte",

@@ -97,6 +97,7 @@ const initial: Board = {
       reverseLabelPosition: null,
       labelOffset: null,
       reverseLabelOffset: null,
+      bend: null,
       color: 'green',
       masterOnly: false,
     },
@@ -111,6 +112,7 @@ const initial: Board = {
       reverseLabelPosition: null,
       labelOffset: null,
       reverseLabelOffset: null,
+      bend: null,
       color: 'default',
       masterOnly: false,
     },
@@ -125,6 +127,7 @@ const initial: Board = {
       reverseLabelPosition: null,
       labelOffset: null,
       reverseLabelOffset: null,
+      bend: null,
       color: 'default',
       masterOnly: false,
     },
@@ -351,6 +354,56 @@ describe('MapBoard', () => {
     const { user } = renderBoard();
     await user.click(screen.getByRole('button', { name: 'Modifica la relazione: alleato' }));
     expect(screen.getByRole('dialog', { name: 'Relazione' })).toBeInTheDocument();
+  });
+
+  describe('bending an arrow (spec 67)', () => {
+    const edgeData = (id: string) =>
+      flow.props.edges.find((edge) => edge.id === id)!.data as {
+        bending: boolean;
+        bend: number | null;
+        onBend: (id: string, bend: number | null) => void;
+      };
+
+    it('opens the bend handle from the arrow\'s dialog, with a hint to reset or finish', async () => {
+      const { last, user } = renderBoard();
+      call('onEdgeClick', null, { id: 'both' });
+      expect(edgeData('both').bending).toBe(false);
+      await user.click(screen.getByRole('button', { name: 'Regola l\'arco' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(edgeData('both').bending).toBe(true);
+      expect(edgeData('forward').bending).toBe(false);
+      expect(screen.getByRole('button', { name: 'Reimposta arco' })).toBeDisabled();
+
+      // Dropping the handle saves the bend with the board.
+      act(() => edgeData('both').onBend('both', 42));
+      expect(last().arrows.find((arrow) => arrow.id === 'both')!.bend).toBe(42);
+      await user.click(screen.getByRole('button', { name: 'Reimposta arco' }));
+      expect(last().arrows.find((arrow) => arrow.id === 'both')!.bend).toBeNull();
+
+      await user.click(screen.getByRole('button', { name: 'Fatto' }));
+      expect(edgeData('both').bending).toBe(false);
+      expect(screen.queryByRole('button', { name: 'Reimposta arco' })).not.toBeInTheDocument();
+    });
+
+    it('stops on a click on the empty board or on another arrow', async () => {
+      const { user } = renderBoard();
+      call('onEdgeClick', null, { id: 'both' });
+      await user.click(screen.getByRole('button', { name: 'Regola l\'arco' }));
+      call('onPaneClick');
+      expect(edgeData('both').bending).toBe(false);
+
+      call('onEdgeClick', null, { id: 'both' });
+      await user.click(screen.getByRole('button', { name: 'Regola l\'arco' }));
+      call('onEdgeClick', null, { id: 'forward' });
+      expect(edgeData('both').bending).toBe(false);
+    });
+
+    it('offers no bend handle to someone who cannot edit', () => {
+      renderBoard({ editable: false });
+      call('onEdgeClick', null, { id: 'both' });
+      expect(screen.queryByRole('button', { name: 'Regola l\'arco' })).not.toBeInTheDocument();
+      expect(edgeData('both').bending).toBe(false);
+    });
   });
 
   it('saves where each label of an arrow was dropped', () => {

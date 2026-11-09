@@ -1236,7 +1236,12 @@
       "none": "Alleen lijn",
       "label": "Label",
       "labelTowards": "Label richting {{name}}",
-      "delete": "De relatie verwijderen"
+      "delete": "De relatie verwijderen",
+      "adjust": "Boog aanpassen",
+      "bendHint": "Sleep de stip op de pijl om hem te buigen. Dubbelklik om terug te gaan naar de automatische boog.",
+      "resetBend": "Boog herstellen",
+      "bendDone": "Klaar",
+      "bendHandle": "De pijl buigen"
     },
     "mention": {
       "button": "Vermeldingskaart",

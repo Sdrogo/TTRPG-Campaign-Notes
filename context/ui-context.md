@@ -801,6 +801,14 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   a bundle share one curve as 7 px lanes. Ends leave the cards toward the
   curve, arrowheads follow it, labels ride it (dragging one finds the
   nearest point of the curve), and the click area follows the curve.
+  **Adjustable arc** (spec 67): the arrow's dialog has "Regola l'arco",
+  which closes it and shows a round handle (44 px to touch on a phone) on
+  the middle of the curve; dragging it bends the curve through the pointer
+  (either side, 0 is straight), double-click or the "Reimposta arco" button
+  of the hint bar at the bottom of the board gives the automatic curve back,
+  "Fatto" or a click on the empty board ends. An arrow with its own bend
+  leaves the fan; a bundle of plain lines bends as one. Anyone who may move
+  a card may bend an arrow; mention maps keep the automatic curve.
   One-way, two-way (a label near each end) or a plain line; Master-only
   arrows are dashed. A new arrow opens its dialog straight away; its label
   fields are plain text inputs, with no suggestions of earlier labels.

@@ -34,9 +34,11 @@ import {
   endId,
   endOf,
   groupCards,
+  ownBend,
   removeArrow,
   removeCards,
   removeGroup,
+  setArrowBend,
   updateArrow,
   updateCard,
   updateGroup,
@@ -135,6 +137,8 @@ function BoardCanvas({
   const wrapper = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<Editing>(null);
   const [addOpened, setAddOpened] = useState(false);
+  // The arrow whose bend handle is showing (spec 67).
+  const [bendingId, setBendingId] = useState<string | null>(null);
   // A finger has no middle button or Space to pan with, so on touch a drag on
   // empty canvas keeps panning and there is no selection box.
   const touch = useMediaQuery('(pointer: coarse)');
@@ -217,8 +221,11 @@ function BoardCanvas({
       arrow,
       shift: parallelShift(board.arrows, arrow),
       fan: arrowFan(board.arrows, arrow),
+      bend: ownBend(board.arrows, arrow),
+      bending: shaping && bendingId === arrow.id,
       editable: shaping,
       onEdit: (id) => setEditing({ kind: 'arrow', id }),
+      onBend: (id, bend) => onChange(setArrowBend(board, id, bend)),
       onMoveLabel: (id, which, position, offset) =>
         onChange(
           updateArrow(
@@ -316,6 +323,7 @@ function BoardCanvas({
   const editedGroup = editing?.kind === 'group' ? board.groups.find((g) => g.id === editing.id) : undefined;
   const editedArrow = editing?.kind === 'arrow' ? board.arrows.find((a) => a.id === editing.id) : undefined;
   const close = () => setEditing(null);
+  const bendingArrow = shaping ? board.arrows.find((a) => a.id === bendingId) : undefined;
 
   return (
     <Box
@@ -338,7 +346,12 @@ function BoardCanvas({
         onNodeDragStop={(_, __, dragged) => handleDragStop(dragged)}
         onSelectionDragStop={(_, dragged) => handleDragStop(dragged)}
         onConnect={handleConnect}
-        onEdgeClick={(_, edge) => shaping && setEditing({ kind: 'arrow', id: edge.id })}
+        onEdgeClick={(_, edge) => {
+          if (!shaping) return;
+          setBendingId(null);
+          setEditing({ kind: 'arrow', id: edge.id });
+        }}
+        onPaneClick={() => setBendingId(null)}
         onBeforeDelete={handleBeforeDelete}
         onDelete={handleDelete}
         nodesDraggable={editable}
@@ -388,7 +401,27 @@ function BoardCanvas({
             </Group>
           </Panel>
         )}
-        {boxSelect && (
+        {bendingArrow && (
+          <Panel position="bottom-center">
+            <Group gap="xs" wrap="nowrap" align="center">
+              <Text size="xs" c="dimmed">
+                {t('maps.arrow.bendHint')}
+              </Text>
+              <Button
+                size="xs"
+                variant="default"
+                disabled={ownBend(board.arrows, bendingArrow) === null}
+                onClick={() => onChange(setArrowBend(board, bendingArrow.id, null))}
+              >
+                {t('maps.arrow.resetBend')}
+              </Button>
+              <Button size="xs" onClick={() => setBendingId(null)}>
+                {t('maps.arrow.bendDone')}
+              </Button>
+            </Group>
+          </Panel>
+        )}
+        {boxSelect && !bendingArrow && (
           <Panel position="bottom-center">
             <Text size="xs" c="dimmed">
               {t('maps.selectHint')}
@@ -485,6 +518,10 @@ function BoardCanvas({
           toName={nameOf(editedArrow.to)}
           isMaster={isMaster}
           onClose={close}
+          onAdjust={() => {
+            setBendingId(editedArrow.id);
+            close();
+          }}
           onSave={(patch) => {
             onChange(updateArrow(board, editedArrow.id, patch));
             close();

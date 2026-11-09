@@ -1236,7 +1236,12 @@
       "none": "Line only",
       "label": "Label",
       "labelTowards": "Label towards {{name}}",
-      "delete": "Delete the relation"
+      "delete": "Delete the relation",
+      "adjust": "Adjust the arc",
+      "bendHint": "Drag the dot on the arrow to bend it. Double-click it to go back to the automatic arc.",
+      "resetBend": "Reset arc",
+      "bendDone": "Done",
+      "bendHandle": "Bend the arrow"
     },
     "mention": {
       "button": "Mentions map",

@@ -140,6 +140,7 @@ def map_to_json(
                 "reverse_label_position": a.reverse_label_position,
                 "label_offset": a.label_offset,
                 "reverse_label_offset": a.reverse_label_offset,
+                "bend": a.bend,
                 "color": a.color.value,
                 "master_only": a.master_only,
             }
@@ -363,6 +364,7 @@ def read_map(raw: Any) -> FileMap:
             reverse_label_position=_opt_number(a.get("reverse_label_position")),
             label_offset=_opt_number(a.get("label_offset")),
             reverse_label_offset=_opt_number(a.get("reverse_label_offset")),
+            bend=_opt_number(a.get("bend")),
             color=_choice(MapColor, a.get("color"), MapColor.DEFAULT),
             master_only=_flag(a.get("master_only")),
         )

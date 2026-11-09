@@ -432,6 +432,7 @@ function build(lang: Lang): DemoData {
     reverse_label_position: null,
     label_offset: null,
     reverse_label_offset: null,
+    bend: null,
     color: 'default',
     master_only: false,
     ...extra,

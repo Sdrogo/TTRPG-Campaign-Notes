@@ -1202,7 +1202,12 @@
       "none": "선만",
       "label": "레이블",
       "labelTowards": "{{name}} 쪽 레이블",
-      "delete": "관계 삭제"
+      "delete": "관계 삭제",
+      "adjust": "호 조정",
+      "bendHint": "화살표의 점을 끌어 휘게 하세요. 더블클릭하면 자동 호로 돌아갑니다.",
+      "resetBend": "호 초기화",
+      "bendDone": "완료",
+      "bendHandle": "화살표 휘기"
     },
     "mention": {
       "button": "언급 지도",

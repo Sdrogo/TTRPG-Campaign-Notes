@@ -43,6 +43,8 @@ MAX_CAPTION_LINES = 2
 MAX_LABEL_LENGTH = 60
 # The farthest a dragged label may sit from its arrow, in board pixels.
 MAX_LABEL_OFFSET = 2000
+# How far an arrow's curve may bend away from the straight line, in board pixels.
+MAX_BEND = 5000.0
 MAX_GROUP_TITLE_LENGTH = 80
 # How far from the origin a card or group may be placed, either way.
 MAX_COORDINATE = 100_000.0
@@ -242,7 +244,10 @@ class MapArrow:
     along the arrow (0 at `from_end`, 1 at `to_end`), or None for the
     board's automatic placement. `label_offset` and `reverse_label_offset` are
     how far, in board pixels, a dragged label sits to the side of the arrow
-    (negative to the other side); they only exist with a position."""
+    (negative to the other side); they only exist with a position. `bend` is how
+    far the curve's middle leaves the straight line, to the right of the way the
+    arrow goes (negative to the left), or None for the automatic curve
+    (spec 67)."""
 
     id: uuid.UUID
     from_end: ArrowEnd
@@ -256,6 +261,7 @@ class MapArrow:
     reverse_label_position: float | None = None
     label_offset: float | None = None
     reverse_label_offset: float | None = None
+    bend: float | None = None
 
 
 @dataclass(frozen=True)
@@ -567,6 +573,15 @@ def clean_label_offset(offset: float | None, position: float | None) -> float | 
     return offset
 
 
+def clean_bend(bend: float | None) -> float | None:
+    """An arrow's bend: 422 when not finite or beyond the largest allowed."""
+    if bend is None:
+        return None
+    if not (math.isfinite(bend) and abs(bend) <= MAX_BEND):
+        raise InvalidBoardError("errors.map.invalidBoard")
+    return bend
+
+
 def _clean_arrow(arrow: MapArrow) -> MapArrow:
     """An arrow with its labels cleaned; only a two-way arrow keeps a reverse
     label. A label keeps the place it was dragged to only while it exists."""
@@ -591,6 +606,7 @@ def _clean_arrow(arrow: MapArrow) -> MapArrow:
         reverse_label_position=reverse_label_position,
         label_offset=clean_label_offset(arrow.label_offset, label_position),
         reverse_label_offset=clean_label_offset(arrow.reverse_label_offset, reverse_label_position),
+        bend=clean_bend(arrow.bend),
     )
 
 
