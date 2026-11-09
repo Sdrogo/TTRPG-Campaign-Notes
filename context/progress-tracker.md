@@ -225,6 +225,9 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 
 ## Next Up
 
+- **66, Back arrow navigation** (product owner, 2026-11-09): analysis and
+  ticket written (`context/feature/66 - Back arrow navigation.md`), waiting
+  for Andrea's answers to Q1 to Q3 before any code. Frontend only.
 - **65, Obsidian vault import** (the bulk import wanted on 2026-11-05; the
   27b PDF ticket is separate and built): ticket written 2026-11-08; Andrea said
   to go ahead with building ("passiamo a sviluppare"), so 65_1 reader, 65_2
