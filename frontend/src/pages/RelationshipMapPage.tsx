@@ -24,6 +24,8 @@ import { PageLayout } from '../components/PageLayout';
 import { VisibilityBadge } from '../components/VisibilityBadge';
 import { LabeledActionIcon } from '../components/LabeledActionIcon';
 import { MapBoard } from '../components/maps/MapBoard';
+import { MapLegendDialog } from '../components/maps/MapLegendDialog';
+import { legendOf } from '../components/maps/MapLegend';
 import { parsePlaceSide, placeSide, useSideDocument } from '../hooks/useSideDocument';
 import { MapFormModal } from '../components/maps/MapFormModal';
 import { GeographicBoard } from '../components/maps/GeographicBoard';
@@ -141,6 +143,7 @@ function MapEditor({
     toBoardBody,
     (saved) => ({ groups: saved.groups, cards: saved.cards, arrows: saved.arrows }),
   );
+  const [legendOpened, setLegendOpened] = useState(false);
 
   return (
     <MapChrome roomId={roomId} map={map} access={access} autosave={autosave}>
@@ -154,7 +157,24 @@ function MapEditor({
         onChange={autosave.change}
         // A click on a Document's name shows it beside the map, opening the pane (spec 62b), or under it on a phone.
         onSelectDocument={access.split.open}
+        legend={{
+          ...legendOf(map),
+          // The legend is edited where the board is (spec 68 Decision 16: not on a phone).
+          onEdit: access.editable ? () => setLegendOpened(true) : undefined,
+          compact: !access.wide,
+        }}
       />
+      {legendOpened && (
+        <MapLegendDialog
+          roomId={roomId}
+          mapId={map.id}
+          meanings={map.colorLegend}
+          preset={map.legendPreset}
+          arrows={autosave.value.arrows}
+          isMaster={access.isMaster}
+          onClose={() => setLegendOpened(false)}
+        />
+      )}
     </MapChrome>
   );
 }

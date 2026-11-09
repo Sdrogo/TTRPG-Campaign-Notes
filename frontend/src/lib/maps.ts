@@ -5,6 +5,8 @@ import type {
   ArrowEnd,
   Board,
   CardSize,
+  ColorMeanings,
+  LegendPresetRef,
   MapArrow,
   MapCard,
   MapColor,
@@ -100,6 +102,8 @@ export interface RawMapDetail extends RawMap {
   groups: RawMapGroup[];
   cards: RawMapCard[];
   arrows: RawMapArrow[];
+  color_legend?: ColorMeanings;
+  legend_preset?: LegendPresetRef | null;
 }
 
 export function toMap(raw: RawMap): RelationshipMap {
@@ -176,7 +180,67 @@ export function toMapDetail(raw: RawMapDetail): RelationshipMapDetail {
     groups: raw.groups.map((group) => ({ ...group })),
     cards: raw.cards.map(toCard),
     arrows: raw.arrows.map(toArrow),
+    colorLegend: raw.color_legend ?? {},
+    legendPreset: raw.legend_preset ?? null,
   };
+}
+
+// --- Color legend (spec 68) ----------------------------------------------------
+
+/** The colors the relations use, in palette order. */
+export function usedColors(arrows: MapArrow[]): MapColor[] {
+  const used = new Set(arrows.map((arrow) => arrow.color));
+  return MAP_COLORS.filter((color) => used.has(color));
+}
+
+/**
+ * The legend's rows (Decision 4): each color a relation the viewer sees uses
+ * and that has a meaning, in palette order.
+ */
+export function legendRows(meanings: ColorMeanings, arrows: MapArrow[]): [MapColor, string][] {
+  return usedColors(arrows).flatMap((color) => {
+    const meaning = meanings[color];
+    return meaning ? [[color, meaning] as [MapColor, string]] : [];
+  });
+}
+
+/** Meanings trimmed and without the empty ones, as the API keeps them. */
+export function cleanMeanings(meanings: ColorMeanings): ColorMeanings {
+  const cleaned: ColorMeanings = {};
+  for (const color of MAP_COLORS) {
+    const meaning = meanings[color]?.trim();
+    if (meaning) cleaned[color] = meaning;
+  }
+  return cleaned;
+}
+
+/** How many of `next`'s colors would change a meaning `current` already gives (the apply warning). */
+export function replacedMeanings(current: ColorMeanings, next: ColorMeanings): number {
+  return MAP_COLORS.filter((color) => current[color] && current[color] !== next[color]).length;
+}
+
+/** Where a viewer's folded or open legend is remembered, per map (Decision 7). */
+export function legendFoldKey(mapId: string): string {
+  return `mapLegend.folded.${mapId}`;
+}
+
+/** Whether the viewer folded this map's legend; open when nothing is stored or storage is blocked. */
+export function storedLegendFolded(mapId: string): boolean {
+  try {
+    return window.localStorage.getItem(legendFoldKey(mapId)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** Remembers the legend folded or open; skipped silently when storage is blocked. */
+export function storeLegendFolded(mapId: string, folded: boolean): void {
+  try {
+    if (folded) window.localStorage.setItem(legendFoldKey(mapId), '1');
+    else window.localStorage.removeItem(legendFoldKey(mapId));
+  } catch {
+    // Storage blocked: the choice just isn't remembered.
+  }
 }
 
 export interface RawMentionMap {

@@ -226,7 +226,9 @@
         "groupTitle": "グループのタイトル",
         "placeName": "名前",
         "subtitle": "サブタイトル",
-        "note": "メモ"
+        "note": "メモ",
+        "legendMeaning": "意味",
+        "presetName": "プリセット名"
       },
       "invalidPlane": "平面は幅・高さとも100〜20,000単位で、地理マップだけが持てます",
       "planeTooSmall": "その平面ではマップの一部がはみ出します",
@@ -235,7 +237,13 @@
       "placeNameRequired": "ドキュメントのないエリアやピンには名前が必要です",
       "tooManyAreas": "1つのマップに置けるエリアは最大{max}個です",
       "tooManyPins": "1つのマップに置けるピンは最大{max}個です",
-      "tooManyLinks": "1つのマップに引けるリンクは最大{max}本です"
+      "tooManyLinks": "1つのマップに引けるリンクは最大{max}本です",
+      "presetNameRequired": "プリセットには名前が必要です",
+      "presetEmpty": "プリセットには少なくとも1つの意味が必要です",
+      "presetNameTaken": "このルームには同じ名前のプリセットがすでにあります",
+      "tooManyPresets": "ルームのプリセットは最大{max}個です",
+      "presetNotFound": "プリセットが見つかりません",
+      "notPresetManager": "ルームのプリセットを変更できるのはマスターだけです"
     },
     "mapImport": {
       "invalidFile": "このファイルはアプリが読めるマップではありません(項目「{field}」を確認してください)",

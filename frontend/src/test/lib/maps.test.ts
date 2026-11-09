@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_CARD_SIZE,
+  cleanMeanings,
+  replacedMeanings,
+  storeLegendFolded,
+  storedLegendFolded,
   GROUP_PADDING,
   absolutePosition,
   addArrow,
@@ -750,5 +754,30 @@ describe('an arrow bent by hand (spec 67)', () => {
 describe('ignoreBoardChange', () => {
   it('does nothing with a read-only board', () => {
     expect(ignoreBoardChange()).toBeUndefined();
+  });
+});
+
+describe('the color legend (spec 68)', () => {
+  it('remembers the folded legend per map, and forgets nothing when storage is blocked', () => {
+    storeLegendFolded('map-1', true);
+    expect(storedLegendFolded('map-1')).toBe(true);
+    expect(storedLegendFolded('map-2')).toBe(false);
+    storeLegendFolded('map-1', false);
+    expect(storedLegendFolded('map-1')).toBe(false);
+
+    const blocked = () => {
+      throw new Error('blocked');
+    };
+    const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
+    expect(storedLegendFolded('map-1')).toBe(false);
+    expect(() => storeLegendFolded('map-1', true)).not.toThrow();
+    get.mockRestore();
+    set.mockRestore();
+  });
+
+  it('counts the meanings a preset would change', () => {
+    expect(replacedMeanings({ red: 'A', green: 'B' }, { red: 'A', blue: 'C' })).toBe(1);
+    expect(cleanMeanings({ red: ' A ', green: '  ' })).toEqual({ red: 'A' });
   });
 });

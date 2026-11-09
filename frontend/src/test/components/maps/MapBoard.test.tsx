@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MapBoard } from '../../../components/maps/MapBoard';
+import type { LegendSetup } from '../../../components/maps/MapLegend';
 import type { Document } from '../../../types/document';
 import type { Board, MapCard } from '../../../types/map';
 import { flow } from '../../xyflowMock';
@@ -145,6 +146,7 @@ function renderBoard({
   docs = documents,
   mode = undefined as 'free' | 'mention' | undefined,
   onSelectDocument = undefined as ((documentId: string) => void) | undefined,
+  legend = undefined as LegendSetup | undefined,
 } = {}) {
   const changes: Board[] = [];
   function Harness() {
@@ -164,6 +166,7 @@ function renderBoard({
         mode={mode}
         onSelectDocument={onSelectDocument}
         height={mode ? 360 : undefined}
+        legend={legend}
       />
     );
   }
@@ -563,5 +566,45 @@ describe('MapBoard', () => {
     await user.click(screen.getByRole('button', { name: 'Aggiungi testo' }));
     await user.keyboard('{Escape}');
     expect(changes).toEqual([]);
+  });
+
+  describe('the color legend (spec 68)', () => {
+    const legend: LegendSetup = { mapId: 'map-1', meanings: { green: 'Alleato', red: 'Nemico' }, presetName: null };
+    const faded = (id: string) => (flow.props.edges.find((edge) => edge.id === id)!.data as { faded: boolean }).faded;
+
+    it('highlights the relations of a row, until the board is clicked or Esc pressed', async () => {
+      const { user } = renderBoard({ legend });
+      const row = screen.getByRole('listitem', { name: 'Verde: Alleato' });
+      // Red has a meaning but no relation.
+      expect(screen.getAllByRole('listitem')).toHaveLength(1);
+      expect(faded('both')).toBe(false);
+      await user.click(row);
+      expect(faded('both')).toBe(false);
+      expect(faded('line')).toBe(true);
+      expect(screen.getByTestId('path-line')).toHaveAttribute('opacity', '0.2');
+      expect(screen.getByTestId('path-both')).not.toHaveAttribute('opacity');
+      await user.keyboard('a');
+      expect(faded('line')).toBe(true);
+      await user.keyboard('{Escape}');
+      expect(faded('line')).toBe(false);
+      await user.click(row);
+      call('onPaneClick');
+      expect(faded('line')).toBe(false);
+    });
+
+    it('highlights nothing once no relation has the color, and tells the relation dialog what colors mean', async () => {
+      const { user } = renderBoard({ legend });
+      await user.click(screen.getByRole('listitem', { name: 'Verde: Alleato' }));
+      call('onEdgeClick', null, { id: 'both' });
+      expect(screen.getByText('In questa mappa: Alleato')).toBeInTheDocument();
+      await user.click(screen.getByRole('radio', { name: 'Rosso' }));
+      expect(screen.getByRole('radio', { name: 'Rosso' })).toHaveAttribute('title', 'Rosso: Nemico');
+      expect(screen.getByRole('radio', { name: 'Azzurro' })).not.toHaveAttribute('title');
+      expect(screen.getByText('In questa mappa: Nemico')).toBeInTheDocument();
+      await user.click(screen.getByRole('radio', { name: 'Azzurro' }));
+      expect(screen.getByText('Questo colore non ha ancora un significato nella legenda.')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Salva' }));
+      expect(faded('line')).toBe(false);
+    });
   });
 });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Button, Checkbox, Group, Modal, SegmentedControl, Stack, Input, TextInput } from '@mantine/core';
+import { Button, Checkbox, Group, Modal, SegmentedControl, Stack, Input, Text, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import type { ArrowDirection, MapArrow } from '../../types/map';
+import type { ArrowDirection, ColorMeanings, MapArrow } from '../../types/map';
 import { MapColorPicker } from './MapColorPicker';
 
 /** The longest label an arrow takes (the backend's limit). */
@@ -22,6 +22,8 @@ interface ArrowDialogProps {
   onClose: () => void;
   /** Closes the dialog and shows the arrow's bend handle (spec 67); only on a free map. */
   onAdjust?: () => void;
+  /** What a free map's colors mean (spec 68 Decision 6): the chosen one's meaning shows under the colors. */
+  meanings?: ColorMeanings;
 }
 
 /**
@@ -29,7 +31,17 @@ interface ArrowDialogProps {
  * direction on a two-way arrow), color and, for the Master, whether only
  * Masters see it. Mounted per arrow, so it starts from the arrow's values.
  */
-export function ArrowDialog({ arrow, fromName, toName, isMaster, onSave, onDelete, onClose, onAdjust }: ArrowDialogProps) {
+export function ArrowDialog({
+  arrow,
+  fromName,
+  toName,
+  isMaster,
+  onSave,
+  onDelete,
+  onClose,
+  onAdjust,
+  meanings,
+}: ArrowDialogProps) {
   const { t } = useTranslation();
   const [direction, setDirection] = useState<ArrowDirection>(arrow.direction);
   const [label, setLabel] = useState(arrow.label ?? '');
@@ -81,7 +93,14 @@ export function ArrowDialog({ arrow, fromName, toName, isMaster, onSave, onDelet
               maxLength={MAX_LABEL_LENGTH}
             />
           )}
-          <MapColorPicker value={color} onChange={setColor} />
+          <MapColorPicker value={color} onChange={setColor} meanings={meanings} />
+          {meanings && (
+            <Text size="sm" c="dimmed" mt={-4}>
+              {meanings[color]
+                ? t('maps.legend.colorMeans', { meaning: meanings[color] })
+                : t('maps.legend.colorMeansNothing')}
+            </Text>
+          )}
           {onAdjust && (
             <Button variant="default" onClick={onAdjust}>
               {t('maps.arrow.adjust')}

@@ -2,15 +2,18 @@ import { Anchor, CheckIcon, ColorSwatch, Group, Input, UnstyledButton } from '@m
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MAP_COLORS, MAP_COLORS_VISIBLE, colorValue } from '../../lib/maps';
-import type { MapColor } from '../../types/map';
+import type { ColorMeanings, MapColor } from '../../types/map';
 
 /** Picks one of the map's theme colors (spec 28 Decision 8): no free picker. */
 export function MapColorPicker({
   value,
   onChange,
+  meanings = {},
 }: {
   value: MapColor;
   onChange: (color: MapColor) => void;
+  /** A relation's colors say what they mean on hover (spec 68 Decision 6). */
+  meanings?: ColorMeanings;
 }) {
   const { t } = useTranslation();
   // The row stays short; a color picked from the hidden part opens it.
@@ -25,6 +28,7 @@ export function MapColorPicker({
             role="radio"
             aria-checked={value === color}
             aria-label={t(`maps.colors.${color}`)}
+            title={meanings[color] ? `${t(`maps.colors.${color}`)}: ${meanings[color]}` : undefined}
             onClick={() => onChange(color)}
           >
             <ColorSwatch color={colorValue(color)} size={24}>

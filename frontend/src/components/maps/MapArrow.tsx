@@ -60,7 +60,8 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
   const sourceRect = rectOf(useInternalNode(source));
   const targetRect = rectOf(useInternalNode(target));
   if (!sourceRect || !targetRect || !data) return null;
-  const { arrow, shift, fan, bend, bending, editable, onEdit, onBend, onMoveLabel } = data;
+  const { arrow, shift, fan, bend, bending, faded, editable, onEdit, onBend, onMoveLabel } = data;
+  const opacity = faded ? 0.2 : undefined;
   const sourceCenter = { x: sourceRect.x + sourceRect.width / 2, y: sourceRect.y + sourceRect.height / 2 };
   const targetCenter = { x: targetRect.x + targetRect.width / 2, y: targetRect.y + targetRect.height / 2 };
   const length = Math.hypot(targetCenter.x - sourceCenter.x, targetCenter.y - sourceCenter.y);
@@ -185,6 +186,7 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
           stroke: color,
           strokeWidth: 2,
           strokeDasharray: arrow.masterOnly ? '6 4' : undefined,
+          opacity,
         }}
       />
       <EdgeLabelRenderer>
@@ -268,6 +270,7 @@ export function MapArrow({ id, source, target, markerEnd, markerStart, data }: E
               padding: '1px 6px',
               cursor: editable ? 'grab' : 'default',
               touchAction: 'none',
+              opacity,
             }}
           >
             <Text size="xs" c={color} fw={500}>

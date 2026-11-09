@@ -37,6 +37,7 @@ from app.db import (
     documents_repo,
     files_repo,
     geographic_maps_repo,
+    map_legends_repo,
     notes_repo,
     relationship_maps_repo,
     room_sections_repo,
@@ -61,6 +62,7 @@ from app.domain.export import (
 )
 from app.domain.geographic_maps import GeoBoard, placed_document_ids, visible_geo_board
 from app.domain.landing_transfer import section_to_json
+from app.domain.map_legends import effective_meanings
 from app.domain.map_transfer import map_to_json
 from app.domain.models import DocumentVisibility, Membership, Room
 from app.domain.relationship_maps import (
@@ -411,6 +413,7 @@ async def export_maps(
     images = {image.id for document in export.documents for image in document.images}
     linked = await relationship_maps_repo.list_linked_documents(session, ids)
     backgrounds = await storage.signed_urls([m.background_path for m in shown if m.background_path])
+    presets = {p.id: p for p in await map_legends_repo.list_presets(session, room_id)}
     result = []
     for relationship_map in shown:
         board = visible_board(boards.get(relationship_map.id, Board()), visible, viewer.role)
@@ -428,6 +431,7 @@ async def export_maps(
                 visible_geo_board(geo.get(relationship_map.id, GeoBoard()), visible, viewer.role),
                 backgrounds.get(relationship_map.background_path or ""),
                 [d for d in linked[relationship_map.id] if d in in_file],
+                effective_meanings(relationship_map, presets),
             )
         )
     return result

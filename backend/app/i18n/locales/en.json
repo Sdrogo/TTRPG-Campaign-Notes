@@ -226,7 +226,9 @@
         "groupTitle": "group title",
         "placeName": "name",
         "subtitle": "subtitle",
-        "note": "note"
+        "note": "note",
+        "legendMeaning": "meaning",
+        "presetName": "preset name"
       },
       "invalidPlane": "The plane must be 100 to 20,000 units wide and tall, and only a geographic map has one",
       "planeTooSmall": "That plane would leave part of the map outside it",
@@ -235,7 +237,13 @@
       "placeNameRequired": "An area or pin without a Document needs a name",
       "tooManyAreas": "A map can have at most {max} areas",
       "tooManyPins": "A map can have at most {max} pins",
-      "tooManyLinks": "A map can have at most {max} links"
+      "tooManyLinks": "A map can have at most {max} links",
+      "presetNameRequired": "A preset needs a name",
+      "presetEmpty": "A preset needs at least one meaning",
+      "presetNameTaken": "Another preset of this room already has that name",
+      "tooManyPresets": "A room can have at most {max} presets",
+      "presetNotFound": "Preset not found",
+      "notPresetManager": "Only the Master can change the room's presets"
     },
     "mapImport": {
       "invalidFile": "The file isn't a map this App can read (check the field \"{field}\")",

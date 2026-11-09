@@ -821,6 +821,22 @@ a grid of as many columns as fit. Rows highlight `--bg-raised` on hover.
   (card, text, group, arrow). Saving is automatic; the header shows
   "Modifiche non salvate", "Salvataggio…", "Salvato", or the error with
   "Riprova". Below the `sm` breakpoint the board is read-only with a note.
+- **Color legend** (spec 68): a free map's relation colors can each carry a
+  meaning ("Rosso: Avversario"). The board shows a "Legenda" panel
+  bottom-right (250 px, one row per color in use with a meaning: a short
+  curved sample in the color and the meaning), foldable to a pill chip with
+  colored dots, remembered per map in `localStorage`. Clicking a row
+  highlights its relations (the others fade to 20%); clicking it again, the
+  empty board or `Esc` clears it. On a phone and on the small linked-map
+  board of a Document page the legend is only the chip, opening a bottom
+  drawer. Nothing shows to a viewer when no used color has a meaning; an
+  editor then gets a "+ Legenda" chip. The pencil opens "Legenda dei
+  colori" (`MapLegendDialog`): used colors first, meanings of unused colors
+  folded below, and views to apply a Room preset (radio cards with a
+  replace warning), save the map as a preset and manage presets (Master
+  only). A linked map names its preset; only the Master edits it there,
+  others can "Scollega". The relation dialog shows the chosen color's
+  meaning, and the color swatches name it on hover.
 
 ## Mention map (spec 36)
 

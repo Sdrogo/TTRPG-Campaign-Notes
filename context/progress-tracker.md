@@ -49,20 +49,21 @@ migration before its PR merges into `staging`; production gets it before the
 release to `main` that ships it. Before any release, list what is pending
 here and remind the product owner.
 
-- **Head in the repository**: `d4a8f2c6b9e1` (arrow bend, spec 67, PR #314).
+- **Head in the repository**: `e7b3d9a1c5f2` (relation color legend, spec 68, PR #315, on its branch until merged).
 - **Staging database**: `d4a8f2c6b9e1 (head)`, applied 2026-11-09 with
   `backend/.env.staging` loaded (`c1d7e3a9f5b2` applied 2026-11-03).
 - **Production database**: `c1d7e3a9f5b2 (head)`, applied 2026-11-03 with
   `backend/.env` loaded (product owner's go-ahead), before the release that
   shipped it (PR #302). `e8c4a2f6b1d9` and `e9c4a2f7b1d8` were applied the same day.
-- **Pending**: `d4a8f2c6b9e1` (arrow bend, spec 67, additive nullable column) on production (applied on staging 2026-11-09).
+- **Pending**: `d4a8f2c6b9e1` (arrow bend, spec 67, additive nullable column) on production (applied on staging 2026-11-09); `e7b3d9a1c5f2` (color legend, spec 68: presets table, two nullable map columns, a check) on staging before PR #315 merges, then on production.
 
 When a new migration lands, update the three lines above and add it to the
 top of the chain below. Per-migration apply history (who, when, which env
 file) up to 2026-11-04 is in the 2026-11-04 archive.
 
 Chain, newest first (where each came from):
-`c1d7e3a9f5b2` Clocks (61) ← `e9c4a2f7b1d8` import job progress (59) ←
+`e7b3d9a1c5f2` color legend and presets (68) ← `d4a8f2c6b9e1` arrow bend (67)
+← `c1d7e3a9f5b2` Clocks (61) ← `e9c4a2f7b1d8` import job progress (59) ←
 `e8c4a2f6b1d9` Section tools + block `collapsed`, drops
 `rooms.maps_position` (60_2) ← `d5b8e1f3a9c7` Room landing page (55) ←
 `c8f2d6a4e1b7` poll choice description (54) ← `b9e4c2a7d1f3` Session 0
@@ -247,6 +248,14 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   rights as moving a card; plain-line bundle bends together; no automatic
   reset); **built on PR #314**, migration `d4a8f2c6b9e1` to apply on staging
   before merge and on production before the release.
+- **68, Relationship color legend** (product owner, 2026-11-09): a meaning
+  per relation color on each free map, with an on-screen legend of the
+  colors in use (desktop panel bottom-right, phone chip and drawer),
+  editing with the same rights as moving a card, highlight by meaning, and
+  Room presets that maps stay linked to (Master manages them). Ticket and
+  mock-up approved 2026-11-09; **built on PR #315**, migration
+  `e7b3d9a1c5f2` to apply on staging before merge and on production before
+  the release.
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).

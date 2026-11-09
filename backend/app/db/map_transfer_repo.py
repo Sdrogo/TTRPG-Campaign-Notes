@@ -82,6 +82,8 @@ async def insert_maps(
                 "plane_width": m.map.plane_width,
                 "plane_height": m.map.plane_height,
                 "background_path": m.map.background_path,
+                "color_legend": relationship_maps_repo.legend_to_json(m.map.color_legend),
+                "legend_preset_id": m.map.legend_preset_id,
             }
             for m in maps
         ],
