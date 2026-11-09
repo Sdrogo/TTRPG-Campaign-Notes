@@ -247,6 +247,12 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
   rights as moving a card; plain-line bundle bends together; no automatic
   reset); **built on PR #314**, migration `d4a8f2c6b9e1` to apply on staging
   before merge and on production before the release.
+- **68, Relationship color legend** (product owner, 2026-11-09): a meaning
+  per relation color on each free map, with an on-screen legend (desktop
+  panel bottom-right, phone chip and drawer), editing with the same rights
+  as moving a card, highlight by meaning, in export/import and duplication.
+  Ticket written (7 open questions with defaults); next the mock-up, then
+  the build. Needs one migration (`relationship_maps.color_legend` JSONB).
 - **Two small tickets, not written yet**: default Tags in the creator's UI
   language (decided 2026-10-03), and a read-only members list for every
   member (the setup page stays Administrator-only).
