@@ -1,4 +1,4 @@
-# 66 - Adjustable relationship arc
+# 67 - Adjustable relationship arc
 
 ## Goals
 

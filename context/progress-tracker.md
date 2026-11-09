@@ -236,7 +236,7 @@ image search, read aloud, GDPR (10-01 → 10-10). See the two older archives.
 - **46b, Dichiarazione d'Intenti invitation**: if a Room has a DDI, its
   invitation opens it read-only with "accept and join" (product owner,
   2026-10-27). Ticket not written yet (the DDI template itself is in 47_3).
-- **66, Adjustable relationship arc** (product owner, 2026-11-09): a
+- **67, Adjustable relationship arc** (product owner, 2026-11-09): a
   draggable bend per arrow on the free maps, as geographic links have (the
   62 follow-up). Ticket written, awaiting confirmation of the defaults
   and 3 open questions before code. One additive migration (`bend` on
